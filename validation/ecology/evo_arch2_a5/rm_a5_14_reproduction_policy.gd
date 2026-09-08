@@ -2,13 +2,14 @@ extends SceneTree
 
 const C = preload("res://scripts/research/ecology/v2/canonical_value_v1.gd")
 const B = preload("res://scripts/research/ecology/v2/body_graph_v1.gd")
+const P = preload("res://scripts/research/ecology/v2/development_program_v1.gd")
+const G = preload("res://scripts/research/ecology/v2/organism_genome_v2.gd")
 const LH = preload("res://scripts/research/ecology/v2/life_history_program_v1.gd")
 const BP = preload("res://scripts/research/ecology/v2/organism_blueprint_v1.gd")
 const LS = preload("res://scripts/research/ecology/v2/organism_life_state_v1.gd")
 const R = preload("res://scripts/research/ecology/v2/resource_lifecycle_runtime_v1.gd")
 const F = preload("res://scripts/research/ecology/v2/environment_field_contract_v1.gd")
 const Field = preload("res://scripts/research/ecology/v2/local_environment_field_v1.gd")
-const Fixtures = preload("res://scripts/research/ecology/v2/body_program_fixtures_v1.gd")
 
 var passed := 0
 var failed := 0
@@ -31,7 +32,8 @@ func _policy() -> Dictionary:
 	var policy := LH.create_default()
 	policy.metabolism.maintenance_energy_per_module_mj = 0
 	policy.metabolism.maintenance_water_per_module_mg = 0
-	policy.growth.transfer_permille = 0
+	policy.growth.transfer_permille = 500
+	policy.growth.max_transfer = B.stock(20000)
 	policy.uptake.basal_water_mg = 0
 	policy.uptake.basal_nutrient_mg = 0
 	policy.uptake.basal_organic_mg = 0
@@ -45,12 +47,21 @@ func _policy() -> Dictionary:
 	policy.reproduction.fee_energy_mj = 0
 	return policy
 
+func _reproductive_genome() -> Dictionary:
+	var leaf := P.rule("leaf", [P.action("differentiate", "collector", [0, 20, 0], 1, 6000), P.action("retire")])
+	var start := P.rule("start", [P.action("differentiate", "reproductive", [0, 10, 0], 1), P.action("branch", "support", [0, 0, 0], 0, 0, 0, "leaf")], "start")
+	return G.create({"schema": P.SCHEMA, "entry": "start", "max_age": 12, "max_depth": 2, "rules": [start, leaf]}, "RM-A5-14 persisted reproduction witness")
+
 func _blueprint() -> Dictionary:
-	return BP.create(Fixtures.make(0), _policy())
+	return BP.create(_reproductive_genome(), _policy())
 
 func _entry() -> Dictionary:
 	var blueprint := _blueprint()
-	return R.individual(blueprint, "rm14.parent", [500, 0, 500], B.stock())
+	var entry := R.individual(blueprint, "rm14.parent", [500, 0, 500], B.stock(30000))
+	if entry.is_empty(): return {}
+	var field := Field.create("rm14.prepare.field", 1, [0, 0, 0], 1000, 1, 1, F.stock(), F.stock(1000000), F.signals(1000, 500, 0, 0))
+	var prepared := R.step_population(field, [entry], field.owner_token, field.owner_epoch, field.revision)
+	return prepared.population[0] if prepared.success else {}
 
 func _encoded_state_file(blueprint: Dictionary, state: Dictionary) -> String:
 	return C.encode({
