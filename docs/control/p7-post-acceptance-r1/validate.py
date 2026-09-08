@@ -17,6 +17,7 @@ BASE = "438b21d0f5f348d838c2fae0bfae3547ba56a875"
 ENGINE_SHA = "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7"
 DOCS = "docs/control/p7-post-acceptance-r1"
 NATIVE = "tests/matter/transactions/test_matter_repository_lock_reclaim.gd"
+MW9_RECOVERY = "tests/matter/handoff/test_mw9_durable_handoff_recovery.gd"
 REVIEW = "docs/control/p7-eg1-world-core-repair-r1/review"
 HISTORICAL = {
     f"{REVIEW}/REVIEWER-RESULT-DCA12CEC-R2.v1.json": "8021cd51cdbd153c0f05b2b0d7b6d15864835fb4",
@@ -56,7 +57,7 @@ def write(path: Path, value: object) -> None:
 def source_guard(root: Path) -> None:
     changed = git(root, "diff", "--name-only", BASE, "HEAD").splitlines()
     allowed = set(LOCKS) | set(HISTORICAL) | {
-        NATIVE, NATIVE + ".uid", "tests/harness/test_project_control_validation.py",
+        NATIVE, NATIVE + ".uid", MW9_RECOVERY, "tests/harness/test_project_control_validation.py",
         "tests/harness/test_p7_post_acceptance_packet.py",
         ".github/workflows/p7-post-acceptance-repair.yml",
     }
@@ -74,6 +75,18 @@ def source_guard(root: Path) -> None:
                 "CHECKPOINT_CAS_OR_PENDING_PROTOCOL_CHANGED:" + path)
     for path, expected in HISTORICAL.items():
         require(blob((root / path).read_bytes()) == expected, "HISTORICAL_VERDICT_CHANGED:" + path)
+    spec = json.loads((root / DOCS / "mw9-fixture-guard.v1.json").read_text())
+    current = (root / MW9_RECOVERY).read_bytes()
+    original = subprocess.check_output(["git", "show", f"{BASE}:{MW9_RECOVERY}"], cwd=root)
+    require(spec["path"] == MW9_RECOVERY and blob(original) == spec["original_blob_sha"]
+            and blob(current) == spec["candidate_blob_sha"], "MW9_FIXTURE_SOURCE_PIN_MISMATCH")
+    restored = current.decode("utf-8")
+    require(len(spec["additions"]) == 3, "MW9_FIXTURE_ADDITIONS_CHANGED")
+    for addition in spec["additions"]:
+        require(isinstance(addition, str) and bool(addition) and restored.count(addition) == 1,
+                "MW9_FIXTURE_ADDITION_MISSING")
+        restored = restored.replace(addition, "")
+    require(restored.encode("utf-8") == original, "MW9_ORIGINAL_ASSERTIONS_CHANGED")
     git(root, "diff", "--check", BASE, "HEAD")
 
 
@@ -202,11 +215,33 @@ def main() -> int:
                         and report["failures"] == failures, "REVIEW_BASELINE_FAILURE_NOT_EMPTY_WRITER_RECOVERY")
                 require(previous_before == legacy.identity(previous) and not previous_before["tracked_status"], "REVIEW_BASELINE_MUTATED")
                 write(out / "review-baseline-identity.json", previous_before)
+                fixture_baseline = baseline.with_name(baseline.name + "-fixture-r2")
+                require(not fixture_baseline.exists(), "FIXTURE_BASELINE_EXISTS")
+                git(root, "worktree", "add", "--detach", str(fixture_baseline),
+                    "dded2e488b161276d7ba679af078c288bd53cf55")
+                fixture_before = legacy.identity(fixture_baseline)
+                run("fixture-baseline-import", [engine, "--headless", "--editor", "--path", str(fixture_baseline), "--import"], 240)
+                run("fixture-baseline-mw9", [engine, "--headless", "--path", str(fixture_baseline),
+                    "--script", "res://" + MW9_RECOVERY], 300, expected=1)
+                text = (out / "fixture-baseline-mw9.log").read_text()
+                expected_errors = ["Fresh ownerless lock was reclaimed without grace",
+                                   "Fresh ownerless lock disappeared during grace"]
+                require(re.findall(r"^ERROR: (.*)$", text, re.MULTILINE) == expected_errors
+                        and text.count("MW9 durable handoff recovery: FAIL (203 assertions, 2 failures)") == 1,
+                        "MW9_FIXTURE_BASELINE_NOT_EXPECTED_FAILURE")
+                require(fixture_before == legacy.identity(fixture_baseline)
+                        and not fixture_before["tracked_status"], "FIXTURE_BASELINE_MUTATED")
+                write(out / "fixture-baseline-identity.json", fixture_before)
                 run("native-locks", [engine, "--headless", "--path", str(root), "--script", "res://" + NATIVE], 90)
                 report = legacy.single_report(out / "native-locks.log", "matter_repository_lock_reclaim")
                 require(report["verdict"] == "PASS" and report["assertions"] == 82 and not report["failures"], "NATIVE_LOCK_SUITE_INCOMPLETE")
                 for file in sorted((root / "tests/matter/handoff").glob("test_mw9*.gd")):
                     run(file.stem, [engine, "--headless", "--path", str(root), "--script", "res://" + file.relative_to(root).as_posix()], 300)
+                    if file.relative_to(root).as_posix() == MW9_RECOVERY:
+                        text = (out / (file.stem + ".log")).read_text()
+                        require(text.count("MW9 durable handoff recovery: PASS (208 assertions)") == 1
+                                and not re.search(r"^ERROR:|: FAIL", text, re.MULTILINE),
+                                "MW9_RECONCILED_FIXTURE_NOT_PROVEN")
                 run("mw10-processes", [engine, "--headless", "--path", str(root), "--script",
                     "res://tests/matter/transactions/test_mw10_cross_region_processes.gd"], 300)
                 for family, count in (("eg1", 5), ("eg4", 3)):

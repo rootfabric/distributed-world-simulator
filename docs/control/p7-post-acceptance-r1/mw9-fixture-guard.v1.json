@@ -1,0 +1,12 @@
+{
+  "path": "tests/matter/handoff/test_mw9_durable_handoff_recovery.gd",
+  "original_blob_sha": "90a9437e24512d9e0d8f6b8d7d26bf3f28641560",
+  "candidate_blob_sha": "3ae21ef962699fa9ed8330f93fad46ac10be8978",
+  "original_assertions": 203,
+  "candidate_assertions": 208,
+  "additions": [
+    "\t# Unknown ownership is nonempty interrupted metadata, not released empty residue.\n\tvar unknown_owner_path: String = stale_lock_path.path_join(\"owner.json\")\n\tvar unknown_owner := FileAccess.open(unknown_owner_path, FileAccess.WRITE)\n\t_assert(unknown_owner != null, \"Unknown owner metadata fixture open failed\")\n\tif unknown_owner != null:\n\t\tunknown_owner.store_string(\"{interrupted\")\n\t\tunknown_owner.close()\n",
+    "\t_assert(FileAccess.file_exists(unknown_owner_path), \"Unknown owner metadata disappeared during grace\")\n\t_assert(DirAccess.remove_absolute(unknown_owner_path) == OK, \"Unknown owner metadata fixture cleanup failed\")\n",
+    "\t# After marker removal, a fresh empty directory is safe to reclaim immediately.\n\t_assert(DirAccess.make_dir_absolute(stale_lock_path) == OK, \"Empty released-lock fixture create failed\")\n\t_assert(bool(repository.call(\"_remove_stale_lock\")) and not DirAccess.dir_exists_absolute(stale_lock_path),\n\t\t\"Empty released-lock residue blocked immediate recovery\")\n"
+  ]
+}
