@@ -75,7 +75,7 @@ func _next_generation(entry: Dictionary, blueprint: Dictionary, generation: int)
 func _lineage_proof_depth_is_explicitly_bounded() -> void:
 	var blueprint := BP.create(_genome(), _policy())
 	_check(not blueprint.is_empty(), "blueprint_valid")
-	_check(LS.MAX_PARENT_PROOF_DEPTH == 32, "research_depth_cap_is_explicit")
+	_check(LS.MAX_PARENT_PROOF_DEPTH == 8, "research_depth_cap_matches_canonical_budget")
 	var current := R.individual(blueprint, "rm29.founder", [500, 0, 500], B.stock(10000))
 	_check(not current.is_empty(), "founder_valid")
 	var all_bounded_generations_valid := true
@@ -92,12 +92,12 @@ func _lineage_proof_depth_is_explicitly_bounded() -> void:
 	if not all_bounded_generations_valid: return
 	_check(_proof_depth(current.state) == LS.MAX_PARENT_PROOF_DEPTH, "lineage_reaches_exact_cap")
 	var persisted := LS.serialize(current.state, blueprint)
-	_check(not persisted.is_empty() and not LS.deserialize(persisted).is_empty(), "cap_depth_state_roundtrips")
+	_check(not persisted.is_empty() and not LS.deserialize(persisted).is_empty(), "cap_depth_state_roundtrips_canonically")
 
 	var overflow_field := _field("rm29.overflow")
 	var overflow_parent := R.step_population(overflow_field, [current], overflow_field.owner_token, overflow_field.owner_epoch, overflow_field.revision)
 	_check(overflow_parent.success and overflow_parent.propagules.size() == 1, "cap_depth_parent_can_still_emit_paid_propagule")
 	if not overflow_parent.success or overflow_parent.propagules.is_empty(): return
 	var overflow_child := R.materialize_propagule(overflow_parent.propagules[0], blueprint, overflow_parent.population[0].state)
-	_check(overflow_child.is_empty(), "generation_beyond_proof_cap_fails_closed")
+	_check(overflow_child.is_empty(), "generation_nine_fails_before_noncanonical_state")
 	_check(LS.validate_parent_transfer_witness(overflow_parent.propagules[0], blueprint, overflow_parent.population[0].state) == "PROPAGULE_PARENT_STATE", "overflow_parent_witness_reports_bounded_failure")
