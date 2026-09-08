@@ -1,0 +1,83 @@
+{
+  "schema": "distributed_world_simulator.v0_product_checkpoint_acceptance_addendum.v1",
+  "addendum_id": "V0-P7-R1-CHECKPOINT-ACCEPTED-ADDENDUM-002",
+  "references_acceptance_id": "V0-P7-R1-CHECKPOINT-ACCEPTED-001",
+  "references_prior_addendum_id": "V0-P7-R1-CHECKPOINT-ACCEPTED-ADDENDUM-001",
+  "program": "V0",
+  "checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
+  "recorded_at_utc": "2026-09-08T14:34:04Z",
+  "addendum_type": "FORMAL_REVIEWER_VERDICT_PROVENANCE_REPAIR",
+  "reason": "A late post-merge review of ADDENDUM-001 identified a P1 provenance defect: the CRITICAL correction claimed INDEPENDENT_REVIEWER_PASS while its referenced reviewer wording was PASS_NO_MAJOR_ISSUES, which is outside the canonical Reviewer verdict vocabulary PASS|FAIL|INSUFFICIENT_EVIDENCE. This append-only addendum does not rewrite the historical acceptance or ADDENDUM-001; it supplies a fresh exact-subject durable Reviewer verdict whose verdict field is literally PASS and binds that result into canonical main.",
+  "late_finding": {
+    "source_pr": 590,
+    "review_id": 5141680809,
+    "review_comment_id": 3957900842,
+    "severity": "P1",
+    "code": "FORMAL_REVIEWER_VERDICT_VOCABULARY_MISMATCH",
+    "finding": "PASS_NO_MAJOR_ISSUES was not a contract-valid durable Reviewer verdict for the CRITICAL correction closure predicate.",
+    "preserved": true
+  },
+  "immutable_predecessors": {
+    "original_acceptance": {
+      "path": "config/control/harness/acceptance/V0-P7-R1-CHECKPOINT-ACCEPTED-001.v1.json",
+      "blob_sha": "1c48eee68719b24b493f261d247975f1a5fa9558",
+      "rewritten": false
+    },
+    "addendum_001": {
+      "path": "config/control/harness/acceptance/V0-P7-R1-CHECKPOINT-ACCEPTED-ADDENDUM-001.v1.json",
+      "blob_sha": "39eb6673525d2b7a6d57a2bf64a9f810001dedc3",
+      "rewritten": false
+    }
+  },
+  "formal_reviewer_r6": {
+    "canonical_document": "docs/control/p7-post-acceptance-r1/review/REVIEWER-RESULT-5A1D-R6.v1.json",
+    "source_branch": "control/v0-p7-post-acceptance-reviewer-r6",
+    "source_commit": "17626dc5224432be4a7aeac045767c6e62ca5e2d",
+    "blob_sha": "b0229fe93dd99464bd926a220960cc88d767e1cb",
+    "role": "REVIEWER",
+    "independent_context": true,
+    "reviewed_head": "5a1d79c6889136c40daf97f69feb90512c214009",
+    "reviewed_tree": "00581408e4ba9033fde16b43915945e73e18fcb2",
+    "canonical_base": "438b21d0f5f348d838c2fae0bfae3547ba56a875",
+    "implementation_pr": 585,
+    "verdict": "PASS",
+    "required_fixes": [],
+    "evidence_gaps": []
+  },
+  "verified_correction_chain": {
+    "implementation_subject": "5a1d79c6889136c40daf97f69feb90512c214009",
+    "implementation_tree": "00581408e4ba9033fde16b43915945e73e18fcb2",
+    "implementation_merge": "87e74287b5682737a224515525f06a17af637098",
+    "merged_tree_equals_tested_tree": true,
+    "verifier_r5_path": "docs/control/p7-post-acceptance-r1/review/VERIFIER-RESULT-5A1D-R5.v1.json",
+    "verifier_r5_verdict": "PASS",
+    "world": "PASS 326/326 scripts, 331/331 stages",
+    "p7": "PASS 29/29 leaves, 2032 assertions, 0 failures",
+    "harness": "PASS 278 tests",
+    "post_merge_pc0": "YELLOW_NON_RED_ZERO_BLOCKING_RED",
+    "cross_branch_overlaps": 0
+  },
+  "closure_predicates": {
+    "FORMAL_REVIEWER_VERDICT_VOCABULARY_VALID": true,
+    "INDEPENDENT_REVIEWER_PASS": true,
+    "INDEPENDENT_VERIFIER_PASS": true,
+    "FULL_WORLD_CORE_REGRESSION_PASS": true,
+    "P7_29_LEAF_EXACT_GATE_PASS": true,
+    "POST_MERGE_HARNESS_PASS": true,
+    "POST_MERGE_PC0_NON_RED": true,
+    "ORIGINAL_ACCEPTANCE_PRESERVED": true,
+    "ADDENDUM_001_PRESERVED": true
+  },
+  "current_main_at_recording_context": "a7ef2465efc98a167a78946d9e8b42572ba5a097",
+  "successor_constraint_reaffirmed": {
+    "checkpoint": "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE",
+    "next_action": "ACTIVATE_MVP_FROM_ACCEPTED_P7",
+    "runtime_mutation_authorized_by_this_addendum": false,
+    "mvp_activation_authorized": false
+  },
+  "correction_closure": {
+    "status": "ACCEPTED_CLOSED_FORMAL_REVIEWER_PROVENANCE_REPAIRED",
+    "mission_scope": "P7_POST_ACCEPTANCE_CORRECTION",
+    "remaining_known_blocking_findings": 0
+  }
+}
