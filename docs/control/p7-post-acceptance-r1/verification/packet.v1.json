@@ -1,0 +1,66 @@
+{
+  "schema": "distributed_world_simulator.p7_post_acceptance_verification_packet.v1",
+  "classification": "IMPLEMENTER_EVIDENCE_FOR_INDEPENDENT_VERIFIER",
+  "status": "EVIDENCE_INCOMPLETE",
+  "subject_head": "62ae64d3651af81d726134b1f2c5b8661000998c",
+  "subject_tree": "b3653e480d42b71a2a2d61fac44086b05a9d73d0",
+  "base_head": "438b21d0f5f348d838c2fae0bfae3547ba56a875",
+  "runtime_pr": 585,
+  "run_id": 34189730552,
+  "run_attempt": 1,
+  "primary_project_control_run": 34189732621,
+  "primary_project_control_status": "SUCCESS",
+  "godot_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+  "machine_evidence": {
+    "control": {
+      "status": "PASS_RECOMPUTED_BY_IMPLEMENTER",
+      "job_id": 101945144839,
+      "artifact_id": 10041791587,
+      "zip_sha256": "496676242011a3e704eac083dd1cfca54fdbe2c17bb62b0f1b9137f3f0aa672d",
+      "manifest_sha256": "1ec46eb3acc38a02a9f8880b48922c852f150f4555fec1ca43139a5f1ac0a11a",
+      "verified_members": 28,
+      "harness_tests": 274,
+      "standard_pc0": "YELLOW",
+      "directional_pc0": "YELLOW",
+      "advisory_red_findings_retained": 2,
+      "cross_branch_overlaps": 0,
+      "blocking_directional_findings": 0,
+      "pc0_canonical_main_head": "438b21d0f5f348d838c2fae0bfae3547ba56a875",
+      "post_merge_audit_of_repair": false
+    },
+    "p7": {
+      "status": "PASS_RECOMPUTED_BY_IMPLEMENTER",
+      "job_id": 101945144634,
+      "artifact_id": 10041866597,
+      "zip_sha256": "3c21a17ef85821e89e11a2a2de5153a9020d7bed8826dfed28500635f76a3b5b",
+      "manifest_sha256": "202a994efe35867ce3e2a66825766edbe02ca37e2b5077ea3ae98331bf6a24e2",
+      "verified_members": 50,
+      "leaf_logs_reparsed": 29,
+      "assertions_resummed": 2032,
+      "failures": 0
+    },
+    "world": {
+      "status": "PENDING_NOT_ACCEPTABLE",
+      "job_id": 101945144873,
+      "expected_distinct_scripts": 326,
+      "expected_stages": 331
+    }
+  },
+  "observed_code_review": {
+    "actor": "chatgpt-codex-connector[bot]",
+    "request_comment": 5579620413,
+    "result_comment": 5579669682,
+    "reviewed_head": "62ae64d3651af81d726134b1f2c5b8661000998c",
+    "raw_result": "Codex Review: Didn't find any major issues. Nice work!",
+    "separate_verifier": false
+  },
+  "rejected_executor": {
+    "request_comment": 5579681593,
+    "response_comment": 5579683403,
+    "classification": "PREFERRED_EXECUTOR_UNAVAILABLE_NO_ENVIRONMENT",
+    "verifier_executed": false
+  },
+  "independent_verification": "PENDING",
+  "acceptance": false,
+  "mvp_activation": false
+}
