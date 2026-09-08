@@ -1,0 +1,88 @@
+{
+  "schema": "distributed_world_simulator.p7_eg1_native_evidence.v1",
+  "work_order_id": "V0-P7-EG1-ENET-BANDWIDTH-R1",
+  "archive": "native-causal-evidence.tar.xz",
+  "sha256": "46979dcd33540fc95b32ecad9f3cb3b3217efef30c69d353c369ccb637b596fb",
+  "engine_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+  "native_ab_passed": true,
+  "classification": "ENGINE_NATIVE_CAUSAL_EVIDENCE_NOT_PRODUCT_ACCEPTANCE",
+  "cases": 9,
+  "exit_code": 0,
+  "files": [
+    {
+      "path": "helper-test.log",
+      "bytes": 1663,
+      "sha256": "873c1e84d5595e4f4afc6eaf9521966eedd744c09d1b11e26795ba9e585e64cd"
+    },
+    {
+      "path": "helper.gd",
+      "bytes": 5535,
+      "sha256": "3a14da38134778b61d94638e2ccec6c4352417e251cd2575728334f89ced4e0a"
+    },
+    {
+      "path": "helper_test.gd",
+      "bytes": 727,
+      "sha256": "cfbcaab418d221ebe83dfac996f8b09e36eb5f8d695016a630c4a14e37eb1e02"
+    },
+    {
+      "path": "import.log",
+      "bytes": 1054,
+      "sha256": "0c9be5c9ed5241880ebaf92b5386f62ccc5f83c1490e3c6f9cc2cf2d1ed495e9"
+    },
+    {
+      "path": "native-ab-r0.json",
+      "bytes": 3843,
+      "sha256": "236c84fdd86c377ae0eb2dd854ee84618d136dfe06b59c9ac7fe16cd6bd9f48c"
+    },
+    {
+      "path": "native-ab-r0.log",
+      "bytes": 2917,
+      "sha256": "cdc144182cb3b3d65d0178186d584b42641f3d167f1567f745610df0f33c8576"
+    },
+    {
+      "path": "native-ab-r1.json",
+      "bytes": 4457,
+      "sha256": "a149cce845f101d5220ea5408fbd2e69083045aec31faaef7fc7e76b5c783217"
+    },
+    {
+      "path": "native-ab-r1.log",
+      "bytes": 3311,
+      "sha256": "2500081f0d9decd6257a8690e37e6cd52fb4be943bf0d0a538d7fc4005c804b3"
+    },
+    {
+      "path": "native-ab.json",
+      "bytes": 3760,
+      "sha256": "9955f0c803c6584399c44a09e39cbbb173bf726759209ee981fcc1e1092ada3b"
+    },
+    {
+      "path": "native-ab.log",
+      "bytes": 2869,
+      "sha256": "b683a99715db3bde8079076f961fc57f86e831911bec05d93900552d778e18cf"
+    },
+    {
+      "path": "native_ab.gd",
+      "bytes": 4577,
+      "sha256": "402ca07370426e5ad5dd0a2c4a57370dc9ff376cb3a60f43569a4a6e32d46524"
+    },
+    {
+      "path": "native_ab_r0.gd",
+      "bytes": 4124,
+      "sha256": "d7dc302d227f1c0c11fa7dbc4196c2bcecf436e7390a1caeb9d9a492b5c1878d"
+    },
+    {
+      "path": "native_ab_r1.gd",
+      "bytes": 4466,
+      "sha256": "539a18d02e45620e52561659ad9a7ea06521b72928c8f190ce0c21914e5f09af"
+    },
+    {
+      "path": "project.godot",
+      "bytes": 123,
+      "sha256": "3cf8370a71a579a0329255f2771cd0c73bf9b8d87aee0fe77867f1e8ce5dfa13"
+    }
+  ],
+  "product_verification": "PENDING_EXACT_CI",
+  "independent_review": "REQUIRED",
+  "independent_verification": "REQUIRED",
+  "canonical_acceptance": false,
+  "mvp_authorized": false
+}

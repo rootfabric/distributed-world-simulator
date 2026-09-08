@@ -1,0 +1,91 @@
+{
+  "schema": "distributed_world_simulator.harness_evidence_map.v1",
+  "work_order_id": "V0-P7-EG1-ENET-BANDWIDTH-R1;V0-P7-EG4-RECEIPT-COMPLETION-R1;V0-P7-P74-WORLD-RUNNER-PHASES-R1;V0-P7-MW10-CROSS-REGION-LOCK-R1",
+  "program": "V0",
+  "checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
+  "risk_class": "CRITICAL",
+  "evidence_head_sha": "a52faf8c44434818775225be3f71c30a0fd86ef3",
+  "intent": "Close the exact P7 closure chain (candidate tree 4ff3adbaeecdd64a68bb3c1f11817aa72918231f; post-build critique NO_MATERIAL_REFACTOR_REQUIRED in POST_BUILD_CRITIQUE_FINAL_RU.md): restore the pinned-engine ENet listener bandwidth contract, drain exact EG4 gameplay receipts before withdrawal, invoke the P7.4 persistence-restart worker in its three canonical phases from the world runner, and port the proven atomic lock release and fail-closed staleness to the MW10 cross-region repository after the exact full regression exposed its ownerless-lock race.",
+  "root_cause_or_reason": "1) Godot a13da4feb passes p_max_channels+SYSCH_MAX as incoming bandwidth in create_server; 2) the EG4 test client withdrew before all six exact operation/movement receipts; 3) the canonical world runner invoked the phase-gated P7.4 worker generically; 4) the cross-region repository lock lifecycle was fail-open for ownerless locks and released in-place, letting a contender steal the lock so a durable begin winner reports failure.",
+  "changed_surfaces": [
+    "scripts/network/transports/v2/enet_multi_peer_transport_port.gd",
+    "tests/network/test_eg1_gateway_processes.gd",
+    "tools/network/eg4_client_worker.gd",
+    "RUN_WORLD_REGRESSION_TESTS.ps1",
+    "scripts/simulation/matter/transactions/distributed/matter_cross_region_transaction_repository.gd",
+    "docs/control/p7-eg1-world-core-repair-r1/**",
+    ".github/workflows/p7-eg1-world-core-repair.yml"
+  ],
+  "canonical_owner": "main",
+  "entry_points": [
+    "EnetMultiPeerTransportPort.start_server",
+    "EG4 client worker withdrawal lifecycle",
+    "RUN_WORLD_REGRESSION_TESTS.ps1 foreach invocation",
+    "CrossRegionTransactionRepository lock lifecycle (acquire/release/staleness)"
+  ],
+  "callers": [
+    "EG1/EG4 process tests",
+    "canonical world/core suite",
+    "MW10 cross-region process scenarios and P7 leaf mw10-process-recovery"
+  ],
+  "callees": [
+    "ENetConnection.host.bandwidth_limit",
+    "Invoke-GodotStep",
+    "POSIX directory rename mutual exclusion, owner.json, /proc liveness"
+  ],
+  "sibling_surfaces_checked": [
+    "T1 multi-peer contracts/processes",
+    "NX2 realtime traffic separation",
+    "all EG siblings",
+    "MW9 durable handoff lock retry test",
+    "MW10 coordinator/authority gate (unchanged)",
+    "P7 train leaves"
+  ],
+  "canonical_truth_changed": false,
+  "architecture_ownership_changed": false,
+  "focused_validation": {
+    "enet": "baseline negative control limit=1/32 INPUT lost 0/3; candidate limit=32/32 received 3/3 (native A/B campaign, prior evidence preserved)",
+    "eg4": "baseline completion negative 15 expected failures; candidate positive 23 assertions 0 failures",
+    "p74": "recording-executor orchestration PASS; real seed/recover-deliver/recover-replay 21+25+17 assertions on pinned engine",
+    "mw10": "baseline lock-lifecycle probe FAIL with exactly 5 predicted failures; candidate PASS 16 assertions; MW10 process test 53 assertions x2; MW9 retry test PASS"
+  },
+  "full_regression": {
+    "world_summary": "artifacts/test-results/world-regression-summary.json",
+    "world_log_sha256": "dd68ddf4154398c4d4cc8fe08151c55a022c12f2967dfa82d89919bf236abb87",
+    "world_summary_sha256": "05aee2fb27d4793f9fd9b371010c4ea2eb472d3c74c27f02c813d8fc9ce89bf3",
+    "declared_test_count": 325,
+    "discovered_test_count": 325,
+    "step_count": 330,
+    "all_steps_pass": true,
+    "p7_stage_summary_sha256": "5fe0f4094a9fae03682c4d71c094c0f49d79e62d66774b4360efcd7964100743",
+    "p7_train_log_sha256": "572c62081159b2b1adae161cf75fdc578fefd7f2fa5dfcb017896854a38a7af9",
+    "p7_stages": 29,
+    "p7_assertions": 2032,
+    "p7_failures": 0,
+    "ci_world_83eb8e2a": "success (pre-MW10 candidate; GitHub-hosted ubuntu, run 34136441852)",
+    "ci_p7_83eb8e2a": "success",
+    "ci_p7_d28002ae": "success (includes MW10 repair)"
+  },
+  "pc0": {
+    "standard": "YELLOW",
+    "overall_health": "YELLOW",
+    "red_programs": "G8 geomorphology and ECO convergence advisory only, pre-existing, unrelated to candidate",
+    "registry_generation": 81
+  },
+  "directional_pc0": {
+    "standard": "YELLOW",
+    "critical_hits": 0,
+    "watch_hits": "CH->NX (4), NX->ECO (1), NX->T (1), pre-existing"
+  },
+  "remaining_risks": [
+    "Approved-engine seed artifact expires 2026-09-14",
+    "d28002ae CI world red is the superseded probe-identifier typo fixed in a52faf8c; final-head CI rerun expected green"
+  ],
+  "review_verdict": "PENDING_FRESH_INDEPENDENT_REVIEWER_AND_VERIFIER",
+  "rank_up_moves": [
+    "Approved-engine seed artifact expires 2026-09-14; future runs must supply the same pinned binary through a reviewed available channel",
+    "Unify probe report identifiers in one place to avoid hyphen/underscore drift"
+  ],
+  "evidence_gaps": [],
+  "required_fixes": []
+}

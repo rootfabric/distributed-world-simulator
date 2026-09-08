@@ -1,0 +1,83 @@
+{
+  "schema": "distributed_world_simulator.work_order.v1",
+  "work_order_id": "V0-P7-EG1-WORLD-CORE-REPAIR-R1",
+  "project_epoch": "E2026-09-06-V0-P7-CANONICAL-CLOSURE-R1",
+  "program": "V0",
+  "goal_checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
+  "state": "IN_PROGRESS",
+  "work_order_type": "FIX",
+  "base_sha": "c14c37cce4930a8b5132d5d5fdfab3a5dfa82f5f",
+  "branch": "repair/v0-p7-eg1-world-core-r1",
+  "scope": "Bounded continuation of PR577: establish the owner of the EG1 L2 regression, repair only a demonstrated test-fixture defect, and produce exact focused/full-world-core evidence. This is NOT a runtime product dispatch or a P7/MVP activation.",
+  "allowed_paths": [
+    "docs/control/p7-eg1-world-core-repair-r1/**",
+    "tools/network/eg1_client_worker.gd",
+    "tools/network/eg1_gateway_worker.gd",
+    "tools/network/eg1_sim_server_worker.gd",
+    "tools/network/eg1_process_support.gd",
+    "tools/network/eg1_loopback_transport_port.gd",
+    "tests/network/test_eg1_gateway_processes.gd",
+    "tests/network/test_eg1_loopback_transport.gd",
+    ".github/workflows/p7-eg1-world-core-repair.yml"
+  ],
+  "forbidden_paths": [
+    "scripts/network/**",
+    "scripts/runtime/**",
+    "runtime/**",
+    "scenes/**",
+    "project.godot",
+    "RUN_WORLD_REGRESSION_TESTS.ps1",
+    "config/control/project-program-registry.v1.json",
+    "config/control/harness/acceptance/**",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/**",
+    "docs/control/p7-canonical-closure-r1/**"
+  ],
+  "required_predicates": [
+    "EG1_ROOT_CAUSE_AND_OWNER_DEMONSTRATED",
+    "EG1_CONTROLLED_BEFORE_AFTER",
+    "EG1_ORIGINAL_SEMANTIC_ASSERTIONS_PRESERVED",
+    "PRODUCTION_NETWORK_AND_P7_BLOBS_UNCHANGED",
+    "EG1_FOCUSED_AND_SIBLING_REGRESSIONS_PASS",
+    "FULL_WORLD_CORE_REGRESSION_PASS",
+    "HARNESS_REQUIRED_REGRESSIONS_PASS",
+    "STANDARD_PC0_NON_RED",
+    "DIRECTIONAL_PC0_NON_RED_FOR_CRITICAL_HITS",
+    "EVIDENCE_MAP_COMPLETE",
+    "INDEPENDENT_REVIEWER_PASS",
+    "INDEPENDENT_VERIFIER_PASS"
+  ],
+  "required_outputs": [
+    "Repair Map and append-only positive/negative evidence",
+    "Exact frozen HEAD/TREE, engine digest, command and exit records",
+    "Raw child reports, complete stage coverage, fatal scan and SHA256 manifest",
+    "Draft repair PR and separate fresh independent role results",
+    "Actual Drive/CloseMission route without self-acceptance"
+  ],
+  "stop_conditions": [
+    "PROVEN_PRODUCT_OWNER_CHANGE_REQUIRES_SEPARATE_RUNTIME_AUTHORIZATION",
+    "HUMAN_CANONICAL_ACCEPTANCE_AND_MERGE_GATE",
+    "DURABLE_PROOF_OF_EXHAUSTED_PERMITTED_EXECUTORS"
+  ],
+  "risk_class": "CRITICAL",
+  "risk_reasons": ["Preserve parent P7 closure risk floor; changing a gate fixture requires independent scrutiny."],
+  "review_required": true,
+  "required_review_roles": ["IMPLEMENTER", "REVIEWER", "VERIFIER", "DIRECTOR", "HUMAN"],
+  "repair_context_required": true,
+  "evidence_map_required": true,
+  "issued_at_utc": "2026-09-07T10:30:00Z",
+  "human_approval_required_for": ["CANONICAL_CHECKPOINT_ACCEPTANCE", "MERGE", "RUNTIME_SCOPE_EXPANSION"],
+  "notes": "Issued within the user's existing P7 closure mission under HARNESS_CONTROL default Git authority. Capacity-one closure hold, canonical generation81 and production-runtime authorization remain unchanged. No second runtime worker, new foundation or historical epoch rewrite. The prior Codex execution request did not start: PR577 comment5567906358 requests a Cloud environment. Use current container and repository-owned validation; CI is never a source-publication/transport channel. States and results in later files are append-only; this Work Order is immutable.",
+  "design_brief": {
+    "problem_statement": "Original exact c14 EG1 sends three reliable operations and a single unreliable movement; archived failures contain only the three operations. A later run passed focused EG1 and failed the same test in full regression.",
+    "current_behavior": "Missing INPUT or SNAPSHOT leaves three workers waiting until their unchanged 60000ms deadline. No proven production defect has been established.",
+    "desired_behavior": "A causally justified fixture matches its declared network preconditions and tests real gateway/sim equivalence without weakening movement, four unique operations, checksums, identity isolation or detach assertions.",
+    "alternatives_considered": ["Instrument the failed path and run a bounded discriminator campaign", "Explicitly establish a no-adaptive-drop loopback fixture if ENet throttling is demonstrated", "Implement bounded semantic replay only if fixture ownership and existing duplicate contracts justify it", "Reject blind timeout increases, reliable INPUT remapping and rerun-until-green"],
+    "selected_design": "Diagnosis first. Record transport/queue facts and a controlled falsifier. Select the smallest test-owned correction only after evidence; production transport/channel policy remains read-only.",
+    "why_selected": "The L2 test requires a fixed four-operation, one-shot exchange, while canonical INPUT/SNAPSHOT use unreliable application-sequenced transport. Test preconditions and actual loss must be separated from product authority.",
+    "affected_owners": ["EG1 process test fixtures", "V0 closure evidence"],
+    "dependencies": ["Canonical EnetMultiPeerTransportPort", "Canonical RealtimeChannelPolicy", "Canonical EG1 gateway node", "Approved Godot4.7.1.double.a13da4feb"],
+    "non_goals": ["Change production transport or authority", "Claim impaired-network acceptance from loss-free loopback", "Accept P7 or activate MVP", "Rewrite PR577 evidence"],
+    "expected_risks": ["Observation changes timing", "No-drop setup may conceal a different defect unless causally tested", "A new full-regression defect may need another bounded Work Order", "Independent role environment may be unavailable"],
+    "validation_plan": ["Digest-verify archived runs34097453853 and34098678302", "Native ENet causal probe with approved engine", "Original EG1 before/after controlled conditions", "Unchanged focused assertions and sibling network tests", "Complete unchanged repository world/core runner on one frozen candidate", "Independent exact-subject review/verifier and human merge gate"]
+  }
+}

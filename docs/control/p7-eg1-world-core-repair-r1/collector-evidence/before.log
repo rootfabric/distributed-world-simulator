@@ -1,0 +1,26 @@
+test_actual_nonzero_exit_is_preserved_and_rejected (test_validation_evidence.EvidenceCollectorTests.test_actual_nonzero_exit_is_preserved_and_rejected) ... nonzero: exit=7 expected=0 fatal=0
+ok
+test_log_digest_is_computed_from_preserved_raw_bytes (test_validation_evidence.EvidenceCollectorTests.test_log_digest_is_computed_from_preserved_raw_bytes) ... success: exit=0 expected=0 fatal=0
+ok
+test_nested_manifests_are_not_excluded_as_self_hashes (test_validation_evidence.EvidenceCollectorTests.test_nested_manifests_are_not_excluded_as_self_hashes) ... FAIL
+test_only_explicit_expected_negative_exit_is_allowed (test_validation_evidence.EvidenceCollectorTests.test_only_explicit_expected_negative_exit_is_allowed) ... negative: exit=1 expected=1 fatal=0
+ok
+test_p7_coverage_is_29_distinct_leaves_and_2032_assertions (test_validation_evidence.EvidenceCollectorTests.test_p7_coverage_is_29_distinct_leaves_and_2032_assertions) ... ok
+test_timeout_is_failure_and_is_recorded (test_validation_evidence.EvidenceCollectorTests.test_timeout_is_failure_and_is_recorded) ... timeout: exit=124 expected=0 fatal=0
+ok
+test_zero_exit_is_not_enough_when_a_fatal_marker_is_present (test_validation_evidence.EvidenceCollectorTests.test_zero_exit_is_not_enough_when_a_fatal_marker_is_present) ... fatal: exit=0 expected=0 fatal=1
+ok
+
+======================================================================
+FAIL: test_nested_manifests_are_not_excluded_as_self_hashes (test_validation_evidence.EvidenceCollectorTests.test_nested_manifests_are_not_excluded_as_self_hashes)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/data/p7-repair/docs/control/p7-eg1-world-core-repair-r1/test_validation_evidence.py", line 35, in test_nested_manifests_are_not_excluded_as_self_hashes
+    self.assertIn("test-results/recovery/manifest.json", paths)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'test-results/recovery/manifest.json' not found in []
+
+----------------------------------------------------------------------
+Ran 7 tests in 3.088s
+
+FAILED (failures=1)

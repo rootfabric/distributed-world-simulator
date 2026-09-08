@@ -1,0 +1,5 @@
+{
+  "original_blob_sha": "a084d570901fadd9b0d5fc1cf14920e19e755b2a",
+  "gate": "\t\t# Drain exact gameplay receipts before withdrawal can overtake their delivery.\n\t\t# The existing timeout remains the failure bound; do not resend any traffic.\n\t\tif not _receipts_complete():\n\t\t\treturn\n",
+  "helper": "func _receipts_complete() -> bool:\n\tvar expected: Dictionary = {}\n\tvar client_tag := String(_options[\"client-session-id\"]).replace(\"client-session/eg4/\", \"\")\n\tfor index in range(_ops_expected):\n\t\texpected[\"operation/eg4/l2/%s-w1-%04d\" % [client_tag, index]] = true\n\tfor index in range(2 * int(_options[\"movements-per-wave\"])):\n\t\texpected[\"operation/eg4/l2/move-ack/%s/%d\" % [\n\t\t\t_gateway_session_id().replace(\"/\", \"-\"), int(_options[\"movement-seq-base\"]) + index]] = true\n\tif _receipts.size() != expected.size():\n\t\treturn false\n\tfor receipt in _receipts:\n\t\tif not receipt is Dictionary:\n\t\t\treturn false\n\t\tif not expected.erase(String(receipt.get(\"operation_id\", \"\"))):\n\t\t\treturn false\n\treturn expected.is_empty()\n\n\n"
+}

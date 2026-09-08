@@ -544,11 +544,26 @@ try {
         -Target "res://"
 
     foreach ($TestScript in $Tests) {
-        Invoke-GodotStep `
-            -Name ([IO.Path]::GetFileNameWithoutExtension($TestScript)) `
-            -Kind "headless_script" `
-            -Arguments @("--headless", "--path", $ProjectRoot, "--script", $TestScript) `
-            -Target $TestScript
+        if ($TestScript -eq "res://tests/runtime/test_v0_p7_4_persistence_restart_composition.gd") {
+            # This worker requires an explicit restart phase. Invoke its three
+            # canonical phases in the fixed seed -> recover-deliver ->
+            # recover-replay order, each in a fresh native process under the
+            # already isolated suite profile. The seed phase owns the profile
+            # reset, so the phases must not run inside one shared process.
+            foreach ($Phase in @("seed", "recover-deliver", "recover-replay")) {
+                Invoke-GodotStep `
+                    -Name ("{0}[{1}]" -f [IO.Path]::GetFileNameWithoutExtension($TestScript), $Phase) `
+                    -Kind "headless_script" `
+                    -Arguments @("--headless", "--path", $ProjectRoot, "--script", $TestScript, "--", "--phase=$Phase") `
+                    -Target $TestScript
+            }
+        } else {
+            Invoke-GodotStep `
+                -Name ([IO.Path]::GetFileNameWithoutExtension($TestScript)) `
+                -Kind "headless_script" `
+                -Arguments @("--headless", "--path", $ProjectRoot, "--script", $TestScript) `
+                -Target $TestScript
+        }
     }
 
     Invoke-GodotStep `

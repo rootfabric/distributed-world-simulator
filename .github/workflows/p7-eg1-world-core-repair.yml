@@ -1,0 +1,193 @@
+name: P7 ENet Repair Exact Validation
+on:
+  push:
+    branches: [repair/v0-p7-eg1-world-core-r1]
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  approved-engine:
+    if: github.repository == 'rootfabric/distributed-world-simulator' && github.actor == 'rootfabric' && (github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[p7-validate]'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Reuse only the previously verified engine while the local runner is queued
+        uses: actions/download-artifact@v4
+        with:
+          name: p7-repair-engine-34117353691
+          run-id: 34117353691
+          repository: rootfabric/distributed-world-simulator
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/p7-repair-approved-seed
+      - name: Preserve only the approved prebuilt engine
+        shell: bash
+        run: |
+          set -euo pipefail
+          expected=bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7
+          engine="$RUNNER_TEMP/p7-repair-approved-seed/godot"
+          test "$(sha256sum "$engine" | cut -d' ' -f1)" = "$expected"
+          mkdir -p "$RUNNER_TEMP/p7-repair-engine-$GITHUB_RUN_ID"
+          cp "$engine" "$RUNNER_TEMP/p7-repair-engine-$GITHUB_RUN_ID/godot"
+          printf '%s  godot\n' "$expected" > "$RUNNER_TEMP/p7-repair-engine-$GITHUB_RUN_ID/SHA256SUMS"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: p7-repair-engine-${{ github.run_id }}
+          path: ${{ runner.temp }}/p7-repair-engine-${{ github.run_id }}/
+          if-no-files-found: error
+          retention-days: 7
+  exact-validation:
+    if: github.repository == 'rootfabric/distributed-world-simulator' && github.actor == 'rootfabric'
+    needs: approved-engine
+    strategy:
+      fail-fast: false
+      matrix:
+        kind: [world, p7]
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    env:
+      PYTHONUTF8: '1'
+      LIBGL_ALWAYS_SOFTWARE: '1'
+      BREAKPOINT_RUNTIME_DISABLED: '1'
+      PLANET_SIMULATOR_INVENTORY_PROFILE: planet_default
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/download-artifact@v4
+        with:
+          name: p7-repair-engine-${{ github.run_id }}
+          path: ${{ runner.temp }}/p7-repair-engine
+      - name: Resolve exact runtime and full-suite graphical dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          engine="$RUNNER_TEMP/p7-repair-engine/godot"
+          chmod u+x "$engine"
+          test "$(sha256sum "$engine" | cut -d' ' -f1)" = bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7
+          echo "GODOT_BIN=$engine" >> "$GITHUB_ENV"
+          if [ ! -x /usr/bin/Xvfb ]; then
+            sudo -n apt-get update
+            sudo -n env DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends xvfb xauth libgl1-mesa-dri
+          fi
+          test -x /usr/bin/Xvfb
+          pwsh -NoProfile -Command 'if ($PSVersionTable.PSVersion.Major -lt 7) { exit 1 }; $PSVersionTable'
+      - name: Validate exact candidate without altering canonical runners
+        shell: bash
+        run: python3 docs/control/p7-eg1-world-core-repair-r1/validate_candidate.py '${{ matrix.kind }}'
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p7-repair-${{ matrix.kind }}-${{ github.sha }}-${{ github.run_id }}
+          path: artifacts/p7-eg1-repair-${{ matrix.kind }}/
+          if-no-files-found: error
+          retention-days: 90
+  control-observation:
+    if: github.repository == 'rootfabric/distributed-world-simulator' && github.actor == 'rootfabric' && (github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[p7-validate]'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Install pinned control dependencies and fetch current refs
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install -r scripts/harness/requirements.txt
+          git fetch origin '+refs/heads/*:refs/remotes/origin/*' --prune
+      - name: Exercise evidence-collector negative controls
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/p7-eg1-repair-control
+          python3 -m unittest discover -s docs/control/p7-eg1-world-core-repair-r1 -p 'test_validation_evidence.py' -v 2>&1 | tee artifacts/p7-eg1-repair-control/collector-tests.log
+      - name: Observe actual controller routing without dispatch
+        shell: bash
+        run: python3 docs/control/p7-eg1-world-core-repair-r1/observe_control.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p7-repair-control-${{ github.sha }}-${{ github.run_id }}
+          path: artifacts/p7-eg1-repair-control/
+          if-no-files-found: error
+          retention-days: 90
+  archive-d24-evidence:
+    if: github.repository == 'rootfabric/distributed-world-simulator' && github.actor == 'rootfabric' && github.ref == 'refs/heads/repair/v0-p7-eg1-world-core-r1' && github.event_name == 'push' && contains(github.event.head_commit.message, '[p7-archive-d24]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+      actions: read
+    concurrency:
+      group: p7-d24-evidence-publication
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Test evidence publication rejection and scope guards
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/p7-evidence-publication
+          python3 -m unittest discover -s docs/control/p7-eg1-world-core-repair-r1 -p 'test_packet_publication.py' -v 2>&1 | tee artifacts/p7-evidence-publication/tests.log
+      - name: Verify and stage original evidence without executing it
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: python3 docs/control/p7-eg1-world-core-repair-r1/publish_d24_evidence.py
+      - name: Commit evidence only with normal fast-forward publication
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import hashlib, json, os, subprocess
+          from pathlib import Path
+          prefix = 'docs/control/p7-eg1-world-core-repair-r1/evidence/d24-r1/'
+          branch = 'repair/v0-p7-eg1-world-core-r1'
+          def git(*args):
+              return subprocess.check_output(['git', *args], text=True).strip()
+          if git('rev-parse', 'HEAD') != os.environ['GITHUB_SHA'] or git('diff', '--cached', '--name-only'):
+              raise SystemExit('CARRIER_OR_INDEX_CHANGED')
+          remote = git('ls-remote', '--heads', 'origin', 'refs/heads/' + branch).split()
+          if len(remote) != 2 or remote[0] != os.environ['GITHUB_SHA']:
+              raise SystemExit('CONCURRENT_REF_MOVEMENT')
+          git('add', '-f', '--', prefix)
+          changes = git('diff', '--cached', '--name-status').splitlines()
+          if not changes or any(not line.startswith('A\t' + prefix) for line in changes):
+              raise SystemExit('NON_APPEND_ONLY_PUBLICATION')
+          git('-c', 'user.name=DWS evidence publisher', '-c', 'user.email=actions@users.noreply.github.com',
+              'commit', '-m', 'docs(p7): preserve original d24 machine evidence; acceptance remains open')
+          for path in sorted(Path(prefix).rglob('*')):
+              if path.is_file():
+                  raw = subprocess.check_output(['git', 'show', 'HEAD:' + path.as_posix()])
+                  if raw != path.read_bytes():
+                      raise SystemExit('COMMITTED_BYTES_CHANGED:' + str(path))
+          manifest = json.loads(Path(prefix + 'machine-evidence-manifest.v1.json').read_bytes())
+          for artifact in manifest['artifacts']:
+              raw = subprocess.check_output(['git', 'show', 'HEAD:' + artifact['path']])
+              if hashlib.sha256(raw).hexdigest() != artifact['sha256']:
+                  raise SystemExit('COMMITTED_EVIDENCE_DIGEST_MISMATCH')
+          if git('status', '--porcelain', '--untracked-files=no'):
+              raise SystemExit('CARRIER_DIRTY_AFTER_COMMIT')
+          git('push', 'origin', 'HEAD:refs/heads/' + branch)
+          print(json.dumps({'evidence_carrier_head': git('rev-parse', 'HEAD'),
+                            'subject_head': manifest['subject_head_sha'],
+                            'canonical_acceptance': False, 'independent_verdict': None}))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p7-d24-evidence-publication-${{ github.run_id }}
+          path: |
+            artifacts/p7-evidence-publication/
+            docs/control/p7-eg1-world-core-repair-r1/evidence/d24-r1/
+          if-no-files-found: error
+          retention-days: 90

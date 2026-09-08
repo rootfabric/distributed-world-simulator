@@ -1,0 +1,105 @@
+{
+  "schema": "distributed_world_simulator.work_order.v1",
+  "work_order_id": "V0-P7-MW10-CROSS-REGION-LOCK-R1",
+  "project_epoch": "E2026-09-06-V0-P7-CANONICAL-CLOSURE-R1",
+  "program": "V0",
+  "goal_checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
+  "work_order_type": "FIX",
+  "state": "IN_PROGRESS",
+  "base_sha": "83eb8e2a6c279933376a37e9ddc83969593b97ec",
+  "branch": "repair/v0-p7-eg1-world-core-r1",
+  "scope": "Successor bounded repair in the existing P7 closure mission after the exact local full world/core regression exposed a timing-sensitive lock-lifecycle hole in the MW10 cross-region transaction repository. Port the already-proven atomic lock release and fail-closed staleness pattern from the canonical durable handoff repository (MW9 repair d1b49938) to the cross-region repository. No new protocol, authority, persistence format, channel, delivery mode or test-semantics change.",
+  "allowed_paths": [
+    "scripts/simulation/matter/transactions/distributed/matter_cross_region_transaction_repository.gd",
+    "docs/control/p7-eg1-world-core-repair-r1/**",
+    ".github/workflows/p7-eg1-world-core-repair.yml"
+  ],
+  "forbidden_paths": [
+    "scripts/simulation/matter/transactions/distributed/matter_cross_region_transaction_coordinator.gd",
+    "scripts/simulation/matter/handoff/**",
+    "scripts/network/**",
+    "tests/**",
+    "tools/**",
+    "RUN_WORLD_REGRESSION_TESTS.ps1",
+    "project.godot",
+    "config/**",
+    "CONTROL_DEVELOPMENT.ps1",
+    "scenes/**"
+  ],
+  "design_brief": {
+    "problem_statement": "The cross-region transaction repository lock lifecycle has two proven holes. (1) _remove_stale_lock treats a lock with missing/unreadable owner.json as removable: an empty owner dictionary falls through every guard (pid<=0, created<=0) and the live lock is deleted. (2) _release_lock removes owner.json in place before removing the lock directory, so a contender can atomically rename its candidate onto the momentarily-empty canonical lock; the releasing winner then observes a foreign owner and its release returns OWNERSHIP_MISMATCH even though its checkpoint commit already became durable. The combination yields the observed signature: a durable race winner whose worker reports failure plus a contender failure, i.e. zero self-reported winners with exactly one durable transaction.",
+    "evidence": {
+      "failing_subject_head": "83eb8e2a6c279933376a37e9ddc83969593b97ec",
+      "runtime_fix_head": "03c0318d966f648f5f509704e5c8491173ec31ea",
+      "local_run_id": "local-p7-20260907150054",
+      "failed_stage": "test_mw10_cross_region_processes",
+      "failure_pair": [
+        "Concurrent begin produced zero or multiple winners",
+        "Race durable winner differs from worker report"
+      ],
+      "preserved_log": "docs/control/p7-eg1-world-core-repair-r1/evidence/world-83eb8e2a-mw10-race-failure.md",
+      "standalone_hammer_runs": 40,
+      "standalone_anomalies": 0,
+      "interpretation": "Rarity proven by campaign, cause proven deterministically by the focused lifecycle probe on the unchanged baseline source."
+    },
+    "selected_design": "Port the exact proven pattern from matter_durable_handoff_repository.gd (MW9 repair d1b49938, in-repo precedent): release by atomic namespace rename to a token-bound released path with bounded retries and no in-place owner removal; staleness decided fail-closed via _lock_is_stale (own-live fast path, ownerless grace fence from directory mtime, valid owner + liveness probe, unknown-liveness extended fence); stale reclaim by quarantine rename with token re-verification and restore-if-changed; _read_lock_owner_at helper; _lock_release_rename_override test hook reused by the focused probe exactly as tests/matter/handoff/test_mw9_lock_release_retry.gd does.",
+    "alternatives_rejected": [
+      "Increase retry counts or timeouts: does not close the hole",
+      "Remove the failing assertions or relax the single-winner contract: hides the defect",
+      "Rewrite the race test workers or barrier: test and workers are unchanged owners of traffic",
+      "Replace the lock with a new cross-process primitive: new foundation, out of scope",
+      "Treat the single local failure as environment noise and rerun until green: forbidden rerun-to-pass"
+    ],
+    "affected_owner": "MW10 cross-region transaction repository lock lifecycle only",
+    "non_goals": [
+      "Change coordinator phases, authority gate, leases, checkpoints or persistence codec",
+      "Change MW9 durable handoff repository (already canonical hardened owner)",
+      "Change EG/MW10 tests or workers",
+      "Change P7.4 runner orchestration",
+      "Accept or merge P7",
+      "Activate MVP"
+    ],
+    "expected_risks": [
+      "Shared repository affects all MW10 process scenarios and the P7 leaf",
+      "Fail-closed staleness must not deadlock crash recovery; covered by grace fence and dead-pid reclaim cases",
+      "Windows rename semantics; preserved by the same retry policy already proven by the MW9 repair"
+    ],
+    "validation_plan": [
+      "Focused deterministic lifecycle probe must FAIL on the unchanged baseline with exactly the predicted ownerless-grace-fence and atomic-release failures",
+      "The same probe must PASS on the candidate",
+      "Unchanged test_mw10_cross_region_processes repeated campaign must pass",
+      "Existing EG/MW siblings and the MW9 lock retry test must pass unchanged",
+      "Complete unchanged full world/core suite and all 29 P7 leaves on the exact final candidate",
+      "Frozen HEAD/TREE, digests, clean checkout evidence, fresh independent Reviewer and Verifier, PC0 non-RED before any human integration decision"
+    ]
+  },
+  "required_predicates": [
+    "MW10_LOCK_BASELINE_NEGATIVE_CONTROL",
+    "MW10_LOCK_CANDIDATE_POSITIVE_CONTROL",
+    "ORIGINAL_MW10_TEST_AND_WORKERS_UNCHANGED",
+    "MW10_AND_SIBLING_REGRESSIONS_PASS",
+    "FULL_WORLD_CORE_REGRESSION_PASS",
+    "P7_29_LEAF_2032_ASSERTION_PASS",
+    "STANDARD_PC0_NON_RED",
+    "DIRECTIONAL_PC0_NON_RED_FOR_CRITICAL_HITS",
+    "INDEPENDENT_REVIEWER_PASS",
+    "INDEPENDENT_VERIFIER_PASS"
+  ],
+  "required_outputs": [
+    "Minimal owning repository patch with pinned blob guard",
+    "Before/after deterministic lifecycle probe with preserved baseline failure evidence",
+    "Exact-head full regression evidence and campaign digests",
+    "Updated existing PR580"
+  ],
+  "risk_class": "CRITICAL",
+  "review_required": true,
+  "evidence_map_required": true,
+  "required_review_roles": ["IMPLEMENTER", "REVIEWER", "VERIFIER", "DIRECTOR", "HUMAN"],
+  "stop_conditions": [
+    "UNRELATED_NEW_FAILURE_REQUIRES_ANOTHER_BOUNDED_WORK_ORDER",
+    "NEW_PERSISTENCE_OR_AUTHORITY_CONTRACT_REQUIRES_NEW_AUTHORIZATION",
+    "HUMAN_CANONICAL_ACCEPTANCE_AND_MERGE_GATE"
+  ],
+  "human_approval_required_for": ["CANONICAL_CHECKPOINT_ACCEPTANCE", "MERGE"],
+  "notes": "Issued as a Director bounded repair continuation under the active P7 closure mission and the user's explicit closure request, after the prior Work Order reached its unrelated-defect stop. Preserves the ENet, EG4 and P7.4 repairs and all their evidence. Not an acceptance record, not a main-owned activation, no generation rotation."
+}

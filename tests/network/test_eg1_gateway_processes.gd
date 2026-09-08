@@ -226,6 +226,15 @@ func _init() -> void:
 
 func _finish() -> void:
 	_cleanup()
+	# Run only after all original worker assertions and cleanup: no timing change
+	# to the original EG1 scenario, and no retry or altered delivery contract.
+	var bandwidth_probe: GDScript = load("res://docs/control/p7-eg1-world-core-repair-r1/probes/enet_bandwidth_probe.gd")
+	var transport_script: GDScript = load("res://scripts/network/transports/v2/enet_multi_peer_transport_port.gd")
+	var bandwidth: Dictionary = bandwidth_probe.run(transport_script)
+	for result in bandwidth.get("cases", []):
+		_assert(bool(result.get("passed", false)), "listener bandwidth regression: %s" % JSON.stringify(result))
+	_assert(bool(bandwidth.get("passed", false)), "both native unreliable modes must preserve unlimited listener bandwidth")
+	print(JSON.stringify(bandwidth))
 	var summary := {
 		"test": "eg1_gateway_processes_l2",
 		"verdict": "PASS" if failures.is_empty() else "FAIL",
