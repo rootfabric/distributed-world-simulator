@@ -4,6 +4,7 @@ const C = preload("res://scripts/research/ecology/v2/canonical_value_v1.gd")
 const B = preload("res://scripts/research/ecology/v2/body_graph_v1.gd")
 const BP = preload("res://scripts/research/ecology/v2/organism_blueprint_v1.gd")
 const S = preload("res://scripts/research/ecology/v2/organism_state_v1.gd")
+const H = preload("res://scripts/research/ecology/v2/phenotype_snapshot_v1.gd")
 const F = preload("res://scripts/research/ecology/v2/environment_field_contract_v1.gd")
 const SCHEMA := "dws.ecology.organism-life-state.v1"
 const ORIGINS := ["FOUNDER_ENDOWMENT", "PARENT_TRANSFER"]
@@ -71,26 +72,40 @@ static func validate(v: Variant, blueprint: Dictionary) -> String:
 	var event_count: int = int(v.reproduction_count / offspring_per_event)
 	var maturity_tick: int = reproduction.maturity_ticks
 	var interval_ticks: int = reproduction.interval_ticks
+	var last_reproduction_tick := -1
 	if event_count == 0:
 		if v.next_reproduction_tick != maturity_tick: return "LIFE_REPRODUCTION_SCHEDULE"
 	else:
-		var last_reproduction_tick: int = v.next_reproduction_tick - interval_ticks
+		last_reproduction_tick = v.next_reproduction_tick - interval_ticks
 		if last_reproduction_tick < maturity_tick or last_reproduction_tick > v.age_ticks: return "LIFE_REPRODUCTION_SCHEDULE"
 		var schedule_events: int = 1 + int((last_reproduction_tick - maturity_tick) / interval_ticks)
 		if event_count > schedule_events: return "LIFE_REPRODUCTION_FREQUENCY"
 		var max_events: int = 0 if v.age_ticks < maturity_tick else 1 + int((v.age_ticks - maturity_tick) / interval_ticks)
 		if event_count > max_events: return "LIFE_REPRODUCTION_CAUSALITY"
+		if last_reproduction_tick > v.age_ticks - v.starvation_ticks: return "LIFE_REPRODUCTION_STARVATION_WINDOW"
 	if not B.valid_stock(v.metabolic_reserves): return "LIFE_STATE_RESERVES"
 	if not _valid_ledger(v.resource_ledger): return "LIFE_STATE_LEDGER"
 	if v.resource_ledger.assimilated.material_mg != v.resource_ledger.field_intake.nutrient_mg + v.resource_ledger.field_intake.organic_mg: return "LIFE_FIELD_MATERIAL_SOURCE"
 	if v.resource_ledger.assimilated.water_mg != v.resource_ledger.field_intake.water_mg: return "LIFE_FIELD_WATER_SOURCE"
 	if v.resource_ledger.assimilated.energy_mj != v.resource_ledger.external_energy_mj: return "LIFE_EXTERNAL_ENERGY_SOURCE"
+	for name in B.RESOURCES:
+		var expected_transfer: int = v.reproduction_count * reproduction.endowment[name]
+		if v.resource_ledger.reproduction_transferred[name] != expected_transfer:
+			return "LIFE_REPRODUCTION_TRANSFER_%s" % name
+		var expected_cost: int = v.reproduction_count * reproduction.fee_energy_mj if name == "energy_mj" else 0
+		if v.resource_ledger.reproduction_cost[name] != expected_cost:
+			return "LIFE_REPRODUCTION_COST_%s" % name
 	if not v.development is Dictionary or v.development.individual_id != v.individual_id: return "LIFE_STATE_DEVELOPMENT_BINDING"
 	var development_error := S.validate(v.development, blueprint.genome)
 	if not development_error.is_empty(): return development_error
 	for name in B.RESOURCES:
 		if v.resource_ledger.growth_transferred[name] != v.development.received[name]:
 			return "LIFE_A2_TRANSFER_%s" % name
+	if event_count > 0:
+		var phenotype := H.compile(v.development, blueprint.genome)
+		if phenotype.is_empty(): return "LIFE_REPRODUCTION_PHENOTYPE"
+		if int(phenotype.module_roles.get("reproductive", 0)) < reproduction.required_reproductive_modules:
+			return "LIFE_REPRODUCTION_MODULE_HISTORY"
 	if not _source_valid(v.last_environment_source): return "LIFE_STATE_ENVIRONMENT_SOURCE"
 	if not _events_valid(v.last_events): return "LIFE_STATE_EVENTS"
 	var sources := B.stock()
