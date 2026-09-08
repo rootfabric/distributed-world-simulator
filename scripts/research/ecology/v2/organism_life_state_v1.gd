@@ -71,11 +71,7 @@ static func create_parent_transfer(blueprint: Dictionary, propagule: Dictionary,
 		"position_mm": propagule.position_mm.duplicate(),
 		"endowment": propagule.endowment.duplicate(true),
 		"parent_state_hash": propagule.parent_state_hash,
-		"parent_age_ticks": paid_parent_state.age_ticks,
-		"parent_reproduction_count": paid_parent_state.reproduction_count,
-		"parent_next_reproduction_tick": paid_parent_state.next_reproduction_tick,
-		"parent_reproduction_transferred": paid_parent_state.resource_ledger.reproduction_transferred.duplicate(true),
-		"parent_reproduction_cost": paid_parent_state.resource_ledger.reproduction_cost.duplicate(true),
+		"parent_state": paid_parent_state.duplicate(true),
 	}
 	var state := {
 		"schema": SCHEMA,
@@ -241,36 +237,26 @@ static func _validate_origin_receipt(state: Dictionary, blueprint: Dictionary) -
 	var receipt: Dictionary = state.origin_receipt
 	if state.origin_kind == "FOUNDER_ENDOWMENT":
 		return "" if receipt.is_empty() else "LIFE_FOUNDER_ORIGIN_RECEIPT"
-	var keys := ["schema", "blueprint_hash", "parent_id", "sequence", "birth_tick", "position_mm", "endowment", "parent_state_hash", "parent_age_ticks", "parent_reproduction_count", "parent_next_reproduction_tick", "parent_reproduction_transferred", "parent_reproduction_cost"]
+	var keys := ["schema", "blueprint_hash", "parent_id", "sequence", "birth_tick", "position_mm", "endowment", "parent_state_hash", "parent_state"]
 	if not C.keys(receipt, keys) or receipt.schema != PARENT_TRANSFER_RECEIPT_SCHEMA: return "LIFE_PARENT_TRANSFER_RECEIPT"
 	if receipt.blueprint_hash != BP.biological_hash(blueprint): return "LIFE_PARENT_TRANSFER_RECEIPT"
-	if not C.identifier(receipt.parent_id) or not C.integer(receipt.sequence, 0, MAX_OFFSPRING_COUNTER - 1): return "LIFE_PARENT_TRANSFER_RECEIPT"
-	if state.individual_id != propagule_id(receipt.parent_id, receipt.sequence): return "LIFE_PARENT_TRANSFER_IDENTITY"
-	if not C.integer(receipt.birth_tick, 1, MAX_AGE_TICK) or not C.vector(receipt.position_mm, F.MAX_PORT_COORD_MM): return "LIFE_PARENT_TRANSFER_RECEIPT"
+	if not receipt.parent_state is Dictionary: return "LIFE_PARENT_TRANSFER_PARENT_STATE"
 	if state.position_mm != receipt.position_mm: return "LIFE_PARENT_TRANSFER_POSITION"
 	if not B.valid_stock(receipt.endowment) or receipt.endowment != blueprint.life_history.reproduction.endowment: return "LIFE_PARENT_TRANSFER_ENDOWMENT"
 	if state.resource_ledger.initial != receipt.endowment: return "LIFE_PARENT_TRANSFER_INITIAL"
-	if not F.valid_hash(receipt.parent_state_hash): return "LIFE_PARENT_TRANSFER_RECEIPT"
-	if not C.integer(receipt.parent_age_ticks, 1, MAX_AGE_TICK): return "LIFE_PARENT_TRANSFER_RECEIPT"
-	if not C.integer(receipt.parent_reproduction_count, 1, MAX_OFFSPRING_COUNTER): return "LIFE_PARENT_TRANSFER_RECEIPT"
-	if not C.integer(receipt.parent_next_reproduction_tick, 0, MAX_REPRODUCTION_SCHEDULE_TICK): return "LIFE_PARENT_TRANSFER_RECEIPT"
-	if not valid_cumulative_stock(receipt.parent_reproduction_transferred) or not valid_cumulative_stock(receipt.parent_reproduction_cost): return "LIFE_PARENT_TRANSFER_RECEIPT"
-	var reproduction: Dictionary = blueprint.life_history.reproduction
-	var event_size: int = reproduction.offspring_per_event
-	if receipt.parent_reproduction_count % event_size != 0 or receipt.parent_reproduction_count < event_size: return "LIFE_PARENT_TRANSFER_RECEIPT"
-	var first_sequence: int = receipt.parent_reproduction_count - event_size
-	if receipt.sequence < first_sequence or receipt.sequence >= receipt.parent_reproduction_count: return "LIFE_PARENT_TRANSFER_SEQUENCE"
-	var last_reproduction_tick: int = receipt.parent_next_reproduction_tick - reproduction.interval_ticks
-	if receipt.birth_tick != receipt.parent_age_ticks or receipt.birth_tick != last_reproduction_tick: return "LIFE_PARENT_TRANSFER_BIRTH"
-	if last_reproduction_tick < reproduction.maturity_ticks: return "LIFE_PARENT_TRANSFER_BIRTH"
-	var event_count: int = int(receipt.parent_reproduction_count / event_size)
-	var schedule_events: int = 1 + int((last_reproduction_tick - reproduction.maturity_ticks) / reproduction.interval_ticks)
-	if event_count > schedule_events: return "LIFE_PARENT_TRANSFER_SEQUENCE"
-	for name in B.RESOURCES:
-		var expected_transfer: int = receipt.parent_reproduction_count * reproduction.endowment[name]
-		if receipt.parent_reproduction_transferred[name] != expected_transfer: return "LIFE_PARENT_TRANSFER_PAYMENT"
-		var expected_cost: int = receipt.parent_reproduction_count * reproduction.fee_energy_mj if name == "energy_mj" else 0
-		if receipt.parent_reproduction_cost[name] != expected_cost: return "LIFE_PARENT_TRANSFER_PAYMENT"
+	var reconstructed_propagule := {
+		"schema": PROPAGULE_SCHEMA,
+		"id": state.individual_id,
+		"parent_id": receipt.parent_id,
+		"sequence": receipt.sequence,
+		"blueprint_hash": receipt.blueprint_hash,
+		"birth_tick": receipt.birth_tick,
+		"position_mm": receipt.position_mm,
+		"endowment": receipt.endowment,
+		"parent_state_hash": receipt.parent_state_hash,
+	}
+	var witness_error := validate_parent_transfer_witness(reconstructed_propagule, blueprint, receipt.parent_state)
+	if not witness_error.is_empty(): return "LIFE_PARENT_TRANSFER_PARENT_STATE"
 	return ""
 
 static func state_hash(v: Dictionary, blueprint: Dictionary) -> String:
