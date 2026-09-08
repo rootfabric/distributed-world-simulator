@@ -63,7 +63,9 @@
     "LIFECYCLE_STATE_GENERIC_CONSTRUCTOR_IS_FOUNDER_ONLY",
     "PARENT_TRANSFER_CREATED_ONLY_AFTER_PROPAGULE_VALIDATION",
     "PERSISTED_PARENT_TRANSFER_REQUIRES_CANONICAL_ORIGIN_RECEIPT",
-    "PARENT_TRANSFER_RECEIPT_BINDS_POLICY_ENDOWMENT_SEED_ID_AND_PAID_LEDGER_SUMMARY",
+    "PARENT_TRANSFER_RECEIPT_EMBEDS_EXACT_PAID_PARENT_STATE",
+    "PARENT_TRANSFER_RECEIPT_HASH_RECOMPUTED_FROM_PARENT_PREIMAGE",
+    "PERSISTED_PARENT_PROOF_IS_NOT_SELF_ASSERTED_SUMMARY_ONLY",
     "CHILD_ENDOWMENT_EQUALS_PARENT_TRANSFER",
     "NO_MANDATORY_FITNESS_OR_TOPK_SELECTION",
     "POPULATION_INPUT_ORDER_INDEPENDENT",
@@ -115,5 +117,5 @@
     "global_pc0_green_inferred": false
   },
   "state": "READY_FOR_FRESH_ACCEPTANCE",
-  "next": "Fresh exact Verifier + fresh independent Reviewer on final RM-A5-01..26 subject; accept research source only if both pass with zero new blocking findings"
+  "next": "Fresh exact Verifier + fresh independent Reviewer on final RM-A5-01..27 subject; accept research source only if both pass with zero new blocking findings"
 }
