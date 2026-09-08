@@ -378,7 +378,7 @@ func _test_repository_atomicity_and_fallback() -> void:
 	var unknown_owner := FileAccess.open(unknown_owner_path, FileAccess.WRITE)
 	_assert(unknown_owner != null, "Unknown owner metadata fixture open failed")
 	if unknown_owner != null:
-		unknown_owner.store_string("{interrupted")
+		unknown_owner.store_string("{}")
 		unknown_owner.close()
 	_assert(not bool(repository.call("_remove_stale_lock")), "Fresh ownerless lock was reclaimed without grace")
 	_assert(DirAccess.dir_exists_absolute(stale_lock_path), "Fresh ownerless lock disappeared during grace")

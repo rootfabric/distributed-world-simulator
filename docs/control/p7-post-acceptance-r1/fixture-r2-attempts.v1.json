@@ -1,0 +1,19 @@
+{
+  "work_order_id": "V0-P7-POST-ACCEPTANCE-MW9-FIXTURE-R2",
+  "previous_candidate": "fc24a5190e29b0533566d7c2f4375d765d6605e7",
+  "previous_run_id": 34189215265,
+  "previous_artifact_id": 10041617333,
+  "previous_archive_sha256": "180457278eee6434aa54a45ac7a51aec091a424da4a056169e17e847d8334b5b",
+  "mw9_log_sha256": "55d88e040436eb1b45029d5bc682313f04d1b6fddd4fbd985435aa79ebea77e0",
+  "observed_mw9_assertions": 208,
+  "observed_mw9_exit": 0,
+  "validation_result": "FAIL_MW9_RECONCILED_FIXTURE_NOT_PROVEN",
+  "cause": "Syntactically invalid fixture JSON emitted an expected engine diagnostic. The strict candidate evidence scanner correctly refused to accept a successful summary with an ERROR line.",
+  "correction": "Use a nonempty owner.json containing the valid JSON object {} with absent ownership fields. This still represents unknown owner metadata, requires fail-closed preservation, and does not generate an irrelevant JSON parser error. Preserve all 208 assertions and the unchanged strict error scanner.",
+  "guard": "Removing exactly the three guarded additions still restores original blob 90a9437e24512d9e0d8f6b8d7d26bf3f28641560 byte-for-byte.",
+  "production_changed": false,
+  "timeouts_changed": false,
+  "tests_excluded": false,
+  "new_acceptance": false,
+  "next_action": "FULL_EXACT_WORLD_P7_CONTROL_AND_FRESH_INDEPENDENT_REVIEW"
+}
