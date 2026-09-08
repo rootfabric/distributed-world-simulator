@@ -59,7 +59,7 @@ func _entry() -> Dictionary:
 	var blueprint := _blueprint()
 	var entry := R.individual(blueprint, "rm14.parent", [500, 0, 500], B.stock(30000))
 	if entry.is_empty(): return {}
-	var field := Field.create("rm14.prepare.field", 1, [0, 0, 0], 1000, 1, 1, F.stock(), F.stock(1000000), F.signals(1000, 500, 0, 0))
+	var field := Field.create("rm14.prepare.field", 1, [0, 0, 0], 1000, 1, 1, F.stock(900000), F.stock(1000000), F.signals(1000, 500, 0, 0))
 	var prepared := R.step_population(field, [entry], field.owner_token, field.owner_epoch, field.revision)
 	return prepared.population[0] if prepared.success else {}
 
