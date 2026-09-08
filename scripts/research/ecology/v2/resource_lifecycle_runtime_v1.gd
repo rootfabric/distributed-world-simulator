@@ -87,11 +87,11 @@ static func step_population(field: Dictionary, population: Array, owner_token: S
 	propagules.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return a.id < b.id)
 	return {"success": true, "field": field_after, "population": next_population, "propagules": propagules, "field_hash": Field.state_hash(field_after)}
 
-static func materialize_propagule(propagule: Dictionary, blueprint: Dictionary) -> Dictionary:
-	if not validate_propagule(propagule, blueprint).is_empty(): return {}
+static func materialize_propagule(propagule: Dictionary, blueprint: Dictionary, paid_parent_state: Dictionary = {}) -> Dictionary:
+	if not validate_propagule(propagule, blueprint, paid_parent_state).is_empty(): return {}
 	return individual(blueprint, propagule.id, propagule.position_mm, propagule.endowment, "PARENT_TRANSFER")
 
-static func validate_propagule(v: Variant, blueprint: Dictionary) -> String:
+static func validate_propagule(v: Variant, blueprint: Dictionary, paid_parent_state: Dictionary = {}) -> String:
 	if not BP.validate(blueprint).is_empty(): return "PROPAGULE_BLUEPRINT"
 	var keys := ["schema", "id", "parent_id", "sequence", "blueprint_hash", "birth_tick", "position_mm", "endowment", "parent_state_hash"]
 	if not C.keys(v, keys) or v.schema != PROPAGULE_SCHEMA: return "PROPAGULE_SCHEMA"
@@ -100,6 +100,26 @@ static func validate_propagule(v: Variant, blueprint: Dictionary) -> String:
 	if not C.integer(v.birth_tick, 1, LS.MAX_AGE_TICK) or not C.vector(v.position_mm, F.MAX_PORT_COORD_MM): return "PROPAGULE_POSITION"
 	if not B.valid_stock(v.endowment) or not F.valid_hash(v.parent_state_hash): return "PROPAGULE_RESOURCE"
 	if v.endowment != blueprint.life_history.reproduction.endowment: return "PROPAGULE_ENDOWMENT"
+	if paid_parent_state.is_empty(): return "PROPAGULE_PARENT_STATE_REQUIRED"
+	var parent_validation := LS.validate(paid_parent_state, blueprint)
+	if not parent_validation.is_empty(): return "PROPAGULE_PARENT_STATE"
+	if paid_parent_state.individual_id != v.parent_id: return "PROPAGULE_PARENT_ID"
+	var paid_parent_hash := LS.state_hash(paid_parent_state, blueprint)
+	if paid_parent_hash.is_empty() or paid_parent_hash != v.parent_state_hash: return "PROPAGULE_PARENT_HASH"
+	var reproduction: Dictionary = blueprint.life_history.reproduction
+	var event_size: int = reproduction.offspring_per_event
+	if paid_parent_state.reproduction_count < event_size: return "PROPAGULE_PARENT_SEQUENCE"
+	var first_sequence: int = paid_parent_state.reproduction_count - event_size
+	if v.sequence < first_sequence or v.sequence >= paid_parent_state.reproduction_count: return "PROPAGULE_PARENT_SEQUENCE"
+	var last_reproduction_tick: int = paid_parent_state.next_reproduction_tick - reproduction.interval_ticks
+	if v.birth_tick != paid_parent_state.age_ticks or v.birth_tick != last_reproduction_tick: return "PROPAGULE_PARENT_BIRTH"
+	if v.position_mm != paid_parent_state.position_mm: return "PROPAGULE_PARENT_POSITION"
+	var reproduced_event := false
+	for event in paid_parent_state.last_events:
+		if event.outcome == "REPRODUCED":
+			reproduced_event = true
+			break
+	if not reproduced_event: return "PROPAGULE_PARENT_EVENT"
 	return ""
 
 static func _advance_individual(source: Dictionary, blueprint: Dictionary, sample: Dictionary, field_intake: Dictionary) -> Dictionary:
@@ -173,7 +193,6 @@ static func _advance_individual(source: Dictionary, blueprint: Dictionary, sampl
 		if reproduction.success:
 			state = reproduction.state
 			propagules = reproduction.propagules
-			state.last_events.append({"outcome": "REPRODUCED", "detail": "offspring=%d" % propagules.size()})
 		else:
 			state.last_events.append({"outcome": "REPRODUCTION_WAIT", "detail": "mature body lacks fully funded propagule budget"})
 	else:
@@ -312,6 +331,7 @@ static func _reproduce(source: Dictionary, blueprint: Dictionary, policy: Dictio
 	state.propagule_seq += count
 	state.reproduction_count += count
 	state.next_reproduction_tick = schedule_tick
+	state.last_events.append({"outcome": "REPRODUCED", "detail": "offspring=%d" % count})
 	var validation := LS.validate(state, blueprint)
 	if not validation.is_empty(): return _fail("A5_REPRODUCTION_STATE:" + validation)
 	var paid_parent_state_hash := LS.state_hash(state, blueprint)
