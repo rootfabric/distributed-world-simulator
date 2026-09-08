@@ -1,0 +1,46 @@
+{
+  "schema": "distributed_world_simulator.work_order.v1",
+  "work_order_id": "V0-P7-POST-ACCEPTANCE-MW9-FIXTURE-R2",
+  "parent_work_order": "V0-P7-POST-ACCEPTANCE-REPAIR-R1",
+  "project_epoch": "E2026-09-08-V0-P7-POST-ACCEPTANCE-R1",
+  "program": "V0",
+  "goal_checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
+  "state": "IN_PROGRESS",
+  "work_order_type": "FIX",
+  "base_sha": "dded2e488b161276d7ba679af078c288bd53cf55",
+  "branch": "repair/v0-p7-post-acceptance-r1",
+  "scope": "Reconcile the existing MW9 recovery fixture with reviewed token-marker lock semantics, without changing production code or excluding any test. An empty directory cannot be an active new-protocol lock; malformed nonempty owner metadata must remain fail-closed. Preserve all previous assertions by populating the ownerless-grace fixture with interrupted legacy metadata and add explicit empty residue recovery assertions.",
+  "allowed_paths": [
+    "tests/matter/handoff/test_mw9_durable_handoff_recovery.gd",
+    "docs/control/p7-post-acceptance-r1/**"
+  ],
+  "forbidden_paths": ["scripts/**", "config/**", "RUN_WORLD_REGRESSION_TESTS.ps1", "project.godot", "scenes/**", "tests/network/**"],
+  "risk_class": "CRITICAL",
+  "review_required": true,
+  "repair_context_required": true,
+  "evidence_map_required": true,
+  "required_review_roles": ["IMPLEMENTER", "REVIEWER", "VERIFIER", "DIRECTOR", "HUMAN"],
+  "failure_evidence": {
+    "run_id": 34185239025,
+    "job_id": 101932145948,
+    "artifact_id": 10040284791,
+    "archive_sha256": "8087b7e98ec78e9819571ac3053b8811f91e9f9bd29f60a3155497e330ef40f4",
+    "log": "34185239025-1/test_mw9_durable_handoff_recovery.log",
+    "log_sha256": "c0507c59217948f91b1164631e1a691a5b99167e9a4f1481fa8a792470649e4a",
+    "assertions": 203,
+    "failures": ["Fresh ownerless lock was reclaimed without grace", "Fresh ownerless lock disappeared during grace"],
+    "classification": "OBSOLETE_EMPTY_DIRECTORY_FIXTURE_NOT_PRODUCTION_EXCLUSIVITY_FAILURE"
+  },
+  "design_brief": {
+    "root_cause": "Reviewer P1 required immediate empty-only cleanup for crashed-release writer recovery. The old MW9 fixture represents unknown ownership with an empty directory, so its grace assertions now contradict that explicitly reviewed behavior. The native 82-check regression and MW9 process recovery passed on the same dded2e4 candidate.",
+    "selected_design": "Keep both grace assertions unchanged, add malformed owner.json to actually represent unknown nonempty ownership, then explicitly remove that test metadata and assert immediate safe empty residue reclamation. Preserve every other original byte through a reverse-addition source guard.",
+    "rejected": ["Restore the Windows writer-recovery defect", "Skip MW9 recovery", "Remove grace assertions", "Increase timeout", "Change checkpoint or CAS", "Rerun until green"],
+    "validation_plan": ["Recompute the exact original test blob 90a9437e24512d9e0d8f6b8d7d26bf3f28641560", "Reverse additions and verify the original byte-for-byte", "Run the unchanged original test at dded2e4 and require its exact two failures", "Run the reconciled test and require all 208 assertions", "Run native 82-check locks, all MW9/MW10 siblings, five EG1 and three EG4", "Complete all discovered world/core stages including the newly discovered native lock test", "Run unchanged P7 29 leaves / 2032 assertions and complete Harness/PC0", "Fresh independent review and evidence verification on the final candidate"]
+  },
+  "required_predicates": ["MW9_ORIGINAL_FIXTURE_FAILURE_PRESERVED", "MW9_FIXTURE_REVERSE_DIFF_EXACT", "MW9_RECOVERY_208_ASSERTIONS_PASS", "NATIVE_MW9_MW10_LOCK_RECLAIM_PASS", "FULL_WORLD_CORE_REGRESSION_PASS", "P7_29_LEAF_EXACT_GATE_PASS", "HARNESS_REGRESSION_PASS", "STANDARD_PC0_NON_RED", "DIRECTIONAL_PC0_NON_RED_FOR_CRITICAL_HITS", "INDEPENDENT_REVIEWER_PASS", "INDEPENDENT_VERIFIER_PASS"],
+  "required_outputs": ["Additive MW9 fixture correction", "Immutable failure and final exact evidence", "Reviewer/Verifier results", "Post-merge repair acceptance addendum"],
+  "human_approval_required_for": ["RUNTIME_FEATURE_MERGE", "CANONICAL_ACCEPTANCE_ADDENDUM"],
+  "owner_request": "продолжай работу, закрой все замечания,  и сделай приемку",
+  "authorization_boundary": "The current user requested completion and acceptance. No merge or acceptance is allowed before required independent and machine gates. Historical owner authorization is not re-used as review of this correction; MVP remains outside this mission.",
+  "stop_conditions": ["NEW_UNRELATED_DEFECT_REQUIRES_BOUNDED_CONTINUATION", "NO_INDEPENDENT_VERDICT_NO_ACCEPTANCE"]
+}
