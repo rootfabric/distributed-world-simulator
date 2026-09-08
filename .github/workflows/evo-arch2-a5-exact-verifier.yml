@@ -21,7 +21,7 @@ jobs:
       - name: Checkout exact immutable source
         uses: actions/checkout@v4
         with:
-          ref: 4a4adb8f8e742e9ad7766bc306873df55574794c
+          ref: 79d3c27c812727ddf59a5c046e7ee10a33d2fb00
           fetch-depth: 0
           persist-credentials: false
 
@@ -29,8 +29,8 @@ jobs:
         run: |
           set -euo pipefail
           base="4b0f772ff39592262b853f7293bbd5403558b145"
-          test "$(git rev-parse HEAD)" = "4a4adb8f8e742e9ad7766bc306873df55574794c"
-          test "$(git rev-parse HEAD^{tree})" = "ae57d7049761e61a7fc734179f40924a3cc16041"
+          test "$(git rev-parse HEAD)" = "79d3c27c812727ddf59a5c046e7ee10a33d2fb00"
+          test "$(git rev-parse HEAD^{tree})" = "36393d0780cef417264acdcdb81261abb33a78fe"
           test -z "$(git status --porcelain --untracked-files=no)"
           git diff --exit-code "$base"..HEAD -- \
             scripts/research/ecology/v2/canonical_value_v1.gd \
@@ -276,9 +276,9 @@ jobs:
       - name: Assert tracked subject unchanged
         run: |
           set -euo pipefail
-          test "$(git rev-parse HEAD)" = "4a4adb8f8e742e9ad7766bc306873df55574794c"
-          test "$(git rev-parse HEAD^{tree})" = "ae57d7049761e61a7fc734179f40924a3cc16041"
+          test "$(git rev-parse HEAD)" = "79d3c27c812727ddf59a5c046e7ee10a33d2fb00"
+          test "$(git rev-parse HEAD^{tree})" = "36393d0780cef417264acdcdb81261abb33a78fe"
           test -z "$(git status --porcelain --untracked-files=no)"
-          echo "SUBJECT_HEAD=4a4adb8f8e742e9ad7766bc306873df55574794c"
-          echo "SUBJECT_TREE=ae57d7049761e61a7fc734179f40924a3cc16041"
+          echo "SUBJECT_HEAD=79d3c27c812727ddf59a5c046e7ee10a33d2fb00"
+          echo "SUBJECT_TREE=36393d0780cef417264acdcdb81261abb33a78fe"
           echo "VERDICT=PASS"
