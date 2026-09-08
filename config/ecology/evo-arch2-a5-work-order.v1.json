@@ -7,7 +7,7 @@
   "source_acceptance_ref": "acceptance/eco-evo-arch2-a4-r1",
   "main_observed": "c14c37cce4930a8b5132d5d5fdfab3a5dfa82f5f",
   "risk": "HIGH",
-  "authorization": "Explicit user request: implement A5 regulatory growth plus resource-funded survival/reproduction on top of accepted A4 research source; no production authority or main activation",
+  "authorization": "Explicit user request: implement and close A5 regulatory growth plus resource-funded survival/reproduction on top of accepted A4 research source; no production authority or main activation",
   "allowed_paths": [
     "docs/research/ecology/EVO_ARCH2_A5*",
     "scripts/research/ecology/v2/life_history_program_v1.gd",
@@ -67,6 +67,9 @@
     "FULL_DIGEST_PROPAGULE_PARENT_IDENTITY",
     "CUMULATIVE_LIFECYCLE_LEDGER_USES_CANONICAL_TOTAL_RANGE",
     "INSTANTANEOUS_RESERVE_BOUND_PRESERVED",
+    "A2_GROWTH_TRANSFER_IS_BOUNDED_BY_CURRENT_RECEIVED_HEADROOM",
+    "A2_HEADROOM_EXHAUSTION_DOES_NOT_ABORT_LIFECYCLE",
+    "UNACCEPTED_GROWTH_REMAINS_IN_METABOLIC_RESERVES",
     "LIFECYCLE_RESTART_EQUIVALENT_TO_UNINTERRUPTED",
     "A5_TO_A2_TRANSFER_LEDGER_SEALED",
     "A4_EXACT_REGRESSION",
@@ -81,6 +84,6 @@
     "independent_verification_required": true,
     "global_pc0_green_inferred": false
   },
-  "state": "IN_PROGRESS",
-  "next": "Close RM-A5-01..10; run core and reviewer counterexample exact gates; fresh independent review/verifier on final exact source"
+  "state": "READY_FOR_FRESH_ACCEPTANCE",
+  "next": "Fresh independent Reviewer + exact Verifier on final RM-A5-01..11 subject; accept research source only if both pass"
 }
