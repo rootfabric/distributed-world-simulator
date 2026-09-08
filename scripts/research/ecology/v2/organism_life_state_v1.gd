@@ -15,7 +15,11 @@ const MAX_AGE_TICK := 1000000
 const MAX_REPRODUCTION_SCHEDULE_TICK := 2000000
 const MAX_OFFSPRING_PER_EVENT := 4
 const MAX_OFFSPRING_COUNTER := MAX_AGE_TICK * MAX_OFFSPRING_PER_EVENT
-const MAX_PARENT_PROOF_DEPTH := 32
+# CanonicalValueV1 rejects nesting deeper than 24. A full A5 state can consume
+# depth 7 before lineage nesting, the state-file wrapper adds 1, and each exact
+# embedded parent state adds 2. Eight parent-transfer links fit the canonical
+# budget; the ninth is rejected before a noncanonical persisted state can exist.
+const MAX_PARENT_PROOF_DEPTH := 8
 
 static func create(blueprint: Dictionary, individual_id: String, position_mm: Array, endowment: Dictionary = {}, origin_kind: String = "FOUNDER_ENDOWMENT") -> Dictionary:
 	# Public generic construction is founder-only. Parent transfers require an exact paid-parent witness.
