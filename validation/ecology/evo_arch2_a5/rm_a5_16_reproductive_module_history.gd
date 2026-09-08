@@ -84,7 +84,7 @@ func _reachable_module_history_accepted() -> void:
 	var entry := R.individual(blueprint, "rm16.reachable", [500, 0, 500], B.stock(30000))
 	_check(not blueprint.is_empty() and not entry.is_empty(), "reachable_entry_valid")
 	if entry.is_empty(): return
-	var field := Field.create("rm16.rich.field", 1, [0, 0, 0], 1000, 1, 1, F.stock(), F.stock(1000000), F.signals(900, 500, 0, 0))
+	var field := Field.create("rm16.rich.field", 1, [0, 0, 0], 1000, 1, 1, F.stock(900000), F.stock(1000000), F.signals(900, 500, 0, 0))
 	var prepared := R.step_population(field, [entry], field.owner_token, field.owner_epoch, field.revision)
 	var prepared_has_module := false
 	if prepared.success:
