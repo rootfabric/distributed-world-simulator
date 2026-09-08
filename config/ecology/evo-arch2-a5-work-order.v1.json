@@ -80,6 +80,9 @@
     "ZERO_EVENT_REPRODUCTION_SCHEDULE_EQUALS_MATURITY",
     "REPRODUCTION_EVENT_HISTORY_POSSIBLE_UNDER_MATURITY_AND_INTERVAL",
     "DELAYED_REPRODUCTION_REMAINS_VALID",
+    "REPRODUCTION_LEDGER_EXACTLY_BOUND_TO_OFFSPRING_COUNT",
+    "PERSISTED_REPRODUCTION_REQUIRES_INHERITED_REPRODUCTIVE_MODULES",
+    "REPRODUCTION_HISTORY_EXCLUDES_CURRENT_STARVATION_WINDOW",
     "LIFECYCLE_RESTART_EQUIVALENT_TO_UNINTERRUPTED",
     "A5_TO_A2_TRANSFER_LEDGER_SEALED",
     "A4_EXACT_REGRESSION",
@@ -95,5 +98,5 @@
     "global_pc0_green_inferred": false
   },
   "state": "READY_FOR_FRESH_ACCEPTANCE",
-  "next": "Fresh exact Verifier + fresh independent Reviewer on final RM-A5-01..14 subject; accept research source only if both pass with zero new blocking findings"
+  "next": "Fresh exact Verifier + fresh independent Reviewer on final RM-A5-01..17 subject; accept research source only if both pass with zero new blocking findings"
 }
