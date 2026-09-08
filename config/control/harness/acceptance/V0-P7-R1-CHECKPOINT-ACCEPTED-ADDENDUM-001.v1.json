@@ -1,0 +1,155 @@
+{
+  "schema": "distributed_world_simulator.v0_product_checkpoint_acceptance_addendum.v1",
+  "addendum_id": "V0-P7-R1-CHECKPOINT-ACCEPTED-ADDENDUM-001",
+  "references_acceptance_id": "V0-P7-R1-CHECKPOINT-ACCEPTED-001",
+  "program": "V0",
+  "checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
+  "recorded_at_utc": "2026-09-08T12:11:08Z",
+  "addendum_type": "POST_ACCEPTANCE_CORRECTION_CLOSURE_AND_HARDENING",
+  "acceptance_stance": {
+    "decision": "ACCEPTANCE_STANDS_WITH_POST_ACCEPTANCE_CORRECTION_INTEGRATED",
+    "reason": "The original P7 acceptance remains immutable historical truth. A later audit found bounded MW9/MW10 lock-lifecycle and evidence/control defects; those findings were repaired, independently reviewed and verified, integrated with tested-tree equivalence, and passed a fresh canonical post-merge Harness/PC0 audit. This addendum records the effective hardening without rewriting the original accepted_runtime_head or its evidence."
+  },
+  "original_acceptance": {
+    "path": "config/control/harness/acceptance/V0-P7-R1-CHECKPOINT-ACCEPTED-001.v1.json",
+    "accepted_runtime_head": "dca12cec28107042f07dcfe1b9d4d8ccd82fb8eb",
+    "accepted_runtime_tree": "bdb1bc0398a2b76b7d34dc3b9d9bb892dd158366",
+    "status": "ACCEPTED",
+    "rewritten": false
+  },
+  "post_acceptance_correction": {
+    "implementation_pr": 585,
+    "frozen_subject_head": "5a1d79c6889136c40daf97f69feb90512c214009",
+    "frozen_subject_tree": "00581408e4ba9033fde16b43915945e73e18fcb2",
+    "canonical_base": "438b21d0f5f348d838c2fae0bfae3547ba56a875",
+    "canonical_merge_commit": "87e74287b5682737a224515525f06a17af637098",
+    "canonical_merge_tree": "00581408e4ba9033fde16b43915945e73e18fcb2",
+    "merged_tree_equals_tested_tree": true,
+    "effective_hardened_runtime_lineage_head": "87e74287b5682737a224515525f06a17af637098",
+    "scope_summary": [
+      "MW9/MW10 token-addressed owner-marker lifecycle closes delayed stale-reclaimer ABA without renaming a reusable canonical lock directory.",
+      "Empty release residue is recoverable while malformed/unknown nonempty ownership remains fail-closed.",
+      "Historical acceptance verdict paths are durable again; control fixtures distinguish pre/post acceptance correctly.",
+      "World evidence identity is path/role bound, permits same basename on distinct targets, rejects exact duplicates and cross-kind aggregate aliases."
+    ],
+    "upgrade_boundary": "Same-host private local filesystem and shared PID namespace; stop all MW9/MW10 writers before upgrading. Mixed old/new writer protocols are unsupported."
+  },
+  "machine_evidence": {
+    "engine": {
+      "version": "4.7.1.stable.double.custom_build.a13da4feb",
+      "sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7"
+    },
+    "exact_run": 34212789413,
+    "world": {
+      "job_id": 102017454020,
+      "artifact_id": 10052617538,
+      "artifact_sha256": "a2ddbdf740e186918b83e87abacb4c55296422096d6f6e8601cba571d2a6a395",
+      "manifest_files_verified": 1946,
+      "manifest_mismatches": 0,
+      "declared_scripts": 326,
+      "discovered_scripts": 326,
+      "stages": 331,
+      "failures": 0,
+      "p7_4_phase_indexes": [300, 301, 302],
+      "result": "FULL_WORLD_CORE_REGRESSION_PASS"
+    },
+    "p7": {
+      "job_id": 102017453441,
+      "artifact_id": 10050761377,
+      "artifact_sha256": "bee6343e229b4a6ed644116d79c32b51945eed70885e821c775f59eaa6141cda",
+      "manifest_files_verified": 50,
+      "leaf_stages": 29,
+      "assertions": 2032,
+      "failures": 0,
+      "result": "P7_29_LEAF_EXACT_GATE_PASS"
+    },
+    "control": {
+      "job_id": 102017453195,
+      "artifact_id": 10050536759,
+      "artifact_sha256": "ccb79a54beb5d3fdb4c0e6a5d4bae9fa261319293921a983488015702d69fcbf",
+      "manifest_files_verified": 28,
+      "harness_tests": 278,
+      "harness_result": "OK",
+      "standard_pc0": "YELLOW_NON_RED",
+      "directional_pc0": "YELLOW_NON_RED_ZERO_BLOCKING_RED",
+      "critical_cross_branch_overlaps": 0
+    },
+    "negative_controls_preserved": {
+      "aba_baseline": "438b21d: 22 assertions / 6 exact failures",
+      "empty_writer_predecessor": "912742d1: 14 assertions / 4 exact failures",
+      "mw9_fixture_predecessor": "dded2e4: 203 assertions / 2 exact failures",
+      "r4_prototype": "6b97e64d / artifact 10050306500 remains FAIL and is not relabeled"
+    }
+  },
+  "independent_roles": {
+    "reviewer": {
+      "reviewed_head": "5a1d79c6889136c40daf97f69feb90512c214009",
+      "github_comment_id": 5583277208,
+      "verdict": "PASS_NO_MAJOR_ISSUES"
+    },
+    "verifier": {
+      "verified_head": "5a1d79c6889136c40daf97f69feb90512c214009",
+      "verified_tree": "00581408e4ba9033fde16b43915945e73e18fcb2",
+      "verdict": "PASS",
+      "source_commit": "cb054a1652a4848382631b5b38edbafbc7f06512",
+      "canonical_document": "docs/control/p7-post-acceptance-r1/review/VERIFIER-RESULT-5A1D-R5.v1.json"
+    }
+  },
+  "post_merge_control_reconciliation": {
+    "work_order": "docs/control/p7-post-acceptance-r1/work-order-post-merge-v0-reporting-ref-sync-r6.v1.json",
+    "result": "docs/control/p7-post-acceptance-r1/post-merge-pc0-r6-result.v1.json",
+    "initial_run": 34224027155,
+    "initial_job": 102053654420,
+    "initial_status": "FAIL_PRESERVED_REPORTING_REF_ANCESTRY_DRIFT",
+    "v0_reporting_ref": "control/project-focus-harness-reconciliation-r1",
+    "reporting_ref_before": "438b21d0f5f348d838c2fae0bfae3547ba56a875",
+    "reporting_ref_after": "87e74287b5682737a224515525f06a17af637098",
+    "fast_forward_only": true,
+    "corrected_run_attempt": 2,
+    "corrected_job": 102055268466,
+    "corrected_status": "SUCCESS",
+    "architecture_compatibility_tests": 65,
+    "harness_tests": 278,
+    "standard_pc0": "YELLOW_NON_RED",
+    "directional_pc0": "YELLOW_NON_RED_ZERO_BLOCKING_RED",
+    "cross_branch_overlaps": 0,
+    "artifact_id": 10055159505,
+    "artifact_sha256": "dfff2f9d84c0603f04883281ccc469399965db5a9b28e1dc9503be6626abebc8",
+    "advisory_research_reds_preserved": ["V0->G", "V0->ECO"]
+  },
+  "closure_predicates": {
+    "MW9_MW10_LOCK_CORRECTION_PASS": true,
+    "FULL_WORLD_CORE_REGRESSION_PASS": true,
+    "P7_29_LEAF_EXACT_GATE_PASS": true,
+    "INDEPENDENT_REVIEWER_PASS": true,
+    "INDEPENDENT_VERIFIER_PASS": true,
+    "MERGED_TREE_EQUALS_TESTED_TREE": true,
+    "POST_MERGE_FULL_HARNESS_PASS": true,
+    "POST_MERGE_STANDARD_PC0_NON_RED": true,
+    "POST_MERGE_DIRECTIONAL_PC0_NO_BLOCKING_RED": true,
+    "POST_MERGE_CROSS_BRANCH_OVERLAPS_ZERO": true,
+    "ORIGINAL_ACCEPTANCE_PRESERVED": true
+  },
+  "human_authorization": {
+    "source": "OWNER_INTERACTIVE_DIRECTIVE_IN_CURRENT_P7_CORRECTION_SESSION",
+    "directive": "продолжай работу, закрой все замечания,  и сделай приемку",
+    "authorized_operations": [
+      "COMPLETE_BOUNDED_POST_ACCEPTANCE_CORRECTIONS",
+      "MERGE_VERIFIED_PR_585",
+      "PUBLISH_APPEND_ONLY_P7_ACCEPTANCE_ADDENDUM"
+    ],
+    "mvp_activation_authorized": false
+  },
+  "successor_constraint_reaffirmed": {
+    "checkpoint": "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE",
+    "next_action": "ACTIVATE_MVP_FROM_ACCEPTED_P7",
+    "activation_requires_main_owned_control_update": true,
+    "runtime_mutation_authorized_by_this_addendum": false,
+    "note": "P7 correction closure removes the discovered post-acceptance defects but does not activate or implement the MVP successor."
+  },
+  "correction_closure": {
+    "status": "ACCEPTED_CLOSED",
+    "mission_scope": "P7_POST_ACCEPTANCE_CORRECTION",
+    "remaining_blocking_findings": 0
+  }
+}

@@ -1,0 +1,67 @@
+{
+  "schema": "distributed_world_simulator.p7_post_merge_control_result.v1",
+  "result_id": "V0-P7-POST-ACCEPTANCE-POST-MERGE-PC0-R6-RESULT-001",
+  "work_order_id": "V0-P7-POST-ACCEPTANCE-POST-MERGE-PC0-R6",
+  "checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
+  "canonical_main": "87e74287b5682737a224515525f06a17af637098",
+  "canonical_tree": "00581408e4ba9033fde16b43915945e73e18fcb2",
+  "tested_candidate": "5a1d79c6889136c40daf97f69feb90512c214009",
+  "tested_tree": "00581408e4ba9033fde16b43915945e73e18fcb2",
+  "merged_tree_equals_tested_tree": true,
+  "reporting_ref_sync": {
+    "ref": "control/project-focus-harness-reconciliation-r1",
+    "before": "438b21d0f5f348d838c2fae0bfae3547ba56a875",
+    "after": "87e74287b5682737a224515525f06a17af637098",
+    "force": false,
+    "open_prs_before_sync": 0,
+    "main_changed_by_sync": false
+  },
+  "initial_post_merge_attempt": {
+    "run_id": 34224027155,
+    "run_attempt": 1,
+    "job_id": 102053654420,
+    "verdict": "FAIL_PRESERVED",
+    "failure_step": "Run architecture and ownership passport compatibility regression",
+    "failure_count": 2,
+    "classification": "POST_MERGE_REPORTING_REF_ANCESTRY_DRIFT_NOT_RUNTIME_REGRESSION"
+  },
+  "corrected_post_merge_attempt": {
+    "run_id": 34224027155,
+    "run_attempt": 2,
+    "job_id": 102055268466,
+    "verdict": "PASS",
+    "all_workflow_steps": "SUCCESS",
+    "architecture_compatibility_tests": 65,
+    "architecture_compatibility_result": "OK",
+    "harness_tests": 278,
+    "harness_result": "OK",
+    "standard_pc0": {
+      "overall_health": "YELLOW",
+      "v0_health": "YELLOW",
+      "main_head": "87e74287b5682737a224515525f06a17af637098",
+      "cross_branch_overlaps": []
+    },
+    "directional_pc0": {
+      "overall_health": "YELLOW",
+      "red_findings": 2,
+      "blocking_red_findings": 0,
+      "advisory_red_findings_preserved": ["V0->G", "V0->ECO"]
+    },
+    "artifact_id": 10055159505,
+    "artifact_name": "project-control-report",
+    "artifact_sha256": "dfff2f9d84c0603f04883281ccc469399965db5a9b28e1dc9503be6626abebc8",
+    "artifact_files": 4
+  },
+  "predicates": {
+    "V0_REPORTING_REF_FAST_FORWARD_ONLY": "PASS",
+    "POST_MERGE_ARCHITECTURE_COMPATIBILITY_PASS": "PASS",
+    "POST_MERGE_FULL_HARNESS_PASS": "PASS",
+    "POST_MERGE_STANDARD_PC0_NON_RED": "PASS",
+    "POST_MERGE_DIRECTIONAL_PC0_NON_RED_FOR_BLOCKING_HITS": "PASS",
+    "POST_MERGE_CROSS_BRANCH_OVERLAPS_ZERO": "PASS",
+    "CANONICAL_MAIN_UNCHANGED_DURING_REF_SYNC": "PASS"
+  },
+  "historical_acceptance_unchanged": true,
+  "mvp_runtime_authorized": false,
+  "verdict": "PASS"
+}
