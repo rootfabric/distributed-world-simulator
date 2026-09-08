@@ -15,6 +15,10 @@ const MAX_PROPAGULES_PER_STEP := 512
 const PROPAGULE_SCHEMA := "dws.ecology.propagule.v1"
 
 static func individual(blueprint: Dictionary, individual_id: String, position_mm: Array, endowment: Dictionary = {}, origin_kind: String = "FOUNDER_ENDOWMENT") -> Dictionary:
+	if origin_kind != "FOUNDER_ENDOWMENT": return {}
+	return _individual_with_origin(blueprint, individual_id, position_mm, endowment, "FOUNDER_ENDOWMENT")
+
+static func _individual_with_origin(blueprint: Dictionary, individual_id: String, position_mm: Array, endowment: Dictionary, origin_kind: String) -> Dictionary:
 	var state := LS.create(blueprint, individual_id, position_mm, endowment, origin_kind)
 	return {"blueprint": blueprint.duplicate(true), "state": state} if not state.is_empty() else {}
 
@@ -89,7 +93,7 @@ static func step_population(field: Dictionary, population: Array, owner_token: S
 
 static func materialize_propagule(propagule: Dictionary, blueprint: Dictionary, paid_parent_state: Dictionary = {}) -> Dictionary:
 	if not validate_propagule(propagule, blueprint, paid_parent_state).is_empty(): return {}
-	return individual(blueprint, propagule.id, propagule.position_mm, propagule.endowment, "PARENT_TRANSFER")
+	return _individual_with_origin(blueprint, propagule.id, propagule.position_mm, propagule.endowment, "PARENT_TRANSFER")
 
 static func validate_propagule(v: Variant, blueprint: Dictionary, paid_parent_state: Dictionary = {}) -> String:
 	if not BP.validate(blueprint).is_empty(): return "PROPAGULE_BLUEPRINT"
