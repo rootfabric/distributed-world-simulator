@@ -1,0 +1,105 @@
+{
+  "schema": "distributed_world_simulator.work_order.v1",
+  "work_order_id": "V0-P7-POST-ACCEPTANCE-WORLD-STAGE-CONTRACT-R4",
+  "parent_work_order": "V0-P7-POST-ACCEPTANCE-WORLD-STEP-IDENTITY-R3",
+  "project_epoch": "E2026-09-08-V0-P7-POST-ACCEPTANCE-R1",
+  "program": "V0",
+  "goal_checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
+  "state": "IN_PROGRESS",
+  "work_order_type": "FIX",
+  "base_sha": "c711051454ee55f0039f23850c1483bb3995f4af",
+  "branch": "repair/v0-p7-post-acceptance-r1",
+  "scope": "Close the fresh Reviewer P1 in the world evidence contract only. Bind each world stage to its canonical kind/target/name role so a headless test cannot be hidden by moving it to another kind and aliasing the final aggregate. Runtime, Godot scripts, world runner, discovery, P7 gates, controller policy and canonical acceptance remain unchanged.",
+  "allowed_paths": [
+    "docs/control/p7-post-acceptance-r1/validate.py",
+    "tests/harness/test_p7_post_acceptance_packet.py",
+    "docs/control/p7-post-acceptance-r1/**"
+  ],
+  "forbidden_paths": [
+    "RUN_WORLD_REGRESSION_TESTS.ps1",
+    "scripts/**",
+    "config/**",
+    "tests/**/*.gd",
+    "project.godot",
+    "scenes/**",
+    ".github/workflows/**"
+  ],
+  "risk_class": "CRITICAL",
+  "review_required": true,
+  "repair_context_required": true,
+  "evidence_map_required": true,
+  "required_review_roles": ["IMPLEMENTER", "REVIEWER", "VERIFIER", "DIRECTOR", "HUMAN"],
+  "failure_evidence": {
+    "reviewed_subject_head": "c711051454ee55f0039f23850c1483bb3995f4af",
+    "reviewed_subject_tree": "f517bd8f189cef9ddc1574c3873c72e805a31ad0",
+    "review_finding": "P1_REJECT_KIND_ALIASED_DUPLICATE_STAGES",
+    "review_thread": "PR585 discussion_r3955873048",
+    "machine_run_id": 34203663161,
+    "machine_run_result": "SUCCESS",
+    "machine_world": "331_OF_331_PASS",
+    "machine_p7": "29_LEAVES_2032_ASSERTIONS_PASS",
+    "machine_control": "PASS",
+    "root_cause": "R3 used (kind,target,name) uniqueness and a target Counter, but did not require the canonical kind/name for every discovered target or exact kind/target for special stages. A crafted summary can move an ordinary test out of headless_script and reuse its target in a fake final aggregate while preserving counts and distinct tuple identities.",
+    "classification": "EVIDENCE_VALIDATION_ROLE_ALIAS_GAP"
+  },
+  "prototype_provenance": {
+    "prototype_commit": "6b97e64d95929898c0702fc8b31fe8ae57ccd7b6",
+    "prototype_tree": "cdc35786c7a35544bfbbeac0f6a98062a6c8c456",
+    "status": "NOT_ACCEPTANCE_SUBJECT",
+    "reason": "The first implementation sketch was published before this continuation Work Order was durably recorded. It is retained as transparent failed/prototype history and must not be represented as the accepted R4 subject.",
+    "prototype_control_run": 34212253996,
+    "prototype_control_job": 102015733709,
+    "prototype_control_artifact": 10050306500,
+    "prototype_control_artifact_sha256": "dac443ce7b508848935addd005dcb3355cffb321579b7d5d9a88d9c5b1f98046",
+    "prototype_failure": "Harness fixture mismatch after stricter special-stage contracts; test_complete_dynamic_coverage raised WORLD_MANIFEST_STAGE_CONTRACT_INVALID",
+    "next_eligible_subject_rule": "Only a descendant commit after this Work Order that updates the targeted regression and passes all required predicates may be reviewed/verified for acceptance."
+  },
+  "design_brief": {
+    "selected_design": [
+      "Retain exact full-stage identity uniqueness.",
+      "Require manifest stage name=test_manifest_coverage, kind=static, and target syntax bound to the discovered script count.",
+      "Require editor_import_parse kind=editor target=res://.",
+      "Require main_scene_cli_all kind=main_scene_cli target=playground:test.run all.",
+      "Require every middle stage to be kind=headless_script and its target to be one of the discovered tests.",
+      "Require each ordinary headless stage name to equal the basename stem of its target; P7.4 alone uses its three exact phase names.",
+      "Keep exact target Counter, total stage count, P7.4 ordering, pass/exit predicates and native-lock presence checks."
+    ],
+    "alternatives_rejected": [
+      "Accept R3 because CI was green",
+      "Drop kind from identity without role validation",
+      "Change RUN_WORLD_REGRESSION_TESTS.ps1",
+      "Rename tests to make basenames globally unique",
+      "Whitelist only the current collision",
+      "Infer acceptance from the successful c711 runtime evidence"
+    ],
+    "validation_plan": [
+      "Update the synthetic Harness fixture to use the exact canonical special-stage targets.",
+      "Add a negative regression reproducing the Reviewer's cross-kind alias attack and require rejection.",
+      "Add negative cases for wrong special kind/target and wrong ordinary name-to-target binding.",
+      "Run complete Harness discovery and Project Control on the first eligible descendant HEAD.",
+      "Run exact world, P7 and control on the same HEAD even though product runtime is unchanged.",
+      "Obtain a fresh independent Reviewer and a fresh Ubuntu Verifier on that exact HEAD.",
+      "Only after PASS perform the already authorized integration, merged-tree equivalence, post-merge control audit and append-only acceptance addendum."
+    ]
+  },
+  "required_predicates": [
+    "C711_REVIEWER_P1_PRESERVED",
+    "R4_PROTOTYPE_NOT_ACCEPTED_AND_FAILURE_PRESERVED",
+    "SAME_BASENAME_DISTINCT_TARGETS_ALLOWED",
+    "DUPLICATE_FULL_STAGE_IDENTITY_REJECTED",
+    "CROSS_KIND_ALIAS_REJECTED",
+    "SPECIAL_STAGE_ROLE_CONTRACTS_EXACT",
+    "HEADLESS_NAME_TARGET_BINDING_EXACT",
+    "FULL_WORLD_CORE_REGRESSION_PASS",
+    "P7_29_LEAF_EXACT_GATE_PASS",
+    "HARNESS_REGRESSION_PASS",
+    "STANDARD_PC0_NON_RED",
+    "DIRECTIONAL_PC0_NON_RED_FOR_CRITICAL_HITS",
+    "INDEPENDENT_REVIEWER_PASS",
+    "INDEPENDENT_VERIFIER_PASS"
+  ],
+  "human_approval_required_for": ["RUNTIME_FEATURE_MERGE", "CANONICAL_ACCEPTANCE_ADDENDUM"],
+  "owner_authorization": "The user explicitly requested continuing the work, closing all findings and performing acceptance. This authorization does not permit inventing Reviewer/Verifier PASS or accepting the prototype commit.",
+  "mvp_runtime_authorized": false,
+  "stop_conditions": ["NEW_P0_P1_REQUIRES_BOUNDED_CONTINUATION", "NO_INDEPENDENT_VERIFIER_PASS_NO_ACCEPTANCE"]
+}

@@ -1,0 +1,72 @@
+name: P7 Post-Acceptance Repair Exact Validation
+on:
+  push:
+    branches: [repair/v0-p7-post-acceptance-r1]
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  exact-validation:
+    if: github.repository == 'rootfabric/distributed-world-simulator' && github.actor == 'rootfabric' && github.ref == 'refs/heads/repair/v0-p7-post-acceptance-r1'
+    strategy:
+      fail-fast: false
+      matrix:
+        kind: [world, p7, control]
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    env:
+      PYTHONUTF8: '1'
+      LIBGL_ALWAYS_SOFTWARE: '1'
+      BREAKPOINT_RUNTIME_DISABLED: '1'
+      PLANET_SIMULATOR_INVENTORY_PROFILE: planet_default
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Fetch source refs without exporting source
+        shell: bash
+        run: git fetch origin '+refs/heads/*:refs/remotes/origin/*' --prune
+      - name: Install pinned Harness dependencies
+        shell: bash
+        run: python3 -m pip install -r scripts/harness/requirements.txt
+      - name: Obtain only the previously approved prebuilt engine
+        if: matrix.kind != 'control'
+        uses: actions/download-artifact@v4
+        with:
+          name: p7-repair-engine-34117353691
+          run-id: 34117353691
+          repository: rootfabric/distributed-world-simulator
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/p7-post-engine
+      - name: Verify pinned engine and graphical prerequisites
+        if: matrix.kind != 'control'
+        shell: bash
+        run: |
+          set -euo pipefail
+          engine="$RUNNER_TEMP/p7-post-engine/godot"
+          test "$(sha256sum "$engine" | cut -d' ' -f1)" = bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7
+          chmod u+x "$engine"
+          echo "GODOT_BIN=$engine" >> "$GITHUB_ENV"
+          if ! command -v Xvfb >/dev/null || ! command -v xauth >/dev/null; then
+            sudo -n apt-get update
+            sudo -n env DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends xvfb xauth libgl1-mesa-dri
+          fi
+      - name: Run exact validation with complete evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ '${{ matrix.kind }}' = control ]; then
+            python3 docs/control/p7-post-acceptance-r1/validate.py control
+          else
+            xvfb-run -a python3 docs/control/p7-post-acceptance-r1/validate.py '${{ matrix.kind }}'
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p7-post-${{ matrix.kind }}-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: artifacts/p7-post-acceptance/${{ matrix.kind }}/
+          if-no-files-found: error
+          retention-days: 90

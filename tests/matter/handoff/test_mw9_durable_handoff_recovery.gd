@@ -373,9 +373,22 @@ func _test_repository_atomicity_and_fallback() -> void:
 	_assert(not DirAccess.dir_exists_absolute(repository.lock_path()), "Atomic lock release left canonical lock path")
 	var stale_lock_path: String = repository.lock_path()
 	_assert(DirAccess.make_dir_absolute(stale_lock_path) == OK, "Fresh ownerless lock fixture create failed")
+	# Unknown ownership is nonempty interrupted metadata, not released empty residue.
+	var unknown_owner_path: String = stale_lock_path.path_join("owner.json")
+	var unknown_owner := FileAccess.open(unknown_owner_path, FileAccess.WRITE)
+	_assert(unknown_owner != null, "Unknown owner metadata fixture open failed")
+	if unknown_owner != null:
+		unknown_owner.store_string("{}")
+		unknown_owner.close()
 	_assert(not bool(repository.call("_remove_stale_lock")), "Fresh ownerless lock was reclaimed without grace")
 	_assert(DirAccess.dir_exists_absolute(stale_lock_path), "Fresh ownerless lock disappeared during grace")
+	_assert(FileAccess.file_exists(unknown_owner_path), "Unknown owner metadata disappeared during grace")
+	_assert(DirAccess.remove_absolute(unknown_owner_path) == OK, "Unknown owner metadata fixture cleanup failed")
 	DirAccess.remove_absolute(stale_lock_path)
+	# After marker removal, a fresh empty directory is safe to reclaim immediately.
+	_assert(DirAccess.make_dir_absolute(stale_lock_path) == OK, "Empty released-lock fixture create failed")
+	_assert(bool(repository.call("_remove_stale_lock")) and not DirAccess.dir_exists_absolute(stale_lock_path),
+		"Empty released-lock residue blocked immediate recovery")
 	_assert(DirAccess.make_dir_absolute(stale_lock_path) == OK, "Stale lock fixture create failed")
 	var stale_owner := FileAccess.open(stale_lock_path.path_join("owner.json"), FileAccess.WRITE)
 	_assert(stale_owner != null, "Stale lock owner fixture open failed")

@@ -1,0 +1,42 @@
+{
+  "schema": "distributed_world_simulator.p7_reviewer_result.v1",
+  "role": "REVIEWER_R2",
+  "verdict": "PASS",
+  "reviewed_head": "dca12cec28107042f07dcfe1b9d4d8ccd82fb8eb",
+  "runtime_tested_head": "a52faf8c44434818775225be3f71c30a0fd86ef3",
+  "reviewed_at_utc": "2026-09-07T17:33:15Z",
+  "checks": [
+    {
+      "name": "R1. Frozen head identity and clean checkout",
+      "result": "PASS",
+      "evidence": "git rev-parse HEAD == dca12cec28107042f07dcfe1b9d4d8ccd82fb8eb; git status --porcelain --untracked-files=no is empty (0 lines)."
+    },
+    {
+      "name": "R2. Delta b06499b7..dca12cec is docs-only verdict carriers",
+      "result": "PASS",
+      "evidence": "git diff --name-only b06499b7..dca12cec = exactly 4 paths, all under docs/control/p7-eg1-world-core-repair-r1/: continuation-final-a52faf8c-r1.v1.json (+103), evidence/world-83eb8e2a-mw10-race-failure.md (+10, 'Superseded artifact note' about the renamed r2 typo failure.json), review/REVIEWER-RESULT-B06499B7-R1.v1.json (+62), review/VERIFIER-RESULT-B06499B7-R1.v1.json (+51) — 226 insertions, 0 deletions, no runtime/test/workflow file touched. git diff --quiet confirms scripts/, tools/, tests/, .github/, RUN_WORLD_REGRESSION_TESTS.ps1 byte-identical between b06499b7 and dca12cec."
+    },
+    {
+      "name": "R3. Verdict integrity of committed carriers",
+      "result": "PASS",
+      "evidence": "REVIEWER-RESULT-B06499B7-R1.v1.json: verdict PASS, reviewed_head b06499b70e51e71cec60042cacfad01e75bf6e86, runtime_tested_head a52faf8c44434818775225be3f71c30a0fd86ef3. VERIFIER-RESULT-B06499B7-R1.v1.json honestly records overall FAIL on V1 (uncommitted 10-line docs append at review time — exactly the append now committed as the delta in R2) with V2-V8 all substantive PASS including fresh machine re-executions. continuation-final-a52faf8c-r1.v1.json binds runtime evidence: world run local-p7-20260907155640 (330 steps, all exit 0, run_id/job/subject_head a52faf8c, summary sha 05aee2fb...), p7 run local-p7-20260907170344 (29 stages / 2032 assertions, summary sha 5fe0f409...), PC0 YELLOW with cross_branch_overlaps [] and 0 critical hits, runtime_commits list ending at a52faf8c, this_document_commit_does_not_retest_runtime=true, and canonical_readiness.remaining_required_steps states the outstanding items (fresh exact-head Reviewer/Verifier PASS, green exact-validation CI on the head, human merge of PR 580, canonical acceptance record, Controller Drive/CloseMission). Artifact cross-checks recomputed: world-regression-summary.json passed=true, 330 steps all exit_code==0; p7-stage-summary.json passed=true, 29 stages, 2032 assertions; project-control-report.json overall_health YELLOW, cross_branch_overlaps []."
+    },
+    {
+      "name": "R4. Review freshness: reviewed runtime scope == tested runtime scope; guards recomputed",
+      "result": "PASS",
+      "evidence": "git diff --name-only a52faf8c..dca12cec = 6 paths, all docs/control/p7-eg1-world-core-repair-r1/ (POST_BUILD_CRITIQUE_FINAL_RU.md, evidence map, continuation record, evidence note, two review verdicts); runtime scope (scripts/, tools/, tests/, .github/, RUN_WORLD_REGRESSION_TESTS.ps1) verified byte-identical a52faf8c..dca12cec, so R1's substantive findings carry over to dca12cec. Guard spot-checks independently recomputed at HEAD: (1) runner reverse-diff — replacing added_block with replaced_original_block in HEAD's RUN_WORLD_REGRESSION_TESTS.ps1 yields git blob 197490d8f66f53642ec1b85da374616667334c5b, matching runner-p74-diff-guard.v1.json original_blob_sha and the c14c37c base blob; (2) MW10 pin — git hash-object of HEAD matter_cross_region_transaction_repository.gd == be7c5ee411752a2623cbf89279b136892d1f0852 (candidate_blob_sha) and c14c37c blob == ec596493c5b96a6140b17adbe18d6283c0615bf0 (original_blob_sha). Both guards bind at the frozen head."
+    },
+    {
+      "name": "R5. Evidence map schema-valid at HEAD",
+      "result": "PASS",
+      "evidence": "evidence-map-final-a52faf8c.v1.json: schema distributed_world_simulator.harness_evidence_map.v1, risk_class CRITICAL, evidence_head_sha a52faf8c44434818775225be3f71c30a0fd86ef3, all required keys present (program, work_order_id, intent, root_cause_or_reason, canonical_owner, callers, callees, entry_points, changed_surfaces, sibling_surfaces_checked, architecture_ownership_changed, canonical_truth_changed, checkpoint, pc0, directional_pc0, focused_validation, full_regression, review_verdict, required_fixes, rank_up_moves, remaining_risks, evidence_gaps) with no unexpected extra keys."
+    }
+  ],
+  "required_fixes": [],
+  "rank_up_moves": [
+    "Green exact-validation world+p7 CI run observed on the frozen head dca12cec itself (or its tree-equivalent merged PR) to convert the 'expected green' inference into direct evidence.",
+    "Delete or archive the superseded-r2-typo-failure.json and failure.json ambiguity permanently once PR 580 is merged, keeping only the final r3 run artifacts in the canonical packet.",
+    "Unify probe report identifiers (mw10_lock_lifecycle vs mw10-lock-lifecycle) across runner and probes to eliminate the typo class that produced the superseded red run."
+  ],
+  "notes": "Fresh independent exact-head review binding frozen head dca12cec. The delta above prior-reviewed b06499b7 consists solely of verdict carriers and documentation (226 insertions, 0 deletions, docs-only), which also resolves the V1 provenance FAIL the Verifier honestly recorded (the uncommitted docs append is now committed). Runtime scope is byte-identical across a52faf8c, b06499b7, and dca12cec, so the runtime-tested tree equals the reviewed tree and R1's substantive findings carry over; diff guards were independently recomputed at HEAD and bind. This PASS is the exact-head Reviewer predicate only: Verifier fresh-head PASS, green CI on the head, human merge of PR 580, and the canonical acceptance chain remain outstanding per the continuation record."
+}

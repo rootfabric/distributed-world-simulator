@@ -1,0 +1,44 @@
+{
+  "schema": "distributed_world_simulator.p7_post_acceptance_repair_continuation.v1",
+  "work_order_id": "V0-P7-POST-ACCEPTANCE-REPAIR-R1",
+  "base_subject": "912742d1bd7368138c5c057664dfe871b6cf8dbd",
+  "review": {
+    "review_id": 5137039708,
+    "comment_id": 3954078860,
+    "reviewed_head": "912742d1bd7368138c5c057664dfe871b6cf8dbd",
+    "classification": "P1_FIX_REQUIRED",
+    "finding": "Immediate empty-directory cleanup is required for writer recovery after marker removal and crash, including platforms that cannot rename over an existing empty directory."
+  },
+  "correction": "Both existing MW9/MW10 _remove_stale_lock methods first attempt atomic empty-only rmdir. No owner file or populated successor is removed by this step. Native test empty-writer calls the production writer fallback before any acquisition can mask the defect through Linux rename-over-empty.",
+  "negative_control": {
+    "subject": "912742d1bd7368138c5c057664dfe871b6cf8dbd",
+    "case": "empty-writer",
+    "assertions": 14,
+    "expected_failures": ["mw10:fresh-empty-writer-lock-reclaimed", "mw10:fresh-empty-writer-directory-removed", "mw9:fresh-empty-writer-lock-reclaimed", "mw9:fresh-empty-writer-directory-removed"]
+  },
+  "positive_control": {"case": "all", "assertions": 82, "expected_failures": []},
+  "collector_correction": "Preserve all directional findings and respect the existing global_blocking classification. Explicit boolean false remains advisory; missing, True, 0, null and strings fail closed for RED. Overall PC0 must still be non-RED. No policy or evaluator source changed.",
+  "control_ref_sync": {
+    "work_order_commit": "85f14913c6bc47c00ad2abe277f79a76e8c8219d",
+    "work_order_path": "docs/control/p7-post-acceptance-r1/work-order-control-ref-sync.v1.json",
+    "ref": "refs/heads/control/project-focus-harness-reconciliation-r1",
+    "before": "36c1091b2406717010e6e9b4585a230e45881545",
+    "after": "438b21d0f5f348d838c2fae0bfae3547ba56a875",
+    "force": false,
+    "main_changed": false,
+    "original_failed_artifact_id": 10039721109,
+    "original_failed_zip_sha256": "e6ccfc16b5cd5676843c0e400b753bc43cded5d64849c9fda071920573b2ad8f",
+    "successful_pc0_run": 34183518209,
+    "successful_pc0_attempt": 2,
+    "successful_pc0_artifact_id": 10039859869,
+    "successful_pc0_zip_sha256": "c9033d3fdf64d499e564739df788c5a35ed226b42679fa7a4a62cffa55a0d5bc",
+    "harness_tests_at_912742d1": 273,
+    "directional_advisory_red_count": 2,
+    "directional_blocking_red_count": 0
+  },
+  "validation_boundary": "Local development extraction reproduced the exact four-failure negative and 82-assertion positive; this is not a full repository run. Publish and rerun the complete native/world/P7/control gates at the corrected head. Prior 912742d1 results remain historical and do not accept the corrected runtime.",
+  "independent_review_required_again": true,
+  "independent_verifier_required": true,
+  "canonical_acceptance": false,
+  "mvp_runtime_authorized": false
+}
