@@ -1,0 +1,82 @@
+{
+  "schema": "distributed_world_simulator.independent_verifier_work_order.v1",
+  "work_order_id": "V0-P7-POST-ACCEPTANCE-VERIFIER-C711-R4",
+  "role": "VERIFIER",
+  "independent_context_required": true,
+  "read_only": true,
+  "subject_head": "c711051454ee55f0039f23850c1483bb3995f4af",
+  "subject_tree": "f517bd8f189cef9ddc1574c3873c72e805a31ad0",
+  "runtime_product_ancestor": "62ae64d3651af81d726134b1f2c5b8661000998c",
+  "canonical_base": "438b21d0f5f348d838c2fae0bfae3547ba56a875",
+  "repair_pr": 585,
+  "predecessor_verifier": {
+    "subject_head": "62ae64d3651af81d726134b1f2c5b8661000998c",
+    "verdict": "FAIL",
+    "sole_blocker": "WORLD_STEP_COUNT_MISMATCH / EVIDENCE_VALIDATION_CONTRACT_UNSATISFIABLE",
+    "must_not_be_relabelled": true
+  },
+  "current_delta": {
+    "base": "62ae64d3651af81d726134b1f2c5b8661000998c",
+    "changed_paths": [
+      "docs/control/p7-post-acceptance-r1/work-order-world-step-identity-r3.v1.json",
+      "docs/control/p7-post-acceptance-r1/validate.py",
+      "tests/harness/test_p7_post_acceptance_packet.py"
+    ],
+    "runtime_or_gd_changed": false,
+    "runner_changed": false,
+    "config_changed": false,
+    "design": "World evidence stage identity is (kind,target,name), not short name alone. Exact target Counter, complete discovery, stage count, P7.4 phase order and final aggregate checks remain mandatory."
+  },
+  "machine_evidence": {
+    "exact_validation_run": 34203663161,
+    "project_control_run": 34203667735,
+    "known_at_dispatch": {
+      "exact_control": "SUCCESS",
+      "project_control": "SUCCESS",
+      "exact_p7": "IN_PROGRESS",
+      "exact_world": "IN_PROGRESS"
+    },
+    "rule": "Verifier must read actual final run and artifact results. Never infer PASS from this dispatch snapshot."
+  },
+  "required_checks": [
+    "Verify exact HEAD/TREE and clean tracked checkout",
+    "Verify 62ae..c711 is exactly the three declared evidence/Harness paths",
+    "Verify predecessor 62ae Ubuntu Verifier FAIL remains preserved and not represented as PASS",
+    "Verify distinct same basename across different world target paths is accepted",
+    "Verify an exact duplicate (kind,target,name) is rejected",
+    "Verify target Counter still equals every dynamically discovered test path, with P7.4 exactly three executions",
+    "Verify full world/core final execution and evidence validation both PASS on c711",
+    "Verify all world steps exit 0, declared==discovered, P7.4 phase order is contiguous, and main_scene_cli_all is final",
+    "Verify P7 29 leaves / 2032 assertions / 0 failures on c711",
+    "Verify complete Harness and both PC0 reports are nonblocking on c711; no critical overlaps",
+    "Verify MW9/MW10 lock production blobs remain exactly the reviewed 62ae versions",
+    "Verify native82, MW9-208, MW10 processes, 5xEG1 and 3xEG4 evidence from the exact c711 world job",
+    "Verify historical P7 acceptance and historical R2 verdict carriers are unchanged and are not used as acceptance of c711",
+    "Verify approved Godot version and SHA256",
+    "Recompute artifact/member SHA256 where immutable CI evidence is relied upon",
+    "Verify MVP remains unactivated"
+  ],
+  "verdict_values": ["PASS", "FAIL", "INSUFFICIENT_EVIDENCE"],
+  "required_result_fields": [
+    "role",
+    "independent_context",
+    "subject_head",
+    "subject_tree",
+    "canonical_base",
+    "verdict",
+    "required_fixes",
+    "evidence_gaps",
+    "risk_assessment",
+    "inspected_runs",
+    "inspected_artifacts",
+    "predicates"
+  ],
+  "hard_rules": [
+    "Do not implement or edit runtime/test/control sources in the verifier context",
+    "Do not merge PR585 or create acceptance",
+    "Do not reuse the 62ae verifier FAIL as a verdict for c711",
+    "Do not treat Codex code review as the VERIFIER result",
+    "If final exact world or P7 is incomplete/failed, return FAIL or INSUFFICIENT_EVIDENCE as appropriate",
+    "No MVP activation"
+  ]
+}
