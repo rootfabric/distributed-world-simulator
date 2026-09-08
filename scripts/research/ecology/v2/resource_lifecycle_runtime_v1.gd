@@ -120,7 +120,8 @@ static func _advance_individual(source: Dictionary, blueprint: Dictionary, sampl
 	var assimilated := B.stock()
 	assimilated.material_mg = field_intake.nutrient_mg + field_intake.organic_mg
 	assimilated.water_mg = field_intake.water_mg
-	assimilated.energy_mj = _photosynthesis_energy(phenotype_before, sample, field_intake.water_mg, policy)
+	var energy_headroom := maxi(0, B.MAX_STOCK - int(state.metabolic_reserves.energy_mj))
+	assimilated.energy_mj = _photosynthesis_energy(phenotype_before, sample, field_intake.water_mg, policy, energy_headroom)
 	if not _add_field_stock(state.resource_ledger.field_intake, field_intake): return _fail("A5_FIELD_INTAKE_OVERFLOW")
 	if state.resource_ledger.external_energy_mj > C.MAX_INT - assimilated.energy_mj: return _fail("A5_ENERGY_SOURCE_OVERFLOW")
 	state.resource_ledger.external_energy_mj += assimilated.energy_mj
@@ -186,18 +187,41 @@ static func _demands(state: Dictionary, blueprint: Dictionary, phenotype: Dictio
 	var absorber_count := int(phenotype.module_roles.get("absorber", 0))
 	var absorber_reach := int(phenotype.statistics.get("absorber_reach_mm", 0))
 	var units := 1 + absorber_count + int(absorber_reach / 100)
+	var desired_water := mini(uptake.basal_water_mg + units * uptake.water_per_absorber_unit_mg, F.MAX_REQUEST)
+	var desired_nutrient := mini(uptake.basal_nutrient_mg + units * uptake.nutrient_per_absorber_unit_mg, F.MAX_REQUEST)
+	var desired_organic := mini(uptake.basal_organic_mg + units * uptake.organic_per_absorber_unit_mg, F.MAX_REQUEST)
+	var material_headroom := maxi(0, B.MAX_STOCK - int(state.metabolic_reserves.material_mg))
+	var water_headroom := maxi(0, B.MAX_STOCK - int(state.metabolic_reserves.water_mg))
+	var material_split := _clip_material_intake(desired_nutrient, desired_organic, material_headroom)
 	var amounts := {
-		"water_mg": uptake.basal_water_mg + units * uptake.water_per_absorber_unit_mg,
-		"nutrient_mg": uptake.basal_nutrient_mg + units * uptake.nutrient_per_absorber_unit_mg,
-		"organic_mg": uptake.basal_organic_mg + units * uptake.organic_per_absorber_unit_mg,
+		"water_mg": mini(desired_water, water_headroom),
+		"nutrient_mg": material_split.nutrient_mg,
+		"organic_mg": material_split.organic_mg,
 	}
 	var out: Array = []
 	for resource in F.RESOURCES:
-		var amount := mini(int(amounts[resource]), F.MAX_REQUEST)
+		var amount: int = int(amounts[resource])
 		if amount <= 0: continue
 		var request_id := _demand_request_id(state.individual_id, state.age_ticks + 1, resource)
 		out.append(Ports.demand(request_id, state.individual_id, resource, amount, state.position_mm, Ports.sampling_extent_mm(phenotype)))
 	return out
+
+static func _clip_material_intake(desired_nutrient: int, desired_organic: int, headroom: int) -> Dictionary:
+	var nutrient := maxi(0, desired_nutrient)
+	var organic := maxi(0, desired_organic)
+	var available := maxi(0, headroom)
+	var total := nutrient + organic
+	if total <= available:
+		return {"nutrient_mg": nutrient, "organic_mg": organic}
+	if available == 0 or total == 0:
+		return {"nutrient_mg": 0, "organic_mg": 0}
+	var clipped_nutrient := int(available * nutrient / total)
+	var clipped_organic := int(available * organic / total)
+	var remainder := available - clipped_nutrient - clipped_organic
+	# Fixed integer remainder rule: nutrient receives the at-most-one residual unit first.
+	clipped_nutrient += mini(remainder, nutrient - clipped_nutrient)
+	clipped_organic = available - clipped_nutrient
+	return {"nutrient_mg": clipped_nutrient, "organic_mg": clipped_organic}
 
 static func _demand_request_id(individual_id: String, age_tick: int, resource: String) -> String:
 	return "life/%s/%06d/%s" % [individual_id.sha256_text(), age_tick, resource]
@@ -205,14 +229,14 @@ static func _demand_request_id(individual_id: String, age_tick: int, resource: S
 static func _propagule_id(parent_id: String, sequence: int) -> String:
 	return "seed/%s/%06d" % [parent_id.sha256_text(), sequence]
 
-static func _photosynthesis_energy(phenotype: Dictionary, sample: Dictionary, granted_water_mg: int, policy: Dictionary) -> int:
+static func _photosynthesis_energy(phenotype: Dictionary, sample: Dictionary, granted_water_mg: int, policy: Dictionary, energy_headroom: int = B.MAX_STOCK) -> int:
 	var area := int(phenotype.statistics.get("collector_area_mm2", 0))
-	if area <= 0: return 0
+	if area <= 0 or energy_headroom <= 0: return 0
 	var light: int = sample.channels.light
 	var water_factor := clampi(int(granted_water_mg * 1000 / maxi(1, policy.metabolism.photosynthesis_water_saturation_mg)), 0, 1000)
 	var divisor: int = policy.metabolism.photosynthesis_area_divisor_mm2
 	var raw := int(area * light * water_factor / maxi(1, divisor) / 1000000)
-	return clampi(raw, 0, policy.metabolism.max_photosynthesis_energy_mj)
+	return mini(clampi(raw, 0, policy.metabolism.max_photosynthesis_energy_mj), energy_headroom)
 
 static func _maintenance_cost(state: Dictionary, policy: Dictionary) -> Dictionary:
 	var modules: int = state.development.modules.size()
