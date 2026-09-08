@@ -100,5 +100,9 @@ func _parent_transfer_state_requires_receipt() -> void:
 	_check(LS.validate(inflated, blueprint) == "LIFE_PARENT_TRANSFER_ENDOWMENT", "arbitrary_endowment_receipt_forge_rejected")
 
 	var unpaid_receipt: Dictionary = child.state.duplicate(true)
-	unpaid_receipt.origin_receipt.parent_reproduction_transferred.material_mg -= blueprint.life_history.reproduction.endowment.material_mg
-	_check(LS.validate(unpaid_receipt, blueprint) == "LIFE_PARENT_TRANSFER_PAYMENT", "unpaid_parent_receipt_rejected")
+	var unpaid_parent: Dictionary = unpaid_receipt.origin_receipt.parent_state
+	var refund_material: int = int(blueprint.life_history.reproduction.endowment.material_mg)
+	unpaid_parent.resource_ledger.reproduction_transferred.material_mg -= refund_material
+	unpaid_parent.metabolic_reserves.material_mg += refund_material
+	unpaid_receipt.origin_receipt.parent_state_hash = C.digest(unpaid_parent)
+	_check(LS.validate(unpaid_receipt, blueprint) == "LIFE_PARENT_TRANSFER_PARENT_STATE", "unpaid_parent_preimage_rejected")
