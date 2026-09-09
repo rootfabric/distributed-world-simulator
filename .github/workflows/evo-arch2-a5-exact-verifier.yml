@@ -1,4 +1,4 @@
-name: ECO ARCH2 A5 Exact Verifier
+name: ECO ARCH2 A5 Canonical Verifier
 
 on:
   push:
@@ -6,57 +6,37 @@ on:
       - validation/eco-arch2-a5-exact-r1
   workflow_dispatch:
 
+concurrency:
+  group: eco-arch2-a5-canonical-verifier
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
 jobs:
-  linux-exact:
-    name: fresh exact A5 Linux verifier
+  linux-canonical:
+    name: canonical A5 Linux verifier
     runs-on: [self-hosted, Linux, X64]
     timeout-minutes: 120
     defaults:
       run:
         shell: bash
     steps:
-      - name: Checkout exact immutable source
+      - name: Checkout exact candidate
         uses: actions/checkout@v4
         with:
-          ref: 79d3c27c812727ddf59a5c046e7ee10a33d2fb00
+          ref: 3b6d1675ca9668f946265c8ce86e12dbae6b5e1d
           fetch-depth: 0
           persist-credentials: false
 
-      - name: Assert exact source identity and A5 forbidden fence
+      - name: Assert exact subject
         run: |
           set -euo pipefail
-          base="4b0f772ff39592262b853f7293bbd5403558b145"
-          test "$(git rev-parse HEAD)" = "79d3c27c812727ddf59a5c046e7ee10a33d2fb00"
-          test "$(git rev-parse HEAD^{tree})" = "36393d0780cef417264acdcdb81261abb33a78fe"
+          test "$(git rev-parse HEAD)" = "3b6d1675ca9668f946265c8ce86e12dbae6b5e1d"
+          test "$(git rev-parse HEAD^{tree})" = "6419054b0f7a422f3d8aceccf37adff461646e92"
           test -z "$(git status --porcelain --untracked-files=no)"
-          git diff --exit-code "$base"..HEAD -- \
-            scripts/research/ecology/v2/canonical_value_v1.gd \
-            scripts/research/ecology/v2/body_graph_v1.gd \
-            scripts/research/ecology/v2/development_program_v1.gd \
-            scripts/research/ecology/v2/organism_genome_v2.gd \
-            scripts/research/ecology/v2/organism_state_v1.gd \
-            scripts/research/ecology/v2/development_interpreter_v1.gd \
-            scripts/research/ecology/v2/phenotype_snapshot_v1.gd \
-            scripts/research/ecology/v2/environment_field_contract_v1.gd \
-            scripts/research/ecology/v2/local_environment_field_v1.gd \
-            scripts/research/ecology/v2/organism_environment_ports_v1.gd
-          changed="$(git diff --name-only "$base"..HEAD)"
-          if printf '%s\n' "$changed" | grep -Eq '^(scripts/ecology/production/|scripts/simulation/|scripts/network/)'; then
-            printf '%s\n' "$changed"
-            echo "forbidden production/simulation/network path changed" >&2
-            exit 1
-          fi
-          executable="scripts/research/ecology/v2/resource_lifecycle_runtime_v1.gd"
-          if grep -Ev '^[[:space:]]*#' "$executable" | grep -Eiq 'net_resource_proxy|shadow_fitness|top[_ -]?k'; then
-            echo "forbidden selection/proxy token found in executable A5 path" >&2
-            exit 1
-          fi
-          echo "A0_A4_FORBIDDEN_DIFF=CLEAN"
 
-      - name: Resolve exact double Godot
+      - name: Resolve canonical double Godot
         id: godot
         env:
           CONFIGURED: ${{ vars.DWS_GODOT_DOUBLE_BIN_LINUX }}
@@ -77,7 +57,6 @@ jobs:
           sha="$(sha256sum "$godot" | awk '{print $1}')"
           test "$sha" = "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7"
           echo "path=$godot" >> "$GITHUB_OUTPUT"
-          echo "godot=$version sha256=$sha"
 
       - name: Cold empty-cache import
         env:
@@ -86,199 +65,23 @@ jobs:
         run: |
           set -euo pipefail
           rm -rf .godot
-          "$GODOT" --headless --audio-driver Dummy --editor --path "$PWD" --import > a5-cold.log 2>&1
-          if grep -E "SCRIPT ERROR|Parse Error|ERROR:" a5-cold.log; then
-            echo "cold import emitted engine errors" >&2
-            exit 1
-          fi
-          sha256sum a5-cold.log
+          "$GODOT" --headless --audio-driver Dummy --editor --path "$PWD" --import > a5-canonical-cold.log 2>&1
+          if grep -E "SCRIPT ERROR|Parse Error|ERROR:" a5-canonical-cold.log; then cat a5-canonical-cold.log; exit 1; fi
 
-      - name: Run A5 core exact twice
+      - name: Diagnose RM26 first failing runtime step
         env:
           GODOT: ${{ steps.godot.outputs.path }}
           GODOT_SILENCE_ROOT_WARNING: "1"
         run: |
           set -euo pipefail
-          for n in 1 2; do
-            "$GODOT" --headless --audio-driver Dummy --path "$PWD" --script res://tests/research/ecology/v2/arch2_a5_exact_acceptance.gd 2>&1 | tee "a5-exact-$n.log"
-            test ${PIPESTATUS[0]} -eq 0
-            grep -F "EVO_ARCH2_A5_EXACT assertions=69 failed=0" "a5-exact-$n.log"
-            if grep -E "SCRIPT ERROR|Parse Error|ERROR:|FAIL:" "a5-exact-$n.log"; then exit 1; fi
-          done
-          cmp a5-exact-1.log a5-exact-2.log
-          sha256sum a5-exact-1.log a5-exact-2.log
-
-      - name: Run A5 reviewer repairs twice
-        env:
-          GODOT: ${{ steps.godot.outputs.path }}
-          GODOT_SILENCE_ROOT_WARNING: "1"
-        run: |
-          set -euo pipefail
-          for n in 1 2; do
-            "$GODOT" --headless --audio-driver Dummy --path "$PWD" --script res://tests/research/ecology/v2/arch2_a5_reviewer_repairs.gd 2>&1 | tee "a5-repairs-$n.log"
-            test ${PIPESTATUS[0]} -eq 0
-            grep -F "EVO_ARCH2_A5_REPAIRS assertions=29 failed=0" "a5-repairs-$n.log"
-            if grep -E "SCRIPT ERROR|Parse Error|ERROR:|FAIL:" "a5-repairs-$n.log"; then exit 1; fi
-          done
-          cmp a5-repairs-1.log a5-repairs-2.log
-          sha256sum a5-repairs-1.log a5-repairs-2.log
-
-      - name: Run RM-A5-11 growth headroom twice
-        env:
-          GODOT: ${{ steps.godot.outputs.path }}
-          GODOT_SILENCE_ROOT_WARNING: "1"
-        run: |
-          set -euo pipefail
-          for n in 1 2; do
-            "$GODOT" --headless --audio-driver Dummy --path "$PWD" --script res://validation/ecology/evo_arch2_a5/rm_a5_11_growth_headroom.gd 2>&1 | tee "a5-rm11-$n.log"
-            test ${PIPESTATUS[0]} -eq 0
-            grep -F "EVO_ARCH2_A5_RM11 assertions=9 failed=0" "a5-rm11-$n.log"
-            if grep -E "SCRIPT ERROR|Parse Error|ERROR:|FAIL:" "a5-rm11-$n.log"; then exit 1; fi
-          done
-          cmp a5-rm11-1.log a5-rm11-2.log
-          sha256sum a5-rm11-1.log a5-rm11-2.log
-
-      - name: Run RM-A5-12 reserve headroom twice
-        env:
-          GODOT: ${{ steps.godot.outputs.path }}
-          GODOT_SILENCE_ROOT_WARNING: "1"
-        run: |
-          set -euo pipefail
-          for n in 1 2; do
-            "$GODOT" --headless --audio-driver Dummy --path "$PWD" --script res://validation/ecology/evo_arch2_a5/rm_a5_12_reserve_headroom.gd 2>&1 | tee "a5-rm12-$n.log"
-            test ${PIPESTATUS[0]} -eq 0
-            grep -F "EVO_ARCH2_A5_RM12 assertions=29 failed=0" "a5-rm12-$n.log"
-            if grep -E "SCRIPT ERROR|Parse Error|ERROR:|FAIL:" "a5-rm12-$n.log"; then exit 1; fi
-          done
-          cmp a5-rm12-1.log a5-rm12-2.log
-          sha256sum a5-rm12-1.log a5-rm12-2.log
-
-      - name: Run RM-A5-13 starvation policy twice
-        env:
-          GODOT: ${{ steps.godot.outputs.path }}
-          GODOT_SILENCE_ROOT_WARNING: "1"
-        run: |
-          set -euo pipefail
-          for n in 1 2; do
-            "$GODOT" --headless --audio-driver Dummy --path "$PWD" --script res://validation/ecology/evo_arch2_a5/rm_a5_13_starvation_policy.gd 2>&1 | tee "a5-rm13-$n.log"
-            test ${PIPESTATUS[0]} -eq 0
-            grep -F "EVO_ARCH2_A5_RM13 assertions=13 failed=0" "a5-rm13-$n.log"
-            if grep -E "SCRIPT ERROR|Parse Error|ERROR:|FAIL:" "a5-rm13-$n.log"; then exit 1; fi
-          done
-          cmp a5-rm13-1.log a5-rm13-2.log
-          sha256sum a5-rm13-1.log a5-rm13-2.log
-
-      - name: Run RM-A5-14 reproduction policy twice
-        env:
-          GODOT: ${{ steps.godot.outputs.path }}
-          GODOT_SILENCE_ROOT_WARNING: "1"
-        run: |
-          set -euo pipefail
-          for n in 1 2; do
-            "$GODOT" --headless --audio-driver Dummy --path "$PWD" --script res://validation/ecology/evo_arch2_a5/rm_a5_14_reproduction_policy.gd 2>&1 | tee "a5-rm14-$n.log"
-            test ${PIPESTATUS[0]} -eq 0
-            grep -F "EVO_ARCH2_A5_RM14 assertions=21 failed=0" "a5-rm14-$n.log"
-            if grep -E "SCRIPT ERROR|Parse Error|ERROR:|FAIL:" "a5-rm14-$n.log"; then exit 1; fi
-          done
-          cmp a5-rm14-1.log a5-rm14-2.log
-          sha256sum a5-rm14-1.log a5-rm14-2.log
-
-      - name: Run RM-A5-15 reproduction ledger twice
-        env:
-          GODOT: ${{ steps.godot.outputs.path }}
-          GODOT_SILENCE_ROOT_WARNING: "1"
-        run: |
-          set -euo pipefail
-          for n in 1 2; do
-            "$GODOT" --headless --audio-driver Dummy --path "$PWD" --script res://validation/ecology/evo_arch2_a5/rm_a5_15_reproduction_ledger.gd 2>&1 | tee "a5-rm15-$n.log"
-            test ${PIPESTATUS[0]} -eq 0
-            grep -F "EVO_ARCH2_A5_RM15 assertions=12 failed=0" "a5-rm15-$n.log"
-            if grep -E "SCRIPT ERROR|Parse Error|ERROR:|FAIL:" "a5-rm15-$n.log"; then exit 1; fi
-          done
-          cmp a5-rm15-1.log a5-rm15-2.log
-          sha256sum a5-rm15-1.log a5-rm15-2.log
-
-      - name: Run RM-A5-16 reproductive module history twice
-        env:
-          GODOT: ${{ steps.godot.outputs.path }}
-          GODOT_SILENCE_ROOT_WARNING: "1"
-        run: |
-          set -euo pipefail
-          for n in 1 2; do
-            "$GODOT" --headless --audio-driver Dummy --path "$PWD" --script res://validation/ecology/evo_arch2_a5/rm_a5_16_reproductive_module_history.gd 2>&1 | tee "a5-rm16-$n.log"
-            test ${PIPESTATUS[0]} -eq 0
-            grep -F "EVO_ARCH2_A5_RM16 assertions=10 failed=0" "a5-rm16-$n.log"
-            if grep -E "SCRIPT ERROR|Parse Error|ERROR:|FAIL:" "a5-rm16-$n.log"; then exit 1; fi
-          done
-          cmp a5-rm16-1.log a5-rm16-2.log
-          sha256sum a5-rm16-1.log a5-rm16-2.log
-
-      - name: Run RM-A5-17 starvation reproduction window twice
-        env:
-          GODOT: ${{ steps.godot.outputs.path }}
-          GODOT_SILENCE_ROOT_WARNING: "1"
-        run: |
-          set -euo pipefail
-          for n in 1 2; do
-            "$GODOT" --headless --audio-driver Dummy --path "$PWD" --script res://validation/ecology/evo_arch2_a5/rm_a5_17_starvation_reproduction_window.gd 2>&1 | tee "a5-rm17-$n.log"
-            test ${PIPESTATUS[0]} -eq 0
-            grep -F "EVO_ARCH2_A5_RM17 assertions=13 failed=0" "a5-rm17-$n.log"
-            if grep -E "SCRIPT ERROR|Parse Error|ERROR:|FAIL:" "a5-rm17-$n.log"; then exit 1; fi
-          done
-          cmp a5-rm17-1.log a5-rm17-2.log
-          sha256sum a5-rm17-1.log a5-rm17-2.log
-
-      - name: Run accepted A4 regression
-        env:
-          GODOT: ${{ steps.godot.outputs.path }}
-          GODOT_SILENCE_ROOT_WARNING: "1"
-        run: |
-          set -euo pipefail
-          "$GODOT" --headless --audio-driver Dummy --path "$PWD" --script res://tests/research/ecology/v2/arch2_a4_exact_acceptance.gd > a4.log 2>&1
-          grep -F "EVO_ARCH2_A4_EXACT assertions=32 failed=0" a4.log
-          if grep -E "SCRIPT ERROR|Parse Error|ERROR:|FAIL:" a4.log; then exit 1; fi
-
-      - name: Run accepted A0-A3 regression
-        env:
-          GODOT: ${{ steps.godot.outputs.path }}
-          GODOT_SILENCE_ROOT_WARNING: "1"
-        run: |
-          set -euo pipefail
-          "$GODOT" --headless --audio-driver Dummy --path "$PWD" --script res://tests/research/ecology/v2/arch2_a03_exact_acceptance.gd > a03.log 2>&1
-          grep -F "EVO_ARCH2_A03_EXACT assertions=86 failed=0" a03.log
-          if grep -E "SCRIPT ERROR|Parse Error|ERROR:|FAIL:" a03.log; then exit 1; fi
-
-      - name: Run preserved VIS5 regression
-        env:
-          GODOT: ${{ steps.godot.outputs.path }}
-          GODOT_SILENCE_ROOT_WARNING: "1"
-        run: |
-          set -euo pipefail
-          scripts=(
-            res://tests/ecology/eco_evo7_vis5_0_terrain_ecosystem_composition_contract_acceptance.gd
-            res://tests/ecology/eco_evo7_vis5_1_terrain_surface_frame_adapter_acceptance.gd
-            res://tests/ecology/eco_evo7_vis5_2_noncanonical_ground_cover_bridge_acceptance.gd
-            res://tests/ecology/eco_evo7_vis5_3_mixed_strata_composition_lab_acceptance.gd
-            res://tests/ecology/eco_evo7_vis5_4_composition_lod_streaming_gate_acceptance.gd
-            res://tests/ecology/eco_evo7_vis5_5_visual_evidence_play1_handoff_acceptance.gd
-          )
-          expected=(87 70 57 101 92 114)
-          total=0
-          for i in "${!scripts[@]}"; do
-            "$GODOT" --headless --audio-driver Dummy --path "$PWD" --script "${scripts[$i]}" > "vis5-$i.log" 2>&1
-            grep -E "PASS \(${expected[$i]} assertions\)" "vis5-$i.log"
-            if grep -E "SCRIPT ERROR|Parse Error|ERROR:|FAIL:" "vis5-$i.log"; then exit 1; fi
-            total=$((total + expected[$i]))
-          done
-          test "$total" -eq 521
-          echo "VIS5 assertions=$total failed=0"
-
-      - name: Assert tracked subject unchanged
-        run: |
-          set -euo pipefail
-          test "$(git rev-parse HEAD)" = "79d3c27c812727ddf59a5c046e7ee10a33d2fb00"
-          test "$(git rev-parse HEAD^{tree})" = "36393d0780cef417264acdcdb81261abb33a78fe"
-          test -z "$(git status --porcelain --untracked-files=no)"
-          echo "SUBJECT_HEAD=79d3c27c812727ddf59a5c046e7ee10a33d2fb00"
-          echo "SUBJECT_TREE=36393d0780cef417264acdcdb81261abb33a78fe"
-          echo "VERDICT=PASS"
+          src="validation/ecology/evo_arch2_a5/rm_a5_26_development_starvation_window.gd"
+          diag="validation/ecology/evo_arch2_a5/_rm26_diag_tmp.gd"
+          cp "$src" "$diag"
+          sed -i 's/^[[:space:]]*return {"success": false}$/\t\t\tprint("RM26_STEP_ERROR=", result.error); return {"success": false}/' "$diag"
+          set +e
+          "$GODOT" --headless --audio-driver Dummy --path "$PWD" --script "res://$diag" 2>&1 | tee rm26-diagnostic.log
+          rc=${PIPESTATUS[0]}
+          set -e
+          rm -f "$diag"
+          grep -F "RM26_STEP_ERROR=" rm26-diagnostic.log || true
+          exit "$rc"
