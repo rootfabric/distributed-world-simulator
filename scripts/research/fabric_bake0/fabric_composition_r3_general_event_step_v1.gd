@@ -57,11 +57,12 @@ static func _first_crossing(system: Dictionary, model: Dictionary, start: Dictio
 	var best := {"ok": true}
 	for transition in D._eligible_transitions(system, "crossing"):
 		var token: String = str(transition.id)
-		var element_id := token.get_slice("|", 1)
+		var parsed := _parse_transition_id(token)
+		if not parsed.get("ok", false): return parsed
+		var element_id: String = str(parsed.element_id)
 		if not polynomials.has(element_id): return _failure("R3_GENERAL_EVENT_ELEMENT_MISSING")
 		var item: Dictionary = polynomials[element_id]
-		var sign_value := float(token.get_slice("|", 2))
-		if sign_value not in [-1.0, 1.0]: return _failure("R3_GENERAL_EVENT_TRANSITION_SHAPE")
+		var sign_value: float = float(parsed.sign)
 		var limit: float = float(transition.guard.nominal)
 		var scale := maxf(limit, _norm(item.coefficients))
 		if not is_finite(scale): return _failure("R3_GENERAL_EVENT_SCALE_NONFINITE")
@@ -88,6 +89,22 @@ static func _first_crossing(system: Dictionary, model: Dictionary, start: Dictio
 			low = high
 			g_low = g_high
 	return best
+
+static func _parse_transition_id(token: String) -> Dictionary:
+	var first_separator := token.find("|")
+	var last_separator := token.rfind("|")
+	if first_separator <= 0 or last_separator <= first_separator + 1 or last_separator >= token.length() - 1:
+		return _failure("R3_GENERAL_EVENT_TRANSITION_SHAPE")
+	var kind := token.substr(0, first_separator)
+	if kind not in ["guard", "failure"]:
+		return _failure("R3_GENERAL_EVENT_TRANSITION_SHAPE")
+	var element_id := token.substr(first_separator + 1, last_separator - first_separator - 1)
+	if element_id.is_empty():
+		return _failure("R3_GENERAL_EVENT_TRANSITION_SHAPE")
+	var sign_value := float(token.substr(last_separator + 1))
+	if sign_value not in [-1.0, 1.0]:
+		return _failure("R3_GENERAL_EVENT_TRANSITION_SHAPE")
+	return {"ok": true, "element_id": element_id, "sign": sign_value}
 
 static func _effort_coefficients(system: Dictionary, model: Dictionary, element: Dictionary, start: Dictionary, end: Dictionary, t0: float, dt: float, stats: Dictionary) -> Dictionary:
 	var matrix: Array = []
