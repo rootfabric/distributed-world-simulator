@@ -28,7 +28,7 @@ func _check(value: bool, name: String) -> void:
 
 func _genome() -> Dictionary:
 	var leaf := P.rule("leaf", [P.action("differentiate", "collector", [0, 20, 0], 1, 6000), P.action("retire")])
-	var start := P.rule("start", [P.action("differentiate", "support", [0, 10, 0], 1), P.action("branch", "support", [0, 0, 0], 0, 0, 0, "leaf")], "start")
+	var start := P.rule("start", [P.action("extend", "support", [0, 10, 0], 1), P.action("branch", "support", [0, 0, 0], 0, 0, 0, "leaf")], "start")
 	return G.create({"schema": P.SCHEMA, "entry": "start", "max_age": 32, "max_depth": 2, "rules": [start, leaf]}, "RM-A5-26 development starvation witness")
 
 func _policy() -> Dictionary:
@@ -62,7 +62,7 @@ func _run_ticks(entry: Dictionary, field: Dictionary, count: int) -> Dictionary:
 	for _tick in count:
 		var result := R.step_population(current_field, [current], current_field.owner_token, current_field.owner_epoch, current_field.revision)
 		if not result.success:
-			return {"success": false}
+			return {"success": false, "error": result.error}
 		current = result.population[0]
 		current_field = result.field
 	return {"success": true, "entry": current, "field": current_field}
@@ -72,9 +72,13 @@ func _encoded_state_file(blueprint: Dictionary, state: Dictionary) -> String:
 
 func _development_cannot_occupy_current_starvation_window() -> void:
 	var blueprint := BP.create(_genome(), _policy())
+	_check(not blueprint.is_empty(), "blueprint_valid")
+	if blueprint.is_empty(): return
 	var entry := R.individual(blueprint, "rm26.organism", [500, 0, 500], B.stock(100000))
+	_check(not entry.is_empty(), "founder_valid")
+	if entry.is_empty(): return
 	var run := _run_ticks(entry, _field("rm26.field"), 6)
-	_check(run.success, "funded_runtime_witness_runs")
+	_check(run.success, "funded_runtime_witness_runs:" + String(run.get("error", "")))
 	if not run.success: return
 	var state: Dictionary = run.entry.state
 	_check(state.age_ticks == 6 and state.development.grant_seq > 1, "development_history_present")
