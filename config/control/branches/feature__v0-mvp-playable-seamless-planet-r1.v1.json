@@ -1,0 +1,76 @@
+{
+  "schema": "distributed_world_simulator.branch_passport.v1",
+  "control_plane_revision": "PC0-2026-08-10-R1",
+  "architecture_revision": "GLOBAL-P0-2026-08-12-R3-REFRESH-R1",
+  "branch": "feature/v0-mvp-playable-seamless-planet-r1",
+  "program": "V0",
+  "role": "COMPOSITION_FRONTIER",
+  "short_description": "MVP: shared graphical world over accepted SM1 and P7.",
+  "purpose": "Compose existing equipment, P7.1/P7.6 Matter routing, representation invalidation, material delivery and client convergence into the visible product digging loop.",
+  "expected_outcome": "Player can equip, aim and dig a canonical hole, receive canonical material exactly once, and converge across clients/seams without new owners.",
+  "current_stage": "MVP ACT0 / bounded composition dispatch",
+  "stage_status": "MVP_ACTIVATED_IMPLEMENTATION_DISPATCHED",
+  "progress_note": "ACT0 declared; gameplay runtime has not started. Accepted P7 is preserved; use the fresh MVP epoch and Work Order.",
+  "last_accepted_checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION + post-acceptance ADDENDUM-002",
+  "next_stage": "MVP1 shared graphical scene; canonical adoption and exact epoch audit required before mutation.",
+  "parent_branch_or_checkpoint": "Canonical P7 + ADDENDUM-002 @ 3d7672cba293d8e7bd72427b803f73fc8fcee5da",
+  "base_commit": "3d7672cba293d8e7bd72427b803f73fc8fcee5da",
+  "dependencies": [
+    "V0_P7_BOUNDED_TERRAIN_MUTATION",
+    "SM1_ACCEPTED",
+    "SERVER_PREDICTED"
+  ],
+  "owned_paths": [
+    "scripts/runtime/networked_gameplay/mvp/**",
+    "scripts/app/**",
+    "scenes/labs/mvp/**",
+    "tests/runtime/test_v0_mvp_*",
+    "tests/integration/test_v0_mvp_*",
+    "tests/fixtures/v0_mvp/**",
+    "RUN_V0_MVP_*",
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/**",
+    "docs/control/mvp-act0-r1/**"
+  ],
+  "watched_paths": [
+    "scripts/runtime/networked_gameplay/p7/**",
+    "scripts/runtime/networked_gameplay/sm1/**",
+    "scripts/simulation/matter/**",
+    "scripts/runtime/networked_gameplay/m4/**",
+    "scenes/labs/p7/**"
+  ],
+  "critical_watched_paths": [
+    "scripts/runtime/networked_gameplay/p7/**",
+    "scripts/simulation/matter/**",
+    "scripts/runtime/networked_gameplay/m4/**"
+  ],
+  "runtime_paths": [
+    "scripts/runtime/networked_gameplay/mvp/**",
+    "scripts/app/**",
+    "scenes/labs/mvp/**"
+  ],
+  "validation_paths": [
+    "tests/runtime/test_v0_mvp_*",
+    "tests/integration/test_v0_mvp_*",
+    "RUN_V0_MVP_*"
+  ],
+  "tested_heads": {
+    "runtime": "NOT_STARTED",
+    "focused": "NOT_STARTED",
+    "full_regression": "NOT_STARTED"
+  },
+  "ownership_claims": [],
+  "forbidden_foundation_ownership": [
+    "MATTER_TRUTH",
+    "TERRAIN_TRUTH",
+    "ITEM_IDENTITY_AND_GRAPH",
+    "PERSISTENCE_DURABILITY",
+    "NETWORK_REPLICATION_POLICY",
+    "AUTHORITY_FOUNDATION",
+    "CROSS_REGION_TRANSACTION_DURABILITY",
+    "AGGREGATE_REVISION_OWNERSHIP"
+  ],
+  "blockers": [],
+  "health_declared": "YELLOW",
+  "cross_branch_overlap_enabled": true,
+  "baseline_evidence_note": "P7 evidence is inherited capability evidence only. No MVP test, review or acceptance is claimed by ACT0."
+}

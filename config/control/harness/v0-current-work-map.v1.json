@@ -2,28 +2,29 @@
   "schema": "distributed_world_simulator.v0_current_work_map.v1",
   "revision": "PROJECT-FOCUS-2026-09-05-R1",
   "canonical_owner": "main",
-  "status": "P7_MERGED_CLOSURE_RECONCILIATION",
-  "authored_against_main": "5b4152958624be4e9cc40f2369ce32c4964f65c3",
-  "accepted_predecessor": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION",
-  "accepted_predecessor_product_lineage": "acb9379cacc413fc25a65117fb1627f5a01b9736",
+  "status": "MVP_ACTIVATED_IMPLEMENTATION_DISPATCHED",
+  "authored_against_main": "3d7672cba293d8e7bd72427b803f73fc8fcee5da",
+  "accepted_predecessor": "V0_P7_BOUNDED_TERRAIN_MUTATION",
+  "accepted_predecessor_product_lineage": "3d7672cba293d8e7bd72427b803f73fc8fcee5da",
   "sm1_acceptance_record": "config/control/harness/acceptance/V0-SM1-R1-CHECKPOINT-ACCEPTED-001.v1.json",
-  "current_campaign": "V0_P7_BOUNDED_TERRAIN_MUTATION",
-  "current_human_plan": "docs/plans/PROJECT_DEVELOPMENT_FOCUS_RU.md",
-  "primary_machine_plan": "config/control/harness/v0-p7-matter-production-convergence-plan.v1.json",
-  "activation_record": "config/control/harness/activation/V0-P7-R1-ACTIVATION-001.v1.json",
-  "project_epoch": "E2026-08-30-V0-P7-R1",
-  "work_order_id": "V0-P7-R1-WO-001",
-  "runtime_branch": "feature/v0-p7-bounded-terrain-mutation",
+  "current_campaign": "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE",
+  "current_human_plan": "docs/control/mvp-act0-r1/ACT0_RU.md",
+  "primary_machine_plan": "config/control/harness/activation/V0-MVP-R1-ACTIVATION-001.v1.json",
+  "activation_record": "config/control/harness/activation/V0-MVP-R1-ACTIVATION-001.v1.json",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "runtime_branch": "feature/v0-mvp-playable-seamless-planet-r1",
   "execution_order": [
-    "P7_1_TOOL_TO_EXISTING_MW4_ADAPTER_COMPLETE",
-    "P7_2_BOUNDED_PLANETARY_MATTER_BUBBLE",
-    "P7_3_MATTER_MATERIAL_BATCH_TO_CANONICAL_ITEM_GRAPH",
-    "P7_4_PERSISTENCE_RESTART_COMPOSITION",
-    "P7_5_TWO_CLIENT_CONVERGENCE",
-    "P7_6_SEAM_AND_TRUE_MULTI_REGION_MW10_COMPOSITION",
-    "P7_7_GRAPHICAL_DIGGING",
-    "P7_CHECKPOINT_ACCEPTANCE",
-    "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE"
+    "MVP_SHARED_GRAPHICAL_SCENE",
+    "MVP_TWO_CLIENT_SHARED_WORLD",
+    "MVP_SEAM_NO_RECONNECT_OR_RESPAWN",
+    "MVP_CANONICAL_DIG_VISIBLE_TO_BOTH_CLIENTS",
+    "MVP_EXACTLY_ONCE_MATERIAL_OUTPUT",
+    "MVP_ITEM_CONSTRUCTION_PERSISTENCE_CONVERGENCE",
+    "MVP_RECONNECT_AND_RESTART",
+    "MVP_BOUNDED_INTERACTIVE_WORKLOAD",
+    "MVP_REVIEW_VERIFICATION_PC0",
+    "HUMAN_MVP_ACCEPTANCE"
   ],
   "p7_hard_invariants": [
     "P7_IS_PRODUCTION_CONVERGENCE_NOT_A_NEW_TERRAIN_FOUNDATION",
@@ -51,8 +52,8 @@
     "material_output": "MatterMaterialBatch",
     "inventory_truth": "CANONICAL_ITEM_GRAPH"
   },
-  "exact_runtime_execution_base": "acb9379cacc413fc25a65117fb1627f5a01b9736",
-  "control_main_base": "ada3f79e02168046c6d1e1430fd25fc2224d7b7f",
+  "exact_runtime_execution_base": "3d7672cba293d8e7bd72427b803f73fc8fcee5da",
+  "control_main_base": "3d7672cba293d8e7bd72427b803f73fc8fcee5da",
   "runtime_mutation_authorized_by_this_pointer": false,
   "p7_activated_by_this_pointer": false,
   "preferred_next_after_p7_acceptance": "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE",
@@ -60,7 +61,7 @@
     "p8_and_rf1_architecture_dependency": false,
     "runtime_execution_pre_h0_3": "SERIALIZED"
   },
-  "sequencing_override": "PROJECT-FOCUS-2026-09-05-R1: coordination + scheduler determine current action; completed substeps are historical evidence.",
+  "sequencing_override": "ACT0: current MVP controls supersede historical P7 substep prose; historical execution/acceptance remain immutable.",
   "p7_0": {
     "status": "ACCEPTED",
     "owner_map_record": "config/control/harness/v0-p7-matter-production-owner-map.v1.json",
@@ -273,7 +274,7 @@
     }
   },
   "p7_7": {
-    "state": "MERGED_PENDING_CANONICAL_CLOSURE",
+    "state": "MERGED_CANONICALLY_ACCEPTED",
     "runtime_branch": "feature/v0-p7-bounded-terrain-mutation",
     "scope": "GRAPHICAL_DIGGING_SLICE",
     "hard_rule": "EQUIP_AIM_DIG_HOLE_MATERIAL_INVENTORY_OVER_EXISTING_P7_1_TO_P7_6_OWNERS_NO_NEW_CANONICAL_TRUTH",
@@ -404,5 +405,28 @@
     },
     "runtime_mutation_authorized": false
   },
-  "next_action": "RECONCILE_P7_DURABLE_CLOSURE_THEN_ACTIVATE_MVP"
+  "next_action": "BEGIN_V0_MVP_PLAYABLE_SEAMLESS_PLANET_COMPOSITION",
+  "historical_p7_execution_order": [
+    "P7_1_TOOL_TO_EXISTING_MW4_ADAPTER_COMPLETE",
+    "P7_2_BOUNDED_PLANETARY_MATTER_BUBBLE",
+    "P7_3_MATTER_MATERIAL_BATCH_TO_CANONICAL_ITEM_GRAPH",
+    "P7_4_PERSISTENCE_RESTART_COMPOSITION",
+    "P7_5_TWO_CLIENT_CONVERGENCE",
+    "P7_6_SEAM_AND_TRUE_MULTI_REGION_MW10_COMPOSITION",
+    "P7_7_GRAPHICAL_DIGGING",
+    "P7_CHECKPOINT_ACCEPTANCE",
+    "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE"
+  ],
+  "accepted_predecessor_acceptance_record": "config/control/harness/acceptance/V0-P7-R1-CHECKPOINT-ACCEPTED-001.v1.json",
+  "accepted_predecessor_acceptance_addendum": "config/control/harness/acceptance/V0-P7-R1-CHECKPOINT-ACCEPTED-ADDENDUM-002.v1.json",
+  "exact_runtime_execution_base_tree": "3cdcd33b4a59a93707b7628bc0124184df94cc64",
+  "mvp": {
+    "activation_record": "config/control/harness/activation/V0-MVP-R1-ACTIVATION-001.v1.json",
+    "exact_execution_base": "3d7672cba293d8e7bd72427b803f73fc8fcee5da",
+    "exact_execution_base_tree": "3cdcd33b4a59a93707b7628bc0124184df94cc64",
+    "project_epoch": "E2026-09-09-V0-MVP-R1",
+    "work_order_id": "V0-MVP-R1-WO-001",
+    "runtime_branch": "feature/v0-mvp-playable-seamless-planet-r1",
+    "control_generation": 82
+  }
 }

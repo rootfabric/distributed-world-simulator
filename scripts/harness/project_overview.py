@@ -229,6 +229,17 @@ def canonical_reconciliation_route(root: Path, checkpoint: str | None) -> dict[s
     scheduler = read_control(root, SCHEDULER, head)
     routing = scheduler.get("v0_product_train_routing", {})
     if routing.get("current_phase") != HOLD:
+        # Historical accepted P7 remains inspectable after the product lease rotates.
+        if checkpoint == P7:
+            acceptance = load_checkpoint_acceptance(root, P7, "main", canonical_head=head)
+            if acceptance is not None:
+                return {"authority": "CANONICAL_MAIN_SNAPSHOT", "canonical_ref": ref,
+                        "canonical_head": head, "checkpoint": P7, "runtime_authorized": False,
+                        "checkpoint_acceptance": acceptance, "mission_complete": True,
+                        "mission_exit_allowed": True, "role_exit_allowed": False,
+                        "next_actor": "DIRECTOR", "next_action": "FOLLOW_CURRENT_PRODUCT_CHECKPOINT",
+                        "resume_condition": "Use the current main-owned product activation.",
+                        "instruction": "Historical P7 acceptance never reactivates its runtime worker."}
         return None
     selected = checkpoint or routing.get("current_checkpoint")
     if selected not in (P7, routing.get("next_runtime_checkpoint")):

@@ -1,0 +1,139 @@
+{
+  "schema": "distributed_world_simulator.work_order.v1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "program": "V0",
+  "goal_checkpoint": "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE",
+  "state": "DISPATCHED",
+  "work_order_type": "INTEGRATION",
+  "base_sha": "3d7672cba293d8e7bd72427b803f73fc8fcee5da",
+  "branch": "feature/v0-mvp-playable-seamless-planet-r1",
+  "scope": "MVP1–MVP8: интеграция уже принятых SM1/P7/Item/Construction/persistence в одну запускаемую двухклиентскую сцену. Никаких новых владельцев канонического состояния.",
+  "allowed_paths": [
+    "scripts/runtime/networked_gameplay/mvp/**",
+    "scripts/app/**",
+    "scenes/labs/mvp/**",
+    "tests/runtime/test_v0_mvp_*",
+    "tests/integration/test_v0_mvp_*",
+    "tests/fixtures/v0_mvp/**",
+    "RUN_V0_MVP_*",
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/**",
+    "docs/control/mvp-act0-r1/**"
+  ],
+  "forbidden_paths": [
+    "config/architecture/**",
+    "config/control/architecture-ownership.v1.json",
+    "config/control/harness/acceptance/**",
+    "scripts/simulation/matter/**",
+    "scripts/network/**",
+    "scripts/runtime/networked_gameplay/m4/**",
+    "scripts/runtime/networked_gameplay/sm1/**",
+    "scripts/runtime/networked_gameplay/p7/**",
+    "project.godot"
+  ],
+  "required_predicates": [
+    "MVP_SHARED_GRAPHICAL_SCENE",
+    "MVP_TWO_CLIENT_SHARED_WORLD",
+    "MVP_SEAM_NO_RECONNECT_OR_RESPAWN",
+    "MVP_CANONICAL_DIG_VISIBLE_TO_BOTH_CLIENTS",
+    "MVP_EXACTLY_ONCE_MATERIAL_OUTPUT",
+    "MVP_ITEM_CONSTRUCTION_PERSISTENCE_CONVERGENCE",
+    "MVP_RECONNECT_AND_RESTART",
+    "MVP_BOUNDED_INTERACTIVE_WORKLOAD",
+    "INDEPENDENT_REVIEWER_PASS",
+    "INDEPENDENT_VERIFIER_PASS",
+    "STANDARD_PC0_NON_RED",
+    "DIRECTIONAL_PC0_NON_RED_FOR_CRITICAL_HITS",
+    "HUMAN_MVP_ACCEPTANCE",
+    "FULL_WORLD_CORE_REGRESSION_PASS",
+    "POST_BUILD_CRITIQUE_COMPLETED",
+    "EVIDENCE_MAP_COMPLETE",
+    "REVIEW_HEAD_EXACT_AND_FRESH",
+    "TESTED_HEADS_EXACT_AND_FRESH",
+    "CRITICAL_CROSS_BRANCH_OVERLAP_ZERO",
+    "HUMAN_ATTENTION_QUEUE_EMPTY_OR_RESOLVED"
+  ],
+  "required_outputs": [
+    "MVP_SHARED_GRAPHICAL_SCENE",
+    "MVP_TWO_CLIENT_SHARED_WORLD",
+    "MVP_SEAM_NO_RECONNECT_OR_RESPAWN",
+    "MVP_CANONICAL_DIG_VISIBLE_TO_BOTH_CLIENTS",
+    "MVP_EXACTLY_ONCE_MATERIAL_OUTPUT",
+    "MVP_ITEM_CONSTRUCTION_PERSISTENCE_CONVERGENCE",
+    "MVP_RECONNECT_AND_RESTART",
+    "MVP_BOUNDED_INTERACTIVE_WORKLOAD",
+    "Exact-head Evidence Map and fresh independent roles"
+  ],
+  "stop_conditions": [
+    "New canonical owner or foundation change required",
+    "Second active runtime worker",
+    "Missing canonical ACT0 or stale epoch",
+    "Attempt to self-accept or self-merge"
+  ],
+  "risk_class": "CRITICAL",
+  "risk_reasons": [
+    "Composes mutable shared world, authority handoff and exactly-once recovery"
+  ],
+  "review_required": true,
+  "required_review_roles": [
+    "IMPLEMENTER",
+    "REVIEWER",
+    "VERIFIER",
+    "DIRECTOR",
+    "HUMAN"
+  ],
+  "repair_context_required": false,
+  "evidence_map_required": true,
+  "issued_at_utc": "2026-09-09T10:18:03Z",
+  "human_approval_required_for": [
+    "RUNTIME_FEATURE_MERGE",
+    "MVP_CHECKPOINT_ACCEPTANCE"
+  ],
+  "notes": "ACT0 records dispatch authority, not a running agent. Implementation starts only on canonical adoption plus current epoch audit. No product predicate is complete at activation.",
+  "design_brief": {
+    "problem_statement": "Принятые компоненты ещё не доказаны как единый пользовательский сценарий.",
+    "current_behavior": "SM1 и P7 приняты; MVP composition не выполнен.",
+    "desired_behavior": "Два клиента видят один мир, копают, пересекают A→B→A и восстанавливают одинаковое каноническое состояние.",
+    "alternatives_considered": [
+      "New demo-only terrain/inventory",
+      "Wait for unrelated research"
+    ],
+    "selected_design": "Small composition adapters over existing owners",
+    "why_selected": "No duplicate truth or new foundation",
+    "affected_owners": [
+      "V0",
+      "MATTER_MW4_MW10",
+      "SM1",
+      "ITEM_GRAPH",
+      "CONSTRUCTION",
+      "PERSISTENCE"
+    ],
+    "dependencies": [
+      "V0_P7_BOUNDED_TERRAIN_MUTATION",
+      "SM1_ACCEPTED",
+      "SERVER_PREDICTED"
+    ],
+    "non_goals": [
+      "ECO",
+      "FABRIC",
+      "WORLDGEN1_FULL",
+      "RF1",
+      "P8",
+      "WORLD_PACKS"
+    ],
+    "expected_risks": [
+      "Presentation/canonical divergence",
+      "Duplicate output on replay",
+      "Seam reconnect or respawn"
+    ],
+    "validation_plan": [
+      "Focused two-client scene",
+      "A-B-A continuity",
+      "Dig and exactly-once accounting",
+      "Reconnect/restart",
+      "Bounded interactive workload",
+      "Full world/core",
+      "Fresh Reviewer/Verifier and PC0"
+    ]
+  }
+}

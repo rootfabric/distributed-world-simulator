@@ -1,0 +1,54 @@
+{
+  "schema": "distributed_world_simulator.v0_mvp_activation.v1",
+  "activation_id": "V0-MVP-R1-ACTIVATION-001",
+  "checkpoint": "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE",
+  "program": "V0",
+  "state": "DISPATCHED",
+  "recorded_at_utc": "2026-09-09T10:18:03Z",
+  "main_declared_exact_successor_base": "3d7672cba293d8e7bd72427b803f73fc8fcee5da",
+  "exact_successor_base_tree": "3cdcd33b4a59a93707b7628bc0124184df94cc64",
+  "accepted_predecessor": {
+    "checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
+    "acceptance_record": "config/control/harness/acceptance/V0-P7-R1-CHECKPOINT-ACCEPTED-001.v1.json",
+    "latest_addendum": "config/control/harness/acceptance/V0-P7-R1-CHECKPOINT-ACCEPTED-ADDENDUM-002.v1.json",
+    "exact_product_base": "3d7672cba293d8e7bd72427b803f73fc8fcee5da",
+    "exact_product_base_tree": "3cdcd33b4a59a93707b7628bc0124184df94cc64",
+    "accepted_runtime_head": "5a1d79c6889136c40daf97f69feb90512c214009",
+    "accepted_runtime_tree": "00581408e4ba9033fde16b43915945e73e18fcb2"
+  },
+  "activation_record": "config/control/harness/activation/V0-MVP-R1-ACTIVATION-001.v1.json",
+  "exact_execution_base": "3d7672cba293d8e7bd72427b803f73fc8fcee5da",
+  "exact_execution_base_tree": "3cdcd33b4a59a93707b7628bc0124184df94cc64",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "runtime_branch": "feature/v0-mvp-playable-seamless-planet-r1",
+  "control_generation": 82,
+  "authorization": {
+    "owner_directive": "отлично. реализуй ACT0 MVP activation / exact base / epoch / Work Order",
+    "scope": "ACT0_ONLY_NOT_MVP_ACCEPTANCE",
+    "source": "OWNER_CONVERSATION_DIRECTIVE"
+  },
+  "mutation_lease": {
+    "capacity": 1,
+    "holder_checkpoint": "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE",
+    "holder_branch": "feature/v0-mvp-playable-seamless-planet-r1",
+    "runtime_mutation_authorized": true,
+    "effective_only_after_main_adoption": true,
+    "post_merge_epoch_audit_required": true,
+    "actual_worker_started": false
+  },
+  "director_dispatch": {
+    "status": "DISPATCHED",
+    "actor": "DIRECTOR",
+    "event": "config/control/harness/executions/E2026-09-09-V0-MVP-R1/events/V0-MVP-R1-WO-001/0002-director-dispatched.v1.json"
+  },
+  "base_control_observation": {
+    "routing_runtime_allowed": false,
+    "lease_state": "RESERVED_P7_CLOSURE_NO_RUNTIME_MUTATION",
+    "interpretation": "No current canonical V0 mutation authorization at base; not a claim about all physical processes or other agents."
+  },
+  "human_gate": "RUNTIME_FEATURE_MERGE",
+  "checkpoint_acceptance_gate": "HUMAN_MVP_ACCEPTANCE",
+  "successor_runtime_merge_authorized": false,
+  "mvp_accepted": false
+}

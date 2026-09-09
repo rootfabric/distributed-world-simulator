@@ -130,9 +130,10 @@
         "V0_SM1_CHECKPOINT_ACCEPTED"
       ],
       "target_checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
-      "current_phase": "P7_MERGED_CLOSURE_RECONCILIATION",
-      "eligibility": "CONTROL_RECONCILIATION_ONLY",
-      "reason": "Runtime merged; recover and durably reconcile closure evidence before any successor."
+      "current_phase": "ACCEPTED",
+      "eligibility": "ACCEPTED",
+      "reason": "P7 and its post-acceptance repair are canonical; immutable acceptance/addenda retained.",
+      "status": "ACCEPTED"
     },
     {
       "id": "V0_PLAYABLE_SEAMLESS_PLANET",
@@ -143,8 +144,10 @@
         "V0_P7_CHECKPOINT_ACCEPTED"
       ],
       "planned_checkpoint": "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE",
-      "eligibility": "PLANNED_PENDING_P7_ACCEPTANCE_AND_ACTIVATION",
-      "reason": "Composition acceptance only: P4+P5+P6+Gateway+SM1+P7, no new foundation."
+      "eligibility": "ACTIVATED_DISPATCHED",
+      "reason": "ACT0 opens one bounded composition Work Order over the exact accepted P7 base; not MVP acceptance.",
+      "target_checkpoint": "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE",
+      "current_phase": "MVP_ACTIVATED_IMPLEMENTATION_DISPATCHED"
     },
     {
       "id": "CONSTRUCTION_TRAIN",
@@ -196,7 +199,7 @@
         "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE",
         "V0_P8_FIRST_MOBILE_CONSTRUCT"
       ],
-      "selection_rule": "MVP is the primary goal; reconcile P7 closure, then explicitly activate the composition checkpoint. Research is not an implicit dependency."
+      "selection_rule": "MVP ACT0 is activated; current epoch and Director dispatch govern one implementation worker. Research is not an implicit blocker."
     },
     {
       "id": "ARCHITECTURE_TRAIN",
@@ -230,7 +233,7 @@
       "work_order_type": "HUMAN_OBSERVATION"
     }
   ],
-  "selection_rule": "MVP first. Resolve current P7 closure debt, then activate the declared MVP composition. Select ECO/FABRIC only on an explicit lane request; research milestones do not automatically block MVP. Goals declare intent, registry declares current phase, scheduler mirrors the dispatch boundary.",
+  "selection_rule": "MVP first: execute the main-owned ACT0 Work Order after epoch audit; no automatic research or P8 activation.",
   "lane_goals": {
     "MVP": {
       "title": "Работающее визуальное сетевое MVP",

@@ -1,0 +1,14 @@
+{
+  "schema": "distributed_world_simulator.project_epoch.v1",
+  "epoch_id": "E2026-09-09-V0-MVP-R1",
+  "base_sha": "3d7672cba293d8e7bd72427b803f73fc8fcee5da",
+  "registry_generation": 82,
+  "architecture_revision": "GLOBAL-P0-2026-08-12-R3-REFRESH-R1",
+  "harness_revision": "H0-2026-08-11-R1",
+  "created_at_utc": "2026-09-09T10:18:03Z",
+  "eligible_checkpoints": [
+    "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE"
+  ],
+  "status": "ACTIVE",
+  "decision": "CONTINUE"
+}
