@@ -53,11 +53,17 @@ class MVPEpochResumeTests(unittest.TestCase):
             code, before = self.cli(root, "drive")
             self.assertEqual(0, code, before)
             self.assertEqual("INTEGRATOR", before["next"]["next_actor"])
+            self.assertEqual("BLOCK_CONTINUATION", before["epoch"]["validation"]["action"])
             self.append_audit(root)
             code, after = self.cli(root, "drive")
             self.assertEqual(0, code, after)
-            self.assertEqual("IMPLEMENTER", after["next"]["next_actor"], after)
             self.assertEqual("MAIN_MOVED_AUDIT_CONTINUE", after["epoch"]["validation"]["status"])
+            self.assertEqual("CONTINUE", after["epoch"]["validation"]["action"])
+            self.assertFalse(after["continuation_blocked"])
+            # This is an INTEGRATION Work Order: existing policy keeps INTEGRATOR,
+            # but its action changes from epoch recovery to executing the order.
+            self.assertEqual("INTEGRATOR", after["next"]["next_actor"])
+            self.assertEqual("CONTINUE_ACTIVE_WORK_ORDER_TO_IMPLEMENTED_AND_VALIDATED", after["next"]["next_action"])
             self.assertEqual("DISPATCHED", after["reduced_work_order"]["state"])
             self.assertEqual([], after["reduced_work_order"]["completed_predicates"])
             self.assertFalse(after["next"]["mission_complete"])
@@ -87,7 +93,8 @@ class MVPEpochResumeTests(unittest.TestCase):
                 self.append_audit(root, **changes)
                 code, result = self.cli(root, "drive")
                 self.assertNotEqual(0, code, result)
-                self.assertIn("PROVENANCE_", result["error"]["detail"])
+                expected = "EXECUTION_AUTHORITY_JSON_SET_MISMATCH" if changes.get("committed") is False else "PROVENANCE_WORKTREE_MODIFIED"
+                self.assertIn(expected, result["error"]["detail"])
 
     def test_unreferenced_audit_is_not_authority(self):
         with self.fixture(adopted=True) as root:
