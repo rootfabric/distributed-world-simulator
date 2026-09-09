@@ -559,31 +559,47 @@ def _select_epoch_audit(
         if path in audited_paths
         and item.get("schema") == "distributed_world_simulator.harness_epoch_audit.v1"
     ]
-    # ACT0 must audit a control-only main advance BEFORE product implementation.
-    # Consume only a committed, identity-bound MVP recovery record; do not invent
-    # IMPLEMENTED/VERIFIED/AUDITED states or mark product predicates complete.
     epoch = guard_context.get("epoch", {})
     mvp = "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE"
-    if epoch.get("eligible_checkpoints") == [mvp] and events[-1].get("work_state") == "DISPATCHED":
-        for event in events:
-            if not (event.get("event_type") == "RECOVERY_RESUMED"
-                    and event.get("work_state") == "DISPATCHED"
-                    and event.get("actor") == "INTEGRATOR"
-                    and event.get("command") == "MVP_ACT0_POST_MERGE_EPOCH_AUDIT"
-                    and type(event.get("exit_code")) is int and event["exit_code"] == 0
-                    and event.get("project_epoch") == epoch.get("epoch_id")):
+    if epoch.get("eligible_checkpoints") != [mvp]:
+        return audits[-1] if audits else None
+
+    # A validated epoch audit outlives the DISPATCHED state. Later product
+    # progress does not invalidate it; a different main still does. Process both
+    # supported audit event forms in ledger order so old recovery cannot mask
+    # a newer audit (including RED or a newly audited main).
+    audits = []
+    for event in sorted(events, key=lambda item: item["sequence"]):
+        completed_audit = (
+            event.get("event_type") == "AUDIT_COMPLETED"
+            and event.get("work_state") == "AUDITED"
+            and event.get("exit_code") == 0
+            and bool(event.get("command"))
+        )
+        recovery_audit = (
+            event.get("event_type") == "RECOVERY_RESUMED"
+            and event.get("work_state") == "DISPATCHED"
+            and event.get("actor") == "INTEGRATOR"
+            and event.get("command") == "MVP_ACT0_POST_MERGE_EPOCH_AUDIT"
+            and type(event.get("exit_code")) is int and event["exit_code"] == 0
+            and event.get("project_epoch") == epoch.get("epoch_id")
+        )
+        if not (completed_audit or recovery_audit):
+            continue
+        for raw_path in event.get("evidence_paths", []):
+            relative = raw_path.replace("\\", "/")
+            document = guard_context["documents"].get(relative, {})
+            if document.get("schema") != "distributed_world_simulator.harness_epoch_audit.v1":
                 continue
-            for relative in event.get("evidence_paths", []):
-                document = guard_context["documents"].get(relative, {})
-                if document.get("schema") != "distributed_world_simulator.harness_epoch_audit.v1":
-                    continue
-                audit = json.loads(committed_bytes(guard_context["root"], relative))
-                if (audit.get("project_epoch") != event["project_epoch"]
-                        or audit.get("work_order_id") != event["work_order_id"]
-                        or audit.get("base_sha") != epoch.get("base_sha")
-                        or audit.get("main_sha") != event["head_sha"]):
-                    raise ContractValidationError("MVP_RESUME_AUDIT_IDENTITY_MISMATCH")
-                audits.append(audit)
+            audit = json.loads(committed_bytes(guard_context["root"], relative))
+            if recovery_audit and (
+                audit.get("project_epoch") != event["project_epoch"]
+                or audit.get("work_order_id") != event["work_order_id"]
+                or audit.get("base_sha") != epoch.get("base_sha")
+                or audit.get("main_sha") != event["head_sha"]
+            ):
+                raise ContractValidationError("MVP_RESUME_AUDIT_IDENTITY_MISMATCH")
+            audits.append(audit)
     return audits[-1] if audits else None
 
 
