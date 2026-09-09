@@ -29,7 +29,7 @@ jobs:
           ref: ${{ github.sha }}
           fetch-depth: 0
           persist-credentials: false
-      - name: Verify exact input and assemble only the declared control files
+      - name: Verify exact input and apply only the bounded R2 control repair
         shell: bash
         run: |
           set -euo pipefail
@@ -39,9 +39,8 @@ jobs:
           test "$(git rev-parse origin/main)" = 3d7672cba293d8e7bd72427b803f73fc8fcee5da
           test "$(git rev-parse origin/control/v0-mvp-act0-r1)" = "$EXPECTED_INPUT"
           git switch -c control/v0-mvp-act0-r1
-          python3 -m py_compile docs/control/mvp-act0-r1/assemble.py docs/control/mvp-act0-r1/test_act0_template.py
-          python3 docs/control/mvp-act0-r1/assemble.py | tee artifacts/act0-assembly/assembly.log
-          cp docs/control/mvp-act0-r1/test_act0_template.py tests/harness/test_v0_mvp_act0.py
+          python3 -m py_compile docs/control/mvp-act0-r1/repair_r2.py
+          python3 docs/control/mvp-act0-r1/repair_r2.py | tee artifacts/act0-assembly/assembly.log
           python3 - <<'PY'
           import fnmatch, json, subprocess
           from pathlib import Path
@@ -57,8 +56,8 @@ jobs:
                   raise SystemExit('ACT0_FORBIDDEN_PATH:' + path)
           PY
           git diff --check
-          git add config/control scripts/harness/checkpoint_planner.py scripts/harness/project_overview.py tests/harness/test_v0_mvp_act0.py docs/control/mvp-act0-r1
-          git -c user.name='ACT0 control assembler' -c user.email='act0-assembler@users.noreply.github.com' commit -m 'feat(act0): bind MVP activation, epoch, work order and serialized planner'
+          git add scripts/harness/project_overview.py tests/harness
+          git -c user.name='ACT0 control assembler' -c user.email='act0-assembler@users.noreply.github.com' commit -m 'fix(act0): validate canonical activation and isolate historical control fixtures'
           echo "SUBJECT_HEAD=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
           echo "SUBJECT_TREE=$(git rev-parse 'HEAD^{tree}')" >> "$GITHUB_ENV"
       - name: Publish only the existing ACT0 candidate branch without force
