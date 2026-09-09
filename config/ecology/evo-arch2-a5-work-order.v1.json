@@ -109,6 +109,8 @@
     "DEVELOPMENT_HISTORY_EXCLUDES_CURRENT_STARVATION_WINDOW",
     "RM22_ORACLE_PARSES_ON_CANONICAL_GODOT_4_7_1_DOUBLE",
     "RM22_MARKER_MATCHES_THIRTEEN_EXECUTED_ASSERTIONS",
+    "RM26_ORACLE_USES_VALID_DEVELOPMENT_PROGRAM",
+    "RM26_ORACLE_FAILS_CLOSED_ON_SETUP_ERRORS",
     "A2_DEVELOPMENT_COUNTERS_CAUSALLY_BOUNDED_BY_LIFECYCLE_AGE",
     "LIFECYCLE_RESTART_EQUIVALENT_TO_UNINTERRUPTED",
     "A5_TO_A2_TRANSFER_LEDGER_SEALED",
@@ -125,5 +127,5 @@
     "global_pc0_green_inferred": false
   },
   "state": "READY_FOR_FRESH_ACCEPTANCE",
-  "next": "Fresh exact Verifier + fresh independent Reviewer on final RM-A5-01..30 subject; accept research source only if both pass with zero new blocking findings"
+  "next": "Fresh exact Verifier + fresh independent Reviewer on final RM-A5-01..31 subject; accept research source only if both pass with zero new blocking findings"
 }
