@@ -4,14 +4,11 @@ on:
   push:
     branches: [control/v0-mvp-act0-r1]
   workflow_dispatch:
-
 permissions:
   contents: read
-
 concurrency:
   group: act0-one-shot-control-assembly
   cancel-in-progress: false
-
 jobs:
   assemble:
     if: github.repository == 'rootfabric/distributed-world-simulator' && github.actor == 'rootfabric' && github.ref == 'refs/heads/control/v0-mvp-act0-r1' && (github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[act0-compose]'))
@@ -29,7 +26,7 @@ jobs:
           ref: ${{ github.sha }}
           fetch-depth: 0
           persist-credentials: false
-      - name: Verify exact input and apply only the bounded R2 control repair
+      - name: Apply exact bounded R3 selector repair
         shell: bash
         run: |
           set -euo pipefail
@@ -39,28 +36,23 @@ jobs:
           test "$(git rev-parse origin/main)" = 3d7672cba293d8e7bd72427b803f73fc8fcee5da
           test "$(git rev-parse origin/control/v0-mvp-act0-r1)" = "$EXPECTED_INPUT"
           git switch -c control/v0-mvp-act0-r1
-          python3 -m py_compile docs/control/mvp-act0-r1/repair_r2.py
-          python3 docs/control/mvp-act0-r1/repair_r2.py | tee artifacts/act0-assembly/assembly.log
+          python3 -m py_compile docs/control/mvp-act0-r1/repair_r3.py docs/control/mvp-act0-r1/test_epoch_resume_template.py
+          python3 docs/control/mvp-act0-r1/repair_r3.py | tee artifacts/act0-assembly/assembly.log
           python3 - <<'PY'
           import fnmatch, json, subprocess
           from pathlib import Path
-          wo = json.loads(Path('docs/control/mvp-act0-r1/work-order.v1.json').read_text())
-          paths = subprocess.check_output(['git','status','--porcelain','--untracked-files=all'], text=True).splitlines()
-          for line in paths:
+          wo = json.loads(Path('docs/control/mvp-act0-r1/work-order-epoch-resume-r3.v1.json').read_text())
+          for line in subprocess.check_output(['git','status','--porcelain','--untracked-files=all'], text=True).splitlines():
               path = line[3:]
-              if path.startswith('artifacts/'):
-                  raise SystemExit('ARTIFACT_NOT_IGNORED:' + path)
               if not any(fnmatch.fnmatchcase(path, p) for p in wo['allowed_paths']):
-                  raise SystemExit('ACT0_SCOPE_DENIED:' + path)
+                  raise SystemExit('ACT0_R3_SCOPE_DENIED:' + path)
               if any(fnmatch.fnmatchcase(path, p) for p in wo['forbidden_paths']):
-                  raise SystemExit('ACT0_FORBIDDEN_PATH:' + path)
+                  raise SystemExit('ACT0_R3_FORBIDDEN_PATH:' + path)
           PY
           git diff --check
-          git add scripts/harness/project_overview.py tests/harness
-          git -c user.name='ACT0 control assembler' -c user.email='act0-assembler@users.noreply.github.com' commit -m 'fix(act0): validate canonical activation and isolate historical control fixtures'
-          echo "SUBJECT_HEAD=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
-          echo "SUBJECT_TREE=$(git rev-parse 'HEAD^{tree}')" >> "$GITHUB_ENV"
-      - name: Publish only the existing ACT0 candidate branch without force
+          git add scripts/harness/state_builder.py tests/harness/test_v0_mvp_epoch_resume.py
+          git -c user.name='ACT0 control assembler' -c user.email='act0-assembler@users.noreply.github.com' commit -m 'fix(act0): resume dispatched MVP from committed exact epoch audit'
+      - name: Publish only the ACT0 branch without force
         env:
           PUBLISH_TOKEN: ${{ github.token }}
         shell: bash
@@ -70,45 +62,55 @@ jobs:
           test "$(git rev-parse HEAD^)" = "$EXPECTED_INPUT"
           authorization="$(printf 'x-access-token:%s' "$PUBLISH_TOKEN" | base64 -w0)"
           git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $authorization" push origin HEAD:refs/heads/control/v0-mvp-act0-r1
-      - name: Install the unchanged pinned Harness dependencies
+      - name: Install pinned Harness dependencies
         run: python3 -m pip install --disable-pip-version-check -r scripts/harness/requirements.txt
-      - name: Run every control check and preserve failures without laundering them
+      - name: Test predecessor rejection, candidate resume and full control regression
         shell: bash
         run: |
           python3 - <<'PY'
-          import hashlib, json, os, subprocess, sys, time
+          import hashlib, json, os, shutil, subprocess, sys, time
           from pathlib import Path
-          out = Path('artifacts/act0-assembly')
+          root = Path.cwd()
+          out = root / 'artifacts/act0-assembly'
           out.mkdir(parents=True, exist_ok=True)
-          def git(*args):
-              return subprocess.check_output(['git', *args], text=True).strip()
+          def git(*args, cwd=root):
+              return subprocess.check_output(['git', *args], cwd=cwd, text=True).strip()
           before = {'head':git('rev-parse','HEAD'), 'tree':git('rev-parse','HEAD^{tree}'), 'tracked_status':git('status','--porcelain','--untracked-files=no')}
-          checks = [
-              ('control-syntax', ['python3','-m','harness.control_candidate_validation']),
-              ('candidate-consistency', ['python3','-m','harness.cli','check-consistency','--candidate']),
-              ('act0-focused', ['python3','-m','unittest','tests.harness.test_v0_mvp_act0','-v']),
-              ('harness-full', ['python3','-m','unittest','discover','-s','tests/harness','-p','test_*.py','-v']),
-              ('base-pc0', ['python3','scripts/control/project_control.py','--no-fetch','--no-fail-on-red']),
-              ('base-directional', ['python3','scripts/control/project_control_directional_watch.py','--no-fail-on-red']),
-          ]
           results = []
-          for name, command in checks:
+          def run(name, command, expected=0, cwd=root):
               started = time.time()
               with (out / (name + '.log')).open('wb') as stream:
                   try:
-                      result = subprocess.run(command, stdout=stream, stderr=subprocess.STDOUT, timeout=720)
-                      code = result.returncode
+                      proc = subprocess.run(command, cwd=cwd, stdout=stream, stderr=subprocess.STDOUT, timeout=720)
+                      code = proc.returncode
                   except subprocess.TimeoutExpired:
                       code = 124
-              results.append({'name':name,'command':command,'exit_code':code,'elapsed_seconds':round(time.time()-started,3)})
-              print(name, 'exit=', code, flush=True)
+              passed = code == expected
+              if name == 'predecessor-epoch-resume':
+                  text = (out / (name + '.log')).read_text()
+                  passed = passed and 'FAILED (failures=1)' in text and 'INTEGRATOR' in text and 'IMPLEMENTER' in text and 'ERROR:' not in text
+              results.append({'name':name, 'command':command,'cwd':str(cwd),'expected_exit':expected,'exit_code':code,'passed':passed,'elapsed_seconds':round(time.time()-started,3)})
+              print(name, 'exit=', code, 'passed=', passed, flush=True)
+          previous = Path(os.environ['RUNNER_TEMP']) / 'act0-r2-predecessor'
+          git('worktree','add','--detach',str(previous),'c5d3eed5532c9dbe61b3ca13a87242bf6f2ea73d')
+          shutil.copyfile(root / 'tests/harness/test_v0_mvp_epoch_resume.py', previous / 'tests/harness/test_v0_mvp_epoch_resume.py')
+          run('predecessor-epoch-resume', ['python3','-m','unittest','tests.harness.test_v0_mvp_epoch_resume.MVPEpochResumeTests.test_committed_exact_audit_resumes_without_product_completion','-v'], expected=1, cwd=previous)
+          (out/'predecessor-identity.json').write_text(json.dumps({'head':git('rev-parse','HEAD',cwd=previous),'tree':git('rev-parse','HEAD^{tree}',cwd=previous),'tracked_status':git('status','--porcelain','--untracked-files=no',cwd=previous),'added_probe_only':'tests/harness/test_v0_mvp_epoch_resume.py'},indent=2)+'\n')
+          for name, command in [
+              ('control-syntax', ['python3','-m','harness.control_candidate_validation']),
+              ('candidate-consistency', ['python3','-m','harness.cli','check-consistency','--candidate']),
+              ('act0-focused', ['python3','-m','unittest','tests.harness.test_v0_mvp_act0','tests.harness.test_v0_mvp_epoch_resume','-v']),
+              ('harness-full', ['python3','-m','unittest','discover','-s','tests/harness','-p','test_*.py','-v']),
+              ('base-pc0', ['python3','scripts/control/project_control.py','--no-fetch','--no-fail-on-red']),
+              ('base-directional', ['python3','scripts/control/project_control_directional_watch.py','--no-fail-on-red']),
+          ]:
+              run(name, command)
           after = {'head':git('rev-parse','HEAD'), 'tree':git('rev-parse','HEAD^{tree}'), 'tracked_status':git('status','--porcelain','--untracked-files=no')}
-          passed = all(r['exit_code'] == 0 for r in results) and before == after and not after['tracked_status']
+          passed = all(r['passed'] for r in results) and before == after and not after['tracked_status']
           result = {'schema':'distributed_world_simulator.act0_machine_evidence.v1','subject':before,'postflight':after,
                     'workflow_sha':os.environ['GITHUB_SHA'],'run_id':os.environ['GITHUB_RUN_ID'],
                     'runner':os.environ['RUNNER_NAME'],'checks':results,'passed':passed,
-                    'canonical_activation':False,'independent_verdict':False,
-                    'pc0_scope':'canonical BASE, not post-merge candidate'}
+                    'canonical_activation':False,'independent_verdict':False,'pc0_scope':'canonical BASE, not post-merge candidate'}
           (out/'result.json').write_text(json.dumps(result,indent=2)+'\n')
           entries = [{'path':p.name,'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()} for p in sorted(out.iterdir()) if p.is_file() and p.name != 'manifest.json']
           (out/'manifest.json').write_text(json.dumps({'subject':before,'workflow_sha':os.environ['GITHUB_SHA'],'run_id':os.environ['GITHUB_RUN_ID'],'files':entries},indent=2)+'\n')
