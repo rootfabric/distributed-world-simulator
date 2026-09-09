@@ -218,6 +218,70 @@ def project_overview(
                 dispatch_authority="EXISTING_HARNESS_ONLY")
 
 
+
+def _validate_canonical_product_snapshot(root: Path, head: str) -> None:
+    bundle = ContractBundle.load(
+        root, reader=lambda path: read_control(root, path.relative_to(root).as_posix(), head)
+    )
+    bundle.validate_schema_definitions()
+    report = project_overview(root, canonical_head=head, include_acceptance=False)
+    blockers = [item["code"] for item in report["consistency_findings"]
+                if item["severity"] == "ERROR"
+                and item["scope"] in ("product_blocking", "observability")]
+    if blockers:
+        raise ContractValidationError("PROJECT_CONSISTENCY_ERRORS:" + ",".join(sorted(set(blockers))))
+
+
+def _validate_mvp_activation(root: Path, head: str, scheduler: dict[str, Any]) -> None:
+    """Canonical activation binds the new execution; a candidate cannot mint it."""
+    mvp = "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE"
+    routing = scheduler["v0_product_train_routing"]
+    declared = routing.get("mvp_activation", {})
+    path = declared.get("activation_record")
+    if not isinstance(path, str) or not path.startswith("config/control/harness/activation/"):
+        raise ContractValidationError("MVP_ACTIVATION_RECORD_REQUIRED")
+    activation = read_control(root, path, head)
+    base = declared.get("exact_execution_base")
+    tree = declared.get("exact_execution_base_tree")
+    if not isinstance(base, str) or not re.fullmatch(r"[0-9a-f]{40}", base):
+        raise ContractValidationError("MVP_ACTIVATION_BASE_INVALID")
+    code, actual_tree = _git(root, "rev-parse", "--verify", base + "^{tree}")
+    if code or actual_tree != tree or activation.get("exact_successor_base_tree") != tree:
+        raise ContractValidationError("MVP_ACTIVATION_TREE_MISMATCH")
+    if _git(root, "merge-base", "--is-ancestor", base, head)[0]:
+        raise ContractValidationError("MVP_ACTIVATION_BASE_NOT_CANONICAL_ANCESTOR")
+    expected = {"checkpoint": mvp, "main_declared_exact_successor_base": base,
+                "project_epoch": declared.get("project_epoch"),
+                "work_order_id": declared.get("work_order_id"),
+                "runtime_branch": declared.get("runtime_branch")}
+    if any(activation.get(key) != value for key, value in expected.items()):
+        raise ContractValidationError("MVP_ACTIVATION_IDENTITY_MISMATCH")
+    if (routing.get("accepted_predecessor_checkpoint") != P7
+            or routing.get("accepted_predecessor_base") != base
+            or activation.get("accepted_predecessor", {}).get("checkpoint") != P7):
+        raise ContractValidationError("MVP_ACCEPTED_PREDECESSOR_MISMATCH")
+    if load_checkpoint_acceptance(root, P7, "main", canonical_head=head) is None:
+        raise ContractValidationError("MVP_P7_ACCEPTANCE_REQUIRED")
+    lease = scheduler["pre_h0_3_runtime_mutation_lease"]
+    if (type(lease.get("capacity")) is not int or lease["capacity"] != 1
+            or lease.get("holder_checkpoint") != mvp
+            or lease.get("holder_branch") != declared.get("runtime_branch")):
+        raise ContractValidationError("MVP_SINGLE_WORKER_LEASE_MISMATCH")
+    epoch_id, wo_id = declared.get("project_epoch"), declared.get("work_order_id")
+    if any(not isinstance(x, str) or not re.fullmatch(r"[A-Za-z0-9._-]+", x) for x in (epoch_id, wo_id)):
+        raise ContractValidationError("MVP_EXECUTION_IDENTITY_INVALID")
+    prefix = "config/control/harness/executions/" + epoch_id
+    epoch = read_control(root, prefix + "/project-epoch.v1.json", head)
+    order = read_control(root, prefix + "/work-orders/" + wo_id + ".v1.json", head)
+    if (epoch.get("base_sha") != base or epoch.get("epoch_id") != epoch_id
+            or epoch.get("registry_generation") != lease.get("effective_registry_generation")
+            or mvp not in epoch.get("eligible_checkpoints", [])
+            or order.get("base_sha") != base or order.get("project_epoch") != epoch_id
+            or order.get("work_order_id") != wo_id or order.get("goal_checkpoint") != mvp
+            or order.get("branch") != lease.get("holder_branch")):
+        raise ContractValidationError("MVP_CANONICAL_EPOCH_WORK_ORDER_MISMATCH")
+
+
 def canonical_reconciliation_route(root: Path, checkpoint: str | None) -> dict[str, Any] | None:
     """Route the held product to Director before loading obsolete execution epochs.
 
@@ -229,6 +293,10 @@ def canonical_reconciliation_route(root: Path, checkpoint: str | None) -> dict[s
     scheduler = read_control(root, SCHEDULER, head)
     routing = scheduler.get("v0_product_train_routing", {})
     if routing.get("current_phase") != HOLD:
+        mvp = "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE"
+        if routing.get("current_checkpoint") == mvp and checkpoint in (None, mvp):
+            _validate_canonical_product_snapshot(root, head)
+            _validate_mvp_activation(root, head, scheduler)
         # Historical accepted P7 remains inspectable after the product lease rotates.
         if checkpoint == P7:
             acceptance = load_checkpoint_acceptance(root, P7, "main", canonical_head=head)
@@ -246,16 +314,7 @@ def canonical_reconciliation_route(root: Path, checkpoint: str | None) -> dict[s
         return None
     # Keep the recovery route independent of obsolete execution epochs, not of
     # canonical contracts. All reads (including acceptance) use this exact head.
-    bundle = ContractBundle.load(
-        root, reader=lambda path: read_control(root, path.relative_to(root).as_posix(), head)
-    )
-    bundle.validate_schema_definitions()
-    report = project_overview(root, canonical_head=head, include_acceptance=False)
-    blockers = [item["code"] for item in report["consistency_findings"]
-                if item["severity"] == "ERROR"
-                and item["scope"] in ("product_blocking", "observability")]
-    if blockers:
-        raise ContractValidationError("PROJECT_CONSISTENCY_ERRORS:" + ",".join(sorted(set(blockers))))
+    _validate_canonical_product_snapshot(root, head)
     acceptance = load_checkpoint_acceptance(root, P7, "main", canonical_head=head)
     return {
         "authority": "CANONICAL_MAIN_SNAPSHOT", "canonical_ref": ref, "canonical_head": head,

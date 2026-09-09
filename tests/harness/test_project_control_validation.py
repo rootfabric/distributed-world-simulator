@@ -27,6 +27,21 @@ class ProjectControlValidationTests(unittest.TestCase):
         cls.root = Path(cls.temporary.name) / "repo"
         subprocess.run(["git", "clone", "--shared", "--quiet", str(ROOT), str(cls.root)],
                        check=True, capture_output=True, text=True)
+        # This suite exercises the P7 HOLD route, not mutable current MVP routing.
+        # Code under test stays current; only disposable canonical control inputs
+        # are pinned to the original accepted-P7 snapshot.
+        for relative in (
+            "config/control/project-program-registry.v1.json",
+            "config/control/harness/scheduler-policy.v1.json",
+            "config/control/harness/project-goals.v1.json",
+            "config/control/harness/v0-product-train-policy.v1.json",
+            "config/control/harness/v0-current-work-map.v1.json",
+            "config/control/harness/checkpoint-catalog.v1.json",
+        ):
+            raw = subprocess.check_output(["git", "show", "3d7672cba293d8e7bd72427b803f73fc8fcee5da:" + relative], cwd=ROOT)
+            (cls.root / relative).write_bytes(raw)
+            cls.git("add", "--", relative)
+        cls.git("commit", "-qm", "test-only pinned P7 hold controls")
         cls.base = cls.git("rev-parse", "HEAD")
 
     @classmethod

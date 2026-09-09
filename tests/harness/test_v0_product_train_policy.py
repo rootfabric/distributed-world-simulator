@@ -1,3 +1,4 @@
+"""Historical P7 regression; current MVP authority is tested in test_v0_mvp_act0."""
 from __future__ import annotations
 
 import json
@@ -23,10 +24,13 @@ SM1_BASE = "acb9379cacc413fc25a65117fb1627f5a01b9736"
 
 
 def _load(path: Path) -> dict:
-    return json.loads(path.read_text(encoding="utf-8"))
+    # Explicit historical inputs preserve the P7 contract after lease rotation.
+    relative = path.relative_to(ROOT).as_posix()
+    raw = subprocess.check_output(["git", "show", "3d7672cba293d8e7bd72427b803f73fc8fcee5da:" + relative], cwd=ROOT)
+    return json.loads(raw.decode("utf-8"))
 
 
-class V0ProductTrainPolicyTests(unittest.TestCase):
+class HistoricalP7ProductTrainPolicyTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         cls.policy = _load(HARNESS / "v0-product-train-policy.v1.json")
@@ -238,7 +242,8 @@ class V0ProductTrainPolicyTests(unittest.TestCase):
                 for relative in paths:
                     destination = root / relative
                     destination.parent.mkdir(parents=True, exist_ok=True)
-                    shutil.copy2(ROOT / relative, destination)
+                    destination.write_bytes(subprocess.check_output(
+                        ["git", "show", "3d7672cba293d8e7bd72427b803f73fc8fcee5da:" + relative], cwd=ROOT))
             for command in (
                 ["git", "init", "-b", "main"],
                 ["git", "add", "."],

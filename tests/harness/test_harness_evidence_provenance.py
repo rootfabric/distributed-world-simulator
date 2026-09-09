@@ -54,7 +54,7 @@ class EvidenceProvenanceTests(unittest.TestCase):
         self.epoch = {
             "schema": "distributed_world_simulator.project_epoch.v1",
             "epoch_id": self.epoch_id, "base_sha": self.base,
-            "registry_generation": 81, "architecture_revision": "TEST",
+            "registry_generation": self.read("config/control/project-program-registry.v1.json")["registry_generation"], "architecture_revision": "TEST",
             "harness_revision": "H0-2026-08-11-R1", "created_at_utc": "2026-09-06T00:00:00Z",
             "eligible_checkpoints": [self.checkpoint], "status": "ACTIVE",
         }

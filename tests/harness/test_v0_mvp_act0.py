@@ -144,7 +144,7 @@ class MVPAct0Tests(unittest.TestCase):
             self.assertEqual(MVP, payload["selected_checkpoint"])
             self.assertEqual("MAIN_MOVED_REVIEW_REQUIRED", payload["epoch"]["validation"]["status"])
             self.assertFalse(payload["next"]["mission_complete"])
-            self.assertEqual("DIRECTOR", payload["next"]["next_actor"])
+            self.assertEqual("INTEGRATOR", payload["next"]["next_actor"])
             code, closed = self.cli(root, "close-mission")
             self.assertEqual(8, code, closed)
 
@@ -154,6 +154,43 @@ class MVPAct0Tests(unittest.TestCase):
             self.assertEqual(0, code, payload)
             self.assertTrue(payload["control_route"]["mission_complete"])
             self.assertFalse(payload["runtime_authorized"])
+
+
+    def commit_fixture(self, root, relative, value):
+        path = root / relative
+        path.write_text(json.dumps(value) + "\n", encoding="utf-8")
+        git(root, "add", "--", relative)
+        git(root, "-c", "user.name=ACT0 fixture", "-c", "user.email=fixture@example.invalid", "commit", "-qm", "test-only canonical fault")
+        git(root, "update-ref", "refs/remotes/origin/main", git(root, "rev-parse", "HEAD"))
+
+    def test_mvp_canonical_lease_and_mirror_faults_block_execution(self):
+        faults = [
+            (H + "scheduler-policy.v1.json", "LEASE_GENERATION_MISMATCH", "lease"),
+            (H + "v0-product-train-policy.v1.json", "CURRENT_PHASE_MISMATCH", "phase"),
+            (H + "activation/V0-MVP-R1-ACTIVATION-001.v1.json", "MVP_ACTIVATION_TREE_MISMATCH", "tree"),
+            (H + "event.schema.v1.json", "JSON_SCHEMA_INVALID", "schema"),
+        ]
+        for relative, expected, kind in faults:
+            with self.subTest(kind=kind), self.fixture(adopted=True) as root:
+                value = json.loads((root / relative).read_text())
+                if kind == "lease":
+                    value["pre_h0_3_runtime_mutation_lease"]["effective_registry_generation"] -= 1
+                elif kind == "phase":
+                    value["current_phase"] = "INVALID_PHASE"
+                elif kind == "tree":
+                    value["exact_successor_base_tree"] = "f" * 40
+                else:
+                    value["type"] = "invalid-schema-type"
+                self.commit_fixture(root, relative, value)
+                code, result = self.cli(root, "drive")
+                self.assertEqual(3, code, result)
+                self.assertIn(expected, result["error"]["detail"])
+
+    def test_current_product_sequence_is_unique(self):
+        policy = read(H + "v0-product-train-policy.v1.json")
+        ids = [item["id"] for item in policy["checkpoint_sequence"]]
+        self.assertEqual(len(ids), len(set(ids)))
+        self.assertEqual([P7, MVP, "V0_P8_FIRST_MOBILE_CONSTRUCT"], ids[-3:])
 
 
 if __name__ == "__main__":
