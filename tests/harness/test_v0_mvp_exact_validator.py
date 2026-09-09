@@ -10,6 +10,8 @@ import unittest
 ROOT = Path(__file__).resolve().parents[2]
 VALIDATOR = ROOT / "docs/control/mvp-act0-r1/validate.py"
 R6 = ROOT / "docs/control/mvp-act0-r1/work-order-exact-validator-r6.v1.json"
+R6_SUBJECT = "32eabd082c372f532a9f87bc382f0fcce4d6e4db"
+R6_TREE = "87874271a1897689aef27fb4ee142b23ee5cd31a"
 
 spec = importlib.util.spec_from_file_location("act0_validate", VALIDATOR)
 assert spec and spec.loader
@@ -21,8 +23,21 @@ class MVPExactValidatorTests(unittest.TestCase):
     def test_r6_repair_diff_touches_only_declared_paths(self) -> None:
         work_order = json.loads(R6.read_text(encoding="utf-8"))
         base = work_order["repair_diff_base"]
+        observed_tree = subprocess.check_output(
+            ["git", "show", "-s", "--format=%T", R6_SUBJECT], cwd=ROOT, text=True
+        ).strip()
+        self.assertEqual(observed_tree, R6_TREE)
+        self.assertEqual(
+            subprocess.run(
+                ["git", "merge-base", "--is-ancestor", R6_SUBJECT, "HEAD"],
+                cwd=ROOT,
+                check=False,
+            ).returncode,
+            0,
+            "current ACT0 descendant no longer contains the frozen R6 subject",
+        )
         changed = subprocess.check_output(
-            ["git", "diff", "--name-only", base, "HEAD"], cwd=ROOT, text=True
+            ["git", "diff", "--name-only", base, R6_SUBJECT], cwd=ROOT, text=True
         ).splitlines()
         self.assertTrue(changed)
         for path in changed:
