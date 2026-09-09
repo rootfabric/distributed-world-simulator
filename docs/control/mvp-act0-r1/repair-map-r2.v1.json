@@ -1,0 +1,39 @@
+{
+  "schema": "distributed_world_simulator.act0_bounded_repair_map.v1",
+  "repair_id": "V0-MVP-ACT0-R2",
+  "parent_work_order": "V0-MVP-ACT0-CONTROL-R1",
+  "failing_head": "cb2710598503b5a5391b70c651453a3fcccf23d4",
+  "failing_tree": "733016eef20bafc52e8cb497f6bfa1b2639b7927",
+  "run_id": 34339460420,
+  "artifact_id": 10099128490,
+  "artifact_sha256": "ef49742540e78ae81b7f4dcf288f45304a7d6e3d6ac9bf4d76e1e7c6b5d58a66",
+  "observed": {
+    "control_syntax": "PASS",
+    "candidate_consistency": "PASS",
+    "act0_checks": "10 PASS, 1 failed expected next_actor (actual policy assigns epoch audit to INTEGRATOR)",
+    "full_harness": "289 tests, failures=29, errors=5; original output retained"
+  },
+  "root_causes": [
+    "Historical P7 hold tests inherit mutable current mirrors instead of explicitly constructing their historical P7 control state.",
+    "Provenance fixture copies current registry but hardcodes its private epoch generation to 81.",
+    "Live lease/passport assertions name P7 rather than the deliberately activated MVP.",
+    "MVP execution entry must validate canonical schema/lease/mirror/activation consistency before reading execution; leaving the P7 HOLD route otherwise loses those checks."
+  ],
+  "canonical_owners": ["HARNESS canonical routing", "isolated test-fixture construction"],
+  "allowed_paths": [
+    "scripts/harness/project_overview.py",
+    "tests/harness/test_v0_mvp_act0.py",
+    "tests/harness/test_v0_product_train_policy.py",
+    "tests/harness/test_v0_generation80_safety_guards.py",
+    "tests/harness/test_v0_s1_networked_checkpoint_contract.py",
+    "tests/harness/test_project_control_validation.py",
+    "tests/harness/test_harness_evidence_provenance.py",
+    "docs/control/mvp-act0-r1/**",
+    ".github/workflows/mvp-act0-assemble.yml"
+  ],
+  "selected_design": "Keep every historical assertion, but pin explicitly historical P7 fixtures to immutable base control bytes. Live lease/passport tests assert MVP and exact accepted-P7 base. Add equivalent negative cases to the real MVP CLI route, and validate canonical activation/base/work-order bindings before execution loading. Do not alter generation enforcement, verdict policy, historical execution or gameplay.",
+  "rejected": ["Skip failed tests", "Disable epoch checks", "Downgrade generation", "Change current mirrors back to P7", "Change the policy-assigned Integrator role merely to satisfy a new test"],
+  "validation": ["Preserve original FAIL archive", "All historical P7 assertions still execute", "Actual MVP CLI rejects canonical schema/mirror/lease/base faults", "Candidate cannot dispatch before main adoption", "Full Harness discovery and PC0"],
+  "runtime_changes": false,
+  "acceptance_authorized_by_this_record": false
+}
