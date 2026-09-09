@@ -5,19 +5,19 @@ import json
 from pathlib import Path
 import unittest
 
-from tests.harness import test_v0_mvp_epoch_resume as fixture
+from tests.harness import test_v0_mvp_epoch_resume as resume
 
-EX = fixture.EX
+EX = resume.EX
 
 
 class MVPAuditIdentityTests(unittest.TestCase):
-    fixture = fixture.MVPEpochResumeTests.fixture
-    cli = fixture.MVPEpochResumeTests.cli
-    append_audit = fixture.MVPEpochResumeTests.append_audit
-    append_progress = fixture.MVPEpochResumeTests.append_progress
+    fixture = resume.MVPEpochResumeTests.fixture
+    cli = resume.MVPEpochResumeTests.cli
+    append_audit = resume.MVPEpochResumeTests.append_audit
+    append_progress = resume.MVPEpochResumeTests.append_progress
 
     def setUp(self):
-        fixture.MVPEpochResumeTests.setUp(self)
+        resume.MVPEpochResumeTests.setUp(self)
 
     def completed_audit(self, root: Path, *, changes=None, missing=()):
         first = self.append_audit(root)
@@ -57,9 +57,9 @@ class MVPAuditIdentityTests(unittest.TestCase):
 
     def test_valid_completed_audit_keeps_main_distinct_from_implementation(self):
         with self.fixture(adopted=True) as root:
-            canonical_main = fixture.git(root, "rev-parse", "origin/main")
+            canonical_main = resume.git(root, "rev-parse", "origin/main")
             self.completed_audit(root)
-            directory = root / EX / "events" / fixture.WO
+            directory = root / EX / "events" / resume.WO
             latest = max((json.loads(p.read_text()) for p in directory.glob("*.json")), key=lambda e: e["sequence"])
             self.assertNotEqual(canonical_main, latest["head_sha"])
             code, result = self.cli(root, "drive")
