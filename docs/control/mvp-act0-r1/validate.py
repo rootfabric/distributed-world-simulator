@@ -18,6 +18,7 @@ import time
 BASE = "3d7672cba293d8e7bd72427b803f73fc8fcee5da"
 PREDECESSOR = "c5d3eed5532c9dbe61b3ca13a87242bf6f2ea73d"
 REVIEWED_PREDECESSOR = "df1af401a11ef0c65ef442433f888f3a21963ac3"
+IDENTITY_PREDECESSOR = "03ec952da8540b2665017138b31dcefcb3cfdf60"
 MVP = "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE"
 DOC = "docs/control/mvp-act0-r1/"
 EX = "config/control/harness/executions/E2026-09-09-V0-MVP-R1/"
@@ -85,6 +86,8 @@ def main() -> int:
         passed = code == expected
         if name in {"predecessor-epoch-resume", "predecessor-progress-audit"}:
             passed = passed and "FAILED (failures=1)" in text and "ERROR:" not in text and "MAIN_MOVED_AUDIT_CONTINUE" in text and "MAIN_MOVED_REVIEW_REQUIRED" in text
+        if name == "predecessor-completed-identity":
+            passed = passed and "FAILED (failures=1)" in text and "ERROR:" not in text and "AssertionError: 3 != 0" in text and "FOREIGN-WORK-ORDER" in text
         record = {"name":name,"command":command,"cwd":str(cwd),"expected_exit":expected,
                   "exit_code":code,"passed":passed,"elapsed_seconds":round(time.time()-started,3),"log_sha256":digest(log)}
         records.append(record)
@@ -102,7 +105,9 @@ def main() -> int:
         save(out / "canonical-context.json", {"head":main_head,"mode":args.mode})
         if args.mode == "candidate":
             require(main_head == BASE, "MAIN_MOVED_REQUIRES_REVIEW")
-            orders = [json.loads((ROOT / DOC / p).read_text()) for p in ("work-order.v1.json", "work-order-epoch-resume-r3.v1.json", "work-order-audit-lifecycle-r4.v1.json")]
+            orders = [json.loads((ROOT / DOC / p).read_text()) for p in (
+                "work-order.v1.json", "work-order-epoch-resume-r3.v1.json",
+                "work-order-audit-lifecycle-r4.v1.json", "work-order-audit-identity-r5.v1.json")]
             allowed = [p for o in orders for p in o["allowed_paths"]]
             forbidden = [p for o in orders for p in o["forbidden_paths"]]
             for path in git("diff", "--name-only", BASE, "HEAD").splitlines():
@@ -112,21 +117,22 @@ def main() -> int:
             original_builder = subprocess.check_output(["git","show",f"{REVIEWED_PREDECESSOR}:{builder_path}"],cwd=ROOT).decode("utf-8")
             require(without_selector(original_builder) == without_selector((ROOT/builder_path).read_text()), "R4_NON_SELECTOR_CODE_DRIFT")
             cases = [
-                ("predecessor-epoch-resume", PREDECESSOR, "test_committed_exact_audit_resumes_without_product_completion"),
-                ("predecessor-progress-audit", REVIEWED_PREDECESSOR, "test_audit_survives_implementation_and_verification_events"),
+                ("predecessor-epoch-resume", PREDECESSOR, "test_v0_mvp_epoch_resume", "MVPEpochResumeTests.test_committed_exact_audit_resumes_without_product_completion"),
+                ("predecessor-progress-audit", REVIEWED_PREDECESSOR, "test_v0_mvp_epoch_resume", "MVPEpochResumeTests.test_audit_survives_implementation_and_verification_events"),
+                ("predecessor-completed-identity", IDENTITY_PREDECESSOR, "test_v0_mvp_audit_identity", "MVPAuditIdentityTests.test_foreign_completed_order_is_rejected"),
             ]
-            for name, head, method in cases:
+            for name, head, module, method in cases:
                 old = Path(os.environ.get("RUNNER_TEMP", "/tmp")) / (name + "-" + run_id)
                 require(not old.exists(), "PREDECESSOR_DIRECTORY_EXISTS")
                 git("worktree", "add", "--detach", str(old), head)
-                probe = "tests/harness/test_v0_mvp_epoch_resume_r4_probe.py"
-                shutil.copyfile(ROOT / "tests/harness/test_v0_mvp_epoch_resume.py", old / probe)
-                run(name, [sys.executable,"-m","unittest", "tests.harness.test_v0_mvp_epoch_resume_r4_probe.MVPEpochResumeTests." + method,"-v"], expected=1, cwd=old)
+                probe = "tests/harness/" + module + "_probe.py"
+                shutil.copyfile(ROOT / ("tests/harness/" + module + ".py"), old / probe)
+                run(name, [sys.executable,"-m","unittest", "tests.harness." + module + "_probe." + method,"-v"], expected=1, cwd=old)
                 save(out / (name + "-identity.json"), {"head":git("rev-parse","HEAD",cwd=old),"tree":git("rev-parse","HEAD^{tree}",cwd=old),
                     "tracked_status":git("status","--porcelain","--untracked-files=no",cwd=old),"added_probe_only":probe})
             run("control-json", [sys.executable,"-m","harness.control_candidate_validation"])
             run("candidate-consistency", [sys.executable,"-m","harness.cli","check-consistency","--candidate"])
-            run("act0-focused", [sys.executable,"-m","unittest","tests.harness.test_v0_mvp_act0","tests.harness.test_v0_mvp_epoch_resume","-v"])
+            run("act0-focused", [sys.executable,"-m","unittest","tests.harness.test_v0_mvp_act0","tests.harness.test_v0_mvp_epoch_resume","tests.harness.test_v0_mvp_audit_identity","-v"])
             run("full-harness", [sys.executable,"-m","unittest","discover","-s","tests/harness","-p","test_*.py","-v"])
         else:
             require(git("branch", "--show-current") == "feature/v0-mvp-playable-seamless-planet-r1", "WRONG_RUNTIME_BRANCH")
