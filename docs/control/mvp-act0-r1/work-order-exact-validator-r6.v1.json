@@ -1,0 +1,58 @@
+{
+  "schema": "distributed_world_simulator.act0_bounded_repair_work_order.v1",
+  "work_order_id": "V0-MVP-ACT0-R6-EXACT-VALIDATOR",
+  "parent_work_order": "V0-MVP-R1-WO-001",
+  "state": "IN_PROGRESS",
+  "risk_class": "CRITICAL",
+  "subject_before_repair": "fcbaa100ffc7b8edf556286ac98a312e30e06c07",
+  "trigger": {
+    "source": "FRESH_LOCAL_INDEPENDENT_REVIEW",
+    "verdict": "FAIL",
+    "blocking_findings": [
+      "B1_PREVIOUS_CLAIMED_SUBJECT_UNREACHABLE",
+      "B2_PREVIOUS_CLAIMED_MACHINE_EVIDENCE_NONEXISTENT",
+      "B3_LIVE_ACT0_EXACT_VALIDATION_RED"
+    ],
+    "live_failed_run": 34345733432,
+    "live_failed_job": 102446763337,
+    "live_failure": "RuntimeError:R4_NON_SELECTOR_CODE_DRIFT",
+    "live_failed_artifact": 10101600203,
+    "live_failed_artifact_sha256": "8dd39d58ca37f9e0a49790994eeb10b2eee907cef92c71c3bd9e036b37e58765"
+  },
+  "root_cause_hypothesis": "The R4 scope guard compares source text after deleting _select_epoch_audit by lineno/end_lineno. Harmless formatting/blank-line differences surrounding the replaced function can therefore report non-selector drift even when the Python AST outside that top-level function is semantically identical.",
+  "canonical_fix_location": "docs/control/mvp-act0-r1/validate.py",
+  "allowed_paths": [
+    "docs/control/mvp-act0-r1/validate.py",
+    "docs/control/mvp-act0-r1/work-order-exact-validator-r6.v1.json",
+    "tests/harness/test_v0_mvp_exact_validator.py"
+  ],
+  "forbidden_paths": [
+    "scripts/runtime/**",
+    "scripts/network/**",
+    "scripts/simulation/**",
+    "scenes/**",
+    "project.godot",
+    "config/architecture/**",
+    "config/control/harness/acceptance/**",
+    "config/control/harness/executions/E2026-08-30-V0-P7-R1/**",
+    "scripts/harness/state_builder.py",
+    "scripts/harness/event_reducer.py",
+    "scripts/harness/epoch_validator.py"
+  ],
+  "required_predicates": [
+    "R6_SCOPE_GUARD_IGNORES_NONSEMANTIC_FORMATTING_OUTSIDE_SELECTOR",
+    "R6_SCOPE_GUARD_REJECTS_SEMANTIC_CHANGE_OUTSIDE_SELECTOR",
+    "R6_CURRENT_ACT0_EXACT_VALIDATION_PASS",
+    "R6_FULL_HARNESS_PASS",
+    "R6_PROJECT_CONTROL_PASS",
+    "R6_REAL_REACHABLE_HEAD_AND_TREE_PINNED",
+    "R6_REAL_RUN_AND_ARTIFACT_IDS_PUBLISHED",
+    "R6_ARCHIVE_AND_MEMBER_DIGESTS_INDEPENDENTLY_REHASHED"
+  ],
+  "stop_conditions": [
+    "Any gameplay or foundation change is required",
+    "The selector semantics themselves require another change",
+    "A fresh P0/P1 remains after the repaired exact-head review"
+  ],
+  "notes": "No force-push or history rewrite is authorized. The prior local FAIL remains historical evidence and is not rewritten. New acceptance must target a reachable descendant of fcbaa100 and only real GitHub run/artifact identifiers."
+}
