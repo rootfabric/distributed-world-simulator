@@ -10,10 +10,10 @@
   "expected_outcome": "Player can equip, aim and dig a canonical hole, receive canonical material exactly once, and converge across clients/seams without new owners.",
   "current_stage": "MVP ACT0 / bounded composition dispatch",
   "stage_status": "MVP_ACTIVATED_IMPLEMENTATION_DISPATCHED",
-  "progress_note": "ACT0 declared; gameplay runtime has not started. Accepted P7 is preserved; use the fresh MVP epoch and Work Order.",
+  "progress_note": "ACT0 is canonical and the runtime branch exists. Gameplay runtime has not started; exact post-merge Project Control and epoch audit are still required before mutation.",
   "last_accepted_checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION + post-acceptance ADDENDUM-002",
-  "next_stage": "MVP1 shared graphical scene; canonical adoption and exact epoch audit required before mutation.",
-  "parent_branch_or_checkpoint": "Canonical P7 + ADDENDUM-002 @ 3d7672cba293d8e7bd72427b803f73fc8fcee5da",
+  "next_stage": "MVP1 shared graphical scene; exact post-merge epoch audit required before mutation.",
+  "parent_branch_or_checkpoint": "Canonical ACT0 main d57a09ae574d0c4deaf8fe7aaccb212d57ba98dd over accepted P7",
   "base_commit": "3d7672cba293d8e7bd72427b803f73fc8fcee5da",
   "dependencies": [
     "V0_P7_BOUNDED_TERRAIN_MUTATION",
@@ -54,9 +54,9 @@
     "RUN_V0_MVP_*"
   ],
   "tested_heads": {
-    "runtime": "NOT_STARTED",
-    "focused": "NOT_STARTED",
-    "full_regression": "NOT_STARTED"
+    "runtime": "",
+    "focused": "",
+    "full_regression": ""
   },
   "ownership_claims": [],
   "forbidden_foundation_ownership": [
@@ -72,5 +72,5 @@
   "blockers": [],
   "health_declared": "YELLOW",
   "cross_branch_overlap_enabled": true,
-  "baseline_evidence_note": "P7 evidence is inherited capability evidence only. No MVP test, review or acceptance is claimed by ACT0."
+  "baseline_evidence_note": "P7 evidence is inherited capability evidence only. Empty tested_heads mean MVP runtime has not started; no MVP test, review or acceptance is claimed by ACT0."
 }
