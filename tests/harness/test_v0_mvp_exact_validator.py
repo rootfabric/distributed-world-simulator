@@ -1,11 +1,15 @@
 from __future__ import annotations
 
+import fnmatch
 import importlib.util
+import json
 from pathlib import Path
+import subprocess
 import unittest
 
 ROOT = Path(__file__).resolve().parents[2]
 VALIDATOR = ROOT / "docs/control/mvp-act0-r1/validate.py"
+R6 = ROOT / "docs/control/mvp-act0-r1/work-order-exact-validator-r6.v1.json"
 
 spec = importlib.util.spec_from_file_location("act0_validate", VALIDATOR)
 assert spec and spec.loader
@@ -14,6 +18,23 @@ spec.loader.exec_module(act0_validate)
 
 
 class MVPExactValidatorTests(unittest.TestCase):
+    def test_r6_repair_diff_touches_only_declared_paths(self) -> None:
+        work_order = json.loads(R6.read_text(encoding="utf-8"))
+        base = work_order["repair_diff_base"]
+        changed = subprocess.check_output(
+            ["git", "diff", "--name-only", base, "HEAD"], cwd=ROOT, text=True
+        ).splitlines()
+        self.assertTrue(changed)
+        for path in changed:
+            self.assertTrue(
+                any(fnmatch.fnmatchcase(path, pattern) for pattern in work_order["allowed_paths"]),
+                f"R6 out-of-scope path: {path}",
+            )
+            self.assertFalse(
+                any(fnmatch.fnmatchcase(path, pattern) for pattern in work_order["forbidden_paths"]),
+                f"R6 forbidden path: {path}",
+            )
+
     def test_nonsemantic_formatting_outside_selector_is_ignored(self) -> None:
         left = '''import json\n\nVALUE = 1\n\ndef _select_epoch_audit(context, events):\n    return None\n\ndef stable():\n    return VALUE + 1\n'''
         right = '''import json\n\n\nVALUE=1\n\ndef _select_epoch_audit(context, events):\n    # selector is intentionally allowed to differ\n    return {"changed": True}\n\n\ndef stable( ) :\n    return VALUE+1\n'''
