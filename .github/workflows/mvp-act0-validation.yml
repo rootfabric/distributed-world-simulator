@@ -10,7 +10,9 @@ concurrency:
   cancel-in-progress: false
 jobs:
   validate:
-    if: github.repository == 'rootfabric/distributed-world-simulator' && github.actor == 'rootfabric' && (github.ref == 'refs/heads/control/v0-mvp-act0-r1' || github.ref == 'refs/heads/feature/v0-mvp-playable-seamless-planet-r1')
+    # Normal MVP implementation pushes are outside this activation-only gate.
+    # Feature-branch execution requires an explicit manual or [act0-audit] request.
+    if: github.repository == 'rootfabric/distributed-world-simulator' && github.actor == 'rootfabric' && (github.ref == 'refs/heads/control/v0-mvp-act0-r1' || (github.ref == 'refs/heads/feature/v0-mvp-playable-seamless-planet-r1' && (github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[act0-audit]'))))
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:

@@ -60,8 +60,7 @@ class MVPEpochResumeTests(unittest.TestCase):
             self.assertEqual("MAIN_MOVED_AUDIT_CONTINUE", after["epoch"]["validation"]["status"])
             self.assertEqual("CONTINUE", after["epoch"]["validation"]["action"])
             self.assertFalse(after["continuation_blocked"])
-            # This is an INTEGRATION Work Order: existing policy keeps INTEGRATOR,
-            # but its action changes from epoch recovery to executing the order.
+            # INTEGRATION orders keep INTEGRATOR; the action now executes the order.
             self.assertEqual("INTEGRATOR", after["next"]["next_actor"])
             self.assertEqual("CONTINUE_ACTIVE_WORK_ORDER_TO_IMPLEMENTED_AND_VALIDATED", after["next"]["next_action"])
             self.assertEqual("DISPATCHED", after["reduced_work_order"]["state"])
@@ -102,6 +101,82 @@ class MVPEpochResumeTests(unittest.TestCase):
             code, result = self.cli(root, "drive")
             self.assertEqual(0, code, result)
             self.assertEqual("INTEGRATOR", result["next"]["next_actor"])
+
+    def append_progress(self, root: Path, event_type: str, state: str, evidence=None):
+        directory = root / EX / "events" / WO
+        prior = max((json.loads(p.read_text()) for p in directory.glob("*.json")), key=lambda x: x["sequence"])
+        sequence = prior["sequence"] + 1
+        recorded = datetime.fromisoformat(prior["recorded_at_utc"].replace("Z", "+00:00")) + timedelta(seconds=1)
+        event = {**prior, "event_id":f"{EPOCH}-TEST-{sequence:04d}", "sequence":sequence,
+                 "event_type":event_type, "work_state":state, "actor":"INTEGRATOR",
+                 "command":"ACT0_ISOLATED_LIFECYCLE_TEST", "head_sha":git(root,"rev-parse","HEAD"),
+                 "recorded_at_utc":recorded.isoformat(), "evidence_paths":evidence or [],
+                 "summary":"Isolated legitimate transition; no product predicate or acceptance is claimed."}
+        event.pop("predicate", None)
+        event_path = directory / f"{sequence:04d}-test-progress.v1.json"
+        event_path.write_text(json.dumps(event) + "\n", encoding="utf-8")
+        order_path = root / EX / "work-orders" / (WO + ".v1.json")
+        order = json.loads(order_path.read_text())
+        order["state"] = state
+        order_path.write_text(json.dumps(order) + "\n", encoding="utf-8")
+        git(root, "add", "--", str(event_path.relative_to(root)), str(order_path.relative_to(root)), *(evidence or []))
+        git(root, "-c", "user.name=ACT0 lifecycle fixture", "-c", "user.email=fixture@example.invalid", "commit", "-qm", "test-only lifecycle progression")
+
+    def test_audit_survives_implementation_and_verification_events(self):
+        with self.fixture(adopted=True) as root:
+            self.append_audit(root)
+            for kind, state in (("IMPLEMENTATION_COMMITTED","IN_PROGRESS"),
+                                ("IMPLEMENTATION_COMMITTED","IMPLEMENTED"),
+                                ("VERIFICATION_STARTED","VERIFYING"),
+                                ("PREDICATE_VERIFIED","VERIFIED")):
+                self.append_progress(root, kind, state)
+                code, result = self.cli(root, "drive")
+                self.assertEqual(0, code, result)
+                self.assertEqual("MAIN_MOVED_AUDIT_CONTINUE", result["epoch"]["validation"]["status"])
+                self.assertEqual("CONTINUE", result["epoch"]["validation"]["action"])
+                self.assertEqual(state, result["reduced_work_order"]["state"])
+                self.assertEqual([], result["reduced_work_order"]["completed_predicates"])
+                self.assertFalse(result["next"]["mission_complete"])
+
+    def test_later_main_invalidates_retained_audit(self):
+        with self.fixture(adopted=True) as root:
+            self.append_audit(root)
+            self.append_progress(root,"IMPLEMENTATION_COMMITTED","IN_PROGRESS")
+            git(root,"update-ref","refs/remotes/origin/main",git(root,"rev-parse","HEAD"))
+            code, result = self.cli(root,"drive")
+            self.assertEqual(0, code, result)
+            self.assertEqual("MAIN_MOVED_REVIEW_REQUIRED",result["epoch"]["validation"]["status"])
+            self.assertTrue(result["continuation_blocked"])
+
+    def test_later_completed_audit_overrides_old_recovery(self):
+        with self.fixture(adopted=True) as root:
+            original_path = self.append_audit(root)
+            for kind, state in (("IMPLEMENTATION_COMMITTED","IMPLEMENTED"),
+                                ("VERIFICATION_STARTED","VERIFYING"),
+                                ("PREDICATE_VERIFIED","VERIFIED")):
+                self.append_progress(root,kind,state)
+            newer = EX + "/audits/000-later-red-audit.v1.json"
+            audit = json.loads((root/original_path).read_text())
+            audit["pc0"] = "RED"
+            (root/newer).write_text(json.dumps(audit) + "\n",encoding="utf-8")
+            self.append_progress(root,"AUDIT_COMPLETED","AUDITED",[newer])
+            code, result = self.cli(root,"drive")
+            self.assertEqual(0, code, result)
+            self.assertEqual("MAIN_MOVED_REVIEW_REQUIRED",result["epoch"]["validation"]["status"])
+            self.assertTrue(result["continuation_blocked"])
+
+    def test_feature_workflow_requires_explicit_act0_request(self):
+        workflow = (fixtures.ROOT / ".github/workflows/mvp-act0-validation.yml").read_text()
+        condition = next(line.strip() for line in workflow.splitlines() if line.startswith("    if:"))
+        expected = (
+            "if: github.repository == 'rootfabric/distributed-world-simulator' && github.actor == 'rootfabric' && "
+            "(github.ref == 'refs/heads/control/v0-mvp-act0-r1' || "
+            "(github.ref == 'refs/heads/feature/v0-mvp-playable-seamless-planet-r1' && "
+            "(github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[act0-audit]'))))"
+        )
+        self.assertEqual(expected, condition)
+        self.assertIn("  contents: read",workflow)
+        self.assertNotIn("contents: write",workflow)
 
 
 if __name__ == "__main__":
