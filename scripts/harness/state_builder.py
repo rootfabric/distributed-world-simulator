@@ -592,11 +592,15 @@ def _select_epoch_audit(
             if document.get("schema") != "distributed_world_simulator.harness_epoch_audit.v1":
                 continue
             audit = json.loads(committed_bytes(guard_context["root"], relative))
-            if recovery_audit and (
-                audit.get("project_epoch") != event["project_epoch"]
+            # Both event forms must belong to this epoch and Work Order. A normal
+            # completed-audit event refers to its implementation head, so only
+            # the pre-implementation recovery form binds main_sha to event head.
+            if (
+                event.get("project_epoch") != epoch.get("epoch_id")
+                or audit.get("project_epoch") != epoch.get("epoch_id")
                 or audit.get("work_order_id") != event["work_order_id"]
                 or audit.get("base_sha") != epoch.get("base_sha")
-                or audit.get("main_sha") != event["head_sha"]
+                or (recovery_audit and audit.get("main_sha") != event["head_sha"])
             ):
                 raise ContractValidationError("MVP_RESUME_AUDIT_IDENTITY_MISMATCH")
             audits.append(audit)
@@ -679,9 +683,7 @@ def _select_authoritative_evidence_paths(
         commits = [line for line in history.splitlines() if line]
         if code != 0 or len(commits) != 1:
             raise ContractValidationError(f"EVIDENCE_RECONCILIATION_IMMUTABILITY_NOT_PROVEN:{relative}")
-        code, add_commit = _git(
-            bundle.root, "log", "--diff-filter=A", "-1", "--format=%H", "--", relative
-        )
+        code, add_commit = _git(bundle.root, "log", "--diff-filter=A", "-1", "--format=%H", "--", relative)
         if code != 0 or add_commit != commits[0]:
             raise ContractValidationError(f"EVIDENCE_RECONCILIATION_ADD_COMMIT_NOT_PROVEN:{relative}")
 
