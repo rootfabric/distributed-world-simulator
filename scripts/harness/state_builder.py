@@ -1,6 +1,7 @@
 """Build complete H0.0 status using only versioned JSON and Git metadata."""
 from __future__ import annotations
 
+import json
 import re
 import subprocess
 from datetime import datetime
@@ -10,7 +11,7 @@ from typing import Any
 from .contracts import ContractBundle, ContractValidationError, read_json
 from .epoch_validator import validate_epoch
 from .event_reducer import load_guard_context, reduce_events
-from .evidence_provenance import load_hard_block_proof, validate_review_record
+from .evidence_provenance import committed_bytes, load_hard_block_proof, validate_review_record
 
 
 _EVIDENCE_MAP_SCHEMA = "distributed_world_simulator.harness_evidence_map.v1"
@@ -558,6 +559,31 @@ def _select_epoch_audit(
         if path in audited_paths
         and item.get("schema") == "distributed_world_simulator.harness_epoch_audit.v1"
     ]
+    # ACT0 must audit a control-only main advance BEFORE product implementation.
+    # Consume only a committed, identity-bound MVP recovery record; do not invent
+    # IMPLEMENTED/VERIFIED/AUDITED states or mark product predicates complete.
+    epoch = guard_context.get("epoch", {})
+    mvp = "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE"
+    if epoch.get("eligible_checkpoints") == [mvp] and events[-1].get("work_state") == "DISPATCHED":
+        for event in events:
+            if not (event.get("event_type") == "RECOVERY_RESUMED"
+                    and event.get("work_state") == "DISPATCHED"
+                    and event.get("actor") == "INTEGRATOR"
+                    and event.get("command") == "MVP_ACT0_POST_MERGE_EPOCH_AUDIT"
+                    and type(event.get("exit_code")) is int and event["exit_code"] == 0
+                    and event.get("project_epoch") == epoch.get("epoch_id")):
+                continue
+            for relative in event.get("evidence_paths", []):
+                document = guard_context["documents"].get(relative, {})
+                if document.get("schema") != "distributed_world_simulator.harness_epoch_audit.v1":
+                    continue
+                audit = json.loads(committed_bytes(guard_context["root"], relative))
+                if (audit.get("project_epoch") != event["project_epoch"]
+                        or audit.get("work_order_id") != event["work_order_id"]
+                        or audit.get("base_sha") != epoch.get("base_sha")
+                        or audit.get("main_sha") != event["head_sha"]):
+                    raise ContractValidationError("MVP_RESUME_AUDIT_IDENTITY_MISMATCH")
+                audits.append(audit)
     return audits[-1] if audits else None
 
 
