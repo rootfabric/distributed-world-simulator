@@ -49,10 +49,26 @@ def digest(path: Path) -> str:
         return hashlib.file_digest(stream, "sha256").hexdigest()
 
 
-def without_selector(text: str) -> str:
-    node = next(n for n in ast.walk(ast.parse(text)) if isinstance(n,ast.FunctionDef) and n.name == "_select_epoch_audit")
-    lines = text.splitlines(keepends=True)
-    return ''.join(lines[:node.lineno-1] + lines[node.end_lineno:])
+def without_selector_semantics(text: str) -> str:
+    """Normalize Python semantics outside the one bounded ACT0 selector.
+
+    R4/R5 intentionally changed only the top-level _select_epoch_audit function in
+    state_builder.py. Comparing source slices made whitespace and blank-line layout
+    part of the authorization contract and produced false drift. Compare the AST
+    after removing exactly that top-level function instead: comments/formatting are
+    ignored, while any executable/import/class/function change elsewhere remains a
+    blocking semantic difference.
+    """
+    tree = ast.parse(text)
+    selectors = [
+        node for node in tree.body
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
+        and node.name == "_select_epoch_audit"
+    ]
+    require(len(selectors) == 1, "R6_SELECTOR_IDENTITY_INVALID")
+    tree.body = [node for node in tree.body if node is not selectors[0]]
+    ast.fix_missing_locations(tree)
+    return ast.dump(tree, annotate_fields=True, include_attributes=False)
 
 
 def main() -> int:
@@ -107,7 +123,8 @@ def main() -> int:
             require(main_head == BASE, "MAIN_MOVED_REQUIRES_REVIEW")
             orders = [json.loads((ROOT / DOC / p).read_text()) for p in (
                 "work-order.v1.json", "work-order-epoch-resume-r3.v1.json",
-                "work-order-audit-lifecycle-r4.v1.json", "work-order-audit-identity-r5.v1.json")]
+                "work-order-audit-lifecycle-r4.v1.json", "work-order-audit-identity-r5.v1.json",
+                "work-order-exact-validator-r6.v1.json")]
             allowed = [p for o in orders for p in o["allowed_paths"]]
             forbidden = [p for o in orders for p in o["forbidden_paths"]]
             for path in git("diff", "--name-only", BASE, "HEAD").splitlines():
@@ -115,7 +132,11 @@ def main() -> int:
                 require(not any(fnmatch.fnmatchcase(path, p) for p in forbidden), "FORBIDDEN_SCOPE:" + path)
             builder_path = "scripts/harness/state_builder.py"
             original_builder = subprocess.check_output(["git","show",f"{REVIEWED_PREDECESSOR}:{builder_path}"],cwd=ROOT).decode("utf-8")
-            require(without_selector(original_builder) == without_selector((ROOT/builder_path).read_text()), "R4_NON_SELECTOR_CODE_DRIFT")
+            require(
+                without_selector_semantics(original_builder)
+                == without_selector_semantics((ROOT/builder_path).read_text()),
+                "R4_NON_SELECTOR_SEMANTIC_DRIFT",
+            )
             cases = [
                 ("predecessor-epoch-resume", PREDECESSOR, "test_v0_mvp_epoch_resume", "MVPEpochResumeTests.test_committed_exact_audit_resumes_without_product_completion"),
                 ("predecessor-progress-audit", REVIEWED_PREDECESSOR, "test_v0_mvp_epoch_resume", "MVPEpochResumeTests.test_audit_survives_implementation_and_verification_events"),
@@ -132,7 +153,7 @@ def main() -> int:
                     "tracked_status":git("status","--porcelain","--untracked-files=no",cwd=old),"added_probe_only":probe})
             run("control-json", [sys.executable,"-m","harness.control_candidate_validation"])
             run("candidate-consistency", [sys.executable,"-m","harness.cli","check-consistency","--candidate"])
-            run("act0-focused", [sys.executable,"-m","unittest","tests.harness.test_v0_mvp_act0","tests.harness.test_v0_mvp_epoch_resume","tests.harness.test_v0_mvp_audit_identity","-v"])
+            run("act0-focused", [sys.executable,"-m","unittest","tests.harness.test_v0_mvp_act0","tests.harness.test_v0_mvp_epoch_resume","tests.harness.test_v0_mvp_audit_identity","tests.harness.test_v0_mvp_exact_validator","-v"])
             run("full-harness", [sys.executable,"-m","unittest","discover","-s","tests/harness","-p","test_*.py","-v"])
         else:
             require(git("branch", "--show-current") == "feature/v0-mvp-playable-seamless-planet-r1", "WRONG_RUNTIME_BRANCH")
