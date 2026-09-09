@@ -5,6 +5,7 @@
   "state": "IN_PROGRESS",
   "risk_class": "CRITICAL",
   "subject_before_repair": "fcbaa100ffc7b8edf556286ac98a312e30e06c07",
+  "repair_diff_base": "fcbaa100ffc7b8edf556286ac98a312e30e06c07",
   "trigger": {
     "source": "FRESH_LOCAL_INDEPENDENT_REVIEW",
     "verdict": "FAIL",
@@ -35,11 +36,11 @@
     "config/architecture/**",
     "config/control/harness/acceptance/**",
     "config/control/harness/executions/E2026-08-30-V0-P7-R1/**",
-    "scripts/harness/state_builder.py",
     "scripts/harness/event_reducer.py",
     "scripts/harness/epoch_validator.py"
   ],
   "required_predicates": [
+    "R6_REPAIR_DIFF_TOUCHES_ONLY_R6_ALLOWED_PATHS",
     "R6_SCOPE_GUARD_IGNORES_NONSEMANTIC_FORMATTING_OUTSIDE_SELECTOR",
     "R6_SCOPE_GUARD_REJECTS_SEMANTIC_CHANGE_OUTSIDE_SELECTOR",
     "R6_CURRENT_ACT0_EXACT_VALIDATION_PASS",
@@ -54,5 +55,5 @@
     "The selector semantics themselves require another change",
     "A fresh P0/P1 remains after the repaired exact-head review"
   ],
-  "notes": "No force-push or history rewrite is authorized. The prior local FAIL remains historical evidence and is not rewritten. New acceptance must target a reachable descendant of fcbaa100 and only real GitHub run/artifact identifiers."
+  "notes": "The cumulative ACT0 branch legitimately contains earlier R4/R5 changes to state_builder.py, so this continuation must not retroactively classify that historical diff as forbidden. R6 itself is fenced by repair_diff_base..HEAD and may touch only its three allowed paths; that is asserted by tests. No force-push or history rewrite is authorized. The prior local FAIL remains historical evidence and is not rewritten. New acceptance must target a reachable descendant of fcbaa100 and only real GitHub run/artifact identifiers."
 }
