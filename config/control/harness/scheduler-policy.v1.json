@@ -26,10 +26,9 @@
   "parallel_product_checkpoints": {
     "enabled": true,
     "checkpoints": [
-      "V0_P7_BOUNDED_TERRAIN_MUTATION"
+      "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE"
     ],
     "future_checkpoints_not_yet_eligible": [
-      "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE",
       "V0_P8_FIRST_MOBILE_CONSTRUCT"
     ],
     "rules": {
@@ -51,13 +50,13 @@
     }
   },
   "v0_product_train_routing": {
-    "current_checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
-    "current_phase": "P7_MERGED_CLOSURE_RECONCILIATION",
-    "runtime_mutation_allowed_now": false,
+    "current_checkpoint": "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE",
+    "current_phase": "MVP_ACTIVATED_IMPLEMENTATION_DISPATCHED",
+    "runtime_mutation_allowed_now": true,
     "next_runtime_checkpoint": "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE",
     "next_runtime_checkpoint_eligible": false,
-    "accepted_predecessor_checkpoint": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION",
-    "accepted_predecessor_base": "acb9379cacc413fc25a65117fb1627f5a01b9736",
+    "accepted_predecessor_checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
+    "accepted_predecessor_base": "3d7672cba293d8e7bd72427b803f73fc8fcee5da",
     "sm1_acceptance": {
       "acceptance_record": "config/control/harness/acceptance/V0-SM1-R1-CHECKPOINT-ACCEPTED-001.v1.json",
       "accepted_runtime_head": "b760a6cd8bf1f8b5c00d5f2430edd84853d1fa5f",
@@ -182,7 +181,7 @@
       "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-6-CLOSURE-EVIDENCE-001.v1.json"
     },
     "p7_7": {
-      "state": "MERGED_PENDING_CANONICAL_CLOSURE",
+      "state": "MERGED_CANONICALLY_ACCEPTED",
       "runtime_branch": "feature/v0-p7-bounded-terrain-mutation",
       "scope": "GRAPHICAL_DIGGING_SLICE",
       "runtime_mutation_authorized": false,
@@ -193,9 +192,27 @@
       "hard_rule": "GRAPHICAL_SLICE_ONLY_OVER_EXISTING_P7_1_TO_P7_6_OWNERS_NO_NEW_CANONICAL_TRUTH",
       "runtime_merge_commit": "dc5d4a4de71598ff4e36f88489a066e57b574386"
     },
-    "control_next_actor": "DIRECTOR",
-    "control_next_action": "RECONCILE_P7_DURABLE_CLOSURE_THEN_ACTIVATE_MVP",
-    "control_resume_condition": "Canonical P7 acceptance evidence reconciled; successor activation + exact epoch/work order + lease update reviewed on main."
+    "control_next_actor": "IMPLEMENTER",
+    "control_next_action": "BEGIN_V0_MVP_PLAYABLE_SEAMLESS_PLANET_COMPOSITION",
+    "control_resume_condition": "Main-owned ACT0 plus exact post-merge epoch audit and Director dispatch; no gameplay worker has been launched by ACT0.",
+    "p7_acceptance": {
+      "checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
+      "acceptance_record": "config/control/harness/acceptance/V0-P7-R1-CHECKPOINT-ACCEPTED-001.v1.json",
+      "latest_addendum": "config/control/harness/acceptance/V0-P7-R1-CHECKPOINT-ACCEPTED-ADDENDUM-002.v1.json",
+      "exact_product_base": "3d7672cba293d8e7bd72427b803f73fc8fcee5da",
+      "exact_product_base_tree": "3cdcd33b4a59a93707b7628bc0124184df94cc64",
+      "accepted_runtime_head": "5a1d79c6889136c40daf97f69feb90512c214009",
+      "accepted_runtime_tree": "00581408e4ba9033fde16b43915945e73e18fcb2"
+    },
+    "mvp_activation": {
+      "activation_record": "config/control/harness/activation/V0-MVP-R1-ACTIVATION-001.v1.json",
+      "exact_execution_base": "3d7672cba293d8e7bd72427b803f73fc8fcee5da",
+      "exact_execution_base_tree": "3cdcd33b4a59a93707b7628bc0124184df94cc64",
+      "project_epoch": "E2026-09-09-V0-MVP-R1",
+      "work_order_id": "V0-MVP-R1-WO-001",
+      "runtime_branch": "feature/v0-mvp-playable-seamless-planet-r1",
+      "control_generation": 82
+    }
   },
   "research_isolation": {
     "non_blocking_by_default": true,
@@ -215,12 +232,12 @@
     ]
   },
   "pre_h0_3_runtime_mutation_lease": {
-    "effective_registry_generation": 81,
+    "effective_registry_generation": 82,
     "capacity": 1,
     "holder_program": "V0",
-    "holder_checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
-    "holder_branch": "feature/v0-p7-bounded-terrain-mutation",
-    "state": "RESERVED_P7_CLOSURE_NO_RUNTIME_MUTATION",
+    "holder_checkpoint": "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE",
+    "holder_branch": "feature/v0-mvp-playable-seamless-planet-r1",
+    "state": "RESERVED_MVP_SINGLE_RUNTIME_WORKER",
     "mutating_states": [
       "DISPATCHED",
       "IN_PROGRESS"
@@ -231,7 +248,7 @@
     "non_holder_dispatch_forbidden": true,
     "release_requires_main_owned_control_update": true,
     "successor_rotation_requires_predecessor_checkpoint_acceptance": true,
-    "reason": "Keep the single slot reserved while P7 closure is reconciled. No successor or research runtime authority is granted by this control change."
+    "reason": "ACT0 rotates the single slot after accepted P7; actual execution requires canonical adoption, current epoch audit and Director dispatch."
   },
   "concurrency": {
     "h0_0_max_autonomous_runtime_workers": 0,

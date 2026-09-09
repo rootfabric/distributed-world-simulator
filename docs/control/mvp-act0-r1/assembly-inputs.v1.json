@@ -1,0 +1,43 @@
+{
+  "schema": "distributed_world_simulator.act0_assembly_inputs.v1",
+  "base_head": "3d7672cba293d8e7bd72427b803f73fc8fcee5da",
+  "base_tree": "3cdcd33b4a59a93707b7628bc0124184df94cc64",
+  "recorded_at_utc": "2026-09-09T10:18:03Z",
+  "files": {
+    "config/control/harness/scheduler-policy.v1.json": {
+      "base_blob": "f09a836b0c59f26f17f1d6e2594862c327c94a59",
+      "candidate_sha256": "ddef99ed7c236a9e2e17ebeb3c8e78ac45e5a5e82f68beadc7ebb76e2bebeebe"
+    },
+    "config/control/harness/v0-product-train-policy.v1.json": {
+      "base_blob": "c132c318055d8a95f9e65f6c994b2b7d61676131",
+      "candidate_sha256": "4dc1471c727ef0a0630cdd3bcda886e6efa5f81fdcfa29d0b39a119eadf82ad9"
+    },
+    "config/control/harness/checkpoint-catalog.v1.json": {
+      "base_blob": "5741892ace23a4671fd2a3cd4ec767ce810d0b08",
+      "candidate_sha256": "2b61fdf1fc5c1d6c3d4928a94aea7cc4d1d491da62ea3e9b344f91ba5f7c1be3"
+    },
+    "config/control/harness/v0-current-work-map.v1.json": {
+      "base_blob": "ba1100bf7f825a7c8de75e65719bb3dd125e8466",
+      "candidate_sha256": "58724b55c1f847fbbc471eabc455810d9983f6e48ecee89f868ef7c5eb1d10b8"
+    },
+    "config/control/harness/project-goals.v1.json": {
+      "base_blob": "ff14869588aadd0abedccea25eb285943583e73d",
+      "candidate_sha256": "69922a3efe692bc1bbf822b139a06f6685aa06d0381468a23bc665b1eb9efdbe"
+    },
+    "config/control/project-program-registry.v1.json": {
+      "base_blob": "42f8bbc69b537a79205b072795cc16e106b2a61d",
+      "candidate_sha256": "2ff35358aa1ea3402f950a3367ad997cf368a97d7a9fec2d8b36114fc3d22825"
+    },
+    "scripts/harness/checkpoint_planner.py": {
+      "base_blob": "594c14b454778727511b35583dba6a339e0d4e25",
+      "candidate_sha256": "d6bad0f35b38ea11e0818fe12f77c5a886dcea9da3e4e8147ea6cd03de813857"
+    },
+    "scripts/harness/project_overview.py": {
+      "base_blob": "bb62225ae3593681c88025d25172da3f1f56bede",
+      "candidate_sha256": "b1952dc3619ae55eded81fdd23655a936df42bebdd9c470045f237cfd17d1603"
+    }
+  },
+  "runtime_modified": false,
+  "independent_verdict": "NOT_ISSUED",
+  "activation_canonical": false
+}

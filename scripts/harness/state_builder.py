@@ -1,6 +1,7 @@
 """Build complete H0.0 status using only versioned JSON and Git metadata."""
 from __future__ import annotations
 
+import json
 import re
 import subprocess
 from datetime import datetime
@@ -10,7 +11,7 @@ from typing import Any
 from .contracts import ContractBundle, ContractValidationError, read_json
 from .epoch_validator import validate_epoch
 from .event_reducer import load_guard_context, reduce_events
-from .evidence_provenance import load_hard_block_proof, validate_review_record
+from .evidence_provenance import committed_bytes, load_hard_block_proof, validate_review_record
 
 
 _EVIDENCE_MAP_SCHEMA = "distributed_world_simulator.harness_evidence_map.v1"
@@ -558,6 +559,51 @@ def _select_epoch_audit(
         if path in audited_paths
         and item.get("schema") == "distributed_world_simulator.harness_epoch_audit.v1"
     ]
+    epoch = guard_context.get("epoch", {})
+    mvp = "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE"
+    if epoch.get("eligible_checkpoints") != [mvp]:
+        return audits[-1] if audits else None
+
+    # A validated epoch audit outlives the DISPATCHED state. Later product
+    # progress does not invalidate it; a different main still does. Process both
+    # supported audit event forms in ledger order so old recovery cannot mask
+    # a newer audit (including RED or a newly audited main).
+    audits = []
+    for event in sorted(events, key=lambda item: item["sequence"]):
+        completed_audit = (
+            event.get("event_type") == "AUDIT_COMPLETED"
+            and event.get("work_state") == "AUDITED"
+            and event.get("exit_code") == 0
+            and bool(event.get("command"))
+        )
+        recovery_audit = (
+            event.get("event_type") == "RECOVERY_RESUMED"
+            and event.get("work_state") == "DISPATCHED"
+            and event.get("actor") == "INTEGRATOR"
+            and event.get("command") == "MVP_ACT0_POST_MERGE_EPOCH_AUDIT"
+            and type(event.get("exit_code")) is int and event["exit_code"] == 0
+            and event.get("project_epoch") == epoch.get("epoch_id")
+        )
+        if not (completed_audit or recovery_audit):
+            continue
+        for raw_path in event.get("evidence_paths", []):
+            relative = raw_path.replace("\\", "/")
+            document = guard_context["documents"].get(relative, {})
+            if document.get("schema") != "distributed_world_simulator.harness_epoch_audit.v1":
+                continue
+            audit = json.loads(committed_bytes(guard_context["root"], relative))
+            # Both event forms must belong to this epoch and Work Order. A normal
+            # completed-audit event refers to its implementation head, so only
+            # the pre-implementation recovery form binds main_sha to event head.
+            if (
+                event.get("project_epoch") != epoch.get("epoch_id")
+                or audit.get("project_epoch") != epoch.get("epoch_id")
+                or audit.get("work_order_id") != event["work_order_id"]
+                or audit.get("base_sha") != epoch.get("base_sha")
+                or (recovery_audit and audit.get("main_sha") != event["head_sha"])
+            ):
+                raise ContractValidationError("MVP_RESUME_AUDIT_IDENTITY_MISMATCH")
+            audits.append(audit)
     return audits[-1] if audits else None
 
 
@@ -637,9 +683,7 @@ def _select_authoritative_evidence_paths(
         commits = [line for line in history.splitlines() if line]
         if code != 0 or len(commits) != 1:
             raise ContractValidationError(f"EVIDENCE_RECONCILIATION_IMMUTABILITY_NOT_PROVEN:{relative}")
-        code, add_commit = _git(
-            bundle.root, "log", "--diff-filter=A", "-1", "--format=%H", "--", relative
-        )
+        code, add_commit = _git(bundle.root, "log", "--diff-filter=A", "-1", "--format=%H", "--", relative)
         if code != 0 or add_commit != commits[0]:
             raise ContractValidationError(f"EVIDENCE_RECONCILIATION_ADD_COMMIT_NOT_PROVEN:{relative}")
 

@@ -26,6 +26,8 @@ SM1 = "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION"
 SM1_BRANCH = "feature/v0-sm1-seamless-product-integration"
 P7 = "V0_P7_BOUNDED_TERRAIN_MUTATION"
 P7_BRANCH = "feature/v0-p7-bounded-terrain-mutation"
+MVP = "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE"
+MVP_BRANCH = "feature/v0-mvp-playable-seamless-planet-r1"
 P4_RUNNER = "RUN_V0_P4_POST_ACTIVATION_EPOCH_AUDIT.ps1"
 P4_TEST_HEAD = "a" * 40
 H0_2 = "H0_2_NX_C1_HIGH_RISK_PILOT"
@@ -201,14 +203,14 @@ class Generation80SafetyGuardTests(unittest.TestCase):
         context = load_guard_context(root, execution)
         return work_order, [created, dispatched], transition, context
 
-    def test_generation80_reserves_one_global_mutation_lease_for_current_p7(self):
+    def test_generation80_reserves_one_global_mutation_lease_for_current_mvp(self):
         self.assertGreaterEqual(self.registry["registry_generation"], 81)
         lease = self.scheduler["pre_h0_3_runtime_mutation_lease"]
         self.assertEqual(self.registry["registry_generation"], lease["effective_registry_generation"])
         self.assertEqual(1, lease["capacity"])
         self.assertEqual("V0", lease["holder_program"])
-        self.assertEqual(P7, lease["holder_checkpoint"])
-        self.assertEqual(P7_BRANCH, lease["holder_branch"])
+        self.assertEqual(MVP, lease["holder_checkpoint"])
+        self.assertEqual(MVP_BRANCH, lease["holder_branch"])
         self.assertEqual(["DISPATCHED", "IN_PROGRESS"], lease["mutating_states"])
         self.assertTrue(lease["implementation_complete_releases_worker"])
         self.assertTrue(lease["initial_dispatch_requires_director"])
@@ -223,18 +225,18 @@ class Generation80SafetyGuardTests(unittest.TestCase):
             "work_order_id": "V0-P4-WO-TEST",
             "state": "DISPATCHED",
         }
-        with self.assertRaisesRegex(ValueError, f"GLOBAL_MUTATION_SLOT_RESERVED_FOR:{P7}"):
+        with self.assertRaisesRegex(ValueError, f"GLOBAL_MUTATION_SLOT_RESERVED_FOR:{MVP}"):
             build_plan(self.contracts, {"goal_checkpoint": P4, "branch": P4_BRANCH}, dispatched)
 
-    def test_generation80_blocks_new_nx_and_unknown_mutation_dispatches_for_p7_lease(self):
+    def test_generation80_blocks_new_nx_and_unknown_mutation_dispatches_for_mvp_lease(self):
         dispatched = {
             "completed_predicates": [],
             "work_order_id": "OTHER-WO",
             "state": "DISPATCHED",
         }
-        with self.assertRaisesRegex(ValueError, f"GLOBAL_MUTATION_SLOT_RESERVED_FOR:{P7}"):
+        with self.assertRaisesRegex(ValueError, f"GLOBAL_MUTATION_SLOT_RESERVED_FOR:{MVP}"):
             build_plan(self.contracts, {"goal_checkpoint": H0_2}, dispatched)
-        with self.assertRaisesRegex(ValueError, f"GLOBAL_MUTATION_SLOT_RESERVED_FOR:{P7}"):
+        with self.assertRaisesRegex(ValueError, f"GLOBAL_MUTATION_SLOT_RESERVED_FOR:{MVP}"):
             build_plan(self.contracts, {"goal_checkpoint": "SM0_NONTRIVIAL_FIX", "branch": "feature/sm0-fix"}, dispatched)
 
     def test_initial_dispatch_requires_director_without_rewriting_historical_evidence(self):
@@ -303,10 +305,10 @@ class Generation80SafetyGuardTests(unittest.TestCase):
 
         current_v0 = self.registry["programs"]["V0"]
         self.assertEqual("COMPOSITION_FRONTIER", current_v0["role"])
-        self.assertEqual("P7_MERGED_CLOSURE_RECONCILIATION", current_v0["stage_status"])
+        self.assertEqual("MVP_ACTIVATED_IMPLEMENTATION_DISPATCHED", current_v0["stage_status"])
         self.assertTrue(current_v0["prebuild_state"]["historical_only"])
         self.assertFalse(current_v0["p7_7"]["runtime_mutation_authorized"])
-        self.assertFalse(self.scheduler["v0_product_train_routing"]["runtime_mutation_allowed_now"])
+        self.assertTrue(self.scheduler["v0_product_train_routing"]["runtime_mutation_allowed_now"])
         self.assertEqual(P7_BRANCH, current_v0["prebuild_state"]["branch"])
         self.assertEqual("c2e056980eed4ae20849154b1dacc71af0ce8bdf", current_v0["prebuild_state"]["head_at_refresh_input"])
         self.assertTrue(current_v0["prebuild_state"]["runtime_mutation_present"])

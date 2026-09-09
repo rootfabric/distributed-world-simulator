@@ -1,11 +1,11 @@
 {
   "schema": "distributed_world_simulator.project_program_registry.v1",
   "control_plane_revision": "PC0-2026-08-10-R1",
-  "registry_generation": 81,
+  "registry_generation": 82,
   "architecture_revision": "GLOBAL-P0-2026-08-12-R3-REFRESH-R1",
   "canonical_branch": "main",
-  "updated_at_utc": "2026-09-05T08:00:00Z",
-  "control_checkpoint": "P7 runtime merged; reconcile durable closure, then activate visual seamless multi-client mutable-world MVP.",
+  "updated_at_utc": "2026-09-09T10:18:03Z",
+  "control_checkpoint": "ACT0: accepted P7 -> one bounded MVP composition epoch and Work Order.",
   "current_frontiers_doc": "docs/control/CURRENT_PROJECT_FRONTIERS_RU.md",
   "project_summary": "Главный результат — наблюдаемое сетевое MVP: несколько клиентов, бесшовная граница authority, изменение среды и восстановление. ECO и FABRIC — самостоятельные research families; их VIS — потребители общего состояния, а не отдельные симуляторы.",
   "programs": {
@@ -21,9 +21,9 @@
       "expected_outcome": "H0.2/NX.C1 continues exact verification independently while V0 follows the explicitly declared sequential product lane.",
       "current_stage": "H0.2 verification plus MVP-first project coordination",
       "stage_status": "H0_2_VERIFICATION_PENDING_PROJECT_FOCUS_CONTROL_CANDIDATE",
-      "progress_note": "P7 runtime merged; reconcile durable acceptance before MVP activation. Overview separates canonical main, candidate preview and research source facts. H0.2/NX.C1 remains independent.",
+      "progress_note": "P7 canonical closure is complete; ACT0 changes current product routing, not the independent H0.2 pilot.",
       "last_accepted_checkpoint": "H0_1_PASS + C22 MAIN_INTEGRATED + V0 P4/P5/P6 ACCEPTED + V0 SM1 ACCEPTED",
-      "next_stage": "Use Overview and CheckConsistency; reconcile P7 closure before MVP dispatch. NX.C1 pilot remains independent.",
+      "next_stage": "Verify current MVP epoch/dispatch and keep one global runtime worker before H0.3.",
       "health_declared": "GREEN",
       "blockers": []
     },
@@ -271,26 +271,27 @@
     "V0": {
       "program": "V0",
       "program_name": "Playable Vertical Slice",
-      "branch": "control/project-focus-harness-reconciliation-r1",
-      "passport_path": "config/control/branches/control__project-focus-harness-reconciliation-r1.v1.json",
+      "branch": "feature/v0-mvp-playable-seamless-planet-r1",
+      "passport_path": "config/control/branches/feature__v0-mvp-playable-seamless-planet-r1.v1.json",
       "requires_passport": true,
       "role": "COMPOSITION_FRONTIER",
-      "short_description": "P7 closure reconciliation followed by visual multi-client seamless mutable-world MVP.",
+      "short_description": "MVP: shared graphical world over accepted SM1 and P7.",
       "purpose": "Compose existing equipment, P7.1/P7.6 Matter routing, representation invalidation, material delivery and client convergence into the visible product digging loop.",
       "expected_outcome": "Player can equip, aim and dig a canonical hole, receive canonical material exactly once, and converge across clients/seams without new owners.",
-      "current_stage": "P7 merged runtime / formal closure reconciliation",
-      "stage_status": "P7_MERGED_CLOSURE_RECONCILIATION",
-      "progress_note": "PR #487 merged. Durable rotation evidence still declares MERGED_BUT_NOT_CLOSED. Reconcile existing closure evidence before starting the MVP composition successor.",
-      "last_accepted_checkpoint": "V0_SM1_SEAMLESS_PRODUCT_INTEGRATION accepted; runtime b760a6cd8bf1f8b5c00d5f2430edd84853d1fa5f; product lineage acb9379cacc413fc25a65117fb1627f5a01b9736",
-      "next_stage": "Reconcile P7 acceptance in canonical Git; activate V0 PLAYABLE SEAMLESS PLANET composition from the accepted exact predecessor.",
+      "current_stage": "MVP ACT0 / bounded composition dispatch",
+      "stage_status": "MVP_ACTIVATED_IMPLEMENTATION_DISPATCHED",
+      "progress_note": "ACT0 declared; gameplay runtime has not started. Accepted P7 is preserved; use the fresh MVP epoch and Work Order.",
+      "last_accepted_checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION + post-acceptance ADDENDUM-002",
+      "next_stage": "MVP1 shared graphical scene; canonical adoption and exact epoch audit required before mutation.",
       "product_execution_base": {
-        "branch": "accepted SM1 product lineage",
-        "sha": "acb9379cacc413fc25a65117fb1627f5a01b9736",
-        "accepted_runtime_head": "b760a6cd8bf1f8b5c00d5f2430edd84853d1fa5f",
-        "accepted_runtime_tree": "7af1fe08e1f92e3b77a4b12dbccbb96c48e93a68",
-        "declares_checkpoint_acceptance": true,
-        "acceptance_record": "config/control/harness/acceptance/V0-SM1-R1-CHECKPOINT-ACCEPTED-001.v1.json",
-        "reason": "P7 must compose the exact accepted SM1 product runtime, while main-owned control/docs remain separate provenance."
+        "branch": "accepted P7 canonical main",
+        "sha": "3d7672cba293d8e7bd72427b803f73fc8fcee5da",
+        "accepted_runtime_head": "5a1d79c6889136c40daf97f69feb90512c214009",
+        "accepted_runtime_tree": "00581408e4ba9033fde16b43915945e73e18fcb2",
+        "declares_checkpoint_acceptance": false,
+        "acceptance_record": "config/control/harness/acceptance/V0-P7-R1-CHECKPOINT-ACCEPTED-001.v1.json",
+        "acceptance_addendum": "config/control/harness/acceptance/V0-P7-R1-CHECKPOINT-ACCEPTED-ADDENDUM-002.v1.json",
+        "reason": "Accepted P7 runtime plus its canonical control closure; does not declare MVP acceptance."
       },
       "prebuild_state": {
         "branch": "feature/v0-p7-bounded-terrain-mutation",
@@ -303,14 +304,28 @@
         "historical_only": true,
         "historical_scope": "P7.6 accepted runtime provenance; current routing is coordination + scheduler."
       },
-      "implementation_blockers": [
-        "P7_RUNTIME_MERGED_RECONCILE_CLOSURE_BEFORE_NEW_RUNTIME"
-      ],
+      "implementation_blockers": [],
       "acceptance_blockers": [
-        "P7_EXACT_HEAD_RUNTIME_AND_REGRESSION_EVIDENCE_REQUIRED",
-        "P7_GRAPHICAL_DIGGING_REQUIRED",
-        "P7_PERSISTENCE_TWO_CLIENT_SEAM_MW10_CLOSURE_REQUIRED",
-        "P7_INDEPENDENT_REVIEWER_VERIFIER_DIRECTOR_REQUIRED"
+        "MVP_SHARED_GRAPHICAL_SCENE",
+        "MVP_TWO_CLIENT_SHARED_WORLD",
+        "MVP_SEAM_NO_RECONNECT_OR_RESPAWN",
+        "MVP_CANONICAL_DIG_VISIBLE_TO_BOTH_CLIENTS",
+        "MVP_EXACTLY_ONCE_MATERIAL_OUTPUT",
+        "MVP_ITEM_CONSTRUCTION_PERSISTENCE_CONVERGENCE",
+        "MVP_RECONNECT_AND_RESTART",
+        "MVP_BOUNDED_INTERACTIVE_WORKLOAD",
+        "INDEPENDENT_REVIEWER_PASS",
+        "INDEPENDENT_VERIFIER_PASS",
+        "STANDARD_PC0_NON_RED",
+        "DIRECTIONAL_PC0_NON_RED_FOR_CRITICAL_HITS",
+        "HUMAN_MVP_ACCEPTANCE",
+        "FULL_WORLD_CORE_REGRESSION_PASS",
+        "POST_BUILD_CRITIQUE_COMPLETED",
+        "EVIDENCE_MAP_COMPLETE",
+        "REVIEW_HEAD_EXACT_AND_FRESH",
+        "TESTED_HEADS_EXACT_AND_FRESH",
+        "CRITICAL_CROSS_BRANCH_OVERLAP_ZERO",
+        "HUMAN_ATTENTION_QUEUE_EMPTY_OR_RESOLVED"
       ],
       "health_declared": "YELLOW",
       "blockers": [],
@@ -410,7 +425,7 @@
         "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-6-CLOSURE-EVIDENCE-001.v1.json"
       },
       "p7_7": {
-        "state": "MERGED_PENDING_CANONICAL_CLOSURE",
+        "state": "MERGED_CANONICALLY_ACCEPTED",
         "runtime_mutation_authorized": false,
         "scope": "GRAPHICAL_DIGGING_SLICE",
         "runtime_branch": "feature/v0-p7-bounded-terrain-mutation",
@@ -422,6 +437,15 @@
         "runtime_merge_pr": 487,
         "runtime_merge_commit": "dc5d4a4de71598ff4e36f88489a066e57b574386",
         "closure_reconciliation_evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-7-POST-MERGE-ACTIVATION-PASSPORT-ROTATION-EVIDENCE-001.v1.json"
+      },
+      "mvp": {
+        "activation_record": "config/control/harness/activation/V0-MVP-R1-ACTIVATION-001.v1.json",
+        "exact_execution_base": "3d7672cba293d8e7bd72427b803f73fc8fcee5da",
+        "exact_execution_base_tree": "3cdcd33b4a59a93707b7628bc0124184df94cc64",
+        "project_epoch": "E2026-09-09-V0-MVP-R1",
+        "work_order_id": "V0-MVP-R1-WO-001",
+        "runtime_branch": "feature/v0-mvp-playable-seamless-planet-r1",
+        "control_generation": 82
       }
     },
     "MATTER": {
@@ -464,7 +488,7 @@
   "convergence_order": {
     "principle": "Branches report facts; main declares project state, exact product execution inputs and the single pre-H0.3 mutation lease; the auditor checks consistency; bounded runtime work moves only between declared checkpoints.",
     "now_parallel": [
-      "V0 P7 durable closure reconciliation → visual MVP composition",
+      "V0 MVP composition after accepted P7; one runtime mutation slot",
       "ECO experiment workbench + LS4.1 + VIS5/PLAY1 research coordination",
       "FABRIC frozen core + B0.6 bake research + shared observatories",
       "Optional WORLD FILL/PACKS presentation donors"
@@ -498,7 +522,7 @@
     "v0_train": [
       "P4/P5/P6 ACCEPTED",
       "SM1 ACCEPTED",
-      "P7 runtime MERGED; canonical closure reconciliation",
+      "P7 ACCEPTED with post-acceptance correction",
       "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE",
       "P8 / WORLDGEN1 / RF1 only after MVP and explicit activation"
     ],
@@ -545,12 +569,8 @@
       "blocked_by": "FRESH_CANONICAL_CHARACTER_FRONTIER_REQUIRED"
     },
     {
-      "stage": "V0-P7 RUNTIME MUTATION START",
-      "blocked_by": "P7_MATTER_OWNER_MAP_FRESH_REVIEW_PLUS_POST_MERGE_PC0_PLUS_DIRECTOR_DISPATCH_REQUIRED"
-    },
-    {
-      "stage": "V0-P7 CHECKPOINT ACCEPTANCE",
-      "blocked_by": "P7_FULL_RUNTIME_GRAPHICAL_PERSISTENCE_TWO_CLIENT_SEAM_MW10_PLUS_FRESH_REVIEW_VERIFIER_REQUIRED"
+      "stage": "MVP CHECKPOINT ACCEPTANCE",
+      "blocked_by": "ALL_MVP_PRODUCT_PREDICATES_PLUS_FRESH_REVIEW_VERIFIER_AND_HUMAN_ACCEPTANCE"
     }
   ],
   "audit_triggers": [
@@ -567,7 +587,7 @@
   ],
   "coordination": {
     "revision": "PROJECT-FOCUS-2026-09-05-R1",
-    "observed_main": "c9e3b9d311818c5c55f16861d6c298aba5458990",
+    "observed_main": "3d7672cba293d8e7bd72427b803f73fc8fcee5da",
     "primary_lane": "MVP",
     "goals_source": "config/control/harness/project-goals.v1.json",
     "status_policy": "SOURCE_REPORT_IS_NOT_MAIN_ACCEPTANCE; MERGED_IS_NOT_COMPOSITION_ACCEPTED",
@@ -577,16 +597,17 @@
         "goal_id": "MVP",
         "priority_class": "PRIMARY_PRODUCT",
         "blocks_mvp": true,
-        "current_checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
-        "phase": "P7_MERGED_CLOSURE_RECONCILIATION",
-        "next_action": "RECONCILE_P7_DURABLE_CLOSURE_THEN_ACTIVATE_MVP",
-        "next_actor": "DIRECTOR",
+        "current_checkpoint": "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE",
+        "phase": "MVP_ACTIVATED_IMPLEMENTATION_DISPATCHED",
+        "next_action": "BEGIN_V0_MVP_PLAYABLE_SEAMLESS_PLANET_COMPOSITION",
+        "next_actor": "IMPLEMENTER",
         "evidence_paths": [
-          "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-7-POST-MERGE-ACTIVATION-PASSPORT-ROTATION-EVIDENCE-001.v1.json"
+          "config/control/harness/acceptance/V0-P7-R1-CHECKPOINT-ACCEPTED-001.v1.json",
+          "config/control/harness/acceptance/V0-P7-R1-CHECKPOINT-ACCEPTED-ADDENDUM-002.v1.json",
+          "config/control/harness/activation/V0-MVP-R1-ACTIVATION-001.v1.json"
         ],
         "open_gaps": [
-          "P7 canonical acceptance record absent at observed main; locate existing post-merge evidence before requesting any new runtime run.",
-          "MVP composition checkpoint needs a fresh exact-base activation and bounded work order."
+          "All MVP product predicates remain unproven; ACT0 is activation only."
         ],
         "tracks": {}
       },

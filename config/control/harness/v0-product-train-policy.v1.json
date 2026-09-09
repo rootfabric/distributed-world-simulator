@@ -5,8 +5,8 @@
   "program": "V0",
   "product_train_alias": "P",
   "purpose": "Develop one playable persistent product line checkpoint-by-checkpoint without restarting from bare main, duplicating canonical truth, or allowing unrelated research frontiers to become implicit blockers.",
-  "current_checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
-  "current_phase": "P7_MERGED_CLOSURE_RECONCILIATION",
+  "current_checkpoint": "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE",
+  "current_phase": "MVP_ACTIVATED_IMPLEMENTATION_DISPATCHED",
   "hard_invariants": {
     "one_product_lineage": true,
     "one_active_runtime_mutation_checkpoint": true,
@@ -51,7 +51,8 @@
       "P6": "feature/v0-p6-persistent-shared-outpost",
       "SM1": "feature/v0-sm1-seamless-product-integration",
       "P7": "feature/v0-p7-bounded-terrain-mutation",
-      "P8": "feature/v0-p8-first-mobile-construct"
+      "P8": "feature/v0-p8-first-mobile-construct",
+      "MVP": "feature/v0-mvp-playable-seamless-planet-r1"
     }
   },
   "checkpoint_sequence": [
@@ -170,7 +171,7 @@
     {
       "id": "V0_P7_BOUNDED_TERRAIN_MUTATION",
       "short_name": "P7",
-      "state": "MERGED_PENDING_CANONICAL_CLOSURE",
+      "state": "ACCEPTED",
       "goal": "Integrate the accepted MW4-MW10 Matter stack into the real V0 planetary product without creating a second terrain/Matter truth.",
       "activation_requires": [
         "V0_SM1_CHECKPOINT_ACCEPTED",
@@ -288,7 +289,7 @@
         "evidence": "config/control/harness/executions/E2026-08-30-V0-P7-R1/evidence/V0-P7-R1-P7-6-CLOSURE-EVIDENCE-001.v1.json"
       },
       "p7_7": {
-        "state": "MERGED_PENDING_CANONICAL_CLOSURE",
+        "state": "MERGED_CANONICALLY_ACCEPTED",
         "scope": "GRAPHICAL_DIGGING_SLICE",
         "runtime_branch": "feature/v0-p7-bounded-terrain-mutation",
         "runtime_mutation_authorized": false,
@@ -298,15 +299,24 @@
         "playground_plan": "docs/plans/V0_P7_7_DIGGING_PLAYGROUND_RU.md",
         "hard_rule": "GRAPHICAL_SLICE_ONLY_OVER_EXISTING_P7_1_TO_P7_6_OWNERS_NO_NEW_CANONICAL_TRUTH",
         "runtime_merge_commit": "dc5d4a4de71598ff4e36f88489a066e57b574386"
-      }
+      },
+      "acceptance_record": "config/control/harness/acceptance/V0-P7-R1-CHECKPOINT-ACCEPTED-001.v1.json",
+      "acceptance_addendum": "config/control/harness/acceptance/V0-P7-R1-CHECKPOINT-ACCEPTED-ADDENDUM-002.v1.json"
     },
     {
       "id": "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE",
       "short_name": "MVP",
-      "state": "PLANNED_PENDING_ACTIVATION",
+      "state": "ACTIVATED_DISPATCHED",
       "goal": "Общий изменяемый мир для нескольких клиентов с бесшовным переходом между authority.",
       "entry_rule": "Canonical P7 acceptance + exact-base activation + bounded Work Order.",
-      "next": "V0_P8_FIRST_MOBILE_CONSTRUCT"
+      "next": "V0_P8_FIRST_MOBILE_CONSTRUCT",
+      "execution_base": "3d7672cba293d8e7bd72427b803f73fc8fcee5da",
+      "execution_base_tree": "3cdcd33b4a59a93707b7628bc0124184df94cc64",
+      "project_epoch": "E2026-09-09-V0-MVP-R1",
+      "work_order_id": "V0-MVP-R1-WO-001",
+      "runtime_branch": "feature/v0-mvp-playable-seamless-planet-r1",
+      "activation_record": "config/control/harness/activation/V0-MVP-R1-ACTIVATION-001.v1.json",
+      "risk_class": "CRITICAL"
     },
     {
       "id": "V0_P8_FIRST_MOBILE_CONSTRUCT",
@@ -406,8 +416,8 @@
     "project_epoch": "E2026-08-30-V0-P7-R1",
     "work_order_id": "V0-P7-R1-WO-001",
     "runtime_branch": "feature/v0-p7-bounded-terrain-mutation",
-    "mutation_lease": "RESERVED_P7_CLOSURE_NO_RUNTIME_MUTATION",
-    "runtime_mutation": "FORBIDDEN_PENDING_CLOSURE_AND_SUCCESSOR_ACTIVATION",
+    "mutation_lease": "RELEASED_TO_MVP",
+    "runtime_mutation": "FROZEN_ACCEPTED",
     "director_dispatch": {
       "status": "DISPATCHED",
       "at_utc": "2026-08-30T06:58:00Z",
@@ -415,13 +425,15 @@
       "runtime_branch": "feature/v0-p7-bounded-terrain-mutation"
     },
     "p7_1": "COMPLETE_MERGED",
-    "next": "RECONCILE_P7_DURABLE_CLOSURE_THEN_ACTIVATE_MVP",
+    "next": "MVP_ACT0",
     "p7_2": "COMPLETE_MERGED",
     "p7_3": "COMPLETE_MERGED",
     "p7_4": "COMPLETE_MERGED",
     "p7_5": "COMPLETE_MERGED",
     "p7_6": "COMPLETE_MERGED",
-    "p7_7": "MERGED_PENDING_CANONICAL_CLOSURE"
+    "p7_7": "ACCEPTED",
+    "historical_only": true,
+    "superseded_by": "current_mvp_activation_route"
   },
   "post_v0_lane_policy": {
     "composition_checkpoint": "V0_PLAYABLE_SEAMLESS_PLANET",
@@ -429,5 +441,17 @@
     "p8_lane": "V0_P8_FIRST_MOBILE_CONSTRUCT",
     "rf1_lane": "RF1_SHADOW_RETAINED_REPLICA_CACHE",
     "pre_h0_3_runtime_execution": "SERIALIZED_ONE_RUNTIME_MUTATION_CHECKPOINT_AT_A_TIME"
+  },
+  "current_mvp_activation_route": {
+    "activation_record": "config/control/harness/activation/V0-MVP-R1-ACTIVATION-001.v1.json",
+    "exact_execution_base": "3d7672cba293d8e7bd72427b803f73fc8fcee5da",
+    "exact_execution_base_tree": "3cdcd33b4a59a93707b7628bc0124184df94cc64",
+    "project_epoch": "E2026-09-09-V0-MVP-R1",
+    "work_order_id": "V0-MVP-R1-WO-001",
+    "runtime_branch": "feature/v0-mvp-playable-seamless-planet-r1",
+    "control_generation": 82,
+    "accepted_predecessor_checkpoint": "V0_P7_BOUNDED_TERRAIN_MUTATION",
+    "runtime_mutation": "CONDITIONAL_ON_CANONICAL_ADOPTION_AND_EPOCH_AUDIT",
+    "director_dispatch": "RECORDED_NOT_WORKER_LAUNCH"
   }
 }

@@ -6,7 +6,9 @@ from typing import Any
 
 _ACTIVE_TRAIN_STATES = {"DISPATCHED", "IN_PROGRESS", "IMPLEMENTED", "VERIFYING", "VERIFIED", "AUDITED"}
 _MUTATION_SLOT_STATES = {"DISPATCHED", "IN_PROGRESS"}
+MVP = "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE"
 _PRODUCT_CHECKPOINTS = {
+    MVP,
     "V0_S1_NETWORKED_PLANETARY_OUTPOST",
     "V0_P4_REAL_RESOURCE_CONSTRUCTION",
     "V0_P5_EQUIPMENT_TOOLS",
@@ -14,6 +16,7 @@ _PRODUCT_CHECKPOINTS = {
     "V0_P7_BOUNDED_TERRAIN_MUTATION",
 }
 _PRODUCT_GATE_NAMES = {
+    MVP: "v0_mvp_gate",
     "V0_S1_NETWORKED_PLANETARY_OUTPOST": "v0_s1_gate",
     "V0_P4_REAL_RESOURCE_CONSTRUCTION": "v0_p4_gate",
     "V0_P5_EQUIPMENT_TOOLS": "v0_p5_gate",
@@ -21,6 +24,7 @@ _PRODUCT_GATE_NAMES = {
     "V0_P7_BOUNDED_TERRAIN_MUTATION": "v0_p7_gate",
 }
 _PRODUCT_BEGIN_ACTIONS = {
+    MVP: "BEGIN_V0_MVP_PLAYABLE_SEAMLESS_PLANET_COMPOSITION",
     "V0_S1_NETWORKED_PLANETARY_OUTPOST": "BEGIN_V0_S1_NETWORKED_PLANETARY_OUTPOST_COMPOSITION",
     "V0_P4_REAL_RESOURCE_CONSTRUCTION": "BEGIN_V0_P4_REAL_RESOURCE_CONSTRUCTION",
     "V0_P5_EQUIPMENT_TOOLS": "BEGIN_V0_P5_EQUIPMENT_TOOLS",
@@ -28,6 +32,7 @@ _PRODUCT_BEGIN_ACTIONS = {
     "V0_P7_BOUNDED_TERRAIN_MUTATION": "BEGIN_V0_P7_MATTER_PRODUCTION_CONVERGENCE",
 }
 _PRODUCT_VERIFY_ACTIONS = {
+    MVP: "VERIFY_V0_MVP_EXACT_HEAD",
     "V0_S1_NETWORKED_PLANETARY_OUTPOST": "VERIFY_V0_S1_EXACT_HEAD",
     "V0_P4_REAL_RESOURCE_CONSTRUCTION": "VERIFY_V0_P4_EXACT_HEAD",
     "V0_P5_EQUIPMENT_TOOLS": "VERIFY_V0_P5_EXACT_HEAD",
@@ -35,6 +40,7 @@ _PRODUCT_VERIFY_ACTIONS = {
     "V0_P7_BOUNDED_TERRAIN_MUTATION": "VERIFY_V0_P7_EXACT_HEAD",
 }
 _PRODUCT_DISPATCH_ACTIONS = {
+    MVP: "DIRECTOR_DISPATCH_ACCEPTED_P7_BASE_V0_MVP_WORK_ORDER",
     "V0_S1_NETWORKED_PLANETARY_OUTPOST": "ISSUE_MAIN_DECLARED_PRODUCT_BASE_V0_S1_WORK_ORDER_AND_DIRECTOR_DISPATCH",
     "V0_P4_REAL_RESOURCE_CONSTRUCTION": "ISSUE_MAIN_DECLARED_PRODUCT_BASE_V0_P4_WORK_ORDER_AND_DIRECTOR_DISPATCH",
     "V0_P5_EQUIPMENT_TOOLS": "DIRECTOR_DISPATCH_ACCEPTED_P4_BASE_V0_P5_WORK_ORDER",
@@ -91,7 +97,7 @@ def _build_product_plan(
     gate_name = _PRODUCT_GATE_NAMES[current]
     gate = {
         "requested_checkpoint": current,
-        "risk_floor": "CRITICAL" if current == "V0_P7_BOUNDED_TERRAIN_MUTATION" else "HIGH",
+        "risk_floor": "CRITICAL" if current in {"V0_P7_BOUNDED_TERRAIN_MUTATION", MVP} else "HIGH",
         "network_baseline": "SERVER_PREDICTED",
         "status": "READY_FOR_BOUNDED_PRODUCT_IMPLEMENTATION" if mutating else ("VERIFYING_PRODUCT_HEAD" if active else "WAITING_DIRECTOR_DISPATCH"),
         "runtime_mutation": "AUTHORIZED_BY_DISPATCH" if mutating else ("NO_ACTIVE_MUTATION_SLOT" if active else "FORBIDDEN_UNTIL_DISPATCH"),
@@ -147,6 +153,26 @@ def _build_product_plan(
         if mutating and remaining:
             raise ValueError("V0_P7_RUNTIME_DISPATCH_BLOCKED:" + ",".join(remaining))
 
+    if current == MVP:
+        routing = scheduler.get("v0_product_train_routing", {})
+        declared = routing.get("mvp_activation", {})
+        if (routing.get("current_checkpoint") != MVP
+                or routing.get("accepted_predecessor_checkpoint") != "V0_P7_BOUNDED_TERRAIN_MUTATION"
+                or not declared.get("exact_execution_base")
+                or work_order.get("base_sha") != declared.get("exact_execution_base")
+                or work_order.get("project_epoch") != declared.get("project_epoch")
+                or work_order.get("work_order_id") != declared.get("work_order_id")
+                or work_order.get("branch") != declared.get("runtime_branch")):
+            raise ValueError("MVP_MAIN_DECLARED_ACTIVATION_MISMATCH")
+        if mutating and routing.get("runtime_mutation_allowed_now") is not True:
+            raise ValueError("MVP_RUNTIME_DISPATCH_NOT_AUTHORIZED")
+        gate.update(accepted_predecessor_checkpoint="V0_P7_BOUNDED_TERRAIN_MUTATION",
+                    accepted_predecessor_base=declared["exact_execution_base"],
+                    composition_truth="EXISTING_SM1_P7_ITEM_CONSTRUCTION_PERSISTENCE",
+                    director_dispatch_required=True, runtime_merge_human_gated=True,
+                    checkpoint_acceptance_human_gated=True,
+                    bounded_implementation_may_proceed_with_prior_acceptance_debt=False)
+
     return {
         "mode": "PLANNING_ONLY" if not active else ("SINGLE_HIGH_RISK_PRODUCT_SLICE" if mutating else "PRODUCT_RUNTIME_VERIFICATION"),
         "selected_checkpoint": current,
@@ -180,7 +206,7 @@ def _build_product_plan(
             "SECOND_MATTER_FOUNDATION",
             "SECOND_PRE_H0_3_RUNTIME_MUTATION_WORKER",
             "SHIP_FLIGHT",
-            "SERVER_HANDOFF",
+            "NEW_AUTHORITY_FOUNDATION" if current == MVP else "SERVER_HANDOFF",
         ],
     }
 

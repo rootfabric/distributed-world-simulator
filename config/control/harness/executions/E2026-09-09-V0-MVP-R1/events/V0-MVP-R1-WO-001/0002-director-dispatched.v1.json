@@ -1,0 +1,20 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-09-09-V0-MVP-R1-0002",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "sequence": 2,
+  "event_type": "DISPATCHED",
+  "work_state": "DISPATCHED",
+  "recorded_at_utc": "2026-09-09T10:18:03Z",
+  "actor": "DIRECTOR",
+  "branch": "feature/v0-mvp-playable-seamless-planet-r1",
+  "head_sha": "3d7672cba293d8e7bd72427b803f73fc8fcee5da",
+  "predicate": "MVP_WORK_ORDER_AND_DIRECTOR_DISPATCH",
+  "command": "ACT0_CONTROL_AUTHORIZATION_NOT_WORKER_EXECUTION",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/activation/V0-MVP-R1-ACTIVATION-001.v1.json"
+  ],
+  "summary": "ACT0: разрешён один bounded MVP worker после main adoption и актуального epoch audit; worker ещё не запущен."
+}

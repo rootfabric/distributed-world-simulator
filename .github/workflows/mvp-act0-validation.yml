@@ -1,0 +1,50 @@
+name: ACT0 Exact Control Validation
+on:
+  push:
+    branches: [control/v0-mvp-act0-r1, feature/v0-mvp-playable-seamless-planet-r1]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: act0-validation-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  validate:
+    # Normal MVP implementation pushes are outside this activation-only gate.
+    # Feature-branch execution requires an explicit manual or [act0-audit] request.
+    if: github.repository == 'rootfabric/distributed-world-simulator' && github.actor == 'rootfabric' && (github.ref == 'refs/heads/control/v0-mvp-act0-r1' || (github.ref == 'refs/heads/feature/v0-mvp-playable-seamless-planet-r1' && (github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[act0-audit]'))))
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      PYTHONUTF8: '1'
+      PYTHONPATH: scripts
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Resolve exact local test identity and current refs
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          git fetch origin '+refs/heads/*:refs/remotes/origin/*' --prune
+          git switch -C "$GITHUB_REF_NAME" "$GITHUB_SHA"
+          python3 -m pip install --disable-pip-version-check -r scripts/harness/requirements.txt
+      - name: Validate without publishing or changing authority
+        shell: bash
+        run: |
+          set -euo pipefail
+          mode=candidate
+          if [ "$GITHUB_REF" = refs/heads/feature/v0-mvp-playable-seamless-planet-r1 ]; then
+            mode=post-adoption
+          fi
+          python3 docs/control/mvp-act0-r1/validate.py --mode "$mode"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: act0-exact-${{ github.sha }}-${{ github.run_id }}
+          path: artifacts/act0-exact/${{ github.run_id }}/
+          if-no-files-found: error
+          retention-days: 90

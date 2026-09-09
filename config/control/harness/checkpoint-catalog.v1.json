@@ -543,11 +543,18 @@
         "INDEPENDENT_VERIFIER_PASS",
         "STANDARD_PC0_NON_RED",
         "DIRECTIONAL_PC0_NON_RED_FOR_CRITICAL_HITS",
-        "HUMAN_MVP_ACCEPTANCE"
+        "HUMAN_MVP_ACCEPTANCE",
+        "FULL_WORLD_CORE_REGRESSION_PASS",
+        "POST_BUILD_CRITIQUE_COMPLETED",
+        "EVIDENCE_MAP_COMPLETE",
+        "REVIEW_HEAD_EXACT_AND_FRESH",
+        "TESTED_HEADS_EXACT_AND_FRESH",
+        "CRITICAL_CROSS_BRANCH_OVERLAP_ZERO",
+        "HUMAN_ATTENTION_QUEUE_EMPTY_OR_RESOLVED"
       ],
       "success_state": "V0_PLAYABLE_SEAMLESS_PLANET_ACCEPTED",
       "human_gate_after": "RUNTIME_FEATURE_MERGE",
-      "activation_state": "PLANNED_NOT_DISPATCHED",
+      "activation_state": "ACTIVATED_DISPATCHED",
       "non_preconditions": [
         "ECO_LS4_FINAL",
         "FABRIC_B06",
@@ -555,7 +562,12 @@
         "RF1",
         "P8",
         "WORLD_PACKS"
-      ]
+      ],
+      "activation_record": "config/control/harness/activation/V0-MVP-R1-ACTIVATION-001.v1.json",
+      "project_epoch": "E2026-09-09-V0-MVP-R1",
+      "work_order_id": "V0-MVP-R1-WO-001",
+      "exact_execution_base": "3d7672cba293d8e7bd72427b803f73fc8fcee5da",
+      "network_baseline": "SERVER_PREDICTED"
     }
   }
 }
