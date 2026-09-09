@@ -37,7 +37,7 @@ class MVPAuditIdentityTests(unittest.TestCase):
         with self.fixture(adopted=True) as root:
             self.completed_audit(root, changes={"work_order_id": "FOREIGN-WORK-ORDER"})
             code, result = self.cli(root, "drive")
-            self.assertEqual(3, code, result)
+            self.assertEqual(3, code, {"foreign_audit_work_order": "FOREIGN-WORK-ORDER", "result": result})
             self.assertIn("MVP_RESUME_AUDIT_IDENTITY_MISMATCH", result["error"]["detail"])
 
     def test_foreign_completed_epoch_is_rejected(self):
