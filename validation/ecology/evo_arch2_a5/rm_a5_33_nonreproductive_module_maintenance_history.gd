@@ -51,9 +51,12 @@ func _policy() -> Dictionary:
 	policy.growth.transfer_permille = 500
 	policy.growth.max_transfer = B.stock(20000)
 	policy.survival.starvation_limit_ticks = 100
+	# The inherited reproduction schema requires at least one reproductive module.
+	# Keep it contract-valid but place maturity beyond this bounded witness so the
+	# observed history still has event_count == 0.
 	policy.reproduction.maturity_ticks = 100
 	policy.reproduction.interval_ticks = 100
-	policy.reproduction.required_reproductive_modules = 0
+	policy.reproduction.required_reproductive_modules = 1
 	policy.reproduction.offspring_per_event = 1
 	policy.reproduction.endowment = B.stock()
 	policy.reproduction.fee_energy_mj = 0
