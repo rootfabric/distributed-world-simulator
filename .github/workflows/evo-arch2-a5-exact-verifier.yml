@@ -1,4 +1,4 @@
-name: ECO ARCH2 A5 RM29 RM30 Diagnostic
+name: ECO ARCH2 A5 RM32 RM33 Diagnostic
 
 on:
   push:
@@ -14,8 +14,8 @@ permissions:
   contents: read
 
 jobs:
-  linux-lineage:
-    name: exact RM29 RM30 diagnostic
+  linux-repair:
+    name: exact RM32 RM33 diagnostic
     runs-on: [self-hosted, Linux, X64]
     timeout-minutes: 30
     defaults:
@@ -55,15 +55,22 @@ jobs:
           test "$(sha256sum "$godot" | awk '{print $1}')" = "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7"
           echo "path=$godot" >> "$GITHUB_OUTPUT"
 
-      - name: Run exact lineage diagnostics
+      - name: Run exact repair diagnostics twice
         env:
           GODOT: ${{ steps.godot.outputs.path }}
           GODOT_SILENCE_ROOT_WARNING: "1"
         run: |
           set -euo pipefail
-          "$GODOT" --headless --audio-driver Dummy --path "$PWD" --script res://validation/ecology/evo_arch2_a5/rm_a5_29_bounded_parent_proof_depth.gd 2>&1 | tee rm29.log
-          test ${PIPESTATUS[0]} -eq 0
-          grep -F "EVO_ARCH2_A5_RM29 assertions=9 failed=0" rm29.log
-          "$GODOT" --headless --audio-driver Dummy --path "$PWD" --script res://validation/ecology/evo_arch2_a5/rm_a5_30_canonical_parent_depth_budget.gd 2>&1 | tee rm30.log
-          test ${PIPESTATUS[0]} -eq 0
-          grep -F "EVO_ARCH2_A5_RM30 assertions=7 failed=0" rm30.log
+          run_twice() {
+            local script="$1" marker="$2" prefix="$3"
+            for n in 1 2; do
+              "$GODOT" --headless --audio-driver Dummy --path "$PWD" --script "$script" 2>&1 | tee "$prefix-$n.log"
+              test ${PIPESTATUS[0]} -eq 0
+              grep -F "$marker" "$prefix-$n.log"
+              if grep -E "SCRIPT ERROR|Parse Error|ERROR:|FAIL:" "$prefix-$n.log"; then exit 1; fi
+            done
+            cmp "$prefix-1.log" "$prefix-2.log"
+            sha256sum "$prefix-1.log" "$prefix-2.log"
+          }
+          run_twice res://validation/ecology/evo_arch2_a5/rm_a5_32_field_intake_lifecycle_causality.gd "EVO_ARCH2_A5_RM32 assertions=12 failed=0" rm32
+          run_twice res://validation/ecology/evo_arch2_a5/rm_a5_33_nonreproductive_module_maintenance_history.gd "EVO_ARCH2_A5_RM33 assertions=17 failed=0" rm33
