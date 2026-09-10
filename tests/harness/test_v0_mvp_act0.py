@@ -43,22 +43,34 @@ class MVPAct0Tests(unittest.TestCase):
 
     @contextmanager
     def fixture(self, adopted: bool):
-        """Run current Harness code against an immutable pre-implementation ACT0 ledger.
+        """Run current Harness code on a lineage that never contained MVP progress events.
 
-        ACT0 regressions exercise activation/audit semantics, not whatever real MVP
-        implementation events happen to exist on the moving feature branch.  The
-        disposable clone therefore keeps current code but restores only this
-        execution directory to the canonical main immediately after PR #596.
+        The previous fixture cloned the moving feature HEAD and then restored the
+        execution directory to PRE_IMPLEMENTATION_MAIN.  That created a real Git
+        deletion commit for sequence 3/4 and the append-only ledger correctly
+        rejected it as EVENT_LEDGER_DELETION_DETECTED.
+
+        Build the synthetic authority fixture in the opposite direction: start
+        from PRE_IMPLEMENTATION_MAIN (where those future events never existed),
+        then overlay only current Harness/control executable code.  This preserves
+        current validation semantics without manufacturing a deletion in the
+        execution ledger's ancestry.
         """
         with tempfile.TemporaryDirectory(prefix="act0-authority-") as tmp:
             root = Path(tmp) / "repo"
             subprocess.run(["git", "clone", "--quiet", "--shared", str(ROOT), str(root)], check=True)
-            head = git(ROOT, "rev-parse", "HEAD")
-            git(root, "checkout", "--quiet", "-B", BRANCH, head)
-            git(root, "restore", "--source", PRE_IMPLEMENTATION_MAIN, "--staged", "--worktree", "--", EX)
-            if git(root, "status", "--porcelain", "--", EX):
+            current_head = git(ROOT, "rev-parse", "HEAD")
+            git(root, "checkout", "--quiet", "-B", BRANCH, PRE_IMPLEMENTATION_MAIN)
+
+            # Keep the frozen ACT0 authority/configuration from PRE_IMPLEMENTATION_MAIN,
+            # but exercise it with the executable Harness/control implementation under
+            # review.  Commit the overlay so strict provenance sees a clean worktree.
+            for path in ("scripts/harness", "scripts/control"):
+                git(root, "restore", "--source", current_head, "--staged", "--worktree", "--", path)
+            if git(root, "status", "--porcelain", "--", "scripts/harness", "scripts/control"):
                 git(root, "-c", "user.name=ACT0 fixture", "-c", "user.email=fixture@example.invalid",
-                    "commit", "-qm", "test-only pin pre-implementation ACT0 ledger")
+                    "commit", "-qm", "test-only overlay current harness code")
+
             git(root, "update-ref", "refs/remotes/origin/main", PRE_IMPLEMENTATION_MAIN if adopted else BASE)
             yield root
 
@@ -137,9 +149,6 @@ class MVPAct0Tests(unittest.TestCase):
     def test_all_p7_execution_and_acceptance_blobs_are_unchanged(self):
         for path in (H + "executions/E2026-08-30-V0-P7-R1", H + "acceptance"):
             self.assertEqual("", git(ROOT, "diff", "--name-only", BASE, "HEAD", "--", path))
-        # MVP is now allowed to add its own runtime/scene surfaces.  Preserve the
-        # accepted foundations themselves rather than incorrectly freezing all
-        # future runtime and scene paths.
         for path in (
             "scripts/runtime/networked_gameplay/p7",
             "scripts/runtime/networked_gameplay/m4",
@@ -158,6 +167,21 @@ class MVPAct0Tests(unittest.TestCase):
         self.assertTrue(events)
         latest = max(events, key=lambda event: event["sequence"])
         self.assertEqual(latest["work_state"], order["state"])
+
+    def test_preimplementation_fixture_never_deletes_future_ledger_events(self):
+        with self.fixture(adopted=True) as root:
+            event_dir = root / EX / "events" / WO
+            self.assertFalse((event_dir / "0004-mvp1-shared-graphical-scene-implementation.v1.json").exists())
+            deleted = git(
+                root,
+                "log",
+                "--diff-filter=D",
+                "--format=%H",
+                PRE_IMPLEMENTATION_MAIN + "..HEAD",
+                "--",
+                EX + "/events/" + WO,
+            )
+            self.assertEqual("", deleted)
 
     def test_candidate_default_and_explicit_execution_cannot_activate(self):
         with self.fixture(adopted=False) as root:
