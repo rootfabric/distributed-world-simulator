@@ -25,15 +25,15 @@ jobs:
       - name: Checkout exact candidate
         uses: actions/checkout@v4
         with:
-          ref: 041556b9e372afefa7342e153b0c5b724e6769b1
+          ref: 37bdad58b010fdec7324f35982dbea1e7974808f
           fetch-depth: 0
           persist-credentials: false
 
       - name: Assert exact subject and bounded scope
         run: |
           set -euo pipefail
-          subject="041556b9e372afefa7342e153b0c5b724e6769b1"
-          tree="bbf3f53ad3f927736bc58f666831cb2e8d15168b"
+          subject="37bdad58b010fdec7324f35982dbea1e7974808f"
+          tree="068b149f770368c9d56e6d410321ffd84cae6b7c"
           base="4b0f772ff39592262b853f7293bbd5403558b145"
           test "$(git rev-parse HEAD)" = "$subject"
           test "$(git rev-parse HEAD^{tree})" = "$tree"
@@ -127,6 +127,8 @@ jobs:
           run_twice res://validation/ecology/evo_arch2_a5/rm_a5_28_post_event_root_maintenance.gd "EVO_ARCH2_A5_RM28 assertions=11 failed=0" rm28
           run_twice res://validation/ecology/evo_arch2_a5/rm_a5_29_bounded_parent_proof_depth.gd "EVO_ARCH2_A5_RM29 assertions=9 failed=0" rm29
           run_twice res://validation/ecology/evo_arch2_a5/rm_a5_30_canonical_parent_depth_budget.gd "EVO_ARCH2_A5_RM30 assertions=7 failed=0" rm30
+          run_twice res://validation/ecology/evo_arch2_a5/rm_a5_32_field_intake_lifecycle_causality.gd "EVO_ARCH2_A5_RM32 assertions=12 failed=0" rm32
+          run_twice res://validation/ecology/evo_arch2_a5/rm_a5_33_nonreproductive_module_maintenance_history.gd "EVO_ARCH2_A5_RM33 assertions=17 failed=0" rm33
 
       - name: Run accepted A4 and A0-A3 regressions
         env:
@@ -169,9 +171,9 @@ jobs:
       - name: Assert candidate stayed exact
         run: |
           set -euo pipefail
-          test "$(git rev-parse HEAD)" = "041556b9e372afefa7342e153b0c5b724e6769b1"
-          test "$(git rev-parse HEAD^{tree})" = "bbf3f53ad3f927736bc58f666831cb2e8d15168b"
+          test "$(git rev-parse HEAD)" = "37bdad58b010fdec7324f35982dbea1e7974808f"
+          test "$(git rev-parse HEAD^{tree})" = "068b149f770368c9d56e6d410321ffd84cae6b7c"
           test -z "$(git status --porcelain --untracked-files=no)"
-          echo "SUBJECT_HEAD=041556b9e372afefa7342e153b0c5b724e6769b1"
-          echo "SUBJECT_TREE=bbf3f53ad3f927736bc58f666831cb2e8d15168b"
+          echo "SUBJECT_HEAD=37bdad58b010fdec7324f35982dbea1e7974808f"
+          echo "SUBJECT_TREE=068b149f770368c9d56e6d410321ffd84cae6b7c"
           echo "VERDICT=PASS"
