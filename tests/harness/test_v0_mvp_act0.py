@@ -1,4 +1,4 @@
-"""ACT0 tests. Installed as tests/harness/test_v0_mvp_act0.py by the assembler."""
+"""ACT0 tests. Historical authority fixtures are pinned to the canonical pre-implementation main."""
 from __future__ import annotations
 
 from contextlib import contextmanager
@@ -17,6 +17,7 @@ from harness.checkpoint_planner import build_plan
 from harness.contracts import ContractBundle
 
 BASE = "3d7672cba293d8e7bd72427b803f73fc8fcee5da"
+PRE_IMPLEMENTATION_MAIN = "127c732a56cc5c25d5712f24a7627ed4bb877374"
 P7 = "V0_P7_BOUNDED_TERRAIN_MUTATION"
 MVP = "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE"
 BRANCH = "feature/v0-mvp-playable-seamless-planet-r1"
@@ -42,12 +43,23 @@ class MVPAct0Tests(unittest.TestCase):
 
     @contextmanager
     def fixture(self, adopted: bool):
+        """Run current Harness code against an immutable pre-implementation ACT0 ledger.
+
+        ACT0 regressions exercise activation/audit semantics, not whatever real MVP
+        implementation events happen to exist on the moving feature branch.  The
+        disposable clone therefore keeps current code but restores only this
+        execution directory to the canonical main immediately after PR #596.
+        """
         with tempfile.TemporaryDirectory(prefix="act0-authority-") as tmp:
             root = Path(tmp) / "repo"
             subprocess.run(["git", "clone", "--quiet", "--shared", str(ROOT), str(root)], check=True)
             head = git(ROOT, "rev-parse", "HEAD")
             git(root, "checkout", "--quiet", "-B", BRANCH, head)
-            git(root, "update-ref", "refs/remotes/origin/main", head if adopted else BASE)
+            git(root, "restore", "--source", PRE_IMPLEMENTATION_MAIN, "--staged", "--worktree", "--", EX)
+            if git(root, "status", "--porcelain", "--", EX):
+                git(root, "-c", "user.name=ACT0 fixture", "-c", "user.email=fixture@example.invalid",
+                    "commit", "-qm", "test-only pin pre-implementation ACT0 ledger")
+            git(root, "update-ref", "refs/remotes/origin/main", PRE_IMPLEMENTATION_MAIN if adopted else BASE)
             yield root
 
     def cli(self, root: Path, *args: str):
@@ -125,8 +137,27 @@ class MVPAct0Tests(unittest.TestCase):
     def test_all_p7_execution_and_acceptance_blobs_are_unchanged(self):
         for path in (H + "executions/E2026-08-30-V0-P7-R1", H + "acceptance"):
             self.assertEqual("", git(ROOT, "diff", "--name-only", BASE, "HEAD", "--", path))
-        for path in ("scripts/runtime", "scripts/network", "scripts/simulation", "scenes", "project.godot"):
-            self.assertEqual("", git(ROOT, "diff", "--name-only", BASE, "HEAD", "--", path))
+        # MVP is now allowed to add its own runtime/scene surfaces.  Preserve the
+        # accepted foundations themselves rather than incorrectly freezing all
+        # future runtime and scene paths.
+        for path in (
+            "scripts/runtime/networked_gameplay/p7",
+            "scripts/runtime/networked_gameplay/m4",
+            "scripts/runtime/networked_gameplay/sm1",
+            "scripts/network",
+            "scripts/simulation",
+            "project.godot",
+            "config/architecture",
+        ):
+            self.assertEqual("", git(ROOT, "diff", "--name-only", BASE, "HEAD", "--", path), path)
+
+    def test_current_mvp_work_order_snapshot_matches_latest_committed_event(self):
+        order = read(EX + "/work-orders/" + WO + ".v1.json")
+        directory = ROOT / EX / "events" / WO
+        events = [json.loads(path.read_text(encoding="utf-8")) for path in directory.glob("*.json")]
+        self.assertTrue(events)
+        latest = max(events, key=lambda event: event["sequence"])
+        self.assertEqual(latest["work_state"], order["state"])
 
     def test_candidate_default_and_explicit_execution_cannot_activate(self):
         with self.fixture(adopted=False) as root:
@@ -154,7 +185,6 @@ class MVPAct0Tests(unittest.TestCase):
             self.assertEqual(0, code, payload)
             self.assertTrue(payload["control_route"]["mission_complete"])
             self.assertFalse(payload["runtime_authorized"])
-
 
     def commit_fixture(self, root, relative, value):
         path = root / relative

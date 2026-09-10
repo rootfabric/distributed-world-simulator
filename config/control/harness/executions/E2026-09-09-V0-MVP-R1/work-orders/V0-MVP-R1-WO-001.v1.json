@@ -4,7 +4,7 @@
   "project_epoch": "E2026-09-09-V0-MVP-R1",
   "program": "V0",
   "goal_checkpoint": "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE",
-  "state": "DISPATCHED",
+  "state": "IN_PROGRESS",
   "work_order_type": "INTEGRATION",
   "base_sha": "3d7672cba293d8e7bd72427b803f73fc8fcee5da",
   "branch": "feature/v0-mvp-playable-seamless-planet-r1",
