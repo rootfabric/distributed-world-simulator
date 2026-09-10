@@ -179,6 +179,12 @@ static func validate(v: Variant, blueprint: Dictionary, parent_proof_depth: int 
 		if last_reproduction_tick > v.age_ticks - v.starvation_ticks: return "LIFE_REPRODUCTION_STARVATION_WINDOW"
 	if not B.valid_stock(v.metabolic_reserves): return "LIFE_STATE_RESERVES"
 	if not _valid_ledger(v.resource_ledger): return "LIFE_STATE_LEDGER"
+	var max_field_intake_per_resource: int = int(v.age_ticks) * F.MAX_REQUEST
+	for resource in F.RESOURCES:
+		if int(v.resource_ledger.field_intake[resource]) > max_field_intake_per_resource:
+			return "LIFE_FIELD_INTAKE_CAUSALITY"
+	if v.age_ticks == 0 and not v.last_environment_source.is_empty():
+		return "LIFE_FIELD_INTAKE_CAUSALITY"
 	if v.resource_ledger.assimilated.material_mg != v.resource_ledger.field_intake.nutrient_mg + v.resource_ledger.field_intake.organic_mg: return "LIFE_FIELD_MATERIAL_SOURCE"
 	if v.resource_ledger.assimilated.water_mg != v.resource_ledger.field_intake.water_mg: return "LIFE_FIELD_WATER_SOURCE"
 	if v.resource_ledger.assimilated.energy_mj != v.resource_ledger.external_energy_mj: return "LIFE_EXTERNAL_ENERGY_SOURCE"
@@ -202,7 +208,7 @@ static func validate(v: Variant, blueprint: Dictionary, parent_proof_depth: int 
 		survival_paid_ticks = int((paid_prefix_ticks + starvation_limit - 1) / starvation_limit)
 	var required_paid_ticks: int = maxi(event_count, maxi(survival_paid_ticks, int(v.development.grant_seq)))
 	var guaranteed_root_payment_ticks: int = required_paid_ticks
-	var guaranteed_module_payment_ticks: int = required_paid_ticks
+	var guaranteed_nonroot_payment_ticks := 0
 	if event_count > 0:
 		# Reproduction proves at least one paid event tick. Count additional paid ticks that are
 		# provably after the first event separately so max()-combination cannot erase their root cost.
@@ -220,11 +226,20 @@ static func validate(v: Variant, blueprint: Dictionary, parent_proof_depth: int 
 			suffix_reproduction_or_terminal_paid_ticks += 1
 		var post_reproduction_paid_ticks: int = maxi(suffix_reproduction_or_terminal_paid_ticks, maxi(suffix_survival_paid_ticks, suffix_development_paid_ticks))
 		guaranteed_root_payment_ticks = maxi(required_paid_ticks, 1 + post_reproduction_paid_ticks)
-		guaranteed_module_payment_ticks = guaranteed_root_payment_ticks
 		if reproduction.required_reproductive_modules > 0:
 			# The first reproduction may create the qualifying module during same-tick growth, after
 			# maintenance. Every provably paid later tick must pay those persistent modules.
-			guaranteed_module_payment_ticks += post_reproduction_paid_ticks * int(reproduction.required_reproductive_modules)
+			guaranteed_nonroot_payment_ticks = post_reproduction_paid_ticks * int(reproduction.required_reproductive_modules)
+	# A2 modules are persistent. Any current non-root module not reported as created by the
+	# latest development tick necessarily existed before that paid tick and therefore incurred
+	# at least one maintenance debit on that tick. This is a conservative floor: it does not
+	# attempt to reconstruct an unpersisted full module-age integral.
+	if int(v.development.grant_seq) > 0 and v.development.modules.size() > 1:
+		var nonroot_modules: int = v.development.modules.size() - 1
+		var latest_created_modules: int = mini(nonroot_modules, _latest_development_created_modules(v.development))
+		var guaranteed_preexisting_nonroot: int = maxi(0, nonroot_modules - latest_created_modules)
+		guaranteed_nonroot_payment_ticks = maxi(guaranteed_nonroot_payment_ticks, guaranteed_preexisting_nonroot)
+	var guaranteed_module_payment_ticks: int = guaranteed_root_payment_ticks + guaranteed_nonroot_payment_ticks
 	var metabolism: Dictionary = blueprint.life_history.metabolism
 	var minimum_maintenance_water: int = guaranteed_module_payment_ticks * int(metabolism.maintenance_water_per_module_mg)
 	var minimum_maintenance_energy: int = guaranteed_module_payment_ticks * int(metabolism.maintenance_energy_per_module_mj)
@@ -306,6 +321,15 @@ static func _valid_ledger(v: Variant) -> bool:
 		if not valid_cumulative_stock(v[k]): return false
 	if not F.valid_total_stock(v.field_intake): return false
 	return C.integer(v.external_energy_mj, 0, C.MAX_INT)
+
+static func _latest_development_created_modules(development: Dictionary) -> int:
+	if int(development.grant_seq) <= 0: return 0
+	var events: Array = development.frame.events if not development.frame.is_empty() else development.last_events
+	var created := 0
+	for event in events:
+		if event is Dictionary and event.get("outcome", "") == "MODULE_CREATED":
+			created += 1
+	return created
 
 static func _source_valid(v: Variant) -> bool:
 	if not v is Dictionary: return false
