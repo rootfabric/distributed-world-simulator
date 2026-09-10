@@ -124,7 +124,7 @@ jobs:
           run_twice res://validation/ecology/evo_arch2_a5/rm_a5_25_reproductive_module_maintenance_history.gd "EVO_ARCH2_A5_RM25 assertions=11 failed=0" rm25
           run_twice res://validation/ecology/evo_arch2_a5/rm_a5_26_development_starvation_window.gd "EVO_ARCH2_A5_RM26 assertions=11 failed=0" rm26
           run_twice res://validation/ecology/evo_arch2_a5/rm_a5_27_exact_parent_state_receipt.gd "EVO_ARCH2_A5_RM27 assertions=13 failed=0" rm27
-          run_twice res://validation/ecology/evo_arch2_a5/rm_a5_28_post_event_root_maintenance.gd "EVO_ARCH2_A5_RM28 assertions=11 failed=0" rm28
+          run_twice res://validation/ecology/evo_arch2_a5/rm_a5_28_post_event_root_maintenance.gd "EVO_ARCH2_A5_RM28 assertions=12 failed=0" rm28
           run_twice res://validation/ecology/evo_arch2_a5/rm_a5_29_bounded_parent_proof_depth.gd "EVO_ARCH2_A5_RM29 assertions=9 failed=0" rm29
           run_twice res://validation/ecology/evo_arch2_a5/rm_a5_30_canonical_parent_depth_budget.gd "EVO_ARCH2_A5_RM30 assertions=7 failed=0" rm30
           run_twice res://validation/ecology/evo_arch2_a5/rm_a5_32_field_intake_lifecycle_causality.gd "EVO_ARCH2_A5_RM32 assertions=12 failed=0" rm32
