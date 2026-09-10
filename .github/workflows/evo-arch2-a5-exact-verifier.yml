@@ -25,15 +25,15 @@ jobs:
       - name: Checkout exact candidate
         uses: actions/checkout@v4
         with:
-          ref: 251238ce231630601a8a641aa06f478dd82ac741
+          ref: 71115b44a0ac059edeea944ae0c0a985a472f4b0
           fetch-depth: 0
           persist-credentials: false
 
       - name: Assert exact subject
         run: |
           set -euo pipefail
-          test "$(git rev-parse HEAD)" = "251238ce231630601a8a641aa06f478dd82ac741"
-          test "$(git rev-parse HEAD^{tree})" = "04e60e392c95fa17360144e8e7f38fbc003f22e4"
+          test "$(git rev-parse HEAD)" = "71115b44a0ac059edeea944ae0c0a985a472f4b0"
+          test "$(git rev-parse HEAD^{tree})" = "cd306f9536a26ed712c49dd799c39b4640832c97"
 
       - name: Resolve canonical double Godot
         id: godot
