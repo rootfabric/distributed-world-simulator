@@ -35,8 +35,10 @@ jobs:
           set -euo pipefail
           test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
           git fetch origin '+refs/heads/*:refs/remotes/origin/*' --prune
+          # Local test-fixture advice only; no effect on validation or error output.
+          git config --global advice.detachedHead false
           # Drive requires the declared local execution branch, not detached HEAD.
-          # This creates only a local ref at the already pinned commit; no commit/push.
+          # This creates only a local ref at the already pinned commit; no source commit/push.
           git switch -c feature/v0-mvp-playable-seamless-planet-r1 "$EXPECTED_HEAD"
           test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
           test -z "$(git status --porcelain --untracked-files=no)"
@@ -53,7 +55,7 @@ jobs:
           repository: rootfabric/distributed-world-simulator
           github-token: ${{ github.token }}
           path: ${{ runner.temp }}/mvp1-r11-engine
-      - name: Execute exact evidence producer
+      - name: Execute exact evidence producer and native-consumer fixture tests
         shell: bash
         run: |
           set -euo pipefail

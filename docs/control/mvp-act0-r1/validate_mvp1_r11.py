@@ -1,4 +1,4 @@
-"""R11 exact evidence producer. No Git writes, role verdicts or acceptance."""
+"""R11/R12 evidence producer. No source/remote Git writes or independent verdicts."""
 from __future__ import annotations
 import copy
 from datetime import datetime, timezone
@@ -8,13 +8,17 @@ import os
 from pathlib import Path
 import re
 import shutil
+import shlex
 import subprocess
 import sys
 import time
+import tempfile
 
 ROOT = Path(__file__).resolve().parents[3]
 BASE = 'b645a738a6a143bee8f7f4a291a3e754cd399996'
 BASE_TREE = 'b7cd01061dab492eaa1de3de6680465ac9e7aaf6'
+R11_FINAL = 'dc3b37d8963691e2004cb403350682f5343b46c6'
+R12_ORDER = 'docs/control/mvp-act0-r1/work-order-native-manifest-r12.v1.json'
 EPOCH = 'E2026-09-09-V0-MVP-R1'
 WO = 'V0-MVP-R1-WO-001'
 EX = f'config/control/harness/executions/{EPOCH}'
@@ -89,6 +93,94 @@ def values_for(obj: object, key: str) -> list:
     return result
 
 
+def native_manifest(result: dict) -> dict:
+    subject = result.get('subject_head', '')
+    run_id = os.environ.get('GITHUB_RUN_ID', '')
+    sink = f'{EX}/evidence/MVP1-NATIVE-{subject[:12]}'
+    primary = [c for c in result['commands'] if c['name'] not in ('drive', 'close-mission')]
+    return {
+        'schema': 'distributed_world_simulator.harness_machine_evidence_manifest.v1',
+        'work_order_id': WO, 'project_epoch': EPOCH,
+        'subject_head_sha': subject, 'subject_tree_sha': result.get('subject_tree'),
+        'runner_id': os.environ.get('RUNNER_NAME', ''), 'run_id': run_id,
+        'tracked_checkout_clean_before': result.get('tracked_before') == '',
+        'tracked_checkout_clean_after': result.get('tracked_after') == '',
+        'artifacts': [dict(path=f"{sink}/{c['log']}", sha256=c['sha256'],
+                           run_id=run_id, subject_head_sha=subject,
+                           archive_member=c['log']) for c in primary],
+        'commands': [dict(command=shlex.join(c['argv']), exit_code=c['exit_code'],
+                          expected_exit_code=c['expected_exit'],
+                          log_path=f"{sink}/{c['log']}") for c in primary],
+        'intended_manifest_path': f'{sink}/manifest.v1.json',
+        'publication_required_before_native_review_consumption': True,
+        'runner': {k: os.environ.get(k, '') for k in
+                   ['GITHUB_REPOSITORY', 'GITHUB_RUN_ID', 'GITHUB_RUN_ATTEMPT',
+                    'GITHUB_JOB', 'GITHUB_WORKFLOW', 'RUNNER_NAME', 'RUNNER_OS']},
+        'supplementary_commands': [c for c in result['commands'] if c not in primary],
+    }
+
+
+def native_consumer_self_test(result: dict) -> dict:
+    """Exercise the existing consumer in disposable local Git fixtures, never publish a review."""
+    sys.path.insert(0, str(ROOT / 'scripts'))
+    from harness.evidence_provenance import validate_review_machine_evidence
+    from harness.contracts import ContractValidationError
+    manifest = native_manifest(result)
+    policy = read('config/control/harness/review-policy.v1.json')
+    epoch = read(f'{EX}/project-epoch.v1.json')
+    outcomes = {}
+    for variant in ('valid', 'legacy_schema', 'foreign_work_order'):
+        with tempfile.TemporaryDirectory(prefix='mvp1-native-consumer-') as temp:
+            clone = Path(temp) / 'fixture'
+            def local_git(*args: str) -> None:
+                subprocess.run(['git', *args], cwd=clone, env=ENV, check=True,
+                               stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            subprocess.run(['git', 'clone', '--quiet', '--shared', '--no-checkout',
+                            str(ROOT), str(clone)], env=ENV, check=True,
+                           stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            local_git('checkout', '--quiet', '--detach', result['subject_head'])
+            for artifact in manifest['artifacts']:
+                dest = clone / artifact['path']
+                dest.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copyfile(OUT / artifact['archive_member'], dest)
+            tested = copy.deepcopy(manifest)
+            if variant == 'legacy_schema':
+                tested['schema'] = 'distributed_world_simulator.mvp1_exact_manifest.v1'
+            elif variant == 'foreign_work_order':
+                tested['work_order_id'] = 'FOREIGN-WORK-ORDER'
+            manifest_path = manifest['intended_manifest_path']
+            write(clone / manifest_path, tested)
+            sink = str(Path(manifest_path).parent)
+            local_git('add', '-f', '--', sink)
+            local_git('-c', 'user.name=Native Manifest Test Fixture',
+                      '-c', 'user.email=fixture@example.invalid', 'commit', '--quiet',
+                      '-m', 'Synthetic native evidence consumer test only; never published')
+            synthetic_review = {
+                'work_order_id': WO, 'reviewed_head_sha': result['subject_head'],
+                'review_type': 'POST_BUILD_EXACT_HEAD_REVIEW', 'verdict': 'PASS',
+                'machine_evidence': {
+                    'mode': 'REUSED', 'manifest_path': manifest_path,
+                    'manifest_sha256': digest(clone / manifest_path),
+                    'runner_id': manifest['runner_id'], 'run_id': manifest['run_id'],
+                    'artifact_paths': [a['path'] for a in manifest['artifacts']],
+                },
+            }
+            try:
+                validate_review_machine_evidence(clone, policy, epoch, synthetic_review)
+            except ContractValidationError as exc:
+                expected = {'legacy_schema': 'REVIEW_MANIFEST_SCHEMA_INVALID',
+                            'foreign_work_order': 'REVIEW_MANIFEST_IDENTITY_MISMATCH'}.get(variant)
+                require(expected is not None and expected in str(exc),
+                        f'NATIVE_CONSUMER_UNEXPECTED_REJECTION:{variant}:{exc}')
+                outcomes[variant] = str(exc)
+            else:
+                require(variant == 'valid', f'NATIVE_CONSUMER_FALSE_PASS:{variant}')
+                outcomes[variant] = 'PASS'
+    return {'classification': 'SYNTHETIC_COMPATIBILITY_TEST_NOT_INDEPENDENT_VERDICT',
+            'unmodified_consumer': 'scripts/harness/evidence_provenance.py',
+            'cases': outcomes}
+
+
 def main() -> int:
     OUT.mkdir(parents=True, exist_ok=False)
     result = {'schema': 'distributed_world_simulator.mvp1_r11_exact_result.v1',
@@ -126,9 +218,13 @@ def main() -> int:
         require(head == os.environ.get('EXPECTED_HEAD', head), 'EXACT_HEAD_MISMATCH')
         require(git('rev-parse', BASE + '^{tree}') == BASE_TREE, 'BASE_TREE_MISMATCH')
         git('merge-base', '--is-ancestor', BASE, head)
-        changed = git('diff', '--name-only', BASE, head).splitlines()
-        allowed = read(REPAIR)['allowed_paths']
-        require(bool(changed) and set(changed) <= set(allowed), 'R11_SCOPE_DRIFT')
+        git('merge-base', '--is-ancestor', R11_FINAL, head)
+        r11_changed = git('diff', '--name-only', BASE, R11_FINAL).splitlines()
+        require(bool(r11_changed) and set(r11_changed) <= set(read(REPAIR)['allowed_paths']),
+                'R11_FROZEN_SCOPE_DRIFT')
+        changed = git('diff', '--name-only', R11_FINAL, head).splitlines()
+        require(bool(changed) and set(changed) <= set(read(R12_ORDER)['allowed_paths']),
+                'R12_SCOPE_DRIFT')
         run('diff-check', ['git', 'diff', '--check', BASE, head])
         record, event = read(ROLE), read(EVENT5)
         require(not provenance_errors(record, event), 'IMPLEMENTER_PROVENANCE_INVALID')
@@ -176,7 +272,7 @@ def main() -> int:
         version = run('godot-version', [str(engine), '--version'], timeout=30)
         require(version.strip() == '4.7.1.stable.double.custom_build.a13da4feb', 'ENGINE_VERSION_MISMATCH')
         harness = run('full-harness', [sys.executable, '-m', 'unittest', 'discover',
-                       '-s', 'tests/harness', '-p', 'test_*.py', '-v'])
+                       '-s', 'tests/harness', '-p', 'test_*.py', '-q'])
         counts = re.findall(r'Ran (\d+) tests?', harness)
         require(bool(counts) and int(counts[-1]) > 0, 'HARNESS_SUMMARY_MISSING')
         result['harness_tests'] = int(counts[-1])
@@ -189,7 +285,7 @@ def main() -> int:
             if name == 'project-control-report.json':
                 require(data.get('cross_branch_overlaps') == [], 'PC0_OVERLAP')
             shutil.copyfile(path, OUT / name)
-        run('godot-import', [str(engine), '--headless', '--editor', '--path', str(ROOT), '--import'], godot_log=True)
+        run('godot-import', [str(engine), '--quiet', '--headless', '--editor', '--path', str(ROOT), '--import'], godot_log=True)
         smoke = run('mvp1-focused', [str(engine), '--headless', '--path', str(ROOT),
                     '--script', 'res://tests/runtime/test_v0_mvp_shared_graphical_scene.gd'], godot_log=True)
         require('V0 MVP shared graphical scene: PASS (16 assertions)' in smoke, 'MVP1_SMOKE_MARKER_MISSING')
@@ -206,6 +302,8 @@ def main() -> int:
         require(not result['tracked_after'], 'TRACKED_CHECKOUT_DIRTY_AFTER')
         require(git('rev-parse', 'HEAD') == head and git('rev-parse', 'HEAD^{tree}') == tree,
                 'SUBJECT_CHANGED_DURING_VALIDATION')
+        result['native_consumer_self_test'] = native_consumer_self_test(result)
+        require(git('status', '--porcelain', '--untracked-files=no') == '', 'SELF_TEST_MODIFIED_SUBJECT')
         result['passed'] = True
     except Exception as exc:
         result['errors'].append(type(exc).__name__ + ':' + str(exc))
@@ -213,15 +311,10 @@ def main() -> int:
         result['started_at_utc'] = started
         result['finished_at_utc'] = datetime.now(timezone.utc).isoformat()
         write(OUT / 'result.json', result)
-        files = [{'path': p.relative_to(OUT).as_posix(), 'bytes': p.stat().st_size,
-                  'sha256': digest(p)} for p in sorted(OUT.rglob('*')) if p.is_file()]
-        write(OUT / 'manifest.json', {
-            'schema': 'distributed_world_simulator.mvp1_exact_manifest.v1',
-            'head_sha': result.get('subject_head'), 'tree_sha': result.get('subject_tree'),
-            'runner': {k: os.environ.get(k, '') for k in
-                       ['GITHUB_REPOSITORY', 'GITHUB_RUN_ID', 'GITHUB_RUN_ATTEMPT',
-                        'GITHUB_JOB', 'GITHUB_WORKFLOW', 'RUNNER_NAME', 'RUNNER_OS']},
-            'files': files})
+        write(OUT / 'manifest.json', native_manifest(result))
+        inventory = [{'path': p.relative_to(OUT).as_posix(), 'bytes': p.stat().st_size,
+                      'sha256': digest(p)} for p in sorted(OUT.rglob('*')) if p.is_file()]
+        write(OUT / 'archive-inventory.json', {'files': inventory})
         print(json.dumps(result, ensure_ascii=False, indent=2))
     return 0 if result['passed'] else 1
 
