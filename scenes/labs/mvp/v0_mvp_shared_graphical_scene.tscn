@@ -1,0 +1,9 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/runtime/networked_gameplay/mvp/v0_mvp_shared_graphical_scene.gd" id="1_mvp"]
+[ext_resource type="PackedScene" path="res://scenes/labs/p7/p7_7_digging_playground.tscn" id="2_p7"]
+
+[node name="V0MVPSharedGraphicalScene" type="Node3D"]
+script = ExtResource("1_mvp")
+
+[node name="AcceptedP7DiggingSlice" parent="." instance=ExtResource("2_p7")]
