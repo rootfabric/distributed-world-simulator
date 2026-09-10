@@ -1,0 +1,57 @@
+{
+  "schema": "distributed_world_simulator.act0_bounded_repair_work_order.v1",
+  "work_order_id": "V0-MVP-ACT0-R8-FROZEN-R6-SCOPE-WITNESS",
+  "parent_work_order": "V0-MVP-R1-WO-001",
+  "state": "IN_PROGRESS",
+  "risk_class": "HIGH",
+  "subject_before_repair": "d46906dbc88fb6dd4e24eedc49f9cd5d4a85a1a0",
+  "trigger": {
+    "source": "POST_MERGE_R7_PROJECT_CONTROL",
+    "run": 34360294796,
+    "job": 102495236771,
+    "finding": "test_v0_mvp_exact_validator.MVPExactValidatorTests.test_r6_repair_diff_touches_only_declared_paths failed because it compared the historical R6 repair base to the moving descendant HEAD.",
+    "observed_out_of_scope_descendant_path": "config/control/branches/feature__v0-mvp-playable-seamless-planet-r1.v1.json"
+  },
+  "root_cause": "R6 scope evidence is historical and immutable, but its regression used HEAD as the upper diff boundary. Any legitimate post-R6 control descendant therefore invalidated the historical R6 proof even though the frozen R6 subject itself was unchanged.",
+  "frozen_r6_subject": {
+    "head": "32eabd082c372f532a9f87bc382f0fcce4d6e4db",
+    "tree": "87874271a1897689aef27fb4ee142b23ee5cd31a",
+    "review_lock_ref": "review/v0-mvp-act0-r6-32eabd08"
+  },
+  "repair": "Bind the R6 scope regression to repair_diff_base..frozen_r6_subject and additionally require the frozen subject to remain an ancestor of the current checkout. Do not change the R6 Work Order, validator, activation semantics or gameplay.",
+  "allowed_paths": [
+    "tests/harness/test_v0_mvp_exact_validator.py",
+    "docs/control/mvp-act0-r1/work-order-frozen-r6-scope-r8.v1.json"
+  ],
+  "forbidden_paths": [
+    "docs/control/mvp-act0-r1/work-order-exact-validator-r6.v1.json",
+    "docs/control/mvp-act0-r1/validate.py",
+    "scripts/harness/state_builder.py",
+    "scripts/runtime/**",
+    "scripts/network/**",
+    "scripts/simulation/**",
+    "scenes/**",
+    "project.godot",
+    "config/architecture/**",
+    "config/control/harness/acceptance/**",
+    "config/control/harness/scheduler-policy.v1.json",
+    "config/control/project-program-registry.v1.json"
+  ],
+  "required_predicates": [
+    "R6_SCOPE_PROOF_BINDS_EXACT_FROZEN_HEAD_AND_TREE",
+    "R6_FROZEN_SUBJECT_REMAINS_ANCESTOR_OF_CURRENT_DESCENDANT",
+    "R6_DIFF_TOUCHES_ONLY_R6_ALLOWED_PATHS",
+    "POST_R6_CONTROL_DESCENDANTS_DO_NOT_RETROACTIVELY_INVALIDATE_R6_SCOPE",
+    "FULL_HARNESS_PASS",
+    "STANDARD_PC0_NON_RED",
+    "DIRECTIONAL_PC0_NO_BLOCKING_RED",
+    "NO_GAMEPLAY_OR_FOUNDATION_CHANGE"
+  ],
+  "stop_conditions": [
+    "Frozen R6 subject or tree is not reachable",
+    "The current branch no longer descends from the frozen R6 subject",
+    "Any R6 historical file must be rewritten",
+    "Any gameplay or foundation change is required"
+  ],
+  "notes": "This repair changes only the temporal boundary of a historical test. It does not weaken R6: the exact R6 diff is still checked against the original R6 allowed/forbidden paths."
+}

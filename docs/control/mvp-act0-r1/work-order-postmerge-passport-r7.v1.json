@@ -1,0 +1,46 @@
+{
+  "schema": "distributed_world_simulator.act0_bounded_repair_work_order.v1",
+  "work_order_id": "V0-MVP-ACT0-R7-POSTMERGE-PASSPORT",
+  "parent_work_order": "V0-MVP-R1-WO-001",
+  "state": "IN_PROGRESS",
+  "risk_class": "HIGH",
+  "subject_before_repair": "d57a09ae574d0c4deaf8fe7aaccb212d57ba98dd",
+  "trigger": {
+    "source": "POST_MERGE_PROJECT_CONTROL",
+    "run": 34359068593,
+    "failed_job_first_attempt": 102491085208,
+    "failed_job_after_runtime_branch_creation": 102492418568,
+    "finding": "V0 TESTED_HEAD_MISSING detail=NOT_STARTED",
+    "root_cause": "The MVP branch passport encoded an unstarted runtime with the nonempty sentinel NOT_STARTED. PC0 correctly interprets every nonempty tested_heads.runtime value as a Git revision and therefore fails closed when NOT_STARTED cannot resolve."
+  },
+  "repair": "Use the existing PC0 representation for an untested active runtime frontier: empty tested-head fields. This produces RUNTIME_TEST_PENDING/YELLOW without claiming a runtime PASS or weakening PC0 SHA validation.",
+  "allowed_paths": [
+    "config/control/branches/feature__v0-mvp-playable-seamless-planet-r1.v1.json",
+    "docs/control/mvp-act0-r1/work-order-postmerge-passport-r7.v1.json"
+  ],
+  "forbidden_paths": [
+    "scripts/runtime/**",
+    "scripts/network/**",
+    "scripts/simulation/**",
+    "scenes/**",
+    "project.godot",
+    "config/architecture/**",
+    "config/control/harness/acceptance/**",
+    "config/control/harness/scheduler-policy.v1.json",
+    "config/control/project-program-registry.v1.json"
+  ],
+  "required_predicates": [
+    "MVP_RUNTIME_NOT_STARTED_REPRESENTED_WITH_EMPTY_TESTED_HEADS",
+    "NO_RUNTIME_PASS_CLAIMED",
+    "V0_PC0_HEALTH_NON_RED",
+    "STANDARD_PC0_NON_RED",
+    "DIRECTIONAL_PC0_NO_BLOCKING_RED",
+    "NO_GAMEPLAY_OR_FOUNDATION_CHANGE"
+  ],
+  "stop_conditions": [
+    "Any runtime-tested SHA must be invented before a real runtime test exists",
+    "Any gameplay/foundation mutation is required",
+    "Post-repair standard PC0 remains RED"
+  ],
+  "notes": "This is post-ACT0 control hygiene only. It does not authorize MVP runtime mutation by itself; the exact-main epoch audit remains required before MVP1 implementation."
+}
