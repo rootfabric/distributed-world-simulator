@@ -112,6 +112,10 @@
     "RM26_ORACLE_USES_VALID_DEVELOPMENT_PROGRAM",
     "RM26_ORACLE_FAILS_CLOSED_ON_SETUP_ERRORS",
     "A2_DEVELOPMENT_COUNTERS_CAUSALLY_BOUNDED_BY_LIFECYCLE_AGE",
+    "FIELD_INTAKE_CAUSALLY_BOUNDED_BY_LIFECYCLE_AGE_AND_REQUEST_CAP",
+    "AGE_ZERO_LIFECYCLE_CANNOT_HAVE_FIELD_INTAKE_OR_FIELD_SOURCE",
+    "PERSISTENT_NONREPRODUCTIVE_MODULES_STRENGTHEN_MAINTENANCE_LOWER_BOUND",
+    "LATEST_TICK_MODULE_CREATION_NOT_RETROACTIVELY_CHARGED",
     "LIFECYCLE_RESTART_EQUIVALENT_TO_UNINTERRUPTED",
     "A5_TO_A2_TRANSFER_LEDGER_SEALED",
     "A4_EXACT_REGRESSION",
@@ -127,5 +131,5 @@
     "global_pc0_green_inferred": false
   },
   "state": "READY_FOR_FRESH_ACCEPTANCE",
-  "next": "Fresh exact Verifier + fresh independent Reviewer on final RM-A5-01..31 subject; accept research source only if both pass with zero new blocking findings"
+  "next": "Fresh exact Verifier + fresh independent Reviewer on final RM-A5-01..33 subject; accept research source only if both pass with zero new blocking findings"
 }
