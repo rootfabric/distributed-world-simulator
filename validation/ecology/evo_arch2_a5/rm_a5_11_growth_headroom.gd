@@ -45,6 +45,10 @@ func _saturated_entry() -> Dictionary:
 	var entry := R.individual(blueprint, "rm11.saturated", [500, 0, 500], B.stock())
 	if entry.is_empty():
 		return {}
+	# This synthetic boundary state claims B.MAX_STOCK of historical A4 intake. Keep
+	# its lifecycle age causally large enough for that cumulative intake under the
+	# accepted per-tick F.MAX_REQUEST cap introduced by RM-A5-32.
+	entry.state.age_ticks = int((B.MAX_STOCK + F.MAX_REQUEST - 1) / F.MAX_REQUEST)
 	entry.state.development.received.material_mg = B.MAX_STOCK
 	entry.state.development.reserves.material_mg = B.MAX_STOCK
 	entry.state.resource_ledger.field_intake.nutrient_mg = B.MAX_STOCK
