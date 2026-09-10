@@ -66,11 +66,18 @@ func _proof_depth(state: Dictionary) -> int:
 func _next_generation(entry: Dictionary, blueprint: Dictionary, generation: int) -> Dictionary:
 	var field := _field("rm29.field.%02d" % generation)
 	var reproduced := R.step_population(field, [entry], field.owner_token, field.owner_epoch, field.revision)
-	if not reproduced.success or reproduced.propagules.size() != 1:
-		return {"success": false}
+	if not reproduced.success:
+		return {"success": false, "error": "step:%s" % String(reproduced.get("error", "unknown"))}
+	if reproduced.propagules.size() != 1:
+		return {"success": false, "error": "propagules:%d" % reproduced.propagules.size()}
 	var parent_state: Dictionary = reproduced.population[0].state
+	var witness_error := LS.validate_parent_transfer_witness(reproduced.propagules[0], blueprint, parent_state)
+	if not witness_error.is_empty():
+		return {"success": false, "error": "witness:%s" % witness_error}
 	var child := R.materialize_propagule(reproduced.propagules[0], blueprint, parent_state)
-	return {"success": not child.is_empty(), "child": child, "parent": reproduced.population[0], "propagule": reproduced.propagules[0]}
+	if child.is_empty():
+		return {"success": false, "error": "materialize:empty"}
+	return {"success": true, "child": child, "parent": reproduced.population[0], "propagule": reproduced.propagules[0]}
 
 func _lineage_proof_depth_is_explicitly_bounded() -> void:
 	var blueprint := BP.create(_genome(), _policy())
@@ -79,16 +86,21 @@ func _lineage_proof_depth_is_explicitly_bounded() -> void:
 	var current := R.individual(blueprint, "rm29.founder", [500, 0, 500], B.stock(10000))
 	_check(not current.is_empty(), "founder_valid")
 	var all_bounded_generations_valid := true
+	var failure_detail := ""
 	for generation in range(1, LS.MAX_PARENT_PROOF_DEPTH + 1):
 		var next := _next_generation(current, blueprint, generation)
 		if not next.success:
 			all_bounded_generations_valid = false
+			failure_detail = "generation=%d %s" % [generation, String(next.get("error", "unknown"))]
 			break
 		current = next.child
-		if _proof_depth(current.state) != generation or not LS.validate(current.state, blueprint).is_empty():
+		var proof_depth := _proof_depth(current.state)
+		var validation_error := LS.validate(current.state, blueprint)
+		if proof_depth != generation or not validation_error.is_empty():
 			all_bounded_generations_valid = false
+			failure_detail = "generation=%d proof_depth=%d validate=%s" % [generation, proof_depth, validation_error]
 			break
-	_check(all_bounded_generations_valid, "all_generations_through_cap_materialize_and_validate")
+	_check(all_bounded_generations_valid, "all_generations_through_cap_materialize_and_validate:" + failure_detail)
 	if not all_bounded_generations_valid: return
 	_check(_proof_depth(current.state) == LS.MAX_PARENT_PROOF_DEPTH, "lineage_reaches_exact_cap")
 	var persisted := LS.serialize(current.state, blueprint)
