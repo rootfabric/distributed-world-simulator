@@ -33,40 +33,57 @@ func _nested(depth: int) -> Variant:
 	return value
 
 func _genome() -> Dictionary:
-	var start := P.rule("start", [P.action("differentiate", "reproductive", [0, 10, 0], 1), P.action("retire")], "start")
+	var start := P.rule("start", [
+		P.action("differentiate", "collector", [0, 10, 0], 1, 50000),
+		P.action("differentiate", "reproductive", [0, 10, 0], 1),
+		P.action("retire"),
+	], "start")
 	return G.create({"schema": P.SCHEMA, "entry": "start", "max_age": 8, "max_depth": 1, "rules": [start]}, "RM-A5-30 canonical lineage depth witness")
 
 func _policy() -> Dictionary:
 	var policy := LH.create_default()
-	policy.uptake.basal_water_mg = 1000
-	policy.uptake.basal_nutrient_mg = 1000
-	policy.uptake.basal_organic_mg = 1000
+	policy.uptake.basal_water_mg = 5000
+	policy.uptake.basal_nutrient_mg = 5000
+	policy.uptake.basal_organic_mg = 5000
 	policy.uptake.water_per_absorber_unit_mg = 0
 	policy.uptake.nutrient_per_absorber_unit_mg = 0
 	policy.uptake.organic_per_absorber_unit_mg = 0
 	policy.metabolism.maintenance_water_per_module_mg = 0
 	policy.metabolism.maintenance_energy_per_module_mj = 0
-	policy.growth.transfer_permille = 500
-	policy.growth.max_transfer = B.stock(10000)
-	policy.reproduction.maturity_ticks = 1
+	policy.growth.transfer_permille = 100
+	policy.growth.max_transfer = B.stock(5000)
+	policy.reproduction.maturity_ticks = 2
 	policy.reproduction.interval_ticks = 10
 	policy.reproduction.required_reproductive_modules = 1
 	policy.reproduction.offspring_per_event = 1
-	policy.reproduction.endowment = B.stock()
+	policy.reproduction.endowment = B.stock(10000)
 	policy.reproduction.fee_energy_mj = 0
 	return policy
 
 func _field(owner: String) -> Dictionary:
 	return Field.create(owner, 1, [0, 0, 0], 1000, 1, 1, F.stock(900000), F.stock(1000000), F.signals(1000, 500, 0, 0))
 
-func _next_generation(entry: Dictionary, blueprint: Dictionary, generation: int) -> Dictionary:
+func _produce_propagule(entry: Dictionary, generation: int) -> Dictionary:
+	var current := entry
 	var field := _field("rm30.field.%02d" % generation)
-	var reproduced := R.step_population(field, [entry], field.owner_token, field.owner_epoch, field.revision)
-	if not reproduced.success or reproduced.propagules.size() != 1:
+	for local_tick in 3:
+		var result := R.step_population(field, [current], field.owner_token, field.owner_epoch, field.revision)
+		if not result.success:
+			return {"success": false}
+		current = result.population[0]
+		field = result.field
+		if result.propagules.size() > 1:
+			return {"success": false}
+		if result.propagules.size() == 1:
+			return {"success": true, "parent": current, "propagule": result.propagules[0]}
+	return {"success": false}
+
+func _next_generation(entry: Dictionary, blueprint: Dictionary, generation: int) -> Dictionary:
+	var produced := _produce_propagule(entry, generation)
+	if not produced.success:
 		return {"success": false}
-	var parent_state: Dictionary = reproduced.population[0].state
-	var child := R.materialize_propagule(reproduced.propagules[0], blueprint, parent_state)
-	return {"success": not child.is_empty(), "child": child, "parent": reproduced.population[0], "propagule": reproduced.propagules[0]}
+	var child := R.materialize_propagule(produced.propagule, blueprint, produced.parent.state)
+	return {"success": not child.is_empty(), "child": child, "parent": produced.parent, "propagule": produced.propagule}
 
 func _canonical_depth_budget_matches_lineage_cap() -> void:
 	_check(not C.encode(_nested(24)).is_empty(), "canonical_depth_24_is_encodable")
@@ -86,9 +103,8 @@ func _canonical_depth_budget_matches_lineage_cap() -> void:
 	if not through_cap: return
 	_check(not LS.serialize(current.state, blueprint).is_empty(), "generation_eight_state_is_canonical_and_serializable")
 
-	var overflow_field := _field("rm30.overflow")
-	var overflow_parent := R.step_population(overflow_field, [current], overflow_field.owner_token, overflow_field.owner_epoch, overflow_field.revision)
-	_check(overflow_parent.success and overflow_parent.propagules.size() == 1, "generation_eight_parent_emits_paid_propagule")
-	if not overflow_parent.success or overflow_parent.propagules.is_empty(): return
-	var generation_nine := R.materialize_propagule(overflow_parent.propagules[0], blueprint, overflow_parent.population[0].state)
+	var overflow := _produce_propagule(current, LS.MAX_PARENT_PROOF_DEPTH + 1)
+	_check(overflow.success, "generation_eight_parent_emits_paid_propagule")
+	if not overflow.success: return
+	var generation_nine := R.materialize_propagule(overflow.propagule, blueprint, overflow.parent.state)
 	_check(generation_nine.is_empty(), "generation_nine_materialization_fails_before_canonical_overflow")

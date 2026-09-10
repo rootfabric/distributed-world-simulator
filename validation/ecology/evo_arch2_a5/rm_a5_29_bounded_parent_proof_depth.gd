@@ -26,26 +26,34 @@ func _check(value: bool, name: String) -> void:
 		push_error("FAIL:" + name)
 
 func _genome() -> Dictionary:
-	var start := P.rule("start", [P.action("differentiate", "reproductive", [0, 10, 0], 1), P.action("retire")], "start")
+	# A child cannot bootstrap a reproductive module from zero energy because A4
+	# supplies mass only. Build a collector and reproductive module from the paid
+	# propagule endowment on tick 1, then let the collector replenish energy so the
+	# same endowment can be paid forward on tick 2.
+	var start := P.rule("start", [
+		P.action("differentiate", "collector", [0, 10, 0], 1, 50000),
+		P.action("differentiate", "reproductive", [0, 10, 0], 1),
+		P.action("retire"),
+	], "start")
 	return G.create({"schema": P.SCHEMA, "entry": "start", "max_age": 8, "max_depth": 1, "rules": [start]}, "RM-A5-29 bounded lineage proof witness")
 
 func _policy() -> Dictionary:
 	var policy := LH.create_default()
-	policy.uptake.basal_water_mg = 1000
-	policy.uptake.basal_nutrient_mg = 1000
-	policy.uptake.basal_organic_mg = 1000
+	policy.uptake.basal_water_mg = 5000
+	policy.uptake.basal_nutrient_mg = 5000
+	policy.uptake.basal_organic_mg = 5000
 	policy.uptake.water_per_absorber_unit_mg = 0
 	policy.uptake.nutrient_per_absorber_unit_mg = 0
 	policy.uptake.organic_per_absorber_unit_mg = 0
 	policy.metabolism.maintenance_water_per_module_mg = 0
 	policy.metabolism.maintenance_energy_per_module_mj = 0
-	policy.growth.transfer_permille = 500
-	policy.growth.max_transfer = B.stock(10000)
-	policy.reproduction.maturity_ticks = 1
+	policy.growth.transfer_permille = 100
+	policy.growth.max_transfer = B.stock(5000)
+	policy.reproduction.maturity_ticks = 2
 	policy.reproduction.interval_ticks = 10
 	policy.reproduction.required_reproductive_modules = 1
 	policy.reproduction.offspring_per_event = 1
-	policy.reproduction.endowment = B.stock()
+	policy.reproduction.endowment = B.stock(10000)
 	policy.reproduction.fee_energy_mj = 0
 	return policy
 
@@ -63,21 +71,32 @@ func _proof_depth(state: Dictionary) -> int:
 		current = current.origin_receipt.parent_state
 	return depth
 
-func _next_generation(entry: Dictionary, blueprint: Dictionary, generation: int) -> Dictionary:
+func _produce_propagule(entry: Dictionary, generation: int) -> Dictionary:
+	var current := entry
 	var field := _field("rm29.field.%02d" % generation)
-	var reproduced := R.step_population(field, [entry], field.owner_token, field.owner_epoch, field.revision)
-	if not reproduced.success:
-		return {"success": false, "error": "step:%s" % String(reproduced.get("error", "unknown"))}
-	if reproduced.propagules.size() != 1:
-		return {"success": false, "error": "propagules:%d" % reproduced.propagules.size()}
-	var parent_state: Dictionary = reproduced.population[0].state
-	var witness_error := LS.validate_parent_transfer_witness(reproduced.propagules[0], blueprint, parent_state)
+	for local_tick in 3:
+		var result := R.step_population(field, [current], field.owner_token, field.owner_epoch, field.revision)
+		if not result.success:
+			return {"success": false, "error": "tick=%d step:%s" % [local_tick + 1, String(result.get("error", "unknown"))]}
+		current = result.population[0]
+		field = result.field
+		if result.propagules.size() > 1:
+			return {"success": false, "error": "tick=%d propagules:%d" % [local_tick + 1, result.propagules.size()]}
+		if result.propagules.size() == 1:
+			return {"success": true, "parent": current, "propagule": result.propagules[0], "ticks": local_tick + 1}
+	return {"success": false, "error": "no_propagule_after_3_ticks"}
+
+func _next_generation(entry: Dictionary, blueprint: Dictionary, generation: int) -> Dictionary:
+	var produced := _produce_propagule(entry, generation)
+	if not produced.success:
+		return produced
+	var witness_error := LS.validate_parent_transfer_witness(produced.propagule, blueprint, produced.parent.state)
 	if not witness_error.is_empty():
 		return {"success": false, "error": "witness:%s" % witness_error}
-	var child := R.materialize_propagule(reproduced.propagules[0], blueprint, parent_state)
+	var child := R.materialize_propagule(produced.propagule, blueprint, produced.parent.state)
 	if child.is_empty():
 		return {"success": false, "error": "materialize:empty"}
-	return {"success": true, "child": child, "parent": reproduced.population[0], "propagule": reproduced.propagules[0]}
+	return {"success": true, "child": child, "parent": produced.parent, "propagule": produced.propagule}
 
 func _lineage_proof_depth_is_explicitly_bounded() -> void:
 	var blueprint := BP.create(_genome(), _policy())
@@ -106,10 +125,9 @@ func _lineage_proof_depth_is_explicitly_bounded() -> void:
 	var persisted := LS.serialize(current.state, blueprint)
 	_check(not persisted.is_empty() and not LS.deserialize(persisted).is_empty(), "cap_depth_state_roundtrips_canonically")
 
-	var overflow_field := _field("rm29.overflow")
-	var overflow_parent := R.step_population(overflow_field, [current], overflow_field.owner_token, overflow_field.owner_epoch, overflow_field.revision)
-	_check(overflow_parent.success and overflow_parent.propagules.size() == 1, "cap_depth_parent_can_still_emit_paid_propagule")
-	if not overflow_parent.success or overflow_parent.propagules.is_empty(): return
-	var overflow_child := R.materialize_propagule(overflow_parent.propagules[0], blueprint, overflow_parent.population[0].state)
+	var overflow := _produce_propagule(current, LS.MAX_PARENT_PROOF_DEPTH + 1)
+	_check(overflow.success, "cap_depth_parent_can_still_emit_paid_propagule")
+	if not overflow.success: return
+	var overflow_child := R.materialize_propagule(overflow.propagule, blueprint, overflow.parent.state)
 	_check(overflow_child.is_empty(), "generation_nine_fails_before_noncanonical_state")
-	_check(LS.validate_parent_transfer_witness(overflow_parent.propagules[0], blueprint, overflow_parent.population[0].state) == "PROPAGULE_PARENT_STATE", "overflow_parent_witness_reports_bounded_failure")
+	_check(LS.validate_parent_transfer_witness(overflow.propagule, blueprint, overflow.parent.state) == "PROPAGULE_PARENT_STATE", "overflow_parent_witness_reports_bounded_failure")
