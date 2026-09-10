@@ -1,0 +1,122 @@
+{
+  "schema": "distributed_world_simulator.mvp1_exact_evidence_binding.v1",
+  "evidence_id": "MVP1-R11-EXACT-BINDING-DC3B37D8-R1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "scope": "MVP_SHARED_GRAPHICAL_SCENE and bounded R11 provenance repair only",
+  "subject_head_sha": "dc3b37d8963691e2004cb403350682f5343b46c6",
+  "subject_tree_sha": "588a5a282bed88108eccf10492cdc352f93ab1de",
+  "canonical_main_observed": "127c732a56cc5c25d5712f24a7627ed4bb877374",
+  "frozen_ref": "review/v0-mvp1-r11-dc3b37d8",
+  "machine_evidence": {
+    "run_id": 34533069542,
+    "job_id": 103058191606,
+    "run_attempt": 1,
+    "workflow": ".github/workflows/mvp1-r11-exact-validation.yml",
+    "runner_name": "GitHub Actions 1000005652",
+    "runner_os": "Linux",
+    "artifact_id": 10174360884,
+    "artifact_name": "mvp1-r11-exact-dc3b37d8963691e2004cb403350682f5343b46c6-34533069542-1",
+    "archive_bytes": 50546,
+    "archive_sha256": "966522322db1114c55c6f0667bddf82704300cbc5e7aaaed10f3499ae62014c9",
+    "manifest_file": "manifest.json",
+    "manifest_indexed_files": 19,
+    "artifact_retention_expires_at": "2026-12-09T21:36:02Z",
+    "started_at_utc": "2026-09-10T21:36:21.744986+00:00",
+    "finished_at_utc": "2026-09-10T21:38:32.656101+00:00",
+    "tracked_checkout_clean_before": true,
+    "tracked_checkout_clean_after": true,
+    "result_passed": true,
+    "result_errors": []
+  },
+  "parent_executor_rehash": {
+    "performed": true,
+    "archive_digest_match": true,
+    "all_19_member_digests_and_sizes_match": true,
+    "unexpected_members_except_manifest": [],
+    "role": "IMPLEMENTER_EVIDENCE_COLLECTOR",
+    "independent_verdict": false
+  },
+  "commands": [
+    {"name":"diff-check","command":"git diff --check b645a738a6a143bee8f7f4a291a3e754cd399996 dc3b37d8963691e2004cb403350682f5343b46c6","exit_code":0,"log":"diff-check.log"},
+    {"name":"godot-version","command":"<pinned-linux-godot> --version","exit_code":0,"log":"godot-version.log"},
+    {"name":"full-harness","command":"<venv-python> -m unittest discover -s tests/harness -p test_*.py -v","exit_code":0,"log":"full-harness.log","tests":311},
+    {"name":"pc0-standard","command":"<venv-python> scripts/control/project_control.py --no-fetch","exit_code":0,"log":"pc0-standard.log","overall":"YELLOW","cross_branch_overlaps":[]},
+    {"name":"pc0-directional","command":"<venv-python> scripts/control/project_control_directional_watch.py","exit_code":0,"log":"pc0-directional.log","overall":"YELLOW","blocking_red":0},
+    {"name":"godot-import","command":"<pinned-linux-godot> --headless --editor --path <exact-checkout> --import","exit_code":0,"log":"godot-import.log"},
+    {"name":"mvp1-focused","command":"<pinned-linux-godot> --headless --path <exact-checkout> --script res://tests/runtime/test_v0_mvp_shared_graphical_scene.gd","exit_code":0,"log":"mvp1-focused.log","assertions":16},
+    {"name":"mvp1-headless-lifecycle","command":"<pinned-linux-godot> --headless --path <exact-checkout> res://scenes/labs/mvp/v0_mvp_shared_graphical_scene.tscn --quit-after 60","exit_code":0,"log":"mvp1-headless-lifecycle.log"},
+    {"name":"drive","command":"<venv-python> -m harness.cli drive","exit_code":0,"log":"drive.log"},
+    {"name":"close-mission","command":"<venv-python> -m harness.cli close-mission","exit_code":8,"expected_exit_code":8,"log":"close-mission.log"}
+  ],
+  "files_in_ci_archive": [
+    {"path":"0004-mvp1-shared-graphical-scene-implementation.v1.json","bytes":1126,"sha256":"d0cad9bef7fb203368486a362767892f2ff5277e883a2dc9b93535b1d884c9f5"},
+    {"path":"0005-mvp1-implementer-provenance-r11.v1.json","bytes":1397,"sha256":"f5b14556e22f9d19047d43b28c4a37c72ea4a7a4a52d0708f95ef09f8e7a504d"},
+    {"path":"MVP1-IMPLEMENTER-PROVENANCE-R11.v1.json","bytes":3397,"sha256":"3afeba10af6be3ec7a0a3746dac265ac130d4ee6f95b8c12fa7d10b726709ece"},
+    {"path":"MVP1-WINDOWS-REPORTED-OBSERVATION-R1.v1.json","bytes":3953,"sha256":"a2eea322d65e92b0cbf542aafccad5b31d3755ebf90a7f3efc98494bf3414149"},
+    {"path":"close-mission.log","bytes":10929,"sha256":"3aded6cace525ce5a9f63c8430dd9a68b55997cfbb732db63adbcc08d2e608bb"},
+    {"path":"diff-check.log","bytes":0,"sha256":"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"},
+    {"path":"directional-watch-report.json","bytes":27365,"sha256":"651e4f442fab6ca17dc6fd7ff60837e9f6e15ef0a25059964863122a10a6801f"},
+    {"path":"drive.log","bytes":12709,"sha256":"c84915d257a06042f33a38aa5dc54bff4942efb10ef09181804c02d39a14b855"},
+    {"path":"full-harness.log","bytes":56171,"sha256":"a7a9fab3a085d84d7e4a58a6169325604ec1ecf5e5f2e5819524e2286f095f54"},
+    {"path":"godot-import.log","bytes":95826,"sha256":"13b9c72843c82c9a9a4d561e1adb3e3e7d6b83aea757e482f3dc764fcc457f1b"},
+    {"path":"godot-version.log","bytes":43,"sha256":"5f9a650ae0e4ec2d93122461dae280ba65215c0d1ffece8159f8ede41e9f82f3"},
+    {"path":"mvp1-focused.log","bytes":162,"sha256":"e310dd15863f5cd4a221c6ed74105cea5edd94d2cf51e25cfabf9d9f53c98c17"},
+    {"path":"mvp1-headless-lifecycle.log","bytes":110,"sha256":"7e13b74061328cb38002de86c89b160a49fe4d3df65f763fc0d8c691893803c2"},
+    {"path":"negative-controls.json","bytes":661,"sha256":"e0b43cdab97341d2bc314b52d95555bbafd38846b60c56e7089a52ca63ef1109"},
+    {"path":"pc0-directional.log","bytes":322,"sha256":"c595e574446438c3e4436153c2441f88f9ce6da59a43b1b0b41e993e99552338"},
+    {"path":"pc0-standard.log","bytes":1533,"sha256":"e307bc49781dce906f2169596927f68789726c1e8c0c46970e66fa77830fa941"},
+    {"path":"project-control-report.json","bytes":63298,"sha256":"3bddffe0d7c603507dfce6329e121c232515866f153fea7d662e329af5c6733f"},
+    {"path":"result.json","bytes":6336,"sha256":"7cc26960159f4407b364140054c0d48d57c92720344b17d8a378c3b7575710f4"},
+    {"path":"work-order-implementer-provenance-r11.v1.json","bytes":3696,"sha256":"581e16f40ff2aee35a24ce3435aadf9a532d360ce0337b8a9ded7e1b6b84d05f"}
+  ],
+  "runtime_content_binding": {
+    "source_head": "b645a738a6a143bee8f7f4a291a3e754cd399996",
+    "candidate_head": "dc3b37d8963691e2004cb403350682f5343b46c6",
+    "identical_source_and_candidate_git_objects": {
+      "scripts":"27157ac6e4ceeec4b687811be8485bd56df64aa1",
+      "scenes":"b8b9e351d975b722af635e30ccf2296492b8cdde",
+      "tests":"f761074c2108b301a8fcf987290463e7ac6de619",
+      "addons":"73f4f5423318cbba8f185ef2f69a69fe40b3ae1c",
+      "project.godot":"8885d5ccdc8258f45f02a4ac6201fb2bf683c5d5",
+      "main.tscn":"8afc48e7d3be052743456789e09fad3cc00f27d8"
+    },
+    "pinned_linux_engine_sha256":"bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+    "windows_report_classification":"ATTRIBUTED_USER_OBSERVATION_ON_UNCHANGED_RUNTIME",
+    "windows_raw_screenshots_and_logs_rehashed":false,
+    "new_windows_graphical_execution_claimed":false
+  },
+  "controller_observation": {
+    "epoch_status":"MAIN_MOVED_AUDIT_CONTINUE",
+    "epoch_action":"CONTINUE",
+    "continuation_blocked":false,
+    "work_order_state":"IN_PROGRESS",
+    "snapshot_matches_authoritative_state":true,
+    "last_event_sequence":5,
+    "completed_predicates":[],
+    "close_mission_exit_code":8
+  },
+  "historical_failed_attempt_preserved": {
+    "subject_head":"59f489f22563e7395790391de70929dfe3047042",
+    "run_id":34532703883,
+    "artifact_id":10174205491,
+    "archive_sha256":"2ad928b3c4a842dff771c0f92347c6c1b5535f5a270fabfa1eed975d8d221c99",
+    "failure":"GIT_BRANCH_UNAVAILABLE during Drive on detached checkout",
+    "repair":"Create only the declared LOCAL branch at the pinned commit before running Drive; no remote write, no new commit, no weakening of Git-state validation."
+  },
+  "independent_review": {
+    "requested_subject":"dc3b37d8963691e2004cb403350682f5343b46c6",
+    "request_comment_id":5625812465,
+    "formal_result_requested_comment_id":5625830757,
+    "status_at_publication":"REQUESTED_NOT_YET_ACCEPTED"
+  },
+  "authority_boundary": {
+    "independent_verdict":false,
+    "mvp1_leaf_verified_by_this_binding":false,
+    "native_review_manifest":false,
+    "raw_ci_files_embedded_in_this_record":false,
+    "runtime_feature_merge_authorized":false,
+    "whole_mvp_acceptance_authorized":false,
+    "notes":"This is an artifact locator, digest manifest and truthful evidence mapping. It is not a native Harness review manifest because raw CI members remain in the downloadable archive; no formal PASS is inferred from metadata."
+  }
+}
