@@ -75,7 +75,7 @@ Conservative floor теперь включает:
 1. **forged creation marker** — синтаксически допустимый `MODULE_CREATED` в A2 events не уменьшает maintenance floor; conservation-preserving refund rejected в validate/serialize/deserialize;
 2. **atomic rollback** — если candidate A2 growth может создать module, но после pre-growth maintenance нет бюджета на combined A2 grant + birth-maintenance, lifecycle step остаётся успешным, но development/growth ledger остаются в pre-growth состоянии без partial commit.
 
-Rollback witness использует A4 field с нулевыми stocks, чтобы дополнительный field intake не мог случайно профинансировать проверяемый birth-maintenance.
+Rollback witness использует water-rich, material-zero A4 field: sampled water остаётся достаточно высоким для положительного regulatory activation, nutrient/organic grants не пополняют material, а отсутствие collector не даёт внешней энергии. Поэтому candidate A2 support module действительно достижим из founder reserves, но post-creation energy birth-maintenance остаётся недофинансированным. Oracle дополнительно требует явный `GROWTH_SUPPRESSED` marker с причиной `birth maintenance budget unavailable`.
 
 ## Source diff fence
 
