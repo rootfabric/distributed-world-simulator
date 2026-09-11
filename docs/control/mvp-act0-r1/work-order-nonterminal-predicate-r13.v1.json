@@ -1,0 +1,49 @@
+{
+  "schema": "distributed_world_simulator.mvp_bounded_repair.v1",
+  "repair_id": "V0-MVP1-NONTERMINAL-PREDICATE-R13",
+  "parent_work_order": "V0-MVP-R1-WO-001",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "risk_class": "CRITICAL",
+  "repair_base": "863924b419d3ddf02481f280ef756c1b2721c034",
+  "trigger": {
+    "runtime_freeze_head": "3973df7e53cbc9864c64448f26641a51f2a20465",
+    "runtime_freeze_tree": "8f5e14d8e4df84b6b9e0e8aa5846ba45af51976c",
+    "evidence_freeze_head": "827b03e553b8d37c64b7a98eb9fdb3a540e68931",
+    "fresh_windows_review_commit": "863924b419d3ddf02481f280ef756c1b2721c034",
+    "fresh_windows_review_verdict": "PASS",
+    "finding": "MVP1 leaf is proven, but the execution-local transition table permits PREDICATE_VERIFIED only in VERIFYING/VERIFIED. Advancing the parent MVP1-MVP8 Work Order to either state would prevent legal continuation to later MVP leaves."
+  },
+  "root_cause": "The parent Work Order intentionally spans MVP1 through MVP8, while its execution-local transition table was written for terminal predicate verification semantics. The reducer already tracks completed predicates independently from state, so MVP leaf closure needs an execution-local non-terminal PREDICATE_VERIFIED self-transition in IN_PROGRESS rather than a global Harness change.",
+  "canonical_fix_owner": "Only the E2026-09-09-V0-MVP-R1 execution-local transition table. Do not modify global Harness reducer semantics or product runtime.",
+  "allowed_paths": [
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/transition-table.v1.json",
+    "tests/harness/test_v0_mvp_nonterminal_predicate_r13.py",
+    "docs/control/mvp-act0-r1/work-order-nonterminal-predicate-r13.v1.json"
+  ],
+  "forbidden_changes": [
+    "scripts/harness/** and global Harness schemas/policies",
+    "Existing MVP events 1-5, Work Order snapshot, epoch, acceptance and audit records",
+    "Runtime, scenes, product tests, Matter, Item Graph, persistence, network, SM1, P7 and project.godot",
+    "Registry, architecture ownership and canonical main state"
+  ],
+  "repair": [
+    "Allow event_type=PREDICATE_VERIFIED with work_state=IN_PROGRESS only through this execution-local transition table.",
+    "Keep IN_PROGRESS->IN_PROGRESS as the parent state transition; the reducer records the leaf predicate in completed_predicates without terminalizing the parent Work Order.",
+    "Prove a subsequent IMPLEMENTATION_COMMITTED/IN_PROGRESS event remains legal, preserving the route to MVP2 and later leaves.",
+    "Prove attempting to jump from current IN_PROGRESS directly to VERIFIED remains rejected.",
+    "Do not create the real MVP1 PREDICATE_VERIFIED event until R13 itself passes focused/full Harness and review."
+  ],
+  "required_predicates": [
+    "MVP1_NONTERMINAL_PREDICATE_REDUCES_TO_IN_PROGRESS",
+    "MVP1_APPEARS_IN_COMPLETED_PREDICATES",
+    "PARENT_SNAPSHOT_REMAINS_IN_PROGRESS",
+    "MVP2_CONTINUATION_REMAINS_LEGAL",
+    "DIRECT_IN_PROGRESS_TO_VERIFIED_REMAINS_REJECTED",
+    "GLOBAL_HARNESS_AND_RUNTIME_BYTES_UNCHANGED",
+    "FULL_HARNESS_AND_PC0_NON_RED"
+  ],
+  "authority_boundary": "R13 changes only execution-local state-machine semantics for partial leaf completion. It does not itself verify MVP1, merge runtime, accept the whole MVP, authorize MVP2 evidence, or change any global Harness contract.",
+  "runtime_mutation": false,
+  "self_acceptance_authorized": false,
+  "merge_authorized": false
+}
