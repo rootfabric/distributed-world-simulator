@@ -116,6 +116,11 @@
     "AGE_ZERO_LIFECYCLE_CANNOT_HAVE_FIELD_INTAKE_OR_FIELD_SOURCE",
     "PERSISTENT_NONREPRODUCTIVE_MODULES_STRENGTHEN_MAINTENANCE_LOWER_BOUND",
     "LATEST_TICK_MODULE_CREATION_NOT_RETROACTIVELY_CHARGED",
+    "NEW_NONROOT_MODULE_PAYS_POST_CREATION_BIRTH_MAINTENANCE",
+    "MODULE_CREATION_EVENTS_DO_NOT_CONTROL_MAINTENANCE_FLOOR",
+    "CURRENT_NONROOT_MODULES_IMPLY_MINIMUM_BIRTH_MAINTENANCE_HISTORY",
+    "UNFUNDED_BIRTH_MAINTENANCE_ROLLS_BACK_GROWTH_WITHOUT_PARTIAL_COMMIT",
+    "BIRTH_MAINTENANCE_IS_PAID_BEFORE_REPRODUCTION",
     "LIFECYCLE_RESTART_EQUIVALENT_TO_UNINTERRUPTED",
     "A5_TO_A2_TRANSFER_LEDGER_SEALED",
     "A4_EXACT_REGRESSION",
@@ -131,5 +136,5 @@
     "global_pc0_green_inferred": false
   },
   "state": "READY_FOR_FRESH_ACCEPTANCE",
-  "next": "Fresh exact Verifier + fresh independent Reviewer on final RM-A5-01..33 subject; accept research source only if both pass with zero new blocking findings"
+  "next": "Fresh exact Verifier + fresh independent Reviewer on final RM-A5-01..34 subject; accept research source only if both pass with zero new blocking findings"
 }
