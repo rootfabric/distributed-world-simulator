@@ -25,15 +25,15 @@ jobs:
       - name: Checkout exact candidate
         uses: actions/checkout@v4
         with:
-          ref: 71115b44a0ac059edeea944ae0c0a985a472f4b0
+          ref: 8e3e8ac384cbdea903e10c3a31c95c9a475c98c2
           fetch-depth: 0
           persist-credentials: false
 
       - name: Assert exact subject and bounded scope
         run: |
           set -euo pipefail
-          subject="71115b44a0ac059edeea944ae0c0a985a472f4b0"
-          tree="cd306f9536a26ed712c49dd799c39b4640832c97"
+          subject="8e3e8ac384cbdea903e10c3a31c95c9a475c98c2"
+          tree="b15c310a1675829e67783b3ebb905dc0d0f56411"
           base="4b0f772ff39592262b853f7293bbd5403558b145"
           test "$(git rev-parse HEAD)" = "$subject"
           test "$(git rev-parse HEAD^{tree})" = "$tree"
@@ -129,6 +129,7 @@ jobs:
           run_twice res://validation/ecology/evo_arch2_a5/rm_a5_30_canonical_parent_depth_budget.gd "EVO_ARCH2_A5_RM30 assertions=7 failed=0" rm30
           run_twice res://validation/ecology/evo_arch2_a5/rm_a5_32_field_intake_lifecycle_causality.gd "EVO_ARCH2_A5_RM32 assertions=12 failed=0" rm32
           run_twice res://validation/ecology/evo_arch2_a5/rm_a5_33_nonreproductive_module_maintenance_history.gd "EVO_ARCH2_A5_RM33 assertions=17 failed=0" rm33
+          run_twice res://validation/ecology/evo_arch2_a5/rm_a5_34_verified_module_birth_maintenance.gd "EVO_ARCH2_A5_RM34 assertions=19 failed=0" rm34
 
       - name: Run accepted A4 and A0-A3 regressions
         env:
@@ -171,9 +172,9 @@ jobs:
       - name: Assert candidate stayed exact
         run: |
           set -euo pipefail
-          test "$(git rev-parse HEAD)" = "71115b44a0ac059edeea944ae0c0a985a472f4b0"
-          test "$(git rev-parse HEAD^{tree})" = "cd306f9536a26ed712c49dd799c39b4640832c97"
+          test "$(git rev-parse HEAD)" = "8e3e8ac384cbdea903e10c3a31c95c9a475c98c2"
+          test "$(git rev-parse HEAD^{tree})" = "b15c310a1675829e67783b3ebb905dc0d0f56411"
           test -z "$(git status --porcelain --untracked-files=no)"
-          echo "SUBJECT_HEAD=71115b44a0ac059edeea944ae0c0a985a472f4b0"
-          echo "SUBJECT_TREE=cd306f9536a26ed712c49dd799c39b4640832c97"
+          echo "SUBJECT_HEAD=8e3e8ac384cbdea903e10c3a31c95c9a475c98c2"
+          echo "SUBJECT_TREE=b15c310a1675829e67783b3ebb905dc0d0f56411"
           echo "VERDICT=PASS"
