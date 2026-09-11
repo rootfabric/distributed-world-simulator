@@ -16,7 +16,7 @@ var failed := 0
 
 func _init() -> void:
 	_nonreproductive_support_module_strengthens_maintenance_floor()
-	_latest_created_module_is_not_charged_retroactively()
+	_latest_created_module_pays_birth_maintenance_after_creation()
 	print("EVO_ARCH2_A5_RM33 assertions=%d failed=%d" % [passed, failed])
 	quit(0 if failed == 0 else 1)
 
@@ -115,10 +115,10 @@ func _nonreproductive_support_module_strengthens_maintenance_floor() -> void:
 	bounded.metabolic_reserves.energy_mj += int(bounded.resource_ledger.maintenance.energy_mj) - minimum_energy
 	bounded.resource_ledger.maintenance.water_mg = minimum_water
 	bounded.resource_ledger.maintenance.energy_mj = minimum_energy
-	_check(LS.validate(bounded, blueprint).is_empty(), "conservative_one_nonroot_tick_boundary_valid")
+	_check(LS.validate(bounded, blueprint).is_empty(), "conservative_one_nonroot_birth_boundary_valid")
 	_check(not LS.serialize(bounded, blueprint).is_empty(), "conservative_boundary_serializable")
 
-func _latest_created_module_is_not_charged_retroactively() -> void:
+func _latest_created_module_pays_birth_maintenance_after_creation() -> void:
 	var blueprint := BP.create(_genome(), _policy())
 	var entry := R.individual(blueprint, "rm33.latest", [500, 0, 500], B.stock(100000))
 	var field := _field("rm33.latest.field")
@@ -127,6 +127,8 @@ func _latest_created_module_is_not_charged_retroactively() -> void:
 	if not result.success: return
 	var state: Dictionary = result.population[0].state
 	_check(state.development.modules.size() == 2, "support_created_on_latest_tick")
-	_check(state.resource_ledger.maintenance.water_mg == blueprint.life_history.metabolism.maintenance_water_per_module_mg, "latest_module_not_water_charged_before_creation")
-	_check(state.resource_ledger.maintenance.energy_mj == blueprint.life_history.metabolism.maintenance_energy_per_module_mj, "latest_module_not_energy_charged_before_creation")
+	var water_per_module: int = int(blueprint.life_history.metabolism.maintenance_water_per_module_mg)
+	var energy_per_module: int = int(blueprint.life_history.metabolism.maintenance_energy_per_module_mj)
+	_check(state.resource_ledger.maintenance.water_mg == 2 * water_per_module, "latest_module_water_birth_maintenance_paid_after_creation")
+	_check(state.resource_ledger.maintenance.energy_mj == 2 * energy_per_module, "latest_module_energy_birth_maintenance_paid_after_creation")
 	_check(LS.validate(state, blueprint).is_empty(), "latest_created_module_state_remains_valid")
