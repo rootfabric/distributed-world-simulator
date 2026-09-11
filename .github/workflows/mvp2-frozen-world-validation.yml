@@ -1,0 +1,88 @@
+name: MVP2 Frozen World Core Regression
+on:
+  push:
+    branches: [validation/v0-mvp2-world-core-991c6f95-r1]
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: mvp2-frozen-world-991c6f95
+  cancel-in-progress: false
+jobs:
+  world:
+    if: >-
+      github.repository == 'rootfabric/distributed-world-simulator' &&
+      github.actor == 'rootfabric' && github.triggering_actor == 'rootfabric' &&
+      github.ref == 'refs/heads/validation/v0-mvp2-world-core-991c6f95-r1'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      PYTHONUTF8: '1'
+      BREAKPOINT_RUNTIME_DISABLED: '1'
+      PLANET_SIMULATOR_INVENTORY_PROFILE: planet_default
+      LIBGL_ALWAYS_SOFTWARE: '1'
+      SUBJECT_HEAD: 991c6f95806ea8b538d90baa46a1e4c40469b609
+      SUBJECT_TREE: a59bc9c4a440f6596c9e183b5f8b075ab5c5d0cd
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 991c6f95806ea8b538d90baa46a1e4c40469b609
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Exact frozen source and display prerequisites
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$SUBJECT_HEAD"
+          test "$(git rev-parse 'HEAD^{tree}')" = "$SUBJECT_TREE"
+          test -z "$(git status --porcelain --untracked-files=no)"
+          command -v pwsh
+          if ! command -v Xvfb >/dev/null || ! command -v xauth >/dev/null; then
+            sudo -n apt-get update
+            sudo -n env DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends xvfb xauth libgl1-mesa-dri
+          fi
+      - name: Approved exact binary
+        uses: actions/download-artifact@v4
+        with:
+          name: p7-repair-engine-34117353691
+          run-id: 34117353691
+          repository: rootfabric/distributed-world-simulator
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/mvp2-world-engine
+      - name: Execute unchanged full world core runner
+        shell: bash
+        run: |
+          set -euo pipefail
+          export GODOT_BIN="$RUNNER_TEMP/mvp2-world-engine/godot"
+          test "$(sha256sum "$GODOT_BIN" | cut -d' ' -f1)" = bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7
+          chmod u+x "$GODOT_BIN"
+          python3 - <<'PY'
+          import hashlib, json, os, pathlib, shutil, subprocess
+          out = pathlib.Path('artifacts/mvp2-world'); out.mkdir(parents=True)
+          log = out / 'full-world-core.log'
+          result = dict(subject_head_sha=os.environ['SUBJECT_HEAD'], subject_tree_sha=os.environ['SUBJECT_TREE'],
+                        workflow_head_sha=os.environ['GITHUB_SHA'], run_id=os.environ['GITHUB_RUN_ID'],
+                        runner_id=os.environ['RUNNER_NAME'], independent_verdict=False, passed=False)
+          def git(*args): return subprocess.check_output(['git', *args]).decode().strip()
+          result['tracked_before'] = git('status', '--porcelain', '--untracked-files=no')
+          with log.open('w') as stream:
+              proc = subprocess.run(['xvfb-run', '-a', 'pwsh', '-NoProfile', '-File', 'RUN_WORLD_REGRESSION_TESTS.ps1'], stdout=stream, stderr=subprocess.STDOUT)
+          result['exit_code'] = proc.returncode
+          result['tracked_after'] = git('status', '--porcelain', '--untracked-files=no')
+          result['log_sha256'] = hashlib.sha256(log.read_bytes()).hexdigest()
+          summary = pathlib.Path('artifacts/test-results/world-regression-summary.json')
+          if summary.exists():
+              shutil.copyfile(summary, out / summary.name)
+              result['summary_sha256'] = hashlib.sha256(summary.read_bytes()).hexdigest()
+          result['passed'] = proc.returncode == 0 and not result['tracked_before'] and not result['tracked_after'] and summary.exists()
+          (out / 'result.json').write_text(json.dumps(result, indent=2) + '\n')
+          print(json.dumps(result))
+          raise SystemExit(0 if result['passed'] else 1)
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mvp2-world-991c6f95-${{ github.run_id }}
+          path: artifacts/mvp2-world/
+          if-no-files-found: error
+          retention-days: 90

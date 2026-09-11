@@ -1,0 +1,16 @@
+{
+  "schema": "distributed_world_simulator.bounded_validation_order.v1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "role": "IMPLEMENTER",
+  "scope": "Run the unchanged canonical full world/core runner on frozen MVP2 subject using the approved double Godot binary. Carrier only adds read-only validation workflow and this order; it is not a product branch or a second runtime worker.",
+  "subject_head_sha": "991c6f95806ea8b538d90baa46a1e4c40469b609",
+  "subject_tree_sha": "a59bc9c4a440f6596c9e183b5f8b075ab5c5d0cd",
+  "allowed_paths": [".github/workflows/mvp2-frozen-world-validation.yml", "docs/control/mvp-act0-r1/MVP2-WORLD-VALIDATION-ORDER-991C6F95.v1.json"],
+  "runtime_mutation": false,
+  "source_export": false,
+  "remote_git_writes": false,
+  "independent_verdict": false,
+  "checkpoint_acceptance": false,
+  "success_requires": ["exact HEAD/TREE", "pinned binary SHA256", "runner exit 0", "all declared/discovered stages executed", "no failed or skipped stage", "clean tracked checkout before/after", "durable logs and digests"]
+}
