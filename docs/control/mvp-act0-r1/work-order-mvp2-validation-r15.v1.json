@@ -20,15 +20,10 @@
     "docs/control/mvp-act0-r1/work-order-mvp2-validation-r15.v1.json"
   ],
   "forbidden_paths": [
-    "scripts/harness/**",
-    "scripts/network/**",
-    "scripts/simulation/**",
-    "scripts/runtime/networked_gameplay/m3/**",
-    "scripts/runtime/networked_gameplay/m4/**",
-    "scripts/runtime/networked_gameplay/p7/**",
-    "scripts/runtime/networked_gameplay/sm1/**",
-    "config/control/harness/acceptance/**",
-    "config/architecture/**"
+    "scripts/harness/**", "scripts/network/**", "scripts/simulation/**",
+    "scripts/runtime/networked_gameplay/m3/**", "scripts/runtime/networked_gameplay/m4/**",
+    "scripts/runtime/networked_gameplay/p7/**", "scripts/runtime/networked_gameplay/sm1/**",
+    "config/control/harness/acceptance/**", "config/architecture/**"
   ],
   "repair_map": {
     "owner": "MVP validation; production event reducer remains unchanged",
@@ -37,26 +32,19 @@
     "not_a_symptom_patch": "Retains real event6 identity, all production guard calls and negative terminal-transition checks; does not remove or rewrite any ledger event."
   },
   "validation": [
-    "R13/R14 historical closure and synthetic continuation remain tested",
-    "live ledger snapshot consistency",
-    "MVP2 focused Godot contract test",
-    "three independent OS processes over existing ENet/M3 runtime",
-    "mutual replicated movement and full item snapshot convergence",
-    "wrong-session and one-client negative controls",
-    "hidden-remote and tampered-evidence negative controls",
-    "graphical client viewport captures; no desktop injection",
+    "R13/R14 historical closure and synthetic continuation remain tested", "live ledger snapshot consistency",
+    "MVP2 focused Godot contract test", "three independent OS processes over existing ENet/M3 runtime",
+    "mutual replicated movement and full item snapshot convergence", "wrong-session and one-client negative controls",
+    "hidden-remote and tampered-evidence negative controls", "graphical client viewport captures; no desktop injection",
     "full Harness and strict standard/directional PC0"
   ],
   "workflow_constraints": {
-    "read_only_github_permissions": true,
-    "owner_only": true,
-    "exact_checkout": true,
-    "source_export": false,
-    "git_writes": false,
-    "self_acceptance": false
+    "read_only_github_permissions": true, "owner_only": true, "exact_checkout": true,
+    "source_export": false, "git_writes": false, "self_acceptance": false
   },
   "runtime_merge_authorized": false,
   "predicate_verified_authorized": false,
   "independent_verdict_issued": false,
-  "issued_at_utc": "2026-09-11T13:00:00Z"
+  "issued_at_utc": "2026-09-11T12:54:40Z",
+  "timestamp_correction": "Initial draft timestamp replaced with the observed Git issuance timestamp of de21af69823a128b2160c9490e18bf82ca287953; no validation outcome changed."
 }

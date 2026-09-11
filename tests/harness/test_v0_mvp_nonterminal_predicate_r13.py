@@ -1,4 +1,4 @@
-"""R13/R14: verify committed MVP1 leaf closure without terminalizing the parent Work Order."""
+"""R13/R14/R15: immutable MVP1 history plus live non-terminal train consistency."""
 from __future__ import annotations
 
 import copy
@@ -9,7 +9,6 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts"))
-
 from harness.contracts import ContractBundle, ContractValidationError
 from harness.event_reducer import load_guard_context, reduce_events
 
@@ -35,30 +34,21 @@ def read(relative: Path) -> dict:
 
 
 def committed_events() -> list[dict]:
-    return [
-        json.loads(path.read_text(encoding="utf-8"))
-        for path in sorted((ROOT / EVENT_DIR).glob("*.json"))
-    ]
+    return [json.loads(path.read_text(encoding="utf-8"))
+            for path in sorted((ROOT / EVENT_DIR).glob("*.json"))]
 
 
 def next_leaf_progress_event() -> dict:
     return {
         "schema": "distributed_world_simulator.harness_event.v1",
         "event_id": f"{EPOCH}-{WO}-0007-R14-TEST",
-        "project_epoch": EPOCH,
-        "work_order_id": WO,
-        "sequence": 7,
-        "event_type": "IMPLEMENTATION_COMMITTED",
-        "work_state": "IN_PROGRESS",
-        "recorded_at_utc": "2026-09-11T10:29:00Z",
-        "actor": "IMPLEMENTER",
-        "branch": BRANCH,
-        "head_sha": CLOSURE_HEAD,
-        "predicate": MVP2_PROGRESS,
+        "project_epoch": EPOCH, "work_order_id": WO, "sequence": 7,
+        "event_type": "IMPLEMENTATION_COMMITTED", "work_state": "IN_PROGRESS",
+        "recorded_at_utc": "2026-09-11T10:29:00Z", "actor": "IMPLEMENTER",
+        "branch": BRANCH, "head_sha": CLOSURE_HEAD, "predicate": MVP2_PROGRESS,
         "command": "R14_DRY_RUN_BEGIN_MVP2_AFTER_COMMITTED_MVP1_LEAF_CLOSURE",
-        "exit_code": 0,
-        "evidence_paths": [R14.as_posix()],
-        "summary": "Synthetic continuation event proving MVP2 implementation may proceed after the committed non-terminal MVP1 leaf closure.",
+        "exit_code": 0, "evidence_paths": [R14.as_posix()],
+        "summary": "Synthetic continuation after the real immutable MVP1 history; never appended to the live ledger.",
     }
 
 
@@ -66,8 +56,13 @@ class MVPNonterminalPredicateR13Tests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         cls.bundle = ContractBundle.load(ROOT)
-        cls.order = read(ORDER)
-        cls.events = committed_events()
+        cls.live_order = read(ORDER)
+        cls.live_events = committed_events()
+        # R15: use the REAL historical prefix, without deleting tracked events.
+        # Later events belong to the live train test, not to this sequence-7 fixture.
+        cls.events = [event for event in cls.live_events if event["sequence"] <= 6]
+        cls.order = copy.deepcopy(cls.live_order)
+        cls.order["state"] = "IN_PROGRESS"
         cls.transition = read(TRANSITION)
         cls.context = load_guard_context(ROOT, ROOT / EX)
         cls.closure = cls.events[-1]
@@ -77,16 +72,10 @@ class MVPNonterminalPredicateR13Tests(unittest.TestCase):
         self.assertFalse(repair["runtime_mutation"])
         self.assertFalse(repair["self_acceptance_authorized"])
         self.assertFalse(repair["merge_authorized"])
-        self.assertEqual(
-            {
-                TRANSITION.as_posix(),
-                "tests/harness/test_v0_mvp_nonterminal_predicate_r13.py",
-                R13.as_posix(),
-            },
-            set(repair["allowed_paths"]),
-        )
-        self.assertEqual("IN_PROGRESS", self.order["state"])
-        self.assertEqual(list(range(1, 7)), [event["sequence"] for event in self.events])
+        self.assertEqual({TRANSITION.as_posix(),
+                          "tests/harness/test_v0_mvp_nonterminal_predicate_r13.py",
+                          R13.as_posix()}, set(repair["allowed_paths"]))
+        self.assertEqual(list(range(1, 7)), [e["sequence"] for e in self.events])
         self.assertEqual(6, self.closure["sequence"])
         self.assertEqual("PREDICATE_VERIFIED", self.closure["event_type"])
         self.assertEqual("IN_PROGRESS", self.closure["work_state"])
@@ -94,18 +83,12 @@ class MVPNonterminalPredicateR13Tests(unittest.TestCase):
         self.assertEqual(RUNTIME_HEAD, self.closure["head_sha"])
         self.assertEqual(MVP1, self.closure["predicate"])
         self.assertEqual(0, self.closure["exit_code"])
-        self.assertIn(REVIEW.as_posix(), self.closure["evidence_paths"])
-        self.assertIn(MANIFEST.as_posix(), self.closure["evidence_paths"])
-        self.assertIn(R13.as_posix(), self.closure["evidence_paths"])
+        for path in (REVIEW, MANIFEST, R13):
+            self.assertIn(path.as_posix(), self.closure["evidence_paths"])
 
     def test_committed_mvp1_predicate_closes_without_terminalizing_parent(self):
-        reduced = reduce_events(
-            self.bundle,
-            self.order,
-            self.events,
-            self.transition,
-            self.context,
-        )
+        reduced = reduce_events(self.bundle, self.order, self.events,
+                                self.transition, self.context)
         self.assertEqual("IN_PROGRESS", reduced["state"])
         self.assertEqual([MVP1], reduced["completed_predicates"])
         self.assertEqual(MVP1, reduced["last_completed_predicate"])
@@ -114,42 +97,36 @@ class MVPNonterminalPredicateR13Tests(unittest.TestCase):
         self.assertEqual(6, reduced["last_event_sequence"])
 
     def test_mvp2_can_continue_after_committed_nonterminal_mvp1_closure(self):
-        reduced = reduce_events(
-            self.bundle,
-            self.order,
-            self.events + [next_leaf_progress_event()],
-            self.transition,
-            self.context,
-        )
+        reduced = reduce_events(self.bundle, self.order,
+                                self.events + [next_leaf_progress_event()],
+                                self.transition, self.context)
         self.assertEqual("IN_PROGRESS", reduced["state"])
         self.assertEqual([MVP1], reduced["completed_predicates"])
         self.assertIn(MVP2_PROGRESS, reduced["observed_predicates"])
         self.assertTrue(reduced["snapshot_matches_authoritative_state"])
         self.assertEqual(7, reduced["last_event_sequence"])
 
+    def test_live_train_preserves_mvp1_and_matches_current_snapshot(self):
+        reduced = reduce_events(self.bundle, self.live_order, self.live_events,
+                                self.transition, self.context)
+        self.assertTrue(reduced["snapshot_matches_authoritative_state"])
+        self.assertEqual(self.live_order["state"], reduced["state"])
+        self.assertEqual(self.live_events[-1]["sequence"], reduced["last_event_sequence"])
+        self.assertIn(MVP1, reduced["completed_predicates"])
+        self.assertEqual(len(self.live_events), len({e["sequence"] for e in self.live_events}))
+
     def test_old_terminal_only_table_rejects_real_nonterminal_predicate(self):
         old = copy.deepcopy(self.transition)
         old["event_type_states"]["PREDICATE_VERIFIED"] = ["VERIFYING", "VERIFIED"]
         with self.assertRaisesRegex(ContractValidationError, "EVENT_TYPE_STATE_PAIR_INVALID"):
-            reduce_events(
-                self.bundle,
-                self.order,
-                self.events,
-                old,
-                self.context,
-            )
+            reduce_events(self.bundle, self.order, self.events, old, self.context)
 
     def test_leaf_closure_cannot_jump_parent_directly_to_verified(self):
         invalid = copy.deepcopy(self.closure)
         invalid["work_state"] = "VERIFIED"
         with self.assertRaisesRegex(ContractValidationError, "STATE_TRANSITION_INVALID:IN_PROGRESS->VERIFIED"):
-            reduce_events(
-                self.bundle,
-                self.order,
-                self.events[:-1] + [invalid],
-                self.transition,
-                self.context,
-            )
+            reduce_events(self.bundle, self.order, self.events[:-1] + [invalid],
+                          self.transition, self.context)
 
 
 if __name__ == "__main__":
