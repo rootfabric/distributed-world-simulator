@@ -140,19 +140,32 @@ static func _advance_individual(source: Dictionary, blueprint: Dictionary, sampl
 	var activation := _growth_activation(sample, policy)
 	var grant := B.stock()
 	if maintenance_paid and activation > 0:
-		if state.development.frame.is_empty():
+		var resuming_open_frame := not state.development.frame.is_empty()
+		if not resuming_open_frame:
 			grant = _growth_grant(state.metabolic_reserves, policy, activation, state.development)
-			state.last_events.append({"outcome": "GROWTH_ACTIVE", "detail": "activation_permille=%d" % activation})
 		else:
-			state.last_events.append({"outcome": "GROWTH_ACTIVE", "detail": "resume paid open frame; activation_permille=%d" % activation})
 			grant = B.stock()
-		var development_result := _advance_development(state.development, blueprint.genome, sample, grant)
+		var development_before: Dictionary = state.development
+		var development_result := _advance_development(development_before, blueprint.genome, sample, grant)
 		if not development_result.success: return development_result
-		if not _stock_zero(grant):
-			if not _can_pay(state.metabolic_reserves, grant): return _fail("A5_GROWTH_DEBIT")
-			if not _add_cumulative_stock(state.resource_ledger.growth_transferred, grant): return _fail("A5_GROWTH_LEDGER_OVERFLOW")
-			_pay(state.metabolic_reserves, grant)
-		state.development = development_result.state
+		var new_modules: int = int(development_result.state.modules.size()) - int(development_before.modules.size())
+		if new_modules < 0: return _fail("A5_GROWTH_MODULE_HISTORY")
+		var birth_maintenance := _maintenance_cost_for_modules(new_modules, policy)
+		var combined_growth_cost := grant.duplicate(true)
+		for name in B.RESOURCES:
+			combined_growth_cost[name] += birth_maintenance[name]
+		if _can_pay(state.metabolic_reserves, combined_growth_cost):
+			if not _stock_zero(grant):
+				if not _add_cumulative_stock(state.resource_ledger.growth_transferred, grant): return _fail("A5_GROWTH_LEDGER_OVERFLOW")
+				_pay(state.metabolic_reserves, grant)
+			if new_modules > 0:
+				if not _add_cumulative_stock(state.resource_ledger.maintenance, birth_maintenance): return _fail("A5_BIRTH_MAINTENANCE_LEDGER_OVERFLOW")
+				_pay(state.metabolic_reserves, birth_maintenance)
+				state.last_events.append({"outcome": "MAINTENANCE_PAID", "detail": "birth maintenance for %d new modules" % new_modules})
+			state.development = development_result.state
+			state.last_events.append({"outcome": "GROWTH_ACTIVE", "detail": "resume paid open frame; activation_permille=%d" % activation} if resuming_open_frame else {"outcome": "GROWTH_ACTIVE", "detail": "activation_permille=%d" % activation})
+		else:
+			state.last_events.append({"outcome": "GROWTH_SUPPRESSED", "detail": "candidate growth rolled back: birth maintenance budget unavailable"})
 	elif maintenance_paid:
 		state.last_events.append({"outcome": "GROWTH_SUPPRESSED", "detail": "regulatory gate freezes development and retained A2 reserves"})
 	else:
@@ -231,7 +244,9 @@ static func _photosynthesis_energy(phenotype: Dictionary, sample: Dictionary, gr
 	return mini(clampi(raw, 0, policy.metabolism.max_photosynthesis_energy_mj), energy_headroom)
 
 static func _maintenance_cost(state: Dictionary, policy: Dictionary) -> Dictionary:
-	var modules: int = state.development.modules.size()
+	return _maintenance_cost_for_modules(state.development.modules.size(), policy)
+
+static func _maintenance_cost_for_modules(modules: int, policy: Dictionary) -> Dictionary:
 	return {
 		"material_mg": 0,
 		"water_mg": modules * policy.metabolism.maintenance_water_per_module_mg,
