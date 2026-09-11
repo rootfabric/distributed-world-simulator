@@ -62,6 +62,23 @@ func _policy(transfer_permille: int = 500) -> Dictionary:
 func _field(owner: String, stock: int = 900000) -> Dictionary:
 	return Field.create(owner, 1, [0, 0, 0], 1000, 1, 1, F.stock(stock), F.stock(1000000), F.signals(1000, 500, 0, 0))
 
+func _rollback_field(owner: String) -> Dictionary:
+	# Keep the sampled water channel high enough to open the regulatory growth gate,
+	# but provide no material and no external-energy producer. The candidate can fund
+	# the tiny A2 support module from founder reserves, while its post-creation energy
+	# birth-maintenance remains deliberately unaffordable after root maintenance.
+	return Field.create(
+		owner,
+		1,
+		[0, 0, 0],
+		1000,
+		1,
+		1,
+		{"water_mg": 600000, "nutrient_mg": 0, "organic_mg": 0},
+		F.stock(1000000),
+		F.signals(1000, 500, 0, 0)
+	)
+
 func _run_ticks(entry: Dictionary, field: Dictionary, count: int) -> Dictionary:
 	var current := entry
 	var current_field := field
@@ -75,6 +92,12 @@ func _run_ticks(entry: Dictionary, field: Dictionary, count: int) -> Dictionary:
 
 func _encoded_state_file(blueprint: Dictionary, state: Dictionary) -> String:
 	return C.encode({"schema": "dws.ecology.life-state-file.v1", "blueprint": blueprint, "state": state, "state_hash": C.digest(state)})
+
+func _has_birth_rollback_event(state: Dictionary) -> bool:
+	for event in state.last_events:
+		if event.outcome == "GROWTH_SUPPRESSED" and String(event.detail).contains("birth maintenance budget unavailable"):
+			return true
+	return false
 
 func _forged_creation_marker_cannot_reduce_floor() -> void:
 	var blueprint := BP.create(_genome(), _policy())
@@ -127,12 +150,12 @@ func _unfunded_birth_maintenance_rolls_back_candidate_growth() -> void:
 	var entry := R.individual(blueprint, "rm34.rollback", [500, 0, 500], {"material_mg": 10, "water_mg": 5, "energy_mj": 5})
 	_check(not entry.is_empty(), "rollback_founder_valid")
 	if entry.is_empty(): return
-	var field := _field("rm34.rollback.field", 0)
+	var field := _rollback_field("rm34.rollback.field")
 	var result := R.step_population(field, [entry], field.owner_token, field.owner_epoch, field.revision)
 	_check(result.success, "rollback_step_succeeds_without_partial_growth")
 	if not result.success: return
 	var state: Dictionary = result.population[0].state
-	_check(state.development.modules.size() == 1 and state.development.received == B.stock(), "rollback_keeps_pre_growth_development")
+	_check(state.development.modules.size() == 1 and state.development.received == B.stock() and _has_birth_rollback_event(state), "rollback_keeps_pre_growth_development_and_reports_birth_gate")
 	_check(state.resource_ledger.growth_transferred == B.stock(), "rollback_keeps_growth_ledger_zero")
 	_check(state.resource_ledger.maintenance.water_mg == 2 and state.resource_ledger.maintenance.energy_mj == 3, "rollback_keeps_only_preexisting_root_maintenance")
 	_check(LS.validate(state, blueprint).is_empty(), "rollback_state_valid")
