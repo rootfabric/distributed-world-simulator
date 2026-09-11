@@ -1,0 +1,38 @@
+name: FABRIC G2 Portable ROM Probe
+
+on:
+  push:
+    branches:
+      - probe/fabric-g2-portable-rom-dd06-r1
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout exact probe subject
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+      - name: Install official Godot 4.7.1
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          curl -fL --retry 3 -o /tmp/godot.zip https://github.com/godotengine/godot/releases/download/4.7.1-stable/Godot_v4.7.1-stable_linux.x86_64.zip
+          rm -rf /tmp/godot
+          mkdir -p /tmp/godot
+          unzip -q /tmp/godot.zip -d /tmp/godot
+          chmod +x /tmp/godot/Godot_v4.7.1-stable_linux.x86_64
+          /tmp/godot/Godot_v4.7.1-stable_linux.x86_64 --version
+      - name: Run focused portable ROM probe
+        shell: bash
+        run: |
+          set +e
+          /tmp/godot/Godot_v4.7.1-stable_linux.x86_64 --headless --path . --script res://tests/research/fabric_bake0/fabric_g2_portable_rom_probe.gd
+          status=$?
+          echo "PROBE_EXIT=$status"
+          exit 0
