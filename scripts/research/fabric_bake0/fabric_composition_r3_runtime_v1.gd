@@ -90,8 +90,10 @@ func advance(dt: float, sources: Dictionary, authority: Dictionary) -> Dictionar
 		for transition in instant.transitions:
 			var token: String = transition.transition_id
 			if token.begins_with("failure|"):
+				var parsed_failure := _failure_transition(token)
+				if not parsed_failure.get("ok", false): return U.failure("R3_FAILURE_EVENT_ID_INVALID", {"transition": token})
 				candidate.time = instant.time
-				pending = {"bond_id": token.get_slice("|", 1), "time_s": instant.time, "source_hash": _model.source_hash, "authority_hash": _model.authority_hash, "event_id": "event/r3-" + U.canonical_hash([_model.source_hash, instant.time, token])}
+				pending = {"bond_id": str(parsed_failure.bond_id), "time_s": instant.time, "source_hash": _model.source_hash, "authority_hash": _model.authority_hash, "event_id": "event/r3-" + U.canonical_hash([_model.source_hash, instant.time, token])}
 	for spec in candidate.states.values():
 		if not U.is_finite_number(spec.value): return U.failure("R3_NONFINITE_TRAJECTORY")
 	_system = candidate
@@ -105,6 +107,16 @@ func advance(dt: float, sources: Dictionary, authority: Dictionary) -> Dictionar
 func _advance_candidate(candidate: Dictionary, dt: float) -> Dictionary:
 	if _is_general(): return GeneralEventStep.advance(candidate, dt, _model)
 	return EventStep.advance(candidate, dt, _model)
+
+static func _failure_transition(token: String) -> Dictionary:
+	var normalized := token
+	var condition_suffix := "|initial"
+	if normalized.ends_with(condition_suffix):
+		normalized = normalized.substr(0, normalized.length() - condition_suffix.length())
+	var parsed := GeneralEventStep._parse_transition_id(normalized)
+	if not parsed.get("ok", false) or not normalized.begins_with("failure|"):
+		return {"ok": false}
+	return {"ok": true, "bond_id": str(parsed.element_id)}
 
 func prepare_successor(previous: Dictionary, successor: Dictionary, authority: Dictionary, kind: String) -> Dictionary:
 	var checked := fence(previous, authority)
