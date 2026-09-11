@@ -92,8 +92,9 @@ func _generalized_sources() -> Dictionary:
 	var sources: Dictionary = Fixture.create({"label": "g2-delimiter-runtime", "capacity": [0.35, 1000.0]})
 	var mechanical: Dictionary = sources.mechanical.duplicate(true)
 	mechanical.bonds[0].bond_id = TARGET_BOND_ID
-	var mechanical_facets: Dictionary = mechanical.compiled_facets.duplicate(true)
-	mechanical_facets.composition_r3["coupler_node_id"] = str(mechanical.parts[0].part_id)
+	var controls: Dictionary = mechanical.compiled_facets.composition_r3.duplicate(true)
+	controls["coupler_node_id"] = "part/g2-delimiter-runtime-slider"
+	var mechanical_facets := {"composition_r3": controls}
 	sources.mechanical = Snapshot.create(mechanical.construct_id, mechanical.root_item_instance_id, mechanical.state_revision, mechanical.build_state, mechanical.parts, mechanical.bonds, mechanical_facets)
 
 	var electrical: Dictionary = sources.electrical.duplicate(true)
