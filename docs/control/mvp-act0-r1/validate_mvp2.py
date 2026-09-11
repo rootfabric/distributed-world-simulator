@@ -254,9 +254,17 @@ class Run:
                 return shared_errors(value['server'], value['a'], value['b'], self.head)
             return neutral_boundary_errors(value['server'], value['a'], value['b'],
                                            self.head, expected_sequences)
-        self.wait(label, lambda: not errors({key: self.observation(key) for key in ('server', 'a', 'b')}))
-        value = self.witness(label)
-        require(not errors(value), 'UNSTABLE_WITNESS:' + label)
+        value: dict = {}
+        def capture_validated_sample() -> bool:
+            nonlocal value
+            sample = {key: self.observation(key) for key in ('server', 'a', 'b')}
+            if errors(sample):
+                return False
+            value = sample
+            return True
+        self.wait(label, capture_validated_sample)
+        # Persist exactly the values just checked. Re-reading can race a later report.
+        write(self.out / ('witness-' + label + '.json'), value)
         if expected_sequences is not None:
             self.result.setdefault('neutral_boundaries', {})[label] = {
                 'expected_input_sequences': expected_sequences,

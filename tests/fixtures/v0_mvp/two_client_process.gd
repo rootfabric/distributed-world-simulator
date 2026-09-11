@@ -132,7 +132,9 @@ func _write(state: String, extra: Dictionary = {}) -> void:
 		"observation": _app.observation() if _app != null else {},
 		"extra": extra,
 	}
-	var file := FileAccess.open(_output, FileAccess.WRITE)
+	# Publish complete records only; readers must not observe a truncated JSON file.
+	var temporary := _output + ".tmp"
+	var file := FileAccess.open(temporary, FileAccess.WRITE)
 	if file == null:
 		push_error("MVP2_FIXTURE_REPORT_WRITE_FAILED")
 		_finished = true
@@ -140,6 +142,12 @@ func _write(state: String, extra: Dictionary = {}) -> void:
 		return
 	file.store_string(JSON.stringify(record, "", true, true) + "\n")
 	file.close()
+	var renamed := DirAccess.rename_absolute(temporary, _output)
+	if renamed != OK:
+		push_error("MVP2_FIXTURE_REPORT_PUBLISH_FAILED:%d" % renamed)
+		_finished = true
+		quit(7)
+		return
 	_last_report = Time.get_ticks_msec()
 
 

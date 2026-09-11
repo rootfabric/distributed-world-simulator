@@ -3,9 +3,11 @@ import copy
 from pathlib import Path
 import sys
 import unittest
+import tempfile
+from unittest.mock import patch, Mock
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / 'docs/control/mvp-act0-r1'))
-from validate_mvp2 import BUILD, SCENE, PROCESS_DRIVER, observation_errors, shared_errors, neutral_boundary_errors
+from validate_mvp2 import BUILD, SCENE, PROCESS_DRIVER, observation_errors, shared_errors, neutral_boundary_errors, Run
 HEAD = '1' * 40
 
 
@@ -132,6 +134,36 @@ class MVP2EvidenceTests(unittest.TestCase):
             self.assertIn('$ExcludedTestDirectoryNames = @("fixtures")', runner.read_text(encoding='utf-8'))
             self.assertTrue((ROOT / driver).is_file())
             self.assertFalse((ROOT / 'tests/integration/test_v0_mvp_two_client_process.gd').exists())
+
+
+    def test_convergence_persists_the_same_validated_sample_without_rereading(self):
+        values = fixture()
+        with tempfile.TemporaryDirectory() as temp:
+            run = Run(Path('unused-engine'), Path(temp), True)
+            run.head = HEAD
+            run.observation = Mock(side_effect=copy.deepcopy(values))
+            run.wait = lambda _label, predicate: self.assertTrue(predicate())
+            with patch('validate_mvp2.write') as save:
+                observed = run.converge('sample')
+            self.assertEqual(3, run.observation.call_count)
+            self.assertEqual(dict(zip(('server', 'a', 'b'), values)), observed)
+            self.assertIs(save.call_args.args[1], observed)
+
+    def test_incomplete_sample_cannot_become_a_saved_witness(self):
+        values = fixture()
+        with tempfile.TemporaryDirectory() as temp:
+            run = Run(Path('unused-engine'), Path(temp), True)
+            run.head = HEAD
+            run.observation = Mock(side_effect=[values[0], {}, values[2], *copy.deepcopy(values)])
+            def wait(_label, predicate):
+                self.assertFalse(predicate())
+                self.assertTrue(predicate())
+            run.wait = wait
+            with patch('validate_mvp2.write') as save:
+                observed = run.converge('sample')
+            self.assertEqual(6, run.observation.call_count)
+            self.assertEqual([], shared_errors(observed['server'], observed['a'], observed['b'], HEAD))
+            save.assert_called_once()
 
 
 if __name__ == '__main__':
