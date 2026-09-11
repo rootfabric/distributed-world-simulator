@@ -23,6 +23,7 @@ WO = 'V0-MVP-R1-WO-001'
 EX = f'config/control/harness/executions/{EPOCH}'
 SCENE = 'res://scenes/labs/mvp/v0_mvp_two_client_shared_world.tscn'
 BUILD = 'v0-mvp2-two-client-shared-world-r1'
+PROCESS_DRIVER = 'res://tests/fixtures/v0_mvp/two_client_process.gd'
 ENGINE_SHA = {
     'linux': 'bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7',
     'win32': '3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5',
@@ -132,6 +133,29 @@ def shared_errors(server: dict, a: dict, b: dict, head: str) -> list[str]:
     return errors
 
 
+def neutral_boundary_errors(server: dict, a: dict, b: dict, head: str,
+                            expected_sequences: dict[str, int]) -> list[str]:
+    """A shared moving snapshot is NOT an acknowledged neutral phase boundary."""
+    errors = shared_errors(server, a, b, head)
+    for player_id, client in [('a', a), ('b', b)]:
+        if client.get('input_active') is not False:
+            errors.append('INPUT_NOT_NEUTRAL:' + player_id)
+        expected = expected_sequences.get(player_id)
+        if not isinstance(expected, int) or expected < 0:
+            errors.append('NEUTRAL_TARGET_MISSING:' + player_id)
+            continue
+        # This bounded workload cannot wrap the canonical sequence counter.
+        for role, observation in [('server', server), ('a', a), ('b', b)]:
+            record = players(observation).get(player_id, {})
+            if record.get('last_input_sequence', -1) < expected:
+                errors.append('NEUTRAL_NOT_ACKNOWLEDGED:' + role + ':' + player_id)
+            velocity = record.get('velocity', {})
+            if not all(axis in velocity for axis in ('x', 'z')) or any(
+                    abs(float(velocity.get(axis, 1.0))) > 1e-8 for axis in ('x', 'z')):
+                errors.append('PLAYER_NOT_SETTLED:' + role + ':' + player_id)
+    return errors
+
+
 class Run:
     def __init__(self, engine: Path, out: Path, runtime_only: bool):
         self.engine, self.out, self.runtime_only = engine.resolve(), out, runtime_only
@@ -177,7 +201,7 @@ class Run:
                 '--audio-driver', 'Dummy', '--resolution', '1280x720']
         if not graphical:
             args.append('--headless')
-        args += ['--script', 'res://tests/integration/test_v0_mvp_two_client_process.gd', '--',
+        args += ['--script', PROCESS_DRIVER, '--',
                  '--role=' + role, '--world=moon', '--player-identity=' + player,
                  '--server-address=127.0.0.1', '--server-port=' + str(self.port),
                  '--network-session-token=' + token, '--network-build-id=' + BUILD,
@@ -224,11 +248,21 @@ class Run:
         write(self.out / ('witness-' + name + '.json'), value)
         return value
 
-    def converge(self, label: str) -> dict:
-        self.wait(label, lambda: not shared_errors(self.observation('server'), self.observation('a'),
-                                                   self.observation('b'), self.head))
+    def converge(self, label: str, expected_sequences: dict[str, int] | None = None) -> dict:
+        def errors(value: dict) -> list[str]:
+            if expected_sequences is None:
+                return shared_errors(value['server'], value['a'], value['b'], self.head)
+            return neutral_boundary_errors(value['server'], value['a'], value['b'],
+                                           self.head, expected_sequences)
+        self.wait(label, lambda: not errors({key: self.observation(key) for key in ('server', 'a', 'b')}))
         value = self.witness(label)
-        require(not shared_errors(value['server'], value['a'], value['b'], self.head), 'UNSTABLE_WITNESS:' + label)
+        require(not errors(value), 'UNSTABLE_WITNESS:' + label)
+        if expected_sequences is not None:
+            self.result.setdefault('neutral_boundaries', {})[label] = {
+                'expected_input_sequences': expected_sequences,
+                'server_acknowledged_sequences': {p: players(value['server'])[p]['last_input_sequence'] for p in ('a', 'b')},
+                'zero_planar_velocity': True,
+            }
         return value
 
     def stop(self, name: str) -> None:
@@ -261,6 +295,11 @@ class Run:
             self.wait(actor + '-keys-ack', lambda: self.read(actor).get('control_sequence') == self.children[actor]['sequence'])
             time.sleep(0.25)
             self.send(actor, 'neutral')
+            self.wait(actor + '-neutral-control-ack', lambda: (
+                self.read(actor).get('control_sequence') == self.children[actor]['sequence']
+                and self.observation(actor).get('input_active') is False))
+            neutral_sequences = {p: int(self.observation(p)['runtime']['input_sequence']) for p in ('a', 'b')}
+            require(neutral_sequences[actor] > 0, 'NEUTRAL_INPUT_SEQUENCE_MISSING:' + actor)
             def moved() -> bool:
                 records = players(self.observation('server'))
                 if actor not in records:
@@ -268,7 +307,7 @@ class Run:
                 p, q = records[actor]['position'], players(before['server'])[actor]['position']
                 return sum((float(p[k]) - float(q[k])) ** 2 for k in ('x', 'z')) > 0.0025
             self.wait(actor + '-server-confirmed-movement', moved)
-            after = self.converge('after-' + actor)
+            after = self.converge('after-' + actor, neutral_sequences)
             require(players(after['server'])[actor].get('last_input_sequence', 0) > 0, 'NO_INPUT_ACK:' + actor)
             other = 'b' if actor == 'a' else 'a'
             p, q = players(before['server'])[other]['position'], players(after['server'])[other]['position']

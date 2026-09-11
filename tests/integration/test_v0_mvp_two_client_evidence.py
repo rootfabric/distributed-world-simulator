@@ -5,7 +5,7 @@ import sys
 import unittest
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / 'docs/control/mvp-act0-r1'))
-from validate_mvp2 import BUILD, SCENE, observation_errors, shared_errors
+from validate_mvp2 import BUILD, SCENE, PROCESS_DRIVER, observation_errors, shared_errors, neutral_boundary_errors
 HEAD = '1' * 40
 
 
@@ -14,7 +14,7 @@ def fixture():
                 'authority_owner_id': 'authority/one', 'authority_epoch': 1, 'revision': 4,
                 'players': [dict(logical_player_id=p, player_entity_id='player/' + p,
                                  connected=True, ownership_epoch=1, last_input_sequence=2,
-                                 position={'x': x, 'y': 1.0, 'z': 0.0}) for p, x in [('a', 0.0), ('b', 2.0)]]}
+                                 position={'x': x, 'y': 1.0, 'z': 0.0}, velocity={'x': 0.0, 'y': 0.0, 'z': 0.0}) for p, x in [('a', 0.0), ('b', 2.0)]]}
     item = {'checksum': 'a' * 64, 'revision': 2, 'items': [{'item_id': 'one', 'quantity': 1}]}
     fp = {'git_commit': HEAD, 'world_id': 'moon', 'build_id': BUILD, 'session_token': 'same'}
     surface = dict(configured=True, bootstrap_hash='b' * 64, descriptor={'anchor': [0, 1, 0]},
@@ -22,7 +22,7 @@ def fixture():
     result = []
     for index, name in enumerate(('server', 'a', 'b')):
         server = name == 'server'
-        result.append(dict(configured=True, stopped=False, error='', scene_path=SCENE, world_id='moon',
+        result.append(dict(configured=True, stopped=False, input_active=False, error='', scene_path=SCENE, world_id='moon',
                            process_id=index + 1, user_data_dir='/isolated/' + name,
                            role='dedicated-server' if server else 'game-client', player_id=name,
                            server_runtime_present=server, client_runtime_present=not server,
@@ -96,6 +96,42 @@ class MVP2EvidenceTests(unittest.TestCase):
         values = fixture()
         values[2]['runtime']['network_fingerprint']['git_commit'] = '2' * 40
         self.assertIn('b:FINGERPRINT_IDENTITY', shared_errors(*values, HEAD))
+
+
+    def test_neutral_barrier_accepts_only_acknowledged_stopped_state(self):
+        self.assertEqual([], neutral_boundary_errors(*fixture(), HEAD, {'a': 2, 'b': 2}))
+
+    def test_shared_but_moving_snapshot_is_not_a_neutral_boundary(self):
+        values = fixture()
+        for observation in values:
+            observation['snapshot']['players'][0]['velocity']['x'] = 6.0
+        self.assertEqual([], shared_errors(*values, HEAD))
+        self.assertIn('PLAYER_NOT_SETTLED:server:a', neutral_boundary_errors(*values, HEAD, {'a': 2, 'b': 2}))
+
+    def test_stale_neutral_acknowledgement_is_rejected(self):
+        self.assertIn('NEUTRAL_NOT_ACKNOWLEDGED:server:a',
+                      neutral_boundary_errors(*fixture(), HEAD, {'a': 10, 'b': 2}))
+
+    def test_active_input_is_not_a_neutral_boundary(self):
+        values = fixture()
+        values[1]['input_active'] = True
+        self.assertIn('INPUT_NOT_NEUTRAL:a', neutral_boundary_errors(*values, HEAD, {'a': 2, 'b': 2}))
+
+    def test_missing_neutral_target_is_rejected(self):
+        self.assertIn('NEUTRAL_TARGET_MISSING:a', neutral_boundary_errors(*fixture(), HEAD, {'b': 2}))
+
+    def test_driver_is_fixture_but_focused_test_is_standalone(self):
+        driver = Path(PROCESS_DRIVER.removeprefix('res://'))
+        focused = Path('tests/runtime/test_v0_mvp_two_client_shared_world.gd')
+        self.assertIn('fixtures', driver.parts[:-1])
+        self.assertNotIn('fixtures', focused.parts[:-1])
+        self.assertTrue(focused.match('test_*.gd'))
+        # On a repository checkout also bind this classification to the actual runner.
+        runner = ROOT / 'RUN_WORLD_REGRESSION_TESTS.ps1'
+        if runner.exists():
+            self.assertIn('$ExcludedTestDirectoryNames = @("fixtures")', runner.read_text(encoding='utf-8'))
+            self.assertTrue((ROOT / driver).is_file())
+            self.assertFalse((ROOT / 'tests/integration/test_v0_mvp_two_client_process.gd').exists())
 
 
 if __name__ == '__main__':
