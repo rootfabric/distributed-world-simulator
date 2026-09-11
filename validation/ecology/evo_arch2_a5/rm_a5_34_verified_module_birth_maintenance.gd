@@ -59,8 +59,8 @@ func _policy(transfer_permille: int = 500) -> Dictionary:
 	policy.reproduction.fee_energy_mj = 0
 	return policy
 
-func _field(owner: String) -> Dictionary:
-	return Field.create(owner, 1, [0, 0, 0], 1000, 1, 1, F.stock(900000), F.stock(1000000), F.signals(1000, 500, 0, 0))
+func _field(owner: String, stock: int = 900000) -> Dictionary:
+	return Field.create(owner, 1, [0, 0, 0], 1000, 1, 1, F.stock(stock), F.stock(1000000), F.signals(1000, 500, 0, 0))
 
 func _run_ticks(entry: Dictionary, field: Dictionary, count: int) -> Dictionary:
 	var current := entry
@@ -127,7 +127,7 @@ func _unfunded_birth_maintenance_rolls_back_candidate_growth() -> void:
 	var entry := R.individual(blueprint, "rm34.rollback", [500, 0, 500], {"material_mg": 10, "water_mg": 5, "energy_mj": 5})
 	_check(not entry.is_empty(), "rollback_founder_valid")
 	if entry.is_empty(): return
-	var field := _field("rm34.rollback.field")
+	var field := _field("rm34.rollback.field", 0)
 	var result := R.step_population(field, [entry], field.owner_token, field.owner_epoch, field.revision)
 	_check(result.success, "rollback_step_succeeds_without_partial_growth")
 	if not result.success: return
