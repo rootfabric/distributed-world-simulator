@@ -1,7 +1,7 @@
 extends RefCounted
 
 const MAX_SAFE_JSON_INTEGER: int = 9007199254740991
-const MAX_FLOAT_TRANSPORT_ROUNDS: int = 32
+const MAX_FLOAT_TRANSPORT_ROUNDS: int = 4096
 
 
 static func canonicalize(value, path: String = "$" ) -> Dictionary:
@@ -55,9 +55,10 @@ static func _transport_stable_float(number: float, path: String) -> Dictionary:
 	var current: float = number
 	var encodings: Array[String] = []
 	var values: Array[float] = []
+	var seen: Dictionary = {}
 	for _round in range(MAX_FLOAT_TRANSPORT_ROUNDS):
 		var encoded: String = JSON.stringify(current, "", true, true)
-		var cycle_start: int = encodings.find(encoded)
+		var cycle_start: int = int(seen.get(encoded, -1))
 		if cycle_start >= 0:
 			var best_index: int = cycle_start
 			for index in range(cycle_start + 1, encodings.size()):
@@ -69,6 +70,7 @@ static func _transport_stable_float(number: float, path: String) -> Dictionary:
 					return _failure(path, "Transport-normalized integer exceeds the safe JSON range")
 				return {"success": true, "value": int(selected), "error": ""}
 			return {"success": true, "value": selected, "error": ""}
+		seen[encoded] = encodings.size()
 		encodings.append(encoded)
 		values.append(current)
 		var decoded = JSON.parse_string(encoded)
