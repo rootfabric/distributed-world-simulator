@@ -1,7 +1,7 @@
 extends RefCounted
 
 const MAX_SAFE_JSON_INTEGER: int = 9007199254740991
-const MAX_FLOAT_TRANSPORT_ROUNDS: int = 32
+const MAX_FLOAT_TRANSPORT_ROUNDS: int = 4096
 
 
 static func canonicalize(value, path: String = "$" ) -> Dictionary:
