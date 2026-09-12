@@ -71,14 +71,6 @@ func _run_ticks(entry: Dictionary, field: Dictionary, count: int) -> Dictionary:
 func _encoded_state_file(blueprint: Dictionary, state: Dictionary) -> String:
 	return C.encode({"schema": "dws.ecology.life-state-file.v1", "blueprint": blueprint, "state": state, "state_hash": C.digest(state)})
 
-func _latest_created_modules(development: Dictionary) -> int:
-	var events: Array = development.frame.events if not development.frame.is_empty() else development.last_events
-	var created := 0
-	for event in events:
-		if event is Dictionary and event.get("outcome", "") == "MODULE_CREATED":
-			created += 1
-	return created
-
 func _reproductive_modules_raise_historical_maintenance_floor() -> void:
 	var blueprint := BP.create(_genome(), _policy())
 	var entry := R.individual(blueprint, "rm25.parent", [500, 0, 500], B.stock(100000))
@@ -124,9 +116,11 @@ func _reproductive_modules_raise_historical_maintenance_floor() -> void:
 	var root_payment_ticks: int = maxi(old_root_paid_ticks, 1 + post_reproduction_paid_ticks)
 	var reproductive_nonroot_payment_ticks: int = post_reproduction_paid_ticks * int(reproduction.required_reproductive_modules)
 	var nonroot_modules: int = maxi(0, state.development.modules.size() - 1)
-	var latest_created: int = mini(nonroot_modules, _latest_created_modules(state.development))
-	var preexisting_nonroot_payment_ticks: int = maxi(0, nonroot_modules - latest_created)
-	var nonroot_payment_ticks: int = maxi(reproductive_nonroot_payment_ticks, preexisting_nonroot_payment_ticks)
+	# RM34 gives every committed non-root module one structural birth-maintenance payment.
+	# These are independent of mutable development event arrays; later provably-paid
+	# reproductive-module ticks are additional payments, matching the validator.
+	var birth_nonroot_payment_ticks: int = nonroot_modules
+	var nonroot_payment_ticks: int = birth_nonroot_payment_ticks + reproductive_nonroot_payment_ticks
 	var module_payment_ticks: int = root_payment_ticks + nonroot_payment_ticks
 	_check(module_payment_ticks > old_root_paid_ticks, "module_history_strengthens_floor")
 
