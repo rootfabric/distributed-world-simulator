@@ -85,7 +85,10 @@ func _unpaid_maintenance_blocks_reproduction() -> void:
 	p.reproduction.maturity_ticks = 2; p.reproduction.interval_ticks = 1
 	p.reproduction.endowment = B.stock(); p.reproduction.fee_energy_mj = 0
 	var blueprint := BP.create(_reproductive_genome(), p)
-	var parent := R.individual(blueprint, "repair.maintenance", [500,0,500], B.stock(1000))
+	# RM34 charges each newly committed module its first maintenance debit. Use enough
+	# founder reserve to fund the rich preparation tick while remaining below the
+	# two-module maintenance requirement once the field is removed on the next tick.
+	var parent := R.individual(blueprint, "repair.maintenance", [500,0,500], B.stock(3000))
 	var prepared := _step(_field("repair.maintenance.rich", 900000, 900), [parent])
 	_check(prepared.success and int(H.compile(prepared.population[0].state.development, blueprint.genome).module_roles.get("reproductive", 0)) >= 1, "reproductive_parent_prepared")
 	var starved := _step(_field("repair.maintenance.starve", 0, 900), prepared.population)
