@@ -123,6 +123,109 @@ class ContractBundle:
         ):
             raise ContractValidationError("CONTINUATION_LAYER_REVISION_MISMATCH")
 
+        if continuation.get("execution_channel_recovery_revision") != (
+            "H0-CHANNEL-RECOVERY-2026-09-12-R1"
+        ):
+            raise ContractValidationError("CHANNEL_RECOVERY_REVISION_INVALID")
+
+        continuation_principles = continuation.get("principles")
+        required_channel_principles = (
+            "tool_or_transport_failure_is_not_mission_terminal",
+            "ephemeral_tool_handles_are_not_durable_state",
+            "executor_local_network_failure_is_route_failure_not_project_block",
+            "unreadable_ephemeral_resource_must_be_refetched_from_durable_locator",
+            "reasoning_or_session_channel_failure_does_not_change_project_state",
+        )
+        if not isinstance(continuation_principles, dict) or any(
+            continuation_principles.get(name) is not True
+            for name in required_channel_principles
+        ):
+            raise ContractValidationError("CHANNEL_RECOVERY_PRINCIPLES_INVALID")
+
+        channel_recovery = continuation.get("execution_channel_recovery")
+        if not isinstance(channel_recovery, dict):
+            raise ContractValidationError("CHANNEL_RECOVERY_POLICY_MISSING")
+        expected_channel_values = {
+            "contract": "docs/control/HARNESS_CHANNEL_RECOVERY_RU.md",
+            "mode": "FAIL_FORWARD_FROM_DURABLE_GIT",
+            "tool_failure_is_terminal": False,
+            "resource_handle_loss_is_terminal": False,
+            "executor_network_failure_is_terminal": False,
+            "reasoning_or_session_channel_failure_is_terminal": False,
+            "hard_block_escalation_requires_autonomous_execution_proof": True,
+        }
+        for name, expected in expected_channel_values.items():
+            if channel_recovery.get(name) != expected:
+                raise ContractValidationError(
+                    f"CHANNEL_RECOVERY_POLICY_INVALID:{name}"
+                )
+
+        expected_ephemeral_route = [
+            "DISCARD_STALE_RESOURCE_HANDLE",
+            "REFETCH_BY_DURABLE_LOCATOR",
+            "VERIFY_EXACT_SUBJECT_IDENTITY",
+            "RESUME_FROM_LAST_DURABLE_PREDICATE",
+        ]
+        if channel_recovery.get("ephemeral_resource_failure_route") != expected_ephemeral_route:
+            raise ContractValidationError("CHANNEL_RESOURCE_RECOVERY_ROUTE_INVALID")
+
+        expected_network_route = [
+            "CAPTURE_FAILURE_SIGNATURE",
+            "CLASSIFY_AS_EXECUTOR_LOCAL_ROUTE_FAILURE",
+            "DO_NOT_INFER_REMOTE_SERVICE_OUTAGE",
+            "DO_NOT_REPEAT_IDENTICAL_FAILED_ROUTE",
+            "TRY_GITHUB_CONNECTOR_OR_EXISTING_EXACT_CHECKOUT",
+            "TRY_REPOSITORY_OWNED_CI_IF_EXECUTION_IS_REQUIRED",
+            "REANCHOR_EXACT_SUBJECT",
+            "RESUME_WORK",
+        ]
+        if channel_recovery.get("executor_network_failure_route") != expected_network_route:
+            raise ContractValidationError("CHANNEL_NETWORK_RECOVERY_ROUTE_INVALID")
+
+        github_source_routing = channel_recovery.get("github_source_routing")
+        if not isinstance(github_source_routing, dict):
+            raise ContractValidationError("CHANNEL_GITHUB_ROUTING_MISSING")
+        required_routing_flags = (
+            "do_not_bootstrap_clone_from_network_restricted_container_when_connector_available",
+            "container_dns_failure_does_not_prove_github_unavailable",
+            "container_download_is_not_git_transport",
+            "one_broken_github_route_is_not_hard_block_while_an_allowed_route_exists",
+        )
+        if any(github_source_routing.get(name) is not True for name in required_routing_flags):
+            raise ContractValidationError("CHANNEL_GITHUB_ROUTING_INVALID")
+
+        forbidden_stop_reasons = channel_recovery.get("forbidden_stop_reasons")
+        required_forbidden_stop_reasons = {
+            "CONNECTOR_RESOURCE_NOT_READABLE",
+            "CONNECTOR_RESOURCE_NOT_FOUND",
+            "TOOL_RESULT_HANDLE_EXPIRED",
+            "CURRENT_EXECUTOR_DNS_FAILURE",
+            "CURRENT_EXECUTOR_GITHUB_CLONE_FAILURE",
+            "DOWNLOAD_ROUTE_SECURITY_REJECTION",
+            "LONG_REASONING_OR_TOOL_CHAIN_FAILURE",
+            "PREFERRED_EXECUTOR_UNAVAILABLE",
+            "CURRENT_EXECUTOR_WORKSPACE_LOSS",
+        }
+        if (
+            not isinstance(forbidden_stop_reasons, list)
+            or not required_forbidden_stop_reasons.issubset(set(forbidden_stop_reasons))
+        ):
+            raise ContractValidationError("CHANNEL_FORBIDDEN_STOP_REASONS_INVALID")
+
+        long_chain = channel_recovery.get("long_tool_chain_guard")
+        required_long_chain_flags = (
+            "persist_completed_predicate_before_next_long_slice",
+            "require_recovery_anchor_before_high_fanout_tool_phase",
+            "reanchor_exact_subject_after_transient_channel_failure",
+            "stale_resource_ids_must_not_cross_recovery_boundary",
+            "chat_only_summary_is_not_recovery_anchor",
+            "nonterminal_mission_must_fail_forward",
+        )
+        if not isinstance(long_chain, dict) or any(
+            long_chain.get(name) is not True for name in required_long_chain_flags
+        ):
+            raise ContractValidationError("CHANNEL_LONG_TOOL_CHAIN_GUARD_INVALID")
+
         if policy.get("git_transport_policy_revision") != "H0-GIT-TRANSPORT-2026-09-05-R1":
             raise ContractValidationError("GIT_TRANSPORT_POLICY_REVISION_INVALID")
 
@@ -231,4 +334,4 @@ class ContractBundle:
                 f"{'.'.join(str(part) for part in error.absolute_path) or '$'}:{error.message}"
                 for error in errors[:3]
             )
-            raise ContractValidationError(f"SCHEMA_INVALID:{label}:{detail}")
+            raise ContractValidationError(f"SCHEMA_INVALID:{label}:{detail}") from exc
