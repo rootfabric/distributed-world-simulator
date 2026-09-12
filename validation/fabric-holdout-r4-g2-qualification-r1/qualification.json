@@ -1,0 +1,25 @@
+{
+  "acceptance_authority": "CANONICAL_HARNESS_ONLY",
+  "blocking_gate_count": 0,
+  "blocking_gates": [],
+  "blocking_total": 0,
+  "checkpoint_accepted": false,
+  "gates": [
+    {"classification": "NONE", "findings": [], "id": "g2_exact", "result": "PASS"},
+    {"classification": "NONE", "findings": [], "id": "b04d_linux", "result": "PASS"},
+    {"classification": "NONE", "findings": [], "id": "complex_labs", "result": "PASS"},
+    {"classification": "NONE", "findings": [], "id": "cx_vis0", "result": "PASS"},
+    {"classification": "NONE", "findings": [], "id": "b06_close", "result": "PASS"},
+    {"classification": "NONE", "findings": [], "id": "b04d_portable", "result": "PASS"}
+  ],
+  "global_findings": [],
+  "policy_sha256": "9fad301348bf9cedcb3251a317d880475fa0365541cdf958fee29a6915a1d721",
+  "production_freeze_allowed": false,
+  "provenance_authentication": "REQUIRES_INDEPENDENT_REVIEW",
+  "qualification": "PASS",
+  "ready_for_independent_review": true,
+  "schema": "fabric.r4.qualification.result.v1",
+  "subject_head": "989ed83c10d861f151423b4e7dae6952c7177b68",
+  "subject_tree": "aefd109b76a5ebc5ee98f35e730bb07a895f59fe",
+  "unseen_holdout_allowed": false
+}
