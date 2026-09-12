@@ -1,10 +1,10 @@
 extends SceneTree
 
-const B = preload("res://scripts/research/fabric_bake0/fabric_composition_r3_canonical_bridge_v1.gd")
+const B = preload("res://scripts/research/fabric_holdout_r4_g2/lossless_replay_bridge_v1.gd")
 const C = preload("res://scripts/research/fabric_bake0/fabric_composition_r3_compiler_v1.gd")
 const Graph = preload("res://scripts/research/fabric_bake0/fabric_composition_r3_general_graph_v1.gd")
 const Mechanics = preload("res://scripts/research/fabric_bake0/fabric_composition_r3_general_mechanics_v1.gd")
-const NetworkUtils = preload("res://scripts/network/contracts/network_contract_utils.gd")
+const Transport = B.Transport
 const Part = preload("res://scripts/construction/contracts/construction_part_record.gd")
 const Bond = preload("res://scripts/construction/contracts/construction_bond_record.gd")
 const Snapshot = preload("res://scripts/construction/contracts/construct_snapshot.gd")
@@ -40,23 +40,24 @@ func _check(ok: bool, label: String, detail = null) -> void:
 
 func _transport_stability() -> void:
 	var payload := {"matter": [0.1, 0.3333333333333333, 0.0000001, 1.2345678901234567, 17.000000000000004], "nested": {"temperature_k": 293.15, "mass_fraction": 0.37, "bulk_volume_m3": 0.000000000123456789}}
-	var normalized_a := NetworkUtils.canonicalize(payload)
-	var wire := NetworkUtils.canonical_json(payload)
-	var decoded = JSON.parse_string(wire)
-	var normalized_b := NetworkUtils.canonicalize(decoded)
+	var normalized_a := Transport.encode(payload)
+	var wire := Transport.canonical_json(payload)
+	var decoded := Transport.parse_json(wire)
+	var normalized_b := Transport.encode(decoded.value)
 	_check(normalized_a.success and normalized_b.success, "G2-C finite payload normalizes")
 	_check(normalized_a.get("value") == normalized_b.get("value"), "G2-C normalize encode/decode idempotent", [normalized_a, normalized_b, wire])
-	_check(NetworkUtils.payload_hash(payload) == NetworkUtils.payload_hash(decoded), "G2-C payload hash transport stable")
+	_check(Transport.payload_hash(payload) == Transport.payload_hash(decoded.value), "G2-C payload hash transport stable")
 	var document := {"schema": "fabric.g2.transport.v1", "payload": payload, "checksum": ""}
 	document.checksum = U.compute_checksum(document)
-	var transported = JSON.parse_string(JSON.stringify(document, "", true, true))
-	_check(transported is Dictionary and U.validate_checksum(transported).success, "G2-C checksum survives raw Godot JSON transport", transported)
+	var transported_result := Transport.parse_json(Transport.canonical_json(document))
+	var transported = transported_result.value
+	_check(transported is Dictionary and U.validate_checksum(transported).success, "G2-C checksum survives explicit lossless Godot JSON transport", transported)
 	if transported is Dictionary:
 		var tampered: Dictionary = transported.duplicate(true)
 		tampered.payload.nested.mass_fraction = float(tampered.payload.nested.mass_fraction) + 0.01
 		_check(not U.validate_checksum(tampered).success, "G2-C tamper remains rejected")
-	_check(NetworkUtils.canonical_json(NAN).is_empty() and NetworkUtils.canonical_json(INF).is_empty(), "G2-C nonfinite remains forbidden")
-	_check(NetworkUtils.canonical_json(Vector3.ONE).is_empty(), "G2-C Godot Variant remains forbidden")
+	_check(Transport.canonical_json(NAN).is_empty() and Transport.canonical_json(INF).is_empty(), "G2-C nonfinite remains forbidden")
+	_check(Transport.canonical_json(Vector3.ONE).is_empty(), "G2-C Godot Variant remains forbidden")
 
 func _general_graph() -> void:
 	var model := {"nodes": [{"node_id": "n_a"}, {"node_id": "n_b"}, {"node_id": "n_c"}, {"node_id": "n_d"}, {"node_id": "n_e"}], "elements": [
@@ -175,14 +176,21 @@ func _revealed_g1_open_regression() -> void:
 		if not replay_checked:
 			replay_checked = true
 			var document: Dictionary = bridge.export_replay()
-			var transported = JSON.parse_string(JSON.stringify(document, "", true, true))
-			_check(transported is Dictionary and U.validate_checksum(transported).success, "G2 cold journal transport checksum", transported)
-			if transported is Dictionary:
+			var encoded: Dictionary = bridge.export_replay_transport()
+			var wire = JSON.parse_string(JSON.stringify(encoded.get("value", {}), "", true, true))
+			var decoded := Transport.decode(wire) if wire is Dictionary else {"success": false, "value": null}
+			_check(encoded.success and decoded.success and decoded.value is Dictionary and U.validate_checksum(decoded.value).success, "G2 cold journal explicit lossless transport checksum", decoded)
+			if decoded.success and decoded.value is Dictionary:
 				var fresh = B.new()
 				var matter := {"mechanical_matter": bridge.sources().mechanical_matter, "electrical_matter": bridge.sources().electrical_matter}
-				var replay := fresh.replay(transported, bridge.canonical_state(), matter, authority, document.checksum)
-				_check(replay.success, "G2 cold replay after raw JSON transport", replay)
+				var replay := fresh.replay_transport(wire, bridge.canonical_state(), matter, authority, document.checksum)
+				_check(replay.success, "G2 cold replay after lossless envelope JSON transport", replay)
 				if replay.success: _check(U.canonical_hash(fresh.inspect()) == U.canonical_hash(bridge.inspect()), "G2 cold replay snapshot exact")
+				var corrupted: Dictionary = decoded.value.duplicate(true)
+				corrupted.checksum = "0".repeat(64)
+				var rewrapped := Transport.encode(corrupted)
+				var rejected = B.new().replay_transport(rewrapped.value, bridge.canonical_state(), matter, authority, document.checksum)
+				_check(not rejected.success and rejected.error_code == "R3_REPLAY_UNTRUSTED_JOURNAL", "G2 transport never repairs a corrupted inner checksum", rejected)
 
 func _sources_from_case(input: Dictionary) -> Dictionary:
 	var scale: float = float(UNITS[input.length_unit])

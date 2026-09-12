@@ -3,6 +3,7 @@ on:
   push:
     branches: [repair/fabric-holdout-r4-g2-generalized-capabilities-r1]
     paths:
+      - scripts/research/fabric_holdout_r4_g2/**
       - scripts/network/contracts/network_contract_utils.gd
       - scripts/research/fabric_bake0/fabric_bake_contract_utils_v1.gd
       - scripts/research/fabric_bake0/fabric_composition_r3_*general*.gd
