@@ -1,0 +1,59 @@
+{
+  "schema": "distributed_world_simulator.mvp3_binding_diagnostic_support.v1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "record_kind": "SUPPORTING_DIAGNOSTIC_EVIDENCE_NOT_ACCEPTANCE_MAP",
+  "role": "IMPLEMENTER",
+  "independent_context": false,
+  "runtime_code_subject": "6dca13bfc91698551544271a0245246e6d2ead12",
+  "runtime_code_tree": "9bb56d31bb1a384a6b2e581d6797c0d142639443",
+  "diagnostic_repository": "rootfabric/distributed-world-simulator",
+  "diagnostic_branch": "control/v0-mvp3-canonical-binding-preflight-r1",
+  "diagnostic_pr": 615,
+  "diagnostic_head": "6d396e2181e9e46bd20c484e1ed2d148d8f223c8",
+  "diagnostic_tree": "0913f2400687bc17707b8679f7d71a5499ac0c1b",
+  "run_id": 34700999492,
+  "run_conclusion": "SUCCESS",
+  "artifact": {
+    "id": 10300397488,
+    "name": "mvp3-binding-diagnostic-6d396e2181e9e46bd20c484e1ed2d148d8f223c8-34700999492",
+    "bytes": 16822,
+    "sha256": "afb4e54eaac497a67dde01701472ca69651709fee48fcddaf048bd8d2afcdb2f",
+    "downloaded_archive_digest_matches_github": true,
+    "members": 9,
+    "manifest_checked_members": 8,
+    "all_manifest_hashes_and_sizes_match": true
+  },
+  "engine_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+  "observations": {
+    "restart_characterization": {"assertions": 35, "failures": 0, "status": "GAPS_REPRODUCED"},
+    "accepted_sm1_carry_gateway_regression": {"assertions": 89, "failures": 0},
+    "bound_real_m3_route_with_commit_aware_completion": {"assertions": 58, "failures": 0, "status": "BOUND_ROUTE_AND_STAGING_GAP_REPRODUCED"},
+    "two_independent_m3_actors_receive_commands": true,
+    "actor_b_continues_while_actor_a_frozen": true,
+    "rejected_m3_handler_does_not_become_applied_carry_operation": true,
+    "target_readiness_error": "MVP3_CANONICAL_PLAYER_NOT_STAGED",
+    "restart_as_target_staging_error": "GAMEPLAY_RECOVERY_OWNER_MISMATCH",
+    "ownership_commit_not_attempted_without_actual_staging": true,
+    "existing_sm1_precommit_abort_then_input_continuation": true,
+    "tracked_checkout_clean": true
+  },
+  "review_findings_addressed": [
+    {"comment_id": 3996545246, "action": "Reuse and actually exercise accepted P6/SM1 carrying/pivot chain; withdraw proposal for a new full transfer protocol"},
+    {"comment_id": 3996583920, "action": "Inject canonical receipt-aware completion using existing P6 port; add real handler-rejection negative control"}
+  ],
+  "review_claim": "NO_INDEPENDENT_PRODUCT_VERDICT; R6 fresh code-review request 5646686289 must be read separately",
+  "proposal_at_diagnostic_head": ["docs/control/mvp-act0-r1/MVP3_CANONICAL_BINDING_AMENDMENT_PROPOSAL_RU.md", "docs/control/mvp-act0-r1/MVP3_COMPLETION_BINDING_R6_RU.md"],
+  "proposed_owner_hook_paths": [
+    "scripts/runtime/networked_gameplay/services/player_registry.gd",
+    "scripts/runtime/networked_gameplay/services/player_ownership_service.gd",
+    "scripts/runtime/networked_gameplay/networked_gameplay_service_p2.gd",
+    "scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime_p2.gd"
+  ],
+  "limitations": ["All new adapters are test-only; no production M3/SM1 owner was modified", "No integrated graphical two-client authority crossing is proven", "No network/fixed-tick or persistence acceptance is inferred", "Characterization does not prove every imaginable public API composition impossible", "No new authority/canonical owner or full transfer protocol is proposed"],
+  "mvp3_implementation_complete": false,
+  "mvp3_predicate_verified": false,
+  "whole_mvp_acceptance": false,
+  "runtime_merge": false,
+  "main_merge": false
+}

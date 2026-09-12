@@ -1,0 +1,16 @@
+{
+  "schema": "distributed_world_simulator.harness_human_attention.v1",
+  "decision_id": "HA-V0-MVP3-LIVE-PLAYER-HOOKS-R1",
+  "program": "V0",
+  "checkpoint": "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE",
+  "risk_class": "CRITICAL",
+  "reason": "FAILED_COMPOSITION_REQUIRING_SCOPE_EXPANSION: accepted SM1/P6 command/carrying/pivot composition now exercises real M3 players and canonical completion, but the inspected existing M3 public API has no demonstrated live per-player target staging/activation path. Restart recovery strips sessions and rejects a different owner/epoch. The parent Work Order explicitly stops when a foundation change is required. This is not a tool failure or a request to create another owner.",
+  "decision_required": "Разрешить отдельный bounded repair для live-player staging/activation hooks внутри существующих M3 owners: services/player_registry.gd, services/player_ownership_service.gd, networked_gameplay_service_p2.gd и при необходимости m3/m3_dedicated_server_runtime_p2.gd, плюс уже разрешённые MVP glue/tests/evidence. Переиспользовать SM1/P6, сохранить restart contracts. Это не разрешает нового canonical owner, смену архитектуры владения, правку M4/SM1/MW8/MW9 foundation, приёмку MVP3/всего MVP или merge в main.",
+  "options": ["AUTHORIZE_BOUNDED_EXISTING_OWNER_LIVE_HOOKS", "KEEP_COMPOSITION_ONLY_AND_HOLD_MVP3"],
+  "recommended_option": "AUTHORIZE_BOUNDED_EXISTING_OWNER_LIVE_HOOKS",
+  "recommendation_reason": "Нужна передача живого canonical player state при сохранении session/input/replay, а не повтор SM1 operator/observer demo или перенос всего игрового агрегата. Существующий SM1 control-plane и найденный commit-aware completion adapter переиспользуются; scope расширяется только на недостающие M3 owner hooks. Если окажется необходим другой foundational owner, требуется новое точное обоснование, не скрытое расширение.",
+  "blast_radius": ["M3 canonical player registry and live ownership/session binding", "M3 fixed-tick/input admission around existing SM1 authority handoff", "MVP1/MVP2 and M3 recovery nonregression; existing restart semantics must remain unchanged"],
+  "blocking": true,
+  "status": "OPEN",
+  "evidence_paths": ["config/control/harness/executions/E2026-09-09-V0-MVP-R1/supporting-evidence/MVP3-CANONICAL-BINDING-R6-SUPPORT.v1.json"]
+}

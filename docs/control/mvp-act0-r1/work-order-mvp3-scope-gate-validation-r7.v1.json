@@ -1,0 +1,20 @@
+{
+  "schema": "distributed_world_simulator.bounded_repair_work_order.v1",
+  "repair_id": "V0-MVP3-R7-SCOPE-GATE-VALIDATION",
+  "parent_work_order_id": "V0-MVP-R1-WO-001",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "base_sha": "6dca13bfc91698551544271a0245246e6d2ead12",
+  "base_tree": "9bb56d31bb1a384a6b2e581d6797c0d142639443",
+  "role": "COORDINATOR",
+  "independent_context": false,
+  "runtime_mutation": false,
+  "scope": "Durably record the actual parent-scope decision and byte-checked supporting diagnostics, then run existing Drive/CloseMission. Not a new hard-block proof or product acceptance.",
+  "allowed_paths": [".github/workflows/mvp3-owner-hooks-scope-gate.yml", "docs/control/mvp-act0-r1/work-order-mvp3-scope-gate-validation-r7.v1.json", "config/control/harness/executions/E2026-09-09-V0-MVP-R1/human-attention/HA-V0-MVP3-LIVE-PLAYER-HOOKS-R1.v1.json", "config/control/harness/executions/E2026-09-09-V0-MVP-R1/supporting-evidence/MVP3-CANONICAL-BINDING-R6-SUPPORT.v1.json"],
+  "forbidden_paths": ["scripts/**", "scenes/**", "config/architecture/**", "config/control/harness/acceptance/**", "project.godot"],
+  "workflow_constraints": {"owner_only": true, "read_only_github_permissions": true, "exact_checkout": true, "git_writes": false, "source_export": false, "self_acceptance": false},
+  "validation": ["exact four-file control-only diff", "existing Harness Drive recognizes a human decision rather than tool failure", "CloseMission is never interpreted as MVP3 or whole-MVP acceptance", "tracked checkout remains clean"],
+  "foundation_scope_expansion_authorized": false,
+  "predicate_verified_authorized": false,
+  "runtime_merge_authorized": false,
+  "main_merge_authorized": false
+}
