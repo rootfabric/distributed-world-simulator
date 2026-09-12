@@ -9,8 +9,8 @@ concurrency:
   group: eco-arch2-a7-canonical-verifier
   cancel-in-progress: true
 env:
-  SOURCE_HEAD: 9e6b273a7758718ea99b1d2e641c8386e6db0ea3
-  SOURCE_TREE: 5e4d0b42e28b4fcfe6537b975080f01015b56872
+  SOURCE_HEAD: 8eccf6304078bec3a3ccaa5860c5aab6ee311209
+  SOURCE_TREE: 24e876b7377cb3e1e521f08ff9766331fe4e895a
 jobs:
   linux-canonical:
     if: github.actor == 'rootfabric' && github.repository == 'rootfabric/distributed-world-simulator'
@@ -30,9 +30,11 @@ jobs:
           mkdir -p artifacts/a7/exact
           test "$(git rev-parse HEAD)" = "$SOURCE_HEAD"
           test "$(git rev-parse HEAD^{tree})" = "$SOURCE_TREE"
+          test -z "$(git status --porcelain --untracked-files=no)"
           python3 - <<'PY' | tee artifacts/a7/source-pins.log
           import json, subprocess
           pins=json.load(open('validation/ecology/evo_arch2_a7/source-blobs.v1.json'))
+          if len(pins['blobs']) != 18: raise SystemExit('SOURCE_PIN_COUNT_MISMATCH')
           failures=[]
           for path,expected in pins['blobs'].items():
               actual=subprocess.check_output(['git','hash-object',path],text=True).strip()
@@ -40,7 +42,7 @@ jobs:
               if actual != expected: failures.append(path)
           if failures: raise SystemExit('SOURCE_BLOB_MISMATCH: '+', '.join(failures))
           PY
-      - name: Full exact A7 and preserved regressions
+      - name: Full exact A7 with mandatory graphics and preserved regressions
         shell: bash
         env:
           CONFIGURED_GODOT: ${{ vars.GODOT_DOUBLE_PATH }}
@@ -49,33 +51,18 @@ jobs:
           godot="${CONFIGURED_GODOT:-$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64}"
           test -x "$godot"
           python3 validation/ecology/evo_arch2_a7/verify.py --godot "$godot" --head "$SOURCE_HEAD" --tree "$SOURCE_TREE"
-      - name: Graphical full-horizon viewport and actual UI handlers
-        shell: bash
-        env:
-          CONFIGURED_GODOT: ${{ vars.GODOT_DOUBLE_PATH }}
-        run: |
-          set -euo pipefail
-          godot="${CONFIGURED_GODOT:-$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64}"
-          mkdir -p artifacts/a7/graphical
-          if command -v xvfb-run >/dev/null 2>&1; then
-            GODOT_SILENCE_ROOT_WARNING=1 xvfb-run -a -s '-screen 0 1600x1100x24' "$godot" \
-              --rendering-method gl_compatibility --audio-driver Dummy --path "$PWD" \
-              --script res://tests/research/ecology/v2/arch2_a7_ui.gd -- --capture \
-              > artifacts/a7/graphical/ui.log 2>&1
-            python3 - <<'PY'
-          import hashlib,json,os,pathlib,re
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib
           root=pathlib.Path('artifacts/a7')
-          text=(root/'graphical/ui.log').read_text(encoding='utf-8-sig')
-          if 'EVO_ARCH2_A7_UI assertions=32 failed=0' not in text or re.search(r'SCRIPT ERROR|Parse Error|ERROR:|FAIL:',text): raise SystemExit(text[-10000:])
-          files=['graphical/ui.log','observatory.png','capture-sources.json']
-          result={'verdict':'PASS','subject_head':os.environ['SOURCE_HEAD'],'subject_tree':os.environ['SOURCE_TREE'],'assertions':32,'files':{p:hashlib.sha256((root/p).read_bytes()).hexdigest() for p in files}}
-          (root/'graphical/summary.json').write_text(json.dumps(result,indent=2)+'\n')
-          print(json.dumps(result,indent=2))
+          summary=json.loads((root/'exact/summary.json').read_text())
+          if summary.get('verdict') != 'PASS' or summary.get('graphical_required') is not True: raise SystemExit('COMPLETE_A7_REQUIRED')
+          if summary['subject_head'] != os.environ['SOURCE_HEAD'] or summary['subject_tree'] != os.environ['SOURCE_TREE']: raise SystemExit('SUMMARY_SUBJECT_MISMATCH')
+          matches=[c for c in summary['checks'] if c['name']=='a7-graphical']
+          if len(matches)!=1 or matches[0]['result']!='PASS' or matches[0]['assertions']!=32 or matches[0]['exit_code']!=0: raise SystemExit('GRAPHICAL_GATE_MISSING')
+          for filename,key in [('observatory.png','viewport_sha256'),('capture-sources.json','viewport_source_report_sha256')]:
+              if hashlib.sha256((root/filename).read_bytes()).hexdigest()!=summary[key]: raise SystemExit('GRAPHICAL_DIGEST_MISMATCH:'+filename)
+          print('COMPLETE_A7_GRAPHICAL_EVIDENCE_PASS')
           PY
-          else
-            printf '%s\n' '{"verdict":"NOT_EXECUTED","reason":"XVFB_NOT_INSTALLED_ON_SELF_HOSTED_RUNNER","required_followup":"Inspect separate exact-source graphical evidence; headless PASS does not prove capture"}' > artifacts/a7/graphical/summary.json
-            cat artifacts/a7/graphical/summary.json
-          fi
           test "$(git rev-parse HEAD)" = "$SOURCE_HEAD"
           test "$(git rev-parse HEAD^{tree})" = "$SOURCE_TREE"
           test -z "$(git status --porcelain --untracked-files=no)"
@@ -113,12 +100,11 @@ jobs:
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: a7-exact-9e6b273a
+          name: a7-exact-8eccf630
           path: |
             artifacts/a7/exact/
             artifacts/a7/source-pins.log
             artifacts/a7/restart/
-            artifacts/a7/graphical/
             artifacts/a7/observatory.png
             artifacts/a7/capture-sources.json
             artifacts/a7/control/
