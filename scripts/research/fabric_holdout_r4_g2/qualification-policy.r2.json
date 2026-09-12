@@ -1,0 +1,110 @@
+{
+  "schema": "fabric.r4.qualification.policy.v1",
+  "checkpoint": "FABRIC_HOLDOUT_R4_G2",
+  "revision": "R4-Q-R2",
+  "historical_control": {
+    "head": "b88004e77a9a424f1b23ba979f5ce8883a98f1a8",
+    "verdict": "FALSIFIED",
+    "paths": [
+      "config/research/fabric-holdout-r4-cases.json",
+      "config/research/fabric-holdout-r4-provenance.json",
+      "scripts/research/fabric_holdout_r4/holdout.py",
+      "tests/research/fabric1/fabric_holdout_r4_probe.gd",
+      "tests/research/fabric1/fabric_holdout_r4_protocol_test.py",
+      "tests/research/fabric1/fabric_holdout_r4_serialization_probe.gd",
+      "docs/research/FABRIC_HOLDOUT_R4_AUTHOR_RAW_RU.md"
+    ]
+  },
+  "gates": [
+    {
+      "id": "g2_exact",
+      "required": true,
+      "mode": "exact_binary",
+      "command_id": "RUN_FABRIC_HOLDOUT_R4_G2_TESTS.sh",
+      "argv": ["bash", "RUN_FABRIC_HOLDOUT_R4_G2_TESTS.sh"],
+      "timeout_seconds": 1200,
+      "environment_id": "linux-x86_64-double-a13da4feb",
+      "godot_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+      "pass_markers": [
+        "FABRIC-HOLDOUT-R4-G2-BOND-ID: PASS",
+        "FABRIC-HOLDOUT-R4-G2-TRANSPORT: PASS",
+        "FABRIC-HOLDOUT-R4-G2: PASS",
+        "FABRIC-HOLDOUT-R4-G2-SIGNED-EFFORT: PASS",
+        "FABRIC-COMPOSITION-R3: PASS",
+        "FABRIC-COMPOSITION-R3-TRANSIENT: PASS",
+        "FABRIC-COMPOSITION-R3-OBSERVER: PASS",
+        "FABRIC-COMPOSITION-R3-PROCESS-WRITE: PASS",
+        "FABRIC-COMPOSITION-R3-PROCESS-READ: PASS",
+        "FABRIC-PHYSICS-R2: PASS",
+        "FABRIC-PHYSICS-R2-CONTRACT: PASS",
+        "FABRIC-PHYSICS-R2-METAMORPHIC: PASS",
+        "FABRIC-REPAIR-R1 INTEGRITY: PASS"
+      ]
+    },
+    {
+      "id": "b04d_linux",
+      "required": true,
+      "mode": "exact_binary",
+      "command_id": "RUN_FABRIC_BAKE_B0_4_D_CLOSURE_TESTS.sh",
+      "argv": ["bash", "RUN_FABRIC_BAKE_B0_4_D_CLOSURE_TESTS.sh"],
+      "timeout_seconds": 1200,
+      "environment_id": "linux-x86_64-double-a13da4feb",
+      "godot_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+      "pass_markers": ["FABRIC-BAKE B0.4-D closure chain: PASS"]
+    },
+    {
+      "id": "complex_labs",
+      "required": true,
+      "mode": "exact_binary",
+      "command_id": "RUN_FABRIC_BAKE_COMPLEX_LABS_TESTS.sh",
+      "argv": ["bash", "RUN_FABRIC_BAKE_COMPLEX_LABS_TESTS.sh"],
+      "timeout_seconds": 900,
+      "environment_id": "linux-x86_64-double-a13da4feb",
+      "godot_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+      "pass_markers": ["FABRIC-BAKE COMPLEX LABS: PASS"]
+    },
+    {
+      "id": "cx_vis0",
+      "required": true,
+      "mode": "exact_binary",
+      "command_id": "RUN_FABRIC_CX_VIS_TESTS.sh",
+      "argv": ["bash", "RUN_FABRIC_CX_VIS_TESTS.sh"],
+      "timeout_seconds": 900,
+      "environment_id": "linux-x86_64-double-a13da4feb",
+      "godot_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+      "pass_markers": ["FABRIC CX-VIS0/1: PASS"]
+    },
+    {
+      "id": "b06_close",
+      "required": true,
+      "mode": "exact_binary",
+      "command_id": "RUN_FABRIC_B0_6_CLOSE_TESTS.sh",
+      "argv": ["bash", "RUN_FABRIC_B0_6_CLOSE_TESTS.sh"],
+      "timeout_seconds": 2400,
+      "environment_id": "linux-x86_64-double-a13da4feb",
+      "godot_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+      "pass_markers": ["FABRIC B0.6 Adaptive Physical Fidelity: PASS"]
+    },
+    {
+      "id": "b04d_portable",
+      "required": true,
+      "mode": "ci_workflow",
+      "command_id": "B04D_PORTABLE_WORKFLOW_SMOKE",
+      "argv": ["github-actions", ".github/workflows/fabric-bake-b0-4-d-portable-smoke.yml", "smoke"],
+      "environment_id": "github-official-godot-4.7.1",
+      "workflow_path": ".github/workflows/fabric-bake-b0-4-d-portable-smoke.yml",
+      "workflow_blob": "a5c2b91f0e40d2a3bbea3865c6728e9a4c1a3c65",
+      "job_name": "smoke",
+      "steps": [
+        "Checkout exact event subject",
+        "Install official Godot 4.7.1 parser/runtime smoke",
+        "Run focused B0.4-D portable smoke",
+        "Record exact smoke identity"
+      ],
+      "pass_markers": [
+        "4.7.1.stable.official.a13da4feb",
+        "FABRIC-BAKE B0.4-D Runtime Execution / Lifecycle Acceptance: PASS"
+      ]
+    }
+  ]
+}
