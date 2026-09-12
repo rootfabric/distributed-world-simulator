@@ -264,6 +264,11 @@ class ContractBundle:
             github_source_routing = channel_recovery.get("github_source_routing")
             if not isinstance(github_source_routing, dict):
                 raise ContractValidationError("CHANNEL_GITHUB_ROUTING_MISSING")
+            repository_route = github_source_routing.get("repository_read_write")
+            if type(repository_route) is not str or repository_route != (
+                "GITHUB_CONNECTOR_OR_NORMAL_GIT_WHEN_NETWORK_AND_AUTH_ARE_PROVEN_AVAILABLE"
+            ):
+                raise ContractValidationError("CHANNEL_GITHUB_REPOSITORY_ROUTE_INVALID")
             required_routing_flags = (
                 "do_not_bootstrap_clone_from_network_restricted_container_when_connector_available",
                 "container_dns_failure_does_not_prove_github_unavailable",
