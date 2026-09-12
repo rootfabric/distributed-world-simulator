@@ -11,7 +11,7 @@ const Route = preload("res://scripts/runtime/networked_gameplay/p6/p6_gateway_co
 const Carry = preload("res://scripts/runtime/networked_gameplay/sm1/sm1_player_carrying_domain.gd")
 const Coordinator = preload("res://scripts/runtime/networked_gameplay/sm1/sm1_authority_transfer_coordinator.gd")
 const Pivot = preload("res://scripts/runtime/networked_gameplay/sm1/sm1_gateway_route_pivot.gd")
-const Projection = preload("res://scripts/runtime/networked_gameplay/p6/p6_outpost_state.gd")
+const ProjectionScript = preload("res://scripts/runtime/networked_gameplay/p6/p6_outpost_state.gd")
 const Shadow = preload("res://scripts/runtime/networked_gameplay/p6/p6_shadow_authority.gd")
 const AtomicJson = preload("res://scripts/testing/process_harness/atomic_json_file.gd")
 
@@ -191,7 +191,7 @@ func _run() -> void:
 	var prepared: Dictionary = carrying.prepare_transfer(transfer, "client-session/mvp3/a", 1, first_a["operation_id"])
 	check(bool(prepared.get("success", false)), "real carry manifest captures committed M3 operation after freeze")
 	check(prepared.get("details", {}).get("manifest", {}).get("captured_after_source_freeze") == true, "carrying evidence contains freeze proof")
-	var projection = Projection.new()
+	var projection = ProjectionScript.new()
 	check(bool(projection.configure_from_canonical_sources({"gameplay": source.create_snapshot(), "item_graph": source.create_canonical_item_graph_snapshot(), "construction": {}}).get("success", false)), "P6 read-only projection uses actual source snapshots")
 	var shadow = Shadow.new()
 	check(bool(shadow.configure(projection).get("success", false)), "accepted P6 read-only shadow configured")
