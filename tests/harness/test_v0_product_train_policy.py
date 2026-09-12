@@ -72,6 +72,7 @@ class HistoricalP7ProductTrainPolicyTests(unittest.TestCase):
 
     def test_p7_activation_binds_exact_accepted_sm1_lineage(self) -> None:
         self.assertEqual(P7, self.activation_p7["checkpoint"])
+        self.assertEqual(SM1_BASE, self.activation_p7["main_declared_exact_successor_base"])
         self.assertEqual(SM1_BASE, self.epoch_p7["base_sha"])
         self.assertEqual([P7], self.epoch_p7["eligible_checkpoints"])
         self.assertEqual(SM1_BASE, self.work_order_p7["base_sha"])
