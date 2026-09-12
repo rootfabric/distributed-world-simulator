@@ -1,0 +1,91 @@
+name: ECO ARCH2 A6 Canonical Verifier
+on:
+  push:
+    branches: [validation/eco-arch2-a6-exact-r1]
+    paths: [.github/workflows/evo-arch2-a6-exact-verifier.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: eco-arch2-a6-canonical-verifier
+  cancel-in-progress: true
+jobs:
+  linux-canonical:
+    if: github.actor == 'rootfabric' && github.repository == 'rootfabric/distributed-world-simulator'
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 45
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout exact A6 candidate
+        uses: actions/checkout@v4
+        with:
+          ref: 993271eb46880b77f0e7584f931131d4bd0a5125
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Assert published bytes match tested source
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = 993271eb46880b77f0e7584f931131d4bd0a5125
+          test "$(git rev-parse HEAD^{tree})" = adce0899b348d6e8b359d732972af0ca5579c742
+          python3 - <<'PY'
+          import json, subprocess
+          pins = json.load(open('validation/ecology/evo_arch2_a6/local-tested-blobs.v1.json'))
+          for path, expected in pins['blobs'].items():
+              actual = subprocess.check_output(['git', 'hash-object', path], text=True).strip()
+              if actual != expected:
+                  raise SystemExit(f'SOURCE_BLOB_MISMATCH {path}: {actual} != {expected}')
+              print(f'SOURCE_BLOB_PASS {path} {actual}')
+          PY
+      - name: Full exact A6 and preserved regressions
+        env:
+          CONFIGURED_GODOT: ${{ vars.DWS_GODOT_DOUBLE_BIN_LINUX }}
+        run: |
+          set -euo pipefail
+          godot="${CONFIGURED_GODOT:-$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64}"
+          test -x "$godot"
+          python3 validation/ecology/evo_arch2_a6/verify.py \
+            --godot "$godot" \
+            --head 993271eb46880b77f0e7584f931131d4bd0a5125 \
+            --tree adce0899b348d6e8b359d732972af0ca5579c742
+      - name: Observe current main control without promoting research
+        run: |
+          set -euo pipefail
+          candidate="$PWD"
+          control="$RUNNER_TEMP/a6-control-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          main="$(git rev-parse refs/remotes/origin/main)"
+          mkdir -p artifacts/a6/control
+          git worktree add --detach "$control" "$main"
+          export A6_CONTROL_ROOT="$control" A6_CONTROL_OUT="$candidate/artifacts/a6/control" A6_CONTROL_MAIN="$main"
+          python3 - <<'PY'
+          import json, os, pathlib, platform, shutil, subprocess
+          root = pathlib.Path(os.environ['A6_CONTROL_ROOT'])
+          out = pathlib.Path(os.environ['A6_CONTROL_OUT'])
+          report = {'main_at_verification': os.environ['A6_CONTROL_MAIN'], 'main_at_dispatch': '127c732a56cc5c25d5712f24a7627ed4bb877374', 'platform': platform.platform(), 'python': platform.python_version(), 'a6_authority': 'ISOLATED_RESEARCH_ONLY', 'global_green_inferred': False, 'audits': []}
+          for name, script, args, artifact in [
+              ('standard', 'project_control.py', ['--no-fetch', '--no-fail-on-red'], 'project-control-report.json'),
+              ('directional', 'project_control_directional_watch.py', ['--no-fail-on-red'], 'directional-watch-report.json')]:
+              with (out / (name + '.log')).open('wb') as log:
+                  result = subprocess.run(['python3', str(root / 'scripts/control' / script), *args], cwd=root, stdout=log, stderr=subprocess.STDOUT, timeout=180)
+              item = {'name': name, 'exit_code': result.returncode, 'overall_health': 'UNAVAILABLE'}
+              source = root / 'artifacts/control' / artifact
+              if source.exists():
+                  shutil.copyfile(source, out / artifact)
+                  item['overall_health'] = json.loads(source.read_text()).get('overall_health', 'UNAVAILABLE')
+              report['audits'].append(item)
+          (out / 'control-observation.json').write_text(json.dumps(report, indent=2) + '\n')
+          print(json.dumps(report, indent=2))
+          PY
+          git worktree remove "$control"
+      - name: Upload exact evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: a6-exact-993271eb
+          path: |
+            artifacts/a6/exact/
+            artifacts/a6/restart/
+            artifacts/a6/control/
+          if-no-files-found: warn
+          retention-days: 30
