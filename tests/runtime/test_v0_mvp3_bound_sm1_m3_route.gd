@@ -216,6 +216,10 @@ func _run() -> void:
 	check(source.get_player("b").get("last_input_sequence") == 2, "B input sequence remains intact")
 	check(registry.get_report().get("counters", {}).get("rebinds", -1) == 0, "no P6 identity rebind occurred")
 	evidence.merge({"assertions": assertions, "failures": failures, "diagnostic_status": "BOUND_ROUTE_AND_STAGING_GAP_REPRODUCED" if failures.is_empty() else "DIAGNOSTIC_FAILED", "initial": initial, "final": source.create_snapshot(), "target_snapshot": target.create_snapshot(), "a_route_result": routed_a, "b_route_result": routed_b, "a_frozen_route": frozen_route, "a_frozen_handler": frozen_handler, "b_during_a_freeze": b_during, "conflicting_replay": conflict_result, "carry_prepare": prepared, "warm_evidence": warm, "target_readiness": target_ready, "restart_restore_attempt": restore_attempt, "final_coordinator": coordinator_a.snapshot(), "client_route_before": identity, "client_route_after": pivot_a.get_client_route_identity(), "alias_mapping": {"a": {"logical_player_id": "a", "player_entity_id": "player/a", "p6_logical_alias": "player/mvp3/a", "p6_entity_alias": "entity/mvp3/a"}, "b": {"logical_player_id": "b", "player_entity_id": "player/b", "p6_logical_alias": "player/mvp3/b", "p6_entity_alias": "entity/mvp3/b"}}, "scope": "TEST_ONLY_BOUND_PUBLIC_COMMAND_PORTS; DOES_NOT_PROVE_M3_FIXED_TICK_OR_PROCESS_NETWORK_INTEGRATION"})
+	# Fixture owns both directions of the route -> handler -> route relation.
+	# Break those RefCounted cycles before exit; error scanning stays enabled.
+	for handler in [handler_a, handler_b, target_a]:
+		handler.p6_route = null
 	source.shutdown()
 	target.shutdown()
 	var saved: Dictionary = AtomicJson.write_dictionary(OS.get_environment("DWS_MVP3_BOUND_OUTPUT"), evidence)
