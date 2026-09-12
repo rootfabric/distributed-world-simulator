@@ -74,7 +74,10 @@ func _reproduction_requires_paid_maintenance_history() -> void:
 	var state: Dictionary = result.population[0].state
 	_check(LS.validate(state, blueprint).is_empty(), "maintenance_paid_reproduction_state_valid")
 	_check(state.reproduction_count == 1, "maintenance_paid_reproduction_count_one")
-	_check(state.resource_ledger.maintenance.water_mg == policy.metabolism.maintenance_water_per_module_mg and state.resource_ledger.maintenance.energy_mj == policy.metabolism.maintenance_energy_per_module_mj, "first_event_paid_root_maintenance_exact")
+	# RM34 atomically charges birth maintenance for the newly committed reproductive
+	# module. The first reproduction tick therefore contains one root payment plus
+	# one birth payment for that module.
+	_check(state.resource_ledger.maintenance.water_mg == 2 * policy.metabolism.maintenance_water_per_module_mg and state.resource_ledger.maintenance.energy_mj == 2 * policy.metabolism.maintenance_energy_per_module_mj, "first_event_root_plus_birth_maintenance_exact")
 
 	var energy_tamper: Dictionary = state.duplicate(true)
 	energy_tamper.resource_ledger.maintenance.energy_mj -= 1
