@@ -140,7 +140,7 @@ static func _advance_individual(source: Dictionary, blueprint: Dictionary, sampl
 	var activation := _growth_activation(sample, policy)
 	var grant := B.stock()
 	if maintenance_paid and activation > 0:
-		var resuming_open_frame := not state.development.frame.is_empty()
+		var resuming_open_frame: bool = not state.development.frame.is_empty()
 		if not resuming_open_frame:
 			grant = _growth_grant(state.metabolic_reserves, policy, activation, state.development)
 		else:
