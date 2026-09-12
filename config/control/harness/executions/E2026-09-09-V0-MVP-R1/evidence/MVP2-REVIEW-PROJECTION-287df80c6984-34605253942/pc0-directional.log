@@ -1,0 +1,8 @@
+
+PC0 Directional Watch
+Registry: 82
+Overall:  YELLOW
+  YELLOW CH -> NX WATCH_HIT BLOCK: 4 path(s)
+  YELLOW NX -> ECO WATCH_HIT ADVISORY: 1 path(s)
+  YELLOW NX -> T WATCH_HIT BLOCK: 1 path(s)
+Report: /home/runner/work/distributed-world-simulator/distributed-world-simulator/artifacts/control/DIRECTIONAL_WATCH_STATUS_RU.md
