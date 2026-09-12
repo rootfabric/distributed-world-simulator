@@ -1,0 +1,20 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-09-09-V0-MVP-R1-V0-MVP-R1-WO-001-0003",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "sequence": 3,
+  "event_type": "RECOVERY_RESUMED",
+  "work_state": "DISPATCHED",
+  "recorded_at_utc": "2026-09-10T11:18:10Z",
+  "actor": "INTEGRATOR",
+  "branch": "feature/v0-mvp-playable-seamless-planet-r1",
+  "head_sha": "127c732a56cc5c25d5712f24a7627ed4bb877374",
+  "predicate": "MVP_ACT0_POST_MERGE_EPOCH_AUDIT_NON_RED",
+  "command": "MVP_ACT0_POST_MERGE_EPOCH_AUDIT",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/audits/ACT0-POST-MERGE-AUDIT-127C732A-R1.v1.json"
+  ],
+  "summary": "Exact canonical-main post-merge audit is NON_RED. Resume the already-dispatched bounded MVP Work Order without claiming any product predicate, runtime implementation, runtime merge, or MVP acceptance."
+}

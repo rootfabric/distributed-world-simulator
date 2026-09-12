@@ -1,0 +1,22 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-09-09-V0-MVP-R1-V0-MVP-R1-WO-001-0006-MVP1-SHARED-GRAPHICAL-SCENE-VERIFIED",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "sequence": 6,
+  "event_type": "PREDICATE_VERIFIED",
+  "work_state": "IN_PROGRESS",
+  "recorded_at_utc": "2026-09-11T10:28:00Z",
+  "actor": "VERIFIER",
+  "branch": "feature/v0-mvp-playable-seamless-planet-r1",
+  "head_sha": "3973df7e53cbc9864c64448f26641a51f2a20465",
+  "predicate": "MVP_SHARED_GRAPHICAL_SCENE",
+  "command": "MVP1_FROZEN_WINDOWS_REVIEW_PASS_PLUS_NATIVE_EVIDENCE_PLUS_R13_NONTERMINAL_CLOSURE",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/reviews/MVP1-WINDOWS-INDEPENDENT-REVIEW-3973DF7E-R1.v1.json",
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence/MVP1-NATIVE-3973df7e53cb/manifest.v1.json",
+    "docs/control/mvp-act0-r1/work-order-nonterminal-predicate-r13.v1.json"
+  ],
+  "summary": "Fresh Windows independent review PASS plus digest-bound native evidence verifies only MVP_SHARED_GRAPHICAL_SCENE on frozen runtime 3973df7e. R13 keeps this leaf closure non-terminal: parent V0-MVP-R1-WO-001 remains IN_PROGRESS, sibling MVP predicates remain unproven, runtime merge and whole-MVP acceptance remain unauthorized."
+}

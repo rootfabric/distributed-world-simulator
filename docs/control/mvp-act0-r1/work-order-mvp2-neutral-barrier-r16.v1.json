@@ -1,0 +1,59 @@
+{
+  "schema": "distributed_world_simulator.bounded_repair_work_order.v1",
+  "repair_id": "V0-MVP2-R16-NEUTRAL-BARRIER-AND-FIXTURE-DISCOVERY",
+  "parent_work_order_id": "V0-MVP-R1-WO-001",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "base_sha": "b0368444d12919218cb2638cdff90b1006e0c531",
+  "base_tree": "d484c45f2726b16a9091e113254b7f01284b3489",
+  "role": "IMPLEMENTER",
+  "independent_context": false,
+  "runtime_mutation": false,
+  "scope": "Только оркестратор/fixture/тесты MVP2. Не менять игровой ввод, сетевую доставку, движение и пороги проверки независимости игроков.",
+  "allowed_paths": [
+    "docs/control/mvp-act0-r1/validate_mvp2.py",
+    "tests/integration/test_v0_mvp_two_client_evidence.py",
+    "tests/integration/test_v0_mvp_two_client_process.gd",
+    "tests/fixtures/v0_mvp/two_client_process.gd",
+    "docs/control/mvp-act0-r1/work-order-mvp2-neutral-barrier-r16.v1.json"
+  ],
+  "forbidden_paths": [
+    "scripts/**", "scenes/**", "RUN_WORLD_REGRESSION_TESTS.ps1",
+    "config/control/harness/executions/**/events/**",
+    "config/control/harness/acceptance/**", "config/architecture/**"
+  ],
+  "trigger": {
+    "run_id": 34602623841,
+    "job_id": 103273359904,
+    "artifact_id": 10265450474,
+    "artifact_zip_sha256": "ad88047c9c660adc450fdb50b93578176790d51cd89836f98ff7eae79efae73e",
+    "artifact_rehashed_locally": true,
+    "member_digest_mismatches": 0,
+    "failure": "RuntimeError:FOREIGN_PLAYER_MOVED:b",
+    "prior_gates": "317 Harness tests OK; PC0 NON_RED; import and MVP1 focused PASS; MVP2 focused 27 assertions PASS"
+  },
+  "repair_map": [
+    {
+      "owner": "MVP2 workload orchestration",
+      "cause": "The after-a witness is shared but not stopped: A input_active=false and client input_sequence=10, while all authoritative replicas still acknowledge 8 and velocity.x=6. The next b phase overlaps A's pending neutral input. A advances x=-2.8000000000000025 to -2.300000000000002 before ack10/velocity0; this is the recorded 0.5m false foreign-motion comparison.",
+      "fix": "Wait for neutral fixture acknowledgement, then require authoritative acknowledgement of that exact final input sequence, input inactive and zero planar velocity for both clients before recording a phase boundary. Preserve the original foreign-motion threshold and state-equality checks.",
+      "negative_controls": "Same replicated state while still moving, stale neutral acknowledgement, and input still active must all fail the new boundary predicate."
+    },
+    {
+      "owner": "MVP2 process fixture location",
+      "cause": "World/core discovers every tests/**/test_*.gd except fixtures directories. The orchestration-only integration driver requires environment parameters and cannot be a standalone regression entrypoint.",
+      "fix": "Move unchanged driver bytes to tests/fixtures/v0_mvp/two_client_process.gd and update its caller. Keep the real focused Godot test in standalone discovery; do not change the world runner.",
+      "negative_controls": "Assert the helper path is excluded by the actual existing fixtures rule while the focused test remains discoverable."
+    }
+  ],
+  "acceptance": [
+    "fresh exact run with full Harness and strict PC0",
+    "unchanged MVP2 runtime and event history",
+    "server and both graphical clients converge after each acknowledged neutral boundary",
+    "unchanged foreign-player movement threshold",
+    "existing one-client, hidden-remote, forged-state and wrong-session falsifiers retained"
+  ],
+  "self_acceptance_authorized": false,
+  "predicate_verified_authorized": false,
+  "merge_authorized": false,
+  "issued_at_utc": "2026-09-11T13:16:31Z"
+}
