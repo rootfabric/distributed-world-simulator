@@ -105,8 +105,9 @@ run_gate import timeout --kill-after=10s 180s "$GODOT_BIN" --headless --editor -
 run_gate g2_bond_id timeout --kill-after=10s 120s "$GODOT_BIN" --headless --path "$ROOT" --script res://tests/research/fabric1/fabric_holdout_r4_g2_bond_id_acceptance.gd
 run_gate g2_transport timeout --kill-after=10s 120s "$GODOT_BIN" --headless --path "$ROOT" --script res://tests/research/fabric1/fabric_holdout_r4_g2_transport_acceptance.gd
 run_gate g2 timeout --kill-after=10s 300s "$GODOT_BIN" --headless --path "$ROOT" --script res://tests/research/fabric1/fabric_holdout_r4_g2_acceptance.gd
+run_gate g2_signed_effort timeout --kill-after=10s 120s "$GODOT_BIN" --headless --path "$ROOT" --script res://tests/research/fabric1/fabric_holdout_r4_g2_signed_effort_acceptance.gd
 run_gate r3 timeout --kill-after=10s 300s bash RUN_FABRIC_COMPOSITION_R3_TESTS.sh
 run_gate r2 timeout --kill-after=10s 300s bash RUN_FABRIC_PHYSICS_R2_TESTS.sh
 run_gate r1 timeout --kill-after=10s 300s bash RUN_FABRIC_REPAIR_R1_TESTS.sh
 [[ -z "$(git status --porcelain=v1 --untracked-files=no)" ]]
-printf 'G2_BOND_ID=PASS\nG2_TRANSPORT=PASS\nG2_TARGETED=PASS\nR3=PASS\nR2=PASS\nR1=PASS\nG1_HISTORY=PRESERVED_FAIL\n' > "$OUT/summary.txt"
+printf 'G2_BOND_ID=PASS\nG2_TRANSPORT=PASS\nG2_TARGETED=PASS\nG2_SIGNED_EFFORT=PASS\nR3=PASS\nR2=PASS\nR1=PASS\nG1_HISTORY=PRESERVED_FAIL\n' > "$OUT/summary.txt"

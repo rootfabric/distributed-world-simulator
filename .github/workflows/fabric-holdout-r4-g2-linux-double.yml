@@ -9,6 +9,7 @@ on:
       - scripts/research/fabric_bake0/fabric_composition_r3_*general*.gd
       - scripts/research/fabric_bake0/fabric_composition_r3_compiler_v1.gd
       - scripts/research/fabric_bake0/fabric_composition_r3_runtime_v1.gd
+      - scripts/research/fabric_bake0/fabric_composition_r3_canonical_bridge_v1.gd
       - config/research/fabric-holdout-r4-cases.json
       - config/research/fabric-holdout-r4-provenance.json
       - scripts/research/fabric_holdout_r4/holdout.py

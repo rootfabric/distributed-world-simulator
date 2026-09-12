@@ -62,12 +62,15 @@ static func system(model: Dictionary, fidelity: String, values: Dictionary = {},
 		var xb := D.expr_state("x_%d" % b_index) if b_index >= 0 else D.expr_constant(0.0, D.dim_length())
 		var va := D.expr_state("v_%d" % a_index) if a_index >= 0 else D.expr_constant(0.0, D.dim_velocity())
 		var vb := D.expr_state("v_%d" % b_index) if b_index >= 0 else D.expr_constant(0.0, D.dim_velocity())
-		var dx := D.expr_sub(xb, xa)
-		var dv := D.expr_sub(vb, va)
-		var effort := D.expr_add(D.expr_mul(D.expr_parameter("k_%d" % edge_index), dx), D.expr_mul(D.expr_parameter("c_%d" % edge_index), dv))
+		# G2-B signed effort convention is node_a -> node_b:
+		# effort = k*(q_a-q_b) + c*(v_a-v_b). Keep the physical internal
+		# force identical by applying -effort to a and +effort to b.
+		var dq := D.expr_sub(xa, xb)
+		var dv := D.expr_sub(va, vb)
+		var effort := D.expr_add(D.expr_mul(D.expr_parameter("k_%d" % edge_index), dq), D.expr_mul(D.expr_parameter("c_%d" % edge_index), dv))
 		effort_expressions[str(element.element_id)] = effort
-		if a_index >= 0: forces[a_index] = D.expr_add(forces[a_index], effort)
-		if b_index >= 0: forces[b_index] = D.expr_sub(forces[b_index], effort)
+		if a_index >= 0: forces[a_index] = D.expr_sub(forces[a_index], effort)
+		if b_index >= 0: forces[b_index] = D.expr_add(forces[b_index], effort)
 		damper_power = D.expr_add(damper_power, D.expr_mul(D.expr_parameter("c_%d" % edge_index), D.expr_pow_int(dv, 2)))
 	forces[coupler_index] = D.expr_add(forces[coupler_index], D.expr_add(D.expr_mul(D.expr_parameter("g"), current), D.expr_parameter("f")))
 	var flows := {}
@@ -126,13 +129,13 @@ static func observe(model: Dictionary, system_value: Dictionary, fidelity: Strin
 		var xb := float(system_value.states["x_%d" % b_index].value) if b_index >= 0 else 0.0
 		var va := float(system_value.states["v_%d" % a_index].value) if a_index >= 0 else 0.0
 		var vb := float(system_value.states["v_%d" % b_index].value) if b_index >= 0 else 0.0
-		var dx := xb - xa
-		var dv := vb - va
-		var effort := (float(element.stiffness_n_per_m) * dx + float(element.damping_ns_per_m) * dv) if element.active else 0.0
+		var dq := xa - xb
+		var dv := va - vb
+		var effort := (float(element.stiffness_n_per_m) * dq + float(element.damping_ns_per_m) * dv) if element.active else 0.0
 		var bond_id := str(element.element_id)
 		efforts[bond_id] = effort
 		if element.active:
-			elastic += 0.5 * float(element.stiffness_n_per_m) * dx * dx
+			elastic += 0.5 * float(element.stiffness_n_per_m) * dq * dq
 			utilization = maxf(utilization, absf(effort) / float(element.capacity_n))
 		supports.append({"bond_id": bond_id, "active": element.active, "effort_n": effort, "capacity_n": element.capacity_n})
 	var source_work := float(system_value.states.source_work.value)
