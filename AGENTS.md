@@ -12,6 +12,7 @@ HARNESS_CONTROL.md
 docs/control/DEVELOPMENT_HARNESS_RU.md
 docs/control/HARNESS_REVIEW_AND_EVIDENCE_RU.md
 docs/control/HARNESS_AUTONOMOUS_EXECUTION_RU.md
+docs/control/HARNESS_CHANNEL_RECOVERY_RU.md
 config/control/project-program-registry.v1.json
 config/control/harness/project-goals.v1.json
 config/control/harness/checkpoint-catalog.v1.json
@@ -26,6 +27,10 @@ MAIN DECLARES PROJECT STATE
 BRANCHES REPORT EXECUTION FACTS
 HARNESS MOVES ONLY BETWEEN DECLARED CHECKPOINTS
 GIT IS DURABLE MEMORY; CHAT IS NOT
+EPHEMERAL TOOL HANDLES ARE CACHE; DURABLE LOCATORS ARE AUTHORITY
+TOOL / TRANSPORT / SESSION FAILURE IS NOT A MISSION TERMINAL
+EXECUTOR-LOCAL NETWORK FAILURE IS A ROUTE FAILURE, NOT A PROJECT BLOCK
+RECOVER FROM EXACT SHA / DURABLE LOCATOR, NOT FROM STALE RESOURCE IDS
 IMPLEMENTER CANNOT SELF-ACCEPT
 CHECKPOINT IS THE UNIT OF CONTROL
 CHECKPOINT MISSION IS THE USER SESSION UNIT
@@ -67,6 +72,10 @@ For every checkpoint mission:
 16. Execute all available mechanical work yourself before handoff: local/VM tests, clean exact checkout, repository-owned CI, artifact/log collection, scoped repair/retest and append-only evidence publication. These are routine A0-A3 operations.
 17. If a preferred executor (including a Codex Cloud environment) is unavailable, follow `HARNESS_AUTONOMOUS_EXECUTION_RU.md` and try the next allowed executor. Do not declare `HARD_BLOCKED` until all allowed automated fallbacks and scope-preserving recovery are exhausted and durably proven.
 18. Keep role independence separate from machine ownership: Implementer may produce exact machine evidence but cannot issue its own independent verdict. A fresh Reviewer/Verifier may consume trusted exact-head evidence without a separate VM rerun unless the Work Order/risk contract explicitly requires independent execution.
+19. Treat `ResourceNotReadable`, `Resource not found`, expired result handles and similar tool-resource failures as ephemeral cache loss. Discard the stale handle, refetch by durable repository/ref/path/run/artifact locator, verify exact subject identity and resume from the last durable predicate.
+20. Treat `Could not resolve host`, ad-hoc clone failure, download security rejection and equivalent executor-local network/transport failures as route failures. Do not infer GitHub/project outage and do not repeat the same failed route; switch to the GitHub connector, an existing exact checkout, repository-owned CI or the next allowed executor.
+21. Before a long/high-fanout tool phase, ensure a durable resume anchor exists (exact subject, last completed predicate, next action, recovery route). After any substantial channel failure, re-anchor the exact HEAD/subject before continuing; stale resource ids never cross a recovery boundary.
+22. Never end a non-terminal checkpoint mission merely because the current tool/session channel became unreliable. Follow `HARNESS_CHANNEL_RECOVERY_RU.md`, fail forward from durable Git state, and only stop at `MISSION_COMPLETE`, genuine `HUMAN_DECISION_REQUIRED`, or fully proven `HARD_BLOCKED`.
 
 ## Checkpoint-session control surface
 
