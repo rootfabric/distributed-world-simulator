@@ -1,0 +1,15 @@
+{
+  "schema": "dws.ecology.a6-tested-source-blobs.v1",
+  "local_tested_head": "47f943440978bd9dc9facce82596398de05fec21",
+  "local_tested_tree": "337055004191fa932e1591d15dd8241b8ce138a8",
+  "note": "Local isolated prepublication subject, not the remote final commit. Final exact verifier must check the published subject separately.",
+  "blobs": {
+    "scripts/research/ecology/v2/persistent_environmental_feedback_v1.gd": "7d8ea2a2e2602b81923a0dde52a6c5a425a8274b",
+    "tests/research/ecology/v2/arch2_a6_adversarial.gd": "95e41c7768b1d6b60121e12bd320ea5bb2fbba3f",
+    "tests/research/ecology/v2/arch2_a6_exact_acceptance.gd": "02e6f34ca6672dff81a575978d4ff74f88393211",
+    "tests/research/ecology/v2/arch2_a6_fixtures.gd": "edd452a9ccca01d47e4c56952fd3c4bccef9f5c7",
+    "tests/research/ecology/v2/arch2_a6_lineage_energy.gd": "0cc472d6c7d6b0c4aa8e6f98f29afd5791083aef",
+    "tests/research/ecology/v2/arch2_a6_restart.gd": "e96a9ef7276c87df0164b315c3e6c7e719e0d0ba",
+    "validation/ecology/evo_arch2_a6/verify.py": "99d1288d31e7dbeec0909e96924adade471015d3"
+  }
+}
