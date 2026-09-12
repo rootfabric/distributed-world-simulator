@@ -47,7 +47,7 @@ jobs:
           repository: rootfabric/distributed-world-simulator
           github-token: ${{ github.token }}
           path: ${{ runner.temp }}/mvp3-engine
-      - name: Exercise real canonical APIs and accepted carrying route
+      - name: Exercise real canonical APIs and commit-aware carrying route
         shell: bash
         run: |
           set -euo pipefail
@@ -66,7 +66,7 @@ jobs:
               ('import', ['--editor', '--import', '--quit'], 120),
               ('restart-diagnostic', ['--script', 'res://tests/runtime/test_v0_mvp3_canonical_binding_preflight.gd'], 45),
               ('accepted-sm1-regression', ['--script', 'res://tests/network/test_v0_sm1_player_carry_and_gateway_pivot.gd'], 45),
-              ('bound-route-diagnostic', ['--script', 'res://tests/runtime/test_v0_mvp3_bound_sm1_m3_route.gd'], 45),
+              ('bound-route-diagnostic', ['--script', 'res://tests/runtime/test_v0_mvp3_bound_sm1_m3_completion.gd'], 45),
           ]:
               argv = [os.environ['DIAGNOSTIC_ENGINE'], '--headless', '--path', '.'] + arguments
               timed_out = False
@@ -89,8 +89,13 @@ jobs:
               assert r['subject_tree'] == os.environ['EXPECTED_TREE']
               assert r['diagnostic_status'] == status and not r['failures']
               assert r['mvp3_predicate_verified'] is False
+              if name == 'bound-report.json':
+                  negative = r['handler_rejection_control']
+                  assert negative['rejection']['error_code'] == 'MVP3_CANONICAL_COMMIT_NOT_PROVEN'
+                  assert negative['canonical_state_unchanged'] is True
+                  assert negative['p6_or_m3_production_changed'] is False
           assert not subprocess.check_output(['git','status','--porcelain','--untracked-files=no'], text=True).strip()
-          print('BOUND_PUBLIC_ROUTE_EXERCISED; TARGET_STAGING_GAP_REPRODUCED; MVP3_PRODUCT_ACCEPTANCE=false')
+          print('BOUND_PUBLIC_ROUTE_EXERCISED; CANONICAL_REJECTION_NOT_APPLIED; TARGET_STAGING_GAP_REPRODUCED; MVP3_PRODUCT_ACCEPTANCE=false')
           PY
       - name: Preserve exact diagnostic provenance
         if: always()
