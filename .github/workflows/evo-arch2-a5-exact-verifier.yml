@@ -25,15 +25,15 @@ jobs:
       - name: Checkout exact candidate
         uses: actions/checkout@v4
         with:
-          ref: fb99670131c4522280833966b07143eb1ff2b653
+          ref: ee93ae9d745fdcbe9b35360e83e510f34018c3b7
           fetch-depth: 0
           persist-credentials: false
 
       - name: Assert exact subject and bounded scope
         run: |
           set -euo pipefail
-          subject="fb99670131c4522280833966b07143eb1ff2b653"
-          tree="6c96b83527e44abc38fb83d19d78826a280f62e3"
+          subject="ee93ae9d745fdcbe9b35360e83e510f34018c3b7"
+          tree="c001ed0a84ee3b841a7eda3f99faed0dc9461a8b"
           base="4b0f772ff39592262b853f7293bbd5403558b145"
           test "$(git rev-parse HEAD)" = "$subject"
           test "$(git rev-parse HEAD^{tree})" = "$tree"
@@ -172,9 +172,9 @@ jobs:
       - name: Assert candidate stayed exact
         run: |
           set -euo pipefail
-          test "$(git rev-parse HEAD)" = "fb99670131c4522280833966b07143eb1ff2b653"
-          test "$(git rev-parse HEAD^{tree})" = "6c96b83527e44abc38fb83d19d78826a280f62e3"
+          test "$(git rev-parse HEAD)" = "ee93ae9d745fdcbe9b35360e83e510f34018c3b7"
+          test "$(git rev-parse HEAD^{tree})" = "c001ed0a84ee3b841a7eda3f99faed0dc9461a8b"
           test -z "$(git status --porcelain --untracked-files=no)"
-          echo "SUBJECT_HEAD=fb99670131c4522280833966b07143eb1ff2b653"
-          echo "SUBJECT_TREE=6c96b83527e44abc38fb83d19d78826a280f62e3"
+          echo "SUBJECT_HEAD=ee93ae9d745fdcbe9b35360e83e510f34018c3b7"
+          echo "SUBJECT_TREE=c001ed0a84ee3b841a7eda3f99faed0dc9461a8b"
           echo "VERDICT=PASS"
