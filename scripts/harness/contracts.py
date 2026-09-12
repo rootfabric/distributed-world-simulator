@@ -334,4 +334,4 @@ class ContractBundle:
                 f"{'.'.join(str(part) for part in error.absolute_path) or '$'}:{error.message}"
                 for error in errors[:3]
             )
-            raise ContractValidationError(f"SCHEMA_INVALID:{label}:{detail}") from exc
+            raise ContractValidationError(f"SCHEMA_INVALID:{label}:{detail}")
