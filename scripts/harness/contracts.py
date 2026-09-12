@@ -3,10 +3,18 @@ from __future__ import annotations
 
 import importlib.metadata
 import json
+import re
+import subprocess
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
+
+# Last canonical main before channel recovery was introduced. Legacy replay must
+# prove ancestry to this immutable commit AND match its actual source snapshot.
+# Missing fields, a caller-supplied generation number, or a copied old policy are
+# not provenance. This fence is not an authority/dispatch override.
+_CHANNEL_RECOVERY_LEGACY_CUTOFF = "127c732a56cc5c25d5712f24a7627ed4bb877374"
 
 
 class ContractValidationError(ValueError):
@@ -48,41 +56,108 @@ def read_json(path: Path) -> dict[str, Any]:
     return value
 
 
+def _contract_paths(policy: dict[str, Any]) -> dict[str, str]:
+    paths = {
+        "harness_policy": "config/control/harness/harness-policy.v1.json",
+        "project_registry": "config/control/project-program-registry.v1.json",
+    }
+    for name in (
+        "project_goals", "checkpoint_catalog", "scheduler_policy",
+        "work_order_schema", "event_schema", "project_epoch_schema",
+        "risk_policy", "review_policy", "repair_doctrine",
+        "evidence_map_schema", "human_attention_schema", "continuation_policy",
+    ):
+        paths[name] = policy[name]
+    return paths
+
+
+def _legacy_git(root: Path, *args: str) -> str:
+    """Read existing local Git objects only; never fetch or trust replace refs."""
+    try:
+        return subprocess.check_output(
+            ["git", "--no-replace-objects", *args], cwd=root, text=True,
+            encoding="utf-8", stderr=subprocess.PIPE, timeout=10,
+        ).strip()
+    except (OSError, UnicodeError, subprocess.SubprocessError) as exc:
+        raise ContractValidationError("CHANNEL_RECOVERY_LEGACY_PROVENANCE_INVALID") from exc
+
+
 @dataclass(frozen=True)
 class ContractBundle:
     root: Path
     contracts: dict[str, dict[str, Any]]
+    # An explicit historical source is a claim, not proof. The legacy path below
+    # verifies its immutable ancestry and every contract against local Git.
+    source_commit: str | None = None
 
     @classmethod
     def load(
-        cls, root: Path, *, reader: Callable[[Path], dict[str, Any]] = read_json
+        cls, root: Path, *, reader: Callable[[Path], dict[str, Any]] = read_json,
+        source_commit: str | None = None,
     ) -> "ContractBundle":
-        """Load one source snapshot; callers may provide a pinned Git reader."""
-        harness_root = root / "config" / "control" / "harness"
-        policy_path = harness_root / "harness-policy.v1.json"
+        """Load one snapshot; a pinned Git reader must declare its source commit."""
+        policy_path = root / "config/control/harness/harness-policy.v1.json"
         policy = reader(policy_path)
-        required = {
-            "harness_policy": "config/control/harness/harness-policy.v1.json",
-            "project_registry": "config/control/project-program-registry.v1.json",
-            "project_goals": policy["project_goals"],
-            "checkpoint_catalog": policy["checkpoint_catalog"],
-            "scheduler_policy": policy["scheduler_policy"],
-            "work_order_schema": policy["work_order_schema"],
-            "event_schema": policy["event_schema"],
-            "project_epoch_schema": policy["project_epoch_schema"],
-            "risk_policy": policy["risk_policy"],
-            "review_policy": policy["review_policy"],
-            "repair_doctrine": policy["repair_doctrine"],
-            "evidence_map_schema": policy["evidence_map_schema"],
-            "human_attention_schema": policy["human_attention_schema"],
-            "continuation_policy": policy["continuation_policy"],
-        }
         contracts = {
-            name: reader(root / relative) for name, relative in required.items()
+            name: reader(root / relative)
+            for name, relative in _contract_paths(policy).items()
         }
-        bundle = cls(root=root, contracts=contracts)
+        if (
+            policy.get("execution_channel_recovery_revision") is None
+            and source_commit is None and reader is read_json
+        ):
+            # A real old checkout may replay, but stripped current worktree data
+            # cannot claim an old HEAD. No inference is made for arbitrary readers.
+            source_commit = _legacy_git(root, "rev-parse", "--verify", "HEAD^{commit}")
+        bundle = cls(root=root, contracts=contracts, source_commit=source_commit)
         bundle.validate_integrity()
         return bundle
+
+    def _validate_legacy_channel_snapshot(self) -> None:
+        source = self.source_commit
+        if not isinstance(source, str) or not re.fullmatch(r"[0-9a-f]{40}", source):
+            raise ContractValidationError("CHANNEL_RECOVERY_LEGACY_PROVENANCE_REQUIRED")
+        _legacy_git(
+            self.root, "merge-base", "--is-ancestor", source,
+            _CHANNEL_RECOVERY_LEGACY_CUTOFF,
+        )
+
+        def read_pinned(relative: str) -> dict[str, Any]:
+            def unique(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+                result: dict[str, Any] = {}
+                for key, value in pairs:
+                    if key in result:
+                        raise ContractValidationError("CHANNEL_RECOVERY_LEGACY_SNAPSHOT_INVALID")
+                    result[key] = value
+                return result
+
+            try:
+                value = json.loads(
+                    _legacy_git(self.root, "show", f"{source}:{relative}"),
+                    object_pairs_hook=unique,
+                )
+            except (ValueError, TypeError) as exc:
+                raise ContractValidationError("CHANNEL_RECOVERY_LEGACY_SNAPSHOT_INVALID") from exc
+            if not isinstance(value, dict):
+                raise ContractValidationError("CHANNEL_RECOVERY_LEGACY_SNAPSHOT_INVALID")
+            return value
+
+        pinned_policy = read_pinned("config/control/harness/harness-policy.v1.json")
+        paths = _contract_paths(pinned_policy)
+        if set(self.contracts) != set(paths):
+            raise ContractValidationError("CHANNEL_RECOVERY_LEGACY_SNAPSHOT_MISMATCH:members")
+        for name, relative in paths.items():
+            expected = pinned_policy if name == "harness_policy" else read_pinned(relative)
+            # JSON serialization preserves bool/int distinctions that Python dict
+            # equality would erase. Compare the complete parsed snapshot, not just
+            # the two policy files or a mutable registry generation field.
+            try:
+                actual_json = json.dumps(self.contracts[name], sort_keys=True, allow_nan=False)
+                expected_json = json.dumps(expected, sort_keys=True, allow_nan=False)
+            except (ValueError, TypeError) as exc:
+                raise ContractValidationError("CHANNEL_RECOVERY_LEGACY_SNAPSHOT_INVALID") from exc
+            if actual_json != expected_json:
+                raise ContractValidationError(f"CHANNEL_RECOVERY_LEGACY_SNAPSHOT_MISMATCH:{name}")
 
     def validate_integrity(self) -> None:
         policy = self.contracts["harness_policy"]
@@ -158,7 +233,8 @@ class ContractBundle:
                 "hard_block_escalation_requires_autonomous_execution_proof": True,
             }
             for name, expected in expected_channel_values.items():
-                if channel_recovery.get(name) != expected:
+                actual = channel_recovery.get(name)
+                if type(actual) is not type(expected) or actual != expected:
                     raise ContractValidationError(
                         f"CHANNEL_RECOVERY_POLICY_INVALID:{name}"
                     )
@@ -212,6 +288,7 @@ class ContractBundle:
             }
             if (
                 not isinstance(forbidden_stop_reasons, list)
+                or any(not isinstance(item, str) for item in forbidden_stop_reasons)
                 or not required_forbidden_stop_reasons.issubset(set(forbidden_stop_reasons))
             ):
                 raise ContractValidationError("CHANNEL_FORBIDDEN_STOP_REASONS_INVALID")
@@ -229,8 +306,26 @@ class ContractBundle:
                 long_chain.get(name) is not True for name in required_long_chain_flags
             ):
                 raise ContractValidationError("CHANNEL_LONG_TOOL_CHAIN_GUARD_INVALID")
+
+            required_anchor_fields = {
+                "EXACT_SUBJECT",
+                "LAST_COMPLETED_DURABLE_PREDICATE",
+                "KNOWN_FAILED_ROUTE_OR_FAILURE_SIGNATURE",
+                "NEXT_ACTION",
+                "ALLOWED_RECOVERY_ROUTE",
+            }
+            anchor_fields = channel_recovery.get("recovery_anchor_requires")
+            if (
+                not isinstance(anchor_fields, list)
+                or any(not isinstance(item, str) for item in anchor_fields)
+                or len(anchor_fields) != len(required_anchor_fields)
+                or set(anchor_fields) != required_anchor_fields
+            ):
+                raise ContractValidationError("CHANNEL_RECOVERY_ANCHOR_REQUIREMENTS_INVALID")
         elif observed_channel_revision is not None:
             raise ContractValidationError("CHANNEL_RECOVERY_UNDECLARED_BY_HARNESS_POLICY")
+        else:
+            self._validate_legacy_channel_snapshot()
 
         if policy.get("git_transport_policy_revision") != "H0-GIT-TRANSPORT-2026-09-05-R1":
             raise ContractValidationError("GIT_TRANSPORT_POLICY_REVISION_INVALID")

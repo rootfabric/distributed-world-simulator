@@ -174,3 +174,33 @@ EPHEMERAL CHANNEL MAY FAIL
 DURABLE PROJECT STATE MUST SURVIVE
 NON-TERMINAL MISSION MUST FAIL FORWARD
 ```
+
+## 10. Repair R1: совместимость без отключения защиты
+
+Основание: независимое review PR #607 на `78fb91cc1047461b2e333e6cdc293c692d6993f5`, замечания `3994885215` (P1) и `3994885224` (P2).
+
+```text
+IMMUTABLE_LEGACY_SNAPSHOT_REQUIRED
+MISSING REVISION IS NOT HISTORICAL PROVENANCE
+EMPTY ANCHOR REQUIREMENTS ARE INVALID
+```
+
+Отсутствие `execution_channel_recovery_revision` теперь допускается только при доказанном старом snapshot. `ContractBundle.source_commit` должен быть полным SHA существующего Git-коммита — предка либо самого `127c732a56cc5c25d5712f24a7627ed4bb877374`, последнего canonical main до появления этой защиты. Все контракты bundle, включая registry, scheduler, catalog, schemas и обе policies, сравниваются с содержимым именно этого коммита. Сравнение полного parsed JSON сохраняет различие boolean и integer; совпадение одного номера generation недостаточно. Git replace refs не участвуют в этой проверке.
+
+Обычный файловый loader старого checkout проверяет его настоящий `HEAD`. Pinned reader обязан явно передать `source_commit`; canonical loader передаёт уже разрешённый exact canonical HEAD, а не берёт его из candidate policy. Произвольный dictionary без такой provenance не получает legacy-исключение. Новый коммит с удалёнными полями не может пройти ancestry fence. Это проверка совместимости чтения, а не разрешение использовать историческую mission как текущую: существующие canonical authority, epoch и dispatch guards остаются обязательными.
+
+Синтетические тестовые репозитории не объявляются историческими только потому, что в них скопированы старые поля. P7 routing fixture сохраняет старый product contract и ожидания `Drive`/`CloseMission`, но использует текущую Harness safety policy. Настоящий legacy replay отдельно проверяется по immutable commits `3d7672cba293d8e7bd72427b803f73fc8fcee5da` и `127c732a56cc5c25d5712f24a7627ed4bb877374`.
+
+В R1 `recovery_anchor_requires` должен содержать ровно пять уникальных строк (порядок несущественен):
+
+```text
+EXACT_SUBJECT
+LAST_COMPLETED_DURABLE_PREDICATE
+KNOWN_FAILED_ROUTE_OR_FAILURE_SIGNATURE
+NEXT_ACTION
+ALLOWED_RECOVERY_ROUTE
+```
+
+Удаление списка, пустой список, пропуск требования, дубль, неизвестное требование или неверный тип отклоняются с `CHANNEL_RECOVERY_ANCHOR_REQUIREMENTS_INVALID`. Замена boolean на `0`/`1` также не считается соблюдением policy. Изменение набора требований требует отдельного согласованного изменения контракта и validator, не молчаливого ослабления JSON.
+
+Проверка policy не является watchdog внешней платформы и не доказывает существование конкретного runtime resume anchor: его durable publication и identity verification остаются обязанностью исполнителя. Завершение отдельного ответа не означает приёмку mission; нельзя обещать автоматическое продолжение без реально запущенного разрешённого исполнителя. Явная отмена или остановка пользователем и ограничения безопасности сохраняют приоритет.

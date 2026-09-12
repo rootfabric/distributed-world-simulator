@@ -221,7 +221,8 @@ def project_overview(
 
 def _validate_canonical_product_snapshot(root: Path, head: str) -> None:
     bundle = ContractBundle.load(
-        root, reader=lambda path: read_control(root, path.relative_to(root).as_posix(), head)
+        root, source_commit=head,
+        reader=lambda path: read_control(root, path.relative_to(root).as_posix(), head)
     )
     bundle.validate_schema_definitions()
     report = project_overview(root, canonical_head=head, include_acceptance=False)

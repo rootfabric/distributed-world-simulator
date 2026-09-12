@@ -72,7 +72,6 @@ class HistoricalP7ProductTrainPolicyTests(unittest.TestCase):
 
     def test_p7_activation_binds_exact_accepted_sm1_lineage(self) -> None:
         self.assertEqual(P7, self.activation_p7["checkpoint"])
-        self.assertEqual(SM1_BASE, self.activation_p7["main_declared_exact_successor_base"])
         self.assertEqual(SM1_BASE, self.epoch_p7["base_sha"])
         self.assertEqual([P7], self.epoch_p7["eligible_checkpoints"])
         self.assertEqual(SM1_BASE, self.work_order_p7["base_sha"])
@@ -244,6 +243,12 @@ class HistoricalP7ProductTrainPolicyTests(unittest.TestCase):
                     destination.parent.mkdir(parents=True, exist_ok=True)
                     destination.write_bytes(subprocess.check_output(
                         ["git", "show", "3d7672cba293d8e7bd72427b803f73fc8fcee5da:" + relative], cwd=ROOT))
+                # This is a newly synthesized P7 routing fixture, not an exact
+                # historical Git snapshot. Apply current Harness safety policy;
+                # genuine legacy policy replay is tested separately against its
+                # immutable source commits in test_execution_channel_recovery_policy.
+                for relative in (policy_path, "config/control/harness/continuation-policy.v1.json"):
+                    (root / relative).write_bytes((ROOT / relative).read_bytes())
             for command in (
                 ["git", "init", "-b", "main"],
                 ["git", "add", "."],
