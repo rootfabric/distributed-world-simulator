@@ -1,0 +1,52 @@
+{
+  "schema": "distributed_world_simulator.mvp2_review_projection_boundary.v1",
+  "classification": "EVIDENCE_PUBLICATION_BOUNDARY_NOT_INDEPENDENT_VERDICT",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "predicate": "MVP_TWO_CLIENT_SHARED_WORLD",
+  "runtime_subject_head_sha": "287df80c69840fea7ae9ac0ea69a07581f192d34",
+  "runtime_subject_tree_sha": "e591dc6c5346139bc1b4659915c54bf80603713e",
+  "original_machine_evidence": {
+    "run_id": "34605253942",
+    "artifact_id": "10266940288",
+    "zip_size_bytes": 333581,
+    "zip_sha256": "850c2422884493c4bd8aeccc2e5dad286c7550610bf43397fe3722f05c746f1f",
+    "native_manifest_sha256": "885a15a7552918a67ada595796bb1e4cfe25fb77c68de5c896dac5cdaea4300f",
+    "indexed_members": 35,
+    "all_member_sha256_checks": "PASS",
+    "digest_mismatches": 0,
+    "unindexed_members": 0,
+    "full_raw_record_remains_authoritative": true
+  },
+  "formal_review_projection": {
+    "path": "config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence/MVP2-REVIEW-PROJECTION-287df80c6984-34605253942",
+    "manifest_sha256": "06638b1b4a111c0eef4cb2028c592ee3e0cfce18f2d9eb3a5922d52b4ec78c17",
+    "raw_members_reused_byte_exact": [
+      "result.json",
+      "mvp2-focused.log",
+      "evidence-consumer-tests.log",
+      "pc0-standard.log",
+      "pc0-directional.log",
+      "godot-version.log",
+      "mvp1-regression.log"
+    ],
+    "derived_files": ["manifest.v1.json"],
+    "runtime_reexecution": false,
+    "purpose": "Provide a repository-committed canonical REUSED evidence package accepted by the unchanged Harness provenance consumer without changing the frozen runtime subject."
+  },
+  "omitted_from_authorizing_projection": {
+    "members": ["a/viewport.png", "b/viewport.png"],
+    "reason": "The current GitHub connector route cannot safely import the large binary payload byte-for-byte. The images remain present and SHA256-bound in the complete original GitHub Actions artifact; they are visual corroboration, while semantic two-client visibility is independently represented by exact runtime observations and negative-control checks in the reused result and validator evidence.",
+    "acceptance_criterion_weakened": false,
+    "raw_evidence_lost": false
+  },
+  "guardrails": {
+    "runtime_branch_modified": false,
+    "freeze_ref_modified": false,
+    "historical_events_rewritten": false,
+    "independent_reviewer_verdict_issued_by_publisher": false,
+    "independent_verifier_verdict_issued_by_publisher": false,
+    "predicate_verified_by_publisher": false,
+    "whole_mvp_acceptance_authorized": false
+  }
+}
