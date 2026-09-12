@@ -6,6 +6,9 @@ on:
 permissions:
   contents: read
   actions: read
+concurrency:
+  group: mvp3-binding-diagnostic-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   diagnose-owner-ports:
     if: >-
@@ -52,17 +55,31 @@ jobs:
           test "$(sha256sum "$engine" | cut -d' ' -f1)" = bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7
           chmod u+x "$engine"
           "$engine" --version | tee artifacts/mvp3-binding-preflight/engine.log
-          "$engine" --headless --path . --editor --import --quit > artifacts/mvp3-binding-preflight/import.log 2>&1
           export DWS_MVP3_PREFLIGHT_OUTPUT="$PWD/artifacts/mvp3-binding-preflight/report.json"
-          "$engine" --headless --path . --script res://tests/runtime/test_v0_mvp3_canonical_binding_preflight.gd > artifacts/mvp3-binding-preflight/diagnostic.log 2>&1
-          cat artifacts/mvp3-binding-preflight/diagnostic.log
+          export DIAGNOSTIC_ENGINE="$engine"
           python3 - <<'PY'
           import json, os, pathlib, re, subprocess
           out = pathlib.Path('artifacts/mvp3-binding-preflight')
-          for log in out.glob('*.log'):
-              text = log.read_text(encoding='utf-8', errors='replace')
-              if re.search(r'(?im)^\s*(?:SCRIPT ERROR|ERROR):|Parse Error|Compile Error', text):
-                  raise SystemExit('GODOT_ERROR:' + log.name)
+          commands = []
+          for name, arguments, deadline in [
+              ('import', ['--editor', '--import', '--quit'], 120),
+              ('diagnostic', ['--script', 'res://tests/runtime/test_v0_mvp3_canonical_binding_preflight.gd'], 45),
+          ]:
+              argv = [os.environ['DIAGNOSTIC_ENGINE'], '--headless', '--path', '.'] + arguments
+              timed_out = False
+              with (out / (name + '.log')).open('w') as log:
+                  try:
+                      completed = subprocess.run(argv, stdout=log, stderr=subprocess.STDOUT, timeout=deadline, check=False)
+                      code = completed.returncode
+                  except subprocess.TimeoutExpired:
+                      code, timed_out = None, True
+              commands.append({'argv':argv, 'exit_code':code, 'timeout':timed_out, 'deadline_seconds':deadline})
+              (out / 'commands.json').write_text(json.dumps(commands, indent=2) + '\n')
+              text = (out / (name + '.log')).read_text(encoding='utf-8', errors='replace')
+              if name == 'diagnostic' or code != 0:
+                  print(text[-12000:])
+              if timed_out or code != 0 or re.search(r'(?im)^\s*(?:SCRIPT ERROR|ERROR):|Parse Error|Compile Error', text):
+                  raise SystemExit('DIAGNOSTIC_COMMAND_FAILED:' + name)
           r = json.loads((out / 'report.json').read_text())
           assert r['subject_head'] == os.environ['EXPECTED_HEAD']
           assert r['subject_tree'] == os.environ['EXPECTED_TREE']
