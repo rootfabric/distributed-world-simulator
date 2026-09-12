@@ -1,0 +1,61 @@
+{
+  "schema": "dws.ecology.a6-final-local-evidence.v1",
+  "subject_head": "993271eb46880b77f0e7584f931131d4bd0a5125",
+  "subject_tree": "adce0899b348d6e8b359d732972af0ca5579c742",
+  "accepted_base": "ce98434481c90f7661f787ceb89b07104a586a2f",
+  "execution_kind": "IMPLEMENTER_EXACT_LOCAL_ON_PUBLISHED_GIT_OBJECTS",
+  "platform": "Linux-6.18.35-x86_64-with-glibc2.41",
+  "python": "3.13.5",
+  "godot": {
+    "version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7"
+  },
+  "verdict": "PASS",
+  "process_checks": 67,
+  "assertion_executions": 1741,
+  "source_fence": "PASS: accepted A0-A5, production, simulation, network unchanged",
+  "elapsed_seconds": 145.335,
+  "summary_sha256": "b5d302fa4322d449479f82f1a09eb6fb64bccc66bf4a8e1ffac06d853084d842",
+  "log_sha256": "c624a4d431a49858123100a92fd26ff9b26546580acb548bee189d03d1981a50",
+  "suite_log_sha256": {
+    "a6-core-1": "8dafe61ac05b1d441908f4f4d0917c564f7dcf295c4d76ec48bc45302c057b9d",
+    "a6-core-2": "8dafe61ac05b1d441908f4f4d0917c564f7dcf295c4d76ec48bc45302c057b9d",
+    "a6-adversarial-1": "367435597d6954a9060b1299c02753b2490094ff33ce2a2068ca2bcc1a9a19c7",
+    "a6-adversarial-2": "367435597d6954a9060b1299c02753b2490094ff33ce2a2068ca2bcc1a9a19c7",
+    "a6-lineage-1": "79fe1126bcba9bc22608cfb84393d021e58a0d95f52173be898d87a0ceb5b164",
+    "a6-lineage-2": "79fe1126bcba9bc22608cfb84393d021e58a0d95f52173be898d87a0ceb5b164",
+    "restart-write-1": "1a57c95d5d9917ec4a4a3e1932eed54d5ca501e9c1ce0182e93e623c53ed415d",
+    "restart-read-1": "7ebe8206ad7dae90818ac22941a3503d94c9b62934d578444914b11316f04f66",
+    "restart-write-2": "1a57c95d5d9917ec4a4a3e1932eed54d5ca501e9c1ce0182e93e623c53ed415d",
+    "restart-read-2": "7ebe8206ad7dae90818ac22941a3503d94c9b62934d578444914b11316f04f66"
+  },
+  "supplemental_full_cycle": {
+    "scope": "One session / same field: actual uptake, growth, reproduction, death, return, recipient uptake, restart; no field replacement",
+    "body_modules": 2,
+    "reproduction_count": 1,
+    "feedback_delta_mg": 100,
+    "control_delta_mg": 0,
+    "checkpoint_step": 3,
+    "restart_equal": true,
+    "pass": true,
+    "probe_sha256": "b83b9d97f3a7fa297fbdf098390380b4071a15c89dfbd571a2dab7e670a2c4fc",
+    "log_sha256": "639ad8a0ce0e998d8be54f76ca6e951a9d48a9e970cdf8f5f29aff890a34976d"
+  },
+  "independent_review": {
+    "reviewed_commit": "993271eb46",
+    "result": "NO_MAJOR_FINDINGS",
+    "comment_id": 5642821827,
+    "finished_at": "2026-09-12T02:20:22Z",
+    "open_blocking_threads_observed": 0
+  },
+  "self_hosted_verifier": {
+    "run_id": 34667080254,
+    "job_id": 103481058351,
+    "dispatch_head": "2579fbd50641de0996569fd11e34d84172e24080",
+    "observed_status": "QUEUED",
+    "result_not_inferred_from_local_pass": true
+  },
+  "research_accepted": false,
+  "main_merged": false,
+  "next": "Observe queued exact self-hosted run; inspect final artifact/HEAD/TREE seal; require explicit research acceptance decision."
+}
