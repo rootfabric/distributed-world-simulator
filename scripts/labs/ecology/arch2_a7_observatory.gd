@@ -65,6 +65,7 @@ func _ready() -> void:
 		var heading := Label.new(); heading.text = site.to_upper(); heading.add_theme_font_size_override("font_size", 20); card.add_child(heading)
 		var view := BodyView.new(); view.name = site + "Body"; view.custom_minimum_size = Vector2(340, 325); view.clip_contents = true
 		view.size_flags_horizontal = Control.SIZE_EXPAND_FILL; view.size_flags_vertical = Control.SIZE_EXPAND_FILL; card.add_child(view); panels[site] = view
+		view.resized.connect(sync_projection)
 		var summary := Label.new(); summary.name = site + "Summary"; summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART; summary.custom_minimum_size.y = 100; card.add_child(summary); summaries[site] = summary
 	var legend := Label.new(); legend.text = "Общий масштаб: сетка 10 mm. Круг collector = площадь; absorber = reach. Серое тело — архив, не расходуемый остаток."; legend.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART; root.add_child(legend)
 	inspector = TextEdit.new(); inspector.name = "Inspector"; inspector.editable = false; inspector.custom_minimum_size.y = 210; inspector.add_theme_font_size_override("font_size", 13); inspector.add_theme_color_override("font_readonly_color", Color("d2dde8")); root.add_child(inspector)
@@ -111,13 +112,24 @@ func select(site: String, individual: String) -> void:
 	if not site in Protocol.SITES or not individual in ["study", "litter-donor"]: return
 	selected_site = site; selected_id = individual; refresh()
 
+func sync_projection() -> void:
+	if panels.is_empty(): return
+	var canvas: Vector2 = panels.wet.size
+	for site in Protocol.SITES:
+		canvas.x = minf(canvas.x, panels[site].size.x)
+		canvas.y = minf(canvas.y, panels[site].size.y)
+	for site in Protocol.SITES:
+		panels[site].common_canvas_size = canvas
+		panels[site].queue_redraw()
+
 func refresh() -> void:
 	report = model.observe()
 	if not report.success: status.text = "OBSERVATION FAILED: " + str(report.get("error")); return
 	var t: Dictionary = report.treatment
 	status.text = "Tick %d / %d | seed %d | common-garden=%s  feedback=%s  founder-mutation=%s | experiment %s" % [report.step, report.horizon, t.seed, t.common_garden, t.effects_enabled, t.mutations_enabled, report.experiment_hash.substr(0, 12)]
+	sync_projection()
 	for site in report.sites:
-		panels[site.id].present(site, selected_id)
+		panels[site.id].present(site, selected_id, panels[site.id].common_canvas_size)
 		var selected: Dictionary = {}
 		for entry in site.entries:
 			if entry.id == selected_id: selected = entry

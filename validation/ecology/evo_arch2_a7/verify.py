@@ -88,7 +88,7 @@ def main() -> int:
         run("cold-import", [str(args.godot), "--headless", "--audio-driver", "Dummy", "--editor", "--path", str(ROOT), "--import"])
         for name, filename, marker, count in [
             ("a7-core", "arch2_a7_acceptance.gd", "EVO_ARCH2_A7_EXACT assertions=158 failed=0", 158),
-            ("a7-ui", "arch2_a7_ui.gd", "EVO_ARCH2_A7_UI assertions=26 failed=0", 26),
+            ("a7-ui", "arch2_a7_ui.gd", "EVO_ARCH2_A7_UI assertions=30 failed=0", 30),
             ("a6-core", "arch2_a6_exact_acceptance.gd", "EVO_ARCH2_A6_EXACT assertions=77 failed=0", 77),
             ("a6-adversarial", "arch2_a6_adversarial.gd", "EVO_ARCH2_A6_ADVERSARIAL assertions=76 failed=0", 76),
             ("a6-lineage", "arch2_a6_lineage_energy.gd", "EVO_ARCH2_A6_LINEAGE assertions=11 failed=0", 11),
@@ -119,7 +119,7 @@ def main() -> int:
             run("a7-graphical", ["xvfb-run", "-a", "-s", "-screen 0 1600x1100x24", str(args.godot),
                 "--rendering-method", "gl_compatibility", "--audio-driver", "Dummy", "--path", str(ROOT),
                 "--script", "res://tests/research/ecology/v2/arch2_a7_ui.gd", "--", "--capture"],
-                "EVO_ARCH2_A7_UI assertions=28 failed=0", 28)
+                "EVO_ARCH2_A7_UI assertions=32 failed=0", 32)
             summary["viewport_sha256"] = sha(ROOT / "artifacts/a7/observatory.png")
             summary["viewport_source_report_sha256"] = sha(ROOT / "artifacts/a7/capture-sources.json")
         require(git("rev-parse", "HEAD") == args.head and git("rev-parse", "HEAD^{tree}") == args.tree

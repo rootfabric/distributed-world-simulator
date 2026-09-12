@@ -45,7 +45,7 @@ Effects-off — реальные A6 policy flags decomposition/mineralization=fa
 
 ## Изображение
 
-Изображается BodyGraph из того же PhenotypeSnapshot, что functional statistics: start/end по X/Y/Z, radius, collector area, absorber reach, reproductive role. Общая изометрическая шкала — 2.4 px/mm, сетка 10 mm. Круг collector — явная area proxy, не ботаническая форма листа. Root-only — реальный результат, не отсутствующий mesh. Мёртвое тело — неизменный provenance, расходуемый остаток только в corpse.remaining. Так графика не придумывает биомассу и не подменяет параметры окраской.
+Изображается BodyGraph из того же PhenotypeSnapshot, что functional statistics: start/end по X/Y/Z, radius, collector area, absorber reach, reproductive role. Общее фиксированное поле зрения — 200×200 mm, сетка 10 mm; px/mm зависит только от общего размера панелей, не от выросшего тела. Это сохраняет сравнимость размеров и не обрезает верх на полном horizon. Круг collector — явная area proxy, не ботаническая форма листа. Root-only — реальный результат, не отсутствующий mesh. Мёртвое тело — неизменный provenance, расходуемый остаток только в corpse.remaining. Так графика не придумывает биомассу и не подменяет параметры окраской.
 
 ## Сохранения и экспорт
 

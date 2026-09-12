@@ -49,10 +49,20 @@ func run() -> void:
  ui.common.button_pressed=false
  ui.find_child("Reset",true,false).pressed.emit()
  for i in 6: ui.find_child("Step",true,false).pressed.emit()
+ for i in 10:
+  if not ui.model.advance():check(false,"horizon advance");break
+ ui.refresh()
+ await process_frame
  var sources=ui.model.source_hashes()
  for site in ui.report.sites:
   check(ui.panels[site.id].site.source_hash==sources[site.id],"render bound to source "+site.id)
   check(ui.panels[site.id].site.entries==site.entries,"all real phenotype entries "+site.id)
+ for site in ui.report.sites:
+  for entry in site.entries:
+   if entry.id=="study":
+    var bounds=ui.panels[site.id].visual_bounds(entry)
+    check(Rect2(Vector2(8,8),ui.panels[site.id].size-Vector2(16,48)).encloses(bounds),"complete horizon body in viewport "+site.id)
+ check(is_equal_approx(ui.panels.wet.projection_scale(),ui.panels.dry.projection_scale()) and is_equal_approx(ui.panels.wet.projection_scale(),ui.panels.dark.projection_scale()),"common scale at full horizon")
  var p=ui.panels.wet
  check(p.point([10,20,30])!=p.point([10,20,0]),"z changes actual projection")
  if "--capture" in OS.get_cmdline_user_args():
