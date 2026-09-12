@@ -1,0 +1,22 @@
+{
+  "schema": "dws.ecology.a7-source-blobs.v1",
+  "note": "Prepublication file identity pins; not an independent verdict. Final verifier must execute the published HEAD/TREE.",
+  "blobs": {
+    "config/ecology/evo-arch2-a7-protocol.v1.json": "34f0ba37c122a6ec8abe7fcec13d2e9212c819d4",
+    "docs/research/ecology/EVO_ARCH2_A7_EVIDENCE_MAP_R1_RU.md": "c87ffa2274f53fc7ff7a8ebef099eb3c8bf1748f",
+    "docs/research/ecology/EVO_ARCH2_A7_OBSERVATORY_R1_RU.md": "a6c798e9150846a147cba9340a22255ef5381823",
+    "scenes/labs/ecology/arch2_a7_observatory.tscn": "1b1e8168110469fd63430d78a5f4326db301235d",
+    "scripts/labs/ecology/arch2_a7_body_view.gd": "d4ba98fcb41af490842ed3fac8b7bab2ba8ef108",
+    "scripts/labs/ecology/arch2_a7_body_view.gd.uid": "8c5aae9768cc54d8646a7baca2ed489cf25f54e5",
+    "scripts/labs/ecology/arch2_a7_observatory.gd": "ac97e6d57c292387958df0266a43ecc6947ec636",
+    "scripts/labs/ecology/arch2_a7_observatory.gd.uid": "6516c177b170f7d4fa4b1e0ea3e374d448de4e70",
+    "scripts/research/ecology/v2/observatory_protocol_v1.gd": "e437eace04e480c6ea70797edbe9d21a22d3d5aa",
+    "scripts/research/ecology/v2/observatory_protocol_v1.gd.uid": "6fb18fc7af160af0810b215d8baa304484845093",
+    "scripts/research/ecology/v2/observatory_session_v1.gd": "83d868c2b4fbf2c9eb60600254bfebc16e7f9b74",
+    "scripts/research/ecology/v2/observatory_session_v1.gd.uid": "9f392f0ba9579373ee1da88c564671f42f178b8d",
+    "tests/research/ecology/v2/arch2_a7_acceptance.gd": "fd72bb832f8779a4a1acd709c06c359d5836ecf6",
+    "tests/research/ecology/v2/arch2_a7_restart.gd": "70eedb119fcf5a50f49e7cdd809656ba0a54be2d",
+    "tests/research/ecology/v2/arch2_a7_ui.gd": "dc774f696ab532566e141f6f6979fc0291c65695",
+    "validation/ecology/evo_arch2_a7/verify.py": "13a01d1952caaa26bcc7287f394870ebe17f9236"
+  }
+}
