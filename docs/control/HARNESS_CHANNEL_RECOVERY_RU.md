@@ -1,7 +1,7 @@
 # DWS Harness — восстановление после сбоев tool / transport / session channel
 
-**Revision:** `H0-CHANNEL-RECOVERY-2026-09-12-R1`  
-**Scope:** любой активный checkpoint mission и любой bounded Work Order.  
+**Revision:** `H0-CHANNEL-RECOVERY-2026-09-12-R1`
+**Scope:** любой активный checkpoint mission и любой bounded Work Order.
 **Не меняет:** product scope, review independence, acceptance criteria, human merge gates и architecture ownership.
 
 ## 1. Главный инвариант
