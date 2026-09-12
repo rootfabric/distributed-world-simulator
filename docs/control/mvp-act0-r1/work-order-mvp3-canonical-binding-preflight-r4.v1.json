@@ -1,0 +1,29 @@
+{
+  "schema": "distributed_world_simulator.bounded_repair_work_order.v1",
+  "repair_id": "V0-MVP3-R4-CANONICAL-BINDING-PREFLIGHT",
+  "parent_work_order_id": "V0-MVP-R1-WO-001",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "base_sha": "6dca13bfc91698551544271a0245246e6d2ead12",
+  "base_tree": "9bb56d31bb1a384a6b2e581d6797c0d142639443",
+  "role": "IMPLEMENTER",
+  "independent_context": false,
+  "runtime_mutation": false,
+  "scope": "Исполняемая диагностика реальных канонических API M3/P2/P3/P5 и SM1. Не новый demo, не реализация authority и не приёмка MVP3.",
+  "allowed_paths": [
+    "tests/runtime/test_v0_mvp3_canonical_binding_preflight.gd",
+    ".github/workflows/mvp3-canonical-binding-preflight.yml",
+    "docs/control/mvp-act0-r1/work-order-mvp3-canonical-binding-preflight-r4.v1.json",
+    "docs/control/mvp-act0-r1/MVP3_CANONICAL_BINDING_AMENDMENT_PROPOSAL_RU.md"
+  ],
+  "forbidden_paths": ["scripts/**", "scenes/**", "config/architecture/**", "config/control/harness/acceptance/**", "project.godot"],
+  "repair_map": {
+    "owner": "Только integration diagnostics и предложение границы следующего Work Order",
+    "root_cause_hypothesis": "План предполагает существующий live per-player handoff-порт M3. Публичный recovery API фактически предназначен для restart и переносит весь агрегат; coordinator сам по себе не связывает M3 mutation admission.",
+    "fix": "Проверить гипотезу реальными вызовами Service и SM1; записать исходные snapshots, точные отказы, список API и минимальный amendment. Не ослаблять restart guards и не обходить запреты через приватные поля или подкласс-owner.",
+    "validation": ["two canonical players can independently move", "same-owner restart positive control", "cross-owner and cross-epoch rejection", "live sessions removed by durable export", "rejoin keeps entity but changes ownership epoch", "actor-only aggregate rejected with intact Item Graph", "live session in restart DTO rejected", "unbound coordinator freeze does not imply M3 source write fence"]
+  },
+  "workflow_constraints": {"read_only_github_permissions": true, "owner_only": true, "exact_checkout": true, "source_export": false, "git_writes": false, "self_acceptance": false},
+  "runtime_merge_authorized": false,
+  "predicate_verified_authorized": false,
+  "foundation_scope_expansion_authorized": false
+}
