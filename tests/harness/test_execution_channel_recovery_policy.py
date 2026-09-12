@@ -14,6 +14,11 @@ from harness.contracts import ContractBundle, ContractValidationError
 
 class ExecutionChannelRecoveryPolicyTests(unittest.TestCase):
     def setUp(self) -> None:
+        self.harness_policy = json.loads(
+            (ROOT / "config/control/harness/harness-policy.v1.json").read_text(
+                encoding="utf-8"
+            )
+        )
         self.policy = json.loads(
             (ROOT / "config/control/harness/continuation-policy.v1.json").read_text(
                 encoding="utf-8"
@@ -22,8 +27,13 @@ class ExecutionChannelRecoveryPolicyTests(unittest.TestCase):
         self.recovery = self.policy["execution_channel_recovery"]
 
     def test_channel_failure_is_never_a_mission_terminal_by_itself(self) -> None:
+        expected_revision = "H0-CHANNEL-RECOVERY-2026-09-12-R1"
         self.assertEqual(
-            "H0-CHANNEL-RECOVERY-2026-09-12-R1",
+            expected_revision,
+            self.harness_policy["execution_channel_recovery_revision"],
+        )
+        self.assertEqual(
+            expected_revision,
             self.policy["execution_channel_recovery_revision"],
         )
         self.assertEqual("FAIL_FORWARD_FROM_DURABLE_GIT", self.recovery["mode"])
@@ -69,6 +79,7 @@ class ExecutionChannelRecoveryPolicyTests(unittest.TestCase):
                 "CURRENT_EXECUTOR_DNS_FAILURE",
                 "CURRENT_EXECUTOR_GITHUB_CLONE_FAILURE",
                 "DOWNLOAD_ROUTE_SECURITY_REJECTION",
+                "TRANSIENT_CONNECTOR_FAILURE",
                 "LONG_REASONING_OR_TOOL_CHAIN_FAILURE",
                 "PREFERRED_EXECUTOR_UNAVAILABLE",
                 "CURRENT_EXECUTOR_WORKSPACE_LOSS",
@@ -101,6 +112,30 @@ class ExecutionChannelRecoveryPolicyTests(unittest.TestCase):
             "CHANNEL_RECOVERY_PRINCIPLES_INVALID",
         ):
             ContractBundle(root=ROOT, contracts=weakened).validate_integrity()
+
+        weakened = copy.deepcopy(bundle.contracts)
+        weakened["continuation_policy"].pop("execution_channel_recovery_revision")
+        with self.assertRaisesRegex(
+            ContractValidationError,
+            "CHANNEL_RECOVERY_REVISION_INVALID",
+        ):
+            ContractBundle(root=ROOT, contracts=weakened).validate_integrity()
+
+    def test_historical_policy_without_channel_extension_remains_replayable(self) -> None:
+        bundle = ContractBundle.load(ROOT)
+        historical = copy.deepcopy(bundle.contracts)
+        historical["harness_policy"].pop("execution_channel_recovery_revision")
+        historical["continuation_policy"].pop("execution_channel_recovery_revision")
+        historical["continuation_policy"].pop("execution_channel_recovery")
+        for name in (
+            "tool_or_transport_failure_is_not_mission_terminal",
+            "ephemeral_tool_handles_are_not_durable_state",
+            "executor_local_network_failure_is_route_failure_not_project_block",
+            "unreadable_ephemeral_resource_must_be_refetched_from_durable_locator",
+            "reasoning_or_session_channel_failure_does_not_change_project_state",
+        ):
+            historical["continuation_policy"]["principles"].pop(name)
+        ContractBundle(root=ROOT, contracts=historical).validate_integrity()
 
     def test_agent_router_and_doctrine_expose_the_recovery_contract(self) -> None:
         agents = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
