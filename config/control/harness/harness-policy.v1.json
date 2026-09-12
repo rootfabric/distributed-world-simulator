@@ -4,6 +4,7 @@
   "policy_amendment_revision": "H0-PTRAIN-2026-08-18-R1",
   "review_layer_revision": "H0-REVIEW-2026-08-11-R1",
   "continuation_layer_revision": "H0-CONTINUATION-2026-08-20-R5",
+  "execution_channel_recovery_revision": "H0-CHANNEL-RECOVERY-2026-09-12-R1",
   "git_transport_policy_revision": "H0-GIT-TRANSPORT-2026-09-05-R1",
   "canonical_branch": "main",
   "pc0_policy": "config/control/project-control-policy.v1.json",
