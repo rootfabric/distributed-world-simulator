@@ -1,0 +1,24 @@
+{
+  "schema": "distributed_world_simulator.bounded_repair_work_order.v1",
+  "repair_id": "V0-MVP3-R6-COMMIT-AWARE-COMPLETION",
+  "parent_work_order_id": "V0-MVP-R1-WO-001",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "base_sha": "f19da9212ee35d91d36bee10a4e6b7e2a74a24ac",
+  "base_tree": "e3fc6527dedb3443414c3896dab791632deb3e52",
+  "role": "IMPLEMENTER",
+  "independent_context": false,
+  "runtime_mutation": false,
+  "scope": "Исправить review P1 3996583920: P6 completion только после подтверждённого успешного канонического M3 result. Только test-only composition decorator и настоящий handler-rejection negative control.",
+  "allowed_paths": ["tests/runtime/test_v0_mvp3_bound_sm1_m3_completion.gd", ".github/workflows/mvp3-canonical-binding-preflight.yml", "docs/control/mvp-act0-r1/work-order-mvp3-commit-aware-completion-r6.v1.json", "docs/control/mvp-act0-r1/MVP3_COMPLETION_BINDING_R6_RU.md"],
+  "forbidden_paths": ["scripts/**", "scenes/**", "config/**", "project.godot"],
+  "repair_map": {
+    "owner": "MVP test-only composition admission decorator; canonical receipt remains in existing Service",
+    "root_cause": "P6 gateway executes admission.complete for any Dictionary outcome. Checking M3 success after P6 returns is too late and can mark a rejected operation APPLIED.",
+    "fix": "Inject a completion decorator through existing P6 configure API. It reads the real M3 replay receipt and verifies successful outcome and exact canonical actor before delegating complete. It owns no canonical or replay state; it does not change existing P6/SM1/M3 code.",
+    "negative_control": "New OperationId with reused input sequence reaches real M3 and fails; P6 completion refuses; carrying applied operations exclude it; retry remains rejected; canonical state unchanged.",
+    "non_goal": "Target live staging, activation and complete graphical crossing remain unimplemented; diagnostic success is not MVP3 acceptance."
+  },
+  "predicate_verified_authorized": false,
+  "foundation_scope_expansion_authorized": false,
+  "runtime_merge_authorized": false
+}

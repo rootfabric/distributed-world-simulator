@@ -1,0 +1,120 @@
+name: MVP3 Canonical Binding Diagnostic
+on:
+  push:
+    branches: [control/v0-mvp3-canonical-binding-preflight-r1]
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: mvp3-binding-diagnostic-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  diagnose-owner-ports:
+    if: >-
+      github.repository == 'rootfabric/distributed-world-simulator' &&
+      github.actor == 'rootfabric' && github.triggering_actor == 'rootfabric' &&
+      github.ref == 'refs/heads/control/v0-mvp3-canonical-binding-preflight-r1'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      EXPECTED_HEAD: ${{ github.sha }}
+      PYTHONUTF8: '1'
+      GODOT_SILENCE_ROOT_WARNING: '1'
+      BREAKPOINT_RUNTIME_DISABLED: '1'
+      PLANET_SIMULATOR_INVENTORY_PROFILE: planet_default
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Verify diagnostic-only exact subject
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+          test -z "$(git status --porcelain --untracked-files=no)"
+          git merge-base --is-ancestor 6dca13bfc91698551544271a0245246e6d2ead12 HEAD
+          test -z "$(git diff --name-only 6dca13bfc91698551544271a0245246e6d2ead12 HEAD -- scripts scenes config project.godot)"
+          git diff --check 6dca13bfc91698551544271a0245246e6d2ead12 HEAD
+          echo "EXPECTED_TREE=$(git rev-parse HEAD^{tree})" >> "$GITHUB_ENV"
+          mkdir -p artifacts/mvp3-binding-preflight
+      - uses: actions/download-artifact@v4
+        with:
+          name: p7-repair-engine-34117353691
+          run-id: 34117353691
+          repository: rootfabric/distributed-world-simulator
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/mvp3-engine
+      - name: Exercise real canonical APIs and commit-aware carrying route
+        shell: bash
+        run: |
+          set -euo pipefail
+          engine="$RUNNER_TEMP/mvp3-engine/godot"
+          test "$(sha256sum "$engine" | cut -d' ' -f1)" = bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7
+          chmod u+x "$engine"
+          "$engine" --version | tee artifacts/mvp3-binding-preflight/engine.log
+          export DWS_MVP3_PREFLIGHT_OUTPUT="$PWD/artifacts/mvp3-binding-preflight/report.json"
+          export DWS_MVP3_BOUND_OUTPUT="$PWD/artifacts/mvp3-binding-preflight/bound-report.json"
+          export DIAGNOSTIC_ENGINE="$engine"
+          python3 - <<'PY'
+          import json, os, pathlib, re, subprocess
+          out = pathlib.Path('artifacts/mvp3-binding-preflight')
+          commands = []
+          for name, arguments, deadline in [
+              ('import', ['--editor', '--import', '--quit'], 120),
+              ('restart-diagnostic', ['--script', 'res://tests/runtime/test_v0_mvp3_canonical_binding_preflight.gd'], 45),
+              ('accepted-sm1-regression', ['--script', 'res://tests/network/test_v0_sm1_player_carry_and_gateway_pivot.gd'], 45),
+              ('bound-route-diagnostic', ['--script', 'res://tests/runtime/test_v0_mvp3_bound_sm1_m3_completion.gd'], 45),
+          ]:
+              argv = [os.environ['DIAGNOSTIC_ENGINE'], '--headless', '--path', '.'] + arguments
+              timed_out = False
+              with (out / (name + '.log')).open('w') as log:
+                  try:
+                      completed = subprocess.run(argv, stdout=log, stderr=subprocess.STDOUT, timeout=deadline, check=False)
+                      code = completed.returncode
+                  except subprocess.TimeoutExpired:
+                      code, timed_out = None, True
+              commands.append({'argv':argv, 'exit_code':code, 'timeout':timed_out, 'deadline_seconds':deadline})
+              (out / 'commands.json').write_text(json.dumps(commands, indent=2) + '\n')
+              text = (out / (name + '.log')).read_text(encoding='utf-8', errors='replace')
+              if name != 'import' or code != 0:
+                  print(text[-12000:])
+              if timed_out or code != 0 or re.search(r'(?im)^\s*(?:SCRIPT ERROR|ERROR):|Parse Error|Compile Error', text):
+                  raise SystemExit('DIAGNOSTIC_COMMAND_FAILED:' + name)
+          for name, status in [('report.json','GAPS_REPRODUCED'), ('bound-report.json','BOUND_ROUTE_AND_STAGING_GAP_REPRODUCED')]:
+              r = json.loads((out / name).read_text())
+              assert r['subject_head'] == os.environ['EXPECTED_HEAD']
+              assert r['subject_tree'] == os.environ['EXPECTED_TREE']
+              assert r['diagnostic_status'] == status and not r['failures']
+              assert r['mvp3_predicate_verified'] is False
+              if name == 'bound-report.json':
+                  negative = r['handler_rejection_control']
+                  assert negative['rejection']['error_code'] == 'MVP3_CANONICAL_COMMIT_NOT_PROVEN'
+                  assert negative['canonical_state_unchanged'] is True
+                  assert negative['p6_or_m3_production_changed'] is False
+          assert not subprocess.check_output(['git','status','--porcelain','--untracked-files=no'], text=True).strip()
+          print('BOUND_PUBLIC_ROUTE_EXERCISED; CANONICAL_REJECTION_NOT_APPLIED; TARGET_STAGING_GAP_REPRODUCED; MVP3_PRODUCT_ACCEPTANCE=false')
+          PY
+      - name: Preserve exact diagnostic provenance
+        if: always()
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import hashlib, json, os, pathlib, subprocess
+          out = pathlib.Path('artifacts/mvp3-binding-preflight'); out.mkdir(parents=True,exist_ok=True)
+          git = lambda *args: subprocess.check_output(['git',*args],text=True).strip()
+          manifest = {'schema':'distributed_world_simulator.mvp3_binding_diagnostic_manifest.v1', 'subject_head':git('rev-parse','HEAD'), 'subject_tree':git('rev-parse','HEAD^{tree}'), 'runtime_subject':'6dca13bfc91698551544271a0245246e6d2ead12', 'run_id':os.environ['GITHUB_RUN_ID'], 'run_attempt':os.environ['GITHUB_RUN_ATTEMPT'], 'tracked_after':git('status','--porcelain','--untracked-files=no'), 'diagnostic_only':True, 'mvp3_predicate_verified':False, 'independent_verdict':False, 'artifacts':[]}
+          for p in sorted(out.glob('*')):
+              if p.is_file() and p.name != 'manifest.json':
+                  manifest['artifacts'].append({'path':p.name,'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()})
+          (out/'manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mvp3-binding-diagnostic-${{ github.sha }}-${{ github.run_id }}
+          path: artifacts/mvp3-binding-preflight/
+          if-no-files-found: error
+          retention-days: 90
