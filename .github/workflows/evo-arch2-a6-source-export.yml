@@ -1,0 +1,41 @@
+name: ECO ARCH2 A6 Source Export
+on:
+  push:
+    branches: [validation/eco-arch2-a6-exact-r1]
+    paths: [.github/workflows/evo-arch2-a6-source-export.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: eco-arch2-a6-source-export
+  cancel-in-progress: true
+jobs:
+  source:
+    if: github.actor == 'rootfabric' && github.repository == 'rootfabric/distributed-world-simulator'
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ce98434481c90f7661f787ceb89b07104a586a2f
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Export exact accepted A5 and pinned main
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD^{tree})" = ea5437a3572ab7e65815ef6117e972b7e6e96cc3
+          git cat-file -e 127c732a56cc5c25d5712f24a7627ed4bb877374^{commit}
+          git update-ref refs/heads/a6-export-base ce98434481c90f7661f787ceb89b07104a586a2f
+          git update-ref refs/heads/a6-export-main 127c732a56cc5c25d5712f24a7627ed4bb877374
+          git bundle create a6-source.bundle refs/heads/a6-export-base refs/heads/a6-export-main
+          git bundle verify a6-source.bundle
+          sha256sum a6-source.bundle | tee a6-source.sha256
+      - uses: actions/upload-artifact@v4
+        with:
+          name: a6-pinned-source
+          path: |
+            a6-source.bundle
+            a6-source.sha256
+          retention-days: 7
+          if-no-files-found: error
