@@ -42,6 +42,13 @@ jobs:
               if actual != expected: failures.append(path)
           if failures: raise SystemExit('SOURCE_BLOB_MISMATCH: '+', '.join(failures))
           PY
+      - name: Prepare required graphical executor in job-local directory
+        shell: bash
+        run: |
+          set -euo pipefail
+          helper="$RUNNER_TEMP/a7-graphics-prepare-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT.sh"
+          git show "$GITHUB_SHA:validation/ecology/evo_arch2_a7/prepare_graphics.sh" > "$helper"
+          bash "$helper"
       - name: Full exact A7 with mandatory graphics and preserved regressions
         shell: bash
         env:
@@ -108,5 +115,16 @@ jobs:
             artifacts/a7/observatory.png
             artifacts/a7/capture-sources.json
             artifacts/a7/control/
+            artifacts/a7/environment/
           if-no-files-found: error
           retention-days: 30
+      - name: Remove job-local graphical dependencies
+        if: always()
+        shell: bash
+        run: |
+          if [ -n "${A7_GRAPHICS_PREFIX:-}" ]; then
+            case "$A7_GRAPHICS_PREFIX" in
+              "$RUNNER_TEMP"/a7-graphics.*) rm -rf -- "$A7_GRAPHICS_PREFIX" ;;
+              *) printf 'Refusing cleanup outside A7 job-local directory\n' >&2; exit 1 ;;
+            esac
+          fi
