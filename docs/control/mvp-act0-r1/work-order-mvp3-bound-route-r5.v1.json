@@ -1,0 +1,23 @@
+{
+  "schema": "distributed_world_simulator.bounded_repair_work_order.v1",
+  "repair_id": "V0-MVP3-R5-BOUND-SM1-M3-ROUTE-PROBE",
+  "parent_work_order_id": "V0-MVP-R1-WO-001",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "base_sha": "55a617b015268a1637231503ae0edeef76d7c91e",
+  "base_tree": "a955d85ded28737bfbaba7b5f8b3a8bc6805a37b",
+  "role": "IMPLEMENTER",
+  "independent_context": false,
+  "runtime_mutation": false,
+  "scope": "Исправить P1 review 3996545246: выполнить реальную P6/SM1 carrying/pivot цепочку с M3 Service вместо счётчика-handler и сузить вывод до недостающего M3 staging/activation binding.",
+  "allowed_paths": ["tests/runtime/test_v0_mvp3_bound_sm1_m3_route.gd", ".github/workflows/mvp3-canonical-binding-preflight.yml", "docs/control/mvp-act0-r1/work-order-mvp3-bound-route-r5.v1.json", "docs/control/mvp-act0-r1/MVP3_CANONICAL_BINDING_AMENDMENT_PROPOSAL_RU.md"],
+  "forbidden_paths": ["scripts/**", "scenes/**", "config/**", "project.godot"],
+  "repair_map": {
+    "root_cause": "R4 доказал restart semantics и не связанную с M3 coordinator проверку, но не проверил accepted carrying/pivot route; предложение описывало существующий control-plane как заново необходимый API.",
+    "owner": "Только diagnostic composition, не новый canonical owner",
+    "fix": "Test-only execute_command/route_command adapter к публичному Service.handle_player_input; accepted P6 identity/admission/closure и SM1 carrying/coordinator/pivot; два настоящих M3 игрока, freeze одного не лишает другого управления; затем точная проверка наличия live actor на B перед ownership commit.",
+    "not_a_scope_expansion": "Ни один production owner не изменяется. P6 namespace aliases явно сопоставлены неизменным M3 id и не выдаются за новые canonical identities. Не добавляется новый freeze/warm/commit протокол."
+  },
+  "predicate_verified_authorized": false,
+  "foundation_scope_expansion_authorized": false,
+  "runtime_merge_authorized": false
+}

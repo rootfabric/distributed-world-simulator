@@ -47,7 +47,7 @@ jobs:
           repository: rootfabric/distributed-world-simulator
           github-token: ${{ github.token }}
           path: ${{ runner.temp }}/mvp3-engine
-      - name: Exercise real canonical APIs
+      - name: Exercise real canonical APIs and accepted carrying route
         shell: bash
         run: |
           set -euo pipefail
@@ -56,6 +56,7 @@ jobs:
           chmod u+x "$engine"
           "$engine" --version | tee artifacts/mvp3-binding-preflight/engine.log
           export DWS_MVP3_PREFLIGHT_OUTPUT="$PWD/artifacts/mvp3-binding-preflight/report.json"
+          export DWS_MVP3_BOUND_OUTPUT="$PWD/artifacts/mvp3-binding-preflight/bound-report.json"
           export DIAGNOSTIC_ENGINE="$engine"
           python3 - <<'PY'
           import json, os, pathlib, re, subprocess
@@ -63,7 +64,9 @@ jobs:
           commands = []
           for name, arguments, deadline in [
               ('import', ['--editor', '--import', '--quit'], 120),
-              ('diagnostic', ['--script', 'res://tests/runtime/test_v0_mvp3_canonical_binding_preflight.gd'], 45),
+              ('restart-diagnostic', ['--script', 'res://tests/runtime/test_v0_mvp3_canonical_binding_preflight.gd'], 45),
+              ('accepted-sm1-regression', ['--script', 'res://tests/network/test_v0_sm1_player_carry_and_gateway_pivot.gd'], 45),
+              ('bound-route-diagnostic', ['--script', 'res://tests/runtime/test_v0_mvp3_bound_sm1_m3_route.gd'], 45),
           ]:
               argv = [os.environ['DIAGNOSTIC_ENGINE'], '--headless', '--path', '.'] + arguments
               timed_out = False
@@ -76,17 +79,18 @@ jobs:
               commands.append({'argv':argv, 'exit_code':code, 'timeout':timed_out, 'deadline_seconds':deadline})
               (out / 'commands.json').write_text(json.dumps(commands, indent=2) + '\n')
               text = (out / (name + '.log')).read_text(encoding='utf-8', errors='replace')
-              if name == 'diagnostic' or code != 0:
+              if name != 'import' or code != 0:
                   print(text[-12000:])
               if timed_out or code != 0 or re.search(r'(?im)^\s*(?:SCRIPT ERROR|ERROR):|Parse Error|Compile Error', text):
                   raise SystemExit('DIAGNOSTIC_COMMAND_FAILED:' + name)
-          r = json.loads((out / 'report.json').read_text())
-          assert r['subject_head'] == os.environ['EXPECTED_HEAD']
-          assert r['subject_tree'] == os.environ['EXPECTED_TREE']
-          assert r['diagnostic_status'] == 'GAPS_REPRODUCED' and not r['failures']
-          assert r['mvp3_implemented'] is False and r['mvp3_predicate_verified'] is False
+          for name, status in [('report.json','GAPS_REPRODUCED'), ('bound-report.json','BOUND_ROUTE_AND_STAGING_GAP_REPRODUCED')]:
+              r = json.loads((out / name).read_text())
+              assert r['subject_head'] == os.environ['EXPECTED_HEAD']
+              assert r['subject_tree'] == os.environ['EXPECTED_TREE']
+              assert r['diagnostic_status'] == status and not r['failures']
+              assert r['mvp3_predicate_verified'] is False
           assert not subprocess.check_output(['git','status','--porcelain','--untracked-files=no'], text=True).strip()
-          print('DIAGNOSTIC_REPRODUCED; MVP3_PRODUCT_ACCEPTANCE=false')
+          print('BOUND_PUBLIC_ROUTE_EXERCISED; TARGET_STAGING_GAP_REPRODUCED; MVP3_PRODUCT_ACCEPTANCE=false')
           PY
       - name: Preserve exact diagnostic provenance
         if: always()

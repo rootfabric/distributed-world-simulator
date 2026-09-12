@@ -1,52 +1,53 @@
-# MVP3 — недостающий live handoff binding: предложение amendment
+# MVP3 — сужение недостающего binding после независимого review
 
-Статус: **PROPOSAL / НЕ РАЗРЕШАЕТ ИЗМЕНЕНИЕ FOUNDATION**.
+Статус: **PROPOSAL; НЕ РАЗРЕШАЕТ FOUNDATION CHANGE; MVP3 НЕ ЗАКРЫТ**.
 Родитель: `V0-MVP-R1-WO-001`, epoch `E2026-09-09-V0-MVP-R1`.
-Проверяемый runtime: `6dca13bfc91698551544271a0245246e6d2ead12`, tree `9bb56d31bb1a384a6b2e581d6797c0d142639443`.
-Последний пройденный seam-subgate остаётся оператором с наблюдателем; он не принимается как MVP3.
+Исходный runtime: `6dca13bfc91698551544271a0245246e6d2ead12` / tree `9bb56d31bb1a384a6b2e581d6797c0d142639443`.
 
-## Контракт пользователя, который нельзя подменять
+## Исправление вывода R4
 
-В одной сцене два независимо управляемых игрока. Пересекающий шов игрок проходит A→B→A через существующий gateway, не пересоздаёт персонажа и не выполняет обычный reconnect. Другой игрок не превращается в наблюдателя. Перенос всего общего мира/Item Graph из-за движения одного игрока не считается доказательством per-player/regional crossing. Канонические владельцы сохраняются; не добавляется новая истина в demo, gateway или subclass.
+Независимое review PR #615, comment `3996545246`, указало на пропуск принятой цепочки P6IdentityRegistry/P6OperationLedger → SM1PlayerCarryingDomain → SM1TransferCoordinator → SM1GatewayRoutePivot → P6GatewayCommandRoute. Это **существующий control-plane**, и проектировать его повторно не требуется.
 
-## Проверяемая проблема
+Первоначальное предложение о новом полном freeze/warm/commit API отозвано. R4 характеризует только проверенные restart/unbound paths, а не доказывает отсутствие всех безопасных композиций. Ошибка первой R4-фикстуры (неверный namespace transport-session) исправлена; неуспешные запуски не являются product evidence.
 
-`NetworkedGameplayService` (P5→P3→P2) предоставляет M6 `export_durable_state` / `restore_durable_state`. Это restart API:
+## Что проверяет R5 вместо предположений
 
-- live transport bindings очищаются в PlayerRegistry и PlayerOwnershipService;
-- восстановление в настроенном другом owner/epoch отклоняется;
-- обычный rejoin сохраняет EntityId и позицию, но увеличивает ownership_epoch — это не live переназначение владельца;
-- payload содержит оба player registry, весь Item Graph и доменные состояния, а не выделенный carrying domain;
-- отдельный `SM1.begin_transfer` без привязки к реальному mutation entry point не блокирует прямой вызов M3 Service.
+`test_v0_mvp3_bound_sm1_m3_route.gd` собирает настоящий accepted route с test-only адаптерами к публичному M3 Service. Handler не увеличивает фиктивный счётчик вместо игры: команда реально вызывает `handle_player_input`, и проверяются канонические координаты и input watermark.
 
-Исполняемый preflight использует реальные классы, показывает успешную штатную инициализацию/движение/restart и точные отрицательные случаи. Он не доказывает отсутствие любой мыслимой композиции и не называет корректное restart-поведение багом. Его результат — доказательство, что проверенные существующие пути не реализуют необходимый binding. Список методов цепочек Service/M3 сохраняется для независимого поиска scope-preserving альтернативы.
+Два M3 игрока независимо двигаются. Во время SM1 freeze игрока A gateway-pivot и bound handler запрещают его команды, а B продолжает двигаться через собственный per-player маршрут. Exact replay не повторяет движение; изменённый payload под прежним OperationId отклоняется до P6 id-only replay shortcut.
 
-## Почему нельзя «исправить только тест»
+PlayerCarryingDomain получает реальное завершённое OperationId после freeze; P6 shadow строится как read-only projection реальных canonical snapshots. Существующий coordinator проверяет WARM chain. Перед ownership commit адаптер отдельно проверяет, существует ли на B настоящий live M3 player. Тест **не активирует B по одному control-plane report**. Если actor не staged, выполняется существующий `abort_before_commit`, затем A продолжает ввод без rejoin.
 
-Нельзя снимать checksum/owner/epoch guards recovery, сохранять активные transport sessions в restart DTO, переписывать `_players`/`_ownership` снаружи, копировать whole Item Graph на B или оставлять M3 реальным владельцем и рисовать чужую authority в HUD. Также нельзя объявить весь агрегат одним игроком. Такой патч скрывает отсутствие продуктовой интеграции.
+P6 требует namespaces `client-session/`, `player/`, `entity/`, тогда как текущий MVP2 M3 использует id `a`/`b`, entity `player/a`/`player/b` и `transport-session/`. Test-only aliases явно отображаются на исходные canonical identities и проверяются каждым вызовом. Это не смена личности M3 игрока.
 
-## Минимальный следующий bounded repair — после согласования scope
+Успех R5 доказывает только bounded command-port composition и точно выявленную target-readiness границу. Он **не доказывает** полную network/fixed-tick интеграцию M3, миграцию, камеры, graphical A→B→A, persistence или продуктовый PASS.
 
-### A. Live-player transfer port у существующего canonical owner
+## Минимальная следующая правка при подтверждении missing hooks
 
-Проектирование/реализация отдельного live handoff API рядом с имеющимися player/input/replay owner-компонентами. Restart API остаётся побайтно и семантически независимым. Frozen transfer-пакет содержит строго определённый player carrying domain, identity/session bindings, input watermark и относящийся к нему replay-срез. Каноническая истина остаётся в существующих владельцах, не в DTO.
+Переиспользовать без изменения SM1 freeze, carrying manifest, warm checksum chain, commit, retirement, activation, replay fencing и gateway pivot.
 
-Нужны явные source freeze, read-only target staging/validation, привязка warm-checksum к SM1 ownership commit, source retirement/fencing, target activation и fail-closed abort/retry semantics. Caller не может объявить себя владельцем присланным SHA/epoch. Не допускается перенос несвязанного игрока, глобального Item Graph или чужого replay.
+Добавить только недостающие **live-player staging/activation hooks существующего M3 canonical owner** и подключение их к уже принятому SM1 owner decision. Нельзя создавать второй coordinator/epoch owner, новый Item Graph, новый identity/replay owner или новый механизм persistence.
 
-### B. Binding существующих M3 runtime и SM1
+Нужен bounded live actor payload с исходными identity/session bindings, input watermark и ровно относящимся к игроку canonical состоянием. Restart `export_durable_state`/`restore_durable_state` остаётся отдельным неизменным контрактом; нельзя очищать сессии при обычном crossing или выдавать весь M6 aggregate за одного игрока.
 
-Все реальные mutation/tick admission routes должны проверять текущую выдачу authority; snapshot-only fence недостаточен. Gateway сохраняет внешние transport session/endpoint и переключает backend route по проверенному commit. Ввод, накопленный около границы, имеет bounded queue, однозначный watermark и не исполняется одновременно на обоих владельцах. M3 replica/prediction обрабатывает переход корректно, а визуальные Node/Camera не заменяются.
+Рассматриваемый минимальный owner-hook scope (финальный список фиксируется до кода):
 
-### C. Приёмочный сценарий
+- `scripts/runtime/networked_gameplay/services/player_registry.gd`: атомарное staging/retirement одного player record в существующем registry;
+- `scripts/runtime/networked_gameplay/services/player_ownership_service.gd`: сохранение live binding без обычного join/reconnect и проверки источника по существующему SM1 решению;
+- `scripts/runtime/networked_gameplay/networked_gameplay_service_p2.gd`: публичный orchestration port у существующего Service, без внешних private-field writes;
+- `scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime_p2.gd`: binding real mutation/fixed-tick admission к переносу, если публичного composition seam недостаточно;
+- только необходимые `mvp/**`, tests и evidence. Изменение SM1/MW8/MW9, M4 Item Graph или protocol ownership **не входит** в это предложение и требует отдельного обоснования.
 
-Пять процессов или документированная существующая топология, один общий scene path. A проходит A→B→A, B независимо двигается до/во время/после переходов; затем роли меняются. Snapshot/position/input/replay доказательства снимаются с обоих canonical owners и обоих клиентов. Проверки: отсутствие reconnect/respawn; no-write на frozen/retired source; no-write на warm target; corrupt/missing warm receipt; stale epoch; replay/conflicting replay; чужой игрок/предмет не мигрирует; два независимых управления; неизменные камеры/тела.
+Если player/replay/Item closure невозможно сохранить без расширения этого списка, остановиться на конкретной новой границе, а не расширять scope скрыто. UI/P6 aliases не являются authority. Чужой игрок, его inventory, общий Item Graph и мировой aggregate не перемещаются за пересекающим игроком.
 
-### D. Нерегрессия и роли
+## Приёмка исправления
 
-MVP1/MVP2, SM1/P7.6, затронутые player/Item/replay/fixed-tick tests; full Harness/PC0 и требуемая world/core регрессия. Exact-head evidence и свежие независимые Reviewer/Verifier. Только потом leaf `MVP_SEAM_NO_RECONNECT_OR_RESPAWN`; whole MVP остаётся отдельной приёмкой.
+Сначала owner-hook tests: штатный same-owner restart не меняется; live staging не становится writable до существующей SM1 activation; source после retirement fenced; replay и conflicting replay; identity/input watermark; чужой actor/Item Graph не перенесён; abort до commit не ломает источник.
 
-## Запрашиваемая граница разрешения
+Затем один настоящий двухклиентский scene/process workload: A проходит A→B→A, B независимо управляется до/во время/после переходов; роли меняются. Те же Node/Camera, одна gateway session, no reconnect/respawn. Проверяются фактические source/target mutations и observed shared state, не только labels.
 
-Текущий WO разрешает composition paths, но содержит stop condition `New canonical owner or foundation change required`. Нужен отдельно утверждённый bounded amendment, разрешающий минимально необходимый **live transfer API и M3/SM1 binding внутри существующих owners**, с заранее согласованным списком файлов. Это не разрешение создавать нового canonical owner, менять ownership registry, отключать проверки, делать merge в main, менять MVP4–MVP8 или переводить весь MVP в ACCEPTED.
+MVP1/MVP2, затронутые M3/SM1/P7.6 tests, требуемая world/core regression, Harness/PC0 и свежие независимые роли остаются обязательными. Только после этого можно подтверждать leaf MVP3; whole MVP и merge не следуют автоматически.
 
-После независимого рассмотрения preflight следует либо найти доказанную scope-preserving композицию и продолжить прежний WO, либо оформить этот конкретный human scope gate. До этого runtime не меняется и MVP3 не отмечается VERIFIED.
+## Граница полномочий
+
+Родительский WO разрешает composition и имеет stop condition `New canonical owner or foundation change required`. Если R5 и независимое рассмотрение подтверждают необходимость перечисленных owner hooks, требуется ограниченный scope amendment **для hooks внутри существующих owners**, не разрешение повторно реализовать SM1 или создавать новые owners. До его утверждения production runtime остаётся неизменным.
