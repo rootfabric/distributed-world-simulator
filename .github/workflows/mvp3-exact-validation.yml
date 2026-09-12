@@ -17,7 +17,7 @@ jobs:
       github.ref == 'refs/heads/feature/v0-mvp-playable-seamless-planet-r1' &&
       (github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[mvp3-evidence]'))
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     env:
       PYTHONUTF8: '1'
       BREAKPOINT_RUNTIME_DISABLED: '1'
@@ -35,11 +35,16 @@ jobs:
         run: |
           set -euo pipefail
           test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+          if [ "$(git branch --show-current)" != feature/v0-mvp-playable-seamless-planet-r1 ]; then
+            git switch -c feature/v0-mvp-playable-seamless-planet-r1 "$EXPECTED_HEAD"
+          fi
           test -z "$(git status --porcelain --untracked-files=no)"
           if ! command -v Xvfb >/dev/null || ! command -v xauth >/dev/null; then
             sudo -n apt-get update
             sudo -n env DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends xvfb xauth libgl1-mesa-dri
           fi
+          python3 -m venv "$RUNNER_TEMP/mvp3-venv"
+          "$RUNNER_TEMP/mvp3-venv/bin/python" -m pip install -r scripts/harness/requirements.txt
       - name: Obtain the already approved engine
         uses: actions/download-artifact@v4
         with:
@@ -56,12 +61,19 @@ jobs:
           test "$(sha256sum "$engine" | cut -d' ' -f1)" = bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7
           chmod u+x "$engine"
           xvfb-run -a python3 RUN_V0_MVP_SEAM.py --engine "$engine" --automated
+      - name: Audited-main MVP1 MVP2 nonregression and full Harness PC0
+        shell: bash
+        run: |
+          set -euo pipefail
+          xvfb-run -a "$RUNNER_TEMP/mvp3-venv/bin/python" docs/control/mvp-act0-r1/validate_mvp3_regression.py --engine "$RUNNER_TEMP/mvp3-engine/godot"
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: mvp3-subgate-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
             artifacts/mvp3-exact/
+            artifacts/mvp2-exact/
             !artifacts/mvp3-exact/**/user-data/**
+            !artifacts/mvp2-exact/**/user-data/**
           if-no-files-found: error
           retention-days: 90
