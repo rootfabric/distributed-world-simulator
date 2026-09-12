@@ -8,6 +8,9 @@ permissions:
 concurrency:
   group: eco-arch2-a7-canonical-verifier
   cancel-in-progress: false
+env:
+  SOURCE_HEAD: 7f5e072e9ee198a54f0ddbc5c06def9a58aa90b3
+  SOURCE_TREE: 7da3e5f07132b297323a43f53cf61fcea9a6c322
 jobs:
   linux-canonical:
     if: github.actor == 'rootfabric' && github.repository == 'rootfabric/distributed-world-simulator'
@@ -17,23 +20,25 @@ jobs:
       - name: Checkout exact A7 candidate
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
-          ref: baf97c89c8c84d6b3341d5e57865f25b75ab6c85
+          ref: ${{ env.SOURCE_HEAD }}
           fetch-depth: 0
           persist-credentials: false
-      - name: Assert exact source and file pins
+      - name: Assert exact source and all file pins
         shell: bash
         run: |
           set -euo pipefail
-          test "$(git rev-parse HEAD)" = baf97c89c8c84d6b3341d5e57865f25b75ab6c85
-          test "$(git rev-parse HEAD^{tree})" = 3919688b79ef04d1cc92abc6746578997f3d3e7b
-          python3 - <<'PY'
+          mkdir -p artifacts/a7/exact
+          test "$(git rev-parse HEAD)" = "$SOURCE_HEAD"
+          test "$(git rev-parse HEAD^{tree})" = "$SOURCE_TREE"
+          python3 - <<'PY' | tee artifacts/a7/source-pins.log
           import json, subprocess
           pins = json.load(open('validation/ecology/evo_arch2_a7/source-blobs.v1.json'))
+          failures = []
           for path, expected in pins['blobs'].items():
-              actual = subprocess.check_output(['git', 'hash-object', path], text=True).strip()
-              if actual != expected:
-                  raise SystemExit(f'SOURCE_BLOB_MISMATCH {path}: {actual} != {expected}')
-              print(f'SOURCE_BLOB_PASS {path} {actual}')
+              actual = subprocess.check_output(['git','hash-object',path],text=True).strip()
+              print(f'SOURCE_BLOB_{"PASS" if actual == expected else "FAIL"} {path} {actual} expected={expected}')
+              if actual != expected: failures.append(path)
+          if failures: raise SystemExit('SOURCE_BLOB_MISMATCH: '+', '.join(failures))
           PY
       - name: Full exact A7 and preserved regressions
         shell: bash
@@ -43,10 +48,7 @@ jobs:
           set -euo pipefail
           godot="${CONFIGURED_GODOT:-$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64}"
           test -x "$godot"
-          python3 validation/ecology/evo_arch2_a7/verify.py \
-            --godot "$godot" \
-            --head baf97c89c8c84d6b3341d5e57865f25b75ab6c85 \
-            --tree 3919688b79ef04d1cc92abc6746578997f3d3e7b
+          python3 validation/ecology/evo_arch2_a7/verify.py --godot "$godot" --head "$SOURCE_HEAD" --tree "$SOURCE_TREE"
       - name: Graphical viewport and actual UI handlers
         shell: bash
         env:
@@ -61,23 +63,21 @@ jobs:
               --script res://tests/research/ecology/v2/arch2_a7_ui.gd -- --capture \
               > artifacts/a7/graphical/ui.log 2>&1
             python3 - <<'PY'
-          import hashlib, json, pathlib, re
-          root = pathlib.Path('artifacts/a7')
-          text = (root / 'graphical/ui.log').read_text(encoding='utf-8-sig')
-          if 'EVO_ARCH2_A7_UI assertions=28 failed=0' not in text or re.search(r'SCRIPT ERROR|Parse Error|ERROR:|FAIL:', text):
-              raise SystemExit(text[-10000:])
-          files = ['graphical/ui.log', 'observatory.png', 'capture-sources.json']
-          hashes = {p: hashlib.sha256((root / p).read_bytes()).hexdigest() for p in files}
-          result = {'verdict':'PASS','subject_head':'baf97c89c8c84d6b3341d5e57865f25b75ab6c85','subject_tree':'3919688b79ef04d1cc92abc6746578997f3d3e7b','assertions':28,'files':hashes}
-          (root / 'graphical/summary.json').write_text(json.dumps(result, indent=2)+'\n')
-          print(json.dumps(result, indent=2))
+          import hashlib,json,os,pathlib,re
+          root=pathlib.Path('artifacts/a7')
+          text=(root/'graphical/ui.log').read_text(encoding='utf-8-sig')
+          if 'EVO_ARCH2_A7_UI assertions=28 failed=0' not in text or re.search(r'SCRIPT ERROR|Parse Error|ERROR:|FAIL:',text): raise SystemExit(text[-10000:])
+          files=['graphical/ui.log','observatory.png','capture-sources.json']
+          result={'verdict':'PASS','subject_head':os.environ['SOURCE_HEAD'],'subject_tree':os.environ['SOURCE_TREE'],'assertions':28,'files':{p:hashlib.sha256((root/p).read_bytes()).hexdigest() for p in files}}
+          (root/'graphical/summary.json').write_text(json.dumps(result,indent=2)+'\n')
+          print(json.dumps(result,indent=2))
           PY
           else
             printf '%s\n' '{"verdict":"NOT_EXECUTED","reason":"XVFB_NOT_INSTALLED_ON_SELF_HOSTED_RUNNER","required_followup":"Inspect separate exact-source graphical evidence; headless PASS does not prove capture"}' > artifacts/a7/graphical/summary.json
             cat artifacts/a7/graphical/summary.json
           fi
-          test "$(git rev-parse HEAD)" = baf97c89c8c84d6b3341d5e57865f25b75ab6c85
-          test "$(git rev-parse HEAD^{tree})" = 3919688b79ef04d1cc92abc6746578997f3d3e7b
+          test "$(git rev-parse HEAD)" = "$SOURCE_HEAD"
+          test "$(git rev-parse HEAD^{tree})" = "$SOURCE_TREE"
           test -z "$(git status --porcelain --untracked-files=no)"
       - name: Observe main control without promoting research
         shell: bash
@@ -90,20 +90,15 @@ jobs:
           git worktree add --detach "$control" "$main"
           export A7_CONTROL_ROOT="$control" A7_CONTROL_OUT="$candidate/artifacts/a7/control" A7_CONTROL_MAIN="$main"
           python3 - <<'PY'
-          import json, os, pathlib, platform, shutil, subprocess
-          root = pathlib.Path(os.environ['A7_CONTROL_ROOT'])
-          out = pathlib.Path(os.environ['A7_CONTROL_OUT'])
-          report = {'main_at_verification':os.environ['A7_CONTROL_MAIN'],'main_at_dispatch':'7dfc68ab5a1e90254a1b7039807f275b5da04eef','platform':platform.platform(),'python':platform.python_version(),'a7_authority':'ISOLATED_RESEARCH_ONLY','global_green_inferred':False,'audits':[]}
-          for name, script, args, artifact in [
-              ('standard','project_control.py',['--no-fetch','--no-fail-on-red'],'project-control-report.json'),
-              ('directional','project_control_directional_watch.py',['--no-fail-on-red'],'directional-watch-report.json')]:
-              with (out / (name+'.log')).open('wb') as log:
-                  result = subprocess.run(['python3',str(root/'scripts/control'/script),*args],cwd=root,stdout=log,stderr=subprocess.STDOUT,timeout=180)
-              item = {'name':name,'exit_code':result.returncode,'overall_health':'UNAVAILABLE'}
-              source = root/'artifacts/control'/artifact
+          import json,os,pathlib,platform,shutil,subprocess
+          root=pathlib.Path(os.environ['A7_CONTROL_ROOT']);out=pathlib.Path(os.environ['A7_CONTROL_OUT'])
+          report={'main_at_verification':os.environ['A7_CONTROL_MAIN'],'main_at_dispatch':'7dfc68ab5a1e90254a1b7039807f275b5da04eef','platform':platform.platform(),'python':platform.python_version(),'a7_authority':'ISOLATED_RESEARCH_ONLY','global_green_inferred':False,'audits':[]}
+          for name,script,args,artifact in [('standard','project_control.py',['--no-fetch','--no-fail-on-red'],'project-control-report.json'),('directional','project_control_directional_watch.py',['--no-fail-on-red'],'directional-watch-report.json')]:
+              with (out/(name+'.log')).open('wb') as log: result=subprocess.run(['python3',str(root/'scripts/control'/script),*args],cwd=root,stdout=log,stderr=subprocess.STDOUT,timeout=180)
+              item={'name':name,'exit_code':result.returncode,'overall_health':'UNAVAILABLE'};source=root/'artifacts/control'/artifact
               if source.exists():
                   shutil.copyfile(source,out/artifact)
-                  item['overall_health'] = json.loads(source.read_text()).get('overall_health','UNAVAILABLE')
+                  item['overall_health']=json.loads(source.read_text()).get('overall_health','UNAVAILABLE')
               report['audits'].append(item)
           (out/'control-observation.json').write_text(json.dumps(report,indent=2)+'\n')
           print(json.dumps(report,indent=2))
@@ -113,9 +108,10 @@ jobs:
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: a7-exact-baf97c89
+          name: a7-exact-7f5e072e
           path: |
             artifacts/a7/exact/
+            artifacts/a7/source-pins.log
             artifacts/a7/restart/
             artifacts/a7/graphical/
             artifacts/a7/observatory.png
