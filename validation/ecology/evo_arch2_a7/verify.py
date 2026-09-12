@@ -39,13 +39,13 @@ def main() -> int:
     parser.add_argument("--godot", type=Path, required=True)
     parser.add_argument("--head", required=True)
     parser.add_argument("--tree", required=True)
-    parser.add_argument("--graphical", action="store_true", help="Require Xvfb viewport capture in addition to headless UI checks")
+    parser.add_argument("--graphical", action="store_true", help="Compatibility option; graphical verification is always required for PASS")
     args = parser.parse_args()
     os.chdir(ROOT)
     out = ROOT / "artifacts/a7/exact"
     out.mkdir(parents=True, exist_ok=True)
     summary = {"subject_head": args.head, "subject_tree": args.tree, "accepted_base": BASE,
-               "verdict": "FAIL", "checks": [], "repeat_pairs": [], "graphical_requested": args.graphical}
+               "verdict": "FAIL", "checks": [], "repeat_pairs": [], "graphical_required": True, "legacy_graphical_flag": args.graphical}
     env = dict(os.environ, GODOT_SILENCE_ROOT_WARNING="1")
     start = time.monotonic()
     spec = importlib.util.spec_from_file_location("a6_verifier", ROOT / "validation/ecology/evo_arch2_a6/verify.py")
@@ -73,6 +73,7 @@ def main() -> int:
         summary["repeat_pairs"].append(name)
 
     try:
+        require(shutil.which("xvfb-run") is not None, "XVFB_REQUIRED_FOR_COMPLETE_A7")
         require(git("rev-parse", "HEAD") == args.head and git("rev-parse", "HEAD^{tree}") == args.tree, "EXACT_SUBJECT")
         require(not git("status", "--porcelain", "--untracked-files=no"), "TRACKED_DIRTY")
         subprocess.run(["git", "merge-base", "--is-ancestor", BASE, args.head], cwd=ROOT, check=True)
@@ -86,7 +87,9 @@ def main() -> int:
         summary["godot"] = {"version": VERSION, "sha256": GODOT_SHA}
         shutil.rmtree(ROOT / ".godot", ignore_errors=True)
         run("cold-import", [str(args.godot), "--headless", "--audio-driver", "Dummy", "--editor", "--path", str(ROOT), "--import"])
+        run("a7-verifier-guard", [sys.executable, "-m", "unittest", "discover", "-s", str(ROOT / "validation/ecology/evo_arch2_a7"), "-p", "test_verifier_gates.py", "-v"], "OK")
         for name, filename, marker, count in [
+            ("a7-protocol", "arch2_a7_protocol_guard.gd", "EVO_ARCH2_A7_PROTOCOL assertions=106 failed=0", 106),
             ("a7-core", "arch2_a7_acceptance.gd", "EVO_ARCH2_A7_EXACT assertions=158 failed=0", 158),
             ("a7-ui", "arch2_a7_ui.gd", "EVO_ARCH2_A7_UI assertions=30 failed=0", 30),
             ("a6-core", "arch2_a6_exact_acceptance.gd", "EVO_ARCH2_A6_EXACT assertions=77 failed=0", 77),
@@ -114,14 +117,12 @@ def main() -> int:
             files = list(ROOT.glob(f"tests/ecology/eco_evo7_vis5_{i}_*acceptance.gd"))
             require(len(files) == 1, f"VIS5_{i}_UNIQUE")
             run(f"vis5-{i}", script(files[0].relative_to(ROOT).as_posix()), f"PASS ({count} assertions)", count)
-        if args.graphical:
-            require(shutil.which("xvfb-run") is not None, "XVFB_REQUIRED")
-            run("a7-graphical", ["xvfb-run", "-a", "-s", "-screen 0 1600x1100x24", str(args.godot),
-                "--rendering-method", "gl_compatibility", "--audio-driver", "Dummy", "--path", str(ROOT),
-                "--script", "res://tests/research/ecology/v2/arch2_a7_ui.gd", "--", "--capture"],
-                "EVO_ARCH2_A7_UI assertions=32 failed=0", 32)
-            summary["viewport_sha256"] = sha(ROOT / "artifacts/a7/observatory.png")
-            summary["viewport_source_report_sha256"] = sha(ROOT / "artifacts/a7/capture-sources.json")
+        run("a7-graphical", ["xvfb-run", "-a", "-s", "-screen 0 1600x1100x24", str(args.godot),
+            "--rendering-method", "gl_compatibility", "--audio-driver", "Dummy", "--path", str(ROOT),
+            "--script", "res://tests/research/ecology/v2/arch2_a7_ui.gd", "--", "--capture"],
+            "EVO_ARCH2_A7_UI assertions=32 failed=0", 32)
+        summary["viewport_sha256"] = sha(ROOT / "artifacts/a7/observatory.png")
+        summary["viewport_source_report_sha256"] = sha(ROOT / "artifacts/a7/capture-sources.json")
         require(git("rev-parse", "HEAD") == args.head and git("rev-parse", "HEAD^{tree}") == args.tree
                 and not git("status", "--porcelain", "--untracked-files=no"), "FINAL_EXACT_SEAL")
         summary["assertion_executions"] = sum(c["assertions"] for c in summary["checks"])

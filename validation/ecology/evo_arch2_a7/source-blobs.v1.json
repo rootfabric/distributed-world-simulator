@@ -1,22 +1,24 @@
 {
   "schema": "dws.ecology.a7-source-blobs.v1",
-  "note": "Published file identity pins, not an independent verdict. R2 keeps the entire horizon body visible in a fixed common physical frame. Final verifier must execute the published HEAD/TREE; historical runs are not inherited as PASS.",
+  "note": "Published file identity pins, not an independent verdict. R3 requires graphical verification for PASS and pins the complete scientific protocol. Final verification/review must use the published HEAD/TREE.",
   "blobs": {
     "config/ecology/evo-arch2-a7-protocol.v1.json": "34f0ba37c122a6ec8abe7fcec13d2e9212c819d4",
     "docs/research/ecology/EVO_ARCH2_A7_EVIDENCE_MAP_R1_RU.md": "c87ffa2274f53fc7ff7a8ebef099eb3c8bf1748f",
-    "docs/research/ecology/EVO_ARCH2_A7_OBSERVATORY_R1_RU.md": "a010162bcfdc39251cff4a8307ac6ec85242bf27",
+    "docs/research/ecology/EVO_ARCH2_A7_OBSERVATORY_R1_RU.md": "231b8a4c6cf08f237310b0a77086c9412631695e",
     "scenes/labs/ecology/arch2_a7_observatory.tscn": "1b1e8168110469fd63430d78a5f4326db301235d",
     "scripts/labs/ecology/arch2_a7_body_view.gd": "0d78a22cbab16722f88d262f0b6efe5bb7355843",
     "scripts/labs/ecology/arch2_a7_body_view.gd.uid": "8c5aae9768cc54d8646a7baca2ed489cf25f54e5",
-    "scripts/labs/ecology/arch2_a7_observatory.gd": "cc718dfa53b4582b5a4e9c67d3efb55f6e3a3384",
+    "scripts/labs/ecology/arch2_a7_observatory.gd": "5e2ecafddf1596a98035d73cf4a3c93e1c0a07ee",
     "scripts/labs/ecology/arch2_a7_observatory.gd.uid": "6516c177b170f7d4fa4b1e0ea3e374d448de4e70",
-    "scripts/research/ecology/v2/observatory_protocol_v1.gd": "e437eace04e480c6ea70797edbe9d21a22d3d5aa",
+    "scripts/research/ecology/v2/observatory_protocol_v1.gd": "ea047e6b01dfaf743d64c437d2cfb8deca4f0434",
     "scripts/research/ecology/v2/observatory_protocol_v1.gd.uid": "6fb18fc7af160af0810b215d8baa304484845093",
     "scripts/research/ecology/v2/observatory_session_v1.gd": "83d868c2b4fbf2c9eb60600254bfebc16e7f9b74",
     "scripts/research/ecology/v2/observatory_session_v1.gd.uid": "9f392f0ba9579373ee1da88c564671f42f178b8d",
     "tests/research/ecology/v2/arch2_a7_acceptance.gd": "fd72bb832f8779a4a1acd709c06c359d5836ecf6",
     "tests/research/ecology/v2/arch2_a7_restart.gd": "70eedb119fcf5a50f49e7cdd809656ba0a54be2d",
     "tests/research/ecology/v2/arch2_a7_ui.gd": "d754a6e5147c5f4e98d1e947ee4654a468f09348",
-    "validation/ecology/evo_arch2_a7/verify.py": "3b2494599f19754b901a1e4e5b610ada43c0ed93"
+    "validation/ecology/evo_arch2_a7/verify.py": "0bcff33893305c77487bc6adcbe7ea1eb5c4d8ed",
+    "tests/research/ecology/v2/arch2_a7_protocol_guard.gd": "35e625b3ae9535e3e0bbfc69fae64f7d928c7113",
+    "validation/ecology/evo_arch2_a7/test_verifier_gates.py": "3386a1cd3b5c78c2750f815c206518eac03d1f59"
   }
 }

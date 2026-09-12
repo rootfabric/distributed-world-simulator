@@ -28,6 +28,13 @@ func _ready() -> void:
 	get_window().size = Vector2i(1440, 960)
 	get_window().content_scale_size = Vector2i(1440, 960)
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	var protocol := Protocol.manifest()
+	if protocol.is_empty():
+		status = Label.new()
+		status.name = "Status"
+		status.text = "PROTOCOL REJECTED: canonical A7-R1 digest/encoding mismatch"
+		add_child(status)
+		return
 	var backdrop := ColorRect.new(); backdrop.color = Color("0b1420"); backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); add_child(backdrop)
 	var margin := MarginContainer.new(); margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	for edge in ["left", "top", "right", "bottom"]: margin.add_theme_constant_override("margin_" + edge, 18)
@@ -37,7 +44,7 @@ func _ready() -> void:
 	var subtitle := Label.new(); subtitle.text = "Три настоящих A6-эксперимента • одно начальное наследуемое правило • research only"; root.add_child(subtitle)
 	var treatments := HBoxContainer.new(); root.add_child(treatments)
 	seed_choice = OptionButton.new(); seed_choice.name = "SeedChoice"
-	for seed in Protocol.manifest().seeds: seed_choice.add_item("Seed " + str(seed))
+	for seed in protocol.seeds: seed_choice.add_item("Seed " + str(seed))
 	treatments.add_child(seed_choice)
 	common = _toggle(treatments, "Common garden", false, "CommonGarden")
 	effects = _toggle(treatments, "Feedback ON", true, "Effects")
@@ -103,7 +110,11 @@ func _step() -> void:
 
 func reset_experiment() -> void:
 	running = false; elapsed = 0; play.text = "▶ Пуск"
-	var seeds: Array = Protocol.manifest().seeds
+	var protocol := Protocol.manifest()
+	if protocol.is_empty():
+		status.text = "PROTOCOL REJECTED: reset did not change the experiment"
+		return
+	var seeds: Array = protocol.seeds
 	if not model.start(Protocol.treatment(seeds[seed_choice.selected], common.button_pressed, effects.button_pressed, mutations.button_pressed)):
 		status.text = "RESET FAILED: " + model.last_error; return
 	refresh()

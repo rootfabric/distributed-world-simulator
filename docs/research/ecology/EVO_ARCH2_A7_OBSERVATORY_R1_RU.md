@@ -37,7 +37,7 @@ if ($LASTEXITCODE -eq 0) {
 
 ## Что сравнивается
 
-Заранее заданы seeds 20260912 / 104729 / 130363; не происходит поиска удачной картинки. Wet/dry отличаются водой, wet/dark — светом. Во всех локациях одинаковы начальный genotype, study endowment и donor. На каждом сайте живёт study-организм и litter-donor: отсутствие воды в его reserves при ненулевом maintenance вызывает настоящую A5-смерть. A6 возвращает material донора в organic и минерализует его.
+Заранее заданы seeds 20260912 / 104729 / 130363; не происходит поиска удачной картинки. Полное каноническое содержимое protocol R1 закреплено SHA-256 `4264c7590762d65dbd65a8e951c6a008e4cac2ced0cc04bb43d8d3a66ef01ce4`: изменения endowment, donor, среды, units/scope или других значений отклоняются даже при прежнем schema/ID. Для нового эксперимента с иным протоколом нужна явная версия, а не скрытая подмена R1. Wet/dry отличаются водой, wet/dark — светом. Во всех локациях одинаковы начальный genotype, study endowment и donor. На каждом сайте живёт study-организм и litter-donor: отсутствие воды в его reserves при ненулевом maintenance вызывает настоящую A5-смерть. A6 возвращает material донора в organic и минерализует его.
 
 Common-garden — новый эксперимент, в котором те же founder genotypes заново выращиваются во всех трёх колонках при одинаковой wet-среде. Он проверяет пластичность/нейтральность при одинаковой среде; это НЕ бесплатная пересадка выращенного тела или evolutionary selection.
 
@@ -61,7 +61,7 @@ Manifest принадлежит оператору эксперимента; э�
 
 ## Проверки
 
-`validation/ecology/evo_arch2_a7/verify.py --godot <exact-bin> --head <HEAD> --tree <TREE>` запускает fail-closed A7 core/UI/restart x2 и A6/A5/all repairs/A0–A4/VIS5 regressions. Headless UI gate проверяет реальные Button handlers, а не фотографию. Отдельный graphical gate:
+`validation/ecology/evo_arch2_a7/verify.py --godot <exact-bin> --head <HEAD> --tree <TREE>` запускает fail-closed A7 protocol/core/UI/restart x2, A6/A5/all repairs/A0–A4/VIS5 regressions и ОБЯЗАТЕЛЬНЫЙ graphical gate. Headless UI gate проверяет реальные Button handlers, но не заменяет изображение. Без Xvfb полный verifier завершится FAIL до долгих тестов; `--graphical` сохранён только для совместимости и больше не включает/выключает обязательную проверку. Самостоятельный graphical gate для диагностики:
 
 ```text
 Godot --rendering-method gl_compatibility --audio-driver Dummy --path <checkout> --script res://tests/research/ecology/v2/arch2_a7_ui.gd -- --capture

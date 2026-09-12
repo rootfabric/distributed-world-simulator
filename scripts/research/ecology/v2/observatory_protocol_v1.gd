@@ -13,9 +13,19 @@ const Field = preload("res://scripts/research/ecology/v2/local_environment_field
 const A6 = preload("res://scripts/research/ecology/v2/persistent_environmental_feedback_v1.gd")
 const PATH := "res://config/ecology/evo-arch2-a7-protocol.v1.json"
 const SITES := ["wet", "dry", "dark"]
+const PROTOCOL_SHA256 := "4264c7590762d65dbd65a8e951c6a008e4cac2ced0cc04bb43d8d3a66ef01ce4"
+const MAX_PROTOCOL_BYTES := 4096
 
 static func manifest() -> Dictionary:
-	var result := C.decode(FileAccess.get_file_as_string(PATH))
+	var file := FileAccess.open(PATH, FileAccess.READ)
+	if file == null or file.get_length() > MAX_PROTOCOL_BYTES: return {}
+	var text := file.get_as_text()
+	file.close()
+	return decode_manifest(text)
+
+static func decode_manifest(text: String) -> Dictionary:
+	if text.to_utf8_buffer().size() > MAX_PROTOCOL_BYTES: return {}
+	var result := C.decode(text)
 	if not result.success or not result.value is Dictionary: return {}
 	var v: Dictionary = result.value
 	if not C.keys(v, ["schema", "id", "seeds", "horizon", "sites", "field_capacity_mg", "donor_material_mg", "study_endowment", "mutation_operator", "coordinate_units", "resource_units", "scope"]): return {}
@@ -27,13 +37,13 @@ static func manifest() -> Dictionary:
 		var site: Variant = v.sites[i]
 		if not C.keys(site, ["id", "water_mg", "light"]) or site.id != SITES[i]: return {}
 		if not C.integer(site.water_mg, 0, v.field_capacity_mg) or not C.integer(site.light, 0, 1000): return {}
-	return v
+	return v if C.digest(v) == PROTOCOL_SHA256 else {}
 
 static func treatment(seed: int = 20260912, common_garden: bool = false, effects_enabled: bool = true, mutations_enabled: bool = true) -> Dictionary:
 	return {"seed": seed, "common_garden": common_garden, "effects_enabled": effects_enabled, "mutations_enabled": mutations_enabled}
 
 static func valid_treatment(v: Variant, protocol: Dictionary) -> bool:
-	if protocol.is_empty() or not C.keys(v, ["seed", "common_garden", "effects_enabled", "mutations_enabled"]): return false
+	if protocol.is_empty() or C.digest(protocol) != PROTOCOL_SHA256 or not C.keys(v, ["seed", "common_garden", "effects_enabled", "mutations_enabled"]): return false
 	if not C.integer(v.seed, 0, C.MAX_INT) or not v.seed in protocol.seeds: return false
 	return v.common_garden is bool and v.effects_enabled is bool and v.mutations_enabled is bool
 
