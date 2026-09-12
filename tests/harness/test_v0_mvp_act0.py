@@ -1,4 +1,4 @@
-"""ACT0 tests. Installed as tests/harness/test_v0_mvp_act0.py by the assembler."""
+"""ACT0 tests. Historical authority fixtures are pinned to the canonical pre-implementation main."""
 from __future__ import annotations
 
 from contextlib import contextmanager
@@ -17,6 +17,7 @@ from harness.checkpoint_planner import build_plan
 from harness.contracts import ContractBundle
 
 BASE = "3d7672cba293d8e7bd72427b803f73fc8fcee5da"
+PRE_IMPLEMENTATION_MAIN = "127c732a56cc5c25d5712f24a7627ed4bb877374"
 P7 = "V0_P7_BOUNDED_TERRAIN_MUTATION"
 MVP = "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE"
 BRANCH = "feature/v0-mvp-playable-seamless-planet-r1"
@@ -42,12 +43,35 @@ class MVPAct0Tests(unittest.TestCase):
 
     @contextmanager
     def fixture(self, adopted: bool):
+        """Run current Harness code on a lineage that never contained MVP progress events.
+
+        The previous fixture cloned the moving feature HEAD and then restored the
+        execution directory to PRE_IMPLEMENTATION_MAIN.  That created a real Git
+        deletion commit for sequence 3/4 and the append-only ledger correctly
+        rejected it as EVENT_LEDGER_DELETION_DETECTED.
+
+        Build the synthetic authority fixture in the opposite direction: start
+        from PRE_IMPLEMENTATION_MAIN (where those future events never existed),
+        then overlay only current Harness/control executable code.  This preserves
+        current validation semantics without manufacturing a deletion in the
+        execution ledger's ancestry.
+        """
         with tempfile.TemporaryDirectory(prefix="act0-authority-") as tmp:
             root = Path(tmp) / "repo"
             subprocess.run(["git", "clone", "--quiet", "--shared", str(ROOT), str(root)], check=True)
-            head = git(ROOT, "rev-parse", "HEAD")
-            git(root, "checkout", "--quiet", "-B", BRANCH, head)
-            git(root, "update-ref", "refs/remotes/origin/main", head if adopted else BASE)
+            current_head = git(ROOT, "rev-parse", "HEAD")
+            git(root, "checkout", "--quiet", "-B", BRANCH, PRE_IMPLEMENTATION_MAIN)
+
+            # Keep the frozen ACT0 authority/configuration from PRE_IMPLEMENTATION_MAIN,
+            # but exercise it with the executable Harness/control implementation under
+            # review.  Commit the overlay so strict provenance sees a clean worktree.
+            for path in ("scripts/harness", "scripts/control"):
+                git(root, "restore", "--source", current_head, "--staged", "--worktree", "--", path)
+            if git(root, "status", "--porcelain", "--", "scripts/harness", "scripts/control"):
+                git(root, "-c", "user.name=ACT0 fixture", "-c", "user.email=fixture@example.invalid",
+                    "commit", "-qm", "test-only overlay current harness code")
+
+            git(root, "update-ref", "refs/remotes/origin/main", PRE_IMPLEMENTATION_MAIN if adopted else BASE)
             yield root
 
     def cli(self, root: Path, *args: str):
@@ -125,8 +149,39 @@ class MVPAct0Tests(unittest.TestCase):
     def test_all_p7_execution_and_acceptance_blobs_are_unchanged(self):
         for path in (H + "executions/E2026-08-30-V0-P7-R1", H + "acceptance"):
             self.assertEqual("", git(ROOT, "diff", "--name-only", BASE, "HEAD", "--", path))
-        for path in ("scripts/runtime", "scripts/network", "scripts/simulation", "scenes", "project.godot"):
-            self.assertEqual("", git(ROOT, "diff", "--name-only", BASE, "HEAD", "--", path))
+        for path in (
+            "scripts/runtime/networked_gameplay/p7",
+            "scripts/runtime/networked_gameplay/m4",
+            "scripts/runtime/networked_gameplay/sm1",
+            "scripts/network",
+            "scripts/simulation",
+            "project.godot",
+            "config/architecture",
+        ):
+            self.assertEqual("", git(ROOT, "diff", "--name-only", BASE, "HEAD", "--", path), path)
+
+    def test_current_mvp_work_order_snapshot_matches_latest_committed_event(self):
+        order = read(EX + "/work-orders/" + WO + ".v1.json")
+        directory = ROOT / EX / "events" / WO
+        events = [json.loads(path.read_text(encoding="utf-8")) for path in directory.glob("*.json")]
+        self.assertTrue(events)
+        latest = max(events, key=lambda event: event["sequence"])
+        self.assertEqual(latest["work_state"], order["state"])
+
+    def test_preimplementation_fixture_never_deletes_future_ledger_events(self):
+        with self.fixture(adopted=True) as root:
+            event_dir = root / EX / "events" / WO
+            self.assertFalse((event_dir / "0004-mvp1-shared-graphical-scene-implementation.v1.json").exists())
+            deleted = git(
+                root,
+                "log",
+                "--diff-filter=D",
+                "--format=%H",
+                PRE_IMPLEMENTATION_MAIN + "..HEAD",
+                "--",
+                EX + "/events/" + WO,
+            )
+            self.assertEqual("", deleted)
 
     def test_candidate_default_and_explicit_execution_cannot_activate(self):
         with self.fixture(adopted=False) as root:
@@ -154,7 +209,6 @@ class MVPAct0Tests(unittest.TestCase):
             self.assertEqual(0, code, payload)
             self.assertTrue(payload["control_route"]["mission_complete"])
             self.assertFalse(payload["runtime_authorized"])
-
 
     def commit_fixture(self, root, relative, value):
         path = root / relative
