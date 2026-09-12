@@ -1,6 +1,6 @@
 {
   "schema": "dws.ecology.a7-source-blobs.v1",
-  "note": "Prepublication file identity pins; not an independent verdict. Final verifier must execute the published HEAD/TREE.",
+  "note": "Published file identity pins, not an independent verdict. R1 normalizes only the UI summary string newlines to escaped form; the final verifier must execute the published HEAD/TREE. See EVO_ARCH2_A7_REPAIR_MAP_R1_RU.md.",
   "blobs": {
     "config/ecology/evo-arch2-a7-protocol.v1.json": "34f0ba37c122a6ec8abe7fcec13d2e9212c819d4",
     "docs/research/ecology/EVO_ARCH2_A7_EVIDENCE_MAP_R1_RU.md": "c87ffa2274f53fc7ff7a8ebef099eb3c8bf1748f",
@@ -8,7 +8,7 @@
     "scenes/labs/ecology/arch2_a7_observatory.tscn": "1b1e8168110469fd63430d78a5f4326db301235d",
     "scripts/labs/ecology/arch2_a7_body_view.gd": "d4ba98fcb41af490842ed3fac8b7bab2ba8ef108",
     "scripts/labs/ecology/arch2_a7_body_view.gd.uid": "8c5aae9768cc54d8646a7baca2ed489cf25f54e5",
-    "scripts/labs/ecology/arch2_a7_observatory.gd": "ac97e6d57c292387958df0266a43ecc6947ec636",
+    "scripts/labs/ecology/arch2_a7_observatory.gd": "8cf89d035999b0cd9a73769ebd459134fec0cc66",
     "scripts/labs/ecology/arch2_a7_observatory.gd.uid": "6516c177b170f7d4fa4b1e0ea3e374d448de4e70",
     "scripts/research/ecology/v2/observatory_protocol_v1.gd": "e437eace04e480c6ea70797edbe9d21a22d3d5aa",
     "scripts/research/ecology/v2/observatory_protocol_v1.gd.uid": "6fb18fc7af160af0810b215d8baa304484845093",
