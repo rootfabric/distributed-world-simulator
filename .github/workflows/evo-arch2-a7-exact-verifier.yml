@@ -7,10 +7,10 @@ permissions:
   contents: read
 concurrency:
   group: eco-arch2-a7-canonical-verifier
-  cancel-in-progress: false
+  cancel-in-progress: true
 env:
-  SOURCE_HEAD: 7f5e072e9ee198a54f0ddbc5c06def9a58aa90b3
-  SOURCE_TREE: 7da3e5f07132b297323a43f53cf61fcea9a6c322
+  SOURCE_HEAD: 9e6b273a7758718ea99b1d2e641c8386e6db0ea3
+  SOURCE_TREE: 5e4d0b42e28b4fcfe6537b975080f01015b56872
 jobs:
   linux-canonical:
     if: github.actor == 'rootfabric' && github.repository == 'rootfabric/distributed-world-simulator'
@@ -32,10 +32,10 @@ jobs:
           test "$(git rev-parse HEAD^{tree})" = "$SOURCE_TREE"
           python3 - <<'PY' | tee artifacts/a7/source-pins.log
           import json, subprocess
-          pins = json.load(open('validation/ecology/evo_arch2_a7/source-blobs.v1.json'))
-          failures = []
-          for path, expected in pins['blobs'].items():
-              actual = subprocess.check_output(['git','hash-object',path],text=True).strip()
+          pins=json.load(open('validation/ecology/evo_arch2_a7/source-blobs.v1.json'))
+          failures=[]
+          for path,expected in pins['blobs'].items():
+              actual=subprocess.check_output(['git','hash-object',path],text=True).strip()
               print(f'SOURCE_BLOB_{"PASS" if actual == expected else "FAIL"} {path} {actual} expected={expected}')
               if actual != expected: failures.append(path)
           if failures: raise SystemExit('SOURCE_BLOB_MISMATCH: '+', '.join(failures))
@@ -49,7 +49,7 @@ jobs:
           godot="${CONFIGURED_GODOT:-$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64}"
           test -x "$godot"
           python3 validation/ecology/evo_arch2_a7/verify.py --godot "$godot" --head "$SOURCE_HEAD" --tree "$SOURCE_TREE"
-      - name: Graphical viewport and actual UI handlers
+      - name: Graphical full-horizon viewport and actual UI handlers
         shell: bash
         env:
           CONFIGURED_GODOT: ${{ vars.GODOT_DOUBLE_PATH }}
@@ -66,9 +66,9 @@ jobs:
           import hashlib,json,os,pathlib,re
           root=pathlib.Path('artifacts/a7')
           text=(root/'graphical/ui.log').read_text(encoding='utf-8-sig')
-          if 'EVO_ARCH2_A7_UI assertions=28 failed=0' not in text or re.search(r'SCRIPT ERROR|Parse Error|ERROR:|FAIL:',text): raise SystemExit(text[-10000:])
+          if 'EVO_ARCH2_A7_UI assertions=32 failed=0' not in text or re.search(r'SCRIPT ERROR|Parse Error|ERROR:|FAIL:',text): raise SystemExit(text[-10000:])
           files=['graphical/ui.log','observatory.png','capture-sources.json']
-          result={'verdict':'PASS','subject_head':os.environ['SOURCE_HEAD'],'subject_tree':os.environ['SOURCE_TREE'],'assertions':28,'files':{p:hashlib.sha256((root/p).read_bytes()).hexdigest() for p in files}}
+          result={'verdict':'PASS','subject_head':os.environ['SOURCE_HEAD'],'subject_tree':os.environ['SOURCE_TREE'],'assertions':32,'files':{p:hashlib.sha256((root/p).read_bytes()).hexdigest() for p in files}}
           (root/'graphical/summary.json').write_text(json.dumps(result,indent=2)+'\n')
           print(json.dumps(result,indent=2))
           PY
@@ -92,7 +92,7 @@ jobs:
           python3 - <<'PY'
           import json,os,pathlib,platform,shutil,subprocess
           root=pathlib.Path(os.environ['A7_CONTROL_ROOT']);out=pathlib.Path(os.environ['A7_CONTROL_OUT'])
-          report={'main_at_verification':os.environ['A7_CONTROL_MAIN'],'main_at_dispatch':'7dfc68ab5a1e90254a1b7039807f275b5da04eef','platform':platform.platform(),'python':platform.python_version(),'a7_authority':'ISOLATED_RESEARCH_ONLY','global_green_inferred':False,'audits':[]}
+          report={'main_at_verification':os.environ['A7_CONTROL_MAIN'],'main_at_dispatch':'7dfc68ab5a1e90254a1b7039807f275b5da04eef','platform':platform.platform(),'python':platform.python_version(),'a7_authority':'ISOLATED_RESEARCH_ONLY','global_green_inferred':False,'audits':[],'harness_observations':[]}
           for name,script,args,artifact in [('standard','project_control.py',['--no-fetch','--no-fail-on-red'],'project-control-report.json'),('directional','project_control_directional_watch.py',['--no-fail-on-red'],'directional-watch-report.json')]:
               with (out/(name+'.log')).open('wb') as log: result=subprocess.run(['python3',str(root/'scripts/control'/script),*args],cwd=root,stdout=log,stderr=subprocess.STDOUT,timeout=180)
               item={'name':name,'exit_code':result.returncode,'overall_health':'UNAVAILABLE'};source=root/'artifacts/control'/artifact
@@ -100,6 +100,11 @@ jobs:
                   shutil.copyfile(source,out/artifact)
                   item['overall_health']=json.loads(source.read_text()).get('overall_health','UNAVAILABLE')
               report['audits'].append(item)
+          env=dict(os.environ,PYTHONPATH=str(root/'scripts'),PYTHONUTF8='1')
+          for mode in ['drive','close-role','close-mission']:
+              command=['python3','-m','harness.cli',mode,'--root',str(root),'--checkpoint','ECO_ARCH2_A7_OBSERVATORY']
+              with (out/(mode+'.log')).open('wb') as log: result=subprocess.run(command,cwd=root,env=env,stdout=log,stderr=subprocess.STDOUT,timeout=180)
+              report['harness_observations'].append({'mode':mode,'command':command,'exit_code':result.returncode,'not_an_acceptance_verdict':True})
           (out/'control-observation.json').write_text(json.dumps(report,indent=2)+'\n')
           print(json.dumps(report,indent=2))
           PY
@@ -108,7 +113,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: a7-exact-7f5e072e
+          name: a7-exact-9e6b273a
           path: |
             artifacts/a7/exact/
             artifacts/a7/source-pins.log
