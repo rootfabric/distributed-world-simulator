@@ -56,7 +56,10 @@ func _field(owner: String, stock: int) -> Dictionary:
 
 func _starvation_window_excludes_reproduction() -> void:
 	var blueprint := BP.create(_genome(), _policy())
-	var entry := R.individual(blueprint, "rm17.parent", [500, 0, 500], B.stock(1000))
+	# RM34 charges first maintenance for a newly committed reproductive module on
+	# its birth tick. Fund that rich tick, but keep the remaining water below the
+	# two-module maintenance bill so the following empty-field ticks still starve.
+	var entry := R.individual(blueprint, "rm17.parent", [500, 0, 500], B.stock(3000))
 	_check(not blueprint.is_empty() and not entry.is_empty(), "starvation_window_entry_valid")
 	if entry.is_empty(): return
 
