@@ -1,8 +1,7 @@
 extends Node3D
 
-# Noncanonical presentation: immutable P7 bootstrap + existing MW6 replica.
-# The temporary generator is discarded before input; no excavation/query API
-# is exposed. Meshes are rebuilt only after MW6 validates a received frame.
+# Read-only P7 procedural bootstrap plus the existing MW6 replica. Only the
+# bootstrap is locally generated; every later change must pass MW6 validation.
 const Bubble = preload("res://scripts/world/matter/lunar_matter_bubble.gd")
 const Bootstrap = preload("res://scripts/runtime/networked_gameplay/mvp/v0_mvp_bootstrap_surface.gd")
 const Replica = preload("res://scripts/simulation/matter/network/matter_replica_client.gd")
@@ -44,13 +43,23 @@ func configure_actor(actor: String, session: String, draw_surface: bool) -> Dict
 	_bootstrap_hash = builder.snapshot_store().content_hash()
 	for snapshot in snapshots:
 		_baseline[String(snapshot["address"]["address_id"])] = Dictionary(snapshot).duplicate(true)
-	# Explicitly release the generator/excavator. Remaining data is read-only.
 	builder = null
 	_actor = actor
 	_draw = draw_surface
 	_replica = Replica.new()
 	result = _replica.configure(_body, _grid, Bridge.OWNER, Bridge.EPOCH, Bridge.client(actor))
 	if not bool(result.get("success", false)): return result
+	# MW6 sequence zero represents the procedural world, not an empty store.
+	# Seed only exact revision-zero bootstrap snapshots through the existing
+	# public replica store API BEFORE session activation. No received snapshot
+	# conflict/epoch/sequence check is bypassed or relaxed.
+	for snapshot in snapshots:
+		if int(snapshot.get("state_revision", -1)) != 0:
+			return Bridge.fail("MVP4_NONZERO_BOOTSTRAP_REVISION")
+		result = _replica.snapshot_store().put(snapshot)
+		if not bool(result.get("success", false)): return result
+	if _replica.snapshot_store().content_hash() != _bootstrap_hash:
+		return Bridge.fail("MVP4_REPLICA_BOOTSTRAP_HASH_MISMATCH")
 	result = _replica.activate_session(Bridge.peer(actor), session)
 	if not bool(result.get("success", false)): return result
 	_configured = true
@@ -69,9 +78,7 @@ func consume(envelope: Dictionary) -> Dictionary:
 	var valid: Dictionary = Envelope.validate(envelope)
 	if not bool(valid.get("success", false)): return valid
 	if envelope.get("target_peer_id") != Bridge.peer(_actor): return Bridge.fail("MVP4_REPLICA_FOREIGN_PEER")
-	# MW6 validates payload schema/checksum, session, authority, operation and
-	# stream sequence. This adapter additionally fences the transport order.
-	var sequence := int(envelope.get("sequence", envelope.get("transport_sequence", -1)))
+	var sequence := int(envelope.get("sequence", -1))
 	if sequence != _last_transport_sequence + 1: return Bridge.fail("MVP4_REPLICA_TRANSPORT_SEQUENCE_GAP")
 	if envelope.get("payload_schema") != "planet_simulator.matter_replication_frame.v1":
 		return Bridge.fail("MVP4_REPLICA_FRAME_SCHEMA_INVALID")
@@ -104,8 +111,6 @@ func _rebuild() -> Dictionary:
 		var valid: Dictionary = MeshData.validate(mesh)
 		if not bool(valid.get("success", false)): return valid
 		entries.append({"address_id": String(address_id), "state_revision": int(snapshot["state_revision"]), "snapshot_checksum": String(snapshot["checksum"])})
-		# Independent physical geometry digest excludes source revision/checksum.
-		# A metadata-only change therefore cannot prove a visible hole.
 		var vertices: Array = []
 		for vertex in mesh["vertices"]:
 			vertices.append([roundi(vertex.x * 1000000.0), roundi(vertex.y * 1000000.0), roundi(vertex.z * 1000000.0)])
@@ -114,7 +119,6 @@ func _rebuild() -> Dictionary:
 		facts.append({"address_id": String(address_id), "state_revision": snapshot["state_revision"], "source_checksum": snapshot["checksum"], "mesh_content_hash": mesh["content_hash"], "geometry_hash": geometry, "triangles": int(mesh["triangle_count"])})
 		triangle_count += int(mesh["triangle_count"])
 		pending_meshes[address_id] = mesh
-	# Commit presentation only after all affected snapshots/meshes validate.
 	if _draw:
 		for old in _mesh_roots.values():
 			remove_child(old)
