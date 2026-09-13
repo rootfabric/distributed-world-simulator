@@ -5,9 +5,6 @@ on:
     paths: [.github/workflows/mvp3-r13-control-recheck.yml]
 permissions:
   contents: read
-concurrency:
-  group: mvp3-r13-control-recheck-${{ github.ref }}
-  cancel-in-progress: false
 jobs:
   control:
     runs-on: ubuntu-latest
@@ -26,59 +23,54 @@ jobs:
           ref: f1d453fb2af49231c30bdc5cbe415ad199394446
           fetch-depth: 0
           persist-credentials: false
-      - name: Bind exact subject to product branch context
+      - name: Verify exact subject and restore product branch identity
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p artifacts/mvp3-r13-control
           test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
           test "$(git rev-parse HEAD^{tree})" = "$EXPECTED_TREE"
-          test -z "$(git status --porcelain --untracked-files=no)"
           git fetch origin '+refs/heads/*:refs/remotes/origin/*' --prune
           test "$(git rev-parse origin/main)" = "$AUDITED_MAIN"
           test "$(git rev-parse origin/$FREEZE_REF)" = "$EXPECTED_HEAD"
           git switch -c "$PRODUCT_BRANCH" "$EXPECTED_HEAD"
-          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
-          test "$(git rev-parse HEAD^{tree})" = "$EXPECTED_TREE"
           test "$(git branch --show-current)" = "$PRODUCT_BRANCH"
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+          test -z "$(git status --porcelain --untracked-files=no)"
           git rev-parse HEAD HEAD^{tree} origin/main > artifacts/mvp3-r13-control/subjects.txt
-          git branch --show-current > artifacts/mvp3-r13-control/branch.txt
           python3 -m pip install --disable-pip-version-check -r scripts/harness/requirements.txt
       - name: Run exact control gates
         shell: bash
         run: |
           set -euo pipefail
-          OUT=artifacts/mvp3-r13-control
-          python3 -m unittest discover -s tests/harness -p 'test_*.py' -v 2>&1 | tee "$OUT/harness.log"
-          pwsh -NoProfile -File CONTROL_DEVELOPMENT.ps1 -Plan 2>&1 | tee "$OUT/plan.log"
-          pwsh -NoProfile -File CONTROL_DEVELOPMENT.ps1 -Drive 2>&1 | tee "$OUT/drive.log"
+          O=artifacts/mvp3-r13-control
+          python3 -m unittest discover -s tests/harness -p 'test_*.py' -v 2>&1 | tee "$O/harness.log"
+          pwsh -NoProfile -File CONTROL_DEVELOPMENT.ps1 -Plan 2>&1 | tee "$O/plan.log"
+          pwsh -NoProfile -File CONTROL_DEVELOPMENT.ps1 -Drive 2>&1 | tee "$O/drive.log"
           set +e
-          pwsh -NoProfile -File CONTROL_DEVELOPMENT.ps1 -CloseRole > "$OUT/close-role.log" 2>&1; CR=$?
-          pwsh -NoProfile -File CONTROL_DEVELOPMENT.ps1 -CloseMission > "$OUT/close-mission.log" 2>&1; CM=$?
+          pwsh -NoProfile -File CONTROL_DEVELOPMENT.ps1 -CloseRole > "$O/close-role.log" 2>&1; CR=$?
+          pwsh -NoProfile -File CONTROL_DEVELOPMENT.ps1 -CloseMission > "$O/close-mission.log" 2>&1; CM=$?
           set -e
-          printf '%s\n' "$CR" > "$OUT/close-role.exit"
-          printf '%s\n' "$CM" > "$OUT/close-mission.exit"
+          echo "$CR" > "$O/close-role.exit"; echo "$CM" > "$O/close-mission.exit"
           test "$CR" = 0 -o "$CR" = 7
           test "$CM" = 8
-          python3 scripts/control/project_control.py --no-fetch --no-fail-on-red 2>&1 | tee "$OUT/pc0.log"
-          python3 scripts/control/project_control_directional_watch.py --no-fail-on-red 2>&1 | tee "$OUT/directional-pc0.log"
+          python3 scripts/control/project_control.py --no-fetch --no-fail-on-red 2>&1 | tee "$O/pc0.log"
+          python3 scripts/control/project_control_directional_watch.py --no-fail-on-red 2>&1 | tee "$O/directional-pc0.log"
           test -z "$(git status --porcelain --untracked-files=no)"
-      - name: Build exact evidence manifest
+      - name: Bind evidence
         if: always()
         shell: bash
         run: |
           python3 - <<'PY'
           import hashlib,json,os,pathlib,subprocess
-          out=pathlib.Path('artifacts/mvp3-r13-control'); out.mkdir(parents=True,exist_ok=True)
-          def git(*a):
-              p=subprocess.run(['git',*a],capture_output=True,text=True)
-              return {'exit_code':p.returncode,'stdout':p.stdout.strip(),'stderr':p.stderr.strip()}
-          files=[]
-          for p in sorted(out.rglob('*')):
-              if p.is_file() and p.name!='manifest.json':
-                  files.append({'path':str(p),'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()})
-          m={'schema':'distributed_world_simulator.mvp3_r13_exact_control.v1','subject_head':git('rev-parse','HEAD'),'subject_tree':git('rev-parse','HEAD^{tree}'),'branch':git('branch','--show-current'),'canonical_main':git('rev-parse','origin/main'),'expected_head':os.environ['EXPECTED_HEAD'],'expected_tree':os.environ['EXPECTED_TREE'],'freeze_ref':os.environ['FREEZE_REF'],'carrier_sha':os.environ['GITHUB_SHA'],'run_id':os.environ['GITHUB_RUN_ID'],'manual_input_executed':False,'independent_verdict':False,'mvp3_predicate_verified':False,'files':files}
-          (out/'manifest.json').write_text(json.dumps(m,indent=2)+'\n')
+          o=pathlib.Path('artifacts/mvp3-r13-control'); o.mkdir(parents=True,exist_ok=True)
+          def g(*a):
+            p=subprocess.run(['git',*a],capture_output=True,text=True); return {'exit_code':p.returncode,'stdout':p.stdout.strip(),'stderr':p.stderr.strip()}
+          fs=[]
+          for p in sorted(o.rglob('*')):
+            if p.is_file() and p.name!='manifest.json': fs.append({'path':str(p),'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()})
+          m={'schema':'distributed_world_simulator.mvp3_r13_exact_control.v1','subject_head':g('rev-parse','HEAD'),'subject_tree':g('rev-parse','HEAD^{tree}'),'branch':g('branch','--show-current'),'canonical_main':g('rev-parse','origin/main'),'expected_head':os.environ['EXPECTED_HEAD'],'expected_tree':os.environ['EXPECTED_TREE'],'freeze_ref':os.environ['FREEZE_REF'],'carrier_sha':os.environ['GITHUB_SHA'],'run_id':os.environ['GITHUB_RUN_ID'],'manual_input_executed':False,'independent_verdict':False,'mvp3_predicate_verified':False,'files':fs}
+          (o/'manifest.json').write_text(json.dumps(m,indent=2)+'\n')
           PY
       - uses: actions/upload-artifact@v4
         if: always()
