@@ -123,6 +123,28 @@ func prepare_export(logical_id: String, transfer_id: String, carrying_manifest: 
 	# Hash canonical JSON without a JSON parse/serialize round trip: native
 	# actor counter types must not be changed while preparing a frozen packet.
 	var packet := {"schema": SCHEMA, "transfer_id": transfer_id, "logical_player_id": logical_id, "source_authority_id": _authority, "target_authority_id": transfer["target_authority_id"], "source_epoch": transfer["source_epoch"], "target_epoch": transfer["target_epoch"], "backend_authority_epoch": _backend_epoch, "player": player, "ownership": binding, "replay": replay, "carrying_manifest": carrying_manifest.duplicate(true), "item_payload_policy": "MVP3_EMPTY_CARRY_ONLY"}
+	# Freeze the packet in its exact transport-canonical JSON form before
+	# hashing. Godot's full-precision double formatting is not idempotent
+	# across a JSON parse for accumulated fixed-tick movement doubles: the
+	# first round trip can shorten a value, so a checksum bound to
+	# pre-transport natives would reject the byte-identical packet at the
+	# target attestation gate. Canonicalizing to a round-trip fixed point
+	# binds the checksum to the exact bytes that travel; stale, forged, or
+	# divergent values still fail the target attestation comparisons.
+	var canonical: Dictionary = packet
+	var stable := false
+	for _attempt in range(3):
+		var round_trip: Dictionary = Utils.json_round_trip(canonical)
+		if not bool(round_trip.get("success", false)) or not round_trip.get("value") is Dictionary:
+			return _failure("LIVE_PLAYER_EXPORT_CANONICALIZATION_FAILED")
+		var candidate: Dictionary = round_trip["value"]
+		if Utils.payload_hash(candidate) == Utils.payload_hash(canonical):
+			stable = true
+			break
+		canonical = candidate
+	if not stable:
+		return _failure("LIVE_PLAYER_EXPORT_CANONICALIZATION_UNSTABLE")
+	packet = canonical
 	packet["checksum"] = Utils.payload_hash(packet)
 	if _prepared.has(logical_id) and _prepared[logical_id].get("transfer_id") == transfer_id:
 		if _prepared[logical_id].get("checksum") != packet["checksum"]:
@@ -156,8 +178,12 @@ func stage_export(logical_id: String, packet: Dictionary) -> Dictionary:
 	var attested: Dictionary = _peers[source].get_ref().get_prepared_export(logical_id, transfer_id)
 	# A recomputed caller checksum is insufficient. This compares with the
 	# frozen native-source receipt through a pre-bound trusted server port.
-	if attested.is_empty() or packet.get("checksum") != _checksum(packet) or Utils.payload_hash(packet) != Utils.payload_hash(attested):
-		return _failure("LIVE_PLAYER_SOURCE_ATTESTATION_MISMATCH")
+	if attested.is_empty():
+		return _failure("LIVE_PLAYER_SOURCE_ATTESTATION_ABSENT")
+	if packet.get("checksum") != _checksum(packet):
+		return _failure("LIVE_PLAYER_SOURCE_CHECKSUM_INVALID")
+	if Utils.payload_hash(packet) != Utils.payload_hash(attested):
+		return _failure("LIVE_PLAYER_SOURCE_PACKET_DIVERGED")
 	for field in ["player", "ownership", "replay", "carrying_manifest"]:
 		if not packet.get(field) is Dictionary:
 			return _failure("LIVE_PLAYER_EXPORT_SECTION_INVALID")
