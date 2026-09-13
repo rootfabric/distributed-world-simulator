@@ -1,10 +1,10 @@
 extends SceneTree
 
-# Separate OS process hosting the EXISTING canonical M3 Service. The network
-# boundary and fixed-tick clock are accepted components, not another kernel.
+# One native M3 Service instance per authority process. The thin derived
+# Service adds a fixed-input receipt method to that same canonical owner.
 const Protocol = preload("res://scripts/runtime/networked_gameplay/mvp/v0_mvp3_process_protocol.gd")
 const Support = preload("res://scripts/runtime/networked_gameplay/sm1/sm1_6_process_support.gd")
-const Service = preload("res://scripts/runtime/networked_gameplay/networked_gameplay_service.gd")
+const Service = preload("res://scripts/runtime/networked_gameplay/mvp/v0_mvp3_fixed_tick_gameplay_service.gd")
 const Views = preload("res://scripts/runtime/networked_gameplay/mvp/v0_mvp3_remote_owner_views.gd")
 const Scheduler = preload("res://scripts/network/simulation/fixed_tick_scheduler.gd")
 var cfg: Dictionary = {}
@@ -23,6 +23,13 @@ var auth_rejections := 0
 var connected_peers: Dictionary = {}
 var disconnects_during_workload := 0
 var input_accepts := {"a": 0, "b": 0}
+var fixed_input_accepts := {"a": 0, "b": 0}
+var held_simulation_ticks := {"a": 0, "b": 0}
+# Input buffers are noncanonical transport state; no player state is stored.
+# A target starts neutral and waits for fresh client input after activation.
+var held_inputs: Dictionary = {}
+var pending_fixed_wire: Dictionary = {}
+var pending_fixed_sequence := 0
 var lifecycle: Array[Dictionary] = []
 var started_ms := 0
 var closing_ms := 0
@@ -51,6 +58,48 @@ func start() -> void:
 	started_ms = Time.get_ticks_msec()
 	Support.write_state(String(cfg["result_file"]), "LISTENING", {"subject_head": cfg["subject_head"], "run_id": cfg["run_id"], "authority_id": authority})
 
+func send_reply(sequence_value: int, response: Dictionary) -> bool:
+	var signed := Protocol.seal(cfg, authority, "gateway", sequence_value, response, key)
+	if not bool(Protocol.send(boundary, gateway_peer, signed).get("success", false)):
+		finish(false, "MVP3_AUTHORITY_REPLY_FAILED")
+		return false
+	return true
+
+func native_envelope(kind: String, actor: String, result: Dictionary, operation_id: String = "") -> Dictionary:
+	var receipt: Dictionary = service.export_live_player_replay(actor).get(operation_id, {}) if kind == "MOVE" and service != null else {}
+	return Protocol.success({"kind": kind, "actor": actor, "result": result, "snapshot": service.create_snapshot() if service != null else {}, "receipt": receipt, "authority_id": authority, "authority_process_id": OS.get_process_id()})
+
+func simulate_inputs_for_tick() -> bool:
+	for actor in ["a", "b"]:
+		if not live_port.actor_ready(actor):
+			held_inputs.erase(actor)
+		var first_step_applied := false
+		if not pending_fixed_wire.is_empty() and pending_fixed_wire.get("logical_player_id") == actor:
+			var wire := pending_fixed_wire.duplicate(true)
+			var sequence_value := pending_fixed_sequence
+			pending_fixed_wire.clear()
+			pending_fixed_sequence = 0
+			var result: Dictionary = service.handle_live_fixed_player_input(wire, 1.0 / 60.0)
+			first_step_applied = bool(result.get("success", false)) and not bool(result.get("replay", false))
+			if first_step_applied:
+				held_inputs[actor] = wire
+				input_accepts[actor] += 1
+				fixed_input_accepts[actor] += 1
+			if not send_reply(sequence_value, native_envelope("MOVE", actor, result, String(wire["operation_id"]))):
+				return false
+		if first_step_applied or not held_inputs.has(actor) or not live_port.actor_ready(actor):
+			continue
+		var held: Dictionary = held_inputs[actor]
+		var intent: Dictionary = Dictionary(held["payload"]).duplicate(true)
+		# Edge-triggered jump cannot be repeated by holding the same packet.
+		intent["jump_pressed"] = false
+		var simulated: Dictionary = service.simulate_fixed_movement_tick(actor, String(held["transport_session_id"]), int(held["ownership_epoch"]), int(held["input_sequence"]), intent, 1.0 / 60.0)
+		if not bool(simulated.get("success", false)):
+			finish(false, "MVP3_HELD_FIXED_INPUT_REJECTED:" + String(simulated.get("error_code", "")))
+			return false
+		held_simulation_ticks[actor] += 1
+	return true
+
 func _process(delta: float) -> bool:
 	if boundary == null:
 		return false
@@ -63,6 +112,8 @@ func _process(delta: float) -> bool:
 		for tick in range(int(ticks["first_tick"]), int(ticks["last_tick"]) + 1) if int(ticks["tick_count"]) > 0 else []:
 			if not bool(service.advance_fixed_server_tick(tick).get("success", false)):
 				finish(false, "MVP3_NATIVE_FIXED_CLOCK_FAILED")
+				return false
+			if not simulate_inputs_for_tick():
 				return false
 	var polled: Dictionary = boundary.poll_events(128)
 	if not bool(polled.get("success", false)):
@@ -89,14 +140,18 @@ func _process(delta: float) -> bool:
 			if int(packet["sequence"]) != received_sequence + 1:
 				auth_rejections += 1
 				continue
+			if not pending_fixed_wire.is_empty():
+				finish(false, "MVP3_RPC_DURING_PENDING_FIXED_INPUT")
+				return false
 			gateway_peer = peer
 			received_sequence = int(packet["sequence"])
 			received_requests += 1
 			var response := handle_rpc(packet["body"])
-			var signed := Protocol.seal(cfg, authority, "gateway", received_sequence, response, key)
-			if not bool(Protocol.send(boundary, peer, signed).get("success", false)):
-				finish(false, "MVP3_AUTHORITY_REPLY_FAILED")
-				return false
+			if pending_fixed_wire.is_empty():
+				if not send_reply(received_sequence, response):
+					return false
+			else:
+				pending_fixed_sequence = received_sequence
 	boundary.flush_outbound(128)
 	if closing_ms > 0 and Time.get_ticks_msec() >= closing_ms:
 		finish(true, "")
@@ -171,6 +226,10 @@ func handle_rpc(body: Dictionary) -> Dictionary:
 	elif kind == "MOVE":
 		if actor not in ["a", "b"] or not body.get("wire") is Dictionary or body["wire"].get("logical_player_id") != actor or body["wire"].get("transport_session_id") != Protocol.session(cfg, actor):
 			return Protocol.failure("MVP3_INPUT_ACTOR_BINDING_INVALID")
+		if body["wire"].get("input_kind") == "MOVEMENT_INTENT":
+			# Reply only after an actual canonical fixed tick produced a receipt.
+			pending_fixed_wire = Dictionary(body["wire"]).duplicate(true)
+			return {}
 		result = service.handle_live_player_input(body["wire"])
 		if bool(result.get("success", false)) and not bool(result.get("replay", false)):
 			input_accepts[actor] += 1
@@ -188,21 +247,21 @@ func handle_rpc(body: Dictionary) -> Dictionary:
 			"RETIRE": result = live_port.retire_source(actor, transfer_id, String(body.get("commit_token", "")))
 			"ACTIVATE": result = live_port.activate_target(actor, transfer_id, String(body.get("commit_token", "")))
 			"ABORT_STAGE": result = live_port.discard_aborted_stage(actor, transfer_id)
+		if bool(result.get("success", false)) and kind in ["EXPORT", "RETIRE", "ACTIVATE", "ABORT_STAGE"]:
+			held_inputs.erase(actor)
 		lifecycle.append({"kind": kind, "actor": actor, "transfer_id": transfer_id, "success": result.get("success", false), "error_code": result.get("error_code", ""), "ready_after": live_port.actor_ready(actor), "rpc_sequence": received_sequence, "process_id": OS.get_process_id()})
 	elif kind == "REPORT":
 		result = Protocol.success({"report": report(false, "RUNNING")})
 	elif kind == "STOP":
 		closing_ms = Time.get_ticks_msec() + 100
+		held_inputs.clear()
 		result = Protocol.success()
 	else:
 		return Protocol.failure("MVP3_UNKNOWN_RPC")
-	var receipt: Dictionary = {}
-	if kind == "MOVE":
-		receipt = service.export_live_player_replay(actor).get(String(body["wire"]["operation_id"]), {})
-	return Protocol.success({"kind": kind, "actor": actor, "result": result, "snapshot": service.create_snapshot() if service != null else {}, "receipt": receipt, "authority_id": authority, "authority_process_id": OS.get_process_id()})
+	return native_envelope(kind, actor, result, String(body.get("wire", {}).get("operation_id", "")))
 
 func report(passed: bool, phase: String) -> Dictionary:
-	return {"schema": "distributed_world_simulator.mvp3_native_authority_process.v1", "state": phase, "passed": passed, "error": error_code, "subject_head": cfg.get("subject_head", ""), "run_id": cfg.get("run_id", ""), "process_id": OS.get_process_id(), "authority_id": authority, "authenticated_gateway_connections": 1 if not gateway_peer.is_empty() else 0, "disconnects_during_workload": disconnects_during_workload, "auth_rejections": auth_rejections, "received_requests": received_requests, "input_accepts": input_accepts.duplicate(), "lifecycle": lifecycle.duplicate(true), "initial_snapshot": initial_snapshot, "final_snapshot": service.create_snapshot() if service != null else {}, "initial_item_graph": initial_graph, "final_item_graph": service.create_canonical_item_graph_snapshot() if service != null else {}, "clock": clock.get_report() if clock != null else {}, "live_port": live_port.get_report() if live_port != null else {}, "mvp3_predicate_verified": false}
+	return {"schema": "distributed_world_simulator.mvp3_native_authority_process.v1", "state": phase, "passed": passed, "error": error_code, "subject_head": cfg.get("subject_head", ""), "run_id": cfg.get("run_id", ""), "process_id": OS.get_process_id(), "authority_id": authority, "authenticated_gateway_connections": 1 if not gateway_peer.is_empty() else 0, "disconnects_during_workload": disconnects_during_workload, "auth_rejections": auth_rejections, "received_requests": received_requests, "input_accepts": input_accepts.duplicate(), "fixed_input_accepts": fixed_input_accepts.duplicate(), "held_simulation_ticks": held_simulation_ticks.duplicate(), "lifecycle": lifecycle.duplicate(true), "initial_snapshot": initial_snapshot, "final_snapshot": service.create_snapshot() if service != null else {}, "initial_item_graph": initial_graph, "final_item_graph": service.create_canonical_item_graph_snapshot() if service != null else {}, "clock": clock.get_report() if clock != null else {}, "live_port": live_port.get_report() if live_port != null else {}, "mvp3_predicate_verified": false}
 
 func finish(passed: bool, code: String) -> void:
 	error_code = code
