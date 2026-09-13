@@ -1,0 +1,99 @@
+{
+  "schema": "dws.ecology.a7-postmerge-main-audit.v1",
+  "work_order": "EVO-ARCH2-A7-MAIN-INTEGRATION-20260913-R1",
+  "pr": 617,
+  "merge": {
+    "merged": true,
+    "merged_at": "2026-09-13T10:52:09Z",
+    "main_head": "9e10e640ffc53f82195f1fd930ebafbbc85e482f",
+    "tree": "27c62c3774117c5163d0d5dacf789b1310638a92",
+    "tree_equals_premerge_verified_tree": true,
+    "first_parent_premerge_main": "7dfc68ab5a1e90254a1b7039807f275b5da04eef",
+    "second_parent_verified_candidate": "f769e308ee929642df30a2d87b84420c04569535",
+    "github_signature_verified": true
+  },
+  "premerge": {
+    "full_exact_linux_run": 34750951859,
+    "full_exact_linux_job": 103707313038,
+    "full_exact_linux_verdict": "PASS",
+    "fresh_independent_review_comment": 5652636526,
+    "fresh_independent_review_verdict": "PASS_NO_MAJOR_ISSUES",
+    "evidence_artifact": 10316142325,
+    "evidence_artifact_sha256": "b608d666900cc747071620c1861716aa4ca22b5d343fe8a61850599a169563b7",
+    "manifest_verified_files": 96,
+    "manifest_missing": 0,
+    "manifest_mismatches": 0
+  },
+  "postmerge_project_control": {
+    "run_id": 34752963523,
+    "job_id": 103712483229,
+    "conclusion": "success",
+    "exact_subject": "9e10e640ffc53f82195f1fd930ebafbbc85e482f",
+    "complete_harness_regression": "success",
+    "canonical_main_pc0": "success",
+    "directional_watch": "success",
+    "artifact_id": 10316323136,
+    "artifact_name": "project-control-report",
+    "artifact_bytes": 28950,
+    "artifact_sha256": "ea4802bf1733e41f894474c28d52bd668b992b4499b0c678341abf3c8633df5d",
+    "artifact_digest_matches_github": true,
+    "standard_overall_health": "YELLOW",
+    "directional_overall_health": "YELLOW",
+    "project_control_report_sha256": "4b6072ae907dd3e1c89b0713c36ac657b3cfe0d559e256af0c458618b4449357",
+    "directional_watch_report_sha256": "ea31c3635a58ca0261720c58ee334172fcb0c7e9476adf2bdf5f75202cd1beff",
+    "registry_generation": 82,
+    "control_plane_revision": "PC0-2026-08-10-R1",
+    "global_green_inferred": false
+  },
+  "directional_findings": [
+    {
+      "level": "YELLOW",
+      "kind": "WATCH_HIT",
+      "producer": "CH",
+      "consumer": "NX",
+      "global_blocking": true
+    },
+    {
+      "level": "YELLOW",
+      "kind": "WATCH_HIT",
+      "producer": "NX",
+      "consumer": "ECO",
+      "global_blocking": false
+    },
+    {
+      "level": "YELLOW",
+      "kind": "WATCH_HIT",
+      "producer": "NX",
+      "consumer": "T",
+      "global_blocking": true
+    }
+  ],
+  "program_health_observed": {
+    "HARNESS": "GREEN",
+    "G": "RED",
+    "ECO": "RED",
+    "T": "YELLOW",
+    "TS": "GREEN",
+    "CH": "YELLOW",
+    "DOCTRINE": "YELLOW",
+    "NX": "YELLOW",
+    "V0": "YELLOW",
+    "MATTER": "GREEN",
+    "S1": "GREEN"
+  },
+  "interpretation": {
+    "merge_failed": false,
+    "postmerge_control_failed": false,
+    "a7_tree_drifted_on_merge": false,
+    "global_health_green": false,
+    "yellow_and_red_program_states_are_existing_cross_program_control_state_not_a7_merge_failure": true
+  },
+  "closure": {
+    "a7_current_main_integration": "COMPLETE_MERGED_POSTMERGE_PC_SUCCESS",
+    "main_head_rechecked_after_project_control": "9e10e640ffc53f82195f1fd930ebafbbc85e482f",
+    "a8_dispatched": false,
+    "production_promoted": false,
+    "automatic_multigeneration_evolution_claimed": false,
+    "next_product_route": "A8_SNAPSHOT_SEAM_SEPARATE_BOUNDED_WORK_ORDER_AFTER_EXPLICIT_ACTIVATION"
+  }
+}
