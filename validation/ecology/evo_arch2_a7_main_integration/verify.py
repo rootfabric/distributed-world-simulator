@@ -21,7 +21,8 @@ ACCEPTED_A7 = "8eccf6304078bec3a3ccaa5860c5aab6ee311209"
 ACCEPTED_TREE = "24e876b7377cb3e1e521f08ff9766331fe4e895a"
 GODOT_SHA = "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7"
 GODOT_VERSION = "4.7.1.stable.double.custom_build.a13da4feb"
-PINNED_JSONSCHEMA = "4.25.1"
+# Mirror the main-owned requirement; require_harness_dependency checks it directly.
+PINNED_JSONSCHEMA = "4.22.0"
 HARNESS_REPAIR_PATH = "tests/harness/test_v0_mvp_act0.py"
 HARNESS_REPAIR_BLOB = "43db3ef992430802dab3b7c60b3bb7d2801205f0"
 EXTERNAL_DEPS = {
@@ -36,8 +37,10 @@ INTEGRATION_LOCAL_PATHS = {
     "docs/research/ecology/EVO_ARCH2_A7_MAIN_INTEGRATION_REPAIR_R2_RU.md",
     "docs/research/ecology/EVO_ARCH2_A7_MAIN_INTEGRATION_REPAIR_R3_RU.md",
     "docs/research/ecology/EVO_ARCH2_A7_MAIN_INTEGRATION_REPAIR_R4_RU.md",
+    "docs/research/ecology/EVO_ARCH2_A7_MAIN_INTEGRATION_REPAIR_R5_RU.md",
     "validation/ecology/evo_arch2_a7_main_integration/expected-transfer.v1.json",
     "validation/ecology/evo_arch2_a7_main_integration/verify.py",
+    "validation/ecology/evo_arch2_a7_main_integration/test_repair_r5.py",
 }
 GENERATED_RES_PREFIXES = ("artifacts/a7/",)
 ERRORS = re.compile(r"SCRIPT ERROR|Parse Error|ERROR:|FAIL:")
@@ -67,7 +70,8 @@ def sha(path: Path) -> str:
 
 def gp(*args: str) -> subprocess.CompletedProcess[str]:
     return subprocess.run(["git", *args], cwd=ROOT, text=True, stdout=subprocess.PIPE,
-                          stderr=subprocess.PIPE, check=False)
+                          stderr=subprocess.PIPE, check=False,
+                          env=dict(os.environ, GIT_NO_REPLACE_OBJECTS="1"))
 
 
 def git(*args: str) -> str:
@@ -75,6 +79,54 @@ def git(*args: str) -> str:
     if p.returncode:
         raise RuntimeError(f"git {' '.join(args)}: {p.stderr.strip()}")
     return p.stdout.strip()
+
+
+def require_research_free_history(head: str, base: str = BASE_MAIN,
+                                  accepted: str = ACCEPTED_A7) -> dict:
+    """Prove non-ancestry, never equate missing history/Git errors with exit 1."""
+    if git("rev-parse", "--is-shallow-repository") != "false":
+        raise RuntimeError("SHALLOW_HISTORY_NOT_ALLOWED")
+    grafts = Path(git("rev-parse", "--git-path", "info/grafts"))
+    if not grafts.is_absolute():
+        grafts = ROOT / grafts
+    if grafts.exists() and grafts.read_bytes().strip():
+        raise RuntimeError("GRAFTED_HISTORY_NOT_ALLOWED")
+    for commit in (head, base, accepted):
+        if gp("cat-file", "-e", commit + "^{commit}").returncode != 0:
+            raise RuntimeError("HISTORY_COMMIT_NOT_AVAILABLE:" + commit)
+    base_check = gp("merge-base", "--is-ancestor", base, head)
+    if base_check.returncode != 0:
+        raise RuntimeError(f"NOT_CURRENT_MAIN_DESCENDANT:exit={base_check.returncode}")
+    research_check = gp("merge-base", "--is-ancestor", accepted, head)
+    if research_check.returncode == 0:
+        raise RuntimeError("RESEARCH_COMMIT_IN_CANDIDATE_ANCESTRY")
+    if research_check.returncode != 1:
+        raise RuntimeError(f"RESEARCH_ANCESTRY_INDETERMINATE:exit={research_check.returncode}")
+    return {"result": "PASS", "base_main": base, "accepted_a7": accepted,
+            "candidate_head": head, "accepted_is_ancestor_exit": 1,
+            "shallow": False, "replace_objects_disabled": True}
+
+
+def require_harness_dependency() -> str:
+    """Check the main-owned declaration AND the actual execution interpreter."""
+    requirements = ROOT / "scripts/harness/requirements.txt"
+    declarations = [line.strip() for line in requirements.read_text(encoding="utf-8").splitlines()
+                    if line.strip().lower().startswith("jsonschema")]
+    if declarations != ["jsonschema==" + PINNED_JSONSCHEMA]:
+        raise RuntimeError("CANONICAL_HARNESS_DEPENDENCY_PIN_MISMATCH")
+    try:
+        version = importlib.metadata.version("jsonschema")
+    except importlib.metadata.PackageNotFoundError as exc:
+        raise RuntimeError("PINNED_JSONSCHEMA_MISSING") from exc
+    if version != PINNED_JSONSCHEMA:
+        raise RuntimeError(f"PINNED_JSONSCHEMA_VERSION_REQUIRED:{version}")
+    return version
+
+
+def require_control_health(value: object) -> str:
+    if value not in ("GREEN", "YELLOW"):
+        raise RuntimeError(f"CONTROL_HEALTH_NOT_EXPLICIT_NON_RED:{value!r}")
+    return str(value)
 
 
 def transferred(path: str) -> bool:
@@ -90,7 +142,7 @@ def main() -> int:
     os.chdir(ROOT)
     out = ROOT / "artifacts/a7-main-integration/exact"
     out.mkdir(parents=True, exist_ok=True)
-    env = dict(os.environ, GODOT_SILENCE_ROOT_WARNING="1")
+    env = dict(os.environ, GODOT_SILENCE_ROOT_WARNING="1", GIT_NO_REPLACE_OBJECTS="1")
     summary = {
         "subject_head": args.head,
         "subject_tree": args.tree,
@@ -140,9 +192,6 @@ def main() -> int:
         req(git("rev-parse", "HEAD") == args.head and git("rev-parse", "HEAD^{tree}") == args.tree,
             "EXACT_SUBJECT")
         req(not git("status", "--porcelain", "--untracked-files=no"), "TRACKED_DIRTY")
-        req(git("merge-base", BASE_MAIN, args.head) == BASE_MAIN, "NOT_CURRENT_MAIN_DESCENDANT")
-        parents = git("rev-list", "--parents", "-n", "1", args.head).split()[1:]
-        req(ACCEPTED_A7 not in parents, "RESEARCH_COMMIT_USED_AS_PARENT")
 
         req(gp("show-ref", "--verify", "--quiet", ACCEPTED_REF).returncode == 0,
             "ACCEPTED_REF_NOT_FETCHED")
@@ -152,6 +201,7 @@ def main() -> int:
             "ACCEPTED_COMMIT_NOT_AVAILABLE")
         req(git("rev-parse", ACCEPTED_A7 + "^{tree}") == ACCEPTED_TREE,
             "ACCEPTED_COMMIT_TREE_MISMATCH")
+        summary["research_free_history"] = require_research_free_history(args.head)
 
         records = git("diff", "--name-status", BASE_MAIN, args.head).splitlines()
         req(bool(records), "EMPTY_DIFF")
@@ -244,14 +294,20 @@ def main() -> int:
         summary["res_path_closure"] = {"result": "PASS", "sources": len(sources),
                                        "references": refs, "generated_missing_allowed": generated_refs}
 
-        try:
-            jsonschema_version = importlib.metadata.version("jsonschema")
-        except importlib.metadata.PackageNotFoundError as exc:
-            raise RuntimeError("PINNED_JSONSCHEMA_MISSING") from exc
-        req(jsonschema_version == PINNED_JSONSCHEMA,
-            f"PINNED_JSONSCHEMA_VERSION_REQUIRED:{jsonschema_version}")
+        jsonschema_version = require_harness_dependency()
         summary["python_environment"] = {"executable": sys.executable,
-                                         "jsonschema": jsonschema_version}
+                                         "jsonschema": jsonschema_version,
+                                         "requirements_sha256": sha(ROOT / "scripts/harness/requirements.txt")}
+        rlog = run("integration-repair-r5-guards",
+            [sys.executable, "-m", "unittest", "discover", "-s",
+             "validation/ecology/evo_arch2_a7_main_integration", "-p", "test_repair_r5.py", "-v"],
+            "OK", timeout=180, scan=False)
+        rtext = rlog.read_text(encoding="utf-8-sig", errors="replace")
+        rcount = re.search(r"Ran (\d+) tests", rtext)
+        req(rcount is not None and int(rcount.group(1)) >= 20 and "skipped=" not in rtext,
+            "REPAIR_R5_GUARD_COVERAGE_INCOMPLETE")
+        summary["repair_r5_guards"] = {"result": "PASS", "tests": int(rcount.group(1)),
+                                       "sha256": sha(rlog)}
 
         args.godot = args.godot.resolve(strict=True)
         req(sha(args.godot) == GODOT_SHA, "GODOT_SHA")
@@ -328,8 +384,7 @@ def main() -> int:
                       timeout=300, scan=False)
             src = ROOT / "artifacts/control" / artifact
             req(src.is_file(), "CONTROL_REPORT_MISSING:" + name)
-            health = json.loads(src.read_text()).get("overall_health", "UNAVAILABLE")
-            req(health != "RED", "CONTROL_RED:" + name)
+            health = require_control_health(json.loads(src.read_text()).get("overall_health"))
             shutil.copyfile(src, cdir / artifact)
             shutil.copyfile(log, cdir / (name + ".log"))
             controls.append({"name": name, "overall_health": health,
