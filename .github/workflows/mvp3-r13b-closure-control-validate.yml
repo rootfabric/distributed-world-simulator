@@ -2,13 +2,15 @@ name: MVP3 R13b Closure Control Validation
 on:
   push:
     branches: [control/v0-mvp3-predicate-verified-f1d453fb-r1]
-    paths: [.github/workflows/mvp3-r13b-closure-control-validate.yml]
+    paths:
+      - .github/workflows/mvp3-r13b-closure-control-validate.yml
+      - config/control/harness/executions/E2026-09-09-V0-MVP-R1/**
 permissions:
   contents: read
 jobs:
   closure-control:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     env:
       PYTHONPATH: scripts
       PYTHONUTF8: '1'
@@ -58,10 +60,14 @@ jobs:
           print(json.dumps(state,ensure_ascii=False,sort_keys=True,separators=(',',':')))
           raw=json.dumps(state,ensure_ascii=False)
           assert 'MVP_SEAM_NO_RECONNECT_OR_RESPAWN' in raw
+          assert 'IN_PROGRESS' in raw
           print('MVP3_PRODUCTION_REDUCER_ACCEPTED_SEQUENCE_11')
           PY
-      - name: Run focused Harness checkpoint-session regression
-        run: python3 -m unittest tests.harness.test_harness_checkpoint_session -v
+      - name: Run full Harness regression on closure candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s tests/harness -p 'test_*.py' -v 2>&1 | tee artifacts/mvp3-r13b-closure-control/full-harness.log
       - name: Run Control Status Plan Drive on named branch
         shell: bash
         run: |
