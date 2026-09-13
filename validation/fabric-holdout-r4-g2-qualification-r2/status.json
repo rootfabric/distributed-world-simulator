@@ -1,0 +1,103 @@
+{
+  "schema": "fabric.r4.qualification.evidence.v2",
+  "checkpoint": "FABRIC_HOLDOUT_R4_G2",
+  "evidence_revision": "R4-Q-R2",
+  "product": {
+    "head": "8fe54a498a9a055b232cfe34bfc379088ec4a627",
+    "tree": "1607ed1c82ea92c11ad26800c3d559d455f26492",
+    "base": "b88004e77a9a424f1b23ba979f5ce8883a98f1a8",
+    "repair_map_commit": "432ba0da426c554a33484cda07231ae02cfe1e30"
+  },
+  "policy": {
+    "control_commit": "2e6528d2ada763699c1b9569c16a2e9586810d0d",
+    "path": "scripts/research/fabric_holdout_r4_g2/qualification-policy.r2.json",
+    "revision": "R4-Q-R2"
+  },
+  "exact_environment": {
+    "godot_version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "godot_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7"
+  },
+  "local_exact_g2": {
+    "exit_code": 0,
+    "tracked_worktree": "CLEAN",
+    "log_path": "validation/fabric-holdout-r4-g2-qualification-r2/g2-local-exact.log",
+    "log_sha256": "1ccd828c9adacf1188491a1f96e39eefadd75d840c076afd5a414793b099dbe9",
+    "results": {
+      "bond_id": "17/17 PASS",
+      "transport": "381/381 PASS",
+      "g2": "89/89 PASS",
+      "signed_effort": "6/6 PASS",
+      "r3_core": "187/187 PASS",
+      "r3_transient": "611/611 PASS",
+      "r3_observer": "PASS",
+      "r3_cold_replay": "PASS",
+      "r2_core_contract_metamorphic": "PASS",
+      "r1_integrity": "42/42 PASS"
+    }
+  },
+  "fresh_ci": {
+    "g2_exact": {
+      "run": 34683753574,
+      "result": "SUCCESS",
+      "artifact_id": 10296483648,
+      "artifact_digest": "sha256:d1488261fa8c882439729b3c84bf435110bd3da3be953e31559eeb3e9290dd93"
+    },
+    "b04d_linux": {"run": 34683755722, "result": "SUCCESS"},
+    "complex_labs_linux": {"run": 34683755707, "result": "SUCCESS"},
+    "cx_vis0_linux": {"run": 34683755714, "result": "SUCCESS"},
+    "b04d_portable": {"run": 34683755666, "result": "SUCCESS"},
+    "project_control": {"run": 34683755651, "result": "SUCCESS"},
+    "b06_a": {"run": 34683755729, "result": "SUCCESS"},
+    "b06_b": {"run": 34683755667, "result": "SUCCESS"},
+    "b06_c": {"run": 34683755680, "result": "SUCCESS"},
+    "b06_d": {"run": 34683755750, "result": "SUCCESS"},
+    "b06_e": {"run": 34683755732, "result": "SUCCESS"},
+    "b06_close": {
+      "run": 34683755670,
+      "result": "FAILURE",
+      "failure_scope": "nested COMPLEX2-PERF only",
+      "observed_500_parts_us": 15660601,
+      "budget_us": 12000000
+    },
+    "complex2_perf": {
+      "run": 34683755661,
+      "job": 103526982968,
+      "result": "FAILURE",
+      "runner": "dws-linux-outenemy",
+      "observed_500_parts_us": 16096845,
+      "budget_us": 12000000
+    },
+    "complex2_close": {"run": 34683755641, "result": "CANCELLED"}
+  },
+  "baseline_perf_control": {
+    "head": "b88004e77a9a424f1b23ba979f5ce8883a98f1a8",
+    "run": 34143404040,
+    "job": 101810134743,
+    "result": "FAILURE",
+    "runner": "dws-linux-outenemy",
+    "observed_500_parts_us": 15471123,
+    "budget_us": 12000000,
+    "proposed_classification": "BASELINE_FAILURE",
+    "classification_authority": "REVIEWER_AND_DIRECTOR_REQUIRED"
+  },
+  "qualification": {
+    "status": "REVIEW_REQUIRED_BASELINE_PERF_CLASSIFICATION",
+    "semantic_regression_detected": false,
+    "perf_gate_declared_pass": false,
+    "b06_close_declared_pass": false,
+    "fresh_exact_head_review_required": true,
+    "independent_verifier_required": true,
+    "director_verdict_required": true
+  },
+  "governance": {
+    "production_freeze_allowed": false,
+    "unseen_holdout_allowed": false,
+    "checkpoint_accepted": false,
+    "scale_r5_unlocked": false,
+    "acceptance_authority": "CANONICAL_HARNESS_ONLY"
+  },
+  "historical_g1": {
+    "verdict": "FALSIFIED",
+    "preserve_negative_history": true
+  }
+}
