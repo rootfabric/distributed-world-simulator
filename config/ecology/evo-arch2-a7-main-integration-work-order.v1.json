@@ -12,7 +12,7 @@
   "accepted_a6_head": "993271eb46880b77f0e7584f931131d4bd0a5125",
   "research_acceptance_ref": "control/eco-evo-arch2-a7-acceptance-r1",
   "research_acceptance_commit": "11d2ce40b4b389d8cfa833ccef36f331b825b40c",
-  "authorization": "User authorized continuing the A7 integration after the two exact-head P1 findings. Bounded verifier/test/environment repairs, exact Godot verification, fresh review and PC0 remain in scope. Merge to main remains a human gate.",
+  "authorization": "User authorized continuing A7 integration. Bounded verifier/test/environment repairs from fresh independent review, exact Godot verification, fresh review and PC0 remain in scope. Merge to main remains a human gate.",
   "objective": "Transfer the minimum self-contained accepted ecology-v2 capability closure plus A7 Observatory into a fresh current-main branch, without importing the long research lineage or overwriting unrelated main-owned runtime, retain only the already authorized P7 scene-guard repair, then produce exact integration evidence and a merge-ready proposal.",
   "transfer_policy": {
     "required_new_subtree": "scripts/research/ecology/v2/**",
@@ -31,6 +31,7 @@
       "res://artifacts/a7/observatory-report.json",
       "res://artifacts/a7/observatory/**"
     ],
+    "resource_closure_authority": "Actual frozen Git transfer additions and recursive res references; every non-generated input must be a regular HEAD blob with identical unfiltered working bytes and no symlink components. Only three explicitly named report/PNG files can be generated-input exceptions, never an artifacts script prefix.",
     "identity_authority": "Every actual transferred addition must match the same path in the fetched exact durable acceptance ref. Candidate-owned pin files are redundant evidence only.",
     "required_a7_surface": [
       "config/ecology/evo-arch2-a7-protocol.v1.json",
@@ -91,13 +92,16 @@
     "REDUNDANT_TRANSFER_PINS_MATCH_DIRECT_OBJECTS",
     "EXTERNAL_TRANSITIVE_DEPENDENCIES_BYTE_EXACT",
     "ALL_NON_GENERATED_TRANSFERRED_RES_PATHS_RESOLVE",
+    "RECURSIVE_RESOURCE_CLOSURE_EXACT_GIT_TREE_AND_WORKING_BYTES",
+    "UNTRACKED_STAGED_SYMLINK_RESOURCE_SUBSTITUTION_REJECTED",
     "DECLARED_GENERATED_OUTPUTS_PRODUCED_BY_TESTS",
     "A7_SURFACE_BYTE_EXACT",
     "ONLY_DECLARED_MAIN_OWNED_HARNESS_REPAIR_MODIFIED",
     "P7_PREEXISTING_SCENES_REMAIN_IMMUTABLE",
     "ONLY_EXACT_A7_LAB_SCENE_ADDITION_ALLOWED",
     "PINNED_JSONSCHEMA_4_22_0_MATCHES_CANONICAL_HARNESS",
-    "REPAIR_R5_NEGATIVE_POSITIVE_CONTROLS_PASS",
+    "REPAIR_R5_ALL_27_NEGATIVE_POSITIVE_CONTROLS_PASS",
+    "REPAIR_R6_ALL_21_NEGATIVE_POSITIVE_CONTROLS_PASS",
     "FULL_HARNESS_DISCOVERY_FAIL_CLOSED",
     "COLD_IMPORT_PASS",
     "A0_A7_V2_REGRESSION_PASS",
@@ -119,8 +123,19 @@
     "canonical_requirement": "scripts/harness/requirements.txt:jsonschema==4.22.0",
     "supersedes_incorrect_r4_pin": "4.25.1",
     "test_command": "python -m unittest discover -s validation/ecology/evo_arch2_a7_main_integration -p test_repair_r5.py -v",
+    "mandatory_test_count": 27,
     "validation_branch": "validation/eco-arch2-a7-main-integration-r1",
     "historical_records_preserved": true
+  },
+  "repair_r6": {
+    "map": "docs/research/ecology/EVO_ARCH2_A7_MAIN_INTEGRATION_REPAIR_R6_RU.md",
+    "findings": [3999322861, 3999322864],
+    "historical_closure_findings": [3998402438, 3998418167],
+    "previous_source_head": "9a4c96a7eba19e25cc262161d2811e2f671537f7",
+    "test_command": "python -m unittest discover -s validation/ecology/evo_arch2_a7_main_integration -p test_repair_r6.py -v",
+    "mandatory_test_count": 21,
+    "standalone_cli_enforces_all_tests": true,
+    "prior_runtime_evidence_not_reused_as_new_head_pass": true
   },
   "acceptance_policy": {
     "implementer_self_merge": false,
@@ -132,9 +147,9 @@
   "state": "IN_PROGRESS",
   "resume_anchor": {
     "exact_subject": "main@7dfc68ab5a1e90254a1b7039807f275b5da04eef + acceptance/eco-evo-arch2-a7-r1@8eccf6304078bec3a3ccaa5860c5aab6ee311209; resolve current integration branch HEAD/TREE before execution",
-    "last_completed_predicate": "R5_IMPLEMENTATION_AND_PRODUCTION_GUARD_TESTS_PUBLISHED",
-    "known_failure_signature": "R4_PIN_4_25_1_CONFLICTS_WITH_CANONICAL_4_22_0; IMMEDIATE_PARENT_GUARD_MISSES_DISTANT_ANCESTOR",
-    "next_action": "FREEZE_R5_HEAD_TREE_THEN_RUN_FOCUSED_AND_FULL_EXACT_LINUX_R6_FRESH_REVIEW_PC0",
+    "last_completed_predicate": "R6_IMPLEMENTATION_AND_21_PRODUCTION_GUARD_TESTS_PUBLISHED",
+    "known_failure_signature": "R5 filesystem-presence closure and >=20 test guard superseded by R6; fresh integrated verdict still required",
+    "next_action": "FREEZE_R6_HEAD_TREE_THEN_RUN_ALL_FOCUSED_TESTS_FULL_EXACT_LINUX_R7_FRESH_REVIEW_PC0",
     "allowed_recovery_route": "GitHub connector for writes; repository-owned hosted/static and self-hosted exact CI",
     "stop_before": "MAIN_MERGE"
   }
