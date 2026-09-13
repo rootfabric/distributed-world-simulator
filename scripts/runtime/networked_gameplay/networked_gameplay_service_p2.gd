@@ -876,7 +876,7 @@ func get_report() -> Dictionary:
 	}
 	if _playable_backend != null:
 		report["playable_backend"] = _playable_backend.get_report()
-		for field in ["player_entity_id", "item_graph_entity_id", "player_revision", "item_revision", "player_checksum", "item_checksum", "open_external_container_id", "handler_invocation_count", "mutation_count", "replay_count", "rejection_count", "operation_ledger_count"]:
+		for field in ["player_entity_id", "item_graph_entity_id", "player_revision", "item_revision", "player_checksum", "item_checksum", "open_external_container_id", "handler_invocation_count", "mutation_count", "replay_count", "rejection_count", "operation_ledger_count", "item_graph_valid", "presentation_objects"]:
 			report[field] = report["playable_backend"].get(field)
 	if _live_player_port != null:
 		report["live_player_transfer"] = _live_player_port.get_report()
