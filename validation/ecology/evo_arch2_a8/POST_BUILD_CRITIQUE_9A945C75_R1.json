@@ -1,0 +1,37 @@
+{
+  "schema": "dws.ecology.a8-post-build-critique.v1",
+  "subject_head": "9a945c758d72bd1c2efd3732b200d7f7785c2ec8",
+  "subject_tree": "bf1787ad7b0af322d6d37b88bd04195e60aaf1c4",
+  "work_order": "EVO-ARCH2-A8-20260913-R1",
+  "risk": "HIGH",
+  "reviewed_surfaces": [
+    "scripts/research/ecology/v2/snapshot_seam_v1.gd",
+    "scripts/research/ecology/v2/snapshot_store.py",
+    "tests/research/ecology/v2/arch2_a8_acceptance.gd",
+    "tests/research/ecology/v2/arch2_a8_restart.gd",
+    "validation/ecology/evo_arch2_a8/test_store.py",
+    "validation/ecology/evo_arch2_a8/store_godot_integration.py",
+    "validation/ecology/evo_arch2_a8/verify.py"
+  ],
+  "questions": {
+    "extra_complexity": "The two-layer design is necessary: GDScript owns semantic replay/biology and the POSIX store owns only opaque durable bytes. Repair R1 adds one explicit external acknowledgement floor rather than reconstructing authority from orphan files.",
+    "duplicate_truth": "No new ecology, field, Matter, Region or network authority truth was introduced. A7/A6/A4 remain the semantic writers; canonical handoff ticket/state machine are consumed unchanged. Store hashes are integrity/cursor evidence, not biological truth.",
+    "implicit_owner": "A8 explicitly separates logical A4 field owner/genesis from partition executor owner. Executor transitions are journaled and epoch-fenced. The external durable anchor is caller-owned and explicitly outside store trust; it is not silently inferred from CURRENT.",
+    "coupling": "A8 depends on the smallest existing surfaces required for scope: A7 save/load for the full coupled cut and canonical handoff contracts for transition legality. It does not depend on WorldEntityAggregate or production region internals.",
+    "sibling_surface": "Accepted A0-A7 runtime/tests, network handoff, registry/scheduler/control and project.godot are source-byte fenced against base main. A6/A7 restart, A5 repair oracles and mandatory A7 graphics remain in full exact verification.",
+    "removable_code": "No redundant alternate persistence/handoff implementation remains. Immutable orphan objects are intentionally tolerated before pointer publication; treating them as authority would reintroduce the reviewed P1.",
+    "design_regression": "Repair R1 strengthens the original crash model without changing biological or network semantics. It preserves both pre-pointer crash recovery and post-pointer ambiguous acknowledgement through equal/descendant external-anchor validation.",
+    "redesign_if_larger_scope": "For production A10, replace the local caller-owned anchor assumption with canonical production journal/consensus/region-authority contracts rather than promoting SnapshotStore as a distributed authority. Windows/power-loss qualification also requires a separate platform-specific durability contract."
+  },
+  "remaining_bounded_risks": [
+    "External durable anchor integrity/anti-rollback is an explicit caller/platform trust boundary; A8 proves separation from mutable store CURRENT, not adversarial rollback of every storage device.",
+    "POSIX file-lock/fsync/rename evidence qualifies the declared Linux local-store scope only.",
+    "A8 transfers the complete coupled research partition; production terrain/Matter/network binding remains A10 and is not inferred from this checkpoint.",
+    "Automatic multi-generation ecology is still outside the A7/A8 accepted claim boundary."
+  ],
+  "required_refactor": false,
+  "verdict": "NO_MATERIAL_REFACTOR_REQUIRED",
+  "independent_review_dependency": "FRESH_REVIEW_PASS_9A945C75_R1.json",
+  "full_exact_linux_still_required": true,
+  "main_merge": false
+}
