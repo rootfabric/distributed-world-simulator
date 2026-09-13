@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
 import os
 from pathlib import Path
 import secrets
@@ -62,6 +63,67 @@ def png_size(path: Path) -> tuple[int, int]:
     return struct.unpack(">II", data[16:24])
 
 
+def native_displacement(before: dict, after: dict, actor: str) -> bool:
+    """Reject a no-op, identity replacement, stale state or missing coordinate."""
+    try:
+        identity = ("logical_player_id", "player_entity_id", "transport_session_id", "ownership_epoch")
+        x0, x1 = float(before["position"]["x"]), float(after["position"]["x"])
+        return (
+            all(before[key] == after[key] for key in identity)
+            and after["logical_player_id"] == actor
+            and after["player_entity_id"] == "player/" + actor
+            and bool(after["transport_session_id"])
+            and math.isfinite(x0) and math.isfinite(x1) and abs(x1 - x0) > 1e-6
+            and int(after["last_input_sequence"]) > int(before["last_input_sequence"])
+            and int(after["state_revision"]) > int(before["state_revision"])
+        )
+    except (KeyError, TypeError, ValueError, OverflowError):
+        return False
+
+
+def fixed_step(value: dict) -> bool:
+    try:
+        dt = float(value["delta_seconds"])
+        return value["fixed_tick"] is True and math.isfinite(dt) and abs(dt - 1 / 60) < 1e-12
+    except (KeyError, TypeError, ValueError, OverflowError):
+        return False
+
+
+def movement_evidence_checks(gateway: dict, clients: dict[str, dict], manual: bool = False) -> dict[str, bool]:
+    """Independent reductions of raw records, not self-reported PASS flags."""
+    result = {"both_players_independent": False, "post_activation_movement": False,
+              "canonical_fixed_receipts": False, "manual_input_proven_when_requested": False}
+    try:
+        observations = gateway.get("input_observations", {})
+        result["both_players_independent"] = all(
+            int(gateway.get("sequences", {}).get(actor, 0)) >= 2
+            and any(native_displacement(row.get("before", {}), row.get("after", {}), actor)
+                    and fixed_step(row.get("server_simulation", {}))
+                    for row in observations.get(actor, []))
+            for actor in ("a", "b")
+        )
+        transfers = gateway.get("transfers", [])
+        result["post_activation_movement"] = len(transfers) == 2 and all(
+            row.get("actor") == "a"
+            and native_displacement(row.get("before", {}), row.get("after", {}), "a")
+            and fixed_step(row.get("post_activation_server_simulation", {}))
+            and str(row.get("post_activation_operation_id", "")).startswith("operation/")
+            and int(row.get("post_activation_server_tick", 0)) > 0
+            for row in transfers
+        )
+        result["canonical_fixed_receipts"] = all(
+            int(clients[actor].get("fixed_input_receipts", 0)) == int(clients[actor].get("input_sequence", -1))
+            and int(clients[actor].get("fixed_input_receipts", 0)) >= 2
+            for actor in ("a", "b")
+        )
+        result["manual_input_proven_when_requested"] = not manual or all(
+            int(clients[actor].get("manual_input_events", 0)) >= 2 for actor in ("a", "b")
+        )
+    except (KeyError, TypeError, ValueError, OverflowError):
+        return {key: False for key in result}
+    return result
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--engine", required=True, type=Path)
@@ -111,18 +173,15 @@ def main() -> int:
         deadline = time.monotonic() + 15
         for authority in ("authority/a", "authority/b"):
             require(wait_state(results[authority], {"LISTENING", "FAILED"}, deadline).get("state") == "LISTENING", f"AUTHORITY_NOT_LISTENING:{authority}")
-
         gateway_config = common("gateway") | {"internal_keys": internal_keys, "client_keys": client_keys, "mode": "interactive"}
         launch("gateway", ["--headless", "--path", str(ROOT), "--script", "res://scripts/runtime/networked_gameplay/mvp/v0_mvp3_gateway_process.gd"], gateway_config)
         require(wait_state(results["gateway"], {"LISTENING", "FAILED"}, time.monotonic() + 20).get("state") == "LISTENING", "GATEWAY_NOT_LISTENING")
-
         for index, actor in enumerate(("a", "b")):
             role = "client/" + actor
             config = common(role) | {"client_key": client_keys[actor], "automated": not args.manual, "screenshot_file": str(screenshots[actor])}
             launch(role, ["--path", str(ROOT), "--resolution", "720x480", "--position", f"{40 + index * 760},80", "res://scenes/labs/mvp/v0_mvp3_live_shared_world.tscn"], config)
-
         if args.manual:
-            print("MANUAL: use A/D or Left/Right in each window. Move A right across the seam, left back across it, then right once; move B at least twice. Keep B active while A crosses so it observes A->B->A. Press Esc in both windows when complete.", flush=True)
+            print("MANUAL: hold A/D or Left/Right in each window. Move A right across the seam, left back across it, then right again; move B in both directions. Keep both clients observing A->B->A. Release keys and press Esc in both windows after completion.", flush=True)
         for role in ("client/a", "client/b", "gateway", "authority/a", "authority/b"):
             code = processes[role].wait(timeout=590 if args.manual else 105)
             require(code == 0, f"PROCESS_EXIT:{role}:{code}")
@@ -151,16 +210,17 @@ def main() -> int:
         "exact_subject": all(report.get("subject_head") == head for report in reports.values()),
         "five_distinct_processes": len({report.get("process_id", report.get("gateway_process_id")) for report in reports.values()}) == 5,
         "a_roundtrip": [(row.get("source"), row.get("target")) for row in gateway.get("transfers", [])] == [("authority/a", "authority/b"), ("authority/b", "authority/a")],
-        "both_clients_observed_routes": all(report.get("route_history") == expected_routes for report in client_reports.values()),
-        "both_players_independent": gateway.get("two_independent_players") is True and int(gateway.get("sequences", {}).get("a", 0)) >= 22 and int(gateway.get("sequences", {}).get("b", 0)) >= 2,
+        "both_clients_observed_routes": all(report.get("route_history") == expected_routes and report.get("route_history_observed_actor") == "a" for report in client_reports.values()),
         "stable_client_connections": all(report.get("connects") == 1 and report.get("disconnects") == 0 and report.get("reconnects") == 0 for report in client_reports.values()),
         "stable_body_camera_instances": all(report.get("initial_instance_ids") == report.get("final_instance_ids") and all(int(v) > 0 for v in report.get("final_instance_ids", {}).values()) for report in client_reports.values()),
         "both_players_always_visible": all(int(report.get("both_visible_snapshots", 0)) == int(report.get("snapshots", -1)) and int(report.get("snapshots", 0)) > 2 for report in client_reports.values()),
-        # The project renders at 16:9 inside the requested 720x480 decorated window.
         "viewport_pngs": all(width == 720 and 400 <= height <= 405 for width, height in sizes.values()),
-        "no_respawn_or_rebind": gateway.get("respawns") == 0 and gateway.get("identity", {}).get("counters", {}).get("rebinds") == 0,
+        "no_respawn_or_rebind": gateway.get("respawns") == 0 and gateway.get("identity", {}).get("counters", {}).get("rebinds") == 0 and all(report.get("identity_changes") == 0 for report in client_reports.values()),
         "no_false_acceptance": gateway.get("mvp3_predicate_verified") is False and all(report.get("mvp3_predicate_verified") is False for report in client_reports.values()),
     }
+    # Replaces a hard-coded 22 delta packets with actual canonical movement
+    # evidence under fixed ticks. Neither neutral input nor route labels pass.
+    checks.update(movement_evidence_checks(gateway, client_reports, args.manual))
     for role, process in processes.items():
         checks[f"exit_{role}"] = process.returncode == 0
         log_text = (output / (role.replace("/", "-") + ".log")).read_text(encoding="utf-8", errors="replace")
@@ -168,20 +228,15 @@ def main() -> int:
     passed = not error and all(checks.values())
     manifest = {
         "schema": "distributed_world_simulator.mvp3_graphical_process_manifest.v1",
-        "subject_head": head,
-        "subject_tree": tree,
-        "run_id": run_id,
-        "engine": str(engine),
-        "engine_sha256": sha(engine),
+        "subject_head": head, "subject_tree": tree, "run_id": run_id,
+        "engine": str(engine), "engine_sha256": sha(engine),
         "duration_seconds": round(time.monotonic() - started, 3),
-        "commands": commands,
-        "checks": checks,
+        "commands": commands, "checks": checks,
         "viewport_sizes": {actor: list(size) for actor, size in sizes.items()},
-        "error": error,
-        "passed": passed,
-        "secrets_recorded": False,
-        "mvp3_predicate_verified": False,
-        "files": [],
+        "error": error, "passed": passed,
+        "manual_input_mode": args.manual,
+        "manual_input_executed": args.manual and all(int(report.get("manual_input_events", 0)) >= 2 for report in client_reports.values()),
+        "secrets_recorded": False, "mvp3_predicate_verified": False, "files": [],
     }
     for path in sorted(output.iterdir()):
         if path.is_file() and path.name != "manifest.json":
