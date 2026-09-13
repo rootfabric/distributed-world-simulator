@@ -5,7 +5,7 @@
   "work_order_id": "V0-MVP-R1-WO-001",
   "sequence": 9,
   "event_type": "RECOVERY_RESUMED",
-  "work_state": "DISPATCHED",
+  "work_state": "IN_PROGRESS",
   "recorded_at_utc": "2026-09-13T02:04:43Z",
   "actor": "INTEGRATOR",
   "branch": "feature/v0-mvp-playable-seamless-planet-r1",
