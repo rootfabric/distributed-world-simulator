@@ -23,6 +23,11 @@ const MAX_DIG_OPERATIONS := 8
 const MAX_REQUEST_BYTES := 65536
 const MAX_FRAME_BYTES := 1048576
 const REACH_M := 4.5
+# This bounded level-one bootstrap has 2 m samples. A 0.75 m stroke only
+# perturbed already-negative SDF samples below vacuum boundary nodes, giving
+# different mesh hashes without a visible surface opening. The real tool must
+# intersect the first solid lattice layer, still within the unchanged P7 reach.
+const DIG_STROKE_M := 2.0
 
 class PlayerProjection extends RefCounted:
 	func project(player: Dictionary, _request: Dictionary) -> Dictionary:
@@ -97,7 +102,6 @@ func configure(gameplay, decisions: Dictionary, sessions: Dictionary) -> Diction
 	_directory = Directory.new()
 	result = _directory.configure(String(_bubble.body_definition()["body_id"]), _bubble.grid_profile())
 	if not bool(result.get("success", false)): return result
-	# Level-one radius-one region covers the actual eight-cell bootstrap root.
 	var region := Region.create("region/mvp4/shared", String(_bubble.body_definition()["body_id"]), 1, snapshots[0]["address"]["cell_address"], 1)
 	result = _directory.register_region(region, OWNER, EPOCH)
 	if not bool(result.get("success", false)): return result
@@ -190,12 +194,12 @@ func prepare_dig(actor: String, session: String, operation_id: String, direction
 	var hit: Vector3 = query["details"]["position_m"]
 	var tool: Dictionary = _gameplay.get_canonical_item_graph_port().get_equipped_item(actor, "tool/main")
 	if tool.is_empty(): return fail("P7_MINING_TOOL_REQUIRED")
-	var request: Dictionary = _bubble.create_excavation_request(operation_id, "player/" + actor, String(tool["item_id"]), hit - direction * 0.25, hit + direction * 0.75, 1.25, 1000000000.0, int(_gameplay.get_report()["server_tick"]))
+	var request: Dictionary = _bubble.create_excavation_request(operation_id, "player/" + actor, String(tool["item_id"]), hit - direction * 0.25, hit + direction * DIG_STROKE_M, 1.25, 1000000000.0, int(_gameplay.get_report()["server_tick"]))
 	if request.is_empty(): return fail("MVP4_BOUNDED_DIG_PLAN_INVALID")
 	var authorized: Dictionary = _gates.authorize_mutation(request)
 	if not bool(authorized.get("success", false)): return authorized
 	var transport := Codec.encode_persistence_json(request)
-	return ok({"request_transport": transport, "plan_mac": _plan_mac(actor, session, transport), "aim_source": "CANONICAL_MATTER_QUERY", "hit_position_m": [hit.x, hit.y, hit.z], "player_position_m": p})
+	return ok({"request_transport": transport, "plan_mac": _plan_mac(actor, session, transport), "aim_source": "CANONICAL_MATTER_QUERY", "hit_position_m": [hit.x, hit.y, hit.z], "player_position_m": p, "stroke_depth_m": DIG_STROKE_M})
 
 func _plan_mac(actor: String, session: String, transport: String) -> String:
 	return Crypto.new().hmac_digest(HashingContext.HASH_SHA256, _plan_key, (actor + "\n" + session + "\n" + transport).to_utf8_buffer()).hex_encode()
@@ -205,10 +209,10 @@ func execute_prepared(actor: String, session: String, plan: Dictionary) -> Dicti
 	if not bool(identity.get("success", false)): return identity
 	if not _connected.has(actor): return fail("MVP4_REPLICA_NOT_CONNECTED")
 	var request_transport := String(plan.get("request_transport", ""))
+	if request_transport.to_utf8_buffer().size() > MAX_REQUEST_BYTES: return fail("MVP4_DIG_REQUEST_BUDGET")
 	var supplied_mac := String(plan.get("plan_mac", ""))
 	if supplied_mac.length() != 64 or not Crypto.new().constant_time_compare(supplied_mac.to_utf8_buffer(), _plan_mac(actor, session, request_transport).to_utf8_buffer()):
 		return fail("MVP4_CANONICAL_AIM_ATTESTATION_INVALID")
-	if request_transport.to_utf8_buffer().size() > MAX_REQUEST_BYTES: return fail("MVP4_DIG_REQUEST_BUDGET")
 	var request: Dictionary = Codec.rehydrate_request(Codec.decode_persistence_json(request_transport))
 	if request.is_empty() or not bool(Request.validate(request).get("success", false)):
 		return fail("MVP4_INVALID_CANONICAL_REQUEST")
@@ -217,8 +221,6 @@ func execute_prepared(actor: String, session: String, plan: Dictionary) -> Dicti
 	var journal = _bubble.excavation_service().mutation_journal()
 	if not journal.has_operation(String(request["operation_id"])) and journal.size() >= MAX_DIG_OPERATIONS:
 		return fail("MVP4_DIG_SESSION_BUDGET")
-	# Canonical request bytes are consumed by the existing MW6 entry point,
-	# which checks P7/MW8 on EVERY attempt and owns exact replay via MW4.
 	var payload := {"peer_id": peer(actor), "session_id": session, "request_transport": request_transport}
 	var envelope := NetworkCommand.create("message/mvp4/" + String(request["operation_id"]).sha256_text(), String(request["operation_id"]), String(_bubble.body_definition()["body_id"]), "MATTER_MUTATION", payload, -1, EPOCH, int(request["client_tick"]), 0)
 	var before := report()
@@ -237,7 +239,6 @@ func report() -> Dictionary:
 	return {"schema": "distributed_world_simulator.mvp4_shared_dig_authority.v1", "configured": _configured, "authority_id": OWNER, "authority_epoch": EPOCH, "matter_region_count": 1, "initial_store_hash": _initial_store_hash, "store_hash": _bubble.snapshot_store().content_hash() if _bubble != null else "", "state_hash": _matter.current_state_hash() if _matter != null else "", "stream_sequence": _matter.stream_sequence() if _matter != null else 0, "dig_observations": _dig_observations.duplicate(true), "connected_replicas": _connected.keys(), "canonical_player_owner": "NETWORKED_GAMEPLAY_SERVICE", "canonical_matter_owner": "LUNAR_BUBBLE_MW4", "replication_owner": "MW6", "mvp4_predicate_verified": false, "mvp5_material_output_verified": false}
 
 func shutdown() -> void:
-	# Break only composition references; the caller owns native M3 lifecycle.
 	_matter = null
 	_gates = null
 	_delivery = null

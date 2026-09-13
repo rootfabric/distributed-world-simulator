@@ -15,8 +15,6 @@ OUT = ROOT / "artifacts/mvp4-exact"
 ENGINE = os.environ["GODOT_BIN"]
 BASELINE = "f1d453fb2af49231c30bdc5cbe415ad199394446"
 ROWS: list[dict] = []
-# Only these exact existing R13 cleanup diagnostics can be classified against
-# a new execution of the immutable baseline. Every other ERROR remains fatal.
 CLEANUP = re.compile(r"(?m)^(?:WARNING: \d+ ObjectDB instances were leaked at exit[^\n]*|ERROR: \d+ resources still in use at exit[^\n]*)$")
 FATAL = re.compile(r"(?im)^\s*(?:SCRIPT ERROR|ERROR):|Parse Error|Compile Error|: FAIL(?:\s|\()")
 
@@ -46,6 +44,9 @@ def main() -> int:
     os.environ["MVP4_FOCUSED_RESULT"] = str(OUT / "focused.json")
     if not run("import", prefix + ["--editor", "--import", "--quit"], 180)["passed"]: return 1
     run("mvp4-focused", prefix + ["--script", "res://tests/runtime/test_v0_mvp_4_shared_canonical_dig.gd"])
+    os.environ["MVP4_FOCUSED_RESULT"] = str(OUT / "replica-rejection.json")
+    run("mvp4-replica-rejection", prefix + ["--script", "res://tests/runtime/test_v0_mvp_4_replica_rejection.gd"])
+    os.environ.pop("MVP4_FOCUSED_RESULT", None)
     current = run("mvp3-attestation", prefix + ["--script", "res://tests/runtime/test_v0_mvp3_source_attestation_roundtrip.gd"])
     if current["cleanup_diagnostics"]:
         baseline_root = Path(os.environ["RUNNER_TEMP"]) / "mvp4-r13-baseline"
@@ -65,15 +66,18 @@ def main() -> int:
         save()
     for name, path in [("mvp3-live-owner", "tests/runtime/test_v0_mvp3_live_owner_handoff.gd"), ("mvp3-fixed-input", "tests/runtime/test_v0_mvp3_fixed_tick_input_contract.gd"), ("sm1-carry", "tests/network/test_v0_sm1_player_carry_and_gateway_pivot.gd")]:
         run(name, prefix + ["--script", "res://" + path])
-    run("mvp4-five-process", [sys.executable, "tests/integration/test_v0_mvp_4_graphical_shared_dig.py", "--engine", ENGINE, "--output", str(OUT / "graphical")], 300)
+    run("mvp4-five-process-visible", [sys.executable, "tests/integration/test_v0_mvp_4_visible_graphical_shared_dig.py", "--engine", ENGINE, "--output", str(OUT / "graphical")], 300)
     run("mvp3-native-process", [sys.executable, "tests/integration/test_v0_mvp3_native_process_roundtrip.py", "--engine", ENGINE, "--output", str(OUT / "mvp3-native")], 240)
     run("mvp3-graphical-process", [sys.executable, "tests/integration/test_v0_mvp3_graphical_process_roundtrip.py", "--engine", ENGINE, "--output", str(OUT / "mvp3-graphical")], 300)
-    focused = json.loads((OUT / "focused.json").read_text()) if (OUT / "focused.json").is_file() else {}
-    graphical = json.loads((OUT / "graphical/manifest.json").read_text()) if (OUT / "graphical/manifest.json").is_file() else {}
-    exact = focused.get("subject_head") == os.environ["EXPECTED_HEAD"] and focused.get("subject_tree") == os.environ["EXPECTED_TREE"] and graphical.get("subject_head") == os.environ["EXPECTED_HEAD"] and graphical.get("subject_tree") == os.environ["EXPECTED_TREE"]
+    def report(path: str) -> dict:
+        source = OUT / path
+        return json.loads(source.read_text()) if source.is_file() else {}
+    focused, rejection = report("focused.json"), report("replica-rejection.json")
+    graphical, visible = report("graphical/manifest.json"), report("graphical/visible-acceptance.json")
+    exact = all(r.get("subject_head") == os.environ["EXPECTED_HEAD"] and r.get("subject_tree") == os.environ["EXPECTED_TREE"] for r in (focused, rejection, graphical))
     clean = not subprocess.check_output(["git", "status", "--porcelain", "--untracked-files=no"], cwd=ROOT, text=True).strip()
-    passed = all(row["passed"] for row in ROWS) and focused.get("passed") is True and graphical.get("passed") is True and exact and clean
-    (OUT / "summary.json").write_text(json.dumps({"passed": passed, "exact_subject": exact, "tracked_clean_after": clean, "independent_verdict": False, "manual_input_executed": False, "mvp4_predicate_verified": False, "full_world_core_executed": False}, indent=2) + "\n")
+    passed = all(row["passed"] for row in ROWS) and all(r.get("passed") is True for r in (focused, rejection, graphical, visible)) and exact and clean
+    (OUT / "summary.json").write_text(json.dumps({"passed": passed, "exact_subject": exact, "tracked_clean_after": clean, "visible_terrain_gate": visible.get("passed", False), "independent_verdict": False, "manual_input_executed": False, "mvp4_predicate_verified": False, "full_world_core_executed": False}, indent=2) + "\n")
     return 0 if passed else 1
 
 if __name__ == "__main__":
