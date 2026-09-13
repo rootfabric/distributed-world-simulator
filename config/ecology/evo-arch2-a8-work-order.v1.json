@@ -1,0 +1,80 @@
+{
+  "schema": "dws.ecology.research-work-order.v1",
+  "id": "EVO-ARCH2-A8-20260913-R1",
+  "checkpoint": "ECO_ARCH2_A8_SNAPSHOT_SEAM",
+  "risk": "HIGH",
+  "authorization": "User explicitly requested implementation of A8 Snapshot / Seam after A7 main merge. Implementation, bounded repairs, CI, fresh review and evidence publication are authorized; A8 main merge is a separate human gate.",
+  "branch": "feature/eco-evo-arch2-a8-snapshot-seam-r1",
+  "project_epoch": {
+    "main": "9e10e640ffc53f82195f1fd930ebafbbc85e482f",
+    "tree": "27c62c3774117c5163d0d5dacf789b1310638a92",
+    "registry_generation": 82,
+    "architecture_revision": "GLOBAL-P0-2026-08-12-R3-REFRESH-R1",
+    "a7_pr": 617,
+    "postmerge_pc_run": 34752963523,
+    "postmerge_pc_conclusion": "success",
+    "global_health": "YELLOW",
+    "historical_eco_g_findings_closed": false
+  },
+  "design": "docs/research/ecology/EVO_ARCH2_A8_SNAPSHOT_SEAM_R1_RU.md",
+  "design_commit": "e49ebddc9e4eccc8bab460ca36d9ace3c1b034a5",
+  "scope": "Bounded full coupled A7 partition snapshot, canonical ticket handoff consumer, restart-safe command receipts and Linux durable CAS byte store. Not production network activation or individual wet/dry transplantation.",
+  "existing_owners_consumed_unchanged": [
+    "scripts/research/ecology/v2/observatory_session_v1.gd",
+    "scripts/research/ecology/v2/persistent_environmental_feedback_v1.gd",
+    "scripts/research/ecology/v2/local_environment_field_v1.gd",
+    "scripts/network/contracts/handoff_ticket.gd",
+    "scripts/network/handoff/handoff_state_machine.gd"
+  ],
+  "allowed_additions": [
+    "config/ecology/evo-arch2-a8-*",
+    "docs/research/ecology/EVO_ARCH2_A8_*",
+    "scripts/research/ecology/v2/snapshot_seam_v1.gd",
+    "scripts/research/ecology/v2/snapshot_seam_v1.gd.uid",
+    "scripts/research/ecology/v2/snapshot_store.py",
+    "tests/research/ecology/v2/arch2_a8_*",
+    "validation/ecology/evo_arch2_a8/**"
+  ],
+  "forbidden": [
+    "Modify any existing main-owned file",
+    "Rewrite accepted A0-A7 runtime or tests",
+    "Rewrite A4 field owner or A6 genesis during handoff",
+    "Create new global Authority/Region/Matter owner",
+    "Production/network/simulation/architecture/registry/scheduler changes",
+    "Main direct or force push",
+    "Main merge, A9/A10 dispatch or production promotion"
+  ],
+  "required_predicates": [
+    "FRESH_MAIN_EPOCH_AND_A7_MERGE_EXACT",
+    "FULL_ORGANISM_FIELD_OUTBOX_CORPSE_CONSISTENT_CUT",
+    "CANONICAL_TICKET_STATE_MACHINE_CONSUMED_NOT_FORKED",
+    "A_B_A_SINGLE_DURABLE_EXECUTOR_AND_EPOCH_FENCE",
+    "ACTUAL_TARGET_PAYLOAD_ADMISSION",
+    "FREEZE_ABORT_EXPIRY_AND_STALE_COMMAND_REJECTION",
+    "EXACT_OPERATION_IDEMPOTENCY_AND_CONFLICT_REJECTION",
+    "EXTERNAL_ANCHOR_PLUS_SEMANTIC_REPLAY_RESTORE",
+    "ALL_HANDOFF_BOUNDARY_FRESH_PROCESS_RESTART",
+    "CONTINUATION_EQUIVALENCE_WITH_UNINTERRUPTED_BIOLOGY",
+    "DURABLE_CAS_CONCURRENT_WRITER_AND_CRASH_CONTROLS",
+    "CORRUPT_STORE_FAIL_CLOSED_NO_SILENT_OWNER_ROLLBACK",
+    "BOUNDED_INPUT_HISTORY_DISK_AND_REPLAY_WORK",
+    "ACCEPTED_MAIN_SOURCE_IMMUTABLE",
+    "EXACT_LINUX_GODOT_COLD_IMPORT_PASS",
+    "A0_A7_ALL_REQUIRED_REGRESSIONS_AND_A5_ORACLES_PASS",
+    "A7_GRAPHICAL_PASS",
+    "FULL_HARNESS_DISCOVERY_NO_SKIPS_PASS",
+    "STANDARD_DIRECTIONAL_NON_RED",
+    "EXACT_FINAL_HEAD_TREE_CLEAN",
+    "POST_BUILD_CRITIQUE_COMPLETE",
+    "FRESH_INDEPENDENT_REVIEW_PASS",
+    "EVIDENCE_BYTES_HASHES_AND_SUBJECT_BINDING_VERIFIED"
+  ],
+  "bounds": {"ecological_horizon": 16, "commands": 96, "ticket_ids": 8, "snapshot_bytes": 2097152, "production_claim": false},
+  "state": "IN_PROGRESS",
+  "resume_anchor": {
+    "last_completed_predicate": "FRESH_MAIN_BRANCH_DESIGN_AND_WORK_ORDER",
+    "next_action": "IMPLEMENT_A8_CONTROLLER_STORE_AND_NEGATIVE_CONTROLS_THEN_EXACT_VERIFY_REVIEW",
+    "allowed_recovery_route": "GitHub connector for source/evidence; repository-owned CI for exact execution; attached approved Godot for local tests when complete source is available",
+    "stop_before": "MAIN_MERGE"
+  }
+}
