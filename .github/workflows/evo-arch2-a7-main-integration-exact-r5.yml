@@ -1,0 +1,157 @@
+name: ECO ARCH2 A7 Main Integration Exact R5
+on:
+  push:
+    branches: [validation/eco-arch2-a7-main-integration-r1]
+    paths: [.github/workflows/evo-arch2-a7-main-integration-exact-r5.yml]
+permissions:
+  contents: read
+concurrency:
+  group: eco-arch2-a7-main-integration-exact-r5
+  cancel-in-progress: true
+env:
+  SOURCE_HEAD: e35ac07582c36b75d3cd05bdc8b66d8dbe84c681
+  SOURCE_TREE: 5afda121c0cba32e8637a4d6cc5cf4cfe127025c
+  ACCEPTED_HEAD: 8eccf6304078bec3a3ccaa5860c5aab6ee311209
+  ACCEPTED_TREE: 24e876b7377cb3e1e521f08ff9766331fe4e895a
+  ACCEPTED_REF: refs/remotes/origin/acceptance/eco-evo-arch2-a7-r1
+jobs:
+  linux-exact:
+    if: github.actor == 'rootfabric' && github.repository == 'rootfabric/distributed-world-simulator'
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 50
+    steps:
+      - name: Checkout frozen integration candidate
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ env.SOURCE_HEAD }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Fetch and seal durable accepted A7 ref
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin refs/heads/acceptance/eco-evo-arch2-a7-r1:refs/remotes/origin/acceptance/eco-evo-arch2-a7-r1
+          test "$(git rev-parse "$ACCEPTED_REF")" = "$ACCEPTED_HEAD"
+          test "$(git rev-parse "$ACCEPTED_REF^{tree}")" = "$ACCEPTED_TREE"
+          test "$(git rev-parse "$ACCEPTED_HEAD^{tree}")" = "$ACCEPTED_TREE"
+          git cat-file -e "$ACCEPTED_HEAD^{commit}"
+      - name: Assert frozen integration subject
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$SOURCE_HEAD"
+          test "$(git rev-parse HEAD^{tree})" = "$SOURCE_TREE"
+          test -z "$(git status --porcelain --untracked-files=no)"
+          git merge-base --is-ancestor 7dfc68ab5a1e90254a1b7039807f275b5da04eef "$SOURCE_HEAD"
+          mkdir -p artifacts/a7-main-integration/environment
+      - name: Prepare exact Harness Python dependency job-locally
+        shell: bash
+        run: |
+          set -euo pipefail
+          py="$(command -v python3)"
+          current="$($py -c 'import importlib.metadata; print(importlib.metadata.version("jsonschema"))' 2>/dev/null || true)"
+          if [ "$current" != '4.25.1' ]; then
+            venv="$RUNNER_TEMP/a7-exact-r5-python"
+            python3 -m venv "$venv"
+            "$venv/bin/python" -m pip install --disable-pip-version-check --no-input 'jsonschema==4.25.1'
+            py="$venv/bin/python"
+          fi
+          test "$("$py" -c 'import importlib.metadata; print(importlib.metadata.version("jsonschema"))')" = '4.25.1'
+          echo "A7_PINNED_PYTHON=$py" >> "$GITHUB_ENV"
+          "$py" -m py_compile validation/ecology/evo_arch2_a7_main_integration/verify.py
+      - name: Prepare graphical executor job-locally
+        shell: bash
+        run: |
+          set -euo pipefail
+          exec > >(tee artifacts/a7-main-integration/environment/graphics-bootstrap.log) 2>&1
+          if command -v xvfb-run >/dev/null 2>&1; then
+            echo GRAPHICS_EXECUTOR=EXISTING_SYSTEM_XVFB
+            xvfb-run -a -s '-screen 0 1600x1100x24' /bin/true
+            exit 0
+          fi
+          command -v apt-get >/dev/null
+          command -v dpkg-deb >/dev/null
+          prefix="$(mktemp -d "$RUNNER_TEMP/a7-main-integration-graphics.XXXXXXXX")"
+          echo "A7_INTEGRATION_GRAPHICS_PREFIX=$prefix" >> "$GITHUB_ENV"
+          mkdir -p "$prefix/packages" "$prefix/root"
+          packages=(xvfb xauth libxfont2 xserver-common x11-xkb-utils xkb-data xfonts-base libxmu6 libxmuu1 libfontenc1 libxau6 libxdmcp6 libxt6 libsm6 libice6)
+          (
+            cd "$prefix/packages"
+            if ! apt-get download "${packages[@]}"; then
+              mkdir -p "$prefix/apt/lists/partial" "$prefix/apt/cache/archives/partial"
+              cat > "$prefix/apt/isolated.conf" <<EOF
+          Dir::State::lists "$prefix/apt/lists";
+          Dir::Cache "$prefix/apt/cache";
+          Debug::NoLocking "true";
+          APT::Sandbox::User "$(id -un)";
+          #clear APT::Update::Post-Invoke;
+          #clear APT::Update::Post-Invoke-Success;
+          #clear DPkg::Post-Invoke;
+          EOF
+              APT_CONFIG="$prefix/apt/isolated.conf" apt-get update
+              APT_CONFIG="$prefix/apt/isolated.conf" apt-get download "${packages[@]}"
+            fi
+            for package in ./*.deb; do
+              dpkg-deb --field "$package" Package Version Architecture
+              sha256sum "$package"
+              dpkg-deb --extract "$package" "$prefix/root"
+            done
+          )
+          echo "$prefix/root/usr/bin" >> "$GITHUB_PATH"
+          echo "LD_LIBRARY_PATH=$prefix/root/usr/lib/x86_64-linux-gnu${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" >> "$GITHUB_ENV"
+          echo "XKB_CONFIG_ROOT=$prefix/root/usr/share/X11/xkb" >> "$GITHUB_ENV"
+          export PATH="$prefix/root/usr/bin:$PATH"
+          export LD_LIBRARY_PATH="$prefix/root/usr/lib/x86_64-linux-gnu${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+          export XKB_CONFIG_ROOT="$prefix/root/usr/share/X11/xkb"
+          command -v Xvfb
+          ! ldd "$prefix/root/usr/bin/Xvfb" | grep -q 'not found'
+          xvfb-run -a -s '-screen 0 1600x1100x24' /bin/true
+          echo GRAPHICS_BOOTSTRAP_PASS
+      - name: Run exact integrated-head verifier
+        shell: bash
+        env:
+          CONFIGURED_GODOT: ${{ vars.GODOT_DOUBLE_PATH }}
+        run: |
+          set -euo pipefail
+          godot="${CONFIGURED_GODOT:-$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64}"
+          test -x "$godot"
+          "$A7_PINNED_PYTHON" validation/ecology/evo_arch2_a7_main_integration/verify.py --godot "$godot" --head "$SOURCE_HEAD" --tree "$SOURCE_TREE"
+          "$A7_PINNED_PYTHON" - <<'PY'
+          import json,os,pathlib
+          s=json.loads(pathlib.Path('artifacts/a7-main-integration/exact/summary.json').read_text())
+          assert s['verdict']=='PASS'
+          assert s['subject_head']==os.environ['SOURCE_HEAD'] and s['subject_tree']==os.environ['SOURCE_TREE']
+          assert s['accepted_transfer_source']==os.environ['ACCEPTED_HEAD'] and s['accepted_transfer_tree']==os.environ['ACCEPTED_TREE']
+          assert s['transfer_identity']=='PASS_ALL_ACTUAL_ADDITIONS_DIRECT_ACCEPTED_REF'
+          assert s['base_absence_gate']=='PASS_BY_GIT_EXIT_STATUS'
+          assert s['res_path_closure']['result']=='PASS'
+          assert s['python_environment']['jsonschema']=='4.25.1'
+          assert s['harness']['result']=='PASS' and s['harness']['tests']>=325
+          assert s['main_owned_files_modified']==['tests/harness/test_v0_mvp_act0.py']
+          assert s['unauthorized_main_owned_files_modified'] is False
+          assert all(x['overall_health']!='RED' for x in s['control'])
+          print(json.dumps(s,indent=2))
+          PY
+      - name: Upload exact integration evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: a7-main-integration-exact-e35ac075-r5
+          path: |
+            artifacts/a7-main-integration/
+            artifacts/a7/observatory.png
+            artifacts/a7/capture-sources.json
+            artifacts/a7/restart/
+            artifacts/a6/restart/
+          if-no-files-found: error
+          retention-days: 30
+      - name: Remove job-local graphical dependencies
+        if: always()
+        shell: bash
+        run: |
+          if [ -n "${A7_INTEGRATION_GRAPHICS_PREFIX:-}" ]; then
+            case "$A7_INTEGRATION_GRAPHICS_PREFIX" in
+              "$RUNNER_TEMP"/a7-main-integration-graphics.*) rm -rf -- "$A7_INTEGRATION_GRAPHICS_PREFIX" ;;
+              *) echo 'Refusing cleanup outside job-local A7 integration directory' >&2; exit 1 ;;
+            esac
+          fi
