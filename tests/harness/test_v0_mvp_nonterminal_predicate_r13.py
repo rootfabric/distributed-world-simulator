@@ -1,4 +1,4 @@
-"""R13/R14/R15: immutable MVP1 history plus live non-terminal train consistency."""
+"""R13/R14/R15/R12: immutable history and production-selected live train."""
 from __future__ import annotations
 
 import copy
@@ -6,11 +6,13 @@ import json
 from pathlib import Path
 import sys
 import unittest
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts"))
-from harness.contracts import ContractBundle, ContractValidationError
+from harness.contracts import ContractBundle, ContractValidationError, read_json
 from harness.event_reducer import load_guard_context, reduce_events
+from harness.state_builder import _select_authoritative_event_paths
 
 EPOCH = "E2026-09-09-V0-MVP-R1"
 WO = "V0-MVP-R1-WO-001"
@@ -34,8 +36,11 @@ def read(relative: Path) -> dict:
 
 
 def committed_events() -> list[dict]:
-    return [json.loads(path.read_text(encoding="utf-8"))
-            for path in sorted((ROOT / EVENT_DIR).glob("*.json"))]
+    raw_paths = sorted((ROOT / EVENT_DIR).glob("*.json"))
+    paths, _ = _select_authoritative_event_paths(
+        ROOT, ROOT / EX, read(ORDER), ROOT / EVENT_DIR, raw_paths
+    )
+    return [read_json(path) for path in paths]
 
 
 def next_leaf_progress_event() -> dict:
@@ -58,8 +63,8 @@ class MVPNonterminalPredicateR13Tests(unittest.TestCase):
         cls.bundle = ContractBundle.load(ROOT)
         cls.live_order = read(ORDER)
         cls.live_events = committed_events()
-        # R15: use the REAL historical prefix, without deleting tracked events.
-        # Later events belong to the live train test, not to this sequence-7 fixture.
+        # The real prefix is untouched. Later events use the same strict
+        # reconciliation selector as production, not a hand-filtered fixture.
         cls.events = [event for event in cls.live_events if event["sequence"] <= 6]
         cls.order = copy.deepcopy(cls.live_order)
         cls.order["state"] = "IN_PROGRESS"
@@ -114,6 +119,29 @@ class MVPNonterminalPredicateR13Tests(unittest.TestCase):
         self.assertEqual(self.live_events[-1]["sequence"], reduced["last_event_sequence"])
         self.assertIn(MVP1, reduced["completed_predicates"])
         self.assertEqual(len(self.live_events), len({e["sequence"] for e in self.live_events}))
+
+    def test_unapproved_duplicate_sequence_still_rejected(self):
+        duplicate = copy.deepcopy(self.live_events[-1])
+        duplicate["event_id"] += "-R12-NEGATIVE-CONTROL"
+        with self.assertRaisesRegex(ContractValidationError, "EVENT_SEQUENCE_NOT_UNIQUE"):
+            reduce_events(self.bundle, self.live_order, self.live_events + [duplicate],
+                          self.transition, self.context)
+
+    def test_tampered_quarantine_pin_still_rejected_without_editing_history(self):
+        relative = EX / "event-ledger-reconciliation.v1.json"
+        original = read(relative)
+        tampered = copy.deepcopy(original)
+        tampered["quarantined_events"][0]["git_blob_sha"] = "0" * 40
+        def controlled_read(path: Path) -> dict:
+            return tampered if path == ROOT / relative else read_json(path)
+        with patch("harness.state_builder.read_json", side_effect=controlled_read):
+            with self.assertRaisesRegex(ContractValidationError, "EVENT_RECONCILIATION_BLOB_MISMATCH"):
+                committed_events()
+        # All quarantined files remain present; the negative control changed
+        # neither the manifest nor an event on disk.
+        self.assertEqual(original, read(relative))
+        for item in original["quarantined_events"]:
+            self.assertTrue((ROOT / item["path"]).is_file())
 
     def test_old_terminal_only_table_rejects_real_nonterminal_predicate(self):
         old = copy.deepcopy(self.transition)
