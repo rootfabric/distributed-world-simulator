@@ -1,0 +1,56 @@
+{
+  "schema": "dws.ecology.a8-progress.v1",
+  "work_order": "EVO-ARCH2-A8-20260913-R1",
+  "source": {
+    "branch": "feature/eco-evo-arch2-a8-snapshot-seam-r1",
+    "head": "695904f7cf5adab5c8466ad37c4dccba8a79df63",
+    "tree": "e227a53b1da616957242679a3a5c0ac31328581c",
+    "base_main": "9e10e640ffc53f82195f1fd930ebafbbc85e482f",
+    "base_tree": "27c62c3774117c5163d0d5dacf789b1310638a92",
+    "diff_policy": "ADDITIONS_ONLY",
+    "changed_files": 9,
+    "modifications": 0,
+    "deletions": 0
+  },
+  "pull_request": 630,
+  "project_control": {
+    "run": 34758816969,
+    "job": 103727831521,
+    "conclusion": "SUCCESS",
+    "standard_health": "YELLOW",
+    "directional_health": "YELLOW",
+    "non_red": true,
+    "evidence_path": "validation/ecology/evo_arch2_a8/PROJECT_CONTROL_695904F7_R1.json"
+  },
+  "exact_linux": {
+    "validation_branch": "validation/eco-arch2-a8-exact-r1",
+    "workflow_commit": "d69c5a9b77d86792ca4252e2fb285ae92235d22b",
+    "run": 34758790276,
+    "preflight_job": 103727757540,
+    "preflight": "SUCCESS",
+    "storage_controls": "26/26 PASS",
+    "linux_job": 103727781349,
+    "linux_status_at_checkpoint": "QUEUED_SHARED_SELF_HOSTED_RUNNER",
+    "acceptance_from_preflight_only": false
+  },
+  "fresh_review": {
+    "request_comment": 5653453238,
+    "summary_comment": 5653454375,
+    "subject_head": "695904f7cf5adab5c8466ad37c4dccba8a79df63",
+    "status_at_checkpoint": "RUNNING",
+    "blocking_threads_at_checkpoint": 0
+  },
+  "last_completed_durable_predicate": "PROJECT_CONTROL_NON_RED_AND_HOSTED_PREFLIGHT_PASS",
+  "next_action": "INSPECT_FRESH_REVIEW_AND_COMPLETE_FULL_EXACT_LINUX_ON_THE_SAME_FROZEN_HEAD; REPAIR_ONLY_IF_A_CONCRETE_DEFECT_IS_PROVED",
+  "allowed_recovery_route": "REFETCH_PR_630_REVIEW_AND_RUN_34758790276_BY_DURABLE_ID; VERIFY_SOURCE_BRANCH_HEAD_AND_MAIN_EPOCH_BEFORE_REUSING_EVIDENCE",
+  "claims": {
+    "a8_implemented_candidate": true,
+    "a8_verified": false,
+    "a8_accepted": false,
+    "merge_ready": false,
+    "main_merge": false,
+    "a9_started": false,
+    "a10_started": false,
+    "production_promotion": false
+  }
+}
