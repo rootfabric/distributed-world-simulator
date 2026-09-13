@@ -1,0 +1,120 @@
+{
+  "schema": "dws.ecology.integration-progress.v1",
+  "work_order": "EVO-ARCH2-A7-MAIN-INTEGRATION-20260913-R1",
+  "state": "VERIFYING",
+  "source_branch": "integration/eco-evo-arch2-a7-main-r1",
+  "source_head": "f769e308ee929642df30a2d87b84420c04569535",
+  "source_tree": "27c62c3774117c5163d0d5dacf789b1310638a92",
+  "base_main": "7dfc68ab5a1e90254a1b7039807f275b5da04eef",
+  "accepted_source": "8eccf6304078bec3a3ccaa5860c5aab6ee311209",
+  "accepted_tree": "24e876b7377cb3e1e521f08ff9766331fe4e895a",
+  "repair_r6_commits": {
+    "map": "c84704f56bd749f4e709b9d8e3aa612b6905c47c",
+    "verifier": "64a634d119818a1d0f6e60648f66d5e35e59ce42",
+    "tests": "53905f96d1cf9498ef1a56956b630c424b6c0bc8",
+    "work_order": "f769e308ee929642df30a2d87b84420c04569535"
+  },
+  "findings_implemented_not_yet_independently_closed": [3999074189, 3999074192, 3999322861, 3999322864],
+  "historical_closure_family": [3998402438, 3998418167],
+  "scope_compare": {
+    "base": "e35ac07582c36b75d3cd05bdc8b66d8dbe84c681",
+    "ahead_by": 8,
+    "behind_by": 0,
+    "changed_paths": [
+      "config/ecology/evo-arch2-a7-main-integration-work-order.v1.json",
+      "docs/research/ecology/EVO_ARCH2_A7_MAIN_INTEGRATION_REPAIR_R5_RU.md",
+      "docs/research/ecology/EVO_ARCH2_A7_MAIN_INTEGRATION_REPAIR_R6_RU.md",
+      "validation/ecology/evo_arch2_a7_main_integration/test_repair_r5.py",
+      "validation/ecology/evo_arch2_a7_main_integration/test_repair_r6.py",
+      "validation/ecology/evo_arch2_a7_main_integration/verify.py"
+    ],
+    "accepted_runtime_or_tests_changed": false,
+    "additional_main_owned_files_changed": false
+  },
+  "post_build_critique": {
+    "role": "IMPLEMENTER",
+    "not_independent_review": true,
+    "verdict": "NO_MATERIAL_REFACTOR_REQUIRED_FOR_BOUNDED_R6_REPAIR",
+    "observations": [
+      "Resource enumeration starts from actual Git transfer additions, not working-directory glob results.",
+      "Each recursively referenced non-generated resource requires a regular frozen blob and identical unfiltered working bytes with no symlink components; final seal repeats this proof.",
+      "Generated exceptions name only specific report/PNG outputs, not executable scripts under a broad artifacts prefix.",
+      "Standalone exact CLI enforces precisely all 27 R5 controls and all 21 R6 controls, independently of the external workflow assertion.",
+      "Canonical dependency, complete ancestry, direct accepted provenance, all existing runtime/restart/graphics/Harness/control gates and human merge boundary remain intact."
+    ]
+  },
+  "focused_preflight": {
+    "run_id": 34750951859,
+    "job_id": 103707283645,
+    "job_conclusion": "success",
+    "workflow_head": "35fa40378765d8d84575925623477fe3bfe66efa",
+    "artifact_id": 10315484355,
+    "artifact_name": "a7-main-integration-f769e308-r7-preflight",
+    "zip_bytes": 5105,
+    "zip_sha256": "cd0998dc08af8ba0e756d3dc6b9ae795eecc5e1373b66dd8054cf6847379f046",
+    "zip_digest_matches_github": true,
+    "all_three_files_read": true,
+    "r5_tests": 27,
+    "r6_tests": 21,
+    "skips_or_failures": false,
+    "r5_log_sha256": "7f4f0a7a676ea3059e1d10fb521e59a20ea628c1a666137f5cb28304a004527b",
+    "r6_log_sha256": "ec87a506930e33d4bb1bafc4095a644d786f90b7d8a09a2d6fe3cd301ccb3d2a",
+    "summary_sha256": "b5c36f85d313f06eba907f61dff8e780aa725d5cf4748bd14c425a63d3a04459",
+    "jsonschema": "4.22.0",
+    "accepted_is_ancestor_exit": 1,
+    "resource_closure_authority": "FROZEN_GIT_TREE_AND_WORKING_BYTES",
+    "exact_resources": 92,
+    "resource_references": 387,
+    "not_full_runtime_verification": true
+  },
+  "project_control": {
+    "run_id": 34750901120,
+    "conclusion": "success",
+    "source_head": "f769e308ee929642df30a2d87b84420c04569535",
+    "artifact_id": 10315716223,
+    "zip_bytes": 28947,
+    "zip_sha256": "9ee57ac602ef866e36f7641b64c365e224895ecae463596ff78b28d9c3787707",
+    "zip_digest_matches_github": true,
+    "standard_overall_health": "YELLOW",
+    "directional_overall_health": "YELLOW",
+    "standard_report_sha256": "0c9b66b6c6b5442b7cb3561318c9accff1f25b139eb898d9b9b177da5ee2008e",
+    "directional_report_sha256": "f26a886ae0280ba371d70dae82f74a3db130258b1f866605448d7d757aa7ef99",
+    "global_green_inferred": false,
+    "not_substitute_for_runtime_verification": true
+  },
+  "full_exact_execution": {
+    "run_id": 34750951859,
+    "job_id": 103707313038,
+    "status_at_observation": "queued",
+    "verdict": "PENDING",
+    "workflow_head": "35fa40378765d8d84575925623477fe3bfe66efa",
+    "workflow_path": ".github/workflows/evo-arch2-a7-main-integration-exact-r7.yml"
+  },
+  "fresh_independent_review": {
+    "request_comment_id": 5652608712,
+    "source_head": "f769e308ee929642df30a2d87b84420c04569535",
+    "status_at_observation": "running",
+    "verdict": "PENDING"
+  },
+  "historical_runtime": {
+    "run_id": 34750348246,
+    "source_head": "9a4c96a7eba19e25cc262161d2811e2f671537f7",
+    "status_at_observation": "in_progress",
+    "cannot_accept_current_source": true
+  },
+  "resume_anchor": {
+    "last_completed_predicate": "R6_ALL_FOCUSED_TESTS_FROZEN_CLOSURE_AND_CURRENT_PROJECT_CONTROL_VERIFIED",
+    "next_action": "READ_FULL_EXACT_RUN_34750951859_JOB_103707313038_AND_FRESH_REVIEW_5652608712; REPAIR_CONFIRMED_FAILURES; INSPECT_FULL_ARTIFACT_LOGS_REPEATS_GRAPHICS_AND_ACTUAL_CLOSE_DIAGNOSTICS; APPEND_FINAL_EVIDENCE_WITHOUT_MOVING_FROZEN_SOURCE",
+    "allowed_recovery_route": "GitHub connector for source and evidence; existing repository-owned CI for execution; connector-mounted ZIP for byte inspection",
+    "known_pending_gate": "FULL_CURRENT_HEAD_RUNTIME_AND_FRESH_INDEPENDENT_REVIEW",
+    "stop_before": "MAIN_MERGE"
+  },
+  "acceptance_claims": {
+    "integration_accepted": false,
+    "independent_self_accept": false,
+    "main_merge": false,
+    "production_promotion": false,
+    "a8_dispatch": false,
+    "main_owned_mission_complete": false
+  }
+}
