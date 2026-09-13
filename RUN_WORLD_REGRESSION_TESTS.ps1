@@ -176,7 +176,7 @@ $Tests = @(
     "res://tests/construction/test_c15_executable_utilities_contracts.gd",
     "res://tests/construction/test_c15_executable_utilities_integration.gd",
     "res://tests/construction/test_c16_interaction_ux_contracts.gd",
-    "res://tests/construction/test_c16_interaction_ux_contracts.gd",
+    "res://tests/construction/test_c16_interaction_ux_integration.gd",
     "res://tests/construction/test_c17_distributed_authority_contracts.gd",
     "res://tests/construction/test_c17_distributed_authority_integration.gd",
     "res://tests/construction/test_c18_streaming_lod_contracts.gd",
