@@ -1,0 +1,146 @@
+name: ECO ARCH2 A7 Main Integration Static Preflight R5
+on:
+  push:
+    branches: [validation/eco-arch2-a7-main-integration-r1]
+    paths: [.github/workflows/evo-arch2-a7-main-integration-static-r5.yml]
+permissions:
+  contents: read
+env:
+  SOURCE_HEAD: e35ac07582c36b75d3cd05bdc8b66d8dbe84c681
+  SOURCE_TREE: 5afda121c0cba32e8637a4d6cc5cf4cfe127025c
+  BASE_MAIN: 7dfc68ab5a1e90254a1b7039807f275b5da04eef
+  ACCEPTED_HEAD: 8eccf6304078bec3a3ccaa5860c5aab6ee311209
+  ACCEPTED_TREE: 24e876b7377cb3e1e521f08ff9766331fe4e895a
+  ACCEPTED_REF: refs/remotes/origin/acceptance/eco-evo-arch2-a7-r1
+  HARNESS_REPAIR_PATH: tests/harness/test_v0_mvp_act0.py
+  HARNESS_REPAIR_BLOB: 43db3ef992430802dab3b7c60b3bb7d2801205f0
+jobs:
+  static-preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout frozen integration candidate
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ env.SOURCE_HEAD }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Fetch and seal durable accepted A7 ref
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin refs/heads/acceptance/eco-evo-arch2-a7-r1:refs/remotes/origin/acceptance/eco-evo-arch2-a7-r1
+          test "$(git rev-parse "$ACCEPTED_REF")" = "$ACCEPTED_HEAD"
+          test "$(git rev-parse "$ACCEPTED_REF^{tree}")" = "$ACCEPTED_TREE"
+          test "$(git rev-parse "$ACCEPTED_HEAD^{tree}")" = "$ACCEPTED_TREE"
+          git cat-file -e "$ACCEPTED_HEAD^{commit}"
+      - name: Verify every actual transfer addition against accepted A7
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$SOURCE_HEAD"
+          test "$(git rev-parse HEAD^{tree})" = "$SOURCE_TREE"
+          git merge-base --is-ancestor "$BASE_MAIN" "$SOURCE_HEAD"
+          test -z "$(git status --porcelain --untracked-files=no)"
+          python3 - <<'PY'
+          import json, os, subprocess
+          base=os.environ['BASE_MAIN']; accepted=os.environ['ACCEPTED_HEAD']; accepted_tree=os.environ['ACCEPTED_TREE']; accepted_ref=os.environ['ACCEPTED_REF']
+          repair=os.environ['HARNESS_REPAIR_PATH']; repair_blob=os.environ['HARNESS_REPAIR_BLOB']
+          integration_local={
+            'config/ecology/evo-arch2-a7-main-integration-work-order.v1.json',
+            'docs/research/ecology/EVO_ARCH2_A7_MAIN_INTEGRATION_R1_RU.md',
+            'docs/research/ecology/EVO_ARCH2_A7_MAIN_INTEGRATION_REPAIR_R1_RU.md',
+            'docs/research/ecology/EVO_ARCH2_A7_MAIN_INTEGRATION_REPAIR_R2_RU.md',
+            'docs/research/ecology/EVO_ARCH2_A7_MAIN_INTEGRATION_REPAIR_R3_RU.md',
+            'docs/research/ecology/EVO_ARCH2_A7_MAIN_INTEGRATION_REPAIR_R4_RU.md',
+            'validation/ecology/evo_arch2_a7_main_integration/expected-transfer.v1.json',
+            'validation/ecology/evo_arch2_a7_main_integration/verify.py',
+          }
+          external={
+            'scripts/research/ecology/plant_development_traits_extension_evo7_v1.gd',
+            'scripts/labs/ecology/evo_morphology_lab_v2_model.gd',
+            'scripts/labs/ecology/evo_morphology_lab_v2_renderer.gd',
+          }
+          prefixes=('config/ecology/evo-arch2-a7-protocol.v1.json','scripts/research/ecology/v2/','scripts/labs/ecology/arch2_a7_','scenes/labs/ecology/arch2_a7_','tests/research/ecology/v2/','validation/ecology/evo_arch2_a5/')
+          forbidden=('scripts/ecology/production/','scripts/network/','scripts/simulation/','config/control/','config/architecture/')
+          def out(*args): return subprocess.check_output(['git',*args],text=True).strip()
+          def rc(*args): return subprocess.run(['git',*args],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL).returncode
+          if out('rev-parse',accepted_ref)!=accepted or out('rev-parse',accepted_ref+'^{tree}')!=accepted_tree or out('rev-parse',accepted+'^{tree}')!=accepted_tree: raise SystemExit('ACCEPTED_IDENTITY')
+          manifest=json.load(open('validation/ecology/evo_arch2_a7_main_integration/expected-transfer.v1.json'))
+          if manifest['accepted_ref']!=accepted_ref or manifest['accepted_a7']!=accepted or manifest['accepted_a7_tree']!=accepted_tree: raise SystemExit('MANIFEST_ACCEPTED_IDENTITY')
+          records=out('diff','--name-status',base,'HEAD').splitlines()
+          if not records: raise SystemExit('EMPTY_DIFF')
+          transfers=[]; locals_=[]; mods=[]
+          for rec in records:
+              parts=rec.split('\t')
+              if len(parts)!=2: raise SystemExit('UNSUPPORTED_DIFF:'+rec)
+              status,path=parts
+              if path=='project.godot' or path.startswith(forbidden) or path.startswith('.github/'): raise SystemExit('MAIN_OWNERSHIP_PATH:'+path)
+              if status=='M':
+                  if path!=repair: raise SystemExit('UNAUTHORIZED_MODIFICATION:'+rec)
+                  mods.append(path); continue
+              if status!='A': raise SystemExit('NON_ADDITION_CHANGE:'+rec)
+              if path in integration_local:
+                  locals_.append(path); continue
+              if not (path in external or any(path==p or path.startswith(p) for p in prefixes)): raise SystemExit('OUT_OF_SCOPE_ADDITION:'+path)
+              if rc('cat-file','-e',base+':'+path)==0: raise SystemExit('TRANSFER_PATH_EXISTED_ON_MAIN:'+path)
+              if rc('cat-file','-e',accepted+':'+path)!=0: raise SystemExit('TRANSFER_PATH_MISSING_FROM_ACCEPTED:'+path)
+              if out('rev-parse','HEAD:'+path)!=out('rev-parse',accepted+':'+path): raise SystemExit('TRANSFER_OBJECT_MISMATCH:'+path)
+              transfers.append(path)
+          if mods != [repair]: raise SystemExit('HARNESS_REPAIR_PATH_SET')
+          if set(locals_) != integration_local: raise SystemExit('INTEGRATION_LOCAL_PATH_SET')
+          if out('rev-parse','HEAD:'+repair)!=repair_blob: raise SystemExit('HARNESS_REPAIR_BLOB')
+          if rc('cat-file','-e',base+':'+repair)!=0: raise SystemExit('HARNESS_REPAIR_BASE_MISSING')
+          parents=out('rev-list','--parents','-n','1','HEAD').split()[1:]
+          if accepted in parents: raise SystemExit('RESEARCH_PARENT_IMPORTED')
+          if not transfers: raise SystemExit('NO_TRANSFER_ADDITIONS')
+          for path,pin in {**manifest['subtrees'],**manifest['blobs']}.items():
+              head_obj=out('rev-parse','HEAD:'+path); accepted_obj=out('rev-parse',accepted+':'+path)
+              if head_obj!=accepted_obj or head_obj!=pin: raise SystemExit('REDUNDANT_PIN_MISMATCH:'+path)
+          print('ALL_ACTUAL_TRANSFER_ADDITIONS_PASS',len(transfers),'INTEGRATION_LOCAL',len(locals_),'BOUNDED_MODS',len(mods))
+          PY
+      - name: Resolve every non-generated transferred res path
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import pathlib,re
+          root=pathlib.Path('.')
+          external=[root/'scripts/research/ecology/plant_development_traits_extension_evo7_v1.gd',root/'scripts/labs/ecology/evo_morphology_lab_v2_model.gd',root/'scripts/labs/ecology/evo_morphology_lab_v2_renderer.gd']
+          files=list((root/'scripts/research/ecology/v2').glob('*.gd'))+list((root/'scripts/labs/ecology').glob('arch2_a7_*.gd'))+list((root/'tests/research/ecology/v2').glob('*.gd'))+list((root/'validation/ecology/evo_arch2_a5').glob('*.gd'))+external+[root/'scenes/labs/ecology/arch2_a7_observatory.tscn']
+          patterns=[re.compile(r'(?:preload|load)\(\s*["\']res://([^"\']+)["\']\s*\)'),re.compile(r'path=["\']res://([^"\']+)["\']')]
+          refs=0; generated=[]; missing=[]
+          for source in files:
+              text=source.read_text(encoding='utf-8-sig')
+              for pattern in patterns:
+                  for match in pattern.finditer(text):
+                      refs+=1; target=match.group(1)
+                      if (root/target).exists(): continue
+                      if target.startswith('artifacts/a7/'): generated.append((source.as_posix(),target)); continue
+                      missing.append((source.as_posix(),target))
+          for source,target in missing: print('MISSING',source,'->',target)
+          if missing: raise SystemExit('TRANSITIVE_RES_PATH_MISSING')
+          print('RES_PATH_CLOSURE_PASS refs=',refs,'sources=',len(files),'generated=',len(generated))
+          PY
+      - name: Prepare exact Harness Python dependency
+        shell: bash
+        run: |
+          set -euo pipefail
+          venv="$RUNNER_TEMP/a7-static-r5-python"
+          python3 -m venv "$venv"
+          "$venv/bin/python" -m pip install --disable-pip-version-check --no-input 'jsonschema==4.25.1'
+          test "$("$venv/bin/python" -c 'import importlib.metadata; print(importlib.metadata.version("jsonschema"))')" = '4.25.1'
+          echo "A7_PINNED_PYTHON=$venv/bin/python" >> "$GITHUB_ENV"
+      - name: Compile integration verifier
+        shell: bash
+        run: "$A7_PINNED_PYTHON -m py_compile validation/ecology/evo_arch2_a7_main_integration/verify.py"
+      - name: Run complete current-main Harness regression fail-closed
+        shell: bash
+        run: |
+          set -euo pipefail
+          "$A7_PINNED_PYTHON" -m unittest discover -s tests/harness -p 'test_*.py' -v 2>&1 | tee /tmp/a7-main-harness-r5.log
+          ! grep -q 'FAILED (' /tmp/a7-main-harness-r5.log
+          ! grep -q '^ERROR' /tmp/a7-main-harness-r5.log
+          ! grep -q 'skipped=' /tmp/a7-main-harness-r5.log
+          grep -Eq '^Ran [3-9][0-9]{2} tests' /tmp/a7-main-harness-r5.log
+          grep -q '^OK$' /tmp/a7-main-harness-r5.log
