@@ -6,6 +6,7 @@
   "branch": "integration/eco-evo-arch2-a7-main-r1",
   "base_main": "7dfc68ab5a1e90254a1b7039807f275b5da04eef",
   "accepted_source_ref": "acceptance/eco-evo-arch2-a7-r1",
+  "accepted_source_remote_ref": "refs/remotes/origin/acceptance/eco-evo-arch2-a7-r1",
   "accepted_source_head": "8eccf6304078bec3a3ccaa5860c5aab6ee311209",
   "accepted_source_tree": "24e876b7377cb3e1e521f08ff9766331fe4e895a",
   "accepted_a6_head": "993271eb46880b77f0e7584f931131d4bd0a5125",
@@ -30,6 +31,7 @@
       "res://artifacts/a7/observatory-report.json",
       "res://artifacts/a7/observatory/**"
     ],
+    "identity_authority": "Every transferred object must match the same path in the fetched exact durable acceptance ref. Candidate-owned pin files are redundant evidence only.",
     "required_a7_surface": [
       "config/ecology/evo-arch2-a7-protocol.v1.json",
       "scenes/labs/ecology/arch2_a7_observatory.tscn",
@@ -73,7 +75,10 @@
   "required_predicates": [
     "FRESH_CURRENT_MAIN_BASE_EXACT",
     "NO_LONG_RESEARCH_LINEAGE_MERGE",
-    "ACCEPTED_V2_CLOSURE_BYTE_EXACT",
+    "DURABLE_ACCEPTANCE_REF_FETCHED_AND_EXACT",
+    "ACCEPTED_REF_TREE_EXACT",
+    "TRANSFER_OBJECTS_DIRECTLY_EQUAL_ACCEPTED_REF",
+    "REDUNDANT_TRANSFER_PINS_MATCH_DIRECT_OBJECTS",
     "EXTERNAL_TRANSITIVE_DEPENDENCIES_BYTE_EXACT",
     "ALL_NON_GENERATED_TRANSFERRED_RES_PATHS_RESOLVE",
     "DECLARED_GENERATED_OUTPUTS_PRODUCED_BY_TESTS",
@@ -102,8 +107,8 @@
   "state": "IN_PROGRESS",
   "resume_anchor": {
     "exact_subject": "main@7dfc68ab5a1e90254a1b7039807f275b5da04eef + acceptance/eco-evo-arch2-a7-r1@8eccf6304078bec3a3ccaa5860c5aab6ee311209",
-    "last_completed_predicate": "TRANSITIVE_DEPENDENCY_REPAIR_R2_APPLIED",
-    "next_action": "FREEZE_REPAIRED_INTEGRATION_HEAD_R3_AND_RERUN_STATIC_EXACT_REVIEW",
+    "last_completed_predicate": "ACCEPTED_REF_PROVENANCE_REPAIR_R3_APPLIED",
+    "next_action": "FREEZE_FINAL_REPAIRED_INTEGRATION_HEAD_AND_RERUN_STATIC_EXACT_REVIEW",
     "allowed_recovery_route": "GitHub connector for writes; repository-owned hosted/static and self-hosted exact CI",
     "stop_before": "MAIN_MERGE"
   }
