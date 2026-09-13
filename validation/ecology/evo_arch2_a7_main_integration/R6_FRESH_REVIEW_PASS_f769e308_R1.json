@@ -1,0 +1,29 @@
+{
+  "schema": "dws.ecology.integration-review-evidence.v1",
+  "work_order": "EVO-ARCH2-A7-MAIN-INTEGRATION-20260913-R1",
+  "pr": 617,
+  "subject_head": "f769e308ee929642df30a2d87b84420c04569535",
+  "subject_tree": "27c62c3774117c5163d0d5dacf789b1310638a92",
+  "base_main": "7dfc68ab5a1e90254a1b7039807f275b5da04eef",
+  "accepted_source": "8eccf6304078bec3a3ccaa5860c5aab6ee311209",
+  "review_request_comment_id": 5652608712,
+  "review_summary_comment_id": 5650171210,
+  "review_result_comment_id": 5652636526,
+  "reviewer": "chatgpt-codex-connector[bot]",
+  "review_summary_status": "Completed",
+  "review_summary_completed_at": "2026-09-13T10:11:56Z",
+  "reviewed_commit_prefix_reported": "f769e308ee",
+  "verdict": "PASS_NO_MAJOR_ISSUES",
+  "verbatim_result_class": "Didn't find any major issues",
+  "new_blocking_findings_on_subject": 0,
+  "historical_findings_preserved": true,
+  "historical_findings_do_not_change_subject": true,
+  "source_modified_by_review": false,
+  "acceptance_boundaries": {
+    "integration_runtime_exact_pass_still_required": true,
+    "main_merge": false,
+    "a8_dispatch": false,
+    "production_promotion": false,
+    "main_owned_mission_complete": false
+  }
+}
