@@ -46,15 +46,17 @@ $Out = "artifacts\mvp3-manual-91c0df9d-$([DateTime]::UtcNow.ToString('yyyyMMddTH
 
 ## Реальный пользовательский сценарий
 
-Должны одновременно существовать gateway + authority/a + authority/b + client/a + client/b. В обоих графических окнах ввод выполняется физической клавиатурой человеком ИЛИ разрешённым repository Breakpoint MCP `runtime_inject_input` согласно `docs/MCP_GODOT.md`. Запрещены `SendKeys`, `PostMessage`, PowerShell UI Automation, OS cursor automation, desktop screenshots и изменение runtime/test code ради evidence.
+Должны одновременно существовать gateway + authority/a + authority/b + client/a + client/b. Для **этого frozen subject и штатного exact wrapper** ввод в обоих графических окнах выполняется физической клавиатурой человеком.
+
+Причина: `tests/integration/test_v0_mvp3_graphical_process_roundtrip.py` на exact subject намеренно задаёт дочерним процессам `BREAKPOINT_RUNTIME_DISABLED=1`. Поэтому запуск `RUN_V0_MVP3_GRAPHICAL_ROUNDTRIP.ps1 -Manual` не предоставляет Breakpoint MCP runtime bridge. Нельзя заявлять MCP manual evidence, не меняя frozen subject или не используя другой заранее доказанный exact launcher. Изменять runtime/test launcher ради прохождения этого acceptance run запрещено.
+
+Запрещены `SendKeys`, `PostMessage`, PowerShell UI Automation, OS cursor automation, desktop screenshots и любые scripted key injectors. Если в будущем для нового subject будет отдельно реализован MCP-enabled manual launcher, он потребует нового freeze/review и к этому R1 не относится.
 
 1. В окне A удерживать `D`/Right до реального A→B. После перехода продолжить движение на B и визуально подтвердить, что тот же body остаётся под управлением.
 2. В окне A удерживать `A`/Left до B→A. После возврата выполнить дополнительное ненулевое движение на A.
 3. В окне B выполнить минимум два собственных изменения направления/движения; B не должен быть только наблюдателем.
 4. Оба окна должны всё время видеть обоих игроков. Не закрывать клиент во время handoff.
 5. После доказанного A→B→A отпустить все удерживаемые клавиши. В обоих окнах нажать `Esc` для штатного FINISH.
-
-Если используется MCP, каждый `injected:true` подтверждает только доставку input event; после него обязательно проверить фактическое изменение canonical snapshot/viewport. Всегда отпустить held keys/actions при ошибке.
 
 ## Fail-closed критерии
 
@@ -88,9 +90,9 @@ Manual PASS возможен только если launcher exit=0 И однов
 - launcher exit code;
 - SHA-256 каждого raw log/JSON/PNG и общего списка;
 - `git status --porcelain --untracked-files=no` до/после;
-- метод ввода: `HUMAN_PHYSICAL_KEYBOARD` или `BREAKPOINT_MCP_RUNTIME_INJECT_INPUT`;
-- при MCP — названия runtime tools и подтверждения фактических world-state изменений, без чтения/публикации MCP secret.
+- метод ввода: `HUMAN_PHYSICAL_KEYBOARD`;
+- отдельно подтвердить, что `-Manual` присутствовал и `manual_input_events` получены самим runtime от реальных key events.
 
 Результат этой задачи не создаёт `PREDICATE_VERIFIED`. После manual PASS его bytes должен независимо проверить Fresh Independent Verifier/Coordinator прежде, чем leaf может быть закрыт.
 
-На момент создания инструкции manual run в текущей ChatGPT tool-среде НЕ выполнялся: здесь отсутствует подключённый Windows Godot/Breakpoint MCP или другой разрешённый live-input канал. Это поле нельзя менять на PASS по automatic CI evidence.
+На момент обновления инструкции manual run в текущей ChatGPT tool-среде НЕ выполнялся: здесь отсутствует подключённый Windows desktop/live-input канал, а frozen launcher отключает Breakpoint runtime bridge. Это поле нельзя менять на PASS по automatic CI evidence.
