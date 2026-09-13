@@ -1,7 +1,7 @@
 extends Node3D
 
-# This is a read-only graphical client. Terrain meshes use the same immutable
-# P7 projection as MVP2; no second Matter store or authority is retained.
+# Read-only client of the native M3/P6/SM1 composition. The immutable P7
+# presentation is shared with MVP2. No client-side Matter/player owner exists.
 const Protocol = preload("res://scripts/runtime/networked_gameplay/mvp/v0_mvp3_process_protocol.gd")
 const Support = preload("res://scripts/runtime/networked_gameplay/sm1/sm1_6_process_support.gd")
 const InputDTO = preload("res://scripts/runtime/networked_gameplay/contracts/player_input_command.gd")
@@ -34,6 +34,12 @@ var observed_identities: Dictionary = {}
 var observed_revisions: Dictionary = {}
 var identity_changes := 0
 var manual_input_events := 0
+var held_keys: Dictionary = {}
+var desired_axis := 0.0
+var last_sent_axis := 0.0
+var manual_finish_requested := false
+var both_clients_ready := false
+var fixed_input_receipts := 0
 
 
 func _ready() -> void:
@@ -59,6 +65,7 @@ func _ready() -> void:
 		finish(false, "MVP3_CLIENT_CONNECT_FAILED")
 		return
 	get_window().title = "DWS MVP3 live client " + actor.to_upper()
+	get_window().focus_exited.connect(_release_manual_keys)
 
 
 func material(color: Color) -> StandardMaterial3D:
@@ -102,7 +109,6 @@ func build_world() -> bool:
 	var projection: Dictionary = surface.contract_report()
 	if not bool(configured.get("success", false)) or not bool(projection.get("configured", false)) or int(projection.get("mesh_count", 0)) < 1:
 		return false
-	# Only an annotation of the authority boundary; never a substitute ground.
 	var seam := MeshInstance3D.new()
 	seam.name = "AuthoritySeamAnnotation"
 	var seam_box := BoxMesh.new()
@@ -147,10 +153,16 @@ func send_request(kind: String, body: Dictionary = {}) -> void:
 	last_send_ms = Time.get_ticks_msec()
 
 
-func send_move(dx: float) -> void:
+func send_move(axis: float) -> void:
+	if not pending_kind.is_empty() or finishing:
+		return
 	input_sequence += 1
+	last_sent_axis = clampf(axis, -1.0, 1.0)
 	var operation := "operation/mvp3/graphical/%s/%d" % [actor, input_sequence]
-	var wire := InputDTO.create("message/mvp3/graphical/%s/%d" % [actor, input_sequence], operation, actor, Protocol.session(cfg, actor), 1, 1, input_sequence, "MOVEMENT_DELTA", {"delta_x": dx, "delta_z": 0.0})
+	# The client sends direction, never displacement. Physics dt is chosen by
+	# the server's accepted 60 Hz scheduler, irrespective of keyboard/RPC rate.
+	var intent := {"move_x": last_sent_axis, "move_z": 0.0, "look_yaw": 0.0, "look_pitch": 0.0, "jump_pressed": false, "sprint": false, "delta_seconds": 1.0 / 60.0}
+	var wire := InputDTO.create("message/mvp3/graphical/%s/%d" % [actor, input_sequence], operation, actor, Protocol.session(cfg, actor), 1, 1, input_sequence, "MOVEMENT_INTENT", intent)
 	send_request("MOVE", {"wire": wire})
 
 
@@ -161,8 +173,6 @@ func apply_snapshot(snapshot: Dictionary) -> void:
 	if a.is_empty() or b.is_empty():
 		failures.append("MVP3_BOTH_PLAYERS_NOT_VISIBLE")
 		return
-	# Validate both identities and per-player revisions BEFORE mutating either
-	# rendered body. Backend epoch changes must not recreate a client identity.
 	for id in ["a", "b"]:
 		var row: Dictionary = players[id]
 		var identity := {"logical_player_id": row.get("logical_player_id"), "player_entity_id": row.get("player_entity_id"), "transport_session_id": row.get("transport_session_id"), "ownership_epoch": row.get("ownership_epoch")}
@@ -181,19 +191,18 @@ func apply_snapshot(snapshot: Dictionary) -> void:
 		var row: Dictionary = players[id]
 		observed_identities[id] = {"logical_player_id": row.get("logical_player_id"), "player_entity_id": row.get("player_entity_id"), "transport_session_id": row.get("transport_session_id"), "ownership_epoch": row.get("ownership_epoch")}
 		observed_revisions[id] = int(row.get("state_revision", 0))
+	both_clients_ready = bool(snapshot.get("both_clients_ready", false))
 	snapshots += 1
 	both_visible_snapshots += 1
 	var own: Dictionary = players[actor]
 	var other: Dictionary = players["b" if actor == "a" else "a"]
-	# M3 positions are local to the accepted bootstrap tangent frame. A capsule
-	# is centred above its feet; no canonical player coordinate is altered.
 	local_body.position = vector(own.get("position", {})) + Vector3.UP * 0.9
 	remote_body.position = vector(other.get("position", {})) + Vector3.UP * 0.9
 	var a_route := String(snapshot.get("decisions", {}).get("a", {}).get("active_authority_id", ""))
 	if route_history.is_empty() or route_history.back() != a_route:
 		route_history.append(a_route)
-	var manual_hint := "\nManual: A/D or Left/Right; Esc after A returns" if not bool(cfg.get("automated", false)) else ""
-	hud.text = "MVP3 LIVE CLIENT %s\nAccepted P7 bootstrap surface\nGateway session: CONNECTED (%d)\nObserved A route: %s  epoch: %s\nA x: %.2f  B x: %.2f\nLocal input sequence: %d\nBody/camera instances: %s / %s%s" % [actor.to_upper(), connected, a_route, str(snapshot.get("decisions", {}).get("a", {}).get("authority_epoch", "?")), float(a.get("position", {}).get("x", 0.0)), float(b.get("position", {}).get("x", 0.0)), input_sequence, str(body_ids["local"]), str(body_ids["camera"]), manual_hint]
+	var manual_hint := "\nManual: hold A/D or Left/Right; Esc after A returns" if not bool(cfg.get("automated", false)) else ""
+	hud.text = "MVP3 LIVE CLIENT %s\nAccepted P7 surface / fixed 60 Hz movement\nGateway: CONNECTED (%d)\nObserved A route: %s  epoch: %s\nA x: %.2f  B x: %.2f\nLocal input sequence: %d\nBody/camera: %s / %s%s" % [actor.to_upper(), connected, a_route, str(snapshot.get("decisions", {}).get("a", {}).get("authority_epoch", "?")), float(a.get("position", {}).get("x", 0.0)), float(b.get("position", {}).get("x", 0.0)), input_sequence, str(body_ids["local"]), str(body_ids["camera"]), manual_hint]
 
 
 func vector(value: Dictionary) -> Vector3:
@@ -206,20 +215,18 @@ func next_automated(snapshot: Dictionary) -> void:
 	if not bool(snapshot.get("both_clients_ready", false)):
 		send_request("OBSERVE")
 		return
-	if actor == "a":
+	if bool(snapshot.get("a_roundtrip_complete", false)) and (actor == "a" or input_sequence >= 2):
+		# End a held intent before either client exits. Neutral input must be
+		# acknowledged by the canonical owner, not locally assumed applied.
+		if not is_zero_approx(last_sent_axis):
+			send_move(0.0)
+		else:
+			send_request("FINISH")
+	elif actor == "a":
 		var decision: Dictionary = snapshot.get("decisions", {}).get("a", {})
-		var complete := bool(snapshot.get("a_roundtrip_complete", false))
-		if complete:
-			send_request("FINISH")
-		elif decision.get("active_authority_id") == "authority/b":
-			send_move(-0.25)
-		else:
-			send_move(0.25)
+		send_move(-1.0 if decision.get("active_authority_id") == "authority/b" else 1.0)
 	else:
-		if bool(snapshot.get("a_roundtrip_complete", false)) and input_sequence >= 2:
-			send_request("FINISH")
-		else:
-			send_move(0.25 if input_sequence % 2 == 0 else -0.25)
+		send_move(1.0 if input_sequence % 2 == 0 else -1.0)
 
 
 func handle_reply(packet: Dictionary) -> void:
@@ -233,6 +240,12 @@ func handle_reply(packet: Dictionary) -> void:
 		finish(false, "MVP3_CLIENT_COMMAND_REJECTED:" + String(response.get("error_code", "")))
 		return
 	var details: Dictionary = response.get("details", {})
+	if requested_kind == "MOVE":
+		var simulation: Dictionary = details.get("outcome", {}).get("details", {}).get("server_simulation", {})
+		if simulation.get("fixed_tick") != true or not is_equal_approx(float(simulation.get("delta_seconds", 0.0)), 1.0 / 60.0):
+			finish(false, "MVP3_CLIENT_FIXED_RECEIPT_MISSING")
+			return
+		fixed_input_receipts += 1
 	var snapshot: Dictionary = details.get("snapshot", {})
 	apply_snapshot(snapshot)
 	if not failures.is_empty():
@@ -269,23 +282,38 @@ func _process(_delta: float) -> void:
 	boundary.flush_outbound(64)
 	if not pending_kind.is_empty() and Time.get_ticks_msec() - last_send_ms > int(cfg.get("client_reply_timeout_ms", 30000)):
 		finish(false, "MVP3_CLIENT_REPLY_TIMEOUT")
-	elif not bool(cfg.get("automated", false)) and connected == 1 and pending_kind.is_empty() and Time.get_ticks_msec() - last_send_ms >= 100:
-		# Observers still receive current shared state while the user is idle.
-		send_request("OBSERVE")
+	elif not bool(cfg.get("automated", false)) and connected == 1 and pending_kind.is_empty():
+		if both_clients_ready and manual_finish_requested:
+			if not is_zero_approx(last_sent_axis):
+				send_move(0.0)
+			else:
+				send_request("FINISH")
+		elif both_clients_ready and (not is_equal_approx(desired_axis, last_sent_axis) or Time.get_ticks_msec() - last_send_ms >= 100):
+			# Periodic intent refresh resumes control on a newly activated owner.
+			# Packet frequency never advances physics beyond the fixed tick clock.
+			send_move(desired_axis)
+		elif Time.get_ticks_msec() - last_send_ms >= 100:
+			send_request("OBSERVE")
+
+
+func _release_manual_keys() -> void:
+	held_keys.clear()
+	desired_axis = 0.0
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if bool(cfg.get("automated", false)) or not event.is_pressed() or event.is_echo() or not pending_kind.is_empty():
+	if bool(cfg.get("automated", false)) or not event is InputEventKey or event.is_echo():
 		return
-	if event is InputEventKey:
-		if event.physical_keycode in [KEY_D, KEY_RIGHT]:
-			manual_input_events += 1
-			send_move(0.25)
-		elif event.physical_keycode in [KEY_A, KEY_LEFT]:
-			manual_input_events += 1
-			send_move(-0.25)
-		elif event.physical_keycode == KEY_ESCAPE:
-			send_request("FINISH")
+	if event.physical_keycode in [KEY_D, KEY_RIGHT, KEY_A, KEY_LEFT]:
+		manual_input_events += 1
+		if event.is_pressed():
+			held_keys[event.physical_keycode] = true
+		else:
+			held_keys.erase(event.physical_keycode)
+		desired_axis = float(held_keys.has(KEY_D) or held_keys.has(KEY_RIGHT)) - float(held_keys.has(KEY_A) or held_keys.has(KEY_LEFT))
+	elif event.physical_keycode == KEY_ESCAPE and event.is_pressed():
+		_release_manual_keys()
+		manual_finish_requested = true
 
 
 func finish(passed: bool, error_code: String) -> void:
@@ -302,7 +330,7 @@ func finish(passed: bool, error_code: String) -> void:
 	var final_ids := {"local": local_body.get_instance_id() if local_body != null else 0, "remote": remote_body.get_instance_id() if remote_body != null else 0, "camera": camera.get_instance_id() if camera != null else 0, "surface": surface.get_instance_id() if surface != null else 0}
 	var projection: Dictionary = surface.contract_report() if surface != null else {}
 	var surface_valid := bool(projection.get("configured", false)) and int(projection.get("mesh_count", 0)) > 0 and not bool(projection.get("canonical_state_owned", true))
-	var report := {"schema": "distributed_world_simulator.mvp3_graphical_client.v1", "passed": passed and failures.is_empty() and connected == 1 and disconnects == 0 and body_ids == final_ids and both_visible_snapshots > 0 and surface_valid, "subject_head": cfg.get("subject_head", ""), "run_id": cfg.get("run_id", ""), "actor": actor, "process_id": OS.get_process_id(), "transport_session_id": Protocol.session(cfg, actor), "connects": connected, "disconnects": disconnects, "input_sequence": input_sequence, "snapshots": snapshots, "both_visible_snapshots": both_visible_snapshots, "route_history": route_history, "route_history_observed_actor": "a", "initial_instance_ids": body_ids, "final_instance_ids": final_ids, "screenshot_file": screenshot_path, "screenshot_saved": screenshot_saved, "surface_projection": projection, "manual_input_events": manual_input_events, "identity_changes": identity_changes, "failures": failures, "reconnects": maxi(0, connected - 1), "respawns": identity_changes + (1 if body_ids != final_ids else 0), "mvp3_predicate_verified": false}
+	var report := {"schema": "distributed_world_simulator.mvp3_graphical_client.v1", "passed": passed and failures.is_empty() and connected == 1 and disconnects == 0 and body_ids == final_ids and both_visible_snapshots > 0 and surface_valid and fixed_input_receipts > 0, "subject_head": cfg.get("subject_head", ""), "run_id": cfg.get("run_id", ""), "actor": actor, "process_id": OS.get_process_id(), "transport_session_id": Protocol.session(cfg, actor), "connects": connected, "disconnects": disconnects, "input_sequence": input_sequence, "fixed_input_receipts": fixed_input_receipts, "snapshots": snapshots, "both_visible_snapshots": both_visible_snapshots, "route_history": route_history, "route_history_observed_actor": "a", "initial_instance_ids": body_ids, "final_instance_ids": final_ids, "screenshot_file": screenshot_path, "screenshot_saved": screenshot_saved, "surface_projection": projection, "manual_input_events": manual_input_events, "identity_changes": identity_changes, "failures": failures, "reconnects": maxi(0, connected - 1), "respawns": identity_changes + (1 if body_ids != final_ids else 0), "mvp3_predicate_verified": false}
 	Support.write_json(String(cfg.get("result_file", "")), report)
 	if boundary != null:
 		boundary.stop()
