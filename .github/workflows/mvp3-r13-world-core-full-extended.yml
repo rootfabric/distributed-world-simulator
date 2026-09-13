@@ -1,0 +1,90 @@
+name: MVP3 R13 Full World Core Exact Extended
+on:
+  push:
+    branches: [control/v0-mvp3-closure-6a750d85-r1]
+    paths: [.github/workflows/mvp3-r13-world-core-full-extended.yml]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  full-world-core:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      EXPECTED_HEAD: f1d453fb2af49231c30bdc5cbe415ad199394446
+      EXPECTED_TREE: f1697cc52c1abc7f1bb21922c5fab3b49a3c167d
+      FREEZE_REF: freeze/v0-mvp3-r13b-f1d453fb-r1
+      AUDITED_MAIN: 7dfc68ab5a1e90254a1b7039807f275b5da04eef
+      ENGINE_SHA: bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7
+      PYTHONUTF8: '1'
+      PYTHONPATH: scripts
+      BREAKPOINT_RUNTIME_DISABLED: '1'
+      PLANET_SIMULATOR_INVENTORY_PROFILE: planet_default
+      LIBGL_ALWAYS_SOFTWARE: '1'
+      GODOT_SILENCE_ROOT_WARNING: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: f1d453fb2af49231c30bdc5cbe415ad199394446
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Verify exact frozen product subject
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+          test "$(git rev-parse HEAD^{tree})" = "$EXPECTED_TREE"
+          test -z "$(git status --porcelain --untracked-files=no)"
+          git fetch origin '+refs/heads/*:refs/remotes/origin/*' --prune
+          test "$(git rev-parse origin/main)" = "$AUDITED_MAIN"
+          test "$(git rev-parse origin/$FREEZE_REF)" = "$EXPECTED_HEAD"
+          mkdir -p artifacts/mvp3-r13-world-core
+          git rev-parse HEAD HEAD^{tree} origin/main > artifacts/mvp3-r13-world-core/subjects.txt
+      - uses: actions/download-artifact@v4
+        with:
+          name: p7-repair-engine-34117353691
+          run-id: 34117353691
+          repository: rootfabric/distributed-world-simulator
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/mvp3-engine
+      - name: Run unchanged full world-core suite
+        shell: bash
+        run: |
+          set -euo pipefail
+          export GODOT_BIN="$RUNNER_TEMP/mvp3-engine/godot"
+          test "$(sha256sum "$GODOT_BIN" | cut -d' ' -f1)" = "$ENGINE_SHA"
+          chmod u+x "$GODOT_BIN"
+          "$GODOT_BIN" --version | tee artifacts/mvp3-r13-world-core/godot-version.log
+          pwsh -NoProfile -File RUN_WORLD_REGRESSION_TESTS.ps1 2>&1 | tee artifacts/mvp3-r13-world-core/world-core.log
+          test -z "$(git status --porcelain --untracked-files=no)"
+      - name: Bind exact evidence manifest
+        if: always()
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib,subprocess
+          out=pathlib.Path('artifacts/mvp3-r13-world-core'); out.mkdir(parents=True,exist_ok=True)
+          def g(*a):
+              p=subprocess.run(['git',*a],capture_output=True,text=True)
+              return {'exit_code':p.returncode,'stdout':p.stdout.strip(),'stderr':p.stderr.strip()}
+          files=[]
+          for root in [out,pathlib.Path('artifacts/test-results')]:
+              if not root.exists(): continue
+              for p in sorted(root.rglob('*')):
+                  if p.is_file() and p != out/'manifest.json' and not any(x.startswith('world-profile-') or x in ('user-data','.godot') for x in p.parts):
+                      files.append({'path':str(p),'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()})
+          engine=pathlib.Path(os.environ['RUNNER_TEMP'])/'mvp3-engine/godot'
+          m={'schema':'distributed_world_simulator.mvp3_r13_full_world_core_exact.v1','subject_head':g('rev-parse','HEAD'),'subject_tree':g('rev-parse','HEAD^{tree}'),'canonical_main':g('rev-parse','origin/main'),'expected_head':os.environ['EXPECTED_HEAD'],'expected_tree':os.environ['EXPECTED_TREE'],'freeze_ref':os.environ['FREEZE_REF'],'carrier_sha':os.environ['GITHUB_SHA'],'run_id':os.environ['GITHUB_RUN_ID'],'run_attempt':os.environ['GITHUB_RUN_ATTEMPT'],'actual_engine_sha256':hashlib.sha256(engine.read_bytes()).hexdigest() if engine.is_file() else None,'tracked_after':g('status','--porcelain','--untracked-files=no'),'manual_input_executed':False,'independent_verdict':False,'mvp3_predicate_verified':False,'files':files}
+          (out/'manifest.json').write_text(json.dumps(m,indent=2)+'\n')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mvp3-r13-f1d453fb-full-world-core-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            artifacts/mvp3-r13-world-core/
+            artifacts/test-results/
+            !artifacts/**/world-profile-*/**
+            !artifacts/**/user-data/**
+          if-no-files-found: error
+          retention-days: 90
