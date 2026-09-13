@@ -176,7 +176,7 @@ $Tests = @(
     "res://tests/construction/test_c15_executable_utilities_contracts.gd",
     "res://tests/construction/test_c15_executable_utilities_integration.gd",
     "res://tests/construction/test_c16_interaction_ux_contracts.gd",
-    "res://tests/construction/test_c16_interaction_ux_integration.gd",
+    "res://tests/construction/test_c16_interaction_ux_contracts.gd",
     "res://tests/construction/test_c17_distributed_authority_contracts.gd",
     "res://tests/construction/test_c17_distributed_authority_integration.gd",
     "res://tests/construction/test_c18_streaming_lod_contracts.gd",
@@ -328,7 +328,7 @@ function Write-JsonFileAtomically {
             $Stream.Dispose()
         }
 
-        $TemporaryInfo = Get-Item -LiteralPath $TemporaryPath -ErrorAction Stop
+        $TemporaryInfo = Get-Item -LiteralPath $TemporaryPath -Force -ErrorAction Stop
         if ($TemporaryInfo.Length -le 0) {
             throw "Temporary summary is zero bytes: $TemporaryPath"
         }
@@ -362,7 +362,7 @@ function Write-JsonFileAtomically {
             throw "Atomic summary replacement did not complete: $Path"
         }
 
-        $FinalInfo = Get-Item -LiteralPath $Path -ErrorAction Stop
+        $FinalInfo = Get-Item -LiteralPath $Path -Force -ErrorAction Stop
         if ($FinalInfo.Length -le 0) {
             throw "Final summary is zero bytes after atomic replacement: $Path"
         }
