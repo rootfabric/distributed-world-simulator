@@ -241,7 +241,9 @@ func handle_reply(packet: Dictionary) -> void:
 		return
 	var details: Dictionary = response.get("details", {})
 	if requested_kind == "MOVE":
-		var simulation: Dictionary = details.get("outcome", {}).get("details", {}).get("server_simulation", {})
+		# Gateway outcome is the accepted SM1 pivot envelope; P6 keeps the
+		# native Service result under route_result.outcome, not directly here.
+		var simulation: Dictionary = details.get("outcome", {}).get("details", {}).get("route_result", {}).get("outcome", {}).get("details", {}).get("server_simulation", {})
 		if simulation.get("fixed_tick") != true or not is_equal_approx(float(simulation.get("delta_seconds", 0.0)), 1.0 / 60.0):
 			finish(false, "MVP3_CLIENT_FIXED_RECEIPT_MISSING")
 			return
