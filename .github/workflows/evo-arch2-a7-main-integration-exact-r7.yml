@@ -1,0 +1,263 @@
+name: ECO ARCH2 A7 Main Integration Exact R7
+on:
+  push:
+    branches: [validation/eco-arch2-a7-main-integration-r1]
+    paths: [.github/workflows/evo-arch2-a7-main-integration-exact-r7.yml]
+permissions:
+  contents: read
+concurrency:
+  group: eco-arch2-a7-main-integration-exact-r7
+  cancel-in-progress: false
+env:
+  SOURCE_HEAD: f769e308ee929642df30a2d87b84420c04569535
+  SOURCE_TREE: 27c62c3774117c5163d0d5dacf789b1310638a92
+  BASE_MAIN: 7dfc68ab5a1e90254a1b7039807f275b5da04eef
+  ACCEPTED_HEAD: 8eccf6304078bec3a3ccaa5860c5aab6ee311209
+  ACCEPTED_TREE: 24e876b7377cb3e1e521f08ff9766331fe4e895a
+  ACCEPTED_REF: refs/remotes/origin/acceptance/eco-evo-arch2-a7-r1
+  GIT_NO_REPLACE_OBJECTS: '1'
+jobs:
+  preflight:
+    if: github.actor == 'rootfabric' && github.repository == 'rootfabric/distributed-world-simulator'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ env.SOURCE_HEAD }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Exact source and full focused controls
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin refs/heads/acceptance/eco-evo-arch2-a7-r1:refs/remotes/origin/acceptance/eco-evo-arch2-a7-r1
+          test "$(git rev-parse HEAD)" = "$SOURCE_HEAD"
+          test "$(git rev-parse HEAD^{tree})" = "$SOURCE_TREE"
+          test "$(git rev-parse "$ACCEPTED_REF")" = "$ACCEPTED_HEAD"
+          test "$(git rev-parse "$ACCEPTED_REF^{tree}")" = "$ACCEPTED_TREE"
+          python3 -m venv "$RUNNER_TEMP/a7-r7-preflight-$GITHUB_RUN_ID"
+          py="$RUNNER_TEMP/a7-r7-preflight-$GITHUB_RUN_ID/bin/python"
+          "$py" -m pip install --disable-pip-version-check --no-input -r scripts/harness/requirements.txt
+          mkdir -p artifacts/a7-main-integration/preflight
+          "$py" - <<'PY'
+          import importlib.util,json,os,pathlib,subprocess,sys
+          root=pathlib.Path.cwd();out=root/'artifacts/a7-main-integration/preflight'
+          p=root/'validation/ecology/evo_arch2_a7_main_integration/verify.py'
+          s=importlib.util.spec_from_file_location('a7_verifier',p);m=importlib.util.module_from_spec(s);s.loader.exec_module(m)
+          results={'source_head':os.environ['SOURCE_HEAD'],'source_tree':os.environ['SOURCE_TREE'],
+                   'workflow_head':os.environ['GITHUB_SHA'],'run_id':os.environ['GITHUB_RUN_ID'],
+                   'history':m.require_research_free_history(os.environ['SOURCE_HEAD']),
+                   'jsonschema':m.require_harness_dependency(),'tests':{}}
+          for revision,count in [('r5',27),('r6',21)]:
+              cmd=[sys.executable,'-m','unittest','discover','-s','validation/ecology/evo_arch2_a7_main_integration','-p','test_repair_'+revision+'.py','-v']
+              run=subprocess.run(cmd,text=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,timeout=180)
+              (out/(revision+'.log')).write_text(run.stdout);print(run.stdout)
+              assert run.returncode==0
+              results['tests'][revision]=m.require_unittest_result(run.stdout,count)
+          records=m.git('diff','--name-status',os.environ['BASE_MAIN'],os.environ['SOURCE_HEAD']).splitlines()
+          seeds=[r.split('\t')[1] for r in records if r.startswith('A\t') and m.transferred(r.split('\t')[1])]
+          assert seeds
+          results['closure']=m.require_source_closure(os.environ['SOURCE_HEAD'],seeds)
+          assert not m.git('status','--porcelain','--untracked-files=no')
+          (out/'summary.json').write_text(json.dumps(results,indent=2)+'\n');print(json.dumps(results,indent=2))
+          PY
+      - name: Upload focused preflight evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: a7-main-integration-f769e308-r7-preflight
+          path: artifacts/a7-main-integration/preflight/
+          if-no-files-found: error
+          retention-days: 30
+  linux-exact:
+    needs: preflight
+    if: github.actor == 'rootfabric' && github.repository == 'rootfabric/distributed-world-simulator'
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 50
+    steps:
+      - name: Checkout frozen integration candidate
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ env.SOURCE_HEAD }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Fetch and seal source and accepted references
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin refs/heads/acceptance/eco-evo-arch2-a7-r1:refs/remotes/origin/acceptance/eco-evo-arch2-a7-r1
+          test "$(git rev-parse "$ACCEPTED_REF")" = "$ACCEPTED_HEAD"
+          test "$(git rev-parse "$ACCEPTED_REF^{tree}")" = "$ACCEPTED_TREE"
+          test "$(git rev-parse "$ACCEPTED_HEAD^{tree}")" = "$ACCEPTED_TREE"
+          test "$(git rev-parse HEAD)" = "$SOURCE_HEAD"
+          test "$(git rev-parse HEAD^{tree})" = "$SOURCE_TREE"
+          test "$(git rev-parse refs/remotes/origin/main)" = "$BASE_MAIN"
+          test -z "$(git status --porcelain --untracked-files=no)"
+          mkdir -p artifacts/a7-main-integration/environment
+      - name: Prepare canonical Harness dependency job-locally
+        shell: bash
+        run: |
+          set -euo pipefail
+          py="$(command -v python3)"
+          current="$($py -c 'import importlib.metadata; print(importlib.metadata.version("jsonschema"))' 2>/dev/null || true)"
+          if [ "$current" != '4.22.0' ]; then
+            venv="$(mktemp -d "$RUNNER_TEMP/a7-r7-python.XXXXXXXX")"
+            echo "A7_PYTHON_PREFIX=$venv" >> "$GITHUB_ENV"
+            python3 -m venv "$venv"
+            "$venv/bin/python" -m pip install --disable-pip-version-check --no-input -r scripts/harness/requirements.txt
+            py="$venv/bin/python"
+          fi
+          test "$("$py" -c 'import importlib.metadata; print(importlib.metadata.version("jsonschema"))')" = '4.22.0'
+          echo "A7_PINNED_PYTHON=$py" >> "$GITHUB_ENV"
+          "$py" -m py_compile validation/ecology/evo_arch2_a7_main_integration/verify.py validation/ecology/evo_arch2_a7_main_integration/test_repair_r5.py validation/ecology/evo_arch2_a7_main_integration/test_repair_r6.py
+      - name: Prepare graphical executor job-locally
+        shell: bash
+        run: |
+          set -euo pipefail
+          exec > >(tee artifacts/a7-main-integration/environment/graphics-bootstrap.log) 2>&1
+          if command -v xvfb-run >/dev/null 2>&1; then
+            echo GRAPHICS_EXECUTOR=EXISTING_SYSTEM_XVFB
+            xvfb-run -a -s '-screen 0 1600x1100x24' /bin/true
+            exit 0
+          fi
+          command -v apt-get >/dev/null
+          command -v dpkg-deb >/dev/null
+          prefix="$(mktemp -d "$RUNNER_TEMP/a7-main-integration-graphics.XXXXXXXX")"
+          echo "A7_INTEGRATION_GRAPHICS_PREFIX=$prefix" >> "$GITHUB_ENV"
+          mkdir -p "$prefix/packages" "$prefix/root"
+          packages=(xvfb xauth libxfont2 xserver-common x11-xkb-utils xkb-data xfonts-base libxmu6 libxmuu1 libfontenc1 libxau6 libxdmcp6 libxt6 libsm6 libice6)
+          (
+            cd "$prefix/packages"
+            if ! apt-get download "${packages[@]}"; then
+              mkdir -p "$prefix/apt/lists/partial" "$prefix/apt/cache/archives/partial"
+              cat > "$prefix/apt/isolated.conf" <<EOF
+          Dir::State::lists "$prefix/apt/lists";
+          Dir::Cache "$prefix/apt/cache";
+          Debug::NoLocking "true";
+          APT::Sandbox::User "$(id -un)";
+          #clear APT::Update::Post-Invoke;
+          #clear APT::Update::Post-Invoke-Success;
+          #clear DPkg::Post-Invoke;
+          EOF
+              APT_CONFIG="$prefix/apt/isolated.conf" apt-get update
+              APT_CONFIG="$prefix/apt/isolated.conf" apt-get download "${packages[@]}"
+            fi
+            for package in ./*.deb; do
+              dpkg-deb --field "$package" Package Version Architecture
+              sha256sum "$package"
+              dpkg-deb --extract "$package" "$prefix/root"
+            done
+          )
+          echo "$prefix/root/usr/bin" >> "$GITHUB_PATH"
+          echo "LD_LIBRARY_PATH=$prefix/root/usr/lib/x86_64-linux-gnu${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" >> "$GITHUB_ENV"
+          echo "XKB_CONFIG_ROOT=$prefix/root/usr/share/X11/xkb" >> "$GITHUB_ENV"
+          export PATH="$prefix/root/usr/bin:$PATH"
+          export LD_LIBRARY_PATH="$prefix/root/usr/lib/x86_64-linux-gnu${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+          export XKB_CONFIG_ROOT="$prefix/root/usr/share/X11/xkb"
+          command -v Xvfb
+          ! ldd "$prefix/root/usr/bin/Xvfb" | grep -q 'not found'
+          xvfb-run -a -s '-screen 0 1600x1100x24' /bin/true
+          echo GRAPHICS_BOOTSTRAP_PASS
+      - name: Run full exact integrated-head verifier
+        shell: bash
+        env:
+          CONFIGURED_GODOT: ${{ vars.GODOT_DOUBLE_PATH }}
+        run: |
+          set -euo pipefail
+          godot="${CONFIGURED_GODOT:-$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64}"
+          test -x "$godot"
+          "$A7_PINNED_PYTHON" validation/ecology/evo_arch2_a7_main_integration/verify.py --godot "$godot" --head "$SOURCE_HEAD" --tree "$SOURCE_TREE"
+          "$A7_PINNED_PYTHON" - <<'PY'
+          import json,os,pathlib
+          s=json.loads(pathlib.Path('artifacts/a7-main-integration/exact/summary.json').read_text())
+          assert s['verdict']=='PASS'
+          assert s['subject_head']==os.environ['SOURCE_HEAD'] and s['subject_tree']==os.environ['SOURCE_TREE']
+          assert s['accepted_transfer_source']==os.environ['ACCEPTED_HEAD'] and s['accepted_transfer_tree']==os.environ['ACCEPTED_TREE']
+          assert s['transfer_identity']=='PASS_ALL_ACTUAL_ADDITIONS_DIRECT_ACCEPTED_REF'
+          assert s['research_free_history']['accepted_is_ancestor_exit']==1
+          assert s['res_path_closure']['authority']=='FROZEN_GIT_TREE_AND_WORKING_BYTES'
+          assert s['python_environment']['jsonschema']=='4.22.0'
+          assert s['repair_r5_guards']['result']=='PASS' and s['repair_r5_guards']['tests']==27
+          assert s['repair_r6_guards']['result']=='PASS' and s['repair_r6_guards']['tests']==21
+          assert s['harness']['result']=='PASS' and s['harness']['tests']>=325
+          assert s['main_owned_files_modified']==['tests/harness/test_v0_mvp_act0.py']
+          assert s['unauthorized_main_owned_files_modified'] is False
+          assert len(s['control'])==2 and all(x['overall_health'] in ('GREEN','YELLOW') for x in s['control'])
+          print(json.dumps(s,indent=2))
+          PY
+      - name: Record actual main-owned Drive and close diagnostics
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          py="${A7_PINNED_PYTHON:-python3}"
+          "$py" - <<'PY'
+          import json,os,pathlib,subprocess,sys
+          root=pathlib.Path.cwd();out=root/'artifacts/a7-main-integration/mission'
+          out.mkdir(parents=True,exist_ok=True)
+          env=dict(os.environ,PYTHONPATH=str(root/'scripts'),PYTHONUTF8='1')
+          records=[]
+          for mode in ('drive','close-role','close-mission'):
+              cmd=[sys.executable,'-m','harness.cli',mode,'--root',str(root),'--checkpoint','ECO_ARCH2_A7_OBSERVATORY']
+              p=subprocess.run(cmd,env=env,text=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,timeout=120)
+              (out/(mode+'.log')).write_text(p.stdout,encoding='utf-8')
+              records.append({'mode':mode,'command':cmd,'exit_code':p.returncode})
+              print(mode,'exit='+str(p.returncode));print(p.stdout)
+          (out/'diagnostics.json').write_text(json.dumps({'scope':'diagnostic_not_acceptance','records':records},indent=2)+'\n')
+          PY
+      - name: Bind evidence bytes to exact source and run
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib,subprocess
+          root=pathlib.Path.cwd();out=root/'artifacts/a7-main-integration'
+          out.mkdir(parents=True,exist_ok=True)
+          def git(*args):
+              p=subprocess.run(['git',*args],text=True,capture_output=True,check=True);return p.stdout.strip()
+          provenance={'source_head':os.environ['SOURCE_HEAD'],'source_tree':os.environ['SOURCE_TREE'],
+                      'actual_head':git('rev-parse','HEAD'),'actual_tree':git('rev-parse','HEAD^{tree}'),
+                      'tracked_status':git('status','--porcelain','--untracked-files=no'),
+                      'run_id':os.environ['GITHUB_RUN_ID'],'run_attempt':os.environ['GITHUB_RUN_ATTEMPT'],
+                      'workflow_head':os.environ['GITHUB_SHA'],'runner':os.environ.get('RUNNER_NAME','unknown')}
+          (out/'provenance.json').write_text(json.dumps(provenance,indent=2)+'\n')
+          files=list(out.rglob('*'))
+          for rel in ('artifacts/a7/observatory.png','artifacts/a7/capture-sources.json','artifacts/a7/restart','artifacts/a6/restart'):
+              p=root/rel;files.extend(p.rglob('*') if p.is_dir() else [p])
+          entries={p.relative_to(root).as_posix():{'sha256':hashlib.sha256(p.read_bytes()).hexdigest(),'bytes':p.stat().st_size}
+                   for p in sorted(set(files)) if p.is_file() and p.name!='evidence-files.v1.json'}
+          (out/'evidence-files.v1.json').write_text(json.dumps({'provenance':provenance,'files':entries},indent=2)+'\n')
+          print(json.dumps(provenance,indent=2));print('HASHED_FILES='+str(len(entries)))
+          PY
+      - name: Upload exact integration evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: a7-main-integration-exact-f769e308-r7
+          path: |
+            artifacts/a7-main-integration/
+            artifacts/a7/observatory.png
+            artifacts/a7/capture-sources.json
+            artifacts/a7/restart/
+            artifacts/a6/restart/
+          if-no-files-found: error
+          retention-days: 30
+      - name: Remove only this job's temporary dependencies
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -n "${A7_INTEGRATION_GRAPHICS_PREFIX:-}" ]; then
+            case "$A7_INTEGRATION_GRAPHICS_PREFIX" in
+              "$RUNNER_TEMP"/a7-main-integration-graphics.*) rm -rf -- "$A7_INTEGRATION_GRAPHICS_PREFIX" ;;
+              *) echo 'Refusing cleanup outside job-local graphics directory' >&2; exit 1 ;;
+            esac
+          fi
+          if [ -n "${A7_PYTHON_PREFIX:-}" ]; then
+            case "$A7_PYTHON_PREFIX" in
+              "$RUNNER_TEMP"/a7-r7-python.*) rm -rf -- "$A7_PYTHON_PREFIX" ;;
+              *) echo 'Refusing cleanup outside job-local Python directory' >&2; exit 1 ;;
+            esac
+          fi
