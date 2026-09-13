@@ -62,6 +62,9 @@ static func settle_after_first_impact(machine: Dictionary) -> Dictionary:
 	var assembly := Coupled.compile_from_machine(machine)
 	if not bool(assembly.get("success", false)):
 		return _failure("COMPLEX2E_COUPLED_COMPILE_FAILED", assembly)
+	var assembly_checked := Coupled.validate(assembly)
+	if not bool(assembly_checked.get("success", false)):
+		return _failure("COMPLEX2E_COUPLED_ASSEMBLY_INVALID", assembly_checked)
 	var live := Coupled.zero_state(assembly)
 	var reference := Coupled.zero_state(assembly)
 	if not bool(live.get("success", false)) or not bool(reference.get("success", false)):
@@ -78,8 +81,8 @@ static func settle_after_first_impact(machine: Dictionary) -> Dictionary:
 	var samples: Array = []
 	for step_index in range(MAX_SETTLE_STEPS):
 		var force: Array = FIRST_IMPACT_FORCE.duplicate() if step_index < FIRST_IMPACT_STEPS else [0.0, 0.0, 0.0, 0.0]
-		var active_step := Coupled.compiled_step(assembly, live, force, DT)
-		var full_step := Coupled.full_reference_step(assembly, reference, force, DT)
+		var active_step := _compiled_step_prevalidated(assembly, live, force, DT)
+		var full_step := _full_reference_step_prevalidated(assembly, reference, force, DT)
 		if not bool(active_step.get("success", false)):
 			return _failure("COMPLEX2E_FIRST_ACTIVE_STEP_FAILED", {"step": step_index, "result": active_step})
 		if not bool(full_step.get("success", false)):
@@ -133,6 +136,9 @@ static func settle_after_first_impact(machine: Dictionary) -> Dictionary:
 	}
 
 static func reimpact_from_settled(assembly: Dictionary, settled_state: Dictionary, settled_reference: Dictionary) -> Dictionary:
+	var assembly_checked := Coupled.validate(assembly)
+	if not bool(assembly_checked.get("success", false)):
+		return _failure("COMPLEX2E_REIMPACT_ASSEMBLY_INVALID", assembly_checked)
 	var live := settled_state.duplicate(true)
 	var reference := settled_reference.duplicate(true)
 	var max_delta := 0.0
@@ -145,8 +151,8 @@ static func reimpact_from_settled(assembly: Dictionary, settled_state: Dictionar
 	var peak_native_abs: Array = [0.0, 0.0, 0.0, 0.0]
 	for step_index in range(REIMPACT_STEPS + REIMPACT_RINGDOWN_STEPS):
 		var force: Array = REIMPACT_FORCE.duplicate() if step_index < REIMPACT_STEPS else [0.0, 0.0, 0.0, 0.0]
-		var active_step := Coupled.compiled_step(assembly, live, force, DT)
-		var full_step := Coupled.full_reference_step(assembly, reference, force, DT)
+		var active_step := _compiled_step_prevalidated(assembly, live, force, DT)
+		var full_step := _full_reference_step_prevalidated(assembly, reference, force, DT)
 		if not bool(active_step.get("success", false)):
 			return _failure("COMPLEX2E_REIMPACT_ACTIVE_STEP_FAILED", {"step": step_index, "result": active_step})
 		if not bool(full_step.get("success", false)):
@@ -189,6 +195,39 @@ static func reimpact_from_settled(assembly: Dictionary, settled_state: Dictionar
 			"final_energy_j": final_energy,
 		}),
 	}
+
+# Tight-loop fast path. The caller validates the immutable assembly once before the
+# loop. State, force, timestep and refinement guards remain enforced inside
+# Coupled._midpoint_step on every physical step.
+static func _compiled_step_prevalidated(assembly: Dictionary, state: Dictionary, force_n: Array, delta_s: float) -> Dictionary:
+	return Coupled._midpoint_step(
+		assembly,
+		state,
+		force_n,
+		delta_s,
+		assembly["mass_matrix"],
+		assembly["stiffness_matrix"],
+		assembly["damping_matrix"],
+		"COMPILED_DYNAMIC_ROM"
+	)
+
+# Preserve the FULL_CANONICAL_SUM oracle: canonical coupling matrices are still
+# rebuilt for every reference step. Only the redundant immutable-assembly hash
+# validation is removed from the hot loop.
+static func _full_reference_step_prevalidated(assembly: Dictionary, state: Dictionary, force_n: Array, delta_s: float) -> Dictionary:
+	var rebuilt := Coupled._compile_matrices(Array(assembly["couplings"]).duplicate(true))
+	if not bool(rebuilt.get("success", false)):
+		return rebuilt
+	return Coupled._midpoint_step(
+		assembly,
+		state,
+		force_n,
+		delta_s,
+		rebuilt["mass_matrix"],
+		rebuilt["stiffness_matrix"],
+		rebuilt["damping_matrix"],
+		"FULL_CANONICAL_SUM"
+	)
 
 static func _sample(phase: String, state: Dictionary, energy_j: float) -> Dictionary:
 	var native_q: Array = []

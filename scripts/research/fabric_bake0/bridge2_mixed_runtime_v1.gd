@@ -108,6 +108,12 @@ static func can_execute_region(session: Dictionary, registry: Dictionary, region
 	var checked := validate_session(session, registry)
 	if not bool(checked.get("success", false)):
 		return checked
+	return _can_execute_region_prevalidated(session, registry, region_id)
+
+# Internal fast path for callers that already validated the exact session/registry
+# pair. This does not weaken the public can_execute_region() contract.
+static func _can_execute_region_prevalidated(session: Dictionary, registry: Dictionary, region_id: String) -> Dictionary:
+	var checked: Dictionary
 	var region := Registry.region_by_id(registry, region_id)
 	if region.is_empty():
 		return Utils.failure("BRIDGE2_REGION_NOT_FOUND")
@@ -167,7 +173,7 @@ static func step(
 	var gate_results := {}
 	for region in registry["regions"]:
 		var region_id := String(region["region_id"])
-		var gate := can_execute_region(session, registry, region_id)
+		var gate := _can_execute_region_prevalidated(session, registry, region_id)
 		if not bool(gate.get("success", false)):
 			return Utils.failure("BRIDGE2_MIXED_STEP_BLOCKED", {
 				"region_id": region_id,

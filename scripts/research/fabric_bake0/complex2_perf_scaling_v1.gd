@@ -135,10 +135,24 @@ static func run_case(part_count: int) -> Dictionary:
 	var final_registry: Dictionary = rebaked["details"]["registry"]
 	var final_dynamic := Registry.region_by_id(final_registry, Fixture.REGION_DYNAMIC)
 	var total_us := Time.get_ticks_usec() - total_begin
+	var timing_us := {
+		"build": build_us,
+		"scan": scan_us,
+		"structural_failure": structural_us,
+		"settle_and_reimpact": settle_us,
+		"mixed_runtime": runtime_us,
+		"local_rebake": local_rebake_us,
+		"total": total_us,
+	}
 	if total_us > int(CASE_BUDGET_US[part_count]):
-		return _failure("COMPLEX2PERF_CASE_BUDGET_EXCEEDED", {"part_count": part_count, "total_us": total_us, "budget_us": CASE_BUDGET_US[part_count]})
+		return _failure("COMPLEX2PERF_CASE_BUDGET_EXCEEDED", {
+			"part_count": part_count,
+			"total_us": total_us,
+			"budget_us": CASE_BUDGET_US[part_count],
+			"timing_us": timing_us,
+		})
 	if local_rebake_us > LOCAL_REBAKE_BUDGET_US:
-		return _failure("COMPLEX2PERF_LOCAL_REBAKE_BUDGET_EXCEEDED", {"part_count": part_count, "local_rebake_us": local_rebake_us})
+		return _failure("COMPLEX2PERF_LOCAL_REBAKE_BUDGET_EXCEEDED", {"part_count": part_count, "local_rebake_us": local_rebake_us, "timing_us": timing_us})
 
 	return {
 		"success": true,
@@ -163,15 +177,7 @@ static func run_case(part_count: int) -> Dictionary:
 		"rebake_generation": int(final_dynamic["adapter"]["artifact"]["build_generation"]),
 		"rebake_artifact_hash": String(final_dynamic["adapter"]["artifact"]["checksum"]),
 		"final_state_hash": Utils.canonical_hash(final_session["state_values"]),
-		"timing_us": {
-			"build": build_us,
-			"scan": scan_us,
-			"structural_failure": structural_us,
-			"settle_and_reimpact": settle_us,
-			"mixed_runtime": runtime_us,
-			"local_rebake": local_rebake_us,
-			"total": total_us,
-		},
+		"timing_us": timing_us,
 		"budget_us": int(CASE_BUDGET_US[part_count]),
 	}
 
