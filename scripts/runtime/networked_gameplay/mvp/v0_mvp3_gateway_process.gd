@@ -30,6 +30,8 @@ var operation_fingerprints: Dictionary = {}
 var assertions := 0
 var failures: Array[String] = []
 var transfers: Array[Dictionary] = []
+# Bounded read-only copies of actual native receipts, not another player owner.
+var input_observations := {"a": [], "b": []}
 var identity = null
 var ledger = null
 var admission = null
@@ -202,7 +204,7 @@ func cross(actor: String, target: String, transfer_id: String, prove_other_input
 			return false
 	else:
 		pending_continuity[actor] = transfer_id
-	transfers.append({"actor": actor, "transfer_id": transfer_id, "source": source, "target": target, "source_epoch": source_epoch, "target_epoch": source_epoch + 1, "before_request": requested_before, "before": before, "after": after, "freeze_cut": "NATIVE_SOURCE_EXPORT", "packet_checksum": packet["checksum"]})
+	transfers.append({"actor": actor, "transfer_id": transfer_id, "source": source, "target": target, "source_epoch": source_epoch, "target_epoch": source_epoch + 1, "before_request": requested_before, "before": before, "after": after, "freeze_cut": "NATIVE_SOURCE_EXPORT", "packet_checksum": packet["checksum"], "post_activation_movement_proven": prove_post_input and after.get("position") != before.get("position")})
 	return true
 
 
@@ -212,19 +214,49 @@ func route_client_input(actor: String, wire: Dictionary) -> Dictionary:
 	var input_sequence := int(wire.get("input_sequence", -1))
 	if input_sequence != int(sequences[actor]) + 1:
 		return Protocol.failure("MVP3_CLIENT_INPUT_SEQUENCE_GAP")
+	var active_authority := String(coordinators[actor].snapshot().get("active_authority_id", ""))
+	var before_input := lookup(active_authority, actor)
 	var operation_id := String(wire.get("operation_id", ""))
 	var command_value := {"domain_id": "p6-domain/outpost-world-state", "command_kind": "PLAYER_INTERACTION", "operation_id": operation_id, "wire": wire}
 	var result: Dictionary = pivots[actor].route_command("client-session/mvp3/" + actor, operation_id, command_value)
 	if not bool(result.get("success", false)):
 		return result
+	var native: Dictionary = result.get("details", {}).get("route_result", {}).get("outcome", {}).get("details", {})
+	var after_input: Dictionary = native.get("player", {})
+	var fixed_step: Dictionary = native.get("server_simulation", {})
+	if after_input.get("logical_player_id") != actor or fixed_step.get("fixed_tick") != true or not is_equal_approx(float(fixed_step.get("delta_seconds", 0.0)), 1.0 / 60.0):
+		return Protocol.failure("MVP3_TARGET_MOVEMENT_RECEIPT_REQUIRED")
+	if input_observations[actor].size() >= 128:
+		input_observations[actor].pop_front()
+	input_observations[actor].append({"operation_id": operation_id, "authority_id": active_authority, "before": before_input, "after": after_input.duplicate(true), "server_simulation": fixed_step.duplicate(true), "server_tick": native.get("server_tick", -1)})
 	sequences[actor] = input_sequence
 	last_commands[actor] = command_value
 	var pending := String(pending_continuity[actor])
 	if not pending.is_empty():
-		var continuity: Dictionary = carrying[actor].validate_after_activation(pending, "client-session/mvp3/" + actor, input_sequence, operation_id, coordinators[actor])
-		if not bool(continuity.get("success", false)):
-			return continuity
-		pending_continuity[actor] = ""
+		var transfer_index := -1
+		for index in range(transfers.size()):
+			if transfers[index].get("transfer_id") == pending and transfers[index].get("actor") == actor:
+				transfer_index = index
+		if transfer_index < 0:
+			return Protocol.failure("MVP3_TRANSFER_EVIDENCE_NOT_FOUND")
+		var transfer: Dictionary = transfers[transfer_index]
+		var frozen: Dictionary = transfer["before"]
+		if active_authority != transfer.get("target") or after_input.get("player_entity_id") != frozen.get("player_entity_id") or after_input.get("transport_session_id") != frozen.get("transport_session_id") or after_input.get("ownership_epoch") != frozen.get("ownership_epoch"):
+			return Protocol.failure("MVP3_POST_ACTIVATION_IDENTITY_CHANGED")
+		# A neutral receipt or replay cannot complete a crossing. Keep waiting
+		# for an actual target step with both new input and physical displacement.
+		var displacement := absf(float(after_input.get("position", {}).get("x", 0.0)) - float(frozen.get("position", {}).get("x", 0.0)))
+		if displacement > 0.000001 and int(after_input.get("last_input_sequence", -1)) > int(frozen.get("last_input_sequence", 0)) and int(after_input.get("state_revision", -1)) > int(frozen.get("state_revision", 0)):
+			var continuity: Dictionary = carrying[actor].validate_after_activation(pending, "client-session/mvp3/" + actor, input_sequence, operation_id, coordinators[actor])
+			if not bool(continuity.get("success", false)):
+				return continuity
+			transfer["after"] = after_input.duplicate(true)
+			transfer["post_activation_operation_id"] = operation_id
+			transfer["post_activation_server_tick"] = native.get("server_tick", -1)
+			transfer["post_activation_server_simulation"] = fixed_step.duplicate(true)
+			transfer["post_activation_movement_proven"] = true
+			transfers[transfer_index] = transfer
+			pending_continuity[actor] = ""
 	return result
 
 
@@ -336,7 +368,7 @@ func authority_reports() -> Dictionary:
 
 
 func base_report(schema: String, passed: bool, graphical: bool) -> Dictionary:
-	var report := {"schema": schema, "passed": passed and failures.is_empty(), "subject_head": cfg["subject_head"], "run_id": cfg["run_id"], "gateway_process_id": OS.get_process_id(), "assertions": assertions, "failures": failures, "transfers": transfers, "sequences": sequences, "identity": identity.get_report() if identity != null else {}, "ledger": ledger.get_report() if ledger != null else {}, "authority_reports": authority_reports(), "backend_links": {}, "route_identity": {"a": pivots["a"].get_client_route_identity(), "b": pivots["b"].get_client_route_identity()} if pivots.size() == 2 else {}, "two_independent_players": true, "gateway_reconnects": 0, "respawns": 0, "graphical_scene_proven": graphical, "mvp3_predicate_verified": false}
+	var report := {"schema": schema, "passed": passed and failures.is_empty(), "subject_head": cfg["subject_head"], "run_id": cfg["run_id"], "gateway_process_id": OS.get_process_id(), "assertions": assertions, "failures": failures, "transfers": transfers, "sequences": sequences, "input_observations": input_observations.duplicate(true), "identity": identity.get_report() if identity != null else {}, "ledger": ledger.get_report() if ledger != null else {}, "authority_reports": authority_reports(), "backend_links": {}, "route_identity": {"a": pivots["a"].get_client_route_identity(), "b": pivots["b"].get_client_route_identity()} if pivots.size() == 2 else {}, "two_independent_players": true, "gateway_reconnects": 0, "respawns": 0, "graphical_scene_proven": graphical, "mvp3_predicate_verified": false}
 	for authority in links:
 		report["backend_links"][authority] = {"connects": links[authority].connects, "disconnects": links[authority].disconnects, "sequence": links[authority].sequence, "failure_code": links[authority].failure_code, "idle_service_count": links[authority].idle_service_count}
 	return report
