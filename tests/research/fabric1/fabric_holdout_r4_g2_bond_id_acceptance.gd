@@ -67,6 +67,24 @@ func _end_to_end_failure_commit() -> void:
 	if snapshot.pending_proposal.is_empty(): return
 	_check(str(snapshot.pending_proposal.bond_id) == TARGET_BOND_ID, "G2-BOND-ID pending proposal keeps full bond id", snapshot.pending_proposal)
 
+	var support_found_at_event := false
+	var declared_effort_at_event := 0.0
+	for support in snapshot.supports:
+		if str(support.bond_id) == TARGET_BOND_ID:
+			support_found_at_event = true
+			declared_effort_at_event = float(support.effort_n)
+			break
+	_check(support_found_at_event, "G2-BOND-ID event snapshot exposes target signed effort", snapshot.supports)
+
+	var failure_event_token := ""
+	for event in snapshot.events:
+		if str(event.transition).begins_with("failure|"):
+			failure_event_token = str(event.transition)
+	var event_failure := EventStep._parse_transition_id(failure_event_token)
+	_check(event_failure.get("ok", false) and str(event_failure.get("element_id", "")) == TARGET_BOND_ID, "G2-BOND-ID runtime history preserves failure event identity", {"transition": failure_event_token, "parsed": event_failure})
+	var persisted_sign := float(event_failure.get("sign", 0.0)) if event_failure.get("ok", false) else 0.0
+	_check(support_found_at_event and declared_effort_at_event * persisted_sign > 0.0, "G2-BOND-ID runtime failure sign matches declared effort", {"effort_n": declared_effort_at_event, "transition": failure_event_token, "sign": persisted_sign})
+
 	var committed := bridge.execute(bridge.make_command("commit_failure", {"event_id": snapshot.pending_proposal.event_id}, authority), authority)
 	_check(committed.success, "G2-BOND-ID canonical failure commit accepts full bond id", committed)
 	if not committed.success: return

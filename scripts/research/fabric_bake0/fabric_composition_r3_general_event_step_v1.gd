@@ -190,7 +190,7 @@ static func _effort(model: Dictionary, element: Dictionary, state: Dictionary) -
 	var xb := float(state.get("x_%d" % b_index, 0.0)) if b_index >= 0 else 0.0
 	var va := float(state.get("v_%d" % a_index, 0.0)) if a_index >= 0 else 0.0
 	var vb := float(state.get("v_%d" % b_index, 0.0)) if b_index >= 0 else 0.0
-	return float(element.stiffness_n_per_m) * (xb - xa) + float(element.damping_ns_per_m) * (vb - va)
+	return float(element.stiffness_n_per_m) * (xa - xb) + float(element.damping_ns_per_m) * (va - vb)
 
 static func _valid_probe(probe: Dictionary) -> bool:
 	if not probe.get("ok", false): return false
