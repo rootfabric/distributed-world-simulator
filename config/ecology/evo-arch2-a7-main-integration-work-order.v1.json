@@ -15,6 +15,10 @@
   "objective": "Transfer the minimum self-contained accepted ecology-v2 capability closure plus A7 Observatory into a fresh current-main branch, without importing the long research lineage or overwriting unrelated main-owned runtime, then produce exact integration evidence and a merge-ready PR.",
   "transfer_policy": {
     "required_new_subtree": "scripts/research/ecology/v2/**",
+    "required_external_dependencies": [
+      "scripts/research/ecology/plant_development_traits_extension_evo7_v1.gd"
+    ],
+    "external_dependency_reason": "legacy_genome_adapter_v1.gd preloads the trait extension; static preflight 34732668117 found it missing. The accepted blob has no further res:// dependencies.",
     "required_a7_surface": [
       "config/ecology/evo-arch2-a7-protocol.v1.json",
       "scenes/labs/ecology/arch2_a7_observatory.tscn",
@@ -34,6 +38,7 @@
     "config/ecology/evo-arch2-a7-protocol.v1.json",
     "docs/research/ecology/EVO_ARCH2_A7_MAIN_INTEGRATION*",
     "scripts/research/ecology/v2/**",
+    "scripts/research/ecology/plant_development_traits_extension_evo7_v1.gd",
     "scripts/labs/ecology/arch2_a7_*",
     "scenes/labs/ecology/arch2_a7_*",
     "tests/research/ecology/v2/arch2_a*",
@@ -56,6 +61,8 @@
     "FRESH_CURRENT_MAIN_BASE_EXACT",
     "NO_LONG_RESEARCH_LINEAGE_MERGE",
     "ACCEPTED_V2_CLOSURE_BYTE_EXACT",
+    "EXTERNAL_TRANSITIVE_DEPENDENCY_BYTE_EXACT",
+    "ALL_TRANSFERRED_RES_PATHS_RESOLVE",
     "A7_SURFACE_BYTE_EXACT",
     "NO_PREEXISTING_MAIN_FILE_OVERWRITTEN",
     "COLD_IMPORT_PASS",
@@ -81,9 +88,9 @@
   "state": "IN_PROGRESS",
   "resume_anchor": {
     "exact_subject": "main@7dfc68ab5a1e90254a1b7039807f275b5da04eef + acceptance/eco-evo-arch2-a7-r1@8eccf6304078bec3a3ccaa5860c5aab6ee311209",
-    "last_completed_predicate": "FRESH_INTEGRATION_BRANCH_CREATED",
-    "next_action": "TRANSFER_MINIMAL_ACCEPTED_V2_CLOSURE_AND_A7_SURFACE",
-    "allowed_recovery_route": "GitHub connector for writes; repository-owned self-hosted CI for exact execution",
+    "last_completed_predicate": "TRANSITIVE_DEPENDENCY_REPAIR_R1_APPLIED",
+    "next_action": "FREEZE_REPAIRED_INTEGRATION_HEAD_AND_RERUN_STATIC_PLUS_EXACT_VERIFICATION",
+    "allowed_recovery_route": "GitHub connector for writes; repository-owned hosted/static and self-hosted exact CI",
     "stop_before": "MAIN_MERGE"
   }
 }
