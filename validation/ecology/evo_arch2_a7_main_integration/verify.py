@@ -15,7 +15,9 @@ import time
 
 ROOT = Path(__file__).resolve().parents[3]
 BASE_MAIN = "7dfc68ab5a1e90254a1b7039807f275b5da04eef"
+ACCEPTED_REF = "refs/remotes/origin/acceptance/eco-evo-arch2-a7-r1"
 ACCEPTED_A7 = "8eccf6304078bec3a3ccaa5860c5aab6ee311209"
+ACCEPTED_TREE = "24e876b7377cb3e1e521f08ff9766331fe4e895a"
 GODOT_SHA = "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7"
 GODOT_VERSION = "4.7.1.stable.double.custom_build.a13da4feb"
 EXTERNAL_DEPS = {
@@ -82,7 +84,9 @@ def main() -> int:
         "subject_head": args.head,
         "subject_tree": args.tree,
         "base_main": BASE_MAIN,
+        "accepted_transfer_ref": ACCEPTED_REF,
         "accepted_transfer_source": ACCEPTED_A7,
+        "accepted_transfer_tree": ACCEPTED_TREE,
         "verdict": "FAIL",
         "checks": [],
         "repeat_pairs": [],
@@ -104,14 +108,8 @@ def main() -> int:
         text = log.read_text(encoding="utf-8-sig", errors="replace")
         req(p.returncode == 0 and (not scan or not ERRORS.search(text)) and (not marker or marker in text),
             f"{name}: exit={p.returncode} marker={marker!r}\n{text[-12000:]}")
-        summary["checks"].append({
-            "name": name,
-            "result": "PASS",
-            "exit_code": p.returncode,
-            "assertions": assertions,
-            "sha256": sha(log),
-            "command": cmd,
-        })
+        summary["checks"].append({"name": name, "result": "PASS", "exit_code": p.returncode,
+                                  "assertions": assertions, "sha256": sha(log), "command": cmd})
         print(f"PASS {name} {marker}", flush=True)
         return log
 
@@ -134,6 +132,13 @@ def main() -> int:
         parents = git("rev-list", "--parents", "-n", "1", args.head).split()[1:]
         req(ACCEPTED_A7 not in parents, "RESEARCH_COMMIT_USED_AS_PARENT")
 
+        req(gp("show-ref", "--verify", "--quiet", ACCEPTED_REF).returncode == 0,
+            "ACCEPTED_REF_NOT_FETCHED")
+        req(git("rev-parse", ACCEPTED_REF) == ACCEPTED_A7, "ACCEPTED_REF_HEAD_MISMATCH")
+        req(git("rev-parse", ACCEPTED_REF + "^{tree}") == ACCEPTED_TREE, "ACCEPTED_REF_TREE_MISMATCH")
+        req(gp("cat-file", "-e", ACCEPTED_A7 + "^{commit}").returncode == 0,
+            "ACCEPTED_COMMIT_NOT_AVAILABLE")
+
         records = git("diff", "--name-status", BASE_MAIN, args.head).splitlines()
         req(bool(records), "EMPTY_DIFF")
         additions = []
@@ -150,15 +155,21 @@ def main() -> int:
         summary["added_paths"] = additions
 
         pins = json.loads((ROOT / "validation/ecology/evo_arch2_a7_main_integration/expected-transfer.v1.json").read_text())
-        req(pins["base_main"] == BASE_MAIN and pins["accepted_a7"] == ACCEPTED_A7,
-            "TRANSFER_MANIFEST_IDENTITY")
+        req(pins["base_main"] == BASE_MAIN and pins["accepted_a7"] == ACCEPTED_A7 and
+            pins["accepted_a7_tree"] == ACCEPTED_TREE, "TRANSFER_MANIFEST_IDENTITY")
+        direct_objects = {}
         for path, want in {**pins["subtrees"], **pins["blobs"]}.items():
-            req(git("rev-parse", "HEAD:" + path) == want, "TRANSFER_IDENTITY:" + path)
+            head_obj = git("rev-parse", "HEAD:" + path)
+            accepted_obj = git("rev-parse", ACCEPTED_A7 + ":" + path)
+            req(head_obj == accepted_obj, "DIRECT_ACCEPTED_OBJECT_MISMATCH:" + path)
+            req(head_obj == want, "REDUNDANT_PIN_MISMATCH:" + path)
             req(gp("cat-file", "-e", BASE_MAIN + ":" + path).returncode != 0,
                 "TRANSFER_PATH_EXISTED_ON_MAIN:" + path)
+            direct_objects[path] = head_obj
         req(set(pins["blobs"]).issuperset(EXTERNAL_DEPS), "EXTERNAL_DEPENDENCY_NOT_PINNED")
-        summary["transfer_identity"] = "PASS"
+        summary["transfer_identity"] = "PASS_DIRECT_ACCEPTED_REF"
         summary["base_absence_gate"] = "PASS_BY_GIT_EXIT_STATUS"
+        summary["direct_accepted_objects"] = direct_objects
 
         sources = list((ROOT / "scripts/research/ecology/v2").glob("*.gd"))
         sources += list((ROOT / "scripts/labs/ecology").glob("arch2_a7_*.gd"))
@@ -181,12 +192,8 @@ def main() -> int:
                         generated_refs.append({"source": source.relative_to(ROOT).as_posix(), "target": rel})
                         continue
                     req(False, f"TRANSITIVE_RES_PATH_MISSING:{source.relative_to(ROOT)}->{rel}")
-        summary["res_path_closure"] = {
-            "result": "PASS",
-            "sources": len(sources),
-            "references": refs,
-            "generated_missing_allowed": generated_refs,
-        }
+        summary["res_path_closure"] = {"result": "PASS", "sources": len(sources),
+                                       "references": refs, "generated_missing_allowed": generated_refs}
 
         args.godot = args.godot.resolve(strict=True)
         req(sha(args.godot) == GODOT_SHA, "GODOT_SHA")
@@ -231,8 +238,7 @@ def main() -> int:
             twice(f"rm{number}", files[0].relative_to(ROOT).as_posix(),
                   f"EVO_ARCH2_A5_RM{number} assertions={n} failed=0", n)
 
-        glog = run(
-            "a7-graphical",
+        glog = run("a7-graphical",
             ["xvfb-run", "-a", "-s", "-screen 0 1600x1100x24", str(args.godot),
              "--rendering-method", "gl_compatibility", "--audio-driver", "Dummy", "--path", str(ROOT),
              "--script", "res://tests/research/ecology/v2/arch2_a7_ui.gd", "--", "--capture"],
@@ -243,11 +249,9 @@ def main() -> int:
         summary.update(viewport_sha256=sha(png), viewport_source_report_sha256=sha(report),
                        graphical_log_sha256=sha(glog))
 
-        hlog = run(
-            "main-harness-regression",
+        hlog = run("main-harness-regression",
             [sys.executable, "-m", "unittest", "discover", "-s", str(ROOT / "tests/harness"),
-             "-p", "test_*.py", "-v"],
-            "OK", timeout=600, scan=False)
+             "-p", "test_*.py", "-v"], "OK", timeout=600, scan=False)
         htext = hlog.read_text(encoding="utf-8-sig", errors="replace")
         req("FAILED (" not in htext and "ERROR" not in htext, "HARNESS_REGRESSION_FAILURE")
 
@@ -256,10 +260,8 @@ def main() -> int:
         controls = []
         for name, script, extra, artifact in [
             ("standard", "project_control.py", ["--no-fetch", "--no-fail-on-red"], "project-control-report.json"),
-            ("directional", "project_control_directional_watch.py", ["--no-fail-on-red"], "directional-watch-report.json"),
-        ]:
-            log = run("control-" + name,
-                      [sys.executable, str(ROOT / "scripts/control" / script), *extra],
+            ("directional", "project_control_directional_watch.py", ["--no-fail-on-red"], "directional-watch-report.json")]:
+            log = run("control-" + name, [sys.executable, str(ROOT / "scripts/control" / script), *extra],
                       timeout=300, scan=False)
             src = ROOT / "artifacts/control" / artifact
             req(src.is_file(), "CONTROL_REPORT_MISSING:" + name)
