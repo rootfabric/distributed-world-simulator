@@ -103,8 +103,10 @@ jobs:
         shell: bash
         run: |
           set -uo pipefail
+          set +e
           pwsh -NoProfile -File ./CONTROL_DEVELOPMENT.ps1 -CloseMission -Execution "$EXECUTION" > artifacts/mvp3-r13b-closure-control/close-mission.log 2>&1
           code=$?
+          set -e
           cat artifacts/mvp3-r13b-closure-control/close-mission.log
           test "$code" -eq 8
           grep -q 'MISSION_EXIT_FORBIDDEN' artifacts/mvp3-r13b-closure-control/close-mission.log
