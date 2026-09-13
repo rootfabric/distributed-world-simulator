@@ -1,0 +1,68 @@
+name: ECO ARCH2 A7 Main Integration Prep
+on:
+  push:
+    branches: [validation/eco-arch2-a7-main-integration-r1]
+    paths: [.github/workflows/evo-arch2-a7-main-integration-prep.yml]
+permissions:
+  contents: read
+jobs:
+  inventory:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout repository history
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Inventory accepted closure
+        shell: bash
+        env:
+          ACCEPTED_A7: 8eccf6304078bec3a3ccaa5860c5aab6ee311209
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/a7-main-integration
+          git cat-file -e "$ACCEPTED_A7^{commit}"
+          for path in \
+            scripts/research/ecology/v2 \
+            tests/research/ecology/v2 \
+            validation/ecology/evo_arch2_a5; do
+            sha="$(git rev-parse "$ACCEPTED_A7:$path")"
+            type="$(git cat-file -t "$sha")"
+            test "$type" = tree
+            printf '%s %s\n' "$path" "$sha" | tee -a artifacts/a7-main-integration/subtrees.txt
+            git ls-tree -r "$ACCEPTED_A7" -- "$path" >> artifacts/a7-main-integration/closure-ls-tree.txt
+          done
+          for path in \
+            config/ecology/evo-arch2-a7-protocol.v1.json \
+            scenes/labs/ecology/arch2_a7_observatory.tscn \
+            scripts/labs/ecology/arch2_a7_body_view.gd \
+            scripts/labs/ecology/arch2_a7_body_view.gd.uid \
+            scripts/labs/ecology/arch2_a7_observatory.gd \
+            scripts/labs/ecology/arch2_a7_observatory.gd.uid; do
+            sha="$(git rev-parse "$ACCEPTED_A7:$path")"
+            type="$(git cat-file -t "$sha")"
+            test "$type" = blob
+            printf '%s %s\n' "$path" "$sha" | tee -a artifacts/a7-main-integration/blobs.txt
+          done
+          python3 - <<'PY'
+          import json, pathlib
+          root=pathlib.Path('artifacts/a7-main-integration')
+          subtrees={}
+          for line in (root/'subtrees.txt').read_text().splitlines():
+              p,s=line.rsplit(' ',1); subtrees[p]=s
+          blobs={}
+          for line in (root/'blobs.txt').read_text().splitlines():
+              p,s=line.rsplit(' ',1); blobs[p]=s
+          lines=(root/'closure-ls-tree.txt').read_text().splitlines()
+          result={'accepted_head':'8eccf6304078bec3a3ccaa5860c5aab6ee311209','subtrees':subtrees,'blobs':blobs,'closure_entries':len(lines),'ls_tree':lines}
+          (root/'manifest.json').write_text(json.dumps(result,indent=2)+'\n')
+          print(json.dumps(result,indent=2))
+          PY
+      - name: Upload inventory
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: a7-main-integration-closure
+          path: artifacts/a7-main-integration/
+          if-no-files-found: error
+          retention-days: 30
