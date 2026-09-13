@@ -15,7 +15,7 @@ jobs:
           ref: 96884d87b7e95d58595f02b1191261d7d3b8d4ce
           fetch-depth: 0
           persist-credentials: false
-      - name: Verify exact evidence subject, raw bytes, engine and input provenance
+      - name: Verify exact evidence subject, raw bytes, manifest binding, engine and input provenance
         shell: bash
         run: |
           set -euo pipefail
@@ -47,6 +47,33 @@ jobs:
           assert hashlib.sha256(report_bytes).hexdigest()==expected_report
           manifest=json.loads(manifest_bytes)
           report=json.loads(report_bytes)
+
+          # Bind every indexed raw file to the independently digest-anchored manifest.
+          # manifest.files describes the 12 produced raw members; the 13th indexed raw
+          # member is manifest.json itself, whose fixed SHA-256 is asserted above.
+          manifest_rows=manifest.get('files')
+          assert isinstance(manifest_rows,list) and len(manifest_rows)==12, len(manifest_rows or [])
+          manifest_members={str(x['path']):x for x in manifest_rows}
+          assert len(manifest_members)==12
+          assert set(rows)==set(manifest_members)|{'manifest.json'}, (set(rows),set(manifest_members))
+          manifest_index_row=rows['manifest.json']
+          assert manifest_index_row['SHA256'].lower()==expected_manifest
+          assert int(manifest_index_row['Bytes'])==len(manifest_bytes)
+          for name,anchored in manifest_members.items():
+              assert name in rows, name
+              indexed=rows[name]
+              assert int(anchored['bytes'])==int(indexed['Bytes']), (name,anchored['bytes'],indexed['Bytes'])
+              assert str(anchored['sha256']).lower()==str(indexed['SHA256']).lower(), name
+              data=(root/name).read_bytes()
+              assert len(data)==int(anchored['bytes']), (name,len(data),anchored['bytes'])
+              assert hashlib.sha256(data).hexdigest()==str(anchored['sha256']).lower(), name
+          expected_root_files=set(rows)|{
+              'sha256-index.json',
+              'MVP3-WINDOWS-IMPLEMENTER-R13-REPORT.json',
+              'publication.json',
+          }
+          actual_root_files={p.name for p in root.iterdir() if p.is_file()}
+          assert actual_root_files==expected_root_files, (sorted(actual_root_files),sorted(expected_root_files))
 
           # Exact product + approved Windows-double engine provenance.
           assert manifest['subject_head']==expected_head
@@ -115,7 +142,7 @@ jobs:
           pub=json.loads((root/'publication.json').read_bytes())
           assert pub['raw_file_count']==13 and pub['raw_bytes_drift'] is False and pub['manual_run_repeated_for_publication'] is False
           assert pub['raw_manifest_sha256']==expected_manifest and pub['implementer_report_sha256']==expected_report
-          print('MVP3_R13B_MANUAL_EVIDENCE_BYTE_AND_PROVENANCE_VERIFICATION_PASS')
-          print('raw_files=13 manifest_sha256='+expected_manifest+' report_sha256='+expected_report)
+          print('MVP3_R13B_MANUAL_EVIDENCE_MANIFEST_BOUND_PROVENANCE_VERIFICATION_PASS')
+          print('raw_files=13 anchored_members=12 manifest_sha256='+expected_manifest+' report_sha256='+expected_report)
           print('windows_engine_sha256='+expected_windows_engine+' input_method='+expected_input_method)
           PY
