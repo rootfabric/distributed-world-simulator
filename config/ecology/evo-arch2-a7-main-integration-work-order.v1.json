@@ -16,9 +16,20 @@
   "transfer_policy": {
     "required_new_subtree": "scripts/research/ecology/v2/**",
     "required_external_dependencies": [
-      "scripts/research/ecology/plant_development_traits_extension_evo7_v1.gd"
+      "scripts/research/ecology/plant_development_traits_extension_evo7_v1.gd",
+      "scripts/labs/ecology/evo_morphology_lab_v2_model.gd",
+      "scripts/labs/ecology/evo_morphology_lab_v2_renderer.gd"
     ],
-    "external_dependency_reason": "legacy_genome_adapter_v1.gd preloads the trait extension; static preflight 34732668117 found it missing. The accepted blob has no further res:// dependencies.",
+    "external_dependency_reasons": [
+      "Repair R1: legacy_genome_adapter_v1.gd preloads the trait extension; static preflight 34732668117 found it missing.",
+      "Repair R2: arch2_a03_exact_acceptance.gd preloads the morphology model and renderer; static preflight 34732821534 found both missing. Their code dependencies are inside the transferred ecology-v2 subtree."
+    ],
+    "declared_generated_outputs": [
+      "res://artifacts/a7/observatory.png",
+      "res://artifacts/a7/capture-sources.json",
+      "res://artifacts/a7/observatory-report.json",
+      "res://artifacts/a7/observatory/**"
+    ],
     "required_a7_surface": [
       "config/ecology/evo-arch2-a7-protocol.v1.json",
       "scenes/labs/ecology/arch2_a7_observatory.tscn",
@@ -39,6 +50,8 @@
     "docs/research/ecology/EVO_ARCH2_A7_MAIN_INTEGRATION*",
     "scripts/research/ecology/v2/**",
     "scripts/research/ecology/plant_development_traits_extension_evo7_v1.gd",
+    "scripts/labs/ecology/evo_morphology_lab_v2_model.gd",
+    "scripts/labs/ecology/evo_morphology_lab_v2_renderer.gd",
     "scripts/labs/ecology/arch2_a7_*",
     "scenes/labs/ecology/arch2_a7_*",
     "tests/research/ecology/v2/arch2_a*",
@@ -61,8 +74,9 @@
     "FRESH_CURRENT_MAIN_BASE_EXACT",
     "NO_LONG_RESEARCH_LINEAGE_MERGE",
     "ACCEPTED_V2_CLOSURE_BYTE_EXACT",
-    "EXTERNAL_TRANSITIVE_DEPENDENCY_BYTE_EXACT",
-    "ALL_TRANSFERRED_RES_PATHS_RESOLVE",
+    "EXTERNAL_TRANSITIVE_DEPENDENCIES_BYTE_EXACT",
+    "ALL_NON_GENERATED_TRANSFERRED_RES_PATHS_RESOLVE",
+    "DECLARED_GENERATED_OUTPUTS_PRODUCED_BY_TESTS",
     "A7_SURFACE_BYTE_EXACT",
     "NO_PREEXISTING_MAIN_FILE_OVERWRITTEN",
     "COLD_IMPORT_PASS",
@@ -88,8 +102,8 @@
   "state": "IN_PROGRESS",
   "resume_anchor": {
     "exact_subject": "main@7dfc68ab5a1e90254a1b7039807f275b5da04eef + acceptance/eco-evo-arch2-a7-r1@8eccf6304078bec3a3ccaa5860c5aab6ee311209",
-    "last_completed_predicate": "TRANSITIVE_DEPENDENCY_REPAIR_R1_APPLIED",
-    "next_action": "FREEZE_REPAIRED_INTEGRATION_HEAD_AND_RERUN_STATIC_PLUS_EXACT_VERIFICATION",
+    "last_completed_predicate": "TRANSITIVE_DEPENDENCY_REPAIR_R2_APPLIED",
+    "next_action": "FREEZE_REPAIRED_INTEGRATION_HEAD_R3_AND_RERUN_STATIC_EXACT_REVIEW",
     "allowed_recovery_route": "GitHub connector for writes; repository-owned hosted/static and self-hosted exact CI",
     "stop_before": "MAIN_MERGE"
   }
