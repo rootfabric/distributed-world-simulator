@@ -5,134 +5,78 @@ on:
     paths: [.github/workflows/mvp3-r13-exact-validation.yml]
 permissions:
   contents: read
-  actions: read
-concurrency:
-  group: mvp3-r13-exact-${{ github.ref }}
-  cancel-in-progress: false
 jobs:
-  exact-evidence:
-    if: github.repository == 'rootfabric/distributed-world-simulator' && github.ref == 'refs/heads/control/v0-mvp3-closure-6a750d85-r1'
+  exact-control-recheck:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        lane: [graphical, world-core, control]
-    timeout-minutes: 40
+    timeout-minutes: 20
     env:
       EXPECTED_HEAD: f1d453fb2af49231c30bdc5cbe415ad199394446
       EXPECTED_TREE: f1697cc52c1abc7f1bb21922c5fab3b49a3c167d
       FREEZE_REF: freeze/v0-mvp3-r13b-f1d453fb-r1
-      BASE_HEAD: 91c0df9d9e9c36f3519110aea85b5884214b9278
+      PRODUCT_BRANCH: feature/v0-mvp-playable-seamless-planet-r1
       AUDITED_MAIN: 7dfc68ab5a1e90254a1b7039807f275b5da04eef
-      ENGINE_SHA: bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7
-      LANE: ${{ matrix.lane }}
       PYTHONUTF8: '1'
       PYTHONPATH: scripts
-      BREAKPOINT_RUNTIME_DISABLED: '1'
-      PLANET_SIMULATOR_INVENTORY_PROFILE: planet_default
-      LIBGL_ALWAYS_SOFTWARE: '1'
-      GODOT_SILENCE_ROOT_WARNING: '1'
     steps:
       - uses: actions/checkout@v4
         with:
           ref: f1d453fb2af49231c30bdc5cbe415ad199394446
           fetch-depth: 0
           persist-credentials: false
-      - name: Verify exact subject and immutable freeze
+      - name: Verify exact frozen subject and product branch context
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p artifacts/mvp3-r13
+          mkdir -p artifacts/mvp3-r13-control
           test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
           test "$(git rev-parse HEAD^{tree})" = "$EXPECTED_TREE"
-          test -z "$(git status --porcelain --untracked-files=no)"
           git fetch origin '+refs/heads/*:refs/remotes/origin/*' --prune
           test "$(git rev-parse origin/main)" = "$AUDITED_MAIN"
           test "$(git rev-parse origin/$FREEZE_REF)" = "$EXPECTED_HEAD"
-          git merge-base --is-ancestor "$BASE_HEAD" "$EXPECTED_HEAD"
-          git rev-parse HEAD HEAD^{tree} origin/main > artifacts/mvp3-r13/subjects.txt
-          git diff --name-only "$BASE_HEAD" "$EXPECTED_HEAD" > artifacts/mvp3-r13/r13-files.txt
+          git switch -c "$PRODUCT_BRANCH" "$EXPECTED_HEAD"
+          test "$(git branch --show-current)" = "$PRODUCT_BRANCH"
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+          test "$(git rev-parse HEAD^{tree})" = "$EXPECTED_TREE"
+          test -z "$(git status --porcelain --untracked-files=no)"
+          git rev-parse HEAD HEAD^{tree} origin/main > artifacts/mvp3-r13-control/subjects.txt
           python3 -m pip install --disable-pip-version-check -r scripts/harness/requirements.txt
-          sudo -n apt-get update
-          sudo -n env DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends xvfb xauth libgl1-mesa-dri mesa-vulkan-drivers
-      - uses: actions/download-artifact@v4
-        if: matrix.lane != 'control'
-        with:
-          name: p7-repair-engine-34117353691
-          run-id: 34117353691
-          repository: rootfabric/distributed-world-simulator
-          github-token: ${{ github.token }}
-          path: ${{ runner.temp }}/mvp3-engine
-      - name: Execute exact R13 lane
+      - name: Run control gates
         shell: bash
         run: |
           set -euo pipefail
-          OUT=artifacts/mvp3-r13
-          if [ "$LANE" != control ]; then
-            export GODOT_BIN="$RUNNER_TEMP/mvp3-engine/godot"
-            test "$(sha256sum "$GODOT_BIN" | cut -d' ' -f1)" = "$ENGINE_SHA"
-            chmod u+x "$GODOT_BIN"
-            "$GODOT_BIN" --version | tee "$OUT/godot-version.log"
-            xvfb-run -a -s '-screen 0 1600x900x24' "$GODOT_BIN" --headless --path . --editor --import --quit 2>&1 | tee "$OUT/import.log"
-            ! grep -Eqi 'SCRIPT ERROR|Parse Error|Compile Error|Failed to instantiate an autoload' "$OUT/import.log"
-          fi
-          if [ "$LANE" = graphical ]; then
-            export MVP3_ATTESTATION_RESULT="$PWD/$OUT/attestation.json"
-            export MVP3_LEDGER_BUDGET_RESULT="$PWD/$OUT/ledger-budget.json"
-            export MVP3_OWNER_HOOKS_RESULT="$PWD/$OUT/owner-hooks.json"
-            export MVP3_FIXED_INPUT_RESULT="$PWD/$OUT/fixed-input.json"
-            xvfb-run -a "$GODOT_BIN" --headless --path . --script res://tests/runtime/test_v0_mvp3_source_attestation_roundtrip.gd 2>&1 | tee "$OUT/attestation.log"
-            xvfb-run -a "$GODOT_BIN" --headless --path . --script res://tests/runtime/test_v0_mvp3_gateway_ledger_budget.gd 2>&1 | tee "$OUT/ledger-budget.log"
-            xvfb-run -a "$GODOT_BIN" --headless --path . --script res://tests/runtime/test_v0_mvp3_fixed_tick_input_contract.gd 2>&1 | tee "$OUT/fixed-input.log"
-            xvfb-run -a "$GODOT_BIN" --headless --path . --script res://tests/runtime/test_v0_mvp3_live_owner_handoff.gd 2>&1 | tee "$OUT/live-owner.log"
-            xvfb-run -a "$GODOT_BIN" --headless --path . --script res://tests/network/test_v0_sm1_player_carry_and_gateway_pivot.gd 2>&1 | tee "$OUT/sm1-pivot.log"
-            xvfb-run -a python3 tests/integration/test_v0_mvp3_native_process_roundtrip.py --engine "$GODOT_BIN" --output "$OUT/native"
-            xvfb-run -a python3 tests/integration/test_v0_mvp3_graphical_process_roundtrip.py --engine "$GODOT_BIN" --output "$OUT/graphical"
-            xvfb-run -a python3 docs/control/mvp-act0-r1/validate_mvp3_regression.py --engine "$GODOT_BIN" 2>&1 | tee "$OUT/mvp-regression.log"
-          elif [ "$LANE" = world-core ]; then
-            pwsh -NoProfile -File RUN_WORLD_REGRESSION_TESTS.ps1 2>&1 | tee "$OUT/world-core.log"
-          else
-            python3 -m unittest discover -s tests/harness -p 'test_*.py' -v 2>&1 | tee "$OUT/harness.log"
-            pwsh -NoProfile -File CONTROL_DEVELOPMENT.ps1 -Plan 2>&1 | tee "$OUT/plan.log"
-            pwsh -NoProfile -File CONTROL_DEVELOPMENT.ps1 -Drive 2>&1 | tee "$OUT/drive.log"
-            set +e
-            pwsh -NoProfile -File CONTROL_DEVELOPMENT.ps1 -CloseRole > "$OUT/close-role.log" 2>&1; CR=$?
-            pwsh -NoProfile -File CONTROL_DEVELOPMENT.ps1 -CloseMission > "$OUT/close-mission.log" 2>&1; CM=$?
-            set -e
-            test "$CR" = 0 -o "$CR" = 7
-            test "$CM" = 8
-            python3 scripts/control/project_control.py --no-fetch --no-fail-on-red 2>&1 | tee "$OUT/pc0.log"
-            python3 scripts/control/project_control_directional_watch.py --no-fail-on-red 2>&1 | tee "$OUT/directional-pc0.log"
-          fi
+          O=artifacts/mvp3-r13-control
+          python3 -m unittest discover -s tests/harness -p 'test_*.py' -v 2>&1 | tee "$O/harness.log"
+          pwsh -NoProfile -File CONTROL_DEVELOPMENT.ps1 -Plan 2>&1 | tee "$O/plan.log"
+          pwsh -NoProfile -File CONTROL_DEVELOPMENT.ps1 -Drive 2>&1 | tee "$O/drive.log"
+          set +e
+          pwsh -NoProfile -File CONTROL_DEVELOPMENT.ps1 -CloseRole > "$O/close-role.log" 2>&1; CR=$?
+          pwsh -NoProfile -File CONTROL_DEVELOPMENT.ps1 -CloseMission > "$O/close-mission.log" 2>&1; CM=$?
+          set -e
+          echo "$CR" > "$O/close-role.exit"; echo "$CM" > "$O/close-mission.exit"
+          test "$CR" = 0 -o "$CR" = 7
+          test "$CM" = 8
+          python3 scripts/control/project_control.py --no-fetch --no-fail-on-red 2>&1 | tee "$O/pc0.log"
+          python3 scripts/control/project_control_directional_watch.py --no-fail-on-red 2>&1 | tee "$O/directional-pc0.log"
           test -z "$(git status --porcelain --untracked-files=no)"
-      - name: Bind raw evidence manifest
+      - name: Bind evidence
         if: always()
         shell: bash
         run: |
           python3 - <<'PY'
           import hashlib,json,os,pathlib,subprocess
-          out=pathlib.Path('artifacts/mvp3-r13'); out.mkdir(parents=True,exist_ok=True)
-          def git(*a): return subprocess.check_output(['git',*a],text=True).strip()
-          files=[]
-          for root in [out,pathlib.Path('artifacts/mvp2-exact'),pathlib.Path('artifacts/control'),pathlib.Path('artifacts/test-results')]:
-              if not root.exists(): continue
-              for p in sorted(root.rglob('*')):
-                  if p.is_file() and p != out/'manifest.json' and 'user-data' not in p.parts:
-                      files.append({'path':str(p),'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()})
-          manifest={'schema':'distributed_world_simulator.mvp3_r13_exact_manifest.v1','subject_head':git('rev-parse','HEAD'),'subject_tree':git('rev-parse','HEAD^{tree}'),'expected_head':os.environ['EXPECTED_HEAD'],'expected_tree':os.environ['EXPECTED_TREE'],'freeze_ref':os.environ['FREEZE_REF'],'base_head':os.environ['BASE_HEAD'],'canonical_main':git('rev-parse','origin/main'),'carrier_sha':os.environ['GITHUB_SHA'],'run_id':os.environ['GITHUB_RUN_ID'],'run_attempt':os.environ['GITHUB_RUN_ATTEMPT'],'lane':os.environ['LANE'],'runner_os':os.environ['RUNNER_OS'],'manual_input_executed':False,'independent_verdict':False,'mvp3_predicate_verified':False,'files':files}
-          engine=pathlib.Path(os.environ.get('RUNNER_TEMP',''))/'mvp3-engine/godot'
-          manifest['actual_engine_sha256']=hashlib.sha256(engine.read_bytes()).hexdigest() if engine.is_file() else None
-          (out/'manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
+          o=pathlib.Path('artifacts/mvp3-r13-control'); o.mkdir(parents=True,exist_ok=True)
+          def g(*a):
+            p=subprocess.run(['git',*a],capture_output=True,text=True); return {'exit_code':p.returncode,'stdout':p.stdout.strip(),'stderr':p.stderr.strip()}
+          fs=[]
+          for p in sorted(o.rglob('*')):
+            if p.is_file() and p.name!='manifest.json': fs.append({'path':str(p),'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()})
+          m={'schema':'distributed_world_simulator.mvp3_r13_exact_control.v2','subject_head':g('rev-parse','HEAD'),'subject_tree':g('rev-parse','HEAD^{tree}'),'branch':g('branch','--show-current'),'canonical_main':g('rev-parse','origin/main'),'expected_head':os.environ['EXPECTED_HEAD'],'expected_tree':os.environ['EXPECTED_TREE'],'freeze_ref':os.environ['FREEZE_REF'],'carrier_sha':os.environ['GITHUB_SHA'],'run_id':os.environ['GITHUB_RUN_ID'],'manual_input_executed':False,'independent_verdict':False,'mvp3_predicate_verified':False,'files':fs}
+          (o/'manifest.json').write_text(json.dumps(m,indent=2)+'\n')
           PY
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: mvp3-r13-f1d453fb-${{ matrix.lane }}-${{ github.run_id }}-${{ github.run_attempt }}
-          path: |
-            artifacts/mvp3-r13/
-            artifacts/mvp2-exact/
-            artifacts/control/
-            artifacts/test-results/
-            !artifacts/**/user-data/**
+          name: mvp3-r13-f1d453fb-control-recheck-${{ github.run_id }}-${{ github.run_attempt }}
+          path: artifacts/mvp3-r13-control/
           if-no-files-found: error
           retention-days: 90
