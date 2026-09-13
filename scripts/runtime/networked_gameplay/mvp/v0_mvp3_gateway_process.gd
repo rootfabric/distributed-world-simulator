@@ -286,7 +286,10 @@ func setup_control() -> bool:
 	ledger = Ledger.new()
 	admission = Admission.new()
 	closure = Closure.new()
-	if not success(ledger.configure(1024), "P6 ledger"):
+	# Fail-closed ledger sized for the full interactive session envelope
+	# (see Protocol.MAX_INTERACTIVE_LEDGER_OPERATIONS). No eviction: the
+	# retirement policy of the P6 guard is unchanged.
+	if not success(ledger.configure(Protocol.MAX_INTERACTIVE_LEDGER_OPERATIONS), "P6 ledger"):
 		return false
 	for actor in ["a", "b"]:
 		if not success(identity.bind("client-session/mvp3/" + actor, "player/mvp3/" + actor, "entity/mvp3/" + actor), "P6 identity " + actor):

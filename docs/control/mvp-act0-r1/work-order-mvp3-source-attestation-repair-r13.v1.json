@@ -46,6 +46,17 @@
     ],
     "red_green_proof": "test fails with LIVE_PLAYER_SOURCE_CHECKSUM_INVALID on pre-fix producer and passes with the repair"
   },
+  "continuation_defect_r13b": {
+    "found_in": "manual rerun artifacts/mvp3-manual-r13-534f496b-20260913T092003Z",
+    "context": "attestation repair confirmed in manual run (route a->b->a completed, client-a/b json+png present); run then aborted on MVP3_CLIENT_COMMAND_REJECTED:LEDGER_CAPACITY_EXCEEDED",
+    "root_cause": "interactive clients submit one distinct fixed-tick operation per held tick (~120 ops/s for two players); the gateway operation ledger was configured with capacity 1024, which legitimate held-input movement exhausts in ~8.6 s. The P6 ledger is deliberately fail-closed with no eviction, so the capacity bound itself was mis-sized for the interactive session envelope.",
+    "repair": [
+      "v0_mvp3_process_protocol.gd: MAX_INTERACTIVE_LEDGER_OPERATIONS = 16384 derived from the session envelope (2 players x 60 fixed ticks/s x 120 s gateway timeout = 14400) plus headroom",
+      "v0_mvp3_gateway_process.gd: ledger.configure(Protocol.MAX_INTERACTIVE_LEDGER_OPERATIONS); retirement policy unchanged",
+      "tests/runtime/test_v0_mvp3_gateway_ledger_budget.gd: envelope saturation never rejects legitimate operations; capacity enforcement beyond the bound still fails closed; exact replay consumes no slot"
+    ],
+    "forbidden_changes_not_made": ["no eviction/LRU", "no capacity rejection downgrade", "no ledger guard removal"]
+  },
   "seamless_contract_guards": ["connects=1", "reconnects=0", "respawns=0", "identity_changes=0", "instance ids stable"],
   "acceptance": "fresh Windows manual executor run on the frozen repair HEAD with HUMAN_PHYSICAL_KEYBOARD; predicate closure reserved for the Independent Verifier",
   "mvp3_predicate_verified": false,

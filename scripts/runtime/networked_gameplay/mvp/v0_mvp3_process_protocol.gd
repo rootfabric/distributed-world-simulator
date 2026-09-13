@@ -8,6 +8,13 @@ const SCHEMA := "planet_simulator.mvp3_live_process_message.v1"
 const SCENE_PATH := "res://scenes/labs/mvp/v0_mvp3_live_shared_world.tscn"
 const ENV_CONFIG := "DWS_MVP3_LIVE_CONFIG"
 const MAX_CLIENT_COMMANDS := 240
+# Interactive clients submit one distinct fixed-tick operation per held tick
+# per player. The interactive session envelope is bounded by the gateway
+# timeout: 2 players x 60 fixed ticks/s x 120 s = 14400 distinct operations.
+# The operation ledger stays fail-closed with no eviction; this bound only
+# sizes its capacity so a legitimate full-length manual session cannot be
+# rejected by an evidence-budget exhaustion (LEDGER_CAPACITY_EXCEEDED).
+const MAX_INTERACTIVE_LEDGER_OPERATIONS := 16384
 const MAX_RPC_CALLS := 8192
 
 static func read_config() -> Dictionary:
