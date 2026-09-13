@@ -1,0 +1,86 @@
+{
+  "schema": "dws.ecology.a8-progress.v2",
+  "work_order": "EVO-ARCH2-A8-20260913-R1",
+  "source": {
+    "branch": "feature/eco-evo-arch2-a8-snapshot-seam-r1",
+    "head": "9a945c758d72bd1c2efd3732b200d7f7785c2ec8",
+    "tree": "bf1787ad7b0af322d6d37b88bd04195e60aaf1c4",
+    "base_main": "9e10e640ffc53f82195f1fd930ebafbbc85e482f",
+    "base_tree": "27c62c3774117c5163d0d5dacf789b1310638a92",
+    "changed_files": 10,
+    "additions_only": true,
+    "modifications": 0,
+    "deletions": 0,
+    "main_epoch_drift_at_freeze": false
+  },
+  "repair_r1": {
+    "historical_finding": 3999708328,
+    "repair_map_commit": "cbdef6040637da42e576226177c5fad5bfb7ed8a",
+    "external_anchor_store_commit": "4062bf862094cb6b3a5819d4517387a1b66846ce",
+    "storage_controls_commit": "4cc30fa6f93d61bfec2ef39c022d082a86abc8dd",
+    "godot_store_integration_commit": "b06a9fab6e7cc8a063c95c1d5d5ec7e716b1d400",
+    "verifier_commit": "8fe7d3668b6770a98945295b30e607e5a61cb7a7",
+    "zero_previous_fork_rollback_fail_closed": true
+  },
+  "hosted_preflight": {
+    "run": 34759532239,
+    "job": 103729766784,
+    "conclusion": "SUCCESS",
+    "tests": 31,
+    "skips": 0,
+    "artifact_id": 10318257789,
+    "artifact_digest": "sha256:373161843c21bbc9759673759a40729cd602a0fc515dc880df9a20a4a6e4415e",
+    "downloaded_zip_sha256": "373161843c21bbc9759673759a40729cd602a0fc515dc880df9a20a4a6e4415e",
+    "store_log_sha256": "67de333216c191973268691d856c7e920f357f8782aad12ec48ca8c6d9f3c721",
+    "diff_sha256": "923a846a7eb4e44de93e8ea7cdefe27f25ff16e88d064a80235203194f35c74c",
+    "summary_sha256": "849250f6978d74f86384a38810942d7f6eb7063b531afe61dc2655d2ac5a7c25"
+  },
+  "project_control": {
+    "run": 34759486136,
+    "conclusion": "SUCCESS",
+    "standard_health": "YELLOW",
+    "directional_health": "YELLOW",
+    "artifact_id": 10318547138,
+    "artifact_digest": "sha256:30325ce76314ce93df0183f7dcbba2c4a8e9ee8e1159e1b477b74cfd12957e17",
+    "global_green_inferred": false
+  },
+  "fresh_review": {
+    "request_comment": 5653537755,
+    "summary_comment": 5653454375,
+    "completed_at_utc": "2026-09-13T13:25:57Z",
+    "subject": "9a945c7",
+    "new_findings": 0,
+    "codex_pr_reaction": "+1",
+    "verdict": "PASS_NO_FINDINGS",
+    "historical_p1_thread": "OUTDATED_AFTER_REPAIR_R1"
+  },
+  "post_build_critique": {
+    "verdict": "NO_MATERIAL_REFACTOR_REQUIRED",
+    "path": "validation/ecology/evo_arch2_a8/POST_BUILD_CRITIQUE_9A945C75_R1.json"
+  },
+  "exact_linux": {
+    "run": 34759532239,
+    "job": 103729793858,
+    "status_at_checkpoint": "QUEUED_SHARED_SELF_HOSTED_RUNNER",
+    "full_pass": false
+  },
+  "historical_r1_exact": {
+    "run": 34758790276,
+    "linux_job": 103727781349,
+    "status": "CANCELLED_AFTER_SOURCE_REPAIR",
+    "usable_for_acceptance": false
+  },
+  "last_completed_durable_predicate": "FRESH_REVIEW_PASS_AND_CURRENT_PROJECT_CONTROL_NON_RED_AND_REPAIR_R1_PREFLIGHT_31_OF_31",
+  "next_action": "COMPLETE_R2_FULL_EXACT_LINUX_ON_9A945C75; INSPECT_AND_HASH_ARTIFACT; FINALIZE_PREMERGE_EVIDENCE",
+  "recovery_route": "REFETCH_SOURCE_REF_PR630_RUN34759532239_BY_DURABLE_ID_AND_VERIFY_MAIN_STILL_9E10E640_BEFORE_REUSING_EVIDENCE",
+  "claims": {
+    "a8_implemented_candidate": true,
+    "a8_verified": false,
+    "a8_accepted": false,
+    "merge_ready": false,
+    "main_merge": false,
+    "a9_started": false,
+    "a10_started": false,
+    "production_promotion": false
+  }
+}
