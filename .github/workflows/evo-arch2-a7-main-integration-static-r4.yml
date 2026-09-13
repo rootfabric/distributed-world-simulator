@@ -1,0 +1,109 @@
+name: ECO ARCH2 A7 Main Integration Static Preflight R4
+on:
+  push:
+    branches: [validation/eco-arch2-a7-main-integration-r1]
+    paths: [.github/workflows/evo-arch2-a7-main-integration-static-r4.yml]
+permissions:
+  contents: read
+env:
+  SOURCE_HEAD: 79825e373a0ef694da065d60688baddc945b00be
+  SOURCE_TREE: da8596e91c6a3469eb99032a6cc336ff5b04f92e
+  BASE_MAIN: 7dfc68ab5a1e90254a1b7039807f275b5da04eef
+  ACCEPTED_HEAD: 8eccf6304078bec3a3ccaa5860c5aab6ee311209
+  ACCEPTED_TREE: 24e876b7377cb3e1e521f08ff9766331fe4e895a
+  ACCEPTED_REF: refs/remotes/origin/acceptance/eco-evo-arch2-a7-r1
+jobs:
+  static-preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout frozen integration candidate
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ env.SOURCE_HEAD }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Fetch and seal durable accepted A7 ref
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin refs/heads/acceptance/eco-evo-arch2-a7-r1:refs/remotes/origin/acceptance/eco-evo-arch2-a7-r1
+          test "$(git rev-parse "$ACCEPTED_REF")" = "$ACCEPTED_HEAD"
+          test "$(git rev-parse "$ACCEPTED_REF^{tree}")" = "$ACCEPTED_TREE"
+          git cat-file -e "$ACCEPTED_HEAD^{commit}"
+      - name: Verify exact addition-only transfer against accepted objects
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$SOURCE_HEAD"
+          test "$(git rev-parse HEAD^{tree})" = "$SOURCE_TREE"
+          git merge-base --is-ancestor "$BASE_MAIN" "$SOURCE_HEAD"
+          test -z "$(git status --porcelain --untracked-files=no)"
+          python3 - <<'PY'
+          import json, os, subprocess
+          base=os.environ['BASE_MAIN']; accepted=os.environ['ACCEPTED_HEAD']; accepted_tree=os.environ['ACCEPTED_TREE']; accepted_ref=os.environ['ACCEPTED_REF']
+          manifest=json.load(open('validation/ecology/evo_arch2_a7_main_integration/expected-transfer.v1.json'))
+          def out(*args): return subprocess.check_output(['git',*args],text=True).strip()
+          def rc(*args): return subprocess.run(['git',*args],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL).returncode
+          if out('rev-parse',accepted_ref)!=accepted or out('rev-parse',accepted_ref+'^{tree}')!=accepted_tree: raise SystemExit('ACCEPTED_REF_IDENTITY')
+          if manifest['accepted_ref']!=accepted_ref or manifest['accepted_a7']!=accepted or manifest['accepted_a7_tree']!=accepted_tree: raise SystemExit('MANIFEST_ACCEPTED_IDENTITY')
+          records=out('diff','--name-status',base,'HEAD').splitlines()
+          if not records or any(not r.startswith('A\t') for r in records): raise SystemExit('NOT_ADDITION_ONLY')
+          forbidden=('scripts/ecology/production/','scripts/network/','scripts/simulation/','config/control/','config/architecture/')
+          for record in records:
+              path=record.split('\t',1)[1]
+              if path=='project.godot' or path.startswith(forbidden) or path.startswith('.github/'): raise SystemExit('MAIN_OWNERSHIP_PATH:'+path)
+          parents=out('rev-list','--parents','-n','1','HEAD').split()[1:]
+          if accepted in parents: raise SystemExit('RESEARCH_PARENT_IMPORTED')
+          direct={}
+          for path,pin in {**manifest['subtrees'],**manifest['blobs']}.items():
+              head_obj=out('rev-parse','HEAD:'+path)
+              accepted_obj=out('rev-parse',accepted+':'+path)
+              if head_obj!=accepted_obj: raise SystemExit('DIRECT_ACCEPTED_OBJECT_MISMATCH:'+path)
+              if head_obj!=pin: raise SystemExit('REDUNDANT_PIN_MISMATCH:'+path)
+              if rc('cat-file','-e',base+':'+path)==0: raise SystemExit('TRANSFER_PATH_EXISTED_ON_MAIN:'+path)
+              direct[path]=head_obj
+          print('DIRECT_ACCEPTED_OBJECTS_PASS',len(direct),'ADDED_PATHS',len(records))
+          PY
+      - name: Resolve every non-generated transferred res path
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import pathlib,re
+          root=pathlib.Path('.')
+          external=[
+            root/'scripts/research/ecology/plant_development_traits_extension_evo7_v1.gd',
+            root/'scripts/labs/ecology/evo_morphology_lab_v2_model.gd',
+            root/'scripts/labs/ecology/evo_morphology_lab_v2_renderer.gd']
+          files=list((root/'scripts/research/ecology/v2').glob('*.gd'))
+          files+=list((root/'scripts/labs/ecology').glob('arch2_a7_*.gd'))
+          files+=list((root/'tests/research/ecology/v2').glob('*.gd'))
+          files+=list((root/'validation/ecology/evo_arch2_a5').glob('*.gd'))
+          files+=external+[root/'scenes/labs/ecology/arch2_a7_observatory.tscn']
+          patterns=[re.compile(r'(?:preload|load)\(\s*["\']res://([^"\']+)["\']\s*\)'),re.compile(r'path=["\']res://([^"\']+)["\']')]
+          refs=0;generated=[];missing=[]
+          for source in files:
+              text=source.read_text(encoding='utf-8-sig')
+              for pattern in patterns:
+                  for match in pattern.finditer(text):
+                      refs+=1; target=match.group(1)
+                      if (root/target).exists(): continue
+                      if target.startswith('artifacts/a7/'):
+                          generated.append((source.as_posix(),target));continue
+                      missing.append((source.as_posix(),target))
+          for source,target in generated: print('GENERATED_OUTPUT',source,'->',target)
+          for source,target in missing: print('MISSING',source,'->',target)
+          if missing: raise SystemExit('TRANSITIVE_RES_PATH_MISSING')
+          print('RES_PATH_CLOSURE_PASS refs=',refs,'sources=',len(files),'generated=',len(generated))
+          PY
+      - name: Compile integration verifier
+        run: python3 -m py_compile validation/ecology/evo_arch2_a7_main_integration/verify.py
+      - name: Run complete current-main Harness regression
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s tests/harness -p 'test_*.py' -v 2>&1 | tee /tmp/a7-main-harness.log
+          ! grep -q 'FAILED (' /tmp/a7-main-harness.log
+          ! grep -q '^ERROR' /tmp/a7-main-harness.log
+          grep -q '^OK$' /tmp/a7-main-harness.log
