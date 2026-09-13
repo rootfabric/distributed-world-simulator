@@ -1,6 +1,7 @@
 {
   "schema": "dws.ecology.a7-main-integration-transfer.v1",
   "base_main": "7dfc68ab5a1e90254a1b7039807f275b5da04eef",
+  "accepted_ref": "refs/remotes/origin/acceptance/eco-evo-arch2-a7-r1",
   "accepted_a7": "8eccf6304078bec3a3ccaa5860c5aab6ee311209",
   "accepted_a7_tree": "24e876b7377cb3e1e521f08ff9766331fe4e895a",
   "subtrees": {
@@ -35,5 +36,7 @@
     "scripts/labs/ecology/evo_morphology_lab_v2_model.gd@a303fdf97003f985edeadd5bc340a84af77fc330",
     "scripts/labs/ecology/evo_morphology_lab_v2_renderer.gd@12579d1d668d3c4b4c86b7814b71155ced033d47"
   ],
+  "repair_r3_review_finding": 3998382558,
+  "authority_policy": "Canonical transfer identity is HEAD:path == fetched accepted_ref:path at exact accepted HEAD/TREE. These SHA values are redundant audit pins and must also match.",
   "policy": "All accepted subtrees/blobs remain byte-exact and must have been absent on base main. Every non-generated local res:// reference must resolve before exact execution. Generated artifact paths are allowed to be absent before the tests that create them."
 }
