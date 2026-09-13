@@ -25,3 +25,5 @@
 *.cache binary
 *.zip binary
 *.7z binary
+
+evidence/mvp3-r13b-manual-f1d453fb/** -text
