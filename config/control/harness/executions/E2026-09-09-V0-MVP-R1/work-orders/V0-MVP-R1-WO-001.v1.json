@@ -8,7 +8,7 @@
   "work_order_type": "INTEGRATION",
   "base_sha": "3d7672cba293d8e7bd72427b803f73fc8fcee5da",
   "branch": "feature/v0-mvp-playable-seamless-planet-r1",
-  "scope": "MVP1–MVP8: интеграция уже принятых SM1/P7/Item/Construction/persistence в одну запускаемую двухклиентскую сцену. Никаких новых владельцев канонического состояния. По явно одобренному HA-V0-MVP3-LIVE-PLAYER-HOOKS-R1 дополнительно разрешены четыре указанных M3 owner-файла только для live-player handoff hooks; точный bounded repair V0-MVP3-R8-LIVE-PLAYER-OWNER-HOOKS.",
+  "scope": "MVP1–MVP8: интеграция уже принятых SM1/P7/Item/Construction/persistence в одну запускаемую двухклиентскую сцену. Никаких новых владельцев канонического состояния. По явно одобренному HA-V0-MVP3-LIVE-PLAYER-HOOKS-R1 дополнительно разрешены четыре указанных M3 owner-файла только для live-player handoff hooks; точный bounded repair V0-MVP3-R8-LIVE-PLAYER-OWNER-HOOKS. Для порученного MVP4 отдельно разрешены только именованный read-only validation workflow и именованный MVP4 launcher; это не расширение foundation/runtime ownership.",
   "allowed_paths": [
     "scripts/runtime/networked_gameplay/mvp/**",
     "scripts/app/**",
@@ -24,7 +24,9 @@
     "scripts/runtime/networked_gameplay/networked_gameplay_service_p2.gd",
     "scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime_p2.gd",
     "tests/runtime/test_v0_mvp3_*",
-    "tests/integration/test_v0_mvp3_*"
+    "tests/integration/test_v0_mvp3_*",
+    ".github/workflows/mvp4-shared-dig-validation.yml",
+    "RUN_V0_MVP4_SHARED_DIG.ps1"
   ],
   "forbidden_paths": [
     "config/architecture/**",
@@ -86,7 +88,7 @@
   "evidence_map_required": true,
   "issued_at_utc": "2026-09-09T10:18:03Z",
   "human_approval_required_for": ["RUNTIME_FEATURE_MERGE", "MVP_CHECKPOINT_ACCEPTANCE"],
-  "notes": "ACT0 records dispatch authority, not a running agent. No product predicate is complete at activation. User explicitly approved HA-V0-MVP3-LIVE-PLAYER-HOOKS-R1 with «разрешаю, реализуй»; scope amendment is bounded by docs/control/mvp-act0-r1/work-order-mvp3-live-hooks-r8.v1.json and does not authorize main merge or acceptance.",
+  "notes": "ACT0 records dispatch authority, not a running agent. No product predicate is complete at activation. User explicitly approved HA-V0-MVP3-LIVE-PLAYER-HOOKS-R1 with «разрешаю, реализуй»; scope amendment is bounded by docs/control/mvp-act0-r1/work-order-mvp3-live-hooks-r8.v1.json and does not authorize main merge or acceptance. MVP4 execution requested explicitly with «реализуй MVP4» and «продолжи работу над MVP4». Coordinator validation-scope correction MVP4_VALIDATION_SCOPE_R1_RU.md adds exactly two named integration/validation paths after fresh review finding 4000014122; old out-of-fence executions remain historical diagnostics, not retroactively independent acceptance.",
   "design_brief": {
     "problem_statement": "Принятые компоненты ещё не доказаны как единый пользовательский сценарий.",
     "current_behavior": "SM1 и P7 приняты; MVP composition не выполнен.",
