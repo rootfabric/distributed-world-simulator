@@ -1,0 +1,156 @@
+name: MVP3 Frozen 6a750d85 Closure Evidence
+on:
+  push:
+    branches: [control/v0-mvp3-closure-6a750d85-r1]
+    paths: [.github/workflows/mvp3-closure-6a750d85-validation.yml]
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: mvp3-closure-6a750d85-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  exact-evidence:
+    if: github.repository == 'rootfabric/distributed-world-simulator' && github.ref == 'refs/heads/control/v0-mvp3-closure-6a750d85-r1'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        lane: [graphical, world-core, control]
+    timeout-minutes: 35
+    env:
+      EXPECTED_HEAD: 6a750d859d5858ff1f2d76bbf2ef7664a893ee86
+      EXPECTED_TREE: fb948fae078a1a372009f5f1ea00ad5440492610
+      AUDITED_MAIN: 7dfc68ab5a1e90254a1b7039807f275b5da04eef
+      ENGINE_SHA: bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7
+      LANE: ${{ matrix.lane }}
+      PYTHONUTF8: '1'
+      PYTHONPATH: scripts
+      BREAKPOINT_RUNTIME_DISABLED: '1'
+      PLANET_SIMULATOR_INVENTORY_PROFILE: planet_default
+      LIBGL_ALWAYS_SOFTWARE: '1'
+      GODOT_SILENCE_ROOT_WARNING: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 6a750d859d5858ff1f2d76bbf2ef7664a893ee86
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Verify frozen subject and record preflight
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/mvp3-closure
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+          test "$(git rev-parse HEAD^{tree})" = "$EXPECTED_TREE"
+          test -z "$(git status --porcelain --untracked-files=no)"
+          git fetch origin '+refs/heads/*:refs/remotes/origin/*' --prune
+          test "$(git rev-parse origin/main)" = "$AUDITED_MAIN"
+          test "$(git rev-parse origin/freeze/v0-mvp3-6a750d85-r1)" = "$EXPECTED_HEAD"
+          git switch -c feature/v0-mvp-playable-seamless-planet-r1 "$EXPECTED_HEAD"
+          git status --porcelain --untracked-files=no > artifacts/mvp3-closure/tracked-before.txt
+          git rev-parse HEAD HEAD^{tree} origin/main > artifacts/mvp3-closure/subjects.txt
+          python3 -m pip install --disable-pip-version-check -r scripts/harness/requirements.txt
+          sudo -n apt-get update
+          sudo -n env DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends xvfb xauth libgl1-mesa-dri mesa-vulkan-drivers
+      - uses: actions/download-artifact@v4
+        if: matrix.lane != 'control'
+        with:
+          name: p7-repair-engine-34117353691
+          run-id: 34117353691
+          repository: rootfabric/distributed-world-simulator
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/mvp3-engine
+      - name: Execute unchanged frozen tests and preserve every result
+        shell: bash
+        run: |
+          set -euo pipefail
+          export GODOT_BIN="$RUNNER_TEMP/mvp3-engine/godot"
+          if [ "$LANE" != control ]; then
+            test "$(sha256sum "$GODOT_BIN" | cut -d' ' -f1)" = "$ENGINE_SHA"
+            chmod u+x "$GODOT_BIN"
+          fi
+          xvfb-run -a -s '-screen 0 1600x900x24' python3 - <<'PY'
+          import hashlib,json,os,pathlib,re,signal,subprocess,time
+          out=pathlib.Path('artifacts/mvp3-closure'); out.mkdir(parents=True,exist_ok=True)
+          engine=os.environ['GODOT_BIN']; lane=os.environ['LANE']; rows=[]
+          def execute(name,argv,limit=180,expected=(0,),scan=False):
+              row={'name':name,'argv':argv,'timeout_seconds':limit,'expected_exit_codes':list(expected),'started_unix':time.time()}
+              log=out/(name+'.log'); process=None
+              with log.open('wb') as stream:
+                  try:
+                      process=subprocess.Popen(argv,stdout=stream,stderr=subprocess.STDOUT,start_new_session=True)
+                      try: code=process.wait(timeout=limit)
+                      except subprocess.TimeoutExpired:
+                          row['timed_out']=True
+                          os.killpg(process.pid,signal.SIGTERM)
+                          try: process.wait(timeout=10)
+                          except subprocess.TimeoutExpired:
+                              os.killpg(process.pid,signal.SIGKILL); process.wait()
+                          code=124
+                  except Exception as exc:
+                      stream.write((type(exc).__name__+':'+str(exc)).encode()); code=125
+              text=log.read_text(errors='replace')
+              fatal=re.findall(r'(?im)^\s*(?:SCRIPT ERROR|ERROR):|Parse Error|Compile Error|Failed to instantiate an autoload',text) if scan else []
+              row.update(exit_code=code,elapsed_seconds=round(time.time()-row['started_unix'],3),fatal_matches=fatal,passed=code in expected and not fatal and not row.get('timed_out',False),log_sha256=hashlib.sha256(log.read_bytes()).hexdigest())
+              rows.append(row); (out/'commands.json').write_text(json.dumps(rows,indent=2)+'\n')
+              print(name,json.dumps(row),text[-2500:],flush=True)
+              return row['passed']
+          if lane!='control':
+              execute('engine-version',[engine,'--version'],30)
+              imported=execute('import',[engine,'--headless','--path','.','--editor','--import','--quit'],180,scan=True)
+              if not imported: raise SystemExit(1)
+          if lane=='graphical':
+              os.environ['MVP3_OWNER_HOOKS_RESULT']=str((out/'owner-hooks.json').resolve())
+              execute('live-owner-hooks',[engine,'--headless','--path','.','--script','res://tests/runtime/test_v0_mvp3_live_owner_handoff.gd'],90,scan=True)
+              execute('accepted-sm1',[engine,'--headless','--path','.','--script','res://tests/network/test_v0_sm1_player_carry_and_gateway_pivot.gd'],90,scan=True)
+              execute('mvp2-focused',[engine,'--headless','--path','.','--script','res://tests/runtime/test_v0_mvp_two_client_shared_world.gd'],90,scan=True)
+              execute('native-process',['python3','tests/integration/test_v0_mvp3_native_process_roundtrip.py','--engine',engine,'--output',str(out/'native')],240,scan=True)
+              execute('graphical-process',['python3','tests/integration/test_v0_mvp3_graphical_process_roundtrip.py','--engine',engine,'--output',str(out/'graphical')],240,scan=True)
+              execute('mvp1-mvp2-regression',['python3','docs/control/mvp-act0-r1/validate_mvp3_regression.py','--engine',engine],600)
+          elif lane=='world-core':
+              execute('world-core',['pwsh','-NoProfile','-File','RUN_WORLD_REGRESSION_TESTS.ps1'],1800)
+          else:
+              execute('harness',['python3','-m','unittest','discover','-s','tests/harness','-p','test_*.py','-v'],600)
+              for flag,expected in [('Plan',(0,)),('Drive',(0,)),('CloseRole',(0,7)),('CloseMission',(8,))]:
+                  execute('harness-'+flag.lower(),['pwsh','-NoProfile','-File','CONTROL_DEVELOPMENT.ps1','-'+flag],120,expected)
+              execute('pc0',['python3','scripts/control/project_control.py','--no-fetch','--no-fail-on-red'],180)
+              execute('directional-pc0',['python3','scripts/control/project_control_directional_watch.py','--no-fail-on-red'],180)
+          clean=not subprocess.check_output(['git','status','--porcelain','--untracked-files=no'],text=True).strip()
+          summary={'subject_head':os.environ['EXPECTED_HEAD'],'subject_tree':os.environ['EXPECTED_TREE'],'lane':lane,'all_commands_passed':all(r['passed'] for r in rows),'tracked_clean_after':clean,'independent_verdict':False,'manual_input_executed':False,'mvp3_predicate_verified':False,'note':'PC0 no-fail-on-red exits are observations; inspect report findings. Automatic graphical run is not a manual input run or independent verdict.'}
+          (out/'summary.json').write_text(json.dumps(summary,indent=2)+'\n')
+          raise SystemExit(0 if summary['all_commands_passed'] and clean else 1)
+          PY
+      - name: Bind raw files to exact subject and run provenance
+        if: always()
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib,subprocess
+          out=pathlib.Path('artifacts/mvp3-closure'); out.mkdir(parents=True,exist_ok=True)
+          def git(*args):
+              p=subprocess.run(['git',*args],capture_output=True,text=True)
+              return {'exit_code':p.returncode,'stdout':p.stdout.strip(),'stderr':p.stderr.strip()}
+          manifest={'schema':'distributed_world_simulator.mvp3_closure_manifest.v1','subject_head':git('rev-parse','HEAD'),'subject_tree':git('rev-parse','HEAD^{tree}'),'canonical_main':git('rev-parse','origin/main'),'expected_head':os.environ['EXPECTED_HEAD'],'expected_tree':os.environ['EXPECTED_TREE'],'carrier_sha':os.environ['GITHUB_SHA'],'run_id':os.environ['GITHUB_RUN_ID'],'run_attempt':os.environ['GITHUB_RUN_ATTEMPT'],'lane':os.environ['LANE'],'runner_os':os.environ['RUNNER_OS'],'tracked_after':git('status','--porcelain','--untracked-files=no'),'independent_verdict':False,'manual_input_executed':False,'mvp3_predicate_verified':False,'files':[]}
+          engine=pathlib.Path(os.environ['RUNNER_TEMP'])/'mvp3-engine/godot'
+          manifest['actual_engine_sha256']=hashlib.sha256(engine.read_bytes()).hexdigest() if engine.is_file() else None
+          for prefix in [out,pathlib.Path('artifacts/mvp2-exact'),pathlib.Path('artifacts/control'),pathlib.Path('artifacts/test-results')]:
+              if not prefix.exists(): continue
+              for p in sorted(prefix.rglob('*')):
+                  if not p.is_file() or p==out/'manifest.json' or any(x.startswith('world-profile-') or x in ('user-data','.godot') for x in p.parts): continue
+                  manifest['files'].append({'path':str(p),'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()})
+          (out/'manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mvp3-frozen-6a750d85-${{ matrix.lane }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            artifacts/mvp3-closure/
+            artifacts/mvp2-exact/
+            artifacts/control/
+            artifacts/test-results/
+            !artifacts/**/user-data/**
+            !artifacts/**/world-profile-*/**
+          if-no-files-found: error
+          retention-days: 90
