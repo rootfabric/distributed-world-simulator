@@ -1,0 +1,28 @@
+{
+  "schema": "dws.ecology.a8-fresh-review-evidence.v1",
+  "pull_request": 630,
+  "subject_head": "9a945c758d72bd1c2efd3732b200d7f7785c2ec8",
+  "subject_tree": "bf1787ad7b0af322d6d37b88bd04195e60aaf1c4",
+  "base_main": "9e10e640ffc53f82195f1fd930ebafbbc85e482f",
+  "request_comment": 5653537755,
+  "summary_comment": 5653454375,
+  "summary_status": "COMPLETED",
+  "summary_commit": "9a945c7",
+  "completed_at_utc": "2026-09-13T13:25:57Z",
+  "new_review_threads": 0,
+  "historical_p1": {
+    "comment": 3999708328,
+    "status": "OUTDATED_AFTER_REPAIR_R1",
+    "implementation_reply": 3999728494
+  },
+  "codex_pr_reaction": {
+    "id": 503365964,
+    "content": "+1",
+    "created_at_utc": "2026-09-13T13:26:00Z"
+  },
+  "verdict": "PASS_NO_FINDINGS",
+  "implementer_self_accept": false,
+  "full_exact_linux_still_required": true,
+  "a8_accepted": false,
+  "main_merge": false
+}
