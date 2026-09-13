@@ -1,7 +1,7 @@
 extends RefCounted
 
-# Execution readiness AND the existing SM1 decision. This object never chooses
-# an owner, increments an authority epoch, or stores canonical player state.
+# Local execution readiness, AND the decision of the EXISTING SM1 owner.
+# This adapter never chooses an owner or advances an authority epoch.
 var _coordinator = null
 var _local_authority := ""
 var _player := ""
@@ -36,7 +36,7 @@ func decision_snapshot() -> Dictionary:
 	var state: Dictionary = _coordinator.snapshot()
 	var player: Dictionary = state.get("player_snapshot", {})
 	var epoch_value = state.get("authority_epoch")
-	if typeof(epoch_value) not in [TYPE_INT, TYPE_FLOAT] or not is_finite(float(epoch_value)) or float(epoch_value) != floorf(float(epoch_value)) or int(epoch_value) < 1:
+	if typeof(epoch_value) not in [TYPE_INT, TYPE_FLOAT] or not is_finite(float(epoch_value)) or float(epoch_value) != floorf(float(epoch_value)) or float(epoch_value) < 1.0 or float(epoch_value) > 9007199254740991.0:
 		return {}
 	var epoch := int(epoch_value)
 	if epoch < _highest_observed_epoch:
@@ -50,6 +50,19 @@ func decision_snapshot() -> Dictionary:
 func is_locally_ready() -> bool:
 	var state := decision_snapshot()
 	return not state.is_empty() and state.get("state") == "ACTIVE" and state.get("active_authority_id") == _local_authority and int(state.get("authority_epoch", 0)) == _installed_epoch and _installed_epoch > 0
+
+
+func is_locally_presentable() -> bool:
+	# A frozen source row remains a read-only presentation until explicit local
+	# retirement. The Service advances its revision at retirement/installation,
+	# not merely because an external coordinator label changed.
+	var state := decision_snapshot()
+	if state.is_empty() or _installed_epoch < 1:
+		return false
+	if state.get("active_authority_id") == _local_authority and int(state.get("authority_epoch", 0)) == _installed_epoch:
+		return state.get("state") in ["ACTIVE", "SOURCE_FROZEN", "TARGET_WARM_VALIDATED"]
+	var transfer: Dictionary = state.get("transfer", {})
+	return state.get("state") == "OWNERSHIP_COMMITTED" and transfer.get("source_authority_id") == _local_authority and int(transfer.get("source_epoch", 0)) == _installed_epoch
 
 
 func authorize_record_write(record: Dictionary) -> Dictionary:
@@ -118,6 +131,16 @@ func mark_retired(transfer_id: String, token: String) -> Dictionary:
 
 func get_report() -> Dictionary:
 	return {"canonical_state_owned": false, "decision_owner": "EXISTING_SM1_COORDINATOR", "local_authority_id": _local_authority, "logical_player_id": _player, "transport_session_id": _session, "ownership_epoch": _ownership_epoch, "installed_epoch": _installed_epoch, "installed_transfer": _installed_transfer, "locally_ready": is_locally_ready(), "decision": decision_snapshot()}
+
+
+static func normalize_live_record(record: Dictionary) -> Dictionary:
+	# Call only AFTER strict integer/finite/identity validation. JSON transports
+	# represent numbers as floats; native canonical counters remain integers.
+	var normalized := record.duplicate(true)
+	for field in ["ownership_epoch", "last_input_sequence", "state_revision", "joined_tick", "left_tick"]:
+		if normalized.has(field):
+			normalized[field] = int(normalized[field])
+	return normalized
 
 
 static func _success(details: Dictionary = {}) -> Dictionary:

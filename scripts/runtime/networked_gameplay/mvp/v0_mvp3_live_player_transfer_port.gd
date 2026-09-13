@@ -1,8 +1,7 @@
 extends RefCounted
 
-# Public port of the existing enclosing M3 Service. Canonical writes are made
-# only through the native PlayerRegistry/PlayerOwnershipService/Service hooks.
-# Prepared and staged packets below are immutable derived transfer receipts.
+# Existing M3 Service's live orchestration port. Only the native registry,
+# ownership and Service hooks write canonical data; SM1 remains decision owner.
 const Utils = preload("res://scripts/network/contracts/network_contract_utils.gd")
 const Gate = preload("res://scripts/runtime/networked_gameplay/mvp/v0_mvp3_live_player_gate.gd")
 const Carry = preload("res://scripts/runtime/networked_gameplay/sm1/sm1_player_carrying_domain.gd")
@@ -37,9 +36,8 @@ func configure(owner, registry, ownership, items, authority: String, backend_epo
 	return _success()
 
 
-# Peers are trusted bootstrap capabilities, never names/objects supplied in a
-# client command. A remote adapter must authenticate these server-only ports.
 func register_peer(authority: String, peer) -> Dictionary:
+	# Trusted bootstrap capability, NEVER a client-supplied endpoint or object.
 	if peer == null or not peer.has_method("get_prepared_export") or not peer.has_method("get_retirement_receipt") or authority == _authority:
 		return _failure("LIVE_TRANSFER_PEER_INVALID")
 	if _peers.has(authority):
@@ -122,7 +120,10 @@ func prepare_export(logical_id: String, transfer_id: String, carrying_manifest: 
 	var manifest_check := _validate_carry_manifest(logical_id, player, transfer, carrying_manifest, replay)
 	if not bool(manifest_check.get("success", false)):
 		return manifest_check
-	var packet := Utils.finalize_json_checksum({"schema": SCHEMA, "transfer_id": transfer_id, "logical_player_id": logical_id, "source_authority_id": _authority, "target_authority_id": transfer["target_authority_id"], "source_epoch": transfer["source_epoch"], "target_epoch": transfer["target_epoch"], "backend_authority_epoch": _backend_epoch, "player": player, "ownership": binding, "replay": replay, "carrying_manifest": carrying_manifest.duplicate(true), "item_payload_policy": "MVP3_EMPTY_CARRY_ONLY", "checksum": ""})
+	# Hash canonical JSON without a JSON parse/serialize round trip: native
+	# actor counter types must not be changed while preparing a frozen packet.
+	var packet := {"schema": SCHEMA, "transfer_id": transfer_id, "logical_player_id": logical_id, "source_authority_id": _authority, "target_authority_id": transfer["target_authority_id"], "source_epoch": transfer["source_epoch"], "target_epoch": transfer["target_epoch"], "backend_authority_epoch": _backend_epoch, "player": player, "ownership": binding, "replay": replay, "carrying_manifest": carrying_manifest.duplicate(true), "item_payload_policy": "MVP3_EMPTY_CARRY_ONLY"}
+	packet["checksum"] = Utils.payload_hash(packet)
 	if _prepared.has(logical_id) and _prepared[logical_id].get("transfer_id") == transfer_id:
 		if _prepared[logical_id].get("checksum") != packet["checksum"]:
 			return _failure("LIVE_PLAYER_FROZEN_EXPORT_CHANGED")
@@ -153,8 +154,8 @@ func stage_export(logical_id: String, packet: Dictionary) -> Dictionary:
 	if not _peers.has(source) or _peers[source].get_ref() == null:
 		return _failure("LIVE_TRANSFER_TRUSTED_SOURCE_REQUIRED")
 	var attested: Dictionary = _peers[source].get_ref().get_prepared_export(logical_id, transfer_id)
-	# A caller's recomputed checksum is insufficient: compare the immutable
-	# source-owner receipt obtained through the already bound server capability.
+	# A recomputed caller checksum is insufficient. This compares with the
+	# frozen native-source receipt through a pre-bound trusted server port.
 	if attested.is_empty() or packet.get("checksum") != _checksum(packet) or Utils.payload_hash(packet) != Utils.payload_hash(attested):
 		return _failure("LIVE_PLAYER_SOURCE_ATTESTATION_MISMATCH")
 	for field in ["player", "ownership", "replay", "carrying_manifest"]:
@@ -166,9 +167,16 @@ func stage_export(logical_id: String, packet: Dictionary) -> Dictionary:
 		var identity: Dictionary = gate.validate_record_identity(row)
 		if not bool(identity.get("success", false)):
 			return identity
-	var replay_check: Dictionary = _owner_ref.get_ref().validate_live_player_replay(logical_id, packet["replay"])
-	if not bool(replay_check.get("success", false)):
-		return replay_check
+	var validations: Array[Dictionary] = [_registry.validate_live_player_record(player), _ownership.validate_live_binding_record(binding), _owner_ref.get_ref().validate_live_player_replay(logical_id, packet["replay"])]
+	for validation in validations:
+		if not bool(validation.get("success", false)):
+			return validation
+	if _staged.has(logical_id) and _staged[logical_id]["packet"].get("checksum") != packet["checksum"]:
+		return _failure("LIVE_PLAYER_STAGE_CONFLICT")
+	# Incoming JSON numbers are normalized ONLY after validation and source
+	# attestation. This preserves canonical integer counters across transport.
+	player = Gate.normalize_live_record(player)
+	binding = Gate.normalize_live_record(binding)
 	var registry_check: Dictionary = _registry.stage_live_player(logical_id, gate, transfer_id, player)
 	if not bool(registry_check.get("success", false)):
 		return registry_check
@@ -176,8 +184,6 @@ func stage_export(logical_id: String, packet: Dictionary) -> Dictionary:
 	if not bool(ownership_check.get("success", false)):
 		_registry.discard_live_player_stage(logical_id, gate, transfer_id)
 		return ownership_check
-	if _staged.has(logical_id) and _staged[logical_id]["packet"].get("checksum") != packet["checksum"]:
-		return _failure("LIVE_PLAYER_STAGE_CONFLICT")
 	var projection = ProjectionScript.new()
 	var projected: Dictionary = projection.configure_from_canonical_sources({"gameplay": {"live_actor_export_checksum": packet["checksum"], "player": player, "ownership": binding}, "item_graph": {"transferred": false}, "construction": {}})
 	if not bool(projected.get("success", false)):
@@ -201,10 +207,14 @@ func retire_source(logical_id: String, transfer_id: String, token: String) -> Di
 	var packet: Dictionary = _prepared.get(logical_id, {})
 	if packet.get("transfer_id") != transfer_id:
 		return _failure("LIVE_PLAYER_SOURCE_EXPORT_REQUIRED")
+	var previous: Dictionary = _retired.get(logical_id, {})
+	if previous.get("transfer_id") == transfer_id:
+		return _success({"replay": true, "receipt": previous.duplicate(true)}) if previous.get("commit_token") == token and previous.get("packet_checksum") == packet["checksum"] else _failure("LIVE_PLAYER_RETIRE_REPLAY_CONFLICT")
 	var retired: Dictionary = gate.mark_retired(transfer_id, token)
 	if not bool(retired.get("success", false)):
 		return retired
 	_retired[logical_id] = {"transfer_id": transfer_id, "packet_checksum": packet["checksum"], "commit_token": token, "source_authority_id": _authority, "source_locally_fenced": true}
+	_owner_ref.get_ref().note_live_player_install()
 	return _success({"receipt": _retired[logical_id].duplicate(true)})
 
 
@@ -242,16 +252,12 @@ func activate_target(logical_id: String, transfer_id: String, token: String) -> 
 	var composite := Utils.payload_hash({"schema": Carry.WARM_SCHEMA, "transfer_id": transfer_id, "p6_shadow_checksum": shadow_checksum, "carrying_manifest_checksum": manifest_checksum})
 	if warm.get("p6_shadow_checksum") != shadow_checksum or warm.get("carrying_manifest_checksum") != manifest_checksum or warm.get("checksum") != composite or completed.get("warm_checksum") != composite:
 		return _failure("LIVE_PLAYER_WARM_STAGE_BINDING_MISMATCH")
-	var checks: Array[Dictionary] = [
-		_registry.preflight_live_player_install(logical_id, gate, transfer_id, token),
-		_ownership.preflight_live_player_install(logical_id, gate, transfer_id, token),
-		_owner_ref.get_ref().validate_live_player_replay(logical_id, packet["replay"]),
-	]
+	var checks: Array[Dictionary] = [_registry.preflight_live_player_install(logical_id, gate, transfer_id, token), _ownership.preflight_live_player_install(logical_id, gate, transfer_id, token), _owner_ref.get_ref().validate_live_player_replay(logical_id, packet["replay"])]
 	for check in checks:
 		if not bool(check.get("success", false)):
 			return check
-	# No await or user callback within the local installation transaction.
-	# Readiness remains FALSE until all three native owner updates succeed.
+	# No await/user callback during local install; readiness stays false until
+	# registry, ownership and actor replay state have all been installed.
 	_installing = {"logical_id": logical_id, "gate": gate, "replay_checksum": Utils.payload_hash(packet["replay"])}
 	var replay_result: Dictionary = _owner_ref.get_ref().install_live_player_replay(logical_id, packet["replay"], gate)
 	_installing = {}

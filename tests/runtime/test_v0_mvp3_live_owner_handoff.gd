@@ -164,8 +164,11 @@ func cross(player: String, target_id: String, transfer_id: String, attack: bool 
 				"logical_player_id": forged["player"]["logical_player_id"] = other
 			forged = Utils.finalize_json_checksum(forged)
 			check(not bool(target_port.stage_export(player, forged).get("success", false)), "rehashed tampering rejected by trusted source attestation: " + field)
-	var stage: Dictionary = target_port.stage_export(player, packet)
-	if not success(stage, "real target native staging"):
+	# Exercise the actual JSON numeric boundary, not only local object passing.
+	var serialized = JSON.parse_string(JSON.stringify(packet, "", true, true))
+	check(serialized is Dictionary, "transfer packet survives actual JSON transport encoding")
+	var stage: Dictionary = target_port.stage_export(player, serialized)
+	if not success(stage, "real target native staging after JSON roundtrip"):
 		return false
 	check(target.get_player(player).is_empty(), "staged actor not visible as authoritative player")
 	check(not bool(target_port.activate_target(player, transfer_id, "forged-token").get("success", false)), "activation without SM1 commit rejected")
@@ -191,6 +194,7 @@ func cross(player: String, target_id: String, transfer_id: String, attack: bool 
 	if not success(installed, "actual target canonical actor installed"):
 		return false
 	check(target.get_player(player) == before, "identity position velocity sequence and revision preserved exactly on install")
+	check(typeof(target.get_player(player)["ownership_epoch"]) == TYPE_INT and typeof(target.get_player(player)["last_input_sequence"]) == TYPE_INT, "canonical counters retain integer types after JSON transport")
 	check(source.get_player(player).is_empty(), "retired source not a second canonical actor")
 	check(not bool(source.move_player(player, "transport-session/mvp3/" + player, 1, sequences[player] + 1, 0.25, 0.0, "operation/mvp3/retired/" + transfer_id.sha256_text()).get("success", false)), "retired direct source input rejected")
 	check(not bool(source.simulate_fixed_movement_tick(player, "transport-session/mvp3/" + player, 1, sequences[player] + 1, fixed_intent, 1.0 / 60.0).get("success", false)), "retired fixed tick rejected")
@@ -201,8 +205,9 @@ func cross(player: String, target_id: String, transfer_id: String, attack: bool 
 	check(bool(replay.get("success", false)) and bool(replay.get("replay", false)), "exact canonical replay survives transfer to other owner")
 	check(target.get_player(player) == before, "exact replay does not move actor twice")
 	var conflict: Dictionary = old_command["wire"].duplicate(true)
-	conflict["payload"]["delta_x"] = -0.25
+	conflict["payload"]["delta_x"] = -float(old_command["wire"]["payload"]["delta_x"])
 	conflict = Utils.finalize_json_checksum(conflict)
+	check(Utils.payload_hash(conflict) != Utils.payload_hash(old_command["wire"]), "negative replay control changes the actual command")
 	check(target.handle_live_player_input(conflict).get("error_code") == "OPERATION_REPLAY_CONFLICT", "conflicting canonical replay rejected after seam")
 	if not move(player, 0.25):
 		return false
@@ -250,7 +255,6 @@ func run() -> void:
 		route.shutdown()
 	for service in services:
 		service.shutdown()
-	var path := OS.get_environment("MVP3_OWNER_HOOKS_RESULT")
-	var saved: Dictionary = AtomicJson.write_dictionary(path, evidence)
+	var saved: Dictionary = AtomicJson.write_dictionary(OS.get_environment("MVP3_OWNER_HOOKS_RESULT"), evidence)
 	print("MVP3_LIVE_OWNER_HOOKS assertions=%d failures=%d passed=%s" % [assertions, failures.size(), evidence["passed"]])
 	quit(0 if bool(evidence["passed"]) and bool(saved.get("success", false)) else 1)

@@ -5,8 +5,7 @@ const Utils = preload("res://scripts/network/contracts/network_contract_utils.gd
 const SCHEMA := "planet_simulator.player_registry.v1"
 const DURABLE_SCHEMA := "planet_simulator.player_registry_state.v1"
 var _players: Dictionary = {}
-# Optional trusted server-side bindings to the EXISTING SM1 decision owner.
-# A staged row is a read-only transfer projection, never a second live player.
+# Trusted bindings to the existing SM1 decision; staged rows are read-only.
 var _live_gates: Dictionary = {}
 var _live_stages: Dictionary = {}
 
@@ -40,15 +39,15 @@ func get_players() -> Array:
 	var ids := _players.keys()
 	ids.sort()
 	for logical_id in ids:
-		var record := get_player(String(logical_id))
-		if not record.is_empty():
-			result.append(record)
+		# Snapshot readers may retain the frozen source projection until the
+		# Service's explicit retirement revision. Mutation readers use get_player.
+		if _live_gates.has(logical_id) and not _live_gates[logical_id].is_locally_presentable():
+			continue
+		result.append(Dictionary(_players[logical_id]).duplicate(true))
 	return result
 
 func export_durable_state() -> Dictionary:
-	# Existing restart DTO deliberately excludes live leases. Until the parent
-	# restart-composition predicate supplies owner reconciliation, do not export
-	# a misleading standalone restart snapshot of a distributed live actor.
+	# Restart composition for live distributed leases is a later explicit gate.
 	if not _live_gates.is_empty():
 		return {}
 	var players: Array = []
@@ -57,11 +56,7 @@ func export_durable_state() -> Dictionary:
 		record["connected"] = false
 		record["transport_session_id"] = ""
 		players.append(record)
-	var state: Dictionary = {
-		"schema": DURABLE_SCHEMA,
-		"players": players,
-		"checksum": "",
-	}
+	var state: Dictionary = {"schema": DURABLE_SCHEMA, "players": players, "checksum": ""}
 	return Utils.finalize_json_checksum(state)
 
 func restore_durable_state(value: Dictionary) -> Dictionary:
@@ -131,7 +126,6 @@ func _valid_vector3(value: Dictionary) -> bool:
 			return false
 	return true
 
-
 func _finite_number(value) -> bool:
 	if typeof(value) not in [TYPE_INT, TYPE_FLOAT]:
 		return false
@@ -153,12 +147,10 @@ func _failure(error_code: String, details: Dictionary = {}) -> Dictionary:
 	return {"success": false, "error_code": error_code, "details": details.duplicate(true)}
 
 
-# Live-transfer hooks are separate from the unchanged restart DTO validator.
-# The binding object is installed by trusted server composition, once per actor.
 func bind_live_player_gate(logical_player_id: String, gate) -> Dictionary:
 	if logical_player_id.is_empty() or logical_player_id != logical_player_id.strip_edges().to_lower():
 		return _failure("LIVE_PLAYER_ID_INVALID")
-	if gate == null or not gate.has_method("authorize_record_write") or not gate.has_method("is_locally_ready") or not gate.has_method("check_transfer_phase"):
+	if gate == null or not gate.has_method("authorize_record_write") or not gate.has_method("is_locally_ready") or not gate.has_method("is_locally_presentable") or not gate.has_method("check_transfer_phase"):
 		return _failure("LIVE_PLAYER_GATE_REQUIRED")
 	if _live_gates.has(logical_player_id):
 		return _success({"replay": true}) if _live_gates[logical_player_id] == gate else _failure("LIVE_PLAYER_GATE_REBIND_FORBIDDEN")
@@ -192,8 +184,6 @@ func validate_live_player_record(record: Dictionary) -> Dictionary:
 		var value = record.get(field)
 		if not _finite_number(value) or float(value) != floorf(float(value)) or float(value) < (0.0 if field == "last_input_sequence" else 1.0) or float(value) > 9007199254740991.0:
 			return _failure("LIVE_PLAYER_INTEGER_INVALID", {"field": field})
-	# Reuse existing spatial/identity validation on a COPY. No live record or
-	# restart contract is rewritten to pretend a restart preserves a session.
 	var disconnected := record.duplicate(true)
 	disconnected["connected"] = false
 	disconnected["transport_session_id"] = ""
@@ -212,11 +202,14 @@ func stage_live_player(logical_player_id: String, gate, transfer_id: String, rec
 		return valid
 	if record["logical_player_id"] != logical_player_id:
 		return _failure("LIVE_PLAYER_SUBJECT_MISMATCH")
-	var digest := Utils.payload_hash(record)
+	var normalized := record.duplicate(true)
+	for field in ["ownership_epoch", "last_input_sequence", "state_revision"]:
+		normalized[field] = int(normalized[field])
+	var digest := Utils.payload_hash(normalized)
 	if _live_stages.has(logical_player_id):
 		var old: Dictionary = _live_stages[logical_player_id]
 		return _success({"replay": true, "checksum": digest}) if old["transfer_id"] == transfer_id and old["checksum"] == digest else _failure("LIVE_PLAYER_STAGE_CONFLICT")
-	_live_stages[logical_player_id] = {"transfer_id": transfer_id, "checksum": digest, "record": record.duplicate(true)}
+	_live_stages[logical_player_id] = {"transfer_id": transfer_id, "checksum": digest, "record": normalized}
 	return _success({"checksum": digest})
 
 
@@ -236,8 +229,6 @@ func install_live_player(logical_player_id: String, gate, transfer_id: String, c
 	var checked := preflight_live_player_install(logical_player_id, gate, transfer_id, commit_token)
 	if not bool(checked.get("success", false)):
 		return checked
-	# Gate readiness is published only after BOTH registry and ownership rows
-	# and replay receipts are installed by the existing enclosing Service port.
 	_players[logical_player_id] = Dictionary(_live_stages[logical_player_id]["record"]).duplicate(true)
 	_live_stages.erase(logical_player_id)
 	return _success()
