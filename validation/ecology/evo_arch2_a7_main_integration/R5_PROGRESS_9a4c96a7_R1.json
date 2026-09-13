@@ -1,0 +1,84 @@
+{
+  "schema": "dws.ecology.integration-progress.v1",
+  "work_order": "EVO-ARCH2-A7-MAIN-INTEGRATION-20260913-R1",
+  "state": "VERIFYING",
+  "source_branch": "integration/eco-evo-arch2-a7-main-r1",
+  "source_head": "9a4c96a7eba19e25cc262161d2811e2f671537f7",
+  "source_tree": "9527a919a7ff5ce0d858f61991a499f4a2742ea7",
+  "base_main": "7dfc68ab5a1e90254a1b7039807f275b5da04eef",
+  "accepted_source": "8eccf6304078bec3a3ccaa5860c5aab6ee311209",
+  "accepted_tree": "24e876b7377cb3e1e521f08ff9766331fe4e895a",
+  "repair_map_commit": "8be6584632eb382db327ab7aa89c931b795c9e66",
+  "verifier_commit": "75f75718b3a9166c19e91b2ecfbdb9d4b4c2bee0",
+  "tests_commit": "17eb2027de11b30165305007288ed7ee26f8baab",
+  "previous_subject": "e35ac07582c36b75d3cd05bdc8b66d8dbe84c681",
+  "review_findings_addressed_in_source": [3999074189, 3999074192],
+  "compare_from_previous_subject": {
+    "status": "ahead",
+    "commits": 4,
+    "changed_paths": [
+      "config/ecology/evo-arch2-a7-main-integration-work-order.v1.json",
+      "docs/research/ecology/EVO_ARCH2_A7_MAIN_INTEGRATION_REPAIR_R5_RU.md",
+      "validation/ecology/evo_arch2_a7_main_integration/test_repair_r5.py",
+      "validation/ecology/evo_arch2_a7_main_integration/verify.py"
+    ],
+    "accepted_a0_a7_runtime_changed": false,
+    "additional_main_owned_files_changed": false
+  },
+  "post_build_critique": {
+    "role": "IMPLEMENTER",
+    "verdict": "NO_MATERIAL_REFACTOR_REQUIRED",
+    "not_independent_review": true,
+    "observations": [
+      "Canonical Harness pin remains owned by main; integration mirror is mechanically checked against actual requirements and the same execution interpreter.",
+      "History exclusion now uses the full graph with a three-state exit-code contract, not an immediate-parent heuristic; errors and incomplete/altered history fail closed.",
+      "Focused tests call production guard functions and use disposable real Git histories; full production CLI, runtime, graphics and Harness gates remain mandatory.",
+      "Accepted research bytes and the previously authorized main-owned scene guard are unchanged by R5.",
+      "Unknown control health cannot be presented as non-RED; YELLOW remains YELLOW.",
+      "No architecture, production, network, scheduler or A8 scope was added."
+    ]
+  },
+  "project_control": {
+    "run_id": 34750314289,
+    "conclusion_observed": "success",
+    "source_head": "9a4c96a7eba19e25cc262161d2811e2f671537f7",
+    "not_substitute_for_runtime_verification": true
+  },
+  "exact_execution": {
+    "run_id": 34750348246,
+    "job_id": 103705641309,
+    "workflow_head": "0ba4053a79cfe8712395087d91051efcef9951d5",
+    "workflow_path": ".github/workflows/evo-arch2-a7-main-integration-exact-r6.yml",
+    "source_seal_step": "success",
+    "canonical_dependency_and_focused_preflight_step": "success",
+    "graphical_bootstrap_step": "success",
+    "full_verifier_status_observed": "in_progress",
+    "verdict": "PENDING"
+  },
+  "independent_review": {
+    "request_comment_id": 5652541028,
+    "source_head": "9a4c96a7eba19e25cc262161d2811e2f671537f7",
+    "verdict": "PENDING"
+  },
+  "channel_recovery": {
+    "failure": "reply_to_review_comment ReadTimeout",
+    "recovery": "Refetched live branch by durable ref and queried actual PR inline comments before retrying any write.",
+    "confirmed_source_head": "9a4c96a7eba19e25cc262161d2811e2f671537f7",
+    "write_confirmed_present_comment_id": 3999315061,
+    "duplicate_write_performed": false
+  },
+  "resume_anchor": {
+    "last_completed_durable_predicate": "R5_PUBLISHED_FOCUSED_PREFLIGHT_AND_PROJECT_CONTROL_SUCCESS",
+    "known_failure_signature": "Old R4 pin and immediate-parent defects are repaired in source; final integrated verdict still pending.",
+    "next_action": "READ_EXACT_RUN_34750348246_AND_FRESH_REVIEW_5652541028; REPAIR_CONFIRMED_IN_SCOPE_FAILURES; PUBLISH_CONTENT_BOUND_FINAL_EVIDENCE_SEPARATELY",
+    "allowed_recovery_route": "GitHub connector -> existing repository-owned CI -> artifact/job-log read; no container clone bootstrap",
+    "human_gate": "MAIN_MERGE_AFTER_REQUIRED_INTEGRATION_GATES"
+  },
+  "acceptance_claims": {
+    "independent_self_accept": false,
+    "main_merge": false,
+    "production_promotion": false,
+    "a8_dispatch": false,
+    "main_owned_mission_complete": false
+  }
+}
