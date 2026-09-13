@@ -1,0 +1,94 @@
+name: MVP3 R13b Manual Evidence Byte Verification
+on:
+  push:
+    branches: [verify/v0-mvp3-r13b-f1d453fb-r1]
+    paths: [.github/workflows/mvp3-r13b-manual-evidence-verify.yml]
+permissions:
+  contents: read
+jobs:
+  verify-manual-evidence:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 96884d87b7e95d58595f02b1191261d7d3b8d4ce
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Verify exact evidence subject and raw bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import hashlib,json,pathlib,sys
+          root=pathlib.Path('evidence/mvp3-r13b-manual-f1d453fb')
+          expected_head='f1d453fb2af49231c30bdc5cbe415ad199394446'
+          expected_tree='f1697cc52c1abc7f1bb21922c5fab3b49a3c167d'
+          expected_manifest='3075debd09a3f06e352387b430015204d3e1c095525dba1d958afcc1a7b03668'
+          expected_report='a65b2352dba0d0394b90027b70a8beac87189deac7a00fa959b307d8704382da'
+          index=json.loads((root/'sha256-index.json').read_bytes())
+          assert len(index)==13, len(index)
+          rows={pathlib.PureWindowsPath(x['Path']).name:x for x in index}
+          assert len(rows)==13
+          for name,row in rows.items():
+              p=root/name
+              assert p.is_file(), name
+              data=p.read_bytes()
+              assert len(data)==int(row['Bytes']), (name,len(data),row['Bytes'])
+              assert hashlib.sha256(data).hexdigest()==row['SHA256'].lower(), name
+          manifest_bytes=(root/'manifest.json').read_bytes()
+          assert hashlib.sha256(manifest_bytes).hexdigest()==expected_manifest
+          report_bytes=(root/'MVP3-WINDOWS-IMPLEMENTER-R13-REPORT.json').read_bytes()
+          assert hashlib.sha256(report_bytes).hexdigest()==expected_report
+          manifest=json.loads(manifest_bytes)
+          assert manifest['subject_head']==expected_head
+          assert manifest['subject_tree']==expected_tree
+          assert manifest['passed'] is True
+          assert manifest['manual_input_mode'] is True
+          assert manifest['manual_input_executed'] is True
+          assert manifest['mvp3_predicate_verified'] is False
+          for key in ['all_processes_passed','exact_subject','five_distinct_processes','a_roundtrip','stable_client_connections','stable_body_camera_instances','both_players_always_visible','viewport_pngs','no_respawn_or_rebind','no_false_acceptance','both_players_independent','post_activation_movement','canonical_fixed_receipts','manual_input_proven_when_requested']:
+              assert manifest['checks'].get(key) is True, key
+          for actor in ('a','b'):
+              c=json.loads((root/f'client-{actor}.json').read_bytes())
+              assert c['subject_head']==expected_head
+              assert c['passed'] is True
+              assert c['connects']==1 and c['disconnects']==0 and c['reconnects']==0 and c['respawns']==0 and c['identity_changes']==0
+              assert c['manual_input_events']>=2 and c['fixed_input_receipts']>0
+              assert c['initial_instance_ids']==c['final_instance_ids']
+              assert all(int(v)>0 for v in c['initial_instance_ids'].values())
+              s=c['surface_projection']
+              assert s['mode']=='IMMUTABLE_P7_BOOTSTRAP_PROJECTION' and s['configured'] is True
+              assert s['canonical_state_owned'] is False and s['mutable_matter_store_retained'] is False
+          ca=json.loads((root/'client-a.json').read_bytes()); cb=json.loads((root/'client-b.json').read_bytes())
+          assert ca['surface_projection']['bootstrap_hash']==cb['surface_projection']['bootstrap_hash']
+          gw=json.loads((root/'gateway.json').read_bytes())
+          assert gw.get('failures',[])==[]
+          assert gw.get('gateway_reconnects')==0
+          transfers=gw.get('transfers',[])
+          assert len(transfers)==2, len(transfers)
+          assert [(t.get('source'),t.get('target')) for t in transfers]==[('authority/a','authority/b'),('authority/b','authority/a')]
+          for t in transfers:
+              assert t.get('post_activation_movement_proven') is True
+              sim=t.get('post_activation_server_simulation',{})
+              assert sim.get('fixed_tick') is True
+              assert abs(float(sim.get('delta_seconds'))-1.0/60.0)<1e-12
+              b=t['before']; a=t['after']
+              assert float(b['position']['x'])!=float(a['position']['x'])
+              assert int(a['last_input_sequence'])>int(b['last_input_sequence'])
+              assert int(a['state_revision'])>int(b['state_revision'])
+              for k in ['logical_player_id','player_entity_id','transport_session_id']:
+                  assert a[k]==b[k], (k,b[k],a[k])
+          obs=gw.get('input_observations',{}).get('b',[])
+          assert len(obs)>0
+          assert any(float(o['before']['position']['x'])!=float(o['after']['position']['x']) and o.get('server_simulation',{}).get('fixed_tick') is True and abs(float(o['server_simulation']['delta_seconds'])-1.0/60.0)<1e-12 for o in obs)
+          for name in ['client-a.png','client-b.png']:
+              data=(root/name).read_bytes(); assert data[:8]==b'\x89PNG\r\n\x1a\n'
+          attrs=pathlib.Path('.gitattributes').read_text()
+          assert 'evidence/mvp3-r13b-manual-f1d453fb/** -text' in attrs
+          pub=json.loads((root/'publication.json').read_bytes())
+          assert pub['raw_file_count']==13 and pub['raw_bytes_drift'] is False and pub['manual_run_repeated_for_publication'] is False
+          assert pub['raw_manifest_sha256']==expected_manifest and pub['implementer_report_sha256']==expected_report
+          print('MVP3_R13B_MANUAL_EVIDENCE_BYTE_VERIFICATION_PASS')
+          print('raw_files=13 manifest_sha256='+expected_manifest+' report_sha256='+expected_report)
+          PY
