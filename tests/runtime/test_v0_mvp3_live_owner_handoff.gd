@@ -185,8 +185,6 @@ func cross(player: String, target_id: String, transfer_id: String, attack: bool 
 		return false
 	if not success(coordinator.activate_target(transfer_id, target_id, source_epoch + 1, token), "accepted SM1 target activation"):
 		return false
-	# Even after the decision changes, an old local row must remain non-writable
-	# until BOTH native target rows and replay receipts have been installed.
 	check(target.get_player(player).is_empty(), "old local row not revived by coordinator label change")
 	check(not bool(target_port.activate_target(player, transfer_id, "wrong-proof").get("success", false)), "wrong commit token rejected after valid control-plane activation")
 	var installed: Dictionary = target_port.activate_target(player, transfer_id, token)
@@ -213,12 +211,12 @@ func cross(player: String, target_id: String, transfer_id: String, attack: bool 
 	if not success(carrying.validate_after_activation(transfer_id, "client-session/mvp3/" + player, sequences[player], last_commands[player]["operation_id"], coordinator), "accepted carrying continuity after real native move"):
 		return false
 	check(pivot.get_client_route_identity() == route_identity, "gateway identity remains unchanged")
-	evidence.setdefault("transfers", []).append({"player": player, "transfer_id": transfer_id, "source": source_id, "target": target_id, "source_epoch": source_epoch, "target_epoch": source_epoch + 1, "packet": packet, "before": before, "after": after, "commit_token": token, "carrying": carrying.get_completed(transfer_id)})
+	evidence["transfers"].append({"player": player, "transfer_id": transfer_id, "source": source_id, "target": target_id, "source_epoch": source_epoch, "target_epoch": source_epoch + 1, "packet": packet, "before": before, "after": after, "commit_token": token, "carrying": carrying.get_completed(transfer_id)})
 	return true
 
 
 func run() -> void:
-	evidence = {"schema": "distributed_world_simulator.mvp3_live_owner_hooks_test.v1", "subject_head": OS.get_environment("EXPECTED_HEAD"), "subject_tree": OS.get_environment("EXPECTED_TREE"), "production_hooks_exercised": true, "network_graphical_scene_proven": false, "mvp3_predicate_verified": false}
+	evidence = {"schema": "distributed_world_simulator.mvp3_live_owner_hooks_test.v1", "subject_head": OS.get_environment("EXPECTED_HEAD"), "subject_tree": OS.get_environment("EXPECTED_TREE"), "production_hooks_exercised": true, "network_graphical_scene_proven": false, "mvp3_predicate_verified": false, "transfers": []}
 	var okay := setup_fixture()
 	if okay:
 		okay = move("a") and move("b")
