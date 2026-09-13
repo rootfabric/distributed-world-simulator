@@ -71,7 +71,7 @@ func rpc_call(body: Dictionary) -> Dictionary:
 		failure_code = "MVP3_BACKEND_SEND_FAILED:" + String(sent.get("error_code", "UNKNOWN"))
 		return Protocol.failure(failure_code)
 	boundary.flush_outbound(64)
-	var deadline := Time.get_ticks_msec() + 3000
+	var deadline := Time.get_ticks_msec() + int(config.get("backend_rpc_timeout_ms", 10000))
 	while Time.get_ticks_msec() < deadline:
 		var packets := poll()
 		if not failure_code.is_empty():

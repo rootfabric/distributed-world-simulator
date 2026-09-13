@@ -34,6 +34,15 @@ var identity = null
 var ledger = null
 var admission = null
 var closure = null
+var interactive := false
+var client_boundary = null
+var client_peers: Dictionary = {}
+var client_sequences := {"a": 0, "b": 0}
+var client_hello := {"a": false, "b": false}
+var client_finished := {"a": false, "b": false}
+var pending_continuity := {"a": "", "b": ""}
+var closing_at_ms := 0
+var started_at_ms := 0
 
 
 func _initialize() -> void:
@@ -107,7 +116,7 @@ func lookup(authority: String, actor: String) -> Dictionary:
 	return Dictionary(rpc.get("details", {}).get("result", {}).get("details", {}).get("player", {})).duplicate(true) if bool(rpc.get("success", false)) else {}
 
 
-func cross(actor: String, target: String, transfer_id: String) -> bool:
+func cross(actor: String, target: String, transfer_id: String, prove_other_input: bool = true, prove_post_input: bool = true) -> bool:
 	var coordinator = coordinators[actor]
 	var carry = carrying[actor]
 	var pivot = pivots[actor]
@@ -119,7 +128,7 @@ func cross(actor: String, target: String, transfer_id: String) -> bool:
 	if not check(not before.is_empty(), "source canonical actor exists") or not success(coordinator.begin_transfer(transfer_id, source, target, source_epoch), "SM1 source freeze"):
 		return false
 	var other := "b" if actor == "a" else "a"
-	if not bool(move(other, -0.25).get("success", false)):
+	if prove_other_input and not bool(move(other, -0.25).get("success", false)):
 		return false
 	var prepared: Dictionary = carry.prepare_transfer(transfer_id, "client-session/mvp3/" + actor, int(sequences[actor]), String(last_commands[actor]["operation_id"]))
 	if not success(prepared, "P6 carrying manifest"):
@@ -168,14 +177,59 @@ func cross(actor: String, target: String, transfer_id: String) -> bool:
 	conflict["wire"]["payload"]["delta_x"] = -float(prior["wire"]["payload"]["delta_x"])
 	conflict["wire"] = Utils.finalize_json_checksum(conflict["wire"])
 	check(pivot.route_command("client-session/mvp3/" + actor, prior["operation_id"], conflict).get("error_code") == "OPERATION_REPLAY_CONFLICT", "conflicting replay rejected at stable gateway")
-	var moved := move(actor, 0.25)
-	if not bool(moved.get("success", false)):
-		return false
-	var after := lookup(target, actor)
-	check(after.get("last_input_sequence") == sequences[actor] and after.get("position") != before.get("position"), "input continues on receiving authority")
-	if not success(carry.validate_after_activation(transfer_id, "client-session/mvp3/" + actor, int(sequences[actor]), String(last_commands[actor]["operation_id"]), coordinator), "P6 continuity after activation"):
-		return false
+	var after := installed
+	if prove_post_input:
+		var moved := move(actor, 0.25)
+		if not bool(moved.get("success", false)):
+			return false
+		after = lookup(target, actor)
+		check(after.get("last_input_sequence") == sequences[actor] and after.get("position") != before.get("position"), "input continues on receiving authority")
+		if not success(carry.validate_after_activation(transfer_id, "client-session/mvp3/" + actor, int(sequences[actor]), String(last_commands[actor]["operation_id"]), coordinator), "P6 continuity after activation"):
+			return false
+	else:
+		pending_continuity[actor] = transfer_id
 	transfers.append({"actor": actor, "transfer_id": transfer_id, "source": source, "target": target, "source_epoch": source_epoch, "target_epoch": source_epoch + 1, "before": before, "after": after, "packet_checksum": packet["checksum"]})
+	return true
+
+
+func route_client_input(actor: String, wire: Dictionary) -> Dictionary:
+	var input_sequence := int(wire.get("input_sequence", -1))
+	if input_sequence != int(sequences[actor]) + 1:
+		return Protocol.failure("MVP3_CLIENT_INPUT_SEQUENCE_GAP")
+	var operation_id := String(wire.get("operation_id", ""))
+	var command_value := {"domain_id": "p6-domain/outpost-world-state", "command_kind": "PLAYER_INTERACTION", "operation_id": operation_id, "wire": wire}
+	var result: Dictionary = pivots[actor].route_command("client-session/mvp3/" + actor, operation_id, command_value)
+	if not bool(result.get("success", false)):
+		return result
+	sequences[actor] = input_sequence
+	last_commands[actor] = command_value
+	var pending := String(pending_continuity[actor])
+	if not pending.is_empty():
+		var continuity: Dictionary = carrying[actor].validate_after_activation(pending, "client-session/mvp3/" + actor, input_sequence, operation_id, coordinators[actor])
+		if not bool(continuity.get("success", false)):
+			return continuity
+		pending_continuity[actor] = ""
+	return result
+
+
+func world_snapshot() -> Dictionary:
+	var players: Dictionary = {}
+	var decisions: Dictionary = {}
+	for actor in ["a", "b"]:
+		var decision: Dictionary = coordinators[actor].snapshot()
+		decisions[actor] = decision
+		players[actor] = lookup(String(decision["active_authority_id"]), actor)
+	return {"players": players, "decisions": decisions, "transfer_count": transfers.size(), "a_roundtrip_complete": transfers.filter(func(row): return row.get("actor") == "a").size() >= 2 and String(pending_continuity["a"]).is_empty(), "both_clients_ready": bool(client_hello["a"]) and bool(client_hello["b"]), "input_sequences": sequences.duplicate(), "gateway_sessions": {"a": pivots["a"].get_client_route_identity(), "b": pivots["b"].get_client_route_identity()}}
+
+
+func maybe_cross_a() -> bool:
+	var decision: Dictionary = coordinators["a"].snapshot()
+	var player := lookup(String(decision["active_authority_id"]), "a")
+	var a_transfers: int = transfers.filter(func(row): return row.get("actor") == "a").size()
+	if a_transfers == 0 and decision.get("active_authority_id") == "authority/a" and float(player.get("position", {}).get("x", -999.0)) >= 0.0:
+		return cross("a", "authority/b", "transfer/mvp3/graphical/a-out", false, false)
+	if a_transfers == 1 and decision.get("active_authority_id") == "authority/b" and float(player.get("position", {}).get("x", 999.0)) < 0.0:
+		return cross("a", "authority/a", "transfer/mvp3/graphical/a-back", false, false)
 	return true
 
 
@@ -214,11 +268,7 @@ func setup_control() -> bool:
 	return true
 
 
-func run() -> void:
-	cfg = Protocol.read_config()
-	if cfg.is_empty() or cfg.get("role") != "gateway":
-		quit(2)
-		return
+func initialize_native() -> bool:
 	var okay := setup_control()
 	for authority in ["authority/a", "authority/b"]:
 		if not okay:
@@ -231,25 +281,148 @@ func run() -> void:
 			if not success(call_authority(authority, {"kind": "INIT"}), "native owner init " + authority):
 				okay = false
 				break
+	return okay
+
+
+func run() -> void:
+	cfg = Protocol.read_config()
+	if cfg.is_empty() or cfg.get("role") != "gateway":
+		quit(2)
+		return
+	started_at_ms = Time.get_ticks_msec()
+	var okay := initialize_native()
+	interactive = String(cfg.get("mode", "scripted")) == "interactive"
+	if interactive:
+		if okay:
+			client_boundary = Support.make_boundary()
+			okay = client_boundary != null and bool(client_boundary.start_server(Support.endpoint("127.0.0.1", int(cfg.get("gateway_port", 0)))).get("success", false))
+		if not okay:
+			finish_interactive(false, "MVP3_INTERACTIVE_GATEWAY_START_FAILED")
+			return
+		Support.write_state(String(cfg["result_file"]), "LISTENING", {"subject_head": cfg["subject_head"], "run_id": cfg["run_id"], "gateway_process_id": OS.get_process_id()})
+		return
 	if okay:
 		okay = bool(move("a", 0.25).get("success", false)) and bool(move("b", -0.25).get("success", false))
 	if okay:
 		okay = cross("a", "authority/b", "transfer/mvp3/process/a-out") and cross("a", "authority/a", "transfer/mvp3/process/a-back")
 	if okay:
 		okay = cross("b", "authority/b", "transfer/mvp3/process/b-out") and cross("b", "authority/a", "transfer/mvp3/process/b-back")
-	var authority_reports: Dictionary = {}
+	finish_scripted(okay)
+
+
+func authority_reports() -> Dictionary:
+	var reports: Dictionary = {}
 	for authority in ["authority/a", "authority/b"]:
 		if links.has(authority):
 			var report_rpc := call_authority(authority, {"kind": "REPORT"})
-			authority_reports[authority] = report_rpc.get("details", {}).get("report", {}) if bool(report_rpc.get("success", false)) else {}
-	var report := {"schema": "distributed_world_simulator.mvp3_native_process_roundtrip.v1", "passed": okay and failures.is_empty(), "subject_head": cfg["subject_head"], "run_id": cfg["run_id"], "gateway_process_id": OS.get_process_id(), "assertions": assertions, "failures": failures, "transfers": transfers, "sequences": sequences, "identity": identity.get_report() if identity != null else {}, "ledger": ledger.get_report() if ledger != null else {}, "authority_reports": authority_reports, "backend_links": {}, "route_identity": {"a": pivots["a"].get_client_route_identity(), "b": pivots["b"].get_client_route_identity()} if pivots.size() == 2 else {}, "two_independent_players": true, "gateway_reconnects": 0, "respawns": 0, "graphical_scene_proven": false, "mvp3_predicate_verified": false}
+			reports[authority] = report_rpc.get("details", {}).get("result", {}).get("details", {}).get("report", {}) if bool(report_rpc.get("success", false)) else {}
+	return reports
+
+
+func base_report(schema: String, passed: bool, graphical: bool) -> Dictionary:
+	var report := {"schema": schema, "passed": passed and failures.is_empty(), "subject_head": cfg["subject_head"], "run_id": cfg["run_id"], "gateway_process_id": OS.get_process_id(), "assertions": assertions, "failures": failures, "transfers": transfers, "sequences": sequences, "identity": identity.get_report() if identity != null else {}, "ledger": ledger.get_report() if ledger != null else {}, "authority_reports": authority_reports(), "backend_links": {}, "route_identity": {"a": pivots["a"].get_client_route_identity(), "b": pivots["b"].get_client_route_identity()} if pivots.size() == 2 else {}, "two_independent_players": true, "gateway_reconnects": 0, "respawns": 0, "graphical_scene_proven": graphical, "mvp3_predicate_verified": false}
 	for authority in links:
 		report["backend_links"][authority] = {"connects": links[authority].connects, "disconnects": links[authority].disconnects, "sequence": links[authority].sequence, "failure_code": links[authority].failure_code}
-	Support.write_json(String(cfg["result_file"]), report)
+	return report
+
+
+func stop_native() -> void:
 	for authority in links:
 		call_authority(authority, {"kind": "STOP"})
 		links[authority].shutdown()
 	for route in routes:
 		route.shutdown()
+
+
+func finish_scripted(okay: bool) -> void:
+	var report := base_report("distributed_world_simulator.mvp3_native_process_roundtrip.v1", okay, false)
+	Support.write_json(String(cfg["result_file"]), report)
+	stop_native()
 	print("MVP3_NATIVE_PROCESS_ROUNDTRIP assertions=%d failures=%d passed=%s" % [assertions, failures.size(), report["passed"]])
 	quit(0 if bool(report["passed"]) else 1)
+
+
+func finish_interactive(okay: bool, error_code: String = "") -> void:
+	if not error_code.is_empty():
+		check(false, error_code)
+	var report := base_report("distributed_world_simulator.mvp3_graphical_gateway.v1", okay, true)
+	report["client_sessions"] = client_peers.duplicate()
+	report["client_finished"] = client_finished.duplicate()
+	report["world_snapshot"] = world_snapshot() if okay else {}
+	Support.write_json(String(cfg["result_file"]), report)
+	if client_boundary != null:
+		client_boundary.stop()
+	stop_native()
+	print("MVP3_GRAPHICAL_GATEWAY assertions=%d failures=%d passed=%s" % [assertions, failures.size(), report["passed"]])
+	quit(0 if bool(report["passed"]) else 1)
+
+
+func identify_client(packet: Dictionary) -> String:
+	for actor in ["a", "b"]:
+		var key := String(cfg.get("client_keys", {}).get(actor, ""))
+		if Protocol.verify(cfg, packet, "client/" + actor, "gateway", key):
+			return actor
+	return ""
+
+
+func handle_client(actor: String, body: Dictionary) -> Dictionary:
+	var kind := String(body.get("kind", ""))
+	if kind == "HELLO":
+		client_hello[actor] = true
+		return Protocol.success({"kind": kind, "actor": actor, "snapshot": world_snapshot()})
+	if kind == "OBSERVE":
+		return Protocol.success({"kind": kind, "actor": actor, "snapshot": world_snapshot()})
+	if kind == "MOVE":
+		if not body.get("wire") is Dictionary or body["wire"].get("logical_player_id") != actor or body["wire"].get("transport_session_id") != Protocol.session(cfg, actor):
+			return Protocol.failure("MVP3_CLIENT_INPUT_BINDING_INVALID")
+		var moved := route_client_input(actor, body["wire"])
+		if not bool(moved.get("success", false)):
+			return moved
+		if actor == "a" and not maybe_cross_a():
+			return Protocol.failure("MVP3_AUTOMATIC_HANDOFF_FAILED")
+		return Protocol.success({"kind": kind, "actor": actor, "outcome": moved, "snapshot": world_snapshot()})
+	if kind == "FINISH":
+		client_finished[actor] = true
+		if bool(client_finished["a"]) and bool(client_finished["b"]):
+			closing_at_ms = Time.get_ticks_msec() + 250
+		return Protocol.success({"kind": kind, "actor": actor, "snapshot": world_snapshot()})
+	return Protocol.failure("MVP3_CLIENT_COMMAND_UNKNOWN")
+
+
+func _process(_delta: float) -> bool:
+	if not interactive or client_boundary == null:
+		return false
+	var polled: Dictionary = client_boundary.poll_events(128)
+	if not bool(polled.get("success", false)):
+		finish_interactive(false, "MVP3_CLIENT_GATEWAY_POLL_FAILED")
+		return false
+	for raw in polled.get("details", {}).get("events", []):
+		var event: Dictionary = raw
+		var peer := String(event.get("peer_id", ""))
+		if event.get("event_type") == "PEER_CONNECTED":
+			Support.mark_ready(client_boundary, peer)
+		elif event.get("event_type") == "PEER_DISCONNECTED":
+			for actor in client_peers:
+				if client_peers[actor] == peer and not bool(client_finished[actor]):
+					finish_interactive(false, "MVP3_CLIENT_DISCONNECTED_DURING_WORKLOAD")
+					return false
+		elif event.get("event_type") == "MESSAGE_RECEIVED":
+			var packet := Protocol.payload(event)
+			var actor := identify_client(packet)
+			if actor.is_empty() or (client_peers.has(actor) and client_peers[actor] != peer) or int(packet.get("sequence", 0)) != int(client_sequences.get(actor, 0)) + 1:
+				continue
+			client_peers[actor] = peer
+			client_sequences[actor] = int(packet["sequence"])
+			var response := handle_client(actor, packet["body"])
+			var signed := Protocol.seal(cfg, "gateway", "client/" + actor, int(packet["sequence"]), response, String(cfg["client_keys"][actor]))
+			var sent := Protocol.send(client_boundary, peer, signed)
+			if not bool(sent.get("success", false)):
+				finish_interactive(false, "MVP3_CLIENT_GATEWAY_REPLY_FAILED")
+				return false
+	client_boundary.flush_outbound(128)
+	if closing_at_ms > 0 and Time.get_ticks_msec() >= closing_at_ms:
+		var a_transfers: int = transfers.filter(func(row): return row.get("actor") == "a").size()
+		finish_interactive(a_transfers == 2 and String(pending_continuity["a"]).is_empty() and int(sequences["b"]) >= 2)
+	elif Time.get_ticks_msec() - started_at_ms > int(cfg.get("timeout_ms", 120000)):
+		finish_interactive(false, "MVP3_GRAPHICAL_GATEWAY_TIMEOUT")
+	return false
