@@ -1,0 +1,61 @@
+name: ECO ARCH2 A8 Development Check R1
+on:
+  push:
+    branches: [validation/eco-arch2-a8-r1]
+    paths: [.github/workflows/evo-arch2-a8-devcheck-r1.yml]
+permissions:
+  contents: read
+concurrency:
+  group: eco-a8-development-r1
+  cancel-in-progress: false
+jobs:
+  focused:
+    if: github.actor == 'rootfabric' && github.repository == 'rootfabric/distributed-world-simulator'
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 25
+    env:
+      SOURCE_HEAD: a5cbb7d9c1c8305ad04497d635501e7b544debd9
+      SOURCE_TREE: da8e820015088146d573f9c17431d03dca0b1b72
+      GODOT_SILENCE_ROOT_WARNING: '1'
+      GIT_NO_REPLACE_OBJECTS: '1'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ env.SOURCE_HEAD }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Seal exact development source
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$SOURCE_HEAD"
+          test "$(git rev-parse HEAD^{tree})" = "$SOURCE_TREE"
+          test -z "$(git status --porcelain --untracked-files=no)"
+          mkdir -p artifacts/a8/development
+          python3 -m unittest discover -s validation/ecology/evo_arch2_a8 -p test_store.py -v 2>&1 | tee artifacts/a8/development/store.log
+      - name: Approved Godot cold import and real A8 core
+        shell: bash
+        env:
+          CONFIGURED_GODOT: ${{ vars.GODOT_DOUBLE_PATH }}
+        run: |
+          set -euo pipefail
+          godot="${CONFIGURED_GODOT:-$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64}"
+          test -x "$godot"
+          test "$(sha256sum "$godot" | cut -d ' ' -f 1)" = 'bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7'
+          test "$("$godot" --version)" = '4.7.1.stable.double.custom_build.a13da4feb'
+          rm -rf .godot
+          timeout 300 "$godot" --headless --audio-driver Dummy --editor --path "$PWD" --import 2>&1 | tee artifacts/a8/development/import.log
+          ! grep -E 'SCRIPT ERROR|Parse Error|ERROR:|FAIL:' artifacts/a8/development/import.log
+          timeout 1000 "$godot" --headless --audio-driver Dummy --path "$PWD" --script res://tests/research/ecology/v2/arch2_a8_acceptance.gd 2>&1 | tee artifacts/a8/development/core.log
+          ! grep -E 'SCRIPT ERROR|Parse Error|ERROR:|FAIL:' artifacts/a8/development/core.log
+          grep -E 'EVO_ARCH2_A8_EXACT assertions=[0-9]+ failed=0' artifacts/a8/development/core.log
+          test "$(git rev-parse HEAD)" = "$SOURCE_HEAD"
+          test -z "$(git status --porcelain --untracked-files=no)"
+      - name: Upload development evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: a8-development-a5cbb7d9-r1
+          path: artifacts/a8/
+          if-no-files-found: error
+          retention-days: 30
