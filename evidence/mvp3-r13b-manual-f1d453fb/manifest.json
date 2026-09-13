@@ -1,0 +1,180 @@
+{
+  "schema": "distributed_world_simulator.mvp3_graphical_process_manifest.v1",
+  "subject_head": "f1d453fb2af49231c30bdc5cbe415ad199394446",
+  "subject_tree": "f1697cc52c1abc7f1bb21922c5fab3b49a3c167d",
+  "run_id": "4f453e10d07b7444ca5c3dcace29e251",
+  "engine": "C:\\Godot\\godot\\bin\\godot.windows.editor.double.x86_64.console.exe",
+  "engine_sha256": "3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5",
+  "duration_seconds": 55.953,
+  "commands": [
+    {
+      "role": "authority/a",
+      "argv": [
+        "C:\\Godot\\godot\\bin\\godot.windows.editor.double.x86_64.console.exe",
+        "--headless",
+        "--path",
+        "C:\\distributed-world-simulator\\.mvp3-manual-91c0df9d-r1",
+        "--script",
+        "res://scripts/runtime/networked_gameplay/mvp/v0_mvp3_authority_process.gd"
+      ],
+      "log": "authority-a.log"
+    },
+    {
+      "role": "authority/b",
+      "argv": [
+        "C:\\Godot\\godot\\bin\\godot.windows.editor.double.x86_64.console.exe",
+        "--headless",
+        "--path",
+        "C:\\distributed-world-simulator\\.mvp3-manual-91c0df9d-r1",
+        "--script",
+        "res://scripts/runtime/networked_gameplay/mvp/v0_mvp3_authority_process.gd"
+      ],
+      "log": "authority-b.log"
+    },
+    {
+      "role": "gateway",
+      "argv": [
+        "C:\\Godot\\godot\\bin\\godot.windows.editor.double.x86_64.console.exe",
+        "--headless",
+        "--path",
+        "C:\\distributed-world-simulator\\.mvp3-manual-91c0df9d-r1",
+        "--script",
+        "res://scripts/runtime/networked_gameplay/mvp/v0_mvp3_gateway_process.gd"
+      ],
+      "log": "gateway.log"
+    },
+    {
+      "role": "client/a",
+      "argv": [
+        "C:\\Godot\\godot\\bin\\godot.windows.editor.double.x86_64.console.exe",
+        "--path",
+        "C:\\distributed-world-simulator\\.mvp3-manual-91c0df9d-r1",
+        "--resolution",
+        "720x480",
+        "--position",
+        "40,80",
+        "res://scenes/labs/mvp/v0_mvp3_live_shared_world.tscn"
+      ],
+      "log": "client-a.log"
+    },
+    {
+      "role": "client/b",
+      "argv": [
+        "C:\\Godot\\godot\\bin\\godot.windows.editor.double.x86_64.console.exe",
+        "--path",
+        "C:\\distributed-world-simulator\\.mvp3-manual-91c0df9d-r1",
+        "--resolution",
+        "720x480",
+        "--position",
+        "800,80",
+        "res://scenes/labs/mvp/v0_mvp3_live_shared_world.tscn"
+      ],
+      "log": "client-b.log"
+    }
+  ],
+  "checks": {
+    "all_processes_passed": true,
+    "exact_subject": true,
+    "five_distinct_processes": true,
+    "a_roundtrip": true,
+    "both_clients_observed_routes": true,
+    "stable_client_connections": true,
+    "stable_body_camera_instances": true,
+    "both_players_always_visible": true,
+    "viewport_pngs": true,
+    "no_respawn_or_rebind": true,
+    "no_false_acceptance": true,
+    "both_players_independent": true,
+    "post_activation_movement": true,
+    "canonical_fixed_receipts": true,
+    "manual_input_proven_when_requested": true,
+    "exit_authority/a": true,
+    "log_authority/a_clean": true,
+    "exit_authority/b": true,
+    "log_authority/b_clean": true,
+    "exit_gateway": true,
+    "log_gateway_clean": true,
+    "exit_client/a": true,
+    "log_client/a_clean": true,
+    "exit_client/b": true,
+    "log_client/b_clean": true
+  },
+  "viewport_sizes": {
+    "a": [
+      720,
+      404
+    ],
+    "b": [
+      720,
+      404
+    ]
+  },
+  "error": "",
+  "passed": true,
+  "manual_input_mode": true,
+  "manual_input_executed": true,
+  "secrets_recorded": false,
+  "mvp3_predicate_verified": false,
+  "files": [
+    {
+      "path": "authority-a.json",
+      "bytes": 11295,
+      "sha256": "924cba9ab16d80a8937881a5f8017e3dc1a2f6ed0be105b1542a16c6f2aadf39"
+    },
+    {
+      "path": "authority-a.log",
+      "bytes": 166,
+      "sha256": "277136a76b3fd3ebcb14d3179f65b39300a335062e4c33b53311a7f1d2160496"
+    },
+    {
+      "path": "authority-b.json",
+      "bytes": 8453,
+      "sha256": "49d83212f3832557967e025938485387c87eefedf79f922617c7fded85d2d67a"
+    },
+    {
+      "path": "authority-b.log",
+      "bytes": 166,
+      "sha256": "db6fc667bba7f2532c0a6896475c2bdc384a9d11cbb2ff245a065d8e0722a0a1"
+    },
+    {
+      "path": "client-a.json",
+      "bytes": 1884,
+      "sha256": "55aabce8f9f83d7cc76d7b91b82617efe3d92c81c047a4173749d135bf3b3d6c"
+    },
+    {
+      "path": "client-a.log",
+      "bytes": 266,
+      "sha256": "b1045fbb0f6711b905f237e20bf1fd820207143df6b60afb457ded324ac248d1"
+    },
+    {
+      "path": "client-a.png",
+      "bytes": 34533,
+      "sha256": "8c26859a831832f44f3febd8ef02278fa503471c3c9f858c1af5471ab37b5c84"
+    },
+    {
+      "path": "client-b.json",
+      "bytes": 1884,
+      "sha256": "a4d938ebe3ecc90eb44e60872974d5264c8da10bf411201110f06d7352f6a104"
+    },
+    {
+      "path": "client-b.log",
+      "bytes": 266,
+      "sha256": "9d470667d537f2cce3d2dc1be1fb4cbeb293f0440c762e49c9597301f513b2e1"
+    },
+    {
+      "path": "client-b.png",
+      "bytes": 34519,
+      "sha256": "d9c8d66035aed73d8d76dbcc7393e5898a9604cf90815539b3d70804c64bccab"
+    },
+    {
+      "path": "gateway.json",
+      "bytes": 451601,
+      "sha256": "71de9d68873136395e556e6edaffa195d1cf4f57179051c6e26f6266ea6f3f10"
+    },
+    {
+      "path": "gateway.log",
+      "bytes": 173,
+      "sha256": "637d500aa15877fd026473da5316b77bf08c61e3f9bbc8af633e94a1870a34c0"
+    }
+  ]
+}

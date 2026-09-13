@@ -1,0 +1,65 @@
+{
+  "actor": "b",
+  "both_visible_snapshots": 151,
+  "connects": 1,
+  "disconnects": 0,
+  "failures": [],
+  "final_instance_ids": {
+    "camera": 61756933667,
+    "local": 61656270297,
+    "remote": 61706601971,
+    "surface": 61253617105
+  },
+  "fixed_input_receipts": 148,
+  "identity_changes": 0,
+  "initial_instance_ids": {
+    "camera": 61756933667,
+    "local": 61656270297,
+    "remote": 61706601971,
+    "surface": 61253617105
+  },
+  "input_sequence": 148,
+  "manual_input_events": 14,
+  "mvp3_predicate_verified": false,
+  "passed": true,
+  "process_id": 34668,
+  "reconnects": 0,
+  "respawns": 0,
+  "route_history": [
+    "authority/a",
+    "authority/b",
+    "authority/a"
+  ],
+  "route_history_observed_actor": "a",
+  "run_id": "4f453e10d07b7444ca5c3dcace29e251",
+  "schema": "distributed_world_simulator.mvp3_graphical_client.v1",
+  "screenshot_file": "C:\\distributed-world-simulator\\.mvp3-manual-91c0df9d-r1\\artifacts\\mvp3-manual-r13b-f1d453fb-20260913T092910Z\\client-b.png",
+  "screenshot_saved": true,
+  "snapshots": 151,
+  "subject_head": "f1d453fb2af49231c30bdc5cbe415ad199394446",
+  "surface_projection": {
+    "bootstrap_hash": "d6979f16e3c02fe4bf4664753d8e2c972beb4c0f76f03cfcd2e78e61337c3f80",
+    "canonical_state_owned": false,
+    "collision_enabled": false,
+    "configured": true,
+    "descriptor": {
+      "anchor_direction": [
+        0.0,
+        1.0,
+        0.0
+      ],
+      "brick_interior_resolution": 4,
+      "canonical_surface_radius_m": 1737425.0,
+      "ghost_border_samples": 1,
+      "half_extent_m": 8.0,
+      "max_level": 2,
+      "mutation_level": 1,
+      "presentation_level": 1
+    },
+    "mesh_count": 4,
+    "mode": "IMMUTABLE_P7_BOOTSTRAP_PROJECTION",
+    "mutable_matter_store_retained": false,
+    "network_mutation_proven": false
+  },
+  "transport_session_id": "transport-session/mvp3/4f453e10d07b7444ca5c3dcace29e251/b"
+}

@@ -1,0 +1,413 @@
+{
+  "auth_rejections": 0,
+  "authenticated_gateway_connections": 1,
+  "authority_id": "authority/a",
+  "clock": {
+    "accumulator_seconds": 0.013072999999999406,
+    "catch_up_limit_hits": 0,
+    "dropped_time_seconds": 0.0,
+    "max_catch_up_ticks": 8,
+    "max_frame_delta_seconds": 0.25,
+    "schema": "planet_simulator.fixed_tick_scheduler.v1",
+    "server_tick": 3221,
+    "tick_delta_seconds": 0.016666666666666666,
+    "tick_rate_hz": 60,
+    "ticks_emitted": 3221
+  },
+  "disconnects_during_workload": 0,
+  "error": "",
+  "final_item_graph": {
+    "authority_epoch": 1,
+    "authority_owner_id": "authority/a",
+    "checksum": "5e0216057af14c9697b4124f2b5673f106060d3c0f07aceadb65fb4faec5d06f",
+    "containers": [
+      {
+        "capacity": 8,
+        "container_id": "container/shared/crate/1",
+        "owner_item_id": "item/shared/crate/1",
+        "slots": []
+      }
+    ],
+    "inventories": {
+      "a": {
+        "hotbar": [],
+        "inventory": [],
+        "selected_hotbar_index": 0
+      },
+      "b": {
+        "hotbar": [],
+        "inventory": [],
+        "selected_hotbar_index": 0
+      }
+    },
+    "items": [
+      {
+        "definition_id": "item/beacon",
+        "item_id": "item/shared/beacon/1",
+        "location": {
+          "kind": "WORLD"
+        },
+        "mounted": false,
+        "quantity": 1
+      },
+      {
+        "definition_id": "item/crate",
+        "item_id": "item/shared/crate/1",
+        "location": {
+          "kind": "WORLD"
+        },
+        "mounted": false,
+        "quantity": 1
+      },
+      {
+        "definition_id": "item/ore",
+        "item_id": "item/shared/ore/1",
+        "location": {
+          "kind": "WORLD"
+        },
+        "mounted": false,
+        "quantity": 8
+      }
+    ],
+    "mounts": [
+      {
+        "item_id": "",
+        "mount_id": "mount/shared/socket/1"
+      }
+    ],
+    "open_containers": {},
+    "revision": 2,
+    "schema": "planet_simulator.canonical_multiplayer_item_graph_snapshot.v1",
+    "tick": 2
+  },
+  "final_snapshot": {
+    "authority_epoch": 1.0,
+    "authority_owner_id": "authority/a",
+    "checksum": "6d9c49c1db02fab2b43c515917f096e1014d484564dab0570ee9d3457ab0634e",
+    "players": [
+      {
+        "connected": true,
+        "flashlight_enabled": false,
+        "inventory": [],
+        "last_input_sequence": 152.0,
+        "logical_player_id": "a",
+        "orientation_yaw": 0.0,
+        "ownership_epoch": 1.0,
+        "player_entity_id": "player/a",
+        "position": {
+          "x": -6.599999999999994,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "state_revision": 1031.0,
+        "transport_session_id": "transport-session/mvp3/4f453e10d07b7444ca5c3dcace29e251/a",
+        "velocity": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        }
+      },
+      {
+        "connected": true,
+        "flashlight_enabled": false,
+        "inventory": [],
+        "last_input_sequence": 148.0,
+        "logical_player_id": "b",
+        "orientation_yaw": 0.0,
+        "ownership_epoch": 1.0,
+        "player_entity_id": "player/b",
+        "position": {
+          "x": 6.099999999999996,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "state_revision": 578.0,
+        "transport_session_id": "transport-session/mvp3/4f453e10d07b7444ca5c3dcace29e251/b",
+        "velocity": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        }
+      }
+    ],
+    "region_id": "region/mvp3/authority/a",
+    "revision": 1493.0,
+    "schema": "planet_simulator.player_state_snapshot.v1",
+    "server_tick": 3221.0,
+    "shared_item": {
+      "available": true,
+      "item_id": "item/shared/beacon/1",
+      "owner_player_entity_id": "",
+      "revision": 0.0
+    }
+  },
+  "fixed_input_accepts": {
+    "a": 143,
+    "b": 148
+  },
+  "held_simulation_ticks": {
+    "a": 2436,
+    "b": 2694
+  },
+  "initial_item_graph": {
+    "authority_epoch": 1,
+    "authority_owner_id": "authority/a",
+    "checksum": "5e0216057af14c9697b4124f2b5673f106060d3c0f07aceadb65fb4faec5d06f",
+    "containers": [
+      {
+        "capacity": 8,
+        "container_id": "container/shared/crate/1",
+        "owner_item_id": "item/shared/crate/1",
+        "slots": []
+      }
+    ],
+    "inventories": {
+      "a": {
+        "hotbar": [],
+        "inventory": [],
+        "selected_hotbar_index": 0
+      },
+      "b": {
+        "hotbar": [],
+        "inventory": [],
+        "selected_hotbar_index": 0
+      }
+    },
+    "items": [
+      {
+        "definition_id": "item/beacon",
+        "item_id": "item/shared/beacon/1",
+        "location": {
+          "kind": "WORLD"
+        },
+        "mounted": false,
+        "quantity": 1
+      },
+      {
+        "definition_id": "item/crate",
+        "item_id": "item/shared/crate/1",
+        "location": {
+          "kind": "WORLD"
+        },
+        "mounted": false,
+        "quantity": 1
+      },
+      {
+        "definition_id": "item/ore",
+        "item_id": "item/shared/ore/1",
+        "location": {
+          "kind": "WORLD"
+        },
+        "mounted": false,
+        "quantity": 8
+      }
+    ],
+    "mounts": [
+      {
+        "item_id": "",
+        "mount_id": "mount/shared/socket/1"
+      }
+    ],
+    "open_containers": {},
+    "revision": 2,
+    "schema": "planet_simulator.canonical_multiplayer_item_graph_snapshot.v1",
+    "tick": 2
+  },
+  "initial_snapshot": {
+    "authority_epoch": 1.0,
+    "authority_owner_id": "authority/a",
+    "checksum": "9b7b82aef241ba32ebcba40b663498f2767081d9a187af235421a69f43bfd23e",
+    "players": [
+      {
+        "connected": true,
+        "flashlight_enabled": false,
+        "inventory": [],
+        "last_input_sequence": 0.0,
+        "logical_player_id": "a",
+        "orientation_yaw": 0.0,
+        "ownership_epoch": 1.0,
+        "player_entity_id": "player/a",
+        "position": {
+          "x": -5.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "state_revision": 1.0,
+        "transport_session_id": "transport-session/mvp3/4f453e10d07b7444ca5c3dcace29e251/a",
+        "velocity": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        }
+      },
+      {
+        "connected": true,
+        "flashlight_enabled": false,
+        "inventory": [],
+        "last_input_sequence": 0.0,
+        "logical_player_id": "b",
+        "orientation_yaw": 0.0,
+        "ownership_epoch": 1.0,
+        "player_entity_id": "player/b",
+        "position": {
+          "x": 5.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "state_revision": 1.0,
+        "transport_session_id": "transport-session/mvp3/4f453e10d07b7444ca5c3dcace29e251/b",
+        "velocity": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        }
+      }
+    ],
+    "region_id": "region/mvp3/authority/a",
+    "revision": 2.0,
+    "schema": "planet_simulator.player_state_snapshot.v1",
+    "server_tick": 0.0,
+    "shared_item": {
+      "available": true,
+      "item_id": "item/shared/beacon/1",
+      "owner_player_entity_id": "",
+      "revision": 0.0
+    }
+  },
+  "input_accepts": {
+    "a": 143,
+    "b": 148
+  },
+  "lifecycle": [
+    {
+      "actor": "a",
+      "error_code": "",
+      "kind": "EXPORT",
+      "process_id": 30924,
+      "ready_after": false,
+      "rpc_sequence": 529,
+      "success": true,
+      "transfer_id": "transfer/mvp3/graphical/a-out"
+    },
+    {
+      "actor": "a",
+      "error_code": "",
+      "kind": "RETIRE",
+      "process_id": 30924,
+      "ready_after": false,
+      "rpc_sequence": 530,
+      "success": true,
+      "transfer_id": "transfer/mvp3/graphical/a-out"
+    },
+    {
+      "actor": "a",
+      "error_code": "",
+      "kind": "STAGE",
+      "process_id": 30924,
+      "ready_after": false,
+      "rpc_sequence": 568,
+      "success": true,
+      "transfer_id": "transfer/mvp3/graphical/a-back"
+    },
+    {
+      "actor": "a",
+      "error_code": "LIVE_PLAYER_TARGET_NOT_CURRENT",
+      "kind": "ACTIVATE",
+      "process_id": 30924,
+      "ready_after": false,
+      "rpc_sequence": 570,
+      "success": false,
+      "transfer_id": "transfer/mvp3/graphical/a-back"
+    },
+    {
+      "actor": "a",
+      "error_code": "",
+      "kind": "ACTIVATE",
+      "process_id": 30924,
+      "ready_after": true,
+      "rpc_sequence": 571,
+      "success": true,
+      "transfer_id": "transfer/mvp3/graphical/a-back"
+    }
+  ],
+  "live_port": {
+    "backend_authority_epoch": 1,
+    "bindings": {
+      "a": {
+        "canonical_state_owned": false,
+        "decision": {
+          "active_authority_id": "authority/a",
+          "authority_epoch": 3.0,
+          "completed_transfer_count": 2.0,
+          "player_snapshot": {
+            "authority_epoch": 3.0,
+            "last_input_sequence": 0.0,
+            "last_operation_id": "",
+            "logical_player_id": "player/mvp3/a",
+            "player_entity_id": "entity/mvp3/a"
+          },
+          "private_construction_truth": false,
+          "private_item_graph": false,
+          "private_persistence_owner": false,
+          "private_replay_owner": false,
+          "schema": "distributed_world_simulator.v0_sm1_authority_transfer.v1",
+          "state": "ACTIVE",
+          "transfer": {}
+        },
+        "decision_owner": "EXISTING_SM1_COORDINATOR",
+        "installed_epoch": 3,
+        "installed_transfer": "transfer/mvp3/graphical/a-back",
+        "local_authority_id": "authority/a",
+        "locally_ready": true,
+        "logical_player_id": "a",
+        "ownership_epoch": 1,
+        "transport_session_id": "transport-session/mvp3/4f453e10d07b7444ca5c3dcace29e251/a"
+      },
+      "b": {
+        "canonical_state_owned": false,
+        "decision": {
+          "active_authority_id": "authority/a",
+          "authority_epoch": 1.0,
+          "completed_transfer_count": 0.0,
+          "player_snapshot": {
+            "authority_epoch": 1.0,
+            "last_input_sequence": 0.0,
+            "last_operation_id": "",
+            "logical_player_id": "player/mvp3/b",
+            "player_entity_id": "entity/mvp3/b"
+          },
+          "private_construction_truth": false,
+          "private_item_graph": false,
+          "private_persistence_owner": false,
+          "private_replay_owner": false,
+          "schema": "distributed_world_simulator.v0_sm1_authority_transfer.v1",
+          "state": "ACTIVE",
+          "transfer": {}
+        },
+        "decision_owner": "EXISTING_SM1_COORDINATOR",
+        "installed_epoch": 1,
+        "installed_transfer": "",
+        "local_authority_id": "authority/a",
+        "locally_ready": true,
+        "logical_player_id": "b",
+        "ownership_epoch": 1,
+        "transport_session_id": "transport-session/mvp3/4f453e10d07b7444ca5c3dcace29e251/b"
+      }
+    },
+    "canonical_state_owned": false,
+    "item_carry_scope": "MVP3_EMPTY_CARRY_ONLY",
+    "local_authority_id": "authority/a",
+    "prepared_count": 1,
+    "restart_reconciliation_required": true,
+    "schema": "distributed_world_simulator.mvp3_live_player_port.v1",
+    "staged_count": 0
+  },
+  "mvp3_predicate_verified": false,
+  "passed": true,
+  "process_id": 30924,
+  "received_requests": 1333,
+  "run_id": "4f453e10d07b7444ca5c3dcace29e251",
+  "schema": "distributed_world_simulator.mvp3_native_authority_process.v1",
+  "state": "COMPLETE",
+  "subject_head": "f1d453fb2af49231c30bdc5cbe415ad199394446"
+}

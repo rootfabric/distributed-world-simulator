@@ -1,0 +1,79 @@
+{
+  "schema": "distributed_world_simulator.mvp3_windows_implementer_report.r13.v1",
+  "role": "LOCAL_WINDOWS_IMPLEMENTER",
+  "parent_work_order": "V0-MVP-R1-WO-001",
+  "repair_work_order": "V0-MVP-R1-WO-R13",
+  "epoch": "E2026-09-09-V0-MVP-R1",
+  "base_subject_head": "91c0df9d9e9c36f3519110aea85b5884214b9278",
+  "base_subject_tree": "1a77202306e5a7f943b24e47d5c84f666b0a2cdc",
+  "repair_branch": "repair/v0-mvp3-live-player-source-attestation-r13",
+  "repair_commits": [
+    {"head": "534f496bfdcd771e41c14166f45a469e9c8ec0ad", "tree": "d7ac4ea88255bc558ab480f81ca0b6bd9b320245", "subject": "fix(mvp3): bind live player export checksum to transport-canonical JSON form", "freeze_ref": "freeze/v0-mvp3-r13-534f496b-r1"},
+    {"head": "f1d453fb2af49231c30bdc5cbe415ad199394446", "tree": "f1697cc52c1abc7f1bb21922c5fab3b49a3c167d", "subject": "fix(mvp3): size gateway operation ledger for the interactive session envelope", "freeze_ref": "freeze/v0-mvp3-r13b-f1d453fb-r1"}
+  ],
+  "final_repair_head": "f1d453fb2af49231c30bdc5cbe415ad199394446",
+  "final_repair_tree": "f1697cc52c1abc7f1bb21922c5fab3b49a3c167d",
+  "godot_version": "4.7.1.stable.double.custom_build.a13da4feb",
+  "godot_sha256": "3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5",
+  "os_version": "Microsoft Windows NT 10.0.19045.0",
+  "machine_identifier": "03000200-0400-0500-0006-000700080009",
+  "defect_1": {
+    "code": "LIVE_PLAYER_SOURCE_ATTESTATION_MISMATCH",
+    "root_cause": "prepare_export hashed the frozen packet over native pre-transport doubles; Godot full-precision JSON formatting is not idempotent across a parse for accumulated fixed-tick movement doubles, so the target recomputed a different checksum over the delivered byte-identical packet and rejected every legitimate handoff with real accumulated movement",
+    "repair": "producer-side canonicalization to a JSON round-trip fixed point before checksum computation; collapsed mismatch split into ABSENT/CHECKSUM_INVALID/PACKET_DIVERGED; gate strictness unchanged",
+    "test": "tests/runtime/test_v0_mvp3_source_attestation_roundtrip.gd (red/green proven: LIVE_PLAYER_SOURCE_CHECKSUM_INVALID on pre-fix producer)"
+  },
+  "defect_2": {
+    "code": "MVP3_CLIENT_COMMAND_REJECTED:LEDGER_CAPACITY_EXCEEDED",
+    "found_in": "R13 manual rerun after the attestation repair (route already completed)",
+    "root_cause": "interactive clients submit one distinct fixed-tick operation per held tick (~120 ops/s for two players); gateway ledger capacity 1024 exhausted in ~8.6 s of held movement; the P6 ledger is fail-closed with no eviction, so the bound was mis-sized",
+    "repair": "MAX_INTERACTIVE_LEDGER_OPERATIONS = 16384 derived from the session envelope (2 x 60 x 120 = 14400) plus headroom; retirement policy unchanged",
+    "test": "tests/runtime/test_v0_mvp3_gateway_ledger_budget.gd"
+  },
+  "targeted_and_regression_results": {
+    "test_v0_mvp3_source_attestation_roundtrip": "PASS 86 assertions 0 failures (red on pre-fix producer)",
+    "test_v0_mvp3_gateway_ledger_budget": "PASS 7 assertions 0 failures",
+    "test_v0_mvp3_live_owner_handoff": "PASS 232 assertions 0 failures",
+    "test_v0_mvp3_fixed_tick_input_contract": "PASS 931 assertions 0 failures",
+    "test_v0_sm1_player_carry_and_gateway_pivot": "PASS 89 assertions",
+    "test_v0_sm1_owner_map_and_transfer": "PASS 79 assertions",
+    "native_process_roundtrip": "PASS (artifacts/mvp3-r13-native-20260913T091526Z)",
+    "automatic_graphical_roundtrip": "PASS x3 (diag2, r13-auto-1, r13-auto-2, r13b-auto) after repair; FAIL reproducible on base subject 91c0df9d before repair"
+  },
+  "manual_rerun": {
+    "subject_head": "f1d453fb2af49231c30bdc5cbe415ad199394446",
+    "input_method": "HUMAN_PHYSICAL_KEYBOARD",
+    "manual_input_mode": true,
+    "manual_input_executed": true,
+    "passed": true,
+    "launcher_exit_code": 0,
+    "evidence_directory": "C:\\distributed-world-simulator\\.mvp3-manual-91c0df9d-r1\\artifacts\\mvp3-manual-r13b-f1d453fb-20260913T092910Z",
+    "utc_start": "2026-09-13T09:29:10Z",
+    "utc_finish": "2026-09-13T09:29:52Z",
+    "a_route": "authority/a -> authority/b -> authority/a",
+    "transfer_rows": 2,
+    "post_activation_movement": [
+      {"transfer": "a-out", "before_x": 0.399999999999999, "after_x": 0.499999999999999, "before_seq": 61, "after_seq": 62, "before_rev": 112, "after_rev": 113, "identity_preserved": true},
+      {"transfer": "a-back", "before_x": -1.7, "after_x": -1.8, "before_seq": 70, "after_seq": 71, "before_rev": 230, "after_rev": 231, "identity_preserved": true}
+    ],
+    "b_independent_movement": "128 observations; own displacement on fixed ticks (delta_seconds = 1/60) on authority/a",
+    "client_a": {"connects": 1, "disconnects": 0, "reconnects": 0, "respawns": 0, "identity_changes": 0, "manual_input_events": 16, "fixed_input_receipts": 152},
+    "client_b": {"connects": 1, "disconnects": 0, "reconnects": 0, "respawns": 0, "identity_changes": 0, "manual_input_events": 14, "fixed_input_receipts": 148},
+    "backend_links": {"authority/a": {"connects": 1, "disconnects": 0, "failure_code": ""}, "authority/b": {"connects": 1, "disconnects": 0, "failure_code": ""}},
+    "gateway_reconnects": 0,
+    "body_camera_continuity": "PASS both clients (initial_instance_ids == final_instance_ids for local/remote/camera/surface, all non-zero)",
+    "p7_projection": {"mode": "IMMUTABLE_P7_BOOTSTRAP_PROJECTION", "configured": true, "canonical_state_owned": false, "mutable_matter_store_retained": false, "bootstrap_hash_a": "d6979f16e3c02fe4bf4664753d8e2c972beb4c0f76f03cfcd2e78e61337c3f80", "bootstrap_hash_b": "d6979f16e3c02fe4bf4664753d8e2c972beb4c0f76f03cfcd2e78e61337c3f80", "identical": true},
+    "screenshots": {"client-a.png": {"bytes": 34533, "sha256": "8c26859a831832f44f3febd8ef02278fa503471c3c9f858c1af5471ab37b5c84", "png_magic": "89 50 4E 47 0D 0A 1A 0A"}, "client-b.png": {"bytes": 34519, "sha256": "d9c8d66035aed73d8d76dbcc7393e5898a9604cf90815539b3d70804c64bccab", "png_magic": "89 50 4E 47 0D 0A 1A 0A"}},
+    "logs": "no SCRIPT ERROR / Parse Error / Compile Error in any log; all five processes exit 0",
+    "raw_manifest_sha256": "3075debd09a3f06e352387b430015204d3e1c095525dba1d958afcc1a7b03668",
+    "sha256_index": "artifacts/mvp3-manual-r13b-f1d453fb-20260913T092910Z/sha256-index.json",
+    "raw_file_count": 13
+  },
+  "worktree_before": "CLEAN",
+  "worktree_after": "CLEAN",
+  "verdict": "REPAIR_COMPLETE_MANUAL_RUN_PASS",
+  "mvp3_predicate_verified": false,
+  "mvp3_closed": false,
+  "parent_work_order_state": "IN_PROGRESS",
+  "notes": "Predicate closure and MVP3 closure remain reserved for the Fresh Independent Verifier / Coordinator over the raw evidence. No merge to main performed."
+}

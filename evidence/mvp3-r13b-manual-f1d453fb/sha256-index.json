@@ -1,0 +1,67 @@
+[
+  {
+    "Path": "C:\\distributed-world-simulator\\.mvp3-manual-91c0df9d-r1\\artifacts\\mvp3-manual-r13b-f1d453fb-20260913T092910Z\\authority-a.json",
+    "Bytes": 11295,
+    "SHA256": "924cba9ab16d80a8937881a5f8017e3dc1a2f6ed0be105b1542a16c6f2aadf39"
+  },
+  {
+    "Path": "C:\\distributed-world-simulator\\.mvp3-manual-91c0df9d-r1\\artifacts\\mvp3-manual-r13b-f1d453fb-20260913T092910Z\\authority-a.log",
+    "Bytes": 166,
+    "SHA256": "277136a76b3fd3ebcb14d3179f65b39300a335062e4c33b53311a7f1d2160496"
+  },
+  {
+    "Path": "C:\\distributed-world-simulator\\.mvp3-manual-91c0df9d-r1\\artifacts\\mvp3-manual-r13b-f1d453fb-20260913T092910Z\\authority-b.json",
+    "Bytes": 8453,
+    "SHA256": "49d83212f3832557967e025938485387c87eefedf79f922617c7fded85d2d67a"
+  },
+  {
+    "Path": "C:\\distributed-world-simulator\\.mvp3-manual-91c0df9d-r1\\artifacts\\mvp3-manual-r13b-f1d453fb-20260913T092910Z\\authority-b.log",
+    "Bytes": 166,
+    "SHA256": "db6fc667bba7f2532c0a6896475c2bdc384a9d11cbb2ff245a065d8e0722a0a1"
+  },
+  {
+    "Path": "C:\\distributed-world-simulator\\.mvp3-manual-91c0df9d-r1\\artifacts\\mvp3-manual-r13b-f1d453fb-20260913T092910Z\\client-a.json",
+    "Bytes": 1884,
+    "SHA256": "55aabce8f9f83d7cc76d7b91b82617efe3d92c81c047a4173749d135bf3b3d6c"
+  },
+  {
+    "Path": "C:\\distributed-world-simulator\\.mvp3-manual-91c0df9d-r1\\artifacts\\mvp3-manual-r13b-f1d453fb-20260913T092910Z\\client-a.log",
+    "Bytes": 266,
+    "SHA256": "b1045fbb0f6711b905f237e20bf1fd820207143df6b60afb457ded324ac248d1"
+  },
+  {
+    "Path": "C:\\distributed-world-simulator\\.mvp3-manual-91c0df9d-r1\\artifacts\\mvp3-manual-r13b-f1d453fb-20260913T092910Z\\client-a.png",
+    "Bytes": 34533,
+    "SHA256": "8c26859a831832f44f3febd8ef02278fa503471c3c9f858c1af5471ab37b5c84"
+  },
+  {
+    "Path": "C:\\distributed-world-simulator\\.mvp3-manual-91c0df9d-r1\\artifacts\\mvp3-manual-r13b-f1d453fb-20260913T092910Z\\client-b.json",
+    "Bytes": 1884,
+    "SHA256": "a4d938ebe3ecc90eb44e60872974d5264c8da10bf411201110f06d7352f6a104"
+  },
+  {
+    "Path": "C:\\distributed-world-simulator\\.mvp3-manual-91c0df9d-r1\\artifacts\\mvp3-manual-r13b-f1d453fb-20260913T092910Z\\client-b.log",
+    "Bytes": 266,
+    "SHA256": "9d470667d537f2cce3d2dc1be1fb4cbeb293f0440c762e49c9597301f513b2e1"
+  },
+  {
+    "Path": "C:\\distributed-world-simulator\\.mvp3-manual-91c0df9d-r1\\artifacts\\mvp3-manual-r13b-f1d453fb-20260913T092910Z\\client-b.png",
+    "Bytes": 34519,
+    "SHA256": "d9c8d66035aed73d8d76dbcc7393e5898a9604cf90815539b3d70804c64bccab"
+  },
+  {
+    "Path": "C:\\distributed-world-simulator\\.mvp3-manual-91c0df9d-r1\\artifacts\\mvp3-manual-r13b-f1d453fb-20260913T092910Z\\gateway.json",
+    "Bytes": 451601,
+    "SHA256": "71de9d68873136395e556e6edaffa195d1cf4f57179051c6e26f6266ea6f3f10"
+  },
+  {
+    "Path": "C:\\distributed-world-simulator\\.mvp3-manual-91c0df9d-r1\\artifacts\\mvp3-manual-r13b-f1d453fb-20260913T092910Z\\gateway.log",
+    "Bytes": 173,
+    "SHA256": "637d500aa15877fd026473da5316b77bf08c61e3f9bbc8af633e94a1870a34c0"
+  },
+  {
+    "Path": "C:\\distributed-world-simulator\\.mvp3-manual-91c0df9d-r1\\artifacts\\mvp3-manual-r13b-f1d453fb-20260913T092910Z\\manifest.json",
+    "Bytes": 5558,
+    "SHA256": "3075debd09a3f06e352387b430015204d3e1c095525dba1d958afcc1a7b03668"
+  }
+]
