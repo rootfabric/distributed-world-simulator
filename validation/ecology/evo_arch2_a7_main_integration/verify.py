@@ -7,7 +7,7 @@ import hashlib
 import importlib.metadata
 import json
 import os
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 import re
 import shutil
 import subprocess
@@ -21,7 +21,6 @@ ACCEPTED_A7 = "8eccf6304078bec3a3ccaa5860c5aab6ee311209"
 ACCEPTED_TREE = "24e876b7377cb3e1e521f08ff9766331fe4e895a"
 GODOT_SHA = "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7"
 GODOT_VERSION = "4.7.1.stable.double.custom_build.a13da4feb"
-# Mirror the main-owned requirement; require_harness_dependency checks it directly.
 PINNED_JSONSCHEMA = "4.22.0"
 HARNESS_REPAIR_PATH = "tests/harness/test_v0_mvp_act0.py"
 HARNESS_REPAIR_BLOB = "43db3ef992430802dab3b7c60b3bb7d2801205f0"
@@ -38,11 +37,17 @@ INTEGRATION_LOCAL_PATHS = {
     "docs/research/ecology/EVO_ARCH2_A7_MAIN_INTEGRATION_REPAIR_R3_RU.md",
     "docs/research/ecology/EVO_ARCH2_A7_MAIN_INTEGRATION_REPAIR_R4_RU.md",
     "docs/research/ecology/EVO_ARCH2_A7_MAIN_INTEGRATION_REPAIR_R5_RU.md",
+    "docs/research/ecology/EVO_ARCH2_A7_MAIN_INTEGRATION_REPAIR_R6_RU.md",
     "validation/ecology/evo_arch2_a7_main_integration/expected-transfer.v1.json",
     "validation/ecology/evo_arch2_a7_main_integration/verify.py",
     "validation/ecology/evo_arch2_a7_main_integration/test_repair_r5.py",
+    "validation/ecology/evo_arch2_a7_main_integration/test_repair_r6.py",
 }
-GENERATED_RES_PREFIXES = ("artifacts/a7/",)
+GENERATED_RES_OUTPUTS = {
+    "artifacts/a7/observatory.png",
+    "artifacts/a7/capture-sources.json",
+    "artifacts/a7/observatory-report.json",
+}
 ERRORS = re.compile(r"SCRIPT ERROR|Parse Error|ERROR:|FAIL:")
 RES_PATTERNS = [
     re.compile(r'(?:preload|load)\(\s*["\']res://([^"\']+)["\']\s*\)'),
@@ -127,6 +132,72 @@ def require_control_health(value: object) -> str:
     if value not in ("GREEN", "YELLOW"):
         raise RuntimeError(f"CONTROL_HEALTH_NOT_EXPLICIT_NON_RED:{value!r}")
     return str(value)
+
+
+def require_exact_resource(head: str, rel: str) -> str:
+    """Require an exact regular Git blob AND identical unfiltered working bytes."""
+    path = PurePosixPath(rel)
+    if (not rel or rel != rel.strip() or path.is_absolute() or path.as_posix() != rel
+            or any(part in (".", "..") for part in path.parts)
+            or "\\" in rel or ":" in rel or any(ord(c) < 32 for c in rel)):
+        raise RuntimeError("NONCANONICAL_RESOURCE_PATH:" + rel)
+    listing = gp("ls-tree", "-z", head, "--", ":(literal)" + rel)
+    if listing.returncode != 0:
+        raise RuntimeError("RESOURCE_TREE_READ_FAILED:" + rel)
+    entries = [r for r in listing.stdout.split("\0") if r]
+    if len(entries) != 1:
+        raise RuntimeError("RESOURCE_NOT_IN_FROZEN_TREE:" + rel)
+    metadata, recorded_path = entries[0].split("\t", 1)
+    mode, kind, oid = metadata.split()
+    if recorded_path != rel or kind != "blob" or mode not in ("100644", "100755"):
+        raise RuntimeError("RESOURCE_NOT_REGULAR_BLOB:" + rel)
+    target = ROOT
+    for part in path.parts:
+        target = target / part
+        if target.is_symlink():
+            raise RuntimeError("RESOURCE_WORKTREE_SYMLINK:" + rel)
+    if not target.is_file():
+        raise RuntimeError("RESOURCE_WORKTREE_FILE_MISSING:" + rel)
+    if git("hash-object", "--no-filters", "--", rel) != oid:
+        raise RuntimeError("RESOURCE_WORKTREE_BYTES_MISMATCH:" + rel)
+    return oid
+
+
+def require_source_closure(head: str, seeds: list[str]) -> dict:
+    """Enumerate from frozen transfer paths, recursively seal referenced inputs."""
+    pending = list(sorted(set(seeds)))
+    objects: dict[str, str] = {}
+    generated: list[dict[str, str]] = []
+    refs = 0
+    while pending:
+        rel = pending.pop()
+        if rel in objects:
+            continue
+        objects[rel] = require_exact_resource(head, rel)
+        if not rel.endswith((".gd", ".tscn", ".tres", ".gdshader")):
+            continue
+        text = (ROOT / rel).read_text(encoding="utf-8-sig")
+        for pattern in RES_PATTERNS:
+            for match in pattern.finditer(text):
+                refs += 1
+                dependency = match.group(1)
+                if dependency in GENERATED_RES_OUTPUTS:
+                    generated.append({"source": rel, "target": dependency})
+                else:
+                    pending.append(dependency)
+    return {"result": "PASS", "authority": "FROZEN_GIT_TREE_AND_WORKING_BYTES",
+            "sources": len(objects), "references": refs, "objects": objects,
+            "generated_missing_allowed": generated}
+
+
+def require_unittest_result(text: str, expected: int) -> int:
+    """The standalone verifier, not only CI, enforces every mandatory control."""
+    counts = re.findall(r"^Ran (\d+) tests? in .+$", text, re.MULTILINE)
+    if (counts != [str(expected)] or not re.search(r"^OK\s*$", text, re.MULTILINE)
+            or re.search(r"^(?:FAILED|ERROR:|FAIL:)", text, re.MULTILINE)
+            or "skipped=" in text):
+        raise RuntimeError(f"MANDATORY_UNITTEST_SUITE_INCOMPLETE:expected={expected}")
+    return expected
 
 
 def transferred(path: str) -> bool:
@@ -269,45 +340,20 @@ def main() -> int:
         summary["transfer_identity"] = "PASS_ALL_ACTUAL_ADDITIONS_DIRECT_ACCEPTED_REF"
         summary["base_absence_gate"] = "PASS_BY_GIT_EXIT_STATUS"
         summary["direct_accepted_objects"] = direct_objects
-
-        sources = list((ROOT / "scripts/research/ecology/v2").glob("*.gd"))
-        sources += list((ROOT / "scripts/labs/ecology").glob("arch2_a7_*.gd"))
-        sources += list((ROOT / "tests/research/ecology/v2").glob("*.gd"))
-        sources += list((ROOT / "validation/ecology/evo_arch2_a5").glob("*.gd"))
-        sources += [ROOT / p for p in sorted(EXTERNAL_DEPS)]
-        sources += [ROOT / "scenes/labs/ecology/arch2_a7_observatory.tscn"]
-        refs = 0
-        generated_refs = []
-        for source in sources:
-            text = source.read_text(encoding="utf-8-sig")
-            for pattern in RES_PATTERNS:
-                for m in pattern.finditer(text):
-                    refs += 1
-                    rel = m.group(1)
-                    target = ROOT / rel
-                    if target.exists():
-                        continue
-                    if any(rel.startswith(prefix) for prefix in GENERATED_RES_PREFIXES):
-                        generated_refs.append({"source": source.relative_to(ROOT).as_posix(), "target": rel})
-                        continue
-                    req(False, f"TRANSITIVE_RES_PATH_MISSING:{source.relative_to(ROOT)}->{rel}")
-        summary["res_path_closure"] = {"result": "PASS", "sources": len(sources),
-                                       "references": refs, "generated_missing_allowed": generated_refs}
+        summary["res_path_closure"] = require_source_closure(args.head, transfer_additions)
 
         jsonschema_version = require_harness_dependency()
         summary["python_environment"] = {"executable": sys.executable,
                                          "jsonschema": jsonschema_version,
                                          "requirements_sha256": sha(ROOT / "scripts/harness/requirements.txt")}
-        rlog = run("integration-repair-r5-guards",
-            [sys.executable, "-m", "unittest", "discover", "-s",
-             "validation/ecology/evo_arch2_a7_main_integration", "-p", "test_repair_r5.py", "-v"],
-            "OK", timeout=180, scan=False)
-        rtext = rlog.read_text(encoding="utf-8-sig", errors="replace")
-        rcount = re.search(r"Ran (\d+) tests", rtext)
-        req(rcount is not None and int(rcount.group(1)) >= 20 and "skipped=" not in rtext,
-            "REPAIR_R5_GUARD_COVERAGE_INCOMPLETE")
-        summary["repair_r5_guards"] = {"result": "PASS", "tests": int(rcount.group(1)),
-                                       "sha256": sha(rlog)}
+        for revision, count in (("r5", 27), ("r6", 21)):
+            rlog = run("integration-repair-" + revision + "-guards",
+                [sys.executable, "-m", "unittest", "discover", "-s",
+                 "validation/ecology/evo_arch2_a7_main_integration", "-p", "test_repair_" + revision + ".py", "-v"],
+                "OK", timeout=180, scan=False)
+            verified_count = require_unittest_result(rlog.read_text(encoding="utf-8-sig", errors="replace"), count)
+            summary["repair_" + revision + "_guards"] = {"result": "PASS", "tests": verified_count,
+                                                         "sha256": sha(rlog)}
 
         args.godot = args.godot.resolve(strict=True)
         req(sha(args.godot) == GODOT_SHA, "GODOT_SHA")
@@ -315,6 +361,10 @@ def main() -> int:
             "GODOT_VERSION")
         summary["godot"] = {"version": GODOT_VERSION, "sha256": GODOT_SHA}
         shutil.rmtree(ROOT / ".godot", ignore_errors=True)
+        for rel in GENERATED_RES_OUTPUTS:
+            target = ROOT / rel
+            if target.is_file() or target.is_symlink():
+                target.unlink()
         run("cold-import", [str(args.godot), "--headless", "--audio-driver", "Dummy", "--editor",
                             "--path", str(ROOT), "--import"], timeout=300)
 
@@ -360,6 +410,8 @@ def main() -> int:
         png = ROOT / "artifacts/a7/observatory.png"
         report = ROOT / "artifacts/a7/capture-sources.json"
         req(png.is_file() and report.is_file(), "GRAPHICAL_EVIDENCE_MISSING")
+        for reference in summary["res_path_closure"]["generated_missing_allowed"]:
+            req((ROOT / reference["target"]).is_file(), "GENERATED_OUTPUT_NOT_PRODUCED:" + reference["target"])
         summary.update(viewport_sha256=sha(png), viewport_source_report_sha256=sha(report),
                        graphical_log_sha256=sha(glog))
 
@@ -394,6 +446,8 @@ def main() -> int:
         req(git("rev-parse", "HEAD") == args.head and git("rev-parse", "HEAD^{tree}") == args.tree,
             "FINAL_SUBJECT_MOVED")
         req(not git("status", "--porcelain", "--untracked-files=no"), "FINAL_TRACKED_DIRTY")
+        req(require_source_closure(args.head, transfer_additions) == summary["res_path_closure"],
+            "FINAL_RESOURCE_CLOSURE_CHANGED")
         summary["assertion_executions"] = sum(c["assertions"] for c in summary["checks"])
         summary["verdict"] = "PASS"
         print(f"SUBJECT_HEAD={args.head}\nSUBJECT_TREE={args.tree}\nVERDICT=PASS", flush=True)
