@@ -39,7 +39,7 @@ func _preflight(operation_id: String, command: Dictionary) -> Dictionary:
 	var validated := InputDTO.validate(wire)
 	if not bool(validated.get("success", false)):
 		return validated
-	if wire.get("logical_player_id") != _player or wire.get("transport_session_id") != _session or wire.get("operation_id") != operation_id or command.get("operation_id") != operation_id or wire.get("input_kind") != "MOVEMENT_DELTA":
+	if wire.get("logical_player_id") != _player or wire.get("transport_session_id") != _session or wire.get("operation_id") != operation_id or command.get("operation_id") != operation_id or wire.get("input_kind") not in ["MOVEMENT_DELTA", "MOVEMENT_INTENT"]:
 		return _failure("MVP3_CANONICAL_INPUT_BINDING_MISMATCH")
 	var known_fingerprint := String(_fingerprints.get(operation_id, ""))
 	var dispatcher = _dispatcher_ref.get_ref() if _dispatcher_ref != null else null
@@ -85,6 +85,13 @@ func execute_command(command: Dictionary) -> Dictionary:
 		return native
 	if receipt.get("fingerprint") != Utils.payload_hash(command["wire"]) or receipt.get("live_player_id") != _player:
 		return _failure("MVP3_NATIVE_RECEIPT_INVALID")
+	# New graphical input must have executed the real fixed movement method,
+	# not just advanced a clock next to a direct coordinate mutation. Historical
+	# replay is already bound to its canonical fingerprint/outcome and adds no tick.
+	if command["wire"].get("input_kind") == "MOVEMENT_INTENT" and not bool(native.get("replay", false)):
+		var simulation: Dictionary = native.get("details", {}).get("server_simulation", {})
+		if simulation.get("fixed_tick") != true or not is_equal_approx(float(simulation.get("delta_seconds", 0.0)), 1.0 / 60.0):
+			return _failure("MVP3_NATIVE_FIXED_TICK_NOT_PROVEN")
 	_receipts[operation_id] = receipt.duplicate(true)
 	_fingerprints[operation_id] = String(receipt["fingerprint"])
 	if dispatcher.has_method("record_operation_fingerprint"):
