@@ -19,8 +19,8 @@ jobs:
         lane: [graphical, world-core, control]
     timeout-minutes: 35
     env:
-      EXPECTED_HEAD: c9b103ee0feafbadee818c7a9d92c92b3c1736bf
-      EXPECTED_TREE: 7ab87a51854acc88d7638cc95b3808a6b4c71d19
+      EXPECTED_HEAD: 4ad95f032e111b3c92d513383d6de28145df92b9
+      EXPECTED_TREE: 0841b12ce9b714f3392f42ae56e56340c66d2d25
       ORIGINAL_FREEZE: 6a750d859d5858ff1f2d76bbf2ef7664a893ee86
       AUDITED_MAIN: 7dfc68ab5a1e90254a1b7039807f275b5da04eef
       ENGINE_SHA: bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7
@@ -34,7 +34,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: c9b103ee0feafbadee818c7a9d92c92b3c1736bf
+          ref: 4ad95f032e111b3c92d513383d6de28145df92b9
           fetch-depth: 0
           persist-credentials: false
       - name: Verify exact repaired subject and original frozen ancestry
@@ -154,7 +154,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: mvp3-r12-c9b103ee-${{ matrix.lane }}-${{ github.run_id }}-${{ github.run_attempt }}
+          name: mvp3-r12-4ad95f03-${{ matrix.lane }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
             artifacts/mvp3-closure/
             artifacts/mvp2-exact/
