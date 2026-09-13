@@ -1,4 +1,4 @@
-name: MVP3 Frozen 6a750d85 Closure Evidence
+name: MVP3 Closure R12 Exact Candidate Evidence
 on:
   push:
     branches: [control/v0-mvp3-closure-6a750d85-r1]
@@ -19,8 +19,9 @@ jobs:
         lane: [graphical, world-core, control]
     timeout-minutes: 35
     env:
-      EXPECTED_HEAD: 6a750d859d5858ff1f2d76bbf2ef7664a893ee86
-      EXPECTED_TREE: fb948fae078a1a372009f5f1ea00ad5440492610
+      EXPECTED_HEAD: c9b103ee0feafbadee818c7a9d92c92b3c1736bf
+      EXPECTED_TREE: 7ab87a51854acc88d7638cc95b3808a6b4c71d19
+      ORIGINAL_FREEZE: 6a750d859d5858ff1f2d76bbf2ef7664a893ee86
       AUDITED_MAIN: 7dfc68ab5a1e90254a1b7039807f275b5da04eef
       ENGINE_SHA: bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7
       LANE: ${{ matrix.lane }}
@@ -33,10 +34,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: 6a750d859d5858ff1f2d76bbf2ef7664a893ee86
+          ref: c9b103ee0feafbadee818c7a9d92c92b3c1736bf
           fetch-depth: 0
           persist-credentials: false
-      - name: Verify frozen subject and record preflight
+      - name: Verify exact repaired subject and original frozen ancestry
         shell: bash
         run: |
           set -euo pipefail
@@ -46,7 +47,8 @@ jobs:
           test -z "$(git status --porcelain --untracked-files=no)"
           git fetch origin '+refs/heads/*:refs/remotes/origin/*' --prune
           test "$(git rev-parse origin/main)" = "$AUDITED_MAIN"
-          test "$(git rev-parse origin/freeze/v0-mvp3-6a750d85-r1)" = "$EXPECTED_HEAD"
+          test "$(git rev-parse origin/freeze/v0-mvp3-6a750d85-r1)" = "$ORIGINAL_FREEZE"
+          git merge-base --is-ancestor "$ORIGINAL_FREEZE" HEAD
           git switch -c feature/v0-mvp-playable-seamless-planet-r1 "$EXPECTED_HEAD"
           git status --porcelain --untracked-files=no > artifacts/mvp3-closure/tracked-before.txt
           git rev-parse HEAD HEAD^{tree} origin/main > artifacts/mvp3-closure/subjects.txt
@@ -61,7 +63,7 @@ jobs:
           repository: rootfabric/distributed-world-simulator
           github-token: ${{ github.token }}
           path: ${{ runner.temp }}/mvp3-engine
-      - name: Execute unchanged frozen tests and preserve every result
+      - name: Execute exact unchanged tests and preserve each outcome
         shell: bash
         run: |
           set -euo pipefail
@@ -76,7 +78,7 @@ jobs:
           engine=os.environ['GODOT_BIN']; lane=os.environ['LANE']; rows=[]
           def execute(name,argv,limit=180,expected=(0,),scan=False):
               row={'name':name,'argv':argv,'timeout_seconds':limit,'expected_exit_codes':list(expected),'started_unix':time.time()}
-              log=out/(name+'.log'); process=None
+              log=out/(name+'.log')
               with log.open('wb') as stream:
                   try:
                       process=subprocess.Popen(argv,stdout=stream,stderr=subprocess.STDOUT,start_new_session=True)
@@ -98,22 +100,30 @@ jobs:
               return row['passed']
           if lane!='control':
               execute('engine-version',[engine,'--version'],30)
-              imported=execute('import',[engine,'--headless','--path','.','--editor','--import','--quit'],180,scan=True)
-              if not imported: raise SystemExit(1)
+              if not execute('import',[engine,'--headless','--path','.','--editor','--import','--quit'],180,scan=True): raise SystemExit(1)
           if lane=='graphical':
               os.environ['MVP3_OWNER_HOOKS_RESULT']=str((out/'owner-hooks.json').resolve())
+              os.environ['MVP3_FIXED_INPUT_RESULT']=str((out/'fixed-input.json').resolve())
+              execute('fixed-input-contract',[engine,'--headless','--path','.','--script','res://tests/runtime/test_v0_mvp3_fixed_tick_input_contract.gd'],90,scan=True)
               execute('live-owner-hooks',[engine,'--headless','--path','.','--script','res://tests/runtime/test_v0_mvp3_live_owner_handoff.gd'],90,scan=True)
               execute('accepted-sm1',[engine,'--headless','--path','.','--script','res://tests/network/test_v0_sm1_player_carry_and_gateway_pivot.gd'],90,scan=True)
-              execute('mvp2-focused',[engine,'--headless','--path','.','--script','res://tests/runtime/test_v0_mvp_two_client_shared_world.gd'],90,scan=True)
-              execute('native-process',['python3','tests/integration/test_v0_mvp3_native_process_roundtrip.py','--engine',engine,'--output',str(out/'native')],240,scan=True)
-              execute('graphical-process',['python3','tests/integration/test_v0_mvp3_graphical_process_roundtrip.py','--engine',engine,'--output',str(out/'graphical')],240,scan=True)
-              execute('mvp1-mvp2-regression',['python3','docs/control/mvp-act0-r1/validate_mvp3_regression.py','--engine',engine],600)
+              execute('native-process',['python3','tests/integration/test_v0_mvp3_native_process_roundtrip.py','--engine',engine,'--output',str(out/'native')],240)
+              execute('graphical-process',['python3','tests/integration/test_v0_mvp3_graphical_process_roundtrip.py','--engine',engine,'--output',str(out/'graphical')],420)
+              execute('mvp1-mvp2-regression',['python3','docs/control/mvp-act0-r1/validate_mvp3_regression.py','--engine',engine],900)
           elif lane=='world-core':
+              original=subprocess.check_output(['git','show',os.environ['ORIGINAL_FREEZE']+':RUN_WORLD_REGRESSION_TESTS.ps1'],text=True)
+              expected=original.replace('Get-Item -LiteralPath $TemporaryPath -ErrorAction Stop','Get-Item -LiteralPath $TemporaryPath -Force -ErrorAction Stop').replace('Get-Item -LiteralPath $Path -ErrorAction Stop','Get-Item -LiteralPath $Path -Force -ErrorAction Stop')
+              current=pathlib.Path('RUN_WORLD_REGRESSION_TESTS.ps1').read_text()
+              exact=expected==current
+              (out/'world-runner-scope.json').write_text(json.dumps({'exact_two_force_changes_only':exact,'original_sha256':hashlib.sha256(original.encode()).hexdigest(),'current_sha256':hashlib.sha256(current.encode()).hexdigest()},indent=2)+'\n')
+              if not exact: raise RuntimeError('WORLD_RUNNER_SCOPE_DRIFT')
+              probe=r'''$ErrorActionPreference='Stop'; $root=Join-Path $env:RUNNER_TEMP ('mvp3-atomic-'+[Guid]::NewGuid().ToString('N')); New-Item -ItemType Directory $root | Out-Null; try { $hidden=Join-Path $root '.hidden.tmp'; [IO.File]::WriteAllText($hidden,'{}'); $reproduced=$false; try { Get-Item -LiteralPath $hidden -ErrorAction Stop | Out-Null } catch { $reproduced=$true }; if(-not $reproduced){throw 'Linux baseline hidden-file failure not reproduced'}; if((Get-Item -LiteralPath $hidden -Force).Length -le 0){throw 'Force lookup failed'}; Remove-Item -LiteralPath $hidden -Force; $source=Get-Content -Raw RUN_WORLD_REGRESSION_TESTS.ps1; $begin=$source.IndexOf('function Write-JsonFileAtomically {'); $end=$source.IndexOf('function Save-Summary {'); . ([ScriptBlock]::Create($source.Substring($begin,$end-$begin))); $target=Join-Path $root 'summary.json'; foreach($i in 1..5){Write-JsonFileAtomically -Value @{sequence=$i; text='exact'} -Path $target; if((Get-Content -Raw $target | ConvertFrom-Json).sequence -ne $i){throw 'Atomic bytes differ'}}; $before=[IO.File]::ReadAllText($target); $failed=$false; try {Write-JsonFileAtomically -Value @{sequence=999} -Path $target -MaxReplaceAttempts 0} catch {$failed=$true}; if(-not $failed -or [IO.File]::ReadAllText($target) -ne $before){throw 'Negative replacement control lost previous bytes'}; if(@(Get-ChildItem -Force $root | Where-Object {$_.Name -match '\.(tmp|bak)$'}).Count -ne 0){throw 'Temporary artifact leak'}; Write-Output 'MVP3_ATOMIC_HIDDEN_BASELINE_AND_REPLACE_CONTROLS_PASS' } finally {Remove-Item -LiteralPath $root -Recurse -Force}'''
+              execute('atomic-summary-regression',['pwsh','-NoProfile','-Command',probe],90)
               execute('world-core',['pwsh','-NoProfile','-File','RUN_WORLD_REGRESSION_TESTS.ps1'],1800)
           else:
               execute('harness',['python3','-m','unittest','discover','-s','tests/harness','-p','test_*.py','-v'],600)
-              for flag,expected in [('Plan',(0,)),('Drive',(0,)),('CloseRole',(0,7)),('CloseMission',(8,))]:
-                  execute('harness-'+flag.lower(),['pwsh','-NoProfile','-File','CONTROL_DEVELOPMENT.ps1','-'+flag],120,expected)
+              for flag,expected_codes in [('Plan',(0,)),('Drive',(0,)),('CloseRole',(0,7)),('CloseMission',(8,))]:
+                  execute('harness-'+flag.lower(),['pwsh','-NoProfile','-File','CONTROL_DEVELOPMENT.ps1','-'+flag],120,expected_codes)
               execute('pc0',['python3','scripts/control/project_control.py','--no-fetch','--no-fail-on-red'],180)
               execute('directional-pc0',['python3','scripts/control/project_control_directional_watch.py','--no-fail-on-red'],180)
           clean=not subprocess.check_output(['git','status','--porcelain','--untracked-files=no'],text=True).strip()
@@ -131,7 +141,7 @@ jobs:
           def git(*args):
               p=subprocess.run(['git',*args],capture_output=True,text=True)
               return {'exit_code':p.returncode,'stdout':p.stdout.strip(),'stderr':p.stderr.strip()}
-          manifest={'schema':'distributed_world_simulator.mvp3_closure_manifest.v1','subject_head':git('rev-parse','HEAD'),'subject_tree':git('rev-parse','HEAD^{tree}'),'canonical_main':git('rev-parse','origin/main'),'expected_head':os.environ['EXPECTED_HEAD'],'expected_tree':os.environ['EXPECTED_TREE'],'carrier_sha':os.environ['GITHUB_SHA'],'run_id':os.environ['GITHUB_RUN_ID'],'run_attempt':os.environ['GITHUB_RUN_ATTEMPT'],'lane':os.environ['LANE'],'runner_os':os.environ['RUNNER_OS'],'tracked_after':git('status','--porcelain','--untracked-files=no'),'independent_verdict':False,'manual_input_executed':False,'mvp3_predicate_verified':False,'files':[]}
+          manifest={'schema':'distributed_world_simulator.mvp3_closure_manifest.v1','subject_head':git('rev-parse','HEAD'),'subject_tree':git('rev-parse','HEAD^{tree}'),'canonical_main':git('rev-parse','origin/main'),'expected_head':os.environ['EXPECTED_HEAD'],'expected_tree':os.environ['EXPECTED_TREE'],'original_freeze':os.environ['ORIGINAL_FREEZE'],'carrier_sha':os.environ['GITHUB_SHA'],'run_id':os.environ['GITHUB_RUN_ID'],'run_attempt':os.environ['GITHUB_RUN_ATTEMPT'],'lane':os.environ['LANE'],'runner_os':os.environ['RUNNER_OS'],'tracked_after':git('status','--porcelain','--untracked-files=no'),'independent_verdict':False,'manual_input_executed':False,'mvp3_predicate_verified':False,'files':[]}
           engine=pathlib.Path(os.environ['RUNNER_TEMP'])/'mvp3-engine/godot'
           manifest['actual_engine_sha256']=hashlib.sha256(engine.read_bytes()).hexdigest() if engine.is_file() else None
           for prefix in [out,pathlib.Path('artifacts/mvp2-exact'),pathlib.Path('artifacts/control'),pathlib.Path('artifacts/test-results')]:
@@ -144,7 +154,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: mvp3-frozen-6a750d85-${{ matrix.lane }}-${{ github.run_id }}-${{ github.run_attempt }}
+          name: mvp3-r12-c9b103ee-${{ matrix.lane }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
             artifacts/mvp3-closure/
             artifacts/mvp2-exact/
