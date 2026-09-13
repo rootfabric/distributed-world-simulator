@@ -24,6 +24,7 @@ EPOCH = "E2026-09-09-V0-MVP-R1"
 WO = "V0-MVP-R1-WO-001"
 H = "config/control/harness/"
 EX = H + "executions/" + EPOCH
+A7_SCENE_ADDITION = "scenes/labs/ecology/arch2_a7_observatory.tscn"
 
 
 def git(root: Path, *args: str) -> str:
@@ -125,8 +126,13 @@ class MVPAct0Tests(unittest.TestCase):
     def test_all_p7_execution_and_acceptance_blobs_are_unchanged(self):
         for path in (H + "executions/E2026-08-30-V0-P7-R1", H + "acceptance"):
             self.assertEqual("", git(ROOT, "diff", "--name-only", BASE, "HEAD", "--", path))
-        for path in ("scripts/runtime", "scripts/network", "scripts/simulation", "scenes", "project.godot"):
+        for path in ("scripts/runtime", "scripts/network", "scripts/simulation", "project.godot"):
             self.assertEqual("", git(ROOT, "diff", "--name-only", BASE, "HEAD", "--", path))
+
+        # P7 scene bytes stay immutable. A future scene is not silently accepted: the only
+        # post-P7 scene delta authorized by this bounded integration is one new A7 lab scene.
+        scene_changes = git(ROOT, "diff", "--name-status", BASE, "HEAD", "--", "scenes").splitlines()
+        self.assertEqual([f"A\t{A7_SCENE_ADDITION}"], scene_changes)
 
     def test_candidate_default_and_explicit_execution_cannot_activate(self):
         with self.fixture(adopted=False) as root:
