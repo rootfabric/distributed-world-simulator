@@ -15,17 +15,21 @@ jobs:
           ref: 96884d87b7e95d58595f02b1191261d7d3b8d4ce
           fetch-depth: 0
           persist-credentials: false
-      - name: Verify exact evidence subject and raw bytes
+      - name: Verify exact evidence subject, raw bytes, engine and input provenance
         shell: bash
         run: |
           set -euo pipefail
           python3 - <<'PY'
-          import hashlib,json,pathlib,sys
+          import hashlib,json,pathlib
           root=pathlib.Path('evidence/mvp3-r13b-manual-f1d453fb')
           expected_head='f1d453fb2af49231c30bdc5cbe415ad199394446'
           expected_tree='f1697cc52c1abc7f1bb21922c5fab3b49a3c167d'
           expected_manifest='3075debd09a3f06e352387b430015204d3e1c095525dba1d958afcc1a7b03668'
           expected_report='a65b2352dba0d0394b90027b70a8beac87189deac7a00fa959b307d8704382da'
+          expected_windows_engine='3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5'
+          expected_godot_version='4.7.1.stable.double.custom_build.a13da4feb'
+          expected_input_method='HUMAN_PHYSICAL_KEYBOARD'
+
           index=json.loads((root/'sha256-index.json').read_bytes())
           assert len(index)==13, len(index)
           rows={pathlib.PureWindowsPath(x['Path']).name:x for x in index}
@@ -36,17 +40,39 @@ jobs:
               data=p.read_bytes()
               assert len(data)==int(row['Bytes']), (name,len(data),row['Bytes'])
               assert hashlib.sha256(data).hexdigest()==row['SHA256'].lower(), name
+
           manifest_bytes=(root/'manifest.json').read_bytes()
           assert hashlib.sha256(manifest_bytes).hexdigest()==expected_manifest
           report_bytes=(root/'MVP3-WINDOWS-IMPLEMENTER-R13-REPORT.json').read_bytes()
           assert hashlib.sha256(report_bytes).hexdigest()==expected_report
           manifest=json.loads(manifest_bytes)
+          report=json.loads(report_bytes)
+
+          # Exact product + approved Windows-double engine provenance.
           assert manifest['subject_head']==expected_head
           assert manifest['subject_tree']==expected_tree
+          assert str(manifest.get('engine_sha256','')).lower()==expected_windows_engine
+          assert report['final_repair_head']==expected_head
+          assert report['final_repair_tree']==expected_tree
+          assert str(report.get('godot_sha256','')).lower()==expected_windows_engine
+          assert report.get('godot_version')==expected_godot_version
+          assert report.get('role')=='LOCAL_WINDOWS_IMPLEMENTER'
+
+          # Manual provenance must be an explicit physical-keyboard run, not CI/manual-mode metadata alone.
+          manual=report.get('manual_rerun',{})
+          assert manual.get('subject_head')==expected_head
+          assert manual.get('input_method')==expected_input_method
+          assert manual.get('manual_input_mode') is True
+          assert manual.get('manual_input_executed') is True
+          assert manual.get('passed') is True
+          assert int(manual.get('launcher_exit_code',-1))==0
+          assert int(manual.get('transfer_rows',0))==2
+          assert int(manual.get('gateway_reconnects',-1))==0
           assert manifest['passed'] is True
           assert manifest['manual_input_mode'] is True
           assert manifest['manual_input_executed'] is True
           assert manifest['mvp3_predicate_verified'] is False
+
           for key in ['all_processes_passed','exact_subject','five_distinct_processes','a_roundtrip','stable_client_connections','stable_body_camera_instances','both_players_always_visible','viewport_pngs','no_respawn_or_rebind','no_false_acceptance','both_players_independent','post_activation_movement','canonical_fixed_receipts','manual_input_proven_when_requested']:
               assert manifest['checks'].get(key) is True, key
           for actor in ('a','b'):
@@ -89,6 +115,7 @@ jobs:
           pub=json.loads((root/'publication.json').read_bytes())
           assert pub['raw_file_count']==13 and pub['raw_bytes_drift'] is False and pub['manual_run_repeated_for_publication'] is False
           assert pub['raw_manifest_sha256']==expected_manifest and pub['implementer_report_sha256']==expected_report
-          print('MVP3_R13B_MANUAL_EVIDENCE_BYTE_VERIFICATION_PASS')
+          print('MVP3_R13B_MANUAL_EVIDENCE_BYTE_AND_PROVENANCE_VERIFICATION_PASS')
           print('raw_files=13 manifest_sha256='+expected_manifest+' report_sha256='+expected_report)
+          print('windows_engine_sha256='+expected_windows_engine+' input_method='+expected_input_method)
           PY
