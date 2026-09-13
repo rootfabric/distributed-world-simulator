@@ -7,7 +7,6 @@ const Support = preload("res://scripts/runtime/networked_gameplay/sm1/sm1_6_proc
 const Service = preload("res://scripts/runtime/networked_gameplay/networked_gameplay_service.gd")
 const Views = preload("res://scripts/runtime/networked_gameplay/mvp/v0_mvp3_remote_owner_views.gd")
 const Scheduler = preload("res://scripts/network/simulation/fixed_tick_scheduler.gd")
-const Utils = preload("res://scripts/network/contracts/network_contract_utils.gd")
 var cfg: Dictionary = {}
 var boundary = null
 var service = null

@@ -4,7 +4,7 @@ extends RefCounted
 # not replace the network kernel. Per-run capabilities never enter artifacts.
 const Support = preload("res://scripts/runtime/networked_gameplay/sm1/sm1_6_process_support.gd")
 const Utils = preload("res://scripts/network/contracts/network_contract_utils.gd")
-const SCHEMA := "distributed_world_simulator.mvp3_live_process_message.v1"
+const SCHEMA := "planet_simulator.mvp3_live_process_message.v1"
 const SCENE_PATH := "res://scenes/labs/mvp/v0_mvp3_live_shared_world.tscn"
 const ENV_CONFIG := "DWS_MVP3_LIVE_CONFIG"
 const MAX_CLIENT_COMMANDS := 240
@@ -36,21 +36,40 @@ static func seal(cfg: Dictionary, sender: String, receiver: String, sequence: in
 	if not valid_key(key) or sequence < 1:
 		return {}
 	var packet := {"schema": SCHEMA, "run_id": cfg["run_id"], "subject_head": cfg["subject_head"], "sender": sender, "receiver": receiver, "sequence": sequence, "body": body.duplicate(true)}
+	# Sign the exact JSON representation which enters ProtocolFrame. A native
+	# double can shorten by one decimal digit on its first JSON round-trip; a MAC
+	# over the pre-transport Variant would then reject an otherwise intact frame.
+	var round_trip := Utils.json_round_trip(packet)
+	if not bool(round_trip.get("success", false)) or not round_trip.get("value") is Dictionary:
+		return {}
+	packet = Dictionary(round_trip["value"]).duplicate(true)
 	packet["mac"] = Crypto.new().hmac_digest(HashingContext.HASH_SHA256, key.to_utf8_buffer(), Utils.payload_hash(packet).to_utf8_buffer()).hex_encode()
 	return packet
 
 static func verify(cfg: Dictionary, packet: Dictionary, sender: String, receiver: String, key: String) -> bool:
-	if not valid_key(key) or packet.size() != 8 or packet.get("schema") != SCHEMA or packet.get("run_id") != cfg.get("run_id") or packet.get("subject_head") != cfg.get("subject_head") or packet.get("sender") != sender or packet.get("receiver") != receiver:
-		return false
+	return verify_error(cfg, packet, sender, receiver, key).is_empty()
+
+
+static func verify_error(cfg: Dictionary, packet: Dictionary, sender: String, receiver: String, key: String) -> String:
+	if not valid_key(key):
+		return "KEY_INVALID"
+	if packet.size() != 8:
+		return "FIELD_COUNT_INVALID"
+	if packet.get("schema") != SCHEMA:
+		return "SCHEMA_INVALID"
+	if packet.get("run_id") != cfg.get("run_id") or packet.get("subject_head") != cfg.get("subject_head"):
+		return "RUN_SUBJECT_INVALID"
+	if packet.get("sender") != sender or packet.get("receiver") != receiver:
+		return "ROUTE_INVALID"
 	var sequence = packet.get("sequence")
 	if typeof(sequence) not in [TYPE_INT, TYPE_FLOAT] or not is_finite(float(sequence)) or float(sequence) != floorf(float(sequence)) or float(sequence) < 1.0 or float(sequence) > MAX_RPC_CALLS:
-		return false
+		return "SEQUENCE_INVALID"
 	if not packet.get("body") is Dictionary or typeof(packet.get("mac")) != TYPE_STRING or String(packet["mac"]).length() != 64:
-		return false
+		return "BODY_OR_MAC_INVALID"
 	var unsigned := packet.duplicate(true)
 	unsigned.erase("mac")
 	var expected := Crypto.new().hmac_digest(HashingContext.HASH_SHA256, key.to_utf8_buffer(), Utils.payload_hash(unsigned).to_utf8_buffer()).hex_encode()
-	return Crypto.new().constant_time_compare(expected.to_utf8_buffer(), String(packet["mac"]).to_utf8_buffer())
+	return "" if Crypto.new().constant_time_compare(expected.to_utf8_buffer(), String(packet["mac"]).to_utf8_buffer()) else "MAC_MISMATCH"
 
 static func send(boundary, peer: String, packet: Dictionary) -> Dictionary:
 	var built: Dictionary = boundary.create_frame_for_peer(peer, "CONTROL", SCHEMA, packet, "RELIABLE_ORDERED")

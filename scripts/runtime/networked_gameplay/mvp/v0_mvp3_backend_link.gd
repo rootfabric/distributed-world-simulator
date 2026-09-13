@@ -55,19 +55,20 @@ func poll() -> Array[Dictionary]:
 			failure_code = "MVP3_BACKEND_DISCONNECTED"
 		elif event.get("event_type") == "MESSAGE_RECEIVED":
 			var packet := Protocol.payload(event)
-			if not Protocol.verify(config, packet, authority, "gateway", key):
-				failure_code = "MVP3_BACKEND_REPLY_AUTH_FAILED"
+			var verification_error := Protocol.verify_error(config, packet, authority, "gateway", key)
+			if not verification_error.is_empty():
+				failure_code = "MVP3_BACKEND_REPLY_AUTH_FAILED:" + verification_error
 				continue
 			packets.append(packet)
 	return packets
 
-func call(body: Dictionary) -> Dictionary:
+func rpc_call(body: Dictionary) -> Dictionary:
 	if not failure_code.is_empty() or sequence >= Protocol.MAX_RPC_CALLS:
 		return Protocol.failure("MVP3_BACKEND_LINK_UNAVAILABLE")
 	sequence += 1
 	var sent := Protocol.send(boundary, peer, Protocol.seal(config, "gateway", authority, sequence, body, key))
 	if not bool(sent.get("success", false)):
-		failure_code = "MVP3_BACKEND_SEND_FAILED"
+		failure_code = "MVP3_BACKEND_SEND_FAILED:" + String(sent.get("error_code", "UNKNOWN"))
 		return Protocol.failure(failure_code)
 	boundary.flush_outbound(64)
 	var deadline := Time.get_ticks_msec() + 3000
