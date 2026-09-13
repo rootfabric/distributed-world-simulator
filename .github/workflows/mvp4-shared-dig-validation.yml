@@ -1,0 +1,106 @@
+name: MVP4 Shared Canonical Dig Exact Validation
+on:
+  push:
+    branches: [feature/v0-mvp-playable-seamless-planet-r1]
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: mvp4-shared-dig-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  focused:
+    if: github.repository == 'rootfabric/distributed-world-simulator' && github.ref == 'refs/heads/feature/v0-mvp-playable-seamless-planet-r1' && (github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[mvp4-evidence]'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      EXPECTED_HEAD: ${{ github.sha }}
+      PYTHONUTF8: '1'
+      PYTHONPATH: scripts
+      BREAKPOINT_RUNTIME_DISABLED: '1'
+      GODOT_SILENCE_ROOT_WARNING: '1'
+      PLANET_SIMULATOR_INVENTORY_PROFILE: planet_default
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Exact preflight
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+          test -z "$(git status --porcelain --untracked-files=no)"
+          git merge-base --is-ancestor e80ff5a37f30729509f0a7d307cbb44f44dc23ac HEAD
+          git diff --check e80ff5a37f30729509f0a7d307cbb44f44dc23ac HEAD
+          echo "EXPECTED_TREE=$(git rev-parse HEAD^{tree})" >> "$GITHUB_ENV"
+          mkdir -p artifacts/mvp4-focused
+      - uses: actions/download-artifact@v4
+        with:
+          name: p7-repair-engine-34117353691
+          run-id: 34117353691
+          repository: rootfabric/distributed-world-simulator
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/mvp4-engine
+      - name: Compile and validate canonical digging and MVP3 regressions
+        shell: bash
+        run: |
+          set -euo pipefail
+          export GODOT_BIN="$RUNNER_TEMP/mvp4-engine/godot"
+          test "$(sha256sum "$GODOT_BIN" | cut -d' ' -f1)" = bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7
+          chmod u+x "$GODOT_BIN"
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib,re,subprocess,time
+          out=pathlib.Path('artifacts/mvp4-focused'); rows=[]
+          os.environ['MVP4_FOCUSED_RESULT']=str((out/'focused.json').resolve())
+          def run(name,args,limit=180):
+              path=out/(name+'.log'); code=124; timeout=False; start=time.monotonic()
+              with path.open('w') as log:
+                  try: code=subprocess.run(args,stdout=log,stderr=subprocess.STDOUT,timeout=limit,check=False).returncode
+                  except subprocess.TimeoutExpired: timeout=True
+              text=path.read_text(errors='replace')
+              fatal=bool(re.search(r'(?im)^\s*(?:SCRIPT ERROR|ERROR):|Parse Error|Compile Error',text))
+              row={'name':name,'argv':args,'exit_code':code,'timed_out':timeout,'fatal_markers':fatal,'passed':code==0 and not timeout and not fatal,'duration_seconds':round(time.monotonic()-start,3),'log_sha256':hashlib.sha256(path.read_bytes()).hexdigest()}
+              rows.append(row); (out/'commands.json').write_text(json.dumps(rows,indent=2)+'\n')
+              print(name,json.dumps(row),text[-6000:],flush=True)
+              return row['passed']
+          engine=os.environ['GODOT_BIN']; prefix=[engine,'--headless','--path','.']
+          if not run('import',prefix+['--editor','--import','--quit'],180): raise SystemExit(1)
+          for name,path in [
+              ('mvp4-focused','tests/runtime/test_v0_mvp_4_shared_canonical_dig.gd'),
+              ('mvp3-source-attestation','tests/runtime/test_v0_mvp3_source_attestation_roundtrip.gd'),
+              ('mvp3-live-owner','tests/runtime/test_v0_mvp3_live_owner_handoff.gd'),
+              ('mvp3-fixed-input','tests/runtime/test_v0_mvp3_fixed_tick_input_contract.gd'),
+              ('sm1-carry','tests/network/test_v0_sm1_player_carry_and_gateway_pivot.gd')]:
+              run(name,prefix+['--script','res://'+path],240)
+          result=json.loads((out/'focused.json').read_text()) if (out/'focused.json').is_file() else {}
+          exact=result.get('subject_head')==os.environ['EXPECTED_HEAD'] and result.get('subject_tree')==os.environ['EXPECTED_TREE']
+          clean=not subprocess.check_output(['git','status','--porcelain','--untracked-files=no'],text=True).strip()
+          passed=all(row['passed'] for row in rows) and result.get('passed') is True and exact and clean
+          (out/'summary.json').write_text(json.dumps({'passed':passed,'exact_subject':exact,'tracked_clean_after':clean,'focused_only':True,'independent_verdict':False,'manual_input_executed':False,'mvp4_predicate_verified':False},indent=2)+'\n')
+          raise SystemExit(0 if passed else 1)
+          PY
+      - name: Bind raw evidence
+        if: always()
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib,subprocess
+          out=pathlib.Path('artifacts/mvp4-focused');out.mkdir(parents=True,exist_ok=True)
+          git=lambda *a:subprocess.check_output(['git',*a],text=True).strip()
+          m={'schema':'distributed_world_simulator.mvp4_focused_manifest.v1','subject_head':git('rev-parse','HEAD'),'subject_tree':git('rev-parse','HEAD^{tree}'),'run_id':os.environ['GITHUB_RUN_ID'],'run_attempt':os.environ['GITHUB_RUN_ATTEMPT'],'tracked_after':git('status','--porcelain','--untracked-files=no'),'mvp4_predicate_verified':False,'files':[]}
+          engine=pathlib.Path(os.environ['RUNNER_TEMP'])/'mvp4-engine/godot'
+          m['engine_sha256']=hashlib.sha256(engine.read_bytes()).hexdigest() if engine.is_file() else None
+          for p in sorted(out.glob('*')):
+              if p.is_file() and p.name!='manifest.json':m['files'].append({'path':p.name,'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()})
+          (out/'manifest.json').write_text(json.dumps(m,indent=2)+'\n')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mvp4-focused-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: artifacts/mvp4-focused/
+          if-no-files-found: error
+          retention-days: 90
