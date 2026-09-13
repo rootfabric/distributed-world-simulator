@@ -93,6 +93,8 @@ func call_authority(authority: String, body: Dictionary) -> Dictionary:
 
 
 func command(actor: String, sequence: int, dx: float, suffix: String = "") -> Dictionary:
+	# Historical native diagnostic uses the original public delta contract.
+	# Interactive clients below are required to submit fixed-tick intent.
 	var operation := "operation/mvp3/process/%s/%d%s" % [actor, sequence, suffix]
 	var wire := InputDTO.create("message/mvp3/process/%s/%d%s" % [actor, sequence, suffix], operation, actor, Protocol.session(cfg, actor), 1, 1, sequence, "MOVEMENT_DELTA", {"delta_x": dx, "delta_z": 0.0})
 	return {"domain_id": "p6-domain/outpost-world-state", "command_kind": "PLAYER_INTERACTION", "operation_id": operation, "wire": wire}
@@ -123,9 +125,9 @@ func cross(actor: String, target: String, transfer_id: String, prove_other_input
 	var decision: Dictionary = coordinator.snapshot()
 	var source := String(decision["active_authority_id"])
 	var source_epoch := int(decision["authority_epoch"])
-	var before := lookup(source, actor)
+	var requested_before := lookup(source, actor)
 	var route_identity: Dictionary = pivot.get_client_route_identity()
-	if not check(not before.is_empty(), "source canonical actor exists") or not success(coordinator.begin_transfer(transfer_id, source, target, source_epoch), "SM1 source freeze"):
+	if not check(not requested_before.is_empty(), "source canonical actor exists") or not success(coordinator.begin_transfer(transfer_id, source, target, source_epoch), "SM1 source freeze"):
 		return false
 	var other := "b" if actor == "a" else "a"
 	if prove_other_input and not bool(move(other, -0.25).get("success", false)):
@@ -139,6 +141,16 @@ func cross(actor: String, target: String, transfer_id: String, prove_other_input
 		return false
 	var packet: Dictionary = exported["details"]["packet"]
 	check(not packet.has("players") and not packet.has("canonical_item_graph"), "transfer remains player bounded")
+	# The authoritative freeze cut is the native source export after it has
+	# ingested the SM1 freeze. A pre-request observation may precede real ticks;
+	# its position is not a legitimate restore target. Identity/input watermark
+	# must be unchanged, and the frozen record must be installed byte-for-byte.
+	var before: Dictionary = Dictionary(packet.get("player", {})).duplicate(true)
+	for field in ["logical_player_id", "player_entity_id", "transport_session_id", "ownership_epoch", "last_input_sequence"]:
+		if not check(before.get(field) == requested_before.get(field), "native freeze identity and input cut " + field):
+			return false
+	if not check(int(before.get("state_revision", -1)) >= int(requested_before.get("state_revision", 0)), "native freeze revision cannot regress"):
+		return false
 	var source_attestation: Dictionary = links[source].last_signed_reply.duplicate(true)
 	var staged_rpc := call_authority(target, {"kind": "STAGE", "actor": actor, "transfer_id": transfer_id, "packet": packet, "source_attestation": source_attestation})
 	var staged := native_result(staged_rpc)
@@ -174,7 +186,9 @@ func cross(actor: String, target: String, transfer_id: String, prove_other_input
 	var conflict := prior.duplicate(true)
 	conflict["wire"] = Dictionary(prior["wire"]).duplicate(true)
 	conflict["wire"]["payload"] = Dictionary(prior["wire"]["payload"]).duplicate(true)
-	conflict["wire"]["payload"]["delta_x"] = -float(prior["wire"]["payload"]["delta_x"])
+	var axis := "move_x" if prior["wire"].get("input_kind") == "MOVEMENT_INTENT" else "delta_x"
+	var original_axis := float(prior["wire"]["payload"].get(axis, 0.0))
+	conflict["wire"]["payload"][axis] = -original_axis if not is_zero_approx(original_axis) else 1.0
 	conflict["wire"] = Utils.finalize_json_checksum(conflict["wire"])
 	check(pivot.route_command("client-session/mvp3/" + actor, prior["operation_id"], conflict).get("error_code") == "OPERATION_REPLAY_CONFLICT", "conflicting replay rejected at stable gateway")
 	var after := installed
@@ -188,11 +202,13 @@ func cross(actor: String, target: String, transfer_id: String, prove_other_input
 			return false
 	else:
 		pending_continuity[actor] = transfer_id
-	transfers.append({"actor": actor, "transfer_id": transfer_id, "source": source, "target": target, "source_epoch": source_epoch, "target_epoch": source_epoch + 1, "before": before, "after": after, "packet_checksum": packet["checksum"]})
+	transfers.append({"actor": actor, "transfer_id": transfer_id, "source": source, "target": target, "source_epoch": source_epoch, "target_epoch": source_epoch + 1, "before_request": requested_before, "before": before, "after": after, "freeze_cut": "NATIVE_SOURCE_EXPORT", "packet_checksum": packet["checksum"]})
 	return true
 
 
 func route_client_input(actor: String, wire: Dictionary) -> Dictionary:
+	if wire.get("input_kind") != "MOVEMENT_INTENT":
+		return Protocol.failure("MVP3_GRAPHICAL_FIXED_INTENT_REQUIRED")
 	var input_sequence := int(wire.get("input_sequence", -1))
 	if input_sequence != int(sequences[actor]) + 1:
 		return Protocol.failure("MVP3_CLIENT_INPUT_SEQUENCE_GAP")
@@ -322,7 +338,7 @@ func authority_reports() -> Dictionary:
 func base_report(schema: String, passed: bool, graphical: bool) -> Dictionary:
 	var report := {"schema": schema, "passed": passed and failures.is_empty(), "subject_head": cfg["subject_head"], "run_id": cfg["run_id"], "gateway_process_id": OS.get_process_id(), "assertions": assertions, "failures": failures, "transfers": transfers, "sequences": sequences, "identity": identity.get_report() if identity != null else {}, "ledger": ledger.get_report() if ledger != null else {}, "authority_reports": authority_reports(), "backend_links": {}, "route_identity": {"a": pivots["a"].get_client_route_identity(), "b": pivots["b"].get_client_route_identity()} if pivots.size() == 2 else {}, "two_independent_players": true, "gateway_reconnects": 0, "respawns": 0, "graphical_scene_proven": graphical, "mvp3_predicate_verified": false}
 	for authority in links:
-		report["backend_links"][authority] = {"connects": links[authority].connects, "disconnects": links[authority].disconnects, "sequence": links[authority].sequence, "failure_code": links[authority].failure_code}
+		report["backend_links"][authority] = {"connects": links[authority].connects, "disconnects": links[authority].disconnects, "sequence": links[authority].sequence, "failure_code": links[authority].failure_code, "idle_service_count": links[authority].idle_service_count}
 	return report
 
 
@@ -371,6 +387,10 @@ func handle_client(actor: String, body: Dictionary) -> Dictionary:
 		client_hello[actor] = true
 		return Protocol.success({"kind": kind, "actor": actor, "snapshot": world_snapshot()})
 	if kind == "OBSERVE":
+		# Held input continues on server ticks even with no new key messages.
+		# Sampling a shared snapshot must therefore observe a real seam crossing.
+		if bool(client_hello["a"]) and bool(client_hello["b"]) and not bool(client_finished["a"]) and not maybe_cross_a():
+			return Protocol.failure("MVP3_AUTOMATIC_HANDOFF_FAILED")
 		return Protocol.success({"kind": kind, "actor": actor, "snapshot": world_snapshot()})
 	if kind == "MOVE":
 		if not body.get("wire") is Dictionary or body["wire"].get("logical_player_id") != actor or body["wire"].get("transport_session_id") != Protocol.session(cfg, actor):
