@@ -164,7 +164,6 @@ func cross(player: String, target_id: String, transfer_id: String, attack: bool 
 				"logical_player_id": forged["player"]["logical_player_id"] = other
 			forged = Utils.finalize_json_checksum(forged)
 			check(not bool(target_port.stage_export(player, forged).get("success", false)), "rehashed tampering rejected by trusted source attestation: " + field)
-	# Exercise the actual JSON numeric boundary, not only local object passing.
 	var serialized = JSON.parse_string(JSON.stringify(packet, "", true, true))
 	check(serialized is Dictionary, "transfer packet survives actual JSON transport encoding")
 	var stage: Dictionary = target_port.stage_export(player, serialized)
@@ -255,6 +254,9 @@ func run() -> void:
 		route.shutdown()
 	for service in services:
 		service.shutdown()
-	var saved: Dictionary = AtomicJson.write_dictionary(OS.get_environment("MVP3_OWNER_HOOKS_RESULT"), evidence)
+	var evidence_path := OS.get_environment("MVP3_OWNER_HOOKS_RESULT").strip_edges()
+	var saved := {"success": true}
+	if not evidence_path.is_empty():
+		saved = AtomicJson.write_dictionary(evidence_path, evidence)
 	print("MVP3_LIVE_OWNER_HOOKS assertions=%d failures=%d passed=%s" % [assertions, failures.size(), evidence["passed"]])
 	quit(0 if bool(evidence["passed"]) and bool(saved.get("success", false)) else 1)
