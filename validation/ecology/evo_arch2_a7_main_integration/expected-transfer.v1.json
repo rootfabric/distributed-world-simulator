@@ -10,6 +10,8 @@
   },
   "blobs": {
     "scripts/research/ecology/plant_development_traits_extension_evo7_v1.gd": "99e2076c959f1841f7b3211eaffbbe7ed80fa495",
+    "scripts/labs/ecology/evo_morphology_lab_v2_model.gd": "a303fdf97003f985edeadd5bc340a84af77fc330",
+    "scripts/labs/ecology/evo_morphology_lab_v2_renderer.gd": "12579d1d668d3c4b4c86b7814b71155ced033d47",
     "config/ecology/evo-arch2-a7-protocol.v1.json": "34f0ba37c122a6ec8abe7fcec13d2e9212c819d4",
     "scenes/labs/ecology/arch2_a7_observatory.tscn": "1b1e8168110469fd63430d78a5f4326db301235d",
     "scripts/labs/ecology/arch2_a7_body_view.gd": "0d78a22cbab16722f88d262f0b6efe5bb7355843",
@@ -17,10 +19,21 @@
     "scripts/labs/ecology/arch2_a7_observatory.gd": "5e2ecafddf1596a98035d73cf4a3c93e1c0a07ee",
     "scripts/labs/ecology/arch2_a7_observatory.gd.uid": "6516c177b170f7d4fa4b1e0ea3e374d448de4e70"
   },
+  "generated_outputs": [
+    "artifacts/a7/observatory.png",
+    "artifacts/a7/capture-sources.json",
+    "artifacts/a7/observatory-report.json",
+    "artifacts/a7/observatory/"
+  ],
   "closure_inventory_run": 34732381163,
   "closure_inventory_artifact": 10310161004,
-  "closure_entries_before_static_repair": 81,
+  "closure_entries_before_static_repairs": 81,
   "repair_r1_static_preflight_run": 34732668117,
   "repair_r1_added_blob": "scripts/research/ecology/plant_development_traits_extension_evo7_v1.gd@99e2076c959f1841f7b3211eaffbbe7ed80fa495",
-  "policy": "All accepted subtrees/blobs must remain byte-exact; integration-only Work Order/docs/verifier may differ and must be new additions on current main. Static res:// closure must be complete before exact execution."
+  "repair_r2_static_preflight_run": 34732821534,
+  "repair_r2_added_blobs": [
+    "scripts/labs/ecology/evo_morphology_lab_v2_model.gd@a303fdf97003f985edeadd5bc340a84af77fc330",
+    "scripts/labs/ecology/evo_morphology_lab_v2_renderer.gd@12579d1d668d3c4b4c86b7814b71155ced033d47"
+  ],
+  "policy": "All accepted subtrees/blobs remain byte-exact and must have been absent on base main. Every non-generated local res:// reference must resolve before exact execution. Generated artifact paths are allowed to be absent before the tests that create them."
 }
