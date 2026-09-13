@@ -66,6 +66,7 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--engine", required=True, type=Path)
     parser.add_argument("--output", type=Path, default=ROOT / "artifacts" / "mvp3-graphical-process")
+    parser.add_argument("--manual", action="store_true", help="wait for keyboard input in both client windows")
     args = parser.parse_args()
     engine = args.engine.resolve()
     output = args.output.resolve()
@@ -90,7 +91,7 @@ def main() -> int:
     started = time.monotonic()
 
     def common(role: str) -> dict:
-        return {"run_id": run_id, "subject_head": head, "role": role, "result_file": str(results[role]), "ports": ports, "gateway_port": gateway_port, "timeout_ms": 120000, "backend_rpc_timeout_ms": 15000}
+        return {"run_id": run_id, "subject_head": head, "role": role, "result_file": str(results[role]), "ports": ports, "gateway_port": gateway_port, "timeout_ms": 600000 if args.manual else 120000, "backend_rpc_timeout_ms": 15000, "client_reply_timeout_ms": 30000}
 
     def launch(role: str, argv_tail: list[str], config: dict) -> None:
         env = os.environ.copy()
@@ -117,11 +118,13 @@ def main() -> int:
 
         for index, actor in enumerate(("a", "b")):
             role = "client/" + actor
-            config = common(role) | {"client_key": client_keys[actor], "automated": True, "screenshot_file": str(screenshots[actor])}
+            config = common(role) | {"client_key": client_keys[actor], "automated": not args.manual, "screenshot_file": str(screenshots[actor])}
             launch(role, ["--path", str(ROOT), "--resolution", "720x480", "--position", f"{40 + index * 760},80", "res://scenes/labs/mvp/v0_mvp3_live_shared_world.tscn"], config)
 
+        if args.manual:
+            print("MANUAL: use A/D or Left/Right in each window. Move A right across the seam, left back across it, then right once; move B at least twice. Keep B active while A crosses so it observes A->B->A. Press Esc in both windows when complete.", flush=True)
         for role in ("client/a", "client/b", "gateway", "authority/a", "authority/b"):
-            code = processes[role].wait(timeout=105)
+            code = processes[role].wait(timeout=590 if args.manual else 105)
             require(code == 0, f"PROCESS_EXIT:{role}:{code}")
     except Exception as exc:
         error = str(exc)

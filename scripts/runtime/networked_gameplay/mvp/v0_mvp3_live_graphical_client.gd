@@ -162,7 +162,8 @@ func apply_snapshot(snapshot: Dictionary) -> void:
 	var a_route := String(snapshot.get("decisions", {}).get("a", {}).get("active_authority_id", ""))
 	if route_history.is_empty() or route_history.back() != a_route:
 		route_history.append(a_route)
-	hud.text = "MVP3 LIVE CLIENT %s\nGateway session: CONNECTED (%d)\nA route: %s  epoch: %s\nA x: %.2f  B x: %.2f\nLocal input sequence: %d\nBody/camera instances: %s / %s" % [actor.to_upper(), connected, a_route, str(snapshot.get("decisions", {}).get("a", {}).get("authority_epoch", "?")), float(a.get("position", {}).get("x", 0.0)), float(b.get("position", {}).get("x", 0.0)), input_sequence, str(body_ids["local"]), str(body_ids["camera"])]
+	var manual_hint := "\nManual: A/D or Left/Right; Esc when both routes are complete" if not bool(cfg.get("automated", false)) else ""
+	hud.text = "MVP3 LIVE CLIENT %s\nGateway session: CONNECTED (%d)\nA route: %s  epoch: %s\nA x: %.2f  B x: %.2f\nLocal input sequence: %d\nBody/camera instances: %s / %s%s" % [actor.to_upper(), connected, a_route, str(snapshot.get("decisions", {}).get("a", {}).get("authority_epoch", "?")), float(a.get("position", {}).get("x", 0.0)), float(b.get("position", {}).get("x", 0.0)), input_sequence, str(body_ids["local"]), str(body_ids["camera"]), manual_hint]
 
 
 func vector(value: Dictionary) -> Vector3:
@@ -233,7 +234,7 @@ func _process(_delta: float) -> void:
 		elif event.get("event_type") == "MESSAGE_RECEIVED":
 			handle_reply(Protocol.payload(event))
 	boundary.flush_outbound(64)
-	if not pending_kind.is_empty() and Time.get_ticks_msec() - last_send_ms > 5000:
+	if not pending_kind.is_empty() and Time.get_ticks_msec() - last_send_ms > int(cfg.get("client_reply_timeout_ms", 30000)):
 		finish(false, "MVP3_CLIENT_REPLY_TIMEOUT")
 
 
