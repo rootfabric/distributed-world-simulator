@@ -43,10 +43,14 @@ def digest(path: Path) -> str:
     return value.hexdigest()
 
 
-def git(*args: str, check: bool = True) -> str:
-    proc = subprocess.run(["git", *args], cwd=ROOT, text=True, stdout=subprocess.PIPE,
+def git_proc(*args: str) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(["git", *args], cwd=ROOT, text=True, stdout=subprocess.PIPE,
                           stderr=subprocess.PIPE, check=False)
-    if check and proc.returncode:
+
+
+def git(*args: str) -> str:
+    proc = git_proc(*args)
+    if proc.returncode:
         raise RuntimeError(f"git {' '.join(args)}: {proc.stderr.strip()}")
     return proc.stdout.strip()
 
@@ -61,15 +65,9 @@ def main() -> int:
     out = ROOT / "artifacts/a7-main-integration/exact"
     out.mkdir(parents=True, exist_ok=True)
     summary: dict = {
-        "subject_head": args.head,
-        "subject_tree": args.tree,
-        "base_main": BASE_MAIN,
-        "accepted_transfer_source": ACCEPTED_A7,
-        "verdict": "FAIL",
-        "checks": [],
-        "repeat_pairs": [],
-        "graphical_required": True,
-        "main_owned_files_modified": False,
+        "subject_head": args.head, "subject_tree": args.tree, "base_main": BASE_MAIN,
+        "accepted_transfer_source": ACCEPTED_A7, "verdict": "FAIL", "checks": [],
+        "repeat_pairs": [], "graphical_required": True, "main_owned_files_modified": False,
     }
     env = dict(os.environ, GODOT_SILENCE_ROOT_WARNING="1")
     started = time.monotonic()
@@ -88,10 +86,8 @@ def main() -> int:
         bad = ERRORS.search(text) if scan_errors else None
         require(proc.returncode == 0 and bad is None and (not marker or marker in text),
                 f"{name}: exit={proc.returncode} marker={marker!r}\n{text[-12000:]}")
-        summary["checks"].append({
-            "name": name, "result": "PASS", "exit_code": proc.returncode,
-            "assertions": count, "sha256": digest(log), "command": command,
-        })
+        summary["checks"].append({"name": name, "result": "PASS", "exit_code": proc.returncode,
+                                  "assertions": count, "sha256": digest(log), "command": command})
         print(f"PASS {name} {marker}", flush=True)
         return log
 
@@ -99,8 +95,8 @@ def main() -> int:
         return [str(args.godot), "--headless", "--audio-driver", "Dummy", "--path", str(ROOT),
                 "--script", "res://" + path, *extra]
 
-    def twice(name: str, path: str, marker: str, count: int, timeout: int = 900) -> None:
-        logs = [run(f"{name}-{n}", script(path), marker, count, timeout=timeout) for n in (1, 2)]
+    def twice(name: str, path: str, marker: str, count: int) -> None:
+        logs = [run(f"{name}-{n}", script(path), marker, count) for n in (1, 2)]
         require(logs[0].read_bytes() == logs[1].read_bytes(), f"REPEAT_MISMATCH:{name}")
         summary["repeat_pairs"].append(name)
         print(f"BYTE_IDENTICAL {name} SHA256={digest(logs[0])}", flush=True)
@@ -111,12 +107,12 @@ def main() -> int:
         require(git("rev-parse", "HEAD^{tree}") == args.tree, "EXACT_TREE_MISMATCH")
         require(not git("status", "--porcelain", "--untracked-files=no"), "TRACKED_WORKTREE_DIRTY")
         require(git("merge-base", BASE_MAIN, args.head) == BASE_MAIN, "NOT_CURRENT_MAIN_DESCENDANT")
-        require(git("rev-list", "--parents", "-n", "1", args.head).split()[1] != ACCEPTED_A7,
-                "RESEARCH_COMMIT_USED_AS_INTEGRATION_PARENT")
+        parents = git("rev-list", "--parents", "-n", "1", args.head).split()
+        require(len(parents) >= 2 and ACCEPTED_A7 not in parents[1:], "RESEARCH_COMMIT_USED_AS_INTEGRATION_PARENT")
 
         diff = git("diff", "--name-status", BASE_MAIN, args.head).splitlines()
         require(bool(diff), "EMPTY_INTEGRATION_DIFF")
-        additions = []
+        additions: list[str] = []
         for line in diff:
             parts = line.split("\t")
             require(len(parts) == 2, f"UNEXPECTED_DIFF_RECORD:{line}")
@@ -125,26 +121,25 @@ def main() -> int:
             require(any(path == prefix or path.startswith(prefix) for prefix in ALLOWED_PREFIXES),
                     f"OUT_OF_SCOPE_PATH:{path}")
             additions.append(path)
-        summary["added_paths"] = additions
-        summary["main_owned_files_modified"] = False
         require(not any(path.startswith(".github/") for path in additions), "INTEGRATION_SOURCE_OWNS_WORKFLOW")
         require(not any(path.startswith(("scripts/ecology/production/", "scripts/network/", "scripts/simulation/",
                                          "config/control/", "config/architecture/")) or path == "project.godot"
                         for path in additions), "CANONICAL_MAIN_OWNERSHIP_VIOLATION")
+        summary["added_paths"] = additions
 
-        expected_path = ROOT / "validation/ecology/evo_arch2_a7_main_integration/expected-transfer.v1.json"
-        expected = json.loads(expected_path.read_text(encoding="utf-8"))
+        expected = json.loads((ROOT / "validation/ecology/evo_arch2_a7_main_integration/expected-transfer.v1.json").read_text())
         require(expected["base_main"] == BASE_MAIN and expected["accepted_a7"] == ACCEPTED_A7,
                 "TRANSFER_MANIFEST_IDENTITY")
         for path, sha in expected["subtrees"].items():
             require(git("rev-parse", f"HEAD:{path}") == sha, f"TRANSFER_TREE_MISMATCH:{path}")
-            require(git("cat-file", "-e", f"{BASE_MAIN}:{path}", check=False) == "",
+            require(git_proc("cat-file", "-e", f"{BASE_MAIN}:{path}").returncode != 0,
                     f"TRANSFER_TREE_ALREADY_EXISTED_ON_MAIN:{path}")
         for path, sha in expected["blobs"].items():
             require(git("rev-parse", f"HEAD:{path}") == sha, f"TRANSFER_BLOB_MISMATCH:{path}")
-            require(git("cat-file", "-e", f"{BASE_MAIN}:{path}", check=False) == "",
+            require(git_proc("cat-file", "-e", f"{BASE_MAIN}:{path}").returncode != 0,
                     f"TRANSFER_BLOB_ALREADY_EXISTED_ON_MAIN:{path}")
         summary["transfer_identity"] = "PASS"
+        summary["base_absence_gate"] = "PASS_BY_GIT_EXIT_STATUS"
 
         args.godot = args.godot.resolve(strict=True)
         require(digest(args.godot) == GODOT_SHA, "GODOT_BINARY_SHA_MISMATCH")
@@ -153,10 +148,10 @@ def main() -> int:
         summary["godot"] = {"version": version, "sha256": GODOT_SHA}
 
         shutil.rmtree(ROOT / ".godot", ignore_errors=True)
-        run("cold-import", [str(args.godot), "--headless", "--audio-driver", "Dummy",
-                            "--editor", "--path", str(ROOT), "--import"], timeout=300)
+        run("cold-import", [str(args.godot), "--headless", "--audio-driver", "Dummy", "--editor",
+                            "--path", str(ROOT), "--import"], timeout=300)
 
-        for name, filename, marker, count in [
+        suites = [
             ("a7-protocol", "arch2_a7_protocol_guard.gd", "EVO_ARCH2_A7_PROTOCOL assertions=106 failed=0", 106),
             ("a7-core", "arch2_a7_acceptance.gd", "EVO_ARCH2_A7_EXACT assertions=158 failed=0", 158),
             ("a7-ui", "arch2_a7_ui.gd", "EVO_ARCH2_A7_UI assertions=30 failed=0", 30),
@@ -167,7 +162,8 @@ def main() -> int:
             ("a5-repairs", "arch2_a5_reviewer_repairs.gd", "EVO_ARCH2_A5_REPAIRS assertions=29 failed=0", 29),
             ("a4", "arch2_a4_exact_acceptance.gd", "EVO_ARCH2_A4_EXACT assertions=32 failed=0", 32),
             ("a03", "arch2_a03_exact_acceptance.gd", "EVO_ARCH2_A03_EXACT assertions=86 failed=0", 86),
-        ]:
+        ]
+        for name, filename, marker, count in suites:
             twice(name, "tests/research/ecology/v2/" + filename, marker, count)
 
         for stage in ("a7", "a6"):
@@ -189,13 +185,11 @@ def main() -> int:
             twice(f"rm{number}", matches[0].relative_to(ROOT).as_posix(),
                   f"EVO_ARCH2_A5_RM{number} assertions={count} failed=0", count)
 
-        graphical = run(
-            "a7-graphical",
+        graphical = run("a7-graphical",
             ["xvfb-run", "-a", "-s", "-screen 0 1600x1100x24", str(args.godot),
              "--rendering-method", "gl_compatibility", "--audio-driver", "Dummy", "--path", str(ROOT),
              "--script", "res://tests/research/ecology/v2/arch2_a7_ui.gd", "--", "--capture"],
-            "EVO_ARCH2_A7_UI assertions=32 failed=0", 32, timeout=300,
-        )
+            "EVO_ARCH2_A7_UI assertions=32 failed=0", 32, timeout=300)
         png = ROOT / "artifacts/a7/observatory.png"
         report = ROOT / "artifacts/a7/capture-sources.json"
         require(png.is_file() and report.is_file(), "GRAPHICAL_EVIDENCE_MISSING")
@@ -203,13 +197,9 @@ def main() -> int:
         summary["viewport_source_report_sha256"] = digest(report)
         summary["graphical_log_sha256"] = digest(graphical)
 
-        # Current-main control code is unchanged. Re-run its complete Harness suite on the integrated tree.
-        harness = run(
-            "main-harness-regression",
-            [sys.executable, "-m", "unittest", "discover", "-s", str(ROOT / "tests/harness"),
-             "-p", "test_*.py", "-v"],
-            marker="OK", timeout=600, scan_errors=False,
-        )
+        harness = run("main-harness-regression",
+            [sys.executable, "-m", "unittest", "discover", "-s", str(ROOT / "tests/harness"), "-p", "test_*.py", "-v"],
+            marker="OK", timeout=600, scan_errors=False)
         harness_text = harness.read_text(encoding="utf-8-sig", errors="replace")
         require("FAILED (" not in harness_text and "ERROR" not in harness_text, "HARNESS_REGRESSION_FAILURE")
 
@@ -218,8 +208,7 @@ def main() -> int:
         control_results = []
         for name, script_name, extra, artifact_name in [
             ("standard", "project_control.py", ["--no-fetch", "--no-fail-on-red"], "project-control-report.json"),
-            ("directional", "project_control_directional_watch.py", ["--no-fail-on-red"], "directional-watch-report.json"),
-        ]:
+            ("directional", "project_control_directional_watch.py", ["--no-fail-on-red"], "directional-watch-report.json")]:
             log = run(f"control-{name}", [sys.executable, str(ROOT / "scripts/control" / script_name), *extra],
                       timeout=300, scan_errors=False)
             target = ROOT / "artifacts/control" / artifact_name
