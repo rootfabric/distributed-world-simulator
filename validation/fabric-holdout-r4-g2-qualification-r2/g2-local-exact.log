@@ -1,0 +1,81 @@
+Godot Engine v4.7.1.stable.double.custom_build.a13da4feb (2026-07-13 21:00:28 UTC) - https://godotengine.org
+
+[   0% ] first_scan_filesystem | Started Project initialization (5 steps)
+[   0% ] first_scan_filesystem | Scanning file structure...
+[  16% ] first_scan_filesystem | Loading global class names...
+[  33% ] first_scan_filesystem | Verifying GDExtensions...
+[  50% ] first_scan_filesystem | Creating autoload scripts...
+[  66% ] first_scan_filesystem | Initializing plugins...
+[breakpoint_mcp] plugin enabled
+[breakpoint_mcp] listening on 127.0.0.1:9080
+[  83% ] first_scan_filesystem | Starting file scan...
+[ DONE ] first_scan_filesystem
+
+[   0% ] loading_editor_layout | Started Loading editor (5 steps)
+[   0% ] loading_editor_layout | Loading editor layout...
+[  16% ] loading_editor_layout | Loading docks...
+[ DONE ] loading_editor_layout
+
+[breakpoint_mcp] plugin disabled
+Godot Engine v4.7.1.stable.double.custom_build.a13da4feb (2026-07-13 21:00:28 UTC) - https://godotengine.org
+
+G2_BOND_ID_ASSERTIONS=17 FAILURES=0
+FABRIC-HOLDOUT-R4-G2-BOND-ID: PASS
+Godot Engine v4.7.1.stable.double.custom_build.a13da4feb (2026-07-13 21:00:28 UTC) - https://godotengine.org
+
+G2_TRANSPORT_ASSERTIONS=381 FAILURES=0
+FABRIC-HOLDOUT-R4-G2-TRANSPORT: PASS
+Godot Engine v4.7.1.stable.double.custom_build.a13da4feb (2026-07-13 21:00:28 UTC) - https://godotengine.org
+
+G2_ASSERTIONS=89 FAILURES=0
+FABRIC-HOLDOUT-R4-G2: PASS
+Godot Engine v4.7.1.stable.double.custom_build.a13da4feb (2026-07-13 21:00:28 UTC) - https://godotengine.org
+
+G2_SIGNED_EFFORT_ASSERTIONS=6 FAILURES=0
+FABRIC-HOLDOUT-R4-G2-SIGNED-EFFORT: PASS
+Godot Engine v4.7.1.stable.double.custom_build.a13da4feb (2026-07-13 21:00:28 UTC) - https://godotengine.org
+
+R3_CONVERGENCE_ERRORS=[0.00000014698048, 0.00000000912869, 0.00000000056861] ENERGY_ERRORS=[0.00000005674512, 0.00000000382623, 0.00000000024785]
+R3_FIRST_FAILURE={"authority_hash":"71e3a3305503af21a48164f457ce5b759e13d203fc8839edb6ee224ab0bd20e9","bond_id":"bond/mechanism-support-00","event_id":"event/r3-2be92c089607482f9857e8418bc52f2c15471352b9c30e5f19775fb897c3733d","source_hash":"f3603c99edd4d867007358a70e556580ecb6f1343fddcb43f345db019c6a69c9","time_s":0.276443615024909} FRACTURE_J=0.07661928473587
+R3_ASSERTIONS=187 FAILURES=0
+FABRIC-COMPOSITION-R3: PASS
+Godot Engine v4.7.1.stable.double.custom_build.a13da4feb (2026-07-13 21:00:28 UTC) - https://godotengine.org
+
+R3_TRANSIENT={"fidelity":"FULL","proposal":{"authority_hash":"71e3a3305503af21a48164f457ce5b759e13d203fc8839edb6ee224ab0bd20e9","bond_id":"bond/mechanism-support-00","event_id":"event/r3-833a99772a6f89111e45e98d6a617f7fadffe05674c11c6e19a2618fb02880c1","source_hash":"9a9cd9efce9cbc0aeb498dc8cacde8f339c6bc172e16f27bd4a6963d1d4c0be2","time_s":0.603745961857373},"reference_first_crossing_s":0.603748955145611,"sign":1.0}
+R3_TRANSIENT={"fidelity":"BAKE","proposal":{"authority_hash":"71e3a3305503af21a48164f457ce5b759e13d203fc8839edb6ee224ab0bd20e9","bond_id":"bond/mechanism-support-00","event_id":"event/r3-833a99772a6f89111e45e98d6a617f7fadffe05674c11c6e19a2618fb02880c1","source_hash":"9a9cd9efce9cbc0aeb498dc8cacde8f339c6bc172e16f27bd4a6963d1d4c0be2","time_s":0.603745961857373},"reference_first_crossing_s":0.603748955145611,"sign":1.0}
+R3_TRANSIENT={"fidelity":"FULL","proposal":{"authority_hash":"71e3a3305503af21a48164f457ce5b759e13d203fc8839edb6ee224ab0bd20e9","bond_id":"bond/mechanism-support-00","event_id":"event/r3-72f4208057d0a54d7d29d86a353bab00874bfc7da914050198c9ea384e871694","source_hash":"fa7e0554a7ec9e44e97ee0fe4469eca3a8c86072bd7d7308f84e9ee18517469c","time_s":0.603745961857373},"reference_first_crossing_s":0.603748955145611,"sign":-1.0}
+R3_TRANSIENT={"fidelity":"BAKE","proposal":{"authority_hash":"71e3a3305503af21a48164f457ce5b759e13d203fc8839edb6ee224ab0bd20e9","bond_id":"bond/mechanism-support-00","event_id":"event/r3-72f4208057d0a54d7d29d86a353bab00874bfc7da914050198c9ea384e871694","source_hash":"fa7e0554a7ec9e44e97ee0fe4469eca3a8c86072bd7d7308f84e9ee18517469c","time_s":0.603745961857373},"reference_first_crossing_s":0.603748955145611,"sign":-1.0}
+R3_TRANSIENT={"fidelity":"FULL","proposal":{"authority_hash":"71e3a3305503af21a48164f457ce5b759e13d203fc8839edb6ee224ab0bd20e9","bond_id":"bond/mechanism-support-00","event_id":"event/r3-b8f2b8710465c85409098865ef8ac9726855f9e08b6fbc0a0b9cda5137bddb82","source_hash":"9a9cd9efce9cbc0aeb498dc8cacde8f339c6bc172e16f27bd4a6963d1d4c0be2","time_s":0.603746648160978},"reference_first_crossing_s":0.603748955145611,"sign":1.0}
+R3_TRANSIENT={"fidelity":"BAKE","proposal":{"authority_hash":"71e3a3305503af21a48164f457ce5b759e13d203fc8839edb6ee224ab0bd20e9","bond_id":"bond/mechanism-support-00","event_id":"event/r3-4074624e218932da6417352c5381a70a4f4ab81c31108a27a603efdd71bc6c33","source_hash":"9a9cd9efce9cbc0aeb498dc8cacde8f339c6bc172e16f27bd4a6963d1d4c0be2","time_s":0.603745163612068},"reference_first_crossing_s":0.603748955145611,"sign":1.0}
+R3_TRANSIENT={"fidelity":"FULL","proposal":{"authority_hash":"71e3a3305503af21a48164f457ce5b759e13d203fc8839edb6ee224ab0bd20e9","bond_id":"bond/mechanism-support-00","event_id":"event/r3-1b590aa1f573470aedc3a6f64f5b1ac5f8c0e49a9705c99187ccd318e92b4b33","source_hash":"9f856de0772b06c5a52d6cfff1ecf1416db8a8a82e5cedadb8ab5c75f4210f36","time_s":0.607649798132313},"reference_first_crossing_s":0.607687631066159,"sign":1.0}
+R3_TRANSIENT={"fidelity":"BAKE","proposal":{"authority_hash":"71e3a3305503af21a48164f457ce5b759e13d203fc8839edb6ee224ab0bd20e9","bond_id":"bond/mechanism-support-00","event_id":"event/r3-4a1aeecad6c2493f693dc408f3a45f36fc7de6508e15cb66b7a13985d22c0ba3","source_hash":"f60df7c914299e5b3d471fe45c0d00853ec28ffe3bbbdadf59cdc9a946deef12","time_s":0.607649798132313},"reference_first_crossing_s":0.607687631066159,"sign":-1.0}
+R3_TRANSIENT_ASSERTIONS=611 FAILURES=0
+FABRIC-COMPOSITION-R3-TRANSIENT: PASS
+Godot Engine v4.7.1.stable.double.custom_build.a13da4feb (2026-07-13 21:00:28 UTC) - https://godotengine.org
+
+R3_OBSERVER_FAILURES=[]
+FABRIC-COMPOSITION-R3-OBSERVER: PASS
+Godot Engine v4.7.1.stable.double.custom_build.a13da4feb (2026-07-13 21:00:28 UTC) - https://godotengine.org
+
+FABRIC-COMPOSITION-R3-PROCESS-WRITE: PASS
+Godot Engine v4.7.1.stable.double.custom_build.a13da4feb (2026-07-13 21:00:28 UTC) - https://godotengine.org
+
+R3_CRASH_PENDING_REPLAY=PASS
+R3_CRASH_COMMITTED_REPLAY=PASS
+R3_COLD_REPLAY_COMMANDS=81 DERIVED_CAPSULES_RESTORED=0
+R3_FRESH_PROCESS_CONTINUITY_HASH=77362335a5e7e20b2fa449edfb0b7d2994251b82bd7ef092f512fa2f70e959a7
+FABRIC-COMPOSITION-R3-PROCESS-READ: PASS
+Godot Engine v4.7.1.stable.double.custom_build.a13da4feb (2026-07-13 21:00:28 UTC) - https://godotengine.org
+
+FABRIC-PHYSICS-R2: PASS
+Godot Engine v4.7.1.stable.double.custom_build.a13da4feb (2026-07-13 21:00:28 UTC) - https://godotengine.org
+
+FABRIC-PHYSICS-R2-CONTRACT: PASS
+Godot Engine v4.7.1.stable.double.custom_build.a13da4feb (2026-07-13 21:00:28 UTC) - https://godotengine.org
+
+FABRIC-PHYSICS-R2-METAMORPHIC: PASS
+Godot Engine v4.7.1.stable.double.custom_build.a13da4feb (2026-07-13 21:00:28 UTC) - https://godotengine.org
+
+FABRIC-REPAIR-R1 INTEGRITY: PASS (42 assertions)
+FABRIC_REPAIR_R1_INTEGRITY_HASH=3330592fbeb7c0e05871016c2e1196ec733aa033bd66d8fee7f56e2b94f83187
+HOLDOUT_R4_G2_EVIDENCE=/mnt/data/dws8fe-work/artifacts/fabric-holdout-r4-g2-exact-IBz9wZ
