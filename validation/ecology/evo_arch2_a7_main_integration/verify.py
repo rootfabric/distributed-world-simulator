@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import importlib.metadata
 import json
 import os
 from pathlib import Path
@@ -20,10 +21,23 @@ ACCEPTED_A7 = "8eccf6304078bec3a3ccaa5860c5aab6ee311209"
 ACCEPTED_TREE = "24e876b7377cb3e1e521f08ff9766331fe4e895a"
 GODOT_SHA = "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7"
 GODOT_VERSION = "4.7.1.stable.double.custom_build.a13da4feb"
+PINNED_JSONSCHEMA = "4.25.1"
+HARNESS_REPAIR_PATH = "tests/harness/test_v0_mvp_act0.py"
+HARNESS_REPAIR_BLOB = "43db3ef992430802dab3b7c60b3bb7d2801205f0"
 EXTERNAL_DEPS = {
     "scripts/research/ecology/plant_development_traits_extension_evo7_v1.gd",
     "scripts/labs/ecology/evo_morphology_lab_v2_model.gd",
     "scripts/labs/ecology/evo_morphology_lab_v2_renderer.gd",
+}
+INTEGRATION_LOCAL_PATHS = {
+    "config/ecology/evo-arch2-a7-main-integration-work-order.v1.json",
+    "docs/research/ecology/EVO_ARCH2_A7_MAIN_INTEGRATION_R1_RU.md",
+    "docs/research/ecology/EVO_ARCH2_A7_MAIN_INTEGRATION_REPAIR_R1_RU.md",
+    "docs/research/ecology/EVO_ARCH2_A7_MAIN_INTEGRATION_REPAIR_R2_RU.md",
+    "docs/research/ecology/EVO_ARCH2_A7_MAIN_INTEGRATION_REPAIR_R3_RU.md",
+    "docs/research/ecology/EVO_ARCH2_A7_MAIN_INTEGRATION_REPAIR_R4_RU.md",
+    "validation/ecology/evo_arch2_a7_main_integration/expected-transfer.v1.json",
+    "validation/ecology/evo_arch2_a7_main_integration/verify.py",
 }
 GENERATED_RES_PREFIXES = ("artifacts/a7/",)
 ERRORS = re.compile(r"SCRIPT ERROR|Parse Error|ERROR:|FAIL:")
@@ -33,16 +47,13 @@ RES_PATTERNS = [
 ]
 RM = {11:9,12:29,13:13,14:21,15:12,16:10,17:13,18:12,19:10,20:12,21:8,22:13,
       23:16,25:11,26:11,27:13,28:12,29:9,30:7,32:12,33:17,34:19}
-PREFIXES = (
-    "config/ecology/evo-arch2-a7-main-integration-",
+TRANSFER_PREFIXES = (
     "config/ecology/evo-arch2-a7-protocol.v1.json",
-    "docs/research/ecology/EVO_ARCH2_A7_MAIN_INTEGRATION",
     "scripts/research/ecology/v2/",
     "scripts/labs/ecology/arch2_a7_",
     "scenes/labs/ecology/arch2_a7_",
     "tests/research/ecology/v2/",
     "validation/ecology/evo_arch2_a5/",
-    "validation/ecology/evo_arch2_a7_main_integration/",
 )
 
 
@@ -66,8 +77,8 @@ def git(*args: str) -> str:
     return p.stdout.strip()
 
 
-def allowed(path: str) -> bool:
-    return path in EXTERNAL_DEPS or any(path == p or path.startswith(p) for p in PREFIXES)
+def transferred(path: str) -> bool:
+    return path in EXTERNAL_DEPS or any(path == p or path.startswith(p) for p in TRANSFER_PREFIXES)
 
 
 def main() -> int:
@@ -91,7 +102,8 @@ def main() -> int:
         "checks": [],
         "repeat_pairs": [],
         "graphical_required": True,
-        "main_owned_files_modified": False,
+        "main_owned_files_modified": [HARNESS_REPAIR_PATH],
+        "unauthorized_main_owned_files_modified": False,
     }
     started = time.monotonic()
 
@@ -138,25 +150,62 @@ def main() -> int:
         req(git("rev-parse", ACCEPTED_REF + "^{tree}") == ACCEPTED_TREE, "ACCEPTED_REF_TREE_MISMATCH")
         req(gp("cat-file", "-e", ACCEPTED_A7 + "^{commit}").returncode == 0,
             "ACCEPTED_COMMIT_NOT_AVAILABLE")
+        req(git("rev-parse", ACCEPTED_A7 + "^{tree}") == ACCEPTED_TREE,
+            "ACCEPTED_COMMIT_TREE_MISMATCH")
 
         records = git("diff", "--name-status", BASE_MAIN, args.head).splitlines()
         req(bool(records), "EMPTY_DIFF")
-        additions = []
-        for rec in records:
-            parts = rec.split("\t")
-            req(len(parts) == 2 and parts[0] == "A", "NOT_ADDITION_ONLY:" + rec)
-            path = parts[1]
-            req(allowed(path), "OUT_OF_SCOPE_PATH:" + path)
-            additions.append(path)
+        transfer_additions: list[str] = []
+        integration_additions: list[str] = []
+        modifications: list[str] = []
         forbidden = ("scripts/ecology/production/", "scripts/network/", "scripts/simulation/",
                      "config/control/", "config/architecture/")
-        req(not any(p == "project.godot" or p.startswith(forbidden) or p.startswith(".github/")
-                    for p in additions), "MAIN_OWNERSHIP_VIOLATION")
-        summary["added_paths"] = additions
+        for rec in records:
+            parts = rec.split("\t")
+            req(len(parts) == 2, "UNSUPPORTED_DIFF_RECORD:" + rec)
+            status, path = parts
+            req(path != "project.godot" and not path.startswith(forbidden) and not path.startswith(".github/"),
+                "MAIN_OWNERSHIP_VIOLATION:" + path)
+            if status == "M":
+                req(path == HARNESS_REPAIR_PATH, "UNAUTHORIZED_MODIFICATION:" + rec)
+                modifications.append(path)
+                continue
+            req(status == "A", "NON_ADDITION_TRANSFER_CHANGE:" + rec)
+            if path in INTEGRATION_LOCAL_PATHS:
+                integration_additions.append(path)
+                continue
+            req(transferred(path), "OUT_OF_SCOPE_ADDITION:" + path)
+            transfer_additions.append(path)
+
+        req(modifications == [HARNESS_REPAIR_PATH], "HARNESS_REPAIR_PATH_SET_MISMATCH")
+        req(set(integration_additions) == INTEGRATION_LOCAL_PATHS,
+            "INTEGRATION_LOCAL_PATH_SET_MISMATCH")
+        req(git("rev-parse", "HEAD:" + HARNESS_REPAIR_PATH) == HARNESS_REPAIR_BLOB,
+            "HARNESS_REPAIR_BLOB_MISMATCH")
+        req(gp("cat-file", "-e", BASE_MAIN + ":" + HARNESS_REPAIR_PATH).returncode == 0,
+            "HARNESS_REPAIR_BASE_PATH_MISSING")
+        req(bool(transfer_additions), "NO_TRANSFER_ADDITIONS")
+
+        accepted_addition_objects = {}
+        for path in transfer_additions:
+            req(gp("cat-file", "-e", BASE_MAIN + ":" + path).returncode != 0,
+                "TRANSFER_PATH_EXISTED_ON_MAIN:" + path)
+            req(gp("cat-file", "-e", ACCEPTED_A7 + ":" + path).returncode == 0,
+                "TRANSFER_PATH_MISSING_FROM_ACCEPTED_A7:" + path)
+            head_obj = git("rev-parse", "HEAD:" + path)
+            accepted_obj = git("rev-parse", ACCEPTED_A7 + ":" + path)
+            req(head_obj == accepted_obj, "ACTUAL_TRANSFER_ADDITION_MISMATCH:" + path)
+            accepted_addition_objects[path] = head_obj
+
+        summary["transfer_additions"] = transfer_additions
+        summary["integration_local_additions"] = integration_additions
+        summary["bounded_modifications"] = modifications
+        summary["actual_transfer_objects"] = accepted_addition_objects
 
         pins = json.loads((ROOT / "validation/ecology/evo_arch2_a7_main_integration/expected-transfer.v1.json").read_text())
-        req(pins["base_main"] == BASE_MAIN and pins["accepted_a7"] == ACCEPTED_A7 and
-            pins["accepted_a7_tree"] == ACCEPTED_TREE, "TRANSFER_MANIFEST_IDENTITY")
+        req(pins["base_main"] == BASE_MAIN and pins["accepted_ref"] == ACCEPTED_REF and
+            pins["accepted_a7"] == ACCEPTED_A7 and pins["accepted_a7_tree"] == ACCEPTED_TREE,
+            "TRANSFER_MANIFEST_IDENTITY")
         direct_objects = {}
         for path, want in {**pins["subtrees"], **pins["blobs"]}.items():
             head_obj = git("rev-parse", "HEAD:" + path)
@@ -167,7 +216,7 @@ def main() -> int:
                 "TRANSFER_PATH_EXISTED_ON_MAIN:" + path)
             direct_objects[path] = head_obj
         req(set(pins["blobs"]).issuperset(EXTERNAL_DEPS), "EXTERNAL_DEPENDENCY_NOT_PINNED")
-        summary["transfer_identity"] = "PASS_DIRECT_ACCEPTED_REF"
+        summary["transfer_identity"] = "PASS_ALL_ACTUAL_ADDITIONS_DIRECT_ACCEPTED_REF"
         summary["base_absence_gate"] = "PASS_BY_GIT_EXIT_STATUS"
         summary["direct_accepted_objects"] = direct_objects
 
@@ -194,6 +243,15 @@ def main() -> int:
                     req(False, f"TRANSITIVE_RES_PATH_MISSING:{source.relative_to(ROOT)}->{rel}")
         summary["res_path_closure"] = {"result": "PASS", "sources": len(sources),
                                        "references": refs, "generated_missing_allowed": generated_refs}
+
+        try:
+            jsonschema_version = importlib.metadata.version("jsonschema")
+        except importlib.metadata.PackageNotFoundError as exc:
+            raise RuntimeError("PINNED_JSONSCHEMA_MISSING") from exc
+        req(jsonschema_version == PINNED_JSONSCHEMA,
+            f"PINNED_JSONSCHEMA_VERSION_REQUIRED:{jsonschema_version}")
+        summary["python_environment"] = {"executable": sys.executable,
+                                         "jsonschema": jsonschema_version}
 
         args.godot = args.godot.resolve(strict=True)
         req(sha(args.godot) == GODOT_SHA, "GODOT_SHA")
@@ -250,10 +308,15 @@ def main() -> int:
                        graphical_log_sha256=sha(glog))
 
         hlog = run("main-harness-regression",
-            [sys.executable, "-m", "unittest", "discover", "-s", str(ROOT / "tests/harness"),
+            [sys.executable, "-m", "unittest", "discover", "-s", "tests/harness",
              "-p", "test_*.py", "-v"], "OK", timeout=600, scan=False)
         htext = hlog.read_text(encoding="utf-8-sig", errors="replace")
         req("FAILED (" not in htext and "ERROR" not in htext, "HARNESS_REGRESSION_FAILURE")
+        req("skipped=" not in htext, "HARNESS_SKIPS_NOT_ALLOWED")
+        ran = re.search(r"Ran (\d+) tests", htext)
+        req(ran is not None and int(ran.group(1)) >= 325, "HARNESS_DISCOVERY_INCOMPLETE")
+        summary["harness"] = {"result": "PASS", "tests": int(ran.group(1)),
+                              "jsonschema": jsonschema_version, "sha256": sha(hlog)}
 
         cdir = ROOT / "artifacts/a7-main-integration/control"
         cdir.mkdir(parents=True, exist_ok=True)
