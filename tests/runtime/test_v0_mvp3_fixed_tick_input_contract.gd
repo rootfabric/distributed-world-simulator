@@ -47,7 +47,7 @@ func command(actor: String, sequence: int, suffix: String = "", axis: float = 1.
 	return InputDTO.create("message/mvp3/fixed/%s/%d%s" % [actor, sequence, suffix], operation, actor, "transport-session/mvp3/fixed/" + actor, 1, 1, sequence, "MOVEMENT_INTENT", {"move_x": axis, "move_z": 0.0, "look_yaw": 0.0, "look_pitch": 0.0, "jump_pressed": false, "sprint": false, "delta_seconds": 1.0 / 60.0})
 
 func next_tick(owner) -> bool:
-	return ok(owner.advance_fixed_server_tick(int(owner.create_snapshot().get("tick", -1)) + 1), "canonical next fixed tick")
+	return ok(owner.advance_fixed_server_tick(int(owner.get_report().get("server_tick", -1)) + 1), "canonical next fixed tick")
 
 func run() -> void:
 	var regular := fixture()
