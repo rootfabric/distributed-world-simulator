@@ -12,8 +12,8 @@
   "accepted_a6_head": "993271eb46880b77f0e7584f931131d4bd0a5125",
   "research_acceptance_ref": "control/eco-evo-arch2-a7-acceptance-r1",
   "research_acceptance_commit": "11d2ce40b4b389d8cfa833ccef36f331b825b40c",
-  "authorization": "User explicitly requested the correct step toward main after A7 research acceptance and then explicitly authorized the bounded Harness regression repair, exact Godot verification, fresh review and PC0. Merge to main remains a human gate.",
-  "objective": "Transfer the minimum self-contained accepted ecology-v2 capability closure plus A7 Observatory into a fresh current-main branch, without importing the long research lineage or overwriting unrelated main-owned runtime, repair only the discovered over-broad P7 scene immutability test, then produce exact integration evidence and a merge-ready PR.",
+  "authorization": "User authorized continuing the A7 integration after the two exact-head P1 findings. Bounded verifier/test/environment repairs, exact Godot verification, fresh review and PC0 remain in scope. Merge to main remains a human gate.",
+  "objective": "Transfer the minimum self-contained accepted ecology-v2 capability closure plus A7 Observatory into a fresh current-main branch, without importing the long research lineage or overwriting unrelated main-owned runtime, retain only the already authorized P7 scene-guard repair, then produce exact integration evidence and a merge-ready proposal.",
   "transfer_policy": {
     "required_new_subtree": "scripts/research/ecology/v2/**",
     "required_external_dependencies": [
@@ -82,6 +82,8 @@
   "required_predicates": [
     "FRESH_CURRENT_MAIN_BASE_EXACT",
     "NO_LONG_RESEARCH_LINEAGE_MERGE",
+    "COMPLETE_HISTORY_NO_REPLACE_OR_GRAFT_BYPASS",
+    "RESEARCH_ANCESTRY_NEGATIVE_PROVEN_BY_EXIT_1",
     "DURABLE_ACCEPTANCE_REF_FETCHED_AND_EXACT",
     "ACCEPTED_REF_TREE_EXACT",
     "ACCEPTED_COMMIT_TREE_EXACT",
@@ -94,7 +96,8 @@
     "ONLY_DECLARED_MAIN_OWNED_HARNESS_REPAIR_MODIFIED",
     "P7_PREEXISTING_SCENES_REMAIN_IMMUTABLE",
     "ONLY_EXACT_A7_LAB_SCENE_ADDITION_ALLOWED",
-    "PINNED_JSONSCHEMA_4_25_1",
+    "PINNED_JSONSCHEMA_4_22_0_MATCHES_CANONICAL_HARNESS",
+    "REPAIR_R5_NEGATIVE_POSITIVE_CONTROLS_PASS",
     "FULL_HARNESS_DISCOVERY_FAIL_CLOSED",
     "COLD_IMPORT_PASS",
     "A0_A7_V2_REGRESSION_PASS",
@@ -109,6 +112,16 @@
     "DRAFT_PR_TO_MAIN_OPEN",
     "HUMAN_MERGE_GATE_NOT_BYPASSED"
   ],
+  "repair_r5": {
+    "map": "docs/research/ecology/EVO_ARCH2_A7_MAIN_INTEGRATION_REPAIR_R5_RU.md",
+    "findings": [3999074189, 3999074192],
+    "previous_source_head": "e35ac07582c36b75d3cd05bdc8b66d8dbe84c681",
+    "canonical_requirement": "scripts/harness/requirements.txt:jsonschema==4.22.0",
+    "supersedes_incorrect_r4_pin": "4.25.1",
+    "test_command": "python -m unittest discover -s validation/ecology/evo_arch2_a7_main_integration -p test_repair_r5.py -v",
+    "validation_branch": "validation/eco-arch2-a7-main-integration-r1",
+    "historical_records_preserved": true
+  },
   "acceptance_policy": {
     "implementer_self_merge": false,
     "main_merge_requires_human": true,
@@ -118,9 +131,10 @@
   },
   "state": "IN_PROGRESS",
   "resume_anchor": {
-    "exact_subject": "main@7dfc68ab5a1e90254a1b7039807f275b5da04eef + acceptance/eco-evo-arch2-a7-r1@8eccf6304078bec3a3ccaa5860c5aab6ee311209",
-    "last_completed_predicate": "HARNESS_REGRESSION_ROOT_CAUSE_AND_R4_BOUNDED_REPAIR_DEFINED",
-    "next_action": "FREEZE_FINAL_R4_SOURCE_HEAD_THEN_RUN_STATIC_R5_EXACT_R5_FRESH_REVIEW_PC0",
+    "exact_subject": "main@7dfc68ab5a1e90254a1b7039807f275b5da04eef + acceptance/eco-evo-arch2-a7-r1@8eccf6304078bec3a3ccaa5860c5aab6ee311209; resolve current integration branch HEAD/TREE before execution",
+    "last_completed_predicate": "R5_IMPLEMENTATION_AND_PRODUCTION_GUARD_TESTS_PUBLISHED",
+    "known_failure_signature": "R4_PIN_4_25_1_CONFLICTS_WITH_CANONICAL_4_22_0; IMMEDIATE_PARENT_GUARD_MISSES_DISTANT_ANCESTOR",
+    "next_action": "FREEZE_R5_HEAD_TREE_THEN_RUN_FOCUSED_AND_FULL_EXACT_LINUX_R6_FRESH_REVIEW_PC0",
     "allowed_recovery_route": "GitHub connector for writes; repository-owned hosted/static and self-hosted exact CI",
     "stop_before": "MAIN_MERGE"
   }
