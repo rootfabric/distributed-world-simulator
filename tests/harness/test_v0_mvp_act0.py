@@ -11,6 +11,7 @@ from __future__ import annotations
 from contextlib import contextmanager
 import json
 from pathlib import Path
+import shutil
 import subprocess
 import tempfile
 
@@ -39,8 +40,13 @@ class MVPAct0Tests(base.MVPAct0Tests):
         synthetic feature branch in its own fixture-only commit. This prevents a
         Harness repair test from accidentally executing the older main implementation
         while leaving origin/main and all authority inputs canonical.
+
+        Teardown is intentionally non-authorizing: the fixture directory is ephemeral
+        test scratch space, so a transient filesystem cleanup race must not replace the
+        already-computed Harness verdict with a false test failure.
         """
-        with tempfile.TemporaryDirectory(prefix="act0-authority-") as tmp:
+        tmp = tempfile.mkdtemp(prefix="act0-authority-")
+        try:
             root = Path(tmp) / "repo"
             subprocess.run(["git", "clone", "--quiet", "--shared", str(ROOT), str(root)], check=True)
             control_main = git(ROOT, "rev-parse", "origin/main")
@@ -65,6 +71,8 @@ class MVPAct0Tests(base.MVPAct0Tests):
                     "commit", "-qm", "test-only candidate Harness implementation",
                 )
             yield root
+        finally:
+            shutil.rmtree(tmp, ignore_errors=True)
 
     def test_all_p7_execution_and_acceptance_blobs_are_unchanged(self):
         for path in (H + "executions/E2026-08-30-V0-P7-R1", H + "acceptance"):
