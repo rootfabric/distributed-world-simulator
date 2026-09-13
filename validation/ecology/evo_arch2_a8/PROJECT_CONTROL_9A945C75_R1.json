@@ -1,0 +1,27 @@
+{
+  "schema": "dws.ecology.a8-project-control-evidence.v1",
+  "source_head": "9a945c758d72bd1c2efd3732b200d7f7785c2ec8",
+  "source_tree": "bf1787ad7b0af322d6d37b88bd04195e60aaf1c4",
+  "base_main": "9e10e640ffc53f82195f1fd930ebafbbc85e482f",
+  "run_id": 34759486136,
+  "conclusion": "success",
+  "artifact": {
+    "id": 10318547138,
+    "name": "project-control-report",
+    "github_digest": "sha256:30325ce76314ce93df0183f7dcbba2c4a8e9ee8e1159e1b477b74cfd12957e17",
+    "downloaded_zip_sha256": "30325ce76314ce93df0183f7dcbba2c4a8e9ee8e1159e1b477b74cfd12957e17",
+    "project_control_report_sha256": "d81a963b00e1d41acda9dcd5c641b6411f19418426ad938225d0cf8316774c43",
+    "directional_watch_report_sha256": "5518f37edeaabbb255f8c2989208ccdded9173a3df2e0ed39f8bdcdb657d1592",
+    "project_status_sha256": "ccd5dbb0d18ecfeceeb96280a6e0ef39dbea39f77acd74306c4dabf92dbb5071",
+    "directional_status_sha256": "2b1347b1beb720c797aa29ac52a243d38e69ca1fe9f4c855fab3f74f31793c9a"
+  },
+  "registry_generation": 82,
+  "standard_overall_health": "YELLOW",
+  "directional_overall_health": "YELLOW",
+  "non_red_gate": true,
+  "global_green_inferred": false,
+  "review_finding_repaired": 3999708328,
+  "a8_accepted": false,
+  "main_merge": false,
+  "next_required": ["FULL_EXACT_LINUX_PASS", "FRESH_INDEPENDENT_REVIEW_PASS", "POST_BUILD_CRITIQUE"]
+}
