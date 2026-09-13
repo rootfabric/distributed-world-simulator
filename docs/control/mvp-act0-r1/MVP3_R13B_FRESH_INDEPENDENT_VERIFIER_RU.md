@@ -19,14 +19,20 @@ Role: FRESH INDEPENDENT VERIFIER, not Implementer/Reviewer/Coordinator. Read-onl
 ## Inputs that must be terminal/retrievable before verdict
 
 1. Fresh R13 Reviewer on PR #621 for exact `f1d453fb...` (completed with no major issues; independently confirm no blocking inline findings).
-2. R13 exact Linux machine evidence run `34749737201`:
-   - graphical lane must be SUCCESS and raw artifact rehashed;
-   - full world-core lane must be terminal SUCCESS and raw artifact rehashed;
+2. R13 exact Linux graphical evidence run `34749737201`:
+   - graphical job `103703953494` must be SUCCESS and artifact `10315018723` independently rehashed;
+   - graphical artifact ZIP SHA-256 expected `b55a36c961d52fb5827dc7f821abf8019feeace82f69345b3015bfd7092646f1`;
    - historical failed control lane must be classified from raw log: Harness completed before `GIT_BRANCH_UNAVAILABLE` caused by detached validation-carrier branch context, not product bytes.
-3. Exact Project Control run `34749699419` on repair PR #621 must be SUCCESS; inspect standard and directional reports, not only exit status.
-4. Existing Windows physical-keyboard manual run must be retrievable byte-for-byte from evidence-only branch `evidence/v0-mvp3-r13b-manual-f1d453fb-r1`. Do not accept the Implementer prose digest alone. Rehash every file and the index/report independently.
+3. Separate exact full world/core gate MUST be inspected from workflow `MVP3 R13 Full World Core Exact Extended`:
+   - run `34750914967`, job `103707193579` = terminal SUCCESS;
+   - artifact `10316317299` (`mvp3-r13-f1d453fb-full-world-core-34750914967-1`);
+   - artifact ZIP SHA-256 expected `35911d930a9f9ce79c9fd32ce2818eb952ade911e867a56016d30ac8dfa1985e`;
+   - independently require exact HEAD/TREE, pinned Linux double Godot SHA `bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7`, clean tracked state, `world-regression-summary.json` `passed=true`, no failed/non-zero steps, literal `test_v0_p6_thirty_minute_soak` PASS, and `main_scene_cli_all` PASS;
+   - known independent reduction: 1772/1772 manifest members matched; summary SHA-256 `39f7b7fc16ed790228a112f41fbae484288ab01d4efcf8482b4016a42353b9f0`, 333 declared/discovered tests, 338 steps, 0 failed, 0 non-zero, literal soak ~1804.077 s. Recheck rather than trusting this prose.
+4. Exact Project Control run `34749699419` on repair PR #621 must be SUCCESS; inspect standard and directional reports, not only exit status.
+5. Existing Windows physical-keyboard manual run must be retrievable byte-for-byte from evidence-only branch `evidence/v0-mvp3-r13b-manual-f1d453fb-r1` at exact evidence commit `96884d87b7e95d58595f02b1191261d7d3b8d4ce`. Do not accept the Implementer prose digest alone. Rehash every file and the index/report independently. Also inspect the hardened verifier workflow result after the carrier repair: it must validate the Windows engine SHA and `HUMAN_PHYSICAL_KEYBOARD`, not merely file digests/manual booleans.
 
-If item 2 world-core or item 4 raw manual bytes are unavailable, verdict must be `INSUFFICIENT_EVIDENCE`, not PASS.
+If item 3 full world/core or item 5 raw manual bytes/provenance are unavailable, verdict must be `INSUFFICIENT_EVIDENCE`, not PASS.
 
 ## Verify R13 repair itself
 
@@ -61,7 +67,9 @@ Independently reduce raw JSON/logs. Require:
 
 Manual PASS is valid only if raw published bytes independently prove:
 - subject exact `f1d453fb.../f1697cc5...` and Windows double Godot SHA `3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5`;
-- `manual_input_mode=true`, `manual_input_executed=true`, method `HUMAN_PHYSICAL_KEYBOARD`;
+- report `godot_sha256` and raw manifest `engine_sha256` both equal that exact expected SHA;
+- `manual_input_mode=true`, `manual_input_executed=true`, report method exactly `HUMAN_PHYSICAL_KEYBOARD`;
+- report/manual subject is the frozen R13b product, not the verifier carrier;
 - five processes exit 0;
 - A→B→A plus post-activation movement both directions;
 - B independent movement;
@@ -71,6 +79,9 @@ Manual PASS is valid only if raw published bytes independently prove:
 
 Implementer-reported manifest digest to compare, not trust:
 `3075debd09a3f06e352387b430015204d3e1c095525dba1d958afcc1a7b03668`.
+
+Implementer report digest to compare, not trust:
+`a65b2352dba0d0394b90027b70a8beac87189deac7a00fa959b307d8704382da`.
 
 ## Verdict boundary
 
