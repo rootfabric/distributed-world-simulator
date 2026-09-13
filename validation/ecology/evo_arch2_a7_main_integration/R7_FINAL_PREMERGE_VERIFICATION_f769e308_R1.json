@@ -1,0 +1,169 @@
+{
+  "schema": "dws.ecology.integration-final-verification.v1",
+  "work_order": "EVO-ARCH2-A7-MAIN-INTEGRATION-20260913-R1",
+  "program": "ECO_ARCH2_A7_OBSERVATORY",
+  "state": "PASS_PREMERGE_HUMAN_GATE",
+  "subject": {
+    "branch": "integration/eco-evo-arch2-a7-main-r1",
+    "head": "f769e308ee929642df30a2d87b84420c04569535",
+    "tree": "27c62c3774117c5163d0d5dacf789b1310638a92",
+    "base_main": "7dfc68ab5a1e90254a1b7039807f275b5da04eef",
+    "accepted_source": "8eccf6304078bec3a3ccaa5860c5aab6ee311209",
+    "accepted_tree": "24e876b7377cb3e1e521f08ff9766331fe4e895a"
+  },
+  "live_ref_seal_after_execution": {
+    "main": "7dfc68ab5a1e90254a1b7039807f275b5da04eef",
+    "integration_branch": "f769e308ee929642df30a2d87b84420c04569535",
+    "main_epoch_drift": false,
+    "source_drift": false,
+    "pr": 617,
+    "pr_state": "open",
+    "pr_draft": true,
+    "pr_mergeable": true,
+    "pr_base_sha": "7dfc68ab5a1e90254a1b7039807f275b5da04eef",
+    "pr_head_sha": "f769e308ee929642df30a2d87b84420c04569535"
+  },
+  "focused_preflight": {
+    "run_id": 34750951859,
+    "job_id": 103707283645,
+    "conclusion": "success",
+    "r5_tests": 27,
+    "r6_tests": 21,
+    "jsonschema": "4.22.0",
+    "resource_closure_authority": "FROZEN_GIT_TREE_AND_WORKING_BYTES",
+    "exact_resources": 92,
+    "resource_references": 387,
+    "accepted_is_ancestor_exit": 1,
+    "artifact_id": 10315484355,
+    "artifact_zip_sha256": "cd0998dc08af8ba0e756d3dc6b9ae795eecc5e1373b66dd8054cf6847379f046"
+  },
+  "exact_linux": {
+    "run_id": 34750951859,
+    "job_id": 103707313038,
+    "workflow_head": "35fa40378765d8d84575925623477fe3bfe66efa",
+    "workflow_path": ".github/workflows/evo-arch2-a7-main-integration-exact-r7.yml",
+    "conclusion": "success",
+    "verdict": "PASS",
+    "runner": "dws-linux-outenemy",
+    "godot_version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "godot_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+    "source_head": "f769e308ee929642df30a2d87b84420c04569535",
+    "source_tree": "27c62c3774117c5163d0d5dacf789b1310638a92",
+    "actual_head": "f769e308ee929642df30a2d87b84420c04569535",
+    "actual_tree": "27c62c3774117c5163d0d5dacf789b1310638a92",
+    "tracked_status": "",
+    "assertion_executions": 1958,
+    "checks": 79,
+    "deterministic_repeat_pairs": 36,
+    "repeat_pair_byte_mismatches": 0,
+    "resource_closure": {
+      "result": "PASS",
+      "authority": "FROZEN_GIT_TREE_AND_WORKING_BYTES",
+      "sources": 92,
+      "references": 387,
+      "generated_input_exception": "artifacts/a7/observatory.png",
+      "generated_output_produced": true
+    },
+    "research_free_history": {
+      "result": "PASS",
+      "accepted_is_ancestor_exit": 1,
+      "shallow": false,
+      "replace_objects_disabled": true
+    },
+    "repair_guards": {
+      "r5_tests": 27,
+      "r5_result": "PASS",
+      "r5_log_sha256": "ebec359fcf5711a4969faa8901aef68a8c0019f28f8f0048eef6e819d76d90f9",
+      "r6_tests": 21,
+      "r6_result": "PASS",
+      "r6_log_sha256": "c17f5192e5ae0804221cd16cee2ad754456ad7e71f726fd03e1e79a1f4813b9e"
+    },
+    "harness": {
+      "result": "PASS",
+      "tests": 325,
+      "jsonschema": "4.22.0",
+      "log_sha256": "0741d78c9680a69a22e45bd221b7e74bc167d6fe5be7fd2a02d783ff44d7927e"
+    },
+    "graphical": {
+      "result": "PASS",
+      "assertions": 32,
+      "viewport_sha256": "8c0b322e64fd71f7501e9b3c9eae425e6744f41cc954e45d26196937e9408d64",
+      "capture_source_report_sha256": "09be584972fc30f8bf1ad166ee46af9929b933bc76a7fd4e5fd96b36c0d8ff09",
+      "graphical_log_sha256": "7062608535344afdde3e3089696a6bc21a068de338472df7405244ac98b7267d",
+      "capture_source_success": true,
+      "capture_scope": "FOUNDER_CONTROLS_NOT_MULTI_GENERATION_EVOLUTION",
+      "artifact_visually_inspected": true,
+      "artifact_non_blank": true
+    },
+    "restart_artifacts": {
+      "a7_manifest_sha256": "20fa8161a7acb210d9f16a6a112760f1bfdcdfdb228fda93bc293d652e0df250",
+      "a7_snapshot_sha256": "b41fdeb12c036046cbe33b09ec88b79ba1162507a8e6cac03caaa7adcc260603",
+      "a6_manifest_sha256": "89075a15b8cbce7f2d1d1c27455035aff2066cc2d33f2994b57e58696d340278",
+      "a6_snapshot_sha256": "db3987e1ca65bc50802091fb0c6797e72f21e900da79c71a7430a8ac576203f2"
+    },
+    "control": {
+      "standard": "YELLOW",
+      "standard_report_sha256": "24b9fd2d071e011dfd8883b05703c39f390506250aa14bbdb49c3287d9943e78",
+      "directional": "YELLOW",
+      "directional_report_sha256": "c7be51ceadbf78e0a2df56af0a85974942e3f50b74c5f46a6ac03959f2971719",
+      "global_green_inferred": false,
+      "non_red_gate": true
+    },
+    "main_owned_files_modified": ["tests/harness/test_v0_mvp_act0.py"],
+    "unauthorized_main_owned_files_modified": false,
+    "elapsed_seconds": 1233.808
+  },
+  "exact_artifact": {
+    "artifact_id": 10316142325,
+    "name": "a7-main-integration-exact-f769e308-r7",
+    "github_reported_bytes": 223764,
+    "downloaded_zip_bytes": 223764,
+    "github_digest": "sha256:b608d666900cc747071620c1861716aa4ca22b5d343fe8a61850599a169563b7",
+    "downloaded_zip_sha256": "b608d666900cc747071620c1861716aa4ca22b5d343fe8a61850599a169563b7",
+    "digest_match": true,
+    "evidence_manifest_entries": 96,
+    "manifest_files_verified": 96,
+    "manifest_missing": 0,
+    "manifest_hash_or_size_mismatch": 0
+  },
+  "independent_review": {
+    "review_request_comment_id": 5652608712,
+    "review_summary_comment_id": 5650171210,
+    "result_comment_id": 5652636526,
+    "reviewer": "chatgpt-codex-connector[bot]",
+    "completed_at": "2026-09-13T10:11:56Z",
+    "reviewed_commit_prefix": "f769e308ee",
+    "verdict": "PASS_NO_MAJOR_ISSUES",
+    "new_blocking_findings": 0,
+    "all_historical_review_threads_resolved": true,
+    "evidence_commit": "6a372ef422393d505e230fb1cbd6ac489d542960"
+  },
+  "project_control": {
+    "source_head_run_id": 34750901120,
+    "conclusion": "success",
+    "standard_and_directional_non_red_reconfirmed_inside_exact_execution": true
+  },
+  "main_owned_mission_diagnostics": {
+    "scope": "diagnostic_not_acceptance",
+    "drive_exit": 5,
+    "close_role_exit": 5,
+    "close_mission_exit": 5,
+    "meaning": "No canonical main-owned ECO_ARCH2_A7_OBSERVATORY execution is claimed; these diagnostics do not override integration evidence and do not authorize MISSION_COMPLETE."
+  },
+  "verdict": {
+    "full_exact_linux_pass_same_head": true,
+    "fresh_independent_review_pass_same_head": true,
+    "premerge_integration_verification": "PASS",
+    "merge_ready_subject": true,
+    "human_main_merge_gate_required": true
+  },
+  "boundaries": {
+    "main_merge_performed": false,
+    "direct_main_push": false,
+    "a8_dispatched": false,
+    "production_promoted": false,
+    "automatic_multi_generation_evolution_claimed": false,
+    "main_owned_mission_complete_claimed": false
+  },
+  "next_action": "HUMAN_DECIDE_PR_617_MAIN_MERGE; IF_APPROVED_MERGE_THEN_RUN_POST_MERGE_EXACT_PROJECT_CONTROL_AND_EPOCH_AUDIT_BEFORE_ANY_A8_OR_PRODUCTION_ACTION"
+}
