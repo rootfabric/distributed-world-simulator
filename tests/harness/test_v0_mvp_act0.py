@@ -1,6 +1,6 @@
 """ACT0 compatibility tests for current-main MVP verification carriers.
 
-The canonical ACT0 suite is reused from the current main blob.  Only the fixture
+The canonical ACT0 suite is reused from the current main blob. Only the fixture
 lineage and the MVP-progress-specific assertions are specialized here: synthetic
 authority fixtures start from the fetched canonical control main, where later MVP
 progress events never existed, so append-only history is preserved without
@@ -32,13 +32,38 @@ read = base.read
 class MVPAct0Tests(base.MVPAct0Tests):
     @contextmanager
     def fixture(self, adopted: bool):
-        """Use current canonical control main, never a copied legacy policy snapshot."""
+        """Use canonical authority plus the exact candidate Harness implementation.
+
+        Authority JSON starts from fetched canonical main. When the candidate changes
+        state_builder.py, that exact committed candidate blob is layered onto the
+        synthetic feature branch in its own fixture-only commit. This prevents a
+        Harness repair test from accidentally executing the older main implementation
+        while leaving origin/main and all authority inputs canonical.
+        """
         with tempfile.TemporaryDirectory(prefix="act0-authority-") as tmp:
             root = Path(tmp) / "repo"
             subprocess.run(["git", "clone", "--quiet", "--shared", str(ROOT), str(root)], check=True)
             control_main = git(ROOT, "rev-parse", "origin/main")
+            candidate_head = git(ROOT, "rev-parse", "HEAD")
             git(root, "checkout", "--quiet", "-B", BRANCH, control_main)
             git(root, "update-ref", "refs/remotes/origin/main", control_main if adopted else BASE)
+
+            relative = "scripts/harness/state_builder.py"
+            candidate_bytes = subprocess.check_output(
+                ["git", "show", f"{candidate_head}:{relative}"], cwd=ROOT
+            )
+            main_bytes = subprocess.check_output(
+                ["git", "show", f"{control_main}:{relative}"], cwd=ROOT
+            )
+            if candidate_bytes != main_bytes:
+                (root / relative).write_bytes(candidate_bytes)
+                git(root, "add", "--", relative)
+                git(
+                    root,
+                    "-c", "user.name=ACT0 candidate harness fixture",
+                    "-c", "user.email=fixture@example.invalid",
+                    "commit", "-qm", "test-only candidate Harness implementation",
+                )
             yield root
 
     def test_all_p7_execution_and_acceptance_blobs_are_unchanged(self):
