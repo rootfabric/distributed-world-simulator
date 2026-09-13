@@ -1,9 +1,10 @@
 """Linux research snapshot journal. Opaque bytes; admission belongs to the caller.
 
 Publication is a locked compare-and-swap of CURRENT after durable immutable blobs
-and records. The caller MUST semantically admit an A8 proposal before publication
-and reload after a conflict/ambiguous acknowledgement. This is not a network
-consensus service or authentication boundary. Use a trusted local POSIX directory.
+and records. The caller MUST semantically admit an A8 proposal before publication,
+keep the last acknowledged head as an external durable anchor, and reload with that
+anchor after a conflict/ambiguous acknowledgement. This is not a network consensus
+service or authentication boundary. Use a trusted local POSIX directory.
 """
 from __future__ import annotations
 
@@ -28,6 +29,7 @@ MAX_RECORDS = 256
 MAX_DISK_BYTES = 64 * 1024 * 1024
 HASH = re.compile(r"[0-9a-f]{64}\Z")
 RECORD_SCHEMA = "dws.ecology.a8-store-record.v1"
+ANCHOR_FIELDS = {"tip", "sequence", "snapshot_sha256"}
 
 
 class StoreError(RuntimeError):
@@ -35,7 +37,7 @@ class StoreError(RuntimeError):
 
 
 class Conflict(StoreError):
-    """The expected durable tip is stale. Discard the local proposal and reload."""
+    """The expected durable head is stale. Discard the local proposal and reload."""
 
 
 def digest(data: bytes) -> str:
@@ -44,6 +46,30 @@ def digest(data: bytes) -> str:
 
 def _json(value: dict) -> bytes:
     return json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=True).encode("ascii")
+
+
+def genesis_anchor() -> dict:
+    """External anchor for a store that has never acknowledged a commit."""
+    return {"tip": ZERO, "sequence": 0, "snapshot_sha256": None}
+
+
+def validate_anchor(value: object) -> dict:
+    """Normalize a caller-owned durable anchor; never infer it from CURRENT."""
+    if not isinstance(value, dict) or set(value) != ANCHOR_FIELDS:
+        raise StoreError("EXTERNAL_DURABLE_ANCHOR_REQUIRED")
+    tip = value.get("tip")
+    sequence = value.get("sequence")
+    snapshot = value.get("snapshot_sha256")
+    if not isinstance(tip, str) or HASH.fullmatch(tip) is None or type(sequence) is not int:
+        raise StoreError("EXTERNAL_DURABLE_ANCHOR_INVALID")
+    if sequence < 0 or sequence > MAX_RECORDS:
+        raise StoreError("EXTERNAL_DURABLE_ANCHOR_INVALID")
+    if sequence == 0:
+        if tip != ZERO or snapshot is not None:
+            raise StoreError("EXTERNAL_DURABLE_ANCHOR_INVALID")
+    elif tip == ZERO or not isinstance(snapshot, str) or HASH.fullmatch(snapshot) is None:
+        raise StoreError("EXTERNAL_DURABLE_ANCHOR_INVALID")
+    return {"tip": tip, "sequence": sequence, "snapshot_sha256": snapshot}
 
 
 def _sync_dir(path: Path) -> None:
@@ -77,7 +103,12 @@ def _read(path: Path, limit: int) -> bytes:
 
 
 class SnapshotStore:
-    """Open an already initialized single-coordinator research store.
+    """Open an initialized single-coordinator research store.
+
+    Public reads require a caller-owned durable anchor. The current chain must be
+    equal to or descend from that exact acknowledged head. Thus a syntactically
+    valid rollback of CURRENT to ZERO/old/forked history fails closed, while an
+    ambiguous commit after pointer replacement can be recovered as a descendant.
 
     `admit` on commit is mandatory and must return exactly True after semantic
     validation. For A8 that means GDScript replay against trusted origin/hash
@@ -136,15 +167,19 @@ class SnapshotStore:
         finally:
             os.close(fd)  # Releases the advisory lock even after exceptions.
 
-    def _load(self) -> tuple[dict, bytes | None]:
+    def _load(self) -> tuple[dict, bytes | None, dict[str, dict]]:
         raw = _read(self.root / "CURRENT", 65)
         if len(raw) != 65 or raw[-1:] != b"\n":
             raise StoreError("CURRENT_CORRUPT")
         tip = raw[:-1].decode("ascii", errors="strict")
         if HASH.fullmatch(tip) is None:
             raise StoreError("CURRENT_CORRUPT")
+        lineage: dict[str, dict] = {ZERO: genesis_anchor()}
         if tip == ZERO:
-            return {"tip": ZERO, "sequence": 0, "snapshot_sha256": None}, None
+            # Orphan immutable objects from a crash before pointer publication are
+            # legal. Only the external acknowledged anchor decides whether ZERO is
+            # still admissible; never infer acknowledgement from object presence.
+            return genesis_anchor(), None, lineage
         cursor = tip
         expected_sequence: int | None = None
         seen: set[str] = set()
@@ -173,19 +208,35 @@ class SnapshotStore:
             blob = _read(self.root / "blobs" / (record["snapshot_sha256"] + ".bin"), MAX_SNAPSHOT_BYTES)
             if digest(blob) != record["snapshot_sha256"] or len(blob) != record["snapshot_bytes"]:
                 raise StoreError("SNAPSHOT_HASH_OR_SIZE")
+            node = {"tip": cursor, "sequence": record["sequence"], "snapshot_sha256": record["snapshot_sha256"]}
+            lineage[cursor] = node
             if not head:
-                head = {"tip": tip, "sequence": record["sequence"], "snapshot_sha256": record["snapshot_sha256"]}
+                head = node.duplicate() if hasattr(node, "duplicate") else dict(node)
                 payload = blob
             expected_sequence = record["sequence"] - 1
             cursor = record["previous"]
             if (cursor == ZERO) != (expected_sequence == 0):
                 raise StoreError("CHAIN_TRUNCATED")
-        return head, payload
+        return head, payload, lineage
 
-    def load(self) -> tuple[dict, bytes | None]:
-        """Hash/chain-checked bytes, NOT semantic state admission."""
+    @staticmethod
+    def _require_anchor(anchor: dict, head: dict, lineage: dict[str, dict]) -> None:
+        exact = validate_anchor(anchor)
+        witnessed = lineage.get(exact["tip"])
+        if witnessed != exact or exact["sequence"] > head["sequence"]:
+            raise StoreError("DURABLE_ANCHOR_ROLLBACK_OR_FORK")
+
+    def load(self, anchor: dict) -> tuple[dict, bytes | None]:
+        """Read hash/chain-checked bytes at/after an external durable anchor.
+
+        This proves storage continuity only. The returned bytes still require A8
+        semantic admission before use as ecology/executor state.
+        """
+        exact = validate_anchor(anchor)
         with self._locked():
-            return self._load()
+            head, payload, lineage = self._load()
+            self._require_anchor(exact, head, lineage)
+            return head, payload
 
     def _usage(self) -> int:
         total = 0
@@ -231,22 +282,23 @@ class SnapshotStore:
         finally:
             temp.unlink(missing_ok=True)
 
-    def commit(self, expected_tip: str, data: bytes, admit: Callable[[bytes], bool]) -> dict:
+    def commit(self, expected_anchor: dict, data: bytes, admit: Callable[[bytes], bool]) -> dict:
         """Publish one semantically admitted snapshot, or change no durable tip.
 
-        An exception after pointer replacement is an ambiguous acknowledgement;
-        reload rather than rolling back or assigning a second authority owner.
+        `expected_anchor` is the caller's last durable acknowledgement and must
+        exactly equal CURRENT for CAS. An exception after pointer replacement is
+        ambiguous acknowledgement: call load(expected_anchor), which accepts a
+        valid descendant but rejects rollback/fork below that durable anchor.
         """
-        if not isinstance(expected_tip, str) or HASH.fullmatch(expected_tip) is None:
-            raise StoreError("EXPECTED_TIP_REQUIRED")
+        expected = validate_anchor(expected_anchor)
         if type(data) is not bytes or not 0 < len(data) <= MAX_SNAPSHOT_BYTES:
             raise StoreError("SNAPSHOT_BYTE_BUDGET")
         if not callable(admit) or admit(data) is not True:
             raise StoreError("SEMANTIC_ADMISSION_REQUIRED")
         with self._locked():
-            current, previous_data = self._load()
-            if expected_tip != current["tip"]:
-                raise Conflict("STALE_DURABLE_TIP")
+            current, previous_data, _lineage = self._load()
+            if expected != current:
+                raise Conflict("STALE_DURABLE_ANCHOR")
             if previous_data == data:
                 return current
             if current["sequence"] >= MAX_RECORDS or self._usage() + 2 * len(data) + 8192 > MAX_DISK_BYTES:
