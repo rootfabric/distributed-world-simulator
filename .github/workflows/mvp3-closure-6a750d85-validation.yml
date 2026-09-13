@@ -19,8 +19,8 @@ jobs:
         lane: [graphical, world-core, control]
     timeout-minutes: 35
     env:
-      EXPECTED_HEAD: 4ad95f032e111b3c92d513383d6de28145df92b9
-      EXPECTED_TREE: 0841b12ce9b714f3392f42ae56e56340c66d2d25
+      EXPECTED_HEAD: 91c0df9d9e9c36f3519110aea85b5884214b9278
+      EXPECTED_TREE: 1a77202306e5a7f943b24e47d5c84f666b0a2cdc
       ORIGINAL_FREEZE: 6a750d859d5858ff1f2d76bbf2ef7664a893ee86
       AUDITED_MAIN: 7dfc68ab5a1e90254a1b7039807f275b5da04eef
       ENGINE_SHA: bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7
@@ -34,7 +34,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: 4ad95f032e111b3c92d513383d6de28145df92b9
+          ref: 91c0df9d9e9c36f3519110aea85b5884214b9278
           fetch-depth: 0
           persist-credentials: false
       - name: Verify exact repaired subject and original frozen ancestry
@@ -48,6 +48,7 @@ jobs:
           git fetch origin '+refs/heads/*:refs/remotes/origin/*' --prune
           test "$(git rev-parse origin/main)" = "$AUDITED_MAIN"
           test "$(git rev-parse origin/freeze/v0-mvp3-6a750d85-r1)" = "$ORIGINAL_FREEZE"
+          test "$(git rev-parse origin/freeze/v0-mvp3-r12-91c0df9d-r1)" = "$EXPECTED_HEAD"
           git merge-base --is-ancestor "$ORIGINAL_FREEZE" HEAD
           git switch -c feature/v0-mvp-playable-seamless-planet-r1 "$EXPECTED_HEAD"
           git status --porcelain --untracked-files=no > artifacts/mvp3-closure/tracked-before.txt
@@ -154,7 +155,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: mvp3-r12-4ad95f03-${{ matrix.lane }}-${{ github.run_id }}-${{ github.run_attempt }}
+          name: mvp3-r12-91c0df9d-${{ matrix.lane }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
             artifacts/mvp3-closure/
             artifacts/mvp2-exact/
