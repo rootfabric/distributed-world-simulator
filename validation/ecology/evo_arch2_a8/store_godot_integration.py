@@ -11,7 +11,11 @@ from pathlib import Path
 import re
 import shutil
 import subprocess
+import sys
 import tempfile
+
+if sys.flags.optimize != 0:
+    raise SystemExit('A8_STORE_GODOT_FAIL: PYTHON_OPTIMIZE_NOT_ALLOWED')
 
 ROOT = Path(__file__).resolve().parents[3]
 SPEC = importlib.util.spec_from_file_location('a8_store', ROOT / 'scripts/research/ecology/v2/snapshot_store.py')
