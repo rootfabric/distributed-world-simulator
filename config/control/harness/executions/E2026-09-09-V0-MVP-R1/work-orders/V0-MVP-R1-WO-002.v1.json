@@ -6,7 +6,7 @@
   "goal_checkpoint": "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE",
   "state": "IN_PROGRESS",
   "work_order_type": "CONTROL",
-  "base_sha": "025c7a635de5caae61e92f16388d448a47820499",
+  "base_sha": "3d7672cba293d8e7bd72427b803f73fc8fcee5da",
   "branch": "repair/v0-mvp-closure-throughput-r1",
   "scope": "Bounded closure-throughput repair only: preserve catalog acceptance and all existing product gates while allowing stricter Work Order refinement predicates, fan out read-only post-freeze gates, fail forward when a preferred Verifier executor is unavailable, and make the existing MVP world/core control-drive branch-aware. No gameplay/runtime owner changes.",
   "allowed_paths": [
@@ -67,7 +67,7 @@
   "evidence_map_required": true,
   "issued_at_utc": "2026-09-14T13:26:00Z",
   "human_approval_required_for": ["HARNESS_CONTROL_SEMANTICS_CHANGE"],
-  "notes": "Human scope authorization is recorded in HA-V0-MVP-CLOSURE-THROUGHPUT-R1. This Work Order is control-only and does not replace V0-MVP-R1-WO-001. Parent MVP predicates and runtime candidate remain unchanged. Integration into canonical main remains a separate human gate. Initial Project Control run 34850223788 stopped before repair tests on pre-existing CANDIDATE_MAIN_DRIFT after canonical main advanced to 675c04bb213bbb68b8cdb500d540d57ce1490318. That drift is retained as a separate product-control item, not reclassified as a repair defect. Exact repair validation therefore uses the dedicated read-only harness-closure-throughput workflow, which does not authorize dispatch or acceptance.",
+  "notes": "Human scope authorization is recorded in HA-V0-MVP-CLOSURE-THROUGHPUT-R1. This Work Order remains in the existing active epoch, so base_sha is the immutable epoch base 3d7672cba293d8e7bd72427b803f73fc8fcee5da. The closure-throughput implementation itself started from active MVP feature subject 025c7a635de5caae61e92f16388d448a47820499; that is implementation provenance, not Work Order epoch identity. This Work Order is control-only and does not replace V0-MVP-R1-WO-001. Parent MVP predicates and runtime candidate remain unchanged. Integration into canonical main remains a separate human gate. Initial Project Control run 34850223788 stopped before repair tests on pre-existing CANDIDATE_MAIN_DRIFT after canonical main advanced to 675c04bb213bbb68b8cdb500d540d57ce1490318. That drift is retained as a separate product-control item, not reclassified as a repair defect. Exact repair validation therefore uses the dedicated read-only harness-closure-throughput workflow, which does not authorize dispatch or acceptance. Fresh Reviewer finding 4005824791 required this base identity correction and is preserved by append-only event 0004.",
   "design_brief": {
     "problem_statement": "MVP leaf implementation completes much faster than closure because evidence/control gates are unnecessarily serialized or produce orchestration false negatives.",
     "current_behavior": "A stronger Work Order predicate list fails an exact-equality Harness test; a preferred unavailable Verifier may stall the practical route despite fallback policy; world/core control-drive checks out exact SHA detached and fails branch-sensitive Drive; post-freeze read-only gates are not explicitly treated as a fan-out barrier.",
@@ -76,7 +76,7 @@
     "selected_design": "Preserve all acceptance gates and change only orchestration semantics plus false-negative tests/workflow setup.",
     "why_selected": "It reduces wall-clock closure latency and rework while keeping the same product evidence strength and ownership rules.",
     "affected_owners": ["HARNESS_CONTROL", "V0_MVP_CONTROL"],
-    "dependencies": ["V0-MVP-R1-WO-001", "H0-AUTONOMY-2026-09-05-R2", "H0-CHANNEL-RECOVERY-2026-09-12-R1"],
+    "dependencies": ["V0-MVP-R1-WO-001", "H0-AUTONOMY-2026-09-05-R2", "H0-CHANNEL-RECOVERY-2026-09-12-R1", "IMPLEMENTATION_START_SUBJECT_025C7A635DE5CAAE61E92F16388D448A47820499"],
     "non_goals": ["Runtime gameplay changes", "Canonical ownership changes", "Removing Reviewer/Verifier", "Reducing regression coverage", "Main merge"],
     "expected_risks": ["Accidentally permitting predicate removal instead of refinement", "Confusing parallel read-only evidence with multiple runtime writers", "Treating executor fallback as self-verification", "Masking real control failures"],
     "validation_plan": ["Focused policy tests", "ACT0 refinement compatibility test", "Workflow text guard for branch-aware control-drive", "Complete Harness regression in exact read-only validation workflow", "Fresh read-only review", "Fresh Verifier consumes exact machine evidence"]
