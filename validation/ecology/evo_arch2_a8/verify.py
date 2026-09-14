@@ -171,6 +171,7 @@ def main() -> int:
         jsonschema = harness_dependency()
 
         slog = run("a8-store-controls", [sys.executable,"-m","unittest","discover","-s","validation/ecology/evo_arch2_a8","-p","test_store.py","-v"], "OK", timeout=180, scan=False)
+        slog_bytes = slog.read_bytes()
         summary["store_controls"] = {"tests":unittest_count(slog.read_text(encoding="utf-8-sig",errors="replace"),31),"sha256":sha(slog),"repair_r1_anchor_controls":True}
 
         args.godot = args.godot.resolve(strict=True)
@@ -180,6 +181,9 @@ def main() -> int:
         shutil.rmtree(ROOT/".godot",ignore_errors=True)
         shutil.rmtree(ROOT/"artifacts/a8",ignore_errors=True)
         out.mkdir(parents=True,exist_ok=True)
+        restored_slog = out / "a8-store-controls.log"
+        restored_slog.write_bytes(slog_bytes)
+        req(sha(restored_slog) == summary["store_controls"]["sha256"], "STORE_CONTROL_LOG_EVIDENCE_MISMATCH")
         run("cold-import", [str(args.godot),"--headless","--audio-driver","Dummy","--editor","--path",str(ROOT),"--import"], timeout=300)
 
         core1 = run("a8-core-1", gd("tests/research/ecology/v2/arch2_a8_acceptance.gd"), "EVO_ARCH2_A8_EXACT", timeout=600)
