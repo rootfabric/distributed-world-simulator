@@ -1,0 +1,96 @@
+{
+  "schema": "distributed_world_simulator.mvp4_closure_control_manifest.v1",
+  "recorded_at_utc": "2026-09-14T10:06:54.103859+00:00",
+  "closure_carrier_head": "d78760738e8032b97de2a433382fc7ddafa17fbf",
+  "closure_carrier_tree": "bb1be98bbfb7341ae5dce555e964e837278287f7",
+  "frozen_product_head": "e37f81821e98a4d00b04ea414722e550b328cd47",
+  "frozen_product_tree": "bcbde9961e701f1e2c728f6f7a74f9df2d334aed",
+  "canonical_main": "9e10e640ffc53f82195f1fd930ebafbbc85e482f",
+  "branch": "feature/v0-mvp-playable-seamless-planet-r1",
+  "status_exit_code": 0,
+  "resume_exit_code": 0,
+  "drive_exit_code": 0,
+  "close_mission_exit_code": 8,
+  "close_mission_meaning": "Expected: whole-MVP remains open. User scope is completed MVP4 leaf; no claim of whole-MVP acceptance.",
+  "windows_full_suite_status": "ABORTED_FOR_LINUX_CI_FALLBACK_NOT_A_PASS",
+  "windows_full_suite_exit_code": -1,
+  "automatic_reset_runtime_run": {
+    "run_id": 34830541996,
+    "status": "CANCELLED_REDUNDANT_RESET_TRIGGER",
+    "used_as_acceptance_evidence": false
+  },
+  "pc0_overall_health": "YELLOW",
+  "directional_pc0_overall_health": "YELLOW",
+  "product_runtime_diff_empty": true,
+  "files": [
+    {
+      "bytes": 42407,
+      "sha256": "eab5c0ad430f88c366fa6dd89f5bda3cd84f8425817a95bdb3aec306fc44b49e",
+      "archive_member": "before-status.log"
+    },
+    {
+      "bytes": 44050,
+      "sha256": "d00e9dfacc737658306a7b3315526ff91d98d17010a119a4fa7db06b59fdc1b5",
+      "archive_member": "status.log"
+    },
+    {
+      "bytes": 45234,
+      "sha256": "93ad95c5694597d5de74722b99157458cce3f93b6da72506aae086430a6dcd56",
+      "archive_member": "resume.log"
+    },
+    {
+      "bytes": 46072,
+      "sha256": "40fb1e744697830746828b6f53a6e68aac46229ce178bc953772770dceab1935",
+      "archive_member": "drive.log"
+    },
+    {
+      "bytes": 44331,
+      "sha256": "0c12b310a0d7b9ee1b627c11e8d5bad079811535478235d67ee9596fb29be272",
+      "archive_member": "close.log"
+    },
+    {
+      "bytes": 2267,
+      "sha256": "ce9e64f6cf88b349b4551900f5cdcaec2005711f07c2a904086aafaba19d8ca5",
+      "archive_member": "pc0.log"
+    },
+    {
+      "bytes": 39,
+      "sha256": "f9f52aee0131813b9ae6f72265b20b5ea3672bf240d3aeca2bba58c621f322e0",
+      "archive_member": "harness-tests.log"
+    },
+    {
+      "bytes": 83910,
+      "sha256": "2122f8315eff483d6b68500eb9328ab54c1703776bc3c52973add95efc7e1222",
+      "archive_member": "project-control-report.log"
+    },
+    {
+      "bytes": 38646,
+      "sha256": "009298df5e981386a1ef6a6a0bf6553efaa7bab4c6858c9ed792ff148ebe90e1",
+      "archive_member": "directional-watch-report.log"
+    },
+    {
+      "bytes": 420584,
+      "sha256": "1f00f1852d8bd0c39d6f69b234092077ba2238a9fd29fbe977fe4a96f13baa47",
+      "archive_member": "linux-project-control.log"
+    },
+    {
+      "bytes": 5625,
+      "sha256": "535002179c52cf9705c81891886857a6acf870577a310a2ff06cfbf53dff7c8b",
+      "archive_member": "linux-project-control-run.log"
+    }
+  ],
+  "linux_project_control": {
+    "run_id": 34831352727,
+    "url": "https://github.com/rootfabric/distributed-world-simulator/actions/runs/34831352727",
+    "head_sha": "d78760738e8032b97de2a433382fc7ddafa17fbf",
+    "status": "SUCCESS",
+    "full_harness_discovery": "PASS",
+    "full_harness_test_count": 349
+  },
+  "log_storage": "Text logs stored with LF line endings; SHA-256 binds the committed LF bytes. Original runtime verifier record remains byte-identical to bc62e063.",
+  "log_archive": {
+    "path": "config/control/harness/executions/E2026-09-09-V0-MVP-R1/supporting-evidence/MVP4-CLOSURE-CONTROL-D7876073-R1.zip",
+    "sha256": "b78d8a91937394b6043033c32969d4c78a5c8c8900a04515e4e09ee2122e8729",
+    "bytes": 155367
+  }
+}
