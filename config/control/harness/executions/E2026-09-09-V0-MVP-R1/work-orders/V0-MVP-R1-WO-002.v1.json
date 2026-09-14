@@ -1,0 +1,81 @@
+{
+  "schema": "distributed_world_simulator.work_order.v1",
+  "work_order_id": "V0-MVP-R1-WO-002",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "program": "V0",
+  "goal_checkpoint": "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE",
+  "state": "IN_PROGRESS",
+  "work_order_type": "CONTROL",
+  "base_sha": "025c7a635de5caae61e92f16388d448a47820499",
+  "branch": "repair/v0-mvp-closure-throughput-r1",
+  "scope": "Bounded closure-throughput repair only: preserve catalog acceptance and all existing product gates while allowing stricter Work Order refinement predicates, fan out read-only post-freeze gates, fail forward when a preferred Verifier executor is unavailable, and make the existing MVP world/core control-drive branch-aware. No gameplay/runtime owner changes.",
+  "allowed_paths": [
+    "config/control/harness/closure-throughput-policy.v1.json",
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/human-attention/HA-V0-MVP-CLOSURE-THROUGHPUT-R1.v1.json",
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/work-orders/V0-MVP-R1-WO-002.v1.json",
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/events/V0-MVP-R1-WO-002/**",
+    "docs/control/HARNESS_CLOSURE_THROUGHPUT_R1_RU.md",
+    "tests/harness/test_closure_throughput_policy.py",
+    "tests/harness/mvp_act0_base.py",
+    ".github/workflows/mvp4-shared-dig-validation.yml"
+  ],
+  "forbidden_paths": [
+    "scripts/runtime/**",
+    "scripts/network/**",
+    "scripts/simulation/**",
+    "scenes/**",
+    "project.godot",
+    "config/architecture/**",
+    "config/control/architecture-ownership.v1.json",
+    "config/control/harness/acceptance/**",
+    "config/control/project-program-registry.v1.json"
+  ],
+  "required_predicates": [
+    "CATALOG_PREDICATES_PRESERVED_WHILE_REFINEMENT_MAY_STRENGTHEN",
+    "POST_FREEZE_READ_ONLY_GATES_MAY_FAN_OUT",
+    "PREFERRED_VERIFIER_EXECUTOR_UNAVAILABLE_FAILS_FORWARD",
+    "MVP_CONTROL_DRIVE_BINDS_DECLARED_BRANCH_IDENTITY",
+    "FOCUSED_HARNESS_CLOSURE_THROUGHPUT_TESTS_PASS",
+    "FULL_HARNESS_REGRESSION_NON_RED",
+    "INDEPENDENT_REVIEWER_PASS",
+    "INDEPENDENT_VERIFIER_PASS"
+  ],
+  "required_outputs": [
+    "Machine-readable closure throughput policy",
+    "Focused regression tests for refinement/fan-out/fallback/branch-aware drive",
+    "Exact repair HEAD/TREE and CI evidence",
+    "Fresh independent review/verifier evidence"
+  ],
+  "stop_conditions": [
+    "Any proposal to remove a catalog-required predicate or lower an acceptance threshold",
+    "Any new canonical owner or runtime gameplay change",
+    "Any relaxation of Implementer self-accept prohibition",
+    "Any change making independent review/verifier optional when the risk contract requires them",
+    "Any attempt to merge canonical main without a separate declared human merge gate"
+  ],
+  "risk_class": "CRITICAL",
+  "risk_reasons": [
+    "Changes control semantics used to decide whether MVP evidence is sufficient",
+    "Must improve throughput without weakening checkpoint acceptance or role independence"
+  ],
+  "review_required": true,
+  "required_review_roles": ["IMPLEMENTER", "REVIEWER", "VERIFIER", "DIRECTOR", "HUMAN"],
+  "repair_context_required": true,
+  "evidence_map_required": true,
+  "issued_at_utc": "2026-09-14T13:26:00Z",
+  "human_approval_required_for": ["HARNESS_CONTROL_SEMANTICS_CHANGE"],
+  "notes": "Human scope authorization is recorded in HA-V0-MVP-CLOSURE-THROUGHPUT-R1. This Work Order is control-only and does not replace V0-MVP-R1-WO-001. Parent MVP predicates and runtime candidate remain unchanged. Integration into canonical main remains a separate human gate.",
+  "design_brief": {
+    "problem_statement": "MVP leaf implementation completes much faster than closure because evidence/control gates are unnecessarily serialized or produce orchestration false negatives.",
+    "current_behavior": "A stronger Work Order predicate list fails an exact-equality Harness test; a preferred unavailable Verifier may stall the practical route despite fallback policy; world/core control-drive checks out exact SHA detached and fails branch-sensitive Drive; post-freeze read-only gates are not explicitly treated as a fan-out barrier.",
+    "desired_behavior": "Catalog predicates remain mandatory and ordered, Work Orders may add unique strengthening predicates, exact frozen product HEAD fans out independent read-only gates in parallel, unavailable preferred Verifier routes immediately to the next allowed fresh context, and control-drive uses the declared local branch at the same exact SHA.",
+    "alternatives_considered": ["Remove independent verification", "Skip world/core", "Weaken exact-head requirements", "Keep the current serial orchestration"],
+    "selected_design": "Preserve all acceptance gates and change only orchestration semantics plus false-negative tests/workflow setup.",
+    "why_selected": "It reduces wall-clock closure latency and rework while keeping the same product evidence strength and ownership rules.",
+    "affected_owners": ["HARNESS_CONTROL", "V0_MVP_CONTROL"],
+    "dependencies": ["V0-MVP-R1-WO-001", "H0-AUTONOMY-2026-09-05-R2", "H0-CHANNEL-RECOVERY-2026-09-12-R1"],
+    "non_goals": ["Runtime gameplay changes", "Canonical ownership changes", "Removing Reviewer/Verifier", "Reducing regression coverage", "Main merge"],
+    "expected_risks": ["Accidentally permitting predicate removal instead of refinement", "Confusing parallel read-only evidence with multiple runtime writers", "Treating executor fallback as self-verification", "Masking real control failures"],
+    "validation_plan": ["Focused policy tests", "ACT0 refinement compatibility test", "Workflow text guard for branch-aware control-drive", "Complete Harness regression", "Fresh read-only review", "Fresh Verifier consumes exact machine evidence"]
+  }
+}
