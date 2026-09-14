@@ -1,0 +1,68 @@
+{
+  "schema": "dws.ecology.a8.validation-progress.v1",
+  "checkpoint": "ECO_ARCH2_A8_SNAPSHOT_SEAM",
+  "state": "VERIFYING_REPAIR_R2",
+  "source": {
+    "branch": "feature/eco-evo-arch2-a8-snapshot-seam-r1",
+    "head": "1529e0a38d99bcbfa9a9806215e0d07ffba46c43",
+    "tree": "b2b38da343a8e38e84cc5f6ff3d4ab3125889808",
+    "base_main": "9e10e640ffc53f82195f1fd930ebafbbc85e482f",
+    "base_tree": "27c62c3774117c5163d0d5dacf789b1310638a92"
+  },
+  "repair_r2": {
+    "root_cause": "exact verifier removed artifacts/a8 after creating artifacts/a8/exact, deleting its own evidence directory before cold import",
+    "repair_commit": "98f1e40b9a846da186b2556e9f6f726260cd1c45",
+    "work_order_anchor_commit": "1529e0a38d99bcbfa9a9806215e0d07ffba46c43",
+    "runtime_semantics_changed": false
+  },
+  "historical_failed_exact_r2": {
+    "run": 34759532239,
+    "job": 103729793858,
+    "artifact": 10325640202,
+    "artifact_sha256": "ccbb81287db92224b5c3b3abc1e9f291870d1b67e0203f1d74687ce8bcca4ee9",
+    "classification": "VALIDATION_INFRASTRUCTURE_FAILURE_NOT_RUNTIME_FINDING"
+  },
+  "current_project_control": {
+    "run": 34833311217,
+    "job": 103941405561,
+    "conclusion": "success",
+    "artifact": 10343421605,
+    "artifact_sha256": "af86b46ea16c8aece12a54dd72d52b3e9baf13ea94e2c787335c00c4c08971d2",
+    "overall_health": "YELLOW",
+    "directional_health": "YELLOW",
+    "non_red_gate": true
+  },
+  "fresh_review": {
+    "request_comment": 5662568096,
+    "subject_head": "1529e0a38d99bcbfa9a9806215e0d07ffba46c43",
+    "status": "RUNNING"
+  },
+  "exact_r3": {
+    "validation_branch": "validation/eco-arch2-a8-exact-r3",
+    "workflow_commit": "1c8f1cda81fd395e4ae98f4d167d6c982212a1e7",
+    "run": 34833409550,
+    "preflight_job": 103941718070,
+    "preflight_conclusion": "success",
+    "preflight_artifact": 10342846960,
+    "preflight_artifact_sha256": "737e061408315bc47ceecf7b24ee418269ca018f03413b410ba4b545673cd1c3",
+    "preflight_summary_sha256": "0f9bc4be6c4fe6492b9503311ef97c7981d125731af48c8b4ac06232a51a8759",
+    "preflight_store_log_sha256": "39d3c8bf7f7e973fd283222adf3bf630f506471c5cece12fad18fb7422df7d06",
+    "preflight_diff_sha256": "923a846a7eb4e44de93e8ea7cdefe27f25ff16e88d064a80235203194f35c74c",
+    "store_tests": 31,
+    "validation_repair_r2_present": true,
+    "linux_job": 103941761812,
+    "linux_status": "IN_PROGRESS"
+  },
+  "claims": {
+    "implementation_repaired": true,
+    "project_control_current_source_pass": true,
+    "fresh_review_pass": false,
+    "full_exact_linux_pass": false,
+    "accepted": false,
+    "merge_ready": false,
+    "main_merge": false,
+    "a9_started": false,
+    "a10_started": false
+  },
+  "resume": "REFETCH_PR630_SOURCE_1529E0A3_RUN34833409550_AND_REVIEW_COMMENT5662568096; DO_NOT_REUSE_R2_ACCEPTANCE_EVIDENCE; STOP_BEFORE_MAIN_MERGE"
+}
