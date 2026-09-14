@@ -81,7 +81,7 @@ jobs:
           retention-days: 90
 
   control-drive:
-    if: github.repository == 'rootfabric/distributed-world-simulator' && github.ref == 'refs/heads/feature/v0-mvp-playable-seamless-planet-r1' && (github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[mvp4-worldcore]'))
+    if: github.repository == 'rootfabric/distributed-world-simulator' && github.ref == 'refs/heads/feature/v0-mvp-playable-seamless-planet-r1' && (github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[mvp4-worldcore]') || contains(github.event.head_commit.message, '[mvp4-drive]'))
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
@@ -103,6 +103,20 @@ jobs:
           git fetch origin '+refs/heads/*:refs/remotes/origin/*' --prune
           mkdir -p artifacts/mvp4-control-drive
           git rev-parse HEAD HEAD^{tree} origin/main > artifacts/mvp4-control-drive/subjects.txt
+      - name: Install pinned Harness dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install --disable-pip-version-check -r scripts/harness/requirements.txt
+          python3 - <<'PY'
+          import importlib.metadata
+          from pathlib import Path
+          required=Path('scripts/harness/requirements.txt').read_text(encoding='utf-8').strip()
+          expected=required.split('==',1)[1]
+          actual=importlib.metadata.version('jsonschema')
+          if actual != expected: raise SystemExit(f'PINNED_DEPENDENCY_VERSION_MISMATCH:jsonschema={actual}:expected={expected}')
+          print(f'PINNED DEPENDENCY OK: jsonschema=={actual}')
+          PY
       - name: CONTROL_DEVELOPMENT Status Resume Drive
         shell: bash
         run: |
