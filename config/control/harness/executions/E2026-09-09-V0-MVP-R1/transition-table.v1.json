@@ -39,6 +39,7 @@
       "VERIFYING"
     ],
     "PREDICATE_VERIFIED": [
+      "IN_PROGRESS",
       "VERIFYING",
       "VERIFIED"
     ],
@@ -214,7 +215,7 @@
       "BLOCKED",
       "WAITING_HUMAN"
     ],
-    "purpose": "Record durable progress, repeated evidence or RECOVERY_RESUMED without falsely advancing the control state.",
+    "purpose": "Record durable progress, non-terminal verified predicates, repeated evidence or RECOVERY_RESUMED without falsely advancing the parent control state.",
     "must_not_remove_existing_blocker_or_guard": true
   },
   "guard_violation_recovery": {

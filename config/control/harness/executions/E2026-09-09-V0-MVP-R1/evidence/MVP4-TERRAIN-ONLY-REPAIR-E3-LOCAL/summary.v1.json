@@ -1,0 +1,22 @@
+{
+  "schema": "distributed_world_simulator.mvp4_repair_supporting_evidence.v1",
+  "description": "Verbatim local-run result of docs/control/mvp-act0-r1/validate_mvp4_exact.py for the terrain-only evidence repair (review 4001519528), frozen as committed supporting evidence. Not an Evidence Map, not an independent verdict and not an acceptance record.",
+  "binding": {
+    "implementation_head": "e3e22af63bc7e672cbe68dd6851143ea8e659b67",
+    "implementation_tree": "687f30365938f2e83e895750d320f4745dc47523",
+    "branch": "feature/v0-mvp-playable-seamless-planet-r1",
+    "engine_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+    "run_id": "7d08c94d2caae33a721c4b343634c967",
+    "raw_artifacts_root": "artifacts/mvp4-exact (git-ignored local copy; CI artifact 10330597999 binds the rerun on 65f2d085)"
+  },
+  "verbatim_local_summary": {
+    "passed": true,
+    "exact_subject": true,
+    "tracked_clean_after": true,
+    "visible_terrain_gate": true,
+    "independent_verdict": false,
+    "manual_input_executed": false,
+    "mvp4_predicate_verified": false,
+    "full_world_core_executed": false
+  }
+}
