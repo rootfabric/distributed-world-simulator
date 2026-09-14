@@ -129,8 +129,8 @@ func apply(command: Dictionary, expected_snapshot_hash: String, received_payload
 			if next != "TARGET_PREPARED" and (not command.args.payload_hash.is_empty() or not received_payload.is_empty()): return _fail("A8_UNEXPECTED_PAYLOAD")
 			var context := {"expected_transition_revision": int(_cut.ticket.transition_revision), "tick": command.clock}
 			if next == "SNAPSHOT_READY":
-				context.snapshot_hash = String(_cut.ecology_payload).sha256_text()
-				context.snapshot_id = "a8." + context.snapshot_hash
+				context["snapshot_hash"] = String(_cut.ecology_payload).sha256_text()
+				context["snapshot_id"] = "a8." + String(context["snapshot_hash"])
 			if next == "TARGET_PREPARED":
 				if not F.valid_hash(command.args.payload_hash) or command.args.payload_hash != _cut.ticket.snapshot_hash:
 					return _fail("A8_TARGET_HASH")
