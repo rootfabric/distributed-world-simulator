@@ -441,3 +441,31 @@ class ContractBundle:
                 for error in errors[:3]
             )
             raise ContractValidationError(f"SCHEMA_INVALID:{label}:{detail}")
+
+        if schema_name != "work_order_schema":
+            return
+
+        checkpoint_id = instance.get("goal_checkpoint")
+        checkpoint = self.contracts["checkpoint_catalog"].get("checkpoints", {}).get(checkpoint_id)
+        if not isinstance(checkpoint, dict):
+            return
+        catalog_required = checkpoint.get("required_predicates")
+        work_order_required = instance.get("required_predicates")
+        if not isinstance(catalog_required, list) or not isinstance(work_order_required, list):
+            return
+        if len(work_order_required) != len(set(work_order_required)):
+            raise ContractValidationError("WORK_ORDER_REQUIRED_PREDICATES_NOT_UNIQUE")
+
+        cursor = -1
+        for predicate in catalog_required:
+            try:
+                position = work_order_required.index(predicate, cursor + 1)
+            except ValueError as exc:
+                raise ContractValidationError(
+                    f"WORK_ORDER_CATALOG_PREDICATE_MISSING:{predicate}"
+                ) from exc
+            if position <= cursor:
+                raise ContractValidationError(
+                    f"WORK_ORDER_CATALOG_PREDICATE_ORDER_INVALID:{predicate}"
+                )
+            cursor = position

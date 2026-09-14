@@ -1,0 +1,77 @@
+{
+  "schema": "distributed_world_simulator.harness_closure_throughput_policy.v1",
+  "revision": "H0-CLOSURE-THROUGHPUT-2026-09-14-R1",
+  "purpose": "Reduce checkpoint wall-clock closure latency without weakening product acceptance, exact-head evidence, ownership or independent-role requirements.",
+  "principles": {
+    "runtime_mutation_remains_single_writer": true,
+    "acceptance_refinement_may_only_strengthen_catalog": true,
+    "preferred_executor_unavailable_never_blocks_when_an_allowed_fallback_exists": true,
+    "post_freeze_read_only_gates_may_run_in_parallel": true,
+    "independent_roles_remain_distinct_from_implementer": true,
+    "historical_failures_remain_visible": true,
+    "product_gate_results_are_classified_separately_from_control_route_diagnostics": true,
+    "only_explicit_pre_freeze_validation_may_be_cancelled": true
+  },
+  "acceptance_refinement": {
+    "catalog_required_predicates_relation": "ORDERED_SUBSEQUENCE_OF_WORK_ORDER_REQUIRED_PREDICATES",
+    "work_order_extra_predicates_allowed": true,
+    "extra_predicates_must_be_unique_non_empty_strings": true,
+    "catalog_predicate_removal_forbidden": true,
+    "catalog_predicate_reorder_forbidden": true,
+    "duplicate_required_predicates_forbidden": true,
+    "risk_floor_may_not_be_lowered": true,
+    "required_review_roles_may_not_be_weakened": true,
+    "production_validator_required": true
+  },
+  "freeze_then_fanout": {
+    "exact_frozen_head_and_tree_required": true,
+    "runtime_mutation_workers_capacity": 1,
+    "read_only_gates_do_not_consume_runtime_mutation_lease": true,
+    "parallel_read_only_gates": [
+      "FULL_WORLD_CORE_REGRESSION",
+      "PROJECT_CONTROL_AND_PC0",
+      "INDEPENDENT_REVIEW",
+      "INDEPENDENT_VERIFICATION_EVIDENCE_CONSUMPTION"
+    ],
+    "closure_barrier_requires_all_mandatory_gates": true,
+    "runtime_change_after_freeze_invalidates_only_exact_head_dependent_results": true,
+    "evidence_only_or_control_only_carriers_must_not_move_the_frozen_product_subject": true
+  },
+  "superseded_validation": {
+    "explicit_pre_freeze_workflow_may_cancel_in_progress": true,
+    "queued_pre_freeze_run_for_older_subject_may_cancel": true,
+    "mixed_or_frozen_required_gate_workflow_must_not_cancel_in_progress": true,
+    "terminal_failure_must_remain_visible": true,
+    "cancelled_stale_run_is_not_evidence_for_new_subject": true,
+    "frozen_subject_required_gate_must_run_to_terminal": true
+  },
+  "verifier_fallback": {
+    "preferred_external_environment_is_optional": true,
+    "preferred_executor_unavailable_is_blocking": false,
+    "on_preferred_executor_unavailable": [
+      "RECORD_ROUTE_UNAVAILABLE_ONCE",
+      "DO_NOT_WAIT",
+      "DO_NOT_RETRY_IDENTICAL_ROUTE",
+      "SELECT_FRESH_ISOLATED_ROLE_CONTEXT_WITH_AVAILABLE_TOOLS",
+      "CONSUME_HASH_BOUND_EXACT_HEAD_MACHINE_EVIDENCE",
+      "REEXECUTE_ONLY_IF_WORK_ORDER_RISK_OR_PROVENANCE_REQUIRES_IT"
+    ],
+    "implementer_may_supply_machine_evidence": true,
+    "implementer_may_not_issue_independent_verdict": true,
+    "fresh_role_context_is_required_when_verifier_role_is_required": true,
+    "specific_cloud_vendor_or_vm_is_not_required_by_default": true
+  },
+  "ci_classification": {
+    "successful_product_job_must_not_be_relabelled_as_product_failure_by_an_unrelated_control_route_failure": true,
+    "control_route_failure_must_remain_visible_and_be_repaired_or_classified": true,
+    "expected_nonterminal_harness_state_is_not_product_failure": true,
+    "real_test_failure_or_evidence_failure_remains_blocking": true,
+    "branch_sensitive_control_commands_must_run_on_the_declared_local_branch_at_the_exact_subject_sha": true
+  },
+  "review_scope": {
+    "review_current_leaf_by_exact_predicate_and_subject_not_entire_parent_pr_history": true,
+    "historical_findings_are_reopened_only_when_reproduced_or_still_applicable_to_current_subject": true,
+    "one_parent_product_pr_may_remain_open": true,
+    "new_leaf_pr_is_not_required_when_an_exact_evidence_or_review carrier_is_sufficient": true
+  }
+}

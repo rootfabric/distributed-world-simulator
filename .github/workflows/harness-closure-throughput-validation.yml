@@ -1,0 +1,95 @@
+name: Harness Closure Throughput Exact Validation
+on:
+  push:
+    branches: [repair/v0-mvp-closure-throughput-r1]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: harness-closure-throughput-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  exact-harness:
+    if: github.repository == 'rootfabric/distributed-world-simulator'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      EXPECTED_HEAD: ${{ github.sha }}
+      PYTHONUTF8: '1'
+      PYTHONPATH: scripts
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Exact read-only preflight
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+          test -z "$(git status --porcelain --untracked-files=no)"
+          git merge-base --is-ancestor 025c7a635de5caae61e92f16388d448a47820499 HEAD
+          git diff --check 025c7a635de5caae61e92f16388d448a47820499 HEAD
+          mkdir -p artifacts/harness-closure-throughput
+          git rev-parse HEAD HEAD^{tree} > artifacts/harness-closure-throughput/subjects.txt
+      - name: Install pinned Harness dependency
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install --disable-pip-version-check -r scripts/harness/requirements.txt
+      - name: Focused closure-throughput policy tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest -v \
+            tests.harness.test_closure_throughput_policy \
+            tests.harness.test_v0_mvp_act0 \
+            2>&1 | tee artifacts/harness-closure-throughput/focused.log
+      - name: Complete Harness regression discovery
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s tests/harness -p 'test_*.py' -v \
+            2>&1 | tee artifacts/harness-closure-throughput/full-harness.log
+      - name: Guard repair scope and runtime immutability
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -z "$(git diff --name-only 025c7a635de5caae61e92f16388d448a47820499 HEAD -- scripts/runtime scripts/network scripts/simulation scenes project.godot config/architecture config/control/architecture-ownership.v1.json config/control/harness/acceptance config/control/project-program-registry.v1.json)"
+          test -z "$(git status --porcelain --untracked-files=no)"
+      - name: Bind exact validation manifest
+        if: always()
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import hashlib, json, os, pathlib, subprocess
+          out = pathlib.Path('artifacts/harness-closure-throughput')
+          out.mkdir(parents=True, exist_ok=True)
+          def git(*args):
+              return subprocess.check_output(['git', *args], text=True).strip()
+          files=[]
+          for p in sorted(out.rglob('*')):
+              if p.is_file() and p.name != 'manifest.json':
+                  files.append({'path':p.relative_to(out).as_posix(),'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()})
+          manifest={
+              'schema':'distributed_world_simulator.harness_closure_throughput_validation.v1',
+              'subject_head':git('rev-parse','HEAD'),
+              'subject_tree':git('rev-parse','HEAD^{tree}'),
+              'run_id':os.environ['GITHUB_RUN_ID'],
+              'run_attempt':os.environ['GITHUB_RUN_ATTEMPT'],
+              'base_subject':'025c7a635de5caae61e92f16388d448a47820499',
+              'runtime_files_changed':False,
+              'independent_verdict':False,
+              'main_drift_evaluated_here':False,
+              'files':files,
+          }
+          (out/'manifest.json').write_text(json.dumps(manifest, indent=2)+'\n', encoding='utf-8')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: harness-closure-throughput-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: artifacts/harness-closure-throughput/
+          if-no-files-found: error
+          retention-days: 90
