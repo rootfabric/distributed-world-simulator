@@ -5,11 +5,15 @@ extends "res://scripts/runtime/networked_gameplay/mvp/v0_mvp3_authority_process.
 const SharedDig4 = preload("res://scripts/runtime/networked_gameplay/mvp/v0_mvp4_shared_dig_authority.gd")
 var _shared_dig4 = null
 
+func create_shared_dig():
+	# Composition hook: MVP4 remains the default, with exactly one bridge/owner.
+	return SharedDig4.new()
+
 func initialize_owner() -> Dictionary:
 	var initialized: Dictionary = super.initialize_owner()
 	if not bool(initialized.get("success", false)): return initialized
 	if authority != SharedDig4.OWNER: return initialized
-	_shared_dig4 = SharedDig4.new()
+	_shared_dig4 = create_shared_dig()
 	return _shared_dig4.configure(service, decisions, {"a": Protocol.session(cfg, "a"), "b": Protocol.session(cfg, "b")})
 
 func handle_rpc(body: Dictionary) -> Dictionary:

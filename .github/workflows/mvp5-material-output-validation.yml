@@ -13,7 +13,7 @@ jobs:
   exact:
     if: github.repository == 'rootfabric/distributed-world-simulator' && github.ref == 'refs/heads/feature/v0-mvp-playable-seamless-planet-r1' && (github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[mvp5-evidence]'))
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 35
     env:
       EXPECTED_HEAD: ${{ github.sha }}
       PYTHONUTF8: '1'
@@ -57,31 +57,14 @@ jobs:
           repository: rootfabric/distributed-world-simulator
           github-token: ${{ github.token }}
           path: ${{ runner.temp }}/mvp5-engine
-      - name: Exact engine and focused failure windows
+      - name: Exact focused, five-process material and unchanged MVP4-MVP3 regressions
         shell: bash
         run: |
           set -euo pipefail
           export GODOT_BIN="$RUNNER_TEMP/mvp5-engine/godot"
           test "$(sha256sum "$GODOT_BIN" | cut -d' ' -f1)" = bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7
           chmod u+x "$GODOT_BIN"
-          python3 - <<'PY'
-          import hashlib,json,os,pathlib,re,subprocess,time
-          out=pathlib.Path('artifacts/mvp5-exact'); rows=[]
-          engine=os.environ['GODOT_BIN']; env=os.environ.copy();env['MVP5_FOCUSED_RESULT']=str((out/'focused.json').resolve())
-          commands=[('import',[engine,'--headless','--path','.', '--editor','--import','--quit']),('mvp5-focused',[engine,'--headless','--path','.', '--script','res://tests/runtime/test_v0_mvp_5_exactly_once_material.gd']),('mvp4-focused',[engine,'--headless','--path','.', '--script','res://tests/runtime/test_v0_mvp_4_shared_canonical_dig.gd'])]
-          for name,argv in commands:
-              p=out/(name+'.log');start=time.monotonic()
-              with p.open('w') as log:
-                  try: code=subprocess.run(argv,env=env,stdout=log,stderr=subprocess.STDOUT,timeout=240).returncode
-                  except subprocess.TimeoutExpired: code=124
-              text=p.read_text(errors='replace'); fatal=bool(re.search(r'(?im)^\s*(?:SCRIPT ERROR|ERROR):|Parse Error|Compile Error',text));passed=code==0 and not fatal
-              row={'name':name,'argv':argv,'exit_code':code,'fatal_markers':fatal,'passed':passed,'duration_seconds':time.monotonic()-start,'log_sha256':hashlib.sha256(p.read_bytes()).hexdigest()};rows.append(row)
-              (out/'commands.json').write_text(json.dumps(rows,indent=2)+'\n'); print(json.dumps(row),text[-5000:],flush=True)
-              if not passed: raise SystemExit(1)
-          d=json.loads((out/'focused.json').read_text())
-          if d.get('passed') is not True or len(d.get('cases',[]))!=4 or d.get('subject_head')!=os.environ['EXPECTED_HEAD'] or d.get('subject_tree')!=os.environ['EXPECTED_TREE']:raise SystemExit('MVP5_FOCUSED_EVIDENCE_INVALID')
-          if subprocess.check_output(['git','status','--porcelain','--untracked-files=no'],text=True).strip():raise SystemExit('TRACKED_DIRTY_AFTER')
-          PY
+          xvfb-run -a -s '-screen 0 1600x900x24' python3 docs/control/mvp-act0-r1/validate_mvp5_exact.py
       - name: Bind exact raw evidence
         if: always()
         shell: bash
@@ -91,9 +74,12 @@ jobs:
           out=pathlib.Path('artifacts/mvp5-exact');out.mkdir(parents=True,exist_ok=True)
           git=lambda *a:subprocess.check_output(['git',*a],text=True).strip()
           engine=pathlib.Path(os.environ['RUNNER_TEMP'])/'mvp5-engine/godot'
+          summary=json.loads((out/'summary.json').read_text()) if (out/'summary.json').is_file() else {}
+          graphical=json.loads((out/'graphical/manifest.json').read_text()) if (out/'graphical/manifest.json').is_file() else {}
           files=[{'path':p.relative_to(out).as_posix(),'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()} for p in sorted(out.rglob('*')) if p.is_file() and p!=out/'manifest.json']
-          m={'schema':'distributed_world_simulator.mvp5_exact_manifest.v1','subject_head':git('rev-parse','HEAD'),'subject_tree':git('rev-parse','HEAD^{tree}'),'run_id':os.environ['GITHUB_RUN_ID'],'run_attempt':os.environ['GITHUB_RUN_ATTEMPT'],'tracked_after':git('status','--porcelain','--untracked-files=no'),'engine_sha256':hashlib.sha256(engine.read_bytes()).hexdigest() if engine.is_file() else None,'mvp5_predicate_verified':False,'independent_verdict':False,'full_world_core_executed':False,'graphical_mvp5_executed':False,'files':files}
+          m={'schema':'distributed_world_simulator.mvp5_exact_manifest.v1','subject_head':git('rev-parse','HEAD'),'subject_tree':git('rev-parse','HEAD^{tree}'),'run_id':os.environ['GITHUB_RUN_ID'],'run_attempt':os.environ['GITHUB_RUN_ATTEMPT'],'tracked_after':git('status','--porcelain','--untracked-files=no'),'engine_sha256':hashlib.sha256(engine.read_bytes()).hexdigest() if engine.is_file() else None,'ci_passed':summary.get('passed') is True,'mvp5_predicate_verified':False,'independent_verdict':False,'full_world_core_executed':False,'graphical_mvp5_executed':bool(graphical),'graphical_mvp5_passed':graphical.get('passed') is True,'files':files}
           (out/'manifest.json').write_text(json.dumps(m,indent=2)+'\n')
+          print(json.dumps({'head':m['subject_head'],'tree':m['subject_tree'],'ci_passed':m['ci_passed'],'graphical_mvp5_passed':m['graphical_mvp5_passed'],'files':len(files)}))
           PY
       - uses: actions/upload-artifact@v4
         if: always()
