@@ -16,9 +16,14 @@ func handle_reply(packet: Dictionary) -> void:
 
 func apply_snapshot(snapshot: Dictionary) -> void:
 	super.apply_snapshot(snapshot)
-	if hud != null and not _material5.is_empty():
+	if hud != null:
+		# Reuse the existing last status row, rather than extending the HUD down
+		# over the excavated surface. The actual UI rect is still fully excluded
+		# by the unchanged terrain-pixel validator; its threshold stays 32.
 		var totals: Dictionary = _material5.get("totals", {})
-		hud.text += "\nMVP5 material (server): A=%d B=%d" % [int(totals.get("a", 0)), int(totals.get("b", 0))]
+		var status := "MVP5 ore (server): A=%s B=%s" % [str(totals.get("a", "pending")), str(totals.get("b", "pending"))]
+		var separator := hud.text.rfind("\n")
+		hud.text = hud.text.substr(0, separator + 1) + status
 
 func _receipt5() -> bool:
 	var receipt: Dictionary = _matter4.get("material_output", {})

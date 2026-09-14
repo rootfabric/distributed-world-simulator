@@ -12,10 +12,12 @@ import json
 import math
 import os
 from pathlib import Path
+import re
 import secrets
 import socket
 import subprocess
 import sys
+import tempfile
 import time
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -118,15 +120,23 @@ def main() -> int:
     client_keys = {a: secrets.token_hex(32) for a in ("a", "b")}
     paths = {role: output / (role.replace("/", "-") + ".json") for role in ROLES}
     processes, streams, commands = {}, {}, []
+    profiles = tempfile.TemporaryDirectory(prefix="dws-mvp5-profile-")
     def launch(role: str, tail: list[str], extra: dict) -> None:
         cfg = {"role": role, "run_id": run_id, "subject_head": head, "result_file": str(paths[role]), "ports": authority_ports, "gateway_port": ports[2], "timeout_ms": 210000, "backend_rpc_timeout_ms": 30000, "client_reply_timeout_ms": 45000} | extra
         env = os.environ.copy()
         env.update(PYTHONUTF8="1", BREAKPOINT_RUNTIME_DISABLED="1", DWS_MVP3_LIVE_CONFIG=json.dumps(cfg, separators=(",", ":")))
-        argv = [str(engine), *tail]
+        # Engine user-data/cache initialization is per owned child, not a race
+        # between two clients or a write into the operator's personal profile.
+        profile = Path(profiles.name) / role.replace("/", "-")
+        for variable, directory in {"XDG_DATA_HOME": "data", "XDG_CONFIG_HOME": "config", "XDG_CACHE_HOME": "cache", "APPDATA": "roaming", "LOCALAPPDATA": "local"}.items():
+            directory_path = profile / directory
+            directory_path.mkdir(parents=True, exist_ok=True)
+            env[variable] = str(directory_path)
+        argv = [str(engine), "--audio-driver", "Dummy", *tail]
         log = output / (role.replace("/", "-") + ".log")
         streams[role] = log.open("w", encoding="utf-8")
         processes[role] = subprocess.Popen(argv, cwd=ROOT, env=env, stdout=streams[role], stderr=subprocess.STDOUT, text=True)
-        commands.append({"role": role, "argv": argv, "log": log.name})
+        commands.append({"role": role, "argv": argv, "log": log.name, "isolated_user_data": True})
     start, error = time.monotonic(), ""
     try:
         for role in ("authority/a", "authority/b"):
@@ -150,6 +160,7 @@ def main() -> int:
                 try: proc.wait(timeout=5)
                 except subprocess.TimeoutExpired: proc.kill(); proc.wait()
         for stream in streams.values(): stream.close()
+        profiles.cleanup()
     reports = {role: BASE.read_json(path) for role, path in paths.items()}
     captures = {a: BASE.read_json(output / f"capture-{a}.json") for a in ("a", "b")}
     materials = {a: BASE.read_json(output / f"material-{a}.json") for a in ("a", "b")}
@@ -159,7 +170,7 @@ def main() -> int:
         log = output / (role.replace("/", "-") + ".log")
         checks["exit:" + role] = role in processes and processes[role].returncode == 0
         text = log.read_text(errors="replace") if log.is_file() else "SCRIPT ERROR: missing log"
-        checks["log:" + role] = not any(marker in text for marker in BASE.ERRORS)
+        checks["log:" + role] = not any(marker in text for marker in BASE.ERRORS) and not re.search(r"(?im)^\s*(?:SCRIPT ERROR|ERROR):|Parse Error|Compile Error", text)
     visible, hud_cases, negatives = {}, [], []
     try:
         for actor in ("a", "b"):
