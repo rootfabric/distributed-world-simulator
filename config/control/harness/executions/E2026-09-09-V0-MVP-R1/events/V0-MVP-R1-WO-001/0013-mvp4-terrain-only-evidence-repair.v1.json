@@ -1,0 +1,22 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-09-09-V0-MVP-R1-V0-MVP-R1-WO-001-0013-MVP4-TERRAIN-ONLY-EVIDENCE-REPAIR",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "sequence": 13,
+  "event_type": "IMPLEMENTATION_COMMITTED",
+  "work_state": "IN_PROGRESS",
+  "recorded_at_utc": "2026-09-14T09:30:00Z",
+  "actor": "IMPLEMENTER",
+  "branch": "feature/v0-mvp-playable-seamless-planet-r1",
+  "head_sha": "e3e22af63bc7e672cbe68dd6851143ea8e659b67",
+  "predicate": "MVP4_TERRAIN_ONLY_EVIDENCE_REPAIR_R3",
+  "command": "docs/control/mvp-act0-r1/validate_mvp4_exact.py",
+  "exit_code": 0,
+  "evidence_paths": [
+    "docs/control/mvp-act0-r1/MVP4_TERRAIN_ONLY_EVIDENCE_REPAIR_R3_RU.md",
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence/MVP4-TERRAIN-ONLY-REPAIR-E3-LOCAL/summary.v1.json"
+  ],
+  "summary": "Repair of blocking review finding 4001519528 on candidate 55fcffe: the visible-terrain gate no longer trusts a fixed row-160 cutoff. Canonical before/after captures now derive the complete UI region from the live UI tree, hide the entire UI for both captures, await two completed render frames and restore it; pixel comparison excludes only that derived region; an explicit HUD-only falsification control proves identical-terrain HUD changes are rejected while the rejected legacy row-160 criterion demonstrably accepted the same pair; positive control retained for both clients (203 changed terrain pixels each, minimum 32). Local exact validation passed on e3e22af6 (import, focused 45/57 assertions, replica rejection, five-process graphical workload, MVP3 regressions with unchanged historical baseline diagnostics). Full Harness 349 OK, PC0 standard and directional non-RED. Evidence correction after Project Control run 34797638436: the initial evidence_paths entry pointed at git-ignored artifacts/mvp4-exact/summary.json, which violates the committed-JSON provenance fence; the durable copies now live under evidence/MVP4-TERRAIN-ONLY-REPAIR-E3-LOCAL/ and this event references only committed paths. No foundation/ownership change; MVP4 remains NOT VERIFIED pending a fresh exact-head review; parent stays IN_PROGRESS.",
+  "blocker": ""
+}
