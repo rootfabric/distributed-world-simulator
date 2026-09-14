@@ -88,10 +88,16 @@ class MVPAct0Tests(unittest.TestCase):
         self.assertEqual(1, scheduler["concurrency"]["pre_h0_3_total_autonomous_runtime_mutation_workers"])
 
     def test_work_order_does_not_weaken_catalog_or_risk_policy(self):
-        required = self.bundle.contracts["checkpoint_catalog"]["checkpoints"][MVP]["required_predicates"]
-        self.assertEqual(required, self.wo["required_predicates"])
+        catalog_required = self.bundle.contracts["checkpoint_catalog"]["checkpoints"][MVP]["required_predicates"]
+        work_order_required = self.wo["required_predicates"]
+        self.assertEqual(len(work_order_required), len(set(work_order_required)), "Work Order predicates must be unique")
+        positions = []
+        for predicate in catalog_required:
+            self.assertIn(predicate, work_order_required, f"catalog predicate removed by Work Order: {predicate}")
+            positions.append(work_order_required.index(predicate))
+        self.assertEqual(positions, sorted(positions), "catalog predicates must remain an ordered subsequence")
         for predicate in ("FULL_WORLD_CORE_REGRESSION_PASS", "INDEPENDENT_REVIEWER_PASS", "INDEPENDENT_VERIFIER_PASS", "HUMAN_MVP_ACCEPTANCE"):
-            self.assertIn(predicate, required)
+            self.assertIn(predicate, catalog_required)
         self.assertEqual(self.bundle.contracts["risk_policy"]["classes"]["CRITICAL"]["required_roles"], self.wo["required_review_roles"])
         self.assertIn("RUNTIME_FEATURE_MERGE", self.wo["human_approval_required_for"])
 
