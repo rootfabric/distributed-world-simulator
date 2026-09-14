@@ -1,0 +1,81 @@
+{
+  "schema": "distributed_world_simulator.mvp_closure_throughput_repair_history.v1",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "parent_work_order_id": "V0-MVP-R1-WO-001",
+  "decision_id": "HA-V0-MVP-CLOSURE-THROUGHPUT-R1",
+  "repair_branch": "repair/v0-mvp-closure-throughput-r1",
+  "implementation_start_subject": "025c7a635de5caae61e92f16388d448a47820499",
+  "history_policy": "Retain failed/superseded attempts as diagnostics; final active execution keeps only parent V0-MVP-R1-WO-001. No second Work Order is integrated.",
+  "retained_attempts": [
+    {
+      "kind": "GLOBAL_PROJECT_CONTROL_ROUTE_FAILURE",
+      "run_id": 34850223788,
+      "result": "FAILURE_BEFORE_REPAIR_TESTS",
+      "reason": "CANDIDATE_MAIN_DRIFT",
+      "detail": "Canonical main advanced to 675c04bb213bbb68b8cdb500d540d57ce1490318 while the active MVP epoch retained its older observed main. This remains a separate product-control item."
+    },
+    {
+      "kind": "DEDICATED_VALIDATION_PREFLIGHT_FAILURE",
+      "run_id": 34850556921,
+      "result": "FAILURE",
+      "reason": "git diff --check found Markdown trailing whitespace",
+      "detail": "Whitespace-only repair followed; failure was not relabelled PASS."
+    },
+    {
+      "kind": "STALE_MACHINE_PASS",
+      "run_id": 34850758616,
+      "result": "SUCCESS_BUT_SUPERSEDED",
+      "subject": "ed63f8faeff5b1157ab6039c812afbbd5d682333",
+      "reason": "Fresh Reviewer found Work Order epoch-base mismatch."
+    },
+    {
+      "kind": "STALE_MACHINE_PASS",
+      "run_id": 34851975840,
+      "job_id": 104002159607,
+      "artifact_id": 10351229416,
+      "artifact_sha256": "bee0f9cb5f3b5b3281d22253e1b5c4252497690db93be1bbca716f37cfc23170",
+      "result": "SUCCESS_BUT_SUPERSEDED",
+      "subject": "d0823818310949503419bf5569ffd41d25e8d85d",
+      "reason": "Fresh Reviewer found three control-semantic P1 issues."
+    }
+  ],
+  "review_findings": [
+    {
+      "comment_id": 4005824791,
+      "finding": "Repair Work Order declared active epoch with wrong base_sha.",
+      "resolution": "The final design removes the competing repair Work Order entirely and amends the existing parent Work Order."
+    },
+    {
+      "comment_id": 4005824805,
+      "finding": "Attempted repair ledger started WORK_ORDER_CREATED in IN_PROGRESS rather than PLANNED.",
+      "resolution": "The attempted second Work Order and its ledger are intentionally not integrated; no replacement competing ledger is created."
+    },
+    {
+      "comment_id": 4005935683,
+      "finding": "Latest Work Order becomes active and could omit catalog product gates.",
+      "resolution": "Final design uses only parent WO-001 and adds a production Work Order validator requiring catalog predicates as an ordered subsequence."
+    },
+    {
+      "comment_id": 4005935699,
+      "finding": "Fresh review reproduced invalid second-Work-Order creation transition.",
+      "resolution": "Second Work Order is removed from final tree; repair history is preserved here."
+    },
+    {
+      "comment_id": 4005935710,
+      "finding": "Ref-wide cancel-in-progress could cancel frozen full-world-core.",
+      "resolution": "Mixed/frozen MVP workflow keeps cancel-in-progress=false. Only explicit pre-freeze repair validation may cancel stale in-progress runs."
+    }
+  ],
+  "final_design": {
+    "active_work_order": "V0-MVP-R1-WO-001",
+    "second_active_work_order": false,
+    "catalog_predicate_enforcement": "PRODUCTION_CONTRACT_VALIDATOR_ORDERED_SUBSEQUENCE",
+    "post_freeze_read_only_fanout": true,
+    "preferred_verifier_fallback": "NEXT_ALLOWED_FRESH_ROLE_CONTEXT",
+    "mixed_frozen_validation_cancel_in_progress": false,
+    "pre_freeze_repair_validation_cancel_in_progress": true,
+    "runtime_gameplay_changed": false,
+    "canonical_owner_changed": false,
+    "acceptance_gate_removed": false
+  }
+}
