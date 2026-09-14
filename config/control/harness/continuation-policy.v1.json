@@ -4,6 +4,8 @@
   "session_stall_guard_revision": "H0-STALL-GUARD-2026-09-06-R1",
   "execution_channel_recovery_revision": "H0-CHANNEL-RECOVERY-2026-09-12-R1",
   "scale_campaign_guard_revision": "H0-SCALE-SHARD-2026-09-06-R1",
+  "closure_throughput_revision": "H0-CLOSURE-THROUGHPUT-2026-09-14-R1",
+  "closure_throughput_policy": "config/control/harness/closure-throughput-policy.v1.json",
   "principles": {
     "checkpoint_is_user_session_unit": true,
     "work_order_is_execution_unit": true,
@@ -36,7 +38,9 @@
     "ephemeral_tool_handles_are_not_durable_state": true,
     "executor_local_network_failure_is_route_failure_not_project_block": true,
     "unreadable_ephemeral_resource_must_be_refetched_from_durable_locator": true,
-    "reasoning_or_session_channel_failure_does_not_change_project_state": true
+    "reasoning_or_session_channel_failure_does_not_change_project_state": true,
+    "post_freeze_read_only_closure_gates_may_fan_out": true,
+    "acceptance_refinement_may_strengthen_but_not_weaken_catalog": true
   },
   "mission_terminal_policy": {
     "allowed_terminals": [
@@ -66,6 +70,8 @@
     "same_parent_session_required": true,
     "fresh_reviewer_context_required": true,
     "fresh_verifier_context_required": true,
+    "post_freeze_read_only_gates_may_run_in_parallel": true,
+    "preferred_verifier_executor_unavailable_route": "FAIL_FORWARD_TO_NEXT_ALLOWED_FRESH_ROLE_CONTEXT",
     "stop_only_on": [
       "MISSION_COMPLETE",
       "WAITING_HUMAN",
@@ -82,6 +88,7 @@
     "split_long_validation_by_runner_or_predicate": true,
     "do_not_repeat_identical_observation_cycle": true,
     "do_not_wait_for_queued_ci_when_exact_local_runtime_is_available": true,
+    "do_not_wait_for_preferred_verifier_executor_when_fallback_exists": true,
     "do_not_create_background_wait_loops": true,
     "on_workspace_loss": [
       "READ_LIVE_REMOTE_HEAD_ONCE",
@@ -206,6 +213,14 @@
       "REPOSITORY_OWNED_CI",
       "FRESH_ISOLATED_ROLE_CONTEXT_WITH_AVAILABLE_TOOLS",
       "OPTIONAL_EXTERNAL_AGENT_ENVIRONMENT"
+    ],
+    "preferred_verifier_executor_unavailable_route": [
+      "RECORD_ROUTE_UNAVAILABLE_ONCE",
+      "DO_NOT_WAIT",
+      "DO_NOT_RETRY_IDENTICAL_ROUTE",
+      "SELECT_FRESH_ISOLATED_ROLE_CONTEXT_WITH_AVAILABLE_TOOLS",
+      "CONSUME_HASH_BOUND_EXACT_HEAD_MACHINE_EVIDENCE",
+      "REEXECUTE_ONLY_IF_WORK_ORDER_RISK_OR_PROVENANCE_REQUIRES_IT"
     ],
     "hard_block_requires": [
       "REQUIRED_CAPABILITY_IS_MANDATORY_FOR_THE_WORK_ORDER",
