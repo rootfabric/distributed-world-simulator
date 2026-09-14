@@ -9,7 +9,8 @@
     "post_freeze_read_only_gates_may_run_in_parallel": true,
     "independent_roles_remain_distinct_from_implementer": true,
     "historical_failures_remain_visible": true,
-    "product_gate_results_are_classified_separately_from_control_route_diagnostics": true
+    "product_gate_results_are_classified_separately_from_control_route_diagnostics": true,
+    "superseded_pre_freeze_validation_may_be_cancelled": true
   },
   "acceptance_refinement": {
     "catalog_required_predicates_relation": "ORDERED_SUBSEQUENCE_OF_WORK_ORDER_REQUIRED_PREDICATES",
@@ -34,6 +35,13 @@
     "closure_barrier_requires_all_mandatory_gates": true,
     "runtime_change_after_freeze_invalidates_only_exact_head_dependent_results": true,
     "evidence_only_or_control_only_carriers_must_not_move_the_frozen_product_subject": true
+  },
+  "superseded_validation": {
+    "pre_freeze_in_progress_run_may_cancel_when_newer_subject_arrives": true,
+    "queued_run_for_older_subject_may_cancel": true,
+    "terminal_failure_must_remain_visible": true,
+    "cancelled_stale_run_is_not_evidence_for_new_subject": true,
+    "frozen_subject_required_gate_must_run_to_terminal": true
   },
   "verifier_fallback": {
     "preferred_external_environment_is_optional": true,
