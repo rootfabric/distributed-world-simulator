@@ -8,6 +8,8 @@ ROOT = Path(__file__).resolve().parents[2]
 POLICY = "config/control/harness/closure-throughput-policy.v1.json"
 CATALOG = "config/control/harness/checkpoint-catalog.v1.json"
 WO = "config/control/harness/executions/E2026-09-09-V0-MVP-R1/work-orders/V0-MVP-R1-WO-001.v1.json"
+REPAIR_WO = "config/control/harness/executions/E2026-09-09-V0-MVP-R1/work-orders/V0-MVP-R1-WO-002.v1.json"
+EPOCH = "config/control/harness/executions/E2026-09-09-V0-MVP-R1/project-epoch.v1.json"
 WORKFLOW = ".github/workflows/mvp4-shared-dig-validation.yml"
 CHECKPOINT = "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE"
 
@@ -29,6 +31,13 @@ class ClosureThroughputPolicyTests(unittest.TestCase):
         positions = [required.index(predicate) for predicate in catalog]
         self.assertEqual(positions, sorted(positions), "catalog predicates must remain an ordered subsequence")
         self.assertGreaterEqual(len(required), len(catalog))
+
+    def test_repair_work_order_matches_declared_epoch_identity(self) -> None:
+        epoch = load(EPOCH)
+        work_order = load(REPAIR_WO)
+        self.assertEqual(epoch["epoch_id"], work_order["project_epoch"])
+        self.assertEqual(epoch["base_sha"], work_order["base_sha"])
+        self.assertIn(work_order["goal_checkpoint"], epoch["eligible_checkpoints"])
 
     def test_freeze_then_fanout_keeps_single_runtime_writer(self) -> None:
         fanout = load(POLICY)["freeze_then_fanout"]
