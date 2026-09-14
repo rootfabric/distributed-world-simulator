@@ -1,0 +1,17 @@
+{
+  "schema": "distributed_world_simulator.mvp4_external_review_evidence.v1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "predicate": "MVP_CANONICAL_DIG_VISIBLE_TO_BOTH_CLIENTS",
+  "reviewed_head_sha": "e37f81821e98a4d00b04ea414722e550b328cd47",
+  "reviewed_tree_sha": "bcbde9961e701f1e2c728f6f7a74f9df2d334aed",
+  "review_source": "https://github.com/rootfabric/distributed-world-simulator/pull/635#issuecomment-5661098205",
+  "reviewer": "chatgpt-codex-connector[bot]",
+  "reviewed_at_utc": "2026-09-14T08:21:29Z",
+  "source_result": "NO_MAJOR_ISSUES",
+  "coordinator_leaf_gate_interpretation": "PASS",
+  "source_path": "config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence/MVP4-EXTERNAL-REVIEW-E37F8182-R1.source.json",
+  "source_sha256": "a13a7574fbb1a786750a455c85022e9d9ab1be57dfb27678cc3a8c952c6b3a3d",
+  "scope": "MVP4 exact-head review PR #635; external Reviewer separate from Verifier R2 and closure coordinator.",
+  "full_work_order_review_claimed": false,
+  "whole_mvp_acceptance": false
+}
