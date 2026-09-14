@@ -1,0 +1,245 @@
+name: ECO ARCH2 A8 Exact R6
+on:
+  push:
+    branches: [validation/eco-arch2-a8-exact-r6]
+    paths: [.github/workflows/evo-arch2-a8-exact-r6.yml]
+permissions:
+  contents: read
+concurrency:
+  group: eco-arch2-a8-exact-r6
+  cancel-in-progress: false
+env:
+  SOURCE_HEAD: e932f1ee547db2476d8fc95d235982555e115486
+  SOURCE_TREE: 04b217ff7acfcd6336490f139f9239a7f6b59b7d
+  BASE_MAIN: 9e10e640ffc53f82195f1fd930ebafbbc85e482f
+  BASE_TREE: 27c62c3774117c5163d0d5dacf789b1310638a92
+  GIT_NO_REPLACE_OBJECTS: '1'
+jobs:
+  preflight:
+    if: github.actor == 'rootfabric' && github.repository == 'rootfabric/distributed-world-simulator'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ env.SOURCE_HEAD }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Seal validation Repair R5 source and additive scope
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main:refs/remotes/origin/main
+          test "$(git rev-parse HEAD)" = "$SOURCE_HEAD"
+          test "$(git rev-parse HEAD^{tree})" = "$SOURCE_TREE"
+          test "$(git rev-parse refs/remotes/origin/main)" = "$BASE_MAIN"
+          test "$(git rev-parse "$BASE_MAIN^{tree}")" = "$BASE_TREE"
+          test "$(git rev-parse --is-shallow-repository)" = false
+          test -z "$(git status --porcelain --untracked-files=no)"
+          python3 -m py_compile scripts/research/ecology/v2/snapshot_store.py validation/ecology/evo_arch2_a8/test_store.py validation/ecology/evo_arch2_a8/store_godot_integration.py validation/ecology/evo_arch2_a8/verify.py
+          mkdir -p artifacts/a8/preflight
+          git diff --name-status "$BASE_MAIN" "$SOURCE_HEAD" | tee artifacts/a8/preflight/diff.txt
+          test "$(git diff --name-status "$BASE_MAIN" "$SOURCE_HEAD" | grep -vc '^A[[:space:]]')" = 0
+          test "$(git diff --name-only "$BASE_MAIN" "$SOURCE_HEAD" | wc -l)" = 10
+      - name: Prove all A8 repairs and optimized-Python rejection
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import pathlib
+          verify=pathlib.Path('validation/ecology/evo_arch2_a8/verify.py').read_text()
+          seam=pathlib.Path('scripts/research/ecology/v2/snapshot_seam_v1.gd').read_text()
+          integ=pathlib.Path('validation/ecology/evo_arch2_a8/store_godot_integration.py').read_text()
+          assert 'out.mkdir(parents=True,exist_ok=True)' in verify
+          assert 'slog_bytes = slog.read_bytes()' in verify
+          assert 'restored_slog.write_bytes(slog_bytes)' in verify
+          assert 'STORE_CONTROL_LOG_EVIDENCE_MISMATCH' in verify
+          assert 'context["snapshot_hash"] = String(_cut.ecology_payload).sha256_text()' in seam
+          assert 'context["snapshot_id"] = "a8." + String(context["snapshot_hash"])' in seam
+          assert 'context.snapshot_hash =' not in seam and 'context.snapshot_id =' not in seam
+          assert 'if sys.flags.optimize != 0:' in integ
+          assert "A8_STORE_GODOT_FAIL: PYTHON_OPTIMIZE_NOT_ALLOWED" in integ
+          print('A8_REPAIRS_R1_R2_R3_R4_R5_PRESENT')
+          PY
+          set +e
+          PYTHONOPTIMIZE=1 python3 validation/ecology/evo_arch2_a8/store_godot_integration.py --godot /bin/true > artifacts/a8/preflight/optimized-reject.log 2>&1
+          rc=$?
+          set -e
+          test "$rc" -ne 0
+          grep -F 'A8_STORE_GODOT_FAIL: PYTHON_OPTIMIZE_NOT_ALLOWED' artifacts/a8/preflight/optimized-reject.log
+      - name: Run all Repair R1 storage controls
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s validation/ecology/evo_arch2_a8 -p test_store.py -v 2>&1 | tee artifacts/a8/preflight/store-tests.log
+          python3 - <<'PY'
+          import pathlib,re,json,os
+          t=pathlib.Path('artifacts/a8/preflight/store-tests.log').read_text()
+          m=re.findall(r'^Ran (\d+) tests? in .+$',t,re.M)
+          assert m==['31'] and re.search(r'^OK\s*$',t,re.M) and 'skipped=' not in t and 'FAILED' not in t
+          out={'source_head':os.environ['SOURCE_HEAD'],'source_tree':os.environ['SOURCE_TREE'],'store_tests':31,
+               'review_findings':[3999708328,4004292501,4004424301],
+               'validation_repair_r2':True,'validation_repair_r3':True,'runtime_repair_r4':True,
+               'validation_repair_r5':True,'optimized_python_rejected':True,
+               'external_durable_anchor_controls':True,'result':'PASS'}
+          pathlib.Path('artifacts/a8/preflight/summary.json').write_text(json.dumps(out,indent=2)+'\n')
+          PY
+      - name: Upload preflight evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: a8-e932f1ee-r6-preflight
+          path: artifacts/a8/preflight/
+          if-no-files-found: error
+          retention-days: 30
+  linux-exact:
+    needs: preflight
+    if: github.actor == 'rootfabric' && github.repository == 'rootfabric/distributed-world-simulator'
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ env.SOURCE_HEAD }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Seal validation Repair R5 source and current main epoch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main:refs/remotes/origin/main
+          test "$(git rev-parse HEAD)" = "$SOURCE_HEAD"
+          test "$(git rev-parse HEAD^{tree})" = "$SOURCE_TREE"
+          test "$(git rev-parse refs/remotes/origin/main)" = "$BASE_MAIN"
+          test "$(git rev-parse "$BASE_MAIN^{tree}")" = "$BASE_TREE"
+          test -z "$(git status --porcelain --untracked-files=no)"
+          mkdir -p artifacts/a8/environment
+      - name: Prepare canonical Harness Python dependency job-locally
+        shell: bash
+        run: |
+          set -euo pipefail
+          py="$(command -v python3)"
+          current="$($py -c 'import importlib.metadata; print(importlib.metadata.version("jsonschema"))' 2>/dev/null || true)"
+          if [ "$current" != '4.22.0' ]; then
+            venv="$(mktemp -d "$RUNNER_TEMP/a8-r6-python.XXXXXXXX")"
+            echo "A8_PYTHON_PREFIX=$venv" >> "$GITHUB_ENV"
+            python3 -m venv "$venv"
+            "$venv/bin/python" -m pip install --disable-pip-version-check --no-input -r scripts/harness/requirements.txt
+            py="$venv/bin/python"
+          fi
+          test "$("$py" -c 'import importlib.metadata; print(importlib.metadata.version("jsonschema"))')" = '4.22.0'
+          echo "A8_PINNED_PYTHON=$py" >> "$GITHUB_ENV"
+          "$py" -m py_compile validation/ecology/evo_arch2_a8/verify.py validation/ecology/evo_arch2_a8/store_godot_integration.py validation/ecology/evo_arch2_a8/test_store.py scripts/research/ecology/v2/snapshot_store.py
+      - name: Prepare graphical executor job-locally
+        shell: bash
+        run: |
+          set -euo pipefail
+          exec > >(tee artifacts/a8/environment/graphics-bootstrap.log) 2>&1
+          if command -v xvfb-run >/dev/null 2>&1; then
+            echo GRAPHICS_EXECUTOR=EXISTING_SYSTEM_XVFB
+            xvfb-run -a -s '-screen 0 1600x1100x24' /bin/true
+            exit 0
+          fi
+          command -v apt-get >/dev/null
+          command -v dpkg-deb >/dev/null
+          prefix="$(mktemp -d "$RUNNER_TEMP/a8-graphics.XXXXXXXX")"
+          echo "A8_GRAPHICS_PREFIX=$prefix" >> "$GITHUB_ENV"
+          mkdir -p "$prefix/packages" "$prefix/root"
+          packages=(xvfb xauth libxfont2 xserver-common x11-xkb-utils xkb-data xfonts-base libxmu6 libxmuu1 libfontenc1 libxau6 libxdmcp6 libxt6 libsm6 libice6)
+          (
+            cd "$prefix/packages"
+            if ! apt-get download "${packages[@]}"; then
+              mkdir -p "$prefix/apt/lists/partial" "$prefix/apt/cache/archives/partial"
+              cat > "$prefix/apt/isolated.conf" <<EOF
+          Dir::State::lists "$prefix/apt/lists";
+          Dir::Cache "$prefix/apt/cache";
+          Debug::NoLocking "true";
+          APT::Sandbox::User "$(id -un)";
+          #clear APT::Update::Post-Invoke;
+          #clear APT::Update::Post-Invoke-Success;
+          #clear DPkg::Post-Invoke;
+          EOF
+              APT_CONFIG="$prefix/apt/isolated.conf" apt-get update
+              APT_CONFIG="$prefix/apt/isolated.conf" apt-get download "${packages[@]}"
+            fi
+            for package in ./*.deb; do dpkg-deb --extract "$package" "$prefix/root"; done
+          )
+          echo "$prefix/root/usr/bin" >> "$GITHUB_PATH"
+          echo "LD_LIBRARY_PATH=$prefix/root/usr/lib/x86_64-linux-gnu${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" >> "$GITHUB_ENV"
+          echo "XKB_CONFIG_ROOT=$prefix/root/usr/share/X11/xkb" >> "$GITHUB_ENV"
+          export PATH="$prefix/root/usr/bin:$PATH"
+          export LD_LIBRARY_PATH="$prefix/root/usr/lib/x86_64-linux-gnu${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+          export XKB_CONFIG_ROOT="$prefix/root/usr/share/X11/xkb"
+          xvfb-run -a -s '-screen 0 1600x1100x24' /bin/true
+          echo GRAPHICS_BOOTSTRAP_PASS
+      - name: Run full exact A8 validation Repair R5 verifier
+        shell: bash
+        env:
+          CONFIGURED_GODOT: ${{ vars.GODOT_DOUBLE_PATH }}
+        run: |
+          set -euo pipefail
+          godot="${CONFIGURED_GODOT:-$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64}"
+          test -x "$godot"
+          "$A8_PINNED_PYTHON" validation/ecology/evo_arch2_a8/verify.py --godot "$godot" --head "$SOURCE_HEAD" --tree "$SOURCE_TREE"
+          "$A8_PINNED_PYTHON" - <<'PY'
+          import json,os,pathlib,hashlib
+          s=json.loads(pathlib.Path('artifacts/a8/exact/summary.json').read_text())
+          assert s['verdict']=='PASS'
+          assert s['subject_head']==os.environ['SOURCE_HEAD'] and s['subject_tree']==os.environ['SOURCE_TREE']
+          assert s['scope']['modifications']==0 and len(s['scope']['additions'])==10
+          assert s['store_controls']['tests']==31 and s['store_controls']['repair_r1_anchor_controls'] is True
+          slog=pathlib.Path('artifacts/a8/exact/a8-store-controls.log')
+          assert slog.is_file() and hashlib.sha256(slog.read_bytes()).hexdigest()==s['store_controls']['sha256']
+          i=s['a8_store_integration']
+          assert i['checkpoint_count']==17 and i['crash_case_count']==7 and i['semantic_process_count']==42 and i['anchor_rollback_case_count']==15
+          assert i['external_anchor']=='CALLER_OWNED_FSYNCED_HEAD_OUTSIDE_STORE_DIRECTORY'
+          assert s['harness']['result']=='PASS' and s['harness']['tests']>=325
+          assert len(s['control'])==2 and all(x['overall_health'] in ('GREEN','YELLOW') for x in s['control'])
+          print(json.dumps(s,indent=2))
+          PY
+      - name: Bind all evidence bytes to exact source and run
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib,subprocess
+          root=pathlib.Path.cwd();out=root/'artifacts/a8';out.mkdir(parents=True,exist_ok=True)
+          def git(*args): return subprocess.run(['git',*args],text=True,capture_output=True,check=True).stdout.strip()
+          provenance={'source_head':os.environ['SOURCE_HEAD'],'source_tree':os.environ['SOURCE_TREE'],
+                      'actual_head':git('rev-parse','HEAD'),'actual_tree':git('rev-parse','HEAD^{tree}'),
+                      'tracked_status':git('status','--porcelain','--untracked-files=no'),
+                      'run_id':os.environ['GITHUB_RUN_ID'],'run_attempt':os.environ['GITHUB_RUN_ATTEMPT'],
+                      'workflow_head':os.environ['GITHUB_SHA'],'runner':os.environ.get('RUNNER_NAME','unknown'),
+                      'review_findings_repaired':[3999708328,4004292501,4004424301],
+                      'validation_repair_r5':True,
+                      'stale_runs':[34759532239,34833409550,34834147104,34834738849]}
+          (out/'provenance.json').write_text(json.dumps(provenance,indent=2)+'\n')
+          files=list(out.rglob('*'))
+          for rel in ('artifacts/a7/observatory.png','artifacts/a7/capture-sources.json','artifacts/a7/restart','artifacts/a6/restart'):
+              p=root/rel;files.extend(p.rglob('*') if p.is_dir() else [p])
+          entries={p.relative_to(root).as_posix():{'sha256':hashlib.sha256(p.read_bytes()).hexdigest(),'bytes':p.stat().st_size}
+                   for p in sorted(set(files)) if p.is_file() and p.name!='evidence-files.v1.json'}
+          (out/'evidence-files.v1.json').write_text(json.dumps({'provenance':provenance,'files':entries},indent=2)+'\n')
+          print(json.dumps(provenance,indent=2));print('HASHED_FILES='+str(len(entries)))
+          PY
+      - name: Upload exact A8 validation Repair R5 evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: a8-exact-e932f1ee-r6
+          path: |
+            artifacts/a8/
+            artifacts/a7/observatory.png
+            artifacts/a7/capture-sources.json
+            artifacts/a7/restart/
+            artifacts/a6/restart/
+          if-no-files-found: error
+          retention-days: 30
+      - name: Remove only this job's temporary dependencies
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -n "${A8_PYTHON_PREFIX:-}" ]; then rm -rf -- "$A8_PYTHON_PREFIX"; fi
+          if [ -n "${A8_GRAPHICS_PREFIX:-}" ]; then rm -rf -- "$A8_GRAPHICS_PREFIX"; fi
