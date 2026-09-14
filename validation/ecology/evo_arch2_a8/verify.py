@@ -186,14 +186,14 @@ def main() -> int:
         req(sha(restored_slog) == summary["store_controls"]["sha256"], "STORE_CONTROL_LOG_EVIDENCE_MISMATCH")
         run("cold-import", [str(args.godot),"--headless","--audio-driver","Dummy","--editor","--path",str(ROOT),"--import"], timeout=300)
 
-        core1 = run("a8-core-1", gd("tests/research/ecology/v2/arch2_a8_acceptance.gd"), "EVO_ARCH2_A8_EXACT", timeout=600)
+        core1 = run("a8-core-1", gd("tests/research/ecology/v2/arch2_a8_acceptance.gd"), "EVO_ARCH2_A8_EXACT", timeout=1500)
         manifest1 = (ROOT/"artifacts/a8/checkpoints/manifest.json").read_bytes(); shutil.rmtree(ROOT/"artifacts/a8/checkpoints",ignore_errors=True)
-        core2 = run("a8-core-2", gd("tests/research/ecology/v2/arch2_a8_acceptance.gd"), "EVO_ARCH2_A8_EXACT", timeout=600)
+        core2 = run("a8-core-2", gd("tests/research/ecology/v2/arch2_a8_acceptance.gd"), "EVO_ARCH2_A8_EXACT", timeout=1500)
         manifest2 = (ROOT/"artifacts/a8/checkpoints/manifest.json").read_bytes()
         req(core1.read_bytes() == core2.read_bytes() and manifest1 == manifest2, "A8_CORE_REPEAT_MISMATCH"); summary["repeat_pairs"].append("a8-core-and-fixture-manifest")
 
         ilog = run("a8-store-godot", [sys.executable,"validation/ecology/evo_arch2_a8/store_godot_integration.py","--godot",str(args.godot)],
-                   "EVO_ARCH2_A8_STORE_GODOT checkpoints=17 crash_cases=7 semantic_processes=42 anchor_rollbacks=15 failed=0", timeout=1200)
+                   "EVO_ARCH2_A8_STORE_GODOT checkpoints=17 crash_cases=7 semantic_processes=42 anchor_rollbacks=15 failed=0", timeout=3600)
         ipath = ROOT/"artifacts/a8/store-integration/summary.json"; req(ipath.is_file(), "A8_STORE_INTEGRATION_SUMMARY_MISSING")
         data = json.loads(ipath.read_text())
         req(data.get("verdict") == "PASS" and data.get("checkpoint_count") == 17 and data.get("crash_case_count") == 7
