@@ -27,6 +27,18 @@
     "canonical_fix": "Require exact external durable head anchor; public load accepts only equal/descendant chain, commit CAS requires exact anchored head. Preserve legitimate pre-pointer orphans and ambiguous descendant recovery.",
     "old_evidence_status": "STALE_AFTER_SOURCE_REPAIR"
   },
+  "validation_repair_r2": {
+    "failed_run": 34759532239,
+    "failed_job": 103729793858,
+    "failed_artifact": 10325640202,
+    "failed_artifact_sha256": "ccbb81287db92224b5c3b3abc1e9f291870d1b67e0203f1d74687ce8bcca4ee9",
+    "failure_class": "VERIFIER_SELF_DELETES_EVIDENCE_DIRECTORY",
+    "root_cause": "The exact verifier created artifacts/a8/exact and later removed the entire artifacts/a8 parent before cold import, so cold-import.log and summary.json could not be created.",
+    "repair_commit": "98f1e40b9a846da186b2556e9f6f726260cd1c45",
+    "repair_scope": "validation/ecology/evo_arch2_a8/verify.py only; no A8 runtime, store, ticket, handoff, accepted A0-A7, registry or scheduler semantics changed.",
+    "canonical_fix": "Preserve the intended clean artifacts/a8 slate, then recreate artifacts/a8/exact before the first post-cleanup verifier log write.",
+    "prior_review_and_exact_status": "STALE_AFTER_VALIDATION_SOURCE_REPAIR"
+  },
   "scope": "Bounded full coupled A7 partition snapshot, canonical ticket handoff consumer, restart-safe command receipts and Linux durable CAS byte store with caller-owned external durable head anchors. Not production network activation or individual wet/dry transplantation.",
   "existing_owners_consumed_unchanged": [
     "scripts/research/ecology/v2/observatory_session_v1.gd",
@@ -81,11 +93,11 @@
     "EVIDENCE_BYTES_HASHES_AND_SUBJECT_BINDING_VERIFIED"
   ],
   "bounds": {"ecological_horizon": 16, "commands": 96, "ticket_ids": 8, "snapshot_bytes": 2097152, "production_claim": false},
-  "state": "VERIFYING_REPAIR_R1",
+  "state": "VERIFYING_REPAIR_R2",
   "resume_anchor": {
-    "last_completed_predicate": "REPAIR_R1_EXTERNAL_DURABLE_ANCHOR_IMPLEMENTED_WITH_31_STORAGE_CONTROLS_DECLARED",
-    "next_action": "FREEZE_NEW_HEAD_AND_RUN_HOSTED_PREFLIGHT_FULL_EXACT_LINUX_AND_FRESH_WHOLE_A8_REVIEW",
-    "allowed_recovery_route": "GitHub connector for source/evidence; repository-owned CI for exact execution; refetch PR #630 and new validation run by durable IDs",
+    "last_completed_predicate": "VALIDATION_REPAIR_R2_IMPLEMENTED_AFTER_EXACT_R2_INFRASTRUCTURE_FAILURE",
+    "next_action": "FREEZE_REPAIR_R2_HEAD_TREE_THEN_RUN_CURRENT_SOURCE_PROJECT_CONTROL_FRESH_WHOLE_A8_REVIEW_AND_FULL_EXACT_LINUX_R3",
+    "allowed_recovery_route": "GitHub connector for source/evidence; repository-owned CI for exact execution; refetch PR #630 and R3 validation run by durable IDs",
     "stop_before": "MAIN_MERGE"
   }
 }
