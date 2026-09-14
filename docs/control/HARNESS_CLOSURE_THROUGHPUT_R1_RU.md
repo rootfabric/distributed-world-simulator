@@ -1,7 +1,9 @@
 # DWS Harness — ускоренное закрытие checkpoint без ослабления приёмки
 
-**Revision:** `H0-CLOSURE-THROUGHPUT-2026-09-14-R1`  
-**Scope:** post-freeze closure для MVP и других Harness-managed runtime checkpoint.  
+**Revision:** `H0-CLOSURE-THROUGHPUT-2026-09-14-R1`
+
+**Scope:** post-freeze closure для MVP и других Harness-managed runtime checkpoint.
+
 **Не меняет:** canonical ownership, exact-head требования, обязательные product predicates, Reviewer/Verifier separation, human merge gates.
 
 ## 1. Зачем
