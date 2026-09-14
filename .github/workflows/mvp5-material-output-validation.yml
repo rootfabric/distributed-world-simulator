@@ -1,90 +1,96 @@
-name: MVP5 Exactly Once Material Output
+name: MVP5 Exact Named-Branch Control Driver
 on:
   push:
-    branches: [feature/v0-mvp-playable-seamless-planet-r1]
+    branches: [control/v0-mvp5-exact-driver-r1]
   workflow_dispatch:
 permissions:
   contents: read
   actions: read
 concurrency:
-  group: mvp5-exact-${{ github.ref }}
+  group: mvp5-control-driver-${{ github.ref }}
   cancel-in-progress: false
 jobs:
-  exact:
-    if: github.repository == 'rootfabric/distributed-world-simulator' && github.ref == 'refs/heads/feature/v0-mvp-playable-seamless-planet-r1' && (github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[mvp5-evidence]'))
+  control-drive:
+    if: github.repository == 'rootfabric/distributed-world-simulator' && github.ref == 'refs/heads/control/v0-mvp5-exact-driver-r1'
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    timeout-minutes: 15
     env:
-      EXPECTED_HEAD: ${{ github.sha }}
+      EXPECTED_HEAD: e3dacd617ede4cca7402ff25c125fa85bd76283f
+      EXPECTED_TREE: dfbef93c5b556499ab7edd3057ccf2900d52cb0f
+      SUBJECT_BRANCH: feature/v0-mvp-playable-seamless-planet-r1
       PYTHONUTF8: '1'
       PYTHONPATH: scripts
-      BREAKPOINT_RUNTIME_DISABLED: '1'
-      GODOT_SILENCE_ROOT_WARNING: '1'
-      PLANET_SIMULATOR_INVENTORY_PROFILE: planet_default
-      LIBGL_ALWAYS_SOFTWARE: '1'
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.sha }}
+          ref: e3dacd617ede4cca7402ff25c125fa85bd76283f
           fetch-depth: 0
           persist-credentials: false
-      - name: Exact subject and parent scope
+      - name: Bind unchanged product subject to its actual execution branch
         shell: bash
         run: |
           set -euo pipefail
           test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+          test "$(git rev-parse HEAD^{tree})" = "$EXPECTED_TREE"
           test -z "$(git status --porcelain --untracked-files=no)"
-          git merge-base --is-ancestor d78760738e8032b97de2a433382fc7ddafa17fbf HEAD
-          git diff --check d78760738e8032b97de2a433382fc7ddafa17fbf HEAD
-          echo "EXPECTED_TREE=$(git rev-parse HEAD^{tree})" >> "$GITHUB_ENV"
-          mkdir -p artifacts/mvp5-exact
+          git fetch origin '+refs/heads/*:refs/remotes/origin/*' --prune
+          test "$(git rev-parse "origin/$SUBJECT_BRANCH")" = "$EXPECTED_HEAD"
+          git checkout -B "$SUBJECT_BRANCH" "$EXPECTED_HEAD"
+          git branch --set-upstream-to="origin/$SUBJECT_BRANCH" "$SUBJECT_BRANCH"
+          test "$(git symbolic-ref --short HEAD)" = "$SUBJECT_BRANCH"
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+          test "$(git rev-parse HEAD^{tree})" = "$EXPECTED_TREE"
+          mkdir -p artifacts/mvp5-control-drive
+          git rev-parse HEAD HEAD^{tree} origin/main > artifacts/mvp5-control-drive/subjects.txt
           python3 - <<'PY'
-          import fnmatch,json,subprocess
+          import json,os
           w=json.load(open('config/control/harness/executions/E2026-09-09-V0-MVP-R1/work-orders/V0-MVP-R1-WO-001.v1.json'))
-          paths=subprocess.check_output(['git','diff','--name-only','d78760738e8032b97de2a433382fc7ddafa17fbf','HEAD'],text=True).splitlines()
-          for p in paths:
-              if not any(fnmatch.fnmatchcase(p,g) for g in w['allowed_paths']) or any(fnmatch.fnmatchcase(p,g) for g in w['forbidden_paths']): raise SystemExit('MVP5_WRITE_FENCE:'+p)
-          print('MVP5_WRITE_FENCE_PASS',len(paths))
+          assert w['branch']==os.environ['SUBJECT_BRANCH']
+          assert w['state']=='IN_PROGRESS'
+          print('EXACT_NAMED_PRODUCT_CHECKOUT_PASS')
           PY
-          if ! command -v Xvfb >/dev/null || ! command -v xauth >/dev/null; then
-            sudo -n apt-get update
-            sudo -n env DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends xvfb xauth libgl1-mesa-dri
-          fi
-      - uses: actions/download-artifact@v4
-        with:
-          name: p7-repair-engine-34117353691
-          run-id: 34117353691
-          repository: rootfabric/distributed-world-simulator
-          github-token: ${{ github.token }}
-          path: ${{ runner.temp }}/mvp5-engine
-      - name: Exact focused, five-process material and unchanged MVP4-MVP3 regressions
+      - name: Install and verify pinned Harness dependency
         shell: bash
         run: |
           set -euo pipefail
-          export GODOT_BIN="$RUNNER_TEMP/mvp5-engine/godot"
-          test "$(sha256sum "$GODOT_BIN" | cut -d' ' -f1)" = bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7
-          chmod u+x "$GODOT_BIN"
-          xvfb-run -a -s '-screen 0 1600x900x24' python3 docs/control/mvp-act0-r1/validate_mvp5_exact.py
-      - name: Bind exact raw evidence
+          python3 -m pip install --disable-pip-version-check -r scripts/harness/requirements.txt
+          python3 - <<'PY'
+          import importlib.metadata
+          from pathlib import Path
+          required=Path('scripts/harness/requirements.txt').read_text(encoding='utf-8').strip()
+          expected=required.split('==',1)[1]
+          actual=importlib.metadata.version('jsonschema')
+          if actual != expected: raise SystemExit(f'PINNED_DEPENDENCY_VERSION_MISMATCH:{actual}:{expected}')
+          print(f'PINNED DEPENDENCY OK: jsonschema=={actual}')
+          PY
+      - name: Exact branch-aware Status Resume Drive
+        shell: bash
+        run: |
+          set -euo pipefail
+          pwsh -NoProfile -File ./CONTROL_DEVELOPMENT.ps1 -Status 2>&1 | tee artifacts/mvp5-control-drive/status.log
+          pwsh -NoProfile -File ./CONTROL_DEVELOPMENT.ps1 -Resume 2>&1 | tee artifacts/mvp5-control-drive/resume.log
+          pwsh -NoProfile -File ./CONTROL_DEVELOPMENT.ps1 -Drive 2>&1 | tee artifacts/mvp5-control-drive/drive.log
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+          test "$(git rev-parse HEAD^{tree})" = "$EXPECTED_TREE"
+          test -z "$(git status --porcelain --untracked-files=no)"
+      - name: Bind driver provenance and exact product evidence
         if: always()
         shell: bash
         run: |
           python3 - <<'PY'
           import hashlib,json,os,pathlib,subprocess
-          out=pathlib.Path('artifacts/mvp5-exact');out.mkdir(parents=True,exist_ok=True)
-          git=lambda *a:subprocess.check_output(['git',*a],text=True).strip()
-          engine=pathlib.Path(os.environ['RUNNER_TEMP'])/'mvp5-engine/godot'
-          summary=json.loads((out/'summary.json').read_text()) if (out/'summary.json').is_file() else {}
-          graphical=json.loads((out/'graphical/manifest.json').read_text()) if (out/'graphical/manifest.json').is_file() else {}
+          out=pathlib.Path('artifacts/mvp5-control-drive');out.mkdir(parents=True,exist_ok=True)
+          def git(*a):
+              p=subprocess.run(['git',*a],text=True,capture_output=True)
+              return {'exit_code':p.returncode,'stdout':p.stdout.strip(),'stderr':p.stderr.strip()}
           files=[{'path':p.relative_to(out).as_posix(),'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()} for p in sorted(out.rglob('*')) if p.is_file() and p!=out/'manifest.json']
-          m={'schema':'distributed_world_simulator.mvp5_exact_manifest.v1','subject_head':git('rev-parse','HEAD'),'subject_tree':git('rev-parse','HEAD^{tree}'),'run_id':os.environ['GITHUB_RUN_ID'],'run_attempt':os.environ['GITHUB_RUN_ATTEMPT'],'tracked_after':git('status','--porcelain','--untracked-files=no'),'engine_sha256':hashlib.sha256(engine.read_bytes()).hexdigest() if engine.is_file() else None,'ci_passed':summary.get('passed') is True,'mvp5_predicate_verified':False,'independent_verdict':False,'full_world_core_executed':False,'graphical_mvp5_executed':bool(graphical),'graphical_mvp5_passed':graphical.get('passed') is True,'files':files}
+          m={'schema':'distributed_world_simulator.mvp5_control_driver_exact.v1','subject_head':git('rev-parse','HEAD'),'subject_tree':git('rev-parse','HEAD^{tree}'),'subject_branch':git('symbolic-ref','--short','HEAD'),'expected_head':os.environ['EXPECTED_HEAD'],'expected_tree':os.environ['EXPECTED_TREE'],'canonical_main':git('rev-parse','origin/main'),'driver_head':os.environ['GITHUB_SHA'],'driver_branch':os.environ['GITHUB_REF_NAME'],'run_id':os.environ['GITHUB_RUN_ID'],'run_attempt':os.environ['GITHUB_RUN_ATTEMPT'],'tracked_after':git('status','--porcelain','--untracked-files=no'),'read_only_driver':True,'mvp5_predicate_verified':False,'independent_verdict':False,'files':files}
           (out/'manifest.json').write_text(json.dumps(m,indent=2)+'\n')
-          print(json.dumps({'head':m['subject_head'],'tree':m['subject_tree'],'ci_passed':m['ci_passed'],'graphical_mvp5_passed':m['graphical_mvp5_passed'],'files':len(files)}))
           PY
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: mvp5-exact-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
-          path: artifacts/mvp5-exact/
+          name: mvp5-control-drive-e3dacd61-${{ github.run_id }}-${{ github.run_attempt }}
+          path: artifacts/mvp5-control-drive/
           if-no-files-found: error
           retention-days: 90
