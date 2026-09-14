@@ -54,6 +54,11 @@ def evidence_checks(reports: dict, captures: dict, head: str, run_id: str) -> di
             after = capture["captures"]["after"]["projection"]
             prefix = actor + ":"
             checks[prefix + "real_render_frames"] = capture["passed"] is True and capture["captures"]["after"]["frame"] > capture["captures"]["before"]["frame"]
+            checks[prefix + "terrain_only_capture"] = all(
+                label in capture["captures"] and capture["captures"][label].get("ui", {}).get("hidden") is True
+                and bool(capture["captures"][label].get("ui", {}).get("region", {}))
+                and len(capture["captures"][label].get("ui", {}).get("nodes", [])) > 0
+                for label in ("before", "after"))
             checks[prefix + "canonical_store_convergence"] = before["store_hash"] == source["initial_store_hash"] and after["store_hash"] == source["store_hash"] and after["replica"]["state_hash"] == source["state_hash"] and after["replica"]["stream_sequence"] == 1
             checks[prefix + "physical_geometry_changes"] = after["geometry_hash"] != before["geometry_hash"] and after["network_mutation_proven"] is True and after["mesh_count"] > 0 and after["triangle_count"] > 0 and after["rebuild_count"] > before["rebuild_count"]
             checks[prefix + "read_only_replica"] = after["mode"] == "MW6_READ_ONLY_P7_REPLICA_PROJECTION" and after["canonical_state_owned"] is False and after["excavation_service_retained"] is False and after["read_only_replica_store_retained"] is True
@@ -79,6 +84,7 @@ def negative_controls(reports: dict, captures: dict, head: str, run_id: str) -> 
         "recreated_camera": lambda r, c: r["client/a"]["final_instance_ids"].update(camera=0),
         "observer_b_without_input": lambda r, c: r["gateway"]["input_observations"].update(b=[]),
         "no_canonical_mutation": lambda r, c: r["authority/a"]["mvp4"].update(dig_observations=[]),
+        "hud_visible_capture": lambda r, c: c["a"]["captures"]["before"]["ui"].update(hidden=False),
         "fake_manual": lambda r, c: c["a"].update(manual_input_executed=True),
         "shared_process": lambda r, c: r["client/b"].update(process_id=r["client/a"]["process_id"]),
         "reconnect": lambda r, c: r["client/b"].update(reconnects=1),
@@ -163,7 +169,7 @@ def main() -> int:
             except (OSError, RuntimeError, ValueError): width, height = 0, 0
             checks[f"viewport:{actor}:{label}"] = width == 720 and 400 <= height <= 480
     negatives = negative_controls(reports, captures, head, run_id) if not error and all(checks.values()) else []
-    passed = not error and all(checks.values()) and len(negatives) == 8
+    passed = not error and all(checks.values()) and len(negatives) == 9
     manifest = {"schema": "distributed_world_simulator.mvp4_graphical_process_manifest.v1", "subject_head": head, "subject_tree": tree, "run_id": run_id, "engine_sha256": BASE.sha(engine), "commands": commands, "error": error, "checks": checks, "negative_controls": negatives, "passed": passed, "duration_seconds": round(time.monotonic() - started, 3), "manual_input_executed": False, "mvp4_predicate_verified": False, "files": []}
     for p in sorted(output.iterdir()):
         if p.is_file() and p.name != "manifest.json": manifest["files"].append({"path": p.name, "bytes": p.stat().st_size, "sha256": BASE.sha(p)})

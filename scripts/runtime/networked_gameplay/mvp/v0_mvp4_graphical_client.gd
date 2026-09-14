@@ -9,6 +9,7 @@ var _snapshot4: Dictionary = {}
 var _prepared4: Dictionary = {}
 var _captures4: Dictionary = {}
 var _capture_busy4 := false
+var _hidden_ui4: Array = []
 
 func build_world() -> bool:
 	if not super.build_world(): return false
@@ -107,21 +108,91 @@ func next_automated(snapshot: Dictionary) -> void:
 		_:
 			finish(false, "MVP4_CLIENT_PHASE_INVALID:" + _phase4)
 
+func _collect_ui4(node: Node, out: Array) -> void:
+	# Complete actual UI surface: every CanvasLayer/CanvasItem under the client
+	# root (the inherited status CanvasLayer + Label today). 3D nodes such as the
+	# replica surface, players, seam annotation and camera are never collected.
+	for child in node.get_children():
+		if child is CanvasLayer:
+			out.append(child)
+			_collect_ui4(child, out)
+		elif child is CanvasItem:
+			out.append(child)
+			_collect_ui4(child, out)
+
+
+func _ui_evidence4() -> Dictionary:
+	var items: Array = []
+	_collect_ui4(self, items)
+	var nodes: Array = []
+	var region := Rect2()
+	for item in items:
+		var entry := {"class": item.get_class(), "name": String(item.name), "visible": bool(item.visible)}
+		if item is Control:
+			var rect: Rect2 = item.get_global_rect()
+			if rect.size.x <= 0.0 or rect.size.y <= 0.0:
+				rect.size = item.get_minimum_size()
+			entry["rect"] = {"x": rect.position.x, "y": rect.position.y, "w": rect.size.x, "h": rect.size.y}
+			if region.size.x <= 0.0 or region.size.y <= 0.0:
+				region = rect
+			else:
+				region = region.merge(rect)
+		nodes.append(entry)
+	return {"nodes": nodes, "canvas_items": items.size(),
+		"region": {"x": region.position.x, "y": region.position.y, "w": region.size.x, "h": region.size.y} if region.size.x > 0.0 and region.size.y > 0.0 else {}}
+
+
+func _hide_ui4() -> int:
+	# Hide exactly the currently visible UI items and remember them so the
+	# restore step cannot change unrelated visibility state.
+	var items: Array = []
+	_collect_ui4(self, items)
+	_hidden_ui4.clear()
+	for item in items:
+		if bool(item.visible):
+			_hidden_ui4.append(item)
+			item.visible = false
+	return _hidden_ui4.size()
+
+
+func _restore_ui4() -> void:
+	for item in _hidden_ui4:
+		if is_instance_valid(item):
+			item.visible = true
+	_hidden_ui4.clear()
+
+
 func _capture4(label: String, next_phase: String, command: String) -> void:
 	_capture_busy4 = true
-	# Two completed real render frames after replica application, not a desktop
-	# screenshot or an image generated from the evidence JSON.
+	# Terrain-only evidence by construction (review 4001519528): derive the
+	# complete UI region from the live UI tree, then hide the whole UI for BOTH
+	# the before and the after captures. No HUD/CanvasLayer pixel can exist in
+	# either image, so no guessed row cutoff is used anywhere.
+	var ui := _ui_evidence4()
+	if ui["nodes"].is_empty() or ui["region"].is_empty():
+		_capture_busy4 = false
+		finish(false, "MVP4_UI_REGION_DERIVATION_FAILED:" + label)
+		return
+	var hidden := _hide_ui4()
+	# Two completed real render frames after replica application and UI hiding,
+	# not a desktop screenshot or an image generated from the evidence JSON.
 	await RenderingServer.frame_post_draw
 	await RenderingServer.frame_post_draw
 	if finishing: return
 	var path := String(cfg.get("mvp4_capture_" + label, ""))
 	var image := get_viewport().get_texture().get_image()
-	if path.is_empty() or image == null or image.is_empty() or image.save_png(path) != OK:
+	_restore_ui4()
+	ui["hidden"] = hidden == ui["canvas_items"]
+	if image == null or not ui["hidden"]:
+		_capture_busy4 = false
+		finish(false, "MVP4_UI_HIDE_INCOMPLETE:" + label)
+		return
+	if path.is_empty() or image.is_empty() or image.save_png(path) != OK:
 		_capture_busy4 = false
 		finish(false, "MVP4_VIEWPORT_CAPTURE_FAILED:" + label)
 		return
 	var projection: Dictionary = surface.contract_report()
-	_captures4[label] = {"file": path, "width": image.get_width(), "height": image.get_height(), "projection": projection.duplicate(true), "snapshot": _snapshot4.duplicate(true), "frame": Engine.get_process_frames()}
+	_captures4[label] = {"file": path, "width": image.get_width(), "height": image.get_height(), "projection": projection.duplicate(true), "snapshot": _snapshot4.duplicate(true), "frame": Engine.get_process_frames(), "ui": ui}
 	_phase4 = next_phase
 	_capture_busy4 = false
 	send_request(command, {"ack": surface.create_ack(), "projection": projection})
