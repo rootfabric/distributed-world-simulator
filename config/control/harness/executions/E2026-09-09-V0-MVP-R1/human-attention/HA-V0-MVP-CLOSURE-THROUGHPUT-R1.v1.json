@@ -12,6 +12,6 @@
   "blast_radius": ["Harness acceptance-refinement compatibility tests", "post-freeze review/verification routing policy", "MVP exact control-drive workflow", "control-only documentation and tests"],
   "blocking": false,
   "status": "RESOLVED",
-  "resolution": "AUTHORIZE_BOUNDED_CLOSURE_THROUGHPUT_REPAIR. Пользователь явно поручил внести правки, чтобы ускорить закрытие пунктов и убрать бюрократию после анализа MVP5. Разрешены только control/policy/test/workflow изменения из V0-MVP-R1-WO-002; runtime gameplay, canonical owners, architecture ownership, acceptance threshold weakening, main merge and self-acceptance не разрешены.",
-  "evidence_paths": ["config/control/harness/executions/E2026-09-09-V0-MVP-R1/work-orders/V0-MVP-R1-WO-002.v1.json", "docs/control/HARNESS_CLOSURE_THROUGHPUT_R1_RU.md"]
+  "resolution": "AUTHORIZE_BOUNDED_CLOSURE_THROUGHPUT_REPAIR. Пользователь явно поручил внести правки, чтобы ускорить закрытие пунктов и убрать бюрократию после анализа MVP5. Repair оформляется как bounded amendment существующего V0-MVP-R1-WO-001, а не как второй active Work Order. Разрешены только Harness/control/policy/test/workflow изменения, перечисленные в amended parent scope; runtime gameplay, canonical owners, architecture ownership, acceptance threshold weakening, main merge и self-acceptance не разрешены.",
+  "evidence_paths": ["config/control/harness/executions/E2026-09-09-V0-MVP-R1/work-orders/V0-MVP-R1-WO-001.v1.json", "docs/control/HARNESS_CLOSURE_THROUGHPUT_R1_RU.md"]
 }
