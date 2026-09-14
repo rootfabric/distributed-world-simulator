@@ -11,13 +11,16 @@
   "scope": "Bounded closure-throughput repair only: preserve catalog acceptance and all existing product gates while allowing stricter Work Order refinement predicates, fan out read-only post-freeze gates, fail forward when a preferred Verifier executor is unavailable, and make the existing MVP world/core control-drive branch-aware. No gameplay/runtime owner changes.",
   "allowed_paths": [
     "config/control/harness/closure-throughput-policy.v1.json",
+    "config/control/harness/continuation-policy.v1.json",
+    "config/control/harness/review-policy.v1.json",
     "config/control/harness/executions/E2026-09-09-V0-MVP-R1/human-attention/HA-V0-MVP-CLOSURE-THROUGHPUT-R1.v1.json",
     "config/control/harness/executions/E2026-09-09-V0-MVP-R1/work-orders/V0-MVP-R1-WO-002.v1.json",
     "config/control/harness/executions/E2026-09-09-V0-MVP-R1/events/V0-MVP-R1-WO-002/**",
     "docs/control/HARNESS_CLOSURE_THROUGHPUT_R1_RU.md",
     "tests/harness/test_closure_throughput_policy.py",
     "tests/harness/mvp_act0_base.py",
-    ".github/workflows/mvp4-shared-dig-validation.yml"
+    ".github/workflows/mvp4-shared-dig-validation.yml",
+    ".github/workflows/harness-closure-throughput-validation.yml"
   ],
   "forbidden_paths": [
     "scripts/runtime/**",
@@ -64,7 +67,7 @@
   "evidence_map_required": true,
   "issued_at_utc": "2026-09-14T13:26:00Z",
   "human_approval_required_for": ["HARNESS_CONTROL_SEMANTICS_CHANGE"],
-  "notes": "Human scope authorization is recorded in HA-V0-MVP-CLOSURE-THROUGHPUT-R1. This Work Order is control-only and does not replace V0-MVP-R1-WO-001. Parent MVP predicates and runtime candidate remain unchanged. Integration into canonical main remains a separate human gate.",
+  "notes": "Human scope authorization is recorded in HA-V0-MVP-CLOSURE-THROUGHPUT-R1. This Work Order is control-only and does not replace V0-MVP-R1-WO-001. Parent MVP predicates and runtime candidate remain unchanged. Integration into canonical main remains a separate human gate. Initial Project Control run 34850223788 stopped before repair tests on pre-existing CANDIDATE_MAIN_DRIFT after canonical main advanced to 675c04bb213bbb68b8cdb500d540d57ce1490318. That drift is retained as a separate product-control item, not reclassified as a repair defect. Exact repair validation therefore uses the dedicated read-only harness-closure-throughput workflow, which does not authorize dispatch or acceptance.",
   "design_brief": {
     "problem_statement": "MVP leaf implementation completes much faster than closure because evidence/control gates are unnecessarily serialized or produce orchestration false negatives.",
     "current_behavior": "A stronger Work Order predicate list fails an exact-equality Harness test; a preferred unavailable Verifier may stall the practical route despite fallback policy; world/core control-drive checks out exact SHA detached and fails branch-sensitive Drive; post-freeze read-only gates are not explicitly treated as a fan-out barrier.",
@@ -76,6 +79,6 @@
     "dependencies": ["V0-MVP-R1-WO-001", "H0-AUTONOMY-2026-09-05-R2", "H0-CHANNEL-RECOVERY-2026-09-12-R1"],
     "non_goals": ["Runtime gameplay changes", "Canonical ownership changes", "Removing Reviewer/Verifier", "Reducing regression coverage", "Main merge"],
     "expected_risks": ["Accidentally permitting predicate removal instead of refinement", "Confusing parallel read-only evidence with multiple runtime writers", "Treating executor fallback as self-verification", "Masking real control failures"],
-    "validation_plan": ["Focused policy tests", "ACT0 refinement compatibility test", "Workflow text guard for branch-aware control-drive", "Complete Harness regression", "Fresh read-only review", "Fresh Verifier consumes exact machine evidence"]
+    "validation_plan": ["Focused policy tests", "ACT0 refinement compatibility test", "Workflow text guard for branch-aware control-drive", "Complete Harness regression in exact read-only validation workflow", "Fresh read-only review", "Fresh Verifier consumes exact machine evidence"]
   }
 }
