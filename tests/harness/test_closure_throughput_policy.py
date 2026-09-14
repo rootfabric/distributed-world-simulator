@@ -11,6 +11,7 @@ WO = "config/control/harness/executions/E2026-09-09-V0-MVP-R1/work-orders/V0-MVP
 REPAIR_WO = "config/control/harness/executions/E2026-09-09-V0-MVP-R1/work-orders/V0-MVP-R1-WO-002.v1.json"
 EPOCH = "config/control/harness/executions/E2026-09-09-V0-MVP-R1/project-epoch.v1.json"
 WORKFLOW = ".github/workflows/mvp4-shared-dig-validation.yml"
+VALIDATION_WORKFLOW = ".github/workflows/harness-closure-throughput-validation.yml"
 CHECKPOINT = "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE"
 
 
@@ -54,6 +55,16 @@ class ClosureThroughputPolicyTests(unittest.TestCase):
             },
             set(fanout["parallel_read_only_gates"]),
         )
+
+    def test_superseded_pre_freeze_validation_is_cancelled_but_terminal_failures_remain_evidence(self) -> None:
+        policy = load(POLICY)["superseded_validation"]
+        self.assertTrue(policy["pre_freeze_in_progress_run_may_cancel_when_newer_subject_arrives"])
+        self.assertTrue(policy["queued_run_for_older_subject_may_cancel"])
+        self.assertTrue(policy["terminal_failure_must_remain_visible"])
+        self.assertTrue(policy["frozen_subject_required_gate_must_run_to_terminal"])
+        for workflow in (WORKFLOW, VALIDATION_WORKFLOW):
+            text = (ROOT / workflow).read_text(encoding="utf-8")
+            self.assertIn("cancel-in-progress: true", text, workflow)
 
     def test_unavailable_preferred_verifier_fails_forward_without_self_verification(self) -> None:
         verifier = load(POLICY)["verifier_fallback"]
