@@ -13,6 +13,24 @@
 - User instruction: «реализуй MVP5: exactly-once material output».
 - This document is a design/continuation record, not an implementation or independent PASS.
 
+## Live Simulator Baseline binding
+
+`V0-MVP-LIVE-SIMULATOR-BASELINE-R1` is now a mandatory refinement of the parent Work Order and applies to this MVP5 leaf. MVP5 must therefore prove all three baseline sub-gates on the same live two-client composition path used by the product scene:
+
+```text
+LIVE_TOOL_GATED_DIG_TO_CANONICAL_OUTPUT
+OUTPUT_EXACTLY_ONCE_UNDER_REPLAY
+NO_SECOND_ITEM_IDENTITY_FOR_DUPLICATE_OPERATION
+```
+
+A backend-only receipt PASS, synthetic Item Graph mutation, local HUD counter or test-owned inventory truth is not sufficient to close MVP5. The existing MVP5 graphical/native accounting evidence remains the implementation route; this binding does not expand MVP5 into MVP6 item lifecycle, seam carry, Construction or restart recovery. Those remain later mandatory leaves of the same whole-MVP live simulator baseline.
+
+Binding sources:
+
+- `docs/control/mvp-act0-r1/MVP_LIVE_SIMULATOR_BASELINE_R1_RU.md`
+- `docs/control/mvp-act0-r1/mvp-live-simulator-baseline-r1.v1.json`
+- parent Work Order `V0-MVP-R1-WO-001`
+
 ## Problem and existing behavior
 
 MVP4 already commits through the existing MW4/MW6/P7 path and invokes `P7MatterMaterialDeliveryCoordinator`. Its response does not expose the canonical Item Graph output to clients, and the graphical gate proves terrain, not material accounting. Matter commit and Item Graph delivery are separate effects: an output-port error must not turn a retry into a second carve or a second item.
