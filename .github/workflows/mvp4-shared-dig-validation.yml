@@ -8,7 +8,7 @@ permissions:
   actions: read
 concurrency:
   group: mvp4-shared-dig-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 jobs:
   exact:
     if: github.repository == 'rootfabric/distributed-world-simulator' && github.ref == 'refs/heads/feature/v0-mvp-playable-seamless-planet-r1' && (github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[mvp4-evidence]'))
