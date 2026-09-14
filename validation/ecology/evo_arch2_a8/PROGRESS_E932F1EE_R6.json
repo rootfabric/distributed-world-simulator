@@ -1,0 +1,62 @@
+{
+  "schema": "dws.ecology.a8.validation-progress.v1",
+  "checkpoint": "ECO_ARCH2_A8_SNAPSHOT_SEAM",
+  "state": "VERIFYING_VALIDATION_REPAIR_R5",
+  "source": {
+    "branch": "feature/eco-evo-arch2-a8-snapshot-seam-r1",
+    "head": "e932f1ee547db2476d8fc95d235982555e115486",
+    "tree": "04b217ff7acfcd6336490f139f9239a7f6b59b7d",
+    "base_main": "9e10e640ffc53f82195f1fd930ebafbbc85e482f",
+    "base_tree": "27c62c3774117c5163d0d5dacf789b1310638a92"
+  },
+  "repair_chain": {
+    "repair_r1_external_anchor": "4062bf862094cb6b3a5819d4517387a1b66846ce",
+    "validation_r2_recreate_exact_dir": "98f1e40b9a846da186b2556e9f6f726260cd1c45",
+    "validation_r3_preserve_store_log": "3a95f13d2ee0f2f8770121295b0e8ef2c5aa5833",
+    "runtime_r4_string_context_keys": "0c41ac2c9aa3cac68891edf9cd5c66487299bca4",
+    "validation_r5_reject_optimized_python": "611661d83451c905a43cdf91988d584ca55be200",
+    "work_order_anchor": "e932f1ee547db2476d8fc95d235982555e115486"
+  },
+  "review_findings_repaired": [3999708328, 4004292501, 4004424301],
+  "current_project_control": {
+    "run": 34835484513,
+    "job": 103948219692,
+    "status": "IN_PROGRESS"
+  },
+  "fresh_review": {
+    "request_comment": 5662858724,
+    "subject_head": "e932f1ee547db2476d8fc95d235982555e115486",
+    "status": "RUNNING"
+  },
+  "exact_r6": {
+    "validation_branch": "validation/eco-arch2-a8-exact-r6",
+    "workflow_commit": "20c59e4b2ffe96002d625df41648eba32ed3390a",
+    "run": 34835588608,
+    "preflight_job": 103948538169,
+    "preflight_conclusion": "success",
+    "preflight_artifact": 10342914675,
+    "preflight_artifact_sha256": "8bc6e415257631f8c36ca4ffe18e03e851e89376ac9e780a4dd6869b9c2b13b9",
+    "preflight_diff_sha256": "923a846a7eb4e44de93e8ea7cdefe27f25ff16e88d064a80235203194f35c74c",
+    "preflight_store_log_sha256": "b03b83c383e8410df44848a036a1a42d39e7014ef2ec5c2a63a32b9142385a72",
+    "optimized_reject_log_sha256": "42fd80694d3e28a2a8eb30bf047dd68725bd262c5b3ea785f0ea7fda12c41cc1",
+    "summary_sha256": "abb8db4ebe92702b352f01a4cf3d012274f029fafa0e572c1c7e3a16525d0069",
+    "store_tests": 31,
+    "optimized_python_rejected": true,
+    "linux_job": 103948600089,
+    "linux_status": "QUEUED_BEHIND_STALE_R5_AT_ANCHOR_TIME"
+  },
+  "stale_runs": [34759532239, 34833409550, 34834147104, 34834738849],
+  "claims": {
+    "validation_repair_r5_implemented": true,
+    "r6_preflight_pass": true,
+    "current_project_control_pass": false,
+    "fresh_review_pass": false,
+    "full_exact_linux_pass": false,
+    "accepted": false,
+    "merge_ready": false,
+    "main_merge": false,
+    "a9_started": false,
+    "a10_started": false
+  },
+  "resume": "REFETCH_PR630_SOURCE_E932F1EE_RUN34835588608_REVIEW_COMMENT5662858724_PC_RUN34835484513; TREAT_R5_AND_PRIOR_RUNS_AS_HISTORICAL; STOP_BEFORE_MAIN_MERGE"
+}
