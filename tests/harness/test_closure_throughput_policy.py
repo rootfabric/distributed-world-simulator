@@ -1,15 +1,20 @@
 from __future__ import annotations
 
+import copy
 import json
+import sys
 import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT / "scripts"))
+
+from harness.contracts import ContractBundle, ContractValidationError
+
 POLICY = "config/control/harness/closure-throughput-policy.v1.json"
 CATALOG = "config/control/harness/checkpoint-catalog.v1.json"
 WO = "config/control/harness/executions/E2026-09-09-V0-MVP-R1/work-orders/V0-MVP-R1-WO-001.v1.json"
-REPAIR_WO = "config/control/harness/executions/E2026-09-09-V0-MVP-R1/work-orders/V0-MVP-R1-WO-002.v1.json"
-EPOCH = "config/control/harness/executions/E2026-09-09-V0-MVP-R1/project-epoch.v1.json"
+REJECTED_REPAIR_WO = "config/control/harness/executions/E2026-09-09-V0-MVP-R1/work-orders/V0-MVP-R1-WO-002.v1.json"
 WORKFLOW = ".github/workflows/mvp4-shared-dig-validation.yml"
 VALIDATION_WORKFLOW = ".github/workflows/harness-closure-throughput-validation.yml"
 CHECKPOINT = "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE"
@@ -24,21 +29,51 @@ class ClosureThroughputPolicyTests(unittest.TestCase):
         policy = load(POLICY)["acceptance_refinement"]
         catalog = load(CATALOG)["checkpoints"][CHECKPOINT]["required_predicates"]
         required = load(WO)["required_predicates"]
-        self.assertEqual("ORDERED_SUBSEQUENCE_OF_WORK_ORDER_REQUIRED_PREDICATES", policy["catalog_required_predicates_relation"])
+        self.assertEqual(
+            "ORDERED_SUBSEQUENCE_OF_WORK_ORDER_REQUIRED_PREDICATES",
+            policy["catalog_required_predicates_relation"],
+        )
         self.assertTrue(policy["work_order_extra_predicates_allowed"])
         self.assertTrue(policy["catalog_predicate_removal_forbidden"])
         self.assertTrue(policy["catalog_predicate_reorder_forbidden"])
+        self.assertTrue(policy["production_validator_required"])
         self.assertEqual(len(required), len(set(required)), "required predicates must be unique")
         positions = [required.index(predicate) for predicate in catalog]
         self.assertEqual(positions, sorted(positions), "catalog predicates must remain an ordered subsequence")
         self.assertGreaterEqual(len(required), len(catalog))
 
-    def test_repair_work_order_matches_declared_epoch_identity(self) -> None:
-        epoch = load(EPOCH)
-        work_order = load(REPAIR_WO)
-        self.assertEqual(epoch["epoch_id"], work_order["project_epoch"])
-        self.assertEqual(epoch["base_sha"], work_order["base_sha"])
-        self.assertIn(work_order["goal_checkpoint"], epoch["eligible_checkpoints"])
+    def test_only_parent_product_work_order_remains_active(self) -> None:
+        self.assertTrue((ROOT / WO).is_file())
+        self.assertFalse((ROOT / REJECTED_REPAIR_WO).exists())
+        work_orders = sorted((ROOT / "config/control/harness/executions/E2026-09-09-V0-MVP-R1/work-orders").glob("*.json"))
+        ids = [load(path.relative_to(ROOT).as_posix())["work_order_id"] for path in work_orders]
+        self.assertEqual(["V0-MVP-R1-WO-001"], ids)
+
+    def test_production_work_order_validator_rejects_catalog_gate_removal_and_reorder(self) -> None:
+        bundle = ContractBundle.load(ROOT)
+        work_order = load(WO)
+        catalog = bundle.contracts["checkpoint_catalog"]["checkpoints"][CHECKPOINT]["required_predicates"]
+        bundle.validate("work_order_schema", work_order, "current-parent-work-order")
+
+        missing = copy.deepcopy(work_order)
+        missing["required_predicates"].remove(catalog[0])
+        with self.assertRaisesRegex(ContractValidationError, "WORK_ORDER_CATALOG_PREDICATE_MISSING"):
+            bundle.validate("work_order_schema", missing, "missing-catalog-gate")
+
+        reordered = copy.deepcopy(work_order)
+        first = reordered["required_predicates"].index(catalog[0])
+        second = reordered["required_predicates"].index(catalog[1])
+        reordered["required_predicates"][first], reordered["required_predicates"][second] = (
+            reordered["required_predicates"][second],
+            reordered["required_predicates"][first],
+        )
+        with self.assertRaisesRegex(ContractValidationError, "WORK_ORDER_CATALOG_PREDICATE"):
+            bundle.validate("work_order_schema", reordered, "reordered-catalog-gates")
+
+        duplicated = copy.deepcopy(work_order)
+        duplicated["required_predicates"].append(duplicated["required_predicates"][0])
+        with self.assertRaisesRegex(ContractValidationError, "WORK_ORDER_REQUIRED_PREDICATES_NOT_UNIQUE"):
+            bundle.validate("work_order_schema", duplicated, "duplicate-predicate")
 
     def test_freeze_then_fanout_keeps_single_runtime_writer(self) -> None:
         fanout = load(POLICY)["freeze_then_fanout"]
@@ -56,15 +91,18 @@ class ClosureThroughputPolicyTests(unittest.TestCase):
             set(fanout["parallel_read_only_gates"]),
         )
 
-    def test_superseded_pre_freeze_validation_is_cancelled_but_terminal_failures_remain_evidence(self) -> None:
+    def test_only_explicit_pre_freeze_validation_may_cancel_stale_runs(self) -> None:
         policy = load(POLICY)["superseded_validation"]
-        self.assertTrue(policy["pre_freeze_in_progress_run_may_cancel_when_newer_subject_arrives"])
-        self.assertTrue(policy["queued_run_for_older_subject_may_cancel"])
+        self.assertTrue(policy["explicit_pre_freeze_workflow_may_cancel_in_progress"])
+        self.assertTrue(policy["queued_pre_freeze_run_for_older_subject_may_cancel"])
+        self.assertTrue(policy["mixed_or_frozen_required_gate_workflow_must_not_cancel_in_progress"])
         self.assertTrue(policy["terminal_failure_must_remain_visible"])
         self.assertTrue(policy["frozen_subject_required_gate_must_run_to_terminal"])
-        for workflow in (WORKFLOW, VALIDATION_WORKFLOW):
-            text = (ROOT / workflow).read_text(encoding="utf-8")
-            self.assertIn("cancel-in-progress: true", text, workflow)
+        mixed = (ROOT / WORKFLOW).read_text(encoding="utf-8")
+        prefreeze = (ROOT / VALIDATION_WORKFLOW).read_text(encoding="utf-8")
+        self.assertIn("cancel-in-progress: false", mixed)
+        self.assertNotIn("cancel-in-progress: true", mixed)
+        self.assertIn("cancel-in-progress: true", prefreeze)
 
     def test_unavailable_preferred_verifier_fails_forward_without_self_verification(self) -> None:
         verifier = load(POLICY)["verifier_fallback"]
