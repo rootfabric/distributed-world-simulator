@@ -101,8 +101,16 @@ jobs:
           test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
           test -z "$(git status --porcelain --untracked-files=no)"
           git fetch origin '+refs/heads/*:refs/remotes/origin/*' --prune
+          # CONTROL_DEVELOPMENT is branch-sensitive. Bind the declared local
+          # MVP branch to the already pinned exact SHA; this does not move any
+          # remote ref or change product bytes.
+          git switch -C feature/v0-mvp-playable-seamless-planet-r1 "$EXPECTED_HEAD"
+          test "$(git branch --show-current)" = feature/v0-mvp-playable-seamless-planet-r1
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+          test -z "$(git status --porcelain --untracked-files=no)"
           mkdir -p artifacts/mvp4-control-drive
           git rev-parse HEAD HEAD^{tree} origin/main > artifacts/mvp4-control-drive/subjects.txt
+          git branch --show-current >> artifacts/mvp4-control-drive/subjects.txt
       - name: Install pinned Harness dependencies
         shell: bash
         run: |
@@ -124,6 +132,8 @@ jobs:
           pwsh -NoProfile -File ./CONTROL_DEVELOPMENT.ps1 -Status 2>&1 | tee artifacts/mvp4-control-drive/status.log
           pwsh -NoProfile -File ./CONTROL_DEVELOPMENT.ps1 -Resume 2>&1 | tee artifacts/mvp4-control-drive/resume.log
           pwsh -NoProfile -File ./CONTROL_DEVELOPMENT.ps1 -Drive 2>&1 | tee artifacts/mvp4-control-drive/drive.log
+          test "$(git branch --show-current)" = feature/v0-mvp-playable-seamless-planet-r1
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
           test -z "$(git status --porcelain --untracked-files=no)"
       - name: Bind control-drive evidence
         if: always()
@@ -136,7 +146,7 @@ jobs:
           files=[]
           for p in sorted(out.rglob('*')):
               if p.is_file() and p!=out/'manifest.json': files.append({'path':p.relative_to(out).as_posix(),'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()})
-          m={'schema':'distributed_world_simulator.mvp4_control_drive_exact.v1','subject_head':git('rev-parse','HEAD'),'subject_tree':git('rev-parse','HEAD^{tree}'),'canonical_main':git('rev-parse','origin/main'),'run_id':os.environ['GITHUB_RUN_ID'],'run_attempt':os.environ['GITHUB_RUN_ATTEMPT'],'tracked_after':git('status','--porcelain','--untracked-files=no'),'mvp4_predicate_verified':False,'files':files}
+          m={'schema':'distributed_world_simulator.mvp4_control_drive_exact.v1','subject_head':git('rev-parse','HEAD'),'subject_tree':git('rev-parse','HEAD^{tree}'),'subject_branch':git('branch','--show-current'),'canonical_main':git('rev-parse','origin/main'),'run_id':os.environ['GITHUB_RUN_ID'],'run_attempt':os.environ['GITHUB_RUN_ATTEMPT'],'tracked_after':git('status','--porcelain','--untracked-files=no'),'mvp4_predicate_verified':False,'files':files}
           (out/'manifest.json').write_text(json.dumps(m,indent=2)+'\n')
           PY
       - uses: actions/upload-artifact@v4
