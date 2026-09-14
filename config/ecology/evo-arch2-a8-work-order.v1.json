@@ -52,6 +52,18 @@
     "stale_exact_job": 103941761812,
     "prior_review_and_exact_status": "STALE_AFTER_VALIDATION_SOURCE_REPAIR"
   },
+  "runtime_repair_r4": {
+    "diagnostic_run": 34833409550,
+    "diagnostic_job": 103941761812,
+    "failed_marker": "EVO_ARCH2_A8_EXACT assertions=204 failed=31",
+    "failure_class": "SNAPSHOT_READY_CONTEXT_KEY_TYPE_MISMATCH",
+    "root_cause": "A8 added new SNAPSHOT_READY context fields with GDScript dictionary dot assignment. Those newly-created keys reached the canonical handoff state machine as StringName keys, while the canonical contract rejects every context key whose runtime type is not TYPE_STRING. SNAPSHOT_READY therefore failed with UNEXPECTED_TRANSITION_CONTEXT and the remaining A8 core failures cascaded from the unadvanced ticket.",
+    "repair_commit": "0c41ac2c9aa3cac68891edf9cd5c66487299bca4",
+    "repair_scope": "scripts/research/ecology/v2/snapshot_seam_v1.gd only; canonical handoff_ticket.gd and handoff_state_machine.gd remain byte-identical to main.",
+    "canonical_fix": "Create snapshot_hash and snapshot_id with explicit bracketed String dictionary keys before calling the canonical machine, preserving the canonical context type contract.",
+    "stale_exact_run": 34834147104,
+    "prior_review_project_control_and_exact_status": "STALE_AFTER_RUNTIME_SOURCE_REPAIR"
+  },
   "scope": "Bounded full coupled A7 partition snapshot, canonical ticket handoff consumer, restart-safe command receipts and Linux durable CAS byte store with caller-owned external durable head anchors. Not production network activation or individual wet/dry transplantation.",
   "existing_owners_consumed_unchanged": [
     "scripts/research/ecology/v2/observatory_session_v1.gd",
@@ -106,11 +118,11 @@
     "EVIDENCE_BYTES_HASHES_AND_SUBJECT_BINDING_VERIFIED"
   ],
   "bounds": {"ecological_horizon": 16, "commands": 96, "ticket_ids": 8, "snapshot_bytes": 2097152, "production_claim": false},
-  "state": "VERIFYING_REPAIR_R3",
+  "state": "VERIFYING_RUNTIME_REPAIR_R4",
   "resume_anchor": {
-    "last_completed_predicate": "VALIDATION_REPAIR_R3_PRESERVES_STORE_CONTROL_EVIDENCE_BYTES",
-    "next_action": "FREEZE_REPAIR_R3_HEAD_TREE_THEN_RUN_CURRENT_SOURCE_PROJECT_CONTROL_FRESH_WHOLE_A8_REVIEW_AND_FULL_EXACT_LINUX_R4",
-    "allowed_recovery_route": "GitHub connector for source/evidence; repository-owned CI for exact execution; refetch PR #630 and R4 validation run by durable IDs",
+    "last_completed_predicate": "RUNTIME_REPAIR_R4_EXPLICIT_STRING_CONTEXT_KEYS_IMPLEMENTED",
+    "next_action": "FREEZE_RUNTIME_REPAIR_R4_HEAD_TREE_THEN_RUN_CURRENT_SOURCE_PROJECT_CONTROL_FRESH_WHOLE_A8_REVIEW_AND_FULL_EXACT_LINUX_R5",
+    "allowed_recovery_route": "GitHub connector for source/evidence; repository-owned CI for exact execution; refetch PR #630 and R5 validation run by durable IDs",
     "stop_before": "MAIN_MERGE"
   }
 }
