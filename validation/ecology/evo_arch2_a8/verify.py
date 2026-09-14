@@ -177,7 +177,9 @@ def main() -> int:
         req(sha(args.godot) == GODOT_SHA, "GODOT_SHA")
         req(subprocess.check_output([str(args.godot),"--version"],text=True).strip() == GODOT_VERSION, "GODOT_VERSION")
         summary["godot"] = {"version":GODOT_VERSION,"sha256":GODOT_SHA}
-        shutil.rmtree(ROOT/".godot",ignore_errors=True); shutil.rmtree(ROOT/"artifacts/a8",ignore_errors=True)
+        shutil.rmtree(ROOT/".godot",ignore_errors=True)
+        shutil.rmtree(ROOT/"artifacts/a8",ignore_errors=True)
+        out.mkdir(parents=True,exist_ok=True)
         run("cold-import", [str(args.godot),"--headless","--audio-driver","Dummy","--editor","--path",str(ROOT),"--import"], timeout=300)
 
         core1 = run("a8-core-1", gd("tests/research/ecology/v2/arch2_a8_acceptance.gd"), "EVO_ARCH2_A8_EXACT", timeout=600)
