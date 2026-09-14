@@ -1,0 +1,63 @@
+{
+  "schema": "dws.ecology.a8.validation-progress.v1",
+  "checkpoint": "ECO_ARCH2_A8_SNAPSHOT_SEAM",
+  "state": "VERIFYING_RUNTIME_REPAIR_R4",
+  "source": {
+    "branch": "feature/eco-evo-arch2-a8-snapshot-seam-r1",
+    "head": "f01c7508676add3705894b938303f354c287e1ff",
+    "tree": "d8b9aafab431e29d39789899fae9c0121a429cb7",
+    "base_main": "9e10e640ffc53f82195f1fd930ebafbbc85e482f",
+    "base_tree": "27c62c3774117c5163d0d5dacf789b1310638a92"
+  },
+  "repair_chain": {
+    "repair_r1_external_anchor": "4062bf862094cb6b3a5819d4517387a1b66846ce",
+    "validation_r2_recreate_exact_dir": "98f1e40b9a846da186b2556e9f6f726260cd1c45",
+    "validation_r3_preserve_store_log": "3a95f13d2ee0f2f8770121295b0e8ef2c5aa5833",
+    "runtime_r4_string_context_keys": "0c41ac2c9aa3cac68891edf9cd5c66487299bca4",
+    "work_order_anchor": "f01c7508676add3705894b938303f354c287e1ff"
+  },
+  "runtime_r4_root_cause": {
+    "diagnostic_run": 34833409550,
+    "diagnostic_job": 103941761812,
+    "first_failure": "SNAPSHOT_READY -> A8_HANDOFF:UNEXPECTED_TRANSITION_CONTEXT",
+    "cascade_failures": 31,
+    "fix": "Use explicit String dictionary keys for snapshot_hash and snapshot_id before canonical handoff transition."
+  },
+  "current_project_control": {
+    "run": 34834639370,
+    "job": 103945572522,
+    "conclusion": "success",
+    "artifact": 10342779132,
+    "artifact_digest": "sha256:0f88224757c1e500c9c7fdd0370da8aca3d87f25bb5378e17bda8f287c0ba237"
+  },
+  "fresh_review": {
+    "request_comment": 5662737509,
+    "subject_head": "f01c7508676add3705894b938303f354c287e1ff",
+    "status": "RUNNING"
+  },
+  "exact_r5": {
+    "validation_branch": "validation/eco-arch2-a8-exact-r5",
+    "workflow_commit": "1b47ef86d578378be24c29617716f293d79f6b5a",
+    "run": 34834738849,
+    "preflight_job": 103945880387,
+    "preflight_conclusion": "success",
+    "preflight_artifact": 10342883734,
+    "preflight_artifact_digest": "sha256:6a5fd262f29e115d0262f911de723cc7e3e403fb5e4b6a84aead2967ed7221b0",
+    "linux_job": 103945945405,
+    "linux_status": "QUEUED_BEHIND_STALE_R4_AT_ANCHOR_TIME"
+  },
+  "stale_runs": [34759532239, 34833409550, 34834147104],
+  "claims": {
+    "runtime_repair_r4_implemented": true,
+    "project_control_current_source_pass": true,
+    "r5_preflight_pass": true,
+    "fresh_review_pass": false,
+    "full_exact_linux_pass": false,
+    "accepted": false,
+    "merge_ready": false,
+    "main_merge": false,
+    "a9_started": false,
+    "a10_started": false
+  },
+  "resume": "REFETCH_PR630_SOURCE_F01C7508_RUN34834738849_REVIEW_COMMENT5662737509; TREAT_ALL_PRIOR_SOURCE_EVIDENCE_AS_HISTORICAL; STOP_BEFORE_MAIN_MERGE"
+}
