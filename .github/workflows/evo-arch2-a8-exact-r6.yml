@@ -96,7 +96,7 @@ jobs:
     needs: preflight
     if: github.actor == 'rootfabric' && github.repository == 'rootfabric/distributed-world-simulator'
     runs-on: [self-hosted, Linux, X64]
-    timeout-minutes: 60
+    timeout-minutes: 240
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
