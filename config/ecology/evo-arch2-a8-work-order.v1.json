@@ -39,6 +39,19 @@
     "canonical_fix": "Preserve the intended clean artifacts/a8 slate, then recreate artifacts/a8/exact before the first post-cleanup verifier log write.",
     "prior_review_and_exact_status": "STALE_AFTER_VALIDATION_SOURCE_REPAIR"
   },
+  "validation_repair_r3": {
+    "reviewed_head": "1529e0a38d99bcbfa9a9806215e0d07ffba46c43",
+    "finding": 4004292501,
+    "severity": "P1",
+    "failure_class": "STORE_CONTROL_LOG_REMOVED_BEFORE_EVIDENCE_UPLOAD",
+    "root_cause": "Repair R2 recreated artifacts/a8/exact after cleanup but the already-passed 31-control log and its recorded SHA-256 were lost when the parent artifacts/a8 tree was removed, so a later PASS could reference evidence bytes absent from the uploaded artifact.",
+    "repair_commit": "3a95f13d2ee0f2f8770121295b0e8ef2c5aa5833",
+    "repair_scope": "validation/ecology/evo_arch2_a8/verify.py only; no runtime/store/ticket/handoff or accepted-main semantics changed.",
+    "canonical_fix": "Retain the exact store-control log bytes before cleanup, recreate the evidence directory, restore the bytes and fail closed unless the restored SHA-256 equals the already-recorded store-control digest.",
+    "stale_exact_run": 34833409550,
+    "stale_exact_job": 103941761812,
+    "prior_review_and_exact_status": "STALE_AFTER_VALIDATION_SOURCE_REPAIR"
+  },
   "scope": "Bounded full coupled A7 partition snapshot, canonical ticket handoff consumer, restart-safe command receipts and Linux durable CAS byte store with caller-owned external durable head anchors. Not production network activation or individual wet/dry transplantation.",
   "existing_owners_consumed_unchanged": [
     "scripts/research/ecology/v2/observatory_session_v1.gd",
@@ -93,11 +106,11 @@
     "EVIDENCE_BYTES_HASHES_AND_SUBJECT_BINDING_VERIFIED"
   ],
   "bounds": {"ecological_horizon": 16, "commands": 96, "ticket_ids": 8, "snapshot_bytes": 2097152, "production_claim": false},
-  "state": "VERIFYING_REPAIR_R2",
+  "state": "VERIFYING_REPAIR_R3",
   "resume_anchor": {
-    "last_completed_predicate": "VALIDATION_REPAIR_R2_IMPLEMENTED_AFTER_EXACT_R2_INFRASTRUCTURE_FAILURE",
-    "next_action": "FREEZE_REPAIR_R2_HEAD_TREE_THEN_RUN_CURRENT_SOURCE_PROJECT_CONTROL_FRESH_WHOLE_A8_REVIEW_AND_FULL_EXACT_LINUX_R3",
-    "allowed_recovery_route": "GitHub connector for source/evidence; repository-owned CI for exact execution; refetch PR #630 and R3 validation run by durable IDs",
+    "last_completed_predicate": "VALIDATION_REPAIR_R3_PRESERVES_STORE_CONTROL_EVIDENCE_BYTES",
+    "next_action": "FREEZE_REPAIR_R3_HEAD_TREE_THEN_RUN_CURRENT_SOURCE_PROJECT_CONTROL_FRESH_WHOLE_A8_REVIEW_AND_FULL_EXACT_LINUX_R4",
+    "allowed_recovery_route": "GitHub connector for source/evidence; repository-owned CI for exact execution; refetch PR #630 and R4 validation run by durable IDs",
     "stop_before": "MAIN_MERGE"
   }
 }
