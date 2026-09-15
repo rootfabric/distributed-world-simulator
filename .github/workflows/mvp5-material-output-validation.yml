@@ -73,6 +73,26 @@ jobs:
           test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
           test "$(git rev-parse HEAD^{tree})" = "$EXPECTED_TREE"
           test -z "$(git status --porcelain --untracked-files=no)"
+      - name: Record actual CloseRole and CloseMission diagnostics without accepting mission
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json,pathlib,subprocess
+          out=pathlib.Path('artifacts/mvp5-control-drive')
+          gates=[]
+          for flag,normal_exits in [('-CloseRole',(0,7)),('-CloseMission',(0,8))]:
+              command=['pwsh','-NoProfile','-File','./CONTROL_DEVELOPMENT.ps1',flag]
+              p=subprocess.run(command,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True,timeout=120)
+              (out/(flag[1:].lower()+'.log')).write_text(p.stdout,encoding='utf-8')
+              gates.append({'command':command,'exit_code':p.returncode,'expected_policy_exit':p.returncode in normal_exits,'exit_authorized_by_process':p.returncode==0})
+          result={'schema':'distributed_world_simulator.mvp5_close_gate_diagnostic.v1','gates':gates,'mission_complete_claimed':False,'mvp5_predicate_verified':False,'diagnostic_only':True}
+          (out/'close-gates.json').write_text(json.dumps(result,indent=2)+'\n')
+          print(json.dumps(result))
+          raise SystemExit(0 if all(g['expected_policy_exit'] for g in gates) else 1)
+          PY
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+          test "$(git rev-parse HEAD^{tree})" = "$EXPECTED_TREE"
+          test -z "$(git status --porcelain --untracked-files=no)"
       - name: Bind driver provenance and exact product evidence
         if: always()
         shell: bash
