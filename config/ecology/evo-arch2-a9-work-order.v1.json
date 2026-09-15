@@ -1,0 +1,65 @@
+{
+  "schema": "dws.ecology.research-work-order.v1",
+  "id": "EVO-ARCH2-A9-20260915-R1",
+  "checkpoint": "ECO_ARCH2_A9_ECOLOGICAL_FIDELITY",
+  "risk": "HIGH",
+  "authorization": "User explicitly requested A9 implementation. Scoped code, tests, bounded repairs, CI, draft PR and independent review are authorized; merge and A10 activation remain separate human gates.",
+  "branch": "feature/eco-evo-arch2-a9-fidelity-r1",
+  "project_epoch": {
+    "main": "675c04bb213bbb68b8cdb500d540d57ce1490318",
+    "tree": "04b217ff7acfcd6336490f139f9239a7f6b59b7d",
+    "registry_generation": 82,
+    "architecture_revision": "GLOBAL-P0-2026-08-12-R3-REFRESH-R1",
+    "a8_pr": 630,
+    "a8_exact_run": 34835588608,
+    "a8_postmerge_pc_run": 34849654191,
+    "a8_postmerge_pc_result": "success"
+  },
+  "design": "docs/research/ecology/EVO_ARCH2_A9_FIDELITY_R1_RU.md",
+  "design_commit": "febdf1dbacd0ca598f92fcf41475839f77f4eb0a",
+  "scope": "Conservative FULL/REDUCED/PATCH/AGGREGATE representation and refinement contracts, independent presentation options, A8-native admission/commands, durable anchored persistence and bounded aggregation. Lossy active population dynamics are not invented; unsupported coarse advancement returns REFINEMENT_REQUIRED.",
+  "allowed_additions": [
+    "config/ecology/evo-arch2-a9-work-order.v1.json",
+    "docs/research/ecology/EVO_ARCH2_A9_FIDELITY_R1_RU.md",
+    "scripts/research/ecology/v2/ecological_fidelity_v1.py",
+    "scripts/research/ecology/v2/fidelity_runtime_v1.py",
+    "scripts/research/ecology/v2/fidelity_admission_v1.gd",
+    "validation/ecology/evo_arch2_a9/test_fidelity.py",
+    "validation/ecology/evo_arch2_a9/integration.py",
+    "validation/ecology/evo_arch2_a9/verify.py"
+  ],
+  "forbidden": [
+    "Modify any pre-existing main-owned file",
+    "Change A0-A8 biological, persistence or authority semantics",
+    "Create a new global Authority, Region, Matter, Scheduler or resource writer",
+    "Derive historical individuals from aggregate totals or a new random seed",
+    "Declare renderer LOD to be ecological fidelity",
+    "Claim coarse biological stepping or million-organism runtime from representation-only evidence",
+    "Force push, direct main push, main merge or A10/A11 activation"
+  ],
+  "required_predicates": [
+    "EXACT_CURRENT_MAIN_AND_ADDITIVE_SCOPE",
+    "REAL_A8_SEMANTIC_ADMISSION",
+    "FULL_REDUCED_BYTE_EXACT_ROUNDTRIP",
+    "PATCH_AGGREGATE_EXPLICIT_LOSS_AND_REFINEMENT_REQUIREMENT",
+    "EXTERNAL_EXACT_STATE_REQUIRED_FOR_HISTORICAL_REFINEMENT",
+    "CONSERVATION_COUNTS_COHORT_AND_FIELD_BINDINGS",
+    "RENDER_OPTIONS_CANNOT_CHANGE_BIOLOGY_OR_FIDELITY",
+    "BOUNDED_DECOMPRESSION_INPUTS_AND_AGGREGATION",
+    "DUPLICATE_PARTITION_AND_MIXED_EPOCH_DOUBLE_COUNT_REJECTED",
+    "A8_NATIVE_COMMAND_AND_SEAM_COMPATIBILITY",
+    "DURABLE_PACKET_ANCHORS_AND_FRESH_PROCESS_RESTART",
+    "SYNTHETIC_SCALE_SEPARATE_FROM_REAL_BIOLOGY",
+    "FULL_INHERITED_A0_A8_REGRESSIONS_AND_GRAPHICS",
+    "FULL_HARNESS_NO_SKIPS_AND_EXPLICIT_NON_RED_AUDITS",
+    "FRESH_INDEPENDENT_WHOLE_HEAD_REVIEW",
+    "EVIDENCE_HASHES_SUBJECT_BINDING_AND_POST_BUILD_CRITIQUE"
+  ],
+  "state": "IN_PROGRESS",
+  "resume_anchor": {
+    "last_completed_predicate": "FRESH_MAIN_BRANCH_DESIGN_AND_WORK_ORDER",
+    "next_action": "IMPLEMENT_KERNEL_NATIVE_ADMISSION_RUNTIME_AND_TESTS_THEN_FREEZE_EXACT_LINUX_REVIEW",
+    "allowed_recovery_route": "GitHub connector for commits; local contract tests and repository-owned self-hosted Linux for actual Godot; separate validation branch for evidence",
+    "stop_before": "MAIN_MERGE"
+  }
+}
