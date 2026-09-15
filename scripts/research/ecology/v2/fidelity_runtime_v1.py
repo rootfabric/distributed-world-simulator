@@ -92,5 +92,7 @@ class NativeA8:
     def restore(self, packet: bytes, expected_packet_sha: str, expected_origin: str) -> FidelityRecord:
         record = FidelityRecord.restore(packet, expected_packet_sha, expected_origin)
         if record.mode in ('FULL', 'REDUCED'):
-            record = record.refine(record.execution_snapshot(), self.admit).convert(record.mode)
+            # Validate semantics without re-encoding an already acknowledged packet.
+            # Valid zlib streams may differ across compression levels/versions.
+            record.refine(record.execution_snapshot(), self.admit)
         return record
