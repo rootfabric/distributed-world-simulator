@@ -11,8 +11,14 @@ permissions:
 
 jobs:
   exact-linux-double:
+    name: exact-linux-double-repeat-${{ matrix.repeat }}
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        repeat: [1, 2]
     runs-on: [self-hosted, Linux, X64]
-    timeout-minutes: 180
+    timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
         with:
@@ -36,25 +42,23 @@ jobs:
           echo 'BREAKPOINT_RUNTIME_DISABLED=1' >> "$GITHUB_ENV"
           echo '*.gd.uid' >> .git/info/exclude
           mkdir -p artifacts/b0_6
-          echo "PRODUCT_HEAD=$(git rev-parse HEAD) PRODUCT_TREE=$(git rev-parse 'HEAD^{tree}')"
+          echo "PRODUCT_HEAD=$(git rev-parse HEAD) PRODUCT_TREE=$(git rev-parse 'HEAD^{tree}') REPEAT=${{ matrix.repeat }}"
           echo "CONTROL_TRIGGER_SHA=$GITHUB_SHA"
       - name: Fresh import
         shell: bash
         run: |
           set -Eeuo pipefail
           rm -rf .godot
-          "$GODOT_BIN" --headless --editor --path . --import 2>&1 | tee artifacts/b0_6/import.log
-          python3 scripts/research/fabric_bake0/validate_adaptive_import.py artifacts/b0_6/import.log
-      - name: Exact suite twice
+          "$GODOT_BIN" --headless --editor --path . --import 2>&1 | tee artifacts/b0_6/import-${{ matrix.repeat }}.log
+          python3 scripts/research/fabric_bake0/validate_adaptive_import.py artifacts/b0_6/import-${{ matrix.repeat }}.log
+      - name: Exact closure
         shell: bash
         run: |
           set -Eeuo pipefail
-          B06_LOG_DIR="$PWD/artifacts/b0_6/closure-1" bash ./RUN_FABRIC_B0_6_CLOSE_TESTS.sh 2>&1 | tee artifacts/b0_6/close-1.log
-          B06_LOG_DIR="$PWD/artifacts/b0_6/closure-2" bash ./RUN_FABRIC_B0_6_CLOSE_TESTS.sh 2>&1 | tee artifacts/b0_6/close-2.log
-          diff <(grep '^B06_CLOSURE_HASH=' artifacts/b0_6/close-1.log) <(grep '^B06_CLOSURE_HASH=' artifacts/b0_6/close-2.log)
+          repeat='${{ matrix.repeat }}'
+          B06_LOG_DIR="$PWD/artifacts/b0_6/closure-$repeat" bash ./RUN_FABRIC_B0_6_CLOSE_TESTS.sh 2>&1 | tee "artifacts/b0_6/close-$repeat.log"
           expected='B06_CLOSURE_HASH=892a66dbcb9e29c99ba7088a03dd41c167fd728a6f97923d4e944e4aef682584'
-          test "$(grep '^B06_CLOSURE_HASH=' artifacts/b0_6/close-1.log | tail -n1)" = "$expected"
-          test "$(grep '^B06_CLOSURE_HASH=' artifacts/b0_6/close-2.log | tail -n1)" = "$expected"
+          test "$(grep '^B06_CLOSURE_HASH=' "artifacts/b0_6/close-$repeat.log" | tail -n1)" = "$expected"
       - name: Verify clean exact product source
         shell: bash
         run: |
@@ -66,7 +70,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: fabric-b0-6-close-e622-control-${{ github.run_attempt }}
+          name: fabric-b0-6-close-e622-control-${{ github.run_attempt }}-repeat-${{ matrix.repeat }}
           path: artifacts/b0_6/
           if-no-files-found: error
           retention-days: 30
