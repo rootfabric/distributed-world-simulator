@@ -1,57 +1,62 @@
 # EVO ARCH2 A9 — Ecological Fidelity / Render LOD Separation
 
-Дата: 2026-09-15. Work Order `EVO-ARCH2-A9-20260915-R1`. Risk HIGH.
-Статус этой записи: DESIGN, не acceptance.
+Дата: 2026-09-15. Work Order `EVO-ARCH2-A9-20260915-R1`, HIGH. Текущее состояние: REPAIR_R1_CANDIDATE, не acceptance.
 
-## Основание и epoch
+## Основание и владельцы
 
-Явное поручение пользователя: реализовать A9. Fresh branch `feature/eco-evo-arch2-a9-fidelity-r1` создана от `main@675c04bb213bbb68b8cdb500d540d57ce1490318`, TREE `04b217ff7acfcd6336490f139f9239a7f6b59b7d` (A8 merge PR #630). A8 exact R6 `34835588608` PASS; post-merge PC `34849654191` SUCCESS. Registry generation82, architecture `GLOBAL-P0-2026-08-12-R3-REFRESH-R1`. Исходный train: `8eccf6304078bec3a3ccaa5860c5aab6ee311209:docs/research/ecology/EVO_ARCH2_A0_RECONCILIATION_RU.md`.
+Явное поручение пользователя — реализовать A9. Ветка `feature/eco-evo-arch2-a9-fidelity-r1` создана от `main@675c04bb213bbb68b8cdb500d540d57ce1490318`, TREE `04b217ff7acfcd6336490f139f9239a7f6b59b7d`. A8 PR #630 merged; exact R6 `34835588608` PASS; post-merge PC `34849654191` SUCCESS. Registry generation82, architecture `GLOBAL-P0-2026-08-12-R3-REFRESH-R1`.
 
-Прочитаны root routing/control/Harness/review/autonomy/channel-recovery, current registry/goals/catalog, MCP_GODOT и принятые A6/A7/A8 contracts. ECO остаётся отдельным research family; исторический LS4/PLAY1 route не объявляется A9 production activation. Central registry/scheduler/owners не меняются.
+Исходный train: `8eccf6304078bec3a3ccaa5860c5aab6ee311209:docs/research/ecology/EVO_ARCH2_A0_RECONCILIATION_RU.md`. Полный первоначальный Design Brief до реализации сохранён в commit `febdf1dbacd0ca598f92fcf41475839f77f4eb0a`. Эта редакция уточняет фактические границы после review, не подменяет историю design-before-code.
 
-## Проблема и выбранная реализация
+Прочитаны main-owned routing/control/Harness/review/autonomy/channel-recovery, registry/goals/catalog, MCP_GODOT и A6/A7/A8 contracts. ECO остаётся research family. A9 не активирует central registry/scheduler и не создаёт новых владельцев Authority/Region/Matter/ресурсов. A6 исполняет биологию, A8 — consistent cut, handoff и durable store; A9 владеет только представлениями и их admission.
 
-Rendering LOD не является ecological fidelity. Сокращение mesh не разрешает потерять запасы, состояние развития, происхождение или idempotency cursor. С другой стороны, настоящий lossy aggregate не содержит достаточно данных для восстановления исторических особей.
+## Четыре представления
 
-A9 R1 реализует **консервативный representation/control layer поверх A8**, а не новую approximation law для биологии:
-
-| Режим | Сохранено | Исполнение / восстановление |
+| Режим | Сохранённые данные | Исполнение и восстановление |
 |---|---|---|
-| FULL | Полные exact A8 bytes + owner/epoch/cursor + source-bound patch accounts | Команды исполняет неизменный A8/A6 |
-| REDUCED | Те же exact bytes в bounded lossless compression, без постоянно распакованных BodyGraph | Явная распаковка по лимиту, затем тот же A8; не новая биология |
-| PATCH | Per-site conserved accounts, field anchors, counts, blueprint cohorts; полный payload удалён | Exact advance требует refinement; прежние особи возвращаются только из exact externally retained snapshot |
-| AGGREGATE | Общие accounts/counts; spatial/cohort detail удалена, source cursor сохранён | Никакой точной реконструкции из totals; только exact snapshot с соответствующим hash/origin/cursor |
+| FULL | Полные exact A8 bytes, source cursor, patch accounts | Команды исполняет неизменный A8/A6 |
+| REDUCED | Те же exact bytes в bounded lossless zlib/base64 | Явная распаковка, затем тот же A8; это не новая biological approximation |
+| PATCH | Per-site conserved accounts, field anchors/stocks, counts, blueprint cohorts; полного payload нет | Exact advance требует refinement; historical individuals только из exact external snapshot |
+| AGGREGATE | Общие accounts/counts/stocks; spatial/cohort detail удалена; source binding сохранён | Никакой исторической реконструкции из totals или reseeding |
 
-Решение намеренно не обещает дешёвую активную симуляцию всех особей из агрегата. У coarse states отсутствует замкнутый принятый transition kernel: `REFINEMENT_REQUIRED` — проверяемый отказ без продвижения tick, не молчаливый пропуск биологии. Exact stepping доступен FULL/REDUCED через существующий A8. Render options не хранятся в biological packet и никогда не дают полномочий изменять fidelity, owner или tick.
+Rendering DETAIL/SUMMARY/HIDDEN не входит в biological packet и не меняет fidelity, owner, epoch, tick, accounts или hash. Renderer не имеет права незаметно переводить PATCH/AGGREGATE обратно в FULL.
 
-Альтернативы: менять A6 под approximate population dynamics (отклонено: новая научная модель и новые error envelopes); выдавать render-LOD за ecological reduction (отклонено); восстанавливать особей reseeding из aggregate (отклонено: подмена истории). R1 даёт необходимые контракты и границы для последующих cohort dynamics, не объявляет их уже доказанными.
+R1 — консервативный representation/control layer, **не реализация активной coarse population dynamics**. Для lossy state нет принятого замкнутого biological transition kernel: неподдерживаемый exact advance возвращает `REFINEMENT_REQUIRED` до запуска native работы. Это не молчаливый пропуск tick. Компрессия не называется сокращением активного biological state; million-organism throughput не заявлен.
 
-## Source and authority
+Рассмотренные и отклонённые альтернативы: переписать A6 под новую approximation law без error envelopes; выдавать visual LOD за ecological reduction; бесплатно воссоздавать исторические особи из aggregate seed. Последующие cohort dynamics потребуют собственного scientific contract и сравнения ошибок.
 
-GDScript admission bridge загружает настоящий A8 по внешним snapshot/origin anchors и получает отчёт через `A8.observe()` → канонический `A6.balance()`. Python fidelity kernel владеет только упаковкой/проекцией, а не запасами или authority. Native bridge и Python public runtime вместе образуют production entry point этого research слоя; синтетический report в unit tests не считается semantic admission.
+## Admission и сохранение ресурсов
 
-Conserved accounts: `initial`, `external`, `current`, `sinks`, каждый с `material_mg`, `water_mg`, `energy_mj`; `initial+external=current+sinks`. Поля nutrient/organic не переименовываются в energy, dead provenance не суммируется второй раз поверх corpse.remaining. Cohort hashes — blueprint grouping, не biological species и не доказательство ancestry.
+Native bridge `fidelity_admission_v1.gd` делает настоящий A8 load/apply/observe с внешними snapshot/origin anchors. Patch accounts приходят через A7.observe из канонического A6.balance, не из независимой формулы Python.
 
-Каждый immutable packet содержит version, representation, exact source binding и projection. При restore нужен внешний hash **всего A9 packet**, а не только внутренний checksum. Для FULL/REDUCED дополнительно нужны повторная A8 admission и равенство derived projection. PATCH/AGGREGATE могут безопасно храниться/отображаться по внешнему packet anchor, но не претендуют на exact historical state. Поздний refinement заново допускает исходные bytes и сверяет сохранённую проекцию, origin, owner epoch, command cursor и ecology hash.
+Accounts: initial/external/current/sinks; units: material_mg/water_mg/energy_mj; invariant `initial+external=current+sinks`. Dead provenance не суммируется второй раз поверх corpse.remaining; оплаченные propagule endowments сохраняются. Blueprint cohort hash — grouping, не biological species и не ancestry proof.
 
-Aggregate batch принимает только явно различные `(region_id, entity_id)`: повтор snapshot, другой epoch того же участка и перекрывающиеся duplicates отклоняются. Суммирование детерминировано, units/overflow/bounds проверяются. Batch — non-authoritative report, не новый field/region owner и не достаточный snapshot отдельной особи.
+Restore требует внешний hash всего A9 packet и origin hash из caller-owned durable acknowledgement. FULL/REDUCED дополнительно проходят native A8 admission и сравнение derived projection. PATCH/AGGREGATE допускаются как сохранённые authenticated summaries, но не как exact historical state. Refinement требует исходные exact bytes и совпадение source hash/origin/owner epoch/revision/ecological cursor и сохранённой projection.
 
-## Budgets / persistence / seam
+Python structural constructor и admission callback не являются защитой от враждебного coordinator: доверенный public entry point — NativeA8 с approved binary и внешними anchors. Хеш, взятый из самого подменённого файла, не является внешним якорем.
 
-Snapshot raw ≤2MiB, packet ≤4MiB, decompression ограничена до выделения произвольного результата; trailing compressed data/encoding errors rejected. Число patches/cohorts и batch members bounded. Достижение cap явно fail-closed.
+Batch aggregation bounded и детерминирована; повтор `(region_id,entity_id)`, в том числе на другом epoch/hash, отклоняется. Batch является `REPORT_ONLY_NOT_SPENDABLE`, не новым consistent world cut, field owner или восстанавливаемым снимком исторических особей. Реальные scale fixtures — независимые bounded research partitions, не production terrain coverage.
 
-A9 snapshots сохраняются через неизменный A8 `SnapshotStore` с внешним durable acknowledged head. Representation downgrade не меняет biological source cursor. Handoff A→B→A исполняется только A8; после реального commit создаётся новый source-bound fidelity packet. Старый packet не становится действующим только из-за сохранённого owner_id: caller обязан предъявить актуальный externally acknowledged packet/source anchor. Потеря anchor не разрешает auto-reset.
+## Budgets и A8 persistence
 
-## Validation plan
+Raw snapshot ≤2MiB; **весь A9 packet ≤2MiB**, совместимо с неизменным A8 SnapshotStore.MAX_SNAPSHOT_BYTES. Первоначальное значение4MiB было ошибкой и исправлено по P1 `4016102680`. A8 source, помещающийся в raw limit, не обязательно помещается в FULL после projection и JSON escaping: oversized envelope явно отвергается, не обрезается и не меняет режим автоматически.
 
-- Public mode transitions: FULL↔REDUCED exact; FULL/REDUCED→PATCH→AGGREGATE; невозможность reverse без достаточного retained state.
-- Forged totals, duplicate keys, bool-as-int, overflow, unknown versions/modes, encoding/decompression bombs, stale packet/source/epoch and absent anchors.
-- Render LOD options leave packet hash/bytes/cursor unchanged; renderer cannot promote fidelity.
-- Real A8 source, command continuation, owner fencing, corpses and funded propagules; refinement and native semantic restore; fresh process persistence with A8 store.
-- Aggregation conservation, order invariance and duplicate partition rejection; synthetic contract scale clearly separated from real Godot workload. Measure serialized retained bytes, not claim million-organism active simulation or general RSS reduction.
-- Exact current-main and addition-only fence; accepted A0–A8 unchanged; inherited full A8/A0–A7 regressions, real A7 capture, full Harness and explicit non-RED audits on current subject.
-- Fresh whole-head independent review, artifact hashes/content inspection and bounded post-build critique. Implementation evidence is not independent acceptance.
+Decompression ограничена; trailing/truncated streams, invalid base64/JSON, bool-as-int/nonfinite/overflow и неправильные schema/cursors rejected. До512 batch members. Достижение лимита — отказ без изменения исходного immutable record.
 
-## Durable recovery
+Persistence использует неизменный A8 SnapshotStore с fsynced caller-owned `{tip,sequence,snapshot_sha256}` за пределами store. Неудачный CAS не публикует локальное предложение. Валидный старый packet сам по себе не возвращает старому owner право записи поверх более нового acknowledgement. A→B→A исполняет только A8; A9 пересоздаёт source-bound packet из настоящего принятого результата.
 
-Last durable predicate: fresh branch + design. Next: add Work Order, kernel/runtime/bridge and falsifiers; run local contracts, freeze source; use separate validation branch for exact Linux and append-only evidence; request fresh independent review. GitHub connector is the source write route; local contract tests and repository-owned CI are executors. No ad-hoc network clone, no force push, no rewriting accepted kernels. Human gate: main merge. A10/A11 not started.
+## Repair R1
+
+1. Post-build counterexample: NativeA8.restore перепаковывал валидный REDUCED stream и менял acknowledged packet hash без команды. Теперь semantic admission выполняется, а возвращаются исходные immutable bytes. Тестируются compression levels0/1/6/9.
+2. Review P1 `4016102680`: packet limit приведён к2MiB; тест raw-valid источника с quote escaping проверяет отказ oversized FULL envelope. Canonical store не меняется.
+3. Review P2 `4016102692`: negative owner test требует именно `A8_STALE_OWNER`, а не любую ошибку процесса/binding. PASS summary публикуется только после проверки полного mandatory-count.
+
+Карты причин/воспроизведения опубликованы отдельно на validation branch: `c92c2e849d0ac8a9de08ac10185287bf945b81f0` и `a59c1cbd19637ae6a25809cc1468a04d3a4a156c`. Independent review на первоначальном `920a6f3a...` исторический после repair.
+
+## Required gates и продолжение
+
+Все32 contract test methods обычным и optimized Python; actual native continuation FULL/REDUCED; lossy refinement and no free history; render immutability; A→B→A ownership/epochs; paid corpses/propagules; четыре fresh-process persistence modes; duplicate rejection; отдельные synthetic и actual native scale measurements.
+
+Полный exact Linux затем обязан исполнить все принятые A0–A8 tests/restart/repeats/A5 repair oracles, реальную A7 graphics capture, полный Harness и explicit non-RED audits на текущем HEAD. Existing A8 verifier не редактируется: адаптер расширяет только addition whitelist на восемь A9 paths, отдельно доказав current-main byte immutability. Результаты не переименовываются в global GREEN.
+
+Дальше: freeze repaired HEAD/TREE, новый exact run, fresh whole-head review, artifact-byte inspection и append-only evidence отдельно от source. Main merge — отдельный human gate. A10/A11 и production promotion не запущены. Отсутствующий central A9 execution не объявляется MISSION_COMPLETE.
