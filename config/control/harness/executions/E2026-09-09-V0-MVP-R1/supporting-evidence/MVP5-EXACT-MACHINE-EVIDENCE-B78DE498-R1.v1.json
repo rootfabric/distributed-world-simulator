@@ -59,8 +59,11 @@
     "artifact_file_count": 4,
     "digest_correction_note": "Supersedes the preliminary 2f74633e... local ZIP value recorded before fresh download. Live GitHub artifact digest and a new independent download/re-hash both equal 3a417111...; final verifier must use this corrected immutable value.",
     "complete_harness": "PASS",
-    "standard_pc0": "YELLOW_NON_RED",
-    "directional_pc0": "YELLOW_NON_RED"
+    "overall_standard_pc0": "YELLOW",
+    "overall_directional_pc0": "YELLOW",
+    "v0_acceptance_boundary_non_red": true,
+    "unrelated_red_program_rows_preserved": true,
+    "scope_note": "YELLOW/non-RED here describes the overall report and the V0 MVP acceptance boundary only. It does not claim that every unrelated program row is non-RED; historical/unrelated RED rows remain visible in the raw report."
   },
   "reviewer": {
     "request_comment_id": 5679618500,
