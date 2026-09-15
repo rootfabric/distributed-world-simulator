@@ -1,4 +1,4 @@
-name: ECO ARCH2 A9 Exact R1
+name: ECO ARCH2 A9 Exact R2
 on:
   push:
     branches: [validation/eco-arch2-a9-exact-r1]
@@ -7,10 +7,10 @@ permissions:
   contents: read
 concurrency:
   group: eco-arch2-a9-exact-r1
-  cancel-in-progress: false
+  cancel-in-progress: true
 env:
-  SOURCE_HEAD: 920a6f3a968be950559747be20ccf2f8b4e205c1
-  SOURCE_TREE: 8a68a33206270b15d3f7cd24ced0c26b0f50ec35
+  SOURCE_HEAD: 1e2604193d7881c370bb38ecf700383241c8a3c8
+  SOURCE_TREE: 468d199e86fa63025e8a97d64c4510a8e66461b2
   BASE_MAIN: 675c04bb213bbb68b8cdb500d540d57ce1490318
   BASE_TREE: 04b217ff7acfcd6336490f139f9239a7f6b59b7d
   GIT_NO_REPLACE_OBJECTS: '1'
@@ -25,7 +25,7 @@ jobs:
           ref: ${{ env.SOURCE_HEAD }}
           fetch-depth: 0
           persist-credentials: false
-      - name: Seal frozen A9 source and execute all contract tests
+      - name: Seal repaired A9 source and execute all contract tests
         shell: bash
         run: |
           set -euo pipefail
@@ -50,6 +50,9 @@ jobs:
           objects={p:v8.require_exact_resource(os.environ['SOURCE_HEAD'],p) for p in sorted(m.ADDITIONS)}
           for path in m.ADDITIONS:
               if path.endswith('.py'): py_compile.compile(path,doraise=True)
+          from scripts.research.ecology.v2 import ecological_fidelity_v1 as fidelity
+          from scripts.research.ecology.v2 import snapshot_store
+          need(fidelity.MAX_PACKET==snapshot_store.MAX_SNAPSHOT_BYTES==2097152,'DURABLE_PACKET_LIMIT_MISMATCH')
           out=pathlib.Path('artifacts/a9/preflight');tests=[]
           for name,flags in [('normal',[]),('optimized',['-O'])]:
               cmd=[sys.executable,*flags,'-m','unittest','discover','-s','validation/ecology/evo_arch2_a9','-p','test_fidelity.py','-v']
@@ -60,14 +63,15 @@ jobs:
               tests.append({'name':name,'tests':count,'command':cmd,'sha256':hashlib.sha256(log.read_bytes()).hexdigest()})
           report={'result':'PASS','source_head':os.environ['SOURCE_HEAD'],'source_tree':os.environ['SOURCE_TREE'],
                   'workflow_head':os.environ['GITHUB_SHA'],'run_id':os.environ['GITHUB_RUN_ID'],
-                  'objects':objects,'tests':tests,'native_biology_verified':False}
+                  'objects':objects,'tests':tests,'native_biology_verified':False,
+                  'repair_r1':True,'packet_limit_bytes':fidelity.MAX_PACKET,'review_findings':[4016102680,4016102692]}
           (out/'summary.json').write_text(json.dumps(report,indent=2)+'\n');print(json.dumps(report,indent=2))
           PY
-      - name: Upload exact contract preflight
+      - name: Upload repaired contract preflight
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: a9-920a6f3a-r1-preflight
+          name: a9-1e260419-r2-preflight
           path: artifacts/a9/preflight/
           if-no-files-found: error
           retention-days: 30
@@ -82,7 +86,7 @@ jobs:
           ref: ${{ env.SOURCE_HEAD }}
           fetch-depth: 0
           persist-credentials: false
-      - name: Seal source and main epoch
+      - name: Seal repaired source and main epoch
         shell: bash
         run: |
           set -euo pipefail
@@ -97,7 +101,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          prefix="$(mktemp -d "$RUNNER_TEMP/a9-r1-python.XXXXXXXX")"
+          prefix="$(mktemp -d "$RUNNER_TEMP/a9-r2-python.XXXXXXXX")"
           echo "A9_PYTHON_PREFIX=$prefix" >> "$GITHUB_ENV"
           python3 -m venv "$prefix"
           "$prefix/bin/python" -m pip install --disable-pip-version-check --no-input -r scripts/harness/requirements.txt
@@ -113,7 +117,7 @@ jobs:
             xvfb-run -a -s '-screen 0 1600x1100x24' /bin/true
             exit 0
           fi
-          prefix="$(mktemp -d "$RUNNER_TEMP/a9-r1-graphics.XXXXXXXX")"
+          prefix="$(mktemp -d "$RUNNER_TEMP/a9-r2-graphics.XXXXXXXX")"
           echo "A9_GRAPHICS_PREFIX=$prefix" >> "$GITHUB_ENV"
           mkdir -p "$prefix/packages" "$prefix/root"
           packages=(xvfb xauth libxfont2 xserver-common x11-xkb-utils xkb-data xfonts-base libxmu6 libxmuu1 libfontenc1 libxau6 libxdmcp6 libxt6 libsm6 libice6)
@@ -146,7 +150,7 @@ jobs:
           export XKB_CONFIG_ROOT="$prefix/root/usr/share/X11/xkb"
           xvfb-run -a -s '-screen 0 1600x1100x24' /bin/true
           echo GRAPHICS_BOOTSTRAP_PASS
-      - name: Run A9 native integration and all inherited exact gates
+      - name: Run repaired A9 native integration and all inherited exact gates
         shell: bash
         env:
           CONFIGURED_GODOT: ${{ vars.GODOT_DOUBLE_PATH }}
@@ -185,7 +189,8 @@ jobs:
                       'actual_head':git('rev-parse','HEAD'),'actual_tree':git('rev-parse','HEAD^{tree}'),
                       'tracked_status':git('status','--porcelain','--untracked-files=no'),
                       'run_id':os.environ['GITHUB_RUN_ID'],'run_attempt':os.environ['GITHUB_RUN_ATTEMPT'],
-                      'workflow_head':os.environ['GITHUB_SHA'],'runner':os.environ.get('RUNNER_NAME','unknown')}
+                      'workflow_head':os.environ['GITHUB_SHA'],'runner':os.environ.get('RUNNER_NAME','unknown'),
+                      'repair_r1':True,'prior_run_historical':34974736747}
           (out/'provenance.json').write_text(json.dumps(provenance,indent=2)+'\n')
           files=list(out.rglob('*'))
           for rel in ('artifacts/a8','artifacts/a7/observatory.png','artifacts/a7/capture-sources.json','artifacts/a7/restart','artifacts/a6/restart'):
@@ -195,11 +200,11 @@ jobs:
           (out/'evidence-files.v1.json').write_text(json.dumps({'provenance':provenance,'files':entries},indent=2)+'\n')
           print(json.dumps(provenance,indent=2));print('HASHED_FILES='+str(len(entries)))
           PY
-      - name: Upload exact A9 and inherited evidence
+      - name: Upload repaired exact A9 and inherited evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: a9-exact-920a6f3a-r1
+          name: a9-exact-1e260419-r2
           path: |
             artifacts/a9/
             artifacts/a8/
@@ -216,8 +221,8 @@ jobs:
         run: |
           set -euo pipefail
           if [ -n "${A9_PYTHON_PREFIX:-}" ]; then
-            case "$A9_PYTHON_PREFIX" in "$RUNNER_TEMP"/a9-r1-python.*) rm -rf -- "$A9_PYTHON_PREFIX" ;; *) exit 1 ;; esac
+            case "$A9_PYTHON_PREFIX" in "$RUNNER_TEMP"/a9-r2-python.*) rm -rf -- "$A9_PYTHON_PREFIX" ;; *) exit 1 ;; esac
           fi
           if [ -n "${A9_GRAPHICS_PREFIX:-}" ]; then
-            case "$A9_GRAPHICS_PREFIX" in "$RUNNER_TEMP"/a9-r1-graphics.*) rm -rf -- "$A9_GRAPHICS_PREFIX" ;; *) exit 1 ;; esac
+            case "$A9_GRAPHICS_PREFIX" in "$RUNNER_TEMP"/a9-r2-graphics.*) rm -rf -- "$A9_GRAPHICS_PREFIX" ;; *) exit 1 ;; esac
           fi
