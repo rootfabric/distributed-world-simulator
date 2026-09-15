@@ -32,8 +32,9 @@
     "producer evidence does not self-claim independent verification or PREDICATE_VERIFIED"
   ],
   "decision_rule": {
-    "any_finding_or_evidence_gap": "NOT_VERIFIED",
-    "terminal_review_completed_with_no_findings_and_success_reaction": "VERIFIED",
+    "any_finding_inline_comment_or_blocking_evidence_gap": "NOT_VERIFIED",
+    "terminal_exact_carrier_review_completed_with_zero_findings": "VERIFIED",
+    "success_reaction": "SUPPLEMENTAL_ONLY_NOT_REQUIRED",
     "coordinator_may_invent_verdict": false,
     "coordinator_may_serialize_external_terminal_result_after_completion": true
   },
