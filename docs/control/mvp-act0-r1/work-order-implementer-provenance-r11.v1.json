@@ -1,0 +1,52 @@
+{
+  "schema": "distributed_world_simulator.mvp_bounded_repair.v1",
+  "repair_id": "V0-MVP1-IMPLEMENTER-PROVENANCE-R11",
+  "parent_work_order": "V0-MVP-R1-WO-001",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "risk_class": "CRITICAL",
+  "repair_base": "b645a738a6a143bee8f7f4a291a3e754cd399996",
+  "canonical_main_observed": "127c732a56cc5c25d5712f24a7627ed4bb877374",
+  "trigger": {
+    "review_pr": 600,
+    "review_result_commit": "ec54a02b5ed1552d19e81667daaaa4de2adacf1a",
+    "independent_codex_review_comment": 3978614901,
+    "finding": "MVP1_IMPLEMENTATION_RECORDED_AS_INTEGRATOR_WITHOUT_IMPLEMENTER_ROLE_RESULT"
+  },
+  "repair_map": {
+    "affected_module": "MVP1 execution provenance, not gameplay",
+    "canonical_owner": "Existing Harness event ledger and main-owned policy",
+    "entry_points": ["MVP1 IMPLEMENTATION_COMMITTED sequence 4", "Harness Drive", "fresh exact-head review"],
+    "root_cause": "Автор кода записал роль INTEGRATOR для code-producing шага; отдельного Implementer role result не было.",
+    "canonical_fix_location": "Новая append-only запись роли IMPLEMENTER и новое событие IN_PROGRESS с ссылкой на исходный код и неизменный event 4.",
+    "why_not_symptom_patch": "Не меняем actor задним числом, не меняем policy и не выдаём текущего Implementer за независимого Reviewer.",
+    "siblings_checked": ["Work Order snapshot", "event identity and sequence", "P7 acceptance", "Windows evidence subject", "runtime content identity"],
+    "expected_behavior": "Происхождение реализации проверяемо из Git; весь MVP остаётся IN_PROGRESS и не считается принятым."
+  },
+  "allowed_paths": [
+    "docs/control/mvp-act0-r1/work-order-implementer-provenance-r11.v1.json",
+    "docs/control/mvp-act0-r1/validate_mvp1_r11.py",
+    ".github/workflows/mvp1-r11-exact-validation.yml",
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence/MVP1-IMPLEMENTER-PROVENANCE-R11.v1.json",
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence/MVP1-WINDOWS-REPORTED-OBSERVATION-R1.v1.json",
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/events/V0-MVP-R1-WO-001/0005-mvp1-implementer-provenance-r11.v1.json"
+  ],
+  "forbidden_changes": [
+    "Any pre-existing event or acceptance byte",
+    "scripts/runtime/**", "scripts/network/**", "scripts/simulation/**", "scenes/**", "project.godot",
+    "scripts/harness/**", "Existing schemas, transition table, scheduler and registry",
+    "Any claim that an unexecuted test, unavailable screenshot or self-review is independently verified"
+  ],
+  "validation": [
+    "Prove original event 4 exact blob and all original ledger bytes unchanged",
+    "Validate sequence 5 identity, Implementer attribution and IN_PROGRESS snapshot",
+    "Prove all runtime/test/scene resources unchanged from b645a738",
+    "Run full Harness and strict standard/directional PC0 on exact new HEAD",
+    "Run pinned double-Godot import and existing MVP1 focused test; publish digest-bound logs",
+    "Preserve Windows report as attributed observation; raw PNG/log bytes are unavailable to this executor",
+    "Request fresh external Reviewer verdict on frozen new HEAD"
+  ],
+  "closure_boundary": "MVP1 leaf review only. The parent MVP1-MVP8 Work Order is not IMPLEMENTED or ACCEPTED. Do not force invalid PREDICATE_VERIFIED/IN_PROGRESS transitions or invent completed sibling predicates.",
+  "runtime_mutation": false,
+  "merge_authorized": false,
+  "self_acceptance_authorized": false
+}

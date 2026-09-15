@@ -1,0 +1,62 @@
+{
+  "schema": "distributed_world_simulator.mvp3_supporting_evidence.v1",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "subject_head": "e0fafdfed4711fe9e43d728f15a5a19869151320",
+  "subject_tree": "9241c76488d6759b639997163a5cc71d0d0eedec",
+  "runner": "WINDOWS_LOCAL_EXACT_GRAPHICAL_GODOT",
+  "engine_version": "4.7.1.stable.double.custom_build.a13da4feb",
+  "engine_sha256": "3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5",
+  "command": ".\\RUN_V0_MVP3_GRAPHICAL_ROUNDTRIP.ps1",
+  "exit_code": 0,
+  "run_id": "4ccf4735254a6271d8e067fb0554a54c",
+  "manifest_sha256": "5e781551fe2be4564de4bec3757cbd71b5c06a24d1a5949b7570c07f65c9b9d1",
+  "report_sha256": {
+    "gateway": "1164631d3fb543b969ded4801e8971d13d55745cc6a013169f9a5de6f4892fcf",
+    "authority_a": "4514812b073de55496548c215ea60875e4bbad0c5c9f9c017bbc56a968f4a051",
+    "authority_b": "18e70bc5b04c331fdbd128a1098a2741e83b6d0264ffb66bc8a2149489db0c37",
+    "client_a": "7717a0da8d25b9b74150b909563942ec6640a615ea462a4a7d056bce117edab4",
+    "client_b": "0082e07258c86577f974a09635f396fbba99505ccdf1757ca499a53d705a681e"
+  },
+  "viewport_sha256": {
+    "client_a": "472ae8eae042e4f97e1fd1c4083d65f4d4bc3a916fd182c0a20e9a3058c869b7",
+    "client_b": "4dd40da776e1a9ab37a05a5aa72ffdff451314c56b215f1cf440a8c52b08cb02"
+  },
+  "result": {
+    "passed": true,
+    "assertions": 59,
+    "processes": 5,
+    "distinct_process_ids": true,
+    "a_transfers": 2,
+    "final_input_sequences": {"a": 22, "b": 29},
+    "route_history_a": ["authority/a", "authority/b", "authority/a"],
+    "route_history_b": ["authority/a", "authority/b", "authority/a"],
+    "snapshots": {"a": 25, "b": 31},
+    "backend_connects_each": 1,
+    "client_connects_each": 1,
+    "disconnects_during_workload": 0,
+    "identity_rebinds": 0,
+    "gateway_reconnects": 0,
+    "respawns": 0,
+    "stable_body_camera_instance_ids": true,
+    "both_players_visible_in_every_snapshot": true,
+    "viewport_sizes": {"a": [720, 404], "b": [720, 404]},
+    "log_errors": 0
+  },
+  "regressions": {
+    "native_process_manifest_sha256": "f988f8af64cf8285bfbd58cc88632b381b0fbe84c7fbe6b822b060bab5353401",
+    "live_owner_assertions": 232,
+    "live_owner_report_sha256": "31a5f2f198f793b861b4431e57cc05a14441d381001dd4eb6e05fdadb72d14ec",
+    "focused_godot_suites_passed": 6,
+    "focused_coverage": ["MVP1 graphical scene", "MVP2 shared world", "MVP3 seam continuity", "P7.6 seam multi-region", "SM1 world continuity", "SM1 authority recovery"]
+  },
+  "scope": "Five-process graphical MVP3 implementation evidence: one gateway, two native M3 authority owners and two rendered clients. Player A crosses authority/a -> authority/b -> authority/a while both clients continuously observe and independently submit input through stable sessions.",
+  "limitations": [
+    "This is Implementer machine evidence, not an independent Reviewer or Verifier verdict.",
+    "The legacy MVP2 exact wrapper is pinned to an older main SHA and stopped before running; its MVP1 and MVP2 focused Godot tests were run directly and passed.",
+    "The MVP_SEAM_NO_RECONNECT_OR_RESPAWN product predicate remains unverified until fresh independent review and verification."
+  ],
+  "mvp3_predicate_verified": false,
+  "runtime_merge_authorized": false,
+  "main_merge_authorized": false
+}

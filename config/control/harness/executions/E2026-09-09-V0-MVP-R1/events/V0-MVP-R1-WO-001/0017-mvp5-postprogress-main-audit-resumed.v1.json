@@ -1,0 +1,19 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-09-09-V0-MVP-R1-V0-MVP-R1-WO-001-0017-MVP5-POSTPROGRESS-MAIN-AUDIT-RESUMED",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "sequence": 17,
+  "event_type": "RECOVERY_RESUMED",
+  "work_state": "IN_PROGRESS",
+  "recorded_at_utc": "2026-09-15T04:41:43Z",
+  "actor": "INTEGRATOR",
+  "branch": "feature/v0-mvp-playable-seamless-planet-r1",
+  "head_sha": "a3ecd432178519d23d2f763f6e501ab17f6d1457",
+  "command": "MVP_ACT0_POST_MERGE_EPOCH_AUDIT",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/audits/MVP5-POSTPROGRESS-MAIN-AUDIT-675C04BB-R1.v1.json"
+  ],
+  "summary": "Canonical main movement from 9e10e640 to 675c04bb was independently audited after the bounded MVP5 checkpoint-catalog repair. Main movement is ECO ARCH2 A8 research-only, exact main Project Control is SUCCESS/NON_RED at the MVP authority boundary, and the parent remains IN_PROGRESS with MVP1-MVP4 preserved. Resume MVP5 validation on the same feature lineage. No product predicate, runtime merge, main merge or whole-MVP acceptance is claimed."
+}

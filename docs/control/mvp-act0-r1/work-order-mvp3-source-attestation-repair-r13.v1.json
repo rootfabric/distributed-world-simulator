@@ -1,0 +1,64 @@
+{
+  "schema": "distributed_world_simulator.harness.work_order.v1",
+  "id": "V0-MVP-R1-WO-R13",
+  "epoch": "E2026-09-09-V0-MVP-R1",
+  "parent_work_order": "V0-MVP-R1-WO-001",
+  "kind": "BOUNDED_REPAIR_CONTINUATION",
+  "created_utc": "2026-09-13T09:15:00Z",
+  "base_subject_head": "91c0df9d9e9c36f3519110aea85b5884214b9278",
+  "base_subject_tree": "1a77202306e5a7f943b24e47d5c84f666b0a2cdc",
+  "repair_branch": "repair/v0-mvp3-live-player-source-attestation-r13",
+  "trigger": {
+    "source": "MVP3-WINDOWS-MANUAL-91C0DF9D-R1",
+    "verdict": "FAIL",
+    "primary_error": "LIVE_PLAYER_SOURCE_ATTESTATION_MISMATCH",
+    "gateway_trace": "v0_mvp3_gateway_process.gd check:58 -> success:63 -> cross:159 -> maybe_cross_a:278 -> handle_client:433",
+    "client_error": "MVP3_CLIENT_COMMAND_REJECTED:MVP3_AUTOMATIC_HANDOFF_FAILED"
+  },
+  "diagnosis": {
+    "root_cause": "prepare_export computed the frozen packet checksum over native pre-transport GDScript doubles. Godot's full-precision JSON formatting is not idempotent across a JSON parse for accumulated fixed-tick movement doubles (e.g. x after 10 walk ticks at 6 m/s and 1/60 s): the first canonical round trip inside Protocol.seal can shorten the decimal representation, so the target's recomputed checksum over the delivered packet no longer matched the stored checksum and every legitimate handoff with real accumulated movement was rejected at the source attestation gate.",
+    "evidence": [
+      "Deterministic reproduction: automatic (non-manual) graphical roundtrip at 91c0df9d failed with the same PROCESS_EXIT:client/a:1 and the same gateway marker.",
+      "Unit probe: Utils.payload_hash({'x': accumulated}) != Utils.payload_hash(json_round_trip(...)) for walk-speed fixed-tick positions (ticks 10, 11, 14, 19, ...).",
+      "Protocol.seal comment already documents the double-shortening behavior for MAC signing; prepare_export did not apply the same rule to the packet checksum."
+    ],
+    "defect_class": "F: hash/token includes a field whose serialized representation changes on first JSON round trip",
+    "wrong_boundary": "producer (source export freeze), not the validator"
+  },
+  "repair": {
+    "principle": "LEGITIMATE CURRENT SOURCE ATTESTATION -> PASS; STALE/FORGED/WRONG SOURCE -> FAIL (unchanged strictness)",
+    "changes": [
+      "scripts/runtime/networked_gameplay/mvp/v0_mvp3_live_player_transfer_port.gd: prepare_export canonicalizes the frozen packet through bounded Utils.json_round_trip iterations to a fixed point BEFORE computing the checksum, so the checksum is bound to the exact bytes that travel. New failure codes LIVE_PLAYER_EXPORT_CANONICALIZATION_FAILED / LIVE_PLAYER_EXPORT_CANONICALIZATION_UNSTABLE fail closed.",
+      "scripts/runtime/networked_gameplay/mvp/v0_mvp3_live_player_transfer_port.gd: the collapsed LIVE_PLAYER_SOURCE_ATTESTATION_MISMATCH is split into LIVE_PLAYER_SOURCE_ATTESTATION_ABSENT (no frozen source receipt), LIVE_PLAYER_SOURCE_CHECKSUM_INVALID (stored checksum does not match the delivered packet), and LIVE_PLAYER_SOURCE_PACKET_DIVERGED (delivered packet differs from the trusted source receipt). Validation strength is unchanged.",
+      "tests/runtime/test_v0_mvp3_source_attestation_roundtrip.gd: targeted regression."
+    ],
+    "forbidden_changes_not_made": ["no attestation removal", "no warning downgrade", "no wildcard authority", "no missing-attestation acceptance", "no post-transfer stale acceptance", "no cross-on-mismatch fallback", "no client-only identity trust"]
+  },
+  "targeted_tests": {
+    "positive": ["legitimate A -> B staging after double JSON transport round trips = PASS", "legitimate B -> A full crossing = PASS"],
+    "negative": [
+      "tamper without rehash -> LIVE_PLAYER_SOURCE_CHECKSUM_INVALID",
+      "tamper with rehash -> LIVE_PLAYER_SOURCE_PACKET_DIVERGED",
+      "forged ownership_epoch with rehash -> LIVE_PLAYER_SOURCE_PACKET_DIVERGED",
+      "wrong logical_player_id -> LIVE_PLAYER_EXPORT_TUPLE_MISMATCH",
+      "unknown transfer id -> LIVE_PLAYER_TRANSFER_NOT_CURRENT",
+      "stale attestation after ownership moved -> LIVE_PLAYER_SOURCE_ATTESTATION_ABSENT"
+    ],
+    "red_green_proof": "test fails with LIVE_PLAYER_SOURCE_CHECKSUM_INVALID on pre-fix producer and passes with the repair"
+  },
+  "continuation_defect_r13b": {
+    "found_in": "manual rerun artifacts/mvp3-manual-r13-534f496b-20260913T092003Z",
+    "context": "attestation repair confirmed in manual run (route a->b->a completed, client-a/b json+png present); run then aborted on MVP3_CLIENT_COMMAND_REJECTED:LEDGER_CAPACITY_EXCEEDED",
+    "root_cause": "interactive clients submit one distinct fixed-tick operation per held tick (~120 ops/s for two players); the gateway operation ledger was configured with capacity 1024, which legitimate held-input movement exhausts in ~8.6 s. The P6 ledger is deliberately fail-closed with no eviction, so the capacity bound itself was mis-sized for the interactive session envelope.",
+    "repair": [
+      "v0_mvp3_process_protocol.gd: MAX_INTERACTIVE_LEDGER_OPERATIONS = 16384 derived from the session envelope (2 players x 60 fixed ticks/s x 120 s gateway timeout = 14400) plus headroom",
+      "v0_mvp3_gateway_process.gd: ledger.configure(Protocol.MAX_INTERACTIVE_LEDGER_OPERATIONS); retirement policy unchanged",
+      "tests/runtime/test_v0_mvp3_gateway_ledger_budget.gd: envelope saturation never rejects legitimate operations; capacity enforcement beyond the bound still fails closed; exact replay consumes no slot"
+    ],
+    "forbidden_changes_not_made": ["no eviction/LRU", "no capacity rejection downgrade", "no ledger guard removal"]
+  },
+  "seamless_contract_guards": ["connects=1", "reconnects=0", "respawns=0", "identity_changes=0", "instance ids stable"],
+  "acceptance": "fresh Windows manual executor run on the frozen repair HEAD with HUMAN_PHYSICAL_KEYBOARD; predicate closure reserved for the Independent Verifier",
+  "mvp3_predicate_verified": false,
+  "mvp3_closed": false
+}

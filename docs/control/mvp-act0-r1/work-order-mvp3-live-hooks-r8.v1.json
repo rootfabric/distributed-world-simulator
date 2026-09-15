@@ -1,0 +1,39 @@
+{
+  "schema": "distributed_world_simulator.bounded_repair_work_order.v1",
+  "repair_id": "V0-MVP3-R8-LIVE-PLAYER-OWNER-HOOKS",
+  "parent_work_order_id": "V0-MVP-R1-WO-001",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "base_sha": "fff07006e41ee2df1e063a381e631ce84468b2ed",
+  "base_tree": "b7459a131f3bd195ce4fc7ed15956d94fe1c50c4",
+  "canonical_main_at_dispatch": "7dfc68ab5a1e90254a1b7039807f275b5da04eef",
+  "branch": "feature/v0-mvp-playable-seamless-planet-r1",
+  "role": "IMPLEMENTER",
+  "independent_context": false,
+  "human_authorization": {"decision_id": "HA-V0-MVP3-LIVE-PLAYER-HOOKS-R1", "user_response_verbatim": "разрешаю, реализуй", "selected_option": "AUTHORIZE_BOUNDED_EXISTING_OWNER_LIVE_HOOKS", "scope_expansion_authorized": true, "new_canonical_owner_authorized": false, "main_merge_authorized": false},
+  "scope": "Реализовать live per-player staging/activation hooks внутри существующих M3 owners, связать с принятыми SM1/P6 и довести до одной графической двухклиентской A→B→A сцены. Не ограничиваться диагностикой или оператором с наблюдателем.",
+  "allowed_paths": [
+    "scripts/runtime/networked_gameplay/services/player_registry.gd",
+    "scripts/runtime/networked_gameplay/services/player_ownership_service.gd",
+    "scripts/runtime/networked_gameplay/networked_gameplay_service_p2.gd",
+    "scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime_p2.gd",
+    "scripts/runtime/networked_gameplay/mvp/**", "scripts/app/**", "scenes/labs/mvp/**",
+    "tests/runtime/test_v0_mvp_*", "tests/runtime/test_v0_mvp3_*", "tests/integration/test_v0_mvp_*", "tests/integration/test_v0_mvp3_*", "tests/fixtures/v0_mvp/**", "RUN_V0_MVP_*",
+    "docs/control/mvp-act0-r1/**", "config/control/harness/executions/E2026-09-09-V0-MVP-R1/**",
+    ".github/workflows/mvp3-live-player-validation.yml"
+  ],
+  "forbidden_paths": ["config/architecture/**", "config/control/architecture-ownership.v1.json", "config/control/harness/acceptance/**", "scripts/network/**", "scripts/simulation/matter/**", "scripts/runtime/networked_gameplay/m4/**", "scripts/runtime/networked_gameplay/p6/**", "scripts/runtime/networked_gameplay/sm1/**", "scripts/runtime/networked_gameplay/p7/**", "project.godot"],
+  "repair_map": {
+    "root_cause": "M3 restart APIs clear live session state and recover an aggregate; real per-player handoff requires owner-native live hooks. Accepted P6/SM1 already provides identity/carrying/authority coordination and route pivot. R6 proves command-port and commit-aware completion composition.",
+    "owner": "Existing PlayerRegistry/PlayerOwnershipService/NetworkedGameplayService and existing SM1 coordinator; MVP adapters own no canonical truth.",
+    "fix": "Add narrow live hooks with exact identity, source snapshot and transfer-proof checks; guard actual mutation and fixed-tick entry points; preserve peer connection and visual instances. Stage target read-only, retire source before activation, bind activation to existing SM1 commit, retain replay behavior. Restart API remains separate.",
+    "required_negative_controls": ["target write before activation", "source write while frozen and after retirement including direct canonical entry", "forged/wrong/stale transfer proof or session", "tampered actor payload with valid recomputed checksum", "conflicting and exact replay across seam", "handler rejection must not become P6 APPLIED", "unrelated player remains controllable and is not transferred", "unrelated Item Graph/replay state not copied", "old activation replay cannot revive retired owner", "abort before commit preserves live source"],
+    "important_boundary": "Per-player authority epoch is not the whole Service epoch. Do not rotate global server authority or the other player's ownership on each crossing. Do not call ordinary join/reconnect or reset input sequence. Do not silently discard carried items: item transfer remains MVP4; unsupported payload must explicitly fail closed rather than corrupt or fake continuity."
+  },
+  "implementation_slices": ["Owner-native hooks and adversarial unit tests", "MVP adapters over accepted P6/SM1 with canonical completion", "Actual networked two-client shared graphical scene and per-player A→B→A", "Exact nonregression and evidence", "Fresh independent review and verifier routing without self-acceptance"],
+  "validation": ["approved double Godot import", "focused owner hooks positive/adversarial tests", "MVP1/MVP2 unchanged regression", "accepted SM1 carrying/pivot and affected M3/P7.6 regression", "two independently controlled graphical clients in same scene; both cross and observe", "clean checkout before/after; exact HEAD/TREE/engine SHA; hashed logs/screenshots/manifests", "full Harness and standard/directional PC0", "world/core regression where required by touched owner paths"],
+  "execution_policy": "One runtime writer. Implementer may run machine tests but cannot emit independent verdict or acceptance. GitHub connector/normal proven Git for repository transport; repository-owned CI only for execution/evidence, not source transport. Preserve partial implementation durably but never rename a subgate PASS to MVP3 VERIFIED.",
+  "runtime_mutation": true,
+  "predicate_verified_authorized": false,
+  "runtime_merge_authorized": false,
+  "main_merge_authorized": false
+}

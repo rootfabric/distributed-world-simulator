@@ -1,0 +1,123 @@
+name: MVP3 R13b Closure Control Validation
+on:
+  push:
+    branches: [control/v0-mvp3-predicate-verified-f1d453fb-r2]
+    paths:
+      - .github/workflows/mvp3-r13b-closure-control-validate.yml
+      - config/control/harness/executions/E2026-09-09-V0-MVP-R1/**
+permissions:
+  contents: read
+jobs:
+  closure-control:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      PYTHONPATH: scripts
+      PYTHONUTF8: '1'
+      EXECUTION: config/control/harness/executions/E2026-09-09-V0-MVP-R1
+      PREDICATE: MVP_SEAM_NO_RECONNECT_OR_RESPAWN
+      PRODUCT_HEAD: f1d453fb2af49231c30bdc5cbe415ad199394446
+      EVENT_ADD_COMMIT: 3fa11a6314715654525bcff59dbfa11a3fdfa148
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: control/v0-mvp3-predicate-verified-f1d453fb-r2
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Verify clean r2 carrier and bounded diff
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git branch --show-current)" = "control/v0-mvp3-predicate-verified-f1d453fb-r2"
+          git fetch origin '+refs/heads/*:refs/remotes/origin/*' --prune
+          test "$(git merge-base HEAD "$PRODUCT_HEAD")" = "$PRODUCT_HEAD"
+          git diff --name-only "$PRODUCT_HEAD"..HEAD | tee closure-diff.txt
+          python3 - <<'PY'
+          import pathlib
+          expected={
+            'config/control/harness/executions/E2026-09-09-V0-MVP-R1/supporting-evidence/MVP3-R13B-CLOSURE-EVIDENCE-F1D453FB-R1.v1.json',
+            'config/control/harness/executions/E2026-09-09-V0-MVP-R1/verifications/MVP3-INDEPENDENT-VERIFICATION-F1D453FB-R3.v1.json',
+            'config/control/harness/executions/E2026-09-09-V0-MVP-R1/events/V0-MVP-R1-WO-001/0011-mvp3-seam-no-reconnect-or-respawn-verified.v1.json',
+            '.github/workflows/mvp3-r13b-closure-control-validate.yml',
+          }
+          actual=set(pathlib.Path('closure-diff.txt').read_text().splitlines())
+          assert actual==expected, (sorted(actual),sorted(expected))
+          print('MVP3_CLOSURE_BOUNDED_DIFF_PASS')
+          PY
+      - name: Prove event 0011 is immutable and introduced once
+        shell: bash
+        run: |
+          set -euo pipefail
+          p='config/control/harness/executions/E2026-09-09-V0-MVP-R1/events/V0-MVP-R1-WO-001/0011-mvp3-seam-no-reconnect-or-respawn-verified.v1.json'
+          test "$(git log --format=%H -- "$p" | wc -l)" -eq 1
+          test "$(git log -1 --format=%H -- "$p")" = "$EVENT_ADD_COMMIT"
+          test "$(git log --diff-filter=A -1 --format=%H -- "$p")" = "$EVENT_ADD_COMMIT"
+          echo MVP3_EVENT_0011_IMMUTABILITY_PASS
+      - name: Install pinned Harness dependencies
+        run: python3 -m pip install --disable-pip-version-check -r scripts/harness/requirements.txt
+      - name: Build exact execution state through production reducer
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/mvp3-r13b-closure-control
+          python3 - <<'PY' | tee artifacts/mvp3-r13b-closure-control/state-builder.json
+          import json, os
+          from pathlib import Path
+          from harness.state_builder import build_state
+          root=Path.cwd()
+          execution=root/'config/control/harness/executions/E2026-09-09-V0-MVP-R1'
+          state=build_state(root,execution)
+          reduced=state['reduced_work_order']
+          active=state['active_work_order']
+          repo=state['repository']
+          predicate=os.environ['PREDICATE']
+          print(json.dumps(state,ensure_ascii=False,sort_keys=True,separators=(',',':')))
+          assert reduced['state']=='IN_PROGRESS', reduced['state']
+          assert active['state']=='IN_PROGRESS', active['state']
+          assert predicate in reduced['completed_predicates'], reduced['completed_predicates']
+          assert reduced['last_completed_predicate']==predicate, reduced.get('last_completed_predicate')
+          assert reduced['last_event_id']=='E2026-09-09-V0-MVP-R1-V0-MVP-R1-WO-001-0011-MVP3-VERIFIED', reduced['last_event_id']
+          assert reduced['event_subject_head_sha']==os.environ['PRODUCT_HEAD'], reduced['event_subject_head_sha']
+          assert repo['event_ledger_head_sha']==os.environ['EVENT_ADD_COMMIT'], repo['event_ledger_head_sha']
+          required=active['required_predicates']
+          assert predicate in required
+          missing=[x for x in required if x not in reduced['completed_predicates']]
+          assert len(missing)>0, 'parent unexpectedly terminal'
+          print('MVP3_PRODUCTION_REDUCER_ACCEPTED_IMMUTABLE_SEQUENCE_11')
+          print('MVP3_LEAF_PREDICATE_COMPLETED_PARENT_IN_PROGRESS')
+          print('remaining_parent_predicates='+str(len(missing)))
+          PY
+      - name: Run full Harness regression on closure candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s tests/harness -p 'test_*.py' -v 2>&1 | tee artifacts/mvp3-r13b-closure-control/full-harness.log
+      - name: Run Control Status Plan Drive
+        shell: bash
+        run: |
+          set -euo pipefail
+          pwsh -NoProfile -File ./CONTROL_DEVELOPMENT.ps1 -Status -Execution "$EXECUTION" | tee artifacts/mvp3-r13b-closure-control/status.log
+          pwsh -NoProfile -File ./CONTROL_DEVELOPMENT.ps1 -Plan -Execution "$EXECUTION" | tee artifacts/mvp3-r13b-closure-control/plan.log
+          pwsh -NoProfile -File ./CONTROL_DEVELOPMENT.ps1 -Drive -Execution "$EXECUTION" | tee artifacts/mvp3-r13b-closure-control/drive.log
+      - name: Prove whole mission remains non-terminal
+        shell: bash
+        run: |
+          set -uo pipefail
+          set +e
+          pwsh -NoProfile -File ./CONTROL_DEVELOPMENT.ps1 -CloseMission -Execution "$EXECUTION" > artifacts/mvp3-r13b-closure-control/close-mission.log 2>&1
+          code=$?
+          set -e
+          cat artifacts/mvp3-r13b-closure-control/close-mission.log
+          test "$code" -eq 8
+          grep -q 'MISSION_EXIT_FORBIDDEN' artifacts/mvp3-r13b-closure-control/close-mission.log
+          echo MVP3_PARENT_REMAINS_OPEN_PASS
+      - name: Upload closure control evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mvp3-r13b-closure-control-r2-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            artifacts/mvp3-r13b-closure-control/
+            closure-diff.txt
+          if-no-files-found: error
+          retention-days: 90
