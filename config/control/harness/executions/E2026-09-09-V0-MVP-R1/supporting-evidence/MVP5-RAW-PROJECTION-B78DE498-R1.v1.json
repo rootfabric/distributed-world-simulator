@@ -1,0 +1,211 @@
+{
+  "schema": "distributed_world_simulator.mvp5_verifier_raw_projection.v1",
+  "subject_head": "b78de4980328bb7b4d19e030bb7f0fa5d9976cd8",
+  "subject_tree": "0bfdd7595e10f007815bb666e62e7c5575172173",
+  "source_artifact": {
+    "artifact_id": 10394302580,
+    "workflow_run_id": 34964304441,
+    "job_id": 104365023773,
+    "zip_sha256": "cb31317ba350b74c544704dc3741c362a7651b206eba5c662673254ff702746f",
+    "focused_json_sha256": "cd34c72e995df5e7f47e416774e0f15c87fe11ddac8c7b8db2d858a3cf8636b9",
+    "native_accounting_json_sha256": "bfe79d1a7f4f0493185c6a11a0518c118558a7c2886aad34d63c49c996ded4c3",
+    "graphical_manifest_json_sha256": "a9525488d53e4ac3d3c25442742d4716df39d4de8d8f2ddc77659018d289da5f",
+    "graphical_material_a_json_sha256": "f5b036dd76fce2671647c026128d7b23cb89b6f2b90002257035d68917906bf4",
+    "graphical_material_b_json_sha256": "f8eb8e39e0603975cad68986395225456fd158670eceb7024dffb424c1507425"
+  },
+  "focused": {
+    "assertions": 270,
+    "failures": [],
+    "passed": true,
+    "cases": [
+      {
+        "mode": "normal",
+        "actor": "a",
+        "initial_revision": 6,
+        "initial_tick": 6,
+        "failure_revision": 7,
+        "failure_tick": 7,
+        "final_revision": 7,
+        "final_tick": 7,
+        "new_item_ids": ["item/server-output/46129794e113c858be5fd532e13e0aa3"],
+        "receipt": {
+          "output_item_id": "item/server-output/46129794e113c858be5fd532e13e0aa3",
+          "output_quantity": 24312,
+          "output_operation_id": "operation/p7-3/item-output/15dd497dd1147e3dc6faa450e2125be4",
+          "matter_replay": false,
+          "output_created_this_call": true,
+          "item_graph_replay": false,
+          "current_item_graph_revision": 7,
+          "current_item_graph_tick": 7,
+          "issued_item_graph_revision": 7,
+          "issued_item_graph_tick": 7,
+          "total_mass_kg": 24312.39652919711,
+          "represented_mass_kg": 24312.0,
+          "residual_mass_kg": 0.3965291971107945,
+          "conservation_error_kg": 0.0,
+          "logical_player_id": "a",
+          "output_definition_id": "item/ore"
+        },
+        "retry_item_ids": ["item/server-output/46129794e113c858be5fd532e13e0aa3", "item/server-output/46129794e113c858be5fd532e13e0aa3", "item/server-output/46129794e113c858be5fd532e13e0aa3"],
+        "retry_quantities": [24312, 24312, 24312],
+        "retry_revisions": [7, 7, 7],
+        "retry_ticks": [7, 7, 7],
+        "retry_created": [false, false, false],
+        "retry_item_graph_replay": [true, true, true]
+      },
+      {
+        "mode": "before_apply",
+        "actor": "a",
+        "initial_revision": 6,
+        "initial_tick": 6,
+        "failure_revision": 6,
+        "failure_tick": 6,
+        "final_revision": 7,
+        "final_tick": 7,
+        "new_item_ids": ["item/server-output/89f90a75b3ca2cbdc4e6ebb990848de8"],
+        "receipt": {
+          "output_item_id": "item/server-output/89f90a75b3ca2cbdc4e6ebb990848de8",
+          "output_quantity": 24312,
+          "output_operation_id": "operation/p7-3/item-output/e99cf815eea82bb2eda0c05a76b98e88",
+          "matter_replay": true,
+          "output_created_this_call": true,
+          "item_graph_replay": false,
+          "current_item_graph_revision": 7,
+          "current_item_graph_tick": 7,
+          "issued_item_graph_revision": 7,
+          "issued_item_graph_tick": 7,
+          "total_mass_kg": 24312.39652919711,
+          "represented_mass_kg": 24312.0,
+          "residual_mass_kg": 0.3965291971107945,
+          "conservation_error_kg": 0.0,
+          "logical_player_id": "a",
+          "output_definition_id": "item/ore"
+        },
+        "retry_item_ids": ["item/server-output/89f90a75b3ca2cbdc4e6ebb990848de8", "item/server-output/89f90a75b3ca2cbdc4e6ebb990848de8", "item/server-output/89f90a75b3ca2cbdc4e6ebb990848de8"],
+        "retry_quantities": [24312, 24312, 24312],
+        "retry_revisions": [7, 7, 7],
+        "retry_ticks": [7, 7, 7],
+        "retry_created": [false, false, false],
+        "retry_item_graph_replay": [true, true, true]
+      },
+      {
+        "mode": "after_apply",
+        "actor": "a",
+        "initial_revision": 6,
+        "initial_tick": 6,
+        "failure_revision": 7,
+        "failure_tick": 7,
+        "final_revision": 7,
+        "final_tick": 7,
+        "new_item_ids": ["item/server-output/08692af6007aea7a10dafb7093a963ef"],
+        "receipt": {
+          "output_item_id": "item/server-output/08692af6007aea7a10dafb7093a963ef",
+          "output_quantity": 24312,
+          "output_operation_id": "operation/p7-3/item-output/e27876b507cf6f26c6e318c23568ff54",
+          "matter_replay": true,
+          "output_created_this_call": false,
+          "item_graph_replay": true,
+          "current_item_graph_revision": 7,
+          "current_item_graph_tick": 7,
+          "issued_item_graph_revision": 7,
+          "issued_item_graph_tick": 7,
+          "total_mass_kg": 24312.39652919711,
+          "represented_mass_kg": 24312.0,
+          "residual_mass_kg": 0.3965291971107945,
+          "conservation_error_kg": 0.0,
+          "logical_player_id": "a",
+          "output_definition_id": "item/ore"
+        },
+        "retry_item_ids": ["item/server-output/08692af6007aea7a10dafb7093a963ef", "item/server-output/08692af6007aea7a10dafb7093a963ef", "item/server-output/08692af6007aea7a10dafb7093a963ef"],
+        "retry_quantities": [24312, 24312, 24312],
+        "retry_revisions": [7, 7, 7],
+        "retry_ticks": [7, 7, 7],
+        "retry_created": [false, false, false],
+        "retry_item_graph_replay": [true, true, true]
+      },
+      {
+        "mode": "actor_b",
+        "actor": "b",
+        "initial_revision": 6,
+        "initial_tick": 6,
+        "failure_revision": 7,
+        "failure_tick": 7,
+        "final_revision": 7,
+        "final_tick": 7,
+        "new_item_ids": ["item/server-output/0ab21d0f8ad074d5ede41f5240f29d30"],
+        "receipt": {
+          "output_item_id": "item/server-output/0ab21d0f8ad074d5ede41f5240f29d30",
+          "output_quantity": 24312,
+          "output_operation_id": "operation/p7-3/item-output/454c76aa812bf7833bf052923c3c53ee",
+          "matter_replay": false,
+          "output_created_this_call": true,
+          "item_graph_replay": false,
+          "current_item_graph_revision": 7,
+          "current_item_graph_tick": 7,
+          "issued_item_graph_revision": 7,
+          "issued_item_graph_tick": 7,
+          "total_mass_kg": 24312.39652919711,
+          "represented_mass_kg": 24312.0,
+          "residual_mass_kg": 0.3965291971107945,
+          "conservation_error_kg": 0.0,
+          "logical_player_id": "b",
+          "output_definition_id": "item/ore"
+        },
+        "retry_item_ids": ["item/server-output/0ab21d0f8ad074d5ede41f5240f29d30", "item/server-output/0ab21d0f8ad074d5ede41f5240f29d30", "item/server-output/0ab21d0f8ad074d5ede41f5240f29d30"],
+        "retry_quantities": [24312, 24312, 24312],
+        "retry_revisions": [7, 7, 7],
+        "retry_ticks": [7, 7, 7],
+        "retry_created": [false, false, false],
+        "retry_item_graph_replay": [true, true, true]
+      }
+    ]
+  },
+  "native_accounting": {
+    "passed": true,
+    "checks": 47,
+    "negative_controls": ["wrong_native_quantity", "duplicate_native_item", "wrong_native_inventory", "wrong_native_owner", "pre_apply_already_mutated", "ack_lost_before_apply", "projection_inflated", "old_world_ore_corrupted", "retry_claims_new_output", "stale_subject"]
+  },
+  "graphical": {
+    "passed": true,
+    "checks": {
+      "canonical_material_owner": true,
+      "two_material_observers": true,
+      "fresh_then_replayed": true,
+      "replay_does_not_advance_graph": true,
+      "single_issuance_delta": true,
+      "static_capture_players:a:a": true,
+      "static_capture_players:a:b": true,
+      "static_capture_players:b:a": true,
+      "static_capture_players:b:b": true
+    },
+    "visible_terrain": {
+      "a": {"terrain_changed_pixels": 372, "minimum_required": 32, "passed": true},
+      "b": {"terrain_changed_pixels": 372, "minimum_required": 32, "passed": true}
+    },
+    "hud_only_falsification": {
+      "rejected_all": true
+    },
+    "negative_controls": ["inflated_receipt", "different_replay_item", "replay_mutates_graph", "missing_retry", "lost_residual", "client_b_disagrees", "duplicate_canonical_item", "stale_subject", "client_owns_material", "fake_native_receipt", "mvp4:unchanged_client_b_geometry", "mvp4:wrong_client_a_canonical_store", "mvp4:recreated_camera", "mvp4:observer_b_without_input", "mvp4:no_canonical_mutation", "mvp4:hud_visible_capture", "mvp4:fake_manual", "mvp4:shared_process", "mvp4:reconnect"],
+    "material_a": {
+      "before_revision": 6.0,
+      "after_revision": 7.0,
+      "before_tick": 6.0,
+      "after_tick": 7.0,
+      "before_stream_sequence": 0.0,
+      "after_stream_sequence": 1.0,
+      "before_item_ids": [],
+      "after_items": [{"definition_id": "item/ore", "item_id": "item/server-output/f1bd585fa1c9d35d85c04bf813271d09", "player_id": "a", "quantity": 24670.0, "slot_index": 1.0}],
+      "receipts": [
+        {"output_item_id": "item/server-output/f1bd585fa1c9d35d85c04bf813271d09", "output_quantity": 24670.0, "output_operation_id": "operation/p7-3/item-output/a983a829bc668803975dba97f0142809", "matter_replay": false, "output_created_this_call": true, "item_graph_replay": false, "current_item_graph_revision": 7.0, "current_item_graph_tick": 7.0, "issued_item_graph_revision": 7.0, "issued_item_graph_tick": 7.0, "total_mass_kg": 24670.74296275268, "represented_mass_kg": 24670.0, "residual_mass_kg": 0.7429627526798868, "conservation_error_kg": 0.0},
+        {"output_item_id": "item/server-output/f1bd585fa1c9d35d85c04bf813271d09", "output_quantity": 24670.0, "output_operation_id": "operation/p7-3/item-output/a983a829bc668803975dba97f0142809", "matter_replay": true, "output_created_this_call": false, "item_graph_replay": true, "current_item_graph_revision": 7.0, "current_item_graph_tick": 7.0, "issued_item_graph_revision": 7.0, "issued_item_graph_tick": 7.0, "total_mass_kg": 24670.74296275268, "represented_mass_kg": 24670.0, "residual_mass_kg": 0.7429627526798868, "conservation_error_kg": 0.0},
+        {"output_item_id": "item/server-output/f1bd585fa1c9d35d85c04bf813271d09", "output_quantity": 24670.0, "output_operation_id": "operation/p7-3/item-output/a983a829bc668803975dba97f0142809", "matter_replay": true, "output_created_this_call": false, "item_graph_replay": true, "current_item_graph_revision": 7.0, "current_item_graph_tick": 7.0, "issued_item_graph_revision": 7.0, "issued_item_graph_tick": 7.0, "total_mass_kg": 24670.74296275268, "represented_mass_kg": 24670.0, "residual_mass_kg": 0.7429627526798868, "conservation_error_kg": 0.0}
+      ]
+    },
+    "material_b_totals_before": {"a": 0.0, "b": 0.0},
+    "material_b_totals_after": {"a": 24670.0, "b": 0.0}
+  },
+  "claims": {
+    "independent_verdict": false,
+    "predicate_verified": false
+  }
+}

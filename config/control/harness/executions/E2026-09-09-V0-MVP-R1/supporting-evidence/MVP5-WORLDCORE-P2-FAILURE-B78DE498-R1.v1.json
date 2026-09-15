@@ -1,0 +1,51 @@
+{
+  "schema": "distributed_world_simulator.mvp5_world_core_failure_diagnostic.v1",
+  "role": "COORDINATOR_DIAGNOSTIC_NOT_INDEPENDENT_VERDICT",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "predicate": "MVP_EXACTLY_ONCE_MATERIAL_OUTPUT",
+  "product_head": "b78de4980328bb7b4d19e030bb7f0fa5d9976cd8",
+  "product_tree": "0bfdd7595e10f007815bb666e62e7c5575172173",
+  "run_id": 34967384187,
+  "run_attempt": 1,
+  "artifact_id": 10396726706,
+  "artifact_sha256": "03b0cf1e930930f593b81febb5483a46be1ed393103b2173a058e94d842c9026",
+  "manifest_sha256": "af5a51448367a29256762317a896a5ffabd6bab3bf8390682e3a2701272b574f",
+  "manifest_checked_members": 1028,
+  "manifest_mismatches": [],
+  "actor_member": "test-results/v0-p2-live-shared-state-7022/actor.json",
+  "actor_sha256": "5d6d70106bd2fa1b1d3763dab91c2e2955cd6797f683f56b18d05d7673802d84",
+  "actor_result": {
+    "passed": false,
+    "assertions": 11,
+    "failures": ["actor picks up shared beacon while B absent", "ITEM_INTERACTION_OUT_OF_RANGE"],
+    "command_type": "item.pickup",
+    "command_status": "REJECTED",
+    "operation_id": "operation/m4/a/item-pickup/7042/2092",
+    "server_sent_at_ms": 10183.0,
+    "error_code": "ITEM_INTERACTION_OUT_OF_RANGE"
+  },
+  "classification": "P2_PICKUP_OUT_OF_RANGE_CONFIRMED_CAUSAL_REGRESSION_NOT_YET_PROVEN",
+  "static_finding": {
+    "path": "tools/runtime/v0_p2_live_reconnect_client.gd",
+    "blob_sha": "61f32514a61a7e5b1f0b21f27314321437984066",
+    "function": "_move_toward",
+    "observation": "Returns final movement command result after fixed step count; it does not assert target reach. Its success is not proof of interaction range.",
+    "caller": "tools/runtime/v0_p2_live_reconnect_client_p5.gd",
+    "caller_blob_sha": "5f74dfb797dc5c32d8fdb97a2680e247d0d79994"
+  },
+  "retry_observed": {
+    "run_attempt": 2,
+    "job_id": 104390100109,
+    "status": "in_progress",
+    "conclusion": null,
+    "started_at": "2026-09-15T12:57:11Z",
+    "started_by_this_session": false
+  },
+  "next_action": "Consume terminal attempt 2 with a separate digest-bound addendum. Preserve attempt 1 failure. If it reproduces, issue bounded P2 reach/replication diagnostic and repair; do not weaken authoritative reach or substitute a green retry for causal proof.",
+  "recovery_route": "GitHub connector for exact refs and artifact download; local ZIP member hashing and bounded JSON/failure windows only. Do not print archive listings or full logs. Do not duplicate the already-running exact world/core job.",
+  "product_ref_changed": false,
+  "mvp5_verified": false,
+  "parent_state": "IN_PROGRESS",
+  "runtime_merge": false,
+  "main_merge": false
+}

@@ -1,0 +1,55 @@
+{
+  "schema": "distributed_world_simulator.mvp5_verifier_decision_rule.v1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "predicate": "MVP_EXACTLY_ONCE_MATERIAL_OUTPUT",
+  "frozen_product": {
+    "branch": "feature/v0-mvp-playable-seamless-planet-r1",
+    "head_sha": "b78de4980328bb7b4d19e030bb7f0fa5d9976cd8",
+    "tree_sha": "0bfdd7595e10f007815bb666e62e7c5575172173"
+  },
+  "independent_verifier_transport": {
+    "pull_request": 639,
+    "provider": "chatgpt-codex-connector[bot]",
+    "mode": "fresh GitHub pull-request review over evidence-only carrier",
+    "responsibility": "VERIFIER_NOT_IMPLEMENTER_NOT_PRODUCT_REVIEWER",
+    "write_access_to_product_required": false
+  },
+  "preflight": {
+    "request_comment_id": 5680137845,
+    "review_id": 5209971126,
+    "reviewed_carrier_head": "3f3f5202664ae77daba733b593142eb8cace88ff",
+    "terminal_for_mvp5_verification": false,
+    "reason": "Requested before terminal exact-product world/core evidence; retained as historical verifier preflight only."
+  },
+  "final_review_preconditions": [
+    "feature/v0-mvp-playable-seamless-planet-r1 still resolves to b78de4980328bb7b4d19e030bb7f0fa5d9976cd8",
+    "exact runtime artifact evidence is present and hash-bound",
+    "exact Project Control evidence is present and hash-bound",
+    "exact branch-aware Status/Resume/Drive evidence is present and hash-bound",
+    "terminal exact-product full world/core addendum is present and hash-bound",
+    "historical failed world/core attempt remains visible",
+    "producer evidence does not self-claim independent verification or PREDICATE_VERIFIED"
+  ],
+  "decision_rule": {
+    "any_finding_inline_comment_or_blocking_evidence_gap": "NOT_VERIFIED",
+    "terminal_exact_carrier_review_completed_with_zero_findings": "VERIFIED",
+    "success_reaction": "SUPPLEMENTAL_ONLY_NOT_REQUIRED",
+    "coordinator_may_invent_verdict": false,
+    "coordinator_may_serialize_external_terminal_result_after_completion": true
+  },
+  "required_subgates": [
+    "MVP_EXACTLY_ONCE_MATERIAL_OUTPUT",
+    "LIVE_TOOL_GATED_DIG_TO_CANONICAL_OUTPUT",
+    "OUTPUT_EXACTLY_ONCE_UNDER_REPLAY",
+    "NO_SECOND_ITEM_IDENTITY_FOR_DUPLICATE_OPERATION"
+  ],
+  "closure_boundary": {
+    "mvp5_leaf_only": true,
+    "parent_work_order_state_after_success": "IN_PROGRESS",
+    "whole_mvp_acceptance": false,
+    "runtime_merge_authorized": false,
+    "main_merge_authorized": false,
+    "next_product_predicate": "MVP_ITEM_CONSTRUCTION_PERSISTENCE_CONVERGENCE"
+  }
+}
