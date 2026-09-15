@@ -1,0 +1,84 @@
+{
+  "schema": "distributed_world_simulator.mvp5_exact_machine_evidence.v1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "predicate": "MVP_EXACTLY_ONCE_MATERIAL_OUTPUT",
+  "subject": {
+    "branch": "feature/v0-mvp-playable-seamless-planet-r1",
+    "head_sha": "b78de4980328bb7b4d19e030bb7f0fa5d9976cd8",
+    "tree_sha": "0bfdd7595e10f007815bb666e62e7c5575172173",
+    "canonical_main_sha": "675c04bb213bbb68b8cdb500d540d57ce1490318"
+  },
+  "exact_runtime": {
+    "workflow_run_id": 34964304441,
+    "job_id": 104365023773,
+    "conclusion": "success",
+    "artifact_id": 10394302580,
+    "artifact_zip_sha256": "cb31317ba350b74c544704dc3741c362a7651b206eba5c662673254ff702746f",
+    "artifact_manifest_indexed_member_count": 95,
+    "artifact_manifest_member_digest_mismatch_count": 0,
+    "artifact_rehashed_by_coordinator": true,
+    "engine_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+    "tracked_checkout_clean_after": true,
+    "focused_assertions": 270,
+    "focused_failures": 0,
+    "focused_case_count": 4,
+    "native_accounting_check_count": 47,
+    "native_accounting_passed": true,
+    "native_negative_corruption_count": 10,
+    "graphical_five_process_passed": true,
+    "graphical_failed_checks": [],
+    "visible_terrain_changed_pixels": {
+      "client_a": 372,
+      "client_b": 372,
+      "minimum_required": 32
+    },
+    "hud_only_false_positive_controls_rejected": true,
+    "static_capture_players": {
+      "a_a": true,
+      "a_b": true,
+      "b_a": true,
+      "b_b": true
+    },
+    "unchanged_mvp4_mvp3_passed": true,
+    "independent_verdict_in_producer": false,
+    "predicate_verified_in_producer": false
+  },
+  "required_live_baseline_subgates": {
+    "LIVE_TOOL_GATED_DIG_TO_CANONICAL_OUTPUT": "MACHINE_EVIDENCE_PASS_REQUIRES_INDEPENDENT_VERIFIER_CONSUMPTION",
+    "OUTPUT_EXACTLY_ONCE_UNDER_REPLAY": "MACHINE_EVIDENCE_PASS_REQUIRES_INDEPENDENT_VERIFIER_CONSUMPTION",
+    "NO_SECOND_ITEM_IDENTITY_FOR_DUPLICATE_OPERATION": "MACHINE_EVIDENCE_PASS_REQUIRES_INDEPENDENT_VERIFIER_CONSUMPTION"
+  },
+  "project_control": {
+    "workflow_run_id": 34964308428,
+    "job_id": 104365037769,
+    "conclusion": "success",
+    "artifact_id": 10394392940,
+    "artifact_zip_sha256_recomputed": "2f74633e34290203fb288faae14682dc7b24d5aa840ea6335ebbc27f0b7037a4",
+    "complete_harness": "PASS",
+    "standard_pc0": "YELLOW_NON_RED",
+    "directional_pc0": "YELLOW_NON_RED"
+  },
+  "reviewer": {
+    "request_comment_id": 5679618500,
+    "result_comment_id": 5679693047,
+    "reviewed_commit_short": "b78de49803",
+    "terminal_result": "NO_MAJOR_ISSUES",
+    "role": "REVIEWER_ONLY_NOT_VERIFIER"
+  },
+  "historical_failures_preserved": true,
+  "world_core_exact_product": {
+    "required_terminal_addendum_path": "config/control/harness/executions/E2026-09-09-V0-MVP-R1/supporting-evidence/MVP5-WORLD-CORE-B78DE498-R1.v1.json",
+    "status_at_this_record": "PENDING",
+    "carrier_branch": "control/v0-mvp5-worldcore-b78de498-r1",
+    "carrier_head_sha": "dab6476ff0881de5a05a8fb49d14d781728083c2",
+    "workflow_run_id": 34967384187
+  },
+  "closure_claims": {
+    "independent_verifier_verdict": false,
+    "predicate_verified": false,
+    "parent_work_order_state": "IN_PROGRESS",
+    "runtime_merge_authorized": false,
+    "main_merge_authorized": false
+  }
+}
