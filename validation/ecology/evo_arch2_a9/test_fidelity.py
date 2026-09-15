@@ -11,6 +11,7 @@ import zlib
 ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT))
 from scripts.research.ecology.v2 import ecological_fidelity_v1 as F
+from scripts.research.ecology.v2.fidelity_runtime_v1 import NativeA8
 
 
 def fixture(entity='fixture.partition', revision=0, epoch=1):
@@ -151,6 +152,18 @@ class FidelityTests(unittest.TestCase):
             self.assertEqual(F.FidelityRecord.restore(r.data, r.sha256, self.origin), r)
             for sha, origin in [('', self.origin), (None, self.origin), ('0'*64, self.origin), (r.sha256, '0'*64)]:
                 with self.assertRaises(F.FidelityError): F.FidelityRecord.restore(r.data, sha, origin)
+
+        # The native-service boundary is stubbed only in this contract test.
+        # The real service and storage are qualified separately by integration.py.
+        runtime = object.__new__(NativeA8)
+        runtime.admit = self.admit
+        for level in (0, 1, 6, 9):
+            doc = self.full.convert('REDUCED').document()
+            doc['payload'] = base64.b64encode(zlib.compress(self.raw, level)).decode()
+            record = F.FidelityRecord(F.canonical(doc))
+            restored = runtime.restore(record.data, record.sha256, self.origin)
+            self.assertEqual(restored.data, record.data)
+            self.assertEqual(restored.sha256, record.sha256)
 
     def test_packet_tampering_rejected(self):
         r = self.full.convert('PATCH'); changed = r.data.replace(b'node.a', b'node.b')
