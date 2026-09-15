@@ -260,6 +260,16 @@ class FidelityTests(unittest.TestCase):
             with self.assertRaises(F.FidelityError): F.FidelityRecord(self.altered(lambda d: change(d['projection'])))
 
     def test_packet_input_byte_and_depth_limits(self):
+        self.assertEqual(F.MAX_PACKET, 2097152)  # Canonical A8 durable byte limit.
+        # Valid source bytes can still become an oversized FULL envelope due to escaping.
+        source_doc = json.loads(self.raw)
+        source_doc['cut']['ecology_payload'] = '"' * 600000
+        raw = F.canonical(source_doc)
+        self.assertLess(len(raw), F.MAX_RAW)
+        admission = self.admit(self.raw, F.digest(self.raw), self.origin)
+        admission['source'] = F.binding(raw, F.digest(raw), self.origin)
+        with self.assertRaisesRegex(F.FidelityError, 'BYTE_BUDGET'):
+            F.FidelityRecord.from_snapshot(raw, F.digest(raw), self.origin, lambda *_: admission)
         for raw in (b'', b'x' * (F.MAX_PACKET + 1), b'[' * 1100 + b'0' + b']' * 1100):
             with self.assertRaises(F.FidelityError): F.FidelityRecord(raw)
 
