@@ -54,7 +54,10 @@
     "job_id": 104365037769,
     "conclusion": "success",
     "artifact_id": 10394392940,
-    "artifact_zip_sha256_recomputed": "2f74633e34290203fb288faae14682dc7b24d5aa840ea6335ebbc27f0b7037a4",
+    "artifact_github_digest_sha256": "3a417111e635ee0f18448d64ac53ad9054ba7d215034daed54073f2725a4660e",
+    "artifact_download_sha256_recomputed": "3a417111e635ee0f18448d64ac53ad9054ba7d215034daed54073f2725a4660e",
+    "artifact_file_count": 4,
+    "digest_correction_note": "Supersedes the preliminary 2f74633e... local ZIP value recorded before fresh download. Live GitHub artifact digest and a new independent download/re-hash both equal 3a417111...; final verifier must use this corrected immutable value.",
     "complete_harness": "PASS",
     "standard_pc0": "YELLOW_NON_RED",
     "directional_pc0": "YELLOW_NON_RED"
