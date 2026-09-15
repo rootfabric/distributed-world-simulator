@@ -101,7 +101,8 @@ def main():
             passed('mode_' + mode.lower() + '_conservation_render_refinement')
         b = handoff(backend, r_next, 'node.b')
         try: backend.step(b, command(b, actor='node.a', epoch=1))
-        except FidelityError: pass
+        except FidelityError as exc:
+            require('A8_STALE_OWNER' in str(exc), 'WRONG_OLD_OWNER_FAILURE:' + str(exc))
         else: raise FidelityError('OLD_OWNER_ACCEPTED')
         a = handoff(backend, b, 'node.a')
         require(a.source()['owner_epoch'] == 3 and a.source()['ecology_sha256'] == r_next.source()['ecology_sha256'], 'ROUNDTRIP_SEAM')
@@ -145,13 +146,14 @@ def main():
             except FidelityError: pass
             else: raise FidelityError('DUPLICATE_SCALE_PARTITION')
         passed('eight_real_partitions_aggregation_no_overlap')
-        result.update(verdict='PASS', source=full.source(), paid_source=paid.source(), final_source=a.source(),
+        result.update(source=full.source(), paid_source=paid.source(), final_source=a.source(),
                       native_processes=backend.runs, modes=list(MODES),
                       retained_packet_bytes={mode: len(paid.convert(mode).data) for mode in MODES},
                       real_scale={'partitions': 8, 'living': json.loads(batch)['totals']['counts']['living'],
                                   'aggregate_bytes': len(batch), 'claim': 'REPRESENTATION_NOT_ACTIVE_SIMULATION_THROUGHPUT'},
                       durable_anchor=acknowledged)
         require(len(result['checks']) == 13, 'INTEGRATION_CHECK_COUNT')
+        result['verdict'] = 'PASS'
         print('EVO_ARCH2_A9_INTEGRATION checks=13 failed=0', flush=True)
         return 0
     except Exception as exc:
