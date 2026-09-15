@@ -1,0 +1,75 @@
+{
+  "schema": "distributed_world_simulator.mvp5_branch_aware_control_evidence.v1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "predicate": "MVP_EXACTLY_ONCE_MATERIAL_OUTPUT",
+  "subject": {
+    "branch": "feature/v0-mvp-playable-seamless-planet-r1",
+    "head_sha": "b78de4980328bb7b4d19e030bb7f0fa5d9976cd8",
+    "tree_sha": "0bfdd7595e10f007815bb666e62e7c5575172173",
+    "canonical_main_sha": "675c04bb213bbb68b8cdb500d540d57ce1490318"
+  },
+  "driver": {
+    "branch": "control/v0-mvp5-exact-driver-b78de498-r1",
+    "head_sha": "2fb23ca9f43491ece958638c18810b84a2dcfe6b",
+    "workflow_run_id": 34973488218,
+    "job_id": 104395270950,
+    "conclusion": "success",
+    "read_only_driver": true,
+    "remote_product_ref_modified": false
+  },
+  "artifact": {
+    "artifact_id": 10397834314,
+    "github_digest_sha256": "ac8ce0bc29a2a72979017d93b19dcd6693a384c58d15ff50db444dc4071d99b7",
+    "download_sha256_recomputed": "ac8ce0bc29a2a72979017d93b19dcd6693a384c58d15ff50db444dc4071d99b7",
+    "manifest_file_count": 4,
+    "manifest_member_digest_mismatch_count": 0,
+    "tracked_after_clean": true
+  },
+  "commands": {
+    "status": {
+      "ok": true,
+      "continuation_blocked": false,
+      "findings": []
+    },
+    "resume": {
+      "ok": true,
+      "continuation_blocked": false,
+      "findings": []
+    },
+    "drive": {
+      "ok": true,
+      "continuation_blocked": false,
+      "findings": [],
+      "next_actor": "INTEGRATOR",
+      "next_action": "CONTINUE_ACTIVE_WORK_ORDER_TO_IMPLEMENTED_AND_VALIDATED",
+      "mission_complete": false,
+      "mission_exit_allowed": false
+    }
+  },
+  "reducer_before_mvp5_closure": {
+    "state": "IN_PROGRESS",
+    "last_event_sequence": 17,
+    "last_event_type": "RECOVERY_RESUMED",
+    "completed_predicates": [
+      "MVP_SHARED_GRAPHICAL_SCENE",
+      "MVP_TWO_CLIENT_SHARED_WORLD",
+      "MVP_SEAM_NO_RECONNECT_OR_RESPAWN",
+      "MVP_CANONICAL_DIG_VISIBLE_TO_BOTH_CLIENTS"
+    ],
+    "open_blocker": null,
+    "human_attention_open_items": 0,
+    "checkpoint_blockers": [
+      "REQUIRED_PREDICATES_INCOMPLETE",
+      "POST_BUILD_REVIEW_NOT_FRESH_PASS",
+      "EVIDENCE_MAP_MISSING"
+    ]
+  },
+  "closure_claims": {
+    "independent_verifier_verdict": false,
+    "predicate_verified": false,
+    "parent_work_order_state": "IN_PROGRESS",
+    "runtime_merge_authorized": false,
+    "main_merge_authorized": false
+  }
+}
