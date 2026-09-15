@@ -1,0 +1,223 @@
+name: ECO ARCH2 A9 Exact R1
+on:
+  push:
+    branches: [validation/eco-arch2-a9-exact-r1]
+    paths: [.github/workflows/evo-arch2-a9-exact-r1.yml]
+permissions:
+  contents: read
+concurrency:
+  group: eco-arch2-a9-exact-r1
+  cancel-in-progress: false
+env:
+  SOURCE_HEAD: 920a6f3a968be950559747be20ccf2f8b4e205c1
+  SOURCE_TREE: 8a68a33206270b15d3f7cd24ced0c26b0f50ec35
+  BASE_MAIN: 675c04bb213bbb68b8cdb500d540d57ce1490318
+  BASE_TREE: 04b217ff7acfcd6336490f139f9239a7f6b59b7d
+  GIT_NO_REPLACE_OBJECTS: '1'
+jobs:
+  preflight:
+    if: github.actor == 'rootfabric' && github.repository == 'rootfabric/distributed-world-simulator'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ env.SOURCE_HEAD }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Seal frozen A9 source and execute all contract tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main:refs/remotes/origin/main
+          test "$(git rev-parse HEAD)" = "$SOURCE_HEAD"
+          test "$(git rev-parse HEAD^{tree})" = "$SOURCE_TREE"
+          test "$(git rev-parse refs/remotes/origin/main)" = "$BASE_MAIN"
+          test "$(git rev-parse "$BASE_MAIN^{tree}")" = "$BASE_TREE"
+          test -z "$(git status --porcelain --untracked-files=no)"
+          mkdir -p artifacts/a9/preflight
+          python3 - <<'PY'
+          import hashlib,importlib.util,json,os,pathlib,py_compile,subprocess,sys
+          p=pathlib.Path('validation/ecology/evo_arch2_a9/verify.py')
+          spec=importlib.util.spec_from_file_location('a9',p)
+          m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m)
+          v8=m.load_a8_verifier()
+          def need(ok,msg):
+              if not ok: raise RuntimeError(msg)
+          rows=v8.git('diff','--name-status',os.environ['BASE_MAIN'],os.environ['SOURCE_HEAD']).splitlines()
+          need(all(r.startswith('A\t') for r in rows),'NON_ADDITIVE_DIFF')
+          need({r.split('\t')[1] for r in rows}==m.ADDITIONS,'A9_EXACT_PATHS')
+          objects={p:v8.require_exact_resource(os.environ['SOURCE_HEAD'],p) for p in sorted(m.ADDITIONS)}
+          for path in m.ADDITIONS:
+              if path.endswith('.py'): py_compile.compile(path,doraise=True)
+          out=pathlib.Path('artifacts/a9/preflight');tests=[]
+          for name,flags in [('normal',[]),('optimized',['-O'])]:
+              cmd=[sys.executable,*flags,'-m','unittest','discover','-s','validation/ecology/evo_arch2_a9','-p','test_fidelity.py','-v']
+              r=subprocess.run(cmd,text=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,timeout=180)
+              log=out/(name+'.log');log.write_text(r.stdout);print(r.stdout)
+              need(r.returncode==0,'CONTRACT_EXIT:'+name)
+              count=v8.unittest_count(r.stdout,32)
+              tests.append({'name':name,'tests':count,'command':cmd,'sha256':hashlib.sha256(log.read_bytes()).hexdigest()})
+          report={'result':'PASS','source_head':os.environ['SOURCE_HEAD'],'source_tree':os.environ['SOURCE_TREE'],
+                  'workflow_head':os.environ['GITHUB_SHA'],'run_id':os.environ['GITHUB_RUN_ID'],
+                  'objects':objects,'tests':tests,'native_biology_verified':False}
+          (out/'summary.json').write_text(json.dumps(report,indent=2)+'\n');print(json.dumps(report,indent=2))
+          PY
+      - name: Upload exact contract preflight
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: a9-920a6f3a-r1-preflight
+          path: artifacts/a9/preflight/
+          if-no-files-found: error
+          retention-days: 30
+  linux-exact:
+    needs: preflight
+    if: github.actor == 'rootfabric' && github.repository == 'rootfabric/distributed-world-simulator'
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ env.SOURCE_HEAD }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Seal source and main epoch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin '+refs/heads/*:refs/remotes/origin/*'
+          test "$(git rev-parse HEAD)" = "$SOURCE_HEAD"
+          test "$(git rev-parse HEAD^{tree})" = "$SOURCE_TREE"
+          test "$(git rev-parse refs/remotes/origin/main)" = "$BASE_MAIN"
+          test "$(git rev-parse "$BASE_MAIN^{tree}")" = "$BASE_TREE"
+          test -z "$(git status --porcelain --untracked-files=no)"
+          mkdir -p artifacts/a9/environment
+      - name: Prepare canonical Harness Python job-locally
+        shell: bash
+        run: |
+          set -euo pipefail
+          prefix="$(mktemp -d "$RUNNER_TEMP/a9-r1-python.XXXXXXXX")"
+          echo "A9_PYTHON_PREFIX=$prefix" >> "$GITHUB_ENV"
+          python3 -m venv "$prefix"
+          "$prefix/bin/python" -m pip install --disable-pip-version-check --no-input -r scripts/harness/requirements.txt
+          test "$("$prefix/bin/python" -c 'import importlib.metadata; print(importlib.metadata.version("jsonschema"))')" = '4.22.0'
+          echo "A9_PYTHON=$prefix/bin/python" >> "$GITHUB_ENV"
+      - name: Prepare graphical executor job-locally
+        shell: bash
+        run: |
+          set -euo pipefail
+          exec > >(tee artifacts/a9/environment/graphics-bootstrap.log) 2>&1
+          if command -v xvfb-run >/dev/null 2>&1; then
+            echo GRAPHICS_EXECUTOR=EXISTING_SYSTEM_XVFB
+            xvfb-run -a -s '-screen 0 1600x1100x24' /bin/true
+            exit 0
+          fi
+          prefix="$(mktemp -d "$RUNNER_TEMP/a9-r1-graphics.XXXXXXXX")"
+          echo "A9_GRAPHICS_PREFIX=$prefix" >> "$GITHUB_ENV"
+          mkdir -p "$prefix/packages" "$prefix/root"
+          packages=(xvfb xauth libxfont2 xserver-common x11-xkb-utils xkb-data xfonts-base libxmu6 libxmuu1 libfontenc1 libxau6 libxdmcp6 libxt6 libsm6 libice6)
+          (
+            cd "$prefix/packages"
+            if ! apt-get download "${packages[@]}"; then
+              mkdir -p "$prefix/apt/lists/partial" "$prefix/apt/cache/archives/partial"
+              cat > "$prefix/apt/isolated.conf" <<EOF
+          Dir::State::lists "$prefix/apt/lists";
+          Dir::Cache "$prefix/apt/cache";
+          Debug::NoLocking "true";
+          APT::Sandbox::User "$(id -un)";
+          #clear APT::Update::Post-Invoke;
+          #clear APT::Update::Post-Invoke-Success;
+          #clear DPkg::Post-Invoke;
+          EOF
+              APT_CONFIG="$prefix/apt/isolated.conf" apt-get update
+              APT_CONFIG="$prefix/apt/isolated.conf" apt-get download "${packages[@]}"
+            fi
+            for package in ./*.deb; do
+              sha256sum "$package"
+              dpkg-deb --extract "$package" "$prefix/root"
+            done
+          )
+          echo "$prefix/root/usr/bin" >> "$GITHUB_PATH"
+          echo "LD_LIBRARY_PATH=$prefix/root/usr/lib/x86_64-linux-gnu${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" >> "$GITHUB_ENV"
+          echo "XKB_CONFIG_ROOT=$prefix/root/usr/share/X11/xkb" >> "$GITHUB_ENV"
+          export PATH="$prefix/root/usr/bin:$PATH"
+          export LD_LIBRARY_PATH="$prefix/root/usr/lib/x86_64-linux-gnu${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+          export XKB_CONFIG_ROOT="$prefix/root/usr/share/X11/xkb"
+          xvfb-run -a -s '-screen 0 1600x1100x24' /bin/true
+          echo GRAPHICS_BOOTSTRAP_PASS
+      - name: Run A9 native integration and all inherited exact gates
+        shell: bash
+        env:
+          CONFIGURED_GODOT: ${{ vars.GODOT_DOUBLE_PATH }}
+        run: |
+          set -euo pipefail
+          godot="${CONFIGURED_GODOT:-$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64}"
+          test -x "$godot"
+          "$A9_PYTHON" validation/ecology/evo_arch2_a9/verify.py --godot "$godot" --head "$SOURCE_HEAD" --tree "$SOURCE_TREE"
+      - name: Record actual main-owned mission diagnostics
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          py="${A9_PYTHON:-python3}"
+          "$py" - <<'PY'
+          import json,os,pathlib,subprocess,sys
+          root=pathlib.Path.cwd();out=root/'artifacts/a9/mission';out.mkdir(parents=True,exist_ok=True)
+          env=dict(os.environ,PYTHONPATH=str(root/'scripts'),PYTHONUTF8='1');records=[]
+          for mode in ('drive','close-role','close-mission'):
+              cmd=[sys.executable,'-m','harness.cli',mode,'--root',str(root),'--checkpoint','ECO_ARCH2_A9_ECOLOGICAL_FIDELITY']
+              p=subprocess.run(cmd,env=env,text=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,timeout=120)
+              (out/(mode+'.log')).write_text(p.stdout)
+              records.append({'mode':mode,'command':cmd,'exit_code':p.returncode});print(mode,p.returncode,p.stdout)
+          (out/'diagnostics.json').write_text(json.dumps({'scope':'DIAGNOSTICS_NOT_ACCEPTANCE','records':records},indent=2)+'\n')
+          PY
+      - name: Bind evidence bytes to frozen source and run
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib,subprocess
+          root=pathlib.Path.cwd();out=root/'artifacts/a9';out.mkdir(parents=True,exist_ok=True)
+          def git(*args): return subprocess.run(['git',*args],text=True,capture_output=True,check=True).stdout.strip()
+          provenance={'source_head':os.environ['SOURCE_HEAD'],'source_tree':os.environ['SOURCE_TREE'],
+                      'actual_head':git('rev-parse','HEAD'),'actual_tree':git('rev-parse','HEAD^{tree}'),
+                      'tracked_status':git('status','--porcelain','--untracked-files=no'),
+                      'run_id':os.environ['GITHUB_RUN_ID'],'run_attempt':os.environ['GITHUB_RUN_ATTEMPT'],
+                      'workflow_head':os.environ['GITHUB_SHA'],'runner':os.environ.get('RUNNER_NAME','unknown')}
+          (out/'provenance.json').write_text(json.dumps(provenance,indent=2)+'\n')
+          files=list(out.rglob('*'))
+          for rel in ('artifacts/a8','artifacts/a7/observatory.png','artifacts/a7/capture-sources.json','artifacts/a7/restart','artifacts/a6/restart'):
+              p=root/rel;files.extend(p.rglob('*') if p.is_dir() else [p])
+          entries={p.relative_to(root).as_posix():{'sha256':hashlib.sha256(p.read_bytes()).hexdigest(),'bytes':p.stat().st_size}
+                   for p in sorted(set(files)) if p.is_file() and p != out/'evidence-files.v1.json'}
+          (out/'evidence-files.v1.json').write_text(json.dumps({'provenance':provenance,'files':entries},indent=2)+'\n')
+          print(json.dumps(provenance,indent=2));print('HASHED_FILES='+str(len(entries)))
+          PY
+      - name: Upload exact A9 and inherited evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: a9-exact-920a6f3a-r1
+          path: |
+            artifacts/a9/
+            artifacts/a8/
+            artifacts/a7/observatory.png
+            artifacts/a7/capture-sources.json
+            artifacts/a7/restart/
+            artifacts/a6/restart/
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 30
+      - name: Remove only owned job-local dependencies
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -n "${A9_PYTHON_PREFIX:-}" ]; then
+            case "$A9_PYTHON_PREFIX" in "$RUNNER_TEMP"/a9-r1-python.*) rm -rf -- "$A9_PYTHON_PREFIX" ;; *) exit 1 ;; esac
+          fi
+          if [ -n "${A9_GRAPHICS_PREFIX:-}" ]; then
+            case "$A9_GRAPHICS_PREFIX" in "$RUNNER_TEMP"/a9-r1-graphics.*) rm -rf -- "$A9_GRAPHICS_PREFIX" ;; *) exit 1 ;; esac
+          fi
