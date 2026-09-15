@@ -41,13 +41,16 @@
     "EXACT_CURRENT_MAIN_AND_ADDITIVE_SCOPE",
     "REAL_A8_SEMANTIC_ADMISSION",
     "FULL_REDUCED_BYTE_EXACT_ROUNDTRIP",
+    "ACKNOWLEDGED_PACKET_RESTORE_DOES_NOT_RECOMPRESS",
     "PATCH_AGGREGATE_EXPLICIT_LOSS_AND_REFINEMENT_REQUIREMENT",
     "EXTERNAL_EXACT_STATE_REQUIRED_FOR_HISTORICAL_REFINEMENT",
     "CONSERVATION_COUNTS_COHORT_AND_FIELD_BINDINGS",
     "RENDER_OPTIONS_CANNOT_CHANGE_BIOLOGY_OR_FIDELITY",
     "BOUNDED_DECOMPRESSION_INPUTS_AND_AGGREGATION",
+    "WHOLE_PACKET_FITS_UNCHANGED_A8_DURABLE_LIMIT",
     "DUPLICATE_PARTITION_AND_MIXED_EPOCH_DOUBLE_COUNT_REJECTED",
     "A8_NATIVE_COMMAND_AND_SEAM_COMPATIBILITY",
+    "PRECISE_STALE_OWNER_ERROR_NOT_ARBITRARY_PROCESS_FAILURE",
     "DURABLE_PACKET_ANCHORS_AND_FRESH_PROCESS_RESTART",
     "SYNTHETIC_SCALE_SEPARATE_FROM_REAL_BIOLOGY",
     "FULL_INHERITED_A0_A8_REGRESSIONS_AND_GRAPHICS",
@@ -55,11 +58,25 @@
     "FRESH_INDEPENDENT_WHOLE_HEAD_REVIEW",
     "EVIDENCE_HASHES_SUBJECT_BINDING_AND_POST_BUILD_CRITIQUE"
   ],
-  "state": "IN_PROGRESS",
+  "repair_r1": {
+    "previous_source": "920a6f3a968be950559747be20ccf2f8b4e205c1",
+    "independent_findings": [4016102680, 4016102692],
+    "restore_map_commit": "c92c2e849d0ac8a9de08ac10185287bf945b81f0",
+    "review_addendum_commit": "a59c1cbd19637ae6a25809cc1468a04d3a4a156c",
+    "maps_branch": "validation/eco-arch2-a9-exact-r1",
+    "packet_limit_bytes": 2097152,
+    "old_packet_limit_superseded": 4194304,
+    "contract_test_methods_required": 32,
+    "test_modes": ["normal", "python -O"],
+    "stale_run": 34974736747,
+    "stale_review_request": 5680887802,
+    "old_evidence_accepts_new_head": false
+  },
+  "state": "VERIFYING_REPAIR_R1",
   "resume_anchor": {
-    "last_completed_predicate": "FRESH_MAIN_BRANCH_DESIGN_AND_WORK_ORDER",
-    "next_action": "IMPLEMENT_KERNEL_NATIVE_ADMISSION_RUNTIME_AND_TESTS_THEN_FREEZE_EXACT_LINUX_REVIEW",
-    "allowed_recovery_route": "GitHub connector for commits; local contract tests and repository-owned self-hosted Linux for actual Godot; separate validation branch for evidence",
+    "last_completed_predicate": "A9_REPAIR_R1_IMPLEMENTED_AND_LOCAL_CONTRACT_TESTS_PASS",
+    "next_action": "FREEZE_REPAIRED_HEAD_TREE_REBIND_EXACT_WORKFLOW_AND_FRESH_WHOLE_HEAD_REVIEW_THEN_INSPECT_ARTIFACTS",
+    "allowed_recovery_route": "GitHub connector for commits; repository-owned self-hosted Linux for actual Godot; separate validation branch for evidence; PR #640",
     "stop_before": "MAIN_MERGE"
   }
 }
