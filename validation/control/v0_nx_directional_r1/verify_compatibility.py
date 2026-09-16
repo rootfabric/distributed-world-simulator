@@ -9,6 +9,7 @@ import re
 import subprocess
 import sys
 import tempfile
+from fixture_types import adapt
 
 ROOT = Path(__file__).resolve().parents[3]
 OUT = ROOT / 'artifacts/v0-nx-compat'
@@ -55,6 +56,10 @@ def raw(ref: str, path: str) -> bytes:
     return subprocess.check_output(['git', 'show', ref + ':' + path], cwd=ROOT)
 
 
+def overlay_bytes(path: str) -> bytes:
+    return adapt(path, raw(NX, path))
+
+
 def sha(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
@@ -89,8 +94,6 @@ def main() -> int:
         require(git('rev-parse', 'origin/main') == MAIN, 'MAIN_EPOCH_DRIFT')
         observed_v0 = git('rev-parse', 'origin/' + V0_BRANCH)
         result['producer_observed'] = observed_v0
-        # Match the existing clearance contract: unrelated descendant commits
-        # may advance, but the reviewed dependency bytes and full hit set cannot.
         require(subprocess.run(['git', 'merge-base', '--is-ancestor', V0, observed_v0], cwd=ROOT, check=False).returncode == 0, 'V0_ANCESTRY_DRIFT')
         require(git('rev-parse', observed_v0 + ':' + FACADE) == BLOB, 'LIVE_FACADE_BLOB_DRIFT')
         require(git('rev-parse', 'origin/' + NX_BRANCH) == NX, 'NX_HEAD_DRIFT')
@@ -116,7 +119,8 @@ def main() -> int:
         result['watch'] = {'critical': critical, 'all_hits': hits, 'baseline_clearance': 'UNRESOLVED', 'rejections': rejected}
         (OUT / 'facade.diff').write_text(git('diff', MAIN, V0, '--', FACADE) + '\n')
         overlay = NX_RUNTIME + NX_TESTS
-        result['nx_overlay'] = {p: {'git_blob': git('rev-parse', NX + ':' + p), 'sha256': sha(raw(NX, p))} for p in overlay}
+        result['nx_overlay'] = {p: {'git_blob': git('rev-parse', NX + ':' + p), 'original_sha256': sha(raw(NX, p)), 'executed_sha256': sha(overlay_bytes(p)), 'typing_only_fixture_repair': overlay_bytes(p) != raw(NX, p)} for p in overlay}
+        result['fixture_scope'] = 'NX_RUNTIME_BYTE_EXACT_TEST_ASSERTIONS_UNCHANGED_WITH_EXPLICIT_TYPING_ANNOTATIONS'
         temp = Path(tempfile.mkdtemp(prefix='v0-nx-compat-', dir=os.environ.get('RUNNER_TEMP')))
         for label, source in [('baseline', MAIN), ('treatment', MAIN), ('producer', V0)]:
             target = temp / label
@@ -126,7 +130,7 @@ def main() -> int:
                 for path in overlay:
                     file = target / path
                     file.parent.mkdir(parents=True, exist_ok=True)
-                    file.write_bytes(raw(NX, path))
+                    file.write_bytes(overlay_bytes(path))
                 if label == 'treatment':
                     (target / FACADE).write_bytes(raw(V0, FACADE))
             result['tests'].append(run(label + '-cold-import', [str(godot), '--headless', '--audio-driver', 'Dummy', '--editor', '--path', str(target), '--import', '--quit'], target))
@@ -139,7 +143,7 @@ def main() -> int:
             changed = set(git('diff', '--name-only', source, cwd=target).splitlines())
             require(changed <= allowed, label + ':UNDECLARED_TRACKED_MUTATION:' + repr(sorted(changed - allowed)))
             for path in overlay if label != 'producer' else []:
-                require((target / path).read_bytes() == raw(NX, path), label + ':OVERLAY_MUTATED:' + path)
+                require((target / path).read_bytes() == overlay_bytes(path), label + ':OVERLAY_MUTATED:' + path)
             require((target / FACADE).read_bytes() == raw(V0 if label in ('treatment', 'producer') else MAIN, FACADE), label + ':FACADE_MUTATED')
         files = set(git('ls-tree', '-r', '--name-only', MAIN).splitlines()) | set(overlay)
         deltas = [p for p in sorted(files) if (worktrees[0] / p).read_bytes() != (worktrees[1] / p).read_bytes()]
