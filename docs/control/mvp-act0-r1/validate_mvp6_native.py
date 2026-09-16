@@ -44,10 +44,11 @@ def main() -> int:
         raise RuntimeError("TRACKED_SOURCE_DIRTY")
     OUT.mkdir(parents=True, exist_ok=False)
     env = os.environ.copy()
-    env.update(PYTHONUTF8="1", PYTHONDONTWRITEBYTECODE="1", BREAKPOINT_RUNTIME_DISABLED="1", MVP6_NATIVE_RESULT=str(OUT / "native.json"), MVP3_OWNER_HOOKS_RESULT=str(OUT / "mvp3.json"), MVP5_FOCUSED_RESULT=str(OUT / "mvp5.json"))
+    env.update(PYTHONUTF8="1", PYTHONDONTWRITEBYTECODE="1", BREAKPOINT_RUNTIME_DISABLED="1", MVP6_NATIVE_RESULT=str(OUT / "native.json"), MVP6_SECURITY_RESULT=str(OUT / "security.json"), MVP3_OWNER_HOOKS_RESULT=str(OUT / "mvp3.json"), MVP5_FOCUSED_RESULT=str(OUT / "mvp5.json"))
     prefix = [str(engine), "--headless", "--path", str(ROOT)]
     specs = [
         ("import", prefix + ["--editor", "--import", "--quit"], 240),
+        ("security", prefix + ["--script", "res://tests/runtime/test_v0_mvp_6_native_replay_security.gd"], 120),
         ("native", prefix + ["--script", "res://tests/runtime/test_v0_mvp_6_native_item_handoff.gd"], 240),
         ("mvp3", prefix + ["--script", "res://tests/runtime/test_v0_mvp3_live_owner_handoff.gd"], 240),
         ("mvp5", prefix + ["--script", "res://tests/runtime/test_v0_mvp_5_exactly_once_material.gd"], 300),
@@ -72,7 +73,7 @@ def main() -> int:
         print(json.dumps(row), flush=True)
         if name == "import" and not row["passed"]:
             break
-    results = {name: read(OUT / (name + ".json")) for name in ("native", "mvp3", "mvp5")}
+    results = {name: read(OUT / (name + ".json")) for name in ("native", "security", "mvp3", "mvp5")}
     checks = {"all_commands": len(rows) == len(specs) and all(r["passed"] for r in rows), "tracked_clean_after": not git("status", "--porcelain", "--untracked-files=no")}
     for name, value in results.items():
         checks[name + "_passed"] = value.get("passed") is True
