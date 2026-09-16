@@ -1,0 +1,107 @@
+name: MVP6 Native Prerequisite Diagnostic
+on:
+  push:
+    branches: [feature/v0-mvp-playable-seamless-planet-r1]
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: mvp6-prerequisite-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  diagnostic:
+    if: github.repository == 'rootfabric/distributed-world-simulator' && github.ref == 'refs/heads/feature/v0-mvp-playable-seamless-planet-r1' && (github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[mvp6-diagnostic]'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      EXPECTED_HEAD: ${{ github.sha }}
+      PYTHONUTF8: '1'
+      PYTHONPATH: scripts
+      BREAKPOINT_RUNTIME_DISABLED: '1'
+      GODOT_SILENCE_ROOT_WARNING: '1'
+      PLANET_SIMULATOR_INVENTORY_PROFILE: planet_default
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Exact subject and diagnostic-only write fence
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+          test -z "$(git status --porcelain --untracked-files=no)"
+          git merge-base --is-ancestor bc360383b78f0778cac136fe1d9c3a7d656c687b HEAD
+          git diff --check bc360383b78f0778cac136fe1d9c3a7d656c687b HEAD
+          echo "EXPECTED_TREE=$(git rev-parse HEAD^{tree})" >> "$GITHUB_ENV"
+          python3 - <<'PY'
+          import fnmatch,json,subprocess
+          w=json.load(open('config/control/harness/executions/E2026-09-09-V0-MVP-R1/work-orders/V0-MVP-R1-WO-001.v1.json'))
+          paths=subprocess.check_output(['git','diff','--name-only','bc360383b78f0778cac136fe1d9c3a7d656c687b','HEAD'],text=True).splitlines()
+          for p in paths:
+              if not any(fnmatch.fnmatchcase(p,g) for g in w['allowed_paths']) or any(fnmatch.fnmatchcase(p,g) for g in w['forbidden_paths']):
+                  raise SystemExit('MVP6_WRITE_FENCE:'+p)
+              if p.startswith(('scripts/','scenes/')):
+                  raise SystemExit('MVP6_DIAGNOSTIC_MUST_NOT_CHANGE_RUNTIME:'+p)
+          subprocess.run(['git','diff','--exit-code','bc360383b78f0778cac136fe1d9c3a7d656c687b','HEAD','--','tests/runtime/test_v0_mvp3_live_owner_handoff.gd','tests/runtime/test_v0_mvp_5_exactly_once_material.gd'],check=True)
+          print('MVP6_DIAGNOSTIC_WRITE_FENCE_PASS',len(paths))
+          PY
+      - uses: actions/download-artifact@v4
+        with:
+          name: p7-repair-engine-34117353691
+          run-id: 34117353691
+          repository: rootfabric/distributed-world-simulator
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/mvp6-engine
+      - name: Reproduce prerequisite and run unchanged native focused controls
+        shell: bash
+        run: |
+          set -euo pipefail
+          export GODOT_BIN="$RUNNER_TEMP/mvp6-engine/godot"
+          test "$(sha256sum "$GODOT_BIN" | cut -d' ' -f1)" = bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7
+          chmod u+x "$GODOT_BIN"
+          python3 docs/control/mvp-act0-r1/validate_mvp6_prerequisite.py
+      - name: Read-only Harness Drive and human-decision close gate
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin '+refs/heads/*:refs/remotes/origin/*' --prune
+          python3 -m pip install --disable-pip-version-check -r scripts/harness/requirements.txt
+          python3 - <<'PY'
+          import json,pathlib,subprocess
+          out=pathlib.Path('artifacts/mvp6-prerequisite');out.mkdir(parents=True,exist_ok=True)
+          rows=[]
+          for mode in ('Drive','CloseMission'):
+              argv=['pwsh','-NoProfile','-File','./CONTROL_DEVELOPMENT.ps1','-'+mode,'-Checkpoint','V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE','-Candidate']
+              with (out/('harness-'+mode.lower()+'.log')).open('w',encoding='utf-8') as log:
+                  try: code=subprocess.run(argv,stdout=log,stderr=subprocess.STDOUT,timeout=180,check=False).returncode
+                  except subprocess.TimeoutExpired: code=124
+              rows.append({'mode':mode,'argv':argv,'exit_code':code})
+              print('MVP6_HARNESS',mode,'exit',code)
+          (out/'harness-commands.json').write_text(json.dumps(rows,indent=2)+'\n')
+          PY
+      - name: Bind complete diagnostic and controller evidence
+        if: always()
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib,subprocess
+          out=pathlib.Path('artifacts/mvp6-prerequisite');out.mkdir(parents=True,exist_ok=True)
+          git=lambda *a:subprocess.check_output(['git',*a],text=True).strip()
+          summary=json.loads((out/'summary.json').read_text()) if (out/'summary.json').is_file() else {}
+          files=[{'path':p.relative_to(out).as_posix(),'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()} for p in sorted(out.rglob('*')) if p.is_file() and p.name!='ci-manifest.json']
+          record={'schema':'distributed_world_simulator.mvp6_prerequisite_ci_manifest.v1','subject_head':git('rev-parse','HEAD'),'subject_tree':git('rev-parse','HEAD^{tree}'),'run_id':os.environ['GITHUB_RUN_ID'],'run_attempt':os.environ['GITHUB_RUN_ATTEMPT'],'tracked_after':git('status','--porcelain','--untracked-files=no'),'diagnostic_passed':summary.get('diagnostic_passed') is True,'mvp6_product_passed':False,'independent_verdict':False,'files':files}
+          target=out/'ci-manifest.json';target.write_text(json.dumps(record,indent=2)+'\n')
+          print('MVP6_CI_MANIFEST_SHA256='+hashlib.sha256(target.read_bytes()).hexdigest())
+          print(json.dumps({'head':record['subject_head'],'tree':record['subject_tree'],'diagnostic_passed':record['diagnostic_passed'],'mvp6_product_passed':False,'files':len(files)}))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mvp6-prerequisite-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: artifacts/mvp6-prerequisite/
+          if-no-files-found: error
+          retention-days: 90
