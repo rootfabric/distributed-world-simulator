@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Exercise unchanged production auditors; simulated acceptance is NOT authority."""
+"""Unchanged auditors against a local-only projected candidate, NEVER authority."""
 from __future__ import annotations
 import copy
 import hashlib
@@ -33,7 +33,7 @@ def run(name, argv, cwd, expected=0):
     env = dict(os.environ, GITHUB_ACTIONS='true', PYTHONPATH=str(cwd / 'scripts'), PYTHONDONTWRITEBYTECODE='1')
     with log.open('wb') as stream:
         p = subprocess.run(argv, cwd=cwd, env=env, stdout=stream, stderr=subprocess.STDOUT, timeout=300, check=False)
-    require(p.returncode == expected, name + ':EXIT:' + str(p.returncode) + ':' + log.read_text()[-1500:])
+    require(p.returncode == expected, name + ':EXIT:' + str(p.returncode) + ':' + log.read_text()[-1800:])
     return {'name': name, 'argv': argv, 'exit_code': p.returncode, 'log': log.name}
 
 
@@ -49,8 +49,7 @@ def main():
         result.update(head=git('rev-parse', 'HEAD'), tree=git('rev-parse', 'HEAD^{tree}'), run_id=os.environ.get('GITHUB_RUN_ID'))
         sys.path.insert(0, str(ROOT / 'scripts/control'))
         import project_control_directional_watch as dw
-        registry = dw.load_main_owned(dw.REGISTRY_PATH)
-        policy = dw.load_main_owned(dw.POLICY_PATH)
+        registry = dw.load_main_owned(dw.REGISTRY_PATH); policy = dw.load_main_owned(dw.POLICY_PATH)
         producer = dw.program_scope('V0', registry['programs']['V0'], policy)
         consumer = dw.program_scope('NX', registry['programs']['NX'], policy)
         require(producer and consumer, 'MISSING_SCOPE')
@@ -83,8 +82,7 @@ def main():
             accepted, rejected = resolve(bad)
             require(accepted is None and any(x['reason'] == reason for x in rejected), 'NEGATIVE_FAILED:' + reason)
             result['controls'].append(reason)
-        extra = FACADE + '.unexpected'
-        accepted, rejected = resolve(candidate, all_hits=hits + [extra])
+        accepted, rejected = resolve(candidate, all_hits=hits + [FACADE + '.unexpected'])
         require(accepted is None and rejected[0]['reason'] == 'WATCHED_FILE_SET_MISMATCH', 'EXPANDED_WATCH_ACCEPTED')
         result['controls'].append('EXPANDED_WATCH_REJECTED')
         require(resolve(candidate, ancestry=lambda a, b: False)[0] is None, 'BAD_ANCESTRY_ACCEPTED')
@@ -100,13 +98,14 @@ def main():
         baseline = json.loads((ROOT / 'artifacts/control/directional-watch-report.json').read_text())
         require(baseline['overall_health'] == 'RED', 'BASELINE_NOT_RED')
         (OUT / 'canonical-before.json').write_text(json.dumps(baseline, indent=2) + '\n')
-        # Standalone LOCAL clone: refs cannot leak through a shared-worktree gitdir.
+        # Local clone has a separate gitdir. Never mutate refs in shared worktrees.
         temp = Path(tempfile.mkdtemp(prefix='v0-nx-shadow-', dir=os.environ.get('RUNNER_TEMP')))
         clone = temp / 'repo'
         subprocess.run(['git', 'clone', '--quiet', '--shared', '--no-checkout', str(ROOT), str(clone)], check=True)
         subprocess.run(['git', '-C', str(clone), 'fetch', '--quiet', 'origin', '+refs/remotes/origin/*:refs/remotes/origin/*'], check=True)
-        subprocess.run(['git', '-C', str(clone), 'checkout', '--quiet', '--detach', MAIN], check=True)
+        subprocess.run(['git', '-C', str(clone), 'checkout', '--quiet', '--detach', result['head']], check=True)
         old = json.loads((clone / REG).read_text())
+        require(old == json.loads(git('show', MAIN + ':' + REG)), 'EXISTING_CANONICAL_CLEARANCES_CHANGED')
         new = copy.deepcopy(old); new['clearances'].append(candidate)
         (clone / REG).write_text(json.dumps(new, ensure_ascii=False, indent=2) + '\n')
         result['commands'].append(run('unmerged-copy-cannot-self-clear', [sys.executable, 'scripts/control/project_control_directional_watch.py'], clone, expected=2))
@@ -133,9 +132,7 @@ def main():
         print('V0_NX_CONTROL_PROJECTION_PASS NOT_CANONICAL_ACCEPTANCE controls=' + str(len(result['controls'])))
         return 0
     except Exception as exc:
-        result['error'] = str(exc)
-        print('V0_NX_CONTROL_PROJECTION_FAIL ' + str(exc))
-        return 1
+        result['error'] = str(exc); print('V0_NX_CONTROL_PROJECTION_FAIL ' + str(exc)); return 1
     finally:
         if temp is not None:
             shutil.rmtree(temp)
