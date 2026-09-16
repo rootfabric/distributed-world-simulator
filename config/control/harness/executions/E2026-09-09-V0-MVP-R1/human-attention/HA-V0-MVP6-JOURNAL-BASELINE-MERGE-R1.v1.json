@@ -18,8 +18,10 @@
     "Canonical main baseline required for subsequent V0 to NX revalidation"
   ],
   "blocking": true,
-  "status": "OPEN",
+  "status": "RESOLVED",
+  "resolution": "Владелец явно ответил «разрешаю» на exact PR646 merge request. Разрешение зафиксировано в PR comment5706008533. Повторно проверены HEAD d9706b157e84c653a753cc54243ce6651d53319c / TREE4925ea293c15d88153278437976a3b69f8985ccf и main6982a563dd0c88c81449566131852c601ae89868. PR646 переведён из draft и успешно merged с expected_head_sha guard: merge commit a6d5eb6b287130a638ba6cf397c34e29169948c1, TREE4925ea293c15d88153278437976a3b69f8985ccf, родители [6982a563dd0c88c81449566131852c601ae89868,d9706b157e84c653a753cc54243ce6651d53319c]. Git commit API подтвердил точное дерево и родителей; PR API подтвердил merged=true и merged_at=2026-09-16T23:25:58Z. PR643 и feature PR597 не сливались. Закрыт только этот выполненный merge gate; directional clearance, postmerge default NX validation и epoch audit не объявлены готовыми, MVP6 и parent Work Order остаются IN_PROGRESS.",
   "evidence_paths": [
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/supporting-evidence/MVP6-JOURNAL-PR646-MERGE-RECEIPT-R1.v1.json",
     "docs/control/mvp-act0-r1/MVP6_JOURNAL_MERGE_HANDOFF_R1_RU.md",
     "docs/control/mvp-act0-r1/journal-resolution-exact-r1/machine-manifest.json",
     "docs/control/mvp-act0-r1/journal-world-control-evidence-r1/world-core-verifier/result.json",
