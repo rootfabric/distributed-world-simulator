@@ -125,7 +125,7 @@ func _test_corrected_authority_survives_later_rollback() -> void:
 		3030
 	)
 	_assert(bool(rollback.get("success", false)), "rollback against duplicate corrected authority resolves")
-	var view := journal.get_presentation_snapshot()
+	var view: Dictionary = journal.get_presentation_snapshot()
 	_assert(int(view.get("revision", -1)) == 2, "corrected revision retained")
 	_assert(_location(view, "item/world/ore") == "WORLD", "rollback exposes corrected canonical location")
 	_assert(absf(_origin_x(view, "item/world/ore") - 7.0) < 0.000001, "rollback exposes corrected canonical transform")
