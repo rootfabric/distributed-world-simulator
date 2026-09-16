@@ -1,0 +1,190 @@
+name: FABRIC HOLDOUT-R4 Post-G2 Unseen Reveal R2
+
+on:
+  push:
+    branches: [research/fabric-holdout-r4-post-g2-unseen-reveal-r2]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fabric-r4-post-g2-unseen-reveal-r2
+  cancel-in-progress: false
+
+env:
+  ATTEMPT1_HEAD: 38ea094aa5d633e449d649c6753cd98993c5585c
+  PREREG_HEAD: 8c28ff9ea4ab1446cd067ca4b8cb5674997a621d
+  FREEZE_COMMIT: 649af4ef16de00c797b4d63be70426abb3c75d68
+  SUBJECT_BRANCH: repair/fabric-holdout-r4-g2-generalized-capabilities-r1
+  SUBJECT_HEAD: e6228a39b6b3006a3d14ad0884c09266570fcd00
+  SUBJECT_TREE: 1b84960369868aa6d5ec23c1eae3019250ff9a8f
+  TARGET_MS: '1789562700000'
+  PULSE_FILE: config/research/fabric-holdout-r4-post-g2-nist-pulse-selection-r1.json
+  EXPECTED_RAW_SHA256: 8a5e684b4fe2a0193dcea7560ad47531bfbc510100e9e670189f50210022a4af
+  EXPECTED_OUTPUT_BYTES_SHA256: 3ca9faa0fe13e6530aa4053e91ee40123749caa3ce64537bba88da36a80852b6
+  EXPECTED_CASES_SHA256: 3e14d528a33f4ecb95c4d7fd1f3f55394fcb4b3e624e0bf728698acef99f576d
+
+jobs:
+  execute-frozen-unseen:
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - name: Bind frozen subject, preregistration and reveal scope
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          git fetch origin "$SUBJECT_BRANCH" --no-tags
+          test "$(git rev-parse "origin/$SUBJECT_BRANCH")" = "$SUBJECT_HEAD"
+          test "$(git rev-parse "$SUBJECT_HEAD^{tree}")" = "$SUBJECT_TREE"
+          test "$(git merge-base HEAD "$ATTEMPT1_HEAD")" = "$ATTEMPT1_HEAD"
+          test "$(git merge-base HEAD "$PREREG_HEAD")" = "$PREREG_HEAD"
+          expected="$(printf '%s\n' \
+            '.github/workflows/fabric-holdout-r4-post-g2-unseen-reveal-r2.yml' \
+            'config/research/fabric-holdout-r4-post-g2-nist-pulse-selection-r1.json' | sort)"
+          actual="$(git diff --name-only "$ATTEMPT1_HEAD"...HEAD | sort)"
+          test "$actual" = "$expected"
+          for p in \
+            config/research/fabric-holdout-r4-post-g2-unseen-preregister-r1.json \
+            scripts/research/fabric_holdout_r4_post_g2/generate_unseen_cases_v1.py \
+            tests/research/fabric1/fabric_holdout_r4_post_g2_unseen_acceptance.gd; do
+            test "$(git rev-parse "$PREREG_HEAD:$p")" = "$(git rev-parse "HEAD:$p")"
+          done
+          git diff --check "$ATTEMPT1_HEAD"...HEAD
+          echo '*.gd.uid' >> .git/info/exclude
+          printf 'REVEAL_R2_HEAD=%s\nREVEAL_R2_TREE=%s\nATTEMPT1_HEAD=%s\nPREREG_HEAD=%s\nSUBJECT_HEAD=%s\nSUBJECT_TREE=%s\n' \
+            "$(git rev-parse HEAD)" "$(git rev-parse 'HEAD^{tree}')" "$ATTEMPT1_HEAD" "$PREREG_HEAD" "$SUBJECT_HEAD" "$SUBJECT_TREE" | tee reveal-r2-identity.txt
+
+      - name: Validate immutable first-reveal NIST pulse
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          python3 - <<'PY' | tee pulse-validation.log
+          import json, os, re, hashlib
+          from datetime import datetime, timezone
+          from pathlib import Path
+          d=json.loads(Path(os.environ['PULSE_FILE']).read_text(encoding='utf-8'))
+          p=d['pulse']
+          assert d['source_run']==35108952760
+          assert d['source_artifact']==10451362354
+          assert d['source_raw_sha256']==os.environ['EXPECTED_RAW_SHA256']
+          assert d['target_ms']==int(os.environ['TARGET_MS'])
+          assert p['uri']=='https://beacon.nist.gov/beacon/2.0/chain/2/pulse/1943920'
+          assert p['version']=='2.0' and p['period']==60000 and p['statusCode']==0
+          assert p['chainIndex']==2 and p['pulseIndex']==1943920
+          assert p['timeStamp']=='2026-09-16T12:46:00.000Z'
+          ts=int(datetime.fromisoformat(p['timeStamp'].replace('Z','+00:00')).timestamp()*1000)
+          assert ts==1789562760000 and ts>int(os.environ['TARGET_MS'])
+          out=p['outputValue'].upper()
+          assert re.fullmatch(r'[0-9A-F]{128}',out)
+          assert hashlib.sha256(bytes.fromhex(out)).hexdigest()==os.environ['EXPECTED_OUTPUT_BYTES_SHA256']
+          Path('beacon-output-value.txt').write_text(out+'\n',encoding='ascii')
+          Path('beacon-uri.txt').write_text(p['uri']+'\n',encoding='utf-8')
+          Path('beacon-timestamp.txt').write_text(p['timeStamp']+'\n',encoding='utf-8')
+          print('NIST_FIRST_REVEAL_PULSE=VERIFIED')
+          print('NIST_PULSE_URI='+p['uri'])
+          print('NIST_PULSE_TIMESTAMP='+p['timeStamp'])
+          print('NIST_RAW_ARTIFACT_SHA256='+d['source_raw_sha256'])
+          PY
+
+      - name: Generate exact preregistered unseen cases
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          python3 scripts/research/fabric_holdout_r4_post_g2/generate_unseen_cases_v1.py \
+            --output-value "$(tr -d '\r\n' < beacon-output-value.txt)" \
+            --pulse-uri "$(tr -d '\r\n' < beacon-uri.txt)" \
+            --pulse-timestamp "$(tr -d '\r\n' < beacon-timestamp.txt)" \
+            --out fabric-r4-post-g2-unseen-cases.json | tee unseen-generation.log
+          actual="$(sha256sum fabric-r4-post-g2-unseen-cases.json | awk '{print $1}')"
+          test "$actual" = "$EXPECTED_CASES_SHA256"
+          printf 'UNSEEN_CASES_SHA256=%s\n' "$actual" | tee unseen-cases.sha256
+
+      - name: Verify canonical Linux double
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          bin="${DWS_GODOT_DOUBLE_BIN:-$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64}"
+          test -x "$bin"
+          version="$("$bin" --version | head -n1 | tr -d '\r')"
+          sha="$(sha256sum "$bin" | awk '{print $1}')"
+          test "$version" = '4.7.1.stable.double.custom_build.a13da4feb'
+          test "$sha" = 'bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7'
+          echo "GODOT_BIN=$bin" >> "$GITHUB_ENV"
+          printf 'GODOT_VERSION=%s\nGODOT_SHA256=%s\n' "$version" "$sha" | tee unseen-godot.txt
+
+      - name: Fresh import frozen runner
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          rm -rf .godot
+          "$GODOT_BIN" --headless --editor --path . --log-file unseen-import.log --import
+          ! grep -Eiq 'SCRIPT ERROR|Parse Error|Invalid call|Invalid access|ERROR:' unseen-import.log
+
+      - name: Execute genuinely unseen holdout against frozen product
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          export FABRIC_R4_POST_G2_CASES="$GITHUB_WORKSPACE/fabric-r4-post-g2-unseen-cases.json"
+          "$GODOT_BIN" --headless --path . --script res://tests/research/fabric1/fabric_holdout_r4_post_g2_unseen_acceptance.gd 2>&1 | tee unseen-runner.log
+          grep -F 'FABRIC_R4_POST_G2_UNSEEN_ASSERTIONS=93 FAILURES=0' unseen-runner.log
+          grep -F 'FABRIC-HOLDOUT-R4-POST-G2-UNSEEN: PASS' unseen-runner.log
+          ! grep -Eiq 'SCRIPT ERROR|Parse Error|Invalid call|Invalid access|Assertion failed|ERROR:|Segmentation fault' unseen-runner.log
+
+      - name: Capture reveal execution receipt
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          python3 - <<'PY'
+          import json, hashlib
+          from pathlib import Path
+          p=json.loads(Path('config/research/fabric-holdout-r4-post-g2-nist-pulse-selection-r1.json').read_text())
+          receipt={
+            'schema':'distributed_world_simulator.fabric_holdout_r4_post_g2_unseen_execution_receipt.v1',
+            'subject_head':'e6228a39b6b3006a3d14ad0884c09266570fcd00',
+            'subject_tree':'1b84960369868aa6d5ec23c1eae3019250ff9a8f',
+            'freeze_commit':'649af4ef16de00c797b4d63be70426abb3c75d68',
+            'prereg_head':'8c28ff9ea4ab1446cd067ca4b8cb5674997a621d',
+            'first_reveal_run':35108952760,
+            'first_reveal_artifact':10451362354,
+            'first_reveal_raw_sha256':p['source_raw_sha256'],
+            'pulse_uri':p['pulse']['uri'],
+            'pulse_timestamp':p['pulse']['timeStamp'],
+            'cases_sha256':hashlib.sha256(Path('fabric-r4-post-g2-unseen-cases.json').read_bytes()).hexdigest(),
+            'assertions':93,
+            'runner_result':'PASS',
+            'independent_verification_required':True,
+            'r4_accepted':False,
+          }
+          Path('unseen-execution-receipt.json').write_text(json.dumps(receipt,sort_keys=True,indent=2)+'\n')
+          PY
+          sha256sum "$PULSE_FILE" fabric-r4-post-g2-unseen-cases.json unseen-runner.log unseen-execution-receipt.json > unseen-evidence.sha256
+          git diff --check
+          test -z "$(git status --porcelain=v1 --untracked-files=no)"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: fabric-r4-post-g2-unseen-reveal-r2-${{ github.sha }}
+          path: |
+            reveal-r2-identity.txt
+            pulse-validation.log
+            config/research/fabric-holdout-r4-post-g2-nist-pulse-selection-r1.json
+            beacon-output-value.txt
+            beacon-uri.txt
+            beacon-timestamp.txt
+            unseen-generation.log
+            fabric-r4-post-g2-unseen-cases.json
+            unseen-cases.sha256
+            unseen-godot.txt
+            unseen-import.log
+            unseen-runner.log
+            unseen-execution-receipt.json
+            unseen-evidence.sha256
+          if-no-files-found: error
+          retention-days: 90
