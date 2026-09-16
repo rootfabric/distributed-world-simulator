@@ -77,6 +77,35 @@ class ClosureThroughputPolicyTests(unittest.TestCase):
         with self.assertRaisesRegex(ContractValidationError, "WORK_ORDER_REQUIRED_PREDICATES_NOT_UNIQUE"):
             bundle.validate("work_order_schema", duplicated, "duplicate-predicate")
 
+    def test_production_work_order_validator_rejects_current_product_risk_floor_weakening(self) -> None:
+        bundle = ContractBundle.load(ROOT)
+        work_order = load(WO)
+        checkpoint = bundle.contracts["checkpoint_catalog"]["checkpoints"][CHECKPOINT]
+        self.assertEqual("CRITICAL", checkpoint["default_risk_floor"])
+
+        lowered = copy.deepcopy(work_order)
+        lowered["risk_class"] = "LOW"
+        lowered["required_review_roles"] = ["IMPLEMENTER", "VERIFIER"]
+        lowered["review_required"] = False
+        lowered["evidence_map_required"] = False
+        with self.assertRaisesRegex(ContractValidationError, "WORK_ORDER_RISK_BELOW_CHECKPOINT_FLOOR"):
+            bundle.validate("work_order_schema", lowered, "lowered-current-product-risk")
+
+        roles_weakened = copy.deepcopy(work_order)
+        roles_weakened["required_review_roles"] = ["IMPLEMENTER", "REVIEWER", "VERIFIER"]
+        with self.assertRaisesRegex(ContractValidationError, "WORK_ORDER_CHECKPOINT_RISK_ROLES_WEAKENED"):
+            bundle.validate("work_order_schema", roles_weakened, "weakened-current-product-roles")
+
+        review_weakened = copy.deepcopy(work_order)
+        review_weakened["review_required"] = False
+        with self.assertRaisesRegex(ContractValidationError, "WORK_ORDER_CHECKPOINT_REVIEW_WEAKENED"):
+            bundle.validate("work_order_schema", review_weakened, "weakened-current-product-review")
+
+        evidence_weakened = copy.deepcopy(work_order)
+        evidence_weakened["evidence_map_required"] = False
+        with self.assertRaisesRegex(ContractValidationError, "WORK_ORDER_CHECKPOINT_EVIDENCE_WEAKENED"):
+            bundle.validate("work_order_schema", evidence_weakened, "weakened-current-product-evidence")
+
     def test_current_product_refinement_does_not_rewrite_historical_or_control_vocabularies(self) -> None:
         bundle = ContractBundle.load(ROOT)
         control = copy.deepcopy(load(WO))
