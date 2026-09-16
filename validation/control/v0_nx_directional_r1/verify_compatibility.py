@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Bounded dependency evidence; never grants a clearance or product acceptance."""
+"""Dependency revalidation only; no raw NX or whole MVP acceptance."""
 from __future__ import annotations
 import hashlib
 import json
@@ -43,48 +43,51 @@ V0_TESTS = [
 BAD = re.compile(r'SCRIPT ERROR:|Parse Error:|Failed to load script|(?m:^ERROR:)|\bFAIL(?:ED)?\b')
 
 
-def require(value: bool, message: str) -> None:
+def require(value, message):
     if not value:
         raise RuntimeError(message)
 
 
-def git(*args: str, cwd: Path = ROOT) -> str:
+def git(*args, cwd=ROOT):
     return subprocess.check_output(['git', *args], cwd=cwd, text=True).strip()
 
 
-def raw(ref: str, path: str) -> bytes:
+def raw(ref, path):
     return subprocess.check_output(['git', 'show', ref + ':' + path], cwd=ROOT)
 
 
-def overlay_bytes(path: str) -> bytes:
+def overlay_bytes(path):
     return adapt(path, raw(NX, path))
 
 
-def sha(data: bytes) -> str:
+def sha(data):
     return hashlib.sha256(data).hexdigest()
 
 
-def run(name: str, argv: list[str], cwd: Path, test: bool = False) -> dict:
+def run(name, argv, cwd, test=False):
     log = OUT / (name + '.log')
     with log.open('wb') as stream:
         p = subprocess.run(argv, cwd=cwd, stdout=stream, stderr=subprocess.STDOUT, timeout=600, check=False)
     text = log.read_text(encoding='utf-8-sig', errors='strict')
-    require(p.returncode == 0, name + ':EXIT:' + str(p.returncode) + ':' + text[-1500:])
-    require(BAD.search(text) is None, name + ':ERROR_OUTPUT:' + text[-1500:])
+    require(p.returncode == 0, name + ':EXIT:' + str(p.returncode) + ':' + text[-2000:])
+    require(BAD.search(text) is None, name + ':ERROR_OUTPUT:' + text[:2000])
     markers = [line for line in text.splitlines() if re.search(r'\bPASS\b', line)]
     if test:
-        require(bool(markers), name + ':MISSING_PASS_MARKER')
+        require(markers, name + ':MISSING_PASS_MARKER')
     row = {'name': name, 'argv': argv, 'cwd': str(cwd), 'exit_code': p.returncode,
            'log': log.name, 'sha256': sha(log.read_bytes()), 'markers': markers}
     print('PASS ' + name + ' ' + ' | '.join(markers), flush=True)
     return row
 
 
-def main() -> int:
+def main():
     OUT.mkdir(parents=True, exist_ok=True)
     result = {'schema': 'dws.v0_nx_dependency_compatibility.v1', 'verdict': 'FAIL',
               'independent_verdict': False, 'clearance_granted': False,
-              'scope': 'BOUNDED_DEPENDENCY_REVALIDATION_NOT_NX_OR_MVP_ACCEPTANCE', 'tests': []}
+              'scope': 'BOUNDED_DEPENDENCY_REVALIDATION_NOT_NX_OR_MVP_ACCEPTANCE',
+              'raw_nx_current_main_compilation': 'KNOWN_FAIL_BASELINE_R2_R3',
+              'fixture_scope': 'TYPE_ONLY_ADAPTED_NX_COMPOSITION_EXPRESSIONS_AND_ASSERTIONS_UNCHANGED',
+              'tests': []}
     worktrees = []
     try:
         require(not sys.flags.optimize, 'OPTIMIZED_PYTHON_FORBIDDEN')
@@ -119,8 +122,7 @@ def main() -> int:
         result['watch'] = {'critical': critical, 'all_hits': hits, 'baseline_clearance': 'UNRESOLVED', 'rejections': rejected}
         (OUT / 'facade.diff').write_text(git('diff', MAIN, V0, '--', FACADE) + '\n')
         overlay = NX_RUNTIME + NX_TESTS
-        result['nx_overlay'] = {p: {'git_blob': git('rev-parse', NX + ':' + p), 'original_sha256': sha(raw(NX, p)), 'executed_sha256': sha(overlay_bytes(p)), 'typing_only_fixture_repair': overlay_bytes(p) != raw(NX, p)} for p in overlay}
-        result['fixture_scope'] = 'NX_RUNTIME_BYTE_EXACT_TEST_ASSERTIONS_UNCHANGED_WITH_EXPLICIT_TYPING_ANNOTATIONS'
+        result['nx_overlay'] = {p: {'git_blob': git('rev-parse', NX + ':' + p), 'original_sha256': sha(raw(NX, p)), 'executed_sha256': sha(overlay_bytes(p)), 'typing_only_adapter': overlay_bytes(p) != raw(NX, p)} for p in overlay}
         temp = Path(tempfile.mkdtemp(prefix='v0-nx-compat-', dir=os.environ.get('RUNNER_TEMP')))
         for label, source in [('baseline', MAIN), ('treatment', MAIN), ('producer', V0)]:
             target = temp / label
@@ -134,8 +136,7 @@ def main() -> int:
                 if label == 'treatment':
                     (target / FACADE).write_bytes(raw(V0, FACADE))
             result['tests'].append(run(label + '-cold-import', [str(godot), '--headless', '--audio-driver', 'Dummy', '--editor', '--path', str(target), '--import', '--quit'], target))
-            paths = V0_TESTS if label == 'producer' else NX_TESTS
-            for index, path in enumerate(paths):
+            for index, path in enumerate(V0_TESTS if label == 'producer' else NX_TESTS):
                 row = run(label + '-' + str(index + 1), [str(godot), '--headless', '--audio-driver', 'Dummy', '--path', str(target), '--script', 'res://' + path], target, test=True)
                 row['test_path'] = path
                 result['tests'].append(row)
@@ -150,6 +151,10 @@ def main() -> int:
         require(deltas == [FACADE], 'PAIR_NOT_SINGLE_DEPENDENCY:' + repr(deltas))
         result['paired_source_differences'] = deltas
         require(len(result['tests']) == 17, 'MISSING_RUNTIME_STAGES')
+        for i in range(1, 6):
+            left = next(row for row in result['tests'] if row['name'] == 'baseline-' + str(i))
+            right = next(row for row in result['tests'] if row['name'] == 'treatment-' + str(i))
+            require(left['markers'] == right['markers'], 'PAIRED_ASSERTION_SUMMARY_MISMATCH:' + str(i))
         result['verdict'] = 'PASS'
         print('V0_NX_COMPATIBILITY_PASS runtime_suites=14 cold_imports=3', flush=True)
         return 0
