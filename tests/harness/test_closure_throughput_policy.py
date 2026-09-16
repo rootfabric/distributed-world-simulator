@@ -9,9 +9,11 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts"))
 
+from harness.continuation import build_continuation
 from harness.contracts import ContractBundle, ContractValidationError
 
 POLICY = "config/control/harness/closure-throughput-policy.v1.json"
+CONTINUATION_POLICY = "config/control/harness/continuation-policy.v1.json"
 CATALOG = "config/control/harness/checkpoint-catalog.v1.json"
 WO = "config/control/harness/executions/E2026-09-09-V0-MVP-R1/work-orders/V0-MVP-R1-WO-001.v1.json"
 REJECTED_REPAIR_WO = "config/control/harness/executions/E2026-09-09-V0-MVP-R1/work-orders/V0-MVP-R1-WO-002.v1.json"
@@ -49,7 +51,7 @@ class ClosureThroughputPolicyTests(unittest.TestCase):
         ids = [load(path.relative_to(ROOT).as_posix())["work_order_id"] for path in work_orders]
         self.assertEqual(["V0-MVP-R1-WO-001"], ids)
 
-    def test_production_work_order_validator_rejects_catalog_gate_removal_and_reorder(self) -> None:
+    def test_production_work_order_validator_rejects_current_product_gate_removal_and_reorder(self) -> None:
         bundle = ContractBundle.load(ROOT)
         work_order = load(WO)
         catalog = bundle.contracts["checkpoint_catalog"]["checkpoints"][CHECKPOINT]["required_predicates"]
@@ -75,6 +77,18 @@ class ClosureThroughputPolicyTests(unittest.TestCase):
         with self.assertRaisesRegex(ContractValidationError, "WORK_ORDER_REQUIRED_PREDICATES_NOT_UNIQUE"):
             bundle.validate("work_order_schema", duplicated, "duplicate-predicate")
 
+    def test_current_product_refinement_does_not_rewrite_historical_or_control_vocabularies(self) -> None:
+        bundle = ContractBundle.load(ROOT)
+        control = copy.deepcopy(load(WO))
+        control["work_order_id"] = "CONTROL-COMPATIBILITY-FIXTURE"
+        control["program"] = "H0"
+        control["goal_checkpoint"] = "H0_1_CLOSED_LOOP_C22_PILOT"
+        control["work_order_type"] = "CONTROL"
+        control["required_predicates"] = []
+        # Current product refinement is not a retroactive migration of durable
+        # historical/control Work Orders. Their own schema/epoch semantics remain authoritative.
+        bundle.validate("work_order_schema", control, "historical-control-vocabulary")
+
     def test_freeze_then_fanout_keeps_single_runtime_writer(self) -> None:
         fanout = load(POLICY)["freeze_then_fanout"]
         self.assertTrue(fanout["exact_frozen_head_and_tree_required"])
@@ -90,6 +104,92 @@ class ClosureThroughputPolicyTests(unittest.TestCase):
             },
             set(fanout["parallel_read_only_gates"]),
         )
+
+    def test_production_continuation_emits_post_freeze_parallel_actions(self) -> None:
+        target = "a" * 40
+        state = {
+            "active_work_order": {
+                "work_order_id": "FANOUT-WO-001",
+                "goal_checkpoint": CHECKPOINT,
+                "work_order_type": "INTEGRATION",
+                "review_required": True,
+                "required_predicates": [
+                    "FULL_WORLD_CORE_REGRESSION_PASS",
+                    "INDEPENDENT_REVIEWER_PASS",
+                    "INDEPENDENT_VERIFIER_PASS",
+                    "STANDARD_PC0_NON_RED",
+                    "DIRECTIONAL_PC0_NON_RED_FOR_CRITICAL_HITS",
+                ],
+            },
+            "reduced_work_order": {
+                "state": "IMPLEMENTED",
+                "work_order_id": "FANOUT-WO-001",
+                "completed_predicates": [],
+            },
+            "review": {
+                "post_build_state": "MISSING",
+                "review_target_head_sha": target,
+            },
+            "repository": {"implementation_head_sha": target},
+            "checkpoint_blockers": [
+                "REQUIRED_PREDICATES_INCOMPLETE",
+                "POST_BUILD_REVIEW_NOT_FRESH_PASS",
+                "EVIDENCE_MAP_MISSING",
+            ],
+            "findings": [],
+            "repair": {"same_defect_fix_required_count": 0},
+            "human_attention": {"open_items": []},
+            "checkpoint_acceptance": None,
+            "epoch": {"registry_generation": 82},
+        }
+        result = build_continuation(state, load(CONTINUATION_POLICY))
+        self.assertEqual("PARALLEL_ROLE_BOUNDARY", result["handoff_class"])
+        self.assertEqual("DIRECTOR", result["next_actor"])
+        self.assertEqual("FAN_OUT_POST_FREEZE_READ_ONLY_CLOSURE_GATES", result["next_action"])
+        self.assertEqual(
+            {
+                "FULL_WORLD_CORE_REGRESSION",
+                "PROJECT_CONTROL_AND_PC0",
+                "INDEPENDENT_REVIEW",
+                "INDEPENDENT_VERIFICATION_EVIDENCE_CONSUMPTION",
+            },
+            {item["gate"] for item in result["parallel_actions"]},
+        )
+        self.assertNotIn("IMPLEMENTER", {item["actor"] for item in result["parallel_actions"]})
+        self.assertTrue(all(item["subject_head_sha"] == target for item in result["parallel_actions"]))
+
+        # The real CLI exposes the complete continuation object under state.next,
+        # so callers of CONTROL_DEVELOPMENT -Drive receive parallel_actions without
+        # a second orchestration protocol or another Work Order.
+        cli = (ROOT / "scripts/harness/cli.py").read_text(encoding="utf-8")
+        self.assertIn('state["next"] = {', cli)
+        self.assertIn("**continuation", cli)
+
+    def test_old_policy_snapshot_keeps_serial_role_boundary(self) -> None:
+        state = {
+            "active_work_order": {
+                "work_order_id": "SERIAL-WO-001",
+                "goal_checkpoint": CHECKPOINT,
+                "work_order_type": "INTEGRATION",
+                "review_required": True,
+                "required_predicates": ["INDEPENDENT_VERIFIER_PASS"],
+            },
+            "reduced_work_order": {
+                "state": "IMPLEMENTED",
+                "completed_predicates": [],
+            },
+            "review": {"post_build_state": "MISSING", "review_target_head_sha": "a" * 40},
+            "repository": {"implementation_head_sha": "a" * 40},
+            "checkpoint_blockers": ["REQUIRED_PREDICATES_INCOMPLETE"],
+            "findings": [],
+            "repair": {"same_defect_fix_required_count": 0},
+            "human_attention": {"open_items": []},
+            "checkpoint_acceptance": None,
+        }
+        result = build_continuation(state, {"self_closing_execution": {}})
+        self.assertEqual("ROLE_BOUNDARY", result["handoff_class"])
+        self.assertEqual("REVIEWER", result["next_actor"])
+        self.assertNotIn("parallel_actions", result)
 
     def test_only_explicit_pre_freeze_validation_may_cancel_stale_runs(self) -> None:
         policy = load(POLICY)["superseded_validation"]
