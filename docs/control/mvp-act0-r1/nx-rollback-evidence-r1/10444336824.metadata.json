@@ -1,0 +1,20 @@
+{
+  "id": 10444336824,
+  "node_id": "MDg6QXJ0aWZhY3QxMDQ0NDMzNjgyNA==",
+  "name": "mvp6-nx-dependency-3a969296cadfe2f750d5c51cabc9c0792a66f6ee-35090924573-1",
+  "size_in_bytes": 10598,
+  "url": "https://api.github.com/repos/rootfabric/distributed-world-simulator/actions/artifacts/10444336824",
+  "archive_download_url": "https://api.github.com/repos/rootfabric/distributed-world-simulator/actions/artifacts/10444336824/zip",
+  "expired": false,
+  "digest": "sha256:ce84c862c8a20b52f837b8b595bc3558297a39b74bae4bf9f120922127bedd83",
+  "created_at": "2026-09-16T11:33:44Z",
+  "updated_at": "2026-09-16T11:33:44Z",
+  "expires_at": "2026-12-15T11:33:08Z",
+  "workflow_run": {
+    "id": 35090924573,
+    "repository_id": 1314035865,
+    "head_repository_id": 1314035865,
+    "head_branch": "feature/v0-mvp-playable-seamless-planet-r1",
+    "head_sha": "3a969296cadfe2f750d5c51cabc9c0792a66f6ee"
+  }
+}
