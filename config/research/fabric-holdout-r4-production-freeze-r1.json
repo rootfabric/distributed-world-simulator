@@ -1,0 +1,88 @@
+{
+  "schema": "distributed_world_simulator.fabric_holdout_r4_production_freeze.v1",
+  "freeze_id": "FABRIC-HOLDOUT-R4-PRODUCTION-FREEZE-R1",
+  "state": "FROZEN",
+  "recorded_on": "2026-09-16",
+  "subject": {
+    "repository": "rootfabric/distributed-world-simulator",
+    "branch": "repair/fabric-holdout-r4-g2-generalized-capabilities-r1",
+    "head": "e6228a39b6b3006a3d14ad0884c09266570fcd00",
+    "tree": "1b84960369868aa6d5ec23c1eae3019250ff9a8f",
+    "base_branch": "research/fabric-holdout-r4-frozen-generalization-r1",
+    "base_head": "b88004e77a9a424f1b23ba979f5ce8883a98f1a8"
+  },
+  "runtime": {
+    "godot_version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "godot_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7"
+  },
+  "director": {
+    "verdict": "PASS",
+    "branch": "control/fabric-holdout-r4-director-r1",
+    "commit": "4ca08fc079b612a1419e1b908e5bef85aa3616b0",
+    "record": "docs/research/FABRIC_HOLDOUT_R4_DIRECTOR_R1_RU.md"
+  },
+  "reviewer": {
+    "verdict": "PASS",
+    "reviewed_product_head": "e6228a39b6b3006a3d14ad0884c09266570fcd00",
+    "request_comment_id": 5696289944,
+    "result_comment_id": 5696356174,
+    "result": "Codex Review: Didn't find any major issues."
+  },
+  "verifier": {
+    "verdict": "PASS",
+    "executable_head": "2c77c1db0f54385f56e91266352659371eb46e38",
+    "executable_tree": "73db3d77b84f5565c8acfa137e20c9f6ef4f9604",
+    "primary_run": 35089433455,
+    "primary_job": 104771963647,
+    "primary_artifact": 10443333867,
+    "primary_artifact_sha256": "c3d5a7b7f9a09fd4862ebb32066f2a9b6ac5342ff67eea214f92cddf26b8088e",
+    "independent_assertions": 54,
+    "status_head": "fcd5748b895a7b35e568727f2600055d1e022ed5",
+    "status_run": 35091203273,
+    "status_job": 104777667691,
+    "status_artifact": 10444188434,
+    "status_artifact_sha256": "4da307d7e971c93bd5056df6c4091f7b7b615072ea4b73fda0f3deaead0a5f7d"
+  },
+  "exact_execution": {
+    "g2_run": 34756624051,
+    "g2_artifact": 10323837160,
+    "complex2_close_run": 34756626745,
+    "complex2_perf_run": 34756626564,
+    "b06_isolated_control_run": 34967889721,
+    "b06_repeat_1_job": 104376646076,
+    "b06_repeat_1_artifact": 10397444837,
+    "b06_repeat_1_artifact_sha256": "690f3ef6bdd16d25c39ee90155809b1aa34f55a08fa9258bf93957704fbccac4",
+    "b06_repeat_2_job": 104376646294,
+    "b06_repeat_2_artifact": 10399258711,
+    "b06_repeat_2_artifact_sha256": "cb8bd4d517eea7c4016a8fa824975b690042e2f6b75899b73ba1a33e25a8ccc9",
+    "b06_closure_hash": "892a66dbcb9e29c99ba7088a03dd41c167fd728a6f97923d4e944e4aef682584"
+  },
+  "historical_g1": {
+    "status_head": "b88004e77a9a424f1b23ba979f5ce8883a98f1a8",
+    "verdict": "FAIL/FALSIFIED",
+    "must_remain_historical_fail": true,
+    "frozen_challenge_provenance_instrument_mutation_forbidden": true
+  },
+  "freeze_invariants": {
+    "entire_product_tree_is_frozen": true,
+    "product_head_must_equal_frozen_head": true,
+    "product_tree_must_equal_frozen_tree": true,
+    "runtime_or_product_mutation_after_freeze_invalidates_freeze": true,
+    "test_or_acceptance_threshold_weakening_forbidden": true,
+    "reviewer_and_verifier_become_stale_if_subject_changes": true,
+    "g1_frozen_bytes_must_not_change": true,
+    "control_evidence_must_not_be_substituted_for_product_identity": true,
+    "pr_merge_authorized": false,
+    "r4_accepted": false,
+    "scale_r5_unlocked": false
+  },
+  "unseen_holdout_gate": {
+    "designed_or_revealed_before_freeze": false,
+    "state_at_freeze": "NOT_REVEALED",
+    "next_action": "PREREGISTER_GENUINELY_UNSEEN_POST_G2_HOLDOUT",
+    "may_begin_only_after_this_freeze_record_is_committed_and_revalidated": true,
+    "must_execute_against_exact_frozen_subject": true,
+    "must_not_mutate_frozen_product": true,
+    "independent_verification_required": true
+  }
+}
