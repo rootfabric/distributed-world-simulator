@@ -16,6 +16,7 @@ CLEARANCE_PATH = ROOT / "config/control/directional-watch-clearances.v1.json"
 REGISTRY_PATH = ROOT / "config/control/project-program-registry.v1.json"
 HISTORICAL_V0_TO_NX_CLEARANCE = "V0-P4-NX-H0-2-M4-CRITICAL-WATCH-CLEARANCE-002"
 HISTORICAL_NX_TO_V0_CLEARANCE = "NX-H0-2-V0-P4-CRITICAL-WATCH-CLEARANCE-001"
+CURRENT_V0_TO_NX_CLEARANCE = "V0-MVP6-NX-H0-2-M4-CRITICAL-WATCH-CLEARANCE-003"
 
 
 def git(*args: str, check: bool = True) -> str:
@@ -162,10 +163,9 @@ class DirectionalWatchClearanceTests(unittest.TestCase):
         for path, expected in clearance["watched_file_blobs"].items():
             self.assertEqual(expected, self.blob_lookup(clearance["reviewed_producer_head"], path), path)
 
-    def test_current_post_p6_v0_does_not_inherit_historical_p4_to_nx_clearance(self):
+    def test_current_post_p6_v0_uses_only_fresh_exact_clearance(self):
         current_v0_branch = self.project_registry["programs"]["V0"]["branch"]
         current_nx_branch = self.project_registry["programs"]["NX"]["branch"]
-        self.assertNotEqual(self.clearance["producer_branch"], current_v0_branch)
         matching = [
             item
             for item in self.clearances
@@ -175,7 +175,50 @@ class DirectionalWatchClearanceTests(unittest.TestCase):
             and item.get("consumer_program") == "NX"
             and item.get("consumer_branch") == current_nx_branch
         ]
-        self.assertEqual([], matching)
+        self.assertEqual(1, len(matching), matching)
+        clearance = matching[0]
+        self.assertEqual(CURRENT_V0_TO_NX_CLEARANCE, clearance["clearance_id"])
+        producer, consumer, critical_hits, all_hits, producer_ref, _ = self._scope(clearance)
+        accepted, rejections = resolve_critical_clearance(
+            [copy.deepcopy(clearance)],
+            producer,
+            consumer,
+            critical_hits,
+            all_hits,
+            self.blob_lookup,
+            self.ancestor_check,
+        )
+        self.assertIsNotNone(accepted, rejections)
+        self.assertEqual([], rejections)
+        self.assertEqual(CURRENT_V0_TO_NX_CLEARANCE, accepted["clearance_id"])
+        self.assertTrue(self.ancestor_check(producer_ref, f"origin/{current_v0_branch}"))
+        self.assertEqual(
+            ["scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service.gd"],
+            critical_hits,
+        )
+        self.assertEqual(critical_hits, all_hits)
+        for path, expected in clearance["watched_file_blobs"].items():
+            self.assertEqual(expected, self.blob_lookup(producer_ref, path), path)
+            self.assertEqual(expected, self.blob_lookup(f"origin/{current_v0_branch}", path), path)
+
+    def test_current_v0_to_nx_clearance_fails_closed_on_hitset_drift(self):
+        matching = [
+            item for item in self.clearances if item.get("clearance_id") == CURRENT_V0_TO_NX_CLEARANCE
+        ]
+        self.assertEqual(1, len(matching), matching)
+        clearance = matching[0]
+        producer, consumer, critical_hits, all_hits, _, _ = self._scope(clearance)
+        accepted, rejections = resolve_critical_clearance(
+            [copy.deepcopy(clearance)],
+            producer,
+            consumer,
+            critical_hits,
+            all_hits + ["scripts/network/prediction/predicted_item_interaction_journal.gd"],
+            self.blob_lookup,
+            self.ancestor_check,
+        )
+        self.assertIsNone(accepted)
+        self.assertEqual("WATCHED_FILE_SET_MISMATCH", rejections[0]["reason"])
 
     def test_current_nx_does_not_inherit_historical_nx_to_p4_clearance_for_post_p6_v0(self):
         current_v0_branch = self.project_registry["programs"]["V0"]["branch"]
