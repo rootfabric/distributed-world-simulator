@@ -218,7 +218,6 @@ jobs:
     timeout-minutes: 20
     env:
       EXPECTED_HEAD: ${{ github.sha }}
-      MVP6_POSTMERGE_OUTPUT: ${{ runner.temp }}/mvp6-postmerge-evidence
       PYTHONUTF8: '1'
       PYTHONDONTWRITEBYTECODE: '1'
       PYTHONPATH: scripts
@@ -261,6 +260,7 @@ jobs:
         run: |
           set -euo pipefail
           export GODOT_BIN="$RUNNER_TEMP/mvp6-postmerge-engine/godot"
+          export MVP6_POSTMERGE_OUTPUT="$RUNNER_TEMP/mvp6-postmerge-evidence"
           chmod u+x "$GODOT_BIN"
           python3 docs/control/mvp-act0-r1/validate_mvp6_postmerge.py
       - uses: actions/upload-artifact@v4
