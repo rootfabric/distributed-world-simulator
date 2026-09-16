@@ -1,0 +1,201 @@
+name: FABRIC HOLDOUT-R4 Post-G2 Unseen Reveal R1
+
+on:
+  push:
+    branches: [research/fabric-holdout-r4-post-g2-unseen-reveal-r1]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fabric-r4-post-g2-unseen-reveal-r1
+  cancel-in-progress: false
+
+env:
+  PREREG_HEAD: 8c28ff9ea4ab1446cd067ca4b8cb5674997a621d
+  FREEZE_COMMIT: 649af4ef16de00c797b4d63be70426abb3c75d68
+  SUBJECT_BRANCH: repair/fabric-holdout-r4-g2-generalized-capabilities-r1
+  SUBJECT_HEAD: e6228a39b6b3006a3d14ad0884c09266570fcd00
+  SUBJECT_TREE: 1b84960369868aa6d5ec23c1eae3019250ff9a8f
+  TARGET_MS: '1789562700000'
+  TARGET_UTC: '2026-09-16T12:45:00.000Z'
+  BEACON_URL: https://beacon.nist.gov/beacon/2.0/pulse/time/next/1789562700000
+
+jobs:
+  reveal-and-execute:
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - name: Bind immutable preregistration and frozen subject
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          git fetch origin "$SUBJECT_BRANCH" --no-tags
+          test "$(git rev-parse "origin/$SUBJECT_BRANCH")" = "$SUBJECT_HEAD"
+          test "$(git rev-parse "$SUBJECT_HEAD^{tree}")" = "$SUBJECT_TREE"
+          test "$(git merge-base HEAD "$PREREG_HEAD")" = "$PREREG_HEAD"
+          test "$(git merge-base HEAD "$FREEZE_COMMIT")" = "$FREEZE_COMMIT"
+          expected=".github/workflows/fabric-holdout-r4-post-g2-unseen-reveal-r1.yml"
+          actual="$(git diff --name-only "$PREREG_HEAD"...HEAD)"
+          test "$actual" = "$expected"
+          for p in \
+            config/research/fabric-holdout-r4-post-g2-unseen-preregister-r1.json \
+            scripts/research/fabric_holdout_r4_post_g2/generate_unseen_cases_v1.py \
+            tests/research/fabric1/fabric_holdout_r4_post_g2_unseen_acceptance.gd; do
+            test "$(git rev-parse "$PREREG_HEAD:$p")" = "$(git rev-parse "HEAD:$p")"
+          done
+          git diff --check "$PREREG_HEAD"...HEAD
+          printf 'REVEAL_HEAD=%s\nREVEAL_TREE=%s\nPREREG_HEAD=%s\nFREEZE_COMMIT=%s\nSUBJECT_HEAD=%s\nSUBJECT_TREE=%s\n' \
+            "$(git rev-parse HEAD)" "$(git rev-parse 'HEAD^{tree}')" "$PREREG_HEAD" "$FREEZE_COMMIT" "$SUBJECT_HEAD" "$SUBJECT_TREE" | tee reveal-identity.txt
+
+      - name: Verify target cut has passed
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          now_ms=$(( $(date -u +%s) * 1000 ))
+          test "$now_ms" -gt "$TARGET_MS"
+          printf 'TARGET_MS=%s\nTARGET_UTC=%s\nOBSERVED_NOW_MS=%s\n' "$TARGET_MS" "$TARGET_UTC" "$now_ms" | tee reveal-time.txt
+
+      - name: Fetch exact preregistered NIST pulse
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          curl --fail --silent --show-error --location --retry 4 --retry-all-errors --connect-timeout 20 --max-time 90 \
+            "$BEACON_URL" -o nist-pulse.raw.json
+          python3 - <<'PY'
+          import json, os, re, hashlib
+          from pathlib import Path
+          p=json.loads(Path('nist-pulse.raw.json').read_text(encoding='utf-8'))
+          pulse=p.get('pulse',p)
+          out=str(pulse.get('outputValue','')).upper()
+          if not re.fullmatch(r'[0-9A-F]{128}',out):
+              raise SystemExit('NIST_OUTPUT_VALUE_SHAPE_INVALID')
+          ts=pulse.get('timeStamp', pulse.get('timestamp'))
+          if ts is None:
+              raise SystemExit('NIST_TIMESTAMP_MISSING')
+          ts_i=int(ts)
+          target=int(os.environ['TARGET_MS'])
+          if ts_i <= target:
+              raise SystemExit(f'NIST_NEXT_PULSE_NOT_AFTER_TARGET:{ts_i}<={target}')
+          uri=str(pulse.get('uri',''))
+          if not uri:
+              raise SystemExit('NIST_URI_MISSING')
+          Path('beacon-output-value.txt').write_text(out+'\n',encoding='ascii')
+          Path('beacon-uri.txt').write_text(uri+'\n',encoding='utf-8')
+          Path('beacon-timestamp.txt').write_text(str(ts_i)+'\n',encoding='ascii')
+          Path('beacon-selection.txt').write_text(
+              'selection_rule=first pulse returned by /beacon/2.0/pulse/time/next/<target_ms>\n'
+              f'target_ms={target}\nselected_timestamp_ms={ts_i}\nselected_uri={uri}\n'
+              f'raw_sha256={hashlib.sha256(Path("nist-pulse.raw.json").read_bytes()).hexdigest()}\n', encoding='utf-8')
+          print('NIST_BEACON_SELECTION=PASS')
+          print('NIST_PULSE_TIMESTAMP_MS='+str(ts_i))
+          print('NIST_PULSE_URI='+uri)
+          print('NIST_OUTPUT_VALUE_SHA256='+hashlib.sha256(bytes.fromhex(out)).hexdigest())
+          PY
+
+      - name: Generate exact unseen cases once
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          output_value="$(tr -d '\r\n' < beacon-output-value.txt)"
+          pulse_uri="$(tr -d '\r\n' < beacon-uri.txt)"
+          pulse_ms="$(tr -d '\r\n' < beacon-timestamp.txt)"
+          python3 scripts/research/fabric_holdout_r4_post_g2/generate_unseen_cases_v1.py \
+            --output-value "$output_value" \
+            --pulse-uri "$pulse_uri" \
+            --pulse-timestamp "$pulse_ms" \
+            --out fabric-r4-post-g2-unseen-cases.json | tee unseen-generation.log
+          cp fabric-r4-post-g2-unseen-cases.json fabric-r4-post-g2-unseen-cases.second.json
+          python3 scripts/research/fabric_holdout_r4_post_g2/generate_unseen_cases_v1.py \
+            --output-value "$output_value" \
+            --pulse-uri "$pulse_uri" \
+            --pulse-timestamp "$pulse_ms" \
+            --out fabric-r4-post-g2-unseen-cases.second.json >/dev/null
+          cmp -s fabric-r4-post-g2-unseen-cases.json fabric-r4-post-g2-unseen-cases.second.json
+          sha256sum fabric-r4-post-g2-unseen-cases.json | tee unseen-cases.sha256
+
+      - name: Verify canonical Linux double
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          bin="${DWS_GODOT_DOUBLE_BIN:-$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64}"
+          test -x "$bin"
+          test "$("$bin" --version | head -n1 | tr -d '\r')" = '4.7.1.stable.double.custom_build.a13da4feb'
+          test "$(sha256sum "$bin" | awk '{print $1}')" = 'bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7'
+          echo "GODOT_BIN=$bin" >> "$GITHUB_ENV"
+          printf 'GODOT_VERSION=%s\nGODOT_SHA256=%s\n' \
+            "$("$bin" --version | head -n1 | tr -d '\r')" "$(sha256sum "$bin" | awk '{print $1}')" | tee unseen-godot.txt
+
+      - name: Fresh import frozen runner
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          rm -rf .godot
+          "$GODOT_BIN" --headless --editor --path . --log-file unseen-import.log --import
+          ! grep -Eiq 'SCRIPT ERROR|Parse Error|Invalid call|Invalid access|ERROR:' unseen-import.log
+
+      - name: Execute genuinely unseen holdout against frozen product
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          export FABRIC_R4_POST_G2_CASES="$GITHUB_WORKSPACE/fabric-r4-post-g2-unseen-cases.json"
+          "$GODOT_BIN" --headless --path . --script res://tests/research/fabric1/fabric_holdout_r4_post_g2_unseen_acceptance.gd 2>&1 | tee unseen-runner.log
+          grep -F 'FABRIC-HOLDOUT-R4-POST-G2-UNSEEN: PASS' unseen-runner.log
+          ! grep -Eiq 'SCRIPT ERROR|Parse Error|Invalid call|Invalid access|Assertion failed|ERROR:|Segmentation fault' unseen-runner.log
+
+      - name: Capture immutable reveal receipt
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          python3 - <<'PY'
+          import json, hashlib
+          from pathlib import Path
+          receipt={
+            'schema':'distributed_world_simulator.fabric_holdout_r4_post_g2_unseen_reveal_receipt.v1',
+            'subject_head':'e6228a39b6b3006a3d14ad0884c09266570fcd00',
+            'subject_tree':'1b84960369868aa6d5ec23c1eae3019250ff9a8f',
+            'freeze_commit':'649af4ef16de00c797b4d63be70426abb3c75d68',
+            'prereg_head':'8c28ff9ea4ab1446cd067ca4b8cb5674997a621d',
+            'reveal_head':Path('reveal-identity.txt').read_text(encoding='utf-8').split('REVEAL_HEAD=',1)[1].splitlines()[0],
+            'beacon_uri':Path('beacon-uri.txt').read_text().strip(),
+            'beacon_timestamp_ms':int(Path('beacon-timestamp.txt').read_text().strip()),
+            'raw_pulse_sha256':hashlib.sha256(Path('nist-pulse.raw.json').read_bytes()).hexdigest(),
+            'cases_sha256':hashlib.sha256(Path('fabric-r4-post-g2-unseen-cases.json').read_bytes()).hexdigest(),
+            'runner_result':'PASS',
+            'r4_accepted':False,
+          }
+          Path('unseen-reveal-receipt.json').write_text(json.dumps(receipt,sort_keys=True,indent=2)+'\n',encoding='utf-8')
+          print('FABRIC_R4_POST_G2_UNSEEN_REVEAL_RECEIPT=PASS')
+          PY
+          sha256sum nist-pulse.raw.json fabric-r4-post-g2-unseen-cases.json unseen-runner.log unseen-reveal-receipt.json > unseen-evidence.sha256
+          git diff --check
+          test -z "$(git status --porcelain=v1 --untracked-files=no)"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: fabric-r4-post-g2-unseen-reveal-${{ github.sha }}
+          path: |
+            reveal-identity.txt
+            reveal-time.txt
+            nist-pulse.raw.json
+            beacon-output-value.txt
+            beacon-uri.txt
+            beacon-timestamp.txt
+            beacon-selection.txt
+            unseen-generation.log
+            fabric-r4-post-g2-unseen-cases.json
+            unseen-cases.sha256
+            unseen-godot.txt
+            unseen-import.log
+            unseen-runner.log
+            unseen-reveal-receipt.json
+            unseen-evidence.sha256
+          if-no-files-found: error
+          retention-days: 90
