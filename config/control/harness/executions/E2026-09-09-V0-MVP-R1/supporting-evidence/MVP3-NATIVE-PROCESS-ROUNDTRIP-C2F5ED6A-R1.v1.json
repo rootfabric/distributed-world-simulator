@@ -1,0 +1,40 @@
+{
+  "schema": "distributed_world_simulator.mvp3_supporting_evidence.v1",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "subject_head": "c2f5ed6a226f39db64f3411bec29a0a7615be0b8",
+  "subject_tree": "b59413563867aa05cb2a854acee4f72bd59862a7",
+  "runner": "WINDOWS_LOCAL_EXACT_GODOT",
+  "engine_version": "4.7.1.stable.double.custom_build.a13da4feb",
+  "engine_sha256": "3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5",
+  "command": ".\\RUN_V0_MVP3_NATIVE_ROUNDTRIP.ps1",
+  "exit_code": 0,
+  "run_id": "beb2fe3fdf6d0062040d19c90c6b546a",
+  "manifest_sha256": "d6e68a3c814db7139e4c89e9c8bb8800f06919c0a472eada9eaf45a420e7c983",
+  "gateway_report_sha256": "7102e0b2cfc15008ba8978cb986fc4e80089310214ce915684a069c8fd768443",
+  "result": {
+    "passed": true,
+    "assertions": 117,
+    "gateway_processes": 1,
+    "authority_processes": 2,
+    "distinct_process_ids": true,
+    "transfers": 4,
+    "final_input_sequences": {"a": 5, "b": 5},
+    "backend_connects_each": 1,
+    "backend_disconnects_during_workload": 0,
+    "identity_rebinds": 0,
+    "gateway_reconnects": 0,
+    "respawns": 0,
+    "item_graph_transferred": false,
+    "log_errors": 0
+  },
+  "scope": "Three-process native owner and stable gateway subgate. Both players independently move and each performs authority/a -> authority/b -> authority/a through accepted P6/SM1 and live M3 owner hooks.",
+  "limitations": [
+    "No graphical client or body/camera continuity is proven by this evidence.",
+    "This is Implementer machine evidence, not an independent Reviewer/Verifier verdict.",
+    "The MVP_SEAM_NO_RECONNECT_OR_RESPAWN product predicate remains unverified."
+  ],
+  "mvp3_predicate_verified": false,
+  "runtime_merge_authorized": false,
+  "main_merge_authorized": false
+}

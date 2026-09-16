@@ -1,0 +1,50 @@
+{
+  "schema": "distributed_world_simulator.bounded_repair_work_order.v1",
+  "repair_id": "V0-MVP2-R15-VALIDATION-AND-FIXTURE",
+  "parent_work_order_id": "V0-MVP-R1-WO-001",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "base_sha": "a029e7cf116074c532c94dc366a75c6ca3fe5415",
+  "base_tree": "6ca31d322e43f90efe26018c27fc895005ed183e",
+  "role": "IMPLEMENTER",
+  "independent_context": false,
+  "runtime_mutation": false,
+  "scope": "Завершить проверочную инфраструктуру уже разрешённого MVP2. R15 меняет только тесты, workflow, evidence producer и историческую R13/R14 fixture; продуктовая сцена и MVP2 glue остаются в родительском bounded Work Order.",
+  "allowed_paths": [
+    "tests/harness/test_v0_mvp_nonterminal_predicate_r13.py",
+    "tests/runtime/test_v0_mvp_two_client_shared_world.gd",
+    "tests/integration/test_v0_mvp_two_client_process.gd",
+    "tests/integration/test_v0_mvp_two_client_evidence.py",
+    "docs/control/mvp-act0-r1/validate_mvp2.py",
+    ".github/workflows/mvp2-exact-validation.yml",
+    "RUN_V0_MVP_TWO_CLIENT_TESTS.ps1",
+    "docs/control/mvp-act0-r1/work-order-mvp2-validation-r15.v1.json"
+  ],
+  "forbidden_paths": [
+    "scripts/harness/**", "scripts/network/**", "scripts/simulation/**",
+    "scripts/runtime/networked_gameplay/m3/**", "scripts/runtime/networked_gameplay/m4/**",
+    "scripts/runtime/networked_gameplay/p7/**", "scripts/runtime/networked_gameplay/sm1/**",
+    "config/control/harness/acceptance/**", "config/architecture/**"
+  ],
+  "repair_map": {
+    "owner": "MVP validation; production event reducer remains unchanged",
+    "root_cause": "R13/R14 tests require the live ledger to end at sequence 6 and inject a synthetic sequence 7. Legitimate MVP2 progress would invalidate that test fixture although append-only product execution is valid.",
+    "fix": "Test immutable committed prefix 1..6 for historical closure, synthetic 7 only after that prefix, and separately reduce the entire current ledger against the live Work Order snapshot.",
+    "not_a_symptom_patch": "Retains real event6 identity, all production guard calls and negative terminal-transition checks; does not remove or rewrite any ledger event."
+  },
+  "validation": [
+    "R13/R14 historical closure and synthetic continuation remain tested", "live ledger snapshot consistency",
+    "MVP2 focused Godot contract test", "three independent OS processes over existing ENet/M3 runtime",
+    "mutual replicated movement and full item snapshot convergence", "wrong-session and one-client negative controls",
+    "hidden-remote and tampered-evidence negative controls", "graphical client viewport captures; no desktop injection",
+    "full Harness and strict standard/directional PC0"
+  ],
+  "workflow_constraints": {
+    "read_only_github_permissions": true, "owner_only": true, "exact_checkout": true,
+    "source_export": false, "git_writes": false, "self_acceptance": false
+  },
+  "runtime_merge_authorized": false,
+  "predicate_verified_authorized": false,
+  "independent_verdict_issued": false,
+  "issued_at_utc": "2026-09-11T12:54:40Z",
+  "timestamp_correction": "Initial draft timestamp replaced with the observed Git issuance timestamp of de21af69823a128b2160c9490e18bf82ca287953; no validation outcome changed."
+}

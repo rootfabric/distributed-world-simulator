@@ -1,0 +1,21 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-09-09-V0-MVP-R1-V0-MVP-R1-WO-001-0005",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "sequence": 5,
+  "event_type": "IMPLEMENTATION_COMMITTED",
+  "work_state": "IN_PROGRESS",
+  "recorded_at_utc": "2026-09-10T21:27:18Z",
+  "actor": "IMPLEMENTER",
+  "branch": "feature/v0-mvp-playable-seamless-planet-r1",
+  "head_sha": "b645a738a6a143bee8f7f4a291a3e754cd399996",
+  "predicate": "MVP1_IMPLEMENTER_PROVENANCE_RECORDED",
+  "command": "APPEND_IMPLEMENTER_ADOPTION_OF_EXISTING_MVP1_IMPLEMENTATION",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence/MVP1-IMPLEMENTER-PROVENANCE-R11.v1.json",
+    "docs/control/mvp-act0-r1/work-order-implementer-provenance-r11.v1.json"
+  ],
+  "summary": "Implementer фиксирует ответственность за существующий MVP1 код и исправляет attribution события 4 добавлением. Event 4 остаётся неизменным. Новый независимый субъект или независимый PASS не заявлены; MVP1 ожидает exact validation и fresh external review. Parent MVP1-MVP8 Work Order остаётся IN_PROGRESS; product predicates не завершаются этим событием."
+}

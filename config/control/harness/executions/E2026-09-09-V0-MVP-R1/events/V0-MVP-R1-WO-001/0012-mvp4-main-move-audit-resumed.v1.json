@@ -1,0 +1,19 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-09-09-V0-MVP-R1-V0-MVP-R1-WO-001-0012-MVP4-MAIN-AUDIT-RESUMED",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "sequence": 12,
+  "event_type": "RECOVERY_RESUMED",
+  "work_state": "IN_PROGRESS",
+  "recorded_at_utc": "2026-09-13T12:29:01Z",
+  "actor": "INTEGRATOR",
+  "branch": "feature/v0-mvp-playable-seamless-planet-r1",
+  "head_sha": "f1d453fb2af49231c30bdc5cbe415ad199394446",
+  "command": "MVP_ACT0_POST_MERGE_EPOCH_AUDIT",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/audits/MVP4-CONTINUATION-AUDIT-9E10E640-R1.v1.json"
+  ],
+  "summary": "Canonical main movement to 9e10e640 was independently audited after MVP3 closure. Parent remains IN_PROGRESS; completed MVP1/MVP2/MVP3 predicates are preserved. Resume the existing Work Order toward MVP4. No product predicate, runtime merge, main merge or whole-MVP acceptance is claimed."
+}

@@ -1,0 +1,29 @@
+{
+  "schema": "distributed_world_simulator.harness_human_attention.v1",
+  "decision_id": "HA-V0-MVP4-EVENT-0013-HISTORY-REPAIR-R1",
+  "program": "V0",
+  "checkpoint": "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE",
+  "risk_class": "CRITICAL",
+  "reason": "APPEND_ONLY_EVENT_LEDGER_CORRUPTED_BY_MODIFICATION_COMMIT: event 0013-mvp4-terrain-only-evidence-repair.v1.json was pushed in commit 2b6b8d7e with an evidence_paths entry pointing at git-ignored artifacts/mvp4-exact/summary.json (violates the committed-JSON provenance fence), and correction commit 65f2d085 then modified the already-pushed event file. The state builder rejected the execution with EVENT_IMMUTABILITY_NOT_PROVEN for that file. Deletion and reconciliation quarantine are machine-forbidden for this history shape, so a bounded history rewrite was required. Runtime/evidence results were unaffected.",
+  "decision_required": "Historical decision: authorize a surgical history rewrite of the unmerged repair tail after e3e22af63bc7e672cbe68dd6851143ea8e659b67 so event 0013 appears in exactly one add-commit with committed evidence_paths, preserving the final runtime/evidence content and leaving canonical main plus events 0001-0012 untouched.",
+  "options": [
+    "AUTHORIZE_SURGICAL_FORCE_PUSH_REWRITE_OF_LAST_TWO_COMMITS",
+    "LEAVE_LEDGER_CORRUPTED_AND_RUN_MISSION_CONTROL_MANUALLY",
+    "CREATE_CLEAN_CONTINUATION_BRANCH_AND_REBIND_WORK_ORDER"
+  ],
+  "recommended_option": "AUTHORIZE_SURGICAL_FORCE_PUSH_REWRITE_OF_LAST_TWO_COMMITS",
+  "recommendation_reason": "The user explicitly authorized the surgical force-push rewrite on 2026-09-14. Because two additional control/evidence commits were appended after the original incident, the safe implementation reconstructs the entire unmerged tail after e3e22af6 into one clean commit while preserving the final content from 51585dd2, adding event 0013 once, and resolving this HA item. Exact CI, Harness, PC0 and Drive must be rerun on the rewritten HEAD before fresh review.",
+  "blast_radius": [
+    "Only the unmerged history tail after e3e22af63bc7e672cbe68dd6851143ea8e659b67 on feature/v0-mvp-playable-seamless-planet-r1",
+    "PR #597 remains draft; canonical main is untouched",
+    "Events 0001-0012 and accepted MVP1-MVP3 predicates remain byte-unchanged",
+    "Post-rewrite exact CI, full Harness, PC0/directional PC0 and CONTROL_DEVELOPMENT Drive must be rerun"
+  ],
+  "blocking": false,
+  "status": "RESOLVED",
+  "resolution": "User explicitly authorized the surgical force-push rewrite on 2026-09-14. The branch tail is reconstructed from parent e3e22af63bc7e672cbe68dd6851143ea8e659b67 as one clean commit preserving the final 51585dd2 runtime/evidence content, with event 0013 introduced exactly once in its corrected form. This resolution authorizes only the history repair; MVP4 remains NOT VERIFIED until post-rewrite validation, fresh review and independent verification complete. Risk class is CRITICAL to match parent Work Order V0-MVP-R1-WO-001 identity requirements; an independent verifier exposed the prior HIGH value as HUMAN_ATTENTION_IDENTITY_MISMATCH after ledger immutability was repaired.",
+  "evidence_paths": [
+    "docs/control/mvp-act0-r1/MVP4_TERRAIN_ONLY_EVIDENCE_REPAIR_R3_RU.md",
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/events/V0-MVP-R1-WO-001/0013-mvp4-terrain-only-evidence-repair.v1.json"
+  ]
+}

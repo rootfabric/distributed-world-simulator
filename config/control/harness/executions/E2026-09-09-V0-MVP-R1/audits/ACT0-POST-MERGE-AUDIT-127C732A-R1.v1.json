@@ -1,0 +1,35 @@
+{
+  "schema": "distributed_world_simulator.harness_epoch_audit.v1",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "base_sha": "3d7672cba293d8e7bd72427b803f73fc8fcee5da",
+  "main_sha": "127c732a56cc5c25d5712f24a7627ed4bb877374",
+  "decision": "CONTINUE",
+  "pc0": "NON_RED",
+  "directional_pc0": "NON_RED",
+  "evidence_class": "EXACT_CANONICAL_POST_MERGE_PROJECT_CONTROL",
+  "project_control": {
+    "run_id": 34470064409,
+    "job_id": 102847629695,
+    "artifact_id": 10149178314,
+    "artifact_sha256": "7935765213545947d64c264a1aa3bd622cf801544cc8f3ec9f9af0071b35e5b8",
+    "head_sha": "127c732a56cc5c25d5712f24a7627ed4bb877374",
+    "conclusion": "success",
+    "standard_overall": "YELLOW",
+    "v0_health": "YELLOW",
+    "v0_runtime_validation": "RUNTIME_TEST_PENDING",
+    "cross_branch_overlaps": [],
+    "directional_overall": "YELLOW",
+    "directional_blocking_red": 0
+  },
+  "runtime_state": {
+    "runtime_branch": "feature/v0-mvp-playable-seamless-planet-r1",
+    "branch_aligned_to_main_before_audit": true,
+    "gameplay_implementation_started": false,
+    "mvp_predicates_completed": [],
+    "runtime_feature_merge_authorized": false,
+    "mvp_acceptance_authorized": false
+  },
+  "recorded_at_utc": "2026-09-10T11:18:00Z",
+  "summary": "Exact post-merge Project Control on canonical ACT0 main is NON_RED. The MVP runtime branch is aligned to that main and remains unimplemented. This audit authorizes continuation of the existing bounded Work Order only; it does not prove any MVP product predicate or authorize runtime merge/acceptance."
+}
