@@ -1,0 +1,8 @@
+test_fixture_commits_do_not_launch_automatic_background_maintenance (test_v0_mvp_act0.MVPAct0Tests.test_fixture_commits_do_not_launch_automatic_background_maintenance) ... ok
+test_original_canonical_act0_fence_without_journal_authorization (test_v0_mvp_act0.MVPAct0Tests.test_original_canonical_act0_fence_without_journal_authorization) ... ok
+test_all_p7_execution_and_acceptance_blobs_are_unchanged (test_v0_mvp_act0.MVPAct0Tests.test_all_p7_execution_and_acceptance_blobs_are_unchanged) ... ok
+
+----------------------------------------------------------------------
+Ran 3 tests in 3.498s
+
+OK
