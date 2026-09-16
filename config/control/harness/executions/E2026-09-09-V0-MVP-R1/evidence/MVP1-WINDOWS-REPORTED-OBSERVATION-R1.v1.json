@@ -1,0 +1,91 @@
+{
+  "schema": "distributed_world_simulator.mvp_visual_verification.v1",
+  "evidence_id": "V0-MVP1-WINDOWS-GRAPHICAL-VERIFICATION-R1",
+  "checkpoint": "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE",
+  "predicate": "MVP_SHARED_GRAPHICAL_SCENE",
+  "subject": {
+    "head": "b645a738a6a143bee8f7f4a291a3e754cd399996",
+    "tree": "b7cd01061dab492eaa1de3de6680465ac9e7aaf6",
+    "pull_request": 597,
+    "runtime_branch": "feature/v0-mvp-playable-seamless-planet-r1"
+  },
+  "platform": {
+    "os": "Windows x86_64",
+    "gpu": "NVIDIA RTX 4060",
+    "renderer_observed": "OpenGL 3.3"
+  },
+  "godot": {
+    "version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "binary": "godot.windows.editor.double.x86_64.console.exe",
+    "sha256": "3633C3E609C8CE2F9BAE334A9C7E75C7F974DE3AF0415AB4A8050A625A15A7A5"
+  },
+  "machine_checks": {
+    "import_parse": "PASS",
+    "focused_machine_smoke": "PASS",
+    "focused_smoke_assertions": 16,
+    "focused_smoke_exit_code": 0,
+    "fatal_runtime_errors": 0
+  },
+  "visual_checks": {
+    "graphical_launch": "PASS",
+    "world_visible": "PASS",
+    "p7_7_donor_visible": "PASS",
+    "camera_usable": "PASS",
+    "lighting_readable": "PASS",
+    "basic_interaction_smoke": "PASS",
+    "scene_alive_after_interaction": "PASS"
+  },
+  "composition_observation": {
+    "scene": "scenes/labs/mvp/v0_mvp_shared_graphical_scene.tscn",
+    "hierarchy": "V0MVPSharedGraphicalScene -> AcceptedP7DiggingSlice",
+    "p7_7_donor_scene": "scenes/labs/p7/p7_7_digging_playground.tscn",
+    "donor_start_frame_reported_pixel_identical": true,
+    "creates_second_canonical_owner_observed": false
+  },
+  "interaction_observation": {
+    "movement": "W input accepted",
+    "controlled_dig": "PASS",
+    "controlled_dig_report": "P7.7-A COMMITTED — route=MW4_SINGLE_REGION | MW10=false | changed=8 | removed=8176.830 kg | ItemGraph output=8176 | presenters=4",
+    "visible_crater_observed": true,
+    "informational_rejected_attempt": "P7_7_PLAYGROUND_MW4_EXECUTION_NOT_COMMITTED",
+    "informational_note": "The rejected attempt occurred around a moved window/third-party click and is not used as MVP1 acceptance evidence. Full dig acceptance belongs to later MVP predicates."
+  },
+  "screenshots_reported": [
+    "01_mvp_scene_initial.png",
+    "02_mvp_scene_gameplay_view.png",
+    "03_mvp_scene_tree_and_running_view.png",
+    "04_mvp_scene_after_basic_movement.png",
+    "05_mvp_scene_console_clean.png",
+    "06_p7_7_donor_standalone.png"
+  ],
+  "logs_reported": [
+    "import_parse.log",
+    "focused_smoke.log",
+    "graphical_run.log",
+    "donor_run.log",
+    "editor_run.log"
+  ],
+  "source_provenance": {
+    "source_kind": "USER_SUPPLIED_FRESH_LOCAL_WINDOWS_VERIFIER_REPORT",
+    "local_evidence_root_reported": "C:\\distributed-world-simulator-mvp1-visual-evidence\\",
+    "local_verification_record_reported": "C:\\distributed-world-simulator-mvp1-visual-evidence\\VERIFICATION-RECORD.md",
+    "repository_code_modified_by_verifier": false,
+    "screenshots_embedded_in_this_carrier": false,
+    "logs_embedded_in_this_carrier": false
+  },
+  "scope": {
+    "mvp_shared_graphical_scene": "PASS",
+    "mvp_two_client_shared_world": "UNPROVEN",
+    "mvp_seam_no_reconnect_or_respawn": "UNPROVEN",
+    "mvp_canonical_dig_visible_to_both_clients": "UNPROVEN",
+    "mvp_exactly_once_material_output": "UNPROVEN",
+    "mvp_item_construction_persistence_convergence": "UNPROVEN",
+    "mvp_reconnect_and_restart": "UNPROVEN",
+    "mvp_bounded_interactive_workload": "UNPROVEN",
+    "mvp_checkpoint_acceptance": "NOT_AUTHORIZED",
+    "runtime_feature_merge": "NOT_AUTHORIZED"
+  },
+  "verdict": "PASS",
+  "ready_for": "MVP1_EXACT_EVIDENCE_RECORD_AND_FRESH_REVIEW",
+  "notes": "This record durably captures the supplied fresh local Windows graphical verifier result without moving the runtime subject. Screenshot/log bytes remain on the verifier machine and are not silently represented as repository-resident evidence."
+}

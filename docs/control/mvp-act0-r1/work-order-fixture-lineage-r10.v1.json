@@ -1,0 +1,36 @@
+{
+  "schema": "distributed_world_simulator.mvp_bounded_repair.v1",
+  "repair_id": "V0-MVP1-ACT0-FIXTURE-LINEAGE-R10",
+  "parent_work_order": "V0-MVP-R1-WO-001",
+  "trigger_run": 34472092076,
+  "trigger_head": "0ded6bc6c7b98af2941f6d687fa4bfbcc959297e",
+  "trigger_failure": "EVENT_LEDGER_DELETION_DETECTED",
+  "classification": "TEST_FIXTURE_HISTORY_DEFECT",
+  "scope": "Build ACT0 synthetic authority fixtures from the pre-implementation canonical lineage instead of deleting later committed MVP ledger events from a clone of the moving feature head.",
+  "repair_base": "0ded6bc6c7b98af2941f6d687fa4bfbcc959297e",
+  "pre_implementation_main": "127c732a56cc5c25d5712f24a7627ed4bb877374",
+  "allowed_paths": [
+    "tests/harness/test_v0_mvp_act0.py",
+    "docs/control/mvp-act0-r1/work-order-fixture-lineage-r10.v1.json"
+  ],
+  "forbidden_paths": [
+    "scripts/runtime/**",
+    "scripts/network/**",
+    "scripts/simulation/**",
+    "scenes/**",
+    "project.godot",
+    "config/architecture/**",
+    "config/control/harness/acceptance/**",
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/events/**"
+  ],
+  "required_predicates": [
+    "SYNTHETIC_FIXTURE_LINEAGE_NEVER_CONTAINED_SEQUENCE_4",
+    "NO_EVENT_LEDGER_DELETION_COMMIT",
+    "CURRENT_HARNESS_CODE_OVERLAY_IS_COMMITTED_AND_CLEAN",
+    "ACT0_AUDIT_IDENTITY_REGRESSIONS_RECOVER",
+    "FULL_HARNESS_PASS"
+  ],
+  "runtime_mutation": false,
+  "mvp_predicate_completion_authorized": false,
+  "notes": "R10 changes test-fixture construction only. It does not alter ACT0 authority, the real MVP ledger, MVP1 gameplay code, or acceptance state."
+}

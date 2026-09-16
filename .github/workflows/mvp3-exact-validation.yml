@@ -1,0 +1,142 @@
+name: MVP3 Exact Native Graphical Evidence
+on:
+  push:
+    branches: [feature/v0-mvp-playable-seamless-planet-r1]
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: mvp3-exact-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  exact-native-graphical:
+    if: >-
+      github.repository == 'rootfabric/distributed-world-simulator' &&
+      github.actor == 'rootfabric' && github.triggering_actor == 'rootfabric' &&
+      github.ref == 'refs/heads/feature/v0-mvp-playable-seamless-planet-r1' &&
+      (github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[mvp3-evidence]'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      PYTHONUTF8: '1'
+      PYTHONPATH: scripts
+      BREAKPOINT_RUNTIME_DISABLED: '1'
+      PLANET_SIMULATOR_INVENTORY_PROFILE: planet_default
+      LIBGL_ALWAYS_SOFTWARE: '1'
+      GODOT_SILENCE_ROOT_WARNING: '1'
+      EXPECTED_HEAD: ${{ github.sha }}
+      ENGINE_SHA: bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Exact checkout and graphical prerequisites
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+          if [ "$(git branch --show-current)" != feature/v0-mvp-playable-seamless-planet-r1 ]; then
+            git switch -c feature/v0-mvp-playable-seamless-planet-r1 "$EXPECTED_HEAD"
+          fi
+          test -z "$(git status --porcelain --untracked-files=no)"
+          mkdir -p artifacts/mvp3-exact
+          git rev-parse HEAD HEAD^{tree} origin/main > artifacts/mvp3-exact/subjects.txt
+          git status --porcelain --untracked-files=no > artifacts/mvp3-exact/tracked-before.txt
+          if ! command -v Xvfb >/dev/null || ! command -v xauth >/dev/null; then
+            sudo -n apt-get update
+            sudo -n env DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends xvfb xauth libgl1-mesa-dri
+          fi
+          python3 -m venv "$RUNNER_TEMP/mvp3-venv"
+          "$RUNNER_TEMP/mvp3-venv/bin/python" -m pip install -r scripts/harness/requirements.txt
+      - name: Obtain the already approved engine
+        uses: actions/download-artifact@v4
+        with:
+          name: p7-repair-engine-34117353691
+          run-id: 34117353691
+          repository: rootfabric/distributed-world-simulator
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/mvp3-engine
+      - name: Actual native and five-process graphical gates plus audited MVP2 regression
+        shell: bash
+        run: |
+          set -euo pipefail
+          export GODOT_BIN="$RUNNER_TEMP/mvp3-engine/godot"
+          test "$(sha256sum "$GODOT_BIN" | cut -d' ' -f1)" = "$ENGINE_SHA"
+          chmod u+x "$GODOT_BIN"
+          xvfb-run -a -s '-screen 0 1600x900x24' "$RUNNER_TEMP/mvp3-venv/bin/python" - <<'PY'
+          import hashlib,json,os,pathlib,re,signal,subprocess,sys,time
+          out=pathlib.Path('artifacts/mvp3-exact'); out.mkdir(parents=True,exist_ok=True)
+          engine=os.environ['GODOT_BIN']; rows=[]
+          def run(name,args,timeout=180,scan=False):
+              path=out/(name+'.log'); started=time.monotonic(); timed_out=False
+              with path.open('wb') as stream:
+                  p=subprocess.Popen(args,stdout=stream,stderr=subprocess.STDOUT,start_new_session=True)
+                  try: code=p.wait(timeout=timeout)
+                  except subprocess.TimeoutExpired:
+                      timed_out=True; os.killpg(p.pid,signal.SIGTERM)
+                      try: p.wait(timeout=10)
+                      except subprocess.TimeoutExpired: os.killpg(p.pid,signal.SIGKILL); p.wait()
+                      code=124
+              text=path.read_text(errors='replace')
+              fatal=re.findall(r'(?im)^\s*(?:SCRIPT ERROR|ERROR):|Parse Error|Compile Error',text) if scan else []
+              rows.append({'name':name,'argv':args,'exit_code':code,'timeout_seconds':timeout,'timed_out':timed_out,'fatal_matches':fatal,'passed':code==0 and not fatal and not timed_out,'elapsed_seconds':round(time.monotonic()-started,3),'log_sha256':hashlib.sha256(path.read_bytes()).hexdigest()})
+              (out/'commands.json').write_text(json.dumps(rows,indent=2)+'\n')
+              print(name,json.dumps(rows[-1]),text[-2000:],flush=True)
+              return rows[-1]['passed']
+          run('engine-version',[engine,'--version'],30)
+          if not run('import',[engine,'--headless','--path','.','--editor','--import','--quit'],180,True): raise SystemExit(1)
+          os.environ['MVP3_OWNER_HOOKS_RESULT']=str((out/'owner-hooks.json').resolve())
+          run('live-owner-hooks',[engine,'--headless','--path','.','--script','res://tests/runtime/test_v0_mvp3_live_owner_handoff.gd'],90,True)
+          run('accepted-sm1',[engine,'--headless','--path','.','--script','res://tests/network/test_v0_sm1_player_carry_and_gateway_pivot.gd'],90,True)
+          run('native-process',[sys.executable,'tests/integration/test_v0_mvp3_native_process_roundtrip.py','--engine',engine,'--output',str(out/'native')],240)
+          graphical=run('graphical-process',[sys.executable,'tests/integration/test_v0_mvp3_graphical_process_roundtrip.py','--engine',engine,'--output',str(out/'graphical')],420)
+          projection_errors=[]; projections=[]
+          for actor in ('a','b'):
+              path=out/'graphical'/('client-'+actor+'.json')
+              if not path.is_file(): projection_errors.append('missing client '+actor); continue
+              report=json.loads(path.read_text()); projection=report.get('surface_projection',{}); projections.append(projection)
+              if projection.get('mode')!='IMMUTABLE_P7_BOOTSTRAP_PROJECTION' or projection.get('configured') is not True or projection.get('canonical_state_owned') is not False or projection.get('mutable_matter_store_retained') is not False or projection.get('mesh_count',0)<1:
+                  projection_errors.append('accepted P7 projection contract '+actor)
+              if report.get('route_history_observed_actor')!='a' or report.get('identity_changes')!=0:
+                  projection_errors.append('identity / route provenance '+actor)
+          if len(projections)!=2 or not projections[0].get('bootstrap_hash') or projections[0].get('bootstrap_hash')!=projections[-1].get('bootstrap_hash'): projection_errors.append('shared bootstrap hash mismatch')
+          (out/'projection-validation.json').write_text(json.dumps({'passed':graphical and not projection_errors,'errors':projection_errors,'projections':projections},indent=2)+'\n')
+          run('mvp1-mvp2-regression',[sys.executable,'docs/control/mvp-act0-r1/validate_mvp3_regression.py','--engine',engine],900)
+          clean=not subprocess.check_output(['git','status','--porcelain','--untracked-files=no'],text=True).strip()
+          summary={'subject_head':os.environ['EXPECTED_HEAD'],'all_commands_passed':all(r['passed'] for r in rows),'projection_passed':graphical and not projection_errors,'tracked_clean_after':clean,'manual_input_executed':False,'independent_verdict':False,'mvp3_predicate_verified':False,'outstanding_scope':'Full world/core and fixed-tick/manual closure are separate required gates; this workflow does not accept MVP3.'}
+          (out/'summary.json').write_text(json.dumps(summary,indent=2)+'\n')
+          raise SystemExit(0 if summary['all_commands_passed'] and summary['projection_passed'] and clean else 1)
+          PY
+      - name: Bind every raw member to exact source and engine
+        if: always()
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib,subprocess
+          out=pathlib.Path('artifacts/mvp3-exact'); out.mkdir(parents=True,exist_ok=True)
+          def git(*args):
+              p=subprocess.run(['git',*args],capture_output=True,text=True)
+              return {'exit_code':p.returncode,'stdout':p.stdout.strip(),'stderr':p.stderr.strip()}
+          engine=pathlib.Path(os.environ['RUNNER_TEMP'])/'mvp3-engine/godot'
+          manifest={'schema':'distributed_world_simulator.mvp3_closure_manifest.v1','subject_head':git('rev-parse','HEAD'),'subject_tree':git('rev-parse','HEAD^{tree}'),'canonical_main':git('rev-parse','origin/main'),'expected_head':os.environ['EXPECTED_HEAD'],'run_id':os.environ['GITHUB_RUN_ID'],'run_attempt':os.environ['GITHUB_RUN_ATTEMPT'],'runner_os':os.environ['RUNNER_OS'],'engine_sha256':hashlib.sha256(engine.read_bytes()).hexdigest() if engine.is_file() else None,'tracked_after':git('status','--porcelain','--untracked-files=no'),'manual_input_executed':False,'independent_verdict':False,'mvp3_predicate_verified':False,'files':[]}
+          for prefix in [out,pathlib.Path('artifacts/mvp2-exact')]:
+              if not prefix.exists(): continue
+              for p in sorted(prefix.rglob('*')):
+                  if not p.is_file() or p==out/'manifest.json' or any(x in ('user-data','.godot') for x in p.parts): continue
+                  manifest['files'].append({'path':str(p),'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()})
+          (out/'manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mvp3-native-graphical-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            artifacts/mvp3-exact/
+            artifacts/mvp2-exact/
+            !artifacts/mvp3-exact/**/user-data/**
+            !artifacts/mvp2-exact/**/user-data/**
+          if-no-files-found: error
+          retention-days: 90

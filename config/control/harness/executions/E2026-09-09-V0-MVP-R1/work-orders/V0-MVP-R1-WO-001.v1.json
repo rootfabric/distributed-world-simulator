@@ -4,11 +4,11 @@
   "project_epoch": "E2026-09-09-V0-MVP-R1",
   "program": "V0",
   "goal_checkpoint": "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE",
-  "state": "DISPATCHED",
+  "state": "IN_PROGRESS",
   "work_order_type": "INTEGRATION",
   "base_sha": "3d7672cba293d8e7bd72427b803f73fc8fcee5da",
   "branch": "feature/v0-mvp-playable-seamless-planet-r1",
-  "scope": "MVP1–MVP8: интеграция уже принятых SM1/P7/Item/Construction/persistence в одну запускаемую двухклиентскую сцену. Никаких новых владельцев канонического состояния.",
+  "scope": "MVP1–MVP8: интеграция принятых SM1/P7/Item/Construction/persistence в одну запускаемую двухклиентскую сцену без новых владельцев состояния. Сохраняются HA-V0-MVP3-LIVE-PLAYER-HOOKS-R1 и его четыре M3 файла; точные validation scope MVP4/MVP5; принятые V0-MVP-LIVE-SIMULATOR-BASELINE-R1 и HA-V0-MVP-CHECKPOINT-CATALOG-SYNC-R1. Пользователь явно разрешил HA-V0-MVP6-NATIVE-ITEM-CARRY-R1: два именованных M4 файла и networked_gameplay_service_p2.gd допускают только native actor-scoped carrying, replay/authority fencing, trusted spatial/content bootstrap и согласование с прежними M3 hooks. Это не смена архитектурного ownership. M4 wildcard-разрешения нет: все остальные M4 пути остаются вне allowed_paths. Именованный новый read-only .github/workflows/mvp6-item-construction-validation.yml разрешён Director для exact tests/evidence этого slice; historical prerequisite diagnostic сохраняется отдельно. Ни один из этих scopes не разрешает main/runtime merge или self-acceptance. Пользователь отдельно разрешил HA-V0-MVP6-NX-SAME-REVISION-ROLLBACK-R1: только scripts/network/prediction/predicted_item_interaction_journal.gd для same-revision rollback. Все остальные scripts/network пути остаются запрещены default-deny allowed_paths; wildcard network scope не выдаётся. Пользователь усилил текущий MVP6 обязательным MVP6_CROSS_AUTHORITY_CONSTRUCTION_SEAM: одна canonical Construction примерно100 элементов через A/B authority, live два клиента+две authority+gateway, непрерывная collision/traversal, canonical ADD/REMOVE/replay, relationships и persistence roundtrip. Второй active Work Order не создаётся; frozen ownership и main merge gates сохраняются.",
   "allowed_paths": [
     "scripts/runtime/networked_gameplay/mvp/**",
     "scripts/app/**",
@@ -18,15 +18,33 @@
     "tests/fixtures/v0_mvp/**",
     "RUN_V0_MVP_*",
     "config/control/harness/executions/E2026-09-09-V0-MVP-R1/**",
-    "docs/control/mvp-act0-r1/**"
+    "docs/control/mvp-act0-r1/**",
+    "scripts/runtime/networked_gameplay/services/player_registry.gd",
+    "scripts/runtime/networked_gameplay/services/player_ownership_service.gd",
+    "scripts/runtime/networked_gameplay/networked_gameplay_service_p2.gd",
+    "scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime_p2.gd",
+    "tests/runtime/test_v0_mvp3_*",
+    "tests/integration/test_v0_mvp3_*",
+    ".github/workflows/mvp4-shared-dig-validation.yml",
+    "RUN_V0_MVP4_SHARED_DIG.ps1",
+    ".github/workflows/mvp5-material-output-validation.yml",
+    "config/control/harness/checkpoint-catalog.v1.json",
+    ".github/workflows/mvp6-native-prerequisite-diagnostic.yml",
+    ".github/workflows/mvp6-item-construction-validation.yml",
+    "scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service.gd",
+    "scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service_base.gd",
+    "scripts/network/prediction/predicted_item_interaction_journal.gd"
   ],
   "forbidden_paths": [
     "config/architecture/**",
     "config/control/architecture-ownership.v1.json",
     "config/control/harness/acceptance/**",
     "scripts/simulation/matter/**",
-    "scripts/network/**",
-    "scripts/runtime/networked_gameplay/m4/**",
+    "scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service_p1.gd",
+    "scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service_p2.gd",
+    "scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service_p3.gd",
+    "scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service_p4.gd",
+    "scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service_p5.gd",
     "scripts/runtime/networked_gameplay/sm1/**",
     "scripts/runtime/networked_gameplay/p7/**",
     "project.godot"
@@ -37,9 +55,37 @@
     "MVP_SEAM_NO_RECONNECT_OR_RESPAWN",
     "MVP_CANONICAL_DIG_VISIBLE_TO_BOTH_CLIENTS",
     "MVP_EXACTLY_ONCE_MATERIAL_OUTPUT",
+    "LIVE_TOOL_GATED_DIG_TO_CANONICAL_OUTPUT",
+    "OUTPUT_EXACTLY_ONCE_UNDER_REPLAY",
+    "NO_SECOND_ITEM_IDENTITY_FOR_DUPLICATE_OPERATION",
     "MVP_ITEM_CONSTRUCTION_PERSISTENCE_CONVERGENCE",
+    "MVP6_LIVE_ITEM_PICKUP_DROP_SHARED",
+    "MVP6_ITEM_IDENTITY_AND_QUANTITY_CONSERVED",
+    "MVP6_TWO_CLIENT_ITEM_CONTENTION_SINGLE_WINNER",
+    "MVP6_SHARED_CONTAINER_INTERACTION",
+    "MVP6_NONEMPTY_ITEM_CARRY_ACROSS_SEAM",
+    "MVP6_LIVE_CANONICAL_TOOL_EQUIPMENT",
+    "MVP6_REAL_RESOURCE_CONSTRUCTION_COMMIT",
+    "MVP6_TWO_CLIENT_CONSTRUCTION_REPLICATION",
+    "MVP6_CONSTRUCTION_COLLISION_PRESENT",
+    "MVP6_NO_PRIVATE_OR_DUPLICATE_TRUTH",
+    "MVP6_CROSS_AUTHORITY_CONSTRUCTION_SEAM",
     "MVP_RECONNECT_AND_RESTART",
+    "RECOVER_TERRAIN_STATE",
+    "RECOVER_ITEM_INVENTORY_EQUIPMENT_STATE",
+    "RECOVER_WORLD_ITEM_IDENTITIES",
+    "RECOVER_SHARED_CONTAINER_STATE",
+    "RECOVER_CONSTRUCTION_STATE_AND_COLLISION",
+    "RECOVER_REQUIRED_OPERATION_DEDUP_STATE",
+    "LATE_JOIN_OR_RESYNC_GETS_CURRENT_STATE",
     "MVP_BOUNDED_INTERACTIVE_WORKLOAD",
+    "ONE_CONNECTED_TWO_CLIENT_GAMEPLAY_LOOP",
+    "REPEATED_MOVE_SEAM_DIG_ITEM_BUILD_OPERATIONS",
+    "ONE_CLIENT_RECONNECT_AND_CONTINUE",
+    "SERVER_OR_WORLD_RESTART_AND_CONTINUE",
+    "BOUNDED_QUEUES_AND_REPLAY_STATE",
+    "NO_DUPLICATE_ITEM_OR_CONSTRUCTION_IDENTITIES",
+    "RESPONSIVE_PLAYER_CONTROL_MAINTAINED",
     "INDEPENDENT_REVIEWER_PASS",
     "INDEPENDENT_VERIFIER_PASS",
     "STANDARD_PC0_NON_RED",
@@ -62,17 +108,23 @@
     "MVP_ITEM_CONSTRUCTION_PERSISTENCE_CONVERGENCE",
     "MVP_RECONNECT_AND_RESTART",
     "MVP_BOUNDED_INTERACTIVE_WORKLOAD",
-    "Exact-head Evidence Map and fresh independent roles"
+    "V0-MVP-LIVE-SIMULATOR-BASELINE-R1 connected live two-client gameplay story",
+    "Exact-head Evidence Map and fresh independent roles",
+    "MVP6_CROSS_AUTHORITY_CONSTRUCTION_SEAM"
   ],
   "stop_conditions": [
-    "New canonical owner or foundation change required",
+    "New canonical owner, architecture transfer or owner mutation outside exact HA-V0-MVP3-LIVE-PLAYER-HOOKS-R1 and HA-V0-MVP6-NATIVE-ITEM-CARRY-R1 scopes required",
     "Second active runtime worker",
     "Missing canonical ACT0 or stale epoch",
-    "Attempt to self-accept or self-merge"
+    "Attempt to self-accept or self-merge",
+    "Attempt to claim MVP6/MVP7/MVP8 from isolated backend or lab PASS without mandatory live-simulator baseline sub-gates",
+    "Mandatory sub-gate requires an additional owner-native change outside allowed paths without separate bounded scope amendment and required Harness/Human gate"
   ],
   "risk_class": "CRITICAL",
   "risk_reasons": [
-    "Composes mutable shared world, authority handoff and exactly-once recovery"
+    "Composes mutable shared world, authority handoff and exactly-once recovery",
+    "Whole-MVP acceptance requires one connected live two-client item/construction/recovery gameplay composition; isolated subsystem PASS is not product completion",
+    "Approved MVP6 carrying changes native player/item handoff with exact single-owner and replay constraints"
   ],
   "review_required": true,
   "required_review_roles": [
@@ -82,24 +134,27 @@
     "DIRECTOR",
     "HUMAN"
   ],
-  "repair_context_required": false,
+  "repair_context_required": true,
   "evidence_map_required": true,
   "issued_at_utc": "2026-09-09T10:18:03Z",
   "human_approval_required_for": [
     "RUNTIME_FEATURE_MERGE",
     "MVP_CHECKPOINT_ACCEPTANCE"
   ],
-  "notes": "ACT0 records dispatch authority, not a running agent. Implementation starts only on canonical adoption plus current epoch audit. No product predicate is complete at activation.",
+  "notes": "ACT0 records dispatch authority, not a running agent or product completion. Historical approvals and exact scopes remain in the resolved HA records and immutable parent versions through 727b5d779543e74f254830acfd743d69fe1f7e4d. MVP3 live hooks: explicit «разрешаю, реализуй», bounded work-order-mvp3-live-hooks-r8.v1.json. MVP4 validation-scope correction: MVP4_VALIDATION_SCOPE_R1_RU.md after review 4000014122. MVP5 named workflow: MVP5_IMPLEMENTATION_R1_RU.md. Live simulator baseline adopted on 2026-09-14 after «внеси правки» concerning PR #632. Checkpoint catalog sync approved on 2026-09-15, only required_predicates synchronization. Existing verified MVP1–MVP5 are not reopened. MVP6 initially requested «отлично, реализуй MVP6», now exact native owner amendment approved by «разрешаю, выполняй» after the declared three-file HA request. Native repair map: docs/control/mvp-act0-r1/MVP6_NATIVE_REPAIR_MAP_R1_RU.md. Default A3 operations and named read-only CI are authorized; no wildcard owner/workflow write scope, history rewrite, direct main push, main/runtime merge or self-acceptance. 2026-09-16: явное «разрешаю» для HA-V0-MVP6-NX-SAME-REVISION-ROLLBACK-R1, exact starting HEAD 9b8c2e03. Удаление общего forbidden glob требуется для одного точного исключения; allowed_paths по-прежнему не допускает остальные network paths. PC0 RED разрешает только причинный bounded dependency repair/validation, не продолжение product acceptance. 2026-09-17: explicit user strengthening текущего MVP6; контракт docs/control/mvp-act0-r1/MVP6_CROSS_AUTHORITY_CONSTRUCTION_SEAM_R1.json. Предикат PENDING, не подтверждён прежним Construction223 или journal/world evidence. Разрешено исследовать и воспроизвести blocker в существующих MVP test paths; foundation change требует отдельного Human Attention. HA-V0-MVP6-JOURNAL-BASELINE-MERGE-R1 остаётся OPEN; нового merge approval нет.",
   "design_brief": {
-    "problem_statement": "Принятые компоненты ещё не доказаны как единый пользовательский сценарий.",
-    "current_behavior": "SM1 и P7 приняты; MVP composition не выполнен.",
-    "desired_behavior": "Два клиента видят один мир, копают, пересекают A→B→A и восстанавливают одинаковое каноническое состояние.",
+    "problem_statement": "Принятые компоненты ещё не доказаны как единый пользовательский сценарий. Native MVP3 переносит только пустой inventory; whole-graph recovery не является actor-scoped handoff.",
+    "current_behavior": "MVP1–MVP5 verified. Diagnostic 152/0 proves expected nonempty rejection while native lifecycle and full JSON payload roundtrip pass.",
+    "desired_behavior": "Два live клиента экипируют tool, копают, получают материал once, выполняют pickup/drop/contention/container, несут непустой inventory/equipment A→B→A и строят одну Construction из canonical resources. MVP7 отдельно доказывает reconnect/restart/resync; MVP8 — связанный bounded workload. Одна примерно100-element Construction пересекает A/B seam с корректной canonical membership/ownership, continuous collision и traversal, exactly-once ADD/REMOVE, live convergence и rehydration.",
     "alternatives_considered": [
-      "New demo-only terrain/inventory",
-      "Wait for unrelated research"
+      "New demo inventory",
+      "Copy whole graph into live target",
+      "Reissue items after seam",
+      "Accept isolated backend PASS",
+      "Native actor-scoped carrying in existing owners"
     ],
-    "selected_design": "Small composition adapters over existing owners",
-    "why_selected": "No duplicate truth or new foundation",
+    "selected_design": "Existing native M4 owns item staging and mutation; existing SM1 owns decisions; M3/MVP glue coordinates player/item readiness, attestation, retirement and activation. Spatial/content startup policy is server-trusted and optional; legacy defaults remain.",
+    "why_selected": "No duplicate truth or owner; unrelated players and world state remain local and untouched.",
     "affected_owners": [
       "V0",
       "MATTER_MW4_MW10",
@@ -111,7 +166,8 @@
     "dependencies": [
       "V0_P7_BOUNDED_TERRAIN_MUTATION",
       "SM1_ACCEPTED",
-      "SERVER_PREDICTED"
+      "SERVER_PREDICTED",
+      "V0-MVP-LIVE-SIMULATOR-BASELINE-R1"
     ],
     "non_goals": [
       "ECO",
@@ -119,19 +175,30 @@
       "WORLDGEN1_FULL",
       "RF1",
       "P8",
-      "WORLD_PACKS"
+      "WORLD_PACKS",
+      "CONTINUOUS_RIGID_BODY_CROSS_SERVER_MIGRATION",
+      "DISTRIBUTED_CONTACT_ISLAND_PHYSICS",
+      "NPC_AI_COMBAT_HEALTH",
+      "MULTI_WORLD_PORTALS_OR_TELEPORT",
+      "POLISHED_PRODUCTION_UI"
     ],
     "expected_risks": [
-      "Presentation/canonical divergence",
-      "Duplicate output on replay",
-      "Seam reconnect or respawn"
+      "Partial player/item install",
+      "Duplicate output/replay across owners",
+      "Stale session or decision admission",
+      "Foreign inventory replacement",
+      "False product acceptance from native-only tests",
+      "Spatial/presentation divergence"
     ],
     "validation_plan": [
-      "Focused two-client scene",
-      "A-B-A continuity",
-      "Dig and exactly-once accounting",
-      "Reconnect/restart",
-      "Bounded interactive workload",
+      "MVP6_CROSS_AUTHORITY_CONSTRUCTION_SEAM: focused live composition, six negative controls, canonical API/data-model diagnostic if unsupported; final same frozen candidate as all existing MVP6 sub-gates",
+      "Native empty and nonempty A-B-A",
+      "Wrong identity/session/epoch/attestation/phase",
+      "Freeze and retire fences including output/consume/replay",
+      "Unchanged MVP3-MVP5",
+      "Live shared pickup/drop/contention/container",
+      "Canonical nonempty carry",
+      "Real-resource Construction replication/collision",
       "Full world/core",
       "Fresh Reviewer/Verifier and PC0"
     ]

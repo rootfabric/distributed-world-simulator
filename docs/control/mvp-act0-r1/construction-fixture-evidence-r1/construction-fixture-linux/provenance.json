@@ -1,0 +1,9 @@
+{
+  "run_id": 35100372324,
+  "artifact_id": 10447788421,
+  "zip_sha256": "cfae9802f9e13e2314763ca3ec926a8a1bc65057fb68774ef3e59ed11d50d63a",
+  "verified_download": true,
+  "validation_head": "193da1133c8b64bcc44898a6ab52fe4aa525b96a",
+  "source_head": "84ab0c0fba87f12dcfc94e32bb9cfa4eb8abb481",
+  "source_tree": "f7e3f255bcc4878f3e738e011e3d45bf3edcdb81"
+}

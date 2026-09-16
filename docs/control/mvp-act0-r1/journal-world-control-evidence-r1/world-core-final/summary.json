@@ -1,0 +1,2672 @@
+{
+  "schema": "planet_simulator.world_regression_summary.v1",
+  "checkpoint": "v16.14.0-network-nx4-client-prediction-reconciliation",
+  "runtime_base_checkpoint": "v16.10.8-network-nx0-observability-baseline",
+  "build_id": "nx4-client-prediction-reconciliation",
+  "started_at_utc": "2026-09-16T12:42:12.4078415Z",
+  "finished_at_utc": "2026-09-16T13:36:11.3454544Z",
+  "godot": "C:/Godot/godot/bin/godot.windows.editor.double.x86_64.console.exe",
+  "project_root": "C:\\distributed-world-simulator\\worktrees\\mvp6-journal-main-repair",
+  "isolated_user_profile": "C:\\distributed-world-simulator\\worktrees\\mvp6-journal-main-repair\\artifacts\\test-results\\world-profile-36628",
+  "declared_test_count": 327,
+  "discovered_test_count": 327,
+  "passed": true,
+  "steps": [
+    {
+      "name": "test_manifest_coverage",
+      "kind": "static",
+      "target": "327 tests; appended 125 discovered overlays",
+      "exit_code": 0,
+      "duration_seconds": 0.0,
+      "passed": true
+    },
+    {
+      "name": "editor_import_parse",
+      "kind": "editor",
+      "target": "res://",
+      "exit_code": 0,
+      "duration_seconds": 6.906,
+      "passed": true
+    },
+    {
+      "name": "test_double_precision_contract",
+      "kind": "headless_script",
+      "target": "res://tests/core/test_double_precision_contract.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.264,
+      "passed": true
+    },
+    {
+      "name": "test_simulation_clock",
+      "kind": "headless_script",
+      "target": "res://tests/unit/test_simulation_clock.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.267,
+      "passed": true
+    },
+    {
+      "name": "test_command_registry",
+      "kind": "headless_script",
+      "target": "res://tests/core/test_command_registry.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.265,
+      "passed": true
+    },
+    {
+      "name": "test_world_catalog",
+      "kind": "headless_script",
+      "target": "res://tests/core/test_world_catalog.gd",
+      "exit_code": 0,
+      "duration_seconds": 1.193,
+      "passed": true
+    },
+    {
+      "name": "test_controller_profiles",
+      "kind": "headless_script",
+      "target": "res://tests/core/test_controller_profiles.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.265,
+      "passed": true
+    },
+    {
+      "name": "test_hotkey_contract",
+      "kind": "headless_script",
+      "target": "res://tests/core/test_hotkey_contract.gd",
+      "exit_code": 0,
+      "duration_seconds": 2.766,
+      "passed": true
+    },
+    {
+      "name": "test_launch_options",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_launch_options.gd",
+      "exit_code": 0,
+      "duration_seconds": 3.603,
+      "passed": true
+    },
+    {
+      "name": "test_lifecycle_coordinator",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_lifecycle_coordinator.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.269,
+      "passed": true
+    },
+    {
+      "name": "test_simulator_shutdown_failures",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_simulator_shutdown_failures.gd",
+      "exit_code": 0,
+      "duration_seconds": 2.95,
+      "passed": true
+    },
+    {
+      "name": "test_network_contracts",
+      "kind": "headless_script",
+      "target": "res://tests/network/test_network_contracts.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.269,
+      "passed": true
+    },
+    {
+      "name": "test_loopback_command_transport",
+      "kind": "headless_script",
+      "target": "res://tests/network/test_loopback_command_transport.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.263,
+      "passed": true
+    },
+    {
+      "name": "test_network_transport_boundary",
+      "kind": "headless_script",
+      "target": "res://tests/network/test_network_transport_boundary.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.262,
+      "passed": true
+    },
+    {
+      "name": "test_n1_enet_snapshot_contracts",
+      "kind": "headless_script",
+      "target": "res://tests/network/test_n1_enet_snapshot_contracts.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.356,
+      "passed": true
+    },
+    {
+      "name": "test_n1_enet_snapshot_processes",
+      "kind": "headless_script",
+      "target": "res://tests/network/test_n1_enet_snapshot_processes.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.912,
+      "passed": true
+    },
+    {
+      "name": "test_n1_remote_item_command_contracts",
+      "kind": "headless_script",
+      "target": "res://tests/network/test_n1_remote_item_command_contracts.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.55,
+      "passed": true
+    },
+    {
+      "name": "test_n1_remote_item_command_processes",
+      "kind": "headless_script",
+      "target": "res://tests/network/test_n1_remote_item_command_processes.gd",
+      "exit_code": 0,
+      "duration_seconds": 1.654,
+      "passed": true
+    },
+    {
+      "name": "test_n1_reconnect_replay_contracts",
+      "kind": "headless_script",
+      "target": "res://tests/network/test_n1_reconnect_replay_contracts.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.638,
+      "passed": true
+    },
+    {
+      "name": "test_n1_reconnect_replay_processes",
+      "kind": "headless_script",
+      "target": "res://tests/network/test_n1_reconnect_replay_processes.gd",
+      "exit_code": 0,
+      "duration_seconds": 1.743,
+      "passed": true
+    },
+    {
+      "name": "test_n2_process_harness_contracts",
+      "kind": "headless_script",
+      "target": "res://tests/testing/test_n2_process_harness_contracts.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.381,
+      "passed": true
+    },
+    {
+      "name": "test_n2_process_harness_processes",
+      "kind": "headless_script",
+      "target": "res://tests/testing/test_n2_process_harness_processes.gd",
+      "exit_code": 0,
+      "duration_seconds": 5.178,
+      "passed": true
+    },
+    {
+      "name": "test_r3_authoritative_recovery_contracts",
+      "kind": "headless_script",
+      "target": "res://tests/persistence/test_r3_authoritative_recovery_contracts.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.818,
+      "passed": true
+    },
+    {
+      "name": "test_r3_authoritative_recovery_processes",
+      "kind": "headless_script",
+      "target": "res://tests/persistence/test_r3_authoritative_recovery_processes.gd",
+      "exit_code": 0,
+      "duration_seconds": 2.581,
+      "passed": true
+    },
+    {
+      "name": "test_h0_listen_host_contracts",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_h0_listen_host_contracts.gd",
+      "exit_code": 0,
+      "duration_seconds": 1.192,
+      "passed": true
+    },
+    {
+      "name": "test_h0_listen_host_processes",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_h0_listen_host_processes.gd",
+      "exit_code": 0,
+      "duration_seconds": 2.868,
+      "passed": true
+    },
+    {
+      "name": "test_h1_playable_listen_host_contracts",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_h1_playable_listen_host_contracts.gd",
+      "exit_code": 0,
+      "duration_seconds": 1.843,
+      "passed": true
+    },
+    {
+      "name": "test_h1_playable_listen_host_integration",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_h1_playable_listen_host_integration.gd",
+      "exit_code": 0,
+      "duration_seconds": 1.379,
+      "passed": true
+    },
+    {
+      "name": "test_h2_player_ownership_contracts",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_h2_player_ownership_contracts.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.266,
+      "passed": true
+    },
+    {
+      "name": "test_h2_host_client_processes",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_h2_host_client_processes.gd",
+      "exit_code": 0,
+      "duration_seconds": 1.189,
+      "passed": true
+    },
+    {
+      "name": "test_h3_multiplayer_gameplay_contracts",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_h3_multiplayer_gameplay_contracts.gd",
+      "exit_code": 0,
+      "duration_seconds": 1.211,
+      "passed": true
+    },
+    {
+      "name": "test_h3_dedicated_multiplayer_processes",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_h3_dedicated_multiplayer_processes.gd",
+      "exit_code": 0,
+      "duration_seconds": 3.98,
+      "passed": true
+    },
+    {
+      "name": "test_a2_networked_gameplay_architecture",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_a2_networked_gameplay_architecture.gd",
+      "exit_code": 0,
+      "duration_seconds": 1.118,
+      "passed": true
+    },
+    {
+      "name": "test_post_a2_single_server_multiplayer_roadmap",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_post_a2_single_server_multiplayer_roadmap.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.265,
+      "passed": true
+    },
+    {
+      "name": "test_m1_networked_gameplay_contracts",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_m1_networked_gameplay_contracts.gd",
+      "exit_code": 0,
+      "duration_seconds": 1.102,
+      "passed": true
+    },
+    {
+      "name": "test_m1_unified_networked_gameplay_service",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_m1_unified_networked_gameplay_service.gd",
+      "exit_code": 0,
+      "duration_seconds": 1.195,
+      "passed": true
+    },
+    {
+      "name": "test_m2_graphical_client_contracts",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_m2_graphical_client_contracts.gd",
+      "exit_code": 0,
+      "duration_seconds": 1.475,
+      "passed": true
+    },
+    {
+      "name": "test_m2_dedicated_graphical_processes",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_m2_dedicated_graphical_processes.gd",
+      "exit_code": 0,
+      "duration_seconds": 51.928,
+      "passed": true
+    },
+    {
+      "name": "test_m3_graphical_multiplayer_contracts",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_m3_graphical_multiplayer_contracts.gd",
+      "exit_code": 0,
+      "duration_seconds": 1.671,
+      "passed": true
+    },
+    {
+      "name": "test_m3_graphical_multiplayer_processes",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_m3_graphical_multiplayer_processes.gd",
+      "exit_code": 0,
+      "duration_seconds": 56.551,
+      "passed": true
+    },
+    {
+      "name": "test_m4_canonical_shared_gameplay_contracts",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_m4_canonical_shared_gameplay_contracts.gd",
+      "exit_code": 0,
+      "duration_seconds": 1.301,
+      "passed": true
+    },
+    {
+      "name": "test_m4_graphical_shared_gameplay_processes",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_m4_graphical_shared_gameplay_processes.gd",
+      "exit_code": 0,
+      "duration_seconds": 16.4,
+      "passed": true
+    },
+    {
+      "name": "test_m4_networked_playground_extension",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_m4_networked_playground_extension.gd",
+      "exit_code": 0,
+      "duration_seconds": 1.317,
+      "passed": true
+    },
+    {
+      "name": "test_m5_graphical_acceptance_preparation",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_m5_graphical_acceptance_preparation.gd",
+      "exit_code": 0,
+      "duration_seconds": 1.391,
+      "passed": true
+    },
+    {
+      "name": "test_m5_graphical_acceptance_contracts",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_m5_graphical_acceptance_contracts.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.831,
+      "passed": true
+    },
+    {
+      "name": "test_m5_graphical_multiplayer_acceptance",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_m5_graphical_multiplayer_acceptance.gd",
+      "exit_code": 0,
+      "duration_seconds": 29.708,
+      "passed": true
+    },
+    {
+      "name": "test_m6_dedicated_recovery_contracts",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_m6_dedicated_recovery_contracts.gd",
+      "exit_code": 0,
+      "duration_seconds": 4.278,
+      "passed": true
+    },
+    {
+      "name": "test_m6_dedicated_recovery_processes",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_m6_dedicated_recovery_processes.gd",
+      "exit_code": 0,
+      "duration_seconds": 38.364,
+      "passed": true
+    },
+    {
+      "name": "test_a3_single_server_multiplayer_architecture",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_a3_single_server_multiplayer_architecture.gd",
+      "exit_code": 0,
+      "duration_seconds": 2.211,
+      "passed": true
+    },
+    {
+      "name": "test_m7_playable_networked_playground",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_m7_playable_networked_playground.gd",
+      "exit_code": 0,
+      "duration_seconds": 3.414,
+      "passed": true
+    },
+    {
+      "name": "test_m7_playable_networked_processes",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_m7_playable_networked_processes.gd",
+      "exit_code": 0,
+      "duration_seconds": 17.299,
+      "passed": true
+    },
+    {
+      "name": "test_m7_playable_networked_recovery_processes",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_m7_playable_networked_recovery_processes.gd",
+      "exit_code": 0,
+      "duration_seconds": 10.546,
+      "passed": true
+    },
+    {
+      "name": "test_a1_generic_aggregate_contracts",
+      "kind": "headless_script",
+      "target": "res://tests/simulation/test_a1_generic_aggregate_contracts.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.354,
+      "passed": true
+    },
+    {
+      "name": "test_a1_generic_aggregate_integration",
+      "kind": "headless_script",
+      "target": "res://tests/simulation/test_a1_generic_aggregate_integration.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.448,
+      "passed": true
+    },
+    {
+      "name": "test_s0_spatial_substrate_contracts",
+      "kind": "headless_script",
+      "target": "res://tests/simulation/test_s0_spatial_substrate_contracts.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.264,
+      "passed": true
+    },
+    {
+      "name": "test_s0_spatial_substrate_integration",
+      "kind": "headless_script",
+      "target": "res://tests/simulation/test_s0_spatial_substrate_integration.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.356,
+      "passed": true
+    },
+    {
+      "name": "test_t1_multi_peer_transport_contracts",
+      "kind": "headless_script",
+      "target": "res://tests/network/test_t1_multi_peer_transport_contracts.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.357,
+      "passed": true
+    },
+    {
+      "name": "test_t1_multi_peer_transport_processes",
+      "kind": "headless_script",
+      "target": "res://tests/network/test_t1_multi_peer_transport_processes.gd",
+      "exit_code": 0,
+      "duration_seconds": 1.38,
+      "passed": true
+    },
+    {
+      "name": "test_nx0_network_experience_preparation",
+      "kind": "headless_script",
+      "target": "res://tests/network/test_nx0_network_experience_preparation.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.356,
+      "passed": true
+    },
+    {
+      "name": "test_nx0_observability_baseline",
+      "kind": "headless_script",
+      "target": "res://tests/network/test_nx0_observability_baseline.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.729,
+      "passed": true
+    },
+    {
+      "name": "test_nx0_observability_handshake_processes",
+      "kind": "headless_script",
+      "target": "res://tests/network/test_nx0_observability_handshake_processes.gd",
+      "exit_code": 0,
+      "duration_seconds": 10.806,
+      "passed": true
+    },
+    {
+      "name": "test_nx1_deterministic_network_condition_simulator",
+      "kind": "headless_script",
+      "target": "res://tests/network/test_nx1_deterministic_network_condition_simulator.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.727,
+      "passed": true
+    },
+    {
+      "name": "test_nx1_network_condition_processes",
+      "kind": "headless_script",
+      "target": "res://tests/network/test_nx1_network_condition_processes.gd",
+      "exit_code": 0,
+      "duration_seconds": 10.993,
+      "passed": true
+    },
+    {
+      "name": "test_nx2_realtime_traffic_separation",
+      "kind": "headless_script",
+      "target": "res://tests/network/test_nx2_realtime_traffic_separation.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.637,
+      "passed": true
+    },
+    {
+      "name": "test_nx3_fixed_tick_authoritative_simulation",
+      "kind": "headless_script",
+      "target": "res://tests/network/test_nx3_fixed_tick_authoritative_simulation.gd",
+      "exit_code": 0,
+      "duration_seconds": 1.555,
+      "passed": true
+    },
+    {
+      "name": "test_nx4_client_prediction_reconciliation",
+      "kind": "headless_script",
+      "target": "res://tests/network/test_nx4_client_prediction_reconciliation.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.634,
+      "passed": true
+    },
+    {
+      "name": "test_b0_message_bus_contracts",
+      "kind": "headless_script",
+      "target": "res://tests/network/test_b0_message_bus_contracts.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.359,
+      "passed": true
+    },
+    {
+      "name": "test_b0_message_bus_integration",
+      "kind": "headless_script",
+      "target": "res://tests/network/test_b0_message_bus_integration.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.359,
+      "passed": true
+    },
+    {
+      "name": "test_m0_aggregate_transaction_contracts",
+      "kind": "headless_script",
+      "target": "res://tests/simulation/test_m0_aggregate_transaction_contracts.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.454,
+      "passed": true
+    },
+    {
+      "name": "test_m0_aggregate_transaction_integration",
+      "kind": "headless_script",
+      "target": "res://tests/simulation/test_m0_aggregate_transaction_integration.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.822,
+      "passed": true
+    },
+    {
+      "name": "test_s1_distributed_compute_contracts",
+      "kind": "headless_script",
+      "target": "res://tests/simulation/test_s1_distributed_compute_contracts.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.448,
+      "passed": true
+    },
+    {
+      "name": "test_s1_distributed_compute_integration",
+      "kind": "headless_script",
+      "target": "res://tests/simulation/test_s1_distributed_compute_integration.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.91,
+      "passed": true
+    },
+    {
+      "name": "test_n0_extended_contracts",
+      "kind": "headless_script",
+      "target": "res://tests/network/test_n0_extended_contracts.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.356,
+      "passed": true
+    },
+    {
+      "name": "test_n0_contract_mutation_matrix",
+      "kind": "headless_script",
+      "target": "res://tests/network/test_n0_contract_mutation_matrix.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.356,
+      "passed": true
+    },
+    {
+      "name": "test_n0_golden_fixtures",
+      "kind": "headless_script",
+      "target": "res://tests/network/test_n0_golden_fixtures.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.359,
+      "passed": true
+    },
+    {
+      "name": "test_loopback_replication_transport",
+      "kind": "headless_script",
+      "target": "res://tests/network/test_loopback_replication_transport.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.269,
+      "passed": true
+    },
+    {
+      "name": "test_n0_review_regressions",
+      "kind": "headless_script",
+      "target": "res://tests/network/test_n0_review_regressions.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.355,
+      "passed": true
+    },
+    {
+      "name": "test_handoff_state_machine",
+      "kind": "headless_script",
+      "target": "res://tests/network/test_handoff_state_machine.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.353,
+      "passed": true
+    },
+    {
+      "name": "test_handoff_transition_matrix",
+      "kind": "headless_script",
+      "target": "res://tests/network/test_handoff_transition_matrix.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.357,
+      "passed": true
+    },
+    {
+      "name": "test_authority_revision_semantics",
+      "kind": "headless_script",
+      "target": "res://tests/entities/test_authority_revision_semantics.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.266,
+      "passed": true
+    },
+    {
+      "name": "test_kernel_ports",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_kernel_ports.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.268,
+      "passed": true
+    },
+    {
+      "name": "test_world_entity_aggregate",
+      "kind": "headless_script",
+      "target": "res://tests/entities/test_world_entity_aggregate.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.354,
+      "passed": true
+    },
+    {
+      "name": "test_world_entity_store_failures",
+      "kind": "headless_script",
+      "target": "res://tests/entities/test_world_entity_store_failures.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.452,
+      "passed": true
+    },
+    {
+      "name": "test_world_item_aggregate_migration",
+      "kind": "headless_script",
+      "target": "res://tests/items/test_world_item_aggregate_migration.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.452,
+      "passed": true
+    },
+    {
+      "name": "test_c1_construction_contracts",
+      "kind": "headless_script",
+      "target": "res://tests/construction/test_c1_construction_contracts.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.262,
+      "passed": true
+    },
+    {
+      "name": "test_c1_construct_aggregate",
+      "kind": "headless_script",
+      "target": "res://tests/construction/test_c1_construct_aggregate.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.264,
+      "passed": true
+    },
+    {
+      "name": "test_c2a_item_graph_contracts",
+      "kind": "headless_script",
+      "target": "res://tests/construction/test_c2a_item_graph_contracts.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.45,
+      "passed": true
+    },
+    {
+      "name": "test_c2a_item_graph_transactions",
+      "kind": "headless_script",
+      "target": "res://tests/construction/test_c2a_item_graph_transactions.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.45,
+      "passed": true
+    },
+    {
+      "name": "test_c2b_authoritative_item_graph_contracts",
+      "kind": "headless_script",
+      "target": "res://tests/construction/test_c2b_authoritative_item_graph_contracts.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.636,
+      "passed": true
+    },
+    {
+      "name": "test_c2b_authoritative_item_graph_integration",
+      "kind": "headless_script",
+      "target": "res://tests/construction/test_c2b_authoritative_item_graph_integration.gd",
+      "exit_code": 0,
+      "duration_seconds": 1.654,
+      "passed": true
+    },
+    {
+      "name": "test_c3_build_plan_contracts",
+      "kind": "headless_script",
+      "target": "res://tests/construction/test_c3_build_plan_contracts.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.635,
+      "passed": true
+    },
+    {
+      "name": "test_c3_build_plan_integration",
+      "kind": "headless_script",
+      "target": "res://tests/construction/test_c3_build_plan_integration.gd",
+      "exit_code": 0,
+      "duration_seconds": 1.291,
+      "passed": true
+    },
+    {
+      "name": "test_c4_composite_definition_contracts",
+      "kind": "headless_script",
+      "target": "res://tests/construction/test_c4_composite_definition_contracts.gd",
+      "exit_code": 0,
+      "duration_seconds": 1.106,
+      "passed": true
+    },
+    {
+      "name": "test_c4_composite_definition_integration",
+      "kind": "headless_script",
+      "target": "res://tests/construction/test_c4_composite_definition_integration.gd",
+      "exit_code": 0,
+      "duration_seconds": 1.565,
+      "passed": true
+    },
+    {
+      "name": "test_c5_capability_affordance_contracts",
+      "kind": "headless_script",
+      "target": "res://tests/construction/test_c5_capability_affordance_contracts.gd",
+      "exit_code": 0,
+      "duration_seconds": 1.197,
+      "passed": true
+    },
+    {
+      "name": "test_c5_capability_affordance_integration",
+      "kind": "headless_script",
+      "target": "res://tests/construction/test_c5_capability_affordance_integration.gd",
+      "exit_code": 0,
+      "duration_seconds": 1.471,
+      "passed": true
+    },
+    {
+      "name": "test_c6_mobile_construct_contracts",
+      "kind": "headless_script",
+      "target": "res://tests/construction/test_c6_mobile_construct_contracts.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.54,
+      "passed": true
+    },
+    {
+      "name": "test_c6_mobile_construct_integration",
+      "kind": "headless_script",
+      "target": "res://tests/construction/test_c6_mobile_construct_integration.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.722,
+      "passed": true
+    },
+    {
+      "name": "test_c7_spatial_construct_contracts",
+      "kind": "headless_script",
+      "target": "res://tests/construction/test_c7_spatial_construct_contracts.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.637,
+      "passed": true
+    },
+    {
+      "name": "test_c7_spatial_construct_integration",
+      "kind": "headless_script",
+      "target": "res://tests/construction/test_c7_spatial_construct_integration.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.91,
+      "passed": true
+    },
+    {
+      "name": "test_c8_fabrication_cell_contracts",
+      "kind": "headless_script",
+      "target": "res://tests/construction/test_c8_fabrication_cell_contracts.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.726,
+      "passed": true
+    },
+    {
+      "name": "test_c8_fabrication_cell_integration",
+      "kind": "headless_script",
+      "target": "res://tests/construction/test_c8_fabrication_cell_integration.gd",
+      "exit_code": 0,
+      "duration_seconds": 1.098,
+      "passed": true
+    },
+    {
+      "name": "test_c9_damage_split_repair_contracts",
+      "kind": "headless_script",
+      "target": "res://tests/construction/test_c9_damage_split_repair_contracts.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.729,
+      "passed": true
+    },
+    {
+      "name": "test_c9_damage_split_repair_integration",
+      "kind": "headless_script",
+      "target": "res://tests/construction/test_c9_damage_split_repair_integration.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.724,
+      "passed": true
+    },
+    {
+      "name": "test_c10_parametric_members_contracts",
+      "kind": "headless_script",
+      "target": "res://tests/construction/test_c10_parametric_members_contracts.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.45,
+      "passed": true
+    },
+    {
+      "name": "test_c10_parametric_members_integration",
+      "kind": "headless_script",
+      "target": "res://tests/construction/test_c10_parametric_members_integration.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.913,
+      "passed": true
+    },
+    {
+      "name": "test_c11_local_geometry_editing_contracts",
+      "kind": "headless_script",
+      "target": "res://tests/construction/test_c11_local_geometry_editing_contracts.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.543,
+      "passed": true
+    },
+    {
+      "name": "test_c11_local_geometry_editing_integration",
+      "kind": "headless_script",
+      "target": "res://tests/construction/test_c11_local_geometry_editing_integration.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.819,
+      "passed": true
+    },
+    {
+      "name": "test_c12_multiplayer_construction_contracts",
+      "kind": "headless_script",
+      "target": "res://tests/construction/test_c12_multiplayer_construction_contracts.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.543,
+      "passed": true
+    },
+    {
+      "name": "test_c12_multiplayer_construction_integration",
+      "kind": "headless_script",
+      "target": "res://tests/construction/test_c12_multiplayer_construction_integration.gd",
+      "exit_code": 0,
+      "duration_seconds": 1.655,
+      "passed": true
+    },
+    {
+      "name": "test_c13_runtime_projection_contracts",
+      "kind": "headless_script",
+      "target": "res://tests/construction/test_c13_runtime_projection_contracts.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.914,
+      "passed": true
+    },
+    {
+      "name": "test_c13_runtime_projection_integration",
+      "kind": "headless_script",
+      "target": "res://tests/construction/test_c13_runtime_projection_integration.gd",
+      "exit_code": 0,
+      "duration_seconds": 1.005,
+      "passed": true
+    },
+    {
+      "name": "test_c14_structural_integrity_contracts",
+      "kind": "headless_script",
+      "target": "res://tests/construction/test_c14_structural_integrity_contracts.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.54,
+      "passed": true
+    },
+    {
+      "name": "test_c14_structural_integrity_integration",
+      "kind": "headless_script",
+      "target": "res://tests/construction/test_c14_structural_integrity_integration.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.915,
+      "passed": true
+    },
+    {
+      "name": "test_c15_executable_utilities_contracts",
+      "kind": "headless_script",
+      "target": "res://tests/construction/test_c15_executable_utilities_contracts.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.356,
+      "passed": true
+    },
+    {
+      "name": "test_c15_executable_utilities_integration",
+      "kind": "headless_script",
+      "target": "res://tests/construction/test_c15_executable_utilities_integration.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.913,
+      "passed": true
+    },
+    {
+      "name": "test_c16_interaction_ux_contracts",
+      "kind": "headless_script",
+      "target": "res://tests/construction/test_c16_interaction_ux_contracts.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.539,
+      "passed": true
+    },
+    {
+      "name": "test_c16_interaction_ux_integration",
+      "kind": "headless_script",
+      "target": "res://tests/construction/test_c16_interaction_ux_integration.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.546,
+      "passed": true
+    },
+    {
+      "name": "test_c17_distributed_authority_contracts",
+      "kind": "headless_script",
+      "target": "res://tests/construction/test_c17_distributed_authority_contracts.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.36,
+      "passed": true
+    },
+    {
+      "name": "test_c17_distributed_authority_integration",
+      "kind": "headless_script",
+      "target": "res://tests/construction/test_c17_distributed_authority_integration.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.355,
+      "passed": true
+    },
+    {
+      "name": "test_c18_streaming_lod_contracts",
+      "kind": "headless_script",
+      "target": "res://tests/construction/test_c18_streaming_lod_contracts.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.818,
+      "passed": true
+    },
+    {
+      "name": "test_c18_streaming_lod_integration",
+      "kind": "headless_script",
+      "target": "res://tests/construction/test_c18_streaming_lod_integration.gd",
+      "exit_code": 0,
+      "duration_seconds": 1.006,
+      "passed": true
+    },
+    {
+      "name": "test_c19_agent_automation_contracts",
+      "kind": "headless_script",
+      "target": "res://tests/construction/test_c19_agent_automation_contracts.gd",
+      "exit_code": 0,
+      "duration_seconds": 1.656,
+      "passed": true
+    },
+    {
+      "name": "test_c19_agent_automation_integration",
+      "kind": "headless_script",
+      "target": "res://tests/construction/test_c19_agent_automation_integration.gd",
+      "exit_code": 0,
+      "duration_seconds": 1.934,
+      "passed": true
+    },
+    {
+      "name": "test_c20_logistics_economy_contracts",
+      "kind": "headless_script",
+      "target": "res://tests/construction/test_c20_logistics_economy_contracts.gd",
+      "exit_code": 0,
+      "duration_seconds": 1.195,
+      "passed": true
+    },
+    {
+      "name": "test_c20_logistics_economy_integration",
+      "kind": "headless_script",
+      "target": "res://tests/construction/test_c20_logistics_economy_integration.gd",
+      "exit_code": 0,
+      "duration_seconds": 1.195,
+      "passed": true
+    },
+    {
+      "name": "test_c21_large_scale_acceptance_contracts",
+      "kind": "headless_script",
+      "target": "res://tests/construction/test_c21_large_scale_acceptance_contracts.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.262,
+      "passed": true
+    },
+    {
+      "name": "test_c21_large_scale_acceptance_integration",
+      "kind": "headless_script",
+      "target": "res://tests/construction/test_c21_large_scale_acceptance_integration.gd",
+      "exit_code": 0,
+      "duration_seconds": 11.486,
+      "passed": true
+    },
+    {
+      "name": "test_c21_large_scale_acceptance_soak",
+      "kind": "headless_script",
+      "target": "res://tests/construction/test_c21_large_scale_acceptance_soak.gd",
+      "exit_code": 0,
+      "duration_seconds": 12.794,
+      "passed": true
+    },
+    {
+      "name": "test_c22_compiled_proxy_contracts",
+      "kind": "headless_script",
+      "target": "res://tests/construction/test_c22_compiled_proxy_contracts.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.73,
+      "passed": true
+    },
+    {
+      "name": "test_c22_compiled_proxy_integration",
+      "kind": "headless_script",
+      "target": "res://tests/construction/test_c22_compiled_proxy_integration.gd",
+      "exit_code": 0,
+      "duration_seconds": 5.921,
+      "passed": true
+    },
+    {
+      "name": "test_c22_compiled_proxy_graphical",
+      "kind": "headless_script",
+      "target": "res://tests/construction/test_c22_compiled_proxy_graphical.gd",
+      "exit_code": 0,
+      "duration_seconds": 3.234,
+      "passed": true
+    },
+    {
+      "name": "test_c22_compiled_proxy_scale_soak",
+      "kind": "headless_script",
+      "target": "res://tests/construction/test_c22_compiled_proxy_scale_soak.gd",
+      "exit_code": 0,
+      "duration_seconds": 3.595,
+      "passed": true
+    },
+    {
+      "name": "test_c22_incremental_local_rebuild",
+      "kind": "headless_script",
+      "target": "res://tests/construction/test_c22_incremental_local_rebuild.gd",
+      "exit_code": 0,
+      "duration_seconds": 42.629,
+      "passed": true
+    },
+    {
+      "name": "test_c23_production_hardening_contracts",
+      "kind": "headless_script",
+      "target": "res://tests/construction/test_c23_production_hardening_contracts.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.393,
+      "passed": true
+    },
+    {
+      "name": "test_c23_production_hardening_integration",
+      "kind": "headless_script",
+      "target": "res://tests/construction/test_c23_production_hardening_integration.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.368,
+      "passed": true
+    },
+    {
+      "name": "test_c23_production_hardening_chaos",
+      "kind": "headless_script",
+      "target": "res://tests/construction/test_c23_production_hardening_chaos.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.363,
+      "passed": true
+    },
+    {
+      "name": "test_c23_production_hardening_soak",
+      "kind": "headless_script",
+      "target": "res://tests/construction/test_c23_production_hardening_soak.gd",
+      "exit_code": 0,
+      "duration_seconds": 17.519,
+      "passed": true
+    },
+    {
+      "name": "test_c24_proxy_mesh_backend_contracts",
+      "kind": "headless_script",
+      "target": "res://tests/construction/test_c24_proxy_mesh_backend_contracts.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.359,
+      "passed": true
+    },
+    {
+      "name": "test_c24_proxy_mesh_backend_integration",
+      "kind": "headless_script",
+      "target": "res://tests/construction/test_c24_proxy_mesh_backend_integration.gd",
+      "exit_code": 0,
+      "duration_seconds": 6.384,
+      "passed": true
+    },
+    {
+      "name": "test_c24_proxy_mesh_backend_graphical",
+      "kind": "headless_script",
+      "target": "res://tests/construction/test_c24_proxy_mesh_backend_graphical.gd",
+      "exit_code": 0,
+      "duration_seconds": 3.516,
+      "passed": true
+    },
+    {
+      "name": "test_c24_proxy_mesh_backend_scale_soak",
+      "kind": "headless_script",
+      "target": "res://tests/construction/test_c24_proxy_mesh_backend_scale_soak.gd",
+      "exit_code": 0,
+      "duration_seconds": 5.825,
+      "passed": true
+    },
+    {
+      "name": "test_simulation_kernel_boundary",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_simulation_kernel_boundary.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.453,
+      "passed": true
+    },
+    {
+      "name": "test_jetpack_controller",
+      "kind": "headless_script",
+      "target": "res://tests/unit/test_jetpack_controller.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.263,
+      "passed": true
+    },
+    {
+      "name": "test_reference_frame_graph",
+      "kind": "headless_script",
+      "target": "res://tests/unit/test_reference_frame_graph.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.268,
+      "passed": true
+    },
+    {
+      "name": "test_celestial_motion",
+      "kind": "headless_script",
+      "target": "res://tests/unit/test_celestial_motion.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.266,
+      "passed": true
+    },
+    {
+      "name": "test_gravity_field",
+      "kind": "headless_script",
+      "target": "res://tests/unit/test_gravity_field.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.456,
+      "passed": true
+    },
+    {
+      "name": "test_partition_address_v2",
+      "kind": "headless_script",
+      "target": "res://tests/unit/test_partition_address_v2.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.27,
+      "passed": true
+    },
+    {
+      "name": "test_cube_sphere_grid",
+      "kind": "headless_script",
+      "target": "res://tests/unit/test_cube_sphere_grid.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.27,
+      "passed": true
+    },
+    {
+      "name": "test_partition_foundation",
+      "kind": "headless_script",
+      "target": "res://tests/unit/test_partition_foundation.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.366,
+      "passed": true
+    },
+    {
+      "name": "test_atmosphere_layer",
+      "kind": "headless_script",
+      "target": "res://tests/unit/test_atmosphere_layer.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.457,
+      "passed": true
+    },
+    {
+      "name": "test_earth_generation_pipeline",
+      "kind": "headless_script",
+      "target": "res://tests/unit/test_earth_generation_pipeline.gd",
+      "exit_code": 0,
+      "duration_seconds": 1.39,
+      "passed": true
+    },
+    {
+      "name": "test_controller_profiles",
+      "kind": "headless_script",
+      "target": "res://tests/integration/test_controller_profiles.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.288,
+      "passed": true
+    },
+    {
+      "name": "test_entity_registry_migration",
+      "kind": "headless_script",
+      "target": "res://tests/integration/test_entity_registry_migration.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.368,
+      "passed": true
+    },
+    {
+      "name": "test_first_person_interaction",
+      "kind": "headless_script",
+      "target": "res://tests/integration/test_first_person_interaction.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.277,
+      "passed": true
+    },
+    {
+      "name": "test_persistence_roundtrip",
+      "kind": "headless_script",
+      "target": "res://tests/integration/test_persistence_roundtrip.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.835,
+      "passed": true
+    },
+    {
+      "name": "test_terrain_streaming_contract",
+      "kind": "headless_script",
+      "target": "res://tests/integration/test_terrain_streaming_contract.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.461,
+      "passed": true
+    },
+    {
+      "name": "test_item_domain",
+      "kind": "headless_script",
+      "target": "res://tests/items/test_item_domain.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.452,
+      "passed": true
+    },
+    {
+      "name": "test_item_identity_and_state_store",
+      "kind": "headless_script",
+      "target": "res://tests/items/test_item_identity_and_state_store.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.548,
+      "passed": true
+    },
+    {
+      "name": "test_item_graph_persistence",
+      "kind": "headless_script",
+      "target": "res://tests/items/test_item_graph_persistence.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.464,
+      "passed": true
+    },
+    {
+      "name": "test_item_operation_ledger",
+      "kind": "headless_script",
+      "target": "res://tests/items/test_item_operation_ledger.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.457,
+      "passed": true
+    },
+    {
+      "name": "test_item_physics_environment",
+      "kind": "headless_script",
+      "target": "res://tests/items/test_item_physics_environment.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.567,
+      "passed": true
+    },
+    {
+      "name": "test_player_inventory_flow",
+      "kind": "headless_script",
+      "target": "res://tests/items/test_player_inventory_flow.gd",
+      "exit_code": 0,
+      "duration_seconds": 1.572,
+      "passed": true
+    },
+    {
+      "name": "test_item_stack_transfers",
+      "kind": "headless_script",
+      "target": "res://tests/items/test_item_stack_transfers.gd",
+      "exit_code": 0,
+      "duration_seconds": 1.387,
+      "passed": true
+    },
+    {
+      "name": "test_item_placement_and_admin",
+      "kind": "headless_script",
+      "target": "res://tests/items/test_item_placement_and_admin.gd",
+      "exit_code": 0,
+      "duration_seconds": 1.103,
+      "passed": true
+    },
+    {
+      "name": "test_item_lab_integration",
+      "kind": "headless_script",
+      "target": "res://tests/items/test_item_lab_integration.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.544,
+      "passed": true
+    },
+    {
+      "name": "test_console_system_menu_and_flashlight",
+      "kind": "headless_script",
+      "target": "res://tests/ui/test_console_system_menu_and_flashlight.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.356,
+      "passed": true
+    },
+    {
+      "name": "test_inventory_ui_i0_architecture",
+      "kind": "headless_script",
+      "target": "res://tests/ui/test_inventory_ui_i0_architecture.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.935,
+      "passed": true
+    },
+    {
+      "name": "test_inventory_ui_i1_interactions",
+      "kind": "headless_script",
+      "target": "res://tests/ui/test_inventory_ui_i1_interactions.gd",
+      "exit_code": 0,
+      "duration_seconds": 1.396,
+      "passed": true
+    },
+    {
+      "name": "test_inventory_ui_i2_large_storage",
+      "kind": "headless_script",
+      "target": "res://tests/ui/test_inventory_ui_i2_large_storage.gd",
+      "exit_code": 0,
+      "duration_seconds": 1.013,
+      "passed": true
+    },
+    {
+      "name": "test_inventory_interaction_profiles",
+      "kind": "headless_script",
+      "target": "res://tests/ui/test_inventory_interaction_profiles.gd",
+      "exit_code": 0,
+      "duration_seconds": 1.38,
+      "passed": true
+    },
+    {
+      "name": "test_inventory_seven_days_interface",
+      "kind": "headless_script",
+      "target": "res://tests/ui/test_inventory_seven_days_interface.gd",
+      "exit_code": 0,
+      "duration_seconds": 2.411,
+      "passed": true
+    },
+    {
+      "name": "test_unified_planetary_runtime",
+      "kind": "headless_script",
+      "target": "res://tests/integration/test_unified_planetary_runtime.gd",
+      "exit_code": 0,
+      "duration_seconds": 2.881,
+      "passed": true
+    },
+    {
+      "name": "test_unified_runtime_boot",
+      "kind": "headless_script",
+      "target": "res://tests/integration/test_unified_runtime_boot.gd",
+      "exit_code": 0,
+      "duration_seconds": 36.432,
+      "passed": true
+    },
+    {
+      "name": "test_world_switch_during_generation",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_world_switch_during_generation.gd",
+      "exit_code": 0,
+      "duration_seconds": 20.504,
+      "passed": true
+    },
+    {
+      "name": "test_world_boot_matrix",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_world_boot_matrix.gd",
+      "exit_code": 0,
+      "duration_seconds": 41.163,
+      "passed": true
+    },
+    {
+      "name": "test_nx2_physical_channel_processes",
+      "kind": "headless_script",
+      "target": "res://tests/network/test_nx2_physical_channel_processes.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.454,
+      "passed": true
+    },
+    {
+      "name": "test_nx5_remote_snapshot_interpolation",
+      "kind": "headless_script",
+      "target": "res://tests/network/test_nx5_remote_snapshot_interpolation.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.363,
+      "passed": true
+    },
+    {
+      "name": "test_nx5_remote_snapshot_interpolation_integration",
+      "kind": "headless_script",
+      "target": "res://tests/network/test_nx5_remote_snapshot_interpolation_integration.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.273,
+      "passed": true
+    },
+    {
+      "name": "test_nx6_predicted_item_interactions",
+      "kind": "headless_script",
+      "target": "res://tests/network/test_nx6_predicted_item_interactions.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.277,
+      "passed": true
+    },
+    {
+      "name": "test_nx6_predicted_item_interactions_integration",
+      "kind": "headless_script",
+      "target": "res://tests/network/test_nx6_predicted_item_interactions_integration.gd",
+      "exit_code": 0,
+      "duration_seconds": 1.192,
+      "passed": true
+    },
+    {
+      "name": "test_authoritative_tick_progression",
+      "kind": "headless_script",
+      "target": "res://tests/persistence/test_authoritative_tick_progression.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.265,
+      "passed": true
+    },
+    {
+      "name": "test_int0_project_uid_contracts",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_int0_project_uid_contracts.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.267,
+      "passed": true
+    },
+    {
+      "name": "test_int0_m3_replica_resync_composition",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_int0_m3_replica_resync_composition.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.263,
+      "passed": true
+    },
+    {
+      "name": "test_mw0_matter_contracts",
+      "kind": "headless_script",
+      "target": "res://tests/matter/contracts/test_mw0_matter_contracts.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.818,
+      "passed": true
+    },
+    {
+      "name": "test_mw1_fixed_seed_asteroid",
+      "kind": "headless_script",
+      "target": "res://tests/matter/generation/test_mw1_fixed_seed_asteroid.gd",
+      "exit_code": 0,
+      "duration_seconds": 10.82,
+      "passed": true
+    },
+    {
+      "name": "test_mw2_sparse_bricks_and_query",
+      "kind": "headless_script",
+      "target": "res://tests/matter/spatial/test_mw2_sparse_bricks_and_query.gd",
+      "exit_code": 0,
+      "duration_seconds": 6.945,
+      "passed": true
+    },
+    {
+      "name": "test_mw3_local_meshing",
+      "kind": "headless_script",
+      "target": "res://tests/matter/presentation/test_mw3_local_meshing.gd",
+      "exit_code": 0,
+      "duration_seconds": 8.519,
+      "passed": true
+    },
+    {
+      "name": "test_mw4_matter_mutations",
+      "kind": "headless_script",
+      "target": "res://tests/matter/mutation/test_mw4_matter_mutations.gd",
+      "exit_code": 0,
+      "duration_seconds": 12.316,
+      "passed": true
+    },
+    {
+      "name": "test_mw5_matter_persistence",
+      "kind": "headless_script",
+      "target": "res://tests/matter/persistence/test_mw5_matter_persistence.gd",
+      "exit_code": 0,
+      "duration_seconds": 32.633,
+      "passed": true
+    },
+    {
+      "name": "test_mw6_matter_network_replication",
+      "kind": "headless_script",
+      "target": "res://tests/matter/network/test_mw6_matter_network_replication.gd",
+      "exit_code": 0,
+      "duration_seconds": 21.121,
+      "passed": true
+    },
+    {
+      "name": "test_mw7_matter_interest_replication",
+      "kind": "headless_script",
+      "target": "res://tests/matter/interest/test_mw7_matter_interest_replication.gd",
+      "exit_code": 0,
+      "duration_seconds": 57.171,
+      "passed": true
+    },
+    {
+      "name": "test_mw8_regional_authority_handoff",
+      "kind": "headless_script",
+      "target": "res://tests/matter/handoff/test_mw8_regional_authority_handoff.gd",
+      "exit_code": 0,
+      "duration_seconds": 24.17,
+      "passed": true
+    },
+    {
+      "name": "test_mw9_durable_handoff_recovery",
+      "kind": "headless_script",
+      "target": "res://tests/matter/handoff/test_mw9_durable_handoff_recovery.gd",
+      "exit_code": 0,
+      "duration_seconds": 2.211,
+      "passed": true
+    },
+    {
+      "name": "test_mw9_durable_handoff_processes",
+      "kind": "headless_script",
+      "target": "res://tests/matter/handoff/test_mw9_durable_handoff_processes.gd",
+      "exit_code": 0,
+      "duration_seconds": 12.047,
+      "passed": true
+    },
+    {
+      "name": "test_mw9_lock_release_retry",
+      "kind": "headless_script",
+      "target": "res://tests/matter/handoff/test_mw9_lock_release_retry.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.45,
+      "passed": true
+    },
+    {
+      "name": "test_mw10_cross_region_transactions",
+      "kind": "headless_script",
+      "target": "res://tests/matter/transactions/test_mw10_cross_region_transactions.gd",
+      "exit_code": 0,
+      "duration_seconds": 43.752,
+      "passed": true
+    },
+    {
+      "name": "test_mw10_cross_region_processes",
+      "kind": "headless_script",
+      "target": "res://tests/matter/transactions/test_mw10_cross_region_processes.gd",
+      "exit_code": 0,
+      "duration_seconds": 14.27,
+      "passed": true
+    },
+    {
+      "name": "test_rl0_representation_contracts",
+      "kind": "headless_script",
+      "target": "res://tests/representation/test_rl0_representation_contracts.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.359,
+      "passed": true
+    },
+    {
+      "name": "test_rl1_matter_summary_pyramid",
+      "kind": "headless_script",
+      "target": "res://tests/representation/test_rl1_matter_summary_pyramid.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.816,
+      "passed": true
+    },
+    {
+      "name": "test_rl2_matter_multiresolution_meshing",
+      "kind": "headless_script",
+      "target": "res://tests/representation/test_rl2_matter_multiresolution_meshing.gd",
+      "exit_code": 0,
+      "duration_seconds": 30.119,
+      "passed": true
+    },
+    {
+      "name": "test_rl2_real_asteroid_multiresolution",
+      "kind": "headless_script",
+      "target": "res://tests/representation/test_rl2_real_asteroid_multiresolution.gd",
+      "exit_code": 0,
+      "duration_seconds": 13.525,
+      "passed": true
+    },
+    {
+      "name": "test_rl3_representation_aware_network_streaming",
+      "kind": "headless_script",
+      "target": "res://tests/representation/test_rl3_representation_aware_network_streaming.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.633,
+      "passed": true
+    },
+    {
+      "name": "test_rl3_representation_streaming_processes",
+      "kind": "headless_script",
+      "target": "res://tests/representation/test_rl3_representation_streaming_processes.gd",
+      "exit_code": 0,
+      "duration_seconds": 1.836,
+      "passed": true
+    },
+    {
+      "name": "test_v0_p4_deterministic_server_allocator",
+      "kind": "headless_script",
+      "target": "res://tests/construction/test_v0_p4_deterministic_server_allocator.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.352,
+      "passed": true
+    },
+    {
+      "name": "test_v0_p4_live_m4_authoritative_transaction_port",
+      "kind": "headless_script",
+      "target": "res://tests/construction/test_v0_p4_live_m4_authoritative_transaction_port.gd",
+      "exit_code": 0,
+      "duration_seconds": 1.283,
+      "passed": true
+    },
+    {
+      "name": "test_v0_p4_live_m4_transaction_port",
+      "kind": "headless_script",
+      "target": "res://tests/construction/test_v0_p4_live_m4_transaction_port.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.822,
+      "passed": true
+    },
+    {
+      "name": "test_v0_p4_real_resource_exact_consume_contract",
+      "kind": "headless_script",
+      "target": "res://tests/construction/test_v0_p4_real_resource_exact_consume_contract.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.45,
+      "passed": true
+    },
+    {
+      "name": "test_v0_p7_2_lunar_matter_bubble",
+      "kind": "headless_script",
+      "target": "res://tests/matter/product/test_v0_p7_2_lunar_matter_bubble.gd",
+      "exit_code": 0,
+      "duration_seconds": 32.35,
+      "passed": true
+    },
+    {
+      "name": "test_matter_repository_lock_reclaim",
+      "kind": "headless_script",
+      "target": "res://tests/matter/transactions/test_matter_repository_lock_reclaim.gd",
+      "exit_code": 0,
+      "duration_seconds": 13.594,
+      "passed": true
+    },
+    {
+      "name": "test_mw10_canonical_physical_output",
+      "kind": "headless_script",
+      "target": "res://tests/matter/transactions/test_mw10_canonical_physical_output.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.634,
+      "passed": true
+    },
+    {
+      "name": "test_mw10_physical_output_durability",
+      "kind": "headless_script",
+      "target": "res://tests/matter/transactions/test_mw10_physical_output_durability.gd",
+      "exit_code": 0,
+      "duration_seconds": 18.626,
+      "passed": true
+    },
+    {
+      "name": "test_eg0_cwip_connect_gate_contracts",
+      "kind": "headless_script",
+      "target": "res://tests/network/test_eg0_cwip_connect_gate_contracts.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.356,
+      "passed": true
+    },
+    {
+      "name": "test_eg0_edge_gateway_contracts",
+      "kind": "headless_script",
+      "target": "res://tests/network/test_eg0_edge_gateway_contracts.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.375,
+      "passed": true
+    },
+    {
+      "name": "test_eg0_edge_gateway_fixtures",
+      "kind": "headless_script",
+      "target": "res://tests/network/test_eg0_edge_gateway_fixtures.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.36,
+      "passed": true
+    },
+    {
+      "name": "test_eg0_r6_review_repairs",
+      "kind": "headless_script",
+      "target": "res://tests/network/test_eg0_r6_review_repairs.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.451,
+      "passed": true
+    },
+    {
+      "name": "test_eg0_r7_review_repairs",
+      "kind": "headless_script",
+      "target": "res://tests/network/test_eg0_r7_review_repairs.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.358,
+      "passed": true
+    },
+    {
+      "name": "test_eg0_world_graph_contracts",
+      "kind": "headless_script",
+      "target": "res://tests/network/test_eg0_world_graph_contracts.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.539,
+      "passed": true
+    },
+    {
+      "name": "test_eg1_dual_role_enet_spike",
+      "kind": "headless_script",
+      "target": "res://tests/network/test_eg1_dual_role_enet_spike.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.263,
+      "passed": true
+    },
+    {
+      "name": "test_eg1_gateway_contracts",
+      "kind": "headless_script",
+      "target": "res://tests/network/test_eg1_gateway_contracts.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.263,
+      "passed": true
+    },
+    {
+      "name": "test_eg1_gateway_forwarder",
+      "kind": "headless_script",
+      "target": "res://tests/network/test_eg1_gateway_forwarder.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.359,
+      "passed": true
+    },
+    {
+      "name": "test_eg1_gateway_loopback_equivalence",
+      "kind": "headless_script",
+      "target": "res://tests/network/test_eg1_gateway_loopback_equivalence.gd",
+      "exit_code": 0,
+      "duration_seconds": 1.283,
+      "passed": true
+    },
+    {
+      "name": "test_eg1_gateway_processes",
+      "kind": "headless_script",
+      "target": "res://tests/network/test_eg1_gateway_processes.gd",
+      "exit_code": 0,
+      "duration_seconds": 8.506,
+      "passed": true
+    },
+    {
+      "name": "test_eg1_gateway_session_control",
+      "kind": "headless_script",
+      "target": "res://tests/network/test_eg1_gateway_session_control.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.262,
+      "passed": true
+    },
+    {
+      "name": "test_eg1_zero_write_fence",
+      "kind": "headless_script",
+      "target": "res://tests/network/test_eg1_zero_write_fence.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.447,
+      "passed": true
+    },
+    {
+      "name": "test_eg2_auth_session_service",
+      "kind": "headless_script",
+      "target": "res://tests/network/test_eg2_auth_session_service.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.358,
+      "passed": true
+    },
+    {
+      "name": "test_eg2_endpoint_disclosure_fence",
+      "kind": "headless_script",
+      "target": "res://tests/network/test_eg2_endpoint_disclosure_fence.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.547,
+      "passed": true
+    },
+    {
+      "name": "test_eg2_gateway_processes",
+      "kind": "headless_script",
+      "target": "res://tests/network/test_eg2_gateway_processes.gd",
+      "exit_code": 0,
+      "duration_seconds": 6.848,
+      "passed": true
+    },
+    {
+      "name": "test_eg2_placement_flow",
+      "kind": "headless_script",
+      "target": "res://tests/network/test_eg2_placement_flow.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.544,
+      "passed": true
+    },
+    {
+      "name": "test_eg2_world_directory",
+      "kind": "headless_script",
+      "target": "res://tests/network/test_eg2_world_directory.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.266,
+      "passed": true
+    },
+    {
+      "name": "test_eg3_backend_multiplexer",
+      "kind": "headless_script",
+      "target": "res://tests/network/test_eg3_backend_multiplexer.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.261,
+      "passed": true
+    },
+    {
+      "name": "test_eg3_gateway_processes",
+      "kind": "headless_script",
+      "target": "res://tests/network/test_eg3_gateway_processes.gd",
+      "exit_code": 0,
+      "duration_seconds": 33.982,
+      "passed": true
+    },
+    {
+      "name": "test_eg3_multiplexed_link",
+      "kind": "headless_script",
+      "target": "res://tests/network/test_eg3_multiplexed_link.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.453,
+      "passed": true
+    },
+    {
+      "name": "test_eg4_gateway_processes",
+      "kind": "headless_script",
+      "target": "res://tests/network/test_eg4_gateway_processes.gd",
+      "exit_code": 0,
+      "duration_seconds": 27.15,
+      "passed": true
+    },
+    {
+      "name": "test_eg4_interest_aggregator",
+      "kind": "headless_script",
+      "target": "res://tests/network/test_eg4_interest_aggregator.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.361,
+      "passed": true
+    },
+    {
+      "name": "test_eg4_projection_aggregation",
+      "kind": "headless_script",
+      "target": "res://tests/network/test_eg4_projection_aggregation.gd",
+      "exit_code": 0,
+      "duration_seconds": 1.371,
+      "passed": true
+    },
+    {
+      "name": "test_eg4_projection_lifecycle",
+      "kind": "headless_script",
+      "target": "res://tests/network/test_eg4_projection_lifecycle.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.542,
+      "passed": true
+    },
+    {
+      "name": "test_eg4_two_worlds_one_transport",
+      "kind": "headless_script",
+      "target": "res://tests/network/test_eg4_two_worlds_one_transport.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.816,
+      "passed": true
+    },
+    {
+      "name": "test_eg4_view_planner",
+      "kind": "headless_script",
+      "target": "res://tests/network/test_eg4_view_planner.gd",
+      "exit_code": 0,
+      "duration_seconds": 1.933,
+      "passed": true
+    },
+    {
+      "name": "test_eg4_world_fixture",
+      "kind": "headless_script",
+      "target": "res://tests/network/test_eg4_world_fixture.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.916,
+      "passed": true
+    },
+    {
+      "name": "test_eg45_interaction_router",
+      "kind": "headless_script",
+      "target": "res://tests/network/test_eg45_interaction_router.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.451,
+      "passed": true
+    },
+    {
+      "name": "test_eg45_scenarios",
+      "kind": "headless_script",
+      "target": "res://tests/network/test_eg45_scenarios.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.539,
+      "passed": true
+    },
+    {
+      "name": "test_eg45_synthetic_journal",
+      "kind": "headless_script",
+      "target": "res://tests/network/test_eg45_synthetic_journal.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.265,
+      "passed": true
+    },
+    {
+      "name": "test_eg45_zero_write_fence",
+      "kind": "headless_script",
+      "target": "res://tests/network/test_eg45_zero_write_fence.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.266,
+      "passed": true
+    },
+    {
+      "name": "test_eg5_correctness_repair",
+      "kind": "headless_script",
+      "target": "res://tests/network/test_eg5_correctness_repair.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.268,
+      "passed": true
+    },
+    {
+      "name": "test_eg5_edge_locator",
+      "kind": "headless_script",
+      "target": "res://tests/network/test_eg5_edge_locator.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.273,
+      "passed": true
+    },
+    {
+      "name": "test_eg5_selection",
+      "kind": "headless_script",
+      "target": "res://tests/network/test_eg5_selection.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.266,
+      "passed": true
+    },
+    {
+      "name": "test_eg5_zero_write_fence",
+      "kind": "headless_script",
+      "target": "res://tests/network/test_eg5_zero_write_fence.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.261,
+      "passed": true
+    },
+    {
+      "name": "test_v0_sm1_player_carry_and_gateway_pivot",
+      "kind": "headless_script",
+      "target": "res://tests/network/test_v0_sm1_player_carry_and_gateway_pivot.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.355,
+      "passed": true
+    },
+    {
+      "name": "test_m7_item_graph_replica_aggregate_compatibility",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_m7_item_graph_replica_aggregate_compatibility.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.451,
+      "passed": true
+    },
+    {
+      "name": "test_mvp_earth_c22_construction_presentation",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_mvp_earth_c22_construction_presentation.gd",
+      "exit_code": 0,
+      "duration_seconds": 3.23,
+      "passed": true
+    },
+    {
+      "name": "test_mvp_earth_m3_spectator",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_mvp_earth_m3_spectator.gd",
+      "exit_code": 0,
+      "duration_seconds": 14.324,
+      "passed": true
+    },
+    {
+      "name": "test_mvp_earth_outpost_authority",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_mvp_earth_outpost_authority.gd",
+      "exit_code": 0,
+      "duration_seconds": 2.343,
+      "passed": true
+    },
+    {
+      "name": "test_mvp_m3_construction_replication_bridge",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_mvp_m3_construction_replication_bridge.gd",
+      "exit_code": 0,
+      "duration_seconds": 3.129,
+      "passed": true
+    },
+    {
+      "name": "test_mvp_procedural_planet_spawn",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_mvp_procedural_planet_spawn.gd",
+      "exit_code": 0,
+      "duration_seconds": 10.401,
+      "passed": true
+    },
+    {
+      "name": "test_v0_c1_mvp_outpost_client_adapter",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_v0_c1_mvp_outpost_client_adapter.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.268,
+      "passed": true
+    },
+    {
+      "name": "test_v0_c2a_earth_surface_render_projector",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_v0_c2a_earth_surface_render_projector.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.264,
+      "passed": true
+    },
+    {
+      "name": "test_v0_i2_inventory_click_place",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_v0_i2_inventory_click_place.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.36,
+      "passed": true
+    },
+    {
+      "name": "test_v0_mvp_6_prediction_rollback",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_v0_mvp_6_prediction_rollback.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.543,
+      "passed": true
+    },
+    {
+      "name": "test_v0_p1_canonical_clock_purity",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_v0_p1_canonical_clock_purity.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.36,
+      "passed": true
+    },
+    {
+      "name": "test_v0_p1_earth_surface_presentation",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_v0_p1_earth_surface_presentation.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.263,
+      "passed": true
+    },
+    {
+      "name": "test_v0_p1_earth_wiring",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_v0_p1_earth_wiring.gd",
+      "exit_code": 0,
+      "duration_seconds": 1.195,
+      "passed": true
+    },
+    {
+      "name": "test_v0_p1_inventory_r5_parity",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_v0_p1_inventory_r5_parity.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.828,
+      "passed": true
+    },
+    {
+      "name": "test_v0_p1_live_reconnect_convergence",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_v0_p1_live_reconnect_convergence.gd",
+      "exit_code": 0,
+      "duration_seconds": 15.026,
+      "passed": true
+    },
+    {
+      "name": "test_v0_p1_modern_network_inventory",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_v0_p1_modern_network_inventory.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.639,
+      "passed": true
+    },
+    {
+      "name": "test_v0_p1_world_items_containers",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_v0_p1_world_items_containers.gd",
+      "exit_code": 0,
+      "duration_seconds": 1.2,
+      "passed": true
+    },
+    {
+      "name": "test_v0_p2_canonical_state_fingerprint",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_v0_p2_canonical_state_fingerprint.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.367,
+      "passed": true
+    },
+    {
+      "name": "test_v0_p2_item_graph_restore_purity",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_v0_p2_item_graph_restore_purity.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.45,
+      "passed": true
+    },
+    {
+      "name": "test_v0_p2_live_shared_state_convergence",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_v0_p2_live_shared_state_convergence.gd",
+      "exit_code": 0,
+      "duration_seconds": 21.417,
+      "passed": true
+    },
+    {
+      "name": "test_v0_p3_live_resource_mining_convergence",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_v0_p3_live_resource_mining_convergence.gd",
+      "exit_code": 0,
+      "duration_seconds": 15.633,
+      "passed": true
+    },
+    {
+      "name": "test_v0_p3_m6_resource_replay_outbox",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_v0_p3_m6_resource_replay_outbox.gd",
+      "exit_code": 0,
+      "duration_seconds": 1.097,
+      "passed": true
+    },
+    {
+      "name": "test_v0_p3_resource_mining_aggregate_recovery",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_v0_p3_resource_mining_aggregate_recovery.gd",
+      "exit_code": 0,
+      "duration_seconds": 1.102,
+      "passed": true
+    },
+    {
+      "name": "test_v0_p3_resource_mining_domain",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_v0_p3_resource_mining_domain.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.448,
+      "passed": true
+    },
+    {
+      "name": "test_v0_p3_resource_mining_preparation",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_v0_p3_resource_mining_preparation.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.263,
+      "passed": true
+    },
+    {
+      "name": "test_v0_p3_resource_mining_wire_and_wiring",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_v0_p3_resource_mining_wire_and_wiring.gd",
+      "exit_code": 0,
+      "duration_seconds": 3.042,
+      "passed": true
+    },
+    {
+      "name": "test_v0_p4_live_mvp_composition_ordering",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_v0_p4_live_mvp_composition_ordering.gd",
+      "exit_code": 0,
+      "duration_seconds": 2.955,
+      "passed": true
+    },
+    {
+      "name": "test_v0_p4_live_two_client_reconnect_convergence",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_v0_p4_live_two_client_reconnect_convergence.gd",
+      "exit_code": 0,
+      "duration_seconds": 17.522,
+      "passed": true
+    },
+    {
+      "name": "test_v0_p4_post_commit_publication_fallback",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_v0_p4_post_commit_publication_fallback.gd",
+      "exit_code": 0,
+      "duration_seconds": 3.046,
+      "passed": true
+    },
+    {
+      "name": "test_v0_p5_canonical_equipment_relation",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_v0_p5_canonical_equipment_relation.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.354,
+      "passed": true
+    },
+    {
+      "name": "test_v0_p5_mining_tool_gate",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_v0_p5_mining_tool_gate.gd",
+      "exit_code": 0,
+      "duration_seconds": 1.006,
+      "passed": true
+    },
+    {
+      "name": "test_v0_p5_two_client_replication_reconnect",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_v0_p5_two_client_replication_reconnect.gd",
+      "exit_code": 0,
+      "duration_seconds": 1.192,
+      "passed": true
+    },
+    {
+      "name": "test_v0_p6_closure_adapter",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_v0_p6_closure_adapter.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.264,
+      "passed": true
+    },
+    {
+      "name": "test_v0_p6_fault_race_matrix",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_v0_p6_fault_race_matrix.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.452,
+      "passed": true
+    },
+    {
+      "name": "test_v0_p6_gateway_command_route",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_v0_p6_gateway_command_route.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.356,
+      "passed": true
+    },
+    {
+      "name": "test_v0_p6_identity_registry",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_v0_p6_identity_registry.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.262,
+      "passed": true
+    },
+    {
+      "name": "test_v0_p6_mutation_admission",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_v0_p6_mutation_admission.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.257,
+      "passed": true
+    },
+    {
+      "name": "test_v0_p6_operation_ledger",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_v0_p6_operation_ledger.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.262,
+      "passed": true
+    },
+    {
+      "name": "test_v0_p6_outpost_state",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_v0_p6_outpost_state.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.269,
+      "passed": true
+    },
+    {
+      "name": "test_v0_p6_ownership_map",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_v0_p6_ownership_map.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.267,
+      "passed": true
+    },
+    {
+      "name": "test_v0_p6_persistence_owner",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_v0_p6_persistence_owner.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.264,
+      "passed": true
+    },
+    {
+      "name": "test_v0_p6_real_process_restart",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_v0_p6_real_process_restart.gd",
+      "exit_code": 0,
+      "duration_seconds": 1.098,
+      "passed": true
+    },
+    {
+      "name": "test_v0_p6_repeat_soak",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_v0_p6_repeat_soak.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.353,
+      "passed": true
+    },
+    {
+      "name": "test_v0_p6_restart_recovery",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_v0_p6_restart_recovery.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.45,
+      "passed": true
+    },
+    {
+      "name": "test_v0_p6_shadow_authority",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_v0_p6_shadow_authority.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.262,
+      "passed": true
+    },
+    {
+      "name": "test_v0_p6_shared_outpost",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_v0_p6_shared_outpost.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.451,
+      "passed": true
+    },
+    {
+      "name": "test_v0_p6_thirty_minute_soak",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_v0_p6_thirty_minute_soak.gd",
+      "exit_code": 0,
+      "duration_seconds": 1807.166,
+      "passed": true
+    },
+    {
+      "name": "test_v0_p6_zero_write_fence",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_v0_p6_zero_write_fence.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.275,
+      "passed": true
+    },
+    {
+      "name": "test_v0_p7_1_matter_command_authority_gate",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_v0_p7_1_matter_command_authority_gate.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.26,
+      "passed": true
+    },
+    {
+      "name": "test_v0_p7_1_tool_to_mw4_adapter",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_v0_p7_1_tool_to_mw4_adapter.gd",
+      "exit_code": 0,
+      "duration_seconds": 5.995,
+      "passed": true
+    },
+    {
+      "name": "test_v0_p7_2_lunar_surface_seam",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_v0_p7_2_lunar_surface_seam.gd",
+      "exit_code": 0,
+      "duration_seconds": 10.36,
+      "passed": true
+    },
+    {
+      "name": "test_v0_p7_3_material_batch_to_item_graph",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_v0_p7_3_material_batch_to_item_graph.gd",
+      "exit_code": 0,
+      "duration_seconds": 16.861,
+      "passed": true
+    },
+    {
+      "name": "test_v0_p7_4_persistence_restart_composition[seed]",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_v0_p7_4_persistence_restart_composition.gd",
+      "exit_code": 0,
+      "duration_seconds": 2.585,
+      "passed": true
+    },
+    {
+      "name": "test_v0_p7_4_persistence_restart_composition[recover-deliver]",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_v0_p7_4_persistence_restart_composition.gd",
+      "exit_code": 0,
+      "duration_seconds": 2.852,
+      "passed": true
+    },
+    {
+      "name": "test_v0_p7_4_persistence_restart_composition[recover-replay]",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_v0_p7_4_persistence_restart_composition.gd",
+      "exit_code": 0,
+      "duration_seconds": 1.929,
+      "passed": true
+    },
+    {
+      "name": "test_v0_p7_5_two_client_convergence",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_v0_p7_5_two_client_convergence.gd",
+      "exit_code": 0,
+      "duration_seconds": 23.622,
+      "passed": true
+    },
+    {
+      "name": "test_v0_p7_6_seam_multi_region_composition",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_v0_p7_6_seam_multi_region_composition.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.539,
+      "passed": true
+    },
+    {
+      "name": "test_v0_p7_7_a_digging_playground",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_v0_p7_7_a_digging_playground.gd",
+      "exit_code": 0,
+      "duration_seconds": 5.732,
+      "passed": true
+    },
+    {
+      "name": "test_v0_p7_7_b_seam_near_single_region",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_v0_p7_7_b_seam_near_single_region.gd",
+      "exit_code": 0,
+      "duration_seconds": 4.989,
+      "passed": true
+    },
+    {
+      "name": "test_v0_p7_7_c2_mw10_physical_output_delivery",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_v0_p7_7_c2_mw10_physical_output_delivery.gd",
+      "exit_code": 0,
+      "duration_seconds": 8.607,
+      "passed": true
+    },
+    {
+      "name": "test_v0_p7_7_c3_true_ab_end_to_end",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_v0_p7_7_c3_true_ab_end_to_end.gd",
+      "exit_code": 0,
+      "duration_seconds": 21.221,
+      "passed": true
+    },
+    {
+      "name": "test_v0_p7_7_d_mw10_reservation_conflict",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_v0_p7_7_d_mw10_reservation_conflict.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.816,
+      "passed": true
+    },
+    {
+      "name": "test_v0_p7_7_e_actor_handoff_no_false_mw10",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_v0_p7_7_e_actor_handoff_no_false_mw10.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.546,
+      "passed": true
+    },
+    {
+      "name": "test_v0_p7_7_graphical_digging_slice",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_v0_p7_7_graphical_digging_slice.gd",
+      "exit_code": 0,
+      "duration_seconds": 25.32,
+      "passed": true
+    },
+    {
+      "name": "test_v0_s1_mvp_fixed_tick_movement",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_v0_s1_mvp_fixed_tick_movement.gd",
+      "exit_code": 0,
+      "duration_seconds": 1.003,
+      "passed": true
+    },
+    {
+      "name": "test_v0_s1_mvp_launch_options",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_v0_s1_mvp_launch_options.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.728,
+      "passed": true
+    },
+    {
+      "name": "test_v0_sm1_authority_recovery",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_v0_sm1_authority_recovery.gd",
+      "exit_code": 0,
+      "duration_seconds": 23.623,
+      "passed": true
+    },
+    {
+      "name": "test_v0_sm1_combined_carry_world_chain",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_v0_sm1_combined_carry_world_chain.gd",
+      "exit_code": 0,
+      "duration_seconds": 1.002,
+      "passed": true
+    },
+    {
+      "name": "test_v0_sm1_concurrent_crossings",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_v0_sm1_concurrent_crossings.gd",
+      "exit_code": 0,
+      "duration_seconds": 3.692,
+      "passed": true
+    },
+    {
+      "name": "test_v0_sm1_fault_matrix_1_6",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_v0_sm1_fault_matrix_1_6.gd",
+      "exit_code": 0,
+      "duration_seconds": 1.466,
+      "passed": true
+    },
+    {
+      "name": "test_v0_sm1_gateway_failure_restart",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_v0_sm1_gateway_failure_restart.gd",
+      "exit_code": 0,
+      "duration_seconds": 14.372,
+      "passed": true
+    },
+    {
+      "name": "test_v0_sm1_graphical_handoff_processes",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_v0_sm1_graphical_handoff_processes.gd",
+      "exit_code": 0,
+      "duration_seconds": 7.911,
+      "passed": true
+    },
+    {
+      "name": "test_v0_sm1_historical_activation_replay",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_v0_sm1_historical_activation_replay.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.45,
+      "passed": true
+    },
+    {
+      "name": "test_v0_sm1_owner_map_and_transfer",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_v0_sm1_owner_map_and_transfer.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.264,
+      "passed": true
+    },
+    {
+      "name": "test_v0_sm1_reconnect_after_handoff",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_v0_sm1_reconnect_after_handoff.gd",
+      "exit_code": 0,
+      "duration_seconds": 4.07,
+      "passed": true
+    },
+    {
+      "name": "test_v0_sm1_repeated_crossings_impaired_network",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_v0_sm1_repeated_crossings_impaired_network.gd",
+      "exit_code": 0,
+      "duration_seconds": 15.088,
+      "passed": true
+    },
+    {
+      "name": "test_v0_sm1_world_mutations_around_handoff",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_v0_sm1_world_mutations_around_handoff.gd",
+      "exit_code": 0,
+      "duration_seconds": 1.282,
+      "passed": true
+    },
+    {
+      "name": "test_v0_sm1_world_state_continuity",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_v0_sm1_world_state_continuity.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.909,
+      "passed": true
+    },
+    {
+      "name": "test_v0_sp1_remote_earth_render_frame",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_v0_sp1_remote_earth_render_frame.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.26,
+      "passed": true
+    },
+    {
+      "name": "test_v0_test_client_contracts",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_v0_test_client_contracts.gd",
+      "exit_code": 0,
+      "duration_seconds": 0.726,
+      "passed": true
+    },
+    {
+      "name": "test_v0_test_client_items_processes",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_v0_test_client_items_processes.gd",
+      "exit_code": 0,
+      "duration_seconds": 18.457,
+      "passed": true
+    },
+    {
+      "name": "test_v0_test_client_seam_processes",
+      "kind": "headless_script",
+      "target": "res://tests/runtime/test_v0_test_client_seam_processes.gd",
+      "exit_code": 0,
+      "duration_seconds": 3.79,
+      "passed": true
+    },
+    {
+      "name": "main_scene_cli_all",
+      "kind": "main_scene_cli",
+      "target": "playground:test.run all",
+      "exit_code": 0,
+      "duration_seconds": 2.95,
+      "passed": true
+    }
+  ]
+}

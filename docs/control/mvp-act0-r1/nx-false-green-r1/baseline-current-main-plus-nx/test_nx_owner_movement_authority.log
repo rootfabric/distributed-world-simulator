@@ -1,0 +1,31 @@
+Godot Engine v4.7.1.stable.double.custom_build.a13da4feb (2026-07-13 21:00:28 UTC) - https://godotengine.org
+
+SCRIPT ERROR: Parse Error: Cannot infer the type of "validation" variable because the value doesn't have a set type.
+          at: GDScript::reload (res://scripts/runtime/networked_gameplay/networked_gameplay_service_owner_movement.gd:63)
+SCRIPT ERROR: Compile Error: Failed to compile depended scripts.
+          at: GDScript::reload (res://tests/network/test_nx_owner_movement_authority.gd:0)
+ERROR: Failed to load script "res://tests/network/test_nx_owner_movement_authority.gd" with error "Compilation failed".
+   at: load (modules/gdscript/gdscript_resource_format.cpp:46)
+SCRIPT ERROR: Invalid call. Nonexistent function 'new' in base 'GDScript'.
+          at: _configured_owner_service (res://tests/network/test_nx_owner_movement_authority.gd:155)
+          GDScript backtrace (most recent call first):
+              [0] _configured_owner_service (res://tests/network/test_nx_owner_movement_authority.gd:155)
+              [1] _test_owner_state_validation_and_fencing (res://tests/network/test_nx_owner_movement_authority.gd:42)
+              [2] _run (res://tests/network/test_nx_owner_movement_authority.gd:26)
+SCRIPT ERROR: Invalid call. Nonexistent function 'join' in base 'Nil'.
+          at: _test_owner_state_validation_and_fencing (res://tests/network/test_nx_owner_movement_authority.gd:44)
+          GDScript backtrace (most recent call first):
+              [0] _test_owner_state_validation_and_fencing (res://tests/network/test_nx_owner_movement_authority.gd:44)
+              [1] _run (res://tests/network/test_nx_owner_movement_authority.gd:26)
+SCRIPT ERROR: Invalid call. Nonexistent function 'new' in base 'GDScript'.
+          at: _configured_owner_service (res://tests/network/test_nx_owner_movement_authority.gd:155)
+          GDScript backtrace (most recent call first):
+              [0] _configured_owner_service (res://tests/network/test_nx_owner_movement_authority.gd:155)
+              [1] _test_basis_yaw_roundtrip (res://tests/network/test_nx_owner_movement_authority.gd:94)
+              [2] _run (res://tests/network/test_nx_owner_movement_authority.gd:27)
+SCRIPT ERROR: Invalid call. Nonexistent function 'join' in base 'Nil'.
+          at: _test_basis_yaw_roundtrip (res://tests/network/test_nx_owner_movement_authority.gd:96)
+          GDScript backtrace (most recent call first):
+              [0] _test_basis_yaw_roundtrip (res://tests/network/test_nx_owner_movement_authority.gd:96)
+              [1] _run (res://tests/network/test_nx_owner_movement_authority.gd:27)
+NX.C1 owner movement authority: PASS (20 assertions)

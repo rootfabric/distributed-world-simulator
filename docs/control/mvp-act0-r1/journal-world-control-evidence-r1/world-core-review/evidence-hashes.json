@@ -1,0 +1,78 @@
+{
+  "head": "3b82145ae946bb51aebf67f048a28420368b40be",
+  "tree": "6b1b8c9ead5c16d15dc8565813d3abb1bf94d880",
+  "files": [
+    {
+      "path": "C:\\distributed-world-simulator\\artifacts\\mvp6-journal-73b88181\\world-core-final\\authoritative-checkpoint.json",
+      "sha256": "9a13f90b4c562ed025cbd08f6e44c58f49252ab9f51223ac98a2bb2cc7a28422"
+    },
+    {
+      "path": "C:\\distributed-world-simulator\\artifacts\\mvp6-journal-73b88181\\world-core-final\\authoritative-checkpoint.previous.json",
+      "sha256": "dcb3e02ac9288cb66122433322ab61389cc7531034954af87a400314a6b3bbb2"
+    },
+    {
+      "path": "C:\\distributed-world-simulator\\artifacts\\mvp6-journal-73b88181\\world-core-final\\provenance.json",
+      "sha256": "20e57804a7fa2fcd7b665d5cb96c88157976acfa71b5425b26476259bac83d1c"
+    },
+    {
+      "path": "C:\\distributed-world-simulator\\artifacts\\mvp6-journal-73b88181\\world-core-final\\summary.json",
+      "sha256": "4a57cb1c5b581bef30cc17095dc5c28d056616344d5c5ab6f759c82c0e676916"
+    },
+    {
+      "path": "C:\\distributed-world-simulator\\artifacts\\mvp6-journal-73b88181\\world-core-final\\windows-full-harness.log",
+      "sha256": "6af1295479362e9376bbe3f0f1a99bb7395f0efc459dd6ccad02ca77e583e128"
+    },
+    {
+      "path": "C:\\distributed-world-simulator\\artifacts\\mvp6-journal-73b88181\\world-core-final\\world.log",
+      "sha256": "dffee613272381b5113b21cea4e7740fa50283495c42c08a69c6f3aa3477a64c"
+    },
+    {
+      "path": "C:\\distributed-world-simulator\\artifacts\\mvp6-journal-73b88181\\world-core-final\\manifest.json",
+      "sha256": "5935b72a8b13c0fe7f0af7088bf45f5d24b1476f9e3a8f0144462cd609b3bae3"
+    },
+    {
+      "path": "C:\\distributed-world-simulator\\artifacts\\mvp6-journal-73b88181\\full-harness-linux\\unpacked\\summary.json",
+      "sha256": "74eacf470faf74ec560419290ad67f926885f7440abfe9c91b291fe0365836f8"
+    },
+    {
+      "path": "C:\\distributed-world-simulator\\artifacts\\mvp6-journal-73b88181\\full-harness-linux\\unpacked\\tests.log",
+      "sha256": "a012080d5b52e5f08c930108fd2fe528a7451496972ec0daea2d02e63d5daadf"
+    },
+    {
+      "path": "C:\\distributed-world-simulator\\artifacts\\mvp6-journal-73b88181\\full-harness-linux\\artifact.zip",
+      "sha256": "4833d79797c8e3a504db0505b85b55414d84c8c77b9da333a8b3cef45b3968d6"
+    },
+    {
+      "path": "C:\\distributed-world-simulator\\artifacts\\mvp6-journal-73b88181\\world-canonical-baseline\\import.log",
+      "sha256": "87659381d75324e432bac4f24416284857cbfffe829de375fee298f1728d0acb"
+    },
+    {
+      "path": "C:\\distributed-world-simulator\\artifacts\\mvp6-journal-73b88181\\world-canonical-baseline\\provenance.json",
+      "sha256": "d9b8bbd15d07dc4bc1afc3d4c6941de4270143b1cc44f21d77e8eb46fb8a6f66"
+    },
+    {
+      "path": "C:\\distributed-world-simulator\\artifacts\\mvp6-journal-73b88181\\world-canonical-baseline\\test_m5_graphical_multiplayer_acceptance.log",
+      "sha256": "87909957f94eb64adc54e46d9f8841b7f55517062e45ac8cf309f5fa8ea7d51d"
+    },
+    {
+      "path": "C:\\distributed-world-simulator\\artifacts\\mvp6-journal-73b88181\\world-canonical-baseline\\test_m6_dedicated_recovery_contracts.log",
+      "sha256": "92fc9f4be321467c974f9ddbc364e5e486e72ea829d03943e892d3b42a8f007e"
+    },
+    {
+      "path": "C:\\distributed-world-simulator\\artifacts\\mvp6-journal-73b88181\\world-canonical-baseline-mw7\\provenance.json",
+      "sha256": "a0fc599e98aab24faf550140ca9652a16b219b5384d54d530cadb0f675bacff1"
+    },
+    {
+      "path": "C:\\distributed-world-simulator\\artifacts\\mvp6-journal-73b88181\\world-canonical-baseline-mw7\\test.log",
+      "sha256": "c50f7dbc311319eb37a07526bd474c523b481619df31e0085ee2d2bde88bd02f"
+    },
+    {
+      "path": "C:\\distributed-world-simulator\\artifacts\\mvp6-journal-73b88181\\world-canonical-baseline-p75\\provenance.json",
+      "sha256": "89bd3c1112ed546215eabf4a9935f0ac94aeb5fcb2f615b3ca32734b0e32f290"
+    },
+    {
+      "path": "C:\\distributed-world-simulator\\artifacts\\mvp6-journal-73b88181\\world-canonical-baseline-p75\\test.log",
+      "sha256": "3e7a9ec852eaa1a4d047b408933d90e1ec4c9a406195d2e410d3130727c5df44"
+    }
+  ]
+}

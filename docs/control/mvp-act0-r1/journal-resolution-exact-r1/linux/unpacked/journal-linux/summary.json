@@ -1,0 +1,82 @@
+{
+  "head": "3b82145ae946bb51aebf67f048a28420368b40be",
+  "tree": "6b1b8c9ead5c16d15dc8565813d3abb1bf94d880",
+  "engine_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+  "run_id": "35097654348",
+  "commands": [
+    {
+      "name": "import",
+      "argv": [
+        "/home/runner/work/_temp/engine/godot",
+        "--headless",
+        "--path",
+        ".",
+        "--editor",
+        "--import",
+        "--quit"
+      ],
+      "exit_code": 0,
+      "assertions": [],
+      "fatal": [],
+      "passed": true,
+      "sha256": "10cc67161a71fdf9cc0aec14a50d609ade7ebd641e0306b21cbc9d456118dde6"
+    },
+    {
+      "name": "rollback",
+      "argv": [
+        "/home/runner/work/_temp/engine/godot",
+        "--headless",
+        "--path",
+        ".",
+        "--script",
+        "res://tests/runtime/test_v0_mvp_6_prediction_rollback.gd"
+      ],
+      "exit_code": 0,
+      "assertions": [
+        77
+      ],
+      "fatal": [],
+      "passed": true,
+      "sha256": "7d0d97baf69042ae7c0e3176f4a49f2daa6c1cb3a3d0c5348ceabb71a5e0500c"
+    },
+    {
+      "name": "nx6",
+      "argv": [
+        "/home/runner/work/_temp/engine/godot",
+        "--headless",
+        "--path",
+        ".",
+        "--script",
+        "res://tests/network/test_nx6_predicted_item_interactions.gd"
+      ],
+      "exit_code": 0,
+      "assertions": [
+        940
+      ],
+      "fatal": [],
+      "passed": true,
+      "sha256": "7b4dcb0bd9cb0b2a09acf2ba59c14d7548c325ee7bcb34ad8a7028cac6bf36ca"
+    },
+    {
+      "name": "bridge",
+      "argv": [
+        "/home/runner/work/_temp/engine/godot",
+        "--headless",
+        "--path",
+        ".",
+        "--script",
+        "res://tests/network/test_nx6_predicted_item_interactions_integration.gd"
+      ],
+      "exit_code": 0,
+      "assertions": [
+        66
+      ],
+      "fatal": [],
+      "passed": true,
+      "sha256": "b1429afd4df91c4e9fe21c3e839adc549745f497c6710e17051bda0a02f4a91a"
+    }
+  ],
+  "tracked_clean": true,
+  "mvp6_verified": false,
+  "passed": true
+}

@@ -1,0 +1,31 @@
+{
+  "schema": "distributed_world_simulator.bounded_repair_work_order.v1",
+  "repair_id": "V0-MVP3-R1-EXACT-SUBGATE-VALIDATION",
+  "parent_work_order_id": "V0-MVP-R1-WO-001",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "base_sha": "ba24f00a352ff56cf23c461f1fc8e7d6931cde19",
+  "base_tree": "3042bd356f2ea7bfd7ba3a924752faf7d4c2eafb",
+  "role": "IMPLEMENTER",
+  "independent_context": false,
+  "runtime_mutation": false,
+  "scope": "Executable validation of the bounded MVP3 operator/observer adapter. Runtime glue is covered by the parent Work Order. This validation subgate cannot close integrated two-player MVP3.",
+  "allowed_paths": [
+    ".github/workflows/mvp3-exact-validation.yml",
+    "RUN_V0_MVP_SEAM.py",
+    "tests/runtime/test_v0_mvp_seam_continuity.gd",
+    "tests/fixtures/v0_mvp/seam_input_driver.gd",
+    "docs/control/mvp-act0-r1/work-order-mvp3-validation-r1.v1.json",
+    "docs/control/mvp-act0-r1/MVP3_IMPLEMENTATION_BRIEF_RU.md"
+  ],
+  "forbidden_paths": ["scripts/harness/**", "scripts/network/**", "scripts/simulation/**", "scripts/runtime/networked_gameplay/m3/**", "scripts/runtime/networked_gameplay/m4/**", "scripts/runtime/networked_gameplay/p7/**", "scripts/runtime/networked_gameplay/sm1/**", "config/control/harness/acceptance/**", "config/architecture/**", "project.godot"],
+  "repair_map": {
+    "owner": "MVP composition validation only",
+    "root_cause": "Historical SM1 smoke sends 11-metre commands and hard-codes a single operator plus observer. Its PASS cannot stand in for playable two-player MVP3.",
+    "fix": "Exercise the same bounded interactive input path in a rendered scene, independently recompute receipt checksums and continuity, require real authority worker lifecycle evidence, and explicitly retain the unresolved two-M3-player integration gate.",
+    "not_a_symptom_patch": "Does not weaken MVP2, rewrite event 0008, mutate authority kernels or fabricate a new owner. Every successful machine result is PASS_SUBGATE_ONLY."
+  },
+  "workflow_constraints": {"read_only_github_permissions": true, "owner_only": true, "exact_checkout": true, "source_export": false, "git_writes": false, "self_acceptance": false},
+  "runtime_merge_authorized": false,
+  "predicate_verified_authorized": false,
+  "independent_verdict_issued": false
+}

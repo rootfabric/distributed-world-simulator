@@ -1,0 +1,25 @@
+{
+  "role": "REVIEWER",
+  "verdict": "FAIL",
+  "scope": "Full Linux Harness addendum; prior Windows focused PASS remains historical and narrower",
+  "head": "a7c711c4b09fe52e52a206abc13ce8b427c19cf9",
+  "tree": "cc48a2446198a49c78ee46af601e2e56d3807bfd",
+  "run_id": "35103186274",
+  "artifact_id": 10448743149,
+  "artifact_sha256": "8628d1323d58d76df9de3b062dbd90b76b4b466c5389f46cb7ef54fa5b14551a",
+  "log_sha256": "7e6fadba2dd0ec111199a3580fc9eb6324138caa0bf387559a7b197aa7d7ed73",
+  "tests": 329,
+  "failures": 1,
+  "errors": 10,
+  "required_fixes": [
+    "Resolve deterministic temporary Git fixture cleanup errors without weakening strict cleanup or negative assertions, freeze new subject and rerun exact focused plus full Linux Harness."
+  ],
+  "known_failure": "Existing live proposed R3 directional PC0 RED; not waived",
+  "finding": "10 new ACT0 negative-case teardown errors: tempfile strict rmtree reports repo directory not empty. Git background maintenance is a hypothesis, not yet proven by this log.",
+  "rank_up_moves": [],
+  "evidence_gaps": [
+    "Fixed replacement subject and fresh validation required."
+  ],
+  "mvp6_verified": false,
+  "main_acceptance": false
+}

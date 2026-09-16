@@ -1,0 +1,17 @@
+{
+  "schema": "distributed_world_simulator.harness_human_attention.v1",
+  "decision_id": "HA-V0-MVP6-NATIVE-ITEM-CARRY-R1",
+  "program": "V0",
+  "checkpoint": "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE",
+  "risk_class": "CRITICAL",
+  "reason": "FAILED_COMPOSITION_REQUIRING_SCOPE_EXPANSION: exact diagnostic 35078382286 at 124b4dfab09e71ec931f0041998d8c57da8b89cb / c0cd6b7442a2ed06a7517125f599f35d84d9b6f9 reproduced MVP3_ITEM_CARRY_REQUIRES_MVP4 for real ore plus equipped tool after successful empty A-to-B-to-A. Diagnostic 152/0, unchanged MVP3 232/0 and MVP5 270/0. Native payload/replay restoration preserves fields and slots. Live actor-scoped native item transfer is missing; whole-graph restore is not a valid replacement. Source inspection also found sandbox-coupled spatial validation and duplicate default world fixture identities.",
+  "decision_required": "Разрешить bounded existing-owner repair MVP6 в трёх точных файлах: scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service.gd; scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service_base.gd; scripts/runtime/networked_gameplay/networked_gameplay_service_p2.gd. Только actor-scoped Item Graph carrying hooks и native replay/authority fencing, разделение trusted spatial-validation/content bootstrap для живой сцены и подключение к существующему M3 Service. MVP glue/tests остаются в ранее разрешённых путях. Без нового владельца, изменения P7/Matter/SM1 foundations, main/runtime merge или приёмки MVP.",
+  "options": ["AUTHORIZE_BOUNDED_EXISTING_OWNER_MVP6_ITEM_CARRY", "KEEP_CURRENT_OWNER_FENCE_AND_HOLD_MVP6_NONEMPTY_CARRY"],
+  "recommended_option": "AUTHORIZE_BOUNDED_EXISTING_OWNER_MVP6_ITEM_CARRY",
+  "recommendation_reason": "Передавать native item closure и оборудование существующими owners, сохраняя единственный SM1 decision owner, P4 atomic consume и действующие restart guards. Снятие empty-only проверки без native переноса, повторная выдача предметов и копирование всего graph запрещены.",
+  "blast_radius": ["M4 actor inventory/equipment closure and operation replay", "M3 live player/item stage-retire-activate and admission", "Trusted spatial validation and unique region bootstrap", "MVP3-MVP5 and P4/P5 nonregression"],
+  "blocking": true,
+  "status": "RESOLVED",
+  "resolution": "AUTHORIZE_BOUNDED_EXISTING_OWNER_MVP6_ITEM_CARRY. Пользователь явно ответил «разрешаю, выполняй» на запрос bounded repair HA-V0-MVP6-NATIVE-ITEM-CARRY-R1 с тремя перечисленными owner-файлами и запретом merge в main. Разрешение зафиксировано до runtime-изменений на исходном live HEAD 727b5d779543e74f254830acfd743d69fe1f7e4d при неизменном canonical main 675c04bb213bbb68b8cdb500d540d57ce1490318. Director должен синхронизировать parent write fence, выпустить bounded implementation slice, выполнить exact tests и независимые review/verifier. Это не approval нового canonical owner, ослабления acceptance, history rewrite, изменения других foundation-файлов, runtime/main merge или MVP acceptance.",
+  "evidence_paths": ["docs/control/mvp-act0-r1/MVP6_NATIVE_PREREQUISITE_EVIDENCE_R1.json", "docs/control/mvp-act0-r1/MVP6_NATIVE_REPAIR_MAP_R1_RU.md", "docs/control/mvp-act0-r1/MVP6_IMPLEMENTATION_R1_RU.md", "tests/runtime/test_v0_mvp_6_native_carry_prerequisite.gd", "docs/control/mvp-act0-r1/validate_mvp6_prerequisite.py"]
+}

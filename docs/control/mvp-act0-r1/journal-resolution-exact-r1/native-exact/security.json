@@ -1,0 +1,57 @@
+{
+  "assertions": 48,
+  "attacks": [
+    {
+      "kind": "foreign_command_replay",
+      "ledger_unchanged": true,
+      "result": {
+        "details": {},
+        "error_code": "OPERATION_REPLAY_CONFLICT",
+        "success": false
+      }
+    },
+    {
+      "kind": "foreign_output_replay",
+      "ledger_unchanged": true,
+      "result": {
+        "details": {},
+        "error_code": "OPERATION_REPLAY_CONFLICT",
+        "success": false
+      }
+    },
+    {
+      "epoch": 0,
+      "kind": "wrong_epoch",
+      "result": {
+        "details": {},
+        "error_code": "LIVE_ITEM_OWNERSHIP_EPOCH_INVALID",
+        "success": false
+      }
+    },
+    {
+      "epoch": 2,
+      "kind": "wrong_epoch",
+      "result": {
+        "details": {},
+        "error_code": "LIVE_ITEM_OWNERSHIP_EPOCH_INVALID",
+        "success": false
+      }
+    },
+    {
+      "epoch": 999,
+      "kind": "wrong_epoch",
+      "result": {
+        "details": {},
+        "error_code": "LIVE_ITEM_OWNERSHIP_EPOCH_INVALID",
+        "success": false
+      }
+    }
+  ],
+  "failures": [],
+  "independent_verdict": false,
+  "mvp6_predicate_verified": false,
+  "passed": true,
+  "schema": "distributed_world_simulator.mvp6_native_replay_security.v1",
+  "subject_head": "73b8818184c93986e3313f35f9f4548c608e47e6",
+  "subject_tree": "a1bbe30fd68af5db3a9535bee942683ebe761bc1"
+}

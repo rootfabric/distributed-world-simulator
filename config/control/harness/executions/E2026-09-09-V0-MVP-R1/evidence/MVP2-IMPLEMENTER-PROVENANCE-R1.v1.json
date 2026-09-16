@@ -1,0 +1,32 @@
+{
+  "schema": "distributed_world_simulator.mvp2_implementer_provenance.v1",
+  "role": "IMPLEMENTER",
+  "independent_context": false,
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "predicate": "MVP_TWO_CLIENT_SHARED_WORLD",
+  "source_base_head": "6fd80b8dbc0cfc422c2ef9a05d2e60a4e7342b57",
+  "resumed_partial_head": "a029e7cf116074c532c94dc366a75c6ca3fe5415",
+  "implementation_head": "fc40bbb396bb9d80b641402e0ae96ef8b12ac13d",
+  "implementation_tree": "368577963f761946d1595b5b8c0ae3a0614e44a5",
+  "description": "Существующий M3/NX server и два графических replica clients в одной новой scene. Завершены отсутствующая scene, focused tests, fail-closed observation consumer, трёхпроцессный runner, Windows entrypoint и validation-only workflow. Исторический MVP1 и события 1–6 не изменялись.",
+  "local_mechanical_checks": {
+    "python_evidence_consumer_unittests": "11 tests OK",
+    "python_compile": "PASS",
+    "source_blob_of_locally_tested_producer": "1659a84b59bcd98d99d7d999606b46c2bd3d548d"
+  },
+  "godot_exact_validation": "PENDING_ON_COMMITTED_SUBJECT",
+  "full_harness": "PENDING_ON_COMMITTED_SUBJECT",
+  "pc0": "PENDING_ON_COMMITTED_SUBJECT",
+  "independent_verdict_issued": false,
+  "predicate_marked_verified": false,
+  "whole_mvp_accepted": false,
+  "runtime_merge_authorized": false,
+  "limitations": [
+    "Immutable initial lunar surface preview, not network terrain mutation",
+    "Existing bounded sandbox movement kernel; arbitrary terrain contact is not claimed",
+    "MVP3-MVP8 and full world/core final acceptance remain separate",
+    "This is the actual Implementer result, not an independent review"
+  ],
+  "recorded_at_utc": "2026-09-11T13:06:48Z"
+}

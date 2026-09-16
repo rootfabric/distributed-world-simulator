@@ -1,0 +1,5 @@
+Godot Engine v4.7.1.stable.double.custom_build.a13da4feb (2026-07-13 21:00:28 UTC) - https://godotengine.org
+
+[m7_item_rejected] {"command_type":"predicted","details":{"wire_result":{"error_code":"ITEM_ALREADY_CLAIMED","operation_id":"operation/mvp6/rollback","status":"REJECTED"}},"error_code":"ITEM_ALREADY_CLAIMED","message":"Предмет уже подобрал другой игрок","operation_id":"operation/mvp6/rollback"}
+[m7_item_rejected] {"command_type":"predicted","details":{"operation_id":"operation/mvp6/rollback"},"error_code":"MVP6_TEST_CANCEL","message":"Сервер отклонил действие с предметом: MVP6_TEST_CANCEL","operation_id":"operation/mvp6/rollback"}
+MVP6 prediction rollback: PASS (77 assertions)

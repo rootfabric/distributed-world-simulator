@@ -1,0 +1,2845 @@
+{
+  "assertions": 232,
+  "failures": [],
+  "final_players": {
+    "a": {
+      "connected": true,
+      "flashlight_enabled": false,
+      "inventory": [],
+      "last_input_sequence": 5,
+      "logical_player_id": "a",
+      "orientation_yaw": -1.5707963267948966,
+      "ownership_epoch": 1,
+      "player_entity_id": "player/a",
+      "position": {
+        "x": -4.75,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "state_revision": 6,
+      "transport_session_id": "transport-session/mvp3/a",
+      "velocity": {
+        "x": -0.25,
+        "y": 0.0,
+        "z": 0.0
+      }
+    },
+    "b": {
+      "connected": true,
+      "flashlight_enabled": false,
+      "inventory": [],
+      "last_input_sequence": 5,
+      "logical_player_id": "b",
+      "orientation_yaw": 1.5707963267948966,
+      "ownership_epoch": 1,
+      "player_entity_id": "player/b",
+      "position": {
+        "x": 5.25,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "state_revision": 6,
+      "transport_session_id": "transport-session/mvp3/b",
+      "velocity": {
+        "x": 0.25,
+        "y": 0.0,
+        "z": 0.0
+      }
+    }
+  },
+  "final_port_reports": {
+    "a": {
+      "backend_authority_epoch": 1,
+      "bindings": {
+        "a": {
+          "canonical_state_owned": false,
+          "decision": {
+            "active_authority_id": "authority/a",
+            "authority_epoch": 3,
+            "completed_transfer_count": 2,
+            "player_snapshot": {
+              "authority_epoch": 3,
+              "last_input_sequence": 0,
+              "last_operation_id": "",
+              "logical_player_id": "player/mvp3/a",
+              "player_entity_id": "entity/mvp3/a"
+            },
+            "private_construction_truth": false,
+            "private_item_graph": false,
+            "private_persistence_owner": false,
+            "private_replay_owner": false,
+            "schema": "distributed_world_simulator.v0_sm1_authority_transfer.v1",
+            "state": "ACTIVE",
+            "transfer": {}
+          },
+          "decision_owner": "EXISTING_SM1_COORDINATOR",
+          "installed_epoch": 3,
+          "installed_transfer": "transfer/mvp3/a-back",
+          "local_authority_id": "authority/a",
+          "locally_ready": true,
+          "logical_player_id": "a",
+          "ownership_epoch": 1,
+          "transport_session_id": "transport-session/mvp3/a"
+        },
+        "b": {
+          "canonical_state_owned": false,
+          "decision": {
+            "active_authority_id": "authority/a",
+            "authority_epoch": 3,
+            "completed_transfer_count": 2,
+            "player_snapshot": {
+              "authority_epoch": 3,
+              "last_input_sequence": 0,
+              "last_operation_id": "",
+              "logical_player_id": "player/mvp3/b",
+              "player_entity_id": "entity/mvp3/b"
+            },
+            "private_construction_truth": false,
+            "private_item_graph": false,
+            "private_persistence_owner": false,
+            "private_replay_owner": false,
+            "schema": "distributed_world_simulator.v0_sm1_authority_transfer.v1",
+            "state": "ACTIVE",
+            "transfer": {}
+          },
+          "decision_owner": "EXISTING_SM1_COORDINATOR",
+          "installed_epoch": 3,
+          "installed_transfer": "transfer/mvp3/b-back",
+          "local_authority_id": "authority/a",
+          "locally_ready": true,
+          "logical_player_id": "b",
+          "ownership_epoch": 1,
+          "transport_session_id": "transport-session/mvp3/b"
+        }
+      },
+      "canonical_state_owned": false,
+      "item_carry_scope": "MVP3_EMPTY_CARRY_ONLY",
+      "local_authority_id": "authority/a",
+      "prepared_count": 2,
+      "restart_reconciliation_required": true,
+      "schema": "distributed_world_simulator.mvp3_live_player_port.v1",
+      "staged_count": 0
+    },
+    "b": {
+      "backend_authority_epoch": 1,
+      "bindings": {
+        "a": {
+          "canonical_state_owned": false,
+          "decision": {
+            "active_authority_id": "authority/a",
+            "authority_epoch": 3,
+            "completed_transfer_count": 2,
+            "player_snapshot": {
+              "authority_epoch": 3,
+              "last_input_sequence": 0,
+              "last_operation_id": "",
+              "logical_player_id": "player/mvp3/a",
+              "player_entity_id": "entity/mvp3/a"
+            },
+            "private_construction_truth": false,
+            "private_item_graph": false,
+            "private_persistence_owner": false,
+            "private_replay_owner": false,
+            "schema": "distributed_world_simulator.v0_sm1_authority_transfer.v1",
+            "state": "ACTIVE",
+            "transfer": {}
+          },
+          "decision_owner": "EXISTING_SM1_COORDINATOR",
+          "installed_epoch": 0,
+          "installed_transfer": "transfer/mvp3/a-out",
+          "local_authority_id": "authority/b",
+          "locally_ready": false,
+          "logical_player_id": "a",
+          "ownership_epoch": 1,
+          "transport_session_id": "transport-session/mvp3/a"
+        },
+        "b": {
+          "canonical_state_owned": false,
+          "decision": {
+            "active_authority_id": "authority/a",
+            "authority_epoch": 3,
+            "completed_transfer_count": 2,
+            "player_snapshot": {
+              "authority_epoch": 3,
+              "last_input_sequence": 0,
+              "last_operation_id": "",
+              "logical_player_id": "player/mvp3/b",
+              "player_entity_id": "entity/mvp3/b"
+            },
+            "private_construction_truth": false,
+            "private_item_graph": false,
+            "private_persistence_owner": false,
+            "private_replay_owner": false,
+            "schema": "distributed_world_simulator.v0_sm1_authority_transfer.v1",
+            "state": "ACTIVE",
+            "transfer": {}
+          },
+          "decision_owner": "EXISTING_SM1_COORDINATOR",
+          "installed_epoch": 0,
+          "installed_transfer": "transfer/mvp3/b-out",
+          "local_authority_id": "authority/b",
+          "locally_ready": false,
+          "logical_player_id": "b",
+          "ownership_epoch": 1,
+          "transport_session_id": "transport-session/mvp3/b"
+        }
+      },
+      "canonical_state_owned": false,
+      "item_carry_scope": "MVP3_EMPTY_CARRY_ONLY",
+      "local_authority_id": "authority/b",
+      "prepared_count": 2,
+      "restart_reconciliation_required": true,
+      "schema": "distributed_world_simulator.mvp3_live_player_port.v1",
+      "staged_count": 0
+    }
+  },
+  "initial_graphs": {
+    "authority/a": {
+      "authority_epoch": 1,
+      "authority_owner_id": "authority/a",
+      "checksum": "5e0216057af14c9697b4124f2b5673f106060d3c0f07aceadb65fb4faec5d06f",
+      "containers": [
+        {
+          "capacity": 8,
+          "container_id": "container/shared/crate/1",
+          "owner_item_id": "item/shared/crate/1",
+          "slots": []
+        }
+      ],
+      "inventories": {
+        "a": {
+          "hotbar": [],
+          "inventory": [],
+          "selected_hotbar_index": 0
+        },
+        "b": {
+          "hotbar": [],
+          "inventory": [],
+          "selected_hotbar_index": 0
+        }
+      },
+      "items": [
+        {
+          "definition_id": "item/beacon",
+          "item_id": "item/shared/beacon/1",
+          "location": {
+            "kind": "WORLD"
+          },
+          "mounted": false,
+          "quantity": 1
+        },
+        {
+          "definition_id": "item/crate",
+          "item_id": "item/shared/crate/1",
+          "location": {
+            "kind": "WORLD"
+          },
+          "mounted": false,
+          "quantity": 1
+        },
+        {
+          "definition_id": "item/ore",
+          "item_id": "item/shared/ore/1",
+          "location": {
+            "kind": "WORLD"
+          },
+          "mounted": false,
+          "quantity": 8
+        }
+      ],
+      "mounts": [
+        {
+          "item_id": "",
+          "mount_id": "mount/shared/socket/1"
+        }
+      ],
+      "open_containers": {},
+      "revision": 2,
+      "schema": "planet_simulator.canonical_multiplayer_item_graph_snapshot.v1",
+      "tick": 2
+    },
+    "authority/b": {
+      "authority_epoch": 1,
+      "authority_owner_id": "authority/b",
+      "checksum": "60799528742ddb8ce12831aee218f162f54c169ae854944733870b87a3db64c1",
+      "containers": [
+        {
+          "capacity": 8,
+          "container_id": "container/shared/crate/1",
+          "owner_item_id": "item/shared/crate/1",
+          "slots": []
+        }
+      ],
+      "inventories": {},
+      "items": [
+        {
+          "definition_id": "item/beacon",
+          "item_id": "item/shared/beacon/1",
+          "location": {
+            "kind": "WORLD"
+          },
+          "mounted": false,
+          "quantity": 1
+        },
+        {
+          "definition_id": "item/crate",
+          "item_id": "item/shared/crate/1",
+          "location": {
+            "kind": "WORLD"
+          },
+          "mounted": false,
+          "quantity": 1
+        },
+        {
+          "definition_id": "item/ore",
+          "item_id": "item/shared/ore/1",
+          "location": {
+            "kind": "WORLD"
+          },
+          "mounted": false,
+          "quantity": 8
+        }
+      ],
+      "mounts": [
+        {
+          "item_id": "",
+          "mount_id": "mount/shared/socket/1"
+        }
+      ],
+      "open_containers": {},
+      "revision": 0,
+      "schema": "planet_simulator.canonical_multiplayer_item_graph_snapshot.v1",
+      "tick": 0
+    }
+  },
+  "initial_players": {
+    "a": {
+      "connected": true,
+      "flashlight_enabled": false,
+      "inventory": [],
+      "last_input_sequence": 0,
+      "logical_player_id": "a",
+      "orientation_yaw": 0.0,
+      "ownership_epoch": 1,
+      "player_entity_id": "player/a",
+      "position": {
+        "x": -5.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "state_revision": 1,
+      "transport_session_id": "transport-session/mvp3/a",
+      "velocity": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      }
+    },
+    "b": {
+      "connected": true,
+      "flashlight_enabled": false,
+      "inventory": [],
+      "last_input_sequence": 0,
+      "logical_player_id": "b",
+      "orientation_yaw": 0.0,
+      "ownership_epoch": 1,
+      "player_entity_id": "player/b",
+      "position": {
+        "x": 5.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "state_revision": 1,
+      "transport_session_id": "transport-session/mvp3/b",
+      "velocity": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      }
+    }
+  },
+  "legacy_restart_before_live": {
+    "authority_epoch": 1.0,
+    "authority_owner_id": "authority/a",
+    "canonical_item_graph": {
+      "checksum": "504a2d7e060c577bcb8f59a8f5c5cdd9da1a71ed2f7d742c4318adb9f81ccdbc",
+      "schema": "planet_simulator.canonical_multiplayer_item_graph_state.v1",
+      "snapshot": {
+        "authority_epoch": 1.0,
+        "authority_owner_id": "authority/a",
+        "checksum": "5e0216057af14c9697b4124f2b5673f106060d3c0f07aceadb65fb4faec5d06f",
+        "containers": [
+          {
+            "capacity": 8.0,
+            "container_id": "container/shared/crate/1",
+            "owner_item_id": "item/shared/crate/1",
+            "slots": []
+          }
+        ],
+        "inventories": {
+          "a": {
+            "hotbar": [],
+            "inventory": [],
+            "selected_hotbar_index": 0.0
+          },
+          "b": {
+            "hotbar": [],
+            "inventory": [],
+            "selected_hotbar_index": 0.0
+          }
+        },
+        "items": [
+          {
+            "definition_id": "item/beacon",
+            "item_id": "item/shared/beacon/1",
+            "location": {
+              "kind": "WORLD"
+            },
+            "mounted": false,
+            "quantity": 1.0
+          },
+          {
+            "definition_id": "item/crate",
+            "item_id": "item/shared/crate/1",
+            "location": {
+              "kind": "WORLD"
+            },
+            "mounted": false,
+            "quantity": 1.0
+          },
+          {
+            "definition_id": "item/ore",
+            "item_id": "item/shared/ore/1",
+            "location": {
+              "kind": "WORLD"
+            },
+            "mounted": false,
+            "quantity": 8.0
+          }
+        ],
+        "mounts": [
+          {
+            "item_id": "",
+            "mount_id": "mount/shared/socket/1"
+          }
+        ],
+        "open_containers": {},
+        "revision": 2.0,
+        "schema": "planet_simulator.canonical_multiplayer_item_graph_snapshot.v1",
+        "tick": 2.0
+      }
+    },
+    "checksum": "ceaac7e434152fa30ae84c87beafaafcb3b3481215ce2acfadb393fd1676d24b",
+    "ownership": {
+      "authority_epoch": 1.0,
+      "authority_owner_id": "authority/a",
+      "checksum": "80f9538e5337aee0918a2cc77f723318ca4972ecef34e881afa5ef6bd3ed4df0",
+      "players": [
+        {
+          "connected": false,
+          "joined_tick": 1.0,
+          "left_tick": 0.0,
+          "logical_player_id": "a",
+          "ownership_epoch": 1.0,
+          "player_entity_id": "player/a",
+          "transport_session_id": ""
+        },
+        {
+          "connected": false,
+          "joined_tick": 2.0,
+          "left_tick": 0.0,
+          "logical_player_id": "b",
+          "ownership_epoch": 1.0,
+          "player_entity_id": "player/b",
+          "transport_session_id": ""
+        }
+      ],
+      "revision": 2.0,
+      "schema": "planet_simulator.player_ownership_state.v1",
+      "server_tick": 2.0
+    },
+    "players": {
+      "checksum": "3e59d06addc866b09efd85004c84d52d6b1e735a80ff388021d1d2cdc018fd84",
+      "players": [
+        {
+          "connected": false,
+          "flashlight_enabled": false,
+          "inventory": [],
+          "last_input_sequence": 0.0,
+          "logical_player_id": "a",
+          "orientation_yaw": 0.0,
+          "ownership_epoch": 1.0,
+          "player_entity_id": "player/a",
+          "position": {
+            "x": -5.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "state_revision": 1.0,
+          "transport_session_id": "",
+          "velocity": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          }
+        },
+        {
+          "connected": false,
+          "flashlight_enabled": false,
+          "inventory": [],
+          "last_input_sequence": 0.0,
+          "logical_player_id": "b",
+          "orientation_yaw": 0.0,
+          "ownership_epoch": 1.0,
+          "player_entity_id": "player/b",
+          "position": {
+            "x": 5.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "state_revision": 1.0,
+          "transport_session_id": "",
+          "velocity": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          }
+        }
+      ],
+      "schema": "planet_simulator.player_registry_state.v1"
+    },
+    "profile": "MULTIPLAYER_CORE",
+    "region_id": "region/mvp3/a",
+    "resource_mining": {
+      "checksum": "9d2e730e3f08b4652c3b2292a42562345b2e4610b92264cc15351bb26ad3fe85",
+      "schema": "planet_simulator.resource_mining_state.v1",
+      "snapshot": {
+        "authority_epoch": 1.0,
+        "authority_owner_id": "authority/a",
+        "checksum": "cd303dfd214ee4604012f83ce2beb36b171abcc2774103dabee05d597b611a5b",
+        "generation": 1.0,
+        "nodes": [
+          {
+            "output_definition_id": "item/ore",
+            "remaining_units": 8.0,
+            "resource_definition_id": "resource/ore",
+            "resource_node_id": "resource/earth/ore-demo/1",
+            "spatial": {
+              "altitude_m": 450.0,
+              "frame": "earth-fixed",
+              "latitude_deg": 45.0,
+              "longitude_deg": 25.0001
+            },
+            "unit_item_quantity": 1.0
+          }
+        ],
+        "schema": "planet_simulator.resource_mining_snapshot.v1"
+      }
+    },
+    "revision": 2.0,
+    "schema": "planet_simulator.networked_gameplay_durable_state.v1",
+    "server_tick": 0.0,
+    "shared_item": {
+      "checksum": "80c099f48d42ae69138d63b9b2421eefae196ea106409707d9bed971cefa51cc",
+      "item": {
+        "available": true,
+        "item_id": "item/shared/beacon/1",
+        "owner_player_entity_id": "",
+        "revision": 0.0
+      },
+      "schema": "planet_simulator.shared_item_fixture_state.v1"
+    },
+    "topology_adapter": "UNSPECIFIED"
+  },
+  "mvp3_predicate_verified": false,
+  "network_graphical_scene_proven": false,
+  "passed": true,
+  "production_hooks_exercised": true,
+  "schema": "distributed_world_simulator.mvp3_live_owner_hooks_test.v1",
+  "subject_head": "789c3af31d849f7f9dfc6af9ac0240fe2e33531f",
+  "subject_tree": "7c5f0c5e1d6fce8abf852f32918faa245c5f6507",
+  "transfers": [
+    {
+      "after": {
+        "connected": true,
+        "flashlight_enabled": false,
+        "inventory": [],
+        "last_input_sequence": 2,
+        "logical_player_id": "a",
+        "orientation_yaw": 1.5707963267948966,
+        "ownership_epoch": 1,
+        "player_entity_id": "player/a",
+        "position": {
+          "x": -4.5,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "state_revision": 3,
+        "transport_session_id": "transport-session/mvp3/a",
+        "velocity": {
+          "x": 0.25,
+          "y": 0.0,
+          "z": 0.0
+        }
+      },
+      "before": {
+        "connected": true,
+        "flashlight_enabled": false,
+        "inventory": [],
+        "last_input_sequence": 1,
+        "logical_player_id": "a",
+        "orientation_yaw": 1.5707963267948966,
+        "ownership_epoch": 1,
+        "player_entity_id": "player/a",
+        "position": {
+          "x": -4.75,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "state_revision": 2,
+        "transport_session_id": "transport-session/mvp3/a",
+        "velocity": {
+          "x": 0.25,
+          "y": 0.0,
+          "z": 0.0
+        }
+      },
+      "carrying": {
+        "after": {
+          "canonical_identity_owner": "networked-gameplay/player-ownership",
+          "canonical_input_owner": "nx/input-sequence",
+          "canonical_replay_owner": "replay/m6-durable-replay",
+          "closure_view": {
+            "canonical_view": {
+              "carried_operations": [
+                "operation/mvp3/live/a/1",
+                "operation/mvp3/live/a/2"
+              ],
+              "declared_domains": [
+                {
+                  "domain_id": "p6-domain/construction-builds",
+                  "persistence_replay": true,
+                  "reconnect_restore": true,
+                  "transport_path": "GATEWAY_ONLY",
+                  "write_authority": "SERVER_ONLY"
+                },
+                {
+                  "domain_id": "p6-domain/equipment-tool-slots",
+                  "persistence_replay": true,
+                  "reconnect_restore": true,
+                  "transport_path": "GATEWAY_ONLY",
+                  "write_authority": "SERVER_ONLY"
+                },
+                {
+                  "domain_id": "p6-domain/interaction-operation-ledger",
+                  "persistence_replay": true,
+                  "reconnect_restore": true,
+                  "transport_path": "GATEWAY_ONLY",
+                  "write_authority": "SERVER_ONLY"
+                },
+                {
+                  "domain_id": "p6-domain/item-inventory",
+                  "persistence_replay": true,
+                  "reconnect_restore": true,
+                  "transport_path": "GATEWAY_ONLY",
+                  "write_authority": "SERVER_ONLY"
+                },
+                {
+                  "domain_id": "p6-domain/outpost-world-state",
+                  "persistence_replay": true,
+                  "reconnect_restore": true,
+                  "transport_path": "GATEWAY_ONLY",
+                  "write_authority": "SERVER_ONLY"
+                },
+                {
+                  "domain_id": "p6-domain/player-identity-bindings",
+                  "persistence_replay": true,
+                  "reconnect_restore": true,
+                  "transport_path": "GATEWAY_ONLY",
+                  "write_authority": "SERVER_ONLY"
+                }
+              ],
+              "identity_binding_revision": 1,
+              "logical_player_id": "player/mvp3/a",
+              "player_entity_id": "entity/mvp3/a",
+              "schema": "planet_simulator.p6_closure_view.v1"
+            },
+            "carried_operations": [
+              "operation/mvp3/live/a/1",
+              "operation/mvp3/live/a/2"
+            ],
+            "declared_domains": [
+              {
+                "domain_id": "p6-domain/construction-builds",
+                "persistence_replay": true,
+                "reconnect_restore": true,
+                "transport_path": "GATEWAY_ONLY",
+                "write_authority": "SERVER_ONLY"
+              },
+              {
+                "domain_id": "p6-domain/equipment-tool-slots",
+                "persistence_replay": true,
+                "reconnect_restore": true,
+                "transport_path": "GATEWAY_ONLY",
+                "write_authority": "SERVER_ONLY"
+              },
+              {
+                "domain_id": "p6-domain/interaction-operation-ledger",
+                "persistence_replay": true,
+                "reconnect_restore": true,
+                "transport_path": "GATEWAY_ONLY",
+                "write_authority": "SERVER_ONLY"
+              },
+              {
+                "domain_id": "p6-domain/item-inventory",
+                "persistence_replay": true,
+                "reconnect_restore": true,
+                "transport_path": "GATEWAY_ONLY",
+                "write_authority": "SERVER_ONLY"
+              },
+              {
+                "domain_id": "p6-domain/outpost-world-state",
+                "persistence_replay": true,
+                "reconnect_restore": true,
+                "transport_path": "GATEWAY_ONLY",
+                "write_authority": "SERVER_ONLY"
+              },
+              {
+                "domain_id": "p6-domain/player-identity-bindings",
+                "persistence_replay": true,
+                "reconnect_restore": true,
+                "transport_path": "GATEWAY_ONLY",
+                "write_authority": "SERVER_ONLY"
+              }
+            ],
+            "identity_binding_revision": 1,
+            "logical_player_id": "player/mvp3/a",
+            "player_entity_id": "entity/mvp3/a",
+            "schema": "planet_simulator.p6_closure_view.v1"
+          },
+          "derived_only": true,
+          "identity_binding_revision": 1,
+          "last_input_sequence": 2,
+          "last_operation_id": "operation/mvp3/live/a/2",
+          "logical_player_id": "player/mvp3/a",
+          "manifest_checksum": "43b91562703b2190417ff1d074f8571e7ce8283260847b14cb68658b2523c580",
+          "player_entity_id": "entity/mvp3/a",
+          "private_canonical_truth": false,
+          "schema": "distributed_world_simulator.v0_sm1_player_carrying_manifest.v1"
+        },
+        "before": {
+          "canonical_identity_owner": "networked-gameplay/player-ownership",
+          "canonical_input_owner": "nx/input-sequence",
+          "canonical_replay_owner": "replay/m6-durable-replay",
+          "captured_after_source_freeze": true,
+          "closure_view": {
+            "canonical_view": {
+              "carried_operations": [
+                "operation/mvp3/live/a/1"
+              ],
+              "declared_domains": [
+                {
+                  "domain_id": "p6-domain/construction-builds",
+                  "persistence_replay": true,
+                  "reconnect_restore": true,
+                  "transport_path": "GATEWAY_ONLY",
+                  "write_authority": "SERVER_ONLY"
+                },
+                {
+                  "domain_id": "p6-domain/equipment-tool-slots",
+                  "persistence_replay": true,
+                  "reconnect_restore": true,
+                  "transport_path": "GATEWAY_ONLY",
+                  "write_authority": "SERVER_ONLY"
+                },
+                {
+                  "domain_id": "p6-domain/interaction-operation-ledger",
+                  "persistence_replay": true,
+                  "reconnect_restore": true,
+                  "transport_path": "GATEWAY_ONLY",
+                  "write_authority": "SERVER_ONLY"
+                },
+                {
+                  "domain_id": "p6-domain/item-inventory",
+                  "persistence_replay": true,
+                  "reconnect_restore": true,
+                  "transport_path": "GATEWAY_ONLY",
+                  "write_authority": "SERVER_ONLY"
+                },
+                {
+                  "domain_id": "p6-domain/outpost-world-state",
+                  "persistence_replay": true,
+                  "reconnect_restore": true,
+                  "transport_path": "GATEWAY_ONLY",
+                  "write_authority": "SERVER_ONLY"
+                },
+                {
+                  "domain_id": "p6-domain/player-identity-bindings",
+                  "persistence_replay": true,
+                  "reconnect_restore": true,
+                  "transport_path": "GATEWAY_ONLY",
+                  "write_authority": "SERVER_ONLY"
+                }
+              ],
+              "identity_binding_revision": 1,
+              "logical_player_id": "player/mvp3/a",
+              "player_entity_id": "entity/mvp3/a",
+              "schema": "planet_simulator.p6_closure_view.v1"
+            },
+            "carried_operations": [
+              "operation/mvp3/live/a/1"
+            ],
+            "declared_domains": [
+              {
+                "domain_id": "p6-domain/construction-builds",
+                "persistence_replay": true,
+                "reconnect_restore": true,
+                "transport_path": "GATEWAY_ONLY",
+                "write_authority": "SERVER_ONLY"
+              },
+              {
+                "domain_id": "p6-domain/equipment-tool-slots",
+                "persistence_replay": true,
+                "reconnect_restore": true,
+                "transport_path": "GATEWAY_ONLY",
+                "write_authority": "SERVER_ONLY"
+              },
+              {
+                "domain_id": "p6-domain/interaction-operation-ledger",
+                "persistence_replay": true,
+                "reconnect_restore": true,
+                "transport_path": "GATEWAY_ONLY",
+                "write_authority": "SERVER_ONLY"
+              },
+              {
+                "domain_id": "p6-domain/item-inventory",
+                "persistence_replay": true,
+                "reconnect_restore": true,
+                "transport_path": "GATEWAY_ONLY",
+                "write_authority": "SERVER_ONLY"
+              },
+              {
+                "domain_id": "p6-domain/outpost-world-state",
+                "persistence_replay": true,
+                "reconnect_restore": true,
+                "transport_path": "GATEWAY_ONLY",
+                "write_authority": "SERVER_ONLY"
+              },
+              {
+                "domain_id": "p6-domain/player-identity-bindings",
+                "persistence_replay": true,
+                "reconnect_restore": true,
+                "transport_path": "GATEWAY_ONLY",
+                "write_authority": "SERVER_ONLY"
+              }
+            ],
+            "identity_binding_revision": 1,
+            "logical_player_id": "player/mvp3/a",
+            "player_entity_id": "entity/mvp3/a",
+            "schema": "planet_simulator.p6_closure_view.v1"
+          },
+          "derived_only": true,
+          "identity_binding_revision": 1,
+          "last_input_sequence": 1,
+          "last_operation_id": "operation/mvp3/live/a/1",
+          "logical_player_id": "player/mvp3/a",
+          "manifest_checksum": "307965975faa2e1981fe57fb8e10ed026e50eada6ee3462f90216a102634d604",
+          "player_entity_id": "entity/mvp3/a",
+          "private_canonical_truth": false,
+          "schema": "distributed_world_simulator.v0_sm1_player_carrying_manifest.v1",
+          "source_authority_id": "authority/a",
+          "source_epoch": 1,
+          "target_authority_id": "authority/b",
+          "target_epoch": 2,
+          "transfer_id": "transfer/mvp3/a-out"
+        },
+        "committed_warm_checksum": "02fc06bdb45edfd798d6072a25ca63aea7657e7c21de420e6f4d3f17bdf80fb4",
+        "composite_warm_checksum": "02fc06bdb45edfd798d6072a25ca63aea7657e7c21de420e6f4d3f17bdf80fb4",
+        "target_authority_id": "authority/b",
+        "target_epoch": 2,
+        "warm_chain_mode": "DIRECT_PLAYER_COMMIT"
+      },
+      "commit_token": "7a563b179a2157d14c20cddca13e669ca0f28f018dc239ba178fde8a63ca2e22",
+      "packet": {
+        "backend_authority_epoch": 1,
+        "carrying_manifest": {
+          "canonical_identity_owner": "networked-gameplay/player-ownership",
+          "canonical_input_owner": "nx/input-sequence",
+          "canonical_replay_owner": "replay/m6-durable-replay",
+          "captured_after_source_freeze": true,
+          "closure_view": {
+            "canonical_view": {
+              "carried_operations": [
+                "operation/mvp3/live/a/1"
+              ],
+              "declared_domains": [
+                {
+                  "domain_id": "p6-domain/construction-builds",
+                  "persistence_replay": true,
+                  "reconnect_restore": true,
+                  "transport_path": "GATEWAY_ONLY",
+                  "write_authority": "SERVER_ONLY"
+                },
+                {
+                  "domain_id": "p6-domain/equipment-tool-slots",
+                  "persistence_replay": true,
+                  "reconnect_restore": true,
+                  "transport_path": "GATEWAY_ONLY",
+                  "write_authority": "SERVER_ONLY"
+                },
+                {
+                  "domain_id": "p6-domain/interaction-operation-ledger",
+                  "persistence_replay": true,
+                  "reconnect_restore": true,
+                  "transport_path": "GATEWAY_ONLY",
+                  "write_authority": "SERVER_ONLY"
+                },
+                {
+                  "domain_id": "p6-domain/item-inventory",
+                  "persistence_replay": true,
+                  "reconnect_restore": true,
+                  "transport_path": "GATEWAY_ONLY",
+                  "write_authority": "SERVER_ONLY"
+                },
+                {
+                  "domain_id": "p6-domain/outpost-world-state",
+                  "persistence_replay": true,
+                  "reconnect_restore": true,
+                  "transport_path": "GATEWAY_ONLY",
+                  "write_authority": "SERVER_ONLY"
+                },
+                {
+                  "domain_id": "p6-domain/player-identity-bindings",
+                  "persistence_replay": true,
+                  "reconnect_restore": true,
+                  "transport_path": "GATEWAY_ONLY",
+                  "write_authority": "SERVER_ONLY"
+                }
+              ],
+              "identity_binding_revision": 1,
+              "logical_player_id": "player/mvp3/a",
+              "player_entity_id": "entity/mvp3/a",
+              "schema": "planet_simulator.p6_closure_view.v1"
+            },
+            "carried_operations": [
+              "operation/mvp3/live/a/1"
+            ],
+            "declared_domains": [
+              {
+                "domain_id": "p6-domain/construction-builds",
+                "persistence_replay": true,
+                "reconnect_restore": true,
+                "transport_path": "GATEWAY_ONLY",
+                "write_authority": "SERVER_ONLY"
+              },
+              {
+                "domain_id": "p6-domain/equipment-tool-slots",
+                "persistence_replay": true,
+                "reconnect_restore": true,
+                "transport_path": "GATEWAY_ONLY",
+                "write_authority": "SERVER_ONLY"
+              },
+              {
+                "domain_id": "p6-domain/interaction-operation-ledger",
+                "persistence_replay": true,
+                "reconnect_restore": true,
+                "transport_path": "GATEWAY_ONLY",
+                "write_authority": "SERVER_ONLY"
+              },
+              {
+                "domain_id": "p6-domain/item-inventory",
+                "persistence_replay": true,
+                "reconnect_restore": true,
+                "transport_path": "GATEWAY_ONLY",
+                "write_authority": "SERVER_ONLY"
+              },
+              {
+                "domain_id": "p6-domain/outpost-world-state",
+                "persistence_replay": true,
+                "reconnect_restore": true,
+                "transport_path": "GATEWAY_ONLY",
+                "write_authority": "SERVER_ONLY"
+              },
+              {
+                "domain_id": "p6-domain/player-identity-bindings",
+                "persistence_replay": true,
+                "reconnect_restore": true,
+                "transport_path": "GATEWAY_ONLY",
+                "write_authority": "SERVER_ONLY"
+              }
+            ],
+            "identity_binding_revision": 1,
+            "logical_player_id": "player/mvp3/a",
+            "player_entity_id": "entity/mvp3/a",
+            "schema": "planet_simulator.p6_closure_view.v1"
+          },
+          "derived_only": true,
+          "identity_binding_revision": 1,
+          "last_input_sequence": 1,
+          "last_operation_id": "operation/mvp3/live/a/1",
+          "logical_player_id": "player/mvp3/a",
+          "manifest_checksum": "307965975faa2e1981fe57fb8e10ed026e50eada6ee3462f90216a102634d604",
+          "player_entity_id": "entity/mvp3/a",
+          "private_canonical_truth": false,
+          "schema": "distributed_world_simulator.v0_sm1_player_carrying_manifest.v1",
+          "source_authority_id": "authority/a",
+          "source_epoch": 1,
+          "target_authority_id": "authority/b",
+          "target_epoch": 2,
+          "transfer_id": "transfer/mvp3/a-out"
+        },
+        "checksum": "104eef65842eb61236a3b752aefe814ae6ea50ff29382f31a569024b663cc74f",
+        "item_payload_policy": "MVP3_EMPTY_CARRY_ONLY",
+        "logical_player_id": "a",
+        "ownership": {
+          "connected": true,
+          "joined_tick": 1,
+          "left_tick": 0,
+          "logical_player_id": "a",
+          "ownership_epoch": 1,
+          "player_entity_id": "player/a",
+          "transport_session_id": "transport-session/mvp3/a"
+        },
+        "player": {
+          "connected": true,
+          "flashlight_enabled": false,
+          "inventory": [],
+          "last_input_sequence": 1,
+          "logical_player_id": "a",
+          "orientation_yaw": 1.5707963267948966,
+          "ownership_epoch": 1,
+          "player_entity_id": "player/a",
+          "position": {
+            "x": -4.75,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "state_revision": 2,
+          "transport_session_id": "transport-session/mvp3/a",
+          "velocity": {
+            "x": 0.25,
+            "y": 0.0,
+            "z": 0.0
+          }
+        },
+        "replay": {
+          "operation/mvp3/live/a/1": {
+            "fingerprint": "71dda6beec9b2f89c19eb56315a7c474c27a5846145a1c64f17adbf9aa690917",
+            "live_player_id": "a",
+            "result": {
+              "details": {
+                "player": {
+                  "connected": true,
+                  "flashlight_enabled": false,
+                  "inventory": [],
+                  "last_input_sequence": 1,
+                  "logical_player_id": "a",
+                  "orientation_yaw": 1.5707963267948966,
+                  "ownership_epoch": 1,
+                  "player_entity_id": "player/a",
+                  "position": {
+                    "x": -4.75,
+                    "y": 0.0,
+                    "z": 0.0
+                  },
+                  "state_revision": 2,
+                  "transport_session_id": "transport-session/mvp3/a",
+                  "velocity": {
+                    "x": 0.25,
+                    "y": 0.0,
+                    "z": 0.0
+                  }
+                }
+              },
+              "error_code": "",
+              "success": true
+            },
+            "source_result_checksum": "0f48ecce4f3f5718d4bb84ac6a738fc433c31cb6ec50722116a2d7af1fd9153d"
+          }
+        },
+        "schema": "distributed_world_simulator.mvp3_live_player_export.v1",
+        "source_authority_id": "authority/a",
+        "source_epoch": 1,
+        "target_authority_id": "authority/b",
+        "target_epoch": 2,
+        "transfer_id": "transfer/mvp3/a-out"
+      },
+      "player": "a",
+      "source": "authority/a",
+      "source_epoch": 1,
+      "target": "authority/b",
+      "target_epoch": 2,
+      "transfer_id": "transfer/mvp3/a-out"
+    },
+    {
+      "after": {
+        "connected": true,
+        "flashlight_enabled": false,
+        "inventory": [],
+        "last_input_sequence": 3,
+        "logical_player_id": "a",
+        "orientation_yaw": 1.5707963267948966,
+        "ownership_epoch": 1,
+        "player_entity_id": "player/a",
+        "position": {
+          "x": -4.25,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "state_revision": 4,
+        "transport_session_id": "transport-session/mvp3/a",
+        "velocity": {
+          "x": 0.25,
+          "y": 0.0,
+          "z": 0.0
+        }
+      },
+      "before": {
+        "connected": true,
+        "flashlight_enabled": false,
+        "inventory": [],
+        "last_input_sequence": 2,
+        "logical_player_id": "a",
+        "orientation_yaw": 1.5707963267948966,
+        "ownership_epoch": 1,
+        "player_entity_id": "player/a",
+        "position": {
+          "x": -4.5,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "state_revision": 3,
+        "transport_session_id": "transport-session/mvp3/a",
+        "velocity": {
+          "x": 0.25,
+          "y": 0.0,
+          "z": 0.0
+        }
+      },
+      "carrying": {
+        "after": {
+          "canonical_identity_owner": "networked-gameplay/player-ownership",
+          "canonical_input_owner": "nx/input-sequence",
+          "canonical_replay_owner": "replay/m6-durable-replay",
+          "closure_view": {
+            "canonical_view": {
+              "carried_operations": [
+                "operation/mvp3/live/a/1",
+                "operation/mvp3/live/a/2",
+                "operation/mvp3/live/a/3"
+              ],
+              "declared_domains": [
+                {
+                  "domain_id": "p6-domain/construction-builds",
+                  "persistence_replay": true,
+                  "reconnect_restore": true,
+                  "transport_path": "GATEWAY_ONLY",
+                  "write_authority": "SERVER_ONLY"
+                },
+                {
+                  "domain_id": "p6-domain/equipment-tool-slots",
+                  "persistence_replay": true,
+                  "reconnect_restore": true,
+                  "transport_path": "GATEWAY_ONLY",
+                  "write_authority": "SERVER_ONLY"
+                },
+                {
+                  "domain_id": "p6-domain/interaction-operation-ledger",
+                  "persistence_replay": true,
+                  "reconnect_restore": true,
+                  "transport_path": "GATEWAY_ONLY",
+                  "write_authority": "SERVER_ONLY"
+                },
+                {
+                  "domain_id": "p6-domain/item-inventory",
+                  "persistence_replay": true,
+                  "reconnect_restore": true,
+                  "transport_path": "GATEWAY_ONLY",
+                  "write_authority": "SERVER_ONLY"
+                },
+                {
+                  "domain_id": "p6-domain/outpost-world-state",
+                  "persistence_replay": true,
+                  "reconnect_restore": true,
+                  "transport_path": "GATEWAY_ONLY",
+                  "write_authority": "SERVER_ONLY"
+                },
+                {
+                  "domain_id": "p6-domain/player-identity-bindings",
+                  "persistence_replay": true,
+                  "reconnect_restore": true,
+                  "transport_path": "GATEWAY_ONLY",
+                  "write_authority": "SERVER_ONLY"
+                }
+              ],
+              "identity_binding_revision": 1,
+              "logical_player_id": "player/mvp3/a",
+              "player_entity_id": "entity/mvp3/a",
+              "schema": "planet_simulator.p6_closure_view.v1"
+            },
+            "carried_operations": [
+              "operation/mvp3/live/a/1",
+              "operation/mvp3/live/a/2",
+              "operation/mvp3/live/a/3"
+            ],
+            "declared_domains": [
+              {
+                "domain_id": "p6-domain/construction-builds",
+                "persistence_replay": true,
+                "reconnect_restore": true,
+                "transport_path": "GATEWAY_ONLY",
+                "write_authority": "SERVER_ONLY"
+              },
+              {
+                "domain_id": "p6-domain/equipment-tool-slots",
+                "persistence_replay": true,
+                "reconnect_restore": true,
+                "transport_path": "GATEWAY_ONLY",
+                "write_authority": "SERVER_ONLY"
+              },
+              {
+                "domain_id": "p6-domain/interaction-operation-ledger",
+                "persistence_replay": true,
+                "reconnect_restore": true,
+                "transport_path": "GATEWAY_ONLY",
+                "write_authority": "SERVER_ONLY"
+              },
+              {
+                "domain_id": "p6-domain/item-inventory",
+                "persistence_replay": true,
+                "reconnect_restore": true,
+                "transport_path": "GATEWAY_ONLY",
+                "write_authority": "SERVER_ONLY"
+              },
+              {
+                "domain_id": "p6-domain/outpost-world-state",
+                "persistence_replay": true,
+                "reconnect_restore": true,
+                "transport_path": "GATEWAY_ONLY",
+                "write_authority": "SERVER_ONLY"
+              },
+              {
+                "domain_id": "p6-domain/player-identity-bindings",
+                "persistence_replay": true,
+                "reconnect_restore": true,
+                "transport_path": "GATEWAY_ONLY",
+                "write_authority": "SERVER_ONLY"
+              }
+            ],
+            "identity_binding_revision": 1,
+            "logical_player_id": "player/mvp3/a",
+            "player_entity_id": "entity/mvp3/a",
+            "schema": "planet_simulator.p6_closure_view.v1"
+          },
+          "derived_only": true,
+          "identity_binding_revision": 1,
+          "last_input_sequence": 3,
+          "last_operation_id": "operation/mvp3/live/a/3",
+          "logical_player_id": "player/mvp3/a",
+          "manifest_checksum": "8f2482fbec4397c72f043b0568511995588d2890fbdf2182c00d6c5c2a7c5c8b",
+          "player_entity_id": "entity/mvp3/a",
+          "private_canonical_truth": false,
+          "schema": "distributed_world_simulator.v0_sm1_player_carrying_manifest.v1"
+        },
+        "before": {
+          "canonical_identity_owner": "networked-gameplay/player-ownership",
+          "canonical_input_owner": "nx/input-sequence",
+          "canonical_replay_owner": "replay/m6-durable-replay",
+          "captured_after_source_freeze": true,
+          "closure_view": {
+            "canonical_view": {
+              "carried_operations": [
+                "operation/mvp3/live/a/1",
+                "operation/mvp3/live/a/2"
+              ],
+              "declared_domains": [
+                {
+                  "domain_id": "p6-domain/construction-builds",
+                  "persistence_replay": true,
+                  "reconnect_restore": true,
+                  "transport_path": "GATEWAY_ONLY",
+                  "write_authority": "SERVER_ONLY"
+                },
+                {
+                  "domain_id": "p6-domain/equipment-tool-slots",
+                  "persistence_replay": true,
+                  "reconnect_restore": true,
+                  "transport_path": "GATEWAY_ONLY",
+                  "write_authority": "SERVER_ONLY"
+                },
+                {
+                  "domain_id": "p6-domain/interaction-operation-ledger",
+                  "persistence_replay": true,
+                  "reconnect_restore": true,
+                  "transport_path": "GATEWAY_ONLY",
+                  "write_authority": "SERVER_ONLY"
+                },
+                {
+                  "domain_id": "p6-domain/item-inventory",
+                  "persistence_replay": true,
+                  "reconnect_restore": true,
+                  "transport_path": "GATEWAY_ONLY",
+                  "write_authority": "SERVER_ONLY"
+                },
+                {
+                  "domain_id": "p6-domain/outpost-world-state",
+                  "persistence_replay": true,
+                  "reconnect_restore": true,
+                  "transport_path": "GATEWAY_ONLY",
+                  "write_authority": "SERVER_ONLY"
+                },
+                {
+                  "domain_id": "p6-domain/player-identity-bindings",
+                  "persistence_replay": true,
+                  "reconnect_restore": true,
+                  "transport_path": "GATEWAY_ONLY",
+                  "write_authority": "SERVER_ONLY"
+                }
+              ],
+              "identity_binding_revision": 1,
+              "logical_player_id": "player/mvp3/a",
+              "player_entity_id": "entity/mvp3/a",
+              "schema": "planet_simulator.p6_closure_view.v1"
+            },
+            "carried_operations": [
+              "operation/mvp3/live/a/1",
+              "operation/mvp3/live/a/2"
+            ],
+            "declared_domains": [
+              {
+                "domain_id": "p6-domain/construction-builds",
+                "persistence_replay": true,
+                "reconnect_restore": true,
+                "transport_path": "GATEWAY_ONLY",
+                "write_authority": "SERVER_ONLY"
+              },
+              {
+                "domain_id": "p6-domain/equipment-tool-slots",
+                "persistence_replay": true,
+                "reconnect_restore": true,
+                "transport_path": "GATEWAY_ONLY",
+                "write_authority": "SERVER_ONLY"
+              },
+              {
+                "domain_id": "p6-domain/interaction-operation-ledger",
+                "persistence_replay": true,
+                "reconnect_restore": true,
+                "transport_path": "GATEWAY_ONLY",
+                "write_authority": "SERVER_ONLY"
+              },
+              {
+                "domain_id": "p6-domain/item-inventory",
+                "persistence_replay": true,
+                "reconnect_restore": true,
+                "transport_path": "GATEWAY_ONLY",
+                "write_authority": "SERVER_ONLY"
+              },
+              {
+                "domain_id": "p6-domain/outpost-world-state",
+                "persistence_replay": true,
+                "reconnect_restore": true,
+                "transport_path": "GATEWAY_ONLY",
+                "write_authority": "SERVER_ONLY"
+              },
+              {
+                "domain_id": "p6-domain/player-identity-bindings",
+                "persistence_replay": true,
+                "reconnect_restore": true,
+                "transport_path": "GATEWAY_ONLY",
+                "write_authority": "SERVER_ONLY"
+              }
+            ],
+            "identity_binding_revision": 1,
+            "logical_player_id": "player/mvp3/a",
+            "player_entity_id": "entity/mvp3/a",
+            "schema": "planet_simulator.p6_closure_view.v1"
+          },
+          "derived_only": true,
+          "identity_binding_revision": 1,
+          "last_input_sequence": 2,
+          "last_operation_id": "operation/mvp3/live/a/2",
+          "logical_player_id": "player/mvp3/a",
+          "manifest_checksum": "d7372db6c7aebb8c239531e0395c0895064ee96b730b712e9599910216785d69",
+          "player_entity_id": "entity/mvp3/a",
+          "private_canonical_truth": false,
+          "schema": "distributed_world_simulator.v0_sm1_player_carrying_manifest.v1",
+          "source_authority_id": "authority/b",
+          "source_epoch": 2,
+          "target_authority_id": "authority/a",
+          "target_epoch": 3,
+          "transfer_id": "transfer/mvp3/a-back"
+        },
+        "committed_warm_checksum": "b1598332b8a8ba59ea7377bba50d19d12d639cab1e3a6ac8e9a27f4e3d5169bf",
+        "composite_warm_checksum": "b1598332b8a8ba59ea7377bba50d19d12d639cab1e3a6ac8e9a27f4e3d5169bf",
+        "target_authority_id": "authority/a",
+        "target_epoch": 3,
+        "warm_chain_mode": "DIRECT_PLAYER_COMMIT"
+      },
+      "commit_token": "afc1a68ebb88284469c60b8936064550cad1db99c33e7be215197fb20c02eb38",
+      "packet": {
+        "backend_authority_epoch": 1,
+        "carrying_manifest": {
+          "canonical_identity_owner": "networked-gameplay/player-ownership",
+          "canonical_input_owner": "nx/input-sequence",
+          "canonical_replay_owner": "replay/m6-durable-replay",
+          "captured_after_source_freeze": true,
+          "closure_view": {
+            "canonical_view": {
+              "carried_operations": [
+                "operation/mvp3/live/a/1",
+                "operation/mvp3/live/a/2"
+              ],
+              "declared_domains": [
+                {
+                  "domain_id": "p6-domain/construction-builds",
+                  "persistence_replay": true,
+                  "reconnect_restore": true,
+                  "transport_path": "GATEWAY_ONLY",
+                  "write_authority": "SERVER_ONLY"
+                },
+                {
+                  "domain_id": "p6-domain/equipment-tool-slots",
+                  "persistence_replay": true,
+                  "reconnect_restore": true,
+                  "transport_path": "GATEWAY_ONLY",
+                  "write_authority": "SERVER_ONLY"
+                },
+                {
+                  "domain_id": "p6-domain/interaction-operation-ledger",
+                  "persistence_replay": true,
+                  "reconnect_restore": true,
+                  "transport_path": "GATEWAY_ONLY",
+                  "write_authority": "SERVER_ONLY"
+                },
+                {
+                  "domain_id": "p6-domain/item-inventory",
+                  "persistence_replay": true,
+                  "reconnect_restore": true,
+                  "transport_path": "GATEWAY_ONLY",
+                  "write_authority": "SERVER_ONLY"
+                },
+                {
+                  "domain_id": "p6-domain/outpost-world-state",
+                  "persistence_replay": true,
+                  "reconnect_restore": true,
+                  "transport_path": "GATEWAY_ONLY",
+                  "write_authority": "SERVER_ONLY"
+                },
+                {
+                  "domain_id": "p6-domain/player-identity-bindings",
+                  "persistence_replay": true,
+                  "reconnect_restore": true,
+                  "transport_path": "GATEWAY_ONLY",
+                  "write_authority": "SERVER_ONLY"
+                }
+              ],
+              "identity_binding_revision": 1,
+              "logical_player_id": "player/mvp3/a",
+              "player_entity_id": "entity/mvp3/a",
+              "schema": "planet_simulator.p6_closure_view.v1"
+            },
+            "carried_operations": [
+              "operation/mvp3/live/a/1",
+              "operation/mvp3/live/a/2"
+            ],
+            "declared_domains": [
+              {
+                "domain_id": "p6-domain/construction-builds",
+                "persistence_replay": true,
+                "reconnect_restore": true,
+                "transport_path": "GATEWAY_ONLY",
+                "write_authority": "SERVER_ONLY"
+              },
+              {
+                "domain_id": "p6-domain/equipment-tool-slots",
+                "persistence_replay": true,
+                "reconnect_restore": true,
+                "transport_path": "GATEWAY_ONLY",
+                "write_authority": "SERVER_ONLY"
+              },
+              {
+                "domain_id": "p6-domain/interaction-operation-ledger",
+                "persistence_replay": true,
+                "reconnect_restore": true,
+                "transport_path": "GATEWAY_ONLY",
+                "write_authority": "SERVER_ONLY"
+              },
+              {
+                "domain_id": "p6-domain/item-inventory",
+                "persistence_replay": true,
+                "reconnect_restore": true,
+                "transport_path": "GATEWAY_ONLY",
+                "write_authority": "SERVER_ONLY"
+              },
+              {
+                "domain_id": "p6-domain/outpost-world-state",
+                "persistence_replay": true,
+                "reconnect_restore": true,
+                "transport_path": "GATEWAY_ONLY",
+                "write_authority": "SERVER_ONLY"
+              },
+              {
+                "domain_id": "p6-domain/player-identity-bindings",
+                "persistence_replay": true,
+                "reconnect_restore": true,
+                "transport_path": "GATEWAY_ONLY",
+                "write_authority": "SERVER_ONLY"
+              }
+            ],
+            "identity_binding_revision": 1,
+            "logical_player_id": "player/mvp3/a",
+            "player_entity_id": "entity/mvp3/a",
+            "schema": "planet_simulator.p6_closure_view.v1"
+          },
+          "derived_only": true,
+          "identity_binding_revision": 1,
+          "last_input_sequence": 2,
+          "last_operation_id": "operation/mvp3/live/a/2",
+          "logical_player_id": "player/mvp3/a",
+          "manifest_checksum": "d7372db6c7aebb8c239531e0395c0895064ee96b730b712e9599910216785d69",
+          "player_entity_id": "entity/mvp3/a",
+          "private_canonical_truth": false,
+          "schema": "distributed_world_simulator.v0_sm1_player_carrying_manifest.v1",
+          "source_authority_id": "authority/b",
+          "source_epoch": 2,
+          "target_authority_id": "authority/a",
+          "target_epoch": 3,
+          "transfer_id": "transfer/mvp3/a-back"
+        },
+        "checksum": "435a1e307fc08dfe8804c9d72d995ac6c7eb3d995c0c8f3c1f8f853de15696fb",
+        "item_payload_policy": "MVP3_EMPTY_CARRY_ONLY",
+        "logical_player_id": "a",
+        "ownership": {
+          "connected": true,
+          "joined_tick": 1,
+          "left_tick": 0,
+          "logical_player_id": "a",
+          "ownership_epoch": 1,
+          "player_entity_id": "player/a",
+          "transport_session_id": "transport-session/mvp3/a"
+        },
+        "player": {
+          "connected": true,
+          "flashlight_enabled": false,
+          "inventory": [],
+          "last_input_sequence": 2,
+          "logical_player_id": "a",
+          "orientation_yaw": 1.5707963267948966,
+          "ownership_epoch": 1,
+          "player_entity_id": "player/a",
+          "position": {
+            "x": -4.5,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "state_revision": 3,
+          "transport_session_id": "transport-session/mvp3/a",
+          "velocity": {
+            "x": 0.25,
+            "y": 0.0,
+            "z": 0.0
+          }
+        },
+        "replay": {
+          "operation/mvp3/live/a/1": {
+            "fingerprint": "71dda6beec9b2f89c19eb56315a7c474c27a5846145a1c64f17adbf9aa690917",
+            "live_player_id": "a",
+            "result": {
+              "details": {
+                "player": {
+                  "connected": true,
+                  "flashlight_enabled": false,
+                  "inventory": [],
+                  "last_input_sequence": 1.0,
+                  "logical_player_id": "a",
+                  "orientation_yaw": 1.5707963267948966,
+                  "ownership_epoch": 1.0,
+                  "player_entity_id": "player/a",
+                  "position": {
+                    "x": -4.75,
+                    "y": 0.0,
+                    "z": 0.0
+                  },
+                  "state_revision": 2.0,
+                  "transport_session_id": "transport-session/mvp3/a",
+                  "velocity": {
+                    "x": 0.25,
+                    "y": 0.0,
+                    "z": 0.0
+                  }
+                }
+              },
+              "error_code": "",
+              "success": true
+            },
+            "source_result_checksum": "0f48ecce4f3f5718d4bb84ac6a738fc433c31cb6ec50722116a2d7af1fd9153d"
+          },
+          "operation/mvp3/live/a/2": {
+            "fingerprint": "f2a109c05bc56246cbe82dc18df8cd1a3f57163802a3ce5c89a65615572036e9",
+            "live_player_id": "a",
+            "result": {
+              "details": {
+                "player": {
+                  "connected": true,
+                  "flashlight_enabled": false,
+                  "inventory": [],
+                  "last_input_sequence": 2,
+                  "logical_player_id": "a",
+                  "orientation_yaw": 1.5707963267948966,
+                  "ownership_epoch": 1,
+                  "player_entity_id": "player/a",
+                  "position": {
+                    "x": -4.5,
+                    "y": 0.0,
+                    "z": 0.0
+                  },
+                  "state_revision": 3,
+                  "transport_session_id": "transport-session/mvp3/a",
+                  "velocity": {
+                    "x": 0.25,
+                    "y": 0.0,
+                    "z": 0.0
+                  }
+                }
+              },
+              "error_code": "",
+              "success": true
+            },
+            "source_result_checksum": "025559f2a68384d295e5179f8da8538c94dd8947b565789ea2ade487bc42318e"
+          }
+        },
+        "schema": "distributed_world_simulator.mvp3_live_player_export.v1",
+        "source_authority_id": "authority/b",
+        "source_epoch": 2,
+        "target_authority_id": "authority/a",
+        "target_epoch": 3,
+        "transfer_id": "transfer/mvp3/a-back"
+      },
+      "player": "a",
+      "source": "authority/b",
+      "source_epoch": 2,
+      "target": "authority/a",
+      "target_epoch": 3,
+      "transfer_id": "transfer/mvp3/a-back"
+    },
+    {
+      "after": {
+        "connected": true,
+        "flashlight_enabled": false,
+        "inventory": [],
+        "last_input_sequence": 4,
+        "logical_player_id": "b",
+        "orientation_yaw": 1.5707963267948966,
+        "ownership_epoch": 1,
+        "player_entity_id": "player/b",
+        "position": {
+          "x": 5.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "state_revision": 5,
+        "transport_session_id": "transport-session/mvp3/b",
+        "velocity": {
+          "x": 0.25,
+          "y": 0.0,
+          "z": 0.0
+        }
+      },
+      "before": {
+        "connected": true,
+        "flashlight_enabled": false,
+        "inventory": [],
+        "last_input_sequence": 3,
+        "logical_player_id": "b",
+        "orientation_yaw": -1.5707963267948966,
+        "ownership_epoch": 1,
+        "player_entity_id": "player/b",
+        "position": {
+          "x": 4.75,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "state_revision": 4,
+        "transport_session_id": "transport-session/mvp3/b",
+        "velocity": {
+          "x": -0.25,
+          "y": 0.0,
+          "z": 0.0
+        }
+      },
+      "carrying": {
+        "after": {
+          "canonical_identity_owner": "networked-gameplay/player-ownership",
+          "canonical_input_owner": "nx/input-sequence",
+          "canonical_replay_owner": "replay/m6-durable-replay",
+          "closure_view": {
+            "canonical_view": {
+              "carried_operations": [
+                "operation/mvp3/live/b/1",
+                "operation/mvp3/live/b/2",
+                "operation/mvp3/live/b/3",
+                "operation/mvp3/live/b/4"
+              ],
+              "declared_domains": [
+                {
+                  "domain_id": "p6-domain/construction-builds",
+                  "persistence_replay": true,
+                  "reconnect_restore": true,
+                  "transport_path": "GATEWAY_ONLY",
+                  "write_authority": "SERVER_ONLY"
+                },
+                {
+                  "domain_id": "p6-domain/equipment-tool-slots",
+                  "persistence_replay": true,
+                  "reconnect_restore": true,
+                  "transport_path": "GATEWAY_ONLY",
+                  "write_authority": "SERVER_ONLY"
+                },
+                {
+                  "domain_id": "p6-domain/interaction-operation-ledger",
+                  "persistence_replay": true,
+                  "reconnect_restore": true,
+                  "transport_path": "GATEWAY_ONLY",
+                  "write_authority": "SERVER_ONLY"
+                },
+                {
+                  "domain_id": "p6-domain/item-inventory",
+                  "persistence_replay": true,
+                  "reconnect_restore": true,
+                  "transport_path": "GATEWAY_ONLY",
+                  "write_authority": "SERVER_ONLY"
+                },
+                {
+                  "domain_id": "p6-domain/outpost-world-state",
+                  "persistence_replay": true,
+                  "reconnect_restore": true,
+                  "transport_path": "GATEWAY_ONLY",
+                  "write_authority": "SERVER_ONLY"
+                },
+                {
+                  "domain_id": "p6-domain/player-identity-bindings",
+                  "persistence_replay": true,
+                  "reconnect_restore": true,
+                  "transport_path": "GATEWAY_ONLY",
+                  "write_authority": "SERVER_ONLY"
+                }
+              ],
+              "identity_binding_revision": 1,
+              "logical_player_id": "player/mvp3/b",
+              "player_entity_id": "entity/mvp3/b",
+              "schema": "planet_simulator.p6_closure_view.v1"
+            },
+            "carried_operations": [
+              "operation/mvp3/live/b/1",
+              "operation/mvp3/live/b/2",
+              "operation/mvp3/live/b/3",
+              "operation/mvp3/live/b/4"
+            ],
+            "declared_domains": [
+              {
+                "domain_id": "p6-domain/construction-builds",
+                "persistence_replay": true,
+                "reconnect_restore": true,
+                "transport_path": "GATEWAY_ONLY",
+                "write_authority": "SERVER_ONLY"
+              },
+              {
+                "domain_id": "p6-domain/equipment-tool-slots",
+                "persistence_replay": true,
+                "reconnect_restore": true,
+                "transport_path": "GATEWAY_ONLY",
+                "write_authority": "SERVER_ONLY"
+              },
+              {
+                "domain_id": "p6-domain/interaction-operation-ledger",
+                "persistence_replay": true,
+                "reconnect_restore": true,
+                "transport_path": "GATEWAY_ONLY",
+                "write_authority": "SERVER_ONLY"
+              },
+              {
+                "domain_id": "p6-domain/item-inventory",
+                "persistence_replay": true,
+                "reconnect_restore": true,
+                "transport_path": "GATEWAY_ONLY",
+                "write_authority": "SERVER_ONLY"
+              },
+              {
+                "domain_id": "p6-domain/outpost-world-state",
+                "persistence_replay": true,
+                "reconnect_restore": true,
+                "transport_path": "GATEWAY_ONLY",
+                "write_authority": "SERVER_ONLY"
+              },
+              {
+                "domain_id": "p6-domain/player-identity-bindings",
+                "persistence_replay": true,
+                "reconnect_restore": true,
+                "transport_path": "GATEWAY_ONLY",
+                "write_authority": "SERVER_ONLY"
+              }
+            ],
+            "identity_binding_revision": 1,
+            "logical_player_id": "player/mvp3/b",
+            "player_entity_id": "entity/mvp3/b",
+            "schema": "planet_simulator.p6_closure_view.v1"
+          },
+          "derived_only": true,
+          "identity_binding_revision": 1,
+          "last_input_sequence": 4,
+          "last_operation_id": "operation/mvp3/live/b/4",
+          "logical_player_id": "player/mvp3/b",
+          "manifest_checksum": "5c88f0bb3db6804411dd3ed865a022c510761f7d49ac76b843a202e538803e73",
+          "player_entity_id": "entity/mvp3/b",
+          "private_canonical_truth": false,
+          "schema": "distributed_world_simulator.v0_sm1_player_carrying_manifest.v1"
+        },
+        "before": {
+          "canonical_identity_owner": "networked-gameplay/player-ownership",
+          "canonical_input_owner": "nx/input-sequence",
+          "canonical_replay_owner": "replay/m6-durable-replay",
+          "captured_after_source_freeze": true,
+          "closure_view": {
+            "canonical_view": {
+              "carried_operations": [
+                "operation/mvp3/live/b/1",
+                "operation/mvp3/live/b/2",
+                "operation/mvp3/live/b/3"
+              ],
+              "declared_domains": [
+                {
+                  "domain_id": "p6-domain/construction-builds",
+                  "persistence_replay": true,
+                  "reconnect_restore": true,
+                  "transport_path": "GATEWAY_ONLY",
+                  "write_authority": "SERVER_ONLY"
+                },
+                {
+                  "domain_id": "p6-domain/equipment-tool-slots",
+                  "persistence_replay": true,
+                  "reconnect_restore": true,
+                  "transport_path": "GATEWAY_ONLY",
+                  "write_authority": "SERVER_ONLY"
+                },
+                {
+                  "domain_id": "p6-domain/interaction-operation-ledger",
+                  "persistence_replay": true,
+                  "reconnect_restore": true,
+                  "transport_path": "GATEWAY_ONLY",
+                  "write_authority": "SERVER_ONLY"
+                },
+                {
+                  "domain_id": "p6-domain/item-inventory",
+                  "persistence_replay": true,
+                  "reconnect_restore": true,
+                  "transport_path": "GATEWAY_ONLY",
+                  "write_authority": "SERVER_ONLY"
+                },
+                {
+                  "domain_id": "p6-domain/outpost-world-state",
+                  "persistence_replay": true,
+                  "reconnect_restore": true,
+                  "transport_path": "GATEWAY_ONLY",
+                  "write_authority": "SERVER_ONLY"
+                },
+                {
+                  "domain_id": "p6-domain/player-identity-bindings",
+                  "persistence_replay": true,
+                  "reconnect_restore": true,
+                  "transport_path": "GATEWAY_ONLY",
+                  "write_authority": "SERVER_ONLY"
+                }
+              ],
+              "identity_binding_revision": 1,
+              "logical_player_id": "player/mvp3/b",
+              "player_entity_id": "entity/mvp3/b",
+              "schema": "planet_simulator.p6_closure_view.v1"
+            },
+            "carried_operations": [
+              "operation/mvp3/live/b/1",
+              "operation/mvp3/live/b/2",
+              "operation/mvp3/live/b/3"
+            ],
+            "declared_domains": [
+              {
+                "domain_id": "p6-domain/construction-builds",
+                "persistence_replay": true,
+                "reconnect_restore": true,
+                "transport_path": "GATEWAY_ONLY",
+                "write_authority": "SERVER_ONLY"
+              },
+              {
+                "domain_id": "p6-domain/equipment-tool-slots",
+                "persistence_replay": true,
+                "reconnect_restore": true,
+                "transport_path": "GATEWAY_ONLY",
+                "write_authority": "SERVER_ONLY"
+              },
+              {
+                "domain_id": "p6-domain/interaction-operation-ledger",
+                "persistence_replay": true,
+                "reconnect_restore": true,
+                "transport_path": "GATEWAY_ONLY",
+                "write_authority": "SERVER_ONLY"
+              },
+              {
+                "domain_id": "p6-domain/item-inventory",
+                "persistence_replay": true,
+                "reconnect_restore": true,
+                "transport_path": "GATEWAY_ONLY",
+                "write_authority": "SERVER_ONLY"
+              },
+              {
+                "domain_id": "p6-domain/outpost-world-state",
+                "persistence_replay": true,
+                "reconnect_restore": true,
+                "transport_path": "GATEWAY_ONLY",
+                "write_authority": "SERVER_ONLY"
+              },
+              {
+                "domain_id": "p6-domain/player-identity-bindings",
+                "persistence_replay": true,
+                "reconnect_restore": true,
+                "transport_path": "GATEWAY_ONLY",
+                "write_authority": "SERVER_ONLY"
+              }
+            ],
+            "identity_binding_revision": 1,
+            "logical_player_id": "player/mvp3/b",
+            "player_entity_id": "entity/mvp3/b",
+            "schema": "planet_simulator.p6_closure_view.v1"
+          },
+          "derived_only": true,
+          "identity_binding_revision": 1,
+          "last_input_sequence": 3,
+          "last_operation_id": "operation/mvp3/live/b/3",
+          "logical_player_id": "player/mvp3/b",
+          "manifest_checksum": "19c9e1b6b09105b7592bd54ab3c6686817e86dd4ab1e96af698373e27806fcac",
+          "player_entity_id": "entity/mvp3/b",
+          "private_canonical_truth": false,
+          "schema": "distributed_world_simulator.v0_sm1_player_carrying_manifest.v1",
+          "source_authority_id": "authority/a",
+          "source_epoch": 1,
+          "target_authority_id": "authority/b",
+          "target_epoch": 2,
+          "transfer_id": "transfer/mvp3/b-out"
+        },
+        "committed_warm_checksum": "559cded8376076ce51aeafa5c5e35dc984e5d4deb4c4189e8bfa8dc04c26dcc0",
+        "composite_warm_checksum": "559cded8376076ce51aeafa5c5e35dc984e5d4deb4c4189e8bfa8dc04c26dcc0",
+        "target_authority_id": "authority/b",
+        "target_epoch": 2,
+        "warm_chain_mode": "DIRECT_PLAYER_COMMIT"
+      },
+      "commit_token": "5154e7a06295efb9e3217752083c2c9072993b0a719e7f1e0e7d50c16f8aed51",
+      "packet": {
+        "backend_authority_epoch": 1,
+        "carrying_manifest": {
+          "canonical_identity_owner": "networked-gameplay/player-ownership",
+          "canonical_input_owner": "nx/input-sequence",
+          "canonical_replay_owner": "replay/m6-durable-replay",
+          "captured_after_source_freeze": true,
+          "closure_view": {
+            "canonical_view": {
+              "carried_operations": [
+                "operation/mvp3/live/b/1",
+                "operation/mvp3/live/b/2",
+                "operation/mvp3/live/b/3"
+              ],
+              "declared_domains": [
+                {
+                  "domain_id": "p6-domain/construction-builds",
+                  "persistence_replay": true,
+                  "reconnect_restore": true,
+                  "transport_path": "GATEWAY_ONLY",
+                  "write_authority": "SERVER_ONLY"
+                },
+                {
+                  "domain_id": "p6-domain/equipment-tool-slots",
+                  "persistence_replay": true,
+                  "reconnect_restore": true,
+                  "transport_path": "GATEWAY_ONLY",
+                  "write_authority": "SERVER_ONLY"
+                },
+                {
+                  "domain_id": "p6-domain/interaction-operation-ledger",
+                  "persistence_replay": true,
+                  "reconnect_restore": true,
+                  "transport_path": "GATEWAY_ONLY",
+                  "write_authority": "SERVER_ONLY"
+                },
+                {
+                  "domain_id": "p6-domain/item-inventory",
+                  "persistence_replay": true,
+                  "reconnect_restore": true,
+                  "transport_path": "GATEWAY_ONLY",
+                  "write_authority": "SERVER_ONLY"
+                },
+                {
+                  "domain_id": "p6-domain/outpost-world-state",
+                  "persistence_replay": true,
+                  "reconnect_restore": true,
+                  "transport_path": "GATEWAY_ONLY",
+                  "write_authority": "SERVER_ONLY"
+                },
+                {
+                  "domain_id": "p6-domain/player-identity-bindings",
+                  "persistence_replay": true,
+                  "reconnect_restore": true,
+                  "transport_path": "GATEWAY_ONLY",
+                  "write_authority": "SERVER_ONLY"
+                }
+              ],
+              "identity_binding_revision": 1,
+              "logical_player_id": "player/mvp3/b",
+              "player_entity_id": "entity/mvp3/b",
+              "schema": "planet_simulator.p6_closure_view.v1"
+            },
+            "carried_operations": [
+              "operation/mvp3/live/b/1",
+              "operation/mvp3/live/b/2",
+              "operation/mvp3/live/b/3"
+            ],
+            "declared_domains": [
+              {
+                "domain_id": "p6-domain/construction-builds",
+                "persistence_replay": true,
+                "reconnect_restore": true,
+                "transport_path": "GATEWAY_ONLY",
+                "write_authority": "SERVER_ONLY"
+              },
+              {
+                "domain_id": "p6-domain/equipment-tool-slots",
+                "persistence_replay": true,
+                "reconnect_restore": true,
+                "transport_path": "GATEWAY_ONLY",
+                "write_authority": "SERVER_ONLY"
+              },
+              {
+                "domain_id": "p6-domain/interaction-operation-ledger",
+                "persistence_replay": true,
+                "reconnect_restore": true,
+                "transport_path": "GATEWAY_ONLY",
+                "write_authority": "SERVER_ONLY"
+              },
+              {
+                "domain_id": "p6-domain/item-inventory",
+                "persistence_replay": true,
+                "reconnect_restore": true,
+                "transport_path": "GATEWAY_ONLY",
+                "write_authority": "SERVER_ONLY"
+              },
+              {
+                "domain_id": "p6-domain/outpost-world-state",
+                "persistence_replay": true,
+                "reconnect_restore": true,
+                "transport_path": "GATEWAY_ONLY",
+                "write_authority": "SERVER_ONLY"
+              },
+              {
+                "domain_id": "p6-domain/player-identity-bindings",
+                "persistence_replay": true,
+                "reconnect_restore": true,
+                "transport_path": "GATEWAY_ONLY",
+                "write_authority": "SERVER_ONLY"
+              }
+            ],
+            "identity_binding_revision": 1,
+            "logical_player_id": "player/mvp3/b",
+            "player_entity_id": "entity/mvp3/b",
+            "schema": "planet_simulator.p6_closure_view.v1"
+          },
+          "derived_only": true,
+          "identity_binding_revision": 1,
+          "last_input_sequence": 3,
+          "last_operation_id": "operation/mvp3/live/b/3",
+          "logical_player_id": "player/mvp3/b",
+          "manifest_checksum": "19c9e1b6b09105b7592bd54ab3c6686817e86dd4ab1e96af698373e27806fcac",
+          "player_entity_id": "entity/mvp3/b",
+          "private_canonical_truth": false,
+          "schema": "distributed_world_simulator.v0_sm1_player_carrying_manifest.v1",
+          "source_authority_id": "authority/a",
+          "source_epoch": 1,
+          "target_authority_id": "authority/b",
+          "target_epoch": 2,
+          "transfer_id": "transfer/mvp3/b-out"
+        },
+        "checksum": "956cb55f6e140c0a75a9d9432483fd6842aeb9ca3723e7e64110b0c0687d0591",
+        "item_payload_policy": "MVP3_EMPTY_CARRY_ONLY",
+        "logical_player_id": "b",
+        "ownership": {
+          "connected": true,
+          "joined_tick": 2,
+          "left_tick": 0,
+          "logical_player_id": "b",
+          "ownership_epoch": 1,
+          "player_entity_id": "player/b",
+          "transport_session_id": "transport-session/mvp3/b"
+        },
+        "player": {
+          "connected": true,
+          "flashlight_enabled": false,
+          "inventory": [],
+          "last_input_sequence": 3,
+          "logical_player_id": "b",
+          "orientation_yaw": -1.5707963267948966,
+          "ownership_epoch": 1,
+          "player_entity_id": "player/b",
+          "position": {
+            "x": 4.75,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "state_revision": 4,
+          "transport_session_id": "transport-session/mvp3/b",
+          "velocity": {
+            "x": -0.25,
+            "y": 0.0,
+            "z": 0.0
+          }
+        },
+        "replay": {
+          "operation/mvp3/live/b/1": {
+            "fingerprint": "707b915e55e6b7627266daf6cb830f50e1100a9306a2757a00078fd08261c0f1",
+            "live_player_id": "b",
+            "result": {
+              "details": {
+                "player": {
+                  "connected": true,
+                  "flashlight_enabled": false,
+                  "inventory": [],
+                  "last_input_sequence": 1,
+                  "logical_player_id": "b",
+                  "orientation_yaw": 1.5707963267948966,
+                  "ownership_epoch": 1,
+                  "player_entity_id": "player/b",
+                  "position": {
+                    "x": 5.25,
+                    "y": 0.0,
+                    "z": 0.0
+                  },
+                  "state_revision": 2,
+                  "transport_session_id": "transport-session/mvp3/b",
+                  "velocity": {
+                    "x": 0.25,
+                    "y": 0.0,
+                    "z": 0.0
+                  }
+                }
+              },
+              "error_code": "",
+              "success": true
+            },
+            "source_result_checksum": "2faf6fe273c2221519032e6d7679ec8b5a644e7067e99b3931cd46c39c679f04"
+          },
+          "operation/mvp3/live/b/2": {
+            "fingerprint": "9596ad7ffcacff5f99c1176da64041811ff401a3bcabd96078627bac736240ea",
+            "live_player_id": "b",
+            "result": {
+              "details": {
+                "player": {
+                  "connected": true,
+                  "flashlight_enabled": false,
+                  "inventory": [],
+                  "last_input_sequence": 2,
+                  "logical_player_id": "b",
+                  "orientation_yaw": -1.5707963267948966,
+                  "ownership_epoch": 1,
+                  "player_entity_id": "player/b",
+                  "position": {
+                    "x": 5.0,
+                    "y": 0.0,
+                    "z": 0.0
+                  },
+                  "state_revision": 3,
+                  "transport_session_id": "transport-session/mvp3/b",
+                  "velocity": {
+                    "x": -0.25,
+                    "y": 0.0,
+                    "z": 0.0
+                  }
+                }
+              },
+              "error_code": "",
+              "success": true
+            },
+            "source_result_checksum": "b6d3d34034b511b0c42b400075da70bebe6bb2da18606bbafc4559acf0526d82"
+          },
+          "operation/mvp3/live/b/3": {
+            "fingerprint": "141d17d085f751e756358f5f185acd61642c7c6fdeb15cbc1f497f3cf551d604",
+            "live_player_id": "b",
+            "result": {
+              "details": {
+                "player": {
+                  "connected": true,
+                  "flashlight_enabled": false,
+                  "inventory": [],
+                  "last_input_sequence": 3,
+                  "logical_player_id": "b",
+                  "orientation_yaw": -1.5707963267948966,
+                  "ownership_epoch": 1,
+                  "player_entity_id": "player/b",
+                  "position": {
+                    "x": 4.75,
+                    "y": 0.0,
+                    "z": 0.0
+                  },
+                  "state_revision": 4,
+                  "transport_session_id": "transport-session/mvp3/b",
+                  "velocity": {
+                    "x": -0.25,
+                    "y": 0.0,
+                    "z": 0.0
+                  }
+                }
+              },
+              "error_code": "",
+              "success": true
+            },
+            "source_result_checksum": "96b60a1d4d469e02d6844505d77d86ae4e0870f77171448afbaac4ea94b7de1b"
+          }
+        },
+        "schema": "distributed_world_simulator.mvp3_live_player_export.v1",
+        "source_authority_id": "authority/a",
+        "source_epoch": 1,
+        "target_authority_id": "authority/b",
+        "target_epoch": 2,
+        "transfer_id": "transfer/mvp3/b-out"
+      },
+      "player": "b",
+      "source": "authority/a",
+      "source_epoch": 1,
+      "target": "authority/b",
+      "target_epoch": 2,
+      "transfer_id": "transfer/mvp3/b-out"
+    },
+    {
+      "after": {
+        "connected": true,
+        "flashlight_enabled": false,
+        "inventory": [],
+        "last_input_sequence": 5,
+        "logical_player_id": "b",
+        "orientation_yaw": 1.5707963267948966,
+        "ownership_epoch": 1,
+        "player_entity_id": "player/b",
+        "position": {
+          "x": 5.25,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "state_revision": 6,
+        "transport_session_id": "transport-session/mvp3/b",
+        "velocity": {
+          "x": 0.25,
+          "y": 0.0,
+          "z": 0.0
+        }
+      },
+      "before": {
+        "connected": true,
+        "flashlight_enabled": false,
+        "inventory": [],
+        "last_input_sequence": 4,
+        "logical_player_id": "b",
+        "orientation_yaw": 1.5707963267948966,
+        "ownership_epoch": 1,
+        "player_entity_id": "player/b",
+        "position": {
+          "x": 5.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "state_revision": 5,
+        "transport_session_id": "transport-session/mvp3/b",
+        "velocity": {
+          "x": 0.25,
+          "y": 0.0,
+          "z": 0.0
+        }
+      },
+      "carrying": {
+        "after": {
+          "canonical_identity_owner": "networked-gameplay/player-ownership",
+          "canonical_input_owner": "nx/input-sequence",
+          "canonical_replay_owner": "replay/m6-durable-replay",
+          "closure_view": {
+            "canonical_view": {
+              "carried_operations": [
+                "operation/mvp3/live/b/1",
+                "operation/mvp3/live/b/2",
+                "operation/mvp3/live/b/3",
+                "operation/mvp3/live/b/4",
+                "operation/mvp3/live/b/5"
+              ],
+              "declared_domains": [
+                {
+                  "domain_id": "p6-domain/construction-builds",
+                  "persistence_replay": true,
+                  "reconnect_restore": true,
+                  "transport_path": "GATEWAY_ONLY",
+                  "write_authority": "SERVER_ONLY"
+                },
+                {
+                  "domain_id": "p6-domain/equipment-tool-slots",
+                  "persistence_replay": true,
+                  "reconnect_restore": true,
+                  "transport_path": "GATEWAY_ONLY",
+                  "write_authority": "SERVER_ONLY"
+                },
+                {
+                  "domain_id": "p6-domain/interaction-operation-ledger",
+                  "persistence_replay": true,
+                  "reconnect_restore": true,
+                  "transport_path": "GATEWAY_ONLY",
+                  "write_authority": "SERVER_ONLY"
+                },
+                {
+                  "domain_id": "p6-domain/item-inventory",
+                  "persistence_replay": true,
+                  "reconnect_restore": true,
+                  "transport_path": "GATEWAY_ONLY",
+                  "write_authority": "SERVER_ONLY"
+                },
+                {
+                  "domain_id": "p6-domain/outpost-world-state",
+                  "persistence_replay": true,
+                  "reconnect_restore": true,
+                  "transport_path": "GATEWAY_ONLY",
+                  "write_authority": "SERVER_ONLY"
+                },
+                {
+                  "domain_id": "p6-domain/player-identity-bindings",
+                  "persistence_replay": true,
+                  "reconnect_restore": true,
+                  "transport_path": "GATEWAY_ONLY",
+                  "write_authority": "SERVER_ONLY"
+                }
+              ],
+              "identity_binding_revision": 1,
+              "logical_player_id": "player/mvp3/b",
+              "player_entity_id": "entity/mvp3/b",
+              "schema": "planet_simulator.p6_closure_view.v1"
+            },
+            "carried_operations": [
+              "operation/mvp3/live/b/1",
+              "operation/mvp3/live/b/2",
+              "operation/mvp3/live/b/3",
+              "operation/mvp3/live/b/4",
+              "operation/mvp3/live/b/5"
+            ],
+            "declared_domains": [
+              {
+                "domain_id": "p6-domain/construction-builds",
+                "persistence_replay": true,
+                "reconnect_restore": true,
+                "transport_path": "GATEWAY_ONLY",
+                "write_authority": "SERVER_ONLY"
+              },
+              {
+                "domain_id": "p6-domain/equipment-tool-slots",
+                "persistence_replay": true,
+                "reconnect_restore": true,
+                "transport_path": "GATEWAY_ONLY",
+                "write_authority": "SERVER_ONLY"
+              },
+              {
+                "domain_id": "p6-domain/interaction-operation-ledger",
+                "persistence_replay": true,
+                "reconnect_restore": true,
+                "transport_path": "GATEWAY_ONLY",
+                "write_authority": "SERVER_ONLY"
+              },
+              {
+                "domain_id": "p6-domain/item-inventory",
+                "persistence_replay": true,
+                "reconnect_restore": true,
+                "transport_path": "GATEWAY_ONLY",
+                "write_authority": "SERVER_ONLY"
+              },
+              {
+                "domain_id": "p6-domain/outpost-world-state",
+                "persistence_replay": true,
+                "reconnect_restore": true,
+                "transport_path": "GATEWAY_ONLY",
+                "write_authority": "SERVER_ONLY"
+              },
+              {
+                "domain_id": "p6-domain/player-identity-bindings",
+                "persistence_replay": true,
+                "reconnect_restore": true,
+                "transport_path": "GATEWAY_ONLY",
+                "write_authority": "SERVER_ONLY"
+              }
+            ],
+            "identity_binding_revision": 1,
+            "logical_player_id": "player/mvp3/b",
+            "player_entity_id": "entity/mvp3/b",
+            "schema": "planet_simulator.p6_closure_view.v1"
+          },
+          "derived_only": true,
+          "identity_binding_revision": 1,
+          "last_input_sequence": 5,
+          "last_operation_id": "operation/mvp3/live/b/5",
+          "logical_player_id": "player/mvp3/b",
+          "manifest_checksum": "96f37342dd7ab5c80199b14c37a4d39bf134bec7f4499124951d7c60674372ac",
+          "player_entity_id": "entity/mvp3/b",
+          "private_canonical_truth": false,
+          "schema": "distributed_world_simulator.v0_sm1_player_carrying_manifest.v1"
+        },
+        "before": {
+          "canonical_identity_owner": "networked-gameplay/player-ownership",
+          "canonical_input_owner": "nx/input-sequence",
+          "canonical_replay_owner": "replay/m6-durable-replay",
+          "captured_after_source_freeze": true,
+          "closure_view": {
+            "canonical_view": {
+              "carried_operations": [
+                "operation/mvp3/live/b/1",
+                "operation/mvp3/live/b/2",
+                "operation/mvp3/live/b/3",
+                "operation/mvp3/live/b/4"
+              ],
+              "declared_domains": [
+                {
+                  "domain_id": "p6-domain/construction-builds",
+                  "persistence_replay": true,
+                  "reconnect_restore": true,
+                  "transport_path": "GATEWAY_ONLY",
+                  "write_authority": "SERVER_ONLY"
+                },
+                {
+                  "domain_id": "p6-domain/equipment-tool-slots",
+                  "persistence_replay": true,
+                  "reconnect_restore": true,
+                  "transport_path": "GATEWAY_ONLY",
+                  "write_authority": "SERVER_ONLY"
+                },
+                {
+                  "domain_id": "p6-domain/interaction-operation-ledger",
+                  "persistence_replay": true,
+                  "reconnect_restore": true,
+                  "transport_path": "GATEWAY_ONLY",
+                  "write_authority": "SERVER_ONLY"
+                },
+                {
+                  "domain_id": "p6-domain/item-inventory",
+                  "persistence_replay": true,
+                  "reconnect_restore": true,
+                  "transport_path": "GATEWAY_ONLY",
+                  "write_authority": "SERVER_ONLY"
+                },
+                {
+                  "domain_id": "p6-domain/outpost-world-state",
+                  "persistence_replay": true,
+                  "reconnect_restore": true,
+                  "transport_path": "GATEWAY_ONLY",
+                  "write_authority": "SERVER_ONLY"
+                },
+                {
+                  "domain_id": "p6-domain/player-identity-bindings",
+                  "persistence_replay": true,
+                  "reconnect_restore": true,
+                  "transport_path": "GATEWAY_ONLY",
+                  "write_authority": "SERVER_ONLY"
+                }
+              ],
+              "identity_binding_revision": 1,
+              "logical_player_id": "player/mvp3/b",
+              "player_entity_id": "entity/mvp3/b",
+              "schema": "planet_simulator.p6_closure_view.v1"
+            },
+            "carried_operations": [
+              "operation/mvp3/live/b/1",
+              "operation/mvp3/live/b/2",
+              "operation/mvp3/live/b/3",
+              "operation/mvp3/live/b/4"
+            ],
+            "declared_domains": [
+              {
+                "domain_id": "p6-domain/construction-builds",
+                "persistence_replay": true,
+                "reconnect_restore": true,
+                "transport_path": "GATEWAY_ONLY",
+                "write_authority": "SERVER_ONLY"
+              },
+              {
+                "domain_id": "p6-domain/equipment-tool-slots",
+                "persistence_replay": true,
+                "reconnect_restore": true,
+                "transport_path": "GATEWAY_ONLY",
+                "write_authority": "SERVER_ONLY"
+              },
+              {
+                "domain_id": "p6-domain/interaction-operation-ledger",
+                "persistence_replay": true,
+                "reconnect_restore": true,
+                "transport_path": "GATEWAY_ONLY",
+                "write_authority": "SERVER_ONLY"
+              },
+              {
+                "domain_id": "p6-domain/item-inventory",
+                "persistence_replay": true,
+                "reconnect_restore": true,
+                "transport_path": "GATEWAY_ONLY",
+                "write_authority": "SERVER_ONLY"
+              },
+              {
+                "domain_id": "p6-domain/outpost-world-state",
+                "persistence_replay": true,
+                "reconnect_restore": true,
+                "transport_path": "GATEWAY_ONLY",
+                "write_authority": "SERVER_ONLY"
+              },
+              {
+                "domain_id": "p6-domain/player-identity-bindings",
+                "persistence_replay": true,
+                "reconnect_restore": true,
+                "transport_path": "GATEWAY_ONLY",
+                "write_authority": "SERVER_ONLY"
+              }
+            ],
+            "identity_binding_revision": 1,
+            "logical_player_id": "player/mvp3/b",
+            "player_entity_id": "entity/mvp3/b",
+            "schema": "planet_simulator.p6_closure_view.v1"
+          },
+          "derived_only": true,
+          "identity_binding_revision": 1,
+          "last_input_sequence": 4,
+          "last_operation_id": "operation/mvp3/live/b/4",
+          "logical_player_id": "player/mvp3/b",
+          "manifest_checksum": "15cb0f6be1c09ab57d4d41ed9e4b6d9473b4cf403da3ad9fddade9a1f969fc4b",
+          "player_entity_id": "entity/mvp3/b",
+          "private_canonical_truth": false,
+          "schema": "distributed_world_simulator.v0_sm1_player_carrying_manifest.v1",
+          "source_authority_id": "authority/b",
+          "source_epoch": 2,
+          "target_authority_id": "authority/a",
+          "target_epoch": 3,
+          "transfer_id": "transfer/mvp3/b-back"
+        },
+        "committed_warm_checksum": "07745db97c0cff67621ee6771448da9f4f9ecccba820892c0b94500f84dc21f3",
+        "composite_warm_checksum": "07745db97c0cff67621ee6771448da9f4f9ecccba820892c0b94500f84dc21f3",
+        "target_authority_id": "authority/a",
+        "target_epoch": 3,
+        "warm_chain_mode": "DIRECT_PLAYER_COMMIT"
+      },
+      "commit_token": "b3f73ddd3ccd332203bf13ce4d820f28530b137648fd5ea7c3ff6bbdc8207342",
+      "packet": {
+        "backend_authority_epoch": 1,
+        "carrying_manifest": {
+          "canonical_identity_owner": "networked-gameplay/player-ownership",
+          "canonical_input_owner": "nx/input-sequence",
+          "canonical_replay_owner": "replay/m6-durable-replay",
+          "captured_after_source_freeze": true,
+          "closure_view": {
+            "canonical_view": {
+              "carried_operations": [
+                "operation/mvp3/live/b/1",
+                "operation/mvp3/live/b/2",
+                "operation/mvp3/live/b/3",
+                "operation/mvp3/live/b/4"
+              ],
+              "declared_domains": [
+                {
+                  "domain_id": "p6-domain/construction-builds",
+                  "persistence_replay": true,
+                  "reconnect_restore": true,
+                  "transport_path": "GATEWAY_ONLY",
+                  "write_authority": "SERVER_ONLY"
+                },
+                {
+                  "domain_id": "p6-domain/equipment-tool-slots",
+                  "persistence_replay": true,
+                  "reconnect_restore": true,
+                  "transport_path": "GATEWAY_ONLY",
+                  "write_authority": "SERVER_ONLY"
+                },
+                {
+                  "domain_id": "p6-domain/interaction-operation-ledger",
+                  "persistence_replay": true,
+                  "reconnect_restore": true,
+                  "transport_path": "GATEWAY_ONLY",
+                  "write_authority": "SERVER_ONLY"
+                },
+                {
+                  "domain_id": "p6-domain/item-inventory",
+                  "persistence_replay": true,
+                  "reconnect_restore": true,
+                  "transport_path": "GATEWAY_ONLY",
+                  "write_authority": "SERVER_ONLY"
+                },
+                {
+                  "domain_id": "p6-domain/outpost-world-state",
+                  "persistence_replay": true,
+                  "reconnect_restore": true,
+                  "transport_path": "GATEWAY_ONLY",
+                  "write_authority": "SERVER_ONLY"
+                },
+                {
+                  "domain_id": "p6-domain/player-identity-bindings",
+                  "persistence_replay": true,
+                  "reconnect_restore": true,
+                  "transport_path": "GATEWAY_ONLY",
+                  "write_authority": "SERVER_ONLY"
+                }
+              ],
+              "identity_binding_revision": 1,
+              "logical_player_id": "player/mvp3/b",
+              "player_entity_id": "entity/mvp3/b",
+              "schema": "planet_simulator.p6_closure_view.v1"
+            },
+            "carried_operations": [
+              "operation/mvp3/live/b/1",
+              "operation/mvp3/live/b/2",
+              "operation/mvp3/live/b/3",
+              "operation/mvp3/live/b/4"
+            ],
+            "declared_domains": [
+              {
+                "domain_id": "p6-domain/construction-builds",
+                "persistence_replay": true,
+                "reconnect_restore": true,
+                "transport_path": "GATEWAY_ONLY",
+                "write_authority": "SERVER_ONLY"
+              },
+              {
+                "domain_id": "p6-domain/equipment-tool-slots",
+                "persistence_replay": true,
+                "reconnect_restore": true,
+                "transport_path": "GATEWAY_ONLY",
+                "write_authority": "SERVER_ONLY"
+              },
+              {
+                "domain_id": "p6-domain/interaction-operation-ledger",
+                "persistence_replay": true,
+                "reconnect_restore": true,
+                "transport_path": "GATEWAY_ONLY",
+                "write_authority": "SERVER_ONLY"
+              },
+              {
+                "domain_id": "p6-domain/item-inventory",
+                "persistence_replay": true,
+                "reconnect_restore": true,
+                "transport_path": "GATEWAY_ONLY",
+                "write_authority": "SERVER_ONLY"
+              },
+              {
+                "domain_id": "p6-domain/outpost-world-state",
+                "persistence_replay": true,
+                "reconnect_restore": true,
+                "transport_path": "GATEWAY_ONLY",
+                "write_authority": "SERVER_ONLY"
+              },
+              {
+                "domain_id": "p6-domain/player-identity-bindings",
+                "persistence_replay": true,
+                "reconnect_restore": true,
+                "transport_path": "GATEWAY_ONLY",
+                "write_authority": "SERVER_ONLY"
+              }
+            ],
+            "identity_binding_revision": 1,
+            "logical_player_id": "player/mvp3/b",
+            "player_entity_id": "entity/mvp3/b",
+            "schema": "planet_simulator.p6_closure_view.v1"
+          },
+          "derived_only": true,
+          "identity_binding_revision": 1,
+          "last_input_sequence": 4,
+          "last_operation_id": "operation/mvp3/live/b/4",
+          "logical_player_id": "player/mvp3/b",
+          "manifest_checksum": "15cb0f6be1c09ab57d4d41ed9e4b6d9473b4cf403da3ad9fddade9a1f969fc4b",
+          "player_entity_id": "entity/mvp3/b",
+          "private_canonical_truth": false,
+          "schema": "distributed_world_simulator.v0_sm1_player_carrying_manifest.v1",
+          "source_authority_id": "authority/b",
+          "source_epoch": 2,
+          "target_authority_id": "authority/a",
+          "target_epoch": 3,
+          "transfer_id": "transfer/mvp3/b-back"
+        },
+        "checksum": "3abf917d0fd0f2632b5bab3fea55e9a165bd8d80dee04b0361c67ac87bfdd453",
+        "item_payload_policy": "MVP3_EMPTY_CARRY_ONLY",
+        "logical_player_id": "b",
+        "ownership": {
+          "connected": true,
+          "joined_tick": 2,
+          "left_tick": 0,
+          "logical_player_id": "b",
+          "ownership_epoch": 1,
+          "player_entity_id": "player/b",
+          "transport_session_id": "transport-session/mvp3/b"
+        },
+        "player": {
+          "connected": true,
+          "flashlight_enabled": false,
+          "inventory": [],
+          "last_input_sequence": 4,
+          "logical_player_id": "b",
+          "orientation_yaw": 1.5707963267948966,
+          "ownership_epoch": 1,
+          "player_entity_id": "player/b",
+          "position": {
+            "x": 5.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "state_revision": 5,
+          "transport_session_id": "transport-session/mvp3/b",
+          "velocity": {
+            "x": 0.25,
+            "y": 0.0,
+            "z": 0.0
+          }
+        },
+        "replay": {
+          "operation/mvp3/live/b/1": {
+            "fingerprint": "707b915e55e6b7627266daf6cb830f50e1100a9306a2757a00078fd08261c0f1",
+            "live_player_id": "b",
+            "result": {
+              "details": {
+                "player": {
+                  "connected": true,
+                  "flashlight_enabled": false,
+                  "inventory": [],
+                  "last_input_sequence": 1.0,
+                  "logical_player_id": "b",
+                  "orientation_yaw": 1.5707963267948966,
+                  "ownership_epoch": 1.0,
+                  "player_entity_id": "player/b",
+                  "position": {
+                    "x": 5.25,
+                    "y": 0.0,
+                    "z": 0.0
+                  },
+                  "state_revision": 2.0,
+                  "transport_session_id": "transport-session/mvp3/b",
+                  "velocity": {
+                    "x": 0.25,
+                    "y": 0.0,
+                    "z": 0.0
+                  }
+                }
+              },
+              "error_code": "",
+              "success": true
+            },
+            "source_result_checksum": "2faf6fe273c2221519032e6d7679ec8b5a644e7067e99b3931cd46c39c679f04"
+          },
+          "operation/mvp3/live/b/2": {
+            "fingerprint": "9596ad7ffcacff5f99c1176da64041811ff401a3bcabd96078627bac736240ea",
+            "live_player_id": "b",
+            "result": {
+              "details": {
+                "player": {
+                  "connected": true,
+                  "flashlight_enabled": false,
+                  "inventory": [],
+                  "last_input_sequence": 2.0,
+                  "logical_player_id": "b",
+                  "orientation_yaw": -1.5707963267948966,
+                  "ownership_epoch": 1.0,
+                  "player_entity_id": "player/b",
+                  "position": {
+                    "x": 5.0,
+                    "y": 0.0,
+                    "z": 0.0
+                  },
+                  "state_revision": 3.0,
+                  "transport_session_id": "transport-session/mvp3/b",
+                  "velocity": {
+                    "x": -0.25,
+                    "y": 0.0,
+                    "z": 0.0
+                  }
+                }
+              },
+              "error_code": "",
+              "success": true
+            },
+            "source_result_checksum": "b6d3d34034b511b0c42b400075da70bebe6bb2da18606bbafc4559acf0526d82"
+          },
+          "operation/mvp3/live/b/3": {
+            "fingerprint": "141d17d085f751e756358f5f185acd61642c7c6fdeb15cbc1f497f3cf551d604",
+            "live_player_id": "b",
+            "result": {
+              "details": {
+                "player": {
+                  "connected": true,
+                  "flashlight_enabled": false,
+                  "inventory": [],
+                  "last_input_sequence": 3.0,
+                  "logical_player_id": "b",
+                  "orientation_yaw": -1.5707963267948966,
+                  "ownership_epoch": 1.0,
+                  "player_entity_id": "player/b",
+                  "position": {
+                    "x": 4.75,
+                    "y": 0.0,
+                    "z": 0.0
+                  },
+                  "state_revision": 4.0,
+                  "transport_session_id": "transport-session/mvp3/b",
+                  "velocity": {
+                    "x": -0.25,
+                    "y": 0.0,
+                    "z": 0.0
+                  }
+                }
+              },
+              "error_code": "",
+              "success": true
+            },
+            "source_result_checksum": "96b60a1d4d469e02d6844505d77d86ae4e0870f77171448afbaac4ea94b7de1b"
+          },
+          "operation/mvp3/live/b/4": {
+            "fingerprint": "a71b0524a2e443aaad7c31563c649b87f5f3272bbc02c01b4385c5f2b8faf51f",
+            "live_player_id": "b",
+            "result": {
+              "details": {
+                "player": {
+                  "connected": true,
+                  "flashlight_enabled": false,
+                  "inventory": [],
+                  "last_input_sequence": 4,
+                  "logical_player_id": "b",
+                  "orientation_yaw": 1.5707963267948966,
+                  "ownership_epoch": 1,
+                  "player_entity_id": "player/b",
+                  "position": {
+                    "x": 5.0,
+                    "y": 0.0,
+                    "z": 0.0
+                  },
+                  "state_revision": 5,
+                  "transport_session_id": "transport-session/mvp3/b",
+                  "velocity": {
+                    "x": 0.25,
+                    "y": 0.0,
+                    "z": 0.0
+                  }
+                }
+              },
+              "error_code": "",
+              "success": true
+            },
+            "source_result_checksum": "73c964fdb415dd6b9e9566a53711009d90dd72b7442b65b9bc72d88823b1942e"
+          }
+        },
+        "schema": "distributed_world_simulator.mvp3_live_player_export.v1",
+        "source_authority_id": "authority/b",
+        "source_epoch": 2,
+        "target_authority_id": "authority/a",
+        "target_epoch": 3,
+        "transfer_id": "transfer/mvp3/b-back"
+      },
+      "player": "b",
+      "source": "authority/b",
+      "source_epoch": 2,
+      "target": "authority/a",
+      "target_epoch": 3,
+      "transfer_id": "transfer/mvp3/b-back"
+    }
+  ]
+}

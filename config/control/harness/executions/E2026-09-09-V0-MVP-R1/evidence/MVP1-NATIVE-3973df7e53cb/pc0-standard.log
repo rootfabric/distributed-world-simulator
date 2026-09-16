@@ -1,0 +1,20 @@
+
+Distributed World Simulator — Project Control
+Architecture: GLOBAL-P0-2026-08-12-R3-REFRESH-R1
+Control:      PC0-2026-08-10-R1
+Registry:     82
+Overall:      YELLOW
+  HARNESS    GREEN  BLOCK    H0.2 verification plus MVP-first project coordination [tracked/stable]
+  G          RED    ADVISORY G8 Aggregate Full Acceptance [feature/g8-geomorphology]
+  ECO        RED    ADVISORY ECO.CONV0-A Global Alignment / World Integration Consumer Requirements [feature/eco-evolutionary-ecology]
+  T          YELLOW BLOCK    T1B Aggregate Handoff Complete [feature/t1b-composition-failure-recovery]
+  TS         GREEN  BLOCK    C22 Main Integration Complete [tracked/stable]
+  CH         YELLOW BLOCK    CH9.6 Playable Network Equipment Lab [feature/ch9-6-playable-network-equipment-lab]
+  DOCTRINE   YELLOW BLOCK    Active doctrine consolidation [feature/world-building-doctrine]
+  NX         YELLOW BLOCK    H0.2 / NX.C1 Source Implemented — Runtime Verification Pending [feature/h0-2-nx-c1-owner-authority-r3]
+  V0         YELLOW BLOCK    MVP ACT0 / bounded composition dispatch [feature/v0-mvp-playable-seamless-planet-r1]
+  MATTER     GREEN  BLOCK    MW10 accepted stable baseline [tracked/stable]
+  S1         GREEN  BLOCK    Stable proposal-only compute foundation [tracked/stable]
+
+Report: /home/runner/work/distributed-world-simulator/distributed-world-simulator/artifacts/control/PROJECT_STATUS_RU.md
+JSON:   /home/runner/work/distributed-world-simulator/distributed-world-simulator/artifacts/control/project-control-report.json

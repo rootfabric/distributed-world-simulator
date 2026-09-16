@@ -1,0 +1,33 @@
+{
+  "review_id": "MVP6-NX-DIAGNOSTIC-REVIEW-6BD1-R1",
+  "role": "REVIEWER",
+  "reviewer_context": "/root/rollback_package_review",
+  "verdict": "PASS",
+  "scope": "DIAGNOSTIC_REPAIR_AND_HUMAN_SCOPE_PACKAGE_ONLY",
+  "reviewed_head": "6bd1ddefbd23b30636aff137cdb26e0102157bca",
+  "reviewed_tree": "00d163574b851d418d6eff02a67f23a03571d64a",
+  "supersedes_reviewed_head": "f3063cbae408a197c5eda37b912a8fe2995ac07e",
+  "required_fixes": [],
+  "checks": {
+    "probe_regressions": "5 tests PASS; old fatal/exit-zero logs rejected",
+    "manifest_git_bytes": "36 payloads PASS",
+    "historical_log_hashes": "12 logs PASS",
+    "windows_linux_ab": "1077 assertions and 3 failures per composition at 970b4293ae303cda03cd99c5c77ddd54e0f41496",
+    "journal_blob": "ed23f0d2b7a9e6cfb3f13b78de70c7f552035b69 unchanged across subject/base/main/NX",
+    "proposed_patch": "git apply --check PASS; not applied",
+    "ha_schema_and_identity": "PASS: CRITICAL matches parent; state_builder.py:957-962 checked",
+    "runtime_source_changes": false
+  },
+  "human_attention": {
+    "decision_id": "HA-V0-MVP6-NX-SAME-REVISION-ROLLBACK-R1",
+    "necessary": true,
+    "status": "OPEN",
+    "scope": "One explicitly named existing journal file, outside current scripts/network/** write fence"
+  },
+  "production_drive_pass_claimed": false,
+  "production_drive_note": "Parent separately publishes controller results; earlier f306 HA was schema-valid but production-route-invalid.",
+  "dependency_clearance": false,
+  "runtime_repair_accepted": false,
+  "mvp6_verified": false,
+  "whole_mvp_accepted": false
+}

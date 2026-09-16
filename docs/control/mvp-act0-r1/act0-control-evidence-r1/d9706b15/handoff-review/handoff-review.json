@@ -1,0 +1,52 @@
+{
+  "role": "INDEPENDENT_REVIEWER",
+  "verdict": "PASS",
+  "scope": "Final exact Human Attention and handoff document only; no new source review or merge authority",
+  "candidate_head": "d9706b157e84c653a753cc54243ce6651d53319c",
+  "candidate_tree": "4925ea293c15d88153278437976a3b69f8985ccf",
+  "canonical_main": "6982a563dd0c88c81449566131852c601ae89868",
+  "pr": {
+    "baseRefName": "main",
+    "headRefOid": "d9706b157e84c653a753cc54243ce6651d53319c",
+    "isDraft": true,
+    "state": "OPEN",
+    "url": "https://github.com/rootfabric/distributed-world-simulator/pull/646"
+  },
+  "required_fixes": [],
+  "checks": {
+    "ha_schema_valid": true,
+    "evidence_paths_exist": true,
+    "final_manifest_file_count": 29,
+    "all_manifest_hashes_valid": true,
+    "verifier_pass_exact_subject": true,
+    "open_blocking_critical_human_gate": true,
+    "only_exact_pr646_baseline_merge_requested": true,
+    "raw_linux_and_pr_ci_fail_preserved": true,
+    "pc0_red_not_waived": true,
+    "mvp6_in_progress_explicit": true,
+    "world_runtime_subject_3b_distinguished": true,
+    "construction_fixture_not_physics_or_five_process_acceptance": true
+  },
+  "assessment": "Genuine declared Human merge prerequisite for causal canonical journal baseline repair. It is not permission to accept clearance/MVP6 or waive the directional assertion. After authorized merge, default canonical NX revalidation, real auditors and fresh main-owned clearance remain required. Parent must commit these exact reviewable bytes and obtain actual Drive/Close Human gate before final mission handoff.",
+  "files": [
+    {
+      "path": "config\\control\\harness\\executions\\E2026-09-09-V0-MVP-R1\\human-attention\\HA-V0-MVP6-JOURNAL-BASELINE-MERGE-R1.v1.json",
+      "sha256": "1e5e8c644dedd3b07a2fc971a0b5ecdf6600d97321b588c4f93063e973158bfa"
+    },
+    {
+      "path": "docs\\control\\mvp-act0-r1\\MVP6_JOURNAL_MERGE_HANDOFF_R1_RU.md",
+      "sha256": "900ac6c778d66af5afd18dba00051461f954fee5c5bcd45f4976e7d56c7dc70e"
+    },
+    {
+      "path": "docs\\control\\mvp-act0-r1\\act0-control-evidence-r1\\d9706b15\\final-manifest.json",
+      "sha256": "52d57028fe334e610205594c4c7b84b03094d40794709963210e8a154e496a97"
+    },
+    {
+      "path": "docs\\control\\mvp-act0-r1\\act0-control-evidence-r1\\d9706b15\\verifier\\result.json",
+      "sha256": "3a8999f8b77cf9a436aeff81b9267a54160f61500cc765bdc0ccf0873b4c1cdf"
+    }
+  ],
+  "mvp6_verified": false,
+  "main_merge_authorized": false,
+  "source_edits": false
+}
