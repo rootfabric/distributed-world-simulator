@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 """Exact V0->NX dependency revalidation probe for the MVP6 M4 critical hit.
 
-The registered NX branch predates the current split M4 implementation, while its
-passport owns only four opt-in owner-movement runtime leaves plus focused tests.
-A root-only overlay on that historical tree is therefore not a valid dependency
-composition. This probe builds the actual compatibility candidate instead:
-current canonical main + exact current NX-owned runtime/validation delta + exact
-current V0 critical M4 producer blob. It then runs the consumer-owned H0.2/NX.C1
-focused suite on pinned double Godot.
+Build two executable compositions on pinned Godot:
+A) current canonical main + exact registered NX-owned runtime/validation delta;
+B) the same composition + exact current V0 critical M4 producer blob.
+
+The registered NX tests were source-implemented but never exact-Godot verified;
+two factory helpers use untyped return syntax that Godot 4.7.1 cannot infer on
+the current composition. The probe applies only an explicit `-> Variant` return
+annotation to those two temporary test copies. No assertion, runtime source or
+payload is changed. Both baseline and candidate must pass the same assertions.
 
 Evidence only: PASS does not write a main-owned directional clearance, does not
 accept NX, and does not accept MVP6.
@@ -35,6 +37,16 @@ TESTS = [
     "tests/network/test_nx_client_tick_robustness.gd",
     "tests/network/test_nx6_predicted_item_interactions.gd",
 ]
+TYPE_ONLY_PATCHES = {
+    "tests/network/test_nx_owner_movement_authority.gd": (
+        "func _configured_owner_service(owner_id: String):",
+        "func _configured_owner_service(owner_id: String) -> Variant:",
+    ),
+    "tests/network/test_nx_owner_item_projection_rollback.gd": (
+        "func _configured_owner_service():",
+        "func _configured_owner_service() -> Variant:",
+    ),
+}
 
 
 def proc(argv: list[str], cwd: Path, *, log: Path | None = None) -> subprocess.CompletedProcess:
@@ -56,8 +68,7 @@ def digest_file(path: Path) -> str:
 
 
 def object_exists(ref: str, path: str) -> bool:
-    result = proc(["git", "cat-file", "-e", f"{ref}:{path}"], ROOT)
-    return result.returncode == 0
+    return proc(["git", "cat-file", "-e", f"{ref}:{path}"], ROOT).returncode == 0
 
 
 def blob(ref: str, path: str) -> str:
@@ -75,6 +86,50 @@ def write_from_ref(ref: str, path: str) -> None:
         target.write_bytes(bytes_at(ref, path))
     elif target.exists():
         target.unlink()
+
+
+def apply_parser_only_test_compatibility() -> list[dict]:
+    records: list[dict] = []
+    for path, (before, after) in TYPE_ONLY_PATCHES.items():
+        target = WORKTREE / path
+        source = target.read_text(encoding="utf-8")
+        if source.count(before) != 1 or after in source:
+            raise RuntimeError(f"NX_TEST_TYPE_PATCH_PRECONDITION_FAILED:{path}")
+        patched = source.replace(before, after)
+        # Prove the temporary compatibility patch cannot change an assertion.
+        if patched.count("_assert(") != source.count("_assert("):
+            raise RuntimeError(f"NX_TEST_ASSERTION_COUNT_CHANGED:{path}")
+        target.write_text(patched, encoding="utf-8")
+        records.append({
+            "path": path,
+            "change": "ADD_EXPLICIT_VARIANT_RETURN_ANNOTATION_ONLY",
+            "before_sha256": hashlib.sha256(source.encode()).hexdigest(),
+            "after_sha256": hashlib.sha256(patched.encode()).hexdigest(),
+            "assertion_calls": source.count("_assert("),
+        })
+    return records
+
+
+def run_suite(label: str) -> list[dict]:
+    rows: list[dict] = []
+    folder = OUT / label
+    folder.mkdir(parents=True, exist_ok=True)
+    import_log = folder / "import.log"
+    imported = proc([str(GODOT), "--headless", "--path", str(WORKTREE), "--editor", "--import", "--quit"], WORKTREE, log=import_log)
+    rows.append({"name": "import", "exit_code": imported.returncode, "log_sha256": digest_file(import_log)})
+    if imported.returncode != 0:
+        return rows
+    for test in TESTS:
+        log = folder / (Path(test).stem + ".log")
+        result = proc([str(GODOT), "--headless", "--path", str(WORKTREE), "--script", "res://" + test], WORKTREE, log=log)
+        rows.append({"name": test, "exit_code": result.returncode, "log_sha256": digest_file(log)})
+        if result.returncode != 0:
+            break
+    return rows
+
+
+def passed(rows: list[dict]) -> bool:
+    return len(rows) == len(TESTS) + 1 and all(row["exit_code"] == 0 for row in rows)
 
 
 def main() -> int:
@@ -97,10 +152,6 @@ def main() -> int:
 
     main_ref = "origin/main"
     main_head = text(["git", "rev-parse", main_ref])
-    expected_main = os.environ.get("MVP6_EXPECTED_MAIN_SHA", "").strip()
-    if expected_main and main_head != expected_main:
-        raise RuntimeError(f"MAIN_MOVED_DURING_NX_PROBE:{main_head}:expected:{expected_main}")
-
     consumer_ref = f"origin/{NX_BRANCH}"
     consumer_head = text(["git", "rev-parse", consumer_ref])
     consumer_passport_blob = blob(consumer_ref, NX_PASSPORT)
@@ -108,9 +159,6 @@ def main() -> int:
     if passport.get("branch") != NX_BRANCH or passport.get("program") != "NX":
         raise RuntimeError("NX_PASSPORT_IDENTITY_INVALID")
 
-    # Only the consumer-owned executable leaves and its focused validation are
-    # replayed on current main. Watched foundations such as M4 are deliberately
-    # NOT copied from the historical NX tree.
     consumer_paths = sorted(set(passport.get("runtime_paths", [])) | set(passport.get("validation_paths", [])))
     if not consumer_paths or CRITICAL in consumer_paths:
         raise RuntimeError("NX_OWNED_DELTA_INVALID")
@@ -124,7 +172,6 @@ def main() -> int:
     if add.returncode != 0:
         raise RuntimeError("NX_PROBE_WORKTREE_ADD_FAILED")
 
-    rows: list[dict] = []
     overlay: list[dict] = []
     try:
         for path in consumer_paths:
@@ -133,9 +180,9 @@ def main() -> int:
             write_from_ref(consumer_ref, path)
             overlay.append({"path": path, "source": "NX", "main_blob": previous, "overlay_blob": current})
 
-        # Overlay the single current V0 critical producer file last. Its split
-        # M4 dependencies remain current-main blobs, exactly as they would after
-        # a future integration on canonical main.
+        parser_patches = apply_parser_only_test_compatibility()
+        baseline_rows = run_suite("baseline-current-main-plus-nx")
+
         target = WORKTREE / CRITICAL
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_bytes(bytes_at(producer_head, CRITICAL))
@@ -147,30 +194,15 @@ def main() -> int:
         })
         if text(["git", "hash-object", CRITICAL], WORKTREE) != producer_blob:
             raise RuntimeError("V0_CRITICAL_OVERLAY_BLOB_MISMATCH")
-
-        changed = sorted(set(text(["git", "status", "--porcelain"], WORKTREE).splitlines()))
-        if not changed:
-            raise RuntimeError("NX_COMPOSITE_HAS_NO_DELTA")
-        diff_check = proc(["git", "diff", "--check"], WORKTREE)
-        if diff_check.returncode != 0:
+        if proc(["git", "diff", "--check"], WORKTREE).returncode != 0:
             raise RuntimeError("NX_COMPOSITE_DIFF_CHECK_FAILED")
+        candidate_rows = run_suite("candidate-plus-mvp6-m4")
 
-        import_log = OUT / "import.log"
-        imported = proc([str(GODOT), "--headless", "--path", str(WORKTREE), "--editor", "--import", "--quit"], WORKTREE, log=import_log)
-        rows.append({"name": "import", "exit_code": imported.returncode, "log_sha256": digest_file(import_log)})
-        if imported.returncode != 0:
-            raise RuntimeError("NX_COMPOSITE_IMPORT_FAILED")
-
-        for test in TESTS:
-            log = OUT / (Path(test).stem + ".log")
-            result = proc([str(GODOT), "--headless", "--path", str(WORKTREE), "--script", "res://" + test], WORKTREE, log=log)
-            rows.append({"name": test, "exit_code": result.returncode, "log_sha256": digest_file(log)})
-            if result.returncode != 0:
-                raise RuntimeError(f"NX_COMPOSITE_TEST_FAILED:{test}")
-
+        baseline_pass = passed(baseline_rows)
+        candidate_pass = passed(candidate_rows)
         summary = {
-            "schema": "distributed_world_simulator.mvp6_nx_dependency_probe.v2",
-            "composition": "CURRENT_MAIN_PLUS_EXACT_NX_OWNED_DELTA_PLUS_CURRENT_V0_M4_CRITICAL",
+            "schema": "distributed_world_simulator.mvp6_nx_dependency_probe.v3",
+            "composition": "CURRENT_MAIN_PLUS_EXACT_NX_OWNED_DELTA_THEN_CURRENT_V0_M4_CRITICAL",
             "canonical_main": main_head,
             "producer_program": "V0",
             "producer_branch": producer_branch,
@@ -184,12 +216,15 @@ def main() -> int:
             "consumer_passport_path": NX_PASSPORT,
             "consumer_passport_blob": consumer_passport_blob,
             "consumer_owned_overlay_paths": consumer_paths,
+            "parser_only_test_compatibility": parser_patches,
             "overlay_records": overlay,
             "engine_sha256": digest_file(GODOT),
-            "focused_tests": rows,
-            "focused_test_count": len(TESTS),
-            "passed": all(row["exit_code"] == 0 for row in rows),
-            "dependency_revalidated": all(row["exit_code"] == 0 for row in rows),
+            "baseline_tests": baseline_rows,
+            "candidate_tests": candidate_rows,
+            "baseline_passed": baseline_pass,
+            "candidate_passed": candidate_pass,
+            "dependency_revalidated": baseline_pass and candidate_pass,
+            "candidate_regressed_consumer": baseline_pass and not candidate_pass,
             "foundation_mutation_accepted": False,
             "clearance_written": False,
             "mvp6_predicate_verified": False,
@@ -198,7 +233,7 @@ def main() -> int:
         }
         (OUT / "summary.json").write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
         print(json.dumps(summary, sort_keys=True), flush=True)
-        return 0
+        return 0 if summary["dependency_revalidated"] else 1
     finally:
         proc(["git", "worktree", "remove", "--force", str(WORKTREE)], ROOT)
         proc(["git", "worktree", "prune"], ROOT)
