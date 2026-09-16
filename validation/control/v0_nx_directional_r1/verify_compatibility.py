@@ -83,16 +83,22 @@ def main() -> int:
     worktrees = []
     try:
         require(not sys.flags.optimize, 'OPTIMIZED_PYTHON_FORBIDDEN')
+        result.update(main=MAIN, producer=V0, consumer=NX, facade_blob=BLOB,
+                      verifier_head=git('rev-parse', 'HEAD'), verifier_tree=git('rev-parse', 'HEAD^{tree}'),
+                      run_id=os.environ.get('GITHUB_RUN_ID'), attempt=os.environ.get('GITHUB_RUN_ATTEMPT'))
         require(git('rev-parse', 'origin/main') == MAIN, 'MAIN_EPOCH_DRIFT')
-        require(git('rev-parse', 'origin/' + V0_BRANCH) == V0, 'V0_HEAD_DRIFT')
+        observed_v0 = git('rev-parse', 'origin/' + V0_BRANCH)
+        result['producer_observed'] = observed_v0
+        # Match the existing clearance contract: unrelated descendant commits
+        # may advance, but the reviewed dependency bytes and full hit set cannot.
+        require(subprocess.run(['git', 'merge-base', '--is-ancestor', V0, observed_v0], cwd=ROOT, check=False).returncode == 0, 'V0_ANCESTRY_DRIFT')
+        require(git('rev-parse', observed_v0 + ':' + FACADE) == BLOB, 'LIVE_FACADE_BLOB_DRIFT')
         require(git('rev-parse', 'origin/' + NX_BRANCH) == NX, 'NX_HEAD_DRIFT')
         require(git('rev-parse', V0 + ':' + FACADE) == BLOB, 'FACADE_BLOB_DRIFT')
         godot = Path(os.environ['GODOT_BIN']).resolve()
         require(sha(godot.read_bytes()) == ENGINE_SHA, 'GODOT_SHA_MISMATCH')
-        result.update(main=MAIN, producer=V0, consumer=NX, facade_blob=BLOB,
-                      verifier_head=git('rev-parse', 'HEAD'), verifier_tree=git('rev-parse', 'HEAD^{tree}'),
-                      engine_sha256=ENGINE_SHA, engine_version=subprocess.check_output([str(godot), '--version'], text=True).strip(),
-                      run_id=os.environ.get('GITHUB_RUN_ID'), attempt=os.environ.get('GITHUB_RUN_ATTEMPT'))
+        result.update(engine_sha256=ENGINE_SHA,
+                      engine_version=subprocess.check_output([str(godot), '--version'], text=True).strip())
         passport_path = 'config/control/branches/feature__h0-2-nx-c1-owner-authority-r3.v1.json'
         require(git('rev-parse', NX + ':' + passport_path) == 'c3af1974228c9ee5c34bf4d54c72896c99fc4d1a', 'NX_PASSPORT_DRIFT')
         sys.path.insert(0, str(ROOT / 'scripts/control'))
@@ -129,15 +135,12 @@ def main() -> int:
                 row = run(label + '-' + str(index + 1), [str(godot), '--headless', '--audio-driver', 'Dummy', '--path', str(target), '--script', 'res://' + path], target, test=True)
                 row['test_path'] = path
                 result['tests'].append(row)
-            # Godot imports must not change tracked source. The declared overlay
-            # is the only permissible change to each exact base checkout.
             allowed = set(overlay + [FACADE]) if label != 'producer' else set()
             changed = set(git('diff', '--name-only', source, cwd=target).splitlines())
             require(changed <= allowed, label + ':UNDECLARED_TRACKED_MUTATION:' + repr(sorted(changed - allowed)))
             for path in overlay if label != 'producer' else []:
                 require((target / path).read_bytes() == raw(NX, path), label + ':OVERLAY_MUTATED:' + path)
             require((target / FACADE).read_bytes() == raw(V0 if label in ('treatment', 'producer') else MAIN, FACADE), label + ':FACADE_MUTATED')
-        # Compare all tracked source bytes, including files added by the exact NX overlay.
         files = set(git('ls-tree', '-r', '--name-only', MAIN).splitlines()) | set(overlay)
         deltas = [p for p in sorted(files) if (worktrees[0] / p).read_bytes() != (worktrees[1] / p).read_bytes()]
         require(deltas == [FACADE], 'PAIR_NOT_SINGLE_DEPENDENCY:' + repr(deltas))
