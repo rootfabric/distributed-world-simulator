@@ -1,0 +1,20 @@
+{
+  "head": "6982a563dd0c88c81449566131852c601ae89868",
+  "tree": "97c61acc96f507d71b6883fbdeef486c08b1113d",
+  "argv": [
+    "C:/Godot/godot/bin/godot.windows.editor.double.x86_64.console.exe",
+    "--headless",
+    "--path",
+    "C:\\distributed-world-simulator\\worktrees\\mvp6-journal-baseline-diagnostics",
+    "--script",
+    "res://tests/matter/interest/test_mw7_matter_interest_replication.gd"
+  ],
+  "exit_code": 0,
+  "diagnostics": [
+    "WARNING: 26 ObjectDB instances were leaked at exit (run with `--verbose` for details).",
+    "ERROR: 7 resources still in use at exit (run with --verbose for details)."
+  ],
+  "sha256": "c50f7dbc311319eb37a07526bd474c523b481619df31e0085ee2d2bde88bd02f",
+  "git_status_after": "",
+  "classification_only": true
+}
