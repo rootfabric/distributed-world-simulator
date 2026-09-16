@@ -1,0 +1,23 @@
+{
+  "schema": "distributed_world_simulator.act0_exact_journal_authorization.v1",
+  "source_commit": "68433ec78f264bc0562f0964623c0d83604251a5",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "parent_work_order": "V0-MVP-R1-WO-001",
+  "decision_id": "HA-V0-MVP6-NX-SAME-REVISION-ROLLBACK-R1",
+  "historical_main": "6982a563dd0c88c81449566131852c601ae89868",
+  "path": "scripts/network/prediction/predicted_item_interaction_journal.gd",
+  "before_blob": "ed23f0d2b7a9e6cfb3f13b78de70c7f552035b69",
+  "after_blob": "abdf0c0a335f4e2c968933156fb17f94a7b45bd1",
+  "files": {
+    "approved-ha.json": {
+      "source_path": "config/control/harness/executions/E2026-09-09-V0-MVP-R1/human-attention/HA-V0-MVP6-NX-SAME-REVISION-ROLLBACK-R1.v1.json",
+      "sha256": "c3a721dc016e3663fcdb582a286960a48f47435c7ff6b55ee0db33972810f608"
+    },
+    "approved.patch": {
+      "source_path": "docs/control/mvp-act0-r1/mvp6_nx_same_revision_rollback_proposed.patch",
+      "sha256": "f8ab87bdd39d3ea1d28105b6b110f39703d44885ef9def89e3e7315a8f9c596c"
+    }
+  },
+  "main_merge_authorized": false,
+  "mvp_accepted": false
+}
