@@ -129,6 +129,7 @@
       "consumer_branch": "feature/h0-2-nx-c1-owner-authority-r3",
       "checkpoint": "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE",
       "reviewed_producer_head": "73b8818184c93986e3313f35f9f4548c608e47e6",
+      "required_main_ancestor": "6b147d0300529a6b40568b4de0817d5cc7f95fdb",
       "consumer_head_sha": "1a56fe0e845c941f14ce7b9296ee939e9d0ca8bc",
       "consumer_passport_path": "config/control/branches/feature__h0-2-nx-c1-owner-authority-r3.v1.json",
       "consumer_passport_blob_sha": "c3af1974228c9ee5c34bf4d54c72896c99fc4d1a",
@@ -147,7 +148,7 @@
       "review_id": "MVP6-JOURNAL-73B88181-REVIEW-R1",
       "verification_id": "MVP6-JOURNAL-FEATURE-VERIFIER-R1",
       "recorded_at_utc": "2026-09-16T14:26:00Z",
-      "reason": "Native V0 journal repair review MVP6-JOURNAL-73B88181-REVIEW-R1 and independent verifier MVP6-JOURNAL-FEATURE-VERIFIER-R1 both PASS on exact producer 73b8818184c93986e3313f35f9f4548c608e47e6 / tree a1bbe30fd68af5db3a9535bee942683ebe761bc1 and runtime blob abdf0c0a335f4e2c968933156fb17f94a7b45bd1. Exact Linux run 35097654348 / artifact 10446937610 (ZIP sha256 afd5aeac91fd73e893fb569cc11a46a49c15673244c79c0a1dcd2e661160c1cd) proves the approved journal-repair composition and registered NX focused suite PASS before and after V0 M4 overlay with identical 44/31/37/25/940 assertion counts and candidate_regressed_consumer=false. The current V0 producer may advance only as a descendant while both fenced blobs remain byte-identical. This clearance accepts exactly the current two-file V0 -> NX hit-set: the M4 path is critical and the prediction journal is ordinary watched scope. It does not accept NX, MVP6, A9, the whole MVP, or any future hit-set/blob drift, and remains non-authoritative until this control repair is merged into main after fresh review."
+      "reason": "Native V0 journal repair review MVP6-JOURNAL-73B88181-REVIEW-R1 and independent verifier MVP6-JOURNAL-FEATURE-VERIFIER-R1 both PASS on exact producer 73b8818184c93986e3313f35f9f4548c608e47e6 / tree a1bbe30fd68af5db3a9535bee942683ebe761bc1 and runtime blob abdf0c0a335f4e2c968933156fb17f94a7b45bd1. Exact Linux run 35097654348 / artifact 10446937610 (ZIP sha256 afd5aeac91fd73e893fb569cc11a46a49c15673244c79c0a1dcd2e661160c1cd) proves the approved journal-repair composition and registered NX focused suite PASS before and after V0 M4 overlay with identical 44/31/37/25/940 assertion counts and candidate_regressed_consumer=false. Runtime repair 6b147d0300529a6b40568b4de0817d5cc7f95fdb is an explicit required_main_ancestor and the resolver refuses this record until that commit is contained by canonical origin/main. After that prerequisite is canonical, the current V0 producer may advance only as a descendant while both fenced blobs remain byte-identical. This clearance accepts exactly the current two-file V0 -> NX hit-set: the M4 path is critical and the prediction journal is ordinary watched scope. It does not accept NX, MVP6, A9, the whole MVP, or any future hit-set/blob drift."
     }
   ]
 }
