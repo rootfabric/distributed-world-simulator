@@ -445,16 +445,27 @@ class ContractBundle:
         if schema_name != "work_order_schema":
             return
 
+        work_order_required = instance.get("required_predicates")
+        if isinstance(work_order_required, list) and len(work_order_required) != len(set(work_order_required)):
+            raise ContractValidationError("WORK_ORDER_REQUIRED_PREDICATES_NOT_UNIQUE")
+
         checkpoint_id = instance.get("goal_checkpoint")
+        routing = self.contracts["scheduler_policy"].get("v0_product_train_routing")
+        current_product_checkpoint = (
+            routing.get("current_checkpoint") if isinstance(routing, dict) else None
+        )
+        # The strengthening relation is a current-product rule, not a retroactive
+        # rewrite of durable historical/control executions. Old epochs keep their
+        # own exact predicate vocabulary and must remain replayable.
+        if checkpoint_id != current_product_checkpoint:
+            return
+
         checkpoint = self.contracts["checkpoint_catalog"].get("checkpoints", {}).get(checkpoint_id)
         if not isinstance(checkpoint, dict):
             return
         catalog_required = checkpoint.get("required_predicates")
-        work_order_required = instance.get("required_predicates")
         if not isinstance(catalog_required, list) or not isinstance(work_order_required, list):
             return
-        if len(work_order_required) != len(set(work_order_required)):
-            raise ContractValidationError("WORK_ORDER_REQUIRED_PREDICATES_NOT_UNIQUE")
 
         cursor = -1
         for predicate in catalog_required:
