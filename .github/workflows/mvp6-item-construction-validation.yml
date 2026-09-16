@@ -212,3 +212,61 @@ jobs:
           path: artifacts/mvp6-seam-repro/
           if-no-files-found: error
           retention-days: 90
+  postmerge-baseline:
+    if: github.repository == 'rootfabric/distributed-world-simulator' && github.ref == 'refs/heads/feature/v0-mvp-playable-seamless-planet-r1' && contains(github.event.head_commit.message, '[mvp6-postmerge]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      EXPECTED_HEAD: ${{ github.sha }}
+      MVP6_POSTMERGE_OUTPUT: ${{ runner.temp }}/mvp6-postmerge-evidence
+      PYTHONUTF8: '1'
+      PYTHONDONTWRITEBYTECODE: '1'
+      PYTHONPATH: scripts
+      BREAKPOINT_RUNTIME_DISABLED: '1'
+      GODOT_SILENCE_ROOT_WARNING: '1'
+      PLANET_SIMULATOR_INVENTORY_PROFILE: planet_default
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Bind exact approved postmerge subject
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+          git switch -c "$GITHUB_REF_NAME" "$EXPECTED_HEAD"
+          git fetch --quiet origin '+refs/heads/*:refs/remotes/origin/*' --prune
+          test "$(git rev-parse origin/main)" = a6d5eb6b287130a638ba6cf397c34e29169948c1
+          test -z "$(git status --porcelain --untracked-files=all)"
+          git diff --check 17941a19c4e92473c440869148a25f0016f03d51 HEAD
+          python3 -m pip install --disable-pip-version-check -r scripts/harness/requirements.txt
+          python3 - <<'PY'
+          import json
+          p='config/control/harness/executions/E2026-09-09-V0-MVP-R1/human-attention/HA-V0-MVP6-JOURNAL-BASELINE-MERGE-R1.v1.json'
+          decision=json.load(open(p))
+          assert decision['status']=='RESOLVED'
+          assert 'a6d5eb6b287130a638ba6cf397c34e29169948c1' in decision['resolution']
+          PY
+      - uses: actions/download-artifact@v4
+        with:
+          name: p7-repair-engine-34117353691
+          run-id: 34117353691
+          repository: rootfabric/distributed-world-simulator
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/mvp6-postmerge-engine
+      - name: Default NX without journal override, raw PC0, actual Drive and Close
+        shell: bash
+        run: |
+          set -euo pipefail
+          export GODOT_BIN="$RUNNER_TEMP/mvp6-postmerge-engine/godot"
+          chmod u+x "$GODOT_BIN"
+          python3 docs/control/mvp-act0-r1/validate_mvp6_postmerge.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mvp6-postmerge-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/mvp6-postmerge-evidence/
+          if-no-files-found: error
+          retention-days: 90
