@@ -1,0 +1,64 @@
+name: V0 NX Clearance Rejection Diagnostic R1
+
+on:
+  push:
+    branches: [validation/v0-nx-directional-composed-postmerge-r1]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  diagnostic:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      COMPOSED_HEAD: 4f84f5f492bcbc0e83bbb1fed206fc4ea07e1509
+      COMPOSED_TREE: 5c8c7c59f238467d633d9961797adac067681f08
+      REAL_MAIN: 6982a563dd0c88c81449566131852c601ae89868
+      PYTHONPATH: scripts
+      PYTHONUTF8: '1'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ env.COMPOSED_HEAD }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Seal and simulate future main
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin '+refs/heads/*:refs/remotes/origin/*' --prune
+          test "$(git rev-parse HEAD)" = "$COMPOSED_HEAD"
+          test "$(git rev-parse HEAD^{tree})" = "$COMPOSED_TREE"
+          test "$(git rev-parse origin/main)" = "$REAL_MAIN"
+          git update-ref refs/remotes/origin/main "$COMPOSED_HEAD"
+          python3 -m pip install --disable-pip-version-check -r scripts/harness/requirements.txt >/dev/null
+      - name: Print V0 to NX directional finding and clearance rejection
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/control/project_control_directional_watch.py --no-fail-on-red >/dev/null
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('artifacts/control/directional-watch-report.json')
+          report=json.loads(p.read_text())
+          print('OVERALL_HEALTH', report.get('overall_health'))
+          findings=report.get('findings',[])
+          matches=[f for f in findings if f.get('producer')=='V0' and f.get('consumer')=='NX']
+          print('MATCH_COUNT',len(matches))
+          for i,f in enumerate(matches):
+              keep={k:f.get(k) for k in sorted(f) if k in {
+                  'producer','consumer','level','code','detail','clearance_id','clearance_status',
+                  'clearance_rejection','clearance_rejections','observed_paths','critical_paths',
+                  'watched_paths','producer_head','consumer_head','producer_branch','consumer_branch',
+                  'global_blocking','dependency_id','watch_id'
+              }}
+              print('MATCH',i,json.dumps(keep,sort_keys=True,ensure_ascii=False))
+          # Also print any top-level clearance diagnostics if present.
+          for key in ('clearance_rejections','clearances','directional_clearances'):
+              if key in report:
+                  val=report[key]
+                  print('TOP',key,json.dumps(val,sort_keys=True,ensure_ascii=False)[:12000])
+          PY
