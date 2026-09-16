@@ -1,0 +1,25 @@
+{
+  "schema": "distributed_world_simulator.directional_watch_clearance.v1",
+  "clearance_id": "V0-MVP6-NX-M4-CRITICAL-WATCH-CLEARANCE-001",
+  "status": "PROPOSED",
+  "kind": "CRITICAL_WATCH_HIT",
+  "producer_program": "V0",
+  "producer_branch": "feature/v0-mvp-playable-seamless-planet-r1",
+  "consumer_program": "NX",
+  "consumer_branch": "feature/h0-2-nx-c1-owner-authority-r3",
+  "checkpoint": "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE",
+  "reviewed_producer_head": "9a4d4257f177af16c0a4274be357717c45c169fe",
+  "consumer_head_sha": "1a56fe0e845c941f14ce7b9296ee939e9d0ca8bc",
+  "consumer_passport_path": "config/control/branches/feature__h0-2-nx-c1-owner-authority-r3.v1.json",
+  "consumer_passport_blob_sha": "c3af1974228c9ee5c34bf4d54c72896c99fc4d1a",
+  "critical_files": ["scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service.gd"],
+  "watched_files": ["scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service.gd"],
+  "watched_file_blobs": {
+    "scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service.gd": "44841fb3719b1cf36fd5afdfc0f8a0e4d0eacb30"
+  },
+  "decision": "DEPENDENCY_REVALIDATED_NO_FOUNDATION_MUTATION",
+  "review_id": "",
+  "verification_id": "",
+  "recorded_at_utc": "2026-09-16T11:14:28Z",
+  "reason": "НЕ ПОЛНОМОЧИЕ: proposal outside the canonical registry. Promotion requires exact compatibility evidence, a fresh independent dependency/control review and separate human merge authorization. The bounded claim is compatibility of the opt-in V0 M4 facade with the unchanged NX runtime leaves on the current-main composition, not NX.C1 or MVP6 product acceptance. Runtime source stays exact; any fixture typing annotations must be disclosed with input/output hashes. Any producer ancestry, consumer head/passport, complete hit-set or fenced dependency blob drift must fail closed."
+}
