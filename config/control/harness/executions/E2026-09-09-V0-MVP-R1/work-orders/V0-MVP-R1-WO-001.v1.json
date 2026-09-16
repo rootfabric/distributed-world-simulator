@@ -33,6 +33,7 @@
     "config/control/harness/continuation-policy.v1.json",
     "config/control/harness/review-policy.v1.json",
     "scripts/harness/contracts.py",
+    "scripts/harness/continuation.py",
     "tests/harness/test_closure_throughput_policy.py",
     "tests/harness/mvp_act0_base.py",
     "docs/control/HARNESS_CLOSURE_THROUGHPUT_R1_RU.md"
