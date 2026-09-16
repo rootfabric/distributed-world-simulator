@@ -38,7 +38,7 @@ func configure_live_items(fixture_owner: bool, spatial_validation: bool = true) 
 func bind_live_item_actor(actor: String, gate, trusted_port) -> Dictionary:
 	if not _live_enabled6 or actor.is_empty() or actor != actor.strip_edges().to_lower() or gate == null or trusted_port == null:
 		return _failure("LIVE_ITEM_BINDING_INVALID")
-	if not gate.has_method("check_transfer_phase") or not gate.has_method("is_locally_ready") or not trusted_port.has_method("attested_item_carry") or not trusted_port.has_method("attested_item_retirement"):
+	if not gate.has_method("check_transfer_phase") or not gate.has_method("is_locally_ready") or not gate.has_method("get_report") or not trusted_port.has_method("attested_item_carry") or not trusted_port.has_method("attested_item_retirement"):
 		return _failure("LIVE_ITEM_TRUSTED_PORT_REQUIRED")
 	if _live_gates6.has(actor):
 		return _success({"replay": true}) if _live_gates6[actor] == gate and _live_ports6[actor].get_ref() == trusted_port else _failure("LIVE_ITEM_REBIND_FORBIDDEN")
@@ -55,22 +55,33 @@ func _live_admission6(actor: String) -> Dictionary:
 		return _failure("LIVE_ITEM_AUTHORITY_NOT_READY")
 	return _success()
 
+func _live_epoch_admission6(actor: String, epoch: int, kind: String) -> Dictionary:
+	var admitted := _live_admission6(actor)
+	if not bool(admitted.get("success", false)) or not _live_enabled6: return admitted
+	# Player ownership and backend authority are different epochs. Native
+	# server output/consume use the latter; client item commands use the former.
+	var expected := _authority_epoch
+	if kind not in [TRUSTED_SERVER_OUTPUT_COMMAND_TYPE, TRUSTED_CONSTRUCTION_CONSUME_COMMAND_TYPE]:
+		expected = int(_live_gates6[actor].get_report().get("ownership_epoch", -1))
+	return _success() if epoch == expected else _failure("LIVE_ITEM_OWNERSHIP_EPOCH_INVALID")
+
 func ensure_player(actor: String) -> void:
 	if _live_enabled6 and _live_gates6.has(actor) and not _live_gates6[actor].is_locally_ready():
 		return
 	super.ensure_player(actor)
 
 func lookup_replay(actor: String, epoch: int, operation: String, kind: String, payload: Dictionary) -> Dictionary:
-	var admitted := _live_admission6(actor)
+	var admitted := _live_epoch_admission6(actor, epoch, kind)
 	if not bool(admitted.get("success", false)):
 		return {"found": true, "conflict": false, "result": admitted}
 	return super.lookup_replay(actor, epoch, operation, kind, payload)
 
 func execute(actor: String, epoch: int, operation: String, kind: String, payload: Dictionary, context: Dictionary = {}) -> Dictionary:
-	var admitted := _live_admission6(actor)
+	var admitted := _live_epoch_admission6(actor, epoch, kind)
 	if not bool(admitted.get("success", false)): return admitted
+	var existed := _ledger.has(operation)
 	var result: Dictionary = super.execute(actor, epoch, operation, kind, payload, context)
-	_tag_live_replay6(actor, operation)
+	_tag_live_replay6(actor, operation, existed)
 	return result
 
 func preflight_server_output(operation: String, actor: String, definition: String, quantity: int, source: String = "") -> Dictionary:
@@ -81,8 +92,10 @@ func preflight_server_output(operation: String, actor: String, definition: Strin
 func apply_server_output(operation: String, actor: String, definition: String, quantity: int, source: String = "") -> Dictionary:
 	var admitted := _live_admission6(actor)
 	if not bool(admitted.get("success", false)): return admitted
+	var key := operation.strip_edges()
+	var existed := _ledger.has(key)
 	var result: Dictionary = super.apply_server_output(operation, actor, definition, quantity, source)
-	_tag_live_replay6(actor, operation)
+	_tag_live_replay6(actor, key, existed)
 	return result
 
 func preflight_server_construction_consume(operation: String, actor: String, allocations: Array, revision: int, tick: int, checksum: String, plan_checksum: String) -> Dictionary:
@@ -93,12 +106,16 @@ func preflight_server_construction_consume(operation: String, actor: String, all
 func apply_server_construction_consume(operation: String, actor: String, allocations: Array, revision: int, tick: int, checksum: String, plan_checksum: String) -> Dictionary:
 	var admitted := _live_admission6(actor)
 	if not bool(admitted.get("success", false)): return admitted
+	var key := operation.strip_edges()
+	var existed := _ledger.has(key)
 	var result: Dictionary = super.apply_server_construction_consume(operation, actor, allocations, revision, tick, checksum, plan_checksum)
-	_tag_live_replay6(actor, operation)
+	_tag_live_replay6(actor, key, existed)
 	return result
 
-func _tag_live_replay6(actor: String, operation: String) -> void:
-	if _live_enabled6 and _ledger.has(operation):
+func _tag_live_replay6(actor: String, operation: String, existed: bool) -> void:
+	# Only the first native insertion establishes attribution. A conflict or
+	# exact replay must never rewrite another actor's pre-existing ledger row.
+	if _live_enabled6 and not existed and _ledger.has(operation):
 		_ledger[operation]["live_player_id"] = actor
 
 func _live_phase6(actor: String, gate, transfer: String, purpose: String, token: String = "") -> Dictionary:
