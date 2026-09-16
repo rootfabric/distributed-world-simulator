@@ -85,11 +85,13 @@ jobs:
           assert r['overall_health']=='RED', r['overall_health']
           hits=[f for f in r['findings'] if f.get('producer')=='V0' and f.get('consumer')=='NX']
           critical=[f for f in hits if f.get('kind')=='CRITICAL_WATCH_HIT']
-          watched=[f for f in hits if f.get('kind')=='WATCHED_FILE_HIT']
+          watched=[f for f in hits if f.get('kind')=='WATCH_HIT']
           assert len(critical)==1, critical
+          assert critical[0]['level']=='RED', critical[0]
           assert critical[0]['files']==['scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service.gd'], critical[0]
           assert critical[0].get('clearance_status')=='UNRESOLVED', critical[0]
           assert len(watched)==1, watched
+          assert watched[0]['level']=='YELLOW', watched[0]
           assert watched[0]['files']==['scripts/network/prediction/predicted_item_interaction_journal.gd'], watched[0]
           print('NEGATIVE_CONTROL_RAW_MAIN_TWO_FILE_SCOPE=PASS')
           PY
@@ -147,7 +149,7 @@ jobs:
           if record['result']!='PASS': raise SystemExit(1)
           PY
 
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+      - uses: actions/upload-artifact@ea165f8d65b540449e92b4886f43607fa02
         if: always()
         with:
           name: v0-mvp6-nx-directional-clearance-${{ env.CONTROL_HEAD }}-${{ github.run_id }}
