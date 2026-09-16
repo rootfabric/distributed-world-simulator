@@ -38,6 +38,13 @@ def _validate_targeted_clearance(
     if not str(clearance.get("review_id", "")) or not str(clearance.get("verification_id", "")):
         return "INDEPENDENT_EVIDENCE_IDS_REQUIRED"
 
+    required_main_ancestor = str(clearance.get("required_main_ancestor", ""))
+    if required_main_ancestor:
+        if len(required_main_ancestor) != 40:
+            return "REQUIRED_MAIN_ANCESTOR_INVALID"
+        if not ancestor_check(required_main_ancestor, "origin/main"):
+            return "REQUIRED_MAIN_ANCESTOR_NOT_CANONICAL"
+
     expected_critical = sorted({str(path) for path in clearance.get("critical_files", []) if str(path)})
     actual_critical = sorted(set(critical_hits))
     if expected_critical != actual_critical:
