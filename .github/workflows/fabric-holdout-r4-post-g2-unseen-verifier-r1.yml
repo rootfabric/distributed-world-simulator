@@ -1,0 +1,195 @@
+name: FABRIC HOLDOUT-R4 Post-G2 Fresh Independent Unseen Verifier R1
+
+on:
+  push:
+    branches: [verify/fabric-holdout-r4-post-g2-unseen-verifier-r1]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fabric-r4-post-g2-unseen-verifier-r1
+  cancel-in-progress: false
+
+env:
+  SUBJECT_BRANCH: repair/fabric-holdout-r4-g2-generalized-capabilities-r1
+  SUBJECT_HEAD: e6228a39b6b3006a3d14ad0884c09266570fcd00
+  SUBJECT_TREE: 1b84960369868aa6d5ec23c1eae3019250ff9a8f
+  FREEZE_COMMIT: 649af4ef16de00c797b4d63be70426abb3c75d68
+  PREREG_HEAD: 8c28ff9ea4ab1446cd067ca4b8cb5674997a621d
+  REVEAL_R2_HEAD: 022fa6730031d529cfaecc40a76fc70315d355d1
+  REVEAL_RUN: '35109278910'
+  REVEAL_ARTIFACT: '10451358632'
+  REVEAL_ARTIFACT_DIGEST: b1ee63b0dedce2f66112242dbbf74f4515a41e7e750be8eaab2d0a183351dd4f
+  CASES_SHA256: 3e14d528a33f4ecb95c4d7fd1f3f55394fcb4b3e624e0bf728698acef99f576d
+  PULSE_FILE: config/research/fabric-holdout-r4-post-g2-nist-pulse-selection-r1.json
+  CASES_FILE: config/research/fabric-holdout-r4-post-g2-unseen-cases-revealed-r1.json
+
+jobs:
+  fresh-independent-unseen-verifier-r1:
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - name: Bind exact product, reveal and verifier-only scope
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          git fetch origin "$SUBJECT_BRANCH" --no-tags
+          test "$(git rev-parse "origin/$SUBJECT_BRANCH")" = "$SUBJECT_HEAD"
+          test "$(git rev-parse "$SUBJECT_HEAD^{tree}")" = "$SUBJECT_TREE"
+          test "$(git merge-base HEAD "$REVEAL_R2_HEAD")" = "$REVEAL_R2_HEAD"
+          test "$(git merge-base HEAD "$PREREG_HEAD")" = "$PREREG_HEAD"
+          test "$(git merge-base HEAD "$FREEZE_COMMIT")" = "$FREEZE_COMMIT"
+          expected="$(printf '%s\n' \
+            '.github/workflows/fabric-holdout-r4-post-g2-unseen-verifier-r1.yml' \
+            'config/research/fabric-holdout-r4-post-g2-unseen-cases-revealed-r1.json' \
+            'docs/research/FABRIC_HOLDOUT_R4_POST_G2_UNSEEN_VERIFIER_R1_RU.md' \
+            'scripts/research/fabric_holdout_r4_post_g2/verify_unseen_cases_independent_v1.py' | sort)"
+          actual="$(git diff --name-only "$REVEAL_R2_HEAD"...HEAD | sort)"
+          test "$actual" = "$expected"
+          for p in \
+            config/research/fabric-holdout-r4-post-g2-unseen-preregister-r1.json \
+            scripts/research/fabric_holdout_r4_post_g2/generate_unseen_cases_v1.py \
+            tests/research/fabric1/fabric_holdout_r4_post_g2_unseen_acceptance.gd; do
+            test "$(git rev-parse "$PREREG_HEAD:$p")" = "$(git rev-parse "HEAD:$p")"
+          done
+          test "$(sha256sum "$CASES_FILE" | awk '{print $1}')" = "$CASES_SHA256"
+          git diff --check "$REVEAL_R2_HEAD"...HEAD
+          echo '*.gd.uid' >> .git/info/exclude
+          printf 'VERIFIER_HEAD=%s\nVERIFIER_TREE=%s\nSUBJECT_HEAD=%s\nSUBJECT_TREE=%s\nFREEZE_COMMIT=%s\nPREREG_HEAD=%s\nREVEAL_R2_HEAD=%s\nREVEAL_RUN=%s\nREVEAL_ARTIFACT=%s\nREVEAL_ARTIFACT_DIGEST=%s\nCASES_SHA256=%s\n' \
+            "$(git rev-parse HEAD)" "$(git rev-parse 'HEAD^{tree}')" "$SUBJECT_HEAD" "$SUBJECT_TREE" "$FREEZE_COMMIT" "$PREREG_HEAD" "$REVEAL_R2_HEAD" "$REVEAL_RUN" "$REVEAL_ARTIFACT" "$REVEAL_ARTIFACT_DIGEST" "$CASES_SHA256" | tee unseen-verifier-identity.txt
+
+      - name: Run primary independent oracle
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          python3 -m py_compile scripts/research/fabric_holdout_r4_post_g2/verify_unseen_cases_independent_v1.py
+          python3 scripts/research/fabric_holdout_r4_post_g2/verify_unseen_cases_independent_v1.py \
+            --pulse "$PULSE_FILE" \
+            --cases "$CASES_FILE" \
+            --out independent-derived-cases.json | tee independent-oracle.log
+          grep -F 'FABRIC_R4_POST_G2_UNSEEN_INDEPENDENT_ASSERTIONS=67' independent-oracle.log
+          grep -F 'FABRIC-R4-POST-G2-UNSEEN-INDEPENDENT-ORACLE: PASS' independent-oracle.log
+          grep -F "INDEPENDENT_CASES_SHA256=$CASES_SHA256" independent-oracle.log
+          cmp -s independent-derived-cases.json "$CASES_FILE"
+
+      - name: Cross-check frozen prereg generator
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          output_value="$(python3 -c 'import json,os; print(json.load(open(os.environ["PULSE_FILE"]))["pulse"]["outputValue"])')"
+          pulse_uri="$(python3 -c 'import json,os; print(json.load(open(os.environ["PULSE_FILE"]))["pulse"]["uri"])')"
+          pulse_timestamp="$(python3 -c 'import json,os; print(json.load(open(os.environ["PULSE_FILE"]))["pulse"]["timeStamp"])')"
+          python3 scripts/research/fabric_holdout_r4_post_g2/generate_unseen_cases_v1.py \
+            --output-value "$output_value" \
+            --pulse-uri "$pulse_uri" \
+            --pulse-timestamp "$pulse_timestamp" \
+            --out frozen-generator-cases.json | tee frozen-generator.log
+          test "$(sha256sum frozen-generator-cases.json | awk '{print $1}')" = "$CASES_SHA256"
+          cmp -s frozen-generator-cases.json independent-derived-cases.json
+          cmp -s frozen-generator-cases.json "$CASES_FILE"
+          echo 'FROZEN_GENERATOR_INDEPENDENT_ORACLE_BYTE_MATCH=PASS'
+
+      - name: Verify canonical Linux double
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          bin="${DWS_GODOT_DOUBLE_BIN:-$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64}"
+          test -x "$bin"
+          version="$("$bin" --version | head -n1 | tr -d '\r')"
+          sha="$(sha256sum "$bin" | awk '{print $1}')"
+          test "$version" = '4.7.1.stable.double.custom_build.a13da4feb'
+          test "$sha" = 'bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7'
+          echo "GODOT_BIN=$bin" >> "$GITHUB_ENV"
+          printf 'GODOT_VERSION=%s\nGODOT_SHA256=%s\n' "$version" "$sha" | tee unseen-verifier-godot.txt
+
+      - name: Fresh import verifier checkout
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          rm -rf .godot
+          "$GODOT_BIN" --headless --editor --path . --log-file unseen-verifier-import.log --import
+          ! grep -Eiq 'SCRIPT ERROR|Parse Error|Invalid call|Invalid access|ERROR:' unseen-verifier-import.log
+
+      - name: Secondary frozen unseen runner replay
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          export FABRIC_R4_POST_G2_CASES="$GITHUB_WORKSPACE/$CASES_FILE"
+          "$GODOT_BIN" --headless --path . --script res://tests/research/fabric1/fabric_holdout_r4_post_g2_unseen_acceptance.gd 2>&1 | tee unseen-verifier-runner.log
+          grep -F 'FABRIC_R4_POST_G2_UNSEEN_ASSERTIONS=93 FAILURES=0' unseen-verifier-runner.log
+          grep -F 'FABRIC-HOLDOUT-R4-POST-G2-UNSEEN: PASS' unseen-verifier-runner.log
+          ! grep -Eiq 'SCRIPT ERROR|Parse Error|Invalid call|Invalid access|Assertion failed|ERROR:|Segmentation fault' unseen-verifier-runner.log
+
+      - name: Tertiary exact frozen-product G2 replay
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          out="$GITHUB_WORKSPACE/exact-product-g2-replay.log"
+          subject_dir="$RUNNER_TEMP/dws-r4-unseen-verifier-subject-${GITHUB_RUN_ID}"
+          rm -rf "$subject_dir"
+          git worktree prune
+          git worktree add --detach "$subject_dir" "$SUBJECT_HEAD"
+          cleanup() { git worktree remove --force "$subject_dir" >/dev/null 2>&1 || true; }
+          trap cleanup EXIT
+          (
+            set -Eeuo pipefail
+            cd "$subject_dir"
+            test "$(git rev-parse HEAD)" = "$SUBJECT_HEAD"
+            test "$(git rev-parse 'HEAD^{tree}')" = "$SUBJECT_TREE"
+            export GODOT_BIN="$GODOT_BIN" BREAKPOINT_RUNTIME_DISABLED=1
+            bash RUN_FABRIC_HOLDOUT_R4_G2_TESTS.sh
+            git diff --check
+            test -z "$(git status --porcelain=v1 --untracked-files=no)"
+          ) 2>&1 | tee "$out"
+          grep -F 'FABRIC-HOLDOUT-R4-G2: PASS' "$out"
+          grep -F 'FABRIC-HOLDOUT-R4-G2-TRANSPORT: PASS' "$out"
+          grep -F 'FABRIC-HOLDOUT-R4-G2-BOND-ID: PASS' "$out"
+          grep -F 'FABRIC-HOLDOUT-R4-G2-SIGNED-EFFORT: PASS' "$out"
+
+      - name: Capture independent verifier evidence
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$(git rev-parse "origin/$SUBJECT_BRANCH")" = "$SUBJECT_HEAD"
+          sha256sum \
+            unseen-verifier-identity.txt \
+            "$PULSE_FILE" \
+            "$CASES_FILE" \
+            independent-derived-cases.json \
+            independent-oracle.log \
+            frozen-generator-cases.json \
+            frozen-generator.log \
+            unseen-verifier-godot.txt \
+            unseen-verifier-import.log \
+            unseen-verifier-runner.log \
+            exact-product-g2-replay.log > unseen-verifier-evidence.sha256
+          git diff --check
+          test -z "$(git status --porcelain=v1 --untracked-files=no)"
+          echo 'FABRIC_R4_POST_G2_FRESH_INDEPENDENT_UNSEEN_VERIFIER=PASS'
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: fabric-r4-post-g2-unseen-verifier-r1-${{ github.sha }}
+          path: |
+            unseen-verifier-identity.txt
+            config/research/fabric-holdout-r4-post-g2-nist-pulse-selection-r1.json
+            config/research/fabric-holdout-r4-post-g2-unseen-cases-revealed-r1.json
+            independent-derived-cases.json
+            independent-oracle.log
+            frozen-generator-cases.json
+            frozen-generator.log
+            unseen-verifier-godot.txt
+            unseen-verifier-import.log
+            unseen-verifier-runner.log
+            exact-product-g2-replay.log
+            unseen-verifier-evidence.sha256
+          if-no-files-found: error
+          retention-days: 90
