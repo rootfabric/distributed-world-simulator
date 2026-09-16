@@ -3,7 +3,8 @@ on:
   push:
     branches: [validation/eco-arch2-a9-postmerge-directional-r1]
     paths:
-      - validation/control/v0_nx_directional_r1/verify_compatibility.py
+      - validation/control/v0_nx_directional_r1/**
+      - scripts/network/prediction/predicted_item_interaction_journal.gd
       - .github/workflows/v0-nx-dependency-compatibility-r1.yml
   workflow_dispatch:
 permissions:
@@ -36,7 +37,7 @@ jobs:
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
           git fetch origin '+refs/heads/*:refs/remotes/origin/*' --prune --quiet
           test -z "$(git status --porcelain --untracked-files=no)"
-          python3 -m py_compile validation/control/v0_nx_directional_r1/verify_compatibility.py
+          python3 -m py_compile validation/control/v0_nx_directional_r1/*.py
       - uses: actions/download-artifact@v4
         with:
           name: p7-repair-engine-34117353691
@@ -44,7 +45,7 @@ jobs:
           repository: rootfabric/distributed-world-simulator
           github-token: ${{ github.token }}
           path: ${{ runner.temp }}/v0-nx-engine
-      - name: Run matched NX baseline treatment and exact V0 native gates
+      - name: Reproduce original defect and validate repaired NX pair plus exact V0
         shell: bash
         run: |
           set -euo pipefail
@@ -57,5 +58,35 @@ jobs:
         with:
           name: v0-nx-compatibility-${{ github.sha }}-${{ github.run_id }}
           path: artifacts/v0-nx-compat/
+          if-no-files-found: error
+          retention-days: 90
+  control-projection:
+    if: github.repository == 'rootfabric/distributed-world-simulator' && github.ref == 'refs/heads/validation/eco-arch2-a9-postmerge-directional-r1'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      PYTHONUTF8: '1'
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Exact head and pinned Harness dependency
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          git fetch origin '+refs/heads/*:refs/remotes/origin/*' --prune --quiet
+          python3 -m pip install --disable-pip-version-check -r scripts/harness/requirements.txt
+          python3 -m py_compile validation/control/v0_nx_directional_r1/*.py
+      - name: Fail-closed controls and isolated full-Harness main projection
+        run: python3 validation/control/v0_nx_directional_r1/verify_control.py
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: v0-nx-control-${{ github.sha }}-${{ github.run_id }}
+          path: artifacts/v0-nx-control/
           if-no-files-found: error
           retention-days: 90
