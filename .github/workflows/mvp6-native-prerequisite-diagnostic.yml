@@ -33,6 +33,11 @@ jobs:
           set -euo pipefail
           test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
           test -z "$(git status --porcelain --untracked-files=no)"
+          # Harness requires the real branch name, not a detached checkout.
+          # Attach only this local CI ref to the immutable event subject.
+          git switch -c "$GITHUB_REF_NAME" "$EXPECTED_HEAD"
+          test "$(git symbolic-ref --short HEAD)" = "$GITHUB_REF_NAME"
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
           git merge-base --is-ancestor bc360383b78f0778cac136fe1d9c3a7d656c687b HEAD
           git diff --check bc360383b78f0778cac136fe1d9c3a7d656c687b HEAD
           echo "EXPECTED_TREE=$(git rev-parse HEAD^{tree})" >> "$GITHUB_ENV"
