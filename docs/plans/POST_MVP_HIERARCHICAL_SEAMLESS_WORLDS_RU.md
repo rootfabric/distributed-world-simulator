@@ -1,270 +1,153 @@
-# Post-MVP — расширение бесшовности и иерархические миры
+# Post-MVP — объёмная бесшовность и иерархия областей
 
-Статус: **POST-MVP ROADMAP AMENDMENT / NOT ACTIVATED / NO CURRENT MVP SCOPE EXPANSION**
+Статус: **POST-MVP ROADMAP AMENDMENT / NOT ACTIVATED / NO CURRENT MVP SCOPE EXPANSION**.
+Уточнение R2: 16 сентября 2026. Детальное решение: [объёмная топология, размещение и безопасное переразбиение](POST_MVP_VOLUMETRIC_TOPOLOGY_DESIGN_RU.md).
 
-Этот план определяет первый крупный этап после принятия `V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE`. Он не является текущим Work Order, не расширяет acceptance первого MVP и не разрешает преждевременно начинать post-MVP runtime mutation.
+Этот план определяет первое крупное направление после принятия `V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE`. Он не является текущим Work Order, не расширяет acceptance первого MVP и не разрешает post-MVP runtime mutation. До принятия PR в main это предложение, не канонический scheduler.
+
+R2 уточняет прежний HS-план: «вложенные миры» означают непрерывное пространство с объёмными участками ответственности, а не портал/телепорт между отдельными сценами. Смысловая иерархия, spatial partition, server placement и reference frames разделены. Прежняя редакция сохраняется в Git; HS1–HS8 остаются плановыми обозначениями, не новыми dispatched checkpoint IDs.
 
 ## 1. Цель
 
-После того как текущий MVP докажет бесшовность между соседними authority domains одного игрового мира, следующий шаг должен доказать, что тот же фундамент масштабируется на **иерархию вложенных миров и reference frames**.
+От простого seam перейти к явному разбиению трёхмерного пространства, допускающему пещеру/подвал внутри региона, несколько участков на одном сервере и управляемое разделение нагрузки между серверами.
 
-Эталонная композиция:
-
-```text
-Space World
-   |
-   | REFERENCE_FRAME_CHILD / CONTAINS
-   v
-Planet World
-   |
-   +---- POI World
-   |       |
-   |       +---- Dungeon World
-   |
-   +---- neighboring surface regions
-```
-
-Игрок проходит:
+Эталонное описание мест:
 
 ```text
-Space -> Planet -> POI -> Dungeon -> POI -> Planet -> Space
+Space
+  -> Planet
+      -> Surface POI
+          -> Cave / Basement / Dungeon
 ```
 
-при сохранении одной логической клиентской сессии.
+Это не дерево физических процессов. Пещера сохраняет ID и содержимое после split её обслуживания. Один сервер может обслуживать несколько участков; разные участки могут пользоваться одной системой координат.
+
+Игрок проходит `Space -> Planet -> POI -> Dungeon -> POI -> Planet -> Space` движением по общему пространству без телепортации, пересоздания персонажа или смены клиентского gameplay transport. Новый проход, выкопанный через стену/потолок, работает без заранее объявленного входа.
 
 ## 2. Основной контракт
 
-Минимальные инварианты этапа:
-
 ```text
+ONE_CONTINUOUS_WORLD_SPACE
 ONE_CLIENT_WORLD_CONNECTION
-STABLE_PLAYER_ID
-STABLE_PLAYER_ENTITY_ID
-NO_NORMAL_GAMEPLAY_RECONNECT
-NO_RESPAWN_ON_WORLD_TRANSITION
-ONE_ACTIVE_CANONICAL_WRITER_PER_DOMAIN
+STABLE_PLAYER_AND_ENTITY_IDENTITIES
+NO_NORMAL_GAMEPLAY_RECONNECT_OR_RESPAWN
+EXACTLY_ONE_SPATIAL_PARTITION_PER_POINT_IN_DECLARED_COVERAGE
+AT_MOST_ONE_ADMITTED_WRITER_PER_CANONICAL_STATE
+CHILD_DELEGATION_SUBTRACTS_FROM_PARENT_EFFECTIVE_REGION
 CANONICAL_ITEMS_AND_CARRYING_PRESERVED
-WORLD_GRAPH_DRIVES_TOPOLOGY
-CLIENT_DOES_NOT_SELECT_SIMULATION_SERVER
-REFERENCE_FRAME_TRANSFORMS_ARE_VERSIONED
-STALE_ROUTE_OR_TRANSFORM_EVIDENCE_FAILS_CLOSED
+SPATIAL_PARTITION != SERVER_PLACEMENT
+SEMANTIC_ZONE != OWNERSHIP_REGION
+REFERENCE_FRAME != SERVER_OWNER
+VERSIONED_TOPOLOGY_ASSIGNMENT_AND_FRAME_EVIDENCE
+STALE_OWNERSHIP_CANNOT_AUTHORIZE_CANONICAL_COMMIT
 ```
 
-World identity и server identity не должны смешиваться. `WorldId` описывает логический world/domain, а Directory/AUTHORITY определяет, какой server instance в данный момент является его canonical owner.
+На барьере или при отказе допустима временная недоступность writer, но не двойная запись. Нормальная бесшовность и восстановление после аварии имеют раздельные latency/ready критерии. Ноль доступных writers не означает дыру в карте и не передаёт область родителю автоматически.
 
-## 3. Иерархия WorldGraph
+Spatial ownership не заменяет существующий aggregate/entity ownership. Для неделимой машины или конструкции на границе требуется явный domain contract; независимые physics copies не становятся совместными writers.
 
-Переиспользовать существующие отношения WorldGraph:
+## 3. Слои и существующие foundations
 
-```text
-NEIGHBOR
-OVERLAP
-CONTAINS
-REFERENCE_FRAME_PARENT
-REFERENCE_FRAME_CHILD
-PORTAL_OR_TRANSITION
-VISUALLY_RELEVANT
-```
+Разделять координаты/reference frames, смысловые зоны, эффективное пространственное разбиение, назначение исполнителей и read-only interest/projections. Semantic и visibility overlaps допустимы; эффективные ownership-области не пересекаются. Priority смыслового слоя не выбирает server authority.
 
-Обязательный reference case:
+Переиспользовать WorldGraph, Directory/AUTHORITY, существующие spatial identities, Edge Gateway, SM1, MW9/MW10 и Item/Construction owners. `CONTAINS` подходит для делегирования; `OVERLAP` должен явно описывать свою семантику. Существующий `PORTAL_OR_TRANSITION` не удаляется из словаря WorldGraph, но портал/телепортация не является основой или доказательством этого этапа.
 
-```text
-W0 Space
-  -> W1 Planet
-      -> W2 Surface POI
-          -> W3 Dungeon
-```
+Начальное представление — статические half-open AABB и вложенные исключения, привязанные к выбранным стабильным границам канонического хранения. Произвольные пересечения ownership-siblings отвергаются до публикации. Дальнейшие CELL_SET/движущиеся области требуют отдельных доказательств.
 
-Нужно доказать не только линейный `A <-> B`, но переходы между уровнями вложенности.
+## 4. Лестница HS1–HS8
 
-## 4. Этапы
+### HS1 — Static Volumetric Topology
 
-### HS1 — Hierarchical WorldGraph Composition
+Собрать конечное объявленное покрытие с вложенными областями Planet/POI/Cave и явным остатком родителей. Доказать точное покрытие без дыр и наложений, half-open faces/edges/vertices, запрет циклов/повторных ID/невалидных bounds и fail-closed при неполном topology cache.
 
-Создать versioned topology для минимум четырёх logical worlds:
+Разделить authoring-дерево и исполняемые непересекающиеся участки. В тестах обязательно два подвала один над другим, semantic overlap без смены owner и ownership overlap с отказом публикации. Случайные точки дополняют, но не заменяют точную геометрическую проверку.
 
-- Space;
-- Planet;
-- POI;
-- Dungeon.
+### HS2 — Coordinates and Reference-Frame Contract
 
-Проверить:
+WorldAddress связывает instance/space, reference frame, координаты и требуемую временную/ревизионную привязку. Сначала доказать статический общий frame и согласованные преобразования Space/Planet/local frame; отдельная frame на каждый сервер не требуется.
 
-- parent/child relationships;
-- contains/portal relationships;
-- topology revisions;
-- stale relation revision rejection;
-- Gateway read-only topology cache;
-- отсутствие canonical gameplay writes в Gateway.
+Проверить position/orientation и применимую velocity semantics без скачка физического состояния. Render-origin shift не меняет canonical address. Движущиеся/вращающиеся ownership volumes и изменение transforms во время операции выделяются в последующую bounded стадию; статический PASS не доказывает их поддержку.
 
-### HS2 — Reference Frame Chain
+### HS3 — Static N-Authority Seamless Handoff
 
-Доказать преобразования:
+Запустить настоящие authority-процессы, Gateway и два клиента. До живого переразбиения доказать движение между заранее заданными соседними и вложенными объёмами, вход с разных сторон и возврат; затем четырёхуровневый маршрут на ограниченном стенде.
 
 ```text
-Space frame
-  -> Planet frame
-      -> Local POI frame
-          -> Dungeon frame
-```
-
-Проверить position, orientation и, где применимо, velocity при переходах.
-
-Нельзя передавать cross-world координаты как голый `Vector3` без provenance. Любое межмировое преобразование должно быть связано с versioned reference-frame evidence.
-
-### HS3 — Hierarchical Seamless Handoff
-
-Запустить реальную multi-process композицию и пройти:
-
-```text
-Planet -> POI -> Planet
-Planet -> Dungeon -> Planet
-```
-
-Затем полный маршрут:
-
-```text
-Space -> Planet -> POI -> Dungeon -> POI -> Planet -> Space
-```
-
-Обязательные результаты:
-
-```text
-client transport count = 1
+same client WorldConnection
+stable PlayerId / PlayerEntityId
 normal reconnects = 0
 respawns = 0
-PlayerId changes = 0
-PlayerEntityId changes = 0
-canonical ACTIVE writers per domain = 1
+teleport used as seam substitute = false
+admitted writers for the same canonical state <= 1
 ```
 
-### HS4 — Nested View / Projection
+Player/carrying handoff использует существующий протокол; соседняя projection не получает права записи. Промежуточные участки быстрого движения проверяются по траектории, а не только по endpoint.
 
-Gateway/View Planner должен показывать только необходимые представления соседних/родительских/дочерних worlds.
+### HS4 — View, Interest and Collision Readiness
 
-Примеры:
+До пересечения границы подготовить нужные данные и collision. На поверхности возможны macro/celestial projections; внутри подвала не требуется detailed simulation всей планеты.
 
-- на поверхности планеты виден macro/celestial Space source;
-- возле POI заранее появляется projection/WARM source;
-- внутри Dungeon не требуется держать полную detailed simulation всей планеты;
-- известность тысячи worlds не означает тысячу upstream connections.
+Проверить bounded ACTIVE/WARM/projection subscriptions, cleanup, отсутствие ghost-only collision proof и контролируемое поведение при неготовом получателе. Гистерезис удерживает interest/preload, но не меняет пространственного владельца точки в зависимости от направления подхода.
 
-Проверить bounded active/warm/projection set и cleanup старых subscriptions.
+### HS5 — Items, Construction and Mutable Boundary
 
-### HS5 — Items and Construction Across Nested Boundaries
+Проверить canonical carrying, pickup/drop, реальные ресурсы и Construction на границе объёмов. Использовать принятые результаты MVP как baseline, не переоткрывая их документационной правкой.
 
-Проверить сохранение canonical item/carrying state через вложенные переходы.
+Обязательный ограниченный стенд: около 100 строительных элементов поперёк seam, два клиента, stable IDs/membership/transforms, canonical resource accounting, реальная collision, ADD/REMOVE/replay и поддерживаемые связи. Неделимая физическая группа сохраняет одного owner либо использует отдельно доказанный sharding.
 
-Дополнительно использовать уже принятую после MVP Construction-модель для хотя бы одного boundary case:
+Новый выкопанный вход/выход через стену или потолок пещеры не меняет ownership topology. Передача ранее изменённой породы не подменяется повторной генерацией baseline. Persistence roundtrip и loss/duplicate controls обязательны.
 
-- объект/Construction возле границы Planet/POI или двух surface authorities;
-- один canonical result;
-- два клиента сходятся;
-- collision/projection не расходятся;
-- replay не создаёт duplicate mutation.
+### HS6 — Cross-Volume Operations and Interaction
 
-Не создавать отдельные inventory, Item Graph или Construction truth для child world.
+Через существующие CWIP и доменные transaction contracts доказать действие из A над B, footprint через несколько участков, согласованность времени/версий и единственный effect commit. Источник input, collision-domain owner и effect-owner не обязаны быть одним сервером.
 
-### HS6 — Cross-World Interaction
+Использовать MW9/MW10 и Item/Construction recovery там, где они подходят; сначала проверить API и scope. Пространственное разбиение команды не заменяет атомарность. Lost reply/retry сохраняют OperationId/result; тесты отвергают partial effect и двойную выдачу ресурса.
 
-Активировать существующий Cross-World Interaction Protocol только после доказанного базового handoff.
+### HS7 — Controlled Placement, Split/Merge and Recovery
 
-Reference cases:
+Этот этап открывается после статической композиции HS1–HS6 и требует собственного разрешённого bounded Work Order. Это ручное управляемое переразбиение, не автоматический балансировщик.
 
-- действие из одного world воздействует на entity другого world;
-- collision path может пересекать несколько world domains;
-- каждая authority проверяет только свой collision domain;
-- target effect authority единственная коммитит canonical effect;
-- retry с тем же `OperationId`/`InteractionId` не создаёт второй эффект.
+| Подэтап | Обязательное доказательство |
+| --- | --- |
+| HS7.A Placement | Несколько участков на одном сервере; migrate существующего участка без смены геометрии |
+| HS7.B Split / merge | R -> R_left/R_right -> перенос части; обратное объединение; child-исключения сохранены |
+| HS7.C Durable cutover | Snapshot/catch-up, barrier, проверенный fence, durable decision, activation и cleanup |
+| HS7.D Fault matrix | Crash каждого участника на каждой фазе; stale process/route; lost reply; concurrent edit; abort/forward recovery |
 
-### HS7 — Persistence / Restart Matrix
+Матрица VT01–VT24 в [design R2](POST_MVP_VOLUMETRIC_TOPOLOGY_DESIGN_RU.md) является обязательным входом планирования тестов. Особенно проверить split родителя через child, удаление делегирования как обратную миграцию, неподвижного игрока при смене assignment и команду, начатую до барьера.
 
-Проверить поочерёдный restart child authorities без разрушения общей сессии/истины:
+Отказ child-сервера не даёт родителю его scope. Старые ownership tokens должны отвергаться на реальном canonical commit path, не только в Gateway. Неподтверждённая защита от stale writer блокирует активацию нового.
 
-```text
-restart Dungeon authority
-restart POI authority
-restart Planet authority
-```
+### HS8 — Four-Level Live Composition Acceptance
 
-После recovery:
+На небольшом стенде: два реальных клиента, Gateway и четыре authority-процесса для маршрута Space/Planet/POI/Dungeon. Все четыре логические области образуют непрерывное пространство, без teleport/scene-switch подмены. Масштаб стенда не означает production galaxy или готовый орбитальный gameplay.
 
-- topology revision согласована;
-- player placement восстановлен;
-- item/carrying state не потерян и не дублирован;
-- Construction/world mutations сохранены;
-- stale authority epoch fenced.
+Пройти полный маршрут и выполнить реальные item/Construction/Matter операции. Дополнительно проиграть контролируемую смену assignment и split/merge в присутствии клиентов, в том числе неподвижного, используя HS7. Проверить continuity, conservation, collision, replay, subscriptions и recovery. Dynamic fault pause измеряется отдельно от normal seam.
 
-### HS8 — Four-Level Acceptance
+Нужны exact HEAD/TREE evidence, relevant full regressions, Project Control и независимые review/verification согласно активированному Harness-контракту. Документ/модель не являются acceptance.
 
-Финальный пользовательский proof:
+## 5. Что остаётся за пределами первого объёмного этапа
 
-```text
-Client A + Client B
-        |
-        v
-Space
-  -> Planet
-      -> POI
-          -> Dungeon
-      <- POI
-  <- Planet
-<- Space
-```
+Полный WORLDGEN1, все WORLD PACKS, production ECO/FABRIC, новые глобальные owners, arbitrary-volume physics, автоматическое размещение/Kubernetes, тысячи игроков и доказательство всех moving-frame случаев не включаются автоматически.
 
-Во время маршрута выполняются реальные world operations: item interaction, mutation/Construction operation и хотя бы одно cross-world или cross-boundary observable действие.
+Порядок развития: статическая N-authority композиция -> управляемые split/migrate/merge -> наблюдение/оценка размещения -> автоматическое размещение позднее. Сам разрез не гарантирует ускорения; учитывать стоимость границ, cross-domain transactions и неделимые физические группы.
 
-## 5. Что этот этап не должен делать
-
-Hierarchical Seamlessness не должен автоматически втягивать:
-
-- полный WORLDGEN1;
-- полноценную галактическую генерацию;
-- production-scale ecology;
-- FABRIC adaptive fidelity;
-- все WORLD PACKS;
-- dynamic autoscaling/Kubernetes;
-- тысячи одновременных игроков.
-
-Цель — сначала доказать **общность seamless topology/authority/reference-frame mechanism** на маленькой четырёхуровневой композиции.
-
-## 6. Порядок после текущего MVP
-
-Рекомендуемая post-MVP последовательность:
+## 6. Место в post-MVP развитии
 
 ```text
 CURRENT MVP ACCEPTED
-        |
-        v
-HS1-HS8 HIERARCHICAL SEAMLESS WORLDS
-        |
-        v
-WORLDGEN1 / PLANET-SCALE WORLD GENERATION
-        |
-        v
-NX7/NX8/RF/NX9 / REPLICATION AND SCALE
-        |
-        v
-MULTI-PLANET / LARGE-WORLD COMPOSITION
-        |
-        +---- WORLD FILL / WORLD PACKS
-        +---- ECO integration
-        +---- FABRIC integration
-        |
-        v
-PRODUCTION-SCALE DISTRIBUTED WORLD
+  -> HS1-HS6: статические объёмные области и живые операции
+  -> HS7: контролируемое размещение / split / merge / recovery
+  -> HS8: четырёхуровневая игровая композиция
+  -> дальнейшее расширение мира и масштаба
 ```
 
-Причина такого порядка: если `Space -> Planet -> POI -> Dungeon` работает на маленьком стенде, дальнейшее расширение количества планет, регионов, станций, подземелий и серверов становится масштабированием уже доказанного механизма, а не новой сетевой архитектурой.
+WORLDGEN1, NX/RF, контент и ECO/FABRIC остаются соответствующими направлениями развития через явные consumer contracts. Этот документ не создаёт искусственную обязательную цепочку `WORLDGEN1 -> NX7 -> NX8 -> RF -> NX9`, не переименовывает P8 и не меняет объявленную независимость P8/RF. Нужные prerequisites определяются конкретным этапом по main-owned control, а не названием большой research-линии.
 
-## 7. Activation rule
+## 7. Activation и состояние доказательств
 
-Этот roadmap становится исполняемым только после:
+Реализация разрешается только после принятия `V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE`, закрытия текущего MVP Work Order, определения exact accepted base, отдельного post-MVP activation/epoch и bounded Work Order. Публикация этого текста не удовлетворяет этим условиям.
 
-1. `V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE` принят;
-2. current MVP Work Order закрыт;
-3. создан отдельный post-MVP activation/epoch;
-4. выпущен bounded Work Order для первого HS checkpoint;
-5. определена exact accepted base.
+Перед исполнением сверить настоящий status и capabilities существующих owners; specification candidate не равен runtime acceptance. Неизвестный или отсутствующий API фиксируется как gap, не восполняется demo-only store/координатором.
 
-До этого документ является направлением развития и не меняет текущий scheduler.
+Уточнение R2 не изменяет текущий MVP6 или его acceptance: выполняющий его агент продолжает действующее поручение. Документы HS — направление и подробная матрица будущих обязательств, а не второй scheduler.

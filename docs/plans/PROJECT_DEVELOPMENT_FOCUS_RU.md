@@ -31,73 +31,46 @@ P7.7 уже содержит графический Digging Playground. Визу
 
 ## После MVP: расширение бесшовности
 
-После принятия `V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE` первым крупным post-MVP направлением становится **Hierarchical Seamless Worlds**: доказать, что текущая бесшовность масштабируется не только горизонтально между соседними authority, но и на вложенную иерархию миров и reference frames.
+Уточнение R2 от 16 сентября 2026: после принятия `V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE` первым крупным post-MVP направлением предлагается **объёмная бесшовность** — единое непрерывное пространство с непересекающимися участками ответственности, а не телепортация между сценами.
 
-Подробный план: [`POST_MVP_HIERARCHICAL_SEAMLESS_WORLDS_RU.md`](POST_MVP_HIERARCHICAL_SEAMLESS_WORLDS_RU.md).
+План этапов: [HS1–HS8](POST_MVP_HIERARCHICAL_SEAMLESS_WORLDS_RU.md). Подробное решение и матрица сценариев: [топология, размещение и split/merge](POST_MVP_VOLUMETRIC_TOPOLOGY_DESIGN_RU.md).
 
-Эталонная композиция:
-
-```text
-Space World
-   |
-   v
-Planet World
-   |
-   +--> POI World
-   |      |
-   |      +--> Dungeon World
-   |
-   +--> neighboring surface authorities
-```
-
-Обязательный end-to-end маршрут:
+Смысловой маршрут сохраняется:
 
 ```text
-Space -> Planet -> POI -> Dungeon -> POI -> Planet -> Space
+Space -> Planet -> POI -> Cave / Basement / Dungeon -> обратно
 ```
 
-при следующих инвариантах:
+Но дерево мест не является деревом серверов. Разделяются reference frames, смысловые зоны, эффективное пространственное разбиение, назначение исполнителей и read-only interest/projections. Semantic overlaps разрешены; каноническое пространственное владение однозначно. Пещера сохраняет identity и состояние при разделении её обслуживания между серверами.
+
+| Ступень | Результат |
+| --- | --- |
+| HS1–HS2 | Статические вложенные AABB, child-исключения, точное покрытие без наложений, согласованные координаты |
+| HS3–HS4 | Реальное движение через объёмы; один WorldConnection; готовые collision и bounded projections |
+| HS5–HS6 | Предметы, примерно 100 элементов Construction через seam, копание нового прохода, согласованные cross-volume операции |
+| HS7 | После статического proof: контролируемые migrate/split/merge, durable cutover, fencing и fault recovery |
+| HS8 | Четыре уровня, два клиента, реальные операции и смена размещения в живой композиции |
+
+Обязательные различия:
 
 ```text
-one Client WorldConnection
-stable PlayerId / PlayerEntityId
-normal gameplay reconnects = 0
-respawns = 0
-one ACTIVE canonical writer per domain
-canonical item/carrying state preserved
-versioned reference-frame transforms
-WorldGraph-driven topology and routing
+point in declared coverage -> exactly one spatial partition
+canonical state           -> at most one admitted writer
+barrier / failure         -> temporary unavailability may be valid
+semantic place            != partition != ServerInstance
+reference frame           != server owner
+replication overlap       != write authority overlap
 ```
 
-Этап должен переиспользовать существующие WorldGraph semantics (`CONTAINS`, `REFERENCE_FRAME_PARENT/CHILD`, `PORTAL_OR_TRANSITION`, `VISUALLY_RELEVANT`), Edge Gateway, authority handoff, projections и Cross-World Interaction Protocol, а не создавать второй routing/ownership foundation.
+Дочерний объём вычитается из владения родителя. Split/merge сохраняет такие исключения; недоступность child-сервера не отдаёт его пространство родителю. Перенос данных, результатов операций и права записи должен завершаться согласованным durable-решением. Heartbeat или флаг ACTIVE не заменяет fence на canonical commit boundary.
 
-Рекомендуемая post-MVP последовательность:
+В первой реализации — статические half-open AABB и явное размещение нескольких участков на одном сервере. Автоматический балансировщик, moving-frame ownership и произвольная физика через границы требуют последующих доказательств. Статическая карта или абстрактная модель не объявляют эти возможности implemented.
 
-```text
-CURRENT MVP ACCEPTED
-        |
-        v
-HIERARCHICAL SEAMLESS WORLDS
-Space -> Planet -> POI -> Dungeon
-        |
-        v
-WORLDGEN1 / PLANET-SCALE WORLD GENERATION
-        |
-        v
-NX7 / NX8 / RF / NX9 — REPLICATION AND SCALE
-        |
-        v
-MULTI-PLANET / LARGE-WORLD COMPOSITION
-        |
-        +---- WORLD FILL / WORLD PACKS
-        +---- ECO integration
-        +---- FABRIC integration
-        |
-        v
-PRODUCTION-SCALE DISTRIBUTED WORLD
-```
+Переиспользуются существующие WorldGraph, Directory/AUTHORITY, Edge Gateway, SM1, MW9/MW10 и Item/Construction contracts. `PORTAL_OR_TRANSITION` может оставаться в словаре, но портал не засчитывается как объёмная бесшовность. Новый routing/ownership foundation не создаётся.
 
-Это **не расширение текущего MVP** и не разрешение немедленного dispatch. Post-MVP этап активируется только после закрытия текущего MVP, создания нового epoch/activation и bounded Work Order на exact accepted base.
+После HS остаются расширение мира/WORLDGEN1, NX/RF и масштаб, WORLD FILL/PACKS и интеграция ECO/FABRIC через явные контракты. Это не новая обязательная последовательность всех research-линий, не переименование P8 и не изменение независимости P8/RF. Конкретный dispatch определяет main-owned control.
+
+Это **не расширение текущего MVP**. Реализация HS разрешается только после закрытия текущего MVP, отдельного post-MVP activation/epoch, exact accepted base и bounded Work Order. Эта документационная правка не меняет runtime, действующий MVP Work Order, scheduler, lease или acceptance.
 
 ## Экология: один экспериментальный полигон
 
