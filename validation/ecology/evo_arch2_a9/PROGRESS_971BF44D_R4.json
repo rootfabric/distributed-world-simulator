@@ -1,0 +1,29 @@
+{
+  "schema": "dws.ecology.a9-progress.v1",
+  "checkpoint": "ECO_ARCH2_A9_ECOLOGICAL_FIDELITY",
+  "work_order": "EVO-ARCH2-A9-20260915-R1",
+  "source": {
+    "branch": "feature/eco-evo-arch2-a9-fidelity-r1",
+    "head": "971bf44d63a7e76f19bcf7b39c978e90312e677b",
+    "tree": "97c61acc96f507d71b6883fbdeef486c08b1113d",
+    "base_main": "675c04bb213bbb68b8cdb500d540d57ce1490318",
+    "base_tree": "04b217ff7acfcd6336490f139f9239a7f6b59b7d",
+    "state": "VERIFYING_REPAIR_R2"
+  },
+  "repair_r2": {
+    "finding": 4016243317,
+    "integration_commit": "9bb24872fba2d6273b202b4b2123bcee452879dd",
+    "verifier_commit": "4716768c0cd58cf941022f5375e74ba46beca968",
+    "control_commit": "971bf44d63a7e76f19bcf7b39c978e90312e677b",
+    "contract": "Fresh-process restore derives packet SHA and origin only from caller-owned fsynced durable acknowledgement; forged durable origin acknowledgement must fail."
+  },
+  "gates": {
+    "project_control": {"run": 35072229608, "result": "SUCCESS"},
+    "fresh_review": {"request_comment": 5694231024, "status": "RUNNING_AT_CHECKPOINT"},
+    "exact_r2": {"run": 34976417664, "status": "HISTORICAL_AFTER_SOURCE_MOVE"},
+    "exact_r3": {"run": 35072320312, "status": "FAILED_ORCHESTRATION_BEFORE_VERIFIER", "reason": "XVFB_RUN_NOT_PRESENT_ON_SELF_HOSTED_RUNNER"},
+    "exact_r4": {"run": 35072474690, "status": "IN_PROGRESS_AT_CHECKPOINT"}
+  },
+  "stop_before": ["MAIN_MERGE", "A10_ACTIVATION"],
+  "next_action": "READ_LIVE_R4_AND_FRESH_REVIEW; IF_BOTH_PASS_INSPECT_EXACT_ARTIFACT_AND_FINAL_MAIN_EPOCH; OTHERWISE_BOUND_REPAIR_TO_REPRODUCIBLE_FINDING"
+}
