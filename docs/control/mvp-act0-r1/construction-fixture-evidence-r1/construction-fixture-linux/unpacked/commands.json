@@ -1,0 +1,73 @@
+[
+  {
+    "name": "import",
+    "argv": [
+      "/home/runner/work/_temp/engine/godot",
+      "--headless",
+      "--path",
+      ".",
+      "--editor",
+      "--import",
+      "--quit"
+    ],
+    "exit_code": 0,
+    "assertions": [],
+    "fatal": [],
+    "passed": true,
+    "sha256": "193d621caa9cd88db89ee63b518f26719cc5464beab381b92f559e7b5eea6c86"
+  },
+  {
+    "name": "construction",
+    "argv": [
+      "/home/runner/work/_temp/engine/godot",
+      "--headless",
+      "--path",
+      ".",
+      "--script",
+      "res://tests/runtime/test_v0_mvp_6_item_construction_composition.gd"
+    ],
+    "exit_code": 0,
+    "assertions": [
+      223
+    ],
+    "fatal": [],
+    "passed": true,
+    "sha256": "26201bf53a5a23c85ebc055e7f5a4150e24c859c4d01b741f5ef8e04e99f993a"
+  },
+  {
+    "name": "p4",
+    "argv": [
+      "/home/runner/work/_temp/engine/godot",
+      "--headless",
+      "--path",
+      ".",
+      "--script",
+      "res://tests/runtime/test_v0_p4_live_mvp_composition_ordering.gd"
+    ],
+    "exit_code": 0,
+    "assertions": [
+      64
+    ],
+    "fatal": [],
+    "passed": true,
+    "sha256": "cccd7428af7e4da9a5c5e3aa66c9ba585a37d1240ab496ce471fd6b72e20d1d2"
+  },
+  {
+    "name": "journal",
+    "argv": [
+      "/home/runner/work/_temp/engine/godot",
+      "--headless",
+      "--path",
+      ".",
+      "--script",
+      "res://tests/runtime/test_v0_mvp_6_prediction_rollback.gd"
+    ],
+    "exit_code": 0,
+    "assertions": [
+      77
+    ],
+    "fatal": [],
+    "passed": true,
+    "sha256": "7d0d97baf69042ae7c0e3176f4a49f2daa6c1cb3a3d0c5348ceabb71a5e0500c"
+  }
+]

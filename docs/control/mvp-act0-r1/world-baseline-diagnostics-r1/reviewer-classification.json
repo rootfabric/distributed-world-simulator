@@ -1,0 +1,30 @@
+{
+  "schema": "distributed_world_simulator.reviewer_diagnostic_classification.v1",
+  "reviewer": "/root/journal_repair_reviewer",
+  "baseline_head": "6982a563dd0c88c81449566131852c601ae89868",
+  "baseline_tree": "97c61acc96f507d71b6883fbdeef486c08b1113d",
+  "classification": "PREEXISTING_BASELINE_DIAGNOSTICS_REPRODUCED",
+  "baseline_clean": true,
+  "import_pass": true,
+  "main_candidate_subject": "3b82145ae946bb51aebf67f048a28420368b40be",
+  "m5": {
+    "signature": "PeekNamedPipe FileAccessWindowsPipe::get_length drivers/windows/file_access_windows_pipe.cpp:110",
+    "assertions": 101,
+    "failures": 0,
+    "errors": 2,
+    "exit_code": 0
+  },
+  "m6": {
+    "warning": "8 ObjectDB instances leaked",
+    "assertions": 126,
+    "failures": 0,
+    "error": "4 resources still in use at exit ResourceCache::clear core/io/resource.cpp:822",
+    "exit_code": 0
+  },
+  "reasoning": "Exact clean canonicalmain already reproduces both signatures using canonical engine. This establishes these diagnostics do not require the journal repair; it does not prove that they are harmless or authorize hiding fatal markers.",
+  "logs_reclassified_as_clean": false,
+  "full_world_pass_claimed": false,
+  "error_suppression_authorized": false,
+  "source_mutation": false,
+  "evidence_manifest": "evidence-manifest.json"
+}

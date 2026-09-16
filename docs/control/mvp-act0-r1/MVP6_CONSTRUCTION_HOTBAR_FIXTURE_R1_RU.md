@@ -24,3 +24,19 @@ Focused test остаётся backend composition. Его presentation proxy ass
 не заменяют required physics interaction и пять реальных процессов. Whole MVP6,
 five-process, full connected Construction и PC0 clearance не объявлены VERIFIED.
 Новых ресурсов/owners/ledger не добавлено; main repair PR646 не менялся.
+
+## Exact результат
+
+Frozen `84ab0c0fba87f12dcfc94e32bb9cfa4eb8abb481`, tree
+`f7e3f255bcc4878f3e738e011e3d45bf3edcdb81`: Windows и Linux223/64/77 PASS,
+proper report HEAD/TREE, отсутствие fatal markers, source clean. Reviewer и
+Verifier дали отдельные bounded PASS; Verifier самостоятельно повторил223.
+Проверены canonical расход8→6→2→0, один OPERATIONAL construct, обе native
+handoff cases и две derived presentations. Physics interaction и five-process
+не заявлены. Runtime scripts byte-identical frozen journal subject73b88181.
+
+Linux run35100372324, artifact10447788421, фактический ZIP SHA256:
+`cfae9802f9e13e2314763ca3ec926a8a1bc65057fb68774ef3e59ed11d50d63a`.
+Все raw результаты и role verdicts: `construction-fixture-evidence-r1/manifest.json`.
+Исторический183/1 сохранён; после staging это больше не текущий focused blocker.
+Canonical PC0, connected live/physics и full MVP6 acceptance остаются открытыми.
