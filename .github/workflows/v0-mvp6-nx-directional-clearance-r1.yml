@@ -1,0 +1,141 @@
+name: V0 MVP6 NX Directional Clearance R1
+
+on:
+  push:
+    branches: [validation/v0-mvp6-nx-directional-clearance-r1]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: v0-mvp6-nx-directional-clearance-r1
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    if: github.repository == 'rootfabric/distributed-world-simulator'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      CONTROL_HEAD: c8e675af4fc6f26cad082712a49f082227342838
+      CONTROL_TREE: 04c324df07d3356db3e0ada31a5a7c3ec5d9cc7e
+      BASE_MAIN: 6982a563dd0c88c81449566131852c601ae89868
+      REVIEWED_V0_HEAD: f3063cbae408a197c5eda37b912a8fe2995ac07e
+      V0_CRITICAL_PATH: scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service.gd
+      V0_CRITICAL_BLOB: 44841fb3719b1cf36fd5afdfc0f8a0e4d0eacb30
+      NX_HEAD: 1a56fe0e845c941f14ce7b9296ee939e9d0ca8bc
+      NX_PASSPORT: config/control/branches/feature__h0-2-nx-c1-owner-authority-r3.v1.json
+      NX_PASSPORT_BLOB: c3af1974228c9ee5c34bf4d54c72896c99fc4d1a
+      CLEARANCE_ID: V0-MVP6-NX-H0-2-M4-CRITICAL-WATCH-CLEARANCE-003
+      PYTHONPATH: scripts
+      PYTHONUTF8: '1'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ env.CONTROL_HEAD }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Seal control candidate and live routing identities
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin '+refs/heads/*:refs/remotes/origin/*' --prune
+          test "$(git rev-parse HEAD)" = "$CONTROL_HEAD"
+          test "$(git rev-parse HEAD^{tree})" = "$CONTROL_TREE"
+          test "$(git rev-parse origin/control/v0-mvp6-nx-directional-clearance-r1)" = "$CONTROL_HEAD"
+          test "$(git rev-parse origin/main)" = "$BASE_MAIN"
+          git merge-base --is-ancestor "$REVIEWED_V0_HEAD" origin/feature/v0-mvp-playable-seamless-planet-r1
+          test "$(git rev-parse "$REVIEWED_V0_HEAD:$V0_CRITICAL_PATH")" = "$V0_CRITICAL_BLOB"
+          test "$(git rev-parse "origin/feature/v0-mvp-playable-seamless-planet-r1:$V0_CRITICAL_PATH")" = "$V0_CRITICAL_BLOB"
+          test "$(git rev-parse origin/feature/h0-2-nx-c1-owner-authority-r3)" = "$NX_HEAD"
+          test "$(git rev-parse "$NX_HEAD:$NX_PASSPORT")" = "$NX_PASSPORT_BLOB"
+          mapfile -t changed < <(git diff --name-only "$BASE_MAIN" "$CONTROL_HEAD")
+          printf '%s\n' "${changed[@]}"
+          test "${#changed[@]}" -eq 2
+          test "${changed[0]}" = "config/control/directional-watch-clearances.v1.json"
+          test "${changed[1]}" = "tests/harness/test_project_control_directional_clearance.py"
+          git diff --check "$BASE_MAIN" "$CONTROL_HEAD"
+
+      - name: Validate candidate JSON and Harness control contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m json.tool config/control/directional-watch-clearances.v1.json >/dev/null
+          python3 -m pip install --disable-pip-version-check -r scripts/harness/requirements.txt
+          python3 -m harness.control_candidate_validation
+
+      - name: Prove canonical-main negative control is still RED before clearance merge
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/control-clearance
+          python3 scripts/control/project_control_directional_watch.py --no-fail-on-red > artifacts/control-clearance/raw-main-directional.log
+          cp artifacts/control/directional-watch-report.json artifacts/control-clearance/raw-main-directional.json
+          python3 - <<'PY'
+          import json
+          p='artifacts/control-clearance/raw-main-directional.json'
+          r=json.load(open(p,encoding='utf-8'))
+          assert r['overall_health']=='RED', r['overall_health']
+          hits=[f for f in r['findings'] if f.get('producer')=='V0' and f.get('consumer')=='NX' and f.get('kind')=='CRITICAL_WATCH_HIT']
+          assert len(hits)==1, hits
+          assert hits[0]['files']==['scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service.gd'], hits[0]
+          assert hits[0].get('clearance_status')=='UNRESOLVED', hits[0]
+          print('NEGATIVE_CONTROL_RAW_MAIN_RED=PASS')
+          PY
+
+      - name: Prove candidate clearance replay and fail-closed behavior
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest tests.harness.test_project_control_directional_clearance | tee artifacts/control-clearance/clearance-tests.log
+
+      - name: Re-run full architecture ownership compatibility group with candidate clearance
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest \
+            tests.harness.test_project_control_architecture_compatibility \
+            tests.harness.test_project_control_historical_ownership_compatibility \
+            tests.harness.test_project_control_proposed_r3_ownership_projection \
+            | tee artifacts/control-clearance/architecture-group.log
+
+      - name: Bind candidate evidence
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib,subprocess
+          out=pathlib.Path('artifacts/control-clearance'); out.mkdir(parents=True,exist_ok=True)
+          def git(*args): return subprocess.check_output(['git',*args],text=True).strip()
+          reg=json.load(open('config/control/directional-watch-clearances.v1.json',encoding='utf-8'))
+          matches=[x for x in reg['clearances'] if x.get('clearance_id')==os.environ['CLEARANCE_ID']]
+          record={
+            'schema':'distributed_world_simulator.v0_mvp6_nx_directional_clearance_candidate_evidence.v1',
+            'control_head':os.environ['CONTROL_HEAD'],
+            'control_tree':os.environ['CONTROL_TREE'],
+            'base_main':os.environ['BASE_MAIN'],
+            'reviewed_v0_head':os.environ['REVIEWED_V0_HEAD'],
+            'live_v0_head':git('rev-parse','origin/feature/v0-mvp-playable-seamless-planet-r1'),
+            'v0_critical_blob':os.environ['V0_CRITICAL_BLOB'],
+            'nx_head':os.environ['NX_HEAD'],
+            'nx_passport_blob':os.environ['NX_PASSPORT_BLOB'],
+            'clearance_id':os.environ['CLEARANCE_ID'],
+            'clearance_count':len(matches),
+            'run_id':os.environ['GITHUB_RUN_ID'],
+            'result':'PASS' if len(matches)==1 else 'FAIL',
+          }
+          target=out/'summary.json'; target.write_text(json.dumps(record,indent=2)+'\n')
+          print(target.read_text())
+          if record['result']!='PASS': raise SystemExit(1)
+          PY
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: v0-mvp6-nx-directional-clearance-${{ env.CONTROL_HEAD }}-${{ github.run_id }}
+          path: artifacts/control-clearance/
+          if-no-files-found: error
+          retention-days: 90
