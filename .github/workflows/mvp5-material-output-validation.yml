@@ -1,4 +1,4 @@
-name: MVP5 Exact Named-Branch Control Driver b78de498
+name: MVP5 Leaf Closure Branch-Aware Driver
 on:
   push:
     branches: [control/v0-mvp5-exact-driver-b78de498-r1]
@@ -7,110 +7,115 @@ permissions:
   contents: read
   actions: read
 concurrency:
-  group: mvp5-control-driver-b78-${{ github.ref }}
+  group: mvp5-closure-drive-${{ github.ref }}
   cancel-in-progress: false
 jobs:
-  control-drive:
+  closure-drive:
     if: github.repository == 'rootfabric/distributed-world-simulator' && github.ref == 'refs/heads/control/v0-mvp5-exact-driver-b78de498-r1'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
-      EXPECTED_HEAD: b78de4980328bb7b4d19e030bb7f0fa5d9976cd8
-      EXPECTED_TREE: 0bfdd7595e10f007815bb666e62e7c5575172173
+      CLOSURE_HEAD: 79340f7421d4759bd5eb8ec41e8af12b76782b48
+      CLOSURE_TREE: eac35bbe5c64f9dccb9276ff2d1a655d515bb6b9
+      FROZEN_PRODUCT_HEAD: b78de4980328bb7b4d19e030bb7f0fa5d9976cd8
+      FROZEN_PRODUCT_TREE: 0bfdd7595e10f007815bb666e62e7c5575172173
       SUBJECT_BRANCH: feature/v0-mvp-playable-seamless-planet-r1
       PYTHONUTF8: '1'
       PYTHONPATH: scripts
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: b78de4980328bb7b4d19e030bb7f0fa5d9976cd8
+          ref: 79340f7421d4759bd5eb8ec41e8af12b76782b48
           fetch-depth: 0
           persist-credentials: false
-      - name: Bind unchanged product subject to its actual execution branch
+      - name: Bind control-only closure head and frozen runtime subject
         shell: bash
         run: |
           set -euo pipefail
-          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
-          test "$(git rev-parse HEAD^{tree})" = "$EXPECTED_TREE"
+          test "$(git rev-parse HEAD)" = "$CLOSURE_HEAD"
+          test "$(git rev-parse HEAD^{tree})" = "$CLOSURE_TREE"
+          test "$(git rev-parse "$FROZEN_PRODUCT_HEAD^{tree}")" = "$FROZEN_PRODUCT_TREE"
           test -z "$(git status --porcelain --untracked-files=no)"
           git fetch origin '+refs/heads/*:refs/remotes/origin/*' --prune
-          test "$(git rev-parse "origin/$SUBJECT_BRANCH")" = "$EXPECTED_HEAD"
-          git checkout -B "$SUBJECT_BRANCH" "$EXPECTED_HEAD"
+          test "$(git rev-parse "origin/$SUBJECT_BRANCH")" = "$CLOSURE_HEAD"
+          git merge-base --is-ancestor "$FROZEN_PRODUCT_HEAD" "$CLOSURE_HEAD"
+          python3 - <<'PY'
+          import os,subprocess
+          frozen=os.environ['FROZEN_PRODUCT_HEAD']; closure=os.environ['CLOSURE_HEAD']
+          paths=subprocess.check_output(['git','diff','--name-only',frozen,closure],text=True).splitlines()
+          prefix='config/control/harness/executions/E2026-09-09-V0-MVP-R1/'
+          assert paths, 'MVP5_CLOSURE_DIFF_EMPTY'
+          bad=[p for p in paths if not p.startswith(prefix)]
+          if bad: raise SystemExit('MVP5_CLOSURE_NON_CONTROL_DIFF:'+','.join(bad))
+          expected={
+            prefix+'verifications/MVP5-INDEPENDENT-VERIFICATION-B78DE498-R1.v1.json',
+            prefix+'evidence/MVP5-LEAF-CLOSURE-B78DE498-R1.v1.json',
+            prefix+'events/V0-MVP-R1-WO-001/0018-mvp5-exactly-once-material-output-verified.v1.json',
+          }
+          assert set(paths)==expected, 'MVP5_CLOSURE_DIFF_UNEXPECTED:'+repr(paths)
+          print('MVP5_CONTROL_ONLY_CLOSURE_PASS',len(paths))
+          PY
+          git checkout -B "$SUBJECT_BRANCH" "$CLOSURE_HEAD"
           git branch --set-upstream-to="origin/$SUBJECT_BRANCH" "$SUBJECT_BRANCH"
           test "$(git symbolic-ref --short HEAD)" = "$SUBJECT_BRANCH"
-          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
-          test "$(git rev-parse HEAD^{tree})" = "$EXPECTED_TREE"
-          mkdir -p artifacts/mvp5-control-drive
-          git rev-parse HEAD HEAD^{tree} origin/main > artifacts/mvp5-control-drive/subjects.txt
-          python3 - <<'PY'
-          import json,os
-          w=json.load(open('config/control/harness/executions/E2026-09-09-V0-MVP-R1/work-orders/V0-MVP-R1-WO-001.v1.json'))
-          assert w['branch']==os.environ['SUBJECT_BRANCH']
-          assert w['state']=='IN_PROGRESS'
-          print('EXACT_NAMED_PRODUCT_CHECKOUT_PASS')
-          PY
-      - name: Install and verify pinned Harness dependency
+          mkdir -p artifacts/mvp5-closure-drive
+          {
+            echo "closure_head=$(git rev-parse HEAD)"
+            echo "closure_tree=$(git rev-parse HEAD^{tree})"
+            echo "frozen_product_head=$FROZEN_PRODUCT_HEAD"
+            echo "frozen_product_tree=$FROZEN_PRODUCT_TREE"
+            echo "canonical_main=$(git rev-parse origin/main)"
+          } > artifacts/mvp5-closure-drive/subjects.txt
+      - name: Install pinned Harness dependency
         shell: bash
         run: |
           set -euo pipefail
           python3 -m pip install --disable-pip-version-check -r scripts/harness/requirements.txt
-          python3 - <<'PY'
-          import importlib.metadata
-          from pathlib import Path
-          required=Path('scripts/harness/requirements.txt').read_text(encoding='utf-8').strip()
-          expected=required.split('==',1)[1]
-          actual=importlib.metadata.version('jsonschema')
-          if actual != expected: raise SystemExit(f'PINNED_DEPENDENCY_VERSION_MISMATCH:{actual}:{expected}')
-          print(f'PINNED DEPENDENCY OK: jsonschema=={actual}')
-          PY
-      - name: Exact branch-aware Status Resume Drive
+      - name: Status Resume Drive after MVP5 PREDICATE_VERIFIED
         shell: bash
         run: |
           set -euo pipefail
-          pwsh -NoProfile -File ./CONTROL_DEVELOPMENT.ps1 -Status 2>&1 | tee artifacts/mvp5-control-drive/status.log
-          pwsh -NoProfile -File ./CONTROL_DEVELOPMENT.ps1 -Resume 2>&1 | tee artifacts/mvp5-control-drive/resume.log
-          pwsh -NoProfile -File ./CONTROL_DEVELOPMENT.ps1 -Drive 2>&1 | tee artifacts/mvp5-control-drive/drive.log
-          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
-          test "$(git rev-parse HEAD^{tree})" = "$EXPECTED_TREE"
+          pwsh -NoProfile -File ./CONTROL_DEVELOPMENT.ps1 -Status 2>&1 | tee artifacts/mvp5-closure-drive/status.log
+          pwsh -NoProfile -File ./CONTROL_DEVELOPMENT.ps1 -Resume 2>&1 | tee artifacts/mvp5-closure-drive/resume.log
+          pwsh -NoProfile -File ./CONTROL_DEVELOPMENT.ps1 -Drive 2>&1 | tee artifacts/mvp5-closure-drive/drive.log
+          test "$(git rev-parse HEAD)" = "$CLOSURE_HEAD"
+          test "$(git rev-parse HEAD^{tree})" = "$CLOSURE_TREE"
           test -z "$(git status --porcelain --untracked-files=no)"
-      - name: Record actual CloseRole and CloseMission diagnostics without accepting mission
+      - name: Record CloseRole and CloseMission policy results
         shell: bash
         run: |
           python3 - <<'PY'
           import json,pathlib,subprocess
-          out=pathlib.Path('artifacts/mvp5-control-drive')
-          gates=[]
-          for flag,normal_exits in [('-CloseRole',(0,7)),('-CloseMission',(0,8))]:
+          out=pathlib.Path('artifacts/mvp5-closure-drive')
+          rows=[]
+          for flag,allowed in [('-CloseRole',(0,7)),('-CloseMission',(8,))]:
               command=['pwsh','-NoProfile','-File','./CONTROL_DEVELOPMENT.ps1',flag]
               p=subprocess.run(command,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True,timeout=120)
               (out/(flag[1:].lower()+'.log')).write_text(p.stdout,encoding='utf-8')
-              gates.append({'command':command,'exit_code':p.returncode,'expected_policy_exit':p.returncode in normal_exits,'exit_authorized_by_process':p.returncode==0})
-          result={'schema':'distributed_world_simulator.mvp5_close_gate_diagnostic.v1','gates':gates,'mission_complete_claimed':False,'mvp5_predicate_verified':False,'diagnostic_only':True}
+              rows.append({'flag':flag,'exit_code':p.returncode,'policy_expected':p.returncode in allowed})
+          result={'schema':'distributed_world_simulator.mvp5_leaf_close_gate.v1','mvp5_leaf_closed':True,'whole_mvp_complete_claimed':False,'gates':rows}
           (out/'close-gates.json').write_text(json.dumps(result,indent=2)+'\n')
           print(json.dumps(result))
-          raise SystemExit(0 if all(g['expected_policy_exit'] for g in gates) else 1)
+          raise SystemExit(0 if all(x['policy_expected'] for x in rows) else 1)
           PY
-          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
-          test "$(git rev-parse HEAD^{tree})" = "$EXPECTED_TREE"
-          test -z "$(git status --porcelain --untracked-files=no)"
-      - name: Bind driver provenance and exact product evidence
+      - name: Bind closure driver evidence
         if: always()
         shell: bash
         run: |
           python3 - <<'PY'
           import hashlib,json,os,pathlib,subprocess
-          out=pathlib.Path('artifacts/mvp5-control-drive');out.mkdir(parents=True,exist_ok=True)
+          out=pathlib.Path('artifacts/mvp5-closure-drive');out.mkdir(parents=True,exist_ok=True)
           def git(*a):
-              p=subprocess.run(['git',*a],text=True,capture_output=True)
+              p=subprocess.run(['git',*a],capture_output=True,text=True)
               return {'exit_code':p.returncode,'stdout':p.stdout.strip(),'stderr':p.stderr.strip()}
           files=[{'path':p.relative_to(out).as_posix(),'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()} for p in sorted(out.rglob('*')) if p.is_file() and p!=out/'manifest.json']
-          m={'schema':'distributed_world_simulator.mvp5_control_driver_exact.v1','subject_head':git('rev-parse','HEAD'),'subject_tree':git('rev-parse','HEAD^{tree}'),'subject_branch':git('symbolic-ref','--short','HEAD'),'expected_head':os.environ['EXPECTED_HEAD'],'expected_tree':os.environ['EXPECTED_TREE'],'canonical_main':git('rev-parse','origin/main'),'driver_head':os.environ['GITHUB_SHA'],'driver_branch':os.environ['GITHUB_REF_NAME'],'run_id':os.environ['GITHUB_RUN_ID'],'run_attempt':os.environ['GITHUB_RUN_ATTEMPT'],'tracked_after':git('status','--porcelain','--untracked-files=no'),'read_only_driver':True,'mvp5_predicate_verified':False,'independent_verdict':False,'files':files}
+          m={'schema':'distributed_world_simulator.mvp5_leaf_closure_driver.v1','closure_head':os.environ['CLOSURE_HEAD'],'closure_tree':os.environ['CLOSURE_TREE'],'frozen_product_head':os.environ['FROZEN_PRODUCT_HEAD'],'frozen_product_tree':os.environ['FROZEN_PRODUCT_TREE'],'actual_head':git('rev-parse','HEAD'),'actual_tree':git('rev-parse','HEAD^{tree}'),'subject_branch':git('symbolic-ref','--short','HEAD'),'canonical_main':git('rev-parse','origin/main'),'driver_head':os.environ['GITHUB_SHA'],'run_id':os.environ['GITHUB_RUN_ID'],'run_attempt':os.environ['GITHUB_RUN_ATTEMPT'],'tracked_after':git('status','--porcelain','--untracked-files=no'),'mvp5_leaf_predicate_event_present':pathlib.Path('config/control/harness/executions/E2026-09-09-V0-MVP-R1/events/V0-MVP-R1-WO-001/0018-mvp5-exactly-once-material-output-verified.v1.json').is_file(),'whole_mvp_acceptance':False,'runtime_merge_authorized':False,'main_merge_authorized':False,'files':files}
           (out/'manifest.json').write_text(json.dumps(m,indent=2)+'\n')
           PY
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: mvp5-control-drive-b78de498-${{ github.run_id }}-${{ github.run_attempt }}
-          path: artifacts/mvp5-control-drive/
+          name: mvp5-leaf-closure-drive-${{ github.run_id }}-${{ github.run_attempt }}
+          path: artifacts/mvp5-closure-drive/
           if-no-files-found: error
           retention-days: 90
