@@ -15,6 +15,8 @@ from scripts.research.ecology.v2.ecological_fidelity_v1 import FidelityRecord, F
 from scripts.research.ecology.v2.fidelity_runtime_v1 import NativeA8
 from scripts.research.ecology.v2 import snapshot_store as S
 
+ACK_SCHEMA = 'dws.ecology.a9-durable-ack.v1'
+
 
 def command(record, kind='ADVANCE', args=None, actor=None, epoch=None):
     c = record.source()
@@ -46,8 +48,15 @@ def handoff(backend, record, target):
     return current
 
 
-def anchor_write(path, anchor):
-    raw = canonical(S.validate_anchor(anchor))
+def _origin(value):
+    require(isinstance(value, str) and len(value) == 64 and all(c in '0123456789abcdef' for c in value),
+            'EXTERNAL_ORIGIN_ANCHOR')
+    return value
+
+
+def ack_write(path, anchor, origin_sha256):
+    exact = {'schema': ACK_SCHEMA, 'store': S.validate_anchor(anchor), 'origin_sha256': _origin(origin_sha256)}
+    raw = canonical(exact)
     temp = path.with_suffix('.tmp')
     with temp.open('wb') as f:
         f.write(raw); f.flush(); os.fsync(f.fileno())
@@ -55,19 +64,29 @@ def anchor_write(path, anchor):
     fd = os.open(path.parent, os.O_RDONLY | os.O_DIRECTORY)
     try: os.fsync(fd)
     finally: os.close(fd)
-    require(path.read_bytes() == raw, 'EXTERNAL_ANCHOR_WRITE')
+    require(path.read_bytes() == raw, 'EXTERNAL_ACK_WRITE')
+    return exact
+
+
+def ack_read(path):
+    data = json.loads(path.read_bytes())
+    require(isinstance(data, dict) and set(data) == {'schema', 'store', 'origin_sha256'} and data.get('schema') == ACK_SCHEMA,
+            'EXTERNAL_ACK_SCHEMA')
+    return {'schema': ACK_SCHEMA, 'store': S.validate_anchor(data['store']), 'origin_sha256': _origin(data['origin_sha256'])}
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--godot', required=True, type=Path)
     parser.add_argument('--restore', type=Path)
-    parser.add_argument('--sha'); parser.add_argument('--origin')
+    parser.add_argument('--ack', type=Path)
     args = parser.parse_args()
     out = ROOT / 'artifacts/a9/integration'
     if args.restore:
+        require(args.ack is not None, 'DURABLE_ACK_REQUIRED')
+        trusted = ack_read(args.ack)
         backend = NativeA8(ROOT, args.godot, ROOT / 'artifacts/a9/restarts')
-        record = backend.restore(args.restore.read_bytes(), args.sha, args.origin)
+        record = backend.restore(args.restore.read_bytes(), trusted['store']['snapshot_sha256'], trusted['origin_sha256'])
         print('A9_RESTORE_PASS mode=' + record.mode + ' sha=' + record.sha256)
         return 0
     if out.exists(): shutil.rmtree(out)
@@ -108,24 +127,38 @@ def main():
         require(a.source()['owner_epoch'] == 3 and a.source()['ecology_sha256'] == r_next.source()['ecology_sha256'], 'ROUNDTRIP_SEAM')
         passed('real_a_b_a_seam_preserves_biology_and_fences_old_owner')
         store = S.SnapshotStore.initialize(out / 'store')
-        external = out / 'caller-owned-anchor.json'
-        acknowledged = S.genesis_anchor(); anchor_write(external, acknowledged)
+        external = out / 'caller-owned-ack.json'
+        trusted_origin = a.source()['origin_sha256']
+        acknowledged = S.genesis_anchor(); ack_write(external, acknowledged, trusted_origin)
         stale = None
+        origin_negative_done = False
         for mode in MODES:
             record = a.convert(mode)
             previous = acknowledged
             acknowledged = store.commit(previous, record.data, lambda raw: FidelityRecord.restore(raw, record.sha256, record.source()['origin_sha256']).data == record.data)
-            anchor_write(external, acknowledged)
-            loaded_head, loaded = S.SnapshotStore(store.root).load(json.loads(external.read_bytes()))
+            ack_write(external, acknowledged, record.source()['origin_sha256'])
+            trusted = ack_read(external)
+            loaded_head, loaded = S.SnapshotStore(store.root).load(trusted['store'])
             require(loaded_head == acknowledged and loaded == record.data, 'DURABLE_PACKET')
             packet_path = out / (mode.lower() + '.json'); packet_path.write_bytes(loaded)
-            cli = [sys.executable, str(Path(__file__)), '--godot', str(args.godot), '--restore', str(packet_path),
-                   '--sha', record.sha256, '--origin', record.source()['origin_sha256']]
+            cli = [sys.executable, str(Path(__file__)), '--godot', str(args.godot), '--restore', str(packet_path), '--ack', str(external)]
             log = out / (mode.lower() + '-restart.log')
             with log.open('wb') as f:
                 p = subprocess.run(cli, cwd=ROOT, stdout=f, stderr=subprocess.STDOUT, timeout=600, check=False)
             text = log.read_text()
             require(p.returncode == 0 and 'A9_RESTORE_PASS mode=' + mode + ' sha=' + record.sha256 in text, 'FRESH_PROCESS_RESTORE:' + text[-2000:])
+            if not origin_negative_done:
+                forged_origin = ('0' if trusted_origin[0] != '0' else '1') + trusted_origin[1:]
+                forged = out / 'forged-origin-ack.json'
+                ack_write(forged, acknowledged, forged_origin)
+                bad_log = out / 'forged-origin-restart.log'
+                bad_cli = [sys.executable, str(Path(__file__)), '--godot', str(args.godot), '--restore', str(packet_path), '--ack', str(forged)]
+                with bad_log.open('wb') as f:
+                    bad = subprocess.run(bad_cli, cwd=ROOT, stdout=f, stderr=subprocess.STDOUT, timeout=600, check=False)
+                bad_text = bad_log.read_text()
+                require(bad.returncode != 0 and 'A9_RESTORE_PASS' not in bad_text, 'FORGED_DURABLE_ORIGIN_ACCEPTED:' + bad_text[-2000:])
+                passed('fresh_process_rejects_forged_durable_origin')
+                origin_negative_done = True
             if stale is None: stale = previous
             passed('durable_fresh_process_' + mode.lower())
         try: store.commit(stale, initial_packet.data, lambda raw: raw == initial_packet.data)
@@ -151,10 +184,13 @@ def main():
                       retained_packet_bytes={mode: len(paid.convert(mode).data) for mode in MODES},
                       real_scale={'partitions': 8, 'living': json.loads(batch)['totals']['counts']['living'],
                                   'aggregate_bytes': len(batch), 'claim': 'REPRESENTATION_NOT_ACTIVE_SIMULATION_THROUGHPUT'},
-                      durable_anchor=acknowledged)
-        require(len(result['checks']) == 13, 'INTEGRATION_CHECK_COUNT')
+                      durable_ack=ack_read(external),
+                      durable_trust={'origin': 'CALLER_OWNED_FSYNCED_ACK',
+                                     'packet_sha256': 'STORE_ANCHOR_SNAPSHOT_SHA256',
+                                     'fresh_process_reads_ack': True})
+        require(len(result['checks']) == 14, 'INTEGRATION_CHECK_COUNT')
         result['verdict'] = 'PASS'
-        print('EVO_ARCH2_A9_INTEGRATION checks=13 failed=0', flush=True)
+        print('EVO_ARCH2_A9_INTEGRATION checks=14 failed=0', flush=True)
         return 0
     except Exception as exc:
         result['error'] = str(exc); result['native_processes'] = backend.runs
