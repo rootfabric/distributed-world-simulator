@@ -10,7 +10,7 @@ New-Item -ItemType Directory -Path $taskOutput -ErrorAction Stop | Out-Null
 $taskSpecs = @(
   @{Name='import'; Args=@('--editor','--import','--quit'); Marker=''},
   @{Name='rollback'; Args=@('--script','res://tests/runtime/test_v0_mvp_6_prediction_rollback.gd'); Marker='MVP6 prediction rollback: PASS (77 assertions)'},
-  @{Name='nx6'; Args=@('--script','res://tests/network/test_nx6_predicted_item_interactions.gd'); Marker='NX6 predicted item interactions: PASS (940 assertions)'},
+  @{Name='nx6'; Args=@('--script','res://tests/network/test_nx6_predicted_item_interactions.gd'); Marker='NX6 predicted item interaction contracts: PASS (940 assertions)'},
   @{Name='bridge'; Args=@('--script','res://tests/network/test_nx6_predicted_item_interactions_integration.gd'); Marker='NX6 predicted item integration: PASS (66 assertions)'}
 )
 foreach ($taskSpec in $taskSpecs) {
