@@ -63,3 +63,37 @@ MVP5 выдаёт материал в существующий canonical Item Gr
 GitHub connector подтверждён для чтения и публикации. В текущем контейнере нет готового checkout, Godot и PowerShell; не повторять прежний неработающий ad-hoc GitHub clone/download route. Для выполнения использовать repository-owned CI с canonical double Godot. После сбоя перечитать live ref и этот anchor, не использовать истёкшие resource IDs и не пересоздавать закрытые predicates.
 
 Известные исторические route failures: `Could not resolve host: github.com`, download security rejection и переполнение длинного инструментального вывода. Читать код и логи ограниченными фрагментами; сохранять существенные результаты отдельными commits. Очередь CI или запрос review не означает автоматическое фоновое продолжение этой сессии.
+
+## Continuation 2026-09-16: реальный NX rollback gate
+
+Native-carry HA выше в истории уже RESOLVED; native carry не реализуется заново.
+Текущий diagnostic subject: `970b4293ae303cda03cd99c5c77ddd54e0f41496`, tree
+`6a86c84e57ef313ad841c6cb906bc7fd1daafb06`. Main остаётся
+`6982a563dd0c88c81449566131852c601ae89868`.
+
+Проверка сырых логов отменила пригодность прежнего NX positive summary:
+[false-green repair](MVP6_NX_FALSE_GREEN_REPAIR_R1_RU.md). Исправленный probe и
+точные Windows/Linux A/B выявили одинаковые 3 failures из 1077 assertions в
+каждой композиции. Это существующий same-revision prediction rollback defect,
+не установленная регрессия MVP6. Raw PC0: standard YELLOW, directional RED.
+
+[Repair Map и конкретный неприменённый diff](MVP6_NX_ROLLBACK_REPAIR_MAP_R1_RU.md)
+задают один дополнительный journal-файл. Новый blocking decision:
+`HA-V0-MVP6-NX-SAME-REVISION-ROLLBACK-R1`. Parent запрещает `scripts/network/**`;
+старое разрешение native carry его не покрывает. Production `Drive` и
+`CloseMission` на `6bd1ddefbd23b30636aff137cdb26e0102157bca` подтвердили
+`HUMAN_DECISION_REQUIRED`, `mission_exit_allowed=true`, `mission_complete=false`.
+Exact controller logs и scoped независимые роли сохраняются в `nx-scope-gate-r1/`.
+
+Следующее действие — durable HUMAN resolution этого одного scope decision,
+после него bounded repair/retest, принятый canonical dependency input и только
+затем main-owned V0→NX clearance, exact PC0/epoch audit и MVP6 construction.
+Clearance registry, journal runtime, main и MVP1–MVP5 этой continuation не изменены.
+MVP6 не VERIFIED; construction/five-process/world-core в этом slice не запускались.
+
+При последнем fetch обнаружена внешняя незамерженная validation-ветка
+`validation/nx-prediction-rollback-r1` (наблюдаемый head
+`3b02b4d71ebabca865f55a4a7f79b9c4db0a9e3c`). Это не работа данной continuation и
+не canonical permission/evidence. Перед возобновлением проверить её live state,
+возможный PR и current main; не дублировать уже принятый repair и не считать
+само наличие внешней ветки разрешением обходить write fence.
