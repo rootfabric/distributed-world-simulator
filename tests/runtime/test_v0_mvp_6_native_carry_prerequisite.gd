@@ -4,6 +4,7 @@ extends "res://tests/runtime/test_v0_mvp3_live_owner_handoff.gd"
 # changing their write fences. A passing diagnostic proves the current blocker,
 # not a successful nonempty transfer, graphical client or world restart.
 const ItemGraph6 = preload("res://scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service.gd")
+const Json6 = preload("res://scripts/network/contracts/network_contract_utils.gd")
 var observed6: Dictionary = {}
 
 func item_command6(actor: String, suffix: String, kind: String, payload: Dictionary) -> Dictionary:
@@ -54,15 +55,33 @@ func persistence_payload6() -> bool:
 	var transported = JSON.parse_string(JSON.stringify(durable, "", true, true))
 	var transported_replay = JSON.parse_string(JSON.stringify(replay, "", true, true))
 	if not check(transported is Dictionary and transported_replay is Dictionary, "real JSON payload roundtrip"): return false
-	if not success(restored6.restore_durable_state(transported), "existing native durable payload restores"): return false
+	var restore_result: Dictionary = restored6.restore_durable_state(transported)
+	if not success(restore_result, "existing native durable payload restores"): return false
 	if not success(restored6.restore_replay_state(transported_replay), "existing native replay payload restores"): return false
 	var restored_snapshot: Dictionary = restored6.create_snapshot()
-	if not check(restored_snapshot == durable["snapshot"], "durable item graph restored without slot migration or loss"): return false
-	if not check(restored6.export_replay_state() == replay, "native replay payload preserved"): return false
+	var restored_replay: Dictionary = restored6.export_replay_state()
+	# Compare the complete existing canonical JSON contract. Do not strip the
+	# checksum, clock, slot, equipment or any other field. JSON numeric type
+	# normalization is owned by Json6, not a test-specific approximation.
+	var expected_json := Json6.canonical_json(durable["snapshot"])
+	var actual_json := Json6.canonical_json(restored_snapshot)
+	observed6["persistence_payload"] = {"durable": durable, "replay": replay, "restored_snapshot": restored_snapshot, "restored_replay": restored_replay, "restore_result": restore_result, "raw_dictionary_equal": restored_snapshot == durable["snapshot"], "full_canonical_json_equal": actual_json == expected_json, "export_revision_type": type_string(typeof(durable["snapshot"]["revision"])), "restored_revision_type": type_string(typeof(restored_snapshot["revision"])), "payload_roundtrip_passed": false, "world_restart_executed": false}
+	if not check(not expected_json.is_empty() and actual_json == expected_json, "full durable canonical JSON restored without any field loss"): return false
+	if not check(restore_result.get("details", {}).get("slot_migration", {}).get("migrated") == false, "complete native slots need no legacy migration"): return false
+	if not check(Json6.canonical_json(restored_replay) == Json6.canonical_json(replay), "full native replay payload preserved"): return false
+	var corrupted: Dictionary = restored_snapshot.duplicate(true)
+	corrupted["items"][0]["quantity"] = int(corrupted["items"][0]["quantity"]) + 1
+	if not check(Json6.canonical_json(corrupted) != expected_json, "canonical comparison rejects changed quantity"): return false
+	corrupted = restored_snapshot.duplicate(true)
+	corrupted["items"][0]["location"]["slot_index"] = 31
+	if not check(Json6.canonical_json(corrupted) != expected_json, "canonical comparison rejects changed slot"): return false
+	var second_export: Dictionary = restored6.export_durable_state()
+	if not check(Json6.canonical_json(second_export) == Json6.canonical_json(durable), "second durable export stays identical including checksums"): return false
 	if not check(services[0].export_durable_state().is_empty(), "ordinary gameplay export is fenced while live bindings exist"): return false
 	var rejected: Dictionary = services[0].restore_durable_state(evidence["legacy_restart_before_live"])
+	observed6["persistence_payload"]["live_restore_rejection"] = rejected
 	if not check(rejected.get("success") == false and rejected.get("error_code") == "LIVE_HANDOFF_RESTART_RECONCILIATION_REQUIRED", "ordinary recovery cannot overwrite active live bindings"): return false
-	observed6["persistence_payload"] = {"durable": durable, "replay": replay, "restored_snapshot": restored_snapshot, "live_restore_rejection": rejected, "payload_roundtrip_passed": true, "world_restart_executed": false}
+	observed6["persistence_payload"]["payload_roundtrip_passed"] = true
 	return true
 
 func nonempty_carry6() -> bool:
@@ -91,15 +110,20 @@ func nonempty_carry6() -> bool:
 
 func run() -> void:
 	evidence = {"schema": "distributed_world_simulator.mvp6_native_prerequisite_diagnostic.v1", "transfers": []}
-	var okay := setup_fixture()
-	if okay: okay = move("a") and move("b")
-	if okay: okay = cross("a", "authority/b", "transfer/mvp6/prerequisite/empty-out")
-	if okay: okay = cross("a", "authority/a", "transfer/mvp6/prerequisite/empty-back")
-	if okay: okay = lifecycle6()
-	if okay: okay = persistence_payload6()
-	if okay: okay = nonempty_carry6()
-	var passed := okay and failures.is_empty() and observed6.has("nonempty_carry")
-	var report := {"schema": "distributed_world_simulator.mvp6_native_prerequisite_diagnostic.v1", "subject_head": OS.get_environment("EXPECTED_HEAD"), "subject_tree": OS.get_environment("EXPECTED_TREE"), "diagnostic_passed": passed, "assertions": assertions, "failures": failures, "observations": observed6, "empty_transfers": evidence.get("transfers", []), "requires_native_scope_amendment": passed, "mvp6_nonempty_carry_passed": false, "mvp6_predicate_verified": false, "independent_verdict": false, "network_clients_executed": false, "manual_input_executed": false, "world_restart_executed": false}
+	var fixture_ok := setup_fixture()
+	if fixture_ok: fixture_ok = move("a") and move("b")
+	if fixture_ok: fixture_ok = cross("a", "authority/b", "transfer/mvp6/prerequisite/empty-out")
+	if fixture_ok: fixture_ok = cross("a", "authority/a", "transfer/mvp6/prerequisite/empty-back")
+	if fixture_ok: fixture_ok = lifecycle6()
+	# The isolated payload comparison must not mask the separate live carry
+	# diagnosis. Both results remain required for a diagnostic PASS.
+	var persistence_ok := false
+	var carry_ok := false
+	if fixture_ok:
+		persistence_ok = persistence_payload6()
+		carry_ok = nonempty_carry6()
+	var passed := fixture_ok and persistence_ok and carry_ok and failures.is_empty()
+	var report := {"schema": "distributed_world_simulator.mvp6_native_prerequisite_diagnostic.v1", "subject_head": OS.get_environment("EXPECTED_HEAD"), "subject_tree": OS.get_environment("EXPECTED_TREE"), "diagnostic_passed": passed, "assertions": assertions, "failures": failures, "observations": observed6, "empty_transfers": evidence.get("transfers", []), "requires_native_scope_amendment": carry_ok, "mvp6_nonempty_carry_passed": false, "mvp6_predicate_verified": false, "independent_verdict": false, "network_clients_executed": false, "manual_input_executed": false, "world_restart_executed": false}
 	for route in routes: route.shutdown()
 	for service in services: service.shutdown()
 	var output := OS.get_environment("MVP6_PREREQUISITE_RESULT")
