@@ -1,70 +1,48 @@
-name: MVP6 Construction Fixture Exact Diagnostic
+name: MVP6 Journal Main Full Harness Diagnostic
 on:
   workflow_dispatch:
 permissions:
   contents: read
-  actions: read
 jobs:
-  fixture:
+  harness:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     env:
       PYTHONUTF8: '1'
       PYTHONDONTWRITEBYTECODE: '1'
-      BREAKPOINT_RUNTIME_DISABLED: '1'
-      PLANET_SIMULATOR_INVENTORY_PROFILE: planet_default
-      EXPECTED_HEAD: 84ab0c0fba87f12dcfc94e32bb9cfa4eb8abb481
-      EXPECTED_TREE: f7e3f255bcc4878f3e738e011e3d45bf3edcdb81
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: 84ab0c0fba87f12dcfc94e32bb9cfa4eb8abb481
+          ref: 3b82145ae946bb51aebf67f048a28420368b40be
           fetch-depth: 0
-      - uses: actions/download-artifact@v4
-        with:
-          name: p7-repair-engine-34117353691
-          run-id: 34117353691
-          repository: rootfabric/distributed-world-simulator
-          github-token: ${{ github.token }}
-          path: ${{ runner.temp }}/engine
-      - name: Exact focused fixture commands, no product acceptance
+      - name: Exact main repair and full canonical Harness invocation
         shell: bash
         run: |
           set -euo pipefail
-          export GODOT_BIN="$RUNNER_TEMP/engine/godot"
-          chmod u+x "$GODOT_BIN"
+          test "$(git rev-parse HEAD)" = 3b82145ae946bb51aebf67f048a28420368b40be
+          test "$(git rev-parse HEAD^{tree})" = 6b1b8c9ead5c16d15dc8565813d3abb1bf94d880
+          git fetch origin '+refs/heads/*:refs/remotes/origin/*' --prune
+          python3 -m pip install --disable-pip-version-check -r scripts/harness/requirements.txt
+          mkdir -p artifacts/full-harness
+          set +e
+          python3 -m unittest discover -s tests/harness -p 'test_*.py' -v > artifacts/full-harness/tests.log 2>&1
+          code=$?
+          set -e
+          export HARNESS_EXIT="$code"
           python3 - <<'PY'
-          import hashlib,json,os,pathlib,re,subprocess
+          import hashlib,json,os,pathlib,subprocess,sys
           git=lambda *a:subprocess.check_output(['git',*a],text=True).strip()
-          head=git('rev-parse','HEAD');tree=git('rev-parse','HEAD^{tree}')
-          assert head==os.environ['EXPECTED_HEAD'] and tree==os.environ['EXPECTED_TREE']
-          assert not git('status','--porcelain')
-          engine=os.environ['GODOT_BIN'];sha=lambda p:hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()
-          assert sha(engine)=='bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7'
-          out=pathlib.Path('artifacts/construction-fixture');out.mkdir(parents=True)
-          os.environ['MVP6_CONSTRUCTION_RESULT']=str((out/'construction.json').resolve())
-          specs=[('import',['--editor','--import','--quit'],None),('construction',['--script','res://tests/runtime/test_v0_mvp_6_item_construction_composition.gd'],223),('p4',['--script','res://tests/runtime/test_v0_p4_live_mvp_composition_ordering.gd'],64),('journal',['--script','res://tests/runtime/test_v0_mvp_6_prediction_rollback.gd'],77)]
-          rows=[]
-          for name,args,count in specs:
-              log=out/(name+'.log');argv=[engine,'--headless','--path','.']+args
-              with log.open('wb') as f: code=subprocess.run(argv,stdout=f,stderr=subprocess.STDOUT,timeout=240).returncode
-              text=log.read_text(errors='replace');counts=[int(a or b) for a,b in re.findall(r'PASS \((\d+) assertions\)|assertions=(\d+) failures=0',text)]
-              fatal=re.findall(r'(?m)^\s*(?:SCRIPT ERROR|ERROR):.*|.*Parse Error.*|.*Compile Error.*',text)
-              rows.append(dict(name=name,argv=argv,exit_code=code,assertions=counts,fatal=fatal,passed=code==0 and not fatal and (count is None or counts==[count]),sha256=sha(log)))
-              (out/'commands.json').write_text(json.dumps(rows,indent=2)+'\n')
-          construction=json.loads((out/'construction.json').read_text())
-          checks={key:construction.get(key) is True for key in ['passed','native_nonempty_carry_executed','real_resource_construction_executed','two_client_derived_replication_executed','construction_collision_present']}
-          checks['exact_report']=construction.get('subject_head')==head and construction.get('subject_tree')==tree
-          checks['no_self_acceptance']=construction.get('mvp6_predicate_verified') is False and construction.get('independent_verdict') is False
-          report=dict(head=head,tree=tree,engine_sha256=sha(engine),run_id=os.environ['GITHUB_RUN_ID'],commands=rows,checks=checks,tracked_clean=not git('status','--porcelain','--untracked-files=no'),mvp6_verified=False,physics_interaction_executed=False,five_process_executed=False)
-          report['passed']=all(r['passed'] for r in rows) and all(checks.values()) and report['tracked_clean']
-          (out/'summary.json').write_text(json.dumps(report,indent=2)+'\n')
-          assert report['passed'],report
+          p=pathlib.Path('artifacts/full-harness/tests.log')
+          result=dict(head=git('rev-parse','HEAD'),tree=git('rev-parse','HEAD^{tree}'),canonical_main=git('rev-parse','origin/main'),argv=['python3','-m','unittest','discover','-s','tests/harness','-p','test_*.py','-v'],exit_code=int(os.environ['HARNESS_EXIT']),log_sha256=hashlib.sha256(p.read_bytes()).hexdigest(),tracked_status=git('status','--porcelain','--untracked-files=no'),run_id=os.environ['GITHUB_RUN_ID'],python=sys.version,diagnostic_only=True,mvp6_verified=False)
+          (p.parent/'summary.json').write_text(json.dumps(result,indent=2)+'\n')
+          print(json.dumps(result))
+          print('\n'.join(p.read_text(errors='replace').splitlines()[-65:]))
           PY
+          exit "$code"
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: construction-fixture-exact-${{ github.run_id }}
-          path: artifacts/construction-fixture
+          name: journal-full-harness-${{ github.run_id }}
+          path: artifacts/full-harness
           if-no-files-found: error
           retention-days: 90
