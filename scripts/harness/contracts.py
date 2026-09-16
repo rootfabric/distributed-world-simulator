@@ -441,3 +441,67 @@ class ContractBundle:
                 for error in errors[:3]
             )
             raise ContractValidationError(f"SCHEMA_INVALID:{label}:{detail}")
+
+        if schema_name != "work_order_schema":
+            return
+
+        work_order_required = instance.get("required_predicates")
+        if isinstance(work_order_required, list) and len(work_order_required) != len(set(work_order_required)):
+            raise ContractValidationError("WORK_ORDER_REQUIRED_PREDICATES_NOT_UNIQUE")
+
+        checkpoint_id = instance.get("goal_checkpoint")
+        routing = self.contracts["scheduler_policy"].get("v0_product_train_routing")
+        current_product_checkpoint = (
+            routing.get("current_checkpoint") if isinstance(routing, dict) else None
+        )
+        # The strengthening relation is a current-product rule, not a retroactive
+        # rewrite of durable historical/control executions. Old epochs keep their
+        # own exact predicate vocabulary and must remain replayable.
+        if checkpoint_id != current_product_checkpoint:
+            return
+
+        checkpoint = self.contracts["checkpoint_catalog"].get("checkpoints", {}).get(checkpoint_id)
+        if not isinstance(checkpoint, dict):
+            return
+        catalog_required = checkpoint.get("required_predicates")
+        if not isinstance(catalog_required, list) or not isinstance(work_order_required, list):
+            return
+
+        risk_rank = {"LOW": 0, "MEDIUM": 1, "HIGH": 2, "CRITICAL": 3}
+        risk_floor = checkpoint.get("default_risk_floor")
+        declared_risk = instance.get("risk_class")
+        if risk_floor in risk_rank:
+            if declared_risk not in risk_rank or risk_rank[declared_risk] < risk_rank[risk_floor]:
+                raise ContractValidationError(
+                    f"WORK_ORDER_RISK_BELOW_CHECKPOINT_FLOOR:{declared_risk}:{risk_floor}"
+                )
+            floor_policy = self.contracts["risk_policy"].get("classes", {}).get(risk_floor)
+            floor_roles = floor_policy.get("required_roles") if isinstance(floor_policy, dict) else None
+            declared_roles = instance.get("required_review_roles")
+            if (
+                not isinstance(floor_roles, list)
+                or not isinstance(declared_roles, list)
+                or any(role not in declared_roles for role in floor_roles)
+            ):
+                raise ContractValidationError("WORK_ORDER_CHECKPOINT_RISK_ROLES_WEAKENED")
+            if "REVIEWER" in floor_roles and instance.get("review_required") is not True:
+                raise ContractValidationError("WORK_ORDER_CHECKPOINT_REVIEW_WEAKENED")
+            if (
+                "EVIDENCE_MAP_COMPLETE" in catalog_required
+                and instance.get("evidence_map_required") is not True
+            ):
+                raise ContractValidationError("WORK_ORDER_CHECKPOINT_EVIDENCE_WEAKENED")
+
+        cursor = -1
+        for predicate in catalog_required:
+            try:
+                position = work_order_required.index(predicate, cursor + 1)
+            except ValueError as exc:
+                raise ContractValidationError(
+                    f"WORK_ORDER_CATALOG_PREDICATE_MISSING:{predicate}"
+                ) from exc
+            if position <= cursor:
+                raise ContractValidationError(
+                    f"WORK_ORDER_CATALOG_PREDICATE_ORDER_INVALID:{predicate}"
+                )
+            cursor = position

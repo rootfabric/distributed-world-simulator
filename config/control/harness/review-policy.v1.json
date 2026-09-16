@@ -5,6 +5,7 @@
   "evidence_map_schema": "config/control/harness/evidence-map.schema.v1.json",
   "repair_doctrine": "config/control/harness/repair-doctrine.v1.json",
   "human_attention_schema": "config/control/harness/human-attention.schema.v1.json",
+  "closure_throughput_policy": "config/control/harness/closure-throughput-policy.v1.json",
   "principles": {
     "checkpoint_is_unit_of_control": true,
     "evidence_package_is_unit_of_review": true,
@@ -16,7 +17,9 @@
     "required_fixes_and_rank_up_moves_are_distinct": true,
     "mechanical_test_execution_may_be_self_executed": true,
     "independent_verdict_is_distinct_from_test_process_ownership": true,
-    "verifier_independence_does_not_require_a_specific_cloud_provider": true
+    "verifier_independence_does_not_require_a_specific_cloud_provider": true,
+    "review_and_verification_may_run_in_parallel_after_exact_runtime_freeze": true,
+    "preferred_verifier_executor_unavailable_is_a_route_failure_not_an_evidence_failure": true
   },
   "review_verdicts": [
     "PASS",
@@ -67,7 +70,9 @@
   "exact_head_protocol": {
     "reviewed_head_must_equal_evidence_head": true,
     "runtime_change_after_review_makes_review_stale": true,
-    "stale_review_blocks_checkpoint_proposal": true
+    "stale_review_blocks_checkpoint_proposal": true,
+    "review_and_verification_may_start_in_parallel_after_exact_freeze": true,
+    "control_or_evidence_only_carrier_does_not_stale_frozen_runtime_when_runtime_tree_is_unchanged": true
   },
   "review_output": {
     "required_sections": [
@@ -92,6 +97,15 @@
     "fresh_verifier_context_required_when_risk_policy_requires_verifier": true,
     "fresh_verifier_machine_required_by_default": false,
     "specific_external_agent_environment_required_by_default": false,
+    "preferred_executor_unavailable_is_blocking": false,
+    "preferred_executor_unavailable_route": [
+      "RECORD_ROUTE_UNAVAILABLE_ONCE",
+      "DO_NOT_WAIT",
+      "DO_NOT_RETRY_IDENTICAL_ROUTE",
+      "SELECT_FRESH_ISOLATED_ROLE_CONTEXT_WITH_AVAILABLE_TOOLS",
+      "CONSUME_HASH_BOUND_EXACT_HEAD_MACHINE_EVIDENCE",
+      "REEXECUTE_ONLY_IF_WORK_ORDER_RISK_OR_PROVENANCE_REQUIRES_IT"
+    ],
     "separate_machine_rerun_required_when": [
       "WORK_ORDER_EXPLICITLY_REQUIRES_INDEPENDENT_EXECUTION",
       "RISK_CONTRACT_EXPLICITLY_REQUIRES_INDEPENDENT_EXECUTION",

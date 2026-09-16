@@ -19,6 +19,14 @@ _AUTO_ROLE_BY_WORK_TYPE = {
     "HUMAN_OBSERVATION": "HUMAN",
 }
 
+_POST_FREEZE_STATES = {
+    "IMPLEMENTED",
+    "VERIFYING",
+    "VERIFIED",
+    "AUDITED",
+    "CHECKPOINT_PROPOSED",
+}
+
 
 def _threshold(policy: dict[str, Any]) -> int:
     closing = policy.get("self_closing_execution")
@@ -78,12 +86,13 @@ def _transition(
     stop_obligation: str,
     evidence_sink: str | None = "EXECUTION_LEDGER",
     hard_blocked: bool = False,
+    parallel_actions: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     human_required = handoff_class == "HUMAN_DECISION_REQUIRED"
     mission_exit_allowed = bool(
         mission["mission_complete"] or human_required or hard_blocked
     )
-    return {
+    result = {
         **mission,
         "handoff_class": handoff_class,
         "next_actor": next_actor,
@@ -101,12 +110,115 @@ def _transition(
         "mission_driver_required": not mission_exit_allowed,
         "stop_obligation": stop_obligation,
     }
+    if parallel_actions:
+        result["parallel_actions"] = parallel_actions
+    return result
 
 
 def _active_role(work_order: dict[str, Any], state_name: str) -> str:
     if state_name == "PLANNED":
         return "DIRECTOR"
     return _AUTO_ROLE_BY_WORK_TYPE.get(str(work_order.get("work_order_type", "IMPLEMENTATION")), "DIRECTOR")
+
+
+def _post_freeze_parallel_actions(
+    state: dict[str, Any],
+    policy: dict[str, Any],
+    work_order: dict[str, Any],
+    reduced: dict[str, Any],
+    review: dict[str, Any],
+    state_name: str,
+) -> list[dict[str, Any]]:
+    """Return independent read-only closure work that may execute concurrently.
+
+    This is deliberately fail-closed: old policy snapshots have no driver opt-in,
+    pre-freeze work states remain serial, and a negative/insufficient review is
+    routed by the existing repair/evidence logic instead of being hidden by fan-out.
+    """
+    driver = policy.get("driver")
+    if (
+        not isinstance(driver, dict)
+        or driver.get("post_freeze_read_only_gates_may_run_in_parallel") is not True
+        or state_name not in _POST_FREEZE_STATES
+    ):
+        return []
+
+    post_build_state = str(review.get("post_build_state", "MISSING"))
+    if post_build_state in {"FAIL", "INSUFFICIENT_EVIDENCE"}:
+        return []
+
+    required = {
+        item
+        for item in work_order.get("required_predicates", [])
+        if isinstance(item, str)
+    }
+    completed = {
+        item
+        for item in reduced.get("completed_predicates", [])
+        if isinstance(item, str)
+    }
+    missing = required - completed
+    target = (
+        review.get("review_target_head_sha")
+        or state.get("repository", {}).get("implementation_head_sha")
+    )
+    if not isinstance(target, str) or len(target) != 40:
+        return []
+
+    actions: list[dict[str, Any]] = []
+    if work_order.get("review_required") and post_build_state != "PASS":
+        actions.append(
+            {
+                "gate": "INDEPENDENT_REVIEW",
+                "actor": "REVIEWER",
+                "role_context": "FRESH_REVIEWER_EXACT_HEAD",
+                "action": "PERSIST_FRESH_EXACT_HEAD_REVIEW",
+                "subject_head_sha": target,
+            }
+        )
+
+    if "FULL_WORLD_CORE_REGRESSION_PASS" in missing:
+        actions.append(
+            {
+                "gate": "FULL_WORLD_CORE_REGRESSION",
+                "actor": "VERIFIER",
+                "role_context": "FRESH_VERIFIER_WORLD_CORE",
+                "action": "RUN_FULL_WORLD_CORE_REGRESSION_ON_EXACT_FROZEN_HEAD",
+                "subject_head_sha": target,
+            }
+        )
+
+    pc0_missing = [
+        predicate
+        for predicate in (
+            "STANDARD_PC0_NON_RED",
+            "DIRECTIONAL_PC0_NON_RED_FOR_CRITICAL_HITS",
+        )
+        if predicate in missing
+    ]
+    if pc0_missing:
+        actions.append(
+            {
+                "gate": "PROJECT_CONTROL_AND_PC0",
+                "actor": "PC0",
+                "role_context": "FRESH_PC0_EXACT_HEAD",
+                "action": "RUN_STANDARD_AND_DIRECTIONAL_PC0_ON_EXACT_FROZEN_HEAD",
+                "subject_head_sha": target,
+                "required_predicates": pc0_missing,
+            }
+        )
+
+    if "INDEPENDENT_VERIFIER_PASS" in missing:
+        actions.append(
+            {
+                "gate": "INDEPENDENT_VERIFICATION_EVIDENCE_CONSUMPTION",
+                "actor": "VERIFIER",
+                "role_context": "FRESH_VERIFIER_INDEPENDENT_VERDICT",
+                "action": "VERIFY_EXACT_FROZEN_HEAD_AND_CONSUME_HASH_BOUND_EVIDENCE",
+                "subject_head_sha": target,
+            }
+        )
+    return actions
 
 
 def build_continuation(
@@ -303,6 +415,24 @@ def build_continuation(
             role_exit_allowed=False,
             closure_loop_required=True,
             stop_obligation="DO_NOT_HANDOFF_BEFORE_EXPLICIT_IMPLEMENTER_VALIDATION_COMPLETES",
+        )
+
+    parallel_actions = _post_freeze_parallel_actions(
+        state, policy, work_order, reduced, review, state_name
+    )
+    if len(parallel_actions) >= 2:
+        return _transition(
+            mission=mission,
+            handoff_class="PARALLEL_ROLE_BOUNDARY",
+            next_actor="DIRECTOR",
+            next_action="FAN_OUT_POST_FREEZE_READ_ONLY_CLOSURE_GATES",
+            resume_condition="ALL_RETURNED_PARALLEL_ACTIONS_DURABLY_TERMINAL_OR_FINDING_ROUTED",
+            reason="The exact frozen subject has independent read-only closure gates that may execute concurrently.",
+            role_exit_allowed=True,
+            closure_loop_required=False,
+            stop_obligation="DISPATCH_ALL_RETURNED_READ_ONLY_GATES_WITHOUT_ENDING_PARENT_MISSION",
+            evidence_sink="EXECUTION_LEDGER_AND_ROLE_EVIDENCE",
+            parallel_actions=parallel_actions,
         )
 
     if state_name == "VERIFYING" and "REQUIRED_PREDICATES_INCOMPLETE" in blockers:
