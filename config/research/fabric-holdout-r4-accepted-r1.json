@@ -1,0 +1,99 @@
+{
+  "schema": "distributed_world_simulator.fabric_holdout_r4_acceptance.v1",
+  "acceptance_id": "FABRIC-HOLDOUT-R4-ACCEPTED-R1",
+  "state": "ACCEPTED",
+  "recorded_on": "2026-09-17",
+  "product": {
+    "branch": "repair/fabric-holdout-r4-g2-generalized-capabilities-r1",
+    "head": "e6228a39b6b3006a3d14ad0884c09266570fcd00",
+    "tree": "1b84960369868aa6d5ec23c1eae3019250ff9a8f",
+    "base": "b88004e77a9a424f1b23ba979f5ce8883a98f1a8"
+  },
+  "historical_g1": {
+    "status_head": "b88004e77a9a424f1b23ba979f5ce8883a98f1a8",
+    "verdict": "FAIL/FALSIFIED",
+    "preserved_as_historical_falsification": true
+  },
+  "pre_freeze_chain": {
+    "g2_run": 34756624051,
+    "g2_artifact": 10323837160,
+    "complex2_close_run": 34756626745,
+    "complex2_perf_run": 34756626564,
+    "b06_control_run": 34967889721,
+    "b06_repeat_1_job": 104376646076,
+    "b06_repeat_1_artifact": 10397444837,
+    "b06_repeat_1_digest": "sha256:690f3ef6bdd16d25c39ee90155809b1aa34f55a08fa9258bf93957704fbccac4",
+    "b06_repeat_2_job": 104376646294,
+    "b06_repeat_2_artifact": 10399258711,
+    "b06_repeat_2_digest": "sha256:cb8bd4d517eea7c4016a8fa824975b690042e2f6b75899b73ba1a33e25a8ccc9",
+    "b06_closure_hash": "892a66dbcb9e29c99ba7088a03dd41c167fd728a6f97923d4e944e4aef682584",
+    "fresh_reviewer_result_comment": 5696356174,
+    "fresh_reviewer_verdict": "PASS",
+    "fresh_verifier_status_head": "fcd5748b895a7b35e568727f2600055d1e022ed5",
+    "fresh_verifier_status_run": 35091203273,
+    "fresh_verifier_status_artifact": 10444188434,
+    "fresh_verifier_status_digest": "sha256:4da307d7e971c93bd5056df6c4091f7b7b615072ea4b73fda0f3deaead0a5f7d",
+    "director_commit": "4ca08fc079b612a1419e1b908e5bef85aa3616b0",
+    "director_verdict": "PASS"
+  },
+  "production_freeze": {
+    "commit": "649af4ef16de00c797b4d63be70426abb3c75d68",
+    "record": "config/research/fabric-holdout-r4-production-freeze-r1.json",
+    "state": "FROZEN"
+  },
+  "unseen_preregistration": {
+    "head": "8c28ff9ea4ab1446cd067ca4b8cb5674997a621d",
+    "run": 35096776907,
+    "artifact": 10445814101,
+    "artifact_digest": "sha256:707e71226fe3012eb308d021ae01c2bb6c1fb55247eb81ea1d753fcf0d5a7006",
+    "target_time_utc": "2026-09-16T12:45:00.000Z",
+    "target_time_unix_ms": 1789562700000,
+    "state": "VERIFIED_PRE_REVEAL"
+  },
+  "unseen_reveal": {
+    "first_reveal_run": 35108952760,
+    "first_reveal_artifact": 10451362354,
+    "first_reveal_raw_pulse_sha256": "8a5e684b4fe2a0193dcea7560ad47531bfbc510100e9e670189f50210022a4af",
+    "pulse_uri": "https://beacon.nist.gov/beacon/2.0/chain/2/pulse/1943920",
+    "pulse_timestamp": "2026-09-16T12:46:00.000Z",
+    "reveal_r2_head": "022fa6730031d529cfaecc40a76fc70315d355d1",
+    "reveal_r2_run": 35109278910,
+    "reveal_r2_artifact": 10451358632,
+    "reveal_r2_artifact_digest": "sha256:b1ee63b0dedce2f66112242dbbf74f4515a41e7e750be8eaab2d0a183351dd4f",
+    "cases_sha256": "3e14d528a33f4ecb95c4d7fd1f3f55394fcb4b3e624e0bf728698acef99f576d",
+    "assertions": 93,
+    "verdict": "PASS"
+  },
+  "fresh_independent_unseen_verifier": {
+    "branch": "verify/fabric-holdout-r4-post-g2-unseen-verifier-r1",
+    "executable_head": "94a0d54f30ea4b6d2311a1d93c766e6d76e2840a",
+    "executable_tree": "a3be3352c5427d5766ed23e8c3315891087fd7ad",
+    "run": 35110199365,
+    "job": 104841606910,
+    "artifact": 10452206840,
+    "artifact_digest": "sha256:92a41e4e902e096089d22e369b6b1489af3ff33482049d6e0ac9825b89575184",
+    "independent_assertions": 67,
+    "unseen_runner_assertions": 93,
+    "status_head": "22c732436a3059c13270badea26599a3e199f473",
+    "status_run": 35110718641,
+    "status_job": 104843383891,
+    "status_artifact": 10452311664,
+    "status_artifact_digest": "sha256:50354f393cf4b7c3fe314920a396c789ec0a1acb1087fba75613c31c607f7fba",
+    "verdict": "PASS"
+  },
+  "known_nonblocking_followup": {
+    "issue": "fabric_bake_complex2_close_acceptance.gd directly indexes perf[matrix_hash] after a failed Perf.run_matrix shape and can mask the original failure",
+    "classification": "NON_BLOCKING_DIAGNOSTIC_RISK",
+    "must_not_mutate_accepted_r4_subject": true
+  },
+  "decision": {
+    "r4_accepted": true,
+    "holdout_r4_state": "ACCEPTED",
+    "scale_r5_unlocked": true,
+    "next_stage": "SCALE-R5",
+    "merge_authorized": false,
+    "pr_592_merge_state": "SEPARATE_HUMAN_GATE",
+    "accepted_product_mutation_allowed": false,
+    "new_product_changes_require_new_subject_and_fresh_evidence": true
+  }
+}
