@@ -19,8 +19,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
-      REPAIR_HEAD: e831ded1cd291afabcec2f52e73b6691b9802aa8
-      REPAIR_TREE: 38d6f664b144594612268095bffef5998b9035d5
+      REPAIR_HEAD: 6b147d0300529a6b40568b4de0817d5cc7f95fdb
+      REPAIR_TREE: 930872d8dfc1afb47eeb6c662b8f536b87ca4221
       BASE_MAIN: 6982a563dd0c88c81449566131852c601ae89868
       V0_HEAD: f3063cbae408a197c5eda37b912a8fe2995ac07e
       NX_HEAD: 1a56fe0e845c941f14ce7b9296ee939e9d0ca8bc
@@ -50,9 +50,11 @@ jobs:
           test "$(git merge-base "$BASE_MAIN" "$REPAIR_HEAD")" = "$BASE_MAIN"
           mapfile -t changed < <(git diff --name-only "$BASE_MAIN" "$REPAIR_HEAD")
           printf '%s\n' "${changed[@]}"
-          test "${#changed[@]}" -eq 2
-          test "${changed[0]}" = "scripts/network/prediction/predicted_item_interaction_journal.gd"
-          test "${changed[1]}" = "tests/network/test_prediction_duplicate_authoritative_rollback.gd"
+          test "${#changed[@]}" -eq 4
+          test "${changed[0]}" = "RUN_NX6_PREDICTED_ITEM_INTERACTIONS_TESTS.ps1"
+          test "${changed[1]}" = "RUN_NX6_PREDICTED_ITEM_INTERACTIONS_TESTS.sh"
+          test "${changed[2]}" = "scripts/network/prediction/predicted_item_interaction_journal.gd"
+          test "${changed[3]}" = "tests/network/test_prediction_duplicate_authoritative_rollback.gd"
           git diff --check "$BASE_MAIN" "$REPAIR_HEAD"
 
       - uses: actions/download-artifact@v4
