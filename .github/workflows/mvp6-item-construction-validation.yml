@@ -59,8 +59,11 @@ jobs:
         run: |
           set -euo pipefail
           python3 -m pip install --disable-pip-version-check -r scripts/harness/requirements.txt
+          test -z "$(git status --porcelain --untracked-files=all)"
+          control_tmp="$RUNNER_TEMP/mvp6-drive-before.log"
+          pwsh -NoProfile -File ./CONTROL_DEVELOPMENT.ps1 -Drive -Checkpoint V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE > "$control_tmp" 2>&1
           mkdir -p artifacts/mvp6-exact/control
-          pwsh -NoProfile -File ./CONTROL_DEVELOPMENT.ps1 -Drive -Checkpoint V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE > artifacts/mvp6-exact/control/drive-before.log 2>&1
+          cp "$control_tmp" artifacts/mvp6-exact/control/drive-before.log
           python3 - <<'PY'
           import json,pathlib
           p=pathlib.Path('artifacts/mvp6-exact/control/drive-before.log')
