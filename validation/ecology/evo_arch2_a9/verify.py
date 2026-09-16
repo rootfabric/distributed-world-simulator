@@ -95,12 +95,17 @@ def main():
         shutil.rmtree(ROOT / '.godot', ignore_errors=True)
         run('a9-cold-import', [str(args.godot), '--headless', '--audio-driver', 'Dummy', '--editor', '--path', str(ROOT), '--import'], '', timeout=300)
         run('a9-native-integration', [sys.executable, 'validation/ecology/evo_arch2_a9/integration.py', '--godot', str(args.godot)],
-            'EVO_ARCH2_A9_INTEGRATION checks=13 failed=0', timeout=7200)
+            'EVO_ARCH2_A9_INTEGRATION checks=14 failed=0', timeout=7200)
         integration = ROOT / 'artifacts/a9/integration/summary.json'
         evidence = json.loads(integration.read_bytes())
-        require(evidence.get('verdict') == 'PASS' and len(evidence.get('checks', [])) == 13, 'INTEGRATION_SUMMARY')
+        require(evidence.get('verdict') == 'PASS' and len(evidence.get('checks', [])) == 14, 'INTEGRATION_SUMMARY')
+        trust = evidence.get('durable_trust', {})
+        require(trust.get('origin') == 'CALLER_OWNED_FSYNCED_ACK' and
+                trust.get('packet_sha256') == 'STORE_ANCHOR_SNAPSHOT_SHA256' and
+                trust.get('fresh_process_reads_ack') is True, 'DURABLE_ORIGIN_TRUST')
         result['integration'] = {'sha256': sha(integration), 'checks': evidence['checks'],
-                                 'retained_packet_bytes': evidence['retained_packet_bytes'], 'real_scale': evidence['real_scale']}
+                                 'retained_packet_bytes': evidence['retained_packet_bytes'], 'real_scale': evidence['real_scale'],
+                                 'durable_trust': trust}
         # The inherited implementation is byte-identical to current main. Only its
         # additive path fence is extended for the eight independently sealed A9 files.
         # Base, runtime commands, assertions, repeats, graphics and control gates stay intact.
