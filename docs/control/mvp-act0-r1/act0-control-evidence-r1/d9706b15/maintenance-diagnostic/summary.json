@@ -1,0 +1,78 @@
+{
+  "exit_code": 0,
+  "start": 1789566162.0088558,
+  "end": 1789566162.1598554,
+  "children": [
+    {
+      "event": "cmd_name",
+      "sid": "20260916T134242.028856Z-H60abd1cd-P0000660c",
+      "thread": "main",
+      "time": "2026-09-16T13:42:42.053856Z",
+      "file": "git.c",
+      "line": 503,
+      "name": "commit",
+      "hierarchy": "commit"
+    },
+    {
+      "event": "child_start",
+      "sid": "20260916T134242.028856Z-H60abd1cd-P0000660c",
+      "thread": "main",
+      "time": "2026-09-16T13:42:42.115855Z",
+      "file": "run-command.c",
+      "line": 741,
+      "child_id": 0,
+      "child_class": "?",
+      "use_shell": false,
+      "argv": [
+        "git",
+        "maintenance",
+        "run",
+        "--auto",
+        "--quiet",
+        "--detach"
+      ]
+    },
+    {
+      "event": "cmd_name",
+      "sid": "20260916T134242.028856Z-H60abd1cd-P0000660c/20260916T134242.125857Z-H60abd1cd-P00006658",
+      "thread": "main",
+      "time": "2026-09-16T13:42:42.150855Z",
+      "file": "git.c",
+      "line": 503,
+      "name": "maintenance",
+      "hierarchy": "commit/maintenance"
+    },
+    {
+      "event": "exit",
+      "sid": "20260916T134242.028856Z-H60abd1cd-P0000660c/20260916T134242.125857Z-H60abd1cd-P00006658",
+      "thread": "main",
+      "time": "2026-09-16T13:42:42.151854Z",
+      "file": "git.c",
+      "line": 783,
+      "t_abs": 0.02875,
+      "code": 0
+    },
+    {
+      "event": "child_exit",
+      "sid": "20260916T134242.028856Z-H60abd1cd-P0000660c",
+      "thread": "main",
+      "time": "2026-09-16T13:42:42.154855Z",
+      "file": "run-command.c",
+      "line": 997,
+      "child_id": 0,
+      "pid": 26200,
+      "code": 0,
+      "t_rel": 0.038677
+    },
+    {
+      "event": "exit",
+      "sid": "20260916T134242.028856Z-H60abd1cd-P0000660c",
+      "thread": "main",
+      "time": "2026-09-16T13:42:42.154855Z",
+      "file": "git.c",
+      "line": 783,
+      "t_abs": 0.127612,
+      "code": 0
+    }
+  ]
+}

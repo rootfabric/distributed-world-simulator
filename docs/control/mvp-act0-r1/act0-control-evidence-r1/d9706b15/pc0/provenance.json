@@ -1,0 +1,16 @@
+{
+  "head": "d9706b157e84c653a753cc54243ce6651d53319c",
+  "tree": "4925ea293c15d88153278437976a3b69f8985ccf",
+  "canonical_main": "6982a563dd0c88c81449566131852c601ae89868",
+  "argv": [
+    "pwsh",
+    "-NoProfile",
+    "-File",
+    "./CONTROL_PROJECT.ps1",
+    "-NoFetch"
+  ],
+  "exit_code": 2,
+  "base_health": "YELLOW",
+  "directional_health": "RED",
+  "no_clearance_acceptance": true
+}

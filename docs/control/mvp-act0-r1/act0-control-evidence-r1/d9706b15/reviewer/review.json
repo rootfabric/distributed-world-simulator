@@ -1,0 +1,92 @@
+{
+  "role": "REVIEWER",
+  "verdict": "PASS",
+  "scope": "Fresh bounded journal ACT0 control repair, exact Windows focused and full Linux Harness classification",
+  "head": "d9706b157e84c653a753cc54243ce6651d53319c",
+  "tree": "4925ea293c15d88153278437976a3b69f8985ccf",
+  "risk_class": "CRITICAL",
+  "required_fixes": [],
+  "rank_up_moves": [],
+  "evidence_gaps": [
+    "Canonical main merge, default NX dependency revalidation and real directional clearance remain pending.",
+    "World/core evidence is exact3b82145a; d970 has identical runtime but is not mislabeled as that tested HEAD.",
+    "Whole MVP6 live five-process product/physics verification remains pending."
+  ],
+  "risk_assessment": "The fixture lifetime fix removes detached automatic Git maintenance before checkout and preserves strict cleanup and all negative assertions. Fixed immutable ACT0 runtime/P7/scene guards admit only the previously approved exact journal delta. No new runtime authority or ownership change.",
+  "windows": {
+    "tests": 18,
+    "negative_committed_cases": 23,
+    "failures": 0,
+    "errors": 0,
+    "skips": 0
+  },
+  "linux": {
+    "run_id": "35103955408",
+    "artifact_id": 10449318113,
+    "tests": 330,
+    "failures": 1,
+    "errors": 0,
+    "skips": 0,
+    "act0_tests_passed": 18,
+    "raw_result": "FAIL",
+    "only_failure": "Unchanged live proposed R3 current-main directional PC0 RED",
+    "artifact_sha256": "1a29620992c1d6cf280a68ed82075f34e1f79a465f598f781e62a7965a696fc4"
+  },
+  "human_gate_assessment": {
+    "genuine": true,
+    "action": "Human approve exact PR646 journal baseline repair with reviewed ACT0 control guard; merge remains separately Human-owned.",
+    "reason": "Default canonical NX baseline must use an accepted journal repair before truthful main-owned clearance can be prepared. Existing directional RED is preserved rather than bypassed.",
+    "forbidden": [
+      "Edit PC0 assertion to green",
+      "Create ACCEPTED clearance from explicit repair-composition evidence",
+      "Self-merge or self-accept",
+      "Claim all automatic CI gates green"
+    ],
+    "after_merge": [
+      "Fetch exact canonical main",
+      "Run default canonical NX baseline/candidate probe",
+      "Run real standard and directional auditors",
+      "Prepare fresh main-owned clearance and independent roles"
+    ]
+  },
+  "claims": {
+    "mvp6_verified": false,
+    "main_merge_authorized": false,
+    "canonical_pc0_clearance": false,
+    "full_harness_pass": false
+  },
+  "evidence": [
+    {
+      "path": "C:\\distributed-world-simulator\\artifacts\\mvp6-journal-73b88181\\act0-fence-exact-d9706b15\\summary.json",
+      "sha256": "3a1d32e43d651e5e607c7a59312acde50767043a39116a9759b7ca19e6874d8a"
+    },
+    {
+      "path": "C:\\distributed-world-simulator\\artifacts\\mvp6-journal-73b88181\\act0-fence-exact-d9706b15\\tests.log",
+      "sha256": "9bf81b5154658af0e444e1dadd20d6de400bb70f3b2d761c5cb2fee7568f3246"
+    },
+    {
+      "path": "C:\\distributed-world-simulator\\artifacts\\mvp6-journal-73b88181\\act0-fence-exact-d9706b15\\IMPLEMENTER_HANDOFF_RU.md",
+      "sha256": "8616b27537ceffa69369bf470244adbe94e43cd0eea5b89fee815073846fc3eb"
+    },
+    {
+      "path": "C:\\distributed-world-simulator\\artifacts\\mvp6-journal-73b88181\\act0-full-harness-linux-d9706b15\\artifact.zip",
+      "sha256": "1a29620992c1d6cf280a68ed82075f34e1f79a465f598f781e62a7965a696fc4"
+    },
+    {
+      "path": "C:\\distributed-world-simulator\\artifacts\\mvp6-journal-73b88181\\act0-full-harness-linux-d9706b15\\unpacked\\summary.json",
+      "sha256": "e6d9eccbb4ae551dd0856d41daa29c96d6851254cc0eed3de852d47fdb667423"
+    },
+    {
+      "path": "C:\\distributed-world-simulator\\artifacts\\mvp6-journal-73b88181\\act0-full-harness-linux-d9706b15\\unpacked\\tests.log",
+      "sha256": "024b03d9f9ffa30a4a8ed9b350e298f5230a6442534b184d34a1c9285df23670"
+    },
+    {
+      "path": "C:\\distributed-world-simulator\\artifacts\\mvp6-journal-73b88181\\act0-control-review-d9706b15\\source-audit.json",
+      "sha256": "1362c2dd452cfdd4fbca79d311014f7c3cbd5ec5ba78f95eab1441333314f21b"
+    },
+    {
+      "path": "C:\\distributed-world-simulator\\worktrees\\mvp6-journal-act0-control\\tests\\harness\\test_v0_mvp_act0.py",
+      "sha256": "8afb752a15452b1ea83aa5104675369d9c5620c0ff533fb08a9ce6e8724b695a"
+    }
+  ]
+}
