@@ -44,6 +44,31 @@ jobs:
           path: ${{ runner.temp }}/mvp6-current-main-pc0/
           if-no-files-found: error
           retention-days: 90
+      - name: Download pinned double Godot for NX dependency probe
+        uses: actions/download-artifact@v4
+        with:
+          name: p7-repair-engine-34117353691
+          run-id: 34117353691
+          repository: rootfabric/distributed-world-simulator
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/mvp6-nx-engine
+      - name: Revalidate exact current V0 critical M4 blob against current NX consumer
+        shell: bash
+        run: |
+          set -euo pipefail
+          export GODOT_BIN="$RUNNER_TEMP/mvp6-nx-engine/godot"
+          chmod u+x "$GODOT_BIN"
+          export MVP6_NX_PROBE_OUTPUT="$RUNNER_TEMP/mvp6-nx-dependency"
+          export MVP6_NX_PROBE_WORKTREE="$RUNNER_TEMP/mvp6-nx-consumer-worktree"
+          python3 docs/control/mvp-act0-r1/mvp6_nx_dependency_probe.py
+      - name: Upload exact NX dependency probe
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mvp6-nx-dependency-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/mvp6-nx-dependency/
+          if-no-files-found: error
+          retention-days: 90
       - name: Exact subject and diagnostic-only write fence
         shell: bash
         run: |
