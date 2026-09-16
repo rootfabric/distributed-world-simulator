@@ -27,14 +27,29 @@ jobs:
           ref: ${{ github.sha }}
           fetch-depth: 0
           persist-credentials: false
+      - name: Probe exact current-main PC0 before historical prerequisite fence
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install --disable-pip-version-check -r scripts/harness/requirements.txt
+          git fetch origin '+refs/heads/*:refs/remotes/origin/*' --prune
+          export MVP6_MAIN_PC0_OUTPUT="$RUNNER_TEMP/mvp6-current-main-pc0"
+          export MVP6_MAIN_PC0_WORKTREE="$RUNNER_TEMP/mvp6-current-main-worktree"
+          python3 docs/control/mvp-act0-r1/mvp6_current_main_pc0_probe.py
+      - name: Upload exact current-main PC0 probe
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mvp6-current-main-pc0-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/mvp6-current-main-pc0/
+          if-no-files-found: error
+          retention-days: 90
       - name: Exact subject and diagnostic-only write fence
         shell: bash
         run: |
           set -euo pipefail
           test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
           test -z "$(git status --porcelain --untracked-files=no)"
-          # Harness requires the real branch name, not a detached checkout.
-          # Attach only this local CI ref to the immutable event subject.
           git switch -c "$GITHUB_REF_NAME" "$EXPECTED_HEAD"
           test "$(git symbolic-ref --short HEAD)" = "$GITHUB_REF_NAME"
           test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
