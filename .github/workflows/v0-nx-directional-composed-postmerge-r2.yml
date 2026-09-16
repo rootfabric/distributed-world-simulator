@@ -1,0 +1,228 @@
+name: V0 NX Directional Composed Postmerge R2
+
+on:
+  push:
+    branches: [validation/v0-nx-directional-composed-postmerge-r2]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: v0-nx-directional-composed-postmerge-r2
+  cancel-in-progress: false
+
+jobs:
+  full-composed-gate:
+    if: github.repository == 'rootfabric/distributed-world-simulator'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      COMPOSED_HEAD: 2a766ec53294f3b91942e51d58a61351dcebe1dd
+      COMPOSED_TREE: f4d0ca4c3f3281055051c6501aaced61afa29958
+      BASE_MAIN: 6982a563dd0c88c81449566131852c601ae89868
+      REPAIR_HEAD: 6b147d0300529a6b40568b4de0817d5cc7f95fdb
+      CONTROL_HEAD: bcfaae78bd852add71a2a2592998b46cc47878b5
+      REVIEWED_V0_HEAD: 73b8818184c93986e3313f35f9f4548c608e47e6
+      V0_M4_PATH: scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service.gd
+      V0_M4_BLOB: 44841fb3719b1cf36fd5afdfc0f8a0e4d0eacb30
+      V0_JOURNAL_PATH: scripts/network/prediction/predicted_item_interaction_journal.gd
+      V0_JOURNAL_BLOB: abdf0c0a335f4e2c968933156fb17f94a7b45bd1
+      NX_HEAD: 1a56fe0e845c941f14ce7b9296ee939e9d0ca8bc
+      NX_PASSPORT: config/control/branches/feature__h0-2-nx-c1-owner-authority-r3.v1.json
+      NX_PASSPORT_BLOB: c3af1974228c9ee5c34bf4d54c72896c99fc4d1a
+      CLEARANCE_ID: V0-MVP6-NX-H0-2-M4-JOURNAL-CRITICAL-WATCH-CLEARANCE-004
+      PYTHONPATH: scripts
+      PYTHONUTF8: '1'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ env.COMPOSED_HEAD }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Seal exact composed subject and live dependency identities
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin '+refs/heads/*:refs/remotes/origin/*' --prune
+          test "$(git rev-parse HEAD)" = "$COMPOSED_HEAD"
+          test "$(git rev-parse HEAD^{tree})" = "$COMPOSED_TREE"
+          test "$(git rev-parse origin/main)" = "$BASE_MAIN"
+          test "$(git rev-parse origin/repair/nx-prediction-rollback-baseline-r1)" = "$REPAIR_HEAD"
+          test "$(git rev-parse origin/control/v0-mvp6-nx-directional-clearance-r1)" = "$CONTROL_HEAD"
+          test "$(git rev-parse origin/validation/v0-nx-directional-composed-subject-r2)" = "$COMPOSED_HEAD"
+          git merge-base --is-ancestor "$BASE_MAIN" "$REPAIR_HEAD"
+          git merge-base --is-ancestor "$BASE_MAIN" "$CONTROL_HEAD"
+          git merge-base --is-ancestor "$REPAIR_HEAD" "$COMPOSED_HEAD"
+          git merge-base --is-ancestor "$CONTROL_HEAD" "$COMPOSED_HEAD"
+          git merge-base --is-ancestor "$REVIEWED_V0_HEAD" origin/feature/v0-mvp-playable-seamless-planet-r1
+          for spec in "$V0_M4_PATH:$V0_M4_BLOB" "$V0_JOURNAL_PATH:$V0_JOURNAL_BLOB"; do
+            path="${spec%%:*}"
+            expected="${spec##*:}"
+            test "$(git rev-parse "$REVIEWED_V0_HEAD:$path")" = "$expected"
+            test "$(git rev-parse "origin/feature/v0-mvp-playable-seamless-planet-r1:$path")" = "$expected"
+          done
+          test "$(git rev-parse origin/feature/h0-2-nx-c1-owner-authority-r3)" = "$NX_HEAD"
+          test "$(git rev-parse "$NX_HEAD:$NX_PASSPORT")" = "$NX_PASSPORT_BLOB"
+          mapfile -t changed < <(git diff --name-only "$BASE_MAIN" "$COMPOSED_HEAD")
+          printf '%s\n' "${changed[@]}"
+          test "${#changed[@]}" -eq 7
+          for expected in \
+            RUN_NX6_PREDICTED_ITEM_INTERACTIONS_TESTS.ps1 \
+            RUN_NX6_PREDICTED_ITEM_INTERACTIONS_TESTS.sh \
+            config/control/directional-watch-clearances.v1.json \
+            scripts/control/directional_watch_clearance.py \
+            scripts/network/prediction/predicted_item_interaction_journal.gd \
+            tests/harness/test_project_control_directional_clearance.py \
+            tests/network/test_prediction_duplicate_authoritative_rollback.gd; do
+            printf '%s\n' "${changed[@]}" | grep -Fx "$expected"
+          done
+          git diff --check "$BASE_MAIN" "$COMPOSED_HEAD"
+
+      - name: Install pinned Harness dependency
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install --disable-pip-version-check -r scripts/harness/requirements.txt
+          python3 - <<'PY'
+          import importlib.metadata
+          from pathlib import Path
+          required=Path('scripts/harness/requirements.txt').read_text().strip()
+          expected=required.split('==',1)[1]
+          actual=importlib.metadata.version('jsonschema')
+          assert actual==expected,(actual,expected)
+          print('PINNED DEPENDENCY OK:',actual)
+          PY
+
+      - name: Validate composed control candidate before main projection
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile \
+            scripts/control/project_control.py \
+            scripts/control/project_control_architecture_compat.py \
+            scripts/control/project_control_core.py \
+            scripts/control/directional_watch_clearance.py \
+            scripts/control/project_control_directional_watch.py \
+            scripts/harness/checkpoint_planner.py \
+            scripts/harness/event_reducer.py \
+            scripts/harness/execution_selector.py \
+            scripts/harness/mission.py \
+            scripts/harness/continuation.py \
+            scripts/harness/git_authority.py \
+            scripts/harness/contracts.py \
+            scripts/harness/cli.py
+          python3 -m harness.control_candidate_validation
+          python3 -m harness.cli check-consistency --candidate
+
+      - name: Simulate exact composed subject as canonical main
+        shell: bash
+        run: |
+          set -euo pipefail
+          git update-ref refs/remotes/origin/main "$COMPOSED_HEAD"
+          test "$(git rev-parse origin/main)" = "$COMPOSED_HEAD"
+          git merge-base --is-ancestor "$REPAIR_HEAD" origin/main
+          python3 -m harness.cli check-consistency
+
+      - name: Regression A project overview and control validation
+        shell: bash
+        run: python3 -m unittest tests.harness.test_project_overview tests.harness.test_project_control_validation
+
+      - name: Regression B checkpoint session
+        shell: bash
+        run: python3 -m unittest tests.harness.test_harness_checkpoint_session
+
+      - name: Regression C architecture and ownership compatibility
+        shell: bash
+        run: |
+          python3 -m unittest \
+            tests.harness.test_project_control_architecture_compatibility \
+            tests.harness.test_project_control_historical_ownership_compatibility \
+            tests.harness.test_project_control_proposed_r3_ownership_projection
+
+      - name: Regression D H0.2 machine checkpoint
+        shell: bash
+        run: python3 -m unittest tests.harness.test_h0_2_machine_checkpoint_contract
+
+      - name: Regression E V0 checkpoint and product policy
+        shell: bash
+        run: |
+          python3 -m unittest \
+            tests.harness.test_v0_s1_networked_checkpoint_contract \
+            tests.harness.test_v0_product_train_policy
+
+      - name: Regression F generation safety and directional clearance
+        shell: bash
+        run: |
+          python3 -m unittest \
+            tests.harness.test_v0_generation80_safety_guards \
+            tests.harness.test_project_control_directional_clearance
+
+      - name: Run complete Harness regression discovery
+        shell: bash
+        run: python3 -m unittest discover -s tests/harness -p 'test_*.py' -v
+
+      - name: Run simulated canonical-main standard and directional PC0
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/composed-postmerge-r2
+          python3 scripts/control/project_control.py --no-fetch --no-fail-on-red
+          cp artifacts/control/project-control-report.json artifacts/composed-postmerge-r2/project-control-report.json
+          cp artifacts/control/PROJECT_STATUS_RU.md artifacts/composed-postmerge-r2/PROJECT_STATUS_RU.md
+          python3 scripts/control/project_control_directional_watch.py --no-fail-on-red
+          cp artifacts/control/directional-watch-report.json artifacts/composed-postmerge-r2/directional-watch-report.json
+          cp artifacts/control/DIRECTIONAL_WATCH_STATUS_RU.md artifacts/composed-postmerge-r2/DIRECTIONAL_WATCH_STATUS_RU.md
+          python3 - <<'PY'
+          import json,os,pathlib,subprocess,hashlib
+          out=pathlib.Path('artifacts/composed-postmerge-r2')
+          standard=json.loads((out/'project-control-report.json').read_text())
+          directional=json.loads((out/'directional-watch-report.json').read_text())
+          assert standard['overall_health']!='RED', standard['overall_health']
+          assert directional['overall_health']!='RED', directional['overall_health']
+          v0nx=[x for x in directional.get('findings',[]) if x.get('producer')=='V0' and x.get('consumer')=='NX']
+          critical=[x for x in v0nx if x.get('kind')=='CRITICAL_WATCH_HIT']
+          ordinary=[x for x in v0nx if x.get('kind')=='WATCH_HIT']
+          assert len(critical)==1, critical
+          assert critical[0].get('level')=='YELLOW', critical[0]
+          assert critical[0].get('clearance_status')=='ACCEPTED', critical[0]
+          assert critical[0].get('clearance_id')==os.environ['CLEARANCE_ID'], critical[0]
+          assert critical[0].get('files')==[os.environ['V0_M4_PATH']], critical[0]
+          assert len(ordinary)==1, ordinary
+          assert ordinary[0].get('level')=='YELLOW', ordinary[0]
+          assert ordinary[0].get('files')==[os.environ['V0_JOURNAL_PATH']], ordinary[0]
+          def sha(path): return hashlib.sha256(path.read_bytes()).hexdigest()
+          live_v0=subprocess.check_output(['git','rev-parse','origin/feature/v0-mvp-playable-seamless-planet-r1'],text=True).strip()
+          summary={
+            'schema':'distributed_world_simulator.v0_nx_directional_composed_postmerge_r2.v1',
+            'composed_head':os.environ['COMPOSED_HEAD'],
+            'composed_tree':os.environ['COMPOSED_TREE'],
+            'base_main':os.environ['BASE_MAIN'],
+            'repair_head':os.environ['REPAIR_HEAD'],
+            'control_head':os.environ['CONTROL_HEAD'],
+            'reviewed_v0_head':os.environ['REVIEWED_V0_HEAD'],
+            'live_v0_head':live_v0,
+            'v0_m4_blob':os.environ['V0_M4_BLOB'],
+            'v0_journal_blob':os.environ['V0_JOURNAL_BLOB'],
+            'nx_head':os.environ['NX_HEAD'],
+            'nx_passport_blob':os.environ['NX_PASSPORT_BLOB'],
+            'clearance_id':os.environ['CLEARANCE_ID'],
+            'standard_health':standard['overall_health'],
+            'directional_health':directional['overall_health'],
+            'standard_sha256':sha(out/'project-control-report.json'),
+            'directional_sha256':sha(out/'directional-watch-report.json'),
+            'run_id':os.environ['GITHUB_RUN_ID'],
+            'result':'PASS',
+          }
+          (out/'summary.json').write_text(json.dumps(summary,indent=2)+'\n')
+          print(json.dumps(summary,sort_keys=True))
+          PY
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: v0-nx-directional-composed-postmerge-r2-${{ env.COMPOSED_HEAD }}-${{ github.run_id }}
+          path: artifacts/composed-postmerge-r2/
+          if-no-files-found: warn
+          retention-days: 90
