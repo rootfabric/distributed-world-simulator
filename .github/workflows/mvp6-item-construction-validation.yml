@@ -1,22 +1,24 @@
-name: MVP6 Journal Resolution Exact Diagnostic
+name: MVP6 Construction Fixture Exact Diagnostic
 on:
   workflow_dispatch:
 permissions:
   contents: read
   actions: read
 jobs:
-  journal:
+  fixture:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 15
     env:
       PYTHONUTF8: '1'
       PYTHONDONTWRITEBYTECODE: '1'
       BREAKPOINT_RUNTIME_DISABLED: '1'
       PLANET_SIMULATOR_INVENTORY_PROFILE: planet_default
+      EXPECTED_HEAD: 84ab0c0fba87f12dcfc94e32bb9cfa4eb8abb481
+      EXPECTED_TREE: f7e3f255bcc4878f3e738e011e3d45bf3edcdb81
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: 3b82145ae946bb51aebf67f048a28420368b40be
+          ref: 84ab0c0fba87f12dcfc94e32bb9cfa4eb8abb481
           fetch-depth: 0
       - uses: actions/download-artifact@v4
         with:
@@ -25,7 +27,7 @@ jobs:
           repository: rootfabric/distributed-world-simulator
           github-token: ${{ github.token }}
           path: ${{ runner.temp }}/engine
-      - name: Exact Linux main integration candidate
+      - name: Exact focused fixture commands, no product acceptance
         shell: bash
         run: |
           set -euo pipefail
@@ -35,45 +37,34 @@ jobs:
           import hashlib,json,os,pathlib,re,subprocess
           git=lambda *a:subprocess.check_output(['git',*a],text=True).strip()
           head=git('rev-parse','HEAD');tree=git('rev-parse','HEAD^{tree}')
-          assert head=='3b82145ae946bb51aebf67f048a28420368b40be'
-          assert tree=='6b1b8c9ead5c16d15dc8565813d3abb1bf94d880'
+          assert head==os.environ['EXPECTED_HEAD'] and tree==os.environ['EXPECTED_TREE']
           assert not git('status','--porcelain')
           engine=os.environ['GODOT_BIN'];sha=lambda p:hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()
           assert sha(engine)=='bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7'
-          out=pathlib.Path('artifacts/journal-linux');out.mkdir(parents=True)
-          specs=[('import',['--editor','--import','--quit'],None),('rollback',['--script','res://tests/runtime/test_v0_mvp_6_prediction_rollback.gd'],77),('nx6',['--script','res://tests/network/test_nx6_predicted_item_interactions.gd'],940),('bridge',['--script','res://tests/network/test_nx6_predicted_item_interactions_integration.gd'],66)]
+          out=pathlib.Path('artifacts/construction-fixture');out.mkdir(parents=True)
+          os.environ['MVP6_CONSTRUCTION_RESULT']=str((out/'construction.json').resolve())
+          specs=[('import',['--editor','--import','--quit'],None),('construction',['--script','res://tests/runtime/test_v0_mvp_6_item_construction_composition.gd'],223),('p4',['--script','res://tests/runtime/test_v0_p4_live_mvp_composition_ordering.gd'],64),('journal',['--script','res://tests/runtime/test_v0_mvp_6_prediction_rollback.gd'],77)]
           rows=[]
           for name,args,count in specs:
               log=out/(name+'.log');argv=[engine,'--headless','--path','.']+args
               with log.open('wb') as f: code=subprocess.run(argv,stdout=f,stderr=subprocess.STDOUT,timeout=240).returncode
-              text=log.read_text(errors='replace');counts=[int(n) for n in re.findall(r'PASS \((\d+) assertions\)',text)]
+              text=log.read_text(errors='replace');counts=[int(a or b) for a,b in re.findall(r'PASS \((\d+) assertions\)|assertions=(\d+) failures=0',text)]
               fatal=re.findall(r'(?m)^\s*(?:SCRIPT ERROR|ERROR):.*|.*Parse Error.*|.*Compile Error.*',text)
               rows.append(dict(name=name,argv=argv,exit_code=code,assertions=counts,fatal=fatal,passed=code==0 and not fatal and (count is None or counts==[count]),sha256=sha(log)))
               (out/'commands.json').write_text(json.dumps(rows,indent=2)+'\n')
-          report=dict(head=head,tree=tree,engine_sha256=sha(engine),run_id=os.environ['GITHUB_RUN_ID'],commands=rows,tracked_clean=not git('status','--porcelain','--untracked-files=no'),mvp6_verified=False)
-          report['passed']=all(r['passed'] for r in rows) and report['tracked_clean']
+          construction=json.loads((out/'construction.json').read_text())
+          checks={key:construction.get(key) is True for key in ['passed','native_nonempty_carry_executed','real_resource_construction_executed','two_client_derived_replication_executed','construction_collision_present']}
+          checks['exact_report']=construction.get('subject_head')==head and construction.get('subject_tree')==tree
+          checks['no_self_acceptance']=construction.get('mvp6_predicate_verified') is False and construction.get('independent_verdict') is False
+          report=dict(head=head,tree=tree,engine_sha256=sha(engine),run_id=os.environ['GITHUB_RUN_ID'],commands=rows,checks=checks,tracked_clean=not git('status','--porcelain','--untracked-files=no'),mvp6_verified=False,physics_interaction_executed=False,five_process_executed=False)
+          report['passed']=all(r['passed'] for r in rows) and all(checks.values()) and report['tracked_clean']
           (out/'summary.json').write_text(json.dumps(report,indent=2)+'\n')
           assert report['passed'],report
           PY
-      - name: Exact feature NX repair composition, never canonical clearance
-        shell: bash
-        run: |
-          set -euo pipefail
-          git fetch origin '+refs/heads/*:refs/remotes/origin/*' --prune
-          test "$(git rev-parse origin/main)" = 6982a563dd0c88c81449566131852c601ae89868
-          git worktree add --detach "$RUNNER_TEMP/feature" 73b8818184c93986e3313f35f9f4548c608e47e6
-          cd "$RUNNER_TEMP/feature"
-          export GODOT_BIN="$RUNNER_TEMP/engine/godot"
-          export EXPECTED_HEAD=73b8818184c93986e3313f35f9f4548c608e47e6
-          export GITHUB_REF_NAME=feature/v0-mvp-playable-seamless-planet-r1
-          export MVP6_NX_JOURNAL_REPAIR_HEAD="$EXPECTED_HEAD"
-          export MVP6_NX_PROBE_OUTPUT="$GITHUB_WORKSPACE/artifacts/journal-nx-linux"
-          export MVP6_NX_PROBE_WORKTREE="$RUNNER_TEMP/nx-composition"
-          python3 docs/control/mvp-act0-r1/mvp6_nx_dependency_probe.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: journal-resolution-exact-${{ github.run_id }}
-          path: artifacts/journal*
+          name: construction-fixture-exact-${{ github.run_id }}
+          path: artifacts/construction-fixture
           if-no-files-found: error
           retention-days: 90
