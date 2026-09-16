@@ -46,6 +46,7 @@ run_checked() {
 run_checked editor_import --headless --editor --path "$PROJECT_ROOT" --quit
 run_checked nx6_contracts --headless --path "$PROJECT_ROOT" --script res://tests/network/test_nx6_predicted_item_interactions.gd
 run_checked nx6_integration --headless --path "$PROJECT_ROOT" --script res://tests/network/test_nx6_predicted_item_interactions_integration.gd
+run_checked prediction_duplicate_authoritative_rollback --headless --path "$PROJECT_ROOT" --script res://tests/network/test_prediction_duplicate_authoritative_rollback.gd
 run_checked m7_playable_contracts --headless --path "$PROJECT_ROOT" --script res://tests/runtime/test_m7_playable_networked_playground.gd
 
 # Fix3 keeps the graphical M7 multiprocess suite to a mandatory gate.
@@ -53,5 +54,5 @@ GODOT_BIN="$GODOT" "$PROJECT_ROOT/RUN_M7_PLAYABLE_NETWORKED_PLAYGROUND_TESTS.sh"
 if [[ "${NX6_INCLUDE_ACCEPTED_REGRESSION:-0}" == "1" ]]; then
   GODOT_BIN="$GODOT" "$PROJECT_ROOT/RUN_NX5_REMOTE_SNAPSHOT_INTERPOLATION_TESTS.sh"
 fi
-echo "NX6 predicted item interactions fix3: PASS (5/5 mandatory)"
+echo "NX6 predicted item interactions fix3: PASS (6/6 mandatory)"
 echo "Logs: $RESULT_ROOT"
