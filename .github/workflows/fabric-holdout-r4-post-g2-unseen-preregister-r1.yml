@@ -1,0 +1,136 @@
+name: FABRIC HOLDOUT-R4 Post-G2 Unseen Preregistration R1
+
+on:
+  push:
+    branches: [research/fabric-holdout-r4-post-g2-unseen-preregister-r1]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fabric-r4-post-g2-unseen-prereg-r1
+  cancel-in-progress: false
+
+env:
+  FREEZE_COMMIT: 649af4ef16de00c797b4d63be70426abb3c75d68
+  SUBJECT_BRANCH: repair/fabric-holdout-r4-g2-generalized-capabilities-r1
+  SUBJECT_HEAD: e6228a39b6b3006a3d14ad0884c09266570fcd00
+  SUBJECT_TREE: 1b84960369868aa6d5ec23c1eae3019250ff9a8f
+  TARGET_EPOCH_SECONDS: '1789562700'
+  SELF_TEST_OUTPUT_VALUE: '0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF'
+
+jobs:
+  preregistration:
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - name: Bind freeze, subject and preregistration scope
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          git fetch origin "$SUBJECT_BRANCH" --no-tags
+          test "$(git rev-parse "origin/$SUBJECT_BRANCH")" = "$SUBJECT_HEAD"
+          test "$(git rev-parse "$SUBJECT_HEAD^{tree}")" = "$SUBJECT_TREE"
+          test "$(git merge-base HEAD "$FREEZE_COMMIT")" = "$FREEZE_COMMIT"
+          expected="$(printf '%s\n' \
+            '.github/workflows/fabric-holdout-r4-post-g2-unseen-preregister-r1.yml' \
+            'config/research/fabric-holdout-r4-post-g2-unseen-preregister-r1.json' \
+            'scripts/research/fabric_holdout_r4_post_g2/generate_unseen_cases_v1.py' \
+            'tests/research/fabric1/fabric_holdout_r4_post_g2_unseen_acceptance.gd' | sort)"
+          actual="$(git diff --name-only "$FREEZE_COMMIT"...HEAD | sort)"
+          test "$actual" = "$expected"
+          git diff --check "$FREEZE_COMMIT"...HEAD
+          printf '%s\n' "$actual" | tee prereg-paths.txt
+          git log --format=%ct "$FREEZE_COMMIT"..HEAD | tee prereg-commit-times.txt
+          test -s prereg-commit-times.txt
+          while read -r ts; do test "$ts" -lt "$TARGET_EPOCH_SECONDS"; done < prereg-commit-times.txt
+          printf 'PREREG_HEAD=%s\nPREREG_TREE=%s\nSUBJECT_HEAD=%s\nSUBJECT_TREE=%s\nFREEZE_COMMIT=%s\n' \
+            "$(git rev-parse HEAD)" "$(git rev-parse 'HEAD^{tree}')" "$SUBJECT_HEAD" "$SUBJECT_TREE" "$FREEZE_COMMIT" | tee prereg-identity.txt
+
+      - name: Verify canonical Linux double
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          bin="${DWS_GODOT_DOUBLE_BIN:-$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64}"
+          test -x "$bin"
+          test "$("$bin" --version | head -n1 | tr -d '\r')" = '4.7.1.stable.double.custom_build.a13da4feb'
+          test "$(sha256sum "$bin" | awk '{print $1}')" = 'bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7'
+          echo "GODOT_BIN=$bin" >> "$GITHUB_ENV"
+          printf 'GODOT_VERSION=%s\nGODOT_SHA256=%s\n' \
+            "$("$bin" --version | head -n1 | tr -d '\r')" "$(sha256sum "$bin" | awk '{print $1}')" | tee prereg-godot.txt
+
+      - name: Validate frozen generator determinism
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          python3 -m py_compile scripts/research/fabric_holdout_r4_post_g2/generate_unseen_cases_v1.py
+          python3 scripts/research/fabric_holdout_r4_post_g2/generate_unseen_cases_v1.py --self-test | tee prereg-generator-selftest.log
+          grep -F 'FABRIC_R4_POST_G2_UNSEEN_GENERATOR_SELF_TEST=PASS' prereg-generator-selftest.log
+          grep -F 'SELF_TEST_CASES_SHA256=ac89c0516550e554e46947f1f5b99fc1b8b672803383bbd487fe63e6005a4a03' prereg-generator-selftest.log
+          python3 scripts/research/fabric_holdout_r4_post_g2/generate_unseen_cases_v1.py \
+            --output-value "$SELF_TEST_OUTPUT_VALUE" \
+            --pulse-uri selftest://pulse \
+            --pulse-timestamp 2099-01-01T00:00:00.000Z \
+            --out prereg-fake-cases.json | tee prereg-generator-build.log
+          test "$(sha256sum prereg-fake-cases.json | awk '{print $1}')" = 'ac89c0516550e554e46947f1f5b99fc1b8b672803383bbd487fe63e6005a4a03'
+
+      - name: Fresh import frozen runner
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          rm -rf .godot
+          "$GODOT_BIN" --headless --editor --path . --log-file prereg-import.log --import
+          ! grep -Eiq 'SCRIPT ERROR|Parse Error|Invalid call|Invalid access|ERROR:' prereg-import.log
+
+      - name: Execute runner against fake future-beacon manifest
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          export FABRIC_R4_POST_G2_CASES="$GITHUB_WORKSPACE/prereg-fake-cases.json"
+          "$GODOT_BIN" --headless --path . --script res://tests/research/fabric1/fabric_holdout_r4_post_g2_unseen_acceptance.gd 2>&1 | tee prereg-runner-selftest.log
+          grep -F 'FABRIC_R4_POST_G2_UNSEEN_ASSERTIONS=93 FAILURES=0' prereg-runner-selftest.log
+          grep -F 'FABRIC-HOLDOUT-R4-POST-G2-UNSEEN: PASS' prereg-runner-selftest.log
+
+      - name: Verify preregistration remains pre-reveal
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          python3 - <<'PY'
+          import json
+          p=json.load(open('config/research/fabric-holdout-r4-post-g2-unseen-preregister-r1.json',encoding='utf-8'))
+          assert p['state']=='PREREGISTERED_AWAITING_FUTURE_BEACON'
+          assert p['unseen_source']['target_unix_ms']==1789562700000
+          assert p['unseen_source']['exact_case_values_known_at_preregistration'] is False
+          assert p['current_gate']['beacon_reveal']=='LOCKED_UNTIL_TARGET_TIME'
+          assert p['production_freeze']['subject_head']=='e6228a39b6b3006a3d14ad0884c09266570fcd00'
+          assert p['production_freeze']['subject_tree']=='1b84960369868aa6d5ec23c1eae3019250ff9a8f'
+          print('FABRIC_R4_POST_G2_UNSEEN_PREREGISTRATION=PASS')
+          PY
+          git diff --check
+          test -z "$(git status --porcelain=v1 --untracked-files=no)"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: fabric-r4-post-g2-unseen-prereg-${{ github.sha }}
+          path: |
+            prereg-identity.txt
+            prereg-paths.txt
+            prereg-commit-times.txt
+            prereg-godot.txt
+            prereg-generator-selftest.log
+            prereg-generator-build.log
+            prereg-fake-cases.json
+            prereg-import.log
+            prereg-runner-selftest.log
+            config/research/fabric-holdout-r4-post-g2-unseen-preregister-r1.json
+            scripts/research/fabric_holdout_r4_post_g2/generate_unseen_cases_v1.py
+            tests/research/fabric1/fabric_holdout_r4_post_g2_unseen_acceptance.gd
+          if-no-files-found: error
+          retention-days: 30
