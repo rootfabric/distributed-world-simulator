@@ -52,6 +52,8 @@
     "A8_NATIVE_COMMAND_AND_SEAM_COMPATIBILITY",
     "PRECISE_STALE_OWNER_ERROR_NOT_ARBITRARY_PROCESS_FAILURE",
     "DURABLE_PACKET_ANCHORS_AND_FRESH_PROCESS_RESTART",
+    "CALLER_OWNED_DURABLE_ORIGIN_ACK_REQUIRED_FOR_FRESH_PROCESS_RESTORE",
+    "FORGED_DURABLE_ORIGIN_ACK_REJECTED",
     "SYNTHETIC_SCALE_SEPARATE_FROM_REAL_BIOLOGY",
     "FULL_INHERITED_A0_A8_REGRESSIONS_AND_GRAPHICS",
     "FULL_HARNESS_NO_SKIPS_AND_EXPLICIT_NON_RED_AUDITS",
@@ -72,10 +74,21 @@
     "stale_review_request": 5680887802,
     "old_evidence_accepts_new_head": false
   },
-  "state": "VERIFYING_REPAIR_R1",
+  "repair_r2": {
+    "previous_source": "1e2604193d7881c370bb38ecf700383241c8a3c8",
+    "independent_finding": 4016243317,
+    "severity": "P1",
+    "root_cause": "Fresh-process restore accepted packet SHA and origin as CLI values derived from the still-live FidelityRecord. The SnapshotStore external anchor only durably acknowledged tip/sequence/snapshot_sha256, so process-loss recovery did not prove any caller-owned durable trust source for expected_origin.",
+    "canonical_fix": "Persist one fsync-backed caller-owned A9 durable acknowledgement containing the exact validated SnapshotStore anchor plus origin_sha256. Fresh-process restore receives only the packet path and acknowledgement path, derives expected packet SHA from the nested store anchor and expected origin from that acknowledgement, and rejects a valid-format forged origin acknowledgement.",
+    "integration_fix_commit": "9bb24872fba2d6273b202b4b2123bcee452879dd",
+    "verifier_fix_commit": "4716768c0cd58cf941022f5375e74ba46beca968",
+    "stale_exact_run": 34976417664,
+    "old_evidence_accepts_new_head": false
+  },
+  "state": "VERIFYING_REPAIR_R2",
   "resume_anchor": {
-    "last_completed_predicate": "A9_REPAIR_R1_IMPLEMENTED_AND_LOCAL_CONTRACT_TESTS_PASS",
-    "next_action": "FREEZE_REPAIRED_HEAD_TREE_REBIND_EXACT_WORKFLOW_AND_FRESH_WHOLE_HEAD_REVIEW_THEN_INSPECT_ARTIFACTS",
+    "last_completed_predicate": "A9_REPAIR_R2_DURABLE_ORIGIN_ACK_IMPLEMENTED",
+    "next_action": "FREEZE_REPAIR_R2_HEAD_TREE_REBIND_EXACT_R3_AND_FRESH_WHOLE_HEAD_REVIEW_THEN_INSPECT_ARTIFACTS",
     "allowed_recovery_route": "GitHub connector for commits; repository-owned self-hosted Linux for actual Godot; separate validation branch for evidence; PR #640",
     "stop_before": "MAIN_MERGE"
   }
