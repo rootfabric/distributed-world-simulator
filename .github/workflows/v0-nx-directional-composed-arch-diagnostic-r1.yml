@@ -1,0 +1,50 @@
+name: V0 NX Composed Architecture Diagnostic R1
+
+on:
+  push:
+    branches: [validation/v0-nx-directional-composed-postmerge-r1]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: v0-nx-composed-arch-diagnostic-r1
+  cancel-in-progress: false
+
+jobs:
+  architecture-diagnostic:
+    if: github.repository == 'rootfabric/distributed-world-simulator'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      COMPOSED_HEAD: 4f84f5f492bcbc0e83bbb1fed206fc4ea07e1509
+      COMPOSED_TREE: 5c8c7c59f238467d633d9961797adac067681f08
+      REAL_MAIN: 6982a563dd0c88c81449566131852c601ae89868
+      PYTHONPATH: scripts
+      PYTHONUTF8: '1'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ env.COMPOSED_HEAD }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Seal and simulate future main
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin '+refs/heads/*:refs/remotes/origin/*' --prune
+          test "$(git rev-parse HEAD)" = "$COMPOSED_HEAD"
+          test "$(git rev-parse HEAD^{tree})" = "$COMPOSED_TREE"
+          test "$(git rev-parse origin/main)" = "$REAL_MAIN"
+          git update-ref refs/remotes/origin/main "$COMPOSED_HEAD"
+          python3 -m pip install --disable-pip-version-check -r scripts/harness/requirements.txt
+      - name: C1 architecture compatibility
+        shell: bash
+        run: python3 -m unittest tests.harness.test_project_control_architecture_compatibility
+      - name: C2 historical ownership compatibility
+        shell: bash
+        run: python3 -m unittest tests.harness.test_project_control_historical_ownership_compatibility
+      - name: C3 proposed R3 ownership projection
+        shell: bash
+        run: python3 -m unittest tests.harness.test_project_control_proposed_r3_ownership_projection
