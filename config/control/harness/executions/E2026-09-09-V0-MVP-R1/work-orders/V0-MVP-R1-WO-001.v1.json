@@ -6,7 +6,7 @@
   "goal_checkpoint": "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE",
   "state": "IN_PROGRESS",
   "work_order_type": "INTEGRATION",
-  "base_sha": "3d7672cba293d8e7bd724b703f73fc8fcee5da",
+  "base_sha": "3d7672cba293d8e7bd72427b803f73fc8fcee5da",
   "branch": "feature/v0-mvp-playable-seamless-planet-r1",
   "scope": "MVP1–MVP8: интеграция принятых SM1/P7/Item/Construction/persistence в одну запускаемую двухклиентскую сцену без новых владельцев состояния. Сохраняются HA-V0-MVP3-LIVE-PLAYER-HOOKS-R1 и его четыре M3 файла; точные validation scope MVP4/MVP5; принятые V0-MVP-LIVE-SIMULATOR-BASELINE-R1 и HA-V0-MVP-CHECKPOINT-CATALOG-SYNC-R1. Пользователь явно разрешил HA-V0-MVP6-NATIVE-ITEM-CARRY-R1: два именованных M4 файла и networked_gameplay_service_p2.gd допускают только native actor-scoped carrying, replay/authority fencing, trusted spatial/content bootstrap и согласование с прежними M3 hooks. Это не смена архитектурного ownership. M4 wildcard-разрешения нет: все остальные M4 пути остаются вне allowed_paths. Именованный новый read-only .github/workflows/mvp6-item-construction-validation.yml разрешён Director для exact tests/evidence этого slice; historical prerequisite diagnostic сохраняется отдельно. Ни один из этих scopes не разрешает main/runtime merge или self-acceptance.",
   "allowed_paths": [
