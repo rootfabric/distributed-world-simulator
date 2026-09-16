@@ -27,3 +27,22 @@ rename/delete; missing/OPEN/foreign HA; P7 acceptance mutation; extra scene.
 До code edits фиксируется этот exact CONTROL WO. Основание — пользовательский
 control mandate §8 и Director replan, а не blanket расширение runtime HA.
 После реализации frozen exact focused tests, fresh Reviewer/Verifier, HUMAN merge.
+
+## FIX_REQUIRED: Linux fixture teardown
+
+Run35103186274 на a7c711c4: 329 tests, один прежний directional RED failure и
+10 ошибок TemporaryDirectory cleanup `Directory not empty: repo`. Все десять
+возникают после negative commits с быстрым отказом source fence; assertions не
+ослабляются. Windows focused17 проходил, поэтому он не заменяет Linux evidence.
+
+Отдельный GIT_TRACE2_EVENT diagnostic на cloned a7 воспроизводит child command
+`git maintenance run --auto --quiet --detach` при обычном fixture commit.
+Windows diagnostic не воспроизводит сам Linux teardown race; связь detached
+maintenance с Linux ошибками — проверяемая гипотеза, не доказательство harmless.
+Raw trace сохранён parent в artifacts/mvp6-journal-73b88181/act0-maintenance-diagnostic.
+
+Минимальное исправление test-only: установить maintenance.auto=false, gc.auto=0,
+gc.autoDetach=false в конфигурацию каждой disposable clone до её первого checkout.
+Добавить real-commit Trace2 проверку отсутствия automatic maintenance/gc children.
+TemporaryDirectory cleanup остаётся строгим; ignore_errors, retries и skip нет.
+Новый exact Windows/fresh Linux прогон обязателен; a7 Linux не переписывается в PASS.
