@@ -8,10 +8,12 @@ B) the same composition + exact current V0 critical M4 producer blob.
 The registered NX tests were source-implemented but never exact-Godot verified.
 Two tests call methods on a dynamically returned owner service but use `:=`,
 which asks Godot 4.7.1 to infer a static return type that the dynamic expression
-does not have. A third test uses `:=` with an untyped loop value. The probe
-changes only those temporary declarations from `:=` to `=`. No assertion,
-payload, method call, runtime source or branch file is changed. Both baseline
-and candidate must pass the same assertions.
+does not have. A third test uses `:=` with an untyped loop value. The NX runtime
+leaf also has one dynamic movement-validator declaration. The probe normalizes
+these explicitly recorded temporary declarations from `:=` to `=` in BOTH
+compositions. No assertion, payload, method call or NX branch file is changed.
+This proves only compatibility of the V0 delta with parser-normalized NX, not
+unmodified NX source acceptance. Fatal logs override exit 0 and printed PASS.
 
 Evidence only: PASS does not write a main-owned directional clearance, does not
 accept NX, and does not accept MVP6.
@@ -24,6 +26,7 @@ import os
 from pathlib import Path
 import re
 import subprocess
+import platform
 
 ROOT = Path(__file__).resolve().parents[3]
 NX_BRANCH = "feature/h0-2-nx-c1-owner-authority-r3"
@@ -32,7 +35,10 @@ CRITICAL = "scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_gra
 OUT = Path(os.environ["MVP6_NX_PROBE_OUTPUT"]).resolve()
 WORKTREE = Path(os.environ["MVP6_NX_PROBE_WORKTREE"]).resolve()
 GODOT = Path(os.environ["GODOT_BIN"]).resolve()
-EXPECTED_ENGINE = "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7"
+EXPECTED_ENGINES = {
+    "Windows": "3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5",
+    "Linux": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+}
 TESTS = [
     "tests/network/test_nx_owner_movement_authority.gd",
     "tests/network/test_nx_render_physics_separation.gd",
@@ -45,6 +51,18 @@ DYNAMIC_TESTS = [
     "tests/network/test_nx_owner_item_projection_rollback.gd",
 ]
 DYNAMIC_DECLARATION = re.compile(r"(?m)^(\s*var\s+[A-Za-z_][A-Za-z0-9_]*)\s*:=\s*(service\.)")
+FATAL = re.compile(r"SCRIPT ERROR:|(?:^|\n)\s*ERROR:|Parse Error:|Compile Error:|Assertion failed", re.I)
+PASS_COUNT = re.compile(r"^.+: PASS \((\d+) assertions\)\s*$", re.M)
+EXPECTED_COUNTS = dict(zip(TESTS, [44, 31, 37, 25, 940]))
+
+
+def inspect_log(path: Path, *, require_assertions: bool) -> dict:
+    source = path.read_text(encoding="utf-8-sig", errors="replace")
+    counts = [int(n) for n in PASS_COUNT.findall(source)]
+    fatal_lines = [line for line in source.splitlines() if FATAL.search(line)]
+    valid = not fatal_lines and (not require_assertions or (len(counts) == 1 and counts[0] > 0))
+    return {"log_valid": valid, "assertions": counts[0] if len(counts) == 1 else None,
+            "fatal_lines": fatal_lines, "log_sha256": digest_file(path)}
 
 
 def proc(argv: list[str], cwd: Path, *, log: Path | None = None) -> subprocess.CompletedProcess:
@@ -145,24 +163,26 @@ def run_suite(label: str) -> list[dict]:
     folder.mkdir(parents=True, exist_ok=True)
     import_log = folder / "import.log"
     imported = proc([str(GODOT), "--headless", "--path", str(WORKTREE), "--editor", "--import", "--quit"], WORKTREE, log=import_log)
-    rows.append({"name": "import", "exit_code": imported.returncode, "log_sha256": digest_file(import_log)})
-    if imported.returncode != 0:
+    rows.append({"name": "import", "exit_code": imported.returncode,
+                 **inspect_log(import_log, require_assertions=False)})
+    if imported.returncode != 0 or not rows[-1]["log_valid"]:
         return rows
     for test in TESTS:
         log = folder / (Path(test).stem + ".log")
         result = proc([str(GODOT), "--headless", "--path", str(WORKTREE), "--script", "res://" + test], WORKTREE, log=log)
-        rows.append({"name": test, "exit_code": result.returncode, "log_sha256": digest_file(log)})
-        if result.returncode != 0:
-            break
+        rows.append({"name": test, "exit_code": result.returncode,
+                     **inspect_log(log, require_assertions=True)})
+        rows[-1]["expected_assertions"] = EXPECTED_COUNTS[test]
+        rows[-1]["log_valid"] = rows[-1]["log_valid"] and rows[-1]["assertions"] == EXPECTED_COUNTS[test]
     return rows
 
 
 def passed(rows: list[dict]) -> bool:
-    return len(rows) == len(TESTS) + 1 and all(row["exit_code"] == 0 for row in rows)
+    return len(rows) == len(TESTS) + 1 and all(row["exit_code"] == 0 and row["log_valid"] for row in rows)
 
 
 def main() -> int:
-    if not GODOT.is_file() or digest_file(GODOT) != EXPECTED_ENGINE:
+    if not GODOT.is_file() or digest_file(GODOT) != EXPECTED_ENGINES.get(platform.system()):
         raise RuntimeError("EXACT_DOUBLE_ENGINE_REQUIRED")
     OUT.mkdir(parents=True, exist_ok=True)
     if any(OUT.iterdir()):
@@ -210,6 +230,22 @@ def main() -> int:
             overlay.append({"path": path, "source": "NX", "main_blob": previous, "overlay_blob": current})
 
         parser_patches = apply_parser_only_test_compatibility()
+        runtime_path = "scripts/runtime/networked_gameplay/networked_gameplay_service_owner_movement.gd"
+        runtime_target = WORKTREE / runtime_path
+        runtime_source = runtime_target.read_text(encoding="utf-8")
+        before = "var validation := _movement.apply_authoritative_state("
+        after = "var validation = _movement.apply_authoritative_state("
+        if runtime_source.count(before) != 1 or after in runtime_source:
+            raise RuntimeError("NX_RUNTIME_PARSER_PATCH_PRECONDITION_FAILED")
+        runtime_patched = runtime_source.replace(before, after)
+        runtime_target.write_text(runtime_patched, encoding="utf-8")
+        runtime_parser_patch = {
+            "path": runtime_path, "change": "ONE_DYNAMIC_DECLARATION_COLON_EQUALS_TO_EQUALS_ONLY",
+            "before_sha256": hashlib.sha256(runtime_source.encode()).hexdigest(),
+            "after_sha256": hashlib.sha256(runtime_patched.encode()).hexdigest(),
+            "applied_identically_to_baseline_and_candidate": True,
+            "nx_branch_modified": False,
+        }
         baseline_rows = run_suite("baseline-current-main-plus-nx")
 
         target = WORKTREE / CRITICAL
@@ -229,14 +265,19 @@ def main() -> int:
 
         baseline_pass = passed(baseline_rows)
         candidate_pass = passed(candidate_rows)
+        same_counts = [r.get("assertions") for r in baseline_rows] == [r.get("assertions") for r in candidate_rows]
         summary = {
-            "schema": "distributed_world_simulator.mvp6_nx_dependency_probe.v5",
-            "composition": "CURRENT_MAIN_PLUS_EXACT_NX_OWNED_DELTA_THEN_CURRENT_V0_M4_CRITICAL",
+            "schema": "distributed_world_simulator.mvp6_nx_dependency_probe.v6",
+            "composition": "CURRENT_MAIN_PLUS_PARSER_NORMALIZED_NX_THEN_EXACT_CURRENT_V0_M4_CRITICAL",
             "canonical_main": main_head,
             "producer_program": "V0",
             "producer_branch": producer_branch,
             "producer_head": producer_head,
             "producer_tree": producer_tree,
+            "probe_sha256": digest_file(Path(__file__)),
+            "producer_tracked_status": text(["git", "status", "--porcelain", "--untracked-files=no"]),
+            "consumer_tree": text(["git", "rev-parse", consumer_head + "^{tree}"]),
+            "canonical_main_tree": text(["git", "rev-parse", main_head + "^{tree}"]),
             "producer_critical_file": CRITICAL,
             "producer_critical_blob": producer_blob,
             "consumer_program": "NX",
@@ -246,13 +287,18 @@ def main() -> int:
             "consumer_passport_blob": consumer_passport_blob,
             "consumer_owned_overlay_paths": consumer_paths,
             "parser_only_test_compatibility": parser_patches,
+            "runtime_parser_compatibility": runtime_parser_patch,
+            "unmodified_nx_runtime_pass_claimed": False,
             "overlay_records": overlay,
             "engine_sha256": digest_file(GODOT),
+            "engine_version": text([str(GODOT), "--version"]),
+            "platform": platform.platform(),
             "baseline_tests": baseline_rows,
             "candidate_tests": candidate_rows,
             "baseline_passed": baseline_pass,
             "candidate_passed": candidate_pass,
-            "dependency_revalidated": baseline_pass and candidate_pass,
+            "same_assertion_counts": same_counts,
+            "dependency_revalidated": baseline_pass and candidate_pass and same_counts,
             "candidate_regressed_consumer": baseline_pass and not candidate_pass,
             "foundation_mutation_accepted": False,
             "clearance_written": False,
