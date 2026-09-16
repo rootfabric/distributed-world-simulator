@@ -1,0 +1,92 @@
+{
+  "schema": "distributed_world_simulator.mvp5_world_core_terminal_evidence.v1",
+  "role": "COORDINATOR_MACHINE_EVIDENCE_NOT_INDEPENDENT_VERDICT",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "predicate": "MVP_EXACTLY_ONCE_MATERIAL_OUTPUT",
+  "product": {
+    "branch": "feature/v0-mvp-playable-seamless-planet-r1",
+    "head": "b78de4980328bb7b4d19e030bb7f0fa5d9976cd8",
+    "tree": "0bfdd7595e10f007815bb666e62e7c5575172173"
+  },
+  "carrier": {
+    "branch": "control/v0-mvp5-worldcore-b78de498-r1",
+    "head": "dab6476ff0881de5a05a8fb49d14d781728083c2"
+  },
+  "workflow": {
+    "run_id": 34967384187,
+    "run_attempt": 2,
+    "job_id": 104390100109,
+    "job_name": "exact-product-world-core",
+    "conclusion": "success"
+  },
+  "artifact": {
+    "artifact_id": 10400491187,
+    "name": "mvp5-world-core-b78de498-34967384187-2",
+    "zip_sha256": "83d21a7ca4c4839b5c4f6295ce0e36065bee82b65f086721cf9772c81b95f250",
+    "manifest_sha256": "1f0b332ed75e378a520c18635509f464ab3aa51de9e85f6bc88a2c5195536a0b",
+    "world_core_acceptance_sha256": "ab711d1f3b2dc605b88dfad1fbe9c0b53af656681733fb816b26453f69bec18f",
+    "world_regression_summary_sha256": "0455cf8cbb6dca2d88535fb319aea704daa1281fb9b6878a60470a093f6a8375",
+    "subjects_sha256": "3d7395a494b40f8cdbaf452d3eec6edc20d73732f9d605202ce2cf4fbbb2f7a8",
+    "manifest_indexed_members": 1755,
+    "rehash_missing_count": 0,
+    "rehash_mismatch_count": 0
+  },
+  "subject_binding": {
+    "actual_head": "b78de4980328bb7b4d19e030bb7f0fa5d9976cd8",
+    "actual_tree": "0bfdd7595e10f007815bb666e62e7c5575172173",
+    "feature_remote": "b78de4980328bb7b4d19e030bb7f0fa5d9976cd8",
+    "canonical_main_observed": "675c04bb213bbb68b8cdb500d540d57ce1490318",
+    "tracked_after_clean": true,
+    "engine_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7"
+  },
+  "world_core": {
+    "passed": true,
+    "declared_test_count": 336,
+    "discovered_test_count": 336,
+    "step_count": 341,
+    "failed_step_count": 0,
+    "nonzero_exit_count": 0,
+    "thirty_minute_soak": {
+      "name": "test_v0_p6_thirty_minute_soak",
+      "exit_code": 0,
+      "duration_seconds": 1804.028,
+      "passed": true,
+      "minimum_required_seconds": 1800.0
+    },
+    "main_scene_cli_all": {
+      "exit_code": 0,
+      "duration_seconds": 2.878,
+      "passed": true
+    }
+  },
+  "historical_attempt_1_preserved": {
+    "run_id": 34967384187,
+    "run_attempt": 1,
+    "artifact_id": 10396726706,
+    "zip_sha256": "03b0cf1e930930f593b81febb5483a46be1ed393103b2173a058e94d842c9026",
+    "failure": "test_v0_p2_live_shared_state_convergence / item.pickup / ITEM_INTERACTION_OUT_OF_RANGE",
+    "evidence_file": "config/control/harness/executions/E2026-09-09-V0-MVP-R1/supporting-evidence/MVP5-WORLDCORE-P2-FAILURE-B78DE498-R1.v1.json",
+    "erased_or_reclassified": false
+  },
+  "p2_followup": {
+    "standalone_exact_repetitions": 3,
+    "standalone_passes": 3,
+    "causal_race_proven": false,
+    "historical_failure_claimed_fixed": false,
+    "evidence_file": "config/control/harness/executions/E2026-09-09-V0-MVP-R1/supporting-evidence/MVP5-P2-FROZEN-REPRO-B78DE498-R1.v1.json"
+  },
+  "verifier_precondition_update": {
+    "exact_product_world_core_terminal_evidence_pending": false,
+    "terminal_exact_product_world_core_present": true,
+    "fresh_independent_verifier_required": true
+  },
+  "claims": {
+    "independent_verdict": false,
+    "mvp5_predicate_verified": false,
+    "whole_mvp_accepted": false,
+    "runtime_merge_authorized": false,
+    "main_merge_authorized": false
+  },
+  "next_action": "Request a NEW fresh independent Verifier review on the exact updated evidence-carrier HEAD. If VERIFIED with no new blocking finding, publish append-only MVP5 leaf PREDICATE_VERIFIED for b78de498/0bfdd759 and rerun exact branch-aware Drive/Close gates."
+}
