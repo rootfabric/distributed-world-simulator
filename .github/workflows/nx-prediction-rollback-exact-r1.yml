@@ -1,0 +1,249 @@
+name: NX Prediction Rollback Exact R1
+
+on:
+  push:
+    branches: [validation/nx-prediction-rollback-r1]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: nx-prediction-rollback-r1
+  cancel-in-progress: false
+
+jobs:
+  exact:
+    if: github.repository == 'rootfabric/distributed-world-simulator'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      REPAIR_HEAD: 3956c2489fb5367845d4a4180dc99ace26b2ce08
+      REPAIR_TREE: e45086d48965050abfb05297c0b858ae1d1824f4
+      BASE_MAIN: 6982a563dd0c88c81449566131852c601ae89868
+      V0_HEAD: f3063cbae408a197c5eda37b912a8fe2995ac07e
+      NX_HEAD: 1a56fe0e845c941f14ce7b9296ee939e9d0ca8bc
+      NX_PASSPORT_BLOB: c3af1974228c9ee5c34bf4d54c72896c99fc4d1a
+      PYTHONUTF8: '1'
+      GODOT_SILENCE_ROOT_WARNING: '1'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ env.REPAIR_HEAD }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Seal repair, V0 and NX subjects
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin '+refs/heads/*:refs/remotes/origin/*' --prune
+          test "$(git rev-parse HEAD)" = "$REPAIR_HEAD"
+          test "$(git rev-parse HEAD^{tree})" = "$REPAIR_TREE"
+          test "$(git rev-parse origin/repair/nx-prediction-rollback-baseline-r1)" = "$REPAIR_HEAD"
+          test "$(git rev-parse origin/feature/v0-mvp-playable-seamless-planet-r1)" = "$V0_HEAD"
+          test "$(git rev-parse origin/feature/h0-2-nx-c1-owner-authority-r3)" = "$NX_HEAD"
+          test "$(git rev-parse "$NX_HEAD:config/control/branches/feature__h0-2-nx-c1-owner-authority-r3.v1.json")" = "$NX_PASSPORT_BLOB"
+          test "$(git merge-base "$BASE_MAIN" "$REPAIR_HEAD")" = "$BASE_MAIN"
+          mapfile -t changed < <(git diff --name-only "$BASE_MAIN" "$REPAIR_HEAD")
+          printf '%s\n' "${changed[@]}"
+          test "${#changed[@]}" -eq 2
+          test "${changed[0]}" = "scripts/network/prediction/predicted_item_interaction_journal.gd"
+          test "${changed[1]}" = "tests/network/test_prediction_duplicate_authoritative_rollback.gd"
+          git diff --check "$BASE_MAIN" "$REPAIR_HEAD"
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: p7-repair-engine-34117353691
+          run-id: 34117353691
+          repository: rootfabric/distributed-world-simulator
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/nx-rollback-engine
+
+      - name: Verify canonical double Godot
+        shell: bash
+        run: |
+          set -euo pipefail
+          export GODOT_BIN="$RUNNER_TEMP/nx-rollback-engine/godot"
+          chmod u+x "$GODOT_BIN"
+          test "$(sha256sum "$GODOT_BIN" | cut -d' ' -f1)" = bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7
+          "$GODOT_BIN" --version
+
+      - name: Run focused shared-journal regressions
+        shell: bash
+        run: |
+          set -euo pipefail
+          export GODOT_BIN="$RUNNER_TEMP/nx-rollback-engine/godot"
+          mkdir -p artifacts/nx-prediction-rollback/direct
+          "$GODOT_BIN" --headless --path . --editor --import --quit > artifacts/nx-prediction-rollback/direct/import.log 2>&1
+          run_test() {
+            local path="$1" marker="$2" name="$3"
+            set +e
+            "$GODOT_BIN" --headless --path . --script "res://$path" > "artifacts/nx-prediction-rollback/direct/$name.log" 2>&1
+            local rc=$?
+            set -e
+            cat "artifacts/nx-prediction-rollback/direct/$name.log"
+            test "$rc" -eq 0
+            ! grep -Eqi 'SCRIPT ERROR:|(^|[[:space:]])ERROR:|Parse Error:|Compile Error:|Assertion failed' "artifacts/nx-prediction-rollback/direct/$name.log"
+            grep -F "$marker" "artifacts/nx-prediction-rollback/direct/$name.log"
+          }
+          run_test tests/network/test_prediction_duplicate_authoritative_rollback.gd 'Prediction duplicate-authority rollback: PASS (28 assertions)' focused
+          run_test tests/network/test_nx6_predicted_item_interactions.gd 'NX6 predicted item interaction contracts: PASS (940 assertions)' nx6-contracts
+          run_test tests/network/test_nx6_predicted_item_interactions_integration.gd 'NX6 predicted item integration: PASS (' nx6-integration
+
+      - name: Revalidate registered NX baseline and exact current V0 critical M4 blob
+        shell: bash
+        run: |
+          set -euo pipefail
+          export GODOT_BIN="$RUNNER_TEMP/nx-rollback-engine/godot"
+          export COMPOSITE_WORKTREE="$RUNNER_TEMP/nx-rollback-composite"
+          python3 - <<'PY'
+          from __future__ import annotations
+          import hashlib, json, os, pathlib, re, shutil, subprocess
+
+          root = pathlib.Path.cwd()
+          repair = os.environ['REPAIR_HEAD']
+          v0 = os.environ['V0_HEAD']
+          nx = os.environ['NX_HEAD']
+          passport_path = 'config/control/branches/feature__h0-2-nx-c1-owner-authority-r3.v1.json'
+          critical = 'scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service.gd'
+          godot = pathlib.Path(os.environ['GODOT_BIN'])
+          work = pathlib.Path(os.environ['COMPOSITE_WORKTREE'])
+          out = root / 'artifacts/nx-prediction-rollback/composite'
+          out.mkdir(parents=True, exist_ok=True)
+          tests = [
+              'tests/network/test_nx_owner_movement_authority.gd',
+              'tests/network/test_nx_render_physics_separation.gd',
+              'tests/network/test_nx_owner_item_projection_rollback.gd',
+              'tests/network/test_nx_client_tick_robustness.gd',
+              'tests/network/test_nx6_predicted_item_interactions.gd',
+          ]
+          expected = dict(zip(tests, [44,31,37,25,940]))
+          fatal = re.compile(r'SCRIPT ERROR:|(?:^|\n)\s*ERROR:|Parse Error:|Compile Error:|Assertion failed', re.I)
+          pass_count = re.compile(r'^.+: PASS \((\d+) assertions\)\s*$', re.M)
+
+          def git(*args: str, cwd=root, check=True) -> str:
+              p = subprocess.run(['git', *args], cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False)
+              if check and p.returncode:
+                  raise RuntimeError('GIT:' + ' '.join(args) + ':' + p.stderr.decode(errors='replace'))
+              return p.stdout.decode().strip() if p.returncode == 0 else ''
+          def bytes_at(ref: str, path: str) -> bytes:
+              return subprocess.check_output(['git','show',f'{ref}:{path}'], cwd=root)
+          def exists(ref: str, path: str) -> bool:
+              return subprocess.run(['git','cat-file','-e',f'{ref}:{path}'],cwd=root).returncode == 0
+          def write_from(ref: str, path: str):
+              target=work/path
+              if exists(ref,path):
+                  target.parent.mkdir(parents=True,exist_ok=True); target.write_bytes(bytes_at(ref,path))
+              elif target.exists(): target.unlink()
+          def sha(path: pathlib.Path) -> str:
+              return hashlib.sha256(path.read_bytes()).hexdigest()
+          def run_suite(label: str):
+              folder=out/label; folder.mkdir(parents=True,exist_ok=True)
+              rows=[]
+              log=folder/'import.log'
+              with log.open('wb') as f:
+                  p=subprocess.run([str(godot),'--headless','--path',str(work),'--editor','--import','--quit'],cwd=work,stdout=f,stderr=subprocess.STDOUT,check=False)
+              text=log.read_text(encoding='utf-8-sig',errors='replace')
+              rows.append({'name':'import','exit_code':p.returncode,'fatal':bool(fatal.search(text)),'sha256':sha(log)})
+              if p.returncode or rows[-1]['fatal']: return rows
+              for test in tests:
+                  log=folder/(pathlib.Path(test).stem+'.log')
+                  with log.open('wb') as f:
+                      p=subprocess.run([str(godot),'--headless','--path',str(work),'--script','res://'+test],cwd=work,stdout=f,stderr=subprocess.STDOUT,check=False)
+                  text=log.read_text(encoding='utf-8-sig',errors='replace')
+                  counts=[int(x) for x in pass_count.findall(text)]
+                  rows.append({'name':test,'exit_code':p.returncode,'fatal':bool(fatal.search(text)),
+                               'assertions':counts[0] if len(counts)==1 else None,
+                               'expected_assertions':expected[test],'sha256':sha(log)})
+              return rows
+          def passed(rows):
+              return len(rows)==len(tests)+1 and all(r['exit_code']==0 and not r['fatal'] and (r['name']=='import' or r['assertions']==r['expected_assertions']) for r in rows)
+
+          if work.exists(): shutil.rmtree(work)
+          subprocess.run(['git','worktree','add','--detach',str(work),repair],cwd=root,check=True)
+          try:
+              passport=json.loads(bytes_at(nx,passport_path))
+              consumer_paths=sorted(set(passport.get('runtime_paths',[]))|set(passport.get('validation_paths',[])))
+              if any(t not in consumer_paths for t in tests): raise RuntimeError('NX_TEST_SET_NOT_DECLARED')
+              for path in consumer_paths: write_from(nx,path)
+
+              dynamic_decl=re.compile(r'(?m)^(\s*var\s+[A-Za-z_][A-Za-z0-9_]*)\s*:=\s*(service\.)')
+              parser_records=[]
+              for path in ['tests/network/test_nx_owner_movement_authority.gd','tests/network/test_nx_owner_item_projection_rollback.gd']:
+                  target=work/path; source=target.read_text(encoding='utf-8'); patched,count=dynamic_decl.subn(r'\1 = \2',source)
+                  if count<1 or patched.count('_assert(')!=source.count('_assert('): raise RuntimeError('DYNAMIC_PATCH:'+path)
+                  target.write_text(patched,encoding='utf-8'); parser_records.append({'path':path,'count':count})
+              tick=work/'tests/network/test_nx_client_tick_robustness.gd'; source=tick.read_text(encoding='utf-8')
+              before='var candidate := reference + offset'; after='var candidate = reference + offset'
+              if source.count(before)!=1: raise RuntimeError('TICK_PATCH_PRECONDITION')
+              tick.write_text(source.replace(before,after),encoding='utf-8'); parser_records.append({'path':tick.relative_to(work).as_posix(),'count':1})
+              runtime=work/'scripts/runtime/networked_gameplay/networked_gameplay_service_owner_movement.gd'; source=runtime.read_text(encoding='utf-8')
+              before='var validation := _movement.apply_authoritative_state('; after='var validation = _movement.apply_authoritative_state('
+              if source.count(before)!=1: raise RuntimeError('RUNTIME_PATCH_PRECONDITION')
+              runtime.write_text(source.replace(before,after),encoding='utf-8'); parser_records.append({'path':runtime.relative_to(work).as_posix(),'count':1})
+
+              baseline=run_suite('repair-plus-nx')
+              baseline_pass=passed(baseline)
+              target=work/critical; target.parent.mkdir(parents=True,exist_ok=True); target.write_bytes(bytes_at(v0,critical))
+              candidate=run_suite('repair-plus-nx-plus-v0-m4')
+              candidate_pass=passed(candidate)
+              same=[r.get('assertions') for r in baseline]==[r.get('assertions') for r in candidate]
+              summary={
+                  'schema':'distributed_world_simulator.v0_nx_directional_repair_exact.v1',
+                  'repair_head':repair,
+                  'repair_tree':git('rev-parse',repair+'^{tree}'),
+                  'v0_head':v0,
+                  'v0_tree':git('rev-parse',v0+'^{tree}'),
+                  'v0_critical_path':critical,
+                  'v0_critical_blob':git('rev-parse',v0+':'+critical),
+                  'nx_head':nx,
+                  'nx_tree':git('rev-parse',nx+'^{tree}'),
+                  'nx_passport_blob':git('rev-parse',nx+':'+passport_path),
+                  'parser_normalization':parser_records,
+                  'unmodified_nx_source_accepted':False,
+                  'baseline':baseline,
+                  'candidate':candidate,
+                  'baseline_passed':baseline_pass,
+                  'candidate_passed':candidate_pass,
+                  'same_assertion_counts':same,
+                  'v0_regressed_nx':baseline_pass and not candidate_pass,
+                  'dependency_revalidated':baseline_pass and candidate_pass and same,
+                  'clearance_written':False,
+              }
+              (out/'summary.json').write_text(json.dumps(summary,indent=2)+'\n',encoding='utf-8')
+              print(json.dumps(summary,sort_keys=True))
+              if not summary['dependency_revalidated']: raise SystemExit(1)
+          finally:
+              subprocess.run(['git','worktree','remove','--force',str(work)],cwd=root,check=False)
+              subprocess.run(['git','worktree','prune'],cwd=root,check=False)
+          PY
+
+      - name: Bind exact evidence
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib,subprocess
+          out=pathlib.Path('artifacts/nx-prediction-rollback'); out.mkdir(parents=True,exist_ok=True)
+          files=[]
+          for p in sorted(out.rglob('*')):
+              if p.is_file() and p.name!='manifest.json':
+                  files.append({'path':p.relative_to(out).as_posix(),'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()})
+          record={'schema':'distributed_world_simulator.nx_prediction_rollback_exact_manifest.v1',
+                  'repair_head':os.environ['REPAIR_HEAD'],'repair_tree':os.environ['REPAIR_TREE'],
+                  'base_main':os.environ['BASE_MAIN'],'v0_head':os.environ['V0_HEAD'],'nx_head':os.environ['NX_HEAD'],
+                  'run_id':os.environ['GITHUB_RUN_ID'],'run_attempt':os.environ['GITHUB_RUN_ATTEMPT'],'files':files}
+          target=out/'manifest.json'; target.write_text(json.dumps(record,indent=2)+'\n')
+          print('MANIFEST_SHA256='+hashlib.sha256(target.read_bytes()).hexdigest())
+          PY
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: nx-prediction-rollback-${{ env.REPAIR_HEAD }}-${{ github.run_id }}
+          path: artifacts/nx-prediction-rollback/
+          if-no-files-found: error
+          retention-days: 90
