@@ -1,0 +1,21 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-09-09-V0-MVP-R1-V0-MVP-R1-WO-001-0018-MVP5-VERIFIED",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "sequence": 18,
+  "event_type": "PREDICATE_VERIFIED",
+  "work_state": "IN_PROGRESS",
+  "recorded_at_utc": "2026-09-16T08:16:45Z",
+  "actor": "DIRECTOR",
+  "branch": "feature/v0-mvp-playable-seamless-planet-r1",
+  "head_sha": "b78de4980328bb7b4d19e030bb7f0fa5d9976cd8",
+  "predicate": "MVP_EXACTLY_ONCE_MATERIAL_OUTPUT",
+  "command": "MVP5_FRESH_INDEPENDENT_VERIFIER_AND_EXACT_WORLD_CORE_CLOSURE",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/verifications/MVP5-INDEPENDENT-VERIFICATION-B78DE498-R1.v1.json",
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence/MVP5-LEAF-CLOSURE-B78DE498-R1.v1.json"
+  ],
+  "summary": "MVP5 leaf закрыт на frozen exact b78de4980328bb7b4d19e030bb7f0fa5d9976cd8 / tree 0bfdd7595e10f007815bb666e62e7c5575172173. Targeted exactly-once evidence: 270 assertions, 0 failures, live tool-gated canonical material output, replay exactly-once и отсутствие второй Item identity подтверждены. Exact-product world/core attempt 2: 336/336 tests, 341 steps, 0 failures, literal soak 1804.028 s и main_scene_cli_all PASS; artifact 10400491187 SHA-256 83d21a7ca4c4839b5c4f6295ce0e36065bee82b65f086721cf9772c81b95f250. Fresh final independent Codex verifier review завершён на exact evidence carrier 8cd1623b193ff375c9e7d65d9d0bd20a2221f8ec без новых inline findings, verdict VERIFIED. Исторический P2 failure attempt 1 сохранён без reclassification; 3/3 standalone repeats лишь фиксируют non-reproduction. Родительский WO остаётся IN_PROGRESS; следующий product predicate MVP_ITEM_CONSTRUCTION_PERSISTENCE_CONVERGENCE. Whole-MVP acceptance, runtime merge и main merge не заявляются."
+}

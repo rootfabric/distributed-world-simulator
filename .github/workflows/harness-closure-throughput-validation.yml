@@ -29,8 +29,8 @@ jobs:
           set -euo pipefail
           test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
           test -z "$(git status --porcelain --untracked-files=no)"
-          git merge-base --is-ancestor 025c7a635de5caae61e92f16388d448a47820499 HEAD
-          git diff --check 025c7a635de5caae61e92f16388d448a47820499 HEAD
+          git merge-base --is-ancestor bc360383b78f0778cac136fe1d9c3a7d656c687b HEAD
+          git diff --check bc360383b78f0778cac136fe1d9c3a7d656c687b HEAD
           mkdir -p artifacts/harness-closure-throughput
           git rev-parse HEAD HEAD^{tree} > artifacts/harness-closure-throughput/subjects.txt
       - name: Install pinned Harness dependency
@@ -56,7 +56,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test -z "$(git diff --name-only 025c7a635de5caae61e92f16388d448a47820499 HEAD -- scripts/runtime scripts/network scripts/simulation scenes project.godot config/architecture config/control/architecture-ownership.v1.json config/control/harness/acceptance config/control/project-program-registry.v1.json)"
+          test -z "$(git diff --name-only bc360383b78f0778cac136fe1d9c3a7d656c687b HEAD -- scripts/runtime scripts/network scripts/simulation scenes project.godot config/architecture config/control/architecture-ownership.v1.json config/control/harness/acceptance config/control/project-program-registry.v1.json)"
           test -z "$(git status --porcelain --untracked-files=no)"
       - name: Bind exact validation manifest
         if: always()
@@ -78,7 +78,7 @@ jobs:
               'subject_tree':git('rev-parse','HEAD^{tree}'),
               'run_id':os.environ['GITHUB_RUN_ID'],
               'run_attempt':os.environ['GITHUB_RUN_ATTEMPT'],
-              'base_subject':'025c7a635de5caae61e92f16388d448a47820499',
+              'base_subject':'bc360383b78f0778cac136fe1d9c3a7d656c687b',
               'runtime_files_changed':False,
               'independent_verdict':False,
               'main_drift_evaluated_here':False,

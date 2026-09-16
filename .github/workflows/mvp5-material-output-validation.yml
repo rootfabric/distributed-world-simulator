@@ -41,10 +41,20 @@ jobs:
           python3 - <<'PY'
           import fnmatch,json,subprocess
           w=json.load(open('config/control/harness/executions/E2026-09-09-V0-MVP-R1/work-orders/V0-MVP-R1-WO-001.v1.json'))
-          paths=subprocess.check_output(['git','diff','--name-only','d78760738e8032b97de2a433382fc7ddafa17fbf','HEAD'],text=True).splitlines()
+          base='d78760738e8032b97de2a433382fc7ddafa17fbf'
+          sync_main=subprocess.check_output(['git','merge-base','HEAD','origin/main'],text=True).strip()
+          paths=subprocess.check_output(['git','diff','--name-only',base,'HEAD'],text=True).splitlines()
+          feature_paths=[]
+          inherited_main_paths=[]
           for p in paths:
-              if not any(fnmatch.fnmatchcase(p,g) for g in w['allowed_paths']) or any(fnmatch.fnmatchcase(p,g) for g in w['forbidden_paths']): raise SystemExit('MVP5_WRITE_FENCE:'+p)
-          print('MVP5_WRITE_FENCE_PASS',len(paths))
+              inherited=subprocess.run(['git','diff','--quiet',sync_main,'HEAD','--',p],check=False).returncode == 0
+              if inherited:
+                  inherited_main_paths.append(p)
+                  continue
+              feature_paths.append(p)
+              if not any(fnmatch.fnmatchcase(p,g) for g in w['allowed_paths']) or any(fnmatch.fnmatchcase(p,g) for g in w['forbidden_paths']):
+                  raise SystemExit('MVP5_WRITE_FENCE:'+p)
+          print('MVP5_WRITE_FENCE_PASS',len(feature_paths),'feature_paths',len(inherited_main_paths),'inherited_main_paths','sync_main',sync_main)
           PY
           if ! command -v Xvfb >/dev/null || ! command -v xauth >/dev/null; then
             sudo -n apt-get update

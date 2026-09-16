@@ -7,6 +7,20 @@ var _before5: Dictionary = {}
 var _after5: Dictionary = {}
 var _receipts5: Array = []
 
+func _players_stationary5(snapshot: Dictionary) -> bool:
+	var players: Dictionary = snapshot.get("players", {})
+	for player_id in ["a", "b"]:
+		var player: Dictionary = players.get(player_id, {})
+		if player.is_empty() or not bool(player.get("connected", false)):
+			return false
+		if int(player.get("last_input_sequence", 0)) < 2:
+			return false
+		var velocity: Dictionary = player.get("velocity", {})
+		for axis in ["x", "y", "z"]:
+			if absf(float(velocity.get(axis, 1.0))) > 0.000001:
+				return false
+	return true
+
 func handle_reply(packet: Dictionary) -> void:
 	if Protocol.verify(cfg, packet, "gateway", "client/" + actor, key) and int(packet.get("sequence", 0)) == pending_rpc:
 		var response: Dictionary = packet.get("body", {})
@@ -37,6 +51,14 @@ func next_automated(snapshot: Dictionary) -> void:
 	if _capture_busy4 or finishing: return
 	if not bool(cfg.get("automated", false)):
 		super.next_automated(snapshot)
+		return
+	# The two clients execute their startup movement concurrently. Do not let
+	# either client capture the terrain baseline until BOTH authoritative player
+	# states have consumed the stop input and report zero velocity. This keeps
+	# the existing static-player pixel falsifier strict instead of weakening it
+	# to tolerate startup scheduling races.
+	if _phase4 == "POLL_BASELINE" and not _players_stationary5(snapshot):
+		send_request("OBSERVE")
 		return
 	match _phase4:
 		"EQUIP":
