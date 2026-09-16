@@ -1,0 +1,77 @@
+{
+  "schema": "distributed_world_simulator.mvp5_world_core_exact_product.v1",
+  "role": "COORDINATOR_MACHINE_EVIDENCE_NOT_INDEPENDENT_VERDICT",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "predicate": "MVP_EXACTLY_ONCE_MATERIAL_OUTPUT",
+  "subject": {
+    "branch": "feature/v0-mvp-playable-seamless-planet-r1",
+    "head_sha": "b78de4980328bb7b4d19e030bb7f0fa5d9976cd8",
+    "tree_sha": "0bfdd7595e10f007815bb666e62e7c5575172173"
+  },
+  "carrier": {
+    "branch": "control/v0-mvp5-worldcore-b78de498-r1",
+    "head_sha": "dab6476ff0881de5a05a8fb49d14d781728083c2"
+  },
+  "workflow": {
+    "run_id": 34967384187,
+    "run_attempt": 2,
+    "job_id": 104390100109,
+    "conclusion": "success"
+  },
+  "artifact": {
+    "artifact_id": 10400491187,
+    "name": "mvp5-world-core-b78de498-34967384187-2",
+    "zip_sha256": "83d21a7ca4c4839b5c4f6295ce0e36065bee82b65f086721cf9772c81b95f250",
+    "manifest_sha256": "1f0b332ed75e378a520c18635509f464ab3aa51de9e85f6bc88a2c5195536a0b",
+    "world_core_acceptance_sha256": "ab711d1f3b2dc605b88dfad1fbe9c0b53af656681733fb816b26453f69bec18f",
+    "world_regression_summary_sha256": "0455cf8cbb6dca2d88535fb319aea704daa1281fb9b6878a60470a093f6a8375",
+    "manifest_indexed_member_count": 1755,
+    "manifest_missing_after_rehash": 0,
+    "manifest_mismatch_after_rehash": 0
+  },
+  "execution": {
+    "product_head": "b78de4980328bb7b4d19e030bb7f0fa5d9976cd8",
+    "product_tree": "0bfdd7595e10f007815bb666e62e7c5575172173",
+    "feature_remote": "b78de4980328bb7b4d19e030bb7f0fa5d9976cd8",
+    "canonical_main_observed": "675c04bb213bbb68b8cdb500d540d57ce1490318",
+    "engine_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+    "tracked_checkout_clean_after": true,
+    "full_world_core_executed": true
+  },
+  "acceptance": {
+    "passed": true,
+    "declared_test_count": 336,
+    "discovered_test_count": 336,
+    "step_count": 341,
+    "failed_step_count": 0,
+    "nonzero_exit_count": 0,
+    "thirty_minute_soak": {
+      "exit_code": 0,
+      "duration_seconds": 1804.028,
+      "minimum_required_seconds": 1800.0,
+      "passed": true
+    },
+    "main_scene_cli_all": {
+      "exit_code": 0,
+      "duration_seconds": 2.878,
+      "passed": true
+    }
+  },
+  "historical_attempt_1": {
+    "artifact_id": 10396726706,
+    "zip_sha256": "03b0cf1e930930f593b81febb5483a46be1ed393103b2173a058e94d842c9026",
+    "result": "FAILED",
+    "failure": "test_v0_p2_live_shared_state_convergence / item.pickup / ITEM_INTERACTION_OUT_OF_RANGE",
+    "preserved": true,
+    "reclassified": false
+  },
+  "compatibility_note": "This file exists at the exact required_terminal_addendum_path declared by MVP5-EXACT-MACHINE-EVIDENCE-B78DE498-R1.v1.json. The same terminal facts are also preserved in MVP5-WORLDCORE-TERMINAL-B78DE498-R2.v1.json; neither file is an independent verifier verdict.",
+  "closure_claims": {
+    "independent_verifier_verdict": false,
+    "predicate_verified": false,
+    "parent_work_order_state": "IN_PROGRESS",
+    "runtime_merge_authorized": false,
+    "main_merge_authorized": false
+  }
+}
