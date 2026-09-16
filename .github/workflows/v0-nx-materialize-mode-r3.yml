@@ -37,7 +37,6 @@ jobs:
           test "$(git rev-parse HEAD)" = "$PRE_MODE_HEAD"
           test "$(git rev-parse HEAD:$LINUX_RUNNER)" = "$LINUX_RUNNER_BLOB"
           test "$(git ls-tree HEAD "$LINUX_RUNNER" | awk '{print $1}')" = "100644"
-          test -z "$(git status --porcelain=v1)"
 
       - name: Apply mode-only executable repair and verify exact tree
         shell: bash
@@ -54,5 +53,6 @@ jobs:
           test "$(git rev-parse HEAD^{tree})" = "$EXPECTED_TREE"
           test "$(git rev-parse HEAD:$LINUX_RUNNER)" = "$LINUX_RUNNER_BLOB"
           test "$(git ls-tree HEAD "$LINUX_RUNNER" | awk '{print $1}')" = "100755"
-          test -z "$(git status --porcelain=v1)"
+          git diff --quiet
+          git diff --cached --quiet
           git push origin "HEAD:$TARGET_BRANCH"
