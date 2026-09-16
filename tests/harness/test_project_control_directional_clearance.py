@@ -16,6 +16,7 @@ REGISTRY_PATH = ROOT / "config/control/project-program-registry.v1.json"
 HIST_V0_NX = "V0-P4-NX-H0-2-M4-CRITICAL-WATCH-CLEARANCE-002"
 HIST_NX_V0 = "NX-H0-2-V0-P4-CRITICAL-WATCH-CLEARANCE-001"
 CURRENT = "V0-MVP6-NX-H0-2-M4-JOURNAL-CRITICAL-WATCH-CLEARANCE-004"
+REPAIR = "6b147d0300529a6b40568b4de0817d5cc7f95fdb"
 M4 = "scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service.gd"
 JOURNAL = "scripts/network/prediction/predicted_item_interaction_journal.gd"
 
@@ -39,6 +40,18 @@ def ancestor(base: str, head: str) -> bool:
 
 def blob(ref: str, path: str) -> str:
     return git("rev-parse", "--verify", f"{ref}:{path}", check=False)
+
+
+def main_without_repair(base: str, head: str) -> bool:
+    if base == REPAIR and head == "origin/main":
+        return False
+    return ancestor(base, head)
+
+
+def main_with_repair(base: str, head: str) -> bool:
+    if base == REPAIR and head == "origin/main":
+        return True
+    return ancestor(base, head)
 
 
 class DirectionalWatchClearanceTests(unittest.TestCase):
@@ -83,22 +96,20 @@ class DirectionalWatchClearanceTests(unittest.TestCase):
         )
 
     def test_historical_v0_to_nx_replays(self):
-        c = self.one(HIST_V0_NX)
-        accepted, rejected = self.resolve(c)
+        accepted, rejected = self.resolve(self.one(HIST_V0_NX))
         self.assertIsNotNone(accepted, rejected)
         self.assertEqual([], rejected)
 
     def test_historical_nx_to_v0_replays(self):
-        c = self.one(HIST_NX_V0)
-        accepted, rejected = self.resolve(c)
+        accepted, rejected = self.resolve(self.one(HIST_NX_V0))
         self.assertIsNotNone(accepted, rejected)
         self.assertEqual([], rejected)
 
-    def test_current_clearance_exactly_matches_live_two_file_scope(self):
+    def test_current_scope_and_evidence_are_exact(self):
         c = self.one(CURRENT)
         v0 = self.project["programs"]["V0"]["branch"]
         nx = self.project["programs"]["NX"]["branch"]
-        current_route = [
+        rows = [
             x for x in self.clearances
             if x.get("status") == "ACCEPTED"
             and x.get("producer_program") == "V0"
@@ -106,32 +117,46 @@ class DirectionalWatchClearanceTests(unittest.TestCase):
             and x.get("consumer_program") == "NX"
             and x.get("consumer_branch") == nx
         ]
-        self.assertEqual([CURRENT], [x["clearance_id"] for x in current_route])
-        p, q, critical, watched = self.scope(c)
-        self.assertEqual([M4], critical)
-        self.assertEqual(sorted([JOURNAL, M4]), sorted(watched))
+        self.assertEqual([CURRENT], [x["clearance_id"] for x in rows])
+        self.assertEqual(REPAIR, c["required_main_ancestor"])
+        self.assertEqual([M4], c["critical_files"])
+        self.assertEqual(sorted([JOURNAL, M4]), sorted(c["watched_files"]))
         self.assertEqual("MVP6-JOURNAL-73B88181-REVIEW-R1", c["review_id"])
         self.assertEqual("MVP6-JOURNAL-FEATURE-VERIFIER-R1", c["verification_id"])
         self.assertTrue(ancestor(c["reviewed_producer_head"], f"origin/{v0}"))
         for path, expected in c["watched_file_blobs"].items():
             self.assertEqual(expected, blob(c["reviewed_producer_head"], path), path)
             self.assertEqual(expected, blob(f"origin/{v0}", path), path)
-        accepted, rejected = resolve_critical_clearance([copy.deepcopy(c)], p, q, critical, watched, blob, ancestor)
+
+    def test_current_requires_runtime_repair_on_canonical_main(self):
+        c = self.one(CURRENT)
+        accepted, rejected = self.resolve(c, ancestor_check=main_without_repair)
+        self.assertIsNone(accepted)
+        self.assertEqual("REQUIRED_MAIN_ANCESTOR_NOT_CANONICAL", rejected[0]["reason"])
+
+        accepted, rejected = self.resolve(c, ancestor_check=main_with_repair)
         self.assertIsNotNone(accepted, rejected)
         self.assertEqual([], rejected)
+        self.assertEqual(CURRENT, accepted["clearance_id"])
 
-    def test_current_hitset_drift_fails_closed(self):
+    def test_current_required_main_ancestor_must_be_full_sha(self):
+        c = copy.deepcopy(self.one(CURRENT))
+        c["required_main_ancestor"] = "6b147d0"
+        accepted, rejected = self.resolve(c, ancestor_check=main_with_repair)
+        self.assertIsNone(accepted)
+        self.assertEqual("REQUIRED_MAIN_ANCESTOR_INVALID", rejected[0]["reason"])
+
+    def test_current_hitset_drift_fails_closed_after_repair(self):
         c = self.one(CURRENT)
         p, q, critical, watched = self.scope(c)
-        for altered in (
-            [x for x in watched if x != JOURNAL],
-            watched + ["scripts/network/prediction/new_runtime.gd"],
-        ):
-            accepted, rejected = resolve_critical_clearance([copy.deepcopy(c)], p, q, critical, altered, blob, ancestor)
+        for altered in ([x for x in watched if x != JOURNAL], watched + ["scripts/network/prediction/new_runtime.gd"]):
+            accepted, rejected = resolve_critical_clearance(
+                [copy.deepcopy(c)], p, q, critical, altered, blob, main_with_repair
+            )
             self.assertIsNone(accepted)
             self.assertEqual("WATCHED_FILE_SET_MISMATCH", rejected[0]["reason"])
 
-    def test_current_either_live_blob_drift_fails_closed(self):
+    def test_current_either_live_blob_drift_fails_closed_after_repair(self):
         c = self.one(CURRENT)
         p, q, critical, watched = self.scope(c)
         for target in (JOURNAL, M4):
@@ -139,35 +164,49 @@ class DirectionalWatchClearanceTests(unittest.TestCase):
                 if ref == f"origin/{p['branch']}" and path == target_path:
                     return "f" * 40
                 return blob(ref, path)
-            accepted, rejected = resolve_critical_clearance([copy.deepcopy(c)], p, q, critical, watched, drift, ancestor)
+            accepted, rejected = resolve_critical_clearance(
+                [copy.deepcopy(c)], p, q, critical, watched, drift, main_with_repair
+            )
             self.assertIsNone(accepted)
             self.assertEqual(f"PRODUCER_BLOB_DRIFT:{target}", rejected[0]["reason"])
 
-    def test_current_reviewed_blob_drift_fails_closed(self):
+    def test_current_reviewed_blob_drift_fails_closed_after_repair(self):
         c = self.one(CURRENT)
         p, q, critical, watched = self.scope(c)
-        target = JOURNAL
         def drift(ref: str, path: str) -> str:
-            if ref == c["reviewed_producer_head"] and path == target:
+            if ref == c["reviewed_producer_head"] and path == JOURNAL:
                 return "f" * 40
             return blob(ref, path)
-        accepted, rejected = resolve_critical_clearance([copy.deepcopy(c)], p, q, critical, watched, drift, ancestor)
+        accepted, rejected = resolve_critical_clearance(
+            [copy.deepcopy(c)], p, q, critical, watched, drift, main_with_repair
+        )
         self.assertIsNone(accepted)
-        self.assertEqual(f"REVIEWED_BLOB_MISMATCH:{target}", rejected[0]["reason"])
+        self.assertEqual(f"REVIEWED_BLOB_MISMATCH:{JOURNAL}", rejected[0]["reason"])
 
-    def test_current_ancestry_drift_fails_closed(self):
+    def test_current_producer_ancestry_drift_fails_closed_after_repair(self):
         c = self.one(CURRENT)
-        accepted, rejected = self.resolve(c, ancestor_check=lambda _base, _head: False)
+        p, q, critical, watched = self.scope(c)
+        def producer_drift(base: str, head: str) -> bool:
+            if base == REPAIR and head == "origin/main":
+                return True
+            if base == c["reviewed_producer_head"] and head == f"origin/{p['branch']}":
+                return False
+            return ancestor(base, head)
+        accepted, rejected = resolve_critical_clearance(
+            [copy.deepcopy(c)], p, q, critical, watched, blob, producer_drift
+        )
         self.assertIsNone(accepted)
         self.assertEqual("REVIEWED_HEAD_NOT_PRODUCER_ANCESTOR", rejected[0]["reason"])
 
-    def test_current_consumer_identity_drift_fails_closed(self):
+    def test_current_consumer_identity_drift_fails_closed_after_repair(self):
         c = self.one(CURRENT)
         p, q, critical, watched = self.scope(c)
         for field in ("head_sha", "passport_blob_sha"):
             changed = copy.deepcopy(q)
             changed[field] = "f" * 40
-            accepted, rejected = resolve_critical_clearance([copy.deepcopy(c)], p, changed, critical, watched, blob, ancestor)
+            accepted, rejected = resolve_critical_clearance(
+                [copy.deepcopy(c)], p, changed, critical, watched, blob, main_with_repair
+            )
             self.assertIsNone(accepted)
             expected = "CONSUMER_HEAD_DRIFT" if field == "head_sha" else "CONSUMER_PASSPORT_BLOB_DRIFT"
             self.assertEqual(expected, rejected[0]["reason"])
@@ -177,12 +216,12 @@ class DirectionalWatchClearanceTests(unittest.TestCase):
         p, q, critical, watched = self.scope(c)
         bad = copy.deepcopy(c)
         bad["decision"] = "UNSUPPORTED"
-        accepted, rejected = resolve_critical_clearance([bad], p, q, critical, watched, blob, ancestor)
+        accepted, rejected = resolve_critical_clearance([bad], p, q, critical, watched, blob, main_with_repair)
         self.assertIsNone(accepted)
         self.assertEqual("DECISION_NOT_ACCEPTED", rejected[0]["reason"])
         bad = copy.deepcopy(c)
         bad["verification_id"] = ""
-        accepted, rejected = resolve_critical_clearance([bad], p, q, critical, watched, blob, ancestor)
+        accepted, rejected = resolve_critical_clearance([bad], p, q, critical, watched, blob, main_with_repair)
         self.assertIsNone(accepted)
         self.assertEqual("INDEPENDENT_EVIDENCE_IDS_REQUIRED", rejected[0]["reason"])
 
