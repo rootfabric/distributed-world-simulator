@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from contextlib import contextmanager
 import copy
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -25,6 +26,14 @@ WO = "V0-MVP-R1-WO-001"
 H = "config/control/harness/"
 EX = H + "executions/" + EPOCH
 A7_SCENE_ADDITION = "scenes/labs/ecology/arch2_a7_observatory.tscn"
+HISTORICAL_MAIN = "6982a563dd0c88c81449566131852c601ae89868"
+HISTORICAL_TREE = "97c61acc96f507d71b6883fbdeef486c08b1113d"
+JOURNAL = "scripts/network/prediction/predicted_item_interaction_journal.gd"
+JOURNAL_BEFORE = "ed23f0d2b7a9e6cfb3f13b78de70c7f552035b69"
+JOURNAL_AFTER = "abdf0c0a335f4e2c968933156fb17f94a7b45bd1"
+AUTH = "docs/control/mvp-act0-r1/act0-journal-fence-r1"
+AUTH_DIGEST = "111dd670e3e45ad79dc874d4e1df38080c9f41b4f5ca5fe07533a7954de4036c"
+PROTECTED_RUNTIME = ("scripts/runtime", "scripts/network", "scripts/simulation", "project.godot")
 
 
 def git(root: Path, *args: str) -> str:
@@ -33,6 +42,58 @@ def git(root: Path, *args: str) -> str:
 
 def read(path: str) -> dict:
     return json.loads((ROOT / path).read_text(encoding="utf-8"))
+
+
+def frozen_git(root: Path, *args: str) -> bytes:
+    """Read immutable Git objects; replace refs cannot supply alternate history."""
+    return subprocess.check_output(["git", "--no-replace-objects", *args], cwd=root, stderr=subprocess.PIPE)
+
+
+def assert_act0_source_fence(root: Path, subject: str = "HEAD") -> None:
+    head = frozen_git(root, "rev-parse", "--verify", subject + "^{commit}").decode().strip()
+    historical_tree = frozen_git(root, "rev-parse", HISTORICAL_MAIN + "^{tree}").decode().strip()
+    if historical_tree != HISTORICAL_TREE:
+        raise ValueError("ACT0_HISTORICAL_TREE_MISMATCH")
+    frozen_git(root, "merge-base", "--is-ancestor", BASE, HISTORICAL_MAIN)
+    frozen_git(root, "merge-base", "--is-ancestor", HISTORICAL_MAIN, head)
+
+    def diff(before: str, after: str, *paths: str, raw: bool = False) -> list[str]:
+        flag = "--raw" if raw else "--name-status"
+        return frozen_git(root, "diff", "--no-ext-diff", "--no-renames", "--no-abbrev",
+                          flag, before, after, "--", *paths).decode().splitlines()
+
+    # This historical ACT0/control statement remains absolute, not an exception.
+    if diff(BASE, HISTORICAL_MAIN, *PROTECTED_RUNTIME):
+        raise ValueError("ACT0_HISTORICAL_RUNTIME_CHANGED")
+    for path in (H + "executions/E2026-08-30-V0-P7-R1", H + "acceptance"):
+        if diff(BASE, head, path):
+            raise ValueError("ACT0_P7_ACCEPTED_EVIDENCE_CHANGED")
+    if diff(BASE, head, "scenes") != [f"A\t{A7_SCENE_ADDITION}"]:
+        raise ValueError("ACT0_SCENE_FENCE_CHANGED")
+
+    changes = diff(BASE, head, *PROTECTED_RUNTIME, raw=True)
+    if not changes:
+        return  # The original canonical baseline needs no later authorization.
+    expected = f":100644 100644 {JOURNAL_BEFORE} {JOURNAL_AFTER} M\t{JOURNAL}"
+    if changes != [expected]:
+        raise ValueError("ACT0_UNAUTHORIZED_RUNTIME_DELTA")
+
+    # These copies travel with main integration: no moving feature ref or
+    # off-branch object is required in a fresh clone after merge.
+    record_bytes = frozen_git(root, "show", f"{head}:{AUTH}/authorization.json")
+    if hashlib.sha256(record_bytes).hexdigest() != AUTH_DIGEST:
+        raise ValueError("ACT0_AUTHORIZATION_DIGEST_MISMATCH")
+    record = json.loads(record_bytes)
+    for name, expected_file in record["files"].items():
+        payload = frozen_git(root, "show", f"{head}:{AUTH}/{name}")
+        if hashlib.sha256(payload).hexdigest() != expected_file["sha256"]:
+            raise ValueError("ACT0_AUTHORIZATION_PAYLOAD_MISMATCH")
+    ha = json.loads(frozen_git(root, "show", f"{head}:{AUTH}/approved-ha.json"))
+    if (ha.get("decision_id") != record["decision_id"] or ha.get("program") != "V0"
+            or ha.get("checkpoint") != MVP or ha.get("status") != "RESOLVED"
+            or ha.get("risk_class") != "CRITICAL"
+            or not ha.get("resolution", "").startswith("AUTHORIZE_ONE_FILE_SAME_REVISION_ROLLBACK_REPAIR.")):
+        raise ValueError("ACT0_AUTHORIZATION_IDENTITY_MISMATCH")
 
 
 class MVPAct0Tests(unittest.TestCase):
@@ -45,7 +106,12 @@ class MVPAct0Tests(unittest.TestCase):
     def fixture(self, adopted: bool):
         with tempfile.TemporaryDirectory(prefix="act0-authority-") as tmp:
             root = Path(tmp) / "repo"
-            subprocess.run(["git", "clone", "--quiet", "--shared", str(ROOT), str(root)], check=True)
+            # Negative fixtures commit and immediately tear down their clone.
+            # Disable detached maintenance before clone's initial checkout so
+            # no background Git writer can race strict TemporaryDirectory cleanup.
+            subprocess.run(["git", "clone", "--quiet", "--shared",
+                            "-c", "maintenance.auto=false", "-c", "gc.auto=0",
+                            "-c", "gc.autoDetach=false", str(ROOT), str(root)], check=True)
             head = git(ROOT, "rev-parse", "HEAD")
             git(root, "checkout", "--quiet", "-B", BRANCH, head)
             git(root, "update-ref", "refs/remotes/origin/main", head if adopted else BASE)
@@ -124,15 +190,90 @@ class MVPAct0Tests(unittest.TestCase):
                 build_plan(contracts, self.wo, self.reduced)
 
     def test_all_p7_execution_and_acceptance_blobs_are_unchanged(self):
-        for path in (H + "executions/E2026-08-30-V0-P7-R1", H + "acceptance"):
-            self.assertEqual("", git(ROOT, "diff", "--name-only", BASE, "HEAD", "--", path))
-        for path in ("scripts/runtime", "scripts/network", "scripts/simulation", "project.godot"):
-            self.assertEqual("", git(ROOT, "diff", "--name-only", BASE, "HEAD", "--", path))
+        assert_act0_source_fence(ROOT)
 
-        # P7 scene bytes stay immutable. A future scene is not silently accepted: the only
-        # post-P7 scene delta authorized by this bounded integration is one new A7 lab scene.
-        scene_changes = git(ROOT, "diff", "--name-status", BASE, "HEAD", "--", "scenes").splitlines()
-        self.assertEqual([f"A\t{A7_SCENE_ADDITION}"], scene_changes)
+    def test_original_canonical_act0_fence_without_journal_authorization(self):
+        assert_act0_source_fence(ROOT, HISTORICAL_MAIN)
+
+    def test_fixture_commits_do_not_launch_automatic_background_maintenance(self):
+        with self.fixture(adopted=True) as root:
+            trace = root.parent / "commit-trace.jsonl"
+            env = dict(os.environ, GIT_TRACE2_EVENT=str(trace))
+            subprocess.run(["git", "-c", "user.name=ACT0 fixture", "-c", "user.email=fixture@example.invalid",
+                            "commit", "--allow-empty", "-qm", "test-only maintenance lifetime"],
+                           cwd=root, env=env, check=True, capture_output=True)
+            events = [json.loads(line) for line in trace.read_text(encoding="utf-8").splitlines()]
+            self.assertTrue(any(event.get("event") == "cmd_name" and event.get("name") == "commit"
+                                for event in events), "trace must observe the real fixture commit")
+            maintenance = [event for event in events if event.get("event") == "child_start"
+                           and any(arg in ("maintenance", "gc") for arg in event.get("argv", []))]
+            self.assertEqual([], maintenance, "fixture commit must not spawn automatic Git maintenance")
+
+    def source_fault(self, root: Path, changes: dict[str, bytes | None]) -> None:
+        for relative, payload in changes.items():
+            target = root / relative
+            if payload is None:
+                target.unlink()
+            else:
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_bytes(payload)
+        git(root, "add", "--", *changes)
+        git(root, "-c", "user.name=ACT0 fixture", "-c", "user.email=fixture@example.invalid",
+            "commit", "-qm", "test-only source fence fault")
+
+    def test_only_exact_approved_journal_runtime_delta_is_admitted(self):
+        journal = frozen_git(ROOT, "show", f"HEAD:{JOURNAL}")
+        cases = {
+            "changed_journal_byte": {JOURNAL: journal + b"\n# unexpected change\n"},
+            "second_network_path": {"scripts/network/unapproved.gd": b"extends RefCounted\n"},
+            "runtime_path": {"scripts/runtime/unapproved.gd": b"extends RefCounted\n"},
+            "simulation_path": {"scripts/simulation/unapproved.gd": b"extends RefCounted\n"},
+            "project_config": {"project.godot": frozen_git(ROOT, "show", "HEAD:project.godot") + b"\n; changed\n"},
+            "deleted_journal": {JOURNAL: None},
+            "renamed_journal": {JOURNAL: None, JOURNAL + ".renamed": journal},
+        }
+        for name, changes in cases.items():
+            with self.subTest(name=name), self.fixture(adopted=True) as root:
+                self.source_fault(root, changes)
+                with self.assertRaisesRegex(ValueError, "ACT0_UNAUTHORIZED_RUNTIME_DELTA"):
+                    assert_act0_source_fence(root)
+
+    def test_journal_approval_cannot_hide_p7_or_scene_mutations(self):
+        cases = {
+            "acceptance": {H + "acceptance/unapproved.json": b"{}\n"},
+            "p7_execution": {H + "executions/E2026-08-30-V0-P7-R1/unapproved.json": b"{}\n"},
+            "new_scene": {"scenes/unapproved.tscn": b"[gd_scene format=3]\n"},
+        }
+        for name, changes in cases.items():
+            with self.subTest(name=name), self.fixture(adopted=True) as root:
+                self.source_fault(root, changes)
+                with self.assertRaisesRegex(ValueError, "ACT0_(P7_ACCEPTED_EVIDENCE|SCENE_FENCE)_CHANGED"):
+                    assert_act0_source_fence(root)
+
+    def test_journal_requires_immutable_resolved_authorization(self):
+        ha_path = AUTH + "/approved-ha.json"
+        original = json.loads(frozen_git(ROOT, "show", f"HEAD:{ha_path}"))
+        cases = {
+            "missing_record": {AUTH + "/authorization.json": None},
+            "missing_ha": {ha_path: None},
+            "missing_patch": {AUTH + "/approved.patch": None},
+            "changed_patch": {AUTH + "/approved.patch": b"different repair\n"},
+            "changed_record": {AUTH + "/authorization.json": b"{}\n"},
+        }
+        for field, value in (("status", "OPEN"), ("decision_id", "FOREIGN"), ("checkpoint", "OTHER"),
+                             ("resolution", "unapproved")):
+            modified = dict(original, **{field: value})
+            cases[field] = {ha_path: (json.dumps(modified) + "\n").encode()}
+        record_path = AUTH + "/authorization.json"
+        record = json.loads(frozen_git(ROOT, "show", f"HEAD:{record_path}"))
+        for field, value in (("before_blob", "0" * 40), ("after_blob", "f" * 40),
+                             ("project_epoch", "FOREIGN"), ("path", "scripts/network/other.gd")):
+            cases[field] = {record_path: (json.dumps(dict(record, **{field: value})) + "\n").encode()}
+        for name, changes in cases.items():
+            with self.subTest(name=name), self.fixture(adopted=True) as root:
+                self.source_fault(root, changes)
+                with self.assertRaises((ValueError, subprocess.CalledProcessError)):
+                    assert_act0_source_fence(root)
 
     def test_candidate_default_and_explicit_execution_cannot_activate(self):
         with self.fixture(adopted=False) as root:
