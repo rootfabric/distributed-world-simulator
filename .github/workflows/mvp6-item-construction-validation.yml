@@ -1,4 +1,4 @@
-name: MVP6 Journal Main Full Harness Diagnostic
+name: MVP6 Journal ACT0 Control Full Harness
 on:
   workflow_dispatch:
 permissions:
@@ -13,14 +13,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: 3b82145ae946bb51aebf67f048a28420368b40be
+          ref: a7c711c4b09fe52e52a206abc13ce8b427c19cf9
           fetch-depth: 0
       - name: Exact main repair and full canonical Harness invocation
         shell: bash
         run: |
           set -euo pipefail
-          test "$(git rev-parse HEAD)" = 3b82145ae946bb51aebf67f048a28420368b40be
-          test "$(git rev-parse HEAD^{tree})" = 6b1b8c9ead5c16d15dc8565813d3abb1bf94d880
+          test "$(git rev-parse HEAD)" = a7c711c4b09fe52e52a206abc13ce8b427c19cf9
+          test "$(git rev-parse HEAD^{tree})" = cc48a2446198a49c78ee46af601e2e56d3807bfd
           git fetch origin '+refs/heads/*:refs/remotes/origin/*' --prune
           python3 -m pip install --disable-pip-version-check -r scripts/harness/requirements.txt
           mkdir -p artifacts/full-harness
