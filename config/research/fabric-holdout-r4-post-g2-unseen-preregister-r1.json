@@ -1,0 +1,98 @@
+{
+  "schema": "distributed_world_simulator.fabric_holdout_r4_post_g2_unseen_preregister.v1",
+  "preregistration_id": "FABRIC-HOLDOUT-R4-POST-G2-UNSEEN-R1",
+  "state": "PREREGISTERED_AWAITING_FUTURE_BEACON",
+  "production_freeze": {
+    "commit": "649af4ef16de00c797b4d63be70426abb3c75d68",
+    "freeze_id": "FABRIC-HOLDOUT-R4-PRODUCTION-FREEZE-R1",
+    "subject_head": "e6228a39b6b3006a3d14ad0884c09266570fcd00",
+    "subject_tree": "1b84960369868aa6d5ec23c1eae3019250ff9a8f",
+    "product_mutation_after_freeze_forbidden": true
+  },
+  "unseen_source": {
+    "provider": "NIST Randomness Beacon 2.0",
+    "provider_project": "https://csrc.nist.gov/projects/interoperable-randomness-beacons/beacon-20",
+    "selection_endpoint": "https://beacon.nist.gov/beacon/2.0/pulse/time/next/1789562700000",
+    "selection_rule": "Use exactly the pulse returned by the NIST v2 next-pulse endpoint for target_unix_ms. Record pulse.uri, pulse.timeStamp, pulse.outputValue, pulse.signatureValue, chainIndex and pulseIndex before generating cases.",
+    "target_time_utc": "2026-09-16T12:45:00.000Z",
+    "target_unix_ms": 1789562700000,
+    "seed_field": "pulse.outputValue",
+    "seed_size_bits": 512,
+    "pulse_status_code_required": 0,
+    "pulse_version_required": "2.0",
+    "pulse_period_ms_expected": 60000,
+    "exact_case_values_known_at_preregistration": false
+  },
+  "frozen_generator": {
+    "path": "scripts/research/fabric_holdout_r4_post_g2/generate_unseen_cases_v1.py",
+    "first_commit": "2fe7025a0771e4780b58139362e5b866bb404683",
+    "domain_separator": "DWS/FABRIC/HOLDOUT-R4/POST-G2/UNSEEN/V1\\0",
+    "self_test_case_sha256": "ac89c0516550e554e46947f1f5b99fc1b8b672803383bbd487fe63e6005a4a03",
+    "generator_changes_after_beacon_forbidden": true
+  },
+  "frozen_runner": {
+    "path": "tests/research/fabric1/fabric_holdout_r4_post_g2_unseen_acceptance.gd",
+    "first_commit": "88d52150f4415b97352539beeba7f50d86c24ad9",
+    "canonical_godot_version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "canonical_godot_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+    "prepublication_fake_beacon_assertions": 93,
+    "prepublication_fake_beacon_failures": 0,
+    "runner_changes_after_beacon_forbidden": true
+  },
+  "families": {
+    "transport": {
+      "generated_items": 11,
+      "challenge": "Future-beacon-derived finite IEEE754 values including one subnormal, nested transport, canonical dictionary order and checksum tamper rejection.",
+      "oracle": "Exact little-endian f64 bits and lossless hash identity."
+    },
+    "graph": {
+      "nodes": 6,
+      "edges": 9,
+      "boundary_ports": 3,
+      "challenge": "Connected cyclic resistive graph plus generated floating-component negative control and insertion-order permutation.",
+      "oracle": "Independent Python Fraction nodal solve for potentials, edge currents and port currents; KCL/power residual checks."
+    },
+    "mechanics": {
+      "nodes": 5,
+      "mobile_coordinates": 3,
+      "challenge": "Generated non-axis-aligned 1D geometry using exact Pythagorean unit axes, randomized masses/stiffness/damping, endpoint/id reversal and DAE mass-floor negative control.",
+      "oracle": "Independent Python Fraction stiffness solve for displacement-per-newton."
+    },
+    "events": {
+      "challenge": "Future-beacon-selected quartic with two simple roots plus one double/tangent root on an exact 1/16 grid, delimiter-rich element id, randomized sign and malformed-sign negative control.",
+      "oracle": "Exact rational polynomial construction and predeclared clustered-root tolerance."
+    }
+  },
+  "acceptance": {
+    "all_families_required": true,
+    "any_required_assertion_failure": "R4_UNSEEN_FAIL",
+    "case_specific_product_repair_after_reveal_allowed": false,
+    "threshold_relaxation_after_reveal_allowed": false,
+    "historical_g1_case_reuse_allowed": false,
+    "generator_or_runner_edit_after_reveal_invalidates_holdout": true,
+    "execute_only_against_frozen_subject_head": "e6228a39b6b3006a3d14ad0884c09266570fcd00",
+    "execute_only_against_frozen_subject_tree": "1b84960369868aa6d5ec23c1eae3019250ff9a8f",
+    "independent_verification_required": true,
+    "r4_acceptance_before_unseen_execution_forbidden": true,
+    "scale_r5_before_r4_acceptance_forbidden": true
+  },
+  "reveal_protocol": {
+    "before_target_time": "Do not fetch or materialize the selected future pulse/cases.",
+    "after_target_time": [
+      "Fetch the exact selection_endpoint response and archive the raw pulse JSON.",
+      "Verify pulse.statusCode == 0, pulse.version == 2.0, 128-hex outputValue and pulse time is at/after target.",
+      "Run the frozen generator exactly once on pulse.outputValue and record generated case JSON SHA256.",
+      "Do not edit generator, runner, product, thresholds or expected values after seeing generated cases.",
+      "Execute frozen runner on canonical Godot against exact frozen product subject in an independent verifier route."
+    ]
+  },
+  "current_gate": {
+    "production_freeze": "CLOSED",
+    "preregistration": "RECORDED",
+    "beacon_reveal": "LOCKED_UNTIL_TARGET_TIME",
+    "unseen_execution": "LOCKED_UNTIL_REVEAL",
+    "r4_accepted": false,
+    "merge_authorized": false,
+    "scale_r5_unlocked": false
+  }
+}
