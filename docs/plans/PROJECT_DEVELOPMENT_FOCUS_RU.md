@@ -29,6 +29,76 @@ P7.7 уже содержит графический Digging Playground. Визу
 
 Не требуются для первого MVP: LS4 FINAL, FABRIC B0.6, полный WORLDGEN1, RF1, P8 и все WORLD PACKS. Реальная зависимость оформляется отдельно с конкретным потребителем и критериями. Исследовательская ошибка сама по себе не останавливает MVP.
 
+## После MVP: расширение бесшовности
+
+После принятия `V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE` первым крупным post-MVP направлением становится **Hierarchical Seamless Worlds**: доказать, что текущая бесшовность масштабируется не только горизонтально между соседними authority, но и на вложенную иерархию миров и reference frames.
+
+Подробный план: [`POST_MVP_HIERARCHICAL_SEAMLESS_WORLDS_RU.md`](POST_MVP_HIERARCHICAL_SEAMLESS_WORLDS_RU.md).
+
+Эталонная композиция:
+
+```text
+Space World
+   |
+   v
+Planet World
+   |
+   +--> POI World
+   |      |
+   |      +--> Dungeon World
+   |
+   +--> neighboring surface authorities
+```
+
+Обязательный end-to-end маршрут:
+
+```text
+Space -> Planet -> POI -> Dungeon -> POI -> Planet -> Space
+```
+
+при следующих инвариантах:
+
+```text
+one Client WorldConnection
+stable PlayerId / PlayerEntityId
+normal gameplay reconnects = 0
+respawns = 0
+one ACTIVE canonical writer per domain
+canonical item/carrying state preserved
+versioned reference-frame transforms
+WorldGraph-driven topology and routing
+```
+
+Этап должен переиспользовать существующие WorldGraph semantics (`CONTAINS`, `REFERENCE_FRAME_PARENT/CHILD`, `PORTAL_OR_TRANSITION`, `VISUALLY_RELEVANT`), Edge Gateway, authority handoff, projections и Cross-World Interaction Protocol, а не создавать второй routing/ownership foundation.
+
+Рекомендуемая post-MVP последовательность:
+
+```text
+CURRENT MVP ACCEPTED
+        |
+        v
+HIERARCHICAL SEAMLESS WORLDS
+Space -> Planet -> POI -> Dungeon
+        |
+        v
+WORLDGEN1 / PLANET-SCALE WORLD GENERATION
+        |
+        v
+NX7 / NX8 / RF / NX9 — REPLICATION AND SCALE
+        |
+        v
+MULTI-PLANET / LARGE-WORLD COMPOSITION
+        |
+        +---- WORLD FILL / WORLD PACKS
+        +---- ECO integration
+        +---- FABRIC integration
+        |
+        v
+PRODUCTION-SCALE DISTRIBUTED WORLD
+```
+
+Это **не расширение текущего MVP** и не разрешение немедленного dispatch. Post-MVP этап активируется только после закрытия текущего MVP, создания нового epoch/activation и bounded Work Order на exact accepted base.
+
 ## Экология: один экспериментальный полигон
 
 Цель — участок среды, совместимый по смыслу с детальным уровнем планеты, где можно менять условия, наблюдать наследование и поколения, сравнивать сценарии и видеть причинное разнообразие растений.
