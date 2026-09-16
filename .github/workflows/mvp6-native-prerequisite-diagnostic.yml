@@ -75,13 +75,23 @@ jobs:
           out=pathlib.Path('artifacts/mvp6-prerequisite');out.mkdir(parents=True,exist_ok=True)
           rows=[]
           for mode in ('Drive','CloseMission'):
-              argv=['pwsh','-NoProfile','-File','./CONTROL_DEVELOPMENT.ps1','-'+mode,'-Checkpoint','V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE','-Candidate']
-              with (out/('harness-'+mode.lower()+'.log')).open('w',encoding='utf-8') as log:
+              argv=['pwsh','-NoProfile','-File','./CONTROL_DEVELOPMENT.ps1','-'+mode,'-Checkpoint','V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE']
+              target=out/('harness-'+mode.lower()+'.log')
+              with target.open('w',encoding='utf-8') as log:
                   try: code=subprocess.run(argv,stdout=log,stderr=subprocess.STDOUT,timeout=180,check=False).returncode
                   except subprocess.TimeoutExpired: code=124
-              rows.append({'mode':mode,'argv':argv,'exit_code':code})
-              print('MVP6_HARNESS',mode,'exit',code)
+              documents=[]
+              for line in target.read_text(encoding='utf-8-sig').splitlines():
+                  if line.startswith('{'):
+                      try: documents.append(json.loads(line))
+                      except json.JSONDecodeError: pass
+              (out/('harness-'+mode.lower()+'.json')).write_text(json.dumps(documents,indent=2)+'\n')
+              row={'mode':mode,'argv':argv,'exit_code':code,'json_documents':len(documents)}
+              rows.append(row)
+              print('MVP6_HARNESS',json.dumps(row))
           (out/'harness-commands.json').write_text(json.dumps(rows,indent=2)+'\n')
+          if any(r['exit_code']!=0 or r['json_documents']==0 for r in rows):
+              raise SystemExit('MVP6_CONTROLLER_BOUNDARY_NOT_ESTABLISHED:inspect harness logs')
           PY
       - name: Bind complete diagnostic and controller evidence
         if: always()
