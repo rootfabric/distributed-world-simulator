@@ -59,11 +59,19 @@ jobs:
         run: |
           set -euo pipefail
           python3 -m pip install --disable-pip-version-check -r scripts/harness/requirements.txt
+          git fetch origin '+refs/heads/*:refs/remotes/origin/*' --prune
+          export MVP6_MAIN_PC0_OUTPUT="$RUNNER_TEMP/mvp6-current-main-pc0"
+          export MVP6_MAIN_PC0_WORKTREE="$RUNNER_TEMP/mvp6-current-main-worktree"
+          python3 docs/control/mvp-act0-r1/mvp6_current_main_pc0_probe.py
           test -z "$(git status --porcelain --untracked-files=all)"
           control_tmp="$RUNNER_TEMP/mvp6-drive-before.log"
+          set +e
           pwsh -NoProfile -File ./CONTROL_DEVELOPMENT.ps1 -Drive -Checkpoint V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE > "$control_tmp" 2>&1
-          mkdir -p artifacts/mvp6-exact/control
+          drive_code=$?
+          set -e
+          mkdir -p artifacts/mvp6-exact/control artifacts/mvp6-exact/current-main-pc0
           cp "$control_tmp" artifacts/mvp6-exact/control/drive-before.log
+          cp -a "$MVP6_MAIN_PC0_OUTPUT/." artifacts/mvp6-exact/current-main-pc0/
           python3 - <<'PY'
           import json,pathlib
           p=pathlib.Path('artifacts/mvp6-exact/control/drive-before.log')
@@ -71,6 +79,9 @@ jobs:
           assert values, 'MISSING_CONTROLLER_JSON'
           p.with_suffix('.json').write_text(json.dumps(values[-1],indent=2)+'\n')
           PY
+          if [ "$drive_code" -ne 0 ]; then
+            exit "$drive_code"
+          fi
           python3 docs/control/mvp-act0-r1/mvp6_controller_preflight.py
       - uses: actions/download-artifact@v4
         with:
@@ -136,11 +147,12 @@ jobs:
           git=lambda *a:subprocess.check_output(['git',*a],text=True).strip()
           native=json.loads((out/'native/summary.json').read_text()) if (out/'native/summary.json').is_file() else {}
           construction=json.loads((out/'construction/result.json').read_text()) if (out/'construction/result.json').is_file() else {}
+          main_probe=json.loads((out/'current-main-pc0/probe-summary.json').read_text()) if (out/'current-main-pc0/probe-summary.json').is_file() else {}
           files=[{'path':p.relative_to(out).as_posix(),'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()} for p in sorted(out.rglob('*')) if p.is_file() and p!=out/'manifest.json']
-          result={'schema':'distributed_world_simulator.mvp6_ci_exact_manifest.v2','subject_head':git('rev-parse','HEAD'),'subject_tree':git('rev-parse','HEAD^{tree}'),'run_id':os.environ['GITHUB_RUN_ID'],'run_attempt':os.environ['GITHUB_RUN_ATTEMPT'],'tracked_after':git('status','--porcelain','--untracked-files=no'),'untracked_after':git('ls-files','--others','--exclude-standard'),'native_passed':native.get('passed') is True,'construction_focused_passed':construction.get('passed') is True,'mvp6_predicate_verified':False,'independent_verdict':False,'files':files}
+          result={'schema':'distributed_world_simulator.mvp6_ci_exact_manifest.v3','subject_head':git('rev-parse','HEAD'),'subject_tree':git('rev-parse','HEAD^{tree}'),'run_id':os.environ['GITHUB_RUN_ID'],'run_attempt':os.environ['GITHUB_RUN_ATTEMPT'],'tracked_after':git('status','--porcelain','--untracked-files=no'),'untracked_after':git('ls-files','--others','--exclude-standard'),'current_main_pc0_probe':main_probe,'native_passed':native.get('passed') is True,'construction_focused_passed':construction.get('passed') is True,'mvp6_predicate_verified':False,'independent_verdict':False,'files':files}
           target=out/'manifest.json';target.write_text(json.dumps(result,indent=2)+'\n')
           print('MVP6_CI_MANIFEST_SHA256='+hashlib.sha256(target.read_bytes()).hexdigest())
-          print(json.dumps({'head':result['subject_head'],'tree':result['subject_tree'],'native_passed':result['native_passed'],'construction_focused_passed':result['construction_focused_passed'],'files':len(files)}))
+          print(json.dumps({'head':result['subject_head'],'tree':result['subject_tree'],'main_probe':main_probe,'native_passed':result['native_passed'],'construction_focused_passed':result['construction_focused_passed'],'files':len(files)}))
           PY
       - uses: actions/upload-artifact@v4
         if: always()
