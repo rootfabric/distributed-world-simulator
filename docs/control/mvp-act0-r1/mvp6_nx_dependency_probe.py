@@ -5,11 +5,12 @@ Build two executable compositions on pinned Godot:
 A) current canonical main + exact registered NX-owned runtime/validation delta;
 B) the same composition + exact current V0 critical M4 producer blob.
 
-The registered NX tests were source-implemented but never exact-Godot verified;
-two factory helpers use untyped return syntax that Godot 4.7.1 cannot infer on
-the current composition. The probe applies only an explicit `-> Variant` return
-annotation to those two temporary test copies. No assertion, runtime source or
-payload is changed. Both baseline and candidate must pass the same assertions.
+The registered NX tests were source-implemented but never exact-Godot verified.
+Two tests call methods on a dynamically returned owner service but use `:=`,
+which asks Godot 4.7.1 to infer a static return type that the dynamic expression
+does not have. The probe changes only those temporary declarations from `:=`
+to `=`. No assertion, payload, method call, runtime source or branch file is
+changed. Both baseline and candidate must pass the same assertions.
 
 Evidence only: PASS does not write a main-owned directional clearance, does not
 accept NX, and does not accept MVP6.
@@ -20,6 +21,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import re
 import subprocess
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -37,16 +39,11 @@ TESTS = [
     "tests/network/test_nx_client_tick_robustness.gd",
     "tests/network/test_nx6_predicted_item_interactions.gd",
 ]
-TYPE_ONLY_PATCHES = {
-    "tests/network/test_nx_owner_movement_authority.gd": (
-        "func _configured_owner_service(owner_id: String):",
-        "func _configured_owner_service(owner_id: String) -> Variant:",
-    ),
-    "tests/network/test_nx_owner_item_projection_rollback.gd": (
-        "func _configured_owner_service():",
-        "func _configured_owner_service() -> Variant:",
-    ),
-}
+DYNAMIC_TESTS = [
+    "tests/network/test_nx_owner_movement_authority.gd",
+    "tests/network/test_nx_owner_item_projection_rollback.gd",
+]
+DYNAMIC_DECLARATION = re.compile(r"(?m)^(\s*var\s+[A-Za-z_][A-Za-z0-9_]*)\s*:=\s*(service\.)")
 
 
 def proc(argv: list[str], cwd: Path, *, log: Path | None = None) -> subprocess.CompletedProcess:
@@ -90,19 +87,29 @@ def write_from_ref(ref: str, path: str) -> None:
 
 def apply_parser_only_test_compatibility() -> list[dict]:
     records: list[dict] = []
-    for path, (before, after) in TYPE_ONLY_PATCHES.items():
+    for path in DYNAMIC_TESTS:
         target = WORKTREE / path
         source = target.read_text(encoding="utf-8")
-        if source.count(before) != 1 or after in source:
-            raise RuntimeError(f"NX_TEST_TYPE_PATCH_PRECONDITION_FAILED:{path}")
-        patched = source.replace(before, after)
-        # Prove the temporary compatibility patch cannot change an assertion.
+        patched, count = DYNAMIC_DECLARATION.subn(r"\1 = \2", source)
+        if count < 1:
+            raise RuntimeError(f"NX_DYNAMIC_DECLARATION_PATCH_PRECONDITION_FAILED:{path}")
         if patched.count("_assert(") != source.count("_assert("):
             raise RuntimeError(f"NX_TEST_ASSERTION_COUNT_CHANGED:{path}")
+        # Every changed line must be exactly a declaration operator change on a
+        # service method call; no method name or argument is allowed to differ.
+        before_lines = source.splitlines()
+        after_lines = patched.splitlines()
+        changed = [(a, b) for a, b in zip(before_lines, after_lines) if a != b]
+        if len(changed) != count:
+            raise RuntimeError(f"NX_TEST_PATCH_LINE_COUNT_MISMATCH:{path}")
+        for before, after in changed:
+            if before.replace(":=", "=") != after:
+                raise RuntimeError(f"NX_TEST_NON_DECLARATION_CHANGE:{path}")
         target.write_text(patched, encoding="utf-8")
         records.append({
             "path": path,
-            "change": "ADD_EXPLICIT_VARIANT_RETURN_ANNOTATION_ONLY",
+            "change": "DYNAMIC_SERVICE_RESULT_DECLARATIONS_COLON_EQUALS_TO_EQUALS_ONLY",
+            "changed_declarations": count,
             "before_sha256": hashlib.sha256(source.encode()).hexdigest(),
             "after_sha256": hashlib.sha256(patched.encode()).hexdigest(),
             "assertion_calls": source.count("_assert("),
@@ -201,7 +208,7 @@ def main() -> int:
         baseline_pass = passed(baseline_rows)
         candidate_pass = passed(candidate_rows)
         summary = {
-            "schema": "distributed_world_simulator.mvp6_nx_dependency_probe.v3",
+            "schema": "distributed_world_simulator.mvp6_nx_dependency_probe.v4",
             "composition": "CURRENT_MAIN_PLUS_EXACT_NX_OWNED_DELTA_THEN_CURRENT_V0_M4_CRITICAL",
             "canonical_main": main_head,
             "producer_program": "V0",
