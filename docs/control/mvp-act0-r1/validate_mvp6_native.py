@@ -48,6 +48,7 @@ def main() -> int:
     prefix = [str(engine), "--headless", "--path", str(ROOT)]
     specs = [
         ("import", prefix + ["--editor", "--import", "--quit"], 240),
+        ("prediction_rollback", prefix + ["--script", "res://tests/runtime/test_v0_mvp_6_prediction_rollback.gd"], 120),
         ("security", prefix + ["--script", "res://tests/runtime/test_v0_mvp_6_native_replay_security.gd"], 120),
         ("native", prefix + ["--script", "res://tests/runtime/test_v0_mvp_6_native_item_handoff.gd"], 240),
         ("mvp3", prefix + ["--script", "res://tests/runtime/test_v0_mvp3_live_owner_handoff.gd"], 240),
@@ -68,6 +69,9 @@ def main() -> int:
         text = log.read_text(encoding="utf-8", errors="replace")
         matches = [line[:300] for line in text.splitlines() if FATAL.search(line)]
         row = {"name": name, "argv": argv, "exit_code": code, "error": error, "fatal_markers": matches[:8], "passed": code == 0 and not matches, "duration_seconds": time.monotonic() - start, "log_sha256": sha(log)}
+        if name == "prediction_rollback":
+            row["assertions"] = 77
+            row["passed"] = row["passed"] and len(re.findall(r"(?m)^MVP6 prediction rollback: PASS \(77 assertions\)$", text)) == 1
         rows.append(row)
         (OUT / "commands.json").write_text(json.dumps(rows, indent=2) + "\n", encoding="utf-8")
         print(json.dumps(row), flush=True)
