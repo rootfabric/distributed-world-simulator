@@ -1,0 +1,80 @@
+name: V0 NX Composed Clearance Rejection Diagnostic R1
+
+on:
+  push:
+    branches: [validation/v0-nx-directional-composed-postmerge-r1]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: v0-nx-composed-clearance-rejection-diagnostic-r1
+  cancel-in-progress: false
+
+jobs:
+  diagnose:
+    if: github.repository == 'rootfabric/distributed-world-simulator'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      COMPOSED_HEAD: 4f84f5f492bcbc0e83bbb1fed206fc4ea07e1509
+      COMPOSED_TREE: 5c8c7c59f238467d633d9961797adac067681f08
+      REAL_MAIN: 6982a563dd0c88c81449566131852c601ae89868
+      REVIEWED_V0_HEAD: f3063cbae408a197c5eda37b912a8fe2995ac07e
+      V0_CRITICAL_PATH: scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service.gd
+      V0_CRITICAL_BLOB: 44841fb3719b1cf36fd5afdfc0f8a0e4d0eacb30
+      NX_HEAD: 1a56fe0e845c941f14ce7b9296ee939e9d0ca8bc
+      NX_PASSPORT: config/control/branches/feature__h0-2-nx-c1-owner-authority-r3.v1.json
+      NX_PASSPORT_BLOB: c3af1974228c9ee5c34bf4d54c72896c99fc4d1a
+      PYTHONUTF8: '1'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ env.COMPOSED_HEAD }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Seal composed source and live identities
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin '+refs/heads/*:refs/remotes/origin/*' --prune
+          test "$(git rev-parse HEAD)" = "$COMPOSED_HEAD"
+          test "$(git rev-parse HEAD^{tree})" = "$COMPOSED_TREE"
+          test "$(git rev-parse origin/main)" = "$REAL_MAIN"
+          git merge-base --is-ancestor "$REVIEWED_V0_HEAD" origin/feature/v0-mvp-playable-seamless-planet-r1
+          test "$(git rev-parse "$REVIEWED_V0_HEAD:$V0_CRITICAL_PATH")" = "$V0_CRITICAL_BLOB"
+          test "$(git rev-parse "origin/feature/v0-mvp-playable-seamless-planet-r1:$V0_CRITICAL_PATH")" = "$V0_CRITICAL_BLOB"
+          test "$(git rev-parse origin/feature/h0-2-nx-c1-owner-authority-r3)" = "$NX_HEAD"
+          test "$(git rev-parse "$NX_HEAD:$NX_PASSPORT")" = "$NX_PASSPORT_BLOB"
+          echo "LIVE_V0_HEAD=$(git rev-parse origin/feature/v0-mvp-playable-seamless-planet-r1)"
+
+      - name: Simulate composed main and print exact V0-to-NX clearance decision
+        shell: bash
+        run: |
+          set -euo pipefail
+          git update-ref refs/remotes/origin/main "$COMPOSED_HEAD"
+          mkdir -p artifacts/v0-nx-clearance-diagnostic
+          python3 scripts/control/project_control_directional_watch.py --no-fail-on-red > artifacts/v0-nx-clearance-diagnostic/directional.log
+          cp artifacts/control/directional-watch-report.json artifacts/v0-nx-clearance-diagnostic/directional-watch-report.json
+          python3 - <<'PY'
+          import json, pathlib
+          p=pathlib.Path('artifacts/v0-nx-clearance-diagnostic/directional-watch-report.json')
+          r=json.loads(p.read_text())
+          hits=[x for x in r.get('findings',[]) if x.get('producer')=='V0' and x.get('consumer')=='NX']
+          print('OVERALL='+str(r.get('overall_health')))
+          print('V0_NX_COUNT='+str(len(hits)))
+          print(json.dumps(hits,indent=2,sort_keys=True))
+          pathlib.Path('artifacts/v0-nx-clearance-diagnostic/v0-nx.json').write_text(json.dumps(hits,indent=2)+'\n')
+          if len(hits)!=1:
+              raise SystemExit('EXPECTED_EXACTLY_ONE_V0_NX_FINDING')
+          PY
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: v0-nx-composed-clearance-rejection-${{ github.run_id }}
+          path: artifacts/v0-nx-clearance-diagnostic/
+          if-no-files-found: error
+          retention-days: 30
