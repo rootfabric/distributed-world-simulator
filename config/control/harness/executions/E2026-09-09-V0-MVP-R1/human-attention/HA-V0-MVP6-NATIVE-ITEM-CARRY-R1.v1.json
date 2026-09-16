@@ -1,0 +1,29 @@
+{
+  "schema": "distributed_world_simulator.harness_human_attention.v1",
+  "decision_id": "HA-V0-MVP6-NATIVE-ITEM-CARRY-R1",
+  "program": "V0",
+  "checkpoint": "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE",
+  "risk_class": "CRITICAL",
+  "reason": "FAILED_COMPOSITION_REQUIRING_SCOPE_EXPANSION: current native live-player export explicitly rejects a nonempty canonical inventory with MVP3_ITEM_CARRY_REQUIRES_MVP4 and transports MVP3_EMPTY_CARRY_ONLY. Current M4 supplies whole-graph restore, not actor-scoped live stage/retire/activate; ordinary gameplay recovery is intentionally fenced while live bindings exist. M4 spatial validation is coupled to sandbox content, and both default authorities seed the same world fixture identities. Source inspection proves these boundaries; the new exact diagnostic must separately confirm the empty-transfer positive control and native nonempty rejection. No runtime execution result is claimed by this initial attention record.",
+  "decision_required": "Разрешить bounded existing-owner repair MVP6 в трёх точных файлах: scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service.gd; scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service_base.gd; scripts/runtime/networked_gameplay/networked_gameplay_service_p2.gd. Только actor-scoped Item Graph carrying hooks и native replay/authority fencing, разделение trusted spatial-validation/content bootstrap для живой сцены и подключение этих hooks к существующему M3 Service. MVP glue/tests остаются в уже разрешённых путях. Сохранить единственный M4 owner, действующий SM1 decision owner, атомарный P4 resource consume и restart guards. Это не разрешение на новый inventory/persistence/authority, изменение P7/Matter/SM1 foundations, runtime/main merge или приёмку MVP.",
+  "options": [
+    "AUTHORIZE_BOUNDED_EXISTING_OWNER_MVP6_ITEM_CARRY",
+    "KEEP_CURRENT_OWNER_FENCE_AND_HOLD_MVP6_NONEMPTY_CARRY"
+  ],
+  "recommended_option": "AUTHORIZE_BOUNDED_EXISTING_OWNER_MVP6_ITEM_CARRY",
+  "recommendation_reason": "Одна согласованная передача player plus canonical item closure должна выполняться существующими владельцами. Снятие empty-only проверки, копирование целого graph, повторная выдача предметов на target или private inventory нарушают обязательную baseline. После разрешения нужны отдельный Work Order/Repair Map, неизменённые MVP3–MVP5 regressions, live five-process evidence и fresh independent review/verifier.",
+  "blast_radius": [
+    "Canonical M4 actor inventory/equipment graph closure, item identities and native operation replay",
+    "M3 live authority admission and coordinated player/item stage-retire-activate",
+    "Trusted native spatial validation and nonduplicating region fixture bootstrap",
+    "Existing MVP3 empty-carry, MVP5 exactly-once material and P4/P5 item/construction contracts"
+  ],
+  "blocking": true,
+  "status": "OPEN",
+  "resolution": "",
+  "evidence_paths": [
+    "docs/control/mvp-act0-r1/MVP6_IMPLEMENTATION_R1_RU.md",
+    "tests/runtime/test_v0_mvp_6_native_carry_prerequisite.gd",
+    "docs/control/mvp-act0-r1/validate_mvp6_prerequisite.py"
+  ]
+}
