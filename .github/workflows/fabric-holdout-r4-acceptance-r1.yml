@@ -1,0 +1,145 @@
+name: FABRIC HOLDOUT-R4 Final Acceptance R1
+
+on:
+  push:
+    branches: [control/fabric-holdout-r4-accepted-r1]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fabric-holdout-r4-acceptance-r1
+  cancel-in-progress: false
+
+env:
+  SUBJECT_BRANCH: repair/fabric-holdout-r4-g2-generalized-capabilities-r1
+  SUBJECT_HEAD: e6228a39b6b3006a3d14ad0884c09266570fcd00
+  SUBJECT_TREE: 1b84960369868aa6d5ec23c1eae3019250ff9a8f
+  DIRECTOR_BRANCH: control/fabric-holdout-r4-director-r1
+  DIRECTOR_HEAD: 4ca08fc079b612a1419e1b908e5bef85aa3616b0
+  FREEZE_BRANCH: control/fabric-holdout-r4-production-freeze-r1
+  FREEZE_HEAD: 649af4ef16de00c797b4d63be70426abb3c75d68
+  PREREG_BRANCH: research/fabric-holdout-r4-post-g2-unseen-preregister-r1
+  PREREG_HEAD: 8c28ff9ea4ab1446cd067ca4b8cb5674997a621d
+  REVEAL_BRANCH: research/fabric-holdout-r4-post-g2-unseen-reveal-r2
+  REVEAL_HEAD: 022fa6730031d529cfaecc40a76fc70315d355d1
+  UNSEEN_VERIFIER_BRANCH: verify/fabric-holdout-r4-post-g2-unseen-verifier-r1
+  UNSEEN_VERIFIER_HEAD: 22c732436a3059c13270badea26599a3e199f473
+  CASES_SHA256: 3e14d528a33f4ecb95c4d7fd1f3f55394fcb4b3e624e0bf728698acef99f576d
+
+jobs:
+  validate-final-acceptance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - name: Resolve and bind every live evidence head
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          fetch_ref() {
+            local branch="$1"
+            git fetch origin "+refs/heads/${branch}:refs/remotes/origin/${branch}" --no-tags
+          }
+          for b in "$SUBJECT_BRANCH" "$DIRECTOR_BRANCH" "$FREEZE_BRANCH" "$PREREG_BRANCH" "$REVEAL_BRANCH" "$UNSEEN_VERIFIER_BRANCH"; do fetch_ref "$b"; done
+          test "$(git rev-parse "origin/$SUBJECT_BRANCH")" = "$SUBJECT_HEAD"
+          test "$(git rev-parse "$SUBJECT_HEAD^{tree}")" = "$SUBJECT_TREE"
+          test "$(git rev-parse "origin/$DIRECTOR_BRANCH")" = "$DIRECTOR_HEAD"
+          test "$(git rev-parse "origin/$FREEZE_BRANCH")" = "$FREEZE_HEAD"
+          test "$(git rev-parse "origin/$PREREG_BRANCH")" = "$PREREG_HEAD"
+          test "$(git rev-parse "origin/$REVEAL_BRANCH")" = "$REVEAL_HEAD"
+          test "$(git rev-parse "origin/$UNSEEN_VERIFIER_BRANCH")" = "$UNSEEN_VERIFIER_HEAD"
+          test "$(git merge-base HEAD "$FREEZE_HEAD")" = "$FREEZE_HEAD"
+          expected="$(printf '%s\n' \
+            '.github/workflows/fabric-holdout-r4-acceptance-r1.yml' \
+            'config/research/fabric-holdout-r4-accepted-r1.json' \
+            'docs/research/FABRIC_HOLDOUT_R4_ACCEPTED_R1_RU.md' | sort)"
+          actual="$(git diff --name-only "$FREEZE_HEAD"...HEAD | sort)"
+          test "$actual" = "$expected"
+          git diff --check "$FREEZE_HEAD"...HEAD
+          printf 'ACCEPTANCE_HEAD=%s\nACCEPTANCE_TREE=%s\nSUBJECT_HEAD=%s\nSUBJECT_TREE=%s\nDIRECTOR_HEAD=%s\nFREEZE_HEAD=%s\nPREREG_HEAD=%s\nREVEAL_HEAD=%s\nUNSEEN_VERIFIER_HEAD=%s\n' \
+            "$(git rev-parse HEAD)" "$(git rev-parse 'HEAD^{tree}')" "$SUBJECT_HEAD" "$SUBJECT_TREE" "$DIRECTOR_HEAD" "$FREEZE_HEAD" "$PREREG_HEAD" "$REVEAL_HEAD" "$UNSEEN_VERIFIER_HEAD" | tee acceptance-identity.txt
+
+      - name: Verify frozen preregistration and revealed-case integrity
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          for p in \
+            scripts/research/fabric_holdout_r4_post_g2/generate_unseen_cases_v1.py \
+            tests/research/fabric1/fabric_holdout_r4_post_g2_unseen_acceptance.gd \
+            config/research/fabric-holdout-r4-post-g2-unseen-preregister-r1.json; do
+            test "$(git rev-parse "$PREREG_HEAD:$p")" = "$(git rev-parse "$UNSEEN_VERIFIER_HEAD:$p")"
+          done
+          git show "$UNSEEN_VERIFIER_HEAD:config/research/fabric-holdout-r4-post-g2-unseen-cases-revealed-r1.json" > accepted-unseen-cases.json
+          test "$(sha256sum accepted-unseen-cases.json | awk '{print $1}')" = "$CASES_SHA256"
+          git show "$REVEAL_HEAD:config/research/fabric-holdout-r4-post-g2-nist-pulse-selection-r1.json" > accepted-pulse-selection.json
+          python3 - <<'PY'
+          import json, hashlib
+          pulse=json.load(open('accepted-pulse-selection.json'))
+          cases=json.load(open('accepted-unseen-cases.json'))
+          assert pulse['pulse']['uri']=='https://beacon.nist.gov/beacon/2.0/chain/2/pulse/1943920'
+          assert pulse['pulse']['timeStamp']=='2026-09-16T12:46:00.000Z'
+          assert pulse['target_ms']==1789562700000
+          assert pulse['source_raw_sha256']=='8a5e684b4fe2a0193dcea7560ad47531bfbc510100e9e670189f50210022a4af'
+          assert cases['subject']['head']=='e6228a39b6b3006a3d14ad0884c09266570fcd00'
+          assert cases['subject']['tree']=='1b84960369868aa6d5ec23c1eae3019250ff9a8f'
+          assert cases['production_freeze_commit']=='649af4ef16de00c797b4d63be70426abb3c75d68'
+          assert cases['acceptance']['all_families_required'] is True
+          assert cases['acceptance']['product_mutation_allowed'] is False
+          print('FABRIC_R4_ACCEPTANCE_UNSEEN_INTEGRITY=PASS')
+          PY
+
+      - name: Validate machine-readable R4 acceptance decision
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          python3 - <<'PY' | tee acceptance-validation.log
+          import json
+          p=json.load(open('config/research/fabric-holdout-r4-accepted-r1.json'))
+          assert p['schema']=='distributed_world_simulator.fabric_holdout_r4_acceptance.v1'
+          assert p['state']=='ACCEPTED'
+          assert p['product']['head']=='e6228a39b6b3006a3d14ad0884c09266570fcd00'
+          assert p['product']['tree']=='1b84960369868aa6d5ec23c1eae3019250ff9a8f'
+          assert p['historical_g1']['verdict']=='FAIL/FALSIFIED'
+          assert p['historical_g1']['preserved_as_historical_falsification'] is True
+          assert p['pre_freeze_chain']['fresh_reviewer_verdict']=='PASS'
+          assert p['pre_freeze_chain']['director_verdict']=='PASS'
+          assert p['production_freeze']['state']=='FROZEN'
+          assert p['unseen_preregistration']['state']=='VERIFIED_PRE_REVEAL'
+          assert p['unseen_reveal']['verdict']=='PASS' and p['unseen_reveal']['assertions']==93
+          assert p['unseen_reveal']['reveal_r2_head']=='022fa6730031d529cfaecc40a76fc70315d355d1'
+          assert p['unseen_reveal']['reveal_r2_artifact']==10451358632
+          assert p['fresh_independent_unseen_verifier']['verdict']=='PASS'
+          assert p['fresh_independent_unseen_verifier']['status_head']=='22c732436a3059c13270badea26599a3e199f473'
+          assert p['fresh_independent_unseen_verifier']['status_run']==35110718641
+          assert p['fresh_independent_unseen_verifier']['status_artifact']==10452311664
+          assert p['decision']['r4_accepted'] is True
+          assert p['decision']['holdout_r4_state']=='ACCEPTED'
+          assert p['decision']['scale_r5_unlocked'] is True
+          assert p['decision']['next_stage']=='SCALE-R5'
+          assert p['decision']['merge_authorized'] is False
+          assert p['decision']['new_product_changes_require_new_subject_and_fresh_evidence'] is True
+          print('FABRIC_HOLDOUT_R4_FINAL_ACCEPTANCE=PASS')
+          PY
+          sha256sum config/research/fabric-holdout-r4-accepted-r1.json docs/research/FABRIC_HOLDOUT_R4_ACCEPTED_R1_RU.md acceptance-identity.txt acceptance-validation.log accepted-unseen-cases.json accepted-pulse-selection.json > acceptance-evidence.sha256
+          git diff --check
+          test -z "$(git status --porcelain=v1 --untracked-files=no)"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fabric-holdout-r4-final-acceptance-${{ github.sha }}
+          path: |
+            config/research/fabric-holdout-r4-accepted-r1.json
+            docs/research/FABRIC_HOLDOUT_R4_ACCEPTED_R1_RU.md
+            acceptance-identity.txt
+            acceptance-validation.log
+            accepted-unseen-cases.json
+            accepted-pulse-selection.json
+            acceptance-evidence.sha256
+          if-no-files-found: error
+          retention-days: 90
