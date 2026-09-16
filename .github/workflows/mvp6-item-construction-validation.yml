@@ -13,7 +13,7 @@ jobs:
   native:
     if: github.repository == 'rootfabric/distributed-world-simulator' && github.ref == 'refs/heads/feature/v0-mvp-playable-seamless-planet-r1' && (github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[mvp6-evidence]'))
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 30
     env:
       EXPECTED_HEAD: ${{ github.sha }}
       PYTHONUTF8: '1'
@@ -84,6 +84,27 @@ jobs:
           test "$(sha256sum "$GODOT_BIN" | cut -d' ' -f1)" = bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7
           chmod u+x "$GODOT_BIN"
           python3 docs/control/mvp-act0-r1/validate_mvp6_native.py
+      - name: Carried canonical resources to Construction, replication and collision
+        shell: bash
+        run: |
+          set -euo pipefail
+          export GODOT_BIN="$RUNNER_TEMP/mvp6-engine/godot"
+          mkdir -p artifacts/mvp6-exact/construction
+          export MVP6_CONSTRUCTION_RESULT="$PWD/artifacts/mvp6-exact/construction/result.json"
+          "$GODOT_BIN" --headless --path . --script res://tests/runtime/test_v0_mvp_6_item_construction_composition.gd | tee artifacts/mvp6-exact/construction/test.log
+          "$GODOT_BIN" --headless --path . --script res://tests/runtime/test_v0_p4_live_mvp_composition_ordering.gd | tee artifacts/mvp6-exact/construction/unchanged-p4.log
+          test -f "$MVP6_CONSTRUCTION_RESULT"
+          python3 - <<'PY'
+          import json
+          p=json.load(open('artifacts/mvp6-exact/construction/result.json'))
+          assert p['passed'] is True
+          assert p['native_nonempty_carry_executed'] is True
+          assert p['real_resource_construction_executed'] is True
+          assert p['two_client_derived_replication_executed'] is True
+          assert p['construction_collision_present'] is True
+          assert p['mvp6_predicate_verified'] is False
+          print('MVP6_CONSTRUCTION_FOCUSED_PASS',p['assertions'])
+          PY
       - name: Observe non-terminal parent mission without accepting it
         if: always()
         shell: bash
@@ -110,12 +131,13 @@ jobs:
           import hashlib,json,os,pathlib,subprocess
           out=pathlib.Path('artifacts/mvp6-exact');out.mkdir(parents=True,exist_ok=True)
           git=lambda *a:subprocess.check_output(['git',*a],text=True).strip()
-          summary=json.loads((out/'native/summary.json').read_text()) if (out/'native/summary.json').is_file() else {}
+          native=json.loads((out/'native/summary.json').read_text()) if (out/'native/summary.json').is_file() else {}
+          construction=json.loads((out/'construction/result.json').read_text()) if (out/'construction/result.json').is_file() else {}
           files=[{'path':p.relative_to(out).as_posix(),'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()} for p in sorted(out.rglob('*')) if p.is_file() and p!=out/'manifest.json']
-          result={'schema':'distributed_world_simulator.mvp6_ci_exact_manifest.v1','subject_head':git('rev-parse','HEAD'),'subject_tree':git('rev-parse','HEAD^{tree}'),'run_id':os.environ['GITHUB_RUN_ID'],'run_attempt':os.environ['GITHUB_RUN_ATTEMPT'],'tracked_after':git('status','--porcelain','--untracked-files=no'),'untracked_after':git('ls-files','--others','--exclude-standard'),'native_passed':summary.get('passed') is True,'mvp6_predicate_verified':False,'independent_verdict':False,'files':files}
+          result={'schema':'distributed_world_simulator.mvp6_ci_exact_manifest.v2','subject_head':git('rev-parse','HEAD'),'subject_tree':git('rev-parse','HEAD^{tree}'),'run_id':os.environ['GITHUB_RUN_ID'],'run_attempt':os.environ['GITHUB_RUN_ATTEMPT'],'tracked_after':git('status','--porcelain','--untracked-files=no'),'untracked_after':git('ls-files','--others','--exclude-standard'),'native_passed':native.get('passed') is True,'construction_focused_passed':construction.get('passed') is True,'mvp6_predicate_verified':False,'independent_verdict':False,'files':files}
           target=out/'manifest.json';target.write_text(json.dumps(result,indent=2)+'\n')
           print('MVP6_CI_MANIFEST_SHA256='+hashlib.sha256(target.read_bytes()).hexdigest())
-          print(json.dumps({'head':result['subject_head'],'tree':result['subject_tree'],'native_passed':result['native_passed'],'files':len(files)}))
+          print(json.dumps({'head':result['subject_head'],'tree':result['subject_tree'],'native_passed':result['native_passed'],'construction_focused_passed':result['construction_focused_passed'],'files':len(files)}))
           PY
       - uses: actions/upload-artifact@v4
         if: always()
