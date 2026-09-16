@@ -8,9 +8,10 @@ B) the same composition + exact current V0 critical M4 producer blob.
 The registered NX tests were source-implemented but never exact-Godot verified.
 Two tests call methods on a dynamically returned owner service but use `:=`,
 which asks Godot 4.7.1 to infer a static return type that the dynamic expression
-does not have. The probe changes only those temporary declarations from `:=`
-to `=`. No assertion, payload, method call, runtime source or branch file is
-changed. Both baseline and candidate must pass the same assertions.
+does not have. A third test uses `:=` with an untyped loop value. The probe
+changes only those temporary declarations from `:=` to `=`. No assertion,
+payload, method call, runtime source or branch file is changed. Both baseline
+and candidate must pass the same assertions.
 
 Evidence only: PASS does not write a main-owned directional clearance, does not
 accept NX, and does not accept MVP6.
@@ -95,8 +96,6 @@ def apply_parser_only_test_compatibility() -> list[dict]:
             raise RuntimeError(f"NX_DYNAMIC_DECLARATION_PATCH_PRECONDITION_FAILED:{path}")
         if patched.count("_assert(") != source.count("_assert("):
             raise RuntimeError(f"NX_TEST_ASSERTION_COUNT_CHANGED:{path}")
-        # Every changed line must be exactly a declaration operator change on a
-        # service method call; no method name or argument is allowed to differ.
         before_lines = source.splitlines()
         after_lines = patched.splitlines()
         changed = [(a, b) for a, b in zip(before_lines, after_lines) if a != b]
@@ -114,6 +113,29 @@ def apply_parser_only_test_compatibility() -> list[dict]:
             "after_sha256": hashlib.sha256(patched.encode()).hexdigest(),
             "assertion_calls": source.count("_assert("),
         })
+
+    tick_path = "tests/network/test_nx_client_tick_robustness.gd"
+    tick_target = WORKTREE / tick_path
+    tick_source = tick_target.read_text(encoding="utf-8")
+    before = "var candidate := reference + offset"
+    after = "var candidate = reference + offset"
+    if tick_source.count(before) != 1 or after in tick_source:
+        raise RuntimeError("NX_CLIENT_TICK_DECLARATION_PATCH_PRECONDITION_FAILED")
+    tick_patched = tick_source.replace(before, after)
+    if tick_patched.count("_assert(") != tick_source.count("_assert("):
+        raise RuntimeError("NX_CLIENT_TICK_ASSERTION_COUNT_CHANGED")
+    tick_changed = [(a, b) for a, b in zip(tick_source.splitlines(), tick_patched.splitlines()) if a != b]
+    if len(tick_changed) != 1 or tick_changed[0][0].replace(":=", "=") != tick_changed[0][1]:
+        raise RuntimeError("NX_CLIENT_TICK_NON_DECLARATION_CHANGE")
+    tick_target.write_text(tick_patched, encoding="utf-8")
+    records.append({
+        "path": tick_path,
+        "change": "UNTYPED_LOOP_RESULT_DECLARATION_COLON_EQUALS_TO_EQUALS_ONLY",
+        "changed_declarations": 1,
+        "before_sha256": hashlib.sha256(tick_source.encode()).hexdigest(),
+        "after_sha256": hashlib.sha256(tick_patched.encode()).hexdigest(),
+        "assertion_calls": tick_source.count("_assert("),
+    })
     return records
 
 
@@ -208,7 +230,7 @@ def main() -> int:
         baseline_pass = passed(baseline_rows)
         candidate_pass = passed(candidate_rows)
         summary = {
-            "schema": "distributed_world_simulator.mvp6_nx_dependency_probe.v4",
+            "schema": "distributed_world_simulator.mvp6_nx_dependency_probe.v5",
             "composition": "CURRENT_MAIN_PLUS_EXACT_NX_OWNED_DELTA_THEN_CURRENT_V0_M4_CRITICAL",
             "canonical_main": main_head,
             "producer_program": "V0",
