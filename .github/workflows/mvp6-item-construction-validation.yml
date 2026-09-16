@@ -13,14 +13,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: a7c711c4b09fe52e52a206abc13ce8b427c19cf9
+          ref: d9706b157e84c653a753cc54243ce6651d53319c
           fetch-depth: 0
       - name: Exact main repair and full canonical Harness invocation
         shell: bash
         run: |
           set -euo pipefail
-          test "$(git rev-parse HEAD)" = a7c711c4b09fe52e52a206abc13ce8b427c19cf9
-          test "$(git rev-parse HEAD^{tree})" = cc48a2446198a49c78ee46af601e2e56d3807bfd
+          test "$(git rev-parse HEAD)" = d9706b157e84c653a753cc54243ce6651d53319c
+          test "$(git rev-parse HEAD^{tree})" = 4925ea293c15d88153278437976a3b69f8985ccf
           git fetch origin '+refs/heads/*:refs/remotes/origin/*' --prune
           python3 -m pip install --disable-pip-version-check -r scripts/harness/requirements.txt
           mkdir -p artifacts/full-harness
