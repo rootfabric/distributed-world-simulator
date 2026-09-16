@@ -1,10 +1,16 @@
 #!/usr/bin/env python3
 """Exact V0->NX dependency revalidation probe for the MVP6 M4 critical hit.
 
-Creates a detached worktree at the current registered NX consumer HEAD, overlays
-only the exact current V0 critical M4 producer file, and runs the consumer-owned
-H0.2/NX.C1 focused suite.  The probe is evidence only: PASS does not write a
-main-owned clearance, does not accept NX, and does not accept MVP6.
+The registered NX branch predates the current split M4 implementation, while its
+passport owns only four opt-in owner-movement runtime leaves plus focused tests.
+A root-only overlay on that historical tree is therefore not a valid dependency
+composition. This probe builds the actual compatibility candidate instead:
+current canonical main + exact current NX-owned runtime/validation delta + exact
+current V0 critical M4 producer blob. It then runs the consumer-owned H0.2/NX.C1
+focused suite on pinned double Godot.
+
+Evidence only: PASS does not write a main-owned directional clearance, does not
+accept NX, and does not accept MVP6.
 """
 from __future__ import annotations
 
@@ -12,7 +18,6 @@ import hashlib
 import json
 import os
 from pathlib import Path
-import shutil
 import subprocess
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -46,16 +51,30 @@ def text(argv: list[str], cwd: Path = ROOT) -> str:
     return result.stdout.decode().strip()
 
 
-def digest_bytes(value: bytes) -> str:
-    return hashlib.sha256(value).hexdigest()
-
-
 def digest_file(path: Path) -> str:
-    return digest_bytes(path.read_bytes())
+    return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def git_blob(ref: str, path: str) -> str:
+def object_exists(ref: str, path: str) -> bool:
+    result = proc(["git", "cat-file", "-e", f"{ref}:{path}"], ROOT)
+    return result.returncode == 0
+
+
+def blob(ref: str, path: str) -> str:
     return text(["git", "rev-parse", f"{ref}:{path}"])
+
+
+def bytes_at(ref: str, path: str) -> bytes:
+    return subprocess.check_output(["git", "show", f"{ref}:{path}"], cwd=ROOT)
+
+
+def write_from_ref(ref: str, path: str) -> None:
+    target = WORKTREE / path
+    if object_exists(ref, path):
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(bytes_at(ref, path))
+    elif target.exists():
+        target.unlink()
 
 
 def main() -> int:
@@ -64,57 +83,97 @@ def main() -> int:
     OUT.mkdir(parents=True, exist_ok=True)
     if any(OUT.iterdir()):
         raise RuntimeError("PRESERVE_EXISTING_NX_PROBE_OUTPUT")
+
     producer_head = text(["git", "rev-parse", "HEAD"])
     expected_head = os.environ.get("EXPECTED_HEAD", "")
     if expected_head and producer_head != expected_head:
         raise RuntimeError("EXACT_PRODUCER_HEAD_REQUIRED")
     producer_tree = text(["git", "rev-parse", "HEAD^{tree}"])
-    producer_ref = f"origin/{os.environ.get('GITHUB_REF_NAME', 'feature/v0-mvp-playable-seamless-planet-r1')}"
+    producer_branch = os.environ.get("GITHUB_REF_NAME", "feature/v0-mvp-playable-seamless-planet-r1")
+    producer_ref = f"origin/{producer_branch}"
     if text(["git", "rev-parse", producer_ref]) != producer_head:
         raise RuntimeError("PRODUCER_REMOTE_REF_DRIFT")
-    producer_blob = git_blob(producer_head, CRITICAL)
-    producer_bytes = subprocess.check_output(["git", "show", f"{producer_head}:{CRITICAL}"], cwd=ROOT)
+    producer_blob = blob(producer_head, CRITICAL)
+
+    main_ref = "origin/main"
+    main_head = text(["git", "rev-parse", main_ref])
+    expected_main = os.environ.get("MVP6_EXPECTED_MAIN_SHA", "").strip()
+    if expected_main and main_head != expected_main:
+        raise RuntimeError(f"MAIN_MOVED_DURING_NX_PROBE:{main_head}:expected:{expected_main}")
 
     consumer_ref = f"origin/{NX_BRANCH}"
     consumer_head = text(["git", "rev-parse", consumer_ref])
-    consumer_passport_blob = git_blob(consumer_ref, NX_PASSPORT)
-    baseline_blob = git_blob(consumer_ref, CRITICAL)
+    consumer_passport_blob = blob(consumer_ref, NX_PASSPORT)
+    passport = json.loads(bytes_at(consumer_ref, NX_PASSPORT).decode("utf-8"))
+    if passport.get("branch") != NX_BRANCH or passport.get("program") != "NX":
+        raise RuntimeError("NX_PASSPORT_IDENTITY_INVALID")
+
+    # Only the consumer-owned executable leaves and its focused validation are
+    # replayed on current main. Watched foundations such as M4 are deliberately
+    # NOT copied from the historical NX tree.
+    consumer_paths = sorted(set(passport.get("runtime_paths", [])) | set(passport.get("validation_paths", [])))
+    if not consumer_paths or CRITICAL in consumer_paths:
+        raise RuntimeError("NX_OWNED_DELTA_INVALID")
+    for required in TESTS:
+        if required not in consumer_paths:
+            raise RuntimeError(f"NX_REQUIRED_TEST_NOT_DECLARED:{required}")
 
     if WORKTREE.exists():
         raise RuntimeError("NX_PROBE_WORKTREE_ALREADY_EXISTS")
-    add = proc(["git", "worktree", "add", "--detach", str(WORKTREE), consumer_head], ROOT)
+    add = proc(["git", "worktree", "add", "--detach", str(WORKTREE), main_head], ROOT)
     if add.returncode != 0:
         raise RuntimeError("NX_PROBE_WORKTREE_ADD_FAILED")
+
     rows: list[dict] = []
+    overlay: list[dict] = []
     try:
+        for path in consumer_paths:
+            previous = blob(main_ref, path) if object_exists(main_ref, path) else ""
+            current = blob(consumer_ref, path) if object_exists(consumer_ref, path) else ""
+            write_from_ref(consumer_ref, path)
+            overlay.append({"path": path, "source": "NX", "main_blob": previous, "overlay_blob": current})
+
+        # Overlay the single current V0 critical producer file last. Its split
+        # M4 dependencies remain current-main blobs, exactly as they would after
+        # a future integration on canonical main.
         target = WORKTREE / CRITICAL
-        target.write_bytes(producer_bytes)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(bytes_at(producer_head, CRITICAL))
+        overlay.append({
+            "path": CRITICAL,
+            "source": "V0",
+            "main_blob": blob(main_ref, CRITICAL),
+            "overlay_blob": producer_blob,
+        })
         if text(["git", "hash-object", CRITICAL], WORKTREE) != producer_blob:
-            raise RuntimeError("NX_OVERLAY_BLOB_MISMATCH")
-        changed = text(["git", "diff", "--name-only"], WORKTREE).splitlines()
-        if changed != [CRITICAL]:
-            raise RuntimeError(f"NX_OVERLAY_NOT_SINGLE_FILE:{changed}")
+            raise RuntimeError("V0_CRITICAL_OVERLAY_BLOB_MISMATCH")
+
+        changed = sorted(set(text(["git", "status", "--porcelain"], WORKTREE).splitlines()))
+        if not changed:
+            raise RuntimeError("NX_COMPOSITE_HAS_NO_DELTA")
         diff_check = proc(["git", "diff", "--check"], WORKTREE)
         if diff_check.returncode != 0:
-            raise RuntimeError("NX_OVERLAY_DIFF_CHECK_FAILED")
+            raise RuntimeError("NX_COMPOSITE_DIFF_CHECK_FAILED")
 
         import_log = OUT / "import.log"
         imported = proc([str(GODOT), "--headless", "--path", str(WORKTREE), "--editor", "--import", "--quit"], WORKTREE, log=import_log)
         rows.append({"name": "import", "exit_code": imported.returncode, "log_sha256": digest_file(import_log)})
         if imported.returncode != 0:
-            raise RuntimeError("NX_OVERLAY_IMPORT_FAILED")
+            raise RuntimeError("NX_COMPOSITE_IMPORT_FAILED")
 
         for test in TESTS:
             log = OUT / (Path(test).stem + ".log")
             result = proc([str(GODOT), "--headless", "--path", str(WORKTREE), "--script", "res://" + test], WORKTREE, log=log)
             rows.append({"name": test, "exit_code": result.returncode, "log_sha256": digest_file(log)})
             if result.returncode != 0:
-                raise RuntimeError(f"NX_OVERLAY_TEST_FAILED:{test}")
+                raise RuntimeError(f"NX_COMPOSITE_TEST_FAILED:{test}")
 
         summary = {
-            "schema": "distributed_world_simulator.mvp6_nx_dependency_probe.v1",
+            "schema": "distributed_world_simulator.mvp6_nx_dependency_probe.v2",
+            "composition": "CURRENT_MAIN_PLUS_EXACT_NX_OWNED_DELTA_PLUS_CURRENT_V0_M4_CRITICAL",
+            "canonical_main": main_head,
             "producer_program": "V0",
-            "producer_branch": os.environ.get("GITHUB_REF_NAME", "feature/v0-mvp-playable-seamless-planet-r1"),
+            "producer_branch": producer_branch,
             "producer_head": producer_head,
             "producer_tree": producer_tree,
             "producer_critical_file": CRITICAL,
@@ -124,8 +183,8 @@ def main() -> int:
             "consumer_head": consumer_head,
             "consumer_passport_path": NX_PASSPORT,
             "consumer_passport_blob": consumer_passport_blob,
-            "consumer_original_critical_blob": baseline_blob,
-            "overlay_changed_files": [CRITICAL],
+            "consumer_owned_overlay_paths": consumer_paths,
+            "overlay_records": overlay,
             "engine_sha256": digest_file(GODOT),
             "focused_tests": rows,
             "focused_test_count": len(TESTS),
