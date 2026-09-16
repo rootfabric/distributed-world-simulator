@@ -106,7 +106,12 @@ class MVPAct0Tests(unittest.TestCase):
     def fixture(self, adopted: bool):
         with tempfile.TemporaryDirectory(prefix="act0-authority-") as tmp:
             root = Path(tmp) / "repo"
-            subprocess.run(["git", "clone", "--quiet", "--shared", str(ROOT), str(root)], check=True)
+            # Negative fixtures commit and immediately tear down their clone.
+            # Disable detached maintenance before clone's initial checkout so
+            # no background Git writer can race strict TemporaryDirectory cleanup.
+            subprocess.run(["git", "clone", "--quiet", "--shared",
+                            "-c", "maintenance.auto=false", "-c", "gc.auto=0",
+                            "-c", "gc.autoDetach=false", str(ROOT), str(root)], check=True)
             head = git(ROOT, "rev-parse", "HEAD")
             git(root, "checkout", "--quiet", "-B", BRANCH, head)
             git(root, "update-ref", "refs/remotes/origin/main", head if adopted else BASE)
@@ -189,6 +194,20 @@ class MVPAct0Tests(unittest.TestCase):
 
     def test_original_canonical_act0_fence_without_journal_authorization(self):
         assert_act0_source_fence(ROOT, HISTORICAL_MAIN)
+
+    def test_fixture_commits_do_not_launch_automatic_background_maintenance(self):
+        with self.fixture(adopted=True) as root:
+            trace = root.parent / "commit-trace.jsonl"
+            env = dict(os.environ, GIT_TRACE2_EVENT=str(trace))
+            subprocess.run(["git", "-c", "user.name=ACT0 fixture", "-c", "user.email=fixture@example.invalid",
+                            "commit", "--allow-empty", "-qm", "test-only maintenance lifetime"],
+                           cwd=root, env=env, check=True, capture_output=True)
+            events = [json.loads(line) for line in trace.read_text(encoding="utf-8").splitlines()]
+            self.assertTrue(any(event.get("event") == "cmd_name" and event.get("name") == "commit"
+                                for event in events), "trace must observe the real fixture commit")
+            maintenance = [event for event in events if event.get("event") == "child_start"
+                           and any(arg in ("maintenance", "gc") for arg in event.get("argv", []))]
+            self.assertEqual([], maintenance, "fixture commit must not spawn automatic Git maintenance")
 
     def source_fault(self, root: Path, changes: dict[str, bytes | None]) -> None:
         for relative, payload in changes.items():
