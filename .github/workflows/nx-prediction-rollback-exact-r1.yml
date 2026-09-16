@@ -34,7 +34,7 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      - name: Seal repair, V0 and NX subjects
+      - name: Seal repair, reviewed V0 ancestry/blob and NX subject
         shell: bash
         run: |
           set -euo pipefail
@@ -42,7 +42,9 @@ jobs:
           test "$(git rev-parse HEAD)" = "$REPAIR_HEAD"
           test "$(git rev-parse HEAD^{tree})" = "$REPAIR_TREE"
           test "$(git rev-parse origin/repair/nx-prediction-rollback-baseline-r1)" = "$REPAIR_HEAD"
-          test "$(git rev-parse origin/feature/v0-mvp-playable-seamless-planet-r1)" = "$V0_HEAD"
+          git merge-base --is-ancestor "$V0_HEAD" origin/feature/v0-mvp-playable-seamless-planet-r1
+          CRITICAL='scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service.gd'
+          test "$(git rev-parse "$V0_HEAD:$CRITICAL")" = "$(git rev-parse "origin/feature/v0-mvp-playable-seamless-planet-r1:$CRITICAL")"
           test "$(git rev-parse origin/feature/h0-2-nx-c1-owner-authority-r3)" = "$NX_HEAD"
           test "$(git rev-parse "$NX_HEAD:config/control/branches/feature__h0-2-nx-c1-owner-authority-r3.v1.json")" = "$NX_PASSPORT_BLOB"
           test "$(git merge-base "$BASE_MAIN" "$REPAIR_HEAD")" = "$BASE_MAIN"
@@ -92,7 +94,7 @@ jobs:
           run_test tests/network/test_nx6_predicted_item_interactions.gd 'NX6 predicted item interaction contracts: PASS (940 assertions)' nx6-contracts
           run_test tests/network/test_nx6_predicted_item_interactions_integration.gd 'NX6 predicted item integration: PASS (' nx6-integration
 
-      - name: Revalidate registered NX baseline and exact current V0 critical M4 blob
+      - name: Revalidate registered NX baseline and exact reviewed V0 critical M4 blob
         shell: bash
         run: |
           set -euo pipefail
@@ -190,14 +192,21 @@ jobs:
               candidate=run_suite('repair-plus-nx-plus-v0-m4')
               candidate_pass=passed(candidate)
               same=[r.get('assertions') for r in baseline]==[r.get('assertions') for r in candidate]
+              live_v0='origin/feature/v0-mvp-playable-seamless-planet-r1'
+              reviewed_blob=git('rev-parse',v0+':'+critical)
+              live_blob=git('rev-parse',live_v0+':'+critical)
               summary={
-                  'schema':'distributed_world_simulator.v0_nx_directional_repair_exact.v1',
+                  'schema':'distributed_world_simulator.v0_nx_directional_repair_exact.v2',
                   'repair_head':repair,
                   'repair_tree':git('rev-parse',repair+'^{tree}'),
-                  'v0_head':v0,
+                  'v0_reviewed_head':v0,
+                  'v0_live_head_at_run':git('rev-parse',live_v0),
+                  'v0_reviewed_is_ancestor_of_live':subprocess.run(['git','merge-base','--is-ancestor',v0,live_v0],cwd=root).returncode==0,
                   'v0_tree':git('rev-parse',v0+'^{tree}'),
                   'v0_critical_path':critical,
-                  'v0_critical_blob':git('rev-parse',v0+':'+critical),
+                  'v0_critical_blob':reviewed_blob,
+                  'v0_live_critical_blob':live_blob,
+                  'v0_critical_blob_unchanged':reviewed_blob==live_blob,
                   'nx_head':nx,
                   'nx_tree':git('rev-parse',nx+'^{tree}'),
                   'nx_passport_blob':git('rev-parse',nx+':'+passport_path),
@@ -209,7 +218,7 @@ jobs:
                   'candidate_passed':candidate_pass,
                   'same_assertion_counts':same,
                   'v0_regressed_nx':baseline_pass and not candidate_pass,
-                  'dependency_revalidated':baseline_pass and candidate_pass and same,
+                  'dependency_revalidated':baseline_pass and candidate_pass and same and reviewed_blob==live_blob,
                   'clearance_written':False,
               }
               (out/'summary.json').write_text(json.dumps(summary,indent=2)+'\n',encoding='utf-8')
@@ -226,15 +235,15 @@ jobs:
         run: |
           set -euo pipefail
           python3 - <<'PY'
-          import hashlib,json,os,pathlib,subprocess
+          import hashlib,json,os,pathlib
           out=pathlib.Path('artifacts/nx-prediction-rollback'); out.mkdir(parents=True,exist_ok=True)
           files=[]
           for p in sorted(out.rglob('*')):
               if p.is_file() and p.name!='manifest.json':
                   files.append({'path':p.relative_to(out).as_posix(),'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()})
-          record={'schema':'distributed_world_simulator.nx_prediction_rollback_exact_manifest.v1',
+          record={'schema':'distributed_world_simulator.nx_prediction_rollback_exact_manifest.v2',
                   'repair_head':os.environ['REPAIR_HEAD'],'repair_tree':os.environ['REPAIR_TREE'],
-                  'base_main':os.environ['BASE_MAIN'],'v0_head':os.environ['V0_HEAD'],'nx_head':os.environ['NX_HEAD'],
+                  'base_main':os.environ['BASE_MAIN'],'v0_reviewed_head':os.environ['V0_HEAD'],'nx_head':os.environ['NX_HEAD'],
                   'run_id':os.environ['GITHUB_RUN_ID'],'run_attempt':os.environ['GITHUB_RUN_ATTEMPT'],'files':files}
           target=out/'manifest.json'; target.write_text(json.dumps(record,indent=2)+'\n')
           print('MANIFEST_SHA256='+hashlib.sha256(target.read_bytes()).hexdigest())
