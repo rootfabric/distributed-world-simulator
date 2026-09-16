@@ -6,9 +6,9 @@
   "goal_checkpoint": "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE",
   "state": "IN_PROGRESS",
   "work_order_type": "INTEGRATION",
-  "base_sha": "3d7672cba293d8e7bd72427b803f73fc8fcee5da",
+  "base_sha": "3d7672cba293d8e7bd724b703f73fc8fcee5da",
   "branch": "feature/v0-mvp-playable-seamless-planet-r1",
-  "scope": "MVP1–MVP8: интеграция уже принятых SM1/P7/Item/Construction/persistence в одну запускаемую двухклиентскую сцену. Никаких новых владельцев канонического состояния. По явно одобренному HA-V0-MVP3-LIVE-PLAYER-HOOKS-R1 дополнительно разрешены четыре указанных M3 owner-файла только для live-player handoff hooks; точный bounded repair V0-MVP3-R8-LIVE-PLAYER-OWNER-HOOKS. Для порученного MVP4 отдельно разрешены только именованный read-only validation workflow и именованный MVP4 launcher; это не расширение foundation/runtime ownership. Для явно порученного MVP5 дополнительно разрешён один именованный read-only validation workflow по MVP5_IMPLEMENTATION_R1_RU.md; остальные owner fences неизменны. По принятому HA-V0-MVP-LIVE-SIMULATOR-BASELINE-R1 whole-MVP acceptance дополнительно обязана соответствовать docs/control/mvp-act0-r1/MVP_LIVE_SIMULATOR_BASELINE_R1_RU.md: MVP5–MVP8 должны образовать одну live two-client gameplay composition, а не набор изолированных лабораторных PASS. Это refinement product acceptance без нового canonical owner и без разрешения foundation/runtime ownership transfer. Для порученного MVP6 Director разрешает только дополнительный именованный read-only diagnostic workflow .github/workflows/mvp6-native-prerequisite-diagnostic.yml: native positive/negative controls и неизменённые predecessor focused tests. Его диагностический PASS не является MVP6 acceptance и не разрешает изменение M4 или расширение ранее одобренных M3 hooks.",
+  "scope": "MVP1–MVP8: интеграция принятых SM1/P7/Item/Construction/persistence в одну запускаемую двухклиентскую сцену без новых владельцев состояния. Сохраняются HA-V0-MVP3-LIVE-PLAYER-HOOKS-R1 и его четыре M3 файла; точные validation scope MVP4/MVP5; принятые V0-MVP-LIVE-SIMULATOR-BASELINE-R1 и HA-V0-MVP-CHECKPOINT-CATALOG-SYNC-R1. Пользователь явно разрешил HA-V0-MVP6-NATIVE-ITEM-CARRY-R1: два именованных M4 файла и networked_gameplay_service_p2.gd допускают только native actor-scoped carrying, replay/authority fencing, trusted spatial/content bootstrap и согласование с прежними M3 hooks. Это не смена архитектурного ownership. M4 wildcard-разрешения нет: все остальные M4 пути остаются вне allowed_paths. Именованный новый read-only .github/workflows/mvp6-item-construction-validation.yml разрешён Director для exact tests/evidence этого slice; historical prerequisite diagnostic сохраняется отдельно. Ни один из этих scopes не разрешает main/runtime merge или self-acceptance.",
   "allowed_paths": [
     "scripts/runtime/networked_gameplay/mvp/**",
     "scripts/app/**",
@@ -29,7 +29,10 @@
     "RUN_V0_MVP4_SHARED_DIG.ps1",
     ".github/workflows/mvp5-material-output-validation.yml",
     "config/control/harness/checkpoint-catalog.v1.json",
-    ".github/workflows/mvp6-native-prerequisite-diagnostic.yml"
+    ".github/workflows/mvp6-native-prerequisite-diagnostic.yml",
+    ".github/workflows/mvp6-item-construction-validation.yml",
+    "scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service.gd",
+    "scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service_base.gd"
   ],
   "forbidden_paths": [
     "config/architecture/**",
@@ -37,7 +40,11 @@
     "config/control/harness/acceptance/**",
     "scripts/simulation/matter/**",
     "scripts/network/**",
-    "scripts/runtime/networked_gameplay/m4/**",
+    "scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service_p1.gd",
+    "scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service_p2.gd",
+    "scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service_p3.gd",
+    "scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service_p4.gd",
+    "scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service_p5.gd",
     "scripts/runtime/networked_gameplay/sm1/**",
     "scripts/runtime/networked_gameplay/p7/**",
     "project.godot"
@@ -91,49 +98,35 @@
     "CRITICAL_CROSS_BRANCH_OVERLAP_ZERO",
     "HUMAN_ATTENTION_QUEUE_EMPTY_OR_RESOLVED"
   ],
-  "required_outputs": [
-    "MVP_SHARED_GRAPHICAL_SCENE",
-    "MVP_TWO_CLIENT_SHARED_WORLD",
-    "MVP_SEAM_NO_RECONNECT_OR_RESPAWN",
-    "MVP_CANONICAL_DIG_VISIBLE_TO_BOTH_CLIENTS",
-    "MVP_EXACTLY_ONCE_MATERIAL_OUTPUT",
-    "MVP_ITEM_CONSTRUCTION_PERSISTENCE_CONVERGENCE",
-    "MVP_RECONNECT_AND_RESTART",
-    "MVP_BOUNDED_INTERACTIVE_WORKLOAD",
-    "V0-MVP-LIVE-SIMULATOR-BASELINE-R1 connected live two-client gameplay story",
-    "Exact-head Evidence Map and fresh independent roles"
-  ],
+  "required_outputs": ["MVP_SHARED_GRAPHICAL_SCENE", "MVP_TWO_CLIENT_SHARED_WORLD", "MVP_SEAM_NO_RECONNECT_OR_RESPAWN", "MVP_CANONICAL_DIG_VISIBLE_TO_BOTH_CLIENTS", "MVP_EXACTLY_ONCE_MATERIAL_OUTPUT", "MVP_ITEM_CONSTRUCTION_PERSISTENCE_CONVERGENCE", "MVP_RECONNECT_AND_RESTART", "MVP_BOUNDED_INTERACTIVE_WORKLOAD", "V0-MVP-LIVE-SIMULATOR-BASELINE-R1 connected live two-client gameplay story", "Exact-head Evidence Map and fresh independent roles"],
   "stop_conditions": [
-    "New canonical owner or foundation change outside the four M3 owner files approved in HA-V0-MVP3-LIVE-PLAYER-HOOKS-R1 required",
+    "New canonical owner, architecture transfer or owner mutation outside exact HA-V0-MVP3-LIVE-PLAYER-HOOKS-R1 and HA-V0-MVP6-NATIVE-ITEM-CARRY-R1 scopes required",
     "Second active runtime worker",
     "Missing canonical ACT0 or stale epoch",
     "Attempt to self-accept or self-merge",
-    "Attempt to claim MVP6/MVP7/MVP8 from isolated backend or lab PASS without the mandatory live-simulator baseline sub-gates",
-    "Mandatory live-simulator baseline sub-gate requires an owner-native change outside allowed paths without a separate bounded scope amendment and required Harness/Human gate"
+    "Attempt to claim MVP6/MVP7/MVP8 from isolated backend or lab PASS without mandatory live-simulator baseline sub-gates",
+    "Mandatory sub-gate requires an additional owner-native change outside allowed paths without separate bounded scope amendment and required Harness/Human gate"
   ],
   "risk_class": "CRITICAL",
-  "risk_reasons": [
-    "Composes mutable shared world, authority handoff and exactly-once recovery",
-    "Whole-MVP acceptance now requires one connected live two-client item/construction/recovery gameplay composition, so isolated subsystem PASS must not be promoted as product completion"
-  ],
+  "risk_reasons": ["Composes mutable shared world, authority handoff and exactly-once recovery", "Whole-MVP acceptance requires one connected live two-client item/construction/recovery gameplay composition; isolated subsystem PASS is not product completion", "Approved MVP6 carrying changes native player/item handoff with exact single-owner and replay constraints"],
   "review_required": true,
   "required_review_roles": ["IMPLEMENTER", "REVIEWER", "VERIFIER", "DIRECTOR", "HUMAN"],
-  "repair_context_required": false,
+  "repair_context_required": true,
   "evidence_map_required": true,
   "issued_at_utc": "2026-09-09T10:18:03Z",
   "human_approval_required_for": ["RUNTIME_FEATURE_MERGE", "MVP_CHECKPOINT_ACCEPTANCE"],
-  "notes": "ACT0 records dispatch authority, not a running agent. No product predicate is complete at activation. User explicitly approved HA-V0-MVP3-LIVE-PLAYER-HOOKS-R1 with «разрешаю, реализуй»; scope amendment is bounded by docs/control/mvp-act0-r1/work-order-mvp3-live-hooks-r8.v1.json and does not authorize main merge or acceptance. MVP4 execution requested explicitly with «реализуй MVP4» and «продолжи работу над MVP4». Coordinator validation-scope correction MVP4_VALIDATION_SCOPE_R1_RU.md adds exactly two named integration/validation paths after fresh review finding 4000014122; old out-of-fence executions remain historical diagnostics, not retroactively independent acceptance. MVP5 explicitly requested with «реализуй MVP5: exactly-once material output» after MVP4 closure at d7876073. Director adds exactly .github/workflows/mvp5-material-output-validation.yml before its creation; see docs/control/mvp-act0-r1/MVP5_IMPLEMENTATION_R1_RU.md. On 2026-09-14 the user instructed «внеси правки» after review of PR #632; HA-V0-MVP-LIVE-SIMULATOR-BASELINE-R1 is therefore adopted into the active feature lineage. Binding sources: docs/control/mvp-act0-r1/MVP_LIVE_SIMULATOR_BASELINE_R1_RU.md and docs/control/mvp-act0-r1/mvp-live-simulator-baseline-r1.v1.json. Existing verified MVP1–MVP4 are not reopened. On 2026-09-15 the user explicitly authorized bounded control-only repair HA-V0-MVP-CHECKPOINT-CATALOG-SYNC-R1; it adds exactly config/control/harness/checkpoint-catalog.v1.json to this Work Order write fence solely to synchronize the current MVP checkpoint required_predicates with this already-adopted list. No wildcard workflow authorization, history rewrite, main merge, runtime merge, runtime/source/test mutation or self-acceptance is granted by these acceptance refinements. MVP6 explicitly requested with «отлично, реализуй MVP6». Director validation-scope amendment permits exactly .github/workflows/mvp6-native-prerequisite-diagnostic.yml before creation, for repository-owned read-only exact-head diagnostics. This amendment leaves every forbidden owner path, historical event, required predicate and human gate unchanged; MVP6 native item-carry scope remains subject to separate authorization if required.",
+  "notes": "ACT0 records dispatch authority, not a running agent or product completion. Historical approvals and exact scopes remain in the resolved HA records and immutable parent versions through 727b5d779543e74f254830acfd743d69fe1f7e4d. MVP3 live hooks: explicit «разрешаю, реализуй», bounded work-order-mvp3-live-hooks-r8.v1.json. MVP4 validation-scope correction: MVP4_VALIDATION_SCOPE_R1_RU.md after review 4000014122. MVP5 named workflow: MVP5_IMPLEMENTATION_R1_RU.md. Live simulator baseline adopted on 2026-09-14 after «внеси правки» concerning PR #632. Checkpoint catalog sync approved on 2026-09-15, only required_predicates synchronization. Existing verified MVP1–MVP5 are not reopened. MVP6 initially requested «отлично, реализуй MVP6», now exact native owner amendment approved by «разрешаю, выполняй» after the declared three-file HA request. Native repair map: docs/control/mvp-act0-r1/MVP6_NATIVE_REPAIR_MAP_R1_RU.md. Default A3 operations and named read-only CI are authorized; no wildcard owner/workflow write scope, history rewrite, direct main push, main/runtime merge or self-acceptance.",
   "design_brief": {
-    "problem_statement": "Принятые компоненты ещё не доказаны как единый пользовательский сценарий; без refinement top-level predicates можно ошибочно закрыть набором изолированных backend/lab PASS.",
-    "current_behavior": "MVP1–MVP4 уже дают shared scene, two-client world, seamless и canonical dig; MVP5 идёт. Item/Construction/recovery ещё не обязаны машинно доказываться как одна связанная live composition.",
-    "desired_behavior": "Два live клиента видят один мир, пересекают A→B→A, реально экипируют canonical tool, копают, получают exactly-once material, выполняют pickup/drop/share/container, несут непустой item state через seam, строят одну Construction из canonical resources, затем проходят reconnect/restart/resync и продолжают bounded gameplay loop с одинаковым canonical state.",
-    "alternatives_considered": ["New demo-only terrain/inventory", "Wait for unrelated research", "Accept isolated Item/Construction/persistence laboratory PASS without one live gameplay story"],
-    "selected_design": "Small composition adapters over existing owners, with V0-MVP-LIVE-SIMULATOR-BASELINE-R1 as mandatory product-acceptance refinement for MVP5–MVP8",
-    "why_selected": "No duplicate truth or new foundation; product completion now proves a usable simulator baseline rather than disconnected subsystem demonstrations.",
+    "problem_statement": "Принятые компоненты ещё не доказаны как единый пользовательский сценарий. Native MVP3 переносит только пустой inventory; whole-graph recovery не является actor-scoped handoff.",
+    "current_behavior": "MVP1–MVP5 verified. Diagnostic 152/0 proves expected nonempty rejection while native lifecycle and full JSON payload roundtrip pass.",
+    "desired_behavior": "Два live клиента экипируют tool, копают, получают материал once, выполняют pickup/drop/contention/container, несут непустой inventory/equipment A→B→A и строят одну Construction из canonical resources. MVP7 отдельно доказывает reconnect/restart/resync; MVP8 — связанный bounded workload.",
+    "alternatives_considered": ["New demo inventory", "Copy whole graph into live target", "Reissue items after seam", "Accept isolated backend PASS", "Native actor-scoped carrying in existing owners"],
+    "selected_design": "Existing native M4 owns item staging and mutation; existing SM1 owns decisions; M3/MVP glue coordinates player/item readiness, attestation, retirement and activation. Spatial/content startup policy is server-trusted and optional; legacy defaults remain.",
+    "why_selected": "No duplicate truth or owner; unrelated players and world state remain local and untouched.",
     "affected_owners": ["V0", "MATTER_MW4_MW10", "SM1", "ITEM_GRAPH", "CONSTRUCTION", "PERSISTENCE"],
     "dependencies": ["V0_P7_BOUNDED_TERRAIN_MUTATION", "SM1_ACCEPTED", "SERVER_PREDICTED", "V0-MVP-LIVE-SIMULATOR-BASELINE-R1"],
     "non_goals": ["ECO", "FABRIC", "WORLDGEN1_FULL", "RF1", "P8", "WORLD_PACKS", "CONTINUOUS_RIGID_BODY_CROSS_SERVER_MIGRATION", "DISTRIBUTED_CONTACT_ISLAND_PHYSICS", "NPC_AI_COMBAT_HEALTH", "MULTI_WORLD_PORTALS_OR_TELEPORT", "POLISHED_PRODUCTION_UI"],
-    "expected_risks": ["Presentation/canonical divergence", "Duplicate output on replay", "Seam reconnect or respawn", "False product completion from isolated subsystem PASS", "Loss or duplication of non-empty carrying state across seam", "Recovery that restores terrain but not item/container/construction state"],
-    "validation_plan": ["Focused two-client scene", "A-B-A continuity", "Live tool-gated dig and exactly-once accounting", "Shared pickup/drop/contention/container", "Non-empty carry across seam", "Real-resource Construction with replication and collision", "Reconnect/restart/late-join recovery of full base state", "One connected bounded two-client gameplay workload", "Full world/core", "Fresh Reviewer/Verifier and PC0"]
+    "expected_risks": ["Partial player/item install", "Duplicate output/replay across owners", "Stale session or decision admission", "Foreign inventory replacement", "False product acceptance from native-only tests", "Spatial/presentation divergence"],
+    "validation_plan": ["Native empty and nonempty A-B-A", "Wrong identity/session/epoch/attestation/phase", "Freeze and retire fences including output/consume/replay", "Unchanged MVP3-MVP5", "Live shared pickup/drop/contention/container", "Canonical nonempty carry", "Real-resource Construction replication/collision", "Full world/core", "Fresh Reviewer/Verifier and PC0"]
   }
 }
