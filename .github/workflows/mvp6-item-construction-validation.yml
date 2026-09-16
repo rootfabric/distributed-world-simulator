@@ -66,11 +66,9 @@ jobs:
           p=pathlib.Path('artifacts/mvp6-exact/control/drive-before.log')
           values=[json.loads(x) for x in p.read_text(encoding='utf-8-sig').splitlines() if x.startswith('{')]
           assert values, 'MISSING_CONTROLLER_JSON'
-          v=values[-1]
-          p.with_suffix('.json').write_text(json.dumps(v,indent=2)+'\n')
-          print(json.dumps({'ok':v.get('ok'),'runtime_authorized':v.get('runtime_authorized'),'next':v.get('next',{}).get('action'),'epoch':v.get('epoch',{}).get('status')}))
-          assert v.get('ok') is True and v.get('runtime_authorized') is True, 'NATIVE_RUNTIME_NOT_AUTHORIZED'
+          p.with_suffix('.json').write_text(json.dumps(values[-1],indent=2)+'\n')
           PY
+          python3 docs/control/mvp-act0-r1/mvp6_controller_preflight.py
       - uses: actions/download-artifact@v4
         with:
           name: p7-repair-engine-34117353691
