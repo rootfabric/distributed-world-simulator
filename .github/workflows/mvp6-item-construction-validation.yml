@@ -44,7 +44,10 @@ jobs:
           old=json.loads(subprocess.check_output(['git','show',base+':'+path],text=True))
           new=json.load(open(path))
           assert new['base_sha']==old['base_sha']=='3d7672cba293d8e7bd72427b803f73fc8fcee5da'
-          assert new['required_predicates']==old['required_predicates']
+          seam='MVP6_CROSS_AUTHORITY_CONSTRUCTION_SEAM'
+          assert new['required_predicates'].count(seam)==1
+          assert [p for p in new['required_predicates'] if p!=seam]==old['required_predicates']
+          assert len(new['required_predicates'])==len(old['required_predicates'])+1
           attention=json.load(open('config/control/harness/executions/E2026-09-09-V0-MVP-R1/human-attention/HA-V0-MVP6-NATIVE-ITEM-CARRY-R1.v1.json'))
           assert attention['status']=='RESOLVED' and 'разрешаю, выполняй' in attention['resolution']
           paths=subprocess.check_output(['git','diff','--name-only',base,'HEAD'],text=True).splitlines()
@@ -159,5 +162,53 @@ jobs:
         with:
           name: mvp6-native-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: artifacts/mvp6-exact/
+          if-no-files-found: error
+          retention-days: 90
+  seam-prerequisites:
+    if: github.repository == 'rootfabric/distributed-world-simulator' && github.ref == 'refs/heads/feature/v0-mvp-playable-seamless-planet-r1' && (github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[mvp6-seam-repro]'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      EXPECTED_HEAD: ${{ github.sha }}
+      PYTHONUTF8: '1'
+      PYTHONDONTWRITEBYTECODE: '1'
+      PYTHONPATH: scripts
+      BREAKPOINT_RUNTIME_DISABLED: '1'
+      GODOT_SILENCE_ROOT_WARNING: '1'
+      PLANET_SIMULATOR_INVENTORY_PROFILE: planet_default
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Bind exact named diagnostic checkout
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+          git switch -c "$GITHUB_REF_NAME" "$EXPECTED_HEAD"
+          test -z "$(git status --porcelain --untracked-files=no)"
+          python3 -m pip install --disable-pip-version-check -r scripts/harness/requirements.txt
+      - uses: actions/download-artifact@v4
+        with:
+          name: p7-repair-engine-34117353691
+          run-id: 34117353691
+          repository: rootfabric/distributed-world-simulator
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/mvp6-seam-engine
+      - name: Native RED reproductions and authenticated positive control only
+        shell: bash
+        run: |
+          set -euo pipefail
+          export GODOT_BIN="$RUNNER_TEMP/mvp6-seam-engine/godot"
+          test "$(sha256sum "$GODOT_BIN" | cut -d' ' -f1)" = bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7
+          chmod u+x "$GODOT_BIN"
+          python3 docs/control/mvp-act0-r1/validate_mvp6_seam_repro.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mvp6-seam-repro-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: artifacts/mvp6-seam-repro/
           if-no-files-found: error
           retention-days: 90
