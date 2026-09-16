@@ -78,6 +78,26 @@ func build6() -> bool:
 	var graph = owner.get_canonical_item_graph_port()
 	check(graph != null, "same canonical Item Graph available for Construction")
 	check(ore6(graph.create_snapshot(), "a") == 8, "eight carried canonical ore units available after A-B-A")
+	# The native carry fixture deliberately preserves a hotbar ore stack.
+	# P4 spends inventory slots only: move that same stack through the native
+	# command owner after both seam crossings, before preparing Construction.
+	var carried_ore_id := String(receipts6["a"]["ore"]["details"]["output_item_id"])
+	var before_storage: Dictionary = graph.create_snapshot()
+	check(Array(before_storage["inventories"]["a"]["hotbar"]).has(carried_ore_id), "carried ore hotbar identity survives both seams")
+	if not success(native_command6("a", "construction-storage", "item.transfer", {
+		"item_id": carried_ore_id, "quantity": 5,
+		"target_container_id": "inventory/a", "target_slot_index": -1,
+	}), "canonical hotbar-to-inventory material staging"): return false
+	var after_storage: Dictionary = graph.create_snapshot()
+	check(ore6(after_storage, "a") == 8, "material staging conserves all eight canonical ore units")
+	check(not Array(after_storage["inventories"]["a"]["hotbar"]).has(carried_ore_id), "native transfer clears only the moved ore hotbar alias")
+	var storage_identity: Dictionary = {}
+	for row in before_storage["items"]:
+		storage_identity[String(row["item_id"])] = [row["definition_id"], row["quantity"]]
+	var staged_identity: Dictionary = {}
+	for row in after_storage["items"]:
+		staged_identity[String(row["item_id"])] = [row["definition_id"], row["quantity"]]
+	check(staged_identity == storage_identity, "material staging preserves every canonical item identity and quantity")
 	var root := "user://mvp6-construction/%d-%d" % [OS.get_process_id(), Time.get_ticks_usec()]
 	var created: Dictionary = ConstructionAuthority6.create_gateway(graph, "authority/a", int(state["coordinators"]["a"].snapshot()["authority_epoch"]), root)
 	if not success(created, "accepted P4 Construction authority binds current Item Graph"): return false
