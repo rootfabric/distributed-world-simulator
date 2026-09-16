@@ -89,6 +89,7 @@ func nonempty_carry6() -> bool:
 	var decision: Dictionary = coordinator.snapshot()
 	var transfer_id := "transfer/mvp6/prerequisite/nonempty"
 	var source_port = state["ports"]["authority/a"]
+	var target_port = state["ports"]["authority/b"]
 	var source_before: Dictionary = services[0].create_canonical_item_graph_snapshot()
 	var target_before: Dictionary = services[1].create_canonical_item_graph_snapshot()
 	var player_before: Dictionary = services[0].get_player("a")
@@ -98,14 +99,25 @@ func nonempty_carry6() -> bool:
 	var prepared: Dictionary = carrying.prepare_transfer(transfer_id, "client-session/mvp3/a", sequences["a"], last_commands["a"]["operation_id"])
 	if not success(prepared, "actual carrying watermark preparation"): return false
 	var result: Dictionary = source_port.prepare_export("a", transfer_id, prepared["details"]["manifest"])
-	if not check(result.get("success") == false and result.get("error_code") == "MVP3_ITEM_CARRY_REQUIRES_MVP4", "current native empty-only boundary reproduced exactly"): return false
 	var repeated: Dictionary = source_port.prepare_export("a", transfer_id, prepared["details"]["manifest"])
+	# Native get_player is deliberately mutation-facing and hides a frozen
+	# actor. get_players is the existing presentation read, retaining source
+	# until actual retirement. Read owners only; never patch their stores.
+	var source_presented: Dictionary = {}
+	var target_presented: Dictionary = {}
+	for row in source_port._registry.get_players():
+		if row.get("logical_player_id") == "a": source_presented = row
+	for row in target_port._registry.get_players():
+		if row.get("logical_player_id") == "a": target_presented = row
+	observed6["nonempty_carry"] = {"error_code": result.get("error_code", ""), "native_rejection": result, "repeated_rejection": repeated, "source_before": source_before, "target_before": target_before, "player_before": player_before, "source_presented_after": source_presented, "target_presented_after": target_presented, "source_mutation_view_after": services[0].get_player("a"), "empty_roundtrip_positive_control": evidence["transfers"].size() == 2, "nonempty_transfer_succeeded": false, "rejection_preserves_state": false}
+	if not check(result.get("success") == false and result.get("error_code") == "MVP3_ITEM_CARRY_REQUIRES_MVP4", "current native empty-only boundary reproduced exactly"): return false
 	if not check(repeated == result, "repeated diagnostic does not bypass native fence"): return false
 	if not check(services[0].create_canonical_item_graph_snapshot() == source_before and services[1].create_canonical_item_graph_snapshot() == target_before, "rejected transfer loses or duplicates no item state"): return false
-	if not check(services[0].get_player("a") == player_before and services[1].get_player("a").is_empty(), "rejected transfer neither retires source nor activates target"): return false
+	if not check(source_presented == player_before and target_presented.is_empty(), "native presentation retains source identity and no target player appears"): return false
+	if not check(services[0].get_player("a").is_empty() and services[1].get_player("a").is_empty(), "frozen source and unactivated target reject mutation-facing player reads"): return false
 	if not check(source_port.get_prepared_export("a", transfer_id).is_empty(), "no false prepared packet escapes failed native export"): return false
 	if not move("b", -0.25): return false
-	observed6["nonempty_carry"] = {"error_code": result["error_code"], "native_rejection": result, "repeated_rejection": repeated, "source_before": source_before, "target_before": target_before, "player_before": player_before, "empty_roundtrip_positive_control": evidence["transfers"].size() == 2, "nonempty_transfer_succeeded": false, "rejection_preserves_state": true}
+	observed6["nonempty_carry"]["rejection_preserves_state"] = true
 	return true
 
 func run() -> void:
