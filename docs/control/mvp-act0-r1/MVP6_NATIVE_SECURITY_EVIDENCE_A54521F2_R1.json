@@ -1,0 +1,75 @@
+{
+  "schema": "distributed_world_simulator.mvp6_native_security_evidence.v1",
+  "evidence_kind": "IMPLEMENTER_EXACT_NATIVE_AND_SECURITY_NOT_PRODUCT_ACCEPTANCE",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "work_order": "V0-MVP-R1-WO-001",
+  "checkpoint": "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE",
+  "branch": "feature/v0-mvp-playable-seamless-planet-r1",
+  "product_subject": {
+    "head": "a54521f2d0fda956e35f9a77c79b65f258d7d849",
+    "tree": "1d22c0cf4b00127b87f8a7659f4ba7c9091a1fe0",
+    "canonical_main_observed": "675c04bb213bbb68b8cdb500d540d57ce1490318"
+  },
+  "native_validation": {
+    "workflow": "MVP6 Item Construction Exact",
+    "run_id": 35083110745,
+    "job_id": 104751526040,
+    "conclusion": "SUCCESS",
+    "artifact_id": 10441615522,
+    "artifact_name": "mvp6-native-a54521f2d0fda956e35f9a77c79b65f258d7d849-35083110745-1",
+    "artifact_zip_sha256": "c14a316fff5bd39a052dc7cc0621ac907805cbf14c4a22b778638809e9e45a88",
+    "artifact_manifest_files_rehashed": 14,
+    "artifact_manifest_mismatches": 0,
+    "engine_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+    "tracked_clean_after": true,
+    "tests": [
+      {"name": "MVP6_NATIVE_ITEM_TRANSFER", "assertions": 408, "failures": 0, "passed": true},
+      {"name": "MVP6_NATIVE_ITEM_TRANSFER_SECURITY", "assertions": 48, "failures": 0, "passed": true},
+      {"name": "UNCHANGED_MVP3_LIVE_OWNER_HANDOFF", "assertions": 232, "failures": 0, "passed": true},
+      {"name": "UNCHANGED_MVP5_EXACTLY_ONCE_MATERIAL", "assertions": 270, "failures": 0, "passed": true}
+    ],
+    "total_assertions": 958,
+    "total_failures": 0,
+    "claims": [
+      "actor-scoped nonempty canonical item and equipment transfer A-to-B-to-A succeeds without creating a second Item Graph owner",
+      "native source freeze, target stage, source retire and target activate preserve item identity and quantity",
+      "wrong ownership epoch is rejected at native item admission",
+      "exact replay and conflicting replay cannot rewrite another actor's live_player_id attribution",
+      "existing MVP3 seamless player transfer remains green",
+      "existing MVP5 exactly-once material output remains green"
+    ]
+  },
+  "project_control": {
+    "run_id": 35083115649,
+    "job_id": 104751541369,
+    "conclusion": "FAILURE",
+    "subject_head_exact": true,
+    "candidate_contract_validation": "PASS",
+    "candidate_consistency": "PASS",
+    "project_overview_regression": "37/37 PASS",
+    "harness_checkpoint_session": "22/22 PASS",
+    "architecture_group": "64 PASS / 1 FAIL",
+    "single_failure": "tests.harness.test_project_control_proposed_r3_ownership_projection.ProposedR3OwnershipProjectionTests.test_live_proposed_r3_standard_and_directional_are_non_red",
+    "failure_value": "directional_health=RED",
+    "live_proposed_r3_ref": "feature/global-p0-r3-architecture",
+    "live_proposed_r3_head_observed_after_failure": "9cf9b888c4f81d61acad310e1f2b68552d3b9a20",
+    "classification": "CONTROL_PLANE_LIVE_PROPOSED_R3_DIRECTIONAL_DRIFT_NOT_MVP6_RUNTIME_TEST_FAILURE",
+    "mvp6_pc0_pass_claimed": false,
+    "note": "The failed test computes health from live external proposed-R3 branch state. MVP6 must not edit R3/Harness paths under this Work Order. Final MVP6 closure still requires a fresh standard/directional non-RED result. Implementation may continue within the already-authorized exact MVP6 runtime scope while this external control-plane drift is tracked."
+  },
+  "status": {
+    "native_item_carry_implemented": true,
+    "native_security_passed": true,
+    "live_five_process_mvp6_passed": false,
+    "real_resource_construction_passed": false,
+    "two_client_construction_replication_passed": false,
+    "construction_collision_passed": false,
+    "full_world_core_passed_for_current_mvp6_subject": false,
+    "independent_reviewer_passed": false,
+    "independent_verifier_passed": false,
+    "mvp6_predicate_verified": false,
+    "whole_mvp_accepted": false,
+    "main_merge": false
+  },
+  "next_action": "MAP_ACCEPTED_P4_CONSTRUCTION_OWNER_API_AND_IMPLEMENT_CONNECTED_FIVE_PROCESS_MVP6_COMPOSITION_WITHOUT_NEW_CANONICAL_OWNER"
+}
