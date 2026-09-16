@@ -32,6 +32,7 @@ ROOT = Path(__file__).resolve().parents[3]
 NX_BRANCH = "feature/h0-2-nx-c1-owner-authority-r3"
 NX_PASSPORT = "config/control/branches/feature__h0-2-nx-c1-owner-authority-r3.v1.json"
 CRITICAL = "scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service.gd"
+JOURNAL = "scripts/network/prediction/predicted_item_interaction_journal.gd"
 OUT = Path(os.environ["MVP6_NX_PROBE_OUTPUT"]).resolve()
 WORKTREE = Path(os.environ["MVP6_NX_PROBE_WORKTREE"]).resolve()
 GODOT = Path(os.environ["GODOT_BIN"]).resolve()
@@ -198,6 +199,9 @@ def main() -> int:
     if text(["git", "rev-parse", producer_ref]) != producer_head:
         raise RuntimeError("PRODUCER_REMOTE_REF_DRIFT")
     producer_blob = blob(producer_head, CRITICAL)
+    repair_head = os.environ.get("MVP6_NX_JOURNAL_REPAIR_HEAD", "")
+    if repair_head and repair_head != producer_head:
+        raise RuntimeError("JOURNAL_REPAIR_MUST_MATCH_EXACT_PRODUCER_HEAD")
 
     main_ref = "origin/main"
     main_head = text(["git", "rev-parse", main_ref])
@@ -229,6 +233,18 @@ def main() -> int:
             write_from_ref(consumer_ref, path)
             overlay.append({"path": path, "source": "NX", "main_blob": previous, "overlay_blob": current})
 
+        repair_input = None
+        if repair_head:
+            repaired = bytes_at(repair_head, JOURNAL)
+            patch_result = proc(["git", "apply", str(ROOT / "docs/control/mvp-act0-r1/mvp6_nx_same_revision_rollback_proposed.patch")], WORKTREE)
+            if patch_result.returncode != 0 or (WORKTREE / JOURNAL).read_bytes().replace(b"\r\n", b"\n") != repaired.replace(b"\r\n", b"\n"):
+                raise RuntimeError("JOURNAL_REPAIR_DIFFERS_FROM_APPROVED_PATCH")
+            repair_input = {"head": repair_head, "path": JOURNAL,
+                            "canonical_main_blob": blob(main_head, JOURNAL),
+                            "repair_blob": blob(repair_head, JOURNAL),
+                            "applied_identically_to_baseline_and_candidate": True,
+                            "canonical_main_modified": False}
+
         parser_patches = apply_parser_only_test_compatibility()
         runtime_path = "scripts/runtime/networked_gameplay/networked_gameplay_service_owner_movement.gd"
         runtime_target = WORKTREE / runtime_path
@@ -246,7 +262,7 @@ def main() -> int:
             "applied_identically_to_baseline_and_candidate": True,
             "nx_branch_modified": False,
         }
-        baseline_rows = run_suite("baseline-current-main-plus-nx")
+        baseline_rows = run_suite("baseline-main-plus-approved-repair-plus-nx" if repair_head else "baseline-current-main-plus-nx")
 
         target = WORKTREE / CRITICAL
         target.parent.mkdir(parents=True, exist_ok=True)
@@ -268,7 +284,9 @@ def main() -> int:
         same_counts = [r.get("assertions") for r in baseline_rows] == [r.get("assertions") for r in candidate_rows]
         summary = {
             "schema": "distributed_world_simulator.mvp6_nx_dependency_probe.v6",
-            "composition": "CURRENT_MAIN_PLUS_PARSER_NORMALIZED_NX_THEN_EXACT_CURRENT_V0_M4_CRITICAL",
+            "composition": "MAIN_PLUS_EXPLICIT_APPROVED_JOURNAL_REPAIR_PLUS_PARSER_NORMALIZED_NX_THEN_V0_M4" if repair_head else "CURRENT_MAIN_PLUS_PARSER_NORMALIZED_NX_THEN_EXACT_CURRENT_V0_M4_CRITICAL",
+            "journal_repair_input": repair_input,
+            "unmodified_canonical_baseline": not bool(repair_head),
             "canonical_main": main_head,
             "producer_program": "V0",
             "producer_branch": producer_branch,
@@ -298,7 +316,8 @@ def main() -> int:
             "baseline_passed": baseline_pass,
             "candidate_passed": candidate_pass,
             "same_assertion_counts": same_counts,
-            "dependency_revalidated": baseline_pass and candidate_pass and same_counts,
+            "dependency_revalidated": baseline_pass and candidate_pass and same_counts and not repair_head,
+            "repair_composition_revalidated": baseline_pass and candidate_pass and same_counts and bool(repair_head),
             "candidate_regressed_consumer": baseline_pass and not candidate_pass,
             "foundation_mutation_accepted": False,
             "clearance_written": False,
@@ -308,7 +327,7 @@ def main() -> int:
         }
         (OUT / "summary.json").write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
         print(json.dumps(summary, sort_keys=True), flush=True)
-        return 0 if summary["dependency_revalidated"] else 1
+        return 0 if summary["dependency_revalidated"] or summary["repair_composition_revalidated"] else 1
     finally:
         proc(["git", "worktree", "remove", "--force", str(WORKTREE)], ROOT)
         proc(["git", "worktree", "prune"], ROOT)
