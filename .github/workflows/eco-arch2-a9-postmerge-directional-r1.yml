@@ -1,0 +1,32 @@
+name: ECO ARCH2 A9 Postmerge Directional Diagnostic
+on:
+  push:
+    branches: [validation/eco-arch2-a9-postmerge-directional-r1]
+    paths: [.github/workflows/eco-arch2-a9-postmerge-directional-r1.yml]
+permissions:
+  contents: read
+jobs:
+  diagnostic:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: 6982a563dd0c88c81449566131852c601ae89868
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Fetch all branch refs
+        run: git fetch origin '+refs/heads/*:refs/remotes/origin/*' --prune
+      - name: Run directional watch diagnostic
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/control
+          python3 scripts/control/project_control_directional_watch.py --no-fail-on-red | tee artifacts/control/directional-diagnostic.log
+          cat artifacts/control/directional-watch-report.json
+      - name: Upload diagnostic
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: a9-postmerge-directional-diagnostic
+          path: artifacts/control/
+          if-no-files-found: error
+          retention-days: 30
