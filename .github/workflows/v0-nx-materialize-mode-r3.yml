@@ -1,0 +1,58 @@
+name: V0 NX Materialize Composed Mode R3
+
+on:
+  push:
+    branches: [validation/v0-nx-directional-composed-postmerge-r2]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: v0-nx-materialize-composed-mode-r3
+  cancel-in-progress: false
+
+jobs:
+  materialize-mode:
+    if: github.repository == 'rootfabric/distributed-world-simulator'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      TARGET_BRANCH: validation/v0-nx-directional-composed-subject-r3
+      PRE_MODE_HEAD: 5f1cc0ec7ba8518c896e0f192910719c432ee199
+      EXPECTED_TREE: f4d0ca4c3f3281055051c6501aaced61afa29958
+      LINUX_RUNNER: RUN_NX6_PREDICTED_ITEM_INTERACTIONS_TESTS.sh
+      LINUX_RUNNER_BLOB: 6190a55f88da2122bd42c8d0e00e1d42de292fc4
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ env.TARGET_BRANCH }}
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Seal pre-mode composition
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$PRE_MODE_HEAD"
+          test "$(git rev-parse HEAD:$LINUX_RUNNER)" = "$LINUX_RUNNER_BLOB"
+          test "$(git ls-tree HEAD "$LINUX_RUNNER" | awk '{print $1}')" = "100644"
+          git status --porcelain=v1 | test ! -s /dev/stdin
+
+      - name: Apply mode-only executable repair and verify exact tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'DWS validation'
+          git config user.email 'validation@dws.invalid'
+          git update-index --chmod=+x "$LINUX_RUNNER"
+          git diff --cached --summary
+          git diff --cached --name-only | grep -Fx "$LINUX_RUNNER"
+          test "$(git diff --cached --name-only | wc -l)" -eq 1
+          test "$(git rev-parse HEAD:$LINUX_RUNNER)" = "$LINUX_RUNNER_BLOB"
+          git commit -m 'validation(pc0): restore exact NX6 Linux executable mode'
+          test "$(git rev-parse HEAD^{tree})" = "$EXPECTED_TREE"
+          test "$(git rev-parse HEAD:$LINUX_RUNNER)" = "$LINUX_RUNNER_BLOB"
+          test "$(git ls-tree HEAD "$LINUX_RUNNER" | awk '{print $1}')" = "100755"
+          git status --porcelain=v1 | test ! -s /dev/stdin
+          git push origin "HEAD:$TARGET_BRANCH"
