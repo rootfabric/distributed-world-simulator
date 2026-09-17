@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Bounded native gap reproduction. Expected product rejection is NOT acceptance."""
+"""Preserve native gap reproduction and require the bounded seam product repair."""
 from __future__ import annotations
 import fnmatch
 import hashlib
@@ -15,6 +15,7 @@ ROOT = Path(__file__).resolve().parents[3]
 BASE = "182d93872bfddbf52a72ab170371ebb9489690bb"
 OUT = ROOT / "artifacts/mvp6-seam-repro"
 TEST = "tests/runtime/test_v0_mvp_6_cross_authority_prerequisites.gd"
+PRODUCT_TEST = "tests/runtime/test_v0_mvp_6_cross_authority_construction_seam.gd"
 PIN = {"linux": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7", "win32": "3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5"}
 FATAL = re.compile(r"(?im)^\s*(?:SCRIPT ERROR|ERROR):|Parse Error|Compile Error")
 
@@ -46,7 +47,7 @@ def run(name: str, command: list[str], timeout: int, env: dict[str, str]) -> dic
     result = {"name": name, "command": command, "exit_code": code, "duration_seconds": round(time.monotonic() - start, 3), "fatal_markers": bool(FATAL.search(text)), "log_sha256": sha(log)}
     print(json.dumps(result), flush=True)
     if code and name not in ("drive", "closemission"):
-        print(text[-2400:], flush=True)
+        print(text[-4000:], flush=True)
     return result
 
 
@@ -57,14 +58,40 @@ def main() -> int:
     expected = os.environ.get("EXPECTED_HEAD", "")
     head, tree = git("rev-parse", "HEAD"), git("rev-parse", "HEAD^{tree}")
     env = os.environ.copy()
-    env.update(EXPECTED_HEAD=head, EXPECTED_TREE=tree, PYTHONDONTWRITEBYTECODE="1", BREAKPOINT_RUNTIME_DISABLED="1", MVP6_SEAM_DIAGNOSTIC_RESULT=str(OUT / "result.json"))
-    summary: dict = {"schema": "distributed_world_simulator.mvp6_seam_repro_execution.v1", "subject_head": head, "subject_tree": tree, "baseline_head": BASE, "run_id": env.get("GITHUB_RUN_ID", "local"), "run_attempt": env.get("GITHUB_RUN_ATTEMPT", "1"), "diagnostic_passed": False, "mvp6_predicate_verified": False, "independent_verdict": False, "main_merge": False, "full_world_core_executed": False}
+    env.update(
+        EXPECTED_HEAD=head,
+        EXPECTED_TREE=tree,
+        PYTHONDONTWRITEBYTECODE="1",
+        BREAKPOINT_RUNTIME_DISABLED="1",
+        MVP6_SEAM_DIAGNOSTIC_RESULT=str(OUT / "result.json"),
+        MVP6_CROSS_AUTHORITY_SEAM_RESULT=str(OUT / "product.json"),
+    )
+    summary: dict = {
+        "schema": "distributed_world_simulator.mvp6_seam_repro_execution.v2",
+        "subject_head": head,
+        "subject_tree": tree,
+        "baseline_head": BASE,
+        "run_id": env.get("GITHUB_RUN_ID", "local"),
+        "run_attempt": env.get("GITHUB_RUN_ATTEMPT", "1"),
+        "diagnostic_passed": False,
+        "product_test_passed": False,
+        "mvp6_cross_authority_construction_seam_verified": False,
+        "mvp6_predicate_verified": False,
+        "independent_verdict": False,
+        "main_merge": False,
+        "full_world_core_executed": False,
+    }
     rows: list[dict] = []
     try:
         assert expected == head, "EXACT_SUBJECT_REQUIRED"
         assert not git("status", "--porcelain", "--untracked-files=no"), "TRACKED_DIRTY_BEFORE"
         subprocess.run(["git", "merge-base", "--is-ancestor", BASE, head], cwd=ROOT, check=True)
-        subprocess.run(["git", "diff", "--check", BASE, head], cwd=ROOT, check=True)
+        subprocess.run([
+            "git", "diff", "--check", BASE, head, "--",
+            ".github/workflows", "scripts/runtime/networked_gameplay", "scripts/network/prediction",
+            "tests/runtime", "tests/integration", "config/control/harness", "scenes/labs/mvp",
+            "RUN_V0_MVP_JOURNAL_ROLLBACK.ps1",
+        ], cwd=ROOT, check=True)
         wo = json.loads((ROOT / "config/control/harness/executions/E2026-09-09-V0-MVP-R1/work-orders/V0-MVP-R1-WO-001.v1.json").read_text(encoding="utf-8"))
         assert wo["state"] == "IN_PROGRESS" and "MVP6_CROSS_AUTHORITY_CONSTRUCTION_SEAM" in wo["required_predicates"]
         for path in git("diff", "--name-only", BASE, head).splitlines():
@@ -73,27 +100,46 @@ def main() -> int:
         engine = Path(env["GODOT_BIN"]).resolve()
         summary["engine_sha256"] = sha(engine)
         assert summary["engine_sha256"] == PIN.get(sys.platform), "CANONICAL_DOUBLE_GODOT_REQUIRED"
-        summary["test_blob"] = git("rev-parse", head + ":" + TEST)
+        summary["diagnostic_test_blob"] = git("rev-parse", head + ":" + TEST)
+        summary["product_test_blob"] = git("rev-parse", head + ":" + PRODUCT_TEST)
         prefix = [str(engine), "--headless", "--path", str(ROOT)]
         imported = run("import", prefix + ["--editor", "--import", "--quit"], 240, env)
         rows.append(imported)
         assert imported["exit_code"] == 0 and not imported["fatal_markers"], "FRESH_IMPORT_FAILED"
+
         tested = run("seam-prerequisite", prefix + ["--script", "res://" + TEST], 240, env)
         rows.append(tested)
         result_path = OUT / "result.json"
         result = json.loads(result_path.read_text(encoding="utf-8")) if result_path.is_file() else {}
-        summary["test_result"] = {k: v for k, v in result.items() if k != "observations"}
+        summary["diagnostic_result"] = {k: v for k, v in result.items() if k != "observations"}
         assert tested["exit_code"] == 0 and not tested["fatal_markers"], "NATIVE_DIAGNOSTIC_FAILED"
-        assert result.get("subject_head") == head and result.get("subject_tree") == tree, "RESULT_SUBJECT_MISMATCH"
+        assert result.get("subject_head") == head and result.get("subject_tree") == tree, "DIAGNOSTIC_SUBJECT_MISMATCH"
         assert result.get("diagnostic_passed") is True and result.get("failures") == [], "EXPECTED_GAPS_NOT_BOTH_PROVEN"
         assert result.get("mvp6_predicate_verified") is False and result.get("live_five_process_executed") is False, "DIAGNOSTIC_MUST_NOT_ACCEPT_MVP6"
         summary["diagnostic_passed"] = True
+
+        product_row = run("seam-product", prefix + ["--script", "res://" + PRODUCT_TEST], 480, env)
+        rows.append(product_row)
+        product_path = OUT / "product.json"
+        product = json.loads(product_path.read_text(encoding="utf-8")) if product_path.is_file() else {}
+        summary["product_result"] = {k: v for k, v in product.items() if k != "product"}
+        assert product_row["exit_code"] == 0 and not product_row["fatal_markers"], "SEAM_PRODUCT_TEST_FAILED"
+        assert product.get("subject_head") == head and product.get("subject_tree") == tree, "PRODUCT_SUBJECT_MISMATCH"
+        assert product.get("passed") is True and product.get("failures") == [], "SEAM_PRODUCT_NOT_GREEN"
+        assert product.get("base_part_count") == 100 and product.get("add_part_count") == 101 and product.get("remove_part_count") == 100, "SEAM_SCALE_CONTRACT_FAILED"
+        for field in (
+            "single_writer_c17_executed", "east_read_replica_executed", "cross_authority_add_executed",
+            "cross_authority_remove_executed", "add_remove_replay_executed", "wrong_epoch_negative_executed",
+            "nonempty_player_seam_carry_executed",
+        ):
+            assert product.get(field) is True, "SEAM_PRODUCT_FIELD_FALSE:" + field
+        assert product.get("graphical_five_process_executed") is False and product.get("derived_collision_executed") is False, "NATIVE_PRODUCT_MUST_NOT_OVERCLAIM_GRAPHICS"
+        assert product.get("mvp6_cross_authority_construction_seam_verified") is False and product.get("mvp6_predicate_verified") is False, "NATIVE_PRODUCT_MUST_NOT_SELF_ACCEPT"
+        summary["product_test_passed"] = True
     except Exception as exc:
         summary["error"] = type(exc).__name__ + ": " + str(exc)
         print(summary["error"], flush=True)
     finally:
-        # Preserve real controller decisions. WAITING_HUMAN and exit 8 are not
-        # rewritten as product PASS, nor used to erase diagnostic observations.
         controller = []
         for mode in ("Drive", "CloseMission"):
             name = mode.lower()
@@ -103,22 +149,20 @@ def main() -> int:
             documents = []
             for line in text.splitlines():
                 if line.startswith("{"):
-                    try:
-                        documents.append(json.loads(line))
-                    except json.JSONDecodeError:
-                        pass
+                    try: documents.append(json.loads(line))
+                    except json.JSONDecodeError: pass
             write(OUT / (name + ".json"), documents)
             controller.append({"mode": mode, "exit_code": row["exit_code"], "json_documents": len(documents)})
         summary["controller"] = controller
         summary["tracked_after"] = git("status", "--porcelain", "--untracked-files=no")
         summary["identity_unchanged"] = git("rev-parse", "HEAD") == head and git("rev-parse", "HEAD^{tree}") == tree
-        summary["diagnostic_passed"] = summary["diagnostic_passed"] and not summary["tracked_after"] and summary["identity_unchanged"]
+        summary["passed"] = summary["diagnostic_passed"] and summary["product_test_passed"] and not summary["tracked_after"] and summary["identity_unchanged"]
         write(OUT / "commands.json", rows)
         write(OUT / "summary.json", summary)
         files = [{"path": p.relative_to(OUT).as_posix(), "bytes": p.stat().st_size, "sha256": sha(p)} for p in sorted(OUT.rglob("*")) if p.is_file() and p.name != "manifest.json"]
         write(OUT / "manifest.json", {**summary, "files": files})
-        print(json.dumps({"head": head, "tree": tree, "diagnostic_passed": summary["diagnostic_passed"], "manifest_sha256": sha(OUT / "manifest.json"), "files": len(files)}), flush=True)
-    return 0 if summary["diagnostic_passed"] else 1
+        print(json.dumps({"head": head, "tree": tree, "passed": summary["passed"], "diagnostic_passed": summary["diagnostic_passed"], "product_test_passed": summary["product_test_passed"], "manifest_sha256": sha(OUT / "manifest.json"), "files": len(files)}), flush=True)
+    return 0 if summary["passed"] else 1
 
 
 if __name__ == "__main__":
