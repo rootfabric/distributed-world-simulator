@@ -9,257 +9,227 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts" / "control"))
-
 from directional_watch_clearance import resolve_critical_clearance
 
 CLEARANCE_PATH = ROOT / "config/control/directional-watch-clearances.v1.json"
 REGISTRY_PATH = ROOT / "config/control/project-program-registry.v1.json"
-HISTORICAL_V0_TO_NX_CLEARANCE = "V0-P4-NX-H0-2-M4-CRITICAL-WATCH-CLEARANCE-002"
-HISTORICAL_NX_TO_V0_CLEARANCE = "NX-H0-2-V0-P4-CRITICAL-WATCH-CLEARANCE-001"
+HIST_V0_NX = "V0-P4-NX-H0-2-M4-CRITICAL-WATCH-CLEARANCE-002"
+HIST_NX_V0 = "NX-H0-2-V0-P4-CRITICAL-WATCH-CLEARANCE-001"
+CURRENT = "V0-MVP6-NX-H0-2-M4-JOURNAL-CRITICAL-WATCH-CLEARANCE-004"
+BASELINE = "d9706b157e84c653a753cc54243ce6651d53319c"
+M4 = "scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service.gd"
+JOURNAL = "scripts/network/prediction/predicted_item_interaction_journal.gd"
 
 
 def git(*args: str, check: bool = True) -> str:
-    completed = subprocess.run(
-        ["git", *args],
+    p = subprocess.run(["git", *args], cwd=ROOT, text=True, capture_output=True, check=False)
+    if check and p.returncode != 0:
+        raise AssertionError(p.stderr.strip())
+    return p.stdout.strip() if p.returncode == 0 else ""
+
+
+def ancestor(base: str, head: str) -> bool:
+    return subprocess.run(
+        ["git", "merge-base", "--is-ancestor", base, head],
         cwd=ROOT,
         text=True,
         capture_output=True,
         check=False,
-    )
-    if check and completed.returncode != 0:
-        raise AssertionError(completed.stderr.strip())
-    return completed.stdout.strip() if completed.returncode == 0 else ""
+    ).returncode == 0
+
+
+def blob(ref: str, path: str) -> str:
+    return git("rev-parse", "--verify", f"{ref}:{path}", check=False)
+
+
+def main_without_baseline(base: str, head: str) -> bool:
+    if base == BASELINE and head == "origin/main":
+        return False
+    return ancestor(base, head)
 
 
 class DirectionalWatchClearanceTests(unittest.TestCase):
     def setUp(self) -> None:
-        clearance_registry = json.loads(CLEARANCE_PATH.read_text(encoding="utf-8"))
-        self.project_registry = json.loads(REGISTRY_PATH.read_text(encoding="utf-8"))
-        self.assertEqual(
-            "distributed_world_simulator.directional_watch_clearance_registry.v1",
-            clearance_registry["schema"],
-        )
-        self.assertEqual("MAIN_OWNED_ONLY", clearance_registry["authority"])
+        registry = json.loads(CLEARANCE_PATH.read_text(encoding="utf-8"))
+        self.project = json.loads(REGISTRY_PATH.read_text(encoding="utf-8"))
+        self.assertEqual("distributed_world_simulator.directional_watch_clearance_registry.v1", registry["schema"])
+        self.assertEqual("MAIN_OWNED_ONLY", registry["authority"])
+        self.clearances = list(registry["clearances"])
 
-        self.clearances = list(clearance_registry["clearances"])
-        historical = [
-            item for item in self.clearances if item.get("clearance_id") == HISTORICAL_V0_TO_NX_CLEARANCE
-        ]
-        self.assertEqual(1, len(historical), historical)
-        self.clearance = historical[0]
-        self.producer_ref = self.clearance["reviewed_producer_head"]
-        self.consumer_ref = self.clearance["consumer_head_sha"]
-        self.producer = {
-            "program": self.clearance["producer_program"],
-            "branch": self.clearance["producer_branch"],
-            "head_sha": self.clearance["reviewed_producer_head"],
-        }
-        self.consumer = {
-            "program": self.clearance["consumer_program"],
-            "branch": self.clearance["consumer_branch"],
-            "head_sha": self.clearance["consumer_head_sha"],
-            "passport_path": self.clearance["consumer_passport_path"],
-            "passport_blob_sha": git(
-                "rev-parse",
-                "--verify",
-                f"{self.clearance['consumer_head_sha']}:{self.clearance['consumer_passport_path']}",
-            ),
-        }
-        self.assertEqual(self.clearance["consumer_passport_blob_sha"], self.consumer["passport_blob_sha"])
-        self.critical_hits = list(self.clearance["critical_files"])
-        self.all_hits = list(self.clearance["watched_files"])
+    def one(self, clearance_id: str) -> dict:
+        rows = [x for x in self.clearances if x.get("clearance_id") == clearance_id]
+        self.assertEqual(1, len(rows), rows)
+        return rows[0]
 
-    def blob_lookup(self, ref: str, path: str) -> str:
-        return git("rev-parse", "--verify", f"{ref}:{path}", check=False)
-
-    def ancestor_check(self, base: str, head: str) -> bool:
-        completed = subprocess.run(
-            ["git", "merge-base", "--is-ancestor", base, head],
-            cwd=ROOT,
-            text=True,
-            capture_output=True,
-            check=False,
-        )
-        return completed.returncode == 0
-
-    def _scope(self, clearance: dict) -> tuple[dict, dict, list[str], list[str], str, str]:
-        producer_ref = clearance["reviewed_producer_head"]
-        consumer_ref = clearance["consumer_head_sha"]
-        producer = {
-            "program": clearance["producer_program"],
-            "branch": clearance["producer_branch"],
-            "head_sha": clearance["reviewed_producer_head"],
-        }
+    def scope(self, c: dict) -> tuple[dict, dict, list[str], list[str]]:
         consumer = {
-            "program": clearance["consumer_program"],
-            "branch": clearance["consumer_branch"],
-            "head_sha": clearance["consumer_head_sha"],
-            "passport_path": clearance["consumer_passport_path"],
-            "passport_blob_sha": git(
-                "rev-parse",
-                "--verify",
-                f"{consumer_ref}:{clearance['consumer_passport_path']}",
-            ),
+            "program": c["consumer_program"],
+            "branch": c["consumer_branch"],
+            "head_sha": c["consumer_head_sha"],
+            "passport_path": c["consumer_passport_path"],
+            "passport_blob_sha": blob(c["consumer_head_sha"], c["consumer_passport_path"]),
         }
-        self.assertEqual(clearance["consumer_passport_blob_sha"], consumer["passport_blob_sha"])
-        return (
-            producer,
-            consumer,
-            list(clearance["critical_files"]),
-            list(clearance["watched_files"]),
-            producer_ref,
-            consumer_ref,
-        )
+        self.assertEqual(c["consumer_passport_blob_sha"], consumer["passport_blob_sha"])
+        producer = {
+            "program": c["producer_program"],
+            "branch": c["producer_branch"],
+            "head_sha": c["reviewed_producer_head"],
+        }
+        return producer, consumer, list(c["critical_files"]), list(c["watched_files"])
 
-    def resolve(self, clearance: dict | None = None, **overrides):
-        producer = copy.deepcopy(overrides.get("producer", self.producer))
-        consumer = copy.deepcopy(overrides.get("consumer", self.consumer))
-        critical_hits = list(overrides.get("critical_hits", self.critical_hits))
-        all_hits = list(overrides.get("all_hits", self.all_hits))
-        blob_lookup = overrides.get("blob_lookup", self.blob_lookup)
-        ancestor_check = overrides.get("ancestor_check", self.ancestor_check)
+    def resolve(self, c: dict, *, producer=None, consumer=None, critical=None, watched=None, blob_lookup=blob, ancestor_check=ancestor):
+        p, q, crit, hits = self.scope(c)
         return resolve_critical_clearance(
-            [copy.deepcopy(clearance or self.clearance)],
-            producer,
-            consumer,
-            critical_hits,
-            all_hits,
+            [copy.deepcopy(c)],
+            copy.deepcopy(producer or p),
+            copy.deepcopy(consumer or q),
+            list(critical if critical is not None else crit),
+            list(watched if watched is not None else hits),
             blob_lookup,
             ancestor_check,
         )
 
-    def test_historical_v0_p4_to_nx_clearance_replays_on_exact_reviewed_subjects(self):
-        accepted, rejections = self.resolve()
-        self.assertIsNotNone(accepted, rejections)
-        self.assertEqual([], rejections)
-        self.assertEqual(HISTORICAL_V0_TO_NX_CLEARANCE, accepted["clearance_id"])
-        self.assertEqual(self.clearance["reviewed_producer_head"], self.producer["head_sha"])
-        self.assertEqual(self.clearance["consumer_head_sha"], self.consumer["head_sha"])
-        for path, expected in self.clearance["watched_file_blobs"].items():
-            self.assertEqual(expected, self.blob_lookup(self.clearance["reviewed_producer_head"], path), path)
+    def test_historical_v0_to_nx_replays(self):
+        accepted, rejected = self.resolve(self.one(HIST_V0_NX))
+        self.assertIsNotNone(accepted, rejected)
+        self.assertEqual([], rejected)
 
-    def test_historical_nx_to_v0_p4_clearance_replays_on_exact_reviewed_subjects(self):
-        matching = [
-            item
-            for item in self.clearances
-            if item.get("clearance_id") == HISTORICAL_NX_TO_V0_CLEARANCE
+    def test_historical_nx_to_v0_replays(self):
+        accepted, rejected = self.resolve(self.one(HIST_NX_V0))
+        self.assertIsNotNone(accepted, rejected)
+        self.assertEqual([], rejected)
+
+    def test_current_scope_and_evidence_are_exact(self):
+        c = self.one(CURRENT)
+        v0 = self.project["programs"]["V0"]["branch"]
+        nx = self.project["programs"]["NX"]["branch"]
+        rows = [
+            x for x in self.clearances
+            if x.get("status") == "ACCEPTED"
+            and x.get("producer_program") == "V0"
+            and x.get("producer_branch") == v0
+            and x.get("consumer_program") == "NX"
+            and x.get("consumer_branch") == nx
         ]
-        self.assertEqual(1, len(matching), matching)
-        clearance = matching[0]
-        producer, consumer, critical_hits, all_hits, producer_ref, _ = self._scope(clearance)
-        accepted, rejections = resolve_critical_clearance(
-            [copy.deepcopy(clearance)],
-            producer,
-            consumer,
-            critical_hits,
-            all_hits,
-            self.blob_lookup,
-            self.ancestor_check,
-        )
-        self.assertIsNotNone(accepted, rejections)
-        self.assertEqual([], rejections)
-        self.assertEqual(clearance["reviewed_producer_head"], producer_ref)
-        for path, expected in clearance["watched_file_blobs"].items():
-            self.assertEqual(expected, self.blob_lookup(clearance["reviewed_producer_head"], path), path)
+        self.assertEqual([CURRENT], [x["clearance_id"] for x in rows])
+        self.assertEqual(BASELINE, c["required_main_ancestor"])
+        self.assertTrue(ancestor(BASELINE, "origin/main"))
+        self.assertEqual([M4], c["critical_files"])
+        self.assertEqual(sorted([JOURNAL, M4]), sorted(c["watched_files"]))
+        self.assertEqual("MVP6-JOURNAL-73B88181-REVIEW-R1", c["review_id"])
+        self.assertEqual("MVP6-JOURNAL-FEATURE-VERIFIER-R1", c["verification_id"])
+        self.assertTrue(ancestor(c["reviewed_producer_head"], f"origin/{v0}"))
+        for path, expected in c["watched_file_blobs"].items():
+            self.assertEqual(expected, blob(c["reviewed_producer_head"], path), path)
+            self.assertEqual(expected, blob(f"origin/{v0}", path), path)
 
-    def test_current_post_p6_v0_does_not_inherit_historical_p4_to_nx_clearance(self):
-        current_v0_branch = self.project_registry["programs"]["V0"]["branch"]
-        current_nx_branch = self.project_registry["programs"]["NX"]["branch"]
-        self.assertNotEqual(self.clearance["producer_branch"], current_v0_branch)
-        matching = [
-            item
-            for item in self.clearances
-            if item.get("status") == "ACCEPTED"
-            and item.get("producer_program") == "V0"
-            and item.get("producer_branch") == current_v0_branch
-            and item.get("consumer_program") == "NX"
-            and item.get("consumer_branch") == current_nx_branch
-        ]
-        self.assertEqual([], matching)
+    def test_current_requires_canonical_baseline(self):
+        c = self.one(CURRENT)
+        accepted, rejected = self.resolve(c)
+        self.assertIsNotNone(accepted, rejected)
+        self.assertEqual([], rejected)
+        self.assertEqual(CURRENT, accepted["clearance_id"])
 
-    def test_current_nx_does_not_inherit_historical_nx_to_p4_clearance_for_post_p6_v0(self):
-        current_v0_branch = self.project_registry["programs"]["V0"]["branch"]
-        current_nx_branch = self.project_registry["programs"]["NX"]["branch"]
-        matching = [
-            item
-            for item in self.clearances
-            if item.get("status") == "ACCEPTED"
-            and item.get("producer_program") == "NX"
-            and item.get("producer_branch") == current_nx_branch
-            and item.get("consumer_program") == "V0"
-            and item.get("consumer_branch") == current_v0_branch
-        ]
-        self.assertEqual([], matching)
-
-    def test_older_historical_clearance_is_retained_but_not_selected_as_p4_h0_2_clearance(self):
-        historical = [
-            item
-            for item in self.clearances
-            if item.get("clearance_id") == "V0-P4-NX-M4-CRITICAL-WATCH-CLEARANCE-001"
-        ]
-        self.assertEqual(1, len(historical), historical)
-        self.assertNotEqual(historical[0]["consumer_branch"], self.clearance["consumer_branch"])
-
-    def test_added_or_removed_watched_hit_fails_closed(self):
-        accepted, rejections = self.resolve(
-            all_hits=self.all_hits + ["scripts/network/prediction/new_runtime.gd"]
-        )
+        accepted, rejected = self.resolve(c, ancestor_check=main_without_baseline)
         self.assertIsNone(accepted)
-        self.assertEqual("WATCHED_FILE_SET_MISMATCH", rejections[0]["reason"])
+        self.assertEqual("REQUIRED_MAIN_ANCESTOR_NOT_CANONICAL", rejected[0]["reason"])
 
-    def test_reviewed_head_must_remain_producer_ancestor(self):
-        accepted, rejections = self.resolve(ancestor_check=lambda _base, _head: False)
+    def test_current_required_main_ancestor_must_be_full_sha(self):
+        c = copy.deepcopy(self.one(CURRENT))
+        c["required_main_ancestor"] = "d9706b1"
+        accepted, rejected = self.resolve(c)
         self.assertIsNone(accepted)
-        self.assertEqual("REVIEWED_HEAD_NOT_PRODUCER_ANCESTOR", rejections[0]["reason"])
+        self.assertEqual("REQUIRED_MAIN_ANCESTOR_INVALID", rejected[0]["reason"])
 
-    def test_consumer_head_or_passport_drift_fails_closed(self):
-        consumer = copy.deepcopy(self.consumer)
-        consumer["head_sha"] = "f" * 40
-        accepted, rejections = self.resolve(consumer=consumer)
-        self.assertIsNone(accepted)
-        self.assertEqual("CONSUMER_HEAD_DRIFT", rejections[0]["reason"])
+    def test_current_hitset_drift_fails_closed_after_baseline(self):
+        c = self.one(CURRENT)
+        p, q, critical, watched = self.scope(c)
+        for altered in ([x for x in watched if x != JOURNAL], watched + ["scripts/network/prediction/new_runtime.gd"]):
+            accepted, rejected = resolve_critical_clearance(
+                [copy.deepcopy(c)], p, q, critical, altered, blob, ancestor
+            )
+            self.assertIsNone(accepted)
+            self.assertEqual("WATCHED_FILE_SET_MISMATCH", rejected[0]["reason"])
 
-        consumer = copy.deepcopy(self.consumer)
-        consumer["passport_blob_sha"] = "f" * 40
-        accepted, rejections = self.resolve(consumer=consumer)
-        self.assertIsNone(accepted)
-        self.assertEqual("CONSUMER_PASSPORT_BLOB_DRIFT", rejections[0]["reason"])
+    def test_current_either_live_blob_drift_fails_closed_after_baseline(self):
+        c = self.one(CURRENT)
+        p, q, critical, watched = self.scope(c)
+        for target in (JOURNAL, M4):
+            def drift(ref: str, path: str, target_path: str = target) -> str:
+                if ref == f"origin/{p['branch']}" and path == target_path:
+                    return "f" * 40
+                return blob(ref, path)
+            accepted, rejected = resolve_critical_clearance(
+                [copy.deepcopy(c)], p, q, critical, watched, drift, ancestor
+            )
+            self.assertIsNone(accepted)
+            self.assertEqual(f"PRODUCER_BLOB_DRIFT:{target}", rejected[0]["reason"])
 
-    def test_any_reviewed_or_current_watched_blob_drift_fails_closed(self):
-        target = self.all_hits[0]
-        expected = self.clearance["watched_file_blobs"][target]
-
-        def reviewed_drift(ref: str, path: str) -> str:
-            if ref == self.clearance["reviewed_producer_head"] and path == target:
+    def test_current_reviewed_blob_drift_fails_closed_after_baseline(self):
+        c = self.one(CURRENT)
+        p, q, critical, watched = self.scope(c)
+        def drift(ref: str, path: str) -> str:
+            if ref == c["reviewed_producer_head"] and path == JOURNAL:
                 return "f" * 40
-            return self.blob_lookup(ref, path)
-
-        accepted, rejections = self.resolve(blob_lookup=reviewed_drift)
+            return blob(ref, path)
+        accepted, rejected = resolve_critical_clearance(
+            [copy.deepcopy(c)], p, q, critical, watched, drift, ancestor
+        )
         self.assertIsNone(accepted)
-        self.assertEqual(f"REVIEWED_BLOB_MISMATCH:{target}", rejections[0]["reason"])
+        self.assertEqual(f"REVIEWED_BLOB_MISMATCH:{JOURNAL}", rejected[0]["reason"])
 
-        def producer_drift(ref: str, path: str) -> str:
-            if ref == self.producer_ref and path == target:
-                return "f" * 40
-            return self.blob_lookup(ref, path)
-
-        accepted, rejections = self.resolve(blob_lookup=producer_drift)
+    def test_current_producer_ancestry_drift_fails_closed_after_baseline(self):
+        c = self.one(CURRENT)
+        p, q, critical, watched = self.scope(c)
+        def producer_drift(base: str, head: str) -> bool:
+            if base == c["reviewed_producer_head"] and head == f"origin/{p['branch']}":
+                return False
+            return ancestor(base, head)
+        accepted, rejected = resolve_critical_clearance(
+            [copy.deepcopy(c)], p, q, critical, watched, blob, producer_drift
+        )
         self.assertIsNone(accepted)
-        self.assertEqual(f"REVIEWED_BLOB_MISMATCH:{target}", rejections[0]["reason"])
-        self.assertNotEqual(expected, "f" * 40)
+        self.assertEqual("REVIEWED_HEAD_NOT_PRODUCER_ANCESTOR", rejected[0]["reason"])
 
-    def test_decision_and_independent_evidence_ids_are_mandatory(self):
-        candidate = copy.deepcopy(self.clearance)
-        candidate["decision"] = "INTERPRET_RED_AS_PASS"
-        accepted, rejections = self.resolve(candidate)
-        self.assertIsNone(accepted)
-        self.assertEqual("DECISION_NOT_ACCEPTED", rejections[0]["reason"])
+    def test_current_consumer_identity_drift_fails_closed_after_baseline(self):
+        c = self.one(CURRENT)
+        p, q, critical, watched = self.scope(c)
+        for field in ("head_sha", "passport_blob_sha"):
+            changed = copy.deepcopy(q)
+            changed[field] = "f" * 40
+            accepted, rejected = resolve_critical_clearance(
+                [copy.deepcopy(c)], p, changed, critical, watched, blob, ancestor
+            )
+            self.assertIsNone(accepted)
+            expected = "CONSUMER_HEAD_DRIFT" if field == "head_sha" else "CONSUMER_PASSPORT_BLOB_DRIFT"
+            self.assertEqual(expected, rejected[0]["reason"])
 
-        candidate = copy.deepcopy(self.clearance)
-        candidate["verification_id"] = ""
-        accepted, rejections = self.resolve(candidate)
+    def test_current_decision_and_evidence_ids_are_mandatory(self):
+        c = self.one(CURRENT)
+        p, q, critical, watched = self.scope(c)
+        bad = copy.deepcopy(c)
+        bad["decision"] = "UNSUPPORTED"
+        accepted, rejected = resolve_critical_clearance([bad], p, q, critical, watched, blob, ancestor)
         self.assertIsNone(accepted)
-        self.assertEqual("INDEPENDENT_EVIDENCE_IDS_REQUIRED", rejections[0]["reason"])
+        self.assertEqual("DECISION_NOT_ACCEPTED", rejected[0]["reason"])
+        bad = copy.deepcopy(c)
+        bad["verification_id"] = ""
+        accepted, rejected = resolve_critical_clearance([bad], p, q, critical, watched, blob, ancestor)
+        self.assertIsNone(accepted)
+        self.assertEqual("INDEPENDENT_EVIDENCE_IDS_REQUIRED", rejected[0]["reason"])
+
+    def test_current_nx_has_no_reverse_post_p6_clearance(self):
+        v0 = self.project["programs"]["V0"]["branch"]
+        nx = self.project["programs"]["NX"]["branch"]
+        rows = [
+            x for x in self.clearances
+            if x.get("status") == "ACCEPTED"
+            and x.get("producer_program") == "NX"
+            and x.get("producer_branch") == nx
+            and x.get("consumer_program") == "V0"
+            and x.get("consumer_branch") == v0
+        ]
+        self.assertEqual([], rows)
 
 
 if __name__ == "__main__":
