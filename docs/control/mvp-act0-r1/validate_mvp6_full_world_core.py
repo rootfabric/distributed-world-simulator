@@ -34,7 +34,10 @@ PIN = {
     "linux": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
     "win32": "3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5",
 }
-FATAL = re.compile(r"(?im)^\s*(?:SCRIPT ERROR|ERROR):|Parse Error|Compile Error")
+# Mirror the canonical runner's marker policy exactly. Godot may emit expected
+# diagnostics on stderr that begin with generic "ERROR:" even when a test is
+# successful; the canonical runner deliberately does not treat those as red.
+FATAL = re.compile(r"(?m)(: FAIL(?:\s|\()|SCRIPT ERROR:|Parse Error:|Compile Error:)")
 
 
 def git(*args: str) -> str:
