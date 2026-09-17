@@ -2,6 +2,7 @@ extends "res://tests/runtime/test_v0_mvp_6_cross_authority_construction_collisio
 
 const RestoredItemGraph = preload("res://scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service.gd")
 const RestoredRuntimeView = preload("res://scripts/runtime/networked_gameplay/mvp/v0_mvp6_derived_construction_runtime_view.gd")
+const NetworkUtils = preload("res://scripts/network/contracts/network_contract_utils.gd")
 
 var persistence_product: Dictionary = {}
 
@@ -31,7 +32,22 @@ func exercise_persistence_rehydration() -> bool:
 		return false
 	var restored_item_snapshot: Dictionary = restored_graph.create_snapshot()
 	var durable_item_snapshot: Dictionary = durable_items.get("snapshot", {})
-	if not check(restored_item_snapshot == durable_item_snapshot, "rehydrated Item Graph is byte-equivalent at canonical JSON value level"):
+	# Durable export deliberately performs a JSON round-trip. Godot Dictionary
+	# equality is Variant-type-sensitive ({"a":1} != {"a":1.0}) even though
+	# NetworkUtils canonical JSON normalizes integer-valued JSON numbers back to
+	# the same canonical value. Require full canonical JSON and checksum equality,
+	# not raw in-memory numeric Variant representation.
+	var item_graph_canonical_equal := (
+		NetworkUtils.canonical_json(restored_item_snapshot)
+		== NetworkUtils.canonical_json(durable_item_snapshot)
+	)
+	if not check(item_graph_canonical_equal, "rehydrated Item Graph is exactly canonical-JSON equivalent to durable snapshot"):
+		return false
+	if not check(
+		String(restored_item_snapshot.get("checksum", "")) == String(durable_item_snapshot.get("checksum", ""))
+		and not String(restored_item_snapshot.get("checksum", "")).is_empty(),
+		"rehydrated Item Graph preserves the exact canonical snapshot checksum"
+	):
 		return false
 	if not check(
 		String(restored_item_snapshot.get("authority_owner_id", "")) == String(durable_item_snapshot.get("authority_owner_id", ""))
@@ -66,7 +82,13 @@ func exercise_persistence_rehydration() -> bool:
 		return false
 
 	var restored_snapshot: Dictionary = detail["authoritative_adapter"].get_construct_snapshot(SeamFactory.CONSTRUCT_ID)
-	if not check(restored_snapshot == removed_snapshot, "rehydrated Construction exactly matches canonical post-REMOVE snapshot"):
+	var construct_canonical_equal := (
+		NetworkUtils.canonical_json(restored_snapshot)
+		== NetworkUtils.canonical_json(removed_snapshot)
+	)
+	if not check(construct_canonical_equal, "rehydrated Construction exactly matches canonical post-REMOVE snapshot"):
+		return false
+	if not check(String(restored_snapshot.get("checksum", "")) == String(removed_snapshot.get("checksum", "")), "rehydrated Construction preserves exact canonical checksum"):
 		return false
 	if not check(seam_parts(restored_snapshot) == 100 and seam_bonds(restored_snapshot) == 99, "rehydrated Construction preserves 100 parts and 99 bonds"):
 		return false
@@ -77,7 +99,11 @@ func exercise_persistence_rehydration() -> bool:
 
 	var original_record: Dictionary = seam_product.get("authority_record", {})
 	var restored_record: Dictionary = detail["cluster"].get_registry().get_record(SeamFactory.CONSTRUCT_ID)
-	if not check(restored_record == original_record, "C17 owner/cell/epoch/replica mapping survives rehydration exactly"):
+	var authority_record_canonical_equal := (
+		NetworkUtils.canonical_json(restored_record)
+		== NetworkUtils.canonical_json(original_record)
+	)
+	if not check(authority_record_canonical_equal, "C17 owner/cell/epoch/replica mapping survives rehydration exactly"):
 		return false
 	if not check(
 		String(restored_record.get("owner_server_id", "")) == SeamFactory.SERVER_A
@@ -147,14 +173,16 @@ func exercise_persistence_rehydration() -> bool:
 		"restored_construct_checksum": String(restored_snapshot.get("checksum", "")),
 		"restored_authority_record": restored_record.duplicate(true),
 		"restored_replica_checksum": String(restored_replica.get("construct_checksum", "")),
+		"slot_migration": migration.duplicate(true),
 		"derived_apply": applied.duplicate(true),
 		"derived_report": view_report.duplicate(true),
 		"west_seam_physics_hits": west_hits.size(),
 		"east_seam_physics_hits": east_hits.size(),
 		"boundary_physics_hits": boundary_hits.size(),
 		"removed_leaf_physics_hits": removed_leaf_hits.size(),
-		"same_snapshot_after_restore": restored_snapshot == removed_snapshot,
-		"same_item_graph_after_restore": restored_item_snapshot == durable_item_snapshot,
+		"same_snapshot_after_restore": construct_canonical_equal,
+		"same_item_graph_after_restore": item_graph_canonical_equal,
+		"same_authority_record_after_restore": authority_record_canonical_equal,
 		"single_writer_preserved": String(restored_record.get("owner_server_id", "")) == SeamFactory.SERVER_A,
 		"east_replica_read_only": not replica.can_write(),
 		"canonical_truth_owner": false,
@@ -178,8 +206,8 @@ func run() -> void:
 		"rehydration_executed": persistence_product.has("restored_construct_checksum"),
 		"item_identity_preserved": bool(persistence_product.get("same_item_graph_after_restore", false)),
 		"construction_identity_preserved": bool(persistence_product.get("same_snapshot_after_restore", false)),
-		"authority_mapping_preserved": bool(persistence_product.get("single_writer_preserved", false)) and bool(persistence_product.get("east_replica_read_only", false)),
-		"relationships_preserved": persistence_product.has("restored_construct_checksum"),
+		"authority_mapping_preserved": bool(persistence_product.get("same_authority_record_after_restore", false)) and bool(persistence_product.get("single_writer_preserved", false)) and bool(persistence_product.get("east_replica_read_only", false)),
+		"relationships_preserved": bool(persistence_product.get("same_snapshot_after_restore", false)),
 		"collision_rehydrated": int(persistence_product.get("west_seam_physics_hits", 0)) > 0 and int(persistence_product.get("east_seam_physics_hits", 0)) > 0 and int(persistence_product.get("boundary_physics_hits", 0)) > 0,
 		"removed_collision_stays_absent": int(persistence_product.get("removed_leaf_physics_hits", -1)) == 0,
 		"full_process_restart_executed": false,
