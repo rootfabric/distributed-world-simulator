@@ -127,6 +127,7 @@ func exercise_cross_authority_construction_seam() -> bool:
 	if not check(seam_parts(base_snapshot) == 100 and seam_bonds(base_snapshot) == 99, "base Construction has exactly 100 parts and 99 bonds"): return false
 	if not check(has_cross_seam_bond(base_snapshot), "base Construction has canonical bond crossing authority seam"): return false
 	var base_facets: Dictionary = base_snapshot.get("compiled_facets", {})
+	print("MVP6_BASE100_STATE build_state=%s semantic=%s operational=%s stage_id=%s stage_index=%s" % [String(base_snapshot.get("build_state", "")), String(base_facets.get("construction_semantic_state", "")), str(base_facets.get("operational", null)), String(base_facets.get("construction_stage_id", "")), str(base_facets.get("construction_stage_index", null))])
 	if not check(String(base_snapshot.get("build_state", "")) == "PARTIAL" and String(base_facets.get("construction_semantic_state", "")) == "STRUCTURE" and not bool(base_facets.get("operational", true)), "base100 remains canonical PARTIAL/STRUCTURE pre-ADD stage"): return false
 
 	var registered: Dictionary = SeamFactory.register_active_construct(detail)
