@@ -41,12 +41,54 @@ def construction_checks(reports: dict, clients: dict, head: str, run_id: str) ->
         gateway = reports["gateway"]["mvp6"]
         owner = reports["authority/a"]["mvp6"]
         replica = reports["authority/b"]["mvp6"]
+        gateway_guard = reports["gateway"]["mvp6_transport_guard"]
+        owner_guard = reports["authority/a"]["mvp6_transport_guard"]
+        replica_guard = reports["authority/b"]["mvp6_transport_guard"]
+        resource = owner["resource_provenance"]
         checks["gateway_complete"] = gateway["complete"] is True and gateway["phase"] == "REMOVED" and gateway["mutation_count"] == 2
         checks["exact_replays"] = gateway["replays"] == {"ADD": True, "REMOVE": True}
         checks["single_canonical_owner"] = owner["canonical_construction_owned"] is True and replica["canonical_construction_owned"] is False and replica["replica_read_only"] is True
         checks["final_owner_replica_equal"] = owner["construction"]["checksum"] == replica["construction"]["checksum"] == gateway["construction"]["checksum"] == gateway["authority_b_replica"]["checksum"]
         checks["final_part_count_100"] = len(owner["construction"]["parts"]) == 100 and len(replica["construction"]["parts"]) == 100
         checks["same_item_graph_not_private_material"] = owner["predicate_verified"] is False and gateway["canonical_state_owned"] is False
+        checks["real_mined_resource_only"] = (
+            resource["source"] == "MVP5_CANONICAL_MINING_OUTPUT"
+            and resource["topup_issued"] is False
+            and resource["same_canonical_item_graph"] is True
+            and resource["required"] == 101
+            and resource["mined_total"] >= resource["required"]
+            and resource["ore_available"] >= resource["required"]
+            and len(resource["material_digest"]) == 64
+            and len(resource["item_graph_checksum"]) == 64
+        )
+        checks["authority_guards_restored"] = (
+            owner_guard["restored_after_each_rpc"] is True
+            and owner_guard["restored_before_finish"] is True
+            and owner_guard["active"] is False
+            and owner_guard["apply_count"] == owner_guard["restore_count"]
+            and replica_guard["restored_after_each_rpc"] is True
+            and replica_guard["restored_before_finish"] is True
+            and replica_guard["active"] is False
+            and replica_guard["apply_count"] == replica_guard["restore_count"]
+        )
+        checks["gateway_guards_restored"] = (
+            gateway_guard["backend_restored_after_each_rpc"] is True
+            and gateway_guard["client_restored_before_finish"] is True
+            and not any(gateway_guard["backend_active"].values())
+            and not any(gateway_guard["client_active"].values())
+            and gateway_guard["shared_transport_changed"] is False
+            and gateway_guard["payload_limit_changed"] is False
+            and gateway_guard["reconnect_policy_changed"] is False
+        )
+        checks["client_guards_restored"] = all(
+            clients[a]["mvp6_transport_guard"]["restored_before_finish"] is True
+            and clients[a]["mvp6_transport_guard"]["active"] is False
+            and clients[a]["mvp6_transport_guard"]["activation_count"] == clients[a]["mvp6_transport_guard"]["restore_count"]
+            and clients[a]["mvp6_transport_guard"]["shared_transport_changed"] is False
+            and clients[a]["mvp6_transport_guard"]["payload_limit_changed"] is False
+            and clients[a]["mvp6_transport_guard"]["reconnect_policy_changed"] is False
+            for a in ("a", "b")
+        )
         apid = reports["authority/a"]["process_id"]
         bpid = reports["authority/b"]["process_id"]
         route_rows = gateway["route_processes"]
@@ -78,6 +120,10 @@ def construction_negatives(reports: dict, clients: dict, head: str, run_id: str)
         "client_claims_truth": lambda r, c: c["a"].update(canonical_state_owned=True),
         "missing_collision_part": lambda r, c: c["b"]["phases"]["ADDED"].update(collision_part_count=100),
         "stale_subject": lambda r, c: c["a"].update(subject_head="0" * 40),
+        "client_guard_not_restored": lambda r, c: c["a"]["mvp6_transport_guard"].update(restored_before_finish=False),
+        "authority_guard_still_active": lambda r, c: r["authority/a"]["mvp6_transport_guard"].update(active=True),
+        "minted_resource_topup": lambda r, c: r["authority/a"]["mvp6"]["resource_provenance"].update(topup_issued=True),
+        "forged_resource_source": lambda r, c: r["authority/a"]["mvp6"]["resource_provenance"].update(source="SERVER_TOPUP"),
     }
     rejected: list[str] = []
     for name, mutate in mutations.items():
@@ -213,7 +259,7 @@ def main() -> int:
     except (OSError, KeyError, ValueError, RuntimeError, TypeError) as exc:
         error += ";" + type(exc).__name__ + ":" + str(exc)
 
-    passed = not error and all(checks.values()) and len(negatives) == 8 and len(hud_cases) == 2
+    passed = not error and all(checks.values()) and len(negatives) == 12 and len(hud_cases) == 2
     manifest = {
         "schema":"distributed_world_simulator.mvp6_graphical_construction_manifest.v1",
         "subject_head":head, "subject_tree":tree, "run_id":run_id, "engine_sha256":BASE.sha(engine),
