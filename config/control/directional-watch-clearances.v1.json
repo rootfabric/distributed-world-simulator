@@ -117,6 +117,41 @@
       "verification_id": "PROJECT_CONTROL_RUN_31690226579",
       "recorded_at_utc": "2026-08-18T02:18:00Z",
       "reason": "Narrow dependency revalidation inspected exact H0.2/NX.C1 source implementation 1814ca72 and found the watched delta limited to opt-in realtime locomotion authorship/derived M3 leaves while SERVER_PREDICTED remains available and durable gameplay, Item Graph, Construction, economy and persistence truth remain server/domain authoritative. Exact Project Control run 31690226579 succeeded on the reviewed producer head. Runtime blobs in the complete observed NX -> V0 hit set remain byte-identical through current NX lifecycle head d1a44667. This clearance does not claim H0_2_PASS, NX SOURCE_ACCEPTED, runtime-tested-head completion, P4 acceptance, or validity of quarantined consumer head da1c8825 as P4 closure truth; that head is fenced only as the current registered Directional Watch consumer identity. Any producer ancestry, consumer identity, hit-set or blob drift fails closed back to raw critical RED."
+    },
+    {
+      "schema": "distributed_world_simulator.directional_watch_clearance.v1",
+      "clearance_id": "V0-MVP6-NX-POSTMERGE-CRITICAL-WATCH-CLEARANCE-005",
+      "status": "ACCEPTED",
+      "kind": "CRITICAL_WATCH_HIT",
+      "producer_program": "V0",
+      "producer_branch": "feature/v0-mvp-playable-seamless-planet-r1",
+      "consumer_program": "NX",
+      "consumer_branch": "feature/h0-2-nx-c1-owner-authority-r3",
+      "checkpoint": "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE",
+      "reviewed_producer_head": "73b8818184c93986e3313f35f9f4548c608e47e6",
+      "required_main_ancestor": "a6d5eb6b287130a638ba6cf397c34e29169948c1",
+      "required_main_file_blobs": {
+        "scripts/network/prediction/predicted_item_interaction_journal.gd": "abdf0c0a335f4e2c968933156fb17f94a7b45bd1"
+      },
+      "consumer_head_sha": "1a56fe0e845c941f14ce7b9296ee939e9d0ca8bc",
+      "consumer_passport_path": "config/control/branches/feature__h0-2-nx-c1-owner-authority-r3.v1.json",
+      "consumer_passport_blob_sha": "c3af1974228c9ee5c34bf4d54c72896c99fc4d1a",
+      "critical_files": [
+        "scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service.gd"
+      ],
+      "watched_files": [
+        "scripts/network/prediction/predicted_item_interaction_journal.gd",
+        "scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service.gd"
+      ],
+      "watched_file_blobs": {
+        "scripts/network/prediction/predicted_item_interaction_journal.gd": "abdf0c0a335f4e2c968933156fb17f94a7b45bd1",
+        "scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service.gd": "44841fb3719b1cf36fd5afdfc0f8a0e4d0eacb30"
+      },
+      "decision": "DEPENDENCY_REVALIDATED_NO_FOUNDATION_MUTATION",
+      "review_id": "MVP6-JOURNAL-73B88181-REVIEW-R1",
+      "verification_id": "MVP6-JOURNAL-FEATURE-VERIFIER-R1",
+      "recorded_at_utc": "2026-09-17T00:00:00Z",
+      "reason": "Proposed main-owned postmerge rebind of independently reviewed producer 73b8818184c93986e3313f35f9f4548c608e47e6. PR646 is actually merged at a6d5eb6b287130a638ba6cf397c34e29169948c1; alternative PR643 is neither required nor authorized. Default postmerge run35162668295 artifact10474045529 ZIP sha256 c1bca166ae69ef754065192a5a50e86d51434ccdaa92efba14af691d29c644c1 proves 1077/1077 baseline and 1077/1077 candidate with zero failures/fatal markers, no journal repair override and no V0 regression. Parser-only normalization is disclosed and symmetric in disposable NX compositions; unmodified NX source acceptance is not claimed. Exact source/provenance: docs/control/mvp-act0-r1/MVP6_NX_CLEARANCE_POSTMERGE_R2_EVIDENCE.json. Producer ancestry and both reviewed/live blobs, consumer HEAD/passport, complete two-path hit-set, real main merge ancestry and current main journal blob must all remain exact. A later journal revert fails closed even when merge ancestry survives. Historical records are unchanged. This proposed record is not canonical until separately approved merge; fresh control review is distinct from the referenced producer verdicts. No NX/MVP6/whole-MVP acceptance, runtime merge or epoch audit is implied."
     }
   ]
 }
