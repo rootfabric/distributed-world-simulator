@@ -175,7 +175,15 @@ class DirectionalWatchClearanceTests(unittest.TestCase):
             and item.get("consumer_program") == "NX"
             and item.get("consumer_branch") == current_nx_branch
         ]
-        self.assertEqual([], matching)
+        # Current MVP6 has its own exact rebind; historical P4 must not apply.
+        self.assertEqual(
+            ["V0-MVP6-NX-POSTMERGE-CRITICAL-WATCH-CLEARANCE-005"],
+            [item["clearance_id"] for item in matching],
+        )
+        producer = dict(self.producer, branch=current_v0_branch)
+        consumer = dict(self.consumer, branch=current_nx_branch)
+        accepted, _ = self.resolve(producer=producer, consumer=consumer)
+        self.assertIsNone(accepted)
 
     def test_current_nx_does_not_inherit_historical_nx_to_p4_clearance_for_post_p6_v0(self):
         current_v0_branch = self.project_registry["programs"]["V0"]["branch"]
