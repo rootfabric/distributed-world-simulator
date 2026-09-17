@@ -1,9 +1,11 @@
 # Post-MVP — объёмная топология, размещение и безопасное переразбиение
 
-Дата: 16 сентября 2026. Уточнение R2 к [плану HS](POST_MVP_HIERARCHICAL_SEAMLESS_WORLDS_RU.md).
+Дата: 17 сентября 2026. Уточнение R3 к [плану HS](POST_MVP_HIERARCHICAL_SEAMLESS_WORLDS_RU.md).
 Статус: **DESIGN PROPOSAL / NOT ACTIVATED / NO CURRENT MVP SCOPE EXPANSION**.
 
-Зафиксировано по поручению владельца проекта после разбора вложенных областей, наложений и разделения одного сервера на два. Это проектное решение для будущей реализации, не описание уже доказанного runtime. Оно не изменяет действующие owners, scheduler, checkpoint catalog, MVP Work Order, acceptance или runtime lease. До принятия изменения в main документ остаётся предложением PR #645.
+Связанное решение для крупных построек и кораблей: [ConstructGrid, целостная authority и whole-grid migration](POST_MVP_CONSTRUCT_GRID_AUTHORITY_RU.md).
+
+Зафиксировано по поручению владельца проекта после разбора вложенных областей, наложений, разделения одного сервера на два и поведения крупных конструкций на seam. Это проектное решение для будущей реализации, не описание уже доказанного runtime. Оно не изменяет действующие owners, scheduler, checkpoint catalog, MVP Work Order, acceptance или runtime lease. До принятия изменения в main документ остаётся предложением PR #645.
 
 ## 1. Назначение и границы решения
 
@@ -20,23 +22,27 @@ WorldAddress + согласованная версия топологии/сис
 
 Логическое место, пространственный участок, authority domain, физический сервер и система координат — разные идентичности. Одна пещера может занимать несколько участков; один сервер может обслуживать несколько пещер. Split не переименовывает игровую пещеру и не пересоздаёт её содержимое.
 
+Крупная Construction имеет отдельный `ConstructGrid`: stable local coordinates и envelope, которые могут пересекать несколько spatial partitions без автоматического construct split. Пространственный lookup определяет владельца world-space, но не подменяет construct/physics ownership.
+
 Уточнение к прежней формулировке «writer всегда ровно один»: карта обязана давать ровно один ответственный участок для каждой точки внутри объявленного покрытия. Допущенных writers одного канонического состояния одновременно **не более одного**. На барьере или при отказе доступных writers может временно быть ноль. Недоступность не разрешает двойную запись; сохранение соединения не обещает отсутствие паузы при любом отказе.
 
 ## 2. Разделение слоёв
 
-Это логические ответственности существующих foundations, а не пять новых глобальных сервисов.
+Это логические ответственности существующих foundations, а не новые глобальные сервисы.
 
 | Слой | Назначение | Семантика пересечения |
 | --- | --- | --- |
 | Координаты / reference frames | Общая физическая позиция, единицы, ориентация, время преобразования | Разные координатные описания одной точки допустимы |
 | Смысловые зоны | Пещера, город, биом, месторождение, permissions | Пересечения допустимы; правила композиции задаёт соответствующий domain |
-| Каноническое пространственное разбиение | Единственный ответственный участок | Эффективные области попарно не пересекаются и полностью покрывают объявленную область |
-| Размещение / право записи | Assignment участка или aggregate, epoch, incarnation, fencing | Не более одного допущенного writer одного канонического состояния |
+| Каноническое пространственное разбиение | Единственный ответственный участок world-space | Эффективные области попарно не пересекаются и полностью покрывают объявленную область |
+| ConstructGrid / construct ownership | Стабильная локальная система постройки и canonical construct writer | Grid может пересекать несколько spatial regions, writer остаётся один |
+| Physics simulation group | Связанный solver scope | Не более одного admitted physics writer одной связанной группы |
+| Размещение / право записи | Assignment участка/aggregate, epoch, incarnation, fencing | Не более одного допущенного writer одного canonical state |
 | Interest / projection / WARM | Видимость, соседние данные, предварительная загрузка | Пересечения допустимы только без дублирования канонических полномочий |
 
 Нельзя выбирать сервер через «самый приоритетный смысловой слой»: добавление месторождения или охранной зоны не должно неявно переносить ownership. Нельзя принимать первое совпадение из неупорядоченного списка перекрывающихся ownership-боксов.
 
-WorldGraph может хранить различные отношения, но `OVERLAP` не означает совместное право записи. Дерево смысловых мест, дерево делегирования, дерево reference frames и индекс размещения не должны становиться одной структурой с одним жизненным циклом.
+WorldGraph может хранить различные отношения, но `OVERLAP` не означает совместное право записи. Дерево смысловых мест, дерево делегирования, reference frames, ConstructGrid и server placement не должны становиться одной структурой с одним жизненным циклом.
 
 ## 3. Вложенные AABB: настройка и эффективное владение
 
@@ -70,7 +76,7 @@ AABB используют `[min_x,max_x) × [min_y,max_y) × [min_z,max_z)`: о�
 
 Точная геометрическая проверка вложенности/пересечения/покрытия обязательна. Случайные точки служат дополнительной property-проверкой, но не заменяют доказательство отсутствия маленьких дыр. Нельзя расширять ownership-bounds epsilon-допуском с двух сторон; численный контракт границы общий для всех участников.
 
-## 4. Две карты и их версии
+## 4. Версии topology и assignment
 
 Разделять геометрическое разбиение и назначение исполнителей:
 
@@ -89,11 +95,13 @@ Assignment:    участок или aggregate -> authority / epoch / ServerInst
 
 ## 5. Split, migrate и merge — разные операции
 
-**Migrate:** R переезжает с A на B; геометрия и стабильные ID состояния не меняются.
+**Migrate:** R переезжает с A на B; геометрия и stable IDs состояния не меняются.
 
 **Split:** R заменяется непересекающимися R_left и R_right с явной lineage. Оба результата могут сначала остаться на A; затем R_right переносится на B. Старый ID нельзя молча переиспользовать для другой геометрии так, чтобы устаревшая команда случайно подошла новому участку.
 
 **Merge:** объединяются совместимые участки, их состояние и полномочия. Для возврата нагрузки на один сервер merge не обязателен: достаточно назначить оба участка A. Геометрическое объединение требуется только при конкретной выгоде.
+
+Spatial split/merge не разрезает ConstructGrid. Construct structural split является отдельной canonical Construction operation и только он может создать независимые child grids.
 
 ### Разрез родителя через дочернюю пещеру
 
@@ -115,40 +123,50 @@ Merge не заменяет точное объединение внешним e
 
 | Фаза | Обязательное действие | Каноническая запись в переносимую часть |
 | --- | --- | --- |
-| PLAN / PREPARE | Проверить исходные поколения, эффективную геометрию, read/write set, пригодность получателя | Старый владелец |
+| PLAN / PREPARE | Проверить исходные поколения, effective geometry, read/write set, пригодность получателя | Старый владелец |
 | COPY / CATCH_UP | Передать согласованный снимок и догнать журнал изменений; целевые данные WARM/staged | Старый владелец |
 | BARRIER | Остановить новые операции затронутого scope; завершить или durable-разрешить уже принятые операции и зафиксировать watermarks | Только разрешённое завершение до cut |
 | FENCE / READY | Подтвердить окончательное состояние B и невозможность дальнейшей старой канонической записи | Временная пауза допустима |
 | PUBLISH / ACTIVATE | Durable-решение нового assignment/generation и активация получателя по проверенному evidence | Новый владелец |
-| DRAIN / CLEANUP | Удалить старое право записи; хранить старые данные до выполнения recovery/retention условий | Новый владелец |
+| DRAIN / CLEANUP | Удалить старое право записи; хранить старые данные до recovery/retention условий | Новый владелец |
 
-Право записи должно проверяться на реальной canonical commit boundary, включая соответствующие authoritative публикации, а не только в Gateway. Существующие epoch, incarnation, fencing и ownership evidence переиспользуются. Число epoch в пакете, heartbeat, истечение локального таймера или флаг ACTIVE сами по себе недостаточны.
+Право записи должно проверяться на реальной canonical commit boundary, включая соответствующие authoritative публикации, а не только в Gateway. Existing epoch, incarnation, fencing и ownership evidence переиспользуются. Число epoch в пакете, heartbeat, истечение локального таймера или флаг ACTIVE сами по себе недостаточны.
 
 Перед активацией нужно доказать, что старый процесс, включая вернувшийся после зависания или partition, не может совершить принятую каноническую запись по старому праву. Если реальный backend этого не обеспечивает, activation блокируется до правильного fenced commit/recovery решения; тестовая заглушка не считается доказательством.
 
 Transfer ID, decision, source/target generation, snapshot identity, watermarks, replay-result continuity и этапы очистки должны восстанавливаться после crash координатора. Копирование gameplay state без результатов операций/дедупликации недостаточно.
 
-До durable cutover возможен abort только с доказанным отсутствием активации B и корректным восстановлением единственного права A. После cutover нельзя просто вернуть старый assignment: нужен forward recovery или новая контролируемая миграция с новым поколением. Неопределённый исход сначала разрешается по durable decision; timeout не равен abort.
+До durable cutover возможен abort только с доказанным отсутствием активации B и корректным восстановлением единственного права A. После cutover нельзя просто вернуть старый assignment: нужен forward recovery или новая контролируемая migration с новым поколением. Неопределённый исход сначала разрешается по durable decision; timeout не равен abort.
 
 Новые операции на незатронутых участках могут продолжаться. Для переносимой части нужны bounded очереди/backpressure, явные ready/paused/retryable состояния, deadlines и метрики; запрещены бесконечное накопление и молчаливые потери команд.
+
+Whole-grid Construct migration использует те же safety primitives, но имеет дополнительное eligibility-условие из ConstructGrid design: весь conservative envelope должен находиться внутри target effective region/`MigrationCore`, если это обычная region-affine migration.
 
 ## 7. Операции и объекты на границах
 
 ### Копание, строительство и несколько writers разных данных
 
-Point lookup определяет адрес, но не весь write set. Бур, взрыв, placement и collision query используют реальный footprint/траекторию, пересекают его с эффективными областями и получают согласованный список участников. Это включает действие игрока A над ресурсом B и расход инвентаря, владельцем которого является третий domain.
+Point lookup определяет адрес, но не весь write set. Бур, взрыв, placement и collision query используют реальный footprint/траекторию, пересекают его с effective regions и получают согласованный список участников. Это включает действие игрока A над ресурсом B и расход инвентаря, владельцем которого является третий domain.
 
-Разложение footprint на части не даёт атомарности. Переиспользовать подходящие MW9/MW10 и существующие Item/Construction transaction/recovery contracts после аудита возможностей. Один `OperationId` и стабильные результаты должны переживать split, merge, lost reply и retry. Нельзя заменить транзакцию независимыми best-effort RPC и дважды выдать материал.
+Разложение footprint на части не даёт атомарности. Переиспользовать MW9/MW10 и существующие Item/Construction transaction/recovery contracts после аудита возможностей. Один `OperationId` и стабильные результаты должны переживать split, merge, lost reply и retry. Нельзя заменить транзакцию независимыми best-effort RPC и дважды выдать материал.
 
-Начатая операция либо завершается на согласованной старой конфигурации до барьера, либо имеет явный recovery/retry путь по новой. Нельзя смешать произвольные старые и новые назначения в одном результате. Prepared multi-domain transactions и операции с неизвестным исходом входят в barrier contract.
+Начатая операция либо завершается на согласованной старой конфигурации до барьера, либо имеет явный recovery/retry path по новой. Нельзя смешать произвольные старые и новые назначения в одном результате. Prepared multi-domain transactions и операции с неизвестным исходом входят в barrier contract.
 
-### Пространственный участок не равен владельцу каждого объекта
+### ConstructGrid и неделимые объекты
 
-Сохраняется A0: aggregate/entity имеет собственного единственного writer. Крупная Construction или rigid body может пересекать несколько пространственных участков, не становясь автоматически несколькими независимыми объектами.
+Крупная Construction или rigid body может пересекать несколько spatial partitions. Сохраняются отдельные owners:
 
-Допустимые направления: явно поддержанный domain-sharding со стабильным root ID и ID частей; либо один aggregate-owner с производными соседними представлениями и маршрутизацией операций к нему. Неделимую физическую группу можно оставить pinned или отклонить её разрез. Точный выбор требует отдельного контракта и не разрешается этим документом.
+```text
+world point -> spatial partition owner
+ConstructGrid -> construct owner
+physics simulation group -> physics solver owner
+```
 
-Два независимых physics solver не должны повторно коммитить одни и те же контакты/импульсы. Межсерверные связи, опоры, питание, жидкости и физические потоки — отдельные coupling contracts. Наличие непересекающихся AABB не доказывает их корректность.
+`GRID_STRADDLING` не создаёт несколько canonical construct copies. Normal region-affine migration разрешается только при whole-grid full containment + readiness/fencing.
+
+Если grid больше region, допустим pin, larger placement domain или explicit Construction sectioning. Spatial seam не является structural split.
+
+Два независимых physics solver не должны повторно коммитить одни и те же contacts/impulses. Межсерверные связи, опоры, питание, жидкости и физические потоки — отдельные coupling contracts. Наличие непересекающихся AABB не доказывает их корректность.
 
 ## 8. Матрица обязательных сценариев
 
@@ -176,50 +194,49 @@ Point lookup определяет адрес, но не весь write set. Бу
 | VT18 | Удаление child-делегирования | Данные/результаты операций переданы родителю до удаления ownership |
 | VT19 | Быстрый объект пересекает несколько границ за tick | Проверяется swept path и промежуточные domains, не только endpoint |
 | VT20 | Async worker вернулся после переноса | Read/write scope и исходные revisions перепроверены перед commit |
-| VT21 | 100-block Construction через границу | IDs, membership, collision, ресурсы и связи согласованы на двух клиентах |
-| VT22 | Неделимый объект попал на линию split | Pin/reject или доказанный domain-sharding, не скрытое разрезание физики |
-| VT23 | Вход/выход через все стороны объёма и колебание у seam | Нет скрытой телепортации, двойных writes, потери carrying и subscription leaks |
+| VT21 | 100-block Construction через границу | IDs, grid identity, collision, ресурсы и связи согласованы; seam не режет construct |
+| VT22 | Неделимый объект попал на spatial split | ConstructGrid остаётся целым; pin/migrate или explicit canonical structural split |
+| VT23 | Вход/выход через все стороны объёма и колебание у seam | Нет teleport, двойных writes, потери carrying и subscription leaks |
 | VT24 | Новая/удалённая зона содержит ранее изменённую породу | Передать текущую истину; не заменить её повторной генерацией baseline |
+| VT25 | Long ConstructGrid пересекает A/B/C | Один construct/physics writer, stable grid identity, no auto-split |
+| VT26 | Whole-grid migration после полного containment | Migration только после `MigrationCore`/readiness; local coordinates unchanged |
+| VT27 | Grid больше target region | Empty migration core; объект не режется и не ping-pong мигрирует |
 
-Отдельно проверять динамическую смену topology под обеими клиентскими сессиями, одинаковые координаты разных instance/space IDs, невалидные размеры и недопустимый schema/generation transition. Недоступность всех durable копий не объявлять recovery PASS.
+Полная ConstructGrid-specific матрица CG01–CG16 хранится в `POST_MVP_CONSTRUCT_GRID_AUTHORITY_RU.md`.
 
-## 9. Interest, collision readiness и reference frames
+## 9. Порядок доказательства
 
-Interest/предзагрузка начинается до authority boundary; overlap реплик не означает overlap канонических полномочий. Гистерезис применим к подпискам и прогреву, но не позволяет выбирать пространственного владельца одной точки в зависимости от направления подхода. Временный owner мигрирующей entity определяется её собственным handoff-протоколом, не вторым spatial truth.
+```text
+static world topology
+ -> ConstructGrid identity / coverage / containment
+ -> straddling without construct migration
+ -> reference-frame/grid placement
+ -> whole-grid migration
+ -> cross-volume operations / large-object physics
+ -> controlled spatial split/merge
+ -> canonical construct split/merge
+ -> recovery/fault matrix
+ -> automatic placement later
+```
 
-Ready означает готовность требуемых состояния, collision и маршрутов, а не только mesh. Недостаточная готовность даёт ограниченную паузу/явный backpressure согласно будущему UX-контракту, не провал сквозь пол или teleport. Измерять handoff pause отдельно от reconnect.
+Автоматический балансировщик не входит в первую реализацию. Сначала доказать ручные/детерминированные operations и наблюдать стоимость границ, migration и coupling.
 
-Пещера и планета могут использовать одну body-fixed frame. Серверный split не создаёт обязательной новой frame. Для Space/Planet сохраняются versioned преобразования позиции, ориентации, линейной и угловой скорости с общей временной привязкой. Преобразование координат не является телепортацией.
+## 10. Неподвижные запреты
 
-Сначала доказать статический aligned случай. Для вращающейся области мировой enclosing AABB — только broad phase; точная принадлежность проверяется в её frame на согласованный момент. Движущиеся ownership-области, пересечения движущихся envelopes и frame changes во время операции требуют отдельной стадии. Не распространять статическую AABB-проверку на них без доказательств.
+Нельзя:
 
-## 10. Масштабирование и эксплуатация
+- использовать портал/телепорт как доказательство continuous spatial seam;
+- разрешать двум spatial partitions владеть одной точкой;
+- разрезать ConstructGrid из-за server seam;
+- считать read-only/WARM overlap вторым writer;
+- считать heartbeat или local timeout достаточным fencing;
+- подменять current mutable truth procedural baseline при migration;
+- скрывать partial multi-domain commit;
+- смешивать reference-frame migration и server migration в одну неразличимую операцию;
+- объявлять static topology proof доказательством dynamic/moving-frame/production scale.
 
-Первый стенд: несколько статических участков на одном сервере, затем ручные split/migrate/merge и два-три authority-процесса. Дерево мест и постоянные ID сохраняются. Автоматический балансировщик добавляется только после наблюдаемого ручного протокола и placement observatory/shadow-проверки.
+## 11. Связь с текущим MVP и control
 
-Критерии полезности разреза: tick cost, число активных сущностей, память, объём миграции, boundary traffic, cross-domain transactions, неделимые coupling groups. Два сервера не гарантируют ускорения одной тесно связанной машины. Нужны минимальная гранулярность, cooldown и ограничение частоты миграций, а не split на каждый локальный всплеск.
+Этот документ не меняет текущий MVP6, active Work Order, scheduler, lease или acceptance. Он становится исполняемым только после закрытия `V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE`, отдельной activation/epoch, exact accepted base и bounded Work Order.
 
-Не подключать все серверы ко всем клиентам. Состояние index/cache/queues и старые subscriptions должны иметь наблюдаемые бюджеты и cleanup. Spatial/semantic/LOD IDs не должны зависеть от числа серверов.
-
-## 11. Доказательства и открытые решения
-
-Модель из обсуждения полезна как иллюстрация геометрии и межшаговых состояний, но предполагает согласованную публикацию metadata, неустранимый обходом fence и durable snapshots. Она не проверяет реализацию этих предпосылок в DWS, транспорт, lease-clock/quorum correctness, реальные abort paths, распределённую атомарность, Godot collision или производительность. Её счётчики нельзя переносить в runtime acceptance.
-
-До activation первого изменяющего runtime шага нужно определить по существующим owners:
-
-- точную единицу хранения/миграции и mapping пространственных участков на Matter/Item/Construction;
-- механизм durable decision и не допускающего обхода commit fencing на всех канонических путях;
-- контракт одновременных transactions, transfer abort и forward recovery;
-- политику неделимых объектов и coupling через границы;
-- численную семантику координат, границ и frame/time revisions;
-- pause/readiness/latency budgets и реальный OS/Godot validation profile.
-
-Каждый реализуемый stage требует focused positive/negative/replay controls, relevant regressions, exact HEAD/TREE evidence и независимых ролей согласно Harness. Модель или документационный commit не объявляют stage implemented/verified/accepted. Отсутствующее owner API фиксируется как gap и bounded amendment, не подменяется тестовым owner.
-
-## 12. Связь с проектом и следующий маршрут
-
-Переиспользовать [A0](../architecture/DISTRIBUTED_RUNTIME_AND_SIMULATION_FOUNDATION_RU.md), [Spatial Domain Fabric и global sequence](GLOBAL_PROGRAM_ARCHITECTURE_ROADMAP_RU.md), [WorldGraph/View Planner](../network/EDGE_GATEWAY_WORLD_GRAPH_VIEW_PLANNER_SPEC_RU.md), [Edge Gateway](../network/EDGE_GATEWAY_FABRIC_SPEC_RU.md), [CWIP](../network/EDGE_GATEWAY_CROSS_WORLD_INTERACTION_PROTOCOL_PLAN_RU.md) и [MW9/MW10 roadmap](MUTABLE_WORLDS_ROADMAP_RU.md). Наличие положения в specification не означает runtime acceptance; актуальный статус берётся из main-owned control/evidence.
-
-Порядок развития внутри post-MVP: статическая объёмная топология -> независимое размещение -> статический игровой handoff -> контролируемые split/migrate/merge и recovery -> живая игровая композиция при переразбиении -> движущиеся frames/масштаб -> автоматическое размещение позднее. Разбивка HS1–HS8 и правила activation находятся в [основном плане HS](POST_MVP_HIERARCHICAL_SEAMLESS_WORLDS_RU.md).
-
-Это уточнение не переименовывает P8 в HS, не меняет независимость P8/RF lanes, не требует полного WORLDGEN1/ECO/FABRIC и не делает их неявными gates. Текущий агент MVP продолжает своё поручение без изменений со стороны этого documentation-only amendment.
+При реализации сначала аудит существующих C17/C18, WorldGraph, Directory/AUTHORITY, SM1, MW9/MW10, Item/Construction transaction и physics capabilities. Если нужного owner API нет, фиксировать gap и scope amendment; не создавать demo-only duplicate foundation.
