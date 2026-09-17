@@ -164,7 +164,7 @@ func exercise_cross_authority_construction_seam() -> bool:
 	var damage_request := DamageRequest.create(
 		"damage/mvp6/seam/remove-east-leaf", SeamFactory.CONSTRUCT_ID, String(added_snapshot["checksum"]),
 		SeamFactory.part_id(0), [SeamFactory.bond_id(SeamFactory.ADD_PART_INDEX - 1)], [],
-		{SeamFactory.part_id(SeamFactory.ADD_PART_INDEX): "DESTROYED"}, [], SalvagePolicy.create(2, {}, false)
+		{}, [], SalvagePolicy.create(2, {}, false)
 	)
 	if not success(DamageRequest.validate(damage_request), "canonical REMOVE request validates"): return false
 	var damage_bundle: Dictionary = bridge.get_snapshot_packet().get("state_bundle", {})
