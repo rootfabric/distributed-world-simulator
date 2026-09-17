@@ -7,6 +7,7 @@ import json
 import os
 from pathlib import Path
 import re
+import shutil
 import subprocess
 import sys
 import time
@@ -14,11 +15,12 @@ import time
 ROOT = Path(__file__).resolve().parents[3]
 BASE = "182d93872bfddbf52a72ab170371ebb9489690bb"
 OUT = ROOT / "artifacts/mvp6-seam-repro"
+WORLD_CORE_OUT = ROOT / "artifacts/mvp6-world-core"
 TEST = "tests/runtime/test_v0_mvp_6_cross_authority_prerequisites.gd"
 PRODUCT_TEST = "tests/runtime/test_v0_mvp_6_cross_authority_construction_seam.gd"
 COLLISION_TEST = "tests/runtime/test_v0_mvp_6_cross_authority_construction_collision.gd"
 PERSISTENCE_TEST = "tests/runtime/test_v0_mvp_6_cross_authority_construction_persistence.gd"
-FULL_WORLD_VALIDATOR = ROOT / "docs/control/mvp-act0-r1/validate_mvp6_full_world_core.py"
+FULL_WORLD_RESULT_VALIDATOR = ROOT / "docs/control/mvp-act0-r1/validate_mvp6_full_world_core_result.py"
 PIN = {"linux": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7", "win32": "3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5"}
 FATAL = re.compile(r"(?im)^\s*(?:SCRIPT ERROR|ERROR):|Parse Error|Compile Error")
 
@@ -54,17 +56,47 @@ def run(name: str, command: list[str], timeout: int, env: dict[str, str]) -> dic
     return result
 
 
+def run_full_world_core() -> int:
+    if OUT.exists() or WORLD_CORE_OUT.exists():
+        raise RuntimeError("PRESERVE_EXISTING_WORLD_CORE_EVIDENCE")
+    if not FULL_WORLD_RESULT_VALIDATOR.is_file():
+        raise RuntimeError("MVP6_FULL_WORLD_CORE_RESULT_VALIDATOR_MISSING")
+    WORLD_CORE_OUT.mkdir(parents=True)
+    head, tree = git("rev-parse", "HEAD"), git("rev-parse", "HEAD^{tree}")
+    env = os.environ.copy()
+    env.update(
+        EXPECTED_HEAD=head,
+        EXPECTED_TREE=tree,
+        PYTHONDONTWRITEBYTECODE="1",
+        BREAKPOINT_RUNTIME_DISABLED="1",
+        MVP6_SEAM_DIAGNOSTIC_RESULT=str(WORLD_CORE_OUT / "result.json"),
+        MVP6_CROSS_AUTHORITY_SEAM_RESULT=str(WORLD_CORE_OUT / "product.json"),
+        MVP6_DERIVED_COLLISION_RESULT=str(WORLD_CORE_OUT / "collision.json"),
+        MVP6_PERSISTENCE_RESULT=str(WORLD_CORE_OUT / "persistence.json"),
+    )
+    command = ["pwsh", "-NoProfile", "-File", str(ROOT / "RUN_WORLD_REGRESSION_TESTS.ps1")]
+    log = WORLD_CORE_OUT / "full-world-core.log"
+    with log.open("w", encoding="utf-8") as stream:
+        try:
+            code = subprocess.run(command, cwd=ROOT, env=env, stdout=stream, stderr=subprocess.STDOUT, check=False).returncode
+        except OSError as exc:
+            stream.write(str(exc) + "\n")
+            code = 127
+    (WORLD_CORE_OUT / "world-exit.txt").write_text(str(code) + "\n", encoding="utf-8")
+    print(json.dumps({"name": "full-world-core", "command": command, "exit_code": code, "log_sha256": sha(log)}), flush=True)
+    checked = subprocess.run([sys.executable, str(FULL_WORLD_RESULT_VALIDATOR)], cwd=ROOT, env=env, check=False).returncode
+    # The existing allowed workflow uploads artifacts/mvp6-seam-repro. Mirror
+    # the completed bounded world/core evidence there only after validation;
+    # the canonical runner and result checker continue to use their dedicated
+    # world-core directory throughout execution.
+    shutil.copytree(WORLD_CORE_OUT, OUT)
+    return checked
+
+
 def main() -> int:
     commit_message = git("log", "-1", "--pretty=%B")
     if "[mvp6-world-core]" in commit_message:
-        if not FULL_WORLD_VALIDATOR.is_file():
-            raise RuntimeError("MVP6_FULL_WORLD_CORE_VALIDATOR_MISSING")
-        return subprocess.run(
-            [sys.executable, str(FULL_WORLD_VALIDATOR)],
-            cwd=ROOT,
-            env=os.environ.copy(),
-            check=False,
-        ).returncode
+        return run_full_world_core()
 
     if OUT.exists():
         raise RuntimeError("PRESERVE_EXISTING_EVIDENCE:" + str(OUT))
