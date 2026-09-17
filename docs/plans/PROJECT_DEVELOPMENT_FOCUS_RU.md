@@ -31,46 +31,37 @@ P7.7 уже содержит графический Digging Playground. Визу
 
 ## После MVP: расширение бесшовности
 
-Уточнение R2 от 16 сентября 2026: после принятия `V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE` первым крупным post-MVP направлением предлагается **объёмная бесшовность** — единое непрерывное пространство с непересекающимися участками ответственности, а не телепортация между сценами.
+Уточнение R3 от 17 сентября 2026: после принятия `V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE` первым крупным post-MVP направлением предлагается **объёмная бесшовность + ConstructGrid**.
 
-План этапов: [HS1–HS8](POST_MVP_HIERARCHICAL_SEAMLESS_WORLDS_RU.md). Подробное решение и матрица сценариев: [топология, размещение и split/merge](POST_MVP_VOLUMETRIC_TOPOLOGY_DESIGN_RU.md).
+План этапов: [HS1–HS8](POST_MVP_HIERARCHICAL_SEAMLESS_WORLDS_RU.md). Подробные решения: [топология/placement/split-merge](POST_MVP_VOLUMETRIC_TOPOLOGY_DESIGN_RU.md) и [ConstructGrid/whole-grid migration](POST_MVP_CONSTRUCT_GRID_AUTHORITY_RU.md).
 
-Смысловой маршрут сохраняется:
+Ключевая модель:
 
 ```text
-Space -> Planet -> POI -> Cave / Basement / Dungeon -> обратно
+world point -> exactly one spatial partition
+construct   -> stable local ConstructGrid -> exactly one construct writer
+physics group -> at most one admitted solver writer
+server placement -> may change independently
 ```
 
-Но дерево мест не является деревом серверов. Разделяются reference frames, смысловые зоны, эффективное пространственное разбиение, назначение исполнителей и read-only interest/projections. Semantic overlaps разрешены; каноническое пространственное владение однозначно. Пещера сохраняет identity и состояние при разделении её обслуживания между серверами.
+Постройка, база, станция или корабль могут одновременно пересекать несколько spatial partitions. Это нормальное состояние `GRID_STRADDLING` и не создаёт автоматического structural split или второго writer.
+
+Обычная region-affine migration конструкции разрешается только после полного вхождения conservative grid envelope в target-region, hysteresis/readiness и безопасного barrier/fence. Если grid больше region, объект сохраняет текущего owner, использует более крупный placement domain либо явно секционируется Construction-domain операцией; server seam сам по себе его не режет.
 
 | Ступень | Результат |
 | --- | --- |
-| HS1–HS2 | Статические вложенные AABB, child-исключения, точное покрытие без наложений, согласованные координаты |
-| HS3–HS4 | Реальное движение через объёмы; один WorldConnection; готовые collision и bounded projections |
-| HS5–HS6 | Предметы, примерно 100 элементов Construction через seam, копание нового прохода, согласованные cross-volume операции |
-| HS7 | После статического proof: контролируемые migrate/split/merge, durable cutover, fencing и fault recovery |
-| HS8 | Четыре уровня, два клиента, реальные операции и смена размещения в живой композиции |
+| HS1 | Статические вложенные world AABB, child-исключения, точное покрытие без authoritative overlap |
+| HS2 | `ConstructGrid`: stable local grid, coverage set, full containment и MigrationCore |
+| HS3 | Reference frames и versioned grid placement; local coordinates конструкции стабильны |
+| HS4 | Игрок и крупный grid бесшовно пересекают A/B/C без обязательной construct migration |
+| HS5 | Whole-grid migration только после полного containment + WARM/barrier/fence |
+| HS6 | Cross-volume Matter/Construction operations и large-object physics без duplicate impulses |
+| HS7 | Раздельные spatial split/merge и canonical structural split/merge; recovery/fault matrix |
+| HS8 | Два клиента, Space/Planet/POI/Cave, 100-block boundary construct и moving ship fixture |
 
-Обязательные различия:
+Construction integration не переоткрывает accepted C17: его `one aggregate -> one writer`, migration fence, replicas и cross-zone split переиспользуются. До отдельной activation новый workstream обозначается `CG0–CG6`, а не автоматически `C25`.
 
-```text
-point in declared coverage -> exactly one spatial partition
-canonical state           -> at most one admitted writer
-barrier / failure         -> temporary unavailability may be valid
-semantic place            != partition != ServerInstance
-reference frame           != server owner
-replication overlap       != write authority overlap
-```
-
-Дочерний объём вычитается из владения родителя. Split/merge сохраняет такие исключения; недоступность child-сервера не отдаёт его пространство родителю. Перенос данных, результатов операций и права записи должен завершаться согласованным durable-решением. Heartbeat или флаг ACTIVE не заменяет fence на canonical commit boundary.
-
-В первой реализации — статические half-open AABB и явное размещение нескольких участков на одном сервере. Автоматический балансировщик, moving-frame ownership и произвольная физика через границы требуют последующих доказательств. Статическая карта или абстрактная модель не объявляют эти возможности implemented.
-
-Переиспользуются существующие WorldGraph, Directory/AUTHORITY, Edge Gateway, SM1, MW9/MW10 и Item/Construction contracts. `PORTAL_OR_TRANSITION` может оставаться в словаре, но портал не засчитывается как объёмная бесшовность. Новый routing/ownership foundation не создаётся.
-
-После HS остаются расширение мира/WORLDGEN1, NX/RF и масштаб, WORLD FILL/PACKS и интеграция ECO/FABRIC через явные контракты. Это не новая обязательная последовательность всех research-линий, не переименование P8 и не изменение независимости P8/RF. Конкретный dispatch определяет main-owned control.
-
-Это **не расширение текущего MVP**. Реализация HS разрешается только после закрытия текущего MVP, отдельного post-MVP activation/epoch, exact accepted base и bounded Work Order. Эта документационная правка не меняет runtime, действующий MVP Work Order, scheduler, lease или acceptance.
+Это **не расширение текущего MVP**. Реализация HS/CG разрешается только после закрытия текущего MVP, отдельного post-MVP activation/epoch, exact accepted base и bounded Work Order. Эта документационная правка не меняет runtime, действующий MVP Work Order, scheduler, lease или acceptance.
 
 ## Экология: один экспериментальный полигон
 
