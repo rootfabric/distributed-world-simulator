@@ -1,0 +1,37 @@
+{
+  "schema": "distributed_world_simulator.mvp6_seam_item_graph_contract_repair_evidence.v1",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "checkpoint": "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE",
+  "runtime_subject_head": "687cd39fbb1978b77641060cfd228c7bb80e305b",
+  "runtime_subject_tree": "d938eccc1f45fd6bb93d0f9be9f35f3fed910529",
+  "repair": {
+    "file": "scripts/runtime/networked_gameplay/mvp/v0_mvp6_cross_authority_construction_factory.gd",
+    "kind": "FACTORY_DETAILS_CONTRACT_REPAIR",
+    "strict_item_graph_identity_preserved": true,
+    "test_assertion_weakened": false,
+    "foundation_files_changed": false
+  },
+  "exact_validation": {
+    "workflow_run": 35197256966,
+    "job_id": 105123320277,
+    "artifact_id": 10486406371,
+    "artifact_zip_sha256": "b404ac7f5af7b66b6bfe7a2780a6dbadcb49fb09b3b81d65223f22e4a825c634",
+    "seam_prerequisite_exit_code": 0,
+    "seam_prerequisite_log_sha256": "cd4a4e750ab2190d43b2832edfbfcf69cf91308bb518dc3affccb2728677cbbd",
+    "seam_product_exit_code": 1,
+    "seam_product_log_sha256": "7f78737cb4f6714134bcb9dee8eeecc568e6c117cf7f744c20ff8d3ffbb76c8c",
+    "assertions_reached": 185,
+    "failures": 1
+  },
+  "verified_outcome": {
+    "previous_blocker": "seam Construction uses same canonical M4 Item Graph",
+    "previous_blocker_reproduced": false,
+    "item_graph_contract_repair_passed": true,
+    "next_blocker": "base100 remains pre-ADD structural stage",
+    "next_blocker_is_distinct": true
+  },
+  "mvp6_predicate_verified": false,
+  "independent_verdict": false,
+  "main_merge": false
+}
