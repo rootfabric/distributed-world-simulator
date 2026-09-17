@@ -1,0 +1,72 @@
+{
+  "schema": "distributed_world_simulator.mvp6_clearance_verifier_receipt.v1",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "checkpoint": "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE",
+  "candidate_pr": 649,
+  "candidate_branch": "control/v0-mvp6-nx-directional-clearance-postmerge-r2",
+  "candidate_head": "6902a99081c1fbdf676c71dca5ea0d80fd633267",
+  "candidate_tree": "f4ae35216de7ed915fcb0c46b03b0f35baeccd6b",
+  "candidate_base_main": "a6d5eb6b287130a638ba6cf397c34e29169948c1",
+  "candidate_runtime_changed": false,
+  "candidate_changed_paths": 7,
+  "machine_validation": {
+    "run_id": 35170637095,
+    "job_id": 105041345558,
+    "artifact_id": 10475649047,
+    "zip_sha256": "9c78fe60f666bf5a0e5c9d2c26d4e17c5a1e761d9c18f9ade7b0ff2b71dcb32c",
+    "manifest_sha256": "67521c1941bcc00e05ebf42a609af6cd0f63c64c36043dff55a9cc2933b1c0df",
+    "historical_tests_passed": 10,
+    "postmerge_tests_passed": 19,
+    "full_harness_passed": 349,
+    "failures": 0,
+    "errors": 0,
+    "skips": 0,
+    "real_main_standard": "YELLOW",
+    "real_main_directional": "RED",
+    "simulated_candidate_main_standard": "YELLOW",
+    "simulated_candidate_main_directional": "YELLOW",
+    "simulated_candidate_main_is_canonical_acceptance": false
+  },
+  "code_review": {
+    "reviewed_head": "6902a99081c1fbdf676c71dca5ea0d80fd633267",
+    "comment_id": 5707040521,
+    "result": "PASS_NO_MAJOR_ISSUES_REPORTED"
+  },
+  "independent_verifier": {
+    "evidence_pr": 650,
+    "carrier_head": "2513aedab6a315d726a61c78607d72e84f960c3b",
+    "carrier_tree": "31a4a3f82d11fa28b9092fdfd259a9a0ab72c291",
+    "final_comment_id": 5709209809,
+    "verdict": "VERIFIED_EVIDENCE",
+    "scope": "EXACT_PR649_CONTROL_ONLY_CANDIDATE_EVIDENCE_SUFFICIENCY",
+    "merge_authorized": false,
+    "canonical_non_red_claimed": false,
+    "nx_accepted": false,
+    "mvp6_accepted": false
+  },
+  "producer_fence": {
+    "live_v0_head": "f79085cfed69bdd826167d2390b286467cbf621c",
+    "live_v0_tree": "924ba3a801e36148778773fddc6dd87df15c9e35",
+    "critical_m4_blob": "44841fb3719b1cf36fd5afdfc0f8a0e4d0eacb30",
+    "journal_blob": "abdf0c0a335f4e2c968933156fb17f94a7b45bd1",
+    "historical_review_blob": "0e70f365c0ca11c60ce8d191e10b25115481271f",
+    "historical_reviewed_producer": "73b8818184c93986e3313f35f9f4548c608e47e6",
+    "historical_reviewed_producer_tree": "a1bbe30fd68af5db3a9535bee942683ebe761bc1"
+  },
+  "next_gate": "HUMAN_EXACT_PR649_CONTROL_CLEARANCE_MERGE",
+  "post_merge_required": [
+    "REAL_CANONICAL_STANDARD_PC0",
+    "REAL_CANONICAL_DIRECTIONAL_PC0",
+    "CURRENT_MAIN_EPOCH_AUDIT",
+    "HARNESS_DRIVE_BEFORE_MVP6_RUNTIME_CONTINUATION"
+  ],
+  "forbidden_in_this_receipt": [
+    "MERGE_PR650",
+    "MERGE_PR643",
+    "MERGE_PR644",
+    "MERGE_PR597",
+    "CLAIM_CANONICAL_NON_RED_BEFORE_PR649_MERGE_AND_REAUDIT",
+    "CLAIM_MVP6_ACCEPTED"
+  ]
+}
