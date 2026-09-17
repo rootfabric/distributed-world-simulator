@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Preserve native gap reproduction and require seam product plus real derived collision."""
+"""Preserve native gap reproduction and require seam product, derived collision and persistence rehydration."""
 from __future__ import annotations
 import fnmatch
 import hashlib
@@ -17,6 +17,7 @@ OUT = ROOT / "artifacts/mvp6-seam-repro"
 TEST = "tests/runtime/test_v0_mvp_6_cross_authority_prerequisites.gd"
 PRODUCT_TEST = "tests/runtime/test_v0_mvp_6_cross_authority_construction_seam.gd"
 COLLISION_TEST = "tests/runtime/test_v0_mvp_6_cross_authority_construction_collision.gd"
+PERSISTENCE_TEST = "tests/runtime/test_v0_mvp_6_cross_authority_construction_persistence.gd"
 PIN = {"linux": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7", "win32": "3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5"}
 FATAL = re.compile(r"(?im)^\s*(?:SCRIPT ERROR|ERROR):|Parse Error|Compile Error")
 
@@ -67,9 +68,10 @@ def main() -> int:
         MVP6_SEAM_DIAGNOSTIC_RESULT=str(OUT / "result.json"),
         MVP6_CROSS_AUTHORITY_SEAM_RESULT=str(OUT / "product.json"),
         MVP6_DERIVED_COLLISION_RESULT=str(OUT / "collision.json"),
+        MVP6_PERSISTENCE_RESULT=str(OUT / "persistence.json"),
     )
     summary: dict = {
-        "schema": "distributed_world_simulator.mvp6_seam_repro_execution.v3",
+        "schema": "distributed_world_simulator.mvp6_seam_repro_execution.v4",
         "subject_head": head,
         "subject_tree": tree,
         "baseline_head": BASE,
@@ -78,12 +80,14 @@ def main() -> int:
         "diagnostic_passed": False,
         "product_test_passed": False,
         "collision_test_passed": False,
+        "persistence_test_passed": False,
         "mvp6_cross_authority_construction_seam_verified": False,
         "mvp6_predicate_verified": False,
         "independent_verdict": False,
         "main_merge": False,
         "full_world_core_executed": False,
         "graphical_five_process_executed": False,
+        "full_process_restart_executed": False,
     }
     rows: list[dict] = []
     try:
@@ -107,6 +111,7 @@ def main() -> int:
         summary["diagnostic_test_blob"] = git("rev-parse", head + ":" + TEST)
         summary["product_test_blob"] = git("rev-parse", head + ":" + PRODUCT_TEST)
         summary["collision_test_blob"] = git("rev-parse", head + ":" + COLLISION_TEST)
+        summary["persistence_test_blob"] = git("rev-parse", head + ":" + PERSISTENCE_TEST)
         prefix = [str(engine), "--headless", "--path", str(ROOT)]
         imported = run("import", prefix + ["--editor", "--import", "--quit"], 240, env)
         rows.append(imported)
@@ -158,6 +163,24 @@ def main() -> int:
         assert collision.get("graphical_five_process_executed") is False, "COLLISION_GATE_MUST_NOT_OVERCLAIM_FIVE_PROCESS"
         assert collision.get("mvp6_cross_authority_construction_seam_verified") is False and collision.get("mvp6_predicate_verified") is False, "COLLISION_GATE_MUST_NOT_SELF_ACCEPT"
         summary["collision_test_passed"] = True
+
+        persistence_row = run("seam-persistence", prefix + ["--script", "res://" + PERSISTENCE_TEST], 720, env)
+        rows.append(persistence_row)
+        persistence_path = OUT / "persistence.json"
+        persistence = json.loads(persistence_path.read_text(encoding="utf-8")) if persistence_path.is_file() else {}
+        summary["persistence_result"] = {k: v for k, v in persistence.items() if k != "persistence"}
+        assert persistence_row["exit_code"] == 0 and not persistence_row["fatal_markers"], "SEAM_PERSISTENCE_TEST_FAILED"
+        assert persistence.get("subject_head") == head and persistence.get("subject_tree") == tree, "PERSISTENCE_SUBJECT_MISMATCH"
+        assert persistence.get("passed") is True and persistence.get("failures") == [], "SEAM_PERSISTENCE_NOT_GREEN"
+        for field in (
+            "serialization_executed", "rehydration_executed", "item_identity_preserved",
+            "construction_identity_preserved", "authority_mapping_preserved", "relationships_preserved",
+            "collision_rehydrated", "removed_collision_stays_absent",
+        ):
+            assert persistence.get(field) is True, "SEAM_PERSISTENCE_FIELD_FALSE:" + field
+        assert persistence.get("full_process_restart_executed") is False and persistence.get("mvp7_restart_claimed") is False, "MVP6_PERSISTENCE_MUST_NOT_CLAIM_MVP7_RESTART"
+        assert persistence.get("mvp6_cross_authority_construction_seam_verified") is False and persistence.get("mvp6_predicate_verified") is False and persistence.get("independent_verdict") is False, "PERSISTENCE_GATE_MUST_NOT_SELF_ACCEPT"
+        summary["persistence_test_passed"] = True
     except Exception as exc:
         summary["error"] = type(exc).__name__ + ": " + str(exc)
         print(summary["error"], flush=True)
@@ -178,12 +201,12 @@ def main() -> int:
         summary["controller"] = controller
         summary["tracked_after"] = git("status", "--porcelain", "--untracked-files=no")
         summary["identity_unchanged"] = git("rev-parse", "HEAD") == head and git("rev-parse", "HEAD^{tree}") == tree
-        summary["passed"] = summary["diagnostic_passed"] and summary["product_test_passed"] and summary["collision_test_passed"] and not summary["tracked_after"] and summary["identity_unchanged"]
+        summary["passed"] = summary["diagnostic_passed"] and summary["product_test_passed"] and summary["collision_test_passed"] and summary["persistence_test_passed"] and not summary["tracked_after"] and summary["identity_unchanged"]
         write(OUT / "commands.json", rows)
         write(OUT / "summary.json", summary)
         files = [{"path": p.relative_to(OUT).as_posix(), "bytes": p.stat().st_size, "sha256": sha(p)} for p in sorted(OUT.rglob("*")) if p.is_file() and p.name != "manifest.json"]
         write(OUT / "manifest.json", {**summary, "files": files})
-        print(json.dumps({"head": head, "tree": tree, "passed": summary["passed"], "diagnostic_passed": summary["diagnostic_passed"], "product_test_passed": summary["product_test_passed"], "collision_test_passed": summary["collision_test_passed"], "manifest_sha256": sha(OUT / "manifest.json"), "files": len(files)}), flush=True)
+        print(json.dumps({"head": head, "tree": tree, "passed": summary["passed"], "diagnostic_passed": summary["diagnostic_passed"], "product_test_passed": summary["product_test_passed"], "collision_test_passed": summary["collision_test_passed"], "persistence_test_passed": summary["persistence_test_passed"], "manifest_sha256": sha(OUT / "manifest.json"), "files": len(files)}), flush=True)
     return 0 if summary["passed"] else 1
 
 
