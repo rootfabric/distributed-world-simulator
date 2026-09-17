@@ -15,7 +15,7 @@ ROOT = Path(__file__).resolve().parents[3]
 BASE = "182d93872bfddbf52a72ab170371ebb9489690bb"
 OUT = ROOT / "artifacts/mvp6-seam-repro"
 TEST = "tests/runtime/test_v0_mvp_6_cross_authority_prerequisites.gd"
-PRODUCT_TEST = "tests/runtime/test_v0_mvp_6_cross_authority_construction_seam.gd"
+PRODUCT_TEST = "tests/runtime/test_v0_mvp_6_cross_authority_construction_seam_diagnostic.gd"
 PIN = {"linux": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7", "win32": "3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5"}
 FATAL = re.compile(r"(?im)^\s*(?:SCRIPT ERROR|ERROR):|Parse Error|Compile Error")
 
