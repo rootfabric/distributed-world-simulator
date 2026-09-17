@@ -21,30 +21,43 @@ func _authority6(authority_id: String, actor: String, request: Dictionary) -> Di
 	return super._authority6(authority_id, actor, request)
 
 
-func _guard_clients6() -> Dictionary:
+func _guard_client6(client_actor: String) -> Dictionary:
 	if client_boundary == null:
 		return Protocol6.failure("MVP6_CLIENT_GUARD_BOUNDARY_MISSING")
+	var client_id: String = "client/" + client_actor
+	var client_peer: String = String(client_peers.get(client_actor, ""))
+	if client_peer.is_empty():
+		return Protocol6.failure("MVP6_CLIENT_GUARD_PEER_MISSING:" + client_actor)
+	var guarded: Dictionary = Guard6.apply(client_boundary, client_peer)
+	if not bool(guarded.get("success", false)):
+		return Protocol6.failure(String(guarded.get("error_code", "MVP6_CLIENT_GUARD_FAILED")) + ":" + client_actor)
+	_client_guard6_counts[client_id] = int(_client_guard6_counts.get(client_id, 0)) + 1
+	_client_guard6_last[client_id] = Dictionary(guarded.get("details", {})).duplicate(true)
+	return Protocol6.success()
+
+
+func _guard_clients6() -> Dictionary:
 	for raw_actor in ["a", "b"]:
 		var client_actor: String = String(raw_actor)
-		var client_id: String = "client/" + client_actor
-		var client_peer: String = String(client_peers.get(client_actor, ""))
-		if client_peer.is_empty():
-			return Protocol6.failure("MVP6_CLIENT_GUARD_PEER_MISSING:" + client_actor)
-		var guarded: Dictionary = Guard6.apply(client_boundary, client_peer)
+		var guarded: Dictionary = _guard_client6(client_actor)
 		if not bool(guarded.get("success", false)):
-			return Protocol6.failure(String(guarded.get("error_code", "MVP6_CLIENT_GUARD_FAILED")) + ":" + client_actor)
-		_client_guard6_counts[client_id] = int(_client_guard6_counts.get(client_id, 0)) + 1
-		_client_guard6_last[client_id] = Dictionary(guarded.get("details", {})).duplicate(true)
+			return guarded
 	return Protocol6.success()
 
 
 func handle_client(actor: String, body: Dictionary) -> Dictionary:
 	var kind: String = String(body.get("kind", ""))
-	if kind.begins_with("MVP6_"):
-		# Base-100 is deliberately synchronous on the canonical authority. While
-		# gateway code waits on that call it cannot poll the client-facing ENet
-		# host either, so protect both already-authenticated client peers before
-		# entering the bounded long operation. This changes liveness only.
+	# Arm the server side of each graphical client link at authenticated HELLO,
+	# before either client can race into the synchronous base-100 operation.
+	# During HELLO only the current actor is guaranteed to exist; MVP6 commands
+	# still require both peers and refresh both windows immediately before the
+	# bounded long operation. Canonical state, payload/order and reconnect policy
+	# remain unchanged.
+	if kind == "HELLO":
+		var hello_guarded: Dictionary = _guard_client6(actor)
+		if not bool(hello_guarded.get("success", false)):
+			return hello_guarded
+	elif kind.begins_with("MVP6_"):
 		var guarded: Dictionary = _guard_clients6()
 		if not bool(guarded.get("success", false)):
 			return guarded
