@@ -4,7 +4,7 @@ const DomainFactory = preload("res://scripts/items/services/item_domain_factory.
 const Definition = preload("res://scripts/items/domain/item_definition.gd")
 const Item = preload("res://scripts/items/domain/item_instance.gd")
 const Relations = preload("res://scripts/items/domain/item_relations.gd")
-const Projection = preload("res://scripts/construction/item_graph/construction_item_projection.gd")
+const ItemProjection = preload("res://scripts/construction/item_graph/construction_item_projection.gd")
 const Snapshot = preload("res://scripts/construction/contracts/construct_snapshot.gd")
 const Part = preload("res://scripts/construction/contracts/construction_part_record.gd")
 const Bond = preload("res://scripts/construction/contracts/construction_bond_record.gd")
@@ -262,7 +262,7 @@ static func target_snapshot() -> Dictionary:
 static func source_projections(item_registry) -> Array:
 	var result: Array = []
 	for index in range(FINAL_PART_COUNT):
-		var projected: Dictionary = Projection.from_item_instance_dict(item_registry.get_item(part_item_id(index)).to_dict())
+		var projected: Dictionary = ItemProjection.from_item_instance_dict(item_registry.get_item(part_item_id(index)).to_dict())
 		if bool(projected.get("success", false)):
 			result.append(Dictionary(projected.get("projection", {})).duplicate(true))
 	return result
@@ -281,7 +281,7 @@ static func build_plan(item_registry) -> Dictionary:
 		Stage.create("stage/mvp6/seam/base", 0, "Seam bridge base 100", Stage.SEMANTIC_STRUCTURE, base_parts, base_bonds, [], ["FASTEN"]),
 		Stage.create("stage/mvp6/seam/add-east", 1, "Seam bridge ADD east leaf", Stage.SEMANTIC_OPERATIONAL, final_parts, final_bonds, [], ["FASTEN"]),
 	]
-	return BuildPlan.create(BUILD_PLAN_ID, "MVP6 Cross Authority Seam Bridge", Projection.world_relation(), snapshot, source_projections(item_registry), stages)
+	return BuildPlan.create(BUILD_PLAN_ID, "MVP6 Cross Authority Seam Bridge", ItemProjection.world_relation(), snapshot, source_projections(item_registry), stages)
 
 static func _failure(code: String, details: Dictionary = {}) -> Dictionary:
 	return {"success":false, "error_code":code, "details":details.duplicate(true)}
