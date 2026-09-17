@@ -1,0 +1,27 @@
+{
+  "schema": "distributed_world_simulator.harness_human_attention.v1",
+  "decision_id": "HA-V0-MVP6-NX-DIRECTIONAL-CLEARANCE-MERGE-R2",
+  "program": "V0",
+  "checkpoint": "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE",
+  "risk_class": "CRITICAL",
+  "reason": "Post-PR646 canonical journal baseline is now exact. A refreshed control-only V0-to-NX directional clearance candidate was rebuilt on actual main a6d5eb6b287130a638ba6cf397c34e29169948c1. PR649 is frozen at HEAD 6902a99081c1fbdf676c71dca5ea0d80fd633267 / TREE f4ae35216de7ed915fcb0c46b03b0f35baeccd6b, changes exactly seven control/test/evidence paths and no gameplay runtime. Exact CI35170637095 passed historical10 + postmerge19 + full Harness349 with zero failures/errors/skips in the declared simulated candidate-main projection while real canonical main correctly remained standard YELLOW / directional RED. Fresh code review on exact candidate reported no major issues. Fresh independent evidence verifier on PR650, after three evidence-only repairs, returned VERIFIED_EVIDENCE for exact PR649 candidate; final verifier comment 5709209809. This does not itself authorize merge or claim canonical NON_RED. Human approval is required for the exact main-owned clearance merge before real canonical PC0 and epoch audit can be rerun.",
+  "decision_required": "Разрешить merge ровно PR #649 https://github.com/rootfabric/distributed-world-simulator/pull/649 с HEAD 6902a99081c1fbdf676c71dca5ea0d80fd633267 / TREE f4ae35216de7ed915fcb0c46b03b0f35baeccd6b в current main a6d5eb6b287130a638ba6cf397c34e29169948c1. Это только control-only V0->NX directional clearance. PR650 evidence-only не merge; PR643/PR644 не merge; runtime PR597 не merge. После merge обязательны реальные canonical standard/directional PC0, current-main epoch audit и новый Harness Drive до продолжения MVP6 runtime. Merge не означает NX acceptance, MVP6 acceptance или whole-MVP acceptance.",
+  "options": [
+    "AUTHORIZE_EXACT_PR649_DIRECTIONAL_CLEARANCE_MERGE",
+    "HOLD_PR649_AND_KEEP_MVP6_RUNTIME_CONTINUATION_BLOCKED"
+  ],
+  "recommended_option": "AUTHORIZE_EXACT_PR649_DIRECTIONAL_CLEARANCE_MERGE",
+  "recommendation_reason": "Frozen candidate is control-only, exact machine validation is green, code review found no major issues, and fresh independent verifier returned VERIFIED_EVIDENCE after all concrete evidence-access and producer-fence findings were closed. Real canonical directional PC0 intentionally remains RED until this clearance is actually merged and re-audited.",
+  "blast_radius": [
+    "main-owned directional-watch clearance registry and loader validation",
+    "V0-to-NX critical dependency watch for canonical_multiplayer_item_graph_service.gd",
+    "postmerge canonical PC0 and epoch continuation decision"
+  ],
+  "blocking": true,
+  "status": "OPEN",
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/supporting-evidence/MVP6-NX-CLEARANCE-R2-VERIFIER-RECEIPT-R1.v1.json",
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/supporting-evidence/MVP6-POSTMERGE-A6D5EB6B-NX-PC0-R1.v1.json",
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/supporting-evidence/MVP6-JOURNAL-PR646-MERGE-RECEIPT-R1.v1.json"
+  ]
+}
