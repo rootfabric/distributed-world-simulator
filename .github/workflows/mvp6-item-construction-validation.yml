@@ -176,7 +176,8 @@ jobs:
           if-no-files-found: error
           retention-days: 90
   seam-prerequisites:
-    if: github.repository == 'rootfabric/distributed-world-simulator' && github.ref == 'refs/heads/feature/v0-mvp-playable-seamless-planet-r1' && (github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[mvp6-seam-repro]'))
+    needs: graphical-five-process
+    if: always() && github.repository == 'rootfabric/distributed-world-simulator' && github.ref == 'refs/heads/feature/v0-mvp-playable-seamless-planet-r1' && (github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[mvp6-seam-repro]')) && (!contains(github.event.head_commit.message, '[mvp6-world-core]') || needs.graphical-five-process.result == 'success')
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
@@ -202,6 +203,11 @@ jobs:
           test -z "$(git status --porcelain --untracked-files=no)"
           python3 -m pip install --disable-pip-version-check -r scripts/harness/requirements.txt
       - uses: actions/download-artifact@v4
+        if: contains(github.event.head_commit.message, '[mvp6-world-core]')
+        with:
+          name: mvp6-graphical-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/mvp6-same-head-graphical
+      - uses: actions/download-artifact@v4
         with:
           name: p7-repair-engine-34117353691
           run-id: 34117353691
@@ -213,6 +219,7 @@ jobs:
         run: |
           set -euo pipefail
           export GODOT_BIN="$RUNNER_TEMP/mvp6-seam-engine/godot"
+          export MVP6_GRAPHICAL_MANIFEST="$RUNNER_TEMP/mvp6-same-head-graphical/live/manifest.json"
           test "$(sha256sum "$GODOT_BIN" | cut -d' ' -f1)" = bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7
           chmod u+x "$GODOT_BIN"
           python3 docs/control/mvp-act0-r1/validate_mvp6_seam_repro.py
