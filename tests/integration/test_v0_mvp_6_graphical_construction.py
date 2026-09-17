@@ -88,6 +88,28 @@ def construction_negatives(reports: dict, clients: dict, head: str, run_id: str)
     return rejected
 
 
+def mvp5_checkpoint_reports(reports: dict, materials: dict) -> dict:
+    """Bind unchanged MVP5 checks to the actual authenticated pre-MVP6 cut.
+
+    The five-process session deliberately continues after MVP5 and consumes 101
+    ore while building MVP6. Therefore the authority's FINAL report is no longer
+    the historical MVP5 material snapshot. The gateway's mvp5.observed rows are
+    immutable copies returned by the real owner over the authenticated backend
+    before Construction starts. Reuse that exact checkpoint instead of weakening
+    any MVP5 invariant or pretending the post-MVP6 graph is the old cut.
+    """
+    frozen = copy.deepcopy(reports)
+    observed = frozen["gateway"]["mvp5"]["observed"]
+    BASE.require(set(observed) == {"a", "b"}, "MVP5_CHECKPOINT_OBSERVERS_REQUIRED")
+    BASE.require(observed["a"] == observed["b"], "MVP5_CHECKPOINT_CLIENTS_DIVERGED")
+    for actor in ("a", "b"):
+        BASE.require(materials[actor]["after"] == observed[actor], "MVP5_CHECKPOINT_RAW_EVIDENCE_MISMATCH:" + actor)
+    source = frozen["authority/a"]["mvp4"]
+    BASE.require(source["material_projection"]["success"] is True, "MVP5_CHECKPOINT_OWNER_PROJECTION_REQUIRED")
+    source["material_projection"]["details"] = copy.deepcopy(observed["a"])
+    return frozen
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--engine", type=Path, required=True)
@@ -162,7 +184,12 @@ def main() -> int:
     materials = {a: BASE.read_json(output/f"material-{a}.json") for a in ("a", "b")}
     clients = {a: BASE.read_json(output/f"construction-{a}.json") for a in ("a", "b")}
     checks = {"mvp4:" + k:v for k,v in P4.evidence_checks(reports, captures, head, run_id).items()}
-    checks.update({"mvp5:" + k:v for k,v in P5.material_checks(reports, materials, head, run_id).items()})
+    try:
+        frozen_mvp5 = mvp5_checkpoint_reports(reports, materials)
+        checks.update({"mvp5:" + k:v for k,v in P5.material_checks(frozen_mvp5, materials, head, run_id).items()})
+    except (KeyError, TypeError, ValueError, RuntimeError) as exc:
+        checks["mvp5:authenticated_preconstruction_checkpoint"] = False
+        error += ";" + type(exc).__name__ + ":" + str(exc)
     checks.update({"mvp6:" + k:v for k,v in construction_checks(reports, clients, head, run_id).items()})
     for role in ROLES:
         log = output / (role.replace("/", "-") + ".log")
