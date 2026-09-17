@@ -44,6 +44,7 @@ func _guard_client6(client_actor: String) -> Dictionary:
 	var client_peer: String = String(client_peers.get(client_actor, ""))
 	if client_peer.is_empty():
 		return Protocol6.failure("MVP6_CLIENT_GUARD_PEER_MISSING:" + client_actor)
+	var was_active := bool(_client_guard6_active.get(client_id, false))
 	var guarded: Dictionary = Guard6.apply(client_boundary, client_peer)
 	if not bool(guarded.get("success", false)):
 		var code: String = String(guarded.get("error_code", "MVP6_CLIENT_GUARD_FAILED"))
@@ -64,7 +65,8 @@ func _guard_client6(client_actor: String) -> Dictionary:
 			}
 			return Protocol6.success({"guard_skipped": true, "peer_id": client_peer, "reason": code})
 		return Protocol6.failure(code + ":" + client_actor)
-	_client_guard6_counts[client_id] = int(_client_guard6_counts.get(client_id, 0)) + 1
+	if not was_active:
+		_client_guard6_counts[client_id] = int(_client_guard6_counts.get(client_id, 0)) + 1
 	_client_guard6_last[client_id] = Dictionary(guarded.get("details", {})).duplicate(true)
 	_client_guard6_active[client_id] = true
 	return Protocol6.success()
