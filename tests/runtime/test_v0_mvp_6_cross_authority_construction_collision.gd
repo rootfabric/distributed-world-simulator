@@ -68,7 +68,7 @@ func exercise_derived_collision() -> bool:
 	if not check(_hits_body(add_hits, body), "PhysicsDirectSpaceState3D hits the added east leaf"):
 		view.queue_free()
 		return false
-	var added_body_rid := body.get_rid()
+	var added_body_rid: RID = body.get_rid()
 
 	var removed: Dictionary = view.apply_snapshot(removed_snapshot)
 	if not success(removed, "derive canonical C9 REMOVE snapshot into same runtime view"):
