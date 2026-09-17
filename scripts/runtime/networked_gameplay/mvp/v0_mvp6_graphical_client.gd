@@ -14,6 +14,9 @@ var _observed_sent6 := {"BASE": false, "ADDED": false, "REMOVED": false}
 var _mvp6_started := false
 var _guard6_count := 0
 var _guard6_last: Dictionary = {}
+var _guard6_restore_count := 0
+var _guard6_restore_last: Dictionary = {}
+var _guard6_active := false
 
 
 func build_world() -> bool:
@@ -28,21 +31,33 @@ func build_world() -> bool:
 
 func send_request(kind: String, body: Dictionary = {}) -> void:
 	# Arm the MVP6-only ENet liveness window as soon as this client completes
-	# its initial transport HELLO, before either peer can enter the synchronous
-	# base-100 Construction operation. Guarding only MVP6_* requests leaves a
-	# race where client/a can start INIT before client/b has sent its first MVP6
-	# request; client/b would then retain the default ENet timeout and disappear
-	# while the gateway is blocked on the canonical authority. HELLO is already
-	# after PEER_CONNECTED + mark_ready, so this touches only the established
-	# packet peer and changes liveness, not payload/order/reconnect semantics.
+	# HELLO. It stays armed through inherited MVP3-MVP5 because A can enter the
+	# synchronous BASE100 operation before B sends its first MVP6 request. Once
+	# MVP6 starts, each request refreshes the window and its reply restores the
+	# unchanged ENet defaults before the next request/terminal FINISH.
 	if (kind == "HELLO" or kind.begins_with("MVP6_")) and boundary != null:
+		var was_active := _guard6_active
 		var guarded: Dictionary = Guard6.apply(boundary, peer)
 		if not bool(guarded.get("success", false)):
 			finish(false, "MVP6_CLIENT_ENET_GUARD_FAILED:" + String(guarded.get("error_code", "")))
 			return
-		_guard6_count += 1
+		if not was_active:
+			_guard6_count += 1
+		_guard6_active = true
 		_guard6_last = Dictionary(guarded.get("details", {})).duplicate(true)
 	super.send_request(kind, body)
+
+
+func _restore_guard6() -> Dictionary:
+	if not _guard6_active:
+		return {"success": true, "error_code": "", "details": {"already_restored": true}}
+	var restored: Dictionary = Guard6.restore(boundary, peer)
+	if not bool(restored.get("success", false)):
+		return restored
+	_guard6_restore_count += 1
+	_guard6_restore_last = Dictionary(restored.get("details", {})).duplicate(true)
+	_guard6_active = false
+	return restored
 
 
 func _apply_construction6(snapshot: Dictionary) -> bool:
@@ -86,6 +101,11 @@ func handle_reply(packet: Dictionary) -> void:
 				finish(false, "MVP6_DERIVED_CONSTRUCTION_VIEW_FAILED")
 				return
 			_mvp6_started = _mvp6_started or not construction.is_empty()
+		if requested.begins_with("MVP6_"):
+			var restored: Dictionary = _restore_guard6()
+			if not bool(restored.get("success", false)):
+				finish(false, "MVP6_CLIENT_ENET_GUARD_RESTORE_FAILED:" + String(restored.get("error_code", "")))
+				return
 	super.handle_reply(packet)
 
 
@@ -192,12 +212,19 @@ func next_automated(snapshot: Dictionary) -> void:
 
 
 func finish(passed: bool, error_code: String) -> void:
+	if _guard6_active:
+		var restored: Dictionary = _restore_guard6()
+		if not bool(restored.get("success", false)):
+			passed = false
+			if error_code.is_empty():
+				error_code = "MVP6_CLIENT_ENET_GUARD_RESTORE_FAILED:" + String(restored.get("error_code", ""))
 	var report: Dictionary = _runtime_view6.get_report() if _runtime_view6 != null else {}
 	var valid := passed and _phase_reports6.has("BASE") and _phase_reports6.has("ADDED") and _phase_reports6.has("REMOVED")
 	valid = valid and int(_phase_reports6.get("BASE", {}).get("part_count", 0)) == 100
 	valid = valid and int(_phase_reports6.get("ADDED", {}).get("part_count", 0)) == 101
 	valid = valid and int(_phase_reports6.get("REMOVED", {}).get("part_count", 0)) == 100
 	valid = valid and int(report.get("construct_count", 0)) == 1 and bool(report.get("canonical_truth_owner", true)) == false and int(report.get("direct_authority_references", -1)) == 0
+	valid = valid and _guard6_count > 0 and _guard6_restore_count == _guard6_count and not _guard6_active
 	var evidence := {
 		"schema": "distributed_world_simulator.mvp6_graphical_construction_client.v1",
 		"subject_head": cfg.get("subject_head", ""),
@@ -211,8 +238,12 @@ func finish(passed: bool, error_code: String) -> void:
 		"direct_authority_references": 0,
 		"manual_input_executed": false,
 		"mvp6_transport_guard": {
-			"apply_count": _guard6_count,
+			"activation_count": _guard6_count,
 			"last": _guard6_last.duplicate(true),
+			"restore_count": _guard6_restore_count,
+			"restore_last": _guard6_restore_last.duplicate(true),
+			"active": _guard6_active,
+			"restored_before_finish": _guard6_count > 0 and _guard6_restore_count == _guard6_count and not _guard6_active,
 			"shared_transport_changed": false,
 			"payload_limit_changed": false,
 			"reconnect_policy_changed": false,
