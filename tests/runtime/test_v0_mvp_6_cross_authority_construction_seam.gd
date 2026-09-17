@@ -7,6 +7,7 @@ const SeamGrant = preload("res://scripts/construction/multiplayer/construction_m
 const DistributedCommand = preload("res://scripts/construction/distributed/construction_distributed_command.gd")
 const DamageRequest = preload("res://scripts/construction/damage/construction_damage_request.gd")
 const SalvagePolicy = preload("res://scripts/construction/damage/construction_salvage_policy.gd")
+const ItemRelations = preload("res://scripts/items/domain/item_relations.gd")
 
 var seam_product: Dictionary = {}
 
@@ -162,10 +163,11 @@ func exercise_cross_authority_construction_seam() -> bool:
 		[SeamGrant.ACTION_DAMAGE, SeamGrant.ACTION_READ], int(permissions.get_epoch())
 	)
 	if not success(permissions.publish(damage_grant), "publish explicit server DAMAGE permission"): return false
+	var salvage_transform := Transform3D(Basis.IDENTITY, Vector3(float(SeamFactory.ADD_PART_INDEX) - 49.5, 0.5, 0.0))
 	var damage_request := DamageRequest.create(
 		"damage/mvp6/seam/remove-east-leaf", SeamFactory.CONSTRUCT_ID, String(added_snapshot["checksum"]),
 		SeamFactory.part_id(0), [SeamFactory.bond_id(SeamFactory.ADD_PART_INDEX - 1)], [],
-		{}, [], SalvagePolicy.create(2, {}, false)
+		{}, [], SalvagePolicy.create(2, ItemRelations.world(salvage_transform), false)
 	)
 	if not success(DamageRequest.validate(damage_request), "canonical REMOVE request validates"): return false
 	var damage_bundle: Dictionary = bridge.get_snapshot_packet().get("state_bundle", {})
