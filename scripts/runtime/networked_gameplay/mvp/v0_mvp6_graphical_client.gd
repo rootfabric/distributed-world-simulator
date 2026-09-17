@@ -5,12 +5,15 @@ extends "res://scripts/runtime/networked_gameplay/mvp/v0_mvp5_graphical_client.g
 # and never submits Construction state back; observations are checksum/count
 # evidence only.
 const RuntimeView6 = preload("res://scripts/runtime/networked_gameplay/mvp/v0_mvp6_derived_construction_runtime_view.gd")
+const Guard6 = preload("res://scripts/runtime/networked_gameplay/mvp/v0_mvp6_enet_long_operation_guard.gd")
 var _runtime_view6 = null
 var _construction6: Dictionary = {}
 var _view_result6: Dictionary = {}
 var _phase_reports6: Dictionary = {}
 var _observed_sent6 := {"BASE": false, "ADDED": false, "REMOVED": false}
 var _mvp6_started := false
+var _guard6_count := 0
+var _guard6_last: Dictionary = {}
 
 
 func build_world() -> bool:
@@ -21,6 +24,17 @@ func build_world() -> bool:
 	add_child(_runtime_view6)
 	var configured: Dictionary = _runtime_view6.setup("client/" + actor)
 	return bool(configured.get("success", false))
+
+
+func send_request(kind: String, body: Dictionary = {}) -> void:
+	if kind.begins_with("MVP6_") and boundary != null:
+		var guarded: Dictionary = Guard6.apply(boundary, peer)
+		if not bool(guarded.get("success", false)):
+			finish(false, "MVP6_CLIENT_ENET_GUARD_FAILED:" + String(guarded.get("error_code", "")))
+			return
+		_guard6_count += 1
+		_guard6_last = Dictionary(guarded.get("details", {})).duplicate(true)
+	super.send_request(kind, body)
 
 
 func _apply_construction6(snapshot: Dictionary) -> bool:
@@ -171,6 +185,13 @@ func finish(passed: bool, error_code: String) -> void:
 		"canonical_state_owned": false,
 		"direct_authority_references": 0,
 		"manual_input_executed": false,
+		"mvp6_transport_guard": {
+			"apply_count": _guard6_count,
+			"last": _guard6_last.duplicate(true),
+			"shared_transport_changed": false,
+			"payload_limit_changed": false,
+			"reconnect_policy_changed": false,
+		},
 		"mvp6_predicate_verified": false,
 	}
 	var path := String(cfg.get("mvp6_evidence_file", ""))
