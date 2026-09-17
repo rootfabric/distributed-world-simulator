@@ -91,7 +91,11 @@ func handle_reply(packet: Dictionary) -> void:
 
 func apply_snapshot(snapshot: Dictionary) -> void:
 	super.apply_snapshot(snapshot)
-	if hud != null:
+	# Preserve the exact MVP4/MVP5 capture surface until Construction has
+	# actually started. Adding an MVP6 status row earlier enlarges the derived
+	# UI exclusion mask and can hide real terrain pixels from the unchanged MVP4
+	# visible-mutation falsifier even though the UI itself is hidden in capture.
+	if hud != null and (_mvp6_started or bool(snapshot.get("mvp6", {}).get("initialized", false))):
 		var mvp6: Dictionary = snapshot.get("mvp6", {})
 		hud.text += "\nMVP6 Construction: %s parts=%s collision=%s" % [
 			String(mvp6.get("phase", "pending")),
