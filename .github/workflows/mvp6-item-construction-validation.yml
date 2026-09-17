@@ -178,7 +178,7 @@ jobs:
   seam-prerequisites:
     if: github.repository == 'rootfabric/distributed-world-simulator' && github.ref == 'refs/heads/feature/v0-mvp-playable-seamless-planet-r1' && (github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[mvp6-seam-repro]'))
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     env:
       EXPECTED_HEAD: ${{ github.sha }}
       PYTHONUTF8: '1'
