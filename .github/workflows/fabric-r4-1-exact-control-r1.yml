@@ -1,0 +1,113 @@
+name: FABRIC R4.1 Exact Control R1
+
+on:
+  push:
+    branches: [control/fabric-r4-1-exact-3afd-r1]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fabric-r4-1-numeric-diagnostics
+  cancel-in-progress: true
+
+env:
+  SUBJECT_HEAD: 3afd12e9296b6533b25e7466cec6b4e2151daceb
+  SUBJECT_TREE: dc8d9c8c9bf0e6905ad3c581f75893ccd195078e
+
+jobs:
+  exact-control:
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Bind control-only scope and exact product
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$(git merge-base HEAD "$SUBJECT_HEAD")" = "$SUBJECT_HEAD"
+          test "$(git rev-parse "$SUBJECT_HEAD^{tree}")" = "$SUBJECT_TREE"
+          actual="$(git diff --name-only "$SUBJECT_HEAD"...HEAD)"
+          test "$actual" = '.github/workflows/fabric-r4-1-exact-control-r1.yml'
+          printf 'CONTROL_HEAD=%s\nSUBJECT_HEAD=%s\nSUBJECT_TREE=%s\n' "$(git rev-parse HEAD)" "$SUBJECT_HEAD" "$SUBJECT_TREE" | tee r41-control-identity.txt
+          git checkout --detach "$SUBJECT_HEAD"
+          echo '*.gd.uid' >> .git/info/exclude
+      - name: Verify canonical Linux double
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          bin="${DWS_GODOT_DOUBLE_BIN:-$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64}"
+          test -x "$bin"
+          test "$("$bin" --version | head -n1 | tr -d '\r')" = '4.7.1.stable.double.custom_build.a13da4feb'
+          sha="$(sha256sum "$bin" | awk '{print $1}')"
+          test "$sha" = 'bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7'
+          echo "GODOT_BIN=$bin" >> "$GITHUB_ENV"
+          printf 'GODOT_SHA256=%s\n' "$sha" | tee r41-control-godot.txt
+      - name: Fresh import exact subject
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          rm -rf .godot
+          "$GODOT_BIN" --headless --editor --path . --log-file r41-control-import.log --import
+          ! grep -Eiq 'SCRIPT ERROR|Parse Error|Invalid call|Invalid access|ERROR:' r41-control-import.log
+      - name: R4.1 numeric and diagnostic regression
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          "$GODOT_BIN" --headless --path . --script res://tests/research/fabric1/fabric_r4_1_numeric_diagnostics_acceptance.gd 2>&1 | tee r41-focused.log
+          grep -F 'FABRIC_R4_1_NUMERIC_DIAGNOSTICS_ASSERTIONS=13 FAILURES=0' r41-focused.log
+          grep -F 'FABRIC-R4.1-NUMERIC-DIAGNOSTICS: PASS' r41-focused.log
+      - name: Historical G2 regression
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          bash RUN_FABRIC_HOLDOUT_R4_G2_TESTS.sh 2>&1 | tee r41-g2.log
+          grep -F 'FABRIC-HOLDOUT-R4-G2: PASS' r41-g2.log
+      - name: COMPLEX2 PERF regression
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          bash RUN_FABRIC_COMPLEX2_PERF_TESTS.sh 2>&1 | tee r41-perf.log
+          grep -F 'COMPLEX2PERF_MATRIX_HASH=698486abd097e6ee12731b0afb1c6e28ed24bf72b52d8d940c9f5b7336498607' r41-perf.log
+      - name: COMPLEX2 CLOSE regression
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          bash RUN_FABRIC_COMPLEX2_CLOSE_TESTS.sh 2>&1 | tee r41-close.log
+          grep -F 'COMPLEX2_CLOSE_HASH=f429d2743dab5f31fed87901186b03868039b13c2e087a86f3473f84e5b60855' r41-close.log
+      - name: B0.6 full closure regression
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          rm -rf artifacts/fabric-r4-1-control-b06
+          B06_LOG_DIR="$GITHUB_WORKSPACE/artifacts/fabric-r4-1-control-b06" bash RUN_FABRIC_B0_6_CLOSE_TESTS.sh 2>&1 | tee r41-b06.log
+          grep -F 'FABRIC B0.6 Adaptive Physical Fidelity: PASS' r41-b06.log
+          grep -F 'B06_CLOSURE_HASH=892a66dbcb9e29c99ba7088a03dd41c167fd728a6f97923d4e944e4aef682584' r41-b06.log
+      - name: Capture exact control evidence
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$(git rev-parse HEAD)" = "$SUBJECT_HEAD"
+          test "$(git rev-parse 'HEAD^{tree}')" = "$SUBJECT_TREE"
+          git diff --check
+          test -z "$(git status --porcelain=v1 --untracked-files=no)"
+          sha256sum r41-control-identity.txt r41-control-godot.txt r41-control-import.log r41-focused.log r41-g2.log r41-perf.log r41-close.log r41-b06.log > r41-control-evidence.sha256
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fabric-r4-1-exact-control-${{ github.sha }}
+          path: |
+            r41-control-identity.txt
+            r41-control-godot.txt
+            r41-control-import.log
+            r41-focused.log
+            r41-g2.log
+            r41-perf.log
+            r41-close.log
+            r41-b06.log
+            r41-control-evidence.sha256
+            artifacts/fabric-r4-1-control-b06/**
+          if-no-files-found: error
+          retention-days: 90
