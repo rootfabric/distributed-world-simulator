@@ -182,27 +182,31 @@ static func restore(canonical_item_graph, authority_owner_id: String, authority_
 	if not bool(result.get("success", false)):
 		return result
 
-	return ParametricUtils.success({
-		"gateway": gateway,
-		"permissions": permissions,
-		"live_port": live_port,
-		"authoritative_adapter": adapter,
-		"damage_process": damage,
-		"build_process": build,
-		"build_store": store,
-		"transfer_backend": transfer,
-		"endpoint_a": endpoint_a,
-		"endpoint_b": endpoint_b,
-		"cluster": cluster,
-		"construct_id": Factory.CONSTRUCT_ID,
-		"build_plan_id": Factory.BUILD_PLAN_ID,
-		"single_item_graph_identity": live_port.is_bound_to_item_graph(canonical_item_graph),
-		"fixture_material_truth_present": false,
-		"damage_process_configured": true,
-		"build_plan_registered": false,
-		"recovered_from_existing_m0": true,
-		"recovered_construct_checksum": String(recovered.get("checksum", "")),
-	})
+	return {
+		"success": true,
+		"error_code": "",
+		"details": {
+			"gateway": gateway,
+			"permissions": permissions,
+			"live_port": live_port,
+			"authoritative_adapter": adapter,
+			"damage_process": damage,
+			"build_process": build,
+			"build_store": store,
+			"transfer_backend": transfer,
+			"endpoint_a": endpoint_a,
+			"endpoint_b": endpoint_b,
+			"cluster": cluster,
+			"construct_id": Factory.CONSTRUCT_ID,
+			"build_plan_id": Factory.BUILD_PLAN_ID,
+			"single_item_graph_identity": live_port.is_bound_to_item_graph(canonical_item_graph),
+			"fixture_material_truth_present": false,
+			"damage_process_configured": true,
+			"build_plan_registered": false,
+			"recovered_from_existing_m0": true,
+			"recovered_construct_checksum": String(recovered.get("checksum", "")),
+		},
+	}
 
 
 static func _failure(code: String, details: Dictionary = {}) -> Dictionary:
