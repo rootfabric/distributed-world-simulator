@@ -130,10 +130,10 @@ def main() -> int:
     start, error = time.monotonic(), ""
     try:
         for role in ("authority/a", "authority/b"):
-            launch(role, ["--headless", "--path", str(ROOT), "--script", "res://scripts/runtime/networked_gameplay/mvp/v0_mvp6_authority_process.gd"], {"internal_keys":internal_keys})
+            launch(role, ["--headless", "--path", str(ROOT), "--script", "res://scripts/runtime/networked_gameplay/mvp/v0_mvp6_guarded_authority_process.gd"], {"internal_keys":internal_keys})
         for role in ("authority/a", "authority/b"):
             BASE.require(BASE.wait_state(paths[role], {"LISTENING", "FAILED"}, time.monotonic() + 30).get("state") == "LISTENING", "AUTHORITY_NOT_LISTENING:" + role)
-        launch("gateway", ["--headless", "--path", str(ROOT), "--script", "res://scripts/runtime/networked_gameplay/mvp/v0_mvp6_gateway_process.gd"], {"internal_keys":internal_keys, "client_keys":client_keys, "mode":"interactive"})
+        launch("gateway", ["--headless", "--path", str(ROOT), "--script", "res://scripts/runtime/networked_gameplay/mvp/v0_mvp6_guarded_gateway_process.gd"], {"internal_keys":internal_keys, "client_keys":client_keys, "mode":"interactive"})
         BASE.require(BASE.wait_state(paths["gateway"], {"LISTENING", "FAILED"}, time.monotonic() + 50).get("state") == "LISTENING", "GATEWAY_NOT_LISTENING")
         for i, actor in enumerate(("a", "b")):
             launch("client/" + actor, ["--path", str(ROOT), "--resolution", "720x480", "--position", f"{40 + i * 760},80", "res://scenes/labs/mvp/v0_mvp6_live_construction.tscn"], {
