@@ -1,0 +1,142 @@
+{
+  "schema": "distributed_world_simulator.mvp6_graphical_five_process_evidence.v1",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "work_order": "V0-MVP-R1-WO-001",
+  "checkpoint": "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE",
+  "work_state": "IN_PROGRESS",
+  "gate": "MVP6_GRAPHICAL_FIVE_DISTINCT_PROCESS",
+  "result": "EXACT_PASS",
+  "runtime_subject": {
+    "head": "14ac9a956197cbe1441671992790803c7e7d8063",
+    "tree": "9dcc88d599cc7787389bdd16c672f45e0d6b5685"
+  },
+  "engine": {
+    "family": "Godot 4.7.1 double",
+    "sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7"
+  },
+  "exact_ci": {
+    "workflow": "MVP6 Item Construction Exact",
+    "run_id": 35227263598,
+    "run_number": 116,
+    "job": "graphical-five-process",
+    "job_id": 105221917720,
+    "conclusion": "success"
+  },
+  "artifact": {
+    "id": 10499248259,
+    "name": "mvp6-graphical-14ac9a956197cbe1441671992790803c7e7d8063-35227263598-1",
+    "sha256": "c6bd59d023474d97a9624f709737d9cf854247007a9c3c53445ed4b2a61aac40",
+    "manifest_passed": true,
+    "manifest_error": "",
+    "checks_total": 86,
+    "checks_failed": 0
+  },
+  "processes": {
+    "authority/a": 2442,
+    "authority/b": 2443,
+    "gateway": 2463,
+    "client/a": 2473,
+    "client/b": 2474,
+    "unique_process_ids": 5
+  },
+  "canonical_ownership": {
+    "authority/a": {
+      "canonical_construction_owned": true,
+      "replica_read_only": false
+    },
+    "authority/b": {
+      "canonical_construction_owned": false,
+      "replica_read_only": true
+    },
+    "gateway": {
+      "canonical_state_owned": false
+    },
+    "client/a": {
+      "canonical_state_owned": false,
+      "direct_authority_references": 0,
+      "derived_construct_count": 1
+    },
+    "client/b": {
+      "canonical_state_owned": false,
+      "direct_authority_references": 0,
+      "derived_construct_count": 1
+    }
+  },
+  "construction_route": {
+    "gateway_complete": true,
+    "final_phase": "REMOVED",
+    "mutation_count": 2,
+    "replays": {
+      "ADD": true,
+      "REMOVE": true
+    },
+    "authority_routes": [
+      {"intent": "ADD", "authority_a_process_id": 2442, "authority_b_process_id": 2443},
+      {"intent": "REPLAY_ADD", "authority_a_process_id": 2442, "authority_b_process_id": 2443},
+      {"intent": "REMOVE", "authority_a_process_id": 2442, "authority_b_process_id": 2443},
+      {"intent": "REPLAY_REMOVE", "authority_a_process_id": 2442, "authority_b_process_id": 2443}
+    ],
+    "final_part_count": 100,
+    "final_checksum": "f686d5f502fbd690b75db7bc093ab4a771ac411d793f1efbfae279244ff2adbb",
+    "owner_replica_gateway_checksum_equal": true
+  },
+  "client_derived_phases": {
+    "BASE": {
+      "part_count": 100,
+      "collision_part_count": 100,
+      "canonical_checksum": "e86ae9c8c719c0d4e5c54661c63ea7c65155887fe1c4f60be19d051ebe666254",
+      "descriptor_checksum": "f7803454de3526f4890b0918e9723d769c570b2ba3b70260747814802f19d6f1",
+      "clients_converged": true
+    },
+    "ADDED": {
+      "part_count": 101,
+      "collision_part_count": 101,
+      "canonical_checksum": "b6d21c1f5a6c80b2a6fa05f2e4e57e6da46dbebca0a34e80a929fd53eaf0837b",
+      "descriptor_checksum": "0d648d0c7a3e951463cd696bd045f1b17aee4acbf341c043b1a87eeadfe92163",
+      "clients_converged": true
+    },
+    "REMOVED": {
+      "part_count": 100,
+      "collision_part_count": 100,
+      "canonical_checksum": "f686d5f502fbd690b75db7bc093ab4a771ac411d793f1efbfae279244ff2adbb",
+      "descriptor_checksum": "3fdd7d00b270fa35b53c6116166fb2e9c04e87e4d7995ea7fa428023e07c5f67",
+      "clients_converged": true
+    }
+  },
+  "composition_checks": {
+    "mvp4": {"passed": 28, "total": 28},
+    "mvp5": {"passed": 22, "total": 22},
+    "mvp6": {"passed": 22, "total": 22},
+    "process_exit": {"passed": 5, "total": 5},
+    "process_logs": {"passed": 5, "total": 5},
+    "visible_terrain": {
+      "client/a_changed_pixels": 376,
+      "client/b_changed_pixels": 376,
+      "passed": true
+    }
+  },
+  "negative_controls": [
+    "duplicate_owner",
+    "one_sided_replica",
+    "missing_add_replay",
+    "fake_same_process_route",
+    "duplicate_client_process",
+    "client_claims_truth",
+    "missing_collision_part",
+    "stale_subject"
+  ],
+  "negative_controls_rejected": 8,
+  "hud_only_falsification_cases": 2,
+  "transport_guard": {
+    "shared_transport_changed": false,
+    "payload_limit_changed": false,
+    "reconnect_policy_changed": false
+  },
+  "scope_statement": "This evidence closes only the exact five-distinct-process graphical MVP6 gate. It does not mark the whole MVP6 predicate VERIFIED.",
+  "mvp6_verified": false,
+  "remaining_before_mvp6_verified": [
+    "full world/core",
+    "fresh Reviewer",
+    "fresh Verifier"
+  ]
+}
