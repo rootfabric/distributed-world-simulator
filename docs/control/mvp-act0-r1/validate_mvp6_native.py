@@ -44,13 +44,23 @@ def main() -> int:
         raise RuntimeError("TRACKED_SOURCE_DIRTY")
     OUT.mkdir(parents=True, exist_ok=False)
     env = os.environ.copy()
-    env.update(PYTHONUTF8="1", PYTHONDONTWRITEBYTECODE="1", BREAKPOINT_RUNTIME_DISABLED="1", MVP6_NATIVE_RESULT=str(OUT / "native.json"), MVP6_SECURITY_RESULT=str(OUT / "security.json"), MVP3_OWNER_HOOKS_RESULT=str(OUT / "mvp3.json"), MVP5_FOCUSED_RESULT=str(OUT / "mvp5.json"))
+    env.update(
+        PYTHONUTF8="1",
+        PYTHONDONTWRITEBYTECODE="1",
+        BREAKPOINT_RUNTIME_DISABLED="1",
+        MVP6_NATIVE_RESULT=str(OUT / "native.json"),
+        MVP6_SECURITY_RESULT=str(OUT / "security.json"),
+        MVP6_C17_ROUTE_RESULT=str(OUT / "c17_route.json"),
+        MVP3_OWNER_HOOKS_RESULT=str(OUT / "mvp3.json"),
+        MVP5_FOCUSED_RESULT=str(OUT / "mvp5.json"),
+    )
     prefix = [str(engine), "--headless", "--path", str(ROOT)]
     specs = [
         ("import", prefix + ["--editor", "--import", "--quit"], 240),
         ("prediction_rollback", prefix + ["--script", "res://tests/runtime/test_v0_mvp_6_prediction_rollback.gd"], 120),
         ("security", prefix + ["--script", "res://tests/runtime/test_v0_mvp_6_native_replay_security.gd"], 120),
         ("native", prefix + ["--script", "res://tests/runtime/test_v0_mvp_6_native_item_handoff.gd"], 240),
+        ("c17_route", prefix + ["--script", "res://tests/runtime/test_v0_mvp_6_authenticated_construction_authority_route.gd"], 240),
         ("mvp3", prefix + ["--script", "res://tests/runtime/test_v0_mvp3_live_owner_handoff.gd"], 240),
         ("mvp5", prefix + ["--script", "res://tests/runtime/test_v0_mvp_5_exactly_once_material.gd"], 300),
     ]
@@ -77,7 +87,8 @@ def main() -> int:
         print(json.dumps(row), flush=True)
         if name == "import" and not row["passed"]:
             break
-    results = {name: read(OUT / (name + ".json")) for name in ("native", "security", "mvp3", "mvp5")}
+    result_names = ("native", "security", "c17_route", "mvp3", "mvp5")
+    results = {name: read(OUT / (name + ".json")) for name in result_names}
     checks = {"all_commands": len(rows) == len(specs) and all(r["passed"] for r in rows), "tracked_clean_after": not git("status", "--porcelain", "--untracked-files=no")}
     for name, value in results.items():
         checks[name + "_passed"] = value.get("passed") is True
@@ -87,11 +98,38 @@ def main() -> int:
     cases = native.get("cases", [])
     checks["six_actual_transfers"] = len(cases) == 6
     checks["four_nonempty_transfers"] = len([c for c in cases if c.get("nonempty") is True]) == 4
-    checks["no_self_acceptance"] = native.get("mvp6_predicate_verified") is False and native.get("independent_verdict") is False
+    c17 = results["c17_route"]
+    checks["c17_authenticated_actor_context"] = c17.get("authenticated_actor_context_preserved") is True
+    checks["c17_terminal_replay_preserved"] = c17.get("terminal_replay_preserved") is True
+    checks["c17_unbound_session_rejected"] = c17.get("unbound_session_rejected") is True
+    checks["c17_no_duplicate_owner"] = c17.get("canonical_owner_duplicated") is False
+    checks["no_self_acceptance"] = (
+        native.get("mvp6_predicate_verified") is False
+        and native.get("independent_verdict") is False
+        and c17.get("mvp6_predicate_verified") is False
+        and c17.get("independent_verdict") is False
+    )
     passed = all(checks.values())
-    summary = {"schema": "distributed_world_simulator.mvp6_native_exact_summary.v1", "subject_head": head, "subject_tree": tree, "engine_sha256": sha(engine), "passed": passed, "checks": checks, "assertions": {n: v.get("assertions", 0) for n, v in results.items()}, "failures": {n: v.get("failures", []) for n, v in results.items()}, "native_carry_passed": checks["native_passed"], "mvp6_predicate_verified": False, "independent_verdict": False, "graphical_clients_executed": False, "construction_executed": False, "world_restart_executed": False, "full_world_core_executed": False}
+    summary = {
+        "schema": "distributed_world_simulator.mvp6_native_exact_summary.v2",
+        "subject_head": head,
+        "subject_tree": tree,
+        "engine_sha256": sha(engine),
+        "passed": passed,
+        "checks": checks,
+        "assertions": {n: v.get("assertions", 0) for n, v in results.items()},
+        "failures": {n: v.get("failures", []) for n, v in results.items()},
+        "native_carry_passed": checks["native_passed"],
+        "authenticated_c17_route_passed": checks["c17_route_passed"],
+        "mvp6_predicate_verified": False,
+        "independent_verdict": False,
+        "graphical_clients_executed": False,
+        "construction_executed": False,
+        "world_restart_executed": False,
+        "full_world_core_executed": False,
+    }
     (OUT / "summary.json").write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
-    manifest = {"schema": "distributed_world_simulator.mvp6_native_exact_manifest.v1", "subject_head": head, "subject_tree": tree, "engine_sha256": sha(engine), "run_id": os.environ.get("GITHUB_RUN_ID", "local"), "run_attempt": os.environ.get("GITHUB_RUN_ATTEMPT", "1"), "commands": rows, "passed": passed, "files": [{"path": p.relative_to(OUT).as_posix(), "bytes": p.stat().st_size, "sha256": sha(p)} for p in sorted(OUT.rglob("*")) if p.is_file()]}
+    manifest = {"schema": "distributed_world_simulator.mvp6_native_exact_manifest.v2", "subject_head": head, "subject_tree": tree, "engine_sha256": sha(engine), "run_id": os.environ.get("GITHUB_RUN_ID", "local"), "run_attempt": os.environ.get("GITHUB_RUN_ATTEMPT", "1"), "commands": rows, "passed": passed, "files": [{"path": p.relative_to(OUT).as_posix(), "bytes": p.stat().st_size, "sha256": sha(p)} for p in sorted(OUT.rglob("*")) if p.is_file()]}
     (OUT / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
     print(json.dumps(summary, indent=2), flush=True)
     return 0 if passed else 1
