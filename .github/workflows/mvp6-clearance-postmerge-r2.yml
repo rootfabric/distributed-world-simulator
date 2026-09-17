@@ -1,0 +1,61 @@
+name: MVP6 Postmerge Clearance R2 Exact
+on:
+  push:
+    branches: [validation/v0-mvp6-nx-clearance-postmerge-r2]
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: mvp6-clearance-postmerge-r2-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  clearance-exact:
+    if: github.repository == 'rootfabric/distributed-world-simulator' && github.ref == 'refs/heads/validation/v0-mvp6-nx-clearance-postmerge-r2'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      EXPECTED_HEAD: 6902a99081c1fbdf676c71dca5ea0d80fd633267
+      EXPECTED_TREE: f4ae35216de7ed915fcb0c46b03b0f35baeccd6b
+      PYTHONUTF8: '1'
+      PYTHONDONTWRITEBYTECODE: '1'
+      PYTHONPATH: scripts
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 6902a99081c1fbdf676c71dca5ea0d80fd633267
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Bind exact control subject and current genuine refs
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+          test "$(git rev-parse HEAD^{tree})" = "$EXPECTED_TREE"
+          git fetch origin '+refs/heads/*:refs/remotes/origin/*' --prune
+          test "$(git rev-parse origin/main)" = a6d5eb6b287130a638ba6cf397c34e29169948c1
+          test "$(git rev-parse origin/control/v0-mvp6-nx-directional-clearance-postmerge-r2)" = "$EXPECTED_HEAD"
+          git switch -c control/v0-mvp6-nx-directional-clearance-postmerge-r2 "$EXPECTED_HEAD"
+          test -z "$(git status --porcelain --untracked-files=all)"
+          python3 -m pip install --disable-pip-version-check -r scripts/harness/requirements.txt
+      - uses: actions/download-artifact@v4
+        with:
+          name: mvp6-postmerge-2497ecb6b89b6c1e20afbff9c823c7564b78f956-35162668295-1
+          run-id: 35162668295
+          repository: rootfabric/distributed-world-simulator
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/mvp6-postmerge-input
+      - name: Rehash input and validate actual versus simulated clearance
+        shell: bash
+        run: |
+          set -euo pipefail
+          export MVP6_CLEARANCE_OUTPUT="$RUNNER_TEMP/mvp6-clearance-r2"
+          export MVP6_POSTMERGE_ARTIFACT="$RUNNER_TEMP/mvp6-postmerge-input"
+          python3 docs/control/mvp-act0-r1/validate_mvp6_clearance_postmerge_r2.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mvp6-clearance-r2-6902a990-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/mvp6-clearance-r2/
+          if-no-files-found: error
+          retention-days: 90
