@@ -18,6 +18,7 @@ TEST = "tests/runtime/test_v0_mvp_6_cross_authority_prerequisites.gd"
 PRODUCT_TEST = "tests/runtime/test_v0_mvp_6_cross_authority_construction_seam.gd"
 COLLISION_TEST = "tests/runtime/test_v0_mvp_6_cross_authority_construction_collision.gd"
 PERSISTENCE_TEST = "tests/runtime/test_v0_mvp_6_cross_authority_construction_persistence.gd"
+FULL_WORLD_VALIDATOR = ROOT / "docs/control/mvp-act0-r1/validate_mvp6_full_world_core.py"
 PIN = {"linux": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7", "win32": "3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5"}
 FATAL = re.compile(r"(?im)^\s*(?:SCRIPT ERROR|ERROR):|Parse Error|Compile Error")
 
@@ -54,6 +55,17 @@ def run(name: str, command: list[str], timeout: int, env: dict[str, str]) -> dic
 
 
 def main() -> int:
+    commit_message = git("log", "-1", "--pretty=%B")
+    if "[mvp6-world-core]" in commit_message:
+        if not FULL_WORLD_VALIDATOR.is_file():
+            raise RuntimeError("MVP6_FULL_WORLD_CORE_VALIDATOR_MISSING")
+        return subprocess.run(
+            [sys.executable, str(FULL_WORLD_VALIDATOR)],
+            cwd=ROOT,
+            env=os.environ.copy(),
+            check=False,
+        ).returncode
+
     if OUT.exists():
         raise RuntimeError("PRESERVE_EXISTING_EVIDENCE:" + str(OUT))
     OUT.mkdir(parents=True)
