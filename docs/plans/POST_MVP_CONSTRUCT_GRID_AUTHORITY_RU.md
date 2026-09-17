@@ -5,6 +5,8 @@
 
 Этот документ уточняет `POST_MVP_HIERARCHICAL_SEAMLESS_WORLDS_RU.md` и `POST_MVP_VOLUMETRIC_TOPOLOGY_DESIGN_RU.md`. Он не меняет принятые C1–C23 задним числом, не объявляет новый runtime owner и не расширяет текущий MVP. Цель — сформулировать единый контракт для домов, машин, станций и кораблей, которые могут пересекать границы пространственных authority.
 
+Связанный обязательный consumer-contract для игроков, роботов и локальных объектов на движущихся grids: `POST_MVP_GRID_RESIDENT_BINDING_RU.md`.
+
 ## 1. Основная идея
 
 Каждый канонический `ConstructAggregate` получает стабильный локальный **ConstructGrid**. Это не означает, что вся геометрия обязана состоять из одинаковых кубиков.
@@ -73,6 +75,9 @@ CG7  соседние authority могут хранить read-only projections/
 CG8  canonical structural split, а не spatial seam, создаёт независимые child grids;
 CG9  server placement является производным assignment и может меняться без смены construct/grid identity;
 CG10 отсутствие target readiness сохраняет текущего owner; оно не разрешает частичный перенос.
+CG11 proximity к grid не меняет player locomotion authority;
+CG12 physical frame binding может сделать player/robot GRID_BOUND без изменения logical identity;
+CG13 GRID_BOUND residents входят в migration closure whole-grid transfer;
 ```
 
 ## 3. Grid как единица пространственного охвата
@@ -166,6 +171,8 @@ PHYSICS GROUP -> at most one admitted physics writer
 
 Это разные canonical states, поэтому присутствие корабля в пространстве B не означает, что B получает право изменить его структуру или интегрировать вторую authoritative physics copy.
 
+Игрок или робот, находящийся рядом с grid, остаётся у своего world movement authority до подтверждённого physical-frame binding. Внешнее interaction с прибором маршрутизируется к construct owner без обязательного locomotion transfer. После `WORLD_BOUND -> GRID_BOUND` resident становится частью поддержанной grid simulation closure; подробный контракт находится в `POST_MVP_GRID_RESIDENT_BINDING_RU.md`.
+
 ## 6. Если grid больше spatial region
 
 Если `MigrationCore(region, grid)` пуст, grid физически не может целиком оказаться в данном регионе.
@@ -209,6 +216,8 @@ Grid G
 
 До structural split пространственная граница не является линией разрушения.
 
+GRID_BOUND residents после structural split должны быть однозначно reassigned к G1, G2 либо возвращены в WORLD_BOUND/free state; один resident не может оставаться canonical-bound одновременно к двум child grids.
+
 ## 8. Merge, docking и joints
 
 Нельзя автоматически объединять grids из-за контакта.
@@ -229,6 +238,8 @@ CANONICAL STRUCTURAL MERGE
 ```
 
 Таким образом `ConstructGrid` и `PhysicsSimulationGroup` не являются одним объектом.
+
+GRID_BOUND resident может перейти G1 -> G2 через explicit grid-to-grid binding handoff; docking сам по себе не делает все residents общими и не является implicit grid merge.
 
 ## 9. Статические большие здания
 
@@ -259,6 +270,8 @@ Server migration не должна автоматически менять Const
 
 Для движущегося корабля grid может оставаться стабильным, пока меняется его `world_from_grid_transform`. Reference-frame migration и server-authority migration — разные операции.
 
+GRID_BOUND resident хранит/использует grid-local pose/velocity semantics и при unbind должен быть корректно преобразован обратно в target world frame, включая движение/вращение grid.
+
 ## 11. Physics и collision
 
 ConstructGrid упрощает ownership, но не решает распределённую физику автоматически.
@@ -269,7 +282,8 @@ ConstructGrid упрощает ownership, но не решает распред�
 - spatial authorities поставляют versioned collision/environment context;
 - соседние copies не коммитят второй impulse;
 - сильносвязанные dynamic objects перед контактом либо co-locate для solve, либо используют отдельно доказанный coupling protocol;
-- spatial seam не пересобирает rigid islands.
+- spatial seam не пересобирает rigid islands;
+- GRID_BOUND locomotion не прыгает между spatial owners при ходьбе по одному mobile grid.
 
 Construction уже компилирует geometry/collision/rigid islands из canonical data; Grid должен адресовать эту структуру, а не заменять её.
 
@@ -298,6 +312,7 @@ local part coordinates
 structural identities
 item identities
 accepted operation results
+resident logical identities
 ```
 
 Меняются:
@@ -307,6 +322,8 @@ authority/server assignment
 authority epoch/incarnation
 possibly placement/runtime caches
 ```
+
+Если grid содержит GRID_BOUND residents, whole-grid migration closure включает их movement continuation, carrying/mount/constraint evidence и terminal operation watermarks. Hull не считается успешно перенесённым, если resident остаётся canonical-active на старом executor.
 
 Если backend не умеет безопасно переносить требуемое physics state, grid остаётся у старого executor либо migration ждёт безопасного состояния. Нельзя компенсировать gap созданием второй active physics copy.
 
@@ -330,6 +347,13 @@ possibly placement/runtime caches
 | CG14 | Large station section grids | stable root; explicit sections; no spatial auto-split |
 | CG15 | Terrain collision на другом spatial owner | один physics result; no duplicate impulse |
 | CG16 | Reference-frame transform меняется | grid local coordinates стабильны; versioned placement |
+| CG17 | Player B взаимодействует с ship A снаружи | interaction проходит, player остаётся WORLD_BOUND(B) |
+| CG18 | Player B входит на mobile ship A | один WORLD_BOUND -> GRID_BOUND handoff, identities/session стабильны |
+| CG19 | Player идёт по ship через A/B/C | locomotion не переключается по world seam |
+| CG20 | Whole-grid migration с onboard residents | grid + residents transfer as one migration closure |
+| CG21 | Player выходит на region C | GRID_BOUND -> WORLD_BOUND(C), world velocity корректна |
+
+Подробная матрица resident cases: GR01–GR16 в `POST_MVP_GRID_RESIDENT_BINDING_RU.md`.
 
 ## 14. Как это встраивается в существующую Construction линию
 
@@ -352,7 +376,7 @@ C16 snap `grid` остаётся UI/placement primitive. Новый ConstructGri
 
 ```text
 CG0 Contract Audit
-  existing Construction/WorldGraph/physics capabilities
+  existing Construction/WorldGraph/physics/player-movement capabilities
 
 CG1 ConstructGrid Foundation
   stable grid identity + local placement + conservative envelope
@@ -360,18 +384,20 @@ CG1 ConstructGrid Foundation
 CG2 Coverage / Containment
   world partition coverage_set + exact full-containment + MigrationCore
 
-CG3 Straddling Continuity
-  static base + moving ship across A/B/C without authority split
+CG3 Straddling + Resident Binding Continuity
+  static base + moving ship across A/B/C without authority split;
+  WORLD_BOUND <-> GRID_BOUND; external interaction without locomotion transfer
 
 CG4 Whole-Grid Migration
-  full containment -> WARM -> barrier/fence -> whole-grid activate
+  full containment -> WARM -> barrier/fence -> whole-grid activate;
+  GridResidentSet included in migration closure
 
 CG5 Structural Split / Merge / Coupled Physics
   child grids only from canonical structural operations;
-  docking/joints and temporary simulation groups
+  docking/joints, temporary simulation groups, resident reassignment/grid-to-grid handoff
 
 CG6 Scale / Recovery Acceptance
-  large station/ship, fault matrix, replay, sections, restart
+  large station/ship, many onboard residents, fault matrix, replay, sections, restart
 ```
 
 ## 16. Главный итоговый контракт
@@ -385,6 +411,14 @@ THESE ARE NOT THE SAME THING.
 
 A GRID MAY STRADDLE MANY WORLD PARTITIONS.
 STRADDLING DOES NOT SPLIT OWNERSHIP.
+
+PROXIMITY DOES NOT MOVE A PLAYER TO THE GRID OWNER.
+CROSS-AUTHORITY INTERACTION DOES NOT REQUIRE LOCOMOTION TRANSFER.
+
+A RESIDENT MAY BECOME GRID_BOUND WHEN THE GRID BECOMES
+THE PHYSICAL FRAME THAT DETERMINES RESIDENT MOTION.
+
+GRID_BOUND RESIDENTS PARTICIPATE IN WHOLE-GRID MIGRATION CLOSURE.
 
 NORMAL REGION-AFFINE MIGRATION IS ALLOWED ONLY AFTER
 THE WHOLE GRID IS SAFELY CONTAINED IN THE TARGET REGION.
