@@ -7,9 +7,37 @@ const NetworkUtils = preload("res://scripts/network/contracts/network_contract_u
 var persistence_product: Dictionary = {}
 
 
+func _process_repository_roots() -> Dictionary:
+	var base := "user://mvp6-seam-construction"
+	var absolute := ProjectSettings.globalize_path(base)
+	var result: Dictionary = {}
+	if not DirAccess.dir_exists_absolute(absolute):
+		return result
+	var prefix := "%d-" % OS.get_process_id()
+	for raw_name in DirAccess.get_directories_at(base):
+		var name := String(raw_name)
+		if name.begins_with(prefix):
+			result[name] = true
+	return result
+
+
 func exercise_persistence_rehydration() -> bool:
+	# The seam product chooses a unique M0 repository beneath user://. Record
+	# the current-process directory set before execution so the persistence proof
+	# can reopen the exact repository created by this run, not a fresh empty one.
+	var roots_before := _process_repository_roots()
 	if not exercise_cross_authority_construction_seam():
 		return false
+	var roots_after := _process_repository_roots()
+	var new_roots: Array[String] = []
+	for raw_name in roots_after.keys():
+		var name := String(raw_name)
+		if not roots_before.has(name):
+			new_roots.append(name)
+	new_roots.sort()
+	if not check(new_roots.size() == 1, "exactly one durable Construction M0 repository is created by the seam scenario"):
+		return false
+	var root := "user://mvp6-seam-construction/%s" % new_roots[0]
 	var removed_snapshot: Dictionary = seam_product.get("removed_snapshot", {})
 	var durable_items: Dictionary = seam_product.get("durable_items", {})
 	var durable_construction: Dictionary = seam_product.get("durable_construction", {})
@@ -59,23 +87,24 @@ func exercise_persistence_rehydration() -> bool:
 	if not migration.is_empty() and not check(not bool(migration.get("migrated", true)), "current canonical Item Graph requires no compatibility migration on restore"):
 		return false
 
-	# Recreate composition wiring only, then load the previously exported
-	# canonical adapter/registry/replica state. The factory still owns no private
-	# material truth and C17 still names authority A as the only writer.
-	var root := "user://mvp6-seam-rehydrate/%d-%d" % [OS.get_process_id(), Time.get_ticks_usec()]
+	# Recreate composition wiring against the SAME durable M0 repository. The
+	# transaction coordinator's bootstrap is replay-only for non-empty stores;
+	# adapter.setup therefore synchronizes from committed M0 before load_state
+	# verifies the exported expected state. No direct Construction insertion is
+	# performed and no second repository is used.
 	var created: Dictionary = SeamFactory.create(
 		restored_graph,
 		String(restored_item_snapshot.get("authority_owner_id", "authority/a")),
 		int(restored_item_snapshot.get("authority_epoch", 1)),
 		root
 	)
-	if not success(created, "create fresh composition shell for canonical restore"):
+	if not success(created, "reopen persisted Construction M0 repository through fresh composition shell"):
 		return false
 	var detail: Dictionary = created.get("details", {})
 	if not check(bool(detail.get("single_item_graph_identity", false)), "rehydrated Construction binds the restored canonical M4 Item Graph"):
 		return false
 	var loaded_construction: Dictionary = detail["authoritative_adapter"].load_state(durable_construction)
-	if not success(loaded_construction, "load canonical Construction adapter state"):
+	if not success(loaded_construction, "verify canonical Construction adapter state against reopened M0 repository"):
 		return false
 	var loaded_cluster: Dictionary = detail["cluster"].load_state(durable_cluster)
 	if not success(loaded_cluster, "load C17 authority registry and east read replica state"):
@@ -169,6 +198,7 @@ func exercise_persistence_rehydration() -> bool:
 		return false
 
 	persistence_product = {
+		"repository_root": root,
 		"restored_item_snapshot_checksum": String(restored_item_snapshot.get("checksum", "")),
 		"restored_construct_checksum": String(restored_snapshot.get("checksum", "")),
 		"restored_authority_record": restored_record.duplicate(true),
