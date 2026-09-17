@@ -82,7 +82,13 @@ func _graph6():
 func _ore6(snapshot: Dictionary, actor: String) -> int:
 	var total := 0
 	for row in snapshot.get("items", []):
-		if row is Dictionary and String(row.get("definition_id", "")) == "item/ore" and String(row.get("player_id", "")) == actor:
+		if not row is Dictionary or String(row.get("definition_id", "")) != "item/ore":
+			continue
+		var owner := String(row.get("player_id", ""))
+		var location = row.get("location", {})
+		if location is Dictionary:
+			owner = String(location.get("player_id", owner))
+		if owner == actor:
 			total += int(row.get("quantity", 0))
 	return total
 
