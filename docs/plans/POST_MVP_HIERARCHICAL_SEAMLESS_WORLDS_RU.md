@@ -1,24 +1,26 @@
 # Post-MVP — объёмная бесшовность, ConstructGrid и иерархия областей
 
 Статус: **POST-MVP ROADMAP AMENDMENT / NOT ACTIVATED / NO CURRENT MVP SCOPE EXPANSION**.
-Уточнение R3: 17 сентября 2026.
+Уточнение R4: 17 сентября 2026.
 
 Подробные решения:
 
 - [объёмная топология, размещение и безопасное переразбиение](POST_MVP_VOLUMETRIC_TOPOLOGY_DESIGN_RU.md);
-- [ConstructGrid, целостная authority и перенос крупных построек](POST_MVP_CONSTRUCT_GRID_AUTHORITY_RU.md).
+- [ConstructGrid, целостная authority и перенос крупных построек](POST_MVP_CONSTRUCT_GRID_AUTHORITY_RU.md);
+- [WORLD_BOUND / GRID_BOUND и GridResidentSet](POST_MVP_GRID_RESIDENT_BINDING_RU.md).
 
 Этот план определяет первое крупное направление после принятия `V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE`. Он не является текущим Work Order, не расширяет acceptance первого MVP и не разрешает post-MVP runtime mutation. До принятия PR в main это предложение, не канонический scheduler.
 
-R3 уточняет прежний HS-план: «вложенные миры» означают одно непрерывное пространство с объёмными участками ответственности. Крупные конструкции не разрезаются server seam: каждая постройка имеет стабильный локальный `ConstructGrid`, который может пересекать несколько spatial partitions и сохранять одного construct/physics writer до отдельного безопасного переноса.
+R4 уточняет прежний HS-план: «вложенные миры» означают одно непрерывное пространство с объёмными участками ответственности. Крупные конструкции не разрезаются server seam: каждая постройка имеет стабильный локальный `ConstructGrid`, который может пересекать несколько spatial partitions и сохранять одного construct/physics writer до отдельного безопасного переноса. Игрок/робот не переносится к owner grid по proximity: locomotion меняет domain только при подтверждённом physical-frame binding `WORLD_BOUND <-> GRID_BOUND`.
 
 ## 1. Цель
 
-Перейти от простого плоского seam к системе, где одновременно выполняются три свойства:
+Перейти от простого плоского seam к системе, где одновременно выполняются четыре свойства:
 
 1. каждая точка объявленного world-space однозначно относится к одному spatial partition;
 2. каждая каноническая постройка имеет стабильный локальный ConstructGrid и единственного writer;
-3. server placement может меняться независимо от spatial/construct identity.
+3. server placement может меняться независимо от spatial/construct identity;
+4. resident может физически войти на mobile ConstructGrid и следовать его simulation frame без перепривязки по world seams.
 
 Эталонное описание пространства:
 
@@ -35,6 +37,18 @@ Space
 Spatial partitions:   AAAAAAAA | BBBBBBBB | CCCCCCCC
 Ship ConstructGrid:        =====================
 Construct/physics owner:             S
+```
+
+Эталонный resident route:
+
+```text
+WORLD_BOUND(B)
+  -> external interaction with ship A, no movement transfer
+  -> board mobile ship
+  -> GRID_BOUND(ship)
+  -> walk across A/B/C while remaining grid-bound
+  -> exit onto region C
+  -> WORLD_BOUND(C)
 ```
 
 Игрок проходит `Space -> Planet -> POI -> Dungeon -> POI -> Planet -> Space` обычным движением. Корабль, база или станция могут пересекать spatial seam без автоматического structural split, teleport или смены object identity.
@@ -57,6 +71,13 @@ GRID_STRADDLING_MAY_SPAN_MULTIPLE_SPATIAL_PARTITIONS
 WHOLE_GRID_CONTAINMENT_REQUIRED_FOR_NORMAL_REGION_AFFINE_MIGRATION
 CANONICAL_STRUCTURAL_SPLIT_CREATES_CHILD_GRIDS
 
+PROXIMITY_DOES_NOT_TRANSFER_PLAYER_AUTHORITY
+INTERACTION_DOES_NOT_REQUIRE_LOCOMOTION_TRANSFER
+PHYSICAL_FRAME_BINDING_MAY_CREATE_GRID_BOUND_RESIDENT
+GRID_BOUND_RESIDENT_FOLLOWS_GRID_SIMULATION_FRAME
+WHOLE_GRID_MIGRATION_INCLUDES_GRID_BOUND_RESIDENT_CLOSURE
+UNBIND_RETURNS_RESIDENT_TO_RESOLVED_WORLD_AUTHORITY
+
 SPATIAL_PARTITION != SERVER_PLACEMENT
 CONSTRUCT_GRID != WORLD_PARTITION_GRID
 CONSTRUCT_GRID != PHYSICS_ISLAND
@@ -64,7 +85,7 @@ REFERENCE_FRAME != SERVER_OWNER
 SEMANTIC_ZONE != OWNERSHIP_REGION
 
 CANONICAL_ITEMS_AND_CARRYING_PRESERVED
-VERSIONED_TOPOLOGY_ASSIGNMENT_GRID_AND_FRAME_EVIDENCE
+VERSIONED_TOPOLOGY_ASSIGNMENT_GRID_BINDING_AND_FRAME_EVIDENCE
 STALE_OWNERSHIP_CANNOT_AUTHORIZE_CANONICAL_COMMIT
 ```
 
@@ -79,6 +100,7 @@ reference frames / coordinates
 semantic places and zones
 canonical world spatial partitions
 ConstructGrid / construct ownership
+resident movement binding (WORLD_BOUND / GRID_BOUND)
 physics simulation groups
 server placement / authority epochs
 interest / WARM / projections
@@ -86,7 +108,7 @@ interest / WARM / projections
 
 Semantic и visibility overlaps допустимы. Эффективные spatial ownership-области не пересекаются. ConstructGrid может пересекать их и при этом оставаться одним canonical construct.
 
-Переиспользовать WorldGraph, Directory/AUTHORITY, existing spatial identities, Edge Gateway, SM1, MW9/MW10, Item Graph и Construction owners. Не создавать второй Construction store, Item Graph, physics truth или routing foundation.
+Переиспользовать WorldGraph, Directory/AUTHORITY, existing spatial identities, Edge Gateway, SM1, MW9/MW10, Item Graph и Construction owners. Не создавать второй Construction store, Item Graph, player identity store, physics truth или routing foundation.
 
 Начальная spatial topology — статические half-open AABB и вложенные исключения. Начальный ConstructGrid — стабильный local frame + conservative envelope поверх существующих C10/C11 geometry semantics. Grid не требует, чтобы parametric members стали кубическими вокселями.
 
@@ -148,11 +170,24 @@ WorldAddress и ConstructPlacement связывают instance/space, reference 
 
 Отдельная frame на каждый server запрещена как следствие placement.
 
-### HS4 — Static Seam, Straddling Continuity and Readiness
+### HS4 — Static Seam, Straddling and Resident Binding Continuity
 
 Запустить реальные authority-процессы, Gateway и два клиента.
 
 Сначала доказать ordinary player/carrying seam через заранее заданные соседние и вложенные объёмы. Затем доказать крупный ConstructGrid, который физически пересекает A/B/C **без construct migration**.
+
+Добавить mobility binding proof:
+
+```text
+WORLD_BOUND(B)
+ -> approach ship A: no proximity transfer
+ -> external device interaction: still WORLD_BOUND(B)
+ -> supported/interior/mount binding
+ -> GRID_BOUND(ship)
+ -> walk/jump across world seams without B/A/C locomotion ping-pong
+ -> exit onto C
+ -> WORLD_BOUND(C)
+```
 
 ```text
 same client WorldConnection
@@ -162,11 +197,14 @@ teleport used as seam substitute = false
 construct_id/grid_id stable
 construct writer count = 1
 physics writer count <= 1
+player movement writer count <= 1
+PlayerId / PlayerEntityId stable
+carrying preserved
 ```
 
-Spatial authorities заранее готовят нужные collision/environment/projection data. WARM/interest overlap не получает write authority. Неготовность контекста не интерпретируется как пустое пространство.
+Spatial authorities заранее готовят нужные collision/environment/projection data. WARM/interest overlap не получает write authority. Неготовность контекста не интерпретируется как пустое пространство. GRID binding использует explicit reason/revision и hysteresis; прыжок внутри/на палубе не должен вызывать authority ping-pong.
 
-### HS5 — Whole-Grid Migration
+### HS5 — Whole-Grid Migration + Resident Closure
 
 После HS2–HS4 разрешить отдельный whole-grid migration gate.
 
@@ -180,11 +218,13 @@ Spatial authorities заранее готовят нужные collision/environ
 - operation/physics barrier определён;
 - stale source writer может быть fenced.
 
+Если есть GRID_BOUND residents, migration closure включает их locomotion continuation, local pose/velocity, carrying/mount/constraint evidence и operation watermarks.
+
 Маршрут:
 
 ```text
 PRELOAD
- -> COPY/CATCH_UP
+ -> COPY/CATCH_UP grid + physics + residents
  -> BARRIER
  -> READY
  -> FENCE SOURCE
@@ -193,13 +233,13 @@ PRELOAD
  -> DRAIN/CLEANUP
 ```
 
-После migration неизменны `construct_id`, `grid_id`, local part coordinates, item identities и accepted operation results.
+После migration неизменны `construct_id`, `grid_id`, local part coordinates, player/entity/item identities и accepted operation results.
 
-Проверить migration в обе стороны, lost reply/retry, source/target crash и объект, который долго находится у seam без ping-pong migration.
+Проверить migration в обе стороны, lost reply/retry, source/target crash, 10+ onboard residents и объект, который долго находится у seam без ping-pong migration.
 
 ### HS6 — Cross-Volume Operations and Large-Object Physics
 
-Проверить реальные операции, когда world-space и construct ownership различаются.
+Проверить реальные операции, когда world-space, construct ownership и resident movement binding различаются.
 
 Обязательные сценарии:
 
@@ -207,7 +247,10 @@ PRELOAD
 - корабль имеет один physics owner, но контактирует с terrain другого spatial owner;
 - тяга/действие на одной стороне длинного construct и collision на другой дают один physics result;
 - соседняя replica не коммитит второй impulse;
-- два dynamic grids при сильной связи не получают два независимых solver результата.
+- два dynamic grids при сильной связи не получают два независимых solver результата;
+- WORLD_BOUND player взаимодействует с construct другого owner без locomotion transfer;
+- GRID_BOUND player взаимодействует внутри ship через тот же canonical Item/Construction path;
+- docking G1/G2 допускает explicit GRID_BOUND(G1)->GRID_BOUND(G2) handoff без implicit grid merge.
 
 Использовать MW9/MW10, CWIP и Item/Construction transaction/recovery contracts после аудита API. Пространственное разложение footprint не заменяет атомарность.
 
@@ -235,6 +278,8 @@ ConstructGrid G
 
 только после canonical structural transaction допускает независимое размещение частей.
 
+При structural split GRID_BOUND resident должен быть однозначно reassigned к G1, G2 либо WORLD_BOUND/free state. Одновременный canonical binding к двум child grids запрещён.
+
 Подэтапы:
 
 | Подэтап | Обязательное доказательство |
@@ -242,10 +287,11 @@ ConstructGrid G
 | HS7.A Placement | migrate world partition без смены геометрии; несколько partitions на одном server |
 | HS7.B Spatial split/merge | parent/child exclusions сохранены; constructs не режутся seam |
 | HS7.C Construct split/merge | child grids только из canonical structural operations; docking/contact не является implicit merge |
-| HS7.D Durable cutover | snapshot/catch-up, barrier, fence, durable decision, activation, cleanup |
-| HS7.E Fault matrix | crash/restart, stale process/route, lost reply, concurrent edit, forward recovery |
+| HS7.D Resident reassignment | GRID_BOUND residents детерминированно follow child grid или unbind |
+| HS7.E Durable cutover | snapshot/catch-up, barrier, fence, durable decision, activation, cleanup |
+| HS7.F Fault matrix | crash/restart, stale process/route, lost reply, concurrent edit, forward recovery |
 
-Использовать VT01–VT24 и CG01–CG16 из двух design-документов как вход будущего test plan.
+Использовать VT01–VT24, CG01–CG21 и GR01–GR16 из design-документов как вход будущего test plan.
 
 ### HS8 — Four-Level Live Composition Acceptance
 
@@ -257,6 +303,7 @@ Gateway
 Space / Planet / POI / Cave authorities
 100-block boundary construct
 long moving ConstructGrid / ship fixture
+onboard GridResidentSet
 ```
 
 Пройти полный пространственный маршрут и одновременно доказать:
@@ -264,9 +311,13 @@ long moving ConstructGrid / ship fixture
 - player/item/carrying continuity;
 - dig/build operations;
 - ConstructGrid straddling without split;
-- один whole-grid migration после полного containment;
+- WORLD_BOUND external interaction without locomotion transfer;
+- boarding WORLD_BOUND -> GRID_BOUND;
+- onboard walk/jump across multiple world seams;
+- GRID_BOUND -> WORLD_BOUND(C) exit with correct world velocity;
+- один whole-grid migration с onboard residents после полного containment;
 - spatial split/merge без разрезания construct;
-- canonical structural split с child grids;
+- canonical structural split с child grids и resident reassignment;
 - recovery/fencing/replay;
 - bounded WARM/projection cleanup.
 
@@ -294,15 +345,15 @@ CURRENT MVP ACCEPTED
   -> HS1: static volumetric world topology
   -> HS2: ConstructGrid + coverage/full containment
   -> HS3: reference frames + grid placement
-  -> HS4: seamless straddling without construct migration
-  -> HS5: whole-grid migration
-  -> HS6: cross-volume operations / large-object physics
-  -> HS7: controlled spatial + structural split/merge/recovery
+  -> HS4: seamless straddling + WORLD_BOUND/GRID_BOUND binding
+  -> HS5: whole-grid migration + GridResidentSet closure
+  -> HS6: cross-volume operations / large-object physics / grid-grid handoff
+  -> HS7: controlled spatial + structural split/merge/resident recovery
   -> HS8: live multi-level acceptance
   -> larger world / scale / placement optimization later
 ```
 
-Construction integration использует отдельную плановую лестницу CG0–CG6 из `POST_MVP_CONSTRUCT_GRID_AUTHORITY_RU.md`. Это не номер C25 и не переоткрытие accepted C17. Конкретная activation должна сначала сверить live Construction frontier и capabilities main.
+Construction integration использует отдельную плановую лестницу CG0–CG6 из `POST_MVP_CONSTRUCT_GRID_AUTHORITY_RU.md`; resident-binding acceptance — GR01–GR16 из `POST_MVP_GRID_RESIDENT_BINDING_RU.md`. Это не номер C25 и не переоткрытие accepted C17. Конкретная activation должна сначала сверить live Construction/player movement frontier и capabilities main.
 
 WORLDGEN1, NX/RF, контент и ECO/FABRIC остаются отдельными направлениями через явные consumer contracts. Этот roadmap не переименовывает P8 и не меняет заявленную независимость P8/RF.
 
@@ -312,4 +363,4 @@ WORLDGEN1, NX/RF, контент и ECO/FABRIC остаются отдельны
 
 Перед исполнением сверить настоящий status существующих owners. Specification candidate не равен runtime acceptance. Неизвестный API фиксируется как gap, не восполняется demo-only store/координатором.
 
-Уточнение R3 не изменяет текущий MVP6 или его acceptance. Документы HS/CG — направление будущей реализации, не второй scheduler.
+Уточнение R4 не изменяет текущий MVP6 или его acceptance. Документы HS/CG/GR — направление будущей реализации, не второй scheduler.
