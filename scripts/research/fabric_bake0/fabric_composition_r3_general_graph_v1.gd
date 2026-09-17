@@ -57,19 +57,35 @@ static func solve_resistive(model: Dictionary, boundary_voltages_v: Dictionary) 
 		var a: String = str(element.node_a)
 		var b: String = str(element.node_b)
 		var conductance := 1.0 / float(element.resistance_ohm)
+		if not is_finite(conductance):
+			return U.failure("R3_NUMERIC_ENVELOPE", {"stage": "conductance", "element_id": str(element.element_id)})
 		for pair in [[a, b], [b, a]]:
 			var x: String = pair[0]
 			var y: String = pair[1]
 			if not index.has(x): continue
 			var row: int = int(index[x])
-			matrix[row][row] = float(matrix[row][row]) + conductance
-			if index.has(y): matrix[row][int(index[y])] = float(matrix[row][int(index[y])]) - conductance
-			else: rhs[row] = float(rhs[row]) + conductance * float(boundary_voltages_v[y])
+			var assembled_diagonal := float(matrix[row][row]) + conductance
+			if not is_finite(assembled_diagonal): return U.failure("R3_NUMERIC_ENVELOPE", {"stage": "matrix_diagonal", "element_id": str(element.element_id)})
+			matrix[row][row] = assembled_diagonal
+			if index.has(y):
+				var assembled := float(matrix[row][int(index[y])]) - conductance
+				if not is_finite(assembled): return U.failure("R3_NUMERIC_ENVELOPE", {"stage": "matrix", "element_id": str(element.element_id)})
+				matrix[row][int(index[y])] = assembled
+			else:
+				var rhs_term := conductance * float(boundary_voltages_v[y])
+				var assembled_rhs := float(rhs[row]) + rhs_term
+				if not is_finite(rhs_term) or not is_finite(assembled_rhs): return U.failure("R3_NUMERIC_ENVELOPE", {"stage": "rhs", "element_id": str(element.element_id)})
+				rhs[row] = assembled_rhs
 	var solved := solve_dense(matrix, rhs)
 	if not solved.success: return solved
 	var potentials := {}
 	for key in boundary_voltages_v: potentials[str(key)] = float(boundary_voltages_v[key])
-	for i in range(free.size()): potentials[free[i]] = float(solved.details.x[i])
+	for i in range(free.size()):
+		var potential := float(solved.details.x[i])
+		if not is_finite(potential): return U.failure("R3_NUMERIC_ENVELOPE", {"stage": "potential", "node_id": free[i]})
+		potentials[free[i]] = potential
+	if not is_finite(float(solved.details.pivot_condition_estimate)):
+		return U.failure("R3_NUMERIC_ENVELOPE", {"stage": "condition_estimate"})
 	var edge_currents := {}
 	var balance := {}
 	for node_id in node_ids: balance[node_id] = 0.0
@@ -78,23 +94,45 @@ static func solve_resistive(model: Dictionary, boundary_voltages_v: Dictionary) 
 		var a: String = str(element.node_a)
 		var b: String = str(element.node_b)
 		var resistance: float = float(element.resistance_ohm)
-		var current := (float(potentials[a]) - float(potentials[b])) / resistance
+		var delta_v := float(potentials[a]) - float(potentials[b])
+		var current := delta_v / resistance
+		if not is_finite(delta_v) or not is_finite(current):
+			return U.failure("R3_NUMERIC_ENVELOPE", {"stage": "edge_current", "element_id": str(element.element_id)})
 		edge_currents[str(element.element_id)] = current
-		balance[a] = float(balance[a]) + current
-		balance[b] = float(balance[b]) - current
-		joule += current * current * resistance
+		var next_balance_a := float(balance[a]) + current
+		var next_balance_b := float(balance[b]) - current
+		if not is_finite(next_balance_a) or not is_finite(next_balance_b):
+			return U.failure("R3_NUMERIC_ENVELOPE", {"stage": "node_balance", "element_id": str(element.element_id)})
+		balance[a] = next_balance_a
+		balance[b] = next_balance_b
+		# delta_v * current is algebraically equal to I^2 R but avoids an
+		# avoidable intermediate overflow when both final factors remain finite.
+		var joule_term := delta_v * current
+		var next_joule := joule + joule_term
+		if not is_finite(joule_term) or not is_finite(next_joule):
+			return U.failure("R3_NUMERIC_ENVELOPE", {"stage": "joule_power", "element_id": str(element.element_id)})
+		joule = next_joule
 	var ports := {}
 	var max_kcl := 0.0
 	for node_id in node_ids:
 		if boundary_voltages_v.has(node_id): ports[node_id] = float(balance[node_id])
 		else: max_kcl = maxf(max_kcl, absf(float(balance[node_id])))
 	var boundary_power := 0.0
-	for node_id in ports: boundary_power += float(potentials[node_id]) * float(ports[node_id])
+	for node_id in ports:
+		var power_term := float(potentials[node_id]) * float(ports[node_id])
+		var next_boundary_power := boundary_power + power_term
+		if not is_finite(power_term) or not is_finite(next_boundary_power):
+			return U.failure("R3_NUMERIC_ENVELOPE", {"stage": "boundary_power", "node_id": node_id})
+		boundary_power = next_boundary_power
 	var power_residual := absf(boundary_power - joule)
+	if not is_finite(max_kcl) or not is_finite(power_residual):
+		return U.failure("R3_NUMERIC_ENVELOPE", {"stage": "residual", "kcl_residual_a": max_kcl, "power_residual_w": power_residual})
 	var current_scale := 1.0
 	for value in edge_currents.values(): current_scale = maxf(current_scale, absf(float(value)))
 	for value in ports.values(): current_scale = maxf(current_scale, absf(float(value)))
 	var power_scale := 1.0 + absf(boundary_power) + absf(joule)
+	if not is_finite(current_scale) or not is_finite(power_scale):
+		return U.failure("R3_NUMERIC_ENVELOPE", {"stage": "residual_scale"})
 	if max_kcl > RESIDUAL_REL_TOL * current_scale or power_residual > RESIDUAL_REL_TOL * power_scale:
 		return U.failure("R3_GENERAL_GRAPH_RESIDUAL", {"kcl_residual_a": max_kcl, "power_residual_w": power_residual})
 	return U.success({"potentials_v": potentials, "edge_currents_a": edge_currents, "port_currents_a": ports, "kcl_residual_a": max_kcl, "joule_power_w": joule, "boundary_power_w": boundary_power, "power_residual_w": power_residual, "pivot_condition_estimate": float(solved.details.pivot_condition_estimate)})
@@ -156,7 +194,9 @@ static func solve_dense(matrix: Array, rhs: Array) -> Dictionary:
 		for j in range(row + 1, n): value -= float(augmented[row][j]) * float(x[j])
 		x[row] = value / float(augmented[row][row])
 		if not is_finite(float(x[row])): return U.failure("R3_GENERAL_LINEAR_NONFINITE")
-	return U.success({"x": x, "pivot_condition_estimate": max_pivot / maxf(min_pivot, 1.0e-300)})
+	var condition_estimate := max_pivot / maxf(min_pivot, 1.0e-300)
+	if not is_finite(condition_estimate): return U.failure("R3_GENERAL_LINEAR_NONFINITE")
+	return U.success({"x": x, "pivot_condition_estimate": condition_estimate})
 
 static func _zero_vector(size: int) -> Array:
 	var result: Array = []
