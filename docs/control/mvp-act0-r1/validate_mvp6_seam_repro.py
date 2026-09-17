@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Preserve native gap reproduction and require the bounded seam product repair."""
+"""Preserve native gap reproduction and require seam product plus real derived collision."""
 from __future__ import annotations
 import fnmatch
 import hashlib
@@ -16,6 +16,7 @@ BASE = "182d93872bfddbf52a72ab170371ebb9489690bb"
 OUT = ROOT / "artifacts/mvp6-seam-repro"
 TEST = "tests/runtime/test_v0_mvp_6_cross_authority_prerequisites.gd"
 PRODUCT_TEST = "tests/runtime/test_v0_mvp_6_cross_authority_construction_seam.gd"
+COLLISION_TEST = "tests/runtime/test_v0_mvp_6_cross_authority_construction_collision.gd"
 PIN = {"linux": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7", "win32": "3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5"}
 FATAL = re.compile(r"(?im)^\s*(?:SCRIPT ERROR|ERROR):|Parse Error|Compile Error")
 
@@ -65,9 +66,10 @@ def main() -> int:
         BREAKPOINT_RUNTIME_DISABLED="1",
         MVP6_SEAM_DIAGNOSTIC_RESULT=str(OUT / "result.json"),
         MVP6_CROSS_AUTHORITY_SEAM_RESULT=str(OUT / "product.json"),
+        MVP6_DERIVED_COLLISION_RESULT=str(OUT / "collision.json"),
     )
     summary: dict = {
-        "schema": "distributed_world_simulator.mvp6_seam_repro_execution.v2",
+        "schema": "distributed_world_simulator.mvp6_seam_repro_execution.v3",
         "subject_head": head,
         "subject_tree": tree,
         "baseline_head": BASE,
@@ -75,11 +77,13 @@ def main() -> int:
         "run_attempt": env.get("GITHUB_RUN_ATTEMPT", "1"),
         "diagnostic_passed": False,
         "product_test_passed": False,
+        "collision_test_passed": False,
         "mvp6_cross_authority_construction_seam_verified": False,
         "mvp6_predicate_verified": False,
         "independent_verdict": False,
         "main_merge": False,
         "full_world_core_executed": False,
+        "graphical_five_process_executed": False,
     }
     rows: list[dict] = []
     try:
@@ -102,6 +106,7 @@ def main() -> int:
         assert summary["engine_sha256"] == PIN.get(sys.platform), "CANONICAL_DOUBLE_GODOT_REQUIRED"
         summary["diagnostic_test_blob"] = git("rev-parse", head + ":" + TEST)
         summary["product_test_blob"] = git("rev-parse", head + ":" + PRODUCT_TEST)
+        summary["collision_test_blob"] = git("rev-parse", head + ":" + COLLISION_TEST)
         prefix = [str(engine), "--headless", "--path", str(ROOT)]
         imported = run("import", prefix + ["--editor", "--import", "--quit"], 240, env)
         rows.append(imported)
@@ -136,6 +141,23 @@ def main() -> int:
         assert product.get("graphical_five_process_executed") is False and product.get("derived_collision_executed") is False, "NATIVE_PRODUCT_MUST_NOT_OVERCLAIM_GRAPHICS"
         assert product.get("mvp6_cross_authority_construction_seam_verified") is False and product.get("mvp6_predicate_verified") is False, "NATIVE_PRODUCT_MUST_NOT_SELF_ACCEPT"
         summary["product_test_passed"] = True
+
+        collision_row = run("seam-collision", prefix + ["--script", "res://" + COLLISION_TEST], 600, env)
+        rows.append(collision_row)
+        collision_path = OUT / "collision.json"
+        collision = json.loads(collision_path.read_text(encoding="utf-8")) if collision_path.is_file() else {}
+        summary["collision_result"] = {k: v for k, v in collision.items() if k != "collision"}
+        assert collision_row["exit_code"] == 0 and not collision_row["fatal_markers"], "SEAM_COLLISION_TEST_FAILED"
+        assert collision.get("subject_head") == head and collision.get("subject_tree") == tree, "COLLISION_SUBJECT_MISMATCH"
+        assert collision.get("passed") is True and collision.get("failures") == [], "SEAM_COLLISION_NOT_GREEN"
+        for field in (
+            "cross_authority_seam_executed", "derived_presentation_executed", "derived_collision_executed",
+            "physics_server_hit_executed", "removed_leaf_collision_absent",
+        ):
+            assert collision.get(field) is True, "SEAM_COLLISION_FIELD_FALSE:" + field
+        assert collision.get("graphical_five_process_executed") is False, "COLLISION_GATE_MUST_NOT_OVERCLAIM_FIVE_PROCESS"
+        assert collision.get("mvp6_cross_authority_construction_seam_verified") is False and collision.get("mvp6_predicate_verified") is False, "COLLISION_GATE_MUST_NOT_SELF_ACCEPT"
+        summary["collision_test_passed"] = True
     except Exception as exc:
         summary["error"] = type(exc).__name__ + ": " + str(exc)
         print(summary["error"], flush=True)
@@ -156,12 +178,12 @@ def main() -> int:
         summary["controller"] = controller
         summary["tracked_after"] = git("status", "--porcelain", "--untracked-files=no")
         summary["identity_unchanged"] = git("rev-parse", "HEAD") == head and git("rev-parse", "HEAD^{tree}") == tree
-        summary["passed"] = summary["diagnostic_passed"] and summary["product_test_passed"] and not summary["tracked_after"] and summary["identity_unchanged"]
+        summary["passed"] = summary["diagnostic_passed"] and summary["product_test_passed"] and summary["collision_test_passed"] and not summary["tracked_after"] and summary["identity_unchanged"]
         write(OUT / "commands.json", rows)
         write(OUT / "summary.json", summary)
         files = [{"path": p.relative_to(OUT).as_posix(), "bytes": p.stat().st_size, "sha256": sha(p)} for p in sorted(OUT.rglob("*")) if p.is_file() and p.name != "manifest.json"]
         write(OUT / "manifest.json", {**summary, "files": files})
-        print(json.dumps({"head": head, "tree": tree, "passed": summary["passed"], "diagnostic_passed": summary["diagnostic_passed"], "product_test_passed": summary["product_test_passed"], "manifest_sha256": sha(OUT / "manifest.json"), "files": len(files)}), flush=True)
+        print(json.dumps({"head": head, "tree": tree, "passed": summary["passed"], "diagnostic_passed": summary["diagnostic_passed"], "product_test_passed": summary["product_test_passed"], "collision_test_passed": summary["collision_test_passed"], "manifest_sha256": sha(OUT / "manifest.json"), "files": len(files)}), flush=True)
     return 0 if summary["passed"] else 1
 
 
