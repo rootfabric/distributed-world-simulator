@@ -27,7 +27,15 @@ func build_world() -> bool:
 
 
 func send_request(kind: String, body: Dictionary = {}) -> void:
-	if kind.begins_with("MVP6_") and boundary != null:
+	# Arm the MVP6-only ENet liveness window as soon as this client completes
+	# its initial transport HELLO, before either peer can enter the synchronous
+	# base-100 Construction operation. Guarding only MVP6_* requests leaves a
+	# race where client/a can start INIT before client/b has sent its first MVP6
+	# request; client/b would then retain the default ENet timeout and disappear
+	# while the gateway is blocked on the canonical authority. HELLO is already
+	# after PEER_CONNECTED + mark_ready, so this touches only the established
+	# packet peer and changes liveness, not payload/order/reconnect semantics.
+	if (kind == "HELLO" or kind.begins_with("MVP6_")) and boundary != null:
 		var guarded: Dictionary = Guard6.apply(boundary, peer)
 		if not bool(guarded.get("success", false)):
 			finish(false, "MVP6_CLIENT_ENET_GUARD_FAILED:" + String(guarded.get("error_code", "")))
