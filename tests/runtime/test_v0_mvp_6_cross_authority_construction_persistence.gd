@@ -2,6 +2,7 @@ extends "res://tests/runtime/test_v0_mvp_6_cross_authority_construction_collisio
 
 const RestoredItemGraph = preload("res://scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service.gd")
 const RestoredRuntimeView = preload("res://scripts/runtime/networked_gameplay/mvp/v0_mvp6_derived_construction_runtime_view.gd")
+const Restorer = preload("res://scripts/runtime/networked_gameplay/mvp/v0_mvp6_cross_authority_construction_restorer.gd")
 const NetworkUtils = preload("res://scripts/network/contracts/network_contract_utils.gd")
 
 var persistence_product: Dictionary = {}
@@ -52,8 +53,8 @@ func exercise_persistence_rehydration() -> bool:
 		return false
 
 	# Fresh instance of the SAME canonical M4 service class. restore_durable_state
-	# rehydrates the owner/epoch/revision/items/inventories from its own payload;
-	# this is not a second live truth owner and does not claim an MVP7 process restart.
+	# rehydrates owner/epoch/revision/items/inventories from its own payload; this
+	# does not claim the separate MVP7 process-restart predicate.
 	var restored_graph = RestoredItemGraph.new()
 	var restored_items: Dictionary = restored_graph.restore_durable_state(durable_items)
 	if not success(restored_items, "restore canonical M4 Item Graph durable state"):
@@ -62,9 +63,7 @@ func exercise_persistence_rehydration() -> bool:
 	var durable_item_snapshot: Dictionary = durable_items.get("snapshot", {})
 	# Durable export deliberately performs a JSON round-trip. Godot Dictionary
 	# equality is Variant-type-sensitive ({"a":1} != {"a":1.0}) even though
-	# NetworkUtils canonical JSON normalizes integer-valued JSON numbers back to
-	# the same canonical value. Require full canonical JSON and checksum equality,
-	# not raw in-memory numeric Variant representation.
+	# canonical JSON normalizes integer-valued JSON numbers to the same value.
 	var item_graph_canonical_equal := (
 		NetworkUtils.canonical_json(restored_item_snapshot)
 		== NetworkUtils.canonical_json(durable_item_snapshot)
@@ -87,27 +86,80 @@ func exercise_persistence_rehydration() -> bool:
 	if not migration.is_empty() and not check(not bool(migration.get("migrated", true)), "current canonical Item Graph requires no compatibility migration on restore"):
 		return false
 
-	# Recreate composition wiring against the SAME durable M0 repository. The
-	# transaction coordinator's bootstrap is replay-only for non-empty stores;
-	# adapter.setup therefore synchronizes from committed M0 before load_state
-	# verifies the exported expected state. No direct Construction insertion is
-	# performed and no second repository is used.
-	var created: Dictionary = SeamFactory.create(
+	# Reopen the SAME durable M0 repository through bounded composition wiring.
+	# The restorer intentionally does not register a new build plan because the
+	# persisted structural items are already attached to the recovered construct.
+	var created: Dictionary = Restorer.restore(
 		restored_graph,
 		String(restored_item_snapshot.get("authority_owner_id", "authority/a")),
 		int(restored_item_snapshot.get("authority_epoch", 1)),
 		root
 	)
-	if not success(created, "reopen persisted Construction M0 repository through fresh composition shell"):
+	if not success(created, "reopen persisted Construction M0 repository without rebuilding part sources"):
 		return false
 	var detail: Dictionary = created.get("details", {})
-	if not check(bool(detail.get("single_item_graph_identity", false)), "rehydrated Construction binds the restored canonical M4 Item Graph"):
+	if not check(
+		bool(detail.get("single_item_graph_identity", false))
+		and bool(detail.get("recovered_from_existing_m0", false))
+		and not bool(detail.get("build_plan_registered", true)),
+		"rehydrated Construction binds restored M4 graph without registering a fresh build plan"
+	):
 		return false
 	var loaded_construction: Dictionary = detail["authoritative_adapter"].load_state(durable_construction)
 	if not success(loaded_construction, "verify canonical Construction adapter state against reopened M0 repository"):
 		return false
 	var loaded_cluster: Dictionary = detail["cluster"].load_state(durable_cluster)
 	if not success(loaded_cluster, "load C17 authority registry and east read replica state"):
+		return false
+
+	var replica = detail["cluster"].get_replica(SeamFactory.CONSTRUCT_ID, SeamFactory.SERVER_B)
+	if not check(replica != null and not replica.can_write(), "rehydrated authority B replica remains read-only"):
+		return false
+	var restored_replica: Dictionary = replica.get_state()
+	var state_bundle: Dictionary = restored_replica.get("state_bundle", {})
+	if not check(
+		not state_bundle.is_empty()
+		and state_bundle.get("payload", {}) is Dictionary
+		and state_bundle.get("payload", {}).get("multiplayer_gateway", {}) is Dictionary,
+		"east replica preserves the final canonical Construction and gateway state bundle"
+	):
+		return false
+
+	# C17 load_state restores registry/replica metadata. The final read replica
+	# carries the owner-exported state_bundle, including terminal command replay.
+	# Import it through the same transfer boundary so the fresh gateway recovers
+	# dedup state instead of reconstructing it from test knowledge.
+	var imported_bundle: Dictionary = detail["transfer_backend"].import_construct_state(state_bundle)
+	if not success(imported_bundle, "restore final Construction and terminal command state from canonical replica bundle"):
+		return false
+	var expected_gateway_state: Dictionary = state_bundle.get("payload", {}).get("multiplayer_gateway", {})
+	var restored_gateway_state: Dictionary = detail["gateway"].export_state()
+	var gateway_state_canonical_equal := (
+		NetworkUtils.canonical_json(restored_gateway_state)
+		== NetworkUtils.canonical_json(expected_gateway_state)
+	)
+	if not check(gateway_state_canonical_equal, "multiplayer gateway terminal/session/permission state survives rehydration exactly"):
+		return false
+	var terminal_commands: Array = expected_gateway_state.get("terminal_commands", [])
+	if not check(terminal_commands.size() >= 3, "persisted gateway retains base ADD and REMOVE terminal command history"):
+		return false
+	var terminal_ids: Dictionary = {}
+	var terminal_replay_state_preserved := true
+	for raw_row in terminal_commands:
+		if not raw_row is Dictionary:
+			terminal_replay_state_preserved = false
+			continue
+		var row: Dictionary = raw_row
+		var command_id := String(row.get("command_id", ""))
+		var command_checksum := String(row.get("command_checksum", ""))
+		terminal_ids[command_id] = true
+		terminal_replay_state_preserved = terminal_replay_state_preserved and detail["transfer_backend"].has_terminal_command(command_id, command_checksum)
+	if not check(
+		terminal_replay_state_preserved
+		and terminal_ids.has("multiplayer-command/mvp6/seam/add-east-leaf")
+		and terminal_ids.has("multiplayer-command/mvp6/seam/remove-east-leaf"),
+		"canonical ADD/REMOVE terminal replay identities survive persistence rehydration"
+	):
 		return false
 
 	var restored_snapshot: Dictionary = detail["authoritative_adapter"].get_construct_snapshot(SeamFactory.CONSTRUCT_ID)
@@ -140,10 +192,6 @@ func exercise_persistence_rehydration() -> bool:
 		"rehydrated C17 registry still has exactly writer A at epoch 1"
 	):
 		return false
-	var replica = detail["cluster"].get_replica(SeamFactory.CONSTRUCT_ID, SeamFactory.SERVER_B)
-	if not check(replica != null and not replica.can_write(), "rehydrated authority B replica remains read-only"):
-		return false
-	var restored_replica: Dictionary = replica.get_state()
 	if not check(
 		String(restored_replica.get("construct_checksum", "")) == String(restored_snapshot.get("checksum", "")),
 		"rehydrated east replica checksum equals the canonical writer checksum"
@@ -204,6 +252,9 @@ func exercise_persistence_rehydration() -> bool:
 		"restored_authority_record": restored_record.duplicate(true),
 		"restored_replica_checksum": String(restored_replica.get("construct_checksum", "")),
 		"slot_migration": migration.duplicate(true),
+		"gateway_state_canonical_equal": gateway_state_canonical_equal,
+		"terminal_command_count": terminal_commands.size(),
+		"terminal_replay_state_preserved": terminal_replay_state_preserved,
 		"derived_apply": applied.duplicate(true),
 		"derived_report": view_report.duplicate(true),
 		"west_seam_physics_hits": west_hits.size(),
@@ -238,6 +289,7 @@ func run() -> void:
 		"construction_identity_preserved": bool(persistence_product.get("same_snapshot_after_restore", false)),
 		"authority_mapping_preserved": bool(persistence_product.get("same_authority_record_after_restore", false)) and bool(persistence_product.get("single_writer_preserved", false)) and bool(persistence_product.get("east_replica_read_only", false)),
 		"relationships_preserved": bool(persistence_product.get("same_snapshot_after_restore", false)),
+		"terminal_replay_state_preserved": bool(persistence_product.get("terminal_replay_state_preserved", false)) and bool(persistence_product.get("gateway_state_canonical_equal", false)),
 		"collision_rehydrated": int(persistence_product.get("west_seam_physics_hits", 0)) > 0 and int(persistence_product.get("east_seam_physics_hits", 0)) > 0 and int(persistence_product.get("boundary_physics_hits", 0)) > 0,
 		"removed_collision_stays_absent": int(persistence_product.get("removed_leaf_physics_hits", -1)) == 0,
 		"full_process_restart_executed": false,
