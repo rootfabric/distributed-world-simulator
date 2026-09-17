@@ -133,13 +133,11 @@ func _ensure_ore6(required: int) -> Dictionary:
 	var graph = _graph6()
 	if graph == null:
 		return Protocol.failure("MVP6_CANONICAL_ITEM_GRAPH_MISSING")
-	var current := _ore6(graph.create_snapshot(), "a")
-	if current > required:
-		return Protocol.failure("MVP6_CONSTRUCTION_ORE_EXCESS_UNEXPECTED")
-	if current < required:
+	var before := _ore6(graph.create_snapshot(), "a")
+	if before < required:
 		var issued: Dictionary = graph.apply_server_output(
 			"operation/mvp6/live/ore-topup-" + String(cfg["run_id"]),
-			"a", "item/ore", required - current, "source/mvp6/live-construction"
+			"a", "item/ore", required - before, "source/mvp6/live-construction"
 		)
 		if not bool(issued.get("success", false)):
 			return issued
@@ -147,7 +145,9 @@ func _ensure_ore6(required: int) -> Dictionary:
 	if not bool(staged.get("success", false)):
 		return staged
 	var after := _ore6(graph.create_snapshot(), "a")
-	return Protocol.success({"ore": after}) if after == required else Protocol.failure("MVP6_CONSTRUCTION_ORE_TARGET_MISMATCH")
+	if after < required:
+		return Protocol.failure("MVP6_CONSTRUCTION_ORE_INSUFFICIENT")
+	return Protocol.success({"ore_before": before, "ore_available": after, "required": required})
 
 
 func _construct_checksum6(bundle: Dictionary) -> String:
