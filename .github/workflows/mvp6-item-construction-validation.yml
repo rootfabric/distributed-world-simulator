@@ -35,7 +35,18 @@ jobs:
           test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
           git switch -c "$GITHUB_REF_NAME" "$EXPECTED_HEAD"
           test -z "$(git status --porcelain --untracked-files=no)"
-          git diff --check 727b5d779543e74f254830acfd743d69fe1f7e4d HEAD
+          # Historical evidence under docs/control deliberately preserves raw
+          # Markdown/patch whitespace. Validate only executable/control surfaces;
+          # allowed/forbidden path checks below still fence the complete diff.
+          git diff --check 727b5d779543e74f254830acfd743d69fe1f7e4d HEAD -- \
+            .github/workflows \
+            scripts/runtime/networked_gameplay \
+            scripts/network/prediction \
+            tests/runtime \
+            tests/integration \
+            config/control/harness \
+            scenes/labs/mvp \
+            RUN_V0_MVP_JOURNAL_ROLLBACK.ps1
           echo "EXPECTED_TREE=$(git rev-parse HEAD^{tree})" >> "$GITHUB_ENV"
           python3 - <<'PY'
           import fnmatch,json,subprocess
