@@ -126,7 +126,8 @@ func exercise_cross_authority_construction_seam() -> bool:
 	var base_snapshot: Dictionary = detail["authoritative_adapter"].get_construct_snapshot(SeamFactory.CONSTRUCT_ID)
 	if not check(seam_parts(base_snapshot) == 100 and seam_bonds(base_snapshot) == 99, "base Construction has exactly 100 parts and 99 bonds"): return false
 	if not check(has_cross_seam_bond(base_snapshot), "base Construction has canonical bond crossing authority seam"): return false
-	if not check(String(base_snapshot.get("build_state", "")) == "STRUCTURE", "base100 remains pre-ADD structural stage"): return false
+	var base_facets: Dictionary = base_snapshot.get("compiled_facets", {})
+	if not check(String(base_snapshot.get("build_state", "")) == "PARTIAL" and String(base_facets.get("construction_semantic_state", "")) == "STRUCTURE" and not bool(base_facets.get("operational", true)), "base100 remains canonical PARTIAL/STRUCTURE pre-ADD stage"): return false
 
 	var registered: Dictionary = SeamFactory.register_active_construct(detail)
 	if not success(registered, "register one C17 canonical owner plus east read replica"): return false
