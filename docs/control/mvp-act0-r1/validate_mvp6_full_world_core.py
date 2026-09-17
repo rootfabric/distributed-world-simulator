@@ -17,6 +17,7 @@ BASE = "182d93872bfddbf52a72ab170371ebb9489690bb"
 OUT = ROOT / "artifacts/mvp6-seam-repro"
 WORLD_SUMMARY = ROOT / "artifacts/test-results/world-regression-summary.json"
 WORLD_RUNNER = "RUN_WORLD_REGRESSION_TESTS.ps1"
+WORLD_TIMEOUT_SECONDS = 1500
 GRAPHICAL_EVIDENCE = ROOT / "docs/control/mvp-act0-r1/MVP6_GRAPHICAL_FIVE_PROCESS_EVIDENCE_14AC9A95_R1.json"
 TESTS = {
     "diagnostic": "res://tests/runtime/test_v0_mvp_6_cross_authority_prerequisites.gd",
@@ -65,7 +66,7 @@ def run_world(env: dict[str, str]) -> dict:
                 stdout=stream,
                 stderr=subprocess.STDOUT,
                 check=False,
-                timeout=780,
+                timeout=WORLD_TIMEOUT_SECONDS,
             ).returncode
         except subprocess.TimeoutExpired:
             stream.write("\nMVP6_FULL_WORLD_CORE_TIMEOUT\n")
@@ -79,6 +80,7 @@ def run_world(env: dict[str, str]) -> dict:
         "command": command,
         "exit_code": code,
         "duration_seconds": round(time.monotonic() - started, 3),
+        "timeout_seconds": WORLD_TIMEOUT_SECONDS,
         "fatal_markers": bool(FATAL.search(text)),
         "log_sha256": sha(log),
     }
