@@ -1,6 +1,7 @@
 """Fail-closed exact clearance matching for PC0 directional critical watches."""
 from __future__ import annotations
 
+import re
 from typing import Any, Callable
 
 ACCEPTED_STATUS = "ACCEPTED"
@@ -22,6 +23,37 @@ def _target_identity_matches(clearance: dict[str, Any], producer: dict[str, Any]
     )
 
 
+def _validate_main_prerequisite(
+    clearance: dict[str, Any], blob_lookup: BlobLookup, ancestor_check: AncestorCheck
+) -> str | None:
+    # Historical clearances have no baseline prerequisite. New records opting
+    # into it must provide BOTH fences; incomplete declarations fail closed.
+    if "required_main_ancestor" not in clearance and "required_main_file_blobs" not in clearance:
+        return None
+    ancestor = clearance.get("required_main_ancestor")
+    if not isinstance(ancestor, str) or re.fullmatch(r"[0-9a-f]{40}", ancestor) is None:
+        return "REQUIRED_MAIN_ANCESTOR_INVALID"
+    blobs = clearance.get("required_main_file_blobs")
+    if not isinstance(blobs, dict) or not blobs:
+        return "REQUIRED_MAIN_BLOB_FENCE_REQUIRED"
+    for path, expected in blobs.items():
+        if (
+            not isinstance(path, str) or not path or "\\" in path or ":" in path
+            or any(part in ("", ".", "..") for part in path.split("/"))
+            or any(ord(char) < 32 for char in path)
+            or not isinstance(expected, str) or re.fullmatch(r"[0-9a-f]{40}", expected) is None
+        ):
+            return "REQUIRED_MAIN_BLOB_FENCE_INVALID"
+    if not ancestor_check(ancestor, "origin/main"):
+        return "REQUIRED_MAIN_ANCESTOR_NOT_CANONICAL"
+    for path, expected in sorted(blobs.items()):
+        if blob_lookup(ancestor, path) != expected:
+            return f"REQUIRED_MAIN_BASELINE_BLOB_MISMATCH:{path}"
+        if blob_lookup("origin/main", path) != expected:
+            return f"REQUIRED_MAIN_BLOB_DRIFT:{path}"
+    return None
+
+
 def _validate_targeted_clearance(
     clearance: dict[str, Any],
     producer: dict[str, Any],
@@ -37,6 +69,10 @@ def _validate_targeted_clearance(
         return "DECISION_NOT_ACCEPTED"
     if not str(clearance.get("review_id", "")) or not str(clearance.get("verification_id", "")):
         return "INDEPENDENT_EVIDENCE_IDS_REQUIRED"
+
+    prerequisite_error = _validate_main_prerequisite(clearance, blob_lookup, ancestor_check)
+    if prerequisite_error is not None:
+        return prerequisite_error
 
     expected_critical = sorted({str(path) for path in clearance.get("critical_files", []) if str(path)})
     actual_critical = sorted(set(critical_hits))
