@@ -24,9 +24,10 @@ func _authority6(authority_id: String, actor: String, request: Dictionary) -> Di
 func _guard_clients6() -> Dictionary:
 	if client_boundary == null:
 		return Protocol6.failure("MVP6_CLIENT_GUARD_BOUNDARY_MISSING")
-	for client_actor in ["a", "b"]:
-		var client_id := "client/" + client_actor
-		var client_peer := String(client_peers.get(client_actor, ""))
+	for raw_actor in ["a", "b"]:
+		var client_actor: String = String(raw_actor)
+		var client_id: String = "client/" + client_actor
+		var client_peer: String = String(client_peers.get(client_actor, ""))
 		if client_peer.is_empty():
 			return Protocol6.failure("MVP6_CLIENT_GUARD_PEER_MISSING:" + client_actor)
 		var guarded: Dictionary = Guard6.apply(client_boundary, client_peer)
@@ -38,13 +39,13 @@ func _guard_clients6() -> Dictionary:
 
 
 func handle_client(actor: String, body: Dictionary) -> Dictionary:
-	var kind := String(body.get("kind", ""))
+	var kind: String = String(body.get("kind", ""))
 	if kind.begins_with("MVP6_"):
 		# Base-100 is deliberately synchronous on the canonical authority. While
 		# gateway code waits on that call it cannot poll the client-facing ENet
 		# host either, so protect both already-authenticated client peers before
 		# entering the bounded long operation. This changes liveness only.
-		var guarded := _guard_clients6()
+		var guarded: Dictionary = _guard_clients6()
 		if not bool(guarded.get("success", false)):
 			return guarded
 	return super.handle_client(actor, body)
