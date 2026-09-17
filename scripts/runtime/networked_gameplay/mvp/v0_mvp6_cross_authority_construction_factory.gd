@@ -186,27 +186,31 @@ static func create(canonical_item_graph, authority_owner_id: String, authority_e
 	if not bool(result.get("success", false)): return result
 	cluster.set_tick(1)
 
-	return ParametricUtils.success({
-		"gateway": gateway,
-		"permissions": permissions,
-		"live_port": live_port,
-		"authoritative_adapter": adapter,
-		"damage_process": damage,
-		"build_process": build,
-		"build_store": store,
-		"build_plan": plan,
-		"transfer_backend": transfer,
-		"endpoint_a": endpoint_a,
-		"endpoint_b": endpoint_b,
-		"cluster": cluster,
-		"construct_id": CONSTRUCT_ID,
-		"build_plan_id": BUILD_PLAN_ID,
-		"base_part_count": BASE_PART_COUNT,
-		"final_part_count": FINAL_PART_COUNT,
-		"single_item_graph_identity": live_port.is_bound_to_item_graph(canonical_item_graph),
-		"fixture_material_truth_present": false,
-		"damage_process_configured": true,
-	})
+	return {
+		"success": true,
+		"error_code": "",
+		"details": {
+			"gateway": gateway,
+			"permissions": permissions,
+			"live_port": live_port,
+			"authoritative_adapter": adapter,
+			"damage_process": damage,
+			"build_process": build,
+			"build_store": store,
+			"build_plan": plan,
+			"transfer_backend": transfer,
+			"endpoint_a": endpoint_a,
+			"endpoint_b": endpoint_b,
+			"cluster": cluster,
+			"construct_id": CONSTRUCT_ID,
+			"build_plan_id": BUILD_PLAN_ID,
+			"base_part_count": BASE_PART_COUNT,
+			"final_part_count": FINAL_PART_COUNT,
+			"single_item_graph_identity": live_port.is_bound_to_item_graph(canonical_item_graph),
+			"fixture_material_truth_present": false,
+			"damage_process_configured": true,
+		},
+	}
 
 
 static func register_active_construct(details: Dictionary) -> Dictionary:
