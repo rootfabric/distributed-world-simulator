@@ -16,17 +16,21 @@ jobs:
   validate:
     if: github.repository == 'rootfabric/distributed-world-simulator'
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     env:
-      CONTROL_HEAD: bcfaae78bd852add71a2a2592998b46cc47878b5
-      CONTROL_TREE: e92777a69d5ce5e8312586b5f69a323d5323f123
-      BASE_MAIN: 6982a563dd0c88c81449566131852c601ae89868
-      REPAIR_HEAD: 6b147d0300529a6b40568b4de0817d5cc7f95fdb
+      CONTROL_HEAD: bf010374131062f220de915a532b59c9baa3bc67
+      CONTROL_TREE: 7f0674dcb9d9434737d1cc5df2ac88bdd369896a
+      BASE_MAIN: a6d5eb6b287130a638ba6cf397c34e29169948c1
+      COMMON_BASE: 6982a563dd0c88c81449566131852c601ae89868
+      BASELINE_REPAIR: d9706b157e84c653a753cc54243ce6651d53319c
+      FORBIDDEN_PR643: 6b147d0300529a6b40568b4de0817d5cc7f95fdb
       REVIEWED_V0_HEAD: 73b8818184c93986e3313f35f9f4548c608e47e6
+      V0_BRANCH: feature/v0-mvp-playable-seamless-planet-r1
       V0_M4_PATH: scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service.gd
       V0_M4_BLOB: 44841fb3719b1cf36fd5afdfc0f8a0e4d0eacb30
       V0_JOURNAL_PATH: scripts/network/prediction/predicted_item_interaction_journal.gd
       V0_JOURNAL_BLOB: abdf0c0a335f4e2c968933156fb17f94a7b45bd1
+      NX_BRANCH: feature/h0-2-nx-c1-owner-authority-r3
       NX_HEAD: 1a56fe0e845c941f14ce7b9296ee939e9d0ca8bc
       NX_PASSPORT: config/control/branches/feature__h0-2-nx-c1-owner-authority-r3.v1.json
       NX_PASSPORT_BLOB: c3af1974228c9ee5c34bf4d54c72896c99fc4d1a
@@ -40,7 +44,7 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      - name: Seal control candidate and live routing identities
+      - name: Fetch and seal exact candidate identities
         shell: bash
         run: |
           set -euo pipefail
@@ -49,41 +53,58 @@ jobs:
           test "$(git rev-parse HEAD^{tree})" = "$CONTROL_TREE"
           test "$(git rev-parse origin/control/v0-mvp6-nx-directional-clearance-r1)" = "$CONTROL_HEAD"
           test "$(git rev-parse origin/main)" = "$BASE_MAIN"
-          test "$(git rev-parse origin/repair/nx-prediction-rollback-baseline-r1)" = "$REPAIR_HEAD"
-          git merge-base --is-ancestor "$BASE_MAIN" "$REPAIR_HEAD"
-          git merge-base --is-ancestor "$REVIEWED_V0_HEAD" origin/feature/v0-mvp-playable-seamless-planet-r1
+          test "$(git merge-base "$BASE_MAIN" "$CONTROL_HEAD")" = "$COMMON_BASE"
+          git merge-base --is-ancestor "$BASELINE_REPAIR" "$BASE_MAIN"
+          if git merge-base --is-ancestor "$FORBIDDEN_PR643" "$BASE_MAIN"; then
+            echo 'FORBIDDEN_PR643_ALREADY_IN_MAIN'
+            exit 1
+          fi
+          git merge-base --is-ancestor "$REVIEWED_V0_HEAD" "origin/$V0_BRANCH"
           for spec in "$V0_M4_PATH:$V0_M4_BLOB" "$V0_JOURNAL_PATH:$V0_JOURNAL_BLOB"; do
             path="${spec%%:*}"
             expected="${spec##*:}"
             test "$(git rev-parse "$REVIEWED_V0_HEAD:$path")" = "$expected"
-            test "$(git rev-parse "origin/feature/v0-mvp-playable-seamless-planet-r1:$path")" = "$expected"
+            test "$(git rev-parse "origin/$V0_BRANCH:$path")" = "$expected"
           done
-          test "$(git rev-parse origin/feature/h0-2-nx-c1-owner-authority-r3)" = "$NX_HEAD"
+          test "$(git rev-parse "origin/$NX_BRANCH")" = "$NX_HEAD"
           test "$(git rev-parse "$NX_HEAD:$NX_PASSPORT")" = "$NX_PASSPORT_BLOB"
-          mapfile -t changed < <(git diff --name-only "$BASE_MAIN" "$CONTROL_HEAD")
+          mapfile -t changed < <(git diff --name-only "$COMMON_BASE" "$CONTROL_HEAD")
           printf '%s\n' "${changed[@]}"
           test "${#changed[@]}" -eq 3
           printf '%s\n' "${changed[@]}" | grep -Fx 'config/control/directional-watch-clearances.v1.json'
           printf '%s\n' "${changed[@]}" | grep -Fx 'scripts/control/directional_watch_clearance.py'
           printf '%s\n' "${changed[@]}" | grep -Fx 'tests/harness/test_project_control_directional_clearance.py'
-          git diff --check "$BASE_MAIN" "$CONTROL_HEAD"
-
-      - name: Validate candidate JSON and Harness control contract
-        shell: bash
-        run: |
-          set -euo pipefail
-          python3 -m json.tool config/control/directional-watch-clearances.v1.json >/dev/null
-          python3 -m py_compile scripts/control/directional_watch_clearance.py
-          python3 -m pip install --disable-pip-version-check -r scripts/harness/requirements.txt
-          python3 -m harness.control_candidate_validation
-
-      - name: Prove canonical-main negative control is still RED before repair and clearance merge
-        shell: bash
-        run: |
-          set -euo pipefail
+          git diff --check "$COMMON_BASE" "$CONTROL_HEAD"
           mkdir -p artifacts/control-clearance
-          python3 scripts/control/project_control_directional_watch.py --no-fail-on-red > artifacts/control-clearance/raw-main-directional.log
-          cp artifacts/control/directional-watch-report.json artifacts/control-clearance/raw-main-directional.json
+          printf '%s\n' "$(git rev-parse "origin/$V0_BRANCH")" > artifacts/control-clearance/live-v0-head.txt
+
+      - name: Install pinned Harness dependency
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install --disable-pip-version-check -r scripts/harness/requirements.txt
+          python3 - <<'PY'
+          import importlib.metadata
+          from pathlib import Path
+          required=Path('scripts/harness/requirements.txt').read_text(encoding='utf-8').strip()
+          expected=required.split('==',1)[1]
+          actual=importlib.metadata.version('jsonschema')
+          assert actual == expected, (actual, expected)
+          print(f'PINNED_DEPENDENCY_OK=jsonschema=={actual}')
+          PY
+
+      - name: Prove clean canonical main still has exact unresolved V0 to NX hit-set
+        shell: bash
+        run: |
+          set -euo pipefail
+          RAW="$RUNNER_TEMP/dws-raw-main"
+          git worktree add --detach "$RAW" "$BASE_MAIN"
+          (
+            cd "$RAW"
+            PYTHONPATH=scripts python3 scripts/control/project_control_directional_watch.py --no-fail-on-red > "$GITHUB_WORKSPACE/artifacts/control-clearance/raw-main-directional.log"
+            cp artifacts/control/directional-watch-report.json "$GITHUB_WORKSPACE/artifacts/control-clearance/raw-main-directional.json"
+          )
+          git worktree remove --force "$RAW"
           python3 - <<'PY'
           import json
           r=json.load(open('artifacts/control-clearance/raw-main-directional.json',encoding='utf-8'))
@@ -98,53 +119,58 @@ jobs:
           assert len(watched)==1, watched
           assert watched[0]['level']=='YELLOW', watched[0]
           assert watched[0]['files']==['scripts/network/prediction/predicted_item_interaction_journal.gd'], watched[0]
-          print('NEGATIVE_CONTROL_RAW_MAIN_TWO_FILE_SCOPE=PASS')
+          print('RAW_MAIN_DIRECTIONAL_TWO_FILE_SCOPE=PASS')
           PY
 
-      - name: Prove candidate prerequisite and all fail-closed fences
+      - name: Validate candidate syntax contract and fail-closed regression
         shell: bash
         run: |
           set -euo pipefail
+          python3 -m json.tool config/control/directional-watch-clearances.v1.json >/dev/null
+          python3 -m py_compile scripts/control/directional_watch_clearance.py
+          python3 -m harness.control_candidate_validation
           python3 -m unittest tests.harness.test_project_control_directional_clearance | tee artifacts/control-clearance/clearance-tests.log
 
-      - name: Simulate canonical main after ordered repair plus clearance
+      - name: Compose current canonical main plus clearance only
         shell: bash
         run: |
           set -euo pipefail
           git config user.name 'DWS validation'
           git config user.email 'validation@dws.invalid'
-          git merge --no-ff --no-edit "$REPAIR_HEAD"
+          git merge --no-ff --no-edit origin/main
           COMPOSED_HEAD="$(git rev-parse HEAD)"
           COMPOSED_TREE="$(git rev-parse HEAD^{tree})"
-          git merge-base --is-ancestor "$REPAIR_HEAD" "$COMPOSED_HEAD"
           git merge-base --is-ancestor "$CONTROL_HEAD" "$COMPOSED_HEAD"
+          git merge-base --is-ancestor "$BASE_MAIN" "$COMPOSED_HEAD"
+          git merge-base --is-ancestor "$BASELINE_REPAIR" "$COMPOSED_HEAD"
+          if git merge-base --is-ancestor "$FORBIDDEN_PR643" "$COMPOSED_HEAD"; then
+            echo 'FORBIDDEN_PR643_IN_COMPOSED_MAIN'
+            exit 1
+          fi
           git update-ref refs/remotes/origin/main "$COMPOSED_HEAD"
-          printf '%s\n' "$COMPOSED_HEAD" > artifacts/control-clearance/simulated-composed-head.txt
-          printf '%s\n' "$COMPOSED_TREE" > artifacts/control-clearance/simulated-composed-tree.txt
-          echo "SIMULATED_COMPOSED_HEAD=$COMPOSED_HEAD"
-          echo "SIMULATED_COMPOSED_TREE=$COMPOSED_TREE"
+          printf '%s\n' "$COMPOSED_HEAD" > artifacts/control-clearance/composed-head.txt
+          printf '%s\n' "$COMPOSED_TREE" > artifacts/control-clearance/composed-tree.txt
+          echo "COMPOSED_HEAD=$COMPOSED_HEAD"
+          echo "COMPOSED_TREE=$COMPOSED_TREE"
 
-      - name: Re-run full architecture ownership compatibility on simulated ordered main
+      - name: Run complete composed Harness and Project Control gate
         shell: bash
         run: |
           set -euo pipefail
-          python3 -m unittest \
-            tests.harness.test_project_control_architecture_compatibility \
-            tests.harness.test_project_control_historical_ownership_compatibility \
-            tests.harness.test_project_control_proposed_r3_ownership_projection \
-            | tee artifacts/control-clearance/architecture-group.log
-
-      - name: Prove simulated directional main is non-red and uses exact clearance
-        shell: bash
-        run: |
-          set -euo pipefail
+          python3 -m harness.control_candidate_validation
+          python3 -m harness.cli check-consistency
+          python3 -m unittest discover -s tests/harness -p 'test_*.py' -v 2>&1 | tee artifacts/control-clearance/full-harness.log
+          python3 scripts/control/project_control.py --no-fetch --no-fail-on-red > artifacts/control-clearance/composed-standard.log
+          cp artifacts/control/project-control-report.json artifacts/control-clearance/composed-standard.json
           python3 scripts/control/project_control_directional_watch.py --no-fail-on-red > artifacts/control-clearance/composed-directional.log
           cp artifacts/control/directional-watch-report.json artifacts/control-clearance/composed-directional.json
           python3 - <<'PY'
           import json
-          r=json.load(open('artifacts/control-clearance/composed-directional.json',encoding='utf-8'))
-          assert r['overall_health']!='RED', r['overall_health']
-          hits=[f for f in r['findings'] if f.get('producer')=='V0' and f.get('consumer')=='NX']
+          s=json.load(open('artifacts/control-clearance/composed-standard.json',encoding='utf-8'))
+          d=json.load(open('artifacts/control-clearance/composed-directional.json',encoding='utf-8'))
+          assert s['overall_health']!='RED', s['overall_health']
+          assert d['overall_health']!='RED', d['overall_health']
+          hits=[f for f in d['findings'] if f.get('producer')=='V0' and f.get('consumer')=='NX']
           critical=[f for f in hits if f.get('kind')=='CRITICAL_WATCH_HIT']
           watched=[f for f in hits if f.get('kind')=='WATCH_HIT']
           assert len(critical)==1, critical
@@ -152,31 +178,32 @@ jobs:
           assert critical[0].get('clearance_status')=='ACCEPTED', critical[0]
           assert critical[0].get('clearance_id')=='V0-MVP6-NX-H0-2-M4-JOURNAL-CRITICAL-WATCH-CLEARANCE-004', critical[0]
           assert len(watched)==1 and watched[0]['level']=='YELLOW', watched
-          print('SIMULATED_ORDERED_MAIN_DIRECTIONAL=PASS')
+          print('COMPOSED_FULL_GATE=PASS')
           PY
 
-      - name: Bind candidate evidence
+      - name: Bind exact evidence
         if: always()
         shell: bash
         run: |
           set -euo pipefail
           python3 - <<'PY'
-          import json,os,pathlib,subprocess
+          import json, os, pathlib, subprocess
           out=pathlib.Path('artifacts/control-clearance'); out.mkdir(parents=True,exist_ok=True)
           def git(*args): return subprocess.check_output(['git',*args],text=True).strip()
           reg=json.load(open('config/control/directional-watch-clearances.v1.json',encoding='utf-8'))
           matches=[x for x in reg['clearances'] if x.get('clearance_id')==os.environ['CLEARANCE_ID']]
-          live=git('rev-parse','origin/feature/v0-mvp-playable-seamless-planet-r1')
-          composed_head=(out/'simulated-composed-head.txt').read_text().strip() if (out/'simulated-composed-head.txt').exists() else None
-          composed_tree=(out/'simulated-composed-tree.txt').read_text().strip() if (out/'simulated-composed-tree.txt').exists() else None
+          def read(name):
+              p=out/name
+              return p.read_text(encoding='utf-8').strip() if p.exists() else None
           record={
-            'schema':'distributed_world_simulator.v0_mvp6_nx_directional_clearance_candidate_evidence.v3',
+            'schema':'distributed_world_simulator.v0_mvp6_nx_directional_clearance_candidate_evidence.v4',
             'control_head':os.environ['CONTROL_HEAD'],
             'control_tree':os.environ['CONTROL_TREE'],
             'base_main':os.environ['BASE_MAIN'],
-            'required_main_ancestor':os.environ['REPAIR_HEAD'],
+            'baseline_repair':os.environ['BASELINE_REPAIR'],
+            'forbidden_pr643':os.environ['FORBIDDEN_PR643'],
             'reviewed_v0_head':os.environ['REVIEWED_V0_HEAD'],
-            'live_v0_head':live,
+            'live_v0_head':read('live-v0-head.txt'),
             'v0_m4_blob':os.environ['V0_M4_BLOB'],
             'v0_journal_blob':os.environ['V0_JOURNAL_BLOB'],
             'nx_head':os.environ['NX_HEAD'],
@@ -185,15 +212,25 @@ jobs:
             'clearance_count':len(matches),
             'review_id':'MVP6-JOURNAL-73B88181-REVIEW-R1',
             'verification_id':'MVP6-JOURNAL-FEATURE-VERIFIER-R1',
-            'native_exact_run':35097654348,
-            'native_exact_artifact':10446937610,
-            'simulated_composed_head':composed_head,
-            'simulated_composed_tree':composed_tree,
+            'postmerge_probe_run':35162668295,
+            'postmerge_probe_job':105016731540,
+            'postmerge_probe_artifact':10474045529,
+            'postmerge_probe_zip_sha256':'c1bca166ae69ef754065192a5a50e86d51434ccdaa92efba14af691d29c644c1',
+            'composed_head':read('composed-head.txt'),
+            'composed_tree':read('composed-tree.txt'),
             'run_id':os.environ['GITHUB_RUN_ID'],
-            'result':'PASS' if len(matches)==1 and composed_head and composed_tree else 'FAIL',
           }
-          target=out/'summary.json'; target.write_text(json.dumps(record,indent=2)+'\n')
-          print(target.read_text())
+          raw=out/'raw-main-directional.json'
+          comp=out/'composed-directional.json'
+          record['raw_main_health']=json.load(raw.open(encoding='utf-8'))['overall_health'] if raw.exists() else None
+          record['composed_directional_health']=json.load(comp.open(encoding='utf-8'))['overall_health'] if comp.exists() else None
+          record['result']='PASS' if (
+              len(matches)==1 and record['raw_main_health']=='RED' and
+              record['composed_directional_health'] in ('GREEN','YELLOW') and
+              record['composed_head'] and record['composed_tree']
+          ) else 'FAIL'
+          target=out/'summary.json'; target.write_text(json.dumps(record,indent=2)+'\n',encoding='utf-8')
+          print(target.read_text(encoding='utf-8'))
           if record['result']!='PASS': raise SystemExit(1)
           PY
 
