@@ -1,0 +1,17 @@
+{
+  "schema": "distributed_world_simulator.mvp6_postclearance_resume.v1",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "checkpoint": "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE",
+  "canonical_main": "99e8efe2422e02fedec40778e12748611d68fb5f",
+  "canonical_main_tree": "f4ae35216de7ed915fcb0c46b03b0f35baeccd6b",
+  "canonical_pc0": {"standard": "YELLOW", "directional": "YELLOW", "non_red": true},
+  "project_control_run": 35190349772,
+  "project_control_job": 105101320511,
+  "project_control_harness": "349/349 PASS",
+  "epoch_audit": "config/control/harness/executions/E2026-09-09-V0-MVP-R1/audits/MVP6-POSTCLEARANCE-MAIN-AUDIT-99E8EFE2-R1.v1.json",
+  "decision": "RUN_CANONICAL_HARNESS_DRIVE_AND_EXISTING_MVP6_NATIVE_FOCUSED_GATES",
+  "mvp6_predicate_verified": false,
+  "runtime_merge_authorized": false,
+  "whole_mvp_accepted": false
+}
