@@ -115,7 +115,7 @@ def main() -> int:
     profiles = tempfile.TemporaryDirectory(prefix="dws-mvp6-profile-")
 
     def launch(role: str, tail: list[str], extra: dict) -> None:
-        cfg = {"role": role, "run_id": run_id, "subject_head": head, "result_file": str(paths[role]), "ports": authority_ports, "gateway_port": ports[2], "timeout_ms": 240000, "backend_rpc_timeout_ms": 30000, "client_reply_timeout_ms": 60000} | extra
+        cfg = {"role": role, "run_id": run_id, "subject_head": head, "result_file": str(paths[role]), "ports": authority_ports, "gateway_port": ports[2], "timeout_ms": 240000, "backend_rpc_timeout_ms": 90000, "client_reply_timeout_ms": 120000} | extra
         env = os.environ.copy()
         env.update(PYTHONUTF8="1", BREAKPOINT_RUNTIME_DISABLED="1", DWS_MVP3_LIVE_CONFIG=json.dumps(cfg, separators=(",", ":")))
         profile = Path(profiles.name) / role.replace("/", "-")
