@@ -2,8 +2,9 @@
 """Validate an already-completed canonical full world/core run for MVP6.
 
 Execution is deliberately outside this checker so the unchanged canonical
-RUN_WORLD_REGRESSION_TESTS.ps1 may use the workflow's bounded 45-minute job
-budget instead of the obsolete 780-second wrapper limit.
+RUN_WORLD_REGRESSION_TESTS.ps1 can consume the workflow's bounded job budget.
+Exact world/core evidence is valid only when the SAME workflow run supplies the
+raw five-process graphical manifest for the SAME HEAD/TREE.
 """
 from __future__ import annotations
 
@@ -22,7 +23,7 @@ BASE = "182d93872bfddbf52a72ab170371ebb9489690bb"
 OUT = ROOT / "artifacts/mvp6-world-core"
 WORLD_SUMMARY = ROOT / "artifacts/test-results/world-regression-summary.json"
 WORLD_RUNNER = "RUN_WORLD_REGRESSION_TESTS.ps1"
-GRAPHICAL_EVIDENCE = ROOT / "docs/control/mvp-act0-r1/MVP6_GRAPHICAL_FIVE_PROCESS_EVIDENCE_14AC9A95_R1.json"
+GRAPHICAL_MANIFEST_ENV = "MVP6_GRAPHICAL_MANIFEST"
 TESTS = {
     "diagnostic": "res://tests/runtime/test_v0_mvp_6_cross_authority_prerequisites.gd",
     "product": "res://tests/runtime/test_v0_mvp_6_cross_authority_construction_seam.gd",
@@ -39,8 +40,6 @@ PIN = {
     "linux": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
     "win32": "3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5",
 }
-# Match the canonical regression runner. Generic Godot `ERROR:` diagnostics are
-# not automatically red; explicit FAIL/script/parse/compile markers are.
 FATAL = re.compile(r"(?m)(: FAIL(?:\s|\()|SCRIPT ERROR:|Parse Error:|Compile Error:)")
 
 
@@ -56,13 +55,33 @@ def write(path: Path, value: object) -> None:
     path.write_text(json.dumps(value, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
 
+def exact_graphical_manifest(head: str, tree: str) -> tuple[Path, dict]:
+    raw = os.environ.get(GRAPHICAL_MANIFEST_ENV, "").strip()
+    assert raw, "SAME_HEAD_GRAPHICAL_MANIFEST_PATH_REQUIRED"
+    path = Path(raw).resolve()
+    assert path.is_file(), "SAME_HEAD_GRAPHICAL_MANIFEST_MISSING"
+    value = json.loads(path.read_text(encoding="utf-8"))
+    assert value.get("schema") == "distributed_world_simulator.mvp6_graphical_construction_manifest.v1", "GRAPHICAL_MANIFEST_SCHEMA_INVALID"
+    assert value.get("subject_head") == head, "GRAPHICAL_HEAD_MISMATCH"
+    assert value.get("subject_tree") == tree, "GRAPHICAL_TREE_MISMATCH"
+    assert value.get("passed") is True, "GRAPHICAL_MANIFEST_NOT_PASS"
+    assert value.get("five_process_graphical_executed") is True, "FIVE_PROCESS_GRAPHICAL_NOT_EXECUTED"
+    assert value.get("mvp6_predicate_verified") is False and value.get("independent_verdict") is False, "GRAPHICAL_GATE_MUST_NOT_SELF_ACCEPT"
+    checks = value.get("checks")
+    assert isinstance(checks, dict) and checks and all(v is True for v in checks.values()), "GRAPHICAL_CHECK_FAILURE"
+    assert checks.get("mvp6:five_distinct_processes") is True, "FIVE_PROCESS_PID_CONTRACT_FAILED"
+    roles = {str(row.get("role", "")) for row in value.get("commands", []) if isinstance(row, dict)}
+    assert roles == {"authority/a", "authority/b", "gateway", "client/a", "client/b"}, "FIVE_PROCESS_ROLE_SET_INVALID"
+    return path, value
+
+
 def main() -> int:
     OUT.mkdir(parents=True, exist_ok=True)
     expected = os.environ.get("EXPECTED_HEAD", "")
     head = git("rev-parse", "HEAD")
     tree = git("rev-parse", "HEAD^{tree}")
     summary: dict = {
-        "schema": "distributed_world_simulator.mvp6_full_world_core_execution.v2",
+        "schema": "distributed_world_simulator.mvp6_full_world_core_execution.v3",
         "subject_head": head,
         "subject_tree": tree,
         "baseline_head": BASE,
@@ -72,7 +91,7 @@ def main() -> int:
         "full_world_core_regression_pass": False,
         "manifest_coverage_pass": False,
         "mvp6_required_steps_pass": False,
-        "prior_graphical_five_process_bound": False,
+        "same_head_graphical_five_process_bound": False,
         "mvp6_predicate_verified": False,
         "independent_verdict": False,
         "main_merge": False,
@@ -99,31 +118,16 @@ def main() -> int:
         summary["engine_sha256"] = engine_sha
         summary["world_runner_blob"] = git("rev-parse", head + ":" + WORLD_RUNNER)
 
-        graphical = json.loads(GRAPHICAL_EVIDENCE.read_text(encoding="utf-8"))
-        graphical_head = str(graphical.get("runtime_subject", {}).get("head", ""))
-        assert graphical.get("result") == "EXACT_PASS", "FIVE_PROCESS_EVIDENCE_NOT_PASS"
-        assert graphical.get("artifact", {}).get("manifest_passed") is True, "FIVE_PROCESS_MANIFEST_NOT_PASS"
-        assert graphical.get("artifact", {}).get("checks_failed") == 0, "FIVE_PROCESS_CHECK_FAILURE"
-        assert graphical.get("processes", {}).get("unique_process_ids") == 5, "FIVE_PROCESS_PID_CONTRACT_FAILED"
-        subprocess.run(["git", "merge-base", "--is-ancestor", graphical_head, head], cwd=ROOT, check=True)
-        graphical_critical = {
-            "scripts/runtime/networked_gameplay/mvp/v0_mvp6_graphical_client.gd",
-            "scripts/runtime/networked_gameplay/mvp/v0_mvp6_guarded_gateway_process.gd",
-            "scripts/runtime/networked_gameplay/mvp/v0_mvp6_guarded_authority_process.gd",
-            "scripts/runtime/networked_gameplay/mvp/v0_mvp6_derived_construction_runtime_view.gd",
-            "scenes/labs/mvp/v0_mvp6_live_construction.tscn",
-            "tests/integration/test_v0_mvp_6_graphical_construction.py",
-        }
-        drift = set(git("diff", "--name-only", graphical_head, head).splitlines()) & graphical_critical
-        assert not drift, "FIVE_PROCESS_CRITICAL_DRIFT:" + ",".join(sorted(drift))
-        summary["prior_graphical_five_process_bound"] = True
+        graphical_path, graphical = exact_graphical_manifest(head, tree)
+        summary["same_head_graphical_five_process_bound"] = True
         summary["graphical_evidence"] = {
-            "runtime_subject_head": graphical_head,
-            "run_id": graphical.get("exact_ci", {}).get("run_id"),
-            "artifact_id": graphical.get("artifact", {}).get("id"),
-            "artifact_sha256": graphical.get("artifact", {}).get("sha256"),
-            "checks_total": graphical.get("artifact", {}).get("checks_total"),
-            "checks_failed": graphical.get("artifact", {}).get("checks_failed"),
+            "manifest_path": str(graphical_path),
+            "manifest_sha256": sha(graphical_path),
+            "subject_head": graphical.get("subject_head"),
+            "subject_tree": graphical.get("subject_tree"),
+            "run_id": graphical.get("run_id"),
+            "check_count": len(graphical.get("checks", {})),
+            "negative_controls": list(graphical.get("negative_controls", [])),
         }
 
         exit_path = OUT / "world-exit.txt"
@@ -197,7 +201,7 @@ def main() -> int:
             summary["full_world_core_regression_pass"]
             and summary["manifest_coverage_pass"]
             and summary["mvp6_required_steps_pass"]
-            and summary["prior_graphical_five_process_bound"]
+            and summary["same_head_graphical_five_process_bound"]
             and not summary["tracked_after"]
             and summary["identity_unchanged"]
         )
@@ -213,6 +217,7 @@ def main() -> int:
             "tree": tree,
             "passed": summary["passed"],
             "full_world_core_regression_pass": summary["full_world_core_regression_pass"],
+            "same_head_graphical": summary["same_head_graphical_five_process_bound"],
             "declared": summary.get("world_regression", {}).get("declared_test_count"),
             "discovered": summary.get("world_regression", {}).get("discovered_test_count"),
             "steps": summary.get("world_regression", {}).get("step_count"),
