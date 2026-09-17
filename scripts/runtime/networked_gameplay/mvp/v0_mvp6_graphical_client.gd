@@ -165,10 +165,23 @@ func _next_mvp6(snapshot: Dictionary) -> void:
 
 
 func next_automated(snapshot: Dictionary) -> void:
-	# Intercept the exact point where MVP5 would otherwise finish. All inherited
-	# M3 movement/seam, MVP4 visible dig and MVP5 exactly-once material work has
-	# completed before this live Construction phase begins.
-	if _phase4 == "MVP5_WAIT_OBSERVERS" and bool(snapshot.get("mvp5", {}).get("both_material_observed", false)):
+	# MVP5 can consume MVP5_AFTER and immediately fall through to its terminal
+	# MVP5_WAIT_OBSERVERS -> FINISH branch in the same call. Intercept BOTH sides
+	# of that transition here so the second material observer cannot disconnect
+	# before entering MVP6. Preserve the exact inherited MVP5_AFTER assignment;
+	# only replace its terminal FINISH with the live Construction continuation.
+	if _phase4 == "MVP5_AFTER":
+		_after5 = _material5.duplicate(true)
+		_phase4 = "MVP5_WAIT_OBSERVERS"
+		if not bool(snapshot.get("mvp5", {}).get("both_material_observed", false)):
+			send_request("OBSERVE")
+			return
+		_next_mvp6(snapshot)
+		return
+	if _phase4 == "MVP5_WAIT_OBSERVERS":
+		if not bool(snapshot.get("mvp5", {}).get("both_material_observed", false)):
+			send_request("OBSERVE")
+			return
 		_next_mvp6(snapshot)
 		return
 	super.next_automated(snapshot)
