@@ -1,0 +1,30 @@
+{
+  "schema": "distributed_world_simulator.mvp6_clearance_r2_external_review_receipt.v1",
+  "record_kind": "COORDINATOR_RECEIPT_OF_EXTERNAL_REVIEW_NOT_SELF_REVIEW",
+  "candidate_pr": 649,
+  "subject_head": "6902a99081c1fbdf676c71dca5ea0d80fd633267",
+  "subject_tree": "f4ae35216de7ed915fcb0c46b03b0f35baeccd6b",
+  "base_main": "a6d5eb6b287130a638ba6cf397c34e29169948c1",
+  "review_request_comment_id": 5707014668,
+  "review_result_comment_id": 5707040521,
+  "review_summary_comment_id": 5707017241,
+  "reviewer_login": "chatgpt-codex-connector[bot]",
+  "reviewer_github_id": 199175422,
+  "review_started_at": "2026-09-17T01:27:24.008667Z",
+  "review_completed_at": "2026-09-17T01:30:28.816575Z",
+  "raw_result": "Codex Review: Didn't find any major issues.",
+  "reported_reviewed_commit": "6902a99081",
+  "code_review_status": "COMPLETED_NO_MAJOR_ISSUES_REPORTED",
+  "independent_code_review_completed": true,
+  "requested_scope": "Whole exact seven-file control candidate, canonical-only loader, actual PR646 merge and live-main journal blob fences, producer/consumer/hit-set identity checks, tests and validation-driver isolation, evidence provenance qualifications",
+  "classification_limits": [
+    "The external response reports no major issues; it is not a claim of independently rerunning CI.",
+    "The CI evidence comment was posted after this code review completed. A fresh separate Verifier evidence assessment remains required.",
+    "No canonical clearance, epoch audit, main merge, NX source acceptance or MVP6 acceptance follows from this receipt."
+  ],
+  "machine_evidence_path": "docs/control/mvp-act0-r1/MVP6_NX_CLEARANCE_R2_EXACT_RESULT_6902A990.json",
+  "fresh_verifier_completed": false,
+  "merge_authorized": false,
+  "canonical_clearance_accepted": false,
+  "mvp6_accepted": false
+}
