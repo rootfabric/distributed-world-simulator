@@ -1,0 +1,118 @@
+name: FABRIC R4.1 Fresh Independent Verifier R3
+
+on:
+  push:
+    branches: [verify/fabric-r4-1-numeric-envelope-diagnostics-r3]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fabric-r4-1-fresh-independent-verifier-r3
+  cancel-in-progress: false
+
+env:
+  SUBJECT_BRANCH: repair/fabric-r4-1-numeric-envelope-diagnostics-r1
+  SUBJECT_HEAD: 5ed03392edcdaf0efaf743423f12bd9e1550e70a
+  SUBJECT_TREE: ef7366f3452b812ab735c42d8447c3ca84c7bea3
+
+jobs:
+  fresh-independent-verifier:
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Bind exact R4.1 subject and verifier scope
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          git fetch origin "$SUBJECT_BRANCH" --no-tags
+          test "$(git rev-parse "origin/$SUBJECT_BRANCH")" = "$SUBJECT_HEAD"
+          test "$(git rev-parse "$SUBJECT_HEAD^{tree}")" = "$SUBJECT_TREE"
+          test "$(git merge-base HEAD "$SUBJECT_HEAD")" = "$SUBJECT_HEAD"
+          expected="$(printf '%s\n' \
+            '.github/workflows/fabric-r4-1-fresh-independent-verifier-r3.yml' \
+            'docs/research/FABRIC_R4_1_FRESH_INDEPENDENT_VERIFIER_R3_RU.md' \
+            'tests/research/fabric1/fabric_r4_1_independent_verifier_r3.gd' | sort)"
+          actual="$(git diff --name-only "$SUBJECT_HEAD"...HEAD | sort)"
+          test "$actual" = "$expected"
+          git diff --check "$SUBJECT_HEAD"...HEAD
+          echo '*.gd.uid' >> .git/info/exclude
+          printf 'VERIFIER_HEAD=%s\nVERIFIER_TREE=%s\nSUBJECT_HEAD=%s\nSUBJECT_TREE=%s\n' "$(git rev-parse HEAD)" "$(git rev-parse 'HEAD^{tree}')" "$SUBJECT_HEAD" "$SUBJECT_TREE" | tee r41-verifier-r3-identity.txt
+      - name: Verify canonical Linux double
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          bin="${DWS_GODOT_DOUBLE_BIN:-$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64}"
+          test -x "$bin"
+          test "$("$bin" --version | head -n1 | tr -d '\r')" = '4.7.1.stable.double.custom_build.a13da4feb'
+          sha="$(sha256sum "$bin" | awk '{print $1}')"
+          test "$sha" = 'bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7'
+          echo "GODOT_BIN=$bin" >> "$GITHUB_ENV"
+          printf 'GODOT_SHA256=%s\n' "$sha" | tee r41-verifier-r3-godot.txt
+      - name: Fresh import verifier checkout
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          rm -rf .godot
+          "$GODOT_BIN" --headless --editor --path . --log-file r41-verifier-r3-import.log --import
+          ! grep -Eiq 'SCRIPT ERROR|Parse Error|Invalid call|Invalid access|ERROR:' r41-verifier-r3-import.log
+      - name: Run primary independent oracle
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          "$GODOT_BIN" --headless --path . --script res://tests/research/fabric1/fabric_r4_1_independent_verifier_r3.gd 2>&1 | tee r41-independent-r2.log
+          grep -F 'FABRIC_R4_1_INDEPENDENT_VERIFIER_R3_ASSERTIONS=24 FAILURES=0' r41-independent-r2.log
+          grep -F 'FABRIC-R4.1-INDEPENDENT-VERIFIER-R3: PASS' r41-independent-r2.log
+          ! grep -Eiq 'SCRIPT ERROR|Parse Error|Invalid call|Invalid access|Assertion failed|Segmentation fault' r41-independent-r2.log
+      - name: Replay exact R4.1 product chain
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          out="$GITHUB_WORKSPACE/r41-subject-r2-replay.log"
+          subject_dir="$RUNNER_TEMP/dws-r41-verifier-r3-subject-${GITHUB_RUN_ID}"
+          rm -rf "$subject_dir"
+          git worktree prune
+          git worktree add --detach "$subject_dir" "$SUBJECT_HEAD"
+          cleanup() { git worktree remove --force "$subject_dir" >/dev/null 2>&1 || true; }
+          trap cleanup EXIT
+          (
+            set -Eeuo pipefail
+            cd "$subject_dir"
+            test "$(git rev-parse HEAD)" = "$SUBJECT_HEAD"
+            test "$(git rev-parse 'HEAD^{tree}')" = "$SUBJECT_TREE"
+            export GODOT_BIN="$GODOT_BIN" BREAKPOINT_RUNTIME_DISABLED=1
+            rm -rf artifacts/fabric-r4-1-b06-close
+            bash RUN_FABRIC_R4_1_REPAIR_TESTS.sh
+            git diff --check
+            test -z "$(git status --porcelain=v1 --untracked-files=no)"
+          ) 2>&1 | tee "$out"
+          grep -F 'FABRIC-R4.1-NUMERIC-DIAGNOSTICS: PASS' "$out"
+          grep -F 'FABRIC-HOLDOUT-R4-G2: PASS' "$out"
+          grep -F 'COMPLEX2PERF_MATRIX_HASH=698486abd097e6ee12731b0afb1c6e28ed24bf72b52d8d940c9f5b7336498607' "$out"
+          grep -F 'COMPLEX2_CLOSE_HASH=f429d2743dab5f31fed87901186b03868039b13c2e087a86f3473f84e5b60855' "$out"
+          grep -F 'FABRIC B0.6 Adaptive Physical Fidelity: PASS' "$out"
+      - name: Capture verifier evidence
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$(git rev-parse "origin/$SUBJECT_BRANCH")" = "$SUBJECT_HEAD"
+          sha256sum r41-verifier-r3-identity.txt r41-verifier-r3-godot.txt r41-verifier-r3-import.log r41-independent-r2.log r41-subject-r2-replay.log > r41-verifier-r3-evidence.sha256
+          git diff --check
+          test -z "$(git status --porcelain=v1 --untracked-files=no)"
+          echo 'FABRIC_R4_1_FRESH_INDEPENDENT_VERIFIER_R3=PASS'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fabric-r4-1-verifier-r3-${{ github.sha }}
+          path: |
+            r41-verifier-r3-identity.txt
+            r41-verifier-r3-godot.txt
+            r41-verifier-r3-import.log
+            r41-independent-r2.log
+            r41-subject-r2-replay.log
+            r41-verifier-r3-evidence.sha256
+          if-no-files-found: error
+          retention-days: 90
