@@ -91,10 +91,18 @@ func _restore_client6(client_actor: String) -> Dictionary:
 
 
 func _guard_clients6() -> Dictionary:
+	# A partial refresh must not leave an earlier client widened when a later
+	# client cannot be guarded. Preserve the original guard failure, but first
+	# attempt cleanup for every active client via the aggregate restore helper.
+	var first_failure: Dictionary = {}
 	for raw_actor in ["a", "b"]:
 		var guarded: Dictionary = _guard_client6(String(raw_actor))
 		if not bool(guarded.get("success", false)):
-			return guarded
+			first_failure = guarded.duplicate(true)
+			break
+	if not first_failure.is_empty():
+		_restore_clients6()
+		return first_failure
 	return Protocol6.success()
 
 
