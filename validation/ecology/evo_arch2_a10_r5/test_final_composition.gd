@@ -141,7 +141,7 @@ func _run() -> void:
 			{"material_id": "matter/water-ice", "mass_fraction": 0.25},
 		]), "temperature_k": 273.15,
 	})
-	var admitted := ResourceMap.admit_material_batch(batch, catalog, mapping)
+	var admitted := ResourceMap.admit_material_batch(batch, catalog, mapping, batch["checksum"])
 	_check(bool(admitted.get("success", false)), "R2 explicit resource admission")
 	if not bool(admitted.get("success", false)):
 		_finish(); return
@@ -216,7 +216,7 @@ func _run() -> void:
 		_check(site_after["physical_sample"] == site_before["physical_sample"], "handoff does not alter Matter sample")
 		_check(site_after["query_id"] == site_before["query_id"] and site_after["matter_state_revision"] == site_before["matter_state_revision"], "Matter provenance remains exact")
 
-	var admitted_after := ResourceMap.admit_material_batch(batch, catalog, mapping)
+	var admitted_after := ResourceMap.admit_material_batch(batch, catalog, mapping, batch["checksum"])
 	_check(bool(admitted_after.get("success", false)) and admitted_after["admission"]["accounting_hash"] == resource_before["accounting_hash"], "resource accounting stable across seam")
 	_check(DamageOverlay.validate_overlay(damaged, body_binding, body_modules, source_snapshot).is_empty(), "persistent damage remains valid after seam")
 	var function_after := DamageOverlay.effective_function(body_binding, damaged, body_modules, source_snapshot)
