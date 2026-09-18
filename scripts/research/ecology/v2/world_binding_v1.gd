@@ -96,7 +96,7 @@ static func project_construction_damage(
 	if String(repair_plan.get("damage_id", "")) != String(request["damage_id"]) \
 	or String(repair_plan.get("damage_request_checksum", "")) != String(request["checksum"]):
 		return _fail("A10_DAMAGE_REPAIR_BINDING_MISMATCH")
-	var target_snapshot: Dictionary = repair_plan.get("target_snapshot", {})
+	var target_snapshot: Dictionary = repair_plan.get("target_snapshot_template", {})
 	if String(target_snapshot.get("construct_id", "")) != String(request["construct_id"]):
 		return _fail("A10_DAMAGE_TARGET_CONSTRUCT_MISMATCH")
 	var source_part_ids := {}
