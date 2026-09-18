@@ -46,6 +46,8 @@ def construction_checks(reports: dict, clients: dict, head: str, run_id: str) ->
         owner_guard = reports["authority/a"]["mvp6_transport_guard"]
         replica_guard = reports["authority/b"]["mvp6_transport_guard"]
         resource = owner["resource_provenance"]
+        live_item = gateway["live_item"]
+        transfers = reports["gateway"]["transfers"]
         checks["gateway_complete"] = gateway["complete"] is True and gateway["phase"] == "REMOVED" and gateway["mutation_count"] == 2
         checks["exact_replays"] = gateway["replays"] == {"ADD": True, "REMOVE": True}
         checks["single_canonical_owner"] = owner["canonical_construction_owned"] is True and replica["canonical_construction_owned"] is False and replica["replica_read_only"] is True
@@ -61,6 +63,61 @@ def construction_checks(reports: dict, clients: dict, head: str, run_id: str) ->
             and resource["ore_available"] >= resource["required"]
             and len(resource["material_digest"]) == 64
             and len(resource["item_graph_checksum"]) == 64
+        )
+        before_carry = live_item["before_carry"]
+        on_b = live_item["on_authority_b"]
+        after_carry = live_item["after_carry"]
+        before_items = {row["item_id"]: row for row in before_carry["items"]}
+        tool_rows = [
+            row for row in before_carry["items"]
+            if row.get("equipment", {}).get("player_id") == "a"
+            and row.get("equipment", {}).get("slot_id") == "tool/main"
+        ]
+        item_transfer_ids = [row["transfer_id"] for row in transfers if row.get("actor") == "a"]
+        expected_transfer_ids = [
+            "transfer/mvp3/graphical/a-out",
+            "transfer/mvp3/graphical/a-back",
+            "transfer/mvp6/live-item/a-out",
+            "transfer/mvp6/live-item/a-back",
+        ]
+        checks["live_item_lifecycle_complete"] = (
+            live_item["complete"] is True
+            and live_item["phase"] == "COMPLETE"
+            and live_item["winner"] == "b"
+            and live_item["loser_error"] == "ITEM_ALREADY_CLAIMED"
+            and live_item["pickup_replay"] is True
+            and live_item["container_open"] == {"a": True, "b": True}
+            and live_item["carry_out_verified"] is True
+            and live_item["carry_back_verified"] is True
+            and len(live_item["events"]) >= 11
+        )
+        checks["live_item_identity_quantity_equipment"] = (
+            live_item["item_id"] in before_items
+            and before_items[live_item["item_id"]]["definition_id"] == "item/ore"
+            and before_items[live_item["item_id"]]["quantity"] == live_item["quantity"]
+            and live_item["quantity"] > 101
+            and len(tool_rows) == 1
+            and before_carry == on_b == after_carry
+        )
+        checks["live_nonempty_seam_exact"] = (
+            item_transfer_ids == expected_transfer_ids
+            and len(transfers) == 4
+            and all(row.get("post_activation_movement_proven") is True for row in transfers)
+        )
+        required_a = {
+            "MVP6_ITEM_READY", "MVP6_ITEM_DROP", "MVP6_ITEM_PICKUP_LOSER",
+            "MVP6_ITEM_OPEN", "MVP6_ITEM_WITHDRAW", "MVP6_ITEM_CARRY_OUT",
+            "MVP6_ITEM_CARRY_BACK", "MVP6_ITEM_FINISH",
+        }
+        required_b = {
+            "MVP6_ITEM_READY", "MVP6_ITEM_PICKUP", "MVP6_ITEM_PICKUP_REPLAY",
+            "MVP6_ITEM_OPEN", "MVP6_ITEM_DEPOSIT",
+        }
+        checks["two_real_clients_drive_item_intents"] = (
+            clients["a"]["live_item"]["complete_seen"] is True
+            and clients["b"]["live_item"]["complete_seen"] is True
+            and required_a.issubset(set(clients["a"]["live_item"]["requests"]))
+            and required_b.issubset(set(clients["b"]["live_item"]["requests"]))
         )
         checks["authority_guards_restored"] = (
             owner_guard["restored_after_each_rpc"] is True
@@ -136,6 +193,12 @@ def construction_negatives(reports: dict, clients: dict, head: str, run_id: str)
         "minted_resource_topup": lambda r, c: r["authority/a"]["mvp6"]["resource_provenance"].update(topup_issued=True),
         "forged_resource_source": lambda r, c: r["authority/a"]["mvp6"]["resource_provenance"].update(source="SERVER_TOPUP"),
         "missing_backend_keepalive": lambda r, c: r["gateway"]["mvp6_transport_guard"]["backend_keepalive"].update(cycles=0),
+        "wrong_item_winner": lambda r, c: r["gateway"]["mvp6"]["live_item"].update(winner="a"),
+        "missing_pickup_replay": lambda r, c: r["gateway"]["mvp6"]["live_item"].update(pickup_replay=False),
+        "diverged_item_closure": lambda r, c: r["gateway"]["mvp6"]["live_item"]["on_authority_b"]["items"][0].update(quantity=999),
+        "missing_item_carry_back": lambda r, c: r["gateway"]["mvp6"]["live_item"].update(carry_back_verified=False),
+        "missing_client_item_intent": lambda r, c: c["b"]["live_item"].update(requests=[]),
+        "missing_item_transfer_evidence": lambda r, c: r["gateway"].update(transfers=r["gateway"]["transfers"][:2]),
     }
     rejected: list[str] = []
     for name, mutate in mutations.items():
@@ -291,7 +354,7 @@ def main() -> int:
     except (OSError, KeyError, ValueError, RuntimeError, TypeError) as exc:
         error += ";" + type(exc).__name__ + ":" + str(exc)
 
-    passed = not error and all(checks.values()) and len(negatives) == 13 and len(hud_cases) == 2
+    passed = not error and all(checks.values()) and len(negatives) == 19 and len(hud_cases) == 2
     manifest = {
         "schema":"distributed_world_simulator.mvp6_graphical_construction_manifest.v1",
         "subject_head":head, "subject_tree":tree, "run_id":run_id, "engine_sha256":BASE.sha(engine),
