@@ -1,7 +1,7 @@
 # EVO ARCH2 A10 — R5 final composition candidate
 
 Дата: 2026-09-18. Work Order `EVO-ARCH2-A10-20260918-R5`, HIGH.
-Parent: A10-R4 `511a1e0f01eac28918f849db78944c726cb318f8`.
+Parent: A10-R4 `ef5a9ecccdc403631d11c2cebe0b95d8971243bf`, TREE `a2cd902fff7375f611fe5f1889d3111619da41d3`.
 
 ## Назначение
 
@@ -33,6 +33,12 @@ R5 не добавляет нового runtime owner или новую биол
 - target ACTIVE Region принимает cursor;
 - тот же production Matter sample повторно bindится к target owner/epoch;
 - persistent damage overlay и effective function остаются byte-identical.
+
+## Exact lineage
+
+R5 verifier и Work Order обязаны ссылаться на один и тот же exact parent:
+`ef5a9ecccdc403631d11c2cebe0b95d8971243bf / a2cd902fff7375f611fe5f1889d3111619da41d3`.
+Предыдущие R4 heads `9e7deeb1...` и `511a1e0f...` являются историческими и не могут использоваться для current R5 acceptance.
 
 ## Scope boundary
 
