@@ -1,6 +1,7 @@
 extends RefCounted
 ## A10 R1 selective binding layer. It does not own or mutate production world state.
 const C = preload("res://scripts/research/ecology/v2/canonical_value_v1.gd")
+const MatterUtils = preload("res://scripts/simulation/matter/matter_contract_utils.gd")
 const MatterQuery = preload("res://scripts/simulation/matter/query/matter_query_result.gd")
 const Region = preload("res://scripts/network/contracts/authority_region_descriptor.gd")
 const DamageRequest = preload("res://scripts/construction/damage/construction_damage_request.gd")
@@ -58,6 +59,8 @@ static func bind_matter_site(query: Dictionary, region: Dictionary, cursor: Dict
 		"binding_hash": "",
 	}
 	value["binding_hash"] = _hash_without(value, "binding_hash")
+	if String(value["binding_hash"]).is_empty():
+		return _fail("A10_BINDING_HASH")
 	return {"success": true, "binding": value}
 
 static func project_construction_damage(request: Dictionary, record: Dictionary, part_to_module: Dictionary) -> Dictionary:
@@ -107,6 +110,8 @@ static func project_construction_damage(request: Dictionary, record: Dictionary,
 		"binding_hash": "",
 	}
 	value["binding_hash"] = _hash_without(value, "binding_hash")
+	if String(value["binding_hash"]).is_empty():
+		return _fail("A10_DAMAGE_BINDING_HASH")
 	return {"success": true, "event": value}
 
 static func admit_cursor(cursor: Dictionary, region: Dictionary) -> Dictionary:
@@ -162,7 +167,7 @@ static func _part_map_error(part_to_module: Dictionary) -> String:
 static func _hash_without(value: Dictionary, field: String) -> String:
 	var payload := value.duplicate(true)
 	payload[field] = ""
-	return C.digest(payload)
+	return MatterUtils.payload_hash(payload)
 
 static func _fail(error: String) -> Dictionary:
 	return {"success": false, "error": error}
