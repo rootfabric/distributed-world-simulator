@@ -32,6 +32,9 @@ IMMUTABLE_PRODUCTION = {
     "scripts/network/contracts/handoff_ticket.gd",
     "scripts/construction/damage/construction_damage_request.gd",
     "scripts/construction/damage/construction_damage_record.gd",
+    "scripts/construction/contracts/construct_snapshot.gd",
+    "scripts/construction/contracts/construction_part_record.gd",
+    "scripts/research/ecology/v2/body_graph_v1.gd",
     "scripts/research/ecology/v2/snapshot_seam_v1.gd",
     "scripts/research/ecology/v2/ecological_fidelity_v1.py",
 }
