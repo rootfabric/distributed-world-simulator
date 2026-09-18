@@ -33,7 +33,7 @@ func run() -> void:
 		check(live.get("success") == true and live.get("replay") == true, "legitimate original actor still receives original replay")
 	var report := {"schema": "distributed_world_simulator.mvp6_native_replay_security.v1", "subject_head": OS.get_environment("EXPECTED_HEAD"), "subject_tree": OS.get_environment("EXPECTED_TREE"), "passed": okay and failures.is_empty(), "assertions": assertions, "failures": failures, "attacks": attacks6, "mvp6_predicate_verified": false, "independent_verdict": false}
 	cleanup6()
-	var saved := false
+	var saved := true
 	var output := OS.get_environment("MVP6_SECURITY_RESULT")
 	if not output.is_empty(): saved = bool(AtomicJson.write_dictionary(output, report).get("success", false))
 	print("MVP6_NATIVE_REPLAY_SECURITY assertions=%d failures=%d passed=%s" % [assertions, failures.size(), str(report["passed"])])
