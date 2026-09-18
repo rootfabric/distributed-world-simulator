@@ -4,11 +4,11 @@
 ROLE              = CONTROL_AUDIT
 MAIN_BASE          = 99e8efe2422e02fedec40778e12748611d68fb5f
 PRODUCT_BRANCH     = repair/fabric-r4-1-numeric-envelope-diagnostics-r1
-PRODUCT_HEAD       = 5ed03392edcdaf0efaf743423f12bd9e1550e70a
-PRODUCT_TREE       = ef7366f3452b812ab735c42d8447c3ca84c7bea3
+PRODUCT_HEAD       = a5001eeafd012323548707d6b705b12301a91761
+PRODUCT_TREE       = 934ecfed15bd0f18389a64daf44caee6748cd73e
 PRODUCT_MUTATION   = NONE
 CONTROL_GENERATION = 82
-STATUS             = PASS
+STATUS             = PENDING_REBIND_PC0
 ```
 
 ## Purpose
@@ -61,3 +61,17 @@ ARTIFACT_SHA256        = 9fb33d6401b30ad550da0aef1bc26f1ecdff8cb9029efd2718dcfcc
 All Project Control steps succeeded, including candidate consistency, architecture/ownership projection, complete Harness regression discovery, canonical-main PC0 auditor and directional-watch auditor.
 
 Decision: `CURRENT_MAIN_PC0 = PASS` for product identity `5ed03392... / ef7366...`. This does not convert the historical product-branch PC0 RED into a PASS; it proves that the RED was caused by stale main-owned control bytes on that historical research lineage. This report-only commit requires one final status-head Project Control replay before Director may consume it.
+
+
+## Subject rebind amendment
+
+The prior PC0 executions remain valid evidence about the current-main control plane, but their product identity binding became stale when the product test-only helper commit moved the subject from `5ed03392...` to `a5001ee...`.
+
+```text
+NEW_PRODUCT_HEAD = a5001eeafd012323548707d6b705b12301a91761
+NEW_PRODUCT_TREE = 934ecfed15bd0f18389a64daf44caee6748cd73e
+PRODUCT_RUNTIME_CHANGE_SINCE_5ed = NONE
+REQUIRED_NEXT = PROJECT_CONTROL_STATUS_REPLAY
+```
+
+No main-owned control file is copied into the product branch.
