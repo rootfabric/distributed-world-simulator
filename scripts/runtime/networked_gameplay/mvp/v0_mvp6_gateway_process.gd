@@ -340,8 +340,26 @@ func _advance_item_handoff6() -> Dictionary:
 	else:
 		_item_after_carry6 = closure.duplicate(true)
 		_item_carry_back_verified6 = true
-		_item_phase6 = "COMPLETE"
+		_item_phase6 = "RETURNED"
 	return Protocol.success({"advanced": true, "phase": _item_phase6})
+
+
+func _finish_item6(actor: String) -> Dictionary:
+	if actor != "a" or _item_phase6 != "RETURNED":
+		return Protocol.failure("MVP6_LIVE_ITEM_FINISH_PHASE_INVALID")
+	var player: Dictionary = world_snapshot().get("players", {}).get("a", {})
+	if player.is_empty() or not _player_stationary6(player) or _active_authority6("a") != "authority/a":
+		return Protocol.failure("MVP6_LIVE_ITEM_RETURN_NEUTRAL_REQUIRED")
+	var read := _item_read6("authority/a", "a")
+	if not bool(read.get("success", false)):
+		return read
+	var closure := _actor_item_closure6(read.get("details", {}).get("item_graph", {}), "a")
+	if Utils.canonical_json(closure) != Utils.canonical_json(_item_before_carry6):
+		return Protocol.failure("MVP6_LIVE_ITEM_FINAL_CLOSURE_DIVERGED")
+	_item_after_carry6 = closure.duplicate(true)
+	_item_phase6 = "COMPLETE"
+	_item_events6.append({"event": "ITEM_COMPLETE", "actor": "a", "neutral": true})
+	return Protocol.success({"complete": true})
 
 
 func _item_complete6() -> bool:
@@ -534,6 +552,8 @@ func handle_client(actor: String, body: Dictionary) -> Dictionary:
 			result = _carry_item6(actor, "authority/b")
 		"MVP6_ITEM_CARRY_BACK":
 			result = _carry_item6(actor, "authority/a")
+		"MVP6_ITEM_FINISH":
+			result = _finish_item6(actor)
 		"MVP6_INIT":
 			result = _initialize6(actor)
 		"MVP6_OBSERVE":
