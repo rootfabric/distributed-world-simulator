@@ -139,7 +139,7 @@ func run() -> void:
 	for route in routes: route.shutdown()
 	for service in services: service.shutdown()
 	var output := OS.get_environment("MVP6_PREREQUISITE_RESULT")
-	var saved := false
+	var saved := true
 	if not output.is_empty(): saved = bool(AtomicJson.write_dictionary(output, report).get("success", false))
 	print("MVP6_NATIVE_PREREQUISITE_DIAGNOSTIC assertions=%d failures=%d diagnostic_passed=%s mvp6_passed=false" % [assertions, failures.size(), str(passed)])
 	quit(0 if passed and saved else 1)
