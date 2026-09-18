@@ -3,6 +3,12 @@ name: FABRIC R4.1 Fresh Independent Verifier R3
 on:
   push:
     branches: [verify/fabric-r4-1-numeric-envelope-diagnostics-r3]
+  pull_request:
+    branches: [repair/fabric-r4-1-numeric-envelope-diagnostics-r1]
+    paths:
+      - '.github/workflows/fabric-r4-1-fresh-independent-verifier-r3.yml'
+      - 'docs/research/FABRIC_R4_1_FRESH_INDEPENDENT_VERIFIER_R3_RU.md'
+      - 'tests/research/fabric1/fabric_r4_1_independent_verifier_r3.gd'
 
 permissions:
   contents: read
@@ -25,6 +31,7 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
       - name: Bind exact R4.1 subject and verifier scope
         shell: bash
         run: |
