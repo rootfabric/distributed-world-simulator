@@ -1,0 +1,70 @@
+name: ECO ARCH2 A10 Fresh Independent Verifier R1
+
+on:
+  push:
+    branches:
+      - verify/eco-arch2-a10-r5-independent-r1
+    paths:
+      - docs/research/ecology/EVO_ARCH2_A10_FRESH_VERIFIER_R1_RU.md
+      - .github/workflows/eco-arch2-a10-fresh-verifier-r1.yml
+  workflow_dispatch:
+
+concurrency:
+  group: eco-a10-fresh-verifier-r1
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Fresh A10 R5 Linux Double
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 30
+    steps:
+      - name: Checkout verifier dispatch
+        uses: actions/checkout@v4
+        with:
+          ref: verify/eco-arch2-a10-r5-independent-r1
+          fetch-depth: 0
+          path: verifier
+
+      - name: Checkout exact A10 product subject
+        uses: actions/checkout@v4
+        with:
+          ref: 57d274de196e2c4d54cf67f819fc925565db7a1a
+          fetch-depth: 0
+          path: subject
+
+      - name: Assert exact subject
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git -C subject rev-parse HEAD)" = "57d274de196e2c4d54cf67f819fc925565db7a1a"
+          test "$(git -C subject rev-parse 'HEAD^{tree}')" = "2519a80694e42040a4d05bded6c77156c0eaea12"
+          test -z "$(git -C subject status --porcelain --untracked-files=no)"
+
+      - name: Resolve canonical Linux double Godot
+        id: godot
+        shell: bash
+        run: |
+          set -euo pipefail
+          GODOT="${DWS_GODOT_DOUBLE_LINUX_BIN:-$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64}"
+          test -x "$GODOT"
+          VERSION="$("$GODOT" --version | head -n1)"
+          test "$VERSION" = "4.7.1.stable.double.custom_build.a13da4feb"
+          SHA="$(sha256sum "$GODOT" | awk '{print $1}')"
+          test "$SHA" = "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7"
+          echo "path=$GODOT" >> "$GITHUB_OUTPUT"
+
+      - name: Run subject-owned whole A10 verifier
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd subject
+          python3 validation/ecology/evo_arch2_a10_r5/verify.py             --godot "${{ steps.godot.outputs.path }}"             --head "57d274de196e2c4d54cf67f819fc925565db7a1a"             --tree "2519a80694e42040a4d05bded6c77156c0eaea12"
+
+      - name: Upload independent evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: eco-a10-fresh-verifier-r1-${{ github.run_id }}
+          path: subject/artifacts/a10-r5/exact
+          if-no-files-found: warn
