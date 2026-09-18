@@ -40,7 +40,6 @@ A10 R1 не выводит `water_mg/nutrient_mg/organic_mg` из одной poi
 - Matter state revision;
 - material mass fractions;
 - density/occupancy/integrity/temperature/porosity;
-- explicit calibration-derived presentation channels, если calibration задан;
 - признак `resource_stock_authority = NOT_DERIVED_FROM_POINT_SAMPLE`.
 
 Любая будущая выдача mass/resource потребует отдельного volumetric transaction contract, а не умножения point density на придуманную площадь.
