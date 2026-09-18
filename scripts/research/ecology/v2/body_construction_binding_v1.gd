@@ -209,6 +209,21 @@ static func validate_overlay(overlay: Dictionary, binding: Dictionary, body_modu
 		return "A10_R4_OVERLAY_CHECKSUM"
 	return ""
 
+static func admit_overlay(
+	overlay: Dictionary,
+	binding: Dictionary,
+	body_modules: Array,
+	source_snapshot: Dictionary,
+	expected_overlay_checksum: String
+) -> Dictionary:
+	if not MatterUtils.is_lower_hex_64(expected_overlay_checksum) \
+	or String(overlay.get("checksum", "")) != expected_overlay_checksum:
+		return _fail("A10_R4_OVERLAY_EXTERNAL_ANCHOR")
+	var error := validate_overlay(overlay, binding, body_modules, source_snapshot)
+	if not error.is_empty():
+		return _fail(error)
+	return {"success": true, "overlay": overlay.duplicate(true)}
+
 static func effective_function(binding: Dictionary, overlay: Dictionary, body_modules: Array, source_snapshot: Dictionary) -> Dictionary:
 	if not validate_overlay(overlay, binding, body_modules, source_snapshot).is_empty():
 		return {}
