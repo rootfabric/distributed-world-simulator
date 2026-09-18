@@ -4,7 +4,7 @@
   "state": "IN_PROGRESS",
   "risk_class": "HIGH",
   "branch": "feature/eco-evo-arch2-a10-seam-binding-r3",
-  "parent_r2": "26732787e4e7c2b8f3bd7c139c2fb548705f3169",
+  "parent_r2": "9aec7c80cd5255d5fc82e856502e6221ff2bd578",
   "goal": "Real A8 snapshot seam handoff composed with production AuthorityRegionDescriptor/HandoffTicket and A10 Region admission.",
   "additive_paths": [
     "config/ecology/evo-arch2-a10-r3-work-order.v1.json",
@@ -32,8 +32,8 @@
     "TARGET_OWNER_ACCEPTED_AFTER_COMMIT"
   ],
   "parent_refresh": {
-    "previous": "bbd8fa6f0479169c6b1638ea97146976e298e52f",
-    "current": "26732787e4e7c2b8f3bd7c139c2fb548705f3169",
-    "reason": "R2 refreshed onto final R1 no-guessed-partition boundary"
+    "previous": "26732787e4e7c2b8f3bd7c139c2fb548705f3169",
+    "current": "9aec7c80cd5255d5fc82e856502e6221ff2bd578",
+    "reason": "R2 requires external Matter batch checksum anchor and records lack of canonical consume receipt"
   }
 }
