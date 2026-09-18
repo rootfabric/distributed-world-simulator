@@ -4,6 +4,7 @@ const C = preload("res://scripts/research/ecology/v2/canonical_value_v1.gd")
 const Body = preload("res://scripts/research/ecology/v2/body_graph_v1.gd")
 const R1 = preload("res://scripts/research/ecology/v2/world_binding_v1.gd")
 const R4 = preload("res://scripts/research/ecology/v2/body_construction_binding_v1.gd")
+const MatterUtils = preload("res://scripts/simulation/matter/matter_contract_utils.gd")
 const Part = preload("res://scripts/construction/contracts/construction_part_record.gd")
 const Snapshot = preload("res://scripts/construction/contracts/construct_snapshot.gd")
 const DamageRequest = preload("res://scripts/construction/damage/construction_damage_request.gd")
@@ -102,6 +103,10 @@ func _run() -> void:
 		return
 	var damaged: Dictionary = applied["overlay"]
 	_check(R4.validate_overlay(damaged, binding, body_modules, source_snapshot).is_empty(), "damaged overlay validates")
+	var anchored_overlay := R4.admit_overlay(damaged, binding, body_modules, source_snapshot, damaged["checksum"])
+	_check(bool(anchored_overlay.get("success", false)) and anchored_overlay["overlay"] == damaged, "persisted overlay admits with external checksum")
+	var bad_overlay_anchor := R4.admit_overlay(damaged, binding, body_modules, source_snapshot, "0".repeat(64))
+	_check(not bool(bad_overlay_anchor.get("success", false)) and bad_overlay_anchor.get("error") == "A10_R4_OVERLAY_EXTERNAL_ANCHOR", "persisted overlay rejects wrong external checksum")
 	_check(damaged["revision"] == 1 and damaged["applied_damage"].size() == 1, "damage receipt persisted")
 	_check(damaged["destroyed_modules"] == ["m000001"], "direct destroyed module recorded")
 	_check(damaged["disabled_modules"] == ["m000001", "m000002"], "destroyed support disables collector descendant")
@@ -139,7 +144,11 @@ func _run() -> void:
 
 	var tampered_overlay := damaged.duplicate(true)
 	tampered_overlay["disabled_modules"] = ["m000001"]
-	_check(not R4.validate_overlay(tampered_overlay, binding, body_modules, source_snapshot).is_empty(), "overlay tamper rejected")
+	tampered_overlay["checksum"] = MatterUtils.compute_checksum(tampered_overlay)
+	_check(R4.validate_overlay(tampered_overlay, binding, body_modules, source_snapshot) == "A10_R4_DISABLED_CLOSURE", "rehashed overlay cannot violate destroyed-subtree closure")
+	var trusted_old_checksum := String(damaged["checksum"])
+	var reanchored_tamper := R4.admit_overlay(tampered_overlay, binding, body_modules, source_snapshot, trusted_old_checksum)
+	_check(not bool(reanchored_tamper.get("success", false)) and reanchored_tamper.get("error") == "A10_R4_OVERLAY_EXTERNAL_ANCHOR", "rehashed persisted tamper cannot replace trusted overlay")
 
 	_finish()
 
