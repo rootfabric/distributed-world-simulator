@@ -161,7 +161,7 @@ func _service_backend_keepalive6() -> Dictionary:
 
 func _process(delta: float) -> bool:
 	var parent_result := super._process(delta)
-	if client_boundary == null or closing_at_ms > 0:
+	if client_boundary == null or closing_at_ms > 0 or not failures.is_empty():
 		return parent_result
 	var kept: Dictionary = _service_backend_keepalive6()
 	if not bool(kept.get("success", false)):
