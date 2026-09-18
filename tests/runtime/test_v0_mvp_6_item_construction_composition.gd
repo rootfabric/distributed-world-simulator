@@ -202,7 +202,11 @@ func run() -> void:
 	}
 	cleanup6()
 	var output := OS.get_environment("MVP6_CONSTRUCTION_RESULT")
-	var saved := false
+	# Evidence output is optional in the canonical world/core regression runner.
+	# Focused MVP6 CI provides the path and still fails closed if persistence of
+	# that requested evidence fails. An absent optional path must not turn an
+	# otherwise passing product test into process exit 1.
+	var saved := true
 	if not output.is_empty(): saved = bool(AtomicJson.write_dictionary(output, report).get("success", false))
 	print("MVP6_ITEM_CONSTRUCTION_COMPOSITION assertions=%d failures=%d passed=%s" % [assertions, failures.size(), str(report["passed"])])
 	quit(0 if report["passed"] and saved else 1)
