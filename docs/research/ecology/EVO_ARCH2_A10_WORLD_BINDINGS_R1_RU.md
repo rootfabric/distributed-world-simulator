@@ -1,0 +1,87 @@
+# EVO ARCH2 A10 — selective world bindings R1
+
+Дата: 2026-09-18. Work Order `EVO-ARCH2-A10-20260918-R1`, HIGH.
+База: `main@99e8efe2422e02fedec40778e12748611d68fb5f`, TREE `f4ae35216de7ed915fcb0c46b03b0f35baeccd6b`.
+
+## Цель
+
+Начать A10 как **selective integration from current main**. ECO не получает собственных production-владельцев Terrain, Matter, Construction, Authority, Region, Network или Persistence. R1 добавляет только адаптер/admission layer и его exact tests.
+
+Первый вертикальный срез должен доказать три вещи на реальных current-main contracts:
+
+1. production Matter/terrain sample можно привязать к ECO site без подмены физической семантики;
+2. A8 ecological cursor допускается к исполнению только когда он совпадает с canonical production Region owner/epoch;
+3. применённый C9 Construction damage можно детерминированно перевести в ECO body-module damage event только через явное part→module binding.
+
+## Production sources — read only
+
+R1 использует неизменённые владельцы:
+
+- `scripts/simulation/matter/query/matter_query_result.gd`;
+- `scripts/simulation/matter/contracts/matter_sample.gd`;
+- `scripts/network/contracts/authority_region_descriptor.gd`;
+- `scripts/network/contracts/handoff_ticket.gd`;
+- `scripts/construction/damage/construction_damage_request.gd`;
+- `scripts/construction/damage/construction_damage_record.gd`;
+- A8/A9 ECO contracts из `scripts/research/ecology/v2/**`.
+
+Ни один из этих файлов R1 не изменяет.
+
+## Matter / terrain binding
+
+A10 R1 не выводит `water_mg/nutrient_mg/organic_mg` из одной point-sample. `MatterQueryResult` даёт физический sample — density, composition, integrity, temperature, porosity — но не доказанный ecological reservoir volume.
+
+Поэтому R1 сохраняет физические значения и provenance byte-for-semantics и публикует только:
+
+- canonical body/frame/cell/brick identity;
+- Matter state revision;
+- material mass fractions;
+- density/occupancy/integrity/temperature/porosity;
+- explicit calibration-derived presentation channels, если calibration задан;
+- признак `resource_stock_authority = NOT_DERIVED_FROM_POINT_SAMPLE`.
+
+Любая будущая выдача mass/resource потребует отдельного volumetric transaction contract, а не умножения point density на придуманную площадь.
+
+## Production authority admission
+
+A10 не создаёт `EcoRegion`. A8 cursor должен совпасть с production `AuthorityRegionDescriptor`:
+
+- `region_id`;
+- `owner_node_id`;
+- `authority_epoch`;
+- lifecycle только `WARM|ACTIVE`.
+
+Несовпадение region/owner/epoch или DORMANT/UNLOADING fail-closed.
+
+## Construction damage binding
+
+A10 не исполняет C9 damage и не редактирует Construction. Он принимает только пару:
+
+`ConstructionDamageRequest + APPLIED ConstructionDamageRecord`
+
+с совпадающими `damage_id` и `request_checksum`.
+
+Влияние на ECO разрешено только для part IDs, явно перечисленных в immutable `part_to_module` binding. `DEGRADED` и `DESTROYED` переводятся в канонические ECO damage events; неизвестный part, лишний module, конфликтующий map или REPAIRED record не допускаются как новое биологическое повреждение.
+
+## Не входит в R1
+
+- изменение production Matter;
+- расход/депозит Matter от роста;
+- физическая проекция всего BodyGraph в Construction;
+- применение damage event к A7 state;
+- coarse population dynamics;
+- A11 playable habitat;
+- изменение registry/scheduler/production ownership;
+- main merge или acceptance.
+
+## Acceptance R1
+
+- additive diff относительно exact current main;
+- production contract files byte-identical current main;
+- Godot test строит валидный current-main MatterQueryResult и RegionDescriptor, затем проверяет admission/negative cases;
+- Godot test связывает валидный C9 damage request/record с ECO modules и отвергает stale/forged/repaired paths;
+- никакая функция R1 не возвращает ecological resource stock, полученный из point Matter sample;
+- Python verifier fail-closed проверяет exact HEAD/TREE/base ancestry и scope;
+- fresh review + independent verifier требуются до R1 acceptance.
+
+После R1 следующий bounded slice A10-R2 может добавить volumetric Matter exchange и применение damage к organism state, только если source contracts дают сохранение массы и replay/authority guarantees.
