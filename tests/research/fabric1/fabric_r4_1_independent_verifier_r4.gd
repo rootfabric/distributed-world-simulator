@@ -75,7 +75,8 @@ func _initialize() -> void:
 	_check(scale_extreme.success and _finite(scale_extreme.details), "V-R41-R4 max-based residual scale stays finite", scale_extreme)
 
 	# Fresh-review P1: prove the fixture really overflows a naive partial balance.
-	var compensated_r := _f64_le("f8ad43bd58010400") # exact 5.57e-309\n\tvar i := 0.51 / compensated_r
+	var compensated_r := _f64_le("f8ad43bd58010400") # exact 5.57e-309
+	var i := 0.51 / compensated_r
 	_check(is_finite(i) and not is_finite(i + i), "V-R41-R4 fixture forces naive partial overflow", i)
 	var compensated_model := {
 		"nodes":[{"node_id":"hub"},{"node_id":"p1"},{"node_id":"p2"},{"node_id":"n1"}],
