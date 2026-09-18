@@ -1,0 +1,32 @@
+{
+  "schema": "dws.ecology.evo-arch2-a10-r4-work-order.v1",
+  "work_order_id": "EVO-ARCH2-A10-20260918-R4",
+  "state": "IN_PROGRESS",
+  "risk_class": "HIGH",
+  "branch": "feature/eco-evo-arch2-a10-body-damage-overlay-r4",
+  "parent_r3": "d387bece70a563729c974793ddeac806e421c9cf",
+  "goal": "Persist C9-derived damage against exact BodyGraph/Construction binding without mutating accepted A5 historical state.",
+  "additive_paths": [
+    "config/ecology/evo-arch2-a10-r4-work-order.v1.json",
+    "docs/research/ecology/EVO_ARCH2_A10_R4_BODY_DAMAGE_OVERLAY_RU.md",
+    "scripts/research/ecology/v2/body_construction_binding_v1.gd",
+    "validation/ecology/evo_arch2_a10_r4/test_body_damage_overlay.gd",
+    "validation/ecology/evo_arch2_a10_r4/verify.py",
+    ".github/workflows/eco-evo-arch2-a10-r4-exact.yml"
+  ],
+  "immutable_sources": [
+    "scripts/research/ecology/v2/body_graph_v1.gd",
+    "scripts/research/ecology/v2/world_binding_v1.gd",
+    "scripts/construction/contracts/construct_snapshot.gd"
+  ],
+  "invariants": [
+    "BIOLOGICAL_A5_STATE_BYTES_NOT_MUTATED",
+    "BODY_AND_CONSTRUCT_BINDING_EXACT",
+    "PART_MODULE_MAPPING_ONE_TO_ONE",
+    "UNMAPPED_MODULES_EXPLICIT",
+    "DAMAGE_REPLAY_IDEMPOTENT",
+    "DAMAGE_ID_CONFLICT_FAILS_CLOSED",
+    "DESTROYED_MODULE_DISables_DESCENDANTS",
+    "EFFECTIVE_FUNCTION_EXCLUDES_DISABLED_MODULES"
+  ]
+}
