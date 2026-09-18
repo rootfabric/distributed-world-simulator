@@ -99,10 +99,16 @@ func _guard_clients6() -> Dictionary:
 
 
 func _restore_clients6() -> Dictionary:
+	# Restore every still-active client even when an earlier restore fails.
+	# Returning early here can leave a later peer on the widened MVP6 timeout
+	# policy, so collect the first failure only after all restore attempts ran.
+	var first_failure: Dictionary = {}
 	for raw_actor in ["a", "b"]:
 		var restored: Dictionary = _restore_client6(String(raw_actor))
-		if not bool(restored.get("success", false)):
-			return restored
+		if not bool(restored.get("success", false)) and first_failure.is_empty():
+			first_failure = restored.duplicate(true)
+	if not first_failure.is_empty():
+		return first_failure
 	return Protocol6.success()
 
 
