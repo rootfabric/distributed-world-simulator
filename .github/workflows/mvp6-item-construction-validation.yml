@@ -202,6 +202,7 @@ jobs:
           git switch -c "$GITHUB_REF_NAME" "$EXPECTED_HEAD"
           test -z "$(git status --porcelain --untracked-files=no)"
           python3 -m pip install --disable-pip-version-check -r scripts/harness/requirements.txt
+          python3 -m py_compile docs/control/mvp-act0-r1/validate_mvp6_seam_repro.py docs/control/mvp-act0-r1/validate_mvp6_full_world_core_result.py
       - uses: actions/download-artifact@v4
         if: contains(github.event.head_commit.message, '[mvp6-world-core]')
         with:
