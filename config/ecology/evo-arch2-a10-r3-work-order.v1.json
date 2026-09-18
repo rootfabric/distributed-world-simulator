@@ -1,0 +1,34 @@
+{
+  "schema": "dws.ecology.evo-arch2-a10-r3-work-order.v1",
+  "work_order_id": "EVO-ARCH2-A10-20260918-R3",
+  "state": "IN_PROGRESS",
+  "risk_class": "HIGH",
+  "branch": "feature/eco-evo-arch2-a10-seam-binding-r3",
+  "parent_r2": "71d6c832b67e52ba1eb031ce6ddecc8a195bb163",
+  "goal": "Real A8 snapshot seam handoff composed with production AuthorityRegionDescriptor/HandoffTicket and A10 Region admission.",
+  "additive_paths": [
+    "config/ecology/evo-arch2-a10-r3-work-order.v1.json",
+    "docs/research/ecology/EVO_ARCH2_A10_R3_PRODUCTION_SEAM_BINDING_RU.md",
+    "scripts/research/ecology/v2/world_seam_binding_v1.gd",
+    "validation/ecology/evo_arch2_a10_r3/test_seam_binding.gd",
+    "validation/ecology/evo_arch2_a10_r3/verify.py",
+    ".github/workflows/eco-evo-arch2-a10-r3-exact.yml"
+  ],
+  "immutable_sources": [
+    "scripts/research/ecology/v2/snapshot_seam_v1.gd",
+    "scripts/research/ecology/v2/world_binding_v1.gd",
+    "scripts/network/contracts/authority_region_descriptor.gd",
+    "scripts/network/contracts/handoff_ticket.gd",
+    "scripts/network/handoff/handoff_state_machine.gd"
+  ],
+  "invariants": [
+    "NO_NEW_AUTHORITY_OWNER",
+    "SOURCE_CURSOR_MATCHES_SOURCE_REGION",
+    "TARGET_SPATIAL_REGION_IS_IDENTICAL_EXCEPT_AUTHORITY_LIFECYCLE",
+    "TARGET_EPOCH_STRICTLY_INCREASES",
+    "A8_REAL_HANDOFF_MACHINE_DRIVES_TRANSITIONS",
+    "HANDOFF_DOES_NOT_MUTATE_BIOLOGY",
+    "OLD_OWNER_REJECTED_AFTER_COMMIT",
+    "TARGET_OWNER_ACCEPTED_AFTER_COMMIT"
+  ]
+}
