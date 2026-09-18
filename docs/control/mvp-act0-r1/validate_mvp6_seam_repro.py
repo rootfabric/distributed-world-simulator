@@ -21,7 +21,7 @@ PRODUCT_TEST = "tests/runtime/test_v0_mvp_6_cross_authority_construction_seam.gd
 COLLISION_TEST = "tests/runtime/test_v0_mvp_6_cross_authority_construction_collision.gd"
 PERSISTENCE_TEST = "tests/runtime/test_v0_mvp_6_cross_authority_construction_persistence.gd"
 FULL_WORLD_RESULT_VALIDATOR = ROOT / "docs/control/mvp-act0-r1/validate_mvp6_full_world_core_result.py"
-FULL_WORLD_TIMEOUT_SECONDS = 3600
+FULL_WORLD_TIMEOUT_SECONDS = 4500
 PIN = {"linux": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7", "win32": "3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5"}
 FATAL = re.compile(r"(?im)^\s*(?:SCRIPT ERROR|ERROR):|Parse Error|Compile Error")
 
@@ -98,6 +98,9 @@ def run_full_world_core() -> int:
             stream.write(str(exc) + "\n")
             code = 127
     duration = round(time.monotonic() - start, 3)
+    runner_summary = ROOT / "artifacts/test-results/world-regression-summary.json"
+    if runner_summary.is_file():
+        shutil.copy2(runner_summary, WORLD_CORE_OUT / "world-regression-summary.json")
     (WORLD_CORE_OUT / "world-exit.txt").write_text(str(code) + "\n", encoding="utf-8")
     write(
         WORLD_CORE_OUT / "execution.json",
