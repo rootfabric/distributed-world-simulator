@@ -23,6 +23,9 @@ R1 использует неизменённые владельцы:
 - `scripts/network/contracts/handoff_ticket.gd`;
 - `scripts/construction/damage/construction_damage_request.gd`;
 - `scripts/construction/damage/construction_damage_record.gd`;
+- `scripts/construction/contracts/construct_snapshot.gd`;
+- `scripts/construction/contracts/construction_part_record.gd`;
+- `scripts/research/ecology/v2/body_graph_v1.gd`;
 - A8/A9 ECO contracts из `scripts/research/ecology/v2/**`.
 
 Ни один из этих файлов R1 не изменяет.
@@ -59,9 +62,9 @@ A10 не исполняет C9 damage и не редактирует Constructio
 
 `ConstructionDamageRequest + APPLIED ConstructionDamageRecord`
 
-с совпадающими `damage_id` и `request_checksum`.
+с совпадающими `damage_id` и `request_checksum`. Дополнительно передаётся exact source `ConstructSnapshot`: его checksum обязан совпасть с `source_snapshot_checksum` запроса, а каждый затронутый part должен реально существовать в этом snapshot.
 
-Влияние на ECO разрешено только для part IDs, явно перечисленных в immutable `part_to_module` binding. `DEGRADED` и `DESTROYED` переводятся в канонические ECO damage events; неизвестный part, лишний module, конфликтующий map или REPAIRED record не допускаются как новое биологическое повреждение.
+Влияние на ECO разрешено только для part IDs, явно перечисленных в immutable `part_to_module` binding. Каждый target module обязан реально существовать в валидном ECO `BodyGraph`; event запечатывает `body_hash`. `DEGRADED` и `DESTROYED` переводятся в канонические ECO damage events; неизвестный part, лишний module, конфликтующий map или REPAIRED record не допускаются как новое биологическое повреждение.
 
 ## Не входит в R1
 
@@ -79,7 +82,7 @@ A10 не исполняет C9 damage и не редактирует Constructio
 - additive diff относительно exact current main;
 - production contract files byte-identical current main;
 - Godot test строит валидный current-main MatterQueryResult и RegionDescriptor, затем проверяет admission/negative cases;
-- Godot test связывает валидный C9 damage request/record с ECO modules и отвергает stale/forged/repaired paths;
+- Godot test связывает валидный C9 damage request/record с exact source ConstructSnapshot и существующими BodyGraph modules, отвергая stale/forged/repaired/unknown-source/unknown-module paths;
 - никакая функция R1 не возвращает ecological resource stock, полученный из point Matter sample;
 - Python verifier fail-closed проверяет exact HEAD/TREE/base ancestry и scope;
 - fresh review + independent verifier требуются до R1 acceptance.
