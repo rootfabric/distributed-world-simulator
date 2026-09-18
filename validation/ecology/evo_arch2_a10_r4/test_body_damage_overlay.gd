@@ -62,7 +62,8 @@ func _damage_event(source_snapshot: Dictionary, body_modules: Array, conditions:
 		return {}
 	var projected := R1.project_construction_damage(
 		request, record, source_snapshot, body_modules,
-		{"part/support": "m000001", "part/leaf": "m000002", "part/root": "m000003"}
+		{"part/support": "m000001", "part/leaf": "m000002", "part/root": "m000003"},
+		record["checksum"]
 	)
 	return projected.get("event", {}) if bool(projected.get("success", false)) else {}
 
