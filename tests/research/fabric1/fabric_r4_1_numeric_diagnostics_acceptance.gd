@@ -47,26 +47,30 @@ func _initialize() -> void:
 	if finite_power_scale.success:
 		_check(is_finite(float(finite_power_scale.details.power_residual_w)) and float(finite_power_scale.details.power_residual_w) <= 1.0e292, "R4.1 extreme finite power residual bounded", finite_power_scale.details)
 
+	# GDScript source literals below ~1e-308 are not a reliable way to express
+	# a positive subnormal in this acceptance. Construct the exact f64 bytes.
+	var compensated_r := _f64_le("f8ad43bd58010400") # 5.57e-309
+	var compensated_i := 0.51 / compensated_r
+	_check(compensated_r > 0.0 and is_finite(1.0 / compensated_r), "R4.1 subnormal resistance fixture is valid", compensated_r)
+	_check(is_finite(compensated_i) and not is_finite(compensated_i + compensated_i), "R4.1 fixture forces naive partial overflow", compensated_i)
 	var compensated_model := {
 		"nodes": [{"node_id": "hub"}, {"node_id": "p1"}, {"node_id": "p2"}, {"node_id": "n1"}],
 		"elements": [
-			{"element_id": "e1", "node_a": "p1", "node_b": "hub", "resistance_ohm": 5.57e-309, "active": true},
-			{"element_id": "e2", "node_a": "p2", "node_b": "hub", "resistance_ohm": 5.57e-309, "active": true},
-			{"element_id": "e3", "node_a": "n1", "node_b": "hub", "resistance_ohm": 5.57e-309, "active": true},
+			{"element_id": "e1", "node_a": "p1", "node_b": "hub", "resistance_ohm": compensated_r, "active": true},
+			{"element_id": "e2", "node_a": "p2", "node_b": "hub", "resistance_ohm": compensated_r, "active": true},
+			{"element_id": "e3", "node_a": "n1", "node_b": "hub", "resistance_ohm": compensated_r, "active": true},
 		],
 	}
-	# 0.51 / 5.57e-309 ~= 9.156e307, so the first two same-sign hub
-	# contributions overflow when added naively, while the third cancels one and
-	# leaves a finite final balance. This must exercise the fallback, not merely
-	# sit close to DBL_MAX.
 	var compensated := Graph.solve_resistive(compensated_model, {"hub": 0.0, "p1": 0.51, "p2": 0.51, "n1": -0.51})
 	_check(compensated.success, "R4.1 compensated node balance survives partial overflow", compensated)
 	if compensated.success:
-		_check(is_finite(float(compensated.details.port_currents_a.hub)), "R4.1 compensated node balance finite", compensated.details.port_currents_a)
+		var hub_balance := float(compensated.details.port_currents_a.hub)
+		_check(is_finite(hub_balance) and absf(hub_balance / (-compensated_i) - 1.0) <= 1.0e-12, "R4.1 compensated node balance finite/analytic", compensated.details.port_currents_a)
 
-	var conductance_overflow := Graph.solve_resistive(_two_node(1.0e-320), {"a": 1.0, "b": 0.0})
+	var conductance_overflow_r := _f64_le("e807000000000000") # 1e-320
+	var conductance_overflow := Graph.solve_resistive(_two_node(conductance_overflow_r), {"a": 1.0, "b": 0.0})
 	_check(not conductance_overflow.success, "R4.1 conductance overflow fails closed", conductance_overflow)
-	_check(String(conductance_overflow.error_code) in ["R3_NUMERIC_ENVELOPE", "R3_GENERAL_ELECTRICAL_ELEMENT_INVALID"], "R4.1 overflow rejection is explicit", conductance_overflow)
+	_check(String(conductance_overflow.error_code) == "R3_NUMERIC_ENVELOPE", "R4.1 conductance overflow reports numeric envelope", conductance_overflow)
 
 	# Regression for the old diagnostic masker: matrix-level failures must carry an
 	# explicitly empty hash so a caller can preserve the primary error code/details.
