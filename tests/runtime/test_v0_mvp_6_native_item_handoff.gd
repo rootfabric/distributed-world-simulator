@@ -193,7 +193,7 @@ func run() -> void:
 	var report := {"schema": "distributed_world_simulator.mvp6_native_item_handoff_test.v1", "subject_head": OS.get_environment("EXPECTED_HEAD"), "subject_tree": OS.get_environment("EXPECTED_TREE"), "passed": okay and failures.is_empty() and cases6.size() == 6, "assertions": assertions, "failures": failures, "cases": cases6, "native_nonempty_carry_executed": true, "graphical_clients_executed": false, "world_restart_executed": false, "mvp6_predicate_verified": false, "independent_verdict": false}
 	cleanup6()
 	var output := OS.get_environment("MVP6_NATIVE_RESULT")
-	var saved := false
+	var saved := true
 	if not output.is_empty(): saved = bool(AtomicJson.write_dictionary(output, report).get("success", false))
 	print("MVP6_NATIVE_ITEM_HANDOFF assertions=%d failures=%d cases=%d passed=%s" % [assertions, failures.size(), cases6.size(), str(report["passed"])])
 	quit(0 if report["passed"] and saved else 1)
