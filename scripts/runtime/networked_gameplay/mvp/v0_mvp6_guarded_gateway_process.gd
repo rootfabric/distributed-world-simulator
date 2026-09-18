@@ -15,6 +15,11 @@ var _client_guard6_restore_last: Dictionary = {}
 var _client_guard6_active := {"client/a": false, "client/b": false}
 var _client_guard6_skips := {"client/a": 0, "client/b": 0}
 var _client_guard6_skip_last: Dictionary = {}
+const BACKEND_KEEPALIVE_INTERVAL_MS6 := 5000
+var _backend_keepalive_last_ms6 := 0
+var _backend_keepalive_cycles6 := 0
+var _backend_keepalive_failures6 := 0
+var _backend_keepalive_last6: Dictionary = {}
 
 
 func _authority6(authority_id: String, actor: String, request: Dictionary) -> Dictionary:
@@ -120,6 +125,50 @@ func _restore_clients6() -> Dictionary:
 	return Protocol6.success()
 
 
+func _service_backend_keepalive6() -> Dictionary:
+	if _construction6.is_empty() or _complete6() or closing_at_ms > 0:
+		return Protocol6.success({"skipped": true})
+	var now := Time.get_ticks_msec()
+	if _backend_keepalive_last_ms6 > 0 and now - _backend_keepalive_last_ms6 < BACKEND_KEEPALIVE_INTERVAL_MS6:
+		return Protocol6.success({"skipped": true})
+	var expected_checksum := String(_construction6.get("checksum", ""))
+	if expected_checksum.is_empty():
+		return Protocol6.failure("MVP6_BACKEND_KEEPALIVE_CHECKSUM_MISSING")
+	var observed: Dictionary = {}
+	for authority_id in ["authority/a", "authority/b"]:
+		var rpc: Dictionary = _authority6(authority_id, "a", {"kind": "MVP6_CONSTRUCTION_READ"})
+		var native: Dictionary = _native6(rpc)
+		if not bool(native.get("success", false)):
+			_backend_keepalive_failures6 += 1
+			return Protocol6.failure("MVP6_BACKEND_KEEPALIVE_RPC_FAILED:" + authority_id + ":" + String(native.get("error_code", "")))
+		var details: Dictionary = native.get("details", {})
+		var construction: Dictionary = details.get("construction", {})
+		var checksum := String(details.get("checksum", construction.get("checksum", "")))
+		if checksum != expected_checksum:
+			_backend_keepalive_failures6 += 1
+			return Protocol6.failure("MVP6_BACKEND_KEEPALIVE_DIVERGED:" + authority_id)
+		observed[authority_id] = checksum
+	_backend_keepalive_cycles6 += 1
+	_backend_keepalive_last_ms6 = now
+	_backend_keepalive_last6 = {
+		"expected_checksum": expected_checksum,
+		"observed": observed,
+		"canonical_state_owned": false,
+		"mutation_performed": false,
+	}
+	return Protocol6.success(_backend_keepalive_last6.duplicate(true))
+
+
+func _process(delta: float) -> bool:
+	var parent_result := super._process(delta)
+	if client_boundary == null or closing_at_ms > 0:
+		return parent_result
+	var kept: Dictionary = _service_backend_keepalive6()
+	if not bool(kept.get("success", false)):
+		finish_interactive(false, String(kept.get("error_code", "MVP6_BACKEND_KEEPALIVE_FAILED")))
+	return parent_result
+
+
 func handle_client(actor: String, body: Dictionary) -> Dictionary:
 	var kind: String = String(body.get("kind", ""))
 	# HELLO remains armed across the inherited MVP3-MVP5 prelude so client B
@@ -170,6 +219,13 @@ func base_report(schema: String, passed: bool, graphical: bool) -> Dictionary:
 		"client_restored_before_finish": clients_restored,
 		"client_skips": _client_guard6_skips.duplicate(true),
 		"client_skip_last": _client_guard6_skip_last.duplicate(true),
+		"backend_keepalive": {
+			"interval_ms": BACKEND_KEEPALIVE_INTERVAL_MS6,
+			"cycles": _backend_keepalive_cycles6,
+			"failures": _backend_keepalive_failures6,
+			"last": _backend_keepalive_last6.duplicate(true),
+			"mutation_performed": false,
+		},
 		"shared_transport_changed": false,
 		"payload_limit_changed": false,
 		"reconnect_policy_changed": false,
