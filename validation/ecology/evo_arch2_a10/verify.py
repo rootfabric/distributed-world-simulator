@@ -11,8 +11,8 @@ import sys
 import time
 
 ROOT = Path(__file__).resolve().parents[3]
-BASE_MAIN = "99e8efe2422e02fedec40778e12748611d68fb5f"
-BASE_TREE = "f4ae35216de7ed915fcb0c46b03b0f35baeccd6b"
+BASE_MAIN = "471210d781e521bc7897a8fe859636a07d7a3ab3"
+BASE_TREE = "5a4576f365c60fe117e03b9aee31b2359249b7a5"
 A9_MAIN_MERGE = "6982a563dd0c88c81449566131852c601ae89868"
 GODOT_VERSION = "4.7.1.stable.double.custom_build.a13da4feb"
 GODOT_SHA256 = "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7"

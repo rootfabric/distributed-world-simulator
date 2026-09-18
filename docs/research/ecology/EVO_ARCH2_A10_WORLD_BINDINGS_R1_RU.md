@@ -1,7 +1,7 @@
 # EVO ARCH2 A10 — selective world bindings R1
 
 Дата: 2026-09-18. Work Order `EVO-ARCH2-A10-20260918-R1`, HIGH.
-База: `main@99e8efe2422e02fedec40778e12748611d68fb5f`, TREE `f4ae35216de7ed915fcb0c46b03b0f35baeccd6b`.
+База: `main@471210d781e521bc7897a8fe859636a07d7a3ab3`, TREE `5a4576f365c60fe117e03b9aee31b2359249b7a5`.
 
 ## Цель
 
@@ -85,3 +85,7 @@ A10 не исполняет C9 damage и не редактирует Constructio
 - fresh review + independent verifier требуются до R1 acceptance.
 
 После R1 следующий bounded slice A10-R2 может добавить volumetric Matter exchange и применение damage к organism state, только если source contracts дают сохранение массы и replay/authority guarantees.
+
+## Base refresh 2026-09-18
+
+Во время публикации R1 canonical main продвинулся с `99e8efe2` до `471210d7` только за счёт merged Harness PR #652. Diff затрагивает harness/docs и не меняет ни один A10 production source. R1 синхронизирован merge-коммитом с current main; scope A10 остаётся additive.

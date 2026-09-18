@@ -4,8 +4,8 @@
   "state": "IN_PROGRESS",
   "risk_class": "HIGH",
   "branch": "feature/eco-evo-arch2-a10-world-bindings-r1",
-  "base_main": "99e8efe2422e02fedec40778e12748611d68fb5f",
-  "base_tree": "f4ae35216de7ed915fcb0c46b03b0f35baeccd6b",
+  "base_main": "471210d781e521bc7897a8fe859636a07d7a3ab3",
+  "base_tree": "5a4576f365c60fe117e03b9aee31b2359249b7a5",
   "predecessor": "EVO_ARCH2_A9_MERGED",
   "goal": "Selective current-main world bindings for Matter/terrain provenance, production region authority admission, and Construction damage projection without new production owners.",
   "additive_paths": [
@@ -47,5 +47,11 @@
     "A11 playable habitat",
     "Production ownership promotion",
     "main merge"
-  ]
+  ],
+  "base_refresh": {
+    "previous_main": "99e8efe2422e02fedec40778e12748611d68fb5f",
+    "current_main": "471210d781e521bc7897a8fe859636a07d7a3ab3",
+    "reason": "Harness PR #652 only; no A10 production source overlap",
+    "production_overlap": false
+  }
 }
