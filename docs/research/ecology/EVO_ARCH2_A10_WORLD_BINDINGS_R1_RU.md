@@ -37,6 +37,7 @@ A10 R1 не выводит `water_mg/nutrient_mg/organic_mg` из одной poi
 Поэтому R1 сохраняет физические значения и provenance byte-for-semantics и публикует только:
 
 - canonical body/frame/cell/brick identity;
+- R1 допускает только production Region selector `GLOBAL_SPACE`; `CHUNK_SET/PARTITION_PREFIX` fail-closed, потому что current-main contracts не дают канонического cell→chunk/partition membership witness;
 - Matter state revision;
 - material mass fractions;
 - density/occupancy/integrity/temperature/porosity;
@@ -53,7 +54,7 @@ A10 не создаёт `EcoRegion`. A8 cursor должен совпасть с 
 - `authority_epoch`;
 - lifecycle только `WARM|ACTIVE`.
 
-Несовпадение region/owner/epoch или DORMANT/UNLOADING fail-closed.
+Несовпадение region/owner/epoch или DORMANT/UNLOADING fail-closed. Нельзя выводить принадлежность Matter cell к `CHUNK_SET/PARTITION_PREFIX` из похожих строк; partition-specific binding требует отдельного production membership witness.
 
 ## Construction damage binding
 

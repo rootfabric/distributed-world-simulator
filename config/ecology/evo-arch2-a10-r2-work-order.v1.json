@@ -4,7 +4,7 @@
   "state": "IN_PROGRESS",
   "risk_class": "HIGH",
   "branch": "feature/eco-evo-arch2-a10-resource-mapping-r2",
-  "parent_a10_r1": "d3c7d856071f2ae9b6417a9b0043d4b3e294fa86",
+  "parent_a10_r1": "06f7ee1774ce2b847ace9422a42f3928c3dff3e9",
   "canonical_main_at_dispatch": "471210d781e521bc7897a8fe859636a07d7a3ab3",
   "goal": "Explicit catalog-bound, mass-conservative MatterMaterialBatch to ECO resource admission with no default material semantics.",
   "additive_paths": [
@@ -39,8 +39,8 @@
     "A11"
   ],
   "parent_refresh": {
-    "previous": "cf63b8263c98847daf91d841892bd00761640754",
-    "current": "d3c7d856071f2ae9b6417a9b0043d4b3e294fa86",
-    "reason": "R1 external authoritative C9 damage-record checksum anchor repair"
+    "previous": "d3c7d856071f2ae9b6417a9b0043d4b3e294fa86",
+    "current": "06f7ee1774ce2b847ace9422a42f3928c3dff3e9",
+    "reason": "R1 stopped inferring Matter cell membership for CHUNK_SET/PARTITION_PREFIX; only proven GLOBAL_SPACE binding remains"
   }
 }

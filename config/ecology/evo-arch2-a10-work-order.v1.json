@@ -35,7 +35,8 @@
     "A9_AND_A8_SOURCE_BYTES_UNMODIFIED",
     "DAMAGE_REQUEST_IS_BOUND_TO_EXACT_SOURCE_CONSTRUCT_SNAPSHOT",
     "PART_TO_MODULE_BINDING_TARGETS_EXISTING_BODYGRAPH_MODULES_ONLY",
-    "SELF_CONTAINED_DAMAGE_RECORD_CHECKSUM_IS_NOT_AUTHORITY_PROOF"
+    "SELF_CONTAINED_DAMAGE_RECORD_CHECKSUM_IS_NOT_AUTHORITY_PROOF",
+    "NO_INFERRED_MATTER_CELL_TO_REGION_CHUNK_OR_PREFIX_MAPPING"
   ],
   "required_gates": [
     "A10_GODOT_WORLD_BINDING_PASS",
@@ -51,7 +52,8 @@
     "Ecology state mutation from damage",
     "A11 playable habitat",
     "Production ownership promotion",
-    "main merge"
+    "main merge",
+    "partition-specific Matter cell membership without a production witness"
   ],
   "base_refresh": {
     "previous_main": "99e8efe2422e02fedec40778e12748611d68fb5f",
