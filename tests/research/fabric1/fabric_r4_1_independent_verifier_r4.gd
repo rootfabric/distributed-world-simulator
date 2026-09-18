@@ -38,7 +38,11 @@ func _finite(value) -> bool:
 func _two_node(resistance: float) -> Dictionary:
 	return {"nodes":[{"node_id":"a"},{"node_id":"b"}],"elements":[{"element_id":"r","node_a":"a","node_b":"b","resistance_ohm":resistance,"active":true}]}
 
-func _f64_le(bits: String) -> float:\n\tvar bytes: PackedByteArray = bits.hex_decode()\n\treturn bytes.decode_double(0)\n\nfunc _initialize() -> void:
+func _f64_le(bits: String) -> float:
+	var bytes: PackedByteArray = bits.hex_decode()
+	return bytes.decode_double(0)
+
+func _initialize() -> void:
 	# Independent rational oracle, not copied expected values from product acceptance.
 	var exact := Graph.solve_resistive(_model([2.0,3.0,4.0,5.0,7.0]), {"a":1.0,"b":0.0})
 	_check(exact.success, "V-R41-R4 branched graph solves", exact)
