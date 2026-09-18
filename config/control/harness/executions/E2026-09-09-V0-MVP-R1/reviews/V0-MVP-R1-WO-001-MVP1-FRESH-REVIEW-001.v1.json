@@ -1,0 +1,73 @@
+{
+  "schema": "distributed_world_simulator.harness_review_result.v1",
+  "review_id": "V0-MVP-R1-WO-001-MVP1-FRESH-REVIEW-001",
+  "review_type": "POST_BUILD_EXACT_HEAD_REVIEW",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "risk_class": "CRITICAL",
+  "reviewed_head_sha": "b645a738a6a143bee8f7f4a291a3e754cd399996",
+  "reviewed_tree_sha": "b7cd01061dab492eaa1de3de6680465ac9e7aaf6",
+  "activation_base_sha": "127c732a56cc5c25d5712f24a7627ed4bb877374",
+  "runtime_pr": 597,
+  "evidence_carrier_pr": 599,
+  "evidence_carrier_head_sha": "ad1133a435b8e1aa5df34ee6cbd9597fa2c09961",
+  "reviewer": "FRESH_INDEPENDENT_REVIEWER_MVP1_R1",
+  "verdict": "FAIL",
+  "required_fixes": [
+    "Preserve immutable event sequence 4 exactly as written and append a corrective role/provenance result establishing IMPLEMENTER ownership/participation for the code-producing MVP1 implementation step. Do not rewrite or relabel the historical INTEGRATOR event.",
+    "After the append-only correction, rerun exact-head Project Control and the pinned Godot MVP1 focused/graphical verification as required by the resulting subject, then route a new fresh exact-head review."
+  ],
+  "rank_up_moves": [
+    "Add a Harness regression that rejects a CRITICAL code-producing checkpoint when required IMPLEMENTER participation is absent from durable role provenance even if the implementation event itself is syntactically valid.",
+    "For future graphical evidence carriers, embed or hash-bind screenshot/log files when practical so a fresh Reviewer can independently verify the visual bytes instead of relying on the verifier report alone."
+  ],
+  "evidence_gaps": [
+    "The Windows screenshots and raw log bytes referenced by evidence carrier #599 remain on the verifier machine and are not repository-resident. Their absence does not affect this FAIL because the blocking role-provenance defect is independently reproducible from Git."
+  ],
+  "findings": [
+    {
+      "severity": "P1",
+      "code": "MVP1_IMPLEMENTER_ROLE_PROVENANCE_MISSING",
+      "path": "config/control/harness/executions/E2026-09-09-V0-MVP-R1/events/V0-MVP-R1-WO-001/0004-mvp1-shared-graphical-scene-implementation.v1.json",
+      "exact_reason": "The only durable code-producing MVP1 event is IMPLEMENTATION_COMMITTED but actor=INTEGRATOR. The CRITICAL Work Order requires IMPLEMENTER participation and AGENTS.md requires isolated role contexts/separation of duties. On the reviewed subject the append-only ledger contains only sequences 1-4; no later corrective role/provenance event exists. Therefore required Implementer participation cannot be established from durable Git state.",
+      "reproduction": "Inspect sequence 4 actor and enumerate the exact event directory at reviewed HEAD b645a738; only 0001..0004 exist. Compare with Work Order required_review_roles including IMPLEMENTER and AGENTS.md separation-of-duties requirements.",
+      "blocking": true
+    }
+  ],
+  "checked_items": [
+    {
+      "item": "PR #597 live exact subject",
+      "disposition": "VERIFIED",
+      "detail": "PR head remains b645a738a6a143bee8f7f4a291a3e754cd399996 and canonical main remains 127c732a56cc5c25d5712f24a7627ed4bb877374."
+    },
+    {
+      "item": "MVP1 runtime/scene scope",
+      "disposition": "VERIFIED",
+      "detail": "Thin Node3D host contains exactly one AcceptedP7DiggingSlice donor; no new Matter, Item Graph, persistence, network or authority owner is introduced by the MVP1 host code."
+    },
+    {
+      "item": "Focused structural contract",
+      "disposition": "VERIFIED",
+      "detail": "Focused test asserts composition_only, creates_canonical_foundation=false, canonical MW4/MW10 Matter truth, canonical Item Graph, SM1/MW8/MW9 authority route, existing persistence owner and SERVER_PREDICTED baseline."
+    },
+    {
+      "item": "Exact Project Control",
+      "disposition": "VERIFIED",
+      "detail": "Run 34484494648 completed SUCCESS on exact reviewed head; full Harness reported 311 tests OK, standard PC0 YELLOW/NON_RED and directional PC0 YELLOW with no blocking RED."
+    },
+    {
+      "item": "Windows graphical verifier evidence carrier",
+      "disposition": "CORROBORATED_WITH_LIMITATION",
+      "detail": "PR #599 contains a one-file evidence record pinning reviewed HEAD/TREE, Godot version/hash, 16-assertion focused PASS and graphical observations. Screenshot/log bytes are explicitly not embedded."
+    },
+    {
+      "item": "Required IMPLEMENTER role participation",
+      "disposition": "FAIL",
+      "detail": "Work Order requires IMPLEMENTER; sequence 4 is attributed to INTEGRATOR and no append-only correction follows."
+    }
+  ],
+  "risk_assessment": "The MVP1 scene implementation itself appears LOW runtime risk within its bounded composition-only scope and is corroborated by exact Project Control plus a fresh Windows graphical verifier report. However the checkpoint remains CRITICAL by Work Order, and separation of duties is part of the control contract. Missing durable Implementer provenance is therefore a blocking P1 regardless of green runtime evidence. The safe repair is append-only role/provenance correction; rewriting sequence 4 would damage ledger immutability and is not acceptable.",
+  "summary": "Fresh independent exact-head review of MVP1 runtime subject b645a738 / tree b7cd0106. Runtime composition and machine/visual evidence are consistent with MVP_SHARED_GRAPHICAL_SCENE, but the only code-producing IMPLEMENTATION_COMMITTED event is attributed to INTEGRATOR while the CRITICAL Work Order requires IMPLEMENTER participation. No later corrective event exists on the subject. VERDICT=FAIL pending append-only role/provenance repair and fresh exact-head re-review.",
+  "merge_authorized": false,
+  "predicate_verified_authorized": false,
+  "mvp_acceptance_authorized": false
+}
