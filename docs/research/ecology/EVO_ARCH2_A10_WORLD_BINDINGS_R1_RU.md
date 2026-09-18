@@ -61,7 +61,7 @@ A10 не исполняет C9 damage и не редактирует Constructio
 
 `ConstructionDamageRequest + APPLIED ConstructionDamageRecord`
 
-с совпадающими `damage_id` и `request_checksum`. Дополнительно передаётся exact source `ConstructSnapshot`: его checksum обязан совпасть с `source_snapshot_checksum` запроса, а каждый затронутый part должен реально существовать в этом snapshot.
+с совпадающими `damage_id` и `request_checksum`. Сам `DamageRecord` допускается только при совпадении с caller-owned external trusted `record_checksum`; self-contained checksum внутри переданного JSON не считается authority proof. Дополнительно передаётся exact source `ConstructSnapshot`: его checksum обязан совпасть с `source_snapshot_checksum` запроса, а каждый затронутый part должен реально существовать в этом snapshot.
 
 Влияние на ECO разрешено только для part IDs, явно перечисленных в immutable `part_to_module` binding. Каждый target module обязан реально существовать в валидном ECO `BodyGraph`; event запечатывает `body_hash`. `DEGRADED` и `DESTROYED` переводятся в канонические ECO damage events; неизвестный part, лишний module, конфликтующий map или REPAIRED record не допускаются как новое биологическое повреждение.
 
@@ -81,7 +81,7 @@ A10 не исполняет C9 damage и не редактирует Constructio
 - additive diff относительно exact current main;
 - production contract files byte-identical current main;
 - Godot test строит валидный current-main MatterQueryResult и RegionDescriptor, затем проверяет admission/negative cases;
-- Godot test связывает валидный C9 damage request/record с exact source ConstructSnapshot и существующими BodyGraph modules, отвергая stale/forged/repaired/unknown-source/unknown-module paths;
+- Godot test связывает валидный C9 damage request/record только при внешнем exact record-checksum anchor с exact source ConstructSnapshot и существующими BodyGraph modules, отвергая stale/forged/repaired/unknown-source/unknown-module paths;
 - никакая функция R1 не возвращает ecological resource stock, полученный из point Matter sample;
 - Python verifier fail-closed проверяет exact HEAD/TREE/base ancestry и scope;
 - fresh review + independent verifier требуются до R1 acceptance.
