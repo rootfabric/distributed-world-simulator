@@ -38,6 +38,20 @@ config/control/harness/evidence-map.schema.v1.json
 config/control/harness/human-attention.schema.v1.json
 ```
 
+
+## Optional evidence sink invariant
+
+Product/diagnostic verdict и сохранение evidence разделены. Если test использует env/path
+вида `*_RESULT`, `*_REPORT`, `*_EVIDENCE`, `*_OUTPUT` или `*_MANIFEST` как optional
+artifact sink, отсутствие этого sink **не может** превращать успешный test в exit != 0.
+Если sink явно задан, ошибка записи остаётся fail-closed. Если evidence действительно
+обязателен, requiredness должен проверяться явно, а не возникать неявно через
+`saved=false`.
+
+Project Control применяет machine guard `scripts/harness/evidence_sink_guard.py` к
+изменённым product test sources. Нарушение блокируется кодом
+`OPTIONAL_EVIDENCE_SINK_CONTROLS_VERDICT` до длинных world/core прогонов.
+
 ## R5: checkpoint-session + default Git authority invariant
 
 ```text

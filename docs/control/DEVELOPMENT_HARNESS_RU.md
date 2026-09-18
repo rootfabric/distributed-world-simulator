@@ -312,6 +312,36 @@ unfinished failing work -> FIX_REQUIRED/BLOCKED event before stop
 
 ---
 
+
+## 7.1. Verdict отдельно от optional evidence sink
+
+Harness запрещает скрытую зависимость test verdict от наличия пути для записи evidence.
+Типовой запрещённый анти-паттерн:
+
+```text
+saved = false
+if OPTIONAL_RESULT_PATH is configured:
+    saved = write_evidence(...)
+exit(0 if product_passed and saved else 1)
+```
+
+Он делает PASS зависимым от внешней конфигурации focused CI и ломает canonical/full-suite
+запуск, где optional sink закономерно не задан.
+
+Обязательный контракт:
+
+```text
+optional sink absent        -> verdict определяется test assertions/product contract
+optional sink configured    -> requested evidence write обязана успешно завершиться
+required evidence sink      -> requiredness проверяется явно отдельным условием
+```
+
+Machine-owned guard: `scripts/harness/evidence_sink_guard.py`. Project Control проверяет
+изменённые `.gd`/`.py` product tests до длинных regression gates и возвращает
+`OPTIONAL_EVIDENCE_SINK_CONTROLS_VERDICT` при обнаружении анти-паттерна.
+
+---
+
 ## 8. Separation of duties
 
 ```text

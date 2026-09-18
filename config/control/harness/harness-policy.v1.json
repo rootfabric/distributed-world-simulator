@@ -62,7 +62,10 @@
     "git_authority_survives_role_boundaries": true,
     "github_actions_is_validation_and_evidence_plane_not_git_transport": true,
     "github_actions_git_transport_workarounds_are_forbidden": true,
-    "normal_git_push_failure_must_be_diagnosed_before_external_automation": true
+    "normal_git_push_failure_must_be_diagnosed_before_external_automation": true,
+    "optional_evidence_sink_absence_must_not_change_test_verdict": true,
+    "requested_evidence_sink_write_failure_must_fail": true,
+    "implicit_evidence_sink_requiredness_is_forbidden": true
   },
   "roles": {
     "IMPLEMENTER": "Changes code within bounded Work Order scope.",
@@ -234,5 +237,21 @@
       ],
       "exception_policy": "EXPLICIT_HUMAN_APPROVED_REPOSITORY_AUTOMATION_DESIGN_ONLY_AND_NEVER_AS_GIT_TRANSPORT_FALLBACK"
     }
+  },
+  "test_evidence_sink_contract_revision": "H0-EVIDENCE-SINK-2026-09-18-R1",
+  "test_evidence_sink_contract": {
+    "revision": "H0-EVIDENCE-SINK-2026-09-18-R1",
+    "scope": [
+      "CHANGED_PRODUCT_TEST_SOURCES_UNDER_tests_EXCLUDING_tests/harness",
+      "GDSCRIPT_.gd",
+      "PYTHON_.py"
+    ],
+    "optional_sink_absence_must_not_change_verdict": true,
+    "requested_sink_write_failure_must_fail": true,
+    "implicit_requiredness_via_false_saved_flag_forbidden": true,
+    "required_sink_rule": "If evidence output is truly required, the test must declare and fail that missing requirement explicitly; requiredness must not be an accidental consequence of saved=false.",
+    "machine_guard": "scripts/harness/evidence_sink_guard.py",
+    "project_control_hook": "scripts/harness/control_candidate_validation.py",
+    "failure_code": "OPTIONAL_EVIDENCE_SINK_CONTROLS_VERDICT"
   }
 }
