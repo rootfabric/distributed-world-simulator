@@ -55,7 +55,11 @@ func _initialize() -> void:
 			{"element_id": "e3", "node_a": "n1", "node_b": "hub", "resistance_ohm": 5.57e-309, "active": true},
 		],
 	}
-	var compensated := Graph.solve_resistive(compensated_model, {"hub": 0.0, "p1": 0.5, "p2": 0.5, "n1": -0.5})
+	# 0.51 / 5.57e-309 ~= 9.156e307, so the first two same-sign hub
+	# contributions overflow when added naively, while the third cancels one and
+	# leaves a finite final balance. This must exercise the fallback, not merely
+	# sit close to DBL_MAX.
+	var compensated := Graph.solve_resistive(compensated_model, {"hub": 0.0, "p1": 0.51, "p2": 0.51, "n1": -0.51})
 	_check(compensated.success, "R4.1 compensated node balance survives partial overflow", compensated)
 	if compensated.success:
 		_check(is_finite(float(compensated.details.port_currents_a.hub)), "R4.1 compensated node balance finite", compensated.details.port_currents_a)
