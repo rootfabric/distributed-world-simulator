@@ -39,7 +39,7 @@ Genesis overlay пустой и привязан к exact binding.
 - повтор того же `damage_id` с тем же event hash идемпотентен;
 - тот же `damage_id` с другими bytes — conflict.
 
-Overlay имеет revision, applied damage receipts и собственный checksum; он сериализуем как обычный canonical Dictionary.
+Overlay имеет revision, applied damage receipts и собственный checksum; он сериализуем как обычный canonical Dictionary. При восстановлении checksum из самого файла недостаточен: `admit_overlay()` требует caller-owned external expected checksum. Кроме того, `disabled_modules` обязан точно равняться structural closure всех `destroyed_modules` по BodyGraph, поэтому пересчитанный локальный checksum не может узаконить произвольное отключение ветвей.
 
 ## Effective function
 
