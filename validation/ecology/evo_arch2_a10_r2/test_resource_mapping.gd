@@ -42,7 +42,7 @@ func _run() -> void:
 	])
 	_check(bool(Batch.validate(mixed).get("success", false)), "mixed production batch fixture")
 
-	var no_semantics := Mapping.admit_material_batch(mixed, catalog, empty_map)
+	var no_semantics := Mapping.admit_material_batch(mixed, catalog, empty_map, mixed["checksum"])
 	_check(bool(no_semantics.get("success", false)), "empty map still admits accounting")
 	if bool(no_semantics.get("success", false)):
 		var a: Dictionary = no_semantics["admission"]
@@ -54,7 +54,9 @@ func _run() -> void:
 		{"material_id": "matter/water-ice", "resource": "water_mg"},
 	])
 	_check(not water_map.is_empty() and Mapping.validate(water_map, catalog).is_empty(), "caller can explicitly map a known material")
-	var admitted := Mapping.admit_material_batch(mixed, catalog, water_map)
+	var bad_batch_anchor := Mapping.admit_material_batch(mixed, catalog, water_map, "0".repeat(64))
+	_check(not bool(bad_batch_anchor.get("success", false)) and bad_batch_anchor.get("error") == "A10_R2_BATCH_EXTERNAL_ANCHOR", "batch requires external trusted checksum")
+	var admitted := Mapping.admit_material_batch(mixed, catalog, water_map, mixed["checksum"])
 	_check(bool(admitted.get("success", false)), "explicit mapped/unmapped batch admission")
 	if bool(admitted.get("success", false)):
 		var a: Dictionary = admitted["admission"]
@@ -89,14 +91,14 @@ func _run() -> void:
 		{"material_id": "matter/water-ice", "mass_fraction": 0.5},
 	])
 	_check(bool(Batch.validate(half_mg).get("success", false)), "fractional-mg production batch is otherwise valid")
-	var rejected_rounding := Mapping.admit_material_batch(half_mg, catalog, water_map)
+	var rejected_rounding := Mapping.admit_material_batch(half_mg, catalog, water_map, half_mg["checksum"])
 	_check(not bool(rejected_rounding.get("success", false)) and rejected_rounding.get("error") == "A10_R2_COMPONENT_MASS_NOT_EXACT_MG", "hidden component rounding is rejected")
 
 	var unknown_batch := _batch("batch/a10-r2-unknown-material", 0.001, [
 		{"material_id": "matter/not-in-catalog", "mass_fraction": 1.0},
 	])
 	_check(bool(Batch.validate(unknown_batch).get("success", false)), "batch schema alone permits catalog-external material identity")
-	var rejected_unknown_batch := Mapping.admit_material_batch(unknown_batch, catalog, empty_map)
+	var rejected_unknown_batch := Mapping.admit_material_batch(unknown_batch, catalog, empty_map, unknown_batch["checksum"])
 	_check(not bool(rejected_unknown_batch.get("success", false)) and rejected_unknown_batch.get("error") == "A10_R2_BATCH_MATERIAL_NOT_IN_CATALOG", "R2 enforces catalog membership")
 
 	print("EVO_ARCH2_A10_R2_RESOURCE_MAPPING checks=%d failed=%d" % [checks, failures.size()])

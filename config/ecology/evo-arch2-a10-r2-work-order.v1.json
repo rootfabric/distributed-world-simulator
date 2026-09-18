@@ -28,7 +28,10 @@
     "UNMAPPED_MASS_REMAINS_EXPLICIT",
     "NO_HIDDEN_MASS_ROUNDING",
     "MAPPED_PLUS_UNMAPPED_EQUALS_BATCH_TOTAL",
-    "NO_WORLD_OR_ECO_FIELD_MUTATION"
+    "NO_WORLD_OR_ECO_FIELD_MUTATION",
+    "MATTER_BATCH_REQUIRES_EXTERNAL_TRUSTED_CHECKSUM",
+    "SELF_CONTAINED_BATCH_CHECKSUM_IS_NOT_AUTHORITY_PROOF",
+    "NO_CLAIM_OF_CANONICAL_MATTER_CONSUMPTION_WITHOUT_CONSUME_RECEIPT"
   ],
   "non_goals": [
     "terrain extraction",
@@ -36,7 +39,8 @@
     "automatic water-ice bioavailability",
     "nutrient or organic synthesis",
     "A4 field mutation",
-    "A11"
+    "A11",
+    "canonical Matter batch consume/transfer until production owner exposes an exactly-once receipt"
   ],
   "parent_refresh": {
     "previous": "d3c7d856071f2ae9b6417a9b0043d4b3e294fa86",

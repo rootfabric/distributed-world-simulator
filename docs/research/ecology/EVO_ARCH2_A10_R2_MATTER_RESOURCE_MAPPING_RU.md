@@ -34,7 +34,7 @@ Matter material_id  --explicit map-->  ECO resource
 
 ## Conservative MatterMaterialBatch admission
 
-R2 принимает только валидный production `MatterMaterialBatch`, все его component IDs должны существовать в связанной версии каталога.
+R2 принимает только валидный production `MatterMaterialBatch`, все его component IDs должны существовать в связанной версии каталога. Допуск требует caller-owned external trusted `expected_batch_checksum`; checksum внутри самого batch не является authority proof.
 
 Перевод kg→mg разрешён только когда total mass и component masses представлены целым количеством mg в пределах строгой double tolerance. Никакого скрытого округления, создающего/теряющего массу, нет.
 
@@ -66,3 +66,7 @@ R2 должен доказать:
 4. unknown/duplicate/ambiguous mapping отвергается;
 5. fractional non-mg-exact batch отвергается вместо округления;
 6. production Matter catalog/batch contracts и A10-R1 source остаются byte-identical.
+
+## Найденная production-граница
+
+Current-main `MatterMaterialReceiver` предоставляет reserve/commit/rollback/get/export/restore, но не canonical consume/transfer operation, которая могла бы атомарно передать уже committed batch в ECO и запретить его повторный расход. Поэтому R2/R5 — admission/accounting, а не физическое списание Matter в biology. Использовать `rollback_batch()` как consume запрещено семантически. До появления отдельного production consume/transfer receipt A10 не заявляет полный Matter-conservative uptake loop.
