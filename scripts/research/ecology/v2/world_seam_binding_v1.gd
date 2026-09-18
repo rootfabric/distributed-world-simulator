@@ -28,7 +28,8 @@ static func prepare_ticket(
 		return _fail("A10_R3_TARGET_EPOCH_NOT_NEWER")
 	if String(target_region["lifecycle_state"]) not in ["WARM", "ACTIVE"]:
 		return _fail("A10_R3_TARGET_NOT_PREPARED")
-	if not C.integer(created_at_tick, int(cursor["clock"]), C.MAX_INT) \
+	if not C.integer(created_at_tick, 0, C.MAX_INT) \
+	or created_at_tick != int(cursor["clock"]) + 1 \
 	or not C.integer(expires_at_tick, created_at_tick + 1, C.MAX_INT):
 		return _fail("A10_R3_TICKET_WINDOW")
 	var ticket_id := "a10.r3.ticket.%s.%d" % [
