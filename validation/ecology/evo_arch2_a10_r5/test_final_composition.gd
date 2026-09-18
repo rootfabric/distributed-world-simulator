@@ -172,6 +172,10 @@ func _run() -> void:
 	var encoded_overlay := C.encode(damaged)
 	var decoded_overlay := C.decode(encoded_overlay)
 	_check(not encoded_overlay.is_empty() and bool(decoded_overlay.get("success", false)) and decoded_overlay["value"] == damaged, "damage overlay canonical persistence roundtrip")
+	var restored_overlay := DamageOverlay.admit_overlay(decoded_overlay["value"], body_binding, body_modules, source_snapshot, damaged["checksum"])
+	_check(bool(restored_overlay.get("success", false)) and restored_overlay["overlay"] == damaged, "damage overlay restore requires trusted external checksum")
+	var forged_overlay_anchor := DamageOverlay.admit_overlay(decoded_overlay["value"], body_binding, body_modules, source_snapshot, "0".repeat(64))
+	_check(not bool(forged_overlay_anchor.get("success", false)) and forged_overlay_anchor.get("error") == "A10_R4_OVERLAY_EXTERNAL_ANCHOR", "wrong persisted overlay anchor rejected")
 
 	var prepared := SeamBridge.prepare_ticket(
 		source_cursor, source_region, target_warm,
