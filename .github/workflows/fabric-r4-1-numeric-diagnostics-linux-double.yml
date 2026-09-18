@@ -1,0 +1,77 @@
+name: FABRIC R4.1 Numeric Diagnostics Linux Double
+
+on:
+  push:
+    branches: [repair/fabric-r4-1-numeric-envelope-diagnostics-r1]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fabric-r4-1-numeric-diagnostics
+  cancel-in-progress: false
+
+jobs:
+  exact-r4-1:
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Bind predecessor and repair scope
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$(git merge-base HEAD e6228a39b6b3006a3d14ad0884c09266570fcd00)" = e6228a39b6b3006a3d14ad0884c09266570fcd00
+          git diff --check e6228a39b6b3006a3d14ad0884c09266570fcd00...HEAD
+          echo '*.gd.uid' >> .git/info/exclude
+          printf 'R41_HEAD=%s\nR41_TREE=%s\nPREDECESSOR=e6228a39b6b3006a3d14ad0884c09266570fcd00\n' "$(git rev-parse HEAD)" "$(git rev-parse 'HEAD^{tree}')" | tee r41-identity.txt
+      - name: Verify canonical Linux double
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          bin="${DWS_GODOT_DOUBLE_BIN:-$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64}"
+          test -x "$bin"
+          test "$("$bin" --version | head -n1 | tr -d '\r')" = '4.7.1.stable.double.custom_build.a13da4feb'
+          test "$(sha256sum "$bin" | awk '{print $1}')" = 'bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7'
+          echo "GODOT_BIN=$bin" >> "$GITHUB_ENV"
+      - name: Fresh import
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          rm -rf .godot
+          "$GODOT_BIN" --headless --editor --path . --log-file r41-import.log --import
+          ! grep -Eiq 'SCRIPT ERROR|Parse Error|Invalid call|Invalid access|ERROR:' r41-import.log
+      - name: Run R4.1 exact repair chain
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          rm -rf artifacts/fabric-r4-1-b06-close
+          mkdir -p artifacts/fabric-r4-1-b06-close
+          bash RUN_FABRIC_R4_1_REPAIR_TESTS.sh 2>&1 | tee r41-tests.log
+          grep -F 'FABRIC-R4.1-NUMERIC-DIAGNOSTICS: PASS' r41-tests.log
+          grep -F 'FABRIC-HOLDOUT-R4-G2: PASS' r41-tests.log
+          grep -F 'FABRIC-HOLDOUT-R4-G2-TRANSPORT: PASS' r41-tests.log
+          grep -F 'COMPLEX2PERF_MATRIX_HASH=698486abd097e6ee12731b0afb1c6e28ed24bf72b52d8d940c9f5b7336498607' r41-tests.log
+          grep -F 'COMPLEX2_CLOSE_HASH=f429d2743dab5f31fed87901186b03868039b13c2e087a86f3473f84e5b60855' r41-tests.log
+          grep -F 'FABRIC B0.6 Adaptive Physical Fidelity: PASS' r41-tests.log
+          ! grep -Eiq 'SCRIPT ERROR|Parse Error|Invalid call|Invalid access|Assertion failed|Segmentation fault' r41-tests.log
+      - name: Capture evidence
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test -z "$(git status --porcelain=v1 --untracked-files=no)"
+          sha256sum r41-identity.txt r41-import.log r41-tests.log > r41-evidence.sha256
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fabric-r4-1-${{ github.sha }}
+          path: |
+            r41-identity.txt
+            r41-import.log
+            r41-tests.log
+            r41-evidence.sha256
+            artifacts/fabric-r4-1-b06-close/**
+          if-no-files-found: error
+          retention-days: 90
