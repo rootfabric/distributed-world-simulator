@@ -70,7 +70,8 @@ static func project_construction_damage(
 	record: Dictionary,
 	source_snapshot: Dictionary,
 	body_modules: Array,
-	part_to_module: Dictionary
+	part_to_module: Dictionary,
+	expected_record_checksum: String
 ) -> Dictionary:
 	var qcheck: Dictionary = DamageRequest.validate(request)
 	if not bool(qcheck.get("success", false)):
@@ -81,6 +82,9 @@ static func project_construction_damage(
 	var scheck: Dictionary = Snapshot.validate(source_snapshot)
 	if not bool(scheck.get("success", false)):
 		return _fail("A10_DAMAGE_SOURCE_SNAPSHOT_INVALID")
+	if not MatterUtils.is_lower_hex_64(expected_record_checksum) \
+	or expected_record_checksum != String(record["checksum"]):
+		return _fail("A10_DAMAGE_RECORD_ANCHOR")
 	var body_error := Body.validate(body_modules)
 	if not body_error.is_empty():
 		return _fail("A10_DAMAGE_BODY_INVALID")
