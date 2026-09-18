@@ -1,7 +1,7 @@
 name: MVP4 Shared Canonical Dig Exact Validation
 on:
   push:
-    branches: [feature/v0-mvp-playable-seamless-planet-r1]
+    branches: [feature/v0-mvp-playable-seamless-planet-r1, control/v0-mvp4-branch-aware-drive-r1]
   workflow_dispatch:
 permissions:
   contents: read
@@ -81,17 +81,19 @@ jobs:
           retention-days: 90
 
   control-drive:
-    if: github.repository == 'rootfabric/distributed-world-simulator' && github.ref == 'refs/heads/feature/v0-mvp-playable-seamless-planet-r1' && (github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[mvp4-worldcore]') || contains(github.event.head_commit.message, '[mvp4-drive]'))
+    if: github.repository == 'rootfabric/distributed-world-simulator' && (github.ref == 'refs/heads/feature/v0-mvp-playable-seamless-planet-r1' || github.ref == 'refs/heads/control/v0-mvp4-branch-aware-drive-r1') && (github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[mvp4-worldcore]') || contains(github.event.head_commit.message, '[mvp4-drive]'))
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
-      EXPECTED_HEAD: ${{ github.sha }}
+      # A validation-only carrier must not move the already running world/core subject.
+      EXPECTED_HEAD: ${{ github.ref == 'refs/heads/control/v0-mvp4-branch-aware-drive-r1' && 'e37f81821e98a4d00b04ea414722e550b328cd47' || github.sha }}
+      SOURCE_BRANCH: feature/v0-mvp-playable-seamless-planet-r1
       PYTHONUTF8: '1'
       PYTHONPATH: scripts
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.sha }}
+          ref: ${{ env.EXPECTED_HEAD }}
           fetch-depth: 0
           persist-credentials: false
       - name: Verify exact control subject
@@ -101,6 +103,11 @@ jobs:
           test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
           test -z "$(git status --porcelain --untracked-files=no)"
           git fetch origin '+refs/heads/*:refs/remotes/origin/*' --prune
+          test "$(git rev-parse "origin/$SOURCE_BRANCH")" = "$EXPECTED_HEAD"
+          if [ "$EXPECTED_HEAD" = e37f81821e98a4d00b04ea414722e550b328cd47 ]; then
+            test "$(git rev-parse HEAD^{tree})" = bcbde9961e701f1e2c728f6f7a74f9df2d334aed
+          fi
+          echo "CONTROL_SUBJECT_TREE=$(git rev-parse HEAD^{tree})" >> "$GITHUB_ENV"
           mkdir -p artifacts/mvp4-control-drive
           git rev-parse HEAD HEAD^{tree} origin/main > artifacts/mvp4-control-drive/subjects.txt
       - name: Install pinned Harness dependencies
@@ -117,6 +124,41 @@ jobs:
           if actual != expected: raise SystemExit(f'PINNED_DEPENDENCY_VERSION_MISMATCH:jsonschema={actual}:expected={expected}')
           print(f'PINNED DEPENDENCY OK: jsonschema=={actual}')
           PY
+      - name: Reproduce detached-HEAD negative control
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json,pathlib,subprocess
+          if subprocess.run(['git','symbolic-ref','-q','HEAD'],capture_output=True).returncode == 0:
+              raise SystemExit('NEGATIVE_CONTROL_NOT_DETACHED')
+          p=subprocess.run(['pwsh','-NoProfile','-File','./CONTROL_DEVELOPMENT.ps1','-Status'],stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
+          pathlib.Path('artifacts/mvp4-control-drive/detached-negative.log').write_bytes(p.stdout)
+          rows=[]
+          for line in p.stdout.decode('utf-8-sig').splitlines():
+              try: rows.append(json.loads(line))
+              except ValueError: pass
+          d=next((x for x in reversed(rows) if isinstance(x,dict) and x.get('schema')=='distributed_world_simulator.control_development_output.v1'),{})
+          if p.returncode != 4 or d.get('error',{}).get('detail') != 'GIT_BRANCH_UNAVAILABLE':
+              raise SystemExit('DETACHED_NEGATIVE_UNEXPECTED:'+str(p.returncode)+':'+str(d))
+          print('DETACHED_NEGATIVE_CONTROL_PASS: GIT_BRANCH_UNAVAILABLE / exit 4')
+          PY
+      - name: Attach exact subject to Work Order branch without changing bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json,os,pathlib
+          p=pathlib.Path('config/control/harness/executions/E2026-09-09-V0-MVP-R1/work-orders/V0-MVP-R1-WO-001.v1.json')
+          if json.loads(p.read_text())['branch'] != os.environ['SOURCE_BRANCH']:
+              raise SystemExit('WORK_ORDER_BRANCH_MISMATCH')
+          PY
+          git checkout -B "$SOURCE_BRANCH" "$EXPECTED_HEAD"
+          test "$(git symbolic-ref --short HEAD)" = "$SOURCE_BRANCH"
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+          test "$(git rev-parse HEAD^{tree})" = "$CONTROL_SUBJECT_TREE"
+          test -z "$(git status --porcelain --untracked-files=no)"
+          git symbolic-ref --short HEAD > artifacts/mvp4-control-drive/branch.txt
       - name: CONTROL_DEVELOPMENT Status Resume Drive
         shell: bash
         run: |
@@ -124,6 +166,20 @@ jobs:
           pwsh -NoProfile -File ./CONTROL_DEVELOPMENT.ps1 -Status 2>&1 | tee artifacts/mvp4-control-drive/status.log
           pwsh -NoProfile -File ./CONTROL_DEVELOPMENT.ps1 -Resume 2>&1 | tee artifacts/mvp4-control-drive/resume.log
           pwsh -NoProfile -File ./CONTROL_DEVELOPMENT.ps1 -Drive 2>&1 | tee artifacts/mvp4-control-drive/drive.log
+          python3 - <<'PY'
+          import json,pathlib
+          for name in ('status','resume','drive'):
+              rows=[]
+              for line in pathlib.Path(f'artifacts/mvp4-control-drive/{name}.log').read_text(encoding='utf-8-sig').splitlines():
+                  try: rows.append(json.loads(line))
+                  except ValueError: pass
+              d=next((x for x in reversed(rows) if isinstance(x,dict) and x.get('schema')=='distributed_world_simulator.control_development_output.v1'),{})
+              if d.get('ok') is not True: raise SystemExit('CONTROL_OUTPUT_NOT_OK:'+name+':'+str(d))
+          print('CONTROL_STATUS_RESUME_DRIVE_OK')
+          PY
+          test "$(git symbolic-ref --short HEAD)" = "$SOURCE_BRANCH"
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+          test "$(git rev-parse HEAD^{tree})" = "$CONTROL_SUBJECT_TREE"
           test -z "$(git status --porcelain --untracked-files=no)"
       - name: Bind control-drive evidence
         if: always()
@@ -136,13 +192,14 @@ jobs:
           files=[]
           for p in sorted(out.rglob('*')):
               if p.is_file() and p!=out/'manifest.json': files.append({'path':p.relative_to(out).as_posix(),'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()})
-          m={'schema':'distributed_world_simulator.mvp4_control_drive_exact.v1','subject_head':git('rev-parse','HEAD'),'subject_tree':git('rev-parse','HEAD^{tree}'),'canonical_main':git('rev-parse','origin/main'),'run_id':os.environ['GITHUB_RUN_ID'],'run_attempt':os.environ['GITHUB_RUN_ATTEMPT'],'tracked_after':git('status','--porcelain','--untracked-files=no'),'mvp4_predicate_verified':False,'files':files}
+          branch=subprocess.run(['git','symbolic-ref','--short','HEAD'],capture_output=True,text=True)
+          m={'schema':'distributed_world_simulator.mvp4_control_drive_exact.v1','subject_head':git('rev-parse','HEAD'),'subject_tree':git('rev-parse','HEAD^{tree}'),'canonical_main':git('rev-parse','origin/main'),'expected_head':os.environ['EXPECTED_HEAD'],'carrier_sha':os.environ['GITHUB_SHA'],'carrier_ref':os.environ['GITHUB_REF'],'source_branch':os.environ['SOURCE_BRANCH'],'actual_branch':branch.stdout.strip(),'run_id':os.environ['GITHUB_RUN_ID'],'run_attempt':os.environ['GITHUB_RUN_ATTEMPT'],'tracked_after':git('status','--porcelain','--untracked-files=no'),'mvp4_predicate_verified':False,'independent_verdict':False,'files':files}
           (out/'manifest.json').write_text(json.dumps(m,indent=2)+'\n')
           PY
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: mvp4-control-drive-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          name: mvp4-control-drive-${{ env.EXPECTED_HEAD }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: artifacts/mvp4-control-drive/
           if-no-files-found: error
           retention-days: 90
