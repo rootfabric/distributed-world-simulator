@@ -22,15 +22,19 @@
     "scripts/network/contracts/authority_region_descriptor.gd",
     "scripts/network/contracts/handoff_ticket.gd",
     "scripts/construction/damage/construction_damage_request.gd",
-    "scripts/construction/damage/construction_damage_record.gd"
+    "scripts/construction/damage/construction_damage_record.gd",
+    "scripts/construction/contracts/construct_snapshot.gd",
+    "scripts/construction/contracts/construction_part_record.gd",
+    "scripts/research/ecology/v2/body_graph_v1.gd"
   ],
   "invariants": [
     "NO_NEW_TERRAIN_MATTER_REGION_NETWORK_CONSTRUCTION_OWNER",
     "POINT_MATTER_SAMPLE_NEVER_BECOMES_ECOLOGICAL_RESOURCE_STOCK",
     "A8_CURSOR_MUST_MATCH_PRODUCTION_REGION_OWNER_AND_EPOCH",
     "ONLY_APPLIED_CHECKSUM_BOUND_C9_DAMAGE_CAN_PROJECT_TO_ECO",
-    "PART_TO_MODULE_BINDING_IS_EXPLICIT_AND_FAIL_CLOSED",
-    "A9_AND_A8_SOURCE_BYTES_UNMODIFIED"
+    "A9_AND_A8_SOURCE_BYTES_UNMODIFIED",
+    "DAMAGE_REQUEST_IS_BOUND_TO_EXACT_SOURCE_CONSTRUCT_SNAPSHOT",
+    "PART_TO_MODULE_BINDING_TARGETS_EXISTING_BODYGRAPH_MODULES_ONLY"
   ],
   "required_gates": [
     "A10_GODOT_WORLD_BINDING_PASS",
