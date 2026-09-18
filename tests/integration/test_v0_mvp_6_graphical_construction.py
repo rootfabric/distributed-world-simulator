@@ -152,6 +152,26 @@ def mvp5_checkpoint_reports(reports: dict, materials: dict) -> dict:
         BASE.require(materials[actor]["after"] == observed[actor], "MVP5_CHECKPOINT_RAW_EVIDENCE_MISMATCH:" + actor)
     source = frozen["authority/a"]["mvp4"]
     BASE.require(source["material_projection"]["success"] is True, "MVP5_CHECKPOINT_OWNER_PROJECTION_REQUIRED")
+
+    # The native authority report passes through Godot JSON while the client
+    # receipt is persisted through the process evidence path. IEEE-754 values
+    # can therefore differ by a last-bit serialization round-trip even when the
+    # authenticated P7 delivery is the same receipt. Keep identity/operations
+    # exact; permit only sub-picogram mass-field representation drift, then feed
+    # the unchanged MVP5 checker an equivalent normalized checkpoint.
+    receipt = materials["a"]["receipts"][0]
+    native = source["dig_observations"][0]["output_delivery"]["delivery"]
+    exact_fields = (
+        "batch_id", "batch_checksum", "source_operation_id", "output_operation_id",
+        "output_item_id", "output_definition_id", "output_quantity", "source_id",
+    )
+    for field in exact_fields:
+        BASE.require(native[field] == receipt[field], "MVP5_NATIVE_RECEIPT_IDENTITY_MISMATCH:" + field)
+    mass_fields = ("total_mass_kg", "represented_mass_kg", "residual_mass_kg")
+    for field in mass_fields:
+        BASE.require(abs(float(native[field]) - float(receipt[field])) <= 1e-12, "MVP5_NATIVE_RECEIPT_MASS_MISMATCH:" + field)
+        native[field] = receipt[field]
+
     source["material_projection"]["details"] = copy.deepcopy(observed["a"])
     return frozen
 
