@@ -8,7 +8,7 @@ PRODUCT_HEAD       = 5ed03392edcdaf0efaf743423f12bd9e1550e70a
 PRODUCT_TREE       = ef7366f3452b812ab735c42d8447c3ca84c7bea3
 PRODUCT_MUTATION   = NONE
 CONTROL_GENERATION = 82
-STATUS             = PENDING_PROJECT_CONTROL
+STATUS             = PASS
 ```
 
 ## Purpose
@@ -45,3 +45,19 @@ The product lineage's stale control snapshot is evidence of historical ancestry,
 This audit is PASS only if the ordinary repository `Project Control` workflow succeeds on this current-main-derived doc-only PR.
 
 A PASS does not review or verify the FABRIC runtime, does not freeze R4.1, does not authorize R4.2 reveal, and does not merge this PR. A product HEAD change makes this record stale for Director use.
+
+
+## Exact current-main Project Control result
+
+```text
+EVIDENCE_CONTROL_HEAD = cd1a20316eb3d4e65a401309e443bcfa8938f32e
+RUN                   = 35331685855
+JOB                   = 105557226516
+RESULT                = SUCCESS
+ARTIFACT               = 10541561090
+ARTIFACT_SHA256        = 9fb33d6401b30ad550da0aef1bc26f1ecdff8cb9029efd2718dcfccadfe54f01
+```
+
+All Project Control steps succeeded, including candidate consistency, architecture/ownership projection, complete Harness regression discovery, canonical-main PC0 auditor and directional-watch auditor.
+
+Decision: `CURRENT_MAIN_PC0 = PASS` for product identity `5ed03392... / ef7366...`. This does not convert the historical product-branch PC0 RED into a PASS; it proves that the RED was caused by stale main-owned control bytes on that historical research lineage. This report-only commit requires one final status-head Project Control replay before Director may consume it.
