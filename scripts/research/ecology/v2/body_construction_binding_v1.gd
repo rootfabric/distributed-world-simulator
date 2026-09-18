@@ -88,8 +88,8 @@ static func validate_binding(binding: Dictionary, body_modules: Array, source_sn
 		return "A10_R4_BINDING_CHECKSUM"
 	return ""
 
-static func create_overlay(binding: Dictionary) -> Dictionary:
-	if not _binding_record_valid(binding):
+static func create_overlay(binding: Dictionary, body_modules: Array, source_snapshot: Dictionary) -> Dictionary:
+	if not validate_binding(binding, body_modules, source_snapshot).is_empty():
 		return {}
 	var value := {
 		"schema": OVERLAY_SCHEMA,
@@ -107,11 +107,11 @@ static func create_overlay(binding: Dictionary) -> Dictionary:
 	value["checksum"] = MatterUtils.compute_checksum(value)
 	return value
 
-static func apply_damage(binding: Dictionary, overlay: Dictionary, body_modules: Array, event: Dictionary) -> Dictionary:
-	if not _binding_record_valid(binding) or String(binding["body_hash"]) != C.digest(body_modules) \
-	or not Body.validate(body_modules).is_empty():
-		return _fail("A10_R4_BINDING_INVALID")
-	var overlay_error := validate_overlay(overlay, binding, body_modules)
+static func apply_damage(binding: Dictionary, overlay: Dictionary, body_modules: Array, source_snapshot: Dictionary, event: Dictionary) -> Dictionary:
+	var binding_error := validate_binding(binding, body_modules, source_snapshot)
+	if not binding_error.is_empty():
+		return _fail(binding_error)
+	var overlay_error := validate_overlay(overlay, binding, body_modules, source_snapshot)
 	if not overlay_error.is_empty():
 		return _fail(overlay_error)
 	var event_error := _event_error(event, binding)
@@ -147,15 +147,15 @@ static func apply_damage(binding: Dictionary, overlay: Dictionary, body_modules:
 	receipts[damage_id] = event_hash
 	next["applied_damage"] = _sorted_dictionary(receipts)
 	next["checksum"] = MatterUtils.compute_checksum(next)
-	var error := validate_overlay(next, binding, body_modules)
+	var error := validate_overlay(next, binding, body_modules, source_snapshot)
 	if not error.is_empty():
 		return _fail(error)
 	return {"success": true, "replay": false, "overlay": next}
 
-static func validate_overlay(overlay: Dictionary, binding: Dictionary, body_modules: Array) -> String:
-	if not _binding_record_valid(binding) or String(binding["body_hash"]) != C.digest(body_modules) \
-	or not Body.validate(body_modules).is_empty():
-		return "A10_R4_BINDING_INVALID"
+static func validate_overlay(overlay: Dictionary, binding: Dictionary, body_modules: Array, source_snapshot: Dictionary) -> String:
+	var binding_error := validate_binding(binding, body_modules, source_snapshot)
+	if not binding_error.is_empty():
+		return binding_error
 	var fields := [
 		"schema", "binding_checksum", "body_hash", "construct_id", "source_snapshot_checksum",
 		"revision", "degraded_modules", "destroyed_modules", "disabled_modules",
@@ -205,8 +205,8 @@ static func validate_overlay(overlay: Dictionary, binding: Dictionary, body_modu
 		return "A10_R4_OVERLAY_CHECKSUM"
 	return ""
 
-static func effective_function(binding: Dictionary, overlay: Dictionary, body_modules: Array) -> Dictionary:
-	if not validate_overlay(overlay, binding, body_modules).is_empty():
+static func effective_function(binding: Dictionary, overlay: Dictionary, body_modules: Array, source_snapshot: Dictionary) -> Dictionary:
+	if not validate_overlay(overlay, binding, body_modules, source_snapshot).is_empty():
 		return {}
 	var disabled := _set_from_array(overlay["disabled_modules"])
 	var active_ids: Array = []
@@ -299,6 +299,13 @@ static func _event_error(event: Dictionary, binding: Dictionary) -> String:
 		return "A10_R4_EVENT_FIELDS"
 	if event.get("schema") != "dws.ecology.a10-construction-damage-event.v1":
 		return "A10_R4_EVENT_SCHEMA"
+	if not String(event.get("damage_id", "")).begins_with("damage/"):
+		return "A10_R4_EVENT_ID"
+	for checksum_field in ["request_checksum", "record_checksum", "binding_hash"]:
+		if not MatterUtils.is_lower_hex_64(event.get(checksum_field)):
+			return "A10_R4_EVENT_CHECKSUM"
+	if not MatterUtils.is_json_integer(event.get("applied_generation")) or int(event["applied_generation"]) < 0:
+		return "A10_R4_EVENT_GENERATION"
 	if String(event.get("construct_id", "")) != String(binding["construct_id"]) \
 	or String(event.get("source_snapshot_checksum", "")) != String(binding["source_snapshot_checksum"]) \
 	or String(event.get("body_hash", "")) != String(binding["body_hash"]):
