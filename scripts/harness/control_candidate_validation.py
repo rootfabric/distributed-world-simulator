@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from .contracts import ContractBundle, ContractValidationError, _validator, read_json
+from .evidence_sink_guard import validate_optional_evidence_sinks
 from .mission import _parse_json_object
 
 REGISTRY = "config/control/project-program-registry.v1.json"
@@ -54,6 +55,14 @@ def changed_paths(root: Path, base: str | None) -> list[str]:
     return [path for path in raw.split("\0") if path.endswith(".json")]
 
 
+def changed_test_paths(root: Path, base: str | None) -> list[str]:
+    if base is None:
+        raw = _git(root, "ls-files", "-z", "--", "tests")
+    else:
+        raw = _git(root, "diff", "--name-only", "--diff-filter=ACMR", "-z", base, "HEAD", "--", "tests")
+    return [path for path in raw.split("\\0") if path.endswith((".gd", ".py"))]
+
+
 def validate_generation(root: Path, base: str | None, changed: list[str]) -> int:
     registry = read_json(root / REGISTRY)
     scheduler = read_json(root / SCHEDULER)
@@ -89,9 +98,17 @@ def validate_control(root: Path, *, event_name: str = "", event: dict[str, Any] 
             _validator(value).check_schema(value)
         print(f"JSON DUPLICATE-KEY VALIDATION OK: {path}")
     generation = validate_generation(root, base, changed)
+    checked_test_sinks = validate_optional_evidence_sinks(root, changed_test_paths(root, base))
+    for path in checked_test_sinks:
+        print(f"OPTIONAL EVIDENCE SINK VALIDATION OK: {path}")
     print(f"CONTROL COMPARISON BASE: {base or 'INITIAL_PUSH_ALL_CONTROL_JSON'}")
     print(f"CANDIDATE REGISTRY GENERATION OK: {generation}")
-    return {"comparison_base": base, "registry_generation": generation, "validated_json_paths": sorted(paths)}
+    return {
+        "comparison_base": base,
+        "registry_generation": generation,
+        "validated_json_paths": sorted(paths),
+        "validated_test_evidence_sink_paths": checked_test_sinks,
+    }
 
 
 def main() -> None:
