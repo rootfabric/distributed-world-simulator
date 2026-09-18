@@ -187,9 +187,13 @@ static func validate_overlay(overlay: Dictionary, binding: Dictionary, body_modu
 			if not module_id is String or not module_ids.has(String(module_id)):
 				return "A10_R4_OVERLAY_UNKNOWN_MODULE"
 	var disabled := _set_from_array(overlay["disabled_modules"])
+	var expected_disabled := {}
 	for module_id in overlay["destroyed_modules"]:
-		if not disabled.has(module_id):
-			return "A10_R4_DESTROYED_NOT_DISABLED"
+		expected_disabled[String(module_id)] = true
+		for descendant in _descendants(body_modules, String(module_id)):
+			expected_disabled[String(descendant)] = true
+	if _sorted_keys(expected_disabled) != overlay["disabled_modules"]:
+		return "A10_R4_DISABLED_CLOSURE"
 	for module_id in overlay["degraded_modules"]:
 		if disabled.has(module_id):
 			return "A10_R4_DEGRADED_DISABLED_CONFLICT"
