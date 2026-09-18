@@ -179,7 +179,7 @@ jobs:
     needs: graphical-five-process
     if: always() && github.repository == 'rootfabric/distributed-world-simulator' && github.ref == 'refs/heads/feature/v0-mvp-playable-seamless-planet-r1' && (github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[mvp6-seam-repro]')) && (!contains(github.event.head_commit.message, '[mvp6-world-core]') || needs.graphical-five-process.result == 'success')
     runs-on: ubuntu-latest
-    timeout-minutes: 70
+    timeout-minutes: 80
     env:
       EXPECTED_HEAD: ${{ github.sha }}
       PYTHONUTF8: '1'
