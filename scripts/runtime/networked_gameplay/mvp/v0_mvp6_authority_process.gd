@@ -149,6 +149,52 @@ func _ensure_ore6(required: int) -> Dictionary:
 	return Protocol.success({"ore_before": before, "ore_available": after, "required": required, "topup_issued": false})
 
 
+func _item_read6(actor: String) -> Dictionary:
+	var graph = _graph6()
+	if graph == null:
+		return Protocol.failure("MVP6_CANONICAL_ITEM_GRAPH_MISSING")
+	var snapshot: Dictionary = graph.create_snapshot()
+	var player: Dictionary = service.get_player(actor)
+	var equipped: Dictionary = graph.get_equipped_item(actor) if graph.has_method("get_equipped_item") else {}
+	return Protocol.success({
+		"item_graph": snapshot,
+		"player": player,
+		"equipped": equipped,
+		"canonical_item_graph_owned": true,
+		"authority_process_id": OS.get_process_id(),
+	})
+
+
+func _item_command6(actor: String, body: Dictionary) -> Dictionary:
+	var operation_id := String(body.get("operation_id", ""))
+	var item_kind := String(body.get("item_kind", ""))
+	var payload = body.get("payload", {})
+	if not operation_id.begins_with("operation/mvp6/live-item/") or item_kind not in ["item.drop", "item.pickup", "container.open", "item.transfer"] or not payload is Dictionary:
+		return Protocol.failure("MVP6_LIVE_ITEM_COMMAND_INVALID")
+	var player: Dictionary = service.get_player(actor)
+	if player.is_empty():
+		return Protocol.failure("MVP6_LIVE_ITEM_PLAYER_NOT_LOCAL")
+	var result: Dictionary = service.handle_canonical_item_command(
+		actor,
+		String(player.get("transport_session_id", "")),
+		int(player.get("ownership_epoch", 0)),
+		operation_id,
+		item_kind,
+		Dictionary(payload).duplicate(true)
+	)
+	if not bool(result.get("success", false)):
+		return result
+	var graph = _graph6()
+	if graph == null:
+		return Protocol.failure("MVP6_CANONICAL_ITEM_GRAPH_MISSING")
+	var details: Dictionary = result.get("details", {}).duplicate(true)
+	details["item_graph"] = graph.create_snapshot()
+	details["authority_process_id"] = OS.get_process_id()
+	details["canonical_item_graph_owned"] = true
+	result["details"] = details
+	return result
+
+
 func _construct_checksum6(bundle: Dictionary) -> String:
 	for row in bundle.get("constructs", []):
 		if row is Dictionary and String(row.get("construct_id", "")) == SeamFactory.CONSTRUCT_ID:
@@ -383,6 +429,10 @@ func handle_rpc(body: Dictionary) -> Dictionary:
 		return Protocol.failure("MVP6_NATIVE_PEER_BINDING_INVALID")
 	var result: Dictionary
 	match kind:
+		"MVP6_ITEM_READ":
+			result = _item_read6(actor)
+		"MVP6_ITEM_COMMAND":
+			result = _item_command6(actor, body)
 		"MVP6_CONSTRUCTION_INIT":
 			result = _ensure_construction6()
 		"MVP6_CONSTRUCTION_ROUTE":
