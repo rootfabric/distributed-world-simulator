@@ -340,6 +340,14 @@ func _next_item6(snapshot: Dictionary) -> void:
 		"CARRY_BACK_PENDING":
 			if actor == "a": _send_item_motion6(1.0, -PI / 2.0)
 			else: send_request("MVP6_OBSERVE")
+		"RETURNED":
+			if actor == "a":
+				if not _stationary6(own):
+					_send_item_motion6(0.0, -PI / 2.0)
+				else:
+					send_request("MVP6_ITEM_FINISH")
+			else:
+				send_request("MVP6_OBSERVE")
 		"COMPLETE":
 			_item_complete_seen6 = true
 			_next_construction6(snapshot)
@@ -394,7 +402,7 @@ func finish(passed: bool, error_code: String) -> void:
 	valid = valid and int(report.get("construct_count", 0)) == 1 and bool(report.get("canonical_truth_owner", true)) == false and int(report.get("direct_authority_references", -1)) == 0
 	valid = valid and _guard6_count > 0 and _guard6_restore_count == _guard6_count and not _guard6_active
 	var required_item_requests: Array = (
-		["MVP6_ITEM_READY", "MVP6_ITEM_DROP", "MVP6_ITEM_PICKUP_LOSER", "MVP6_ITEM_OPEN", "MVP6_ITEM_WITHDRAW", "MVP6_ITEM_CARRY_OUT", "MVP6_ITEM_CARRY_BACK"]
+		["MVP6_ITEM_READY", "MVP6_ITEM_DROP", "MVP6_ITEM_PICKUP_LOSER", "MVP6_ITEM_OPEN", "MVP6_ITEM_WITHDRAW", "MVP6_ITEM_CARRY_OUT", "MVP6_ITEM_CARRY_BACK", "MVP6_ITEM_FINISH"]
 		if actor == "a"
 		else ["MVP6_ITEM_READY", "MVP6_ITEM_PICKUP", "MVP6_ITEM_PICKUP_REPLAY", "MVP6_ITEM_OPEN", "MVP6_ITEM_DEPOSIT"]
 	)
