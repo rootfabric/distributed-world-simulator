@@ -74,7 +74,7 @@ func _run() -> void:
 		"sample": sample,
 	})
 	_check(bool(Query.validate(query).get("success", false)), "production matter query fixture")
-	var selector := {"kind": "CHUNK_SET", "partition_prefix": "", "chunk_ids": [cell["cell_id"]]}
+	var selector := {"kind": "GLOBAL_SPACE", "partition_prefix": "", "chunk_ids": []}
 	var region := Region.create("region/a", "u", "i", "surface", "octree", 1, selector, "node/a", 3, "ACTIVE", 4)
 	_check(bool(Region.validate(region).get("success", false)), "production region fixture")
 	var cursor := {
@@ -102,10 +102,10 @@ func _run() -> void:
 	var dormant := Region.create("region/a", "u", "i", "surface", "octree", 1, selector, "node/a", 3, "DORMANT", 5)
 	var dormant_result := Binding.admit_cursor(cursor, dormant)
 	_check(not bool(dormant_result.get("success", false)) and dormant_result.get("error") == "A10_REGION_NOT_EXECUTABLE", "dormant region cannot execute ecology")
-	var excluded_selector := {"kind": "CHUNK_SET", "partition_prefix": "", "chunk_ids": ["other/cell"]}
-	var excluded_region := Region.create("region/a", "u", "i", "surface", "octree", 1, excluded_selector, "node/a", 3, "ACTIVE", 6)
-	var excluded := Binding.bind_matter_site(query, excluded_region, cursor)
-	_check(not bool(excluded.get("success", false)) and excluded.get("error") == "A10_REGION_SELECTOR_EXCLUDES_CELL", "region selector bounds Matter site")
+	var partition_selector := {"kind": "CHUNK_SET", "partition_prefix": "", "chunk_ids": [cell["cell_id"]]}
+	var partition_region := Region.create("region/a", "u", "i", "surface", "octree", 1, partition_selector, "node/a", 3, "ACTIVE", 6)
+	var partition_result := Binding.bind_matter_site(query, partition_region, cursor)
+	_check(not bool(partition_result.get("success", false)) and partition_result.get("error") == "A10_REGION_SELECTOR_UNSUPPORTED", "partition-specific Matter membership is not guessed from cell/chunk strings")
 
 	var trunk := Part.create("part/trunk", "item/trunk", "BIO_PROXY", "support", 1.0, [0.0, 0.0, 0.0])
 	var leaf_part := Part.create("part/leaf", "item/leaf", "BIO_PROXY", "collector", 0.2, [0.0, 1.0, 0.0])
