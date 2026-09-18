@@ -4,7 +4,7 @@
   "state": "IN_PROGRESS",
   "risk_class": "HIGH",
   "branch": "feature/eco-evo-arch2-a10-final-composition-r5",
-  "parent_r4": "511a1e0f01eac28918f849db78944c726cb318f8",
+  "parent_r4": "00eb7200e34b39285b6e56c35464db4484dfbf14",
   "goal": "Whole-A10 composition proof across A8 seam, production Region/Matter, explicit resource mapping, Construction damage and persistent body overlay.",
   "additive_paths": [
     "config/ecology/evo-arch2-a10-r5-work-order.v1.json",
@@ -36,5 +36,10 @@
     "production ECO authority",
     "automatic biological Matter extraction",
     "main merge"
-  ]
+  ],
+  "parent_refresh": {
+    "previous": "511a1e0f01eac28918f849db78944c726cb318f8",
+    "current": "00eb7200e34b39285b6e56c35464db4484dfbf14",
+    "reason": "R4 disabled-subtree closure and external persisted-overlay checksum anchor"
+  }
 }
