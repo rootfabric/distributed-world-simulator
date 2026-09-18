@@ -4,7 +4,7 @@
   "state": "IN_PROGRESS",
   "risk_class": "HIGH",
   "branch": "feature/eco-evo-arch2-a10-seam-binding-r3",
-  "parent_r2": "71d6c832b67e52ba1eb031ce6ddecc8a195bb163",
+  "parent_r2": "bbd8fa6f0479169c6b1638ea97146976e298e52f",
   "goal": "Real A8 snapshot seam handoff composed with production AuthorityRegionDescriptor/HandoffTicket and A10 Region admission.",
   "additive_paths": [
     "config/ecology/evo-arch2-a10-r3-work-order.v1.json",
@@ -30,5 +30,10 @@
     "HANDOFF_DOES_NOT_MUTATE_BIOLOGY",
     "OLD_OWNER_REJECTED_AFTER_COMMIT",
     "TARGET_OWNER_ACCEPTED_AFTER_COMMIT"
-  ]
+  ],
+  "parent_refresh": {
+    "previous": "71d6c832b67e52ba1eb031ce6ddecc8a195bb163",
+    "current": "bbd8fa6f0479169c6b1638ea97146976e298e52f",
+    "reason": "R2 refreshed after R1 external C9 record anchor repair"
+  }
 }

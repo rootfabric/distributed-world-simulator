@@ -11,8 +11,8 @@ import sys
 import time
 
 ROOT = Path(__file__).resolve().parents[3]
-PARENT_R1 = "cf63b8263c98847daf91d841892bd00761640754"
-PARENT_TREE = "85f8fb27e412217106bd45b43f535ea6017f5515"
+PARENT_R1 = "d3c7d856071f2ae9b6417a9b0043d4b3e294fa86"
+PARENT_TREE = "be09647424bb26ae5e13a44d0333032c8775e2f0"
 GODOT_VERSION = "4.7.1.stable.double.custom_build.a13da4feb"
 GODOT_SHA256 = "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7"
 
