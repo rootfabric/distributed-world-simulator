@@ -29,8 +29,9 @@ static func bind_matter_site(query: Dictionary, region: Dictionary, cursor: Dict
 	or String(cell.get("instance_id", "")) != String(region["instance_id"]) \
 	or String(cell.get("space_id", "")) != String(region["space_id"]):
 		return _fail("A10_WORLD_SPACE_MISMATCH")
-	if not _selector_contains_cell(region["selector"], String(cell["cell_id"])):
-		return _fail("A10_REGION_SELECTOR_EXCLUDES_CELL")
+	var selector_error := _selector_error(region["selector"])
+	if not selector_error.is_empty():
+		return _fail(selector_error)
 	var sample: Dictionary = query["sample"]
 	var value := {
 		"schema": SITE_SCHEMA,
@@ -173,16 +174,12 @@ static func _cursor_error(cursor: Dictionary, region: Dictionary) -> String:
 		return "A10_CURSOR_EPOCH_MISMATCH"
 	return ""
 
-static func _selector_contains_cell(selector: Dictionary, cell_id: String) -> bool:
-	match String(selector.get("kind", "")):
-		"GLOBAL_SPACE":
-			return true
-		"CHUNK_SET":
-			return Array(selector.get("chunk_ids", [])).has(cell_id)
-		"PARTITION_PREFIX":
-			return cell_id.begins_with(String(selector.get("partition_prefix", "")))
-		_:
-			return false
+static func _selector_error(selector: Dictionary) -> String:
+	# AuthorityRegionDescriptor does not define a canonical mapping from its
+	# CHUNK_SET/PARTITION_PREFIX identifiers to Matter SimulationCellAddress.
+	# Do not infer one from similar-looking strings. A later production
+	# partition-membership witness may extend this bounded adapter.
+	return "" if String(selector.get("kind", "")) == "GLOBAL_SPACE" else "A10_REGION_SELECTOR_UNSUPPORTED"
 
 static func _part_map_error(part_to_module: Dictionary, body_modules: Array, source_part_ids: Dictionary) -> String:
 	var valid_modules := {}
