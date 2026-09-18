@@ -42,6 +42,7 @@ def construction_checks(reports: dict, clients: dict, head: str, run_id: str) ->
         owner = reports["authority/a"]["mvp6"]
         replica = reports["authority/b"]["mvp6"]
         gateway_guard = reports["gateway"]["mvp6_transport_guard"]
+        keepalive = gateway_guard["backend_keepalive"]
         owner_guard = reports["authority/a"]["mvp6_transport_guard"]
         replica_guard = reports["authority/b"]["mvp6_transport_guard"]
         resource = owner["resource_provenance"]
@@ -79,6 +80,16 @@ def construction_checks(reports: dict, clients: dict, head: str, run_id: str) ->
             and gateway_guard["shared_transport_changed"] is False
             and gateway_guard["payload_limit_changed"] is False
             and gateway_guard["reconnect_policy_changed"] is False
+        )
+        checks["backend_keepalive_read_only"] = (
+            keepalive["cycles"] >= 1
+            and keepalive["failures"] == 0
+            and keepalive["interval_ms"] == 5000
+            and keepalive["mutation_performed"] is False
+            and keepalive["last"]["mutation_performed"] is False
+            and keepalive["last"]["canonical_state_owned"] is False
+            and keepalive["last"]["expected_checksum"] == keepalive["last"]["observed"]["authority/a"]
+            and keepalive["last"]["expected_checksum"] == keepalive["last"]["observed"]["authority/b"]
         )
         checks["client_guards_restored"] = all(
             clients[a]["mvp6_transport_guard"]["restored_before_finish"] is True
@@ -124,6 +135,7 @@ def construction_negatives(reports: dict, clients: dict, head: str, run_id: str)
         "authority_guard_still_active": lambda r, c: r["authority/a"]["mvp6_transport_guard"].update(active=True),
         "minted_resource_topup": lambda r, c: r["authority/a"]["mvp6"]["resource_provenance"].update(topup_issued=True),
         "forged_resource_source": lambda r, c: r["authority/a"]["mvp6"]["resource_provenance"].update(source="SERVER_TOPUP"),
+        "missing_backend_keepalive": lambda r, c: r["gateway"]["mvp6_transport_guard"]["backend_keepalive"].update(cycles=0),
     }
     rejected: list[str] = []
     for name, mutate in mutations.items():
@@ -279,7 +291,7 @@ def main() -> int:
     except (OSError, KeyError, ValueError, RuntimeError, TypeError) as exc:
         error += ";" + type(exc).__name__ + ":" + str(exc)
 
-    passed = not error and all(checks.values()) and len(negatives) == 12 and len(hud_cases) == 2
+    passed = not error and all(checks.values()) and len(negatives) == 13 and len(hud_cases) == 2
     manifest = {
         "schema":"distributed_world_simulator.mvp6_graphical_construction_manifest.v1",
         "subject_head":head, "subject_tree":tree, "run_id":run_id, "engine_sha256":BASE.sha(engine),
