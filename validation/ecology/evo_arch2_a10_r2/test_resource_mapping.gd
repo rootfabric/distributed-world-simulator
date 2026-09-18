@@ -66,6 +66,9 @@ func _run() -> void:
 		_check(a["mapped_mass_mg"] + a["unmapped_mass_mg"] == a["total_mass_mg"], "mixed batch conserves mass")
 		_check(String(a["accounting_hash"]).length() == 64, "admission accounting sealed")
 
+	var malformed := Mapping.create(catalog, "eco-map/malformed", ["not-a-dictionary"])
+	_check(malformed.is_empty(), "malformed mapping entry is not silently dropped")
+
 	var unknown := Mapping.create(catalog, "eco-map/unknown", [
 		{"material_id": "matter/biological-nutrient-that-does-not-exist", "resource": "nutrient_mg"},
 	])
