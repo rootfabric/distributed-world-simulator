@@ -12,6 +12,7 @@ const FIELDS := ["schema", "map_id", "catalog_hash", "entries", "checksum"]
 const ENTRY_FIELDS := ["material_id", "resource"]
 const KG_TO_MG := 1000000.0
 const MASS_TOLERANCE_MG := 0.000001
+const MAX_BATCH_MG := 1000000000000
 
 static func create(catalog: Dictionary, map_id: String, entries: Array = []) -> Dictionary:
 	if not bool(Catalog.validate(catalog).get("success", false)):
@@ -19,7 +20,7 @@ static func create(catalog: Dictionary, map_id: String, entries: Array = []) -> 
 	var normalized: Array = []
 	for raw in entries:
 		if not raw is Dictionary:
-			continue
+			return {}
 		normalized.append({
 			"material_id": String(raw.get("material_id", "")).strip_edges().to_lower(),
 			"resource": String(raw.get("resource", "")).strip_edges(),
@@ -110,7 +111,7 @@ static func admit_material_batch(batch: Dictionary, catalog: Dictionary, mapping
 		accounted += nearest
 		if resource_by_material.has(material_id):
 			var resource := String(resource_by_material[material_id])
-			if resources[resource] > F.MAX_CELL_STOCK - nearest:
+			if resources[resource] > MAX_BATCH_MG - nearest:
 				return _fail("A10_R2_RESOURCE_OVERFLOW")
 			resources[resource] += nearest
 		else:
@@ -152,7 +153,7 @@ static func _exact_mg(mass_kg: float) -> Dictionary:
 	if not is_finite(mass_kg) or mass_kg <= 0.0:
 		return {"success": false}
 	var scaled := mass_kg * KG_TO_MG
-	if not is_finite(scaled) or scaled > float(F.MAX_CELL_STOCK):
+	if not is_finite(scaled) or scaled > float(MAX_BATCH_MG):
 		return {"success": false}
 	var nearest := roundi(scaled)
 	if nearest <= 0 or absf(scaled - float(nearest)) > MASS_TOLERANCE_MG:
@@ -160,9 +161,7 @@ static func _exact_mg(mass_kg: float) -> Dictionary:
 	return {"success": true, "mg": nearest}
 
 static func _checksum(value: Dictionary) -> String:
-	var payload := value.duplicate(true)
-	payload["checksum"] = ""
-	return MatterUtils.payload_hash(payload)
+	return MatterUtils.compute_checksum(value)
 
 static func _hash_without(value: Dictionary, field: String) -> String:
 	var payload := value.duplicate(true)
