@@ -1,9 +1,11 @@
 extends RefCounted
 ## A10 R1 selective binding layer. It does not own or mutate production world state.
 const C = preload("res://scripts/research/ecology/v2/canonical_value_v1.gd")
+const Body = preload("res://scripts/research/ecology/v2/body_graph_v1.gd")
 const MatterUtils = preload("res://scripts/simulation/matter/matter_contract_utils.gd")
 const MatterQuery = preload("res://scripts/simulation/matter/query/matter_query_result.gd")
 const Region = preload("res://scripts/network/contracts/authority_region_descriptor.gd")
+const Snapshot = preload("res://scripts/construction/contracts/construct_snapshot.gd")
 const DamageRequest = preload("res://scripts/construction/damage/construction_damage_request.gd")
 const DamageRecord = preload("res://scripts/construction/damage/construction_damage_record.gd")
 
@@ -63,13 +65,28 @@ static func bind_matter_site(query: Dictionary, region: Dictionary, cursor: Dict
 		return _fail("A10_BINDING_HASH")
 	return {"success": true, "binding": value}
 
-static func project_construction_damage(request: Dictionary, record: Dictionary, part_to_module: Dictionary) -> Dictionary:
+static func project_construction_damage(
+	request: Dictionary,
+	record: Dictionary,
+	source_snapshot: Dictionary,
+	body_modules: Array,
+	part_to_module: Dictionary
+) -> Dictionary:
 	var qcheck: Dictionary = DamageRequest.validate(request)
 	if not bool(qcheck.get("success", false)):
 		return _fail("A10_DAMAGE_REQUEST_INVALID")
 	var rcheck: Dictionary = DamageRecord.validate(record)
 	if not bool(rcheck.get("success", false)):
 		return _fail("A10_DAMAGE_RECORD_INVALID")
+	var scheck: Dictionary = Snapshot.validate(source_snapshot)
+	if not bool(scheck.get("success", false)):
+		return _fail("A10_DAMAGE_SOURCE_SNAPSHOT_INVALID")
+	var body_error := Body.validate(body_modules)
+	if not body_error.is_empty():
+		return _fail("A10_DAMAGE_BODY_INVALID")
+	if String(source_snapshot["construct_id"]) != String(request["construct_id"]) \
+	or String(source_snapshot["checksum"]) != String(request["source_snapshot_checksum"]):
+		return _fail("A10_DAMAGE_SOURCE_SNAPSHOT_MISMATCH")
 	if String(record["status"]) != "APPLIED":
 		return _fail("A10_DAMAGE_RECORD_NOT_APPLIED")
 	if String(record["damage_id"]) != String(request["damage_id"]) \
@@ -79,7 +96,15 @@ static func project_construction_damage(request: Dictionary, record: Dictionary,
 	if String(repair_plan.get("damage_id", "")) != String(request["damage_id"]) \
 	or String(repair_plan.get("damage_request_checksum", "")) != String(request["checksum"]):
 		return _fail("A10_DAMAGE_REPAIR_BINDING_MISMATCH")
-	var map_error := _part_map_error(part_to_module)
+	var target_snapshot: Dictionary = repair_plan.get("target_snapshot", {})
+	if String(target_snapshot.get("construct_id", "")) != String(request["construct_id"]):
+		return _fail("A10_DAMAGE_TARGET_CONSTRUCT_MISMATCH")
+	var source_part_ids := {}
+	for raw_part in source_snapshot["parts"]:
+		source_part_ids[String(raw_part["part_id"])] = true
+	if not source_part_ids.has(String(request["retained_part_id"])):
+		return _fail("A10_DAMAGE_RETAINED_PART_NOT_IN_SOURCE")
+	var map_error := _part_map_error(part_to_module, body_modules, source_part_ids)
 	if not map_error.is_empty():
 		return _fail(map_error)
 	var events: Array = []
@@ -87,6 +112,8 @@ static func project_construction_damage(request: Dictionary, record: Dictionary,
 	affected.sort()
 	for raw_part_id in affected:
 		var part_id := String(raw_part_id)
+		if not source_part_ids.has(part_id):
+			return _fail("A10_DAMAGE_PART_NOT_IN_SOURCE")
 		var condition := String(request["part_conditions"][raw_part_id])
 		if condition == "INTACT":
 			continue
@@ -103,6 +130,8 @@ static func project_construction_damage(request: Dictionary, record: Dictionary,
 		"schema": DAMAGE_SCHEMA,
 		"damage_id": String(request["damage_id"]),
 		"construct_id": String(request["construct_id"]),
+		"source_snapshot_checksum": String(source_snapshot["checksum"]),
+		"body_hash": C.digest(body_modules),
 		"request_checksum": String(request["checksum"]),
 		"record_checksum": String(record["checksum"]),
 		"applied_generation": int(record["applied_generation"]),
@@ -110,7 +139,7 @@ static func project_construction_damage(request: Dictionary, record: Dictionary,
 		"binding_hash": "",
 	}
 	value["binding_hash"] = _hash_without(value, "binding_hash")
-	if String(value["binding_hash"]).is_empty():
+	if String(value["body_hash"]).is_empty() or String(value["binding_hash"]).is_empty():
 		return _fail("A10_DAMAGE_BINDING_HASH")
 	return {"success": true, "event": value}
 
@@ -151,14 +180,21 @@ static func _selector_contains_cell(selector: Dictionary, cell_id: String) -> bo
 		_:
 			return false
 
-static func _part_map_error(part_to_module: Dictionary) -> String:
+static func _part_map_error(part_to_module: Dictionary, body_modules: Array, source_part_ids: Dictionary) -> String:
+	var valid_modules := {}
+	for module in body_modules:
+		valid_modules[String(module["id"])] = true
 	var module_ids := {}
 	for raw_part in part_to_module.keys():
 		if not raw_part is String or not String(raw_part).begins_with("part/"):
 			return "A10_PART_BINDING_ID"
+		if not source_part_ids.has(String(raw_part)):
+			return "A10_PART_BINDING_UNKNOWN_SOURCE"
 		var module_id = part_to_module[raw_part]
 		if not module_id is String or not C.identifier(module_id):
 			return "A10_MODULE_BINDING_ID"
+		if not valid_modules.has(String(module_id)):
+			return "A10_MODULE_BINDING_UNKNOWN"
 		if module_ids.has(module_id):
 			return "A10_MODULE_BINDING_NOT_ONE_TO_ONE"
 		module_ids[module_id] = true
