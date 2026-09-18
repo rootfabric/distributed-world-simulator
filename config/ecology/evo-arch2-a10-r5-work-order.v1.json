@@ -1,0 +1,40 @@
+{
+  "schema": "dws.ecology.evo-arch2-a10-r5-work-order.v1",
+  "work_order_id": "EVO-ARCH2-A10-20260918-R5",
+  "state": "IN_PROGRESS",
+  "risk_class": "HIGH",
+  "branch": "feature/eco-evo-arch2-a10-final-composition-r5",
+  "parent_r4": "511a1e0f01eac28918f849db78944c726cb318f8",
+  "goal": "Whole-A10 composition proof across A8 seam, production Region/Matter, explicit resource mapping, Construction damage and persistent body overlay.",
+  "additive_paths": [
+    "config/ecology/evo-arch2-a10-r5-work-order.v1.json",
+    "docs/research/ecology/EVO_ARCH2_A10_R5_FINAL_COMPOSITION_RU.md",
+    "validation/ecology/evo_arch2_a10_r5/test_final_composition.gd",
+    "validation/ecology/evo_arch2_a10_r5/verify.py",
+    ".github/workflows/eco-evo-arch2-a10-r5-exact.yml"
+  ],
+  "immutable_sources": [
+    "scripts/research/ecology/v2/world_binding_v1.gd",
+    "scripts/research/ecology/v2/matter_resource_mapping_v1.gd",
+    "scripts/research/ecology/v2/world_seam_binding_v1.gd",
+    "scripts/research/ecology/v2/body_construction_binding_v1.gd",
+    "scripts/research/ecology/v2/snapshot_seam_v1.gd"
+  ],
+  "required_gates": [
+    "R1_CURRENT_EXACT_PASS",
+    "R2_CURRENT_EXACT_PASS",
+    "R3_CURRENT_EXACT_PASS",
+    "R4_CURRENT_EXACT_PASS",
+    "R5_COMPOSITION_EXACT_PASS",
+    "PROJECT_CONTROL_NON_RED",
+    "FRESH_REVIEWER_PASS",
+    "FRESH_VERIFIER_PASS",
+    "MAIN_EPOCH_RECHECK"
+  ],
+  "nonclaims": [
+    "A11",
+    "production ECO authority",
+    "automatic biological Matter extraction",
+    "main merge"
+  ]
+}
