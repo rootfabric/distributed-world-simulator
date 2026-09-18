@@ -1,12 +1,14 @@
 extends SceneTree
 
 const Binding = preload("res://scripts/research/ecology/v2/world_binding_v1.gd")
+const Body = preload("res://scripts/research/ecology/v2/body_graph_v1.gd")
 const Cell = preload("res://scripts/simulation/spatial/simulation_cell_address.gd")
 const Brick = preload("res://scripts/simulation/matter/contracts/matter_brick_address.gd")
 const Composition = preload("res://scripts/simulation/matter/contracts/matter_composition.gd")
 const Sample = preload("res://scripts/simulation/matter/contracts/matter_sample.gd")
 const Query = preload("res://scripts/simulation/matter/query/matter_query_result.gd")
 const Region = preload("res://scripts/network/contracts/authority_region_descriptor.gd")
+const Part = preload("res://scripts/construction/contracts/construction_part_record.gd")
 const DamageRequest = preload("res://scripts/construction/damage/construction_damage_request.gd")
 const DamageRecord = preload("res://scripts/construction/damage/construction_damage_record.gd")
 const RepairPlan = preload("res://scripts/construction/damage/construction_repair_plan.gd")
@@ -24,14 +26,32 @@ func _check(condition: bool, message: String) -> void:
 		failures.append(message)
 		push_error("A10_FAIL " + message)
 
+func _body_modules() -> Array:
+	var modules: Array = [Body.root()]
+	var leaf := {
+		"id": "m000001", "parent": "m000000", "role": "collector",
+		"start_mm": [0, 0, 0], "end_mm": [0, 100, 0],
+		"radius_mm": 1, "area_mm2": 100, "reach_mm": 0, "cost": Body.stock(),
+	}
+	leaf["cost"] = Body.cost(leaf)
+	modules.append(leaf)
+	var root := {
+		"id": "m000002", "parent": "m000000", "role": "absorber",
+		"start_mm": [0, 0, 0], "end_mm": [0, -100, 0],
+		"radius_mm": 1, "area_mm2": 0, "reach_mm": 100, "cost": Body.stock(),
+	}
+	root["cost"] = Body.cost(root)
+	modules.append(root)
+	return modules
+
 func _run() -> void:
 	var cell := Cell.create("u", "i", "surface", "grid", 1, "root")
 	_check(bool(Cell.validate(cell).get("success", false)), "production cell fixture")
 	var brick := Brick.create(cell, 0, 0, 0, 0)
 	_check(bool(Brick.validate(brick).get("success", false)), "production brick fixture")
 	var composition := Composition.create([
-		{"material_id": "material/soil", "mass_fraction": 0.8},
-		{"material_id": "material/water", "mass_fraction": 0.2},
+		{"material_id": "matter/regolith-loose", "mass_fraction": 0.8},
+		{"material_id": "matter/water-ice", "mass_fraction": 0.2},
 	])
 	_check(bool(Composition.validate(composition).get("success", false)), "production composition fixture")
 	var sample := Sample.create(-0.25, 1.0, 1350.0, composition, 0.9, 289.5, 0.35, ["matter-state/solid"])
@@ -58,13 +78,8 @@ func _run() -> void:
 	var region := Region.create("region/a", "u", "i", "surface", "octree", 1, selector, "node/a", 3, "ACTIVE", 4)
 	_check(bool(Region.validate(region).get("success", false)), "production region fixture")
 	var cursor := {
-		"entity_id": "organism/a",
-		"region_id": "region/a",
-		"owner_id": "node/a",
-		"owner_epoch": 3,
-		"revision": 8,
-		"clock": 21,
-		"ecology_step": 5,
+		"entity_id": "organism/a", "region_id": "region/a", "owner_id": "node/a",
+		"owner_epoch": 3, "revision": 8, "clock": 21, "ecology_step": 5,
 	}
 	var bound := Binding.bind_matter_site(query, region, cursor)
 	_check(bool(bound.get("success", false)), "bind current-main Matter to ECO site")
@@ -92,51 +107,55 @@ func _run() -> void:
 	var excluded := Binding.bind_matter_site(query, excluded_region, cursor)
 	_check(not bool(excluded.get("success", false)) and excluded.get("error") == "A10_REGION_SELECTOR_EXCLUDES_CELL", "region selector bounds Matter site")
 
+	var trunk := Part.create("part/trunk", "item/trunk", "BIO_PROXY", "support", 1.0, [0.0, 0.0, 0.0])
+	var leaf_part := Part.create("part/leaf", "item/leaf", "BIO_PROXY", "collector", 0.2, [0.0, 1.0, 0.0])
+	var root_part := Part.create("part/root", "item/root-part", "BIO_PROXY", "absorber", 0.3, [0.0, -1.0, 0.0])
+	var source_snapshot := Snapshot.create("construct/tree", "item/tree-root", 1, "OPERATIONAL", [trunk, leaf_part, root_part], [], {})
+	_check(bool(Snapshot.validate(source_snapshot).get("success", false)), "production source construct snapshot fixture")
 	var request := DamageRequest.create(
-		"damage/a10", "construct/tree", "c".repeat(64), "part/trunk", [], [],
+		"damage/a10", "construct/tree", source_snapshot["checksum"], "part/trunk", [], [],
 		{"part/leaf": "DEGRADED", "part/root": "DESTROYED"}
 	)
 	_check(bool(DamageRequest.validate(request).get("success", false)), "production damage request fixture")
-	var snapshot := Snapshot.create("construct/tree", "item/root", 1, "OPERATIONAL", [], [], {})
-	_check(bool(Snapshot.validate(snapshot).get("success", false)), "production construct snapshot fixture")
-	var repair := RepairPlan.create("repair/a10", "damage/a10", snapshot, [], [], [], [], request["checksum"])
+	var target_snapshot := Snapshot.create("construct/tree", "item/tree-root", 2, "DAMAGED", [trunk, leaf_part], [], {})
+	_check(bool(Snapshot.validate(target_snapshot).get("success", false)), "production target construct snapshot fixture")
+	var repair := RepairPlan.create("repair/a10", "damage/a10", target_snapshot, [], [], [], [], request["checksum"])
 	_check(bool(RepairPlan.validate(repair).get("success", false)), "production repair plan fixture")
 	var record := DamageRecord.create("damage/a10", request["checksum"], "d".repeat(64), repair, [], 9)
 	_check(bool(DamageRecord.validate(record).get("success", false)), "production applied damage record fixture")
-	var projected := Binding.project_construction_damage(request, record, {
-		"part/leaf": "module.leaf",
-		"part/root": "module.root",
-	})
-	_check(bool(projected.get("success", false)), "project applied C9 damage into ECO module event")
+	var body_modules := _body_modules()
+	_check(Body.validate(body_modules).is_empty(), "real ECO BodyGraph fixture")
+	var mapping := {"part/leaf": "m000001", "part/root": "m000002"}
+	var projected := Binding.project_construction_damage(request, record, source_snapshot, body_modules, mapping)
+	_check(bool(projected.get("success", false)), "project applied C9 damage into existing ECO body modules")
 	if bool(projected.get("success", false)):
 		var event: Dictionary = projected["event"]
 		_check(event["events"].size() == 2, "two affected body modules projected")
-		_check(event["events"][0]["part_id"] == "part/leaf" and event["events"][0]["severity_milli"] == 500, "degraded part projection")
-		_check(event["events"][1]["part_id"] == "part/root" and event["events"][1]["severity_milli"] == 1000, "destroyed part projection")
-		_check(String(event["binding_hash"]).length() == 64, "damage projection sealed")
+		_check(event["events"][0]["part_id"] == "part/leaf" and event["events"][0]["module_id"] == "m000001" and event["events"][0]["severity_milli"] == 500, "degraded part projection")
+		_check(event["events"][1]["part_id"] == "part/root" and event["events"][1]["module_id"] == "m000002" and event["events"][1]["severity_milli"] == 1000, "destroyed part projection")
+		_check(String(event["body_hash"]).length() == 64 and String(event["binding_hash"]).length() == 64, "damage projection sealed to body")
 
-	var missing_map := Binding.project_construction_damage(request, record, {"part/leaf": "module.leaf"})
+	var missing_map := Binding.project_construction_damage(request, record, source_snapshot, body_modules, {"part/leaf": "m000001"})
 	_check(not bool(missing_map.get("success", false)) and missing_map.get("error") == "A10_DAMAGE_PART_UNBOUND", "unknown affected part fails closed")
-	var duplicate_map := Binding.project_construction_damage(request, record, {
-		"part/leaf": "module.same",
-		"part/root": "module.same",
-	})
+	var duplicate_map := Binding.project_construction_damage(request, record, source_snapshot, body_modules, {"part/leaf": "m000001", "part/root": "m000001"})
 	_check(not bool(duplicate_map.get("success", false)) and duplicate_map.get("error") == "A10_MODULE_BINDING_NOT_ONE_TO_ONE", "part-module mapping is one-to-one")
+	var unknown_module := Binding.project_construction_damage(request, record, source_snapshot, body_modules, {"part/leaf": "m000001", "part/root": "m999999"})
+	_check(not bool(unknown_module.get("success", false)) and unknown_module.get("error") == "A10_MODULE_BINDING_UNKNOWN", "mapping cannot target nonexistent ECO module")
+	var extraneous_part := Binding.project_construction_damage(request, record, source_snapshot, body_modules, {"part/leaf": "m000001", "part/root": "m000002", "part/ghost": "m000000"})
+	_check(not bool(extraneous_part.get("success", false)) and extraneous_part.get("error") == "A10_PART_BINDING_UNKNOWN_SOURCE", "mapping cannot target nonexistent source part")
+
+	var other_source := Snapshot.create("construct/tree", "item/tree-root", 2, "OPERATIONAL", [trunk, leaf_part, root_part], [], {})
+	var wrong_source := Binding.project_construction_damage(request, record, other_source, body_modules, mapping)
+	_check(not bool(wrong_source.get("success", false)) and wrong_source.get("error") == "A10_DAMAGE_SOURCE_SNAPSHOT_MISMATCH", "request is bound to exact source snapshot")
 	var repaired_record := DamageRecord.mark_repaired(record, 10)
 	_check(bool(DamageRecord.validate(repaired_record).get("success", false)), "repaired production record fixture")
-	var replay_damage := Binding.project_construction_damage(request, repaired_record, {
-		"part/leaf": "module.leaf",
-		"part/root": "module.root",
-	})
+	var replay_damage := Binding.project_construction_damage(request, repaired_record, source_snapshot, body_modules, mapping)
 	_check(not bool(replay_damage.get("success", false)) and replay_damage.get("error") == "A10_DAMAGE_RECORD_NOT_APPLIED", "repair does not replay biological damage")
 	var other_request := DamageRequest.create(
-		"damage/a10", "construct/tree", "e".repeat(64), "part/trunk", [], [],
-		{"part/leaf": "DEGRADED", "part/root": "DESTROYED"}
+		"damage/a10", "construct/tree", source_snapshot["checksum"], "part/trunk", [], [],
+		{"part/leaf": "DESTROYED", "part/root": "DESTROYED"}
 	)
-	var mismatch := Binding.project_construction_damage(other_request, record, {
-		"part/leaf": "module.leaf",
-		"part/root": "module.root",
-	})
+	var mismatch := Binding.project_construction_damage(other_request, record, source_snapshot, body_modules, mapping)
 	_check(not bool(mismatch.get("success", false)) and mismatch.get("error") == "A10_DAMAGE_REQUEST_RECORD_MISMATCH", "forged request cannot reuse applied record")
 
 	print("EVO_ARCH2_A10_WORLD_BINDING checks=%d failed=%d" % [checks, failures.size()])
