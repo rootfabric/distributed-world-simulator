@@ -4,7 +4,7 @@
   "state": "IN_PROGRESS",
   "risk_class": "HIGH",
   "branch": "feature/eco-evo-arch2-a10-body-damage-overlay-r4",
-  "parent_r3": "73cba5b4f07b901ba44255e9f079f1489964e735",
+  "parent_r3": "1872fe20437a525c5982266d0fc09bfd4af49fcc",
   "goal": "Persist C9-derived damage against exact BodyGraph/Construction binding without mutating accepted A5 historical state.",
   "additive_paths": [
     "config/ecology/evo-arch2-a10-r4-work-order.v1.json",
@@ -32,8 +32,8 @@
     "PERSISTED_OVERLAY_REQUIRES_EXTERNAL_CHECKSUM_ANCHOR"
   ],
   "parent_refresh": {
-    "previous": "97bcf05f2a62faa4691cf9b99255a7202e3d4db9",
-    "current": "73cba5b4f07b901ba44255e9f079f1489964e735",
-    "reason": "R3 refreshed through final R1/R2 no-guessed-partition lineage"
+    "previous": "73cba5b4f07b901ba44255e9f079f1489964e735",
+    "current": "1872fe20437a525c5982266d0fc09bfd4af49fcc",
+    "reason": "R3 refreshed after R2 external Matter batch anchor repair"
   }
 }

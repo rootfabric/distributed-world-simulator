@@ -79,10 +79,13 @@ static func validate(value: Dictionary, catalog: Dictionary) -> String:
 		return "A10_R2_MAP_CHECKSUM"
 	return ""
 
-static func admit_material_batch(batch: Dictionary, catalog: Dictionary, mapping: Dictionary) -> Dictionary:
+static func admit_material_batch(batch: Dictionary, catalog: Dictionary, mapping: Dictionary, expected_batch_checksum: String) -> Dictionary:
 	var map_error := validate(mapping, catalog)
 	if not map_error.is_empty():
 		return _fail(map_error)
+	if not MatterUtils.is_lower_hex_64(expected_batch_checksum) \
+	or String(batch.get("checksum", "")) != expected_batch_checksum:
+		return _fail("A10_R2_BATCH_EXTERNAL_ANCHOR")
 	if not bool(Batch.validate(batch).get("success", false)):
 		return _fail("A10_R2_BATCH_INVALID")
 	var total := _exact_mg(float(batch["total_mass_kg"]))
