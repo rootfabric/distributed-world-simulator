@@ -20,7 +20,7 @@ TEST = "tests/runtime/test_v0_mvp_6_cross_authority_prerequisites.gd"
 PRODUCT_TEST = "tests/runtime/test_v0_mvp_6_cross_authority_construction_seam.gd"
 COLLISION_TEST = "tests/runtime/test_v0_mvp_6_cross_authority_construction_collision.gd"
 PERSISTENCE_TEST = "tests/runtime/test_v0_mvp_6_cross_authority_construction_persistence.gd"
-FULL_WORLD_RESULT_VALIDATOR = ROOT / "docs/control/mvp-act0-r1/validate_mvp6_full_world_core_result.py"
+FULL_WORLD_RESULT_VALIDATOR = ROOT / "docs/control/mvp-act0-r1/validate_mvp6_full_world_core_result.py"\nFULL_WORLD_TIMEOUT_SECONDS = 3600
 PIN = {"linux": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7", "win32": "3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5"}
 FATAL = re.compile(r"(?im)^\s*(?:SCRIPT ERROR|ERROR):|Parse Error|Compile Error")
 
@@ -76,21 +76,72 @@ def run_full_world_core() -> int:
     )
     command = ["pwsh", "-NoProfile", "-File", str(ROOT / "RUN_WORLD_REGRESSION_TESTS.ps1")]
     log = WORLD_CORE_OUT / "full-world-core.log"
+    start = time.monotonic()
+    timed_out = False
     with log.open("w", encoding="utf-8") as stream:
         try:
-            code = subprocess.run(command, cwd=ROOT, env=env, stdout=stream, stderr=subprocess.STDOUT, check=False).returncode
+            code = subprocess.run(
+                command,
+                cwd=ROOT,
+                env=env,
+                stdout=stream,
+                stderr=subprocess.STDOUT,
+                check=False,
+                timeout=FULL_WORLD_TIMEOUT_SECONDS,
+            ).returncode
+        except subprocess.TimeoutExpired:
+            stream.write("\nMVP6_FULL_WORLD_CORE_TIMEOUT\n")
+            code = 124
+            timed_out = True
         except OSError as exc:
             stream.write(str(exc) + "\n")
             code = 127
+    duration = round(time.monotonic() - start, 3)
     (WORLD_CORE_OUT / "world-exit.txt").write_text(str(code) + "\n", encoding="utf-8")
-    print(json.dumps({"name": "full-world-core", "command": command, "exit_code": code, "log_sha256": sha(log)}), flush=True)
-    checked = subprocess.run([sys.executable, str(FULL_WORLD_RESULT_VALIDATOR)], cwd=ROOT, env=env, check=False).returncode
-    # The existing allowed workflow uploads artifacts/mvp6-seam-repro. Mirror
-    # the completed bounded world/core evidence there only after validation;
-    # the canonical runner and result checker continue to use their dedicated
-    # world-core directory throughout execution.
-    shutil.copytree(WORLD_CORE_OUT, OUT)
-    return checked
+    write(
+        WORLD_CORE_OUT / "execution.json",
+        {
+            "schema": "distributed_world_simulator.mvp6_world_core_execution_probe.v1",
+            "subject_head": head,
+            "subject_tree": tree,
+            "command": command,
+            "exit_code": code,
+            "duration_seconds": duration,
+            "timeout_seconds": FULL_WORLD_TIMEOUT_SECONDS,
+            "timed_out": timed_out,
+            "log_sha256": sha(log),
+            "predicate_verified": False,
+            "independent_verdict": False,
+        },
+    )
+    print(
+        json.dumps(
+            {
+                "name": "full-world-core",
+                "command": command,
+                "exit_code": code,
+                "duration_seconds": duration,
+                "timeout_seconds": FULL_WORLD_TIMEOUT_SECONDS,
+                "timed_out": timed_out,
+                "log_sha256": sha(log),
+            }
+        ),
+        flush=True,
+    )
+    checked = 1
+    try:
+        checked = subprocess.run(
+            [sys.executable, str(FULL_WORLD_RESULT_VALIDATOR)],
+            cwd=ROOT,
+            env=env,
+            check=False,
+        ).returncode
+    finally:
+        # Always publish raw partial evidence before the outer CI budget can
+        # terminate cleanup. A timeout remains RED; this only makes the reason
+        # independently inspectable instead of losing the world/core log.
+        shutil.copytree(WORLD_CORE_OUT, OUT, dirs_exist_ok=True)
+    return checked if checked != 0 else (0 if code == 0 else 1)
 
 
 def main() -> int:
