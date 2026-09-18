@@ -38,7 +38,7 @@ func _finite(value) -> bool:
 func _two_node(resistance: float) -> Dictionary:
 	return {"nodes":[{"node_id":"a"},{"node_id":"b"}],"elements":[{"element_id":"r","node_a":"a","node_b":"b","resistance_ohm":resistance,"active":true}]}
 
-func _initialize() -> void:
+func _f64_le(bits: String) -> float:\n\tvar bytes: PackedByteArray = bits.hex_decode()\n\treturn bytes.decode_double(0)\n\nfunc _initialize() -> void:
 	# Independent rational oracle, not copied expected values from product acceptance.
 	var exact := Graph.solve_resistive(_model([2.0,3.0,4.0,5.0,7.0]), {"a":1.0,"b":0.0})
 	_check(exact.success, "V-R41-R3 branched graph solves", exact)
@@ -94,10 +94,10 @@ func _initialize() -> void:
 	var power_over := Graph.solve_resistive(_two_node(1e-100), {"a":1e200,"b":0.0})
 	_check(not power_over.success and String(power_over.error_code)=="R3_NUMERIC_ENVELOPE", "V-R41-R3 finite current but power overflow fails closed", power_over)
 	var cond_over := Graph.solve_resistive(_two_node(_f64_le("e807000000000000")), {"a":1.0,"b":0.0})
-	_check(not cond_over.success, "V-R41-R3 reciprocal overflow fails closed", cond_over)
+	_check(not cond_over.success and String(cond_over.error_code)=="R3_NUMERIC_ENVELOPE", "V-R41-R3 reciprocal overflow fails closed", cond_over)
 
 	# Diagnostic integrity is independently checked with a sentinel primary error.
-	var primary := {"success":false,"error_code":"INDEPENDENT_PRIMARY_SENTINEL","details":{"stage":"verifier-r2"}}
+	var primary := {"success":false,"error_code":"INDEPENDENT_PRIMARY_SENTINEL","details":{"stage":"verifier-r3"}}
 	var wrapped := Perf._matrix_case_failure_for_diagnostics(2000, primary)
 	_check(not wrapped.success, "V-R41-R3 diagnostic wrapper remains failure", wrapped)
 	_check(String(wrapped.get("matrix_hash","forged"))=="", "V-R41-R3 failed matrix hash explicit empty", wrapped)

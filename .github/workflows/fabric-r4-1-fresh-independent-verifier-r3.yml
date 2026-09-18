@@ -64,15 +64,15 @@ jobs:
         shell: bash
         run: |
           set -Eeuo pipefail
-          "$GODOT_BIN" --headless --path . --script res://tests/research/fabric1/fabric_r4_1_independent_verifier_r3.gd 2>&1 | tee r41-independent-r2.log
-          grep -F 'FABRIC_R4_1_INDEPENDENT_VERIFIER_R3_ASSERTIONS=24 FAILURES=0' r41-independent-r2.log
-          grep -F 'FABRIC-R4.1-INDEPENDENT-VERIFIER-R3: PASS' r41-independent-r2.log
-          ! grep -Eiq 'SCRIPT ERROR|Parse Error|Invalid call|Invalid access|Assertion failed|Segmentation fault' r41-independent-r2.log
+          "$GODOT_BIN" --headless --path . --script res://tests/research/fabric1/fabric_r4_1_independent_verifier_r3.gd 2>&1 | tee r41-independent-r3.log
+          grep -F 'FABRIC_R4_1_INDEPENDENT_VERIFIER_R3_ASSERTIONS=24 FAILURES=0' r41-independent-r3.log
+          grep -F 'FABRIC-R4.1-INDEPENDENT-VERIFIER-R3: PASS' r41-independent-r3.log
+          ! grep -Eiq 'SCRIPT ERROR|Parse Error|Invalid call|Invalid access|Assertion failed|Segmentation fault' r41-independent-r3.log
       - name: Replay exact R4.1 product chain
         shell: bash
         run: |
           set -Eeuo pipefail
-          out="$GITHUB_WORKSPACE/r41-subject-r2-replay.log"
+          out="$GITHUB_WORKSPACE/r41-subject-r3-replay.log"
           subject_dir="$RUNNER_TEMP/dws-r41-verifier-r3-subject-${GITHUB_RUN_ID}"
           rm -rf "$subject_dir"
           git worktree prune
@@ -100,7 +100,7 @@ jobs:
         run: |
           set -Eeuo pipefail
           test "$(git rev-parse "origin/$SUBJECT_BRANCH")" = "$SUBJECT_HEAD"
-          sha256sum r41-verifier-r3-identity.txt r41-verifier-r3-godot.txt r41-verifier-r3-import.log r41-independent-r2.log r41-subject-r2-replay.log > r41-verifier-r3-evidence.sha256
+          sha256sum r41-verifier-r3-identity.txt r41-verifier-r3-godot.txt r41-verifier-r3-import.log r41-independent-r3.log r41-subject-r3-replay.log > r41-verifier-r3-evidence.sha256
           git diff --check
           test -z "$(git status --porcelain=v1 --untracked-files=no)"
           echo 'FABRIC_R4_1_FRESH_INDEPENDENT_VERIFIER_R3=PASS'
@@ -111,8 +111,8 @@ jobs:
             r41-verifier-r3-identity.txt
             r41-verifier-r3-godot.txt
             r41-verifier-r3-import.log
-            r41-independent-r2.log
-            r41-subject-r2-replay.log
+            r41-independent-r3.log
+            r41-subject-r3-replay.log
             r41-verifier-r3-evidence.sha256
           if-no-files-found: error
           retention-days: 90
