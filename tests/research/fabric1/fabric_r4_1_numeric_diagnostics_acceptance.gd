@@ -18,6 +18,10 @@ func _two_node(resistance: float) -> Dictionary:
 		"elements": [{"element_id": "r", "node_a": "a", "node_b": "b", "resistance_ohm": resistance, "active": true}],
 	}
 
+func _f64_le(bits: String) -> float:
+	var bytes: PackedByteArray = bits.hex_decode()
+	return bytes.decode_double(0)
+
 func _initialize() -> void:
 	var nominal := Graph.solve_resistive(_two_node(1.0), {"a": 1.0, "b": 0.0})
 	_check(nominal.success, "R4.1 nominal graph succeeds", nominal)
