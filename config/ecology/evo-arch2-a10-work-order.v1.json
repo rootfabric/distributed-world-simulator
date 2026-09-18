@@ -1,0 +1,64 @@
+{
+  "schema": "dws.ecology.evo-arch2-a10-work-order.v1",
+  "work_order_id": "EVO-ARCH2-A10-20260918-R1",
+  "state": "IN_PROGRESS",
+  "risk_class": "HIGH",
+  "branch": "feature/eco-evo-arch2-a10-world-bindings-r1",
+  "base_main": "471210d781e521bc7897a8fe859636a07d7a3ab3",
+  "base_tree": "5a4576f365c60fe117e03b9aee31b2359249b7a5",
+  "predecessor": "EVO_ARCH2_A9_MERGED",
+  "goal": "Selective current-main world bindings for Matter/terrain provenance, production region authority admission, and Construction damage projection without new production owners.",
+  "additive_paths": [
+    "config/ecology/evo-arch2-a10-work-order.v1.json",
+    "docs/research/ecology/EVO_ARCH2_A10_WORLD_BINDINGS_R1_RU.md",
+    "scripts/research/ecology/v2/world_binding_v1.gd",
+    "validation/ecology/evo_arch2_a10/test_world_binding.gd",
+    "validation/ecology/evo_arch2_a10/verify.py",
+    ".github/workflows/eco-evo-arch2-a10-exact.yml"
+  ],
+  "immutable_production_sources": [
+    "scripts/simulation/matter/query/matter_query_result.gd",
+    "scripts/simulation/matter/contracts/matter_sample.gd",
+    "scripts/network/contracts/authority_region_descriptor.gd",
+    "scripts/network/contracts/handoff_ticket.gd",
+    "scripts/construction/damage/construction_damage_request.gd",
+    "scripts/construction/damage/construction_damage_record.gd",
+    "scripts/construction/contracts/construct_snapshot.gd",
+    "scripts/construction/contracts/construction_part_record.gd",
+    "scripts/research/ecology/v2/body_graph_v1.gd"
+  ],
+  "invariants": [
+    "NO_NEW_TERRAIN_MATTER_REGION_NETWORK_CONSTRUCTION_OWNER",
+    "POINT_MATTER_SAMPLE_NEVER_BECOMES_ECOLOGICAL_RESOURCE_STOCK",
+    "A8_CURSOR_MUST_MATCH_PRODUCTION_REGION_OWNER_AND_EPOCH",
+    "ONLY_EXTERNALLY_ANCHORED_APPLIED_C9_DAMAGE_CAN_PROJECT_TO_ECO",
+    "A9_AND_A8_SOURCE_BYTES_UNMODIFIED",
+    "DAMAGE_REQUEST_IS_BOUND_TO_EXACT_SOURCE_CONSTRUCT_SNAPSHOT",
+    "PART_TO_MODULE_BINDING_TARGETS_EXISTING_BODYGRAPH_MODULES_ONLY",
+    "SELF_CONTAINED_DAMAGE_RECORD_CHECKSUM_IS_NOT_AUTHORITY_PROOF",
+    "NO_INFERRED_MATTER_CELL_TO_REGION_CHUNK_OR_PREFIX_MAPPING"
+  ],
+  "required_gates": [
+    "A10_GODOT_WORLD_BINDING_PASS",
+    "ADDITIVE_SCOPE_ONLY",
+    "PRODUCTION_SOURCE_BYTES_UNCHANGED",
+    "PROJECT_CONTROL_NON_RED",
+    "FRESH_REVIEWER_PASS",
+    "FRESH_VERIFIER_PASS"
+  ],
+  "non_goals": [
+    "Matter mutation from ecology",
+    "BodyGraph construction materialization",
+    "Ecology state mutation from damage",
+    "A11 playable habitat",
+    "Production ownership promotion",
+    "main merge",
+    "partition-specific Matter cell membership without a production witness"
+  ],
+  "base_refresh": {
+    "previous_main": "99e8efe2422e02fedec40778e12748611d68fb5f",
+    "current_main": "471210d781e521bc7897a8fe859636a07d7a3ab3",
+    "reason": "Harness PR #652 only; no A10 production source overlap",
+    "production_overlap": false
+  }
+}
