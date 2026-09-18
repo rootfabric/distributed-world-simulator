@@ -4,7 +4,8 @@
   "state": "IN_PROGRESS",
   "risk_class": "HIGH",
   "branch": "feature/eco-evo-arch2-a10-final-composition-r5",
-  "parent_r4": "9e7deeb1d890b2de6785a83ff58e6784cd4dcf8d",
+  "parent_r4": "ef5a9ecccdc403631d11c2cebe0b95d8971243bf",
+  "parent_r4_tree": "a2cd902fff7375f611fe5f1889d3111619da41d3",
   "goal": "Whole-A10 composition proof across A8 seam, production Region/Matter, explicit resource mapping, Construction damage and persistent body overlay.",
   "additive_paths": [
     "config/ecology/evo-arch2-a10-r5-work-order.v1.json",
@@ -38,8 +39,8 @@
     "main merge"
   ],
   "parent_refresh": {
-    "previous": "00eb7200e34b39285b6e56c35464db4484dfbf14",
-    "current": "9e7deeb1d890b2de6785a83ff58e6784cd4dcf8d",
-    "reason": "R4 refreshed through final R1-R3 lineage while retaining disabled-closure and external overlay anchor"
+    "previous": "9e7deeb1d890b2de6785a83ff58e6784cd4dcf8d",
+    "current": "ef5a9ecccdc403631d11c2cebe0b95d8971243bf",
+    "reason": "R4 refreshed through anchored R2 batch trust and final R3 lineage; exact verifier already binds this parent/tree"
   }
 }
