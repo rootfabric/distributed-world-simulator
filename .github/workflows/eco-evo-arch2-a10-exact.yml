@@ -19,7 +19,7 @@ on:
       - .github/workflows/eco-evo-arch2-a10-exact.yml
 
 concurrency:
-  group: eco-a10-exact-${{ github.ref }}
+  group: eco-a10-exact-${{ github.event.pull_request.head.ref || github.ref_name }}
   cancel-in-progress: true
 
 jobs:
