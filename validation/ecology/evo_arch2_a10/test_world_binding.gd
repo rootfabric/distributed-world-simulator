@@ -126,7 +126,7 @@ func _run() -> void:
 	var body_modules := _body_modules()
 	_check(Body.validate(body_modules).is_empty(), "real ECO BodyGraph fixture")
 	var mapping := {"part/leaf": "m000001", "part/root": "m000002"}
-	var projected := Binding.project_construction_damage(request, record, source_snapshot, body_modules, mapping)
+	var projected := Binding.project_construction_damage(request, record, source_snapshot, body_modules, mapping, record["checksum"])
 	_check(bool(projected.get("success", false)), "project applied C9 damage into existing ECO body modules")
 	if bool(projected.get("success", false)):
 		var event: Dictionary = projected["event"]
@@ -135,27 +135,29 @@ func _run() -> void:
 		_check(event["events"][1]["part_id"] == "part/root" and event["events"][1]["module_id"] == "m000002" and event["events"][1]["severity_milli"] == 1000, "destroyed part projection")
 		_check(String(event["body_hash"]).length() == 64 and String(event["binding_hash"]).length() == 64, "damage projection sealed to body")
 
-	var missing_map := Binding.project_construction_damage(request, record, source_snapshot, body_modules, {"part/leaf": "m000001"})
+	var bad_anchor := Binding.project_construction_damage(request, record, source_snapshot, body_modules, mapping, "0".repeat(64))
+	_check(not bool(bad_anchor.get("success", false)) and bad_anchor.get("error") == "A10_DAMAGE_RECORD_ANCHOR", "damage record requires external trusted checksum")
+	var missing_map := Binding.project_construction_damage(request, record, source_snapshot, body_modules, {"part/leaf": "m000001"}, record["checksum"])
 	_check(not bool(missing_map.get("success", false)) and missing_map.get("error") == "A10_DAMAGE_PART_UNBOUND", "unknown affected part fails closed")
-	var duplicate_map := Binding.project_construction_damage(request, record, source_snapshot, body_modules, {"part/leaf": "m000001", "part/root": "m000001"})
+	var duplicate_map := Binding.project_construction_damage(request, record, source_snapshot, body_modules, {"part/leaf": "m000001", "part/root": "m000001"}, record["checksum"])
 	_check(not bool(duplicate_map.get("success", false)) and duplicate_map.get("error") == "A10_MODULE_BINDING_NOT_ONE_TO_ONE", "part-module mapping is one-to-one")
-	var unknown_module := Binding.project_construction_damage(request, record, source_snapshot, body_modules, {"part/leaf": "m000001", "part/root": "m999999"})
+	var unknown_module := Binding.project_construction_damage(request, record, source_snapshot, body_modules, {"part/leaf": "m000001", "part/root": "m999999"}, record["checksum"])
 	_check(not bool(unknown_module.get("success", false)) and unknown_module.get("error") == "A10_MODULE_BINDING_UNKNOWN", "mapping cannot target nonexistent ECO module")
-	var extraneous_part := Binding.project_construction_damage(request, record, source_snapshot, body_modules, {"part/leaf": "m000001", "part/root": "m000002", "part/ghost": "m000000"})
+	var extraneous_part := Binding.project_construction_damage(request, record, source_snapshot, body_modules, {"part/leaf": "m000001", "part/root": "m000002", "part/ghost": "m000000"}, record["checksum"])
 	_check(not bool(extraneous_part.get("success", false)) and extraneous_part.get("error") == "A10_PART_BINDING_UNKNOWN_SOURCE", "mapping cannot target nonexistent source part")
 
 	var other_source := Snapshot.create("construct/tree", "item/tree-root", 2, "OPERATIONAL", [trunk, leaf_part, root_part], [], {})
-	var wrong_source := Binding.project_construction_damage(request, record, other_source, body_modules, mapping)
+	var wrong_source := Binding.project_construction_damage(request, record, other_source, body_modules, mapping, record["checksum"])
 	_check(not bool(wrong_source.get("success", false)) and wrong_source.get("error") == "A10_DAMAGE_SOURCE_SNAPSHOT_MISMATCH", "request is bound to exact source snapshot")
 	var repaired_record := DamageRecord.mark_repaired(record, 10)
 	_check(bool(DamageRecord.validate(repaired_record).get("success", false)), "repaired production record fixture")
-	var replay_damage := Binding.project_construction_damage(request, repaired_record, source_snapshot, body_modules, mapping)
+	var replay_damage := Binding.project_construction_damage(request, repaired_record, source_snapshot, body_modules, mapping, repaired_record["checksum"])
 	_check(not bool(replay_damage.get("success", false)) and replay_damage.get("error") == "A10_DAMAGE_RECORD_NOT_APPLIED", "repair does not replay biological damage")
 	var other_request := DamageRequest.create(
 		"damage/a10", "construct/tree", source_snapshot["checksum"], "part/trunk", [], [],
 		{"part/leaf": "DESTROYED", "part/root": "DESTROYED"}
 	)
-	var mismatch := Binding.project_construction_damage(other_request, record, source_snapshot, body_modules, mapping)
+	var mismatch := Binding.project_construction_damage(other_request, record, source_snapshot, body_modules, mapping, record["checksum"])
 	_check(not bool(mismatch.get("success", false)) and mismatch.get("error") == "A10_DAMAGE_REQUEST_RECORD_MISMATCH", "forged request cannot reuse applied record")
 
 	print("EVO_ARCH2_A10_WORLD_BINDING checks=%d failed=%d" % [checks, failures.size()])
