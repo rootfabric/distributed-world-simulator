@@ -16,6 +16,8 @@ NEW_SUBJECT = repair/fabric-r4-1-numeric-envelope-diagnostics-r1
 На exact predecessor воспроизводятся конечные входы, после которых generalized resistive graph возвращает `success=true` с `inf/nan` в derived токах/мощности. Repair обязан:
 
 - отклонять non-finite conductance / assembly / current / balance / power / residual / condition estimate;
+- сохранять конечный результат при компенсируемом intermediate overflow: signed node balances и boundary power используют normal-path-first, затем scale-normalized compensated fallback;
+- считать residual power scale через максимум конечных модулей, а не через потенциально переполняющуюся сумму;
 - использовать алгебраически эквивалентный `delta_v * current` для Joule power, чтобы не создавать лишнее intermediate overflow там, где итог конечен;
 - сохранить nominal и большой, но representable finite случай;
 - не расширять физическую capability за declared model.

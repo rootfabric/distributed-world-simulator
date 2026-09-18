@@ -87,8 +87,8 @@ static func solve_resistive(model: Dictionary, boundary_voltages_v: Dictionary) 
 	if not is_finite(float(solved.details.pivot_condition_estimate)):
 		return U.failure("R3_NUMERIC_ENVELOPE", {"stage": "condition_estimate"})
 	var edge_currents := {}
-	var balance := {}
-	for node_id in node_ids: balance[node_id] = 0.0
+	var balance_terms := {}
+	for node_id in node_ids: balance_terms[node_id] = []
 	var joule := 0.0
 	for element in active_elements:
 		var a: String = str(element.node_a)
@@ -99,12 +99,8 @@ static func solve_resistive(model: Dictionary, boundary_voltages_v: Dictionary) 
 		if not is_finite(delta_v) or not is_finite(current):
 			return U.failure("R3_NUMERIC_ENVELOPE", {"stage": "edge_current", "element_id": str(element.element_id)})
 		edge_currents[str(element.element_id)] = current
-		var next_balance_a := float(balance[a]) + current
-		var next_balance_b := float(balance[b]) - current
-		if not is_finite(next_balance_a) or not is_finite(next_balance_b):
-			return U.failure("R3_NUMERIC_ENVELOPE", {"stage": "node_balance", "element_id": str(element.element_id)})
-		balance[a] = next_balance_a
-		balance[b] = next_balance_b
+		balance_terms[a].append(current)
+		balance_terms[b].append(-current)
 		# delta_v * current is algebraically equal to I^2 R but avoids an
 		# avoidable intermediate overflow when both final factors remain finite.
 		var joule_term := delta_v * current
@@ -112,25 +108,29 @@ static func solve_resistive(model: Dictionary, boundary_voltages_v: Dictionary) 
 		if not is_finite(joule_term) or not is_finite(next_joule):
 			return U.failure("R3_NUMERIC_ENVELOPE", {"stage": "joule_power", "element_id": str(element.element_id)})
 		joule = next_joule
+	var balance := {}
+	for node_id in node_ids:
+		var summed_balance := _safe_signed_sum(balance_terms[node_id])
+		if not bool(summed_balance.get("success", false)):
+			return U.failure("R3_NUMERIC_ENVELOPE", {"stage": "node_balance", "node_id": node_id})
+		balance[node_id] = float(summed_balance.value)
 	var ports := {}
 	var max_kcl := 0.0
 	for node_id in node_ids:
 		if boundary_voltages_v.has(node_id): ports[node_id] = float(balance[node_id])
 		else: max_kcl = maxf(max_kcl, absf(float(balance[node_id])))
-	var boundary_power := 0.0
-	for node_id in ports:
-		var power_term := float(potentials[node_id]) * float(ports[node_id])
-		var next_boundary_power := boundary_power + power_term
-		if not is_finite(power_term) or not is_finite(next_boundary_power):
-			return U.failure("R3_NUMERIC_ENVELOPE", {"stage": "boundary_power", "node_id": node_id})
-		boundary_power = next_boundary_power
+	var boundary_power_result := _safe_dot_sum_for_power(potentials, ports)
+	if not bool(boundary_power_result.get("success", false)):
+		return U.failure("R3_NUMERIC_ENVELOPE", {"stage": "boundary_power"})
+	var boundary_power := float(boundary_power_result.value)
 	var power_residual := absf(boundary_power - joule)
 	if not is_finite(max_kcl) or not is_finite(power_residual):
 		return U.failure("R3_NUMERIC_ENVELOPE", {"stage": "residual", "kcl_residual_a": max_kcl, "power_residual_w": power_residual})
 	var current_scale := 1.0
 	for value in edge_currents.values(): current_scale = maxf(current_scale, absf(float(value)))
 	for value in ports.values(): current_scale = maxf(current_scale, absf(float(value)))
-	var power_scale := 1.0 + absf(boundary_power) + absf(joule)
+	# Max-based scaling cannot overflow merely because two finite powers are large.
+	var power_scale := maxf(1.0, maxf(absf(boundary_power), absf(joule)))
 	if not is_finite(current_scale) or not is_finite(power_scale):
 		return U.failure("R3_NUMERIC_ENVELOPE", {"stage": "residual_scale"})
 	if max_kcl > RESIDUAL_REL_TOL * current_scale or power_residual > RESIDUAL_REL_TOL * power_scale:
@@ -143,9 +143,77 @@ static func boundary_for_velocity(boundaries: Dictionary, source_port_id: String
 	return result
 
 static func external_power(nominal_boundaries: Dictionary, port_currents: Dictionary) -> float:
-	var result := 0.0
-	for node_id in port_currents: result += float(nominal_boundaries[node_id]) * float(port_currents[node_id])
-	return result
+	var solved := _safe_dot_sum_for_power(nominal_boundaries, port_currents)
+	return float(solved.value) if bool(solved.get("success", false)) else INF
+
+# Preserve the original arithmetic path whenever it remains finite. Only the
+# overflow case falls back to scale-normalized compensated summation, so
+# nominal historical hashes do not move merely because this guard exists.
+static func _safe_signed_sum(values: Array) -> Dictionary:
+	var naive := 0.0
+	var naive_ok := true
+	for raw_value in values:
+		var value := float(raw_value)
+		if not is_finite(value): return {"success": false}
+		if naive_ok:
+			var next_value := naive + value
+			if is_finite(next_value): naive = next_value
+			else: naive_ok = false
+	if naive_ok: return {"success": true, "value": naive}
+	var scale := 0.0
+	for raw_value in values: scale = maxf(scale, absf(float(raw_value)))
+	if not is_finite(scale): return {"success": false}
+	if scale == 0.0: return {"success": true, "value": 0.0}
+	var total := 0.0
+	var correction := 0.0
+	for raw_value in values:
+		var normalized := float(raw_value) / scale
+		var y := normalized - correction
+		var next_total := total + y
+		correction = (next_total - total) - y
+		total = next_total
+	var result := total * scale
+	if not is_finite(result): return {"success": false}
+	return {"success": true, "value": result}
+
+static func _safe_dot_sum_for_power(left: Dictionary, right: Dictionary) -> Dictionary:
+	var keys: Array[String] = []
+	for raw_key in right:
+		var key := str(raw_key)
+		if not left.has(key): return {"success": false}
+		keys.append(key)
+	keys.sort()
+	var naive := 0.0
+	var naive_ok := true
+	for key in keys:
+		var a := float(left[key])
+		var b := float(right[key])
+		if not is_finite(a) or not is_finite(b): return {"success": false}
+		if naive_ok:
+			var term := a * b
+			var next_value := naive + term
+			if is_finite(term) and is_finite(next_value): naive = next_value
+			else: naive_ok = false
+	if naive_ok: return {"success": true, "value": naive}
+	var left_scale := 0.0
+	var right_scale := 0.0
+	for key in keys:
+		left_scale = maxf(left_scale, absf(float(left[key])))
+		right_scale = maxf(right_scale, absf(float(right[key])))
+	if not is_finite(left_scale) or not is_finite(right_scale): return {"success": false}
+	if left_scale == 0.0 or right_scale == 0.0: return {"success": true, "value": 0.0}
+	var normalized_terms: Array = []
+	for key in keys:
+		normalized_terms.append((float(left[key]) / left_scale) * (float(right[key]) / right_scale))
+	var normalized_sum := _safe_signed_sum(normalized_terms)
+	if not bool(normalized_sum.get("success", false)): return {"success": false}
+	var first_scale := minf(left_scale, right_scale)
+	var second_scale := maxf(left_scale, right_scale)
+	var intermediate := float(normalized_sum.value) * first_scale
+	if not is_finite(intermediate): return {"success": false}
+	var result := intermediate * second_scale
+	if not is_finite(result): return {"success": false}
+	return {"success": true, "value": result}
 
 static func solve_dense(matrix: Array, rhs: Array) -> Dictionary:
 	var n := rhs.size()

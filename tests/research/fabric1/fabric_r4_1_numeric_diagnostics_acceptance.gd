@@ -35,6 +35,31 @@ func _initialize() -> void:
 		_check(absf(float(large_finite.details.edge_currents_a.r) / 1.0e200 - 1.0) <= 1.0e-12, "R4.1 large finite current scale", large_finite.details.edge_currents_a.r)
 		_check(absf(float(large_finite.details.joule_power_w) / 1.0e200 - 1.0) <= 1.0e-12, "R4.1 stable Joule evaluation", large_finite.details.joule_power_w)
 
+	# Fresh-review regressions: all inputs and final physical outputs are finite;
+	# only naive intermediate arithmetic would overflow.
+	var common_offset := Graph.solve_resistive(_two_node(5.0e306), {"a": 1.0e308, "b": 9.0e307})
+	_check(common_offset.success, "R4.1 common-potential power remains representable", common_offset)
+	if common_offset.success:
+		_check(is_finite(float(common_offset.details.boundary_power_w)) and absf(float(common_offset.details.boundary_power_w) / 2.0e307 - 1.0) <= 1.0e-12, "R4.1 common-offset boundary power stable", common_offset.details)
+
+	var finite_power_scale := Graph.solve_resistive(_two_node(1.0e308), {"a": 1.0e308, "b": 0.0})
+	_check(finite_power_scale.success, "R4.1 finite 1e308 power does not overflow residual scale", finite_power_scale)
+	if finite_power_scale.success:
+		_check(is_finite(float(finite_power_scale.details.power_residual_w)) and float(finite_power_scale.details.power_residual_w) <= 1.0e292, "R4.1 extreme finite power residual bounded", finite_power_scale.details)
+
+	var compensated_model := {
+		"nodes": [{"node_id": "hub"}, {"node_id": "p1"}, {"node_id": "p2"}, {"node_id": "n1"}],
+		"elements": [
+			{"element_id": "e1", "node_a": "p1", "node_b": "hub", "resistance_ohm": 5.57e-309, "active": true},
+			{"element_id": "e2", "node_a": "p2", "node_b": "hub", "resistance_ohm": 5.57e-309, "active": true},
+			{"element_id": "e3", "node_a": "n1", "node_b": "hub", "resistance_ohm": 5.57e-309, "active": true},
+		],
+	}
+	var compensated := Graph.solve_resistive(compensated_model, {"hub": 0.0, "p1": 0.5, "p2": 0.5, "n1": -0.5})
+	_check(compensated.success, "R4.1 compensated node balance survives partial overflow", compensated)
+	if compensated.success:
+		_check(is_finite(float(compensated.details.port_currents_a.hub)), "R4.1 compensated node balance finite", compensated.details.port_currents_a)
+
 	var conductance_overflow := Graph.solve_resistive(_two_node(1.0e-320), {"a": 1.0, "b": 0.0})
 	_check(not conductance_overflow.success, "R4.1 conductance overflow fails closed", conductance_overflow)
 	_check(String(conductance_overflow.error_code) in ["R3_NUMERIC_ENVELOPE", "R3_GENERAL_ELECTRICAL_ELEMENT_INVALID"], "R4.1 overflow rejection is explicit", conductance_overflow)
