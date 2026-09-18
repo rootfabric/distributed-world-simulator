@@ -1,0 +1,41 @@
+{
+  "schema": "dws.ecology.evo-arch2-a10-r2-work-order.v1",
+  "work_order_id": "EVO-ARCH2-A10-20260918-R2",
+  "state": "IN_PROGRESS",
+  "risk_class": "HIGH",
+  "branch": "feature/eco-evo-arch2-a10-resource-mapping-r2",
+  "parent_a10_r1": "cf63b8263c98847daf91d841892bd00761640754",
+  "canonical_main_at_dispatch": "471210d781e521bc7897a8fe859636a07d7a3ab3",
+  "goal": "Explicit catalog-bound, mass-conservative MatterMaterialBatch to ECO resource admission with no default material semantics.",
+  "additive_paths": [
+    "config/ecology/evo-arch2-a10-r2-work-order.v1.json",
+    "docs/research/ecology/EVO_ARCH2_A10_R2_MATTER_RESOURCE_MAPPING_RU.md",
+    "scripts/research/ecology/v2/matter_resource_mapping_v1.gd",
+    "validation/ecology/evo_arch2_a10_r2/test_resource_mapping.gd",
+    "validation/ecology/evo_arch2_a10_r2/verify.py",
+    ".github/workflows/eco-evo-arch2-a10-r2-exact.yml"
+  ],
+  "immutable_sources": [
+    "scripts/research/ecology/v2/world_binding_v1.gd",
+    "scripts/research/ecology/v2/environment_field_contract_v1.gd",
+    "scripts/simulation/matter/catalog/matter_material_catalog.gd",
+    "scripts/simulation/matter/contracts/matter_material_batch.gd",
+    "scripts/simulation/matter/contracts/matter_composition.gd"
+  ],
+  "invariants": [
+    "NO_DEFAULT_MATTER_TO_ECO_RESOURCE_MAPPING",
+    "MAPPING_BINDS_EXACT_CATALOG_HASH",
+    "UNMAPPED_MASS_REMAINS_EXPLICIT",
+    "NO_HIDDEN_MASS_ROUNDING",
+    "MAPPED_PLUS_UNMAPPED_EQUALS_BATCH_TOTAL",
+    "NO_WORLD_OR_ECO_FIELD_MUTATION"
+  ],
+  "non_goals": [
+    "terrain extraction",
+    "new Matter material definitions",
+    "automatic water-ice bioavailability",
+    "nutrient or organic synthesis",
+    "A4 field mutation",
+    "A11"
+  ]
+}
