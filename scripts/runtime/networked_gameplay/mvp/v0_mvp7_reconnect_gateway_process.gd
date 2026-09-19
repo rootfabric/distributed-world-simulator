@@ -139,6 +139,42 @@ func handle_client(actor: String, body: Dictionary) -> Dictionary:
 	return super.handle_client(actor, body)
 
 
+func _mvp7_mvp6_read_only_witness7() -> Dictionary:
+	# Preserve the inherited MVP6 evidence contract on the longer MVP7 story.
+	# This performs the same real read-only canonical Construction check against
+	# both authorities; it does not synthesize report fields without RPCs.
+	if _backend_keepalive_cycles6 > 0:
+		return Protocol7.success({"skipped": true, "reason": "MVP6_WITNESS_ALREADY_RECORDED"})
+	if _construction6.is_empty():
+		return Protocol7.failure("MVP7_MVP6_READ_ONLY_WITNESS_CONSTRUCTION_REQUIRED")
+	var expected_checksum := String(_construction6.get("checksum", ""))
+	if expected_checksum.is_empty():
+		return Protocol7.failure("MVP7_MVP6_READ_ONLY_WITNESS_CHECKSUM_REQUIRED")
+	var observed: Dictionary = {}
+	for authority_id in ["authority/a", "authority/b"]:
+		var rpc: Dictionary = _authority6(authority_id, "a", {"kind": "MVP6_CONSTRUCTION_READ"})
+		var native: Dictionary = _native6(rpc)
+		if not bool(native.get("success", false)):
+			_backend_keepalive_failures6 += 1
+			return Protocol7.failure("MVP7_MVP6_READ_ONLY_WITNESS_RPC_FAILED:" + authority_id + ":" + String(native.get("error_code", "")))
+		var details: Dictionary = native.get("details", {})
+		var construction: Dictionary = details.get("construction", {})
+		var checksum := String(details.get("checksum", construction.get("checksum", "")))
+		if checksum != expected_checksum:
+			_backend_keepalive_failures6 += 1
+			return Protocol7.failure("MVP7_MVP6_READ_ONLY_WITNESS_DIVERGED:" + authority_id)
+		observed[authority_id] = checksum
+	_backend_keepalive_cycles6 += 1
+	_backend_keepalive_last_ms6 = Time.get_ticks_msec()
+	_backend_keepalive_last6 = {
+		"expected_checksum": expected_checksum,
+		"observed": observed,
+		"canonical_state_owned": false,
+		"mutation_performed": false,
+	}
+	return Protocol7.success(_backend_keepalive_last6.duplicate(true))
+
+
 func _mvp7_backend_liveness7() -> Dictionary:
 	# MVP7 keeps the already-authenticated authority links alive for the entire
 	# graphical story, including the long client-side evidence/capture interval
@@ -238,6 +274,11 @@ func _process(_delta: float) -> bool:
 		var kept: Dictionary = _mvp7_backend_liveness7()
 		if not bool(kept.get("success", false)):
 			finish_interactive(false, String(kept.get("error_code", "MVP7_BACKEND_LIVENESS_FAILED")))
+			return false
+		if _complete6() and _backend_keepalive_cycles6 == 0:
+			var inherited_witness: Dictionary = _mvp7_mvp6_read_only_witness7()
+			if not bool(inherited_witness.get("success", false)):
+				finish_interactive(false, String(inherited_witness.get("error_code", "MVP7_MVP6_READ_ONLY_WITNESS_FAILED")))
 	return false
 
 
