@@ -62,7 +62,7 @@ static func validate_binding(binding: Dictionary, body_modules: Array, source_sn
 		return "A10_R4_BODY_INVALID"
 	if not bool(Snapshot.validate(source_snapshot).get("success", false)):
 		return "A10_R4_SNAPSHOT_INVALID"
-	var fields := [
+	var fields: Array[String] = [
 		"schema", "scope", "body_hash", "construct_id", "source_snapshot_checksum",
 		"part_to_module", "mapped_module_ids", "unmapped_module_ids", "checksum",
 	]
@@ -156,7 +156,7 @@ static func validate_overlay(overlay: Dictionary, binding: Dictionary, body_modu
 	var binding_error := validate_binding(binding, body_modules, source_snapshot)
 	if not binding_error.is_empty():
 		return binding_error
-	var fields := [
+	var fields: Array[String] = [
 		"schema", "binding_checksum", "body_hash", "construct_id", "source_snapshot_checksum",
 		"revision", "degraded_modules", "destroyed_modules", "disabled_modules",
 		"applied_damage", "checksum",
@@ -295,7 +295,7 @@ static func create_binding_unchecked(body_modules: Array, source_snapshot: Dicti
 	}
 
 static func _binding_record_valid(binding: Dictionary) -> bool:
-	var fields := [
+	var fields: Array[String] = [
 		"schema", "scope", "body_hash", "construct_id", "source_snapshot_checksum",
 		"part_to_module", "mapped_module_ids", "unmapped_module_ids", "checksum",
 	]
@@ -309,7 +309,7 @@ static func _binding_record_valid(binding: Dictionary) -> bool:
 		and String(binding["checksum"]) == MatterUtils.compute_checksum(binding)
 
 static func _event_error(event: Dictionary, binding: Dictionary) -> String:
-	var fields := [
+	var fields: Array[String] = [
 		"schema", "damage_id", "construct_id", "source_snapshot_checksum", "body_hash",
 		"request_checksum", "record_checksum", "applied_generation", "events", "binding_hash",
 	]

@@ -1,7 +1,7 @@
 # EVO ARCH2 A10 — R5 final composition candidate
 
 Дата: 2026-09-18. Work Order `EVO-ARCH2-A10-20260918-R5`, HIGH.
-Parent: A10-R4 `ef5a9ecccdc403631d11c2cebe0b95d8971243bf`, TREE `a2cd902fff7375f611fe5f1889d3111619da41d3`.
+Parent: A10-R4 `1ae0f96d06a00791425cb853f0bb9d2f709e1f0f`, TREE `7cb2c285fde95fd9e5d46c59ca509127a51b1575`.
 
 ## Назначение
 
@@ -37,7 +37,7 @@ R5 не добавляет нового runtime owner или новую биол
 ## Exact lineage
 
 R5 verifier и Work Order обязаны ссылаться на один и тот же exact parent:
-`ef5a9ecccdc403631d11c2cebe0b95d8971243bf / a2cd902fff7375f611fe5f1889d3111619da41d3`.
+`1ae0f96d06a00791425cb853f0bb9d2f709e1f0f / 7cb2c285fde95fd9e5d46c59ca509127a51b1575`.
 Предыдущие R4 heads `9e7deeb1...` и `511a1e0f...` являются историческими и не могут использоваться для current R5 acceptance.
 
 ## Scope boundary
@@ -50,3 +50,7 @@ R5 доказывает A10 integration contracts, но не является A1
 - нет biological repair или возврата destroyed tissue в Matter.
 
 После exact PASS всех R1–R5, fresh review/verifier и main epoch check A10 может стать merge/acceptance candidate. До этого R5 остаётся stacked candidate.
+
+## Windows Repair R2
+
+Canonical Windows double Godot on historical R5 `57d274de...` exposed typed-array runtime errors in R2/R4 and deterministic parser inference failures in R3/R5. The current lineage carries the fixes at their owning layers: R2 field arrays are `Array[String]`, R3/R5 transition state is explicitly typed, and all R4 exact-field arrays are `Array[String]`. The external Matter batch checksum anchor introduced before this repair remains mandatory.

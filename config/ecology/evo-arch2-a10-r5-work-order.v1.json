@@ -4,8 +4,8 @@
   "state": "IN_PROGRESS",
   "risk_class": "HIGH",
   "branch": "feature/eco-evo-arch2-a10-final-composition-r5",
-  "parent_r4": "ef5a9ecccdc403631d11c2cebe0b95d8971243bf",
-  "parent_r4_tree": "a2cd902fff7375f611fe5f1889d3111619da41d3",
+  "parent_r4": "1ae0f96d06a00791425cb853f0bb9d2f709e1f0f",
+  "parent_r4_tree": "7cb2c285fde95fd9e5d46c59ca509127a51b1575",
   "goal": "Whole-A10 composition proof across A8 seam, production Region/Matter, explicit resource mapping, Construction damage and persistent body overlay.",
   "additive_paths": [
     "config/ecology/evo-arch2-a10-r5-work-order.v1.json",
@@ -39,8 +39,19 @@
     "main merge"
   ],
   "parent_refresh": {
-    "previous": "9e7deeb1d890b2de6785a83ff58e6784cd4dcf8d",
-    "current": "ef5a9ecccdc403631d11c2cebe0b95d8971243bf",
-    "reason": "R4 refreshed through anchored R2 batch trust and final R3 lineage; exact verifier already binds this parent/tree"
+    "previous": "ef5a9ecccdc403631d11c2cebe0b95d8971243bf",
+    "current": "1ae0f96d06a00791425cb853f0bb9d2f709e1f0f",
+    "reason": "Windows canonical repair chain: R2/R4 typed-array fixes and R3 parser annotations propagated into R5."
+  },
+  "repair_r2": {
+    "platform": "Windows canonical double Godot 4.7.1 a13da4feb",
+    "findings": [
+      "R2 validate_exact_fields typed-array mismatch",
+      "R3 target_ack parser inference failure",
+      "R4 validate_exact_fields typed-array mismatch",
+      "R5 target_ack parser inference failure"
+    ],
+    "repair": "Typed contract arrays at source layers; explicit R3/R5 transition-loop annotations; preserve external Matter batch anchor.",
+    "prior_windows_subject": "57d274de196e2c4d54cf67f819fc925565db7a1a"
   }
 }
