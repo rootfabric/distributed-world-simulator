@@ -29,6 +29,40 @@ P7.7 уже содержит графический Digging Playground. Визу
 
 Не требуются для первого MVP: LS4 FINAL, FABRIC B0.6, полный WORLDGEN1, RF1, P8 и все WORLD PACKS. Реальная зависимость оформляется отдельно с конкретным потребителем и критериями. Исследовательская ошибка сама по себе не останавливает MVP.
 
+## После MVP: расширение бесшовности
+
+Уточнение R3 от 17 сентября 2026: после принятия `V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE` первым крупным post-MVP направлением предлагается **объёмная бесшовность + ConstructGrid**.
+
+План этапов: [HS1–HS8](POST_MVP_HIERARCHICAL_SEAMLESS_WORLDS_RU.md). Подробные решения: [топология/placement/split-merge](POST_MVP_VOLUMETRIC_TOPOLOGY_DESIGN_RU.md) и [ConstructGrid/whole-grid migration](POST_MVP_CONSTRUCT_GRID_AUTHORITY_RU.md).
+
+Ключевая модель:
+
+```text
+world point -> exactly one spatial partition
+construct   -> stable local ConstructGrid -> exactly one construct writer
+physics group -> at most one admitted solver writer
+server placement -> may change independently
+```
+
+Постройка, база, станция или корабль могут одновременно пересекать несколько spatial partitions. Это нормальное состояние `GRID_STRADDLING` и не создаёт автоматического structural split или второго writer.
+
+Обычная region-affine migration конструкции разрешается только после полного вхождения conservative grid envelope в target-region, hysteresis/readiness и безопасного barrier/fence. Если grid больше region, объект сохраняет текущего owner, использует более крупный placement domain либо явно секционируется Construction-domain операцией; server seam сам по себе его не режет.
+
+| Ступень | Результат |
+| --- | --- |
+| HS1 | Статические вложенные world AABB, child-исключения, точное покрытие без authoritative overlap |
+| HS2 | `ConstructGrid`: stable local grid, coverage set, full containment и MigrationCore |
+| HS3 | Reference frames и versioned grid placement; local coordinates конструкции стабильны |
+| HS4 | Игрок и крупный grid бесшовно пересекают A/B/C без обязательной construct migration |
+| HS5 | Whole-grid migration только после полного containment + WARM/barrier/fence |
+| HS6 | Cross-volume Matter/Construction operations и large-object physics без duplicate impulses |
+| HS7 | Раздельные spatial split/merge и canonical structural split/merge; recovery/fault matrix |
+| HS8 | Два клиента, Space/Planet/POI/Cave, 100-block boundary construct и moving ship fixture |
+
+Construction integration не переоткрывает accepted C17: его `one aggregate -> one writer`, migration fence, replicas и cross-zone split переиспользуются. До отдельной activation новый workstream обозначается `CG0–CG6`, а не автоматически `C25`.
+
+Это **не расширение текущего MVP**. Реализация HS/CG разрешается только после закрытия текущего MVP, отдельного post-MVP activation/epoch, exact accepted base и bounded Work Order. Эта документационная правка не меняет runtime, действующий MVP Work Order, scheduler, lease или acceptance.
+
 ## Экология: один экспериментальный полигон
 
 Цель — участок среды, совместимый по смыслу с детальным уровнем планеты, где можно менять условия, наблюдать наследование и поколения, сравнивать сценарии и видеть причинное разнообразие растений.
