@@ -92,6 +92,21 @@ def main() -> int:
             a, b = world_reports[previous], world_reports[current]
             for field in ("checkpoint_checksum", "item_graph_checksum", "store_hash", "state_hash"):
                 require(a[field] == b["recovered_" + field], "world:" + previous + "->" + current + ":" + field)
+        for mode in ("produce", "recover1", "recover2"):
+            target = out / ("construction-" + mode + ".json")
+            execute("construction-" + mode, [str(engine), "--headless", "--path", str(ROOT), "--script", "res://tests/runtime/test_v0_mvp_7_construction_restart.gd"], 240, {"MVP7_CONSTRUCTION_MODE": mode, "MVP7_CONSTRUCTION_ROOT": str(out / "construction-restart"), "MVP7_CONSTRUCTION_RESULT": str(target)})
+            report = check_report(target, mode, 18)
+            require(report["enet_reconnect_executed"] is False and report["graphical_five_process_executed"] is False, "NO_FALSE_ENET_OR_GRAPHICAL_CLOSURE")
+            if mode != "produce":
+                require(report["construction_recovery_executed"] is True and report["collision_recovery_executed"] is True, mode + ":CONSTRUCTION_COLLISION_RECOVERY_REQUIRED")
+            construction_reports[mode] = report
+        require(len({r["process_id"] for r in construction_reports.values()}) == 3, "THREE_DISTINCT_CONSTRUCTION_PROCESS_IDS_REQUIRED")
+        produced_construction = construction_reports["produce"]["evidence"]
+        for mode in ("recover1", "recover2"):
+            recovered_construction = construction_reports[mode]["evidence"]
+            for field in ("item_graph_checksum", "construction_checksum"):
+                require(produced_construction[field] == recovered_construction[field], "construction:produce->" + mode + ":" + field)
+            require(recovered_construction["collision_part_count"] == 100 and recovered_construction["boundary_hits"] > 0 and recovered_construction["removed_leaf_hits"] == 0, mode + ":COLLISION_CONTINUITY")
         for label, script in (
             ("regression-mvp3", "tests/runtime/test_v0_mvp3_live_owner_handoff.gd"),
             ("regression-mvp5", "tests/runtime/test_v0_mvp_5_exactly_once_material.gd"),
@@ -106,7 +121,7 @@ def main() -> int:
     finally:
         (out / "commands.json").write_text(json.dumps(commands, indent=2) + "\n", encoding="utf-8")
         files = [{"path": p.relative_to(out).as_posix(), "bytes": p.stat().st_size, "sha256": digest(p)} for p in sorted(out.rglob("*")) if p.is_file() and p.name not in {"manifest.json", "summary.json"}]
-        summary = {"schema": "distributed_world_simulator.mvp7_native_ci_summary.v1", "subject_head": head, "subject_tree": tree, "engine_sha256": digest(engine), "passed": passed, "error": error, "process_ids": {m: r["process_id"] for m, r in reports.items()}, "world_process_ids": {m: r["process_id"] for m, r in world_reports.items()}, "assertions": sum(r["assertions"] for r in reports.values()) + sum(r["assertions"] for r in world_reports.values()), "tracked_after": git("status", "--porcelain", "--untracked-files=no"), "mvp7_predicate_verified": False, "independent_verdict": False, "scope": "NATIVE_GAMEPLAY_AND_MW5_COMMITTED_CUT_PREREQUISITES"}
+        summary = {"schema": "distributed_world_simulator.mvp7_native_ci_summary.v1", "subject_head": head, "subject_tree": tree, "engine_sha256": digest(engine), "passed": passed, "error": error, "process_ids": {m: r["process_id"] for m, r in reports.items()}, "world_process_ids": {m: r["process_id"] for m, r in world_reports.items()}, "construction_process_ids": {m: r["process_id"] for m, r in construction_reports.items()}, "assertions": sum(r["assertions"] for r in reports.values()) + sum(r["assertions"] for r in world_reports.values()) + sum(r["assertions"] for r in construction_reports.values()), "tracked_after": git("status", "--porcelain", "--untracked-files=no"), "mvp7_predicate_verified": False, "independent_verdict": False, "scope": "NATIVE_GAMEPLAY_MW5_AND_CONSTRUCTION_PROCESS_RESTART_PREREQUISITES"}
         (out / "summary.json").write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
         (out / "manifest.json").write_text(json.dumps({"summary": summary, "files": files, "commands": commands}, indent=2) + "\n", encoding="utf-8")
         print("MVP7_NATIVE_SUMMARY", json.dumps(summary), flush=True)
