@@ -5,8 +5,8 @@ import argparse, hashlib, json, os, subprocess, time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
-PARENT_R3 = "19466340ad236a54b32797094b1ca86f2f1c6fa2"
-PARENT_TREE = "01d3c006520b9c05578bc00f84f23b1f8a26f807"
+PARENT_R3 = "5df721877758b77ae4b944737eb5c57f705898a4"
+PARENT_TREE = "6699b7ff35b365da87cc9f4cf55ee55e9a058ec3"
 GODOT_VERSION = "4.7.1.stable.double.custom_build.a13da4feb"
 GODOT_SHA256 = "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7"
 
@@ -92,7 +92,7 @@ def main():
         source = (ROOT / "scripts/research/ecology/v2/body_construction_binding_v1.gd").read_text(encoding="utf-8")
         require("organism_life_state_v1.gd" not in source and "resource_lifecycle_runtime_v1.gd" not in source,
                 "R4_MUTATES_ACCEPTED_A5_PATH")
-        require("PARTIAL_PHYSICAL_PROXY" in source, "R4_COVERAGE_SCOPE_MISSING")
+        require("PARTIAL_PHYSICAL_PROXY" in source, "R4_COVERAGE_SCOPE_MISSING")\n        require("A10_R4_EVENT_EXTERNAL_ANCHOR" in source, "R4_EVENT_EXTERNAL_ANCHOR_MISSING")
         result["checks"].append("a5_history_not_rewritten")
 
         require(not git("status", "--porcelain", "--untracked-files=no"), "TRACKED_SOURCE_DIRTY")
