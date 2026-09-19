@@ -12,6 +12,7 @@ var _mvp7_position_before: Dictionary = {}
 var _mvp7_position_after: Dictionary = {}
 var _mvp7_continue_ok := false
 var _mvp7_proved := false
+var _mvp7_finish_ack_disconnect := false
 var _mvp7_last_current: Dictionary = {}
 const MVP7_BACKEND_LIVENESS_INTERVAL_MS := 4000
 var _mvp7_backend_liveness_last_ms := 0
@@ -125,7 +126,9 @@ func handle_client(actor: String, body: Dictionary) -> Dictionary:
 		_mvp7_proved = true
 		_mvp7_waiting_reconnect = false
 		client_finished["a"] = true
-		closing_at_ms = Time.get_ticks_msec() + 250
+		# Do not close on a timer here. The client stops its ENet peer only after
+		# it receives this FINISH ACK, so that disconnect is the delivery witness.
+		closing_at_ms = 0
 		return Protocol7.success({
 			"kind": kind,
 			"actor": actor,
@@ -185,6 +188,10 @@ func _process(_delta: float) -> bool:
 		if event.get("event_type") == "PEER_CONNECTED":
 			Support.mark_ready(client_boundary, peer)
 		elif event.get("event_type") == "PEER_DISCONNECTED":
+			if peer == _mvp7_reconnect_peer and _mvp7_proved:
+				_mvp7_finish_ack_disconnect = true
+				closing_at_ms = Time.get_ticks_msec() + 25
+				continue
 			if peer == _mvp7_original_peer and (_mvp7_waiting_reconnect or _mvp7_reconnects > 0):
 				if String(client_peers.get("a", "")) == peer:
 					client_peers.erase("a")
@@ -224,7 +231,7 @@ func _process(_delta: float) -> bool:
 				return false
 	client_boundary.flush_outbound(128)
 	if closing_at_ms > 0 and Time.get_ticks_msec() >= closing_at_ms:
-		finish_interactive(_complete6() and _mvp7_proved)
+		finish_interactive(_complete6() and _mvp7_proved and _mvp7_finish_ack_disconnect)
 	elif Time.get_ticks_msec() - started_at_ms > int(cfg.get("timeout_ms", 240000)):
 		finish_interactive(false, "MVP7_GRAPHICAL_GATEWAY_TIMEOUT")
 	elif failures.is_empty():
@@ -257,6 +264,7 @@ func base_report(schema: String, passed: bool, graphical: bool) -> Dictionary:
 		"position_changed": _mvp7_position_before != _mvp7_position_after and not _mvp7_position_before.is_empty(),
 		"continue_ok": _mvp7_continue_ok,
 		"proved": _mvp7_proved,
+		"finish_ack_disconnect": _mvp7_finish_ack_disconnect,
 		"current": _mvp7_last_current.duplicate(true),
 		"canonical_state_owned": false,
 		"mvp7_predicate_verified": false,

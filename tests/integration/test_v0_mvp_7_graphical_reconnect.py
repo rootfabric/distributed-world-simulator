@@ -69,7 +69,11 @@ def reconnect_checks(reports: dict, clients: dict, reconnect: dict, head: str, r
             and proof["reconnect_peer"]
             and proof["original_peer"] != proof["reconnect_peer"]
         )
-        checks["gateway_proved_reconnect"] = proof["proved"] is True and proof["continue_ok"] is True
+        checks["gateway_proved_reconnect"] = (
+            proof["proved"] is True
+            and proof["continue_ok"] is True
+            and proof["finish_ack_disconnect"] is True
+        )
         checks["backend_liveness_until_reconnect"] = (
             liveness["cycles"] >= 2
             and liveness["failures"] == 0
@@ -127,6 +131,7 @@ def reconnect_negatives(reports: dict, clients: dict, reconnect: dict, head: str
         "stale_construction": lambda r, c, x: x.update(construction_checksum="0" * 64),
         "stale_matter": lambda r, c, x: x.update(matter_store_hash="0" * 64),
         "no_backend_liveness": lambda r, c, x: r["gateway"]["mvp7_backend_liveness"].update(cycles=0),
+        "no_finish_ack_disconnect": lambda r, c, x: r["gateway"]["mvp7_reconnect"].update(finish_ack_disconnect=False),
     }
     rejected: list[str] = []
     for name, mutate in mutations.items():
@@ -327,7 +332,7 @@ def main() -> int:
         not error
         and all(checks.values())
         and len(negatives) == 13
-        and len(reconnect_rejected) == 6
+        and len(reconnect_rejected) == 7
         and len(hud_cases) == 2
         and not BASE.git("status", "--porcelain", "--untracked-files=no")
     )
