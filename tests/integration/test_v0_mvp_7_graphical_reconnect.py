@@ -52,6 +52,7 @@ def reconnect_checks(reports: dict, clients: dict, reconnect: dict, head: str, r
         current_material = current["material"]
         current_construction = current["construction"]
         owner = reports["authority/a"]
+        liveness = gateway["mvp7_backend_liveness"]
         pids = {
             reports["authority/a"]["process_id"],
             reports["authority/b"]["process_id"],
@@ -69,6 +70,14 @@ def reconnect_checks(reports: dict, clients: dict, reconnect: dict, head: str, r
             and proof["original_peer"] != proof["reconnect_peer"]
         )
         checks["gateway_proved_reconnect"] = proof["proved"] is True and proof["continue_ok"] is True
+        checks["backend_liveness_until_reconnect"] = (
+            liveness["cycles"] >= 2
+            and liveness["failures"] == 0
+            and set(liveness["last"]["observed"]) == {"authority/a", "authority/b"}
+            and liveness["mutation_performed"] is False
+            and liveness["backend_reconnect_performed"] is False
+            and liveness["timeout_policy_changed"] is False
+        )
         checks["reconnect_client_passed"] = reconnect["passed"] is True and reconnect["canonical_state_owned"] is False
         checks["stable_world_digest"] = (
             len(proof["hello_world_digest"]) == 64
@@ -117,6 +126,7 @@ def reconnect_negatives(reports: dict, clients: dict, reconnect: dict, head: str
         "no_post_reconnect_motion": lambda r, c, x: x.update(position_changed=False),
         "stale_construction": lambda r, c, x: x.update(construction_checksum="0" * 64),
         "stale_matter": lambda r, c, x: x.update(matter_store_hash="0" * 64),
+        "no_backend_liveness": lambda r, c, x: r["gateway"]["mvp7_backend_liveness"].update(cycles=0),
     }
     rejected: list[str] = []
     for name, mutate in mutations.items():
@@ -317,7 +327,7 @@ def main() -> int:
         not error
         and all(checks.values())
         and len(negatives) == 13
-        and len(reconnect_rejected) == 5
+        and len(reconnect_rejected) == 6
         and len(hud_cases) == 2
         and not BASE.git("status", "--porcelain", "--untracked-files=no")
     )

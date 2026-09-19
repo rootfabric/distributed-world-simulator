@@ -13,6 +13,11 @@ var _mvp7_position_after: Dictionary = {}
 var _mvp7_continue_ok := false
 var _mvp7_proved := false
 var _mvp7_last_current: Dictionary = {}
+const MVP7_BACKEND_LIVENESS_INTERVAL_MS := 4000
+var _mvp7_backend_liveness_last_ms := 0
+var _mvp7_backend_liveness_cycles := 0
+var _mvp7_backend_liveness_failures := 0
+var _mvp7_backend_liveness_last: Dictionary = {}
 
 
 func _current7(actor: String) -> Dictionary:
@@ -131,6 +136,42 @@ func handle_client(actor: String, body: Dictionary) -> Dictionary:
 	return super.handle_client(actor, body)
 
 
+func _mvp7_backend_liveness7() -> Dictionary:
+	# MVP7 keeps the already-authenticated authority links alive for the entire
+	# graphical story, including the long client-side evidence/capture interval
+	# before reconnect. This is traffic, not a timeout-policy relaxation: real
+	# PEER_DISCONNECTED / RPC failures remain terminal and no retry/reconnect is
+	# introduced on the backend links.
+	if links.size() != 2 or closing_at_ms > 0:
+		return Protocol7.success({"skipped": true})
+	var now := Time.get_ticks_msec()
+	if _mvp7_backend_liveness_last_ms > 0 and now - _mvp7_backend_liveness_last_ms < MVP7_BACKEND_LIVENESS_INTERVAL_MS:
+		return Protocol7.success({"skipped": true})
+	var observed: Dictionary = {}
+	for authority_id in ["authority/a", "authority/b"]:
+		var rpc: Dictionary = call_authority(authority_id, {"kind": "SYNC"})
+		if not bool(rpc.get("success", false)):
+			_mvp7_backend_liveness_failures += 1
+			return Protocol7.failure("MVP7_BACKEND_LIVENESS_RPC_FAILED:" + authority_id + ":" + String(rpc.get("error_code", "")))
+		var native: Dictionary = rpc.get("details", {}).get("result", {})
+		if not bool(native.get("success", false)):
+			_mvp7_backend_liveness_failures += 1
+			return Protocol7.failure("MVP7_BACKEND_LIVENESS_NATIVE_FAILED:" + authority_id + ":" + String(native.get("error_code", "")))
+		observed[authority_id] = {
+			"sequence": int(links[authority_id].sequence),
+			"ready": Dictionary(native.get("details", {}).get("ready", {})).duplicate(true),
+		}
+	_mvp7_backend_liveness_cycles += 1
+	_mvp7_backend_liveness_last_ms = now
+	_mvp7_backend_liveness_last = {
+		"observed": observed,
+		"mutation_performed": false,
+		"backend_reconnect_performed": false,
+		"timeout_policy_changed": false,
+	}
+	return Protocol7.success(_mvp7_backend_liveness_last.duplicate(true))
+
+
 func _process(_delta: float) -> bool:
 	if not interactive or client_boundary == null:
 		return false
@@ -187,14 +228,23 @@ func _process(_delta: float) -> bool:
 	elif Time.get_ticks_msec() - started_at_ms > int(cfg.get("timeout_ms", 240000)):
 		finish_interactive(false, "MVP7_GRAPHICAL_GATEWAY_TIMEOUT")
 	elif failures.is_empty():
-		var kept: Dictionary = _service_backend_keepalive6()
+		var kept: Dictionary = _mvp7_backend_liveness7()
 		if not bool(kept.get("success", false)):
-			finish_interactive(false, String(kept.get("error_code", "MVP7_BACKEND_KEEPALIVE_FAILED")))
+			finish_interactive(false, String(kept.get("error_code", "MVP7_BACKEND_LIVENESS_FAILED")))
 	return false
 
 
 func base_report(schema: String, passed: bool, graphical: bool) -> Dictionary:
 	var value: Dictionary = super.base_report(schema, passed, graphical)
+	value["mvp7_backend_liveness"] = {
+		"interval_ms": MVP7_BACKEND_LIVENESS_INTERVAL_MS,
+		"cycles": _mvp7_backend_liveness_cycles,
+		"failures": _mvp7_backend_liveness_failures,
+		"last": _mvp7_backend_liveness_last.duplicate(true),
+		"mutation_performed": false,
+		"backend_reconnect_performed": false,
+		"timeout_policy_changed": false,
+	}
 	value["mvp7_reconnect"] = {
 		"waiting": _mvp7_waiting_reconnect,
 		"reconnect_count": _mvp7_reconnects,
