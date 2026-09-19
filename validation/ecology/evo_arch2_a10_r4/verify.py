@@ -5,8 +5,8 @@ import argparse, hashlib, json, os, subprocess, time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
-PARENT_R3 = "eaab893f1f727eb0cfc427860e27b0ba0463bcff"
-PARENT_TREE = "255c25cb469e0b30b05f6bb726870ac5b4494ffe"
+PARENT_R3 = "19466340ad236a54b32797094b1ca86f2f1c6fa2"
+PARENT_TREE = "01d3c006520b9c05578bc00f84f23b1f8a26f807"
 GODOT_VERSION = "4.7.1.stable.double.custom_build.a13da4feb"
 GODOT_SHA256 = "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7"
 

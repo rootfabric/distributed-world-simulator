@@ -21,7 +21,7 @@ R3 использует:
 - target Region обязан описывать тот же logical region/space/selector;
 - target owner отличается;
 - target epoch строго больше source epoch;
-- target lifecycle для подготовки — WARM или ACTIVE.
+- target lifecycle для подготовки — WARM или ACTIVE; `WARM` не даёт права исполнения и допускается только как preparation state.
 
 Bridge формирует только production HandoffTicket. Он не переносит biology сам и не имеет собственной state machine.
 
@@ -32,7 +32,7 @@ Bridge формирует только production HandoffTicket. Он не пе�
 должно быть:
 - A8 cursor owner/epoch = target Region owner/epoch;
 - old source descriptor больше не допускает cursor;
-- ACTIVE target descriptor допускает cursor;
+- ACTIVE target descriptor допускает cursor; WARM target descriptor до commit обязан быть отвергнут R1 admission;
 - `ecology_payload` byte-identical до/после handoff;
 - ticket identity/revision/snapshot hash проходит production machine, не локальную копию протокола.
 

@@ -4,8 +4,8 @@
   "state": "IN_PROGRESS",
   "risk_class": "HIGH",
   "branch": "feature/eco-evo-arch2-a10-final-composition-r5",
-  "parent_r4": "e23681e178d505c382d9af3cc89643a78a7a6c71",
-  "parent_r4_tree": "a3da194c1cfb1110f683c9ee646f214757958844",
+  "parent_r4": "0169ad98b6a8f7179a60a1c50c5226050709f7c7",
+  "parent_r4_tree": "f4aae9dae6ba255ee1021b42fc42611377ace8ed",
   "goal": "Whole-A10 composition proof across A8 seam, production Region/Matter, explicit resource mapping, Construction damage and persistent body overlay.",
   "additive_paths": [
     "config/ecology/evo-arch2-a10-r5-work-order.v1.json",
@@ -30,7 +30,8 @@
     "PROJECT_CONTROL_NON_RED",
     "FRESH_REVIEWER_PASS",
     "FRESH_VERIFIER_PASS",
-    "MAIN_EPOCH_RECHECK"
+    "MAIN_EPOCH_RECHECK",
+    "ACTIVE_ONLY_REGION_EXECUTION_REVIEW_REPAIR_PASS"
   ],
   "nonclaims": [
     "A11",
@@ -39,9 +40,9 @@
     "main merge"
   ],
   "parent_refresh": {
-    "previous": "1ae0f96d06a00791425cb853f0bb9d2f709e1f0f",
-    "current": "e23681e178d505c382d9af3cc89643a78a7a6c71",
-    "reason": "R4 negative-control repair: replace semantic no-op forged event with re-sealed mismatched part/module mapping."
+    "previous": "e23681e178d505c382d9af3cc89643a78a7a6c71",
+    "current": "0169ad98b6a8f7179a60a1c50c5226050709f7c7",
+    "reason": "Fresh whole-stack review repaired authority admission: WARM is preparation-only; ACTIVE required for ECO execution."
   },
   "repair_r2": {
     "platform": "Windows canonical double Godot 4.7.1 a13da4feb",
@@ -60,5 +61,10 @@
     "finding": "R4 forged-event tamper was byte-identical/no-op and falsely expected rejection.",
     "repair": "R4 now changes part_id to part/support, re-seals binding_hash, and requires exact A10_R4_EVENT_MAPPING.",
     "product_semantics_changed": false
+  },
+  "review_repair_r1": {
+    "finding": "Whole-stack review found R1 admitted WARM AuthorityRegionDescriptor as executable.",
+    "repair": "ACTIVE-only cursor/site admission propagated through R2-R5; R3 retains WARM only for handoff preparation.",
+    "expected_effect": "Prevent concurrent source ACTIVE and target WARM ecology execution before COMMITTED."
   }
 }
