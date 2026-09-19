@@ -100,7 +100,32 @@
     "backend_liveness_read_only": true,
     "backend_disconnects_during_attempt_1": 0,
     "inherited_mvp6_negative_controls_rejected": "13/13",
-    "mvp7_negative_controls_rejected": "7/7"
+    "mvp7_negative_controls_rejected": "7/7",
+    "attempt_1_process_ids": {
+      "authority_a": 5076,
+      "authority_b": 5077,
+      "gateway": 5096,
+      "client_a": 5107,
+      "client_b": 5108,
+      "reconnect_a": 5214
+    },
+    "attempt_2_process_ids": {
+      "authority_a": 5252,
+      "authority_b": 5253,
+      "gateway": 5272,
+      "client_a": 5283,
+      "client_b": 5284,
+      "reconnect_a": 5391
+    },
+    "attempt_2_backend_liveness_cycles": 16,
+    "attempt_2_backend_disconnects": {
+      "authority_a": 0,
+      "authority_b": 0
+    },
+    "attempt_2_reconnect_count": 1,
+    "attempt_2_distinct_original_and_reconnect_peer": true,
+    "attempt_2_finish_ack_disconnect": true,
+    "attempt_2_world_digest_stable": true
   },
   "predicate_coverage": {
     "MVP_RECONNECT_AND_RESTART": "SERVER_PROCESS_RESTART plus FRESH_ENET_RECONNECT on the same exact HEAD/TREE",
