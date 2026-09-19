@@ -221,6 +221,14 @@ jobs:
           test "$(sha256sum "$engine" | cut -d' ' -f1)" = bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7
           chmod u+x "$engine"
           python3 docs/control/mvp-act0-r1/validate_mvp7_native.py --engine "$engine" --output "$PWD/artifacts/mvp7-native"
+      - name: Real ENet reconnect and current-state graphical resync
+        shell: bash
+        run: |
+          set -euo pipefail
+          engine="$RUNNER_TEMP/mvp7-engine/godot"
+          sudo -n env DEBIAN_FRONTEND=noninteractive apt-get update
+          sudo -n env DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends xvfb xauth libgl1-mesa-dri
+          xvfb-run -a -s '-screen 0 1600x900x24' python3 tests/integration/test_v0_mvp_7_graphical_reconnect.py --engine "$engine" --output "$PWD/artifacts/mvp7-graphical-reconnect"
       - name: Bounded raw diagnostics
         if: always()
         shell: bash
@@ -247,6 +255,7 @@ jobs:
           name: mvp7-native-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
             artifacts/mvp7-native/
+            artifacts/mvp7-graphical-reconnect/
             artifacts/mvp7-control/
           if-no-files-found: error
           retention-days: 90
