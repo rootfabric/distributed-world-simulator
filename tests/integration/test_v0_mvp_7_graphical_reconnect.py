@@ -89,8 +89,7 @@ def reconnect_checks(reports: dict, clients: dict, reconnect: dict, head: str, r
             and reconnect["matter_state_hash"] == gateway["mvp4"]["canonical_source"]["state_hash"]
         )
         checks["current_item_material_state"] = (
-            current_snapshot["mvp5"]["both_material_observed"] is True
-            and len(current_material["material_digest"]) == 64
+            len(current_material["material_digest"]) == 64
             and len(current_material["item_graph_checksum"]) == 64
             and reconnect["material_digest"] == current_material["material_digest"]
             and current_material["material_digest"] == owner["mvp4"]["material_projection"]["details"]["material_digest"]

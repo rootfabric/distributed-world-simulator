@@ -90,7 +90,11 @@ func validate_current7(current: Dictionary, digest: String) -> bool:
 	if digest.length() != 64 or int(snapshot.get("mvp4", {}).get("source_stream_sequence", 0)) < 1:
 		failures.append("MVP7_CURRENT_TERRAIN_REQUIRED")
 		return false
-	if snapshot.get("mvp4", {}).get("both_observed") != true or snapshot.get("mvp5", {}).get("both_material_observed") != true or snapshot.get("mvp6", {}).get("complete") != true:
+	# MVP5 observers describe the pre-Construction checkpoint. Construction
+	# legitimately consumes ore afterwards, so current recovery must validate
+	# the fresh owner projection below rather than require that historical
+	# material projection to remain byte-identical.
+	if snapshot.get("mvp4", {}).get("both_observed") != true or snapshot.get("mvp6", {}).get("complete") != true:
 		failures.append("MVP7_CURRENT_WORLD_NOT_COMPLETE")
 		return false
 	if Array(construction.get("parts", [])).size() != 100 or String(construction.get("checksum", "")).length() != 64:
