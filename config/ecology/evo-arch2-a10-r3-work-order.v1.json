@@ -4,7 +4,7 @@
   "state": "IN_PROGRESS",
   "risk_class": "HIGH",
   "branch": "feature/eco-evo-arch2-a10-seam-binding-r3",
-  "parent_r2": "4af2c3095646dcfefd8c2360686034b8e021e49e",
+  "parent_r2": "03913b5c2992739f435819880896cbaee0ecbc1d",
   "goal": "Real A8 snapshot seam handoff composed with production AuthorityRegionDescriptor/HandoffTicket and A10 Region admission.",
   "additive_paths": [
     "config/ecology/evo-arch2-a10-r3-work-order.v1.json",
@@ -29,12 +29,13 @@
     "A8_REAL_HANDOFF_MACHINE_DRIVES_TRANSITIONS",
     "HANDOFF_DOES_NOT_MUTATE_BIOLOGY",
     "OLD_OWNER_REJECTED_AFTER_COMMIT",
-    "TARGET_OWNER_ACCEPTED_AFTER_COMMIT"
+    "TARGET_OWNER_ACCEPTED_AFTER_COMMIT",
+    "WARM_TARGET_IS_PREPARATION_ONLY_AND_CANNOT_EXECUTE_ECOLOGY"
   ],
   "parent_refresh": {
-    "previous": "9aec7c80cd5255d5fc82e856502e6221ff2bd578",
-    "current": "4af2c3095646dcfefd8c2360686034b8e021e49e",
-    "reason": "Windows canonical Godot repair: R2 exact-field arrays are explicitly Array[String]; R3 parser inference is repaired without changing seam semantics."
+    "previous": "4af2c3095646dcfefd8c2360686034b8e021e49e",
+    "current": "03913b5c2992739f435819880896cbaee0ecbc1d",
+    "reason": "Fresh review authority repair propagated from R1/R2; WARM target remains preparation-only."
   },
   "repair_r1": {
     "platform": "Windows canonical double Godot 4.7.1 a13da4feb",

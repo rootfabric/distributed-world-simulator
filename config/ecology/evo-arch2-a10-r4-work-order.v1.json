@@ -4,7 +4,7 @@
   "state": "IN_PROGRESS",
   "risk_class": "HIGH",
   "branch": "feature/eco-evo-arch2-a10-body-damage-overlay-r4",
-  "parent_r3": "eaab893f1f727eb0cfc427860e27b0ba0463bcff",
+  "parent_r3": "19466340ad236a54b32797094b1ca86f2f1c6fa2",
   "goal": "Persist C9-derived damage against exact BodyGraph/Construction binding without mutating accepted A5 historical state.",
   "additive_paths": [
     "config/ecology/evo-arch2-a10-r4-work-order.v1.json",
@@ -32,9 +32,9 @@
     "PERSISTED_OVERLAY_REQUIRES_EXTERNAL_CHECKSUM_ANCHOR"
   ],
   "parent_refresh": {
-    "previous": "1872fe20437a525c5982266d0fc09bfd4af49fcc",
-    "current": "eaab893f1f727eb0cfc427860e27b0ba0463bcff",
-    "reason": "Windows canonical repair chain: inherit R2 typed-field fix and R3 parser annotations."
+    "previous": "eaab893f1f727eb0cfc427860e27b0ba0463bcff",
+    "current": "19466340ad236a54b32797094b1ca86f2f1c6fa2",
+    "reason": "Fresh review authority repair propagated through R3; WARM is preparation-only and ACTIVE required for ECO execution."
   },
   "repair_r1": {
     "platform": "Windows canonical double Godot 4.7.1 a13da4feb",

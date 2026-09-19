@@ -4,7 +4,7 @@
   "state": "IN_PROGRESS",
   "risk_class": "HIGH",
   "branch": "feature/eco-evo-arch2-a10-resource-mapping-r2",
-  "parent_a10_r1": "06f7ee1774ce2b847ace9422a42f3928c3dff3e9",
+  "parent_a10_r1": "a0df8f550e32c6fb4f38553509878e5abcdd63c3",
   "canonical_main_at_dispatch": "471210d781e521bc7897a8fe859636a07d7a3ab3",
   "goal": "Explicit catalog-bound, mass-conservative MatterMaterialBatch to ECO resource admission with no default material semantics.",
   "additive_paths": [
@@ -43,8 +43,8 @@
     "canonical Matter batch consume/transfer until production owner exposes an exactly-once receipt"
   ],
   "parent_refresh": {
-    "previous": "d3c7d856071f2ae9b6417a9b0043d4b3e294fa86",
-    "current": "06f7ee1774ce2b847ace9422a42f3928c3dff3e9",
-    "reason": "R1 stopped inferring Matter cell membership for CHUNK_SET/PARTITION_PREFIX; only proven GLOBAL_SPACE binding remains"
+    "previous": "06f7ee1774ce2b847ace9422a42f3928c3dff3e9",
+    "current": "a0df8f550e32c6fb4f38553509878e5abcdd63c3",
+    "reason": "Fresh whole-stack review repaired R1 authority admission: WARM is preparation-only; ACTIVE required for ECO execution."
   }
 }

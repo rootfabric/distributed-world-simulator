@@ -119,6 +119,11 @@ func _run() -> void:
 	var source_region := _region("node/a", 1, "ACTIVE", 10)
 	var target_warm := _region("node/b", 2, "WARM", 11)
 	var target_active := _region("node/b", 2, "ACTIVE", 12)
+	var premature_target_cursor := source_cursor.duplicate(true)
+	premature_target_cursor["owner_id"] = "node/b"
+	premature_target_cursor["owner_epoch"] = 2
+	var warm_admission := World.admit_cursor(premature_target_cursor, target_warm)
+	_check(not bool(warm_admission.get("success", false)) and warm_admission.get("error") == "A10_REGION_NOT_EXECUTABLE", "WARM target is preparation-only before handoff commit")
 
 	var query := _matter_query()
 	_check(bool(Query.validate(query).get("success", false)), "production Matter query valid")

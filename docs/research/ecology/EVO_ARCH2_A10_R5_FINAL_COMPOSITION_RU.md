@@ -1,7 +1,7 @@
 # EVO ARCH2 A10 — R5 final composition candidate
 
 Дата: 2026-09-18. Work Order `EVO-ARCH2-A10-20260918-R5`, HIGH.
-Parent: A10-R4 `e23681e178d505c382d9af3cc89643a78a7a6c71`, TREE `a3da194c1cfb1110f683c9ee646f214757958844`.
+Parent: A10-R4 `0169ad98b6a8f7179a60a1c50c5226050709f7c7`, TREE `f4aae9dae6ba255ee1021b42fc42611377ace8ed`.
 
 ## Назначение
 
@@ -37,7 +37,7 @@ R5 не добавляет нового runtime owner или новую биол
 ## Exact lineage
 
 R5 verifier и Work Order обязаны ссылаться на один и тот же exact parent:
-`e23681e178d505c382d9af3cc89643a78a7a6c71 / a3da194c1cfb1110f683c9ee646f214757958844`.
+`0169ad98b6a8f7179a60a1c50c5226050709f7c7 / f4aae9dae6ba255ee1021b42fc42611377ace8ed`.
 Предыдущие R4 heads `9e7deeb1...` и `511a1e0f...` являются историческими и не могут использоваться для current R5 acceptance.
 
 ## Scope boundary
@@ -58,3 +58,7 @@ Canonical Windows double Godot on historical R5 `57d274de...` exposed typed-arra
 ## Windows Repair R3 — R4 negative-control
 
 Historical Windows exact on `2d322129...` produced R1/R2/R3/R5 PASS and one R4 failure. The R4 failure was a latent test defect: its forged event assigned `m000003` to a row already mapped to `m000003`, so the tamper was a semantic no-op. Current R4 changes the row `part_id` to another real part, re-seals `binding_hash`, and requires exact `A10_R4_EVENT_MAPPING`. Runtime damage semantics are unchanged.
+
+## Fresh whole-stack authority review repair
+
+Fresh review текущего frozen closure выявил, что R1 допускал `WARM` Region как исполняющий. Это слабее production handoff semantics, где подготовленный target остаётся закрыт до `ACTIVE`. Текущий стек требует `ACTIVE` для `admit_cursor` и Matter-backed site execution; `WARM` остаётся допустимым только в R3 как preparation target до COMMITTED. R5 имеет отдельный negative control для premature WARM target admission.

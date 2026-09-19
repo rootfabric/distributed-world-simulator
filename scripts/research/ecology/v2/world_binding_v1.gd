@@ -12,7 +12,7 @@ const DamageRecord = preload("res://scripts/construction/damage/construction_dam
 const SITE_SCHEMA := "dws.ecology.a10-world-site-binding.v1"
 const DAMAGE_SCHEMA := "dws.ecology.a10-construction-damage-event.v1"
 const CURSOR_FIELDS := ["entity_id", "region_id", "owner_id", "owner_epoch", "revision", "clock", "ecology_step"]
-const ACTIVE_REGION_STATES := ["WARM", "ACTIVE"]
+const EXECUTABLE_REGION_STATES := ["ACTIVE"]
 
 static func bind_matter_site(query: Dictionary, region: Dictionary, cursor: Dictionary) -> Dictionary:
 	var qcheck: Dictionary = MatterQuery.validate(query)
@@ -164,7 +164,7 @@ static func _cursor_error(cursor: Dictionary, region: Dictionary) -> String:
 	for field in ["owner_epoch", "revision", "clock", "ecology_step"]:
 		if not C.integer(cursor.get(field), 0 if field != "owner_epoch" else 1, C.MAX_INT):
 			return "A10_CURSOR_VERSION"
-	if not ACTIVE_REGION_STATES.has(String(region["lifecycle_state"])):
+	if not EXECUTABLE_REGION_STATES.has(String(region["lifecycle_state"])):
 		return "A10_REGION_NOT_EXECUTABLE"
 	if String(cursor["region_id"]) != String(region["region_id"]):
 		return "A10_CURSOR_REGION_MISMATCH"
