@@ -4,7 +4,7 @@
   "state": "IN_PROGRESS",
   "risk_class": "HIGH",
   "branch": "feature/eco-evo-arch2-a10-seam-binding-r3",
-  "parent_r2": "9aec7c80cd5255d5fc82e856502e6221ff2bd578",
+  "parent_r2": "4af2c3095646dcfefd8c2360686034b8e021e49e",
   "goal": "Real A8 snapshot seam handoff composed with production AuthorityRegionDescriptor/HandoffTicket and A10 Region admission.",
   "additive_paths": [
     "config/ecology/evo-arch2-a10-r3-work-order.v1.json",
@@ -32,8 +32,14 @@
     "TARGET_OWNER_ACCEPTED_AFTER_COMMIT"
   ],
   "parent_refresh": {
-    "previous": "26732787e4e7c2b8f3bd7c139c2fb548705f3169",
-    "current": "9aec7c80cd5255d5fc82e856502e6221ff2bd578",
-    "reason": "R2 requires external Matter batch checksum anchor and records lack of canonical consume receipt"
+    "previous": "9aec7c80cd5255d5fc82e856502e6221ff2bd578",
+    "current": "4af2c3095646dcfefd8c2360686034b8e021e49e",
+    "reason": "Windows canonical Godot repair: R2 exact-field arrays are explicitly Array[String]; R3 parser inference is repaired without changing seam semantics."
+  },
+  "repair_r1": {
+    "platform": "Windows canonical double Godot 4.7.1 a13da4feb",
+    "finding": "target_ack Variant inference parse failure",
+    "repair": "Explicit state/bool/string/int annotations in R3 transition loop",
+    "upstream_r2_repair": "4af2c3095646dcfefd8c2360686034b8e021e49e"
   }
 }
