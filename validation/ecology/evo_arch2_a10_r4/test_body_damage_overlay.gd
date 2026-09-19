@@ -96,7 +96,8 @@ func _run() -> void:
 		"part/support": "DESTROYED",
 	})
 	_check(not event.is_empty(), "R1 produces exact C9-derived damage event")
-	var applied := R4.apply_damage(binding, overlay, body_modules, source_snapshot, event)
+	var trusted_event_binding_hash := String(event["binding_hash"])
+	var applied := R4.apply_damage(binding, overlay, body_modules, source_snapshot, event, trusted_event_binding_hash)
 	_check(bool(applied.get("success", false)) and not bool(applied.get("replay", false)), "R4 applies damage once")
 	if not bool(applied.get("success", false)):
 		_finish()
@@ -120,7 +121,7 @@ func _run() -> void:
 	_check(String(function_after["functional_hash"]).length() == 64, "effective function sealed")
 	_check(C.digest(body_modules) == body_hash_before, "historical BodyGraph bytes are not mutated")
 
-	var replay := R4.apply_damage(binding, damaged, body_modules, source_snapshot, event)
+	var replay := R4.apply_damage(binding, damaged, body_modules, source_snapshot, event, trusted_event_binding_hash)
 	_check(bool(replay.get("success", false)) and bool(replay.get("replay", false)), "same damage event is idempotent")
 	_check(replay["overlay"] == damaged, "idempotent replay changes no overlay bytes")
 
@@ -128,11 +129,11 @@ func _run() -> void:
 		"part/root": "DESTROYED",
 	}, "damage/a10-r4")
 	_check(not conflict_event.is_empty(), "conflicting same-id event fixture valid")
-	var conflict := R4.apply_damage(binding, damaged, body_modules, source_snapshot, conflict_event)
+	var conflict := R4.apply_damage(binding, damaged, body_modules, source_snapshot, conflict_event, String(conflict_event["binding_hash"]))
 	_check(not bool(conflict.get("success", false)) and conflict.get("error") == "A10_R4_DAMAGE_ID_CONFLICT", "same damage id with different bytes fails closed")
 
 	var wrong_source := Snapshot.create("construct/tree", "item/tree-root", 2, "OPERATIONAL", _parts(), [], {})
-	var wrong_binding_use := R4.apply_damage(binding, overlay, body_modules, wrong_source, event)
+	var wrong_binding_use := R4.apply_damage(binding, overlay, body_modules, wrong_source, event, trusted_event_binding_hash)
 	_check(not bool(wrong_binding_use.get("success", false)) and wrong_binding_use.get("error") == "A10_R4_SNAPSHOT_BINDING", "binding cannot be replayed over another construct revision")
 
 	var forged_event := event.duplicate(true)
@@ -145,10 +146,27 @@ func _run() -> void:
 	var forged_payload := forged_event.duplicate(true)
 	forged_payload["binding_hash"] = ""
 	forged_event["binding_hash"] = MatterUtils.payload_hash(forged_payload)
-	var forged := R4.apply_damage(binding, overlay, body_modules, source_snapshot, forged_event)
+	var forged := R4.apply_damage(binding, overlay, body_modules, source_snapshot, forged_event, String(forged_event["binding_hash"]))
 	_check(
 		not bool(forged.get("success", false)) and forged.get("error") == "A10_R4_EVENT_MAPPING",
 		"tampered part-module mapping rejected after valid re-seal"
+	)
+
+	var rehashed_semantic_event := event.duplicate(true)
+	rehashed_semantic_event["events"] = Array(event["events"]).duplicate(true)
+	rehashed_semantic_event["events"][0] = Dictionary(rehashed_semantic_event["events"][0]).duplicate(true)
+	rehashed_semantic_event["events"][0]["condition"] = "DESTROYED"
+	rehashed_semantic_event["events"][0]["severity_milli"] = 1000
+	var rehashed_semantic_payload := rehashed_semantic_event.duplicate(true)
+	rehashed_semantic_payload["binding_hash"] = ""
+	rehashed_semantic_event["binding_hash"] = MatterUtils.payload_hash(rehashed_semantic_payload)
+	_check(String(rehashed_semantic_event["binding_hash"]) != trusted_event_binding_hash, "semantic event tamper rotates self-seal")
+	var rehashed_semantic_result := R4.apply_damage(
+		binding, overlay, body_modules, source_snapshot, rehashed_semantic_event, trusted_event_binding_hash
+	)
+	_check(
+		not bool(rehashed_semantic_result.get("success", false)) and rehashed_semantic_result.get("error") == "A10_R4_EVENT_EXTERNAL_ANCHOR",
+		"re-sealed semantic damage event cannot replace caller-owned trusted event anchor"
 	)
 
 	var tampered_overlay := damaged.duplicate(true)

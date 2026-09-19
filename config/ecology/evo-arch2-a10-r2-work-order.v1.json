@@ -4,7 +4,7 @@
   "state": "IN_PROGRESS",
   "risk_class": "HIGH",
   "branch": "feature/eco-evo-arch2-a10-resource-mapping-r2",
-  "parent_a10_r1": "a0df8f550e32c6fb4f38553509878e5abcdd63c3",
+  "parent_a10_r1": "9ff2d13e31318bd0f323d29a3efd03f0850d8c7b",
   "canonical_main_at_dispatch": "471210d781e521bc7897a8fe859636a07d7a3ab3",
   "goal": "Explicit catalog-bound, mass-conservative MatterMaterialBatch to ECO resource admission with no default material semantics.",
   "additive_paths": [
@@ -31,7 +31,8 @@
     "NO_WORLD_OR_ECO_FIELD_MUTATION",
     "MATTER_BATCH_REQUIRES_EXTERNAL_TRUSTED_CHECKSUM",
     "SELF_CONTAINED_BATCH_CHECKSUM_IS_NOT_AUTHORITY_PROOF",
-    "NO_CLAIM_OF_CANONICAL_MATTER_CONSUMPTION_WITHOUT_CONSUME_RECEIPT"
+    "NO_CLAIM_OF_CANONICAL_MATTER_CONSUMPTION_WITHOUT_CONSUME_RECEIPT",
+    "REHASHED_MATTER_BATCH_CANNOT_REPLACE_CALLER_OWNED_TRUST_ANCHOR"
   ],
   "non_goals": [
     "terrain extraction",
@@ -43,8 +44,12 @@
     "canonical Matter batch consume/transfer until production owner exposes an exactly-once receipt"
   ],
   "parent_refresh": {
-    "previous": "06f7ee1774ce2b847ace9422a42f3928c3dff3e9",
-    "current": "a0df8f550e32c6fb4f38553509878e5abcdd63c3",
-    "reason": "Fresh whole-stack review repaired R1 authority admission: WARM is preparation-only; ACTIVE required for ECO execution."
+    "previous": "a0df8f550e32c6fb4f38553509878e5abcdd63c3",
+    "current": "9ff2d13e31318bd0f323d29a3efd03f0850d8c7b",
+    "reason": "Fresh trust review adds a rehashed-record external-anchor falsifier to R1."
+  },
+  "review_repair_r2": {
+    "finding": "R2 external batch anchor had no valid rehashed-tamper falsifier.",
+    "repair": "Retain trusted checksum before mutation; rehash a schema-valid batch and require A10_R2_BATCH_EXTERNAL_ANCHOR."
   }
 }

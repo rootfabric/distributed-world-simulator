@@ -1,7 +1,7 @@
 # EVO ARCH2 A10 — R5 final composition candidate
 
 Дата: 2026-09-18. Work Order `EVO-ARCH2-A10-20260918-R5`, HIGH.
-Parent: A10-R4 `0169ad98b6a8f7179a60a1c50c5226050709f7c7`, TREE `f4aae9dae6ba255ee1021b42fc42611377ace8ed`.
+Parent: A10-R4 `9ab7bdf396fc0ecffc847397c4f2e3685f5ef92b`, TREE `18b47b917c035f4cc66a7c4c4026d0aae004a44b`.
 
 ## Назначение
 
@@ -37,7 +37,7 @@ R5 не добавляет нового runtime owner или новую биол
 ## Exact lineage
 
 R5 verifier и Work Order обязаны ссылаться на один и тот же exact parent:
-`0169ad98b6a8f7179a60a1c50c5226050709f7c7 / f4aae9dae6ba255ee1021b42fc42611377ace8ed`.
+`9ab7bdf396fc0ecffc847397c4f2e3685f5ef92b / 18b47b917c035f4cc66a7c4c4026d0aae004a44b`.
 Предыдущие R4 heads `9e7deeb1...` и `511a1e0f...` являются историческими и не могут использоваться для current R5 acceptance.
 
 ## Scope boundary
@@ -62,3 +62,7 @@ Historical Windows exact on `2d322129...` produced R1/R2/R3/R5 PASS and one R4 f
 ## Fresh whole-stack authority review repair
 
 Fresh review текущего frozen closure выявил, что R1 допускал `WARM` Region как исполняющий. Это слабее production handoff semantics, где подготовленный target остаётся закрыт до `ACTIVE`. Текущий стек требует `ACTIVE` для `admit_cursor` и Matter-backed site execution; `WARM` остаётся допустимым только в R3 как preparation target до COMMITTED. R5 имеет отдельный negative control для premature WARM target admission.
+
+## Fresh trust review repair R2
+
+Дополнительный whole-stack review усилил trust boundaries. R1/R2 теперь доказывают, что schema-valid rehashed record/batch не заменяют ранее сохранённый caller-owned checksum. R3 разрешает handoff preparation только по WARM target и отвергает ACTIVE до commit. R4 `apply_damage()` требует caller-owned `expected_event_binding_hash`: корректно пересчитанный, но семантически изменённый event не получает authority от собственного self-seal. R5 сохраняет trusted batch/record/event anchors отдельными значениями и передаёт их между слоями.

@@ -58,3 +58,7 @@ R4 не переписывает A5 state. Вместо этого из `BodyGra
 - лечение/repair биологического модуля;
 - изменение A5 resource ledger;
 - окончательная A11 lifecycle loop.
+
+## Fresh trust review repair
+
+R4 ранее мог принять семантически изменённый, но корректно пересчитанный event, если part/module/condition оставались schema-valid: `binding_hash` был integrity seal, а не внешний authority proof. Текущий `apply_damage()` требует caller-owned `expected_event_binding_hash`. Negative control меняет DEGRADED→DESTROYED, корректно пересчитывает self-seal и доказывает, что прежний trusted hash блокирует событие с `A10_R4_EVENT_EXTERNAL_ANCHOR`.

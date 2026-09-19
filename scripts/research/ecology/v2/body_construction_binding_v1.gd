@@ -107,7 +107,7 @@ static func create_overlay(binding: Dictionary, body_modules: Array, source_snap
 	value["checksum"] = MatterUtils.compute_checksum(value)
 	return value
 
-static func apply_damage(binding: Dictionary, overlay: Dictionary, body_modules: Array, source_snapshot: Dictionary, event: Dictionary) -> Dictionary:
+static func apply_damage(binding: Dictionary, overlay: Dictionary, body_modules: Array, source_snapshot: Dictionary, event: Dictionary, expected_event_binding_hash: String) -> Dictionary:
 	var binding_error := validate_binding(binding, body_modules, source_snapshot)
 	if not binding_error.is_empty():
 		return _fail(binding_error)
@@ -117,6 +117,9 @@ static func apply_damage(binding: Dictionary, overlay: Dictionary, body_modules:
 	var event_error := _event_error(event, binding)
 	if not event_error.is_empty():
 		return _fail(event_error)
+	if not MatterUtils.is_lower_hex_64(expected_event_binding_hash) \
+	or String(event.get("binding_hash", "")) != expected_event_binding_hash:
+		return _fail("A10_R4_EVENT_EXTERNAL_ANCHOR")
 	var event_hash := MatterUtils.payload_hash(event)
 	var damage_id := String(event["damage_id"])
 	if overlay["applied_damage"].has(damage_id):

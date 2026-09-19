@@ -4,8 +4,8 @@
   "state": "IN_PROGRESS",
   "risk_class": "HIGH",
   "branch": "feature/eco-evo-arch2-a10-final-composition-r5",
-  "parent_r4": "0169ad98b6a8f7179a60a1c50c5226050709f7c7",
-  "parent_r4_tree": "f4aae9dae6ba255ee1021b42fc42611377ace8ed",
+  "parent_r4": "9ab7bdf396fc0ecffc847397c4f2e3685f5ef92b",
+  "parent_r4_tree": "18b47b917c035f4cc66a7c4c4026d0aae004a44b",
   "goal": "Whole-A10 composition proof across A8 seam, production Region/Matter, explicit resource mapping, Construction damage and persistent body overlay.",
   "additive_paths": [
     "config/ecology/evo-arch2-a10-r5-work-order.v1.json",
@@ -31,7 +31,10 @@
     "FRESH_REVIEWER_PASS",
     "FRESH_VERIFIER_PASS",
     "MAIN_EPOCH_RECHECK",
-    "ACTIVE_ONLY_REGION_EXECUTION_REVIEW_REPAIR_PASS"
+    "ACTIVE_ONLY_REGION_EXECUTION_REVIEW_REPAIR_PASS",
+    "WARM_ONLY_HANDOFF_PREPARATION_REVIEW_REPAIR_PASS",
+    "R4_EXTERNAL_DAMAGE_EVENT_ANCHOR_REVIEW_REPAIR_PASS",
+    "REHASHED_R1_R2_TRUST_ANCHOR_FALSIFIERS_PASS"
   ],
   "nonclaims": [
     "A11",
@@ -40,9 +43,9 @@
     "main merge"
   ],
   "parent_refresh": {
-    "previous": "e23681e178d505c382d9af3cc89643a78a7a6c71",
-    "current": "0169ad98b6a8f7179a60a1c50c5226050709f7c7",
-    "reason": "Fresh whole-stack review repaired authority admission: WARM is preparation-only; ACTIVE required for ECO execution."
+    "previous": "0169ad98b6a8f7179a60a1c50c5226050709f7c7",
+    "current": "9ab7bdf396fc0ecffc847397c4f2e3685f5ef92b",
+    "reason": "Fresh trust review: WARM-only R3 preparation, external R4 damage-event anchor, and R1/R2 rehashed-anchor falsifiers."
   },
   "repair_r2": {
     "platform": "Windows canonical double Godot 4.7.1 a13da4feb",
@@ -66,5 +69,13 @@
     "finding": "Whole-stack review found R1 admitted WARM AuthorityRegionDescriptor as executable.",
     "repair": "ACTIVE-only cursor/site admission propagated through R2-R5; R3 retains WARM only for handoff preparation.",
     "expected_effect": "Prevent concurrent source ACTIVE and target WARM ecology execution before COMMITTED."
+  },
+  "review_repair_r2": {
+    "findings": [
+      "R1/R2 external-anchor tests did not falsify schema-valid rehashed objects against retained trusted checksums.",
+      "R3 accepted ACTIVE target as preparation descriptor before commit.",
+      "R4 apply_damage trusted self-sealed event bytes without caller-owned event authority anchor."
+    ],
+    "repair": "Add rehashed record/batch falsifiers; require WARM exactly for R3 preparation; require expected_event_binding_hash for R4 apply_damage and reject re-sealed semantic event against old trusted hash."
   }
 }
