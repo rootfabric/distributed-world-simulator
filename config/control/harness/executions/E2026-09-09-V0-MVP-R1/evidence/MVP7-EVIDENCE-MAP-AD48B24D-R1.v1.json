@@ -1,0 +1,118 @@
+{
+  "schema": "distributed_world_simulator.mvp7_evidence_map.v1",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "frozen_head_sha": "ad48b24d8cde350db8c26adb958d9a0d62c6ff56",
+  "frozen_tree_sha": "f306e84ebce87ea3644c60b5dd75779d7980f8bb",
+  "evidence_record": "config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence/MVP7-PRODUCT-EVIDENCE-AD48B24D-R1.v1.json",
+  "exact_run": {
+    "run_id": 35447331651,
+    "attempt_1_job": 105908424301,
+    "attempt_2_job": 105909777021,
+    "attempt_1_artifact_id": 10586196268,
+    "attempt_2_artifact_id": 10585912124
+  },
+  "entries": [
+    {
+      "predicate": "MVP_RECONNECT_AND_RESTART",
+      "status": "IMPLEMENTER_PROVEN_PENDING_INDEPENDENT_ROLES",
+      "evidence": [
+        "mvp7-native/summary.json: distinct gameplay/world/Construction restart process families",
+        "mvp7-graphical-reconnect/manifest.json: fresh sixth ENet client, peer replacement, current-state resync, continued fixed-tick movement"
+      ],
+      "composition_note": "Restart and live ENet reconnect are separate executions bound to the same exact HEAD/TREE; one combined mid-session server kill is not claimed at MVP7."
+    },
+    {
+      "predicate": "RECOVER_TERRAIN_STATE",
+      "status": "IMPLEMENTER_PROVEN_PENDING_INDEPENDENT_ROLES",
+      "evidence": [
+        "mvp7-native/world-produce.json",
+        "mvp7-native/world-recover1.json",
+        "mvp7-native/world-recover2.json",
+        "tests/runtime/test_v0_mvp_7_matter_restart.gd"
+      ],
+      "observed": "MW5 store/state hashes survive two fresh processes and canonical digging continues after restore."
+    },
+    {
+      "predicate": "RECOVER_ITEM_INVENTORY_EQUIPMENT_STATE",
+      "status": "IMPLEMENTER_PROVEN_PENDING_INDEPENDENT_ROLES",
+      "evidence": [
+        "mvp7-native/produce.json",
+        "mvp7-native/recover1.json",
+        "mvp7-native/recover2.json",
+        "tests/runtime/test_v0_mvp_7_quiescent_recovery.gd"
+      ],
+      "observed": "Exact canonical Item Graph recovery includes inventory, hotbar and equipped tool; generation 2 preserves post-reconnect mutation."
+    },
+    {
+      "predicate": "RECOVER_WORLD_ITEM_IDENTITIES",
+      "status": "IMPLEMENTER_PROVEN_PENDING_INDEPENDENT_ROLES",
+      "evidence": [
+        "tests/runtime/test_v0_mvp_7_quiescent_recovery.gd",
+        "mvp7-native/produce.json",
+        "mvp7-native/recover1.json"
+      ],
+      "observed": "Restored item IDs are unique and exact; terminal server-output replay does not create a second identity."
+    },
+    {
+      "predicate": "RECOVER_SHARED_CONTAINER_STATE",
+      "status": "IMPLEMENTER_PROVEN_PENDING_INDEPENDENT_ROLES",
+      "evidence": [
+        "tests/runtime/test_v0_mvp_7_quiescent_recovery.gd",
+        "mvp7-native/recover1.json",
+        "mvp7-native/recover2.json"
+      ],
+      "observed": "Shared container graph/content is durable. Open-container lease is transport/session state and is intentionally cleared rather than persisted."
+    },
+    {
+      "predicate": "RECOVER_CONSTRUCTION_STATE_AND_COLLISION",
+      "status": "IMPLEMENTER_PROVEN_PENDING_INDEPENDENT_ROLES",
+      "evidence": [
+        "mvp7-native/construction-produce.json",
+        "mvp7-native/construction-recover1.json",
+        "mvp7-native/construction-recover2.json",
+        "tests/runtime/test_v0_mvp_7_construction_restart.gd"
+      ],
+      "observed": "Same M0 repository/C17 authority record restored across PIDs; 100 parts/99 bonds; 100 collision parts; seam collision present; removed leaf collision absent."
+    },
+    {
+      "predicate": "RECOVER_REQUIRED_OPERATION_DEDUP_STATE",
+      "status": "IMPLEMENTER_PROVEN_PENDING_INDEPENDENT_ROLES",
+      "evidence": [
+        "tests/runtime/test_v0_mvp_7_quiescent_recovery.gd",
+        "tests/runtime/test_v0_mvp_7_matter_restart.gd",
+        "mvp7-native/recover1.json",
+        "mvp7-native/construction-recover1.json"
+      ],
+      "observed": "Corrupt/mixed replay fails before mutation; material output replay is terminal/no duplicate; Construction terminal commands recover; older generation rollback rejected."
+    },
+    {
+      "predicate": "LATE_JOIN_OR_RESYNC_GETS_CURRENT_STATE",
+      "status": "IMPLEMENTER_PROVEN_PENDING_INDEPENDENT_ROLES",
+      "evidence": [
+        "mvp7-graphical-reconnect/manifest.json",
+        "mvp7-graphical-reconnect/reconnect-a.json",
+        "mvp7-graphical-reconnect/gateway.json"
+      ],
+      "observed": "Fresh reconnect process receives current terrain/material/Construction/player state, derives 100-part collision and continues authoritative fixed-tick movement."
+    }
+  ],
+  "falsification": {
+    "inherited_mvp6_negative_controls": "13/13 rejected",
+    "mvp7_negative_controls": "7/7 rejected",
+    "exact_failed_checks": []
+  },
+  "limitations": [
+    "Recovery claim is bounded to a confirmed quiescent checkpoint; arbitrary loss of uncheckpointed writes is not claimed.",
+    "Graphical reconnect and server restart are proven on separate exact-head surfaces; a single connected live server-kill scenario is deferred to the stronger MVP8 workload contract.",
+    "No fresh independent Reviewer or Verifier verdict is encoded in this map.",
+    "Current exact product evidence is Linux; no current MVP7 Windows corroboration is claimed.",
+    "Whole-world/core final regression and Human MVP acceptance remain parent/whole-MVP gates."
+  ],
+  "implementer_evidence_map_complete": true,
+  "independent_review_complete": false,
+  "independent_verification_complete": false,
+  "predicate_verified": false,
+  "parent_work_order_state": "IN_PROGRESS",
+  "main_merge_performed": false
+}
