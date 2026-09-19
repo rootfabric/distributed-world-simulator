@@ -4,6 +4,7 @@ const Mapping = preload("res://scripts/research/ecology/v2/matter_resource_mappi
 const Catalog = preload("res://scripts/simulation/matter/catalog/matter_material_catalog.gd")
 const Composition = preload("res://scripts/simulation/matter/contracts/matter_composition.gd")
 const Batch = preload("res://scripts/simulation/matter/contracts/matter_material_batch.gd")
+const MatterUtils = preload("res://scripts/simulation/matter/matter_contract_utils.gd")
 
 var checks := 0
 var failures: Array[String] = []
@@ -42,7 +43,8 @@ func _run() -> void:
 	])
 	_check(bool(Batch.validate(mixed).get("success", false)), "mixed production batch fixture")
 
-	var no_semantics := Mapping.admit_material_batch(mixed, catalog, empty_map, mixed["checksum"])
+	var trusted_mixed_checksum := String(mixed["checksum"])
+	var no_semantics := Mapping.admit_material_batch(mixed, catalog, empty_map, trusted_mixed_checksum)
 	_check(bool(no_semantics.get("success", false)), "empty map still admits accounting")
 	if bool(no_semantics.get("success", false)):
 		var a: Dictionary = no_semantics["admission"]
@@ -54,9 +56,15 @@ func _run() -> void:
 		{"material_id": "matter/water-ice", "resource": "water_mg"},
 	])
 	_check(not water_map.is_empty() and Mapping.validate(water_map, catalog).is_empty(), "caller can explicitly map a known material")
+	var rehashed_batch := mixed.duplicate(true)
+	rehashed_batch["temperature_k"] = 274.15
+	rehashed_batch["checksum"] = MatterUtils.compute_checksum(rehashed_batch)
+	_check(bool(Batch.validate(rehashed_batch).get("success", false)), "rehashed batch remains schema-valid")
+	var rehashed_batch_result := Mapping.admit_material_batch(rehashed_batch, catalog, water_map, trusted_mixed_checksum)
+	_check(not bool(rehashed_batch_result.get("success", false)) and rehashed_batch_result.get("error") == "A10_R2_BATCH_EXTERNAL_ANCHOR", "rehashed batch cannot replace caller-owned trusted batch anchor")
 	var bad_batch_anchor := Mapping.admit_material_batch(mixed, catalog, water_map, "0".repeat(64))
 	_check(not bool(bad_batch_anchor.get("success", false)) and bad_batch_anchor.get("error") == "A10_R2_BATCH_EXTERNAL_ANCHOR", "batch requires external trusted checksum")
-	var admitted := Mapping.admit_material_batch(mixed, catalog, water_map, mixed["checksum"])
+	var admitted := Mapping.admit_material_batch(mixed, catalog, water_map, trusted_mixed_checksum)
 	_check(bool(admitted.get("success", false)), "explicit mapped/unmapped batch admission")
 	if bool(admitted.get("success", false)):
 		var a: Dictionary = admitted["admission"]
