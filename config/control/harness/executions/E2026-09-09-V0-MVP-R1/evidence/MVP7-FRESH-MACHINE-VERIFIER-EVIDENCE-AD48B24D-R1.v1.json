@@ -1,0 +1,53 @@
+{
+  "schema": "distributed_world_simulator.mvp7_machine_verifier_evidence.v1",
+  "recorded_at_utc": "2026-09-19T22:29:10Z",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "predicate": "MVP_RECONNECT_AND_RESTART",
+  "frozen_product": {
+    "head_sha": "ad48b24d8cde350db8c26adb958d9a0d62c6ff56",
+    "tree_sha": "f306e84ebce87ea3644c60b5dd75779d7980f8bb",
+    "freeze_ref": "freeze/v0-mvp7-review-ad48b24d-r1"
+  },
+  "fresh_repository_owned_execution": {
+    "workflow_run_id": 35447331651,
+    "run_attempt": 3,
+    "job_id": 105977766107,
+    "job_name": "mvp7-recovery",
+    "conclusion": "success",
+    "engine_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+    "artifact": {
+      "id": 10594111480,
+      "name": "mvp7-native-ad48b24d8cde350db8c26adb958d9a0d62c6ff56-35447331651-3",
+      "digest": "sha256:5cbbf01e95dd6fe41c72f5d3bcc36da326c2e1201845eda37796e2caf3609bb6",
+      "size_in_bytes": 3815869
+    },
+    "exact_subject_bound": true,
+    "tracked_checkout_clean": true,
+    "native_assertions": 549,
+    "native_failures": 0,
+    "graphical_reconnect_passed": true,
+    "graphical_failed_checks": [],
+    "construction_restart_passed": true,
+    "matter_restart_passed": true,
+    "gameplay_restart_passed": true,
+    "mvp7_negative_controls_rejected": 7
+  },
+  "independence_boundary": {
+    "machine_execution_is_fresh": true,
+    "repository_owned_ci": true,
+    "implementer_did_not_mutate_source_for_rerun": true,
+    "independent_verifier_verdict": false,
+    "independent_reviewer_verdict": false,
+    "note": "Per review-policy, this durable fresh machine evidence may be consumed by an independent Verifier but is not itself the independent verdict."
+  },
+  "closure_boundary": {
+    "full_world_core_pending": true,
+    "pc0_pending": true,
+    "mvp7_predicate_verified": false,
+    "parent_work_order_state": "IN_PROGRESS",
+    "mvp8_started": false,
+    "runtime_merge_authorized": false,
+    "main_merge_authorized": false
+  }
+}
