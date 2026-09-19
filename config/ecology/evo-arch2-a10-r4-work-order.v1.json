@@ -41,5 +41,12 @@
     "finding": "Untyped local field arrays passed to Array[String] validate_exact_fields at four R4 call sites",
     "repair": "Explicit Array[String] annotations; damage semantics unchanged",
     "expected_effect": "Remove cascade failures in snapshot binding, tampered event rejection, and disabled-subtree closure checks."
+  },
+  "repair_r2": {
+    "platform": "Windows canonical double Godot 4.7.1 a13da4feb",
+    "prior_subject": "2d32212914de961b9900b7e57694424c71d4ecd7",
+    "finding": "R4 forged-event negative control was a semantic no-op because events[0] already mapped part/root to m000003.",
+    "repair": "Tamper part_id to part/support, re-seal binding_hash, and require exact A10_R4_EVENT_MAPPING rejection.",
+    "product_semantics_changed": false
   }
 }

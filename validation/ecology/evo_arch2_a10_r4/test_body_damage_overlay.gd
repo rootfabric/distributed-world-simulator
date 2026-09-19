@@ -138,9 +138,18 @@ func _run() -> void:
 	var forged_event := event.duplicate(true)
 	forged_event["events"] = Array(event["events"]).duplicate(true)
 	forged_event["events"][0] = Dictionary(forged_event["events"][0]).duplicate(true)
-	forged_event["events"][0]["module_id"] = "m000003"
+	# Real semantic tamper: rebind the root event row to a different real part while
+	# preserving the old module. Re-seal binding_hash so rejection proves the
+	# part->module integrity check rather than merely detecting a stale hash.
+	forged_event["events"][0]["part_id"] = "part/support"
+	var forged_payload := forged_event.duplicate(true)
+	forged_payload["binding_hash"] = ""
+	forged_event["binding_hash"] = MatterUtils.payload_hash(forged_payload)
 	var forged := R4.apply_damage(binding, overlay, body_modules, source_snapshot, forged_event)
-	_check(not bool(forged.get("success", false)), "tampered damage event rejected")
+	_check(
+		not bool(forged.get("success", false)) and forged.get("error") == "A10_R4_EVENT_MAPPING",
+		"tampered part-module mapping rejected after valid re-seal"
+	)
 
 	var tampered_overlay := damaged.duplicate(true)
 	tampered_overlay["disabled_modules"] = ["m000001"]

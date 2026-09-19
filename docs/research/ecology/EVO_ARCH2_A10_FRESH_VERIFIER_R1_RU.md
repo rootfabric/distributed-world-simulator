@@ -5,8 +5,8 @@
 ## Exact subject
 
 ```text
-SUBJECT_HEAD = 2d32212914de961b9900b7e57694424c71d4ecd7
-SUBJECT_TREE = 445700262683d21764a93a34cca61b5cb3a1544d
+SUBJECT_HEAD = a33a9056a9d7b6c77f25c8f9dd79470554d7545d
+SUBJECT_TREE = 6a5aec11734b262f36db83f569f2e3a500057d98
 BASE_MAIN    = 471210d781e521bc7897a8fe859636a07d7a3ab3
 R1 = 06f7ee1774ce2b847ace9422a42f3928c3dff3e9
 R2 = 9aec7c80cd5255d5fc82e856502e6221ff2bd578
@@ -35,4 +35,8 @@ If the self-hosted Linux runner is unavailable, state must remain BLOCKED_RUNNER
 
 ## Windows Repair R2 rebind
 
-The prior pinned subject `57d274de196e...` is historical after canonical Windows double Godot exposed R2/R4 typed-array failures and R3/R5 parser inference failures. This verifier now admits only `2d32212914de961b9900b7e57694424c71d4ecd7 / 445700262683d21764a93a34cca61b5cb3a1544d`, containing the fixes at their owning layers.
+The prior pinned subject `57d274de196e...` is historical after canonical Windows double Godot exposed R2/R4 typed-array failures and R3/R5 parser inference failures. This verifier now admits only `a33a9056a9d7b6c77f25c8f9dd79470554d7545d / 6a5aec11734b262f36db83f569f2e3a500057d98`, containing the fixes at their owning layers.
+
+## R4 negative-control rebind
+
+The prior Windows subject `2d32212914de...` is historical after R4 revealed a no-op forged-event negative control. Current product `a33a9056a9d7b6c77f25c8f9dd79470554d7545d / 6a5aec11734b262f36db83f569f2e3a500057d98` carries the non-noop, re-sealed part/module mismatch control and no runtime semantic change.
