@@ -74,12 +74,13 @@ func _run() -> void:
 	var result := seam.apply(begin, seam.snapshot_hash())
 	_check(bool(result.get("success", false)) and not bool(result.get("replay", false)), "A8 BEGIN accepted")
 
-	for state in ["PREPARING", "FROZEN", "SNAPSHOT_READY", "TARGET_PREPARED", "COMMITTED"]:
-		var live_ticket := seam.ticket_snapshot()
-		var target_ack := state == "TARGET_PREPARED"
-		var payload_hash := String(live_ticket.get("snapshot_hash", "")) if target_ack else ""
-		var actor := "node/b" if target_ack else String(seam.cursor()["owner_id"])
-		var epoch := 2 if target_ack else int(seam.cursor()["owner_epoch"])
+	for raw_state in ["PREPARING", "FROZEN", "SNAPSHOT_READY", "TARGET_PREPARED", "COMMITTED"]:
+		var state: String = String(raw_state)
+		var live_ticket: Dictionary = seam.ticket_snapshot()
+		var target_ack: bool = state == "TARGET_PREPARED"
+		var payload_hash: String = String(live_ticket.get("snapshot_hash", "")) if target_ack else ""
+		var actor: String = "node/b" if target_ack else String(seam.cursor()["owner_id"])
+		var epoch: int = 2 if target_ack else int(seam.cursor()["owner_epoch"])
 		var cmd := _command(
 			seam,
 			"a10.r3." + state.to_lower(),
@@ -88,7 +89,7 @@ func _run() -> void:
 			actor,
 			epoch
 		)
-		var received := seam.ecology_text() if target_ack else ""
+		var received: String = seam.ecology_text() if target_ack else ""
 		result = seam.apply(cmd, seam.snapshot_hash(), received)
 		_check(bool(result.get("success", false)) and not bool(result.get("replay", false)), "A8 transition " + state)
 

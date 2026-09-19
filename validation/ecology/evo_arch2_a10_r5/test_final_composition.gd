@@ -187,9 +187,10 @@ func _run() -> void:
 	var begin := _command(seam, "a10.r5.begin", "BEGIN", {"ticket": prepared["ticket"]})
 	var step := seam.apply(begin, seam.snapshot_hash())
 	_check(bool(step.get("success", false)), "A8 BEGIN")
-	for state in ["PREPARING", "FROZEN", "SNAPSHOT_READY", "TARGET_PREPARED", "COMMITTED"]:
-		var live_ticket := seam.ticket_snapshot()
-		var target_ack := state == "TARGET_PREPARED"
+	for raw_state in ["PREPARING", "FROZEN", "SNAPSHOT_READY", "TARGET_PREPARED", "COMMITTED"]:
+		var state: String = String(raw_state)
+		var live_ticket: Dictionary = seam.ticket_snapshot()
+		var target_ack: bool = state == "TARGET_PREPARED"
 		var cmd := _command(
 			seam, "a10.r5." + state.to_lower(), "TRANSITION",
 			{"ticket_id": String(live_ticket["ticket_id"]), "state": state,
