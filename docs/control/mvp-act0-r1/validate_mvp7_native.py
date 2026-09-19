@@ -44,6 +44,7 @@ def main() -> int:
     commands: list[dict] = []
     reports: dict = {}
     world_reports: dict = {}
+    construction_reports: dict = {}
     passed = False
     error = ""
 
