@@ -16,9 +16,12 @@ var _mvp7_last_current: Dictionary = {}
 
 
 func _current7(actor: String) -> Dictionary:
-	var refreshed: Dictionary = _refresh_source4(actor)
-	if not bool(refreshed.get("success", false)):
-		return refreshed
+	# Read current Matter directly from the authenticated owner without mutating
+	# inherited _source4: that cache is the historical MVP4/MVP5 observer cut.
+	var report_result: Dictionary = _owner4(actor, {"kind": "MVP4_REPORT"})
+	if not bool(report_result.get("success", false)):
+		return report_result
+	var matter_source: Dictionary = Dictionary(report_result.get("details", {})).duplicate(true)
 	var material_result: Dictionary = _owner4(actor, {"kind": "MVP5_MATERIAL"})
 	if not bool(material_result.get("success", false)):
 		return material_result
@@ -29,9 +32,9 @@ func _current7(actor: String) -> Dictionary:
 	var material: Dictionary = material_result.get("details", {})
 	var snapshot: Dictionary = world_snapshot()
 	var digest := Utils.payload_hash({
-		"mvp4_store_hash": snapshot.get("mvp4", {}).get("source_store_hash", ""),
-		"mvp4_state_hash": snapshot.get("mvp4", {}).get("source_state_hash", ""),
-		"mvp4_stream_sequence": snapshot.get("mvp4", {}).get("source_stream_sequence", 0),
+		"mvp4_store_hash": matter_source.get("store_hash", ""),
+		"mvp4_state_hash": matter_source.get("state_hash", ""),
+		"mvp4_stream_sequence": matter_source.get("stream_sequence", 0),
 		"material_digest": material.get("material_digest", ""),
 		"item_graph_checksum": material.get("item_graph_checksum", ""),
 		"construction_checksum": _construction6.get("checksum", ""),
@@ -39,7 +42,7 @@ func _current7(actor: String) -> Dictionary:
 	})
 	var current := {
 		"snapshot": snapshot,
-		"matter_source": _source4.duplicate(true),
+		"matter_source": matter_source,
 		"material": material.duplicate(true),
 		"construction": _construction6.duplicate(true),
 		"construction_replica": _replica6.duplicate(true),

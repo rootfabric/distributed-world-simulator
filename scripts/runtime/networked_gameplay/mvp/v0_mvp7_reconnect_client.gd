@@ -84,10 +84,11 @@ func send7(kind: String, body: Dictionary = {}) -> void:
 
 func validate_current7(current: Dictionary, digest: String) -> bool:
 	var snapshot: Dictionary = current.get("snapshot", {})
+	var matter_source: Dictionary = current.get("matter_source", {})
 	var construction: Dictionary = current.get("construction", {})
 	var material: Dictionary = current.get("material", {})
 	var player: Dictionary = current.get("player", {})
-	if digest.length() != 64 or int(snapshot.get("mvp4", {}).get("source_stream_sequence", 0)) < 1:
+	if digest.length() != 64 or int(matter_source.get("stream_sequence", 0)) < 1:
 		failures.append("MVP7_CURRENT_TERRAIN_REQUIRED")
 		return false
 	# MVP5 observers describe the pre-Construction checkpoint. Construction
@@ -118,8 +119,8 @@ func validate_current7(current: Dictionary, digest: String) -> bool:
 		failures.append("MVP7_RECONNECT_COLLISION_DERIVATION_FAILED")
 		return false
 	construction_checksum = String(construction["checksum"])
-	matter_store_hash = String(snapshot["mvp4"]["source_store_hash"])
-	matter_state_hash = String(snapshot["mvp4"]["source_state_hash"])
+	matter_store_hash = String(matter_source.get("store_hash", ""))
+	matter_state_hash = String(matter_source.get("state_hash", ""))
 	material_digest = String(material["material_digest"])
 	collision_part_count = int(applied["collision_part_count"])
 	return true

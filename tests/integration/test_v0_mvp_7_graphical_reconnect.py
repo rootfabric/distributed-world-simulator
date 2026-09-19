@@ -48,6 +48,7 @@ def reconnect_checks(reports: dict, clients: dict, reconnect: dict, head: str, r
         proof = gateway["mvp7_reconnect"]
         current = proof["current"]
         current_snapshot = current["snapshot"]
+        current_matter = current["matter_source"]
         current_material = current["material"]
         current_construction = current["construction"]
         owner = reports["authority/a"]
@@ -82,11 +83,11 @@ def reconnect_checks(reports: dict, clients: dict, reconnect: dict, head: str, r
         )
         checks["current_terrain_state"] = (
             current_snapshot["mvp4"]["both_observed"] is True
-            and current_snapshot["mvp4"]["source_stream_sequence"] >= 1
-            and reconnect["matter_store_hash"] == current_snapshot["mvp4"]["source_store_hash"]
-            and reconnect["matter_state_hash"] == current_snapshot["mvp4"]["source_state_hash"]
-            and reconnect["matter_store_hash"] == gateway["mvp4"]["canonical_source"]["store_hash"]
-            and reconnect["matter_state_hash"] == gateway["mvp4"]["canonical_source"]["state_hash"]
+            and current_matter["stream_sequence"] >= 1
+            and reconnect["matter_store_hash"] == current_matter["store_hash"]
+            and reconnect["matter_state_hash"] == current_matter["state_hash"]
+            and reconnect["matter_store_hash"] == owner["mvp4"]["store_hash"]
+            and reconnect["matter_state_hash"] == owner["mvp4"]["state_hash"]
         )
         checks["current_item_material_state"] = (
             len(current_material["material_digest"]) == 64
