@@ -398,17 +398,31 @@ jobs:
           repository: rootfabric/distributed-world-simulator
           github-token: ${{ github.token }}
           path: ${{ runner.temp }}/mvp7-closure-engine
-      - name: Exact frozen full world core
+      - name: Exact frozen graphical prerequisite and full world core
         shell: bash
         run: |
           set -euo pipefail
           export GODOT_BIN="$RUNNER_TEMP/mvp7-closure-engine/godot"
           test "$(sha256sum "$GODOT_BIN" | cut -d' ' -f1)" = bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7
           chmod u+x "$GODOT_BIN"
+          if ! command -v Xvfb >/dev/null || ! command -v xauth >/dev/null; then
+            sudo -n apt-get update
+            sudo -n env DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends xvfb xauth libgl1-mesa-dri
+          fi
+          mkdir -p artifacts/mvp7-closure-graphical
+          "$GODOT_BIN" --headless --path . --editor --import --quit > artifacts/mvp7-closure-graphical/import.log 2>&1
+          xvfb-run -a -s '-screen 0 1600x900x24' python3             tests/integration/test_v0_mvp_6_graphical_construction.py             --engine "$GODOT_BIN"             --output artifacts/mvp7-closure-graphical/live
+          export MVP6_GRAPHICAL_MANIFEST="$PWD/artifacts/mvp7-closure-graphical/live/manifest.json"
           python3 - <<'PY'
-          import importlib.util
+          import importlib.util, json, os
           from pathlib import Path
           p=Path('docs/control/mvp-act0-r1/validate_mvp6_seam_repro.py')
+          manifest=Path(os.environ['MVP6_GRAPHICAL_MANIFEST'])
+          value=json.loads(manifest.read_text(encoding='utf-8'))
+          assert value.get('schema')=='distributed_world_simulator.mvp6_graphical_construction_manifest.v1'
+          assert value.get('subject_head')==os.environ['EXPECTED_HEAD']
+          assert value.get('subject_tree')==os.environ['EXPECTED_TREE']
+          assert value.get('passed') is True
           spec=importlib.util.spec_from_file_location('mvp7_world_core_carrier',p)
           module=importlib.util.module_from_spec(spec)
           spec.loader.exec_module(module)
@@ -455,6 +469,7 @@ jobs:
           path: |
             artifacts/mvp6-seam-repro/
             artifacts/mvp6-world-core/
+            artifacts/mvp7-closure-graphical/
             artifacts/control/
             artifacts/mvp7-closure-control/
           if-no-files-found: error
