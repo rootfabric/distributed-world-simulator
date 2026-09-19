@@ -4,8 +4,8 @@
   "state": "IN_PROGRESS",
   "risk_class": "HIGH",
   "branch": "feature/eco-evo-arch2-a10-final-composition-r5",
-  "parent_r4": "1ae0f96d06a00791425cb853f0bb9d2f709e1f0f",
-  "parent_r4_tree": "7cb2c285fde95fd9e5d46c59ca509127a51b1575",
+  "parent_r4": "e23681e178d505c382d9af3cc89643a78a7a6c71",
+  "parent_r4_tree": "a3da194c1cfb1110f683c9ee646f214757958844",
   "goal": "Whole-A10 composition proof across A8 seam, production Region/Matter, explicit resource mapping, Construction damage and persistent body overlay.",
   "additive_paths": [
     "config/ecology/evo-arch2-a10-r5-work-order.v1.json",
@@ -39,9 +39,9 @@
     "main merge"
   ],
   "parent_refresh": {
-    "previous": "ef5a9ecccdc403631d11c2cebe0b95d8971243bf",
-    "current": "1ae0f96d06a00791425cb853f0bb9d2f709e1f0f",
-    "reason": "Windows canonical repair chain: R2/R4 typed-array fixes and R3 parser annotations propagated into R5."
+    "previous": "1ae0f96d06a00791425cb853f0bb9d2f709e1f0f",
+    "current": "e23681e178d505c382d9af3cc89643a78a7a6c71",
+    "reason": "R4 negative-control repair: replace semantic no-op forged event with re-sealed mismatched part/module mapping."
   },
   "repair_r2": {
     "platform": "Windows canonical double Godot 4.7.1 a13da4feb",
@@ -53,5 +53,12 @@
     ],
     "repair": "Typed contract arrays at source layers; explicit R3/R5 transition-loop annotations; preserve external Matter batch anchor.",
     "prior_windows_subject": "57d274de196e2c4d54cf67f819fc925565db7a1a"
+  },
+  "repair_r3": {
+    "platform": "Windows canonical double Godot 4.7.1 a13da4feb",
+    "prior_subject": "2d32212914de961b9900b7e57694424c71d4ecd7",
+    "finding": "R4 forged-event tamper was byte-identical/no-op and falsely expected rejection.",
+    "repair": "R4 now changes part_id to part/support, re-seals binding_hash, and requires exact A10_R4_EVENT_MAPPING.",
+    "product_semantics_changed": false
   }
 }
