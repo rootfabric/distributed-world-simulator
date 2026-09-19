@@ -1,0 +1,166 @@
+{
+  "schema": "distributed_world_simulator.mvp7_product_evidence.v1",
+  "captured_after_utc": "2026-09-19T14:17:01Z",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "predicate": "MVP_RECONNECT_AND_RESTART",
+  "frozen_product": {
+    "branch": "feature/v0-mvp-playable-seamless-planet-r1",
+    "head_sha": "ad48b24d8cde350db8c26adb958d9a0d62c6ff56",
+    "tree_sha": "f306e84ebce87ea3644c60b5dd75779d7980f8bb",
+    "implementation_base_sha": "8d10bcf896547476d6f9a1db8769fa8c41110291",
+    "commits_from_base": 13,
+    "changed_paths": 24
+  },
+  "engine": {
+    "platform": "Linux",
+    "godot": "4.7.1.stable.double.custom_build.a13da4feb",
+    "sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7"
+  },
+  "exact_ci": {
+    "workflow_run_id": 35447331651,
+    "workflow": "MVP6 Native Prerequisite Diagnostic",
+    "job_name": "mvp7-recovery",
+    "scope_write_fence": "PASS_24_PATHS",
+    "attempt_1": {
+      "job_id": 105908424301,
+      "conclusion": "success",
+      "artifact": {
+        "id": 10586196268,
+        "name": "mvp7-native-ad48b24d8cde350db8c26adb958d9a0d62c6ff56-35447331651-1",
+        "bytes": 3814354,
+        "digest": "sha256:799a2c2707e3a77bf2ace4615ae09141a4d4c24c84a34e0bacccaa9819cf0877"
+      }
+    },
+    "attempt_2_fresh_rerun": {
+      "job_id": 105909777021,
+      "conclusion": "success",
+      "artifact": {
+        "id": 10585912124,
+        "name": "mvp7-native-ad48b24d8cde350db8c26adb958d9a0d62c6ff56-35447331651-2",
+        "bytes": 3815709,
+        "digest": "sha256:e14d190412999720257ffca0156e9efdc30236924d6e09437377e0473d7c093b"
+      }
+    }
+  },
+  "native_recovery": {
+    "passed": true,
+    "assertions": 549,
+    "failures": 0,
+    "attempt_1_process_ids": {
+      "gameplay": [
+        4445,
+        4455,
+        4467
+      ],
+      "world_matter": [
+        4477,
+        4493,
+        4518
+      ],
+      "construction": [
+        4535,
+        4548,
+        4558
+      ]
+    },
+    "attempt_2_process_ids": {
+      "gameplay": [
+        4652,
+        4663,
+        4673
+      ],
+      "world_matter": [
+        4684,
+        4705,
+        4723
+      ],
+      "construction": [
+        4744,
+        4757,
+        4769
+      ]
+    },
+    "tracked_checkout_after": "",
+    "server_restart_evidence": "THREE_DISTINCT_OS_PROCESSES_PER_RECOVERY_FAMILY"
+  },
+  "live_graphical_reconnect": {
+    "passed": true,
+    "failed_checks": [],
+    "checks": 106,
+    "two_original_graphical_clients": true,
+    "fresh_reconnect_process": true,
+    "enet_reconnect": true,
+    "current_state_resync": true,
+    "stable_world_digest": true,
+    "post_reconnect_fixed_tick_movement": true,
+    "derived_construction_collision_parts": 100,
+    "backend_reconnect_performed": false,
+    "backend_timeout_policy_changed": false,
+    "backend_liveness_read_only": true,
+    "backend_disconnects_during_attempt_1": 0,
+    "inherited_mvp6_negative_controls_rejected": "13/13",
+    "mvp7_negative_controls_rejected": "7/7"
+  },
+  "predicate_coverage": {
+    "MVP_RECONNECT_AND_RESTART": "SERVER_PROCESS_RESTART plus FRESH_ENET_RECONNECT on the same exact HEAD/TREE",
+    "RECOVER_TERRAIN_STATE": "MW5 committed cut restored across PIDs; exact store/state hashes; post-recovery canonical dig continues",
+    "RECOVER_ITEM_INVENTORY_EQUIPMENT_STATE": "canonical M4 graph exact; inventory/hotbar/equipment restored; new authenticated mutation persists to generation 2",
+    "RECOVER_WORLD_ITEM_IDENTITIES": "restored item IDs remain exact and unique; server output replay creates no duplicate identity",
+    "RECOVER_SHARED_CONTAINER_STATE": "durable shared container graph/content survives; transient open lease is explicitly non-durable and cleared",
+    "RECOVER_CONSTRUCTION_STATE_AND_COLLISION": "same M0 repository and C17 record restored; 100 parts/99 bonds; 100 collision parts; seam collision continuous; removed leaf stays absent",
+    "RECOVER_REQUIRED_OPERATION_DEDUP_STATE": "malformed replay rejected pre-mutation; exact material replay is terminal/no duplicate; Construction terminal commands restored; rollback generation rejected",
+    "LATE_JOIN_OR_RESYNC_GETS_CURRENT_STATE": "fresh sixth ENet process receives current terrain/material/Construction/player projection and continues authoritative fixed-tick movement"
+  },
+  "negative_controls": {
+    "inherited_mvp6": [
+      "duplicate_owner",
+      "one_sided_replica",
+      "missing_add_replay",
+      "fake_same_process_route",
+      "duplicate_client_process",
+      "client_claims_truth",
+      "missing_collision_part",
+      "stale_subject",
+      "client_guard_not_restored",
+      "authority_guard_still_active",
+      "minted_resource_topup",
+      "forged_resource_source",
+      "missing_backend_keepalive"
+    ],
+    "mvp7": [
+      "no_reconnect",
+      "same_peer",
+      "no_post_reconnect_motion",
+      "stale_construction",
+      "stale_matter",
+      "no_backend_liveness",
+      "no_finish_ack_disconnect"
+    ]
+  },
+  "recovery_model": {
+    "supported": "CONFIRMED_QUIESCENT_CHECKPOINT",
+    "arbitrary_uncheckpointed_power_loss_claimed": false,
+    "transient_transport_sessions_durable": false,
+    "transient_container_open_lease_durable": false
+  },
+  "role_boundary": {
+    "implementer_evidence_only": true,
+    "independent_review": false,
+    "independent_verification": false,
+    "director_verdict": false,
+    "human_checkpoint_acceptance": false,
+    "predicate_verified": false,
+    "parent_work_order_state": "IN_PROGRESS",
+    "whole_mvp_acceptance": false,
+    "runtime_merge_authorized": false,
+    "main_merge_authorized": false,
+    "main_mutated": false
+  },
+  "next_required_actions": [
+    "FRESH_INDEPENDENT_REVIEWER on exact ad48b24d/f306e84e",
+    "FRESH_INDEPENDENT_VERIFIER on the same exact product subject",
+    "DIRECTOR reads both independent records and evidence",
+    "HUMAN checkpoint acceptance only where required by Work Order"
+  ]
+}
