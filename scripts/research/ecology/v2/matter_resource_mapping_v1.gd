@@ -8,8 +8,8 @@ const Batch = preload("res://scripts/simulation/matter/contracts/matter_material
 
 const SCHEMA := "dws.ecology.a10-matter-resource-map.v1"
 const ADMISSION_SCHEMA := "dws.ecology.a10-matter-resource-admission.v1"
-const FIELDS := ["schema", "map_id", "catalog_hash", "entries", "checksum"]
-const ENTRY_FIELDS := ["material_id", "resource"]
+const FIELDS: Array[String] = ["schema", "map_id", "catalog_hash", "entries", "checksum"]
+const ENTRY_FIELDS: Array[String] = ["material_id", "resource"]
 const KG_TO_MG := 1000000.0
 const MASS_TOLERANCE_MG := 0.000001
 const MAX_BATCH_MG := 1000000000000
