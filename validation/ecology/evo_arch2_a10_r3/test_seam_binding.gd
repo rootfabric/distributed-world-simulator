@@ -59,6 +59,11 @@ func _run() -> void:
 	_check(bool(Region.validate(source).get("success", false)), "source production Region valid")
 	_check(bool(Region.validate(target_warm).get("success", false)), "target WARM production Region valid")
 	_check(bool(WorldBinding.admit_cursor(before_cursor, source).get("success", false)), "R1 admits source A8 cursor")
+	var premature_target_cursor := before_cursor.duplicate(true)
+	premature_target_cursor["owner_id"] = "node/b"
+	premature_target_cursor["owner_epoch"] = 2
+	var warm_admission := WorldBinding.admit_cursor(premature_target_cursor, target_warm)
+	_check(not bool(warm_admission.get("success", false)) and warm_admission.get("error") == "A10_REGION_NOT_EXECUTABLE", "WARM target cannot execute ecology before commit")
 
 	var prepared := Bridge.prepare_ticket(before_cursor, source, target_warm, int(before_cursor["clock"]) + 1, int(before_cursor["clock"]) + 100)
 	_check(bool(prepared.get("success", false)), "R3 prepares production handoff ticket")
