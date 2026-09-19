@@ -99,11 +99,16 @@ func _run() -> void:
 	stale_epoch["owner_epoch"] = 2
 	var epoch_result := Binding.admit_cursor(stale_epoch, region)
 	_check(not bool(epoch_result.get("success", false)) and epoch_result.get("error") == "A10_CURSOR_EPOCH_MISMATCH", "stale epoch fails closed")
-	var dormant := Region.create("region/a", "u", "i", "surface", "octree", 1, selector, "node/a", 3, "DORMANT", 5)
+	var warm := Region.create("region/a", "u", "i", "surface", "octree", 1, selector, "node/a", 3, "WARM", 5)
+	var warm_result := Binding.admit_cursor(cursor, warm)
+	_check(not bool(warm_result.get("success", false)) and warm_result.get("error") == "A10_REGION_NOT_EXECUTABLE", "WARM region is preparation-only and cannot execute ecology")
+	var warm_site := Binding.bind_matter_site(query, warm, cursor)
+	_check(not bool(warm_site.get("success", false)) and warm_site.get("error") == "A10_REGION_NOT_EXECUTABLE", "WARM region cannot authorize Matter-backed ECO site execution")
+	var dormant := Region.create("region/a", "u", "i", "surface", "octree", 1, selector, "node/a", 3, "DORMANT", 6)
 	var dormant_result := Binding.admit_cursor(cursor, dormant)
 	_check(not bool(dormant_result.get("success", false)) and dormant_result.get("error") == "A10_REGION_NOT_EXECUTABLE", "dormant region cannot execute ecology")
 	var partition_selector := {"kind": "CHUNK_SET", "partition_prefix": "", "chunk_ids": [cell["cell_id"]]}
-	var partition_region := Region.create("region/a", "u", "i", "surface", "octree", 1, partition_selector, "node/a", 3, "ACTIVE", 6)
+	var partition_region := Region.create("region/a", "u", "i", "surface", "octree", 1, partition_selector, "node/a", 3, "ACTIVE", 7)
 	var partition_result := Binding.bind_matter_site(query, partition_region, cursor)
 	_check(not bool(partition_result.get("success", false)) and partition_result.get("error") == "A10_REGION_SELECTOR_UNSUPPORTED", "partition-specific Matter membership is not guessed from cell/chunk strings")
 
