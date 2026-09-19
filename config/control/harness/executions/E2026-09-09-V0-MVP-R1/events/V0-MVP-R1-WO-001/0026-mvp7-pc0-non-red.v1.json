@@ -1,0 +1,20 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-09-09-V0-MVP-R1-V0-MVP-R1-WO-001-0026-MVP7-PC0-NON-RED",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "sequence": 26,
+  "event_type": "PREDICATE_VERIFIED",
+  "work_state": "IN_PROGRESS",
+  "recorded_at_utc": "2026-09-19T22:31:10Z",
+  "actor": "INTEGRATOR",
+  "branch": "feature/v0-mvp-playable-seamless-planet-r1",
+  "head_sha": "ad48b24d8cde350db8c26adb958d9a0d62c6ff56",
+  "predicate": "MVP7_STANDARD_AND_DIRECTIONAL_PC0_NON_RED",
+  "command": "RECORD_EXACT_FROZEN_PRODUCT_PC0_NON_RED",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence/MVP7-PC0-AD48B24D-R1.v1.json"
+  ],
+  "summary": "Exact frozen MVP7 product ad48b24d/f306e84e passed standard and directional Project Control at YELLOW/non-RED on carrier run 35473552815. This closes the MVP7 leaf PC0 evidence gap only; full world/core and independent Reviewer/Verifier verdicts remain pending."
+}

@@ -1,0 +1,41 @@
+{
+  "schema": "distributed_world_simulator.mvp7_pc0_evidence.v1",
+  "recorded_at_utc": "2026-09-19T22:31:10Z",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "frozen_product": {
+    "head_sha": "ad48b24d8cde350db8c26adb958d9a0d62c6ff56",
+    "tree_sha": "f306e84ebce87ea3644c60b5dd75779d7980f8bb",
+    "freeze_ref": "freeze/v0-mvp7-review-ad48b24d-r1"
+  },
+  "carrier": {
+    "branch": "control/v0-mvp7-pc0-ad48-r1",
+    "carrier_head": "8ba159488293d57def4347bff38cc0a84e15712d",
+    "run_id": 35473552815,
+    "run_attempt": 1,
+    "job_id": 105978749777,
+    "conclusion": "success",
+    "artifact": {
+      "id": 10593077063,
+      "name": "mvp7-pc0-ad48b24d-35473552815-1",
+      "digest": "sha256:3e0fb44603673b6b1938362f7663b1fcf0e53e4d7eaa9cadfa812503be966d8d",
+      "size_in_bytes": 37372
+    }
+  },
+  "standard_pc0": {
+    "overall_health": "YELLOW",
+    "non_red": true
+  },
+  "directional_pc0": {
+    "overall_health": "YELLOW",
+    "non_red": true
+  },
+  "tracked_checkout_clean": true,
+  "closure_boundary": {
+    "full_world_core_pending": true,
+    "independent_reviewer_verdict": false,
+    "independent_verifier_verdict": false,
+    "mvp7_predicate_verified": false,
+    "parent_work_order_state": "IN_PROGRESS"
+  }
+}
