@@ -37,7 +37,8 @@
     "PART_TO_MODULE_BINDING_TARGETS_EXISTING_BODYGRAPH_MODULES_ONLY",
     "SELF_CONTAINED_DAMAGE_RECORD_CHECKSUM_IS_NOT_AUTHORITY_PROOF",
     "NO_INFERRED_MATTER_CELL_TO_REGION_CHUNK_OR_PREFIX_MAPPING",
-    "WARM_REGION_IS_PREPARATION_ONLY_ACTIVE_REQUIRED_FOR_ECO_EXECUTION"
+    "WARM_REGION_IS_PREPARATION_ONLY_ACTIVE_REQUIRED_FOR_ECO_EXECUTION",
+    "REHASHED_DAMAGE_RECORD_CANNOT_REPLACE_CALLER_OWNED_TRUST_ANCHOR"
   ],
   "required_gates": [
     "A10_GODOT_WORLD_BINDING_PASS",
@@ -66,5 +67,9 @@
     "finding": "R1 admitted WARM as executable, while production authority keeps prepared target closed until ACTIVE.",
     "repair": "Only ACTIVE AuthorityRegionDescriptor can admit ECO cursor or Matter-backed site; WARM remains preparation-only for R3.",
     "source_evidence": "MW8 production authority command gate requires ACTIVE lease; R3 already promotes to ACTIVE for post-COMMITTED admission."
+  },
+  "review_repair_r2": {
+    "finding": "External record-checksum contract had only a zero-anchor negative; it did not falsify a schema-valid rehashed record against the previously trusted checksum.",
+    "repair": "R1 test retains trusted_record_checksum, rehashes a semantically changed valid record, and requires A10_DAMAGE_RECORD_ANCHOR."
   }
 }
