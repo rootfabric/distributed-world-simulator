@@ -52,9 +52,9 @@ A10 не создаёт `EcoRegion`. A8 cursor должен совпасть с 
 - `region_id`;
 - `owner_node_id`;
 - `authority_epoch`;
-- lifecycle только `WARM|ACTIVE`.
+- lifecycle для cursor/site execution только `ACTIVE`; `WARM` является preparation-only состоянием и не даёт ECO право исполнения.
 
-Несовпадение region/owner/epoch или DORMANT/UNLOADING fail-closed. Нельзя выводить принадлежность Matter cell к `CHUNK_SET/PARTITION_PREFIX` из похожих строк; partition-specific binding требует отдельного production membership witness.
+Несовпадение region/owner/epoch или WARM/DORMANT/UNLOADING fail-closed для исполнения. R3 может использовать WARM только как подготовленный target до COMMITTED; после handoff исполнение допускается лишь по ACTIVE descriptor. Нельзя выводить принадлежность Matter cell к `CHUNK_SET/PARTITION_PREFIX` из похожих строк; partition-specific binding требует отдельного production membership witness.
 
 ## Construction damage binding
 
@@ -92,3 +92,7 @@ A10 не исполняет C9 damage и не редактирует Constructio
 ## Base refresh 2026-09-18
 
 Во время публикации R1 canonical main продвинулся с `99e8efe2` до `471210d7` только за счёт merged Harness PR #652. Diff затрагивает harness/docs и не меняет ни один A10 production source. R1 синхронизирован merge-коммитом с current main; scope A10 остаётся additive.
+
+## Fresh whole-stack review repair — ACTIVE-only execution
+
+Fresh review текущего A10 closure выявил authority-gap: R1 трактовал `WARM` и `ACTIVE` как одинаково исполняемые состояния. Production Matter handoff допускает command authority только при `ACTIVE`, а подготовленный target остаётся закрыт до commit. R1 теперь fail-closed отклоняет `WARM` для `admit_cursor` и `bind_matter_site`; R3 по-прежнему может принять WARM descriptor только для подготовки handoff. Это сохраняет single-writer boundary и предотвращает одновременное исполнение source ACTIVE + target WARM.
