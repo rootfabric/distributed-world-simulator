@@ -101,10 +101,11 @@ func _damage_event(source_snapshot: Dictionary, body_modules: Array) -> Dictiona
 	var record := DamageRecord.create("damage/a10-r5", request["checksum"], "d".repeat(64), repair, [], 5)
 	if not bool(DamageRecord.validate(record).get("success", false)):
 		return {}
+	var trusted_record_checksum := String(record["checksum"])
 	var projected := World.project_construction_damage(
 		request, record, source_snapshot, body_modules,
 		{"part/support": "m000001", "part/leaf": "m000002", "part/root": "m000003"},
-		record["checksum"]
+		trusted_record_checksum
 	)
 	return projected.get("event", {}) if bool(projected.get("success", false)) else {}
 
@@ -146,7 +147,8 @@ func _run() -> void:
 			{"material_id": "matter/water-ice", "mass_fraction": 0.25},
 		]), "temperature_k": 273.15,
 	})
-	var admitted := ResourceMap.admit_material_batch(batch, catalog, mapping, batch["checksum"])
+	var trusted_batch_checksum := String(batch["checksum"])
+	var admitted := ResourceMap.admit_material_batch(batch, catalog, mapping, trusted_batch_checksum)
 	_check(bool(admitted.get("success", false)), "R2 explicit resource admission")
 	if not bool(admitted.get("success", false)):
 		_finish(); return
@@ -165,7 +167,8 @@ func _run() -> void:
 	var overlay := DamageOverlay.create_overlay(body_binding, body_modules, source_snapshot)
 	var event := _damage_event(source_snapshot, body_modules)
 	_check(not body_binding.is_empty() and not overlay.is_empty() and not event.is_empty(), "R1/R4 damage fixtures bound")
-	var damaged_result := DamageOverlay.apply_damage(body_binding, overlay, body_modules, source_snapshot, event)
+	var trusted_event_binding_hash := String(event["binding_hash"])
+	var damaged_result := DamageOverlay.apply_damage(body_binding, overlay, body_modules, source_snapshot, event, trusted_event_binding_hash)
 	_check(bool(damaged_result.get("success", false)), "persistent physical damage applied")
 	if not bool(damaged_result.get("success", false)):
 		_finish(); return
@@ -222,7 +225,7 @@ func _run() -> void:
 		_check(site_after["physical_sample"] == site_before["physical_sample"], "handoff does not alter Matter sample")
 		_check(site_after["query_id"] == site_before["query_id"] and site_after["matter_state_revision"] == site_before["matter_state_revision"], "Matter provenance remains exact")
 
-	var admitted_after := ResourceMap.admit_material_batch(batch, catalog, mapping, batch["checksum"])
+	var admitted_after := ResourceMap.admit_material_batch(batch, catalog, mapping, trusted_batch_checksum)
 	_check(bool(admitted_after.get("success", false)) and admitted_after["admission"]["accounting_hash"] == resource_before["accounting_hash"], "resource accounting stable across seam")
 	_check(DamageOverlay.validate_overlay(damaged, body_binding, body_modules, source_snapshot).is_empty(), "persistent damage remains valid after seam")
 	var function_after := DamageOverlay.effective_function(body_binding, damaged, body_modules, source_snapshot)

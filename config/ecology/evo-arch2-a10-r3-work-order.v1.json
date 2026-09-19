@@ -4,7 +4,7 @@
   "state": "IN_PROGRESS",
   "risk_class": "HIGH",
   "branch": "feature/eco-evo-arch2-a10-seam-binding-r3",
-  "parent_r2": "03913b5c2992739f435819880896cbaee0ecbc1d",
+  "parent_r2": "46983be7370c1fd8eaf652b7672023d4bc1f6f80",
   "goal": "Real A8 snapshot seam handoff composed with production AuthorityRegionDescriptor/HandoffTicket and A10 Region admission.",
   "additive_paths": [
     "config/ecology/evo-arch2-a10-r3-work-order.v1.json",
@@ -30,17 +30,21 @@
     "HANDOFF_DOES_NOT_MUTATE_BIOLOGY",
     "OLD_OWNER_REJECTED_AFTER_COMMIT",
     "TARGET_OWNER_ACCEPTED_AFTER_COMMIT",
-    "WARM_TARGET_IS_PREPARATION_ONLY_AND_CANNOT_EXECUTE_ECOLOGY"
+    "WARM_TARGET_IS_PREPARATION_ONLY_AND_CANNOT_EXECUTE_ECOLOGY",
+    "HANDOFF_PREPARATION_TARGET_MUST_BE_WARM_NOT_ACTIVE"
   ],
   "parent_refresh": {
-    "previous": "4af2c3095646dcfefd8c2360686034b8e021e49e",
-    "current": "03913b5c2992739f435819880896cbaee0ecbc1d",
-    "reason": "Fresh review authority repair propagated from R1/R2; WARM target remains preparation-only."
+    "previous": "03913b5c2992739f435819880896cbaee0ecbc1d",
+    "current": "46983be7370c1fd8eaf652b7672023d4bc1f6f80",
+    "reason": "Trust-anchor falsifiers propagated from R1/R2."
   },
   "repair_r1": {
     "platform": "Windows canonical double Godot 4.7.1 a13da4feb",
     "finding": "target_ack Variant inference parse failure",
-    "repair": "Explicit state/bool/string/int annotations in R3 transition loop",
-    "upstream_r2_repair": "4af2c3095646dcfefd8c2360686034b8e021e49e"
+    "repair": "Explicit state/bool/string/int annotations in R3 transition loop"
+  },
+  "review_repair_r2": {
+    "finding": "prepare_ticket accepted an already ACTIVE target before commit, allowing dual-ACTIVE descriptors.",
+    "repair": "Preparation target must be WARM exactly; ACTIVE is admitted only after COMMITTED through R1 ACTIVE-only admission."
   }
 }

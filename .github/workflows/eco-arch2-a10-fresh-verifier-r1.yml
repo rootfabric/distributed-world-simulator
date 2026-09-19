@@ -29,7 +29,7 @@ jobs:
       - name: Checkout exact A10 product subject
         uses: actions/checkout@v4
         with:
-          ref: 0ecec3ef88508b24e526bf7efe4e67f4a14666ec
+          ref: 8cc0f6ec26c7b8f80c67788cf076b7023a2f4130
           fetch-depth: 0
           path: subject
 
@@ -37,8 +37,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test "$(git -C subject rev-parse HEAD)" = "0ecec3ef88508b24e526bf7efe4e67f4a14666ec"
-          test "$(git -C subject rev-parse 'HEAD^{tree}')" = "b0507338e17b4125479344ff9d706169a3600c9b"
+          test "$(git -C subject rev-parse HEAD)" = "8cc0f6ec26c7b8f80c67788cf076b7023a2f4130"
+          test "$(git -C subject rev-parse 'HEAD^{tree}')" = "fbca791248c42fd55f274ec980b304d464584059"
           test -z "$(git -C subject status --porcelain --untracked-files=no)"
 
       - name: Resolve canonical Linux double Godot
@@ -61,8 +61,8 @@ jobs:
           cd subject
           python3 validation/ecology/evo_arch2_a10_r5/verify.py \
             --godot "${{ steps.godot_linux.outputs.path }}" \
-            --head "0ecec3ef88508b24e526bf7efe4e67f4a14666ec" \
-            --tree "b0507338e17b4125479344ff9d706169a3600c9b"
+            --head "8cc0f6ec26c7b8f80c67788cf076b7023a2f4130" \
+            --tree "fbca791248c42fd55f274ec980b304d464584059"
 
       - name: Upload Linux independent evidence
         if: always()
@@ -90,7 +90,7 @@ jobs:
       - name: Checkout exact A10 product subject
         uses: actions/checkout@v4
         with:
-          ref: 0ecec3ef88508b24e526bf7efe4e67f4a14666ec
+          ref: 8cc0f6ec26c7b8f80c67788cf076b7023a2f4130
           fetch-depth: 0
           path: subject
 
@@ -98,8 +98,8 @@ jobs:
         run: |
           $head = (git -C subject rev-parse HEAD).Trim()
           $tree = (git -C subject rev-parse 'HEAD^{tree}').Trim()
-          if ($head -ne "0ecec3ef88508b24e526bf7efe4e67f4a14666ec") { throw "EXACT_HEAD_MISMATCH: $head" }
-          if ($tree -ne "b0507338e17b4125479344ff9d706169a3600c9b") { throw "EXACT_TREE_MISMATCH: $tree" }
+          if ($head -ne "8cc0f6ec26c7b8f80c67788cf076b7023a2f4130") { throw "EXACT_HEAD_MISMATCH: $head" }
+          if ($tree -ne "fbca791248c42fd55f274ec980b304d464584059") { throw "EXACT_TREE_MISMATCH: $tree" }
           $dirty = git -C subject status --porcelain --untracked-files=no
           if (-not [string]::IsNullOrWhiteSpace(($dirty -join ""))) { throw "TRACKED_SOURCE_DIRTY" }
 
@@ -162,8 +162,8 @@ jobs:
 
           [pscustomobject]@{
             verdict = "PASS"
-            subject_head = "0ecec3ef88508b24e526bf7efe4e67f4a14666ec"
-            subject_tree = "b0507338e17b4125479344ff9d706169a3600c9b"
+            subject_head = "8cc0f6ec26c7b8f80c67788cf076b7023a2f4130"
+            subject_tree = "fbca791248c42fd55f274ec980b304d464584059"
             godot_version = "4.7.1.stable.double.custom_build.a13da4feb"
             godot_sha256 = "3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5"
             runtime = $summary

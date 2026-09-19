@@ -4,7 +4,7 @@
   "state": "IN_PROGRESS",
   "risk_class": "HIGH",
   "branch": "feature/eco-evo-arch2-a10-body-damage-overlay-r4",
-  "parent_r3": "19466340ad236a54b32797094b1ca86f2f1c6fa2",
+  "parent_r3": "5df721877758b77ae4b944737eb5c57f705898a4",
   "goal": "Persist C9-derived damage against exact BodyGraph/Construction binding without mutating accepted A5 historical state.",
   "additive_paths": [
     "config/ecology/evo-arch2-a10-r4-work-order.v1.json",
@@ -29,12 +29,14 @@
     "DESTROYED_MODULE_DISables_DESCENDANTS",
     "EFFECTIVE_FUNCTION_EXCLUDES_DISABLED_MODULES",
     "DISABLED_SET_EQUALS_DESTROYED_BODYGRAPH_CLOSURE",
-    "PERSISTED_OVERLAY_REQUIRES_EXTERNAL_CHECKSUM_ANCHOR"
+    "PERSISTED_OVERLAY_REQUIRES_EXTERNAL_CHECKSUM_ANCHOR",
+    "DAMAGE_EVENT_REQUIRES_CALLER_OWNED_EXTERNAL_BINDING_HASH_ANCHOR",
+    "RESEALED_SEMANTIC_DAMAGE_EVENT_CANNOT_REPLACE_TRUSTED_EVENT"
   ],
   "parent_refresh": {
-    "previous": "eaab893f1f727eb0cfc427860e27b0ba0463bcff",
-    "current": "19466340ad236a54b32797094b1ca86f2f1c6fa2",
-    "reason": "Fresh review authority repair propagated through R3; WARM is preparation-only and ACTIVE required for ECO execution."
+    "previous": "19466340ad236a54b32797094b1ca86f2f1c6fa2",
+    "current": "5df721877758b77ae4b944737eb5c57f705898a4",
+    "reason": "R3 WARM-only preparation and upstream trust-anchor falsifiers propagated."
   },
   "repair_r1": {
     "platform": "Windows canonical double Godot 4.7.1 a13da4feb",
@@ -48,5 +50,9 @@
     "finding": "R4 forged-event negative control was a semantic no-op because events[0] already mapped part/root to m000003.",
     "repair": "Tamper part_id to part/support, re-seal binding_hash, and require exact A10_R4_EVENT_MAPPING rejection.",
     "product_semantics_changed": false
+  },
+  "review_repair_r3": {
+    "finding": "R4 apply_damage trusted a self-consistent event seal but had no caller-owned event authority anchor.",
+    "repair": "apply_damage requires expected_event_binding_hash; a semantically valid re-sealed event must fail A10_R4_EVENT_EXTERNAL_ANCHOR against the retained trusted hash."
   }
 }

@@ -5,13 +5,13 @@
 ## Exact subject
 
 ```text
-SUBJECT_HEAD = 0ecec3ef88508b24e526bf7efe4e67f4a14666ec
-SUBJECT_TREE = b0507338e17b4125479344ff9d706169a3600c9b
+SUBJECT_HEAD = 8cc0f6ec26c7b8f80c67788cf076b7023a2f4130
+SUBJECT_TREE = fbca791248c42fd55f274ec980b304d464584059
 BASE_MAIN    = 471210d781e521bc7897a8fe859636a07d7a3ab3
-R1 = a0df8f550e32c6fb4f38553509878e5abcdd63c3
-R2 = 03913b5c2992739f435819880896cbaee0ecbc1d
-R3 = 19466340ad236a54b32797094b1ca86f2f1c6fa2
-R4 = 0169ad98b6a8f7179a60a1c50c5226050709f7c7
+R1 = 9ff2d13e31318bd0f323d29a3efd03f0850d8c7b
+R2 = 46983be7370c1fd8eaf652b7672023d4bc1f6f80
+R3 = 5df721877758b77ae4b944737eb5c57f705898a4
+R4 = 9ab7bdf396fc0ecffc847397c4f2e3685f5ef92b
 ```
 
 Verifier branch MUST NOT modify product files. Workflow checks out the exact subject into a separate checkout and runs the subject-owned R5 whole-stack verifier there.
@@ -35,12 +35,16 @@ If the self-hosted Linux runner is unavailable, state must remain BLOCKED_RUNNER
 
 ## Windows Repair R2 rebind
 
-The prior pinned subject `57d274de196e...` is historical after canonical Windows double Godot exposed R2/R4 typed-array failures and R3/R5 parser inference failures. This verifier now admits only `0ecec3ef88508b24e526bf7efe4e67f4a14666ec / b0507338e17b4125479344ff9d706169a3600c9b`, containing the fixes at their owning layers.
+The prior pinned subject `57d274de196e...` is historical after canonical Windows double Godot exposed R2/R4 typed-array failures and R3/R5 parser inference failures. This verifier now admits only `8cc0f6ec26c7b8f80c67788cf076b7023a2f4130 / fbca791248c42fd55f274ec980b304d464584059`, containing the fixes at their owning layers.
 
 ## R4 negative-control rebind
 
-The prior Windows subject `2d32212914de...` is historical after R4 revealed a no-op forged-event negative control. Current product `0ecec3ef88508b24e526bf7efe4e67f4a14666ec / b0507338e17b4125479344ff9d706169a3600c9b` carries the non-noop, re-sealed part/module mismatch control and no runtime semantic change.
+The prior Windows subject `2d32212914de...` is historical after R4 revealed a no-op forged-event negative control. Current product `8cc0f6ec26c7b8f80c67788cf076b7023a2f4130 / fbca791248c42fd55f274ec980b304d464584059` carries the non-noop, re-sealed part/module mismatch control and no runtime semantic change.
 
 ## Fresh whole-stack authority review rebind
 
-The previous subject `a33a9056a9d7...` remains historical PASS evidence but cannot satisfy current acceptance after review found that R1 admitted WARM as executable. Current product `0ecec3ef88508b24e526bf7efe4e67f4a14666ec / b0507338e17b4125479344ff9d706169a3600c9b` requires ACTIVE for ECO cursor/site execution and retains WARM only as R3 handoff preparation state. Verifier must run the new subject on both canonical platforms.
+The previous subject `a33a9056a9d7...` remains historical PASS evidence but cannot satisfy current acceptance after review found that R1 admitted WARM as executable. Current product `8cc0f6ec26c7b8f80c67788cf076b7023a2f4130 / fbca791248c42fd55f274ec980b304d464584059` requires ACTIVE for ECO cursor/site execution and retains WARM only as R3 handoff preparation state. Verifier must run the new subject on both canonical platforms.
+
+## Fresh trust review R2 rebind
+
+Current subject `8cc0f6ec26c7b8f80c67788cf076b7023a2f4130 / fbca791248c42fd55f274ec980b304d464584059` additionally requires WARM-only handoff preparation, caller-owned R4 event binding-hash authority, and valid-rehash falsifiers for the R1 damage record and R2 Matter batch anchors. All earlier subjects are historical after these trust-boundary repairs.

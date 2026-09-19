@@ -72,6 +72,8 @@ func _run() -> void:
 		return
 	var ticket: Dictionary = prepared["ticket"]
 	_check(bool(Ticket.validate(ticket).get("success", false)) and ticket["state"] == "REQUESTED", "prepared ticket is canonical REQUESTED")
+	var active_prepare := Bridge.prepare_ticket(before_cursor, source, target_active, int(before_cursor["clock"]) + 1, int(before_cursor["clock"]) + 100)
+	_check(not bool(active_prepare.get("success", false)) and active_prepare.get("error") == "A10_R3_TARGET_NOT_WARM", "ACTIVE target cannot be used as pre-commit preparation descriptor")
 	var premature := Bridge.admit_committed(before_cursor, target_active, ticket)
 	_check(not bool(premature.get("success", false)) and premature.get("error") == "A10_R3_TICKET_NOT_COMMITTED", "REQUESTED ticket cannot authorize target")
 
@@ -124,7 +126,7 @@ func _run() -> void:
 
 	var dormant := _region("node/b", 2, "DORMANT", 16)
 	var dormant_result := Bridge.prepare_ticket(before_cursor, source, dormant, 1, 100)
-	_check(not bool(dormant_result.get("success", false)) and dormant_result.get("error") == "A10_R3_TARGET_NOT_PREPARED", "DORMANT target rejected")
+	_check(not bool(dormant_result.get("success", false)) and dormant_result.get("error") == "A10_R3_TARGET_NOT_WARM", "DORMANT target rejected")
 
 	var changed_selector := {"kind": "CHUNK_SET", "partition_prefix": "", "chunk_ids": ["chunk/other"]}
 	var other_space := _region("node/b", 2, "WARM", 17, "region/a", changed_selector)
