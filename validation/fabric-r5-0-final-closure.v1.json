@@ -1,0 +1,44 @@
+{
+  "schema": "fabric.r5_0.final_closure.v1",
+  "status": "CLOSED_ACCEPTED_RESEARCH",
+  "subject_head": "5e4f2edfd48be643493d0abbd50b063980326901",
+  "subject_tree": "ae153088da30456cbcdb1dfc0f585d6a946b7d60",
+  "freeze_ref": "freeze/fabric-r5-0-5e4f2ed-r1",
+  "research_merge_commit": "aee2ceca54d6d7536a12d54f6ce0361d3698a3a9",
+  "pull_request": 671,
+  "authoritative_exact": {
+    "run_id": 35509470296,
+    "aggregate_job_id": 106074821225,
+    "artifact_id": 10604399667,
+    "artifact_digest": "sha256:19b2851e9c0b8c99bbdbee5d60033b004bece15d3c2398d35e8ef45c11f6ec39",
+    "deterministic_hash": "1c549d536b4077c686dea9e25ca5e08935afd240f3b070ca49da153b7bee883b",
+    "sample_count": 3,
+    "conclusion": "PASS"
+  },
+  "review": {
+    "review_id": 5260521961,
+    "verdict": "PASS",
+    "blocking_findings": 0
+  },
+  "independent_verifier": {
+    "branch": "verify/fabric-r5-0-fresh-independent-verifier-r1",
+    "head": "f1101a4bf6342af785823ec11fcae699411dac1c",
+    "run_id": 35509598142,
+    "job_id": 106075076854,
+    "artifact_id": 10604784139,
+    "artifact_digest": "sha256:854566fce64565d43762548fa2fc62b601e5336f4f15076d900b9cd948d9b9b6",
+    "deterministic_hash": "1c549d536b4077c686dea9e25ca5e08935afd240f3b070ca49da153b7bee883b",
+    "verdict": "PASS"
+  },
+  "baseline": {
+    "canonical_parts": 5000,
+    "active_full_peak": 20,
+    "local_reconstructed_parts": 20,
+    "local_rebake_validations": 20,
+    "global_physical_rebuilds": 0,
+    "duplicate_ownership_count": 0
+  },
+  "main_integration": false,
+  "next_stage": "R5.1_QUANTITATIVE_SCALE",
+  "parallel_stage": "R5.2_QUALITATIVE_COMPLEXITY_COMPRESSION"
+}

@@ -115,17 +115,17 @@ R4.2 TOPOLOGY + DYNAMIC HOLDOUT          ✅ CLOSED
               ▼
 SCALE-R5 EXECUTABLE CAMPAIGN             ← CURRENT
   │
-  ├─ R5.0 MEASUREMENT HARNESS + 5k BASELINE
+  ├─ R5.0 MEASUREMENT HARNESS + 5k BASELINE      ✅ CLOSED
   │    - разложить стоимость по scan/hash/solve/reconstruct/alloc/RSS/CPU
   │    - зафиксировать корректные измерители до больших оптимизаций
   │
-  ├─ R5.1 QUANTITATIVE SCALE
+  ├─ R5.1 QUANTITATIVE SCALE                     ← CURRENT
   │    - 5k / 20k / 100k canonical parts
   │    - axes: canonical N / active DOF k / boundary b / events / changed deps
   │    - local event vs genuinely global propagation
   │    - стоимость должна зависеть прежде всего от active/changed region
   │
-  ├─ R5.2 QUALITATIVE COMPLEXITY COMPRESSION
+  ├─ R5.2 QUALITATIVE COMPLEXITY COMPRESSION      ↔ PARALLEL-ELIGIBLE
   │    - сложные electrical / mechanical / coupled subsystems
   │    - много внутренних элементов → мало external ports
   │    - static equivalents + dynamic ROM + hybrid modes
@@ -186,7 +186,7 @@ INTEGRATION-R6
 
 ## Gate rules
 
-- R5.0 measurement harness идёт первым; после него количественное и качественное scaling развиваются как одна программа, а не как независимые оптимизации.
+- R5.0 measurement harness закрыт. R5.1 — текущий quantitative frontier; R5.2 qualitative complexity compression разрешён параллельно, но обязан использовать R5.0 measurement contract.
 - Large executable SCALE-R5 acceptance does not begin until R4.2 is closed on the repaired subject.
 - Do not raise `MAX_NODES`, budgets or tolerances merely to obtain PASS.
 - `COMPLEX3` is a baseline, not a future milestone to reimplement.
@@ -360,4 +360,4 @@ device-specific kernel shortcut        FORBIDDEN
 
 ## Current acceptance target
 
-`R4.1` и `R4.2` закрыты на frozen evidence. Текущий research stage — `SCALE-R5`, причём его цель двойная: (1) количественный масштаб 5k/20k/100k и (2) качественная компрессия сложности, когда сложные подсистемы исполняются как компактные boundary-equivalent модели и разворачиваются в детали только когда это физически необходимо.
+`R4.1`, `R4.2` и `R5.0` закрыты. Текущий active frontier — `R5.1 QUANTITATIVE SCALE`: 5k → 20k → 100k с измерением зависимости стоимости от total N, active DOF, boundary size и changed dependencies. Параллельно разрешён `R5.2 QUALITATIVE COMPLEXITY COMPRESSION`, который должен строиться на том же R5.0 measurement contract.
