@@ -460,7 +460,13 @@ func _commit_round8(round_index: int) -> Dictionary:
 	var bounded := _refresh_bounds8()
 	if not bool(bounded.get("success", false)):
 		return bounded
-	return Protocol8.success({"round_completed": round_index, "action": action, "current": current.get("details", {}), "snapshot": world_snapshot()})
+	var current_details: Dictionary = Dictionary(current.get("details", {})).duplicate(true)
+	return Protocol8.success({
+		"round_completed": round_index,
+		"action": action,
+		"current": current_details,
+		"snapshot": Dictionary(current_details.get("snapshot", {})).duplicate(true),
+	})
 
 
 func _checkpoint8() -> Dictionary:
@@ -590,7 +596,11 @@ func handle_client(actor: String, body: Dictionary) -> Dictionary:
 		var current := _current8(actor)
 		if not bool(current.get("success", false)):
 			return current
-		return Protocol8.success({"current": current.get("details", {}), "snapshot": world_snapshot()})
+		var details: Dictionary = Dictionary(current.get("details", {})).duplicate(true)
+		# _current8 already sampled the canonical owners and produced the exact
+		# world snapshot for that sample. Reuse it instead of issuing a second
+		# pair of player LOOKUP RPCs for every status poll.
+		return Protocol8.success({"current": details, "snapshot": Dictionary(details.get("snapshot", {})).duplicate(true)})
 	if kind == "MVP8_ROUND":
 		if actor != "a":
 			return Protocol8.failure("MVP8_ROUND_DRIVER_A_REQUIRED")
