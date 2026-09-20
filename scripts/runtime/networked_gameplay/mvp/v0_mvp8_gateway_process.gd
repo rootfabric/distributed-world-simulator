@@ -265,16 +265,21 @@ func _dig8(round_index: int) -> Dictionary:
 			candidates.append(actor)
 	if candidates.is_empty():
 		return Protocol8.failure("MVP8_DIG_OWNER_OBSERVER_REQUIRED")
-	var directions: Array = [[0.0, -1.0, 0.0]]
-	for vertical in [-0.95, -0.9, -0.8, -0.75, -0.7, -0.6]:
-		var horizontal := sqrt(1.0 - float(vertical) * float(vertical))
-		var diagonal := horizontal / sqrt(2.0)
-		directions.append_array([
-			[horizontal, vertical, 0.0], [-horizontal, vertical, 0.0],
-			[0.0, vertical, horizontal], [0.0, vertical, -horizontal],
-			[diagonal, vertical, diagonal], [diagonal, vertical, -diagonal],
-			[-diagonal, vertical, diagonal], [-diagonal, vertical, -diagonal],
-		])
+	# Prioritize a compact set of directions that are known to intersect the
+	# bounded bootstrap surface. A player far on +X/-X first probes back toward
+	# the Matter bubble centre; this avoids dozens of authenticated PREPARE RPCs.
+	var directions: Array = [
+		[0.0, -1.0, 0.0],
+		[0.714142842854285, -0.7, 0.0], [-0.714142842854285, -0.7, 0.0],
+		[0.4358898943540673, -0.9, 0.0], [-0.4358898943540673, -0.9, 0.0],
+		[0.0, -0.9, 0.4358898943540673], [0.0, -0.9, -0.4358898943540673],
+		[0.6, -0.8, 0.0], [-0.6, -0.8, 0.0],
+		[0.0, -0.8, 0.6], [0.0, -0.8, -0.6],
+		[0.30822070014844877, -0.9, 0.30822070014844877],
+		[0.30822070014844877, -0.9, -0.30822070014844877],
+		[-0.30822070014844877, -0.9, 0.30822070014844877],
+		[-0.30822070014844877, -0.9, -0.30822070014844877],
+	]
 	_last_dig8 = {
 		"round": round_index,
 		"candidates": candidates.duplicate(),
@@ -288,7 +293,11 @@ func _dig8(round_index: int) -> Dictionary:
 	for candidate in candidates:
 		var player_owner := String(coordinators[candidate].snapshot().get("active_authority_id", ""))
 		var player: Dictionary = lookup(player_owner, candidate)
-		for direction in directions:
+		var candidate_directions: Array = directions.duplicate(true)
+		var px := float(player.get("position", {}).get("x", 0.0))
+		if absf(px) > 1.0:
+			candidate_directions.push_front([-0.714142842854285 if px > 0.0 else 0.714142842854285, -0.7, 0.0])
+		for direction in candidate_directions:
 			var operation := "operation/mvp4/%s/mvp8-dig/%d/attempt-%02d" % [candidate, round_index, attempt_index]
 			attempt_index += 1
 			var prepared := _owner4(candidate, {"kind": "MVP4_PREPARE", "operation_id": operation, "direction": direction})
