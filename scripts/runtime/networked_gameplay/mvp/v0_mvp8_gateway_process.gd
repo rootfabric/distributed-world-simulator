@@ -183,11 +183,25 @@ func route_client_input(actor: String, wire: Dictionary) -> Dictionary:
 	return routed
 
 
+func _matter_observer8() -> String:
+	# Matter remains canonically owned on authority/a while player A is free to
+	# cross the SM1 seam. Use whichever authenticated logical player is currently
+	# local to the Matter owner for read/dig authorization; never pretend A still
+	# belongs to authority/a after its ownership transfer.
+	for actor in ["a", "b"]:
+		if String(coordinators[actor].snapshot().get("active_authority_id", "")) == "authority/a":
+			return actor
+	return ""
+
+
 func _current8(actor: String) -> Dictionary:
-	var matter_result := _owner4(actor, {"kind": "MVP4_REPORT"})
+	var observer := _matter_observer8()
+	if observer.is_empty():
+		return Protocol8.failure("MVP8_MATTER_OWNER_OBSERVER_REQUIRED")
+	var matter_result := _owner4(observer, {"kind": "MVP4_REPORT"})
 	if not bool(matter_result.get("success", false)):
 		return matter_result
-	var material_result := _owner4(actor, {"kind": "MVP5_MATERIAL"})
+	var material_result := _owner4(observer, {"kind": "MVP5_MATERIAL"})
 	if not bool(material_result.get("success", false)):
 		return material_result
 	var decision: Dictionary = coordinators[actor].snapshot()
@@ -216,18 +230,21 @@ func _current8(actor: String) -> Dictionary:
 
 
 func _dig8(round_index: int) -> Dictionary:
-	# Reuse the accepted MVP4 actor-bound operation namespace. MVP8 owns only
-	# sequencing; the canonical Matter owner must continue enforcing its exact
-	# operation binding instead of accepting a new orchestration prefix.
-	var operation := "operation/mvp4/a/mvp8-dig/%d" % round_index
+	# Reuse the accepted MVP4 actor-bound operation namespace. The dig actor is
+	# an authenticated player currently local to authority/a, because Matter
+	# ownership does not migrate with player A's SM1 seam crossing.
+	var dig_actor := _matter_observer8()
+	if dig_actor.is_empty():
+		return Protocol8.failure("MVP8_DIG_OWNER_OBSERVER_REQUIRED")
+	var operation := "operation/mvp4/%s/mvp8-dig/%d" % [dig_actor, round_index]
 	var prepared: Dictionary = {}
 	for direction in [[0.0, -1.0, 0.0], [0.6, -0.8, 0.0], [-0.6, -0.8, 0.0], [0.0, -0.8, 0.6]]:
-		prepared = _owner4("a", {"kind": "MVP4_PREPARE", "operation_id": operation, "direction": direction})
+		prepared = _owner4(dig_actor, {"kind": "MVP4_PREPARE", "operation_id": operation, "direction": direction})
 		if bool(prepared.get("success", false)):
 			break
 	if not bool(prepared.get("success", false)):
 		return prepared
-	var executed := _owner4("a", {"kind": "MVP4_EXECUTE", "plan": Dictionary(prepared.get("details", {})).duplicate(true)})
+	var executed := _owner4(dig_actor, {"kind": "MVP4_EXECUTE", "plan": Dictionary(prepared.get("details", {})).duplicate(true)})
 	if not bool(executed.get("success", false)):
 		return executed
 	var current := _current8("a")
@@ -237,7 +254,10 @@ func _dig8(round_index: int) -> Dictionary:
 
 
 func _item8(round_index: int) -> Dictionary:
-	var rpc := _authority6("authority/a", "a", {
+	var owner_id := String(coordinators["a"].snapshot().get("active_authority_id", ""))
+	if owner_id not in ["authority/a", "authority/b"]:
+		return Protocol8.failure("MVP8_ITEM_ACTIVE_OWNER_REQUIRED")
+	var rpc := _authority6(owner_id, "a", {
 		"kind": "MVP8_ITEM",
 		"operation_id": "operation/mvp8/item/select/%d" % round_index,
 		"command_kind": "inventory.select_hotbar",

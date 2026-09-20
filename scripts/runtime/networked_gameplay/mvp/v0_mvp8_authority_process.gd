@@ -451,10 +451,13 @@ func handle_rpc(body: Dictionary) -> Dictionary:
 	var result: Dictionary
 	match kind:
 		"MVP8_ITEM":
-			if authority != "authority/a":
-				result = Protocol.failure("MVP8_ITEM_CANONICAL_OWNER_REQUIRED")
+			# Actor-scoped Item Graph ownership follows the accepted SM1 player
+			# transfer. Execute only on the authority that currently has the
+			# canonical player record; a stale/non-owner authority fails closed.
+			var player: Dictionary = service.get_player(actor)
+			if player.is_empty():
+				result = Protocol.failure("MVP8_ITEM_ACTIVE_OWNER_REQUIRED")
 			else:
-				var player: Dictionary = service.get_player(actor)
 				result = service.handle_canonical_item_command(
 					actor,
 					Protocol.session(cfg, actor),
