@@ -1,6 +1,6 @@
 # FABRIC — Current Roadmap after HOLDOUT-R4 Audit
 
-Дата: 17 сентября 2026.
+Дата: 20 сентября 2026.
 
 ## Неизменяемая история
 
@@ -19,7 +19,7 @@ PR #592                                OPEN / UNMERGED / separate human gate
 historical HOLDOUT-R4 ACCEPTED
               │
               ▼
-R4.1 NUMERIC + DIAGNOSTIC REPAIR        ← CURRENT
+R4.1 NUMERIC + DIAGNOSTIC REPAIR        ✅ CLOSED
   - finite-output/fail-closed numeric envelope
   - stable PERF failure shape
   - no matrix_hash masking
@@ -29,7 +29,7 @@ R4.1 NUMERIC + DIAGNOSTIC REPAIR        ← CURRENT
 NEW SUBJECT FREEZE + fresh review/verifier
               │
               ▼
-R4.2 TOPOLOGY + DYNAMIC HOLDOUT
+R4.2 TOPOLOGY + DYNAMIC HOLDOUT          ✅ CLOSED
   - multiple unseen topology families
   - variable node/port/active-DOF counts
   - near-singular + unsupported negatives
@@ -39,7 +39,7 @@ R4.2 TOPOLOGY + DYNAMIC HOLDOUT
   - independent oracle
               │
               ▼
-SCALE-R5 EXECUTABLE CAMPAIGN
+SCALE-R5 EXECUTABLE CAMPAIGN             ← CURRENT
   - axes: canonical N / active DOF k / boundary b / events / changed deps
   - metadata walks + hashes + solver + reconstruction + allocations + RSS/CPU
   - variable causal island, not hard-coded 20 FULL
@@ -66,4 +66,4 @@ INTEGRATION-R6
 
 ## Current acceptance target
 
-`R4.1` closes only after exact canonical-double CI preserves the historical successful hashes and proves the new numeric/diagnostic negatives. `R4.2` then creates a fresh freeze/preregistration before any new holdout case values are materialized.
+`R4.1` и `R4.2` закрыты на frozen evidence. Следующий research stage — `SCALE-R5`: executable scaling campaign без изменения уже закрытых R4.1/R4.2 claims.
