@@ -5,6 +5,6 @@ cd "$ROOT"
 : "${GODOT_BIN:?Set GODOT_BIN to canonical Linux double Godot}"
 export GODOT_BIN GODOT="$GODOT_BIN" BREAKPOINT_RUNTIME_DISABLED=1
 
-timeout --kill-after=10s 900s \
+timeout --kill-after=5s 180s \
   "$GODOT_BIN" --headless --path "$ROOT" \
   --script res://tests/research/fabric_bake0/fabric_r5_0_measurement_5k_acceptance.gd
