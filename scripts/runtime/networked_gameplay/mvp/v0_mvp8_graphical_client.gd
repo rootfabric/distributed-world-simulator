@@ -5,6 +5,7 @@ const Support8 = preload("res://scripts/runtime/networked_gameplay/sm1/sm1_6_pro
 
 var _mvp8_active := false
 var _mvp8_move_round := -1
+var _mvp8_neutral_round := -1
 var _mvp8_rounds_seen: Array[int] = []
 var _mvp8_exit_after_reply := false
 var _mvp8_reconnect_prepared := false
@@ -30,6 +31,7 @@ func _publish_progress8(snapshot: Dictionary) -> void:
 		"phase4": _phase4,
 		"mvp8_active": _mvp8_active,
 		"mvp8_move_round": _mvp8_move_round,
+		"mvp8_neutral_round": _mvp8_neutral_round,
 		"pending_kind": pending_kind,
 		"pending_rpc": pending_rpc,
 		"input_sequence": input_sequence,
@@ -81,6 +83,13 @@ func _next_mvp8(snapshot: Dictionary) -> void:
 		else:
 			axis = 1.0 if round_index % 2 == 0 else -1.0
 		send_move(axis)
+		return
+	if _mvp8_neutral_round != round_index:
+		# A fixed-tick intent is held by the native owner between packets. Stop it
+		# explicitly before running the potentially long canonical round action so
+		# CI/runtime speed cannot move the player outside the bounded terrain area.
+		_mvp8_neutral_round = round_index
+		send_move(0.0)
 		return
 	var moves: Dictionary = state.get("round_moves", {})
 	if actor == "a" and bool(moves.get("a", false)) and bool(moves.get("b", false)):

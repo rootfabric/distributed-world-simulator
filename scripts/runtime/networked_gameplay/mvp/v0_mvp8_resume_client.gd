@@ -21,6 +21,7 @@ var failures: Array[String] = []
 var latest_snapshot: Dictionary = {}
 var latest_current: Dictionary = {}
 var moved_round := -1
+var neutral_round := -1
 var rounds_seen: Array[int] = []
 var fixed_receipts := 0
 var max_reply_ms := 0
@@ -122,7 +123,7 @@ func _validate_current8(current: Dictionary, digest: String = "") -> bool:
 	return true
 
 
-func _send_move8(snapshot: Dictionary, round_index: int) -> void:
+func _send_move8(snapshot: Dictionary, round_index: int, neutral: bool = false) -> void:
 	var player: Dictionary = snapshot.get("players", {}).get(actor, {})
 	var epoch := int(player.get("ownership_epoch", 0))
 	var input_sequence := int(snapshot.get("input_sequences", {}).get(actor, 0)) + 1
@@ -130,14 +131,16 @@ func _send_move8(snapshot: Dictionary, round_index: int) -> void:
 		fail8("MVP8_MOVE_WATERMARK_INVALID")
 		return
 	var decision: Dictionary = snapshot.get("decisions", {}).get("a", {})
-	var axis := 1.0
-	if actor == "a":
-		axis = -1.0 if String(decision.get("active_authority_id", "authority/a")) == "authority/b" else 1.0
-	else:
-		axis = 1.0 if round_index % 2 == 0 else -1.0
-	var operation := "operation/mvp8/%s/round-%02d/input-%d" % [actor, round_index, input_sequence]
+	var axis := 0.0 if neutral else 1.0
+	if not neutral:
+		if actor == "a":
+			axis = -1.0 if String(decision.get("active_authority_id", "authority/a")) == "authority/b" else 1.0
+		else:
+			axis = 1.0 if round_index % 2 == 0 else -1.0
+	var phase_tag := "neutral" if neutral else "move"
+	var operation := "operation/mvp8/%s/round-%02d/%s-%d" % [actor, round_index, phase_tag, input_sequence]
 	var wire := InputDTO8.create(
-		"message/mvp8/%s/round-%02d/input-%d" % [actor, round_index, input_sequence],
+		"message/mvp8/%s/round-%02d/%s-%d" % [actor, round_index, phase_tag, input_sequence],
 		operation,
 		actor,
 		Protocol8.session(cfg, actor),
@@ -147,7 +150,10 @@ func _send_move8(snapshot: Dictionary, round_index: int) -> void:
 		"MOVEMENT_INTENT",
 		{"move_x": axis, "move_z": 0.0, "look_yaw": 0.0, "look_pitch": 0.0, "jump_pressed": false, "sprint": false, "delta_seconds": 1.0 / 60.0}
 	)
-	moved_round = round_index
+	if neutral:
+		neutral_round = round_index
+	else:
+		moved_round = round_index
 	send8("MOVE", {"wire": wire})
 
 
@@ -178,6 +184,9 @@ func _advance8(snapshot: Dictionary) -> void:
 		return
 	if moved_round != round_index:
 		_send_move8(snapshot, round_index)
+		return
+	if neutral_round != round_index:
+		_send_move8(snapshot, round_index, true)
 		return
 	var moves: Dictionary = state.get("round_moves", {})
 	if actor == "a" and bool(moves.get("a", false)) and bool(moves.get("b", false)):
@@ -279,6 +288,7 @@ func finish8(requested_pass: bool) -> void:
 		"disconnects": disconnects,
 		"rounds_seen": rounds_seen.duplicate(),
 		"final_round": final_round,
+		"neutral_round": neutral_round,
 		"fixed_input_receipts": fixed_receipts,
 		"max_reply_ms": max_reply_ms,
 		"collision_part_count": collision_parts,
