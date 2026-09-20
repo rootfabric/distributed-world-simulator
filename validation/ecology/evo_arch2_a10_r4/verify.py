@@ -92,7 +92,8 @@ def main():
         source = (ROOT / "scripts/research/ecology/v2/body_construction_binding_v1.gd").read_text(encoding="utf-8")
         require("organism_life_state_v1.gd" not in source and "resource_lifecycle_runtime_v1.gd" not in source,
                 "R4_MUTATES_ACCEPTED_A5_PATH")
-        require("PARTIAL_PHYSICAL_PROXY" in source, "R4_COVERAGE_SCOPE_MISSING")\n        require("A10_R4_EVENT_EXTERNAL_ANCHOR" in source, "R4_EVENT_EXTERNAL_ANCHOR_MISSING")
+        require("PARTIAL_PHYSICAL_PROXY" in source, "R4_COVERAGE_SCOPE_MISSING")
+        require("A10_R4_EVENT_EXTERNAL_ANCHOR" in source, "R4_EVENT_EXTERNAL_ANCHOR_MISSING")
         result["checks"].append("a5_history_not_rewritten")
 
         require(not git("status", "--porcelain", "--untracked-files=no"), "TRACKED_SOURCE_DIRTY")

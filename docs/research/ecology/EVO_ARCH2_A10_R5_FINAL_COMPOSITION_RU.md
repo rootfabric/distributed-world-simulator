@@ -1,7 +1,7 @@
 # EVO ARCH2 A10 — R5 final composition candidate
 
 Дата: 2026-09-18. Work Order `EVO-ARCH2-A10-20260918-R5`, HIGH.
-Parent: A10-R4 `9ab7bdf396fc0ecffc847397c4f2e3685f5ef92b`, TREE `18b47b917c035f4cc66a7c4c4026d0aae004a44b`.
+Parent: A10-R4 `96d152176a813535db6950085cb10fff33c1464f`, TREE `b554647557a6b78b79c24f4cd3a8ef63513a6468`.
 
 ## Назначение
 
@@ -37,7 +37,7 @@ R5 не добавляет нового runtime owner или новую биол
 ## Exact lineage
 
 R5 verifier и Work Order обязаны ссылаться на один и тот же exact parent:
-`9ab7bdf396fc0ecffc847397c4f2e3685f5ef92b / 18b47b917c035f4cc66a7c4c4026d0aae004a44b`.
+`96d152176a813535db6950085cb10fff33c1464f / b554647557a6b78b79c24f4cd3a8ef63513a6468`.
 Предыдущие R4 heads `9e7deeb1...` и `511a1e0f...` являются историческими и не могут использоваться для current R5 acceptance.
 
 ## Scope boundary
@@ -66,3 +66,7 @@ Fresh review текущего frozen closure выявил, что R1 допус�
 ## Fresh trust review repair R2
 
 Дополнительный whole-stack review усилил trust boundaries. R1/R2 теперь доказывают, что schema-valid rehashed record/batch не заменяют ранее сохранённый caller-owned checksum. R3 разрешает handoff preparation только по WARM target и отвергает ACTIVE до commit. R4 `apply_damage()` требует caller-owned `expected_event_binding_hash`: корректно пересчитанный, но семантически изменённый event не получает authority от собственного self-seal. R5 сохраняет trusted batch/record/event anchors отдельными значениями и передаёт их между слоями.
+
+## Verifier-only refresh
+
+R4 individual exact initially failed before Godot because its Python verifier contained a literal `\\n` introduced during a static-guard edit. R4 runtime already passed inside the R5 whole-stack exact. The R4 verifier syntax was repaired in `96d152176a813535db6950085cb10fff33c1464f`; no GDScript runtime adapter or runtime test semantics changed. R5 is rebound to that exact R4 parent/tree.
