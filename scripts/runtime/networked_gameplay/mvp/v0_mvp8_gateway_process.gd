@@ -55,6 +55,8 @@ var _backend_liveness_syncs8 := 0
 var _seam_crossings8 := 0
 var _handoff_stage8 := "IDLE"
 var _matter_resynced8 := {"a": false, "b": false}
+var _handoff_tick_barriers8 := 0
+var _handoff_tick_barrier_last8: Dictionary = {}
 var _current_cache8 := {"a": {}, "b": {}}
 var _current_cache_hits8 := 0
 var _current_cache_misses8 := 0
@@ -172,6 +174,55 @@ func initialize_native() -> bool:
 	return okay
 
 
+func _authority_tick8(authority_id: String, actor: String) -> Dictionary:
+	var rpc := call_authority(authority_id, {
+		"kind": "LOOKUP",
+		"actor": actor,
+		"operation_id": "",
+	})
+	if not bool(rpc.get("success", false)):
+		return rpc
+	var snapshot_value = rpc.get("details", {}).get("snapshot", {})
+	if not snapshot_value is Dictionary:
+		return Protocol8.failure("MVP8_HANDOFF_TICK_SNAPSHOT_REQUIRED")
+	var tick := int(Dictionary(snapshot_value).get("server_tick", -1))
+	if tick < 0:
+		return Protocol8.failure("MVP8_HANDOFF_SERVER_TICK_REQUIRED")
+	return Protocol8.success({"server_tick": tick})
+
+
+func _await_post_handoff_tick8(authority_id: String, actor: String) -> Dictionary:
+	var baseline := _authority_tick8(authority_id, actor)
+	if not bool(baseline.get("success", false)):
+		return baseline
+	var baseline_tick := int(baseline.get("details", {}).get("server_tick", -1))
+	var observed_tick := baseline_tick
+	var samples := 1
+	# A freshly activated target may still remember that this actor consumed the
+	# current fixed tick during an earlier tenure. Wait for an objectively newer
+	# canonical server tick before allowing the next client intent. Read-only
+	# LOOKUPs never re-execute input or mutate player state.
+	for _attempt in range(6):
+		OS.delay_msec(4)
+		var observed := _authority_tick8(authority_id, actor)
+		if not bool(observed.get("success", false)):
+			return observed
+		samples += 1
+		observed_tick = int(observed.get("details", {}).get("server_tick", -1))
+		if observed_tick > baseline_tick:
+			_handoff_tick_barriers8 += 1
+			_handoff_tick_barrier_last8 = {
+				"actor": actor,
+				"authority_id": authority_id,
+				"baseline_tick": baseline_tick,
+				"observed_tick": observed_tick,
+				"samples": samples,
+				"mutation_performed": false,
+			}
+			return Protocol8.success(_handoff_tick_barrier_last8.duplicate(true))
+	return Protocol8.failure("MVP8_HANDOFF_NEXT_TICK_NOT_OBSERVED")
+
+
 func maybe_cross_a() -> bool:
 	var decision: Dictionary = coordinators["a"].snapshot()
 	var source := String(decision.get("active_authority_id", ""))
@@ -193,6 +244,11 @@ func maybe_cross_a() -> bool:
 		_publish_progress8()
 		return false
 	_seam_crossings8 += 1
+	var tick_barrier := _await_post_handoff_tick8(target, "a")
+	if not bool(tick_barrier.get("success", false)):
+		_handoff_stage8 = "TICK_BARRIER_FAILED:" + transfer_id
+		_publish_progress8()
+		return false
 	_invalidate_current8("a")
 	_handoff_stage8 = "COMPLETE:" + transfer_id
 	_publish_progress8()
@@ -685,6 +741,8 @@ func _publish_progress8() -> void:
 		"fixed_receipts": _fixed_receipts8,
 		"seam_crossings": _seam_crossings8,
 		"handoff_stage": _handoff_stage8,
+		"handoff_tick_barriers": _handoff_tick_barriers8,
+		"handoff_tick_barrier_last": _handoff_tick_barrier_last8.duplicate(true),
 		"last_dig": _last_dig8.duplicate(true),
 		"dig_hits": _dig_hits8.duplicate(true),
 		"reconnect_complete": _reconnect_complete8,
@@ -937,6 +995,8 @@ func base_report(schema: String, passed: bool, graphical: bool) -> Dictionary:
 		"action_counts": _action_counts8.duplicate(true),
 		"fixed_receipts": _fixed_receipts8,
 		"seam_crossings": _seam_crossings8,
+		"handoff_tick_barriers": _handoff_tick_barriers8,
+		"handoff_tick_barrier_last": _handoff_tick_barrier_last8.duplicate(true),
 		"reconnect_count": _reconnect_count8,
 		"original_peer": _original_peer8,
 		"reconnect_peer": _reconnect_peer8,
