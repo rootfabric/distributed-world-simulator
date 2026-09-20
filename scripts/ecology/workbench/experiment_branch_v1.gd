@@ -168,10 +168,15 @@ func fork(checkpoint: Dictionary, env_patch: Dictionary = {}, label: String = ""
 		# checkpoint's own manifest family); document as session limitation.
 		return {"success": false, "error": "BRANCH_MANIFEST_FAMILY"}
 	if not env_patch.is_empty():
-		var applied: Dictionary = EnvironmentPatch.apply_patch(manifest, env_patch)
-		if not bool(applied.get("success", false)):
-			return {"success": false, "error": "BRANCH_PATCH:" + String(applied.get("error", "?"))}
-		manifest = applied.manifest
+		# Validate the patch against the ORIGINAL manifest up front, but keep
+		# the original for initialize(): apply_field_patch below computes the
+		# stock deltas against the controller's CURRENT (original) manifest
+		# and switches it to the patched immutable manifest itself.
+		# (Initializing with the patched manifest first would zero every
+		# stock delta — the patch would never reach the live field.)
+		var check: Dictionary = EnvironmentPatch.apply_patch(manifest, env_patch)
+		if not bool(check.get("success", false)):
+			return {"success": false, "error": "BRANCH_PATCH:" + String(check.get("error", "?"))}
 	var branch_controller := Controller.new()
 	var init_result: Dictionary = branch_controller.initialize(manifest, _founder_registry)
 	if not bool(init_result.get("success", false)):
@@ -183,7 +188,7 @@ func fork(checkpoint: Dictionary, env_patch: Dictionary = {}, label: String = ""
 		var patched: Dictionary = branch_controller.apply_field_patch(env_patch)
 		if not bool(patched.get("success", false)):
 			return {"success": false, "error": "BRANCH_FIELD_PATCH:" + String(patched.get("error", "?"))}
-	var manifest_hash := Manifest.canonical_hash(manifest)
+	var manifest_hash := Manifest.canonical_hash(branch_controller.get_manifest())
 	var branch_id := _branch_id(current_branch_id(), String(checkpoint.checkpoint_id), manifest_hash, _branches.size())
 	_branches[branch_id] = {
 		"parent_branch_id": current_branch_id(),
