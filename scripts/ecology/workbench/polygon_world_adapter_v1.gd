@@ -1,29 +1,430 @@
-# EcologyWorkbench PolygonWorldAdapter v1 (skeleton, P0).
-# Role: WORLD-COMPAT mode adapter between the polygon workbench and A10 world
-#   bindings: terrain/Matter/Construction/damage/Region/handoff. Read-only
-#   projection of world state; canonical ecology transitions still go through
-#   ExperimentController. Active only when A10 adapter contracts exist on disk.
-# Layer: 2 (SIMULATION / ORCHESTRATION adapter; read-only toward world).
-# Canonical API used (owner map rows 11,12,13):
-#   - snapshot_seam_v1.gd: start()/apply()/load_text()/observe()  [A8/A10 seam]
-#   - ecology_region_ownership_v1.gd: prepare_handoff()/accept_handoff()/
-#     authorize()/commit_snapshot()  [A10 region line; observed, not owned]
-#   - ecology_region_state_v1.gd: validate_region_state()/
-#     compute_region_state_hash()  [A10]
-#   - handoff_ticket.gd: validate()/is_terminal()  [network line]
-#   - matter_material_batch.gd: validate()/normalize()  [MW line]
-#   - construction_damage_record.gd: validate()/compute_checksum()  [A10]
-# Frozen A10 adapter invariants (owner map §2; adapters NOT on disk yet):
-#   - ACTIVE-only execution; WARM handoff prep; post-commit ACTIVE;
-#   - explicit-only Matter mapping (no guessed ecology<->Matter meaning);
-#   - DamageRecord / Matter batch are external trusted anchors.
-# Forbidden: PolygonWorldState/PolygonRegion/PolygonMatter ownership; bypassing
-#   owner/epoch/Region/Matter rules.
+# EcologyWorkbench PolygonWorldAdapter v1 (P12, ECO ARCH2 A10.5 / ECO-POLYGON-1).
+# Role: WORLD_COMPAT mode adapter between the polygon workbench and the A10
+#   world binding contracts. THIN COMPOSITION ONLY: every authority decision
+#   delegates to an existing A10 contract; the adapter owns no world state
+#   truth of its own.
+#   - World/environment authority source: authority_region_descriptor (ACTIVE),
+#     world_binding_v1.bind_matter_site / admit_cursor,
+#     matter_resource_mapping_v1.create / admit_material_batch (explicit-only).
+#   - Ecology (genome/body/lifecycle) stays the canonical A1-A9 pipeline inside
+#     ExperimentController; ONLY the environment sampling authority changes.
+#   - Damage (§25): external trusted DamageRecord -> world_binding_v1
+#     projection -> body_construction_binding_v1 overlay. The historical
+#     BodyGraph is never modified; effective_function is presentation.
+#   - Region handoff (§24): world_seam_binding_v1 prepare/admit over the
+#     production handoff ticket; ecology_region_ownership_v1 production line
+#     is composed (observed, not replaced).
+# Layer: 2 (SIMULATION / ORCHESTRATION adapter; no new truth, no formulas).
+# Forbidden (and absent): PolygonRegion/PolygonMatter/PolygonHandoff ownership,
+# polygon persistence truth, guessed matter<->ecology semantics.
+# Documented canonical gaps (A11/canonical backlog):
+#   - No canonical Matter -> A4 signal (light/temperature) mapping exists;
+#     WORLD_COMPAT signals remain explicit manifest declarations (zone
+#     light/temperature fields). Stocks, in contrast, come exclusively from
+#     matter mapping admissions (WORLD_COMPAT manifests must declare zero
+#     zone stocks — enforced fail-closed below).
+#   - Checkpoint identity across the seam uses ExperimentController
+#     serialize_state (P8): the A8 snapshot_seam_v1 ecology payload schema is
+#     bound to the A7 observatory treatment model and cannot carry controller
+#     field+population+feedback state; the controller envelope is the
+#     canonical fit and is used instead.
 class_name EcoWorkbenchPolygonWorldAdapterV1
 extends RefCounted
 
-var last_error := "NOT_IMPLEMENTED_P11"
+const C = preload("res://scripts/research/ecology/v2/canonical_value_v1.gd")
+const Manifest = preload("res://scripts/ecology/workbench/experiment_manifest_v1.gd")
+const FieldContract = preload("res://scripts/research/ecology/v2/environment_field_contract_v1.gd")
+const WorldBinding = preload("res://scripts/research/ecology/v2/world_binding_v1.gd")
+const SeamBinding = preload("res://scripts/research/ecology/v2/world_seam_binding_v1.gd")
+const Mapping = preload("res://scripts/research/ecology/v2/matter_resource_mapping_v1.gd")
+const BodyBinding = preload("res://scripts/research/ecology/v2/body_construction_binding_v1.gd")
+const Body = preload("res://scripts/research/ecology/v2/body_graph_v1.gd")
+const Region = preload("res://scripts/network/contracts/authority_region_descriptor.gd")
+const Ticket = preload("res://scripts/network/contracts/handoff_ticket.gd")
+const Ownership = preload("res://scripts/ecology/production/ecology_region_ownership_v1.gd")
 
-## Report world-facing read view (region state, matter anchors, damage).
+const AUTHORITY_FIELDS := ["region", "entity_id", "owner_id", "catalog", "mapping_entries"]
+const STOCK_FIELDS := ["water_mg", "nutrient_mg", "organic_mg"]
+
+var _manifest: Dictionary = {}
+var _manifest_hash := ""
+var _region: Dictionary = {}
+var _cursor: Dictionary = {}
+var _catalog: Dictionary = {}
+var _mapping: Dictionary = {}
+var _map_id := "eco-map/world-compat"
+var _site_binding: Dictionary = {}
+# batch_id -> {"batch": ..., "checksum": ..., "applied": bool, "admission": ...}
+var _batches: Dictionary = {}
+var _admitted_resources := FieldContract.stock()
+# individual_id -> {"modules", "snapshot", "binding", "overlay", "event"}
+var _damage: Dictionary = {}
+var last_error := ""
+
+## Configure the world authority for one WORLD_COMPAT experiment.
+## authority (dependency-injected, explicit):
+##   region         ACTIVE authority_region_descriptor (required)
+##   entity_id      world-side entity identifier for the cursor (required)
+##   owner_id       must equal region.owner_node_id (required)
+##   owner_epoch    defaults to region.authority_epoch
+##   revision/clock/ecology_step  cursor bookkeeping, default 0
+##   catalog        production matter catalog (required)
+##   map_id         optional mapping id (default eco-map/world-compat)
+##   mapping_entries explicit material->resource entries, possibly empty (required)
+##   matter_query   optional MatterQueryResult; when present the adapter also
+##                  builds a world_binding_v1 matter site binding.
+func configure(manifest: Dictionary, authority: Dictionary) -> Dictionary:
+	var manifest_error := Manifest.validate(manifest)
+	if not manifest_error.is_empty():
+		return _fail("ADAPTER_MANIFEST:" + manifest_error)
+	if String(manifest.mode) != "WORLD_COMPAT":
+		return _fail("ADAPTER_MODE_NOT_WORLD_COMPAT")
+	if not authority is Dictionary:
+		return _fail("ADAPTER_AUTHORITY_FIELDS")
+	for field in AUTHORITY_FIELDS:
+		if not authority.has(field):
+			return _fail("ADAPTER_AUTHORITY_FIELDS:" + field)
+	var region: Dictionary = authority.region
+	if not bool(Region.validate(region).get("success", false)):
+		return _fail("ADAPTER_REGION_INVALID")
+	if String(region.lifecycle_state) != "ACTIVE":
+		return _fail("ADAPTER_REGION_NOT_ACTIVE")
+	if not C.identifier(String(authority.entity_id)) or not C.identifier(String(authority.owner_id)):
+		return _fail("ADAPTER_AUTHORITY_IDENTITY")
+	if String(authority.owner_id) != String(region.owner_node_id):
+		return _fail("ADAPTER_AUTHORITY_OWNER_MISMATCH")
+	var owner_epoch: int = int(region.authority_epoch) if not authority.has("owner_epoch") else int(authority.owner_epoch)
+	var cursor := {
+		"entity_id": String(authority.entity_id),
+		"region_id": String(region.region_id),
+		"owner_id": String(authority.owner_id),
+		"owner_epoch": owner_epoch,
+		"revision": int(authority.get("revision", 0)),
+		"clock": int(authority.get("clock", 0)),
+		"ecology_step": int(authority.get("ecology_step", 0)),
+	}
+	var admitted := WorldBinding.admit_cursor(cursor, region)
+	if not bool(admitted.get("success", false)):
+		return _fail("ADAPTER_CURSOR:" + String(admitted.get("error", "?")))
+	var catalog: Dictionary = authority.catalog
+	var entries: Array = authority.mapping_entries
+	if not entries is Array:
+		return _fail("ADAPTER_MAPPING_ENTRIES")
+	var map_id := String(authority.get("map_id", "eco-map/world-compat"))
+	var mapping := Mapping.create(catalog, map_id, entries)
+	if mapping.is_empty():
+		return _fail("ADAPTER_MAPPING_INVALID")
+	_manifest = manifest.duplicate(true)
+	_manifest_hash = Manifest.canonical_hash(manifest)
+	_region = region.duplicate(true)
+	_cursor = cursor
+	_catalog = catalog.duplicate(true)
+	_mapping = mapping
+	_map_id = map_id
+	_site_binding = {}
+	_batches = {}
+	_admitted_resources = FieldContract.stock()
+	_damage = {}
+	last_error = ""
+	return {"success": true, "cursor": cursor.duplicate(true), "map_checksum": String(mapping.checksum)}
+
+## Controller-side compatibility check (fail-closed gate used by
+## ExperimentController.initialize in WORLD_COMPAT mode): the manifest must be
+## the configured one and must not declare zone stocks (stock authority is the
+## matter mapping alone; dual truth is forbidden).
+func world_manifest_compatible(manifest: Dictionary) -> Dictionary:
+	if _manifest.is_empty():
+		return _fail("ADAPTER_NOT_CONFIGURED")
+	if Manifest.canonical_hash(manifest) != _manifest_hash:
+		return _fail("ADAPTER_MANIFEST_MISMATCH")
+	for zone in manifest.environment.zones:
+		for stock_field in STOCK_FIELDS:
+			if int(zone[stock_field]) != 0:
+				return _fail("ADAPTER_ZONE_STOCK_DUAL_TRUTH:" + String(zone.id) + "/" + stock_field)
+	return {"success": true}
+
+## ACTIVE-only execution admission (called by the controller before EVERY
+## WORLD_COMPAT tick). On success the world-side cursor bookkeeping advances
+## (clock/ecology_step/revision); on failure nothing changes.
+func admit_execution() -> Dictionary:
+	if _region.is_empty():
+		return _fail("ADAPTER_NOT_CONFIGURED")
+	var admitted := WorldBinding.admit_cursor(_cursor, _region)
+	if not bool(admitted.get("success", false)):
+		return _fail(String(admitted.get("error", "A10_CURSOR")))
+	_cursor.revision = int(_cursor.revision) + 1
+	_cursor.clock = int(_cursor.clock) + 1
+	_cursor.ecology_step = int(_cursor.ecology_step) + 1
+	return {"success": true, "cursor": cursor()}
+
+## Replace the tracked region descriptor (host reflects world-side lifecycle
+## changes: ACTIVE -> WARM handoff prep, post-commit ACTIVE, etc.). The new
+## descriptor is validated; execution admission decides executability.
+func set_region(region: Dictionary) -> Dictionary:
+	if not bool(Region.validate(region).get("success", false)):
+		return _fail("ADAPTER_REGION_INVALID")
+	if String(region.region_id) != String(_region.region_id):
+		return _fail("ADAPTER_REGION_IDENTITY")
+	if String(region.universe_id) != String(_region.universe_id) \
+			or String(region.instance_id) != String(_region.instance_id) \
+			or String(region.space_id) != String(_region.space_id):
+		return _fail("ADAPTER_REGION_SPACE")
+	_region = region.duplicate(true)
+	return {"success": true}
+
+## Optional matter site binding (world_binding_v1.bind_matter_site): binds a
+## materialized Matter point sample to the cursor/region for provenance.
+## NOTE: the binding carries NO resource stock authority
+## (resource_stock_authority = NOT_DERIVED_FROM_POINT_SAMPLE).
+func bind_site(matter_query: Dictionary) -> Dictionary:
+	if _region.is_empty():
+		return _fail("ADAPTER_NOT_CONFIGURED")
+	var bound := WorldBinding.bind_matter_site(matter_query, _region, _cursor)
+	if not bool(bound.get("success", false)):
+		return _fail(String(bound.get("error", "A10_SITE")))
+	_site_binding = bound.binding.duplicate(true)
+	return {"success": true, "binding_hash": String(_site_binding.binding_hash)}
+
+## Register an external trusted material batch (checksum = trusted anchor).
+## Admits it through matter_resource_mapping_v1 immediately (explicit-only:
+## unmapped materials stay unmapped; nothing is guessed).
+func add_batch(batch: Dictionary, expected_batch_checksum: String) -> Dictionary:
+	if _region.is_empty():
+		return _fail("ADAPTER_NOT_CONFIGURED")
+	var admitted_batch := Mapping.admit_material_batch(batch, _catalog, _mapping, expected_batch_checksum)
+	if not bool(admitted_batch.get("success", false)):
+		return _fail(String(admitted_batch.get("error", "A10_R2")))
+	var admission: Dictionary = admitted_batch.admission
+	_batches[String(admission.batch_id)] = {
+		"checksum": String(admission.batch_checksum),
+		"applied": false,
+		"admission": admission.duplicate(true),
+	}
+	return {"success": true, "admission": admission.duplicate(true)}
+
+## Push all not-yet-applied admitted batches into the controller field through
+## the canonical owner-write bridge (ExperimentController.apply_world_stocks).
+## Aggregates per-resource totals across admissions (mass conservation is
+## already guaranteed per admission by the mapping contract).
+func apply_environment(controller: Object) -> Dictionary:
+	if _region.is_empty():
+		return _fail("ADAPTER_NOT_CONFIGURED")
+	if controller == null or not controller.has_method("apply_world_stocks"):
+		return _fail("ADAPTER_CONTROLLER")
+	var pending: Dictionary = _admitted_resources.duplicate(true)
+	var applied_ids: Array = []
+	for batch_id in _batches.keys():
+		var row: Dictionary = _batches[batch_id]
+		if bool(row.applied):
+			continue
+		for resource in FieldContract.RESOURCES:
+			pending[resource] = int(pending[resource]) + int(row.admission.resources[resource])
+		row.applied = true
+		applied_ids.append(String(batch_id))
+	if applied_ids.is_empty():
+		return {"success": true, "applied_batches": [], "resources": pending.duplicate(true), "applied": false}
+	var result: Dictionary = controller.apply_world_stocks(pending, "matter-map/%s" % _map_id)
+	if not bool(result.get("success", false)):
+		return _fail("ADAPTER_ENVIRONMENT_APPLY:" + String(result.get("error", "?")))
+	_admitted_resources = pending
+	return {
+		"success": true,
+		"applied_batches": applied_ids,
+		"resources": pending.duplicate(true),
+		"applied": true,
+		"field_hash": String(result.get("field_hash", "")),
+	}
+
+# --- damage integration (§25) --------------------------------------------------
+
+## Accept an EXTERNAL trusted DamageRecord (checksum anchor), project it onto
+## the organism's historical BodyGraph modules (world_binding_v1), and build a
+## persistent body_construction_binding_v1 binding + damage overlay. The
+## historical BodyGraph is copied read-only and never modified.
+## part_to_module: {"part/<id>": "<module id>"} explicit, one-to-one.
+func register_damage(controller: Object, individual_id: String, request: Dictionary, record: Dictionary, source_snapshot: Dictionary, part_to_module: Dictionary, expected_record_checksum: String) -> Dictionary:
+	if _region.is_empty():
+		return _fail("ADAPTER_NOT_CONFIGURED")
+	if controller == null or not controller.has_method("debug_state"):
+		return _fail("ADAPTER_CONTROLLER")
+	var entry := _population_entry(controller.debug_state(), individual_id)
+	if entry.is_empty():
+		return _fail("ADAPTER_ORGANISM_UNKNOWN:" + individual_id)
+	var modules: Array = entry.state.development.modules
+	if not Body.validate(modules).is_empty():
+		return _fail("ADAPTER_BODY_INVALID")
+	var projected := WorldBinding.project_construction_damage(request, record, source_snapshot, modules, part_to_module, expected_record_checksum)
+	if not bool(projected.get("success", false)):
+		return _fail(String(projected.get("error", "A10_DAMAGE")))
+	var event: Dictionary = projected.event
+	var binding := BodyBinding.create_binding(modules, source_snapshot, part_to_module)
+	if binding.is_empty():
+		return _fail("ADAPTER_DAMAGE_BINDING")
+	var overlay := BodyBinding.create_overlay(binding, modules, source_snapshot)
+	if overlay.is_empty():
+		return _fail("ADAPTER_DAMAGE_OVERLAY")
+	_damage[String(individual_id)] = {
+		"modules": modules.duplicate(true),
+		"snapshot": source_snapshot.duplicate(true),
+		"binding": binding,
+		"overlay": overlay,
+		"event": event.duplicate(true),
+	}
+	return {"success": true, "event": event.duplicate(true), "binding": binding.duplicate(true), "overlay": overlay.duplicate(true)}
+
+## Apply the previously projected damage event to the overlay. The projected
+## event's binding_hash is the trusted anchor (it was sealed from the trusted
+## record). Idempotent per damage_id (R4 replay contract).
+func apply_damage(individual_id: String) -> Dictionary:
+	if not _damage.has(String(individual_id)):
+		return _fail("ADAPTER_DAMAGE_UNKNOWN:" + String(individual_id))
+	var row: Dictionary = _damage[String(individual_id)]
+	var applied := BodyBinding.apply_damage(row.binding, row.overlay, row.modules, row.snapshot, row.event, String(row.event.binding_hash))
+	if not bool(applied.get("success", false)):
+		return _fail(String(applied.get("error", "A10_R4")))
+	row.overlay = applied.overlay.duplicate(true)
+	return {"success": true, "replay": bool(applied.replay), "overlay": row.overlay.duplicate(true)}
+
+## Effective active body function (presentation projection, R4).
+func effective_function(individual_id: String) -> Dictionary:
+	if not _damage.has(String(individual_id)):
+		return {}
+	var row: Dictionary = _damage[String(individual_id)]
+	return BodyBinding.effective_function(row.binding, row.overlay, row.modules, row.snapshot)
+
+func has_overlay(individual_id: String) -> bool:
+	return _damage.has(String(individual_id))
+
+## Three-layer damage view for the inspector (§25): historical topology /
+## damage overlay / effective active modules — SEPARATE layers; the historical
+## topology_signature is a copy and can never be modified by the overlay.
+func damage_view(individual_id: String) -> Dictionary:
+	if not _damage.has(String(individual_id)):
+		return {}
+	var row: Dictionary = _damage[String(individual_id)]
+	if not BodyBinding.validate_overlay(row.overlay, row.binding, row.modules, row.snapshot).is_empty():
+		return {}
+	var effective := effective_function(individual_id)
+	if effective.is_empty():
+		return {}
+	return {
+		"overlay_present": true,
+		"historical": {
+			"topology_signature": Body.topology_signature(row.modules),
+			"module_count": int(row.modules.size()),
+			"body_hash": String(row.binding.body_hash),
+		},
+		"overlay": {
+			"revision": int(row.overlay.revision),
+			"degraded_modules": Array(row.overlay.degraded_modules).duplicate(),
+			"destroyed_modules": Array(row.overlay.destroyed_modules).duplicate(),
+			"disabled_modules": Array(row.overlay.disabled_modules).duplicate(),
+			"overlay_checksum": String(row.overlay.checksum),
+		},
+		"effective": {
+			"active_module_ids": Array(effective.active_module_ids).duplicate(),
+			"active_module_count": int(effective.active_module_count),
+			"functional_hash": String(effective.functional_hash),
+		},
+	}
+
+# --- region handoff seam (§24) ---------------------------------------------------
+
+## WARM handoff preparation: world_seam_binding_v1.prepare_ticket over the
+## current cursor + ACTIVE source region and a WARM target region (different
+## owner, newer epoch, same spatial region). Read-only: the cursor does not move.
+func prepare_region_handoff(target_region_warm: Dictionary, expires_at_tick: int) -> Dictionary:
+	if _region.is_empty():
+		return _fail("ADAPTER_NOT_CONFIGURED")
+	var prepared := SeamBinding.prepare_ticket(_cursor, _region, target_region_warm, int(_cursor.clock) + 1, expires_at_tick)
+	if not bool(prepared.get("success", false)):
+		return _fail(String(prepared.get("error", "A10_R3")))
+	return {"success": true, "ticket": prepared.ticket.duplicate(true)}
+
+## Post-commit admission: admit_committed validates the COMMITTED ticket, the
+## target ACTIVE region and the new cursor; on success the adapter authority
+## switches to the target region (old owner is rejected from here on).
+func commit_region_handoff(target_region_active: Dictionary, ticket_committed: Dictionary) -> Dictionary:
+	if _region.is_empty():
+		return _fail("ADAPTER_NOT_CONFIGURED")
+	var next_cursor := _cursor.duplicate(true)
+	next_cursor.owner_id = String(target_region_active.get("owner_node_id", ""))
+	next_cursor.owner_epoch = int(target_region_active.get("authority_epoch", -1))
+	var admitted := SeamBinding.admit_committed(next_cursor, target_region_active, ticket_committed)
+	if not bool(admitted.get("success", false)):
+		return _fail(String(admitted.get("error", "A10_R3")))
+	var swapped := set_region(target_region_active)
+	if not bool(swapped.get("success", false)):
+		return _fail(String(swapped.get("error", "ADAPTER_REGION")))
+	_cursor = next_cursor
+	return {"success": true, "cursor": cursor()}
+
+# --- production ownership line (composed, observed — thin passthroughs) --------
+
+## Production region ownership handoff package (ecology_region_ownership_v1).
+## The production P4.5 line is composed beside the A10 seam: it owns server
+## fencing epochs; the A10 seam owns region authority. No truth is duplicated.
+static func production_prepare_handoff(ownership_state: Dictionary, target_owner_server_id: String) -> Dictionary:
+	var package := Ownership.prepare_handoff(ownership_state, target_owner_server_id)
+	if package.is_empty():
+		return {"success": false, "error": "ADAPTER_PRODUCTION_PREPARE"}
+	return {"success": true, "package": package}
+
+static func production_accept_handoff(ownership_state: Dictionary, package: Dictionary, accepting_server_id: String) -> Dictionary:
+	var target := Ownership.accept_handoff(ownership_state, package, accepting_server_id)
+	if target.is_empty():
+		return {"success": false, "error": "ADAPTER_PRODUCTION_ACCEPT"}
+	return {"success": true, "ownership": target}
+
+# --- read views -------------------------------------------------------------------
+
+func cursor() -> Dictionary:
+	return _cursor.duplicate(true)
+
+func region() -> Dictionary:
+	return _region.duplicate(true)
+
+func mapping() -> Dictionary:
+	return _mapping.duplicate(true)
+
+## World-facing read view (region state, cursor, matter anchors, damage).
 func observe_world() -> Dictionary:
+	if _region.is_empty():
+		return {"configured": false, "error": last_error}
+	var damage_summary := {}
+	for individual_id in _damage.keys():
+		var row: Dictionary = _damage[individual_id]
+		damage_summary[individual_id] = {
+			"overlay_revision": int(row.overlay.revision),
+			"overlay_checksum": String(row.overlay.checksum),
+		}
+	return {
+		"configured": true,
+		"region_id": String(_region.region_id),
+		"owner_node_id": String(_region.owner_node_id),
+		"authority_epoch": int(_region.authority_epoch),
+		"lifecycle_state": String(_region.lifecycle_state),
+		"cursor": cursor(),
+		"matter_mapping": {
+			"map_id": String(_mapping.map_id),
+			"map_checksum": String(_mapping.checksum),
+			"entries": Array(_mapping.entries).duplicate(true),
+		},
+		"site_binding_hash": "" if _site_binding.is_empty() else String(_site_binding.binding_hash),
+		"admitted_resources": _admitted_resources.duplicate(true),
+		"damage": damage_summary,
+	}
+
+# --- helpers ------------------------------------------------------------------------
+
+func _population_entry(debug: Dictionary, individual_id: String) -> Dictionary:
+	if not debug is Dictionary or not debug.has("population"):
+		return {}
+	for entry in debug.population:
+		if String(entry.state.individual_id) == String(individual_id):
+			return entry
 	return {}
+
+func _fail(error: String) -> Dictionary:
+	last_error = error
+	return {"success": false, "error": error}

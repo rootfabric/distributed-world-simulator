@@ -7,7 +7,8 @@
 #   DevelopmentProgram (rules/actions summary) -> DevelopmentState (modules,
 #   age) -> BodyGraph (topology_signature, roles histogram, bounds) ->
 #   Phenotype (phenotype_snapshot_v1.compile) -> resources (reserves +
-#   cumulative ledger, read-only) -> damage (reserved; empty in LAB) ->
+#   cumulative ledger, read-only) -> damage (P12: three-layer WORLD_COMPAT
+#   view via the polygon world adapter; explicit empty shape in LAB) ->
 #   lineage (parent chain, lineage_depth from the P4 presentation view).
 # Layer: 4 (PRESENTATION / read-only projection).
 # Canonical API used (owner map rows 1,2,8 + auxiliary):
@@ -24,8 +25,12 @@ const Phenotype = preload("res://scripts/research/ecology/v2/phenotype_snapshot_
 const SCHEMA := "dws.ecology.workbench.organism-inspector-view.v1"
 
 ## Full read-only inspection view for one organism of the bound controller.
+## world_adapter (optional, P12 WORLD_COMPAT): when provided and it holds a
+## damage overlay for this organism, the damage section shows the three
+## SEPARATE layers (historical topology / damage overlay / effective active
+## modules). Without it the section keeps the explicit empty LAB shape.
 ## Returns {"success": true, "view": {...}} or {"success": false, "error"}.
-static func compile(controller: Object, individual_id: String) -> Dictionary:
+static func compile(controller: Object, individual_id: String, world_adapter: Object = null) -> Dictionary:
 	if controller == null or not controller.has_method("debug_state"):
 		return {"success": false, "error": "INSPECTOR_CONTROLLER"}
 	var presentation := {}
@@ -36,10 +41,10 @@ static func compile(controller: Object, individual_id: String) -> Dictionary:
 				if String(entry.individual_id) == individual_id:
 					presentation = entry
 					break
-	return compile_from_debug(controller.debug_state(), individual_id, presentation)
+	return compile_from_debug(controller.debug_state(), individual_id, presentation, world_adapter)
 
 ## Same chain from a detached canonical debug state (equivalence harnesses).
-static func compile_from_debug(debug: Dictionary, individual_id: String, presentation: Dictionary = {}) -> Dictionary:
+static func compile_from_debug(debug: Dictionary, individual_id: String, presentation: Dictionary = {}, world_adapter: Object = null) -> Dictionary:
 	var entry := _find_entry(debug, individual_id)
 	if entry.is_empty():
 		return {"success": false, "error": "INSPECTOR_ORGANISM_UNKNOWN:" + individual_id}
@@ -58,7 +63,7 @@ static func compile_from_debug(debug: Dictionary, individual_id: String, present
 		"body_graph": _body_section(state),
 		"phenotype": _phenotype_section(state, genome),
 		"resources": _resources_section(state),
-		"damage": _damage_section(state),
+		"damage": _damage_section(state, world_adapter, individual_id),
 		"lineage": _lineage_section(debug, state, presentation),
 	}
 	return {"success": true, "view": view}
@@ -154,10 +159,18 @@ static func _resources_section(state: Dictionary) -> Dictionary:
 		"cumulative": state.resource_ledger.duplicate(true),
 	}
 
-## Reserved damage section: LAB has no construction damage overlay yet;
-## the field stays explicit and empty until the WORLD-COMPAT host (P12+)
-## binds body_construction_binding_v1 overlays.
-static func _damage_section(_state: Dictionary) -> Dictionary:
+## Damage section (P12). LAB / no overlay: explicit empty shape. With a
+## WORLD_COMPAT world adapter holding a damage overlay for this organism:
+## three SEPARATE layers — historical body topology (read-only copy,
+## topology_signature can never be modified by the overlay), the damage
+## overlay itself (degraded/destroyed/disabled), and the effective active
+## module set (presentation projection). The historical BodyGraph is not
+## modified by damage (§25 invariant).
+static func _damage_section(state: Dictionary, world_adapter: Object, individual_id: String) -> Dictionary:
+	if world_adapter != null and world_adapter.has_method("damage_view"):
+		var view: Dictionary = world_adapter.damage_view(individual_id)
+		if not view.is_empty():
+			return view
 	return {"overlay_present": false, "overlay": {}}
 
 static func _lineage_section(debug: Dictionary, state: Dictionary, presentation: Dictionary) -> Dictionary:
@@ -246,7 +259,24 @@ static func render_text(view: Dictionary) -> String:
 		int(ledger.maintenance.material_mg), int(ledger.growth_transferred.material_mg),
 	])
 	var damage: Dictionary = view.damage
-	lines.append("DAMAGE overlay_present=%s (reserved; empty in LAB)" % str(damage.overlay_present))
+	if bool(damage.get("overlay_present", false)) and damage.has("historical"):
+		var historical: Dictionary = damage.historical
+		var overlay: Dictionary = damage.overlay
+		var effective: Dictionary = damage.effective
+		lines.append("DAMAGE (three layers; historical topology is immutable)")
+		lines.append("  HISTORICAL topology=%s modules=%d" % [
+			String(historical.topology_signature).substr(0, 12), int(historical.module_count),
+		])
+		lines.append("  OVERLAY rev=%d degraded=%s destroyed=%s disabled=%s" % [
+			int(overlay.revision), str(overlay.degraded_modules),
+			str(overlay.destroyed_modules), str(overlay.disabled_modules),
+		])
+		lines.append("  EFFECTIVE active=%d ids=%s hash=%s" % [
+			int(effective.active_module_count), str(effective.active_module_ids),
+			String(effective.functional_hash).substr(0, 12),
+		])
+	else:
+		lines.append("DAMAGE overlay_present=%s (reserved; empty in LAB)" % str(damage.get("overlay_present", false)))
 	var lineage: Dictionary = view.lineage
 	lines.append("LINEAGE origin=%s depth=%d chain=%s" % [
 		String(lineage.origin_kind), int(lineage.lineage_depth),
