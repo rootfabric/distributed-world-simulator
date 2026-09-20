@@ -2,6 +2,8 @@
 
 ## Статус
 
+**Статус:** EXACT T1 PASS / fresh review + verifier pending.
+
 ```text
 PROGRAM = FABRIC research
 STAGE = R5.2A + R5.2B/T1
@@ -131,3 +133,70 @@ cheap binding fences
 Fast path допустим только для текущего exact/stateless/no-guard T1 domain. Любая invalidation, source/frontier/authority/dependency/graph/policy change, non-empty runtime estimator или guard set немедленно запрещают fast execute и требуют reactivation/general gate.
 
 Таким образом provenance не удаляется — он выносится из inner numerical loop.
+
+
+## Exact T1 result — run 35514232032
+
+```text
+SUBJECT_HEAD = 555368186cb46971e2ad6828ac021f8b4f1f3ae1
+SUBJECT_TREE = 8d865d9253099e729a9be7e050023cc32b043682
+
+samples = 3/3 PASS
+aggregate job = 106087426611
+artifact = 10606785462
+digest = sha256:be698db4fc804a8d3a519fb0a192c2f07fe9906bd3165a0944e43ad8e04b57e0
+
+deterministic hash =
+9afd2af8820932b6103c8a7bc8b64b0a6f751dc08498a3881d6aa5d35eec7237
+```
+
+### Доказанная qualitative compression
+
+```text
+543 generic conductance components
+        ↓
+128 hidden nodes + 4 boundary nodes
+        ↓
+132 full equations
+        ↓ exact reduction
+4 executable boundary equations
+
+equation compression       = 33.0×
+component/executable ratio = 135.75×
+source traversals / execute = 0
+```
+
+Exact full↔capsule errors:
+
+```text
+max boundary flow error  = 8.53e-14
+max boundary power error = 2.84e-12
+```
+
+### Prepared execution
+
+Первый корректный T1 показал, что deep PhysicalBake provenance validation на каждом вызове стоила больше самой 4×4 модели. После переноса полной validation на activation boundary:
+
+```text
+one-time prepare/full validation ≈ 9.09 ms
+
+old full-gate path:
+  128 calls / 1,212,415 µs
+  ≈ 9.47 ms/call
+
+prepared path:
+  4096 calls / 80,306 µs
+  ≈ 19.6 µs/call
+
+observed inner-loop speedup ≈ 483×
+```
+
+Это observation на одном типе GitHub-hosted runner, а не universal performance threshold.
+
+Prepared path сохраняет fail-closed fences для STALE/invalidation/source frontier/authority/dependencies/graph/compiler/boundary/policy/runtime-domain и запрещает T1 fast path при runtime estimator или refinement guards.
+
+### Trust boundary fast path
+
+Per-tick fast path использует hashes/checksums, выпущенные canonical owner live-context как immutable snapshot tokens. Произвольное изменение вложенного Dictionary без обновления его canonical hash/checksum считается нарушением live-context contract и T1 его не объявляет поддерживаемым.
+
+Это не второй revision/authority system. Future persistent/hierarchical capsule work может получить owner-issued compact revision token.
