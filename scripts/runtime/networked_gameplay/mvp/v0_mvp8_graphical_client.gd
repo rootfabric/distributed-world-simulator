@@ -30,6 +30,12 @@ func _publish_progress8(snapshot: Dictionary) -> void:
 		"phase4": _phase4,
 		"mvp8_active": _mvp8_active,
 		"mvp8_move_round": _mvp8_move_round,
+		"pending_kind": pending_kind,
+		"pending_rpc": pending_rpc,
+		"input_sequence": input_sequence,
+		"finishing": finishing,
+		"failure_count": failures.size(),
+		"last_sent_axis": last_sent_axis,
 		"mvp6": Dictionary(snapshot.get("mvp6", {})).duplicate(true),
 		"mvp8": Dictionary(snapshot.get("mvp8", {})).duplicate(true),
 	})

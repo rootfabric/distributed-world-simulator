@@ -45,6 +45,7 @@ var _backend_liveness_failures8 := 0
 var _backend_liveness_last_ms8 := 0
 var _backend_liveness_last8: Dictionary = {}
 var _seam_crossings8 := 0
+var _handoff_stage8 := "IDLE"
 
 
 func _phase8() -> String:
@@ -162,9 +163,15 @@ func maybe_cross_a() -> bool:
 	if target.is_empty():
 		return true
 	var transfer_id := "transfer/mvp8/a/%03d" % (_seam_crossings8 + 1)
+	_handoff_stage8 = "BEGIN:%s->%s:%s" % [source, target, transfer_id]
+	_publish_progress8()
 	if not cross("a", target, transfer_id, false, false):
+		_handoff_stage8 = "FAILED:" + transfer_id
+		_publish_progress8()
 		return false
 	_seam_crossings8 += 1
+	_handoff_stage8 = "COMPLETE:" + transfer_id
+	_publish_progress8()
 	return true
 
 
@@ -391,6 +398,7 @@ func _publish_progress8() -> void:
 		"action_counts": _action_counts8.duplicate(true),
 		"fixed_receipts": _fixed_receipts8,
 		"seam_crossings": _seam_crossings8,
+		"handoff_stage": _handoff_stage8,
 		"reconnect_complete": _reconnect_complete8,
 		"checkpointed": _checkpointed8,
 		"mvp6": {
