@@ -44,6 +44,7 @@ var _backend_liveness_cycles8 := 0
 var _backend_liveness_failures8 := 0
 var _backend_liveness_last_ms8 := 0
 var _backend_liveness_last8: Dictionary = {}
+var _seam_crossings8 := 0
 
 
 func _phase8() -> String:
@@ -109,6 +110,10 @@ func setup_control() -> bool:
 		pivots[actor] = pivot
 	_round8 = int(cfg.get("mvp8_start_round", 0))
 	_recovery_boot8 = bool(cfg.get("mvp8_recovery", false))
+	_action_counts8 = Dictionary(cfg.get("mvp8_initial_action_counts", _action_counts8)).duplicate(true)
+	_fixed_receipts8 = int(cfg.get("mvp8_initial_fixed_receipts", 0))
+	_round_history8 = Array(cfg.get("mvp8_initial_round_history", [])).duplicate(true)
+	_seam_crossings8 = int(cfg.get("mvp8_initial_seam_crossings", 0))
 	_active8 = _recovery_boot8
 	_reconnect_complete8 = _recovery_boot8 or _round8 >= RECONNECT_AFTER_ROUND8
 	_restart_file8 = String(cfg.get("mvp8_restart_file", ""))
@@ -141,6 +146,26 @@ func initialize_native() -> bool:
 				failures.append("MVP8_RECOVERED_CURRENT_STATE_FAILED:" + String(current.get("error_code", "")))
 				okay = false
 	return okay
+
+
+func maybe_cross_a() -> bool:
+	var decision: Dictionary = coordinators["a"].snapshot()
+	var source := String(decision.get("active_authority_id", ""))
+	var player := lookup(source, "a")
+	if player.is_empty():
+		return false
+	var target := ""
+	if source == "authority/a" and float(player.get("position", {}).get("x", -999.0)) >= 0.0:
+		target = "authority/b"
+	elif source == "authority/b" and float(player.get("position", {}).get("x", 999.0)) < 0.0:
+		target = "authority/a"
+	if target.is_empty():
+		return true
+	var transfer_id := "transfer/mvp8/a/%03d" % (_seam_crossings8 + 1)
+	if not cross("a", target, transfer_id, false, false):
+		return false
+	_seam_crossings8 += 1
+	return true
 
 
 func route_client_input(actor: String, wire: Dictionary) -> Dictionary:
@@ -343,6 +368,7 @@ func _checkpoint8() -> Dictionary:
 		"action_counts": _action_counts8.duplicate(true),
 		"fixed_receipts": _fixed_receipts8,
 		"round_history": _round_history8.duplicate(true),
+		"seam_crossings": _seam_crossings8,
 		"bounds": _bounds8.duplicate(true),
 	}
 	if _restart_file8.is_empty() or not Support8.write_json(_restart_file8, _checkpoint_receipt8):
@@ -360,6 +386,7 @@ func world_snapshot() -> Dictionary:
 		"round_moves": _round_moves8.duplicate(true),
 		"action_counts": _action_counts8.duplicate(true),
 		"fixed_receipts": _fixed_receipts8,
+		"seam_crossings": _seam_crossings8,
 		"reconnect_due": _round8 == RECONNECT_AFTER_ROUND8 and not _reconnect_complete8,
 		"reconnect_complete": _reconnect_complete8,
 		"checkpoint_due": _round8 == RESTART_AFTER_ROUND8 and not _recovery_boot8 and not _checkpointed8,
@@ -426,7 +453,15 @@ func _backend_liveness8() -> Dictionary:
 
 func _phase_success8() -> bool:
 	if _recovery_boot8:
-		return _round8 >= TOTAL_ROUNDS8 and int(_action_counts8["DIG"]) >= 1 and int(_action_counts8["ITEM"]) >= 1 and int(_action_counts8["BUILD_ADD"]) >= 1 and int(_action_counts8["BUILD_REMOVE"]) >= 1
+		return (
+			_round8 >= TOTAL_ROUNDS8
+			and int(_action_counts8["DIG"]) >= 4
+			and int(_action_counts8["ITEM"]) >= 4
+			and int(_action_counts8["BUILD_ADD"]) >= 2
+			and int(_action_counts8["BUILD_REMOVE"]) >= 2
+			and _fixed_receipts8 >= 24
+			and _seam_crossings8 >= 4
+		)
 	return _checkpointed8 and _round8 == RESTART_AFTER_ROUND8 and _reconnect_complete8 and _reconnect_count8 == 1
 
 
@@ -501,6 +536,7 @@ func base_report(schema: String, passed: bool, graphical: bool) -> Dictionary:
 		"round_history": _round_history8.duplicate(true),
 		"action_counts": _action_counts8.duplicate(true),
 		"fixed_receipts": _fixed_receipts8,
+		"seam_crossings": _seam_crossings8,
 		"reconnect_count": _reconnect_count8,
 		"original_peer": _original_peer8,
 		"reconnect_peer": _reconnect_peer8,
