@@ -88,7 +88,7 @@ static func make_graph(
 			var profile_id := selected_profile
 			if mixed_parallel_profile and series_index == 0 and parallel_index == 0:
 				profile_id = "profile/nmc-characterized" if selected_profile == "profile/lfp-characterized" else "profile/lfp-characterized"
-			var active_volume := 1.5e-5
+			var active_volume := 5.0e-6
 			if unsafe_geometry and series_index == 0 and parallel_index == 1:
 				active_volume *= 1.07
 			var enabled := true
@@ -103,7 +103,7 @@ static func make_graph(
 				"profile_id": profile_id,
 				"case_material_id": "matter/cell-case-polymer",
 				"active_volume_m3": active_volume,
-				"case_volume_m3": 8.0e-6,
+				"case_volume_m3": 3.0e-5,
 				"electrode_area_m2": 0.015,
 				"current_path_length_m": 0.0002,
 				"case_surface_area_m2": 0.0015,
