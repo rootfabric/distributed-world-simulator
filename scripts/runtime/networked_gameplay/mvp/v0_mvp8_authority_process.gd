@@ -390,6 +390,13 @@ func _checkpoint8() -> Dictionary:
 			"ownership_epoch": int(player.get("ownership_epoch", 0)),
 			"position": Dictionary(player.get("position", {})).duplicate(true),
 		}
+	# The Service7 cut is sealed now. Stop fixed-clock/input advancement but keep
+	# the process alive for read-only REPORT/SYNC until the gateway acknowledges
+	# the planned restart and sends STOP.
+	clock = null
+	held_inputs.clear()
+	pending_fixed_wire.clear()
+	pending_fixed_sequence = 0
 	_checkpoint8 = {
 		"generation": generation,
 		"checkpoint_checksum": String(saved.get("details", {}).get("checkpoint", {}).get("checksum", "")),
