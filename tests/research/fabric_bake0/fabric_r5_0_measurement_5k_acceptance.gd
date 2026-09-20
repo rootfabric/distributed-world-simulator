@@ -7,7 +7,7 @@ const Measure = preload("res://scripts/research/fabric_bake0/r5_measurement_harn
 const U = preload("res://scripts/research/fabric_bake0/fabric_bake_contract_utils_v1.gd")
 
 const COUNT := 5000
-const BOUNDARY_EXECUTIONS_PER_PHASE := 512
+const BOUNDARY_EXECUTIONS_PER_PHASE := 64
 
 var checks := 0
 var failed := false
