@@ -179,8 +179,8 @@ func _initialize() -> void:
 	check(final_status.work.local_reconstructed_parts == Source.REGION_SIZE, "local reconstruction exactly 20", final_status.work)
 	check(final_status.work.rebake_local_validations == Source.REGION_SIZE, "local rebake validations exactly 20", final_status.work)
 	check(final_status.work.metadata_parts_scanned == 0, "indexed lifecycle performs no full residual part scans", final_status.work)
-\tcheck(int(final_status.work.get("range_query_count", -1)) == 4, "exactly four indexed residual queries", final_status.work)
-\tcheck(int(final_status.work.get("range_query_prefix_reads", -1)) == 80, "indexed residual queries use bounded prefix reads", final_status.work)
+	check(int(final_status.work.get("range_query_count", -1)) == 4, "exactly four indexed residual queries", final_status.work)
+	check(int(final_status.work.get("range_query_prefix_reads", -1)) == 80, "indexed residual queries use bounded prefix reads", final_status.work)
 	check(final_status.work.global_physical_rebuilds == 0, "no global physical rebuild", final_status.work)
 	check(final_status.work.duplicate_ownership_count == 0, "no duplicate ownership", final_status.work)
 	check(Ownership.validate(final_status.ownership).success, "final ownership")
@@ -228,12 +228,12 @@ func _initialize() -> void:
 		"source_base_checksum": base.spec.checksum,
 		"source_successor_checksum": successor.spec.checksum,
 		"parent_aggregate_checksum": parent.details.descriptor.checksum,
-\t\t"indexed_parent_checksum": indexed_parent.details.descriptor.checksum,
-\t\t"range_index_summary_hash": range_index.summary_hash,
-\t\t"range_index_build_parts_scanned": count,
-\t\t"range_index_mass_error": mass_error,
-\t\t"range_index_com_error": com_error,
-\t\t"range_index_inertia_error": inertia_error,
+		"indexed_parent_checksum": indexed_parent.details.descriptor.checksum,
+		"range_index_summary_hash": range_index.summary_hash,
+		"range_index_build_parts_scanned": count,
+		"range_index_mass_error": mass_error,
+		"range_index_com_error": com_error,
+		"range_index_inertia_error": inertia_error,
 		"global_control_aggregate_checksum": global_control.details.descriptor.checksum,
 		"active_full_peak": int(final_status.work.active_full_peak),
 		"local_reconstructed_parts": int(final_status.work.local_reconstructed_parts),
@@ -242,8 +242,8 @@ func _initialize() -> void:
 		"component_counts": component_counts,
 		"component_hashes": component_hashes,
 		"metadata_parts_scanned_lifecycle": int(final_status.work.metadata_parts_scanned),
-\t\t"range_query_count": int(final_status.work.get("range_query_count", -1)),
-\t\t"range_query_prefix_reads": int(final_status.work.get("range_query_prefix_reads", -1)),
+		"range_query_count": int(final_status.work.get("range_query_count", -1)),
+		"range_query_prefix_reads": int(final_status.work.get("range_query_prefix_reads", -1)),
 		"global_control_parts_scanned": int(global_control.details.parts_scanned),
 		"rebake_local_validations": int(final_status.work.rebake_local_validations),
 		"global_physical_rebuilds": int(final_status.work.global_physical_rebuilds),
