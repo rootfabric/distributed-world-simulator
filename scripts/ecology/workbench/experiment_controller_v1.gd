@@ -19,9 +19,11 @@ const FieldContract = preload("res://scripts/research/ecology/v2/environment_fie
 const Ports = preload("res://scripts/research/ecology/v2/organism_environment_ports_v1.gd")
 const Lifecycle = preload("res://scripts/research/ecology/v2/resource_lifecycle_runtime_v1.gd")
 const Feedback = preload("res://scripts/research/ecology/v2/persistent_environmental_feedback_v1.gd")
+const EnvironmentPatch = preload("res://scripts/ecology/workbench/environment_patch_v1.gd")
 const Manifest = preload("res://scripts/ecology/workbench/experiment_manifest_v1.gd")
 
 const SCHEMA := "dws.ecology.workbench.experiment-controller.v1"
+const STATE_SCHEMA := "dws.ecology.workbench.experiment-state.v1"
 # Controller-declared genesis policy (deterministic, manifest-independent).
 const OWNER_TOKEN := "eco-polygon.controller"
 const CELL_CAPACITY_MG := 1000000
@@ -261,6 +263,120 @@ func status() -> String:
 
 func last_error() -> String:
 	return _error
+
+# --- deterministic state serialization (P8: checkpoint/fork/replay) -----------
+# Canonical-only: the whole controller state is an integer canonical
+# Dictionary; the envelope is canonical_value_v1.encode (stable key order,
+# no wall-clock, no presentation data — presentation is always re-derived).
+
+## Serialize the canonical controller state (field + population + feedback +
+## tick) into canonical text, bound to the manifest hash. Deterministic:
+## identical states always serialize to the identical text.
+func serialize_state() -> Dictionary:
+	if _status == "IDLE":
+		return _command_fail("CONTROLLER_NOT_INITIALIZED")
+	if _status == "FAILED":
+		return _failed_command()
+	var payload := {"field": _field, "population": _population, "feedback": _feedback, "tick": _tick}
+	var manifest_hash := Manifest.canonical_hash(_manifest)
+	var text := C.encode({"schema": STATE_SCHEMA, "manifest_hash": manifest_hash, "state": payload})
+	if text.is_empty():
+		return _command_fail("CONTROLLER_STATE_ENCODE")
+	return {
+		"success": true,
+		"state_text": text,
+		"state_hash": C.digest(payload),
+		"tick": _tick,
+		"status": _status,
+		"manifest_hash": manifest_hash,
+	}
+
+## Load a serialized canonical state into this controller. The controller
+## must already be initialized (the manifest is the identity anchor).
+## expected_manifest_hash: when non-empty, the envelope's manifest hash must
+## match exactly (strict restore); an empty value skips the binding check
+## (branch fork: the checkpoint legitimately comes from the parent manifest).
+func load_state(state_text: String, expected_manifest_hash: String = "") -> Dictionary:
+	if _status == "IDLE":
+		return _command_fail("CONTROLLER_NOT_INITIALIZED")
+	var parsed: Dictionary = C.decode(state_text)
+	if not bool(parsed.get("success", false)):
+		return _command_fail("CONTROLLER_STATE_DECODE:" + String(parsed.get("error", "?")))
+	var envelope: Dictionary = parsed.value
+	if not C.keys(envelope, ["schema", "manifest_hash", "state"]) or envelope.schema != STATE_SCHEMA:
+		return _command_fail("CONTROLLER_STATE_SCHEMA")
+	if not expected_manifest_hash.is_empty() and String(envelope.manifest_hash) != expected_manifest_hash:
+		return _command_fail("CONTROLLER_STATE_MANIFEST_MISMATCH")
+	var state: Dictionary = envelope.state
+	if not C.keys(state, ["field", "population", "feedback", "tick"]):
+		return _command_fail("CONTROLLER_STATE_FIELDS")
+	_field = state.field.duplicate(true)
+	_population = state.population.duplicate(true)
+	_feedback = state.feedback.duplicate(true)
+	_tick = int(state.tick)
+	_status = "READY"
+	_error = ""
+	return {"success": true, "tick": _tick, "status": _status}
+
+## Apply an input-layer environment patch (P4 schema) to the LIVE field
+## state. Used ONLY by branch fork (P8): stocks move through canonical
+## deposit/sink effects, signals through set_cell_signals — the same
+## owner-write API as genesis. The stored manifest is replaced by the
+## patched immutable manifest (new canonical hash).
+func apply_field_patch(patch: Dictionary) -> Dictionary:
+	if _status == "IDLE" or _status == "FAILED":
+		return _command_fail("CONTROLLER_NOT_INITIALIZED")
+	var applied := EnvironmentPatch.apply_patch(_manifest, patch)
+	if not bool(applied.get("success", false)):
+		return _command_fail("CONTROLLER_FIELD_PATCH:" + String(applied.get("error", "?")))
+	var next_manifest: Dictionary = applied.manifest
+	# Deltas are computed against the ORIGINAL manifest zone values (the
+	# patched manifest already carries the new declared values).
+	var zones: Array = _manifest.environment.zones
+	var total: int = int(next_manifest.environment.spatial.width) * int(next_manifest.environment.spatial.depth)
+	var field := _field
+	var effects: Array = []
+	var signal_updates: Array = []
+	for index in total:
+		var zone: Dictionary = zones[mini(zones.size() - 1, index * zones.size() / total)]
+		if not patch.zones.has(String(zone.id)):
+			continue
+		var edits: Dictionary = patch.zones[String(zone.id)]
+		var center := _cell_center(field, index)
+		for resource in FieldContract.RESOURCES:
+			if not edits.has(resource):
+				continue
+			var delta: int = int(edits[resource]) - int(zone[resource])
+			if delta == 0:
+				continue
+			# Canonical effects are bounded by FieldContract.MAX_REQUEST per
+			# effect; larger deltas are split into deterministic chunks.
+			var remaining := absi(delta)
+			var chunk_index := 0
+			while remaining > 0:
+				var chunk: int = mini(remaining, FieldContract.MAX_REQUEST)
+				effects.append(Ports.effect("branch-patch/%06d/%s/%03d" % [index, resource, chunk_index], OWNER_TOKEN, "deposit" if delta > 0 else "sink", resource, chunk, center, 0, "CONTROLLER_BRANCH_PATCH"))
+				remaining -= chunk
+				chunk_index += 1
+		if edits.has("light") or edits.has("temperature"):
+			signal_updates.append({
+				"index": index,
+				"signals": FieldContract.signals(int(edits.get("light", zone.light)), int(edits.get("temperature", zone.temperature)), 0, 0),
+			})
+	if not effects.is_empty():
+		var effect_result := Field.apply_effects(field, effects, OWNER_TOKEN, int(field.owner_epoch), int(field.revision))
+		if not bool(effect_result.get("success", false)):
+			return _command_fail("CONTROLLER_FIELD_PATCH_EFFECTS:" + String(effect_result.get("error", "?")))
+		field = effect_result.state
+	for update in signal_updates:
+		var index: int = int(update.index)
+		var set_result := Field.set_cell_signals(field, index % int(field.width), int(index / int(field.width)), update.signals, OWNER_TOKEN, int(field.owner_epoch), int(field.revision))
+		if not bool(set_result.get("success", false)):
+			return _command_fail("CONTROLLER_FIELD_PATCH_SIGNALS:" + String(set_result.get("error", "?")))
+		field = set_result.state
+	_field = field
+	_manifest = next_manifest
+	return {"success": true, "tick": _tick, "field_hash": Field.state_hash(_field), "manifest_hash": Manifest.canonical_hash(_manifest)}
 
 # --- presentation views (P4): read-only canonical projection -----------------
 
