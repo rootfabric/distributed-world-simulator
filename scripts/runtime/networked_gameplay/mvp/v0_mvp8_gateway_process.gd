@@ -52,6 +52,9 @@ var _backend_liveness_last8: Dictionary = {}
 var _seam_crossings8 := 0
 var _handoff_stage8 := "IDLE"
 var _matter_resynced8 := {"a": false, "b": false}
+var _current_cache8 := {"a": {}, "b": {}}
+var _current_cache_hits8 := 0
+var _current_cache_misses8 := 0
 
 
 func _phase8() -> String:
@@ -177,6 +180,7 @@ func maybe_cross_a() -> bool:
 		_publish_progress8()
 		return false
 	_seam_crossings8 += 1
+	_invalidate_current8("a")
 	_handoff_stage8 = "COMPLETE:" + transfer_id
 	_publish_progress8()
 	return true
@@ -184,9 +188,11 @@ func maybe_cross_a() -> bool:
 
 func route_client_input(actor: String, wire: Dictionary) -> Dictionary:
 	var routed := super.route_client_input(actor, wire)
-	if bool(routed.get("success", false)) and _active8 and _round8 < TOTAL_ROUNDS8:
-		_round_moves8[actor] = true
-		_fixed_receipts8 += 1
+	if bool(routed.get("success", false)):
+		_invalidate_current8(actor)
+		if _active8 and _round8 < TOTAL_ROUNDS8:
+			_round_moves8[actor] = true
+			_fixed_receipts8 += 1
 	return routed
 
 
@@ -202,6 +208,32 @@ func _matter_observer8() -> String:
 		if String(coordinators[actor].snapshot().get("active_authority_id", "")) == "authority/a":
 			return actor
 	return ""
+
+
+func _invalidate_current8(actor: String = "") -> void:
+	if actor in ["a", "b"]:
+		_current_cache8[actor] = {}
+	else:
+		_current_cache8 = {"a": {}, "b": {}}
+
+
+func _status_current8(actor: String) -> Dictionary:
+	var cached_value = _current_cache8.get(actor, {})
+	var details: Dictionary = {}
+	if cached_value is Dictionary and not Dictionary(cached_value).is_empty():
+		_current_cache_hits8 += 1
+		details = Dictionary(cached_value).duplicate(true)
+	else:
+		var sampled := _current8(actor)
+		if not bool(sampled.get("success", false)):
+			return sampled
+		_current_cache_misses8 += 1
+		details = Dictionary(sampled.get("details", {})).duplicate(true)
+		_current_cache8[actor] = details.duplicate(true)
+	# Gateway-only coordination can change while canonical owners remain stable.
+	# Always publish the latest orchestration snapshot without re-reading owners.
+	details["snapshot"] = world_snapshot()
+	return Protocol8.success(details)
 
 
 func _current8(actor: String) -> Dictionary:
@@ -328,15 +360,16 @@ func _dig8(round_index: int) -> Dictionary:
 			_last_dig8["execute_attempts"] = execute_attempts
 			var executed := _owner4(candidate, {"kind": "MVP4_EXECUTE", "plan": Dictionary(prepared.get("details", {})).duplicate(true)})
 			if bool(executed.get("success", false)):
+				var current := _current8("a")
+				if not bool(current.get("success", false)):
+					return current
 				_dig_hits8.append(hit.duplicate())
 				_last_dig8["selected_actor"] = candidate
 				_last_dig8["selected_operation_id"] = operation
 				_last_dig8["selected_hit_position_m"] = hit.duplicate()
 				_last_dig8["executed"] = true
-				var current := _current8("a")
-				if bool(current.get("success", false)):
-					_action_counts8["DIG"] = int(_action_counts8["DIG"]) + 1
-				return current
+				_action_counts8["DIG"] = int(_action_counts8["DIG"]) + 1
+				return Protocol8.success({"current": Dictionary(current.get("details", {})).duplicate(true)})
 			_last_dig8["attempts"][-1]["execute_error"] = String(executed.get("error_code", ""))
 			last_failure = executed
 			if String(executed.get("error_code", "")) != "MVP4_MATTER_NOT_COMMITTED":
@@ -403,6 +436,7 @@ func _refresh_bounds8() -> Dictionary:
 		"client_sequences": client_sequences.duplicate(true),
 		"input_observations": {"a": input_observations["a"].size(), "b": input_observations["b"].size()},
 		"authority": authority_bounds.duplicate(true),
+		"current_cache": {"hits": _current_cache_hits8, "misses": _current_cache_misses8},
 	}
 	var okay: bool = (
 		operation_fingerprints.size() <= OP_FINGERPRINT_CAP8
@@ -444,7 +478,13 @@ func _commit_round8(round_index: int) -> Dictionary:
 		return Protocol8.failure("MVP8_ROUND_ACTION_INVALID")
 	if not bool(outcome.get("success", false)):
 		return outcome
-	var current := _current8("a")
+	var outcome_current = outcome.get("details", {}).get("current", {})
+	_invalidate_current8()
+	var current: Dictionary
+	if outcome_current is Dictionary and not Dictionary(outcome_current).is_empty():
+		current = Protocol8.success(Dictionary(outcome_current).duplicate(true))
+	else:
+		current = _current8("a")
 	if not bool(current.get("success", false)):
 		return current
 	_round_history8.append({
@@ -467,6 +507,7 @@ func _commit_round8(round_index: int) -> Dictionary:
 	# replay the round they just completed.
 	var post_snapshot := world_snapshot()
 	current_details["snapshot"] = post_snapshot.duplicate(true)
+	_current_cache8["a"] = current_details.duplicate(true)
 	return Protocol8.success({
 		"round_completed": round_index,
 		"action": action,
@@ -530,6 +571,7 @@ func _publish_progress8() -> void:
 		"reconnect_complete": _reconnect_complete8,
 		"checkpointed": _checkpointed8,
 		"matter_resynced": _matter_resynced8.duplicate(true),
+		"current_cache": {"hits": _current_cache_hits8, "misses": _current_cache_misses8},
 		"mvp6": {
 			"phase": _phase6,
 			"complete": _complete6(),
@@ -555,6 +597,7 @@ func world_snapshot() -> Dictionary:
 		"checkpointed": _checkpointed8,
 		"recovery_boot": _recovery_boot8,
 		"matter_resynced": _matter_resynced8.duplicate(true),
+		"current_cache": {"hits": _current_cache_hits8, "misses": _current_cache_misses8},
 		"complete": _round8 >= TOTAL_ROUNDS8,
 		"bounds": _bounds8.duplicate(true),
 		"last_dig": _last_dig8.duplicate(true),
@@ -599,13 +642,10 @@ func handle_client(actor: String, body: Dictionary) -> Dictionary:
 			"snapshot": world_snapshot(),
 		})
 	if kind == "MVP8_STATUS":
-		var current := _current8(actor)
+		var current := _status_current8(actor)
 		if not bool(current.get("success", false)):
 			return current
 		var details: Dictionary = Dictionary(current.get("details", {})).duplicate(true)
-		# _current8 already sampled the canonical owners and produced the exact
-		# world snapshot for that sample. Reuse it instead of issuing a second
-		# pair of player LOOKUP RPCs for every status poll.
 		return Protocol8.success({"current": details, "snapshot": Dictionary(details.get("snapshot", {})).duplicate(true)})
 	if kind == "MVP8_ROUND":
 		if actor != "a":
@@ -615,6 +655,7 @@ func handle_client(actor: String, body: Dictionary) -> Dictionary:
 		if actor != "a" or _round8 != RECONNECT_AFTER_ROUND8 or _waiting_reconnect8 or _reconnect_complete8:
 			return Protocol8.failure("MVP8_RECONNECT_PREPARE_INVALID")
 		_waiting_reconnect8 = true
+		_invalidate_current8("a")
 		_original_peer8 = String(client_peers.get("a", ""))
 		client_hello["a"] = false
 		client_finished["a"] = true
@@ -743,6 +784,7 @@ func base_report(schema: String, passed: bool, graphical: bool) -> Dictionary:
 		"checkpoint_receipt": _checkpoint_receipt8.duplicate(true),
 		"recovery_boot": _recovery_boot8,
 		"matter_resynced": _matter_resynced8.duplicate(true),
+		"current_cache": {"hits": _current_cache_hits8, "misses": _current_cache_misses8},
 		"bounds": _bounds8.duplicate(true),
 		"backend_liveness_cycles": _backend_liveness_cycles8,
 		"backend_liveness_failures": _backend_liveness_failures8,
