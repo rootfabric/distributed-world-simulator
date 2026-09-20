@@ -288,3 +288,35 @@ difference:
 ```
 
 `detached charge/energy` не исчезают: projector явно возвращает их вызывающему canonical mutation layer как состояние отключённой части. Температура сохраняется. Проекция разрешена только для capacity loss при неизменном group electrochemical profile; capacity gain или chemistry change требуют более детального reconstruction / `NO_SAFE_BAKE`.
+
+
+## State-reconstruction exact result — run 35540111456
+
+```text
+RUNTIME SUBJECT = a8d87339453b1b661ec72aa05788ebf2c61c5f87
+RUNTIME TREE    = 4259c21770084696500379f4849078ec0ef40d0e
+
+samples = 3/3 PASS
+aggregate job = 106156193277
+artifact = 10614098445
+digest = sha256:183190850f59c3df3792a83c516ec1f42588aa18ce0e62715517b8f8cd12a8f7
+
+deterministic hash =
+41f062118b325b64884360037ea2a8a02a158990706bcd912a0681b6f2a9d8a3
+```
+
+For the one-cell disconnect at synchronized SOC:
+
+```text
+projection = CAPACITY_LOSS_SAME_SOC
+detached charge          = 8262 C
+detached chemical energy = 25,612.2 J
+
+remaining active group SOC = preserved exactly
+unaffected groups detached charge = 0
+projected damaged state:
+  detailed damaged reference = PASS
+  rebuilt damaged capsule    = PASS
+```
+
+The projector returns detached charge/energy explicitly; they are not destroyed or silently absorbed by the new capsule. Capacity gain or profile change is outside this conservative projection and requires more detailed reconstruction.
