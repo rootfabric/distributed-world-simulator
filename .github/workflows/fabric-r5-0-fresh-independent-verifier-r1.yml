@@ -67,7 +67,7 @@ jobs:
           name: p7-repair-engine-34117353691
           run-id: 34117353691
           repository: rootfabric/distributed-world-simulator
-          github-token: ${{ github.token }
+          github-token: ${{ github.token }}
           path: ${{ runner.temp }}/r5-verifier-engine
 
       - name: Verify canonical Linux double
@@ -123,7 +123,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: fabric-r5-0-verifier-r1-${{ github.sha }
+          name: fabric-r5-0-verifier-r1-${{ github.sha }}
           path: |
             r5-0-verifier-identity.txt
             r5-0-verifier-godot.txt
