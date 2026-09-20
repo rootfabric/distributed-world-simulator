@@ -64,6 +64,53 @@ FABRIC-BAKE отвечает на другой фундаментальный в
 
 > Может ли уже возникшая physical complexity автоматически компилироваться в значительно более дешёвое executable representation без потери причинно значимого boundary behavior, conservation и возможности безопасно вернуть детализацию?
 
+### Главная optimization objective
+
+Цель FABRIC-BAKE — не просто LOD по числу объектов. Основная цель:
+
+> **Разрешить canonical миру быть очень сложным, но заставлять runtime исполнять только минимальную модель, достаточную для текущего физически значимого поведения.**
+
+Пример:
+
+```text
+сложная микросхема:
+  тысячи/миллионы внутренних элементов
+        ↓ compile / reduce
+  несколько ports
+  + compact state
+  + small executable relation / generated equations
+        ↓
+  дешёвая симуляция
+```
+
+Если boundary behavior подсистемы в текущем режиме можно сохранить несколькими формулами или небольшим сгенерированным executable artifact, runtime не должен покомпонентно симулировать каждый внутренний transistor/resistor/spring.
+
+Детализация возвращается только когда она становится причинно значимой:
+
+```text
+validity exit
+hidden event
+damage
+mode transition
+uncertainty/error bound violation
+        ↓
+local refine / UNBAKE
+        ↓
+detailed solve
+        ↓
+rebuild compact model
+```
+
+Это должно работать иерархически:
+
+```text
+components → module ROM → assembly ROM → machine ROM
+```
+
+с локальным разворачиванием любого уровня без обязательного разворачивания всей машины.
+
+Компактный artifact остаётся **derived representation**, а не device-specific hard-coded истиной. Canonical source, provenance, validity envelope, error envelope, refinement guards и возможность полного восстановления обязательны.
+
 Это две независимые research axes:
 
 ```text
