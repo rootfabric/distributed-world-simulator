@@ -379,6 +379,21 @@ def run_phase2(engine: Path, output: Path, checkpoint_root: Path, receipt: dict,
     }
 
 
+def spatially_distinct_hits(hits: list, minimum_m: float = 1.0) -> bool:
+    if len(hits) != 4:
+        return False
+    for i, left in enumerate(hits):
+        if not isinstance(left, list) or len(left) != 3:
+            return False
+        for right in hits[i + 1:]:
+            if not isinstance(right, list) or len(right) != 3:
+                return False
+            squared = sum((float(a) - float(b)) ** 2 for a, b in zip(left, right))
+            if squared < minimum_m * minimum_m:
+                return False
+    return True
+
+
 def evidence_checks(phase1: dict, phase2: dict, receipt: dict, head: str, tree: str) -> dict[str, bool]:
     checks: dict[str, bool] = {}
     try:
@@ -435,7 +450,7 @@ def evidence_checks(phase1: dict, phase2: dict, receipt: dict, head: str, tree: 
             and [row["round"] for row in w2["round_history"]] == list(range(TOTAL_ROUNDS))
         )
         checks["repeated_operations"] = w2["action_counts"] == EXPECTED_ACTIONS
-        checks["four_spatially_distinct_digs"] = len(w2.get("dig_hits", [])) == 4
+        checks["four_spatially_distinct_digs"] = spatially_distinct_hits(list(w2.get("dig_hits", [])))
         checks["seam_crossings"] = int(w2["seam_crossings"]) >= 4
         checks["responsive_fixed_tick"] = (
             int(w2["fixed_receipts"]) >= 24
@@ -513,7 +528,7 @@ def negative_controls(phase1: dict, phase2: dict, receipt: dict, head: str, tree
             g2.get("action_counts") == EXPECTED_ACTIONS,
             int(g2.get("seam_crossings", 0)) >= 4,
             int(g2.get("fixed_receipts", 0)) >= 24,
-            len(g2.get("dig_hits", [])) == 4,
+            spatially_distinct_hits(list(g2.get("dig_hits", []))),
             g2.get("matter_resynced") == {"a": True, "b": True},
             int(b.get("operation_fingerprints", 9999)) <= 256,
             int(b.get("ledger", {}).get("tracked_count", 9999)) <= 512,
@@ -535,6 +550,7 @@ def negative_controls(phase1: dict, phase2: dict, receipt: dict, head: str, tree
         "lost_build_cycle": lambda x: x["p2"]["gateway"]["mvp8"]["action_counts"].update(BUILD_ADD=1),
         "missing_dig_hit": lambda x: x["p2"]["gateway"]["mvp8"]["dig_hits"].pop(),
         "missing_matter_resync": lambda x: x["p2"]["gateway"]["mvp8"]["matter_resynced"].update(a=False),
+        "overlapping_dig_hit": lambda x: x["p2"]["gateway"]["mvp8"]["dig_hits"].__setitem__(3, list(x["p2"]["gateway"]["mvp8"]["dig_hits"][2])),
     }
     rejected: list[str] = []
     for name, mutate in mutations.items():
@@ -593,7 +609,7 @@ def main() -> int:
         not error
         and checks
         and all(checks.values())
-        and len(negatives) == 12
+        and len(negatives) == 13
         and not fatal_logs
         and not BASE.git("status", "--porcelain", "--untracked-files=no")
     )
