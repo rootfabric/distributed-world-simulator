@@ -162,84 +162,84 @@ jobs:
           $env:MVP8_SNAPSHOT = $snapshot
           $env:MVP8_FACTS = Join-Path $evidence "mvp8-raw-facts.json"
           @'
-import json, math, os
-from pathlib import Path
-root = Path(os.environ["MVP8_SNAPSHOT"])
-def load(rel):
-    return json.loads((root / rel).read_text(encoding="utf-8-sig"))
-m = load("manifest.json")
-p1a = load("phase1/authority-a.json")
-p1b = load("phase1/authority-b.json")
-g1 = load("phase1/gateway.json")
-c1a = load("phase1/client-a.json")
-c1b = load("phase1/client-b.json")
-r1a = load("phase1/reconnect-a.json")
-p2a = load("phase2/authority-a.json")
-p2b = load("phase2/authority-b.json")
-g2 = load("phase2/gateway.json")
-c2a = load("phase2/client-a.json")
-c2b = load("phase2/client-b.json")
-w1, w2 = g1["mvp8"], g2["mvp8"]
-phase1_pids = [p1a["process_id"], p1b["process_id"], g1["gateway_process_id"], c1a["process_id"], c1b["process_id"], r1a["process_id"]]
-phase2_pids = [p2a["process_id"], p2b["process_id"], g2["gateway_process_id"], c2a["process_id"], c2b["process_id"]]
-hits = list(w2["dig_hits"])
-distances = []
-for i in range(len(hits)):
-    for j in range(i + 1, len(hits)):
-        distances.append(math.sqrt(sum((float(a)-float(b))**2 for a,b in zip(hits[i], hits[j]))))
-authority = w2["bounds"]["authority"]
-construction = p2a.get("mvp6", {}).get("construction", {})
-facts = {
-    "schema": "distributed_world_simulator.mvp8_windows_raw_facts.v1",
-    "subject_head": m["subject_head"],
-    "subject_tree": m["subject_tree"],
-    "engine_sha256": m["engine_sha256"],
-    "manifest_passed": m["passed"],
-    "positive_checks": f'{sum(1 for v in m["checks"].values() if v)}/{len(m["checks"])}',
-    "negative_controls": f'{len(m["negative_controls"])}/14',
-    "fatal_logs": m["fatal_logs"],
-    "phase1_pids": phase1_pids,
-    "phase1_pids_distinct": len(set(phase1_pids)) == 6,
-    "original_a_pid": c1a["process_id"],
-    "reconnect_a_pid": r1a["process_id"],
-    "original_a_pid_ne_reconnect_a_pid": c1a["process_id"] != r1a["process_id"],
-    "original_peer": w1["original_peer"],
-    "reconnect_peer": w1["reconnect_peer"],
-    "peer_identity_changed": w1["original_peer"] != w1["reconnect_peer"],
-    "phase2_pids": phase2_pids,
-    "phase2_pids_distinct": len(set(phase2_pids)) == 5,
-    "phase_pid_sets_disjoint": set(phase1_pids).isdisjoint(phase2_pids),
-    "round_history": [row["round"] for row in w2["round_history"]],
-    "action_counts": w2["action_counts"],
-    "fixed_receipts": w2["fixed_receipts"],
-    "seam_crossings": w2["seam_crossings"],
-    "dig_hits": hits,
-    "minimum_dig_separation_m": min(distances),
-    "matter_resynced": w2["matter_resynced"],
-    "item_count": authority["item_count"],
-    "unique_item_count": authority["unique_item_count"],
-    "duplicate_item_identity": authority["duplicate_item_identity"],
-    "construction_id": authority["construction_id"],
-    "construction_part_count": construction.get("part_count", construction.get("parts")),
-    "collision_part_count_a": c2a["collision_part_count"],
-    "collision_part_count_b": c2b["collision_part_count"],
-    "bounds": w2["bounds"],
-    "phase1_backend_sequences": w1["bounds"]["backend_sequences"],
-    "phase1_authority_a_backend_sequence": w1["bounds"]["backend_sequences"]["authority/a"],
-}
-assert facts["phase1_pids_distinct"]
-assert facts["original_a_pid_ne_reconnect_a_pid"]
-assert facts["peer_identity_changed"]
-assert facts["phase2_pids_distinct"] and facts["phase_pid_sets_disjoint"]
-assert facts["round_history"] == list(range(12))
-assert facts["action_counts"] == {"DIG":4,"ITEM":4,"BUILD_ADD":2,"BUILD_REMOVE":2}
-assert len(hits) == 4 and facts["minimum_dig_separation_m"] >= 1.0
-assert facts["matter_resynced"] == {"a": True, "b": True}
-assert facts["item_count"] == facts["unique_item_count"] and facts["duplicate_item_identity"] is False
-assert facts["collision_part_count_a"] == 100 and facts["collision_part_count_b"] == 100
-Path(os.environ["MVP8_FACTS"]).write_text(json.dumps(facts, indent=2) + "\n", encoding="utf-8")
-print(json.dumps(facts, indent=2))
-'@ | python -
+          import json, math, os
+          from pathlib import Path
+          root = Path(os.environ["MVP8_SNAPSHOT"])
+          def load(rel):
+              return json.loads((root / rel).read_text(encoding="utf-8-sig"))
+          m = load("manifest.json")
+          p1a = load("phase1/authority-a.json")
+          p1b = load("phase1/authority-b.json")
+          g1 = load("phase1/gateway.json")
+          c1a = load("phase1/client-a.json")
+          c1b = load("phase1/client-b.json")
+          r1a = load("phase1/reconnect-a.json")
+          p2a = load("phase2/authority-a.json")
+          p2b = load("phase2/authority-b.json")
+          g2 = load("phase2/gateway.json")
+          c2a = load("phase2/client-a.json")
+          c2b = load("phase2/client-b.json")
+          w1, w2 = g1["mvp8"], g2["mvp8"]
+          phase1_pids = [p1a["process_id"], p1b["process_id"], g1["gateway_process_id"], c1a["process_id"], c1b["process_id"], r1a["process_id"]]
+          phase2_pids = [p2a["process_id"], p2b["process_id"], g2["gateway_process_id"], c2a["process_id"], c2b["process_id"]]
+          hits = list(w2["dig_hits"])
+          distances = []
+          for i in range(len(hits)):
+              for j in range(i + 1, len(hits)):
+                  distances.append(math.sqrt(sum((float(a)-float(b))**2 for a,b in zip(hits[i], hits[j]))))
+          authority = w2["bounds"]["authority"]
+          construction = p2a.get("mvp6", {}).get("construction", {})
+          facts = {
+              "schema": "distributed_world_simulator.mvp8_windows_raw_facts.v1",
+              "subject_head": m["subject_head"],
+              "subject_tree": m["subject_tree"],
+              "engine_sha256": m["engine_sha256"],
+              "manifest_passed": m["passed"],
+              "positive_checks": f'{sum(1 for v in m["checks"].values() if v)}/{len(m["checks"])}',
+              "negative_controls": f'{len(m["negative_controls"])}/14',
+              "fatal_logs": m["fatal_logs"],
+              "phase1_pids": phase1_pids,
+              "phase1_pids_distinct": len(set(phase1_pids)) == 6,
+              "original_a_pid": c1a["process_id"],
+              "reconnect_a_pid": r1a["process_id"],
+              "original_a_pid_ne_reconnect_a_pid": c1a["process_id"] != r1a["process_id"],
+              "original_peer": w1["original_peer"],
+              "reconnect_peer": w1["reconnect_peer"],
+              "peer_identity_changed": w1["original_peer"] != w1["reconnect_peer"],
+              "phase2_pids": phase2_pids,
+              "phase2_pids_distinct": len(set(phase2_pids)) == 5,
+              "phase_pid_sets_disjoint": set(phase1_pids).isdisjoint(phase2_pids),
+              "round_history": [row["round"] for row in w2["round_history"]],
+              "action_counts": w2["action_counts"],
+              "fixed_receipts": w2["fixed_receipts"],
+              "seam_crossings": w2["seam_crossings"],
+              "dig_hits": hits,
+              "minimum_dig_separation_m": min(distances),
+              "matter_resynced": w2["matter_resynced"],
+              "item_count": authority["item_count"],
+              "unique_item_count": authority["unique_item_count"],
+              "duplicate_item_identity": authority["duplicate_item_identity"],
+              "construction_id": authority["construction_id"],
+              "construction_part_count": construction.get("part_count", construction.get("parts")),
+              "collision_part_count_a": c2a["collision_part_count"],
+              "collision_part_count_b": c2b["collision_part_count"],
+              "bounds": w2["bounds"],
+              "phase1_backend_sequences": w1["bounds"]["backend_sequences"],
+              "phase1_authority_a_backend_sequence": w1["bounds"]["backend_sequences"]["authority/a"],
+          }
+          assert facts["phase1_pids_distinct"]
+          assert facts["original_a_pid_ne_reconnect_a_pid"]
+          assert facts["peer_identity_changed"]
+          assert facts["phase2_pids_distinct"] and facts["phase_pid_sets_disjoint"]
+          assert facts["round_history"] == list(range(12))
+          assert facts["action_counts"] == {"DIG":4,"ITEM":4,"BUILD_ADD":2,"BUILD_REMOVE":2}
+          assert len(hits) == 4 and facts["minimum_dig_separation_m"] >= 1.0
+          assert facts["matter_resynced"] == {"a": True, "b": True}
+          assert facts["item_count"] == facts["unique_item_count"] and facts["duplicate_item_identity"] is False
+          assert facts["collision_part_count_a"] == 100 and facts["collision_part_count_b"] == 100
+          Path(os.environ["MVP8_FACTS"]).write_text(json.dumps(facts, indent=2) + "\n", encoding="utf-8")
+          print(json.dumps(facts, indent=2))
+          '@ | python -
           if ($LASTEXITCODE -ne 0) { throw "MVP8_RAW_FACT_BINDING_FAILED" }
 
       - name: Independent Windows full world core
