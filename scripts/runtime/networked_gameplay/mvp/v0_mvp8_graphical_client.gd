@@ -19,7 +19,24 @@ func _next_mvp6(snapshot: Dictionary) -> void:
 	super._next_mvp6(snapshot)
 
 
+func _publish_progress8(snapshot: Dictionary) -> void:
+	var path := String(cfg.get("mvp8_progress_file", ""))
+	if path.is_empty():
+		return
+	Support8.write_json(path, {
+		"schema": "distributed_world_simulator.mvp8_client_progress.v1",
+		"actor": actor,
+		"process_id": OS.get_process_id(),
+		"phase4": _phase4,
+		"mvp8_active": _mvp8_active,
+		"mvp8_move_round": _mvp8_move_round,
+		"mvp6": Dictionary(snapshot.get("mvp6", {})).duplicate(true),
+		"mvp8": Dictionary(snapshot.get("mvp8", {})).duplicate(true),
+	})
+
+
 func _next_mvp8(snapshot: Dictionary) -> void:
+	_publish_progress8(snapshot)
 	if _mvp8_exit_after_reply:
 		finish(true, "")
 		return
@@ -63,6 +80,7 @@ func _next_mvp8(snapshot: Dictionary) -> void:
 
 
 func next_automated(snapshot: Dictionary) -> void:
+	_publish_progress8(snapshot)
 	if _mvp8_exit_after_reply:
 		finish(true, "")
 		return

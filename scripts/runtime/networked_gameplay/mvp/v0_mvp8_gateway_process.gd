@@ -377,6 +377,31 @@ func _checkpoint8() -> Dictionary:
 	return Protocol8.success({"checkpointed": true, "restart": _checkpoint_receipt8.duplicate(true), "snapshot": world_snapshot()})
 
 
+func _publish_progress8() -> void:
+	var path := String(cfg.get("mvp8_progress_file", ""))
+	if path.is_empty():
+		return
+	Support8.write_json(path, {
+		"schema": "distributed_world_simulator.mvp8_gateway_progress.v1",
+		"process_id": OS.get_process_id(),
+		"round": _round8,
+		"phase": _phase8(),
+		"active": _active8,
+		"round_moves": _round_moves8.duplicate(true),
+		"action_counts": _action_counts8.duplicate(true),
+		"fixed_receipts": _fixed_receipts8,
+		"seam_crossings": _seam_crossings8,
+		"reconnect_complete": _reconnect_complete8,
+		"checkpointed": _checkpointed8,
+		"mvp6": {
+			"phase": _phase6,
+			"complete": _complete6(),
+			"removed_observers": _phase_count6("REMOVED"),
+			"replay_remove": _replays6["REMOVE"],
+		},
+	})
+
+
 func world_snapshot() -> Dictionary:
 	var value: Dictionary = super.world_snapshot()
 	value["mvp8"] = {
@@ -512,6 +537,7 @@ func _process(_delta: float) -> bool:
 				client_peers[actor] = peer
 				client_sequences[actor] = packet_sequence
 			var response := handle_client(actor, packet["body"])
+			_publish_progress8()
 			var signed := Protocol8.seal(cfg, "gateway", "client/" + actor, packet_sequence, response, String(cfg["client_keys"][actor]))
 			if not bool(Protocol8.send(client_boundary, peer, signed).get("success", false)):
 				finish_interactive(false, "MVP8_CLIENT_GATEWAY_REPLY_FAILED")

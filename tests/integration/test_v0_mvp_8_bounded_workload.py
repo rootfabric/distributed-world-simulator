@@ -206,6 +206,7 @@ def run_phase1(engine: Path, output: Path, checkpoint_root: Path, head: str, tre
         sequences={"a": 0, "b": 0},
     )
     paths = {role: phase / (role.replace("/", "-") + ".json") for role in ROLES}
+    cfg["mvp8_progress_file"] = str(phase / "gateway-progress.json")
     original_mvp8 = {a: phase / f"initial-{a}-mvp8.json" for a in ("a", "b")}
     reconnect_path = phase / "reconnect-a.json"
     processes: dict[str, subprocess.Popen] = {}
@@ -236,6 +237,7 @@ def run_phase1(engine: Path, output: Path, checkpoint_root: Path, head: str, tre
             client_cfg = dict(cfg)
             client_cfg.update(
                 automated=True,
+                mvp8_progress_file=str(phase / f"client-{actor}-progress.json"),
                 client_key=client_keys[actor],
                 screenshot_file=str(phase / f"client-{actor}.png"),
                 mvp4_capture_before=str(phase / f"client-{actor}-before.png"),
