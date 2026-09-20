@@ -23,6 +23,8 @@ const REPLAY_PENDING_CAP8 := 32
 const TERMINAL_COMMAND_CAP8 := 16
 const MATTER_STREAM_CAP8 := 64
 const LIVENESS_INTERVAL_MS8 := 4000
+const DIG_HIT_MIN_SEPARATION_M8 := 1.5
+const DIG_EXECUTION_ATTEMPT_CAP8 := 2
 
 var _round8 := 0
 var _round_moves8 := {"a": false, "b": false}
@@ -40,6 +42,7 @@ var _checkpoint_receipt8: Dictionary = {}
 var _restart_file8 := ""
 var _bounds8: Dictionary = {}
 var _last_dig8: Dictionary = {}
+var _dig_hits8: Array = []
 var _round_history8: Array = []
 var _backend_liveness_cycles8 := 0
 var _backend_liveness_failures8 := 0
@@ -115,6 +118,7 @@ func setup_control() -> bool:
 	_action_counts8 = Dictionary(cfg.get("mvp8_initial_action_counts", _action_counts8)).duplicate(true)
 	_fixed_receipts8 = int(cfg.get("mvp8_initial_fixed_receipts", 0))
 	_round_history8 = Array(cfg.get("mvp8_initial_round_history", [])).duplicate(true)
+	_dig_hits8 = Array(cfg.get("mvp8_initial_dig_hits", [])).duplicate(true)
 	_seam_crossings8 = int(cfg.get("mvp8_initial_seam_crossings", 0))
 	_active8 = _recovery_boot8
 	_reconnect_complete8 = _recovery_boot8 or _round8 >= RECONNECT_AFTER_ROUND8
@@ -233,11 +237,26 @@ func _current8(actor: String) -> Dictionary:
 	})
 
 
+func _dig_hit_far_enough8(hit: Array) -> bool:
+	if hit.size() != 3:
+		return false
+	for raw in _dig_hits8:
+		if not raw is Array or Array(raw).size() != 3:
+			continue
+		var prior: Array = raw
+		var dx := float(hit[0]) - float(prior[0])
+		var dy := float(hit[1]) - float(prior[1])
+		var dz := float(hit[2]) - float(prior[2])
+		if sqrt(dx * dx + dy * dy + dz * dz) < DIG_HIT_MIN_SEPARATION_M8:
+			return false
+	return true
+
+
 func _dig8(round_index: int) -> Dictionary:
-	# PREPARE is a read-only canonical MVP4 query. Probe every authenticated
-	# player currently local to authority/a, preferring A (the already-proven
-	# terrain footprint) and falling back to B. Execute only the first PREPARE
-	# accepted by the existing Matter owner; MVP8 never fabricates a hit.
+	# PREPARE stays a read-only canonical MVP4 query. Repeated digs must not
+	# accidentally select the surface of an already excavated hole, otherwise
+	# EXECUTE can validly return a no-effect REJECTED result. Keep accepted hit
+	# positions as orchestration evidence only and require spatial separation.
 	var candidates: Array[String] = []
 	for actor in ["a", "b"]:
 		if String(coordinators[actor].snapshot().get("active_authority_id", "")) == "authority/a":
@@ -254,47 +273,64 @@ func _dig8(round_index: int) -> Dictionary:
 			[diagonal, vertical, diagonal], [diagonal, vertical, -diagonal],
 			[-diagonal, vertical, diagonal], [-diagonal, vertical, -diagonal],
 		])
-	var prepared: Dictionary = {}
-	var dig_actor := ""
-	_last_dig8 = {"round": round_index, "candidates": candidates.duplicate(), "attempts": []}
+	_last_dig8 = {
+		"round": round_index,
+		"candidates": candidates.duplicate(),
+		"existing_hits": _dig_hits8.duplicate(true),
+		"attempts": [],
+		"execute_attempts": 0,
+	}
+	var last_failure: Dictionary = {}
+	var attempt_index := 0
+	var execute_attempts := 0
 	for candidate in candidates:
 		var player_owner := String(coordinators[candidate].snapshot().get("active_authority_id", ""))
 		var player: Dictionary = lookup(player_owner, candidate)
-		var operation := "operation/mvp4/%s/mvp8-dig/%d" % [candidate, round_index]
 		for direction in directions:
-			prepared = _owner4(candidate, {"kind": "MVP4_PREPARE", "operation_id": operation, "direction": direction})
+			var operation := "operation/mvp4/%s/mvp8-dig/%d/attempt-%02d" % [candidate, round_index, attempt_index]
+			attempt_index += 1
+			var prepared := _owner4(candidate, {"kind": "MVP4_PREPARE", "operation_id": operation, "direction": direction})
 			var prepare_error := String(prepared.get("error_code", ""))
+			var hit: Array = Array(Dictionary(prepared.get("details", {})).get("hit_position_m", [])).duplicate()
+			var separated := bool(prepared.get("success", false)) and _dig_hit_far_enough8(hit)
 			_last_dig8["attempts"].append({
 				"actor": candidate,
+				"operation_id": operation,
 				"player_owner": player_owner,
 				"player_position": Dictionary(player.get("position", {})).duplicate(true),
 				"direction": Array(direction).duplicate(),
-				"success": bool(prepared.get("success", false)),
+				"prepare_success": bool(prepared.get("success", false)),
 				"error_code": prepare_error,
-				"hit_position_m": Dictionary(prepared.get("details", {})).get("hit_position_m", []),
+				"hit_position_m": hit.duplicate(),
+				"separated_from_prior_hits": separated,
 			})
-			if bool(prepared.get("success", false)):
-				dig_actor = candidate
-				break
-			# Authority-transfer fencing is actor state, not an aim miss. One
-			# canonical rejection proves this actor cannot mutate Matter at this
-			# moment; probing 48 more directions would only inflate RPC state.
-			if prepare_error == "SM1_AUTHORITY_TRANSFER_WRITE_FENCED":
-				break
-		if not dig_actor.is_empty():
-			break
-	if dig_actor.is_empty():
-		return prepared if not prepared.is_empty() else Protocol8.failure("MVP8_CANONICAL_DIG_PREPARE_FAILED")
-	_last_dig8["selected_actor"] = dig_actor
-	var executed := _owner4(dig_actor, {"kind": "MVP4_EXECUTE", "plan": Dictionary(prepared.get("details", {})).duplicate(true)})
-	if not bool(executed.get("success", false)):
-		_last_dig8["execute_error"] = String(executed.get("error_code", ""))
-		return executed
-	_last_dig8["executed"] = true
-	var current := _current8("a")
-	if bool(current.get("success", false)):
-		_action_counts8["DIG"] = int(_action_counts8["DIG"]) + 1
-	return current
+			if not bool(prepared.get("success", false)):
+				last_failure = prepared
+				if prepare_error == "SM1_AUTHORITY_TRANSFER_WRITE_FENCED":
+					break
+				continue
+			if not separated:
+				continue
+			if execute_attempts >= DIG_EXECUTION_ATTEMPT_CAP8:
+				return Protocol8.failure("MVP8_DIG_EXECUTION_ATTEMPT_CAP")
+			execute_attempts += 1
+			_last_dig8["execute_attempts"] = execute_attempts
+			var executed := _owner4(candidate, {"kind": "MVP4_EXECUTE", "plan": Dictionary(prepared.get("details", {})).duplicate(true)})
+			if bool(executed.get("success", false)):
+				_dig_hits8.append(hit.duplicate())
+				_last_dig8["selected_actor"] = candidate
+				_last_dig8["selected_operation_id"] = operation
+				_last_dig8["selected_hit_position_m"] = hit.duplicate()
+				_last_dig8["executed"] = true
+				var current := _current8("a")
+				if bool(current.get("success", false)):
+					_action_counts8["DIG"] = int(_action_counts8["DIG"]) + 1
+				return current
+			_last_dig8["attempts"][-1]["execute_error"] = String(executed.get("error_code", ""))
+			last_failure = executed
+			if String(executed.get("error_code", "")) != "MVP4_MATTER_NOT_COMMITTED":
+				return executed
+	return last_failure if not last_failure.is_empty() else Protocol8.failure("MVP8_CANONICAL_DIG_COMMIT_FAILED")
 
 func _item8(round_index: int) -> Dictionary:
 	var owner_id := String(coordinators["a"].snapshot().get("active_authority_id", ""))
@@ -441,6 +477,7 @@ func _checkpoint8() -> Dictionary:
 		"action_counts": _action_counts8.duplicate(true),
 		"fixed_receipts": _fixed_receipts8,
 		"round_history": _round_history8.duplicate(true),
+		"dig_hits": _dig_hits8.duplicate(true),
 		"seam_crossings": _seam_crossings8,
 		"bounds": _bounds8.duplicate(true),
 	}
@@ -466,6 +503,7 @@ func _publish_progress8() -> void:
 		"seam_crossings": _seam_crossings8,
 		"handoff_stage": _handoff_stage8,
 		"last_dig": _last_dig8.duplicate(true),
+		"dig_hits": _dig_hits8.duplicate(true),
 		"reconnect_complete": _reconnect_complete8,
 		"checkpointed": _checkpointed8,
 		"mvp6": {
@@ -495,6 +533,7 @@ func world_snapshot() -> Dictionary:
 		"complete": _round8 >= TOTAL_ROUNDS8,
 		"bounds": _bounds8.duplicate(true),
 		"last_dig": _last_dig8.duplicate(true),
+		"dig_hits": _dig_hits8.duplicate(true),
 	}
 	return value
 
@@ -651,6 +690,7 @@ func base_report(schema: String, passed: bool, graphical: bool) -> Dictionary:
 		"backend_liveness_failures": _backend_liveness_failures8,
 		"backend_liveness_last": _backend_liveness_last8.duplicate(true),
 		"last_dig": _last_dig8.duplicate(true),
+		"dig_hits": _dig_hits8.duplicate(true),
 		"canonical_state_owned": false,
 		"mvp8_predicate_verified": false,
 	}

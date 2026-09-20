@@ -152,6 +152,7 @@ def phase_config(
     fixed_receipts: int = 0,
     round_history: list | None = None,
     seam_crossings: int = 0,
+    dig_hits: list | None = None,
 ) -> dict:
     return {
         "run_id": run_id,
@@ -178,6 +179,7 @@ def phase_config(
         "mvp8_initial_fixed_receipts": fixed_receipts,
         "mvp8_initial_round_history": round_history or [],
         "mvp8_initial_seam_crossings": seam_crossings,
+        "mvp8_initial_dig_hits": dig_hits or [],
     }
 
 
@@ -323,6 +325,7 @@ def run_phase2(engine: Path, output: Path, checkpoint_root: Path, receipt: dict,
         fixed_receipts=int(receipt["fixed_receipts"]),
         round_history=list(receipt["round_history"]),
         seam_crossings=int(receipt["seam_crossings"]),
+        dig_hits=list(receipt["dig_hits"]),
     )
     paths = {role: phase / (role.replace("/", "-") + ".json") for role in ROLES}
     processes: dict[str, subprocess.Popen] = {}
@@ -419,6 +422,7 @@ def evidence_checks(phase1: dict, phase2: dict, receipt: dict, head: str, tree: 
             and receipt["next_round"] == 8
             and receipt["generation"] == 1
             and len(receipt["checkpoint"]["checkpoint_checksum"]) == 64
+            and len(receipt["dig_hits"]) == 3
         )
         checks["phase2_passed"] = not phase2["error"] and g2["passed"] is True and w2["recovery_boot"] is True and w2["round"] == TOTAL_ROUNDS
         checks["twelve_rounds_same_lineage"] = (
@@ -426,6 +430,7 @@ def evidence_checks(phase1: dict, phase2: dict, receipt: dict, head: str, tree: 
             and [row["round"] for row in w2["round_history"]] == list(range(TOTAL_ROUNDS))
         )
         checks["repeated_operations"] = w2["action_counts"] == EXPECTED_ACTIONS
+        checks["four_spatially_distinct_digs"] = len(w2.get("dig_hits", [])) == 4
         checks["seam_crossings"] = int(w2["seam_crossings"]) >= 4
         checks["responsive_fixed_tick"] = (
             int(w2["fixed_receipts"]) >= 24
@@ -503,6 +508,7 @@ def negative_controls(phase1: dict, phase2: dict, receipt: dict, head: str, tree
             g2.get("action_counts") == EXPECTED_ACTIONS,
             int(g2.get("seam_crossings", 0)) >= 4,
             int(g2.get("fixed_receipts", 0)) >= 24,
+            len(g2.get("dig_hits", [])) == 4,
             int(b.get("operation_fingerprints", 9999)) <= 256,
             int(b.get("ledger", {}).get("tracked_count", 9999)) <= 512,
             a.get("duplicate_item_identity") is False,
@@ -521,6 +527,7 @@ def negative_controls(phase1: dict, phase2: dict, receipt: dict, head: str, tree
         "terminal_overflow": lambda x: x["p2"]["gateway"]["mvp8"]["bounds"]["authority"].update(construction_terminal_commands=17),
         "missing_collision": lambda x: x["p2"]["client/a"].update(collision_part_count=99),
         "lost_build_cycle": lambda x: x["p2"]["gateway"]["mvp8"]["action_counts"].update(BUILD_ADD=1),
+        "missing_dig_hit": lambda x: x["p2"]["gateway"]["mvp8"]["dig_hits"].pop(),
     }
     rejected: list[str] = []
     for name, mutate in mutations.items():
@@ -579,7 +586,7 @@ def main() -> int:
         not error
         and checks
         and all(checks.values())
-        and len(negatives) == 10
+        and len(negatives) == 11
         and not fatal_logs
         and not BASE.git("status", "--porcelain", "--untracked-files=no")
     )
