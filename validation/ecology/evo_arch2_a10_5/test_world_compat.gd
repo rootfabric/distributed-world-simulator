@@ -287,6 +287,40 @@ func _scenario_explicit_mapping() -> void:
 		_check(int(a.resources.nutrient_mg) == 0 and int(a.resources.organic_mg) == 0, "M nutrient/organic grants absent (not guessed)")
 		_check(a.unmapped_materials.size() == 1 and String(a.unmapped_materials[0].material_id) == "matter/regolith-loose", "M regolith stays explicitly unmapped")
 		_check(int(a.mapped_mass_mg) + int(a.unmapped_mass_mg) == int(a.total_mass_mg), "M mass conservation holds")
+	# Delta-only application: a second batch must add ONLY its own mapped mass.
+	var wc_mass := _wc_controller(manifest, adapter)
+	var first_apply := adapter.apply_environment(wc_mass)
+	_check(bool(first_apply.get("success", false)), "M first pending batch delta applied")
+	var water_after_first := int(wc_mass.debug_state().field.cells[0].stocks.water_mg)
+	_check(water_after_first == 250, "M first mapped delta deposits exactly 250mg once")
+	var second := Batch.create({
+		"batch_id":"batch/p12-water-second","container_id":"container/p12","source_body_id":"body/moon",
+		"source_operation_id":"operation/p12-second","total_mass_kg":0.0005,"bulk_volume_m3":0.000001,
+		"composition":Composition.create([{"material_id":"matter/water-ice","mass_fraction":1.0}]),"temperature_k":273.15,
+	})
+	_check(bool(adapter.add_batch(second, String(second.checksum)).get("success", false)), "M second water batch admitted")
+	var second_apply := adapter.apply_environment(wc_mass)
+	_check(bool(second_apply.get("success", false)), "M second batch delta applied")
+	var water_after_second := int(wc_mass.debug_state().field.cells[0].stocks.water_mg)
+	_check(water_after_second == 750, "M cumulative field water is 250+500, old 250 is NOT redeposited")
+	_check(int(adapter.observe_world().admitted_resources.water_mg) == 750, "M admitted resource accounting is exactly cumulative 750mg")
+	var noop_apply := adapter.apply_environment(wc_mass)
+	_check(bool(noop_apply.get("success", false)) and not bool(noop_apply.get("applied", true)), "M repeated apply with no new batch is idempotent")
+	_check(int(wc_mass.debug_state().field.cells[0].stocks.water_mg) == 750, "M idempotent apply leaves mass unchanged")
+
+	# A batch total has no canonical per-cell allocation witness. Multi-cell
+	# WORLD_COMPAT therefore fails closed instead of multiplying total mass.
+	var multi_manifest := _manifest("WORLD_COMPAT", 4)
+	multi_manifest.environment.spatial.width = 2
+	multi_manifest.placement.entries[0].position_mm = [500, 0, 500]
+	var multi_adapter := _adapter(multi_manifest, _region("node/a", 1, "ACTIVE"), [{"material_id":"matter/water-ice","resource":"water_mg"}])
+	var multi_ctl := _wc_controller(multi_manifest, multi_adapter)
+	var multi_batch := _water_batch()
+	_check(bool(multi_adapter.add_batch(multi_batch, String(multi_batch.checksum)).get("success", false)), "M multi-cell batch admission itself is valid")
+	var multi_apply := multi_adapter.apply_environment(multi_ctl)
+	_check(not bool(multi_apply.get("success", false)) and String(multi_apply.get("error", "")).contains("SPATIAL_ALLOCATION_REQUIRED"), "M multi-cell total fails closed without spatial allocation witness")
+	_check(int(multi_adapter.observe_world().admitted_resources.water_mg) == 0, "M failed multi-cell application does not commit adapter accounting")
+
 	# Unknown material entry -> explicit configure failure.
 	var bad := Adapter.new()
 	var bad_configured: Dictionary = bad.configure(manifest, {
@@ -389,14 +423,17 @@ func _scenario_handoff() -> void:
 		_check(String(after_print[individual_id].biological_hash) == String(before_print[individual_id].biological_hash), "H biological_hash preserved across seam: " + individual_id)
 		_check(int(after_ids[individual_id].lineage_depth) == int(before_ids[individual_id].lineage_depth), "H lineage_depth preserved: " + individual_id)
 
-	# Checkpoint identity: restore into a fresh controller bound to the new
-	# authority and continue.
+	# Persist AFTER commit: authority state is part of the externally-anchored
+	# controller envelope, so restore continues under the exact new owner.
+	var post_checkpoint: Dictionary = wc.serialize_state()
+	_check(bool(post_checkpoint.get("success", false)), "H post-commit controller+authority checkpoint serialized")
 	var adapter2 := _adapter(manifest, region_b_active, [])
 	var wc2 := _wc_controller(manifest, adapter2)
-	var restored: Dictionary = wc2.load_state(String(checkpoint.get("state_text", "")), String(checkpoint.get("manifest_hash", "")))
-	_check(bool(restored.get("success", false)), "H checkpoint restored through the seam: " + str(restored))
+	var restored: Dictionary = wc2.load_state(String(post_checkpoint.get("state_text", "")), String(post_checkpoint.get("manifest_hash", "")), String(post_checkpoint.get("state_checksum", "")))
+	_check(bool(restored.get("success", false)), "H post-commit checkpoint restored through the seam: " + str(restored))
 	if bool(restored.get("success", false)):
-		_check(int(wc2.get_snapshot().tick) == int(checkpoint.get("tick", -1)), "H checkpoint tick preserved")
+		_check(int(wc2.get_snapshot().tick) == int(post_checkpoint.get("tick", -1)), "H checkpoint tick preserved")
+		_check(String(adapter2.cursor().owner_id) == "node/b" and int(adapter2.cursor().owner_epoch) == 2, "H restored authority is target owner/epoch")
 		_check(bool(wc2.run(1).get("success", false)), "H restored controller continues ticking under new authority")
 
 	# Production ecology_region_ownership_v1 handoff line composed alongside.
@@ -460,6 +497,22 @@ func _scenario_damage() -> void:
 	var tampered: Dictionary = adapter.register_damage(wc, individual_id, request, rehashed, source_snapshot, part_to_module, String(record.checksum))
 	_check(not bool(tampered.get("success", false)) and String(tampered.get("error", "")) == "A10_DAMAGE_RECORD_ANCHOR", "D tampered DamageRecord rejected on trusted anchor")
 
+	# Re-seal a semantic event tamper after registration. The adapter must use
+	# the separately retained trusted_event_binding_hash, not event self-seal.
+	var registered_for_tamper: Dictionary = adapter.register_damage(wc, individual_id, request, record, source_snapshot, part_to_module, String(record.checksum))
+	_check(bool(registered_for_tamper.get("success", false)), "D trusted event registered for anchor falsifier")
+	if bool(registered_for_tamper.get("success", false)):
+		var original_event: Dictionary = adapter._damage[individual_id].event.duplicate(true)
+		var forged_event: Dictionary = original_event.duplicate(true)
+		if not forged_event.events.is_empty():
+			forged_event.events[0].condition = "DEGRADED" if String(forged_event.events[0].condition) == "DESTROYED" else "DESTROYED"
+		forged_event.binding_hash = ""
+		forged_event.binding_hash = MatterUtils.payload_hash(forged_event)
+		_check(String(forged_event.binding_hash) != String(adapter._damage[individual_id].trusted_event_binding_hash), "D forged event self-seal rotates")
+		adapter._damage[individual_id].event = forged_event
+		var event_rejected: Dictionary = adapter.apply_damage(individual_id)
+		_check(not bool(event_rejected.get("success", false)) and String(event_rejected.get("error", "")) == "A10_R4_EVENT_EXTERNAL_ANCHOR", "D re-sealed semantic event rejected by stored external anchor")
+		adapter._damage[individual_id].event = original_event
 	# Register + apply the trusted record.
 	var registered: Dictionary = adapter.register_damage(wc, individual_id, request, record, source_snapshot, part_to_module, String(record.checksum))
 	_check(bool(registered.get("success", false)), "D trusted DamageRecord registered: " + str(registered))
