@@ -57,6 +57,7 @@ var _checkpoint_receipt8: Dictionary = {}
 var _construction_root8 := ""
 var _construction_cut_file8 := ""
 var _matter_decisions8: Dictionary = {}
+var _recovery_decision_bootstrap8 := false
 
 
 func create_shared_dig():
@@ -554,8 +555,46 @@ func _bounds8() -> Dictionary:
 	}
 
 
+func _recovery_init8(body: Dictionary) -> Dictionary:
+	if service != null:
+		return Protocol.failure("MVP3_DUPLICATE_NATIVE_BOOTSTRAP")
+	var incoming = body.get("decisions", {})
+	if not incoming is Dictionary:
+		return Protocol.failure("MVP3_AUTHENTICATED_DECISIONS_REQUIRED")
+	var bootstrap := {}
+	for actor in ["a", "b"]:
+		var current_value = Dictionary(incoming).get(actor, {})
+		if not current_value is Dictionary:
+			return Protocol.failure("MVP3_AUTHENTICATED_DECISIONS_REQUIRED")
+		var current: Dictionary = Dictionary(current_value).duplicate(true)
+		var player_value = current.get("player_snapshot", {})
+		if not player_value is Dictionary:
+			return Protocol.failure("MVP3_DECISION_IDENTITY_INVALID")
+		bootstrap[actor] = {
+			"state": "ACTIVE",
+			"active_authority_id": "authority/a",
+			"authority_epoch": 1,
+			"player_snapshot": Dictionary(player_value).duplicate(true),
+			"transfer": {},
+		}
+	var baseline := ingest_decisions({"decisions": bootstrap, "completed": {}})
+	if not bool(baseline.get("success", false)):
+		return baseline
+	# The fresh process now has the mandatory epoch-1 read-model baseline.
+	# Advance immediately to the authenticated current recovery decision before
+	# any player gate is bound or any client command is admitted.
+	var current_ingest := ingest_decisions(body)
+	if not bool(current_ingest.get("success", false)):
+		return current_ingest
+	_recovery_decision_bootstrap8 = true
+	var result := initialize_owner()
+	return native_envelope("INIT", "", result)
+
+
 func handle_rpc(body: Dictionary) -> Dictionary:
 	var kind := String(body.get("kind", ""))
+	if kind == "INIT" and bool(cfg.get("mvp8_recovery", false)):
+		return _recovery_init8(body)
 	if not kind.begins_with("MVP8_"):
 		return super.handle_rpc(body)
 	if closing_ms > 0:
@@ -617,6 +656,7 @@ func report(passed: bool, phase: String) -> Dictionary:
 		"bounds": _bounds8(),
 		"construction_root": _construction_root8,
 		"canonical_state_owned": authority == "authority/a",
+		"recovery_decision_bootstrap": _recovery_decision_bootstrap8,
 		"mvp8_predicate_verified": false,
 	}
 	return value
