@@ -1,0 +1,35 @@
+name: Harness ACT0 Scene Fence Repair
+
+on:
+  push:
+    branches:
+      - repair/harness-act0-additive-scenes-r1
+  pull_request:
+    paths:
+      - "tests/harness/test_v0_mvp_act0.py"
+      - ".github/workflows/harness-act0-scene-fence-repair.yml"
+
+jobs:
+  harness:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install pinned Harness dependencies
+        run: |
+          python -m pip install --disable-pip-version-check -r requirements-harness.lock
+      - name: Run focused ACT0 suite
+        env:
+          PYTHONUTF8: "1"
+        run: |
+          python -m unittest -v tests.harness.test_v0_mvp_act0
+      - name: Run complete Harness regression discovery
+        env:
+          PYTHONUTF8: "1"
+        run: |
+          python -m unittest discover -s tests/harness -p "test_*.py" -v
