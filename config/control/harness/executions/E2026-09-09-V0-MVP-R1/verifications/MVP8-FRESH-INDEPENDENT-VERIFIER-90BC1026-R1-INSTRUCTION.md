@@ -64,3 +64,27 @@ Write durable result:
 Record platform, Godot version/hash, exact subject, Reviewer result consumed, commands/exits, process IDs, round/action counts, queue/replay bounds, dig distances, reconnect/restart facts, negative controls, full world/core status, source cleanliness, evidence gaps and verdict.
 
 Commit only verifier evidence on a branch such as `verify/v0-mvp8-90bc1026-r1`. Do not create `MVP_BOUNDED_INTERACTIVE_WORKLOAD = PREDICATE_VERIFIED`; Director publishes the leaf after all closure gates.
+
+
+## Reviewer prerequisite now resolved
+
+Fresh Independent Reviewer result is now durable:
+
+- branch: `review/v0-mvp8-90bc1026-r1`
+- commit: `b8daebf27e11938a3c4432a127f384290e3255dc`
+- commit tree: `70d4e0ac54de7376ec9ebe9361b19ea769db16c7`
+- result: `MVP8-INDEPENDENT-REVIEW-90BC1026-R1.v1.json`
+- verdict: `PASS`
+- P0/P1: `0 / 0`
+- required fixes: none.
+
+The first full world/core carrier run `35513166911` is a known infrastructure/evidence-route failure: auto-discovery launched process-managed `test_v0_mvp_7_construction_restart.gd` without its required `MVP7_CONSTRUCTION_MODE/ROOT` environment. Do not treat that carrier defect as a frozen MVP8 product regression.
+
+Director repair rerun:
+
+- run: `35515256366`
+- job: `106089996971`
+- subject remains frozen `90bc1026... / 4b6f2d48...`
+- carrier only sets bounded standalone `produce` environments for auto-discovered MVP7 process-managed tests; no product/runtime source changed.
+
+If the rerun is complete when verification starts, inspect its final artifact/result. If it is still running, record the world/core gate as pending rather than inventing a PASS.
