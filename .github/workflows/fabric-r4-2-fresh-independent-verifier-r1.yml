@@ -1,0 +1,147 @@
+name: FABRIC R4.2 Fresh Independent Verifier R1
+
+on:
+  push:
+    branches: [verify/fabric-r4-2-fresh-independent-verifier-r1]
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: fabric-r4-2-fresh-independent-verifier-r1
+  cancel-in-progress: false
+
+env:
+  SUBJECT_HEAD: 33b06f9658fe3373d18893ab2292471a13d61894
+  SUBJECT_TREE: 56ca6be7249dfdb96a4cc62f4bdc4e27e508b4e9
+  PREREG_HEAD: b8fa56cc1bccf1d38b9882f735309402fc5cd014
+  PREREG_TREE: 86b04ad3bef1e6b77a9a510ff28cf89c8f7d9aa2
+  EXPECTED_BUNDLE: ced365821a11ca79365dd4bb86c8f983b615da3a96ca0742f3acda32ad27085a
+  EXPECTED_CHALLENGE_SHA: c56e267fcb5eb066cf2b3fa543571a6bf63879fdad0fca10e4b469cf3566344a
+  EXPECTED_RESULT_HASH: e8b5f02c88d21c5c3c59e9471b946529a9d106249a0688f960cf051fbaaf3a3b
+
+jobs:
+  fresh-independent-verifier:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Bind exact R4.2 subject and verifier scope
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$(git rev-parse "$SUBJECT_HEAD^{tree}")" = "$SUBJECT_TREE"
+          test "$(git rev-parse "$PREREG_HEAD^{tree}")" = "$PREREG_TREE"
+          test "$(git merge-base HEAD "$SUBJECT_HEAD")" = "$SUBJECT_HEAD"
+          expected="$(printf '%s\n'             '.github/workflows/fabric-r4-2-fresh-independent-verifier-r1.yml'             'docs/research/FABRIC_R4_2_FRESH_INDEPENDENT_VERIFIER_R1_RU.md' | sort)"
+          actual="$(git diff --name-only "$SUBJECT_HEAD"...HEAD | sort)"
+          test "$actual" = "$expected"
+          forbidden="$(git diff --name-only "$PREREG_HEAD"...$SUBJECT_HEAD | grep -E '^(scripts/research/fabric_holdout_r42/|tests/research/fabric1/fabric_r4_2_topology_dynamic_acceptance\.gd$|RUN_FABRIC_R4_2_TESTS\.sh$|config/research/fabric-r4-2-preregistration\.v1\.json$|validation/fabric-r4-2-preregistration\.v1\.json$|\.github/workflows/fabric-r4-2-topology-dynamic-linux-double\.yml$)' || true)"
+          test -z "$forbidden"
+          git diff --check "$SUBJECT_HEAD"...HEAD
+          echo '*.gd.uid' >> .git/info/exclude
+          printf 'VERIFIER_HEAD=%s\nVERIFIER_TREE=%s\nSUBJECT_HEAD=%s\nSUBJECT_TREE=%s\n' "$(git rev-parse HEAD)" "$(git rev-parse 'HEAD^{tree}')" "$SUBJECT_HEAD" "$SUBJECT_TREE" | tee r42-verifier-identity.txt
+
+      - name: Download canonical Linux double
+        uses: actions/download-artifact@v4
+        with:
+          name: p7-repair-engine-34117353691
+          run-id: 34117353691
+          repository: rootfabric/distributed-world-simulator
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/r42-verifier-engine
+
+      - name: Verify canonical Linux double
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          bin="$RUNNER_TEMP/r42-verifier-engine/godot"
+          chmod u+x "$bin"
+          test "$("$bin" --version | head -n1 | tr -d '\r')" = '4.7.1.stable.double.custom_build.a13da4feb'
+          sha="$(sha256sum "$bin" | awk '{print $1}')"
+          test "$sha" = 'bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7'
+          echo "GODOT_BIN=$bin" >> "$GITHUB_ENV"
+          echo "GODOT_SHA256=$sha" | tee r42-verifier-godot.txt
+
+      - name: Recompute sealed beacon and commitment
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          python3 - <<'PY'
+          import hashlib,json
+          b=json.load(open('config/research/fabric-r4-2-beacon-retrieval.v1.json'))
+          c=json.load(open('validation/fabric-r4-2-challenge-commitment.v1.json'))
+          assert b['preregistration_commit']=='b8fa56cc1bccf1d38b9882f735309402fc5cd014'
+          assert c['preregistration_commit']==b['preregistration_commit']
+          fb=b['fallback']
+          value=hashlib.sha256((str(fb['run_id'])+fb['head_sha']).encode('ascii')).hexdigest()
+          assert value==fb['value']==c['beacon_fallback_value']
+          assert c['bundle_checksum']=='ced365821a11ca79365dd4bb86c8f983b615da3a96ca0742f3acda32ad27085a'
+          assert c['materialized_file_sha256']=='c56e267fcb5eb066cf2b3fa543571a6bf63879fdad0fca10e4b469cf3566344a'
+          assert c['local_first_reveal']['result_hash']=='e8b5f02c88d21c5c3c59e9471b946529a9d106249a0688f960cf051fbaaf3a3b'
+          beacon={
+            'source':'FALLBACK_GITHUB_ACTIONS',
+            'reason':'NO_QUALIFYING_NIST_FUTURE_PULSE_AVAILABLE',
+            'preregistration_commit':b['preregistration_commit'],
+            'run_id':fb['run_id'],
+            'head_sha':fb['head_sha'],
+            'derivation':fb['derivation'],
+            'value':fb['value'],
+          }
+          with open('r42-verifier-beacon.json','w') as f:
+              json.dump(beacon,f,sort_keys=True,indent=2); f.write('\n')
+          print('R42_VERIFIER_BEACON=PASS')
+          PY
+
+      - name: Regenerate exact unseen challenge
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          python3 scripts/research/fabric_holdout_r42/r42.py protocol --prereg config/research/fabric-r4-2-preregistration.v1.json | tee r42-verifier-protocol.log
+          python3 scripts/research/fabric_holdout_r42/r42.py generate             --prereg config/research/fabric-r4-2-preregistration.v1.json             --prereg-sha "$PREREG_HEAD"             --beacon-json r42-verifier-beacon.json             --out config/research/fabric-r4-2-challenge.v1.json | tee r42-verifier-generate.log
+          python3 scripts/research/fabric_holdout_r42/r42.py verify             --challenge config/research/fabric-r4-2-challenge.v1.json | tee r42-verifier-verify.log
+          grep -F "\"bundle_checksum\":\"$EXPECTED_BUNDLE\"" r42-verifier-generate.log
+          test "$(sha256sum config/research/fabric-r4-2-challenge.v1.json | awk '{print $1}')" = "$EXPECTED_CHALLENGE_SHA"
+
+      - name: Fresh import and independent replay
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          rm -rf .godot
+          "$GODOT_BIN" --headless --editor --path . --log-file r42-verifier-import.log --import
+          ! grep -Eiq 'SCRIPT ERROR|Parse Error|Invalid call|Invalid access|ERROR:' r42-verifier-import.log
+          GODOT_BIN="$GODOT_BIN" bash RUN_FABRIC_R4_2_TESTS.sh 2>&1 | tee r42-verifier-replay.log
+          grep -F 'FABRIC_R4_2_ASSERTIONS=21 FAILURES=0' r42-verifier-replay.log
+          grep -F "FABRIC_R4_2_RESULT_HASH=$EXPECTED_RESULT_HASH" r42-verifier-replay.log
+          grep -F 'FABRIC-R4.2-TOPOLOGY-DYNAMIC-HOLDOUT: PASS' r42-verifier-replay.log
+
+      - name: Seal verifier evidence
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          sha256sum r42-verifier-identity.txt r42-verifier-godot.txt r42-verifier-beacon.json r42-verifier-protocol.log r42-verifier-generate.log r42-verifier-verify.log r42-verifier-import.log r42-verifier-replay.log config/research/fabric-r4-2-challenge.v1.json > r42-verifier-evidence.sha256
+          git diff --check
+          test -z "$(git status --porcelain=v1 --untracked-files=no)"
+          echo 'FABRIC_R4_2_FRESH_INDEPENDENT_VERIFIER_R1=PASS'
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fabric-r4-2-verifier-r1-${{ github.sha }}
+          path: |
+            r42-verifier-identity.txt
+            r42-verifier-godot.txt
+            r42-verifier-beacon.json
+            r42-verifier-protocol.log
+            r42-verifier-generate.log
+            r42-verifier-verify.log
+            r42-verifier-import.log
+            r42-verifier-replay.log
+            r42-verifier-evidence.sha256
+            config/research/fabric-r4-2-challenge.v1.json
+          if-no-files-found: error
+          retention-days: 90
