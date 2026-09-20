@@ -269,3 +269,22 @@ electrically open series group
 ```
 
 This is intentional: unsafe aggregation does not get silently averaged.
+
+
+## Damage state reconstruction
+
+Fresh review выявил, что простого rebuild новой capsule недостаточно: необходимо доказать перенос caller-owned state через capacity-losing topology mutation.
+
+T3 теперь использует conservative projector:
+
+```text
+old group charge / old capacity = synchronized SOC
+        ↓ one cell disconnects
+new group charge = same SOC × new active capacity
+
+difference:
+  detached charge
+  detached chemical energy
+```
+
+`detached charge/energy` не исчезают: projector явно возвращает их вызывающему canonical mutation layer как состояние отключённой части. Температура сохраняется. Проекция разрешена только для capacity loss при неизменном group electrochemical profile; capacity gain или chemistry change требуют более детального reconstruction / `NO_SAFE_BAKE`.

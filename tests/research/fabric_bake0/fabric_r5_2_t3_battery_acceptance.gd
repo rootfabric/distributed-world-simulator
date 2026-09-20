@@ -8,6 +8,7 @@ const Capsule = preload("res://scripts/research/fabric_bake0/behavior_capsule_co
 const Compiler = preload("res://scripts/research/fabric_bake0/r5_t3_battery_compiler_v1.gd")
 const Runtime = preload("res://scripts/research/fabric_bake0/r5_t3_battery_runtime_v1.gd")
 const FullReference = preload("res://scripts/research/fabric_bake0/r5_t3_battery_full_reference_v1.gd")
+const StateProjector = preload("res://scripts/research/fabric_bake0/battery_state_projector_v1.gd")
 const Measure = preload("res://scripts/research/fabric_bake0/r5_measurement_harness_v1.gd")
 const Fixture = preload("res://tests/research/fabric_bake0/fabric_r5_2_t3_battery_fixture.gd")
 
@@ -213,10 +214,34 @@ func _initialize() -> void:
 		check(absf(float(damaged.details.descriptor.total_mass_kg) - float(descriptor.total_mass_kg)) <= 1.0e-9, "disabled cell remains physical mass")
 		var damaged_live := Fixture.live_from(damaged.details.artifact)
 		check(not runtime.execute(damaged_live, hot_state, 5.0, 0.1, 298.15).success, "old capsule rejects damaged graph")
+		begin_stage(m, "damage_state_projection")
+		var projected := StateProjector.project_capacity_loss(descriptor, damaged.details.descriptor, hot_state)
+		end_stage(m, "damage_state_projection")
+		check(projected.success, "damage state projection", projected)
+		var old_soc := StateProjector.soc_by_group(descriptor, hot_state)
+		var projected_soc := StateProjector.soc_by_group(damaged.details.descriptor, projected.details.next_state) if projected.success else U.failure("projection failed")
+		check(old_soc.success and projected_soc.success, "damage SOC inspection")
+		if old_soc.success and projected_soc.success:
+			for group_index in range(int(descriptor.series_group_count)):
+				check(absf(float(old_soc.details.soc[group_index]) - float(projected_soc.details.soc[group_index])) <= 1.0e-12, "damage preserves synchronized SOC", {"group": group_index})
+		if projected.success:
+			check(float(projected.details.detached_charge_c_by_group[affected]) > 0.0, "damage exposes detached charge")
+			check(float(projected.details.total_detached_chemical_energy_j) > 0.0, "damage exposes detached chemical energy")
+			for group_index in range(int(descriptor.series_group_count)):
+				if group_index != affected:
+					check(absf(float(projected.details.detached_charge_c_by_group[group_index])) <= 1.0e-12, "unaffected group has no detached charge", {"group": group_index})
 		var damaged_runtime = Runtime.new()
 		check(damaged_runtime.prepare(damaged.details.capsule, damaged.details.artifact, damaged.details.descriptor, damaged_live).success, "damaged capsule prepare")
-		var damaged_state := damaged_runtime.initial_state(0.75, 300.0)
-		check(damaged_runtime.execute(damaged_live, damaged_state, 5.0, 0.1, 298.15).success, "damaged capsule executes")
+		var damaged_state := projected.details.next_state if projected.success else {}
+		var damaged_reference_plan := FullReference.prepare(damaged_graph)
+		check(damaged_reference_plan.success, "damaged detailed reference prepare")
+		var damaged_fast := damaged_runtime.execute(damaged_live, damaged_state, 5.0, 0.1, 298.15) if not damaged_state.is_empty() else U.failure("no projected state")
+		var damaged_full := FullReference.execute(damaged_reference_plan.details, damaged_state, 5.0, 0.1, 298.15) if damaged_reference_plan.success and not damaged_state.is_empty() else U.failure("no damaged reference")
+		check(damaged_fast.success and damaged_full.success, "damaged projected state executes")
+		if damaged_fast.success and damaged_full.success:
+			check(absf(float(damaged_fast.details.terminal_voltage_v) - float(damaged_full.details.terminal_voltage_v)) <= 1.0e-9, "damaged projected voltage parity")
+			check(absf(float(damaged_fast.details.heat_generated_j) - float(damaged_full.details.heat_generated_j)) <= 1.0e-9, "damaged projected heat parity")
+			check(max_charge_error(damaged_fast.details.next_state.group_charge_c, damaged_full.details.next_state.group_charge_c) <= 1.0e-9, "damaged projected state parity")
 
 	var mismatch_request := Fixture.build_request(nmc_graph if nmc.success else Fixture.make_graph("NMC"), 2)
 	var mismatch := Compiler.compile(base_graph, mismatch_request, "capsule/r5-t3-battery")
@@ -280,6 +305,9 @@ func _initialize() -> void:
 		"damaged_group5_capacity_c": float(damaged.details.descriptor.group_capacity_c[5]) if damaged.success else -1.0,
 		"damaged_group5_resistance_ohm": float(damaged.details.descriptor.group_resistance_ref_ohm[5]) if damaged.success else -1.0,
 		"damaged_max_current_a": float(damaged.details.descriptor.max_continuous_current_a) if damaged.success else -1.0,
+		"damage_projection_kind": String(projected.details.projection_kind) if damaged.success and projected.success else "",
+		"damage_detached_charge_c": float(projected.details.detached_charge_c_by_group[5]) if damaged.success and projected.success else -1.0,
+		"damage_detached_chemical_energy_j": float(projected.details.total_detached_chemical_energy_j) if damaged.success and projected.success else -1.0,
 		"sequence_ticks": SEQUENCE_TICKS,
 		"maximum_voltage_error": max_voltage_error,
 		"maximum_heat_error": max_heat_error,
