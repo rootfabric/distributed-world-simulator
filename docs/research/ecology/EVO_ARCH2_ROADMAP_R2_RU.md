@@ -62,6 +62,136 @@ ECO-POLYGON-1 UI / experiment orchestration only
 
 UI полигона не становится новым biological owner, resource owner, Region owner или persistence owner.
 
+### 3.1 Свободная эволюция — обязательный canonical invariant
+
+ECO не должен превращаться в выбор одной из заранее заданных форм. Каноническая причинная цепочка остаётся:
+
+```text
+Genome
+  ↓
+DevelopmentProgram
+  ↓
+structural / regulatory / parameter expression
+  ↓
+BodyGraph
+  ↓
+physiology + mechanics + behaviour
+  ↓
+environment interaction / fitness
+  ↓
+reproduction + mutation
+```
+
+Обязательные правила:
+
+- Genome не обязан содержать `species_type`, `TREE`, `BUSH`, `QUADRUPED`, `BIRD`, `FISH` или другой визуальный archetype;
+- structural mutation может создавать новую топологию BodyGraph, если она проходит canonical biological/physical validation;
+- неизвестная ранее морфология не может быть отброшена только потому, что для неё нет curated asset;
+- visual/archetype layer не может переписывать Genome, DevelopmentProgram или canonical BodyGraph;
+- morphotype/archetype допускается как **derived classification результата**, но не как обязательная причина формы;
+- curated organization должен быть явным экспериментальным входом, а не скрытым default;
+- режим `FREE` отключает организационные bias'ы, но **не отключает** conservation, resource costs, world physics, ownership и другие реальные законы среды.
+
+Таким образом A10.5 исследует открытое пространство морфологий, а не комбинаторику заранее изготовленных существ.
+
+### 3.2 Morphology Realizer: NMS-подобные идеи только после BodyGraph
+
+Полезные идеи modular procedural art переносятся только в слой реализации фенотипа:
+
+```text
+canonical BodyGraph
+        ↓
+MorphologyDescriptor
+        ↓
+Generic Realizer ──────────────┐
+        │                       │
+        └→ Specialized Realizer│
+                                ↓
+                     mesh / skeleton / skin
+                     materials / animation
+```
+
+`MorphologyDescriptor` является derived view над canonical BodyGraph и не становится вторым морфологическим truth.
+
+**Generic Realizer обязателен.** Он должен уметь представить ранее неизвестную валидную структуру через универсальные примитивы/процедуры (segments, tubes, capsules, junctions, membranes, surfaces или их будущие эквиваленты). Specialized/curated realization может улучшать качество распространённых форм, но отсутствие подходящего набора не является причиной отклонения организма.
+
+Это создаёт важную страховку:
+
+```text
+new evolved topology
+        ↓
+curated realization exists?
+   YES ─────→ high-quality realization
+    NO ─────→ generic procedural realization
+```
+
+Renderer и presentation assets не влияют на fitness или ecological state, если отдельное функциональное свойство не объявлено в canonical biological model.
+
+### 3.3 OrganizationProfile — опциональное давление на пространство форм
+
+Для управляемых экспериментов вводится **не новый тип организма**, а versioned `OrganizationProfile` / organization rule set.
+
+Минимальные исследовательские presets:
+
+- `FREE` — без дополнительных организационных bias'ов;
+- `SOFT` — слабые вероятностные bias'ы к повторяемости, симметрии и согласованным структурам;
+- `EARTH_LIKE` — исследовательский набор явных developmental bias'ов к знакомым земным морфологическим мотивам;
+- `NMS_LIKE` — исследовательский preset модульной визуально согласованной организации, вдохновлённый общим procedural-art подходом; без зависимости от внешнего кода/assets;
+- `CUSTOM` — явно заданный набор правил и весов.
+
+Профиль не может скрыто превращаться в обязательную grammar. Предпочтительная модель — **soft bias**, например:
+
+```text
+paired_appendage_bias = 0.80
+bilateral_symmetry_bias = 0.70
+segment_repeat_bias = 0.55
+visual_coherence_bias = 0.90
+```
+
+а не:
+
+```text
+allowed_body = QUADRUPED
+allowed_heads = [A, B, C]
+allowed_legs = [A, B]
+```
+
+Каждый bias должен быть:
+- явно назван;
+- versioned;
+- сохранён в experiment manifest;
+- детерминирован при одинаковом seed;
+- независимо отключаем;
+- различим в provenance и сравнительном отчёте.
+
+### 3.4 Три класса правил нельзя смешивать
+
+Организация разделяется на три уровня:
+
+1. **VISUAL_ONLY** — palette/material/mesh smoothing/skin/joint presentation. Не меняет canonical BodyGraph, ecological hash, fitness или reproduction.
+2. **DEVELOPMENT_BIAS** — меняет вероятности/веса разрешённых developmental или mutation transitions и поэтому является явным входом эксперимента.
+3. **BIOLOGICAL/WORLD CONSTRAINT** — реальные resource, mechanics, physiology, conservation и world-law ограничения. Они принадлежат canonical model/world contracts и не могут незаметно появляться из visual profile.
+
+Если исследователь хочет превратить визуальную эвристику в реальное биологическое правило, это отдельная versioned rule/model change с собственным validation/provenance, а не переключение renderer preset.
+
+### 3.5 Emergent morphotypes, а не предзаданные виды
+
+После прогонов система может анализировать результаты и находить устойчивые морфологические кластеры:
+
+```text
+evolved BodyGraphs
+        ↓
+derived morphology features
+        ↓
+clustering / similarity
+        ↓
+emergent morphotype labels
+```
+
+Например можно получить оценки `bilateral_like`, `radial_like`, `branched_like`, `segmented_like` или автоматически найденный cluster id. Эти labels являются аналитикой. По умолчанию они не участвуют в развитии следующего поколения.
+
+Если некоторый emergent cluster становится частым, для него можно позже добавить Specialized Realizer, не меняя уже существующие Genome/BodyGraph и сохраняя Generic Realizer как fallback.
+
 ## 4. Обязательные возможности
 
 ### 4.1 Experiment setup
@@ -75,6 +205,7 @@ UI полигона не становится новым biological owner, resou
 - выбранные genomes / blueprints / lineages;
 - стартовые ресурсы и environmental conditions;
 - включённые mutation operators и их разрешённые параметры;
+- `OrganizationProfile` и явные веса organization/development bias'ов; default для проверки свободного пространства — `FREE`;
 - режимы feedback / decomposition / mineralization;
 - скорость отображения и симуляции;
 - набор метрик и сохраняемых checkpoints.
@@ -92,9 +223,11 @@ UI полигона не становится новым biological owner, resou
 - создавать вариант от существующего genome;
 - сравнивать parent/variant;
 - показывать validation errors до запуска;
-- сохранять варианты в библиотеку эксперимента.
+- сохранять варианты в библиотеку эксперимента;
+- видеть structural topology/BodyGraph без обязательного сведения к заранее заданному archetype;
+- отдельно видеть derived morphotype classification и выбранный OrganizationProfile, не смешивая их с genotype.
 
-Редактор не должен разрешать произвольный executable code в genotype и не должен обходить A1/A3 validation.
+Редактор не должен разрешать произвольный executable code в genotype и не должен обходить A1/A3 validation. Он также не должен требовать curated archetype для сохранения или запуска валидного genome.
 
 ### 4.3 Placement / рассадка
 
@@ -176,6 +309,9 @@ UI полигона не становится новым biological owner, resou
 - births/deaths;
 - resource balances;
 - mutation events;
+- generic vs specialized morphology realization;
+- derived/emergent morphotype similarity без записи labels обратно в genotype;
+- активный OrganizationProfile и его фактические bias weights;
 - owner/region/seam state при world-compatible режиме.
 
 Пользователь должен иметь возможность выбрать организм и увидеть:
@@ -191,6 +327,8 @@ same seed / different environment
 same environment / different genome
 mutation ON / OFF
 feedback ON / OFF
+FREE vs SOFT vs NMS_LIKE organization
+same genome + visual-only profile A/B
 different founder sets
 multiple deterministic seeds
 ```
@@ -224,6 +362,10 @@ multiple deterministic seeds
 - UI-owned mutation semantics;
 - отдельный save format, который нельзя связать с A8;
 - guessed Matter meaning;
+- обязательный visual archetype как условие валидности Genome/BodyGraph;
+- renderer write-back в canonical Genome/DevelopmentProgram/BodyGraph;
+- скрытый organization bias, отсутствующий в experiment manifest/provenance;
+- отказ от валидной новой морфологии только из-за отсутствия curated asset;
 - bypass Region/owner rules в world-compatible mode.
 
 Любой компонент, который предполагается переносить в основной симулятор, должен зависеть от shared contracts/runtime, а не от scene-specific state.
@@ -258,24 +400,28 @@ multiple deterministic seeds
 
 LAB и WORLD-COMPAT могут отличаться источником world/environment data, но не правилами организма.
 
+OrganizationProfile ортогонален этому выбору: `FREE`, `SOFT`, `NMS_LIKE` или custom experiment может запускаться как LAB-исследование, а допустимый совместимый набор — позднее проверяться через WORLD-COMPAT. Сам режим WORLD-COMPAT не имеет права скрыто включать curated morphology.
+
 ## 7. Минимальный пользовательский сценарий acceptance
 
 A10.5 нельзя считать готовым только по unit tests. Должен проходить видимый end-to-end опыт:
 
 1. Создать новый experiment.
 2. Выбрать два canonical founder genomes.
-3. Создать от одного founder изменённый разрешённый gene/rule variant.
-4. Создать минимум три environmental zones, например WET / DRY / DARK или custom.
-5. Рассадить одинаковые и разные founders по зонам.
-6. Запустить simulation.
-7. Наблюдать реальные growth/resource/lifecycle/mutation events.
-8. Сохранить checkpoint.
-9. Продолжить исходный вариант.
-10. Вернуться к checkpoint и создать альтернативный fork с другим условием.
-11. Переиграть исходный вариант и получить deterministic повтор.
-12. Сравнить branches по population, morphology, resources, births/deaths и lineage.
-13. Экспортировать experiment manifest + checkpoints + report.
-14. Загрузить совместимый scenario/state через simulator-compatible route без переопределения biological truth.
+3. Запустить базовую ветку с `OrganizationProfile=FREE` и подтвердить отсутствие обязательного curated archetype.
+4. Создать от одного founder изменённый разрешённый gene/rule/structural variant.
+5. Создать минимум три environmental zones, например WET / DRY / DARK или custom.
+6. Рассадить одинаковые и разные founders по зонам.
+7. Запустить simulation.
+8. Наблюдать реальные growth/resource/lifecycle/mutation events и валидную ранее неизвестную BodyGraph topology через Generic Realizer.
+9. Сохранить checkpoint.
+10. Продолжить исходный вариант.
+11. Вернуться к checkpoint и создать альтернативный fork с другим условием.
+12. От того же source+seed сделать отдельный fork с `SOFT` или `NMS_LIKE` organization и сохранить профиль как причинное различие эксперимента.
+13. Переиграть исходную FREE-ветку и получить deterministic повтор.
+14. Сравнить branches по population, morphology, resources, births/deaths, lineage и morphology-cluster metrics.
+15. Экспортировать experiment manifest + organization profile + checkpoints + report.
+16. Загрузить совместимый scenario/state через simulator-compatible route без переопределения biological truth.
 
 ## 8. Acceptance gates
 
@@ -289,6 +435,13 @@ A10.5 считается завершённым только если:
 - save → fork создаёт отдельную явно связанную историю;
 - replay исходной ветки совпадает;
 - visualization не меняет simulation state;
+- `VISUAL_ONLY` profile не меняет canonical ecology/BodyGraph hash;
+- `FREE` работает без обязательных TREE/QUADRUPED/other archetype labels;
+- валидная неизвестная BodyGraph topology имеет Generic Realizer fallback;
+- Specialized Realizer не является условием biological validity;
+- `DEVELOPMENT_BIAS` явно входит в manifest/provenance и детерминирован при одинаковом seed;
+- изменение organization profile не маскируется как изменение genome/environment;
+- derived morphotype labels по умолчанию не пишутся обратно в genotype и не влияют на reproduction;
 - batch comparison сохраняет все seeds и не выбирает winner скрыто;
 - resource/material balances не ломаются;
 - WORLD-COMPAT mode не обходит owner/epoch/Region/Matter rules;
@@ -304,6 +457,8 @@ A10.5 — инструмент и simulator-compatible slice, а не финал
 - бесконечную эволюцию;
 - production-scale million-organism simulation;
 - окончательную species model;
+- полный набор curated morphotype/archetype assets;
+- сведение всего пространства эволюции к ограниченному каталогу форм;
 - глобальную калибровку биологии;
 - весь planet generation;
 - полную gameplay ecology;
@@ -326,7 +481,9 @@ A11
 visible persistent evolving habitat
 ```
 
-A11 должен брать проверенные через полигон genomes, habitat presets, placement, visualization, checkpoint/replay и experiment tooling и переносить их в persistent living-world scenario.
+A11 должен брать проверенные через полигон genomes, habitat presets, placement, Generic/Specialized Realizer, OrganizationProfile controls, visualization, checkpoint/replay и experiment tooling и переносить их в persistent living-world scenario.
+
+При этом `FREE` остаётся обязательным supported mode A11: curated/NMS-like organization может улучшать читаемость и художественную согласованность мира, но не становится единственным способом существования или отображения организмов.
 
 Таким образом A10.5 становится одновременно:
 1. исследовательской лабораторией;
