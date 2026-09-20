@@ -234,6 +234,45 @@ func _remember_terminal_snapshot8(snapshot: Dictionary) -> void:
 	_terminal_snapshot8 = snapshot.duplicate(true)
 
 
+func _overlay_snapshot8(snapshot: Dictionary) -> Dictionary:
+	if snapshot.is_empty() or not snapshot.get("players", {}) is Dictionary:
+		return world_snapshot()
+	var value := snapshot.duplicate(true)
+	var decisions := {}
+	for actor in ["a", "b"]:
+		decisions[actor] = coordinators[actor].snapshot()
+	value["decisions"] = decisions
+	value["transfer_count"] = transfers.size()
+	value["a_roundtrip_complete"] = transfers.filter(func(row): return row.get("actor") == "a").size() >= 2 and String(pending_continuity["a"]).is_empty()
+	value["both_clients_ready"] = bool(client_hello["a"]) and bool(client_hello["b"])
+	value["input_sequences"] = sequences.duplicate()
+	value["gateway_sessions"] = {
+		"a": pivots["a"].get_client_route_identity(),
+		"b": pivots["b"].get_client_route_identity(),
+	}
+	var mvp8 := Dictionary(value.get("mvp8", {})).duplicate(true)
+	mvp8["active"] = _active8
+	mvp8["round"] = _round8
+	mvp8["phase"] = _phase8()
+	mvp8["round_moves"] = _round_moves8.duplicate(true)
+	mvp8["action_counts"] = _action_counts8.duplicate(true)
+	mvp8["fixed_receipts"] = _fixed_receipts8
+	mvp8["seam_crossings"] = _seam_crossings8
+	mvp8["reconnect_due"] = _round8 == RECONNECT_AFTER_ROUND8 and not _reconnect_complete8
+	mvp8["reconnect_complete"] = _reconnect_complete8
+	mvp8["checkpoint_due"] = _round8 == RESTART_AFTER_ROUND8 and not _recovery_boot8 and not _checkpointed8
+	mvp8["checkpointed"] = _checkpointed8
+	mvp8["recovery_boot"] = _recovery_boot8
+	mvp8["matter_resynced"] = _matter_resynced8.duplicate(true)
+	mvp8["current_cache"] = {"hits": _current_cache_hits8, "misses": _current_cache_misses8}
+	mvp8["complete"] = _round8 >= TOTAL_ROUNDS8
+	mvp8["bounds"] = _bounds8.duplicate(true)
+	mvp8["last_dig"] = _last_dig8.duplicate(true)
+	mvp8["dig_hits"] = _dig_hits8.duplicate(true)
+	value["mvp8"] = mvp8
+	return value
+
+
 func _status_current8(actor: String) -> Dictionary:
 	var cached_value = _current_cache8.get(actor, {})
 	var details: Dictionary = {}
@@ -248,8 +287,11 @@ func _status_current8(actor: String) -> Dictionary:
 		details = Dictionary(sampled.get("details", {})).duplicate(true)
 		_current_cache8[actor] = details.duplicate(true)
 	# Gateway-only coordination can change while canonical owners remain stable.
-	# Always publish the latest orchestration snapshot without re-reading owners.
-	details["snapshot"] = world_snapshot()
+	# Reuse the already owner-validated snapshot on cache hits and update only
+	# local orchestration fields. A real MOVE/action invalidates the cache, so
+	# the first STATUS after canonical mutation still performs fresh owner reads.
+	var base_snapshot = details.get("snapshot", {})
+	details["snapshot"] = _overlay_snapshot8(Dictionary(base_snapshot) if base_snapshot is Dictionary else {})
 	_remember_terminal_snapshot8(Dictionary(details["snapshot"]))
 	return Protocol8.success(details)
 
@@ -526,7 +568,8 @@ func _commit_round8(round_index: int) -> Dictionary:
 	# MVP8 orchestration cursor, but its embedded snapshot carries the pre-commit
 	# round number. Publish one post-commit orchestration snapshot so clients never
 	# replay the round they just completed.
-	var post_snapshot := world_snapshot()
+	var base_snapshot = current_details.get("snapshot", {})
+	var post_snapshot := _overlay_snapshot8(Dictionary(base_snapshot) if base_snapshot is Dictionary else {})
 	_remember_terminal_snapshot8(post_snapshot)
 	current_details["snapshot"] = post_snapshot.duplicate(true)
 	_current_cache8["a"] = current_details.duplicate(true)
