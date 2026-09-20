@@ -38,6 +38,22 @@ var _feedback: Dictionary = {}
 var _tick := 0
 var _status := "IDLE"
 var _error := ""
+# P12 WORLD_COMPAT: dependency-injected world authority adapter
+# (EcoWorkbenchPolygonWorldAdapterV1). Null in LAB mode.
+var _world_authority: Object = null
+
+## Attach the WORLD_COMPAT world authority adapter (P12). The adapter is the
+## source of world/environment authority (region ACTIVE gate, matter-mapped
+## stocks). It MUST be attached before initialize() when manifest.mode ==
+## "WORLD_COMPAT" (fail-closed otherwise). LAB mode ignores it.
+func attach_world_authority(authority: Object) -> Dictionary:
+	if authority == null \
+			or not authority.has_method("admit_execution") \
+			or not authority.has_method("world_manifest_compatible") \
+			or not authority.has_method("apply_environment"):
+		return _command_fail("CONTROLLER_WORLD_AUTHORITY_INVALID")
+	_world_authority = authority
+	return {"success": true}
 
 ## Validate the manifest and build the canonical initial state:
 ## field (zones -> per-cell stocks/signals through owner-write API),
@@ -47,6 +63,13 @@ func initialize(manifest: Dictionary, founder_registry: Dictionary = {}) -> Dict
 	var manifest_error := Manifest.validate(manifest)
 	if not manifest_error.is_empty():
 		return _command_fail("CONTROLLER_MANIFEST:" + manifest_error)
+	# P12 fail-closed: WORLD_COMPAT requires world authority deps.
+	if String(manifest.mode) == "WORLD_COMPAT":
+		if _world_authority == null:
+			return _command_fail("CONTROLLER_WORLD_AUTHORITY_REQUIRED")
+		var authority_check: Dictionary = _world_authority.world_manifest_compatible(manifest)
+		if not bool(authority_check.get("success", false)):
+			return _command_fail("CONTROLLER_WORLD_AUTHORITY:" + String(authority_check.get("error", "?")))
 	var resolution := _resolve_founders(manifest.founders, founder_registry)
 	if not resolution.success:
 		return resolution
@@ -378,6 +401,53 @@ func apply_field_patch(patch: Dictionary) -> Dictionary:
 	_manifest = next_manifest
 	return {"success": true, "tick": _tick, "field_hash": Field.state_hash(_field), "manifest_hash": Manifest.canonical_hash(_manifest)}
 
+# --- P12 WORLD_COMPAT bridge: world-authority environment sampling -----------
+# Minimal adapter-layer bridge (§23): the A10 matter_resource_mapping_v1
+# admission (canonical, explicit-only) produces per-resource stock totals;
+# they enter the A4 field EXCLUSIVELY through the canonical owner-write API
+# (Field.apply_effects deposits) — the same path as genesis. No formula and
+# no field truth is duplicated here.
+
+## Deposit world-authority-admitted resource stocks into every field cell
+## through the canonical owner-write API (per-cell semantics identical to
+## genesis zone stocks). WORLD_COMPAT only; LAB field stocks come from the
+## manifest zones. Idempotent per (source_tag, batch set) — call once after
+## initialize()/apply_environment().
+func apply_world_stocks(resources: Dictionary, source_tag: String) -> Dictionary:
+	if _status == "IDLE":
+		return _command_fail("CONTROLLER_NOT_INITIALIZED")
+	if _status == "FAILED":
+		return _failed_command()
+	if String(_manifest.mode) != "WORLD_COMPAT":
+		return _command_fail("CONTROLLER_WORLD_STOCKS_LAB")
+	if not resources is Dictionary or source_tag.is_empty():
+		return _command_fail("CONTROLLER_WORLD_STOCKS_INPUT")
+	var spatial: Dictionary = _manifest.environment.spatial
+	var total: int = int(spatial.width) * int(spatial.depth)
+	var deposits: Array = []
+	for index in total:
+		var position := _cell_center(_field, index)
+		for resource in FieldContract.RESOURCES:
+			var amount: int = int(resources.get(resource, 0))
+			if amount <= 0:
+				continue
+			if amount > CELL_CAPACITY_MG:
+				return _command_fail("CONTROLLER_WORLD_STOCK:" + resource)
+			var remaining := amount
+			var chunk_index := 0
+			while remaining > 0:
+				var chunk: int = mini(remaining, FieldContract.MAX_REQUEST)
+				deposits.append(Ports.effect("world/%s/%06d/%s/%03d" % [source_tag, index, resource, chunk_index], OWNER_TOKEN, "deposit", resource, chunk, position, 0, "CONTROLLER_WORLD_COMPAT"))
+				remaining -= chunk
+				chunk_index += 1
+	if deposits.is_empty():
+		return {"success": true, "tick": _tick, "field_hash": Field.state_hash(_field), "deposited": false}
+	var applied := Field.apply_effects(_field, deposits, OWNER_TOKEN, int(_field.owner_epoch), int(_field.revision))
+	if not bool(applied.get("success", false)):
+		return _command_fail("CONTROLLER_WORLD_STOCKS_EFFECTS:" + String(applied.get("error", "?")))
+	_field = applied.state
+	return {"success": true, "tick": _tick, "field_hash": Field.state_hash(_field), "deposited": true}
+
 # --- presentation views (P4): read-only canonical projection -----------------
 
 ## Per-organism presentation view derived read-only from canonical state:
@@ -443,6 +513,14 @@ func _zone_id_at(position_mm: Array) -> String:
 # --- canonical tick: the ONLY place where state changes ---------------------
 
 func _tick_once() -> void:
+	# P12 WORLD_COMPAT: ACTIVE-only execution. The world authority gate runs
+	# BEFORE any canonical mutation: a rejected admission leaves the whole
+	# controller state untouched (fail-closed, state unchanged).
+	if String(_manifest.mode) == "WORLD_COMPAT":
+		var admitted: Dictionary = _world_authority.admit_execution()
+		if not bool(admitted.get("success", false)):
+			_fail("CONTROLLER_WORLD_AUTHORITY:" + String(admitted.get("error", "?")))
+			return
 	# (a) resource-funded lifecycle advance (A5).
 	var result := Lifecycle.step_population(_field, _population, _field.owner_token, _field.owner_epoch, _field.revision)
 	if not result.success:
