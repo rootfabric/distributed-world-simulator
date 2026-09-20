@@ -7,7 +7,7 @@ STAGE = R5.0
 SUBJECT = research/fabric-r5-0-measurement-harness-5k-r1
 PREDECESSOR_R4_2_ACCEPTED_HEAD = 33b06f9658fe3373d18893ab2292471a13d61894
 BASE_RESEARCH_HEAD = 618786e5b472fc968d83300c8ceb62864476b1c1
-STATUS = IMPLEMENTATION / EXACT VALIDATION PENDING
+STATUS = EXACT BASELINE PASS / FRESH REVIEW + VERIFIER PENDING
 ```
 
 R5.0 не создаёт новый физический capability claim. Его задача — зафиксировать измерительный контракт, на котором затем сравниваются R5.1 quantitative scaling и R5.2/R5.3 qualitative complexity compression.
@@ -159,3 +159,46 @@ R5.0 закрывается, когда:
 9. current R4.2 accepted/frozen code не переписывается.
 
 Следующий этап после R5.0 — R5.1 quantitative scale, после первого 5k baseline параллельно разрешается открывать R5.2 complexity-compilation fixtures.
+
+
+## Exact 5k baseline — run 35509335947
+
+```text
+subject HEAD = 5ad976be94b9aba847dfa0845c0b6e489439379c
+subject TREE = d0ff00b282f16619fc34427e8cd35ee84a2a1ea8
+run          = 35509335947
+samples      = 3/3 PASS
+aggregate    = PASS
+artifact     = 10604504327
+digest       = sha256:288c24212196866795cdffe48da9152e1cfc54445af5c667b0ffcbf08ebb9557
+evidence hash       = 13e40d7be2c318088fb533c8235411a0fac3343534e2f6b8d02623c93c4f75ef
+deterministic hash  = 1c549d536b4077c686dea9e25ca5e08935afd240f3b070ca49da153b7bee883b
+```
+
+Deterministic predicates:
+
+```text
+canonical parts           = 5000
+FULL peak                 = 20
+local reconstructed       = 20
+local rebake validations  = 20
+global physical rebuilds  = 0
+duplicate ownership       = 0
+boundary calls            = 128
+```
+
+Observational median on this GitHub-hosted Ubuntu runner:
+
+```text
+whole process            ≈ 2.12 s
+max RSS                  ≈ 127416 KiB
+Godot MEMORY_STATIC peak = 28,825,994 bytes
+source create            ≈ 540.7 ms
+full source rehash       ≈ 570.5 ms
+parent aggregate         ≈ 10.7 ms
+local UNBAKE 20          ≈ 22.5 ms
+local ReBAKE             ≈ 15.1 ms
+64-call baked boundary   ≈ 25.6 ms before / 25.6 ms after
+```
+
+Эти времена являются baseline observations, а не absolute acceptance budgets. Основной ранний вывод R5.0: на данном fixture стоимость metadata/source hashing (~0.5 s на проход) заметно выше локального physical refinement (~15–23 ms); это кандидат на измеряемую ось R5.1, но не основание ослаблять correctness/fidelity.
