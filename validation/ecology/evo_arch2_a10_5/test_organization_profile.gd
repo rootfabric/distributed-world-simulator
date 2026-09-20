@@ -22,7 +22,7 @@ const B = preload("res://scripts/research/ecology/v2/body_graph_v1.gd")
 const P = preload("res://scripts/research/ecology/v2/development_program_v1.gd")
 const S = preload("res://scripts/research/ecology/v2/organism_state_v1.gd")
 const D = preload("res://scripts/research/ecology/v2/development_interpreter_v1.gd")
-const G = preload("res://scripts/research/ecology/v2/organism_genome_v2.gd")
+const G = preload("res://scripts/research/ecology/v2/organism_genome_v2.gd")\nconst Mutation = preload("res://scripts/research/ecology/v2/genome_mutation_v1.gd")
 const E = preload("res://scripts/research/ecology/v2/environment_fixture_v1.gd")
 const Fixtures = preload("res://scripts/research/ecology/v2/body_program_fixtures_v1.gd")
 const Controller = preload("res://scripts/ecology/workbench/experiment_controller_v1.gd")
@@ -162,38 +162,27 @@ func _grow(genome: Dictionary, ticks: int) -> Dictionary:
 				break
 	return state
 
-# --- b) DEVELOPMENT_BIAS blocked ------------------------------------------------
+# --- b) DEVELOPMENT_BIAS uses canonical A3 hook -------------------------------
 
-func _test_development_bias_blocked() -> void:
+func _test_development_bias_applied() -> void:
 	for mode in ["SOFT", "EARTH_LIKE", "NMS_LIKE"]:
 		var preset: Dictionary = Profile.preset(mode)
 		_check(String(preset.rule_class) == "DEVELOPMENT_BIAS", "%s declares DEVELOPMENT_BIAS intent" % mode)
 		var result: Dictionary = Profile.apply_development_bias(preset)
-		_check(not bool(result.get("success", false)), "%s bias request is not successful" % mode)
-		_check(String(result.get("status", "")) == Profile.BLOCKED_STATUS,
-			"%s bias returns BLOCKED_CANONICAL_EXTENSION_REQUIRED" % mode)
-		_check(not String(result.get("required_hook", "")).is_empty(), "%s blocked result documents the required hook" % mode)
-	# VISUAL_ONLY profiles are not applicable (and never block).
+		_check(bool(result.get("success", false)) and bool(result.get("applied", false)), "%s canonical bias is applied" % mode)
+		_check(String(result.get("status", "")) == Profile.APPLIED_STATUS, "%s reports APPLIED_CANONICAL_BIAS" % mode)
+		var bias: Dictionary = result.get("bias", {})
+		_check(Mutation.validate_bias(bias).is_empty(), "%s bias validates in canonical A3" % mode)
+		var one := Mutation.mutate_with_bias(_founder_genome(), 42, bias)
+		var two := Mutation.mutate_with_bias(_founder_genome(), 42, bias)
+		_check(bool(one.get("success", false)) == bool(two.get("success", false)), "%s bias deterministic success/rejection" % mode)
+		if bool(one.get("success", false)):
+			_check(String(one.get("event_hash", "")) == String(two.get("event_hash", "")), "%s same seed -> same canonical mutation event" % mode)
+			_check(String(one.get("selected_operator", "")) in Mutation.OPERATORS, "%s selects only an existing canonical operator" % mode)
 	var free_result: Dictionary = Profile.apply_development_bias(Profile.preset("FREE"))
-	_check(bool(free_result.get("success", false)) and String(free_result.status) == "NOT_APPLICABLE",
-		"FREE profile has no development semantics")
-	# Weights are provenance-only and stay blocked-marked for bias modes.
+	_check(bool(free_result.get("success", false)) and String(free_result.status) == "NOT_APPLICABLE", "FREE profile has no development semantics")
 	var weights: Dictionary = Profile.resolve_weights(Profile.preset("EARTH_LIKE"), 42)
-	_check(bool(weights.get("blocked", false)), "DEVELOPMENT_BIAS provenance weights are marked blocked")
-	# Canonical state is NOT changed by a blocked bias request: pure call +
-	# identical 16-tick hash regardless of whether the request was made.
-	var manifest := _manifest_16()
-	var ctl := Controller.new()
-	_check(bool(ctl.initialize(manifest).get("success", false)), "bias controller initialize succeeds")
-	_check(bool(ctl.run(16).get("success", false)), "bias run(16) succeeds")
-	var hash_clean := String(ctl.get_snapshot().canonical_state_hash)
-	var ctl2 := Controller.new()
-	ctl2.initialize(manifest)
-	for mode in ["SOFT", "EARTH_LIKE", "NMS_LIKE"]:
-		Profile.apply_development_bias(Profile.preset(mode))
-	_check(bool(ctl2.run(16).get("success", false)), "run after blocked bias requests succeeds")
-	_check(String(ctl2.get_snapshot().canonical_state_hash) == hash_clean,
-		"blocked DEVELOPMENT_BIAS requests never change canonical state")
+	_check(not bool(weights.get("blocked", true)) and not (weights.operator_weights as Dictionary).is_empty(), "DEVELOPMENT_BIAS weights are active provenance")
 
 # --- c) FREE-mode acceptance (§19) ----------------------------------------------
 
@@ -300,7 +289,7 @@ func _test_manifest_modes() -> void:
 
 func _run() -> void:
 	_test_visual_only()
-	_test_development_bias_blocked()
+	_test_development_bias_applied()
 	_test_free_acceptance()
 	_test_morphotype_classifier()
 	_test_manifest_modes()
