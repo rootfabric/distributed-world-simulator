@@ -133,6 +133,31 @@ SCALE-R5 EXECUTABLE CAMPAIGN             ← CURRENT
   │    - validity envelope + deterministic error bounds
   │    - NO_SAFE_BAKE, если безопасно сжать нельзя
   │
+  ├─ R5.2A FUNCTIONAL ASSEMBLY / BEHAVIOR CAPSULE CONTRACT
+  │    - понятные человеку blocks собираются из более мелких physical components
+  │    - component/material/quality → derived characteristics
+  │    - block → ports + compact state + generated behavior + events + guards
+  │    - prefab/name не владеет поведением; behavior выводится из сборки
+  │    - разумный floor детализации: не требуется симуляция до атомов
+  │
+  ├─ R5.2B COMPLEXITY-COMPILATION TEST LADDER
+  │    - T1 Boundary Network Box
+  │    - T2 Logic Adder / Counter
+  │    - T3 Battery from Cells + Materials
+  │    - T4 Stateful Filter / Thermal Pack
+  │    - T5 Motor / Generator
+  │    - T6 Power Stage / Switching Compression
+  │    - T7 Gearbox / Mechanical Drive
+  │    - T8 Cooling Unit
+  │    - T9 Laser Emitter
+  │    - T10 Laser Cannon Functional Assembly
+  │    - T11 Smart Servo / Closed-loop Drive
+  │    - T12 Matryoshka Ship Subsystem
+  │    - T13 Many Identical Instances / Shared Compiled Code
+  │    - T14 Observation-Driven Refinement
+  │    - T15 Local Damage → Local UNBAKE → ReBAKE
+  │    - T16 NO_SAFE_BAKE adversarial cases
+  │
   ├─ R5.3 HIERARCHICAL BAKE / RECURSIVE ROM
   │    - component → module ROM
   │    - module ROMs → assembly ROM
@@ -172,6 +197,166 @@ INTEGRATION-R6
 - Компактная модель может быть tiny generated executable (вплоть до нескольких формул/строк кода), но должна быть derived, воспроизводимой и связанной с canonical source; ручной hard-coded behavior для конкретной микросхемы не считается решением.
 - Внутренние элементы не обязаны симулироваться каждый tick. Они разворачиваются только при validity exit, скрытом событии, повреждении, mode transition или запросе более высокой fidelity.
 - Иерархическая reduction должна быть рекурсивной: subsystem → module → assembly → machine, при этом invalidation/refinement распространяются только настолько далеко, насколько требует зависимость/causality.
+- Test assemblies R5.2B являются обязательными falsification fixtures, а не showcase-only demos. Каждый следующий тест должен доказать новый вид compression: elimination, generated logic, state reduction, event compression, bidirectional physical coupling, hierarchy или selective refinement.
+- Functional block не получает вручную заданные gameplay stats как источник истины. Например Battery capacity/current/heat должны выводиться из cells/materials/topology/quality; Laser Cannon shot/recharge/thermal limits — из power storage/emitter/optics/cooling/structure.
+- Названия `Battery`, `Motor`, `LaserCannon` и т.п. могут быть prefab/assembly labels, но не разрешают kernel special-case вида `LaserCannon.update()` с заранее прописанным поведением.
+- Разрешён bounded physical floor: ниже выбранного уровня свойства могут задаваться material/characterized-component contracts. R5 не требует спускаться до атомной/квантовой симуляции.
+- Успех compression обязан измерять не только output error, но и реальную исполняемую сложность: active states/equations, internal traversals per tick, guard cost, memory, compile/rebuild cost и amortization.
+- Для фиксированного boundary/state контракта рост скрытой внутренней структуры должен по возможности увеличивать compile/rebuild cost, но не линейно увеличивать steady-state tick cost уже скомпилированной capsule.
+- Hidden detail может быть восстановлен только из сохранённого/reconstructable state. Если безопасной reconstruction нет, compiler обязан вернуть `NO_SAFE_BAKE`, а не придумывать внутреннее состояние.
+
+## Обязательная R5.2B test ladder — научиться компилировать сложность
+
+Эти fixtures должны проходиться последовательно. Их смысл — не собрать каталог игровых устройств, а доказать разные классы автоматической reduction.
+
+### T1 — Boundary Network Box
+
+```text
+100–1000 internal electrical elements
+          ↓ exact/validated reduction
+2–8 external ports
+          ↓
+small boundary executable
+```
+
+Проверить: FULL/BAKE boundary equivalence, power, invalidation после внутреннего изменения, отсутствие покомпонентного обхода в steady-state.
+
+### T2 — Logic Adder / Counter
+
+Собрать logic graph из generic primitives и получить компактное generated behavior.
+
+```text
+gates / wires / registers
+        ↓ compile
+small combinational/sequential executable
+```
+
+Проверить: truth/state equivalence, deterministic event ordering, изменение одного gate инвалидирует старую capsule. Нельзя подменять тест специальным `Adder`/ `Counter` kernel class.
+
+### T3 — Battery from Cells + Materials
+
+```text
+materials + cell geometry/quality
+        ↓
+cells
+        ↓
+series/parallel modules
+        ↓
+battery
+        ↓ compile
+SOC + temperature + health + electrical/thermal ports
+```
+
+Derived characteristics: capacity, voltage range, internal resistance, continuous/peak current, heat generation, mass, limits. Повреждение части cells должно локально изменить topology/характеристики и породить новую capsule.
+
+### T4 — Stateful Filter / Thermal Pack
+
+Много внутренних energy-storage states → малый dynamic ROM. Проверить transient response, energy/error envelope и validity exit.
+
+### T5 — Motor / Generator
+
+Сложная электромеханическая структура → компактная bidirectional model:
+
+```text
+electrical port + shaft + thermal + mount
+state ≈ current / speed / temperature / necessary modes
+```
+
+Проверить разгон, нагрузку, generator mode, stall/heat и обратное влияние механической нагрузки на источник питания.
+
+### T6 — Power Stage / Switching Compression
+
+Высокочастотные internal switching events → averaged/hybrid executable. Проверить средние токи/мощность/тепло и переход к более высокой fidelity, когда ripple/режим становятся значимыми.
+
+### T7 — Gearbox / Mechanical Drive
+
+Gears/bearings/shafts → compact mechanical relation + inertia/loss/modes. Проверить обратную реакцию нагрузки, backlash/limit regime и damage-triggered refinement.
+
+### T8 — Cooling Unit
+
+Pump + pipes + radiator + thermal masses → few flow/temperature states. Cooling capsule должна корректно связываться с Battery/Motor/Laser и не быть просто gameplay multiplier.
+
+### T9 — Laser Emitter
+
+Power conditioning + emitter + optics + thermal path → compact emitter behavior. Derived outputs: accepted electrical power, optical output/beam event, waste heat, temperature/health limits.
+
+### T10 — Laser Cannon Functional Assembly
+
+```text
+Battery/Capacitor Capsule
+        +
+Power Stage Capsule
+        +
+Laser Emitter Capsule
+        +
+Cooling Capsule
+        +
+Mount / Controller
+        ↓
+Laser Cannon Capsule
+```
+
+Shot energy, recharge rate, sustained fire rate, heat and failure limits должны быть следствием assembled subsystems. Улучшение cooling меняет sustained behavior; изменение storage/emitter меняет pulse behavior. Никакого hard-coded `damage=100, cooldown=3`.
+
+### T11 — Smart Servo / Closed-loop Drive
+
+Controller + power stage + motor + gearbox + sensor + load → higher-level capsule. Проверить closed-loop response, load disturbance, reverse power flow и selective opening одного дочернего module.
+
+### T12 — Matryoshka Ship Subsystem
+
+```text
+cells → battery modules → battery
+battery + converter + emitter + cooling → cannon
+cannons → weapon bank
+weapon bank + power system + drives → ship subsystem
+```
+
+Каждый уровень должен иметь собственную capsule. При проблеме Cannon #3 нельзя автоматически раскрывать остальные cannon/battery/ship subsystems.
+
+### T13 — Many Identical Instances
+
+1 → 10 → 100 одинаковых motors/batteries/cannons. Immutable compiled code/descriptor должен переиспользоваться, while state remains per-instance. Повреждение одного экземпляра не инвалидирует остальные.
+
+### T14 — Observation-Driven Refinement
+
+Изменение requested observables может требовать более богатую capsule. Внутренний физический sensor может вызвать refinement; приближение камеры или cosmetic detail — нет.
+
+### T15 — Local Damage → Local UNBAKE → ReBAKE
+
+Повредить внутренний element в глубокой hierarchy. Проверить минимальный causal refinement path:
+
+```text
+machine ROM
+  ↓ affected assembly only
+assembly ROM
+  ↓ affected module only
+module detail
+  ↓ canonical mutation
+new module ROM
+  ↓
+rebuild dependent parents
+```
+
+### T16 — NO_SAFE_BAKE
+
+Намеренно создать subsystem, которую текущий reducer не может безопасно сжать: unresolved hidden mode, insufficient observability, unreconstructable state, unstable/near-critical regime, unsafe error envelope. Правильный результат — сохранить FULL/refine, а не выдать красивую, но ложную capsule.
+
+### Общий acceptance для каждого test assembly
+
+```text
+canonical structure preserved          YES
+capsule derived, not second truth      YES
+boundary/state behavior within contract
+conservation / energy / event audit    PASS where applicable
+steady-state internal traversals       bounded / eliminated
+active executable states/equations     explicitly measured
+guard/runtime estimator cost           explicitly measured
+compile/rebuild cost                    explicitly measured
+source mutation invalidates artifact   PASS
+local change → local refinement        PASS where causal
+reconstruction                         justified or NO_SAFE_BAKE
+device-specific kernel shortcut        FORBIDDEN
+```
 
 ## Current acceptance target
 
