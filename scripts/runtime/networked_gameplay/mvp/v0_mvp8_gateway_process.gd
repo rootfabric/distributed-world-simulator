@@ -241,11 +241,13 @@ func _dig8(round_index: int) -> Dictionary:
 	if dig_actor.is_empty():
 		return Protocol8.failure("MVP8_DIG_OWNER_OBSERVER_REQUIRED")
 	var operation := "operation/mvp4/%s/mvp8-dig/%d" % [dig_actor, round_index]
-	var player_lookup: Dictionary = _lookup8(dig_actor)
+	var player_owner := String(coordinators[dig_actor].snapshot().get("active_authority_id", ""))
+	var player: Dictionary = lookup(player_owner, dig_actor)
 	_last_dig8 = {
 		"actor": dig_actor,
 		"round": round_index,
-		"player": Dictionary(player_lookup.get("details", {}).get("player", {})).duplicate(true),
+		"player_owner": player_owner,
+		"player": player.duplicate(true),
 		"attempts": [],
 	}
 	var prepared: Dictionary = {}
