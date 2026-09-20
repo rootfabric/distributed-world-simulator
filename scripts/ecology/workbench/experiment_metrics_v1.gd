@@ -85,7 +85,7 @@ func observe(controller: Object) -> Dictionary:
 		module_count[id] = int(state.development.modules.size())
 		body_modules_total += int(state.development.modules.size())
 		var parent_id := ""
-		if state.origin_kind == "PARENT_TRANSFER" and not state.origin_receipt.is_empty():
+		if state.origin_kind in ["PARENT_TRANSFER", "PARENT_MUTATION_TRANSFER"] and not state.origin_receipt.is_empty():
 			parent_id = String(state.origin_receipt.parent_id)
 		parent_of[id] = parent_id
 		genome_hash[id] = Genome.biological_hash(entry.blueprint.genome)
@@ -110,14 +110,6 @@ func observe(controller: Object) -> Dictionary:
 							"parent_id": parent_id,
 							"parent_hash": String(_prev_genome_hash[parent_id]).substr(0, 12),
 							"child_hash": String(genome_hash[id]).substr(0, 12),
-						})
-					elif _mutations_enabled:
-						# Read-only evidence of a REJECTED mutation attempt: the
-						# A5 parent-transfer witness falls back to the exact
-						# parent genome (documented canonical limitation).
-						_emit(tick, "mutation", id, {
-							"applied": false, "operator": _mutation_operator,
-							"parent_id": parent_id, "reason": "PARENT_TRANSFER_WITNESS_FALLBACK",
 						})
 			elif bool(_prev_alive[id]) and not bool(alive_map[id]):
 				deaths += 1
