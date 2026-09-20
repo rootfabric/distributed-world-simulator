@@ -1,0 +1,46 @@
+{
+  "schema": "fabric.r4_2.final_closure.v1",
+  "status": "CLOSED_ACCEPTED",
+  "accepted_head": "33b06f9658fe3373d18893ab2292471a13d61894",
+  "accepted_tree": "56ca6be7249dfdb96a4cc62f4bdc4e27e508b4e9",
+  "freeze_ref": "freeze/fabric-r4-2-33b06f-r1",
+  "preregistration_head": "b8fa56cc1bccf1d38b9882f735309402fc5cd014",
+  "preregistration_tree": "86b04ad3bef1e6b77a9a510ff28cf89c8f7d9aa2",
+  "review": {
+    "verdict": "PASS",
+    "review_id": 5259873052,
+    "blocking_findings": 0,
+    "codex_or_agent_used": false
+  },
+  "authoritative_unseen": {
+    "verdict": "PASS",
+    "run_id": 35496283692,
+    "job_id": 106039722056,
+    "artifact_id": 10601465104,
+    "artifact_digest": "sha256:b2d1d18d89555463052fee63de749ffbf96152b4912e28c30cab59f183b97f01",
+    "bundle_checksum": "ced365821a11ca79365dd4bb86c8f983b615da3a96ca0742f3acda32ad27085a",
+    "challenge_sha256": "c56e267fcb5eb066cf2b3fa543571a6bf63879fdad0fca10e4b469cf3566344a",
+    "result_hash": "e8b5f02c88d21c5c3c59e9471b946529a9d106249a0688f960cf051fbaaf3a3b",
+    "assertions": 21,
+    "failures": 0,
+    "godot_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7"
+  },
+  "independent_verifier": {
+    "verdict": "PASS",
+    "branch": "verify/fabric-r4-2-fresh-independent-verifier-r1",
+    "head": "eb4d5d776b5a3b04dd18822a8c9920f7ba4b034b",
+    "run_id": 35496457986,
+    "job_id": 106040207399,
+    "artifact_id": 10600981124,
+    "artifact_digest": "sha256:96607f1ccfb4b940c39b2f0685e50104134dad0d31843aaed19997931390d601",
+    "result_hash": "e8b5f02c88d21c5c3c59e9471b946529a9d106249a0688f960cf051fbaaf3a3b",
+    "assertions": 21,
+    "failures": 0
+  },
+  "research_merge_commit": "77c4dcc53d721ef41476022eace6ab828a2e9402",
+  "main_integration": false,
+  "production_authority": false,
+  "product_runtime_mutated_after_preregistration": false,
+  "threshold_relaxation": false,
+  "next_stage": "SCALE-R5"
+}
