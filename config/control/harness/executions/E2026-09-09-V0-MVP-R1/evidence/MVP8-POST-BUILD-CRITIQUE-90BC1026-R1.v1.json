@@ -1,0 +1,90 @@
+{
+  "schema": "distributed_world_simulator.post_build_critique.v1",
+  "critique_id": "V0-MVP-R1-MVP8-POST-BUILD-CRITIQUE-90BC1026-R1",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "source_implementation_candidate": "90bc1026f0f5749492107191233330f87c8c70df",
+  "exact_closure_candidate": "90bc1026f0f5749492107191233330f87c8c70df",
+  "exact_closure_tree": "4b6f2d48f7ef8d9c441ae89d2cbb02c730ef7f71",
+  "closure_candidate_pr": 597,
+  "outcome": "NO_MATERIAL_REFACTOR_REQUIRED",
+  "verdict": "IMPLEMENTATION_COMPLETE_READY_FOR_FRESH_REVIEW",
+  "strengths": [
+    "MVP8 composes the already accepted MVP3-MVP7 gameplay, Matter, Item Graph and Construction owners into one connected two-client workload instead of introducing another canonical store.",
+    "The same lineage executes twelve bounded rounds, a fresh client reconnect, a quiescent server/world restart in new OS processes, current-state Matter resync and continued post-restart control.",
+    "Repeated dig/item/Construction operations are genuine canonical mutations: four spatially distinct Matter digs, four Item operations and two ADD/REMOVE Construction cycles.",
+    "Construction rebuild after the first damage/remove uses the accepted C9 DAMAGE_REPAIR path and preserves the same salvaged leaf/item identity rather than replaying a one-shot build-plan stage.",
+    "Timing repairs preserve fail-closed semantics: held input is explicitly neutralized, post-handoff input waits for an objectively newer server tick, backend liveness is idle-only, and no timeout/cap increase or hidden input retry was used.",
+    "Two exact runs of the same frozen HEAD/TREE pass all 20 acceptance checks and reject all 14 false-positive mutations."
+  ],
+  "production_scope_review": {
+    "second_item_graph": false,
+    "second_terrain_truth": false,
+    "second_construction_truth": false,
+    "second_persistence_owner": false,
+    "gateway_gameplay_authority": false,
+    "architecture_ownership_change": false,
+    "timeout_policy_change": false,
+    "bound_increase_for_pass": false,
+    "retry_or_eviction_policy_change": false,
+    "unexpected_runtime_scope": false
+  },
+  "findings": [
+    {
+      "id": "MVP8-PBC-F001",
+      "severity": "IMPORTANT",
+      "classification": "CLOSURE_EVIDENCE",
+      "blocks_runtime_repair": false,
+      "blocks_leaf_verification_until_closed": true,
+      "summary": "Fresh independent Reviewer and Verifier must bind to frozen 90bc1026/4b6f2d48; two implementer exact passes are machine evidence, not independent verdicts."
+    },
+    {
+      "id": "MVP8-PBC-F002",
+      "severity": "IMPORTANT",
+      "classification": "CONTROL_CLOSURE",
+      "blocks_runtime_repair": false,
+      "blocks_leaf_verification_until_closed": true,
+      "summary": "Leaf closure still needs exact-head full world/core and standard/directional PC0 non-red evidence or an explicit policy-backed classification."
+    },
+    {
+      "id": "MVP8-PBC-F003",
+      "severity": "IMPORTANT",
+      "classification": "BOUND_HEADROOM",
+      "blocks_runtime_repair": false,
+      "blocks_leaf_verification_until_closed": false,
+      "summary": "Attempt 2 phase1 authority/a backend sequence is 498 against cap 512 (14 calls headroom). The gate passes without eviction/retry/cap increase, but Fresh Reviewer should inspect whether the bound remains structurally robust to legitimate scheduling variation."
+    },
+    {
+      "id": "MVP8-PBC-F004",
+      "severity": "INFO",
+      "classification": "FAILURE_MODEL_BOUNDARY",
+      "blocks_runtime_repair": false,
+      "blocks_leaf_verification_until_closed": false,
+      "summary": "Server/world restart is from an acknowledged quiescent checkpoint; arbitrary loss of uncheckpointed operations is not claimed."
+    },
+    {
+      "id": "MVP8-PBC-F005",
+      "severity": "INFO",
+      "classification": "CONSTRUCTION_SEMANTICS",
+      "blocks_runtime_repair": false,
+      "blocks_leaf_verification_until_closed": false,
+      "summary": "The workload label BUILD_ADD means restoring the removed construction leaf. After the initial historical build, subsequent ADD is canonically implemented by C9 DAMAGE_REPAIR using the same salvaged identity, not by reopening an already completed build-plan stage."
+    },
+    {
+      "id": "MVP8-PBC-F006",
+      "severity": "INFO",
+      "classification": "RECOVERY_ORCHESTRATION",
+      "blocks_runtime_repair": false,
+      "blocks_leaf_verification_until_closed": false,
+      "summary": "Recovery is intentionally staged across authenticated SETUP/GAMEPLAY/CONSTRUCTION RPCs so ENet servicing resumes between existing recovery participants; this creates no new canonical state owner."
+    }
+  ],
+  "open_runtime_blockers": [],
+  "runtime_repair_required_by_critique": false,
+  "ready_for_evidence_map": true,
+  "ready_for_fresh_reviewer_after_evidence_map": true,
+  "checkpoint_proposal_authorized": false,
+  "mvp8_verified": false,
+  "parent_work_order_state": "IN_PROGRESS",
+  "recorded_at_utc": "2026-09-20T12:46:01Z"
+}
