@@ -16,7 +16,7 @@ concurrency:
 
 env:
   PREREG_HEAD: b8fa56cc1bccf1d38b9882f735309402fc5cd014
-  PREREG_TREE: 12f3db5d8e1f23f9c48b1fc184cd4339f44a56ec
+  PREREG_TREE: 86b04ad3bef1e6b77a9a510ff28cf89c8f7d9aa2
 
 jobs:
   unseen-exact:
