@@ -66,7 +66,7 @@ static func prepare(graph: Dictionary) -> Dictionary:
 				ready.sort()
 	if order.size() != gates.size():
 		return U.failure("LOGIC_COMBINATIONAL_CYCLE")
-	var initial_state_word := 0
+	var initial_state_word: int = 0
 	for index in range(registers.size()):
 		if bool(registers[index].initial_value):
 			initial_state_word |= 1 << index
@@ -83,8 +83,8 @@ static func prepare(graph: Dictionary) -> Dictionary:
 
 static func evaluate(plan: Dictionary, input_word: int, state_word: int) -> Dictionary:
 	var interface: Dictionary = plan.interface
-	var input_count := interface.input_signals.size()
-	var state_count := interface.state_signals.size()
+	var input_count: int = interface.input_signals.size()
+	var state_count: int = interface.state_signals.size()
 	if input_word < 0 or input_word >= (1 << input_count):
 		return U.failure("LOGIC_INPUT_WORD_OUT_OF_RANGE")
 	if state_count == 0:
@@ -97,7 +97,7 @@ static func evaluate(plan: Dictionary, input_word: int, state_word: int) -> Dict
 		values[interface.input_signals[index]] = bool((input_word >> index) & 1)
 	for index in range(state_count):
 		values[interface.state_signals[index]] = bool((state_word >> index) & 1)
-	var traversed := 0
+	var traversed: int = 0
 	for gate in plan.gate_order:
 		var kind := String(gate.kind)
 		var a := bool(values[gate.inputs[0]])
@@ -117,11 +117,11 @@ static func evaluate(plan: Dictionary, input_word: int, state_word: int) -> Dict
 				return U.failure("LOGIC_INTERPRETER_UNSUPPORTED_GATE", {"kind": kind})
 		values[gate.output] = result
 		traversed += 1
-	var output_word := 0
+	var output_word: int = 0
 	for index in range(interface.output_signals.size()):
 		if bool(values[interface.output_signals[index]]):
 			output_word |= 1 << index
-	var next_state_word := 0
+	var next_state_word: int = 0
 	for index in range(plan.registers.size()):
 		var register: Dictionary = plan.registers[index]
 		if bool(values[register.inputs[0]]):

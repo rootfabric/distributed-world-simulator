@@ -38,6 +38,11 @@ func compile_fixture(graph: Dictionary, source_id: String, revision: int, capsul
 	return Compiler.compile(graph, Fixture.build_request(graph, source_id, revision), capsule_id)
 
 func _initialize() -> void:
+	for arg in OS.get_cmdline_user_args():
+		if arg == "--preflight":
+			print("FABRIC_R5_2_T2_PREFLIGHT=PASS")
+			quit(0)
+			return
 	var m = Measure.new("R5.2-T2-LOGIC-ADDER-COUNTER-R1")
 
 	var adder_graph := Fixture.make_adder_graph()

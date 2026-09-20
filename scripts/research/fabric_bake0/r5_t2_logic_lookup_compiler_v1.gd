@@ -18,7 +18,7 @@ static func compile(graph: Dictionary, request: Dictionary, capsule_id: String) 
 		return planned
 	var plan: Dictionary = planned.details
 	var interface: Dictionary = plan.interface
-	var address_bits := interface.input_signals.size() + interface.state_signals.size()
+	var address_bits: int = interface.input_signals.size() + interface.state_signals.size()
 	if address_bits > MAX_ADDRESS_BITS:
 		return U.failure("LOGIC_STATE_SPACE_TOO_LARGE", {"address_bits": address_bits, "maximum": MAX_ADDRESS_BITS})
 	if typeof(request.get("canonical_source_frontier")) != TYPE_DICTIONARY:
@@ -30,16 +30,16 @@ static func compile(graph: Dictionary, request: Dictionary, capsule_id: String) 
 			break
 	if not bound:
 		return U.failure("LOGIC_CANONICAL_GRAPH_SOURCE_MISMATCH")
-	var input_bits := interface.input_signals.size()
-	var output_bits := interface.output_signals.size()
-	var state_bits := interface.state_signals.size()
-	var input_mask := (1 << input_bits) - 1
-	var entries := 1 << address_bits
+	var input_bits: int = interface.input_signals.size()
+	var output_bits: int = interface.output_signals.size()
+	var state_bits: int = interface.state_signals.size()
+	var input_mask: int = (1 << input_bits) - 1
+	var entries: int = 1 << address_bits
 	var table: Array = []
 	table.resize(entries)
 	for address in range(entries):
-		var input_word := address & input_mask
-		var state_word := address >> input_bits
+		var input_word: int = address & input_mask
+		var state_word: int = address >> input_bits
 		var evaluated := Interpreter.evaluate(plan, input_word, state_word)
 		if not evaluated.success:
 			return evaluated

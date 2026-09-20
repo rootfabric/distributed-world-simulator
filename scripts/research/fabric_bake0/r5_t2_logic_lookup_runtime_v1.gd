@@ -85,10 +85,10 @@ func execute(live: Dictionary, input_word: int, state_word: int) -> Dictionary:
 			return U.failure("LOGIC_RUNTIME_STATE_OUT_OF_RANGE")
 	elif state_word < 0 or state_word > _state_mask:
 		return U.failure("LOGIC_RUNTIME_STATE_OUT_OF_RANGE")
-	var address := input_word | (state_word << _input_bits)
-	var packed := int(_table[address])
-	var output_word := packed & _output_mask
-	var next_state_word := (packed >> _output_bits) & _state_mask if _state_bits > 0 else 0
+	var address: int = input_word | (state_word << _input_bits)
+	var packed: int = int(_table[address])
+	var output_word: int = packed & _output_mask
+	var next_state_word: int = (packed >> _output_bits) & _state_mask if _state_bits > 0 else 0
 	return U.success({
 		"capsule_id": _capsule_id,
 		"output_word": output_word,

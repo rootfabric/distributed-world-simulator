@@ -19,11 +19,11 @@ static func create(
 	compiled_operation_count: int,
 	table: Array
 ) -> Dictionary:
-	var input_bits := interface_contract.input_signals.size()
-	var output_bits := interface_contract.output_signals.size()
-	var state_bits := interface_contract.state_signals.size()
-	var address_bits := input_bits + state_bits
-	var packed_bits := output_bits + state_bits
+	var input_bits: int = interface_contract.input_signals.size()
+	var output_bits: int = interface_contract.output_signals.size()
+	var state_bits: int = interface_contract.state_signals.size()
+	var address_bits: int = input_bits + state_bits
+	var packed_bits: int = output_bits + state_bits
 	var value := {
 		"schema": SCHEMA,
 		"graph_hash": graph_hash,
@@ -74,7 +74,7 @@ static func validate(value: Dictionary) -> Dictionary:
 		return U.failure("LOGIC_LOOKUP_ENTRY_COUNT_MISMATCH")
 	if typeof(value.get("table")) != TYPE_ARRAY or value.table.size() != int(value.entry_count):
 		return U.failure("INVALID_LOGIC_LOOKUP_TABLE")
-	var packed_limit := 1 << int(value.packed_result_bits)
+	var packed_limit: int = 1 << int(value.packed_result_bits)
 	for entry in value.table:
 		if not U.is_json_integer(entry) or int(entry) < 0 or int(entry) >= packed_limit:
 			return U.failure("INVALID_LOGIC_LOOKUP_ENTRY")
