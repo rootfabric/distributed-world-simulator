@@ -47,7 +47,11 @@ func _next_mvp8(snapshot: Dictionary) -> void:
 		finish(true, "")
 		return
 	var state: Dictionary = snapshot.get("mvp8", {})
-	if state.is_empty():
+	if state.is_empty() or not bool(state.get("active", false)):
+		# The first inherited MVP6-complete snapshot is produced before the
+		# gateway has seen any MVP8 command. Activate the workload explicitly
+		# before sending the first round MOVE; otherwise that MOVE is valid
+		# gameplay but intentionally not counted by the bounded workload gate.
 		send_request("MVP8_STATUS")
 		return
 	var round_index := int(state.get("round", -1))
