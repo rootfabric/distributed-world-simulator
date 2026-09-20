@@ -4,8 +4,8 @@
   "state": "IN_PROGRESS",
   "risk_class": "HIGH",
   "branch": "feature/eco-evo-arch2-a10-final-composition-r5",
-  "parent_r4": "9ab7bdf396fc0ecffc847397c4f2e3685f5ef92b",
-  "parent_r4_tree": "18b47b917c035f4cc66a7c4c4026d0aae004a44b",
+  "parent_r4": "96d152176a813535db6950085cb10fff33c1464f",
+  "parent_r4_tree": "b554647557a6b78b79c24f4cd3a8ef63513a6468",
   "goal": "Whole-A10 composition proof across A8 seam, production Region/Matter, explicit resource mapping, Construction damage and persistent body overlay.",
   "additive_paths": [
     "config/ecology/evo-arch2-a10-r5-work-order.v1.json",
@@ -43,9 +43,9 @@
     "main merge"
   ],
   "parent_refresh": {
-    "previous": "0169ad98b6a8f7179a60a1c50c5226050709f7c7",
-    "current": "9ab7bdf396fc0ecffc847397c4f2e3685f5ef92b",
-    "reason": "Fresh trust review: WARM-only R3 preparation, external R4 damage-event anchor, and R1/R2 rehashed-anchor falsifiers."
+    "previous": "9ab7bdf396fc0ecffc847397c4f2e3685f5ef92b",
+    "current": "96d152176a813535db6950085cb10fff33c1464f",
+    "reason": "Verifier-only repair: R4 exact verifier newline syntax fixed; runtime adapters/tests unchanged."
   },
   "repair_r2": {
     "platform": "Windows canonical double Godot 4.7.1 a13da4feb",
@@ -77,5 +77,9 @@
       "R4 apply_damage trusted self-sealed event bytes without caller-owned event authority anchor."
     ],
     "repair": "Add rehashed record/batch falsifiers; require WARM exactly for R3 preparation; require expected_event_binding_hash for R4 apply_damage and reject re-sealed semantic event against old trusted hash."
+  },
+  "verifier_repair_r1": {
+    "finding": "R4 verify.py accidentally contained a literal \\\\n in Python source and failed before runtime.",
+    "repair": "Replace literal backslash-n with a real newline; no R4 runtime code/test semantics changed."
   }
 }
