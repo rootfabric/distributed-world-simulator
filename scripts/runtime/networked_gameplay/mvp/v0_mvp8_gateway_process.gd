@@ -216,7 +216,10 @@ func _current8(actor: String) -> Dictionary:
 
 
 func _dig8(round_index: int) -> Dictionary:
-	var operation := "operation/mvp8/dig/%d" % round_index
+	# Reuse the accepted MVP4 actor-bound operation namespace. MVP8 owns only
+	# sequencing; the canonical Matter owner must continue enforcing its exact
+	# operation binding instead of accepting a new orchestration prefix.
+	var operation := "operation/mvp4/a/mvp8-dig/%d" % round_index
 	var prepared: Dictionary = {}
 	for direction in [[0.0, -1.0, 0.0], [0.6, -0.8, 0.0], [-0.6, -0.8, 0.0], [0.0, -0.8, 0.6]]:
 		prepared = _owner4("a", {"kind": "MVP4_PREPARE", "operation_id": operation, "direction": direction})
