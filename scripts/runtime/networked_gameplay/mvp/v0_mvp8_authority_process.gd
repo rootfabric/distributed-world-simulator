@@ -58,6 +58,9 @@ var _construction_root8 := ""
 var _construction_cut_file8 := ""
 var _matter_decisions8: Dictionary = {}
 var _recovery_decision_bootstrap8 := false
+var _recovery_setup_ready8 := false
+var _recovery_gameplay_ready8 := false
+var _recovery_construction_ready8 := false
 
 
 func create_shared_dig():
@@ -130,17 +133,26 @@ func _setup_recovery8(recovering: bool) -> Dictionary:
 	if not bool(configured.get("success", false)):
 		return configured
 	if recovering:
-		_generation8 = int(cfg.get("mvp8_generation", 1))
-		configured = _recovery8.require_minimum_generation7(_generation8)
-		if not bool(configured.get("success", false)):
-			return configured
-		configured = _recovery8.recover_latest()
-		if not bool(configured.get("success", false)):
-			return configured
-		_recovered8 = true
-		_checkpoint_receipt8 = Dictionary(configured.get("details", {}).get("checkpoint", {})).duplicate(true)
-		_shared_dig4 = _adapter8.get_shared_matter7()
+		return _restore_gameplay_state8()
 	return Protocol.success({"recovered": _recovered8, "generation": _generation8})
+
+
+func _restore_gameplay_state8() -> Dictionary:
+	if authority != "authority/a" or _recovery8 == null or _adapter8 == null:
+		return Protocol.failure("MVP8_RECOVERY_RUNTIME_NOT_CONFIGURED")
+	if _recovered8:
+		return Protocol.success({"replay": true, "recovered": true, "generation": _generation8})
+	_generation8 = int(cfg.get("mvp8_generation", 1))
+	var restored: Dictionary = _recovery8.require_minimum_generation7(_generation8)
+	if not bool(restored.get("success", false)):
+		return restored
+	restored = _recovery8.recover_latest()
+	if not bool(restored.get("success", false)):
+		return restored
+	_recovered8 = true
+	_checkpoint_receipt8 = Dictionary(restored.get("details", {}).get("checkpoint", {})).duplicate(true)
+	_shared_dig4 = _adapter8.get_shared_matter7()
+	return Protocol.success({"recovered": true, "generation": _generation8})
 
 
 func initialize_owner() -> Dictionary:
@@ -562,9 +574,9 @@ func _bounds8() -> Dictionary:
 	}
 
 
-func _recovery_init8(body: Dictionary) -> Dictionary:
-	if service != null:
-		return Protocol.failure("MVP3_DUPLICATE_NATIVE_BOOTSTRAP")
+func _bootstrap_recovery_decisions8(body: Dictionary) -> Dictionary:
+	if _recovery_decision_bootstrap8:
+		return Protocol.success({"replay": true})
 	var incoming = body.get("decisions", {})
 	if not incoming is Dictionary:
 		return Protocol.failure("MVP3_AUTHENTICATED_DECISIONS_REQUIRED")
@@ -587,21 +599,124 @@ func _recovery_init8(body: Dictionary) -> Dictionary:
 	var baseline := ingest_decisions({"decisions": bootstrap, "completed": {}})
 	if not bool(baseline.get("success", false)):
 		return baseline
-	# The fresh process now has the mandatory epoch-1 read-model baseline.
-	# Advance immediately to the authenticated current recovery decision before
-	# any player gate is bound or any client command is admitted.
 	var current_ingest := ingest_decisions(body)
 	if not bool(current_ingest.get("success", false)):
 		return current_ingest
 	_recovery_decision_bootstrap8 = true
+	return Protocol.success()
+
+
+func _compact_recovery_ack8(kind: String, result: Dictionary) -> Dictionary:
+	if not bool(result.get("success", false)):
+		return result
+	return Protocol.success({
+		"kind": kind,
+		"authority_id": authority,
+		"authority_process_id": OS.get_process_id(),
+		"recovery_stage": kind,
+	})
+
+
+func _recovery_setup_stage8(body: Dictionary) -> Dictionary:
+	if authority != "authority/a" or service != null or _recovery_setup_ready8:
+		return Protocol.failure("MVP8_RECOVERY_SETUP_STAGE_INVALID")
+	var boot := _bootstrap_recovery_decisions8(body)
+	if not bool(boot.get("success", false)):
+		return boot
+	service = Service8.new()
+	var setup: Dictionary = service.setup(authority, 1, 0, {
+		"profile": Service8.PROFILE_MULTIPLAYER_CORE,
+		"topology_adapter": "ENET",
+		"region_id": "region/mvp8/" + authority,
+		"fixed_tick_authority": true,
+		"mvp6_fixture_owner": true,
+		"mvp6_spatial_validation": true,
+	})
+	if not bool(setup.get("success", false)):
+		return setup
+	setup = _setup_recovery8(false)
+	if not bool(setup.get("success", false)):
+		return setup
+	_construction_root8 = String(cfg.get("mvp8_construction_root", "")).strip_edges()
+	_construction_cut_file8 = String(cfg.get("mvp8_construction_cut_file", "")).strip_edges()
+	if _construction_root8.is_empty() or _construction_cut_file8.is_empty():
+		return Protocol.failure("MVP8_CONSTRUCTION_PERSISTENCE_PATH_REQUIRED")
+	_recovery_setup_ready8 = true
+	return _compact_recovery_ack8("MVP8_RECOVERY_SETUP", Protocol.success())
+
+
+func _recovery_gameplay_stage8() -> Dictionary:
+	if authority != "authority/a" or not _recovery_setup_ready8 or _recovery_gameplay_ready8:
+		return Protocol.failure("MVP8_RECOVERY_GAMEPLAY_STAGE_INVALID")
+	var restored := _restore_gameplay_state8()
+	if not bool(restored.get("success", false)):
+		return restored
+	var expected_epochs: Dictionary = Dictionary(cfg.get(
+		"mvp8_player_ownership_epochs",
+		cfg.get("mvp8_authority_epochs", {"a": 1, "b": 1})
+	)).duplicate(true)
+	for actor in ["a", "b"]:
+		var joined: Dictionary = service.join(actor, Protocol.session(cfg, actor), "operation/mvp8/" + String(cfg["run_id"]) + "/join/" + actor)
+		if not bool(joined.get("success", false)):
+			return joined
+		if int(service.get_player(actor).get("ownership_epoch", 0)) != int(expected_epochs.get(actor, 1)):
+			return Protocol.failure("MVP8_RECOVERED_OWNERSHIP_EPOCH_MISMATCH:" + actor)
+	initial_snapshot = service.create_snapshot()
+	initial_graph = service.create_canonical_item_graph_snapshot()
+	live_port = service.get_live_player_transfer_port()
+	if live_port == null:
+		return Protocol.failure("MVP8_NATIVE_LIVE_PORT_MISSING")
+	source_view = Views8.SourceReceiptView.new()
+	source_view.config = cfg.duplicate(true)
+	source_view.source_authority = "authority/b"
+	source_view.source_key = String(cfg["internal_keys"]["authority/b"])
+	var peer_setup: Dictionary = live_port.register_peer("authority/b", source_view)
+	if not bool(peer_setup.get("success", false)):
+		return peer_setup
+	for actor in ["a", "b"]:
+		var bound: Dictionary = live_port.bind_player(actor, Protocol.session(cfg, actor), int(expected_epochs.get(actor, 1)), decisions[actor])
+		if not bool(bound.get("success", false)):
+			return bound
+	clock = Scheduler8.new()
+	var clock_ready: Dictionary = clock.configure(60, 8, int(service.get_report().get("server_tick", 0)))
+	if not bool(clock_ready.get("success", false)):
+		return clock_ready
+	_recovery_gameplay_ready8 = true
+	return _compact_recovery_ack8("MVP8_RECOVERY_GAMEPLAY", Protocol.success())
+
+
+func _recovery_construction_stage8() -> Dictionary:
+	if authority != "authority/a" or not _recovery_gameplay_ready8 or _recovery_construction_ready8:
+		return Protocol.failure("MVP8_RECOVERY_CONSTRUCTION_STAGE_INVALID")
+	var restored := _restore_construction8()
+	if not bool(restored.get("success", false)):
+		return restored
+	_recovery_construction_ready8 = true
+	return _compact_recovery_ack8("MVP8_RECOVERY_CONSTRUCTION", Protocol.success())
+
+
+func _recovery_init8(body: Dictionary) -> Dictionary:
+	# Compatibility path for direct tests. The production MVP8 gateway uses the
+	# staged recovery handshake below so ENet servicing resumes between restore
+	# participants.
+	var boot := _bootstrap_recovery_decisions8(body)
+	if not bool(boot.get("success", false)):
+		return boot
 	var result := initialize_owner()
 	return native_envelope("INIT", "", result)
 
 
 func handle_rpc(body: Dictionary) -> Dictionary:
 	var kind := String(body.get("kind", ""))
-	if kind == "INIT" and bool(cfg.get("mvp8_recovery", false)):
-		return _recovery_init8(body)
+	if bool(cfg.get("mvp8_recovery", false)):
+		if kind == "MVP8_RECOVERY_SETUP":
+			return _recovery_setup_stage8(body)
+		if kind == "MVP8_RECOVERY_GAMEPLAY":
+			return _recovery_gameplay_stage8()
+		if kind == "MVP8_RECOVERY_CONSTRUCTION":
+			return _recovery_construction_stage8()
+		if kind == "INIT":
+			return _recovery_init8(body)
 	if not kind.begins_with("MVP8_"):
 		return super.handle_rpc(body)
 	if closing_ms > 0:
@@ -664,6 +779,11 @@ func report(passed: bool, phase: String) -> Dictionary:
 		"construction_root": _construction_root8,
 		"canonical_state_owned": authority == "authority/a",
 		"recovery_decision_bootstrap": _recovery_decision_bootstrap8,
+		"recovery_stages": {
+			"setup": _recovery_setup_ready8,
+			"gameplay": _recovery_gameplay_ready8,
+			"construction": _recovery_construction_ready8,
+		},
 		"mvp8_predicate_verified": false,
 	}
 	return value

@@ -143,7 +143,16 @@ func initialize_native() -> bool:
 		var link = BackendLink8.new()
 		links[authority_id] = link
 		okay = success(link.start(cfg, authority_id, int(cfg["ports"][authority_id]), String(cfg["internal_keys"][authority_id])), "authenticated backend " + authority_id)
-	if okay:
+	if okay and _recovery_boot8:
+		if not success(call_authority("authority/a", {"kind": "MVP8_RECOVERY_SETUP"}), "MVP8 recovery setup authority/a"):
+			okay = false
+		elif not success(call_authority("authority/b", {"kind": "INIT"}), "native owner init authority/b"):
+			okay = false
+		elif not success(call_authority("authority/a", {"kind": "MVP8_RECOVERY_GAMEPLAY"}), "MVP8 recovery gameplay authority/a"):
+			okay = false
+		elif not success(call_authority("authority/a", {"kind": "MVP8_RECOVERY_CONSTRUCTION"}), "MVP8 recovery Construction authority/a"):
+			okay = false
+	elif okay:
 		for authority_id in ["authority/a", "authority/b"]:
 			if not success(call_authority(authority_id, {"kind": "INIT"}), "native owner init " + authority_id):
 				okay = false
