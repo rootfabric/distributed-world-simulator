@@ -154,38 +154,31 @@ func _test_mutation_on_off() -> void:
 	_check(on_events > off_events or (on_events == 0 and off_events == 0),
 		"mutation metrics differ or both runs correctly recorded zero (on=%d off=%d)" % [on_events, off_events])
 
-func _test_profile_blocked() -> void:
+func _test_profile_applied() -> void:
 	var runner := Batch.new()
 	var plan := Batch.profile_free_vs_visual(_base_manifest(1001), [1001])
-	plan.horizon_ticks = 8
+	plan.horizon_ticks = 16
 	var batch: Dictionary = runner.run_batch(plan)
-	_check(bool(batch.get("success", false)), "profile_free_vs_visual batch succeeds")
+	_check(bool(batch.get("success", false)), "profile batch succeeds")
 	var results: Array = batch.results
-	_check(results.size() == 3, "profile batch: FREE + SOFT + NMS_LIKE all reported (blocked kept, not excluded)")
+	_check(results.size() == 3, "profile batch reports FREE + SOFT + NMS_LIKE")
 	var by_name := {}
 	for result in results:
 		by_name[String(result.variation_name)] = result
-	_check(String(by_name["profile-free"].status) == "COMPLETED", "FREE profile runs COMPLETED")
-	for blocked_name in ["profile-soft", "profile-nms-like"]:
-		var blocked: Dictionary = by_name[blocked_name]
-		_check(String(blocked.status) == "BLOCKED_CANONICAL_EXTENSION_REQUIRED",
-			"%s recorded as BLOCKED_CANONICAL_EXTENSION_REQUIRED" % blocked_name)
-		_check(String(blocked.final_state_hash).is_empty() and String(blocked.initial_state_hash).is_empty(),
-			"%s never touched canonical state (no state hashes)" % blocked_name)
-		_check(not String(blocked.required_hook).is_empty(), "%s documents the required canonical hook" % blocked_name)
-		_check(String(blocked.status) == Profile.BLOCKED_STATUS, "%s status matches OrganizationProfile constant" % blocked_name)
-	# Canonical state untouched by the blocked attempts: the FREE run equals a
-	# plain controller run of the EXACT derived manifest (same identity).
+		_check(String(result.status) == "COMPLETED", "%s is a real canonical run" % String(result.variation_name))
+		_check(not String(result.initial_state_hash).is_empty() and not String(result.final_state_hash).is_empty(), "%s carries canonical state hashes" % String(result.variation_name))
+	for name in ["profile-soft", "profile-nms-like"]:
+		var mode := "SOFT" if name == "profile-soft" else "NMS_LIKE"
+		var applied := Profile.apply_development_bias(Profile.preset(mode))
+		_check(bool(applied.get("success", false)) and bool(applied.get("applied", false)), "%s uses applied canonical bias" % name)
+	# FREE path still equals a plain controller run of the exact derived manifest.
 	var free_result: Dictionary = by_name["profile-free"]
-	var runner2 := Batch.new()
-	var derived: Dictionary = runner2.derive_manifest(_base_manifest(1001),
-		{"name": "profile-free", "organization_profile": "FREE"}, 1001, 8)
-	_check(bool(derived.get("success", false)), "derive_manifest succeeds for the FREE variation")
+	var derived: Dictionary = runner.derive_manifest(_base_manifest(1001), {"name":"profile-free","organization_profile":"FREE"}, 1001, 16)
+	_check(bool(derived.get("success", false)), "derive_manifest FREE succeeds")
 	var plain := Controller.new()
 	plain.initialize(derived.manifest)
-	plain.run(8)
-	_check(String(free_result.final_state_hash) == String(plain.get_snapshot().canonical_state_hash),
-		"FREE batch run hash == plain controller run of the derived manifest (blocked profiles changed nothing)")
+	plain.run(16)
+	_check(String(free_result.final_state_hash) == String(plain.get_snapshot().canonical_state_hash), "FREE batch == plain controller")
 
 func _test_report_round_trip(batch: Dictionary) -> void:
 	var runner := Batch.new()
@@ -264,14 +257,14 @@ func _test_helpers_and_validation() -> void:
 	capped.erase("horizon_ticks")
 	var capped_batch: Dictionary = runner.run_batch(capped)
 	_check(bool(capped_batch.get("success", false)) and int(capped_batch.horizon_ticks) == 32,
-		"default batch horizon capped at 32 (A6 O(steps^2) guard)")
+		"default batch horizon remains bounded at 32 by runner policy")
 
 func _run() -> void:
 	var batch := _test_small_batch()
 	_test_determinism(batch)
 	_test_seed_divergence(batch)
 	_test_mutation_on_off()
-	_test_profile_blocked()
+	_test_profile_applied()
 	_test_report_round_trip(batch)
 	_test_comparison(batch)
 	_test_helpers_and_validation()
