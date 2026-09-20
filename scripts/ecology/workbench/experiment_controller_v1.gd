@@ -101,6 +101,86 @@ func step() -> Dictionary:
 func run_n(n_ticks: int) -> Dictionary:
 	return run(n_ticks)
 
+## Advance to an absolute simulation tick (P5 time control). Exactly
+## equivalent to run(target - current_tick); wall-clock independent.
+func run_to_tick(target_tick: int) -> Dictionary:
+	if _status == "IDLE":
+		return _command_fail("CONTROLLER_NOT_INITIALIZED")
+	if _status == "FAILED":
+		return _failed_command()
+	if not C.integer(target_tick, 0, int(_manifest.horizon_ticks)):
+		return _command_fail("CONTROLLER_TARGET_TICK")
+	if target_tick < _tick:
+		return _command_fail("CONTROLLER_TARGET_TICK")
+	var remaining := target_tick - _tick
+	if remaining == 0:
+		return {"success": true, "tick": _tick, "status": _status}
+	return run(remaining)
+
+## Advance until max lineage depth reaches target_generation (or the horizon
+## stops the loop). Returns {"generation": <reached depth>}.
+func run_to_generation(target_generation: int) -> Dictionary:
+	var guard := _run_guard(1)
+	if not guard.success:
+		return guard
+	if not C.integer(target_generation, 1, C.MAX_INT):
+		return _command_fail("CONTROLLER_TARGET_GENERATION")
+	while _tick < int(_manifest.horizon_ticks) and _max_lineage_depth() < target_generation:
+		_tick_once()
+		if _status == "FAILED":
+			return {"success": false, "error": _error, "status": _status, "tick": _tick}
+	_status = "RUNNING"
+	return {"success": true, "tick": _tick, "status": _status, "generation": _max_lineage_depth()}
+
+## Advance until a run condition is met (or the horizon stops the loop).
+## condition: {"population_at_least": int} OR {"tick": int} (tick == horizon).
+## Returns {"met": bool} — false when the horizon was reached first.
+func run_to_condition(condition: Dictionary) -> Dictionary:
+	var guard := _run_guard(1)
+	if not guard.success:
+		return guard
+	var error := _validate_condition(condition)
+	if not error.is_empty():
+		return _command_fail(error)
+	while not _condition_met(condition):
+		if _tick >= int(_manifest.horizon_ticks):
+			return {"success": true, "tick": _tick, "status": _status, "met": false}
+		_tick_once()
+		if _status == "FAILED":
+			return {"success": false, "error": _error, "status": _status, "tick": _tick}
+	_status = "RUNNING"
+	return {"success": true, "tick": _tick, "status": _status, "met": true}
+
+func _validate_condition(condition: Dictionary) -> String:
+	if not condition is Dictionary or condition.size() != 1:
+		return "CONTROLLER_CONDITION"
+	if condition.has("population_at_least"):
+		if not C.integer(condition.population_at_least, 0, C.MAX_INT):
+			return "CONTROLLER_CONDITION_POPULATION"
+	elif condition.has("tick"):
+		if not C.integer(condition.tick, 0, int(_manifest.horizon_ticks)):
+			return "CONTROLLER_CONDITION_TICK"
+	else:
+		return "CONTROLLER_CONDITION"
+	return ""
+
+func _condition_met(condition: Dictionary) -> bool:
+	if condition.has("population_at_least"):
+		return _population.size() >= int(condition.population_at_least)
+	if condition.has("tick"):
+		return _tick >= int(condition.tick)
+	return true
+
+func _max_lineage_depth() -> int:
+	var by_id := {}
+	for entry in _population:
+		by_id[entry.state.individual_id] = entry
+	var depths := {}
+	var depth := 0
+	for entry in _population:
+		depth = maxi(depth, _lineage_depth(String(entry.state.individual_id), by_id, depths))
+	return depth
+
 ## Re-initialize from the stored manifest + founder registry (determinism).
 func reset() -> Dictionary:
 	if _manifest.is_empty():

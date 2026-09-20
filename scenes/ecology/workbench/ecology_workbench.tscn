@@ -13,7 +13,7 @@ script = ExtResource("1")
 anchors_preset = 0
 offset_left = 16.0
 offset_top = 16.0
-offset_right = 500.0
+offset_right = 1400.0
 offset_bottom = 48.0
 
 [node name="Run" type="Button" parent="WorkbenchUI/ExperimentControls"]
@@ -23,18 +23,80 @@ text = "RUN"
 text = "PAUSE"
 
 [node name="Step" type="Button" parent="WorkbenchUI/ExperimentControls"]
-text = "STEP"
+text = "STEP 1"
 
-[node name="Reset" type="Button" parent="WorkbenchUI/ExperimentControls"]
-text = "RESET"
+[node name="StepNSpin" type="SpinBox" parent="WorkbenchUI/ExperimentControls"]
+min_value = 1.0
+max_value = 1000.0
+value = 5.0
+
+[node name="StepN" type="Button" parent="WorkbenchUI/ExperimentControls"]
+text = "STEP N"
 
 [node name="Fast" type="Button" parent="WorkbenchUI/ExperimentControls"]
 text = "FAST"
 
-[node name="StatusBar" type="Label" parent="WorkbenchUI"]
+[node name="TickTarget" type="SpinBox" parent="WorkbenchUI/ExperimentControls"]
+min_value = 0.0
+max_value = 10000000.0
+value = 32.0
+
+[node name="RunToTick" type="Button" parent="WorkbenchUI/ExperimentControls"]
+text = "RUN TO TICK"
+
+[node name="GenTarget" type="SpinBox" parent="WorkbenchUI/ExperimentControls"]
+min_value = 1.0
+max_value = 1000.0
+value = 2.0
+
+[node name="RunToGen" type="Button" parent="WorkbenchUI/ExperimentControls"]
+text = "RUN TO GEN"
+
+[node name="ConditionKind" type="OptionButton" parent="WorkbenchUI/ExperimentControls"]
+item_count = 2
+popup/item_0/text = "POPULATION >= X"
+popup/item_1/text = "TICK == HORIZON"
+selected = 0
+
+[node name="ConditionValue" type="SpinBox" parent="WorkbenchUI/ExperimentControls"]
+min_value = 0.0
+max_value = 10000000.0
+value = 4.0
+
+[node name="RunToCondition" type="Button" parent="WorkbenchUI/ExperimentControls"]
+text = "RUN TO COND"
+
+[node name="Reset" type="Button" parent="WorkbenchUI/ExperimentControls"]
+text = "RESET"
+
+[node name="PlacementControls" type="HBoxContainer" parent="WorkbenchUI"]
 anchors_preset = 0
 offset_left = 16.0
 offset_top = 56.0
+offset_right = 1400.0
+offset_bottom = 88.0
+
+[node name="PlacementPreset" type="OptionButton" parent="WorkbenchUI/PlacementControls"]
+
+[node name="GeneratePlacement" type="Button" parent="WorkbenchUI/PlacementControls"]
+text = "GEN PLACEMENT"
+
+[node name="EnvZone" type="OptionButton" parent="WorkbenchUI/PlacementControls"]
+
+[node name="EnvField" type="OptionButton" parent="WorkbenchUI/PlacementControls"]
+
+[node name="EnvValue" type="SpinBox" parent="WorkbenchUI/PlacementControls"]
+min_value = -10.0
+max_value = 2000000000.0
+value = 0.0
+
+[node name="ApplyEnvPatch" type="Button" parent="WorkbenchUI/PlacementControls"]
+text = "APPLY ENV"
+
+[node name="StatusBar" type="Label" parent="WorkbenchUI"]
+anchors_preset = 0
+offset_left = 16.0
+offset_top = 96.0
 offset_right = 900.0
-offset_bottom = 80.0
+offset_bottom = 120.0
 text = "not bound"
