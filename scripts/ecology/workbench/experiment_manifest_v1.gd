@@ -45,7 +45,10 @@ const MAX_FOUNDERS := 4096
 ## references, invalid environment configuration and unknown enum values
 ## are hard errors.
 static func validate(value: Variant) -> String:
-	if not C.keys(value, FIELDS) or value.schema != SCHEMA:
+	var exact_fields: Array = FIELDS.duplicate()
+	if value is Dictionary and value.has("genesis"):
+		exact_fields.append("genesis")
+	if not C.keys(value, exact_fields) or value.schema != SCHEMA:
 		return "MANIFEST_SCHEMA"
 	if not C.identifier(value.experiment_id):
 		return "MANIFEST_EXPERIMENT_ID"
@@ -57,6 +60,9 @@ static func validate(value: Variant) -> String:
 		return "MANIFEST_MODE"
 	if not value.organization_profile is String or not value.organization_profile in ORGANIZATION_MODES:
 		return "MANIFEST_ORGANIZATION_PROFILE"
+	if value.has("genesis"):
+		if not value.genesis is Dictionary or not C.keys(value.genesis, ["founder_endowment"]) or not B.valid_stock(value.genesis.founder_endowment):
+			return "MANIFEST_GENESIS"
 	var founder_error := _validate_founders(value.founders)
 	if not founder_error.is_empty():
 		return founder_error

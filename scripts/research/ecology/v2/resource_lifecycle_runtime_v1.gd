@@ -88,12 +88,15 @@ static func step_population(field: Dictionary, population: Array, owner_token: S
 	propagules.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return a.id < b.id)
 	return {"success": true, "field": field_after, "population": next_population, "propagules": propagules, "field_hash": Field.state_hash(field_after)}
 
-static func materialize_propagule(propagule: Dictionary, blueprint: Dictionary, paid_parent_state: Dictionary = {}) -> Dictionary:
-	var state := LS.create_parent_transfer(blueprint, propagule, paid_parent_state)
+static func materialize_propagule(propagule: Dictionary, blueprint: Dictionary, paid_parent_state: Dictionary = {}, mutation_receipt: Dictionary = {}) -> Dictionary:
+	var state := LS.create_parent_transfer(blueprint, propagule, paid_parent_state) if mutation_receipt.is_empty() else LS.create_mutated_parent_transfer(blueprint, propagule, paid_parent_state, mutation_receipt)
 	return {"blueprint": blueprint.duplicate(true), "state": state} if not state.is_empty() else {}
 
-static func validate_propagule(v: Variant, blueprint: Dictionary, paid_parent_state: Dictionary = {}) -> String:
-	return LS.validate_parent_transfer_witness(v, blueprint, paid_parent_state)
+static func validate_propagule(v: Variant, blueprint: Dictionary, paid_parent_state: Dictionary = {}, mutation_receipt: Dictionary = {}) -> String:
+	if mutation_receipt.is_empty():
+		return LS.validate_parent_transfer_witness(v, blueprint, paid_parent_state)
+	var state := LS.create_mutated_parent_transfer(blueprint, v, paid_parent_state, mutation_receipt)
+	return "" if not state.is_empty() else "PROPAGULE_MUTATION_TRANSFER"
 
 static func _advance_individual(source: Dictionary, blueprint: Dictionary, sample: Dictionary, field_intake: Dictionary) -> Dictionary:
 	var state := source.duplicate(true)

@@ -3,17 +3,9 @@
 #   FREE / SOFT / EARTH_LIKE / NMS_LIKE / CUSTOM (manifest enum). Three rule
 #   classes are STRICTLY separated (brief §18-19) and never mix:
 #   a) VISUAL_ONLY — {palette, material_hint, smoothing, presentation_detail};
-#      applied ONLY to the generic realizer's visual_profile (colour /
-#      detail). NEVER influences canonical state. The ONLY implemented class.
-#   b) DEVELOPMENT_BIAS — a canonical hook in A3 (genome_mutation/development)
-#      does NOT exist today: the A5 parent-transfer witness rejects mutated
-#      genomes (known since P2) and OPERATORS is a closed canonical list.
-#      Per brief §18 there must be NO polygon-only mutation engine: profiles
-#      of this class return status BLOCKED_CANONICAL_EXTENSION_REQUIRED with
-#      the required canonical hook description. The formal canonical
-#      extension proposal lives in
-#      docs/research/ecology/ECO_ARCH2_A10_5_P9_DEVELOPMENT_BIAS_EXTENSION_RU.md
-#      (STOP condition, properly documented).
+#      applied ONLY to the generic realizer visual_profile. NEVER influences canonical state.
+#   b) DEVELOPMENT_BIAS — explicit canonical input implemented by the shared A3 bias hook;
+#      it only reweights already-allowed operators. A5 mutation receipts prove inherited variants.
 #   c) BIOLOGICAL/WORLD CONSTRAINT — canonical law (conservation, resource
 #      costs, world physics, ownership), OUTSIDE OrganizationProfile by
 #      definition. No code stub here; documented for completeness.
@@ -25,6 +17,8 @@
 class_name EcoWorkbenchOrganizationProfileV1
 extends RefCounted
 
+const Mutation = preload("res://scripts/research/ecology/v2/genome_mutation_v1.gd")
+
 const SCHEMA := "dws.ecology.workbench.organization-profile.v1"
 const MODES := ["FREE", "SOFT", "EARTH_LIKE", "NMS_LIKE", "CUSTOM"]
 const RULE_CLASSES := ["VISUAL_ONLY", "DEVELOPMENT_BIAS", "BIOLOGICAL_WORLD_CONSTRAINT"]
@@ -33,12 +27,10 @@ const VERSION := 1
 # The STOP-conditional status required by the brief for DEVELOPMENT_BIAS.
 const BLOCKED_STATUS := "BLOCKED_CANONICAL_EXTENSION_REQUIRED" # historical status; no longer returned after Repair R1
 const APPLIED_STATUS := "APPLIED_CANONICAL_BIAS"
-# The canonical API that must exist before DEVELOPMENT_BIAS can be realized.
-const REQUIRED_HOOK := "A3 genome_mutation_v1 must accept a named, versioned bias (reweighting only ALLOWED operators/transitions) AND the A5 parent-transfer witness must admit genomes provably produced by that canonical hook; see docs/research/ecology/ECO_ARCH2_A10_5_P9_DEVELOPMENT_BIAS_EXTENSION_RU.md"
 
 # Rule class per manifest mode. FREE/CUSTOM are pure VISUAL_ONLY acceptance
 # modes; the "organization" presets (SOFT/EARTH_LIKE/NMS_LIKE) DECLARE a
-# development-bias intent (blocked until the canonical extension exists);
+# development-bias intent implemented through the shared canonical A3/A5 extension;
 # their visual part still applies (presentation-only).
 const RULE_CLASS_BY_MODE := {
 	"FREE": "VISUAL_ONLY",
@@ -122,12 +114,8 @@ static func visual_profile(profile: Dictionary) -> Dictionary:
 		"smoothing": bool(profile.visual.smoothing),
 	}
 
-## DEVELOPMENT_BIAS application request. The canonical hook does not exist
-## (closed OPERATORS list + A5 parent-transfer witness rejects mutated
-## genomes), so by the brief §18 rule there is NO polygon-only mutation
-## engine: every DEVELOPMENT_BIAS profile is blocked with the required
-## canonical extension documented. VISUAL_ONLY profiles are simply not
-## applicable here. Pure: NEVER mutates anything.
+## DEVELOPMENT_BIAS application request. The profile returns a validated canonical A3 bias;
+## simulation applies it through the shared composed runtime. No polygon-only mutation engine exists.
 static func canonical_bias(profile: Dictionary) -> Dictionary:
 	var error := validate(profile)
 	if not error.is_empty() or String(profile.rule_class) != "DEVELOPMENT_BIAS": return {}
@@ -155,8 +143,7 @@ static func apply_development_bias(profile: Dictionary) -> Dictionary:
 				"detail": "biological/world constraints remain outside OrganizationProfile"}
 	return {"success": false, "status": "REJECTED", "error": "PROFILE_RULE_CLASS"}
 
-## Deterministic bias weights for a given seed (provenance reports only;
-## never consumed by simulation while DEVELOPMENT_BIAS is blocked).
+## Deterministic canonical bias weights/provenance.
 static func resolve_weights(profile: Dictionary, seed: int) -> Dictionary:
 	var error := validate(profile)
 	if not error.is_empty(): return {}
