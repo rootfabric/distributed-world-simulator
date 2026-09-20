@@ -410,8 +410,8 @@ func _checkpoint8() -> Dictionary:
 
 
 func _bounds8() -> Dictionary:
-	var replay := service.export_replay_state() if service != null else {}
-	var pending := _outbox8.get_pending_records().size() if _outbox8 != null else 0
+	var replay: Dictionary = service.export_replay_state() if service != null else {}
+	var pending: int = _outbox8.get_pending_records().size() if _outbox8 != null else 0
 	var terminal := 0
 	if not _construction6.is_empty():
 		terminal = Array(_construction6["gateway"].export_state().get("terminal_commands", [])).size()
