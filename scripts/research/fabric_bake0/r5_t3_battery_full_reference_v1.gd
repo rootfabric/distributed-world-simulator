@@ -104,18 +104,18 @@ static func execute(plan: Dictionary, state: Dictionary, current_a: float, dt_s:
 			var cell_conductance := 1.0 / resistance_t
 			var cell_current := current_a * cell_conductance / conductance_t
 			heat_j += cell_current * cell_current * resistance_t * dt_s
-		chemical_delta_j += CellPhysics.chemical_energy_j(
-			float(row.capacity_c),
-			old_charge * float(row.capacity_c) / capacity,
-			float(row.empty_voltage_v),
-			float(row.full_voltage_v)
-		)
-		chemical_delta_j -= CellPhysics.chemical_energy_j(
-			float(row.capacity_c),
-			next_charge * float(row.capacity_c) / capacity,
-			float(row.empty_voltage_v),
-			float(row.full_voltage_v)
-		)
+			chemical_delta_j += CellPhysics.chemical_energy_j(
+				float(row.capacity_c),
+				old_charge * float(row.capacity_c) / capacity,
+				float(row.empty_voltage_v),
+				float(row.full_voltage_v)
+			)
+			chemical_delta_j -= CellPhysics.chemical_energy_j(
+				float(row.capacity_c),
+				next_charge * float(row.capacity_c) / capacity,
+				float(row.empty_voltage_v),
+				float(row.full_voltage_v)
+			)
 		next_charges.append(clampf(next_charge, 0.0, capacity))
 
 	if absf(current_a) > pack_current_limit:
