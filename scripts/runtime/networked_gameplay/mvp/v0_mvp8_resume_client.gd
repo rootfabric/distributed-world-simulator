@@ -27,6 +27,8 @@ var fixed_receipts := 0
 var max_reply_ms := 0
 var current_send_ms := 0
 var collision_parts := 0
+var construction_parts := 0
+var construction_counts_seen: Array[int] = []
 var current_world_digest := ""
 var matter_resynced := false
 var final_round := -1
@@ -97,9 +99,20 @@ func _validate_current8(current: Dictionary, digest: String = "") -> bool:
 	var material: Dictionary = current.get("material", {})
 	var matter: Dictionary = current.get("matter", {})
 	var player: Dictionary = current.get("player", {})
-	if Array(construction.get("parts", [])).size() != 100 or String(construction.get("checksum", "")).length() != 64:
+	var snapshot: Dictionary = current.get("snapshot", {})
+	var workload: Dictionary = snapshot.get("mvp8", {})
+	var action_counts: Dictionary = workload.get("action_counts", {})
+	# Reuse the already accepted MVP6 phase contract. A completed ADD exposes
+	# 101 parts/colliders until the matching REMOVE returns the same construct to
+	# 100. Requiring 100 at every sample falsely rejects the legitimate round-10
+	# intermediate state; final completion still requires 100 below.
+	var expected_parts := 101 if int(action_counts.get("BUILD_ADD", 0)) > int(action_counts.get("BUILD_REMOVE", 0)) else 100
+	construction_parts = Array(construction.get("parts", [])).size()
+	if construction_parts != expected_parts or String(construction.get("checksum", "")).length() != 64:
 		failures.append("MVP8_CURRENT_CONSTRUCTION_REQUIRED")
 		return false
+	if construction_parts not in construction_counts_seen:
+		construction_counts_seen.append(construction_parts)
 	if String(material.get("item_graph_checksum", "")).length() != 64 or int(matter.get("stream_sequence", -1)) < 1:
 		failures.append("MVP8_CURRENT_ITEM_MATTER_REQUIRED")
 		return false
@@ -114,7 +127,7 @@ func _validate_current8(current: Dictionary, digest: String = "") -> bool:
 			failures.append("MVP8_RUNTIME_VIEW_SETUP_FAILED")
 			return false
 	var applied: Dictionary = view.apply_snapshot(construction)
-	if not bool(applied.get("success", false)) or int(applied.get("collision_part_count", 0)) != 100:
+	if not bool(applied.get("success", false)) or int(applied.get("collision_part_count", 0)) != expected_parts:
 		failures.append("MVP8_CURRENT_COLLISION_REQUIRED")
 		return false
 	collision_parts = int(applied.get("collision_part_count", 0))
@@ -301,6 +314,8 @@ func finish8(requested_pass: bool) -> void:
 		"fixed_input_receipts": fixed_receipts,
 		"max_reply_ms": max_reply_ms,
 		"collision_part_count": collision_parts,
+		"construction_part_count": construction_parts,
+		"construction_counts_seen": construction_counts_seen.duplicate(),
 		"current_world_digest": current_world_digest,
 		"matter_resynced": matter_resynced,
 		"failures": failures,
