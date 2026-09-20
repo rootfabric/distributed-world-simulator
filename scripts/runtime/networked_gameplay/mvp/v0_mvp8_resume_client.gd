@@ -28,6 +28,7 @@ var max_reply_ms := 0
 var current_send_ms := 0
 var collision_parts := 0
 var current_world_digest := ""
+var matter_resynced := false
 var final_round := -1
 var view = null
 
@@ -167,6 +168,9 @@ func _advance8(snapshot: Dictionary) -> void:
 	final_round = round_index
 	if round_index >= 0 and round_index not in rounds_seen:
 		rounds_seen.append(round_index)
+	if bool(state.get("recovery_boot", false)) and not matter_resynced:
+		send8("MVP8_MATTER_CONNECT")
+		return
 	if bool(state.get("complete", false)) or bool(state.get("checkpointed", false)):
 		send8("MVP8_PHASE_FINISH")
 		return
@@ -214,6 +218,8 @@ func handle_reply8(packet: Dictionary) -> void:
 			fail8("MVP8_FIXED_TICK_RECEIPT_MISSING")
 			return
 		fixed_receipts += 1
+	elif requested == "MVP8_MATTER_CONNECT":
+		matter_resynced = true
 	elif requested == "MVP8_STATUS":
 		var current: Dictionary = details.get("current", {})
 		if not _validate_current8(current, String(current.get("world_digest", details.get("world_digest", "")))):
@@ -293,6 +299,7 @@ func finish8(requested_pass: bool) -> void:
 		"max_reply_ms": max_reply_ms,
 		"collision_part_count": collision_parts,
 		"current_world_digest": current_world_digest,
+		"matter_resynced": matter_resynced,
 		"failures": failures,
 		"canonical_state_owned": false,
 		"mvp8_predicate_verified": false,

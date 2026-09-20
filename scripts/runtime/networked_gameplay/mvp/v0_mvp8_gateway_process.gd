@@ -12,6 +12,7 @@ const Carry8 = preload("res://scripts/runtime/networked_gameplay/sm1/sm1_player_
 const Pivot8 = preload("res://scripts/runtime/networked_gameplay/sm1/sm1_gateway_route_pivot.gd")
 const Support8 = preload("res://scripts/runtime/networked_gameplay/sm1/sm1_6_process_support.gd")
 const Utils8 = preload("res://scripts/network/contracts/network_contract_utils.gd")
+const SyncRequest8 = preload("res://scripts/simulation/matter/network/matter_replication_sync_request.gd")
 
 const TOTAL_ROUNDS8 := 12
 const RECONNECT_AFTER_ROUND8 := 4
@@ -50,6 +51,7 @@ var _backend_liveness_last_ms8 := 0
 var _backend_liveness_last8: Dictionary = {}
 var _seam_crossings8 := 0
 var _handoff_stage8 := "IDLE"
+var _matter_resynced8 := {"a": false, "b": false}
 
 
 func _phase8() -> String:
@@ -506,6 +508,7 @@ func _publish_progress8() -> void:
 		"dig_hits": _dig_hits8.duplicate(true),
 		"reconnect_complete": _reconnect_complete8,
 		"checkpointed": _checkpointed8,
+		"matter_resynced": _matter_resynced8.duplicate(true),
 		"mvp6": {
 			"phase": _phase6,
 			"complete": _complete6(),
@@ -530,6 +533,7 @@ func world_snapshot() -> Dictionary:
 		"checkpoint_due": _round8 == RESTART_AFTER_ROUND8 and not _recovery_boot8 and not _checkpointed8,
 		"checkpointed": _checkpointed8,
 		"recovery_boot": _recovery_boot8,
+		"matter_resynced": _matter_resynced8.duplicate(true),
 		"complete": _round8 >= TOTAL_ROUNDS8,
 		"bounds": _bounds8.duplicate(true),
 		"last_dig": _last_dig8.duplicate(true),
@@ -545,6 +549,34 @@ func handle_client(actor: String, body: Dictionary) -> Dictionary:
 	if not bool(client_hello.get(actor, false)):
 		return Protocol8.failure("MVP8_HELLO_REQUIRED")
 	_active8 = true
+	if kind == "MVP8_MATTER_CONNECT":
+		if not _recovery_boot8:
+			return Protocol8.failure("MVP8_MATTER_RESYNC_ONLY_AFTER_RESTART")
+		if bool(_matter_resynced8.get(actor, false)):
+			return Protocol8.success({"replay": true, "actor": actor, "snapshot": world_snapshot()})
+		var report_rpc := _owner4(actor, {"kind": "MVP4_REPORT"})
+		if not bool(report_rpc.get("success", false)):
+			return report_rpc
+		var matter: Dictionary = Dictionary(report_rpc.get("details", {})).duplicate(true)
+		var sync := SyncRequest8.create(
+			"client/mvp4/" + actor,
+			Protocol8.session(cfg, actor),
+			1,
+			int(matter.get("stream_sequence", 0)),
+			String(matter.get("state_hash", ""))
+		)
+		var connected := _owner4(actor, {"kind": "MVP4_CONNECT", "sync_request": sync})
+		if not bool(connected.get("success", false)):
+			return connected
+		if int(connected.get("details", {}).get("queued_frames", 0)) != 0:
+			return Protocol8.failure("MVP8_MATTER_CURRENT_RESYNC_QUEUED_UNEXPECTED_FRAMES")
+		_matter_resynced8[actor] = true
+		return Protocol8.success({
+			"actor": actor,
+			"matter": matter,
+			"mode": connected.get("details", {}).get("mode", ""),
+			"snapshot": world_snapshot(),
+		})
 	if kind == "MVP8_STATUS":
 		var current := _current8(actor)
 		if not bool(current.get("success", false)):
@@ -685,6 +717,7 @@ func base_report(schema: String, passed: bool, graphical: bool) -> Dictionary:
 		"checkpointed": _checkpointed8,
 		"checkpoint_receipt": _checkpoint_receipt8.duplicate(true),
 		"recovery_boot": _recovery_boot8,
+		"matter_resynced": _matter_resynced8.duplicate(true),
 		"bounds": _bounds8.duplicate(true),
 		"backend_liveness_cycles": _backend_liveness_cycles8,
 		"backend_liveness_failures": _backend_liveness_failures8,

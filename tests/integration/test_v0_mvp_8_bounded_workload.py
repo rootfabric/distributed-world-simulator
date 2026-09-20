@@ -425,6 +425,11 @@ def evidence_checks(phase1: dict, phase2: dict, receipt: dict, head: str, tree: 
             and len(receipt["dig_hits"]) == 3
         )
         checks["phase2_passed"] = not phase2["error"] and g2["passed"] is True and w2["recovery_boot"] is True and w2["round"] == TOTAL_ROUNDS
+        checks["matter_resync_after_restart"] = (
+            w2.get("matter_resynced") == {"a": True, "b": True}
+            and p2["client/a"].get("matter_resynced") is True
+            and p2["client/b"].get("matter_resynced") is True
+        )
         checks["twelve_rounds_same_lineage"] = (
             len(w2["round_history"]) == TOTAL_ROUNDS
             and [row["round"] for row in w2["round_history"]] == list(range(TOTAL_ROUNDS))
@@ -509,6 +514,7 @@ def negative_controls(phase1: dict, phase2: dict, receipt: dict, head: str, tree
             int(g2.get("seam_crossings", 0)) >= 4,
             int(g2.get("fixed_receipts", 0)) >= 24,
             len(g2.get("dig_hits", [])) == 4,
+            g2.get("matter_resynced") == {"a": True, "b": True},
             int(b.get("operation_fingerprints", 9999)) <= 256,
             int(b.get("ledger", {}).get("tracked_count", 9999)) <= 512,
             a.get("duplicate_item_identity") is False,
@@ -528,6 +534,7 @@ def negative_controls(phase1: dict, phase2: dict, receipt: dict, head: str, tree
         "missing_collision": lambda x: x["p2"]["client/a"].update(collision_part_count=99),
         "lost_build_cycle": lambda x: x["p2"]["gateway"]["mvp8"]["action_counts"].update(BUILD_ADD=1),
         "missing_dig_hit": lambda x: x["p2"]["gateway"]["mvp8"]["dig_hits"].pop(),
+        "missing_matter_resync": lambda x: x["p2"]["gateway"]["mvp8"]["matter_resynced"].update(a=False),
     }
     rejected: list[str] = []
     for name, mutate in mutations.items():
@@ -586,7 +593,7 @@ def main() -> int:
         not error
         and checks
         and all(checks.values())
-        and len(negatives) == 11
+        and len(negatives) == 12
         and not fatal_logs
         and not BASE.git("status", "--porcelain", "--untracked-files=no")
     )
