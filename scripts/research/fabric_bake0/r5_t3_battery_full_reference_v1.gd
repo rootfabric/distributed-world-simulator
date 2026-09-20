@@ -116,7 +116,6 @@ static func execute(plan: Dictionary, state: Dictionary, current_a: float, dt_s:
 			float(row.empty_voltage_v),
 			float(row.full_voltage_v)
 		)
-		next_charges.append(0) if false else null
 		next_charges.append(clampf(next_charge, 0.0, capacity))
 
 	if absf(current_a) > pack_current_limit:
