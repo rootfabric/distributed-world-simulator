@@ -1,0 +1,21 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-09-09-V0-MVP-R1-V0-MVP-R1-WO-001-0046-MVP8-WINDOWS-R2-CARRIER-DISPATCHED",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "sequence": 46,
+  "event_type": "EVIDENCE_GAP",
+  "work_state": "IN_PROGRESS",
+  "recorded_at_utc": "2026-09-20T21:38:00Z",
+  "actor": "DIRECTOR",
+  "branch": "feature/v0-mvp-playable-seamless-planet-r1",
+  "head_sha": "90bc1026f0f5749492107191233330f87c8c70df",
+  "predicate": "MVP8_INDEPENDENT_VERIFIER",
+  "command": "DISPATCH_FRESH_WINDOWS_R2_GAP_CLOSURE",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence/MVP8-WINDOWS-R2-CARRIER-DISPATCH-R1.v1.json",
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/verifications/MVP8-FRESH-INDEPENDENT-VERIFIER-90BC1026-R2-GAP-CLOSURE-INSTRUCTION.md"
+  ],
+  "summary": "Fresh Windows R2 gap-closure carrier was prepared without changing frozen product source and dispatched as Actions run 35539050245/job 106153224998. GitHub accepted the workflow and created the Windows job, but it remains queued with no runner assignment; another unrelated Windows job has also remained queued since 14:29 UTC. MVP8 therefore remains IN_PROGRESS with the same infrastructure-side evidence gap and no known product defect."
+}
