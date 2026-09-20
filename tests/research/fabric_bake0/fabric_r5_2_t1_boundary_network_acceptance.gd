@@ -141,6 +141,36 @@ func _initialize() -> void:
 			check(LinearAlgebra.max_abs_delta(full.details.boundary_flow, fast.details.boundary_flow) <= float(request.error_envelope.flow_abs), "prepared flow equivalence")
 			check(absf(float(full.details.boundary_power) - float(fast.details.boundary_power)) <= float(request.error_envelope.power_abs), "prepared power equivalence")
 
+	var stale_live: Dictionary = live.duplicate(true)
+	stale_live.artifact_state = "STALE"
+	check(not prepared_runtime.execute(stale_live, excitations[0]).success, "prepared session rejects STALE")
+
+	var invalidated_live: Dictionary = live.duplicate(true)
+	invalidated_live.invalidations = [{"synthetic": true}]
+	check(not prepared_runtime.execute(invalidated_live, excitations[0]).success, "prepared session rejects invalidation")
+
+	var authority_drift_live: Dictionary = live.duplicate(true)
+	authority_drift_live.authority_envelope = live.authority_envelope.duplicate(true)
+	authority_drift_live.authority_envelope.checksum = "0".repeat(64)
+	check(not prepared_runtime.execute(authority_drift_live, excitations[0]).success, "prepared session rejects authority drift")
+
+	var dependency_drift_live: Dictionary = live.duplicate(true)
+	dependency_drift_live.dependency_set = live.dependency_set.duplicate(true)
+	dependency_drift_live.dependency_set.dependency_hash = "1".repeat(64)
+	check(not prepared_runtime.execute(dependency_drift_live, excitations[0]).success, "prepared session rejects dependency drift")
+
+	var graph_drift_live: Dictionary = live.duplicate(true)
+	graph_drift_live.fabric_graph_hash = "2".repeat(64)
+	check(not prepared_runtime.execute(graph_drift_live, excitations[0]).success, "prepared session rejects graph drift")
+
+	var estimator_live: Dictionary = live.duplicate(true)
+	estimator_live.runtime_error_estimator = {"unexpected": 1.0}
+	check(not prepared_runtime.execute(estimator_live, excitations[0]).success, "prepared session rejects estimator outside T1 scope")
+
+	var guard_live: Dictionary = live.duplicate(true)
+	guard_live.guard_values = {"unexpected": 1.0}
+	check(not prepared_runtime.execute(guard_live, excitations[0]).success, "prepared session rejects guards outside T1 scope")
+
 	begin_stage(m, "full_gate_hot_loop")
 	var full_gate_accumulator := 0.0
 	for i in range(FULL_GATE_HOT_LOOP_CALLS):
