@@ -36,7 +36,7 @@ extends SceneTree
 const C = preload("res://scripts/research/ecology/v2/canonical_value_v1.gd")
 const P = preload("res://scripts/research/ecology/v2/development_program_v1.gd")
 const Genome = preload("res://scripts/research/ecology/v2/organism_genome_v2.gd")
-const Body = preload("res://scripts/research/ecology/v2/body_graph_v1.gd")
+const Body = preload("res://scripts/research/ecology/v2/body_graph_v1.gd")\nconst LifeState = preload("res://scripts/research/ecology/v2/organism_life_state_v1.gd")\nconst Mutation = preload("res://scripts/research/ecology/v2/genome_mutation_v1.gd")
 const Protocol = preload("res://scripts/research/ecology/v2/observatory_protocol_v1.gd")
 const Fixtures = preload("res://scripts/research/ecology/v2/body_program_fixtures_v1.gd")
 const Controller = preload("res://scripts/ecology/workbench/experiment_controller_v1.gd")
@@ -234,96 +234,76 @@ func _scenario_run_and_observe(state: Dictionary) -> void:
 	# S9 reproduction: birth event in the observatory timeline.
 	var births := 0
 	var mutations := 0
-	var fallback_mutations := 0
 	for event in observer.timeline:
 		if String(event.kind) == "birth":
 			births += 1
 		elif String(event.kind) == "mutation":
 			mutations += 1
-			if not bool(event.detail.get("applied", true)):
-				fallback_mutations += 1
-	_check(births >= 1, "S9 reproduction: at least one birth/propagule event (births=%d)" % births)
-	_check(mutations >= 1, "S10 mutation attempt recorded as an event (mutations=%d)" % mutations)
-	_check(fallback_mutations >= 1 or mutations >= 1,
-		"S10 mutation events carry the documented fallback status where applicable (fallback=%d)" % fallback_mutations)
+			_check(bool(event.detail.get("applied", false)), "S10 mutation timeline contains only actually inherited mutations")
+	_check(births >= 1, "S9 reproduction: at least one birth event (births=%d)" % births)
+	_check(mutations >= 1, "S10 at least one inherited mutation observed (mutations=%d)" % mutations)
+	var inherited := 0
+	for entry in controller.debug_state().population:
+		if String(entry.state.origin_kind) == "PARENT_MUTATION_TRANSFER":
+			inherited += 1
+			_check(not entry.state.origin_receipt.mutation_receipt.is_empty(), "S10 inherited child carries canonical mutation receipt")
+			_check(String(entry.state.origin_receipt.mutation_receipt.child_blueprint_hash) == String(entry.state.blueprint_hash), "S10 receipt binds exact child blueprint")
+	_check(inherited >= 1, "S10 canonical lineage contains PARENT_MUTATION_TRANSFER descendants")
 
-# --- S11: death/decomposition (canonical-limit fit, documented) -----------------------
-# CANONICAL LIMITATION (fixated): organism death is NOT reachable through the
-# ExperimentController inside LAB bounds. The only death causes are A5
-# starvation (maintenance unpaid for starvation_limit_ticks=3) and the hard
-# A5_AGE_LIMIT (LS.MAX_AGE_TICK = 1e6); the controller fixes the founder
-# endowment at FOUNDER_ENDOWMENT_STOCK (200000 per reserve), while full
-# maintenance is <= a few hundred units per tick — reserves cover ~2000+
-# ticks, far beyond the A6 MAX_STEPS horizon (64). The genome program max_age
-# only stops DEVELOPMENT (development_interpreter_v1), it does not kill.
-# Fixated assertions: (a) a zero-resource founder provably survives the full
-# tested horizon (death unreachable); (b) the DECOMPOSITION half — corpse
-# organic matter -> field organic_mg -> mineralized nutrient feedback — IS
-# exercised directly: zone organic matter mineralizes step by step at the
-# default policy (the same _mineralize/_return_corpses feedback frame the
-# corpse path uses; the corpse branch itself is covered canonically in the
-# A6 adversarial suite).
+# --- S11: real starvation death -> corpse -> decomposition ----------------------
 
 func _scenario_death_decomposition() -> void:
-	# (a) Death unreachable in LAB bounds: a founder in a fully void zone
-	# stays alive across the whole tested horizon (maintenance paid from the
-	# fixed endowment; starvation horizon ~2000+ ticks >> MAX_STEPS 64).
-	var void_controller := Controller.new()
-	var void_manifest := {
+	var controller := Controller.new()
+	var manifest := {
 		"schema": Manifest.SCHEMA,
 		"experiment_id": "eco-polygon/exp-p13-death",
 		"seed": 20260912,
-		"horizon_ticks": 16,
-		"founders": [{"founder_id": "founder/a", "biological_hash": null, "genome": Protocol.ancestor()}],
+		"horizon_ticks": 8,
+		"founders": [{"founder_id":"founder/a","biological_hash":null,"genome":Protocol.ancestor()}],
 		"environment": {
-			"spatial": {"origin_mm": [0, 0, 0], "cell_size_mm": 1000, "width": 1, "depth": 1},
-			"zones": [{"id": "void", "water_mg": 0, "light": 0, "temperature": 100, "nutrient_mg": 0, "organic_mg": 0}],
+			"spatial":{"origin_mm":[0,0,0],"cell_size_mm":1000,"width":1,"depth":1},
+			"zones":[{"id":"void","water_mg":0,"light":0,"temperature":100,"nutrient_mg":0,"organic_mg":0}],
 		},
-		"placement": {"entries": [{"founder_ref": "founder/a", "zone_id": "void", "position_mm": [500, 0, 500]}]},
-		"mutation": {"operator": "small", "mutations_enabled": false},
-		"organization_profile": "FREE",
-		"feedback": {"enabled": true, "decomposition_enabled": true},
-		"metrics": {"requested": ["population"]},
-		"checkpoint": {"interval_ticks": 16},
-		"mode": "LAB",
+		"placement":{"entries":[{"founder_ref":"founder/a","zone_id":"void","position_mm":[500,0,500]}]},
+		"mutation":{"operator":"small","mutations_enabled":false},
+		"organization_profile":"FREE",
+		"feedback":{"enabled":true,"decomposition_enabled":true},
+		"metrics":{"requested":["population"]},
+		"checkpoint":{"interval_ticks":4},
+		"mode":"LAB",
+		# Explicit experiment input: enough corpse material to observe return,
+		# deliberately insufficient water/energy to pay maintenance for 3 ticks.
+		"genesis":{"founder_endowment":{"material_mg":100,"water_mg":1,"energy_mj":1}},
 	}
-	_check(bool(void_controller.initialize(void_manifest, {}).get("success", false)), "S11 void-zone experiment initializes")
-	var void_run: Dictionary = void_controller.run(16)
-	_check(bool(void_run.get("success", false)), "S11 void-zone run reaches the horizon")
-	_check(_alive_count(void_controller) == 1, "S11 death FIXATED as unreachable in LAB bounds: zero-income founder survives (endowment >> maintenance over any horizon)")
-
-	# (b) Decomposition/mineralization feedback on dead organic matter.
-	var decomp_controller := Controller.new()
-	var decomp_manifest := {
-		"schema": Manifest.SCHEMA,
-		"experiment_id": "eco-polygon/exp-p13-decomp",
-		"seed": 20260912,
-		"horizon_ticks": 16,
-		"founders": [{"founder_id": "founder/a", "biological_hash": null, "genome": Protocol.ancestor()}],
-		"environment": {
-			"spatial": {"origin_mm": [0, 0, 0], "cell_size_mm": 1000, "width": 1, "depth": 1},
-			"zones": [{"id": "litter", "water_mg": 500000, "light": 700, "temperature": 500, "nutrient_mg": 0, "organic_mg": 5000}],
-		},
-		"placement": {"entries": [{"founder_ref": "founder/a", "zone_id": "litter", "position_mm": [500, 0, 500]}]},
-		"mutation": {"operator": "small", "mutations_enabled": false},
-		"organization_profile": "FREE",
-		"feedback": {"enabled": true, "decomposition_enabled": true},
-		"metrics": {"requested": ["population"]},
-		"checkpoint": {"interval_ticks": 16},
-		"mode": "LAB",
-	}
-	_check(bool(decomp_controller.initialize(decomp_manifest, {}).get("success", false)), "S11 litter-zone experiment initializes")
-	var organic_before := _stock_sum(decomp_controller, "organic_mg")
-	var decomp_run: Dictionary = decomp_controller.run(4)
-	_check(bool(decomp_run.get("success", false)), "S11 decomposition run(4) succeeds")
-	var mineralized := int(decomp_controller.debug_state().feedback.frame.get("mineralized_mg", 0))
-	_check(mineralized > 0, "S11 decomposition feedback mineralized organic matter (mineralized_mg=%d)" % mineralized)
-	var organic_after := _stock_sum(decomp_controller, "organic_mg")
-	# The A6 feedback frame keeps its own field projection: mineralization is
-	# accounted INSIDE the frame (frame.mineralized_mg / frame.field), the
-	# controller field only moves through the A5 intake path. Assert the
-	# feedback accounting plus non-increase of the controller-side organic.
-	_check(organic_after <= organic_before, "S11 controller-side organic stock never increased (feedback is a sink, not a source)")
+	_check(Manifest.validate(manifest).is_empty(), "S11 low-endowment death manifest validates")
+	_check(bool(controller.initialize(manifest, {}).get("success", false)), "S11 death experiment initializes")
+	var observer := Metrics.new()
+	observer.begin(manifest)
+	observer.observe(controller)
+	var died := false
+	for _i in 6:
+		var step := controller.step()
+		_check(bool(step.get("success", false)), "S11 starvation/decomposition tick succeeds")
+		if not bool(step.get("success", false)): break
+		observer.observe(controller)
+		if _alive_count(controller) == 0:
+			died = true
+			break
+	_check(died, "S11 founder reaches canonical A5 starvation death")
+	var debug := controller.debug_state()
+	_check(debug.runtime.corpses.size() == 1, "S11 A6 creates one corpse on the same trajectory")
+	if debug.runtime.corpses.size() == 1:
+		_check(String(debug.runtime.corpses[0].individual_id) == String(debug.population[0].state.individual_id), "S11 corpse binds exact dead organism")
+	_check(int(debug.runtime.returned.water_mg) > 0 or int(debug.runtime.returned.organic_mg) > 0, "S11 corpse returns conserved material/water to field")
+	_check(int(debug.runtime.mineralized_mg) > 0, "S11 returned organic matter is mineralized canonically")
+	_check(debug.field == debug.feedback.frame.field, "S11 decomposition updates the SAME controller field")
+	var deaths := 0
+	var minerals := 0
+	for event in observer.timeline:
+		if String(event.kind) == "death": deaths += 1
+		if String(event.kind) == "mineralization": minerals += 1
+	_check(deaths >= 1, "S11 observatory records real death event")
+	_check(minerals >= 1, "S11 observatory records real mineralization event")
 
 # --- S12+S13: unknown topology via the generic realizer + full inspector ------------
 
@@ -432,7 +412,7 @@ func _scenario_branches(state: Dictionary) -> void:
 	_check(bool(restored.get("success", false)), "S16 checkpoint restored into the original controller")
 	_check(int(controller.get_snapshot().tick) == checkpoint_tick, "S16 controller back at the checkpoint tick (%d)" % checkpoint_tick)
 	# S18 replay: identical checkpoint + manifest + commands -> identical hash.
-	var replay: Dictionary = ExperimentBranch.replay(checkpoint, controller.get_manifest(), registry, [8])
+	var trusted_anchor := manager.trusted_checkpoint_anchor(String(checkpoint.checkpoint_id))\n\tvar replay: Dictionary = ExperimentBranch.replay(checkpoint, controller.get_manifest(), registry, [8], trusted_anchor)
 	_check(bool(replay.get("success", false)), "S18 replay succeeds: " + str(replay.get("error", "")))
 	if bool(replay.get("success", false)):
 		_check(String(replay.canonical_state_hash) == hash_a, "S18 replay of the original branch reproduces the identical hash")
@@ -441,26 +421,36 @@ func _scenario_branches(state: Dictionary) -> void:
 # --- S19: SOFT blocked + VISUAL_ONLY non-causality ------------------------------------
 
 func _scenario_profiles(topology_controller: Object) -> void:
-	var soft: Dictionary = Profile.preset("SOFT")
-	var bias: Dictionary = Profile.apply_development_bias(soft)
-	_check(String(bias.get("status", "")) == Profile.BLOCKED_STATUS, "S19 SOFT profile is BLOCKED_CANONICAL_EXTENSION_REQUIRED (documented canonical gap)")
-	_check(not String(bias.get("required_hook", "")).is_empty(), "S19 blocked profile documents the required canonical hook")
-	# VISUAL_ONLY application never changes the canonical hash: render the
-	# same organism through the SOFT/NMS visual profiles and re-read the hash.
+	for mode in ["SOFT", "NMS_LIKE"]:
+		var profile := Profile.preset(mode)
+		var applied := Profile.apply_development_bias(profile)
+		_check(bool(applied.get("success", false)) and bool(applied.get("applied", false)), "S19 %s bias uses canonical A3 hook" % mode)
+		_check(Mutation.validate_bias(applied.bias).is_empty(), "S19 %s bias validates canonically" % mode)
+		var manifest := _manifest_3zones(20260912, _two_founders(), [
+			{"founder_ref":"founder/a","zone_id":"wet","position_mm":[500,0,500]},
+			{"founder_ref":"founder/b","zone_id":"dry","position_mm":[1500,0,500]},
+		])
+		manifest.organization_profile = mode
+		manifest.environment.spatial.width = 2
+		manifest.environment.zones = [manifest.environment.zones[0], manifest.environment.zones[1]]
+		var ctl := Controller.new()
+		_check(bool(ctl.initialize(manifest, {}).get("success", false)), "S19 %s experiment initializes" % mode)
+		_check(bool(ctl.run(12).get("success", false)), "S19 %s canonical-bias experiment runs" % mode)
+	# Presentation-only differences on an ALREADY EXISTING state remain non-causal.
 	var debug: Dictionary = topology_controller.debug_state()
 	if debug.population.is_empty():
-		_check(false, "S19 organism available for the visual-profile render")
+		_check(false, "S19 organism available for visual-profile render")
 		return
 	var state: Dictionary = debug.population[0].state
 	var descriptor: Dictionary = Descriptor.compile(state.development.modules, String(state.individual_id), state.position_mm)
 	var hash_before := String(topology_controller.get_snapshot().canonical_state_hash)
 	var counts := {}
 	for mode in ["FREE", "SOFT", "NMS_LIKE"]:
-		var visual: Dictionary = Profile.visual_profile(Profile.preset(mode))
-		var realized: Dictionary = Realizer.realize(descriptor, visual)
+		var visual := Profile.visual_profile(Profile.preset(mode))
+		var realized := Realizer.realize(descriptor, visual)
 		counts[mode] = int(realized.primitive_count)
-	_check(int(counts["FREE"]) == int(counts["SOFT"]) and int(counts["FREE"]) == int(counts["NMS_LIKE"]), "S19 visual profiles change presentation detail only (same primitive coverage)")
-	_check(String(topology_controller.get_snapshot().canonical_state_hash) == hash_before, "S19 VISUAL_ONLY application leaves canonical_state_hash unchanged")
+	_check(int(counts["FREE"]) == int(counts["SOFT"]) and int(counts["FREE"]) == int(counts["NMS_LIKE"]), "S19 visual profiles preserve module coverage")
+	_check(String(topology_controller.get_snapshot().canonical_state_hash) == hash_before, "S19 rendering profiles never mutate canonical state")
 
 # --- S20: batch of 3 seeds ---------------------------------------------------------------
 
