@@ -188,7 +188,10 @@ func _matter_observer8() -> String:
 	# cross the SM1 seam. Use whichever authenticated logical player is currently
 	# local to the Matter owner for read/dig authorization; never pretend A still
 	# belongs to authority/a after its ownership transfer.
-	for actor in ["a", "b"]:
+	# B is the stable authority/a observer and did not perform the inherited
+	# MVP4 bootstrap dig, so prefer its real player/tool state for repeated
+	# workload Matter actions. Fall back to A only when B is not local.
+	for actor in ["b", "a"]:
 		if String(coordinators[actor].snapshot().get("active_authority_id", "")) == "authority/a":
 			return actor
 	return ""
