@@ -58,6 +58,7 @@ var _matter_resynced8 := {"a": false, "b": false}
 var _current_cache8 := {"a": {}, "b": {}}
 var _current_cache_hits8 := 0
 var _current_cache_misses8 := 0
+var _terminal_snapshot8: Dictionary = {}
 
 
 func _phase8() -> String:
@@ -220,6 +221,19 @@ func _invalidate_current8(actor: String = "") -> void:
 		_current_cache8 = {"a": {}, "b": {}}
 
 
+func _remember_terminal_snapshot8(snapshot: Dictionary) -> void:
+	var players = snapshot.get("players", {})
+	if not players is Dictionary:
+		return
+	var a = Dictionary(players).get("a", {})
+	var b = Dictionary(players).get("b", {})
+	if not a is Dictionary or not b is Dictionary or Dictionary(a).is_empty() or Dictionary(b).is_empty():
+		return
+	if String(Dictionary(a).get("logical_player_id", "")) != "a" or String(Dictionary(b).get("logical_player_id", "")) != "b":
+		return
+	_terminal_snapshot8 = snapshot.duplicate(true)
+
+
 func _status_current8(actor: String) -> Dictionary:
 	var cached_value = _current_cache8.get(actor, {})
 	var details: Dictionary = {}
@@ -236,6 +250,7 @@ func _status_current8(actor: String) -> Dictionary:
 	# Gateway-only coordination can change while canonical owners remain stable.
 	# Always publish the latest orchestration snapshot without re-reading owners.
 	details["snapshot"] = world_snapshot()
+	_remember_terminal_snapshot8(Dictionary(details["snapshot"]))
 	return Protocol8.success(details)
 
 
@@ -512,6 +527,7 @@ func _commit_round8(round_index: int) -> Dictionary:
 	# round number. Publish one post-commit orchestration snapshot so clients never
 	# replay the round they just completed.
 	var post_snapshot := world_snapshot()
+	_remember_terminal_snapshot8(post_snapshot)
 	current_details["snapshot"] = post_snapshot.duplicate(true)
 	_current_cache8["a"] = current_details.duplicate(true)
 	return Protocol8.success({
@@ -554,7 +570,9 @@ func _checkpoint8() -> Dictionary:
 	if _restart_file8.is_empty() or not Support8.write_json(_restart_file8, _checkpoint_receipt8):
 		return Protocol8.failure("MVP8_RESTART_RECEIPT_WRITE_FAILED")
 	_checkpointed8 = true
-	return Protocol8.success({"checkpointed": true, "restart": _checkpoint_receipt8.duplicate(true), "snapshot": world_snapshot()})
+	var checkpoint_snapshot := world_snapshot()
+	_remember_terminal_snapshot8(checkpoint_snapshot)
+	return Protocol8.success({"checkpointed": true, "restart": _checkpoint_receipt8.duplicate(true), "snapshot": checkpoint_snapshot.duplicate(true)})
 
 
 func _publish_progress8() -> void:
@@ -681,10 +699,18 @@ func handle_client(actor: String, body: Dictionary) -> Dictionary:
 		client_finished[actor] = true
 		if bool(client_finished["a"]) and bool(client_finished["b"]):
 			closing_at_ms = Time.get_ticks_msec() + 50
-		# The client terminates immediately after this ACK and never consumes a
-		# world snapshot. Avoid two inherited player LOOKUP RPCs per FINISH while
-		# keeping the final bounded-state refresh intact.
-		return Protocol8.success({"finished": true, "actor": actor, "round": _round8})
+		# The inherited graphical client validates every successful reply before
+		# exiting, including the terminal ACK. Reuse the last already-validated
+		# two-player snapshot instead of returning an empty snapshot or issuing
+		# fresh backend LOOKUPs after the quiescent checkpoint.
+		if _terminal_snapshot8.is_empty():
+			return Protocol8.failure("MVP8_TERMINAL_SNAPSHOT_REQUIRED")
+		return Protocol8.success({
+			"finished": true,
+			"actor": actor,
+			"round": _round8,
+			"snapshot": _terminal_snapshot8.duplicate(true),
+		})
 	return Protocol8.failure("MVP8_UNKNOWN_CLIENT_COMMAND")
 
 
