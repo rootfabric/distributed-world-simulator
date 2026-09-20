@@ -1,4 +1,4 @@
-# ECO ARCH2 A10.5 / ECO-POLYGON-1 — launch/test tool (P13).
+﻿# ECO ARCH2 A10.5 / ECO-POLYGON-1 — launch/test tool (P13).
 #
 # Usage:
 #   .\RUN_ECO_A10_5_POLYGON.ps1              open the polygon LAB scene in the Godot editor for manual GUI checks
