@@ -18,6 +18,7 @@ class_name EcoWorkbenchExperimentBranchV1
 extends RefCounted
 
 const C = preload("res://scripts/research/ecology/v2/canonical_value_v1.gd")
+const F = preload("res://scripts/research/ecology/v2/environment_field_contract_v1.gd")
 const Manifest = preload("res://scripts/ecology/workbench/experiment_manifest_v1.gd")
 const EnvironmentPatch = preload("res://scripts/ecology/workbench/environment_patch_v1.gd")
 const Controller = preload("res://scripts/ecology/workbench/experiment_controller_v1.gd")

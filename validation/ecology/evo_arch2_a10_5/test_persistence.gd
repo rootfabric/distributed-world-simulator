@@ -180,7 +180,7 @@ func _run() -> void:
 		_check(not trusted_anchor.is_empty(), "P8 external checkpoint anchor recorded outside checkpoint")
 		var replay_one: Dictionary = Branch.replay(checkpoint, manifest, {}, [4, 4], trusted_anchor)
 		var replay_two: Dictionary = Branch.replay(checkpoint, manifest, {}, [8], trusted_anchor)
-		var replay_three: Dictionary = Branch.replay(checkpoint, manifest, {}, [4, 4])
+		var replay_three: Dictionary = Branch.replay(checkpoint, manifest, {}, [4, 4], trusted_anchor)
 		_check(bool(replay_one.get("success", false)), "P8 replay [4,4] succeeds: " + str(replay_one))
 		_check(bool(replay_two.get("success", false)), "P8 replay [8] succeeds: " + str(replay_two))
 		_check(bool(replay_three.get("success", false)), "P8 replay [4,4] again succeeds")
