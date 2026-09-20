@@ -94,3 +94,21 @@ Wall time/RSS не являются absolute budgets.
 - не называть explicit global control естественной physical propagation;
 - не делать вывод о DAE/ROM solver scaling: это R5.2;
 - не скрывать O(N) metadata/hash work под термином local scaling.
+
+
+## Repair R1 — indexed local residual path
+
+Первый exact measurement выявил, что old local lifecycle сохранял bounded FULL=20, но residual descriptor preparation повторно сканировал O(N) hidden parts. Это не соответствует цели R5.1.
+
+Repair R1 добавляет one-time `range_index_build = O(N)`, после которого четыре residual span queries на local UNBAKE/ReBAKE выполняются без part scans. Подробности: `FABRIC_R5_1_REPAIR_R1_RANGE_INDEX_RU.md`.
+
+Новый deterministic contract:
+
+```text
+index build scan = N once
+online lifecycle full scans = 0
+range queries = 4
+prefix reads = 80
+FULL peak = 20
+global rebuilds = 0
+```

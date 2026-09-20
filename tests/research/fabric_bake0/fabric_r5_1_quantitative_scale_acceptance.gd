@@ -1,7 +1,7 @@
 extends SceneTree
 
 const Source = preload("res://scripts/research/fabric_bake0/complex3_streaming_canonical_structure_v1.gd")
-const Life = preload("res://scripts/research/fabric_bake0/complex3_sparse_damage_lifecycle_v1.gd")
+const Life = preload("res://scripts/research/fabric_bake0/r5_indexed_sparse_damage_lifecycle_v1.gd")\nconst RangeIndex = preload("res://scripts/research/fabric_bake0/r5_range_aggregate_index_v1.gd")
 const Ownership = preload("res://scripts/research/fabric_bake0/mixed_representation_ownership_contract_v1.gd")
 const Measure = preload("res://scripts/research/fabric_bake0/r5_measurement_harness_v1.gd")
 const U = preload("res://scripts/research/fabric_bake0/fabric_bake_contract_utils_v1.gd")
@@ -30,6 +30,20 @@ func fingerprint(run: Object) -> Dictionary:
 		"work": s.work,
 		"source_checksum": s.source_checksum,
 	}
+
+func max_matrix_error(a: Array, b: Array) -> float:
+	var e := 0.0
+	for i in range(3):
+		for j in range(3):
+			e = maxf(e, absf(float(a[i][j]) - float(b[i][j])))
+	return e
+
+func max_matrix_abs(a: Array) -> float:
+	var m := 0.0
+	for i in range(3):
+		for j in range(3):
+			m = maxf(m, absf(float(a[i][j])))
+	return m
 
 func boundary_hot_loop(run: Object, subject: Dictionary, count: int) -> Dictionary:
 	var mode := ""
@@ -86,7 +100,7 @@ func _initialize() -> void:
 	var state := Source.reference_state()
 	var run := Life.new()
 	begin_stage(m, "bake_start")
-	var started := run.start_baked(base, parent.details.descriptor, state)
+	var started := run.start_baked(base, indexed_parent.details.descriptor, state)
 	end_stage(m, "bake_start")
 	check(started.success, "start certified bake", started)
 	check(run.execute_boundary(base).success, "initial bake executable")
@@ -163,7 +177,7 @@ func _initialize() -> void:
 	check(final_status.work.active_full_peak == Source.REGION_SIZE, "FULL peak exactly 20", final_status.work)
 	check(final_status.work.local_reconstructed_parts == Source.REGION_SIZE, "local reconstruction exactly 20", final_status.work)
 	check(final_status.work.rebake_local_validations == Source.REGION_SIZE, "local rebake validations exactly 20", final_status.work)
-	check(final_status.work.metadata_parts_scanned == 2 * count - Source.REGION_SIZE, "lifecycle metadata scan follows 2N-20", final_status.work)
+	check(final_status.work.metadata_parts_scanned == 0, "indexed lifecycle performs no full residual part scans", final_status.work)\n\tcheck(int(final_status.work.get("range_query_count", -1)) == 4, "exactly four indexed residual queries", final_status.work)\n\tcheck(int(final_status.work.get("range_query_prefix_reads", -1)) == 80, "indexed residual queries use bounded prefix reads", final_status.work)
 	check(final_status.work.global_physical_rebuilds == 0, "no global physical rebuild", final_status.work)
 	check(final_status.work.duplicate_ownership_count == 0, "no duplicate ownership", final_status.work)
 	check(Ownership.validate(final_status.ownership).success, "final ownership")
@@ -210,7 +224,7 @@ func _initialize() -> void:
 		"bond_count_before": count - 1,
 		"source_base_checksum": base.spec.checksum,
 		"source_successor_checksum": successor.spec.checksum,
-		"parent_aggregate_checksum": parent.details.descriptor.checksum,
+		"parent_aggregate_checksum": parent.details.descriptor.checksum,\n\t\t"indexed_parent_checksum": indexed_parent.details.descriptor.checksum,\n\t\t"range_index_summary_hash": range_index.summary_hash,\n\t\t"range_index_build_parts_scanned": count,\n\t\t"range_index_mass_error": mass_error,\n\t\t"range_index_com_error": com_error,\n\t\t"range_index_inertia_error": inertia_error,
 		"global_control_aggregate_checksum": global_control.details.descriptor.checksum,
 		"active_full_peak": int(final_status.work.active_full_peak),
 		"local_reconstructed_parts": int(final_status.work.local_reconstructed_parts),
@@ -218,7 +232,7 @@ func _initialize() -> void:
 		"final_baked_bodies": 2,
 		"component_counts": component_counts,
 		"component_hashes": component_hashes,
-		"metadata_parts_scanned_lifecycle": int(final_status.work.metadata_parts_scanned),
+		"metadata_parts_scanned_lifecycle": int(final_status.work.metadata_parts_scanned),\n\t\t"range_query_count": int(final_status.work.get("range_query_count", -1)),\n\t\t"range_query_prefix_reads": int(final_status.work.get("range_query_prefix_reads", -1)),
 		"global_control_parts_scanned": int(global_control.details.parts_scanned),
 		"rebake_local_validations": int(final_status.work.rebake_local_validations),
 		"global_physical_rebuilds": int(final_status.work.global_physical_rebuilds),
