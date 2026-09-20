@@ -1,0 +1,87 @@
+name: FABRIC R4.2 Topology Dynamic Holdout Linux Double
+
+on:
+  push:
+    branches: [research/fabric-r4-2-topology-dynamic-holdout-r1]
+  pull_request:
+    paths:
+      - 'config/research/fabric-r4-2-*'
+      - 'scripts/research/fabric_holdout_r42/**'
+      - 'tests/research/fabric1/fabric_r4_2_*'
+      - 'docs/research/FABRIC_R4_2_*'
+      - 'validation/fabric-r4-2-*'
+      - 'RUN_FABRIC_R4_2_TESTS.sh'
+      - '.github/workflows/fabric-r4-2-topology-dynamic-linux-double.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fabric-r4-2-topology-dynamic-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  R41_HEAD: a5001eeafd012323548707d6b705b12301a91761
+  R41_TREE: 934ecfed15bd0f18389a64daf44caee6748cd73e
+
+jobs:
+  exact-linux-double:
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Bind frozen R4.1 predecessor and R4.2-only scope
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$(git rev-parse "$R41_HEAD^{tree}")" = "$R41_TREE"
+          test "$(git merge-base HEAD "$R41_HEAD")" = "$R41_HEAD"
+          git diff --check "$R41_HEAD"...HEAD
+          bad="$(git diff --name-only "$R41_HEAD"...HEAD | grep -Ev '^(config/research/fabric-r4-2-|scripts/research/fabric_holdout_r42/|tests/research/fabric1/fabric_r4_2_|docs/research/FABRIC_R4_2_|validation/fabric-r4-2-|RUN_FABRIC_R4_2_TESTS\.sh$|\.github/workflows/fabric-r4-2-topology-dynamic-linux-double\.yml$)' || true)"
+          test -z "$bad"
+          echo '*.gd.uid' >> .git/info/exclude
+      - name: Resolve canonical Linux double
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          bin="${DWS_GODOT_DOUBLE_BIN:-$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64}"
+          test -x "$bin"
+          test "$("$bin" --version | head -n1 | tr -d '\r')" = '4.7.1.stable.double.custom_build.a13da4feb'
+          test "$(sha256sum "$bin" | awk '{print $1}')" = 'bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7'
+          echo "GODOT_BIN=$bin" >> "$GITHUB_ENV"
+      - name: Fresh import
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          rm -rf .godot
+          "$GODOT_BIN" --headless --editor --path . --log-file r42-import.log --import
+          ! grep -Eiq 'SCRIPT ERROR|Parse Error|Invalid call|Invalid access|ERROR:' r42-import.log
+      - name: Run preregistration or revealed holdout
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          bash RUN_FABRIC_R4_2_TESTS.sh 2>&1 | tee r42-tests.log
+          if test -f config/research/fabric-r4-2-challenge.v1.json; then
+            grep -F 'FABRIC-R4.2-TOPOLOGY-DYNAMIC-HOLDOUT: PASS' r42-tests.log
+          else
+            grep -F 'FABRIC-R4.2-PREREGISTRATION: PASS' r42-tests.log
+          fi
+      - name: Verify clean source
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          git diff --check
+          test -z "$(git status --porcelain=v1 --untracked-files=no)"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fabric-r4-2-${{ github.sha }}
+          path: |
+            r42-import.log
+            r42-tests.log
+            config/research/fabric-r4-2-*.json
+            validation/fabric-r4-2-*.json
+          if-no-files-found: error
+          retention-days: 90
