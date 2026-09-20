@@ -43,7 +43,7 @@ const Region = preload("res://scripts/network/contracts/authority_region_descrip
 const Ticket = preload("res://scripts/network/contracts/handoff_ticket.gd")
 const Ownership = preload("res://scripts/ecology/production/ecology_region_ownership_v1.gd")
 
-const AUTHORITY_FIELDS := ["region", "entity_id", "owner_id", "catalog", "mapping_entries"]
+const STATE_SCHEMA := "dws.ecology.workbench.world-adapter-state.v1"\nconst AUTHORITY_FIELDS := ["region", "entity_id", "owner_id", "catalog", "mapping_entries"]
 const STOCK_FIELDS := ["water_mg", "nutrient_mg", "organic_mg"]
 
 var _manifest: Dictionary = {}
@@ -211,26 +211,34 @@ func apply_environment(controller: Object) -> Dictionary:
 		return _fail("ADAPTER_NOT_CONFIGURED")
 	if controller == null or not controller.has_method("apply_world_stocks"):
 		return _fail("ADAPTER_CONTROLLER")
-	var pending: Dictionary = _admitted_resources.duplicate(true)
+	# IMPORTANT: apply only the NEW batch delta. _admitted_resources is a
+	# cumulative observation and must never be re-deposited.
+	var delta := FieldContract.stock()
 	var applied_ids: Array = []
 	for batch_id in _batches.keys():
 		var row: Dictionary = _batches[batch_id]
 		if bool(row.applied):
 			continue
 		for resource in FieldContract.RESOURCES:
-			pending[resource] = int(pending[resource]) + int(row.admission.resources[resource])
-		row.applied = true
+			delta[resource] = int(delta[resource]) + int(row.admission.resources[resource])
 		applied_ids.append(String(batch_id))
 	if applied_ids.is_empty():
-		return {"success": true, "applied_batches": [], "resources": pending.duplicate(true), "applied": false}
-	var result: Dictionary = controller.apply_world_stocks(pending, "matter-map/%s" % _map_id)
+		return {"success": true, "applied_batches": [], "resources": _admitted_resources.duplicate(true), "applied": false}
+	applied_ids.sort()
+	var source_tag := "matter-delta/%s/%s" % [_map_id, C.digest(applied_ids).substr(0, 16)]
+	var result: Dictionary = controller.apply_world_stocks(delta, source_tag)
 	if not bool(result.get("success", false)):
 		return _fail("ADAPTER_ENVIRONMENT_APPLY:" + String(result.get("error", "?")))
-	_admitted_resources = pending
+	# Commit adapter bookkeeping only AFTER the canonical field write succeeds.
+	for batch_id in applied_ids:
+		_batches[batch_id].applied = true
+	for resource in FieldContract.RESOURCES:
+		_admitted_resources[resource] = int(_admitted_resources[resource]) + int(delta[resource])
 	return {
 		"success": true,
 		"applied_batches": applied_ids,
-		"resources": pending.duplicate(true),
+		"resources": _admitted_resources.duplicate(true),
+		"delta_resources": delta.duplicate(true),
 		"applied": true,
 		"field_hash": String(result.get("field_hash", "")),
 	}
@@ -279,7 +287,7 @@ func apply_damage(individual_id: String) -> Dictionary:
 	if not _damage.has(String(individual_id)):
 		return _fail("ADAPTER_DAMAGE_UNKNOWN:" + String(individual_id))
 	var row: Dictionary = _damage[String(individual_id)]
-	var applied := BodyBinding.apply_damage(row.binding, row.overlay, row.modules, row.snapshot, row.event, String(row.event.binding_hash))
+	var applied := BodyBinding.apply_damage(row.binding, row.overlay, row.modules, row.snapshot, row.event, String(row.trusted_event_binding_hash))
 	if not bool(applied.get("success", false)):
 		return _fail(String(applied.get("error", "A10_R4")))
 	row.overlay = applied.overlay.duplicate(true)
@@ -375,6 +383,103 @@ static func production_accept_handoff(ownership_state: Dictionary, package: Dict
 	if target.is_empty():
 		return {"success": false, "error": "ADAPTER_PRODUCTION_ACCEPT"}
 	return {"success": true, "ownership": target}
+
+# --- durable authority state ---------------------------------------------------------
+
+## Export all WORLD_COMPAT orchestration state needed to continue the same
+## experiment after a checkpoint. This is not biological truth; it is an
+## externally-anchored authority/admission envelope around existing A10 data.
+func export_state() -> Dictionary:
+	if _region.is_empty():
+		return {}
+	var value := {
+		"schema": STATE_SCHEMA,
+		"manifest_hash": _manifest_hash,
+		"region": _region.duplicate(true),
+		"cursor": _cursor.duplicate(true),
+		"catalog": _catalog.duplicate(true),
+		"mapping": _mapping.duplicate(true),
+		"map_id": _map_id,
+		"site_binding": _site_binding.duplicate(true),
+		"batches": _batches.duplicate(true),
+		"admitted_resources": _admitted_resources.duplicate(true),
+		"damage": _damage.duplicate(true),
+		"checksum": "",
+	}
+	value.checksum = _state_checksum(value)
+	return value if _validate_exported_state(value).is_empty() else {}
+
+func import_state(value: Dictionary, expected_hash: String) -> Dictionary:
+	if not FieldContract.valid_hash(expected_hash) or C.digest(value) != expected_hash:
+		return _fail("ADAPTER_STATE_EXTERNAL_ANCHOR")
+	var error := _validate_exported_state(value)
+	if not error.is_empty():
+		return _fail(error)
+	if not _manifest_hash.is_empty() and String(value.manifest_hash) != _manifest_hash:
+		return _fail("ADAPTER_STATE_MANIFEST")
+	_region = value.region.duplicate(true)
+	_cursor = value.cursor.duplicate(true)
+	_catalog = value.catalog.duplicate(true)
+	_mapping = value.mapping.duplicate(true)
+	_map_id = String(value.map_id)
+	_site_binding = value.site_binding.duplicate(true)
+	_batches = value.batches.duplicate(true)
+	_admitted_resources = value.admitted_resources.duplicate(true)
+	_damage = value.damage.duplicate(true)
+	last_error = ""
+	return {"success": true}
+
+func _validate_exported_state(value: Variant) -> String:
+	var fields := ["schema","manifest_hash","region","cursor","catalog","mapping","map_id","site_binding","batches","admitted_resources","damage","checksum"]
+	if not C.keys(value, fields) or value.schema != STATE_SCHEMA:
+		return "ADAPTER_STATE_SCHEMA"
+	if not FieldContract.valid_hash(value.manifest_hash) or not value.region is Dictionary or not value.cursor is Dictionary:
+		return "ADAPTER_STATE_FIELDS"
+	if not bool(Region.validate(value.region).get("success", false)):
+		return "ADAPTER_STATE_REGION"
+	if String(value.region.lifecycle_state) != "ACTIVE":
+		return "ADAPTER_STATE_REGION_NOT_ACTIVE"
+	var admission := WorldBinding.admit_cursor(value.cursor, value.region)
+	if not bool(admission.get("success", false)):
+		return "ADAPTER_STATE_CURSOR"
+	if not value.catalog is Dictionary or not value.mapping is Dictionary or not Mapping.validate(value.mapping, value.catalog).is_empty():
+		return "ADAPTER_STATE_MAPPING"
+	if not value.map_id is String or String(value.map_id) != String(value.mapping.map_id):
+		return "ADAPTER_STATE_MAP_ID"
+	if not value.site_binding is Dictionary or not value.batches is Dictionary or not value.damage is Dictionary:
+		return "ADAPTER_STATE_CONTAINER"
+	if not FieldContract.valid_total_stock(value.admitted_resources):
+		return "ADAPTER_STATE_RESOURCES"
+	for batch_id in value.batches:
+		var row = value.batches[batch_id]
+		if not row is Dictionary or not row.has_all(["checksum","applied","admission"]):
+			return "ADAPTER_STATE_BATCH"
+		if not FieldContract.valid_hash(row.checksum) or not row.applied is bool or not row.admission is Dictionary:
+			return "ADAPTER_STATE_BATCH"
+		if String(row.admission.batch_id) != String(batch_id) or String(row.admission.batch_checksum) != String(row.checksum):
+			return "ADAPTER_STATE_BATCH_BINDING"
+	for individual_id in value.damage:
+		var row = value.damage[individual_id]
+		if not row is Dictionary or not row.has_all(["modules","snapshot","binding","overlay","event","trusted_event_binding_hash"]):
+			return "ADAPTER_STATE_DAMAGE"
+		if not row.modules is Array or not row.snapshot is Dictionary or not row.binding is Dictionary or not row.overlay is Dictionary or not row.event is Dictionary:
+			return "ADAPTER_STATE_DAMAGE"
+		if not Body.validate(row.modules).is_empty():
+			return "ADAPTER_STATE_DAMAGE_BODY"
+		if not BodyBinding.validate_binding(row.binding, row.modules, row.snapshot).is_empty():
+			return "ADAPTER_STATE_DAMAGE_BINDING"
+		if not BodyBinding.validate_overlay(row.overlay, row.binding, row.modules, row.snapshot).is_empty():
+			return "ADAPTER_STATE_DAMAGE_OVERLAY"
+		if not FieldContract.valid_hash(row.trusted_event_binding_hash) or String(row.event.get("binding_hash", "")) != String(row.trusted_event_binding_hash):
+			return "ADAPTER_STATE_DAMAGE_EVENT_ANCHOR"
+	if not FieldContract.valid_hash(value.checksum) or String(value.checksum) != _state_checksum(value):
+		return "ADAPTER_STATE_CHECKSUM"
+	return ""
+
+func _state_checksum(value: Dictionary) -> String:
+	var payload := value.duplicate(true)
+	payload.checksum = ""
+	return C.digest(payload)
 
 # --- read views -------------------------------------------------------------------
 
