@@ -461,11 +461,17 @@ func _commit_round8(round_index: int) -> Dictionary:
 	if not bool(bounded.get("success", false)):
 		return bounded
 	var current_details: Dictionary = Dictionary(current.get("details", {})).duplicate(true)
+	# The canonical world sample above is still valid after advancing only the
+	# MVP8 orchestration cursor, but its embedded snapshot carries the pre-commit
+	# round number. Publish one post-commit orchestration snapshot so clients never
+	# replay the round they just completed.
+	var post_snapshot := world_snapshot()
+	current_details["snapshot"] = post_snapshot.duplicate(true)
 	return Protocol8.success({
 		"round_completed": round_index,
 		"action": action,
 		"current": current_details,
-		"snapshot": Dictionary(current_details.get("snapshot", {})).duplicate(true),
+		"snapshot": post_snapshot.duplicate(true),
 	})
 
 
