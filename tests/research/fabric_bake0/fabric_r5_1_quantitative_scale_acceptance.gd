@@ -90,16 +90,45 @@ func _initialize() -> void:
 	end_stage(m, "source_full_rehash_validation")
 	check(rehashed.success, "full canonical rehash validation", rehashed)
 
+	begin_stage(m, "range_index_build")
+	var built_index := RangeIndex.build(base.spec)
+	end_stage(m, "range_index_build")
+	check(built_index.success and int(built_index.details.parts_scanned) == count, "range index one-time build scans N", built_index)
+	if not built_index.success:
+		_finish_failed(count)
+		return
+	var range_index: Dictionary = built_index.details.index
+
 	begin_stage(m, "parent_aggregate_compile")
 	var parent := Source.aggregate_span(base.spec, 0, count)
 	end_stage(m, "parent_aggregate_compile")
-	check(parent.success and int(parent.details.parts_scanned) == count, "parent aggregate scans N", parent)
+	check(parent.success and int(parent.details.parts_scanned) == count, "reference parent aggregate scans N", parent)
 	if not parent.success:
 		_finish_failed(count)
 		return
 
+	begin_stage(m, "range_index_parent_query")
+	var indexed_parent := RangeIndex.aggregate(range_index, base.spec, 0, count)
+	end_stage(m, "range_index_parent_query")
+	check(indexed_parent.success and int(indexed_parent.details.parts_scanned) == 0, "indexed parent query has no part scan", indexed_parent)
+	if not indexed_parent.success:
+		_finish_failed(count)
+		return
+	var reference_desc: Dictionary = parent.details.descriptor
+	var indexed_desc: Dictionary = indexed_parent.details.descriptor
+	var ref_com := Vector3(reference_desc.center_of_mass[0], reference_desc.center_of_mass[1], reference_desc.center_of_mass[2])
+	var idx_com := Vector3(indexed_desc.center_of_mass[0], indexed_desc.center_of_mass[1], indexed_desc.center_of_mass[2])
+	var mass_error := absf(float(reference_desc.total_mass) - float(indexed_desc.total_mass))
+	var com_error := ref_com.distance_to(idx_com)
+	var inertia_error := max_matrix_error(reference_desc.inertia_tensor_body, indexed_desc.inertia_tensor_body)
+	var inertia_scale := maxf(1.0, max_matrix_abs(reference_desc.inertia_tensor_body))
+	check(mass_error <= 1.0e-8, "range index mass parity", {"error": mass_error})
+	check(com_error <= 1.0e-9, "range index COM parity", {"error": com_error})
+	check(inertia_error <= 1.0e-10 * inertia_scale, "range index inertia relative parity", {"error": inertia_error, "scale": inertia_scale})
+
 	var state := Source.reference_state()
 	var run := Life.new()
+	check(run.attach_range_index(range_index, base).success, "attach range index to initial runtime")
 	begin_stage(m, "bake_start")
 	var started := run.start_baked(base, indexed_parent.details.descriptor, state)
 	end_stage(m, "bake_start")
@@ -136,6 +165,7 @@ func _initialize() -> void:
 	check(local_capsule.success, "capture local capsule", local_capsule)
 	var local_fingerprint := U.canonical_hash(fingerprint(run))
 	var restarted := Life.new()
+	check(restarted.attach_range_index(range_index, base).success, "attach range index to local restart")
 	begin_stage(m, "local_capsule_restore")
 	var local_restore := restarted.restore_capsule(base, local_capsule.details.capsule)
 	end_stage(m, "local_capsule_restore")
@@ -160,6 +190,7 @@ func _initialize() -> void:
 	end_stage(m, "fenced_capsule_capture")
 	check(fenced_capsule.success, "capture fenced capsule", fenced_capsule)
 	var fenced := Life.new()
+	check(fenced.attach_range_index(range_index, successor).success, "attach range index to fenced restart")
 	begin_stage(m, "fenced_capsule_restore")
 	var fenced_restore := fenced.restore_capsule(successor, fenced_capsule.details.capsule)
 	end_stage(m, "fenced_capsule_restore")
@@ -197,6 +228,7 @@ func _initialize() -> void:
 	check(final_capsule.success, "capture final capsule", final_capsule)
 	var final_fingerprint := U.canonical_hash(fingerprint(fenced))
 	var final_restart := Life.new()
+	check(final_restart.attach_range_index(range_index, successor).success, "attach range index to final restart")
 	begin_stage(m, "final_capsule_restore")
 	var final_restore := final_restart.restore_capsule(successor, final_capsule.details.capsule)
 	end_stage(m, "final_capsule_restore")
@@ -255,8 +287,11 @@ func _initialize() -> void:
 	}
 	m.set_counter("canonical_parts", count)
 	m.set_counter("canonical_bonds_before", count - 1)
+	m.set_counter("range_index_build_parts_scanned", count)
 	m.set_counter("parent_compile_parts_scanned", count)
 	m.set_counter("lifecycle_metadata_parts_scanned", int(final_status.work.metadata_parts_scanned))
+	m.set_counter("range_query_count", int(final_status.work.get("range_query_count", -1)))
+	m.set_counter("range_query_prefix_reads", int(final_status.work.get("range_query_prefix_reads", -1)))
 	m.set_counter("global_control_parts_scanned", int(global_control.details.parts_scanned))
 	m.set_counter("active_full_peak", int(final_status.work.active_full_peak))
 	m.set_counter("local_reconstructed_parts", int(final_status.work.local_reconstructed_parts))
