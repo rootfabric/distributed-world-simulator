@@ -1,0 +1,40 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/ecology/workbench/ecology_workbench.gd" id="1"]
+
+[node name="EcologyWorkbench" type="Node"]
+script = ExtResource("1")
+
+[node name="OrganismMarkers" type="Node3D" parent="."]
+
+[node name="WorkbenchUI" type="CanvasLayer" parent="."]
+
+[node name="ExperimentControls" type="HBoxContainer" parent="WorkbenchUI"]
+anchors_preset = 0
+offset_left = 16.0
+offset_top = 16.0
+offset_right = 500.0
+offset_bottom = 48.0
+
+[node name="Run" type="Button" parent="WorkbenchUI/ExperimentControls"]
+text = "RUN"
+
+[node name="Pause" type="Button" parent="WorkbenchUI/ExperimentControls"]
+text = "PAUSE"
+
+[node name="Step" type="Button" parent="WorkbenchUI/ExperimentControls"]
+text = "STEP"
+
+[node name="Reset" type="Button" parent="WorkbenchUI/ExperimentControls"]
+text = "RESET"
+
+[node name="Fast" type="Button" parent="WorkbenchUI/ExperimentControls"]
+text = "FAST"
+
+[node name="StatusBar" type="Label" parent="WorkbenchUI"]
+anchors_preset = 0
+offset_left = 16.0
+offset_top = 56.0
+offset_right = 900.0
+offset_bottom = 80.0
+text = "not bound"
