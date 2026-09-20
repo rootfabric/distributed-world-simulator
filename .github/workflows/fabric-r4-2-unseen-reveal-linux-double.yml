@@ -11,7 +11,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: fabric-r4-2-unseen-reveal
+  group: fabric-r4-2-unseen-reveal-${{ github.sha }}
   cancel-in-progress: false
 
 env:
