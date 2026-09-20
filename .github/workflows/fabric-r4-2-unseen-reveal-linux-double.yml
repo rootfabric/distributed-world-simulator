@@ -1,0 +1,139 @@
+name: FABRIC R4.2 Unseen Reveal Linux Double
+
+on:
+  push:
+    branches: [research/fabric-r4-2-topology-dynamic-holdout-r1]
+    paths:
+      - 'config/research/fabric-r4-2-beacon-retrieval.v1.json'
+      - '.github/workflows/fabric-r4-2-unseen-reveal-linux-double.yml'
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: fabric-r4-2-unseen-reveal-${{ github.sha }}
+  cancel-in-progress: false
+
+env:
+  PREREG_HEAD: b8fa56cc1bccf1d38b9882f735309402fc5cd014
+  PREREG_TREE: 86b04ad3bef1e6b77a9a510ff28cf89c8f7d9aa2
+
+jobs:
+  unseen-exact:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Bind frozen preregistration
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$(git merge-base HEAD "$PREREG_HEAD")" = "$PREREG_HEAD"
+          test "$(git rev-parse "$PREREG_HEAD^{tree}")" = "$PREREG_TREE"
+          forbidden="$(git diff --name-only "$PREREG_HEAD"...HEAD | grep -E '^(scripts/research/fabric_holdout_r42/|tests/research/fabric1/fabric_r4_2_topology_dynamic_acceptance\.gd$|RUN_FABRIC_R4_2_TESTS\.sh$|config/research/fabric-r4-2-preregistration\.v1\.json$|validation/fabric-r4-2-preregistration\.v1\.json$|\.github/workflows/fabric-r4-2-topology-dynamic-linux-double\.yml$)' || true)"
+          test -z "$forbidden"
+          git diff --check "$PREREG_HEAD"...HEAD
+          echo '*.gd.uid' >> .git/info/exclude
+
+      - name: Download canonical Linux double
+        uses: actions/download-artifact@v4
+        with:
+          name: p7-repair-engine-34117353691
+          run-id: 34117353691
+          repository: rootfabric/distributed-world-simulator
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/r42-engine
+
+      - name: Verify canonical Linux double
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          bin="$RUNNER_TEMP/r42-engine/godot"
+          chmod u+x "$bin"
+          test -x "$bin"
+          test "$("$bin" --version | head -n1 | tr -d '\r')" = '4.7.1.stable.double.custom_build.a13da4feb'
+          test "$(sha256sum "$bin" | awk '{print $1}')" = 'bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7'
+          echo "GODOT_BIN=$bin" >> "$GITHUB_ENV"
+
+      - name: Materialize sealed fallback beacon
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          python3 - <<'PY'
+          import hashlib, json
+          src=json.load(open("config/research/fabric-r4-2-beacon-retrieval.v1.json"))
+          assert src["preregistration_commit"] == "b8fa56cc1bccf1d38b9882f735309402fc5cd014"
+          assert src["selection"] == "FALLBACK_NO_QUALIFYING_NIST_FUTURE_PULSE_AVAILABLE"
+          fb=src["fallback"]
+          expected=hashlib.sha256((str(fb["run_id"])+fb["head_sha"]).encode("ascii")).hexdigest()
+          assert expected == fb["value"]
+          beacon={
+            "source":"FALLBACK_GITHUB_ACTIONS",
+            "reason":"NO_QUALIFYING_NIST_FUTURE_PULSE_AVAILABLE",
+            "preregistration_commit":src["preregistration_commit"],
+            "run_id":fb["run_id"],
+            "head_sha":fb["head_sha"],
+            "derivation":fb["derivation"],
+            "value":fb["value"],
+          }
+          with open("r42-beacon.json","w") as f:
+              json.dump(beacon,f,sort_keys=True,indent=2)
+              f.write("\n")
+          PY
+          sha256sum config/research/fabric-r4-2-beacon-retrieval.v1.json r42-beacon.json | tee r42-beacon.sha256
+
+      - name: Materialize unseen challenge from frozen generator
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          python3 scripts/research/fabric_holdout_r42/r42.py generate             --prereg config/research/fabric-r4-2-preregistration.v1.json             --prereg-sha "$PREREG_HEAD"             --beacon-json r42-beacon.json             --out config/research/fabric-r4-2-challenge.v1.json | tee r42-generate.log
+          python3 scripts/research/fabric_holdout_r42/r42.py verify             --challenge config/research/fabric-r4-2-challenge.v1.json | tee r42-verify.log
+          sha256sum config/research/fabric-r4-2-challenge.v1.json | tee r42-challenge.sha256
+
+      - name: Fresh import
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          rm -rf .godot
+          "$GODOT_BIN" --headless --editor --path . --log-file r42-unseen-import.log --import
+          ! grep -Eiq 'SCRIPT ERROR|Parse Error|Invalid call|Invalid access|ERROR:' r42-unseen-import.log
+
+      - name: Run frozen unseen holdout
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          GODOT_BIN="$GODOT_BIN" bash RUN_FABRIC_R4_2_TESTS.sh 2>&1 | tee r42-unseen.log
+          grep -F 'FABRIC_R4_2_ASSERTIONS=21 FAILURES=0' r42-unseen.log
+          grep -F 'FABRIC-R4.2-TOPOLOGY-DYNAMIC-HOLDOUT: PASS' r42-unseen.log
+          grep -F 'FABRIC_R4_2_RESULT_HASH=e8b5f02c88d21c5c3c59e9471b946529a9d106249a0688f960cf051fbaaf3a3b' r42-unseen.log
+
+      - name: Seal evidence
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          sha256sum r42-beacon.json r42-generate.log r42-verify.log r42-unseen-import.log r42-unseen.log config/research/fabric-r4-2-challenge.v1.json > r42-evidence.sha256
+          git diff --check
+          test -z "$(git status --porcelain=v1 --untracked-files=no)"
+          echo 'FABRIC_R4_2_UNSEEN_REVEAL=PASS'
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fabric-r4-2-unseen-${{ github.sha }}
+          path: |
+            config/research/fabric-r4-2-beacon-retrieval.v1.json
+            config/research/fabric-r4-2-challenge.v1.json
+            r42-beacon.json
+            r42-beacon.sha256
+            r42-challenge.sha256
+            r42-generate.log
+            r42-verify.log
+            r42-unseen-import.log
+            r42-unseen.log
+            r42-evidence.sha256
+          if-no-files-found: error
+          retention-days: 90

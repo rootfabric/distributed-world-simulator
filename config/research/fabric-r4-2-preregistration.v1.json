@@ -1,0 +1,51 @@
+{
+  "schema": "fabric.holdout_r4_2.preregistration.v1",
+  "work_order": "FABRIC-R4.2-TOPOLOGY-DYNAMIC-HOLDOUT-R1",
+  "status": "PREREGISTERED_CHALLENGE_NOT_REVEALED",
+  "base_subject_head": "a5001eeafd012323548707d6b705b12301a91761",
+  "base_subject_tree": "934ecfed15bd0f18389a64daf44caee6748cd73e",
+  "generator_version": "r42-generator-oracle-v1",
+  "families": [
+    "electrical_chain_2port",
+    "electrical_branch_3port",
+    "electrical_cycle_4port",
+    "mechanics_multi_dof",
+    "near_singular_supported",
+    "coupled_dynamic_trajectory",
+    "canonical_lifecycle_rebake",
+    "reject_floating_electrical",
+    "reject_underdetermined_mechanics",
+    "reject_noncollinear_mechanics"
+  ],
+  "future_beacon": {
+    "primary": "NIST Randomness Beacon v2 pulse strictly newer than the preregistration commit timestamp",
+    "selection": "first successfully retrieved qualifying pulse; persist pulse URI/time/outputValue before any product/runtime mutation",
+    "fallback": "SHA256 of the first GitHub Actions run-id plus head-sha created by the preregistration commit, only if the NIST endpoint is unavailable; persist retrieval failure first"
+  },
+  "acceptance": {
+    "positive_families_required": 7,
+    "negative_families_required": 3,
+    "electrical_abs_rel_tolerance": 1e-8,
+    "mechanical_static_abs_rel_tolerance": 1e-8,
+    "dynamic_abs_rel_tolerance": 0.0015,
+    "lifecycle_time_tolerance_s": 0.003,
+    "full_bake_abs_rel_tolerance": 1e-8,
+    "near_singular_min_condition_inf": 10000.0,
+    "runtime_threshold_relaxation": false,
+    "post_reveal_product_mutation": false
+  },
+  "claims": [
+    "variable electrical topology with 2-4 independent Dirichlet ports",
+    "variable bounded axial mobile-DOF topology",
+    "supported finite near-singular topology",
+    "coupled dynamic trajectory against independent raw-topology oracle",
+    "physical proposal to canonical mutation to rebake/continuation lifecycle",
+    "fail-closed unsupported/underdetermined negatives"
+  ],
+  "non_claims": [
+    "production ownership",
+    "SCALE-R5 performance",
+    "arbitrary 3D mechanics",
+    "unbounded topology size"
+  ]
+}

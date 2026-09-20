@@ -1,0 +1,23 @@
+{
+  "schema": "fabric.r4_2.preregistration_validation.v1",
+  "base_head": "a5001eeafd012323548707d6b705b12301a91761",
+  "base_tree": "934ecfed15bd0f18389a64daf44caee6748cd73e",
+  "generator_version": "r42-generator-oracle-v1",
+  "protocol_result": "PASS",
+  "protocol_calibration_bundle_hash": "83f5295ab14bb5f0e0fb1ef78effdd4395bf3176309a8b5b351c2672a49047b9",
+  "protocol_stress_bundle_hash": "adf31772b0502f060fb8c7bb45dc0602e09c3e668b337cf130112823493f8301",
+  "protocol_stress_seed_count": 10,
+  "lifecycle_weak_ids_covered": ["life0", "life1", "life2", "life3"],
+  "runtime_calibration_result_hashes": {
+    "life0": "5978bf8865bf303301050a815c2cd7e10821f184e1fcaf8c5b95ad779608e9eb",
+    "life1": "2c8d4ad82c3a4796933963f6c846b34e625d6fe0d8ea5ab6d49ebe7968d457ff",
+    "life2": "1ffa53f2f3f7570440af8623d48143774840274be025d228e9bf409bda0d86b6",
+    "life3": "9fdb5fedc7e13b43672cc1096286caaab3c0b6a38748af231e77148b7462507a"
+  },
+  "calibration_assertions_each": 21,
+  "calibration_failures_total": 0,
+  "godot_version": "4.7.1.stable.double.custom_build.a13da4feb",
+  "godot_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+  "challenge_revealed": false,
+  "product_runtime_mutated": false
+}
