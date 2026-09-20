@@ -268,10 +268,22 @@ func _restore_construction8() -> Dictionary:
 	return Protocol.success({"checksum": String(actual.get("checksum", "")), "part_count": Array(actual.get("parts", [])).size()})
 
 
+func _next_construction_sequence8() -> int:
+	if _construction6.is_empty() or _bridge6 == null or not _sessions6.has("a"):
+		return -1
+	var session_id := String(_sessions6["a"].get("session_id", ""))
+	if session_id.is_empty():
+		return -1
+	var session: Dictionary = _construction6["gateway"].get_session_store().get_session(session_id)
+	return int(session.get("next_sequence", -1))
+
+
 func _mvp8_add(cycle: int) -> Dictionary:
 	if _phase6 != "REMOVED":
 		return Protocol.failure("MVP8_BUILD_ADD_PHASE_INVALID")
-	var sequence := 20 + cycle * 2
+	var sequence := _next_construction_sequence8()
+	if sequence < 0:
+		return Protocol.failure("MVP8_CONSTRUCTION_SEQUENCE_REQUIRED")
 	var inner := _build_command6(sequence, 1, "mvp8-add-east-leaf-%d" % cycle)
 	var checked: Dictionary = SeamCommand.validate(inner)
 	if not bool(checked.get("success", false)):
@@ -322,7 +334,9 @@ func _mvp8_remove(cycle: int) -> Dictionary:
 	if not bool(valid_request.get("success", false)):
 		return valid_request
 	var bundle: Dictionary = _bridge6.get_snapshot_packet().get("state_bundle", {})
-	var sequence := 21 + cycle * 2
+	var sequence := _next_construction_sequence8()
+	if sequence < 0:
+		return Protocol.failure("MVP8_CONSTRUCTION_SEQUENCE_REQUIRED")
 	var inner := SeamCommand.create(
 		"multiplayer-command/mvp8/live/remove-east-leaf/%d" % cycle,
 		String(_sessions6["a"].get("client_id", "")),
