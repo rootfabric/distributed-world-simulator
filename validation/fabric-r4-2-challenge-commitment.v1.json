@@ -1,0 +1,73 @@
+{
+  "schema": "fabric.r4_2.challenge_commitment.v1",
+  "preregistration_commit": "b8fa56cc1bccf1d38b9882f735309402fc5cd014",
+  "preregistration_tree": "86b04ad3bef1e6b77a9a510ff28cf89c8f7d9aa2",
+  "beacon_retrieval_commit": "ce62e09ccdd6f526502079d7f96f74f62704002a",
+  "beacon_fallback_value": "7ee17424db75658eda5cad717e5b5e82f3b490828ea10395789c8e7dc0dceb8c",
+  "seed_commitment": "bd0bdac2e9b8093ebd1f3eb7174d2185e3a47931688e8ca01025eda6680646ed",
+  "bundle_checksum": "ced365821a11ca79365dd4bb86c8f983b615da3a96ca0742f3acda32ad27085a",
+  "materialized_file_sha256": "c56e267fcb5eb066cf2b3fa543571a6bf63879fdad0fca10e4b469cf3566344a",
+  "local_first_reveal": {
+    "godot_version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "godot_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+    "result_hash": "e8b5f02c88d21c5c3c59e9471b946529a9d106249a0688f960cf051fbaaf3a3b",
+    "assertions": 21,
+    "failures": 0,
+    "verdict": "PASS",
+    "authoritative_ci": "PENDING"
+  },
+  "cases": [
+    [
+      "electrical_chain_2port",
+      "1bf8cd2bec48b299e7506f5f377c9cc57e4df09f3b77ee4cb0c93cb14520584f",
+      "8d43e3626ec04aac674e5d395287426e00fc93be5f78ccc458a90f304c1c7792"
+    ],
+    [
+      "electrical_branch_3port",
+      "16a4c92a9cf6e3aaf6ddd0fbd96f8f04cfef99a2a2e271b8af2aa0cd71389443",
+      "0b0a1caf61e71c41b63833d606ff952e36fc26f19d78b44f9b06b53d1138ad78"
+    ],
+    [
+      "electrical_cycle_4port",
+      "4d66e4cb1c31177dbc84dcdd1a9e90f3a8fa08885c1ddca753580a744acac6ee",
+      "fbdafd45ea16b4903a66fa0cfe65f2d4d9743294cd14589852aae65c3d37d68b"
+    ],
+    [
+      "mechanics_multi_dof",
+      "b9b22462eef8c6e568471cdfa29f934a058b596df10b74634d67a202ecf58aba",
+      "0f1db40e67c938bbf4d640f959981fe6f66e1dc2201ef5ec77e6c4fa7d18352a"
+    ],
+    [
+      "near_singular_supported",
+      "4c93c3e2cd0591d46680f82d8560db80eced6c8dc0e42f3bc4bf602e25f76467",
+      "4ab40615a4477b110fbd067a2494049b998facfc28b34e30bb25aa81f3015c6c"
+    ],
+    [
+      "coupled_dynamic_trajectory",
+      "38519a144d4eee316f710adae08e72a547725c3fb4e86657c9e2a1b51c5ff3c8",
+      "abb287879804542ec10b96a385d1680e664476740f3e976a7f56bd2da21839fa"
+    ],
+    [
+      "canonical_lifecycle_rebake",
+      "3e657d7fa0db638bba682f3b54e96cdc3911e2df3fa30bb54f5e668e203e0ec3",
+      "52980424393a320cc4a11658dd09857775cf5b888f749802fdc459c4a486eded"
+    ],
+    [
+      "reject_floating_electrical",
+      "4f38f83698ef5df5ca578fa3b286133c509de7db1525df2d920e90508f3d9268",
+      "5ec1dcf0694581ddb1691d8a9141225d44ee551050708ad6a55d9ca4bab05ded"
+    ],
+    [
+      "reject_underdetermined_mechanics",
+      "890f6d99fa409fcd6bf9e6d03f34421fe62970a43119348d5efd14bf101d86f3",
+      "ffe1c3c714db22e35dde5d3f0bf90953079efaf178c5c162a41abc19509159bf"
+    ],
+    [
+      "reject_noncollinear_mechanics",
+      "9a9530c21437006f469f6452284282e19c41be57fb5e8b529f192df49aacb980",
+      "02560b2869148ab7033cf19e6b387258289769ebbc79bed8d1b1f2c10d370133"
+    ]
+  ],
+  "post_reveal_frozen_paths_unchanged": true,
+  "product_runtime_mutated": false
+}
