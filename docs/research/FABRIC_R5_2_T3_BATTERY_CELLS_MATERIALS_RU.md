@@ -1,5 +1,7 @@
 # FABRIC R5.2 / T3 — Battery from Cells + Materials
 
+**Статус:** EXACT T3 PASS / fresh review + verifier pending.
+
 ## Цель
 
 T3 — первый полноценный functional assembly:
@@ -136,3 +138,134 @@ T3 does not yet claim:
 - runaway/venting chemistry.
 
 Those are downstream fidelity layers. T3 proves component/material/quality → compact stateful battery behavior.
+
+
+## Exact T3 result — run 35539756495
+
+```text
+SUBJECT_HEAD = bf41370633b17a0462bbb4340b112a381d87d86f
+SUBJECT_TREE = aafaa5183c6b66bd75ac4fb10f854dd240acc305
+
+samples = 3/3 PASS
+aggregate job = 106155278113
+artifact = 10614232565
+digest = sha256:4e0d6cf14e38a9a02efa332b36383990c006b0db92d3ed9f5089408a14510db8
+
+deterministic hash =
+c46528cdcc0d17f250c605abcf430dbc16a52f3ae42868fdf15f6ac75ec743e0
+```
+
+### Базовый 12S8P pack
+
+```text
+cells                  = 96
+series groups          = 12
+parallel cells/group   = 8
+
+detailed source ops    = 768
+compiled ops           = 42
+
+runtime state:
+  12 group charges
+  1 temperature
+  = 13 scalars
+
+source cell traversals / capsule execute = 0
+```
+
+Derived LFP-like pack characteristics:
+
+```text
+nominal voltage        = 38.4 V
+empty/full voltage     = 33.6 / 43.2 V
+capacity               ≈ 23.62 Ah
+max continuous current = 69.48 A
+R pack @ reference     ≈ 6.22 mΩ
+mass                   = 5.184 kg
+full energy            ≈ 907 Wh
+specific energy        ≈ 175 Wh/kg
+thermal capacity       ≈ 6739 J/K
+passive thermal K      = 24 W/K
+```
+
+NMC-like material profile with the same topology/geometry derives:
+
+```text
+specific energy ≈ 278 Wh/kg
+```
+
+No battery-level energy-density stat is assigned manually.
+
+### Full 96-cell reference vs capsule
+
+2048 sequential charge/discharge/thermal steps:
+
+```text
+max voltage error      = 2.13e-14 V
+max heat error         = 2.44e-15 J
+max charge-state error = 0
+max temperature error  = 0
+max energy residual    = 5.82e-10 J
+```
+
+Detailed reference traversals:
+
+```text
+2048 × 96 = 196608 cell traversals
+```
+
+Capsule:
+
+```text
+source cell traversals / execute = 0
+```
+
+Observed hot-loop runtime on this runner set:
+
+```text
+96-cell detailed reference ≈ 249 µs/call
+12-group capsule           ≈ 22.8 µs/call
+observed speedup           ≈ 10.9×
+```
+
+Timing is observational, not a universal budget.
+
+### Quality and damage are structural causes
+
+Lower manufacturing quality (`quality_scale=0.85`) derives:
+
+```text
+capacity    ↓ 85043.52 C → 72286.992 C / group
+resistance  ↑
+max current ↓ 69.48 A → 59.058 A
+mass        unchanged
+```
+
+One electrically-disabled cell:
+
+```text
+active cells 96 → 95
+affected group capacity ↓ to 74027.52 C
+affected group resistance ↑
+pack current limit 69.48 A → 60.48 A
+physical mass unchanged
+old capsule → rejected
+rebuilt capsule → executes
+```
+
+### Conservative reduction boundary
+
+Compiler refuses compact one-charge-per-parallel-group reduction for:
+
+```text
+mixed chemistry in one parallel group
+→ BATTERY_PARALLEL_PROFILE_MISMATCH
+
+geometry that breaks conductance/capacity synchrony
+→ BATTERY_PARALLEL_SOC_SYNCHRONY_UNSAFE
+
+electrically open series group
+→ BATTERY_SERIES_GROUP_OPEN
+```
+
+This is intentional: unsafe aggregation does not get silently averaged.
