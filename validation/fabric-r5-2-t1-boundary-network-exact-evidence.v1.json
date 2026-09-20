@@ -1,8 +1,8 @@
 {
-  "schema": "fabric.r5_2.t1_boundary_network_capsule_exact_evidence.v1",
-  "status": "EXACT_T1_PASS",
-  "subject_head": "555368186cb46971e2ad6828ac021f8b4f1f3ae1",
-  "subject_tree": "8d865d9253099e729a9be7e050023cc32b043682",
+  "schema": "fabric.r5_2.t1_boundary_network_capsule_exact_evidence.v2",
+  "status": "EXACT_T1_CANONICAL_BOUND_PASS",
+  "subject_head": "dc8f1efb038c6e55781f848b4737e401f1f6bcb1",
+  "subject_tree": "c071370374bef9671f9b27d12831d4e5c17a0221",
   "r5_1_merge_head": "630724d2a73e476d0e6dc430e09050e3957d454a",
   "canonical_owner": "Construction/Matter",
   "production_checkpoint": false,
@@ -11,21 +11,26 @@
     "sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7"
   },
   "authoritative_run": {
-    "run_id": 35514232032,
+    "run_id": 35514519075,
     "sample_count": 3,
     "sample_conclusion": "3/3 PASS",
-    "aggregate_job_id": 106087426611,
-    "aggregate_artifact_id": 10606785462,
-    "aggregate_artifact_digest": "sha256:be698db4fc804a8d3a519fb0a192c2f07fe9906bd3165a0944e43ad8e04b57e0"
+    "aggregate_job_id": 106088158464,
+    "aggregate_artifact_id": 10606456727,
+    "aggregate_artifact_digest": "sha256:1815b7a2fabdad9837576daa463f6ac46fcbcff0b18f379d0fbdd192d2469f04"
   },
   "hashes": {
-    "deterministic_hash": "9afd2af8820932b6103c8a7bc8b64b0a6f751dc08498a3881d6aa5d35eec7237",
-    "evidence_hash": "6ff6dcd791e7307f5c97fe98fbde0e69839e817dd04a166b036143e2b1fbf2a8",
+    "deterministic_hash": "3236785de6f45e34c7f380edb5cad6286bf650c7d963c907708afe936b97de0f",
+    "evidence_hash": "f77847921d01c3c8608d5a5e7593457589a3969f75c75216ac575abce92721fc",
     "graph_hash": "756d27b1c749b7bba61068ec2cd2007e497548469d8bde70b233c3bea16ab505",
     "system_hash": "4b052e18564446855f7eb77aad98a9c0bc945626fba94df393576018bdcd4b05",
-    "capsule_checksum": "a3aad013ca99398eb2c8174b4a26b9fa14afc8e6d3ae50d71a189c16599fbac5",
-    "artifact_checksum": "9dc8b902fdf3bb1922d707296aed6158a245437a4e0d646eaccc369f09f5ba38",
+    "capsule_checksum": "4f702047986f29df8f6209f2dd64dd0d890b10a86851ff42aa749e32c64515fa",
+    "artifact_checksum": "43c3d980578798aded308b2cc288ba65d017dea0b14cb186c2cbe115af8e04dd",
     "descriptor_checksum": "52a60179bf705d42c9fbe15d56db4df4fb232d7c091de155c0eb0f43aa1ad11a"
+  },
+  "canonical_graph_binding": {
+    "rule": "graph.graph_hash must equal source_hash of a CONSTRUCTION revision in canonical_source_frontier",
+    "graph_frontier_mismatch": "REJECTED",
+    "second_truth_allowed": false
   },
   "qualitative_compression": {
     "source_components": 543,
@@ -40,31 +45,18 @@
     "maximum_power_error": 2.8421709430404e-12
   },
   "prepared_execution": {
-    "activation_full_validation_median_us": 9094,
+    "activation_full_validation_median_us": 6551,
     "full_gate_hot_loop_calls": 128,
-    "full_gate_hot_loop_median_us": 1212415,
-    "full_gate_median_us_per_call": 9471.9921875,
+    "full_gate_hot_loop_median_us": 881455,
+    "full_gate_median_us_per_call": 6886.3671875,
     "prepared_hot_loop_calls": 4096,
-    "prepared_hot_loop_median_us": 80306,
-    "prepared_median_us_per_call": 19.60595703125,
-    "observed_inner_loop_speedup": 483.1180733693622,
-    "source_component_traversals_per_call": 0,
-    "fast_fence_scope": [
-      "artifact_state",
-      "invalidation_presence",
-      "source_frontier_hash",
-      "authority_checksum",
-      "dependency_hash",
-      "fabric_graph_hash",
-      "fabric_compiler_version",
-      "boundary_contract_hash",
-      "bake_policy_hash",
-      "runtime_domain",
-      "runtime_error_estimator_empty",
-      "guard_values_empty"
-    ]
+    "prepared_hot_loop_median_us": 56776,
+    "prepared_median_us_per_call": 13.861328125,
+    "observed_inner_loop_speedup": 496.8042835000704,
+    "source_component_traversals_per_call": 0
   },
   "fail_closed": {
+    "canonical_graph_frontier_mismatch": "REJECTED",
     "singular_graph": {
       "status": "NO_SAFE_BAKE",
       "reason": "RANK_DEFICIENCY"
@@ -92,7 +84,7 @@
   },
   "fast_path_trust_boundary": {
     "statement": "Per-tick fast fences consume canonical-owner-issued binding hashes/checksums as immutable snapshot tokens. Arbitrary in-memory nested mutation that leaves those tokens stale is outside the T1 live-context contract.",
-    "future_hardening": "Later persistent/hierarchical capsule work may introduce an owner-issued compact revision token; T1 does not create a second authority or revision system."
+    "future_hardening": "Persistent/hierarchical capsule work may use an owner-issued compact revision token; T1 does not create a second authority or revision system."
   },
   "non_claims": [
     "dynamic ROM",
@@ -106,7 +98,7 @@
     "timing_is_acceptance_threshold": false,
     "speedup_is_acceptance_threshold": false,
     "performance_values_are_observational": true,
-    "correctness_is_boundary_equivalence_and_fail_closed_contracts": true
+    "correctness_is_boundary_equivalence_canonical_binding_and_fail_closed_contracts": true
   },
   "next_gate": "EXACT_HEAD_RERUN_THEN_FRESH_REVIEW_AND_INDEPENDENT_VERIFIER"
 }

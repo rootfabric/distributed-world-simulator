@@ -216,3 +216,43 @@ source_hash одной CONSTRUCTION revision
 ```
 
 То есть graph является проверяемым derived representation конкретного canonical Construction state. Тест `graph A + frontier B` обязан fail-closed с `R5_2_T1_CANONICAL_GRAPH_SOURCE_MISMATCH`.
+
+
+## Canonical-bound exact result — run 35514519075
+
+После provenance repair graph больше нельзя компилировать с несвязанным canonical frontier.
+
+```text
+SUBJECT_HEAD = dc8f1efb038c6e55781f848b4737e401f1f6bcb1
+SUBJECT_TREE = c071370374bef9671f9b27d12831d4e5c17a0221
+
+samples = 3/3 PASS
+aggregate job = 106088158464
+artifact = 10606456727
+digest = sha256:1815b7a2fabdad9837576daa463f6ac46fcbcff0b18f379d0fbdd192d2469f04
+
+deterministic hash =
+3236785de6f45e34c7f380edb5cad6286bf650c7d963c907708afe936b97de0f
+
+graph hash =
+756d27b1c749b7bba61068ec2cd2007e497548469d8bde70b233c3bea16ab505
+
+capsule checksum =
+4f702047986f29df8f6209f2dd64dd0d890b10a86851ff42aa749e32c64515fa
+```
+
+Prepared runtime observation on this run:
+
+```text
+one-time activation median ≈ 6.55 ms
+full-gate path             ≈ 6.89 ms/call
+prepared path              ≈ 13.9 µs/call
+observed inner-loop speedup ≈ 497×
+```
+
+Physical equivalence stayed unchanged:
+
+```text
+max flow error  = 8.53e-14
+max power error = 2.84e-12
+```
