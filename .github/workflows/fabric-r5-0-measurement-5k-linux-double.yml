@@ -55,7 +55,7 @@ jobs:
           name: p7-repair-engine-34117353691
           run-id: 34117353691
           repository: rootfabric/distributed-world-simulator
-          github-token: ${{ github.token }
+          github-token: ${{ github.token }}
           path: ${{ runner.temp }}/r5-engine
 
       - name: Verify canonical Linux double
