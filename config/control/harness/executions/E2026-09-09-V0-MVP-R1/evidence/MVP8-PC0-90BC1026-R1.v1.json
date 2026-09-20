@@ -1,0 +1,24 @@
+{
+  "schema": "distributed_world_simulator.mvp8_pc0_evidence.v1",
+  "recorded_at_utc": "2026-09-20T13:22:00Z",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "subject_head": "90bc1026f0f5749492107191233330f87c8c70df",
+  "subject_tree": "4b6f2d48f7ef8d9c441ae89d2cbb02c730ef7f71",
+  "freeze_ref": "freeze/v0-mvp8-review-90bc1026-r1",
+  "run_id": 35513137221,
+  "job_id": 106084467438,
+  "artifact": {
+    "id": 10606027418,
+    "name": "mvp8-pc0-90bc1026-35513137221-1",
+    "digest": "sha256:8ab3a60fdde12ccf377771b71564e5483ea4e30d7553c9d5e341264256cae72b",
+    "size_in_bytes": 37703
+  },
+  "standard_pc0": "YELLOW",
+  "directional_pc0": "YELLOW",
+  "standard_non_red": true,
+  "directional_non_red": true,
+  "tracked_after": "",
+  "independent_verdict": false,
+  "mvp8_predicate_verified": false
+}
