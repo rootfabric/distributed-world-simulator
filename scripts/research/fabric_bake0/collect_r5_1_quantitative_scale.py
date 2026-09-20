@@ -12,7 +12,9 @@ PASS = "FABRIC R5.1 QUANTITATIVE SCALE: PASS"
 STAGES = [
     "source_create_with_expanded_digests",
     "source_full_rehash_validation",
-    "range_index_build",\n    "parent_aggregate_compile",\n    "range_index_parent_query",
+    "range_index_build",
+    "parent_aggregate_compile",
+    "range_index_parent_query",
     "bake_start",
     "baked_boundary_hot_loop_before",
     "local_unbake_20",
@@ -71,7 +73,10 @@ def parse_log(path: Path, expected_count: int) -> dict[str, Any]:
     c=data.get("counters",{})
     if c.get("canonical_parts")!=expected_count: raise ValueError("R5_1_COUNT_DRIFT")
     if c.get("parent_compile_parts_scanned")!=expected_count: raise ValueError("R5_1_PARENT_SCAN_DRIFT")
-    if c.get("range_index_build_parts_scanned")!=expected_count: raise ValueError("R5_1_INDEX_BUILD_SCAN_DRIFT")\n    if c.get("lifecycle_metadata_parts_scanned")!=0: raise ValueError("R5_1_LIFECYCLE_SCAN_NOT_ELIMINATED")\n    if c.get("range_query_count")!=4: raise ValueError("R5_1_RANGE_QUERY_COUNT_DRIFT")\n    if c.get("range_query_prefix_reads")!=80: raise ValueError("R5_1_RANGE_QUERY_WORK_DRIFT")
+    if c.get("range_index_build_parts_scanned")!=expected_count: raise ValueError("R5_1_INDEX_BUILD_SCAN_DRIFT")
+    if c.get("lifecycle_metadata_parts_scanned")!=0: raise ValueError("R5_1_LIFECYCLE_SCAN_NOT_ELIMINATED")
+    if c.get("range_query_count")!=4: raise ValueError("R5_1_RANGE_QUERY_COUNT_DRIFT")
+    if c.get("range_query_prefix_reads")!=80: raise ValueError("R5_1_RANGE_QUERY_WORK_DRIFT")
     if c.get("global_control_parts_scanned")!=expected_count: raise ValueError("R5_1_GLOBAL_CONTROL_SCAN_DRIFT")
     if c.get("active_full_peak")!=20: raise ValueError("R5_1_FULL_PEAK_DRIFT")
     if c.get("local_reconstructed_parts")!=20: raise ValueError("R5_1_LOCAL_RECONSTRUCTION_DRIFT")
@@ -124,7 +129,10 @@ def main() -> int:
             "rebake_local_validations":20,
             "global_physical_rebuilds":0,
             "parent_compile_parts_scanned":count,
-            "range_index_build_parts_scanned":count,\n            "lifecycle_metadata_parts_scanned":0,\n            "range_query_count":4,\n            "range_query_prefix_reads":80,
+            "range_index_build_parts_scanned":count,
+            "lifecycle_metadata_parts_scanned":0,
+            "range_query_count":4,
+            "range_query_prefix_reads":80,
             "global_control_parts_scanned":count,
             "stage_us":stage_summary,
             "process_elapsed_s":{"min":min(elapsed),"median":med(elapsed),"max":max(elapsed)},
@@ -139,7 +147,9 @@ def main() -> int:
             "payload_sha256":row["deterministic_payload_sha256"],
             "active_full_peak":20,
             "parent_scan":count,
-            "index_build_scan":count,\n            "lifecycle_scan":0,\n            "range_queries":4,
+            "index_build_scan":count,
+            "lifecycle_scan":0,
+            "range_queries":4,
             "global_control_scan":count,
         })
 
@@ -152,7 +162,9 @@ def main() -> int:
             "active_fraction":row["active_fraction"],
             "source_create_ratio_vs_5k":row["stage_us"]["source_create_with_expanded_digests"]["median"]/max(1,base["stage_us"]["source_create_with_expanded_digests"]["median"]),
             "full_rehash_ratio_vs_5k":row["stage_us"]["source_full_rehash_validation"]["median"]/max(1,base["stage_us"]["source_full_rehash_validation"]["median"]),
-            "range_index_build_ratio_vs_5k":row["stage_us"]["range_index_build"]["median"]/max(1,base["stage_us"]["range_index_build"]["median"]),\n            "range_index_parent_query_ratio_vs_5k":row["stage_us"]["range_index_parent_query"]["median"]/max(1,base["stage_us"]["range_index_parent_query"]["median"]),\n            "parent_aggregate_ratio_vs_5k":row["stage_us"]["parent_aggregate_compile"]["median"]/max(1,base["stage_us"]["parent_aggregate_compile"]["median"]),
+            "range_index_build_ratio_vs_5k":row["stage_us"]["range_index_build"]["median"]/max(1,base["stage_us"]["range_index_build"]["median"]),
+            "range_index_parent_query_ratio_vs_5k":row["stage_us"]["range_index_parent_query"]["median"]/max(1,base["stage_us"]["range_index_parent_query"]["median"]),
+            "parent_aggregate_ratio_vs_5k":row["stage_us"]["parent_aggregate_compile"]["median"]/max(1,base["stage_us"]["parent_aggregate_compile"]["median"]),
             "global_control_ratio_vs_5k":row["stage_us"]["global_control_full_aggregate"]["median"]/max(1,base["stage_us"]["global_control_full_aggregate"]["median"]),
             "local_unbake_ratio_vs_5k":row["stage_us"]["local_unbake_20"]["median"]/max(1,base["stage_us"]["local_unbake_20"]["median"]),
             "local_rebake_ratio_vs_5k":row["stage_us"]["local_rebake_after_settle"]["median"]/max(1,base["stage_us"]["local_rebake_after_settle"]["median"]),
