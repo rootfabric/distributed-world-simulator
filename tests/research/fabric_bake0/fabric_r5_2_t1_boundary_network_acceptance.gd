@@ -126,7 +126,7 @@ func _initialize() -> void:
 	begin_stage(m, "capsule_hot_loop")
 	var hot_accumulator := 0.0
 	for i in range(HOT_LOOP_CALLS):
-		var effort := excitations[i % excitations.size()]
+		var effort: Array = excitations[i % excitations.size()]
 		var executed := T1Runtime.execute(capsule, artifact, descriptor, live, effort)
 		check(executed.success, "hot loop execution", {"index": i, "result": executed} if not executed.success else {})
 		if executed.success:
