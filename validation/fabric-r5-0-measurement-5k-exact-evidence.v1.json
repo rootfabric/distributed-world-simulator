@@ -1,0 +1,94 @@
+{
+  "schema": "fabric.r5_0.measurement_5k_exact_evidence.v1",
+  "status": "EXACT_BASELINE_PASS",
+  "subject_head": "5ad976be94b9aba847dfa0845c0b6e489439379c",
+  "subject_tree": "d0ff00b282f16619fc34427e8cd35ee84a2a1ea8",
+  "predecessor_r4_2_accepted_head": "33b06f9658fe3373d18893ab2292471a13d61894",
+  "research_base_head": "618786e5b472fc968d83300c8ceb62864476b1c1",
+  "canonical_godot": {
+    "version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7"
+  },
+  "authoritative_run": {
+    "run_id": 35509335947,
+    "run_number": 14,
+    "conclusion": "success",
+    "sample_jobs": [
+      106074404980,
+      106074404965,
+      106074404919
+    ],
+    "aggregate_job": 106074468172,
+    "aggregate_artifact_id": 10604504327,
+    "aggregate_artifact_digest": "sha256:288c24212196866795cdffe48da9152e1cfc54445af5c667b0ffcbf08ebb9557"
+  },
+  "deterministic": {
+    "sample_count": 3,
+    "deterministic_hash": "1c549d536b4077c686dea9e25ca5e08935afd240f3b070ca49da153b7bee883b",
+    "deterministic_payload_sha256": "a9bd388d4da41c20a8c9025a7f8d01214b2aeb295875e58268b35afdf07f8087",
+    "evidence_hash": "13e40d7be2c318088fb533c8235411a0fac3343534e2f6b8d02623c93c4f75ef",
+    "canonical_parts": 5000,
+    "canonical_bonds_before": 4999,
+    "active_full_peak": 20,
+    "local_reconstructed_parts": 20,
+    "rebake_local_validations": 20,
+    "global_physical_rebuilds": 0,
+    "duplicate_ownership_count": 0,
+    "lifecycle_metadata_parts_scanned": 9980,
+    "boundary_execute_calls": 128,
+    "component_counts": [
+      2493,
+      2507
+    ]
+  },
+  "observational_baseline": {
+    "process_elapsed_s": {
+      "min": 2.03,
+      "median": 2.12,
+      "max": 2.31
+    },
+    "process_max_rss_kb": {
+      "min": 127052,
+      "median": 127416,
+      "max": 127500
+    },
+    "process_cpu_percent": {
+      "min": 96,
+      "median": 98,
+      "max": 98
+    },
+    "godot_memory_static_peak_bytes": {
+      "min": 28825994,
+      "median": 28825994,
+      "max": 28825994
+    },
+    "stage_median_us": {
+      "source_create_with_expanded_digests": 540653,
+      "source_full_rehash_validation": 570519,
+      "parent_aggregate_compile": 10704,
+      "bake_start": 5627,
+      "baked_boundary_hot_loop_before_64_calls": 25632,
+      "local_unbake_20": 22535,
+      "local_capsule_capture": 2879,
+      "local_capsule_restore": 9006,
+      "canonical_successor_create": 538738,
+      "canonical_mutation_fence": 1886,
+      "fenced_capsule_capture": 3109,
+      "fenced_capsule_restore": 8677,
+      "local_rebake_after_settle": 15122,
+      "baked_boundary_hot_loop_after_64_calls": 25630,
+      "final_capsule_capture": 1653,
+      "final_capsule_restore": 5117
+    }
+  },
+  "policy": {
+    "timings_are_acceptance_thresholds": false,
+    "rss_is_acceptance_threshold": false,
+    "exact_allocator_events_available": false,
+    "object_count_is_allocation_proxy": true,
+    "solver_cost_claimed": false,
+    "note": "R5.0 is a structural BAKE/local-refinement baseline. Dynamic solver cost begins with R5.2 fixtures."
+  },
+  "runtime_mutation_to_closed_r4_2_or_complex3": false,
+  "next_gate": "FRESH_REVIEW_AND_INDEPENDENT_VERIFIER"
+}

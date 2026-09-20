@@ -1,0 +1,168 @@
+name: FABRIC R5.0 Measurement Harness 5K Linux Double
+
+on:
+  push:
+    branches: [research/fabric-r5-0-measurement-harness-5k-r1]
+  pull_request:
+    paths:
+      - 'scripts/research/fabric_bake0/r5_measurement_harness_v1.gd'
+      - 'scripts/research/fabric_bake0/collect_r5_0_measurement.py'
+      - 'tests/research/fabric_bake0/fabric_r5_0_measurement_5k_acceptance.gd'
+      - 'RUN_FABRIC_R5_0_TESTS.sh'
+      - 'docs/research/FABRIC_R5_0_MEASUREMENT_HARNESS_5K_RU.md'
+      - 'validation/fabric-r5-0-*'
+      - '.github/workflows/fabric-r5-0-measurement-5k-linux-double.yml'
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: fabric-r5-0-measurement-5k-${{ github.sha }}
+  cancel-in-progress: false
+
+env:
+  R42_ACCEPTED_HEAD: 33b06f9658fe3373d18893ab2292471a13d61894
+  R5_BASE_HEAD: 618786e5b472fc968d83300c8ceb62864476b1c1
+
+jobs:
+  sample:
+    name: sample-${{ matrix.sample }}
+    strategy:
+      fail-fast: false
+      matrix:
+        sample: [1, 2, 3]
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Bind R4.2 closure and bounded R5.0 scope
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$(git merge-base HEAD "$R42_ACCEPTED_HEAD")" = "$R42_ACCEPTED_HEAD"
+          test "$(git merge-base HEAD "$R5_BASE_HEAD")" = "$R5_BASE_HEAD"
+          git diff --check "$R5_BASE_HEAD"...HEAD
+          allowed='^(.github/workflows/fabric-r5-0-measurement-5k-linux-double.yml|RUN_FABRIC_R5_0_TESTS.sh|docs/research/FABRIC_R5_0_MEASUREMENT_HARNESS_5K_RU.md|scripts/research/fabric_bake0/r5_measurement_harness_v1.gd|scripts/research/fabric_bake0/collect_r5_0_measurement.py|tests/research/fabric_bake0/fabric_r5_0_measurement_5k_acceptance.gd|validation/fabric-r5-0-[^/]+)$'
+          bad="$(git diff --name-only "$R5_BASE_HEAD"...HEAD | grep -Ev "$allowed" || true)"
+          test -z "$bad"
+          git diff --exit-code "$R5_BASE_HEAD"...HEAD --             scripts/research/fabric_bake0/complex3_sparse_damage_lifecycle_v1.gd             scripts/research/fabric_bake0/complex3_streaming_canonical_structure_v1.gd
+          echo '*.gd.uid' >> .git/info/exclude
+
+      - name: Download canonical Linux double
+        uses: actions/download-artifact@v4
+        with:
+          name: p7-repair-engine-34117353691
+          run-id: 34117353691
+          repository: rootfabric/distributed-world-simulator
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/r5-engine
+
+      - name: Verify canonical Linux double
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          bin="$RUNNER_TEMP/r5-engine/godot"
+          chmod u+x "$bin"
+          version="$("$bin" --version | head -n1 | tr -d '\r')"
+          sha="$(sha256sum "$bin" | awk '{print $1}')"
+          test "$version" = '4.7.1.stable.double.custom_build.a13da4feb'
+          test "$sha" = 'bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7'
+          echo "GODOT_BIN=$bin" >> "$GITHUB_ENV"
+          mkdir -p artifacts/fabric-r5-0
+          printf 'GODOT_VERSION=%s\nGODOT_SHA256=%s\n' "$version" "$sha"             > "artifacts/fabric-r5-0/sample-${{ matrix.sample }}.godot.txt"
+
+      - name: Fresh import
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          rm -rf .godot
+          "$GODOT_BIN" --headless --editor --path .             --log-file "artifacts/fabric-r5-0/sample-${{ matrix.sample }}.import.log" --import
+          ! grep -Eiq 'SCRIPT ERROR|Parse Error|Invalid call|Invalid access|ERROR:'             "artifacts/fabric-r5-0/sample-${{ matrix.sample }}.import.log"
+
+      - name: Capture runner metadata
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          {
+            echo "SAMPLE=${{ matrix.sample }}"
+            echo "HEAD=$(git rev-parse HEAD)"
+            echo "TREE=$(git rev-parse 'HEAD^{tree}')"
+            echo "RUNNER_OS=$RUNNER_OS"
+            echo "RUNNER_ARCH=$RUNNER_ARCH"
+            uname -a
+            lscpu
+            free -b
+            python3 --version
+            /usr/bin/time --version | head -n1
+          } > "artifacts/fabric-r5-0/sample-${{ matrix.sample }}.runner.txt"
+
+      - name: Run fresh-process 5k baseline sample
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          i='${{ matrix.sample }}'
+          log="artifacts/fabric-r5-0/sample-$i.log"
+          timing="artifacts/fabric-r5-0/sample-$i.time.txt"
+          /usr/bin/time -v -o "$timing" bash RUN_FABRIC_R5_0_TESTS.sh 2>&1 | tee "$log"
+          grep -F 'FABRIC R5.0 MEASUREMENT 5K: PASS' "$log"
+          grep -F 'FABRIC_R5_0_BASELINE=' "$log"
+          git diff --check
+          test -z "$(git status --porcelain=v1 --untracked-files=no)"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: fabric-r5-0-sample-${{ matrix.sample }}-${{ github.sha }}
+          path: artifacts/fabric-r5-0/sample-${{ matrix.sample }}.*
+          if-no-files-found: error
+          retention-days: 90
+
+  aggregate:
+    name: aggregate-evidence
+    needs: sample
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Download all fresh sample artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: fabric-r5-0-sample-*-${{ github.sha }}
+          path: artifacts/fabric-r5-0
+          merge-multiple: true
+
+      - name: Aggregate deterministic and observational evidence
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          python3 scripts/research/fabric_bake0/collect_r5_0_measurement.py             --log artifacts/fabric-r5-0/sample-1.log --time artifacts/fabric-r5-0/sample-1.time.txt             --log artifacts/fabric-r5-0/sample-2.log --time artifacts/fabric-r5-0/sample-2.time.txt             --log artifacts/fabric-r5-0/sample-3.log --time artifacts/fabric-r5-0/sample-3.time.txt             --out artifacts/fabric-r5-0/r5-0-baseline-evidence.json             | tee artifacts/fabric-r5-0/collector.log
+          grep -F 'FABRIC_R5_0_EVIDENCE=PASS' artifacts/fabric-r5-0/collector.log
+
+      - name: Seal aggregate evidence
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          {
+            echo "HEAD=$(git rev-parse HEAD)"
+            echo "TREE=$(git rev-parse 'HEAD^{tree}')"
+            echo "R42_ACCEPTED_HEAD=$R42_ACCEPTED_HEAD"
+            echo "R5_BASE_HEAD=$R5_BASE_HEAD"
+          } > artifacts/fabric-r5-0/identity.txt
+          sha256sum artifacts/fabric-r5-0/sample-*             artifacts/fabric-r5-0/r5-0-baseline-evidence.json             artifacts/fabric-r5-0/collector.log             > artifacts/fabric-r5-0/evidence.sha256
+          git diff --check
+          test -z "$(git status --porcelain=v1 --untracked-files=no)"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fabric-r5-0-5k-aggregate-${{ github.sha }}
+          path: artifacts/fabric-r5-0/**
+          if-no-files-found: error
+          retention-days: 90
