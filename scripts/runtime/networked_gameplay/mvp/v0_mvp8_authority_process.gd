@@ -145,7 +145,10 @@ func _setup_recovery8(recovering: bool) -> Dictionary:
 
 func initialize_owner() -> Dictionary:
 	var recovering := bool(cfg.get("mvp8_recovery", false))
-	var expected_epochs: Dictionary = Dictionary(cfg.get("mvp8_authority_epochs", {"a": 1, "b": 1})).duplicate(true)
+	var expected_epochs: Dictionary = Dictionary(cfg.get(
+		"mvp8_player_ownership_epochs",
+		cfg.get("mvp8_authority_epochs", {"a": 1, "b": 1})
+	)).duplicate(true)
 	service = Service8.new()
 	var setup: Dictionary = service.setup(authority, 1, 0, {
 		"profile": Service8.PROFILE_MULTIPLAYER_CORE,
@@ -187,7 +190,11 @@ func initialize_owner() -> Dictionary:
 		if not bool(bound.get("success", false)):
 			return bound
 	clock = Scheduler8.new()
-	var clock_ready: Dictionary = clock.configure(60, 8, 0)
+	# Recovery restores the canonical Service tick before fresh transport
+	# admission. Rebase only the scheduler cursor to that exact tick; resetting
+	# it to zero would make the first post-restart tick non-monotonic.
+	var initial_clock_tick := int(service.get_report().get("server_tick", 0))
+	var clock_ready: Dictionary = clock.configure(60, 8, initial_clock_tick)
 	if not bool(clock_ready.get("success", false)):
 		return clock_ready
 

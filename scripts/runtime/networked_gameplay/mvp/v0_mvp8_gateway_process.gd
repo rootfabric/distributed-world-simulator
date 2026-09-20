@@ -538,9 +538,41 @@ func _commit_round8(round_index: int) -> Dictionary:
 	})
 
 
+func _normalize_checkpoint_owner8() -> Dictionary:
+	var decision: Dictionary = coordinators["a"].snapshot()
+	if decision.get("state") != "ACTIVE":
+		return Protocol8.failure("MVP8_CHECKPOINT_PLAYER_A_DECISION_NOT_ACTIVE")
+	var owner := String(decision.get("active_authority_id", ""))
+	if owner == "authority/a":
+		return Protocol8.success({"replay": true, "authority_epoch": int(decision.get("authority_epoch", 0))})
+	if owner != "authority/b":
+		return Protocol8.failure("MVP8_CHECKPOINT_PLAYER_A_OWNER_INVALID")
+	var transfer_id := "transfer/mvp8/a/checkpoint-return-%03d" % (_seam_crossings8 + 1)
+	_handoff_stage8 = "CHECKPOINT_RETURN:%s" % transfer_id
+	_publish_progress8()
+	# Both clients have already acknowledged their neutral fixed-tick input for
+	# round 7. The transfer replays that neutral command and performs no new
+	# post-activation movement, leaving the native owners quiescent for the cut.
+	if not cross("a", "authority/a", transfer_id, false, false):
+		_handoff_stage8 = "CHECKPOINT_RETURN_FAILED:%s" % transfer_id
+		_publish_progress8()
+		return Protocol8.failure("MVP8_CHECKPOINT_PLAYER_A_RETURN_FAILED")
+	_seam_crossings8 += 1
+	_invalidate_current8()
+	decision = coordinators["a"].snapshot()
+	if decision.get("state") != "ACTIVE" or String(decision.get("active_authority_id", "")) != "authority/a":
+		return Protocol8.failure("MVP8_CHECKPOINT_PLAYER_A_RETURN_NOT_CURRENT")
+	_handoff_stage8 = "CHECKPOINT_RETURN_COMPLETE:%s" % transfer_id
+	_publish_progress8()
+	return Protocol8.success({"replay": false, "authority_epoch": int(decision.get("authority_epoch", 0))})
+
+
 func _checkpoint8() -> Dictionary:
 	if _round8 != RESTART_AFTER_ROUND8 or not _reconnect_complete8 or _checkpointed8:
 		return Protocol8.failure("MVP8_CHECKPOINT_PHASE_INVALID")
+	var normalized := _normalize_checkpoint_owner8()
+	if not bool(normalized.get("success", false)):
+		return normalized
 	var rpc := _authority6("authority/a", "a", {"kind": "MVP8_CHECKPOINT"})
 	var native := _native6(rpc)
 	if not bool(native.get("success", false)):
@@ -548,9 +580,18 @@ func _checkpoint8() -> Dictionary:
 	var checkpoint: Dictionary = native.get("details", {}).get("checkpoint", {})
 	if checkpoint.is_empty():
 		return Protocol8.failure("MVP8_CHECKPOINT_RECEIPT_REQUIRED")
-	var next_epochs := {}
+	var next_decision_epochs := {}
+	var next_player_epochs := {}
 	for actor in ["a", "b"]:
-		next_epochs[actor] = int(checkpoint.get("players", {}).get(actor, {}).get("ownership_epoch", 0)) + 1
+		var player_value = checkpoint.get("players", {}).get(actor, {})
+		if not player_value is Dictionary:
+			return Protocol8.failure("MVP8_CHECKPOINT_PLAYER_REQUIRED:" + actor)
+		var player: Dictionary = player_value
+		var position_value = player.get("position", {})
+		if int(player.get("ownership_epoch", 0)) < 1 or not position_value is Dictionary or not Dictionary(position_value).has_all(["x", "y", "z"]):
+			return Protocol8.failure("MVP8_CHECKPOINT_PLAYER_DURABLE_STATE_REQUIRED:" + actor)
+		next_player_epochs[actor] = int(player.get("ownership_epoch", 0)) + 1
+		next_decision_epochs[actor] = int(coordinators[actor].snapshot().get("authority_epoch", 0)) + 1
 	_checkpoint_receipt8 = {
 		"schema": "distributed_world_simulator.mvp8_restart_receipt.v1",
 		"subject_head": cfg.get("subject_head", ""),
@@ -559,7 +600,9 @@ func _checkpoint8() -> Dictionary:
 		"checkpoint": checkpoint.duplicate(true),
 		"next_round": _round8,
 		"initial_sequences": sequences.duplicate(true),
-		"authority_epochs": next_epochs,
+		"authority_epochs": next_decision_epochs,
+		"player_ownership_epochs": next_player_epochs,
+		"checkpoint_player_a_normalized": true,
 		"action_counts": _action_counts8.duplicate(true),
 		"fixed_receipts": _fixed_receipts8,
 		"round_history": _round_history8.duplicate(true),

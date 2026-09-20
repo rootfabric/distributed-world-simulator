@@ -148,6 +148,7 @@ def phase_config(
     start_round: int,
     epochs: dict,
     sequences: dict,
+    player_epochs: dict | None = None,
     action_counts: dict | None = None,
     fixed_receipts: int = 0,
     round_history: list | None = None,
@@ -174,6 +175,7 @@ def phase_config(
         "mvp8_generation": 1,
         "mvp8_start_round": start_round,
         "mvp8_authority_epochs": epochs,
+        "mvp8_player_ownership_epochs": player_epochs or epochs,
         "mvp8_initial_sequences": sequences,
         "mvp8_initial_action_counts": action_counts or {"DIG": 0, "ITEM": 0, "BUILD_ADD": 0, "BUILD_REMOVE": 0},
         "mvp8_initial_fixed_receipts": fixed_receipts,
@@ -206,6 +208,7 @@ def run_phase1(engine: Path, output: Path, checkpoint_root: Path, head: str, tre
         start_round=0,
         epochs={"a": 1, "b": 1},
         sequences={"a": 0, "b": 0},
+        player_epochs={"a": 1, "b": 1},
     )
     paths = {role: phase / (role.replace("/", "-") + ".json") for role in ROLES}
     cfg["mvp8_progress_file"] = str(phase / "gateway-progress.json")
@@ -321,6 +324,7 @@ def run_phase2(engine: Path, output: Path, checkpoint_root: Path, receipt: dict,
         start_round=int(receipt["next_round"]),
         epochs=dict(receipt["authority_epochs"]),
         sequences=dict(receipt["initial_sequences"]),
+        player_epochs=dict(receipt["player_ownership_epochs"]),
         action_counts=dict(receipt["action_counts"]),
         fixed_receipts=int(receipt["fixed_receipts"]),
         round_history=list(receipt["round_history"]),
@@ -430,6 +434,7 @@ def evidence_checks(phase1: dict, phase2: dict, receipt: dict, head: str, tree: 
             and w1["original_peer"] != w1["reconnect_peer"]
             and reconnect["passed"] is True
         )
+        checkpoint_players = receipt["checkpoint"]["players"]
         checks["restart_receipt_exact"] = (
             receipt["schema"] == "distributed_world_simulator.mvp8_restart_receipt.v1"
             and receipt["subject_head"] == head
@@ -438,6 +443,15 @@ def evidence_checks(phase1: dict, phase2: dict, receipt: dict, head: str, tree: 
             and receipt["generation"] == 1
             and len(receipt["checkpoint"]["checkpoint_checksum"]) == 64
             and len(receipt["dig_hits"]) == 3
+            and receipt.get("checkpoint_player_a_normalized") is True
+            and set(receipt["authority_epochs"]) == {"a", "b"}
+            and set(receipt["player_ownership_epochs"]) == {"a", "b"}
+        )
+        checks["checkpoint_both_players_durable"] = all(
+            isinstance(checkpoint_players.get(actor), dict)
+            and int(checkpoint_players[actor].get("ownership_epoch", 0)) >= 1
+            and set(checkpoint_players[actor].get("position", {})) >= {"x", "y", "z"}
+            for actor in ("a", "b")
         )
         checks["phase2_passed"] = not phase2["error"] and g2["passed"] is True and w2["recovery_boot"] is True and w2["round"] == TOTAL_ROUNDS
         checks["matter_resync_after_restart"] = (
@@ -523,6 +537,13 @@ def negative_controls(phase1: dict, phase2: dict, receipt: dict, head: str, tree
             g1.get("reconnect_count") == 1,
             g1.get("original_peer") != g1.get("reconnect_peer"),
             x["receipt"].get("next_round") == 8,
+            x["receipt"].get("checkpoint_player_a_normalized") is True,
+            all(
+                isinstance(x["receipt"].get("checkpoint", {}).get("players", {}).get(actor), dict)
+                and int(x["receipt"]["checkpoint"]["players"][actor].get("ownership_epoch", 0)) >= 1
+                and set(x["receipt"]["checkpoint"]["players"][actor].get("position", {})) >= {"x", "y", "z"}
+                for actor in ("a", "b")
+            ),
             g2.get("round") == 12,
             len(g2.get("round_history", [])) == 12,
             g2.get("action_counts") == EXPECTED_ACTIONS,
@@ -551,6 +572,7 @@ def negative_controls(phase1: dict, phase2: dict, receipt: dict, head: str, tree
         "missing_dig_hit": lambda x: x["p2"]["gateway"]["mvp8"]["dig_hits"].pop(),
         "missing_matter_resync": lambda x: x["p2"]["gateway"]["mvp8"]["matter_resynced"].update(a=False),
         "overlapping_dig_hit": lambda x: x["p2"]["gateway"]["mvp8"]["dig_hits"].__setitem__(3, list(x["p2"]["gateway"]["mvp8"]["dig_hits"][2])),
+        "missing_checkpoint_player": lambda x: x["receipt"]["checkpoint"]["players"].pop("a"),
     }
     rejected: list[str] = []
     for name, mutate in mutations.items():
@@ -609,7 +631,7 @@ def main() -> int:
         not error
         and checks
         and all(checks.values())
-        and len(negatives) == 13
+        and len(negatives) == 14
         and not fatal_logs
         and not BASE.git("status", "--porcelain", "--untracked-files=no")
     )
