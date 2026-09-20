@@ -108,8 +108,7 @@ jobs:
           i='${{ matrix.sample }}'
           log="artifacts/fabric-r5-0/sample-$i.log"
           timing="artifacts/fabric-r5-0/sample-$i.time.txt"
-          /usr/bin/time -v -o "$timing" bash RUN_FABRIC_R5_0_TESTS.sh >"$log" 2>&1
-          cat "$log"
+          /usr/bin/time -v -o "$timing" bash RUN_FABRIC_R5_0_TESTS.sh 2>&1 | tee "$log"
           grep -F 'FABRIC R5.0 MEASUREMENT 5K: PASS' "$log"
           grep -F 'FABRIC_R5_0_BASELINE=' "$log"
           git diff --check
