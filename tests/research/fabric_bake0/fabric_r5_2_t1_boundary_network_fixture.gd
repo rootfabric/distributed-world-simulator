@@ -110,7 +110,7 @@ static func build(
 	var dependency_hash := h({"dependency": "r5.2-t1-canonical"})
 	var construction := SourceRevision.create(
 		"CONSTRUCTION", "construct/r5-t1-network", 9, 100 + mutation_revision,
-		h({"graph_hash": graph.graph_hash, "mutation_revision": mutation_revision}),
+		String(graph.graph_hash),
 		dependency_hash
 	)
 	var matter := SourceRevision.create(

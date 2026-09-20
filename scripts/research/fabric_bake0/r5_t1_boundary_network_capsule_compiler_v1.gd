@@ -15,6 +15,18 @@ static func compile(graph: Dictionary, bake_request: Dictionary, capsule_id: Str
 	var graph_compiled := GraphCompiler.compile(graph)
 	if not graph_compiled.success:
 		return graph_compiled
+	if typeof(bake_request.get("canonical_source_frontier")) != TYPE_DICTIONARY:
+		return U.failure("R5_2_T1_CANONICAL_FRONTIER_REQUIRED")
+	var canonical_graph_bound := false
+	for source in bake_request.canonical_source_frontier.get("sources", []):
+		if String(source.get("source_domain", "")) == "CONSTRUCTION" and String(source.get("source_hash", "")) == String(graph.graph_hash):
+			canonical_graph_bound = true
+			break
+	if not canonical_graph_bound:
+		return U.failure("R5_2_T1_CANONICAL_GRAPH_SOURCE_MISMATCH", {
+			"graph_hash": graph.graph_hash,
+			"frontier_hash": bake_request.canonical_source_frontier.get("frontier_hash", ""),
+		})
 	var request: Dictionary = bake_request.duplicate(true)
 	request.linear_system = graph_compiled.details.linear_system
 	request.fabric_graph_hash = String(graph.graph_hash)

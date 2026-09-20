@@ -193,6 +193,11 @@ func _initialize() -> void:
 	end_stage(m, "prepared_capsule_hot_loop")
 	check(is_finite(prepared_accumulator), "prepared hot loop finite")
 
+	var mismatched_fixture := Fixture.build(1)
+	var mismatched_binding := T1Compiler.compile(graph, mismatched_fixture.request, "capsule/r5-t1-boundary-network")
+	check(not mismatched_binding.success, "graph/frontier mismatch rejected")
+	check(String(mismatched_binding.get("error_code", "")) == "R5_2_T1_CANONICAL_GRAPH_SOURCE_MISMATCH", "graph/frontier mismatch diagnostic", mismatched_binding)
+
 	var foreign_descriptor := descriptor.duplicate(true)
 	foreign_descriptor.schur_matrix[0][0] = float(foreign_descriptor.schur_matrix[0][0]) + 0.001
 	foreign_descriptor.checksum = U.compute_checksum(foreign_descriptor)

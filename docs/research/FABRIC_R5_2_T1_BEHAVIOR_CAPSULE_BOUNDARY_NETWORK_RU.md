@@ -200,3 +200,19 @@ Prepared path сохраняет fail-closed fences для STALE/invalidation/so
 Per-tick fast path использует hashes/checksums, выпущенные canonical owner live-context как immutable snapshot tokens. Произвольное изменение вложенного Dictionary без обновления его canonical hash/checksum считается нарушением live-context contract и T1 его не объявляет поддерживаемым.
 
 Это не второй revision/authority system. Future persistent/hierarchical capsule work может получить owner-issued compact revision token.
+
+
+## Canonical graph-source binding
+
+Fresh review потребовал закрыть возможный second-truth gap: физический component graph нельзя принимать отдельно от canonical Construction.
+
+T1 compiler теперь требует:
+
+```text
+graph.graph_hash
+==
+source_hash одной CONSTRUCTION revision
+в canonical_source_frontier
+```
+
+То есть graph является проверяемым derived representation конкретного canonical Construction state. Тест `graph A + frontier B` обязан fail-closed с `R5_2_T1_CANONICAL_GRAPH_SOURCE_MISMATCH`.
