@@ -3,10 +3,57 @@ extends RefCounted
 const C = preload("res://scripts/research/ecology/v2/canonical_value_v1.gd")
 const P = preload("res://scripts/research/ecology/v2/development_program_v1.gd")
 const G = preload("res://scripts/research/ecology/v2/organism_genome_v2.gd")
-const OPERATORS := ["small", "medium", "regulatory", "duplicate", "activate", "delete", "rewire", "insert", "module_parameter", "development_parameter", "none"]
+const OPERATORS := ["small", "medium", "regulatory", "duplicate", "activate", "delete", "rewire", "insert", "module_parameter", "development_parameter", "none"]\nconst BIAS_SCHEMA := "dws.ecology.genome-mutation-bias.v1"\nconst MAX_BIAS_WEIGHT := 1000000
 
 static func draw(seed: int, key: String, count: int) -> int:
 	return ("evo-arch2|%d|%s" % [seed, key]).sha256_text().substr(0, 12).hex_to_int() % maxi(1, count)
+
+
+## Canonical A3 extension used by A10.5/A11: a bias may ONLY reweight the
+## already-allowed OPERATORS. It cannot add operators or biological semantics.
+static func validate_bias(bias: Variant) -> String:
+	if not C.keys(bias, ["schema", "name", "version", "operator_weights"]) or bias.schema != BIAS_SCHEMA:
+		return "MUTATION_BIAS_SCHEMA"
+	if not C.identifier(bias.name) or not C.integer(bias.version, 1, C.MAX_INT):
+		return "MUTATION_BIAS_IDENTITY"
+	if not bias.operator_weights is Dictionary or bias.operator_weights.is_empty():
+		return "MUTATION_BIAS_WEIGHTS"
+	var total := 0
+	for raw in bias.operator_weights.keys():
+		if not raw is String or not String(raw) in OPERATORS:
+			return "MUTATION_BIAS_OPERATOR"
+		var weight = bias.operator_weights[raw]
+		if not C.integer(weight, 0, MAX_BIAS_WEIGHT):
+			return "MUTATION_BIAS_WEIGHT"
+		total += int(weight)
+		if total > C.MAX_INT:
+			return "MUTATION_BIAS_WEIGHT"
+	return "" if total > 0 else "MUTATION_BIAS_ZERO"
+
+static func mutate_with_bias(parent: Dictionary, seed: int, bias: Dictionary) -> Dictionary:
+	var error := validate_bias(bias)
+	if not error.is_empty() or not G.validate(parent).is_empty() or not C.integer(seed, 0, C.MAX_INT):
+		return _rejected("bias", error if not error.is_empty() else "INVALID_INPUT")
+	var names: Array = bias.operator_weights.keys()
+	names.sort()
+	var total := 0
+	for name in names:
+		total += int(bias.operator_weights[name])
+	var ticket := draw(seed, "bias/%s/%d" % [String(bias.name), int(bias.version)], total)
+	var selected := ""
+	var cursor := 0
+	for name in names:
+		cursor += int(bias.operator_weights[name])
+		if ticket < cursor:
+			selected = String(name)
+			break
+	if selected.is_empty():
+		return _rejected("bias", "MUTATION_BIAS_SELECTION")
+	var result := mutate(parent, seed, selected)
+	result["bias_name"] = String(bias.name)
+	result["bias_version"] = int(bias.version)
+	result["selected_operator"] = selected
+	return result
 
 static func mutate(parent: Dictionary, seed: int, operator: String = "small") -> Dictionary:
 	if not G.validate(parent).is_empty() or not C.integer(seed, 0, C.MAX_INT) or not operator in OPERATORS:

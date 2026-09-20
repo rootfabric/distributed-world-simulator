@@ -2,7 +2,7 @@ extends RefCounted
 ## A5 persistent lifecycle state. Resource accounting is separate from A2 body accounting.
 const C = preload("res://scripts/research/ecology/v2/canonical_value_v1.gd")
 const B = preload("res://scripts/research/ecology/v2/body_graph_v1.gd")
-const BP = preload("res://scripts/research/ecology/v2/organism_blueprint_v1.gd")
+const BP = preload("res://scripts/research/ecology/v2/organism_blueprint_v1.gd")\nconst Mutation = preload("res://scripts/research/ecology/v2/genome_mutation_v1.gd")
 const S = preload("res://scripts/research/ecology/v2/organism_state_v1.gd")
 const H = preload("res://scripts/research/ecology/v2/phenotype_snapshot_v1.gd")
 const F = preload("res://scripts/research/ecology/v2/environment_field_contract_v1.gd")
@@ -105,6 +105,76 @@ static func create_parent_transfer(blueprint: Dictionary, propagule: Dictionary,
 		"development": development,
 		"last_environment_source": {},
 		"last_events": [],
+	}
+	return state if validate(state, blueprint).is_empty() else {}
+
+
+## Build a caller-verifiable receipt proving that child_blueprint is exactly
+## the result of the canonical A3 mutation applied to parent_blueprint.
+static func create_mutation_receipt(parent_blueprint: Dictionary, child_blueprint: Dictionary, seed: int, operator: String, event_hash: String) -> Dictionary:
+	if not BP.validate(parent_blueprint).is_empty() or not BP.validate(child_blueprint).is_empty(): return {}
+	if not C.integer(seed, 0, C.MAX_INT) or not operator in Mutation.OPERATORS or not F.valid_hash(event_hash): return {}
+	if child_blueprint.life_history != parent_blueprint.life_history: return {}
+	var replay := Mutation.mutate(parent_blueprint.genome, seed, operator)
+	if not bool(replay.get("success", false)) or String(replay.get("event_hash", "")) != event_hash: return {}
+	var expected := BP.create(replay.genome, parent_blueprint.life_history)
+	if expected.is_empty() or BP.biological_hash(expected) != BP.biological_hash(child_blueprint): return {}
+	return {
+		"schema": MUTATION_RECEIPT_SCHEMA,
+		"parent_blueprint": parent_blueprint.duplicate(true),
+		"parent_blueprint_hash": BP.biological_hash(parent_blueprint),
+		"child_blueprint_hash": BP.biological_hash(child_blueprint),
+		"operator": operator,
+		"seed": seed,
+		"event_hash": event_hash,
+	}
+
+static func validate_mutation_receipt(receipt: Variant, child_blueprint: Dictionary) -> String:
+	if not C.keys(receipt, ["schema", "parent_blueprint", "parent_blueprint_hash", "child_blueprint_hash", "operator", "seed", "event_hash"]) or receipt.schema != MUTATION_RECEIPT_SCHEMA:
+		return "MUTATION_RECEIPT_SCHEMA"
+	if not receipt.parent_blueprint is Dictionary or not BP.validate(receipt.parent_blueprint).is_empty(): return "MUTATION_RECEIPT_PARENT"
+	if receipt.parent_blueprint_hash != BP.biological_hash(receipt.parent_blueprint): return "MUTATION_RECEIPT_PARENT_HASH"
+	if BP.validate(child_blueprint) != "" or receipt.child_blueprint_hash != BP.biological_hash(child_blueprint): return "MUTATION_RECEIPT_CHILD_HASH"
+	if child_blueprint.life_history != receipt.parent_blueprint.life_history: return "MUTATION_RECEIPT_LIFE_HISTORY"
+	if not receipt.operator is String or not String(receipt.operator) in Mutation.OPERATORS or not C.integer(receipt.seed, 0, C.MAX_INT) or not F.valid_hash(receipt.event_hash):
+		return "MUTATION_RECEIPT_INPUT"
+	var replay := Mutation.mutate(receipt.parent_blueprint.genome, int(receipt.seed), String(receipt.operator))
+	if not bool(replay.get("success", false)) or String(replay.get("event_hash", "")) != String(receipt.event_hash): return "MUTATION_RECEIPT_REPLAY"
+	var expected := BP.create(replay.genome, receipt.parent_blueprint.life_history)
+	return "" if not expected.is_empty() and BP.biological_hash(expected) == BP.biological_hash(child_blueprint) else "MUTATION_RECEIPT_CHILD"
+
+static func create_mutated_parent_transfer(blueprint: Dictionary, propagule: Dictionary, paid_parent_state: Dictionary, mutation_receipt: Dictionary) -> Dictionary:
+	var receipt_error := validate_mutation_receipt(mutation_receipt, blueprint)
+	if not receipt_error.is_empty(): return {}
+	var parent_blueprint: Dictionary = mutation_receipt.parent_blueprint
+	if not validate_parent_transfer_witness(propagule, parent_blueprint, paid_parent_state).is_empty(): return {}
+	var individual_id: String = propagule.id
+	var initial: Dictionary = propagule.endowment.duplicate(true)
+	var development := S.create(blueprint.genome, individual_id, B.stock())
+	if development.is_empty(): return {}
+	var origin := {
+		"schema": MUTATION_TRANSFER_RECEIPT_SCHEMA,
+		"child_blueprint_hash": BP.biological_hash(blueprint),
+		"parent_blueprint_hash": BP.biological_hash(parent_blueprint),
+		"parent_id": propagule.parent_id,
+		"sequence": propagule.sequence,
+		"birth_tick": propagule.birth_tick,
+		"position_mm": propagule.position_mm.duplicate(),
+		"endowment": propagule.endowment.duplicate(true),
+		"parent_state_hash": propagule.parent_state_hash,
+		"parent_state": paid_parent_state.duplicate(true),
+		"mutation_receipt": mutation_receipt.duplicate(true),
+	}
+	var state := {
+		"schema": SCHEMA, "blueprint_hash": BP.biological_hash(blueprint), "individual_id": individual_id,
+		"position_mm": propagule.position_mm.duplicate(), "origin_kind": "PARENT_MUTATION_TRANSFER", "origin_receipt": origin,
+		"alive": true, "age_ticks": 0, "starvation_ticks": 0,
+		"next_reproduction_tick": blueprint.life_history.reproduction.maturity_ticks,
+		"reproduction_count": 0, "propagule_seq": 0,
+		"metabolic_reserves": initial.duplicate(true),
+		"resource_ledger": {"initial": initial.duplicate(true), "field_intake": F.stock(), "external_energy_mj": 0,
+			"assimilated": B.stock(), "maintenance": B.stock(), "growth_transferred": B.stock(), "reproduction_transferred": B.stock(), "reproduction_cost": B.stock()},
+		"development": development, "last_environment_source": {}, "last_events": [],
 	}
 	return state if validate(state, blueprint).is_empty() else {}
 
@@ -262,27 +332,34 @@ static func _validate_origin_receipt(state: Dictionary, blueprint: Dictionary, p
 	if state.origin_kind == "FOUNDER_ENDOWMENT":
 		return "" if receipt.is_empty() else "LIFE_FOUNDER_ORIGIN_RECEIPT"
 	if parent_proof_depth >= MAX_PARENT_PROOF_DEPTH: return "LIFE_PARENT_TRANSFER_DEPTH"
-	var keys := ["schema", "blueprint_hash", "parent_id", "sequence", "birth_tick", "position_mm", "endowment", "parent_state_hash", "parent_state"]
-	if not C.keys(receipt, keys) or receipt.schema != PARENT_TRANSFER_RECEIPT_SCHEMA: return "LIFE_PARENT_TRANSFER_RECEIPT"
-	if receipt.blueprint_hash != BP.biological_hash(blueprint): return "LIFE_PARENT_TRANSFER_RECEIPT"
-	if not receipt.parent_state is Dictionary: return "LIFE_PARENT_TRANSFER_PARENT_STATE"
-	if state.position_mm != receipt.position_mm: return "LIFE_PARENT_TRANSFER_POSITION"
-	if not B.valid_stock(receipt.endowment) or receipt.endowment != blueprint.life_history.reproduction.endowment: return "LIFE_PARENT_TRANSFER_ENDOWMENT"
-	if state.resource_ledger.initial != receipt.endowment: return "LIFE_PARENT_TRANSFER_INITIAL"
-	var reconstructed_propagule := {
-		"schema": PROPAGULE_SCHEMA,
-		"id": state.individual_id,
-		"parent_id": receipt.parent_id,
-		"sequence": receipt.sequence,
-		"blueprint_hash": receipt.blueprint_hash,
-		"birth_tick": receipt.birth_tick,
-		"position_mm": receipt.position_mm,
-		"endowment": receipt.endowment,
-		"parent_state_hash": receipt.parent_state_hash,
-	}
-	var witness_error := validate_parent_transfer_witness(reconstructed_propagule, blueprint, receipt.parent_state, parent_proof_depth + 1)
-	if not witness_error.is_empty(): return "LIFE_PARENT_TRANSFER_PARENT_STATE"
-	return ""
+	if state.origin_kind == "PARENT_TRANSFER":
+		var keys := ["schema", "blueprint_hash", "parent_id", "sequence", "birth_tick", "position_mm", "endowment", "parent_state_hash", "parent_state"]
+		if not C.keys(receipt, keys) or receipt.schema != PARENT_TRANSFER_RECEIPT_SCHEMA: return "LIFE_PARENT_TRANSFER_RECEIPT"
+		if receipt.blueprint_hash != BP.biological_hash(blueprint): return "LIFE_PARENT_TRANSFER_RECEIPT"
+		if not receipt.parent_state is Dictionary: return "LIFE_PARENT_TRANSFER_PARENT_STATE"
+		if state.position_mm != receipt.position_mm: return "LIFE_PARENT_TRANSFER_POSITION"
+		if not B.valid_stock(receipt.endowment) or receipt.endowment != blueprint.life_history.reproduction.endowment: return "LIFE_PARENT_TRANSFER_ENDOWMENT"
+		if state.resource_ledger.initial != receipt.endowment: return "LIFE_PARENT_TRANSFER_INITIAL"
+		var reconstructed := {"schema": PROPAGULE_SCHEMA, "id": state.individual_id, "parent_id": receipt.parent_id,
+			"sequence": receipt.sequence, "blueprint_hash": receipt.blueprint_hash, "birth_tick": receipt.birth_tick,
+			"position_mm": receipt.position_mm, "endowment": receipt.endowment, "parent_state_hash": receipt.parent_state_hash}
+		return "" if validate_parent_transfer_witness(reconstructed, blueprint, receipt.parent_state, parent_proof_depth + 1).is_empty() else "LIFE_PARENT_TRANSFER_PARENT_STATE"
+	if state.origin_kind == "PARENT_MUTATION_TRANSFER":
+		var keys2 := ["schema", "child_blueprint_hash", "parent_blueprint_hash", "parent_id", "sequence", "birth_tick", "position_mm", "endowment", "parent_state_hash", "parent_state", "mutation_receipt"]
+		if not C.keys(receipt, keys2) or receipt.schema != MUTATION_TRANSFER_RECEIPT_SCHEMA: return "LIFE_MUTATION_TRANSFER_RECEIPT"
+		if receipt.child_blueprint_hash != BP.biological_hash(blueprint): return "LIFE_MUTATION_TRANSFER_CHILD"
+		if not receipt.mutation_receipt is Dictionary: return "LIFE_MUTATION_TRANSFER_MUTATION"
+		var mutation_error := validate_mutation_receipt(receipt.mutation_receipt, blueprint)
+		if not mutation_error.is_empty(): return "LIFE_MUTATION_TRANSFER_MUTATION:" + mutation_error
+		var parent_blueprint: Dictionary = receipt.mutation_receipt.parent_blueprint
+		if receipt.parent_blueprint_hash != BP.biological_hash(parent_blueprint): return "LIFE_MUTATION_TRANSFER_PARENT"
+		if not receipt.parent_state is Dictionary: return "LIFE_MUTATION_TRANSFER_PARENT_STATE"
+		if state.position_mm != receipt.position_mm or state.resource_ledger.initial != receipt.endowment: return "LIFE_MUTATION_TRANSFER_BINDING"
+		var reconstructed2 := {"schema": PROPAGULE_SCHEMA, "id": state.individual_id, "parent_id": receipt.parent_id,
+			"sequence": receipt.sequence, "blueprint_hash": receipt.parent_blueprint_hash, "birth_tick": receipt.birth_tick,
+			"position_mm": receipt.position_mm, "endowment": receipt.endowment, "parent_state_hash": receipt.parent_state_hash}
+		return "" if validate_parent_transfer_witness(reconstructed2, parent_blueprint, receipt.parent_state, parent_proof_depth + 1).is_empty() else "LIFE_MUTATION_TRANSFER_PARENT_STATE"
+	return "LIFE_ORIGIN_KIND"
 
 static func state_hash(v: Dictionary, blueprint: Dictionary) -> String:
 	return C.digest(v) if validate(v, blueprint).is_empty() else ""

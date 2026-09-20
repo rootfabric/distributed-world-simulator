@@ -32,6 +32,56 @@ static func validate_policy(v: Variant) -> String:
 		if not C.integer(v[name], 0, F.MAX_REQUEST): return "A6_POLICY_RATE"
 	return ""
 
+
+## Canonical composition hook for a single-trajectory runtime. The caller has
+## already executed exactly one A5 lifecycle step. This helper performs ONLY
+## A6 post-lifecycle corpse return + mineralization + field tick; it never calls
+## A5 and therefore cannot create a second population/field trajectory.
+static func post_lifecycle_feedback(field: Dictionary, population: Array, corpses: Array, policy: Dictionary, step: int) -> Dictionary:
+	if not validate_policy(policy).is_empty() or not F.validate_state(field).is_empty(): return _fail("A6_POST_INPUT")
+	if not C.integer(step, 0, MAX_STEPS - 1) or population.size() > MAX_POPULATION: return _fail("A6_POST_BUDGET")
+	var entries: Array = []
+	var by_id := {}
+	for entry in population:
+		if not C.keys(entry, ["blueprint", "state"]) or not entry.blueprint is Dictionary or not entry.state is Dictionary: return _fail("A6_POST_ENTRY")
+		if not LS.validate(entry.state, entry.blueprint).is_empty(): return _fail("A6_POST_ENTRY_INVALID")
+		var id := String(entry.state.individual_id)
+		if by_id.has(id): return _fail("A6_POST_DUPLICATE")
+		by_id[id] = entry
+		entries.append(entry.duplicate(true))
+	var next_corpses: Array = corpses.duplicate(true)
+	var corpse_ids := {}
+	for corpse in next_corpses:
+		if not corpse is Dictionary or not corpse.has_all(["individual_id", "death_step", "source_hash", "inventory", "remaining", "returned", "dissipated_energy_mj"]): return _fail("A6_POST_CORPSE")
+		var cid := String(corpse.individual_id)
+		if corpse_ids.has(cid) or not by_id.has(cid) or bool(by_id[cid].state.alive): return _fail("A6_POST_CORPSE_BINDING")
+		if not B.valid_stock(corpse.inventory) or not B.valid_stock(corpse.remaining) or not F.valid_total_stock(corpse.returned): return _fail("A6_POST_CORPSE_STOCK")
+		corpse_ids[cid] = true
+	for entry in entries:
+		if not bool(entry.state.alive) and not corpse_ids.has(String(entry.state.individual_id)):
+			next_corpses.append(_corpse(entry.state, step + 1))
+			corpse_ids[String(entry.state.individual_id)] = true
+	next_corpses.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return String(a.individual_id) < String(b.individual_id))
+	var payloads: Array = []
+	for entry in entries:
+		var text := LS.serialize(entry.state, entry.blueprint)
+		if text.is_empty(): return _fail("A6_POST_SERIALIZE")
+		payloads.append(text)
+	var frame := {"schema": FRAME_SCHEMA, "step": step, "field": field.duplicate(true), "population": payloads,
+		"corpses": next_corpses, "propagules": [], "returned": F.stock(), "mineralized_mg": 0, "dissipated_energy_mj": 0}
+	var returned := _return_corpses(frame, entries, policy)
+	if not returned.success: return returned
+	frame = returned.frame
+	var mineralized := _mineralize(frame, policy)
+	if not mineralized.success: return mineralized
+	frame = mineralized.frame
+	var f: Dictionary = frame.field
+	var advanced_tick := Field.advance_tick(f, f.owner_token, f.owner_epoch, f.revision)
+	if not advanced_tick.success: return _fail("A6_POST_FIELD_TICK:" + String(advanced_tick.error))
+	frame.field = advanced_tick.state
+	return {"success": true, "field": frame.field, "corpses": frame.corpses,
+		"returned": frame.returned, "mineralized_mg": frame.mineralized_mg, "dissipated_energy_mj": frame.dissipated_energy_mj}
+
 static func create(session_id: String, field: Dictionary, population: Array, policy: Dictionary) -> Dictionary:
 	if not C.identifier(session_id): return _fail("A6_SESSION_ID")
 	if not validate_policy(policy).is_empty(): return _fail(validate_policy(policy))
