@@ -53,7 +53,7 @@ aggregate compile
         ↓
 one baked body
         ↓
-cheap baked boundary execution loop (512 calls)
+cheap baked boundary execution loop (64 calls)
         ↓
 local guard
         ↓
@@ -83,7 +83,7 @@ local reconstructed parts   = 20
 rebake local validations    = 20
 global physical rebuilds    = 0
 duplicate ownership         = 0
-baked boundary calls        = 1024
+baked boundary calls        = 128
 ```
 
 ## Measurement stages
