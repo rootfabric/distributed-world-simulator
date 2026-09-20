@@ -18,7 +18,7 @@ func _init(label: String = "r5-0") -> void:
 
 func begin_stage(name: String) -> Dictionary:
 	if name.is_empty() or _active.has(name) or _stages.has(name):
-		return U.failure("R5_MEASURE_STAGE_BEGIN_INVALID", name)
+		return U.failure("R5_MEASURE_STAGE_BEGIN_INVALID", {"stage": name})
 	print("FABRIC_R5_0_STAGE_BEGIN=" + name)
 	_active[name] = {
 		"start_us": Time.get_ticks_usec(),
@@ -29,7 +29,7 @@ func begin_stage(name: String) -> Dictionary:
 
 func end_stage(name: String) -> Dictionary:
 	if not _active.has(name):
-		return U.failure("R5_MEASURE_STAGE_END_INVALID", name)
+		return U.failure("R5_MEASURE_STAGE_END_INVALID", {"stage": name})
 	var started: Dictionary = _active[name]
 	var ended_us := Time.get_ticks_usec()
 	var memory_after := _memory_static()
@@ -59,13 +59,13 @@ func sample(name: String) -> Dictionary:
 
 func set_counter(name: String, value) -> Dictionary:
 	if name.is_empty() or not _json_scalar(value):
-		return U.failure("R5_MEASURE_COUNTER_INVALID", name)
+		return U.failure("R5_MEASURE_COUNTER_INVALID", {"counter": name})
 	_counters[name] = value
 	return U.success()
 
 func finish(deterministic: Dictionary, applicability: Dictionary = {}) -> Dictionary:
 	if not _active.is_empty():
-		return U.failure("R5_MEASURE_STAGE_LEFT_OPEN", _active.keys())
+		return U.failure("R5_MEASURE_STAGE_LEFT_OPEN", {"open_stages": _active.keys()})
 	var memory_peak := _memory_static()
 	for row in _snapshots.values():
 		memory_peak = maxi(memory_peak, int(row.memory_static_bytes))
