@@ -263,17 +263,23 @@ func _dig8(round_index: int) -> Dictionary:
 		var operation := "operation/mvp4/%s/mvp8-dig/%d" % [candidate, round_index]
 		for direction in directions:
 			prepared = _owner4(candidate, {"kind": "MVP4_PREPARE", "operation_id": operation, "direction": direction})
+			var prepare_error := String(prepared.get("error_code", ""))
 			_last_dig8["attempts"].append({
 				"actor": candidate,
 				"player_owner": player_owner,
 				"player_position": Dictionary(player.get("position", {})).duplicate(true),
 				"direction": Array(direction).duplicate(),
 				"success": bool(prepared.get("success", false)),
-				"error_code": String(prepared.get("error_code", "")),
+				"error_code": prepare_error,
 				"hit_position_m": Dictionary(prepared.get("details", {})).get("hit_position_m", []),
 			})
 			if bool(prepared.get("success", false)):
 				dig_actor = candidate
+				break
+			# Authority-transfer fencing is actor state, not an aim miss. One
+			# canonical rejection proves this actor cannot mutate Matter at this
+			# moment; probing 48 more directions would only inflate RPC state.
+			if prepare_error == "SM1_AUTHORITY_TRANSFER_WRITE_FENCED":
 				break
 		if not dig_actor.is_empty():
 			break
