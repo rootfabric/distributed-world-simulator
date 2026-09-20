@@ -46,6 +46,13 @@ func compile_graph(graph: Dictionary, revision: int = 0) -> Dictionary:
 func _initialize() -> void:
 	for arg in OS.get_cmdline_user_args():
 		if arg == "--preflight":
+			var preflight_graph := Fixture.make_graph()
+			var preflight_compile := compile_graph(preflight_graph)
+			var preflight_reference := FullReference.prepare(preflight_graph)
+			if not preflight_compile.success or not preflight_reference.success:
+				print("FABRIC_R5_2_T3_PREFLIGHT=FAIL")
+				quit(1)
+				return
 			print("FABRIC_R5_2_T3_PREFLIGHT=PASS")
 			quit(0)
 			return
