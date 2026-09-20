@@ -133,7 +133,7 @@ func _initialize() -> void:
 	if not prepared.success:
 		_finish()
 		return
-		for index in range(excitations.size()):
+	for index in range(excitations.size()):
 		var fast := prepared_runtime.execute(live, excitations[index])
 		check(fast.success, "prepared excitation", fast)
 		if fast.success:
