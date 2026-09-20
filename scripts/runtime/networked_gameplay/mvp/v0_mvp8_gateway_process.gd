@@ -234,29 +234,18 @@ func _current8(actor: String) -> Dictionary:
 
 
 func _dig8(round_index: int) -> Dictionary:
-	# Reuse the accepted MVP4 actor-bound operation namespace. The dig actor is
-	# an authenticated player currently local to authority/a, because Matter
-	# ownership does not migrate with player A's SM1 seam crossing.
-	var dig_actor := _matter_observer8()
-	if dig_actor.is_empty():
+	# PREPARE is a read-only canonical MVP4 query. Probe every authenticated
+	# player currently local to authority/a, preferring A (the already-proven
+	# terrain footprint) and falling back to B. Execute only the first PREPARE
+	# accepted by the existing Matter owner; MVP8 never fabricates a hit.
+	var candidates: Array[String] = []
+	for actor in ["a", "b"]:
+		if String(coordinators[actor].snapshot().get("active_authority_id", "")) == "authority/a":
+			candidates.append(actor)
+	if candidates.is_empty():
 		return Protocol8.failure("MVP8_DIG_OWNER_OBSERVER_REQUIRED")
-	var operation := "operation/mvp4/%s/mvp8-dig/%d" % [dig_actor, round_index]
-	var player_owner := String(coordinators[dig_actor].snapshot().get("active_authority_id", ""))
-	var player: Dictionary = lookup(player_owner, dig_actor)
-	_last_dig8 = {
-		"actor": dig_actor,
-		"round": round_index,
-		"player_owner": player_owner,
-		"player": player.duplicate(true),
-		"attempts": [],
-	}
-	var prepared: Dictionary = {}
-	# The inherited MVP4 story already excavates one surface opening. Probe a
-	# bounded downward hemisphere so repeated workload digs find another native
-	# surface hit while preserving the exact MVP4 raycast/attestation contract.
-	# No mutation occurs until the first successful prepare is executed.
 	var directions: Array = [[0.0, -1.0, 0.0]]
-	for vertical in [-0.9, -0.8, -0.75, -0.7, -0.6]:
+	for vertical in [-0.95, -0.9, -0.8, -0.75, -0.7, -0.6]:
 		var horizontal := sqrt(1.0 - float(vertical) * float(vertical))
 		var diagonal := horizontal / sqrt(2.0)
 		directions.append_array([
@@ -265,26 +254,41 @@ func _dig8(round_index: int) -> Dictionary:
 			[diagonal, vertical, diagonal], [diagonal, vertical, -diagonal],
 			[-diagonal, vertical, diagonal], [-diagonal, vertical, -diagonal],
 		])
-	for direction in directions:
-		prepared = _owner4(dig_actor, {"kind": "MVP4_PREPARE", "operation_id": operation, "direction": direction})
-		_last_dig8["attempts"].append({
-			"direction": Array(direction).duplicate(),
-			"success": bool(prepared.get("success", false)),
-			"error_code": String(prepared.get("error_code", "")),
-			"hit_position_m": Dictionary(prepared.get("details", {})).get("hit_position_m", []),
-		})
-		if bool(prepared.get("success", false)):
+	var prepared: Dictionary = {}
+	var dig_actor := ""
+	_last_dig8 = {"round": round_index, "candidates": candidates.duplicate(), "attempts": []}
+	for candidate in candidates:
+		var player_owner := String(coordinators[candidate].snapshot().get("active_authority_id", ""))
+		var player: Dictionary = lookup(player_owner, candidate)
+		var operation := "operation/mvp4/%s/mvp8-dig/%d" % [candidate, round_index]
+		for direction in directions:
+			prepared = _owner4(candidate, {"kind": "MVP4_PREPARE", "operation_id": operation, "direction": direction})
+			_last_dig8["attempts"].append({
+				"actor": candidate,
+				"player_owner": player_owner,
+				"player_position": Dictionary(player.get("position", {})).duplicate(true),
+				"direction": Array(direction).duplicate(),
+				"success": bool(prepared.get("success", false)),
+				"error_code": String(prepared.get("error_code", "")),
+				"hit_position_m": Dictionary(prepared.get("details", {})).get("hit_position_m", []),
+			})
+			if bool(prepared.get("success", false)):
+				dig_actor = candidate
+				break
+		if not dig_actor.is_empty():
 			break
-	if not bool(prepared.get("success", false)):
-		return prepared
+	if dig_actor.is_empty():
+		return prepared if not prepared.is_empty() else Protocol8.failure("MVP8_CANONICAL_DIG_PREPARE_FAILED")
+	_last_dig8["selected_actor"] = dig_actor
 	var executed := _owner4(dig_actor, {"kind": "MVP4_EXECUTE", "plan": Dictionary(prepared.get("details", {})).duplicate(true)})
 	if not bool(executed.get("success", false)):
+		_last_dig8["execute_error"] = String(executed.get("error_code", ""))
 		return executed
+	_last_dig8["executed"] = true
 	var current := _current8("a")
 	if bool(current.get("success", false)):
 		_action_counts8["DIG"] = int(_action_counts8["DIG"]) + 1
 	return current
-
 
 func _item8(round_index: int) -> Dictionary:
 	var owner_id := String(coordinators["a"].snapshot().get("active_authority_id", ""))
@@ -455,6 +459,7 @@ func _publish_progress8() -> void:
 		"fixed_receipts": _fixed_receipts8,
 		"seam_crossings": _seam_crossings8,
 		"handoff_stage": _handoff_stage8,
+		"last_dig": _last_dig8.duplicate(true),
 		"reconnect_complete": _reconnect_complete8,
 		"checkpointed": _checkpointed8,
 		"mvp6": {
@@ -483,6 +488,7 @@ func world_snapshot() -> Dictionary:
 		"recovery_boot": _recovery_boot8,
 		"complete": _round8 >= TOTAL_ROUNDS8,
 		"bounds": _bounds8.duplicate(true),
+		"last_dig": _last_dig8.duplicate(true),
 	}
 	return value
 
@@ -638,6 +644,7 @@ func base_report(schema: String, passed: bool, graphical: bool) -> Dictionary:
 		"backend_liveness_cycles": _backend_liveness_cycles8,
 		"backend_liveness_failures": _backend_liveness_failures8,
 		"backend_liveness_last": _backend_liveness_last8.duplicate(true),
+		"last_dig": _last_dig8.duplicate(true),
 		"canonical_state_owned": false,
 		"mvp8_predicate_verified": false,
 	}
