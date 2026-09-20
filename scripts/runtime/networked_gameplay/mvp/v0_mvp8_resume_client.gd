@@ -137,7 +137,10 @@ func _send_move8(snapshot: Dictionary, round_index: int, neutral: bool = false) 
 		if actor == "a":
 			axis = -1.0 if String(decision.get("active_authority_id", "authority/a")) == "authority/b" else 1.0
 		else:
-			axis = 1.0 if round_index % 2 == 0 else -1.0
+			var x := float(player.get("position", {}).get("x", 0.0))
+			# Fresh/recovered B uses the same bounded controller as the original
+			# client: always steer toward x=0, then send the explicit neutral tick.
+			axis = -1.0 if x > 0.0 else 1.0
 	var phase_tag := "neutral" if neutral else "move"
 	var operation := "operation/mvp8/%s/round-%02d/%s-%d" % [actor, round_index, phase_tag, input_sequence]
 	var wire := InputDTO8.create(

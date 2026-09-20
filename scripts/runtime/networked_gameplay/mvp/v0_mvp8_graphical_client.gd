@@ -81,7 +81,12 @@ func _next_mvp8(snapshot: Dictionary) -> void:
 		if actor == "a":
 			axis = -1.0 if String(decision.get("active_authority_id", "authority/a")) == "authority/b" else 1.0
 		else:
-			axis = 1.0 if round_index % 2 == 0 else -1.0
+			var player: Dictionary = snapshot.get("players", {}).get(actor, {})
+			var x := float(player.get("position", {}).get("x", 0.0))
+			# B is the stable Matter observer. Keep its non-zero responsiveness
+			# bounded around the Matter bubble instead of accumulating timing-
+			# dependent drift while long canonical RPCs are in flight.
+			axis = -1.0 if x > 0.0 else 1.0
 		send_move(axis)
 		return
 	if _mvp8_neutral_round != round_index:
