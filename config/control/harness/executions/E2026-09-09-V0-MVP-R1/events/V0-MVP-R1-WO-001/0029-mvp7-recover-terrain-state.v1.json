@@ -1,0 +1,21 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-09-09-V0-MVP-R1-V0-MVP-R1-WO-001-0029-MVP7-RECOVER-TERRAIN-STATE",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "sequence": 29,
+  "event_type": "PREDICATE_VERIFIED",
+  "work_state": "IN_PROGRESS",
+  "recorded_at_utc": "2026-09-20T02:07:00Z",
+  "actor": "DIRECTOR",
+  "branch": "feature/v0-mvp-playable-seamless-planet-r1",
+  "head_sha": "ad48b24d8cde350db8c26adb958d9a0d62c6ff56",
+  "predicate": "RECOVER_TERRAIN_STATE",
+  "command": "MVP7-RECOVER-TERRAIN-STATE",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/verifications/MVP7-INDEPENDENT-VERIFICATION-AD48B24D-R1.v1.json",
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence/MVP7-LEAF-CLOSURE-AD48B24D-R1.v1.json"
+  ],
+  "summary": "MVP7 closure evidence verifies RECOVER_TERRAIN_STATE on frozen ad48b24d/f306e84e. Parent Work Order remains IN_PROGRESS and no merge/whole-MVP acceptance is claimed."
+}

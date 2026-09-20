@@ -1,0 +1,210 @@
+{
+  "schema": "distributed_world_simulator.mvp7_independent_verification.v1",
+  "role": "FRESH_INDEPENDENT_VERIFIER",
+  "verdict": "VERIFIED",
+  "work_order": "V0-MVP-R1-WO-001",
+  "epoch": "E2026-09-09-V0-MVP-R1",
+  "target": "MVP_RECONNECT_AND_RESTART",
+  "PRODUCT_HEAD": "ad48b24d8cde350db8c26adb958d9a0d62c6ff56",
+  "PRODUCT_TREE": "f306e84ebce87ea3644c60b5dd75779d7980f8bb",
+  "FREEZE_REF": "freeze/v0-mvp7-review-ad48b24d-r1 -> ad48b24d8cde350db8c26adb958d9a0d62c6ff56",
+  "verify_branch": "verify/v0-mvp7-ad48b24d-r1",
+  "reviewer_result_consumed": {
+    "branch": "review/v0-mvp7-ad48b24d-r1",
+    "commit": "dc2c8676dad9dde664c48ebce3419609fdd0e593",
+    "tree": "7d4aae09e7b3150ab3bc03c168ea08b347c7d5ee",
+    "verdict": "PASS",
+    "required_fixes": [],
+    "evidence_gaps": [],
+    "merge_performed": false,
+    "predicate_verified": false,
+    "result_path": "config/control/harness/executions/E2026-09-09-V0-MVP-R1/verifications/MVP7-INDEPENDENT-REVIEW-AD48B24D-R1.v1.json"
+  },
+  "platform": {
+    "os": "Windows 10 Pro 10.0.19045",
+    "cpu": "13th Gen Intel(R) Core(TM) i9-13900H",
+    "engine": "godot.windows.editor.double.x86_64.console.exe",
+    "godot_version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "godot_sha256": "3633C3E609C8CE2F9BAE334A9C7E75C7F974DE3AF0415AB4A8050A625A15A7A5"
+  },
+  "runtime_worktree": "worktrees/mvp7-verifier-runtime-ad48 (detached at ad48b24d8cde350db8c26adb958d9a0d62c6ff56)",
+  "source_clean_before": true,
+  "source_clean_after": true,
+  "source_clean_after_detail": "git status --untracked-files=no empty; git diff --exit-code clean; only generated .godot/.uid and artifacts/ untracked files",
+  "commands_and_exit_codes": {
+    "git_fetch_prune": 0,
+    "fresh_godot_import": 0,
+    "native_produce": 0,
+    "native_recover1": 0,
+    "native_recover2": 0,
+    "world_produce": 0,
+    "world_recover1": 0,
+    "world_recover2": 0,
+    "construction_produce": 0,
+    "construction_recover1": 0,
+    "construction_recover2": 0,
+    "regression_mvp3": 0,
+    "regression_mvp5": 0,
+    "regression_mvp6_persistence": 0,
+    "graphical_reconnect_python": 0,
+    "full_world_core_attempt1": 1,
+    "full_world_core_attempt2": 1,
+    "full_world_core_attempt3": 0
+  },
+  "native_gameplay_restart": {
+    "result": "PASS",
+    "assertions": 117,
+    "failures": 0,
+    "pids": { "produce": 24588, "recover1": 19584, "recover2": 23292 },
+    "pid_distinct": true,
+    "per_mode": { "produce": 45, "recover1": 45, "recover2": 27 },
+    "durable_generation_continuity": true,
+    "gameplay_checksum_continuity": "produce durable af3e2afe1f90b9a24d72452927cc5ab6c66b3a83a7ffe5245d7f84e8ebcf1481 -> recover1 recovered_durable identical -> recover2 recovered_durable fc4b1358ff10d752b94a884191ea8a883688e00808f98cd0aa2481111c4560ef matches recover1 durable",
+    "item_graph_checksum_continuity": "477a9a05959aac628e323e1afbc35e1a862f3f610204a30755065f192c2432ad restored in recover1; 733093c66390f7505cfa44ba94c97481dc79c29c08bf199f7e79f2f2b38ecb1d restored in recover2",
+    "replay_checksum_continuity": "126ff27324c8052ac3d913664b2254619d991d8dddc40c88dd10a639d2e08c60 -> dc1ae0e96ec8e1729ed5ee4c0e0061d27f5405fdf19de099273859b76b5cf6f1 restored across restarts",
+    "inventory_hotbar_equipment_restored": true,
+    "durable_shared_container_graph_restored": true,
+    "recovered_container_count": 1,
+    "old_session_rejected": true,
+    "old_authority_epoch_rejected": true,
+    "malformed_mixed_rollback_recovery_rejected": "asserted inside 63-assertion recover modes (failures=0)",
+    "exact_replay_no_duplicate_canonical_output": true
+  },
+  "mw5_terrain_matter_restart": {
+    "result": "PASS",
+    "assertions": 159,
+    "failures": 0,
+    "pids": { "produce": 23256, "recover1": 14236, "recover2": 22712 },
+    "pid_distinct": true,
+    "per_mode": { "produce": 47, "recover1": 63, "recover2": 49 },
+    "store_hash": {
+      "produce": "e1646dc59f08cfabe287ff414f633b57519bdd2df8df494b3b1e235ee8a46928",
+      "recover1_new": "7c4a3c41ff41546853866c7dd66d26e860cc03bf051a387f4af230e1c3a77600",
+      "recover2_recovered": "7c4a3c41ff41546853866c7dd66d26e860cc03bf051a387f4af230e1c3a77600"
+    },
+    "state_hash": {
+      "produce": "1b115051011f8f4d5d9bdd1d6b5a72b6516cee6e8b8b4a27c1fc6b1a86b25ab8",
+      "recover1_new": "c5c79a2a4b1095fb6a518fe486a1499a47fc5a38e1882f08a79b346e0ae7118a",
+      "recover2_recovered": "c5c79a2a4b1095fb6a518fe486a1499a47fc5a38e1882f08a79b346e0ae7118a"
+    },
+    "receiver_journal_continuity": true,
+    "material_identity_preserved": true,
+    "material_quantity_preserved": true,
+    "replay_no_second_carve": true,
+    "replay_no_second_material_output": true,
+    "post_recovery_new_dig": { "succeeds": true, "output_created_this_call": true, "store_mutated_exactly_once": true, "stream_advanced_exactly_once": true, "output_quantity": 24312 },
+    "current_terrain_visible_to_recovered_replicas": true
+  },
+  "construction_collision_restart": {
+    "result": "PASS",
+    "assertions": 273,
+    "failures": 0,
+    "pids": { "produce": 8928, "recover1": 1924, "recover2": 24996 },
+    "pid_distinct": true,
+    "per_mode": { "produce": 217, "recover1": 28, "recover2": 28 },
+    "same_existing_m0_repository_reopened": "repository_root user://mvp6-seam-construction/8928-2585691 reused across all three PIDs (8928 = produce PID)",
+    "m4_item_graph_checksum": "9021d8e35175bac41e34640ef94bf0a0cd1022b5c9a64839d362a8277cfc7cee",
+    "construction_checksum": "c2a087e8b7e84d4d56828721ae62b945263d9dd89bc11e121b40405667ee4d21",
+    "c17_single_writer_a_readonly_replica_b": true,
+    "terminal_command_count": 3,
+    "final_parts": 100,
+    "final_bonds": 99,
+    "cross_seam_construction_relation_preserved": true,
+    "derived_collision": { "static_body_3d": true, "collision_part_count": 100, "west_hit": true, "east_hit": true, "boundary_seam_hit": true, "removed_leaf_hits": 0, "removed_leaf_collision_absent": true }
+  },
+  "inherited_regressions": {
+    "mvp3_live_owner_handoff": "PASS (exit 0, no fatal markers)",
+    "mvp5_exactly_once_material": "PASS (exit 0, no fatal markers)",
+    "mvp6_cross_authority_construction_persistence": "PASS (exit 0, no fatal markers)"
+  },
+  "graphical_reconnect": {
+    "result": "PASS",
+    "failed_checks": [],
+    "duration_seconds": 76.891,
+    "subject_head": "ad48b24d8cde350db8c26adb958d9a0d62c6ff56",
+    "subject_tree": "f306e84ebce87ea3644c60b5dd75779d7980f8bb",
+    "engine_sha256": "3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5",
+    "pids": { "authority_a": 24980, "authority_b": 25228, "gateway": 8376, "client_a_original": 10684, "client_b": 19972, "reconnect_a_fresh": 23876 },
+    "pids_distinct": true,
+    "original_peer": "peer/enet/923400965/mvp3-7604c00b93cb51587af9f41b4c56cda9-a",
+    "reconnect_peer": "peer/enet/192528937/mvp3-7604c00b93cb51587af9f41b4c56cda9-a",
+    "reconnect_count": 1,
+    "fresh_reconnect_peer_differs": true,
+    "current_state_resync": {
+      "current_terrain_state": true,
+      "current_matter_hashes_exact": { "store": "253437ef06a6399bb3a30468dca5e11e82ef9948b08453b60f73e345803e3b49", "state": "fa5459b4025d5c8cf6c1817efd5aef27b33f4d71eb6f4d6eda5180dd8e1d40f1" },
+      "current_material_projection_present": true,
+      "current_item_graph_checksum_present": true,
+      "current_construction_exact": true,
+      "collision_part_count": 100,
+      "current_player_state_present": true,
+      "not_served_from_stale_source4_observer_cache": "gateway reads current state via authenticated owner RPCs; checks bind reconnect hashes to the live owner mvp4 projection"
+    },
+    "fixed_tick_continuation": { "continued_fixed_tick_control": true, "fixed_input_receipt": true, "position_changed": true, "position_before_x": -3.8000000000000034, "position_after_x": -3.625000000000002 },
+    "world_digest_before_equals_after": "0d374e52b7aaeea4d047290283e5459ac8ad6e8d8b92e234daa16f0bed435922",
+    "backend": { "backend_reconnect_performed": false, "backend_disconnects": 0, "liveness_cycles": 11, "liveness_failures": 0, "timeout_policy_changed": false, "payload_limit_changed": false, "reconnect_policy_changed": false, "shared_transport_changed": false },
+    "finish_ack_disconnect": true,
+    "server_restart_executed": false,
+    "hud_only_falsification_rejected_both_actors": true
+  },
+  "negative_controls": {
+    "mvp6": { "rejected": 13, "total": 13, "names": ["duplicate_owner", "one_sided_replica", "missing_add_replay", "fake_same_process_route", "duplicate_client_process", "client_claims_truth", "missing_collision_part", "stale_subject", "client_guard_not_restored", "authority_guard_still_active", "minted_resource_topup", "forged_resource_source", "missing_backend_keepalive"] },
+    "mvp7": { "rejected": 7, "total": 7, "names": ["no_reconnect", "same_peer", "no_post_reconnect_motion", "stale_construction", "stale_matter", "no_backend_liveness", "no_finish_ack_disconnect"] },
+    "verification_mode": "each falsifier mutates the raw reports and the harness BASE.requires that the check gate rejects it (MVP7_RECONNECT_FALSE_POSITIVE guard); python exit 0 proves all 20 rejections"
+  },
+  "full_world_core": {
+    "result": "PASS",
+    "exit_code": 0,
+    "declared_tests": 349,
+    "discovered_tests": 349,
+    "steps": 354,
+    "failed_steps": 0,
+    "started_utc": "2026-09-20T00:37:54",
+    "finished_utc": "2026-09-20T01:41:10",
+    "wall_minutes": 63.3,
+    "sum_step_duration_seconds": 3788.9,
+    "summary_path": "artifacts/mvp7-windows-verifier-r1/full-world-core-final-summary.json",
+    "summary_sha256": "6346FAEADE75AF9219A428A88D33849AE8CE62C362E9740EA5DCE8EAEDA5A819",
+    "log_sha256": "7443D511E76E5D8119A18F4ACF9123FE7D2F02CD8D95339C0EDE4280D96D3BB8",
+    "fatal_markers_in_log": "0 real (23 grep hits are PASS lines asserting absence of script/parse/compile errors)",
+    "attempts": [
+      {
+        "attempt": 1,
+        "exit_code": 1,
+        "classification": "INFRASTRUCTURE_EVIDENCE_ROUTE",
+        "detail": "test_v0_mvp_6_cross_authority_prerequisites exit 1: 63/63 assertions passed, diagnostic_passed=true, quit gate requires env MVP6_SEAM_DIAGNOSTIC_RESULT which the bare RUN_WORLD_REGRESSION_TESTS.ps1 invocation does not set (canonical wrapper validate_mvp6_seam_repro.py sets it). Not a product failure."
+      },
+      {
+        "attempt": 2,
+        "exit_code": 1,
+        "classification": "INFRASTRUCTURE_EVIDENCE_ROUTE",
+        "detail": "test_v0_mvp_7_construction_restart exit 1: 'bounded Construction restart process configuration' - the auto-discovered MVP7 multi-process tests refuse to run without their bounded MVP7_*_MODE/ROOT env; same class as attempt 1. MVP7 bounded gates were independently executed as full produce/recover1/recover2 OS-process triples earlier in this verification."
+      },
+      {
+        "attempt": 3,
+        "exit_code": 0,
+        "classification": "PASS",
+        "env_configuration_supplied": ["MVP6_SEAM_DIAGNOSTIC_RESULT", "MVP6_CROSS_AUTHORITY_SEAM_RESULT", "MVP6_DERIVED_COLLISION_RESULT", "MVP6_PERSISTENCE_RESULT", "MVP7_NATIVE_MODE=produce + MVP7_NATIVE_ROOT + MVP7_NATIVE_RESULT", "MVP7_WORLD_MODE=produce + MVP7_WORLD_ROOT + MVP7_WORLD_RESULT", "MVP7_CONSTRUCTION_MODE=produce + MVP7_CONSTRUCTION_ROOT + MVP7_CONSTRUCTION_RESULT", "EXPECTED_HEAD", "EXPECTED_TREE", "GODOT_BIN"],
+        "note": "env-only configuration, no source change; mirrors the canonical wrapper pattern in docs/control/mvp-act0-r1/validate_mvp6_seam_repro.py and the bounded-mode pattern in docs/control/mvp-act0-r1/validate_mvp7_native.py"
+      }
+    ]
+  },
+  "existing_linux_evidence_checked": {
+    "native_run_35447331651": { "attempt": 3, "head": "ad48b24d8cde350db8c26adb958d9a0d62c6ff56", "conclusion": "success", "job_105977766107": "success (mvp7-recovery)", "artifact_10594111480_digest": "sha256:5cbbf01e95dd6fe41c72f5d3bcc36da326c2e1201845eda37796e2caf3609bb6", "digest_verified_via_api": true },
+    "pc0_run_35473552815": { "conclusion": "success", "carrier_head": "8ba159488293d57def4347bff38cc0a84e15712d (control-only descendant of ad48b24d)", "job_105978749777": "success (mvp7-pc0-carrier)", "artifact_10593077063_digest": "sha256:3e0fb44603673b6b1938362f7663b1fcf0e53e4d7eaa9cadfa812503be966d8d", "digest_verified_via_api": true },
+    "linux_closure_rerun_35476684387": { "status": "completed", "conclusion": "failure", "job_105987014808": "mvp7-closure-carrier", "failure": "FULL_WORLD_CORE_PROCESS_FAILED", "corroboration": "canonical Linux wrapper (which does not set MVP7_* bounded env) fails at the same auto-discovered MVP7 bounded tests my Windows attempts 1-2 hit; my configured attempt 3 passes all 349 tests, confirming evidence-route classification rather than product defect", "prerequisite": false }
+  },
+  "blocking_findings": [],
+  "evidence_gaps": [
+    {
+      "id": "MVP7-VER-EG001",
+      "severity": "INFO",
+      "summary": "RUN_WORLD_REGRESSION_TESTS.ps1 as shipped does not set the bounded env (MVP6_SEAM_DIAGNOSTIC_RESULT, MVP7_*_MODE/ROOT) required by three auto-discovered multi-process tests, so a bare invocation exits 1 despite all product assertions passing. The canonical Linux closure carrier (run 35476684387) failed the same way (FULL_WORLD_CORE_PROCESS_FAILED). Full pass requires the documented wrapper env configuration. Recorded for the Director; not a frozen product defect and not repaired in verifier role."
+    }
+  ],
+  "merge_performed": false,
+  "predicate_verified": false,
+  "human_acceptance": false,
+  "mvp8_started": false,
+  "recorded_at_utc": "2026-09-20T02:05:00Z"
+}
