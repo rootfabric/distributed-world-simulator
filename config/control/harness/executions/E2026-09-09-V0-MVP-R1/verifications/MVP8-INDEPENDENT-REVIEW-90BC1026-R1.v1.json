@@ -1,7 +1,7 @@
 {
   "schema": "distributed_world_simulator.mvp8_independent_review.v1",
   "role": "FRESH_INDEPENDENT_REVIEWER",
-  "reviewed_at_utc": "2026-09-20T14:05:00Z",
+  "reviewed_at_utc": "2026-09-20T14:35:00Z",
   "project_epoch": "E2026-09-09-V0-MVP-R1",
   "work_order_id": "V0-MVP-R1-WO-001",
   "repository": "rootfabric/distributed-world-simulator",
@@ -132,8 +132,24 @@
   "full_world_core": {
     "run_id": 35513166911,
     "job_id": 106084548114,
-    "status_at_review_time": "IN_PROGRESS",
-    "treatment": "Source/evidence review completed independently. Exact full world/core remains a separate Director/Verifier closure gate; this review neither waits on it nor declares it PASS."
+    "status_at_review_time": "COMPLETED_FAILURE",
+    "completed_at_utc": "2026-09-20T13:46:09Z",
+    "run_head": "4615cb023ed813df3c3dc8f2a08c7a02aed3bb3a (control carrier commit)",
+    "subject_binding": "EXPECTED_HEAD=90bc1026f0f5749492107191233330f87c8c70df EXPECTED_TREE=4b6f2d48f7ef8d9c441ae89d2cbb02c730ef7f71 confirmed in job log",
+    "artifact": {"id": 10606256907, "name": "mvp8-closure-90bc1026-35513166911-1", "digest": "sha256:e5c22376c0ce362666fbf532862e71cb0d39516b343d0846e5696fadd3e7484f", "downloaded_and_inspected": true},
+    "outcome": "FAILURE",
+    "failing_step": "Exact frozen graphical prerequisite and full world core",
+    "failing_regression": {
+      "test": "test_v0_mvp_7_construction_restart",
+      "target": "res://tests/runtime/test_v0_mvp_7_construction_restart.gd",
+      "exit_code": 1,
+      "observed_error": "ERROR: bounded Construction restart process configuration at test line 199; MVP7_CONSTRUCTION_RESTART passed=false assertions=2 failures=2"
+    },
+    "all_other_steps": "PASSED (full world/core suite including all MW0-MW10, RL, C1-C16, EG, MVP3-MVP6 regression steps)",
+    "pc0_carrier_result": "YELLOW/YELLOW non-red",
+    "membership_in_mvp8_product_diff": false,
+    "treatment": "The full world/core is a separate Director/Verifier closure gate per the reviewer instruction. Its completed FAILURE is recorded factually and blocks leaf closure, not this source review: the failing regression target executes no MVP8-diff code (the 48-commit product diff contains only MVP8-specific files plus a new workflow job), and the MVP8 workload evidence itself passed 3/3 exact attempts. The Director/Verifier owns triage (flake vs environment vs genuine MVP7-area regression) before any leaf verdict.",
+    "declared_pass_by_this_review": false
   },
   "subpredicate_assessment": {
     "ONE_CONNECTED_TWO_CLIENT_GAMEPLAY_LOOP": "SUPPORTED - one canonical lineage through 6 distinct phase1 OS processes and 5 disjoint phase2 processes; round history 0..11 contiguous in the frozen artifact; both clients move every round (MVP8_BOTH_CLIENT_MOVES_REQUIRED gate).",
@@ -199,6 +215,17 @@
       "problem": "The PC0 carrier run head (be4b6661...) is not the product head; subject binding relies on the artifact name and embedded summary.json.",
       "why_not_blocking": "Both binding surfaces were independently downloaded and verified to pin subject_head 90bc1026... and subject_tree 4b6f2d48..., and the artifact digest matches the pinned evidence.",
       "required_fix": "None required."
+    },
+    {
+      "id": "MVP8-REV-OBS-005",
+      "severity": "INFO",
+      "classification": "CLOSURE_GATE_OBSERVATION",
+      "blocking": false,
+      "file": "config/control/harness/executions/E2026-09-09-V0-MVP-R1/verifications/MVP8-INDEPENDENT-REVIEW-90BC1026-R1.v1.json",
+      "line_range": "full_world_core section",
+      "problem": "The exact full world/core closure run 35513166911 completed with FAILURE during the review window: regression step test_v0_mvp_7_construction_restart exits 1 with 'bounded Construction restart process configuration' (test line 199); every other suite step passed.",
+      "why_not_blocking": "Not an MVP8 product finding: the failing target executes no MVP8-diff code (the product diff is 9 MVP8-specific paths plus a new workflow job), the MVP8 workload evidence passed 3/3 exact attempts on the same frozen HEAD, and the full world/core is explicitly a separate Director/Verifier closure gate that this review must not pass or repair.",
+      "required_fix": "None in this review role. Director/Verifier must triage the MVP7 construction restart regression step (flake vs environment vs genuine regression) and obtain a green exact world/core run before any MVP8 leaf closure."
     }
   ],
   "required_fixes": [],
@@ -206,7 +233,7 @@
     {
       "id": "MVP8-REV-GAP-001",
       "blocking_for_this_review": false,
-      "description": "Exact full world/core regression run 35513166911 (job 106084548114) was still IN_PROGRESS at review time. It remains a separate Director/Verifier closure gate and is not declared PASS by this review."
+      "description": "Exact full world/core regression run 35513166911 (job 106084548114) COMPLETED WITH FAILURE during the review window (regression step test_v0_mvp_7_construction_restart, exit 1; all other steps passed; artifact sha256:e5c22376...). It is a separate Director/Verifier closure gate: triage and a green exact world/core run are required before any MVP8 leaf closure. This review does not declare it PASS and does not repair it."
     },
     {
       "id": "MVP8-REV-GAP-002",
