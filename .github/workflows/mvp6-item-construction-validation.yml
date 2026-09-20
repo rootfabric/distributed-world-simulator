@@ -1,7 +1,7 @@
 name: MVP6 Item Construction Exact
 on:
   push:
-    branches: [feature/v0-mvp-playable-seamless-planet-r1]
+    branches: [feature/v0-mvp-playable-seamless-planet-r1, control/v0-mvp8-closure-90bc-r1]
   workflow_dispatch:
 permissions:
   contents: read
@@ -355,4 +355,118 @@ jobs:
           name: mvp6-graphical-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: artifacts/mvp6-graphical/
           if-no-files-found: error
+          retention-days: 90
+
+
+  mvp8-closure-carrier:
+    if: github.repository == 'rootfabric/distributed-world-simulator' && github.ref == 'refs/heads/control/v0-mvp8-closure-90bc-r1'
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      EXPECTED_HEAD: 90bc1026f0f5749492107191233330f87c8c70df
+      EXPECTED_TREE: 4b6f2d48f7ef8d9c441ae89d2cbb02c730ef7f71
+      PYTHONUTF8: '1'
+      PYTHONDONTWRITEBYTECODE: '1'
+      PYTHONPATH: scripts
+      BREAKPOINT_RUNTIME_DISABLED: '1'
+      GODOT_SILENCE_ROOT_WARNING: '1'
+      PLANET_SIMULATOR_INVENTORY_PROFILE: planet_default
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 90bc1026f0f5749492107191233330f87c8c70df
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Bind frozen MVP8 product subject
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+          test "$(git rev-parse HEAD^{tree})" = "$EXPECTED_TREE"
+          test -z "$(git status --porcelain --untracked-files=no)"
+          git switch -c feature/v0-mvp-playable-seamless-planet-r1 "$EXPECTED_HEAD"
+          git fetch origin '+refs/heads/*:refs/remotes/origin/*' --prune
+          python3 -m pip install --disable-pip-version-check -r scripts/harness/requirements.txt
+          python3 -m py_compile             docs/control/mvp-act0-r1/validate_mvp6_seam_repro.py             docs/control/mvp-act0-r1/validate_mvp6_full_world_core_result.py             scripts/control/project_control.py             scripts/control/project_control_directional_watch.py
+      - uses: actions/download-artifact@v4
+        with:
+          name: p7-repair-engine-34117353691
+          run-id: 34117353691
+          repository: rootfabric/distributed-world-simulator
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/mvp8-closure-engine
+      - name: Exact frozen graphical prerequisite and full world core
+        shell: bash
+        run: |
+          set -euo pipefail
+          export GODOT_BIN="$RUNNER_TEMP/mvp8-closure-engine/godot"
+          test "$(sha256sum "$GODOT_BIN" | cut -d' ' -f1)" = bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7
+          chmod u+x "$GODOT_BIN"
+          if ! command -v Xvfb >/dev/null || ! command -v xauth >/dev/null; then
+            sudo -n apt-get update
+            sudo -n env DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends xvfb xauth libgl1-mesa-dri
+          fi
+          mkdir -p artifacts/mvp8-closure-graphical
+          "$GODOT_BIN" --headless --path . --editor --import --quit > artifacts/mvp8-closure-graphical/import.log 2>&1
+          xvfb-run -a -s '-screen 0 1600x900x24' python3             tests/integration/test_v0_mvp_6_graphical_construction.py             --engine "$GODOT_BIN"             --output artifacts/mvp8-closure-graphical/live
+          export MVP6_GRAPHICAL_MANIFEST="$PWD/artifacts/mvp8-closure-graphical/live/manifest.json"
+          python3 - <<'PY'
+          import importlib.util, json, os
+          from pathlib import Path
+          p=Path('docs/control/mvp-act0-r1/validate_mvp6_seam_repro.py')
+          manifest=Path(os.environ['MVP6_GRAPHICAL_MANIFEST'])
+          value=json.loads(manifest.read_text(encoding='utf-8'))
+          assert value.get('schema')=='distributed_world_simulator.mvp6_graphical_construction_manifest.v1'
+          assert value.get('subject_head')==os.environ['EXPECTED_HEAD']
+          assert value.get('subject_tree')==os.environ['EXPECTED_TREE']
+          assert value.get('passed') is True
+          spec=importlib.util.spec_from_file_location('mvp8_world_core_carrier',p)
+          module=importlib.util.module_from_spec(spec)
+          spec.loader.exec_module(module)
+          raise SystemExit(module.run_full_world_core())
+          PY
+      - name: Exact frozen standard and directional PC0
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+          python3 scripts/control/project_control.py --no-fetch --no-fail-on-red
+          python3 scripts/control/project_control_directional_watch.py --no-fail-on-red
+          mkdir -p artifacts/mvp8-closure-control
+          python3 - <<'PY'
+          import json,os,pathlib,subprocess
+          std=json.load(open('artifacts/control/project-control-report.json'))
+          directional=json.load(open('artifacts/control/directional-watch-report.json'))
+          head=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
+          tree=subprocess.check_output(['git','rev-parse','HEAD^{tree}'],text=True).strip()
+          assert head==os.environ['EXPECTED_HEAD']
+          assert tree==os.environ['EXPECTED_TREE']
+          summary={
+            'schema':'distributed_world_simulator.mvp8_closure_carrier.v1',
+            'subject_head':head,
+            'subject_tree':tree,
+            'run_id':os.environ['GITHUB_RUN_ID'],
+            'run_attempt':os.environ['GITHUB_RUN_ATTEMPT'],
+            'standard_pc0':std.get('overall_health'),
+            'directional_pc0':directional.get('overall_health'),
+            'tracked_after':subprocess.check_output(['git','status','--porcelain','--untracked-files=no'],text=True).strip(),
+            'independent_verdict':False,
+            'mvp8_predicate_verified':False,
+          }
+          out=pathlib.Path('artifacts/mvp8-closure-control/summary.json')
+          out.write_text(json.dumps(summary,indent=2)+'\n')
+          print('MVP8_CLOSURE_CONTROL',json.dumps(summary))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mvp8-closure-90bc1026-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            artifacts/mvp6-seam-repro/
+            artifacts/mvp6-world-core/
+            artifacts/mvp8-closure-graphical/
+            artifacts/control/
+            artifacts/mvp8-closure-control/
+          if-no-files-found: warn
           retention-days: 90
