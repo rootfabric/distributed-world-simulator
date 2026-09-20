@@ -356,3 +356,72 @@ jobs:
           path: artifacts/mvp6-graphical/
           if-no-files-found: error
           retention-days: 90
+
+
+  mvp8-pc0-carrier:
+    if: github.repository == 'rootfabric/distributed-world-simulator' && github.ref == 'refs/heads/control/v0-mvp8-pc0-90bc-r1'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      EXPECTED_HEAD: 90bc1026f0f5749492107191233330f87c8c70df
+      EXPECTED_TREE: 4b6f2d48f7ef8d9c441ae89d2cbb02c730ef7f71
+      PYTHONUTF8: '1'
+      PYTHONDONTWRITEBYTECODE: '1'
+      PYTHONPATH: scripts
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 90bc1026f0f5749492107191233330f87c8c70df
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Bind frozen MVP8 product subject
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+          test "$(git rev-parse HEAD^{tree})" = "$EXPECTED_TREE"
+          test -z "$(git status --porcelain --untracked-files=no)"
+          git switch -c feature/v0-mvp-playable-seamless-planet-r1 "$EXPECTED_HEAD"
+          git fetch origin '+refs/heads/*:refs/remotes/origin/*' --prune
+          python3 -m pip install --disable-pip-version-check -r scripts/harness/requirements.txt
+      - name: Exact frozen standard and directional PC0
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/control/project_control.py --no-fetch --no-fail-on-red
+          python3 scripts/control/project_control_directional_watch.py --no-fail-on-red
+          mkdir -p artifacts/mvp8-pc0
+          python3 - <<'PY'
+          import json,os,pathlib,subprocess
+          std=json.load(open('artifacts/control/project-control-report.json'))
+          directional=json.load(open('artifacts/control/directional-watch-report.json'))
+          head=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
+          tree=subprocess.check_output(['git','rev-parse','HEAD^{tree}'],text=True).strip()
+          assert head==os.environ['EXPECTED_HEAD']
+          assert tree==os.environ['EXPECTED_TREE']
+          assert std.get('overall_health')!='RED', std.get('overall_health')
+          assert directional.get('overall_health')!='RED', directional.get('overall_health')
+          summary={
+            'schema':'distributed_world_simulator.mvp8_pc0_carrier.v1',
+            'subject_head':head,
+            'subject_tree':tree,
+            'run_id':os.environ['GITHUB_RUN_ID'],
+            'run_attempt':os.environ['GITHUB_RUN_ATTEMPT'],
+            'standard_pc0':std.get('overall_health'),
+            'directional_pc0':directional.get('overall_health'),
+            'tracked_after':subprocess.check_output(['git','status','--porcelain','--untracked-files=no'],text=True).strip(),
+            'independent_verdict':False,
+            'mvp8_predicate_verified':False,
+          }
+          pathlib.Path('artifacts/mvp8-pc0/summary.json').write_text(json.dumps(summary,indent=2)+'\n')
+          print('MVP8_PC0_CARRIER',json.dumps(summary))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mvp8-pc0-90bc1026-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            artifacts/control/
+            artifacts/mvp8-pc0/
+          if-no-files-found: error
+          retention-days: 90
