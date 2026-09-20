@@ -20,7 +20,7 @@ var _recovery8 = null
 var _sessions8: Dictionary = {}
 var _generation8 := 0
 var _recovered8 := false
-var _checkpoint8: Dictionary = {}
+var _checkpoint_receipt8: Dictionary = {}
 var _construction_root8 := ""
 var _construction_cut_file8 := ""
 
@@ -96,7 +96,7 @@ func _setup_recovery8(recovering: bool) -> Dictionary:
 		if not bool(configured.get("success", false)):
 			return configured
 		_recovered8 = true
-		_checkpoint8 = Dictionary(configured.get("details", {}).get("checkpoint", {})).duplicate(true)
+		_checkpoint_receipt8 = Dictionary(configured.get("details", {}).get("checkpoint", {})).duplicate(true)
 		_shared_dig4 = _adapter8.get_shared_matter7()
 	return Protocol.success({"recovered": _recovered8, "generation": _generation8})
 
@@ -356,8 +356,8 @@ func _mvp8_remove(cycle: int) -> Dictionary:
 func _checkpoint8() -> Dictionary:
 	if authority != "authority/a" or _adapter8 == null or _recovery8 == null or _construction6.is_empty() or _phase6 != "REMOVED":
 		return Protocol.failure("MVP8_QUIESCENT_CHECKPOINT_NOT_READY")
-	if not _checkpoint8.is_empty():
-		return Protocol.success({"replay": true, "checkpoint": _checkpoint8.duplicate(true)})
+	if not _checkpoint_receipt8.is_empty():
+		return Protocol.success({"replay": true, "checkpoint": _checkpoint_receipt8.duplicate(true)})
 	var generation := 1
 	var prepared: Dictionary = _adapter8.prepare_checkpoint7(generation)
 	if not bool(prepared.get("success", false)):
@@ -397,7 +397,7 @@ func _checkpoint8() -> Dictionary:
 	held_inputs.clear()
 	pending_fixed_wire.clear()
 	pending_fixed_sequence = 0
-	_checkpoint8 = {
+	_checkpoint_receipt8 = {
 		"generation": generation,
 		"checkpoint_checksum": String(saved.get("details", {}).get("checkpoint", {}).get("checksum", "")),
 		"gameplay_checksum": String(service.export_durable_state().get("checksum", "")),
@@ -406,7 +406,7 @@ func _checkpoint8() -> Dictionary:
 		"matter": _shared_dig4.report(),
 		"players": players,
 	}
-	return Protocol.success({"checkpoint": _checkpoint8.duplicate(true)})
+	return Protocol.success({"checkpoint": _checkpoint_receipt8.duplicate(true)})
 
 
 func _bounds8() -> Dictionary:
@@ -492,7 +492,7 @@ func report(passed: bool, phase: String) -> Dictionary:
 	value["mvp8"] = {
 		"recovered": _recovered8,
 		"generation": _generation8,
-		"checkpoint": _checkpoint8.duplicate(true),
+		"checkpoint": _checkpoint_receipt8.duplicate(true),
 		"bounds": _bounds8(),
 		"construction_root": _construction_root8,
 		"canonical_state_owned": authority == "authority/a",
