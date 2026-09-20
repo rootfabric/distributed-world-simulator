@@ -1,0 +1,154 @@
+name: FABRIC R5.1 Quantitative Scale Linux Double
+
+on:
+  push:
+    branches: [research/fabric-r5-1-quantitative-scale-r1]
+  pull_request:
+    paths:
+      - 'tests/research/fabric_bake0/fabric_r5_1_quantitative_scale_acceptance.gd'
+      - 'scripts/research/fabric_bake0/collect_r5_1_quantitative_scale.py'
+      - 'RUN_FABRIC_R5_1_TESTS.sh'
+      - 'docs/research/FABRIC_R5_1_QUANTITATIVE_SCALE_RU.md'
+      - 'validation/fabric-r5-1-*'
+      - '.github/workflows/fabric-r5-1-quantitative-scale-linux-double.yml'
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: fabric-r5-1-quantitative-scale-${{ github.sha }}
+  cancel-in-progress: false
+
+env:
+  R5_0_CLOSURE_HEAD: deec93566edadef3ed604a055cafcd62275df253
+  R5_0_SUBJECT_HEAD: 5e4f2edfd48be643493d0abbd50b063980326901
+
+jobs:
+  scale-sample:
+    name: count-${{ matrix.count }}-sample-${{ matrix.sample }}
+    strategy:
+      fail-fast: false
+      matrix:
+        count: [5000, 20000, 100000]
+        sample: [1, 2, 3]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Bind R5.0 closure and R5.1-only scope
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$(git merge-base HEAD "$R5_0_CLOSURE_HEAD")" = "$R5_0_CLOSURE_HEAD"
+          allowed='^(.github/workflows/fabric-r5-1-quantitative-scale-linux-double.yml|RUN_FABRIC_R5_1_TESTS.sh|docs/research/FABRIC_R5_1_QUANTITATIVE_SCALE_RU.md|scripts/research/fabric_bake0/collect_r5_1_quantitative_scale.py|scripts/research/fabric_bake0/r5_range_aggregate_index_v1.gd|scripts/research/fabric_bake0/r5_indexed_sparse_damage_lifecycle_v1.gd|docs/research/FABRIC_R5_1_REPAIR_R1_RANGE_INDEX_RU.md|tests/research/fabric_bake0/fabric_r5_1_quantitative_scale_acceptance.gd|validation/fabric-r5-1-[^/]+)$'
+          bad="$(git diff --name-only "$R5_0_CLOSURE_HEAD"...HEAD | grep -Ev "$allowed" || true)"
+          test -z "$bad"
+          git diff --check "$R5_0_CLOSURE_HEAD"...HEAD
+          git diff --exit-code "$R5_0_CLOSURE_HEAD"...HEAD -- \
+            scripts/research/fabric_bake0/complex3_streaming_canonical_structure_v1.gd \
+            scripts/research/fabric_bake0/complex3_sparse_damage_lifecycle_v1.gd \
+            scripts/research/fabric_bake0/r5_measurement_harness_v1.gd \
+            scripts/research/fabric_bake0/collect_r5_0_measurement.py \
+            tests/research/fabric_bake0/fabric_r5_0_measurement_5k_acceptance.gd
+          echo '*.gd.uid' >> .git/info/exclude
+
+      - name: Download canonical Linux double
+        uses: actions/download-artifact@v4
+        with:
+          name: p7-repair-engine-34117353691
+          run-id: 34117353691
+          repository: rootfabric/distributed-world-simulator
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/r5-1-engine
+
+      - name: Verify canonical Linux double
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          bin="$RUNNER_TEMP/r5-1-engine/godot"
+          chmod u+x "$bin"
+          version="$("$bin" --version | head -n1 | tr -d '\r')"
+          sha="$(sha256sum "$bin" | awk '{print $1}')"
+          test "$version" = '4.7.1.stable.double.custom_build.a13da4feb'
+          test "$sha" = 'bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7'
+          echo "GODOT_BIN=$bin" >> "$GITHUB_ENV"
+          mkdir -p artifacts/fabric-r5-1
+          printf 'GODOT_VERSION=%s\nGODOT_SHA256=%s\n' "$version" "$sha" > "artifacts/fabric-r5-1/count-${{ matrix.count }}-sample-${{ matrix.sample }}.godot.txt"
+
+      - name: Fresh import
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          rm -rf .godot
+          "$GODOT_BIN" --headless --editor --path . --log-file "artifacts/fabric-r5-1/count-${{ matrix.count }}-sample-${{ matrix.sample }}.import.log" --import
+          ! grep -Eiq 'SCRIPT ERROR|Parse Error|Invalid call|Invalid access|ERROR:' "artifacts/fabric-r5-1/count-${{ matrix.count }}-sample-${{ matrix.sample }}.import.log"
+
+      - name: Run fresh scale sample
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          count='${{ matrix.count }}'
+          sample='${{ matrix.sample }}'
+          stem="artifacts/fabric-r5-1/count-$count-sample-$sample"
+          /usr/bin/time -v -o "$stem.time.txt" bash RUN_FABRIC_R5_1_TESTS.sh "$count" 2>&1 | tee "$stem.log"
+          grep -F "FABRIC_R5_1_COUNT=$count" "$stem.log"
+          grep -F 'FABRIC R5.1 QUANTITATIVE SCALE: PASS' "$stem.log"
+          git diff --check
+          test -z "$(git status --porcelain=v1 --untracked-files=no)"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: fabric-r5-1-count-${{ matrix.count }}-sample-${{ matrix.sample }}-${{ github.sha }}
+          path: artifacts/fabric-r5-1/count-${{ matrix.count }}-sample-${{ matrix.sample }}.*
+          if-no-files-found: error
+          retention-days: 90
+
+  aggregate:
+    name: aggregate-scale-evidence
+    needs: scale-sample
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: fabric-r5-1-count-*-sample-*-${{ github.sha }}
+          path: artifacts/fabric-r5-1
+          merge-multiple: true
+
+      - name: Aggregate scale evidence
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          python3 scripts/research/fabric_bake0/collect_r5_1_quantitative_scale.py \
+            --root artifacts/fabric-r5-1 \
+            --out artifacts/fabric-r5-1/r5-1-scale-evidence.json \
+            | tee artifacts/fabric-r5-1/collector.log
+          grep -F 'FABRIC_R5_1_EVIDENCE=PASS' artifacts/fabric-r5-1/collector.log
+
+      - name: Seal scale evidence
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          printf 'HEAD=%s\nTREE=%s\nR5_0_CLOSURE_HEAD=%s\n' \
+            "$(git rev-parse HEAD)" "$(git rev-parse 'HEAD^{tree}')" "$R5_0_CLOSURE_HEAD" \
+            > artifacts/fabric-r5-1/identity.txt
+          sha256sum artifacts/fabric-r5-1/count-* artifacts/fabric-r5-1/r5-1-scale-evidence.json artifacts/fabric-r5-1/collector.log > artifacts/fabric-r5-1/evidence.sha256
+          git diff --check
+          test -z "$(git status --porcelain=v1 --untracked-files=no)"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fabric-r5-1-scale-aggregate-${{ github.sha }}
+          path: artifacts/fabric-r5-1/**
+          if-no-files-found: error
+          retention-days: 90

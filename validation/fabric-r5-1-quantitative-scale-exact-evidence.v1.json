@@ -1,0 +1,116 @@
+{
+  "schema": "fabric.r5_1.quantitative_scale_exact_evidence.v1",
+  "status": "EXACT_SCALE_PASS",
+  "subject_head": "2c013ec53e99fd1b7a6a14a83a2154815a160837",
+  "subject_tree": "9c46f941d1e44012eb7fcaaa0e58e4ca55951ce3",
+  "r5_0_closure_head": "deec93566edadef3ed604a055cafcd62275df253",
+  "canonical_godot": {
+    "version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7"
+  },
+  "authoritative_run": {
+    "run_id": 35511390359,
+    "aggregate_job_id": 106079913853,
+    "aggregate_artifact_id": 10605926786,
+    "aggregate_artifact_digest": "sha256:b0a3b8f2c63b0b6ddb0d61546868ad223ef53b001636823464d917461787f206",
+    "sample_count": 9,
+    "conclusion": "PASS"
+  },
+  "hashes": {
+    "scale_hash": "dfbb3aeea6b9c121b3fb46d032cddfdce7a15015ae0dd250157fc82f6758decc",
+    "evidence_hash": "5de8130785bb3af010d13f5825947aef7970a8ba3a557e3eee83f9b0d0774bc3",
+    "deterministic_hash_by_count": {
+      "5000": "5b4fc2d4d126ddbf07d7b9b2da4629d1c19187217d7afdb31674c73303911d15",
+      "20000": "fd80d091955ceb7936cf27da5a17bc38a3e29fadf8a258eafcaeb0a828722ae3",
+      "100000": "896b62ea0059c6beb0aaae51e5cc243efb7808dbdfa46acf29b3bf08d8991bcd"
+    }
+  },
+  "deterministic_contract": {
+    "counts": [
+      5000,
+      20000,
+      100000
+    ],
+    "samples_per_count": 3,
+    "active_full_peak": 20,
+    "local_reconstructed_parts": 20,
+    "local_rebake_validations": 20,
+    "online_local_residual_full_scans": 0,
+    "range_queries_per_lifecycle": 4,
+    "range_query_prefix_reads": 80,
+    "global_physical_rebuilds": 0,
+    "duplicate_ownership_count": 0,
+    "index_build_scan": "N once",
+    "explicit_global_control_scan": "N"
+  },
+  "observations": {
+    "5000": {
+      "elapsed_median_s": 2.21,
+      "rss_median_kib": 129316,
+      "range_index_build_median_us": 34196,
+      "range_index_parent_query_median_us": 254,
+      "parent_aggregate_median_us": 10827,
+      "local_unbake_median_us": 11847,
+      "local_rebake_median_us": 5152,
+      "baked_boundary_64_median_us": 25483,
+      "global_control_median_us": 10498
+    },
+    "20000": {
+      "elapsed_median_s": 7.23,
+      "rss_median_kib": 129888,
+      "range_index_build_median_us": 136960,
+      "range_index_parent_query_median_us": 221,
+      "parent_aggregate_median_us": 41539,
+      "local_unbake_median_us": 12054,
+      "local_rebake_median_us": 5346,
+      "baked_boundary_64_median_us": 25487,
+      "global_control_median_us": 42592
+    },
+    "100000": {
+      "elapsed_median_s": 32.53,
+      "rss_median_kib": 135400,
+      "range_index_build_median_us": 640710,
+      "range_index_parent_query_median_us": 220,
+      "parent_aggregate_median_us": 182532,
+      "local_unbake_median_us": 11738,
+      "local_rebake_median_us": 5215,
+      "baked_boundary_64_median_us": 22991,
+      "global_control_median_us": 180142
+    },
+    "ratios_100k_vs_5k": {
+      "N": 20,
+      "source_create": 18.702725485714286,
+      "full_rehash": 18.72400767243404,
+      "range_index_build": 18.736401918353025,
+      "parent_aggregate": 16.85896370185647,
+      "explicit_global_control": 17.159649457039436,
+      "range_index_parent_query": 0.8661417322834646,
+      "local_unbake_20": 0.9907993584873808,
+      "local_rebake": 1.0122282608695652,
+      "baked_boundary_loop": 0.902209316014598,
+      "rss": 1.0470475424541434
+    }
+  },
+  "initial_measurement_blocker": {
+    "run_id": 35510772849,
+    "correctness_passed": true,
+    "local_unbake_100k_vs_5k_ratio": 10.56,
+    "local_rebake_100k_vs_5k_ratio": 15.01,
+    "root_cause": "closed COMPLEX3 residual aggregates rescanned hidden parts via aggregate_span during local transitions"
+  },
+  "repair": {
+    "class": "derived range aggregate prefix index",
+    "closed_complex3_mutated": false,
+    "closed_r5_0_mutated": false,
+    "threshold_relaxation": false,
+    "result": "local UNBAKE/ReBAKE decoupled from total N for this structural fixture"
+  },
+  "policy": {
+    "timing_is_acceptance_threshold": false,
+    "rss_is_acceptance_threshold": false,
+    "dynamic_solver_scaling_claimed": false,
+    "natural_global_physical_event_claimed": false,
+    "note": "R5.1 proves structural/local-refinement quantitative scaling. Dynamic ROM/DAE and naturally propagating global events remain downstream."
+  },
+  "next_gate": "EXACT_HEAD_RERUN_THEN_FRESH_REVIEW_AND_INDEPENDENT_VERIFIER"
+}
