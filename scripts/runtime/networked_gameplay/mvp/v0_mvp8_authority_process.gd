@@ -278,13 +278,54 @@ func _next_construction_sequence8() -> int:
 	return int(session.get("next_sequence", -1))
 
 
+func has_part8(snapshot: Dictionary, part_id: String) -> bool:
+	for raw in snapshot.get("parts", []):
+		if raw is Dictionary and String(raw.get("part_id", "")) == part_id:
+			return true
+	return false
+
+
 func _mvp8_add(cycle: int) -> Dictionary:
 	if _phase6 != "REMOVED":
 		return Protocol.failure("MVP8_BUILD_ADD_PHASE_INVALID")
+	var removed := _snapshot6()
+	var repair_plan_value = removed.get("compiled_facets", {}).get("damage_repair_plan", {})
+	if not repair_plan_value is Dictionary or Dictionary(repair_plan_value).is_empty():
+		return Protocol.failure("MVP8_CANONICAL_REPAIR_PLAN_REQUIRED")
+	var repair_plan: Dictionary = Dictionary(repair_plan_value).duplicate(true)
+	var permissions = _construction6["gateway"].get_permission_store()
+	var grant := SeamGrant.create(
+		"permission/mvp8/live/repair/%d" % cycle,
+		String(_sessions6["a"].get("client_id", "")),
+		SeamFactory.CONSTRUCT_ID,
+		[SeamGrant.ACTION_READ, SeamGrant.ACTION_REPAIR],
+		int(permissions.get_epoch())
+	)
+	var published: Dictionary = permissions.publish(grant)
+	if not bool(published.get("success", false)):
+		return published
 	var sequence := _next_construction_sequence8()
 	if sequence < 0:
 		return Protocol.failure("MVP8_CONSTRUCTION_SEQUENCE_REQUIRED")
-	var inner := _build_command6(sequence, 1, "mvp8-add-east-leaf-%d" % cycle)
+	var bundle: Dictionary = _bridge6.get_snapshot_packet().get("state_bundle", {})
+	var inner := SeamCommand.create(
+		"multiplayer-command/mvp8/live/repair-east-leaf/%d" % cycle,
+		String(_sessions6["a"].get("client_id", "")),
+		String(_sessions6["a"].get("session_id", "")),
+		int(_sessions6["a"].get("session_epoch", 0)),
+		sequence,
+		SeamGrant.ACTION_REPAIR,
+		SeamFactory.CONSTRUCT_ID,
+		String(removed.get("checksum", "")),
+		int(bundle.get("server_generation", 0)),
+		int(permissions.get_epoch()),
+		{
+			"plan_id": "plan/mvp8/live/repair-east-leaf/%d" % cycle,
+			"operation_id": "operation/mvp8/live/repair-east-leaf/%d" % cycle,
+			"repair_plan": repair_plan,
+			"failure_mode": "",
+		}
+	)
 	var checked: Dictionary = SeamCommand.validate(inner)
 	if not bool(checked.get("success", false)):
 		return checked
@@ -293,17 +334,31 @@ func _mvp8_add(cycle: int) -> Dictionary:
 	if construction_epoch < 1:
 		return Protocol.failure("MVP8_CONSTRUCTION_AUTHORITY_RECORD_REQUIRED")
 	var route := DistributedCommand.create(
-		"authority-route/mvp8/live/add-east-%d" % cycle,
+		"authority-route/mvp8/live/repair-east-%d" % cycle,
 		SeamFactory.SERVER_B, SeamFactory.SERVER_A, construction_epoch, inner,
-		{"entry": "east", "operation": "ADD", "cycle": cycle}
+		{"entry": "east", "operation": "ADD", "canonical_action": "DAMAGE_REPAIR", "cycle": cycle}
 	)
 	var applied: Dictionary = _construction6["cluster"].submit(SeamFactory.SERVER_B, route)
 	if not bool(applied.get("success", false)):
 		return applied
+	var restored := _snapshot6()
+	if Array(restored.get("parts", [])).size() != SeamFactory.FINAL_PART_COUNT or not has_part8(restored, SeamFactory.part_id(SeamFactory.ADD_PART_INDEX)):
+		return Protocol.failure("MVP8_REPAIR_ADD_DID_NOT_RESTORE_LEAF")
 	_phase6 = "ADDED"
-	_route_receipts6.append({"intent": "MVP8_ADD", "cycle": cycle, "entry_process": "authority/b", "writer_process": "authority/a"})
-	return Protocol.success(_public6({"gateway_result": applied.get("gateway_result", {}), "cycle": cycle}))
-
+	_route_receipts6.append({
+		"intent": "MVP8_ADD",
+		"canonical_action": "DAMAGE_REPAIR",
+		"cycle": cycle,
+		"entry_process": "authority/b",
+		"writer_process": "authority/a",
+		"part_count": Array(restored.get("parts", [])).size(),
+	})
+	return Protocol.success(_public6({
+		"gateway_result": applied.get("gateway_result", {}),
+		"cycle": cycle,
+		"canonical_action": "DAMAGE_REPAIR",
+		"reused_part_identity": SeamFactory.part_id(SeamFactory.ADD_PART_INDEX),
+	}))
 
 func _mvp8_remove(cycle: int) -> Dictionary:
 	if _phase6 != "ADDED":
