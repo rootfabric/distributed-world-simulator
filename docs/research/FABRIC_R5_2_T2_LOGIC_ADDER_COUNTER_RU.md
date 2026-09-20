@@ -1,5 +1,7 @@
 # FABRIC R5.2 / T2 — Logic Adder / Counter
 
+**Статус:** EXACT T2 PASS / fresh review + verifier pending.
+
 ## Цель
 
 T2 проверяет второй класс qualitative compression:
@@ -98,3 +100,80 @@ T2 не доказывает:
 - optimal/minimal logic synthesis.
 
 T2 доказывает только exact synchronous Boolean behavior compression for the declared bounded domain.
+
+
+## Exact T2 result — run 35516297356
+
+```text
+SUBJECT_HEAD = ac6fd2102a460baf617764d19bfa7af639a1bfbb
+SUBJECT_TREE = 9d72a0a47d75f9620260f71e4dbcf622eeb3b727
+
+samples = 3/3 PASS
+aggregate job = 106092924124
+artifact = 10606434175
+digest = sha256:10812c48d514f00ef4a35371ef368ae299ca72eed5286d0639873967fb3d421c
+
+deterministic hash =
+a7bb61c19ddda61527155d3ed405b22b6260cce807a3e958558a13b1a50b8d05
+```
+
+### 8-bit adder
+
+```text
+40 generic gates
+17 input bits
+0 state bits
+131072 exhaustive cases PASS
+
+compile median      ≈ 8.83 s
+LUT                 = 131072 entries
+runtime LUT memory  ≈ 512 KiB
+
+gate interpreter    ≈ 66.6 µs/call
+prepared lookup     ≈ 19.3 µs/call
+observed speedup    ≈ 3.45×
+source traversals   = 0
+```
+
+### 8-bit counter
+
+```text
+24 combinational gates
+8 registers
+2 external input bits
+8 explicit state bits
+
+1024/1024 state/input cases PASS
+2048-tick sequence PASS
+event order:
+  OUTPUT_EVALUATED
+  REGISTER_COMMIT
+
+LUT                 = 1024 entries
+runtime LUT memory  ≈ 4 KiB
+per-instance state  = 8 bits minimum
+
+gate interpreter    ≈ 37.3 µs/call
+prepared lookup     ≈ 8.28 µs/call
+observed speedup    ≈ 4.51×
+source traversals   = 0
+```
+
+### Важный tradeoff
+
+T2 lookup не является универсальным ответом для любой микросхемы.
+
+```text
+runtime cost
+depends weakly on hidden gate count
+
+but LUT size
+depends exponentially on:
+external input bits + explicit state bits
+```
+
+Поэтому compiler fail-closed при address space > 17 bits. Позднее generic compiler может выбирать symbolic/BDD/bytecode/word-level representation, но T2 не подменяет это device-specific распознаванием Adder/Counter.
+
+Главный доказанный принцип T2:
+
+> Внутренний gate/register graph может быть полностью canonical-derived, один раз скомпилирован и затем исполняться без обхода исходных компонентов; state остаётся явным и не захватывается capsule как новая canonical truth.

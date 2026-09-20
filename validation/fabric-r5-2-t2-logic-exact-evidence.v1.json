@@ -1,0 +1,129 @@
+{
+  "schema": "fabric.r5_2.t2_logic_adder_counter_exact_evidence.v1",
+  "status": "EXACT_T2_PASS",
+  "subject_head": "ac6fd2102a460baf617764d19bfa7af639a1bfbb",
+  "subject_tree": "9d72a0a47d75f9620260f71e4dbcf622eeb3b727",
+  "t1_merge_head": "cfbaa9041a3532887a1edb39a321f24f0067e728",
+  "canonical_owner": "Construction",
+  "production_checkpoint": false,
+  "canonical_godot": {
+    "version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7"
+  },
+  "authoritative_run": {
+    "run_id": 35516297356,
+    "sample_count": 3,
+    "sample_conclusion": "3/3 PASS",
+    "aggregate_job_id": 106092924124,
+    "aggregate_artifact_id": 10606434175,
+    "aggregate_artifact_digest": "sha256:10812c48d514f00ef4a35371ef368ae299ca72eed5286d0639873967fb3d421c"
+  },
+  "hashes": {
+    "deterministic_hash": "a7bb61c19ddda61527155d3ed405b22b6260cce807a3e958558a13b1a50b8d05",
+    "evidence_hash": "b2821aa521cb52913de863b102e12a5c9dab3f8dde4c790c8d5d3bb8cfd63852",
+    "adder_graph_hash": "4c6166fe5166dd805cf02e449cc47d37e805e0debf9af2aca9d995cb663a26d1",
+    "adder_descriptor_hash": "7ad83d447aeb21610656059c8522a2df22ad5d10b212d3bbd94f6628e266b305",
+    "adder_table_hash": "39d2f41c83279d4ca130d316f753f00b2afefac395e1737e9bc27ad38e764d0a",
+    "adder_capsule_checksum": "7f30210ba6c869f00048a26c3e447d0015b1013dfb1d8bf4f49e109a8b70c33e",
+    "counter_graph_hash": "c5980018425cf06396b6fc2e0209ace95989234e5cf4c5c8bbd0a254b59ba2f5",
+    "counter_descriptor_hash": "0d291c0e82d15662e544e6c207697f1b77f1e1ee5528f227839d34fcf122cb7d",
+    "counter_table_hash": "c7ffe4b10c51ae093ab317c26caea827f478a10bc7bb8ba365dc16d0bc649220",
+    "counter_capsule_checksum": "41f75aeabb36b647a3bbc86647a42bcf1b5210bb135cece1ff8f8182006f3464",
+    "counter_sequence_hash": "acfe4cd4493353efc749b597ffc5b001bf76386577b69749bf654f877e65fde1"
+  },
+  "adder": {
+    "width_bits": 8,
+    "source_components": 40,
+    "input_bits": 17,
+    "state_bits": 0,
+    "output_bits": 9,
+    "exhaustive_cases": 131072,
+    "lookup_entries": 131072,
+    "lookup_bytes_estimate": 524288,
+    "source_operations": 40,
+    "compiled_operations": 3,
+    "operation_compression_ratio": 13.333333333333334,
+    "runtime_source_traversals_per_execute": 0,
+    "exhaustive_arithmetic_oracle": "PASS"
+  },
+  "counter": {
+    "width_bits": 8,
+    "source_components": 32,
+    "input_bits": 2,
+    "state_bits": 8,
+    "output_bits": 8,
+    "exhaustive_cases": 1024,
+    "lookup_entries": 1024,
+    "lookup_bytes_estimate": 4096,
+    "per_instance_state_bits": 8,
+    "per_instance_state_bytes_minimum": 1,
+    "sequence_ticks": 2048,
+    "event_order": [
+      "OUTPUT_EVALUATED",
+      "REGISTER_COMMIT"
+    ],
+    "source_operations": 32,
+    "compiled_operations": 3,
+    "operation_compression_ratio": 10.666666666666666,
+    "runtime_source_traversals_per_execute": 0,
+    "exhaustive_state_transition_oracle": "PASS",
+    "runtime_owns_persistent_state": false
+  },
+  "observations": {
+    "process_elapsed_s_median": 38.65,
+    "process_max_rss_kib_median": 158460,
+    "adder_compile_median_us": 8829478,
+    "counter_compile_median_us": 59273,
+    "runtime_prepare_both_median_us": 1972656,
+    "adder_exhaustive_median_us": 3423711,
+    "counter_exhaustive_median_us": 15550,
+    "counter_sequence_median_us": 33696,
+    "adder_interpreter_us_per_call": 66.593994140625,
+    "adder_lookup_us_per_call": 19.3062744140625,
+    "adder_observed_speedup": 3.4493446385553597,
+    "counter_interpreter_us_per_call": 37.31689453125,
+    "counter_lookup_us_per_call": 8.281753540039062,
+    "counter_observed_speedup": 4.505917056193149
+  },
+  "fail_closed": {
+    "one_gate_mutation_changes_lookup": true,
+    "old_runtime_rejects_mutated_live_context": true,
+    "graph_frontier_mismatch": "REJECTED",
+    "stale": "REJECTED",
+    "invalidation": "REJECTED",
+    "authority_drift": "REJECTED",
+    "combinational_cycle": "LOGIC_COMBINATIONAL_CYCLE",
+    "address_state_space_over_17_bits": "LOGIC_STATE_SPACE_TOO_LARGE"
+  },
+  "invariants": {
+    "device_specific_kernel": false,
+    "behavior_capsule_v1_t1_modified": false,
+    "t1_evidence_modified": false,
+    "capsule_is_derived": true,
+    "canonical_truth_duplicated": false,
+    "runtime_persistent_state_owner": false,
+    "threshold_relaxation": false
+  },
+  "tradeoffs": {
+    "statement": "T2 exhaustive lookup exchanges compile time and immutable shared LUT memory for bounded runtime independent of source gate count.",
+    "scaling_axis": "lookup size is exponential in external input bits + explicit state bits, not in hidden gate count",
+    "adder_compile_time_is_observation_not_budget": true,
+    "later_need": "Future logic compilers may choose symbolic/bytecode/BDD/word-level forms when LUT boundary-state space is too large."
+  },
+  "non_claims": [
+    "analog transistor equivalence",
+    "propagation delay/timing closure",
+    "metastability",
+    "asynchronous logic",
+    "optimal logic synthesis",
+    "persistent canonical register-state ownership",
+    "unbounded logic state-space compilation"
+  ],
+  "policy": {
+    "timing_is_acceptance_threshold": false,
+    "speedup_is_acceptance_threshold": false,
+    "memory_is_acceptance_threshold": false,
+    "correctness_is_exhaustive_function_and_state_equivalence": true
+  },
+  "next_gate": "EXACT_HEAD_RERUN_THEN_FRESH_REVIEW_AND_INDEPENDENT_VERIFIER"
+}
