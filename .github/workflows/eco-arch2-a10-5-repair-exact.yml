@@ -1,6 +1,9 @@
 name: ECO ARCH2 A10.5 Repair Exact
 
 on:
+  push:
+    branches:
+      - repair/eco-arch2-a10-5-polygon-r1
   pull_request:
     paths:
       - "scripts/research/ecology/v2/**"
