@@ -230,12 +230,14 @@ func _checkpoint_ref(ctl: Object, manifest_hash: String) -> Dictionary:
 		"schema": CHECKPOINT_SCHEMA,
 		"tick": tick,
 		"state_hash": state_hash,
+		"state_checksum": String(serialized.state_checksum),
 		"manifest_hash": manifest_hash,
 		"checkpoint_id": C.digest({
 			"schema": CHECKPOINT_SCHEMA,
 			"manifest_hash": manifest_hash,
 			"tick": tick,
 			"state_hash": state_hash,
+			"state_checksum": String(serialized.state_checksum),
 		}),
 	}
 

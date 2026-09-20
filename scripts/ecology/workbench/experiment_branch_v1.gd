@@ -170,9 +170,9 @@ func restore(checkpoint: Dictionary) -> Dictionary:
 ## (controller.apply_field_patch). Returns a NEW controller instance bound
 ## to the branch; the parent checkpoint and parent branch stay untouched.
 func fork(checkpoint: Dictionary, env_patch: Dictionary = {}, label: String = "") -> Dictionary:
-	var error := validate_checkpoint(checkpoint)
+	var error := _trusted_checkpoint_error(checkpoint)
 	if not error.is_empty():
-		return {"success": false, "error": "BRANCH_CHECKPOINT:" + error}
+		return {"success": false, "error": error}
 	if not env_patch.is_empty() and not env_patch is Dictionary:
 		return {"success": false, "error": "BRANCH_PATCH_TYPE"}
 	var manifest: Dictionary = _controller.get_manifest()
@@ -216,10 +216,12 @@ func fork(checkpoint: Dictionary, env_patch: Dictionary = {}, label: String = ""
 ## commands must reach the identical final canonical state hash.
 ## commands = tick batch counts (the controller command surface has no
 ## other inputs). Returns {"success", "canonical_state_hash", "tick"}.
-static func replay(checkpoint: Dictionary, manifest: Dictionary, founder_registry: Dictionary, tick_commands: Array) -> Dictionary:
+static func replay(checkpoint: Dictionary, manifest: Dictionary, founder_registry: Dictionary, tick_commands: Array, expected_checkpoint_anchor: String) -> Dictionary:
 	var error := validate_checkpoint(checkpoint)
 	if not error.is_empty():
 		return {"success": false, "error": "REPLAY_CHECKPOINT:" + error}
+	if not F.valid_hash(expected_checkpoint_anchor) or C.digest(checkpoint) != expected_checkpoint_anchor:
+		return {"success": false, "error": "REPLAY_EXTERNAL_ANCHOR"}
 	if not tick_commands is Array or tick_commands.is_empty():
 		return {"success": false, "error": "REPLAY_COMMANDS"}
 	for command in tick_commands:

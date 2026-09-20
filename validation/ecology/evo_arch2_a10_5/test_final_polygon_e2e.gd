@@ -412,13 +412,14 @@ func _scenario_branches(state: Dictionary) -> void:
 	_check(bool(restored.get("success", false)), "S16 checkpoint restored into the original controller")
 	_check(int(controller.get_snapshot().tick) == checkpoint_tick, "S16 controller back at the checkpoint tick (%d)" % checkpoint_tick)
 	# S18 replay: identical checkpoint + manifest + commands -> identical hash.
-	var trusted_anchor := manager.trusted_checkpoint_anchor(String(checkpoint.checkpoint_id))\n\tvar replay: Dictionary = ExperimentBranch.replay(checkpoint, controller.get_manifest(), registry, [8], trusted_anchor)
+	var trusted_anchor := manager.trusted_checkpoint_anchor(String(checkpoint.checkpoint_id))
+	var replay: Dictionary = ExperimentBranch.replay(checkpoint, controller.get_manifest(), registry, [8], trusted_anchor)
 	_check(bool(replay.get("success", false)), "S18 replay succeeds: " + str(replay.get("error", "")))
 	if bool(replay.get("success", false)):
 		_check(String(replay.canonical_state_hash) == hash_a, "S18 replay of the original branch reproduces the identical hash")
 		_check(int(replay.tick) == checkpoint_tick + 8, "S18 replay reached the same tick")
 
-# --- S19: SOFT blocked + VISUAL_ONLY non-causality ------------------------------------
+# --- S19: canonical organization bias + VISUAL_ONLY non-causality ---------------------
 
 func _scenario_profiles(topology_controller: Object) -> void:
 	for mode in ["SOFT", "NMS_LIKE"]:
