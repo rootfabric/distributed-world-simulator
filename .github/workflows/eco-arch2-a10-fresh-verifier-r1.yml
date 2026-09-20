@@ -1,0 +1,178 @@
+name: ECO ARCH2 A10 Fresh Independent Verifier R1
+
+on:
+  push:
+    branches:
+      - verify/eco-arch2-a10-r5-independent-r1
+    paths:
+      - docs/research/ecology/EVO_ARCH2_A10_FRESH_VERIFIER_R1_RU.md
+      - .github/workflows/eco-arch2-a10-fresh-verifier-r1.yml
+  workflow_dispatch:
+
+concurrency:
+  group: eco-a10-fresh-verifier-r1
+  cancel-in-progress: true
+
+jobs:
+  verify_linux:
+    name: Fresh A10 R5 Linux Double
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 30
+    steps:
+      - name: Checkout verifier dispatch
+        uses: actions/checkout@v4
+        with:
+          ref: verify/eco-arch2-a10-r5-independent-r1
+          fetch-depth: 0
+          path: verifier
+
+      - name: Checkout exact A10 product subject
+        uses: actions/checkout@v4
+        with:
+          ref: ce8013f7507ea310012ceef2d0968b26910b9348
+          fetch-depth: 0
+          path: subject
+
+      - name: Assert exact subject
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git -C subject rev-parse HEAD)" = "ce8013f7507ea310012ceef2d0968b26910b9348"
+          test "$(git -C subject rev-parse 'HEAD^{tree}')" = "970282ec6b8504f50a62edde639fd142a5bee1cd"
+          test -z "$(git -C subject status --porcelain --untracked-files=no)"
+
+      - name: Resolve canonical Linux double Godot
+        id: godot_linux
+        shell: bash
+        run: |
+          set -euo pipefail
+          GODOT="${DWS_GODOT_DOUBLE_LINUX_BIN:-$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64}"
+          test -x "$GODOT"
+          VERSION="$("$GODOT" --version | head -n1)"
+          test "$VERSION" = "4.7.1.stable.double.custom_build.a13da4feb"
+          SHA="$(sha256sum "$GODOT" | awk '{print $1}')"
+          test "$SHA" = "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7"
+          echo "path=$GODOT" >> "$GITHUB_OUTPUT"
+
+      - name: Run subject-owned whole A10 verifier
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd subject
+          python3 validation/ecology/evo_arch2_a10_r5/verify.py \
+            --godot "${{ steps.godot_linux.outputs.path }}" \
+            --head "ce8013f7507ea310012ceef2d0968b26910b9348" \
+            --tree "970282ec6b8504f50a62edde639fd142a5bee1cd"
+
+      - name: Upload Linux independent evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: eco-a10-fresh-verifier-linux-${{ github.run_id }}
+          path: subject/artifacts/a10-r5/exact
+          if-no-files-found: warn
+
+  verify_windows:
+    name: Fresh A10 R5 Windows Double
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: powershell
+    steps:
+      - name: Checkout verifier dispatch
+        uses: actions/checkout@v4
+        with:
+          ref: verify/eco-arch2-a10-r5-independent-r1
+          fetch-depth: 0
+          path: verifier
+
+      - name: Checkout exact A10 product subject
+        uses: actions/checkout@v4
+        with:
+          ref: ce8013f7507ea310012ceef2d0968b26910b9348
+          fetch-depth: 0
+          path: subject
+
+      - name: Assert exact subject
+        run: |
+          $head = (git -C subject rev-parse HEAD).Trim()
+          $tree = (git -C subject rev-parse 'HEAD^{tree}').Trim()
+          if ($head -ne "ce8013f7507ea310012ceef2d0968b26910b9348") { throw "EXACT_HEAD_MISMATCH: $head" }
+          if ($tree -ne "970282ec6b8504f50a62edde639fd142a5bee1cd") { throw "EXACT_TREE_MISMATCH: $tree" }
+          $dirty = git -C subject status --porcelain --untracked-files=no
+          if (-not [string]::IsNullOrWhiteSpace(($dirty -join ""))) { throw "TRACKED_SOURCE_DIRTY" }
+
+      - name: Resolve canonical Windows double Godot
+        id: godot_windows
+        env:
+          CONFIGURED_GODOT_BIN: ${{ vars.DWS_GODOT_DOUBLE_BIN }}
+        run: |
+          $godot = $env:CONFIGURED_GODOT_BIN
+          if ([string]::IsNullOrWhiteSpace($godot)) {
+            $godot = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
+          }
+          if (-not (Test-Path -LiteralPath $godot -PathType Leaf)) { throw "GODOT_NOT_FOUND: $godot" }
+          $version = (& $godot --version 2>&1 | Select-Object -First 1).Trim()
+          if ($version -ne "4.7.1.stable.double.custom_build.a13da4feb") { throw "GODOT_VERSION_MISMATCH: $version" }
+          $sha = (Get-FileHash -LiteralPath $godot -Algorithm SHA256).Hash.ToUpperInvariant()
+          if ($sha -ne "3633C3E609C8CE2F9BAE334A9C7E75C7F974DE3AF0415AB4A8050A625A15A7A5") {
+            throw "GODOT_SHA256_MISMATCH: $sha"
+          }
+          "path=$godot" >> $env:GITHUB_OUTPUT
+
+      - name: Run R1-R5 on exact Windows subject
+        run: |
+          $ErrorActionPreference = "Stop"
+          $subject = (Resolve-Path "subject").Path
+          $godot = "${{ steps.godot_windows.outputs.path }}"
+          $logDir = Join-Path $subject "artifacts\a10-r5\windows-exact"
+          New-Item -ItemType Directory -Force -Path $logDir | Out-Null
+
+          $tests = @(
+            @{ Name="r1-world-binding"; Script="res://validation/ecology/evo_arch2_a10/test_world_binding.gd"; Marker="EVO_ARCH2_A10_WORLD_BINDING PASS" },
+            @{ Name="r2-resource-mapping"; Script="res://validation/ecology/evo_arch2_a10_r2/test_resource_mapping.gd"; Marker="EVO_ARCH2_A10_R2_RESOURCE_MAPPING PASS" },
+            @{ Name="r3-seam-binding"; Script="res://validation/ecology/evo_arch2_a10_r3/test_seam_binding.gd"; Marker="EVO_ARCH2_A10_R3_SEAM_BINDING PASS" },
+            @{ Name="r4-damage-overlay"; Script="res://validation/ecology/evo_arch2_a10_r4/test_body_damage_overlay.gd"; Marker="EVO_ARCH2_A10_R4_DAMAGE_OVERLAY PASS" },
+            @{ Name="r5-final-composition"; Script="res://validation/ecology/evo_arch2_a10_r5/test_final_composition.gd"; Marker="EVO_ARCH2_A10_R5_FINAL_COMPOSITION PASS" }
+          )
+
+          $summary = @()
+          foreach ($test in $tests) {
+            $log = Join-Path $logDir ($test.Name + ".log")
+            & $godot --headless --audio-driver Dummy --path $subject --script $test.Script *> $log
+            $exitCode = $LASTEXITCODE
+            $text = Get-Content -LiteralPath $log -Raw
+            if ($exitCode -ne 0) { throw ($test.Name + "_EXIT=" + $exitCode + [Environment]::NewLine + $text) }
+            if (-not $text.Contains($test.Marker)) { throw ($test.Name + "_MISSING_MARKER" + [Environment]::NewLine + $text) }
+            if ($text.Contains("SCRIPT ERROR:") -or $text.Contains("Parse Error:")) {
+              throw ($test.Name + "_SCRIPT_ERROR" + [Environment]::NewLine + $text)
+            }
+            if ($text -match "A10(_R[0-9]+)?_(FAIL|FAILURE)") {
+              throw ($test.Name + "_FAIL_MARKER" + [Environment]::NewLine + $text)
+            }
+            $summary += [pscustomobject]@{
+              name = $test.Name
+              marker = $test.Marker
+              exit_code = $exitCode
+              log_sha256 = (Get-FileHash -LiteralPath $log -Algorithm SHA256).Hash.ToLowerInvariant()
+            }
+            Write-Host "PASS $($test.Name)"
+          }
+
+          [pscustomobject]@{
+            verdict = "PASS"
+            subject_head = "ce8013f7507ea310012ceef2d0968b26910b9348"
+            subject_tree = "970282ec6b8504f50a62edde639fd142a5bee1cd"
+            godot_version = "4.7.1.stable.double.custom_build.a13da4feb"
+            godot_sha256 = "3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5"
+            runtime = $summary
+          } | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath (Join-Path $logDir "summary.json") -Encoding utf8
+
+      - name: Upload Windows independent evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: eco-a10-fresh-verifier-windows-${{ github.run_id }}
+          path: subject/artifacts/a10-r5/windows-exact
+          if-no-files-found: warn
