@@ -1,0 +1,50 @@
+{
+  "schema": "dws.ecology.evo-arch2-a10-r3-work-order.v1",
+  "work_order_id": "EVO-ARCH2-A10-20260918-R3",
+  "state": "IN_PROGRESS",
+  "risk_class": "HIGH",
+  "branch": "feature/eco-evo-arch2-a10-seam-binding-r3",
+  "parent_r2": "46983be7370c1fd8eaf652b7672023d4bc1f6f80",
+  "goal": "Real A8 snapshot seam handoff composed with production AuthorityRegionDescriptor/HandoffTicket and A10 Region admission.",
+  "additive_paths": [
+    "config/ecology/evo-arch2-a10-r3-work-order.v1.json",
+    "docs/research/ecology/EVO_ARCH2_A10_R3_PRODUCTION_SEAM_BINDING_RU.md",
+    "scripts/research/ecology/v2/world_seam_binding_v1.gd",
+    "validation/ecology/evo_arch2_a10_r3/test_seam_binding.gd",
+    "validation/ecology/evo_arch2_a10_r3/verify.py",
+    ".github/workflows/eco-evo-arch2-a10-r3-exact.yml"
+  ],
+  "immutable_sources": [
+    "scripts/research/ecology/v2/snapshot_seam_v1.gd",
+    "scripts/research/ecology/v2/world_binding_v1.gd",
+    "scripts/network/contracts/authority_region_descriptor.gd",
+    "scripts/network/contracts/handoff_ticket.gd",
+    "scripts/network/handoff/handoff_state_machine.gd"
+  ],
+  "invariants": [
+    "NO_NEW_AUTHORITY_OWNER",
+    "SOURCE_CURSOR_MATCHES_SOURCE_REGION",
+    "TARGET_SPATIAL_REGION_IS_IDENTICAL_EXCEPT_AUTHORITY_LIFECYCLE",
+    "TARGET_EPOCH_STRICTLY_INCREASES",
+    "A8_REAL_HANDOFF_MACHINE_DRIVES_TRANSITIONS",
+    "HANDOFF_DOES_NOT_MUTATE_BIOLOGY",
+    "OLD_OWNER_REJECTED_AFTER_COMMIT",
+    "TARGET_OWNER_ACCEPTED_AFTER_COMMIT",
+    "WARM_TARGET_IS_PREPARATION_ONLY_AND_CANNOT_EXECUTE_ECOLOGY",
+    "HANDOFF_PREPARATION_TARGET_MUST_BE_WARM_NOT_ACTIVE"
+  ],
+  "parent_refresh": {
+    "previous": "03913b5c2992739f435819880896cbaee0ecbc1d",
+    "current": "46983be7370c1fd8eaf652b7672023d4bc1f6f80",
+    "reason": "Trust-anchor falsifiers propagated from R1/R2."
+  },
+  "repair_r1": {
+    "platform": "Windows canonical double Godot 4.7.1 a13da4feb",
+    "finding": "target_ack Variant inference parse failure",
+    "repair": "Explicit state/bool/string/int annotations in R3 transition loop"
+  },
+  "review_repair_r2": {
+    "finding": "prepare_ticket accepted an already ACTIVE target before commit, allowing dual-ACTIVE descriptors.",
+    "repair": "Preparation target must be WARM exactly; ACTIVE is admitted only after COMMITTED through R1 ACTIVE-only admission."
+  }
+}
