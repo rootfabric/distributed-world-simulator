@@ -9,6 +9,7 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 concurrency:
   group: fabric-r4-2-unseen-reveal-${{ github.sha }}
@@ -20,7 +21,7 @@ env:
 
 jobs:
   unseen-exact:
-    runs-on: [self-hosted, Linux, X64]
+    runs-on: ubuntu-latest
     timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
@@ -39,11 +40,21 @@ jobs:
           git diff --check "$PREREG_HEAD"...HEAD
           echo '*.gd.uid' >> .git/info/exclude
 
+      - name: Download canonical Linux double
+        uses: actions/download-artifact@v4
+        with:
+          name: p7-repair-engine-34117353691
+          run-id: 34117353691
+          repository: rootfabric/distributed-world-simulator
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/r42-engine
+
       - name: Verify canonical Linux double
         shell: bash
         run: |
           set -Eeuo pipefail
-          bin="${DWS_GODOT_DOUBLE_BIN:-$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64}"
+          bin="$RUNNER_TEMP/r42-engine/godot"
+          chmod u+x "$bin"
           test -x "$bin"
           test "$("$bin" --version | head -n1 | tr -d '\r')" = '4.7.1.stable.double.custom_build.a13da4feb'
           test "$(sha256sum "$bin" | awk '{print $1}')" = 'bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7'
