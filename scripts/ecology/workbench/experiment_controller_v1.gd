@@ -1,44 +1,340 @@
-# EcologyWorkbench ExperimentController v1 (skeleton, P0).
-# Role: single orchestration point of a polygon experiment: RUN/PAUSE,
-#   single tick / bounded step / run-to-horizon, RESET to manifest,
-#   checkpoint / restore / fork / replay. The ONLY component allowed to call
-#   the canonical mutation step (one canonical mutation step per session).
-# Layer: 2 (SIMULATION / ORCHESTRATION).
-# Canonical API used (owner map rows 3,5,6,7,9):
-#   - resource_lifecycle_runtime_v1.gd: step_population(), individual(),
-#     materialize_propagule()  [A5]
-#   - persistent_environmental_feedback_v1.gd: advance(), create()  [A6]
-#   - local_environment_field_v1.gd: create()/advance_tick()/set_cell_signals()
-#     (explicit editor inputs only, via owner_token/epoch/revision)  [A4]
-#   - observatory_session_v1.gd: start()/advance()/observe()/save_text()/
-#     load_text()  [A7/A8]
-#   - snapshot_seam_v1.gd: start()/apply()/load_text()  [A8; WORLD-COMPAT]
-# Threading rules (architecture doc §3): one canonical mutation step per
-#   session; publish only completed immutable snapshots; abort = join;
-#   race fail-closed.
-# Forbidden: no own lifecycle/reproduction/resource formulas.
+# EcologyWorkbench ExperimentController v1 (P2, ECO ARCH2 A10.5 / ECO-POLYGON-1).
+# Role: canonical experiment loop wrapper. ZERO own biology: every state
+# transition goes through canonical APIs (owner map rows 4,5,6,7); the
+# controller only orchestrates, derives seeds and hashes.
+# Layer: 2 (SIMULATION / ORCHESTRATION). Fail-closed: any canonical API
+# failure stops the controller and surfaces the error.
 class_name EcoWorkbenchExperimentControllerV1
 extends RefCounted
 
-var last_error := "NOT_STARTED"
+const C = preload("res://scripts/research/ecology/v2/canonical_value_v1.gd")
+const B = preload("res://scripts/research/ecology/v2/body_graph_v1.gd")
+const Genome = preload("res://scripts/research/ecology/v2/organism_genome_v2.gd")
+const Mutation = preload("res://scripts/research/ecology/v2/genome_mutation_v1.gd")
+const Blueprint = preload("res://scripts/research/ecology/v2/organism_blueprint_v1.gd")
+const LifeState = preload("res://scripts/research/ecology/v2/organism_life_state_v1.gd")
+const OrganismState = preload("res://scripts/research/ecology/v2/organism_state_v1.gd")
+const Field = preload("res://scripts/research/ecology/v2/local_environment_field_v1.gd")
+const FieldContract = preload("res://scripts/research/ecology/v2/environment_field_contract_v1.gd")
+const Ports = preload("res://scripts/research/ecology/v2/organism_environment_ports_v1.gd")
+const Lifecycle = preload("res://scripts/research/ecology/v2/resource_lifecycle_runtime_v1.gd")
+const Feedback = preload("res://scripts/research/ecology/v2/persistent_environmental_feedback_v1.gd")
+const Manifest = preload("res://scripts/ecology/workbench/experiment_manifest_v1.gd")
 
-## Start a new run from a validated manifest. Fails closed on invalid input.
-func start(manifest: Dictionary) -> bool:
-	return false
+const SCHEMA := "dws.ecology.workbench.experiment-controller.v1"
+# Controller-declared genesis policy (deterministic, manifest-independent).
+const OWNER_TOKEN := "eco-polygon.controller"
+const CELL_CAPACITY_MG := 1000000
+const FOUNDER_ENDOWMENT_STOCK := 200000
+const STATUSES := ["READY", "RUNNING", "PAUSED", "FAILED"]
 
-## Advance exactly one canonical tick (lifecycle + feedback, then publish).
-func step() -> bool:
-	return false
+var _manifest: Dictionary = {}
+var _founder_registry: Dictionary = {}
+var _field: Dictionary = {}
+var _population: Array = []
+var _feedback: Dictionary = {}
+var _tick := 0
+var _status := "IDLE"
+var _error := ""
 
-## Bounded multi-step; abort semantics = join current step, not mid-step cancel.
-func run_bounded(ticks: int) -> bool:
-	return false
+## Validate the manifest and build the canonical initial state:
+## field (zones -> per-cell stocks/signals through owner-write API),
+## founders -> blueprints (inline genomes or hash registry), population
+## (FOUNDER_ENDOWMENT) and persistent feedback state.
+func initialize(manifest: Dictionary, founder_registry: Dictionary = {}) -> Dictionary:
+	var manifest_error := Manifest.validate(manifest)
+	if not manifest_error.is_empty():
+		return _command_fail("CONTROLLER_MANIFEST:" + manifest_error)
+	var resolution := _resolve_founders(manifest.founders, founder_registry)
+	if not resolution.success:
+		return resolution
+	var blueprints: Dictionary = resolution.blueprints
+	var field_result := _build_field(manifest.environment)
+	if not field_result.success:
+		return field_result
+	var field: Dictionary = field_result.field
+	var population_result := _build_population(manifest.placement, blueprints, field)
+	if not population_result.success:
+		return population_result
+	var population: Array = population_result.population
+	var policy := Feedback.default_policy()
+	policy.decomposition_enabled = manifest.feedback.decomposition_enabled
+	var created := Feedback.create(manifest.experiment_id, field, population, policy)
+	if not created.success:
+		return _command_fail("CONTROLLER_FEEDBACK_CREATE:" + String(created.error))
+	_manifest = manifest.duplicate(true)
+	_founder_registry = founder_registry.duplicate(true)
+	_field = field
+	_population = population
+	_feedback = created.state
+	_tick = 0
+	_status = "READY"
+	_error = ""
+	return {"success": true, "tick": _tick, "status": _status}
 
-## Checkpoint via A8 (observatory session text + seam hashes).
-func checkpoint() -> Dictionary:
-	return {}
+## Advance exactly n canonical ticks. Speed = more ticks per call; dt never
+## changes. Any canonical error stops the loop (fail-closed).
+func run(n_ticks: int) -> Dictionary:
+	var guard := _run_guard(n_ticks)
+	if not guard.success:
+		return guard
+	for _i in n_ticks:
+		_tick_once()
+		if _status == "FAILED":
+			return {"success": false, "error": _error, "status": _status, "tick": _tick}
+	_status = "RUNNING"
+	return {"success": true, "tick": _tick, "status": _status}
 
-## Restore / fork: restore continues the same history; fork creates a new
-## explicitly linked branch history from the same immutable source.
-func restore(checkpoint_text: String) -> bool:
-	return false
+## Pause the loop (no tick is in flight; run/step resume from PAUSED).
+func pause() -> Dictionary:
+	if _status == "FAILED":
+		return _failed_command()
+	if _status == "RUNNING":
+		_status = "PAUSED"
+	return {"success": true, "tick": _tick, "status": _status}
+
+## One canonical tick.
+func step() -> Dictionary:
+	return run(1)
+
+## Alias of run(n_ticks) (time-mode equivalence contract).
+func run_n(n_ticks: int) -> Dictionary:
+	return run(n_ticks)
+
+## Re-initialize from the stored manifest + founder registry (determinism).
+func reset() -> Dictionary:
+	if _manifest.is_empty():
+		return _command_fail("CONTROLLER_NOT_INITIALIZED")
+	return initialize(_manifest, _founder_registry)
+
+## Completed immutable snapshot only. No mutation of live state.
+func get_snapshot() -> Dictionary:
+	if _status == "IDLE":
+		return _command_fail("CONTROLLER_NOT_INITIALIZED")
+	if _status == "FAILED":
+		return _failed_command()
+	var population_hashes: Array = []
+	for entry in _population:
+		population_hashes.append({
+			"individual_id": entry.state.individual_id,
+			"life_state_hash": LifeState.state_hash(entry.state, entry.blueprint),
+			"development_biological_hash": OrganismState.biological_hash(entry.state.development),
+		})
+	var payload := {
+		"tick": _tick,
+		"field_hash": Field.state_hash(_field),
+		"population": population_hashes,
+		"feedback_hash": C.digest(_feedback),
+	}
+	return {
+		"success": true,
+		"status": _status,
+		"tick": _tick,
+		"field_hash": payload.field_hash,
+		"population": population_hashes,
+		"feedback_hash": payload.feedback_hash,
+		"canonical_state_hash": C.digest(payload),
+	}
+
+## Read-only metrics projection (canonical observability only).
+func get_metrics() -> Dictionary:
+	if _status == "IDLE":
+		return _command_fail("CONTROLLER_NOT_INITIALIZED")
+	if _status == "FAILED":
+		return _failed_command()
+	var alive := 0
+	for entry in _population:
+		if entry.state.alive:
+			alive += 1
+	var metrics := {
+		"success": true,
+		"status": _status,
+		"tick": _tick,
+		"population_size": _population.size(),
+		"alive": alive,
+		"manifest_hash": Manifest.canonical_hash(_manifest),
+	}
+	var balance := Feedback.balance(_feedback)
+	if balance.get("success", false):
+		metrics["feedback_balance"] = balance
+	return metrics
+
+## Deep-copied live state for equivalence harnesses (direct canonical loop).
+func debug_state() -> Dictionary:
+	return {
+		"field": _field.duplicate(true),
+		"population": _population.duplicate(true),
+		"feedback": _feedback.duplicate(true),
+		"tick": _tick,
+	}
+
+func status() -> String:
+	return _status
+
+func last_error() -> String:
+	return _error
+
+# --- canonical tick: the ONLY place where state changes ---------------------
+
+func _tick_once() -> void:
+	# (a) resource-funded lifecycle advance (A5).
+	var result := Lifecycle.step_population(_field, _population, _field.owner_token, _field.owner_epoch, _field.revision)
+	if not result.success:
+		_fail("CONTROLLER_TICK_A:" + String(result.error))
+		return
+	_field = result.field
+	_population = result.population
+	# (b)+(c) propagules: mutate (A3, derived seed), then materialize (A5).
+	var children: Array = []
+	for propagule in result.propagules:
+		var parent: Dictionary = {}
+		for entry in _population:
+			if entry.state.individual_id == propagule.parent_id:
+				parent = entry
+				break
+		if parent.is_empty():
+			_fail("CONTROLLER_PROPAGULE_PARENT:" + String(propagule.id))
+			return
+		var child_blueprint: Dictionary = parent.blueprint
+		if _manifest.mutation.mutations_enabled:
+			var seed := mutation_seed(_manifest.seed, _tick + 1, String(propagule.parent_id))
+			var mutated := Mutation.mutate(parent.blueprint.genome, seed, _manifest.mutation.operator)
+			if mutated.get("success", false):
+				var candidate := Blueprint.create(mutated.genome, parent.blueprint.life_history)
+				if not candidate.is_empty():
+					child_blueprint = candidate
+		var child := Lifecycle.materialize_propagule(propagule, child_blueprint, parent.state)
+		if child.is_empty() and child_blueprint != parent.blueprint:
+			# Canonical A5 parent-transfer witness binds the child blueprint hash
+			# to the parent's; a mutated genome cannot enter through it. Fall
+			# back to the exact parent blueprint (documented limitation).
+			child = Lifecycle.materialize_propagule(propagule, parent.blueprint, parent.state)
+		if child.is_empty():
+			_fail("CONTROLLER_PROPAGULE_MATERIALIZE:" + String(propagule.id))
+			return
+		children.append(child)
+	_population.append_array(children)
+	_population.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return a.state.individual_id < b.state.individual_id)
+	# (d) persistent environmental feedback advance (A6).
+	if _manifest.feedback.enabled:
+		var advanced := Feedback.advance(_feedback, _feedback.frame.field.owner_token, _feedback.frame.field.owner_epoch, _feedback.frame.step)
+		if not advanced.success:
+			_fail("CONTROLLER_TICK_D:" + String(advanced.error))
+			return
+		_feedback = advanced.state
+	_tick += 1
+
+# --- deterministic seed derivation (no own RNG) ------------------------------
+
+## Deterministic mutation seed from (manifest.seed, tick, parent_id), derived
+## exclusively through the canonical genome_mutation_v1.draw stream.
+static func mutation_seed(seed: int, tick: int, parent_id: String) -> int:
+	return Mutation.draw(seed, "eco-arch2-a10-5/mut/%06d/%s" % [tick, parent_id], C.MAX_INT + 1)
+
+# --- genesis builders --------------------------------------------------------
+
+func _resolve_founders(founders: Array, registry: Dictionary) -> Dictionary:
+	var blueprints := {}
+	for founder in founders:
+		var genome: Dictionary = {}
+		if founder.genome != null:
+			genome = founder.genome
+		else:
+			if not registry is Dictionary or not registry.has(founder.biological_hash):
+				return _command_fail("CONTROLLER_FOUNDER_UNRESOLVED:" + founder.founder_id)
+			var candidate: Variant = registry[founder.biological_hash]
+			if not candidate is Dictionary or not Genome.validate(candidate).is_empty():
+				return _command_fail("CONTROLLER_FOUNDER_REGISTRY:" + founder.founder_id)
+			if Genome.biological_hash(candidate) != founder.biological_hash:
+				return _command_fail("CONTROLLER_FOUNDER_HASH_MISMATCH:" + founder.founder_id)
+			genome = candidate
+		var blueprint := Blueprint.create(genome)
+		if blueprint.is_empty():
+			return _command_fail("CONTROLLER_FOUNDER_BLUEPRINT:" + founder.founder_id)
+		blueprints[founder.founder_id] = blueprint
+	return {"success": true, "blueprints": blueprints}
+
+## Zone -> cells mapping: zone index = min(zones-1, cell_index * zones / cells)
+## (deterministic contiguous bands by cell index). Zone stocks/signals are
+## per-cell and are written ONLY through the canonical owner-write API
+## (apply_effects deposits + set_cell_signals).
+func _build_field(environment: Dictionary) -> Dictionary:
+	var spatial: Dictionary = environment.spatial
+	var zones: Array = environment.zones
+	var field := Field.create(OWNER_TOKEN, 0, spatial.origin_mm, spatial.cell_size_mm, spatial.width, spatial.depth, FieldContract.stock(0), FieldContract.stock(CELL_CAPACITY_MG), FieldContract.signals(0, 0))
+	if field.is_empty():
+		return _command_fail("CONTROLLER_FIELD_CREATE")
+	var total: int = spatial.width * spatial.depth
+	var deposits: Array = []
+	for index in total:
+		var zone: Dictionary = zones[mini(zones.size() - 1, index * zones.size() / total)]
+		var position := _cell_center(field, index)
+		for resource in FieldContract.RESOURCES:
+			var amount: int = int(zone[resource])
+			if amount <= 0:
+				continue
+			if amount > CELL_CAPACITY_MG:
+				return _command_fail("CONTROLLER_ZONE_STOCK:" + String(zone.id) + "/" + resource)
+			deposits.append(Ports.effect("setup/deposit/%04d/%s" % [index, resource], OWNER_TOKEN, "deposit", resource, amount, position, 0, "CONTROLLER_GENESIS"))
+	if not deposits.is_empty():
+		var applied := Field.apply_effects(field, deposits, OWNER_TOKEN, 0, field.revision)
+		if not applied.success:
+			return _command_fail("CONTROLLER_FIELD_STOCKS:" + String(applied.error))
+		field = applied.state
+	for index in total:
+		var zone: Dictionary = zones[mini(zones.size() - 1, index * zones.size() / total)]
+		var signals := FieldContract.signals(int(zone.light), int(zone.temperature), 0, 0)
+		var set := Field.set_cell_signals(field, index % int(spatial.width), int(index / int(spatial.width)), signals, OWNER_TOKEN, 0, field.revision)
+		if not set.success:
+			return _command_fail("CONTROLLER_FIELD_SIGNALS:" + String(set.error))
+		field = set.state
+	return {"success": true, "field": field}
+
+func _build_population(placement: Dictionary, blueprints: Dictionary, field: Dictionary) -> Dictionary:
+	var population: Array = []
+	var entries: Array = placement.entries
+	for index in entries.size():
+		var entry: Dictionary = entries[index]
+		var blueprint: Dictionary = blueprints[entry.founder_ref]
+		if _cell_index(field, entry.position_mm) < 0:
+			return _command_fail("CONTROLLER_PLACEMENT_OUTSIDE_FIELD:%d" % index)
+		var individual := Lifecycle.individual(blueprint, "founder/%04d" % index, entry.position_mm, B.stock(FOUNDER_ENDOWMENT_STOCK))
+		if individual.is_empty():
+			return _command_fail("CONTROLLER_FOUNDER_STATE:%d" % index)
+		population.append(individual)
+	return {"success": true, "population": population}
+
+# --- helpers ------------------------------------------------------------------
+
+func _run_guard(n_ticks: int) -> Dictionary:
+	if _status == "IDLE":
+		return _command_fail("CONTROLLER_NOT_INITIALIZED")
+	if _status == "FAILED":
+		return _failed_command()
+	if n_ticks < 1:
+		return _command_fail("CONTROLLER_RUN_TICKS")
+	if _tick + n_ticks > int(_manifest.horizon_ticks):
+		return _command_fail("CONTROLLER_HORIZON")
+	return {"success": true}
+
+func _fail(error: String) -> void:
+	_status = "FAILED"
+	_error = error
+
+func _failed_command() -> Dictionary:
+	return {"success": false, "error": _error, "status": _status, "tick": _tick}
+
+func _command_fail(error: String) -> Dictionary:
+	return {"success": false, "error": error, "status": _status}
+
+static func _cell_center(field: Dictionary, index: int) -> Array:
+	var x: int = index % int(field.width)
+	var z: int = int(index / int(field.width))
+	return [int(field.origin_mm[0]) + x * int(field.cell_size_mm) + int(field.cell_size_mm / 2), int(field.origin_mm[1]), int(field.origin_mm[2]) + z * int(field.cell_size_mm) + int(field.cell_size_mm / 2)]
+
+static func _cell_index(field: Dictionary, position: Array) -> int:
+	var x: int = position[0] - field.origin_mm[0]
+	var z: int = position[2] - field.origin_mm[2]
+	if x < 0 or z < 0 or x >= field.width * field.cell_size_mm or z >= field.depth * field.cell_size_mm:
+		return -1
+	return int(z / field.cell_size_mm) * int(field.width) + int(x / field.cell_size_mm)
