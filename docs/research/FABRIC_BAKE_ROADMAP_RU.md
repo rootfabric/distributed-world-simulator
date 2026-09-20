@@ -111,6 +111,12 @@ components → module ROM → assembly ROM → machine ROM
 
 Компактный artifact остаётся **derived representation**, а не device-specific hard-coded истиной. Canonical source, provenance, validity envelope, error envelope, refinement guards и возможность полного восстановления обязательны.
 
+### Обязательные R5 complexity-compilation fixtures
+
+Для развития этой цели текущая FABRIC roadmap вводит обязательную test ladder `R5.2B`: Boundary Network Box, Logic Adder/Counter, Battery from Cells + Materials, Stateful Filter/Thermal Pack, Motor/Generator, Power Stage, Gearbox, Cooling Unit, Laser Emitter, Laser Cannon, Smart Servo, Matryoshka Ship Subsystem, shared compiled instances, observation-driven refinement, local damage→UNBAKE→ReBAKE и `NO_SAFE_BAKE` adversarial cases.
+
+Эти fixtures являются falsification tests для reduction/compilation architecture, а не набором device-specific runtime classes. Источник истины остаётся в structure/materials/components; capsule должна компилироваться из них.
+
 Это две независимые research axes:
 
 ```text
