@@ -178,14 +178,6 @@ func _run_one(base: Dictionary, variation: Dictionary, variation_index: int, see
 	var manifest_hash := Manifest.canonical_hash(manifest)
 	var result := _result_shell(variation_name, variation_index, seed, manifest)
 	result["manifest_hash"] = manifest_hash
-	# DEVELOPMENT_BIAS profiles are canonically blocked (P9): record the
-	# blocked status and never touch canonical state.
-	var profile := Profile.preset(String(manifest.organization_profile))
-	if String(profile.rule_class) == "DEVELOPMENT_BIAS":
-		var blocked := Profile.apply_development_bias(profile)
-		result["status"] = STATUS_BLOCKED
-		result["required_hook"] = String(blocked.get("required_hook", Profile.REQUIRED_HOOK))
-		return result
 	var ctl := Controller.new()
 	var init_result: Dictionary = ctl.initialize(manifest)
 	if not bool(init_result.get("success", false)):
