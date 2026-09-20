@@ -276,9 +276,13 @@ func _mvp8_add(cycle: int) -> Dictionary:
 	var checked: Dictionary = SeamCommand.validate(inner)
 	if not bool(checked.get("success", false)):
 		return checked
+	var record: Dictionary = _construction6["cluster"].get_registry().get_record(SeamFactory.CONSTRUCT_ID)
+	var construction_epoch := int(record.get("authority_epoch", 0))
+	if construction_epoch < 1:
+		return Protocol.failure("MVP8_CONSTRUCTION_AUTHORITY_RECORD_REQUIRED")
 	var route := DistributedCommand.create(
 		"authority-route/mvp8/live/add-east-%d" % cycle,
-		SeamFactory.SERVER_B, SeamFactory.SERVER_A, sequence, inner,
+		SeamFactory.SERVER_B, SeamFactory.SERVER_A, construction_epoch, inner,
 		{"entry": "east", "operation": "ADD", "cycle": cycle}
 	)
 	var applied: Dictionary = _construction6["cluster"].submit(SeamFactory.SERVER_B, route)
@@ -340,9 +344,13 @@ func _mvp8_remove(cycle: int) -> Dictionary:
 	var checked: Dictionary = SeamCommand.validate(inner)
 	if not bool(checked.get("success", false)):
 		return checked
+	var record: Dictionary = _construction6["cluster"].get_registry().get_record(SeamFactory.CONSTRUCT_ID)
+	var construction_epoch := int(record.get("authority_epoch", 0))
+	if construction_epoch < 1:
+		return Protocol.failure("MVP8_CONSTRUCTION_AUTHORITY_RECORD_REQUIRED")
 	var route := DistributedCommand.create(
 		"authority-route/mvp8/live/remove-east-%d" % cycle,
-		SeamFactory.SERVER_B, SeamFactory.SERVER_A, sequence, inner,
+		SeamFactory.SERVER_B, SeamFactory.SERVER_A, construction_epoch, inner,
 		{"entry": "east", "operation": "REMOVE", "cycle": cycle}
 	)
 	var applied: Dictionary = _construction6["cluster"].submit(SeamFactory.SERVER_B, route)
