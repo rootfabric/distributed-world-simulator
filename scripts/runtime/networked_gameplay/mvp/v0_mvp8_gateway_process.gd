@@ -295,7 +295,10 @@ func _dig8(round_index: int) -> Dictionary:
 	# EXECUTE can validly return a no-effect REJECTED result. Keep accepted hit
 	# positions as orchestration evidence only and require spatial separation.
 	var candidates: Array[String] = []
-	for actor in ["a", "b"]:
+	# Match the canonical current-state observer preference: B is intentionally
+	# kept near the Matter bubble and should be tried first. A is only a fallback
+	# when it is local to authority/a and B cannot produce a valid canonical hit.
+	for actor in ["b", "a"]:
 		if String(coordinators[actor].snapshot().get("active_authority_id", "")) == "authority/a":
 			candidates.append(actor)
 	if candidates.is_empty():
@@ -575,6 +578,13 @@ func _publish_progress8() -> void:
 		"checkpointed": _checkpointed8,
 		"matter_resynced": _matter_resynced8.duplicate(true),
 		"current_cache": {"hits": _current_cache_hits8, "misses": _current_cache_misses8},
+		"bounds": _bounds8.duplicate(true),
+		"backend_liveness": {
+			"cycles": _backend_liveness_cycles8,
+			"active_skips": _backend_liveness_active_skips8,
+			"syncs": _backend_liveness_syncs8,
+			"failures": _backend_liveness_failures8,
+		},
 		"mvp6": {
 			"phase": _phase6,
 			"complete": _complete6(),
