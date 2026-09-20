@@ -126,15 +126,15 @@ func _initialize() -> void:
 	end_stage(m, "capsule_excitation_batch")
 
 	begin_stage(m, "prepared_session_start")
-	var prepared := PreparedSession.start(capsule, artifact, descriptor, live)
+	var prepared_runtime = PreparedSession.new()
+	var prepared := prepared_runtime.prepare(capsule, artifact, descriptor, live)
 	end_stage(m, "prepared_session_start")
 	check(prepared.success, "prepared session start", prepared)
 	if not prepared.success:
 		_finish()
 		return
-	var session: Dictionary = prepared.details.session
-	for index in range(excitations.size()):
-		var fast := PreparedSession.execute(session, live, excitations[index])
+		for index in range(excitations.size()):
+		var fast := prepared_runtime.execute(live, excitations[index])
 		check(fast.success, "prepared excitation", fast)
 		if fast.success:
 			var full: Dictionary = full_rows[index]
@@ -156,7 +156,7 @@ func _initialize() -> void:
 	var prepared_accumulator := 0.0
 	for i in range(PREPARED_HOT_LOOP_CALLS):
 		var effort: Array = excitations[i % excitations.size()]
-		var executed := PreparedSession.execute(session, live, effort)
+		var executed := prepared_runtime.execute(live, effort)
 		check(executed.success, "prepared hot loop execution", {"index": i, "result": executed} if not executed.success else {})
 		if executed.success:
 			prepared_accumulator += float(executed.details.boundary_power)
@@ -178,7 +178,7 @@ func _initialize() -> void:
 		check(String(mutated.details.reduction.checksum) != String(descriptor.checksum), "mutation changes reduction")
 		var mutated_live := ExactCompiler.live_context_from_request(mutated.details.bake_request)
 		check(not T1Runtime.execute(capsule, artifact, descriptor, mutated_live, excitations[0]).success, "old capsule rejects mutated live graph")
-		check(not PreparedSession.execute(session, mutated_live, excitations[0]).success, "prepared session rejects mutated live graph")
+		check(not prepared_runtime.execute(mutated_live, excitations[0]).success, "prepared session rejects mutated live graph")
 		var new_exec := T1Runtime.execute(mutated.details.capsule, mutated.details.artifact, mutated.details.reduction, mutated_live, excitations[0])
 		check(new_exec.success, "rebuilt capsule executes")
 

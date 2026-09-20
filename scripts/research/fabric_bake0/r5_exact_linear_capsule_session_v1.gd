@@ -1,7 +1,6 @@
 extends RefCounted
-## Prepared exact-linear capsule session.
-## Full provenance and execution-gate validation happens once at start().
-## execute() uses only the reduced 4x4 relation plus cheap live-binding fences.
+## Prepared exact-linear capsule execution object.
+## Full provenance/gate validation is activation work, not per-tick work.
 
 const U = preload("res://scripts/research/fabric_bake0/fabric_bake_contract_utils_v1.gd")
 const Capsule = preload("res://scripts/research/fabric_bake0/behavior_capsule_contract_v1.gd")
@@ -9,20 +8,22 @@ const Artifact = preload("res://scripts/research/fabric_bake0/physical_bake_arti
 const Descriptor = preload("res://scripts/research/fabric_bake0/exact_boundary_reduction_descriptor_v1.gd")
 const Gate = preload("res://scripts/research/fabric_bake0/bake_execution_gate_v1.gd")
 
-const SCHEMA := "planet_simulator.fabric_r5_2_exact_linear_capsule_session.v1"
-const FIELDS: Array[String] = [
-	"schema", "capsule_id", "capsule_checksum", "artifact_checksum", "descriptor_checksum",
-	"source_frontier_hash", "authority_checksum", "dependency_hash", "fabric_graph_hash",
-	"fabric_compiler_version", "boundary_contract_hash", "bake_policy_hash",
-	"boundary_port_ids", "schur_matrix", "reduced_rhs", "checksum",
-]
+var _ready := false
+var _capsule_id := ""
+var _activation_hash := ""
+var _source_frontier_hash := ""
+var _authority_checksum := ""
+var _dependency_hash := ""
+var _fabric_graph_hash := ""
+var _fabric_compiler_version := ""
+var _boundary_contract_hash := ""
+var _bake_policy_hash := ""
+var _boundary_port_ids: Array = []
+var _schur_matrix: Array = []
+var _reduced_rhs: Array = []
 
-static func start(
-	capsule: Dictionary,
-	artifact: Dictionary,
-	descriptor: Dictionary,
-	live: Dictionary
-) -> Dictionary:
+func prepare(capsule: Dictionary, artifact: Dictionary, descriptor: Dictionary, live: Dictionary) -> Dictionary:
+	_ready = false
 	var checked := Capsule.validate(capsule)
 	if not checked.success:
 		return checked
@@ -45,89 +46,63 @@ static func start(
 	checked = Gate.can_execute(artifact, live)
 	if not checked.success:
 		return checked
-	var session := {
-		"schema": SCHEMA,
-		"capsule_id": String(capsule.capsule_id),
-		"capsule_checksum": String(capsule.checksum),
-		"artifact_checksum": String(artifact.checksum),
-		"descriptor_checksum": String(descriptor.checksum),
-		"source_frontier_hash": String(artifact.source_binding.frontier_hash),
-		"authority_checksum": String(artifact.source_binding.authority_envelope.checksum),
-		"dependency_hash": String(artifact.source_binding.dependency_hash),
-		"fabric_graph_hash": String(artifact.source_binding.fabric_graph_hash),
-		"fabric_compiler_version": String(artifact.source_binding.fabric_compiler_version),
-		"boundary_contract_hash": String(artifact.source_binding.boundary_contract_hash),
-		"bake_policy_hash": String(artifact.source_binding.bake_policy_hash),
-		"boundary_port_ids": descriptor.boundary_port_ids.duplicate(),
-		"schur_matrix": descriptor.schur_matrix.duplicate(true),
-		"reduced_rhs": descriptor.reduced_rhs.duplicate(),
-		"checksum": "",
-	}
-	session.checksum = U.compute_checksum(session)
-	checked = validate(session)
-	if not checked.success:
-		return checked
-	return U.success({"session": session, "activation_gate": checked})
 
-static func validate(session: Dictionary) -> Dictionary:
-	var checked := U.validate_exact_fields(session, FIELDS)
-	if not checked.success:
-		return checked
-	if session.get("schema") != SCHEMA:
-		return U.failure("UNSUPPORTED_R5_2_CAPSULE_SESSION_SCHEMA")
-	if not U.is_canonical_id(session.get("capsule_id"), 2):
-		return U.failure("INVALID_R5_2_CAPSULE_SESSION_ID")
-	for field in [
-		"capsule_checksum", "artifact_checksum", "descriptor_checksum",
-		"source_frontier_hash", "authority_checksum", "dependency_hash",
-		"fabric_graph_hash", "boundary_contract_hash", "bake_policy_hash"
-	]:
-		if not U.is_lower_hex_64(session.get(field)):
-			return U.failure("INVALID_R5_2_CAPSULE_SESSION_HASH", {"field": field})
-	if typeof(session.get("fabric_compiler_version")) != TYPE_STRING or String(session.fabric_compiler_version).is_empty():
-		return U.failure("INVALID_R5_2_CAPSULE_SESSION_COMPILER")
-	if typeof(session.get("boundary_port_ids")) != TYPE_ARRAY or session.boundary_port_ids.is_empty():
-		return U.failure("INVALID_R5_2_CAPSULE_SESSION_PORTS")
-	var n := session.boundary_port_ids.size()
-	if typeof(session.get("schur_matrix")) != TYPE_ARRAY or session.schur_matrix.size() != n:
-		return U.failure("INVALID_R5_2_CAPSULE_SESSION_MATRIX")
-	for row in session.schur_matrix:
-		if typeof(row) != TYPE_ARRAY or row.size() != n:
-			return U.failure("INVALID_R5_2_CAPSULE_SESSION_MATRIX")
-		for value in row:
-			if not U.is_finite_number(value):
-				return U.failure("INVALID_R5_2_CAPSULE_SESSION_MATRIX")
-	if typeof(session.get("reduced_rhs")) != TYPE_ARRAY or session.reduced_rhs.size() != n:
-		return U.failure("INVALID_R5_2_CAPSULE_SESSION_RHS")
-	for value in session.reduced_rhs:
-		if not U.is_finite_number(value):
-			return U.failure("INVALID_R5_2_CAPSULE_SESSION_RHS")
-	return U.validate_checksum(session)
+	_capsule_id = String(capsule.capsule_id)
+	_source_frontier_hash = String(artifact.source_binding.frontier_hash)
+	_authority_checksum = String(artifact.source_binding.authority_envelope.checksum)
+	_dependency_hash = String(artifact.source_binding.dependency_hash)
+	_fabric_graph_hash = String(artifact.source_binding.fabric_graph_hash)
+	_fabric_compiler_version = String(artifact.source_binding.fabric_compiler_version)
+	_boundary_contract_hash = String(artifact.source_binding.boundary_contract_hash)
+	_bake_policy_hash = String(artifact.source_binding.bake_policy_hash)
+	_boundary_port_ids = descriptor.boundary_port_ids.duplicate()
+	_schur_matrix = descriptor.schur_matrix.duplicate(true)
+	_reduced_rhs = descriptor.reduced_rhs.duplicate()
+	_activation_hash = U.canonical_hash({
+		"capsule_checksum": capsule.checksum,
+		"artifact_checksum": artifact.checksum,
+		"descriptor_checksum": descriptor.checksum,
+		"source_frontier_hash": _source_frontier_hash,
+		"authority_checksum": _authority_checksum,
+		"dependency_hash": _dependency_hash,
+		"fabric_graph_hash": _fabric_graph_hash,
+		"boundary_contract_hash": _boundary_contract_hash,
+		"bake_policy_hash": _bake_policy_hash,
+		"boundary_port_ids": _boundary_port_ids,
+		"schur_matrix": _schur_matrix,
+		"reduced_rhs": _reduced_rhs,
+	})
+	_ready = true
+	return U.success({
+		"activation_hash": _activation_hash,
+		"capsule_id": _capsule_id,
+		"executable_equation_count": _boundary_port_ids.size(),
+	})
 
-static func execute(session: Dictionary, live: Dictionary, boundary_effort: Array) -> Dictionary:
-	var checked := validate(session)
+func execute(live: Dictionary, boundary_effort: Array) -> Dictionary:
+	if not _ready:
+		return U.failure("R5_2_SESSION_NOT_READY")
+	var checked := _fast_live_fence(live)
 	if not checked.success:
 		return checked
-	checked = _fast_live_fence(session, live)
-	if not checked.success:
-		return checked
-	var n := session.boundary_port_ids.size()
+	var n := _boundary_port_ids.size()
 	if boundary_effort.size() != n:
 		return U.failure("R5_2_SESSION_BOUNDARY_EFFORT_SIZE_MISMATCH")
 	var flow: Array = []
 	flow.resize(n)
 	for row_index in range(n):
-		var value := -float(session.reduced_rhs[row_index])
+		var value := -float(_reduced_rhs[row_index])
 		for column_index in range(n):
 			if not U.is_finite_number(boundary_effort[column_index]):
 				return U.failure("R5_2_SESSION_NONFINITE_BOUNDARY_EFFORT")
-			value += float(session.schur_matrix[row_index][column_index]) * float(boundary_effort[column_index])
+			value += float(_schur_matrix[row_index][column_index]) * float(boundary_effort[column_index])
 		flow[row_index] = value
 	var power := 0.0
 	for index in range(n):
 		power += float(boundary_effort[index]) * float(flow[index])
 	return U.success({
-		"capsule_id": session.capsule_id,
+		"capsule_id": _capsule_id,
+		"activation_hash": _activation_hash,
 		"boundary_effort": boundary_effort.duplicate(),
 		"boundary_flow": flow,
 		"boundary_power": power,
@@ -136,28 +111,31 @@ static func execute(session: Dictionary, live: Dictionary, boundary_effort: Arra
 		"fast_binding_checks": 10,
 	})
 
-static func _fast_live_fence(session: Dictionary, live: Dictionary) -> Dictionary:
+func invalidate() -> void:
+	_ready = false
+
+func _fast_live_fence(live: Dictionary) -> Dictionary:
 	if String(live.get("artifact_state", "")) != "READY":
 		return U.failure("R5_2_SESSION_PHYSICAL_BAKE_NOT_READY")
 	if typeof(live.get("invalidations")) != TYPE_ARRAY or not live.invalidations.is_empty():
 		return U.failure("R5_2_SESSION_INVALIDATION_REQUIRES_REACTIVATION")
-	if typeof(live.get("canonical_source_frontier")) != TYPE_DICTIONARY or String(live.canonical_source_frontier.get("frontier_hash", "")) != String(session.source_frontier_hash):
+	if typeof(live.get("canonical_source_frontier")) != TYPE_DICTIONARY or String(live.canonical_source_frontier.get("frontier_hash", "")) != _source_frontier_hash:
 		return U.failure("R5_2_SESSION_SOURCE_FRONTIER_MISMATCH")
-	if typeof(live.get("authority_envelope")) != TYPE_DICTIONARY or String(live.authority_envelope.get("checksum", "")) != String(session.authority_checksum):
+	if typeof(live.get("authority_envelope")) != TYPE_DICTIONARY or String(live.authority_envelope.get("checksum", "")) != _authority_checksum:
 		return U.failure("R5_2_SESSION_AUTHORITY_MISMATCH")
-	if typeof(live.get("dependency_set")) != TYPE_DICTIONARY or String(live.dependency_set.get("dependency_hash", "")) != String(session.dependency_hash):
+	if typeof(live.get("dependency_set")) != TYPE_DICTIONARY or String(live.dependency_set.get("dependency_hash", "")) != _dependency_hash:
 		return U.failure("R5_2_SESSION_DEPENDENCY_MISMATCH")
-	if String(live.get("fabric_graph_hash", "")) != String(session.fabric_graph_hash):
+	if String(live.get("fabric_graph_hash", "")) != _fabric_graph_hash:
 		return U.failure("R5_2_SESSION_GRAPH_MISMATCH")
-	if String(live.get("fabric_compiler_version", "")) != String(session.fabric_compiler_version):
+	if String(live.get("fabric_compiler_version", "")) != _fabric_compiler_version:
 		return U.failure("R5_2_SESSION_COMPILER_MISMATCH")
-	if String(live.get("boundary_contract_hash", "")) != String(session.boundary_contract_hash):
+	if String(live.get("boundary_contract_hash", "")) != _boundary_contract_hash:
 		return U.failure("R5_2_SESSION_BOUNDARY_MISMATCH")
-	if String(live.get("bake_policy_hash", "")) != String(session.bake_policy_hash):
+	if String(live.get("bake_policy_hash", "")) != _bake_policy_hash:
 		return U.failure("R5_2_SESSION_POLICY_MISMATCH")
 	if typeof(live.get("runtime_domain")) != TYPE_DICTIONARY:
 		return U.failure("R5_2_SESSION_RUNTIME_DOMAIN_MISSING")
-	if String(live.runtime_domain.get("source_frontier_hash", "")) != String(session.source_frontier_hash) or String(live.runtime_domain.get("fabric_graph_hash", "")) != String(session.fabric_graph_hash):
+	if String(live.runtime_domain.get("source_frontier_hash", "")) != _source_frontier_hash or String(live.runtime_domain.get("fabric_graph_hash", "")) != _fabric_graph_hash:
 		return U.failure("R5_2_SESSION_RUNTIME_DOMAIN_MISMATCH")
 	if String(live.runtime_domain.get("mode", "")) != "STEADY":
 		return U.failure("R5_2_SESSION_RUNTIME_MODE_MISMATCH")
