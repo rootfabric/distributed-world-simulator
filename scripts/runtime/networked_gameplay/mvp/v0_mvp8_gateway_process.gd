@@ -49,6 +49,9 @@ var _backend_liveness_cycles8 := 0
 var _backend_liveness_failures8 := 0
 var _backend_liveness_last_ms8 := 0
 var _backend_liveness_last8: Dictionary = {}
+var _backend_liveness_seen_sequence8 := {"authority/a": -1, "authority/b": -1}
+var _backend_liveness_active_skips8 := 0
+var _backend_liveness_syncs8 := 0
 var _seam_crossings8 := 0
 var _handoff_stage8 := "IDLE"
 var _matter_resynced8 := {"a": false, "b": false}
@@ -677,15 +680,39 @@ func _backend_liveness8() -> Dictionary:
 	if _backend_liveness_last_ms8 > 0 and now - _backend_liveness_last_ms8 < LIVENESS_INTERVAL_MS8:
 		return Protocol8.success({"skipped": true})
 	var observed := {}
+	var idle_syncs := {}
 	for authority_id in ["authority/a", "authority/b"]:
+		var before := int(links[authority_id].sequence)
+		var previous := int(_backend_liveness_seen_sequence8.get(authority_id, -1))
+		# A real workload RPC already proves this authenticated backend link is
+		# alive. Do not add a redundant SYNC on top of useful traffic. If the
+		# sequence did not move during the interval, issue the same fail-closed
+		# read-only SYNC used previously.
+		if previous < 0 or before != previous:
+			_backend_liveness_seen_sequence8[authority_id] = before
+			_backend_liveness_active_skips8 += 1
+			observed[authority_id] = before
+			idle_syncs[authority_id] = false
+			continue
 		var rpc: Dictionary = call_authority(authority_id, {"kind": "SYNC"})
 		if not bool(rpc.get("success", false)):
 			_backend_liveness_failures8 += 1
 			return Protocol8.failure("MVP8_BACKEND_LIVENESS_FAILED:" + authority_id)
-		observed[authority_id] = int(links[authority_id].sequence)
+		var after := int(links[authority_id].sequence)
+		_backend_liveness_seen_sequence8[authority_id] = after
+		_backend_liveness_syncs8 += 1
+		observed[authority_id] = after
+		idle_syncs[authority_id] = true
 	_backend_liveness_cycles8 += 1
 	_backend_liveness_last_ms8 = now
-	_backend_liveness_last8 = {"observed_sequences": observed, "mutation_performed": false, "backend_reconnect_performed": false}
+	_backend_liveness_last8 = {
+		"observed_sequences": observed,
+		"idle_syncs": idle_syncs,
+		"active_skips": _backend_liveness_active_skips8,
+		"syncs": _backend_liveness_syncs8,
+		"mutation_performed": false,
+		"backend_reconnect_performed": false,
+	}
 	return Protocol8.success(_backend_liveness_last8.duplicate(true))
 
 
@@ -788,6 +815,8 @@ func base_report(schema: String, passed: bool, graphical: bool) -> Dictionary:
 		"bounds": _bounds8.duplicate(true),
 		"backend_liveness_cycles": _backend_liveness_cycles8,
 		"backend_liveness_failures": _backend_liveness_failures8,
+		"backend_liveness_active_skips": _backend_liveness_active_skips8,
+		"backend_liveness_syncs": _backend_liveness_syncs8,
 		"backend_liveness_last": _backend_liveness_last8.duplicate(true),
 		"last_dig": _last_dig8.duplicate(true),
 		"dig_hits": _dig_hits8.duplicate(true),
