@@ -10,7 +10,9 @@ STAGES=[
  "behavior_capsule_compile",
  "full_reference_excitation_batch",
  "capsule_excitation_batch",
- "prepared_session_start",\n "full_gate_hot_loop",\n "prepared_capsule_hot_loop",
+ "prepared_session_start",
+ "full_gate_hot_loop",
+ "prepared_capsule_hot_loop",
  "mutation_recompile",
  "singular_fail_closed",
 ]
@@ -45,7 +47,8 @@ def main():
         if counters["internal_nodes"] != 128 or counters["boundary_ports"] != 4: raise ValueError("T1_TOPOLOGY_DRIFT")
         if counters["full_equations"] != 132 or counters["executable_equations"] != 4: raise ValueError("T1_EQUATION_DRIFT")
         if counters["runtime_source_traversals_per_execute"] != 0: raise ValueError("T1_RUNTIME_SOURCE_TRAVERSAL_PRESENT")
-        if counters["full_gate_hot_loop_calls"] != 128: raise ValueError("T1_FULL_GATE_LOOP_DRIFT")\n        if counters["prepared_hot_loop_calls"] != 4096: raise ValueError("T1_PREPARED_LOOP_DRIFT")
+        if counters["full_gate_hot_loop_calls"] != 128: raise ValueError("T1_FULL_GATE_LOOP_DRIFT")
+        if counters["prepared_hot_loop_calls"] != 4096: raise ValueError("T1_PREPARED_LOOP_DRIFT")
         for s in STAGES:
             if s not in data["stages"]: raise ValueError(f"T1_STAGE_MISSING {s}")
         deterministic.add(data["deterministic_hash"])

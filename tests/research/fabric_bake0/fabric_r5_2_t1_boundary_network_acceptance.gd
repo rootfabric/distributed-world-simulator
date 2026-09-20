@@ -5,7 +5,8 @@ const Graph = preload("res://scripts/research/fabric_bake0/linear_conductance_co
 const GraphCompiler = preload("res://scripts/research/fabric_bake0/linear_conductance_graph_compiler_v1.gd")
 const Capsule = preload("res://scripts/research/fabric_bake0/behavior_capsule_contract_v1.gd")
 const T1Compiler = preload("res://scripts/research/fabric_bake0/r5_t1_boundary_network_capsule_compiler_v1.gd")
-const T1Runtime = preload("res://scripts/research/fabric_bake0/r5_t1_boundary_network_capsule_runtime_v1.gd")\nconst PreparedSession = preload("res://scripts/research/fabric_bake0/r5_exact_linear_capsule_session_v1.gd")
+const T1Runtime = preload("res://scripts/research/fabric_bake0/r5_t1_boundary_network_capsule_runtime_v1.gd")
+const PreparedSession = preload("res://scripts/research/fabric_bake0/r5_exact_linear_capsule_session_v1.gd")
 const ExactCompiler = preload("res://scripts/research/fabric_bake0/exact_boundary_bake_compiler_v1.gd")
 const Reducer = preload("res://scripts/research/fabric_bake0/exact_boundary_reducer_v1.gd")
 const LinearAlgebra = preload("res://scripts/research/fabric_bake0/dense_linear_algebra_v1.gd")
@@ -13,7 +14,8 @@ const CompileResult = preload("res://scripts/research/fabric_bake0/bake_compile_
 const Measure = preload("res://scripts/research/fabric_bake0/r5_measurement_harness_v1.gd")
 const Fixture = preload("res://tests/research/fabric_bake0/fabric_r5_2_t1_boundary_network_fixture.gd")
 
-const FULL_GATE_HOT_LOOP_CALLS := 128\nconst PREPARED_HOT_LOOP_CALLS := 4096
+const FULL_GATE_HOT_LOOP_CALLS := 128
+const PREPARED_HOT_LOOP_CALLS := 4096
 
 var checks := 0
 var failed := false
@@ -175,7 +177,8 @@ func _initialize() -> void:
 		check(String(mutated.details.capsule.checksum) != String(capsule.checksum), "mutation changes capsule")
 		check(String(mutated.details.reduction.checksum) != String(descriptor.checksum), "mutation changes reduction")
 		var mutated_live := ExactCompiler.live_context_from_request(mutated.details.bake_request)
-		check(not T1Runtime.execute(capsule, artifact, descriptor, mutated_live, excitations[0]).success, "old capsule rejects mutated live graph")\n\t\tcheck(not PreparedSession.execute(session, mutated_live, excitations[0]).success, "prepared session rejects mutated live graph")
+		check(not T1Runtime.execute(capsule, artifact, descriptor, mutated_live, excitations[0]).success, "old capsule rejects mutated live graph")
+		check(not PreparedSession.execute(session, mutated_live, excitations[0]).success, "prepared session rejects mutated live graph")
 		var new_exec := T1Runtime.execute(mutated.details.capsule, mutated.details.artifact, mutated.details.reduction, mutated_live, excitations[0])
 		check(new_exec.success, "rebuilt capsule executes")
 
@@ -206,7 +209,8 @@ func _initialize() -> void:
 		"component_to_executable_ratio": float(capsule.component_to_executable_ratio),
 		"maximum_flow_error": maximum_flow_error,
 		"maximum_power_error": maximum_power_error,
-		"full_gate_hot_loop_calls": FULL_GATE_HOT_LOOP_CALLS,\n\t\t"prepared_hot_loop_calls": PREPARED_HOT_LOOP_CALLS,
+		"full_gate_hot_loop_calls": FULL_GATE_HOT_LOOP_CALLS,
+		"prepared_hot_loop_calls": PREPARED_HOT_LOOP_CALLS,
 		"singular_status": String(singular.get("status", "")),
 		"singular_reason": String(singular.get("reason", "")),
 	}
@@ -216,7 +220,8 @@ func _initialize() -> void:
 	m.set_counter("full_equations", int(capsule.full_equation_count))
 	m.set_counter("executable_equations", int(capsule.executable_equation_count))
 	m.set_counter("runtime_source_traversals_per_execute", int(capsule.runtime_source_traversals_per_execute))
-	m.set_counter("full_gate_hot_loop_calls", FULL_GATE_HOT_LOOP_CALLS)\n\tm.set_counter("prepared_hot_loop_calls", PREPARED_HOT_LOOP_CALLS)
+	m.set_counter("full_gate_hot_loop_calls", FULL_GATE_HOT_LOOP_CALLS)
+	m.set_counter("prepared_hot_loop_calls", PREPARED_HOT_LOOP_CALLS)
 	var applicability := {
 		"dynamic_state": {"applicable": false, "reason": "T1 is an exact stateless linear boundary capsule. Dynamic ROM begins at later fixtures."},
 		"material_property_derivation": {"applicable": false, "reason": "T1 uses characterized conductance components; deriving cell/material properties is T3 Battery."},
