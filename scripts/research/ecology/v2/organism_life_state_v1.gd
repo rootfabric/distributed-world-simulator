@@ -2,7 +2,8 @@ extends RefCounted
 ## A5 persistent lifecycle state. Resource accounting is separate from A2 body accounting.
 const C = preload("res://scripts/research/ecology/v2/canonical_value_v1.gd")
 const B = preload("res://scripts/research/ecology/v2/body_graph_v1.gd")
-const BP = preload("res://scripts/research/ecology/v2/organism_blueprint_v1.gd")\nconst Mutation = preload("res://scripts/research/ecology/v2/genome_mutation_v1.gd")
+const BP = preload("res://scripts/research/ecology/v2/organism_blueprint_v1.gd")
+const Mutation = preload("res://scripts/research/ecology/v2/genome_mutation_v1.gd")
 const S = preload("res://scripts/research/ecology/v2/organism_state_v1.gd")
 const H = preload("res://scripts/research/ecology/v2/phenotype_snapshot_v1.gd")
 const F = preload("res://scripts/research/ecology/v2/environment_field_contract_v1.gd")

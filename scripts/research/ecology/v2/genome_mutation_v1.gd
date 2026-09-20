@@ -3,7 +3,9 @@ extends RefCounted
 const C = preload("res://scripts/research/ecology/v2/canonical_value_v1.gd")
 const P = preload("res://scripts/research/ecology/v2/development_program_v1.gd")
 const G = preload("res://scripts/research/ecology/v2/organism_genome_v2.gd")
-const OPERATORS := ["small", "medium", "regulatory", "duplicate", "activate", "delete", "rewire", "insert", "module_parameter", "development_parameter", "none"]\nconst BIAS_SCHEMA := "dws.ecology.genome-mutation-bias.v1"\nconst MAX_BIAS_WEIGHT := 1000000
+const OPERATORS := ["small", "medium", "regulatory", "duplicate", "activate", "delete", "rewire", "insert", "module_parameter", "development_parameter", "none"]
+const BIAS_SCHEMA := "dws.ecology.genome-mutation-bias.v1"
+const MAX_BIAS_WEIGHT := 1000000
 
 static func draw(seed: int, key: String, count: int) -> int:
 	return ("evo-arch2|%d|%s" % [seed, key]).sha256_text().substr(0, 12).hex_to_int() % maxi(1, count)

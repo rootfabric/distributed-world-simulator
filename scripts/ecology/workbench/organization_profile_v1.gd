@@ -31,7 +31,8 @@ const RULE_CLASSES := ["VISUAL_ONLY", "DEVELOPMENT_BIAS", "BIOLOGICAL_WORLD_CONS
 const VERSION := 1
 
 # The STOP-conditional status required by the brief for DEVELOPMENT_BIAS.
-const BLOCKED_STATUS := "BLOCKED_CANONICAL_EXTENSION_REQUIRED" # historical status; no longer returned after Repair R1\nconst APPLIED_STATUS := "APPLIED_CANONICAL_BIAS"
+const BLOCKED_STATUS := "BLOCKED_CANONICAL_EXTENSION_REQUIRED" # historical status; no longer returned after Repair R1
+const APPLIED_STATUS := "APPLIED_CANONICAL_BIAS"
 # The canonical API that must exist before DEVELOPMENT_BIAS can be realized.
 const REQUIRED_HOOK := "A3 genome_mutation_v1 must accept a named, versioned bias (reweighting only ALLOWED operators/transitions) AND the A5 parent-transfer witness must admit genomes provably produced by that canonical hook; see docs/research/ecology/ECO_ARCH2_A10_5_P9_DEVELOPMENT_BIAS_EXTENSION_RU.md"
 

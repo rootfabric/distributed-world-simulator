@@ -20,7 +20,8 @@ extends RefCounted
 const C = preload("res://scripts/research/ecology/v2/canonical_value_v1.gd")
 const Manifest = preload("res://scripts/ecology/workbench/experiment_manifest_v1.gd")
 const EnvironmentPatch = preload("res://scripts/ecology/workbench/environment_patch_v1.gd")
-const Controller = preload("res://scripts/ecology/workbench/experiment_controller_v1.gd")\nconst RuntimeCheckpoint = preload("res://scripts/research/ecology/v2/ecology_runtime_checkpoint_v1.gd")
+const Controller = preload("res://scripts/ecology/workbench/experiment_controller_v1.gd")
+const RuntimeCheckpoint = preload("res://scripts/research/ecology/v2/ecology_runtime_checkpoint_v1.gd")
 
 const SCHEMA := "dws.ecology.workbench.experiment-branch.v1"
 const CHECKPOINT_SCHEMA := "dws.ecology.workbench.checkpoint.v1"
