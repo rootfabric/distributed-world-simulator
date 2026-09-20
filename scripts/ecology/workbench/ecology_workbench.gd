@@ -36,6 +36,8 @@ const GenericRealizer = preload("res://scripts/ecology/workbench/generic_morphol
 const OrganismInspector = preload("res://scripts/ecology/workbench/organism_inspector_v1.gd")
 const GenomeEditor = preload("res://scripts/ecology/workbench/genome_editor_v1.gd")
 const ExperimentBranch = preload("res://scripts/ecology/workbench/experiment_branch_v1.gd")
+const ExperimentMetrics = preload("res://scripts/ecology/workbench/experiment_metrics_v1.gd")
+const MorphotypeClassifier = preload("res://scripts/ecology/workbench/morphotype_classifier_v1.gd")
 const MutationProxy = preload("res://scripts/research/ecology/v2/genome_mutation_v1.gd")
 
 # Scene scale: millimetres -> metres (same convention as the P3 markers).
@@ -68,6 +70,11 @@ var _morphology_by_id: Dictionary = {}
 var _selected_entity := ""
 var _last_checkpoint: Dictionary = {}
 var branch_manager: Object = null
+# Observatory (P10): read-only metrics accumulator + morphotype analytics
+# toggle. Analytics NEVER feed back into canonical state (§20).
+var observatory_enabled := false
+var morphotype_classification_enabled := true
+var metrics_observer: Object = null
 
 func setup(deps: Dictionary) -> void:
 	# deps: {controller, founder_registry, zone_color_provider?} — everything
@@ -92,6 +99,7 @@ func bind_controller(new_controller: Object) -> void:
 	var branch_setup: Dictionary = branch_manager.setup(new_controller, founder_registry)
 	if not bool(branch_setup.get("success", false)):
 		push_error("ECO_WORKBENCH branch setup failed: " + str(branch_setup))
+	_reset_observatory()
 	_refresh_from_controller(true)
 
 # --- Commands (versioned UI actions -> controller, never direct mutation) ---
@@ -138,6 +146,7 @@ func command_reset() -> bool:
 		return false
 	var result: Dictionary = controller.reset()
 	var ok := bool(result.get("success", false))
+	_reset_observatory()
 	_refresh_from_controller(true)
 	return ok
 
@@ -192,6 +201,7 @@ func command_generate_placement(preset: String) -> bool:
 	next.placement.entries = generated.entries
 	var result: Dictionary = controller.initialize(next, founder_registry)
 	var ok := bool(result.get("success", false))
+	_reset_observatory()
 	_refresh_from_controller(true)
 	return ok
 
@@ -209,6 +219,7 @@ func command_apply_environment_patch(zone_id: String, field: String, value: int)
 		return false
 	var result: Dictionary = controller.initialize(applied.manifest, founder_registry)
 	var ok := bool(result.get("success", false))
+	_reset_observatory()
 	_refresh_from_controller(true)
 	return ok
 
@@ -436,6 +447,8 @@ func _refresh_from_controller(rebuild_all: bool) -> void:
 	organism_views = _build_views(snapshot)
 	_sync_markers()
 	snapshot_updated.emit(snapshot)
+	if observatory_enabled:
+		_observe_and_render(snapshot)
 	_update_status_bar(snapshot)
 	if rebuild_all:
 		_sync_placement_panel(snapshot)
@@ -672,6 +685,107 @@ func _marker_color(descriptor: Dictionary, selected: bool) -> Color:
 		color = Color(1.0, 0.9, 0.2)
 	return color
 
+# --- Observatory (P10): read-only metrics + morphotype analytics -------------
+
+## Restart the read-only accumulator after any (re-)initialization.
+func _reset_observatory() -> void:
+	metrics_observer = ExperimentMetrics.new()
+	if controller != null and controller.has_method("get_manifest"):
+		metrics_observer.begin(controller.get_manifest())
+	_set_observatory_status("observatory armed" if observatory_enabled else "observatory off")
+
+## Observe the completed snapshot (read-only APIs only) and render the text
+## observatory: latest series values + latest events + morphotype histogram
+## (when classification is ON — analytics only, never canonical input).
+func _observe_and_render(snapshot: Dictionary) -> void:
+	if metrics_observer == null:
+		_reset_observatory()
+	var observed: Dictionary = metrics_observer.observe(controller)
+	if not bool(observed.get("success", false)):
+		_set_observatory_status("observatory error: " + str(observed.get("error", "?")))
+		return
+	_set_observatory_status("observing tick %d" % int(observed.tick))
+	var content := get_node_or_null("WorkbenchUI/ObservatoryPanel/ObservatoryContent") as Label
+	if content == null:
+		return
+	content.text = _render_observatory_text()
+
+func _render_observatory_text() -> String:
+	if metrics_observer == null:
+		return ""
+	var series: Dictionary = metrics_observer.series
+	var lines: Array[String] = []
+	var count: int = series.get("tick", []).size()
+	if count > 0:
+		var index := count - 1
+		lines.append("tick %d | population %d | alive %d | births %d | deaths %d" % [
+			int(series.tick[index]), int(series.population[index]), int(series.alive[index]),
+			int(series.births[index]), int(series.deaths[index]),
+		])
+		var stock: Dictionary = series.resource_stocks[index]
+		lines.append("stocks water %d | nutrient %d | organic %d" % [
+			int(stock.get("water_mg", 0)), int(stock.get("nutrient_mg", 0)), int(stock.get("organic_mg", 0)),
+		])
+		lines.append("morphology signatures %d | shannon %d/1000 | modules %d | lineage %d" % [
+			int(series.morphology_unique_signatures[index]), int(series.morphology_shannon_permille[index]),
+			int(series.body_modules_total[index]), int(series.lineage_depth_max[index]),
+		])
+	# Morphotype analytics (toggle affects ONLY this section — §20).
+	if morphotype_classification_enabled and controller != null:
+		var classifications: Array = []
+		if controller.has_method("debug_state"):
+			for entry in controller.debug_state().population:
+				var state: Dictionary = entry.state
+				if not bool(state.alive):
+					continue
+				var descriptor: Dictionary = MorphologyDescriptor.compile(state.development.modules, String(state.individual_id), state.position_mm)
+				if descriptor.is_empty():
+					continue
+				var classification: Dictionary = MorphotypeClassifier.classify(descriptor)
+				if not classification.is_empty():
+					classifications.append(classification)
+		if not classifications.is_empty():
+			var diversity: Dictionary = MorphotypeClassifier.diversity(classifications)
+			var histogram: Dictionary = diversity.get("histogram", {})
+			var parts: Array[String] = []
+			for key in histogram.keys():
+				parts.append("%s x%d" % [String(key), int(histogram[key])])
+			parts.sort()
+			lines.append("morphotypes: " + " | ".join(parts))
+	# Latest timeline events (last 6, newest last).
+	var timeline: Array = metrics_observer.timeline
+	var shown := mini(6, timeline.size())
+	if shown > 0:
+		var event_lines: Array[String] = []
+		for event_index in range(timeline.size() - shown, timeline.size()):
+			var event: Dictionary = timeline[event_index]
+			event_lines.append("t%d %s %s" % [int(event.tick), String(event.kind), String(event.entity_id)])
+		lines.append("events: " + " ; ".join(event_lines))
+	return "\n".join(lines)
+
+func set_observatory_enabled(value: bool) -> void:
+	observatory_enabled = value
+	if value and metrics_observer == null:
+		_reset_observatory()
+	_set_observatory_status("observing" if value else "observatory off")
+	if value:
+		if controller != null:
+			_observe_and_render(controller.get_snapshot())
+
+## Morphotype classification toggle: affects ONLY observatory analytics,
+## never the canonical simulation (§20 non-causality).
+func set_morphotype_classification(value: bool) -> void:
+	morphotype_classification_enabled = value
+	if observatory_enabled:
+		var content := get_node_or_null("WorkbenchUI/ObservatoryPanel/ObservatoryContent") as Label
+		if content != null:
+			content.text = _render_observatory_text()
+
+func _set_observatory_status(text: String) -> void:
+	var status := get_node_or_null("WorkbenchUI/ObservatoryControls/ObservatoryStatus") as Label
+	if status != null:
+		status.text = text
+
 # --- UI wiring (buttons live in the workbench scene) -------------------------
 
 func _ready() -> void:
@@ -718,6 +832,15 @@ func _ready() -> void:
 	_connect_button("WorkbenchUI/BranchControls/Restore", command_restore)
 	_connect_button("WorkbenchUI/BranchControls/Fork", command_fork)
 	_connect_button("WorkbenchUI/BranchControls/ShowBranches", Callable(self, "command_show_branches"))
+	# Observatory (P10): read-only metrics + morphotype analytics toggles.
+	var observatory_toggle := get_node_or_null("WorkbenchUI/ObservatoryControls/Observatory") as CheckBox
+	if observatory_toggle != null:
+		observatory_toggle.button_pressed = observatory_enabled
+		observatory_toggle.toggled.connect(set_observatory_enabled)
+	var classification_toggle := get_node_or_null("WorkbenchUI/ObservatoryControls/MorphotypeClassification") as CheckBox
+	if classification_toggle != null:
+		classification_toggle.button_pressed = morphotype_classification_enabled
+		classification_toggle.toggled.connect(set_morphotype_classification)
 
 # --- Button handlers (read spinner/option values, then command) -------------
 

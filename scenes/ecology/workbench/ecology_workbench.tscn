@@ -162,3 +162,33 @@ text = "INSPECTOR"
 
 [node name="InspectorContent" type="Label" parent="WorkbenchUI/InspectorPanel"]
 text = ""
+
+[node name="ObservatoryControls" type="HBoxContainer" parent="WorkbenchUI"]
+anchors_preset = 0
+offset_left = 16.0
+offset_top = 424.0
+offset_right = 1400.0
+offset_bottom = 452.0
+
+[node name="Observatory" type="CheckBox" parent="WorkbenchUI/ObservatoryControls"]
+text = "OBSERVATORY"
+
+[node name="MorphotypeClassification" type="CheckBox" parent="WorkbenchUI/ObservatoryControls"]
+button_pressed = true
+text = "MORPHOTYPE CLASSIFICATION"
+
+[node name="ObservatoryStatus" type="Label" parent="WorkbenchUI/ObservatoryControls"]
+text = "observatory off"
+
+[node name="ObservatoryPanel" type="VBoxContainer" parent="WorkbenchUI"]
+anchors_preset = 0
+offset_left = 16.0
+offset_top = 456.0
+offset_right = 700.0
+offset_bottom = 640.0
+
+[node name="ObservatoryTitle" type="Label" parent="WorkbenchUI/ObservatoryPanel"]
+text = "OBSERVATORY"
+
+[node name="ObservatoryContent" type="Label" parent="WorkbenchUI/ObservatoryPanel"]
+text = ""
