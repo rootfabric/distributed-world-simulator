@@ -410,6 +410,21 @@ jobs:
           "$GODOT_BIN" --headless --path . --editor --import --quit > artifacts/mvp8-closure-graphical/import.log 2>&1
           xvfb-run -a -s '-screen 0 1600x900x24' python3             tests/integration/test_v0_mvp_6_graphical_construction.py             --engine "$GODOT_BIN"             --output artifacts/mvp8-closure-graphical/live
           export MVP6_GRAPHICAL_MANIFEST="$PWD/artifacts/mvp8-closure-graphical/live/manifest.json"
+          # RUN_WORLD_REGRESSION_TESTS.ps1 auto-discovers process-managed MVP7
+          # tests as standalone scripts. Bind each to its valid bounded produce
+          # mode so auto-discovery exercises the standalone surface instead of
+          # failing on intentionally missing orchestration env. Full multi-PID
+          # produce/recover1/recover2 semantics are already covered by frozen
+          # MVP7 and MVP8 exact focused gates.
+          export MVP7_NATIVE_MODE=produce
+          export MVP7_NATIVE_ROOT="$RUNNER_TEMP/mvp8-worldcore-native"
+          export MVP7_NATIVE_RESULT="$RUNNER_TEMP/mvp8-worldcore-native-result.json"
+          export MVP7_WORLD_MODE=produce
+          export MVP7_WORLD_ROOT="$RUNNER_TEMP/mvp8-worldcore-world"
+          export MVP7_WORLD_RESULT="$RUNNER_TEMP/mvp8-worldcore-world-result.json"
+          export MVP7_CONSTRUCTION_MODE=produce
+          export MVP7_CONSTRUCTION_ROOT="$RUNNER_TEMP/mvp8-worldcore-construction"
+          export MVP7_CONSTRUCTION_RESULT="$RUNNER_TEMP/mvp8-worldcore-construction-result.json"
           python3 - <<'PY'
           import importlib.util, json, os
           from pathlib import Path
