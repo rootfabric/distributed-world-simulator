@@ -13,6 +13,39 @@ const Views8 = preload("res://scripts/runtime/networked_gameplay/mvp/v0_mvp3_rem
 const Scheduler8 = preload("res://scripts/network/simulation/fixed_tick_scheduler.gd")
 const NetworkUtils8 = preload("res://scripts/network/contracts/network_contract_utils.gd")
 
+
+class MatterDecisionEpochAdapter8:
+	extends RefCounted
+	var source = null
+	var matter_region_epoch := 1
+
+	func configure(source_view, region_epoch: int = 1) -> Dictionary:
+		if source != null or source_view == null or not source_view.has_method("snapshot") or not source_view.has_method("authorize_write") or region_epoch < 1:
+			return {"success": false, "error_code": "MVP8_MATTER_DECISION_ADAPTER_INVALID", "details": {}}
+		source = source_view
+		matter_region_epoch = region_epoch
+		return {"success": true, "error_code": "", "details": {"matter_region_epoch": matter_region_epoch, "canonical_state_owned": false}}
+
+	func snapshot() -> Dictionary:
+		return source.snapshot() if source != null else {}
+
+	func authorize_write(authority_id: String, region_epoch: int) -> Dictionary:
+		if source == null or region_epoch != matter_region_epoch:
+			return {"success": false, "error_code": "MVP8_MATTER_REGION_EPOCH_MISMATCH", "details": {}}
+		var current: Dictionary = source.snapshot()
+		if current.is_empty() or current.get("state") != "ACTIVE" or String(current.get("active_authority_id", "")) != authority_id:
+			return {"success": false, "error_code": "SM1_AUTHORITY_TRANSFER_WRITE_FENCED", "details": {"matter_region_epoch": matter_region_epoch}}
+		var sm1_epoch := int(current.get("authority_epoch", 0))
+		var authorized: Dictionary = source.authorize_write(authority_id, sm1_epoch)
+		if not bool(authorized.get("success", false)):
+			return authorized
+		var details: Dictionary = Dictionary(authorized.get("details", {})).duplicate(true)
+		details["matter_region_epoch"] = matter_region_epoch
+		details["sm1_authority_epoch"] = sm1_epoch
+		details["canonical_state_owned"] = false
+		return {"success": true, "error_code": "", "details": details}
+
+
 var _repository8 = null
 var _adapter8 = null
 var _outbox8 = null
@@ -23,6 +56,7 @@ var _recovered8 := false
 var _checkpoint_receipt8: Dictionary = {}
 var _construction_root8 := ""
 var _construction_cut_file8 := ""
+var _matter_decisions8: Dictionary = {}
 
 
 func create_shared_dig():
@@ -64,8 +98,15 @@ func _setup_recovery8(recovering: bool) -> Dictionary:
 	if root.is_empty():
 		return Protocol.failure("MVP8_RECOVERY_ROOT_REQUIRED")
 	_sessions8 = {"a": Protocol.session(cfg, "a"), "b": Protocol.session(cfg, "b")}
+	_matter_decisions8.clear()
+	for actor in ["a", "b"]:
+		var adapter = MatterDecisionEpochAdapter8.new()
+		var adapter_ready: Dictionary = adapter.configure(decisions[actor], 1)
+		if not bool(adapter_ready.get("success", false)):
+			return adapter_ready
+		_matter_decisions8[actor] = adapter
 	_shared_dig4 = create_shared_dig()
-	var configured: Dictionary = _shared_dig4.configure(service, decisions, _sessions8)
+	var configured: Dictionary = _shared_dig4.configure(service, _matter_decisions8, _sessions8)
 	if not bool(configured.get("success", false)):
 		return configured
 	_repository8 = Repository8.new()
@@ -76,7 +117,7 @@ func _setup_recovery8(recovering: bool) -> Dictionary:
 	configured = _adapter8.setup(service, "session/mvp8/live-world")
 	if not bool(configured.get("success", false)):
 		return configured
-	configured = _adapter8.configure_matter7(_shared_dig4, decisions, _sessions8, root)
+	configured = _adapter8.configure_matter7(_shared_dig4, _matter_decisions8, _sessions8, root)
 	if not bool(configured.get("success", false)):
 		return configured
 	_outbox8 = Outbox8.new()
