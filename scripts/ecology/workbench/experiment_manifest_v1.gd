@@ -22,7 +22,7 @@ extends RefCounted
 const C = preload("res://scripts/research/ecology/v2/canonical_value_v1.gd")
 const Genome = preload("res://scripts/research/ecology/v2/organism_genome_v2.gd")
 const Mutation = preload("res://scripts/research/ecology/v2/genome_mutation_v1.gd")
-const FieldContract = preload("res://scripts/research/ecology/v2/environment_field_contract_v1.gd")
+const FieldContract = preload("res://scripts/research/ecology/v2/environment_field_contract_v1.gd")\nconst B = preload("res://scripts/research/ecology/v2/body_graph_v1.gd")\nconst OrganizationProfile = preload("res://scripts/ecology/workbench/organization_profile_v1.gd")
 
 const SCHEMA := "dws.ecology.workbench.experiment-manifest.v1"
 const FILE_SCHEMA := "dws.ecology.workbench.experiment-manifest-file.v1"
@@ -89,7 +89,7 @@ static func validate(value: Variant) -> String:
 static func canonical_hash(manifest: Dictionary) -> String:
 	if not validate(manifest).is_empty():
 		return ""
-	return C.digest(manifest)
+	return C.digest({"manifest": manifest, "organization_profile_version": OrganizationProfile.VERSION})
 
 ## Canonical text serialization (validated manifest only; "" when invalid).
 static func to_text(manifest: Dictionary) -> String:

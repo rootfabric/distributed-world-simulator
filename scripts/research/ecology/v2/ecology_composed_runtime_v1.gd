@@ -93,7 +93,7 @@ static func replace_field(source: Dictionary, field: Dictionary) -> Dictionary:
 static func validate(v: Variant) -> String:
 	var fields := ["schema","tick","field","population","corpses","policy","returned","mineralized_mg","dissipated_energy_mj","mutation_events","integrity_hash"]
 	if not C.keys(v, fields) or v.schema != SCHEMA: return "RUNTIME_SCHEMA"
-	if not C.integer(v.tick, 0, Feedback.MAX_STEPS) or not v.field is Dictionary or int(v.field.get("tick", -1)) != int(v.tick): return "RUNTIME_TICK"
+	if not C.integer(v.tick, 0, F.MAX_TICK) or not v.field is Dictionary or int(v.field.get("tick", -1)) != int(v.tick): return "RUNTIME_TICK"
 	if not F.validate_state(v.field).is_empty() or not Feedback.validate_policy(v.policy).is_empty(): return "RUNTIME_FIELD_POLICY"
 	if not v.population is Array or v.population.is_empty() or v.population.size() > Lifecycle.MAX_POPULATION: return "RUNTIME_POPULATION"
 	var ids := {}

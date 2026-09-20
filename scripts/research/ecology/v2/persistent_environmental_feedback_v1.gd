@@ -39,7 +39,7 @@ static func validate_policy(v: Variant) -> String:
 ## A5 and therefore cannot create a second population/field trajectory.
 static func post_lifecycle_feedback(field: Dictionary, population: Array, corpses: Array, policy: Dictionary, step: int) -> Dictionary:
 	if not validate_policy(policy).is_empty() or not F.validate_state(field).is_empty(): return _fail("A6_POST_INPUT")
-	if not C.integer(step, 0, MAX_STEPS - 1) or population.size() > MAX_POPULATION: return _fail("A6_POST_BUDGET")
+	if not C.integer(step, 0, F.MAX_TICK - 1) or population.size() > MAX_POPULATION: return _fail("A6_POST_BUDGET")
 	var entries: Array = []
 	var by_id := {}
 	for entry in population:
