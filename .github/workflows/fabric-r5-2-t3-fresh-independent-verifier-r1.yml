@@ -1,0 +1,164 @@
+name: FABRIC R5.2 T3 Fresh Independent Verifier R1
+
+on:
+  push:
+    branches: [verify/fabric-r5-2-t3-fresh-independent-verifier-r1]
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: fabric-r5-2-t3-fresh-independent-verifier-r1
+  cancel-in-progress: false
+
+env:
+  SUBJECT_HEAD: 37e7329ead37ee377e0d601b8c69639e50f91cce
+  SUBJECT_TREE: ac168b20d0a14f6009afc4cb4fb92b5b17414e5d
+  EXPECTED_DETERMINISTIC_HASH: 41f062118b325b64884360037ea2a8a02a158990706bcd912a0681b6f2a9d8a3
+
+jobs:
+  sample:
+    name: verifier-sample-${{ matrix.sample }}
+    strategy:
+      fail-fast: false
+      matrix:
+        sample: [1, 2, 3]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Bind exact T3 subject and verifier-only scope
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$(git rev-parse "$SUBJECT_HEAD^{tree}")" = "$SUBJECT_TREE"
+          test "$(git merge-base HEAD "$SUBJECT_HEAD")" = "$SUBJECT_HEAD"
+          expected="$(printf '%s\n'             '.github/workflows/fabric-r5-2-t3-fresh-independent-verifier-r1.yml'             'docs/research/FABRIC_R5_2_T3_FRESH_INDEPENDENT_VERIFIER_R1_RU.md' | sort)"
+          actual="$(git diff --name-only "$SUBJECT_HEAD"...HEAD | sort)"
+          test "$actual" = "$expected"
+          git diff --check "$SUBJECT_HEAD"...HEAD
+          git diff --exit-code "$SUBJECT_HEAD"...HEAD --             scripts/research/fabric_bake0/battery_electrochemical_profile_v1.gd             scripts/research/fabric_bake0/battery_cell_graph_v1.gd             scripts/research/fabric_bake0/battery_cell_physics_v1.gd             scripts/research/fabric_bake0/battery_pack_descriptor_v1.gd             scripts/research/fabric_bake0/battery_execution_artifact_v1.gd             scripts/research/fabric_bake0/battery_state_projector_v1.gd             scripts/research/fabric_bake0/r5_t3_battery_compiler_v1.gd             scripts/research/fabric_bake0/r5_t3_battery_runtime_v1.gd             scripts/research/fabric_bake0/r5_t3_battery_full_reference_v1.gd             tests/research/fabric_bake0/fabric_r5_2_t3_battery_fixture.gd             tests/research/fabric_bake0/fabric_r5_2_t3_battery_acceptance.gd             scripts/research/fabric_bake0/collect_r5_2_t3_evidence.py
+          echo '*.gd.uid' >> .git/info/exclude
+
+      - name: Verify durable T3 evidence
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          python3 - <<'PY'
+          import json
+          x=json.load(open('validation/fabric-r5-2-t3-battery-exact-evidence.v1.json'))
+          assert x['status']=='EXACT_T3_STATE_RECONSTRUCTION_PASS'
+          assert x['subject_head']=='a8d87339453b1b661ec72aa05788ebf2c61c5f87'
+          assert x['hashes']['deterministic_hash']=='41f062118b325b64884360037ea2a8a02a158990706bcd912a0681b6f2a9d8a3'
+          q=x['qualitative_compression']
+          assert q['source_cells']==96 and q['series_groups']==12
+          assert q['executable_state_scalars']==13
+          assert q['runtime_source_cell_traversals_per_execute']==0
+          e=x['exact_equivalence']
+          assert e['sequence_ticks']==2048
+          assert e['full_reference_cell_traversals']==196608
+          d=x['damage_variant']
+          assert d['active_cells']==95
+          assert d['projection_kind']=='CAPACITY_LOSS_SAME_SOC'
+          assert d['detached_charge_c']>0
+          assert d['detached_chemical_energy_j']>0
+          assert d['synchronized_soc_preserved'] is True
+          assert d['damaged_full_vs_capsule_after_projection']=='PASS'
+          assert x['invariants']['runtime_persistent_state_owner'] is False
+          assert x['invariants']['detached_state_is_returned_to_canonical_mutation_layer'] is True
+          assert x['invariants']['threshold_relaxation'] is False
+          print('FABRIC_R5_2_T3_DURABLE_EVIDENCE_BINDING=PASS')
+          PY
+
+      - name: Download canonical Linux double
+        uses: actions/download-artifact@v4
+        with:
+          name: p7-repair-engine-34117353691
+          run-id: 34117353691
+          repository: rootfabric/distributed-world-simulator
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/r5-2-t3-verifier-engine
+
+      - name: Verify canonical Linux double
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          bin="$RUNNER_TEMP/r5-2-t3-verifier-engine/godot"
+          chmod u+x "$bin"
+          version="$("$bin" --version | head -n1 | tr -d '\r')"
+          sha="$(sha256sum "$bin" | awk '{print $1}')"
+          test "$version" = '4.7.1.stable.double.custom_build.a13da4feb'
+          test "$sha" = 'bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7'
+          echo "GODOT_BIN=$bin" >> "$GITHUB_ENV"
+          mkdir -p artifacts/fabric-r5-2-t3-verifier
+
+      - name: Fresh import
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          rm -rf .godot
+          "$GODOT_BIN" --headless --editor --path .             --log-file "artifacts/fabric-r5-2-t3-verifier/sample-${{ matrix.sample }}.import.log" --import
+          ! grep -Eiq 'SCRIPT ERROR|Parse Error|Invalid call|Invalid access|ERROR:'             "artifacts/fabric-r5-2-t3-verifier/sample-${{ matrix.sample }}.import.log"
+
+      - name: Run fresh verifier T3 sample
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          i='${{ matrix.sample }}'
+          /usr/bin/time -v -o "artifacts/fabric-r5-2-t3-verifier/sample-$i.time.txt"             bash RUN_FABRIC_R5_2_T3_TESTS.sh 2>&1 | tee "artifacts/fabric-r5-2-t3-verifier/sample-$i.log"
+          grep -F 'FABRIC R5.2 T3 BATTERY CELLS MATERIALS: PASS' "artifacts/fabric-r5-2-t3-verifier/sample-$i.log"
+          grep -F "FABRIC_R5_2_T3_DETERMINISTIC_HASH=$EXPECTED_DETERMINISTIC_HASH"             "artifacts/fabric-r5-2-t3-verifier/sample-$i.log"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: fabric-r5-2-t3-verifier-sample-${{ matrix.sample }}-${{ github.sha }}
+          path: artifacts/fabric-r5-2-t3-verifier/sample-${{ matrix.sample }}.*
+          if-no-files-found: error
+          retention-days: 90
+
+  aggregate:
+    name: aggregate-verifier-evidence
+    needs: sample
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: fabric-r5-2-t3-verifier-sample-*-${{ github.sha }}
+          path: artifacts/fabric-r5-2-t3-verifier
+          merge-multiple: true
+
+      - name: Aggregate verifier evidence
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          python3 scripts/research/fabric_bake0/collect_r5_2_t3_evidence.py             --root artifacts/fabric-r5-2-t3-verifier             --out artifacts/fabric-r5-2-t3-verifier/evidence.json             | tee artifacts/fabric-r5-2-t3-verifier/collector.log
+          grep -F "FABRIC_R5_2_T3_DETERMINISTIC_HASH=$EXPECTED_DETERMINISTIC_HASH"             artifacts/fabric-r5-2-t3-verifier/collector.log
+          grep -F 'FABRIC_R5_2_T3_EVIDENCE=PASS' artifacts/fabric-r5-2-t3-verifier/collector.log
+
+      - name: Seal verifier evidence
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          printf 'SUBJECT_HEAD=%s\nSUBJECT_TREE=%s\nVERIFIER_HEAD=%s\nVERIFIER_TREE=%s\n'             "$SUBJECT_HEAD" "$SUBJECT_TREE" "$(git rev-parse HEAD)" "$(git rev-parse 'HEAD^{tree}')"             > artifacts/fabric-r5-2-t3-verifier/identity.txt
+          sha256sum artifacts/fabric-r5-2-t3-verifier/sample-*             artifacts/fabric-r5-2-t3-verifier/evidence.json             artifacts/fabric-r5-2-t3-verifier/collector.log             > artifacts/fabric-r5-2-t3-verifier/evidence.sha256
+          test -z "$(git status --porcelain=v1 --untracked-files=no)"
+          echo 'FABRIC_R5_2_T3_FRESH_INDEPENDENT_VERIFIER_R1=PASS'
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fabric-r5-2-t3-verifier-r1-${{ github.sha }}
+          path: artifacts/fabric-r5-2-t3-verifier/**
+          if-no-files-found: error
+          retention-days: 90
