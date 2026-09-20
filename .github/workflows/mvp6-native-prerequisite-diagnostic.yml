@@ -259,3 +259,90 @@ jobs:
             artifacts/mvp7-control/
           if-no-files-found: error
           retention-days: 90
+
+  mvp8-workload:
+    if: github.repository == 'rootfabric/distributed-world-simulator' && github.ref == 'refs/heads/feature/v0-mvp-playable-seamless-planet-r1' && contains(github.event.head_commit.message, '[mvp8-evidence]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      EXPECTED_HEAD: ${{ github.sha }}
+      PYTHONUTF8: '1'
+      PYTHONDONTWRITEBYTECODE: '1'
+      PYTHONPATH: scripts
+      BREAKPOINT_RUNTIME_DISABLED: '1'
+      GODOT_SILENCE_ROOT_WARNING: '1'
+      PLANET_SIMULATOR_INVENTORY_PROFILE: planet_default
+      LIBGL_ALWAYS_SOFTWARE: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Exact MVP8 subject and write fence
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+          test -z "$(git status --porcelain --untracked-files=no)"
+          git switch -c "$GITHUB_REF_NAME" "$EXPECTED_HEAD"
+          base='eab67e7d9913de13dc696aa6e3ff9d267f7ceaa1'
+          git merge-base --is-ancestor "$base" HEAD
+          git diff --check "$base" HEAD
+          echo "EXPECTED_TREE=$(git rev-parse HEAD^{tree})" >> "$GITHUB_ENV"
+          python3 - <<'PY'
+          import fnmatch,json,subprocess
+          base='eab67e7d9913de13dc696aa6e3ff9d267f7ceaa1'
+          path='config/control/harness/executions/E2026-09-09-V0-MVP-R1/work-orders/V0-MVP-R1-WO-001.v1.json'
+          w=json.load(open(path))
+          paths=subprocess.check_output(['git','diff','--name-only',base,'HEAD'],text=True).splitlines()
+          for p in paths:
+              assert any(fnmatch.fnmatchcase(p,g) for g in w['allowed_paths']), 'OUTSIDE_ALLOWED:'+p
+              assert not any(fnmatch.fnmatchcase(p,g) for g in w['forbidden_paths']), 'FORBIDDEN:'+p
+          subprocess.run(['git','diff','--exit-code',base,'HEAD','--',path],check=True)
+          print('MVP8_SCOPE_EXACT_PASS',len(paths))
+          PY
+          python3 -m py_compile tests/integration/test_v0_mvp_8_bounded_workload.py
+      - uses: actions/download-artifact@v4
+        with:
+          name: p7-repair-engine-34117353691
+          run-id: 34117353691
+          repository: rootfabric/distributed-world-simulator
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/mvp8-engine
+      - name: Exact bounded connected workload
+        shell: bash
+        run: |
+          set -euo pipefail
+          engine="$RUNNER_TEMP/mvp8-engine/godot"
+          test "$(sha256sum "$engine" | cut -d' ' -f1)" = bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7
+          chmod u+x "$engine"
+          if ! command -v Xvfb >/dev/null || ! command -v xauth >/dev/null; then
+            sudo -n apt-get update
+            sudo -n env DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends xvfb xauth libgl1-mesa-dri
+          fi
+          mkdir -p artifacts/mvp8-workload
+          "$engine" --headless --path . --editor --import --quit > artifacts/mvp8-workload/import.log 2>&1
+          xvfb-run -a -s '-screen 0 1600x900x24' python3 tests/integration/test_v0_mvp_8_bounded_workload.py --engine "$engine" --output "$PWD/artifacts/mvp8-workload/live"
+      - name: Bounded MVP8 diagnostics
+        if: always()
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import pathlib
+          root=pathlib.Path('artifacts/mvp8-workload')
+          for p in sorted(root.rglob('*.log')):
+              lines=p.read_text(encoding='utf-8',errors='replace').splitlines()
+              selected=[(i,line) for i,line in enumerate(lines) if any(k in line for k in ('MVP8_', 'Parse Error:', 'SCRIPT ERROR:', 'ERROR:'))]
+              if selected:
+                  print('MVP8_LOG',p.relative_to(root),'lines',len(lines),'matches',len(selected))
+                  for i,line in selected[:40]:
+                      print(i+1,line[:800])
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mvp8-workload-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: artifacts/mvp8-workload/
+          if-no-files-found: error
+          retention-days: 90
