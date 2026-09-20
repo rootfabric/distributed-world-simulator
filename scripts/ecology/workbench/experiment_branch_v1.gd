@@ -20,7 +20,7 @@ extends RefCounted
 const C = preload("res://scripts/research/ecology/v2/canonical_value_v1.gd")
 const Manifest = preload("res://scripts/ecology/workbench/experiment_manifest_v1.gd")
 const EnvironmentPatch = preload("res://scripts/ecology/workbench/environment_patch_v1.gd")
-const Controller = preload("res://scripts/ecology/workbench/experiment_controller_v1.gd")
+const Controller = preload("res://scripts/ecology/workbench/experiment_controller_v1.gd")\nconst RuntimeCheckpoint = preload("res://scripts/research/ecology/v2/ecology_runtime_checkpoint_v1.gd")
 
 const SCHEMA := "dws.ecology.workbench.experiment-branch.v1"
 const CHECKPOINT_SCHEMA := "dws.ecology.workbench.checkpoint.v1"
@@ -100,36 +100,50 @@ func create_checkpoint(parent_checkpoint_id: String = "", branch_meta: Dictionar
 		"tick": tick,
 		"canonical_state_hash": state_hash,
 		"snapshot_text": String(serialized.state_text),
+		"state_checksum": String(serialized.state_checksum),
+		"controller_checkpoint_checksum": String(serialized.checkpoint_checksum),
 		"parent_checkpoint_id": parent_checkpoint_id,
 		"branch_meta": branch_meta.duplicate(true),
 		"operator_annotations": operator_annotations.duplicate(true),
-		# Deterministic timestamp substitute: derived from tick + id digest
-		# (wall-clock never enters the canonical record).
 		"created_at": {"tick": tick, "checkpoint_id": id},
 	}
 	if _checkpoints.has(id):
-		# Same state -> same checkpoint: keep the first immutable copy.
 		return {"success": true, "checkpoint": _checkpoints[id].duplicate(true), "existing": true}
+	var error := validate_checkpoint(checkpoint)
+	if not error.is_empty():
+		return {"success": false, "error": "BRANCH_CHECKPOINT_CREATE:" + error}
 	_checkpoints[id] = checkpoint.duplicate(true)
+	_checkpoint_anchors[id] = C.digest(checkpoint)
 	var branch: Dictionary = _branches.get(current_branch_id(), {})
-	if not branch.is_empty():
-		branch.checkpoints.append(id)
+	if not branch.is_empty(): branch.checkpoints.append(id)
 	return {"success": true, "checkpoint": checkpoint, "existing": false}
 
 ## Structural checkpoint validation (id binding, envelope, canonical text).
 static func validate_checkpoint(checkpoint: Dictionary) -> String:
-	if not C.keys(checkpoint, ["schema", "checkpoint_id", "manifest_hash", "tick", "canonical_state_hash", "snapshot_text", "parent_checkpoint_id", "branch_meta", "operator_annotations", "created_at"]) or checkpoint.schema != CHECKPOINT_SCHEMA:
+	var fields := ["schema","checkpoint_id","manifest_hash","tick","canonical_state_hash","snapshot_text","state_checksum","controller_checkpoint_checksum","parent_checkpoint_id","branch_meta","operator_annotations","created_at"]
+	if not C.keys(checkpoint, fields) or checkpoint.schema != CHECKPOINT_SCHEMA:
 		return "CHECKPOINT_SCHEMA"
 	if checkpoint.checkpoint_id != checkpoint_id_for(String(checkpoint.manifest_hash), int(checkpoint.tick), String(checkpoint.canonical_state_hash)):
 		return "CHECKPOINT_ID"
-	var decoded: Dictionary = C.decode(String(checkpoint.snapshot_text))
-	if not bool(decoded.get("success", false)):
-		return "CHECKPOINT_TEXT:" + String(decoded.get("error", "?"))
+	if not checkpoint.snapshot_text is String or String(checkpoint.snapshot_text).sha256_text() != String(checkpoint.state_checksum):
+		return "CHECKPOINT_STATE_CHECKSUM"
+	var decoded := C.decode(String(checkpoint.snapshot_text))
+	if not bool(decoded.get("success", false)) or not decoded.value is Dictionary:
+		return "CHECKPOINT_TEXT"
 	var envelope: Dictionary = decoded.value
-	if not C.keys(envelope, ["schema", "manifest_hash", "state"]):
+	if not C.keys(envelope, ["schema","manifest_hash","checkpoint","world_state","world_state_hash"]):
 		return "CHECKPOINT_ENVELOPE"
-	if String(envelope.manifest_hash) != String(checkpoint.manifest_hash) or int(envelope.state.tick) != int(checkpoint.tick):
+	if String(envelope.manifest_hash) != String(checkpoint.manifest_hash):
 		return "CHECKPOINT_BINDING"
+	if not envelope.checkpoint is Dictionary:
+		return "CHECKPOINT_RUNTIME"
+	var runtime_error := RuntimeCheckpoint.validate(envelope.checkpoint)
+	if not runtime_error.is_empty():
+		return "CHECKPOINT_RUNTIME:" + runtime_error
+	if String(envelope.checkpoint.checksum) != String(checkpoint.controller_checkpoint_checksum):
+		return "CHECKPOINT_CONTROLLER_CHECKSUM"
+	if int(envelope.checkpoint.tick) != int(checkpoint.tick) or String(envelope.checkpoint.runtime_state.integrity_hash) != String(checkpoint.canonical_state_hash):
+		return "CHECKPOINT_RUNTIME_BINDING"
 	return ""
 
 # --- restore / fork / replay ---------------------------------------------------
@@ -138,15 +152,13 @@ static func validate_checkpoint(checkpoint: Dictionary) -> String:
 ## After restore, further ticks continue deterministically from the
 ## checkpointed tick.
 func restore(checkpoint: Dictionary) -> Dictionary:
-	if _controller == null:
-		return {"success": false, "error": "BRANCH_CONTROLLER"}
-	var error := validate_checkpoint(checkpoint)
-	if not error.is_empty():
-		return {"success": false, "error": "BRANCH_CHECKPOINT:" + error}
+	if _controller == null: return {"success": false, "error": "BRANCH_CONTROLLER"}
+	var error := _trusted_checkpoint_error(checkpoint)
+	if not error.is_empty(): return {"success": false, "error": error}
 	var reinit: Dictionary = _controller.initialize(_controller.get_manifest(), _founder_registry)
 	if not bool(reinit.get("success", false)):
 		return {"success": false, "error": "BRANCH_REINIT:" + String(reinit.get("error", "?"))}
-	var loaded: Dictionary = _controller.load_state(String(checkpoint.snapshot_text), String(checkpoint.manifest_hash))
+	var loaded: Dictionary = _controller.load_state(String(checkpoint.snapshot_text), String(checkpoint.manifest_hash), String(checkpoint.state_checksum))
 	if not bool(loaded.get("success", false)):
 		return {"success": false, "error": "BRANCH_LOAD:" + String(loaded.get("error", "?"))}
 	return {"success": true, "tick": int(loaded.tick), "status": String(loaded.status)}
@@ -181,7 +193,7 @@ func fork(checkpoint: Dictionary, env_patch: Dictionary = {}, label: String = ""
 	var init_result: Dictionary = branch_controller.initialize(manifest, _founder_registry)
 	if not bool(init_result.get("success", false)):
 		return {"success": false, "error": "BRANCH_INIT:" + String(init_result.get("error", "?"))}
-	var loaded: Dictionary = branch_controller.load_state(String(checkpoint.snapshot_text), "")
+	var loaded: Dictionary = branch_controller.load_state(String(checkpoint.snapshot_text), String(checkpoint.manifest_hash), String(checkpoint.state_checksum))
 	if not bool(loaded.get("success", false)):
 		return {"success": false, "error": "BRANCH_LOAD:" + String(loaded.get("error", "?"))}
 	if not env_patch.is_empty():
@@ -216,7 +228,7 @@ static func replay(checkpoint: Dictionary, manifest: Dictionary, founder_registr
 	var init_result: Dictionary = replay_controller.initialize(manifest, founder_registry)
 	if not bool(init_result.get("success", false)):
 		return {"success": false, "error": "REPLAY_INIT:" + String(init_result.get("error", "?"))}
-	var loaded: Dictionary = replay_controller.load_state(String(checkpoint.snapshot_text), String(checkpoint.manifest_hash))
+	var loaded: Dictionary = replay_controller.load_state(String(checkpoint.snapshot_text), String(checkpoint.manifest_hash), String(checkpoint.state_checksum))
 	if not bool(loaded.get("success", false)):
 		return {"success": false, "error": "REPLAY_LOAD:" + String(loaded.get("error", "?"))}
 	for command in tick_commands:
@@ -227,6 +239,17 @@ static func replay(checkpoint: Dictionary, manifest: Dictionary, founder_registr
 	if not bool(snapshot.get("success", false)):
 		return {"success": false, "error": "REPLAY_SNAPSHOT"}
 	return {"success": true, "canonical_state_hash": String(snapshot.canonical_state_hash), "tick": int(snapshot.tick)}
+
+func trusted_checkpoint_anchor(checkpoint_id: String) -> String:
+	return String(_checkpoint_anchors.get(checkpoint_id, ""))
+
+func _trusted_checkpoint_error(checkpoint: Dictionary) -> String:
+	var error := validate_checkpoint(checkpoint)
+	if not error.is_empty(): return "BRANCH_CHECKPOINT:" + error
+	var id := String(checkpoint.checkpoint_id)
+	if not _checkpoint_anchors.has(id) or String(_checkpoint_anchors[id]) != C.digest(checkpoint):
+		return "BRANCH_CHECKPOINT_EXTERNAL_ANCHOR"
+	return ""
 
 # --- registry views --------------------------------------------------------------
 
