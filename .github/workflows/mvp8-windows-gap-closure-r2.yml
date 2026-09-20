@@ -1,0 +1,352 @@
+name: MVP8 Windows Gap Closure R2 Evidence
+
+on:
+  push:
+    branches:
+      - control/v0-mvp8-windows-gap-carrier-r1
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mvp8-windows-gap-r2
+  cancel-in-progress: false
+
+jobs:
+  windows-gap-closure:
+    name: Frozen 90bc1026 Windows evidence
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 150
+    defaults:
+      run:
+        shell: powershell
+    env:
+      SUBJECT_HEAD: 90bc1026f0f5749492107191233330f87c8c70df
+      SUBJECT_TREE: 4b6f2d48f7ef8d9c441ae89d2cbb02c730ef7f71
+      EXPECTED_HEAD: 90bc1026f0f5749492107191233330f87c8c70df
+      EXPECTED_GODOT_VERSION: 4.7.1.stable.double.custom_build.a13da4feb
+      EXPECTED_GODOT_SHA256: 3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5
+      GODOT_BIN: C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe
+      PYTHONUTF8: '1'
+      PYTHONDONTWRITEBYTECODE: '1'
+      BREAKPOINT_RUNTIME_DISABLED: '1'
+      GODOT_SILENCE_ROOT_WARNING: '1'
+      PLANET_SIMULATOR_INVENTORY_PROFILE: planet_default
+
+    steps:
+      - name: Checkout frozen product
+        uses: actions/checkout@v4
+        with:
+          ref: 90bc1026f0f5749492107191233330f87c8c70df
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Host preflight and exact identity
+        run: |
+          $ErrorActionPreference = "Stop"
+          $evidence = Join-Path $PWD "artifacts\mvp8-windows-gap-r2"
+          New-Item -ItemType Directory -Force -Path $evidence | Out-Null
+
+          $head = (git rev-parse HEAD).Trim()
+          $tree = (git rev-parse "HEAD^{tree}").Trim()
+          if ($head -ne $env:SUBJECT_HEAD) { throw "SUBJECT_HEAD_MISMATCH:$head" }
+          if ($tree -ne $env:SUBJECT_TREE) { throw "SUBJECT_TREE_MISMATCH:$tree" }
+
+          $tracked = @(git status --porcelain --untracked-files=no)
+          if ($tracked.Count -ne 0) { throw "TRACKED_CHECKOUT_DIRTY_BEFORE" }
+
+          if (-not (Test-Path -LiteralPath $env:GODOT_BIN -PathType Leaf)) {
+            throw "GODOT_NOT_FOUND:$env:GODOT_BIN"
+          }
+          $version = (& $env:GODOT_BIN --version 2>&1 | Select-Object -First 1).Trim()
+          $sha = (Get-FileHash -Algorithm SHA256 -LiteralPath $env:GODOT_BIN).Hash.ToLowerInvariant()
+          if ($version -ne $env:EXPECTED_GODOT_VERSION) { throw "GODOT_VERSION_MISMATCH:$version" }
+          if ($sha -ne $env:EXPECTED_GODOT_SHA256) { throw "GODOT_SHA256_MISMATCH:$sha" }
+
+          $os = Get-CimInstance Win32_OperatingSystem
+          $freeGb = [Math]::Round(($os.FreePhysicalMemory * 1KB) / 1GB, 3)
+          $totalGb = [Math]::Round(($os.TotalVisibleMemorySize * 1KB) / 1GB, 3)
+          $godotProcesses = @(Get-Process -ErrorAction SilentlyContinue | Where-Object { $_.ProcessName -like "godot*" })
+          $heavy = @(Get-Process -ErrorAction SilentlyContinue | Where-Object { $_.ProcessName -match "^(vmmem|vmmemWSL|llama-server|ollama|python|node)$" } | Sort-Object WorkingSet64 -Descending | Select-Object -First 20 ProcessName,Id,@{n="working_set_mb";e={[Math]::Round($_.WorkingSet64/1MB,1)}})
+
+          $preflight = [ordered]@{
+            schema = "distributed_world_simulator.mvp8_windows_gap_preflight.v1"
+            run_id = $env:GITHUB_RUN_ID
+            run_attempt = $env:GITHUB_RUN_ATTEMPT
+            subject_head = $head
+            subject_tree = $tree
+            godot_path = $env:GODOT_BIN
+            godot_version = $version
+            godot_sha256 = $sha
+            windows_caption = $os.Caption
+            windows_version = $os.Version
+            windows_build = $os.BuildNumber
+            free_physical_gb = $freeGb
+            total_physical_gb = $totalGb
+            existing_godot_processes = @($godotProcesses | ForEach-Object { [ordered]@{ id=$_.Id; name=$_.ProcessName } })
+            observed_heavy_processes = $heavy
+            tracked_clean = $true
+          }
+          $preflight | ConvertTo-Json -Depth 8 | Set-Content -Encoding UTF8 (Join-Path $evidence "preflight.json")
+
+          if ($godotProcesses.Count -ne 0) { throw "HOST_PREFLIGHT_DEGRADED_EXISTING_GODOT_PROCESSES" }
+          if ($freeGb -lt 10.0) { throw "HOST_PREFLIGHT_DEGRADED_FREE_RAM_$($freeGb)GB" }
+
+      - name: Exact Windows MVP8 runtime
+        run: |
+          $ErrorActionPreference = "Stop"
+          $evidence = Join-Path $PWD "artifacts\mvp8-windows-gap-r2"
+          $live = Join-Path $evidence "mvp8-live"
+          $log = Join-Path $evidence "mvp8-runtime.log"
+          if (Test-Path $live) { throw "PRESERVE_PREVIOUS_EVIDENCE:$live" }
+
+          & python tests/integration/test_v0_mvp_8_bounded_workload.py --engine "$env:GODOT_BIN" --output "$live" *> "$log"
+          $code = $LASTEXITCODE
+          Get-Content -LiteralPath $log
+          [ordered]@{ exit_code=$code; finished_at_utc=[DateTime]::UtcNow.ToString("o") } |
+            ConvertTo-Json | Set-Content -Encoding UTF8 (Join-Path $evidence "mvp8-exit.json")
+          if ($code -ne 0) { throw "MVP8_RUNTIME_FAILED:$code" }
+
+      - name: Snapshot and bind raw MVP8 evidence
+        run: |
+          $ErrorActionPreference = "Stop"
+          $evidence = Join-Path $PWD "artifacts\mvp8-windows-gap-r2"
+          $live = Join-Path $evidence "mvp8-live"
+          $snapshot = Join-Path $evidence "mvp8-live-snapshot"
+          if (Test-Path $snapshot) { throw "SNAPSHOT_ALREADY_EXISTS:$snapshot" }
+          Copy-Item -LiteralPath $live -Destination $snapshot -Recurse
+
+          $manifestPath = Join-Path $snapshot "manifest.json"
+          $manifest = Get-Content -Raw -LiteralPath $manifestPath | ConvertFrom-Json
+          if ($manifest.passed -ne $true) { throw "MVP8_MANIFEST_NOT_PASS" }
+          if (@($manifest.fatal_logs).Count -ne 0) { throw "MVP8_FATAL_LOGS_PRESENT" }
+          $props = @($manifest.checks.PSObject.Properties)
+          if ($props.Count -ne 20) { throw "MVP8_CHECK_COUNT_MISMATCH:$($props.Count)" }
+          if (@($props | Where-Object { $_.Value -ne $true }).Count -ne 0) { throw "MVP8_CHECK_FALSE" }
+          if (@($manifest.negative_controls).Count -ne 14) { throw "MVP8_NEGATIVE_COUNT_MISMATCH" }
+          if ($manifest.subject_head -ne $env:SUBJECT_HEAD -or $manifest.subject_tree -ne $env:SUBJECT_TREE) { throw "MVP8_MANIFEST_SUBJECT_MISMATCH" }
+
+          $requiredRoleFiles = @(
+            "phase1\authority-a.json",
+            "phase1\authority-b.json",
+            "phase1\gateway.json",
+            "phase1\client-a.json",
+            "phase1\client-b.json",
+            "phase1\reconnect-a.json",
+            "phase2\authority-a.json",
+            "phase2\authority-b.json",
+            "phase2\gateway.json",
+            "phase2\client-a.json",
+            "phase2\client-b.json"
+          )
+          foreach ($rel in $requiredRoleFiles) {
+            if (-not (Test-Path -LiteralPath (Join-Path $snapshot $rel) -PathType Leaf)) {
+              throw "MVP8_REQUIRED_RAW_ROLE_FILE_MISSING:$rel"
+            }
+          }
+
+          $hashes = @(
+            Get-ChildItem -LiteralPath $snapshot -Recurse -File |
+              Sort-Object FullName |
+              ForEach-Object {
+                [ordered]@{
+                  path = $_.FullName.Substring($snapshot.Length).TrimStart("\").Replace("\","/")
+                  bytes = $_.Length
+                  sha256 = (Get-FileHash -Algorithm SHA256 -LiteralPath $_.FullName).Hash.ToLowerInvariant()
+                }
+              }
+          )
+          [ordered]@{ schema="distributed_world_simulator.mvp8_snapshot_hashes.v1"; files=$hashes } |
+            ConvertTo-Json -Depth 8 | Set-Content -Encoding UTF8 (Join-Path $evidence "mvp8-snapshot-hashes.json")
+
+          $env:MVP8_SNAPSHOT = $snapshot
+          $env:MVP8_FACTS = Join-Path $evidence "mvp8-raw-facts.json"
+          @'
+import json, math, os
+from pathlib import Path
+root = Path(os.environ["MVP8_SNAPSHOT"])
+def load(rel):
+    return json.loads((root / rel).read_text(encoding="utf-8-sig"))
+m = load("manifest.json")
+p1a = load("phase1/authority-a.json")
+p1b = load("phase1/authority-b.json")
+g1 = load("phase1/gateway.json")
+c1a = load("phase1/client-a.json")
+c1b = load("phase1/client-b.json")
+r1a = load("phase1/reconnect-a.json")
+p2a = load("phase2/authority-a.json")
+p2b = load("phase2/authority-b.json")
+g2 = load("phase2/gateway.json")
+c2a = load("phase2/client-a.json")
+c2b = load("phase2/client-b.json")
+w1, w2 = g1["mvp8"], g2["mvp8"]
+phase1_pids = [p1a["process_id"], p1b["process_id"], g1["gateway_process_id"], c1a["process_id"], c1b["process_id"], r1a["process_id"]]
+phase2_pids = [p2a["process_id"], p2b["process_id"], g2["gateway_process_id"], c2a["process_id"], c2b["process_id"]]
+hits = list(w2["dig_hits"])
+distances = []
+for i in range(len(hits)):
+    for j in range(i + 1, len(hits)):
+        distances.append(math.sqrt(sum((float(a)-float(b))**2 for a,b in zip(hits[i], hits[j]))))
+authority = w2["bounds"]["authority"]
+construction = p2a.get("mvp6", {}).get("construction", {})
+facts = {
+    "schema": "distributed_world_simulator.mvp8_windows_raw_facts.v1",
+    "subject_head": m["subject_head"],
+    "subject_tree": m["subject_tree"],
+    "engine_sha256": m["engine_sha256"],
+    "manifest_passed": m["passed"],
+    "positive_checks": f'{sum(1 for v in m["checks"].values() if v)}/{len(m["checks"])}',
+    "negative_controls": f'{len(m["negative_controls"])}/14',
+    "fatal_logs": m["fatal_logs"],
+    "phase1_pids": phase1_pids,
+    "phase1_pids_distinct": len(set(phase1_pids)) == 6,
+    "original_a_pid": c1a["process_id"],
+    "reconnect_a_pid": r1a["process_id"],
+    "original_a_pid_ne_reconnect_a_pid": c1a["process_id"] != r1a["process_id"],
+    "original_peer": w1["original_peer"],
+    "reconnect_peer": w1["reconnect_peer"],
+    "peer_identity_changed": w1["original_peer"] != w1["reconnect_peer"],
+    "phase2_pids": phase2_pids,
+    "phase2_pids_distinct": len(set(phase2_pids)) == 5,
+    "phase_pid_sets_disjoint": set(phase1_pids).isdisjoint(phase2_pids),
+    "round_history": [row["round"] for row in w2["round_history"]],
+    "action_counts": w2["action_counts"],
+    "fixed_receipts": w2["fixed_receipts"],
+    "seam_crossings": w2["seam_crossings"],
+    "dig_hits": hits,
+    "minimum_dig_separation_m": min(distances),
+    "matter_resynced": w2["matter_resynced"],
+    "item_count": authority["item_count"],
+    "unique_item_count": authority["unique_item_count"],
+    "duplicate_item_identity": authority["duplicate_item_identity"],
+    "construction_id": authority["construction_id"],
+    "construction_part_count": construction.get("part_count", construction.get("parts")),
+    "collision_part_count_a": c2a["collision_part_count"],
+    "collision_part_count_b": c2b["collision_part_count"],
+    "bounds": w2["bounds"],
+    "phase1_backend_sequences": w1["bounds"]["backend_sequences"],
+    "phase1_authority_a_backend_sequence": w1["bounds"]["backend_sequences"]["authority/a"],
+}
+assert facts["phase1_pids_distinct"]
+assert facts["original_a_pid_ne_reconnect_a_pid"]
+assert facts["peer_identity_changed"]
+assert facts["phase2_pids_distinct"] and facts["phase_pid_sets_disjoint"]
+assert facts["round_history"] == list(range(12))
+assert facts["action_counts"] == {"DIG":4,"ITEM":4,"BUILD_ADD":2,"BUILD_REMOVE":2}
+assert len(hits) == 4 and facts["minimum_dig_separation_m"] >= 1.0
+assert facts["matter_resynced"] == {"a": True, "b": True}
+assert facts["item_count"] == facts["unique_item_count"] and facts["duplicate_item_identity"] is False
+assert facts["collision_part_count_a"] == 100 and facts["collision_part_count_b"] == 100
+Path(os.environ["MVP8_FACTS"]).write_text(json.dumps(facts, indent=2) + "\n", encoding="utf-8")
+print(json.dumps(facts, indent=2))
+'@ | python -
+          if ($LASTEXITCODE -ne 0) { throw "MVP8_RAW_FACT_BINDING_FAILED" }
+
+      - name: Independent Windows full world core
+        run: |
+          $ErrorActionPreference = "Stop"
+          $evidence = Join-Path $PWD "artifacts\mvp8-windows-gap-r2"
+          $managed = Join-Path $evidence "world-core-managed"
+          New-Item -ItemType Directory -Force -Path $managed | Out-Null
+
+          $env:MVP7_NATIVE_MODE = "produce"
+          $env:MVP7_NATIVE_ROOT = Join-Path $managed "native"
+          $env:MVP7_NATIVE_RESULT = Join-Path $managed "native-result.json"
+          $env:MVP7_WORLD_MODE = "produce"
+          $env:MVP7_WORLD_ROOT = Join-Path $managed "world"
+          $env:MVP7_WORLD_RESULT = Join-Path $managed "world-result.json"
+          $env:MVP7_CONSTRUCTION_MODE = "produce"
+          $env:MVP7_CONSTRUCTION_ROOT = Join-Path $managed "construction"
+          $env:MVP7_CONSTRUCTION_RESULT = Join-Path $managed "construction-result.json"
+          foreach ($p in @($env:MVP7_NATIVE_ROOT,$env:MVP7_WORLD_ROOT,$env:MVP7_CONSTRUCTION_ROOT)) {
+            New-Item -ItemType Directory -Force -Path $p | Out-Null
+          }
+
+          $log = Join-Path $evidence "world-core.log"
+          & powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\RUN_WORLD_REGRESSION_TESTS.ps1" *> "$log"
+          $code = $LASTEXITCODE
+          Get-Content -LiteralPath $log
+          [ordered]@{ exit_code=$code; finished_at_utc=[DateTime]::UtcNow.ToString("o") } |
+            ConvertTo-Json | Set-Content -Encoding UTF8 (Join-Path $evidence "world-core-exit.json")
+
+          $summarySource = Join-Path $PWD "artifacts\test-results\world-regression-summary.json"
+          if (Test-Path -LiteralPath $summarySource -PathType Leaf) {
+            Copy-Item -LiteralPath $summarySource -Destination (Join-Path $evidence "world-regression-summary.json")
+          }
+          if ($code -ne 0) { throw "WORLD_CORE_FAILED:$code" }
+
+          $summary = Get-Content -Raw -LiteralPath (Join-Path $evidence "world-regression-summary.json") | ConvertFrom-Json
+          if ($summary.passed -ne $true) { throw "WORLD_CORE_SUMMARY_NOT_PASS" }
+          if ($summary.declared_test_count -ne $summary.discovered_test_count) { throw "WORLD_CORE_DISCOVERY_MISMATCH" }
+          $failed = @($summary.steps | Where-Object { $_.passed -ne $true })
+          if ($failed.Count -ne 0) { throw "WORLD_CORE_FAILED_STEPS:$($failed.Count)" }
+
+      - name: Bind final carrier evidence
+        if: always()
+        run: |
+          $ErrorActionPreference = "Continue"
+          $evidence = Join-Path $PWD "artifacts\mvp8-windows-gap-r2"
+          New-Item -ItemType Directory -Force -Path $evidence | Out-Null
+          $tracked = @(git status --porcelain --untracked-files=no)
+          $head = (git rev-parse HEAD).Trim()
+          $tree = (git rev-parse "HEAD^{tree}").Trim()
+          $worldPath = Join-Path $evidence "world-regression-summary.json"
+          $manifestPath = Join-Path $evidence "mvp8-live-snapshot\manifest.json"
+
+          $world = $null
+          if (Test-Path $worldPath) { $world = Get-Content -Raw $worldPath | ConvertFrom-Json }
+          $manifest = $null
+          if (Test-Path $manifestPath) { $manifest = Get-Content -Raw $manifestPath | ConvertFrom-Json }
+
+          $bound = [ordered]@{
+            schema = "distributed_world_simulator.mvp8_windows_gap_carrier.v1"
+            run_id = $env:GITHUB_RUN_ID
+            run_attempt = $env:GITHUB_RUN_ATTEMPT
+            carrier_ref = $env:GITHUB_REF
+            frozen_subject_head = $head
+            frozen_subject_tree = $tree
+            exact_subject_match = ($head -eq $env:SUBJECT_HEAD -and $tree -eq $env:SUBJECT_TREE)
+            source_tracked_clean_after = ($tracked.Count -eq 0)
+            tracked_status_after = $tracked
+            mvp8_manifest_present = (Test-Path $manifestPath)
+            mvp8_passed = if ($null -ne $manifest) { $manifest.passed } else { $false }
+            mvp8_check_count = if ($null -ne $manifest) { @($manifest.checks.PSObject.Properties).Count } else { 0 }
+            mvp8_negative_count = if ($null -ne $manifest) { @($manifest.negative_controls).Count } else { 0 }
+            world_core_summary_present = (Test-Path $worldPath)
+            world_core_passed = if ($null -ne $world) { $world.passed } else { $false }
+            world_core_declared = if ($null -ne $world) { $world.declared_test_count } else { $null }
+            world_core_discovered = if ($null -ne $world) { $world.discovered_test_count } else { $null }
+            world_core_steps = if ($null -ne $world) { @($world.steps).Count } else { $null }
+            world_core_failed_steps = if ($null -ne $world) { @($world.steps | Where-Object { $_.passed -ne $true }).Count } else { $null }
+            linux_world_core_run = 35515256366
+            linux_world_core_artifact = 10607661947
+            linux_world_core_digest = "sha256:9ed20f0d75f2809070e10f6247b4458309ed966de16b871104153a89be0be3a4"
+            pc0_run = 35513137221
+            pc0_standard = "YELLOW"
+            pc0_directional = "YELLOW"
+            predicate_verified = $false
+            independent_verdict = $false
+          }
+          $bound | ConvertTo-Json -Depth 10 | Set-Content -Encoding UTF8 (Join-Path $evidence "carrier-summary.json")
+
+          Get-ChildItem -LiteralPath $evidence -Recurse -File |
+            Sort-Object FullName |
+            ForEach-Object {
+              [ordered]@{
+                path = $_.FullName.Substring($evidence.Length).TrimStart("\").Replace("\","/")
+                bytes = $_.Length
+                sha256 = (Get-FileHash -Algorithm SHA256 -LiteralPath $_.FullName).Hash.ToLowerInvariant()
+              }
+            } | ConvertTo-Json -Depth 6 | Set-Content -Encoding UTF8 (Join-Path $evidence "all-evidence-hashes.json")
+
+          if ($head -ne $env:SUBJECT_HEAD -or $tree -ne $env:SUBJECT_TREE) { throw "FINAL_SUBJECT_MISMATCH" }
+          if ($tracked.Count -ne 0) { throw "TRACKED_CHECKOUT_DIRTY_AFTER" }
+
+      - name: Upload preserved R2 evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mvp8-windows-gap-r2
+          path: artifacts/mvp8-windows-gap-r2/
+          if-no-files-found: error
+          retention-days: 90
