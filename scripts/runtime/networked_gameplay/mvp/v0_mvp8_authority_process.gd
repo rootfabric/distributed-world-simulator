@@ -103,7 +103,7 @@ func _setup_recovery8(recovering: bool) -> Dictionary:
 
 func initialize_owner() -> Dictionary:
 	var recovering := bool(cfg.get("mvp8_recovery", false))
-	var expected_epoch := int(cfg.get("mvp8_authority_epoch", 2 if recovering else 1))
+	var expected_epochs: Dictionary = Dictionary(cfg.get("mvp8_authority_epochs", {"a": 1, "b": 1})).duplicate(true)
 	service = Service8.new()
 	var setup: Dictionary = service.setup(authority, 1, 0, {
 		"profile": Service8.PROFILE_MULTIPLAYER_CORE,
@@ -124,8 +124,8 @@ func initialize_owner() -> Dictionary:
 			var joined: Dictionary = service.join(actor, Protocol.session(cfg, actor), "operation/mvp8/" + String(cfg["run_id"]) + "/join/" + actor)
 			if not bool(joined.get("success", false)):
 				return joined
-			if int(service.get_player(actor).get("ownership_epoch", 0)) != expected_epoch:
-				return Protocol.failure("MVP8_RECOVERED_OWNERSHIP_EPOCH_MISMATCH")
+			if int(service.get_player(actor).get("ownership_epoch", 0)) != int(expected_epochs.get(actor, 1)):
+				return Protocol.failure("MVP8_RECOVERED_OWNERSHIP_EPOCH_MISMATCH:" + actor)
 
 	initial_snapshot = service.create_snapshot()
 	initial_graph = service.create_canonical_item_graph_snapshot()
@@ -141,7 +141,7 @@ func initialize_owner() -> Dictionary:
 	if not bool(peer_setup.get("success", false)):
 		return peer_setup
 	for actor in ["a", "b"]:
-		var bound: Dictionary = live_port.bind_player(actor, Protocol.session(cfg, actor), expected_epoch, decisions[actor])
+		var bound: Dictionary = live_port.bind_player(actor, Protocol.session(cfg, actor), int(expected_epochs.get(actor, 1)), decisions[actor])
 		if not bool(bound.get("success", false)):
 			return bound
 	clock = Scheduler8.new()
