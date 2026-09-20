@@ -270,7 +270,7 @@ func _current8(actor: String) -> Dictionary:
 		"construction": _construction6.duplicate(true),
 		"replica": _replica6.duplicate(true),
 		"player": player.duplicate(true),
-		"snapshot": world_snapshot(),
+		"snapshot": _world_snapshot8({actor: player}),
 	})
 
 
@@ -584,8 +584,42 @@ func _publish_progress8() -> void:
 	})
 
 
-func world_snapshot() -> Dictionary:
-	var value: Dictionary = super.world_snapshot()
+func _world_snapshot8(player_overrides: Dictionary = {}) -> Dictionary:
+	var players: Dictionary = {}
+	var decisions: Dictionary = {}
+	for actor in ["a", "b"]:
+		var decision: Dictionary = coordinators[actor].snapshot()
+		decisions[actor] = decision
+		var player: Dictionary = {}
+		if player_overrides.has(actor) and player_overrides[actor] is Dictionary:
+			player = Dictionary(player_overrides[actor]).duplicate(true)
+		else:
+			var cached_value = _current_cache8.get(actor, {})
+			if cached_value is Dictionary and not Dictionary(cached_value).is_empty():
+				var cached_player = Dictionary(cached_value).get("player", {})
+				if cached_player is Dictionary:
+					var candidate: Dictionary = Dictionary(cached_player)
+					if (
+						String(candidate.get("logical_player_id", "")) == actor
+						and bool(candidate.get("connected", false))
+						and int(candidate.get("ownership_epoch", 0)) == int(decision.get("authority_epoch", -1))
+					):
+						player = candidate.duplicate(true)
+		if player.is_empty():
+			player = lookup(String(decision.get("active_authority_id", "")), actor)
+		players[actor] = player
+	var value := {
+		"players": players,
+		"decisions": decisions,
+		"transfer_count": transfers.size(),
+		"a_roundtrip_complete": transfers.filter(func(row): return row.get("actor") == "a").size() >= 2 and String(pending_continuity["a"]).is_empty(),
+		"both_clients_ready": bool(client_hello["a"]) and bool(client_hello["b"]),
+		"input_sequences": sequences.duplicate(),
+		"gateway_sessions": {
+			"a": pivots["a"].get_client_route_identity(),
+			"b": pivots["b"].get_client_route_identity(),
+		},
+	}
 	value["mvp8"] = {
 		"active": _active8,
 		"round": _round8,
@@ -607,6 +641,10 @@ func world_snapshot() -> Dictionary:
 		"dig_hits": _dig_hits8.duplicate(true),
 	}
 	return value
+
+
+func world_snapshot() -> Dictionary:
+	return _world_snapshot8()
 
 
 func handle_client(actor: String, body: Dictionary) -> Dictionary:
