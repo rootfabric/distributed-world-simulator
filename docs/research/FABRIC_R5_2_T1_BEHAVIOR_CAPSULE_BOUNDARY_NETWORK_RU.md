@@ -111,3 +111,23 @@ T1 does not prove:
 - arbitrary nonlinear FABRIC graph compilation.
 
 Those are later R5.2/R5.3 fixtures.
+
+
+## Prepared execution session
+
+Первый exact measurement показал, что full `BakeExecutionGate` на каждом вызове делает повторную deep-validation всего artifact/source binding и поэтому скрывает вычислительную дешевизну 4×4 relation.
+
+T1 поэтому вводит reduction-specific prepared session:
+
+```text
+capsule + artifact + descriptor + live
+        ↓ full validation ONCE
+prepared exact-linear session
+        ↓ each tick
+cheap binding fences
++ 4×4 relation
+```
+
+Fast path допустим только для текущего exact/stateless/no-guard T1 domain. Любая invalidation, source/frontier/authority/dependency/graph/policy change, non-empty runtime estimator или guard set немедленно запрещают fast execute и требуют reactivation/general gate.
+
+Таким образом provenance не удаляется — он выносится из inner numerical loop.

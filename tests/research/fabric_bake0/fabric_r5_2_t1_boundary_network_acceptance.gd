@@ -5,7 +5,7 @@ const Graph = preload("res://scripts/research/fabric_bake0/linear_conductance_co
 const GraphCompiler = preload("res://scripts/research/fabric_bake0/linear_conductance_graph_compiler_v1.gd")
 const Capsule = preload("res://scripts/research/fabric_bake0/behavior_capsule_contract_v1.gd")
 const T1Compiler = preload("res://scripts/research/fabric_bake0/r5_t1_boundary_network_capsule_compiler_v1.gd")
-const T1Runtime = preload("res://scripts/research/fabric_bake0/r5_t1_boundary_network_capsule_runtime_v1.gd")
+const T1Runtime = preload("res://scripts/research/fabric_bake0/r5_t1_boundary_network_capsule_runtime_v1.gd")\nconst PreparedSession = preload("res://scripts/research/fabric_bake0/r5_exact_linear_capsule_session_v1.gd")
 const ExactCompiler = preload("res://scripts/research/fabric_bake0/exact_boundary_bake_compiler_v1.gd")
 const Reducer = preload("res://scripts/research/fabric_bake0/exact_boundary_reducer_v1.gd")
 const LinearAlgebra = preload("res://scripts/research/fabric_bake0/dense_linear_algebra_v1.gd")
@@ -13,7 +13,7 @@ const CompileResult = preload("res://scripts/research/fabric_bake0/bake_compile_
 const Measure = preload("res://scripts/research/fabric_bake0/r5_measurement_harness_v1.gd")
 const Fixture = preload("res://tests/research/fabric_bake0/fabric_r5_2_t1_boundary_network_fixture.gd")
 
-const HOT_LOOP_CALLS := 512
+const FULL_GATE_HOT_LOOP_CALLS := 128\nconst PREPARED_HOT_LOOP_CALLS := 4096
 
 var checks := 0
 var failed := false
@@ -123,16 +123,43 @@ func _initialize() -> void:
 		check(int(executed.details.runtime_source_component_traversals) == 0, "no source component traversal")
 	end_stage(m, "capsule_excitation_batch")
 
-	begin_stage(m, "capsule_hot_loop")
-	var hot_accumulator := 0.0
-	for i in range(HOT_LOOP_CALLS):
+	begin_stage(m, "prepared_session_start")
+	var prepared := PreparedSession.start(capsule, artifact, descriptor, live)
+	end_stage(m, "prepared_session_start")
+	check(prepared.success, "prepared session start", prepared)
+	if not prepared.success:
+		_finish()
+		return
+	var session: Dictionary = prepared.details.session
+	for index in range(excitations.size()):
+		var fast := PreparedSession.execute(session, live, excitations[index])
+		check(fast.success, "prepared excitation", fast)
+		if fast.success:
+			var full: Dictionary = full_rows[index]
+			check(LinearAlgebra.max_abs_delta(full.details.boundary_flow, fast.details.boundary_flow) <= float(request.error_envelope.flow_abs), "prepared flow equivalence")
+			check(absf(float(full.details.boundary_power) - float(fast.details.boundary_power)) <= float(request.error_envelope.power_abs), "prepared power equivalence")
+
+	begin_stage(m, "full_gate_hot_loop")
+	var full_gate_accumulator := 0.0
+	for i in range(FULL_GATE_HOT_LOOP_CALLS):
 		var effort: Array = excitations[i % excitations.size()]
 		var executed := T1Runtime.execute(capsule, artifact, descriptor, live, effort)
-		check(executed.success, "hot loop execution", {"index": i, "result": executed} if not executed.success else {})
+		check(executed.success, "full gate hot loop execution", {"index": i, "result": executed} if not executed.success else {})
 		if executed.success:
-			hot_accumulator += float(executed.details.boundary_power)
-	end_stage(m, "capsule_hot_loop")
-	check(is_finite(hot_accumulator), "hot loop finite")
+			full_gate_accumulator += float(executed.details.boundary_power)
+	end_stage(m, "full_gate_hot_loop")
+	check(is_finite(full_gate_accumulator), "full gate hot loop finite")
+
+	begin_stage(m, "prepared_capsule_hot_loop")
+	var prepared_accumulator := 0.0
+	for i in range(PREPARED_HOT_LOOP_CALLS):
+		var effort: Array = excitations[i % excitations.size()]
+		var executed := PreparedSession.execute(session, live, effort)
+		check(executed.success, "prepared hot loop execution", {"index": i, "result": executed} if not executed.success else {})
+		if executed.success:
+			prepared_accumulator += float(executed.details.boundary_power)
+	end_stage(m, "prepared_capsule_hot_loop")
+	check(is_finite(prepared_accumulator), "prepared hot loop finite")
 
 	var foreign_descriptor := descriptor.duplicate(true)
 	foreign_descriptor.schur_matrix[0][0] = float(foreign_descriptor.schur_matrix[0][0]) + 0.001
@@ -148,7 +175,7 @@ func _initialize() -> void:
 		check(String(mutated.details.capsule.checksum) != String(capsule.checksum), "mutation changes capsule")
 		check(String(mutated.details.reduction.checksum) != String(descriptor.checksum), "mutation changes reduction")
 		var mutated_live := ExactCompiler.live_context_from_request(mutated.details.bake_request)
-		check(not T1Runtime.execute(capsule, artifact, descriptor, mutated_live, excitations[0]).success, "old capsule rejects mutated live graph")
+		check(not T1Runtime.execute(capsule, artifact, descriptor, mutated_live, excitations[0]).success, "old capsule rejects mutated live graph")\n\t\tcheck(not PreparedSession.execute(session, mutated_live, excitations[0]).success, "prepared session rejects mutated live graph")
 		var new_exec := T1Runtime.execute(mutated.details.capsule, mutated.details.artifact, mutated.details.reduction, mutated_live, excitations[0])
 		check(new_exec.success, "rebuilt capsule executes")
 
@@ -179,7 +206,7 @@ func _initialize() -> void:
 		"component_to_executable_ratio": float(capsule.component_to_executable_ratio),
 		"maximum_flow_error": maximum_flow_error,
 		"maximum_power_error": maximum_power_error,
-		"hot_loop_calls": HOT_LOOP_CALLS,
+		"full_gate_hot_loop_calls": FULL_GATE_HOT_LOOP_CALLS,\n\t\t"prepared_hot_loop_calls": PREPARED_HOT_LOOP_CALLS,
 		"singular_status": String(singular.get("status", "")),
 		"singular_reason": String(singular.get("reason", "")),
 	}
@@ -189,7 +216,7 @@ func _initialize() -> void:
 	m.set_counter("full_equations", int(capsule.full_equation_count))
 	m.set_counter("executable_equations", int(capsule.executable_equation_count))
 	m.set_counter("runtime_source_traversals_per_execute", int(capsule.runtime_source_traversals_per_execute))
-	m.set_counter("hot_loop_calls", HOT_LOOP_CALLS)
+	m.set_counter("full_gate_hot_loop_calls", FULL_GATE_HOT_LOOP_CALLS)\n\tm.set_counter("prepared_hot_loop_calls", PREPARED_HOT_LOOP_CALLS)
 	var applicability := {
 		"dynamic_state": {"applicable": false, "reason": "T1 is an exact stateless linear boundary capsule. Dynamic ROM begins at later fixtures."},
 		"material_property_derivation": {"applicable": false, "reason": "T1 uses characterized conductance components; deriving cell/material properties is T3 Battery."},

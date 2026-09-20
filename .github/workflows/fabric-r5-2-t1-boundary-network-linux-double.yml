@@ -49,7 +49,7 @@ jobs:
         run: |
           set -Eeuo pipefail
           test "$(git merge-base HEAD "$R5_1_MERGE_HEAD")" = "$R5_1_MERGE_HEAD"
-          allowed='^(.github/workflows/fabric-r5-2-t1-boundary-network-linux-double.yml|RUN_FABRIC_R5_2_T1_TESTS.sh|docs/research/FABRIC_R5_2_T1_BEHAVIOR_CAPSULE_BOUNDARY_NETWORK_RU.md|scripts/research/fabric_bake0/(behavior_capsule_contract_v1.gd|linear_conductance_component_graph_v1.gd|linear_conductance_graph_compiler_v1.gd|r5_t1_boundary_network_capsule_compiler_v1.gd|r5_t1_boundary_network_capsule_runtime_v1.gd|collect_r5_2_t1_evidence.py)|tests/research/fabric_bake0/(fabric_r5_2_t1_boundary_network_fixture.gd|fabric_r5_2_t1_boundary_network_acceptance.gd)|validation/fabric-r5-2-t1-[^/]+)$'
+          allowed='^(.github/workflows/fabric-r5-2-t1-boundary-network-linux-double.yml|RUN_FABRIC_R5_2_T1_TESTS.sh|docs/research/FABRIC_R5_2_T1_BEHAVIOR_CAPSULE_BOUNDARY_NETWORK_RU.md|scripts/research/fabric_bake0/(behavior_capsule_contract_v1.gd|linear_conductance_component_graph_v1.gd|linear_conductance_graph_compiler_v1.gd|r5_t1_boundary_network_capsule_compiler_v1.gd|r5_t1_boundary_network_capsule_runtime_v1.gd|r5_exact_linear_capsule_session_v1.gd|collect_r5_2_t1_evidence.py)|tests/research/fabric_bake0/(fabric_r5_2_t1_boundary_network_fixture.gd|fabric_r5_2_t1_boundary_network_acceptance.gd)|validation/fabric-r5-2-t1-[^/]+)$'
           bad="$(git diff --name-only "$R5_1_MERGE_HEAD"...HEAD | grep -Ev "$allowed" || true)"
           test -z "$bad"
           git diff --check "$R5_1_MERGE_HEAD"...HEAD
