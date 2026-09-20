@@ -1,0 +1,532 @@
+extends "res://scripts/runtime/networked_gameplay/mvp/v0_mvp6_guarded_gateway_process.gd"
+
+const Protocol8 = preload("res://scripts/runtime/networked_gameplay/mvp/v0_mvp3_process_protocol.gd")
+const BackendLink8 = preload("res://scripts/runtime/networked_gameplay/mvp/v0_mvp3_backend_link.gd")
+const RemoteRoute8 = preload("res://scripts/runtime/networked_gameplay/mvp/v0_mvp3_remote_player_command_route.gd")
+const Identity8 = preload("res://scripts/runtime/networked_gameplay/p6/p6_identity_registry.gd")
+const Ledger8 = preload("res://scripts/runtime/networked_gameplay/p6/p6_operation_ledger.gd")
+const Admission8 = preload("res://scripts/runtime/networked_gameplay/p6/p6_mutation_admission.gd")
+const Closure8 = preload("res://scripts/runtime/networked_gameplay/p6/p6_closure_adapter.gd")
+const Coordinator8 = preload("res://scripts/runtime/networked_gameplay/sm1/sm1_authority_transfer_coordinator.gd")
+const Carry8 = preload("res://scripts/runtime/networked_gameplay/sm1/sm1_player_carrying_domain.gd")
+const Pivot8 = preload("res://scripts/runtime/networked_gameplay/sm1/sm1_gateway_route_pivot.gd")
+const Support8 = preload("res://scripts/runtime/networked_gameplay/sm1/sm1_6_process_support.gd")
+const Utils8 = preload("res://scripts/network/contracts/network_contract_utils.gd")
+
+const TOTAL_ROUNDS8 := 12
+const RECONNECT_AFTER_ROUND8 := 4
+const RESTART_AFTER_ROUND8 := 8
+const LEDGER_CAP8 := 512
+const OP_FINGERPRINT_CAP8 := 256
+const RPC_CAP8 := 512
+const REPLAY_PENDING_CAP8 := 32
+const TERMINAL_COMMAND_CAP8 := 16
+const MATTER_STREAM_CAP8 := 64
+const LIVENESS_INTERVAL_MS8 := 4000
+
+var _round8 := 0
+var _round_moves8 := {"a": false, "b": false}
+var _action_counts8 := {"DIG": 0, "ITEM": 0, "BUILD_ADD": 0, "BUILD_REMOVE": 0}
+var _fixed_receipts8 := 0
+var _active8 := false
+var _recovery_boot8 := false
+var _waiting_reconnect8 := false
+var _reconnect_complete8 := false
+var _original_peer8 := ""
+var _reconnect_peer8 := ""
+var _reconnect_count8 := 0
+var _checkpointed8 := false
+var _checkpoint_receipt8: Dictionary = {}
+var _restart_file8 := ""
+var _bounds8: Dictionary = {}
+var _round_history8: Array = []
+var _backend_liveness_cycles8 := 0
+var _backend_liveness_failures8 := 0
+var _backend_liveness_last_ms8 := 0
+var _backend_liveness_last8: Dictionary = {}
+
+
+func _phase8() -> String:
+	if _round8 < RECONNECT_AFTER_ROUND8:
+		return "PRE_RECONNECT"
+	if _round8 < RESTART_AFTER_ROUND8:
+		return "POST_RECONNECT"
+	if _round8 < TOTAL_ROUNDS8:
+		return "POST_RESTART"
+	return "COMPLETE"
+
+
+func _action_for_round8(round_index: int) -> String:
+	var actions := [
+		"DIG", "ITEM", "BUILD_ADD", "BUILD_REMOVE",
+		"DIG", "ITEM", "DIG", "ITEM",
+		"DIG", "ITEM", "BUILD_ADD", "BUILD_REMOVE",
+	]
+	return String(actions[round_index]) if round_index >= 0 and round_index < actions.size() else ""
+
+
+func setup_control() -> bool:
+	identity = Identity8.new()
+	ledger = Ledger8.new()
+	admission = Admission8.new()
+	closure = Closure8.new()
+	if not success(ledger.configure(LEDGER_CAP8), "MVP8 bounded P6 ledger"):
+		return false
+	for actor in ["a", "b"]:
+		if not success(identity.bind("client-session/mvp3/" + actor, "player/mvp3/" + actor, "entity/mvp3/" + actor), "P6 identity " + actor):
+			return false
+	if not success(admission.configure(identity, ledger), "P6 admission") or not success(closure.configure(identity, ledger), "P6 closure"):
+		return false
+	var epochs: Dictionary = Dictionary(cfg.get("mvp8_authority_epochs", {"a": 1, "b": 1})).duplicate(true)
+	var initial_sequences: Dictionary = Dictionary(cfg.get("mvp8_initial_sequences", {"a": 0, "b": 0})).duplicate(true)
+	sequences["a"] = int(initial_sequences.get("a", 0))
+	sequences["b"] = int(initial_sequences.get("b", 0))
+	for actor in ["a", "b"]:
+		var coordinator = Coordinator8.new()
+		var initial := {
+			"logical_player_id": "player/mvp3/" + actor,
+			"player_entity_id": "entity/mvp3/" + actor,
+			"last_input_sequence": int(initial_sequences.get(actor, 0)),
+			"last_operation_id": "",
+		}
+		if not success(coordinator.configure("authority/a", int(epochs.get(actor, 1)), initial), "MVP8 SM1 coordinator " + actor):
+			return false
+		coordinators[actor] = coordinator
+		var carry = Carry8.new()
+		if not success(carry.configure(identity, ledger, closure, coordinator), "SM1 carrying " + actor):
+			return false
+		carrying[actor] = carry
+		var by_authority: Dictionary = {}
+		for authority_id in ["authority/a", "authority/b"]:
+			var route = RemoteRoute8.new()
+			if not success(route.configure(self, authority_id, actor, Protocol8.session(cfg, actor), identity, ledger, admission, closure), "MVP8 remote owner route"):
+				return false
+			routes.append(route)
+			by_authority[authority_id] = route
+		var pivot = Pivot8.new()
+		if not success(pivot.configure(by_authority, coordinator, "gateway/mvp8/" + String(cfg["run_id"]), "client-session/mvp3/" + actor), "MVP8 stable gateway pivot"):
+			return false
+		pivots[actor] = pivot
+	_round8 = int(cfg.get("mvp8_start_round", 0))
+	_recovery_boot8 = bool(cfg.get("mvp8_recovery", false))
+	_active8 = _recovery_boot8
+	_reconnect_complete8 = _recovery_boot8 or _round8 >= RECONNECT_AFTER_ROUND8
+	_restart_file8 = String(cfg.get("mvp8_restart_file", ""))
+	return true
+
+
+func initialize_native() -> bool:
+	var okay := setup_control()
+	for authority_id in ["authority/a", "authority/b"]:
+		if not okay:
+			break
+		var link = BackendLink8.new()
+		links[authority_id] = link
+		okay = success(link.start(cfg, authority_id, int(cfg["ports"][authority_id]), String(cfg["internal_keys"][authority_id])), "authenticated backend " + authority_id)
+	if okay:
+		for authority_id in ["authority/a", "authority/b"]:
+			if not success(call_authority(authority_id, {"kind": "INIT"}), "native owner init " + authority_id):
+				okay = false
+				break
+	if okay and _recovery_boot8:
+		var owner_rpc := _authority6("authority/a", "a", {"kind": "MVP6_CONSTRUCTION_READ"})
+		var synced := _sync_b6("a", owner_rpc)
+		if not bool(synced.get("success", false)):
+			failures.append("MVP8_RECOVERED_CONSTRUCTION_SYNC_FAILED:" + String(synced.get("error_code", "")))
+			okay = false
+		else:
+			_phase6 = "REMOVED"
+			var current := _current8("a")
+			if not bool(current.get("success", false)):
+				failures.append("MVP8_RECOVERED_CURRENT_STATE_FAILED:" + String(current.get("error_code", "")))
+				okay = false
+	return okay
+
+
+func route_client_input(actor: String, wire: Dictionary) -> Dictionary:
+	var routed := super.route_client_input(actor, wire)
+	if bool(routed.get("success", false)) and _active8 and _round8 < TOTAL_ROUNDS8:
+		_round_moves8[actor] = true
+		_fixed_receipts8 += 1
+	return routed
+
+
+func _current8(actor: String) -> Dictionary:
+	var matter_result := _owner4(actor, {"kind": "MVP4_REPORT"})
+	if not bool(matter_result.get("success", false)):
+		return matter_result
+	var material_result := _owner4(actor, {"kind": "MVP5_MATERIAL"})
+	if not bool(material_result.get("success", false)):
+		return material_result
+	var decision: Dictionary = coordinators[actor].snapshot()
+	var player: Dictionary = lookup(String(decision.get("active_authority_id", "")), actor)
+	if player.is_empty() or _construction6.is_empty():
+		return Protocol8.failure("MVP8_CURRENT_STATE_INCOMPLETE")
+	var matter: Dictionary = matter_result.get("details", {})
+	var material: Dictionary = material_result.get("details", {})
+	var digest := Utils8.payload_hash({
+		"store_hash": matter.get("store_hash", ""),
+		"state_hash": matter.get("state_hash", ""),
+		"stream_sequence": matter.get("stream_sequence", 0),
+		"material_digest": material.get("material_digest", ""),
+		"item_graph_checksum": material.get("item_graph_checksum", ""),
+		"construction_checksum": _construction6.get("checksum", ""),
+	})
+	return Protocol8.success({
+		"world_digest": digest,
+		"matter": matter.duplicate(true),
+		"material": material.duplicate(true),
+		"construction": _construction6.duplicate(true),
+		"replica": _replica6.duplicate(true),
+		"player": player.duplicate(true),
+		"snapshot": world_snapshot(),
+	})
+
+
+func _dig8(round_index: int) -> Dictionary:
+	var operation := "operation/mvp8/dig/%d" % round_index
+	var prepared: Dictionary = {}
+	for direction in [[0.0, -1.0, 0.0], [0.6, -0.8, 0.0], [-0.6, -0.8, 0.0], [0.0, -0.8, 0.6]]:
+		prepared = _owner4("a", {"kind": "MVP4_PREPARE", "operation_id": operation, "direction": direction})
+		if bool(prepared.get("success", false)):
+			break
+	if not bool(prepared.get("success", false)):
+		return prepared
+	var executed := _owner4("a", {"kind": "MVP4_EXECUTE", "plan": Dictionary(prepared.get("details", {})).duplicate(true)})
+	if not bool(executed.get("success", false)):
+		return executed
+	var current := _current8("a")
+	if bool(current.get("success", false)):
+		_action_counts8["DIG"] = int(_action_counts8["DIG"]) + 1
+	return current
+
+
+func _item8(round_index: int) -> Dictionary:
+	var rpc := _authority6("authority/a", "a", {
+		"kind": "MVP8_ITEM",
+		"operation_id": "operation/mvp8/item/select/%d" % round_index,
+		"command_kind": "inventory.select_hotbar",
+		"payload": {"selected_hotbar_index": round_index % 4},
+	})
+	var native := _native6(rpc)
+	if bool(native.get("success", false)):
+		_action_counts8["ITEM"] = int(_action_counts8["ITEM"]) + 1
+	return native
+
+
+func _build8(intent: String, round_index: int) -> Dictionary:
+	var cycle := 1 if round_index < RESTART_AFTER_ROUND8 else 2
+	var route_rpc := _authority6("authority/b", "a", {"kind": "MVP6_CONSTRUCTION_ROUTE", "intent": intent})
+	var routed := _native6(route_rpc)
+	if not bool(routed.get("success", false)):
+		return routed
+	var attestation: Dictionary = links["authority/b"].last_signed_reply.duplicate(true)
+	var owner_rpc := _authority6("authority/a", "a", {
+		"kind": "MVP8_BUILD_APPLY",
+		"intent": intent,
+		"cycle": cycle,
+		"route_attestation": attestation,
+	})
+	var owner := _native6(owner_rpc)
+	if not bool(owner.get("success", false)):
+		return owner
+	var synced := _sync_b6("a", owner_rpc)
+	if not bool(synced.get("success", false)):
+		return synced
+	if intent == "ADD":
+		_phase6 = "ADDED"
+		_action_counts8["BUILD_ADD"] = int(_action_counts8["BUILD_ADD"]) + 1
+	else:
+		_phase6 = "REMOVED"
+		_action_counts8["BUILD_REMOVE"] = int(_action_counts8["BUILD_REMOVE"]) + 1
+	return Protocol8.success({"construction": _construction6.duplicate(true), "replica": _replica6.duplicate(true)})
+
+
+func _refresh_bounds8() -> Dictionary:
+	var native := _native6(_authority6("authority/a", "a", {"kind": "MVP8_BOUNDS"}))
+	if not bool(native.get("success", false)):
+		return native
+	var authority_bounds: Dictionary = native.get("details", {})
+	var ledger_report: Dictionary = ledger.get_report()
+	var backend_sequences := {}
+	for authority_id in links:
+		backend_sequences[authority_id] = int(links[authority_id].sequence)
+	_bounds8 = {
+		"operation_fingerprints": operation_fingerprints.size(),
+		"ledger": ledger_report,
+		"backend_sequences": backend_sequences,
+		"client_sequences": client_sequences.duplicate(true),
+		"input_observations": {"a": input_observations["a"].size(), "b": input_observations["b"].size()},
+		"authority": authority_bounds.duplicate(true),
+	}
+	var okay := (
+		operation_fingerprints.size() <= OP_FINGERPRINT_CAP8
+		and int(ledger_report.get("tracked_count", 0)) <= LEDGER_CAP8
+		and int(backend_sequences.get("authority/a", 0)) <= RPC_CAP8
+		and int(backend_sequences.get("authority/b", 0)) <= RPC_CAP8
+		and int(client_sequences.get("a", 0)) <= RPC_CAP8
+		and int(client_sequences.get("b", 0)) <= RPC_CAP8
+		and input_observations["a"].size() <= 128
+		and input_observations["b"].size() <= 128
+		and int(authority_bounds.get("durable_replay_pending", 0)) <= REPLAY_PENDING_CAP8
+		and int(authority_bounds.get("construction_terminal_commands", 0)) <= TERMINAL_COMMAND_CAP8
+		and int(authority_bounds.get("matter_stream_sequence", 0)) <= MATTER_STREAM_CAP8
+		and authority_bounds.get("duplicate_item_identity") == false
+	)
+	return Protocol8.success({"bounded": okay, "bounds": _bounds8.duplicate(true)}) if okay else Protocol8.failure("MVP8_BOUNDED_STATE_EXCEEDED")
+
+
+func _commit_round8(round_index: int) -> Dictionary:
+	if round_index != _round8 or round_index < 0 or round_index >= TOTAL_ROUNDS8:
+		return Protocol8.failure("MVP8_ROUND_SEQUENCE_INVALID")
+	if not bool(_round_moves8["a"]) or not bool(_round_moves8["b"]):
+		return Protocol8.failure("MVP8_BOTH_CLIENT_MOVES_REQUIRED")
+	if round_index >= RECONNECT_AFTER_ROUND8 and not _reconnect_complete8:
+		return Protocol8.failure("MVP8_RECONNECT_REQUIRED_BEFORE_ROUND")
+	if round_index >= RESTART_AFTER_ROUND8 and not _recovery_boot8:
+		return Protocol8.failure("MVP8_SERVER_RESTART_REQUIRED_BEFORE_ROUND")
+	var action := _action_for_round8(round_index)
+	var outcome: Dictionary
+	if action == "DIG":
+		outcome = _dig8(round_index)
+	elif action == "ITEM":
+		outcome = _item8(round_index)
+	elif action == "BUILD_ADD":
+		outcome = _build8("ADD", round_index)
+	elif action == "BUILD_REMOVE":
+		outcome = _build8("REMOVE", round_index)
+	else:
+		return Protocol8.failure("MVP8_ROUND_ACTION_INVALID")
+	if not bool(outcome.get("success", false)):
+		return outcome
+	var current := _current8("a")
+	if not bool(current.get("success", false)):
+		return current
+	_round_history8.append({
+		"round": round_index,
+		"phase": _phase8(),
+		"action": action,
+		"world_digest": current.get("details", {}).get("world_digest", ""),
+		"transfer_count": transfers.size(),
+		"input_sequences": sequences.duplicate(true),
+	})
+	_round8 += 1
+	_round_moves8 = {"a": false, "b": false}
+	var bounded := _refresh_bounds8()
+	if not bool(bounded.get("success", false)):
+		return bounded
+	return Protocol8.success({"round_completed": round_index, "action": action, "current": current.get("details", {}), "snapshot": world_snapshot()})
+
+
+func _checkpoint8() -> Dictionary:
+	if _round8 != RESTART_AFTER_ROUND8 or not _reconnect_complete8 or _checkpointed8:
+		return Protocol8.failure("MVP8_CHECKPOINT_PHASE_INVALID")
+	var rpc := _authority6("authority/a", "a", {"kind": "MVP8_CHECKPOINT"})
+	var native := _native6(rpc)
+	if not bool(native.get("success", false)):
+		return native
+	var checkpoint: Dictionary = native.get("details", {}).get("checkpoint", {})
+	if checkpoint.is_empty():
+		return Protocol8.failure("MVP8_CHECKPOINT_RECEIPT_REQUIRED")
+	var next_epochs := {}
+	for actor in ["a", "b"]:
+		next_epochs[actor] = int(checkpoint.get("players", {}).get(actor, {}).get("ownership_epoch", 0)) + 1
+	_checkpoint_receipt8 = {
+		"schema": "distributed_world_simulator.mvp8_restart_receipt.v1",
+		"subject_head": cfg.get("subject_head", ""),
+		"subject_tree": cfg.get("subject_tree", ""),
+		"generation": int(checkpoint.get("generation", 0)),
+		"checkpoint": checkpoint.duplicate(true),
+		"next_round": _round8,
+		"initial_sequences": sequences.duplicate(true),
+		"authority_epochs": next_epochs,
+		"action_counts": _action_counts8.duplicate(true),
+		"fixed_receipts": _fixed_receipts8,
+		"round_history": _round_history8.duplicate(true),
+		"bounds": _bounds8.duplicate(true),
+	}
+	if _restart_file8.is_empty() or not Support8.write_json(_restart_file8, _checkpoint_receipt8):
+		return Protocol8.failure("MVP8_RESTART_RECEIPT_WRITE_FAILED")
+	_checkpointed8 = true
+	return Protocol8.success({"checkpointed": true, "restart": _checkpoint_receipt8.duplicate(true), "snapshot": world_snapshot()})
+
+
+func world_snapshot() -> Dictionary:
+	var value: Dictionary = super.world_snapshot()
+	value["mvp8"] = {
+		"active": _active8,
+		"round": _round8,
+		"phase": _phase8(),
+		"round_moves": _round_moves8.duplicate(true),
+		"action_counts": _action_counts8.duplicate(true),
+		"fixed_receipts": _fixed_receipts8,
+		"reconnect_due": _round8 == RECONNECT_AFTER_ROUND8 and not _reconnect_complete8,
+		"reconnect_complete": _reconnect_complete8,
+		"checkpoint_due": _round8 == RESTART_AFTER_ROUND8 and not _recovery_boot8 and not _checkpointed8,
+		"checkpointed": _checkpointed8,
+		"recovery_boot": _recovery_boot8,
+		"complete": _round8 >= TOTAL_ROUNDS8,
+		"bounds": _bounds8.duplicate(true),
+	}
+	return value
+
+
+func handle_client(actor: String, body: Dictionary) -> Dictionary:
+	var kind := String(body.get("kind", ""))
+	if not kind.begins_with("MVP8_"):
+		return super.handle_client(actor, body)
+	if not bool(client_hello.get(actor, false)):
+		return Protocol8.failure("MVP8_HELLO_REQUIRED")
+	_active8 = true
+	if kind == "MVP8_STATUS":
+		var current := _current8(actor)
+		if not bool(current.get("success", false)):
+			return current
+		return Protocol8.success({"current": current.get("details", {}), "snapshot": world_snapshot()})
+	if kind == "MVP8_ROUND":
+		if actor != "a":
+			return Protocol8.failure("MVP8_ROUND_DRIVER_A_REQUIRED")
+		return _commit_round8(int(body.get("round", -1)))
+	if kind == "MVP8_RECONNECT_PREPARE":
+		if actor != "a" or _round8 != RECONNECT_AFTER_ROUND8 or _waiting_reconnect8 or _reconnect_complete8:
+			return Protocol8.failure("MVP8_RECONNECT_PREPARE_INVALID")
+		_waiting_reconnect8 = true
+		_original_peer8 = String(client_peers.get("a", ""))
+		client_hello["a"] = false
+		client_finished["a"] = true
+		return Protocol8.success({"prepared": true, "original_peer": _original_peer8, "snapshot": world_snapshot()})
+	if kind == "MVP8_CHECKPOINT":
+		if actor != "a":
+			return Protocol8.failure("MVP8_CHECKPOINT_DRIVER_A_REQUIRED")
+		return _checkpoint8()
+	if kind == "MVP8_PHASE_FINISH":
+		client_finished[actor] = true
+		if bool(client_finished["a"]) and bool(client_finished["b"]):
+			closing_at_ms = Time.get_ticks_msec() + 50
+		return Protocol8.success({"finished": true, "actor": actor, "snapshot": world_snapshot()})
+	return Protocol8.failure("MVP8_UNKNOWN_CLIENT_COMMAND")
+
+
+func _backend_liveness8() -> Dictionary:
+	var now := Time.get_ticks_msec()
+	if _backend_liveness_last_ms8 > 0 and now - _backend_liveness_last_ms8 < LIVENESS_INTERVAL_MS8:
+		return Protocol8.success({"skipped": true})
+	var observed := {}
+	for authority_id in ["authority/a", "authority/b"]:
+		var rpc: Dictionary = call_authority(authority_id, {"kind": "SYNC"})
+		if not bool(rpc.get("success", false)):
+			_backend_liveness_failures8 += 1
+			return Protocol8.failure("MVP8_BACKEND_LIVENESS_FAILED:" + authority_id)
+		observed[authority_id] = int(links[authority_id].sequence)
+	_backend_liveness_cycles8 += 1
+	_backend_liveness_last_ms8 = now
+	_backend_liveness_last8 = {"observed_sequences": observed, "mutation_performed": false, "backend_reconnect_performed": false}
+	return Protocol8.success(_backend_liveness_last8.duplicate(true))
+
+
+func _phase_success8() -> bool:
+	if _recovery_boot8:
+		return _round8 >= TOTAL_ROUNDS8 and int(_action_counts8["DIG"]) >= 1 and int(_action_counts8["ITEM"]) >= 1 and int(_action_counts8["BUILD_ADD"]) >= 1 and int(_action_counts8["BUILD_REMOVE"]) >= 1
+	return _checkpointed8 and _round8 == RESTART_AFTER_ROUND8 and _reconnect_complete8 and _reconnect_count8 == 1
+
+
+func _process(_delta: float) -> bool:
+	if not interactive or client_boundary == null:
+		return false
+	var polled: Dictionary = client_boundary.poll_events(128)
+	if not bool(polled.get("success", false)):
+		finish_interactive(false, "MVP8_CLIENT_GATEWAY_POLL_FAILED")
+		return false
+	for raw in polled.get("details", {}).get("events", []):
+		var event: Dictionary = raw
+		var peer := String(event.get("peer_id", ""))
+		if event.get("event_type") == "PEER_CONNECTED":
+			Support8.mark_ready(client_boundary, peer)
+		elif event.get("event_type") == "PEER_DISCONNECTED":
+			if peer == _original_peer8 and _waiting_reconnect8 and not _reconnect_complete8:
+				if String(client_peers.get("a", "")) == peer:
+					client_peers.erase("a")
+				continue
+			for actor_value in client_peers.keys():
+				var actor := String(actor_value)
+				if String(client_peers[actor]) == peer and not bool(client_finished[actor]):
+					finish_interactive(false, "MVP8_CLIENT_DISCONNECTED_DURING_WORKLOAD")
+					return false
+		elif event.get("event_type") == "MESSAGE_RECEIVED":
+			var packet := Protocol8.payload(event)
+			var actor := identify_client(packet)
+			if actor.is_empty():
+				continue
+			var kind := String(packet.get("body", {}).get("kind", ""))
+			var packet_sequence := int(packet.get("sequence", 0))
+			var replacement := actor == "a" and kind == "HELLO" and _waiting_reconnect8 and not _reconnect_complete8
+			if replacement:
+				var existing := String(client_peers.get("a", ""))
+				if packet_sequence != 1 or peer == _original_peer8 or (not existing.is_empty() and existing != _original_peer8 and existing != peer):
+					continue
+				client_peers["a"] = peer
+				client_sequences["a"] = 1
+				_reconnect_peer8 = peer
+				_reconnect_count8 = 1
+				_reconnect_complete8 = true
+				_waiting_reconnect8 = false
+				client_finished["a"] = false
+			else:
+				if (client_peers.has(actor) and String(client_peers[actor]) != peer) or packet_sequence != int(client_sequences.get(actor, 0)) + 1:
+					continue
+				client_peers[actor] = peer
+				client_sequences[actor] = packet_sequence
+			var response := handle_client(actor, packet["body"])
+			var signed := Protocol8.seal(cfg, "gateway", "client/" + actor, packet_sequence, response, String(cfg["client_keys"][actor]))
+			if not bool(Protocol8.send(client_boundary, peer, signed).get("success", false)):
+				finish_interactive(false, "MVP8_CLIENT_GATEWAY_REPLY_FAILED")
+				return false
+	client_boundary.flush_outbound(128)
+	if closing_at_ms > 0 and Time.get_ticks_msec() >= closing_at_ms:
+		finish_interactive(_phase_success8())
+	elif Time.get_ticks_msec() - started_at_ms > int(cfg.get("timeout_ms", 360000)):
+		finish_interactive(false, "MVP8_GATEWAY_TIMEOUT")
+	elif failures.is_empty():
+		var kept := _backend_liveness8()
+		if not bool(kept.get("success", false)):
+			finish_interactive(false, String(kept.get("error_code", "MVP8_BACKEND_LIVENESS_FAILED")))
+	return false
+
+
+func base_report(schema: String, passed: bool, graphical: bool) -> Dictionary:
+	var value: Dictionary = super.base_report(schema, passed, graphical)
+	value["mvp8"] = {
+		"round": _round8,
+		"phase": _phase8(),
+		"round_history": _round_history8.duplicate(true),
+		"action_counts": _action_counts8.duplicate(true),
+		"fixed_receipts": _fixed_receipts8,
+		"reconnect_count": _reconnect_count8,
+		"original_peer": _original_peer8,
+		"reconnect_peer": _reconnect_peer8,
+		"reconnect_complete": _reconnect_complete8,
+		"checkpointed": _checkpointed8,
+		"checkpoint_receipt": _checkpoint_receipt8.duplicate(true),
+		"recovery_boot": _recovery_boot8,
+		"bounds": _bounds8.duplicate(true),
+		"backend_liveness_cycles": _backend_liveness_cycles8,
+		"backend_liveness_failures": _backend_liveness_failures8,
+		"backend_liveness_last": _backend_liveness_last8.duplicate(true),
+		"canonical_state_owned": false,
+		"mvp8_predicate_verified": false,
+	}
+	return value
+
+
+func finish_interactive(_criterion: bool, error_code: String = "") -> void:
+	var bounded := _refresh_bounds8() if error_code.is_empty() else Protocol8.failure(error_code)
+	var okay := error_code.is_empty() and failures.is_empty() and _phase_success8() and bool(bounded.get("success", false))
+	var report := base_report("distributed_world_simulator.mvp8_gateway_process.v1", okay, true)
+	report["passed"] = okay
+	report["error"] = error_code if not error_code.is_empty() else ("" if okay else "MVP8_PHASE_COMPLETION_FAILED")
+	var saved := Support8.write_json(String(cfg.get("result_file", "")), report)
+	if client_boundary != null:
+		client_boundary.stop()
+	stop_native()
+	print("MVP8_GATEWAY round=%d phase=%s passed=%s" % [_round8, _phase8(), okay])
+	quit(0 if okay and saved else 1)
