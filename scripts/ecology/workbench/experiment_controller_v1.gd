@@ -134,6 +134,10 @@ func get_snapshot() -> Dictionary:
 		"population": population_hashes,
 		"feedback_hash": payload.feedback_hash,
 		"canonical_state_hash": C.digest(payload),
+		# Presentation views (P4): read-only per-organism projection from the
+		# canonical state. Deliberately OUTSIDE the canonical_state_hash payload
+		# (it is a UI projection, not simulation truth).
+		"presentation": _presentation_views(),
 	}
 
 ## Read-only metrics projection (canonical observability only).
@@ -168,11 +172,77 @@ func debug_state() -> Dictionary:
 		"tick": _tick,
 	}
 
+## Deep-copied stored manifest (input layer; immutable at runtime).
+func get_manifest() -> Dictionary:
+	return _manifest.duplicate(true)
+
 func status() -> String:
 	return _status
 
 func last_error() -> String:
 	return _error
+
+# --- presentation views (P4): read-only canonical projection -----------------
+
+## Per-organism presentation view derived read-only from canonical state:
+## {individual_id, position_mm, alive, zone_id, development_summary
+##  {module_count, age_ticks}, parent_id, origin_kind, lineage_depth}.
+## lineage_depth = max lineage depth: founders 0, children 1 + parent depth,
+## computed from the organism_life_state parent chain (origin_receipt).
+func _presentation_views() -> Array:
+	var by_id := {}
+	for entry in _population:
+		by_id[entry.state.individual_id] = entry
+	var depths := {}
+	var views: Array = []
+	for entry in _population:
+		var state: Dictionary = entry.state
+		var parent_id := ""
+		if state.origin_kind == "PARENT_TRANSFER" and not state.origin_receipt.is_empty():
+			parent_id = String(state.origin_receipt.parent_id)
+		views.append({
+			"individual_id": String(state.individual_id),
+			"position_mm": [int(state.position_mm[0]), int(state.position_mm[1]), int(state.position_mm[2])],
+			"alive": bool(state.alive),
+			"zone_id": _zone_id_at(state.position_mm),
+			"development_summary": {
+				"module_count": int(state.development.modules.size()),
+				"age_ticks": int(state.age_ticks),
+			},
+			"parent_id": parent_id,
+			"origin_kind": String(state.origin_kind),
+			"lineage_depth": _lineage_depth(String(state.individual_id), by_id, depths),
+		})
+	return views
+
+func _lineage_depth(individual_id: String, by_id: Dictionary, memo: Dictionary) -> int:
+	if memo.has(individual_id):
+		return int(memo[individual_id])
+	var depth := 0
+	var entry: Dictionary = by_id.get(individual_id, {})
+	if not entry.is_empty() \
+			and entry.state.origin_kind == "PARENT_TRANSFER" \
+			and not entry.state.origin_receipt.is_empty():
+		var parent_id := String(entry.state.origin_receipt.parent_id)
+		if by_id.has(parent_id):
+			depth = 1 + _lineage_depth(parent_id, by_id, memo)
+		else:
+			depth = 1
+	memo[individual_id] = depth
+	return depth
+
+## Zone of a canonical position using the SAME contiguous-band mapping as
+## _build_field (zone index = min(zones-1, cell_index * zones / cells)).
+func _zone_id_at(position_mm: Array) -> String:
+	if _manifest.is_empty():
+		return ""
+	var cell := _cell_index(_field, position_mm)
+	if cell < 0:
+		return ""
+	var environment: Dictionary = _manifest.environment
+	var zones: Array = environment.zones
+	var total: int = int(environment.spatial.width) * int(environment.spatial.depth)
+	return String(zones[mini(zones.size() - 1, cell * zones.size() / total)].id)
 
 # --- canonical tick: the ONLY place where state changes ---------------------
 
