@@ -121,7 +121,7 @@ func setup_control() -> bool:
 
 
 func initialize_native() -> bool:
-	var okay := setup_control()
+	var okay: bool = setup_control()
 	for authority_id in ["authority/a", "authority/b"]:
 		if not okay:
 			break
@@ -284,7 +284,7 @@ func _refresh_bounds8() -> Dictionary:
 		"input_observations": {"a": input_observations["a"].size(), "b": input_observations["b"].size()},
 		"authority": authority_bounds.duplicate(true),
 	}
-	var okay := (
+	var okay: bool = (
 		operation_fingerprints.size() <= OP_FINGERPRINT_CAP8
 		and int(ledger_report.get("tracked_count", 0)) <= LEDGER_CAP8
 		and int(backend_sequences.get("authority/a", 0)) <= RPC_CAP8
@@ -556,7 +556,7 @@ func base_report(schema: String, passed: bool, graphical: bool) -> Dictionary:
 
 func finish_interactive(_criterion: bool, error_code: String = "") -> void:
 	var bounded := _refresh_bounds8() if error_code.is_empty() else Protocol8.failure(error_code)
-	var okay := error_code.is_empty() and failures.is_empty() and _phase_success8() and bool(bounded.get("success", false))
+	var okay: bool = error_code.is_empty() and failures.is_empty() and _phase_success8() and bool(bounded.get("success", false))
 	var report := base_report("distributed_world_simulator.mvp8_gateway_process.v1", okay, true)
 	report["passed"] = okay
 	report["error"] = error_code if not error_code.is_empty() else ("" if okay else "MVP8_PHASE_COMPLETION_FAILED")
