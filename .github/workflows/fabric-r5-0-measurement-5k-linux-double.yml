@@ -115,6 +115,7 @@ jobs:
           test -z "$(git status --porcelain=v1 --untracked-files=no)"
 
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: fabric-r5-0-sample-${{ matrix.sample }}-${{ github.sha }}
           path: artifacts/fabric-r5-0/sample-${{ matrix.sample }}.*
