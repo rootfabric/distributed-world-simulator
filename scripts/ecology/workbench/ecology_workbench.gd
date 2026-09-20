@@ -9,6 +9,12 @@
 # Reads ONLY completed snapshots after a finished tick. Since P4 the
 # organism views are built from the controller snapshot's read-only
 # presentation views (debug_state is no longer a UI dependency).
+# Morphology (P6): when the Morphology toggle is ON, organism bodies are
+# projected read-only into MorphologyDescriptors (canonical development
+# modules via controller debug_state) and realized by the generic universal
+# realizer into primitive meshes. P3 sphere markers stay as the
+# LOD-minimal fallback (visible when Morphology is OFF). Presentation never
+# touches canonical state (A10.5 brief §14/§27 visual invariant).
 # Time controls (P5): simulation time (controller ticks) is strictly
 # separated from wall-clock (UI cadence); FAST only changes ticks per wall
 # interval, never dt; MAX_TICKS_PER_FRAME bounds catch-up.
@@ -25,6 +31,12 @@ const MAX_TICKS_PER_FRAME := 64
 
 const PlacementPlan = preload("res://scripts/ecology/workbench/placement_plan_v1.gd")
 const EnvironmentPatch = preload("res://scripts/ecology/workbench/environment_patch_v1.gd")
+const MorphologyDescriptor = preload("res://scripts/ecology/workbench/morphology_descriptor_v1.gd")
+const GenericRealizer = preload("res://scripts/ecology/workbench/generic_morphology_realizer_v1.gd")
+
+# Scene scale: millimetres -> metres (same convention as the P3 markers).
+const MM_PER_SCENE_UNIT := 100.0
+const MORPHOLOGY_BASE_OFFSET_Y := 0.5
 
 var controller: Object = null
 var founder_registry: Dictionary = {}
@@ -42,6 +54,11 @@ var _markers_root: Node3D = null
 var _marker_by_id: Dictionary = {}
 var _status_bar: Label = null
 var _run_button: Button = null
+# Morphology presentation state (P6): presentation-only, no biology truth.
+var morphology_enabled := true
+var morphology_lod := "HIGH"
+var _morphology_root: Node3D = null
+var _morphology_by_id: Dictionary = {}
 
 func setup(deps: Dictionary) -> void:
 	# deps: {controller, founder_registry, zone_color_provider?} — everything
@@ -319,7 +336,7 @@ func _update_status_bar(snapshot: Dictionary) -> void:
 		String(snapshot.get("status", "?")), hash_short,
 	]
 
-# --- P3-minimal organism markers (morphology is P6, NOT here) ---------------
+# --- P3 organism markers + P6 generic morphology meshes -----------------------
 
 func _sync_markers() -> void:
 	if _markers_root == null:
@@ -341,6 +358,9 @@ func _sync_markers() -> void:
 			marker.material_override = material
 			_markers_root.add_child(marker)
 			_marker_by_id[entity_id] = marker
+		# LOD-minimal fallback: markers stay hidden while morphology meshes
+		# are enabled (P6), and remain the visible representation when OFF.
+		marker.visible = not morphology_enabled
 		# Scene scale: millimetres -> metres (mm / 100).
 		var position_mm: Array = descriptor.position_mm
 		marker.position = Vector3(
@@ -355,6 +375,148 @@ func _sync_markers() -> void:
 			var stale: Node = _marker_by_id[entity_id]
 			_marker_by_id.erase(entity_id)
 			stale.queue_free()
+	_sync_morphology()
+
+## Toggle generic morphology meshes (P6). ON by default; OFF restores the
+## P3 sphere markers as the LOD-minimal fallback representation.
+func set_morphology_enabled(value: bool) -> void:
+	morphology_enabled = value
+	for entity_id in _marker_by_id:
+		var marker: MeshInstance3D = _marker_by_id[entity_id]
+		marker.visible = not value
+	if not value and _morphology_root != null:
+		for entity_id in _morphology_by_id.keys():
+			_morphology_by_id[entity_id].queue_free()
+		_morphology_by_id.clear()
+	_sync_markers()
+
+func set_morphology_lod(lod: String) -> void:
+	if GenericRealizer.LOD_DETAIL.has(String(lod).to_upper()):
+		morphology_lod = String(lod).to_upper()
+		_sync_markers()
+
+## Read-only morphology projection: canonical development modules are read
+## (never written) from the controller's completed state via debug_state;
+## descriptors + realization run entirely in presentation space.
+func _sync_morphology() -> void:
+	if _morphology_root == null or controller == null or not morphology_enabled:
+		return
+	var bodies := {}
+	if controller.has_method("debug_state"):
+		for entry in controller.debug_state().population:
+			bodies[String(entry.state.individual_id)] = {
+				"modules": entry.state.development.modules,
+				"position_mm": entry.state.position_mm,
+				"alive": bool(entry.state.alive),
+			}
+	var seen := {}
+	for view in organism_views:
+		var entity_id: String = view.canonical_entity_id
+		if not bodies.has(entity_id):
+			continue
+		var body: Dictionary = bodies[entity_id]
+		seen[entity_id] = true
+		var holder: Node3D = _morphology_by_id.get(entity_id)
+		if holder == null:
+			holder = Node3D.new()
+			holder.name = "Morphology_" + entity_id.replace("/", "_")
+			_morphology_root.add_child(holder)
+			_morphology_by_id[entity_id] = holder
+		for child in holder.get_children():
+			child.queue_free()
+		var descriptor: Dictionary = MorphologyDescriptor.compile(body.modules, entity_id, body.position_mm)
+		if descriptor.is_empty():
+			continue
+		# Stable per-entity palette seed (presentation only).
+		var manifest: Dictionary = GenericRealizer.realize(descriptor, {"lod": morphology_lod, "palette_seed": entity_id.hash()})
+		var primitives: Array = manifest.get("primitives", [])
+		for primitive in primitives:
+			var color: Array = primitive.color
+			if not body.alive:
+				color = [color[0] * 0.35, color[1] * 0.35, color[2] * 0.35, 1.0]
+			if view.selection_state == "selected":
+				color = [1.0, 0.9, 0.2, 1.0]
+			primitive.color = color
+		build_meshes(primitives, holder)
+	for entity_id in _morphology_by_id.keys():
+		if not seen.has(entity_id):
+			_morphology_by_id[entity_id].queue_free()
+			_morphology_by_id.erase(entity_id)
+
+## Thin Godot adapter (P6): universal primitive manifest -> MeshInstance3D
+## children under parent_node. Scale: mm / 100 (P3 visual convention).
+func build_meshes(primitives: Array, parent_node: Node3D) -> void:
+	for primitive in primitives:
+		var kind := String(primitive.kind)
+		var color: Array = primitive.color
+		var material := StandardMaterial3D.new()
+		material.albedo_color = Color(float(color[0]), float(color[1]), float(color[2]))
+		if float(color[3]) < 0.999:
+			material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		var inst := MeshInstance3D.new()
+		inst.name = "Primitive_" + String(primitive.module_id) + "_" + kind
+		match kind:
+			"capsule":
+				var mesh_c := CapsuleMesh.new()
+				var from := _scene_point(primitive.from_mm)
+				var to := _scene_point(primitive.to_mm)
+				var radius := float(primitive.radius_mm) / MM_PER_SCENE_UNIT
+				var axis := to - from
+				var length: float = maxf(axis.length(), 0.01)
+				mesh_c.radius = radius
+				mesh_c.height = length + 2.0 * radius
+				mesh_c.radial_segments = int(primitive.radial_segments)
+				mesh_c.rings = int(primitive.rings)
+				inst.mesh = mesh_c
+				inst.material_override = material
+				inst.transform = Transform3D(_axis_basis(axis), (from + to) * 0.5)
+			"sphere":
+				var mesh_s := SphereMesh.new()
+				mesh_s.radius = maxf(float(primitive.radius_mm) / MM_PER_SCENE_UNIT, 0.01)
+				mesh_s.height = 2.0 * mesh_s.radius
+				mesh_s.radial_segments = int(primitive.radial_segments)
+				mesh_s.rings = int(primitive.rings)
+				inst.mesh = mesh_s
+				inst.material_override = material
+				inst.position = _scene_point(primitive.center_mm)
+			"junction_plane":
+				var mesh_p := PlaneMesh.new()
+				var side_x := float(primitive.size_mm[0]) / MM_PER_SCENE_UNIT
+				var side_z := float(primitive.size_mm[1]) / MM_PER_SCENE_UNIT
+				mesh_p.size = Vector2(maxf(side_x, 0.02), maxf(side_z, 0.02))
+				mesh_p.orientation = PlaneMesh.FACE_Y
+				inst.mesh = mesh_p
+				inst.material_override = material
+				inst.position = _scene_point(primitive.center_mm)
+			_:
+				# Universal adapter fallback: any unknown kind still renders
+				# as a bounding box (never zero primitives).
+				var mesh_b := BoxMesh.new()
+				var size: Array = primitive.size_mm
+				mesh_b.size = Vector3(
+					maxf(float(size[0]) / MM_PER_SCENE_UNIT, 0.02),
+					maxf(float(size[1]) / MM_PER_SCENE_UNIT, 0.02),
+					maxf(float(size[2]) / MM_PER_SCENE_UNIT, 0.02),
+				)
+				inst.mesh = mesh_b
+				inst.material_override = material
+				inst.position = _scene_point(primitive.center_mm)
+		parent_node.add_child(inst)
+
+func _scene_point(mm: Array) -> Vector3:
+	return Vector3(
+		float(mm[0]) / MM_PER_SCENE_UNIT,
+		MORPHOLOGY_BASE_OFFSET_Y + float(mm[1]) / MM_PER_SCENE_UNIT,
+		float(mm[2]) / MM_PER_SCENE_UNIT
+	)
+
+## Basis whose local +Y aligns with the capsule axis direction.
+func _axis_basis(direction: Vector3) -> Basis:
+	var y := direction.normalized() if direction.length() > 0.0001 else Vector3.UP
+	var helper := Vector3.UP if absf(y.dot(Vector3.UP)) < 0.99 else Vector3.RIGHT
+	var x := helper.cross(y).normalized()
+	var z := x.cross(y).normalized()
+	return Basis(x, y, z)
 
 func _marker_color(descriptor: Dictionary, selected: bool) -> Color:
 	var color := Color(0.8, 0.8, 0.8)
@@ -372,6 +534,9 @@ func _marker_color(descriptor: Dictionary, selected: bool) -> Color:
 
 func _ready() -> void:
 	_markers_root = get_node_or_null("OrganismMarkers")
+	_morphology_root = Node3D.new()
+	_morphology_root.name = "OrganismMorphology"
+	add_child(_morphology_root)
 	_status_bar = get_node_or_null("WorkbenchUI/StatusBar")
 	_run_button = get_node_or_null("WorkbenchUI/ExperimentControls/Run") as Button
 	_connect_button("WorkbenchUI/ExperimentControls/Run", command_run)
@@ -393,6 +558,11 @@ func _ready() -> void:
 	if fields != null:
 		for field in EnvironmentPatch.EDITABLE_FIELDS:
 			fields.add_item(field)
+	# Morphology toggle (P6): ON by default; OFF shows the P3 marker fallback.
+	var morphology_toggle := get_node_or_null("WorkbenchUI/ExperimentControls/Morphology") as CheckBox
+	if morphology_toggle != null:
+		morphology_toggle.button_pressed = morphology_enabled
+		morphology_toggle.toggled.connect(set_morphology_enabled)
 
 # --- Button handlers (read spinner/option values, then command) -------------
 

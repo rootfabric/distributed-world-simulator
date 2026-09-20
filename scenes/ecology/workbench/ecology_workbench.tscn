@@ -69,6 +69,10 @@ text = "RUN TO COND"
 [node name="Reset" type="Button" parent="WorkbenchUI/ExperimentControls"]
 text = "RESET"
 
+[node name="Morphology" type="CheckBox" parent="WorkbenchUI/ExperimentControls"]
+button_pressed = true
+text = "MORPHOLOGY"
+
 [node name="PlacementControls" type="HBoxContainer" parent="WorkbenchUI"]
 anchors_preset = 0
 offset_left = 16.0
