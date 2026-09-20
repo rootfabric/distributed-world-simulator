@@ -1,0 +1,133 @@
+name: FABRIC R5.0 Fresh Independent Verifier R1
+
+on:
+  push:
+    branches: [verify/fabric-r5-0-fresh-independent-verifier-r1]
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: fabric-r5-0-fresh-independent-verifier-r1
+  cancel-in-progress: false
+
+env:
+  SUBJECT_HEAD: 5e4f2edfd48be643493d0abbd50b063980326901
+  SUBJECT_TREE: ae153088da30456cbcdb1dfc0f585d6a946b7d60
+  EXPECTED_DETERMINISTIC_HASH: 1c549d536b4077c686dea9e25ca5e08935afd240f3b070ca49da153b7bee883b
+
+jobs:
+  fresh-independent-verifier:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Bind exact R5.0 subject and verifier-only diff
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$(git rev-parse "$SUBJECT_HEAD^{tree}")" = "$SUBJECT_TREE"
+          test "$(git merge-base HEAD "$SUBJECT_HEAD")" = "$SUBJECT_HEAD"
+          expected="$(printf '%s\n'             '.github/workflows/fabric-r5-0-fresh-independent-verifier-r1.yml'             'docs/research/FABRIC_R5_0_FRESH_INDEPENDENT_VERIFIER_R1_RU.md' | sort)"
+          actual="$(git diff --name-only "$SUBJECT_HEAD"...HEAD | sort)"
+          test "$actual" = "$expected"
+          git diff --check "$SUBJECT_HEAD"...HEAD
+          echo '*.gd.uid' >> .git/info/exclude
+          printf 'SUBJECT_HEAD=%s\nSUBJECT_TREE=%s\nVERIFIER_HEAD=%s\nVERIFIER_TREE=%s\n'             "$SUBJECT_HEAD" "$SUBJECT_TREE" "$(git rev-parse HEAD)" "$(git rev-parse 'HEAD^{tree}')"             | tee r5-0-verifier-identity.txt
+
+      - name: Verify durable subject evidence
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          python3 - <<'PY'
+          import json
+          p='validation/fabric-r5-0-measurement-5k-exact-evidence.v1.json'
+          x=json.load(open(p))
+          assert x['status']=='EXACT_BASELINE_PASS'
+          assert x['deterministic']['canonical_parts']==5000
+          assert x['deterministic']['active_full_peak']==20
+          assert x['deterministic']['local_reconstructed_parts']==20
+          assert x['deterministic']['rebake_local_validations']==20
+          assert x['deterministic']['global_physical_rebuilds']==0
+          assert x['deterministic']['duplicate_ownership_count']==0
+          assert x['deterministic']['deterministic_hash']=='1c549d536b4077c686dea9e25ca5e08935afd240f3b070ca49da153b7bee883b'
+          assert x['policy']['timings_are_acceptance_thresholds'] is False
+          assert x['policy']['rss_is_acceptance_threshold'] is False
+          print('R5_0_DURABLE_EVIDENCE_BINDING=PASS')
+          PY
+
+      - name: Download canonical Linux double
+        uses: actions/download-artifact@v4
+        with:
+          name: p7-repair-engine-34117353691
+          run-id: 34117353691
+          repository: rootfabric/distributed-world-simulator
+          github-token: ${{ github.token }
+          path: ${{ runner.temp }}/r5-verifier-engine
+
+      - name: Verify canonical Linux double
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          bin="$RUNNER_TEMP/r5-verifier-engine/godot"
+          chmod u+x "$bin"
+          version="$("$bin" --version | head -n1 | tr -d '\r')"
+          sha="$(sha256sum "$bin" | awk '{print $1}')"
+          test "$version" = '4.7.1.stable.double.custom_build.a13da4feb'
+          test "$sha" = 'bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7'
+          echo "GODOT_BIN=$bin" >> "$GITHUB_ENV"
+          printf 'GODOT_VERSION=%s\nGODOT_SHA256=%s\n' "$version" "$sha" | tee r5-0-verifier-godot.txt
+
+      - name: Fresh import
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          rm -rf .godot
+          "$GODOT_BIN" --headless --editor --path . --log-file r5-0-verifier-import.log --import
+          ! grep -Eiq 'SCRIPT ERROR|Parse Error|Invalid call|Invalid access|ERROR:' r5-0-verifier-import.log
+
+      - name: Run three fresh verifier samples
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          mkdir -p artifacts/fabric-r5-0-verifier
+          for i in 1 2 3; do
+            log="artifacts/fabric-r5-0-verifier/sample-$i.log"
+            timing="artifacts/fabric-r5-0-verifier/sample-$i.time.txt"
+            /usr/bin/time -v -o "$timing" bash RUN_FABRIC_R5_0_TESTS.sh 2>&1 | tee "$log"
+            grep -F 'FABRIC R5.0 MEASUREMENT 5K: PASS' "$log"
+            grep -F "FABRIC_R5_0_DETERMINISTIC_HASH=$EXPECTED_DETERMINISTIC_HASH" "$log"
+          done
+
+      - name: Aggregate verifier evidence
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          python3 scripts/research/fabric_bake0/collect_r5_0_measurement.py             --log artifacts/fabric-r5-0-verifier/sample-1.log --time artifacts/fabric-r5-0-verifier/sample-1.time.txt             --log artifacts/fabric-r5-0-verifier/sample-2.log --time artifacts/fabric-r5-0-verifier/sample-2.time.txt             --log artifacts/fabric-r5-0-verifier/sample-3.log --time artifacts/fabric-r5-0-verifier/sample-3.time.txt             --out artifacts/fabric-r5-0-verifier/evidence.json             | tee artifacts/fabric-r5-0-verifier/collector.log
+          grep -F "FABRIC_R5_0_DETERMINISTIC_HASH=$EXPECTED_DETERMINISTIC_HASH" artifacts/fabric-r5-0-verifier/collector.log
+          grep -F 'FABRIC_R5_0_EVIDENCE=PASS' artifacts/fabric-r5-0-verifier/collector.log
+
+      - name: Seal verifier evidence
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          sha256sum r5-0-verifier-identity.txt r5-0-verifier-godot.txt r5-0-verifier-import.log             artifacts/fabric-r5-0-verifier/sample-*.log             artifacts/fabric-r5-0-verifier/sample-*.time.txt             artifacts/fabric-r5-0-verifier/evidence.json             artifacts/fabric-r5-0-verifier/collector.log             > artifacts/fabric-r5-0-verifier/evidence.sha256
+          git diff --check
+          test -z "$(git status --porcelain=v1 --untracked-files=no)"
+          echo 'FABRIC_R5_0_FRESH_INDEPENDENT_VERIFIER_R1=PASS'
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fabric-r5-0-verifier-r1-${{ github.sha }
+          path: |
+            r5-0-verifier-identity.txt
+            r5-0-verifier-godot.txt
+            r5-0-verifier-import.log
+            artifacts/fabric-r5-0-verifier/**
+          if-no-files-found: error
+          retention-days: 90
