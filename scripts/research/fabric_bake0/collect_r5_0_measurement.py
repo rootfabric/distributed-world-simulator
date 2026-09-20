@@ -136,7 +136,7 @@ def main() -> int:
             raise ValueError("R5_0_GLOBAL_REBUILD_PRESENT")
         if counters.get("duplicate_ownership_count") != 0:
             raise ValueError("R5_0_DUPLICATE_OWNER_PRESENT")
-        if counters.get("boundary_execute_calls") != 1024:
+        if counters.get("boundary_execute_calls") != 128:
             raise ValueError("R5_0_BOUNDARY_CALL_COUNT_DRIFT")
         deterministic_hashes.add(str(baseline["deterministic_hash"]))
         deterministic_payload_hashes.add(sha256_value(baseline["deterministic"]))
@@ -179,7 +179,7 @@ def main() -> int:
             "rebake_local_validations": 20,
             "global_physical_rebuilds": 0,
             "duplicate_ownership_count": 0,
-            "boundary_execute_calls": 1024,
+            "boundary_execute_calls": 128,
         },
         "observations": {
             "stage_summary": stage_summary,
