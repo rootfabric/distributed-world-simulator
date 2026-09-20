@@ -68,7 +68,20 @@ def assert_act0_source_fence(root: Path, subject: str = "HEAD") -> None:
     for path in (H + "executions/E2026-08-30-V0-P7-R1", H + "acceptance"):
         if diff(BASE, head, path):
             raise ValueError("ACT0_P7_ACCEPTED_EVIDENCE_CHANGED")
-    if diff(BASE, head, "scenes") != [f"A\t{A7_SCENE_ADDITION}"]:
+    # Historical ACT0 freezes the scenes that existed in its own accepted
+    # epoch; it must not reserve the entire future "scenes/" namespace.
+    # Preserve the exact historical delta and the accepted A7 scene bytes,
+    # while allowing later projects to add new scene paths additively.
+    if diff(BASE, HISTORICAL_MAIN, "scenes") != [f"A\t{A7_SCENE_ADDITION}"]:
+        raise ValueError("ACT0_HISTORICAL_SCENE_DELTA_CHANGED")
+    if diff(HISTORICAL_MAIN, head, A7_SCENE_ADDITION):
+        raise ValueError("ACT0_SCENE_FENCE_CHANGED")
+    for row in diff(BASE, head, "scenes"):
+        if row == f"A\t{A7_SCENE_ADDITION}":
+            continue
+        status, _path = row.split("\t", 1)
+        if status == "A":
+            continue
         raise ValueError("ACT0_SCENE_FENCE_CHANGED")
 
     changes = diff(BASE, head, *PROTECTED_RUNTIME, raw=True)
@@ -238,17 +251,27 @@ class MVPAct0Tests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, "ACT0_UNAUTHORIZED_RUNTIME_DELTA"):
                     assert_act0_source_fence(root)
 
-    def test_journal_approval_cannot_hide_p7_or_scene_mutations(self):
+    def test_journal_approval_cannot_hide_p7_or_historical_scene_mutations(self):
+        a7_scene = frozen_git(ROOT, "show", f"{HISTORICAL_MAIN}:{A7_SCENE_ADDITION}")
         cases = {
             "acceptance": {H + "acceptance/unapproved.json": b"{}\n"},
             "p7_execution": {H + "executions/E2026-08-30-V0-P7-R1/unapproved.json": b"{}\n"},
-            "new_scene": {"scenes/unapproved.tscn": b"[gd_scene format=3]\n"},
+            "accepted_a7_scene_changed": {A7_SCENE_ADDITION: a7_scene + b"\n; unexpected mutation\n"},
         }
         for name, changes in cases.items():
             with self.subTest(name=name), self.fixture(adopted=True) as root:
                 self.source_fault(root, changes)
                 with self.assertRaisesRegex(ValueError, "ACT0_(P7_ACCEPTED_EVIDENCE|SCENE_FENCE)_CHANGED"):
                     assert_act0_source_fence(root)
+
+    def test_act0_scene_fence_allows_future_additive_scene_paths(self):
+        with self.fixture(adopted=True) as root:
+            self.source_fault(root, {
+                "scenes/labs/ecology/future_additive_scene.tscn": b"[gd_scene format=3]\n",
+            })
+            # A historical checkpoint must not reserve an unrelated namespace
+            # forever; an additive future scene is outside ACT0 ownership.
+            assert_act0_source_fence(root)
 
     def test_journal_requires_immutable_resolved_authorization(self):
         ha_path = AUTH + "/approved-ha.json"
