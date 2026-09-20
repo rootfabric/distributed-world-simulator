@@ -205,6 +205,7 @@ func _initialize() -> void:
 	var damaged := compile_graph(damaged_graph, 1)
 	end_stage(m, "damage_recompile")
 	check(damaged.success, "damaged pack recompile", damaged)
+	var projected: Dictionary = U.failure("BATTERY_STATE_PROJECTION_NOT_ATTEMPTED")
 	if damaged.success:
 		var affected := 5
 		check(int(damaged.details.descriptor.active_cell_count) == 95, "one disabled cell")
@@ -215,7 +216,7 @@ func _initialize() -> void:
 		var damaged_live := Fixture.live_from(damaged.details.artifact)
 		check(not runtime.execute(damaged_live, hot_state, 5.0, 0.1, 298.15).success, "old capsule rejects damaged graph")
 		begin_stage(m, "damage_state_projection")
-		var projected := StateProjector.project_capacity_loss(descriptor, damaged.details.descriptor, hot_state)
+		projected = StateProjector.project_capacity_loss(descriptor, damaged.details.descriptor, hot_state)
 		end_stage(m, "damage_state_projection")
 		check(projected.success, "damage state projection", projected)
 		var old_soc := StateProjector.soc_by_group(descriptor, hot_state)
@@ -232,11 +233,15 @@ func _initialize() -> void:
 					check(absf(float(projected.details.detached_charge_c_by_group[group_index])) <= 1.0e-12, "unaffected group has no detached charge", {"group": group_index})
 		var damaged_runtime = Runtime.new()
 		check(damaged_runtime.prepare(damaged.details.capsule, damaged.details.artifact, damaged.details.descriptor, damaged_live).success, "damaged capsule prepare")
-		var damaged_state := projected.details.next_state if projected.success else {}
+		var damaged_state: Dictionary = projected.details.next_state if projected.success else {}
 		var damaged_reference_plan := FullReference.prepare(damaged_graph)
 		check(damaged_reference_plan.success, "damaged detailed reference prepare")
-		var damaged_fast := damaged_runtime.execute(damaged_live, damaged_state, 5.0, 0.1, 298.15) if not damaged_state.is_empty() else U.failure("no projected state")
-		var damaged_full := FullReference.execute(damaged_reference_plan.details, damaged_state, 5.0, 0.1, 298.15) if damaged_reference_plan.success and not damaged_state.is_empty() else U.failure("no damaged reference")
+		var damaged_fast: Dictionary = U.failure("BATTERY_DAMAGED_FAST_NOT_EXECUTED")
+		var damaged_full: Dictionary = U.failure("BATTERY_DAMAGED_FULL_NOT_EXECUTED")
+		if not damaged_state.is_empty():
+			damaged_fast = damaged_runtime.execute(damaged_live, damaged_state, 5.0, 0.1, 298.15)
+			if damaged_reference_plan.success:
+				damaged_full = FullReference.execute(damaged_reference_plan.details, damaged_state, 5.0, 0.1, 298.15)
 		check(damaged_fast.success and damaged_full.success, "damaged projected state executes")
 		if damaged_fast.success and damaged_full.success:
 			check(absf(float(damaged_fast.details.terminal_voltage_v) - float(damaged_full.details.terminal_voltage_v)) <= 1.0e-9, "damaged projected voltage parity")
