@@ -1,5 +1,7 @@
 # FABRIC R5.1 — Quantitative Scale 5k / 20k / 100k
 
+**Статус:** EXACT SCALE PASS / fresh review + verifier pending.
+
 ## Цель
 
 R5.1 использует закрытый R5.0 measurement contract и проверяет количественный масштаб, не переобъявляя старый COMPLEX3 как новый результат.
@@ -112,3 +114,59 @@ prefix reads = 80
 FULL peak = 20
 global rebuilds = 0
 ```
+
+
+## Exact Repair R1 result — run 35511390359
+
+```text
+SUBJECT_HEAD = 2c013ec53e99fd1b7a6a14a83a2154815a160837
+SUBJECT_TREE = 9c46f941d1e44012eb7fcaaa0e58e4ca55951ce3
+run = 35511390359
+samples = 9/9 PASS
+aggregate = PASS
+artifact = 10605926786
+digest = sha256:b0a3b8f2c63b0b6ddb0d61546868ad223ef53b001636823464d917461787f206
+scale hash = dfbb3aeea6b9c121b3fb46d032cddfdce7a15015ae0dd250157fc82f6758decc
+evidence hash = 5de8130785bb3af010d13f5825947aef7970a8ba3a557e3eee83f9b0d0774bc3
+```
+
+### Главный результат
+
+Рост canonical N:
+
+```text
+5k → 100k = ×20
+```
+
+O(N) стадии действительно растут:
+
+```text
+source create        ≈ ×18.70
+full rehash          ≈ ×18.72
+range-index build    ≈ ×18.74
+parent aggregate     ≈ ×16.86
+explicit global      ≈ ×17.16
+```
+
+Но online local physical path после Repair R1 остаётся практически плоским:
+
+```text
+range query          ≈ ×0.87
+local UNBAKE 20      ≈ ×0.99
+local ReBAKE         ≈ ×1.01
+64-call BAKE loop    ≈ ×0.90
+```
+
+При всех N:
+
+```text
+FULL peak = 20
+local reconstructed = 20
+local rebake validations = 20
+online residual full scans = 0
+range queries = 4
+global physical rebuilds = 0
+duplicate ownership = 0
+```
+
+Это исправляет blocker первого run `35510772849`, где local UNBAKE и ReBAKE скрыто росли с N из-за повторных residual scans.
