@@ -39,6 +39,7 @@ var _checkpointed8 := false
 var _checkpoint_receipt8: Dictionary = {}
 var _restart_file8 := ""
 var _bounds8: Dictionary = {}
+var _last_dig8: Dictionary = {}
 var _round_history8: Array = []
 var _backend_liveness_cycles8 := 0
 var _backend_liveness_failures8 := 0
@@ -240,6 +241,13 @@ func _dig8(round_index: int) -> Dictionary:
 	if dig_actor.is_empty():
 		return Protocol8.failure("MVP8_DIG_OWNER_OBSERVER_REQUIRED")
 	var operation := "operation/mvp4/%s/mvp8-dig/%d" % [dig_actor, round_index]
+	var player_lookup: Dictionary = _lookup8(dig_actor)
+	_last_dig8 = {
+		"actor": dig_actor,
+		"round": round_index,
+		"player": Dictionary(player_lookup.get("details", {}).get("player", {})).duplicate(true),
+		"attempts": [],
+	}
 	var prepared: Dictionary = {}
 	# The inherited MVP4 story already excavates one surface opening. Probe a
 	# bounded downward hemisphere so repeated workload digs find another native
@@ -257,6 +265,12 @@ func _dig8(round_index: int) -> Dictionary:
 		])
 	for direction in directions:
 		prepared = _owner4(dig_actor, {"kind": "MVP4_PREPARE", "operation_id": operation, "direction": direction})
+		_last_dig8["attempts"].append({
+			"direction": Array(direction).duplicate(),
+			"success": bool(prepared.get("success", false)),
+			"error_code": String(prepared.get("error_code", "")),
+			"hit_position_m": Dictionary(prepared.get("details", {})).get("hit_position_m", []),
+		})
 		if bool(prepared.get("success", false)):
 			break
 	if not bool(prepared.get("success", false)):
