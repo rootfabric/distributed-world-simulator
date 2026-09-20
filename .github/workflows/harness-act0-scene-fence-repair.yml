@@ -22,7 +22,7 @@ jobs:
           python-version: "3.12"
       - name: Install pinned Harness dependencies
         run: |
-          python -m pip install --disable-pip-version-check -r requirements-harness.lock
+          python -m pip install --disable-pip-version-check -r scripts/harness/requirements.txt
       - name: Run focused ACT0 suite
         env:
           PYTHONUTF8: "1"
