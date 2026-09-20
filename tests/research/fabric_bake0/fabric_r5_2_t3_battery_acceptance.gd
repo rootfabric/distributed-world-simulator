@@ -40,6 +40,12 @@ func max_charge_error(a: Array, b: Array) -> float:
 		out = maxf(out, absf(float(a[index]) - float(b[index])))
 	return out
 
+func sum_numbers(values: Array) -> float:
+	var total := 0.0
+	for value in values:
+		total += float(value)
+	return total
+
 func compile_graph(graph: Dictionary, revision: int = 0) -> Dictionary:
 	return Compiler.compile(graph, Fixture.build_request(graph, revision), "capsule/r5-t3-battery")
 
@@ -256,6 +262,24 @@ func _initialize() -> void:
 		"source_operations": int(descriptor.source_operation_count),
 		"compiled_operations": int(descriptor.compiled_operation_count),
 		"runtime_source_cell_traversals": 0,
+		"nominal_voltage_v": float(descriptor.nominal_voltage_v),
+		"full_voltage_v": float(descriptor.full_voltage_v),
+		"empty_voltage_v": float(descriptor.empty_voltage_v),
+		"total_mass_kg": float(descriptor.total_mass_kg),
+		"full_chemical_energy_j": float(descriptor.full_chemical_energy_j),
+		"full_specific_energy_wh_kg": float(descriptor.full_chemical_energy_j) / 3600.0 / float(descriptor.total_mass_kg),
+		"max_continuous_current_a": float(descriptor.max_continuous_current_a),
+		"pack_resistance_ref_ohm": sum_numbers(descriptor.group_resistance_ref_ohm),
+		"group0_capacity_c": float(descriptor.group_capacity_c[0]),
+		"thermal_capacity_j_k": float(descriptor.thermal_capacity_j_k),
+		"thermal_conductance_w_k": float(descriptor.thermal_conductance_w_k),
+		"nmc_specific_energy_wh_kg": float(nmc.details.descriptor.full_chemical_energy_j) / 3600.0 / float(nmc.details.descriptor.total_mass_kg) if nmc.success else -1.0,
+		"lower_quality_group0_capacity_c": float(lower_quality.details.descriptor.group_capacity_c[0]) if lower_quality.success else -1.0,
+		"lower_quality_group0_resistance_ohm": float(lower_quality.details.descriptor.group_resistance_ref_ohm[0]) if lower_quality.success else -1.0,
+		"lower_quality_max_current_a": float(lower_quality.details.descriptor.max_continuous_current_a) if lower_quality.success else -1.0,
+		"damaged_group5_capacity_c": float(damaged.details.descriptor.group_capacity_c[5]) if damaged.success else -1.0,
+		"damaged_group5_resistance_ohm": float(damaged.details.descriptor.group_resistance_ref_ohm[5]) if damaged.success else -1.0,
+		"damaged_max_current_a": float(damaged.details.descriptor.max_continuous_current_a) if damaged.success else -1.0,
 		"sequence_ticks": SEQUENCE_TICKS,
 		"maximum_voltage_error": max_voltage_error,
 		"maximum_heat_error": max_heat_error,
