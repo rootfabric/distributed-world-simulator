@@ -238,7 +238,18 @@ func _dig8(round_index: int) -> Dictionary:
 		return Protocol8.failure("MVP8_DIG_OWNER_OBSERVER_REQUIRED")
 	var operation := "operation/mvp4/%s/mvp8-dig/%d" % [dig_actor, round_index]
 	var prepared: Dictionary = {}
-	for direction in [[0.0, -1.0, 0.0], [0.6, -0.8, 0.0], [-0.6, -0.8, 0.0], [0.0, -0.8, 0.6]]:
+	# The inherited MVP4 story already excavates directly below the initial
+	# player position. Probe a bounded normalized cone so later workload digs can
+	# find untouched canonical terrain without changing the Matter aim contract.
+	var diagonal := 0.565685424949238
+	var directions := [
+		[0.0, -1.0, 0.0],
+		[0.8, -0.6, 0.0], [-0.8, -0.6, 0.0],
+		[0.0, -0.6, 0.8], [0.0, -0.6, -0.8],
+		[diagonal, -0.6, diagonal], [diagonal, -0.6, -diagonal],
+		[-diagonal, -0.6, diagonal], [-diagonal, -0.6, -diagonal],
+	]
+	for direction in directions:
 		prepared = _owner4(dig_actor, {"kind": "MVP4_PREPARE", "operation_id": operation, "direction": direction})
 		if bool(prepared.get("success", false)):
 			break
