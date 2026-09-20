@@ -104,3 +104,61 @@ offset_top = 96.0
 offset_right = 900.0
 offset_bottom = 120.0
 text = "not bound"
+
+[node name="InspectorControls" type="HBoxContainer" parent="WorkbenchUI"]
+anchors_preset = 0
+offset_left = 16.0
+offset_top = 124.0
+offset_right = 1400.0
+offset_bottom = 152.0
+
+[node name="SelectedLabel" type="Label" parent="WorkbenchUI/InspectorControls"]
+text = "INSPECTOR: select an organism"
+
+[node name="VariantOperator" type="OptionButton" parent="WorkbenchUI/InspectorControls"]
+
+[node name="VariantSeed" type="SpinBox" parent="WorkbenchUI/InspectorControls"]
+min_value = 0.0
+max_value = 9007199254740991.0
+value = 7.0
+
+[node name="CreateVariant" type="Button" parent="WorkbenchUI/InspectorControls"]
+text = "CREATE VARIANT"
+
+[node name="InspectorStatus" type="Label" parent="WorkbenchUI/InspectorControls"]
+text = ""
+
+[node name="BranchControls" type="HBoxContainer" parent="WorkbenchUI"]
+anchors_preset = 0
+offset_left = 16.0
+offset_top = 156.0
+offset_right = 1400.0
+offset_bottom = 184.0
+
+[node name="Checkpoint" type="Button" parent="WorkbenchUI/BranchControls"]
+text = "CHECKPOINT"
+
+[node name="Restore" type="Button" parent="WorkbenchUI/BranchControls"]
+text = "RESTORE"
+
+[node name="Fork" type="Button" parent="WorkbenchUI/BranchControls"]
+text = "FORK (ENV PATCH)"
+
+[node name="ShowBranches" type="Button" parent="WorkbenchUI/BranchControls"]
+text = "BRANCHES"
+
+[node name="BranchStatus" type="Label" parent="WorkbenchUI/BranchControls"]
+text = "no branch"
+
+[node name="InspectorPanel" type="VBoxContainer" parent="WorkbenchUI"]
+anchors_preset = 0
+offset_left = 16.0
+offset_top = 188.0
+offset_right = 700.0
+offset_bottom = 420.0
+
+[node name="InspectorTitle" type="Label" parent="WorkbenchUI/InspectorPanel"]
+text = "INSPECTOR"
+
+[node name="InspectorContent" type="Label" parent="WorkbenchUI/InspectorPanel"]
+text = ""

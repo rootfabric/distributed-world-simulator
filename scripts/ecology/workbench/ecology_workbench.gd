@@ -33,6 +33,10 @@ const PlacementPlan = preload("res://scripts/ecology/workbench/placement_plan_v1
 const EnvironmentPatch = preload("res://scripts/ecology/workbench/environment_patch_v1.gd")
 const MorphologyDescriptor = preload("res://scripts/ecology/workbench/morphology_descriptor_v1.gd")
 const GenericRealizer = preload("res://scripts/ecology/workbench/generic_morphology_realizer_v1.gd")
+const OrganismInspector = preload("res://scripts/ecology/workbench/organism_inspector_v1.gd")
+const GenomeEditor = preload("res://scripts/ecology/workbench/genome_editor_v1.gd")
+const ExperimentBranch = preload("res://scripts/ecology/workbench/experiment_branch_v1.gd")
+const MutationProxy = preload("res://scripts/research/ecology/v2/genome_mutation_v1.gd")
 
 # Scene scale: millimetres -> metres (same convention as the P3 markers).
 const MM_PER_SCENE_UNIT := 100.0
@@ -59,6 +63,11 @@ var morphology_enabled := true
 var morphology_lod := "HIGH"
 var _morphology_root: Node3D = null
 var _morphology_by_id: Dictionary = {}
+# Inspector / editor / branch state (P7+P8): presentation + orchestration
+# commands only; no biology truth ever lives in the workbench.
+var _selected_entity := ""
+var _last_checkpoint: Dictionary = {}
+var branch_manager: Object = null
 
 func setup(deps: Dictionary) -> void:
 	# deps: {controller, founder_registry, zone_color_provider?} — everything
@@ -67,6 +76,8 @@ func setup(deps: Dictionary) -> void:
 		bind_controller(deps.controller)
 	if deps.has("founder_registry") and deps.founder_registry is Dictionary:
 		founder_registry = deps.founder_registry
+		if branch_manager != null:
+			branch_manager.set_founder_registry(founder_registry)
 	if deps.has("zone_color_provider") and deps.zone_color_provider is Callable:
 		zone_color_provider = deps.zone_color_provider
 
@@ -76,6 +87,11 @@ func bind_controller(new_controller: Object) -> void:
 	pending_target = {}
 	_elapsed = 0.0
 	_wall_elapsed = 0.0
+	_last_checkpoint = {}
+	branch_manager = ExperimentBranch.new()
+	var branch_setup: Dictionary = branch_manager.setup(new_controller, founder_registry)
+	if not bool(branch_setup.get("success", false)):
+		push_error("ECO_WORKBENCH branch setup failed: " + str(branch_setup))
 	_refresh_from_controller(true)
 
 # --- Commands (versioned UI actions -> controller, never direct mutation) ---
@@ -199,8 +215,134 @@ func command_apply_environment_patch(zone_id: String, field: String, value: int)
 func select_entity(entity_id: String) -> void:
 	for view in organism_views:
 		view.selection_state = "selected" if view.canonical_entity_id == entity_id else "none"
+	_selected_entity = entity_id
 	selection_changed.emit(entity_id)
 	_sync_markers()
+
+# --- Inspector / genome editor (P7) -------------------------------------------
+
+## Read-only inspection chain for the currently selected organism, shown in
+## the Inspector panel. Opens on every selection_changed.
+func _on_selection_changed_inspector(entity_id: String) -> void:
+	_render_inspector()
+
+func _render_inspector() -> void:
+	var selected := get_node_or_null("WorkbenchUI/InspectorControls/SelectedLabel") as Label
+	var content := get_node_or_null("WorkbenchUI/InspectorPanel/InspectorContent") as Label
+	if selected == null or content == null:
+		return
+	if controller == null or _selected_entity.is_empty():
+		selected.text = "INSPECTOR: select an organism"
+		content.text = ""
+		return
+	selected.text = "INSPECTOR: " + _selected_entity
+	var inspection: Dictionary = OrganismInspector.compile(controller, _selected_entity)
+	if not bool(inspection.get("success", false)):
+		content.text = "inspector error: " + str(inspection.get("error", "?"))
+		return
+	content.text = OrganismInspector.render_text(inspection.view)
+
+## CREATE VARIANT: propose a NEW validated genome variant for the selected
+## organism through the canonical A3 editor; accepted variants are registered
+## as session founders (never applied to the live population).
+func command_create_variant() -> bool:
+	if controller == null or _selected_entity.is_empty():
+		return false
+	var genome := OrganismInspector.genome_of(controller, _selected_entity)
+	if genome.is_empty():
+		_set_inspector_status("VARIANT: organism not found")
+		return false
+	var operator := "small"
+	var operator_option := get_node_or_null("WorkbenchUI/InspectorControls/VariantOperator") as OptionButton
+	if operator_option != null and operator_option.item_count > 0:
+		operator = String(operator_option.get_item_text(maxi(0, operator_option.selected)))
+	var seed := 7
+	var seed_spin := get_node_or_null("WorkbenchUI/InspectorControls/VariantSeed") as SpinBox
+	if seed_spin != null:
+		seed = int(seed_spin.value)
+	var proposed: Dictionary = GenomeEditor.propose_variant(genome, {"kind": "mutate", "operator": operator, "seed": seed})
+	if not bool(proposed.get("success", false)):
+		# Validation error is surfaced; nothing is applied.
+		_set_inspector_status("VARIANT REJECTED: " + str(proposed.get("error", "?")))
+		return false
+	var hash := GenomeEditor.register_founder(founder_registry, proposed.genome)
+	if branch_manager != null:
+		branch_manager.set_founder_registry(founder_registry)
+	_set_inspector_status("VARIANT OK founder hash " + hash.substr(0, 10))
+	return true
+
+func _set_inspector_status(text: String) -> void:
+	var status := get_node_or_null("WorkbenchUI/InspectorControls/InspectorStatus") as Label
+	if status != null:
+		status.text = text
+
+# --- Checkpoint / restore / fork (P8) ------------------------------------------
+
+func command_checkpoint() -> bool:
+	if branch_manager == null:
+		return false
+	var result: Dictionary = branch_manager.create_checkpoint("", {"source": "workbench"}, {})
+	if not bool(result.get("success", false)):
+		_set_branch_status("CHECKPOINT FAILED: " + str(result.get("error", "?")))
+		return false
+	_last_checkpoint = result.checkpoint
+	_set_branch_status("CHECKPOINT @" + str(int(_last_checkpoint.tick)) + " id " + String(_last_checkpoint.checkpoint_id).substr(0, 8))
+	return true
+
+func command_restore() -> bool:
+	if branch_manager == null or _last_checkpoint.is_empty():
+		_set_branch_status("RESTORE: no checkpoint")
+		return false
+	running = false
+	pending_target = {}
+	var result: Dictionary = branch_manager.restore(_last_checkpoint)
+	if not bool(result.get("success", false)):
+		_set_branch_status("RESTORE FAILED: " + str(result.get("error", "?")))
+		return false
+	_set_branch_status("RESTORED to tick " + str(int(result.tick)))
+	_refresh_from_controller(true)
+	return true
+
+## FORK: new branch from the last checkpoint; when an env-zone field is
+## selected, the optional environment patch is applied to the new branch.
+func command_fork() -> bool:
+	if branch_manager == null or _last_checkpoint.is_empty():
+		_set_branch_status("FORK: no checkpoint")
+		return false
+	running = false
+	pending_target = {}
+	var patch := _selected_env_patch()
+	var result: Dictionary = branch_manager.fork(_last_checkpoint, patch, "fork/ui")
+	if not bool(result.get("success", false)):
+		_set_branch_status("FORK FAILED: " + str(result.get("error", "?")))
+		return false
+	bind_controller(result.controller)
+	_set_branch_status("FORKED branch " + String(result.branch_id).substr(0, 8))
+	return true
+
+func command_show_branches() -> void:
+	if branch_manager == null:
+		return
+	_set_branch_status(" | ".join(PackedStringArray(branch_manager.branch_tree_text().split("\n"))))
+
+func _selected_env_patch() -> Dictionary:
+	var zone_option := get_node_or_null("WorkbenchUI/PlacementControls/EnvZone") as OptionButton
+	var field_option := get_node_or_null("WorkbenchUI/PlacementControls/EnvField") as OptionButton
+	var spin := get_node_or_null("WorkbenchUI/PlacementControls/EnvValue") as SpinBox
+	if zone_option == null or field_option == null or spin == null:
+		return {}
+	if zone_option.item_count == 0 or field_option.item_count == 0:
+		return {}
+	return EnvironmentPatch.patch(
+		String(zone_option.get_item_text(maxi(0, zone_option.selected))),
+		String(field_option.get_item_text(maxi(0, field_option.selected))),
+		int(spin.value)
+	)
+
+func _set_branch_status(text: String) -> void:
+	var status := get_node_or_null("WorkbenchUI/BranchControls/BranchStatus") as Label
+	if status != null:
+		status.text = text
 
 # --- Tick-driven update with wall-clock budget ------------------------------
 
@@ -563,6 +705,19 @@ func _ready() -> void:
 	if morphology_toggle != null:
 		morphology_toggle.button_pressed = morphology_enabled
 		morphology_toggle.toggled.connect(set_morphology_enabled)
+	# Inspector panel (P7): opens on selection_changed.
+	selection_changed.connect(_on_selection_changed_inspector)
+	# Genome editor (P7): mutate operators from the canonical OPERATORS list.
+	var operators := get_node_or_null("WorkbenchUI/InspectorControls/VariantOperator") as OptionButton
+	if operators != null:
+		for operator in MutationProxy.OPERATORS:
+			operators.add_item(operator)
+	_connect_button("WorkbenchUI/InspectorControls/CreateVariant", command_create_variant)
+	# Checkpoint / restore / fork / branch tree (P8).
+	_connect_button("WorkbenchUI/BranchControls/Checkpoint", command_checkpoint)
+	_connect_button("WorkbenchUI/BranchControls/Restore", command_restore)
+	_connect_button("WorkbenchUI/BranchControls/Fork", command_fork)
+	_connect_button("WorkbenchUI/BranchControls/ShowBranches", Callable(self, "command_show_branches"))
 
 # --- Button handlers (read spinner/option values, then command) -------------
 
