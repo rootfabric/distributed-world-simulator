@@ -1,0 +1,85 @@
+name: ECO ARCH2 A10.5 Repair Exact
+
+on:
+  pull_request:
+    paths:
+      - "scripts/research/ecology/v2/**"
+      - "scripts/ecology/workbench/**"
+      - "scripts/labs/ecology/**"
+      - "scenes/ecology/workbench/**"
+      - "scenes/labs/ecology/**"
+      - "validation/ecology/evo_arch2_a10_5/**"
+      - "RUN_ECO_A10_5_POLYGON.ps1"
+      - ".github/workflows/eco-arch2-a10-5-repair-exact.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: eco-a10-5-repair-exact-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  windows_exact:
+    name: A10.5 Windows Double Exact
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 90
+    defaults:
+      run:
+        shell: powershell
+    steps:
+      - name: Checkout exact event subject
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Record exact subject
+        id: subject
+        run: |
+          $head = (git rev-parse HEAD).Trim()
+          $tree = (git rev-parse 'HEAD^{tree}').Trim()
+          $dirty = git status --porcelain --untracked-files=no
+          if (-not [string]::IsNullOrWhiteSpace(($dirty -join ""))) { throw "TRACKED_SOURCE_DIRTY_BEFORE" }
+          Write-Host "SUBJECT_HEAD=$head"
+          Write-Host "SUBJECT_TREE=$tree"
+          "head=$head" >> $env:GITHUB_OUTPUT
+          "tree=$tree" >> $env:GITHUB_OUTPUT
+
+      - name: Resolve canonical Windows double Godot
+        id: godot
+        env:
+          CONFIGURED_GODOT_BIN: ${{ vars.DWS_GODOT_DOUBLE_BIN }}
+        run: |
+          $godot = $env:CONFIGURED_GODOT_BIN
+          if ([string]::IsNullOrWhiteSpace($godot)) {
+            $godot = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
+          }
+          if (-not (Test-Path -LiteralPath $godot -PathType Leaf)) { throw "GODOT_NOT_FOUND: $godot" }
+          $version = (& $godot --version 2>&1 | Select-Object -First 1).Trim()
+          if ($version -ne "4.7.1.stable.double.custom_build.a13da4feb") { throw "GODOT_VERSION_MISMATCH: $version" }
+          $sha = (Get-FileHash -LiteralPath $godot -Algorithm SHA256).Hash.ToUpperInvariant()
+          if ($sha -ne "3633C3E609C8CE2F9BAE334A9C7E75C7F974DE3AF0415AB4A8050A625A15A7A5") {
+            throw "GODOT_SHA256_MISMATCH: $sha"
+          }
+          Write-Host "GODOT_VERSION=$version"
+          Write-Host "GODOT_SHA256=$sha"
+
+      - name: Run full A10.5 suite
+        run: |
+          $ErrorActionPreference = "Stop"
+          .\RUN_ECO_A10_5_POLYGON.ps1 -Test
+
+      - name: Verify clean tracked source
+        if: always()
+        run: |
+          $dirty = git status --porcelain --untracked-files=no
+          if (-not [string]::IsNullOrWhiteSpace(($dirty -join ""))) {
+            Write-Host $dirty
+            throw "TRACKED_SOURCE_DIRTY_AFTER"
+          }
+
+      - name: Upload A10.5 exact evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: eco-a10-5-repair-exact-${{ github.run_id }}
+          path: artifacts/runtime/eco-a10-5-polygon
+          if-no-files-found: warn
