@@ -19,6 +19,7 @@ func _init(label: String = "r5-0") -> void:
 func begin_stage(name: String) -> Dictionary:
 	if name.is_empty() or _active.has(name) or _stages.has(name):
 		return U.failure("R5_MEASURE_STAGE_BEGIN_INVALID", name)
+	print("FABRIC_R5_0_STAGE_BEGIN=" + name)
 	_active[name] = {
 		"start_us": Time.get_ticks_usec(),
 		"memory_static_bytes": _memory_static(),
@@ -43,6 +44,7 @@ func end_stage(name: String) -> Dictionary:
 		"object_delta": objects_after - int(started.object_count),
 	}
 	_active.erase(name)
+	print("FABRIC_R5_0_STAGE_END=%s DURATION_US=%d" % [name, int(_stages[name].duration_us)])
 	return U.success(_stages[name].duplicate(true))
 
 func sample(name: String) -> Dictionary:
