@@ -13,7 +13,7 @@ static func create() -> Dictionary:
 	var value := {
 		"schema": SCHEMA,
 		"input_quantities": ["DT_S", "INPUT_ANGULAR_VELOCITY_RAD_S", "INPUT_TORQUE_NM"],
-		"output_quantities": ["ENERGY_RESIDUAL_J", "INPUT_MECHANICAL_ENERGY_J", "OUTPUT_ANGULAR_VELOCITY_RAD_S", "OUTPUT_MECHANICAL_ENERGY_J", "OUTPUT_TORQUE_NM"],
+		"output_quantities": ["ENERGY_RESIDUAL_J", "EQUIVALENT_INPUT_INERTIA_KG_M2", "INPUT_MECHANICAL_ENERGY_J", "OUTPUT_ANGULAR_VELOCITY_RAD_S", "OUTPUT_MECHANICAL_ENERGY_J", "OUTPUT_TORQUE_NM"],
 		"state_quantities": [],
 		"sign_convention": SIGN_CONVENTION,
 		"interface_hash": "",
