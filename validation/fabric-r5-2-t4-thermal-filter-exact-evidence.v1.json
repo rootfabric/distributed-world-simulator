@@ -1,8 +1,8 @@
 {
   "schema": "fabric.r5_2.t4_stateful_filter_thermal_pack_exact_evidence.v1",
-  "status": "AUTHORITATIVE_EXACT_PASS",
-  "subject_head": "5ee40be0d19f9d5746d13d63743e9b31577d4b78",
-  "subject_tree": "1f97293b2958480e0b8fe4bb687c5b2a5c92a4ef",
+  "status": "REPAIR_R1_AUTHORITATIVE_EXACT_PASS",
+  "subject_head": "573c80046280f161a560b77a21401970e21a15c3",
+  "subject_tree": "5577ae624d5c9eb3ff8c3f21a3d06d10ba058914",
   "t3_merge_head": "837c677426efb5f308fb6cc8098a5dd6898cfb5d",
   "canonical_owner": "Construction/Matter",
   "production_checkpoint": false,
@@ -11,17 +11,17 @@
     "sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7"
   },
   "authoritative_run": {
-    "run_id": 35603629267,
+    "run_id": 35604289532,
     "sample_count": 3,
     "sample_conclusion": "3/3 PASS",
-    "assertions_per_sample": 2206,
-    "aggregate_job_id": 106345605893,
-    "aggregate_artifact_id": 10640870366,
-    "aggregate_artifact_digest": "sha256:85fc0dfe6c880570c3db1dfe03d2fe1506682a7545e217bd95eeab9d22dcd505"
+    "assertions_per_sample": 2210,
+    "aggregate_job_id": 106347781004,
+    "aggregate_artifact_id": 10641406131,
+    "aggregate_artifact_digest": "sha256:cbfc34e0c01bc91dacbef410eafac60e14b4e7453a7396f537032efff9d038c1"
   },
   "hashes": {
-    "deterministic_hash": "8ef84f3818cc37ff50037bbaa7d22b76cc65276b576fcfdda31e82045a170c79",
-    "evidence_hash": "eec44e97811abcdad57113c84cc285ac39ae23476e78c172503fd62f710d517a",
+    "deterministic_hash": "c84392d885293054273bb797c8d3caed104e2f768a90d9e676213623ce9b1c7f",
+    "evidence_hash": "baeb1d31fe10b8d10f19585608ec7af5220886b7ffc8ad4e2473798faee14e43",
     "graph_hash": "4d6bc5af80b88c0af904a5fb6ca10b2c0dac33447be74e09ccb4bb33b5a55f31",
     "descriptor_hash": "6bd7ead1d5bf1ec7ffd14b958ed9f43c6cf13a74a35ec699f4e3a667e144973e",
     "capsule_checksum": "c414a4575d154641ab668c9526dca478e1ec9ddf4f0fba4a415629a114afe521"
@@ -51,6 +51,12 @@
     "replay_max_state_error": 0,
     "runtime_persistent_state_owner": false
   },
+  "repair_r1_fail_closed": {
+    "nonfinite_projector": "THERMAL_STATE_PROJECTOR_STATE_INVALID",
+    "nonfinite_detailed_reference": "THERMAL_REFERENCE_STATE_INVALID",
+    "out_of_domain_projector": "THERMAL_STATE_PROJECTOR_TEMPERATURE_OUT_OF_DOMAIN",
+    "out_of_domain_detailed_reference": "THERMAL_REFERENCE_TEMPERATURE_OUT_OF_DOMAIN"
+  },
   "fail_closed": {
     "asymmetric_lane": "THERMAL_PACK_LAYER_SYMMETRY_BROKEN",
     "off_reduction_manifold": "THERMAL_STATE_NOT_IN_REDUCTION_MANIFOLD",
@@ -75,7 +81,7 @@
   "policy": {
     "timing_is_acceptance_threshold": false,
     "rss_is_acceptance_threshold": false,
-    "correctness_is_detailed_reference_equivalence_energy_audit_history_dependence_snapshot_replay_and_fail_closed_reduction": true
+    "correctness_is_detailed_reference_equivalence_energy_audit_history_dependence_snapshot_replay_state_validation_and_fail_closed_reduction": true
   },
   "next_gate": "EXACT_HEAD_RERUN_THEN_FRESH_REVIEW_AND_INDEPENDENT_VERIFIER"
 }

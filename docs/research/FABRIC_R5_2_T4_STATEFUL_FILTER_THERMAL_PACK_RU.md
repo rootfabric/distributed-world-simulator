@@ -1,6 +1,6 @@
 # FABRIC R5.2 / T4 — Stateful Filter / Thermal Pack
 
-**Статус:** FRESH REVIEW REPAIR R1 — fail-closed state validation; exact rerun pending.
+**Статус:** REPAIR R1 AUTHORITATIVE EXACT PASS / exact-head closure rerun pending.
 
 ## Цель
 
@@ -149,3 +149,37 @@ finite temperature above descriptor domain
 ```
 
 Acceptance thresholds не ослаблялись.
+
+
+## Repair R1 authoritative result
+
+```text
+REPAIR SUBJECT   = 573c80046280f161a560b77a21401970e21a15c3
+REPAIR TREE      = 5577ae624d5c9eb3ff8c3f21a3d06d10ba058914
+
+push run         = 35604289532
+samples          = 3/3 PASS
+assertions       = 2210 / sample
+aggregate job    = 106347781004
+artifact         = 10641406131
+artifact digest  = sha256:cbfc34e0c01bc91dacbef410eafac60e14b4e7453a7396f537032efff9d038c1
+
+deterministic hash =
+c84392d885293054273bb797c8d3caed104e2f768a90d9e676213623ce9b1c7f
+
+evidence hash =
+baeb1d31fe10b8d10f19585608ec7af5220886b7ffc8ad4e2473798faee14e43
+```
+
+Repair R1 сохранил exact physical trajectory и добавил fail-closed adversarial state coverage:
+
+```text
+max output-temperature error = 5.11590769747272e-13 K
+max layer-state error        = 0
+max energy residual          = 7.32562455141306e-10 J
+
+NaN projector/reference      = rejected
+out-of-domain projector/ref  = rejected
+snapshot replay error        = 0
+history output delta         = 0.628210830977537 K
+```
