@@ -95,6 +95,15 @@ jobs:
           python -m pip install --disable-pip-version-check --no-input "scons>=4.8,<4.10"
           scons --version
 
+      - name: Install canonical Windows build dependencies
+        shell: pwsh
+        working-directory: godot
+        run: |
+          $ErrorActionPreference = "Stop"
+          python misc/scripts/install_d3d12_sdk_windows.py
+          python misc/scripts/install_winrt.py
+          python misc/scripts/install_accesskit.py
+
       - name: Build Windows double editor from exact source
         shell: pwsh
         run: |
