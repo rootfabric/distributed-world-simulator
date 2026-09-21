@@ -1,0 +1,111 @@
+name: MVP8 Repair R1 Windows Full World Core
+
+on:
+  push:
+    branches:
+      - control/v0-mvp8-windows-worldcore-repair-r1
+
+permissions:
+  contents: read
+
+jobs:
+  windows-world-core:
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 120
+    defaults:
+      run:
+        shell: powershell
+    env:
+      SUBJECT_HEAD: cdcb517947218ec31d76cbbd7d55462d86813232
+      SUBJECT_TREE: f0bcd8c9fe29a1a4a1bb82d0bb04101502da75c2
+      GODOT_BIN: C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe
+      EXPECTED_GODOT_SHA256: 3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5
+      BREAKPOINT_RUNTIME_DISABLED: '1'
+      GODOT_SILENCE_ROOT_WARNING: '1'
+      PLANET_SIMULATOR_INVENTORY_PROFILE: planet_default
+      PYTHONUTF8: '1'
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: cdcb517947218ec31d76cbbd7d55462d86813232
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Exact identity and host preflight
+        run: |
+          $ErrorActionPreference = "Stop"
+          New-Item -ItemType Directory -Force artifacts\mvp8-repair-worldcore-r1 | Out-Null
+          $head=(git rev-parse HEAD).Trim()
+          $tree=(git rev-parse "HEAD^{tree}").Trim()
+          if ($head -ne $env:SUBJECT_HEAD -or $tree -ne $env:SUBJECT_TREE) { throw "SUBJECT_MISMATCH" }
+          if (@(git status --porcelain --untracked-files=no).Count -ne 0) { throw "TRACKED_DIRTY_BEFORE" }
+          $sha=(Get-FileHash $env:GODOT_BIN -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($sha -ne $env:EXPECTED_GODOT_SHA256) { throw "GODOT_SHA_MISMATCH:$sha" }
+          $version=(& $env:GODOT_BIN --version 2>&1 | Select-Object -First 1).Trim()
+          if ($version -ne "4.7.1.stable.double.custom_build.a13da4feb") { throw "GODOT_VERSION_MISMATCH:$version" }
+          $os=Get-CimInstance Win32_OperatingSystem
+          $free=[Math]::Round(($os.FreePhysicalMemory*1KB)/1GB,3)
+          [ordered]@{
+            head=$head; tree=$tree; godot_version=$version; godot_sha256=$sha;
+            free_physical_gb=$free;
+            existing_godot=@(Get-Process -ErrorAction SilentlyContinue | Where-Object ProcessName -like "godot*" | Select-Object Id,ProcessName)
+          } | ConvertTo-Json -Depth 6 | Set-Content -Encoding UTF8 artifacts\mvp8-repair-worldcore-r1\preflight.json
+          if ($free -lt 10) { throw "LOW_FREE_RAM:$free" }
+
+      - name: Run exact full world core
+        run: |
+          $ErrorActionPreference = "Stop"
+          $out=Join-Path $PWD "artifacts\mvp8-repair-worldcore-r1"
+          $managed=Join-Path $out "managed"
+          New-Item -ItemType Directory -Force $managed | Out-Null
+          $env:MVP7_NATIVE_MODE="produce"
+          $env:MVP7_NATIVE_ROOT=Join-Path $managed "native"
+          $env:MVP7_NATIVE_RESULT=Join-Path $managed "native-result.json"
+          $env:MVP7_WORLD_MODE="produce"
+          $env:MVP7_WORLD_ROOT=Join-Path $managed "world"
+          $env:MVP7_WORLD_RESULT=Join-Path $managed "world-result.json"
+          $env:MVP7_CONSTRUCTION_MODE="produce"
+          $env:MVP7_CONSTRUCTION_ROOT=Join-Path $managed "construction"
+          $env:MVP7_CONSTRUCTION_RESULT=Join-Path $managed "construction-result.json"
+          foreach($p in @($env:MVP7_NATIVE_ROOT,$env:MVP7_WORLD_ROOT,$env:MVP7_CONSTRUCTION_ROOT)){
+            New-Item -ItemType Directory -Force $p | Out-Null
+          }
+          $start=[DateTime]::UtcNow
+          & pwsh -NoProfile -File .\RUN_WORLD_REGRESSION_TESTS.ps1 *> (Join-Path $out "world-core.log")
+          $code=$LASTEXITCODE
+          [ordered]@{exit_code=$code;start_utc=$start.ToString("o");end_utc=[DateTime]::UtcNow.ToString("o")} |
+            ConvertTo-Json | Set-Content -Encoding UTF8 (Join-Path $out "exit.json")
+          if (Test-Path artifacts\test-results\world-regression-summary.json) {
+            Copy-Item artifacts\test-results\world-regression-summary.json (Join-Path $out "world-regression-summary.json")
+          }
+          Get-Content (Join-Path $out "world-core.log")
+          if ($code -ne 0) { throw "WORLD_CORE_EXIT:$code" }
+
+      - name: Validate summary and clean source
+        if: always()
+        run: |
+          $ErrorActionPreference = "Stop"
+          $out=Join-Path $PWD "artifacts\mvp8-repair-worldcore-r1"
+          $summaryPath=Join-Path $out "world-regression-summary.json"
+          if (Test-Path $summaryPath) {
+            $s=Get-Content -Raw $summaryPath | ConvertFrom-Json
+            [ordered]@{
+              passed=$s.passed
+              declared=$s.declared_test_count
+              discovered=$s.discovered_test_count
+              steps=@($s.steps).Count
+              failed_steps=@($s.steps | Where-Object {$_.passed -ne $true} | Select-Object name,kind,target,exit_code,duration_seconds)
+            } | ConvertTo-Json -Depth 8 | Set-Content -Encoding UTF8 (Join-Path $out "result-facts.json")
+          }
+          $tracked=@(git status --porcelain --untracked-files=no)
+          $tracked | Set-Content -Encoding UTF8 (Join-Path $out "tracked-after.txt")
+          if ($tracked.Count -ne 0) { throw "TRACKED_DIRTY_AFTER" }
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mvp8-repair-r1-windows-worldcore
+          path: artifacts/mvp8-repair-worldcore-r1/
+          if-no-files-found: error
+          retention-days: 90
