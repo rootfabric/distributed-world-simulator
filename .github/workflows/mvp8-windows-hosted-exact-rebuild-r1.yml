@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - control/v0-mvp8-windows-hosted-exact-rebuild-r1
+  pull_request:
+    branches:
+      - feature/v0-mvp-playable-seamless-planet-r1
   workflow_dispatch:
 
 permissions:
