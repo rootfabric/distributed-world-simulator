@@ -130,8 +130,14 @@ func _initialize() -> void:
 		var old_on_damaged := runtime.execute(damaged_live, 480.0, 0.5, 50.0, 20000.0, 320.0, DT_S)
 		check(not old_on_damaged.success and String(old_on_damaged.error_code) == "POWER_STAGE_RUNTIME_FRONTIER_MISMATCH", "old capsule rejects damaged source", old_on_damaged)
 
-	var unsafe := compile_graph(Fixture.make_graph("SIC", false, true), 3)
+	var unsafe_graph := Fixture.make_graph("SIC", false, true)
+	var unsafe := compile_graph(unsafe_graph, 3)
 	check(not unsafe.success and String(unsafe.error_code) == "POWER_STAGE_PARALLEL_CURRENT_SYNCHRONY_UNSAFE", "unsafe parallel geometry fails closed", unsafe)
+	var unsafe_reference := FullReference.prepare(unsafe_graph)
+	check(unsafe_reference.success, "unsafe geometry remains physically executable in detailed reference", unsafe_reference)
+	if unsafe_reference.success:
+		var unsafe_reference_step := FullReference.execute(unsafe_reference.details, 480.0, 0.5, 50.0, 20000.0, 320.0, DT_S)
+		check(unsafe_reference_step.success, "unsafe geometry is NO_SAFE_BAKE rather than invalid physics", unsafe_reference_step)
 	var mixed := compile_graph(Fixture.make_graph("SIC", false, false, true), 4)
 	check(not mixed.success and String(mixed.error_code) == "POWER_STAGE_PROFILE_MISMATCH", "mixed semiconductor profile fails closed", mixed)
 	var open_bank := compile_graph(Fixture.make_graph("SIC", false, false, false, true), 5)
