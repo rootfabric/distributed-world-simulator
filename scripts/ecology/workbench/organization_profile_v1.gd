@@ -36,8 +36,12 @@ const BIAS_PRESETS := {
 		"module_parameter": 15, "development_parameter": 15, "none": 5,
 	},
 	"NMS_LIKE": {
-		"small": 15, "medium": 10, "duplicate": 20, "activate": 10,
-		"rewire": 10, "insert": 15, "module_parameter": 15, "none": 5,
+		# Deliberately stays inside broadly admissible A3 operators. Context-
+		# dependent topology operators (activate/rewire) remain available to A3
+		# itself but are not used as preset priors until an applicability witness
+		# becomes part of the bias contract.
+		"small": 10, "medium": 20, "regulatory": 15,
+		"module_parameter": 20, "development_parameter": 30, "none": 5,
 	},
 }
 
@@ -58,7 +62,7 @@ static func preset(mode: String) -> Dictionary:
 		"version": VERSION,
 		"mode": normalized,
 		"rule_class": String(RULE_CLASS_BY_MODE[normalized]),
-		"visual": Dictionary(VISUAL_PRESETS[normalized]).duplicate(true),
+		"visual": VISUAL_PRESETS[normalized].duplicate(true),
 	}
 
 static func validate(value: Variant) -> String:
@@ -108,7 +112,7 @@ static func canonical_bias(profile: Dictionary) -> Dictionary:
 		"schema": Mutation.BIAS_SCHEMA,
 		"name": "organization/%s" % mode.to_lower(),
 		"version": VERSION,
-		"operator_weights": Dictionary(BIAS_PRESETS[mode]).duplicate(true),
+		"operator_weights": BIAS_PRESETS[mode].duplicate(true),
 	}
 	return bias if Mutation.validate_bias(bias).is_empty() else {}
 
