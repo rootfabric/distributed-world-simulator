@@ -95,7 +95,7 @@ jobs:
       - name: Exact Windows MVP8 runtime
         run: |
           $ErrorActionPreference = "Stop"
-          $evidence = Join-Path $PWD "artifacts\mvp8-windows-gap-r2"
+          $evidence = Join-Path $PWD "artifacts\mvp8-windows-repair-r1"
           $live = Join-Path $evidence "mvp8-live"
           $log = Join-Path $evidence "mvp8-runtime.log"
           if (Test-Path $live) { throw "PRESERVE_PREVIOUS_EVIDENCE:$live" }
@@ -110,7 +110,7 @@ jobs:
       - name: Snapshot and bind raw MVP8 evidence
         run: |
           $ErrorActionPreference = "Stop"
-          $evidence = Join-Path $PWD "artifacts\mvp8-windows-gap-r2"
+          $evidence = Join-Path $PWD "artifacts\mvp8-windows-repair-r1"
           $live = Join-Path $evidence "mvp8-live"
           $snapshot = Join-Path $evidence "mvp8-live-snapshot"
           if (Test-Path $snapshot) { throw "SNAPSHOT_ALREADY_EXISTS:$snapshot" }
@@ -245,7 +245,7 @@ jobs:
       - name: Independent Windows full world core
         run: |
           $ErrorActionPreference = "Stop"
-          $evidence = Join-Path $PWD "artifacts\mvp8-windows-gap-r2"
+          $evidence = Join-Path $PWD "artifacts\mvp8-windows-repair-r1"
           $managed = Join-Path $evidence "world-core-managed"
           New-Item -ItemType Directory -Force -Path $managed | Out-Null
 
@@ -285,7 +285,7 @@ jobs:
         if: always()
         run: |
           $ErrorActionPreference = "Continue"
-          $evidence = Join-Path $PWD "artifacts\mvp8-windows-gap-r2"
+          $evidence = Join-Path $PWD "artifacts\mvp8-windows-repair-r1"
           New-Item -ItemType Directory -Force -Path $evidence | Out-Null
           $tracked = @(git status --porcelain --untracked-files=no)
           $head = (git rev-parse HEAD).Trim()
@@ -346,7 +346,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: mvp8-windows-gap-r2
-          path: artifacts/mvp8-windows-gap-r2/
+          name: mvp8-windows-repair-r1
+          path: artifacts/mvp8-windows-repair-r1/
           if-no-files-found: error
           retention-days: 90
