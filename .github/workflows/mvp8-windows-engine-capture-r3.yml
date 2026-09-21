@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - control/v0-mvp8-windows-engine-capture-r3
+    paths:
+      - .github/workflows/mvp8-windows-engine-capture-r3.yml
   workflow_dispatch:
 
 permissions:
@@ -11,7 +13,7 @@ permissions:
 
 concurrency:
   group: mvp8-windows-engine-capture-r3
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 env:
   SUBJECT_HEAD: 90bc1026f0f5749492107191233330f87c8c70df
