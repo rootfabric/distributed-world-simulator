@@ -1,0 +1,155 @@
+name: FABRIC R5.2 T8 Fresh Independent Verifier R1
+
+on:
+  push:
+    branches: [verify/fabric-r5-2-t8-fresh-independent-verifier-r1]
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  SUBJECT_HEAD: 667e8e15afbff68a779fb06bb3326bdcd42d9b42
+  RUNTIME_REPAIR_SUBJECT: b5c8078edb66901be8d8c235a11bce53df44e894
+  EXPECTED_DETERMINISTIC_HASH: eba45c45ef855367ee0c99a730fcea48ad5df172e5db21e5ecb67c942a82ae29
+
+jobs:
+  sample:
+    name: verifier-sample-${{ matrix.sample }}
+    strategy:
+      fail-fast: false
+      matrix:
+        sample: [1, 2, 3]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Prove frozen product identity
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$(git merge-base HEAD "$SUBJECT_HEAD")" = "$SUBJECT_HEAD"
+          changed="$(git diff --name-only "$SUBJECT_HEAD"...HEAD)"
+          test "$changed" = '.github/workflows/fabric-r5-2-t8-independent-verifier-r1.yml'
+          git diff --exit-code "$SUBJECT_HEAD"...HEAD -- \
+            scripts/research/fabric_bake0 \
+            tests/research/fabric_bake0 \
+            RUN_FABRIC_R5_2_T8_TESTS.sh \
+            docs/research/FABRIC_R5_2_T8_COOLING_RU.md \
+            validation/fabric-r5-2-t8-cooling-exact-evidence.v1.json
+
+      - name: Independently inspect durable R2 evidence
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          python3 - <<'PY'
+          import json
+          d=json.load(open('validation/fabric-r5-2-t8-cooling-exact-evidence.v1.json',encoding='utf-8'))
+          assert d['status']=='REPAIR_R2_AUTHORITATIVE_EXACT_PASS'
+          assert d['subject_head']=='b5c8078edb66901be8d8c235a11bce53df44e894'
+          assert d['hashes']['deterministic_hash']=='eba45c45ef855367ee0c99a730fcea48ad5df172e5db21e5ecb67c942a82ae29'
+          assert d['repair_r1']['source_traversal_semantics_preserved'] is True
+          assert d['repair_r2']['projector_nonfinite_error']=='COOLING_STATE_PROJECTOR_STATE_INVALID'
+          assert d['repair_r2']['reference_domain_error']=='COOLING_REFERENCE_TEMPERATURE_OUT_OF_DOMAIN'
+          assert d['repair_r2']['rehashed_flow_regime_descriptor_error']=='COOLING_LOOP_DESCRIPTOR_FLOW_REGIME_UNSUPPORTED'
+          assert d['repair_r2']['asymmetric_lane_detailed_reference_executes'] is True
+          assert d['t6_composition']['active_vs_zero_flow_plate_temperature_advantage_k'] > 0.1
+          assert d['invariants']['threshold_relaxation'] is False
+          print('T8_DURABLE_EVIDENCE=PASS')
+          PY
+
+      - name: Download canonical Linux double
+        uses: actions/download-artifact@v4
+        with:
+          name: p7-repair-engine-34117353691
+          run-id: 34117353691
+          repository: rootfabric/distributed-world-simulator
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/r5-2-t8-verifier-engine
+
+      - name: Verify canonical Linux double
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          bin="$RUNNER_TEMP/r5-2-t8-verifier-engine/godot"
+          chmod u+x "$bin"
+          version="$("$bin" --version | head -n1 | tr -d '\r')"
+          sha="$(sha256sum "$bin" | awk '{print $1}')"
+          test "$version" = '4.7.1.stable.double.custom_build.a13da4feb'
+          test "$sha" = 'bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7'
+          echo "GODOT_BIN=$bin" >> "$GITHUB_ENV"
+          mkdir -p artifacts/fabric-r5-2-t8-verifier
+
+      - name: Fresh import
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          rm -rf .godot
+          "$GODOT_BIN" --headless --editor --path . \
+            --log-file "artifacts/fabric-r5-2-t8-verifier/sample-${{ matrix.sample }}.import.log" --import
+          ! grep -Eiq 'SCRIPT ERROR|Parse Error|Invalid call|Invalid access|ERROR:' \
+            "artifacts/fabric-r5-2-t8-verifier/sample-${{ matrix.sample }}.import.log"
+
+      - name: Run frozen T8 sample
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          i='${{ matrix.sample }}'
+          /usr/bin/time -v -o "artifacts/fabric-r5-2-t8-verifier/sample-$i.time.txt" \
+            bash RUN_FABRIC_R5_2_T8_TESTS.sh 2>&1 | tee "artifacts/fabric-r5-2-t8-verifier/sample-$i.log"
+          grep -F 'FABRIC R5.2 T8 COOLING: PASS' "artifacts/fabric-r5-2-t8-verifier/sample-$i.log"
+          grep -F 'FABRIC_R5_2_T8_RESULT=' "artifacts/fabric-r5-2-t8-verifier/sample-$i.log"
+          test -z "$(git status --porcelain=v1 --untracked-files=no)"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: fabric-r5-2-t8-verifier-sample-${{ matrix.sample }}-${{ github.sha }}
+          path: artifacts/fabric-r5-2-t8-verifier/sample-${{ matrix.sample }}.*
+          if-no-files-found: error
+          retention-days: 90
+
+  aggregate:
+    name: verifier-aggregate
+    needs: sample
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: fabric-r5-2-t8-verifier-sample-*-${{ github.sha }}
+          path: artifacts/fabric-r5-2-t8-verifier
+          merge-multiple: true
+      - name: Aggregate independent verifier evidence
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          python3 scripts/research/fabric_bake0/collect_r5_2_t8_evidence.py \
+            --root artifacts/fabric-r5-2-t8-verifier \
+            --out artifacts/fabric-r5-2-t8-verifier/evidence.json \
+            | tee artifacts/fabric-r5-2-t8-verifier/collector.log
+          grep -F 'FABRIC_R5_2_T8_EVIDENCE=PASS' artifacts/fabric-r5-2-t8-verifier/collector.log
+          grep -F "FABRIC_R5_2_T8_DETERMINISTIC_HASH=$EXPECTED_DETERMINISTIC_HASH" artifacts/fabric-r5-2-t8-verifier/collector.log
+          printf 'SUBJECT_HEAD=%s\nRUNTIME_REPAIR_SUBJECT=%s\nVERIFIER_HEAD=%s\nEXPECTED_DETERMINISTIC_HASH=%s\n' \
+            "$SUBJECT_HEAD" "$RUNTIME_REPAIR_SUBJECT" "$(git rev-parse HEAD)" "$EXPECTED_DETERMINISTIC_HASH" \
+            > artifacts/fabric-r5-2-t8-verifier/identity.txt
+          git diff --exit-code "$SUBJECT_HEAD"...HEAD -- \
+            scripts/research/fabric_bake0 \
+            tests/research/fabric_bake0 \
+            RUN_FABRIC_R5_2_T8_TESTS.sh \
+            validation/fabric-r5-2-t8-cooling-exact-evidence.v1.json
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fabric-r5-2-t8-verifier-aggregate-${{ github.sha }}
+          path: artifacts/fabric-r5-2-t8-verifier/**
+          if-no-files-found: error
+          retention-days: 90
