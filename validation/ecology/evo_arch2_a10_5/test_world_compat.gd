@@ -132,16 +132,25 @@ func _adapter(manifest: Dictionary, region: Dictionary, mapping_entries: Array) 
 	return adapter
 
 func _water_batch() -> Dictionary:
+	return _water_batch_amount("batch/p12-water", WATER_STOCK_MG)
+
+func _water_batch_amount(batch_id: String, mass_mg: int) -> Dictionary:
 	return Batch.create({
-		"batch_id": "batch/p12-water",
+		"batch_id": batch_id,
 		"container_id": "container/p12",
 		"source_body_id": "body/moon",
 		"source_operation_id": "operation/p12",
-		"total_mass_kg": float(WATER_STOCK_MG) / 1000000.0,
+		"total_mass_kg": float(mass_mg) / 1000000.0,
 		"bulk_volume_m3": 0.000001,
 		"composition": Composition.create([{"material_id": "matter/water-ice", "mass_fraction": 1.0}]),
 		"temperature_k": 273.15,
 	})
+
+func _field_total(controller: Object, resource: String) -> int:
+	var total := 0
+	for cell in controller.debug_state().field.cells:
+		total += int(cell.stocks[resource])
+	return total
 
 func _wc_controller(manifest: Dictionary, adapter: Object) -> Object:
 	var controller := Controller.new()
@@ -315,6 +324,41 @@ func _scenario_explicit_mapping() -> void:
 	var dual_init: Dictionary = dual_ctl.initialize(dual)
 	_check(not bool(dual_init.get("success", false)) and String(dual_init.get("error", "")).contains("ADAPTER_ZONE_STOCK_DUAL_TRUTH"), "M WORLD_COMPAT zone stocks rejected as dual truth")
 
+	# Multi-batch delta-only: the second apply deposits ONLY the second batch,
+	# never the cumulative first+second total.
+	var delta_adapter := _adapter(manifest, _region("node/a", 1, "ACTIVE"), [{"material_id": "matter/water-ice", "resource": "water_mg"}])
+	var delta_ctl := _wc_controller(manifest, delta_adapter)
+	var b1 := _water_batch_amount("batch/p12-delta-a", 1000)
+	var b2 := _water_batch_amount("batch/p12-delta-b", 250)
+	_check(bool(delta_adapter.add_batch(b1, String(b1.checksum)).get("success", false)), "M delta batch A admitted")
+	var first_apply: Dictionary = delta_adapter.apply_environment(delta_ctl)
+	_check(bool(first_apply.get("success", false)), "M delta batch A applied")
+	var after_first := _field_total(delta_ctl, "water_mg")
+	_check(after_first == 1000, "M first batch deposits exactly 1000 mg")
+	_check(bool(delta_adapter.add_batch(b2, String(b2.checksum)).get("success", false)), "M delta batch B admitted")
+	var second_apply: Dictionary = delta_adapter.apply_environment(delta_ctl)
+	_check(bool(second_apply.get("success", false)), "M delta batch B applied")
+	var after_second := _field_total(delta_ctl, "water_mg")
+	_check(after_second - after_first == 250, "M second apply deposits only the new 250 mg delta")
+	_check(int(delta_adapter.observe_world().admitted_resources.water_mg) == 1250, "M cumulative admitted observation is 1250 mg without redeposit")
+	var no_pending: Dictionary = delta_adapter.apply_environment(delta_ctl)
+	_check(bool(no_pending.get("success", false)) and not bool(no_pending.get("applied", true)), "M third apply with no new batch is a no-op")
+	_check(_field_total(delta_ctl, "water_mg") == 1250, "M no-op apply leaves field mass unchanged")
+
+	# Multi-cell total stock has no canonical spatial allocation witness.
+	# It must fail closed instead of multiplying one batch by cell count.
+	var multi := _manifest("WORLD_COMPAT", 4)
+	multi.environment.spatial.width = 2
+	multi.placement.entries[0].position_mm = [500, 0, 500]
+	var multi_adapter := _adapter(multi, _region("node/a", 1, "ACTIVE"), [{"material_id": "matter/water-ice", "resource": "water_mg"}])
+	var multi_ctl := _wc_controller(multi, multi_adapter)
+	var mb := _water_batch_amount("batch/p12-multicell", 500)
+	_check(bool(multi_adapter.add_batch(mb, String(mb.checksum)).get("success", false)), "M multi-cell batch admitted at mapping layer")
+	var multi_apply: Dictionary = multi_adapter.apply_environment(multi_ctl)
+	_check(not bool(multi_apply.get("success", false)) and String(multi_apply.get("error", "")).contains("SPATIAL_ALLOCATION_REQUIRED"), "M multi-cell total batch fails closed without allocation witness")
+	_check(_field_total(multi_ctl, "water_mg") == 0, "M multi-cell failure deposits zero mass")
+	_check(int(multi_adapter.observe_world().admitted_resources.water_mg) == 0, "M failed multi-cell write is not committed into admitted-resource bookkeeping")
+
 # --- Scenario H: region handoff E2E (§24) -----------------------------------------
 
 func _scenario_handoff() -> void:
@@ -391,13 +435,21 @@ func _scenario_handoff() -> void:
 
 	# Checkpoint identity: restore into a fresh controller bound to the new
 	# authority and continue.
+	# Persist AFTER the committed handoff so the shared checkpoint contains the
+	# exact current WORLD_COMPAT authority state (region B + cursor).
+	var post_checkpoint: Dictionary = wc.serialize_state()
+	_check(bool(post_checkpoint.get("success", false)), "H post-handoff WORLD_COMPAT checkpoint serialized")
 	var adapter2 := _adapter(manifest, region_b_active, [])
 	var wc2 := _wc_controller(manifest, adapter2)
-	var restored: Dictionary = wc2.load_state(String(checkpoint.get("state_text", "")), String(checkpoint.get("manifest_hash", "")))
-	_check(bool(restored.get("success", false)), "H checkpoint restored through the seam: " + str(restored))
+	var no_anchor: Dictionary = wc2.load_state(String(post_checkpoint.get("state_text", "")), String(post_checkpoint.get("manifest_hash", "")))
+	_check(not bool(no_anchor.get("success", false)), "H WORLD_COMPAT restore rejects missing caller-owned state anchor")
+	var restored: Dictionary = wc2.load_state(String(post_checkpoint.get("state_text", "")), String(post_checkpoint.get("manifest_hash", "")), String(post_checkpoint.get("state_checksum", "")))
+	_check(bool(restored.get("success", false)), "H checkpoint restores runtime + WORLD_COMPAT authority state: " + str(restored))
 	if bool(restored.get("success", false)):
-		_check(int(wc2.get_snapshot().tick) == int(checkpoint.get("tick", -1)), "H checkpoint tick preserved")
-		_check(bool(wc2.run(1).get("success", false)), "H restored controller continues ticking under new authority")
+		_check(int(wc2.get_snapshot().tick) == int(post_checkpoint.get("tick", -1)), "H checkpoint tick preserved")
+		_check(adapter2.cursor() == adapter.cursor(), "H cursor/authority bookkeeping restored exactly")
+		_check(String(adapter2.region().owner_node_id) == "node/b" and int(adapter2.region().authority_epoch) == 2, "H restored adapter remains on committed owner B/epoch 2")
+		_check(bool(wc2.run(1).get("success", false)), "H restored controller continues ticking under restored owner B")
 
 	# Production ecology_region_ownership_v1 handoff line composed alongside.
 	var catchup := _completed_catchup()
@@ -465,6 +517,23 @@ func _scenario_damage() -> void:
 	_check(bool(registered.get("success", false)), "D trusted DamageRecord registered: " + str(registered))
 	if not bool(registered.get("success", false)):
 		return
+	# The event anchor is stored separately from the event. A fully rehashed
+	# exported adapter state with event.binding_hash changed must still fail
+	# import because the trusted anchor is caller-owned state, not derived from
+	# the event being checked.
+	var exported: Dictionary = adapter.export_state()
+	_check(not exported.is_empty(), "D adapter WORLD state exports after damage registration")
+	if not exported.is_empty():
+		var tampered_world := exported.duplicate(true)
+		var damage_row: Dictionary = tampered_world.damage[individual_id]
+		damage_row.event.binding_hash = "e".repeat(64)
+		tampered_world.checksum = ""
+		var checksum_payload := tampered_world.duplicate(true)
+		checksum_payload.checksum = ""
+		tampered_world.checksum = C.digest(checksum_payload)
+		var tampered_hash := C.digest(tampered_world)
+		var import_tampered: Dictionary = adapter.import_state(tampered_world, tampered_hash)
+		_check(not bool(import_tampered.get("success", false)) and String(import_tampered.get("error", "")).contains("DAMAGE_EVENT_ANCHOR"), "D rehashed event cannot replace separately stored trusted binding anchor")
 	var effective_before: Dictionary = adapter.effective_function(individual_id)
 	_check(int(effective_before.active_module_count) == modules.size(), "D pre-damage body fully active")
 	var applied: Dictionary = adapter.apply_damage(individual_id)
