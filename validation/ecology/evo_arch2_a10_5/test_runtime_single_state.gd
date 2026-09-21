@@ -347,13 +347,7 @@ func _s5_presentation_same_state() -> void:
 				or int(view.development_summary.module_count) != int(entry.state.development.modules.size()):
 			same_organisms = false
 	_check(same_organisms, "S5 presentation views project the same organisms (id/alive/modules)")
-	var recomputed := C.digest({
-		"tick": int(debug.tick),
-		"field_hash": Field.state_hash(debug.field),
-		"population": snapshot.population,
-		"feedback_hash": C.digest(debug.feedback),
-	})
-	_check(String(snapshot.canonical_state_hash) == String(recomputed), "S5 canonical_state_hash recomputes from the SAME debug state")
+	_check(String(snapshot.canonical_state_hash) == String(debug.runtime.integrity_hash), "S5 canonical_state_hash is the integrity seal of the SAME shared runtime state")
 
 # S6: checkpoint saves the same state.
 
@@ -367,7 +361,7 @@ func _s6_checkpoint_same_state() -> void:
 	var hash_at_6 := String(controller.get_snapshot().canonical_state_hash)
 	var restored := Controller.new()
 	_check(bool(restored.initialize(manifest, {}).get("success", false)), "S6 twin controller initializes")
-	var loaded: Dictionary = restored.load_state(String(saved.state_text), String(saved.manifest_hash))
+	var loaded: Dictionary = restored.load_state(String(saved.state_text), String(saved.manifest_hash), String(saved.state_checksum))
 	_check(bool(loaded.get("success", false)), "S6 load_state succeeds: " + String(loaded.get("error", "?")))
 	_check(String(restored.get_snapshot().canonical_state_hash) == hash_at_6, "S6 restored snapshot hash == saved snapshot hash")
 	_check(bool(controller.run(4).get("success", false)), "S6 original advances 4 more")
