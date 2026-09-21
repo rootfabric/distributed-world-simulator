@@ -21,13 +21,19 @@ static func project(graph: Dictionary, descriptor: Dictionary, detailed_state: D
 	for field in ["plate_temperature_k", "hot_coolant_temperature_k", "radiator_temperature_k", "cold_coolant_temperature_k"]:
 		if typeof(detailed_state.get(field)) != TYPE_ARRAY or detailed_state[field].size() != n:
 			return U.failure("COOLING_STATE_PROJECTOR_STATE_INVALID", {"field": field})
-		var reference := float(detailed_state[field][0])
-		if not is_finite(reference):
-			return U.failure("COOLING_STATE_PROJECTOR_STATE_INVALID", {"field": field})
+		var reference_raw = detailed_state[field][0]
+		if not U.is_positive_number(reference_raw):
+			return U.failure("COOLING_STATE_PROJECTOR_STATE_INVALID", {"field": field, "lane": 0})
+		var reference := float(reference_raw)
+		if reference < float(descriptor.min_temperature_k) or reference > float(descriptor.max_temperature_k):
+			return U.failure("COOLING_STATE_PROJECTOR_TEMPERATURE_OUT_OF_DOMAIN", {"field": field, "lane": 0, "temperature_k": reference})
 		for lane in range(1, n):
-			var actual := float(detailed_state[field][lane])
-			if not is_finite(actual):
+			var actual_raw = detailed_state[field][lane]
+			if not U.is_positive_number(actual_raw):
 				return U.failure("COOLING_STATE_PROJECTOR_STATE_INVALID", {"field": field, "lane": lane})
+			var actual := float(actual_raw)
+			if actual < float(descriptor.min_temperature_k) or actual > float(descriptor.max_temperature_k):
+				return U.failure("COOLING_STATE_PROJECTOR_TEMPERATURE_OUT_OF_DOMAIN", {"field": field, "lane": lane, "temperature_k": actual})
 			var scale := maxf(1.0, maxf(absf(reference), absf(actual)))
 			if absf(actual - reference) > REL_TOL * scale:
 				return U.failure("COOLING_STATE_NOT_IN_REDUCTION_MANIFOLD", {"field": field, "lane": lane, "reference_k": reference, "actual_k": actual})

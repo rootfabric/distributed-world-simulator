@@ -52,7 +52,12 @@ def main():
         assert d["asymmetric_detailed_reference_executes"] is True
         assert d["disabled_lane_error"]=="COOLING_LANE_DISABLED"
         assert d["off_manifold_error"]=="COOLING_STATE_NOT_IN_REDUCTION_MANIFOLD"
+        assert d["nonfinite_projection_error"]=="COOLING_STATE_PROJECTOR_STATE_INVALID"
+        assert d["nonfinite_reference_error"]=="COOLING_REFERENCE_STATE_INVALID"
+        assert d["out_of_domain_projection_error"]=="COOLING_STATE_PROJECTOR_TEMPERATURE_OUT_OF_DOMAIN"
+        assert d["out_of_domain_reference_error"]=="COOLING_REFERENCE_TEMPERATURE_OUT_OF_DOMAIN"
         assert d["descriptor_relation_error"]=="COOLING_LOOP_DESCRIPTOR_MAX_FLOW_RELATION_MISMATCH"
+        assert d["flow_regime_descriptor_error"]=="COOLING_LOOP_DESCRIPTOR_FLOW_REGIME_UNSUPPORTED"
         assert d["t6_cooling_temperature_advantage_k"] > 0.10
         assert d["t6_composition_heat_j"] > 0.0
         assert d["t6_composition_pump_hydraulic_energy_j"] > 0.0

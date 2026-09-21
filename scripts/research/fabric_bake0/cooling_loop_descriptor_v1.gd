@@ -78,6 +78,8 @@ static func validate(value: Dictionary) -> Dictionary:
 			return U.failure("INVALID_COOLING_LOOP_DESCRIPTOR_SCALAR", {"field": field})
 	if float(value.min_temperature_k) >= float(value.max_temperature_k):
 		return U.failure("COOLING_LOOP_DESCRIPTOR_TEMPERATURE_DOMAIN_EMPTY")
+	if float(value.laminar_reynolds_limit) > 2300.0:
+		return U.failure("COOLING_LOOP_DESCRIPTOR_FLOW_REGIME_UNSUPPORTED")
 	var expected_max_flow := float(value.laminar_reynolds_limit) * float(value.dynamic_viscosity_pa_s) * float(value.channel_flow_area_m2) / float(value.channel_hydraulic_diameter_m) * float(value.lane_count)
 	var flow_scale := maxf(1.0e-18, maxf(absf(expected_max_flow), absf(float(value.max_total_mass_flow_kg_s))))
 	if absf(expected_max_flow - float(value.max_total_mass_flow_kg_s)) > 1.0e-12 * flow_scale:

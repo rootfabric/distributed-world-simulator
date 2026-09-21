@@ -77,8 +77,10 @@ static func execute(
 		var c := float(state.cold_coolant_temperature_k[lane_index])
 		for pair in [["plate",p],["hot",h],["radiator",r],["cold",c]]:
 			var t := float(pair[1])
-			if not is_finite(t) or t < float(row.min_temperature_k) or t > float(row.max_temperature_k):
-				return U.failure("COOLING_REFERENCE_TEMPERATURE_OUT_OF_DOMAIN", {"lane": lane_index, "node": String(pair[0])})
+			if not is_finite(t):
+				return U.failure("COOLING_REFERENCE_STATE_INVALID", {"lane": lane_index, "node": String(pair[0])})
+			if t < float(row.min_temperature_k) or t > float(row.max_temperature_k):
+				return U.failure("COOLING_REFERENCE_TEMPERATURE_OUT_OF_DOMAIN", {"lane": lane_index, "node": String(pair[0]), "temperature_k": t})
 		var pump_power := Physics.hydraulic_power_w(row, lane_flow)
 		var flow_g := lane_flow * float(row.coolant_heat_capacity_j_kg_k)
 		var q_ph := float(row.plate_to_hot_conductance_w_k) * (p - h)

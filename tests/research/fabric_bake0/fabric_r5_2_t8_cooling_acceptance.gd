@@ -188,6 +188,33 @@ func _initialize() -> void:
 	var projection_fail := Projector.project(graph, descriptor, off_manifold)
 	check(not projection_fail.success and String(projection_fail.error_code) == "COOLING_STATE_NOT_IN_REDUCTION_MANIFOLD", "off-manifold detailed state rejected", projection_fail)
 
+	var nonfinite_state: Dictionary = detailed_state.duplicate(true)
+	nonfinite_state.hot_coolant_temperature_k = detailed_state.hot_coolant_temperature_k.duplicate()
+	nonfinite_state.hot_coolant_temperature_k[7] = NAN
+	var nonfinite_projection := Projector.project(graph, descriptor, nonfinite_state)
+	check(not nonfinite_projection.success and String(nonfinite_projection.error_code) == "COOLING_STATE_PROJECTOR_STATE_INVALID", "non-finite projector state rejected", nonfinite_projection)
+	var nonfinite_reference := FullReference.execute(reference.details, nonfinite_state, 100.0, 0.10, 294.0, DT_S)
+	check(not nonfinite_reference.success and String(nonfinite_reference.error_code) == "COOLING_REFERENCE_STATE_INVALID", "non-finite detailed reference state rejected", nonfinite_reference)
+
+	var out_of_domain_state: Dictionary = detailed_state.duplicate(true)
+	out_of_domain_state.plate_temperature_k = detailed_state.plate_temperature_k.duplicate()
+	out_of_domain_state.plate_temperature_k[0] = float(descriptor.max_temperature_k) + 1.0
+	var out_of_domain_projection := Projector.project(graph, descriptor, out_of_domain_state)
+	check(not out_of_domain_projection.success and String(out_of_domain_projection.error_code) == "COOLING_STATE_PROJECTOR_TEMPERATURE_OUT_OF_DOMAIN", "projector domain violation rejected", out_of_domain_projection)
+	var out_of_domain_reference := FullReference.execute(reference.details, out_of_domain_state, 100.0, 0.10, 294.0, DT_S)
+	check(not out_of_domain_reference.success and String(out_of_domain_reference.error_code) == "COOLING_REFERENCE_TEMPERATURE_OUT_OF_DOMAIN", "detailed reference domain violation rejected", out_of_domain_reference)
+
+	var regime_descriptor: Dictionary = descriptor.duplicate(true)
+	regime_descriptor.laminar_reynolds_limit = 2400.0
+	regime_descriptor.max_total_mass_flow_kg_s = float(regime_descriptor.laminar_reynolds_limit) * float(regime_descriptor.dynamic_viscosity_pa_s) * float(regime_descriptor.channel_flow_area_m2) / float(regime_descriptor.channel_hydraulic_diameter_m) * float(regime_descriptor.lane_count)
+	var regime_payload: Dictionary = regime_descriptor.duplicate(true)
+	regime_payload.erase("descriptor_hash")
+	regime_payload.erase("checksum")
+	regime_descriptor.descriptor_hash = U.canonical_hash(regime_payload)
+	regime_descriptor.checksum = U.compute_checksum(regime_descriptor)
+	var regime_check := Descriptor.validate(regime_descriptor)
+	check(not regime_check.success and String(regime_check.error_code) == "COOLING_LOOP_DESCRIPTOR_FLOW_REGIME_UNSUPPORTED", "rehashed turbulent descriptor rejected", regime_check)
+
 	var frontier_mismatch := Compiler.compile(graph, Fixture.build_request(asymmetric_graph, 4), "capsule/r5-t8-cooling-loop")
 	check(not frontier_mismatch.success and String(frontier_mismatch.error_code) == "COOLING_LOOP_CANONICAL_GRAPH_SOURCE_MISMATCH", "frontier mismatch rejected", frontier_mismatch)
 	var flow_limit := runtime.execute(live, runtime.initial_state(300.0), 1000.0, float(descriptor.max_total_mass_flow_kg_s) * 1.01, 294.0, DT_S)
@@ -262,7 +289,12 @@ func _initialize() -> void:
 		"asymmetric_detailed_reference_executes": asymmetric_reference_executes,
 		"disabled_lane_error": String(disabled.get("error_code", "")),
 		"off_manifold_error": String(projection_fail.get("error_code", "")),
+		"nonfinite_projection_error": String(nonfinite_projection.get("error_code", "")),
+		"nonfinite_reference_error": String(nonfinite_reference.get("error_code", "")),
+		"out_of_domain_projection_error": String(out_of_domain_projection.get("error_code", "")),
+		"out_of_domain_reference_error": String(out_of_domain_reference.get("error_code", "")),
 		"descriptor_relation_error": String(inconsistent_check.get("error_code", "")),
+		"flow_regime_descriptor_error": String(regime_check.get("error_code", "")),
 		"t6_cooling_temperature_advantage_k": cooling_temperature_advantage_k,
 		"t6_composition_heat_j": composition_heat_j,
 		"t6_composition_pump_hydraulic_energy_j": composition_pump_j,
