@@ -8,8 +8,8 @@ extends SceneTree
 #      change the realizer visual_profile (colours and LOD detail differ);
 #      16-tick runs with profile A vs profile B vs NO profile produce an
 #      IDENTICAL canonical_state_hash (non-causal proof, §14/§18/§27).
-#   b) DEVELOPMENT_BIAS profiles (SOFT/EARTH_LIKE/NMS_LIKE) ->
-#      status BLOCKED_CANONICAL_EXTENSION_REQUIRED; canonical state unchanged.
+#   b) DEVELOPMENT_BIAS profiles (SOFT/EARTH_LIKE/NMS_LIKE) -> canonical A3
+#      versioned operator reweighting; no new operators, deterministic selection.
 #   c) FREE-mode acceptance (§19): a canonical valid genome WITHOUT species /
 #      curated labels grows -> valid BodyGraph -> descriptor -> generic
 #      realizer -> >= 1 primitive per module.
@@ -23,6 +23,7 @@ const P = preload("res://scripts/research/ecology/v2/development_program_v1.gd")
 const S = preload("res://scripts/research/ecology/v2/organism_state_v1.gd")
 const D = preload("res://scripts/research/ecology/v2/development_interpreter_v1.gd")
 const G = preload("res://scripts/research/ecology/v2/organism_genome_v2.gd")
+const Mutation = preload("res://scripts/research/ecology/v2/genome_mutation_v1.gd")
 const E = preload("res://scripts/research/ecology/v2/environment_fixture_v1.gd")
 const Fixtures = preload("res://scripts/research/ecology/v2/body_program_fixtures_v1.gd")
 const Controller = preload("res://scripts/ecology/workbench/experiment_controller_v1.gd")
@@ -162,38 +163,44 @@ func _grow(genome: Dictionary, ticks: int) -> Dictionary:
 				break
 	return state
 
-# --- b) DEVELOPMENT_BIAS blocked ------------------------------------------------
+# --- b) DEVELOPMENT_BIAS canonical A3 hook -----------------------------------------
 
-func _test_development_bias_blocked() -> void:
+func _test_development_bias_applied() -> void:
+	var parent := _founder_genome()
 	for mode in ["SOFT", "EARTH_LIKE", "NMS_LIKE"]:
 		var preset: Dictionary = Profile.preset(mode)
 		_check(String(preset.rule_class) == "DEVELOPMENT_BIAS", "%s declares DEVELOPMENT_BIAS intent" % mode)
 		var result: Dictionary = Profile.apply_development_bias(preset)
-		_check(not bool(result.get("success", false)), "%s bias request is not successful" % mode)
-		_check(String(result.get("status", "")) == Profile.BLOCKED_STATUS,
-			"%s bias returns BLOCKED_CANONICAL_EXTENSION_REQUIRED" % mode)
-		_check(not String(result.get("required_hook", "")).is_empty(), "%s blocked result documents the required hook" % mode)
-	# VISUAL_ONLY profiles are not applicable (and never block).
+		_check(bool(result.get("success", false)) and bool(result.get("applied", false)), "%s bias is admitted" % mode)
+		_check(String(result.get("status", "")) == Profile.APPLIED_STATUS, "%s reports APPLIED_CANONICAL_BIAS" % mode)
+		var bias: Dictionary = result.get("bias", {})
+		_check(Mutation.validate_bias(bias).is_empty(), "%s bias validates through canonical A3" % mode)
+		var known_only := true
+		for op in bias.operator_weights.keys():
+			if not String(op) in Mutation.OPERATORS:
+				known_only = false
+		_check(known_only, "%s bias contains only existing A3 operators" % mode)
+		var a: Dictionary = Mutation.mutate_with_bias(parent, 4242, bias)
+		var b: Dictionary = Mutation.mutate_with_bias(parent, 4242, bias)
+		_check(bool(a.get("success", false)) and bool(b.get("success", false)), "%s biased mutation executes" % mode)
+		if bool(a.get("success", false)) and bool(b.get("success", false)):
+			_check(String(a.selected_operator) == String(b.selected_operator), "%s operator selection is deterministic" % mode)
+			_check(String(a.event_hash) == String(b.event_hash), "%s biased mutation event is deterministic" % mode)
+			_check(String(a.selected_operator) in Mutation.OPERATORS, "%s selected operator remains canonical" % mode)
+		_check(String(result.get("bias_hash", "")).length() == 64, "%s bias provenance is sealed" % mode)
+	# New operators remain impossible even through a rehashed-looking profile.
+	var invalid_bias := {
+		"schema": Mutation.BIAS_SCHEMA,
+		"name": "organization/adversarial",
+		"version": 1,
+		"operator_weights": {"teleport_species": 100},
+	}
+	_check(Mutation.validate_bias(invalid_bias) == "MUTATION_BIAS_OPERATOR", "bias cannot introduce a polygon-only mutation operator")
+	# FREE remains presentation-only.
 	var free_result: Dictionary = Profile.apply_development_bias(Profile.preset("FREE"))
-	_check(bool(free_result.get("success", false)) and String(free_result.status) == "NOT_APPLICABLE",
-		"FREE profile has no development semantics")
-	# Weights are provenance-only and stay blocked-marked for bias modes.
+	_check(bool(free_result.get("success", false)) and String(free_result.status) == "NOT_APPLICABLE", "FREE profile has no development bias")
 	var weights: Dictionary = Profile.resolve_weights(Profile.preset("EARTH_LIKE"), 42)
-	_check(bool(weights.get("blocked", false)), "DEVELOPMENT_BIAS provenance weights are marked blocked")
-	# Canonical state is NOT changed by a blocked bias request: pure call +
-	# identical 16-tick hash regardless of whether the request was made.
-	var manifest := _manifest_16()
-	var ctl := Controller.new()
-	_check(bool(ctl.initialize(manifest).get("success", false)), "bias controller initialize succeeds")
-	_check(bool(ctl.run(16).get("success", false)), "bias run(16) succeeds")
-	var hash_clean := String(ctl.get_snapshot().canonical_state_hash)
-	var ctl2 := Controller.new()
-	ctl2.initialize(manifest)
-	for mode in ["SOFT", "EARTH_LIKE", "NMS_LIKE"]:
-		Profile.apply_development_bias(Profile.preset(mode))
-	_check(bool(ctl2.run(16).get("success", false)), "run after blocked bias requests succeeds")
-	_check(String(ctl2.get_snapshot().canonical_state_hash) == hash_clean,
-		"blocked DEVELOPMENT_BIAS requests never change canonical state")
+	_check(not bool(weights.get("blocked", true)) and String(weights.get("bias_hash", "")).length() == 64, "DEVELOPMENT_BIAS weights are realizable canonical provenance")
 
 # --- c) FREE-mode acceptance (§19) ----------------------------------------------
 
@@ -300,7 +307,7 @@ func _test_manifest_modes() -> void:
 
 func _run() -> void:
 	_test_visual_only()
-	_test_development_bias_blocked()
+	_test_development_bias_applied()
 	_test_free_acceptance()
 	_test_morphotype_classifier()
 	_test_manifest_modes()
