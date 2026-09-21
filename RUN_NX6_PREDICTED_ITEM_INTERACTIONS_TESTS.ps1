@@ -53,6 +53,7 @@ try {
     Invoke-Nx6Step "editor_import" @("--headless", "--editor", "--path", $ProjectRoot, "--quit")
     Invoke-Nx6Step "nx6_contracts" @("--headless", "--path", $ProjectRoot, "--script", "res://tests/network/test_nx6_predicted_item_interactions.gd")
     Invoke-Nx6Step "nx6_integration" @("--headless", "--path", $ProjectRoot, "--script", "res://tests/network/test_nx6_predicted_item_interactions_integration.gd")
+    Invoke-Nx6Step "prediction_duplicate_authoritative_rollback" @("--headless", "--path", $ProjectRoot, "--script", "res://tests/network/test_prediction_duplicate_authoritative_rollback.gd")
     Invoke-Nx6Step "m7_playable_contracts" @("--headless", "--path", $ProjectRoot, "--script", "res://tests/runtime/test_m7_playable_networked_playground.gd")
 
     # Fix3 keeps the graphical M7 multiprocess suite to a mandatory gate.
@@ -65,7 +66,7 @@ try {
         & (Join-Path $ProjectRoot "RUN_NX5_REMOTE_SNAPSHOT_INTERPOLATION_TESTS.ps1") -GodotPath $Godot -IncludeAcceptedRegression
         if ($LASTEXITCODE -ne 0) { throw "NX5 accepted regression failed" }
     }
-    Write-Host "NX6 predicted item interactions fix3: PASS (5/5 mandatory)" -ForegroundColor Green
+    Write-Host "NX6 predicted item interactions fix3: PASS (6/6 mandatory)" -ForegroundColor Green
     Write-Host "Logs: $ResultRoot"
 }
 finally {

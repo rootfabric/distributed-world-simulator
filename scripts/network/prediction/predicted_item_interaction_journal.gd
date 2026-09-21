@@ -85,6 +85,9 @@ func adopt_authoritative(snapshot: Dictionary, now_ms: int = -1) -> Dictionary:
 		if incoming_revision == current_revision:
 			if incoming_checksum == current_checksum:
 				_expire_predictions(_now_ms(now_ms))
+				var duplicate_rebuild := _rebuild_projection(false)
+				if not bool(duplicate_rebuild.get("success", false)):
+					return duplicate_rebuild
 				return _success({
 					"accepted": false,
 					"duplicate": true,
