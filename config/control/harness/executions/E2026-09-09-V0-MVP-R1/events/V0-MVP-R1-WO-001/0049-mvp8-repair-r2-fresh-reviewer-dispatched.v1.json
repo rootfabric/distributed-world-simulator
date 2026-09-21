@@ -1,0 +1,22 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-09-09-V0-MVP-R1-V0-MVP-R1-WO-001-0049-MVP8-REPAIR-R2-FRESH-REVIEWER-DISPATCHED",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "sequence": 49,
+  "event_type": "REVIEW_DISPATCHED",
+  "work_state": "IN_PROGRESS",
+  "recorded_at_utc": "2026-09-21T21:31:00Z",
+  "actor": "DIRECTOR",
+  "branch": "repair/v0-mvp8-cold-class-cache-r2",
+  "head_sha": "dc6e7fffa27d764ea09ded949d50b99a32fa4d9b",
+  "predicate": "MVP8_INDEPENDENT_REVIEWER_PASS",
+  "command": "DISPATCH_FRESH_REVIEWER_DC6E7FFF_R1",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/verifications/MVP8-FRESH-INDEPENDENT-REVIEWER-DC6E7FFF-R1-INSTRUCTION.md",
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/verifications/MVP8-FRESH-INDEPENDENT-VERIFIER-DC6E7FFF-R1-INSTRUCTION.md",
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence/MVP8-WINDOWS-FINAL-CLOSURE-DC6E7FFF-R1.v1.json"
+  ],
+  "summary": "Exact repair subject frozen at dc6e7fff/8fc0044f and PR #680 marked ready for review. Fresh Reviewer is dispatched now. Fresh Verifier instruction is prepared but must not execute until exact Reviewer PASS is published."
+}
