@@ -154,7 +154,7 @@ func _controller_hash(controller: Object) -> String:
 	return String(snapshot.canonical_state_hash)
 
 func _runtime_hash(state: Dictionary) -> String:
-	return _canonical_hash(state.field, state.population, Runtime.feedback_view(state), int(state.tick))
+	return Runtime.state_hash(state)
 
 func _alive(state: Dictionary) -> int:
 	var count := 0
