@@ -565,6 +565,24 @@ func _scenario_damage() -> void:
 		_check(int(damage.effective.active_module_count) == int(effective_after.active_module_count), "D inspector layer 3: effective active modules")
 		var text := Inspector.render_text(inspected.view)
 		_check(text.contains("HISTORICAL") and text.contains("OVERLAY") and text.contains("EFFECTIVE"), "D inspector renders three separate layers")
+	# WORLD_COMPAT checkpoint after applied damage must preserve the complete
+	# adapter state, including the overlay and its separately stored trust anchor.
+	var damage_checkpoint: Dictionary = wc.serialize_state()
+	_check(bool(damage_checkpoint.get("success", false)), "D checkpoint serializes after damage overlay")
+	if bool(damage_checkpoint.get("success", false)):
+		var adapter2 := _adapter(manifest, _region("node/a", 1, "ACTIVE"), [{"material_id": "matter/water-ice", "resource": "water_mg"}])
+		var wc2 := _wc_controller(manifest, adapter2)
+		var restored: Dictionary = wc2.load_state(String(damage_checkpoint.state_text), String(damage_checkpoint.manifest_hash), String(damage_checkpoint.state_checksum))
+		_check(bool(restored.get("success", false)), "D checkpoint restores runtime + damage authority state")
+		if bool(restored.get("success", false)):
+			var restored_view: Dictionary = adapter2.damage_view(individual_id)
+			_check(bool(restored_view.get("overlay_present", false)), "D restored adapter still exposes damage overlay")
+			_check(int(restored_view.overlay.revision) == 1, "D restored overlay revision preserved")
+			var restored_effective: Dictionary = adapter2.effective_function(individual_id)
+			_check(String(restored_effective.get("functional_hash", "")) == String(effective_after.functional_hash), "D restored effective body hash matches pre-checkpoint damage state")
+			var replay_after_restore: Dictionary = adapter2.apply_damage(individual_id)
+			_check(bool(replay_after_restore.get("success", false)) and bool(replay_after_restore.get("replay", false)), "D restored trusted damage replay remains idempotent")
+
 	# LAB-shaped damage section without adapter.
 	var lab_view: Dictionary = Inspector.compile_from_debug(wc.debug_state(), individual_id)
 	_check(not bool(lab_view.view.damage.overlay_present), "D without adapter the damage section keeps the explicit empty shape")
