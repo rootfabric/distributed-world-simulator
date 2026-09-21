@@ -32,6 +32,7 @@ class_name EcoWorkbenchPolygonWorldAdapterV1
 extends RefCounted
 
 const C = preload("res://scripts/research/ecology/v2/canonical_value_v1.gd")
+const MatterUtils = preload("res://scripts/simulation/matter/matter_contract_utils.gd")
 const Manifest = preload("res://scripts/ecology/workbench/experiment_manifest_v1.gd")
 const FieldContract = preload("res://scripts/research/ecology/v2/environment_field_contract_v1.gd")
 const WorldBinding = preload("res://scripts/research/ecology/v2/world_binding_v1.gd")
@@ -44,6 +45,7 @@ const Ticket = preload("res://scripts/network/contracts/handoff_ticket.gd")
 const Ownership = preload("res://scripts/ecology/production/ecology_region_ownership_v1.gd")
 
 const STATE_SCHEMA := "dws.ecology.workbench.world-adapter-state.v1"
+const STATE_ENVELOPE_SCHEMA := "dws.ecology.workbench.world-adapter-state-envelope.v1"
 const AUTHORITY_FIELDS := ["region", "entity_id", "owner_id", "catalog", "mapping_entries"]
 const STOCK_FIELDS := ["water_mg", "nutrient_mg", "organic_mg"]
 
@@ -404,7 +406,11 @@ static func production_accept_handoff(ownership_state: Dictionary, package: Dict
 func export_state() -> Dictionary:
 	if _region.is_empty():
 		return {}
-	var value := {
+	# The physical-world payload legitimately contains finite floats (Matter
+	# samples/catalog and Construction snapshots). It therefore keeps its own
+	# JSON canonicalization domain and crosses into the integer-only ecology
+	# checkpoint as opaque canonical TEXT plus a text hash.
+	var raw := {
 		"schema": STATE_SCHEMA,
 		"manifest_hash": _manifest_hash,
 		"region": _region.duplicate(true),
@@ -418,33 +424,55 @@ func export_state() -> Dictionary:
 		"damage": _damage.duplicate(true),
 		"checksum": "",
 	}
-	value.checksum = _state_checksum(value)
-	return value if _validate_exported_state(value).is_empty() else {}
+	raw.checksum = _state_checksum(raw)
+	var error := _validate_raw_state(raw)
+	if not error.is_empty():
+		return {}
+	var state_text := MatterUtils.canonical_json(raw)
+	if state_text.is_empty():
+		return {}
+	var envelope := {
+		"schema": STATE_ENVELOPE_SCHEMA,
+		"state_text": state_text,
+		"state_hash": state_text.sha256_text(),
+	}
+	return envelope if not C.encode(envelope).is_empty() else {}
 
-## Import only an externally anchored state. configure() must already have
-## bound this adapter to the same manifest; the checkpoint does not get to
-## replace caller-owned manifest identity.
+## Import only an externally anchored state envelope. configure() must already
+## have bound this adapter to the same manifest. The ecology checkpoint anchors
+## this envelope; the envelope in turn anchors canonical physical JSON bytes.
 func import_state(value: Dictionary, expected_hash: String) -> Dictionary:
 	if not FieldContract.valid_hash(expected_hash) or C.digest(value) != expected_hash:
 		return _fail("ADAPTER_STATE_EXTERNAL_ANCHOR")
-	var error := _validate_exported_state(value)
+	if not C.keys(value, ["schema", "state_text", "state_hash"]) or String(value.schema) != STATE_ENVELOPE_SCHEMA:
+		return _fail("ADAPTER_STATE_ENVELOPE")
+	if not value.state_text is String or not FieldContract.valid_hash(value.state_hash) \
+			or String(value.state_text).sha256_text() != String(value.state_hash):
+		return _fail("ADAPTER_STATE_TEXT_ANCHOR")
+	var decoded: Variant = JSON.parse_string(String(value.state_text))
+	if not decoded is Dictionary:
+		return _fail("ADAPTER_STATE_TEXT_DECODE")
+	var raw: Dictionary = decoded
+	if MatterUtils.canonical_json(raw) != String(value.state_text):
+		return _fail("ADAPTER_STATE_TEXT_NONCANONICAL")
+	var error := _validate_raw_state(raw)
 	if not error.is_empty():
 		return _fail(error)
-	if not _manifest_hash.is_empty() and String(value.manifest_hash) != _manifest_hash:
+	if not _manifest_hash.is_empty() and String(raw.manifest_hash) != _manifest_hash:
 		return _fail("ADAPTER_STATE_MANIFEST")
-	_region = value.region.duplicate(true)
-	_cursor = value.cursor.duplicate(true)
-	_catalog = value.catalog.duplicate(true)
-	_mapping = value.mapping.duplicate(true)
-	_map_id = String(value.map_id)
-	_site_binding = value.site_binding.duplicate(true)
-	_batches = value.batches.duplicate(true)
-	_admitted_resources = value.admitted_resources.duplicate(true)
-	_damage = value.damage.duplicate(true)
+	_region = raw.region.duplicate(true)
+	_cursor = raw.cursor.duplicate(true)
+	_catalog = raw.catalog.duplicate(true)
+	_mapping = raw.mapping.duplicate(true)
+	_map_id = String(raw.map_id)
+	_site_binding = raw.site_binding.duplicate(true)
+	_batches = raw.batches.duplicate(true)
+	_admitted_resources = raw.admitted_resources.duplicate(true)
+	_damage = raw.damage.duplicate(true)
 	last_error = ""
 	return {"success": true}
 
-func _validate_exported_state(value: Variant) -> String:
+func _validate_raw_state(value: Variant) -> String:
 	var fields := ["schema", "manifest_hash", "region", "cursor", "catalog", "mapping", "map_id", "site_binding", "batches", "admitted_resources", "damage", "checksum"]
 	if not C.keys(value, fields) or String(value.schema) != STATE_SCHEMA:
 		return "ADAPTER_STATE_SCHEMA"
@@ -452,8 +480,6 @@ func _validate_exported_state(value: Variant) -> String:
 		return "ADAPTER_STATE_FIELDS"
 	if not bool(Region.validate(value.region).get("success", false)):
 		return "ADAPTER_STATE_REGION"
-	# Cursor identity remains bound to the region even when the region is in a
-	# non-executable handoff lifecycle state.
 	if String(value.cursor.get("region_id", "")) != String(value.region.get("region_id", "")):
 		return "ADAPTER_STATE_CURSOR_REGION"
 	if String(value.cursor.get("owner_id", "")) != String(value.region.get("owner_node_id", "")):
@@ -466,6 +492,10 @@ func _validate_exported_state(value: Variant) -> String:
 		return "ADAPTER_STATE_MAP_ID"
 	if not value.site_binding is Dictionary or not value.batches is Dictionary or not value.damage is Dictionary:
 		return "ADAPTER_STATE_CONTAINER"
+	if not MatterUtils.validate_json_safe(value.catalog).success \
+			or not MatterUtils.validate_json_safe(value.site_binding).success \
+			or not MatterUtils.validate_json_safe(value.damage).success:
+		return "ADAPTER_STATE_JSON_SAFE"
 	if not FieldContract.valid_total_stock(value.admitted_resources):
 		return "ADAPTER_STATE_RESOURCES"
 	for batch_id in value.batches:
@@ -499,7 +529,7 @@ func _validate_exported_state(value: Variant) -> String:
 func _state_checksum(value: Dictionary) -> String:
 	var payload := value.duplicate(true)
 	payload.checksum = ""
-	return C.digest(payload)
+	return MatterUtils.payload_hash(payload)
 
 # --- read views -------------------------------------------------------------------
 
