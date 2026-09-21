@@ -1,0 +1,73 @@
+{
+  "schema": "distributed_world_simulator.mvp8_windows_engine_capture_r3_dispatch.v1",
+  "recorded_at_utc": "2026-09-21T04:23:00Z",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "frozen_product": {
+    "head": "90bc1026f0f5749492107191233330f87c8c70df",
+    "tree": "4b6f2d48f7ef8d9c441ae89d2cbb02c730ef7f71",
+    "freeze_ref": "freeze/v0-mvp8-review-90bc1026-r1",
+    "product_source_changed": false
+  },
+  "canonical_windows_godot": {
+    "version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "console_sha256": "3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5",
+    "capture_source": "C:\\Godot\\godot\\bin",
+    "rebuild_substitution_allowed": false
+  },
+  "prior_routes": {
+    "verifier_r1": {
+      "branch": "verify/v0-mvp8-90bc1026-r1",
+      "commit": "502f5ea8d12f97b89577bc28d57f473918fe8f16",
+      "verdict": "EVIDENCE_GAP"
+    },
+    "self_hosted_r2": {
+      "run_id": 35539050245,
+      "job_id": 106153224998,
+      "status": "queued",
+      "conclusion": null,
+      "issue": "self-hosted Windows executor has not accepted the job"
+    },
+    "hosted_rebuild_windows_2022": {
+      "run_id": 35557275380,
+      "job_id": 106203245137,
+      "build_result": "success",
+      "version_result": "exact",
+      "rebuilt_console_sha256": "7608b77a798a66f3ff6a89e8a0e8001aa044fca162a324676215b3294b21d891",
+      "expected_console_sha256": "3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5",
+      "verdict": "NOT_EQUIVALENT_ENGINE",
+      "product_runtime_executed": false
+    }
+  },
+  "r3_route": {
+    "branch": "control/v0-mvp8-windows-engine-capture-r3",
+    "workflow": ".github/workflows/mvp8-windows-engine-capture-r3.yml",
+    "workflow_commit": "8eec0971b42787500ec4924ebad4fa565e2ca1b1",
+    "verifier_instruction": "config/control/harness/executions/E2026-09-09-V0-MVP-R1/verifications/MVP8-FRESH-INDEPENDENT-VERIFIER-90BC1026-R3-ENGINE-CAPTURE-ROUTE.md",
+    "run_id": 35560712264,
+    "capture_job_id": 106212936026,
+    "capture_job_status": "queued",
+    "stage_a": "self-hosted runner only verifies/copies exact installed canonical Godot pair and uploads same-run artifact",
+    "stage_b": "clean GitHub-hosted windows-2022 runner re-verifies exact SHA then runs MVP8 and full world/core",
+    "heavy_workload_on_self_hosted": false,
+    "rebuild_used_for_acceptance": false,
+    "predicate_verified": false,
+    "independent_verdict": false
+  },
+  "already_green": {
+    "reviewer_pass_commit": "b8daebf27e11938a3c4432a127f384290e3255dc",
+    "linux_mvp8_run": 35510920506,
+    "linux_mvp8_attempts": "1/2/3 SUCCESS",
+    "linux_world_core_run": 35515256366,
+    "linux_world_core_job": 106089996971,
+    "linux_world_core": "349 declared == 349 discovered; 354 steps; 0 failed",
+    "pc0_run": 35513137221,
+    "pc0": "STANDARD YELLOW; DIRECTIONAL YELLOW; non-RED"
+  },
+  "state": {
+    "product_defect_known": false,
+    "mvp8_verified": false,
+    "mvp8_closed": false,
+    "blocker": "Stage A exact canonical engine capture has not started because the self-hosted Windows runner remains unavailable."
+  }
+}
