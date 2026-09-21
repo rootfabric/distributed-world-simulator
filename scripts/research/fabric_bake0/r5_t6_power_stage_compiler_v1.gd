@@ -107,9 +107,9 @@ static func compile(graph: Dictionary, request: Dictionary, capsule_id: String) 
 	var interface := Interface.create()
 	if interface.is_empty():
 		return U.failure("POWER_STAGE_INTERFACE_CREATE_FAILED")
-	var source_count := graph.switch_dies.size()
-	var source_operations := source_count * 6
-	var compiled_operations := 18
+	var source_count: int = int(graph.switch_dies.size())
+	var source_operations: int = source_count * 6
+	var compiled_operations: int = 18
 	var descriptor := Descriptor.create({
 		"graph_hash": graph.graph_hash,
 		"material_catalog_hash": graph.material_catalog.catalog_hash,
