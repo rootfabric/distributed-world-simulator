@@ -1,0 +1,328 @@
+name: MVP8 Windows Exact Engine Capture R3
+
+on:
+  push:
+    branches:
+      - control/v0-mvp8-windows-engine-capture-r3
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mvp8-windows-engine-capture-r3
+  cancel-in-progress: false
+
+env:
+  SUBJECT_HEAD: 90bc1026f0f5749492107191233330f87c8c70df
+  SUBJECT_TREE: 4b6f2d48f7ef8d9c441ae89d2cbb02c730ef7f71
+  EXPECTED_GODOT_VERSION: 4.7.1.stable.double.custom_build.a13da4feb
+  EXPECTED_GODOT_SHA256: 3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5
+  PYTHONUTF8: '1'
+  PYTHONDONTWRITEBYTECODE: '1'
+  BREAKPOINT_RUNTIME_DISABLED: '1'
+  GODOT_SILENCE_ROOT_WARNING: '1'
+  PLANET_SIMULATOR_INVENTORY_PROFILE: planet_default
+
+jobs:
+  capture-canonical-engine:
+    name: Capture canonical Windows double Godot only
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 15
+    defaults:
+      run:
+        shell: powershell
+
+    steps:
+      - name: Verify and stage canonical engine
+        run: |
+          $ErrorActionPreference = "Stop"
+          $sourceDir = "C:\Godot\godot\bin"
+          $console = Join-Path $sourceDir "godot.windows.editor.double.x86_64.console.exe"
+          $editor = Join-Path $sourceDir "godot.windows.editor.double.x86_64.exe"
+          if (-not (Test-Path -LiteralPath $console -PathType Leaf)) { throw "CANONICAL_CONSOLE_MISSING:$console" }
+          if (-not (Test-Path -LiteralPath $editor -PathType Leaf)) { throw "CANONICAL_EDITOR_MISSING:$editor" }
+
+          $version = (& $console --version 2>&1 | Select-Object -First 1).Trim()
+          $consoleSha = (Get-FileHash -Algorithm SHA256 -LiteralPath $console).Hash.ToLowerInvariant()
+          $editorSha = (Get-FileHash -Algorithm SHA256 -LiteralPath $editor).Hash.ToLowerInvariant()
+          if ($version -ne $env:EXPECTED_GODOT_VERSION) { throw "GODOT_VERSION_MISMATCH:$version" }
+          if ($consoleSha -ne $env:EXPECTED_GODOT_SHA256) { throw "GODOT_SHA256_MISMATCH:$consoleSha" }
+
+          $stage = Join-Path $env:RUNNER_TEMP "mvp8-canonical-godot"
+          if (Test-Path $stage) { Remove-Item -LiteralPath $stage -Recurse -Force }
+          New-Item -ItemType Directory -Force -Path $stage | Out-Null
+          Copy-Item -LiteralPath $console -Destination (Join-Path $stage (Split-Path $console -Leaf))
+          Copy-Item -LiteralPath $editor -Destination (Join-Path $stage (Split-Path $editor -Leaf))
+
+          $stagedConsole = Join-Path $stage "godot.windows.editor.double.x86_64.console.exe"
+          $stagedEditor = Join-Path $stage "godot.windows.editor.double.x86_64.exe"
+          $stagedVersion = (& $stagedConsole --version 2>&1 | Select-Object -First 1).Trim()
+          $stagedConsoleSha = (Get-FileHash -Algorithm SHA256 -LiteralPath $stagedConsole).Hash.ToLowerInvariant()
+          $stagedEditorSha = (Get-FileHash -Algorithm SHA256 -LiteralPath $stagedEditor).Hash.ToLowerInvariant()
+          if ($stagedVersion -ne $version) { throw "STAGED_VERSION_MISMATCH:$stagedVersion" }
+          if ($stagedConsoleSha -ne $consoleSha) { throw "STAGED_CONSOLE_HASH_MISMATCH:$stagedConsoleSha" }
+          if ($stagedEditorSha -ne $editorSha) { throw "STAGED_EDITOR_HASH_MISMATCH:$stagedEditorSha" }
+
+          [ordered]@{
+            schema = "distributed_world_simulator.canonical_windows_godot_capture.v1"
+            run_id = $env:GITHUB_RUN_ID
+            run_attempt = $env:GITHUB_RUN_ATTEMPT
+            runner_name = $env:RUNNER_NAME
+            source_dir = $sourceDir
+            version = $version
+            expected_version = $env:EXPECTED_GODOT_VERSION
+            console_sha256 = $consoleSha
+            expected_console_sha256 = $env:EXPECTED_GODOT_SHA256
+            editor_sha256 = $editorSha
+            console_bytes = (Get-Item -LiteralPath $stagedConsole).Length
+            editor_bytes = (Get-Item -LiteralPath $stagedEditor).Length
+            staged_relocation_version_ok = $true
+            staged_console_hash_ok = $true
+            staged_editor_hash_ok = $true
+          } | ConvertTo-Json -Depth 6 | Set-Content -Encoding UTF8 (Join-Path $stage "capture-manifest.json")
+
+      - name: Upload canonical engine
+        uses: actions/upload-artifact@v4
+        with:
+          name: mvp8-canonical-windows-godot
+          path: ${{ runner.temp }}\mvp8-canonical-godot\
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 0
+
+  hosted-closure:
+    name: Verify frozen MVP8 on clean hosted Windows
+    needs: capture-canonical-engine
+    runs-on: windows-2022
+    timeout-minutes: 210
+
+    steps:
+      - name: Checkout frozen MVP8 product
+        uses: actions/checkout@v4
+        with:
+          ref: 90bc1026f0f5749492107191233330f87c8c70df
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Download canonical engine
+        uses: actions/download-artifact@v4
+        with:
+          name: mvp8-canonical-windows-godot
+          path: engine
+
+      - name: Verify exact subject and engine
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $evidence = Join-Path $PWD "artifacts\mvp8-windows-engine-capture-r3"
+          New-Item -ItemType Directory -Force -Path $evidence | Out-Null
+
+          $head = (git rev-parse HEAD).Trim()
+          $tree = (git rev-parse "HEAD^{tree}").Trim()
+          if ($head -ne $env:SUBJECT_HEAD) { throw "SUBJECT_HEAD_MISMATCH:$head" }
+          if ($tree -ne $env:SUBJECT_TREE) { throw "SUBJECT_TREE_MISMATCH:$tree" }
+          $tracked = @(git status --porcelain --untracked-files=no)
+          if ($tracked.Count -ne 0) { throw "TRACKED_CHECKOUT_DIRTY_BEFORE" }
+
+          $console = Join-Path $PWD "engine\godot.windows.editor.double.x86_64.console.exe"
+          $editor = Join-Path $PWD "engine\godot.windows.editor.double.x86_64.exe"
+          $manifestPath = Join-Path $PWD "engine\capture-manifest.json"
+          foreach ($p in @($console,$editor,$manifestPath)) {
+            if (-not (Test-Path -LiteralPath $p -PathType Leaf)) { throw "ENGINE_ARTIFACT_FILE_MISSING:$p" }
+          }
+          $capture = Get-Content -Raw -LiteralPath $manifestPath | ConvertFrom-Json
+          $version = (& $console --version 2>&1 | Select-Object -First 1).Trim()
+          $consoleSha = (Get-FileHash -Algorithm SHA256 -LiteralPath $console).Hash.ToLowerInvariant()
+          $editorSha = (Get-FileHash -Algorithm SHA256 -LiteralPath $editor).Hash.ToLowerInvariant()
+          if ($version -ne $env:EXPECTED_GODOT_VERSION) { throw "DOWNLOADED_GODOT_VERSION_MISMATCH:$version" }
+          if ($consoleSha -ne $env:EXPECTED_GODOT_SHA256) { throw "DOWNLOADED_GODOT_SHA256_MISMATCH:$consoleSha" }
+          if ($capture.console_sha256 -ne $consoleSha) { throw "CAPTURE_CONSOLE_BINDING_MISMATCH" }
+          if ($capture.editor_sha256 -ne $editorSha) { throw "CAPTURE_EDITOR_BINDING_MISMATCH" }
+
+          [ordered]@{
+            schema = "distributed_world_simulator.mvp8_hosted_exact_engine_binding.v1"
+            subject_head = $head
+            subject_tree = $tree
+            version = $version
+            console_sha256 = $consoleSha
+            editor_sha256 = $editorSha
+            capture_runner = $capture.runner_name
+            hosted_runner = $env:RUNNER_NAME
+            tracked_clean_before = $true
+          } | ConvertTo-Json -Depth 6 | Set-Content -Encoding UTF8 (Join-Path $evidence "engine-binding.json")
+
+          "GODOT_BIN=$console" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: Healthy hosted preflight
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $evidence = Join-Path $PWD "artifacts\mvp8-windows-engine-capture-r3"
+          $os = Get-CimInstance Win32_OperatingSystem
+          $freeGb = [Math]::Round(($os.FreePhysicalMemory * 1KB) / 1GB, 3)
+          $totalGb = [Math]::Round(($os.TotalVisibleMemorySize * 1KB) / 1GB, 3)
+          $godotProcesses = @(Get-Process -ErrorAction SilentlyContinue | Where-Object { $_.ProcessName -like "godot*" })
+          [ordered]@{
+            schema = "distributed_world_simulator.mvp8_hosted_windows_preflight.v1"
+            windows_caption = $os.Caption
+            windows_version = $os.Version
+            windows_build = $os.BuildNumber
+            free_physical_gb = $freeGb
+            total_physical_gb = $totalGb
+            existing_godot_processes = @($godotProcesses | ForEach-Object { [ordered]@{ id=$_.Id; name=$_.ProcessName } })
+          } | ConvertTo-Json -Depth 6 | Set-Content -Encoding UTF8 (Join-Path $evidence "host-preflight.json")
+          if ($godotProcesses.Count -ne 0) { throw "HOST_PREFLIGHT_EXISTING_GODOT_PROCESSES" }
+          if ($freeGb -lt 6.0) { throw "HOST_PREFLIGHT_LOW_FREE_RAM_$($freeGb)GB" }
+
+      - name: Fresh exact Windows MVP8 runtime
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $evidence = Join-Path $PWD "artifacts\mvp8-windows-engine-capture-r3"
+          $live = Join-Path $evidence "mvp8-live"
+          $snapshot = Join-Path $evidence "mvp8-live-snapshot"
+          $log = Join-Path $evidence "mvp8-runtime.log"
+          if (Test-Path $live) { throw "MVP8_LIVE_ALREADY_EXISTS" }
+
+          & python tests/integration/test_v0_mvp_8_bounded_workload.py --engine "$env:GODOT_BIN" --output "$live" *> "$log"
+          $code = $LASTEXITCODE
+          Get-Content -LiteralPath $log
+          [ordered]@{ exit_code=$code; finished_at_utc=[DateTime]::UtcNow.ToString("o") } |
+            ConvertTo-Json | Set-Content -Encoding UTF8 (Join-Path $evidence "mvp8-exit.json")
+          if ($code -ne 0) { throw "MVP8_RUNTIME_FAILED:$code" }
+
+          Copy-Item -LiteralPath $live -Destination $snapshot -Recurse
+          $manifest = Get-Content -Raw -LiteralPath (Join-Path $snapshot "manifest.json") | ConvertFrom-Json
+          if ($manifest.passed -ne $true) { throw "MVP8_MANIFEST_NOT_PASS" }
+          if ($manifest.subject_head -ne $env:SUBJECT_HEAD -or $manifest.subject_tree -ne $env:SUBJECT_TREE) { throw "MVP8_MANIFEST_SUBJECT_MISMATCH" }
+          $props = @($manifest.checks.PSObject.Properties)
+          if ($props.Count -ne 20) { throw "MVP8_CHECK_COUNT_MISMATCH:$($props.Count)" }
+          if (@($props | Where-Object { $_.Value -ne $true }).Count -ne 0) { throw "MVP8_CHECK_FALSE" }
+          if (@($manifest.negative_controls).Count -ne 14) { throw "MVP8_NEGATIVE_COUNT_MISMATCH" }
+          if (@($manifest.fatal_logs).Count -ne 0) { throw "MVP8_FATAL_LOGS_PRESENT" }
+
+          $required = @(
+            "phase1\authority-a.json","phase1\authority-b.json","phase1\gateway.json",
+            "phase1\client-a.json","phase1\client-b.json","phase1\reconnect-a.json",
+            "phase2\authority-a.json","phase2\authority-b.json","phase2\gateway.json",
+            "phase2\client-a.json","phase2\client-b.json"
+          )
+          foreach ($rel in $required) {
+            if (-not (Test-Path -LiteralPath (Join-Path $snapshot $rel) -PathType Leaf)) {
+              throw "MVP8_REQUIRED_RAW_ROLE_FILE_MISSING:$rel"
+            }
+          }
+
+          $hashRows = @(
+            Get-ChildItem -LiteralPath $snapshot -Recurse -File |
+              Sort-Object FullName |
+              ForEach-Object {
+                [ordered]@{
+                  path = $_.FullName.Substring($snapshot.Length).TrimStart("\").Replace("\","/")
+                  bytes = $_.Length
+                  sha256 = (Get-FileHash -Algorithm SHA256 -LiteralPath $_.FullName).Hash.ToLowerInvariant()
+                }
+              }
+          )
+          [ordered]@{
+            schema = "distributed_world_simulator.mvp8_windows_snapshot_hashes.v1"
+            files = $hashRows
+          } | ConvertTo-Json -Depth 8 | Set-Content -Encoding UTF8 (Join-Path $evidence "mvp8-snapshot-hashes.json")
+
+      - name: Independent Windows full world core
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $evidence = Join-Path $PWD "artifacts\mvp8-windows-engine-capture-r3"
+          $managed = Join-Path $evidence "world-core-managed"
+          New-Item -ItemType Directory -Force -Path $managed | Out-Null
+
+          $env:MVP7_NATIVE_MODE = "produce"
+          $env:MVP7_NATIVE_ROOT = Join-Path $managed "native"
+          $env:MVP7_NATIVE_RESULT = Join-Path $managed "native-result.json"
+          $env:MVP7_WORLD_MODE = "produce"
+          $env:MVP7_WORLD_ROOT = Join-Path $managed "world"
+          $env:MVP7_WORLD_RESULT = Join-Path $managed "world-result.json"
+          $env:MVP7_CONSTRUCTION_MODE = "produce"
+          $env:MVP7_CONSTRUCTION_ROOT = Join-Path $managed "construction"
+          $env:MVP7_CONSTRUCTION_RESULT = Join-Path $managed "construction-result.json"
+          foreach ($p in @($env:MVP7_NATIVE_ROOT,$env:MVP7_WORLD_ROOT,$env:MVP7_CONSTRUCTION_ROOT)) {
+            New-Item -ItemType Directory -Force -Path $p | Out-Null
+          }
+
+          $log = Join-Path $evidence "world-core.log"
+          & powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\RUN_WORLD_REGRESSION_TESTS.ps1" *> "$log"
+          $code = $LASTEXITCODE
+          Get-Content -LiteralPath $log
+          [ordered]@{ exit_code=$code; finished_at_utc=[DateTime]::UtcNow.ToString("o") } |
+            ConvertTo-Json | Set-Content -Encoding UTF8 (Join-Path $evidence "world-core-exit.json")
+          if ($code -ne 0) { throw "WORLD_CORE_FAILED:$code" }
+
+          $summaryPath = Join-Path $PWD "artifacts\test-results\world-regression-summary.json"
+          if (-not (Test-Path -LiteralPath $summaryPath -PathType Leaf)) { throw "WORLD_CORE_SUMMARY_MISSING" }
+          Copy-Item -LiteralPath $summaryPath -Destination (Join-Path $evidence "world-regression-summary.json")
+          $summary = Get-Content -Raw -LiteralPath $summaryPath | ConvertFrom-Json
+          if ($summary.passed -ne $true) { throw "WORLD_CORE_SUMMARY_NOT_PASS" }
+          if ($summary.declared_test_count -ne $summary.discovered_test_count) { throw "WORLD_CORE_DISCOVERY_MISMATCH" }
+          $failed = @($summary.steps | Where-Object { $_.passed -ne $true })
+          if ($failed.Count -ne 0) { throw "WORLD_CORE_FAILED_STEPS:$($failed.Count)" }
+
+      - name: Bind final R3 evidence
+        if: always()
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Continue"
+          $evidence = Join-Path $PWD "artifacts\mvp8-windows-engine-capture-r3"
+          New-Item -ItemType Directory -Force -Path $evidence | Out-Null
+
+          $head = (git rev-parse HEAD).Trim()
+          $tree = (git rev-parse "HEAD^{tree}").Trim()
+          $tracked = @(git status --porcelain --untracked-files=no)
+          $manifestPath = Join-Path $evidence "mvp8-live-snapshot\manifest.json"
+          $worldPath = Join-Path $evidence "world-regression-summary.json"
+          $manifest = if (Test-Path $manifestPath) { Get-Content -Raw $manifestPath | ConvertFrom-Json } else { $null }
+          $world = if (Test-Path $worldPath) { Get-Content -Raw $worldPath | ConvertFrom-Json } else { $null }
+
+          [ordered]@{
+            schema = "distributed_world_simulator.mvp8_windows_engine_capture_r3_carrier.v1"
+            run_id = $env:GITHUB_RUN_ID
+            run_attempt = $env:GITHUB_RUN_ATTEMPT
+            subject_head = $head
+            subject_tree = $tree
+            exact_subject_match = ($head -eq $env:SUBJECT_HEAD -and $tree -eq $env:SUBJECT_TREE)
+            source_tracked_clean_after = ($tracked.Count -eq 0)
+            godot_console_sha256 = if ($env:GODOT_BIN) { (Get-FileHash -Algorithm SHA256 -LiteralPath $env:GODOT_BIN).Hash.ToLowerInvariant() } else { $null }
+            godot_console_sha256_exact = if ($env:GODOT_BIN) { ((Get-FileHash -Algorithm SHA256 -LiteralPath $env:GODOT_BIN).Hash.ToLowerInvariant() -eq $env:EXPECTED_GODOT_SHA256) } else { $false }
+            mvp8_manifest_present = ($null -ne $manifest)
+            mvp8_passed = if ($null -ne $manifest) { $manifest.passed } else { $false }
+            mvp8_check_count = if ($null -ne $manifest) { @($manifest.checks.PSObject.Properties).Count } else { 0 }
+            mvp8_negative_count = if ($null -ne $manifest) { @($manifest.negative_controls).Count } else { 0 }
+            world_core_summary_present = ($null -ne $world)
+            world_core_passed = if ($null -ne $world) { $world.passed } else { $false }
+            world_core_declared = if ($null -ne $world) { $world.declared_test_count } else { $null }
+            world_core_discovered = if ($null -ne $world) { $world.discovered_test_count } else { $null }
+            world_core_steps = if ($null -ne $world) { @($world.steps).Count } else { $null }
+            world_core_failed_steps = if ($null -ne $world) { @($world.steps | Where-Object { $_.passed -ne $true }).Count } else { $null }
+            predicate_verified = $false
+            independent_verdict = $false
+          } | ConvertTo-Json -Depth 8 | Set-Content -Encoding UTF8 (Join-Path $evidence "carrier-summary.json")
+
+          Get-ChildItem -LiteralPath $evidence -Recurse -File |
+            Sort-Object FullName |
+            ForEach-Object {
+              [ordered]@{
+                path = $_.FullName.Substring($evidence.Length).TrimStart("\").Replace("\","/")
+                bytes = $_.Length
+                sha256 = (Get-FileHash -Algorithm SHA256 -LiteralPath $_.FullName).Hash.ToLowerInvariant()
+              }
+            } | ConvertTo-Json -Depth 6 | Set-Content -Encoding UTF8 (Join-Path $evidence "all-evidence-hashes.json")
+
+      - name: Upload R3 closure evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mvp8-windows-engine-capture-r3
+          path: artifacts/mvp8-windows-engine-capture-r3/
+          if-no-files-found: error
+          retention-days: 90
