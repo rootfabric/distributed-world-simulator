@@ -28,20 +28,20 @@ const RULE_CLASS_BY_MODE := {
 # profile. The presets are intentionally broad priors, not species templates.
 const BIAS_PRESETS := {
 	"SOFT": {
-		"small": 40, "medium": 15, "regulatory": 20,
-		"module_parameter": 10, "development_parameter": 10, "none": 5,
+		"small": 45, "medium": 15, "regulatory": 20,
+		"development_parameter": 15, "none": 5,
 	},
 	"EARTH_LIKE": {
-		"small": 25, "medium": 10, "regulatory": 20, "duplicate": 10,
-		"module_parameter": 15, "development_parameter": 15, "none": 5,
+		"small": 30, "medium": 15, "regulatory": 25,
+		"development_parameter": 25, "none": 5,
 	},
 	"NMS_LIKE": {
 		# Deliberately stays inside broadly admissible A3 operators. Context-
 		# dependent topology operators (activate/rewire) remain available to A3
 		# itself but are not used as preset priors until an applicability witness
 		# becomes part of the bias contract.
-		"small": 10, "medium": 20, "regulatory": 15,
-		"module_parameter": 20, "development_parameter": 30, "none": 5,
+		"small": 15, "medium": 25, "regulatory": 15,
+		"development_parameter": 40, "none": 5,
 	},
 }
 
