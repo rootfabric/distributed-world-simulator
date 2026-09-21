@@ -140,7 +140,12 @@ static func admit_propagules(state: Dictionary, options: Dictionary) -> Dictiona
 	var seed_base: int = int(options.get("seed", 0))
 	if options.has("seed") and not C.integer(options.seed, 0, C.MAX_INT): return _fail("RUNTIME_MUTATION_SEED")
 	var key_prefix: String = String(options.get("mutation_key_prefix", MUTATION_KEY_PREFIX_DEFAULT))
-	if mutations_enabled and not operator_name in Mutation.OPERATORS: return _fail("RUNTIME_MUTATION_OPERATOR")
+	var bias: Dictionary = Dictionary(options.get("bias", {})).duplicate(true)
+	if mutations_enabled and not bias.is_empty():
+		var bias_error := Mutation.validate_bias(bias)
+		if not bias_error.is_empty(): return _fail("RUNTIME_MUTATION_BIAS:" + bias_error)
+	elif mutations_enabled and not operator_name in Mutation.OPERATORS:
+		return _fail("RUNTIME_MUTATION_OPERATOR")
 	var next := state.duplicate(true)
 	var population: Array = next.population
 	var children: Array = []
@@ -152,12 +157,14 @@ static func admit_propagules(state: Dictionary, options: Dictionary) -> Dictiona
 		var receipt := {}
 		if mutations_enabled:
 			var seed := mutation_seed(seed_base, int(next.tick) + 1, String(propagule.parent_id), key_prefix)
-			var mutated := Mutation.mutate(parent.blueprint.genome, seed, operator_name)
+			var mutated := Mutation.mutate(parent.blueprint.genome, seed, operator_name) if bias.is_empty() else Mutation.mutate_with_bias(parent.blueprint.genome, seed, bias)
 			if not bool(mutated.get("success", false)):
 				return _fail("RUNTIME_MUTATION_REJECTED:" + String(mutated.get("reason", "?")))
+			var actual_operator := String(mutated.get("selected_operator", operator_name))
 			var candidate := BP.create(mutated.genome, parent.blueprint.life_history)
 			if candidate.is_empty(): return _fail("RUNTIME_MUTATION_BLUEPRINT")
-			receipt = Receipt.issue(parent.blueprint, mutated.genome, operator_name, seed)
+			var bias_hash := "" if bias.is_empty() else C.digest(bias)
+			receipt = Receipt.issue(parent.blueprint, mutated.genome, actual_operator, seed, bias_hash)
 			if receipt.is_empty(): return _fail("RUNTIME_MUTATION_RECEIPT")
 			blueprint = candidate
 		var child := Lifecycle.materialize_propagule(propagule, blueprint, parent.state, receipt, {} if receipt.is_empty() else parent.blueprint)
