@@ -98,7 +98,7 @@ static func make_graph(
 		for tooth_index in range(count):
 			var quality := 0.96 + 0.01 * float(tooth_index % 4)
 			var enabled := true
-			if weak_tooth and stage == 1 and role == "DRIVEN" and tooth_index == 7:
+			if weak_tooth and stage == 2 and role == "DRIVER" and tooth_index == 7:
 				quality = 0.55
 			if disabled_tooth and stage == 2 and role == "DRIVER" and tooth_index == 3:
 				enabled = false
