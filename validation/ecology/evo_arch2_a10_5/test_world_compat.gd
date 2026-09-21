@@ -345,6 +345,18 @@ func _scenario_explicit_mapping() -> void:
 	_check(bool(no_pending.get("success", false)) and not bool(no_pending.get("applied", true)), "M third apply with no new batch is a no-op")
 	_check(_field_total(delta_ctl, "water_mg") == 1250, "M no-op apply leaves field mass unchanged")
 
+	# Exact batch replay is idempotent even after the original batch was applied.
+	var replay_add: Dictionary = delta_adapter.add_batch(b1, String(b1.checksum))
+	_check(bool(replay_add.get("success", false)) and bool(replay_add.get("replay", false)) and bool(replay_add.get("applied", false)), "M exact applied batch replay is recognized as idempotent")
+	var replay_apply: Dictionary = delta_adapter.apply_environment(delta_ctl)
+	_check(bool(replay_apply.get("success", false)) and not bool(replay_apply.get("applied", true)), "M replayed batch creates no pending deposit")
+	_check(_field_total(delta_ctl, "water_mg") == 1250, "M exact batch replay cannot duplicate mass")
+	var conflicting := b1.duplicate(true)
+	conflicting.temperature_k = 274.15
+	conflicting.checksum = MatterUtils.compute_checksum(conflicting)
+	var conflict_add: Dictionary = delta_adapter.add_batch(conflicting, String(conflicting.checksum))
+	_check(not bool(conflict_add.get("success", false)) and String(conflict_add.get("error", "")).contains("BATCH_ID_CONFLICT"), "M same batch_id with different trusted content fails closed")
+
 	# Multi-cell total stock has no canonical spatial allocation witness.
 	# It must fail closed instead of multiplying one batch by cell count.
 	var multi := _manifest("WORLD_COMPAT", 4)
