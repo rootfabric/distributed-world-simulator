@@ -57,7 +57,9 @@ func attach_world_authority(authority: Object) -> Dictionary:
 	if authority == null \
 			or not authority.has_method("admit_execution") \
 			or not authority.has_method("world_manifest_compatible") \
-			or not authority.has_method("apply_environment"):
+			or not authority.has_method("apply_environment") \
+			or not authority.has_method("export_state") \
+			or not authority.has_method("import_state"):
 		return _command_fail("CONTROLLER_WORLD_AUTHORITY_INVALID")
 	_world_authority = authority
 	return {"success": true}
@@ -433,11 +435,9 @@ func apply_field_patch(patch: Dictionary) -> Dictionary:
 # no field truth is duplicated here; the patched field is adopted into the
 # single runtime truth with an exact accounting re-anchor.
 
-## Deposit world-authority-admitted resource stocks into every field cell
-## through the canonical owner-write API (per-cell semantics identical to
-## genesis zone stocks). WORLD_COMPAT only; LAB field stocks come from the
-## manifest zones. Idempotent per (source_tag, batch set) — call once after
-## initialize()/apply_environment().
+## Deposit one admitted Matter batch TOTAL through the canonical owner-write
+## API. A total has no spatial meaning, so multi-cell fields fail closed until
+## a production allocation witness exists. WORLD_COMPAT only.
 func apply_world_stocks(resources: Dictionary, source_tag: String) -> Dictionary:
 	if _status == "IDLE":
 		return _command_fail("CONTROLLER_NOT_INITIALIZED")
