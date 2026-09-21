@@ -55,6 +55,8 @@ def main():
         assert data["regeneration_seen"] is True
         assert data["damage_active_dies"] == 255
         assert data["unsafe_geometry_error"] == "POWER_STAGE_PARALLEL_CURRENT_SYNCHRONY_UNSAFE"
+        assert data["unsafe_geometry_detailed_reference_executes"] is True
+        assert data["descriptor_relation_error"] == "POWER_STAGE_DESCRIPTOR_PATH_RELATION_MISMATCH"
         assert data["mixed_profile_error"] == "POWER_STAGE_PROFILE_MISMATCH"
         assert data["open_bank_error"] == "POWER_STAGE_BANK_OPEN"
         assert data["composition_max_voltage_error"] <= 1e-9
