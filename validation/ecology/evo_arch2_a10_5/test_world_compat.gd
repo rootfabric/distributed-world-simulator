@@ -536,16 +536,28 @@ func _scenario_damage() -> void:
 	var exported: Dictionary = adapter.export_state()
 	_check(not exported.is_empty(), "D adapter WORLD state exports after damage registration")
 	if not exported.is_empty():
-		var tampered_world := exported.duplicate(true)
-		var damage_row: Dictionary = tampered_world.damage[individual_id]
-		damage_row.event.binding_hash = "e".repeat(64)
-		tampered_world.checksum = ""
-		var checksum_payload := tampered_world.duplicate(true)
-		checksum_payload.checksum = ""
-		tampered_world.checksum = C.digest(checksum_payload)
-		var tampered_hash := C.digest(tampered_world)
-		var import_tampered: Dictionary = adapter.import_state(tampered_world, tampered_hash)
-		_check(not bool(import_tampered.get("success", false)) and String(import_tampered.get("error", "")).contains("DAMAGE_EVENT_ANCHOR"), "D rehashed event cannot replace separately stored trusted binding anchor")
+		var decoded_raw: Variant = JSON.parse_string(String(exported.state_text))
+		_check(decoded_raw is Dictionary, "D exported physical-world canonical text decodes")
+		if decoded_raw is Dictionary:
+			var tampered_raw: Dictionary = decoded_raw
+			var damage_row: Dictionary = tampered_raw.damage[individual_id]
+			damage_row.event.binding_hash = "e".repeat(64)
+			# Rehash EVERYTHING the attacker controls, including the raw-state
+			# checksum and the outer physical envelope. The separate trusted event
+			# anchor must still reject it.
+			tampered_raw.checksum = ""
+			var checksum_payload := tampered_raw.duplicate(true)
+			checksum_payload.checksum = ""
+			tampered_raw.checksum = MatterUtils.payload_hash(checksum_payload)
+			var tampered_text := MatterUtils.canonical_json(tampered_raw)
+			var tampered_world := {
+				"schema": Adapter.STATE_ENVELOPE_SCHEMA,
+				"state_text": tampered_text,
+				"state_hash": tampered_text.sha256_text(),
+			}
+			var tampered_hash := C.digest(tampered_world)
+			var import_tampered: Dictionary = adapter.import_state(tampered_world, tampered_hash)
+			_check(not bool(import_tampered.get("success", false)) and String(import_tampered.get("error", "")).contains("DAMAGE_EVENT_ANCHOR"), "D fully rehashed physical state cannot replace separately stored trusted binding anchor")
 	var effective_before: Dictionary = adapter.effective_function(individual_id)
 	_check(int(effective_before.active_module_count) == modules.size(), "D pre-damage body fully active")
 	var applied: Dictionary = adapter.apply_damage(individual_id)
