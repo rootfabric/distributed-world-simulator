@@ -1,6 +1,6 @@
 # FABRIC R5.2 / T5 — Motor / Generator
 
-**Статус:** Fresh Review Repair R1 — state reconstruction coverage; exact rerun pending.
+**Статус:** REPAIR R1 AUTHORITATIVE EXACT PASS / exact-head closure rerun pending.
 
 ## Цель
 
@@ -156,3 +156,84 @@ MOTOR_STATE_RECONSTRUCTION_INERTIA_CHANGE_UNSUPPORTED
 Такой mutation требует более богатого canonical event: сохранение angular momentum, detached/attached rotor state и механический impulse нельзя придумывать внутри capsule.
 
 Также добавлен явный overspeed-state negative gate.
+
+
+## Repair R1 authoritative exact result
+
+```text
+SUBJECT_HEAD = dc31849760d94a8ace76aecc8e17bdd4991b9441
+SUBJECT_TREE = 5f77c70d156b5959e913d95ae61694843afb5b9d
+
+run             = 35606491334
+samples         = 3/3 PASS
+assertions      = 2234 / sample
+aggregate job   = 106354999859
+artifact        = 10642385491
+artifact digest = sha256:a27d858316224a746cf59b5f614739c0edd64c5e4a8c9cb80501d1fcc75f1d34
+
+deterministic hash =
+3e99d3add53d800016395235245e5a24f24bbd0921c72af7bdcb295f9d1ca61a
+
+evidence hash =
+f92c6011470f78f78b1a7ccf8a2624903c9c006a82407b002f4fecfa762c269e
+```
+
+Key quantitative result:
+
+```text
+source components = 256
+  192 winding segments
+  64 rotor sectors
+
+runtime state = 1 scalar (ω)
+
+source operations = 1408
+compiled operations = 14
+operation compression ≈ 100.57x
+runtime source traversal = 0
+
+2048 detailed-reference ticks
+source traversals = 524,288
+
+max V error      = 0
+max torque error = 0
+max ω error      = 0
+
+max electrical energy residual = 8.88e-16 J
+max total energy residual      = 2.41e-13 J
+```
+
+Generator mode is directly observed:
+
+```text
+terminal voltage ≈ 230.23 V
+electromagnetic torque ≈ -2.609 N·m
+electrical energy / observed step ≈ -1.842 J
+```
+
+Negative electrical energy means energy leaves the electromechanical assembly into the electrical boundary under the declared sign convention.
+
+Stateful proof:
+
+```text
+same instantaneous zero-current command:
+stationary vs spinning rotor
+→ terminal-voltage delta ≈ 78.26 V
+
+snapshot replay:
+voltage error = 0
+state error   = 0
+```
+
+Repair R1 reconstruction:
+
+```text
+winding-only coefficient mutation
+→ COEFFICIENT_CHANGE_SAME_ROTOR_INERTIA
+→ projected/rebuilt detailed parity = 0
+
+rotor inertia mutation
+→ MOTOR_STATE_RECONSTRUCTION_INERTIA_CHANGE_UNSUPPORTED
+```
+
+Wall-time/RSS are observations only.
