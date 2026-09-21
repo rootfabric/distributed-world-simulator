@@ -1,59 +1,63 @@
 # FABRIC R5.2 / T8 — Active Cooling Loop
 
-**Статус:** implementation; first exact gate pending.
+**Статус:** Repair R2 authoritative exact 3/3 PASS; exact-head closure/review/verifier pending.
 
-## Цель
-
-T8 делает cooling отдельной собираемой подсистемой, а не готовым коэффициентом:
+## Результат
 
 ```text
-64 parallel coolant lanes
+subject = b5c8078edb66901be8d8c235a11bce53df44e894
+tree    = 68b0e716c6885a5d1c75a5dfc3e763fd503fc104
+run     = 35659249681
+samples = 3/3 PASS
+assertions/sample = 4145
 
-each lane:
-cold plate
-hot coolant volume
-radiator
-cold coolant volume
+deterministic hash =
+eba45c45ef855367ee0c99a730fcea48ad5df172e5db21e5ecb67c942a82ae29
 
-= 256 detailed thermal states
-        ↓ exact symmetric compile
-4 caller-owned temperatures
+evidence hash =
+55c468a1e3f2b78dd8746b818368f6a6fdc909561b19877753c3c0ff8f335a78
+
+aggregate artifact = 10667390015
+digest = sha256:10d65ffdb0c667411a6930266c100ad08476868582f1cb611ad87f4e61ac07c5
 ```
 
-Входной heat может приходить от T6 Power Stage. Mass flow — внешний hydraulic boundary, но его стоимость не бесплатна: dynamic viscosity + channel area/diameter/length дают pressure drop и hydraulic pump power.
-
-Pump hydraulic energy учитывается как viscous heat в coolant и входит в общий energy audit.
-
-## Physical floor
-
-Generic Matter уже даёт density, heat capacity, thermal conductivity и phase temperatures. Coolant profile добавляет только отсутствующие свойства: dynamic viscosity, ambient-side heat-transfer coefficient и bounded laminar Reynolds limit. Profile привязан к canonical coolant Matter checksum.
-
-## Thermal model
-
-Compact state: plate temperature, hot coolant temperature, radiator temperature, cold coolant temperature.
+64 одинаковых coolant lanes содержат plate/hot-coolant/radiator/cold-coolant узлы: 256 detailed thermal states компилируются в 4 caller-owned температуры.
 
 ```text
-source heat
-  ↓
-plate --conductance--> hot coolant
-                         |
-                         | m_dot * Cp
-                         ↓
-                      cold coolant --conductance--> radiator --ambient G--> world
+1536 source operations
+→ 32 compiled operations
+compression = 48x
+runtime source traversals/execute = 0
 ```
 
-Hydraulic dissipation делится между hot/cold coolant nodes.
+Detailed reference за 2048 шагов делает 524,288 thermal-node traversals. Максимальная температурная ошибка ≈5.12e-13 K, state error = 0, energy residual ≈8.31e-11 J.
 
-## Exact reduction
+## Hydraulic floor
 
-64 lanes обязаны иметь одинаковую geometry/material/quality derivation. Тогда каждая lane остаётся на одинаковой trajectory и 256 detailed state scalars точно редуцируются в 4.
+Mass flow — boundary input, но hydraulic cost не бесплатен. Dynamic viscosity плюс channel geometry выводят pressure drop и hydraulic power; эта энергия возвращается как viscous heat и входит в energy audit. Laminar descriptor ограничен Re ≤ 2300.
 
-Asymmetric lane остаётся физически исполняемой detailed model, но compiler возвращает COOLING_LANE_SYMMETRY_BROKEN: это NO_SAFE_BAKE, не invalid physics.
+Water-like → glycol-like profile при той же geometry даёт pump-energy ratio ≈3.227.
 
 ## T6 composition
 
-Acceptance генерирует conduction + switching heat реальным merged T6 Power Stage и подаёт один и тот же heat trace в active loop с mass flow и zero-flow loop. Active loop обязан закончить с более низкой plate temperature, а pump hydraulic energy должна быть ненулевой и отдельно учтённой.
+Реальный T6 Power Stage генерирует conduction + switching heat. За composition sequence:
 
-## Bounded claim
+```text
+T6 heat = 4751.015 J
+T8 hydraulic pump energy = 7.154 J
+active-flow plate advantage vs zero-flow = 3.398 K
+```
 
-T8 использует laminar lumped-flow floor. Он не заявляет turbulence/CFD, cavitation, pump electrical efficiency, boiling/phase change, flexible hoses или fan aerodynamics. Эти fidelity layers можно добавить поверх стабильного thermal/hydraulic boundary.
+## Repairs
+
+R0 исправил ошибку tree lineage: T8 заново наложен только поверх точного T7 merge tree. Финальный PR снова additive, deletions=0.
+
+R1 убрал повторную статическую derivation Matter/geometry из каждого detailed tick. FullReference.prepare выводит коэффициенты всех 64 lanes один раз, но каждый execute по-прежнему обновляет все 256 detailed thermal states. Acceptance и source-traversal semantics не ослаблены.
+
+R2 закрыл state/projector trust boundary: NaN и finite out-of-domain state отвергаются отдельно в projector и reference. Rehashed descriptor также не может поднять laminar limit выше 2300 или нарушить relation max-flow.
+
+Asymmetric lane остаётся физически исполняемой detailed model, но compact compiler возвращает COOLING_LANE_SYMMETRY_BROKEN — это NO_SAFE_BAKE, а не invalid physics.
+
+## Ограничения
+
+T8 — laminar lumped-flow floor. CFD/turbulence, cavitation, boiling/phase change, pump electrical efficiency, flexible-hose dynamics и fan aerodynamics не заявляются и остаются последующими fidelity layers.
