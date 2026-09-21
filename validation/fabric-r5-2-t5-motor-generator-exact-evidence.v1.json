@@ -1,0 +1,109 @@
+{
+  "schema": "fabric.r5_2.t5_motor_generator_exact_evidence.v1",
+  "status": "REPAIR_R1_AUTHORITATIVE_EXACT_PASS",
+  "subject_head": "dc31849760d94a8ace76aecc8e17bdd4991b9441",
+  "subject_tree": "5f77c70d156b5959e913d95ae61694843afb5b9d",
+  "t4_merge_head": "c1f57ece7c2e79d3d7a93597af49b918a2b32631",
+  "canonical_owner": "Construction/Matter",
+  "production_checkpoint": false,
+  "canonical_godot": {
+    "version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7"
+  },
+  "authoritative_run": {
+    "run_id": 35606491334,
+    "sample_count": 3,
+    "sample_conclusion": "3/3 PASS",
+    "assertions_per_sample": 2234,
+    "aggregate_job_id": 106354999859,
+    "aggregate_artifact_id": 10642385491,
+    "aggregate_artifact_digest": "sha256:a27d858316224a746cf59b5f614739c0edd64c5e4a8c9cb80501d1fcc75f1d34"
+  },
+  "hashes": {
+    "deterministic_hash": "3e99d3add53d800016395235245e5a24f24bbd0921c72af7bdcb295f9d1ca61a",
+    "evidence_hash": "f92c6011470f78f78b1a7ccf8a2624903c9c006a82407b002f4fecfa762c269e",
+    "graph_hash": "76f757ba52f59e853b046fc2fe6e063872caf6d4d1f2505ac4d3bb5240909e94",
+    "descriptor_hash": "0a8cfe025eb44465c35dca3e1b8421b6f0b949a7387af211d20cdfaab2be8ba5",
+    "capsule_checksum": "9816993e133ad381d0535d91d2290ecf3fb235bd920d88c0c50f044ffbf8fe93"
+  },
+  "qualitative_compression": {
+    "source_components": 256,
+    "winding_segments": 192,
+    "rotor_sectors": 64,
+    "executable_state_scalars": 1,
+    "state_breakdown": "caller-owned angular velocity",
+    "source_operations": 1408,
+    "compiled_operations": 14,
+    "operation_compression_ratio": 100.571428571429,
+    "runtime_source_component_traversals_per_execute": 0
+  },
+  "derived_base": {
+    "total_resistance_ohm": 0.150501465528084,
+    "torque_constant_nm_a": 0.652185600000001,
+    "back_emf_constant_v_s_rad": 0.652185600000001,
+    "max_abs_current_a": 14.88,
+    "winding_mass_kg": 0.309657600000001,
+    "rotor_mass_kg": 3.49440000000001,
+    "rotor_inertia_kg_m2": 0.01057056,
+    "max_abs_angular_velocity_rad_s": 4966.51214113698
+  },
+  "exact_equivalence": {
+    "sequence_ticks": 2048,
+    "full_reference_component_traversals": 524288,
+    "maximum_voltage_error": 0,
+    "maximum_torque_error": 0,
+    "maximum_omega_error": 0,
+    "maximum_electrical_energy_residual_j": 8.88178419700125e-16,
+    "maximum_total_energy_residual_j": 2.40904518555851e-13
+  },
+  "bidirectional_semantics": {
+    "generator_observed": true,
+    "generator_voltage_v": 230.234355343657,
+    "generator_electrical_energy_j": -1.84187484274925,
+    "generator_torque_nm": -2.6087424,
+    "same_command_different_state_voltage_delta_v": 78.2622720000001
+  },
+  "reconstruction": {
+    "winding_quality_projection": "COEFFICIENT_CHANGE_SAME_ROTOR_INERTIA",
+    "projected_rebuilt_voltage_error": 0,
+    "inertia_change": "MOTOR_STATE_RECONSTRUCTION_INERTIA_CHANGE_UNSUPPORTED",
+    "snapshot_replay_voltage_error": 0,
+    "snapshot_replay_state_error": 0
+  },
+  "material_and_quality": {
+    "lower_quality_resistance_ohm": 0.177060547680099,
+    "lower_quality_torque_constant_nm_a": 0.55435776,
+    "quality_does_not_change_conductor_mass": true,
+    "steel_rotor_mass_kg": 3.49440000000001,
+    "aluminum_rotor_mass_kg": 1.2096,
+    "steel_rotor_inertia_kg_m2": 0.01057056,
+    "aluminum_rotor_inertia_kg_m2": 0.00365904
+  },
+  "fail_closed": {
+    "open_winding": "MOTOR_WINDING_OPEN",
+    "incomplete_rotor": "MOTOR_ROTOR_INCOMPLETE",
+    "overspeed": "MOTOR_GENERATOR_RUNTIME_SPEED_OUT_OF_DOMAIN",
+    "nonfinite_state": "MOTOR_GENERATOR_RUNTIME_STATE_INVALID",
+    "canonical_graph_frontier_mismatch": "REJECTED",
+    "stale": "REJECTED",
+    "invalidation": "REJECTED",
+    "authority_drift": "REJECTED",
+    "graph_drift": "REJECTED"
+  },
+  "invariants": {
+    "electromagnetic_profile_is_characterized_floor": true,
+    "mass_inertia_and_speed_envelope_derive_from_matter_and_geometry": true,
+    "k_t_equals_k_e_in_si": true,
+    "runtime_persistent_state_owner": false,
+    "arbitrary_voltage_driven_inductive_motor_claimed": false,
+    "behavior_capsule_v1_modified": false,
+    "behavior_capsule_v2_modified": false,
+    "t1_evidence_modified": false,
+    "t2_evidence_modified": false,
+    "t3_evidence_modified": false,
+    "t4_evidence_modified": false,
+    "threshold_relaxation": false
+  },
+  "scope_note": "Detailed reference shares the characterized electromagnetic primitive with the compiler. T5 proves exact aggregation of the declared winding/rigid-rotor law, not independent validation of magnetic material science or field geometry.",
+  "next_gate": "EXACT_HEAD_RERUN_THEN_FRESH_REVIEW_AND_INDEPENDENT_VERIFIER"
+}
