@@ -147,6 +147,19 @@ func _run() -> void:
 	bad_profile["organization_profile"] = "HIVE"
 	_check(not Manifest.validate(bad_profile).is_empty(), "unknown organization profile rejected")
 
+	# 7b. Optional explicit genesis founder endowment is canonical experiment
+	# input (needed for starvation/death experiments), not runtime save state.
+	var low_endowment := manifest.duplicate(true)
+	low_endowment["genesis"] = {"founder_endowment": {"material_mg": 1000, "water_mg": 0, "energy_mj": 0}}
+	_check(Manifest.validate(low_endowment).is_empty(), "explicit founder endowment validates")
+	_check(Manifest.canonical_hash(low_endowment) != hash_a, "founder endowment changes manifest identity")
+	var bad_endowment := low_endowment.duplicate(true)
+	bad_endowment.genesis.founder_endowment.water_mg = -1
+	_check(not Manifest.validate(bad_endowment).is_empty(), "negative founder endowment fails closed")
+	var bad_genesis_field := low_endowment.duplicate(true)
+	bad_genesis_field.genesis["runtime_state"] = {}
+	_check(not Manifest.validate(bad_genesis_field).is_empty(), "genesis cannot smuggle runtime state")
+
 	# 8. Manifest carries no runtime biological state keys.
 	var text := Manifest.to_text(manifest)
 	_check(text.find("population_state") == -1 and text.find("field_state") == -1, "manifest text carries no runtime state keys")
