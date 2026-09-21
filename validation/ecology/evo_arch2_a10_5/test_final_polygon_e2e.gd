@@ -17,8 +17,8 @@ extends SceneTree
 #  S9  reproduction (birth event through the metrics timeline);
 #  S10 inherited mutation: receipt-backed admission, at least one REALLY
 #      inherited mutated genome; no fallback status exists (repair R2);
-#  S11 death + decomposition (death fixated as controller-layer unreachable;
-#      mineralization measured on THE single canonical field — repair R1);
+#  S11 real Polygon-controller starvation death -> corpse return ->
+#      mineralization on THE single canonical field (repair R2);
 #  S12 unknown BodyGraph topology through the generic realizer (all-roles
 #      program + an invented unknown role module);
 #  S13 full inspector chain (genome -> ... -> lineage);
@@ -27,8 +27,8 @@ extends SceneTree
 #  S16 restore;
 #  S17 branch B with an environment patch (different history);
 #  S18 replay of the original branch -> identical hash;
-#  S19 SOFT organization profile -> BLOCKED_CANONICAL_EXTENSION_REQUIRED
-#      (documented STOP); VISUAL_ONLY application never changes the hash;
+#  S19 SOFT organization profile -> canonical A3 DEVELOPMENT_BIAS;
+#      VISUAL_ONLY rendering remains non-causal;
 #  S20 batch of 3 seeds -> complete report, no cherry-picking;
 #  S21 WORLD-COMPAT scenario: region handoff (ACTIVE->WARM->COMMITTED->new
 #      ACTIVE) + damage overlay through the polygon world adapter.
@@ -275,24 +275,20 @@ func _scenario_run_and_observe(state: Dictionary) -> void:
 	_check(receipt_bound >= 1, "S10 receipt-backed children present in the lineage (bound=%d)" % receipt_bound)
 	_check(inherited >= 1, "S10 at least one REALLY INHERITED mutated genome (child genome != parent genome, inherited=%d)" % inherited)
 
-# --- S11: death/decomposition (single canonical field, repair R1) ---------------------
-# Controller-layer fixate (unchanged): organism death is NOT reachable through
-# the ExperimentController inside LAB bounds (the controller fixes the founder
-# endowment at FOUNDER_ENDOWMENT_STOCK = 200000 per reserve while full
-# maintenance is <= a few hundred units per tick; real death + corpse return
-# is covered canonically by test_runtime_single_state S4 through the shared
-# runtime API). The DECOMPOSITION half is asserted on the SINGLE canonical
-# controller field (repair R1): zone organic matter is mineralized step by
-# step and the canonical field shows exactly that — organic drops by
-# mineralized + intake, nutrient rises by mineralized - intake. There is no
-# second feedback field projection anymore.
+# --- S11: real death -> corpse return -> decomposition (repair R2) -------------------
+# The manifest now owns an explicit founder endowment input. This lets the
+# Polygon controller exercise the same canonical starvation/death path as the
+# reusable runtime instead of proving death unreachable behind a fixed 200k
+# endowment.
 
 func _scenario_death_decomposition() -> void:
-	# (a) Death unreachable in LAB bounds: a founder in a fully void zone
-	# stays alive across the whole tested horizon (maintenance paid from the
-	# fixed endowment; starvation horizon ~2000+ ticks >> any tested horizon).
-	var void_controller := Controller.new()
-	var void_manifest := {
+	var controller := Controller.new()
+	var endowment := Body.stock(0)
+	# Preserve material for a real corpse while providing no water/energy for
+	# maintenance. The organism starves canonically; the material must return
+	# through A6 as organic matter and then mineralize on the SAME field.
+	endowment.material_mg = 1000
+	var manifest := {
 		"schema": Manifest.SCHEMA,
 		"experiment_id": "eco-polygon/exp-p13-death",
 		"seed": 20260912,
@@ -309,55 +305,20 @@ func _scenario_death_decomposition() -> void:
 		"metrics": {"requested": ["population"]},
 		"checkpoint": {"interval_ticks": 16},
 		"mode": "LAB",
+		"genesis": {"founder_endowment": endowment},
 	}
-	_check(bool(void_controller.initialize(void_manifest, {}).get("success", false)), "S11 void-zone experiment initializes")
-	var void_run: Dictionary = void_controller.run(16)
-	_check(bool(void_run.get("success", false)), "S11 void-zone run reaches the horizon")
-	_check(_alive_count(void_controller) == 1, "S11 death FIXATED as unreachable at the controller layer (zero-income founder survives on the fixed endowment)")
-
-	# (b) Decomposition/mineralization on dead organic matter — measured on
-	# THE canonical controller field (single truth).
-	var decomp_controller := Controller.new()
-	var decomp_manifest := {
-		"schema": Manifest.SCHEMA,
-		"experiment_id": "eco-polygon/exp-p13-decomp",
-		"seed": 20260912,
-		"horizon_ticks": 16,
-		"founders": [{"founder_id": "founder/a", "biological_hash": null, "genome": Protocol.ancestor()}],
-		"environment": {
-			"spatial": {"origin_mm": [0, 0, 0], "cell_size_mm": 1000, "width": 1, "depth": 1},
-			"zones": [{"id": "litter", "water_mg": 500000, "light": 700, "temperature": 500, "nutrient_mg": 0, "organic_mg": 5000}],
-		},
-		"placement": {"entries": [{"founder_ref": "founder/a", "zone_id": "litter", "position_mm": [500, 0, 500]}]},
-		"mutation": {"operator": "small", "mutations_enabled": false},
-		"organization_profile": "FREE",
-		"feedback": {"enabled": true, "decomposition_enabled": true},
-		"metrics": {"requested": ["population"]},
-		"checkpoint": {"interval_ticks": 16},
-		"mode": "LAB",
-	}
-	_check(bool(decomp_controller.initialize(decomp_manifest, {}).get("success", false)), "S11 litter-zone experiment initializes")
-	var organic_before := _stock_sum(decomp_controller, "organic_mg")
-	var nutrient_before := _stock_sum(decomp_controller, "nutrient_mg")
-	var decomp_run: Dictionary = decomp_controller.run(4)
-	_check(bool(decomp_run.get("success", false)), "S11 decomposition run(4) succeeds")
-	var debug: Dictionary = decomp_controller.debug_state()
-	var mineralized := int(debug.feedback.frame.mineralized_mg)
-	_check(mineralized > 0, "S11 decomposition feedback mineralized organic matter (mineralized_mg=%d)" % mineralized)
-	var organic_after := _stock_sum(decomp_controller, "organic_mg")
-	var nutrient_after := _stock_sum(decomp_controller, "nutrient_mg")
-	var intake_organic := 0
-	var intake_nutrient := 0
-	for entry in debug.population:
-		intake_organic += int(entry.state.resource_ledger.field_intake.organic_mg)
-		intake_nutrient += int(entry.state.resource_ledger.field_intake.nutrient_mg)
-	# SINGLE-STATE CANON: organic decreases and nutrient increases in THE
-	# canonical controller field by exactly the mineralized amount (adjusted
-	# by what the living organism ate from the same field).
-	_check(organic_before - organic_after == mineralized + intake_organic,
-		"S11 canonical field organic drop == mineralized + intake (%d == %d + %d)" % [organic_before - organic_after, mineralized, intake_organic])
-	_check(nutrient_after - nutrient_before == mineralized - intake_nutrient,
-		"S11 canonical field nutrient gain == mineralized - intake (%d == %d - %d)" % [nutrient_after - nutrient_before, mineralized, intake_nutrient])
+	_check(Manifest.validate(manifest).is_empty(), "S11 low-endowment death manifest validates")
+	_check(bool(controller.initialize(manifest, {}).get("success", false)), "S11 low-endowment Polygon experiment initializes")
+	var starvation_limit := int(controller.debug_state().population[0].blueprint.life_history.survival.starvation_limit_ticks)
+	var run: Dictionary = controller.run(starvation_limit)
+	_check(bool(run.get("success", false)), "S11 controller reaches canonical starvation limit")
+	var debug: Dictionary = controller.debug_state()
+	_check(_alive_count(controller) == 0, "S11 founder dies inside the real Polygon controller")
+	_check(debug.feedback.frame.corpses.size() == 1, "S11 A6 registers exactly one corpse on the controller trajectory")
+	_check(int(debug.feedback.frame.returned.organic_mg) > 0, "S11 corpse material returned to canonical field as organic matter")
+	_check(int(debug.feedback.frame.mineralized_mg) > 0, "S11 corpse-derived organic matter mineralized on the same field")
+	_check(_stock_sum(controller, "nutrient_mg") > 0, "S11 canonical field contains corpse-derived mineral nutrient")
+	_check(String(controller.get_snapshot().canonical_state_hash) == String(debug.runtime.integrity_hash), "S11 presentation/checkpoint identity is the same sealed runtime state")
 
 # --- S12+S13: unknown topology via the generic realizer + full inspector ------------
 
@@ -466,21 +427,24 @@ func _scenario_branches(state: Dictionary) -> void:
 	_check(bool(restored.get("success", false)), "S16 checkpoint restored into the original controller")
 	_check(int(controller.get_snapshot().tick) == checkpoint_tick, "S16 controller back at the checkpoint tick (%d)" % checkpoint_tick)
 	# S18 replay: identical checkpoint + manifest + commands -> identical hash.
-	var replay: Dictionary = ExperimentBranch.replay(checkpoint, controller.get_manifest(), registry, [8])
+	var checkpoint_anchor := manager.trusted_checkpoint_anchor(String(checkpoint.checkpoint_id))
+	_check(checkpoint_anchor == C.digest(checkpoint), "S18 branch manager exposes the caller-owned checkpoint anchor")
+	var replay: Dictionary = ExperimentBranch.replay(checkpoint, controller.get_manifest(), registry, [8], checkpoint_anchor)
 	_check(bool(replay.get("success", false)), "S18 replay succeeds: " + str(replay.get("error", "")))
 	if bool(replay.get("success", false)):
 		_check(String(replay.canonical_state_hash) == hash_a, "S18 replay of the original branch reproduces the identical hash")
 		_check(int(replay.tick) == checkpoint_tick + 8, "S18 replay reached the same tick")
 
-# --- S19: SOFT blocked + VISUAL_ONLY non-causality ------------------------------------
+# --- S19: canonical DEVELOPMENT_BIAS + visual non-causality -------------------------
 
 func _scenario_profiles(topology_controller: Object) -> void:
 	var soft: Dictionary = Profile.preset("SOFT")
-	var bias: Dictionary = Profile.apply_development_bias(soft)
-	_check(String(bias.get("status", "")) == Profile.BLOCKED_STATUS, "S19 SOFT profile is BLOCKED_CANONICAL_EXTENSION_REQUIRED (documented canonical gap)")
-	_check(not String(bias.get("required_hook", "")).is_empty(), "S19 blocked profile documents the required canonical hook")
-	# VISUAL_ONLY application never changes the canonical hash: render the
-	# same organism through the SOFT/NMS visual profiles and re-read the hash.
+	var bias_result: Dictionary = Profile.apply_development_bias(soft)
+	_check(bool(bias_result.get("success", false)) and bool(bias_result.get("applied", false)), "S19 SOFT development bias is admitted through the canonical A3 hook")
+	_check(String(bias_result.get("status", "")) == Profile.APPLIED_STATUS, "S19 SOFT bias reports APPLIED_CANONICAL_BIAS")
+	_check(String(bias_result.get("bias_hash", "")).length() == 64, "S19 canonical bias carries a sealed provenance hash")
+	# Rendering through a visual profile is still presentation-only and cannot
+	# mutate a running canonical state.
 	var debug: Dictionary = topology_controller.debug_state()
 	if debug.population.is_empty():
 		_check(false, "S19 organism available for the visual-profile render")
@@ -493,8 +457,18 @@ func _scenario_profiles(topology_controller: Object) -> void:
 		var visual: Dictionary = Profile.visual_profile(Profile.preset(mode))
 		var realized: Dictionary = Realizer.realize(descriptor, visual)
 		counts[mode] = int(realized.primitive_count)
-	_check(int(counts["FREE"]) == int(counts["SOFT"]) and int(counts["FREE"]) == int(counts["NMS_LIKE"]), "S19 visual profiles change presentation detail only (same primitive coverage)")
-	_check(String(topology_controller.get_snapshot().canonical_state_hash) == hash_before, "S19 VISUAL_ONLY application leaves canonical_state_hash unchanged")
+	_check(int(counts["FREE"]) == int(counts["SOFT"]) and int(counts["FREE"]) == int(counts["NMS_LIKE"]), "S19 visual profiles preserve morphology coverage")
+	_check(String(topology_controller.get_snapshot().canonical_state_hash) == hash_before, "S19 visual realization leaves canonical_state_hash unchanged")
+	# And the bias modes are executable controller inputs, not workbench-only
+	# stubs. A short run must remain canonical-valid.
+	for mode in ["SOFT", "EARTH_LIKE", "NMS_LIKE"]:
+		var biased_manifest := _wc_manifest(4)
+		biased_manifest.mode = "LAB"
+		biased_manifest.environment.zones[0].water_mg = WATER_STOCK_MG
+		biased_manifest.organization_profile = mode
+		var ctl := Controller.new()
+		_check(bool(ctl.initialize(biased_manifest, {}).get("success", false)), "S19 %s controller initializes with canonical bias" % mode)
+		_check(bool(ctl.run(4).get("success", false)), "S19 %s controller executes canonical biased ticks" % mode)
 
 # --- S20: batch of 3 seeds ---------------------------------------------------------------
 
