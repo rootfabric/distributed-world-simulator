@@ -1,0 +1,97 @@
+name: MVP8 Linux Cold Class Cache Repair R1
+
+on:
+  push:
+    branches:
+      - control/v0-mvp8-linux-repair-r1-carrier
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  linux-repair:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      SUBJECT_HEAD: cdcb517947218ec31d76cbbd7d55462d86813232
+      SUBJECT_TREE: f0bcd8c9fe29a1a4a1bb82d0bb04101502da75c2
+      EXPECTED_HEAD: cdcb517947218ec31d76cbbd7d55462d86813232
+      PYTHONUTF8: '1'
+      PYTHONDONTWRITEBYTECODE: '1'
+      BREAKPOINT_RUNTIME_DISABLED: '1'
+      GODOT_SILENCE_ROOT_WARNING: '1'
+      PLANET_SIMULATOR_INVENTORY_PROFILE: planet_default
+
+    steps:
+      - name: Checkout exact repair candidate
+        uses: actions/checkout@v4
+        with:
+          ref: cdcb517947218ec31d76cbbd7d55462d86813232
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Verify exact subject
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$SUBJECT_HEAD"
+          test "$(git rev-parse HEAD^{tree})" = "$SUBJECT_TREE"
+          test -z "$(git status --porcelain --untracked-files=no)"
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: p7-repair-engine-34117353691
+          run-id: 34117353691
+          repository: rootfabric/distributed-world-simulator
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/mvp8-repair-engine
+
+      - name: Resolve exact Linux double Godot and display
+        shell: bash
+        run: |
+          set -euo pipefail
+          GODOT_BIN="$RUNNER_TEMP/mvp8-repair-engine/godot"
+          test -f "$GODOT_BIN"
+          test "$(sha256sum "$GODOT_BIN" | cut -d' ' -f1)" = bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7
+          chmod u+x "$GODOT_BIN"
+          echo "GODOT_BIN=$GODOT_BIN" >> "$GITHUB_ENV"
+          "$GODOT_BIN" --version
+          if ! command -v Xvfb >/dev/null || ! command -v xauth >/dev/null; then
+            sudo -n apt-get update
+            sudo -n env DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends xvfb xauth libgl1-mesa-dri
+          fi
+
+      - name: Exact MVP8 repair runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/mvp8-linux-repair-r1
+          xvfb-run -a -s '-screen 0 1600x900x24' \
+            python3 tests/integration/test_v0_mvp_8_bounded_workload.py \
+            --engine "$GODOT_BIN" \
+            --output artifacts/mvp8-linux-repair-r1/live | tee artifacts/mvp8-linux-repair-r1/runtime.stdout.log
+          python3 - <<'PY'
+          import json, pathlib, subprocess
+          root=pathlib.Path("artifacts/mvp8-linux-repair-r1/live")
+          m=json.loads((root/"manifest.json").read_text())
+          assert m["passed"] is True, m
+          assert len(m["checks"]) == 20 and all(m["checks"].values())
+          assert len(m["negative_controls"]) == 14
+          assert m["fatal_logs"] == []
+          imp=m["project_import"]
+          assert imp["returncode"] == 0
+          assert imp["global_script_class_cache_bytes"] > 0
+          assert m["subject_head"] == "cdcb517947218ec31d76cbbd7d55462d86813232"
+          assert m["subject_tree"] == "f0bcd8c9fe29a1a4a1bb82d0bb04101502da75c2"
+          assert subprocess.check_output(["git","status","--porcelain","--untracked-files=no"],text=True).strip() == ""
+          print("MVP8_LINUX_COLD_CACHE_REPAIR_PASS")
+          PY
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mvp8-linux-repair-r1-${{ github.run_id }}-${{ github.run_attempt }}
+          path: artifacts/mvp8-linux-repair-r1/
+          if-no-files-found: error
+          retention-days: 90
