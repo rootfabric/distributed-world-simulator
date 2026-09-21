@@ -1,7 +1,11 @@
 # EcologyWorkbench ExperimentController v1 (P2, ECO ARCH2 A10.5 / ECO-POLYGON-1).
-# Role: canonical experiment loop wrapper. ZERO own biology: every state
-# transition goes through canonical APIs (owner map rows 4,5,6,7); the
-# controller only orchestrates, derives seeds and hashes.
+# Role: canonical experiment loop wrapper. ZERO own biology: the ONE current
+# ecology state trajectory lives in the shared canonical runtime
+# (ecology_runtime_v1.gd): A5 executes exactly once per tick on the single
+# field/population, mutated genomes enter the lineage only through sealed
+# canonical mutation receipts + canonical A5 admission (no fallback), and the
+# A6 post-lifecycle feedback transition mutates the SAME field the next tick
+# reads. The controller only orchestrates, derives seeds and hashes.
 # Layer: 2 (SIMULATION / ORCHESTRATION). Fail-closed: any canonical API
 # failure stops the controller and surfaces the error.
 class_name EcoWorkbenchExperimentControllerV1
@@ -18,6 +22,7 @@ const Field = preload("res://scripts/research/ecology/v2/local_environment_field
 const FieldContract = preload("res://scripts/research/ecology/v2/environment_field_contract_v1.gd")
 const Ports = preload("res://scripts/research/ecology/v2/organism_environment_ports_v1.gd")
 const Lifecycle = preload("res://scripts/research/ecology/v2/resource_lifecycle_runtime_v1.gd")
+const Runtime = preload("res://scripts/research/ecology/v2/ecology_runtime_v1.gd")
 const Feedback = preload("res://scripts/research/ecology/v2/persistent_environmental_feedback_v1.gd")
 const EnvironmentPatch = preload("res://scripts/ecology/workbench/environment_patch_v1.gd")
 const Manifest = preload("res://scripts/ecology/workbench/experiment_manifest_v1.gd")
@@ -29,13 +34,14 @@ const OWNER_TOKEN := "eco-polygon.controller"
 const CELL_CAPACITY_MG := 1000000
 const FOUNDER_ENDOWMENT_STOCK := 200000
 const STATUSES := ["READY", "RUNNING", "PAUSED", "FAILED"]
+# Historical controller mutation seed stream (deterministic, manifest-derived).
+const MUTATION_KEY_PREFIX := "eco-arch2-a10-5/mut"
 
 var _manifest: Dictionary = {}
 var _founder_registry: Dictionary = {}
-var _field: Dictionary = {}
-var _population: Array = []
-var _feedback: Dictionary = {}
-var _tick := 0
+# THE single current ecology state (field + population + feedback
+# bookkeeping + accounting + tick). No second field/population exists.
+var _runtime: Dictionary = {}
 var _status := "IDLE"
 var _error := ""
 # P12 WORLD_COMPAT: dependency-injected world authority adapter
@@ -55,10 +61,10 @@ func attach_world_authority(authority: Object) -> Dictionary:
 	_world_authority = authority
 	return {"success": true}
 
-## Validate the manifest and build the canonical initial state:
-## field (zones -> per-cell stocks/signals through owner-write API),
-## founders -> blueprints (inline genomes or hash registry), population
-## (FOUNDER_ENDOWMENT) and persistent feedback state.
+## Validate the manifest and build the canonical initial state through the
+## shared runtime: field (zones -> per-cell stocks/signals through the
+## owner-write API), founders -> blueprints (inline genomes or hash
+## registry), population (FOUNDER_ENDOWMENT) and feedback bookkeeping.
 func initialize(manifest: Dictionary, founder_registry: Dictionary = {}) -> Dictionary:
 	var manifest_error := Manifest.validate(manifest)
 	if not manifest_error.is_empty():
@@ -84,18 +90,15 @@ func initialize(manifest: Dictionary, founder_registry: Dictionary = {}) -> Dict
 	var population: Array = population_result.population
 	var policy := Feedback.default_policy()
 	policy.decomposition_enabled = manifest.feedback.decomposition_enabled
-	var created := Feedback.create(manifest.experiment_id, field, population, policy)
+	var created := Runtime.create(String(manifest.experiment_id), field, population, policy, bool(manifest.feedback.enabled))
 	if not created.success:
-		return _command_fail("CONTROLLER_FEEDBACK_CREATE:" + String(created.error))
+		return _command_fail("CONTROLLER_RUNTIME_CREATE:" + String(created.error))
 	_manifest = manifest.duplicate(true)
 	_founder_registry = founder_registry.duplicate(true)
-	_field = field
-	_population = population
-	_feedback = created.state
-	_tick = 0
+	_runtime = created.state
 	_status = "READY"
 	_error = ""
-	return {"success": true, "tick": _tick, "status": _status}
+	return {"success": true, "tick": tick(), "status": _status}
 
 ## Advance exactly n canonical ticks. Speed = more ticks per call; dt never
 ## changes. Any canonical error stops the loop (fail-closed).
@@ -106,9 +109,9 @@ func run(n_ticks: int) -> Dictionary:
 	for _i in n_ticks:
 		_tick_once()
 		if _status == "FAILED":
-			return {"success": false, "error": _error, "status": _status, "tick": _tick}
+			return {"success": false, "error": _error, "status": _status, "tick": tick()}
 	_status = "RUNNING"
-	return {"success": true, "tick": _tick, "status": _status}
+	return {"success": true, "tick": tick(), "status": _status}
 
 ## Pause the loop (no tick is in flight; run/step resume from PAUSED).
 func pause() -> Dictionary:
@@ -116,7 +119,7 @@ func pause() -> Dictionary:
 		return _failed_command()
 	if _status == "RUNNING":
 		_status = "PAUSED"
-	return {"success": true, "tick": _tick, "status": _status}
+	return {"success": true, "tick": tick(), "status": _status}
 
 ## One canonical tick.
 func step() -> Dictionary:
@@ -135,11 +138,11 @@ func run_to_tick(target_tick: int) -> Dictionary:
 		return _failed_command()
 	if not C.integer(target_tick, 0, int(_manifest.horizon_ticks)):
 		return _command_fail("CONTROLLER_TARGET_TICK")
-	if target_tick < _tick:
+	if target_tick < tick():
 		return _command_fail("CONTROLLER_TARGET_TICK")
-	var remaining := target_tick - _tick
+	var remaining := target_tick - tick()
 	if remaining == 0:
-		return {"success": true, "tick": _tick, "status": _status}
+		return {"success": true, "tick": tick(), "status": _status}
 	return run(remaining)
 
 ## Advance until max lineage depth reaches target_generation (or the horizon
@@ -150,12 +153,12 @@ func run_to_generation(target_generation: int) -> Dictionary:
 		return guard
 	if not C.integer(target_generation, 1, C.MAX_INT):
 		return _command_fail("CONTROLLER_TARGET_GENERATION")
-	while _tick < int(_manifest.horizon_ticks) and _max_lineage_depth() < target_generation:
+	while tick() < int(_manifest.horizon_ticks) and _max_lineage_depth() < target_generation:
 		_tick_once()
 		if _status == "FAILED":
-			return {"success": false, "error": _error, "status": _status, "tick": _tick}
+			return {"success": false, "error": _error, "status": _status, "tick": tick()}
 	_status = "RUNNING"
-	return {"success": true, "tick": _tick, "status": _status, "generation": _max_lineage_depth()}
+	return {"success": true, "tick": tick(), "status": _status, "generation": _max_lineage_depth()}
 
 ## Advance until a run condition is met (or the horizon stops the loop).
 ## condition: {"population_at_least": int} OR {"tick": int} (tick == horizon).
@@ -168,13 +171,13 @@ func run_to_condition(condition: Dictionary) -> Dictionary:
 	if not error.is_empty():
 		return _command_fail(error)
 	while not _condition_met(condition):
-		if _tick >= int(_manifest.horizon_ticks):
-			return {"success": true, "tick": _tick, "status": _status, "met": false}
+		if tick() >= int(_manifest.horizon_ticks):
+			return {"success": true, "tick": tick(), "status": _status, "met": false}
 		_tick_once()
 		if _status == "FAILED":
-			return {"success": false, "error": _error, "status": _status, "tick": _tick}
+			return {"success": false, "error": _error, "status": _status, "tick": tick()}
 	_status = "RUNNING"
-	return {"success": true, "tick": _tick, "status": _status, "met": true}
+	return {"success": true, "tick": tick(), "status": _status, "met": true}
 
 func _validate_condition(condition: Dictionary) -> String:
 	if not condition is Dictionary or condition.size() != 1:
@@ -191,18 +194,18 @@ func _validate_condition(condition: Dictionary) -> String:
 
 func _condition_met(condition: Dictionary) -> bool:
 	if condition.has("population_at_least"):
-		return _population.size() >= int(condition.population_at_least)
+		return _runtime.population.size() >= int(condition.population_at_least)
 	if condition.has("tick"):
-		return _tick >= int(condition.tick)
+		return tick() >= int(condition.tick)
 	return true
 
 func _max_lineage_depth() -> int:
 	var by_id := {}
-	for entry in _population:
+	for entry in _runtime.population:
 		by_id[entry.state.individual_id] = entry
 	var depths := {}
 	var depth := 0
-	for entry in _population:
+	for entry in _runtime.population:
 		depth = maxi(depth, _lineage_depth(String(entry.state.individual_id), by_id, depths))
 	return depth
 
@@ -219,22 +222,23 @@ func get_snapshot() -> Dictionary:
 	if _status == "FAILED":
 		return _failed_command()
 	var population_hashes: Array = []
-	for entry in _population:
+	for entry in _runtime.population:
 		population_hashes.append({
 			"individual_id": entry.state.individual_id,
 			"life_state_hash": LifeState.state_hash(entry.state, entry.blueprint),
 			"development_biological_hash": OrganismState.biological_hash(entry.state.development),
 		})
+	var feedback_view: Dictionary = Runtime.feedback_view(_runtime)
 	var payload := {
-		"tick": _tick,
-		"field_hash": Field.state_hash(_field),
+		"tick": tick(),
+		"field_hash": Field.state_hash(_runtime.field),
 		"population": population_hashes,
-		"feedback_hash": C.digest(_feedback),
+		"feedback_hash": C.digest(feedback_view),
 	}
 	return {
 		"success": true,
 		"status": _status,
-		"tick": _tick,
+		"tick": tick(),
 		"field_hash": payload.field_hash,
 		"population": population_hashes,
 		"feedback_hash": payload.feedback_hash,
@@ -252,29 +256,32 @@ func get_metrics() -> Dictionary:
 	if _status == "FAILED":
 		return _failed_command()
 	var alive := 0
-	for entry in _population:
+	for entry in _runtime.population:
 		if entry.state.alive:
 			alive += 1
 	var metrics := {
 		"success": true,
 		"status": _status,
-		"tick": _tick,
-		"population_size": _population.size(),
+		"tick": tick(),
+		"population_size": _runtime.population.size(),
 		"alive": alive,
 		"manifest_hash": Manifest.canonical_hash(_manifest),
 	}
-	var balance := Feedback.balance(_feedback)
+	var balance := Runtime.balance(_runtime)
 	if balance.get("success", false):
 		metrics["feedback_balance"] = balance
 	return metrics
 
 ## Deep-copied live state for equivalence harnesses (direct canonical loop).
+## field/population are the ONE current truth; feedback is the runtime's
+## read-only bookkeeping view (no second field/population exists anywhere).
 func debug_state() -> Dictionary:
 	return {
-		"field": _field.duplicate(true),
-		"population": _population.duplicate(true),
-		"feedback": _feedback.duplicate(true),
-		"tick": _tick,
+		"field": _runtime.field.duplicate(true),
+		"population": _runtime.population.duplicate(true),
+		"feedback": Runtime.feedback_view(_runtime),
+		"runtime": _runtime.duplicate(true),
+		"tick": tick(),
 	}
 
 ## Deep-copied stored manifest (input layer; immutable at runtime).
@@ -287,20 +294,23 @@ func status() -> String:
 func last_error() -> String:
 	return _error
 
-# --- deterministic state serialization (P8: checkpoint/fork/replay) -----------
-# Canonical-only: the whole controller state is an integer canonical
-# Dictionary; the envelope is canonical_value_v1.encode (stable key order,
-# no wall-clock, no presentation data — presentation is always re-derived).
+func tick() -> int:
+	return int(_runtime.get("tick", 0))
 
-## Serialize the canonical controller state (field + population + feedback +
-## tick) into canonical text, bound to the manifest hash. Deterministic:
-## identical states always serialize to the identical text.
+# --- deterministic state serialization (P8: checkpoint/fork/replay) -----------
+# Canonical-only: the whole controller state is the sealed canonical runtime
+# state; the envelope is canonical_value_v1.encode (stable key order, no
+# wall-clock, no presentation data — presentation is always re-derived).
+
+## Serialize the canonical controller state (the shared runtime state + tick)
+## into canonical text, bound to the manifest hash. Deterministic: identical
+## states always serialize to the identical text.
 func serialize_state() -> Dictionary:
 	if _status == "IDLE":
 		return _command_fail("CONTROLLER_NOT_INITIALIZED")
 	if _status == "FAILED":
 		return _failed_command()
-	var payload := {"field": _field, "population": _population, "feedback": _feedback, "tick": _tick}
+	var payload := {"runtime": _runtime, "tick": tick()}
 	var manifest_hash := Manifest.canonical_hash(_manifest)
 	var text := C.encode({"schema": STATE_SCHEMA, "manifest_hash": manifest_hash, "state": payload})
 	if text.is_empty():
@@ -309,7 +319,7 @@ func serialize_state() -> Dictionary:
 		"success": true,
 		"state_text": text,
 		"state_hash": C.digest(payload),
-		"tick": _tick,
+		"tick": tick(),
 		"status": _status,
 		"manifest_hash": manifest_hash,
 	}
@@ -331,21 +341,24 @@ func load_state(state_text: String, expected_manifest_hash: String = "") -> Dict
 	if not expected_manifest_hash.is_empty() and String(envelope.manifest_hash) != expected_manifest_hash:
 		return _command_fail("CONTROLLER_STATE_MANIFEST_MISMATCH")
 	var state: Dictionary = envelope.state
-	if not C.keys(state, ["field", "population", "feedback", "tick"]):
+	if not C.keys(state, ["runtime", "tick"]):
 		return _command_fail("CONTROLLER_STATE_FIELDS")
-	_field = state.field.duplicate(true)
-	_population = state.population.duplicate(true)
-	_feedback = state.feedback.duplicate(true)
-	_tick = int(state.tick)
+	var runtime_error := Runtime.validate(state.runtime)
+	if not runtime_error.is_empty():
+		return _command_fail("CONTROLLER_STATE_RUNTIME:" + runtime_error)
+	if int(state.runtime.tick) != int(state.tick):
+		return _command_fail("CONTROLLER_STATE_TICK_MISMATCH")
+	_runtime = state.runtime.duplicate(true)
 	_status = "READY"
 	_error = ""
-	return {"success": true, "tick": _tick, "status": _status}
+	return {"success": true, "tick": tick(), "status": _status}
 
 ## Apply an input-layer environment patch (P4 schema) to the LIVE field
 ## state. Used ONLY by branch fork (P8): stocks move through canonical
 ## deposit/sink effects, signals through set_cell_signals — the same
-## owner-write API as genesis. The stored manifest is replaced by the
-## patched immutable manifest (new canonical hash).
+## owner-write API as genesis. The patched field is adopted into the single
+## runtime truth with an exact accounting re-anchor; the stored manifest is
+## replaced by the patched immutable manifest (new canonical hash).
 func apply_field_patch(patch: Dictionary) -> Dictionary:
 	if _status == "IDLE" or _status == "FAILED":
 		return _command_fail("CONTROLLER_NOT_INITIALIZED")
@@ -357,7 +370,7 @@ func apply_field_patch(patch: Dictionary) -> Dictionary:
 	# patched manifest already carries the new declared values).
 	var zones: Array = _manifest.environment.zones
 	var total: int = int(next_manifest.environment.spatial.width) * int(next_manifest.environment.spatial.depth)
-	var field := _field
+	var field: Dictionary = _runtime.field
 	var effects: Array = []
 	var signal_updates: Array = []
 	for index in total:
@@ -397,16 +410,20 @@ func apply_field_patch(patch: Dictionary) -> Dictionary:
 		if not bool(set_result.get("success", false)):
 			return _command_fail("CONTROLLER_FIELD_PATCH_SIGNALS:" + String(set_result.get("error", "?")))
 		field = set_result.state
-	_field = field
+	var adopted := Runtime.adopt_field(_runtime, field)
+	if not bool(adopted.get("success", false)):
+		return _command_fail("CONTROLLER_FIELD_PATCH_ADOPT:" + String(adopted.get("error", "?")))
+	_runtime = adopted.state
 	_manifest = next_manifest
-	return {"success": true, "tick": _tick, "field_hash": Field.state_hash(_field), "manifest_hash": Manifest.canonical_hash(_manifest)}
+	return {"success": true, "tick": tick(), "field_hash": Field.state_hash(_runtime.field), "manifest_hash": Manifest.canonical_hash(_manifest)}
 
 # --- P12 WORLD_COMPAT bridge: world-authority environment sampling -----------
 # Minimal adapter-layer bridge (§23): the A10 matter_resource_mapping_v1
 # admission (canonical, explicit-only) produces per-resource stock totals;
 # they enter the A4 field EXCLUSIVELY through the canonical owner-write API
 # (Field.apply_effects deposits) — the same path as genesis. No formula and
-# no field truth is duplicated here.
+# no field truth is duplicated here; the patched field is adopted into the
+# single runtime truth with an exact accounting re-anchor.
 
 ## Deposit world-authority-admitted resource stocks into every field cell
 ## through the canonical owner-write API (per-cell semantics identical to
@@ -426,7 +443,7 @@ func apply_world_stocks(resources: Dictionary, source_tag: String) -> Dictionary
 	var total: int = int(spatial.width) * int(spatial.depth)
 	var deposits: Array = []
 	for index in total:
-		var position := _cell_center(_field, index)
+		var position := _cell_center(_runtime.field, index)
 		for resource in FieldContract.RESOURCES:
 			var amount: int = int(resources.get(resource, 0))
 			if amount <= 0:
@@ -441,12 +458,15 @@ func apply_world_stocks(resources: Dictionary, source_tag: String) -> Dictionary
 				remaining -= chunk
 				chunk_index += 1
 	if deposits.is_empty():
-		return {"success": true, "tick": _tick, "field_hash": Field.state_hash(_field), "deposited": false}
-	var applied := Field.apply_effects(_field, deposits, OWNER_TOKEN, int(_field.owner_epoch), int(_field.revision))
+		return {"success": true, "tick": tick(), "field_hash": Field.state_hash(_runtime.field), "deposited": false}
+	var applied := Field.apply_effects(_runtime.field, deposits, OWNER_TOKEN, int(_runtime.field.owner_epoch), int(_runtime.field.revision))
 	if not bool(applied.get("success", false)):
 		return _command_fail("CONTROLLER_WORLD_STOCKS_EFFECTS:" + String(applied.get("error", "?")))
-	_field = applied.state
-	return {"success": true, "tick": _tick, "field_hash": Field.state_hash(_field), "deposited": true}
+	var adopted := Runtime.adopt_field(_runtime, applied.state)
+	if not bool(adopted.get("success", false)):
+		return _command_fail("CONTROLLER_WORLD_STOCKS_ADOPT:" + String(adopted.get("error", "?")))
+	_runtime = adopted.state
+	return {"success": true, "tick": tick(), "field_hash": Field.state_hash(_runtime.field), "deposited": true}
 
 # --- presentation views (P4): read-only canonical projection -----------------
 
@@ -457,11 +477,11 @@ func apply_world_stocks(resources: Dictionary, source_tag: String) -> Dictionary
 ## computed from the organism_life_state parent chain (origin_receipt).
 func _presentation_views() -> Array:
 	var by_id := {}
-	for entry in _population:
+	for entry in _runtime.population:
 		by_id[entry.state.individual_id] = entry
 	var depths := {}
 	var views: Array = []
-	for entry in _population:
+	for entry in _runtime.population:
 		var state: Dictionary = entry.state
 		var parent_id := ""
 		if state.origin_kind == "PARENT_TRANSFER" and not state.origin_receipt.is_empty():
@@ -502,7 +522,7 @@ func _lineage_depth(individual_id: String, by_id: Dictionary, memo: Dictionary) 
 func _zone_id_at(position_mm: Array) -> String:
 	if _manifest.is_empty():
 		return ""
-	var cell := _cell_index(_field, position_mm)
+	var cell := _cell_index(_runtime.field, position_mm)
 	if cell < 0:
 		return ""
 	var environment: Dictionary = _manifest.environment
@@ -511,6 +531,9 @@ func _zone_id_at(position_mm: Array) -> String:
 	return String(zones[mini(zones.size() - 1, cell * zones.size() / total)].id)
 
 # --- canonical tick: the ONLY place where state changes ---------------------
+# One canonical tick = ONE shared-runtime step: A5 lifecycle (once) ->
+# receipt-only propagule admission -> A6 post-lifecycle feedback on the SAME
+# field. The controller adds no state transition of its own.
 
 func _tick_once() -> void:
 	# P12 WORLD_COMPAT: ACTIVE-only execution. The world authority gate runs
@@ -521,59 +544,24 @@ func _tick_once() -> void:
 		if not bool(admitted.get("success", false)):
 			_fail("CONTROLLER_WORLD_AUTHORITY:" + String(admitted.get("error", "?")))
 			return
-	# (a) resource-funded lifecycle advance (A5).
-	var result := Lifecycle.step_population(_field, _population, _field.owner_token, _field.owner_epoch, _field.revision)
-	if not result.success:
-		_fail("CONTROLLER_TICK_A:" + String(result.error))
+	var stepped := Runtime.step(_runtime, {
+		"mutations_enabled": bool(_manifest.mutation.mutations_enabled),
+		"operator": String(_manifest.mutation.operator),
+		"seed": int(_manifest.seed),
+		"mutation_key_prefix": MUTATION_KEY_PREFIX,
+	})
+	if not bool(stepped.get("success", false)):
+		_fail("CONTROLLER_TICK:" + String(stepped.get("error", "?")))
 		return
-	_field = result.field
-	_population = result.population
-	# (b)+(c) propagules: mutate (A3, derived seed), then materialize (A5).
-	var children: Array = []
-	for propagule in result.propagules:
-		var parent: Dictionary = {}
-		for entry in _population:
-			if entry.state.individual_id == propagule.parent_id:
-				parent = entry
-				break
-		if parent.is_empty():
-			_fail("CONTROLLER_PROPAGULE_PARENT:" + String(propagule.id))
-			return
-		var child_blueprint: Dictionary = parent.blueprint
-		if _manifest.mutation.mutations_enabled:
-			var seed := mutation_seed(_manifest.seed, _tick + 1, String(propagule.parent_id))
-			var mutated := Mutation.mutate(parent.blueprint.genome, seed, _manifest.mutation.operator)
-			if mutated.get("success", false):
-				var candidate := Blueprint.create(mutated.genome, parent.blueprint.life_history)
-				if not candidate.is_empty():
-					child_blueprint = candidate
-		var child := Lifecycle.materialize_propagule(propagule, child_blueprint, parent.state)
-		if child.is_empty() and child_blueprint != parent.blueprint:
-			# Canonical A5 parent-transfer witness binds the child blueprint hash
-			# to the parent's; a mutated genome cannot enter through it. Fall
-			# back to the exact parent blueprint (documented limitation).
-			child = Lifecycle.materialize_propagule(propagule, parent.blueprint, parent.state)
-		if child.is_empty():
-			_fail("CONTROLLER_PROPAGULE_MATERIALIZE:" + String(propagule.id))
-			return
-		children.append(child)
-	_population.append_array(children)
-	_population.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return a.state.individual_id < b.state.individual_id)
-	# (d) persistent environmental feedback advance (A6).
-	if _manifest.feedback.enabled:
-		var advanced := Feedback.advance(_feedback, _feedback.frame.field.owner_token, _feedback.frame.field.owner_epoch, _feedback.frame.step)
-		if not advanced.success:
-			_fail("CONTROLLER_TICK_D:" + String(advanced.error))
-			return
-		_feedback = advanced.state
-	_tick += 1
+	_runtime = stepped.state
 
 # --- deterministic seed derivation (no own RNG) ------------------------------
 
 ## Deterministic mutation seed from (manifest.seed, tick, parent_id), derived
-## exclusively through the canonical genome_mutation_v1.draw stream.
+## exclusively through the canonical genome_mutation_v1.draw stream with the
+## historical controller key prefix (delegates to the shared runtime).
 static func mutation_seed(seed: int, tick: int, parent_id: String) -> int:
-	return Mutation.draw(seed, "eco-arch2-a10-5/mut/%06d/%s" % [tick, parent_id], C.MAX_INT + 1)
+	return Runtime.mutation_seed(seed, tick, parent_id, MUTATION_KEY_PREFIX)
 
 # --- genesis builders --------------------------------------------------------
 
@@ -657,7 +645,7 @@ func _run_guard(n_ticks: int) -> Dictionary:
 		return _failed_command()
 	if n_ticks < 1:
 		return _command_fail("CONTROLLER_RUN_TICKS")
-	if _tick + n_ticks > int(_manifest.horizon_ticks):
+	if tick() + n_ticks > int(_manifest.horizon_ticks):
 		return _command_fail("CONTROLLER_HORIZON")
 	return {"success": true}
 
@@ -666,7 +654,7 @@ func _fail(error: String) -> void:
 	_error = error
 
 func _failed_command() -> Dictionary:
-	return {"success": false, "error": _error, "status": _status, "tick": _tick}
+	return {"success": false, "error": _error, "status": _status, "tick": tick()}
 
 func _command_fail(error: String) -> Dictionary:
 	return {"success": false, "error": error, "status": _status}

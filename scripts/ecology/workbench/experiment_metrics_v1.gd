@@ -104,6 +104,9 @@ func observe(controller: Object) -> Dictionary:
 				var parent_id := String(parent_of.get(id, ""))
 				if not parent_id.is_empty() and _prev_genome_hash.has(parent_id):
 					if String(genome_hash[id]) != String(_prev_genome_hash[parent_id]):
+						# Repaired lineage truth (R1/R2): a mutated genome is
+						# admitted through a sealed canonical mutation receipt,
+						# so a differing child genome IS an inherited mutation.
 						mutations += 1
 						_emit(tick, "mutation", id, {
 							"applied": true, "operator": _mutation_operator,
@@ -112,12 +115,15 @@ func observe(controller: Object) -> Dictionary:
 							"child_hash": String(genome_hash[id]).substr(0, 12),
 						})
 					elif _mutations_enabled:
-						# Read-only evidence of a REJECTED mutation attempt: the
-						# A5 parent-transfer witness falls back to the exact
-						# parent genome (documented canonical limitation).
+						# Mutations are enabled and the admitted genome equals
+						# the parent: a canonical NEUTRAL A3 event (e.g. the
+						# "none" control operator), not a rejection. There is
+						# no fallback path — admission is fail-closed.
 						_emit(tick, "mutation", id, {
-							"applied": false, "operator": _mutation_operator,
-							"parent_id": parent_id, "reason": "PARENT_TRANSFER_WITNESS_FALLBACK",
+							"applied": true, "neutral": true, "operator": _mutation_operator,
+							"parent_id": parent_id,
+							"parent_hash": String(_prev_genome_hash[parent_id]).substr(0, 12),
+							"child_hash": String(genome_hash[id]).substr(0, 12),
 						})
 			elif bool(_prev_alive[id]) and not bool(alive_map[id]):
 				deaths += 1
