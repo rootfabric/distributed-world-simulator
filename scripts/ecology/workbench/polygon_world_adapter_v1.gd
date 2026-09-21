@@ -33,6 +33,7 @@ extends RefCounted
 
 const C = preload("res://scripts/research/ecology/v2/canonical_value_v1.gd")
 const MatterUtils = preload("res://scripts/simulation/matter/matter_contract_utils.gd")
+const NetworkUtils = preload("res://scripts/network/contracts/network_contract_utils.gd")
 const Manifest = preload("res://scripts/ecology/workbench/experiment_manifest_v1.gd")
 const FieldContract = preload("res://scripts/research/ecology/v2/environment_field_contract_v1.gd")
 const WorldBinding = preload("res://scripts/research/ecology/v2/world_binding_v1.gd")
@@ -452,7 +453,13 @@ func import_state(value: Dictionary, expected_hash: String) -> Dictionary:
 	var decoded: Variant = JSON.parse_string(String(value.state_text))
 	if not decoded is Dictionary:
 		return _fail("ADAPTER_STATE_TEXT_DECODE")
-	var raw: Dictionary = decoded
+	# JSON numbers have no integer type; normalize through the production
+	# network canonicalizer so cursor/revision fields regain exact int types
+	# while genuine fractional physical values stay float.
+	var normalized: Dictionary = NetworkUtils.canonicalize(decoded, "$.eco_world_state")
+	if not bool(normalized.get("success", false)) or not normalized.get("value") is Dictionary:
+		return _fail("ADAPTER_STATE_TEXT_NORMALIZE")
+	var raw: Dictionary = normalized.value
 	if MatterUtils.canonical_json(raw) != String(value.state_text):
 		return _fail("ADAPTER_STATE_TEXT_NONCANONICAL")
 	var error := _validate_raw_state(raw)
