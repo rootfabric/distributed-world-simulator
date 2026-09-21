@@ -31,7 +31,7 @@ static func execute(
 	if not U.is_finite_number(load_current_a) or not U.is_non_negative_number(pwm_frequency_hz) or not U.is_positive_number(junction_temperature_k) or not U.is_positive_number(dt_s):
 		return U.failure("POWER_STAGE_REFERENCE_INPUT_INVALID")
 	var conductance := [0.0, 0.0, 0.0, 0.0]
-	var max_current := [0.0, 0.0, 0.0, 0.0]
+	var min_current_per_conductance := [INF, INF, INF, INF]
 	var transition_weighted := [0.0, 0.0, 0.0, 0.0]
 	var max_bus := INF
 	var min_t := 0.0
@@ -43,7 +43,7 @@ static func execute(
 		var r := Physics.resistance_at_temperature(row, junction_temperature_k)
 		var g := 1.0 / r
 		conductance[bank] = float(conductance[bank]) + g
-		max_current[bank] = float(max_current[bank]) + float(row.max_abs_current_a)
+		min_current_per_conductance[bank] = minf(float(min_current_per_conductance[bank]), float(row.max_abs_current_a) / g)
 		transition_weighted[bank] = float(transition_weighted[bank]) + g * float(row.transition_time_s)
 		max_bus = minf(max_bus, float(row.max_bus_voltage_v))
 		min_t = maxf(min_t, float(row.min_temperature_k))
@@ -63,7 +63,9 @@ static func execute(
 	var positive_path := duty_ratio >= 0.0
 	var a := 0 if positive_path else 1
 	var b := 3 if positive_path else 2
-	var current_limit := minf(float(max_current[a]), float(max_current[b]))
+	var current_limit_a := float(conductance[a]) * float(min_current_per_conductance[a])
+	var current_limit_b := float(conductance[b]) * float(min_current_per_conductance[b])
+	var current_limit := minf(current_limit_a, current_limit_b)
 	if absf(load_current_a) > current_limit:
 		return U.failure("POWER_STAGE_REFERENCE_CURRENT_LIMIT")
 	var path_r := float(bank_r[a]) + float(bank_r[b])
