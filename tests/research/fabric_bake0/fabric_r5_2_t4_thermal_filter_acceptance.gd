@@ -165,6 +165,22 @@ func _initialize() -> void:
 	var rejected_projection := StateProjector.project(graph, descriptor, perturbed)
 	check(not rejected_projection.success and String(rejected_projection.error_code) == "THERMAL_STATE_NOT_IN_REDUCTION_MANIFOLD", "off-manifold detailed state rejected", rejected_projection)
 
+	var nonfinite_state: Dictionary = detailed_state.duplicate(true)
+	nonfinite_state.cell_temperature_k = detailed_state.cell_temperature_k.duplicate()
+	nonfinite_state.cell_temperature_k[7] = NAN
+	var nonfinite_projection := StateProjector.project(graph, descriptor, nonfinite_state)
+	check(not nonfinite_projection.success and String(nonfinite_projection.error_code) == "THERMAL_STATE_PROJECTOR_STATE_INVALID", "non-finite projector state rejected", nonfinite_projection)
+	var nonfinite_reference := FullReference.execute(reference.details, nonfinite_state, 100.0, DT_S, 293.15)
+	check(not nonfinite_reference.success and String(nonfinite_reference.error_code) == "THERMAL_REFERENCE_STATE_INVALID", "non-finite detailed reference state rejected", nonfinite_reference)
+
+	var out_of_domain_state: Dictionary = detailed_state.duplicate(true)
+	out_of_domain_state.cell_temperature_k = detailed_state.cell_temperature_k.duplicate()
+	out_of_domain_state.cell_temperature_k[0] = float(descriptor.max_temperature_k) + 1.0
+	var out_of_domain_projection := StateProjector.project(graph, descriptor, out_of_domain_state)
+	check(not out_of_domain_projection.success and String(out_of_domain_projection.error_code) == "THERMAL_STATE_PROJECTOR_TEMPERATURE_OUT_OF_DOMAIN", "projector domain violation rejected", out_of_domain_projection)
+	var out_of_domain_reference := FullReference.execute(reference.details, out_of_domain_state, 100.0, DT_S, 293.15)
+	check(not out_of_domain_reference.success and String(out_of_domain_reference.error_code) == "THERMAL_REFERENCE_TEMPERATURE_OUT_OF_DOMAIN", "detailed reference domain violation rejected", out_of_domain_reference)
+
 	var stale_live: Dictionary = live.duplicate(true)
 	stale_live.artifact_state = "STALE"
 	check(not runtime.execute(stale_live, compact_state, 100.0, DT_S, 293.15).success, "STALE rejected")
@@ -204,6 +220,10 @@ func _initialize() -> void:
 		"replay_max_state_error": replay_max_state_error,
 		"asymmetry_error": String(asymmetric.get("error_code", "")),
 		"off_manifold_error": String(rejected_projection.get("error_code", "")),
+		"nonfinite_projection_error": String(nonfinite_projection.get("error_code", "")),
+		"nonfinite_reference_error": String(nonfinite_reference.get("error_code", "")),
+		"out_of_domain_projection_error": String(out_of_domain_projection.get("error_code", "")),
+		"out_of_domain_reference_error": String(out_of_domain_reference.get("error_code", "")),
 	}
 	print("FABRIC_R5_2_T4_RESULT=" + JSON.stringify(deterministic))
 	if not failed:

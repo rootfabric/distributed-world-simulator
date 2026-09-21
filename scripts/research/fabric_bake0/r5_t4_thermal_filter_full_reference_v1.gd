@@ -75,6 +75,13 @@ static func execute(plan: Dictionary, state: Dictionary, heat_input_w: float, dt
 		return U.failure("THERMAL_REFERENCE_STATE_INVALID")
 	if not U.is_non_negative_number(heat_input_w) or not U.is_positive_number(dt_s) or not U.is_positive_number(ambient_temperature_k):
 		return U.failure("THERMAL_REFERENCE_STEP_INVALID")
+	for index in range(count):
+		var raw_temperature = state.cell_temperature_k[index]
+		if not U.is_positive_number(raw_temperature):
+			return U.failure("THERMAL_REFERENCE_STATE_INVALID", {"cell_index": index})
+		var temperature := float(raw_temperature)
+		if temperature < float(plan.min_temperature_k) or temperature > float(plan.max_temperature_k):
+			return U.failure("THERMAL_REFERENCE_TEMPERATURE_OUT_OF_DOMAIN", {"cell_index": index, "temperature_k": temperature})
 	var net_power: Array = []
 	net_power.resize(count)
 	for i in range(count):

@@ -69,6 +69,10 @@ def main():
         assert data["history_output_delta_k"] > 1.0e-3
         assert data["replay_max_output_error"] == 0.0
         assert data["replay_max_state_error"] == 0.0
+        assert data["nonfinite_projection_error"] == "THERMAL_STATE_PROJECTOR_STATE_INVALID"
+        assert data["nonfinite_reference_error"] == "THERMAL_REFERENCE_STATE_INVALID"
+        assert data["out_of_domain_projection_error"] == "THERMAL_STATE_PROJECTOR_TEMPERATURE_OUT_OF_DOMAIN"
+        assert data["out_of_domain_reference_error"] == "THERMAL_REFERENCE_TEMPERATURE_OUT_OF_DOMAIN"
 
         payload_hashes.add(canonical_hash(data))
         graph_hashes.add(data["graph_hash"])
@@ -112,6 +116,10 @@ def main():
             "history_output_delta_k": d["history_output_delta_k"],
             "replay_max_output_error": d["replay_max_output_error"],
             "replay_max_state_error": d["replay_max_state_error"],
+            "nonfinite_projection_error": d["nonfinite_projection_error"],
+            "nonfinite_reference_error": d["nonfinite_reference_error"],
+            "out_of_domain_projection_error": d["out_of_domain_projection_error"],
+            "out_of_domain_reference_error": d["out_of_domain_reference_error"],
         },
         "identity": {
             "graph_hash": d["graph_hash"],

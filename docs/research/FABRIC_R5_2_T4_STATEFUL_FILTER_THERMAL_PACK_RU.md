@@ -1,6 +1,6 @@
 # FABRIC R5.2 / T4 — Stateful Filter / Thermal Pack
 
-**Статус:** AUTHORITATIVE EXACT PASS / exact-head closure rerun pending.
+**Статус:** FRESH REVIEW REPAIR R1 — fail-closed state validation; exact rerun pending.
 
 ## Цель
 
@@ -130,3 +130,22 @@ detailed state outside exact symmetry manifold
 ```
 
 Wall time/RSS remain observational and are not acceptance thresholds.
+
+
+## Fresh Review Repair R1
+
+Fresh review обнаружил fail-closed gap в adversarial state validation: detailed reference и state projector не должны принимать non-finite либо thermal-domain-invalid source state даже если canonical fixture таких значений не создаёт.
+
+Repair R1 добавляет явную проверку каждого detailed temperature перед вычислением и отдельные negative gates:
+
+```text
+NaN detailed state
+→ THERMAL_STATE_PROJECTOR_STATE_INVALID
+→ THERMAL_REFERENCE_STATE_INVALID
+
+finite temperature above descriptor domain
+→ THERMAL_STATE_PROJECTOR_TEMPERATURE_OUT_OF_DOMAIN
+→ THERMAL_REFERENCE_TEMPERATURE_OUT_OF_DOMAIN
+```
+
+Acceptance thresholds не ослаблялись.
