@@ -1,6 +1,6 @@
 # FABRIC R5.2 / T4 — Stateful Filter / Thermal Pack
 
-**Статус:** implementation started; first exact CI gate pending.
+**Статус:** AUTHORITATIVE EXACT PASS / exact-head closure rerun pending.
 
 ## Цель
 
@@ -71,3 +71,62 @@ Acceptance sequence: 2048 heat/ambient steps с проверкой detailed-vs-c
 ## Bounded claim
 
 T4 доказывает exact symmetry lumping только для данного structural class. Он не утверждает, что произвольную неоднородную 3D тепловую сеть можно безопасно сжать в 8 состояний. Если symmetry proof не проходит, compiler обязан оставить более детальное представление или вернуть fail-closed.
+
+
+## Authoritative exact result
+
+```text
+RUNTIME SUBJECT = 5ee40be0d19f9d5746d13d63743e9b31577d4b78
+RUNTIME TREE    = 1f97293b2958480e0b8fe4bb687c5b2a5c92a4ef
+
+push run        = 35603629267
+samples         = 3/3 PASS
+assertions      = 2206 / sample
+aggregate job   = 106345605893
+artifact        = 10640870366
+artifact digest = sha256:85fc0dfe6c880570c3db1dfe03d2fe1506682a7545e217bd95eeab9d22dcd505
+
+deterministic hash =
+8ef84f3818cc37ff50037bbaa7d22b76cc65276b576fcfdda31e82045a170c79
+
+evidence hash =
+eec44e97811abcdad57113c84cc285ac39ae23476e78c172503fd62f710d517a
+```
+
+Quantitative result:
+
+```text
+512 source cells
+8 layer state scalars
+
+source operations = 3072
+compiled operations = 36
+operation compression = 85.333333x
+runtime source-cell traversals / execute = 0
+
+2048 sequence ticks
+1,048,576 detailed source-cell traversals
+
+max output-temperature error = 5.11590769747272e-13 K
+max layer-state error        = 0
+max energy residual          = 7.32562455141306e-10 J
+
+same instantaneous input after different histories:
+output delta = 0.628210830977537 K
+
+caller-owned snapshot replay:
+output error = 0
+state error  = 0
+```
+
+Fail-closed boundary:
+
+```text
+asymmetric physical lane
+→ THERMAL_PACK_LAYER_SYMMETRY_BROKEN
+
+detailed state outside exact symmetry manifold
+→ THERMAL_STATE_NOT_IN_REDUCTION_MANIFOLD
+```
+
+Wall time/RSS remain observational and are not acceptance thresholds.
