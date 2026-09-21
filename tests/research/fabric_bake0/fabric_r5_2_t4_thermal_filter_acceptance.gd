@@ -116,6 +116,42 @@ func _initialize() -> void:
 	check(max_energy_residual <= 1.0e-8, "energy audit", {"max_residual_j": max_energy_residual})
 	check(full_traversals == Fixture.CELL_COUNT * SEQUENCE_TICKS, "detailed traversal count", {"count": full_traversals})
 
+	# Stateful-filter proof: the same instantaneous input must produce a different
+	# response after different thermal histories.
+	var cold_state := runtime.initial_state(293.15)
+	var hot_history_response := runtime.execute(live, compact_state, 0.0, DT_S, 293.15)
+	var cold_history_response := runtime.execute(live, cold_state, 0.0, DT_S, 293.15)
+	check(hot_history_response.success and cold_history_response.success, "history comparison executes")
+	var history_output_delta_k := 0.0
+	if hot_history_response.success and cold_history_response.success:
+		history_output_delta_k = absf(float(hot_history_response.details.output_temperature_k) - float(cold_history_response.details.output_temperature_k))
+	check(history_output_delta_k > 1.0e-3, "same input differs after different history", {"delta_k": history_output_delta_k})
+
+	# Caller-owned snapshot replay: runtime must not hide a second persistent state.
+	var replay_a: Dictionary = compact_state.duplicate(true)
+	var replay_b: Dictionary = compact_state.duplicate(true)
+	var replay_max_output_error := 0.0
+	var replay_max_state_error := 0.0
+	for replay_tick in range(128):
+		var replay_heat := 1800.0 if replay_tick < 64 else 125.0
+		var replay_ambient := 292.5 + 1.5 * sin(float(replay_tick) * 0.031)
+		var a := runtime.execute(live, replay_a, replay_heat, DT_S, replay_ambient)
+		var b := runtime.execute(live, replay_b, replay_heat, DT_S, replay_ambient)
+		check(a.success and b.success, "snapshot replay execute", {"tick": replay_tick})
+		if not a.success or not b.success:
+			break
+		replay_max_output_error = maxf(replay_max_output_error, absf(float(a.details.output_temperature_k) - float(b.details.output_temperature_k)))
+		for layer in range(Fixture.LAYERS):
+			replay_max_state_error = maxf(replay_max_state_error, absf(float(a.details.next_state.layer_temperature_k[layer]) - float(b.details.next_state.layer_temperature_k[layer])))
+		replay_a = a.details.next_state
+		replay_b = b.details.next_state
+	check(replay_max_output_error == 0.0 and replay_max_state_error == 0.0, "snapshot replay exact", {"output_error": replay_max_output_error, "state_error": replay_max_state_error})
+
+	var final_projection := StateProjector.project(graph, descriptor, detailed_state)
+	check(final_projection.success, "final detailed state remains on reduction manifold", final_projection)
+	if final_projection.success:
+		check(JSON.stringify(final_projection.details.next_state) == JSON.stringify(compact_state), "final projected state equals compact state")
+
 	var asymmetric_graph := Fixture.make_graph(true)
 	var asymmetric := compile_graph(asymmetric_graph, 1)
 	check(not asymmetric.success and String(asymmetric.error_code) == "THERMAL_PACK_LAYER_SYMMETRY_BROKEN", "asymmetric lane fails closed", asymmetric)
@@ -139,6 +175,10 @@ func _initialize() -> void:
 	authority_drift.authority_envelope = live.authority_envelope.duplicate(true)
 	authority_drift.authority_envelope.checksum = "0".repeat(64)
 	check(not runtime.execute(authority_drift, compact_state, 100.0, DT_S, 293.15).success, "authority drift rejected")
+	var graph_drift: Dictionary = live.duplicate(true)
+	graph_drift.graph_hash = String(asymmetric_graph.graph_hash)
+	var graph_drift_result := runtime.execute(graph_drift, compact_state, 100.0, DT_S, 293.15)
+	check(not graph_drift_result.success and String(graph_drift_result.error_code) == "THERMAL_FILTER_RUNTIME_GRAPH_MISMATCH", "graph drift rejected", graph_drift_result)
 
 	var deterministic := {
 		"schema": "planet_simulator.fabric_r5_2_t4_thermal_filter_result.v1",
@@ -159,6 +199,9 @@ func _initialize() -> void:
 		"maximum_layer_temperature_error": max_temperature_error,
 		"maximum_energy_residual_j": max_energy_residual,
 		"final_output_temperature_k": last_output,
+		"history_output_delta_k": history_output_delta_k,
+		"replay_max_output_error": replay_max_output_error,
+		"replay_max_state_error": replay_max_state_error,
 		"asymmetry_error": String(asymmetric.get("error_code", "")),
 		"off_manifold_error": String(rejected_projection.get("error_code", "")),
 	}
