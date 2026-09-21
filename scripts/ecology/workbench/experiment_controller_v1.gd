@@ -23,7 +23,9 @@ const FieldContract = preload("res://scripts/research/ecology/v2/environment_fie
 const Ports = preload("res://scripts/research/ecology/v2/organism_environment_ports_v1.gd")
 const Lifecycle = preload("res://scripts/research/ecology/v2/resource_lifecycle_runtime_v1.gd")
 const Runtime = preload("res://scripts/research/ecology/v2/ecology_runtime_v1.gd")
+const Checkpoint = preload("res://scripts/research/ecology/v2/ecology_runtime_checkpoint_v1.gd")
 const Feedback = preload("res://scripts/research/ecology/v2/persistent_environmental_feedback_v1.gd")
+const OrganizationProfile = preload("res://scripts/ecology/workbench/organization_profile_v1.gd")
 const EnvironmentPatch = preload("res://scripts/ecology/workbench/environment_patch_v1.gd")
 const Manifest = preload("res://scripts/ecology/workbench/experiment_manifest_v1.gd")
 
@@ -31,8 +33,7 @@ const SCHEMA := "dws.ecology.workbench.experiment-controller.v1"
 const STATE_SCHEMA := "dws.ecology.workbench.experiment-state.v1"
 # Controller-declared genesis policy (deterministic, manifest-independent).
 const OWNER_TOKEN := "eco-polygon.controller"
-const CELL_CAPACITY_MG := 1000000
-const FOUNDER_ENDOWMENT_STOCK := 200000
+const DEFAULT_FOUNDER_ENDOWMENT_STOCK := 200000
 const STATUSES := ["READY", "RUNNING", "PAUSED", "FAILED"]
 # Historical controller mutation seed stream (deterministic, manifest-derived).
 const MUTATION_KEY_PREFIX := "eco-arch2-a10-5/mut"
@@ -84,7 +85,7 @@ func initialize(manifest: Dictionary, founder_registry: Dictionary = {}) -> Dict
 	if not field_result.success:
 		return field_result
 	var field: Dictionary = field_result.field
-	var population_result := _build_population(manifest.placement, blueprints, field)
+	var population_result := _build_population(manifest, blueprints, field)
 	if not population_result.success:
 		return population_result
 	var population: Array = population_result.population
@@ -242,7 +243,7 @@ func get_snapshot() -> Dictionary:
 		"field_hash": payload.field_hash,
 		"population": population_hashes,
 		"feedback_hash": payload.feedback_hash,
-		"canonical_state_hash": C.digest(payload),
+		"canonical_state_hash": Runtime.state_hash(_runtime),
 		# Presentation views (P4): read-only per-organism projection from the
 		# canonical state. Deliberately OUTSIDE the canonical_state_hash payload
 		# (it is a UI projection, not simulation truth).
@@ -310,55 +311,62 @@ func serialize_state() -> Dictionary:
 		return _command_fail("CONTROLLER_NOT_INITIALIZED")
 	if _status == "FAILED":
 		return _failed_command()
-	var payload := {"runtime": _runtime, "tick": tick()}
 	var manifest_hash := Manifest.canonical_hash(_manifest)
-	var text := C.encode({"schema": STATE_SCHEMA, "manifest_hash": manifest_hash, "state": payload})
+	var external_state := {}
+	if String(_manifest.mode) == "WORLD_COMPAT":
+		if _world_authority == null:
+			return _command_fail("CONTROLLER_WORLD_AUTHORITY_REQUIRED")
+		external_state = _world_authority.export_state()
+		if external_state.is_empty():
+			return _command_fail("CONTROLLER_WORLD_STATE_EXPORT")
+	var checkpoint := Checkpoint.create(manifest_hash, _runtime, external_state)
+	if checkpoint.is_empty():
+		return _command_fail("CONTROLLER_CHECKPOINT_CREATE")
+	var text := Checkpoint.serialize(checkpoint)
 	if text.is_empty():
 		return _command_fail("CONTROLLER_STATE_ENCODE")
 	return {
 		"success": true,
 		"state_text": text,
-		"state_hash": C.digest(payload),
+		# Caller-owned admission anchor. load_state requires this exact hash;
+		# an attacker cannot rewrite + rehash the payload without also changing
+		# the trusted value held by the checkpoint manager/caller.
+		"state_checksum": text.sha256_text(),
+		"checkpoint_checksum": String(checkpoint.checksum),
+		"state_hash": String(checkpoint.runtime_state_hash),
+		"external_state_hash": String(checkpoint.external_state_hash),
 		"tick": tick(),
 		"status": _status,
 		"manifest_hash": manifest_hash,
 	}
 
-## Load a serialized canonical state into this controller. The controller
-## must already be initialized (the manifest is the identity anchor).
-## expected_manifest_hash: when non-empty, the envelope's manifest hash must
-## match exactly (strict restore); an empty value skips the binding check
-## (branch fork: the checkpoint legitimately comes from the parent manifest).
-func load_state(state_text: String, expected_manifest_hash: String = "") -> Dictionary:
+## Restore only from an externally anchored shared runtime checkpoint.
+func load_state(state_text: String, expected_manifest_hash: String = "", expected_state_checksum: String = "") -> Dictionary:
 	if _status == "IDLE":
 		return _command_fail("CONTROLLER_NOT_INITIALIZED")
-	var parsed: Dictionary = C.decode(state_text)
-	if not bool(parsed.get("success", false)):
-		return _command_fail("CONTROLLER_STATE_DECODE:" + String(parsed.get("error", "?")))
-	var envelope: Dictionary = parsed.value
-	if not C.keys(envelope, ["schema", "manifest_hash", "state"]) or envelope.schema != STATE_SCHEMA:
-		return _command_fail("CONTROLLER_STATE_SCHEMA")
-	if not expected_manifest_hash.is_empty() and String(envelope.manifest_hash) != expected_manifest_hash:
+	if expected_state_checksum.is_empty():
+		return _command_fail("CONTROLLER_STATE_EXTERNAL_ANCHOR_REQUIRED")
+	var current_manifest_hash := Manifest.canonical_hash(_manifest)
+	if not expected_manifest_hash.is_empty() and expected_manifest_hash != current_manifest_hash:
 		return _command_fail("CONTROLLER_STATE_MANIFEST_MISMATCH")
-	var state: Dictionary = envelope.state
-	if not C.keys(state, ["runtime", "tick"]):
-		return _command_fail("CONTROLLER_STATE_FIELDS")
-	var runtime_error := Runtime.validate(state.runtime)
-	if not runtime_error.is_empty():
-		return _command_fail("CONTROLLER_STATE_RUNTIME:" + runtime_error)
-	if int(state.runtime.tick) != int(state.tick):
-		return _command_fail("CONTROLLER_STATE_TICK_MISMATCH")
-	_runtime = state.runtime.duplicate(true)
+	var checkpoint := Checkpoint.deserialize(state_text, expected_state_checksum, current_manifest_hash)
+	if checkpoint.is_empty():
+		return _command_fail("CONTROLLER_STATE_ADMISSION")
+	if String(_manifest.mode) == "WORLD_COMPAT":
+		if checkpoint.external_state.is_empty() or String(checkpoint.external_state_hash).is_empty():
+			return _command_fail("CONTROLLER_WORLD_STATE_REQUIRED")
+		if _world_authority == null:
+			return _command_fail("CONTROLLER_WORLD_AUTHORITY_REQUIRED")
+		var imported: Dictionary = _world_authority.import_state(checkpoint.external_state, String(checkpoint.external_state_hash))
+		if not bool(imported.get("success", false)):
+			return _command_fail("CONTROLLER_WORLD_STATE_IMPORT:" + String(imported.get("error", "?")))
+	elif not checkpoint.external_state.is_empty() or not String(checkpoint.external_state_hash).is_empty():
+		return _command_fail("CONTROLLER_LAB_EXTERNAL_STATE")
+	_runtime = checkpoint.runtime_state.duplicate(true)
 	_status = "READY"
 	_error = ""
 	return {"success": true, "tick": tick(), "status": _status}
 
-## Apply an input-layer environment patch (P4 schema) to the LIVE field
-## state. Used ONLY by branch fork (P8): stocks move through canonical
-## deposit/sink effects, signals through set_cell_signals — the same
-## owner-write API as genesis. The patched field is adopted into the single
-## runtime truth with an exact accounting re-anchor; the stored manifest is
-## replaced by the patched immutable manifest (new canonical hash).
 func apply_field_patch(patch: Dictionary) -> Dictionary:
 	if _status == "IDLE" or _status == "FAILED":
 		return _command_fail("CONTROLLER_NOT_INITIALIZED")
@@ -437,29 +445,34 @@ func apply_world_stocks(resources: Dictionary, source_tag: String) -> Dictionary
 		return _failed_command()
 	if String(_manifest.mode) != "WORLD_COMPAT":
 		return _command_fail("CONTROLLER_WORLD_STOCKS_LAB")
-	if not resources is Dictionary or source_tag.is_empty():
+	if not FieldContract.valid_total_stock(resources) or source_tag.is_empty():
 		return _command_fail("CONTROLLER_WORLD_STOCKS_INPUT")
-	var spatial: Dictionary = _manifest.environment.spatial
-	var total: int = int(spatial.width) * int(spatial.depth)
+	# A Matter admission supplies a total batch amount, not a spatial
+	# allocation. Replicating that total into every cell violates mass
+	# conservation. Until production provides an allocation witness, only a
+	# one-cell field can admit a total batch; multi-cell fails closed.
+	if int(_runtime.field.width) * int(_runtime.field.depth) != 1:
+		return _command_fail("CONTROLLER_WORLD_STOCKS_SPATIAL_ALLOCATION_REQUIRED")
+	var field: Dictionary = _runtime.field
+	var position := _cell_center(field, 0)
 	var deposits: Array = []
-	for index in total:
-		var position := _cell_center(_runtime.field, index)
-		for resource in FieldContract.RESOURCES:
-			var amount: int = int(resources.get(resource, 0))
-			if amount <= 0:
-				continue
-			if amount > CELL_CAPACITY_MG:
-				return _command_fail("CONTROLLER_WORLD_STOCK:" + resource)
-			var remaining := amount
-			var chunk_index := 0
-			while remaining > 0:
-				var chunk: int = mini(remaining, FieldContract.MAX_REQUEST)
-				deposits.append(Ports.effect("world/%s/%06d/%s/%03d" % [source_tag, index, resource, chunk_index], OWNER_TOKEN, "deposit", resource, chunk, position, 0, "CONTROLLER_WORLD_COMPAT"))
-				remaining -= chunk
-				chunk_index += 1
+	for resource in FieldContract.RESOURCES:
+		var amount: int = int(resources[resource])
+		if amount <= 0:
+			continue
+		var room := int(field.cells[0].capacities[resource]) - int(field.cells[0].stocks[resource])
+		if amount > room:
+			return _command_fail("CONTROLLER_WORLD_STOCK_CAPACITY:" + resource)
+		var remaining := amount
+		var chunk_index := 0
+		while remaining > 0:
+			var chunk: int = mini(remaining, FieldContract.MAX_REQUEST)
+			deposits.append(Ports.effect("world/%s/%s/%03d" % [source_tag, resource, chunk_index], OWNER_TOKEN, "deposit", resource, chunk, position, 0, "CONTROLLER_WORLD_COMPAT"))
+			remaining -= chunk
+			chunk_index += 1
 	if deposits.is_empty():
-		return {"success": true, "tick": tick(), "field_hash": Field.state_hash(_runtime.field), "deposited": false}
-	var applied := Field.apply_effects(_runtime.field, deposits, OWNER_TOKEN, int(_runtime.field.owner_epoch), int(_runtime.field.revision))
+		return {"success": true, "tick": tick(), "field_hash": Field.state_hash(field), "deposited": false}
+	var applied := Field.apply_effects(field, deposits, OWNER_TOKEN, int(field.owner_epoch), int(field.revision))
 	if not bool(applied.get("success", false)):
 		return _command_fail("CONTROLLER_WORLD_STOCKS_EFFECTS:" + String(applied.get("error", "?")))
 	var adopted := Runtime.adopt_field(_runtime, applied.state)
@@ -544,9 +557,18 @@ func _tick_once() -> void:
 		if not bool(admitted.get("success", false)):
 			_fail("CONTROLLER_WORLD_AUTHORITY:" + String(admitted.get("error", "?")))
 			return
+	var profile := OrganizationProfile.preset(String(_manifest.organization_profile))
+	var bias := {}
+	if String(profile.rule_class) == "DEVELOPMENT_BIAS":
+		var applied_bias := OrganizationProfile.apply_development_bias(profile)
+		if not bool(applied_bias.get("success", false)) or not bool(applied_bias.get("applied", false)):
+			_fail("CONTROLLER_DEVELOPMENT_BIAS")
+			return
+		bias = applied_bias.bias
 	var stepped := Runtime.step(_runtime, {
 		"mutations_enabled": bool(_manifest.mutation.mutations_enabled),
 		"operator": String(_manifest.mutation.operator),
+		"bias": bias,
 		"seed": int(_manifest.seed),
 		"mutation_key_prefix": MUTATION_KEY_PREFIX,
 	})
@@ -593,7 +615,7 @@ func _resolve_founders(founders: Array, registry: Dictionary) -> Dictionary:
 func _build_field(environment: Dictionary) -> Dictionary:
 	var spatial: Dictionary = environment.spatial
 	var zones: Array = environment.zones
-	var field := Field.create(OWNER_TOKEN, 0, spatial.origin_mm, spatial.cell_size_mm, spatial.width, spatial.depth, FieldContract.stock(0), FieldContract.stock(CELL_CAPACITY_MG), FieldContract.signals(0, 0))
+	var field := Field.create(OWNER_TOKEN, 0, spatial.origin_mm, spatial.cell_size_mm, spatial.width, spatial.depth, FieldContract.stock(0), FieldContract.stock(FieldContract.MAX_CELL_STOCK), FieldContract.signals(0, 0))
 	if field.is_empty():
 		return _command_fail("CONTROLLER_FIELD_CREATE")
 	var total: int = spatial.width * spatial.depth
@@ -605,8 +627,6 @@ func _build_field(environment: Dictionary) -> Dictionary:
 			var amount: int = int(zone[resource])
 			if amount <= 0:
 				continue
-			if amount > CELL_CAPACITY_MG:
-				return _command_fail("CONTROLLER_ZONE_STOCK:" + String(zone.id) + "/" + resource)
 			deposits.append(Ports.effect("setup/deposit/%04d/%s" % [index, resource], OWNER_TOKEN, "deposit", resource, amount, position, 0, "CONTROLLER_GENESIS"))
 	if not deposits.is_empty():
 		var applied := Field.apply_effects(field, deposits, OWNER_TOKEN, 0, field.revision)
@@ -622,15 +642,18 @@ func _build_field(environment: Dictionary) -> Dictionary:
 		field = set.state
 	return {"success": true, "field": field}
 
-func _build_population(placement: Dictionary, blueprints: Dictionary, field: Dictionary) -> Dictionary:
+func _build_population(manifest: Dictionary, blueprints: Dictionary, field: Dictionary) -> Dictionary:
 	var population: Array = []
-	var entries: Array = placement.entries
+	var entries: Array = manifest.placement.entries
+	var founder_endowment := B.stock(DEFAULT_FOUNDER_ENDOWMENT_STOCK)
+	if manifest.has("genesis"):
+		founder_endowment = manifest.genesis.founder_endowment.duplicate(true)
 	for index in entries.size():
 		var entry: Dictionary = entries[index]
 		var blueprint: Dictionary = blueprints[entry.founder_ref]
 		if _cell_index(field, entry.position_mm) < 0:
 			return _command_fail("CONTROLLER_PLACEMENT_OUTSIDE_FIELD:%d" % index)
-		var individual := Lifecycle.individual(blueprint, "founder/%04d" % index, entry.position_mm, B.stock(FOUNDER_ENDOWMENT_STOCK))
+		var individual := Lifecycle.individual(blueprint, "founder/%04d" % index, entry.position_mm, founder_endowment)
 		if individual.is_empty():
 			return _command_fail("CONTROLLER_FOUNDER_STATE:%d" % index)
 		population.append(individual)
