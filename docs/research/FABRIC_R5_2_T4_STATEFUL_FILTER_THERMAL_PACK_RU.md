@@ -66,7 +66,7 @@ Compiled runtime обновляет только 8 layer states и имеет:
 runtime source-cell traversals / execute = 0
 ```
 
-Acceptance sequence: 2048 heat/ambient steps с проверкой detailed-vs-capsule parity, energy audit, state projection, fail-closed symmetry boundary и canonical live fences.
+Acceptance sequence: 2048 heat/ambient steps с проверкой detailed-vs-capsule parity, energy audit, state projection, fail-closed symmetry boundary и canonical live fences. Дополнительно один и тот же instantaneous input подаётся после двух разных thermal histories: output обязан различаться. Caller-owned snapshot затем проигрывается двумя независимыми replay-траекториями, которые обязаны совпасть bit-exact, что запрещает скрытое persistent state внутри runtime.
 
 ## Bounded claim
 

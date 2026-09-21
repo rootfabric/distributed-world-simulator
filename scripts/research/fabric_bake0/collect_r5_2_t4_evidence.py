@@ -66,6 +66,9 @@ def main():
         assert data["maximum_energy_residual_j"] <= 1.0e-8
         assert data["asymmetry_error"] == "THERMAL_PACK_LAYER_SYMMETRY_BROKEN"
         assert data["off_manifold_error"] == "THERMAL_STATE_NOT_IN_REDUCTION_MANIFOLD"
+        assert data["history_output_delta_k"] > 1.0e-3
+        assert data["replay_max_output_error"] == 0.0
+        assert data["replay_max_state_error"] == 0.0
 
         payload_hashes.add(canonical_hash(data))
         graph_hashes.add(data["graph_hash"])
@@ -106,6 +109,9 @@ def main():
             "maximum_energy_residual_j": d["maximum_energy_residual_j"],
             "asymmetry_error": d["asymmetry_error"],
             "off_manifold_error": d["off_manifold_error"],
+            "history_output_delta_k": d["history_output_delta_k"],
+            "replay_max_output_error": d["replay_max_output_error"],
+            "replay_max_state_error": d["replay_max_state_error"],
         },
         "identity": {
             "graph_hash": d["graph_hash"],
