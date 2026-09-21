@@ -55,7 +55,7 @@ static func validate(value: Dictionary) -> Dictionary:
 	var coolant_material := MatterCatalog.material_by_id(value.material_catalog, String(value.coolant_profile.coolant_material_id))
 	if coolant_material.is_empty():
 		return U.failure("COOLING_LOOP_COOLANT_MATERIAL_MISSING")
-	checked = Profile.validate_against_materials(value.coolant_profile, coolant_material) if false else Profile.validate_against_material(value.coolant_profile, coolant_material)
+	checked = Profile.validate_against_material(value.coolant_profile, coolant_material)
 	if not checked.success:
 		return checked
 	if typeof(value.get("lanes")) != TYPE_ARRAY or value.lanes.is_empty():
