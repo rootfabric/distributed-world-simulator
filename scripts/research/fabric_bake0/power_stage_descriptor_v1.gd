@@ -89,6 +89,28 @@ static func validate(value: Dictionary) -> Dictionary:
 		return U.failure("INVALID_POWER_STAGE_DESCRIPTOR_TEMP_COEFFICIENT")
 	if float(value.min_temperature_k) >= float(value.reference_temperature_k) or float(value.reference_temperature_k) >= float(value.max_temperature_k):
 		return U.failure("POWER_STAGE_DESCRIPTOR_TEMPERATURE_ORDER_INVALID")
+	if int(value.active_die_count) > int(value.switch_die_count) or int(value.active_die_count) < int(value.bank_count):
+		return U.failure("POWER_STAGE_DESCRIPTOR_ACTIVE_DIE_COUNT_INVALID")
+	var expected_positive_r := float(value.bank_resistance_ref_ohm[0]) + float(value.bank_resistance_ref_ohm[3])
+	var expected_negative_r := float(value.bank_resistance_ref_ohm[1]) + float(value.bank_resistance_ref_ohm[2])
+	var expected_positive_current := minf(float(value.bank_max_abs_current_a[0]), float(value.bank_max_abs_current_a[3]))
+	var expected_negative_current := minf(float(value.bank_max_abs_current_a[1]), float(value.bank_max_abs_current_a[2]))
+	var expected_positive_transition := float(value.bank_effective_transition_time_s[0]) + float(value.bank_effective_transition_time_s[3])
+	var expected_negative_transition := float(value.bank_effective_transition_time_s[1]) + float(value.bank_effective_transition_time_s[2])
+	var consistency_checks := [
+		["positive_path_resistance_ref_ohm", float(value.positive_path_resistance_ref_ohm), expected_positive_r],
+		["negative_path_resistance_ref_ohm", float(value.negative_path_resistance_ref_ohm), expected_negative_r],
+		["positive_path_max_abs_current_a", float(value.positive_path_max_abs_current_a), expected_positive_current],
+		["negative_path_max_abs_current_a", float(value.negative_path_max_abs_current_a), expected_negative_current],
+		["positive_path_transition_time_s", float(value.positive_path_transition_time_s), expected_positive_transition],
+		["negative_path_transition_time_s", float(value.negative_path_transition_time_s), expected_negative_transition],
+	]
+	for relation in consistency_checks:
+		var actual := float(relation[1])
+		var expected := float(relation[2])
+		var scale := maxf(1.0e-18, maxf(absf(actual), absf(expected)))
+		if absf(actual - expected) > 1.0e-12 * scale:
+			return U.failure("POWER_STAGE_DESCRIPTOR_PATH_RELATION_MISMATCH", {"field": String(relation[0]), "actual": actual, "expected": expected})
 	if int(value.source_operation_count) <= int(value.compiled_operation_count):
 		return U.failure("INSUFFICIENT_POWER_STAGE_COMPRESSION")
 	if String(value.descriptor_hash) != U.canonical_hash(_identity(value)):
