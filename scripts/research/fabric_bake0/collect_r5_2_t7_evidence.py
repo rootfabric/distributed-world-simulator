@@ -52,6 +52,7 @@ def main():
         assert d["composition_max_ratio_error"]<=1e-12
         assert d["composition_max_power_error"]<=1e-12
         assert d["composition_torque_gain_seen"] is True
+        assert 0.0 < d["coupled_acceleration_ratio"] < 1.0
         hashes.add(canonical_hash(d))
         samples.append({"sample":i,"deterministic":d,"process":parse_time(root/f"sample-{i}.time.txt")})
     if len(hashes)!=1: raise ValueError("T7_DETERMINISM_MISMATCH")
