@@ -4,11 +4,11 @@ const U = preload("res://scripts/research/fabric_bake0/fabric_bake_contract_util
 const Frontier = preload("res://scripts/research/fabric_bake0/canonical_source_frontier_v1.gd")
 const Authority = preload("res://scripts/research/fabric_bake0/authority_envelope_v1.gd")
 const Dependencies = preload("res://scripts/research/fabric_bake0/bake_dependency_set_v1.gd")
-const Interface = preload("res://scripts/research/fabric_bake0/gearbox_interface_contract_v1.gd")
-const Descriptor = preload("res://scripts/research/fabric_bake0/gearbox_descriptor_v1.gd")
+const Interface = preload("res://scripts/research/fabric_bake0/cooling_loop_interface_contract_v1.gd")
+const Descriptor = preload("res://scripts/research/fabric_bake0/cooling_loop_descriptor_v1.gd")
 
-const SCHEMA := "planet_simulator.fabric_gearbox_execution_artifact.v1"
-const KIND := "GEARBOX"
+const SCHEMA := "planet_simulator.fabric_cooling_loop_execution_artifact.v1"
+const KIND := "COOLING_LOOP"
 const FIELDS: Array[String] = [
 	"schema", "artifact_id", "artifact_kind", "canonical_source_frontier",
 	"authority_envelope", "dependency_set", "graph_hash", "material_catalog_hash",
@@ -53,9 +53,9 @@ static func validate(value: Dictionary) -> Dictionary:
 	if not checked.success:
 		return checked
 	if value.get("schema") != SCHEMA or value.get("artifact_kind") != KIND:
-		return U.failure("UNSUPPORTED_GEARBOX_EXECUTION_ARTIFACT")
+		return U.failure("UNSUPPORTED_COOLING_LOOP_EXECUTION_ARTIFACT")
 	if not U.is_canonical_id(value.get("artifact_id"), 2):
-		return U.failure("INVALID_GEARBOX_ARTIFACT_ID")
+		return U.failure("INVALID_COOLING_LOOP_ARTIFACT_ID")
 	checked = Frontier.validate(value.canonical_source_frontier)
 	if not checked.success:
 		return checked
@@ -70,7 +70,7 @@ static func validate(value: Dictionary) -> Dictionary:
 		return checked
 	for field in ["graph_hash", "material_catalog_hash", "descriptor_checksum", "state_schema_hash", "artifact_hash"]:
 		if not U.is_lower_hex_64(value.get(field)):
-			return U.failure("INVALID_GEARBOX_ARTIFACT_HASH", {"field": field})
+			return U.failure("INVALID_COOLING_LOOP_ARTIFACT_HASH", {"field": field})
 	var graph_bound := false
 	var matter_bound := false
 	for source in value.canonical_source_frontier.sources:
@@ -79,15 +79,15 @@ static func validate(value: Dictionary) -> Dictionary:
 		if String(source.source_domain) == "MATTER" and String(source.source_hash) == String(value.material_catalog_hash):
 			matter_bound = true
 	if not graph_bound:
-		return U.failure("GEARBOX_ARTIFACT_GRAPH_SOURCE_MISMATCH")
+		return U.failure("COOLING_LOOP_ARTIFACT_GRAPH_SOURCE_MISMATCH")
 	if not matter_bound:
-		return U.failure("GEARBOX_ARTIFACT_MATERIAL_SOURCE_MISMATCH")
+		return U.failure("COOLING_LOOP_ARTIFACT_MATERIAL_SOURCE_MISMATCH")
 	if not U.is_json_integer(value.get("build_generation")) or int(value.build_generation) < 1:
-		return U.failure("INVALID_GEARBOX_BUILD_GENERATION")
+		return U.failure("INVALID_COOLING_LOOP_BUILD_GENERATION")
 	if value.get("derived_only") != true:
-		return U.failure("GEARBOX_ARTIFACT_MUST_BE_DERIVED")
+		return U.failure("COOLING_LOOP_ARTIFACT_MUST_BE_DERIVED")
 	if String(value.artifact_hash) != U.canonical_hash(_identity(value)):
-		return U.failure("GEARBOX_ARTIFACT_HASH_MISMATCH")
+		return U.failure("COOLING_LOOP_ARTIFACT_HASH_MISMATCH")
 	return U.validate_checksum(value)
 
 static func verify_descriptor(value: Dictionary, descriptor: Dictionary) -> Dictionary:
@@ -98,9 +98,9 @@ static func verify_descriptor(value: Dictionary, descriptor: Dictionary) -> Dict
 	if not checked.success:
 		return checked
 	if String(value.descriptor_checksum) != String(descriptor.checksum):
-		return U.failure("GEARBOX_ARTIFACT_DESCRIPTOR_MISMATCH")
+		return U.failure("COOLING_LOOP_ARTIFACT_DESCRIPTOR_MISMATCH")
 	if String(value.graph_hash) != String(descriptor.graph_hash) or String(value.material_catalog_hash) != String(descriptor.material_catalog_hash):
-		return U.failure("GEARBOX_ARTIFACT_DESCRIPTOR_SOURCE_MISMATCH")
+		return U.failure("COOLING_LOOP_ARTIFACT_DESCRIPTOR_SOURCE_MISMATCH")
 	return U.success()
 
 static func _identity(value: Dictionary) -> Dictionary:
