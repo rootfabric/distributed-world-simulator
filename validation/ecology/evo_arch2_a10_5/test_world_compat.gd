@@ -244,6 +244,22 @@ func _scenario_equivalence() -> void:
 	_check(bool(observe.get("configured", false)) and String(observe.lifecycle_state) == "ACTIVE", "E observe_world reports ACTIVE region")
 	_check(int(observe.admitted_resources.water_mg) == WATER_STOCK_MG, "E observe_world reports admitted water total")
 
+	# The physical adapter payload contains real float-valued Matter provenance.
+	# It must survive the integer-only ecology checkpoint through the opaque
+	# canonical JSON envelope without losing site binding or admitted mass.
+	var checkpoint: Dictionary = wc.serialize_state()
+	_check(bool(checkpoint.get("success", false)), "E WORLD_COMPAT checkpoint serializes Matter catalog/site binding")
+	if bool(checkpoint.get("success", false)):
+		var adapter2 := _adapter(_manifest("WORLD_COMPAT", 16), _region("node/a", 1, "ACTIVE"), water_entries)
+		var wc2 := _wc_controller(_manifest("WORLD_COMPAT", 16), adapter2)
+		var restored: Dictionary = wc2.load_state(String(checkpoint.state_text), String(checkpoint.manifest_hash), String(checkpoint.state_checksum))
+		_check(bool(restored.get("success", false)), "E opaque physical-world state restores through shared ecology checkpoint")
+		if bool(restored.get("success", false)):
+			var observe2: Dictionary = adapter2.observe_world()
+			_check(String(observe2.site_binding_hash) == String(observe.site_binding_hash), "E Matter site binding hash preserved across checkpoint")
+			_check(int(observe2.admitted_resources.water_mg) == WATER_STOCK_MG, "E admitted Matter resources preserved across checkpoint")
+			_check(bool(wc2.run(1).get("success", false)), "E restored WORLD_COMPAT controller continues from opaque physical state")
+
 # --- Scenario A: ACTIVE-only + fail-closed authority deps (§23/§24) --------------
 
 func _scenario_active_only() -> void:
