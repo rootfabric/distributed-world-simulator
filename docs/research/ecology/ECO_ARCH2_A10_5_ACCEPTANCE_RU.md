@@ -83,14 +83,8 @@ handoff + damage overlay.
 
 ## 5. Известные канонические ограничения и gaps (сводка из P-отчётов)
 
-1. **A5 witness / mutated-genome fallback** (P2, наблюдается в P10/P13):
-   A5 parent-transfer witness привязывает hash генома ребёнка к родительскому;
-   мутированный геном не может войти через него — контроллер делает fallback
-   на точный родительский геном (событие `PARENT_TRANSFER_WITNESS_FALLBACK`).
-   Мутации регистрируются как события, но не закрепляются в линии.
-2. **A6 `MAX_STEPS=64` и O(n²) рост**: горизонт эксперимента ограничен 64 тиками
-   feedback-фрейма; batch runner дополнительно ограничивает горизонт 32
-   (guard). Длинные прогоны требуют канонического расширения.
+1. ~~**A5 witness / mutated-genome fallback** (P2, наблюдается в P10/P13)~~ — **ИСПРАВЛЕНО в REPAIR R1** (`repair/eco-arch2-a10-5-polygon-r1`): мутированный геном входит в линию ТОЛЬКО через canonical sealed mutation receipt (`genome_mutation_receipt_v1.gd`) + canonical A5 admission; fallback на родительский геном удалён (fail-closed). Durable provenance хранится в состоянии ребёнка (`mutation_receipt`) и перепроверяется при каждой валидации. См. `ECO_ARCH2_A10_5_OWNER_MAP_RU.md` §4.
+2. ~~**A6 `MAX_STEPS=64` и O(n²) рост**~~ — **снято с controller-пути в REPAIR R1**: полигон исполняется через shared `EcologyRuntimeV1` (per-step conservation + integrity seal вместо полного replay-доказательства на каждом шаге); старый public `Feedback.advance` сохранён для прежних callers без изменений. Batch-горизонт 32 остаётся политикой runner'а, не каноническим пределом.
 3. **DEVELOPMENT_BIAS profile**: закрытый список OPERATORS в A3 + A5 witness ⇒
    SOFT/EARTH_LIKE/NMS_LIKE BLOCKED; формальное предложение расширения —
    `ECO_ARCH2_A10_5_P9_DEVELOPMENT_BIAS_EXTENSION_RU.md`.
@@ -111,7 +105,9 @@ handoff + damage overlay.
    founder endowment контроллера (200000 на резерв) покрывает maintenance на
    ~2000+ тиков ≫ MAX_STEPS 64; genome `max_age` останавливает только
    development, не убивает. Decomposition-половина цикла (organic→nutrient
-   mineralization) покрыта напрямую; corpse-ветка покрыта каноническим
+   mineralization) измеряется на ЕДИНОМ canonical field (repair R1);
+   реальная смерть + corpse return через canonical runtime API покрыты в
+   `test_runtime_single_state.gd` S4; corpse-ветка также покрыта каноническим
    A6-сьютом.
 8. **Bounds-расхождение** (P1/P4, зафиксировано): manifest валидирует zone
    stocks по `FieldContract.MAX_CELL_STOCK` (10⁹), а controller genesis — по

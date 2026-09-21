@@ -56,3 +56,29 @@
 2. **A9 representation-контракты plant-lineage-specific**: вход `plant_multiscale_representation_v1.build(description, tier)` ожидает `description` plant-render формата (`plant_render_description_v1.gd`), а не universal phenotype. Для полигона нужен **reusable adapter** `phenotype_snapshot → render description` (не копия формул). Помечено в строке 10.
 3. **Observatory protocol ограничен** тремя сайтами (wet/dry/dark) и фиксированным `treatment(...)`; ExperimentManifest P1 должен расширить входы (custom zones, произвольные founders), не ломая `valid_treatment`-контракт.
 4. `ecology_region_*` (P4.1/P4.5) — production-line API с собственными schema `distributed_world_simulator.ecology.*`; polygon должен читать их как trusted contracts, не подменяя ownership-модель. Ecology-side мост к Matter — через `matter_resource_mapping_v1` (explicit-only), НЕ через прямое чтение Matter catalog.
+
+## 4. REPAIR R1 (ECO-POLYGON-1) — single-trajectory runtime + mutation receipts
+
+Статус: REPAIR R1 применён на ветке `repair/eco-arch2-a10-5-polygon-r1` (base `af192718`, tree `b29e770f`). Дата: 2026-09-21.
+
+### 4.1 Новые canonical компоненты
+
+| Компонент | Файл | Роль |
+|---|---|---|
+| EcologyRuntimeV1 | `scripts/research/ecology/v2/ecology_runtime_v1.gd` | ЕДИСТВЕННАЯ текущая ecology state trajectory (один field, одна population). Композиция тика: A5 `step_lifecycle` (ровно один раз) → `admit_propagules` (receipt-only) → A6 `step_feedback` на ТОМ ЖЕ field/population. Владеет accounting-якорем (conservation per step, fail-closed), integrity seal, outbox (paid-but-unmaterialized emissions, пуст на rest). Переиспользуем для A11+; workbench — consumer. |
+| GenomeMutationReceiptV1 | `scripts/research/ecology/v2/genome_mutation_receipt_v1.gd` | Canonical contract мутационного события: `{schema, parent_genome_hash, child_genome_hash, operator, seed, event_hash, bias_hash}`; `issue` (из фактических объектов) + `validate` (seal) + `validate_admission` (binding parent/child/propagule + наследование life_history). |
+
+### 4.2 Backward-compatible расширения canonical API
+
+| Owner | Расширение | Совместимость |
+|---|---|---|
+| A5 | `resource_lifecycle_runtime_v1.gd: materialize_propagule(propagule, blueprint, paid_parent_state = {}, mutation_receipt = {}, parent_blueprint = {})` | Без receipt — прежний v1 witness (бит 1:1); с receipt — `validate_mutated_parent_transfer` (LS): receipt binding + полный v1 witness против реконструированного parent blueprint. Fail-closed, fallback отсутствует. |
+| LS | `organism_life_state_v1.gd`: опциональный ключ `mutation_receipt` (schema `dws.ecology.parent-transfer-mutation.v1`, `{receipt, parent_genome}`) | Состояния без ключа сохраняют точный v1 key-set; каждая последующая валидация перепроверяет binding (durable provenance). Глубина canonical-энкодинга ограничивает цепочки подряд мутированных поколений (fail-closed при рождении — задокументировано в файле). |
+| A6 | `persistent_environmental_feedback_v1.gd`: `advance_after_lifecycle(field, population, corpses, policy, step)` + shared statics `register_corpses`, `corpse_return_transition`, `mineralization_transition`, `balance_over`, `accounts_error`, `inventory`, `field_inventory` | Старый public `advance()` сохранён и исполняет ТЕ ЖЕ формулы через shared statics (zero behavior change; regression: arch2_a6_* suites PASS). Новый API не создаёт второго field/population truth. |
+| A3 | Receipt contract ссылается на `Mutation.OPERATORS`/`biological_hash`; сама A3 без изменений | arch2_a03 suite PASS. |
+
+### 4.3 Workbench (polygon) после ремонта
+
+- `experiment_controller_v1.gd` — consumer runtime: единственное состояние `_runtime`; `_tick_once()` = `Runtime.step(...)`; WORLD_COMPAT gate сохранён до шага; `apply_field_patch`/`apply_world_stocks` → canonical owner-write API + `Runtime.adopt_field` (accounting re-anchor); checkpoint envelope несёт состояние runtime (старые pre-repair checkpoint-тексты отклоняются fail-closed — формат версионируется manifest_hash binding).
+- `experiment_metrics_v1.gd` — emission `PARENT_TRANSFER_WITNESS_FALLBACK` удалён: мутация либо реально наследуется (applied, sealed receipt), либо canonical neutral (например оператор `none`).
+- Тесты: `test_controller_equivalence.gd` переписан — oracle = явная композиция публичных примитивов EcologyRuntimeV1 (не копия orchestration); `test_runtime_single_state.gd` (новый) доказывает: A5 ровно один раз за tick; один field/одна population; mineralization меняет тот же field, который читает следующий A5; corpse return попадает в тот же canonical field; presentation/checkpoint видят то же состояние.
