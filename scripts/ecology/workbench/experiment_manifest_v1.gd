@@ -23,6 +23,8 @@ const C = preload("res://scripts/research/ecology/v2/canonical_value_v1.gd")
 const Genome = preload("res://scripts/research/ecology/v2/organism_genome_v2.gd")
 const Mutation = preload("res://scripts/research/ecology/v2/genome_mutation_v1.gd")
 const FieldContract = preload("res://scripts/research/ecology/v2/environment_field_contract_v1.gd")
+const B = preload("res://scripts/research/ecology/v2/body_graph_v1.gd")
+const OrganizationProfile = preload("res://scripts/ecology/workbench/organization_profile_v1.gd")
 
 const SCHEMA := "dws.ecology.workbench.experiment-manifest.v1"
 const FILE_SCHEMA := "dws.ecology.workbench.experiment-manifest-file.v1"
@@ -43,7 +45,10 @@ const MAX_FOUNDERS := 4096
 ## references, invalid environment configuration and unknown enum values
 ## are hard errors.
 static func validate(value: Variant) -> String:
-	if not C.keys(value, FIELDS) or value.schema != SCHEMA:
+	var exact_fields: Array = FIELDS.duplicate()
+	if value is Dictionary and value.has("genesis"):
+		exact_fields.append("genesis")
+	if not C.keys(value, exact_fields) or value.schema != SCHEMA:
 		return "MANIFEST_SCHEMA"
 	if not C.identifier(value.experiment_id):
 		return "MANIFEST_EXPERIMENT_ID"
@@ -55,6 +60,11 @@ static func validate(value: Variant) -> String:
 		return "MANIFEST_MODE"
 	if not value.organization_profile is String or not value.organization_profile in ORGANIZATION_MODES:
 		return "MANIFEST_ORGANIZATION_PROFILE"
+	if value.has("genesis"):
+		if not value.genesis is Dictionary or not C.keys(value.genesis, ["founder_endowment"]):
+			return "MANIFEST_GENESIS"
+		if not B.valid_stock(value.genesis.founder_endowment):
+			return "MANIFEST_GENESIS_ENDOWMENT"
 	var founder_error := _validate_founders(value.founders)
 	if not founder_error.is_empty():
 		return founder_error
@@ -89,7 +99,9 @@ static func validate(value: Variant) -> String:
 static func canonical_hash(manifest: Dictionary) -> String:
 	if not validate(manifest).is_empty():
 		return ""
-	return C.digest(manifest)
+	# Profile version is part of executable experiment semantics even though
+	# the manifest stores only the profile name.
+	return C.digest({"manifest": manifest, "organization_profile_version": OrganizationProfile.VERSION})
 
 ## Canonical text serialization (validated manifest only; "" when invalid).
 static func to_text(manifest: Dictionary) -> String:
