@@ -8,11 +8,11 @@
 #   report text.
 # Layer: 2 (SIMULATION / ORCHESTRATION) for run driving; the report itself is
 #   Layer 3 derived data (metrics summaries are read-only projections).
-# DEVELOPMENT_BIAS profiles (SOFT / EARTH_LIKE / NMS_LIKE) are canonically
-#   blocked (P9): such variations are KEPT in the report with status
-#   BLOCKED_CANONICAL_EXTENSION_REQUIRED and never touch canonical state.
-# Performance note: the A6 feedback advance is O(steps^2); the batch default
-#   horizon is capped at DEFAULT_HORIZON (32). The cap is parameterized.
+# DEVELOPMENT_BIAS profiles (SOFT / EARTH_LIKE / NMS_LIKE) execute through
+#   the shared canonical A3 operator-reweighting hook. They remain ordinary
+#   reported variations; no workbench-only mutation semantics exist.
+# Batch horizon stays bounded by policy (DEFAULT_HORIZON) for predictable
+# research runs; it is not an A6 replay limit on the shared runtime.
 class_name EcoWorkbenchBatchRunnerV1
 extends RefCounted
 
@@ -178,14 +178,6 @@ func _run_one(base: Dictionary, variation: Dictionary, variation_index: int, see
 	var manifest_hash := Manifest.canonical_hash(manifest)
 	var result := _result_shell(variation_name, variation_index, seed, manifest)
 	result["manifest_hash"] = manifest_hash
-	# DEVELOPMENT_BIAS profiles are canonically blocked (P9): record the
-	# blocked status and never touch canonical state.
-	var profile := Profile.preset(String(manifest.organization_profile))
-	if String(profile.rule_class) == "DEVELOPMENT_BIAS":
-		var blocked := Profile.apply_development_bias(profile)
-		result["status"] = STATUS_BLOCKED
-		result["required_hook"] = String(blocked.get("required_hook", Profile.REQUIRED_HOOK))
-		return result
 	var ctl := Controller.new()
 	var init_result: Dictionary = ctl.initialize(manifest)
 	if not bool(init_result.get("success", false)):
@@ -339,8 +331,8 @@ static func _total_run_count(variations: Array, base_seed: int) -> int:
 
 # --- common-scenario plan helpers (brief §22) ------------------------------------
 # Every helper returns a COMPLETE batch plan; all results are kept (no seed
-# selection). SOFT/NMS_LIKE variations intentionally enter the report with
-# status BLOCKED_CANONICAL_EXTENSION_REQUIRED.
+# selection). Organization-profile variations execute as ordinary canonical
+# runs, including DEVELOPMENT_BIAS presets.
 
 static func plan(base_manifest: Dictionary, variations: Array, horizon_ticks: int = DEFAULT_HORIZON) -> Dictionary:
 	return {
@@ -378,8 +370,7 @@ static func feedback_on_off(base_manifest: Dictionary, seed_range: Array = []) -
 		_variation("feedback-off", {"feedback_enabled": false}, seed_range),
 	])
 
-## FREE vs visual organization presets. SOFT/NMS_LIKE are DEVELOPMENT_BIAS:
-## they stay in the report as BLOCKED_CANONICAL_EXTENSION_REQUIRED.
+## FREE vs organization presets. SOFT/NMS_LIKE exercise canonical A3 bias.
 static func profile_free_vs_visual(base_manifest: Dictionary, seed_range: Array = []) -> Dictionary:
 	return plan(base_manifest, [
 		_variation("profile-free", {"organization_profile": "FREE"}, seed_range),
