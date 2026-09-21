@@ -140,7 +140,10 @@ static func admit_propagules(state: Dictionary, options: Dictionary) -> Dictiona
 	var seed_base: int = int(options.get("seed", 0))
 	if options.has("seed") and not C.integer(options.seed, 0, C.MAX_INT): return _fail("RUNTIME_MUTATION_SEED")
 	var key_prefix: String = String(options.get("mutation_key_prefix", MUTATION_KEY_PREFIX_DEFAULT))
-	var bias: Dictionary = Dictionary(options.get("bias", {})).duplicate(true)
+	var bias_value: Variant = options.get("bias", {})
+	if not bias_value is Dictionary:
+		return _fail("RUNTIME_MUTATION_BIAS_TYPE")
+	var bias: Dictionary = bias_value.duplicate(true)
 	if mutations_enabled and not bias.is_empty():
 		var bias_error := Mutation.validate_bias(bias)
 		if not bias_error.is_empty(): return _fail("RUNTIME_MUTATION_BIAS:" + bias_error)
