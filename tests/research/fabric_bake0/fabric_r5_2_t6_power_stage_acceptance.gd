@@ -1,6 +1,8 @@
 extends SceneTree
 
+const U = preload("res://scripts/research/fabric_bake0/fabric_bake_contract_utils_v1.gd")
 const Graph = preload("res://scripts/research/fabric_bake0/power_stage_graph_v1.gd")
+const Descriptor = preload("res://scripts/research/fabric_bake0/power_stage_descriptor_v1.gd")
 const Compiler = preload("res://scripts/research/fabric_bake0/r5_t6_power_stage_compiler_v1.gd")
 const Runtime = preload("res://scripts/research/fabric_bake0/r5_t6_power_stage_runtime_v1.gd")
 const FullReference = preload("res://scripts/research/fabric_bake0/r5_t6_power_stage_full_reference_v1.gd")
@@ -57,6 +59,17 @@ func _initialize() -> void:
 	check(int(descriptor.active_die_count) == Fixture.DIE_COUNT, "all dies active")
 	check(int(capsule.runtime_source_traversals_per_execute) == 0, "zero source traversal contract")
 	check(float(capsule.operation_compression_ratio) > 50.0, "qualitative operation compression", {"ratio": capsule.operation_compression_ratio})
+
+	# Rehashing an internally inconsistent descriptor must not bypass structural relations.
+	var inconsistent_descriptor: Dictionary = descriptor.duplicate(true)
+	inconsistent_descriptor.positive_path_resistance_ref_ohm = float(inconsistent_descriptor.positive_path_resistance_ref_ohm) * 1.01
+	var inconsistent_payload: Dictionary = inconsistent_descriptor.duplicate(true)
+	inconsistent_payload.erase("descriptor_hash")
+	inconsistent_payload.erase("checksum")
+	inconsistent_descriptor.descriptor_hash = U.canonical_hash(inconsistent_payload)
+	inconsistent_descriptor.checksum = U.compute_checksum(inconsistent_descriptor)
+	var inconsistent_check := Descriptor.validate(inconsistent_descriptor)
+	check(not inconsistent_check.success and String(inconsistent_check.error_code) == "POWER_STAGE_DESCRIPTOR_PATH_RELATION_MISMATCH", "rehashed inconsistent descriptor rejected", inconsistent_check)
 
 	var live := Fixture.live_from(artifact)
 	var runtime = Runtime.new()
@@ -135,9 +148,11 @@ func _initialize() -> void:
 	check(not unsafe.success and String(unsafe.error_code) == "POWER_STAGE_PARALLEL_CURRENT_SYNCHRONY_UNSAFE", "unsafe parallel geometry fails closed", unsafe)
 	var unsafe_reference := FullReference.prepare(unsafe_graph)
 	check(unsafe_reference.success, "unsafe geometry remains physically executable in detailed reference", unsafe_reference)
+	var unsafe_reference_executes := false
 	if unsafe_reference.success:
 		var unsafe_reference_step := FullReference.execute(unsafe_reference.details, 480.0, 0.5, 50.0, 20000.0, 320.0, DT_S)
-		check(unsafe_reference_step.success, "unsafe geometry is NO_SAFE_BAKE rather than invalid physics", unsafe_reference_step)
+		unsafe_reference_executes = bool(unsafe_reference_step.success)
+		check(unsafe_reference_executes, "unsafe geometry is NO_SAFE_BAKE rather than invalid physics", unsafe_reference_step)
 	var mixed := compile_graph(Fixture.make_graph("SIC", false, false, true), 4)
 	check(not mixed.success and String(mixed.error_code) == "POWER_STAGE_PROFILE_MISMATCH", "mixed semiconductor profile fails closed", mixed)
 	var open_bank := compile_graph(Fixture.make_graph("SIC", false, false, false, true), 5)
@@ -226,6 +241,8 @@ func _initialize() -> void:
 		"silicon_positive_path_transition_time_s": float(silicon.details.descriptor.positive_path_transition_time_s) if silicon.success else -1.0,
 		"damage_active_dies": int(damaged.details.descriptor.active_die_count) if damaged.success else -1,
 		"unsafe_geometry_error": String(unsafe.get("error_code", "")),
+		"unsafe_geometry_detailed_reference_executes": unsafe_reference_executes,
+		"descriptor_relation_error": String(inconsistent_check.get("error_code", "")),
 		"mixed_profile_error": String(mixed.get("error_code", "")),
 		"open_bank_error": String(open_bank.get("error_code", "")),
 		"composition_max_voltage_error": composition_max_voltage_error,
