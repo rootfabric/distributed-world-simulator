@@ -1,0 +1,109 @@
+name: MVP8 Windows M2 Focused Diagnostic R1
+
+on:
+  push:
+    branches:
+      - control/v0-mvp8-windows-m2-diagnostic-r1
+
+permissions:
+  contents: read
+
+jobs:
+  m2-diagnostic:
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: powershell
+    env:
+      SUBJECT_HEAD: cdcb517947218ec31d76cbbd7d55462d86813232
+      SUBJECT_TREE: f0bcd8c9fe29a1a4a1bb82d0bb04101502da75c2
+      GODOT_BIN: C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe
+      EXPECTED_GODOT_SHA256: 3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5
+      BREAKPOINT_RUNTIME_DISABLED: '1'
+      GODOT_SILENCE_ROOT_WARNING: '1'
+      PYTHONUTF8: '1'
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: cdcb517947218ec31d76cbbd7d55462d86813232
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Exact identity and host
+        run: |
+          $ErrorActionPreference = "Stop"
+          New-Item -ItemType Directory -Force artifacts\m2-windows-diag-r1 | Out-Null
+          $head=(git rev-parse HEAD).Trim()
+          $tree=(git rev-parse "HEAD^{tree}").Trim()
+          if ($head -ne $env:SUBJECT_HEAD -or $tree -ne $env:SUBJECT_TREE) { throw "SUBJECT_MISMATCH" }
+          if ((Get-FileHash $env:GODOT_BIN -Algorithm SHA256).Hash.ToLowerInvariant() -ne $env:EXPECTED_GODOT_SHA256) { throw "GODOT_SHA_MISMATCH" }
+          $os=Get-CimInstance Win32_OperatingSystem
+          [ordered]@{
+            head=$head; tree=$tree;
+            godot_version=(& $env:GODOT_BIN --version 2>&1 | Select-Object -First 1).Trim()
+            godot_sha=(Get-FileHash $env:GODOT_BIN -Algorithm SHA256).Hash.ToLowerInvariant()
+            free_gb=[Math]::Round(($os.FreePhysicalMemory*1KB)/1GB,3)
+            session_name=$env:SESSIONNAME
+            username=$env:USERNAME
+            existing_godot=@(Get-Process -ErrorAction SilentlyContinue | Where-Object ProcessName -like "godot*" | Select-Object Id,ProcessName)
+          } | ConvertTo-Json -Depth 6 | Set-Content -Encoding UTF8 artifacts\m2-windows-diag-r1\preflight.json
+
+      - name: Deterministic project import
+        run: |
+          $ErrorActionPreference = "Stop"
+          & $env:GODOT_BIN --headless --path . --editor --import --quit *> artifacts\m2-windows-diag-r1\editor-import.log
+          if ($LASTEXITCODE -ne 0) { throw "EDITOR_IMPORT_FAILED:$LASTEXITCODE" }
+          if (-not (Test-Path .godot\global_script_class_cache.cfg)) { throw "CLASS_CACHE_MISSING" }
+
+      - name: Focused M2 attempt 1
+        continue-on-error: true
+        id: m2a1
+        run: |
+          $ErrorActionPreference = "Continue"
+          $start=[DateTime]::UtcNow
+          $env:M2_DIAG_START_UTC=$start.ToString("o")
+          & $env:GODOT_BIN --headless --path . --script res://tests/runtime/test_m2_dedicated_graphical_processes.gd *> artifacts\m2-windows-diag-r1\m2-attempt1.stdout.log
+          $code=$LASTEXITCODE
+          [ordered]@{exit_code=$code;start_utc=$start.ToString("o");end_utc=[DateTime]::UtcNow.ToString("o")} | ConvertTo-Json | Set-Content -Encoding UTF8 artifacts\m2-windows-diag-r1\m2-attempt1-exit.json
+          Copy-Item artifacts\test-results\m2-graphical-* artifacts\m2-windows-diag-r1\ -Recurse -Force -ErrorAction SilentlyContinue
+          exit $code
+
+      - name: Focused M2 attempt 2
+        continue-on-error: true
+        id: m2a2
+        run: |
+          $ErrorActionPreference = "Continue"
+          $start=[DateTime]::UtcNow
+          & $env:GODOT_BIN --headless --path . --script res://tests/runtime/test_m2_dedicated_graphical_processes.gd *> artifacts\m2-windows-diag-r1\m2-attempt2.stdout.log
+          $code=$LASTEXITCODE
+          [ordered]@{exit_code=$code;start_utc=$start.ToString("o");end_utc=[DateTime]::UtcNow.ToString("o")} | ConvertTo-Json | Set-Content -Encoding UTF8 artifacts\m2-windows-diag-r1\m2-attempt2-exit.json
+          Copy-Item artifacts\test-results\m2-graphical-* artifacts\m2-windows-diag-r1\ -Recurse -Force -ErrorAction SilentlyContinue
+          exit $code
+
+      - name: Capture Windows crash diagnostics
+        if: always()
+        run: |
+          $ErrorActionPreference = "Continue"
+          $since=[DateTime]::UtcNow.AddMinutes(-15)
+          Get-WinEvent -FilterHashtable @{LogName='Application';StartTime=$since} -ErrorAction SilentlyContinue |
+            Where-Object { $_.ProviderName -match 'Application Error|Windows Error Reporting|Application Hang' -or $_.Message -match 'godot' } |
+            Select-Object TimeCreated,ProviderName,Id,LevelDisplayName,Message |
+            ConvertTo-Json -Depth 5 |
+            Set-Content -Encoding UTF8 artifacts\m2-windows-diag-r1\windows-application-events.json
+          Get-Process -ErrorAction SilentlyContinue |
+            Select-Object ProcessName,Id,@{N='WorkingSetMB';E={[Math]::Round($_.WorkingSet64/1MB,1)}} |
+            Sort-Object WorkingSetMB -Descending |
+            Select-Object -First 50 |
+            ConvertTo-Json -Depth 4 |
+            Set-Content -Encoding UTF8 artifacts\m2-windows-diag-r1\processes-after.json
+          git status --porcelain --untracked-files=no | Set-Content -Encoding UTF8 artifacts\m2-windows-diag-r1\tracked-status.txt
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mvp8-windows-m2-diag-r1
+          path: artifacts/m2-windows-diag-r1/
+          if-no-files-found: error
+          retention-days: 90
