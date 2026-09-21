@@ -1,0 +1,143 @@
+name: FABRIC R5.2 T5 Fresh Independent Verifier R1
+
+on:
+  push:
+    branches: [verify/fabric-r5-2-t5-fresh-independent-verifier-r1]
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  SUBJECT_HEAD: 2f4a3e04f89eb491cea671b7c77add05b32dab2f
+  EXPECTED_DETERMINISTIC_HASH: 3e99d3add53d800016395235245e5a24f24bbd0921c72af7bdcb295f9d1ca61a
+
+jobs:
+  sample:
+    name: verifier-sample-${{ matrix.sample }}
+    strategy:
+      fail-fast: false
+      matrix:
+        sample: [1, 2, 3]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Prove frozen product identity
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$(git merge-base HEAD "$SUBJECT_HEAD")" = "$SUBJECT_HEAD"
+          changed="$(git diff --name-only "$SUBJECT_HEAD"...HEAD)"
+          test "$changed" = '.github/workflows/fabric-r5-2-t5-independent-verifier-r1.yml'
+          git diff --exit-code "$SUBJECT_HEAD"...HEAD -- \
+            scripts/research/fabric_bake0 \
+            tests/research/fabric_bake0 \
+            RUN_FABRIC_R5_2_T5_TESTS.sh \
+            validation/fabric-r5-2-t5-motor-generator-exact-evidence.v1.json
+
+      - name: Verify durable subject evidence
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          python3 - <<'PY'
+          import json
+          d=json.load(open('validation/fabric-r5-2-t5-motor-generator-exact-evidence.v1.json',encoding='utf-8'))
+          assert d['status']=='REPAIR_R1_AUTHORITATIVE_EXACT_PASS'
+          assert d['subject_head']=='dc31849760d94a8ace76aecc8e17bdd4991b9441'
+          assert d['hashes']['deterministic_hash']=='3e99d3add53d800016395235245e5a24f24bbd0921c72af7bdcb295f9d1ca61a'
+          assert d['reconstruction']['winding_quality_projection']=='COEFFICIENT_CHANGE_SAME_ROTOR_INERTIA'
+          assert d['reconstruction']['inertia_change']=='MOTOR_STATE_RECONSTRUCTION_INERTIA_CHANGE_UNSUPPORTED'
+          print('T5_DURABLE_EVIDENCE=PASS')
+          PY
+
+      - name: Download canonical Linux double
+        uses: actions/download-artifact@v4
+        with:
+          name: p7-repair-engine-34117353691
+          run-id: 34117353691
+          repository: rootfabric/distributed-world-simulator
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/r5-2-t5-verifier-engine
+
+      - name: Verify canonical Linux double
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          bin="$RUNNER_TEMP/r5-2-t5-verifier-engine/godot"
+          chmod u+x "$bin"
+          version="$("$bin" --version | head -n1 | tr -d '\r')"
+          sha="$(sha256sum "$bin" | awk '{print $1}')"
+          test "$version" = '4.7.1.stable.double.custom_build.a13da4feb'
+          test "$sha" = 'bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7'
+          echo "GODOT_BIN=$bin" >> "$GITHUB_ENV"
+          mkdir -p artifacts/fabric-r5-2-t5-verifier
+
+      - name: Fresh import
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          rm -rf .godot
+          "$GODOT_BIN" --headless --editor --path . \
+            --log-file "artifacts/fabric-r5-2-t5-verifier/sample-${{ matrix.sample }}.import.log" --import
+          ! grep -Eiq 'SCRIPT ERROR|Parse Error|Invalid call|Invalid access|ERROR:' \
+            "artifacts/fabric-r5-2-t5-verifier/sample-${{ matrix.sample }}.import.log"
+
+      - name: Run frozen T5 sample
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          i='${{ matrix.sample }}'
+          /usr/bin/time -v -o "artifacts/fabric-r5-2-t5-verifier/sample-$i.time.txt" \
+            bash RUN_FABRIC_R5_2_T5_TESTS.sh 2>&1 | tee "artifacts/fabric-r5-2-t5-verifier/sample-$i.log"
+          grep -F 'FABRIC R5.2 T5 MOTOR GENERATOR: PASS' "artifacts/fabric-r5-2-t5-verifier/sample-$i.log"
+          grep -F 'FABRIC_R5_2_T5_RESULT=' "artifacts/fabric-r5-2-t5-verifier/sample-$i.log"
+          test -z "$(git status --porcelain=v1 --untracked-files=no)"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: fabric-r5-2-t5-verifier-sample-${{ matrix.sample }}-${{ github.sha }}
+          path: artifacts/fabric-r5-2-t5-verifier/sample-${{ matrix.sample }}.*
+          if-no-files-found: error
+          retention-days: 90
+
+  aggregate:
+    name: verifier-aggregate
+    needs: sample
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: fabric-r5-2-t5-verifier-sample-*-${{ github.sha }}
+          path: artifacts/fabric-r5-2-t5-verifier
+          merge-multiple: true
+
+      - name: Aggregate verifier evidence
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          python3 scripts/research/fabric_bake0/collect_r5_2_t5_evidence.py \
+            --root artifacts/fabric-r5-2-t5-verifier \
+            --out artifacts/fabric-r5-2-t5-verifier/evidence.json \
+            | tee artifacts/fabric-r5-2-t5-verifier/collector.log
+          grep -F 'FABRIC_R5_2_T5_EVIDENCE=PASS' artifacts/fabric-r5-2-t5-verifier/collector.log
+          grep -F "FABRIC_R5_2_T5_DETERMINISTIC_HASH=$EXPECTED_DETERMINISTIC_HASH" artifacts/fabric-r5-2-t5-verifier/collector.log
+          printf 'SUBJECT_HEAD=%s\nVERIFIER_HEAD=%s\nEXPECTED_DETERMINISTIC_HASH=%s\n' \
+            "$SUBJECT_HEAD" "$(git rev-parse HEAD)" "$EXPECTED_DETERMINISTIC_HASH" \
+            > artifacts/fabric-r5-2-t5-verifier/identity.txt
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fabric-r5-2-t5-verifier-aggregate-${{ github.sha }}
+          path: artifacts/fabric-r5-2-t5-verifier/**
+          if-no-files-found: error
+          retention-days: 90
