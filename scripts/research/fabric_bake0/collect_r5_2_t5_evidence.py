@@ -66,6 +66,10 @@ def main():
         assert d["replay_max_state_error"] == 0.0
         assert d["open_winding_error"] == "MOTOR_WINDING_OPEN"
         assert d["incomplete_rotor_error"] == "MOTOR_ROTOR_INCOMPLETE"
+        assert d["quality_projection_kind"] == "COEFFICIENT_CHANGE_SAME_ROTOR_INERTIA"
+        assert d["quality_rebuilt_parity_error"] <= 1.0e-9
+        assert d["inertia_change_projection_error"] == "MOTOR_STATE_RECONSTRUCTION_INERTIA_CHANGE_UNSUPPORTED"
+        assert d["overspeed_error"] == "MOTOR_GENERATOR_RUNTIME_SPEED_OUT_OF_DOMAIN"
         hashes.add(canonical_hash(d))
         identities.add((d["graph_hash"], d["descriptor_hash"], d["capsule_checksum"]))
         samples.append({"sample": i, "deterministic": d, "process": parse_time(root / f"sample-{i}.time.txt")})

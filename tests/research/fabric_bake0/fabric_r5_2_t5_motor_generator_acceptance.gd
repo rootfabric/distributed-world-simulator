@@ -4,6 +4,7 @@ const Graph = preload("res://scripts/research/fabric_bake0/motor_generator_graph
 const Compiler = preload("res://scripts/research/fabric_bake0/r5_t5_motor_generator_compiler_v1.gd")
 const Runtime = preload("res://scripts/research/fabric_bake0/r5_t5_motor_generator_runtime_v1.gd")
 const FullReference = preload("res://scripts/research/fabric_bake0/r5_t5_motor_generator_full_reference_v1.gd")
+const StateProjector = preload("res://scripts/research/fabric_bake0/motor_generator_state_projector_v1.gd")
 const Fixture = preload("res://tests/research/fabric_bake0/fabric_r5_2_t5_motor_generator_fixture.gd")
 
 const SEQUENCE_TICKS := 2048
@@ -167,20 +168,49 @@ func _initialize() -> void:
 	var lower_quality_graph := Fixture.make_graph(0.85)
 	var lower_quality := compile_graph(lower_quality_graph, 1)
 	check(lower_quality.success, "lower winding quality compiles", lower_quality)
+	var quality_projection: Dictionary = {"success": false, "error_code": "NOT_RUN", "details": {}}
+	var quality_rebuilt_parity_error := INF
 	if lower_quality.success:
 		check(float(lower_quality.details.descriptor.total_resistance_ohm) > float(descriptor.total_resistance_ohm), "lower quality raises resistance")
 		check(float(lower_quality.details.descriptor.torque_constant_nm_a) < float(descriptor.torque_constant_nm_a), "lower quality lowers coupling")
 		check(float(lower_quality.details.descriptor.max_abs_current_a) < float(descriptor.max_abs_current_a), "lower quality lowers current limit")
 		check(absf(float(lower_quality.details.descriptor.winding_mass_kg) - float(descriptor.winding_mass_kg)) <= 1.0e-12, "quality does not alter conductor mass")
 
+		# Coefficient-only mutation: old capsule must reject the new canonical graph,
+		# while state reconstruction may preserve omega because rotor inertia is unchanged.
+		var lower_live := Fixture.live_from(lower_quality.details.artifact)
+		var old_on_new_live := runtime.execute(lower_live, fast_state, 0.0, 0.0, DT_S)
+		check(not old_on_new_live.success and String(old_on_new_live.error_code) == "MOTOR_GENERATOR_RUNTIME_FRONTIER_MISMATCH", "old capsule rejects winding mutation", old_on_new_live)
+		quality_projection = StateProjector.project(descriptor, lower_quality.details.descriptor, fast_state)
+		check(quality_projection.success, "winding mutation state projection", quality_projection)
+		if quality_projection.success:
+			check(String(quality_projection.details.projection_kind) == "COEFFICIENT_CHANGE_SAME_ROTOR_INERTIA", "quality projection kind")
+			check(absf(float(quality_projection.details.angular_momentum_before_kg_m2_rad_s) - float(quality_projection.details.angular_momentum_after_kg_m2_rad_s)) <= 1.0e-12, "quality projection preserves angular momentum")
+			check(absf(float(quality_projection.details.kinetic_energy_before_j) - float(quality_projection.details.kinetic_energy_after_j)) <= 1.0e-12, "quality projection preserves kinetic energy")
+			var rebuilt_runtime = Runtime.new()
+			check(rebuilt_runtime.prepare(lower_quality.details.capsule, lower_quality.details.artifact, lower_quality.details.descriptor, lower_live).success, "rebuilt lower-quality runtime prepare")
+			var rebuilt_reference := FullReference.prepare(lower_quality_graph)
+			check(rebuilt_reference.success, "rebuilt lower-quality reference prepare")
+			if rebuilt_reference.success:
+				var rebuilt_fast := rebuilt_runtime.execute(lower_live, quality_projection.details.next_state, 2.0, -0.3, DT_S)
+				var rebuilt_full := FullReference.execute(rebuilt_reference.details, quality_projection.details.next_state, 2.0, -0.3, DT_S)
+				check(rebuilt_fast.success and rebuilt_full.success, "projected rebuilt state executes")
+				if rebuilt_fast.success and rebuilt_full.success:
+					quality_rebuilt_parity_error = absf(float(rebuilt_fast.details.terminal_voltage_v) - float(rebuilt_full.details.terminal_voltage_v))
+					check(quality_rebuilt_parity_error <= 1.0e-9, "projected rebuilt voltage parity", {"error": quality_rebuilt_parity_error})
+					check(absf(float(rebuilt_fast.details.next_state.angular_velocity_rad_s) - float(rebuilt_full.details.next_state.angular_velocity_rad_s)) <= 1.0e-9, "projected rebuilt state parity")
+
 	# Rotor Matter changes mass/inertia/speed envelope.
 	var aluminum_graph := Fixture.make_graph(1.0, "matter/motor-aluminum")
 	var aluminum := compile_graph(aluminum_graph, 2)
 	check(aluminum.success, "aluminum rotor compiles", aluminum)
+	var inertia_change_projection: Dictionary = {"success": false, "error_code": "NOT_RUN", "details": {}}
 	if aluminum.success:
 		check(float(aluminum.details.descriptor.rotor_mass_kg) < float(descriptor.rotor_mass_kg), "aluminum rotor mass lower")
 		check(float(aluminum.details.descriptor.rotor_inertia_kg_m2) < float(descriptor.rotor_inertia_kg_m2), "aluminum rotor inertia lower")
 		check(absf(float(aluminum.details.descriptor.max_abs_angular_velocity_rad_s) - float(descriptor.max_abs_angular_velocity_rad_s)) > 1.0e-6, "rotor material changes speed envelope")
+		inertia_change_projection = StateProjector.project(descriptor, aluminum.details.descriptor, fast_state)
+		check(not inertia_change_projection.success and String(inertia_change_projection.error_code) == "MOTOR_STATE_RECONSTRUCTION_INERTIA_CHANGE_UNSUPPORTED", "rotor inertia mutation requires richer reconstruction", inertia_change_projection)
 
 	var open_graph := Fixture.make_graph(1.0, "matter/motor-steel", true)
 	var open_result := compile_graph(open_graph, 3)
@@ -197,6 +227,9 @@ func _initialize() -> void:
 	var nonfinite_state := {"angular_velocity_rad_s": NAN}
 	var nonfinite_result := runtime.execute(live, nonfinite_state, 0.0, 0.0, DT_S)
 	check(not nonfinite_result.success and String(nonfinite_result.error_code) == "MOTOR_GENERATOR_RUNTIME_STATE_INVALID", "non-finite state rejected", nonfinite_result)
+	var overspeed_state := {"angular_velocity_rad_s": float(descriptor.max_abs_angular_velocity_rad_s) * 1.001}
+	var overspeed_result := runtime.execute(live, overspeed_state, 0.0, 0.0, DT_S)
+	check(not overspeed_result.success and String(overspeed_result.error_code) == "MOTOR_GENERATOR_RUNTIME_SPEED_OUT_OF_DOMAIN", "overspeed state rejected", overspeed_result)
 
 	var stale_live: Dictionary = live.duplicate(true)
 	stale_live.artifact_state = "STALE"
@@ -251,6 +284,10 @@ func _initialize() -> void:
 		"lower_quality_torque_constant_nm_a": float(lower_quality.details.descriptor.torque_constant_nm_a) if lower_quality.success else -1.0,
 		"aluminum_rotor_mass_kg": float(aluminum.details.descriptor.rotor_mass_kg) if aluminum.success else -1.0,
 		"aluminum_rotor_inertia_kg_m2": float(aluminum.details.descriptor.rotor_inertia_kg_m2) if aluminum.success else -1.0,
+		"quality_projection_kind": String(quality_projection.details.get("projection_kind", "")) if quality_projection.success else "",
+		"quality_rebuilt_parity_error": quality_rebuilt_parity_error,
+		"inertia_change_projection_error": String(inertia_change_projection.get("error_code", "")),
+		"overspeed_error": String(overspeed_result.get("error_code", "")),
 		"open_winding_error": String(open_result.get("error_code", "")),
 		"incomplete_rotor_error": String(incomplete_result.get("error_code", "")),
 	}

@@ -1,6 +1,6 @@
 # FABRIC R5.2 / T5 — Motor / Generator
 
-**Статус:** initial implementation; exact CI pending.
+**Статус:** Fresh Review Repair R1 — state reconstruction coverage; exact rerun pending.
 
 ## Цель
 
@@ -128,3 +128,31 @@ T5 does not yet model:
 - atom-level magnetic behavior.
 
 Those belong to later fidelity layers. T5 proves that a component/material/geometry assembly can compile into compact bidirectional electromechanical behavior without pack-level gameplay stats.
+
+
+## Fresh Review Repair R1 — state reconstruction
+
+После первого exact PASS fresh review потребовал явно доказать перенос caller-owned rotor state через rebuild.
+
+Для winding-only mutation:
+
+```text
+R / kT / kE / current limit change
+rotor inertia unchanged
+        ↓
+ω can be preserved exactly
+angular momentum unchanged
+kinetic energy unchanged
+        ↓
+rebuilt capsule + detailed reference parity
+```
+
+Для mutation, которая меняет rotor inertia, projector намеренно fail-closed:
+
+```text
+MOTOR_STATE_RECONSTRUCTION_INERTIA_CHANGE_UNSUPPORTED
+```
+
+Такой mutation требует более богатого canonical event: сохранение angular momentum, detached/attached rotor state и механический impulse нельзя придумывать внутри capsule.
+
+Также добавлен явный overspeed-state negative gate.
