@@ -1,29 +1,29 @@
-name: MVP8 Windows Gap Closure R2 Evidence
+name: MVP8 Windows Cold Class Cache Repair R1
 
 on:
   push:
     branches:
-      - control/v0-mvp8-windows-gap-carrier-r1
+      - control/v0-mvp8-windows-repair-r1-carrier
 
 permissions:
   contents: read
 
 concurrency:
-  group: mvp8-windows-gap-r2
+  group: mvp8-windows-cold-cache-repair-r1
   cancel-in-progress: false
 
 jobs:
   windows-gap-closure:
-    name: Frozen 90bc1026 Windows evidence
+    name: Repair cdcb5179 Windows evidence
     runs-on: [self-hosted, Windows, X64]
     timeout-minutes: 150
     defaults:
       run:
         shell: powershell
     env:
-      SUBJECT_HEAD: 90bc1026f0f5749492107191233330f87c8c70df
-      SUBJECT_TREE: 4b6f2d48f7ef8d9c441ae89d2cbb02c730ef7f71
-      EXPECTED_HEAD: 90bc1026f0f5749492107191233330f87c8c70df
+      SUBJECT_HEAD: cdcb517947218ec31d76cbbd7d55462d86813232
+      SUBJECT_TREE: f0bcd8c9fe29a1a4a1bb82d0bb04101502da75c2
+      EXPECTED_HEAD: cdcb517947218ec31d76cbbd7d55462d86813232
       EXPECTED_GODOT_VERSION: 4.7.1.stable.double.custom_build.a13da4feb
       EXPECTED_GODOT_SHA256: 3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5
       GODOT_BIN: C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe
@@ -37,14 +37,14 @@ jobs:
       - name: Checkout frozen product
         uses: actions/checkout@v4
         with:
-          ref: 90bc1026f0f5749492107191233330f87c8c70df
+          ref: cdcb517947218ec31d76cbbd7d55462d86813232
           fetch-depth: 0
           persist-credentials: false
 
       - name: Host preflight and exact identity
         run: |
           $ErrorActionPreference = "Stop"
-          $evidence = Join-Path $PWD "artifacts\mvp8-windows-gap-r2"
+          $evidence = Join-Path $PWD "artifacts\mvp8-windows-repair-r1"
           New-Item -ItemType Directory -Force -Path $evidence | Out-Null
 
           $head = (git rev-parse HEAD).Trim()
@@ -70,7 +70,7 @@ jobs:
           $heavy = @(Get-Process -ErrorAction SilentlyContinue | Where-Object { $_.ProcessName -match "^(vmmem|vmmemWSL|llama-server|ollama|python|node)$" } | Sort-Object WorkingSet64 -Descending | Select-Object -First 20 ProcessName,Id,@{n="working_set_mb";e={[Math]::Round($_.WorkingSet64/1MB,1)}})
 
           $preflight = [ordered]@{
-            schema = "distributed_world_simulator.mvp8_windows_gap_preflight.v1"
+            schema = "distributed_world_simulator.mvp8_windows_repair_preflight.v1"
             run_id = $env:GITHUB_RUN_ID
             run_attempt = $env:GITHUB_RUN_ATTEMPT
             subject_head = $head
@@ -299,7 +299,7 @@ jobs:
           if (Test-Path $manifestPath) { $manifest = Get-Content -Raw $manifestPath | ConvertFrom-Json }
 
           $bound = [ordered]@{
-            schema = "distributed_world_simulator.mvp8_windows_gap_carrier.v1"
+            schema = "distributed_world_simulator.mvp8_windows_repair_carrier.v1"
             run_id = $env:GITHUB_RUN_ID
             run_attempt = $env:GITHUB_RUN_ATTEMPT
             carrier_ref = $env:GITHUB_REF
