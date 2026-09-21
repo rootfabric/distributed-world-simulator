@@ -61,6 +61,7 @@ func _initialize() -> void:
 	check(int(capsule.runtime_source_traversals_per_execute) == 0, "zero source traversal contract")
 	check(float(capsule.operation_compression_ratio) > 80.0, "qualitative operation compression", {"ratio": capsule.operation_compression_ratio})
 	check(absf(float(descriptor.total_speed_ratio) + 1.0 / 36.0) <= 1.0e-15, "3-stage ratio derives to -1/36", {"ratio": descriptor.total_speed_ratio})
+	check(descriptor.interface_contract.output_quantities.has("EQUIVALENT_INPUT_INERTIA_KG_M2"), "reflected inertia is explicit mechanical boundary output")
 
 	var inconsistent: Dictionary = descriptor.duplicate(true)
 	inconsistent.max_abs_output_torque_nm = float(inconsistent.max_abs_output_torque_nm) * 1.01
@@ -160,7 +161,15 @@ func _initialize() -> void:
 	var composition_max_ratio_error := 0.0
 	var composition_max_power_error := 0.0
 	var composition_torque_gain_seen := false
+	var coupled_acceleration_ratio := -1.0
 	if motor_compiled.success:
+		var motor_inertia := float(motor_compiled.details.descriptor.rotor_inertia_kg_m2)
+		var gearbox_inertia := float(descriptor.equivalent_input_inertia_kg_m2)
+		var probe_torque := float(motor_compiled.details.descriptor.torque_constant_nm_a) * 4.0
+		var bare_alpha := probe_torque / motor_inertia
+		var coupled_alpha := probe_torque / (motor_inertia + gearbox_inertia)
+		coupled_acceleration_ratio = coupled_alpha / bare_alpha
+		check(coupled_acceleration_ratio > 0.0 and coupled_acceleration_ratio < 1.0, "reflected gearbox inertia reduces T5 acceleration", {"ratio": coupled_acceleration_ratio, "motor_inertia": motor_inertia, "gearbox_inertia": gearbox_inertia})
 		var motor_live := MotorFixture.live_from(motor_compiled.details.artifact)
 		var motor_runtime = MotorRuntime.new()
 		var mp := motor_runtime.prepare(motor_compiled.details.capsule, motor_compiled.details.artifact, motor_compiled.details.descriptor, motor_live)
@@ -224,6 +233,7 @@ func _initialize() -> void:
 		"composition_max_ratio_error": composition_max_ratio_error,
 		"composition_max_power_error": composition_max_power_error,
 		"composition_torque_gain_seen": composition_torque_gain_seen,
+		"coupled_acceleration_ratio": coupled_acceleration_ratio,
 	}
 	print("FABRIC_R5_2_T7_RESULT=" + JSON.stringify(deterministic))
 	if not failed:
