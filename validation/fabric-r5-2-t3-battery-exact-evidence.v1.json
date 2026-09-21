@@ -1,0 +1,140 @@
+{
+  "schema": "fabric.r5_2.t3_battery_cells_materials_exact_evidence.v2",
+  "status": "EXACT_T3_STATE_RECONSTRUCTION_PASS",
+  "subject_head": "a8d87339453b1b661ec72aa05788ebf2c61c5f87",
+  "subject_tree": "4259c21770084696500379f4849078ec0ef40d0e",
+  "t2_merge_head": "2379caa688525ff7f4732664555b0e5da4ddd68e",
+  "canonical_owner": "Construction/Matter",
+  "production_checkpoint": false,
+  "canonical_godot": {
+    "version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7"
+  },
+  "authoritative_run": {
+    "run_id": 35540111456,
+    "sample_count": 3,
+    "sample_conclusion": "3/3 PASS",
+    "aggregate_job_id": 106156193277,
+    "aggregate_artifact_id": 10614098445,
+    "aggregate_artifact_digest": "sha256:183190850f59c3df3792a83c516ec1f42588aa18ce0e62715517b8f8cd12a8f7"
+  },
+  "hashes": {
+    "deterministic_hash": "41f062118b325b64884360037ea2a8a02a158990706bcd912a0681b6f2a9d8a3",
+    "evidence_hash": "5159bb43058cb77dbe61398e8b5ffb5be5541d2a6c6eb4d0b399fd3f8e4256c4",
+    "graph_hash": "b9e0d2ef670955d01660076095ec873dba65c8569e9d456ef194e11be9624318",
+    "descriptor_hash": "15dbd26ca193d84c26be6de4dce8700cda6578b8907cf72e33820a26a766aba2",
+    "capsule_checksum": "87ffb4c67eb1256a5fe5031d1ce3fc6fc22bf96e4ac9af45f81c58b9912b9266"
+  },
+  "qualitative_compression": {
+    "source_cells": 96,
+    "active_cells": 96,
+    "topology": "12S8P",
+    "series_groups": 12,
+    "executable_state_scalars": 13,
+    "state_breakdown": "12 series-group charges + 1 common temperature",
+    "source_operations": 768,
+    "compiled_operations": 42,
+    "runtime_source_cell_traversals_per_execute": 0
+  },
+  "base_pack": {
+    "chemistry_profile": "profile/lfp-characterized",
+    "nominal_voltage_v": 38.4,
+    "empty_voltage_v": 33.6,
+    "full_voltage_v": 43.2,
+    "group_capacity_c": 85043.52,
+    "group_capacity_ah": 23.6232,
+    "max_continuous_current_a": 69.48,
+    "pack_resistance_ref_ohm": 0.00621761658031088,
+    "total_mass_kg": 5.184,
+    "full_chemical_energy_j": 3265671.168,
+    "full_chemical_energy_wh": 907.13088,
+    "full_specific_energy_wh_kg": 174.986666666667,
+    "thermal_capacity_j_k": 6739.2,
+    "passive_thermal_conductance_w_k": 24
+  },
+  "material_variant": {
+    "chemistry_profile": "profile/nmc-characterized",
+    "full_specific_energy_wh_kg": 277.92
+  },
+  "quality_variant": {
+    "quality_scale": 0.85,
+    "group_capacity_c": 72286.992,
+    "group_resistance_ref_ohm": 0.000609570252971655,
+    "max_continuous_current_a": 59.058,
+    "mass_change_kg": 0
+  },
+  "damage_variant": {
+    "disabled_cells": 1,
+    "active_cells": 95,
+    "affected_series_group": 5,
+    "affected_group_capacity_c": 74027.52,
+    "affected_group_resistance_ref_ohm": 0.000595238095238095,
+    "pack_max_continuous_current_a": 60.48,
+    "physical_mass_retained": true,
+    "old_capsule_rejected": true,
+    "projection_kind": "CAPACITY_LOSS_SAME_SOC",
+    "detached_charge_c": 8262,
+    "detached_chemical_energy_j": 25612.2,
+    "synchronized_soc_preserved": true,
+    "damaged_full_vs_capsule_after_projection": "PASS",
+    "rebuilt_capsule_executes": true
+  },
+  "exact_equivalence": {
+    "sequence_ticks": 2048,
+    "full_reference_cell_traversals": 196608,
+    "maximum_voltage_error": 2.1316282072803e-14,
+    "maximum_heat_error": 2.44249065417534e-15,
+    "maximum_charge_state_error": 0,
+    "maximum_temperature_error": 0,
+    "maximum_energy_residual_j": 5.82457207465303e-10
+  },
+  "observations": {
+    "process_elapsed_s_median": 8.14,
+    "process_max_rss_kib_median": 126956,
+    "base_compile_median_us": 321276,
+    "runtime_prepare_median_us": 3618,
+    "full_vs_capsule_sequence_median_us": 563600,
+    "full_reference_us_per_call": 252.091064453125,
+    "capsule_us_per_call": 20.791534423828125,
+    "observed_runtime_speedup": 12.124697452065693
+  },
+  "fail_closed": {
+    "canonical_graph_frontier_mismatch": "REJECTED",
+    "mixed_parallel_chemistry": "BATTERY_PARALLEL_PROFILE_MISMATCH",
+    "geometry_breaks_soc_synchrony": "BATTERY_PARALLEL_SOC_SYNCHRONY_UNSAFE",
+    "open_series_group": "BATTERY_SERIES_GROUP_OPEN",
+    "over_current": "BATTERY_RUNTIME_CURRENT_LIMIT",
+    "stale": "REJECTED",
+    "invalidation": "REJECTED",
+    "authority_drift": "REJECTED",
+    "state_projection_profile_change": "UNSUPPORTED_BY_PROJECTOR",
+    "state_projection_capacity_gain": "UNSUPPORTED_BY_PROJECTOR"
+  },
+  "invariants": {
+    "battery_stats_are_derived": true,
+    "canonical_truth_duplicated": false,
+    "runtime_persistent_state_owner": false,
+    "manufacturing_quality_is_static_property": true,
+    "disabled_cell_mass_retained": true,
+    "detached_state_is_returned_to_canonical_mutation_layer": true,
+    "behavior_capsule_v1_modified": false,
+    "behavior_capsule_v2_modified": false,
+    "t1_evidence_modified": false,
+    "t2_evidence_modified": false,
+    "threshold_relaxation": false
+  },
+  "bounded_floor": {
+    "atom_level_chemistry_claimed": false,
+    "statement": "Electrochemical profiles are characterized, versioned primitives linked to canonical Matter material checksums.",
+    "active_cooling_claimed": false,
+    "health_degradation_claimed": false
+  },
+  "review_scope_note": "The detailed 96-cell reference shares the characterized CellPhysics primitive with the capsule compiler; T3 proves exact reduction of that declared cell law, not independent scientific validation of the electrochemical law itself.",
+  "policy": {
+    "timing_is_acceptance_threshold": false,
+    "speedup_is_acceptance_threshold": false,
+    "material_and_quality_effects_are_acceptance_semantics": true,
+    "correctness_is_full_cell_reference_equivalence_energy_audit_state_projection_and_fail_closed_reduction": true
+  },
+  "next_gate": "EXACT_HEAD_RERUN_THEN_FRESH_REVIEW_AND_INDEPENDENT_VERIFIER"
+}
