@@ -1,0 +1,21 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-09-09-V0-MVP-R1-V0-MVP-R1-WO-001-0047-MVP8-WINDOWS-ENGINE-CAPTURE-R3-DISPATCHED",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "sequence": 47,
+  "event_type": "EVIDENCE_GAP",
+  "work_state": "IN_PROGRESS",
+  "recorded_at_utc": "2026-09-21T04:24:00Z",
+  "actor": "DIRECTOR",
+  "branch": "feature/v0-mvp-playable-seamless-planet-r1",
+  "head_sha": "90bc1026f0f5749492107191233330f87c8c70df",
+  "predicate": "MVP8_INDEPENDENT_VERIFIER",
+  "command": "DISPATCH_EXACT_WINDOWS_ENGINE_CAPTURE_R3",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence/MVP8-WINDOWS-ENGINE-CAPTURE-R3-DISPATCH.v1.json",
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/verifications/MVP8-FRESH-INDEPENDENT-VERIFIER-90BC1026-R3-ENGINE-CAPTURE-ROUTE.md"
+  ],
+  "summary": "R3 gap-closure route dispatched without changing frozen product source or relaxing the canonical Windows Godot SHA. Self-hosted Windows is used only to verify and capture the installed canonical engine pair; clean hosted Windows re-verifies the exact SHA and performs the heavy MVP8 + full world/core workload. Run 35560712264 capture job 106212936026 is queued because the self-hosted Windows executor is still unavailable."
+}
