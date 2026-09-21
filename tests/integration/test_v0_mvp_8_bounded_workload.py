@@ -58,6 +58,55 @@ def read(path: Path) -> dict:
     return BASE.read_json(path)
 
 
+def prepare_project_import(engine: Path, output: Path) -> dict:
+    """Build Godot's project-local script class cache before multi-process startup.
+
+    Direct --script launches on a cold source checkout can race global class_name
+    discovery across authority processes. A single deterministic editor import
+    establishes the same project metadata that normal editor/CI startup creates.
+    The import log is preserved under output and is still covered by the existing
+    fatal-log scan; this does not suppress or downgrade parse/compile errors.
+    """
+    log = output / "editor-import.log"
+    argv = [
+        str(engine),
+        "--headless",
+        "--path",
+        str(ROOT),
+        "--editor",
+        "--import",
+        "--quit",
+    ]
+    env = os.environ.copy()
+    env.update(
+        PYTHONUTF8="1",
+        BREAKPOINT_RUNTIME_DISABLED="1",
+    )
+    started = time.monotonic()
+    with log.open("w", encoding="utf-8") as stream:
+        completed = subprocess.run(
+            argv,
+            cwd=ROOT,
+            env=env,
+            stdout=stream,
+            stderr=subprocess.STDOUT,
+            text=True,
+            timeout=180,
+            check=False,
+        )
+    class_cache = ROOT / ".godot" / "global_script_class_cache.cfg"
+    BASE.require(completed.returncode == 0, "MVP8_EDITOR_IMPORT_FAILED:" + str(completed.returncode))
+    BASE.require(class_cache.is_file() and class_cache.stat().st_size > 0, "MVP8_GLOBAL_SCRIPT_CLASS_CACHE_MISSING")
+    return {
+        "argv": argv,
+        "returncode": completed.returncode,
+        "duration_seconds": time.monotonic() - started,
+        "log": str(log.relative_to(output)),
+        "global_script_class_cache": str(class_cache.relative_to(ROOT)).replace("\\", "/"),
+        "global_script_class_cache_bytes": class_cache.stat().st_size,
+    }
+
+
 def start_process(
     engine: Path,
     output: Path,
@@ -601,12 +650,14 @@ def main() -> int:
 
     started = time.monotonic()
     error = ""
+    project_import: dict = {}
     phase1: dict = {}
     phase2: dict = {}
     receipt: dict = {}
     checks: dict[str, bool] = {}
     negatives: list[str] = []
     try:
+        project_import = prepare_project_import(engine, output)
         phase1 = run_phase1(engine, output, checkpoint_root, head, tree)
         BASE.require(not phase1["error"], "MVP8_PHASE1_FAILED:" + phase1["error"])
         receipt = read(Path(phase1["restart_file"]))
@@ -649,6 +700,7 @@ def main() -> int:
         "phase2": phase2,
         "restart_receipt": receipt,
         "duration_seconds": time.monotonic() - started,
+        "project_import": project_import,
         "one_connected_two_client_gameplay_loop_executed": bool(phase1 and phase2),
         "client_reconnect_inside_workload_executed": bool(receipt),
         "server_world_restart_inside_workload_executed": bool(phase2),
