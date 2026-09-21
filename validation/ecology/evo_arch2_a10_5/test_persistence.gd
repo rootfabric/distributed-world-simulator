@@ -93,7 +93,9 @@ func _run() -> void:
 	_check(bool(reference.run(16).get("success", false)), "P8 reference run(16) succeeds")
 	var hash_reference := _hash(reference)
 	_check(_hash(ctl) == hash_reference, "P8 save branch == continuous 16-tick reference")
-	var restored: Dictionary = ctl.load_state(String(saved.state_text), String(saved.manifest_hash))
+	var missing_anchor: Dictionary = ctl.load_state(String(saved.state_text), String(saved.manifest_hash))
+	_check(not bool(missing_anchor.get("success", false)) and String(missing_anchor.get("error", "")).contains("EXTERNAL_ANCHOR"), "P8 load_state requires caller-owned state checksum")
+	var restored: Dictionary = ctl.load_state(String(saved.state_text), String(saved.manifest_hash), String(saved.state_checksum))
 	_check(bool(restored.get("success", false)), "P8 load_state succeeds: " + str(restored))
 	_check(int(ctl.get_snapshot().tick) == 8, "P8 restored tick == 8")
 	var snapshot_restored: Dictionary = ctl.get_snapshot()
@@ -103,10 +105,10 @@ func _run() -> void:
 	_check(bool(ctl.run(8).get("success", false)), "P8 run(8) after restore succeeds")
 	_check(_hash(ctl) == hash_reference, "P8 restore + 8 == first 16 continuous ticks (same path)")
 	# Manifest mismatch fails closed.
-	var mismatch: Dictionary = ctl.load_state(String(saved.state_text), "0".repeat(64))
+	var mismatch: Dictionary = ctl.load_state(String(saved.state_text), "0".repeat(64), String(saved.state_checksum))
 	_check(not bool(mismatch.get("success", false)), "P8 load_state rejects foreign manifest hash")
 	# Garbage fails closed.
-	_check(not bool(ctl.load_state("not json").get("success", false)), "P8 load_state rejects garbage text")
+	_check(not bool(ctl.load_state("not json", "", "0".repeat(64)).get("success", false)), "P8 load_state rejects garbage text")
 
 	# --- 2. checkpoint determinism ---------------------------------------------
 	var twin_a := _new_controller(manifest, "P8 twin a")
@@ -134,6 +136,31 @@ func _run() -> void:
 	_check(bool(cp_result.get("success", false)), "P8 source checkpoint created")
 	var checkpoint: Dictionary = cp_result.checkpoint
 	var checkpoint_digest := C.digest(checkpoint)
+	var checkpoint_anchor := fork_manager.trusted_checkpoint_anchor(String(checkpoint.checkpoint_id))
+	_check(checkpoint_anchor == checkpoint_digest, "P8 manager retains caller-owned checkpoint anchor")
+
+	# Adversarial checkpoint admission. A different valid runtime state may be
+	# fully rehashed into a structurally valid record, but it cannot replace the
+	# manager's trusted checkpoint without also possessing the external anchor.
+	var foreign_ctl := _new_controller(manifest, "P8 adversarial source")
+	_check(bool(foreign_ctl.run(9).get("success", false)), "P8 adversarial source reaches tick 9")
+	var foreign_saved: Dictionary = foreign_ctl.serialize_state()
+	var text_swapped := checkpoint.duplicate(true)
+	text_swapped.snapshot_text = foreign_saved.state_text
+	text_swapped.state_checksum = foreign_saved.state_checksum
+	text_swapped.runtime_checkpoint_checksum = foreign_saved.checkpoint_checksum
+	_check(not Branch.validate_checkpoint(text_swapped).is_empty(), "P8 changed snapshot text cannot keep the old canonical state hash")
+	var rehashed := checkpoint.duplicate(true)
+	rehashed.tick = int(foreign_saved.tick)
+	rehashed.canonical_state_hash = String(foreign_saved.state_hash)
+	rehashed.snapshot_text = String(foreign_saved.state_text)
+	rehashed.state_checksum = String(foreign_saved.state_checksum)
+	rehashed.runtime_checkpoint_checksum = String(foreign_saved.checkpoint_checksum)
+	rehashed.checkpoint_id = Branch.checkpoint_id_for(String(rehashed.manifest_hash), int(rehashed.tick), String(rehashed.canonical_state_hash))
+	rehashed.created_at = {"tick": int(rehashed.tick), "checkpoint_id": String(rehashed.checkpoint_id)}
+	_check(Branch.validate_checkpoint(rehashed).is_empty(), "P8 fully rehashed alternate state is structurally self-consistent")
+	var rehashed_restore: Dictionary = fork_manager.restore(rehashed)
+	_check(not bool(rehashed_restore.get("success", false)) and String(rehashed_restore.get("error", "")).contains("EXTERNAL_ANCHOR"), "P8 manager rejects fully rehashed checkpoint without caller-owned anchor")
 	var branch_a: Dictionary = fork_manager.fork(checkpoint, {}, "branch-a")
 	_check(bool(branch_a.get("success", false)), "P8 fork A succeeds: " + str(branch_a))
 	var branch_b: Dictionary = fork_manager.fork(checkpoint, EnvironmentPatch.patch("zone/wet", "light", 100), "branch-b")
@@ -163,9 +190,9 @@ func _run() -> void:
 		_check(C.digest(checkpoint) == checkpoint_digest, "P8 returned checkpoint copy unchanged")
 
 		# --- 4. replay -----------------------------------------------------------
-		var replay_one: Dictionary = Branch.replay(checkpoint, manifest, {}, [4, 4])
-		var replay_two: Dictionary = Branch.replay(checkpoint, manifest, {}, [8])
-		var replay_three: Dictionary = Branch.replay(checkpoint, manifest, {}, [4, 4])
+		var replay_one: Dictionary = Branch.replay(checkpoint, manifest, {}, [4, 4], checkpoint_anchor)
+		var replay_two: Dictionary = Branch.replay(checkpoint, manifest, {}, [8], checkpoint_anchor)
+		var replay_three: Dictionary = Branch.replay(checkpoint, manifest, {}, [4, 4], checkpoint_anchor)
 		_check(bool(replay_one.get("success", false)), "P8 replay [4,4] succeeds: " + str(replay_one))
 		_check(bool(replay_two.get("success", false)), "P8 replay [8] succeeds: " + str(replay_two))
 		_check(bool(replay_three.get("success", false)), "P8 replay [4,4] again succeeds")
@@ -174,10 +201,10 @@ func _run() -> void:
 			_check(String(replay_one.canonical_state_hash) == String(replay_two.canonical_state_hash), "P8 replay command batching never affects the hash")
 			_check(String(replay_one.canonical_state_hash) == hash_a, "P8 replay == fork A continuous advance (same manifest+seed+commands)")
 		# Bad commands fail closed.
-		_check(not bool(Branch.replay(checkpoint, manifest, {}, [0]).get("success", false)), "P8 replay rejects zero-tick command")
+		_check(not bool(Branch.replay(checkpoint, manifest, {}, [0], checkpoint_anchor).get("success", false)), "P8 replay rejects zero-tick command")
 		var tampered := checkpoint.duplicate(true)
 		tampered.tick = 9
-		_check(not bool(Branch.replay(tampered, manifest, {}, [8]).get("success", false)), "P8 replay rejects a tampered checkpoint id binding")
+		_check(not bool(Branch.replay(tampered, manifest, {}, [8], checkpoint_anchor).get("success", false)), "P8 replay rejects a tampered checkpoint id binding")
 
 	# --- 5. restore through the branch manager ----------------------------------
 	var manager_restore: Dictionary = fork_manager.restore(checkpoint)
