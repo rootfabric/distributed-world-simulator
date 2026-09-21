@@ -1,0 +1,113 @@
+{
+  "schema": "fabric.r5_2.t6_power_stage_exact_evidence.v2",
+  "status": "REPAIR_R2_AUTHORITATIVE_EXACT_PASS",
+  "subject_head": "63872eb0cc4dc64cc5468e348915a047c6bf9fd8",
+  "subject_tree": "d75e3092e1267243b4d00384ad985b0b191b0360",
+  "t5_merge_head": "65c800f625cfbdc7c8ab842d7404e68498c37f31",
+  "canonical_owner": "Construction/Matter",
+  "production_checkpoint": false,
+  "canonical_godot": {
+    "version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7"
+  },
+  "authoritative_run": {
+    "run_id": 35612395529,
+    "sample_count": 3,
+    "sample_conclusion": "3/3 PASS",
+    "assertions_per_sample": 3627,
+    "aggregate_job_id": 106374735955,
+    "aggregate_artifact_id": 10644921532,
+    "aggregate_artifact_digest": "sha256:223b69875fe40b0f961b9db250063a58eae2a533772dfcfd2c95a499a5dbd180"
+  },
+  "hashes": {
+    "deterministic_hash": "d95c0b44507de9e0bcb3f1de5440986b7e63f0b5c575687371575d5f4011f1b7",
+    "evidence_hash": "4479b50e43eb26e52813f47625160df919d0fa6acd9d1bec4d8600c83a6ff718",
+    "graph_hash": "08f0775694e72da90d457d57712814a0579af926dde79d79d6664e947f4234be",
+    "descriptor_hash": "7a98915e099191eaa1242b8300b51f341018e59260f16a4aa6c258be81afe6fd",
+    "capsule_checksum": "95b848a5d72c685da57824be33e37f50023db1fda7a101527161b09c49cf928d"
+  },
+  "qualitative_compression": {
+    "source_switch_dies": 256,
+    "active_switch_dies": 256,
+    "banks": 4,
+    "topology": "4 banks x 64 parallel dies",
+    "executable_state_scalars": 0,
+    "source_operations": 1536,
+    "compiled_operations": 18,
+    "operation_compression_ratio": 85.3333333333333,
+    "runtime_source_die_traversals_per_execute": 0
+  },
+  "derived_base": {
+    "positive_path_resistance_ref_ohm": 0.000647668393782383,
+    "positive_path_max_abs_current_a": 617.6,
+    "positive_path_transition_time_s": 1.6580310880829e-7
+  },
+  "exact_equivalence": {
+    "sequence_ticks": 2048,
+    "full_reference_die_traversals": 524288,
+    "maximum_load_voltage_error": 0,
+    "maximum_bus_current_error": 2.8421709430404e-14,
+    "maximum_conduction_heat_error": 2.77555756156289e-17,
+    "maximum_switching_heat_error": 4.71844785465692e-16,
+    "maximum_energy_residual_j": 7.02216063075412e-15
+  },
+  "bidirectional_semantics": {
+    "regeneration_seen": true,
+    "signed_bus_current_preserved": true
+  },
+  "material_variant": {
+    "silicon_positive_path_resistance_ref_ohm": 0.000971502590673575,
+    "silicon_positive_path_transition_time_s": 3.10880829015544e-7
+  },
+  "damage_variant": {
+    "disabled_dies": 1,
+    "active_dies": 255,
+    "physical_mass_retained": true,
+    "old_capsule_rejected": true
+  },
+  "t5_composition": {
+    "maximum_terminal_voltage_error_v": 2.8421709430404e-14,
+    "maximum_electrical_energy_error_j": 8.88178419700125e-16,
+    "regeneration_preserved": true
+  },
+  "repair_r2": {
+    "descriptor_bank_to_path_relations_validated": true,
+    "rehashed_inconsistent_descriptor": "POWER_STAGE_DESCRIPTOR_PATH_RELATION_MISMATCH",
+    "detailed_reference_current_limit": "PER_DIE_I_MAX_OVER_CONDUCTANCE_ENVELOPE",
+    "unsafe_geometry_detailed_reference_executes": true,
+    "unsafe_geometry_compiler_result": "POWER_STAGE_PARALLEL_CURRENT_SYNCHRONY_UNSAFE",
+    "interpretation": "VALID_DETAILED_PHYSICS_NO_SAFE_BAKE"
+  },
+  "fail_closed": {
+    "unsafe_parallel_geometry": "POWER_STAGE_PARALLEL_CURRENT_SYNCHRONY_UNSAFE",
+    "mixed_semiconductor_profile": "POWER_STAGE_PROFILE_MISMATCH",
+    "open_switch_bank": "POWER_STAGE_BANK_OPEN",
+    "descriptor_path_relation": "POWER_STAGE_DESCRIPTOR_PATH_RELATION_MISMATCH",
+    "over_voltage": "POWER_STAGE_RUNTIME_BUS_VOLTAGE_LIMIT",
+    "over_current": "POWER_STAGE_RUNTIME_CURRENT_LIMIT",
+    "invalid_duty": "REJECTED",
+    "temperature_domain": "REJECTED",
+    "canonical_graph_frontier_mismatch": "REJECTED",
+    "stale": "REJECTED",
+    "invalidation": "REJECTED"
+  },
+  "invariants": {
+    "semiconductor_profile_is_characterized_floor": true,
+    "electrical_limits_and_losses_derive_from_profile_geometry_quality": true,
+    "runtime_persistent_state_owner": false,
+    "runtime_source_traversal_zero": true,
+    "t5_boundary_composition_verified": true,
+    "unsafe_geometry_not_mislabeled_invalid_physics": true,
+    "descriptor_self_consistency_not_trusted_by_checksum_alone": true,
+    "behavior_capsule_v1_modified": false,
+    "behavior_capsule_v2_modified": false,
+    "t1_evidence_modified": false,
+    "t2_evidence_modified": false,
+    "t3_evidence_modified": false,
+    "t4_evidence_modified": false,
+    "t5_evidence_modified": false,
+    "threshold_relaxation": false
+  },
+  "scope_note": "T6 proves exact aggregation of the declared average H-bridge semiconductor law for the synchronized parallel reduction class and its electrical boundary composition with T5. Unsafe heterogeneous current sharing remains valid detailed physics but is rejected as NO_SAFE_BAKE. T6 does not independently validate transistor-level charge transport, parasitic inductance, EMI, dead-time, gate-driver dynamics or thermal runaway.",
+  "next_gate": "EXACT_HEAD_CLOSURE_THEN_FRESH_REVIEW_AND_INDEPENDENT_VERIFIER"
+}
