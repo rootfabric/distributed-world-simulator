@@ -14,7 +14,7 @@ extends SceneTree
 #      dynamics), same seed -> identical hash.
 #   d) mutation_on_off helper: mutation event metrics differ between on/off
 #      (or both statuses are correctly recorded COMPLETED).
-#   e) profile SOFT -> status BLOCKED_CANONICAL_EXTENSION_REQUIRED, kept in
+#   e) profile SOFT/NMS -> canonical DEVELOPMENT_BIAS runs, all kept in
 #      the report, canonical state untouched (FREE run hash == plain
 #      controller run hash for the same seed).
 #   f) batch report round-trip: saved canonical text decodes back and
@@ -154,38 +154,35 @@ func _test_mutation_on_off() -> void:
 	_check(on_events > off_events or (on_events == 0 and off_events == 0),
 		"mutation metrics differ or both runs correctly recorded zero (on=%d off=%d)" % [on_events, off_events])
 
-func _test_profile_blocked() -> void:
+func _test_profile_bias() -> void:
 	var runner := Batch.new()
 	var plan := Batch.profile_free_vs_visual(_base_manifest(1001), [1001])
 	plan.horizon_ticks = 8
 	var batch: Dictionary = runner.run_batch(plan)
 	_check(bool(batch.get("success", false)), "profile_free_vs_visual batch succeeds")
 	var results: Array = batch.results
-	_check(results.size() == 3, "profile batch: FREE + SOFT + NMS_LIKE all reported (blocked kept, not excluded)")
+	_check(results.size() == 3, "profile batch: FREE + SOFT + NMS_LIKE all reported")
 	var by_name := {}
 	for result in results:
 		by_name[String(result.variation_name)] = result
-	_check(String(by_name["profile-free"].status) == "COMPLETED", "FREE profile runs COMPLETED")
-	for blocked_name in ["profile-soft", "profile-nms-like"]:
-		var blocked: Dictionary = by_name[blocked_name]
-		_check(String(blocked.status) == "BLOCKED_CANONICAL_EXTENSION_REQUIRED",
-			"%s recorded as BLOCKED_CANONICAL_EXTENSION_REQUIRED" % blocked_name)
-		_check(String(blocked.final_state_hash).is_empty() and String(blocked.initial_state_hash).is_empty(),
-			"%s never touched canonical state (no state hashes)" % blocked_name)
-		_check(not String(blocked.required_hook).is_empty(), "%s documents the required canonical hook" % blocked_name)
-		_check(String(blocked.status) == Profile.BLOCKED_STATUS, "%s status matches OrganizationProfile constant" % blocked_name)
-	# Canonical state untouched by the blocked attempts: the FREE run equals a
-	# plain controller run of the EXACT derived manifest (same identity).
+	for name in ["profile-free", "profile-soft", "profile-nms-like"]:
+		var row: Dictionary = by_name[name]
+		_check(String(row.status) == "COMPLETED", "%s executes as a canonical batch run" % name)
+		_check(not String(row.initial_state_hash).is_empty() and not String(row.final_state_hash).is_empty(), "%s carries canonical state hashes" % name)
+	# FREE batch result must still equal a direct run of its exact derived manifest.
 	var free_result: Dictionary = by_name["profile-free"]
-	var runner2 := Batch.new()
-	var derived: Dictionary = runner2.derive_manifest(_base_manifest(1001),
+	var derived: Dictionary = runner.derive_manifest(_base_manifest(1001),
 		{"name": "profile-free", "organization_profile": "FREE"}, 1001, 8)
-	_check(bool(derived.get("success", false)), "derive_manifest succeeds for the FREE variation")
+	_check(bool(derived.get("success", false)), "derive_manifest succeeds for FREE")
 	var plain := Controller.new()
 	plain.initialize(derived.manifest)
 	plain.run(8)
 	_check(String(free_result.final_state_hash) == String(plain.get_snapshot().canonical_state_hash),
-		"FREE batch run hash == plain controller run of the derived manifest (blocked profiles changed nothing)")
+		"FREE batch run hash == plain controller run of the derived manifest")
+	# Biased runs have distinct manifest identities because the profile name and
+	# profile semantic version are part of the manifest hash.
+	_check(String(by_name["profile-soft"].manifest_hash) != String(free_result.manifest_hash), "SOFT bias has distinct manifest identity")
+	_check(String(by_name["profile-nms-like"].manifest_hash) != String(free_result.manifest_hash), "NMS_LIKE bias has distinct manifest identity")
 
 func _test_report_round_trip(batch: Dictionary) -> void:
 	var runner := Batch.new()
@@ -271,7 +268,7 @@ func _run() -> void:
 	_test_determinism(batch)
 	_test_seed_divergence(batch)
 	_test_mutation_on_off()
-	_test_profile_blocked()
+	_test_profile_bias()
 	_test_report_round_trip(batch)
 	_test_comparison(batch)
 	_test_helpers_and_validation()
