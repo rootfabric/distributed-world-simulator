@@ -1,0 +1,289 @@
+{
+  "schema": "distributed_world_simulator.mvp8_independent_linux_verification.v1",
+  "role": "FRESH_INDEPENDENT_LINUX_VERIFIER",
+  "verified_at_utc": "2026-09-21T07:33:00Z",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "repository": "rootfabric/distributed-world-simulator",
+  "PRODUCT_HEAD": "90bc1026f0f5749492107191233330f87c8c70df",
+  "PRODUCT_TREE": "4b6f2d48f7ef8d9c441ae89d2cbb02c730ef7f71",
+  "FREEZE_REF": "freeze/v0-mvp8-review-90bc1026-r1",
+  "verdict": "EVIDENCE_GAP",
+  "verdict_basis": "No product defect found. The fresh local Ubuntu exact MVP8 rerun could not complete on this host: all attempts abort in phase1 gateway init with MVP3_BACKEND_DISCONNECTED on authority/a because authority/a's synchronous native-owner init (CPU-bound, ~10-12 CPU-seconds, freezes the headless main loop including ENet servicing) exceeds the ENet default peer-timeout window (~16s) under heavy host CPU oversubscription (load 14-17 on 12 CPUs, foreign long-running Godot simulations of an unrelated project consuming 4+ cores for 2.5+ days, cpu.pressure some 17-24%). The identical accepted-code control tests fail at the identical init point on the same frozen tree, proving the failure is host-level, not MVP8-product-level: tests/integration/test_v0_mvp_7_graphical_reconnect.py (accepted MVP7, no MVP8 diff code) and tests/integration/test_v0_mvp_6_graphical_construction.py fail with the same 'native owner init authority/a: MVP3_BACKEND_DISCONNECTED' signature (authority/a stall ticks 360-376, authority/b healthy). strace observation of the stalled authority/a shows a live poll/nanosleep main loop after init completes (no deadlock); the gateway aborts first on the ENet PEER_DISCONNECTED event while the authority is still inside its synchronous init. The identical signature was documented by the Windows R1 verifier as host-level degradation (same tick 361 freeze), and the identical tree+engine passes 3/3 on GitHub ubuntu-latest CI with xvfb. Frozen CI evidence was re-downloaded and independently re-verified from raw files (57/57 independent checks green, artifact digest sha256:0d4eab2d... re-confirmed live). Therefore the gap is environment/runner-side only; per instruction it is NOT classified as a product defect and does not trigger FIX_REQUIRED.",
+  "platform": "linux",
+  "os": "Ubuntu 26.04 LTS (Resolute Raccoon) x86_64",
+  "kernel": "7.0.0-31-generic",
+  "host_condition": {
+    "load_average_during_attempts": "13.9-16.8 on 12 CPUs",
+    "cpu_pressure_some_avg10": "17-24%",
+    "foreign_load": "unrelated project's long-running Godot simulators since 2026-09-19 (312% and 92% CPU) plus robot fleet containers",
+    "memory": "30 GiB total, ~9 GiB available during attempts, no OOM"
+  },
+  "godot": {
+    "path": "/home/yurig/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64",
+    "version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+    "matches_test_pinned_linux_engine": true
+  },
+  "subject": {
+    "worktree": "/home/yurig/distributed-world-simulator/dws-mvp8-linux-verify (detached)",
+    "head": "90bc1026f0f5749492107191233330f87c8c70df",
+    "tree": "4b6f2d48f7ef8d9c441ae89d2cbb02c730ef7f71",
+    "tracked_clean_before": true,
+    "tracked_clean_after": true,
+    "fresh_import_performed": true
+  },
+  "local_fresh_exact_mvp8_attempts": [
+    {
+      "attempt": 1,
+      "mode": "host DISPLAY=:0",
+      "output": "artifacts/mvp8-linux-local-verifier-r1/live-attempt1-enet-starvation",
+      "exit_code": 1,
+      "duration_seconds": 64.4,
+      "error": "RuntimeError:MVP8_PHASE1_FAILED:RuntimeError:GATEWAY_NOT_LISTENING:{}",
+      "authority_a_stall_tick": 361,
+      "gateway_backend_links": {"authority/a": "connects=1 disconnects=1 failure=MVP3_BACKEND_DISCONNECTED", "authority/b": "healthy idle_service=3937"}
+    },
+    {"attempt": 2, "mode": "host DISPLAY=:0", "output": "artifacts/mvp8-linux-local-verifier-r1/live-attempt2", "exit_code": 1, "duration_seconds": 65.0, "error": "same signature", "authority_a_stall_tick": 361},
+    {"attempt": 3, "mode": "host DISPLAY=:0", "output": "artifacts/mvp8-linux-local-verifier-r1/live-attempt3", "exit_code": 1, "duration_seconds": 66.0, "error": "same signature", "authority_a_stall_tick": 376},
+    {"attempt": 4, "mode": "host DISPLAY=:0", "output": "artifacts/mvp8-linux-local-verifier-r1/live-attempt4", "exit_code": 1, "duration_seconds": 65.0, "error": "same signature", "authority_a_stall_tick": 360},
+    {
+      "attempt": 5,
+      "mode": "docker ubuntu:26.04 container, CI-identical xvfb-run 1600x900x24, nice -10 (CAP_SYS_NICE)",
+      "output": "artifacts/mvp8-linux-local-verifier-r1/live-container1",
+      "exit_code": 1,
+      "duration_seconds": 64.7,
+      "error": "same signature",
+      "authority_a_stall_tick": 360,
+      "note": "CPU priority advantage did not change the outcome; failure is a timing envelope of the synchronous authority/a init against the ENet peer timeout, aggravated by host contention"
+    }
+  ],
+  "local_control_experiments": {
+    "mvp7_graphical_reconnect_control": {
+      "test": "tests/integration/test_v0_mvp_7_graphical_reconnect.py",
+      "output": "artifacts/mvp8-linux-local-verifier-r1/mvp7-control-live",
+      "exit_code": 1,
+      "duration_seconds": 55.3,
+      "failure": "native owner init authority/a: MVP3_BACKEND_DISCONNECTED at v0_mvp3_gateway_process.gd:332",
+      "authority_a_stall_tick": 362,
+      "conclusion": "accepted MVP7 product code (zero MVP8 diff code) fails at the identical point on this host => failure class is host-level, not MVP8"
+    },
+    "mvp6_graphical_construction_control": {
+      "test": "tests/integration/test_v0_mvp_6_graphical_construction.py",
+      "output": "artifacts/mvp8-linux-local-verifier-r1/mvp6-graphical-live",
+      "exit_code": 1,
+      "duration_seconds": 54.9,
+      "failure": "native owner init authority/a: MVP3_BACKEND_DISCONNECTED",
+      "conclusion": "accepted MVP6 product code fails at the identical point on this host"
+    },
+    "strace_observation": {
+      "method": "docker exec strace -p <authority/a pid> at detected stall + /proc stat sampling",
+      "finding": "authority/a performs ~11.8 CPU-seconds of synchronous init (state R, cpu ticks 134->1174 over ~14s), then returns to a healthy poll/nanosleep main loop (poll fd 4/5/6 with 0-timeout, clock_nanosleep ~6ms) and stays alive until the gateway aborts; no deadlock, no crash, no engine error in authority logs",
+      "interpretation": "gateway-side ENet peer (default Godot ENet timeout ~16s of unresponsiveness) times out while authority/a is inside its synchronous init; both sides then observe disconnects fail-closed"
+    }
+  },
+  "frozen_linux_exact_evidence_independently_reverified": {
+    "run_id": 35510920506,
+    "branch": "feature/v0-mvp-playable-seamless-planet-r1",
+    "attempts": "1/2/3 all success; attempt 3 frozen",
+    "attempt_3_job_id": 106080669992,
+    "attempt_3_artifact_id": 10606091961,
+    "attempt_3_artifact_name": "mvp8-workload-90bc1026f0f5749492107191233330f87c8c70df-35510920506-3",
+    "attempt_3_digest": "sha256:0d4eab2d5034a01f02395e10d5e158bcdb8cea458f08935a4402ebda7f7181c5",
+    "digest_reconfirmed_live_at_utc": "2026-09-21T08:38Z via GitHub API artifact metadata",
+    "artifact_downloaded_and_rehashed_by_this_verifier": true,
+    "raw_independent_recheck": {
+      "method": "fresh python script recomputing every mandated fact from the 11 raw role files + restart receipt + sealed file list; manifest not trusted as source",
+      "checks_total": 57,
+      "checks_failed": 0,
+      "manifest_passed": true,
+      "positive_checks": "20/20 (names re-verified)",
+      "negative_controls": "14/14 (names exact: skip_reconnect, reuse_same_peer, wrong_restart_round, missing_round, missing_postrestart_motion, queue_overflow, duplicate_item_identity, terminal_overflow, missing_collision, lost_build_cycle, missing_dig_hit, missing_matter_resync, overlapping_dig_hit, missing_checkpoint_player)",
+      "fatal_logs": [],
+      "phase1_pid_set": [2468, 2469, 2488, 2501, 2502, 2614],
+      "phase1_pid_distinct": 6,
+      "original_client_a_pid_vs_reconnect_pid": [2501, 2614],
+      "original_peer_vs_reconnect_peer": ["peer/enet/1278745371/mvp3-12116cbbe606d0f97e867579c9aeaaad-a", "peer/enet/1185307935/mvp3-12116cbbe606d0f97e867579c9aeaaad-a"],
+      "phase2_pid_set": [2637, 2638, 2657, 2675, 2676],
+      "phase2_pid_distinct": 5,
+      "phase2_disjoint_from_phase1": true,
+      "round_history": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+      "action_counts": {"DIG": 4, "ITEM": 4, "BUILD_ADD": 2, "BUILD_REMOVE": 2},
+      "fixed_receipts": 48,
+      "seam_crossings": 12,
+      "dig_hits_count": 4,
+      "dig_coordinates_xyz": [[0.3067, 1737425.1363, 0.0], [3.1000, 1737425.0640, 0.0], [4.7933, 1737425.1363, 0.0], [-1.8935, 1737425.1361, 0.0]],
+      "dig_pairwise_distances_m": [2.794, 4.487, 2.200, 1.695, 4.994, 6.687],
+      "dig_minimum_pairwise_separation_m": 1.6948,
+      "dig_minimum_separation_ge_1m": true,
+      "matter_resynced": {"a": true, "b": true},
+      "item_count": 10,
+      "unique_item_count": 10,
+      "duplicate_item_identity": false,
+      "construction_id": "construct/mvp6/seam-bridge",
+      "construction_identity_stable_across_restart": true,
+      "final_collision_part_count_A": 100,
+      "final_collision_part_count_B": 100,
+      "bounds_final": {
+        "operation_fingerprints": {"value": 16, "cap": 256},
+        "ledger_tracked_count": {"value": 16, "cap": 512},
+        "backend_sequences": {"authority/a": 162, "authority/b": 63, "cap_each": 512},
+        "client_sequences": {"a": 20, "b": 20, "cap_each": 512},
+        "input_observations": {"a": 8, "b": 8, "cap_each": 128},
+        "durable_replay_pending": {"value": 0, "cap": 32},
+        "construction_terminal_commands": {"value": 7, "cap": 16},
+        "matter_stream_sequence": {"value": 5, "cap": 64}
+      },
+      "all_bounds_within_caps": true,
+      "all_sealed_files_sha256_match": true,
+      "all_11_role_files_subject_head_pinned": true,
+      "mvp8_predicate_verified_in_artifact": false,
+      "independent_verdict_flag_in_artifact": false
+    }
+  },
+  "local_full_world_core": {
+    "method": "canonical validate_mvp6_seam_repro.run_full_world_core() (RUN_WORLD_REGRESSION_TESTS.ps1 unchanged) in CI-parity container (ubuntu:26.04, Xvfb 2:21.1.22, pwsh 7.4.6, bounded MVP7 produce env bound per carrier recipe); host-direct run aborted earlier at test_m2_dedicated_graphical_processes because /usr/bin/Xvfb is not installed on the host and no root is available",
+    "declared_test_count": 349,
+    "discovered_test_count": 349,
+    "attempt_1": {
+      "steps_recorded_before_abort": 48,
+      "failed_steps": 1,
+      "failing_step": "test_m6_dedicated_recovery_processes",
+      "failing_assertion": "A observed dedicated crash (DISCONNECT_TIMEOUT_MS=45000)",
+      "evidence_directory": "artifacts/mvp8-linux-local-verifier-r1/mvp6-world-core-attempt1-m6-timing",
+      "outcome_classification": "host timing envelope: the test kills the dedicated server and requires both clients to observe DISCONNECTED_AFTER_CRASH within 45 s wall clock; client A exceeded the deadline while BOTH clients' final result states are correct (seed-a and seed-b both DISCONNECTED_AFTER_CRASH in raw result files); frozen .ps1 stops the suite on first step failure by design"
+    },
+    "attempt_2": {
+      "steps_recorded_before_abort": 48,
+      "failed_steps": 1,
+      "failing_step": "test_m6_dedicated_recovery_processes",
+      "failing_assertion": "identical 'A observed dedicated crash'; both final client states again correct",
+      "evidence_directory": "artifacts/mvp8-linux-local-verifier-r1/mvp6-world-core-attempt2-m6-timing",
+      "attempt2_log_sha256": "36c0d67eab56cab43a6c67689a082be7b0ec09b3dad6c955fa09b879adfa593a",
+      "attempt2_summary_sha256": "0edf1d596d473ed9601c54f691306827b586f769eee45102d56eaca3e519db3c",
+      "outcome_classification": "two identical infrastructure failures => per bounded control-repair doctrine the strategy, not the acceptance criterion, changes; no further local retries under current host contention; counts identical to CI (349 declared/349 discovered) confirmed before abort"
+    },
+    "local_full_green_obtained": false,
+    "note": "All 47 preceding steps incl. M1/M2 graphical (Xvfb), M3/M4/M5 graphical multiplayer families passed locally; the single aborting assertion is a wall-clock deadline whose expectation is eventually satisfied (final states correct). Frozen CI run 35515256366 (independently reverified below) remains the machine-authoritative full world/core evidence."
+  },
+  "frozen_full_world_core_evidence_independently_reverified": {
+    "run_id": 35515256366,
+    "job_id": 106089996971,
+    "artifact_id": 10607661947,
+    "artifact_name": "mvp8-closure-90bc1026-35515256366-1",
+    "digest": "sha256:9ed20f0d75f2809070e10f6247b4458309ed966de16b871104153a89be0be3a4",
+    "artifact_downloaded_and_rehashed_by_this_verifier": true,
+    "world_regression_passed": true,
+    "declared_test_count": 349,
+    "discovered_test_count": 349,
+    "steps": 354,
+    "failed_steps": 0,
+    "exit_code": 0,
+    "duration_seconds": 3678,
+    "subject_head": "90bc1026f0f5749492107191233330f87c8c70df",
+    "subject_tree": "4b6f2d48f7ef8d9c441ae89d2cbb02c730ef7f71",
+    "mvp6_graphical_prerequisite_manifest": {"passed": true, "five_process_graphical_executed": true, "checks": "91/91 true"},
+    "mvp7_process_managed_steps": ["test_v0_mvp_7_construction_restart: PASS", "test_v0_mvp_7_matter_restart: PASS", "test_v0_mvp_7_quiescent_recovery: PASS"]
+  },
+  "pc0_evidence_independently_reverified": {
+    "run_id": 35513137221,
+    "job_id": 106084467438,
+    "artifact_id": 10606027418,
+    "digest": "sha256:8ab3a60fdde12ccf377771b71564e5483ea4e30d7553c9d5e341264256cae72b",
+    "artifact_downloaded_and_rehashed_by_this_verifier": true,
+    "standard_pc0": "YELLOW",
+    "directional_pc0": "YELLOW",
+    "standard_red_families": 0,
+    "directional_red_families": 0,
+    "subject_head": "90bc1026f0f5749492107191233330f87c8c70df",
+    "subject_tree": "4b6f2d48f7ef8d9c441ae89d2cbb02c730ef7f71"
+  },
+  "reviewer_corroboration": {
+    "branch": "review/v0-mvp8-90bc1026-r1",
+    "commit": "b8daebf27e11938a3c4432a127f384290e3255dc",
+    "result_file": "config/control/harness/executions/E2026-09-09-V0-MVP-R1/verifications/MVP8-INDEPENDENT-REVIEW-90BC1026-R1.v1.json",
+    "verdict": "PASS",
+    "p0_count": 0,
+    "p1_count": 0,
+    "required_fixes": [],
+    "reviewed_head_sha_match": true,
+    "reviewed_tree_sha_match": true,
+    "merge_performed": false,
+    "predicate_verified": false,
+    "file_read_directly_by_this_verifier": true
+  },
+  "windows_r1_verifier_corroboration": {
+    "branch": "verify/v0-mvp8-90bc1026-r1",
+    "commit": "502f5ea8d12f97b89577bc28d57f473918fe8f16",
+    "verdict": "EVIDENCE_GAP",
+    "windows_exact_mvp8_attempt1": "PASS (exit 0, 20/20, 14/14, engine sha 3633c3e6... exact)",
+    "windows_full_world_core": "NOT_RUN_ENVIRONMENT_BLOCKED",
+    "file_read_directly_by_this_verifier": true
+  },
+  "windows_r3_live_status_at_this_verification": {
+    "checked_at_utc": "2026-09-21T07:32:26Z",
+    "route": "control/v0-mvp8-windows-engine-capture-r3",
+    "canonical_workflow_commit": "8eec0971b42787500ec4924ebad4fa565e2ca1b1",
+    "run_id": 35560712264,
+    "capture_job_id": 106212936026,
+    "run_head_sha": "8eec0971b42787500ec4924ebad4fa565e2ca1b1",
+    "run_head_matches_canonical": true,
+    "status": "queued (self-hosted Windows runner not picking up the job; >3h10m in queue at last check)",
+    "prior_attempts_on_branch": "35560651984 (cancelled), 35560698583 (cancelled)",
+    "canonical_windows_console_sha_expected": "3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5",
+    "note": "Windows closure remains OPEN pending this route; this Linux verifier does not claim the Windows verifier role"
+  },
+  "local_evidence_bundle": {
+    "root": "artifacts/mvp8-linux-local-verifier-r1/",
+    "contains": [
+      "import.log",
+      "stdout.log / stderr.log / exit-code.txt (attempt 1)",
+      "live-attempt1..4 + snapshots (host attempts)",
+      "live-container1 (CI-parity xvfb container attempt)",
+      "mvp7-control-live + snapshot (accepted-code control)",
+      "mvp6-graphical-live + snapshot (accepted-code control)",
+      "all-files.sha256 (117 files hashed, covers attempts/controls/snapshots before world/core)",
+      "mvp6-world-core-attempt1-m6-timing/ + mvp6-world-core-attempt2-m6-timing/ (two aborted local world/core runs, raw logs + summaries)",
+      "world-core-managed/ (bounded MVP7 produce roots/results)",
+      "world-core-stdout-container.log + world-core-stdout-container-attempt2.log"
+    ],
+    "all_files_sha256_manifest": "4949a9f5bcd5805e55f52df588ecef689a25a2ac71c802d5fa76eba4900a8b72 (all-files.sha256, covers attempts/controls/snapshots before world/core completion)"
+  },
+  "exact_commands": {
+    "engine_version": "$GODOT_BIN --version",
+    "engine_sha": "sha256sum $GODOT_BIN",
+    "import": "DISPLAY=:0 $GODOT_BIN --headless --path . --editor --import --quit",
+    "mvp8_workload": "python3 tests/integration/test_v0_mvp_8_bounded_workload.py --engine $GODOT_BIN --output artifacts/mvp8-linux-local-verifier-r1/live",
+    "mvp7_control": "python3 tests/integration/test_v0_mvp_7_graphical_reconnect.py --engine $GODOT_BIN --output artifacts/mvp8-linux-local-verifier-r1/mvp7-control-live",
+    "mvp6_control": "python3 tests/integration/test_v0_mvp_6_graphical_construction.py --engine $GODOT_BIN --output artifacts/mvp8-linux-local-verifier-r1/mvp6-graphical-live",
+    "world_core": "python3 -c 'import validate_mvp6_seam_repro; run_full_world_core()' with MVP7_NATIVE/WORLD/CONSTRUCTION_MODE=produce bounded env and pwsh 7.4.6",
+    "container_world_core": "docker exec mvp8verify (ubuntu:26.04, Xvfb 2:21.1.22, CAP_SYS_NICE/SYS_PTRACE) same command set"
+  },
+  "required_fixes": [],
+  "evidence_gaps": [
+    {
+      "id": "MVP8-LNX-R2-GAP-001",
+      "blocking_for_verdict": true,
+      "description": "Fresh local exact MVP8 PASS not obtainable on this host: multi-process ENet init timing envelope exceeded under foreign CPU oversubscription (5 attempts incl. CI-parity xvfb container + negative nice). Accepted-code MVP6/MVP7 controls reproduce the identical init failure on the same tree; CI passes 3/3. Requires either a quiet host window for a local rerun or reliance on the frozen CI exact evidence (independently reverified here from raw files)."
+    },
+    {
+      "id": "MVP8-LNX-R2-GAP-003",
+      "blocking_for_verdict": true,
+      "description": "Fresh local full world/core green run not obtainable on this host: two identical aborts at step test_m6_dedicated_recovery_processes ('A observed dedicated crash', 45 s wall-clock deadline; both clients' final states correct in raw evidence); frozen .ps1 stop-on-first-failure leaves 306 of 354 steps unexecuted locally. Host-direct execution additionally impossible at test_m2_dedicated_graphical_processes without /usr/bin/Xvfb (no root on host). Frozen CI world/core evidence (run 35515256366, 349/349, 354 steps, 0 failed) independently reverified from the downloaded artifact and remains machine-authoritative."
+    },
+    {
+      "id": "MVP8-LNX-R2-GAP-002",
+      "description": "Windows closure route R3 (control/v0-mvp8-windows-engine-capture-r3, canonical commit 8eec0971...) run 35560712264 still queued on the self-hosted Windows runner; no captured canonical console SHA yet. Windows gap remains THE single MVP8 closure blocker."
+    }
+  ],
+  "blocking_findings": [],
+  "product_defect_found": false,
+  "merge_performed": false,
+  "predicate_verified": false,
+  "human_acceptance": false,
+  "main_touched": false,
+  "windows_gap_closed": false,
+  "mvp8_closed": false,
+  "worktree_result_branch": "verify/v0-mvp8-90bc1026-linux-r2",
+  "result_worktree_base": "origin/verify/v0-mvp8-90bc1026-r1 (502f5ea8d12f97b89577bc28d57f473918fe8f16)"
+}
