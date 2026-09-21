@@ -1,0 +1,123 @@
+{
+  "schema": "fabric.r5_2.t7_gearbox_exact_evidence.v1",
+  "status": "REPAIR_R2_AUTHORITATIVE_EXACT_PASS",
+  "subject_head": "939a31f8d5b140adc075e7a35bd5fb531926bfc1",
+  "subject_tree": "5659a2d81ec210483f517b4833538641fa321a2b",
+  "t6_merge_head": "fee500d369c1614fff86bcfdf72fece478a01c41",
+  "canonical_owner": "Construction/Matter",
+  "production_checkpoint": false,
+  "canonical_godot": {
+    "version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7"
+  },
+  "authoritative_run": {
+    "run_id": 35614946267,
+    "sample_count": 3,
+    "sample_conclusion": "3/3 PASS",
+    "assertions_per_sample": 3114,
+    "aggregate_job_id": 106383624678,
+    "aggregate_artifact_id": 10646355991,
+    "aggregate_artifact_digest": "sha256:88a2198b53dbeb0c598648023d355fe1e45e5b7c64b7ab2a328209ead99839a4"
+  },
+  "hashes": {
+    "deterministic_hash": "50870621cc1ca8fcf76312ba803e2e6a8061cfb8414e133c20b8ca7d46995286",
+    "evidence_hash": "891e6c88811df00ec59b8a33cc9746215bc366bb6c83185860925ac1287fab97",
+    "graph_hash": "6f0d5ac32f13c3f8ea88fb2d5c260927c71ef8d83ae01e7c84d282b7a066e96b",
+    "descriptor_hash": "cf64c859f2a09496a9e28d989a3d731d3cb6676f2b551296b8f0f02eaa18ed96",
+    "capsule_checksum": "971c58d311bae8bbdbcb66149e9be34ee74533ac3d8c02ddc4b7ca1c8b854348"
+  },
+  "qualitative_compression": {
+    "source_gears": 6,
+    "source_teeth": 232,
+    "source_components": 238,
+    "stages": 3,
+    "source_operations": 1428,
+    "compiled_operations": 16,
+    "operation_compression_ratio": 89.25,
+    "runtime_source_component_traversals_per_execute": 0
+  },
+  "kinematics": {
+    "stage_ratios": [
+      -0.3333333333333333,
+      -0.3333333333333333,
+      -0.25
+    ],
+    "total_speed_ratio": -0.027777777777777776,
+    "torque_multiplication_magnitude": 36
+  },
+  "derived_base": {
+    "equivalent_input_inertia_kg_m2": 0.00086415107648016,
+    "total_mass_kg": 5.14577043031034,
+    "max_abs_input_torque_nm": 43.58016,
+    "max_abs_input_omega_rad_s": 9255.97299549962
+  },
+  "exact_equivalence": {
+    "sequence_ticks": 2048,
+    "full_reference_component_traversals": 487424,
+    "maximum_output_omega_error": 0,
+    "maximum_output_torque_error": 0,
+    "maximum_reflected_inertia_error": 0,
+    "maximum_instantaneous_boundary_energy_residual_j": 4.44089209850063e-16,
+    "reverse_power_seen": true
+  },
+  "material_variant": {
+    "aluminum_mass_kg": 1.76988282316407,
+    "aluminum_equivalent_input_inertia_kg_m2": 0.000297223937133304,
+    "aluminum_max_abs_input_torque_nm": 20.11392
+  },
+  "quality_variant": {
+    "weak_tooth_max_abs_input_torque_nm": 24.9678,
+    "base_max_abs_input_torque_nm": 43.58016
+  },
+  "repair_r1": {
+    "issue": "weak-tooth fixture was placed on a non-limiting stage",
+    "repair": "moved weak tooth to limiting stage-2 driver",
+    "thresholds_relaxed": false
+  },
+  "repair_r2": {
+    "equivalent_input_inertia_declared_in_interface": true,
+    "t5_coupled_acceleration_ratio": 0.924427379869911,
+    "interpretation": "gearbox reflected inertia is exported for downstream coupled mechanical solver",
+    "runtime_kind": "ALGEBRAIC_RIGID_BOUNDARY",
+    "standalone_dynamic_solver_claimed": false
+  },
+  "t5_composition": {
+    "maximum_speed_ratio_error": 0,
+    "maximum_instantaneous_power_error_j": 2.22044604925031e-16,
+    "torque_multiplication_observed": true,
+    "coupled_acceleration_ratio": 0.924427379869911
+  },
+  "fail_closed": {
+    "disabled_tooth": "GEARBOX_TOOTH_DISABLED",
+    "mesh_module_mismatch": "GEARBOX_MESH_MODULE_MISMATCH",
+    "descriptor_output_relation": "GEARBOX_DESCRIPTOR_OUTPUT_TORQUE_MISMATCH",
+    "canonical_graph_frontier_mismatch": "REJECTED",
+    "overspeed": "REJECTED",
+    "over_torque": "REJECTED",
+    "stale": "REJECTED",
+    "invalidation": "REJECTED"
+  },
+  "invariants": {
+    "ratio_derived_from_tooth_counts": true,
+    "inertia_mass_speed_and_torque_limits_derived_from_matter_geometry_quality": true,
+    "runtime_persistent_state_owner": false,
+    "runtime_source_traversal_zero": true,
+    "reflected_inertia_is_explicit_boundary_quantity": true,
+    "t5_boundary_compatibility_verified": true,
+    "behavior_capsule_v1_modified": false,
+    "behavior_capsule_v2_modified": false,
+    "t1_to_t6_evidence_modified": false,
+    "threshold_relaxation": false
+  },
+  "bounded_floor": {
+    "lossless_rigid_gearbox": true,
+    "tribology_loss_claimed": false,
+    "backlash_claimed": false,
+    "lubrication_claimed": false,
+    "tooth_compliance_claimed": false,
+    "bearing_loss_claimed": false,
+    "note": "gear-body mass is an equivalent whole-gear body approximation; explicit tooth rows represent topology and local tooth quality/availability and are not additional mass volumes."
+  },
+  "scope_note": "T7 proves exact reduction of a rigid lossless multi-stage gear-train law, material/geometry-derived limits, reflected inertia export, and mechanical boundary compatibility with T5. Changing input omega between independent algebraic samples is not claimed to be a standalone gearbox dynamic integration; downstream coupled solvers must use the exported reflected inertia.",
+  "next_gate": "EXACT_HEAD_CLOSURE_THEN_FRESH_REVIEW_AND_INDEPENDENT_VERIFIER"
+}
