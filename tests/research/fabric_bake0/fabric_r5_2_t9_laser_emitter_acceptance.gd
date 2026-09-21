@@ -146,9 +146,11 @@ func _initialize() -> void:
 	var damaged := compile_graph(damaged_graph, 2)
 	check(damaged.success, "one disabled gain cell recompiles", damaged)
 	var damaged_divergence_ratio := -1.0
+	var damage_mass_retained := false
 	if damaged.success:
 		check(int(damaged.details.descriptor.active_cell_count) == Fixture.CELLS - 1, "damage removes one active cell")
-		check(absf(float(damaged.details.descriptor.total_physical_mass_kg) - float(descriptor.total_physical_mass_kg)) <= 1.0e-15, "disabled cell retains physical mass")
+		damage_mass_retained = absf(float(damaged.details.descriptor.total_physical_mass_kg) - float(descriptor.total_physical_mass_kg)) <= 1.0e-15
+		check(damage_mass_retained, "disabled cell retains physical mass")
 		damaged_divergence_ratio = float(damaged.details.descriptor.beam_divergence_half_angle_rad) / float(descriptor.beam_divergence_half_angle_rad)
 		check(damaged_divergence_ratio > 1.0, "smaller active aperture increases diffraction floor")
 		var damaged_live := Fixture.live_from(damaged.details.artifact)
@@ -236,10 +238,13 @@ func _initialize() -> void:
 		"maximum_photon_count_relative_error": max_photon_error_relative,
 		"maximum_divergence_error_rad": max_divergence_error,
 		"maximum_energy_residual_j": max_energy_residual,
+		"optical_emission_seen_above_threshold": optical_seen,
+		"below_threshold_zero_optical_seen": below_threshold_zero_seen,
 		"thermal_derating_ratio_380k_to_300k": thermal_derating_ratio,
 		"gan_wavelength_m": float(gan.details.descriptor.wavelength_m) if gan.success else -1.0,
 		"gan_forward_voltage_v": float(gan.details.descriptor.forward_voltage_v) if gan.success else -1.0,
 		"damage_active_cells": int(damaged.details.descriptor.active_cell_count) if damaged.success else -1,
+		"damage_mass_retained": damage_mass_retained,
 		"damage_divergence_ratio": damaged_divergence_ratio,
 		"geometry_mismatch_error": String(geometry_mismatch.get("error_code", "")),
 		"mixed_profile_error": String(mixed.get("error_code", "")),

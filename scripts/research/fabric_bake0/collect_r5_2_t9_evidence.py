@@ -48,10 +48,13 @@ def main():
         assert d["maximum_photon_count_relative_error"]<=1e-12
         assert d["maximum_divergence_error_rad"]<=1e-15
         assert d["maximum_energy_residual_j"]<=1e-12
+        assert d["optical_emission_seen_above_threshold"] is True
+        assert d["below_threshold_zero_optical_seen"] is True
         assert 0.0 < d["thermal_derating_ratio_380k_to_300k"] < 1.0
         assert d["gan_wavelength_m"] < d["wavelength_m"]
         assert d["gan_forward_voltage_v"] > 0.0
         assert d["damage_active_cells"]==127
+        assert d["damage_mass_retained"] is True
         assert d["damage_divergence_ratio"]>1.0
         assert d["geometry_mismatch_error"]=="LASER_GAIN_CELL_SYNCHRONY_UNSAFE"
         assert d["mixed_profile_error"]=="LASER_GAIN_PROFILE_MISMATCH"
