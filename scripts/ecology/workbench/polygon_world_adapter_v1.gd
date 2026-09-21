@@ -196,12 +196,19 @@ func add_batch(batch: Dictionary, expected_batch_checksum: String) -> Dictionary
 	if not bool(admitted_batch.get("success", false)):
 		return _fail(String(admitted_batch.get("error", "A10_R2")))
 	var admission: Dictionary = admitted_batch.admission
-	_batches[String(admission.batch_id)] = {
+	var batch_id := String(admission.batch_id)
+	if _batches.has(batch_id):
+		var existing: Dictionary = _batches[batch_id]
+		if String(existing.checksum) != String(admission.batch_checksum) or existing.admission != admission:
+			return _fail("ADAPTER_BATCH_ID_CONFLICT:" + batch_id)
+		# Exact replay is idempotent and preserves the original applied flag.
+		return {"success": true, "admission": existing.admission.duplicate(true), "replay": true, "applied": bool(existing.applied)}
+	_batches[batch_id] = {
 		"checksum": String(admission.batch_checksum),
 		"applied": false,
 		"admission": admission.duplicate(true),
 	}
-	return {"success": true, "admission": admission.duplicate(true)}
+	return {"success": true, "admission": admission.duplicate(true), "replay": false, "applied": false}
 
 ## Push all not-yet-applied admitted batches into the controller field through
 ## the canonical owner-write bridge (ExperimentController.apply_world_stocks).
