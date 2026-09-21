@@ -1,0 +1,123 @@
+{
+  "schema": "fabric.r5_2.t8_cooling_exact_evidence.v1",
+  "status": "REPAIR_R2_AUTHORITATIVE_EXACT_PASS",
+  "subject_head": "b5c8078edb66901be8d8c235a11bce53df44e894",
+  "subject_tree": "68b0e716c6885a5d1c75a5dfc3e763fd503fc104",
+  "t7_merge_head": "10ae7bcc682e7384da0e768d3af6c3d61d63a3df",
+  "canonical_owner": "Construction/Matter",
+  "production_checkpoint": false,
+  "canonical_godot": {
+    "version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7"
+  },
+  "authoritative_run": {
+    "run_id": 35659249681,
+    "sample_count": 3,
+    "sample_conclusion": "3/3 PASS",
+    "assertions_per_sample": 4145,
+    "aggregate_job_id": 106530527737,
+    "aggregate_artifact_id": 10667390015,
+    "aggregate_artifact_digest": "sha256:10d65ffdb0c667411a6930266c100ad08476868582f1cb611ad87f4e61ac07c5"
+  },
+  "hashes": {
+    "deterministic_hash": "eba45c45ef855367ee0c99a730fcea48ad5df172e5db21e5ecb67c942a82ae29",
+    "evidence_hash": "55c468a1e3f2b78dd8746b818368f6a6fdc909561b19877753c3c0ff8f335a78",
+    "graph_hash": "bbef71fa080ccd2abf21a553efc8403fe4edc67c99431c843f9ad3a0bdb6205e",
+    "descriptor_hash": "ee61251a6d2073f75e4a190b5303ef9ad3db86906a791ead5ee1ac82ea3960e4",
+    "capsule_checksum": "40a358cad6730ae9e798226786775edfb50ff8804a7096e52e2460b2e0b4ef72"
+  },
+  "qualitative_compression": {
+    "lanes": 64,
+    "detailed_state_scalars": 256,
+    "executable_state_scalars": 4,
+    "source_operations": 1536,
+    "compiled_operations": 32,
+    "operation_compression_ratio": 48,
+    "runtime_source_thermal_node_traversals_per_execute": 0
+  },
+  "hydraulic_floor": {
+    "max_total_mass_flow_kg_s": 0.426666666666667,
+    "laminar_limit_enforced": true,
+    "flow_regime_error": "COOLING_LOOP_DESCRIPTOR_FLOW_REGIME_UNSUPPORTED",
+    "pump_hydraulic_energy_explicit": true,
+    "pump_electrical_efficiency_claimed": false
+  },
+  "exact_equivalence": {
+    "sequence_ticks": 2048,
+    "full_reference_thermal_node_traversals": 524288,
+    "maximum_plate_temperature_error_k": 5.11590769747272e-13,
+    "maximum_hot_coolant_temperature_error_k": 5.11590769747272e-13,
+    "maximum_cold_coolant_temperature_error_k": 5.11590769747272e-13,
+    "maximum_radiator_temperature_error_k": 5.11590769747272e-13,
+    "maximum_state_parity_error_k": 0,
+    "maximum_ambient_exchange_error_j": 1.4210854715202e-14,
+    "maximum_pump_energy_error_j": 1.21430643318376e-17,
+    "maximum_energy_residual_j": 8.31255064781544e-11
+  },
+  "coolant_variant": {
+    "glycol_to_water_pump_energy_ratio": 3.22704001298596
+  },
+  "t6_composition": {
+    "power_stage_heat_j": 4751.01512953362,
+    "cooling_pump_hydraulic_energy_j": 7.15397054866825,
+    "active_vs_zero_flow_plate_temperature_advantage_k": 3.39790582710964
+  },
+  "repair_r0": {
+    "issue": "initial T8 tree was accidentally overlaid on the T6 tree snapshot despite T7 merge parent",
+    "repair": "rebuilt exact T7 merge tree and overlaid T8-only files",
+    "final_pr_additive": true,
+    "final_pr_deletions": 0
+  },
+  "repair_r1": {
+    "issue": "strict detailed reference repeated static Matter/geometry derivation inside every tick and hit the 300s gate",
+    "repair": "prederive all independent lane coefficients once in FullReference.prepare while execute still traverses and advances all 256 detailed thermal states",
+    "source_traversal_semantics_preserved": true,
+    "thresholds_relaxed": false
+  },
+  "repair_r2": {
+    "projector_nonfinite_error": "COOLING_STATE_PROJECTOR_STATE_INVALID",
+    "reference_nonfinite_error": "COOLING_REFERENCE_STATE_INVALID",
+    "projector_domain_error": "COOLING_STATE_PROJECTOR_TEMPERATURE_OUT_OF_DOMAIN",
+    "reference_domain_error": "COOLING_REFERENCE_TEMPERATURE_OUT_OF_DOMAIN",
+    "rehashed_flow_regime_descriptor_error": "COOLING_LOOP_DESCRIPTOR_FLOW_REGIME_UNSUPPORTED",
+    "rehashed_max_flow_relation_error": "COOLING_LOOP_DESCRIPTOR_MAX_FLOW_RELATION_MISMATCH",
+    "asymmetric_lane_detailed_reference_executes": true,
+    "asymmetric_lane_compiler_result": "COOLING_LANE_SYMMETRY_BROKEN",
+    "interpretation": "VALID_DETAILED_PHYSICS_NO_SAFE_BAKE"
+  },
+  "fail_closed": {
+    "asymmetric_lane": "COOLING_LANE_SYMMETRY_BROKEN",
+    "disabled_lane": "COOLING_LANE_DISABLED",
+    "off_manifold_state": "COOLING_STATE_NOT_IN_REDUCTION_MANIFOLD",
+    "nonfinite_projection": "COOLING_STATE_PROJECTOR_STATE_INVALID",
+    "nonfinite_reference": "COOLING_REFERENCE_STATE_INVALID",
+    "out_of_domain_projection": "COOLING_STATE_PROJECTOR_TEMPERATURE_OUT_OF_DOMAIN",
+    "out_of_domain_reference": "COOLING_REFERENCE_TEMPERATURE_OUT_OF_DOMAIN",
+    "descriptor_max_flow_relation": "COOLING_LOOP_DESCRIPTOR_MAX_FLOW_RELATION_MISMATCH",
+    "descriptor_flow_regime": "COOLING_LOOP_DESCRIPTOR_FLOW_REGIME_UNSUPPORTED"
+  },
+  "invariants": {
+    "capacities_and_conductances_derive_from_matter_and_geometry": true,
+    "coolant_viscosity_is_characterized_floor": true,
+    "hydraulic_power_is_geometry_derived": true,
+    "pump_hydraulic_dissipation_enters_thermal_energy_balance": true,
+    "runtime_persistent_state_owner": false,
+    "runtime_source_traversal_zero": true,
+    "t6_heat_composition_verified": true,
+    "behavior_capsule_v1_modified": false,
+    "behavior_capsule_v2_modified": false,
+    "t1_to_t7_evidence_modified": false,
+    "threshold_relaxation": false
+  },
+  "bounded_floor": {
+    "laminar_lumped_flow": true,
+    "cfd_claimed": false,
+    "turbulence_claimed": false,
+    "cavitation_claimed": false,
+    "boiling_phase_change_claimed": false,
+    "pump_electrical_efficiency_claimed": false,
+    "fan_aerodynamics_claimed": false
+  },
+  "scope_note": "T8 proves exact symmetric reduction of the declared 64-lane lumped thermal/hydraulic law, explicit hydraulic dissipation, conservative state projection and composition with T6 semiconductor heat. It does not independently validate CFD/turbulence/cavitation/boiling/pump-electrical/fan-aerodynamic effects.",
+  "next_gate": "EXACT_HEAD_CLOSURE_THEN_FRESH_REVIEW_AND_INDEPENDENT_VERIFIER"
+}
