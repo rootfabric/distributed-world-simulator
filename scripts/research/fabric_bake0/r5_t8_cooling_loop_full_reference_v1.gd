@@ -9,10 +9,16 @@ static func prepare(graph: Dictionary) -> Dictionary:
 	var checked := Graph.validate(graph)
 	if not checked.success:
 		return checked
+	var rows: Array = []
+	for lane in graph.lanes:
+		var derived := Physics.derive_lane(graph, lane)
+		if not derived.success:
+			return derived
+		rows.append(derived.details.lane)
 	return U.success({
-		"graph": graph.duplicate(true),
-		"lane_count": int(graph.lanes.size()),
-		"source_thermal_node_count": int(graph.lanes.size()) * 4,
+		"rows": rows,
+		"lane_count": int(rows.size()),
+		"source_thermal_node_count": int(rows.size()) * 4,
 	})
 
 static func initial_state(plan: Dictionary, temperature_k: float) -> Dictionary:
@@ -60,10 +66,7 @@ static func execute(
 	var lane_flow := mass_flow_kg_s / float(n)
 	var lane_heat := heat_input_w / float(n)
 	for lane_index in range(n):
-		var derived := Physics.derive_lane(plan.graph, plan.graph.lanes[lane_index])
-		if not derived.success:
-			return derived
-		var row: Dictionary = derived.details.lane
+		var row: Dictionary = plan.rows[lane_index]
 		var re := Physics.reynolds_number(row, lane_flow)
 		if re > float(row.laminar_reynolds_limit) * (1.0 + 1.0e-12):
 			return U.failure("COOLING_REFERENCE_FLOW_REGIME_UNSUPPORTED", {"lane": lane_index, "reynolds": re})
