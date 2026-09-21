@@ -1,28 +1,36 @@
 extends SceneTree
 
-# ECO ARCH2 A10.5 / ECO-POLYGON-1 — P2 ExperimentController equivalence tests.
-# Runner: Godot headless --script; prints checks/failed counts and PASS/FAIL.
-# CRITICAL case: direct canonical loop (a-d steps implemented here) MUST
-# produce the same final canonical_state_hash as the controller.
+# ECO ARCH2 A10.5 / ECO-POLYGON-1 — P2 ExperimentController equivalence tests
+# (repair R1 edition). Runner: Godot headless --script; prints checks/failed
+# counts and PASS/FAIL.
+#
+# ORACLE (repaired): the direct comparison drives the SHARED CANONICAL
+# EcologyRuntimeV1 primitives EXPLICITLY — Runtime.step_lifecycle (A5, once)
+# -> Runtime.admit_propagules (receipt-only mutation admission) ->
+# Runtime.step_feedback (A6 post-lifecycle on the SAME field) — and requires
+# the exact same final canonical_state_hash as the controller. The tick
+# formulas are NEVER re-implemented in this file: composing canonical APIs is
+# the comparison; duplicating controller orchestration would not be an oracle
+# (the pre-repair direct loop copied the controller's dual-trajectory scheme
+# and its silent mutation fallback, so it proved nothing).
 #
 # Scenario X (equivalence, 64 ticks): manifest X / seed X, founder program
-#   without a reproductive module (bounded population; A6 replay validation
-#   is O(steps^2) in payload size, so a reproduction-heavy 64-tick history
-#   costs minutes per run — see report known limitations).
-# Scenario R (reproduction liveness, 12 ticks): reproductive program; the
-#   population grows through canonical propagule materialization and the
-#   direct loop still matches the controller hash.
+#   without a reproductive module (bounded population; feedback enabled).
+# Scenario R (reproduction + inheritance, 12 ticks): reproductive program;
+#   the population grows through canonical receipt-backed propagule
+#   admission and at least one child carries a REALLY INHERITED mutated
+#   genome (mutation receipt bound to parent+child genome hashes).
+# Scenario F (feedback disabled, 8 ticks): the feedback-off path is held to
+#   the same single-trajectory oracle.
 
 const C = preload("res://scripts/research/ecology/v2/canonical_value_v1.gd")
 const P = preload("res://scripts/research/ecology/v2/development_program_v1.gd")
 const Genome = preload("res://scripts/research/ecology/v2/organism_genome_v2.gd")
-const Mutation = preload("res://scripts/research/ecology/v2/genome_mutation_v1.gd")
-const Blueprint = preload("res://scripts/research/ecology/v2/organism_blueprint_v1.gd")
 const LifeState = preload("res://scripts/research/ecology/v2/organism_life_state_v1.gd")
 const OrganismState = preload("res://scripts/research/ecology/v2/organism_state_v1.gd")
 const Field = preload("res://scripts/research/ecology/v2/local_environment_field_v1.gd")
-const Lifecycle = preload("res://scripts/research/ecology/v2/resource_lifecycle_runtime_v1.gd")
 const Feedback = preload("res://scripts/research/ecology/v2/persistent_environmental_feedback_v1.gd")
+const Runtime = preload("res://scripts/research/ecology/v2/ecology_runtime_v1.gd")
 const Controller = preload("res://scripts/ecology/workbench/experiment_controller_v1.gd")
 
 var checks := 0
@@ -37,22 +45,8 @@ func _check(condition: bool, message: String) -> void:
 		failures.append(message)
 		push_error("A10_5_P2_FAIL " + message)
 
-func _program(with_reproductive: bool) -> Dictionary:
-	var actions := [
-		P.action("extend", "support", [0, 100, 0], 10),
-		P.action("differentiate", "collector", [0, 60, 0], 4, 200),
-	]
-	var rules := [P.rule("r1", actions)]
-	if with_reproductive:
-		rules[0].next = "r2"
-		rules.append(P.rule("r2", [P.action("differentiate", "reproductive", [0, 50, 0], 5)]))
-	return {"schema": P.SCHEMA, "entry": "r1", "max_age": 64, "max_depth": 4, "rules": rules}
-
-func _manifest(with_reproductive: bool, horizon: int, seed: int) -> Dictionary:
-	# Scenario X (equivalence, 64 ticks): single founder, 1x1 field, one zone;
-	# the A6 feedback replay validation is O(steps^2), so a reproduction-heavy
-	# 64-tick history costs minutes per run (known limitation) — scenario R
-	# exercises reproduction at a shorter horizon.
+func _manifest(with_reproductive: bool, horizon: int, seed: int, feedback_enabled: bool = true) -> Dictionary:
+	# Scenario X (equivalence, 64 ticks): single founder, 1x1 field, one zone.
 	var actions := [
 		P.action("extend", "support", [0, 100, 0], 10),
 		# Large collector keeps the founder energy-solvent while the growth
@@ -99,70 +93,68 @@ func _manifest(with_reproductive: bool, horizon: int, seed: int) -> Dictionary:
 		},
 		"mutation": {"operator": "small", "mutations_enabled": true},
 		"organization_profile": "FREE",
-		"feedback": {"enabled": true, "decomposition_enabled": true},
+		"feedback": {"enabled": feedback_enabled, "decomposition_enabled": true},
 		"metrics": {"requested": ["population"]},
 		"checkpoint": {"interval_ticks": 16},
 		"mode": "LAB",
 	}
 
-# --- direct canonical loop (mini-runner): the same a-d steps ---------------
+# --- shared canonical runtime oracle (explicit primitive composition) --------
 
-func _direct_tick(state: Dictionary, manifest: Dictionary) -> String:
-	# (a) A5 lifecycle step.
-	var result := Lifecycle.step_population(state.field, state.population, state.field.owner_token, state.field.owner_epoch, state.field.revision)
-	if not result.success:
-		return "A:" + String(result.error)
-	state.field = result.field
-	state.population = result.population
-	# (b)+(c) mutation + materialization of propagules.
-	var children: Array = []
-	for propagule in result.propagules:
-		var parent: Dictionary = {}
-		for entry in state.population:
-			if entry.state.individual_id == propagule.parent_id:
-				parent = entry
-				break
-		if parent.is_empty():
-			return "PARENT"
-		var child_blueprint: Dictionary = parent.blueprint
-		if manifest.mutation.mutations_enabled:
-			var seed := Controller.mutation_seed(manifest.seed, state.tick + 1, String(propagule.parent_id))
-			var mutated := Mutation.mutate(parent.blueprint.genome, seed, manifest.mutation.operator)
-			if mutated.get("success", false):
-				var candidate := Blueprint.create(mutated.genome, parent.blueprint.life_history)
-				if not candidate.is_empty():
-					child_blueprint = candidate
-		var child := Lifecycle.materialize_propagule(propagule, child_blueprint, parent.state)
-		if child.is_empty() and child_blueprint != parent.blueprint:
-			child = Lifecycle.materialize_propagule(propagule, parent.blueprint, parent.state)
-		if child.is_empty():
-			return "MATERIALIZE"
-		children.append(child)
-	state.population.append_array(children)
-	state.population.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return a.state.individual_id < b.state.individual_id)
-	# (d) A6 feedback advance.
-	if manifest.feedback.enabled:
-		var advanced := Feedback.advance(state.feedback, state.feedback.frame.field.owner_token, state.feedback.frame.field.owner_epoch, state.feedback.frame.step)
-		if not advanced.success:
-			return "D:" + String(advanced.error)
-		state.feedback = advanced.state
-	state.tick += 1
-	return ""
+func _build_runtime_state(manifest: Dictionary) -> Dictionary:
+	# Genesis through the controller's PUBLIC genesis read, then the shared
+	# runtime create: the same canonical genesis, no second genesis formula.
+	var genesis_controller := Controller.new()
+	var init_result: Dictionary = genesis_controller.initialize(manifest)
+	_check(bool(init_result.get("success", false)), "oracle genesis initialize succeeds: " + str(init_result))
+	var debug: Dictionary = genesis_controller.debug_state()
+	var policy := Feedback.default_policy()
+	policy.decomposition_enabled = manifest.feedback.decomposition_enabled
+	var created: Dictionary = Runtime.create(String(manifest.experiment_id), debug.field, debug.population, policy, bool(manifest.feedback.enabled))
+	_check(bool(created.get("success", false)), "oracle runtime create succeeds: " + str(created))
+	return created.get("state", {})
 
-func _canonical_hash(state: Dictionary) -> String:
+func _runtime_tick(state: Dictionary, manifest: Dictionary) -> Dictionary:
+	# Independent canonical composition: each phase is a public runtime
+	# primitive; the mutation stream uses the controller's declared key
+	# prefix so both sides derive identical deterministic seeds.
+	var lifecycle: Dictionary = Runtime.step_lifecycle(state)
+	if not bool(lifecycle.get("success", false)):
+		return {"success": false, "error": "A5:" + String(lifecycle.get("error", "?"))}
+	var admitted: Dictionary = Runtime.admit_propagules(lifecycle.state, {
+		"mutations_enabled": manifest.mutation.mutations_enabled,
+		"operator": manifest.mutation.operator,
+		"seed": manifest.seed,
+		"mutation_key_prefix": Controller.MUTATION_KEY_PREFIX,
+	})
+	if not bool(admitted.get("success", false)):
+		return {"success": false, "error": "ADMIT:" + String(admitted.get("error", "?"))}
+	var feedback: Dictionary = Runtime.step_feedback(admitted.state)
+	if not bool(feedback.get("success", false)):
+		return {"success": false, "error": "A6:" + String(feedback.get("error", "?"))}
+	return {"success": true, "state": feedback.state}
+
+func _canonical_hash(field: Dictionary, population: Array, feedback_view: Dictionary, tick_value: int) -> String:
 	var population_hashes: Array = []
-	for entry in state.population:
+	for entry in population:
 		population_hashes.append({
 			"individual_id": entry.state.individual_id,
 			"life_state_hash": LifeState.state_hash(entry.state, entry.blueprint),
 			"development_biological_hash": OrganismState.biological_hash(entry.state.development),
 		})
 	return C.digest({
-		"tick": state.tick,
-		"field_hash": Field.state_hash(state.field),
+		"tick": tick_value,
+		"field_hash": Field.state_hash(field),
 		"population": population_hashes,
-		"feedback_hash": C.digest(state.feedback),
+		"feedback_hash": C.digest(feedback_view),
 	})
+
+func _controller_hash(controller: Object) -> String:
+	var snapshot: Dictionary = controller.get_snapshot()
+	return String(snapshot.canonical_state_hash)
+
+func _runtime_hash(state: Dictionary) -> String:
+	return _canonical_hash(state.field, state.population, Runtime.feedback_view(state), int(state.tick))
 
 func _alive(state: Dictionary) -> int:
 	var count := 0
@@ -177,15 +169,10 @@ func _max_modules(state: Dictionary) -> int:
 		count = maxi(count, entry.state.development.modules.size())
 	return count
 
-func _new_controller(manifest: Dictionary) -> Object:
-	var controller := Controller.new()
-	var started: Dictionary = controller.initialize(manifest)
-	_check(bool(started.get("success", false)), "initialize succeeds: " + str(started))
-	return controller
-
 func _run() -> void:
 	_scenario_x()
 	_scenario_r()
+	_scenario_f()
 	_finish()
 
 # Scenario X: equivalence matrix at 64 ticks.
@@ -201,39 +188,43 @@ func _scenario_x() -> void:
 	_check(bool(run_result.get("success", false)), "X controller run(64) succeeds: " + str(run_result))
 	var hash_run := ""
 	if bool(run_result.get("success", false)):
-		hash_run = String(ctl_run.get_snapshot().canonical_state_hash)
+		hash_run = _controller_hash(ctl_run)
 		_check(not hash_run.is_empty(), "X controller run hash non-empty")
 		var before: Dictionary = ctl_run.get_snapshot()
 		var after: Dictionary = ctl_run.get_snapshot()
 		_check(before == after, "X repeated snapshots are identical")
 		var metrics: Dictionary = ctl_run.get_metrics()
 		_check(bool(metrics.get("success", false)), "X get_metrics succeeds")
-		_check(String(ctl_run.get_snapshot().canonical_state_hash) == hash_run, "X snapshot/metrics calls do not mutate state")
+		_check(_controller_hash(ctl_run) == hash_run, "X snapshot/metrics calls do not mutate state")
 		var reset_result: Dictionary = ctl_run.reset()
 		_check(bool(reset_result.get("success", false)), "X reset succeeds")
 		_check(int(ctl_run.get_snapshot().tick) == 0, "X reset returns to tick 0")
 		var rerun: Dictionary = ctl_run.run(64)
 		_check(bool(rerun.get("success", false)), "X post-reset run(64) succeeds: " + str(rerun))
-		_check(String(ctl_run.get_snapshot().canonical_state_hash) == hash_run, "X reset + rerun reproduces hash")
+		_check(_controller_hash(ctl_run) == hash_run, "X reset + rerun reproduces hash")
 		# Liveliness at 64 ticks: alive organisms + development growth.
 		var state: Dictionary = ctl_run.debug_state()
 		_check(_alive(state) >= 1, "X alive organisms >= 1 after 64 ticks")
 		_check(_max_modules(state) > 1, "X development growth observed (max modules=%d)" % _max_modules(state))
 
-	# 2. Direct canonical loop from an identical genesis state.
-	var ctl_direct := _new_controller(manifest)
-	var state: Dictionary = ctl_direct.debug_state()
-	var direct_error := ""
+	# 2. Shared canonical runtime composition from the same genesis: the
+	#    oracle. Explicit primitives, no controller orchestration.
+	var oracle_state: Dictionary = _build_runtime_state(manifest)
+	var oracle_error := ""
 	for _i in 64:
-		direct_error = _direct_tick(state, manifest)
-		if not direct_error.is_empty():
+		var ticked: Dictionary = _runtime_tick(oracle_state, manifest)
+		if not bool(ticked.get("success", false)):
+			oracle_error = String(ticked.get("error", "?"))
 			break
-	_check(direct_error.is_empty(), "X direct canonical loop completes 64 ticks: " + direct_error)
-	if direct_error.is_empty():
-		_check(_canonical_hash(state) == hash_run, "X direct loop hash == controller hash")
+		oracle_state = ticked.state
+	_check(oracle_error.is_empty(), "X oracle canonical composition completes 64 ticks: " + oracle_error)
+	if oracle_error.is_empty():
+		_check(Runtime.validate(oracle_state).is_empty(), "X oracle state validates")
+		_check(_runtime_hash(oracle_state) == hash_run, "X oracle (shared runtime) hash == controller hash")
 
 	# 3. Time-mode equivalence: 64x step == 4x run(16) == run(64).
-	var ctl_step := _new_controller(manifest)
+	var ctl_step := Controller.new()
+	ctl_step.initialize(manifest)
 	var step_ok := true
 	for i in 64:
 		var one: Dictionary = ctl_step.step()
@@ -242,8 +233,9 @@ func _scenario_x() -> void:
 			_check(false, "X step %d fails: %s" % [i, str(one)])
 			break
 	if step_ok:
-		_check(String(ctl_step.get_snapshot().canonical_state_hash) == hash_run, "X 64x step == run(64)")
-	var ctl_batch := _new_controller(manifest)
+		_check(_controller_hash(ctl_step) == hash_run, "X 64x step == run(64)")
+	var ctl_batch := Controller.new()
+	ctl_batch.initialize(manifest)
 	var batch_ok := true
 	for _b in 4:
 		var batch: Dictionary = ctl_batch.run(16)
@@ -252,32 +244,80 @@ func _scenario_x() -> void:
 			_check(false, "X run(16) batch fails: " + str(batch))
 			break
 	if batch_ok:
-		_check(String(ctl_batch.get_snapshot().canonical_state_hash) == hash_run, "X 4x run(16) == run(64)")
+		_check(_controller_hash(ctl_batch) == hash_run, "X 4x run(16) == run(64)")
 
-# Scenario R: reproduction liveness + direct-loop equivalence at 12 ticks.
+# Scenario R: reproduction liveness + REAL inherited mutation + oracle.
 
 func _scenario_r() -> void:
 	var manifest := _manifest(true, 12, 777)
 	var ctl := Controller.new()
 	var init_result: Dictionary = ctl.initialize(manifest)
 	_check(bool(init_result.get("success", false)), "R controller initialize succeeds: " + str(init_result))
+	var founder_genomes := {}
+	for entry in ctl.debug_state().population:
+		founder_genomes[String(entry.state.individual_id)] = Genome.biological_hash(entry.blueprint.genome)
 	var run_result: Dictionary = ctl.run(12)
 	_check(bool(run_result.get("success", false)), "R run(12) succeeds: " + str(run_result))
+	var inherited := 0
 	if bool(run_result.get("success", false)):
 		var state: Dictionary = ctl.debug_state()
 		_check(_alive(state) >= 1, "R alive organisms >= 1")
 		_check(state.population.size() > 2, "R propagules materialized (population=%d > founders=2)" % state.population.size())
-		var hash_run := String(ctl.get_snapshot().canonical_state_hash)
-		var ctl_direct := _new_controller(manifest)
-		var dstate: Dictionary = ctl_direct.debug_state()
-		var direct_error := ""
+		# BLOCKER R2 proof: mutated genomes really enter the lineage through
+		# sealed receipts — no silent parent-blueprint fallback exists.
+		for entry in state.population:
+			if String(entry.state.origin_kind) != "PARENT_TRANSFER":
+				continue
+			var parent_id := String(entry.state.origin_receipt.parent_id)
+			if not founder_genomes.has(parent_id):
+				continue
+			var child_hash := Genome.biological_hash(entry.blueprint.genome)
+			if child_hash == String(founder_genomes[parent_id]):
+				continue
+			inherited += 1
+			var record: Dictionary = entry.state.get("mutation_receipt", {})
+			_check(not record.is_empty(), "R inherited child carries durable mutation provenance")
+			if record.is_empty():
+				continue
+			_check(String(record.get("schema", "")) == "dws.ecology.parent-transfer-mutation.v1", "R provenance record schema")
+			var receipt: Dictionary = record.get("receipt", {})
+			_check(String(receipt.get("child_genome_hash", "")) == child_hash, "R receipt binds the child genome")
+			_check(String(receipt.get("parent_genome_hash", "")) == String(founder_genomes[parent_id]), "R receipt binds the parent genome")
+			_check(LifeState.validate(entry.state, entry.blueprint).is_empty(), "R inherited child state validates canonically")
+		_check(inherited >= 1, "R at least one REALLY INHERITED mutated genome in the lineage (inherited=%d)" % inherited)
+		var hash_run := _controller_hash(ctl)
+		var oracle_state: Dictionary = _build_runtime_state(manifest)
+		var oracle_error := ""
 		for _i in 12:
-			direct_error = _direct_tick(dstate, manifest)
-			if not direct_error.is_empty():
+			var ticked: Dictionary = _runtime_tick(oracle_state, manifest)
+			if not bool(ticked.get("success", false)):
+				oracle_error = String(ticked.get("error", "?"))
 				break
-		_check(direct_error.is_empty(), "R direct loop completes 12 ticks: " + direct_error)
-		if direct_error.is_empty():
-			_check(_canonical_hash(dstate) == hash_run, "R direct loop hash == controller hash")
+			oracle_state = ticked.state
+		_check(oracle_error.is_empty(), "R oracle canonical composition completes 12 ticks: " + oracle_error)
+		if oracle_error.is_empty():
+			_check(_runtime_hash(oracle_state) == hash_run, "R oracle (shared runtime) hash == controller hash")
+
+# Scenario F: feedback disabled — same single-trajectory oracle.
+
+func _scenario_f() -> void:
+	var manifest := _manifest(false, 8, 424242, false)
+	var ctl := Controller.new()
+	ctl.initialize(manifest)
+	var run_result: Dictionary = ctl.run(8)
+	_check(bool(run_result.get("success", false)), "F controller run(8) succeeds: " + str(run_result))
+	var hash_run := _controller_hash(ctl)
+	var oracle_state: Dictionary = _build_runtime_state(manifest)
+	var oracle_error := ""
+	for _i in 8:
+		var ticked: Dictionary = _runtime_tick(oracle_state, manifest)
+		if not bool(ticked.get("success", false)):
+			oracle_error = String(ticked.get("error", "?"))
+			break
+		oracle_state = ticked.state
+	_check(oracle_error.is_empty(), "F oracle canonical composition completes 8 ticks: " + oracle_error)
+	if oracle_error.is_empty():
+		_check(_runtime_hash(oracle_state) == hash_run, "F oracle (shared runtime, feedback off) hash == controller hash")
 
 func _finish() -> void:
 	print("EVO_ARCH2_A10_5_CONTROLLER_P2 checks=%d failed=%d" % [checks, failures.size()])

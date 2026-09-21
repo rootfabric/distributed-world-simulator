@@ -15,10 +15,10 @@ extends SceneTree
 #  S7  growth (development modules advanced);
 #  S8  resource consumption (field stocks decreased);
 #  S9  reproduction (birth event through the metrics timeline);
-#  S10 mutation attempt (event recorded, incl. the documented
-#      PARENT_TRANSFER_WITNESS_FALLBACK status);
-#  S11 death + decomposition (starvation death in a void zone; corpse
-#      return -> mineralized feedback at the default policy/horizon);
+#  S10 inherited mutation: receipt-backed admission, at least one REALLY
+#      inherited mutated genome; no fallback status exists (repair R2);
+#  S11 death + decomposition (death fixated as controller-layer unreachable;
+#      mineralization measured on THE single canonical field — repair R1);
 #  S12 unknown BodyGraph topology through the generic realizer (all-roles
 #      program + an invented unknown role module);
 #  S13 full inspector chain (genome -> ... -> lineage);
@@ -200,7 +200,7 @@ func _scenario_placement(state: Dictionary) -> void:
 	_check(state.controller.debug_state().population.size() == same.entries.size(), "S5 population matches the generated entries (%d)" % same.entries.size())
 	state.manifest = manifest
 
-# --- S6..S10: run, growth, consumption, reproduction, mutation attempt --------------
+# --- S6..S10: run, growth, consumption, reproduction, inherited mutation -------------
 
 func _scenario_run_and_observe(state: Dictionary) -> void:
 	var controller: Object = state.controller
@@ -208,6 +208,9 @@ func _scenario_run_and_observe(state: Dictionary) -> void:
 	observer.begin(controller.get_manifest())
 	observer.observe(controller)  # tick-0 baseline
 	var tick0_debug: Dictionary = controller.debug_state()
+	var founder_genomes := {}
+	for entry in tick0_debug.population:
+		founder_genomes[String(entry.state.individual_id)] = Genome.biological_hash(entry.blueprint.genome)
 	var first_id := String(tick0_debug.population[0].state.individual_id)
 	var modules_tick0 := int(tick0_debug.population[0].state.development.modules.size())
 	var water_tick0 := _stock_sum(controller, "water_mg")
@@ -231,43 +234,63 @@ func _scenario_run_and_observe(state: Dictionary) -> void:
 	# S8 consumption: field water stocks decreased.
 	var water_now := _stock_sum(controller, "water_mg")
 	_check(water_now < water_tick0, "S8 resource consumption: field water decreased (%d -> %d)" % [water_tick0, water_now])
-	# S9 reproduction: birth event in the observatory timeline.
+	# S9/S10 reproduction + REAL inherited mutation (repair R2): births happen
+	# through receipt-backed canonical admission; every mutated child differs
+	# from its parent genome and carries the sealed receipt binding. The
+	# silent parent-blueprint fallback no longer exists, so there is no
+	# "applied: false" mutation event and no unapplied lineage mutation.
 	var births := 0
 	var mutations := 0
-	var fallback_mutations := 0
+	var unapplied_mutations := 0
 	for event in observer.timeline:
 		if String(event.kind) == "birth":
 			births += 1
 		elif String(event.kind) == "mutation":
 			mutations += 1
-			if not bool(event.detail.get("applied", true)):
-				fallback_mutations += 1
+			if not bool(event.detail.get("applied", false)):
+				unapplied_mutations += 1
 	_check(births >= 1, "S9 reproduction: at least one birth/propagule event (births=%d)" % births)
-	_check(mutations >= 1, "S10 mutation attempt recorded as an event (mutations=%d)" % mutations)
-	_check(fallback_mutations >= 1 or mutations >= 1,
-		"S10 mutation events carry the documented fallback status where applicable (fallback=%d)" % fallback_mutations)
+	_check(mutations >= 1, "S10 mutation events recorded (mutations=%d)" % mutations)
+	_check(unapplied_mutations == 0, "S10 NO unapplied/fallback mutation events exist (unapplied=%d)" % unapplied_mutations)
+	var inherited := 0
+	var receipt_bound := 0
+	for entry in controller.debug_state().population:
+		if String(entry.state.origin_kind) != "PARENT_TRANSFER":
+			continue
+		var parent_id := String(entry.state.origin_receipt.parent_id)
+		var parent_hash := ""
+		if founder_genomes.has(parent_id):
+			parent_hash = String(founder_genomes[parent_id])
+		else:
+			for other in controller.debug_state().population:
+				if String(other.state.individual_id) == parent_id:
+					parent_hash = Genome.biological_hash(other.blueprint.genome)
+					break
+		var child_hash := Genome.biological_hash(entry.blueprint.genome)
+		var record: Dictionary = entry.state.get("mutation_receipt", {})
+		if not record.is_empty() and String(record.receipt.child_genome_hash) == child_hash:
+			receipt_bound += 1
+			if not parent_hash.is_empty() and child_hash != parent_hash:
+				inherited += 1
+	_check(receipt_bound >= 1, "S10 receipt-backed children present in the lineage (bound=%d)" % receipt_bound)
+	_check(inherited >= 1, "S10 at least one REALLY INHERITED mutated genome (child genome != parent genome, inherited=%d)" % inherited)
 
-# --- S11: death/decomposition (canonical-limit fit, documented) -----------------------
-# CANONICAL LIMITATION (fixated): organism death is NOT reachable through the
-# ExperimentController inside LAB bounds. The only death causes are A5
-# starvation (maintenance unpaid for starvation_limit_ticks=3) and the hard
-# A5_AGE_LIMIT (LS.MAX_AGE_TICK = 1e6); the controller fixes the founder
-# endowment at FOUNDER_ENDOWMENT_STOCK (200000 per reserve), while full
-# maintenance is <= a few hundred units per tick — reserves cover ~2000+
-# ticks, far beyond the A6 MAX_STEPS horizon (64). The genome program max_age
-# only stops DEVELOPMENT (development_interpreter_v1), it does not kill.
-# Fixated assertions: (a) a zero-resource founder provably survives the full
-# tested horizon (death unreachable); (b) the DECOMPOSITION half — corpse
-# organic matter -> field organic_mg -> mineralized nutrient feedback — IS
-# exercised directly: zone organic matter mineralizes step by step at the
-# default policy (the same _mineralize/_return_corpses feedback frame the
-# corpse path uses; the corpse branch itself is covered canonically in the
-# A6 adversarial suite).
+# --- S11: death/decomposition (single canonical field, repair R1) ---------------------
+# Controller-layer fixate (unchanged): organism death is NOT reachable through
+# the ExperimentController inside LAB bounds (the controller fixes the founder
+# endowment at FOUNDER_ENDOWMENT_STOCK = 200000 per reserve while full
+# maintenance is <= a few hundred units per tick; real death + corpse return
+# is covered canonically by test_runtime_single_state S4 through the shared
+# runtime API). The DECOMPOSITION half is asserted on the SINGLE canonical
+# controller field (repair R1): zone organic matter is mineralized step by
+# step and the canonical field shows exactly that — organic drops by
+# mineralized + intake, nutrient rises by mineralized - intake. There is no
+# second feedback field projection anymore.
 
 func _scenario_death_decomposition() -> void:
 	# (a) Death unreachable in LAB bounds: a founder in a fully void zone
 	# stays alive across the whole tested horizon (maintenance paid from the
-	# fixed endowment; starvation horizon ~2000+ ticks >> MAX_STEPS 64).
+	# fixed endowment; starvation horizon ~2000+ ticks >> any tested horizon).
 	var void_controller := Controller.new()
 	var void_manifest := {
 		"schema": Manifest.SCHEMA,
@@ -290,9 +313,10 @@ func _scenario_death_decomposition() -> void:
 	_check(bool(void_controller.initialize(void_manifest, {}).get("success", false)), "S11 void-zone experiment initializes")
 	var void_run: Dictionary = void_controller.run(16)
 	_check(bool(void_run.get("success", false)), "S11 void-zone run reaches the horizon")
-	_check(_alive_count(void_controller) == 1, "S11 death FIXATED as unreachable in LAB bounds: zero-income founder survives (endowment >> maintenance over any horizon)")
+	_check(_alive_count(void_controller) == 1, "S11 death FIXATED as unreachable at the controller layer (zero-income founder survives on the fixed endowment)")
 
-	# (b) Decomposition/mineralization feedback on dead organic matter.
+	# (b) Decomposition/mineralization on dead organic matter — measured on
+	# THE canonical controller field (single truth).
 	var decomp_controller := Controller.new()
 	var decomp_manifest := {
 		"schema": Manifest.SCHEMA,
@@ -314,16 +338,26 @@ func _scenario_death_decomposition() -> void:
 	}
 	_check(bool(decomp_controller.initialize(decomp_manifest, {}).get("success", false)), "S11 litter-zone experiment initializes")
 	var organic_before := _stock_sum(decomp_controller, "organic_mg")
+	var nutrient_before := _stock_sum(decomp_controller, "nutrient_mg")
 	var decomp_run: Dictionary = decomp_controller.run(4)
 	_check(bool(decomp_run.get("success", false)), "S11 decomposition run(4) succeeds")
-	var mineralized := int(decomp_controller.debug_state().feedback.frame.get("mineralized_mg", 0))
+	var debug: Dictionary = decomp_controller.debug_state()
+	var mineralized := int(debug.feedback.frame.mineralized_mg)
 	_check(mineralized > 0, "S11 decomposition feedback mineralized organic matter (mineralized_mg=%d)" % mineralized)
 	var organic_after := _stock_sum(decomp_controller, "organic_mg")
-	# The A6 feedback frame keeps its own field projection: mineralization is
-	# accounted INSIDE the frame (frame.mineralized_mg / frame.field), the
-	# controller field only moves through the A5 intake path. Assert the
-	# feedback accounting plus non-increase of the controller-side organic.
-	_check(organic_after <= organic_before, "S11 controller-side organic stock never increased (feedback is a sink, not a source)")
+	var nutrient_after := _stock_sum(decomp_controller, "nutrient_mg")
+	var intake_organic := 0
+	var intake_nutrient := 0
+	for entry in debug.population:
+		intake_organic += int(entry.state.resource_ledger.field_intake.organic_mg)
+		intake_nutrient += int(entry.state.resource_ledger.field_intake.nutrient_mg)
+	# SINGLE-STATE CANON: organic decreases and nutrient increases in THE
+	# canonical controller field by exactly the mineralized amount (adjusted
+	# by what the living organism ate from the same field).
+	_check(organic_before - organic_after == mineralized + intake_organic,
+		"S11 canonical field organic drop == mineralized + intake (%d == %d + %d)" % [organic_before - organic_after, mineralized, intake_organic])
+	_check(nutrient_after - nutrient_before == mineralized - intake_nutrient,
+		"S11 canonical field nutrient gain == mineralized - intake (%d == %d - %d)" % [nutrient_after - nutrient_before, mineralized, intake_nutrient])
 
 # --- S12+S13: unknown topology via the generic realizer + full inspector ------------
 
