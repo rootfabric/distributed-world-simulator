@@ -196,6 +196,26 @@ func _test_development_bias_applied() -> void:
 		"operator_weights": {"teleport_species": 100},
 	}
 	_check(Mutation.validate_bias(invalid_bias) == "MUTATION_BIAS_OPERATOR", "bias cannot introduce a polygon-only mutation operator")
+
+	# Context-sensitive operators participate only when they are actually
+	# applicable. This founder has no disabled action, so ACTIVATE alone has no
+	# canonical transition; adding SMALL makes the bounded prior executable and
+	# must select SMALL even if ACTIVATE carries almost all nominal weight.
+	var activate_only := {
+		"schema": Mutation.BIAS_SCHEMA,
+		"name": "organization/activate-only",
+		"version": 1,
+		"operator_weights": {"activate": 100},
+	}
+	var no_transition: Dictionary = Mutation.mutate_with_bias(parent, 4242, activate_only)
+	_check(not bool(no_transition.get("success", false)) and String(no_transition.get("reason", "")) == "MUTATION_BIAS_NO_APPLICABLE_OPERATOR",
+		"bias fails closed when it contains no applicable canonical transition")
+	var mixed_applicability := activate_only.duplicate(true)
+	mixed_applicability.name = "organization/applicable-filter"
+	mixed_applicability.operator_weights = {"activate": 999999, "small": 1}
+	var applicable_result: Dictionary = Mutation.mutate_with_bias(parent, 4242, mixed_applicability)
+	_check(bool(applicable_result.get("success", false)) and String(applicable_result.get("selected_operator", "")) == "small",
+		"bias weights are conditioned on the canonical applicable transition set")
 	# FREE remains presentation-only.
 	var free_result: Dictionary = Profile.apply_development_bias(Profile.preset("FREE"))
 	_check(bool(free_result.get("success", false)) and String(free_result.status) == "NOT_APPLICABLE", "FREE profile has no development bias")
