@@ -82,6 +82,22 @@ func _manual_step(manual:Dictionary,descriptor:Dictionary,state:Dictionary,bus_v
 	})
 
 func _initialize()->void:
+	for arg in OS.get_cmdline_user_args():
+		if arg=="--preflight":
+			var ps:=Fixture.compile_subsystems()
+			if not ps.success:
+				print("FABRIC_R5_2_T10_PREFLIGHT=FAIL")
+				quit(1)
+				return
+			var pg:=Fixture.make_graph(ps.details)
+			var pc:=_compile(ps.details,pg)
+			if not pc.success:
+				print("FABRIC_R5_2_T10_PREFLIGHT=FAIL")
+				quit(1)
+				return
+			print("FABRIC_R5_2_T10_PREFLIGHT=PASS")
+			quit(0)
+			return
 	var subsystems:=Fixture.compile_subsystems()
 	check(subsystems.success,"subsystems compile",subsystems)
 	if not subsystems.success:
