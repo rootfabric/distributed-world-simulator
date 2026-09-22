@@ -1,0 +1,35 @@
+{
+  "role": "INDEPENDENT_REVIEWER",
+  "verdict": "PASS",
+  "scope": "Evidence Git line-ending normalization audit only",
+  "evidence_commit": "9a3c1fd052652701a2d45e77508789db1ebfd37a",
+  "evidence_tree": "a6e45cbedfb857b75e8b2d35c90054b5f3ece382",
+  "path": "config/control/harness/executions/E2026-09-09-V0-MVP-R1/human-attention/HA-V0-MVP6-JOURNAL-BASELINE-MERGE-R1.v1.json",
+  "git_blob": "fe94443d75f47b520d6d3a815e5a3219529f7d3d",
+  "reviewed_working_sha256": "1e5e8c644dedd3b07a2fc971a0b5ecdf6600d97321b588c4f93063e973158bfa",
+  "git_bytes_sha256": "e096bf4ad8c07c949141144a7dd5ae1627fd9aa14d442e61a3ff3862e81911aa",
+  "exact_crlf_to_lf_only": true,
+  "json_identical": true,
+  "schema_valid": true,
+  "other_reviewed_git_files": [
+    {
+      "path": "docs/control/mvp-act0-r1/MVP6_JOURNAL_MERGE_HANDOFF_R1_RU.md",
+      "sha256": "900ac6c778d66af5afd18dba00051461f954fee5c5bcd45f4976e7d56c7dc70e",
+      "matches_original_review": true
+    },
+    {
+      "path": "docs/control/mvp-act0-r1/act0-control-evidence-r1/d9706b15/final-manifest.json",
+      "sha256": "52d57028fe334e610205594c4c7b84b03094d40794709963210e8a154e496a97",
+      "matches_original_review": true
+    },
+    {
+      "path": "docs/control/mvp-act0-r1/act0-control-evidence-r1/d9706b15/verifier/result.json",
+      "sha256": "3a8999f8b77cf9a436aeff81b9267a54160f61500cc765bdc0ccf0873b4c1cdf",
+      "matches_original_review": true
+    }
+  ],
+  "original_review_file_sha256": "c0a623aa91b7a2d2da59dbefe3e813932661a713e8e2e91bf813faf5d6c8b5e3",
+  "original_review_unchanged": true,
+  "policy_or_source_changes": false,
+  "merge_authorized": false
+}

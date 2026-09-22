@@ -1,0 +1,32 @@
+{
+  "schema": "distributed_world_simulator.external_code_review_observation.v1",
+  "classification": "ATTRIBUTED_EXTERNAL_CODE_REVIEW_NOT_FORMAL_HARNESS_VERDICT",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "predicate": "MVP_TWO_CLIENT_SHARED_WORLD",
+  "subject_head_sha": "287df80c69840fea7ae9ac0ea69a07581f192d34",
+  "subject_tree_sha": "e591dc6c5346139bc1b4659915c54bf80603713e",
+  "runtime_freeze_ref": "refs/heads/freeze/v0-mvp2-287df80c-r1",
+  "repository": "rootfabric/distributed-world-simulator",
+  "pr_number": 597,
+  "requested_comment_id": 5642087579,
+  "external_author": "chatgpt-codex-connector[bot]",
+  "result_comment_id": 5642117789,
+  "result_created_at_utc": "2026-09-12T00:19:35Z",
+  "result_url": "https://github.com/rootfabric/distributed-world-simulator/pull/597#issuecomment-5642117789",
+  "external_result_text": "Codex Review: Didn't find any major issues. Nice work!",
+  "external_reported_commit": "287df80c69",
+  "summary_comment_id": 5617964635,
+  "summary_status": "Completed",
+  "summary_completed_at_utc": "2026-09-12T00:19:36.466181Z",
+  "formal_harness_review_result_created": false,
+  "formal_independent_verifier_result_created": false,
+  "canonical_reused_consumer_validated": false,
+  "predicate_verified_event_created": false,
+  "notes": [
+    "This record preserves an actual external exact-subject code review. It does not invent checks, reruns, artifact access or a formal PASS absent from that review.",
+    "The prior pending-review index remains immutable historical evidence. This new append-only record reports completion of the requested code review.",
+    "Native manifest and all raw evidence still require byte-exact publication on an evidence/review branch for committed REUSED consumption.",
+    "A formal Reviewer/Verifier decision is still required before non-terminal MVP2 predicate closure. No runtime merge or whole-MVP acceptance is authorized."
+  ]
+}

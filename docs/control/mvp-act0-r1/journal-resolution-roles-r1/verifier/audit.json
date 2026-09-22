@@ -1,0 +1,324 @@
+{
+  "verified_at_utc": "2026-09-16T12:52:21.594320+00:00",
+  "manifest_sha256": "e0cb0b4793b5b89846c0defca471dcd2feb023a8ba7a86af1768d98c8ce27ce8",
+  "manifest_files_verified": 92,
+  "git_files_verified": 92,
+  "subjects": {
+    "feature": {
+      "head": "73b8818184c93986e3313f35f9f4548c608e47e6",
+      "tree": "a1bbe30fd68af5db3a9535bee942683ebe761bc1",
+      "tracked_clean": true,
+      "blobs": {
+        "scripts/network/prediction/predicted_item_interaction_journal.gd": "abdf0c0a335f4e2c968933156fb17f94a7b45bd1",
+        "tests/runtime/test_v0_mvp_6_prediction_rollback.gd": "b86e375ac5cb79ff9463f246e843d09efb9b9e65"
+      }
+    },
+    "main": {
+      "head": "3b82145ae946bb51aebf67f048a28420368b40be",
+      "tree": "6b1b8c9ead5c16d15dc8565813d3abb1bf94d880",
+      "tracked_clean": true,
+      "blobs": {
+        "scripts/network/prediction/predicted_item_interaction_journal.gd": "abdf0c0a335f4e2c968933156fb17f94a7b45bd1",
+        "tests/runtime/test_v0_mvp_6_prediction_rollback.gd": "b86e375ac5cb79ff9463f246e843d09efb9b9e65"
+      }
+    }
+  },
+  "raw_logs": [
+    {
+      "path": "native-exact\\import.log",
+      "pass_assertions": [],
+      "fatal": []
+    },
+    {
+      "path": "native-exact\\mvp3.log",
+      "pass_assertions": [
+        "232"
+      ],
+      "fatal": []
+    },
+    {
+      "path": "native-exact\\mvp5.log",
+      "pass_assertions": [
+        "270"
+      ],
+      "fatal": []
+    },
+    {
+      "path": "native-exact\\native.log",
+      "pass_assertions": [
+        "408"
+      ],
+      "fatal": []
+    },
+    {
+      "path": "native-exact\\prediction_rollback.log",
+      "pass_assertions": [
+        "77"
+      ],
+      "fatal": []
+    },
+    {
+      "path": "native-exact\\security.log",
+      "pass_assertions": [
+        "48"
+      ],
+      "fatal": []
+    },
+    {
+      "path": "main-focused\\bridge.log",
+      "pass_assertions": [
+        "66"
+      ],
+      "fatal": []
+    },
+    {
+      "path": "main-focused\\import.log",
+      "pass_assertions": [],
+      "fatal": []
+    },
+    {
+      "path": "main-focused\\nx6.log",
+      "pass_assertions": [
+        "940"
+      ],
+      "fatal": []
+    },
+    {
+      "path": "main-focused\\rollback.log",
+      "pass_assertions": [
+        "77"
+      ],
+      "fatal": []
+    },
+    {
+      "path": "linux\\unpacked\\journal-linux\\bridge.log",
+      "pass_assertions": [
+        "66"
+      ],
+      "fatal": []
+    },
+    {
+      "path": "linux\\unpacked\\journal-linux\\import.log",
+      "pass_assertions": [],
+      "fatal": []
+    },
+    {
+      "path": "linux\\unpacked\\journal-linux\\nx6.log",
+      "pass_assertions": [
+        "940"
+      ],
+      "fatal": []
+    },
+    {
+      "path": "linux\\unpacked\\journal-linux\\rollback.log",
+      "pass_assertions": [
+        "77"
+      ],
+      "fatal": []
+    },
+    {
+      "path": "nx-serial\\baseline-main-plus-approved-repair-plus-nx\\import.log",
+      "pass_assertions": [],
+      "fatal": []
+    },
+    {
+      "path": "nx-serial\\baseline-main-plus-approved-repair-plus-nx\\test_nx6_predicted_item_interactions.log",
+      "pass_assertions": [
+        "940"
+      ],
+      "fatal": []
+    },
+    {
+      "path": "nx-serial\\baseline-main-plus-approved-repair-plus-nx\\test_nx_client_tick_robustness.log",
+      "pass_assertions": [
+        "25"
+      ],
+      "fatal": []
+    },
+    {
+      "path": "nx-serial\\baseline-main-plus-approved-repair-plus-nx\\test_nx_owner_item_projection_rollback.log",
+      "pass_assertions": [
+        "37"
+      ],
+      "fatal": []
+    },
+    {
+      "path": "nx-serial\\baseline-main-plus-approved-repair-plus-nx\\test_nx_owner_movement_authority.log",
+      "pass_assertions": [
+        "44"
+      ],
+      "fatal": []
+    },
+    {
+      "path": "nx-serial\\baseline-main-plus-approved-repair-plus-nx\\test_nx_render_physics_separation.log",
+      "pass_assertions": [
+        "31"
+      ],
+      "fatal": []
+    },
+    {
+      "path": "nx-serial\\candidate-plus-mvp6-m4\\import.log",
+      "pass_assertions": [],
+      "fatal": []
+    },
+    {
+      "path": "nx-serial\\candidate-plus-mvp6-m4\\test_nx6_predicted_item_interactions.log",
+      "pass_assertions": [
+        "940"
+      ],
+      "fatal": []
+    },
+    {
+      "path": "nx-serial\\candidate-plus-mvp6-m4\\test_nx_client_tick_robustness.log",
+      "pass_assertions": [
+        "25"
+      ],
+      "fatal": []
+    },
+    {
+      "path": "nx-serial\\candidate-plus-mvp6-m4\\test_nx_owner_item_projection_rollback.log",
+      "pass_assertions": [
+        "37"
+      ],
+      "fatal": []
+    },
+    {
+      "path": "nx-serial\\candidate-plus-mvp6-m4\\test_nx_owner_movement_authority.log",
+      "pass_assertions": [
+        "44"
+      ],
+      "fatal": []
+    },
+    {
+      "path": "nx-serial\\candidate-plus-mvp6-m4\\test_nx_render_physics_separation.log",
+      "pass_assertions": [
+        "31"
+      ],
+      "fatal": []
+    },
+    {
+      "path": "linux\\unpacked\\journal-nx-linux\\baseline-main-plus-approved-repair-plus-nx\\import.log",
+      "pass_assertions": [],
+      "fatal": []
+    },
+    {
+      "path": "linux\\unpacked\\journal-nx-linux\\baseline-main-plus-approved-repair-plus-nx\\test_nx6_predicted_item_interactions.log",
+      "pass_assertions": [
+        "940"
+      ],
+      "fatal": []
+    },
+    {
+      "path": "linux\\unpacked\\journal-nx-linux\\baseline-main-plus-approved-repair-plus-nx\\test_nx_client_tick_robustness.log",
+      "pass_assertions": [
+        "25"
+      ],
+      "fatal": []
+    },
+    {
+      "path": "linux\\unpacked\\journal-nx-linux\\baseline-main-plus-approved-repair-plus-nx\\test_nx_owner_item_projection_rollback.log",
+      "pass_assertions": [
+        "37"
+      ],
+      "fatal": []
+    },
+    {
+      "path": "linux\\unpacked\\journal-nx-linux\\baseline-main-plus-approved-repair-plus-nx\\test_nx_owner_movement_authority.log",
+      "pass_assertions": [
+        "44"
+      ],
+      "fatal": []
+    },
+    {
+      "path": "linux\\unpacked\\journal-nx-linux\\baseline-main-plus-approved-repair-plus-nx\\test_nx_render_physics_separation.log",
+      "pass_assertions": [
+        "31"
+      ],
+      "fatal": []
+    },
+    {
+      "path": "linux\\unpacked\\journal-nx-linux\\candidate-plus-mvp6-m4\\import.log",
+      "pass_assertions": [],
+      "fatal": []
+    },
+    {
+      "path": "linux\\unpacked\\journal-nx-linux\\candidate-plus-mvp6-m4\\test_nx6_predicted_item_interactions.log",
+      "pass_assertions": [
+        "940"
+      ],
+      "fatal": []
+    },
+    {
+      "path": "linux\\unpacked\\journal-nx-linux\\candidate-plus-mvp6-m4\\test_nx_client_tick_robustness.log",
+      "pass_assertions": [
+        "25"
+      ],
+      "fatal": []
+    },
+    {
+      "path": "linux\\unpacked\\journal-nx-linux\\candidate-plus-mvp6-m4\\test_nx_owner_item_projection_rollback.log",
+      "pass_assertions": [
+        "37"
+      ],
+      "fatal": []
+    },
+    {
+      "path": "linux\\unpacked\\journal-nx-linux\\candidate-plus-mvp6-m4\\test_nx_owner_movement_authority.log",
+      "pass_assertions": [
+        "44"
+      ],
+      "fatal": []
+    },
+    {
+      "path": "linux\\unpacked\\journal-nx-linux\\candidate-plus-mvp6-m4\\test_nx_render_physics_separation.log",
+      "pass_assertions": [
+        "31"
+      ],
+      "fatal": []
+    }
+  ],
+  "independent_runs": [
+    {
+      "argv": [
+        "C:\\Godot\\godot\\bin\\godot.windows.editor.double.x86_64.console.exe",
+        "--headless",
+        "--path",
+        "C:\\distributed-world-simulator\\worktrees\\mvp6-journal-exact-73b88181",
+        "--script",
+        "res://tests/runtime/test_v0_mvp_6_prediction_rollback.gd"
+      ],
+      "exit_code": 0,
+      "assertions": 77,
+      "log_sha256": "70b2f5a3e56fd9e1ba73d342dbbc0ea28597a55f209f06128494049dd3a8f5cb"
+    },
+    {
+      "argv": [
+        "C:\\Godot\\godot\\bin\\godot.windows.editor.double.x86_64.console.exe",
+        "--headless",
+        "--path",
+        "C:\\distributed-world-simulator\\worktrees\\mvp6-journal-exact-73b88181",
+        "--script",
+        "res://tests/network/test_nx6_predicted_item_interactions.gd"
+      ],
+      "exit_code": 0,
+      "assertions": 940,
+      "log_sha256": "21d6fb98e60f04b2c23ce4adeb30d68b3071d744405228c645d55a00e0f87ac6"
+    },
+    {
+      "argv": [
+        "C:\\Godot\\godot\\bin\\godot.windows.editor.double.x86_64.console.exe",
+        "--headless",
+        "--path",
+        "C:\\distributed-world-simulator\\worktrees\\mvp6-journal-exact-73b88181",
+        "--script",
+        "res://tests/network/test_nx6_predicted_item_interactions_integration.gd"
+      ],
+      "exit_code": 0,
+      "assertions": 66,
+      "log_sha256": "44e2d644d14f9adb5bcb47111399191e82ca68bb592af504cb650b42041c82b5"
+    }
+  ],
+  "mvp6_accepted": false,
+  "merge_ready": false,
+  "full_world_core": "PENDING_SEPARATE_ADDENDUM"
+}

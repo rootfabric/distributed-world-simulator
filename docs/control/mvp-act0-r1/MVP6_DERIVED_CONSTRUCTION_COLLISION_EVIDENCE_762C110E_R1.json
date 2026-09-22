@@ -1,0 +1,92 @@
+{
+  "schema": "distributed_world_simulator.mvp6_derived_construction_collision_evidence.v1",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "work_order": "V0-MVP-R1-WO-001",
+  "checkpoint": "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE",
+  "work_state": "IN_PROGRESS",
+  "predicate": "MVP6_CONSTRUCTION_COLLISION_PRESENT",
+  "subject": {
+    "head": "762c110e94e19acc5ef9d735c170f15cc55f51cd",
+    "tree": "fa8f8d3d81d781cf74677dc9d941108d20c4bb80",
+    "branch": "feature/v0-mvp-playable-seamless-planet-r1"
+  },
+  "exact_execution": {
+    "workflow": "MVP6 Item Construction Exact",
+    "run_id": 35216103526,
+    "run_number": 91,
+    "job_id": 105184834380,
+    "conclusion": "success",
+    "platform": "ubuntu-24.04",
+    "godot_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+    "artifact_id": 10495046831,
+    "artifact_name": "mvp6-seam-repro-762c110e94e19acc5ef9d735c170f15cc55f51cd-35216103526-1",
+    "artifact_zip_sha256": "dd84ec213710a06d66e6b27f850f1168b5c44fd82ee6d100b6fd1a6e22c8f5d7",
+    "manifest_members": 13,
+    "manifest_rehash_mismatches": 0
+  },
+  "controls": {
+    "diagnostic_passed": true,
+    "cross_authority_product_passed": true,
+    "cross_authority_product_assertions": 211,
+    "cross_authority_product_failures": 0,
+    "base_part_count": 100,
+    "add_part_count": 101,
+    "remove_part_count": 100
+  },
+  "derived_collision_gate": {
+    "passed": true,
+    "assertions": 228,
+    "failures": 0,
+    "derived_presentation_executed": true,
+    "derived_collision_executed": true,
+    "physics_server_hit_executed": true,
+    "removed_leaf_collision_absent": true,
+    "added_leaf_physics_hits": 1,
+    "removed_leaf_physics_hits": 0,
+    "retained_part_physics_hits": 1,
+    "static_body_rid_valid": true,
+    "same_runtime_body_across_remove": true,
+    "removed_leaf_body_hit": false,
+    "retained_body_hit": true,
+    "source_construct_checksum_after_remove": "c2a087e8b7e84d4d56828721ae62b945263d9dd89bc11e121b40405667ee4d21",
+    "derived_descriptor_checksum_after_remove": "927605e58dfc819e75e06027b55f896c4701c3d220c63f4b26b2d9e6baeb2050",
+    "derived_world_checksum_after_remove": "e8dad322457bad53c2687d94766ad040c79b78988f8f0f1d6fcd868eb5105cee",
+    "presentation_generation": 2,
+    "direct_authority_references": 0,
+    "canonical_truth_owner": false
+  },
+  "implementation": {
+    "derived_view": "scripts/runtime/networked_gameplay/mvp/v0_mvp6_derived_construction_runtime_view.gd",
+    "collision_test": "tests/runtime/test_v0_mvp_6_cross_authority_construction_collision.gd",
+    "canonical_projection_reused": "scripts/construction/runtime_projection/construction_runtime_projection_synchronizer.gd",
+    "canonical_physics_node_reused": "scripts/construction/runtime_projection/construction_runtime_construct_node.gd",
+    "new_canonical_authority": false,
+    "new_physics_truth_owner": false
+  },
+  "repair_history": [
+    {
+      "head": "283a8adc029c8a7c0a85d984e12f6ab210635b2d",
+      "run_id": 35215862318,
+      "result": "FAIL_COMPILE_ONLY",
+      "cause": "GDScript could not infer added_body_rid type",
+      "native_controls_passed": true,
+      "product_controls_passed": true
+    },
+    {
+      "head": "762c110e94e19acc5ef9d735c170f15cc55f51cd",
+      "run_id": 35216103526,
+      "result": "PASS",
+      "repair": "explicit RID type annotation only"
+    }
+  ],
+  "non_claims": {
+    "graphical_five_process_executed": false,
+    "full_world_core_executed": false,
+    "mvp6_cross_authority_construction_seam_verified": false,
+    "mvp6_predicate_verified": false,
+    "independent_verdict": false,
+    "main_merge": false,
+    "whole_mvp_acceptance": false
+  },
+  "next_required_gate": "MVP6_GRAPHICAL_FIVE_PROCESS_A_B_GATEWAY_CLIENT_A_CLIENT_B"
+}

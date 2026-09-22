@@ -1,0 +1,9 @@
+{
+  "run_id": 35097654348,
+  "artifact_id": 10446937610,
+  "zip_sha256": "afd5aeac91fd73e893fb569cc11a46a49c15673244c79c0a1dcd2e661160c1cd",
+  "verified_download": true,
+  "validation_head": "804d306e",
+  "main_runtime_head": "3b82145ae946bb51aebf67f048a28420368b40be",
+  "feature_head": "73b8818184c93986e3313f35f9f4548c608e47e6"
+}

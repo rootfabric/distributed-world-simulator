@@ -1,0 +1,82 @@
+{
+  "schema": "distributed_world_simulator.bounded_repair_work_order.v1",
+  "repair_id": "V0-MVP3-R12-FRESH-CLOSURE-DEFECTS",
+  "parent_work_order_id": "V0-MVP-R1-WO-001",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "base_sha": "6a750d859d5858ff1f2d76bbf2ef7664a893ee86",
+  "base_tree": "fb948fae078a1a372009f5f1ea00ad5440492610",
+  "branch": "feature/v0-mvp-playable-seamless-planet-r1",
+  "frozen_base_ref": "freeze/v0-mvp3-6a750d85-r1",
+  "state": "IN_PROGRESS",
+  "role": "IMPLEMENTER",
+  "independent_context": false,
+  "authorization": "User explicitly requested frozen candidate -> fresh review -> repair only real defects -> fresh independent verification -> exact graphical/manual evidence -> non-terminal MVP3 closure. Existing human live-player-hook authorization remains valid. No runtime/main merge or whole-MVP acceptance.",
+  "failure_evidence": {
+    "fresh_review_id": 5189336736,
+    "reviewed_head": "6a750d859d5858ff1f2d76bbf2ef7664a893ee86",
+    "review_state": "COMMENTED_WITH_REQUIRED_FIXES",
+    "p1_comment_ids": [3998546150, 3998546153, 3998546158, 3998546162],
+    "p2_comment_ids": [3998546165],
+    "run_id": 34734994571,
+    "run_url": "https://github.com/rootfabric/distributed-world-simulator/actions/runs/34734994571",
+    "ci_subject_is_frozen_base_not_carrier": true,
+    "artifacts": [
+      {"lane": "control", "artifact_id": 10310228831, "sha256": "88b138f90555424f5b3db04b8946caa70b5737ff6231a266213c7758f7e874fd", "indexed_members_rehashed": 15, "hash_mismatches": 0},
+      {"lane": "graphical", "artifact_id": 10310204035, "sha256": "23797508d2c2da442e2dcbbd1f66cb73810abff1009eeec270780b8a2201f4e1", "indexed_members_rehashed": 37, "hash_mismatches": 0},
+      {"lane": "world-core", "artifact_id": 10311125914, "sha256": "8132b86e93880d8bf0bbb0fc3b2e6fed924d38b811f4abc90f32d1e782ef360f", "indexed_members_rehashed": null}
+    ],
+    "observations": [
+      "Fresh Reviewer: graphical build_world makes a standalone flat BoxMesh lab, not the accepted shared planetary composition.",
+      "Fresh Reviewer: MOVE delegates immediate MOVEMENT_DELTA; advancing a scheduler separately does not drive movement through simulate_fixed_movement_tick.",
+      "Fresh Reviewer: predecessor local evidence has only hashes with no retrievable bytes; automatic manual-launcher regression is not a manual input run.",
+      "Fresh Reviewer: mvp3-exact-validation.yml invokes older one-actor/observer RUN_V0_MVP_SEAM.py, not the new M3 five-process path.",
+      "Full Harness ran 333 tests with one ERROR: test_live_train_preserves_mvp1_and_matches_current_snapshot -> EVENT_SEQUENCE_NOT_UNIQUE. Plan=0, Drive=0, CloseRole=7, CloseMission=8; these do not negate the failed regression.",
+      "Exact Linux graphical run reached A input sequence 20 but failed first transfer: native target stage -> MVP3_BACKEND_DISCONNECTED. Authority B received only INIT then reported MVP3_GATEWAY_DISCONNECTED. Native fast three-process gate passed. Investigate servicing idle backend ENet boundaries; do not merely increase deadlines or reconnect.",
+      "Canonical world/core wrapper stopped after import at RUN_WORLD_REGRESSION_TESTS.ps1:331 Get-Item of dot-prefixed temporary summary file. Full runtime suites did not execute. Check Linux hidden-file semantics with a bounded positive/negative reproduction before changing this preexisting tooling."
+    ]
+  },
+  "repair_map": {
+    "canonical_owners": "P7/accepted bootstrap surface owns terrain truth; existing M3 Service owns player/input/replay; accepted NX fixed-tick simulation owns movement; P6/SM1 own identity/authority transfer. Reuse, do not duplicate owners.",
+    "required_fixes": [
+      {"id": "R12-01", "source": 3998546150, "fix": "Compose the accepted MVP1/MVP2/P7 presentation donor through its public read-only surface route; remove standalone flat-ground substitution. Test donor identity and fail when absent."},
+      {"id": "R12-02", "source": 3998546153, "fix": "Bind the live interactive movement path to existing canonical fixed server ticks; deterministic input sequencing and successful-only replay completion must survive freeze/activate. Preserve prior standalone APIs. Prove packet/key frequency does not become unbounded displacement and frozen source cannot advance actor movement."},
+      {"id": "R12-03", "source": 3998546158, "fix": "Publish raw exact-candidate logs, reports, real viewport captures and manifest in retrievable immutable GitHub artifacts with run ID, artifact ID, engine hash and per-file hashes; verify exact new subject. Record keyboard/manual execution separately and truthfully."},
+      {"id": "R12-04", "source": 3998546162, "fix": "Wire repository-owned exact CI to the real native five-process graphical launcher; retain clearly labeled legacy diagnostic coverage but do not substitute it for the product."},
+      {"id": "R12-05", "source": 3998546165, "fix": "Make live-ledger regression consume the production reconciliation selector; keep all historical event bytes and rejection of unapproved duplicate sequences. Add negative control for altered quarantine pins."},
+      {"id": "R12-06", "source": "34734994571/graphical", "fix": "Reproduce idle target link failure beyond heartbeat timeout and maintain polling/service of every existing backend link even while another RPC is active. No reconnect, invented counters or timeout-only fix. Re-run real five-process route and an idle-then-cross control."},
+      {"id": "R12-07", "source": "34734994571/world-core", "fix": "Confirm and minimally fix canonical summary publisher portability if caused by hidden temp-file lookup; preserve symlink checks, atomic replace, exact bytes and failure behavior. Run canonical full world/core, not a substitute subset."}
+    ],
+    "not_symptom_patch": "Do not weaken assertions, make simulated input count as manual human evidence, restore a whole world to transfer one actor, fabricate hashes/verdicts, or stop at Plan=0. Existing evidence remains historical; repaired subject requires fresh review.",
+    "scope_limits": "No new gameplay beyond MVP3; no MVP4 items, shared digging or persistence feature work. Do not add a new network/player/Item/Matter authority. Optional aesthetics/performance features excluded."
+  },
+  "allowed_paths": [
+    "scripts/runtime/networked_gameplay/mvp/**",
+    "scripts/runtime/networked_gameplay/networked_gameplay_service_p2.gd",
+    "scenes/labs/mvp/**",
+    "tests/integration/test_v0_mvp3_*",
+    "tests/runtime/test_v0_mvp3_*",
+    "tests/harness/test_v0_mvp_nonterminal_predicate_r13.py",
+    "tests/harness/test_v0_mvp_event_ledger_reconciliation.py",
+    "tests/harness/test_mvp3_closure_*",
+    "RUN_V0_MVP*",
+    "RUN_WORLD_REGRESSION_TESTS.ps1",
+    ".github/workflows/mvp3-exact-validation.yml",
+    ".github/workflows/mvp3-live-player-validation.yml",
+    "docs/control/mvp-act0-r1/**",
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/events/V0-MVP-R1-WO-001/0011-mvp3-r12-*.v1.json",
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/supporting-evidence/MVP3-R12-*.v1.json"
+  ],
+  "forbidden_paths": ["project.godot", "addons/**", "config/architecture/**", "config/control/architecture-ownership.v1.json", "config/control/harness/acceptance/**", "scripts/harness/event_reducer.py", "scripts/runtime/networked_gameplay/sm1/**", "scripts/network/**"],
+  "required_validation": [
+    "Confirm original failure controls before each repair, then focused positive and adversarial controls.",
+    "Exact approved Godot import plus all native live-owner and SM1 tests.",
+    "Real graphical five-process automatic route, independent A/B input, movement on target and after return, immutable identity/session/body/camera continuity; distinguish observed actor-A route from actor-B own transfer.",
+    "Actual keyboard/manual route through approved Breakpoint MCP or documented human execution; never OS-injected keyboard scripts, never claim it from automatic run.",
+    "Full Harness, audited MVP1/MVP2 regression, canonical full world/core, standard and directional PC0. Preserve and explain every FAIL.",
+    "Fresh exact Reviewer, then separate fresh Independent Verifier; no Implementer self-acceptance."
+  ],
+  "runtime_merge_authorized": false,
+  "main_merge_authorized": false,
+  "mvp3_predicate_verified": false,
+  "whole_mvp_acceptance": false
+}

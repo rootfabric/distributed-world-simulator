@@ -1,0 +1,21 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-09-09-V0-MVP-R1-V0-MVP-R1-WO-001-0011",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "sequence": 11,
+  "event_type": "IMPLEMENTATION_COMMITTED",
+  "work_state": "IN_PROGRESS",
+  "recorded_at_utc": "2026-09-13T02:42:55Z",
+  "actor": "IMPLEMENTER",
+  "branch": "feature/v0-mvp-playable-seamless-planet-r1",
+  "head_sha": "e0fafdfed4711fe9e43d728f15a5a19869151320",
+  "predicate": "MVP3_GRAPHICAL_PROCESS_ROUNDTRIP_IMPLEMENTATION",
+  "command": ".\\RUN_V0_MVP3_GRAPHICAL_ROUNDTRIP.ps1",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/supporting-evidence/MVP3-GRAPHICAL-PROCESS-ROUNDTRIP-E0FAFDFE-R1.v1.json",
+    "docs/control/mvp-act0-r1/work-order-mvp3-graphical-process-roundtrip-r11.v1.json"
+  ],
+  "summary": "Exact Windows double-Godot run proves a five-process graphical implementation with two native owners, stable gateway and client sessions, independent A/B input, A authority/a -> authority/b -> authority/a handoff, stable body/camera instances, clean exits and two real viewport captures. This event records Implementer evidence only; MVP3 remains unverified and merge is not authorized."
+}

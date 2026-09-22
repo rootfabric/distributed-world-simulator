@@ -1,0 +1,23 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-09-09-V0-MVP-R1-V0-MVP-R1-WO-001-0016-MVP5-LIVE-BASELINE-BINDING",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "sequence": 16,
+  "event_type": "IMPLEMENTATION_COMMITTED",
+  "work_state": "IN_PROGRESS",
+  "recorded_at_utc": "2026-09-14T11:11:33Z",
+  "actor": "DIRECTOR",
+  "branch": "feature/v0-mvp-playable-seamless-planet-r1",
+  "head_sha": "1ddc75f4edfd1fbd307b303ad49ebcb9403c6963",
+  "predicate": "MVP5_LIVE_BASELINE_BINDING_APPLIED",
+  "command": "BIND_MVP5_BRIEF_TO_V0_MVP_LIVE_SIMULATOR_BASELINE_R1",
+  "exit_code": 0,
+  "evidence_paths": [
+    "docs/control/mvp-act0-r1/MVP5_IMPLEMENTATION_R1_RU.md",
+    "docs/control/mvp-act0-r1/MVP_LIVE_SIMULATOR_BASELINE_R1_RU.md",
+    "docs/control/mvp-act0-r1/mvp-live-simulator-baseline-r1.v1.json",
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/work-orders/V0-MVP-R1-WO-001.v1.json"
+  ],
+  "summary": "Текущий MVP5 brief явно связан с принятым live simulator baseline. Закрытие MVP5 требует live tool-gated dig to canonical output, exactly-once replay proof и отсутствие второй item identity; backend-only receipt, synthetic mutation или local HUD truth не засчитываются. MVP6+ scope не втягивается в MVP5, но остаётся обязательным для parent whole-MVP acceptance."
+}

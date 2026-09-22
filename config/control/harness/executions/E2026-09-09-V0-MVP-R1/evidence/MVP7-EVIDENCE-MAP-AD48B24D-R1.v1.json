@@ -1,0 +1,85 @@
+{
+  "schema": "distributed_world_simulator.harness_evidence_map.v1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "program": "V0",
+  "checkpoint": "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE",
+  "risk_class": "CRITICAL",
+  "evidence_head_sha": "ad48b24d8cde350db8c26adb958d9a0d62c6ff56",
+  "intent": "Close MVP7 reconnect/restart as a bounded leaf of the still-open playable seamless planet Work Order: recover terrain, canonical Item/inventory/equipment/world identities, shared-container durable state, Construction/collision and required dedup state across real process restart; then replace one graphical client with a fresh ENet peer, resync current world state and continue fixed-tick control without changing canonical ownership.",
+  "root_cause_or_reason": "MVP6 proved live Item/Construction composition and in-process rehydration but explicitly did not prove real process restart or fresh transport reconnect. MVP7 adds orchestration around accepted M6/M4/MW5/M0/C17 owners plus a live reconnect gate; it does not add a new canonical owner.",
+  "changed_surfaces": [
+    "scripts/runtime/networked_gameplay/mvp/v0_mvp7_*",
+    "tests/runtime/test_v0_mvp_7_*",
+    "tests/integration/test_v0_mvp_7_graphical_reconnect.py",
+    "docs/control/mvp-act0-r1/validate_mvp7_native.py",
+    ".github/workflows/mvp6-native-prerequisite-diagnostic.yml",
+    "docs/control/mvp-act0-r1/MVP7_IMPLEMENTATION_R1_RU.md",
+    "docs/control/mvp-act0-r1/MVP7_NATIVE_RECOVERY_R1_EVIDENCE_RU.md"
+  ],
+  "canonical_owner": "Gameplay/replay persistence remains M6 AuthoritativeRecoveryRepository/Coordinator; item/inventory/equipment/world identity remains canonical M4 Item Graph; terrain/material persistence remains MW5 MatterStateCoordinator and P7 material delivery owner; Construction remains M0 authoritative adapter + C17 single-writer authority; Gateway remains routing/presentation coordination only.",
+  "entry_points": [
+    "v0_mvp7_gameplay_service.gd seal_recovery_cut7/export_durable_state",
+    "v0_mvp7_matter_gameplay_authority_adapter.gd prepare_checkpoint7/restore_recovery_state",
+    "v0_mvp7_shared_dig_authority.gd seal_and_save_matter7/restore_matter7/authorize_committed_replay7",
+    "v0_mvp7_recovery_coordinator.gd recover_latest",
+    "test_v0_mvp_7_quiescent_recovery.gd",
+    "test_v0_mvp_7_matter_restart.gd",
+    "test_v0_mvp_7_construction_restart.gd",
+    "v0_mvp7_reconnect_gateway_process.gd + v0_mvp7_reconnect_client.gd",
+    "test_v0_mvp_7_graphical_reconnect.py"
+  ],
+  "callers": [
+    "MVP7 exact Linux recovery validation",
+    "MVP7 fresh graphical reconnect integration gate",
+    "future MVP8 bounded interactive workload composition"
+  ],
+  "callees": [
+    "M6 dedicated gameplay authority adapter and durable replay outbox",
+    "canonical M4 multiplayer Item Graph service",
+    "MW5 Matter persistence repository/coordinator",
+    "M0 Construction persistence bridge and authoritative adapter",
+    "C17 distributed Construction authority cluster",
+    "existing MVP3-MVP6 ENet gateway/authority/client process protocol"
+  ],
+  "sibling_surfaces_checked": [
+    "MVP3 live owner handoff regression PASS on exact ad48b24d",
+    "MVP5 exactly-once material regression PASS on exact ad48b24d",
+    "MVP6 Construction persistence regression PASS on exact ad48b24d",
+    "three gameplay recovery PIDs distinct with two persisted generations",
+    "three world/MW5 recovery PIDs distinct with exact store/state checksum continuity",
+    "three Construction recovery PIDs distinct with exact M4/M0/C17 checksum and collision continuity",
+    "fresh sixth graphical client receives current terrain/material/Construction and continues movement",
+    "13 MVP6 graphical negative controls plus 7 MVP7 reconnect negative controls rejected",
+    "authority backend connections remain one connect/zero disconnect through reconnect evidence"
+  ],
+  "canonical_truth_changed": false,
+  "architecture_ownership_changed": false,
+  "focused_validation": "PASS",
+  "full_regression": "NOT_REQUIRED",
+  "pc0": "NOT_RUN",
+  "directional_pc0": "NOT_RUN",
+  "production_diff_summary": "MVP7 introduces only bounded recovery/reconnect composition in the existing MVP namespace. Durable recovery is checkpoint-based and exact-head bound. Backend liveness sends read-only SYNC traffic rather than widening timeout/reconnect policy. Fresh client reconnect is admitted only after the original client finishes; current state is read from canonical owners and Construction collision is derived locally.",
+  "remaining_risks": [
+    "Fresh independent Reviewer PASS is pending on exact frozen ad48b24d/f306e84e.",
+    "Fresh independent Verifier PASS is pending; repository-owned CI may supply machine evidence but implementer execution is not itself the verdict.",
+    "Exact-head full world/core and standard/directional PC0 closure evidence remain pending before MVP7 leaf can be durably marked verified.",
+    "Restart claim is acknowledged-quiescent-checkpoint recovery, not arbitrary power-loss of uncheckpointed operations.",
+    "MVP8 still must prove the connected bounded interactive workload including reconnect/restart and bounded queues/replay state."
+  ],
+  "required_fixes": [],
+  "rank_up_moves": [
+    "Run fresh read-only Reviewer against freeze/v0-mvp7-review-ad48b24d-r1.",
+    "Run fresh Verifier on the same exact head/tree and bind artifact digests.",
+    "Run exact full world/core and PC0/directional PC0 before Director leaf verdict.",
+    "After MVP7 leaf verification, continue parent Work Order to MVP8 without changing the frozen MVP7 product subject."
+  ],
+  "evidence_gaps": [
+    "INDEPENDENT_REVIEWER_PASS pending",
+    "INDEPENDENT_VERIFIER_PASS pending",
+    "FULL_WORLD_CORE_REGRESSION_PASS for MVP7 closure pending",
+    "STANDARD_PC0_NON_RED pending",
+    "DIRECTIONAL_PC0_NON_RED_FOR_CRITICAL_HITS pending",
+    "MVP_RECONNECT_AND_RESTART Director leaf verdict pending"
+  ],
+  "review_verdict": "PASS"
+}

@@ -1,0 +1,21 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-09-09-V0-MVP-R1-V0-MVP-R1-WO-001-0011-MVP3-VERIFIED",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "sequence": 11,
+  "event_type": "PREDICATE_VERIFIED",
+  "work_state": "IN_PROGRESS",
+  "recorded_at_utc": "2026-09-13T11:35:53Z",
+  "actor": "VERIFIER",
+  "branch": "feature/v0-mvp-playable-seamless-planet-r1",
+  "head_sha": "f1d453fb2af49231c30bdc5cbe415ad199394446",
+  "predicate": "MVP_SEAM_NO_RECONNECT_OR_RESPAWN",
+  "command": "MVP3_R13B_FRESH_INDEPENDENT_VERIFIER_R3_AND_EXACT_EVIDENCE_REDUCTION",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/verifications/MVP3-INDEPENDENT-VERIFICATION-F1D453FB-R3.v1.json",
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/supporting-evidence/MVP3-R13B-CLOSURE-EVIDENCE-F1D453FB-R1.v1.json"
+  ],
+  "summary": "MVP3 seam predicate verified for the frozen R13b product: real two-client five-process A->B->A continuity, actual fixed-tick post-activation movement on B and after return A, independent B movement, stable identity/session/entity/body/camera/spawn, zero reconnect/respawn/identity replacement, immutable P7 projection, fail-closed negative controls, exact full world/core regression and independently manifest-bound Windows physical-keyboard evidence. Carry scope remains EMPTY_ONLY. This closes only the MVP3 leaf predicate; parent V0-MVP-R1-WO-001 remains IN_PROGRESS. No whole-MVP acceptance, runtime merge, PR merge or main merge is authorized."
+}

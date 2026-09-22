@@ -1,0 +1,66 @@
+{
+  "schema": "distributed_world_simulator.reviewer_bounded_evidence_manifest.v1",
+  "feature_head": "84ab0c0fba87f12dcfc94e32bb9cfa4eb8abb481",
+  "feature_tree": "f7e3f255bcc4878f3e738e011e3d45bf3edcdb81",
+  "baseline_head": "6982a563dd0c88c81449566131852c601ae89868",
+  "baseline_tree": "97c61acc96f507d71b6883fbdeef486c08b1113d",
+  "runner": "LOCAL_WINDOWS_CANONICAL_DOUBLE_GODOT",
+  "engine_sha256": "3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5",
+  "files": [
+    {
+      "bytes": 2368,
+      "sha256": "519e12f5d97232c199c3d06b0beff6282d4966dff887730ad1c881ecbea7f850",
+      "path": "construction-fixture-exact-84ab0c0f/summary.json"
+    },
+    {
+      "bytes": 513253,
+      "sha256": "b1f5a14a9dbc7d47078759458481cf3629deb09f03cbda27e5c4a104b14451de",
+      "path": "construction-fixture-exact-84ab0c0f/construction.json"
+    },
+    {
+      "bytes": 186,
+      "sha256": "4d59b75d417bda9abb66de8b7e60e28eae6639ec1f7f4b8022af2eec12da0705",
+      "path": "construction-fixture-exact-84ab0c0f/construction.log"
+    },
+    {
+      "bytes": 171,
+      "sha256": "8bbce5ebf3c41306d0d1edd67fdd606db9ce6886fe6aba81edf48c894a4e9967",
+      "path": "construction-fixture-exact-84ab0c0f/p4.log"
+    },
+    {
+      "bytes": 760,
+      "sha256": "70b2f5a3e56fd9e1ba73d342dbbc0ea28597a55f209f06128494049dd3a8f5cb",
+      "path": "construction-fixture-exact-84ab0c0f/rollback.log"
+    },
+    {
+      "bytes": 2870,
+      "sha256": "d79ad9ab1aff0a1e2fbf6cd6859871255f230b7689d016e5c33f146f2b696fcc",
+      "path": "validate_construction_fixture.py"
+    },
+    {
+      "bytes": 2388,
+      "sha256": "d9b8bbd15d07dc4bc1afc3d4c6941de4270143b1cc44f21d77e8eb46fb8a6f66",
+      "path": "world-canonical-baseline/provenance.json"
+    },
+    {
+      "bytes": 102348,
+      "sha256": "87659381d75324e432bac4f24416284857cbfffe829de375fee298f1728d0acb",
+      "path": "world-canonical-baseline/import.log"
+    },
+    {
+      "bytes": 28669,
+      "sha256": "87909957f94eb64adc54e46d9f8841b7f55517062e45ac8cf309f5fa8ea7d51d",
+      "path": "world-canonical-baseline/test_m5_graphical_multiplayer_acceptance.log"
+    },
+    {
+      "bytes": 193496,
+      "sha256": "92fc9f4be321467c974f9ddbc364e5e486e72ea829d03943e892d3b42a8f007e",
+      "path": "world-canonical-baseline/test_m6_dedicated_recovery_contracts.log"
+    },
+    {
+      "bytes": 2170,
+      "sha256": "764959428f8884a7cb932a90240f08e67842f01b228b637797bbe4efc575ecf4",
+      "path": "run_exact_baseline_diagnostics.py"
+    }
+  ]
+}

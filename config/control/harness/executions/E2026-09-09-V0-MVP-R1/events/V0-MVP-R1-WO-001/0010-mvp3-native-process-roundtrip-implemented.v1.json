@@ -1,0 +1,21 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-09-09-V0-MVP-R1-V0-MVP-R1-WO-001-0010",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "sequence": 10,
+  "event_type": "IMPLEMENTATION_COMMITTED",
+  "work_state": "IN_PROGRESS",
+  "recorded_at_utc": "2026-09-13T02:18:00Z",
+  "actor": "IMPLEMENTER",
+  "branch": "feature/v0-mvp-playable-seamless-planet-r1",
+  "head_sha": "c2f5ed6a226f39db64f3411bec29a0a7615be0b8",
+  "predicate": "MVP3_NATIVE_PROCESS_ROUNDTRIP_SUBGATE",
+  "command": ".\\RUN_V0_MVP3_NATIVE_ROUNDTRIP.ps1",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/supporting-evidence/MVP3-NATIVE-PROCESS-ROUNDTRIP-C2F5ED6A-R1.v1.json",
+    "docs/control/mvp-act0-r1/work-order-mvp3-native-process-roundtrip-r10.v1.json"
+  ],
+  "summary": "Exact Windows double-Godot run proves one gateway and two distinct native M3 authority processes execute four real player transfers with independent input, stable P6/SM1 identity and replay, no reconnect/respawn/rebind, no Item Graph transfer and clean process exits. This is a non-graphical implementation subgate; MVP3 is not verified or accepted."
+}

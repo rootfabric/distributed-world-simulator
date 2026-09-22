@@ -1,0 +1,53 @@
+{
+  "schema": "distributed_world_simulator.mvp6_postclearance_focused_evidence.v1",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "checkpoint": "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE",
+  "subject_head": "708375f9fd5537bbd6b32800d2f1c88bf61e77e2",
+  "subject_tree": "f3558b03bc629443450d40bf258dbc1eab29ed15",
+  "canonical_main": "99e8efe2422e02fedec40778e12748611d68fb5f",
+  "workflow_run": 35191541822,
+  "job_id": 105104992714,
+  "job_conclusion": "success",
+  "artifact_id": 10483089641,
+  "artifact_zip_sha256": "dd9ff7f80b9621dae664c42ab6a1f47c35361fec6f627afa9fdeb1f47ac672f6",
+  "manifest_sha256": "f4ca4b81c63dd83c6b519206fa4d9e9263f2039539455184ca7edcebaf3b507f",
+  "manifest_members_rehashed": 29,
+  "manifest_mismatches": [],
+  "native_summary_sha256": "cce6dfedf06ec65546e8a7bd286ebe2d5484882c6a2564fa518f920284925f0d",
+  "construction_result_sha256": "c91e7f762bf68ba0fa5ec0f11e97764e360af9c0278da1dc4b689d5d99cf7d77",
+  "drive_before_sha256": "459849ed2ed2f3ccd864ca36c0cfdd574f3e2e4bdc54ce375bbe6231536596a5",
+  "native": {
+    "passed": true,
+    "assertions": {"native": 408, "security": 48, "mvp3": 232, "mvp5": 270},
+    "total_assertions": 958,
+    "failures": 0
+  },
+  "construction": {
+    "passed": true,
+    "assertions": 223,
+    "failures": 0,
+    "native_nonempty_carry_executed": true,
+    "real_resource_construction_executed": true,
+    "two_client_derived_replication_executed": true,
+    "construction_collision_present": true,
+    "mvp6_predicate_verified": false
+  },
+  "canonical_pc0": {"standard": "YELLOW", "directional": "YELLOW"},
+  "epoch_validation": {
+    "status": "MAIN_MOVED_AUDIT_CONTINUE",
+    "action": "CONTINUE",
+    "reason": "RECORDED_AUDIT_PERMITS_CONTINUATION"
+  },
+  "controller": {
+    "continuation_blocked": false,
+    "human_decision_required": false,
+    "hard_blocked": false,
+    "next_actor": "INTEGRATOR",
+    "next_action": "CONTINUE_ACTIVE_WORK_ORDER_TO_IMPLEMENTED_AND_VALIDATED"
+  },
+  "cross_authority_seam_predicate_verified": false,
+  "mvp6_predicate_verified": false,
+  "runtime_feature_merge_authorized": false,
+  "whole_mvp_accepted": false
+}

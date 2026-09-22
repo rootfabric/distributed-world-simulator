@@ -1,0 +1,106 @@
+[
+  {
+    "script": "tests/network/test_nx6_predicted_item_interactions.gd",
+    "argv": [
+      "C:/Godot/godot/bin/godot.windows.editor.double.x86_64.console.exe",
+      "--headless",
+      "--path",
+      "C:\\distributed-world-simulator\\worktrees\\mvp6-journal-exact-73b88181",
+      "--script",
+      "res://tests/network/test_nx6_predicted_item_interactions.gd"
+    ],
+    "exit_code": 0,
+    "fatal": [],
+    "assertions": 940,
+    "passed": true,
+    "log_sha256": "21d6fb98e60f04b2c23ce4adeb30d68b3071d744405228c645d55a00e0f87ac6",
+    "seconds": 0.375
+  },
+  {
+    "script": "tests/network/test_nx6_predicted_item_interactions_integration.gd",
+    "argv": [
+      "C:/Godot/godot/bin/godot.windows.editor.double.x86_64.console.exe",
+      "--headless",
+      "--path",
+      "C:\\distributed-world-simulator\\worktrees\\mvp6-journal-exact-73b88181",
+      "--script",
+      "res://tests/network/test_nx6_predicted_item_interactions_integration.gd"
+    ],
+    "exit_code": 0,
+    "fatal": [],
+    "assertions": 66,
+    "passed": true,
+    "log_sha256": "44e2d644d14f9adb5bcb47111399191e82ca68bb592af504cb650b42041c82b5",
+    "seconds": 1.2189999999973224
+  },
+  {
+    "script": "tests/runtime/test_v0_mvp_4_shared_canonical_dig.gd",
+    "argv": [
+      "C:/Godot/godot/bin/godot.windows.editor.double.x86_64.console.exe",
+      "--headless",
+      "--path",
+      "C:\\distributed-world-simulator\\worktrees\\mvp6-journal-exact-73b88181",
+      "--script",
+      "res://tests/runtime/test_v0_mvp_4_shared_canonical_dig.gd"
+    ],
+    "exit_code": 0,
+    "fatal": [],
+    "assertions": 45,
+    "passed": true,
+    "log_sha256": "ae98191b4700d8fe7d5edb125a925631a9659ec875d75515c9168489dbc6473c",
+    "seconds": 23.04699999999866
+  },
+  {
+    "script": "tests/runtime/test_v0_mvp_4_replica_rejection.gd",
+    "argv": [
+      "C:/Godot/godot/bin/godot.windows.editor.double.x86_64.console.exe",
+      "--headless",
+      "--path",
+      "C:\\distributed-world-simulator\\worktrees\\mvp6-journal-exact-73b88181",
+      "--script",
+      "res://tests/runtime/test_v0_mvp_4_replica_rejection.gd"
+    ],
+    "exit_code": 0,
+    "fatal": [],
+    "assertions": 57,
+    "passed": true,
+    "log_sha256": "30a2d0fd6344f9c16f69c0e62c10db889eeba846e485479852573ac5aff35772",
+    "seconds": 24.42199999999866
+  },
+  {
+    "script": "tests/runtime/test_v0_mvp_6_item_construction_composition.gd",
+    "argv": [
+      "C:/Godot/godot/bin/godot.windows.editor.double.x86_64.console.exe",
+      "--headless",
+      "--path",
+      "C:\\distributed-world-simulator\\worktrees\\mvp6-journal-exact-73b88181",
+      "--script",
+      "res://tests/runtime/test_v0_mvp_6_item_construction_composition.gd"
+    ],
+    "exit_code": 1,
+    "fatal": [
+      "\nERROR: real-resource Construction stage 1: CONSTRUCTION_MATERIAL_INSUFFICIENT"
+    ],
+    "assertions": null,
+    "passed": false,
+    "log_sha256": "419469980ecc32fb29567960da76062a8e33c5df51487f4b8fe1432284c47855",
+    "seconds": 3.2660000000032596
+  },
+  {
+    "script": "tests/runtime/test_v0_p4_live_mvp_composition_ordering.gd",
+    "argv": [
+      "C:/Godot/godot/bin/godot.windows.editor.double.x86_64.console.exe",
+      "--headless",
+      "--path",
+      "C:\\distributed-world-simulator\\worktrees\\mvp6-journal-exact-73b88181",
+      "--script",
+      "res://tests/runtime/test_v0_p4_live_mvp_composition_ordering.gd"
+    ],
+    "exit_code": 0,
+    "fatal": [],
+    "assertions": 64,
+    "passed": true,
+    "log_sha256": "8bbce5ebf3c41306d0d1edd67fdd606db9ce6886fe6aba81edf48c894a4e9967",
+    "seconds": 5.014999999999418
+  }
+]

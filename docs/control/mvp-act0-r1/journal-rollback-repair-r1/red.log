@@ -1,0 +1,74 @@
+Godot Engine v4.7.1.stable.double.custom_build.a13da4feb (2026-07-13 21:00:28 UTC) - https://godotengine.org
+
+ERROR: prediction duplicate-authority rollback: duplicate authority restores pickup presentation
+   at: VariantUtilityFunctions::push_error (core\variant\variant_utility.cpp:1023)
+   GDScript backtrace (most recent call first):
+       [0] _assert (res://tests/runtime/test_v0_mvp_6_prediction_rollback.gd:178)
+       [1] _test_pickup_rollback_with_duplicate_authority (res://tests/runtime/test_v0_mvp_6_prediction_rollback.gd:90)
+       [2] _run (res://tests/runtime/test_v0_mvp_6_prediction_rollback.gd:17)
+ERROR: prediction duplicate-authority rollback: duplicate authority restores drop quantity
+   at: VariantUtilityFunctions::push_error (core\variant\variant_utility.cpp:1023)
+   GDScript backtrace (most recent call first):
+       [0] _assert (res://tests/runtime/test_v0_mvp_6_prediction_rollback.gd:178)
+       [1] _test_drop_rollback_with_duplicate_authority (res://tests/runtime/test_v0_mvp_6_prediction_rollback.gd:118)
+       [2] _run (res://tests/runtime/test_v0_mvp_6_prediction_rollback.gd:18)
+ERROR: prediction duplicate-authority rollback: duplicate authority removes optimistic spawn
+   at: VariantUtilityFunctions::push_error (core\variant\variant_utility.cpp:1023)
+   GDScript backtrace (most recent call first):
+       [0] _assert (res://tests/runtime/test_v0_mvp_6_prediction_rollback.gd:178)
+       [1] _test_drop_rollback_with_duplicate_authority (res://tests/runtime/test_v0_mvp_6_prediction_rollback.gd:119)
+       [2] _run (res://tests/runtime/test_v0_mvp_6_prediction_rollback.gd:18)
+ERROR: prediction duplicate-authority rollback: rollback exposes corrected canonical location
+   at: VariantUtilityFunctions::push_error (core\variant\variant_utility.cpp:1023)
+   GDScript backtrace (most recent call first):
+       [0] _assert (res://tests/runtime/test_v0_mvp_6_prediction_rollback.gd:178)
+       [1] _test_corrected_authority_survives_later_rollback (res://tests/runtime/test_v0_mvp_6_prediction_rollback.gd:140)
+       [2] _run (res://tests/runtime/test_v0_mvp_6_prediction_rollback.gd:19)
+ERROR: prediction duplicate-authority rollback: rollback exposes corrected canonical transform
+   at: VariantUtilityFunctions::push_error (core\variant\variant_utility.cpp:1023)
+   GDScript backtrace (most recent call first):
+       [0] _assert (res://tests/runtime/test_v0_mvp_6_prediction_rollback.gd:178)
+       [1] _test_corrected_authority_survives_later_rollback (res://tests/runtime/test_v0_mvp_6_prediction_rollback.gd:141)
+       [2] _run (res://tests/runtime/test_v0_mvp_6_prediction_rollback.gd:19)
+ERROR: prediction duplicate-authority rollback: item.place restores complete snapshot including mounts/container
+   at: VariantUtilityFunctions::push_error (core\variant\variant_utility.cpp:1023)
+   GDScript backtrace (most recent call first):
+       [0] _assert (res://tests/runtime/test_v0_mvp_6_prediction_rollback.gd:178)
+       [1] _test_place_transfer_and_pending_sibling (res://tests/runtime/test_v0_mvp_6_prediction_rollback.gd:204)
+       [2] _run (res://tests/runtime/test_v0_mvp_6_prediction_rollback.gd:20)
+ERROR: prediction duplicate-authority rollback: item.transfer restores complete snapshot including mounts/container
+   at: VariantUtilityFunctions::push_error (core\variant\variant_utility.cpp:1023)
+   GDScript backtrace (most recent call first):
+       [0] _assert (res://tests/runtime/test_v0_mvp_6_prediction_rollback.gd:178)
+       [1] _test_place_transfer_and_pending_sibling (res://tests/runtime/test_v0_mvp_6_prediction_rollback.gd:204)
+       [2] _run (res://tests/runtime/test_v0_mvp_6_prediction_rollback.gd:20)
+ERROR: prediction duplicate-authority rollback: remaining prediction reapplied exactly once
+   at: VariantUtilityFunctions::push_error (core\variant\variant_utility.cpp:1023)
+   GDScript backtrace (most recent call first):
+       [0] _assert (res://tests/runtime/test_v0_mvp_6_prediction_rollback.gd:178)
+       [1] _test_place_transfer_and_pending_sibling (res://tests/runtime/test_v0_mvp_6_prediction_rollback.gd:214)
+       [2] _run (res://tests/runtime/test_v0_mvp_6_prediction_rollback.gd:20)
+[m7_item_rejected] {"command_type":"predicted","details":{"wire_result":{"error_code":"ITEM_ALREADY_CLAIMED","operation_id":"operation/mvp6/rollback","status":"REJECTED"}},"error_code":"ITEM_ALREADY_CLAIMED","message":"Предмет уже подобрал другой игрок","operation_id":"operation/mvp6/rollback"}
+ERROR: prediction duplicate-authority rollback: completion/stop publishes restored canonical values
+   at: VariantUtilityFunctions::push_error (core\variant\variant_utility.cpp:1023)
+   GDScript backtrace (most recent call first):
+       [0] _assert (res://tests/runtime/test_v0_mvp_6_prediction_rollback.gd:178)
+       [1] _test_bridge_completion_and_stop (res://tests/runtime/test_v0_mvp_6_prediction_rollback.gd:267)
+       [2] _run (res://tests/runtime/test_v0_mvp_6_prediction_rollback.gd:22)
+[m7_item_rejected] {"command_type":"predicted","details":{"operation_id":"operation/mvp6/rollback"},"error_code":"MVP6_TEST_CANCEL","message":"Сервер отклонил действие с предметом: MVP6_TEST_CANCEL","operation_id":"operation/mvp6/rollback"}
+ERROR: prediction duplicate-authority rollback: completion/stop publishes restored canonical values
+   at: VariantUtilityFunctions::push_error (core\variant\variant_utility.cpp:1023)
+   GDScript backtrace (most recent call first):
+       [0] _assert (res://tests/runtime/test_v0_mvp_6_prediction_rollback.gd:178)
+       [1] _test_bridge_completion_and_stop (res://tests/runtime/test_v0_mvp_6_prediction_rollback.gd:267)
+MVP6 prediction rollback: FAIL (77 assertions, 10 failures)
+ - duplicate authority restores pickup presentation
+ - duplicate authority restores drop quantity
+ - duplicate authority removes optimistic spawn
+ - rollback exposes corrected canonical location
+ - rollback exposes corrected canonical transform
+ - item.place restores complete snapshot including mounts/container
+ - item.transfer restores complete snapshot including mounts/container
+ - remaining prediction reapplied exactly once
+ - completion/stop publishes restored canonical values
+ - completion/stop publishes restored canonical values

@@ -523,8 +523,6 @@ def _load_reviews(
                 root, review_policy, review_epoch, value, _repo_relative(root, path),
             )
         except ContractValidationError as exc:
-            # Preserve the immutable review file and its declared verdict; only
-            # its derived authority is downgraded when provenance is insufficient.
             value = {**value, "declared_verdict": value["verdict"],
                      "verdict": "INSUFFICIENT_EVIDENCE",
                      "evidence_gaps": [*value["evidence_gaps"], str(exc)]}
@@ -564,10 +562,10 @@ def _select_epoch_audit(
     if epoch.get("eligible_checkpoints") != [mvp]:
         return audits[-1] if audits else None
 
-    # A validated epoch audit outlives the DISPATCHED state. Later product
-    # progress does not invalidate it; a different main still does. Process both
-    # supported audit event forms in ledger order so old recovery cannot mask
-    # a newer audit (including RED or a newly audited main).
+    # A validated epoch audit outlives the initial DISPATCHED state. Later product
+    # progress does not invalidate it; a different main still does. Recovery may
+    # therefore either establish the pre-implementation DISPATCHED state or record
+    # a no-state-regression IN_PROGRESS continuation audit after product progress.
     audits = []
     for event in sorted(events, key=lambda item: item["sequence"]):
         completed_audit = (
@@ -576,7 +574,7 @@ def _select_epoch_audit(
             and event.get("exit_code") == 0
             and bool(event.get("command"))
         )
-        recovery_audit = (
+        preimplementation_recovery_audit = (
             event.get("event_type") == "RECOVERY_RESUMED"
             and event.get("work_state") == "DISPATCHED"
             and event.get("actor") == "INTEGRATOR"
@@ -584,6 +582,15 @@ def _select_epoch_audit(
             and type(event.get("exit_code")) is int and event["exit_code"] == 0
             and event.get("project_epoch") == epoch.get("epoch_id")
         )
+        postprogress_recovery_audit = (
+            event.get("event_type") == "RECOVERY_RESUMED"
+            and event.get("work_state") == "IN_PROGRESS"
+            and event.get("actor") == "INTEGRATOR"
+            and event.get("command") == "MVP_ACT0_POST_MERGE_EPOCH_AUDIT"
+            and type(event.get("exit_code")) is int and event["exit_code"] == 0
+            and event.get("project_epoch") == epoch.get("epoch_id")
+        )
+        recovery_audit = preimplementation_recovery_audit or postprogress_recovery_audit
         if not (completed_audit or recovery_audit):
             continue
         for raw_path in event.get("evidence_paths", []):
@@ -592,15 +599,21 @@ def _select_epoch_audit(
             if document.get("schema") != "distributed_world_simulator.harness_epoch_audit.v1":
                 continue
             audit = json.loads(committed_bytes(guard_context["root"], relative))
-            # Both event forms must belong to this epoch and Work Order. A normal
-            # completed-audit event refers to its implementation head, so only
-            # the pre-implementation recovery form binds main_sha to event head.
+            # All forms are exact-bound to epoch, Work Order and base. The legacy
+            # pre-implementation recovery form additionally uses main as event
+            # subject. Post-progress recovery deliberately keeps event.head_sha on
+            # the implementation/control lineage; validate_epoch() independently
+            # requires audit.main_sha to equal the actual canonical main before
+            # continuation can be granted.
             if (
                 event.get("project_epoch") != epoch.get("epoch_id")
                 or audit.get("project_epoch") != epoch.get("epoch_id")
                 or audit.get("work_order_id") != event["work_order_id"]
                 or audit.get("base_sha") != epoch.get("base_sha")
-                or (recovery_audit and audit.get("main_sha") != event["head_sha"])
+                or (
+                    preimplementation_recovery_audit
+                    and audit.get("main_sha") != event["head_sha"]
+                )
             ):
                 raise ContractValidationError("MVP_RESUME_AUDIT_IDENTITY_MISMATCH")
             audits.append(audit)
@@ -683,7 +696,9 @@ def _select_authoritative_evidence_paths(
         commits = [line for line in history.splitlines() if line]
         if code != 0 or len(commits) != 1:
             raise ContractValidationError(f"EVIDENCE_RECONCILIATION_IMMUTABILITY_NOT_PROVEN:{relative}")
-        code, add_commit = _git(bundle.root, "log", "--diff-filter=A", "-1", "--format=%H", "--", relative)
+        code, add_commit = _git(
+            bundle.root, "log", "--diff-filter=A", "-1", "--format=%H", "--", relative
+        )
         if code != 0 or add_commit != commits[0]:
             raise ContractValidationError(f"EVIDENCE_RECONCILIATION_ADD_COMMIT_NOT_PROVEN:{relative}")
 

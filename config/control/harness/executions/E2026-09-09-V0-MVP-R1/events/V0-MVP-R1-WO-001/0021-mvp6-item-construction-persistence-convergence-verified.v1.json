@@ -1,0 +1,22 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-09-09-V0-MVP-R1-V0-MVP-R1-WO-001-0021-MVP6-VERIFIED",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "sequence": 21,
+  "event_type": "PREDICATE_VERIFIED",
+  "work_state": "IN_PROGRESS",
+  "recorded_at_utc": "2026-09-19T10:15:30Z",
+  "actor": "DIRECTOR",
+  "branch": "feature/v0-mvp-playable-seamless-planet-r1",
+  "head_sha": "1d51b410925407ad1f83dc4ffa37b8a909bb6811",
+  "predicate": "MVP_ITEM_CONSTRUCTION_PERSISTENCE_CONVERGENCE",
+  "command": "MVP6_FRESH_WINDOWS_REVIEWER_VERIFIER_AND_EXACT_WORLD_CORE_CLOSURE",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/verifications/MVP6-INDEPENDENT-REVIEW-1D51B410-R1.v1.json",
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/verifications/MVP6-INDEPENDENT-VERIFICATION-1D51B410-R1.v1.json",
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence/MVP6-LEAF-CLOSURE-1D51B410-R1.v1.json"
+  ],
+  "summary": "MVP6 leaf закрыт на frozen exact 1d51b410925407ad1f83dc4ffa37b8a909bb6811 / tree fb51a7cab464404fc843cb1da2fac5419a1c6ee3. Linux exact run 35351922506: native, five-process graphical и full world/core SUCCESS; 346/346 tests, 351 steps. Fresh Windows Independent Reviewer: PASS, P0=0/P1=0. Fresh Windows Independent Verifier: PASS на canonical Godot 4.7.1 double SHA256 3633C3E6..., focused MVP6 gates green, пять разных процессов, A single writer/B read-only, real MVP5 material without top-up, BASE100→ADD101→REMOVE100, replay/security, guard restore, read-only keepalive, persistence и collision подтверждены; Windows full world/core 346/346, 351 steps, exit 0. Исторический intermittent P2 ITEM_INTERACTION_OUT_OF_RANGE сохранён и не объявлен исправленным. Parent WO остаётся IN_PROGRESS; следующий product predicate MVP_RECONNECT_AND_RESTART. Whole-MVP acceptance и runtime/main merge не заявляются."
+}

@@ -1,0 +1,54 @@
+{
+  "schema": "distributed_world_simulator.harness_verifier_result.v1",
+  "verification_id": "MVP6-JOURNAL-MAIN-VERIFIER-R1",
+  "verifier": "/root/journal_repair_verifier",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "risk_class": "CRITICAL",
+  "verified_at_utc": "2026-09-16T12:52:21.594320+00:00",
+  "verdict": "PASS",
+  "scope": "APPROVED_JOURNAL_REPAIR_SOURCE_AND_FOCUSED_EVIDENCE_ONLY",
+  "verified_head_sha": "3b82145ae946bb51aebf67f048a28420368b40be",
+  "verified_tree_sha": "6b1b8c9ead5c16d15dc8565813d3abb1bf94d880",
+  "runtime_blob": "abdf0c0a335f4e2c968933156fb17f94a7b45bd1",
+  "test_blob": "b86e375ac5cb79ff9463f246e843d09efb9b9e65",
+  "manifest_sha256": "e0cb0b4793b5b89846c0defca471dcd2feb023a8ba7a86af1768d98c8ce27ce8",
+  "manifest_files_verified": 92,
+  "git_files_verified": 92,
+  "raw_clean_logs_verified": 38,
+  "independent_execution_subject": {
+    "head": "73b8818184c93986e3313f35f9f4548c608e47e6",
+    "tree": "a1bbe30fd68af5db3a9535bee942683ebe761bc1",
+    "tracked_clean": true,
+    "blobs": {
+      "scripts/network/prediction/predicted_item_interaction_journal.gd": "abdf0c0a335f4e2c968933156fb17f94a7b45bd1",
+      "tests/runtime/test_v0_mvp_6_prediction_rollback.gd": "b86e375ac5cb79ff9463f246e843d09efb9b9e65"
+    }
+  },
+  "independent_execution_assertions": [
+    77,
+    940,
+    66
+  ],
+  "independent_execution_errors": [],
+  "trusted_exact_head_evidence_consumed": true,
+  "checks": [
+    "Approved resolve-only four-line patch matches HA, existing rebuild(false) preserves canonical truth and pending siblings.",
+    "Windows native feature958+77, NX6/bridge940+66, MVP4 45+57 and P4 64 confirmed.",
+    "Main Windows/Linux77+940+66; Linux ZIP hash matches afd5aeac91fd73e893fb569cc11a46a49c15673244c79c0a1dcd2e661160c1cd.",
+    "Explicit-repair Windows/Linux NX A/B1077+1077 each; canonical dependency revalidation remains false.",
+    "Original false-green script failures and source-dirty/port-collision attempts preserved and excluded.",
+    "Construction183/1 remains failing; original-journal replay diagnostic only, not accepted exact subject."
+  ],
+  "required_fixes": [],
+  "evidence_gaps": [
+    "Full world/core still pending separate exact-subject addendum.",
+    "MVP6 construction183/1 remains FAIL, five-process and whole-MVP acceptance unproved.",
+    "Directional PC0 RED not cleared; main merge still HUMAN gate."
+  ],
+  "merge_ready": false,
+  "merge_authorized": false,
+  "mvp6_verified": false,
+  "whole_mvp_accepted": false,
+  "directional_clearance_accepted": false,
+  "audit_sha256": "51056655130942438d70516c2ca649aabac875cbfa9d8d3f64954632a5a9ed5c"
+}

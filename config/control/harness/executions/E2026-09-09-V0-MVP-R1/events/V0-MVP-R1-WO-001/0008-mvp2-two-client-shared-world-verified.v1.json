@@ -1,0 +1,23 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-09-09-V0-MVP-R1-0008-MVP2-TWO-CLIENT-SHARED-WORLD-VERIFIED",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "sequence": 8,
+  "event_type": "PREDICATE_VERIFIED",
+  "work_state": "IN_PROGRESS",
+  "recorded_at_utc": "2026-09-12T13:06:00Z",
+  "actor": "VERIFIER",
+  "branch": "feature/v0-mvp-playable-seamless-planet-r1",
+  "head_sha": "287df80c69840fea7ae9ac0ea69a07581f192d34",
+  "predicate": "MVP_TWO_CLIENT_SHARED_WORLD",
+  "command": "MVP2_FROZEN_REVIEW_PASS_PLUS_INDEPENDENT_WINDOWS_VERIFIER_PLUS_CURRENT_MAIN_CARRIER",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/reviews/MVP2-INDEPENDENT-REVIEW-287DF80C-R1.v1.json",
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/verifications/MVP2-INDEPENDENT-VERIFICATION-287DF80C-R1.v1.json",
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence/MVP2-REVIEW-PROJECTION-287df80c6984-34605253942/manifest.v1.json",
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence/MVP2-CURRENT-MAIN-CARRIER-MACHINE-PASS-8E078245-R1.v1.json"
+  ],
+  "summary": "Fresh independent Reviewer PASS and independent Windows Verifier VERIFIED confirm only MVP_TWO_CLIENT_SHARED_WORLD for frozen runtime 287df80c69840fea7ae9ac0ea69a07581f192d34 / tree e591dc6c5346139bc1b4659915c54bf80603713e. Digest-bound reused Linux exact workload evidence and current-main carrier machine gate are independently revalidated. Parent V0-MVP-R1-WO-001 remains IN_PROGRESS; runtime merge, whole-MVP acceptance and MVP3 implementation are not authorized by this event."
+}

@@ -1,0 +1,101 @@
+{
+  "schema": "distributed_world_simulator.mvp7_leaf_closure.v1",
+  "recorded_at_utc": "2026-09-20T02:06:00Z",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "predicate": "MVP_RECONNECT_AND_RESTART",
+  "frozen_product_head_sha": "ad48b24d8cde350db8c26adb958d9a0d62c6ff56",
+  "frozen_product_tree_sha": "f306e84ebce87ea3644c60b5dd75779d7980f8bb",
+  "freeze_ref": "freeze/v0-mvp7-review-ad48b24d-r1",
+  "independent_reviewer": {
+    "verdict": "PASS",
+    "branch": "review/v0-mvp7-ad48b24d-r1",
+    "commit_sha": "dc2c8676dad9dde664c48ebce3419609fdd0e593",
+    "tree_sha": "7d4aae09e7b3150ab3bc03c168ea08b347c7d5ee",
+    "p0": 0,
+    "p1": 0,
+    "required_fixes": [],
+    "evidence_gaps": [],
+    "source_clean_before": true,
+    "source_clean_after": true
+  },
+  "independent_verifier": {
+    "verdict": "VERIFIED",
+    "branch": "verify/v0-mvp7-ad48b24d-r1",
+    "commit_sha": "5cade0801d823a66ff8e928ba70f82e708571773",
+    "tree_sha": "aa1f59cfaec4720d99108ce058a327f82d9396dc",
+    "platform": "Windows 10 Pro 10.0.19045",
+    "cpu": "13th Gen Intel Core i9-13900H",
+    "godot_version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "godot_sha256": "3633C3E609C8CE2F9BAE334A9C7E75C7F974DE3AF0415AB4A8050A625A15A7A5",
+    "source_clean_before": true,
+    "source_clean_after": true,
+    "blocking_findings": []
+  },
+  "exact_linux_machine_evidence": {
+    "run_id": 35447331651,
+    "run_attempt": 3,
+    "job_id": 105977766107,
+    "conclusion": "success",
+    "artifact_id": 10594111480,
+    "artifact_digest": "sha256:5cbbf01e95dd6fe41c72f5d3bcc36da326c2e1201845eda37796e2caf3609bb6",
+    "native_assertions": 549,
+    "native_failures": 0,
+    "graphical_reconnect_passed": true
+  },
+  "pc0": {
+    "run_id": 35473552815,
+    "job_id": 105978749777,
+    "standard": "YELLOW_NON_RED",
+    "directional": "YELLOW_NON_RED",
+    "artifact_id": 10593077063,
+    "artifact_digest": "sha256:3e0fb44603673b6b1938362f7663b1fcf0e53e4d7eaa9cadfa812503be966d8d"
+  },
+  "windows_full_world_core": {
+    "result": "PASS",
+    "exit_code": 0,
+    "declared_tests": 349,
+    "discovered_tests": 349,
+    "steps": 354,
+    "failed_steps": 0,
+    "wall_minutes": 63.3,
+    "summary_sha256": "6346FAEADE75AF9219A428A88D33849AE8CE62C362E9740EA5DCE8EAEDA5A819",
+    "log_sha256": "7443D511E76E5D8119A18F4ACF9123FE7D2F02CD8D95339C0EDE4280D96D3BB8",
+    "source_change_for_pass": false,
+    "environment_only_bounded_configuration": true
+  },
+  "linux_closure_carrier_history": {
+    "run_id": 35476684387,
+    "conclusion": "failure",
+    "classification": "INFRASTRUCTURE_EVIDENCE_ROUTE",
+    "blocking_for_mvp7": false,
+    "reason": "Bare RUN_WORLD_REGRESSION_TESTS.ps1 auto-discovers bounded multi-process tests without their required MVP6/MVP7 environment. Independent Windows verifier supplied documented bounded environment only, changed no source, and passed all 349/349 tests."
+  },
+  "predicate_coverage": {
+    "RECOVER_TERRAIN_STATE": "VERIFIED: MW5 terrain/Matter across distinct produce/recover PIDs with exact hashes and post-recovery dig.",
+    "RECOVER_ITEM_INVENTORY_EQUIPMENT_STATE": "VERIFIED: canonical Item Graph, inventory, hotbar, equipment and durable shared-container graph restored.",
+    "RECOVER_WORLD_ITEM_IDENTITIES": "VERIFIED: exact item identities/checksums preserved; replay creates no duplicate canonical output.",
+    "RECOVER_SHARED_CONTAINER_STATE": "VERIFIED: durable container graph/content restored; transient open lease explicitly non-durable and reset.",
+    "RECOVER_CONSTRUCTION_STATE_AND_COLLISION": "VERIFIED: same M0/C17 state restored, 100 parts/99 bonds, 100 derived collision parts, removed leaf absent.",
+    "RECOVER_REQUIRED_OPERATION_DEDUP_STATE": "VERIFIED: stale session/epoch, corrupt/mixed/rollback cuts rejected; terminal replay exactly-once.",
+    "LATE_JOIN_OR_RESYNC_GETS_CURRENT_STATE": "VERIFIED: fresh ENet peer receives current terrain/material/item/construction/collision/player state and continues authoritative fixed-tick movement.",
+    "MVP_RECONNECT_AND_RESTART": "VERIFIED: real process restart families plus fresh graphical client reconnect on the same exact frozen HEAD/TREE."
+  },
+  "recovery_model": {
+    "supported": "CONFIRMED_QUIESCENT_CHECKPOINT",
+    "arbitrary_uncheckpointed_power_loss_claimed": false,
+    "transient_transport_session_durable": false,
+    "transient_container_open_lease_durable": false
+  },
+  "residual_info": [
+    "Verifier INFO MVP7-VER-EG001: bare full-suite launcher lacks bounded env for three auto-discovered multi-process tests. This is an infrastructure/evidence-route issue, not a frozen product defect.",
+    "Restart and live reconnect are proven on separate exact-head surfaces; their connected composition is intentionally deferred to MVP8 bounded workload."
+  ],
+  "director_leaf_decision": "PREDICATE_VERIFIED",
+  "parent_work_order_state": "IN_PROGRESS",
+  "next_product_predicate": "MVP_BOUNDED_INTERACTIVE_WORKLOAD",
+  "whole_mvp_acceptance": false,
+  "runtime_merge_authorized": false,
+  "main_merge_authorized": false,
+  "mvp8_started": false
+}

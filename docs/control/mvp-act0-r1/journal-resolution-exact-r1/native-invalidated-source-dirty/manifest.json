@@ -1,0 +1,177 @@
+{
+  "schema": "distributed_world_simulator.mvp6_native_exact_manifest.v1",
+  "subject_head": "789c3af31d849f7f9dfc6af9ac0240fe2e33531f",
+  "subject_tree": "7c5f0c5e1d6fce8abf852f32918faa245c5f6507",
+  "engine_sha256": "3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5",
+  "run_id": "local",
+  "run_attempt": "1",
+  "commands": [
+    {
+      "name": "import",
+      "argv": [
+        "C:\\Godot\\godot\\bin\\godot.windows.editor.double.x86_64.console.exe",
+        "--headless",
+        "--path",
+        "C:\\distributed-world-simulator\\worktrees\\mvp6-continuation",
+        "--editor",
+        "--import",
+        "--quit"
+      ],
+      "exit_code": 0,
+      "error": "",
+      "fatal_markers": [],
+      "passed": true,
+      "duration_seconds": 7.936999999998079,
+      "log_sha256": "287bf2333b393a757417cf33f1ada6d3eb90edc2495f234237a9612b88da32b9"
+    },
+    {
+      "name": "prediction_rollback",
+      "argv": [
+        "C:\\Godot\\godot\\bin\\godot.windows.editor.double.x86_64.console.exe",
+        "--headless",
+        "--path",
+        "C:\\distributed-world-simulator\\worktrees\\mvp6-continuation",
+        "--script",
+        "res://tests/runtime/test_v0_mvp_6_prediction_rollback.gd"
+      ],
+      "exit_code": 0,
+      "error": "",
+      "fatal_markers": [],
+      "passed": true,
+      "duration_seconds": 0.5630000000019209,
+      "log_sha256": "70b2f5a3e56fd9e1ba73d342dbbc0ea28597a55f209f06128494049dd3a8f5cb",
+      "assertions": 77
+    },
+    {
+      "name": "security",
+      "argv": [
+        "C:\\Godot\\godot\\bin\\godot.windows.editor.double.x86_64.console.exe",
+        "--headless",
+        "--path",
+        "C:\\distributed-world-simulator\\worktrees\\mvp6-continuation",
+        "--script",
+        "res://tests/runtime/test_v0_mvp_6_native_replay_security.gd"
+      ],
+      "exit_code": 0,
+      "error": "",
+      "fatal_markers": [],
+      "passed": true,
+      "duration_seconds": 1.4680000000007567,
+      "log_sha256": "7c2525c9e8e2ce6f2d1a023941d2215a35a514f5cb559f82355420e25fdebdc6"
+    },
+    {
+      "name": "native",
+      "argv": [
+        "C:\\Godot\\godot\\bin\\godot.windows.editor.double.x86_64.console.exe",
+        "--headless",
+        "--path",
+        "C:\\distributed-world-simulator\\worktrees\\mvp6-continuation",
+        "--script",
+        "res://tests/runtime/test_v0_mvp_6_native_item_handoff.gd"
+      ],
+      "exit_code": 0,
+      "error": "",
+      "fatal_markers": [],
+      "passed": true,
+      "duration_seconds": 1.9530000000013388,
+      "log_sha256": "43e34b1c6ec4331d52814717c70f04346a6f30f86d702aecf562edfbd50b828c"
+    },
+    {
+      "name": "mvp3",
+      "argv": [
+        "C:\\Godot\\godot\\bin\\godot.windows.editor.double.x86_64.console.exe",
+        "--headless",
+        "--path",
+        "C:\\distributed-world-simulator\\worktrees\\mvp6-continuation",
+        "--script",
+        "res://tests/runtime/test_v0_mvp3_live_owner_handoff.gd"
+      ],
+      "exit_code": 0,
+      "error": "",
+      "fatal_markers": [],
+      "passed": true,
+      "duration_seconds": 1.5939999999973224,
+      "log_sha256": "1a8c43f06444815ceba81d4a47bf347c69e25dd6009dc788f22342f3d927bb6b"
+    },
+    {
+      "name": "mvp5",
+      "argv": [
+        "C:\\Godot\\godot\\bin\\godot.windows.editor.double.x86_64.console.exe",
+        "--headless",
+        "--path",
+        "C:\\distributed-world-simulator\\worktrees\\mvp6-continuation",
+        "--script",
+        "res://tests/runtime/test_v0_mvp_5_exactly_once_material.gd"
+      ],
+      "exit_code": 0,
+      "error": "",
+      "fatal_markers": [],
+      "passed": true,
+      "duration_seconds": 79.54699999999866,
+      "log_sha256": "f0ab7c1cc124a66799e8b2a456bdb9f84995733b8d67010448b8540c3d9968a8"
+    }
+  ],
+  "passed": false,
+  "files": [
+    {
+      "path": "commands.json",
+      "bytes": 3303,
+      "sha256": "90ed1e90989c3a4fb72201704a6f107836df5cfd30f72e657d952918d139b49f"
+    },
+    {
+      "path": "import.log",
+      "bytes": 41199,
+      "sha256": "287bf2333b393a757417cf33f1ada6d3eb90edc2495f234237a9612b88da32b9"
+    },
+    {
+      "path": "mvp3.json",
+      "bytes": 105768,
+      "sha256": "d521a39285b8a4313a01f3c04ac793bcc5f5c8150dae841b2b8c6c6acea80513"
+    },
+    {
+      "path": "mvp3.log",
+      "bytes": 173,
+      "sha256": "1a8c43f06444815ceba81d4a47bf347c69e25dd6009dc788f22342f3d927bb6b"
+    },
+    {
+      "path": "mvp5.json",
+      "bytes": 68977,
+      "sha256": "88521d4326240340d9924245fa6deb8430fc25f87859092231361a28ca3c35ef"
+    },
+    {
+      "path": "mvp5.log",
+      "bytes": 186,
+      "sha256": "f0ab7c1cc124a66799e8b2a456bdb9f84995733b8d67010448b8540c3d9968a8"
+    },
+    {
+      "path": "native.json",
+      "bytes": 157312,
+      "sha256": "65be14aedbee84eebdbd3c09dd054901ab9f1da9738ab029d05313fa88dfefb3"
+    },
+    {
+      "path": "native.log",
+      "bytes": 184,
+      "sha256": "43e34b1c6ec4331d52814717c70f04346a6f30f86d702aecf562edfbd50b828c"
+    },
+    {
+      "path": "prediction_rollback.log",
+      "bytes": 760,
+      "sha256": "70b2f5a3e56fd9e1ba73d342dbbc0ea28597a55f209f06128494049dd3a8f5cb"
+    },
+    {
+      "path": "security.json",
+      "bytes": 1344,
+      "sha256": "5213970214d0dd242c0bad0ff89c84aa53259fa64f19bfa570089035d7b3add8"
+    },
+    {
+      "path": "security.log",
+      "bytes": 178,
+      "sha256": "7c2525c9e8e2ce6f2d1a023941d2215a35a514f5cb559f82355420e25fdebdc6"
+    },
+    {
+      "path": "summary.json",
+      "bytes": 1326,
+      "sha256": "2578dbd198e519f671a67fdbdfff20f483293e015a0926729ed646319b009fbc"
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "schema": "distributed_world_simulator.mvp6_persistence_rehydration_rerun.v1",
+  "purpose": "Execute exact seam persistence after bounded restorer and canonical terminal replay recovery were added.",
+  "expected": {
+    "same_m0_repository_reopened": true,
+    "fresh_build_plan_registered": false,
+    "item_graph_canonical_identity_preserved": true,
+    "construction_canonical_identity_preserved": true,
+    "c17_authority_mapping_preserved": true,
+    "terminal_add_remove_replay_state_preserved": true,
+    "collision_rehydrated": true,
+    "removed_leaf_collision_absent": true
+  },
+  "mvp7_restart_claimed": false,
+  "mvp6_predicate_verified": false,
+  "independent_verdict": false,
+  "acceptance": false
+}

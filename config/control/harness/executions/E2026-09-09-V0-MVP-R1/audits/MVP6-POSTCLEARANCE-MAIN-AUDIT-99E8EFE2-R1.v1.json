@@ -1,0 +1,109 @@
+{
+  "schema": "distributed_world_simulator.harness_epoch_audit.v1",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "base_sha": "3d7672cba293d8e7bd72427b803f73fc8fcee5da",
+  "main_sha": "99e8efe2422e02fedec40778e12748611d68fb5f",
+  "decision": "CONTINUE",
+  "pc0": "NON_RED",
+  "directional_pc0": "NON_RED",
+  "evidence_class": "EXACT_GITHUB_MAIN_PROJECT_CONTROL_APPROVED_MERGE_CHAIN_AND_DEPENDENCY_DIFF",
+  "project_control": {
+    "executor": "GITHUB_ACTIONS",
+    "workflow": "Project Control",
+    "run_id": 35190349772,
+    "job_id": 105101320511,
+    "run_conclusion": "SUCCESS",
+    "head_sha": "99e8efe2422e02fedec40778e12748611d68fb5f",
+    "head_tree_sha": "f4ae35216de7ed915fcb0c46b03b0f35baeccd6b",
+    "standard_overall": "YELLOW",
+    "directional_overall": "YELLOW",
+    "directional_blocking_red": 0,
+    "artifact_id": 10483362973,
+    "artifact_zip_sha256": "153ecdd4e23274367cb9561c19c95016b221e1acd92a99b2851ed2cf07f28b49",
+    "standard_report_sha256": "5b8003e6e075ca264b7395399e370606b8979f3dab7916bc78fef1871ffaa19b",
+    "directional_report_sha256": "fd37d28167416c7ee9bb373dad6cd00f00f4d080400bac23cfc0802eaec54a49",
+    "harness_tests": 349,
+    "harness_failures": 0,
+    "harness_errors": 0,
+    "harness_skips": 0,
+    "artifact_rehashed_independently": true,
+    "v0_to_nx_clearance": "V0-MVP6-NX-POSTMERGE-CRITICAL-WATCH-CLEARANCE-005"
+  },
+  "dependency_audit": {
+    "previous_audited_main": "675c04bb213bbb68b8cdb500d540d57ce1490318",
+    "current_main": "99e8efe2422e02fedec40778e12748611d68fb5f",
+    "commits_reviewed": 35,
+    "merge_base": "675c04bb213bbb68b8cdb500d540d57ce1490318",
+    "main_change_class": "ECO_A9_PLUS_HUMAN_APPROVED_MVP6_JOURNAL_BASELINE_REPAIR_PLUS_HUMAN_APPROVED_DIRECTIONAL_CLEARANCE",
+    "runtime_watched_path_changes": [
+      "scripts/network/prediction/predicted_item_interaction_journal.gd"
+    ],
+    "critical_watched_path_changes": [],
+    "v0_control_changes_reviewed": [
+      "config/control/directional-watch-clearances.v1.json",
+      "scripts/control/directional_watch_clearance.py",
+      "tests/harness/test_mvp6_postmerge_directional_clearance.py",
+      "tests/harness/test_project_control_directional_clearance.py"
+    ],
+    "changed_paths": [
+      "RUN_V0_MVP_JOURNAL_ROLLBACK.ps1",
+      "config/control/directional-watch-clearances.v1.json",
+      "config/ecology/evo-arch2-a9-work-order.v1.json",
+      "docs/control/mvp-act0-r1/MVP6_NX_CLEARANCE_POSTMERGE_R2_EVIDENCE.json",
+      "docs/control/mvp-act0-r1/MVP6_NX_CLEARANCE_POSTMERGE_R2_RU.md",
+      "docs/control/mvp-act0-r1/act0-journal-fence-r1/.gitattributes",
+      "docs/control/mvp-act0-r1/act0-journal-fence-r1/REPAIR_MAP_RU.md",
+      "docs/control/mvp-act0-r1/act0-journal-fence-r1/approved-ha.json",
+      "docs/control/mvp-act0-r1/act0-journal-fence-r1/approved.patch",
+      "docs/control/mvp-act0-r1/act0-journal-fence-r1/authorization.json",
+      "docs/control/mvp-act0-r1/act0-journal-fence-r1/work-order.json",
+      "docs/control/mvp-act0-r1/journal-main-repair-r1/README.md",
+      "docs/control/mvp-act0-r1/validate_mvp6_clearance_postmerge_r2.py",
+      "docs/research/ecology/EVO_ARCH2_A9_FIDELITY_R1_RU.md",
+      "scripts/control/directional_watch_clearance.py",
+      "scripts/network/prediction/predicted_item_interaction_journal.gd",
+      "scripts/research/ecology/v2/ecological_fidelity_v1.py",
+      "scripts/research/ecology/v2/fidelity_admission_v1.gd",
+      "scripts/research/ecology/v2/fidelity_runtime_v1.py",
+      "tests/harness/test_mvp6_postmerge_directional_clearance.py",
+      "tests/harness/test_project_control_directional_clearance.py",
+      "tests/harness/test_v0_mvp_act0.py",
+      "tests/runtime/test_v0_mvp_6_prediction_rollback.gd",
+      "tests/runtime/test_v0_mvp_6_prediction_rollback.gd.uid",
+      "validation/ecology/evo_arch2_a9/integration.py",
+      "validation/ecology/evo_arch2_a9/test_fidelity.py",
+      "validation/ecology/evo_arch2_a9/verify.py"
+    ],
+    "approved_runtime_merge_chain": [
+      {
+        "pr": 646,
+        "merge_commit": "a6d5eb6b287130a638ba6cf397c34e29169948c1",
+        "scope": "four-line same-revision prediction rollback repair plus bounded control/test evidence",
+        "human_gate": "HA-V0-MVP6-JOURNAL-BASELINE-MERGE-R1"
+      },
+      {
+        "pr": 649,
+        "merge_commit": "99e8efe2422e02fedec40778e12748611d68fb5f",
+        "scope": "control-only V0-to-NX directional clearance R2",
+        "human_gate": "HA-V0-MVP6-NX-DIRECTIONAL-CLEARANCE-MERGE-R2"
+      }
+    ],
+    "conclusion": "Since the previous audited main, ECO A9 advanced only isolated ecology paths. The only V0 runtime mutation merged to canonical main is the explicitly human-approved PR646 prediction-journal baseline repair, independently reviewed/verified before merge and revalidated on the real merged baseline. PR649 is control-only and was separately human-approved after exact machine validation, fresh code review and VERIFIED_EVIDENCE. Current canonical Project Control is SUCCESS with full Harness 349/349 and standard/directional reports YELLOW/YELLOW; V0-to-NX has zero blocking RED and is covered by exact fail-closed clearance005. The feature M4 MVP6 runtime and Construction seam implementation remain unmerged. Continue the same parent Work Order without reopening MVP1-MVP5 or accepting MVP6."
+  },
+  "runtime_state": {
+    "runtime_branch": "feature/v0-mvp-playable-seamless-planet-r1",
+    "runtime_head_before_audit": "1a1536c66477e762e2ed1c97b330bf70aaefae8b",
+    "runtime_tree_before_audit": "d3a06e9aa42a1d1a155663e116235b3c7a25ea84",
+    "mvp1_verified": true,
+    "mvp2_verified": true,
+    "mvp3_verified": true,
+    "mvp4_verified": true,
+    "mvp5_predicate_verified": true,
+    "mvp6_predicate_verified": false,
+    "runtime_feature_merge_authorized": false,
+    "whole_mvp_acceptance_authorized": false
+  },
+  "recorded_at_utc": "2026-09-17T06:40:10Z",
+  "summary": "Fresh post-clearance continuation audit for canonical main 99e8efe2. Human-approved PR646 journal repair and PR649 control-only V0-to-NX clearance are now canonical. Exact current-main Project Control run35190349772 is SUCCESS with Harness349/349 and standard/directional YELLOW/YELLOW. The epoch may CONTINUE; this audit does not accept MVP6, NX, the whole MVP or authorize the feature runtime merge."
+}

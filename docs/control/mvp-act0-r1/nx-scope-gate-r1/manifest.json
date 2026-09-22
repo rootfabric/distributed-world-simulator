@@ -1,0 +1,104 @@
+{
+  "schema": "distributed_world_simulator.mvp6_nx_human_scope_gate.v1",
+  "reviewed_package_head": "6bd1ddefbd23b30636aff137cdb26e0102157bca",
+  "reviewed_package_tree": "00d163574b851d418d6eff02a67f23a03571d64a",
+  "runtime_evidence_head": "970b4293ae303cda03cd99c5c77ddd54e0f41496",
+  "main_head": "6982a563dd0c88c81449566131852c601ae89868",
+  "decision_id": "HA-V0-MVP6-NX-SAME-REVISION-ROLLBACK-R1",
+  "commands": [
+    {
+      "argv": [
+        "pwsh",
+        "-NoProfile",
+        "-File",
+        "./CONTROL_DEVELOPMENT.ps1",
+        "-Drive",
+        "-Checkpoint",
+        "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE"
+      ],
+      "exit_code": 0
+    },
+    {
+      "argv": [
+        "pwsh",
+        "-NoProfile",
+        "-File",
+        "./CONTROL_DEVELOPMENT.ps1",
+        "-CloseMission",
+        "-Checkpoint",
+        "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE"
+      ],
+      "exit_code": 0
+    }
+  ],
+  "result": {
+    "handoff_class": "HUMAN_DECISION_REQUIRED",
+    "next_actor": "HUMAN",
+    "mission_exit_allowed": true,
+    "mission_complete": false
+  },
+  "pc0": {
+    "standard": "YELLOW",
+    "directional": "RED"
+  },
+  "ci_note": "Feature Project Control 35093374774 fails CANDIDATE_MAIN_DRIFT; no green gate claimed. Native diagnostic 35093369957 correctly fails baseline/candidate rollback; artifacts retained.",
+  "publication_only": true,
+  "mvp6_verified": false,
+  "files": [
+    {
+      "path": ".gitattributes",
+      "bytes": 29,
+      "sha256": "730a35ae3d558080083c3103d9ac8100c3f6561678092abe341701dfa331eb1d"
+    },
+    {
+      "path": "close-mission.log",
+      "bytes": 60539,
+      "sha256": "ea501e85f6142f124d00c75f159ecb16f784629bef483dc64c7e73d4368ea2aa"
+    },
+    {
+      "path": "directional-watch-report.json",
+      "bytes": 41760,
+      "sha256": "52e0cd5b6bab33cdd6c1982185f4eeea64f597a1a31f297d51b16dfb728dd42c"
+    },
+    {
+      "path": "drive.log",
+      "bytes": 62355,
+      "sha256": "755e9cdeb2e87421f45dc152924532c7f2c89b083609d1a8816b16c9d401b78a"
+    },
+    {
+      "path": "feature-project-control-failure.log",
+      "bytes": 27245,
+      "sha256": "a6fd427033574a240b446f05e6317d1511c42c15970d0b984ac77b7c2e4282f2"
+    },
+    {
+      "path": "final-directional.log",
+      "bytes": 364,
+      "sha256": "2454236c0a169314c8beca06b2ab581aece0f9ab505171a41faf24a7f902bb18"
+    },
+    {
+      "path": "final-standard.log",
+      "bytes": 1517,
+      "sha256": "71207f56d9fd5fcfb2860e6ac330b19119a6e7753cb6987fa587793e7f4225cd"
+    },
+    {
+      "path": "project-control-report.json",
+      "bytes": 96907,
+      "sha256": "8bc424665cc7cb3d70b655ea160c8ce24139e50b277af95d45de2c9bb5ba3449"
+    },
+    {
+      "path": "reviewer.json",
+      "bytes": 1588,
+      "sha256": "841247ab01a01254babe61141a798cda1d756777067840aa8d74a5ab367177f9"
+    },
+    {
+      "path": "superseded-f306-drive-rejection.log",
+      "bytes": 784,
+      "sha256": "b0ad021954a03940df170c77b721c85565d9370c2389f91c1b7365e63fc1f988"
+    },
+    {
+      "path": "verifier.json",
+      "bytes": 2381,
+      "sha256": "7510e7b97929c7e72f9060d6967932230334f8adf507698cb55a8543df658f49"
+    }
+  ]
+}

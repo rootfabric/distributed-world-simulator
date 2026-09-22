@@ -1,0 +1,29 @@
+{
+  "schema": "distributed_world_simulator.harness_human_attention.v1",
+  "decision_id": "HA-V0-MVP-CHECKPOINT-CATALOG-SYNC-R1",
+  "program": "V0",
+  "checkpoint": "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE",
+  "risk_class": "CRITICAL",
+  "reason": "FIX_REQUIRED_ACCEPTANCE_EVIDENCE: the adopted V0 live-simulator baseline expanded V0-MVP-R1-WO-001.required_predicates, while the main-owned checkpoint catalog still carried the older 20-predicate MVP acceptance envelope. Exact Harness regression on 025c7a635de5caae61e92f16388d448a47820499 therefore failed closed at test_work_order_does_not_weaken_catalog_or_risk_policy even though MVP5 runtime evidence passed.",
+  "decision_required": "Authorize a bounded control-only repair that adds exactly config/control/harness/checkpoint-catalog.v1.json to the active Work Order write fence and synchronizes only V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE.required_predicates to the already-adopted Work Order list. No runtime, test, ownership, risk, acceptance or main-merge authority changes are authorized.",
+  "options": [
+    "AUTHORIZE_BOUNDED_CHECKPOINT_CATALOG_SYNC",
+    "KEEP_CATALOG_UNCHANGED_AND_HOLD_MVP5_CLOSURE"
+  ],
+  "recommended_option": "AUTHORIZE_BOUNDED_CHECKPOINT_CATALOG_SYNC",
+  "recommendation_reason": "The mismatch is a control-plane consistency defect introduced by the already-adopted live-simulator acceptance refinement. Synchronizing the declared checkpoint preserves fail-closed exact equality and does not weaken any predicate or change runtime behavior.",
+  "blast_radius": [
+    "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE required_predicates only",
+    "V0-MVP-R1-WO-001 exact allowed_paths scope fence",
+    "Harness checkpoint/work-order exact-equality regression"
+  ],
+  "blocking": true,
+  "status": "RESOLVED",
+  "resolution": "AUTHORIZE_BOUNDED_CHECKPOINT_CATALOG_SYNC. User explicitly authorized: «разрешаю bounded control-only repair HA-V0-MVP-CHECKPOINT-CATALOG-SYNC-R1». The repair may modify only the Human Attention record, the active Work Order scope declaration, and config/control/harness/checkpoint-catalog.v1.json for the single V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE required_predicates list. Runtime/source/tests, canonical ownership, risk floor, human gates, historical events, main and acceptance records remain unchanged. This authorization is not MVP5 PREDICATE_VERIFIED and not permission to merge into main.",
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/work-orders/V0-MVP-R1-WO-001.v1.json",
+    "config/control/harness/checkpoint-catalog.v1.json",
+    "docs/control/mvp-act0-r1/MVP_LIVE_SIMULATOR_BASELINE_R1_RU.md",
+    "docs/control/mvp-act0-r1/MVP5_IMPLEMENTATION_R1_RU.md"
+  ]
+}

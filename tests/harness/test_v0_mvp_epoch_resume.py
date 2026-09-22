@@ -48,6 +48,84 @@ class MVPEpochResumeTests(unittest.TestCase):
             path.write_text(json.dumps(dict(audit, pc0="RED")) + "\n", encoding="utf-8")
         return relative
 
+    def advance_canonical_main(self, root: Path) -> str:
+        """Advance origin/main on a side commit without making it an event-head ancestor."""
+        old_main = git(root, "rev-parse", "origin/main")
+        tree = git(root, "rev-parse", old_main + "^{tree}")
+        new_main = git(
+            root,
+            "-c", "user.name=ACT0 main fixture",
+            "-c", "user.email=fixture@example.invalid",
+            "commit-tree", tree, "-p", old_main, "-m", "test-only canonical main advance",
+        )
+        git(root, "update-ref", "refs/remotes/origin/main", new_main)
+        return new_main
+
+    def append_post_progress_audit(
+        self,
+        root: Path,
+        *,
+        actor="INTEGRATOR",
+        command="MVP_ACT0_POST_MERGE_EPOCH_AUDIT",
+        wrong_main=False,
+        wrong_identity=False,
+        committed=True,
+        pc0="NON_RED",
+        directional_pc0="NON_RED",
+        dirty=False,
+    ):
+        main = git(root, "rev-parse", "origin/main")
+        branch_head = git(root, "rev-parse", "HEAD")
+        relative = EX + "/audits/ACT0-POST-PROGRESS-AUDIT-TEST.v1.json"
+        path = root / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        audit = {
+            "schema":"distributed_world_simulator.harness_epoch_audit.v1",
+            "project_epoch":EPOCH,
+            "work_order_id":"FOREIGN" if wrong_identity else WO,
+            "base_sha":BASE,
+            "main_sha":BASE if wrong_main else main,
+            "decision":"CONTINUE",
+            "pc0":pc0,
+            "directional_pc0":directional_pc0,
+            "evidence_class":"ISOLATED_POST_PROGRESS_TEST_FIXTURE_NOT_REAL_PROJECT_ACCEPTANCE",
+        }
+        path.write_text(json.dumps(audit) + "\n", encoding="utf-8")
+        directory = root / EX / "events" / WO
+        prior = max((json.loads(p.read_text()) for p in directory.glob("*.json")), key=lambda x: x["sequence"])
+        sequence = prior["sequence"] + 1
+        recorded = datetime.fromisoformat(prior["recorded_at_utc"].replace("Z", "+00:00")) + timedelta(seconds=1)
+        event = {
+            **prior,
+            "event_id":f"{EPOCH}-TEST-{sequence:04d}-POST-PROGRESS-AUDIT",
+            "sequence":sequence,
+            "event_type":"RECOVERY_RESUMED",
+            "work_state":"IN_PROGRESS",
+            "actor":actor,
+            "command":command,
+            "exit_code":0,
+            "head_sha":branch_head,
+            "evidence_paths":[relative],
+            "recorded_at_utc":recorded.isoformat(),
+            "summary":"Isolated post-progress exact-main audit; preserves IN_PROGRESS and completes no product predicate.",
+        }
+        event.pop("predicate", None)
+        event.pop("blocker", None)
+        event_path = directory / f"{sequence:04d}-test-post-progress-audit.v1.json"
+        event_path.write_text(json.dumps(event) + "\n", encoding="utf-8")
+        git(root, "add", "--", str(event_path.relative_to(root)))
+        if committed:
+            git(root, "add", "--", relative)
+        git(
+            root,
+            "-c", "user.name=ACT0 post-progress audit fixture",
+            "-c", "user.email=fixture@example.invalid",
+            "commit", "-qm", "test-only post-progress exact main audit",
+        )
+        if dirty:
+            path.write_text(json.dumps(dict(audit, pc0="RED")) + "\n", encoding="utf-8")
+        return relative, branch_head, main
+
     def test_committed_exact_audit_resumes_without_product_completion(self):
         with self.fixture(adopted=True) as root:
             code, before = self.cli(root, "drive")
@@ -60,7 +138,6 @@ class MVPEpochResumeTests(unittest.TestCase):
             self.assertEqual("MAIN_MOVED_AUDIT_CONTINUE", after["epoch"]["validation"]["status"])
             self.assertEqual("CONTINUE", after["epoch"]["validation"]["action"])
             self.assertFalse(after["continuation_blocked"])
-            # INTEGRATION orders keep INTEGRATOR; the action now executes the order.
             self.assertEqual("INTEGRATOR", after["next"]["next_actor"])
             self.assertEqual("CONTINUE_ACTIVE_WORK_ORDER_TO_IMPLEMENTED_AND_VALIDATED", after["next"]["next_action"])
             self.assertEqual("DISPATCHED", after["reduced_work_order"]["state"])
@@ -147,6 +224,90 @@ class MVPEpochResumeTests(unittest.TestCase):
             self.assertEqual(0, code, result)
             self.assertEqual("MAIN_MOVED_REVIEW_REQUIRED",result["epoch"]["validation"]["status"])
             self.assertTrue(result["continuation_blocked"])
+
+    def test_post_progress_exact_main_audit_resumes_without_state_regression(self):
+        with self.fixture(adopted=True) as root:
+            self.append_audit(root)
+            self.append_progress(root, "IMPLEMENTATION_COMMITTED", "IN_PROGRESS")
+            code, before = self.cli(root, "drive")
+            self.assertEqual(0, code, before)
+            self.assertEqual("IN_PROGRESS", before["reduced_work_order"]["state"])
+            completed_before = list(before["reduced_work_order"]["completed_predicates"])
+
+            new_main = self.advance_canonical_main(root)
+            self.assertNotEqual(new_main, git(root, "rev-parse", "HEAD"))
+            code, blocked = self.cli(root, "drive")
+            self.assertEqual(0, code, blocked)
+            self.assertEqual("MAIN_MOVED_REVIEW_REQUIRED", blocked["epoch"]["validation"]["status"])
+            self.assertTrue(blocked["continuation_blocked"])
+
+            _, event_subject, audited_main = self.append_post_progress_audit(root)
+            self.assertNotEqual(event_subject, audited_main)
+            self.assertEqual(new_main, audited_main)
+            code, after = self.cli(root, "drive")
+            self.assertEqual(0, code, after)
+            self.assertEqual("MAIN_MOVED_AUDIT_CONTINUE", after["epoch"]["validation"]["status"])
+            self.assertEqual("CONTINUE", after["epoch"]["validation"]["action"])
+            self.assertFalse(after["continuation_blocked"])
+            self.assertEqual(new_main, after["repository"]["origin_main_head_sha"])
+            self.assertEqual("IN_PROGRESS", after["reduced_work_order"]["state"])
+            self.assertEqual(completed_before, after["reduced_work_order"]["completed_predicates"])
+
+    def test_post_progress_wrong_actor_or_command_cannot_resume(self):
+        for changes in ({"actor":"IMPLEMENTER"}, {"command":"UNRELATED_AUDIT"}):
+            with self.subTest(changes=changes), self.fixture(adopted=True) as root:
+                self.append_audit(root)
+                self.append_progress(root, "IMPLEMENTATION_COMMITTED", "IN_PROGRESS")
+                self.advance_canonical_main(root)
+                self.append_post_progress_audit(root, **changes)
+                code, result = self.cli(root, "drive")
+                self.assertEqual(0, code, result)
+                self.assertEqual("MAIN_MOVED_REVIEW_REQUIRED", result["epoch"]["validation"]["status"])
+                self.assertTrue(result["continuation_blocked"])
+                self.assertEqual("IN_PROGRESS", result["reduced_work_order"]["state"])
+
+    def test_post_progress_wrong_main_or_red_control_cannot_resume(self):
+        variants = (
+            {"wrong_main":True},
+            {"pc0":"RED"},
+            {"directional_pc0":"RED"},
+        )
+        for changes in variants:
+            with self.subTest(changes=changes), self.fixture(adopted=True) as root:
+                self.append_audit(root)
+                self.append_progress(root, "IMPLEMENTATION_COMMITTED", "IN_PROGRESS")
+                self.advance_canonical_main(root)
+                self.append_post_progress_audit(root, **changes)
+                code, result = self.cli(root, "drive")
+                self.assertEqual(0, code, result)
+                self.assertEqual("MAIN_MOVED_REVIEW_REQUIRED", result["epoch"]["validation"]["status"])
+                self.assertTrue(result["continuation_blocked"])
+                self.assertEqual("IN_PROGRESS", result["reduced_work_order"]["state"])
+
+    def test_post_progress_wrong_identity_fails_closed(self):
+        with self.fixture(adopted=True) as root:
+            self.append_audit(root)
+            self.append_progress(root, "IMPLEMENTATION_COMMITTED", "IN_PROGRESS")
+            self.advance_canonical_main(root)
+            self.append_post_progress_audit(root, wrong_identity=True)
+            code, result = self.cli(root, "drive")
+            self.assertEqual(3, code, result)
+            self.assertIn("MVP_RESUME_AUDIT_IDENTITY_MISMATCH", result["error"]["detail"])
+
+    def test_post_progress_uncommitted_or_dirty_audit_fails_closed(self):
+        for changes in ({"committed":False}, {"dirty":True}):
+            with self.subTest(changes=changes), self.fixture(adopted=True) as root:
+                self.append_audit(root)
+                self.append_progress(root, "IMPLEMENTATION_COMMITTED", "IN_PROGRESS")
+                self.advance_canonical_main(root)
+                self.append_post_progress_audit(root, **changes)
+                code, result = self.cli(root, "drive")
+                self.assertNotEqual(0, code, result)
+                detail = result["error"]["detail"]
+                self.assertTrue(
+                    "PROVENANCE_" in detail or "EXECUTION_AUTHORITY_" in detail,
+                    detail,
+                )
 
     def test_later_completed_audit_overrides_old_recovery(self):
         with self.fixture(adopted=True) as root:
