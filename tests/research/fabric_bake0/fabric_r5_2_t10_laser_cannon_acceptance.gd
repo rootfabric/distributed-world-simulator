@@ -9,6 +9,8 @@ const Fixture = preload("res://tests/research/fabric_bake0/fabric_r5_2_t10_laser
 const PowerRuntime = preload("res://scripts/research/fabric_bake0/r5_t6_power_stage_runtime_v1.gd")
 const EmitterRuntime = preload("res://scripts/research/fabric_bake0/r5_t9_laser_emitter_runtime_v1.gd")
 const CoolingRuntime = preload("res://scripts/research/fabric_bake0/r5_t8_cooling_loop_runtime_v1.gd")
+const EmitterCompiler = preload("res://scripts/research/fabric_bake0/r5_t9_laser_emitter_compiler_v1.gd")
+const EmitterFixture = preload("res://tests/research/fabric_bake0/fabric_r5_2_t9_laser_emitter_fixture.gd")
 
 const DT_S:=0.002
 const TICKS:=2048
@@ -127,6 +129,27 @@ func _initialize()->void:
 	inconsistent.checksum=U.compute_checksum(inconsistent)
 	var inconsistent_check:=Descriptor.validate(inconsistent)
 	check(not inconsistent_check.success and String(inconsistent_check.error_code)=="LASER_CANNON_DESCRIPTOR_TRANSMISSION_RELATION_MISMATCH","rehashed transmission inconsistency rejected",inconsistent_check)
+	var bad_expansion: Dictionary = descriptor.duplicate(true)
+	bad_expansion.optical_expansion_ratio=float(bad_expansion.optical_expansion_ratio)*1.01
+	var expansion_payload:=bad_expansion.duplicate(true)
+	expansion_payload.erase("descriptor_hash");expansion_payload.erase("checksum")
+	bad_expansion.descriptor_hash=U.canonical_hash(expansion_payload)
+	bad_expansion.checksum=U.compute_checksum(bad_expansion)
+	var expansion_check:=Descriptor.validate(bad_expansion)
+	check(not expansion_check.success and String(expansion_check.error_code)=="LASER_CANNON_DESCRIPTOR_EXPANSION_RELATION_MISMATCH","rehashed expansion inconsistency rejected",expansion_check)
+
+	# Child capsule identity is part of the hierarchy: a damaged T9 child cannot reuse the old child descriptor.
+	var damaged_emitter_graph:=EmitterFixture.make_graph("GAAS",true)
+	var damaged_emitter:=EmitterCompiler.compile(damaged_emitter_graph,EmitterFixture.build_request(damaged_emitter_graph),"capsule/r5-t10-damaged-emitter")
+	check(damaged_emitter.success,"damaged child emitter compiles",damaged_emitter)
+	var child_binding_error:=""
+	if damaged_emitter.success:
+		var changed_subsystems: Dictionary = s.duplicate(true)
+		changed_subsystems.emitter=damaged_emitter.details
+		var changed_graph:=Fixture.make_graph(changed_subsystems)
+		var child_mismatch:=_compile(s,changed_graph,4)
+		child_binding_error=String(child_mismatch.get("error_code",""))
+		check(not child_mismatch.success and child_binding_error=="LASER_CANNON_EMITTER_DESCRIPTOR_BINDING_MISMATCH","child capsule/descriptor mismatch rejected",child_mismatch)
 
 	var runtime=Runtime.new()
 	var live:=Fixture.live_from(artifact)
@@ -295,6 +318,8 @@ func _initialize()->void:
 		"fluence_limit_error":fluence_limit_error,
 		"snapshot_replay_error":replay_error,
 		"descriptor_relation_error":String(inconsistent_check.get("error_code","")),
+		"descriptor_expansion_error":String(expansion_check.get("error_code","")),
+		"child_capsule_binding_error":child_binding_error,
 	}
 	print("FABRIC_R5_2_T10_RESULT="+JSON.stringify(deterministic))
 	if not failed:
