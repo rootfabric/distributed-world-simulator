@@ -615,39 +615,54 @@ func _resolve_founders(founders: Array, registry: Dictionary) -> Dictionary:
 func _build_field(environment: Dictionary) -> Dictionary:
 	var spatial: Dictionary = environment.spatial
 	var zones: Array = environment.zones
-	var field := Field.create(OWNER_TOKEN, 0, spatial.origin_mm, spatial.cell_size_mm, spatial.width, spatial.depth, FieldContract.stock(0), FieldContract.stock(FieldContract.MAX_CELL_STOCK), FieldContract.signals(0, 0))
+	var field := Field.create(
+		OWNER_TOKEN, 0,
+		spatial.origin_mm, spatial.cell_size_mm, spatial.width, spatial.depth,
+		FieldContract.stock(0),
+		FieldContract.stock(FieldContract.MAX_CELL_STOCK),
+		FieldContract.signals(0, 0)
+	)
 	if field.is_empty():
 		return _command_fail("CONTROLLER_FIELD_CREATE")
 	var total: int = spatial.width * spatial.depth
-	var deposits: Array = []
+
+	# Commit stocks per cell. One manifest cell may contain up to
+	# MAX_CELL_STOCK for each of the three resources; splitting at MAX_REQUEST
+	# yields at most 3,000 effects/cell, safely below A4 MAX_BATCH=4,096.
+	# Applying all cells in one batch would make a large but otherwise valid
+	# manifest fail merely because of workbench orchestration.
 	for index in total:
 		var zone: Dictionary = zones[mini(zones.size() - 1, index * zones.size() / total)]
 		var position := _cell_center(field, index)
+		var deposits: Array = []
 		for resource in FieldContract.RESOURCES:
-			var amount: int = int(zone[resource])
-			if amount <= 0:
-				continue
-			# Manifest accepts the full canonical per-cell stock range while one
-			# A4 effect is bounded by MAX_REQUEST. Split deterministically instead
-			# of introducing a second, smaller workbench stock ceiling.
-			var remaining := amount
+			var remaining: int = int(zone[resource])
 			var chunk_index := 0
 			while remaining > 0:
 				var chunk := mini(remaining, FieldContract.MAX_REQUEST)
-				deposits.append(Ports.effect("setup/deposit/%04d/%s/%03d" % [index, resource, chunk_index], OWNER_TOKEN, "deposit", resource, chunk, position, 0, "CONTROLLER_GENESIS"))
+				deposits.append(Ports.effect(
+					"setup/deposit/%04d/%s/%03d" % [index, resource, chunk_index],
+					OWNER_TOKEN, "deposit", resource, chunk, position, 0,
+					"CONTROLLER_GENESIS"
+				))
 				remaining -= chunk
 				chunk_index += 1
-	if not deposits.is_empty():
-		var applied := Field.apply_effects(field, deposits, OWNER_TOKEN, 0, field.revision)
-		if not applied.success:
-			return _command_fail("CONTROLLER_FIELD_STOCKS:" + String(applied.error))
-		field = applied.state
+		if not deposits.is_empty():
+			var applied := Field.apply_effects(field, deposits, OWNER_TOKEN, 0, int(field.revision))
+			if not bool(applied.get("success", false)):
+				return _command_fail("CONTROLLER_FIELD_STOCKS:" + String(applied.get("error", "?")))
+			field = applied.state
+
 	for index in total:
 		var zone: Dictionary = zones[mini(zones.size() - 1, index * zones.size() / total)]
 		var signals := FieldContract.signals(int(zone.light), int(zone.temperature), 0, 0)
-		var set := Field.set_cell_signals(field, index % int(spatial.width), int(index / int(spatial.width)), signals, OWNER_TOKEN, 0, field.revision)
-		if not set.success:
-			return _command_fail("CONTROLLER_FIELD_SIGNALS:" + String(set.error))
+		var set := Field.set_cell_signals(
+			field,
+			index % int(spatial.width), int(index / int(spatial.width)),
+			signals, OWNER_TOKEN, 0, int(field.revision)
+		)
+		if not bool(set.get("success", false)):
+			return _command_fail("CONTROLLER_FIELD_SIGNALS:" + String(set.get("error", "?")))
 		field = set.state
 	return {"success": true, "field": field}
 
