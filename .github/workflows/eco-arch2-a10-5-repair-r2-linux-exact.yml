@@ -1,0 +1,90 @@
+name: ECO ARCH2 A10.5 Repair R2 Linux Exact
+
+on:
+  push:
+    branches:
+      - repair/eco-arch2-a10-5-polygon-r2
+  pull_request:
+    paths:
+      - "scripts/research/ecology/v2/**"
+      - "scripts/ecology/workbench/**"
+      - "scripts/labs/ecology/**"
+      - "scenes/ecology/workbench/**"
+      - "scenes/labs/ecology/**"
+      - "validation/ecology/evo_arch2_a10_5/**"
+      - ".github/workflows/eco-arch2-a10-5-repair-r2-linux-exact.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: eco-a10-5-repair-r2-linux-exact-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  linux_exact:
+    name: A10.5 R2 Linux Double Exact
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 90
+    steps:
+      - name: Checkout exact event subject
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+
+      - name: Record exact subject
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -z "$(git status --porcelain --untracked-files=no)"
+          echo "SUBJECT_HEAD=$(git rev-parse HEAD)"
+          echo "SUBJECT_TREE=$(git rev-parse 'HEAD^{tree}')"
+
+      - name: Resolve canonical Linux double Godot
+        id: godot
+        shell: bash
+        run: |
+          set -euo pipefail
+          GODOT="${DWS_GODOT_DOUBLE_LINUX_BIN:-$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64}"
+          test -x "$GODOT"
+          VERSION="$("$GODOT" --version | head -n1)"
+          test "$VERSION" = "4.7.1.stable.double.custom_build.a13da4feb"
+          SHA="$(sha256sum "$GODOT" | awk '{print $1}')"
+          test "$SHA" = "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7"
+          echo "path=$GODOT" >> "$GITHUB_OUTPUT"
+          echo "GODOT_VERSION=$VERSION"
+          echo "GODOT_SHA256=$SHA"
+
+      - name: Run full A10.5 suite
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/runtime/eco-a10-5-polygon
+          count=0
+          for test_file in validation/ecology/evo_arch2_a10_5/test_*.gd; do
+            name="$(basename "$test_file" .gd)"
+            log="artifacts/runtime/eco-a10-5-polygon/${name}.linux.log"
+            echo "=== RUN $name ==="
+            if ! timeout 900s "${{ steps.godot.outputs.path }}" --headless --path . --log-file "$log" --script "$test_file"; then
+              echo "FAILED: $name"
+              tail -n 120 "$log" || true
+              exit 1
+            fi
+            count=$((count + 1))
+          done
+          test "$count" -eq 15
+          echo "A10_5_R2_LINUX_EXACT_TESTS=$count"
+
+      - name: Verify clean tracked source
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -z "$(git status --porcelain --untracked-files=no)"
+
+      - name: Upload Linux exact evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: eco-a10-5-repair-r2-linux-exact-${{ github.run_id }}
+          path: artifacts/runtime/eco-a10-5-polygon
+          if-no-files-found: warn
