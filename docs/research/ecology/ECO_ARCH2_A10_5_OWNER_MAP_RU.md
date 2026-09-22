@@ -91,8 +91,8 @@
 | Boundary | Canonical/shared owner | R2 composition |
 |---|---|---|
 | Single ecology truth | `ecology_runtime_v1.gd` | Polygon controller хранит только один `_runtime`; A5→receipt admission→A6 работают над тем же field/population |
-| Heritable mutation | A3 + `genome_mutation_receipt_v1.gd` + A5 | Mutated child допускается только с sealed receipt; bias provenance входит как `bias_hash` |
-| Development bias | `genome_mutation_v1.gd` | Versioned weights только над существующим `OPERATORS`; `organization_profile_v1.gd` лишь формирует canonical input |
+| Heritable mutation | A3 + `genome_mutation_receipt_v1.gd` + A5 | Mutated child допускается только с receipt v2: actual A3 event hash + full canonical bias + receipt seal; admission replay'ит parent+seed(+bias) и сверяет operator/child/event |
+| Development bias | `genome_mutation_v1.gd` | Versioned weights только над существующим `OPERATORS`; weighted selection идёт среди применимых canonical transitions; `organization_profile_v1.gd` лишь формирует canonical input |
 | Runtime persistence | `ecology_runtime_checkpoint_v1.gd` | Shared checkpoint владеет `runtime_state + runtime_state_hash`; admission требует caller-owned text hash |
 | Branch trust | `experiment_branch_v1.gd` | Внешний digest полного checkpoint record хранится отдельно; fully rehashed alternate checkpoint отвергается |
 | WORLD-COMPAT persistence | `polygon_world_adapter_v1.gd` | Region/cursor/Matter mapping+batches/site/damage сохраняются как opaque canonical physical JSON envelope, привязанный hash'ами к shared checkpoint |
