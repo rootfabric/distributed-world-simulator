@@ -82,3 +82,46 @@
 - `experiment_controller_v1.gd` — consumer runtime: единственное состояние `_runtime`; `_tick_once()` = `Runtime.step(...)`; WORLD_COMPAT gate сохранён до шага; `apply_field_patch`/`apply_world_stocks` → canonical owner-write API + `Runtime.adopt_field` (accounting re-anchor); checkpoint envelope несёт состояние runtime (старые pre-repair checkpoint-тексты отклоняются fail-closed — формат версионируется manifest_hash binding).
 - `experiment_metrics_v1.gd` — emission `PARENT_TRANSFER_WITNESS_FALLBACK` удалён: мутация либо реально наследуется (applied, sealed receipt), либо canonical neutral (например оператор `none`).
 - Тесты: `test_controller_equivalence.gd` переписан — oracle = явная композиция публичных примитивов EcologyRuntimeV1 (не копия orchestration); `test_runtime_single_state.gd` (новый) доказывает: A5 ровно один раз за tick; один field/одна population; mineralization меняет тот же field, который читает следующий A5; corpse return попадает в тот же canonical field; presentation/checkpoint видят то же состояние.
+
+
+## 5. REPAIR R2 — closure of trust/persistence/world gaps
+
+Ветка: `repair/eco-arch2-a10-5-polygon-r2`. Base: R1 retrain `8c42844e9`.
+
+| Boundary | Canonical/shared owner | R2 composition |
+|---|---|---|
+| Single ecology truth | `ecology_runtime_v1.gd` | Polygon controller хранит только один `_runtime`; A5→receipt admission→A6 работают над тем же field/population |
+| Heritable mutation | A3 + `genome_mutation_receipt_v1.gd` + A5 | Mutated child допускается только с sealed receipt; bias provenance входит как `bias_hash` |
+| Development bias | `genome_mutation_v1.gd` | Versioned weights только над существующим `OPERATORS`; `organization_profile_v1.gd` лишь формирует canonical input |
+| Runtime persistence | `ecology_runtime_checkpoint_v1.gd` | Shared checkpoint владеет `runtime_state + runtime_state_hash`; admission требует caller-owned text hash |
+| Branch trust | `experiment_branch_v1.gd` | Внешний digest полного checkpoint record хранится отдельно; fully rehashed alternate checkpoint отвергается |
+| WORLD-COMPAT persistence | `polygon_world_adapter_v1.gd` | Region/cursor/Matter mapping+batches/site/damage сохраняются как opaque canonical physical JSON envelope, привязанный hash'ами к shared checkpoint |
+| Matter bridge | A10 `matter_resource_mapping_v1.gd` + A4 owner-write | Только new-batch delta; exact batch replay idempotent; multi-cell total без spatial allocation witness fail-closed |
+| Damage trust | A10 `body_construction_binding_v1.gd` | `expected_event_binding_hash` хранится отдельно при trusted registration; apply не выводит expected anchor из event |
+| Death E2E | A5 + A6 | Manifest `genesis.founder_endowment` задаёт явный experiment input; Polygon E2E наблюдает starvation death→corpse return→mineralization |
+| Field bounds | A4 `FieldContract` | Controller использует `MAX_CELL_STOCK`, режет writes по `MAX_REQUEST` и коммитит genesis per-cell, не превышая `MAX_BATCH` |
+
+### R2 trust chain
+
+```text
+caller-owned checkpoint anchor
+        ↓
+checkpoint state_text SHA-256
+        ↓
+shared EcologyRuntimeCheckpoint checksum
+        ↓
+Runtime.integrity_hash + Runtime.validate
+        ↓
+single field / population / feedback accounting
+
+WORLD_COMPAT:
+checkpoint.external_state_hash
+        ↓
+opaque world-state envelope digest
+        ↓
+physical canonical JSON state_hash/checksum
+        ↓
+Region + cursor + Matter admissions + damage trusted anchors
+```
+
+Это разделяет ownership: biological/runtime truth принадлежит shared ecology runtime; physical/world authority — существующим A10 contracts; workbench управляет экспериментом, но не создаёт параллельную biological/world truth.
