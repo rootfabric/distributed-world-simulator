@@ -8,7 +8,7 @@ const FIELDS: Array[String] = [
 	"schema","graph_hash","interface_contract",
 	"power_stage_capsule_checksum","laser_emitter_capsule_checksum","cooling_capsule_checksum",
 	"optics_surface_transmission_ratio","optics_total_transmission_ratio",
-	"optical_expansion_ratio","clear_aperture_diameter_m","max_surface_fluence_j_m2",
+	"optical_expansion_ratio","emitter_aperture_area_m2","input_clear_aperture_area_m2","output_clear_aperture_area_m2","clear_aperture_diameter_m","max_surface_fluence_j_m2",
 	"source_component_count","source_operation_count","compiled_operation_count",
 	"descriptor_hash","checksum",
 ]
@@ -24,6 +24,9 @@ static func create(data: Dictionary) -> Dictionary:
 		"optics_surface_transmission_ratio":float(data.optics_surface_transmission_ratio),
 		"optics_total_transmission_ratio":float(data.optics_total_transmission_ratio),
 		"optical_expansion_ratio":float(data.optical_expansion_ratio),
+		"emitter_aperture_area_m2":float(data.emitter_aperture_area_m2),
+		"input_clear_aperture_area_m2":float(data.input_clear_aperture_area_m2),
+		"output_clear_aperture_area_m2":float(data.output_clear_aperture_area_m2),
 		"clear_aperture_diameter_m":float(data.clear_aperture_diameter_m),
 		"max_surface_fluence_j_m2":float(data.max_surface_fluence_j_m2),
 		"source_component_count":int(data.source_component_count),
@@ -50,7 +53,7 @@ static func validate(value: Dictionary) -> Dictionary:
 	checked = Interface.validate(value.interface_contract)
 	if not checked.success:
 		return checked
-	for field in ["optics_surface_transmission_ratio","optics_total_transmission_ratio","optical_expansion_ratio","clear_aperture_diameter_m","max_surface_fluence_j_m2"]:
+	for field in ["optics_surface_transmission_ratio","optics_total_transmission_ratio","optical_expansion_ratio","emitter_aperture_area_m2","input_clear_aperture_area_m2","output_clear_aperture_area_m2","clear_aperture_diameter_m","max_surface_fluence_j_m2"]:
 		if not U.is_positive_number(value.get(field)):
 			return U.failure("INVALID_LASER_CANNON_DESCRIPTOR_SCALAR",{"field":field})
 	if float(value.optics_surface_transmission_ratio) >= 1.0 or float(value.optics_total_transmission_ratio) >= 1.0:
@@ -58,6 +61,14 @@ static func validate(value: Dictionary) -> Dictionary:
 	var expected_total := pow(float(value.optics_surface_transmission_ratio),4.0)
 	if absf(float(value.optics_total_transmission_ratio)-expected_total) > 1.0e-12*maxf(1.0e-18,expected_total):
 		return U.failure("LASER_CANNON_DESCRIPTOR_TRANSMISSION_RELATION_MISMATCH")
+	var expected_output_area := PI * pow(float(value.clear_aperture_diameter_m) * 0.5, 2.0)
+	var expected_input_area := expected_output_area / pow(float(value.optical_expansion_ratio), 2.0)
+	if absf(float(value.output_clear_aperture_area_m2)-expected_output_area) > 1.0e-12*maxf(1.0e-18,expected_output_area):
+		return U.failure("LASER_CANNON_DESCRIPTOR_OUTPUT_APERTURE_RELATION_MISMATCH")
+	if absf(float(value.input_clear_aperture_area_m2)-expected_input_area) > 1.0e-12*maxf(1.0e-18,expected_input_area):
+		return U.failure("LASER_CANNON_DESCRIPTOR_INPUT_APERTURE_RELATION_MISMATCH")
+	if float(value.input_clear_aperture_area_m2) < float(value.emitter_aperture_area_m2):
+		return U.failure("LASER_CANNON_INPUT_APERTURE_CLIPS_EMITTER")
 	for field in ["source_component_count","source_operation_count","compiled_operation_count"]:
 		if not U.is_json_integer(value.get(field)) or int(value[field]) < 1:
 			return U.failure("INVALID_LASER_CANNON_DESCRIPTOR_INTEGER",{"field":field})
