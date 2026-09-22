@@ -1,0 +1,188 @@
+name: P7 Canonical Closure Evidence
+on:
+  push:
+    branches: [control/v0-p7-canonical-closure-r1]
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  packet-audit:
+    if: github.repository == 'rootfabric/distributed-world-simulator' && github.actor == 'rootfabric'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate preserved exact evidence and history
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install -r scripts/harness/requirements.txt
+          python scripts/harness/verify_p7_closure_packet.py --git --github --output artifacts/p7-closure/packet-audit.json
+          python -m unittest discover -s tests/harness -p 'test_p7_closure_packet.py' -v
+      - name: Observe canonical control routing without dispatch
+        shell: bash
+        run: |
+          set +e
+          set -u
+          mkdir -p artifacts/p7-closure
+          failed=0
+          for mode in Overview CheckConsistency Drive CloseMission; do
+            pwsh -NoProfile -File ./CONTROL_DEVELOPMENT.ps1 "-$mode" > "artifacts/p7-closure/$mode.log" 2>&1
+            code=$?
+            printf '%s %s\n' "$mode" "$code" >> artifacts/p7-closure/control-exits.txt
+            if [ "$mode" = CloseMission ]; then expected=8; else expected=0; fi
+            if [ "$code" -ne "$expected" ]; then failed=1; fi
+          done
+          set -e
+          git diff --exit-code
+          git diff --cached --exit-code
+          exit "$failed"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p7-closure-packet-audit-${{ github.sha }}
+          path: artifacts/p7-closure/
+          if-no-files-found: error
+          retention-days: 90
+  approved-engine:
+    if: github.repository == 'rootfabric/distributed-world-simulator' && github.actor == 'rootfabric' && (github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[world-core]'))
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 10
+    steps:
+      - name: Preserve approved prebuilt runtime dependency only
+        shell: bash
+        run: |
+          set -euo pipefail
+          expected=bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7
+          engine="$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64"
+          test "$(sha256sum "$engine" | cut -d' ' -f1)" = "$expected"
+          mkdir -p "$RUNNER_TEMP/p7-approved-engine-$GITHUB_RUN_ID"
+          cp "$engine" "$RUNNER_TEMP/p7-approved-engine-$GITHUB_RUN_ID/godot"
+          # This artifact is a prebuilt tool dependency, never repository source,
+          # a checkout, Git metadata, or a source-publication transport workaround.
+          printf '%s  godot\n' "$expected" > "$RUNNER_TEMP/p7-approved-engine-$GITHUB_RUN_ID/SHA256SUMS"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: p7-approved-engine-${{ github.run_id }}
+          path: ${{ runner.temp }}/p7-approved-engine-${{ github.run_id }}/
+          if-no-files-found: error
+          retention-days: 7
+  canonical-world-core:
+    if: github.repository == 'rootfabric/distributed-world-simulator' && github.actor == 'rootfabric' && (github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[world-core]'))
+    needs: approved-engine
+    runs-on: ubuntu-latest
+    concurrency:
+      group: p7-world-core-c14
+      cancel-in-progress: false
+    timeout-minutes: 150
+    env:
+      SUBJECT_HEAD: c14c37cce4930a8b5132d5d5fdfab3a5dfa82f5f
+      SUBJECT_TREE: 04679a6e67fc86ec156d4341140fd5b0225d6085
+      GODOT_SHA256: bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7
+      PYTHONUTF8: '1'
+      LIBGL_ALWAYS_SOFTWARE: '1'
+    steps:
+      - name: Checkout frozen canonical product, not workflow source
+        uses: actions/checkout@v4
+        with:
+          ref: c14c37cce4930a8b5132d5d5fdfab3a5dfa82f5f
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/download-artifact@v4
+        with:
+          name: p7-approved-engine-${{ github.run_id }}
+          path: ${{ runner.temp }}/p7-approved-engine
+      - name: Resolve exact identity and approved engine
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/p7-world-core
+          test "$(git rev-parse HEAD)" = "$SUBJECT_HEAD"
+          test "$(git rev-parse 'HEAD^{tree}')" = "$SUBJECT_TREE"
+          test -z "$(git status --porcelain --untracked-files=no)"
+          { git rev-parse HEAD; git rev-parse 'HEAD^{tree}'; git status --porcelain --untracked-files=no; uname -a; } > artifacts/p7-world-core/preflight.txt
+          engine="$RUNNER_TEMP/p7-approved-engine/godot"
+          chmod u+x "$engine"
+          test "$(sha256sum "$engine" | cut -d' ' -f1)" = "$GODOT_SHA256"
+          "$engine" --version | tee artifacts/p7-world-core/godot-version.txt
+          sha256sum "$engine" > artifacts/p7-world-core/godot-sha256.txt
+          echo "GODOT_BIN=$engine" >> "$GITHUB_ENV"
+      - name: Provide required graphical test dependency
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ ! -x /usr/bin/Xvfb ]; then
+            if [ "$(id -u)" = 0 ]; then
+              apt-get update
+              DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends xvfb xauth libgl1-mesa-dri
+            else
+              sudo -n apt-get update
+              sudo -n env DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends xvfb xauth libgl1-mesa-dri
+            fi
+          fi
+          test -x /usr/bin/Xvfb
+          { ls -l /usr/bin/Xvfb; dpkg-query -W xvfb libgl1-mesa-dri; } > artifacts/p7-world-core/graphical-environment.txt
+      - name: Resolve available PowerShell 7
+        shell: bash
+        run: |
+          set -euo pipefail
+          shell_bin="$(command -v pwsh)"
+          "$shell_bin" -NoProfile -Command 'if ($PSVersionTable.PSVersion.Major -lt 7) { exit 1 }; $PSVersionTable' > artifacts/p7-world-core/powershell-version.txt
+          echo "P7_PWSH=$shell_bin" >> "$GITHUB_ENV"
+      - name: Run unchanged repository full world and core regression
+        shell: bash
+        run: |
+          set +e
+          set -uo pipefail
+          # Unix dotfiles require Get-Item -Force in the existing Windows-oriented
+          # atomic summary writer. Set this read-only provider default in this
+          # PowerShell process, without editing the canonical runner or test list.
+          printf '%s\n' 'Get-Item:Force=true (Linux hidden atomic-summary temp files)' > artifacts/p7-world-core/environment-adapter.txt
+          timeout --signal=TERM --kill-after=60s 120m "$P7_PWSH" -NoProfile -Command '$PSDefaultParameterValues = @{"Get-Item:Force" = $true}; & ./RUN_WORLD_REGRESSION_TESTS.ps1; exit $LASTEXITCODE' 2>&1 | tee artifacts/p7-world-core/full-world-core.log
+          code=${PIPESTATUS[0]}
+          printf '%s\n' "$code" > artifacts/p7-world-core/exit-code.txt
+          exit "$code"
+      - name: Require actual successful summary and exit code
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(cat artifacts/p7-world-core/exit-code.txt)" = 0
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          summary = json.loads(Path('artifacts/test-results/world-regression-summary.json').read_text())
+          assert summary['passed'] is True, 'WORLD_CORE_SUMMARY_NOT_PASS'
+          assert summary['declared_test_count'] == summary['discovered_test_count'], 'WORLD_CORE_COVERAGE_MISMATCH'
+          assert summary['steps'] and all(s['passed'] is True and s['exit_code'] == 0 for s in summary['steps']), 'WORLD_CORE_STAGE_NOT_PASS'
+          assert any(s['name'] == 'main_scene_cli_all' for s in summary['steps']), 'WORLD_CORE_AGGREGATE_MISSING'
+          PY
+      - name: Verify frozen checkout and durable summary
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/p7-world-core
+          { git rev-parse HEAD; git rev-parse 'HEAD^{tree}'; git status --porcelain --untracked-files=no; } > artifacts/p7-world-core/postflight.txt
+          test "$(git rev-parse HEAD)" = "$SUBJECT_HEAD"
+          test "$(git rev-parse 'HEAD^{tree}')" = "$SUBJECT_TREE"
+          test -z "$(git status --porcelain --untracked-files=no)"
+          if [ -f artifacts/test-results/world-regression-summary.json ]; then
+            cp artifacts/test-results/world-regression-summary.json artifacts/p7-world-core/
+          fi
+          find artifacts/p7-world-core -type f ! -name SHA256SUMS -print0 | sort -z | xargs -0 sha256sum > artifacts/p7-world-core/SHA256SUMS
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p7-canonical-world-core-c14c37cc-${{ github.run_id }}
+          path: artifacts/p7-world-core/
+          if-no-files-found: error
+          retention-days: 90
