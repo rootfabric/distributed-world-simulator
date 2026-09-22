@@ -1,0 +1,98 @@
+{
+  "schema": "fabric.r5_2.t10_laser_cannon_exact_evidence.v1",
+  "status": "REPAIR_R2_LOCAL_EXACT_3X_PASS",
+  "subject_head": "8e0916384e302d1ec1e8dbcb60a32db2c7977731",
+  "subject_tree": "60c4f44911c855eb1c82d989f0487a92517075de",
+  "t9_merge_head": "676672b03c563b5e5f6428ac30f6545a5676e1ef",
+  "canonical_owner": "Construction/Matter + frozen T6/T8/T9 BehaviorCapsules",
+  "production_checkpoint": false,
+  "execution_environment": {
+    "godot_version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "godot_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+    "source_carrier_run_id": 35747914442,
+    "source_carrier_artifact_id": 10703657075,
+    "source_carrier_artifact_digest": "sha256:027324bfa3a6798ad525fd89382a6c2a8b9d66d0f9db61a3f4f26f4c458c9af0",
+    "source_bundle_verified": true,
+    "source_bundle_head": "8e0916384e302d1ec1e8dbcb60a32db2c7977731",
+    "source_bundle_tree": "60c4f44911c855eb1c82d989f0487a92517075de",
+    "sample_processes": 3,
+    "note": "Self-hosted Actions carrier was queued behind stale T7 run 35614335791/job 106381057011; exact product evidence was executed from the hosted Exact Source Carrier bundle on the byte-exact canonical Godot."
+  },
+  "hashes": {
+    "deterministic_hash": "5905b9102685455853595e246be60fe89c835f8c53814f47a04f3aad220332fd",
+    "evidence_hash": "104506a20025a786bfb4558f3de99f4496189b39ebb866a1a80298b6b74c03b9",
+    "graph_hash": "d746d39906665d188018c25e500fb8c15e984c0e8413405ac894f7d0b3be4371",
+    "descriptor_hash": "36689f17dbf36a6ff3e25a09eb2b95d6467c9f040a7a1119b6833ca376bf2756",
+    "capsule_checksum": "bc9ba91c0fc2d2023a086b6e891259b77c5884332f60db4e5fae420b2ce06ca6"
+  },
+  "hierarchical_compression": {
+    "leaf_source_components": 642,
+    "leaf_source_operations": 3848,
+    "assembly_operations": 24,
+    "operation_compression_ratio": 160.333333333333,
+    "runtime_source_component_traversals_per_execute": 0,
+    "subsystem_runtime_source_traversals_per_execute": {
+      "power_stage": 0,
+      "laser_emitter": 0,
+      "cooling": 0
+    }
+  },
+  "exact_composition": {
+    "sequence_ticks": 2048,
+    "assertions_per_sample": 6311,
+    "maximum_manual_muzzle_error_j": 0,
+    "maximum_manual_heat_error_j": 0,
+    "maximum_manual_spot_radius_error_m": 0,
+    "maximum_manual_state_error_k": 0,
+    "maximum_whole_energy_residual_j": 8.13247247322124e-11,
+    "snapshot_replay_error": 0
+  },
+  "optical_boundary": {
+    "optical_expansion_ratio": 4,
+    "optics_total_transmission_ratio": 0.980149500625,
+    "divergence_ratio_vs_bare_emitter": 0.25,
+    "lossy_optics_muzzle_ratio": 0.941048441499837,
+    "clipped_geometry_error": "LASER_CANNON_INPUT_APERTURE_CLIPS_EMITTER",
+    "fluence_limit_error": "LASER_CANNON_RUNTIME_OPTICS_FLUENCE_LIMIT"
+  },
+  "assembly_observation": {
+    "total_muzzle_optical_energy_j": 122.524617996954,
+    "total_pump_hydraulic_energy_j": 2.86158821946721,
+    "max_plate_temperature_k": 300.254451865668
+  },
+  "repair_r1": {
+    "issue": "canonical Godot strict parser rejected multiline hierarchical arithmetic and Variant-inferred subsystem results",
+    "repair": "parse-safe explicit integer arithmetic and explicit Dictionary subsystem result types",
+    "thresholds_relaxed": false
+  },
+  "repair_r2": {
+    "focal_length_expansion_relation_validated": true,
+    "descriptor_expansion_tamper": "LASER_CANNON_DESCRIPTOR_EXPANSION_RELATION_MISMATCH",
+    "transmission_relation_tamper": "LASER_CANNON_DESCRIPTOR_TRANSMISSION_RELATION_MISMATCH",
+    "child_capsule_descriptor_mismatch": "LASER_CANNON_EMITTER_DESCRIPTOR_BINDING_MISMATCH",
+    "optics_profile_checksum_bound": true
+  },
+  "observations": {
+    "process_elapsed_s": {
+      "min": 3.77,
+      "median": 3.87,
+      "max": 3.98
+    },
+    "process_max_rss_kib": {
+      "min": 134172,
+      "median": 134200,
+      "max": 134488
+    },
+    "timing_is_acceptance_threshold": false,
+    "rss_is_acceptance_threshold": false
+  },
+  "bounded_claim": {
+    "target_damage_model_claimed": false,
+    "atmosphere_claimed": false,
+    "adaptive_optics_claimed": false,
+    "pointing_servo_claimed": false,
+    "battery_source_dynamics_claimed": false,
+    "note": "T10 proves hierarchical capsule composition, optical boundary relations, cooling state ownership and whole-assembly energy accounting. Spot fluence is not converted into damage."
+  },
+  "next_gate": "EXACT_HEAD_CLOSURE_THEN_FRESH_REVIEW_AND_INDEPENDENT_VERIFIER"
+}
