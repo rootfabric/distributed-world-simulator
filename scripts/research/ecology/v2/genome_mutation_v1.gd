@@ -37,27 +37,40 @@ static func mutate_with_bias(parent: Dictionary, seed: int, bias: Dictionary) ->
 	var error := validate_bias(bias)
 	if not error.is_empty() or not G.validate(parent).is_empty() or not C.integer(seed, 0, C.MAX_INT):
 		return _rejected("bias", error if not error.is_empty() else "INVALID_INPUT")
+
+	# A bias is a prior over canonical transitions, not over names that happen
+	# to be syntactically present. Some A3 operators are context-sensitive
+	# (e.g. activate requires a disabled action). Determine the canonical
+	# applicable set by executing each pure operator once with the same seed,
+	# then perform weighted selection only over successful transitions.
 	var names: Array = bias.operator_weights.keys()
 	names.sort()
+	var applicable: Array = []
 	var total := 0
-	for name in names:
-		total += int(bias.operator_weights[name])
+	for raw_name in names:
+		var name := String(raw_name)
+		var weight := int(bias.operator_weights[name])
+		if weight <= 0:
+			continue
+		var candidate: Dictionary = mutate(parent, seed, name)
+		if not bool(candidate.get("success", false)):
+			continue
+		applicable.append({"operator": name, "weight": weight, "result": candidate})
+		total += weight
+	if applicable.is_empty() or total <= 0:
+		return _rejected("bias", "MUTATION_BIAS_NO_APPLICABLE_OPERATOR")
+
 	var ticket := draw(seed, "bias/%s/%d" % [String(bias.name), int(bias.version)], total)
-	var selected := ""
 	var cursor := 0
-	for name in names:
-		cursor += int(bias.operator_weights[name])
+	for row in applicable:
+		cursor += int(row.weight)
 		if ticket < cursor:
-			selected = String(name)
-			break
-	if selected.is_empty():
-		return _rejected("bias", "MUTATION_BIAS_SELECTION")
-	var result := mutate(parent, seed, selected)
-	if bool(result.get("success", false)):
-		result["bias_name"] = String(bias.name)
-		result["bias_version"] = int(bias.version)
-		result["selected_operator"] = selected
-	return result
+			var result: Dictionary = row.result.duplicate(true)
+			result["bias_name"] = String(bias.name)
+			result["bias_version"] = int(bias.version)
+			result["selected_operator"] = String(row.operator)
+			return result
+	return _rejected("bias", "MUTATION_BIAS_SELECTION")
 
 static func mutate(parent: Dictionary, seed: int, operator: String = "small") -> Dictionary:
 	if not G.validate(parent).is_empty() or not C.integer(seed, 0, C.MAX_INT) or not operator in OPERATORS:
