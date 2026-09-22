@@ -8,18 +8,23 @@
 #
 # Notes:
 #   - Godot canonical console binary (docs/GODOT_LOCAL_TESTING_RU.md).
+#   - -GodotPath pins the exact binary selected/hashed by CI; DWS_GODOT_DOUBLE_BIN
+#     is the fallback override for local runs. The test launcher never silently
+#     switches away from an explicitly supplied exact binary.
 #   - Tests run via Start-Process + --log-file + a timeout watchdog
 #     (RedirectStandardOutput deadlocks Godot on Windows).
 #   - Heavy tests (world_compat, final e2e, batch) get 900s; the rest 300s.
 
 param(
     [switch]$Test,
-    [string]$Name = ""
+    [string]$Name = "",
+    [string]$GodotPath = ""
 )
 
 $ErrorActionPreference = "Stop"
 
-$GodotBin  = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
+$DefaultGodotBin = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe"
+$GodotBin = if (-not [string]::IsNullOrWhiteSpace($GodotPath)) { $GodotPath } elseif (-not [string]::IsNullOrWhiteSpace($env:DWS_GODOT_DOUBLE_BIN)) { $env:DWS_GODOT_DOUBLE_BIN } else { $DefaultGodotBin }
 $GodotGui  = "C:\Godot\godot\bin\godot.windows.editor.double.x86_64.exe"
 $Project   = $PSScriptRoot
 $TestDir   = Join-Path $Project "validation\ecology\evo_arch2_a10_5"
