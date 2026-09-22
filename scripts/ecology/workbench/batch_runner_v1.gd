@@ -29,7 +29,6 @@ const REPORT_SCHEMA := "dws.ecology.workbench.batch-report.v1"
 const CHECKPOINT_SCHEMA := "dws.ecology.workbench.batch-checkpoint.v1"
 const STATUS_COMPLETED := "COMPLETED"
 const STATUS_FAILED := "FAILED"
-const STATUS_BLOCKED := "BLOCKED_CANONICAL_EXTENSION_REQUIRED"
 const DEFAULT_HORIZON := 32
 const MAX_HORIZON := 512
 const MAX_VARIATIONS := 4096
