@@ -40,6 +40,8 @@ def main():
         assert d["runtime_source_cell_traversals"]==0
         assert d["total_max_current_a"] > d["total_threshold_current_a"] > 0.0
         assert d["wavelength_m"] > 0.0 and d["beam_divergence_half_angle_rad"] > 0.0
+        assert 0.0 < d["reference_carrier_quantum_yield_ratio"] <= 1.0
+        assert d["quantum_unsafe_profile_rejected"] is True
         assert d["sequence_ticks"]==2048
         assert d["full_reference_cell_traversals"]==128*2048
         assert d["maximum_terminal_voltage_error_v"]<=1e-12
