@@ -76,12 +76,17 @@ func root_branch_id() -> String:
 # --- checkpoint ----------------------------------------------------------------
 
 ## Deterministic checkpoint id: digest of (manifest_hash, tick, state hash).
-static func checkpoint_id_for(manifest_hash: String, tick: int, canonical_state_hash: String) -> String:
+static func checkpoint_id_for(manifest_hash: String, tick: int, canonical_state_hash: String, state_checksum: String) -> String:
+	# Identity binds BOTH the canonical ecology runtime and the complete
+	# serialized checkpoint payload. This matters in WORLD_COMPAT: authority,
+	# Matter/site bindings and damage overlay may legitimately change while the
+	# biological runtime/tick stays identical.
 	return C.digest({
 		"schema": CHECKPOINT_SCHEMA,
 		"manifest_hash": manifest_hash,
 		"tick": tick,
 		"canonical_state_hash": canonical_state_hash,
+		"state_checksum": state_checksum,
 	})
 
 ## Create an immutable checkpoint of the bound controller state.
@@ -95,7 +100,8 @@ func create_checkpoint(parent_checkpoint_id: String = "", branch_meta: Dictionar
 	var manifest_hash := String(serialized.manifest_hash)
 	var tick := int(serialized.tick)
 	var state_hash := String(serialized.state_hash)
-	var id := checkpoint_id_for(manifest_hash, tick, state_hash)
+	var state_checksum := String(serialized.state_checksum)
+	var id := checkpoint_id_for(manifest_hash, tick, state_hash, state_checksum)
 	var checkpoint := {
 		"schema": CHECKPOINT_SCHEMA,
 		"checkpoint_id": id,
@@ -103,7 +109,7 @@ func create_checkpoint(parent_checkpoint_id: String = "", branch_meta: Dictionar
 		"tick": tick,
 		"canonical_state_hash": state_hash,
 		"snapshot_text": String(serialized.state_text),
-		"state_checksum": String(serialized.state_checksum),
+		"state_checksum": state_checksum,
 		"runtime_checkpoint_checksum": String(serialized.checkpoint_checksum),
 		"parent_checkpoint_id": parent_checkpoint_id,
 		"branch_meta": branch_meta.duplicate(true),
@@ -131,7 +137,9 @@ static func validate_checkpoint(checkpoint: Dictionary) -> String:
 		return "CHECKPOINT_SCHEMA"
 	if not F.valid_hash(checkpoint.manifest_hash) or not F.valid_hash(checkpoint.canonical_state_hash):
 		return "CHECKPOINT_HASH"
-	if checkpoint.checkpoint_id != checkpoint_id_for(String(checkpoint.manifest_hash), int(checkpoint.tick), String(checkpoint.canonical_state_hash)):
+	if not F.valid_hash(checkpoint.state_checksum):
+		return "CHECKPOINT_STATE_CHECKSUM"
+	if checkpoint.checkpoint_id != checkpoint_id_for(String(checkpoint.manifest_hash), int(checkpoint.tick), String(checkpoint.canonical_state_hash), String(checkpoint.state_checksum)):
 		return "CHECKPOINT_ID"
 	if not checkpoint.snapshot_text is String or not F.valid_hash(checkpoint.state_checksum) or String(checkpoint.snapshot_text).sha256_text() != String(checkpoint.state_checksum):
 		return "CHECKPOINT_STATE_CHECKSUM"
