@@ -11,7 +11,7 @@
 - `BIAS_SCHEMA = dws.ecology.genome-mutation-bias.v1`;
 - `validate_bias(bias)` допускает только имена из закрытого `OPERATORS`;
 - веса — bounded non-negative integers, суммарный вес > 0;
-- `mutate_with_bias(parent, seed, bias)` детерминированно выбирает существующий оператор и затем вызывает обычный `mutate()`;
+- `mutate_with_bias(parent, seed, bias)` сначала вычисляет множество **применимых** canonical A3 transitions, затем детерминированно делает weighted selection внутри него и вызывает обычный `mutate()` result; контекстно неприменимый оператор не превращает валидный профиль в случайный hard-fail;
 - bias не добавляет roles/actions/операторов и не обходит `Genome.validate`.
 
 Фактическая форма:
@@ -32,11 +32,12 @@ R1 уже добавил `genome_mutation_receipt_v1.gd` и receipt-backed paren
 `EcologyRuntimeV1.admit_propagules`
 → `Mutation.mutate_with_bias`
 → child blueprint
-→ `GenomeMutationReceipt.issue(..., bias_hash)`
+→ `GenomeMutationReceipt.issue(parent, actual_A3_result, seed, bias)`
+→ receipt v2 хранит `mutation_event_hash` + bias + отдельный `receipt_hash`
 → `Lifecycle.materialize_propagule`
 → `LifeState.validate_mutated_parent_transfer`.
 
-Silent fallback на parent genome отсутствует: невалидный mutation/bias/receipt останавливает tick fail-closed.
+Silent fallback на parent genome отсутствует: невалидный mutation/bias/receipt останавливает tick fail-closed. `Receipt.validate_admission()` повторно исполняет A3 из exact parent+seed(+bias) и требует совпадения operator, child hash и mutation event hash; полностью перехешированный forged receipt с чужим child отвергается.
 
 ## 3. OrganizationProfile
 
