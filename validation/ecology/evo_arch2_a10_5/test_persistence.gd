@@ -138,6 +138,13 @@ func _run() -> void:
 	var checkpoint_digest := C.digest(checkpoint)
 	var checkpoint_anchor := fork_manager.trusted_checkpoint_anchor(String(checkpoint.checkpoint_id))
 	_check(checkpoint_anchor == checkpoint_digest, "P8 manager retains caller-owned checkpoint anchor")
+	# Checkpoint identity also binds the full persisted payload, not only the
+	# ecology runtime. WORLD_COMPAT authority/site/damage state can change while
+	# runtime state and tick remain identical, so equal runtime hashes must not
+	# collapse distinct persisted states.
+	var alternate_state_checksum := "a".repeat(64) if String(checkpoint.state_checksum) != "a".repeat(64) else "b".repeat(64)
+	var alternate_id := Branch.checkpoint_id_for(String(checkpoint.manifest_hash), int(checkpoint.tick), String(checkpoint.canonical_state_hash), alternate_state_checksum)
+	_check(String(alternate_id) != String(checkpoint.checkpoint_id), "P8 checkpoint id binds full persisted state checksum")
 
 	# Adversarial checkpoint admission. A different valid runtime state may be
 	# fully rehashed into a structurally valid record, but it cannot replace the
@@ -156,7 +163,7 @@ func _run() -> void:
 	rehashed.snapshot_text = String(foreign_saved.state_text)
 	rehashed.state_checksum = String(foreign_saved.state_checksum)
 	rehashed.runtime_checkpoint_checksum = String(foreign_saved.checkpoint_checksum)
-	rehashed.checkpoint_id = Branch.checkpoint_id_for(String(rehashed.manifest_hash), int(rehashed.tick), String(rehashed.canonical_state_hash))
+	rehashed.checkpoint_id = Branch.checkpoint_id_for(String(rehashed.manifest_hash), int(rehashed.tick), String(rehashed.canonical_state_hash), String(rehashed.state_checksum))
 	rehashed.created_at = {"tick": int(rehashed.tick), "checkpoint_id": String(rehashed.checkpoint_id)}
 	_check(Branch.validate_checkpoint(rehashed).is_empty(), "P8 fully rehashed alternate state is structurally self-consistent")
 	var rehashed_restore: Dictionary = fork_manager.restore(rehashed)
