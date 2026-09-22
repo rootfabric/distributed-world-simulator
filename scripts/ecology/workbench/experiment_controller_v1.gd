@@ -627,7 +627,16 @@ func _build_field(environment: Dictionary) -> Dictionary:
 			var amount: int = int(zone[resource])
 			if amount <= 0:
 				continue
-			deposits.append(Ports.effect("setup/deposit/%04d/%s" % [index, resource], OWNER_TOKEN, "deposit", resource, amount, position, 0, "CONTROLLER_GENESIS"))
+			# Manifest accepts the full canonical per-cell stock range while one
+			# A4 effect is bounded by MAX_REQUEST. Split deterministically instead
+			# of introducing a second, smaller workbench stock ceiling.
+			var remaining := amount
+			var chunk_index := 0
+			while remaining > 0:
+				var chunk := mini(remaining, FieldContract.MAX_REQUEST)
+				deposits.append(Ports.effect("setup/deposit/%04d/%s/%03d" % [index, resource, chunk_index], OWNER_TOKEN, "deposit", resource, chunk, position, 0, "CONTROLLER_GENESIS"))
+				remaining -= chunk
+				chunk_index += 1
 	if not deposits.is_empty():
 		var applied := Field.apply_effects(field, deposits, OWNER_TOKEN, 0, field.revision)
 		if not applied.success:
