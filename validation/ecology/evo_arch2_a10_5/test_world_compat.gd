@@ -573,7 +573,31 @@ func _scenario_damage() -> void:
 			}
 			var tampered_hash := C.digest(tampered_world)
 			var import_tampered: Dictionary = adapter.import_state(tampered_world, tampered_hash)
-			_check(not bool(import_tampered.get("success", false)) and String(import_tampered.get("error", "")).contains("DAMAGE_EVENT_ANCHOR"), "D fully rehashed physical state cannot replace separately stored trusted binding anchor")
+			_check(not bool(import_tampered.get("success", false)) and String(import_tampered.get("error", "")).contains("DAMAGE_EVENT_ANCHOR"), "D rehashed event cannot replace separately stored trusted binding anchor")
+
+			# Stronger adversary: rewrite BOTH the event and the internal stored
+			# anchor, then recompute every attacker-controlled raw/envelope hash.
+			# This becomes internally self-consistent, but it is still a different
+			# external state and must be rejected against the caller-owned hash of
+			# the originally exported envelope.
+			var fully_tampered_raw: Dictionary = decoded_raw.duplicate(true)
+			var fully_damage_row: Dictionary = fully_tampered_raw.damage[individual_id]
+			fully_damage_row.event.binding_hash = "f".repeat(64)
+			fully_damage_row.trusted_event_binding_hash = "f".repeat(64)
+			fully_tampered_raw.checksum = ""
+			var fully_checksum_payload := fully_tampered_raw.duplicate(true)
+			fully_checksum_payload.checksum = ""
+			fully_tampered_raw.checksum = MatterUtils.payload_hash(fully_checksum_payload)
+			var fully_tampered_text := MatterUtils.canonical_json(fully_tampered_raw)
+			var fully_tampered_world := {
+				"schema": Adapter.STATE_ENVELOPE_SCHEMA,
+				"state_text": fully_tampered_text,
+				"state_hash": fully_tampered_text.sha256_text(),
+			}
+			var original_world_anchor := C.digest(exported)
+			var full_rehash_result: Dictionary = adapter.import_state(fully_tampered_world, original_world_anchor)
+			_check(not bool(full_rehash_result.get("success", false)) and String(full_rehash_result.get("error", "")) == "ADAPTER_STATE_EXTERNAL_ANCHOR",
+				"D full event+anchor rehash still cannot replace caller-anchored WORLD state")
 	var effective_before: Dictionary = adapter.effective_function(individual_id)
 	_check(int(effective_before.active_module_count) == modules.size(), "D pre-damage body fully active")
 	var applied: Dictionary = adapter.apply_damage(individual_id)
