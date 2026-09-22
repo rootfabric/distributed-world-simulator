@@ -4,6 +4,10 @@ extends RefCounted
 const U = preload("res://scripts/research/fabric_bake0/fabric_bake_contract_utils_v1.gd")
 const MatterMaterial = preload("res://scripts/simulation/matter/contracts/matter_material_definition.gd")
 
+const PLANCK_J_S := 6.62607015e-34
+const LIGHT_SPEED_M_S := 299792458.0
+const ELEMENTARY_CHARGE_C := 1.602176634e-19
+
 const SCHEMA := "planet_simulator.fabric_laser_emitter_photonic_profile.v1"
 const FIELDS: Array[String] = [
 	"schema", "profile_id", "active_material_id", "active_material_checksum",
@@ -80,6 +84,10 @@ static func validate(value: Dictionary) -> Dictionary:
 		return U.failure("LASER_PHOTONIC_TEMPERATURE_ORDER_INVALID")
 	if float(value.beam_quality_m2) < 1.0:
 		return U.failure("LASER_PHOTONIC_BEAM_QUALITY_INVALID")
+	var photon_voltage := PLANCK_J_S * LIGHT_SPEED_M_S / (float(value.wavelength_m) * ELEMENTARY_CHARGE_C)
+	var reference_quantum_yield := float(value.reference_optical_efficiency_ratio) * float(value.forward_voltage_v) / photon_voltage
+	if reference_quantum_yield > 1.0 + 1.0e-12:
+		return U.failure("LASER_PHOTONIC_QUANTUM_YIELD_UNSAFE", {"reference_quantum_yield": reference_quantum_yield})
 	return U.validate_checksum(value)
 
 static func validate_against_material(value: Dictionary, material: Dictionary) -> Dictionary:
