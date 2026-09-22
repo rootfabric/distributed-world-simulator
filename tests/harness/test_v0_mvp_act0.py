@@ -29,6 +29,21 @@ EX = base.EX
 git = base.git
 read = base.read
 
+V0_ACCEPTED_HEAD = "a1db0c66762bee887f0bf2643f7c000961e64520"
+MAIN_CATCHUP_HEAD = "e200a61cb55930378d11c39dcc5950cf49db603c"
+CRITICAL_V0_PREFIXES = (
+    "scripts/runtime/networked_gameplay/mvp",
+    "scripts/runtime/networked_gameplay/m4",
+    "scripts/runtime/networked_gameplay/services",
+    "scripts/runtime/networked_gameplay/networked_gameplay_service_p2.gd",
+    "scripts/network/prediction/predicted_item_interaction_journal.gd",
+    "scripts/simulation",
+    "scenes/labs/mvp",
+    "tests/runtime/test_v0_mvp_",
+    "tests/integration/test_v0_mvp_",
+    "tests/fixtures/v0_mvp",
+)
+
 
 class MVPAct0Tests(base.MVPAct0Tests):
     @contextmanager
@@ -83,6 +98,30 @@ class MVPAct0Tests(base.MVPAct0Tests):
         finally:
             shutil.rmtree(tmp, ignore_errors=True)
 
+
+    def test_all_p7_execution_and_acceptance_blobs_are_unchanged(self):
+        """Catch-up may add current-main state, but must not rewrite accepted V0 product bytes."""
+        self.assertEqual(MAIN_CATCHUP_HEAD, git(ROOT, "rev-parse", "origin/main"))
+        subprocess.run(["git", "merge-base", "--is-ancestor", MAIN_CATCHUP_HEAD, "HEAD"], cwd=ROOT, check=True)
+        subprocess.run(["git", "merge-base", "--is-ancestor", V0_ACCEPTED_HEAD, "HEAD"], cwd=ROOT, check=True)
+
+        for prefix in CRITICAL_V0_PREFIXES:
+            with self.subTest(prefix=prefix):
+                self.assertEqual(
+                    "",
+                    git(ROOT, "diff", "--name-only", V0_ACCEPTED_HEAD, "HEAD", "--", prefix),
+                    prefix,
+                )
+
+        current_main_act0 = subprocess.check_output(
+            ["git", "show", f"{MAIN_CATCHUP_HEAD}:tests/harness/test_v0_mvp_act0.py"],
+            cwd=ROOT,
+        )
+        self.assertEqual(
+            current_main_act0,
+            (ROOT / "tests/harness/mvp_act0_base.py").read_bytes(),
+            "ACT0 base module must be the exact current-main canonical test blob",
+        )
 
     def test_current_mvp_work_order_snapshot_matches_latest_committed_event(self):
         order = read(EX + "/work-orders/" + WO + ".v1.json")
