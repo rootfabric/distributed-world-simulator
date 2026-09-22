@@ -1,6 +1,12 @@
 extends SceneTree
 
 const U = preload("res://scripts/research/fabric_bake0/fabric_bake_contract_utils_v1.gd")
+const MatterCatalog = preload("res://scripts/simulation/matter/catalog/matter_material_catalog.gd")
+const PhotonicProfile = preload("res://scripts/research/fabric_bake0/laser_emitter_photonic_profile_v1.gd")
+
+const PLANCK_J_S := 6.62607015e-34
+const LIGHT_SPEED_M_S := 299792458.0
+const ELEMENTARY_CHARGE_C := 1.602176634e-19
 const Graph = preload("res://scripts/research/fabric_bake0/laser_emitter_graph_v1.gd")
 const Descriptor = preload("res://scripts/research/fabric_bake0/laser_emitter_descriptor_v1.gd")
 const Compiler = preload("res://scripts/research/fabric_bake0/r5_t9_laser_emitter_compiler_v1.gd")
@@ -61,6 +67,28 @@ func _initialize() -> void:
 	check(float(capsule.operation_compression_ratio) > 30.0, "qualitative operation compression", {"ratio": capsule.operation_compression_ratio})
 	check(float(descriptor.total_max_current_a) > float(descriptor.total_threshold_current_a), "nonempty current window")
 	check(float(descriptor.wavelength_m) > 0.0 and float(descriptor.beam_divergence_half_angle_rad) > 0.0, "optical boundary derived")
+	var photon_voltage := PLANCK_J_S * LIGHT_SPEED_M_S / (float(descriptor.wavelength_m) * ELEMENTARY_CHARGE_C)
+	var reference_quantum_yield := float(descriptor.reference_optical_efficiency_ratio) * float(descriptor.forward_voltage_v) / photon_voltage
+	check(reference_quantum_yield > 0.0 and reference_quantum_yield <= 1.0, "reference carrier-to-photon yield is physically bounded", {"ratio": reference_quantum_yield})
+	var profile_catalog := Fixture.material_catalog()
+	var gaas_material := MatterCatalog.material_by_id(profile_catalog, "matter/laser-gaas")
+	var unsafe_profile := PhotonicProfile.create(
+		"profile/laser-gaas-unsafe-quantum-yield",
+		gaas_material,
+		1.0e6,
+		4.0e6,
+		5.0e-4,
+		3.20,
+		0.90,
+		0.0,
+		300.0,
+		250.0,
+		420.0,
+		905.0e-9,
+		1.30
+	)
+	var quantum_unsafe_profile_rejected := unsafe_profile.is_empty()
+	check(quantum_unsafe_profile_rejected, "profile with >1 photon per above-threshold carrier fails closed")
 
 	var inconsistent: Dictionary = descriptor.duplicate(true)
 	inconsistent.beam_divergence_half_angle_rad = float(inconsistent.beam_divergence_half_angle_rad) * 1.01
@@ -230,6 +258,8 @@ func _initialize() -> void:
 		"total_max_current_a": float(descriptor.total_max_current_a),
 		"wavelength_m": float(descriptor.wavelength_m),
 		"beam_divergence_half_angle_rad": float(descriptor.beam_divergence_half_angle_rad),
+		"reference_carrier_quantum_yield_ratio": reference_quantum_yield,
+		"quantum_unsafe_profile_rejected": quantum_unsafe_profile_rejected,
 		"sequence_ticks": SEQUENCE_TICKS,
 		"full_reference_cell_traversals": full_traversals,
 		"maximum_terminal_voltage_error_v": max_voltage_error,
