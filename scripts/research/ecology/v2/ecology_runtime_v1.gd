@@ -172,13 +172,10 @@ static func admit_propagules(state: Dictionary, options: Dictionary) -> Dictiona
 			blueprint = candidate
 		var child := Lifecycle.materialize_propagule(propagule, blueprint, parent.state, receipt, {} if receipt.is_empty() else parent.blueprint)
 		if child.is_empty(): return _fail("RUNTIME_PROPAGULE_ADMISSION:" + String(propagule.id))
-		# Conservation anchor for births: the paid endowment moves parent ->
-		# child (already conserved), while the born organism's structural body
-		# (the blueprint's genesis modules) enters the anchor exactly like the
-		# founder bodies did at create. Without this anchor the child's
-		# structural material would appear in current with no source.
-		for module in child.state.development.modules:
-			next.accounting.initial.material_mg += int(module.cost.material_mg)
+		# Parent already paid the child's endowment before the propagule entered
+		# the outbox. OrganismState genesis contains only the zero-cost canonical
+		# root module, so admission is a pure transfer from outbox -> child and
+		# MUST NOT rewrite the immutable initial conservation anchor.
 		children.append(child)
 	next.outbox = []
 	population.append_array(children)
