@@ -23,7 +23,9 @@ const P = preload("res://scripts/research/ecology/v2/development_program_v1.gd")
 const S = preload("res://scripts/research/ecology/v2/organism_state_v1.gd")
 const D = preload("res://scripts/research/ecology/v2/development_interpreter_v1.gd")
 const G = preload("res://scripts/research/ecology/v2/organism_genome_v2.gd")
+const Blueprint = preload("res://scripts/research/ecology/v2/organism_blueprint_v1.gd")
 const Mutation = preload("res://scripts/research/ecology/v2/genome_mutation_v1.gd")
+const Receipt = preload("res://scripts/research/ecology/v2/genome_mutation_receipt_v1.gd")
 const E = preload("res://scripts/research/ecology/v2/environment_fixture_v1.gd")
 const Fixtures = preload("res://scripts/research/ecology/v2/body_program_fixtures_v1.gd")
 const Controller = preload("res://scripts/ecology/workbench/experiment_controller_v1.gd")
@@ -216,6 +218,32 @@ func _test_development_bias_applied() -> void:
 	var applicable_result: Dictionary = Mutation.mutate_with_bias(parent, 4242, mixed_applicability)
 	_check(bool(applicable_result.get("success", false)) and String(applicable_result.get("selected_operator", "")) == "small",
 		"bias weights are conditioned on the canonical applicable transition set")
+
+	# Receipt provenance must prove the actual A3 transition, not merely seal
+	# arbitrary parent/child hashes.
+	var parent_blueprint := Blueprint.create(parent)
+	var genuine: Dictionary = Mutation.mutate(parent, 5050, "small")
+	var genuine_receipt: Dictionary = Receipt.issue(parent_blueprint, genuine, 5050, {})
+	_check(not genuine_receipt.is_empty() and Receipt.validate(genuine_receipt).is_empty(),
+		"unbiased receipt is issued only from a real A3 result")
+	var unrelated: Dictionary = Mutation.mutate(parent, 5051, "medium")
+	var forged_result: Dictionary = genuine.duplicate(true)
+	forged_result.genome = unrelated.genome.duplicate(true)
+	_check(Receipt.issue(parent_blueprint, forged_result, 5050, {}).is_empty(),
+		"receipt issuer rejects a valid but unrelated child genome with stale A3 event proof")
+
+	var soft_bias := Profile.canonical_bias(Profile.preset("SOFT"))
+	var biased_mutation: Dictionary = Mutation.mutate_with_bias(parent, 4242, soft_bias)
+	var biased_receipt: Dictionary = Receipt.issue(parent_blueprint, biased_mutation, 4242, soft_bias)
+	_check(not biased_receipt.is_empty(), "biased receipt issued from actual canonical bias transition")
+	if not biased_receipt.is_empty():
+		var child_blueprint := Blueprint.create(biased_mutation.genome, parent_blueprint.life_history)
+		var propagule_binding := {"blueprint_hash": Blueprint.biological_hash(parent_blueprint)}
+		_check(Receipt.validate_admission(biased_receipt, propagule_binding, parent_blueprint, child_blueprint).is_empty(),
+			"receipt admission replays and proves the exact A3 biased child")
+		var arbitrary_child := Blueprint.create(unrelated.genome, parent_blueprint.life_history)
+		_check(not Receipt.validate_admission(biased_receipt, propagule_binding, parent_blueprint, arbitrary_child).is_empty(),
+			"receipt admission rejects an arbitrary valid child that was not produced by the recorded transition")
 	# FREE remains presentation-only.
 	var free_result: Dictionary = Profile.apply_development_bias(Profile.preset("FREE"))
 	_check(bool(free_result.get("success", false)) and String(free_result.status) == "NOT_APPLICABLE", "FREE profile has no development bias")
