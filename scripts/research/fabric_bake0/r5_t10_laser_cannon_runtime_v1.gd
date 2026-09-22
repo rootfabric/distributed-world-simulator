@@ -104,7 +104,7 @@ func execute(
 	if not U.is_positive_number(state.get("plate_temperature_k")):
 		return U.failure("LASER_CANNON_RUNTIME_STATE_INVALID")
 	var junction_t:=float(state.plate_temperature_k)
-	var emitter:=_emitter.execute(_emitter_live,current_a,junction_t,dt_s)
+	var emitter: Dictionary = _emitter.execute(_emitter_live,current_a,junction_t,dt_s)
 	if not emitter.success:return emitter
 
 	var alpha:=float(_power_descriptor.resistance_temp_coefficient_per_k)
@@ -113,7 +113,7 @@ func execute(
 	var duty:=(float(emitter.details.terminal_voltage_v)+current_a*path_r)/bus_voltage_v
 	if duty<0.0 or duty>1.0:
 		return U.failure("LASER_CANNON_RUNTIME_BUS_HEADROOM_INSUFFICIENT",{"required_duty":duty})
-	var stage:=_power.execute(_power_live,bus_voltage_v,duty,current_a,pwm_frequency_hz,junction_t,dt_s)
+	var stage: Dictionary = _power.execute(_power_live,bus_voltage_v,duty,current_a,pwm_frequency_hz,junction_t,dt_s)
 	if not stage.success:return stage
 	if absf(float(stage.details.load_voltage_v)-float(emitter.details.terminal_voltage_v))>1.0e-9:
 		return U.failure("LASER_CANNON_RUNTIME_ELECTRICAL_VOLTAGE_MISMATCH")
@@ -136,7 +136,7 @@ func execute(
 
 	var stage_heat:=float(stage.details.conduction_heat_j)+float(stage.details.switching_heat_j)
 	var total_heat:=stage_heat+float(emitter.details.waste_heat_j)+optics_heat
-	var cooling:=_cooling.execute(_cooling_live,state,total_heat/dt_s,mass_flow_kg_s,ambient_temperature_k,dt_s)
+	var cooling: Dictionary = _cooling.execute(_cooling_live,state,total_heat/dt_s,mass_flow_kg_s,ambient_temperature_k,dt_s)
 	if not cooling.success:return cooling
 	var total_residual:=(
 		float(stage.details.electrical_input_energy_j)
