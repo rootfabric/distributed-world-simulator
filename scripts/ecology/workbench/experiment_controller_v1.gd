@@ -376,56 +376,72 @@ func apply_field_patch(patch: Dictionary) -> Dictionary:
 	if not bool(applied.get("success", false)):
 		return _command_fail("CONTROLLER_FIELD_PATCH:" + String(applied.get("error", "?")))
 	var next_manifest: Dictionary = applied.manifest
-	# Deltas are computed against the ORIGINAL manifest zone values (the
-	# patched manifest already carries the new declared values).
+	# Deltas are relative to the immutable input manifest. They are applied to
+	# the current live field (not used as absolute replacement values), then the
+	# resulting field is adopted into the single runtime truth.
 	var zones: Array = _manifest.environment.zones
 	var total: int = int(next_manifest.environment.spatial.width) * int(next_manifest.environment.spatial.depth)
 	var field: Dictionary = _runtime.field
-	var effects: Array = []
-	var signal_updates: Array = []
 	for index in total:
 		var zone: Dictionary = zones[mini(zones.size() - 1, index * zones.size() / total)]
 		if not patch.zones.has(String(zone.id)):
 			continue
 		var edits: Dictionary = patch.zones[String(zone.id)]
 		var center := _cell_center(field, index)
+		var cell_effects: Array = []
 		for resource in FieldContract.RESOURCES:
 			if not edits.has(resource):
 				continue
 			var delta: int = int(edits[resource]) - int(zone[resource])
 			if delta == 0:
 				continue
-			# Canonical effects are bounded by FieldContract.MAX_REQUEST per
-			# effect; larger deltas are split into deterministic chunks.
 			var remaining := absi(delta)
 			var chunk_index := 0
 			while remaining > 0:
 				var chunk: int = mini(remaining, FieldContract.MAX_REQUEST)
-				effects.append(Ports.effect("branch-patch/%06d/%s/%03d" % [index, resource, chunk_index], OWNER_TOKEN, "deposit" if delta > 0 else "sink", resource, chunk, center, 0, "CONTROLLER_BRANCH_PATCH"))
+				cell_effects.append(Ports.effect(
+					"branch-patch/%06d/%s/%03d" % [index, resource, chunk_index],
+					OWNER_TOKEN,
+					"deposit" if delta > 0 else "sink",
+					resource, chunk, center, 0, "CONTROLLER_BRANCH_PATCH"
+				))
 				remaining -= chunk
 				chunk_index += 1
+		# Per-cell batching keeps the maximum at 3,000 effects, below A4
+		# MAX_BATCH even for MAX_CELL_STOCK deltas across all three resources.
+		if not cell_effects.is_empty():
+			var effect_result := Field.apply_effects(
+				field, cell_effects, OWNER_TOKEN, int(field.owner_epoch), int(field.revision)
+			)
+			if not bool(effect_result.get("success", false)):
+				return _command_fail("CONTROLLER_FIELD_PATCH_EFFECTS:" + String(effect_result.get("error", "?")))
+			field = effect_result.state
 		if edits.has("light") or edits.has("temperature"):
-			signal_updates.append({
-				"index": index,
-				"signals": FieldContract.signals(int(edits.get("light", zone.light)), int(edits.get("temperature", zone.temperature)), 0, 0),
-			})
-	if not effects.is_empty():
-		var effect_result := Field.apply_effects(field, effects, OWNER_TOKEN, int(field.owner_epoch), int(field.revision))
-		if not bool(effect_result.get("success", false)):
-			return _command_fail("CONTROLLER_FIELD_PATCH_EFFECTS:" + String(effect_result.get("error", "?")))
-		field = effect_result.state
-	for update in signal_updates:
-		var index: int = int(update.index)
-		var set_result := Field.set_cell_signals(field, index % int(field.width), int(index / int(field.width)), update.signals, OWNER_TOKEN, int(field.owner_epoch), int(field.revision))
-		if not bool(set_result.get("success", false)):
-			return _command_fail("CONTROLLER_FIELD_PATCH_SIGNALS:" + String(set_result.get("error", "?")))
-		field = set_result.state
+			var signals := FieldContract.signals(
+				int(edits.get("light", zone.light)),
+				int(edits.get("temperature", zone.temperature)),
+				0, 0
+			)
+			var set_result := Field.set_cell_signals(
+				field,
+				index % int(field.width), int(index / int(field.width)),
+				signals, OWNER_TOKEN, int(field.owner_epoch), int(field.revision)
+			)
+			if not bool(set_result.get("success", false)):
+				return _command_fail("CONTROLLER_FIELD_PATCH_SIGNALS:" + String(set_result.get("error", "?")))
+			field = set_result.state
+
 	var adopted := Runtime.adopt_field(_runtime, field)
 	if not bool(adopted.get("success", false)):
 		return _command_fail("CONTROLLER_FIELD_PATCH_ADOPT:" + String(adopted.get("error", "?")))
 	_runtime = adopted.state
 	_manifest = next_manifest
-	return {"success": true, "tick": tick(), "field_hash": Field.state_hash(_runtime.field), "manifest_hash": Manifest.canonical_hash(_manifest)}
+	return {
+		"success": true,
+		"tick": tick(),
+		"field_hash": Field.state_hash(_runtime.field),
+		"manifest_hash": Manifest.canonical_hash(_manifest),
+	}
 
 # --- P12 WORLD_COMPAT bridge: world-authority environment sampling -----------
 # Minimal adapter-layer bridge (§23): the A10 matter_resource_mapping_v1
