@@ -208,6 +208,10 @@ func _scenario_run_and_observe(state: Dictionary) -> void:
 	observer.begin(controller.get_manifest())
 	observer.observe(controller)  # tick-0 baseline
 	var tick0_debug: Dictionary = controller.debug_state()
+	# Conservation is anchored at genesis. A birth is a parent-paid transfer
+	# (parent -> propagule outbox -> child), so reproduction must never rewrite
+	# the historical initial account to make the books balance.
+	var accounting_initial_tick0: Dictionary = tick0_debug.runtime.accounting.initial.duplicate(true)
 	var founder_genomes := {}
 	for entry in tick0_debug.population:
 		founder_genomes[String(entry.state.individual_id)] = Genome.biological_hash(entry.blueprint.genome)
@@ -274,6 +278,8 @@ func _scenario_run_and_observe(state: Dictionary) -> void:
 				inherited += 1
 	_check(receipt_bound >= 1, "S10 receipt-backed children present in the lineage (bound=%d)" % receipt_bound)
 	_check(inherited >= 1, "S10 at least one REALLY INHERITED mutated genome (child genome != parent genome, inherited=%d)" % inherited)
+	_check(controller.debug_state().runtime.accounting.initial == accounting_initial_tick0,
+		"S10 reproduction/mutation preserves the immutable genesis conservation anchor")
 
 # --- S11: real death -> corpse return -> decomposition (repair R2) -------------------
 # The manifest now owns an explicit founder endowment input. This lets the
