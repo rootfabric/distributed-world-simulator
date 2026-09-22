@@ -57,11 +57,11 @@ static func validate(value: Dictionary) -> Dictionary:
 		checked = Capsule.validate(value[field])
 		if not checked.success:
 			return checked
-	if String(value.power_stage_capsule.capsule_kind) != "POWER_STAGE":
+	if String(value.power_stage_capsule.executable_kind) != "POWER_STAGE":
 		return U.failure("LASER_CANNON_POWER_STAGE_KIND_MISMATCH")
-	if String(value.laser_emitter_capsule.capsule_kind) != "LASER_EMITTER":
+	if String(value.laser_emitter_capsule.executable_kind) != "LASER_EMITTER":
 		return U.failure("LASER_CANNON_EMITTER_KIND_MISMATCH")
-	if String(value.cooling_capsule.capsule_kind) != "COOLING_LOOP":
+	if String(value.cooling_capsule.executable_kind) != "COOLING_LOOP":
 		return U.failure("LASER_CANNON_COOLING_KIND_MISMATCH")
 	for field in ["input_focal_length_m","output_focal_length_m","clear_aperture_diameter_m","optics_temperature_k"]:
 		if not U.is_positive_number(value.get(field)):
