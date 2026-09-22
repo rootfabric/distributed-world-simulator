@@ -1,0 +1,163 @@
+name: V0 FINAL.1 Main Catch-up Validation
+
+on:
+  push:
+    branches:
+      - integration/v0-final-1-main-catchup-r1
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  ubuntu-candidate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      MAIN_HEAD: e200a61cb55930378d11c39dcc5950cf49db603c
+      V0_HEAD: a1db0c66762bee887f0bf2643f7c000961e64520
+      COMPOSITION_MERGE: 4fe42745e77f784fba52f1c11223ef002fccfb9a
+      PYTHONUTF8: '1'
+      PYTHONDONTWRITEBYTECODE: '1'
+      BREAKPOINT_RUNTIME_DISABLED: '1'
+      GODOT_SILENCE_ROOT_WARNING: '1'
+      PLANET_SIMULATOR_INVENTORY_PROFILE: planet_default
+
+    steps:
+      - name: Checkout exact catch-up candidate
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Bind ancestry and zero V0 product drift
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "${GITHUB_SHA}"
+          git fetch --quiet origin             main:refs/remotes/origin/main             feature/v0-mvp-playable-seamless-planet-r1:refs/remotes/origin/feature/v0-mvp-playable-seamless-planet-r1
+          test "$(git rev-parse origin/main)" = "$MAIN_HEAD"
+          test "$(git rev-parse origin/feature/v0-mvp-playable-seamless-planet-r1)" = "$V0_HEAD"
+          git merge-base --is-ancestor "$MAIN_HEAD" HEAD
+          git merge-base --is-ancestor "$V0_HEAD" HEAD
+          test "$(git rev-parse "$COMPOSITION_MERGE^1")" = "$MAIN_HEAD"
+          test "$(git rev-parse "$COMPOSITION_MERGE^2")" = "$V0_HEAD"
+          test "$(git rev-parse HEAD:tests/harness/mvp_act0_base.py)" = "$(git rev-parse "$MAIN_HEAD":tests/harness/test_v0_mvp_act0.py)"
+          python3 - <<'PY'
+          import subprocess
+          prefixes = [
+              "scripts/runtime/networked_gameplay/mvp",
+              "scripts/runtime/networked_gameplay/m4",
+              "scripts/runtime/networked_gameplay/services",
+              "scripts/runtime/networked_gameplay/networked_gameplay_service_p2.gd",
+              "scripts/network/prediction/predicted_item_interaction_journal.gd",
+              "scripts/simulation",
+              "scenes/labs/mvp",
+              "tests/runtime/test_v0_mvp_",
+              "tests/integration/test_v0_mvp_",
+              "tests/fixtures/v0_mvp",
+          ]
+          cmd = ["git","diff","--name-only","a1db0c66762bee887f0bf2643f7c000961e64520","HEAD","--",*prefixes]
+          drift=subprocess.check_output(cmd,text=True).strip()
+          assert not drift, "CRITICAL_V0_PRODUCT_DRIFT:\n"+drift
+          print("V0_FINAL_1_CRITICAL_PRODUCT_DRIFT_ZERO")
+          PY
+          test -z "$(git status --porcelain --untracked-files=no)"
+
+      - name: Install Harness dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install --disable-pip-version-check -r scripts/harness/requirements.txt
+          python3 -m py_compile tests/harness/mvp_act0_base.py tests/harness/test_v0_mvp_act0.py
+
+      - name: Current-main plus V0 ACT0 compatibility
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest tests.harness.test_v0_mvp_act0 | tee artifacts-v0-final-1-act0.log
+          python3 -m unittest             tests.harness.test_project_control_directional_clearance             tests.harness.test_mvp6_postmerge_directional_clearance             tests.harness.test_optional_evidence_sink_contract             | tee artifacts-v0-final-1-main-harness.log
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: p7-repair-engine-34117353691
+          run-id: 34117353691
+          repository: rootfabric/distributed-world-simulator
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/v0-final-engine
+
+      - name: Resolve exact Linux double Godot and display
+        shell: bash
+        run: |
+          set -euo pipefail
+          GODOT_BIN="$RUNNER_TEMP/v0-final-engine/godot"
+          test -f "$GODOT_BIN"
+          test "$(sha256sum "$GODOT_BIN" | cut -d' ' -f1)" = bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7
+          chmod u+x "$GODOT_BIN"
+          echo "GODOT_BIN=$GODOT_BIN" >> "$GITHUB_ENV"
+          "$GODOT_BIN" --version
+          if ! command -v Xvfb >/dev/null || ! command -v xauth >/dev/null; then
+            sudo -n apt-get update
+            sudo -n env DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends xvfb xauth libgl1-mesa-dri
+          fi
+
+      - name: Exact MVP8 workload on combined candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/v0-final-1
+          export EXPECTED_HEAD="$(git rev-parse HEAD)"
+          xvfb-run -a -s '-screen 0 1600x900x24'             python3 tests/integration/test_v0_mvp_8_bounded_workload.py             --engine "$GODOT_BIN"             --output artifacts/v0-final-1/mvp8             | tee artifacts/v0-final-1/mvp8.stdout.log
+          python3 - <<'PY'
+          import json, pathlib, subprocess
+          root=pathlib.Path("artifacts/v0-final-1/mvp8")
+          m=json.loads((root/"manifest.json").read_text())
+          head=subprocess.check_output(["git","rev-parse","HEAD"],text=True).strip()
+          tree=subprocess.check_output(["git","rev-parse","HEAD^{tree}"],text=True).strip()
+          assert m["passed"] is True, m.get("error")
+          assert len(m["checks"]) == 20 and all(m["checks"].values())
+          assert len(m["negative_controls"]) == 14
+          assert m["fatal_logs"] == []
+          assert m["project_import"]["returncode"] == 0
+          assert m["project_import"]["global_script_class_cache_bytes"] > 0
+          assert m["subject_head"] == head
+          assert m["subject_tree"] == tree
+          assert subprocess.check_output(["git","status","--porcelain","--untracked-files=no"],text=True).strip() == ""
+          print("V0_FINAL_1_MVP8_EXACT_PASS", head, tree)
+          PY
+
+      - name: Candidate summary
+        if: always()
+        shell: bash
+        run: |
+          mkdir -p artifacts/v0-final-1
+          python3 - <<'PY'
+          import json, pathlib, subprocess
+          def git(*a):
+              return subprocess.check_output(["git",*a],text=True).strip()
+          p=pathlib.Path("artifacts/v0-final-1/candidate-summary.json")
+          value={
+              "schema":"distributed_world_simulator.v0_final_1_validation.v1",
+              "head":git("rev-parse","HEAD"),
+              "tree":git("rev-parse","HEAD^{tree}"),
+              "main_head":"e200a61cb55930378d11c39dcc5950cf49db603c",
+              "v0_head":"a1db0c66762bee887f0bf2643f7c000961e64520",
+              "composition_merge":"4fe42745e77f784fba52f1c11223ef002fccfb9a",
+              "tracked_after":git("status","--porcelain","--untracked-files=no"),
+          }
+          p.write_text(json.dumps(value,indent=2)+"\n")
+          print(json.dumps(value))
+          PY
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v0-final-1-main-catchup-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            artifacts/v0-final-1/
+            artifacts-v0-final-1-act0.log
+            artifacts-v0-final-1-main-harness.log
+          if-no-files-found: warn
+          retention-days: 90
