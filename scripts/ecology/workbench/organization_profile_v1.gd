@@ -13,7 +13,6 @@ const SCHEMA := "dws.ecology.workbench.organization-profile.v1"
 const MODES := ["FREE", "SOFT", "EARTH_LIKE", "NMS_LIKE", "CUSTOM"]
 const RULE_CLASSES := ["VISUAL_ONLY", "DEVELOPMENT_BIAS", "BIOLOGICAL_WORLD_CONSTRAINT"]
 const VERSION := 2
-const BLOCKED_STATUS := "BLOCKED_CANONICAL_EXTENSION_REQUIRED" # historical compatibility constant
 const APPLIED_STATUS := "APPLIED_CANONICAL_BIAS"
 
 const RULE_CLASS_BY_MODE := {
