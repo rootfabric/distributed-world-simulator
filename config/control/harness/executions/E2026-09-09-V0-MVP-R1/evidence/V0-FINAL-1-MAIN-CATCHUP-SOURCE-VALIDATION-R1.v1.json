@@ -1,0 +1,70 @@
+{
+  "schema": "distributed_world_simulator.v0_final_1_source_validation.v1",
+  "recorded_at_utc": "2026-09-22T13:56:00Z",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "stage": "V0-FINAL.1",
+  "verdict": "PASS",
+  "candidate": {
+    "branch": "integration/v0-final-1-main-catchup-r1",
+    "head": "2c873f1e75f4e519c68fc6a80faddce3345362eb",
+    "freeze": "freeze/v0-final-1-main-catchup-2c873f1e-r1",
+    "pr": 687,
+    "base_main": "e200a61cb55930378d11c39dcc5950cf49db603c",
+    "accepted_v0": "a1db0c66762bee887f0bf2643f7c000961e64520",
+    "composition_merge": "4fe42745e77f784fba52f1c11223ef002fccfb9a"
+  },
+  "full_tree_audit": {
+    "main_delta_files": 62,
+    "v0_delta_files": 662,
+    "overlaps": 4,
+    "identical_overlaps": 3,
+    "manual_conflicts": 1,
+    "runtime_ownership_conflicts": 0,
+    "file_directory_collisions": 0,
+    "main_changes_preserved": "62/62",
+    "v0_changes_preserved": "662/662 except deliberate ACT0 harness composition paths",
+    "critical_v0_product_drift": 0
+  },
+  "github_validation": {
+    "run": 35736300717,
+    "ubuntu_job": 106774311749,
+    "ubuntu_result": "SUCCESS",
+    "artifact_id": 10697342311,
+    "artifact_name": "v0-final-1-source-35736300717-1",
+    "artifact_digest": "sha256:d302fb156777dd59712e885cbd3bd84586d9da73d3efa11edecb5e238cdd3d63",
+    "checks": [
+      "exact candidate checkout",
+      "current main exact ref binding",
+      "accepted V0 exact ref binding",
+      "both parents are ancestors",
+      "composition merge parents exact",
+      "critical V0 product drift zero",
+      "current-main ACT0 base blob exact",
+      "ACT0 current-main + V0 compatibility",
+      "current-main directional clearance harness",
+      "MVP6 postmerge directional clearance harness",
+      "optional evidence sink contract",
+      "tracked source clean"
+    ]
+  },
+  "historical_infra": {
+    "run": 35735713669,
+    "classification": "INFRASTRUCTURE_ONLY",
+    "source_harness_passed": true,
+    "failure": "expired Linux Godot artifact before runtime execution"
+  },
+  "early_final2_runtime": {
+    "run": 35736300717,
+    "windows_job": 106774643809,
+    "status": "QUEUED",
+    "blocking_for_final1": false,
+    "blocking_for_final2_promotion": true
+  },
+  "state": {
+    "v0_final_1_complete": true,
+    "final_composition_accepted": false,
+    "main_merge_performed": false,
+    "next_stage": "V0-FINAL.2 exact integrated candidate validation"
+  }
+}
