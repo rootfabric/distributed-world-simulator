@@ -32,7 +32,7 @@ jobs:
       fail-fast: false
       matrix:
         sample: [1, 2, 3]
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, X64]
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
@@ -62,21 +62,12 @@ jobs:
             validation/fabric-r5-2-t8-cooling-exact-evidence.v1.json
           echo '*.gd.uid' >> .git/info/exclude
 
-      - name: Download canonical Linux double
-        uses: actions/download-artifact@v4
-        with:
-          name: p7-repair-engine-34117353691
-          run-id: 34117353691
-          repository: rootfabric/distributed-world-simulator
-          github-token: ${{ github.token }}
-          path: ${{ runner.temp }}/r5-2-t9-engine
-
       - name: Verify canonical Linux double
         shell: bash
         run: |
           set -Eeuo pipefail
-          bin="$RUNNER_TEMP/r5-2-t9-engine/godot"
-          chmod u+x "$bin"
+          bin="${DWS_GODOT_DOUBLE_BIN:-$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64}"
+          test -x "$bin"
           version="$("$bin" --version | head -n1 | tr -d '\r')"
           sha="$(sha256sum "$bin" | awk '{print $1}')"
           test "$version" = '4.7.1.stable.double.custom_build.a13da4feb'
