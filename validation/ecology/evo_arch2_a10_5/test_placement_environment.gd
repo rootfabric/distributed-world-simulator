@@ -194,6 +194,32 @@ func _run() -> void:
 		_check(zone_match, "presentation zone_id matches canonical band mapping")
 		_check(snapshot.presentation.size() == snapshot.population.size(), "presentation count == population hash count")
 
+	# --- 8. full A4 stock domain is executable, not only manifest-valid ------
+	var high_stock := _manifest()
+	high_stock.environment.spatial.width = 2
+	high_stock.environment.spatial.depth = 1
+	high_stock.environment.zones = [{
+		"id": "zone/high",
+		"water_mg": FieldContract.MAX_REQUEST + 123,
+		"light": 700,
+		"temperature": 500,
+		"nutrient_mg": 0,
+		"organic_mg": 0,
+	}]
+	high_stock.placement.entries = [{
+		"founder_ref": "founder/a",
+		"zone_id": "zone/high",
+		"position_mm": [500, 0, 500],
+	}]
+	_check(Manifest.validate(high_stock).is_empty(), "stock above one A4 request remains a valid manifest")
+	var high_ctl := Controller.new()
+	var high_init: Dictionary = high_ctl.initialize(high_stock)
+	_check(bool(high_init.get("success", false)), "controller chunks >MAX_REQUEST stock through bounded A4 writes")
+	if bool(high_init.get("success", false)):
+		var high_field: Dictionary = high_ctl.debug_state().field
+		_check(int(high_field.cells[0].stocks.water_mg) == FieldContract.MAX_REQUEST + 123, "cell 0 receives exact high stock")
+		_check(int(high_field.cells[1].stocks.water_mg) == FieldContract.MAX_REQUEST + 123, "cell 1 receives exact high stock")
+
 	_finish()
 
 func _finish() -> void:
