@@ -220,6 +220,51 @@ func _run() -> void:
 		_check(int(high_field.cells[0].stocks.water_mg) == FieldContract.MAX_REQUEST + 123, "cell 0 receives exact high stock")
 		_check(int(high_field.cells[1].stocks.water_mg) == FieldContract.MAX_REQUEST + 123, "cell 1 receives exact high stock")
 
+	# --- 9. large multi-cell patch is bounded per cell -------------------------
+	# 2 cells × 3 resources × 700 chunks = 4200 A4 effects. The historical
+	# aggregate patch path exceeded MAX_BATCH=4096; the R2 per-cell path commits
+	# 2100 effects/cell and therefore remains inside the canonical A4 budget.
+	var patch_manifest := _manifest()
+	patch_manifest.environment.spatial.width = 2
+	patch_manifest.environment.spatial.depth = 1
+	patch_manifest.environment.zones = [{
+		"id": "zone/patch",
+		"water_mg": 0,
+		"light": 700,
+		"temperature": 500,
+		"nutrient_mg": 0,
+		"organic_mg": 0,
+	}]
+	patch_manifest.placement.entries = [{
+		"founder_ref": "founder/a",
+		"zone_id": "zone/patch",
+		"position_mm": [500, 0, 500],
+	}]
+	_check(Manifest.validate(patch_manifest).is_empty(), "large-patch fixture manifest validates")
+	var patch_ctl := Controller.new()
+	var patch_init: Dictionary = patch_ctl.initialize(patch_manifest)
+	_check(bool(patch_init.get("success", false)), "large-patch controller initializes")
+	if bool(patch_init.get("success", false)):
+		var large_value := 700 * FieldContract.MAX_REQUEST
+		var large_patch := {
+			"schema": EnvironmentPatch.SCHEMA,
+			"zones": {
+				"zone/patch": {
+					"water_mg": large_value,
+					"nutrient_mg": large_value,
+					"organic_mg": large_value,
+				},
+			},
+		}
+		var large_applied: Dictionary = patch_ctl.apply_field_patch(large_patch)
+		_check(bool(large_applied.get("success", false)), "4200-effect logical patch succeeds through per-cell bounded A4 batches")
+		if bool(large_applied.get("success", false)):
+			var patched_field: Dictionary = patch_ctl.debug_state().field
+			for cell in patched_field.cells:
+				_check(int(cell.stocks.water_mg) == large_value, "large patch water exact in " + String(cell.id))
+				_check(int(cell.stocks.nutrient_mg) == large_value, "large patch nutrient exact in " + String(cell.id))
+				_check(int(cell.stocks.organic_mg) == large_value, "large patch organic exact in " + String(cell.id))
+
 	_finish()
 
 func _finish() -> void:
