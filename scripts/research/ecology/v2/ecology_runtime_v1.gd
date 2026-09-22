@@ -166,8 +166,10 @@ static func admit_propagules(state: Dictionary, options: Dictionary) -> Dictiona
 			var actual_operator := String(mutated.get("selected_operator", operator_name))
 			var candidate := BP.create(mutated.genome, parent.blueprint.life_history)
 			if candidate.is_empty(): return _fail("RUNTIME_MUTATION_BLUEPRINT")
-			var bias_hash := "" if bias.is_empty() else C.digest(bias)
-			receipt = Receipt.issue(parent.blueprint, mutated.genome, actual_operator, seed, bias_hash)
+			# Receipt issuance verifies and then records the actual A3 result. Its
+			# admission path replays parent+seed(+bias), so provenance cannot seal
+			# an arbitrary valid child genome.
+			receipt = Receipt.issue(parent.blueprint, mutated, seed, bias)
 			if receipt.is_empty(): return _fail("RUNTIME_MUTATION_RECEIPT")
 			blueprint = candidate
 		var child := Lifecycle.materialize_propagule(propagule, blueprint, parent.state, receipt, {} if receipt.is_empty() else parent.blueprint)
