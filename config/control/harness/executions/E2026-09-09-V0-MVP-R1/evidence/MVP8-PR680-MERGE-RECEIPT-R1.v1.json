@@ -1,0 +1,42 @@
+{
+  "schema": "distributed_world_simulator.mvp8_merge_receipt.v1",
+  "recorded_at_utc": "2026-09-22T11:29:01Z",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "pr_number": 680,
+  "pr_state": "MERGED",
+  "target_branch": "feature/v0-mvp-playable-seamless-planet-r1",
+  "pre_merge_base": "6779af78c8cde642abf8bdfc868e905dc48a763f",
+  "reviewed_product_head": "dc6e7fffa27d764ea09ded949d50b99a32fa4d9b",
+  "reviewed_product_tree": "8fc0044ff42ad502e6457593a185465af7d2a825",
+  "merge_commit": "a1db0c66762bee887f0bf2643f7c000961e64520",
+  "merge_tree": "8fc0044ff42ad502e6457593a185465af7d2a825",
+  "merge_parents": [
+    "6779af78c8cde642abf8bdfc868e905dc48a763f",
+    "dc6e7fffa27d764ea09ded949d50b99a32fa4d9b"
+  ],
+  "merge_tree_equals_reviewed_product_tree": true,
+  "product_delta": {
+    "files": 1,
+    "additions": 52,
+    "deletions": 0,
+    "path": "tests/integration/test_v0_mvp_8_bounded_workload.py"
+  },
+  "reviewer": {
+    "commit": "6d1f3fbcbebee31d9be9745f82becc3439de57cc",
+    "verdict": "PASS"
+  },
+  "verifier": {
+    "commit": "97e284c266e7ee2b72bffdde2c6a09ef8b36a453",
+    "verdict": "VERIFIED"
+  },
+  "human_gate": {
+    "accepted": true,
+    "merge_authorized": true,
+    "checkpoint_accepted": true,
+    "source_instruction": "мерджи"
+  },
+  "mvp8_status": "COMPLETE_MERGED",
+  "whole_work_order_state": "IN_PROGRESS",
+  "note": "MVP8 technical and human gates are closed and PR #680 is merged. Parent Work Order remains separately governed by its remaining non-MVP8 predicates."
+}
