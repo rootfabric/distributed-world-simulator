@@ -49,13 +49,13 @@ func _manual_prepare(subsystems:Dictionary)->Dictionary:
 
 func _manual_step(manual:Dictionary,descriptor:Dictionary,state:Dictionary,bus_v:float,current:float,pwm:float,flow:float,ambient:float,range_m:float,dt:float)->Dictionary:
 	var t:=float(state.plate_temperature_k)
-	var emitter:=manual.emitter.execute(manual.eb.live,current,t,dt)
+	var emitter: Dictionary = manual.emitter.execute(manual.eb.live,current,t,dt)
 	if not emitter.success:return emitter
 	var pd:Dictionary=manual.pb.descriptor
 	var factor:=1.0+float(pd.resistance_temp_coefficient_per_k)*(t-float(pd.reference_temperature_k))
 	var path_r:=float(pd.positive_path_resistance_ref_ohm)*maxf(factor,0.05)
 	var duty:=(float(emitter.details.terminal_voltage_v)+current*path_r)/bus_v
-	var stage:=manual.power.execute(manual.pb.live,bus_v,duty,current,pwm,t,dt)
+	var stage: Dictionary = manual.power.execute(manual.pb.live,bus_v,duty,current,pwm,t,dt)
 	if not stage.success:return stage
 	var muzzle:=float(emitter.details.optical_energy_j)*float(descriptor.optics_total_transmission_ratio)
 	var optics_heat:=float(emitter.details.optical_energy_j)-muzzle
@@ -65,7 +65,7 @@ func _manual_step(manual:Dictionary,descriptor:Dictionary,state:Dictionary,bus_v
 	var spot_fluence:=muzzle/(PI*spot_radius*spot_radius)
 	var stage_heat:=float(stage.details.conduction_heat_j)+float(stage.details.switching_heat_j)
 	var total_heat:=stage_heat+float(emitter.details.waste_heat_j)+optics_heat
-	var cooling:=manual.cooling.execute(manual.cb.live,state,total_heat/dt,flow,ambient,dt)
+	var cooling: Dictionary = manual.cooling.execute(manual.cb.live,state,total_heat/dt,flow,ambient,dt)
 	if not cooling.success:return cooling
 	return U.success({
 		"duty_ratio":duty,
@@ -142,7 +142,7 @@ func _initialize()->void:
 	if not prep.success or not manual.success:
 		_finish();return
 	var state:=runtime.initial_state(300.0)
-	var manual_state:=manual.details.cooling.initial_state(300.0)
+	var manual_state: Dictionary = manual.details.cooling.initial_state(300.0)
 	check(JSON.stringify(state)==JSON.stringify(manual_state),"initial caller-owned state parity")
 
 	var max_muzzle_error:=0.0
