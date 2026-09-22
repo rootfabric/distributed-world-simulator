@@ -1,0 +1,28 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-09-09-V0-MVP-R1-V0-MVP-R1-WO-001-0050-MVP8-REPAIR-R2-INDEPENDENT-REVIEWER-PASS",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "sequence": 50,
+  "event_type": "PREDICATE_VERIFIED",
+  "work_state": "IN_PROGRESS",
+  "recorded_at_utc": "2026-09-22T01:48:00Z",
+  "actor": "REVIEWER",
+  "branch": "review/v0-mvp8-dc6e7fff-r1",
+  "head_sha": "6d1f3fbcbebee31d9be9745f82becc3439de57cc",
+  "tree_sha": "5946f247f66f5dfb083a35b8606f8ac8c6c57700",
+  "predicate": "MVP8_INDEPENDENT_REVIEWER_PASS",
+  "command": "RECORD_FRESH_INDEPENDENT_REVIEWER_PASS_DC6E7FFF_R1",
+  "exit_code": 0,
+  "product_subject": {
+    "head": "dc6e7fffa27d764ea09ded949d50b99a32fa4d9b",
+    "tree": "8fc0044ff42ad502e6457593a185465af7d2a825",
+    "base": "6779af78c8cde642abf8bdfc868e905dc48a763f",
+    "freeze": "freeze/v0-mvp8-repair-dc6e7fff-r1",
+    "pr": 680
+  },
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/verifications/MVP8-INDEPENDENT-REVIEW-DC6E7FFF-R1.v1.json"
+  ],
+  "summary": "Fresh Independent Reviewer PASS confirmed on exact repair subject dc6e7fff/8fc0044f. Reviewer commit is one commit directly atop the product subject and adds only the durable review result. No blocking findings, required fixes, or evidence gaps. No merge/predicate self-acceptance/human acceptance performed by Reviewer."
+}
