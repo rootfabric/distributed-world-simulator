@@ -1,6 +1,6 @@
 # FABRIC R5.2 / T9 — Laser Emitter
 
-**Статус:** implementation; first exact gate pending.
+**Статус:** Repair R2 exact product PASS локально 3/3; GitHub self-hosted carrier queued.
 
 ## Цель
 
@@ -14,28 +14,104 @@ cell area / current path / manufacturing quality
 LaserEmitter BehaviorCapsule
 ```
 
-Electrical current и junction temperature приходят через boundary. Capsule возвращает terminal voltage, electrical energy, optical energy, waste heat, wavelength, photon count и diffraction-limited beam-divergence floor.
+Electrical current и junction temperature приходят через boundary. Capsule возвращает terminal voltage, electrical energy, optical energy, waste heat, wavelength, photon count и bounded common-aperture diffraction floor.
 
-## Electro-optical law
+## Repair R2
 
-Для каждой active gain cell geometry выводит resistance, threshold current, max current, aperture area и physical mass. Characterized profile задаёт только свойства, отсутствующие в generic Matter: threshold/max current density, effective resistivity, forward voltage, optical efficiency floor, temperature derating, wavelength и M².
+Fresh review физической формулы выявил проблему: предыдущая формула optical power использовала всю electrical power, включая I²R. При росте series current это позволяло омическому нагреву искусственно увеличивать photon output.
 
-Ни pack-level efficiency, ни damage-per-second вручную не задаются. Ниже total threshold current optical energy равна нулю; выше threshold electrical energy консервативно делится на optical output и waste heat.
+R2 разделяет carrier и resistive power:
 
-## Exact reduction
+```text
+electrical power =
+V_forward * I + I²R
 
-Compact reduction разрешён только для active cells с одинаковой derived electro-optical signature. Mixed profiles или geometry mismatch дают fail-closed NO_SAFE_BAKE. Электрически disabled cell остаётся физической массой, но больше не участвует в active aperture/current envelope.
+coherent optical power =
+V_forward * max(0, I - I_threshold) * eta(T)
 
-Common-aperture divergence floor рассчитывается как M² × wavelength / (π × waist radius), где effective aperture area выводится из активных cells. Это bounded common-cavity/aperture floor, а не полный coherent-array phase solver.
+waste heat =
+electrical power - optical power
+```
+
+Дополнительно profile fail-closed, если reference carrier→photon yield превышает 1. Runtime повторно проверяет этот bound.
+
+Для base GaAs-like fixture:
+
+```text
+reference carrier quantum yield = 0.64234
+unsafe >1 profile               = REJECTED
+```
+
+## Exact R2 evidence
+
+GitHub-hosted R2 run не дошёл до продукта: исторический canonical-engine artifact истёк. Self-hosted exact carrier поставлен в очередь.
+
+Чтобы не блокировать product verification, использован свежий GitHub Exact Source Carrier artifact с base HEAD 7d8cc3, поверх которого наложены четыре R2 product/evidence blob. Их blob SHA byte-exact совпадают с GitHub current subject.
+
+Exact Godot:
+
+```text
+version = 4.7.1.stable.double.custom_build.a13da4feb
+SHA256  = bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7
+```
+
+Три независимых процесса:
+
+```text
+samples = 3/3 PASS
+assertions/sample = 3118
+
+deterministic hash =
+3767c1b478c022f5a7684083dfa6f587bad90519dbfc46b564d1591bc073af67
+
+local evidence hash =
+dbd896094bafbb8372163dda12d1f60c2228cb4f38a0c04bc1593a710302adf5
+```
+
+Detailed-vs-compiled:
+
+```text
+128 source cells
+262,144 detailed traversals over 2048 ticks
+768 source operations → 20 compiled operations
+38.4x operation compression
+runtime source traversal = 0
+
+max terminal voltage error = 0
+max optical energy error   = 6.94e-16 J
+max waste heat error       = 2.22e-15 J
+max photon relative error  = 3.51e-15
+max energy residual        = 3.66e-15 J
+```
+
+## Damage and material consequences
+
+One disabled cell remains physical mass but leaves the active electrical/optical aperture:
+
+```text
+active cells = 128 → 127
+beam divergence floor increases by ~1.00393x
+old capsule rejects mutated canonical source
+```
+
+GaN-like characterized profile produces a shorter 450 nm wavelength and higher 3.2 V forward voltage than the GaAs-like 905 nm floor.
 
 ## T6 composition
 
-T6 Power Stage получает current boundary и duty выбирается так, чтобы stage load voltage совпал с требуемым T9 terminal voltage. Acceptance отдельно сравнивает output electrical energy stage и emitter electrical energy, а также сохраняет отдельно:
+Merged T6 Power Stage reproduces T9 terminal voltage and electrical boundary energy exactly in the acceptance composition. The accounting keeps separate:
 
-- T6 conduction/switching heat;
-- T9 optical energy;
-- T9 emitter waste heat.
+```text
+T6 conduction + switching loss = 381.953 J
+T9 coherent optical output     = 60.026 J
+T9 emitter waste heat          = 283.981 J
+```
 
-## Bounded claim
+## Optical scope
 
-T9 не заявляет free-space propagation, lens focusing, atmospheric absorption, target coupling/damage, cavity longitudinal modes, phase-lock dynamics, saturation, spontaneous-emission noise или detailed semiconductor band-structure validation. Эти уровни относятся к T10 Laser Cannon и последующим fidelity layers.
+Common-aperture divergence uses M² × wavelength / (π × waist radius) with aperture area derived from active cells. This is an explicitly bounded common-cavity/aperture floor, not a coherent phased-array solver.
+
+T9 does not claim free-space propagation, lens focusing, atmospheric absorption, target coupling/damage, cavity longitudinal modes, phase-lock dynamics, saturation, spontaneous-emission noise or detailed semiconductor band-structure validation.
+
+## Remaining gate
+
+Product R2 is exact-tested. Merge remains blocked on closure/fresh independent verification while the canonical self-hosted GitHub runner is unavailable/queued.

@@ -1,0 +1,133 @@
+{
+  "schema": "fabric.r5_2.t9_laser_emitter_exact_evidence.v2",
+  "status": "REPAIR_R2_LOCAL_EXACT_3X_PASS_CI_RUNNER_PENDING",
+  "product_subject_head": "3a3fdfd5285199dc54281dc8cecd4452b330f9ea",
+  "product_subject_tree": "1377623ca8aac9a06b5a712576e8fdfd31ecf624",
+  "carrier_head": "8e6a71610ee58f7f87f74f38c88a031c3c7bcfa4",
+  "carrier_tree": "c729148fe0cc1f1aaa1d714a5f221a054ba753e2",
+  "t8_merge_head": "25e05831484a16c6038b578943d8cc4c8fccb7a1",
+  "canonical_owner": "Construction/Matter",
+  "production_checkpoint": false,
+  "canonical_godot": {
+    "version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "source_commit": "a13da4feb8d8aefc283c3763d33a2f170a18d541",
+    "sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+    "platform": "linuxbsd",
+    "target": "editor",
+    "arch": "x86_64",
+    "precision": "double"
+  },
+  "exact_source_reconstruction": {
+    "source_carrier_run": 35660839793,
+    "source_carrier_artifact_id": 10667517610,
+    "source_carrier_artifact_digest": "sha256:06199730cc5058f65c8125c1771636ee1e767da3ce0d424999abb5074d29ebf7",
+    "bundle_base_head": "7d8cc3ede31c48c45ea970d8841d1e653ff3fb31",
+    "bundle_sha256": "45adbf316fb4c90b32ee89d35d46882a276c223ff873896da006013b31db869b",
+    "r2_product_blob_overlay": {
+      "scripts/research/fabric_bake0/laser_emitter_photonic_profile_v1.gd": "d1840257960b37c85ab7de5c7b4e86f443d91574",
+      "scripts/research/fabric_bake0/laser_emitter_physics_v1.gd": "8d005d1c96946d440c1366d407c623db0ecb6c4d",
+      "tests/research/fabric_bake0/fabric_r5_2_t9_laser_emitter_acceptance.gd": "6040ec4ade777c709505f241d6b60f0202fdea1f",
+      "scripts/research/fabric_bake0/collect_r5_2_t9_evidence.py": "bf92457c220ddaf4db128ab7d312dbafcda57bca"
+    },
+    "github_compare_confirms_only_other_change_is_ci_carrier": true
+  },
+  "local_exact": {
+    "sample_count": 3,
+    "assertions_per_sample": 3118,
+    "deterministic_hash": "3767c1b478c022f5a7684083dfa6f587bad90519dbfc46b564d1591bc073af67",
+    "evidence_hash": "dbd896094bafbb8372163dda12d1f60c2228cb4f38a0c04bc1593a710302adf5",
+    "evidence_json_sha256": "9be1dba9e0d8f8afe796252af6a5e18e1a61e1ca78c53416535049864cb870ae",
+    "sample_log_sha256": "1cdec79b0aef9226bf2ada6ad695e13a00f6ef4ad2165469879bd5ccee375eac",
+    "elapsed_s": {
+      "min": 3.81,
+      "median": 3.82,
+      "max": 3.93
+    },
+    "max_rss_kib": {
+      "min": 129092,
+      "median": 129144,
+      "max": 129276
+    }
+  },
+  "qualitative_compression": {
+    "source_gain_cells": 128,
+    "active_gain_cells": 128,
+    "source_operations": 768,
+    "compiled_operations": 20,
+    "operation_compression_ratio": 38.4,
+    "runtime_source_cell_traversals_per_execute": 0
+  },
+  "optical_boundary": {
+    "wavelength_m": 9.05e-7,
+    "beam_divergence_half_angle_rad": 0.0000419067493653826,
+    "total_threshold_current_a": 261.224489795918,
+    "total_max_current_a": 1003.52,
+    "reference_carrier_quantum_yield_ratio": 0.642339919170491,
+    "below_threshold_zero_optical": true,
+    "thermal_derating_ratio_380k_to_300k": 0.84
+  },
+  "exact_equivalence": {
+    "sequence_ticks": 2048,
+    "full_reference_cell_traversals": 262144,
+    "maximum_terminal_voltage_error_v": 0,
+    "maximum_optical_energy_error_j": 6.93889390390723e-16,
+    "maximum_waste_heat_error_j": 2.22044604925031e-15,
+    "maximum_photon_count_relative_error": 3.5052678585082e-15,
+    "maximum_divergence_error_rad": 4.743384504624e-20,
+    "maximum_energy_residual_j": 3.66373598126302e-15
+  },
+  "repair_r2": {
+    "issue": "resistive I^2R power incorrectly contributed to coherent optical output",
+    "repair": "optical power derives only from forward-junction voltage times above-threshold carrier current times characterized efficiency; series resistance remains waste heat",
+    "impossible_reference_quantum_yield_profile_rejected": true,
+    "runtime_quantum_yield_guard": true,
+    "thresholds_relaxed": false
+  },
+  "material_variant": {
+    "gan_wavelength_m": 4.5e-7,
+    "gan_forward_voltage_v": 3.2
+  },
+  "damage_variant": {
+    "disabled_cells": 1,
+    "active_cells": 127,
+    "physical_mass_retained": true,
+    "divergence_ratio": 1.00392928822105,
+    "old_capsule_rejected": true
+  },
+  "t6_composition": {
+    "max_terminal_voltage_error_v": 0,
+    "max_electrical_energy_error_j": 0,
+    "stage_loss_j": 381.952968008234,
+    "optical_energy_j": 60.0256261224493,
+    "emitter_waste_heat_j": 283.980904489797
+  },
+  "fail_closed": {
+    "geometry_mismatch": "LASER_GAIN_CELL_SYNCHRONY_UNSAFE",
+    "mixed_profile": "LASER_GAIN_PROFILE_MISMATCH",
+    "descriptor_relation": "LASER_EMITTER_DESCRIPTOR_RELATION_MISMATCH",
+    "impossible_quantum_yield_profile": "REJECTED",
+    "over_current": "REJECTED",
+    "temperature_domain": "REJECTED",
+    "source_mismatch": "REJECTED",
+    "stale": "REJECTED",
+    "invalidation": "REJECTED"
+  },
+  "ci_state": {
+    "hosted_r2_runs_failed_before_product_execution": "canonical engine artifact expired",
+    "self_hosted_exact_run_id": 35735603288,
+    "self_hosted_exact_status": "QUEUED",
+    "engine_regeneration_run_id": 34117353691,
+    "engine_regeneration_attempt": 3,
+    "engine_regeneration_status": "QUEUED"
+  },
+  "invariants": {
+    "common_aperture_is_bounded_model_floor": true,
+    "phase_array_solver_claimed": false,
+    "target_damage_or_dps_constant_claimed": false,
+    "runtime_persistent_state_owner": false,
+    "behavior_capsule_v1_modified": false,
+    "behavior_capsule_v2_modified": false,
+    "t1_to_t8_evidence_modified": false
+  },
+  "next_gate": "EXACT_HEAD_CLOSURE_AND_FRESH_INDEPENDENT_VERIFIER_BEFORE_MERGE"
+}
