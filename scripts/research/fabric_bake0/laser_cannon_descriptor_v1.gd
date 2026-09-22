@@ -6,8 +6,8 @@ const Interface = preload("res://scripts/research/fabric_bake0/laser_cannon_inte
 const SCHEMA := "planet_simulator.fabric_laser_cannon_descriptor.v1"
 const FIELDS: Array[String] = [
 	"schema","graph_hash","interface_contract",
-	"power_stage_capsule_checksum","laser_emitter_capsule_checksum","cooling_capsule_checksum",
-	"optics_surface_transmission_ratio","optics_total_transmission_ratio",
+	"power_stage_capsule_checksum","laser_emitter_capsule_checksum","cooling_capsule_checksum","optics_profile_checksum",
+	"input_focal_length_m","output_focal_length_m","optics_surface_transmission_ratio","optics_total_transmission_ratio",
 	"optical_expansion_ratio","emitter_aperture_area_m2","input_clear_aperture_area_m2","output_clear_aperture_area_m2","clear_aperture_diameter_m","max_surface_fluence_j_m2",
 	"source_component_count","source_operation_count","compiled_operation_count",
 	"descriptor_hash","checksum",
@@ -21,6 +21,9 @@ static func create(data: Dictionary) -> Dictionary:
 		"power_stage_capsule_checksum":String(data.power_stage_capsule_checksum),
 		"laser_emitter_capsule_checksum":String(data.laser_emitter_capsule_checksum),
 		"cooling_capsule_checksum":String(data.cooling_capsule_checksum),
+		"optics_profile_checksum":String(data.optics_profile_checksum),
+		"input_focal_length_m":float(data.input_focal_length_m),
+		"output_focal_length_m":float(data.output_focal_length_m),
 		"optics_surface_transmission_ratio":float(data.optics_surface_transmission_ratio),
 		"optics_total_transmission_ratio":float(data.optics_total_transmission_ratio),
 		"optical_expansion_ratio":float(data.optical_expansion_ratio),
@@ -47,17 +50,20 @@ static func validate(value: Dictionary) -> Dictionary:
 		return U.failure("UNSUPPORTED_LASER_CANNON_DESCRIPTOR_SCHEMA")
 	if not U.is_lower_hex_64(value.get("graph_hash")) or not U.is_lower_hex_64(value.get("descriptor_hash")):
 		return U.failure("INVALID_LASER_CANNON_DESCRIPTOR_HASH")
-	for field in ["power_stage_capsule_checksum","laser_emitter_capsule_checksum","cooling_capsule_checksum"]:
+	for field in ["power_stage_capsule_checksum","laser_emitter_capsule_checksum","cooling_capsule_checksum","optics_profile_checksum"]:
 		if not U.is_lower_hex_64(value.get(field)):
 			return U.failure("INVALID_LASER_CANNON_SUBCAPSULE_CHECKSUM",{"field":field})
 	checked = Interface.validate(value.interface_contract)
 	if not checked.success:
 		return checked
-	for field in ["optics_surface_transmission_ratio","optics_total_transmission_ratio","optical_expansion_ratio","emitter_aperture_area_m2","input_clear_aperture_area_m2","output_clear_aperture_area_m2","clear_aperture_diameter_m","max_surface_fluence_j_m2"]:
+	for field in ["input_focal_length_m","output_focal_length_m","optics_surface_transmission_ratio","optics_total_transmission_ratio","optical_expansion_ratio","emitter_aperture_area_m2","input_clear_aperture_area_m2","output_clear_aperture_area_m2","clear_aperture_diameter_m","max_surface_fluence_j_m2"]:
 		if not U.is_positive_number(value.get(field)):
 			return U.failure("INVALID_LASER_CANNON_DESCRIPTOR_SCALAR",{"field":field})
 	if float(value.optics_surface_transmission_ratio) >= 1.0 or float(value.optics_total_transmission_ratio) >= 1.0:
 		return U.failure("LASER_CANNON_TRANSMISSION_INVALID")
+	var expected_expansion := float(value.output_focal_length_m) / float(value.input_focal_length_m)
+	if absf(float(value.optical_expansion_ratio)-expected_expansion) > 1.0e-12*maxf(1.0e-18,expected_expansion):
+		return U.failure("LASER_CANNON_DESCRIPTOR_EXPANSION_RELATION_MISMATCH")
 	var expected_total := pow(float(value.optics_surface_transmission_ratio),4.0)
 	if absf(float(value.optics_total_transmission_ratio)-expected_total) > 1.0e-12*maxf(1.0e-18,expected_total):
 		return U.failure("LASER_CANNON_DESCRIPTOR_TRANSMISSION_RELATION_MISMATCH")
