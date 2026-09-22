@@ -1,0 +1,143 @@
+name: FABRIC R5.2 T10 Laser Cannon
+
+on:
+  push:
+    branches: [research/fabric-r5-2-t10-laser-cannon-r1]
+  pull_request:
+    paths:
+      - 'scripts/research/fabric_bake0/laser_cannon_*'
+      - 'scripts/research/fabric_bake0/r5_t10_laser_cannon_*'
+      - 'tests/research/fabric_bake0/fabric_r5_2_t10_laser_cannon_*'
+      - 'scripts/research/fabric_bake0/collect_r5_2_t10_evidence.py'
+      - 'validation/fabric-r5-2-t10-*'
+      - 'RUN_FABRIC_R5_2_T10_TESTS.sh'
+      - 'docs/research/FABRIC_R5_2_T10_LASER_CANNON_RU.md'
+      - '.github/workflows/fabric-r5-2-t10-laser-cannon-linux-double.yml'
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: fabric-r5-2-t10-${{ github.sha }}
+  cancel-in-progress: false
+
+env:
+  T9_MERGE_HEAD: 676672b03c563b5e5f6428ac30f6545a5676e1ef
+
+jobs:
+  sample:
+    name: sample-${{ matrix.sample }}
+    strategy:
+      fail-fast: false
+      matrix:
+        sample: [1, 2, 3]
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Bind T9 merged base and T10-only scope
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$(git merge-base HEAD "$T9_MERGE_HEAD")" = "$T9_MERGE_HEAD"
+          allowed='^(.github/workflows/fabric-r5-2-t10-laser-cannon-linux-double.yml|RUN_FABRIC_R5_2_T10_TESTS.sh|docs/research/FABRIC_R5_2_T10_LASER_CANNON_RU.md|scripts/research/fabric_bake0/(laser_cannon_[^/]+|r5_t10_laser_cannon_[^/]+|collect_r5_2_t10_evidence.py)|tests/research/fabric_bake0/fabric_r5_2_t10_laser_cannon_[^/]+|validation/fabric-r5-2-t10-[^/]+)$'
+          bad="$(git diff --name-only "$T9_MERGE_HEAD"...HEAD | grep -Ev "$allowed" || true)"
+          test -z "$bad"
+          git diff --check "$T9_MERGE_HEAD"...HEAD
+          git diff --exit-code "$T9_MERGE_HEAD"...HEAD -- \
+            scripts/research/fabric_bake0/behavior_capsule_contract_v1.gd \
+            scripts/research/fabric_bake0/behavior_capsule_contract_v2.gd \
+            validation/fabric-r5-2-t1-boundary-network-exact-evidence.v1.json \
+            validation/fabric-r5-2-t2-logic-exact-evidence.v1.json \
+            validation/fabric-r5-2-t3-battery-exact-evidence.v1.json \
+            validation/fabric-r5-2-t4-thermal-filter-exact-evidence.v1.json \
+            validation/fabric-r5-2-t5-motor-generator-exact-evidence.v1.json \
+            validation/fabric-r5-2-t6-power-stage-exact-evidence.v1.json \
+            validation/fabric-r5-2-t7-gearbox-exact-evidence.v1.json \
+            validation/fabric-r5-2-t8-cooling-exact-evidence.v1.json \
+            validation/fabric-r5-2-t9-laser-emitter-exact-evidence.v1.json
+          echo '*.gd.uid' >> .git/info/exclude
+
+      - name: Verify canonical Linux double
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          bin="${DWS_GODOT_DOUBLE_BIN:-$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64}"
+          test -x "$bin"
+          test "$("$bin" --version | head -n1 | tr -d '\r')" = '4.7.1.stable.double.custom_build.a13da4feb'
+          test "$(sha256sum "$bin" | awk '{print $1}')" = 'bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7'
+          echo "GODOT_BIN=$bin" >> "$GITHUB_ENV"
+          mkdir -p artifacts/fabric-r5-2-t10
+
+      - name: Fresh import
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          rm -rf .godot
+          "$GODOT_BIN" --headless --editor --path . \
+            --log-file "artifacts/fabric-r5-2-t10/sample-${{ matrix.sample }}.import.log" --import
+          ! grep -Eiq 'SCRIPT ERROR|Parse Error|Invalid call|Invalid access|ERROR:' \
+            "artifacts/fabric-r5-2-t10/sample-${{ matrix.sample }}.import.log"
+
+      - name: Run T10 sample
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          i='${{ matrix.sample }}'
+          /usr/bin/time -v -o "artifacts/fabric-r5-2-t10/sample-$i.time.txt" \
+            bash RUN_FABRIC_R5_2_T10_TESTS.sh 2>&1 | tee "artifacts/fabric-r5-2-t10/sample-$i.log"
+          grep -F 'FABRIC R5.2 T10 LASER CANNON: PASS' "artifacts/fabric-r5-2-t10/sample-$i.log"
+          grep -F 'FABRIC_R5_2_T10_RESULT=' "artifacts/fabric-r5-2-t10/sample-$i.log"
+          test -z "$(git status --porcelain=v1 --untracked-files=no)"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: fabric-r5-2-t10-sample-${{ matrix.sample }}-${{ github.sha }}
+          path: artifacts/fabric-r5-2-t10/sample-${{ matrix.sample }}.*
+          if-no-files-found: error
+          retention-days: 90
+
+  aggregate:
+    name: aggregate-t10-evidence
+    needs: sample
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: fabric-r5-2-t10-sample-*-${{ github.sha }}
+          path: artifacts/fabric-r5-2-t10
+          merge-multiple: true
+      - name: Aggregate T10 evidence
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          python3 scripts/research/fabric_bake0/collect_r5_2_t10_evidence.py \
+            --root artifacts/fabric-r5-2-t10 \
+            --out artifacts/fabric-r5-2-t10/evidence.json \
+            | tee artifacts/fabric-r5-2-t10/collector.log
+          grep -F 'FABRIC_R5_2_T10_EVIDENCE=PASS' artifacts/fabric-r5-2-t10/collector.log
+      - name: Seal evidence
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          printf 'HEAD=%s\nTREE=%s\nT9_MERGE_HEAD=%s\n' \
+            "$(git rev-parse HEAD)" "$(git rev-parse 'HEAD^{tree}')" "$T9_MERGE_HEAD" \
+            > artifacts/fabric-r5-2-t10/identity.txt
+          sha256sum artifacts/fabric-r5-2-t10/sample-* artifacts/fabric-r5-2-t10/evidence.json artifacts/fabric-r5-2-t10/collector.log \
+            > artifacts/fabric-r5-2-t10/evidence.sha256
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fabric-r5-2-t10-aggregate-${{ github.sha }}
+          path: artifacts/fabric-r5-2-t10/**
+          if-no-files-found: error
+          retention-days: 90
