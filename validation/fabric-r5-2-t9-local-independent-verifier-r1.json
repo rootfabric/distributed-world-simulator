@@ -1,0 +1,57 @@
+{
+  "schema": "fabric.r5_2.t9_local_independent_verifier.v1",
+  "role": "VERIFIER",
+  "verdict": "PASS",
+  "subject_head": "3470c73ca7887e04fd80c7114c216fb7f7592d7f",
+  "subject_tree": "8d116de3acf2120563955dd1e2c6c2638d385eee",
+  "freeze_ref": "freeze/fabric-r5-2-t9-3470c73-r1",
+  "verification_mode": "FRESH_GITHUB_EXACT_SOURCE_CARRIER_PLUS_CANONICAL_LOCAL_GODOT",
+  "exact_source": {
+    "workflow_run": 35736557342,
+    "artifact_id": 10697787384,
+    "artifact_digest": "sha256:9f7a91c51d7bc36a86c1660195bb498b321e223215da0bf21923268dbdc751cc",
+    "bundle_sha256": "dec569676d201d9245f684cbee0fee931b2572ebb7d415380a2219001b00109f",
+    "bundle_ref": "3470c73ca7887e04fd80c7114c216fb7f7592d7f",
+    "cloned_head": "3470c73ca7887e04fd80c7114c216fb7f7592d7f",
+    "cloned_tree": "8d116de3acf2120563955dd1e2c6c2638d385eee",
+    "tracked_clean_before_run": true
+  },
+  "engine": {
+    "version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "source_commit": "a13da4feb8d8aefc283c3763d33a2f170a18d541",
+    "sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+    "platform": "linuxbsd",
+    "target": "editor",
+    "arch": "x86_64",
+    "precision": "double"
+  },
+  "fresh_import": "PASS",
+  "samples": {
+    "count": 3,
+    "assertions_per_sample": 3118,
+    "conclusion": "3/3 PASS",
+    "identical_sample_log_sha256": "1c8c653c8d0249e8465d146b99dac09a42940ce11a5cdcf76afc1cb89b1164be"
+  },
+  "aggregate": {
+    "deterministic_hash": "3767c1b478c022f5a7684083dfa6f587bad90519dbfc46b564d1591bc073af67",
+    "verifier_evidence_hash": "ca70a910ebc1bdc1058715991d803480357647f7478e0a3644afeb175c1826bd",
+    "evidence_json_sha256": "38318154ce67b6fb7f588957d8a6e5e49d20fcbe1463898697cf51493684dd79"
+  },
+  "product_checks": {
+    "quantum_yield_bound": true,
+    "impossible_quantum_yield_profile_rejected": true,
+    "source_cell_traversals_per_execute": 0,
+    "detailed_reference_traversals": 262144,
+    "t6_composition": true,
+    "threshold_semantics": true,
+    "damage_mass_retained": true,
+    "fail_closed_geometry_and_profile_mismatch": true
+  },
+  "infrastructure_note": {
+    "github_self_hosted_run_id": 35735603288,
+    "github_self_hosted_status_at_verification": "QUEUED",
+    "engine_regeneration_run_id": 34117353691,
+    "engine_regeneration_status_at_verification": "QUEUED",
+    "product_verdict_depends_on_these_queued_runs": false
+  }
+}
