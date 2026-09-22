@@ -57,11 +57,16 @@ static func compile(
 	if interface.is_empty():return U.failure("LASER_CANNON_INTERFACE_CREATE_FAILED")
 	var surface_t:=float(graph.optics_profile.surface_transmission_ratio)
 	var total_t:=pow(surface_t,4.0)
-	var source_components:=5
+	var source_components:=(
+		int(graph.power_stage_capsule.source_component_count)
+		+int(graph.laser_emitter_capsule.source_component_count)
+		+int(graph.cooling_capsule.source_component_count)
+		+2
+	)
 	var source_operations:=(
-		int(graph.power_stage_capsule.executable_operation_count)
-		+int(graph.laser_emitter_capsule.executable_operation_count)
-		+int(graph.cooling_capsule.executable_operation_count)
+		int(graph.power_stage_capsule.full_operation_count)
+		+int(graph.laser_emitter_capsule.full_operation_count)
+		+int(graph.cooling_capsule.full_operation_count)
 		+8
 	)
 	var compiled_operations:=24
