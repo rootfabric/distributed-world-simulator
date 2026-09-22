@@ -53,6 +53,8 @@ def main():
         assert d["fluence_limit_error"]=="LASER_CANNON_RUNTIME_OPTICS_FLUENCE_LIMIT"
         assert d["snapshot_replay_error"]==0.0
         assert d["descriptor_relation_error"]=="LASER_CANNON_DESCRIPTOR_TRANSMISSION_RELATION_MISMATCH"
+        assert d["descriptor_expansion_error"]=="LASER_CANNON_DESCRIPTOR_EXPANSION_RELATION_MISMATCH"
+        assert d["child_capsule_binding_error"]=="LASER_CANNON_EMITTER_DESCRIPTOR_BINDING_MISMATCH"
         hashes.add(canonical_hash(d))
         samples.append({"sample":i,"deterministic":d,"process":parse_time(root/f"sample-{i}.time.txt")})
     if len(hashes)!=1:raise ValueError("T10_DETERMINISM_MISMATCH")
