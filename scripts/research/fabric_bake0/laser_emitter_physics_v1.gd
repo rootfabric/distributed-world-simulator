@@ -7,6 +7,7 @@ const Graph = preload("res://scripts/research/fabric_bake0/laser_emitter_graph_v
 
 const PLANCK_J_S := 6.62607015e-34
 const LIGHT_SPEED_M_S := 299792458.0
+const ELEMENTARY_CHARGE_C := 1.602176634e-19
 
 static func derive_cell(graph: Dictionary, cell: Dictionary) -> Dictionary:
 	var profile := Graph.profile_by_id(graph, String(cell.profile_id))
@@ -65,22 +66,30 @@ static func evaluate_cell(row: Dictionary, current_a: float, temperature_k: floa
 	if temperature_k > float(row.reference_temperature_k):
 		efficiency *= maxf(0.0, 1.0 - float(row.efficiency_temp_coefficient_per_k) * (temperature_k - float(row.reference_temperature_k)))
 	efficiency = clampf(efficiency, 0.0, 0.999999999)
-	var above_fraction := 0.0
-	if current_a > float(row.threshold_current_a) and current_a > 0.0:
-		above_fraction = (current_a - float(row.threshold_current_a)) / current_a
-	var optical_power := electrical_power * efficiency * above_fraction
+	var above_threshold_current := maxf(0.0, current_a - float(row.threshold_current_a))
+	# Only the active-junction carrier power can become coherent optical output.
+	# Series-resistance I^2 R remains heat instead of artificially boosting photons.
+	var optical_power := float(row.forward_voltage_v) * above_threshold_current * efficiency
 	var heat_power := electrical_power - optical_power
+	if heat_power < -1.0e-12:
+		return U.failure("LASER_GAIN_CELL_NEGATIVE_WASTE_HEAT")
+	heat_power = maxf(0.0, heat_power)
 	var electrical_energy := electrical_power * dt_s
 	var optical_energy := optical_power * dt_s
 	var heat_energy := heat_power * dt_s
 	var photon_energy := PLANCK_J_S * LIGHT_SPEED_M_S / float(row.wavelength_m)
 	var photon_count := optical_energy / photon_energy if photon_energy > 0.0 else 0.0
+	var above_threshold_carriers := above_threshold_current * dt_s / ELEMENTARY_CHARGE_C
+	var quantum_yield := photon_count / above_threshold_carriers if above_threshold_carriers > 0.0 else 0.0
+	if quantum_yield > 1.0 + 1.0e-10:
+		return U.failure("LASER_GAIN_CELL_QUANTUM_YIELD_UNSAFE", {"quantum_yield": quantum_yield})
 	return U.success({
 		"terminal_voltage_v": voltage,
 		"electrical_energy_j": electrical_energy,
 		"optical_energy_j": optical_energy,
 		"waste_heat_j": heat_energy,
 		"photon_count": photon_count,
-		"optical_efficiency_ratio": efficiency * above_fraction,
+		"optical_efficiency_ratio": optical_power / electrical_power if electrical_power > 0.0 else 0.0,
+		"carrier_quantum_yield_ratio": quantum_yield,
 		"energy_residual_j": electrical_energy - optical_energy - heat_energy,
 	})
