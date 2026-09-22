@@ -47,6 +47,7 @@ jobs:
           "tree=$tree" >> $env:GITHUB_OUTPUT
 
       - name: Resolve canonical Windows double Godot
+        id: godot
         env:
           CONFIGURED_GODOT_BIN: ${{ vars.DWS_GODOT_DOUBLE_BIN }}
         run: |
@@ -73,11 +74,12 @@ jobs:
           }
           Write-Host "GODOT_VERSION=$version"
           Write-Host "GODOT_SHA256=$sha"
+          "path=$godot" >> $env:GITHUB_OUTPUT
 
       - name: Run full A10.5 suite
         run: |
           $ErrorActionPreference = "Stop"
-          .\RUN_ECO_A10_5_POLYGON.ps1 -Test
+          .\RUN_ECO_A10_5_POLYGON.ps1 -Test -GodotPath "${{ steps.godot.outputs.path }}"
 
       - name: Verify clean tracked source
         if: always()
