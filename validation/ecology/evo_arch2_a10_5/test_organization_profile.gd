@@ -244,6 +244,20 @@ func _test_development_bias_applied() -> void:
 		var arbitrary_child := Blueprint.create(unrelated.genome, parent_blueprint.life_history)
 		_check(not Receipt.validate_admission(biased_receipt, propagule_binding, parent_blueprint, arbitrary_child).is_empty(),
 			"receipt admission rejects an arbitrary valid child that was not produced by the recorded transition")
+
+		# Fully rehash an otherwise well-formed receipt around that arbitrary
+		# child. Structural seal validation alone should pass, but A3 replay must
+		# still reject it at admission.
+		var forged_receipt := biased_receipt.duplicate(true)
+		forged_receipt.child_genome_hash = G.biological_hash(arbitrary_child.genome)
+		forged_receipt.mutation_event_hash = "f".repeat(64)
+		forged_receipt.receipt_hash = ""
+		var forged_payload := forged_receipt.duplicate(true)
+		forged_payload.receipt_hash = ""
+		forged_receipt.receipt_hash = C.digest(forged_payload)
+		_check(Receipt.validate(forged_receipt).is_empty(), "fully rehashed forged receipt is structurally self-consistent")
+		_check(not Receipt.validate_admission(forged_receipt, propagule_binding, parent_blueprint, arbitrary_child).is_empty(),
+			"A3 replay rejects fully rehashed receipt that names a child not produced by parent+seed+bias")
 	# FREE remains presentation-only.
 	var free_result: Dictionary = Profile.apply_development_bias(Profile.preset("FREE"))
 	_check(bool(free_result.get("success", false)) and String(free_result.status) == "NOT_APPLICABLE", "FREE profile has no development bias")
