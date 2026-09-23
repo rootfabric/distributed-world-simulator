@@ -3,7 +3,7 @@ extends RefCounted
 
 const U = preload("res://scripts/research/fabric_bake0/fabric_bake_contract_utils_v1.gd")
 const Capsule = preload("res://scripts/research/fabric_bake0/behavior_capsule_contract_v2.gd")
-const Control = preload("res://scripts/research/fabric_bake0/smart_servo_control_profile_v1.gd")
+const ServoControl = preload("res://scripts/research/fabric_bake0/smart_servo_control_profile_v1.gd")
 
 const SCHEMA := "planet_simulator.fabric_smart_servo_graph.v1"
 const FIELDS: Array[String] = [
@@ -43,7 +43,7 @@ static func validate(value:Dictionary)->Dictionary:
 		return U.failure("SMART_SERVO_MOTOR_KIND_MISMATCH")
 	if String(value.gearbox_capsule.executable_kind)!="GEARBOX":
 		return U.failure("SMART_SERVO_GEARBOX_KIND_MISMATCH")
-	checked=Control.validate(value.control_profile)
+	checked=ServoControl.validate(value.control_profile)
 	if not checked.success:return checked
 	if not U.is_lower_hex_64(value.get("graph_hash")) or String(value.graph_hash)!=U.canonical_hash(_identity(value)):
 		return U.failure("SMART_SERVO_GRAPH_HASH_MISMATCH")
