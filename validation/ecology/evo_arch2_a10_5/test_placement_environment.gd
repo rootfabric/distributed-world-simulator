@@ -146,7 +146,7 @@ func _run() -> void:
 	_check(not EnvironmentPatch.validate_patch(manifest, bad_zone).is_empty(), "patch with unknown zone rejected")
 	var negative := EnvironmentPatch.patch("zone/wet", "water_mg", -1)
 	_check(not EnvironmentPatch.validate_patch(manifest, negative).is_empty(), "patch with negative stock rejected")
-	var over_max := EnvironmentPatch.patch("zone/wet", "water_mg", FieldContract.MAX_CELL_STOCK + 1)
+	var over_max := EnvironmentPatch.patch("zone/wet", "water_mg", Manifest.CELL_CAPACITY_MG + 1)
 	_check(not EnvironmentPatch.validate_patch(manifest, over_max).is_empty(), "patch with out-of-bounds stock rejected")
 	var bad_signal := EnvironmentPatch.patch("zone/dry", "light", -50)
 	_check(not EnvironmentPatch.validate_patch(manifest, bad_signal).is_empty(), "patch with negative signal rejected")
@@ -194,13 +194,13 @@ func _run() -> void:
 		_check(zone_match, "presentation zone_id matches canonical band mapping")
 		_check(snapshot.presentation.size() == snapshot.population.size(), "presentation count == population hash count")
 
-	# --- 8. full A4 stock domain is executable, not only manifest-valid ------
+	# --- 8. explicit ecology capacity preserves water semantics ---------------
 	var high_stock := _manifest()
 	high_stock.environment.spatial.width = 2
 	high_stock.environment.spatial.depth = 1
 	high_stock.environment.zones = [{
 		"id": "zone/high",
-		"water_mg": FieldContract.MAX_REQUEST + 123,
+		"water_mg": Manifest.CELL_CAPACITY_MG,
 		"light": 700,
 		"temperature": 500,
 		"nutrient_mg": 0,
@@ -211,19 +211,20 @@ func _run() -> void:
 		"zone_id": "zone/high",
 		"position_mm": [500, 0, 500],
 	}]
-	_check(Manifest.validate(high_stock).is_empty(), "stock above one A4 request remains a valid manifest")
+	_check(Manifest.validate(high_stock).is_empty(), "stock at explicit ecology cell capacity validates")
 	var high_ctl := Controller.new()
 	var high_init: Dictionary = high_ctl.initialize(high_stock)
-	_check(bool(high_init.get("success", false)), "controller chunks >MAX_REQUEST stock through bounded A4 writes")
+	_check(bool(high_init.get("success", false)), "controller initializes at exact ecology cell capacity")
 	if bool(high_init.get("success", false)):
 		var high_field: Dictionary = high_ctl.debug_state().field
-		_check(int(high_field.cells[0].stocks.water_mg) == FieldContract.MAX_REQUEST + 123, "cell 0 receives exact high stock")
-		_check(int(high_field.cells[1].stocks.water_mg) == FieldContract.MAX_REQUEST + 123, "cell 1 receives exact high stock")
+		for cell in high_field.cells:
+			_check(int(cell.capacities.water_mg) == Manifest.CELL_CAPACITY_MG, "water capacity preserves canonical ecology normalization in " + String(cell.id))
+			_check(int(cell.stocks.water_mg) == Manifest.CELL_CAPACITY_MG, "water stock reaches exact capacity in " + String(cell.id))
+	var too_high := high_stock.duplicate(true)
+	too_high.environment.zones[0].water_mg = Manifest.CELL_CAPACITY_MG + 1
+	_check(not Manifest.validate(too_high).is_empty(), "stock above ecology cell capacity fails closed at manifest admission")
 
-	# --- 9. large multi-cell patch is bounded per cell -------------------------
-	# 2 cells × 3 resources × 700 chunks = 4200 A4 effects. The historical
-	# aggregate patch path exceeded MAX_BATCH=4096; the R2 per-cell path commits
-	# 2100 effects/cell and therefore remains inside the canonical A4 budget.
+	# --- 9. multi-cell patch respects the same capacity boundary ---------------
 	var patch_manifest := _manifest()
 	patch_manifest.environment.spatial.width = 2
 	patch_manifest.environment.spatial.depth = 1
@@ -240,30 +241,29 @@ func _run() -> void:
 		"zone_id": "zone/patch",
 		"position_mm": [500, 0, 500],
 	}]
-	_check(Manifest.validate(patch_manifest).is_empty(), "large-patch fixture manifest validates")
+	_check(Manifest.validate(patch_manifest).is_empty(), "capacity-patch fixture manifest validates")
 	var patch_ctl := Controller.new()
 	var patch_init: Dictionary = patch_ctl.initialize(patch_manifest)
-	_check(bool(patch_init.get("success", false)), "large-patch controller initializes")
+	_check(bool(patch_init.get("success", false)), "capacity-patch controller initializes")
 	if bool(patch_init.get("success", false)):
-		var large_value := 700 * FieldContract.MAX_REQUEST
-		var large_patch := {
+		var exact_patch := {
 			"schema": EnvironmentPatch.SCHEMA,
 			"zones": {
 				"zone/patch": {
-					"water_mg": large_value,
-					"nutrient_mg": large_value,
-					"organic_mg": large_value,
+					"water_mg": Manifest.CELL_CAPACITY_MG,
+					"nutrient_mg": Manifest.CELL_CAPACITY_MG,
+					"organic_mg": Manifest.CELL_CAPACITY_MG,
 				},
 			},
 		}
-		var large_applied: Dictionary = patch_ctl.apply_field_patch(large_patch)
-		_check(bool(large_applied.get("success", false)), "4200-effect logical patch succeeds through per-cell bounded A4 batches")
-		if bool(large_applied.get("success", false)):
+		var applied_exact: Dictionary = patch_ctl.apply_field_patch(exact_patch)
+		_check(bool(applied_exact.get("success", false)), "multi-cell patch to exact ecology capacity succeeds")
+		if bool(applied_exact.get("success", false)):
 			var patched_field: Dictionary = patch_ctl.debug_state().field
 			for cell in patched_field.cells:
-				_check(int(cell.stocks.water_mg) == large_value, "large patch water exact in " + String(cell.id))
-				_check(int(cell.stocks.nutrient_mg) == large_value, "large patch nutrient exact in " + String(cell.id))
-				_check(int(cell.stocks.organic_mg) == large_value, "large patch organic exact in " + String(cell.id))
+				_check(int(cell.stocks.water_mg) == Manifest.CELL_CAPACITY_MG, "patch water exact in " + String(cell.id))
+				_check(int(cell.stocks.nutrient_mg) == Manifest.CELL_CAPACITY_MG, "patch nutrient exact in " + String(cell.id))
+				_check(int(cell.stocks.organic_mg) == Manifest.CELL_CAPACITY_MG, "patch organic exact in " + String(cell.id))
 
 	_finish()
 
