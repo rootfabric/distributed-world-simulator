@@ -104,6 +104,22 @@ func _initialize()->void:
 	var inconsistent_check:=Descriptor.validate(inconsistent)
 	check(not inconsistent_check.success and String(inconsistent_check.error_code)=="SMART_SERVO_DESCRIPTOR_INERTIA_RELATION_MISMATCH","rehash cannot fake combined inertia",inconsistent_check)
 
+	var bad_current:Dictionary=descriptor.duplicate(true)
+	bad_current.max_abs_current_a=float(bad_current.max_abs_current_a)*1.01
+	bad_current.max_abs_output_torque_nm=float(bad_current.torque_constant_nm_a)*float(bad_current.max_abs_current_a)/absf(float(bad_current.gear_ratio))
+	var bad_current_payload:=bad_current.duplicate(true);bad_current_payload.erase("descriptor_hash");bad_current_payload.erase("checksum")
+	bad_current.descriptor_hash=U.canonical_hash(bad_current_payload);bad_current.checksum=U.compute_checksum(bad_current)
+	var bad_current_check:=Descriptor.validate(bad_current)
+	check(not bad_current_check.success and String(bad_current_check.error_code)=="SMART_SERVO_DESCRIPTOR_CURRENT_ENVELOPE_MISMATCH","rehash cannot expand safe current envelope",bad_current_check)
+
+	var bad_speed:Dictionary=descriptor.duplicate(true)
+	bad_speed.max_abs_motor_omega_rad_s=float(bad_speed.max_abs_motor_omega_rad_s)*1.01
+	bad_speed.max_abs_output_omega_rad_s=float(bad_speed.max_abs_motor_omega_rad_s)*absf(float(bad_speed.gear_ratio))
+	var bad_speed_payload:=bad_speed.duplicate(true);bad_speed_payload.erase("descriptor_hash");bad_speed_payload.erase("checksum")
+	bad_speed.descriptor_hash=U.canonical_hash(bad_speed_payload);bad_speed.checksum=U.compute_checksum(bad_speed)
+	var bad_speed_check:=Descriptor.validate(bad_speed)
+	check(not bad_speed_check.success and String(bad_speed_check.error_code)=="SMART_SERVO_DESCRIPTOR_SPEED_ENVELOPE_MISMATCH","rehash cannot expand safe speed envelope",bad_speed_check)
+
 	var runtime=Runtime.new()
 	var live:=Fixture.live_from(artifact)
 	var prep:=runtime.prepare(capsule,artifact,descriptor,live)
@@ -258,6 +274,8 @@ func _initialize()->void:
 		"light_gearbox_acceleration_ratio":light_accel_ratio,
 		"snapshot_replay_error":replay_error,
 		"descriptor_inertia_relation_error":String(inconsistent_check.get("error_code","")),
+		"descriptor_current_envelope_error":String(bad_current_check.get("error_code","")),
+		"descriptor_speed_envelope_error":String(bad_speed_check.get("error_code","")),
 		"child_descriptor_binding_error":String(mismatch.get("error_code","")),
 	}
 	print("FABRIC_R5_2_T11_RESULT="+JSON.stringify(deterministic))
