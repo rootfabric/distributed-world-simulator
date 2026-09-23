@@ -123,6 +123,9 @@ func _run() -> void:
 	var zone_without_id := manifest.duplicate(true)
 	zone_without_id["environment"]["zones"][0].erase("id")
 	_check(not Manifest.validate(zone_without_id).is_empty(), "zone without id rejected")
+	var over_capacity := manifest.duplicate(true)
+	over_capacity["environment"]["zones"][0]["water_mg"] = Manifest.CELL_CAPACITY_MG + 1
+	_check(not Manifest.validate(over_capacity).is_empty(), "zone stock above explicit ecology capacity rejected")
 	var duplicate_zones := manifest.duplicate(true)
 	duplicate_zones["environment"]["zones"][1]["id"] = "zone/wet"
 	_check(not Manifest.validate(duplicate_zones).is_empty(), "duplicate zone id rejected")
