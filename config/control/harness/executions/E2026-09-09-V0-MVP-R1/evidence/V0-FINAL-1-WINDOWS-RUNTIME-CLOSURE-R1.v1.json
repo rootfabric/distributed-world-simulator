@@ -1,0 +1,60 @@
+{
+  "schema": "distributed_world_simulator.v0_final_1_windows_runtime_closure.v1",
+  "recorded_at_utc": "2026-09-23T10:20:00Z",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "stage": "V0-FINAL.1",
+  "candidate": {
+    "branch": "integration/v0-final-1-main-catchup-r1",
+    "head": "2c873f1e75f4e519c68fc6a80faddce3345362eb",
+    "tree": "9b17c68992dbfc36b6999c56e5b8b15aca593593",
+    "freeze": "freeze/v0-final-1-main-catchup-2c873f1e-r1",
+    "pr": 687,
+    "main_head": "e200a61cb55930378d11c39dcc5950cf49db603c",
+    "accepted_v0_head": "a1db0c66762bee887f0bf2643f7c000961e64520"
+  },
+  "github_validation": {
+    "run": 35736300717,
+    "conclusion": "SUCCESS",
+    "ubuntu_source": {
+      "job": 106774311749,
+      "conclusion": "SUCCESS",
+      "artifact": 10697342311,
+      "artifact_digest": "sha256:d302fb156777dd59712e885cbd3bd84586d9da73d3efa11edecb5e238cdd3d63"
+    },
+    "windows_runtime": {
+      "job": 106774643809,
+      "conclusion": "SUCCESS",
+      "artifact": 10744351283,
+      "artifact_digest": "sha256:7c835d52316239f0409871314208e3f752013980306ce07c33e27286aed99b9e"
+    }
+  },
+  "windows": {
+    "runner_class": "self-hosted Windows X64",
+    "godot_version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "godot_sha256": "3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5",
+    "host_preflight": "PASS",
+    "existing_godot_processes": 0,
+    "minimum_free_ram_gb": 10,
+    "exact_candidate_identity": true,
+    "main_ancestor": true,
+    "v0_ancestor": true,
+    "mvp8": {
+      "exit_code": 0,
+      "passed": true,
+      "checks": "20/20",
+      "negative_controls": "14/14",
+      "fatal_logs": [],
+      "project_import_exit": 0,
+      "class_cache_nonempty": true,
+      "subject_head": "2c873f1e75f4e519c68fc6a80faddce3345362eb",
+      "subject_tree": "9b17c68992dbfc36b6999c56e5b8b15aca593593"
+    },
+    "tracked_source_clean": true
+  },
+  "verdict": "PASS",
+  "final1_complete": true,
+  "final2_promotion_ready": true,
+  "final_composition_accepted": false,
+  "main_merge_performed": false
+}
