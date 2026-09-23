@@ -45,6 +45,8 @@ def main():
         assert d["light_gearbox_acceleration_ratio"]>1.0
         assert d["snapshot_replay_error"]==0.0
         assert d["descriptor_inertia_relation_error"]=="SMART_SERVO_DESCRIPTOR_INERTIA_RELATION_MISMATCH"
+        assert d["descriptor_current_envelope_error"]=="SMART_SERVO_DESCRIPTOR_CURRENT_ENVELOPE_MISMATCH"
+        assert d["descriptor_speed_envelope_error"]=="SMART_SERVO_DESCRIPTOR_SPEED_ENVELOPE_MISMATCH"
         assert d["child_descriptor_binding_error"]=="SMART_SERVO_GEARBOX_DESCRIPTOR_BINDING_MISMATCH"
         hashes.add(ch(d));samples.append({"sample":i,"deterministic":d,"process":pt(root/f"sample-{i}.time.txt")})
     if len(hashes)!=1:raise ValueError("T11_DETERMINISM_MISMATCH")
