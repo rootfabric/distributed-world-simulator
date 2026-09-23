@@ -1,0 +1,23 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-09-09-V0-MVP-R1-V0-MVP-R1-WO-001-0075-V0-FINAL-2-PROMOTION-READY",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "sequence": 75,
+  "event_type": "PREDICATE_VERIFIED",
+  "work_state": "IN_PROGRESS",
+  "recorded_at_utc": "2026-09-23T10:21:00Z",
+  "actor": "DIRECTOR",
+  "branch": "integration/v0-final-1-main-catchup-r1",
+  "head_sha": "2c873f1e75f4e519c68fc6a80faddce3345362eb",
+  "tree_sha": "9b17c68992dbfc36b6999c56e5b8b15aca593593",
+  "predicate": "V0_FINAL_2_PROMOTION_READY",
+  "command": "PROMOTE_V0_FINAL_1_TO_FINAL_2",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence/V0-FINAL-1-MAIN-CATCHUP-R1.v1.json",
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence/V0-FINAL-1-MAIN-CATCHUP-SOURCE-VALIDATION-R1.v1.json",
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence/V0-FINAL-1-WINDOWS-RUNTIME-CLOSURE-R1.v1.json"
+  ],
+  "summary": "V0-FINAL.1 is fully closed and V0-FINAL.2 is authorized on frozen candidate 2c873f1e/9b17c689. Ubuntu source composition and Windows exact cold-start MVP8 both passed in run 35736300717; current-main and accepted V0 ancestry are exact, critical V0 product drift is zero, and tracked source is clean. Final V0 acceptance/main merge are still not claimed."
+}
