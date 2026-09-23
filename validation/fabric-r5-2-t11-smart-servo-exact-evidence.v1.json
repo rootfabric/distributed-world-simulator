@@ -1,27 +1,26 @@
 {
-  "schema": "fabric.r5_2.t11_smart_servo_exact_evidence.v1",
-  "status": "REPAIR_R2_LOCAL_EXACT_3X_PASS",
-  "subject_head": "397f7acc76239cf6bac6dec399cfcaed53245634",
-  "subject_tree": "b2001c807b4e6ccb8158e57fef2c63030614db4a",
+  "schema": "fabric.r5_2.t11_smart_servo_exact_evidence.v2",
+  "status": "REPAIR_R3_LOCAL_EXACT_3X_PASS",
+  "subject_head": "6b8cc7e5f81a3b1c9020177a027c1a82d3f6e9b8",
+  "subject_tree": "163287319fa7efc03142214b058f550b37b67630",
   "t10_merge_head": "613cd890b0871959544810c5396b66d94a4288ec",
   "canonical_owner": "Construction + frozen T5/T7 BehaviorCapsules",
   "production_checkpoint": false,
   "execution_environment": {
     "godot_version": "4.7.1.stable.double.custom_build.a13da4feb",
     "godot_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
-    "source_carrier_run_id": 35864380300,
-    "source_carrier_artifact_id": 10752155366,
-    "source_carrier_artifact_digest": "sha256:4bb11c3976af4dabd63d426419ea7ffce46308452ac26f957661d67844430a55",
-    "source_bundle_sha256": "6d9b75befed1a240047f89ae16841cd1101acb03e894d4a3d95c4c8b199eede1",
-    "sample_processes": 3,
-    "note": "Exact source carrier bundle executed locally on byte-exact canonical Godot; sample-1 followed fresh import, samples 2/3 were independent Godot processes on the same imported exact snapshot."
+    "source_carrier_run_id": 35865338962,
+    "source_carrier_artifact_id": 10752137458,
+    "source_carrier_artifact_digest": "sha256:22d0a4b493ded168008e2a576f8c7c6f3f469de136b0d4df92c37d4aa2b6f9b4",
+    "source_bundle_sha256": "f0582436290a5addf946b8e8c92dd965b1c0269ccc86ba37fcb19ba4d0154a0b",
+    "sample_processes": 3
   },
   "hashes": {
-    "deterministic_hash": "2a618449007f3ca6a1799852af17db1980118549a3c049cf4c56826aa45a8176",
-    "evidence_hash": "5a7edc22cfcff8c5843359e0474087ce8690ace3dbec14a6eec7bd31583ce567",
+    "deterministic_hash": "8e60a85aa92333fd4f347c8e3e08c9031844d7b1c7579b981182e6603d7afc17",
+    "evidence_hash": "497bedc975db17477ef96a0cef2f1c0bd8db3b670f2bdf85adfe9096370fe15a",
     "graph_hash": "ed9c437f3165c2bacbdcaabe8e790f46f685750d5b06ca799769b30cc426b383",
-    "descriptor_hash": "cb36c602375f1ebaaccb63043120a92757dea34d246a26e48643d74903e5860a",
-    "capsule_checksum": "e213cae949c033689feeee41e3fb7bbb5b2f3a6026e50af41528b0713c0c733c"
+    "descriptor_hash": "553727955ad6bf43ba36adf76044c467934db1a4afaec2aa7cc029bbd86dfc01",
+    "capsule_checksum": "054bc111f0c9edc7863ab88a1d19a27fd6a9618c243332ceff3a5390e19335a9"
   },
   "hierarchical_compression": {
     "leaf_source_components": 495,
@@ -40,7 +39,7 @@
   },
   "exact_control": {
     "sequence_ticks": 4096,
-    "assertions_per_sample": 4386,
+    "assertions_per_sample": 4388,
     "maximum_current_command_error_a": 0,
     "maximum_terminal_voltage_error_v": 0,
     "maximum_position_state_error_rad": 0,
@@ -52,32 +51,43 @@
   },
   "repair_r1": {
     "issue": "Godot native Control class shadowed preload alias Control",
-    "repair": "renamed preload alias to ServoControl in graph and fixture",
+    "repair": "renamed preload alias to ServoControl",
     "physics_changed": false,
     "thresholds_relaxed": false
   },
   "repair_r2": {
-    "issue": "moderate trajectory correctly stayed unsaturated while assertion incorrectly required saturation before dedicated large-step probe",
-    "repair": "bound saturation evidence to explicit 10-rad large-step probe; linear-regime trajectory remains unsaturated",
+    "issue": "moderate trajectory correctly stayed unsaturated while assertion expected saturation before dedicated large-step probe",
+    "repair": "bound saturation evidence to explicit 10-rad large-step probe",
+    "physics_changed": false,
+    "thresholds_relaxed": false
+  },
+  "repair_r3": {
+    "issue": "rehash-valid servo descriptor could coherently alter max current or max motor speed because raw T5/T7 child envelopes were not retained",
+    "repair": "persist raw motor current/speed and gearbox input torque/speed envelopes; independently rederive safe min relations in descriptor validation",
+    "current_envelope_tamper": "SMART_SERVO_DESCRIPTOR_CURRENT_ENVELOPE_MISMATCH",
+    "speed_envelope_tamper": "SMART_SERVO_DESCRIPTOR_SPEED_ENVELOPE_MISMATCH",
     "physics_changed": false,
     "thresholds_relaxed": false
   },
   "trust_boundary": {
     "descriptor_inertia_tamper": "SMART_SERVO_DESCRIPTOR_INERTIA_RELATION_MISMATCH",
+    "descriptor_current_envelope_tamper": "SMART_SERVO_DESCRIPTOR_CURRENT_ENVELOPE_MISMATCH",
+    "descriptor_speed_envelope_tamper": "SMART_SERVO_DESCRIPTOR_SPEED_ENVELOPE_MISMATCH",
     "child_descriptor_mismatch": "SMART_SERVO_GEARBOX_DESCRIPTOR_BINDING_MISMATCH",
     "current_limit_derived_from_motor_and_gearbox": true,
+    "speed_limit_derived_from_motor_and_gearbox": true,
     "reflected_gearbox_inertia_in_solver": true
   },
   "observations": {
     "process_elapsed_s": {
-      "min": 8.14,
-      "median": 8.71,
-      "max": 8.96
+      "min": 8.28,
+      "median": 8.34,
+      "max": 8.43
     },
     "process_max_rss_kib": {
-      "min": 130608,
-      "median": 131236,
-      "max": 131524
+      "min": 131908,
+      "median": 132100,
+      "max": 132108
     },
     "timing_is_acceptance_threshold": false,
     "rss_is_acceptance_threshold": false
@@ -87,8 +97,7 @@
     "power_stage_dynamics_claimed": false,
     "encoder_noise_claimed": false,
     "backlash_claimed": false,
-    "shaft_compliance_claimed": false,
-    "note": "T11 proves closed-loop coupled motor+gearbox mechanics with caller-owned state. T6/battery drive dynamics and richer sensor/mechanical fidelity remain downstream."
+    "shaft_compliance_claimed": false
   },
   "next_gate": "EXACT_HEAD_CLOSURE_THEN_FRESH_REVIEW_AND_INDEPENDENT_VERIFIER"
 }
