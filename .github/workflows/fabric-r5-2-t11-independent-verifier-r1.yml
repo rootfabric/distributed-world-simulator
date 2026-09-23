@@ -1,0 +1,76 @@
+name: FABRIC R5.2 T11 Fresh Independent Verifier R1
+
+on:
+  push:
+    branches: [verify/fabric-r5-2-t11-fresh-independent-verifier-r1]
+
+permissions:
+  contents: read
+
+env:
+  SUBJECT_HEAD: 2fb4c66a7dc75151296440c18350bea6fb3537f7
+  PRODUCT_SUBJECT: 6b8cc7e5f81a3b1c9020177a027c1a82d3f6e9b8
+  EXPECTED_DETERMINISTIC_HASH: 8e60a85aa92333fd4f347c8e3e08c9031844d7b1c7579b981182e6603d7afc17
+
+jobs:
+  verifier-source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Prove frozen product identity
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$(git merge-base HEAD "$SUBJECT_HEAD")" = "$SUBJECT_HEAD"
+          changed="$(git diff --name-only "$SUBJECT_HEAD"...HEAD)"
+          test "$changed" = '.github/workflows/fabric-r5-2-t11-independent-verifier-r1.yml'
+          git diff --exit-code "$SUBJECT_HEAD"...HEAD -- \
+            scripts/research/fabric_bake0 \
+            tests/research/fabric_bake0 \
+            RUN_FABRIC_R5_2_T11_TESTS.sh \
+            docs/research/FABRIC_R5_2_T11_SMART_SERVO_RU.md \
+            validation/fabric-r5-2-t11-smart-servo-exact-evidence.v1.json
+
+      - name: Independently inspect durable R3 evidence
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          python3 - <<'PY'
+          import json
+          d=json.load(open('validation/fabric-r5-2-t11-smart-servo-exact-evidence.v1.json',encoding='utf-8'))
+          assert d['status']=='REPAIR_R3_LOCAL_EXACT_3X_PASS'
+          assert d['subject_head']=='6b8cc7e5f81a3b1c9020177a027c1a82d3f6e9b8'
+          assert d['hashes']['deterministic_hash']=='8e60a85aa92333fd4f347c8e3e08c9031844d7b1c7579b981182e6603d7afc17'
+          assert d['hierarchical_compression']['leaf_source_components']==495
+          assert d['trust_boundary']['descriptor_current_envelope_tamper']=='SMART_SERVO_DESCRIPTOR_CURRENT_ENVELOPE_MISMATCH'
+          assert d['trust_boundary']['descriptor_speed_envelope_tamper']=='SMART_SERVO_DESCRIPTOR_SPEED_ENVELOPE_MISMATCH'
+          assert d['trust_boundary']['descriptor_inertia_tamper']=='SMART_SERVO_DESCRIPTOR_INERTIA_RELATION_MISMATCH'
+          assert d['exact_control']['snapshot_replay_error']==0.0
+          assert 0.0 < d['coupled_mechanics']['coupled_to_bare_acceleration_ratio'] < 1.0
+          print('T11_DURABLE_EVIDENCE=PASS')
+          PY
+
+      - name: Build exact verifier source bundle
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          mkdir -p verifier-source
+          git branch -f t11-verifier-exact HEAD
+          git bundle create verifier-source/t11-verifier-exact.bundle refs/heads/t11-verifier-exact
+          sha256sum verifier-source/t11-verifier-exact.bundle > verifier-source/t11-verifier-exact.bundle.sha256
+          printf 'SUBJECT_HEAD=%s\nPRODUCT_SUBJECT=%s\nVERIFIER_HEAD=%s\nVERIFIER_TREE=%s\nEXPECTED_DETERMINISTIC_HASH=%s\n' \
+            "$SUBJECT_HEAD" "$PRODUCT_SUBJECT" "$(git rev-parse HEAD)" "$(git rev-parse 'HEAD^{tree}')" "$EXPECTED_DETERMINISTIC_HASH" \
+            > verifier-source/identity.txt
+          git bundle verify verifier-source/t11-verifier-exact.bundle
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fabric-r5-2-t11-independent-verifier-source-${{ github.sha }}
+          path: verifier-source/**
+          if-no-files-found: error
+          retention-days: 90
