@@ -39,6 +39,11 @@ const ZONE_FIELDS := ["id", "water_mg", "light", "temperature", "nutrient_mg", "
 const PLACEMENT_FIELDS := ["founder_ref", "zone_id", "position_mm"]
 const MAX_ZONES := 4096
 const MAX_FOUNDERS := 4096
+# Polygon LAB/WORLD field policy. A4 supports a wider absolute stock type, but
+# its water development signal is stock/capacity. Keeping this explicit
+# 1,000,000 mg capacity preserves established ecology semantics and makes the
+# manifest fail closed instead of silently changing water availability.
+const CELL_CAPACITY_MG := 1000000
 
 ## Validate manifest against canonical contracts. Returns "" when valid.
 ## Fail-closed: unknown fields, invalid seed, unresolvable/invalid founder
@@ -212,7 +217,7 @@ static func _validate_environment(environment: Variant) -> String:
 		seen_zone_ids[zone.id] = true
 		# Stocks: canonical [A4] resource stock bounds (nonnegative).
 		for stock_field in ["water_mg", "nutrient_mg", "organic_mg"]:
-			if not C.integer(zone[stock_field], 0, FieldContract.MAX_CELL_STOCK):
+			if not C.integer(zone[stock_field], 0, CELL_CAPACITY_MG):
 				return "MANIFEST_ZONE_STOCK:" + stock_field
 		# Signals: nonnegative light / temperature (canonical signal domain).
 		for signal_field in ["light", "temperature"]:
