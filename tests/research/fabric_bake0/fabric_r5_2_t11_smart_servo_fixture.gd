@@ -1,7 +1,7 @@
 extends RefCounted
 
 const U = preload("res://scripts/research/fabric_bake0/fabric_bake_contract_utils_v1.gd")
-const Control = preload("res://scripts/research/fabric_bake0/smart_servo_control_profile_v1.gd")
+const ServoControl = preload("res://scripts/research/fabric_bake0/smart_servo_control_profile_v1.gd")
 const Graph = preload("res://scripts/research/fabric_bake0/smart_servo_graph_v1.gd")
 const SourceRevision = preload("res://scripts/simulation/representation/contracts/representation_source_revision.gd")
 const Frontier = preload("res://scripts/research/fabric_bake0/canonical_source_frontier_v1.gd")
@@ -28,7 +28,7 @@ static func compile_subsystems(
 	return U.success({"motor":motor.details,"gearbox":gear.details})
 
 static func control_profile(kp:float=100.0,kd:float=60.0)->Dictionary:
-	return Control.create("profile/r5-t11-servo-pd",kp,kd,0.002,0.01)
+	return ServoControl.create("profile/r5-t11-servo-pd",kp,kd,0.002,0.01)
 
 static func make_graph(subsystems:Dictionary,kp:float=100.0,kd:float=60.0)->Dictionary:
 	return Graph.create(
