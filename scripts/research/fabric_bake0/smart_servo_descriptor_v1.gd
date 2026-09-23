@@ -8,6 +8,8 @@ const FIELDS: Array[String] = [
 	"schema","graph_hash","interface_contract","motor_capsule_checksum","gearbox_capsule_checksum",
 	"gear_ratio","motor_resistance_ohm","torque_constant_nm_a",
 	"motor_rotor_inertia_kg_m2","gearbox_reflected_inertia_kg_m2","combined_input_inertia_kg_m2",
+	"motor_child_max_abs_current_a","motor_child_max_abs_omega_rad_s",
+	"gearbox_child_max_abs_input_torque_nm","gearbox_child_max_abs_input_omega_rad_s",
 	"position_kp_nm_rad","velocity_kd_nm_s_rad","position_tolerance_rad","velocity_tolerance_rad_s",
 	"max_abs_current_a","max_abs_motor_omega_rad_s","max_abs_output_omega_rad_s","max_abs_output_torque_nm",
 	"source_component_count","source_operation_count","compiled_operation_count",
@@ -27,6 +29,10 @@ static func create(data:Dictionary)->Dictionary:
 		"motor_rotor_inertia_kg_m2":float(data.motor_rotor_inertia_kg_m2),
 		"gearbox_reflected_inertia_kg_m2":float(data.gearbox_reflected_inertia_kg_m2),
 		"combined_input_inertia_kg_m2":float(data.combined_input_inertia_kg_m2),
+		"motor_child_max_abs_current_a":float(data.motor_child_max_abs_current_a),
+		"motor_child_max_abs_omega_rad_s":float(data.motor_child_max_abs_omega_rad_s),
+		"gearbox_child_max_abs_input_torque_nm":float(data.gearbox_child_max_abs_input_torque_nm),
+		"gearbox_child_max_abs_input_omega_rad_s":float(data.gearbox_child_max_abs_input_omega_rad_s),
 		"position_kp_nm_rad":float(data.position_kp_nm_rad),
 		"velocity_kd_nm_s_rad":float(data.velocity_kd_nm_s_rad),
 		"position_tolerance_rad":float(data.position_tolerance_rad),
@@ -58,6 +64,8 @@ static func validate(value:Dictionary)->Dictionary:
 	for field in [
 		"motor_resistance_ohm","torque_constant_nm_a","motor_rotor_inertia_kg_m2",
 		"gearbox_reflected_inertia_kg_m2","combined_input_inertia_kg_m2",
+		"motor_child_max_abs_current_a","motor_child_max_abs_omega_rad_s",
+		"gearbox_child_max_abs_input_torque_nm","gearbox_child_max_abs_input_omega_rad_s",
 		"position_kp_nm_rad","velocity_kd_nm_s_rad","position_tolerance_rad","velocity_tolerance_rad_s",
 		"max_abs_current_a","max_abs_motor_omega_rad_s","max_abs_output_omega_rad_s","max_abs_output_torque_nm"
 	]:
@@ -71,6 +79,18 @@ static func validate(value:Dictionary)->Dictionary:
 	var expected_inertia:=float(value.motor_rotor_inertia_kg_m2)+float(value.gearbox_reflected_inertia_kg_m2)
 	if absf(float(value.combined_input_inertia_kg_m2)-expected_inertia)>1.0e-12*maxf(1.0,expected_inertia):
 		return U.failure("SMART_SERVO_DESCRIPTOR_INERTIA_RELATION_MISMATCH")
+	var expected_max_current:=minf(
+		float(value.motor_child_max_abs_current_a),
+		float(value.gearbox_child_max_abs_input_torque_nm)/float(value.torque_constant_nm_a)
+	)
+	if absf(float(value.max_abs_current_a)-expected_max_current)>1.0e-12*maxf(1.0,expected_max_current):
+		return U.failure("SMART_SERVO_DESCRIPTOR_CURRENT_ENVELOPE_MISMATCH")
+	var expected_max_motor_omega:=minf(
+		float(value.motor_child_max_abs_omega_rad_s),
+		float(value.gearbox_child_max_abs_input_omega_rad_s)
+	)
+	if absf(float(value.max_abs_motor_omega_rad_s)-expected_max_motor_omega)>1.0e-12*maxf(1.0,expected_max_motor_omega):
+		return U.failure("SMART_SERVO_DESCRIPTOR_SPEED_ENVELOPE_MISMATCH")
 	var expected_output_omega:=float(value.max_abs_motor_omega_rad_s)*absf(float(value.gear_ratio))
 	if absf(float(value.max_abs_output_omega_rad_s)-expected_output_omega)>1.0e-12*maxf(1.0,expected_output_omega):
 		return U.failure("SMART_SERVO_DESCRIPTOR_OUTPUT_SPEED_RELATION_MISMATCH")
