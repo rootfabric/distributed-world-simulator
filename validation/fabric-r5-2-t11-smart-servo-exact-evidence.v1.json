@@ -1,0 +1,103 @@
+{
+  "schema": "fabric.r5_2.t11_smart_servo_exact_evidence.v2",
+  "status": "REPAIR_R3_LOCAL_EXACT_3X_PASS",
+  "subject_head": "6b8cc7e5f81a3b1c9020177a027c1a82d3f6e9b8",
+  "subject_tree": "163287319fa7efc03142214b058f550b37b67630",
+  "t10_merge_head": "613cd890b0871959544810c5396b66d94a4288ec",
+  "canonical_owner": "Construction + frozen T5/T7 BehaviorCapsules",
+  "production_checkpoint": false,
+  "execution_environment": {
+    "godot_version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "godot_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+    "source_carrier_run_id": 35865338962,
+    "source_carrier_artifact_id": 10752137458,
+    "source_carrier_artifact_digest": "sha256:22d0a4b493ded168008e2a576f8c7c6f3f469de136b0d4df92c37d4aa2b6f9b4",
+    "source_bundle_sha256": "f0582436290a5addf946b8e8c92dd965b1c0269ccc86ba37fcb19ba4d0154a0b",
+    "sample_processes": 3
+  },
+  "hashes": {
+    "deterministic_hash": "8e60a85aa92333fd4f347c8e3e08c9031844d7b1c7579b981182e6603d7afc17",
+    "evidence_hash": "497bedc975db17477ef96a0cef2f1c0bd8db3b670f2bdf85adfe9096370fe15a",
+    "graph_hash": "ed9c437f3165c2bacbdcaabe8e790f46f685750d5b06ca799769b30cc426b383",
+    "descriptor_hash": "553727955ad6bf43ba36adf76044c467934db1a4afaec2aa7cc029bbd86dfc01",
+    "capsule_checksum": "054bc111f0c9edc7863ab88a1d19a27fd6a9618c243332ceff3a5390e19335a9"
+  },
+  "hierarchical_compression": {
+    "leaf_source_components": 495,
+    "leaf_source_operations": 2846,
+    "compiled_operations": 24,
+    "operation_compression_ratio": 118.583333333333,
+    "runtime_source_component_traversals_per_execute": 0
+  },
+  "coupled_mechanics": {
+    "gear_ratio": -0.027777777777777776,
+    "combined_input_inertia_kg_m2": 0.0114347110764802,
+    "max_abs_current_a": 14.88,
+    "max_abs_output_torque_nm": 349.362782208,
+    "coupled_to_bare_acceleration_ratio": 0.924427379869911,
+    "light_gearbox_acceleration_ratio": 1.05216584564308
+  },
+  "exact_control": {
+    "sequence_ticks": 4096,
+    "assertions_per_sample": 4388,
+    "maximum_current_command_error_a": 0,
+    "maximum_terminal_voltage_error_v": 0,
+    "maximum_position_state_error_rad": 0,
+    "maximum_velocity_state_error_rad_s": 0,
+    "maximum_energy_residual_j": 2.56739074444567e-15,
+    "saturation_seen": true,
+    "settled_seen": true,
+    "snapshot_replay_error": 0
+  },
+  "repair_r1": {
+    "issue": "Godot native Control class shadowed preload alias Control",
+    "repair": "renamed preload alias to ServoControl",
+    "physics_changed": false,
+    "thresholds_relaxed": false
+  },
+  "repair_r2": {
+    "issue": "moderate trajectory correctly stayed unsaturated while assertion expected saturation before dedicated large-step probe",
+    "repair": "bound saturation evidence to explicit 10-rad large-step probe",
+    "physics_changed": false,
+    "thresholds_relaxed": false
+  },
+  "repair_r3": {
+    "issue": "rehash-valid servo descriptor could coherently alter max current or max motor speed because raw T5/T7 child envelopes were not retained",
+    "repair": "persist raw motor current/speed and gearbox input torque/speed envelopes; independently rederive safe min relations in descriptor validation",
+    "current_envelope_tamper": "SMART_SERVO_DESCRIPTOR_CURRENT_ENVELOPE_MISMATCH",
+    "speed_envelope_tamper": "SMART_SERVO_DESCRIPTOR_SPEED_ENVELOPE_MISMATCH",
+    "physics_changed": false,
+    "thresholds_relaxed": false
+  },
+  "trust_boundary": {
+    "descriptor_inertia_tamper": "SMART_SERVO_DESCRIPTOR_INERTIA_RELATION_MISMATCH",
+    "descriptor_current_envelope_tamper": "SMART_SERVO_DESCRIPTOR_CURRENT_ENVELOPE_MISMATCH",
+    "descriptor_speed_envelope_tamper": "SMART_SERVO_DESCRIPTOR_SPEED_ENVELOPE_MISMATCH",
+    "child_descriptor_mismatch": "SMART_SERVO_GEARBOX_DESCRIPTOR_BINDING_MISMATCH",
+    "current_limit_derived_from_motor_and_gearbox": true,
+    "speed_limit_derived_from_motor_and_gearbox": true,
+    "reflected_gearbox_inertia_in_solver": true
+  },
+  "observations": {
+    "process_elapsed_s": {
+      "min": 8.28,
+      "median": 8.34,
+      "max": 8.43
+    },
+    "process_max_rss_kib": {
+      "min": 131908,
+      "median": 132100,
+      "max": 132108
+    },
+    "timing_is_acceptance_threshold": false,
+    "rss_is_acceptance_threshold": false
+  },
+  "bounded_claim": {
+    "ideal_current_source_boundary": true,
+    "power_stage_dynamics_claimed": false,
+    "encoder_noise_claimed": false,
+    "backlash_claimed": false,
+    "shaft_compliance_claimed": false
+  },
+  "next_gate": "EXACT_HEAD_CLOSURE_THEN_FRESH_REVIEW_AND_INDEPENDENT_VERIFIER"
+}
