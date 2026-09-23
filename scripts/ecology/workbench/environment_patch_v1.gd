@@ -7,7 +7,7 @@
 #   mutated. NO runtime field mutation happens here (world-compat is P12).
 # Layer: 2 (SIMULATION / ORCHESTRATION) — INPUT layer only.
 # Canonical bounds follow the P1 manifest schema (experiment_manifest_v1):
-#   stocks 0..MAX_CELL_STOCK, signals 0..C.MAX_INT. No new fields, no
+#   stocks 0..Manifest.CELL_CAPACITY_MG, signals 0..C.MAX_INT. No new fields, no
 #   duplicates of existing schema fields.
 class_name EcoWorkbenchEnvironmentPatchV1
 extends RefCounted
@@ -43,7 +43,7 @@ static func validate_patch(manifest: Dictionary, patch: Dictionary) -> String:
 			if not field in EDITABLE_FIELDS:
 				return "PATCH_FIELD_UNKNOWN:" + String(field)
 		for field in STOCK_FIELDS:
-			if edits.has(field) and not C.integer(edits[field], 0, FieldContract.MAX_CELL_STOCK):
+			if edits.has(field) and not C.integer(edits[field], 0, Manifest.CELL_CAPACITY_MG):
 				return "PATCH_STOCK_BOUNDS:" + String(field)
 		for field in SIGNAL_FIELDS:
 			if edits.has(field) and not C.integer(edits[field], 0, C.MAX_INT):
