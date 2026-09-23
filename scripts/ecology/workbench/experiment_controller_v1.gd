@@ -407,8 +407,8 @@ func apply_field_patch(patch: Dictionary) -> Dictionary:
 				))
 				remaining -= chunk
 				chunk_index += 1
-		# Per-cell batching keeps the maximum at 3,000 effects, below A4
-		# MAX_BATCH even for MAX_CELL_STOCK deltas across all three resources.
+		# Per-cell batching remains bounded by A4 MAX_BATCH. Manifest stock values
+		# are capped at the explicit ecology cell capacity.
 		if not cell_effects.is_empty():
 			var effect_result := Field.apply_effects(
 				field, cell_effects, OWNER_TOKEN, int(field.owner_epoch), int(field.revision)
@@ -635,18 +635,18 @@ func _build_field(environment: Dictionary) -> Dictionary:
 		OWNER_TOKEN, 0,
 		spatial.origin_mm, spatial.cell_size_mm, spatial.width, spatial.depth,
 		FieldContract.stock(0),
-		FieldContract.stock(FieldContract.MAX_CELL_STOCK),
+		FieldContract.stock(Manifest.CELL_CAPACITY_MG),
 		FieldContract.signals(0, 0)
 	)
 	if field.is_empty():
 		return _command_fail("CONTROLLER_FIELD_CREATE")
 	var total: int = spatial.width * spatial.depth
 
-	# Commit stocks per cell. One manifest cell may contain up to
-	# MAX_CELL_STOCK for each of the three resources; splitting at MAX_REQUEST
-	# yields at most 3,000 effects/cell, safely below A4 MAX_BATCH=4,096.
-	# Applying all cells in one batch would make a large but otherwise valid
-	# manifest fail merely because of workbench orchestration.
+	# Commit stocks per cell through the canonical owner-write API. The
+	# manifest bound equals the ecology cell capacity, preserving the A4 water
+	# signal semantics (water = stock/capacity) used by A5 growth regulation.
+	# Chunking is retained so the bridge remains valid if MAX_REQUEST is ever
+	# lowered independently of that capacity.
 	for index in total:
 		var zone: Dictionary = zones[mini(zones.size() - 1, index * zones.size() / total)]
 		var position := _cell_center(field, index)
