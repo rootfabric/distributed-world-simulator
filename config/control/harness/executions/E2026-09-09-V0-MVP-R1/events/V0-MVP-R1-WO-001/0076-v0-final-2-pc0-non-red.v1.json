@@ -1,0 +1,21 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-09-09-V0-MVP-R1-V0-MVP-R1-WO-001-0076-V0-FINAL-2-PC0-NON-RED",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "sequence": 76,
+  "event_type": "PREDICATE_VERIFIED",
+  "work_state": "IN_PROGRESS",
+  "recorded_at_utc": "2026-09-24T12:39:30Z",
+  "actor": "DIRECTOR",
+  "branch": "integration/v0-final-1-main-catchup-r1",
+  "head_sha": "2c873f1e75f4e519c68fc6a80faddce3345362eb",
+  "tree_sha": "9b17c68992dbfc36b6999c56e5b8b15aca593593",
+  "predicate": "V0_FINAL_2_PC0_NON_RED",
+  "command": "RECORD_V0_FINAL_2_EXACT_PC0",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence/V0-FINAL-2-PC0-2C873F1E-R1.v1.json"
+  ],
+  "summary": "FINAL.2 exact integrated candidate passed Ubuntu source/control regression and exact Standard/Directional PC0 on 2c873f1e/9b17c689: STANDARD=YELLOW non-RED, DIRECTIONAL=YELLOW non-RED, tracked source clean. Windows full world/core remains the only machine gate pending before Fresh Reviewer dispatch."
+}
