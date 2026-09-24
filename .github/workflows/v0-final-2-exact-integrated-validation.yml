@@ -1,0 +1,268 @@
+name: V0 FINAL.2 Exact Integrated Validation
+
+on:
+  push:
+    branches:
+      - control/v0-final-2-validation-r1
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: v0-final-2-exact
+  cancel-in-progress: false
+
+env:
+  PRODUCT_HEAD: 2c873f1e75f4e519c68fc6a80faddce3345362eb
+  PRODUCT_TREE: 9b17c68992dbfc36b6999c56e5b8b15aca593593
+  MAIN_HEAD: e200a61cb55930378d11c39dcc5950cf49db603c
+  ACCEPTED_V0_HEAD: a1db0c66762bee887f0bf2643f7c000961e64520
+  PYTHONUTF8: '1'
+  PYTHONDONTWRITEBYTECODE: '1'
+  BREAKPOINT_RUNTIME_DISABLED: '1'
+  GODOT_SILENCE_ROOT_WARNING: '1'
+  PLANET_SIMULATOR_INVENTORY_PROFILE: planet_default
+
+jobs:
+  pc0:
+    name: Ubuntu exact PC0 + directional
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout frozen integrated candidate
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.PRODUCT_HEAD }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Bind exact identity and ancestry
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$PRODUCT_HEAD"
+          test "$(git rev-parse 'HEAD^{tree}')" = "$PRODUCT_TREE"
+          git merge-base --is-ancestor "$MAIN_HEAD" "$PRODUCT_HEAD"
+          git merge-base --is-ancestor "$ACCEPTED_V0_HEAD" "$PRODUCT_HEAD"
+          test -z "$(git status --porcelain --untracked-files=no)"
+          git fetch origin '+refs/heads/*:refs/remotes/origin/*' --prune
+          test "$(git rev-parse origin/main)" = "$MAIN_HEAD"
+
+      - name: Install pinned Harness dependency
+        shell: bash
+        run: python3 -m pip install --disable-pip-version-check -r scripts/harness/requirements.txt
+
+      - name: Exact source/control regression
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest             tests.harness.test_v0_mvp_act0             tests.harness.test_project_control_validation             tests.harness.test_project_control_architecture_compatibility             tests.harness.test_project_control_historical_ownership_compatibility             tests.harness.test_project_control_proposed_r3_ownership_projection             tests.harness.test_project_control_directional_clearance
+
+      - name: Standard PC0
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/v0-final-2/pc0
+          python3 scripts/control/project_control.py --no-fetch --no-fail-on-red             > artifacts/v0-final-2/pc0/standard.log 2>&1
+          cp artifacts/control/project-control-report.json artifacts/v0-final-2/pc0/
+          cp artifacts/control/PROJECT_STATUS_RU.md artifacts/v0-final-2/pc0/
+          python3 - <<'PY'
+          import json
+          p=json.load(open('artifacts/v0-final-2/pc0/project-control-report.json',encoding='utf-8'))
+          health=p.get('overall_health',p.get('overall',p.get('health')))
+          assert health and health != 'RED', health
+          print('V0_FINAL_2_STANDARD_PC0_NON_RED',health)
+          PY
+
+      - name: Directional PC0
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/control/project_control_directional_watch.py --no-fail-on-red             > artifacts/v0-final-2/pc0/directional.log 2>&1
+          cp artifacts/control/directional-watch-report.json artifacts/v0-final-2/pc0/
+          cp artifacts/control/DIRECTIONAL_WATCH_STATUS_RU.md artifacts/v0-final-2/pc0/
+          python3 - <<'PY'
+          import json
+          p=json.load(open('artifacts/v0-final-2/pc0/directional-watch-report.json',encoding='utf-8'))
+          health=p.get('overall_health',p.get('overall',p.get('health')))
+          assert health and health != 'RED', health
+          print('V0_FINAL_2_DIRECTIONAL_PC0_NON_RED',health)
+          PY
+
+      - name: Bind PC0 evidence
+        if: always()
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import hashlib,json,pathlib,subprocess
+          root=pathlib.Path('artifacts/v0-final-2/pc0')
+          root.mkdir(parents=True,exist_ok=True)
+          def git(*a): return subprocess.check_output(['git',*a],text=True).strip()
+          def load(n):
+              p=root/n
+              return json.loads(p.read_text(encoding='utf-8')) if p.is_file() else {}
+          s=load('project-control-report.json'); d=load('directional-watch-report.json')
+          def health(v): return v.get('overall_health',v.get('overall',v.get('health','UNKNOWN')))
+          files=[]
+          for p in sorted(root.glob('*')):
+              if p.is_file() and p.name!='summary.json':
+                  files.append({'path':p.name,'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()})
+          out={
+            'schema':'distributed_world_simulator.v0_final_2_pc0.v1',
+            'subject_head':git('rev-parse','HEAD'),
+            'subject_tree':git('rev-parse','HEAD^{tree}'),
+            'standard':health(s),'directional':health(d),
+            'standard_non_red':health(s)!='RED',
+            'directional_non_red':health(d)!='RED',
+            'tracked_clean':not bool(git('status','--porcelain','--untracked-files=no')),
+            'files':files,
+          }
+          (root/'summary.json').write_text(json.dumps(out,indent=2)+'\n')
+          print(json.dumps(out))
+          PY
+
+      - name: Upload exact PC0
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v0-final-2-pc0-${{ github.run_id }}-${{ github.run_attempt }}
+          path: artifacts/v0-final-2/pc0/
+          if-no-files-found: error
+          retention-days: 90
+
+  world-core:
+    name: Windows exact full world/core
+    needs: pc0
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 90
+    env:
+      GODOT_BIN: C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe
+    steps:
+      - name: Checkout frozen integrated candidate
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.PRODUCT_HEAD }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Host preflight and exact identity
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          if ((git rev-parse HEAD).Trim() -ne $env:PRODUCT_HEAD) { throw 'HEAD_MISMATCH' }
+          if ((git rev-parse 'HEAD^{tree}').Trim() -ne $env:PRODUCT_TREE) { throw 'TREE_MISMATCH' }
+          if ((git status --porcelain --untracked-files=no)) { throw 'TRACKED_DIRTY_BEFORE' }
+          $sha=(Get-FileHash $env:GODOT_BIN -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($sha -ne '3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5') { throw "GODOT_SHA_MISMATCH:$sha" }
+          $ver=& $env:GODOT_BIN --version
+          if ($ver -notmatch '4\.7\.1.*double.*a13da4feb') { throw "GODOT_VERSION_MISMATCH:$ver" }
+          $existing=@(Get-Process -ErrorAction SilentlyContinue | Where-Object { $_.ProcessName -like 'godot*' })
+          if ($existing.Count -gt 0) { throw ('FOREIGN_GODOT_PROCESS:' + (($existing | Select-Object -ExpandProperty Id) -join ',')) }
+          $os=Get-CimInstance Win32_OperatingSystem
+          $free=[math]::Round(($os.FreePhysicalMemory*1KB)/1GB,2)
+          if ($free -lt 10) { throw "LOW_FREE_RAM:$free" }
+          New-Item -ItemType Directory -Force artifacts\v0-final-2\world-core | Out-Null
+          [ordered]@{head=$env:PRODUCT_HEAD;tree=$env:PRODUCT_TREE;godot_version=$ver;godot_sha256=$sha;free_ram_gb=$free} |
+            ConvertTo-Json | Set-Content artifacts\v0-final-2\world-core\preflight.json -Encoding UTF8
+
+      - name: Deterministic Godot import
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          if (Test-Path .godot) { Remove-Item .godot -Recurse -Force }
+          & $env:GODOT_BIN --headless --path . --editor --import --quit *> artifacts\v0-final-2\world-core\editor-import.log
+          if ($LASTEXITCODE -ne 0) { throw "IMPORT_FAILED:$LASTEXITCODE" }
+          if (-not (Test-Path .godot\global_script_class_cache.cfg)) { throw 'CLASS_CACHE_MISSING' }
+          if ((Get-Item .godot\global_script_class_cache.cfg).Length -le 0) { throw 'CLASS_CACHE_EMPTY' }
+
+      - name: Canonical full world/core
+        shell: pwsh
+        timeout-minutes: 65
+        run: |
+          $ErrorActionPreference='Stop'
+          $root=(Resolve-Path .).Path
+          $out=Join-Path $root 'artifacts\v0-final-2\world-core'
+          $mvp6=Join-Path $out 'mvp6-results'
+          $mvp7=Join-Path $out 'mvp7-managed'
+          New-Item -ItemType Directory -Force $mvp6,$mvp7 | Out-Null
+
+          $env:EXPECTED_HEAD=$env:PRODUCT_HEAD
+          $env:EXPECTED_TREE=$env:PRODUCT_TREE
+
+          $env:MVP6_SEAM_DIAGNOSTIC_RESULT=Join-Path $mvp6 'diagnostic.json'
+          $env:MVP6_CROSS_AUTHORITY_SEAM_RESULT=Join-Path $mvp6 'product.json'
+          $env:MVP6_DERIVED_COLLISION_RESULT=Join-Path $mvp6 'collision.json'
+          $env:MVP6_PERSISTENCE_RESULT=Join-Path $mvp6 'persistence.json'
+
+          $env:MVP7_NATIVE_MODE='produce'
+          $env:MVP7_NATIVE_ROOT=Join-Path $mvp7 'native'
+          $env:MVP7_NATIVE_RESULT=Join-Path $mvp7 'native-result.json'
+          $env:MVP7_WORLD_MODE='produce'
+          $env:MVP7_WORLD_ROOT=Join-Path $mvp7 'world'
+          $env:MVP7_WORLD_RESULT=Join-Path $mvp7 'world-result.json'
+          $env:MVP7_CONSTRUCTION_MODE='produce'
+          $env:MVP7_CONSTRUCTION_ROOT=Join-Path $mvp7 'construction'
+          $env:MVP7_CONSTRUCTION_RESULT=Join-Path $mvp7 'construction-result.json'
+          New-Item -ItemType Directory -Force $env:MVP7_NATIVE_ROOT,$env:MVP7_WORLD_ROOT,$env:MVP7_CONSTRUCTION_ROOT | Out-Null
+
+          pwsh -NoProfile -File .\RUN_WORLD_REGRESSION_TESTS.ps1 *> (Join-Path $out 'full-world-core.log')
+          $code=$LASTEXITCODE
+          "$code" | Set-Content (Join-Path $out 'world-exit.txt') -Encoding ascii
+          if ($code -ne 0) { Get-Content (Join-Path $out 'full-world-core.log') -Tail 250; throw "WORLD_CORE_FAILED:$code" }
+
+          $summary='artifacts\test-results\world-regression-summary.json'
+          if (-not (Test-Path $summary)) { throw 'WORLD_SUMMARY_MISSING' }
+          Copy-Item $summary (Join-Path $out 'world-regression-summary.json')
+          $j=Get-Content -Raw $summary | ConvertFrom-Json
+          if ($j.passed -ne $true) { throw 'WORLD_SUMMARY_RED' }
+          if ([int]$j.declared_test_count -ne [int]$j.discovered_test_count) { throw 'DISCOVERY_PARITY_FAILED' }
+          $bad=@($j.steps | Where-Object { $_.passed -ne $true -or [int]$_.exit_code -ne 0 })
+          if ($bad.Count -ne 0) { throw "WORLD_STEPS_RED:$($bad.Count)" }
+          Write-Host "V0_FINAL_2_WORLD_CORE_PASS declared=$($j.declared_test_count) discovered=$($j.discovered_test_count) steps=$(@($j.steps).Count)"
+
+      - name: Bind world/core evidence
+        if: always()
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          $out=Resolve-Path artifacts\v0-final-2\world-core
+          $summaryPath=Join-Path $out 'world-regression-summary.json'
+          $summary=@{}
+          if (Test-Path $summaryPath) { $summary=Get-Content -Raw $summaryPath | ConvertFrom-Json }
+          $files=@()
+          Get-ChildItem $out -Recurse -File | Sort-Object FullName | ForEach-Object {
+            if ($_.Name -ne 'manifest.json') {
+              $files += [ordered]@{
+                path=$_.FullName.Substring($out.Path.Length).TrimStart('\')
+                bytes=$_.Length
+                sha256=(Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+              }
+            }
+          }
+          $tracked=(git status --porcelain --untracked-files=no)
+          $manifest=[ordered]@{
+            schema='distributed_world_simulator.v0_final_2_world_core.v1'
+            subject_head=(git rev-parse HEAD).Trim()
+            subject_tree=(git rev-parse 'HEAD^{tree}').Trim()
+            passed=($summary.passed -eq $true)
+            declared=$summary.declared_test_count
+            discovered=$summary.discovered_test_count
+            steps=@($summary.steps).Count
+            failed_steps=@($summary.steps | Where-Object { $_.passed -ne $true -or [int]$_.exit_code -ne 0 }).Count
+            tracked_clean=([string]::IsNullOrWhiteSpace($tracked))
+            files=$files
+          }
+          $manifest | ConvertTo-Json -Depth 8 | Set-Content (Join-Path $out 'manifest.json') -Encoding UTF8
+          if ((git rev-parse HEAD).Trim() -ne $env:PRODUCT_HEAD) { throw 'IDENTITY_CHANGED' }
+          if ((git rev-parse 'HEAD^{tree}').Trim() -ne $env:PRODUCT_TREE) { throw 'TREE_CHANGED' }
+          if (-not [string]::IsNullOrWhiteSpace($tracked)) { throw 'TRACKED_DIRTY_AFTER' }
+
+      - name: Upload exact world/core
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v0-final-2-world-core-${{ github.run_id }}-${{ github.run_attempt }}
+          path: artifacts/v0-final-2/world-core/
+          if-no-files-found: error
+          retention-days: 90
