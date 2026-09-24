@@ -1,0 +1,38 @@
+{
+  "schema": "distributed_world_simulator.v0_final_2_pc0_evidence.v1",
+  "recorded_at_utc": "2026-09-24T12:39:30Z",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "product": {
+    "head": "2c873f1e75f4e519c68fc6a80faddce3345362eb",
+    "tree": "9b17c68992dbfc36b6999c56e5b8b15aca593593",
+    "freeze": "freeze/v0-final-1-main-catchup-2c873f1e-r1",
+    "integrated_main": "e200a61cb55930378d11c39dcc5950cf49db603c",
+    "accepted_v0": "a1db0c66762bee887f0bf2643f7c000961e64520"
+  },
+  "validation": {
+    "workflow": "V0 FINAL.2 Exact Integrated Validation",
+    "run": 36000334692,
+    "job": 107635145087,
+    "conclusion": "SUCCESS",
+    "standard_pc0": "YELLOW",
+    "directional_pc0": "YELLOW",
+    "standard_non_red": true,
+    "directional_non_red": true,
+    "tracked_clean": true,
+    "artifact": 10807402940,
+    "artifact_digest": "sha256:ea32d562bf04b288622d219bcc2b8b3dcfcb6efe3fb606f022cc513622970527"
+  },
+  "files": {
+    "project-control-report.json": "bd6db9fc8bc833568a30079c379021e773b9833f6c4c0723c077b02d0abbc2b0",
+    "directional-watch-report.json": "14157ebebfde0843e8b0724f1e4452a9076b3240786d5c15922b35f5deb46b0a",
+    "standard.log": "e307bc49781dce906f2169596927f68789726c1e8c0c46970e66fa77830fa941",
+    "directional.log": "1b60cdfc1fbcddcf7ca87805f546a7dbecfb6ee3aa38009cd62c509f85ccfeda",
+    "PROJECT_STATUS_RU.md": "e48df7913d062365ce2851b4ae4eb210c667437601ac30a93ed9a418881c0ab1",
+    "DIRECTIONAL_WATCH_STATUS_RU.md": "005f54269e0d854d71087ec12d67ea2ec770db898063b39d47bdda7afc880bbb"
+  },
+  "final2_state": "PC0_CLOSED_WORLD_CORE_PENDING",
+  "windows_world_core_job": 107635500751,
+  "merge_performed": false,
+  "human_acceptance": false
+}
