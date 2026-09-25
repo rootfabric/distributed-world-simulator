@@ -3,7 +3,7 @@ name: V0 FINAL.2 Exact Integrated Validation
 on:
   push:
     branches:
-      - control/v0-final-2-validation-r1
+      - control/v0-final-2-validation-r2
 
 permissions:
   contents: read
@@ -14,9 +14,9 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  PRODUCT_HEAD: 2c873f1e75f4e519c68fc6a80faddce3345362eb
-  PRODUCT_TREE: 9b17c68992dbfc36b6999c56e5b8b15aca593593
-  MAIN_HEAD: e200a61cb55930378d11c39dcc5950cf49db603c
+  PRODUCT_HEAD: 8708cfac56346af0ec8c9e5599eb47fcfb751087
+  PRODUCT_TREE: c6ea0671d4850641daafaf63e79bb3431ff5ef65
+  MAIN_HEAD: 6b336af8faeadbd7f69c96b62dc30d25150f45a7
   ACCEPTED_V0_HEAD: a1db0c66762bee887f0bf2643f7c000961e64520
   PYTHONUTF8: '1'
   PYTHONDONTWRITEBYTECODE: '1'
