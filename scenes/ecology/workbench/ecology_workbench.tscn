@@ -1,0 +1,194 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/ecology/workbench/ecology_workbench.gd" id="1"]
+
+[node name="EcologyWorkbench" type="Node"]
+script = ExtResource("1")
+
+[node name="OrganismMarkers" type="Node3D" parent="."]
+
+[node name="WorkbenchUI" type="CanvasLayer" parent="."]
+
+[node name="ExperimentControls" type="HBoxContainer" parent="WorkbenchUI"]
+anchors_preset = 0
+offset_left = 16.0
+offset_top = 16.0
+offset_right = 1400.0
+offset_bottom = 48.0
+
+[node name="Run" type="Button" parent="WorkbenchUI/ExperimentControls"]
+text = "RUN"
+
+[node name="Pause" type="Button" parent="WorkbenchUI/ExperimentControls"]
+text = "PAUSE"
+
+[node name="Step" type="Button" parent="WorkbenchUI/ExperimentControls"]
+text = "STEP 1"
+
+[node name="StepNSpin" type="SpinBox" parent="WorkbenchUI/ExperimentControls"]
+min_value = 1.0
+max_value = 1000.0
+value = 5.0
+
+[node name="StepN" type="Button" parent="WorkbenchUI/ExperimentControls"]
+text = "STEP N"
+
+[node name="Fast" type="Button" parent="WorkbenchUI/ExperimentControls"]
+text = "FAST"
+
+[node name="TickTarget" type="SpinBox" parent="WorkbenchUI/ExperimentControls"]
+min_value = 0.0
+max_value = 10000000.0
+value = 32.0
+
+[node name="RunToTick" type="Button" parent="WorkbenchUI/ExperimentControls"]
+text = "RUN TO TICK"
+
+[node name="GenTarget" type="SpinBox" parent="WorkbenchUI/ExperimentControls"]
+min_value = 1.0
+max_value = 1000.0
+value = 2.0
+
+[node name="RunToGen" type="Button" parent="WorkbenchUI/ExperimentControls"]
+text = "RUN TO GEN"
+
+[node name="ConditionKind" type="OptionButton" parent="WorkbenchUI/ExperimentControls"]
+item_count = 2
+popup/item_0/text = "POPULATION >= X"
+popup/item_1/text = "TICK == HORIZON"
+selected = 0
+
+[node name="ConditionValue" type="SpinBox" parent="WorkbenchUI/ExperimentControls"]
+min_value = 0.0
+max_value = 10000000.0
+value = 4.0
+
+[node name="RunToCondition" type="Button" parent="WorkbenchUI/ExperimentControls"]
+text = "RUN TO COND"
+
+[node name="Reset" type="Button" parent="WorkbenchUI/ExperimentControls"]
+text = "RESET"
+
+[node name="Morphology" type="CheckBox" parent="WorkbenchUI/ExperimentControls"]
+button_pressed = true
+text = "MORPHOLOGY"
+
+[node name="PlacementControls" type="HBoxContainer" parent="WorkbenchUI"]
+anchors_preset = 0
+offset_left = 16.0
+offset_top = 56.0
+offset_right = 1400.0
+offset_bottom = 88.0
+
+[node name="PlacementPreset" type="OptionButton" parent="WorkbenchUI/PlacementControls"]
+
+[node name="GeneratePlacement" type="Button" parent="WorkbenchUI/PlacementControls"]
+text = "GEN PLACEMENT"
+
+[node name="EnvZone" type="OptionButton" parent="WorkbenchUI/PlacementControls"]
+
+[node name="EnvField" type="OptionButton" parent="WorkbenchUI/PlacementControls"]
+
+[node name="EnvValue" type="SpinBox" parent="WorkbenchUI/PlacementControls"]
+min_value = -10.0
+max_value = 2000000000.0
+value = 0.0
+
+[node name="ApplyEnvPatch" type="Button" parent="WorkbenchUI/PlacementControls"]
+text = "APPLY ENV"
+
+[node name="StatusBar" type="Label" parent="WorkbenchUI"]
+anchors_preset = 0
+offset_left = 16.0
+offset_top = 96.0
+offset_right = 900.0
+offset_bottom = 120.0
+text = "not bound"
+
+[node name="InspectorControls" type="HBoxContainer" parent="WorkbenchUI"]
+anchors_preset = 0
+offset_left = 16.0
+offset_top = 124.0
+offset_right = 1400.0
+offset_bottom = 152.0
+
+[node name="SelectedLabel" type="Label" parent="WorkbenchUI/InspectorControls"]
+text = "INSPECTOR: select an organism"
+
+[node name="VariantOperator" type="OptionButton" parent="WorkbenchUI/InspectorControls"]
+
+[node name="VariantSeed" type="SpinBox" parent="WorkbenchUI/InspectorControls"]
+min_value = 0.0
+max_value = 9007199254740991.0
+value = 7.0
+
+[node name="CreateVariant" type="Button" parent="WorkbenchUI/InspectorControls"]
+text = "CREATE VARIANT"
+
+[node name="InspectorStatus" type="Label" parent="WorkbenchUI/InspectorControls"]
+text = ""
+
+[node name="BranchControls" type="HBoxContainer" parent="WorkbenchUI"]
+anchors_preset = 0
+offset_left = 16.0
+offset_top = 156.0
+offset_right = 1400.0
+offset_bottom = 184.0
+
+[node name="Checkpoint" type="Button" parent="WorkbenchUI/BranchControls"]
+text = "CHECKPOINT"
+
+[node name="Restore" type="Button" parent="WorkbenchUI/BranchControls"]
+text = "RESTORE"
+
+[node name="Fork" type="Button" parent="WorkbenchUI/BranchControls"]
+text = "FORK (ENV PATCH)"
+
+[node name="ShowBranches" type="Button" parent="WorkbenchUI/BranchControls"]
+text = "BRANCHES"
+
+[node name="BranchStatus" type="Label" parent="WorkbenchUI/BranchControls"]
+text = "no branch"
+
+[node name="InspectorPanel" type="VBoxContainer" parent="WorkbenchUI"]
+anchors_preset = 0
+offset_left = 16.0
+offset_top = 188.0
+offset_right = 700.0
+offset_bottom = 420.0
+
+[node name="InspectorTitle" type="Label" parent="WorkbenchUI/InspectorPanel"]
+text = "INSPECTOR"
+
+[node name="InspectorContent" type="Label" parent="WorkbenchUI/InspectorPanel"]
+text = ""
+
+[node name="ObservatoryControls" type="HBoxContainer" parent="WorkbenchUI"]
+anchors_preset = 0
+offset_left = 16.0
+offset_top = 424.0
+offset_right = 1400.0
+offset_bottom = 452.0
+
+[node name="Observatory" type="CheckBox" parent="WorkbenchUI/ObservatoryControls"]
+text = "OBSERVATORY"
+
+[node name="MorphotypeClassification" type="CheckBox" parent="WorkbenchUI/ObservatoryControls"]
+button_pressed = true
+text = "MORPHOTYPE CLASSIFICATION"
+
+[node name="ObservatoryStatus" type="Label" parent="WorkbenchUI/ObservatoryControls"]
+text = "observatory off"
+
+[node name="ObservatoryPanel" type="VBoxContainer" parent="WorkbenchUI"]
+anchors_preset = 0
+offset_left = 16.0
+offset_top = 456.0
+offset_right = 700.0
+offset_bottom = 640.0
+
+[node name="ObservatoryTitle" type="Label" parent="WorkbenchUI/ObservatoryPanel"]
+text = "OBSERVATORY"
+
+[node name="ObservatoryContent" type="Label" parent="WorkbenchUI/ObservatoryPanel"]
+text = ""

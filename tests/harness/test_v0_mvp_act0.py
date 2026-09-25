@@ -30,7 +30,7 @@ git = base.git
 read = base.read
 
 V0_ACCEPTED_HEAD = "a1db0c66762bee887f0bf2643f7c000961e64520"
-MAIN_CATCHUP_HEAD = "e200a61cb55930378d11c39dcc5950cf49db603c"
+MAIN_CATCHUP_HEAD = "6b336af8faeadbd7f69c96b62dc30d25150f45a7"
 CRITICAL_V0_PREFIXES = (
     "scripts/runtime/networked_gameplay/mvp",
     "scripts/runtime/networked_gameplay/m4",

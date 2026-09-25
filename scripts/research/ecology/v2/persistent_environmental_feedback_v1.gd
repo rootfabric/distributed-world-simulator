@@ -207,21 +207,23 @@ static func _advance_frame(source: Dictionary, policy: Dictionary) -> Dictionary
 		if ids.has(id) or id == prior_seed: return _fail("A6_PROPAGULE_ID_CONFLICT")
 		prior_seed = id
 	frame.population = []
-	var corpses_by_id := {}
-	for corpse in frame.corpses: corpses_by_id[corpse.individual_id] = true
 	for entry in entries:
 		var text := LS.serialize(entry.state, entry.blueprint)
 		if text.is_empty() or LS.deserialize(text).is_empty(): return _fail("A6_ENTRY_NOT_PERSISTABLE")
 		frame.population.append(text)
-		if not entry.state.alive and not corpses_by_id.has(entry.state.individual_id):
-			frame.corpses.append(_corpse(entry.state, frame.step + 1))
-	frame.corpses.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return a.individual_id < b.individual_id)
-	var returned := _return_corpses(frame, entries, policy)
-	if not returned.success: return returned
-	frame = returned.frame
-	var mineralized := _mineralize(frame, policy)
-	if not mineralized.success: return mineralized
-	frame = mineralized.frame
+	var registered := register_corpses(entries, frame.corpses, frame.step + 1)
+	if not registered.success: return registered
+	frame.corpses = registered.corpses
+	var returned_transition := corpse_return_transition(frame.field, frame.corpses, entries, policy, frame.step)
+	if not returned_transition.success: return returned_transition
+	frame.field = returned_transition.field
+	frame.corpses = returned_transition.corpses
+	for resource in F.RESOURCES: frame.returned[resource] += returned_transition.returned[resource]
+	frame.dissipated_energy_mj += returned_transition.dissipated_energy_mj
+	var mineralized_transition := mineralization_transition(frame.field, policy, frame.step)
+	if not mineralized_transition.success: return mineralized_transition
+	frame.field = mineralized_transition.field
+	frame.mineralized_mg += mineralized_transition.mineralized_mg
 	var f: Dictionary = frame.field
 	var tick := Field.advance_tick(f, f.owner_token, f.owner_epoch, f.revision)
 	if not tick.success: return _fail("A6_FIELD_TICK:" + String(tick.error))
@@ -234,64 +236,123 @@ static func _corpse(state: Dictionary, death_step: int) -> Dictionary:
 	return {"individual_id": state.individual_id, "death_step": death_step, "source_hash": C.digest(state),
 		"inventory": inventory, "remaining": inventory.duplicate(true), "returned": F.stock(), "dissipated_energy_mj": 0}
 
-static func _inventory(state: Dictionary) -> Dictionary:
-	var out: Dictionary = state.metabolic_reserves.duplicate(true)
-	for name in B.RESOURCES: out[name] += state.development.reserves[name]
-	# Only material cost is retained body matter. Construction water/energy are sinks.
-	for module in state.development.modules: out.material_mg += module.cost.material_mg
-	return out
+# --- canonical post-lifecycle feedback transitions (repair R1) ---------------
+# A6 owns death/corpse feedback, resource return, decomposition, mineralization
+# and the abiotic feedback. These statics are the single formula source for
+# that half-tick: the historical frame path (_advance_frame) and the shared
+# canonical runtime (advance_after_lifecycle) both execute EXACTLY these
+# transitions, so there is one decomposition truth and no second field.
 
-static func _return_corpses(frame: Dictionary, entries: Array, policy: Dictionary) -> Dictionary:
-	if not policy.decomposition_enabled: return {"success": true, "frame": frame}
+## Register corpse records for entries that are dead and not yet registered.
+## entries: Array of {blueprint, state} (read-only input).
+static func register_corpses(entries: Array, corpses: Array, death_step: int) -> Dictionary:
+	var known := {}
+	for corpse in corpses: known[corpse.individual_id] = true
+	var out := corpses.duplicate(true)
+	for entry in entries:
+		if not C.keys(entry, ["blueprint", "state"]) or not entry.state is Dictionary: return _fail("A6_ENTRY")
+		if not entry.state.alive and not known.has(entry.state.individual_id):
+			out.append(_corpse(entry.state, death_step))
+	out.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return a.individual_id < b.individual_id)
+	return {"success": true, "corpses": out}
+
+## One corpse-return/decomposition transition over the CURRENT field.
+## step is the current completed step counter; effect ids use step + 1
+## (identical to the historical frame formulas). Returns transition deltas.
+static func corpse_return_transition(field: Dictionary, corpses: Array, entries: Array, policy: Dictionary, step: int) -> Dictionary:
+	if not policy.decomposition_enabled:
+		return {"success": true, "field": field, "corpses": corpses.duplicate(true), "returned": F.stock(), "dissipated_energy_mj": 0}
 	var states := {}
 	for entry in entries: states[entry.state.individual_id] = entry.state
 	var rooms: Array = []
-	for cell in frame.field.cells:
+	for cell in field.cells:
 		rooms.append({"water_mg": cell.capacities.water_mg - cell.stocks.water_mg, "organic_mg": cell.capacities.organic_mg - cell.stocks.organic_mg})
 	var effects: Array = []
-	for corpse in frame.corpses:
+	var updated_corpses: Array = corpses.duplicate(true)
+	var returned := F.stock()
+	var dissipated := 0
+	for corpse_index in updated_corpses.size():
+		var corpse: Dictionary = updated_corpses[corpse_index]
 		var state: Dictionary = states[corpse.individual_id]
-		var index := _cell_index(frame.field, state.position_mm)
+		var index := _cell_index(field, state.position_mm)
 		if index < 0: return _fail("A6_POSITION")
 		for resource in ["water_mg", "organic_mg"]:
 			var internal: String = "material_mg" if resource == "organic_mg" else "water_mg"
 			var rate: int = policy.material_return_mg if resource == "organic_mg" else policy.water_return_mg
 			var amount: int = mini(rate, mini(corpse.remaining[internal], rooms[index][resource]))
 			if amount == 0: continue
-			var effect_id := "a6/return/%s/%d/%s" % [String(corpse.individual_id).sha256_text(), frame.step + 1, resource]
+			var effect_id := "a6/return/%s/%d/%s" % [String(corpse.individual_id).sha256_text(), step + 1, resource]
 			effects.append(Ports.effect(effect_id, corpse.individual_id, "deposit", resource, amount, state.position_mm, 0, "A6_CORPSE_RETURN"))
 			rooms[index][resource] -= amount
 			corpse.remaining[internal] -= amount
 			corpse.returned[resource] += amount
-			frame.returned[resource] += amount
+			returned[resource] += amount
 		var heat: int = mini(corpse.remaining.energy_mj, policy.energy_dissipation_mj)
 		corpse.remaining.energy_mj -= heat
 		corpse.dissipated_energy_mj += heat
-		frame.dissipated_energy_mj += heat
-	return _apply_effects(frame, effects)
+		dissipated += heat
+	if not effects.is_empty():
+		var applied := Field.apply_effects(field, effects, field.owner_token, field.owner_epoch, field.revision)
+		if not applied.success: return _fail("A6_EFFECT:" + String(applied.error))
+		field = applied.state
+	return {"success": true, "field": field, "corpses": updated_corpses, "returned": returned, "dissipated_energy_mj": dissipated}
 
-static func _mineralize(frame: Dictionary, policy: Dictionary) -> Dictionary:
-	if not policy.mineralization_enabled: return {"success": true, "frame": frame}
+## One mineralization transition over the CURRENT field (organic -> nutrient,
+## per cell, one A4 batch). Returns the mineralized DELTA of this transition.
+static func mineralization_transition(field: Dictionary, policy: Dictionary, step: int) -> Dictionary:
+	if not policy.mineralization_enabled:
+		return {"success": true, "field": field, "mineralized_mg": 0}
 	var effects: Array = []
-	var f: Dictionary = frame.field
-	for cell in f.cells:
+	var mineralized := 0
+	for cell in field.cells:
 		var amount: int = mini(policy.mineralization_per_cell_mg, mini(cell.stocks.organic_mg, cell.capacities.nutrient_mg - cell.stocks.nutrient_mg))
 		if amount == 0: continue
-		var position := [int(f.origin_mm[0]) + int(cell.x) * int(f.cell_size_mm) + int(f.cell_size_mm / 2), int(f.origin_mm[1]), int(f.origin_mm[2]) + int(cell.z) * int(f.cell_size_mm) + int(f.cell_size_mm / 2)]
-		var prefix := "a6/mineral/%d/%s/" % [frame.step + 1, cell.id]
+		var position := [int(field.origin_mm[0]) + int(cell.x) * int(field.cell_size_mm) + int(field.cell_size_mm / 2), int(field.origin_mm[1]), int(field.origin_mm[2]) + int(cell.z) * int(field.cell_size_mm) + int(field.cell_size_mm / 2)]
+		var prefix := "a6/mineral/%d/%s/" % [step + 1, cell.id]
 		# Both effects commit through one A4 batch, including rollback on any failed effect.
 		effects.append(Ports.effect(prefix + "0", "abiotic", "sink", "organic_mg", amount, position, 0, "A6_ABIOTIC_MINERALIZATION"))
 		effects.append(Ports.effect(prefix + "1", "abiotic", "deposit", "nutrient_mg", amount, position, 0, "A6_ABIOTIC_MINERALIZATION"))
-		frame.mineralized_mg += amount
-	return _apply_effects(frame, effects)
-
-static func _apply_effects(frame: Dictionary, effects: Array) -> Dictionary:
+		mineralized += amount
 	if not effects.is_empty():
-		var f: Dictionary = frame.field
-		var applied := Field.apply_effects(f, effects, f.owner_token, f.owner_epoch, f.revision)
+		var applied := Field.apply_effects(field, effects, field.owner_token, field.owner_epoch, field.revision)
 		if not applied.success: return _fail("A6_EFFECT:" + String(applied.error))
-		frame.field = applied.state
-	return {"success": true, "frame": frame}
+		field = applied.state
+	return {"success": true, "field": field, "mineralized_mg": mineralized}
+
+## Canonical post-lifecycle feedback transition (repair R1): the A6-owned
+## second half of an ecology tick over an EXTERNAL post-lifecycle field and
+## population — corpse registration, corpse resource return, decomposition
+## dissipation, mineralization and the field tick advance, all applied to the
+## SAME field the lifecycle step produced. This API creates NO second field
+## or population truth; the caller owns the single current state.
+## step: current completed feedback step (effect ids use step + 1).
+## Returns transition deltas: {field, corpses, returned, mineralized_mg,
+## dissipated_energy_mj}.
+static func advance_after_lifecycle(field: Dictionary, population: Array, corpses: Array, policy: Dictionary, step: int) -> Dictionary:
+	var policy_error := validate_policy(policy)
+	if not policy_error.is_empty(): return _fail(policy_error)
+	if not F.validate_state(field).is_empty(): return _fail("A6_FIELD")
+	var registered := register_corpses(population, corpses, step + 1)
+	if not bool(registered.get("success", false)): return registered
+	var returned_transition := corpse_return_transition(field, registered.corpses, population, policy, step)
+	if not bool(returned_transition.get("success", false)): return returned_transition
+	var mineralized_transition := mineralization_transition(returned_transition.field, policy, step)
+	if not bool(mineralized_transition.get("success", false)): return mineralized_transition
+	var tick := Field.advance_tick(mineralized_transition.field, mineralized_transition.field.owner_token, mineralized_transition.field.owner_epoch, mineralized_transition.field.revision)
+	if not tick.success: return _fail("A6_FIELD_TICK:" + String(tick.error))
+	return {"success": true, "field": tick.state, "corpses": returned_transition.corpses,
+		"returned": returned_transition.returned, "mineralized_mg": mineralized_transition.mineralized_mg,
+		"dissipated_energy_mj": returned_transition.dissipated_energy_mj}
+
+static func inventory(state: Dictionary) -> Dictionary:
+	var out: Dictionary = state.metabolic_reserves.duplicate(true)
+	for name in B.RESOURCES: out[name] += state.development.reserves[name]
+	# Only material cost is retained body matter. Construction water/energy are sinks.
+	for module in state.development.modules: out.material_mg += module.cost.material_mg
+	return out
+
+static func _inventory(state: Dictionary) -> Dictionary:
+	return inventory(state)
 
 static func _cell_index(field: Dictionary, position: Array) -> int:
 	var x: int = position[0] - field.origin_mm[0]
@@ -300,34 +361,57 @@ static func _cell_index(field: Dictionary, position: Array) -> int:
 		return -1
 	return int(z / field.cell_size_mm) * int(field.width) + int(x / field.cell_size_mm)
 
-static func _balance(genesis: Dictionary, frame: Dictionary) -> Dictionary:
-	var initial := _field_inventory(genesis.field)
-	var current := _field_inventory(frame.field)
+## Shared conservation accounts over ONE current field/population/corpse truth
+## (the single formula source for the frame path and the canonical runtime).
+## population_pairs: [{state, baseline}] — baseline is the creation-time life
+## state of the same individual ({} when it did not exist at the anchor, i.e.
+## ledgers count absolutely from zero). outbox_endowments: endowment stocks of
+## emitted-but-unmaterialized propagules ([] when every emission is already
+## materialized). initial: anchor accounts (field + organism inventories).
+static func balance_over(field: Dictionary, population_pairs: Array, corpses: Array, outbox_endowments: Array, initial: Dictionary, dissipated_energy_mj: int) -> Dictionary:
+	var current := field_inventory(field)
 	var external := B.stock()
 	var sinks := B.stock()
+	for pair in population_pairs:
+		var state: Dictionary = pair.state
+		var baseline: Dictionary = pair.get("baseline", {})
+		var baseline_external := 0
+		if not baseline.is_empty(): baseline_external = int(baseline.resource_ledger.external_energy_mj)
+		if bool(pair.get("in_current", state.alive)): _sum(current, inventory(state))
+		external.energy_mj += state.resource_ledger.external_energy_mj - baseline_external
+		for name in B.RESOURCES:
+			var baseline_maintenance := 0
+			var baseline_cost := 0
+			if not baseline.is_empty():
+				baseline_maintenance = int(baseline.resource_ledger.maintenance[name])
+				baseline_cost = int(baseline.resource_ledger.reproduction_cost[name])
+			sinks[name] += state.resource_ledger.maintenance[name] - baseline_maintenance
+			sinks[name] += state.resource_ledger.reproduction_cost[name] - baseline_cost
+		for name in ["water_mg", "energy_mj"]:
+			var baseline_spent := 0
+			if not baseline.is_empty(): baseline_spent = int(baseline.development.spent[name])
+			sinks[name] += state.development.spent[name] - baseline_spent
+	for corpse in corpses: _sum(current, corpse.remaining)
+	for endowment in outbox_endowments: _sum(current, endowment)
+	sinks.energy_mj += dissipated_energy_mj
+	return {"initial": initial, "external": external, "current": current, "sinks": sinks}
+
+static func _balance(genesis: Dictionary, frame: Dictionary) -> Dictionary:
+	var initial := field_inventory(genesis.field)
 	var initial_by_id := {}
 	for text in genesis.population:
 		var entry := LS.deserialize(text)
 		initial_by_id[entry.state.individual_id] = entry.state
-		_sum(initial, _inventory(entry.state))
+		_sum(initial, inventory(entry.state))
+	var pairs: Array = []
 	for text in frame.population:
 		var entry := LS.deserialize(text)
-		var state: Dictionary = entry.state
-		var old: Dictionary = initial_by_id[state.individual_id]
-		if state.alive: _sum(current, _inventory(state))
-		external.energy_mj += state.resource_ledger.external_energy_mj - old.resource_ledger.external_energy_mj
-		for name in B.RESOURCES:
-			sinks[name] += state.resource_ledger.maintenance[name] - old.resource_ledger.maintenance[name]
-			sinks[name] += state.resource_ledger.reproduction_cost[name] - old.resource_ledger.reproduction_cost[name]
-		for name in ["water_mg", "energy_mj"]:
-			sinks[name] += state.development.spent[name] - old.development.spent[name]
-	for corpse in frame.corpses: _sum(current, corpse.remaining)
-	for receipt in frame.propagules: _sum(current, receipt.propagule.endowment)
-	sinks.energy_mj += frame.dissipated_energy_mj
-	return {"initial": initial, "external": external, "current": current, "sinks": sinks}
+		pairs.append({"state": entry.state, "baseline": initial_by_id[entry.state.individual_id]})
+	var outbox: Array = []
+	for receipt in frame.propagules: outbox.append(receipt.propagule.endowment)
+	return balance_over(frame.field, pairs, frame.corpses, outbox, initial, int(frame.dissipated_energy_mj))
 
-static func _balance_error(genesis: Dictionary, frame: Dictionary) -> String:
-	var accounts := _balance(genesis, frame)
+static func accounts_error(accounts: Dictionary) -> String:
 	for account in accounts.values():
 		if not LS.valid_cumulative_stock(account): return "A6_BALANCE_RANGE"
 	for name in B.RESOURCES:
@@ -335,9 +419,15 @@ static func _balance_error(genesis: Dictionary, frame: Dictionary) -> String:
 			return "A6_CONSERVATION_%s" % name
 	return ""
 
-static func _field_inventory(field: Dictionary) -> Dictionary:
+static func _balance_error(genesis: Dictionary, frame: Dictionary) -> String:
+	return accounts_error(_balance(genesis, frame))
+
+static func field_inventory(field: Dictionary) -> Dictionary:
 	var total := F.totals(field.cells)
 	return {"material_mg": total.organic_mg + total.nutrient_mg, "water_mg": total.water_mg, "energy_mj": 0}
+
+static func _field_inventory(field: Dictionary) -> Dictionary:
+	return field_inventory(field)
 
 static func _sum(target: Dictionary, delta: Dictionary) -> void:
 	for name in B.RESOURCES: target[name] += delta[name]

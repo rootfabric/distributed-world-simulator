@@ -3,12 +3,19 @@ extends RefCounted
 const C = preload("res://scripts/research/ecology/v2/canonical_value_v1.gd")
 const B = preload("res://scripts/research/ecology/v2/body_graph_v1.gd")
 const BP = preload("res://scripts/research/ecology/v2/organism_blueprint_v1.gd")
+const G = preload("res://scripts/research/ecology/v2/organism_genome_v2.gd")
+const MR = preload("res://scripts/research/ecology/v2/genome_mutation_receipt_v1.gd")
 const S = preload("res://scripts/research/ecology/v2/organism_state_v1.gd")
 const H = preload("res://scripts/research/ecology/v2/phenotype_snapshot_v1.gd")
 const F = preload("res://scripts/research/ecology/v2/environment_field_contract_v1.gd")
 const SCHEMA := "dws.ecology.organism-life-state.v1"
 const PROPAGULE_SCHEMA := "dws.ecology.propagule.v1"
 const PARENT_TRANSFER_RECEIPT_SCHEMA := "dws.ecology.parent-transfer-origin-receipt.v1"
+# Canonical mutation provenance record (repair R1): carried by a
+# PARENT_TRANSFER state whose genome was admitted through a sealed A3
+# mutation receipt. Optional state key: states without it keep the exact
+# v1 shape, so every pre-repair state and code path validates unchanged.
+const PARENT_TRANSFER_MUTATION_SCHEMA := "dws.ecology.parent-transfer-mutation.v1"
 const ORIGINS := ["FOUNDER_ENDOWMENT", "PARENT_TRANSFER"]
 const OUTCOMES := ["MAINTENANCE_PAID", "MAINTENANCE_STARVED", "GROWTH_ACTIVE", "GROWTH_SUPPRESSED", "REPRODUCED", "REPRODUCTION_WAIT", "DIED_STARVATION", "DEAD_INERT"]
 const MAX_AGE_TICK := 1000000
@@ -19,6 +26,11 @@ const MAX_OFFSPRING_COUNTER := MAX_AGE_TICK * MAX_OFFSPRING_PER_EVENT
 # depth 7 before lineage nesting, the state-file wrapper adds 1, and each exact
 # embedded parent state adds 2. Eight parent-transfer links fit the canonical
 # budget; the ninth is rejected before a noncanonical persisted state can exist.
+# A mutated link additionally carries its durable mutation provenance record
+# (schema + receipt + parent genome) at the state level, which consumes about
+# four extra nesting levels; chains of consecutive MUTATED generations are
+# therefore bounded by the same 24-level canonical budget (fail-closed at the
+# materialization API — a deeper chain cannot encode, so it cannot exist).
 const MAX_PARENT_PROOF_DEPTH := 8
 
 static func create(blueprint: Dictionary, individual_id: String, position_mm: Array, endowment: Dictionary = {}, origin_kind: String = "FOUNDER_ENDOWMENT") -> Dictionary:
@@ -60,8 +72,15 @@ static func create(blueprint: Dictionary, individual_id: String, position_mm: Ar
 	}
 	return state if validate(state, blueprint).is_empty() else {}
 
-static func create_parent_transfer(blueprint: Dictionary, propagule: Dictionary, paid_parent_state: Dictionary) -> Dictionary:
-	if not validate_parent_transfer_witness(propagule, blueprint, paid_parent_state).is_empty(): return {}
+static func create_parent_transfer(blueprint: Dictionary, propagule: Dictionary, paid_parent_state: Dictionary, mutation_receipt: Dictionary = {}, parent_blueprint: Dictionary = {}) -> Dictionary:
+	# Canonical admission. Without a mutation receipt the v1 witness binds the
+	# child blueprint hash to the parent's. With a sealed receipt the mutated
+	# child genome is admitted through validate_mutated_parent_transfer; there
+	# is no third path (fail-closed).
+	if mutation_receipt.is_empty():
+		if not validate_parent_transfer_witness(propagule, blueprint, paid_parent_state).is_empty(): return {}
+	else:
+		if not validate_mutated_parent_transfer(propagule, blueprint, paid_parent_state, mutation_receipt, parent_blueprint).is_empty(): return {}
 	var individual_id: String = propagule.id
 	var position_mm: Array = propagule.position_mm
 	var initial: Dictionary = propagule.endowment.duplicate(true)
@@ -106,7 +125,32 @@ static func create_parent_transfer(blueprint: Dictionary, propagule: Dictionary,
 		"last_environment_source": {},
 		"last_events": [],
 	}
+	if not mutation_receipt.is_empty():
+		# Durable canonical provenance of the admitted mutation: the sealed
+		# receipt plus the exact parent genome it was issued from. Every later
+		# validation re-proves the binding against this record.
+		state["mutation_receipt"] = {
+			"schema": PARENT_TRANSFER_MUTATION_SCHEMA,
+			"receipt": mutation_receipt.duplicate(true),
+			"parent_genome": parent_blueprint.genome.duplicate(true),
+		}
 	return state if validate(state, blueprint).is_empty() else {}
+
+## Canonical admission witness for a MUTATED child genome. The v1 witness
+## binds the child blueprint hash to the parent's, so a mutated genome can
+## never pass it. With a sealed mutation receipt the binding is proved by
+## GenomeMutationReceipt.validate_admission (parent genome, child genome,
+## propagule binding, verbatim life_history inheritance), and every other
+## anti-forgery check of the v1 witness still runs unchanged against the
+## reconstructed parent blueprint. Fail-closed: any error rejects admission.
+static func validate_mutated_parent_transfer(propagule: Dictionary, child_blueprint: Dictionary, paid_parent_state: Dictionary, mutation_receipt: Dictionary, parent_blueprint: Dictionary, parent_proof_depth: int = 1) -> String:
+	if parent_proof_depth < 0 or parent_proof_depth > MAX_PARENT_PROOF_DEPTH: return "PROPAGULE_PARENT_PROOF_DEPTH"
+	if parent_blueprint.is_empty(): return "PROPAGULE_PARENT_BLUEPRINT_REQUIRED"
+	var binding_error := MR.validate_admission(mutation_receipt, propagule, parent_blueprint, child_blueprint)
+	if not binding_error.is_empty(): return "PROPAGULE_MUTATION_RECEIPT:" + binding_error
+	if not validate_parent_transfer_witness(propagule, parent_blueprint, paid_parent_state, parent_proof_depth).is_empty():
+		return "PROPAGULE_PARENT_STATE"
+	return ""
 
 static func propagule_id(parent_id: String, sequence: int) -> String:
 	return "seed/%s/%06d" % [parent_id.sha256_text(), sequence]
@@ -147,6 +191,11 @@ static func validate(v: Variant, blueprint: Dictionary, parent_proof_depth: int 
 	if parent_proof_depth < 0 or parent_proof_depth > MAX_PARENT_PROOF_DEPTH: return "LIFE_PARENT_TRANSFER_DEPTH"
 	if not BP.validate(blueprint).is_empty(): return "LIFE_STATE_BLUEPRINT"
 	var keys := ["schema", "blueprint_hash", "individual_id", "position_mm", "origin_kind", "origin_receipt", "alive", "age_ticks", "starvation_ticks", "next_reproduction_tick", "reproduction_count", "propagule_seq", "metabolic_reserves", "resource_ledger", "development", "last_environment_source", "last_events"]
+	# Backward-compatible canonical extension (repair R1): a PARENT_TRANSFER
+	# state admitted through a sealed mutation receipt carries one extra key.
+	# States without it keep the exact v1 key set.
+	if v.has("mutation_receipt"):
+		keys.append("mutation_receipt")
 	if not C.keys(v, keys) or v.schema != SCHEMA: return "LIFE_STATE_SCHEMA"
 	if v.blueprint_hash != BP.biological_hash(blueprint) or not C.identifier(v.individual_id): return "LIFE_STATE_BINDING"
 	if not C.vector(v.position_mm, F.MAX_PORT_COORD_MM) or not v.origin_kind in ORIGINS or not v.origin_receipt is Dictionary or not v.alive is bool: return "LIFE_STATE_IDENTITY"
@@ -260,11 +309,12 @@ static func validate(v: Variant, blueprint: Dictionary, parent_proof_depth: int 
 static func _validate_origin_receipt(state: Dictionary, blueprint: Dictionary, parent_proof_depth: int) -> String:
 	var receipt: Dictionary = state.origin_receipt
 	if state.origin_kind == "FOUNDER_ENDOWMENT":
-		return "" if receipt.is_empty() else "LIFE_FOUNDER_ORIGIN_RECEIPT"
+		if not receipt.is_empty(): return "LIFE_FOUNDER_ORIGIN_RECEIPT"
+		if state.has("mutation_receipt"): return "LIFE_MUTATION_PROVENANCE"
+		return ""
 	if parent_proof_depth >= MAX_PARENT_PROOF_DEPTH: return "LIFE_PARENT_TRANSFER_DEPTH"
 	var keys := ["schema", "blueprint_hash", "parent_id", "sequence", "birth_tick", "position_mm", "endowment", "parent_state_hash", "parent_state"]
 	if not C.keys(receipt, keys) or receipt.schema != PARENT_TRANSFER_RECEIPT_SCHEMA: return "LIFE_PARENT_TRANSFER_RECEIPT"
-	if receipt.blueprint_hash != BP.biological_hash(blueprint): return "LIFE_PARENT_TRANSFER_RECEIPT"
 	if not receipt.parent_state is Dictionary: return "LIFE_PARENT_TRANSFER_PARENT_STATE"
 	if state.position_mm != receipt.position_mm: return "LIFE_PARENT_TRANSFER_POSITION"
 	if not B.valid_stock(receipt.endowment) or receipt.endowment != blueprint.life_history.reproduction.endowment: return "LIFE_PARENT_TRANSFER_ENDOWMENT"
@@ -280,7 +330,35 @@ static func _validate_origin_receipt(state: Dictionary, blueprint: Dictionary, p
 		"endowment": receipt.endowment,
 		"parent_state_hash": receipt.parent_state_hash,
 	}
+	if state.has("mutation_receipt"):
+		return _validate_mutation_provenance(state, blueprint, reconstructed_propagule, parent_proof_depth)
+	if receipt.blueprint_hash != BP.biological_hash(blueprint): return "LIFE_PARENT_TRANSFER_RECEIPT"
 	var witness_error := validate_parent_transfer_witness(reconstructed_propagule, blueprint, receipt.parent_state, parent_proof_depth + 1)
+	if not witness_error.is_empty(): return "LIFE_PARENT_TRANSFER_PARENT_STATE"
+	return ""
+
+## Re-validate the durable mutation provenance of an admitted mutated child:
+## the record must carry the sealed receipt plus the exact parent genome, the
+## receipt must bind (parent genome, child genome, propagule), and the embedded
+## paid parent state must pass the unchanged v1 witness against the
+## reconstructed parent blueprint.
+static func _validate_mutation_provenance(state: Dictionary, child_blueprint: Dictionary, reconstructed_propagule: Dictionary, parent_proof_depth: int) -> String:
+	var record: Dictionary = state.mutation_receipt
+	if not C.keys(record, ["schema", "receipt", "parent_genome"]) or record.schema != PARENT_TRANSFER_MUTATION_SCHEMA:
+		return "LIFE_MUTATION_PROVENANCE"
+	if not G.validate(record.parent_genome).is_empty():
+		return "LIFE_MUTATION_PROVENANCE"
+	var receipt: Dictionary = state.origin_receipt
+	var parent_blueprint := {
+		"schema": BP.SCHEMA,
+		"genome": record.parent_genome,
+		"life_history": child_blueprint.life_history,
+	}
+	if not BP.validate(parent_blueprint).is_empty(): return "LIFE_MUTATION_PROVENANCE"
+	if receipt.blueprint_hash != BP.biological_hash(parent_blueprint): return "LIFE_PARENT_TRANSFER_RECEIPT"
+	var binding_error := MR.validate_admission(record.receipt, reconstructed_propagule, parent_blueprint, child_blueprint)
+	if not binding_error.is_empty(): return "LIFE_MUTATION_RECEIPT:" + binding_error
+	var witness_error := validate_parent_transfer_witness(reconstructed_propagule, parent_blueprint, receipt.parent_state, parent_proof_depth + 1)
 	if not witness_error.is_empty(): return "LIFE_PARENT_TRANSFER_PARENT_STATE"
 	return ""
 
