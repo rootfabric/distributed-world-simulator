@@ -376,6 +376,17 @@ func apply_field_patch(patch: Dictionary) -> Dictionary:
 	if not bool(applied.get("success", false)):
 		return _command_fail("CONTROLLER_FIELD_PATCH:" + String(applied.get("error", "?")))
 	var next_manifest: Dictionary = applied.manifest
+	# A11: direct live patches must obey the same world boundary as initialize.
+	# Validate BEFORE any owner-write; zone stocks cannot bypass Matter admission.
+	if String(_manifest.mode) == "WORLD_COMPAT":
+		if _world_authority == null:
+			return _command_fail("CONTROLLER_WORLD_AUTHORITY_REQUIRED")
+		var compatible: Dictionary = _world_authority.world_manifest_compatible(next_manifest)
+		if not bool(compatible.get("success", false)):
+			return _command_fail("CONTROLLER_FIELD_PATCH_WORLD:" + String(compatible.get("error", "?")))
+		var admitted: Dictionary = _world_authority.admit_execution()
+		if not bool(admitted.get("success", false)):
+			return _command_fail("CONTROLLER_FIELD_PATCH_AUTHORITY:" + String(admitted.get("error", "?")))
 	# Deltas are relative to the immutable input manifest. They are applied to
 	# the current live field (not used as absolute replacement values), then the
 	# resulting field is adopted into the single runtime truth.
