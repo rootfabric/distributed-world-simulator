@@ -1,0 +1,231 @@
+{
+  "schema": "distributed_world_simulator.mvp8_implementer_exact_evidence.v1",
+  "recorded_at_utc": "2026-09-20T12:46:00Z",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "predicate": "MVP_BOUNDED_INTERACTIVE_WORKLOAD",
+  "frozen_product": {
+    "branch": "feature/v0-mvp-playable-seamless-planet-r1",
+    "freeze_ref": "freeze/v0-mvp8-review-90bc1026-r1",
+    "head_sha": "90bc1026f0f5749492107191233330f87c8c70df",
+    "tree_sha": "4b6f2d48f7ef8d9c441ae89d2cbb02c730ef7f71",
+    "implementation_base_sha": "eab67e7d9913de13dc696aa6e3ff9d267f7ceaa1",
+    "pr": 597,
+    "product_diff_commits": 48,
+    "product_diff_paths": 9
+  },
+  "exact_linux_ci": {
+    "workflow": "MVP6 Native Prerequisite Diagnostic",
+    "run_id": 35510920506,
+    "job": "mvp8-workload",
+    "engine_artifact": {
+      "id": 10394296242,
+      "name": "p7-repair-engine-34117353691",
+      "digest": "sha256:4fbbf6b4607a012a5d6cb225bfe4e67b1eec68255f8cf354a03278ed7afb230d"
+    },
+    "attempts": [
+      {
+        "run_attempt": 1,
+        "job_id": 106078566521,
+        "conclusion": "success",
+        "artifact": {
+          "id": 10606076004,
+          "name": "mvp8-workload-90bc1026f0f5749492107191233330f87c8c70df-35510920506-1",
+          "digest": "sha256:c498617b03f81419bf5ddd7a50f2ee1f1b12801d622124043719638165dc6459",
+          "size_in_bytes": 2741432
+        },
+        "manifest_sha256": "2f4532e0788b074ac48f59b7395bb043d88f24ebc18b375b6f66fdd9c4d5039d",
+        "duration_seconds": 298.446,
+        "acceptance_checks": "20/20",
+        "negative_controls_rejected": "14/14",
+        "fatal_logs": 0,
+        "tracked_checkout_clean_after": true
+      },
+      {
+        "run_attempt": 2,
+        "job_id": 106079392187,
+        "conclusion": "success",
+        "artifact": {
+          "id": 10604982142,
+          "name": "mvp8-workload-90bc1026f0f5749492107191233330f87c8c70df-35510920506-2",
+          "digest": "sha256:d4345b7539af42f1c910a00359e4bb27a6beef6fb4b6952f8ca64a3622db3a94",
+          "size_in_bytes": 2741436
+        },
+        "manifest_sha256": "c9e0df92742303dda9cd39cf3ce83ef54e10c570c28600d34d2da84f8b094adb",
+        "duration_seconds": 223.669,
+        "acceptance_checks": "20/20",
+        "negative_controls_rejected": "14/14",
+        "fatal_logs": 0,
+        "tracked_checkout_clean_after": true
+      }
+    ]
+  },
+  "connected_workload": {
+    "total_rounds": 12,
+    "round_actions": [
+      "0:DIG",
+      "1:ITEM",
+      "2:BUILD_ADD",
+      "3:BUILD_REMOVE",
+      "4:DIG",
+      "5:ITEM",
+      "6:DIG",
+      "7:ITEM",
+      "8:DIG",
+      "9:ITEM",
+      "10:BUILD_ADD",
+      "11:BUILD_REMOVE"
+    ],
+    "same_canonical_lineage": true,
+    "two_clients_move_every_round": true,
+    "directional_then_neutral_fixed_tick_input": true,
+    "fixed_receipts_final": 48,
+    "seam_crossings_final_minimum": 12,
+    "fresh_client_a_reconnect_inside_workload": true,
+    "server_world_restart_inside_workload": true,
+    "post_restart_rounds_completed": true
+  },
+  "restart_and_resync": {
+    "phase1_processes_distinct": 6,
+    "phase2_processes_distinct": 5,
+    "phase1_phase2_pid_sets_disjoint": true,
+    "quiescent_checkpoint_acknowledged": true,
+    "checkpoint_contains_both_durable_players": true,
+    "checkpoint_player_a_normalized_to_authority_a": true,
+    "sm1_decision_epochs_and_player_ownership_epochs_separate": true,
+    "restored_scheduler_continues_canonical_server_tick": true,
+    "staged_recovery_participants": [
+      "decision/read-model baseline+current ingest",
+      "gameplay/Matter recovery and live-player gates",
+      "M0/C17 Construction recovery"
+    ],
+    "matter_current_resync_after_restart": {
+      "a": true,
+      "b": true
+    },
+    "current_collision_final": 100
+  },
+  "repeated_operations": {
+    "DIG": 4,
+    "ITEM": 4,
+    "BUILD_ADD": 2,
+    "BUILD_REMOVE": 2,
+    "spatially_distinct_digs": 4,
+    "minimum_dig_hit_separation_m": 1,
+    "construction_add_semantics": "FIRST ADD uses accepted build path; subsequent workload ADD after damage uses canonical C9 DAMAGE_REPAIR and reuses the salvaged leaf identity.",
+    "construction_intermediate_part_count": 101,
+    "construction_final_part_count": 100,
+    "construction_identity_stable": true
+  },
+  "bounded_state": {
+    "caps": {
+      "operation_fingerprints": 256,
+      "gateway_ledger_tracked": 512,
+      "backend_rpc_sequence_each": 512,
+      "client_rpc_sequence_each": 512,
+      "input_observations_each": 128,
+      "durable_replay_pending": 32,
+      "construction_terminal_commands": 16,
+      "matter_stream_sequence": 64
+    },
+    "attempt1_phase1": {
+      "operation_fingerprints": 36,
+      "gateway_ledger_tracked": 36,
+      "backend_sequences": {
+        "authority/a": 488,
+        "authority/b": 139
+      },
+      "durable_replay_pending": 0,
+      "construction_terminal_commands": 5,
+      "matter_stream_sequence": 4,
+      "duplicate_item_identity": false
+    },
+    "attempt2_phase1": {
+      "backend_sequences": {
+        "authority/a": 498,
+        "authority/b": 132
+      },
+      "backend_authority_a_headroom": 14
+    },
+    "attempt1_phase2": {
+      "operation_fingerprints": 16,
+      "gateway_ledger_tracked": 16,
+      "backend_sequences": {
+        "authority/a": 168,
+        "authority/b": 67
+      },
+      "client_sequences": {
+        "a": 22,
+        "b": 22
+      },
+      "durable_replay_pending": 0,
+      "construction_terminal_commands": 7,
+      "matter_stream_sequence": 5,
+      "item_count": 10,
+      "unique_item_count": 10,
+      "duplicate_item_identity": false
+    },
+    "eviction_used": false,
+    "hidden_retry_used": false,
+    "cap_increase_used_for_pass": false
+  },
+  "acceptance_checks": [
+    "bounded_gateway_state",
+    "bounded_owner_state",
+    "checkpoint_both_players_durable",
+    "construction_identity_stable",
+    "current_state_after_restart",
+    "exact_subject",
+    "four_spatially_distinct_digs",
+    "initial_graphical_clients_passed",
+    "matter_resync_after_restart",
+    "no_self_acceptance",
+    "one_client_reconnect",
+    "phase1_passed",
+    "phase1_processes_distinct",
+    "phase2_passed",
+    "repeated_operations",
+    "responsive_fixed_tick",
+    "restart_receipt_exact",
+    "seam_crossings",
+    "server_restart_processes_distinct",
+    "twelve_rounds_same_lineage"
+  ],
+  "negative_controls_rejected": [
+    "skip_reconnect",
+    "reuse_same_peer",
+    "wrong_restart_round",
+    "missing_round",
+    "missing_postrestart_motion",
+    "queue_overflow",
+    "duplicate_item_identity",
+    "terminal_overflow",
+    "missing_collision",
+    "lost_build_cycle",
+    "missing_dig_hit",
+    "missing_matter_resync",
+    "overlapping_dig_hit",
+    "missing_checkpoint_player"
+  ],
+  "subpredicate_support": {
+    "ONE_CONNECTED_TWO_CLIENT_GAMEPLAY_LOOP": "SUPPORTED_BY_12_ROUND_TWO_CLIENT_EXACT_PROCESS_GATE",
+    "REPEATED_MOVE_SEAM_DIG_ITEM_BUILD_OPERATIONS": "SUPPORTED_BY_12_ROUND_ACTION_HISTORY_AND_4_4_2_2_COUNTS",
+    "ONE_CLIENT_RECONNECT_AND_CONTINUE": "SUPPORTED_BY_FRESH_CLIENT_A_PROCESS_AND_POST_RECONNECT_ROUNDS_4_TO_7",
+    "SERVER_OR_WORLD_RESTART_AND_CONTINUE": "SUPPORTED_BY_QUIESCENT_CHECKPOINT_NEW_PHASE2_PROCESS_SET_AND_ROUNDS_8_TO_11",
+    "BOUNDED_QUEUES_AND_REPLAY_STATE": "SUPPORTED_BY_FAIL_CLOSED_CAPS_WITH_TWO_EXACT_RUNS_AND_NO_EVICTION",
+    "NO_DUPLICATE_ITEM_OR_CONSTRUCTION_IDENTITIES": "SUPPORTED_BY_ITEM_UNIQUENESS_AND_STABLE_CONSTRUCT_ID_ACROSS_RESTART",
+    "RESPONSIVE_PLAYER_CONTROL_MAINTAINED": "SUPPORTED_BY_48_FIXED_TICK_RECEIPTS_AND_POST_RECONNECT_POST_RESTART_CONTROL"
+  },
+  "boundaries": {
+    "implementer_mechanical_validation_only": true,
+    "independent_reviewer_verdict": false,
+    "independent_verifier_verdict": false,
+    "mvp8_predicate_verified": false,
+    "parent_work_order_state": "IN_PROGRESS",
+    "pc0_for_leaf_closure": "PENDING",
+    "full_world_core_for_leaf_closure": "PENDING",
+    "runtime_merge_authorized": false,
+    "main_merge_authorized": false,
+    "whole_mvp_acceptance": false
+  }
+}

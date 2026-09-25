@@ -1,0 +1,63 @@
+{
+  "schema": "distributed_world_simulator.mvp8_fresh_machine_verifier_evidence.v1",
+  "recorded_at_utc": "2026-09-20T13:16:00Z",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "predicate": "MVP_BOUNDED_INTERACTIVE_WORKLOAD",
+  "subject": {
+    "head_sha": "90bc1026f0f5749492107191233330f87c8c70df",
+    "tree_sha": "4b6f2d48f7ef8d9c441ae89d2cbb02c730ef7f71",
+    "freeze_ref": "freeze/v0-mvp8-review-90bc1026-r1"
+  },
+  "workflow": {
+    "name": "MVP6 Native Prerequisite Diagnostic",
+    "run_id": 35510920506,
+    "run_attempt": 3,
+    "job_id": 106080669992,
+    "conclusion": "success"
+  },
+  "engine": {
+    "artifact_id": 10394296242,
+    "artifact_name": "p7-repair-engine-34117353691",
+    "sha256": "4fbbf6b4607a012a5d6cb225bfe4e67b1eec68255f8cf354a03278ed7afb230d"
+  },
+  "artifact": {
+    "id": 10606091961,
+    "name": "mvp8-workload-90bc1026f0f5749492107191233330f87c8c70df-35510920506-3",
+    "digest": "sha256:0d4eab2d5034a01f02395e10d5e158bcdb8cea458f08935a4402ebda7f7181c5",
+    "size_in_bytes": 2741816
+  },
+  "observed": {
+    "manifest_passed": true,
+    "phase1_gateway_passed": true,
+    "reconnect_client_a_passed": true,
+    "phase2_gateway_round": 12,
+    "phase2_gateway_phase": "COMPLETE",
+    "phase2_gateway_passed": true,
+    "phase2_client_a_passed": true,
+    "phase2_client_b_passed": true,
+    "fatal_logs": 0,
+    "tracked_checkout_clean_after": true
+  },
+  "prior_exact_attempts": [
+    {
+      "run_attempt": 1,
+      "job_id": 106078566521,
+      "conclusion": "success",
+      "artifact_id": 10606076004,
+      "artifact_digest": "sha256:c498617b03f81419bf5ddd7a50f2ee1f1b12801d622124043719638165dc6459"
+    },
+    {
+      "run_attempt": 2,
+      "job_id": 106079392187,
+      "conclusion": "success",
+      "artifact_id": 10604982142,
+      "artifact_digest": "sha256:d4345b7539af42f1c910a00359e4bb27a6beef6fb4b6952f8ca64a3622db3a94"
+    }
+  ],
+  "machine_evidence_only": true,
+  "independent_reviewer_verdict": false,
+  "independent_verifier_verdict": false,
+  "mvp8_predicate_verified": false,
+  "parent_work_order_state": "IN_PROGRESS"
+}

@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource path="res://scripts/runtime/networked_gameplay/mvp/v0_mvp3_live_graphical_client.gd" type="Script" id="1_client"]
+
+[node name="V0MVP3LiveSharedWorld" type="Node3D"]
+script = ExtResource("1_client")

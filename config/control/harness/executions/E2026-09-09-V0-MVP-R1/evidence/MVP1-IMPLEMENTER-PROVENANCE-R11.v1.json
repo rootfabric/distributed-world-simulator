@@ -1,0 +1,53 @@
+{
+  "schema": "distributed_world_simulator.mvp_implementer_provenance.v1",
+  "result_id": "V0-MVP1-IMPLEMENTER-PROVENANCE-R11",
+  "role": "IMPLEMENTER",
+  "independent_context": false,
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "repair_id": "V0-MVP1-IMPLEMENTER-PROVENANCE-R11",
+  "subject_head": "b645a738a6a143bee8f7f4a291a3e754cd399996",
+  "subject_tree": "b7cd01061dab492eaa1de3de6680465ac9e7aaf6",
+  "implementation_commit": "e5abf7e806e1cd17cb1d5f8c8bb2d5f5a99cb2a8",
+  "original_event": {
+    "path": "config/control/harness/executions/E2026-09-09-V0-MVP-R1/events/V0-MVP-R1-WO-001/0004-mvp1-shared-graphical-scene-implementation.v1.json",
+    "sequence": 4,
+    "blob_sha": "1005fea2edbb49775690e2554e3e8372e9f2cec8",
+    "recorded_actor": "INTEGRATOR",
+    "preserve_unchanged": true
+  },
+  "attribution_correction": {
+    "effective_code_responsibility": "IMPLEMENTER",
+    "author_context": "Existing code-producing assistant in the parent DWS mission; not a new independent Reviewer or Verifier",
+    "statement": "Я как Implementer принимаю ответственность за существующую реализацию MVP1 после проверки её исходников и связей. Событие 4 ошибочно назвало code-producing роль INTEGRATOR. Эта запись исправляет attribution добавлением, не переписывает исходный event и не заявляет, что историческая работа выполнялась новым независимым агентом.",
+    "git_authorship_rewritten": false,
+    "historical_event_rewritten": false
+  },
+  "inspected_surfaces": [
+    "scenes/labs/mvp/v0_mvp_shared_graphical_scene.tscn",
+    "scripts/runtime/networked_gameplay/mvp/v0_mvp_shared_graphical_scene.gd",
+    "tests/runtime/test_v0_mvp_shared_graphical_scene.gd",
+    "RUN_V0_MVP_SHARED_GRAPHICAL_SCENE_TESTS.sh"
+  ],
+  "post_build_critique": {
+    "result": "NO_MATERIAL_REFACTOR_REQUIRED",
+    "reason": "MVP1 — тонкий Node3D composition host с одним экземпляром существующей P7.7 сцены. Контрактные строки не являются доказательством сетевой игры; focused test проверяет только структуру. Новый canonical owner не добавлен.",
+    "known_test_boundary": "Существующий focused smoke не вводит сцену в SceneTree и не заменяет графическое наблюдение."
+  },
+  "windows_observation": {
+    "source_commit": "ad1133a435b8e1aa5df34ee6cbd9597fa2c09961",
+    "source_path": "docs/evidence/2026-09-11_V0_MVP1_WINDOWS_GRAPHICAL_VERIFICATION_R1.v1.json",
+    "source_blob_sha": "2a5525fa44c66dd505f7fb8e1bf8abb1d6f41ef4",
+    "raw_screenshots_and_logs_available_here": false,
+    "classification": "ATTRIBUTED_USER_SUPPLIED_WINDOWS_OBSERVATION_NOT_REHASHED_RAW_MACHINE_EVIDENCE"
+  },
+  "validation_state": "PENDING_EXACT_R11_CI",
+  "independent_verdict_issued": false,
+  "review_required": true,
+  "mvp1_predicate_marked_verified": false,
+  "parent_work_order_state": "IN_PROGRESS",
+  "whole_mvp_implemented": false,
+  "runtime_feature_merge_authorized": false,
+  "mvp_acceptance_authorized": false,
+  "recorded_at_utc": "2026-09-10T21:27:18Z"
+}

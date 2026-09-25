@@ -1,0 +1,280 @@
+{
+  "schema": "distributed_world_simulator.mvp6_nx_dependency_probe.v6",
+  "composition": "CURRENT_MAIN_PLUS_PARSER_NORMALIZED_NX_THEN_EXACT_CURRENT_V0_M4_CRITICAL",
+  "canonical_main": "6982a563dd0c88c81449566131852c601ae89868",
+  "producer_program": "V0",
+  "producer_branch": "feature/v0-mvp-playable-seamless-planet-r1",
+  "producer_head": "970b4293ae303cda03cd99c5c77ddd54e0f41496",
+  "producer_tree": "6a86c84e57ef313ad841c6cb906bc7fd1daafb06",
+  "probe_sha256": "54eb57ad6dc31964ca41e8e347416487eddf0e083397a181bcb87ae7f99e750d",
+  "producer_tracked_status": "",
+  "consumer_tree": "caeaf9bf86680ad72c40d8e9bd6ee309deeb669d",
+  "canonical_main_tree": "97c61acc96f507d71b6883fbdeef486c08b1113d",
+  "producer_critical_file": "scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service.gd",
+  "producer_critical_blob": "44841fb3719b1cf36fd5afdfc0f8a0e4d0eacb30",
+  "consumer_program": "NX",
+  "consumer_branch": "feature/h0-2-nx-c1-owner-authority-r3",
+  "consumer_head": "1a56fe0e845c941f14ce7b9296ee939e9d0ca8bc",
+  "consumer_passport_path": "config/control/branches/feature__h0-2-nx-c1-owner-authority-r3.v1.json",
+  "consumer_passport_blob": "c3af1974228c9ee5c34bf4d54c72896c99fc4d1a",
+  "consumer_owned_overlay_paths": [
+    "RUN_H0_2_NX_C1_TESTS.ps1",
+    "RUN_H0_2_NX_C1_TESTS.sh",
+    "scripts/network/authority/movement_authority_profile.gd",
+    "scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime_owner_movement.gd",
+    "scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime_owner_movement.gd",
+    "scripts/runtime/networked_gameplay/networked_gameplay_service_owner_movement.gd",
+    "tests/harness/test_h0_2_machine_checkpoint_contract.py",
+    "tests/network/test_nx6_predicted_item_interactions.gd",
+    "tests/network/test_nx_client_tick_robustness.gd",
+    "tests/network/test_nx_owner_item_projection_rollback.gd",
+    "tests/network/test_nx_owner_movement_authority.gd",
+    "tests/network/test_nx_render_physics_separation.gd"
+  ],
+  "parser_only_test_compatibility": [
+    {
+      "path": "tests/network/test_nx_owner_movement_authority.gd",
+      "change": "DYNAMIC_SERVICE_RESULT_DECLARATIONS_COLON_EQUALS_TO_EQUALS_ONLY",
+      "changed_declarations": 14,
+      "before_sha256": "5751df3c4325c44afdd81eb601b07f9246381156837df524b2e7fd4c985890f4",
+      "after_sha256": "79d348e4a5bf503872f1cfa622f79872d1ef8675639b8c62281e27a918b5cfa4",
+      "assertion_calls": 40
+    },
+    {
+      "path": "tests/network/test_nx_owner_item_projection_rollback.gd",
+      "change": "DYNAMIC_SERVICE_RESULT_DECLARATIONS_COLON_EQUALS_TO_EQUALS_ONLY",
+      "changed_declarations": 7,
+      "before_sha256": "8bdc6fb891e37673e78607f90ab26873041eabf8b4ba6bb1fc483067d2360900",
+      "after_sha256": "9898b3b9bbdb9ea4aa12db21f7cb08e8be5479400306147acc87aebb01827723",
+      "assertion_calls": 37
+    },
+    {
+      "path": "tests/network/test_nx_client_tick_robustness.gd",
+      "change": "UNTYPED_LOOP_RESULT_DECLARATION_COLON_EQUALS_TO_EQUALS_ONLY",
+      "changed_declarations": 1,
+      "before_sha256": "c4b536b4952344282be97488b372ee2325e996c151f20dd5a34083191be2fa6e",
+      "after_sha256": "832e30ba3026d70117791590209a960d77349b25738329a79e9ce67b18071fe9",
+      "assertion_calls": 14
+    }
+  ],
+  "runtime_parser_compatibility": {
+    "path": "scripts/runtime/networked_gameplay/networked_gameplay_service_owner_movement.gd",
+    "change": "ONE_DYNAMIC_DECLARATION_COLON_EQUALS_TO_EQUALS_ONLY",
+    "before_sha256": "8665da9bd4648b8028a3fca0f5e76f1df07862a057df251f17744be1fe7096d4",
+    "after_sha256": "27f43ce50df21c251a58961796a1178d75a5f11e002f12562666b6503b0652c7",
+    "applied_identically_to_baseline_and_candidate": true,
+    "nx_branch_modified": false
+  },
+  "unmodified_nx_runtime_pass_claimed": false,
+  "overlay_records": [
+    {
+      "path": "RUN_H0_2_NX_C1_TESTS.ps1",
+      "source": "NX",
+      "main_blob": "",
+      "overlay_blob": "9d4122252af29c322bf788f7fea02ab5191afe91"
+    },
+    {
+      "path": "RUN_H0_2_NX_C1_TESTS.sh",
+      "source": "NX",
+      "main_blob": "",
+      "overlay_blob": "989e45ca75dc2328116d23dd88784c1634382b58"
+    },
+    {
+      "path": "scripts/network/authority/movement_authority_profile.gd",
+      "source": "NX",
+      "main_blob": "",
+      "overlay_blob": "5b3804f9d90fcd91cfad4e6202ed3e710f0f2257"
+    },
+    {
+      "path": "scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime_owner_movement.gd",
+      "source": "NX",
+      "main_blob": "",
+      "overlay_blob": "8377db769e1c18b35d1919cbfb41d5cf32e986b9"
+    },
+    {
+      "path": "scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime_owner_movement.gd",
+      "source": "NX",
+      "main_blob": "",
+      "overlay_blob": "0c5b1c51e70ccb10b6076f5921582d83d0d82c8e"
+    },
+    {
+      "path": "scripts/runtime/networked_gameplay/networked_gameplay_service_owner_movement.gd",
+      "source": "NX",
+      "main_blob": "",
+      "overlay_blob": "f3231004bc32ea54028243111859966f08200d4f"
+    },
+    {
+      "path": "tests/harness/test_h0_2_machine_checkpoint_contract.py",
+      "source": "NX",
+      "main_blob": "4856d361fceb0863841deb62cfbff883720b6223",
+      "overlay_blob": "fb492b7518b996c29e02a3e9331b49adca4c1bc0"
+    },
+    {
+      "path": "tests/network/test_nx6_predicted_item_interactions.gd",
+      "source": "NX",
+      "main_blob": "3ce0a18c46b6fefc78f7353df15c44e2f5d6e6d8",
+      "overlay_blob": "3ce0a18c46b6fefc78f7353df15c44e2f5d6e6d8"
+    },
+    {
+      "path": "tests/network/test_nx_client_tick_robustness.gd",
+      "source": "NX",
+      "main_blob": "",
+      "overlay_blob": "9e519b1a20caca30042ea69e4686374b8ea1b0ee"
+    },
+    {
+      "path": "tests/network/test_nx_owner_item_projection_rollback.gd",
+      "source": "NX",
+      "main_blob": "",
+      "overlay_blob": "58ac2dce2bc914080fa723e3e864a401ead00d45"
+    },
+    {
+      "path": "tests/network/test_nx_owner_movement_authority.gd",
+      "source": "NX",
+      "main_blob": "",
+      "overlay_blob": "70c9c1625cb86bcf1498b7d012862cc7c5219d8c"
+    },
+    {
+      "path": "tests/network/test_nx_render_physics_separation.gd",
+      "source": "NX",
+      "main_blob": "",
+      "overlay_blob": "f3409933201865b2315b74ab4a1683e83066f50f"
+    },
+    {
+      "path": "scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service.gd",
+      "source": "V0",
+      "main_blob": "c3c46986260188e3a51a5bcbebbda40b6ddfef73",
+      "overlay_blob": "44841fb3719b1cf36fd5afdfc0f8a0e4d0eacb30"
+    }
+  ],
+  "engine_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+  "engine_version": "4.7.1.stable.double.custom_build.a13da4feb",
+  "platform": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+  "baseline_tests": [
+    {
+      "name": "import",
+      "exit_code": 0,
+      "log_valid": true,
+      "assertions": null,
+      "fatal_lines": [],
+      "log_sha256": "3e3a2269f9fef726c4740afd07b65ac68e42377e393ee8915342b02aac176f5e"
+    },
+    {
+      "name": "tests/network/test_nx_owner_movement_authority.gd",
+      "exit_code": 0,
+      "log_valid": true,
+      "assertions": 44,
+      "fatal_lines": [],
+      "log_sha256": "44e1e30b89a98a8515fed0ca346b9bcf0b3f702e82697cb55e8a925ed72e9d2f",
+      "expected_assertions": 44
+    },
+    {
+      "name": "tests/network/test_nx_render_physics_separation.gd",
+      "exit_code": 0,
+      "log_valid": true,
+      "assertions": 31,
+      "fatal_lines": [],
+      "log_sha256": "642671d0d73f303dcb0bba9f81547c8eaeede7f94ff84dfbb57f45f57705d201",
+      "expected_assertions": 31
+    },
+    {
+      "name": "tests/network/test_nx_owner_item_projection_rollback.gd",
+      "exit_code": 1,
+      "log_valid": false,
+      "assertions": null,
+      "fatal_lines": [
+        "ERROR: NX.C1 item rollback: pickup rollback restores canonical world placement",
+        "ERROR: NX.C1 item rollback: drop rollback restores authoritative quantity",
+        "ERROR: NX.C1 item rollback: drop rollback removes predicted spawn"
+      ],
+      "log_sha256": "bb82e04b9d0b66a71e0976f583c80ba53c87fe2d7d0e66cc470b1d53745706f5",
+      "expected_assertions": 37
+    },
+    {
+      "name": "tests/network/test_nx_client_tick_robustness.gd",
+      "exit_code": 0,
+      "log_valid": true,
+      "assertions": 25,
+      "fatal_lines": [],
+      "log_sha256": "92657a19afeabf85eec302fe6a1c27c6fc449dad32904cd1319e2cc2f38b9264",
+      "expected_assertions": 25
+    },
+    {
+      "name": "tests/network/test_nx6_predicted_item_interactions.gd",
+      "exit_code": 0,
+      "log_valid": true,
+      "assertions": 940,
+      "fatal_lines": [],
+      "log_sha256": "7b4dcb0bd9cb0b2a09acf2ba59c14d7548c325ee7bcb34ad8a7028cac6bf36ca",
+      "expected_assertions": 940
+    }
+  ],
+  "candidate_tests": [
+    {
+      "name": "import",
+      "exit_code": 0,
+      "log_valid": true,
+      "assertions": null,
+      "fatal_lines": [],
+      "log_sha256": "491cd6c6f1e8102925cd62e887366463b9d5326ca05b329aae8df1e7aa575ff6"
+    },
+    {
+      "name": "tests/network/test_nx_owner_movement_authority.gd",
+      "exit_code": 0,
+      "log_valid": true,
+      "assertions": 44,
+      "fatal_lines": [],
+      "log_sha256": "44e1e30b89a98a8515fed0ca346b9bcf0b3f702e82697cb55e8a925ed72e9d2f",
+      "expected_assertions": 44
+    },
+    {
+      "name": "tests/network/test_nx_render_physics_separation.gd",
+      "exit_code": 0,
+      "log_valid": true,
+      "assertions": 31,
+      "fatal_lines": [],
+      "log_sha256": "642671d0d73f303dcb0bba9f81547c8eaeede7f94ff84dfbb57f45f57705d201",
+      "expected_assertions": 31
+    },
+    {
+      "name": "tests/network/test_nx_owner_item_projection_rollback.gd",
+      "exit_code": 1,
+      "log_valid": false,
+      "assertions": null,
+      "fatal_lines": [
+        "ERROR: NX.C1 item rollback: pickup rollback restores canonical world placement",
+        "ERROR: NX.C1 item rollback: drop rollback restores authoritative quantity",
+        "ERROR: NX.C1 item rollback: drop rollback removes predicted spawn"
+      ],
+      "log_sha256": "bb82e04b9d0b66a71e0976f583c80ba53c87fe2d7d0e66cc470b1d53745706f5",
+      "expected_assertions": 37
+    },
+    {
+      "name": "tests/network/test_nx_client_tick_robustness.gd",
+      "exit_code": 0,
+      "log_valid": true,
+      "assertions": 25,
+      "fatal_lines": [],
+      "log_sha256": "92657a19afeabf85eec302fe6a1c27c6fc449dad32904cd1319e2cc2f38b9264",
+      "expected_assertions": 25
+    },
+    {
+      "name": "tests/network/test_nx6_predicted_item_interactions.gd",
+      "exit_code": 0,
+      "log_valid": true,
+      "assertions": 940,
+      "fatal_lines": [],
+      "log_sha256": "7b4dcb0bd9cb0b2a09acf2ba59c14d7548c325ee7bcb34ad8a7028cac6bf36ca",
+      "expected_assertions": 940
+    }
+  ],
+  "baseline_passed": false,
+  "candidate_passed": false,
+  "same_assertion_counts": true,
+  "dependency_revalidated": false,
+  "candidate_regressed_consumer": false,
+  "foundation_mutation_accepted": false,
+  "clearance_written": false,
+  "mvp6_predicate_verified": false,
+  "nx_source_accepted": false,
+  "independent_verdict": false
+}

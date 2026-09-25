@@ -1,0 +1,5 @@
+[CONTROL][CONTRACT_LOAD] loading control contracts; overview defaults to canonical main
+[CONTROL][EXECUTION_SELECT] resolving current checkpoint execution from machine policy
+[CONTROL][STATE_BUILD] reducing append-only execution ledger
+[CONTROL][MISSION] binding the user session to one checkpoint mission
+[CONTROL][CLOSE_ROLE] checking whether the current isolated role may end

@@ -1,0 +1,29 @@
+{
+  "schema": "distributed_world_simulator.harness_human_attention.v1",
+  "decision_id": "HA-V0-MVP6-NX-DIRECTIONAL-CLEARANCE-MERGE-R2",
+  "program": "V0",
+  "checkpoint": "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE",
+  "risk_class": "CRITICAL",
+  "reason": "Post-PR646 canonical journal baseline is exact. Refreshed control-only PR649 was frozen at 6902a99081c1fbdf676c71dca5ea0d80fd633267 / f4ae35216de7ed915fcb0c46b03b0f35baeccd6b, passed exact machine validation, fresh code review and fresh VERIFIED_EVIDENCE. Human approval was required for the exact main-owned clearance merge before real canonical PC0 and epoch audit.",
+  "decision_required": "Authorize exactly PR #649 control-only directional clearance merge; no other PR or product acceptance.",
+  "options": [
+    "AUTHORIZE_EXACT_PR649_DIRECTIONAL_CLEARANCE_MERGE",
+    "HOLD_PR649_AND_KEEP_MVP6_RUNTIME_CONTINUATION_BLOCKED"
+  ],
+  "recommended_option": "AUTHORIZE_EXACT_PR649_DIRECTIONAL_CLEARANCE_MERGE",
+  "recommendation_reason": "Frozen candidate was control-only, machine validation green, code review had no major issues, and independent verifier returned VERIFIED_EVIDENCE.",
+  "blast_radius": [
+    "main-owned directional-watch clearance registry and loader validation",
+    "V0-to-NX critical dependency watch for canonical_multiplayer_item_graph_service.gd",
+    "postmerge canonical PC0 and epoch continuation decision"
+  ],
+  "blocking": true,
+  "status": "RESOLVED",
+  "resolution": "Владелец явно ответил «разрешаяю мердж» на exact merge PR649. Перед merge exact subject оставался HEAD 6902a99081c1fbdf676c71dca5ea0d80fd633267 / TREE f4ae35216de7ed915fcb0c46b03b0f35baeccd6b поверх main a6d5eb6b287130a638ba6cf397c34e29169948c1. Merge выполнен с expected_head_sha guard; canonical merge commit 99e8efe2422e02fedec40778e12748611d68fb5f имеет TREE f4ae35216de7ed915fcb0c46b03b0f35baeccd6b и родителей [a6d5eb6b287130a638ba6cf397c34e29169948c1,6902a99081c1fbdf676c71dca5ea0d80fd633267]. Разрешение распространялось только на control-only PR649. PR650 evidence-only, PR643, PR644 и runtime PR597 не сливались. Этот RESOLVED закрывает только merge gate; реальные canonical PC0, current-main epoch audit, Harness Drive и MVP6 runtime continuation остаются обязательными. NX/MVP6/whole-MVP acceptance не заявлены.",
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/supporting-evidence/MVP6-NX-CLEARANCE-R2-VERIFIER-RECEIPT-R1.v1.json",
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/supporting-evidence/MVP6-NX-CLEARANCE-PR649-MERGE-RECEIPT-R1.v1.json",
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/supporting-evidence/MVP6-POSTMERGE-A6D5EB6B-NX-PC0-R1.v1.json",
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/supporting-evidence/MVP6-JOURNAL-PR646-MERGE-RECEIPT-R1.v1.json"
+  ]
+}

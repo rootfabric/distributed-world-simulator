@@ -1,0 +1,23 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-09-09-V0-MVP-R1-V0-MVP-R1-WO-001-0065-MVP8-REVIEW-HEAD-EXACT-FRESH",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "sequence": 65,
+  "event_type": "PREDICATE_VERIFIED",
+  "work_state": "IN_PROGRESS",
+  "recorded_at_utc": "2026-09-22T10:53:00Z",
+  "actor": "DIRECTOR",
+  "branch": "repair/v0-mvp8-cold-class-cache-r2",
+  "head_sha": "dc6e7fffa27d764ea09ded949d50b99a32fa4d9b",
+  "tree_sha": "8fc0044ff42ad502e6457593a185465af7d2a825",
+  "predicate": "REVIEW_HEAD_EXACT_AND_FRESH",
+  "command": "BIND_MVP8_REVIEW_HEAD_EXACT_AND_FRESH",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/verifications/MVP8-INDEPENDENT-REVIEW-DC6E7FFF-R1.v1.json",
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/verifications/MVP8-INDEPENDENT-VERIFICATION-DC6E7FFF-R1.v1.json",
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence/MVP8-LEAF-CLOSURE-DC6E7FFF-R1.v1.json"
+  ],
+  "summary": "Fresh Reviewer result commit 6d1f3fbc is directly atop exact product dc6e7fff and adds only one durable review JSON; reviewed HEAD/TREE equal the frozen subject and source was clean before/after."
+}

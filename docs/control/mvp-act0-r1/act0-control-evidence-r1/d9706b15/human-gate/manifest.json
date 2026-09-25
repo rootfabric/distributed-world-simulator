@@ -1,0 +1,28 @@
+{
+  "evidence_head": "9a3c1fd052652701a2d45e77508789db1ebfd37a",
+  "subject_head": "d9706b157e84c653a753cc54243ce6651d53319c",
+  "subject_tree": "4925ea293c15d88153278437976a3b69f8985ccf",
+  "drive_exit": 0,
+  "close_role_exit": 0,
+  "close_mission_exit": 0,
+  "handoff_class": "HUMAN_DECISION_REQUIRED",
+  "decision_id": "HA-V0-MVP6-JOURNAL-BASELINE-MERGE-R1",
+  "main_merge_authorized": false,
+  "files": [
+    {
+      "path": "close-mission.log",
+      "sha256": "e94b2c63876898db62ce5c828f9657c3bb6db1185be7da3b6b900ada41402fcf",
+      "size": 65303
+    },
+    {
+      "path": "close-role.log",
+      "sha256": "77bb1c6cceb57621b77d370f5df678f5946ffb35f6412ee1f6b70f16842ad423",
+      "size": 65250
+    },
+    {
+      "path": "drive.log",
+      "sha256": "35858f0fb09aa00d19c6c9cec15fc84360febfedd6ddc68d74f3ab930c742f37",
+      "size": 67119
+    }
+  ]
+}

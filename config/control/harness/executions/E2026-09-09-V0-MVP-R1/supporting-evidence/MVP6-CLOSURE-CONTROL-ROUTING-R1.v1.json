@@ -1,0 +1,55 @@
+{
+  "schema": "distributed_world_simulator.mvp6_closure_control_routing.v1",
+  "recorded_at_utc": "2026-09-19T10:23:00Z",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "frozen_product_head_sha": "1d51b410925407ad1f83dc4ffa37b8a909bb6811",
+  "frozen_product_tree_sha": "fb51a7cab464404fc843cb1da2fac5419a1c6ee3",
+  "closure_event": {
+    "sequence": 21,
+    "event_id": "E2026-09-09-V0-MVP-R1-V0-MVP-R1-WO-001-0021-MVP6-VERIFIED",
+    "predicate": "MVP_ITEM_CONSTRUCTION_PERSISTENCE_CONVERGENCE",
+    "event_type": "PREDICATE_VERIFIED",
+    "work_state": "IN_PROGRESS"
+  },
+  "act0_probe": {
+    "run_id": 35437042387,
+    "head_sha": "96a57deac716f6ca373cbd73982e15482d390ef3",
+    "conclusion": "failure",
+    "failing_check": "git merge-base --is-ancestor 471210d781e521bc7897a8fe859636a07d7a3ab3 HEAD",
+    "classification": "VALIDATOR_ROUTE_MISMATCH",
+    "product_regression": false,
+    "ledger_rejection": false,
+    "explanation": "ACT0 post-adoption requires current main to be an ancestor. This feature train intentionally continues under append-only main-move audit 0020, so ACT0 post-adoption is not the branch-aware closure validator for this carrier."
+  },
+  "reducer_check": {
+    "event_schema_required_fields_present": true,
+    "authoritative_sequences_contiguous_through_21": true,
+    "sequence_unique": true,
+    "event_id_unique": true,
+    "transition": "IN_PROGRESS->IN_PROGRESS",
+    "transition_allowed": true,
+    "predicate_event_state_pair_allowed": true,
+    "command_present": true,
+    "evidence_paths_present": true,
+    "exit_code": 0,
+    "predicate_added_to_completed_predicates_by_rule": true,
+    "parent_snapshot_state": "IN_PROGRESS",
+    "parent_remains_non_terminal": true
+  },
+  "control_pr": {
+    "number": 666,
+    "state": "CLOSED_WITHOUT_MERGE",
+    "merge_authorized": false,
+    "purpose": "attempted validation surface only",
+    "workflow_triggered": false
+  },
+  "boundary": {
+    "mvp6_leaf_closed": true,
+    "parent_work_order_state": "IN_PROGRESS",
+    "next_product_predicate": "MVP_RECONNECT_AND_RESTART",
+    "whole_mvp_acceptance": false,
+    "main_merge_authorized": false,
+    "runtime_merge_authorized": false
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "schema": "distributed_world_simulator.harness_verifier_result.v1",
+  "verification_id": "MVP6-CONSTRUCTION-FIXTURE-84AB0C0F-VERIFIER-R1",
+  "verifier": "/root/journal_repair_verifier",
+  "verified_at_utc": "2026-09-16T13:15:33.914836+00:00",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "risk_class": "CRITICAL",
+  "verified_head_sha": "84ab0c0fba87f12dcfc94e32bb9cfa4eb8abb481",
+  "verified_tree_sha": "f7e3f255bcc4878f3e738e011e3d45bf3edcdb81",
+  "verdict": "PASS",
+  "scope": "CONSTRUCTION_BACKEND_TEST_FIXTURE_STAGING_ONLY",
+  "required_fixes": [],
+  "findings": [],
+  "independent_windows_assertions": 223,
+  "trusted_windows_assertions": [
+    223,
+    64,
+    77
+  ],
+  "linux_assertions": [
+    223,
+    64,
+    77
+  ],
+  "linux_run_id": "35100372324",
+  "linux_artifact_id": "10447788421",
+  "linux_zip_sha256": "cfae9802f9e13e2314763ca3ec926a8a1bc65057fb68774ef3e59ed11d50d63a",
+  "review_manifest_files_verified": 11,
+  "baseline_diagnostic_logs_verified": 3,
+  "checks": [
+    "Exact clean84 subject and runtime identical73 confirmed before/after own223 run.",
+    "Native canonical item.transfer stages same carried hotbar ore only after both seams; allocator deliberately excludes negative inventory slots.",
+    "Five assertions added; old stage recipe2/4/2, replay conservation and cross-seam identity checks preserved.",
+    "Full identity/definition/quantity equality, total8 retained, moved hotbar alias removed; observed consumption8→6→2→0 and one OPERATIONAL construct.",
+    "Two native handoffs and two in-process derived presentations confirmed; not five live processes or physics interaction.",
+    "Windows/Linux exact logs hash verified, positive223/64/77 markers and no fatal errors.",
+    "Canonical main6982 M5 PeekNamedPipe and M6 resource-leak diagnostics reproduced; not reclassified harmless or clean."
+  ],
+  "evidence_gaps": [
+    "Full world/core on main3b remains separate ongoing subject.",
+    "Five-process gameplay/physics interaction and whole-MVP6 not verified.",
+    "Directional clearance and runtime/main merge require separate gates."
+  ],
+  "mvp6_verified": false,
+  "whole_mvp_accepted": false,
+  "five_process_verified": false,
+  "physics_interaction_verified": false,
+  "full_world_core_verified": false,
+  "merge_ready": false,
+  "merge_authorized": false
+}

@@ -1,0 +1,23 @@
+{
+  "role": "INDEPENDENT_VERIFIER",
+  "verdict": "FAIL",
+  "head": "a7c711c4b09fe52e52a206abc13ce8b427c19cf9",
+  "tree": "cc48a2446198a49c78ee46af601e2e56d3807bfd",
+  "scope": "ACT0_CONTROL_EXACT_EVIDENCE_ADDENDUM",
+  "checks": {
+    "immutable_authorization_git_bytes": true,
+    "source_68433_ha_patch_identical": true,
+    "linux_zip_sha256": "8628d1323d58d76df9de3b062dbd90b76b4b466c5389f46cb7ef54fa5b14551a",
+    "all_zip_members_verified": true,
+    "linux_log_sha256": "7e6fadba2dd0ec111199a3580fc9eb6324138caa0bf387559a7b197aa7d7ed73"
+  },
+  "required_fixes": [
+    "Fix new ACT0 fixture cleanup errors without weakening authorization or runtime fences; rerun Linux focused/full Harness and obtain fresh exact-head roles."
+  ],
+  "linux_result": "329 tests; 1 PC0 directional RED failure; 10 new ACT0 fixture cleanup errors",
+  "mvp6_verified": false,
+  "canonical_clearance": false,
+  "main_acceptance": false,
+  "source_edits": false,
+  "independent_windows_focused": "INTERRUPTED after parent paused superseded a7 verification for repair; not PASS. Own Python/Git process tree terminated; raw partial focused.log retained."
+}

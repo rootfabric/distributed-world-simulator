@@ -1,0 +1,21 @@
+{
+  "head": "a7c711c4b09fe52e52a206abc13ce8b427c19cf9",
+  "tree": "cc48a2446198a49c78ee46af601e2e56d3807bfd",
+  "runtime_delta_from_3b": false,
+  "tracked_clean": true,
+  "authorization_source_bytes_verified": true,
+  "work_order_precedes_code": true,
+  "changed_paths": [
+    "docs/control/mvp-act0-r1/act0-journal-fence-r1/.gitattributes",
+    "docs/control/mvp-act0-r1/act0-journal-fence-r1/REPAIR_MAP_RU.md",
+    "docs/control/mvp-act0-r1/act0-journal-fence-r1/approved-ha.json",
+    "docs/control/mvp-act0-r1/act0-journal-fence-r1/approved.patch",
+    "docs/control/mvp-act0-r1/act0-journal-fence-r1/authorization.json",
+    "docs/control/mvp-act0-r1/act0-journal-fence-r1/work-order.json",
+    "tests/harness/test_v0_mvp_act0.py"
+  ],
+  "source_findings": [],
+  "limits": [
+    "This source audit alone is not a validation or acceptance verdict."
+  ]
+}

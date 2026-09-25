@@ -1,0 +1,99 @@
+{
+  "schema": "distributed_world_simulator.mvp6_leaf_closure.v1",
+  "recorded_at_utc": "2026-09-19T10:15:00Z",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "predicate": "MVP_ITEM_CONSTRUCTION_PERSISTENCE_CONVERGENCE",
+  "frozen_product_head_sha": "1d51b410925407ad1f83dc4ffa37b8a909bb6811",
+  "frozen_product_tree_sha": "fb51a7cab464404fc843cb1da2fac5419a1c6ee3",
+  "reviewer_record": "config/control/harness/executions/E2026-09-09-V0-MVP-R1/verifications/MVP6-INDEPENDENT-REVIEW-1D51B410-R1.v1.json",
+  "verifier_record": "config/control/harness/executions/E2026-09-09-V0-MVP-R1/verifications/MVP6-INDEPENDENT-VERIFICATION-1D51B410-R1.v1.json",
+  "independent_roles": {
+    "reviewer": "PASS",
+    "verifier": "PASS",
+    "exact_same_subject": true
+  },
+  "terminal_linux_exact": {
+    "run_id": 35351922506,
+    "conclusion": "success",
+    "native_job": "SUCCESS",
+    "graphical_five_process_job": "SUCCESS",
+    "seam_world_core_job": "SUCCESS",
+    "native_artifact": {
+      "id": 10550945273,
+      "digest": "sha256:03c857c760fa09a64763a90e08d7412640d0cf798a32dbecb035f102a2a6b2b1"
+    },
+    "graphical_artifact": {
+      "id": 10550625777,
+      "digest": "sha256:e005599aa48f30923e6eebe51289714a0ae68be11151195542d10577b6712f0d"
+    },
+    "world_core_artifact": {
+      "id": 10552647376,
+      "digest": "sha256:619958490779df4236c188cb63ffac78f89e72d77bbd97654c67dde5b3b83060"
+    },
+    "world_core_passed": true,
+    "declared_tests": 346,
+    "discovered_tests": 346,
+    "steps": 351
+  },
+  "terminal_windows_verifier": {
+    "platform": "Windows",
+    "godot_sha256": "3633C3E609C8CE2F9BAE334A9C7E75C7F974DE3AF0415AB4A8050A625A15A7A5",
+    "full_world_core_passed": true,
+    "exit_code": 0,
+    "declared_tests": 346,
+    "discovered_tests": 346,
+    "steps": 351,
+    "duration_seconds": 3210.734,
+    "five_process_distinct_pids": 5,
+    "blocking_runtime_findings": 0
+  },
+  "product_contract": {
+    "base100_parts": 100,
+    "add101_parts": 101,
+    "remove100_parts": 100,
+    "resource_source": "MVP5_CANONICAL_MINING_OUTPUT",
+    "resource_required": 101,
+    "resource_available_windows": 19340,
+    "topup_issued": false,
+    "authority_a_single_writer": true,
+    "authority_b_read_only": true,
+    "b_to_a_attestation_boundary_confirmed": true,
+    "replay_security": "PASS",
+    "enet_guard_restored": "PASS",
+    "keepalive_read_only": "PASS",
+    "persistence_checksum_stable": "PASS",
+    "collision_derived_only": "PASS",
+    "same_head_graphical": "PASS"
+  },
+  "project_control": {
+    "canonical_main_sha": "471210d781e521bc7897a8fe859636a07d7a3ab3",
+    "standard_exit_code": 0,
+    "standard_overall": "YELLOW_NON_RED",
+    "directional_exit_code": 0,
+    "directional_overall": "YELLOW_NON_RED",
+    "standard_report_sha256": "7a06405626f5fcfa506a8db1eba734acd7ee255884f4204c3a9341bea52781e4",
+    "directional_report_sha256": "855ee722a800cd4a945c586fe2ff32cbc9515ed5c35af9fdb20b9c5109b6c942"
+  },
+  "historical_failure_policy": {
+    "windows_p2_item_pickup_failure_preserved": true,
+    "test": "test_v0_p2_live_shared_state_convergence",
+    "error": "ITEM_INTERACTION_OUT_OF_RANGE",
+    "observed_red_runs": "2/5",
+    "exact_windows_attempt_2": "PASS",
+    "exact_linux_ci": "PASS",
+    "inside_mvp6_base_head_diff": false,
+    "claimed_fixed": false,
+    "blocking_for_mvp6": false
+  },
+  "director_leaf_decision": "PREDICATE_VERIFIED",
+  "parent_work_order_state": "IN_PROGRESS",
+  "next_product_predicate": "MVP_RECONNECT_AND_RESTART",
+  "whole_mvp_acceptance": false,
+  "runtime_merge_authorized": false,
+  "main_merge_authorized": false,
+  "mvp7_verified": false,
+  "mvp8_verified": false,
+  "publication_contract": "Closure commits add only control/evidence records after the independently reviewed and verified frozen 1d51b410/fb51a7ca product subject. They do not mutate runtime, tests, canonical owners or acceptance criteria.",
+  "control_boundary": "Only MVP6 leaf is closed. V0-MVP-R1-WO-001 remains IN_PROGRESS and continues to MVP7 reconnect/restart. Whole-MVP Human acceptance and main/runtime merge gates remain open."
+}

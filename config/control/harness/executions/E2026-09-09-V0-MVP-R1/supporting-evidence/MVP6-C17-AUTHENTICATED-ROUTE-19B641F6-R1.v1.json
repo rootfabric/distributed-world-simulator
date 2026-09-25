@@ -1,0 +1,40 @@
+{
+  "schema": "distributed_world_simulator.mvp6_authenticated_c17_route_evidence.v1",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "checkpoint": "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE",
+  "subject_head": "19b641f6f1a63ad07c341a93307ff059b7cc82fb",
+  "subject_tree": "3f776eead353c83cd8256c735d3566fa8b8f9777",
+  "canonical_main": "99e8efe2422e02fedec40778e12748611d68fb5f",
+  "workflow_run": 35191944219,
+  "job_id": 105106255833,
+  "job_conclusion": "success",
+  "artifact_id": 10484182734,
+  "artifact_zip_sha256": "4da6780b7d43ee902491751f4edfe6aae9588b5eee2e6458b4bfb909ab8c44c0",
+  "native_manifest_schema": "distributed_world_simulator.mvp6_native_exact_manifest.v2",
+  "native_summary_sha256": "edda7ceaa19211975593ec39d4d031ab8d6026e5267a2a5491300fb4fe6d8265",
+  "c17_result_sha256": "2d70ace4a6bf87bef8dae05f1564ed2459631958ee85a33d3531ed142b0494d4",
+  "c17_log_sha256": "cc9637420d32a531fb3825ab855eb0bd000e666772578470b551381e66e9ffda",
+  "engine_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+  "assertions": {
+    "native": 408,
+    "security": 48,
+    "c17_authenticated_route": 58,
+    "mvp3": 232,
+    "mvp5": 270,
+    "total_excluding_prediction_rollback": 1016,
+    "prediction_rollback": 77
+  },
+  "checks": {
+    "authenticated_actor_context_preserved": true,
+    "terminal_replay_preserved": true,
+    "unbound_session_rejected": true,
+    "canonical_owner_duplicated": false,
+    "tracked_clean_after": true,
+    "all_commands_passed": true
+  },
+  "construction_focused_legacy_passed": true,
+  "cross_authority_construction_seam_verified": false,
+  "mvp6_predicate_verified": false,
+  "independent_verdict": false
+}

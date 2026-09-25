@@ -1,0 +1,20 @@
+{
+  "schema": "distributed_world_simulator.mvp4_ref_reset_evidence.v1",
+  "recorded_at_utc": "2026-09-14T09:59:48Z",
+  "branch": "feature/v0-mvp-playable-seamless-planet-r1",
+  "old_head_sha": "00b5645c0cc177030754efdd646fd60e979d987a",
+  "restored_head_sha": "e37f81821e98a4d00b04ea414722e550b328cd47",
+  "old_tree_sha": "bcbde9961e701f1e2c728f6f7a74f9df2d334aed",
+  "restored_tree_sha": "bcbde9961e701f1e2c728f6f7a74f9df2d334aed",
+  "dropped_commits": [
+    "a87dd711a9fdbe8cee14694d4a3daa2ee347c41a",
+    "00b5645c0cc177030754efdd646fd60e979d987a"
+  ],
+  "user_instruction": "реализуй самый оптимальный путь, надо закрыть пункт",
+  "authorization_context": "Поручение дано после предложения точного возврата feature 00b5645c -> e37f8182 как кратчайшего пути закрытия MVP4.",
+  "command": "git push --force-with-lease=refs/heads/feature/v0-mvp-playable-seamless-planet-r1:00b5645c0cc177030754efdd646fd60e979d987a origin e37f81821e98a4d00b04ea414722e550b328cd47:refs/heads/feature/v0-mvp-playable-seamless-planet-r1",
+  "exit_code": 0,
+  "remote_head_rechecked": "e37f81821e98a4d00b04ea414722e550b328cd47",
+  "product_tree_changed": false,
+  "scope": "Только placeholder и revert. Последующая обычная FF-публикация execution records сохраняет frozen runtime subject e37f8182."
+}

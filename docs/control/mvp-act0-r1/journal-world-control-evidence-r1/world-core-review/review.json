@@ -1,0 +1,150 @@
+{
+  "role": "REVIEWER",
+  "verdict": "PASS",
+  "scope": "Bounded journal main repair full world/core evidence addendum only",
+  "head": "3b82145ae946bb51aebf67f048a28420368b40be",
+  "tree": "6b1b8c9ead5c16d15dc8565813d3abb1bf94d880",
+  "risk_class": "CRITICAL",
+  "required_fixes": [],
+  "rank_up_moves": [
+    "Existing cleanup/resource diagnostics remain separate maintenance debt."
+  ],
+  "evidence_gaps": [
+    "No whole MVP6 live five-process or physics interaction acceptance in this subject.",
+    "Canonical PC0 directional RED and main merge remain unresolved."
+  ],
+  "risk_assessment": "No new world/core regression identified; runner success is not fatal-free or product acceptance.",
+  "world": {
+    "runner_passed": true,
+    "steps": 332,
+    "standalone_scripts": 327,
+    "soak_ms": 1800002,
+    "soak_assertions": 51,
+    "errors": [
+      {
+        "line": 502,
+        "step": "test_m5_graphical_multiplayer_acceptance",
+        "message": "ERROR: Condition \"!PeekNamedPipe(fd[0], nullptr, 0, nullptr, &buf_rem, nullptr)\" is true. Returning: 0",
+        "classification": "BASELINE_PEEKNAMEDPIPE_CLEANUP"
+      },
+      {
+        "line": 510,
+        "step": "test_m5_graphical_multiplayer_acceptance",
+        "message": "ERROR: Condition \"!PeekNamedPipe(fd[0], nullptr, 0, nullptr, &buf_rem, nullptr)\" is true. Returning: 0",
+        "classification": "BASELINE_PEEKNAMEDPIPE_CLEANUP"
+      },
+      {
+        "line": 651,
+        "step": "test_m6_dedicated_recovery_contracts",
+        "message": "ERROR: 4 resources still in use at exit (run with --verbose for details).",
+        "classification": "BASELINE_RESOURCE_EXIT_DEBT"
+      },
+      {
+        "line": 1692,
+        "step": "test_partition_foundation",
+        "message": "ERROR: Invalid partition namespace: universe=main instance=invalid/path space=moon",
+        "classification": "INTENTIONAL_INVALID_NAMESPACE_GRID_REJECTION"
+      },
+      {
+        "line": 1698,
+        "step": "test_partition_foundation",
+        "message": "ERROR: Invalid cube-sphere partition grid configuration: { \"scheme_id\": \"cube_sphere\", \"scheme_revision\": 1, \"body_frame_id\": \"body/moon/fixed\", \"body_radius_m\": 1737400.0, \"zones_per_face\": 0, \"chunks_per_zone\": 32 }",
+        "classification": "INTENTIONAL_INVALID_NAMESPACE_GRID_REJECTION"
+      },
+      {
+        "line": 2170,
+        "step": "test_persistence_roundtrip",
+        "message": "ERROR: World manifest identity mismatch (instance_id): user://tests/persistence_243/world.json",
+        "classification": "INTENTIONAL_FOREIGN_INSTANCE_GRID_REJECTION"
+      },
+      {
+        "line": 2181,
+        "step": "test_persistence_roundtrip",
+        "message": "ERROR: World manifest identity mismatch (partition_grid): user://tests/persistence_243/world.json",
+        "classification": "INTENTIONAL_FOREIGN_INSTANCE_GRID_REJECTION"
+      },
+      {
+        "line": 2876,
+        "step": "test_mw7_matter_interest_replication",
+        "message": "ERROR: 7 resources still in use at exit (run with --verbose for details).",
+        "classification": "BASELINE_RESOURCE_EXIT_DEBT"
+      },
+      {
+        "line": 4175,
+        "step": "test_v0_p7_5_two_client_convergence",
+        "message": "ERROR: 8 resources still in use at exit (run with --verbose for details).",
+        "classification": "BASELINE_RESOURCE_EXIT_DEBT"
+      }
+    ],
+    "warnings": [
+      {
+        "line": 305,
+        "step": "test_m4_networked_playground_extension",
+        "message": "WARNING: [remote_player_presenter:b] apply_replica failed: CONFLICTING_REMOTE_SNAPSHOT_TICK"
+      },
+      {
+        "line": 649,
+        "step": "test_m6_dedicated_recovery_contracts",
+        "message": "WARNING: 8 ObjectDB instances were leaked at exit (run with `--verbose` for details)."
+      },
+      {
+        "line": 1628,
+        "step": "test_c23_production_hardening_contracts",
+        "message": "WARNING: 3 ObjectDB instances were leaked at exit (run with `--verbose` for details)."
+      },
+      {
+        "line": 1634,
+        "step": "test_c23_production_hardening_integration",
+        "message": "WARNING: 2 ObjectDB instances were leaked at exit (run with `--verbose` for details)."
+      },
+      {
+        "line": 2754,
+        "step": "test_nx5_remote_snapshot_interpolation_integration",
+        "message": "WARNING: [remote_player_presenter:b] apply_replica failed: CONFLICTING_REMOTE_SNAPSHOT_TICK"
+      },
+      {
+        "line": 2761,
+        "step": "test_nx5_remote_snapshot_interpolation_integration",
+        "message": "WARNING: [remote_player_presenter:c] apply_replica failed: STALE_REMOTE_AUTHORITY_EPOCH"
+      },
+      {
+        "line": 2874,
+        "step": "test_mw7_matter_interest_replication",
+        "message": "WARNING: 26 ObjectDB instances were leaked at exit (run with `--verbose` for details)."
+      },
+      {
+        "line": 4173,
+        "step": "test_v0_p7_5_two_client_convergence",
+        "message": "WARNING: 15 ObjectDB instances were leaked at exit (run with `--verbose` for details)."
+      }
+    ]
+  },
+  "harness": {
+    "linux": "FAIL:325 tests,2 failures (PC0 directional RED and stale ACT0 fence)",
+    "windows": "FAIL:303 tests,4 failures,8 errors,3 skips; extra failures absent on Linux",
+    "linux_log_sha256": "a012080d5b52e5f08c930108fd2fe528a7451496972ec0daea2d02e63d5daadf"
+  },
+  "manifest": {
+    "path": "C:\\distributed-world-simulator\\artifacts\\mvp6-journal-73b88181\\world-core-final\\manifest.json",
+    "sha256": "5935b72a8b13c0fe7f0af7088bf45f5d24b1476f9e3a8f0144462cd609b3bae3",
+    "checked_files": 6
+  },
+  "baseline": [
+    {
+      "path": "C:\\distributed-world-simulator\\artifacts\\mvp6-journal-73b88181\\world-canonical-baseline\\provenance.json",
+      "sha256": "d9b8bbd15d07dc4bc1afc3d4c6941de4270143b1cc44f21d77e8eb46fb8a6f66"
+    },
+    {
+      "path": "C:\\distributed-world-simulator\\artifacts\\mvp6-journal-73b88181\\world-canonical-baseline-mw7\\provenance.json",
+      "sha256": "a0fc599e98aab24faf550140ca9652a16b219b5384d54d530cadb0f675bacff1"
+    },
+    {
+      "path": "C:\\distributed-world-simulator\\artifacts\\mvp6-journal-73b88181\\world-canonical-baseline-p75\\provenance.json",
+      "sha256": "89bd3c1112ed546215eabf4a9935f0ac94aeb5fcb2f615b3ca32734b0e32f290"
+    }
+  ],
+  "mvp6_verified": false,
+  "main_acceptance": false,
+  "canonical_clearance": false,
+  "reviewer_source_changes": false
+}

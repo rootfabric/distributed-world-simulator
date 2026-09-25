@@ -1,0 +1,98 @@
+[
+  {
+    "path": "C:\\distributed-world-simulator\\artifacts\\mvp6-journal-73b88181\\nx-serial\\baseline-main-plus-approved-repair-plus-nx\\import.log",
+    "sha256": "48823d850986e9d40e475f407ba4e42ecfe7c829d39a93d3300343c723ec9766",
+    "matches": true,
+    "exit": 0,
+    "assertions": null,
+    "valid": true
+  },
+  {
+    "path": "C:\\distributed-world-simulator\\artifacts\\mvp6-journal-73b88181\\nx-serial\\baseline-main-plus-approved-repair-plus-nx\\test_nx_owner_movement_authority.log",
+    "sha256": "a3b4385f1cb5e3b55d16d3dbe1a852a4f5fd7da577cbd373129f7209759fb0b1",
+    "matches": true,
+    "exit": 0,
+    "assertions": 44,
+    "valid": true
+  },
+  {
+    "path": "C:\\distributed-world-simulator\\artifacts\\mvp6-journal-73b88181\\nx-serial\\baseline-main-plus-approved-repair-plus-nx\\test_nx_render_physics_separation.log",
+    "sha256": "11052dabb4850cf03c83321aaf01f86d1c9be22bede4a636da1232340e1dbfcd",
+    "matches": true,
+    "exit": 0,
+    "assertions": 31,
+    "valid": true
+  },
+  {
+    "path": "C:\\distributed-world-simulator\\artifacts\\mvp6-journal-73b88181\\nx-serial\\baseline-main-plus-approved-repair-plus-nx\\test_nx_owner_item_projection_rollback.log",
+    "sha256": "69e0c0ef37eabce359508b255abd6e1b74308f2b3705049618a10a7e18df2426",
+    "matches": true,
+    "exit": 0,
+    "assertions": 37,
+    "valid": true
+  },
+  {
+    "path": "C:\\distributed-world-simulator\\artifacts\\mvp6-journal-73b88181\\nx-serial\\baseline-main-plus-approved-repair-plus-nx\\test_nx_client_tick_robustness.log",
+    "sha256": "ee853fc7c456d729297d6bf651352d3a29b11c11adccb8bacfb78df126eee689",
+    "matches": true,
+    "exit": 0,
+    "assertions": 25,
+    "valid": true
+  },
+  {
+    "path": "C:\\distributed-world-simulator\\artifacts\\mvp6-journal-73b88181\\nx-serial\\baseline-main-plus-approved-repair-plus-nx\\test_nx6_predicted_item_interactions.log",
+    "sha256": "21d6fb98e60f04b2c23ce4adeb30d68b3071d744405228c645d55a00e0f87ac6",
+    "matches": true,
+    "exit": 0,
+    "assertions": 940,
+    "valid": true
+  },
+  {
+    "path": "C:\\distributed-world-simulator\\artifacts\\mvp6-journal-73b88181\\nx-serial\\candidate-plus-mvp6-m4\\import.log",
+    "sha256": "fafcc6690da9a0471e7a4615396f60e74d23fbfacbb076404a8482790a9f5fea",
+    "matches": true,
+    "exit": 0,
+    "assertions": null,
+    "valid": true
+  },
+  {
+    "path": "C:\\distributed-world-simulator\\artifacts\\mvp6-journal-73b88181\\nx-serial\\candidate-plus-mvp6-m4\\test_nx_owner_movement_authority.log",
+    "sha256": "a3b4385f1cb5e3b55d16d3dbe1a852a4f5fd7da577cbd373129f7209759fb0b1",
+    "matches": true,
+    "exit": 0,
+    "assertions": 44,
+    "valid": true
+  },
+  {
+    "path": "C:\\distributed-world-simulator\\artifacts\\mvp6-journal-73b88181\\nx-serial\\candidate-plus-mvp6-m4\\test_nx_render_physics_separation.log",
+    "sha256": "11052dabb4850cf03c83321aaf01f86d1c9be22bede4a636da1232340e1dbfcd",
+    "matches": true,
+    "exit": 0,
+    "assertions": 31,
+    "valid": true
+  },
+  {
+    "path": "C:\\distributed-world-simulator\\artifacts\\mvp6-journal-73b88181\\nx-serial\\candidate-plus-mvp6-m4\\test_nx_owner_item_projection_rollback.log",
+    "sha256": "69e0c0ef37eabce359508b255abd6e1b74308f2b3705049618a10a7e18df2426",
+    "matches": true,
+    "exit": 0,
+    "assertions": 37,
+    "valid": true
+  },
+  {
+    "path": "C:\\distributed-world-simulator\\artifacts\\mvp6-journal-73b88181\\nx-serial\\candidate-plus-mvp6-m4\\test_nx_client_tick_robustness.log",
+    "sha256": "ee853fc7c456d729297d6bf651352d3a29b11c11adccb8bacfb78df126eee689",
+    "matches": true,
+    "exit": 0,
+    "assertions": 25,
+    "valid": true
+  },
+  {
+    "path": "C:\\distributed-world-simulator\\artifacts\\mvp6-journal-73b88181\\nx-serial\\candidate-plus-mvp6-m4\\test_nx6_predicted_item_interactions.log",
+    "sha256": "21d6fb98e60f04b2c23ce4adeb30d68b3071d744405228c645d55a00e0f87ac6",
+    "matches": true,
+    "exit": 0,
+    "assertions": 940,
+    "valid": true
+  }
+]

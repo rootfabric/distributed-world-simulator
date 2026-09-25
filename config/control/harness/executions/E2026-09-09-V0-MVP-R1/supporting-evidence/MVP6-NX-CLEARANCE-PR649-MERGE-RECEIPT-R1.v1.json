@@ -1,0 +1,38 @@
+{
+  "schema": "distributed_world_simulator.mvp6_clearance_merge_receipt.v1",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "checkpoint": "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE",
+  "pull_request": 649,
+  "scope": "CONTROL_ONLY_V0_TO_NX_DIRECTIONAL_CLEARANCE",
+  "human_attention": "HA-V0-MVP6-NX-DIRECTIONAL-CLEARANCE-MERGE-R2",
+  "human_resolution_text": "разрешаяю мердж",
+  "approved_head": "6902a99081c1fbdf676c71dca5ea0d80fd633267",
+  "approved_tree": "f4ae35216de7ed915fcb0c46b03b0f35baeccd6b",
+  "base_main": "a6d5eb6b287130a638ba6cf397c34e29169948c1",
+  "merge_commit": "99e8efe2422e02fedec40778e12748611d68fb5f",
+  "merge_tree": "f4ae35216de7ed915fcb0c46b03b0f35baeccd6b",
+  "merge_parents": [
+    "a6d5eb6b287130a638ba6cf397c34e29169948c1",
+    "6902a99081c1fbdf676c71dca5ea0d80fd633267"
+  ],
+  "merge_guard": "expected_head_sha",
+  "code_review": {
+    "reviewed_head": "6902a99081c1fbdf676c71dca5ea0d80fd633267",
+    "result_comment": 5707040521,
+    "result": "NO_MAJOR_ISSUES_REPORTED"
+  },
+  "fresh_verifier": {
+    "candidate_head": "6902a99081c1fbdf676c71dca5ea0d80fd633267",
+    "candidate_tree": "f4ae35216de7ed915fcb0c46b03b0f35baeccd6b",
+    "evidence_carrier_head": "2513aedab6a315d726a61c78607d72e84f960c3b",
+    "evidence_carrier_tree": "31a4a3f82d11fa28b9092fdfd259a9a0ab72c291",
+    "final_comment": 5709209809,
+    "verdict": "VERIFIED_EVIDENCE"
+  },
+  "not_merged": [650, 643, 644, 597],
+  "canonical_pc0_after_merge": "NOT_YET_RECORDED",
+  "epoch_audit_after_merge": "NOT_YET_RECORDED",
+  "mvp6_predicate_verified": false,
+  "whole_mvp_accepted": false
+}

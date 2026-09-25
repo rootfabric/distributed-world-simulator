@@ -1,0 +1,15 @@
+{
+  "schema": "distributed_world_simulator.mvp6_current_main_pc0_probe.v1",
+  "main_sha": "6982a563dd0c88c81449566131852c601ae89868",
+  "feature_subject_head": "",
+  "standard_exit_code": 0,
+  "directional_exit_code": 0,
+  "standard_overall": "YELLOW",
+  "directional_overall": "RED",
+  "standard_report_sha256": "ab3e41693390d67ba004d9c6722f279165aa351c330ea815965cc774909e2b32",
+  "directional_report_sha256": "9331481dd5d7317bb83ff97720a07f39eb73afe077f9aaa0de7d30bb0ca6a6cd",
+  "standard_log_sha256": "f267e7a77dd367732bf7cbc1e9a91f2efc55566092d5fb25032b90f091a270b6",
+  "directional_log_sha256": "18d5eb986bf7c4a227f0a6efba60f55a6cae01081f14b43971203651576185d9",
+  "audit_written": false,
+  "continuation_claimed": false
+}

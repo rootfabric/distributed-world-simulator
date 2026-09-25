@@ -1,0 +1,23 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-09-09-V0-MVP-R1-V0-MVP-R1-WO-001-0057-MVP8-ONE-CONNECTED-TWO-CLIENT-LOOP",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "sequence": 57,
+  "event_type": "PREDICATE_VERIFIED",
+  "work_state": "IN_PROGRESS",
+  "recorded_at_utc": "2026-09-22T10:45:00Z",
+  "actor": "DIRECTOR",
+  "branch": "repair/v0-mvp8-cold-class-cache-r2",
+  "head_sha": "dc6e7fffa27d764ea09ded949d50b99a32fa4d9b",
+  "tree_sha": "8fc0044ff42ad502e6457593a185465af7d2a825",
+  "predicate": "ONE_CONNECTED_TWO_CLIENT_GAMEPLAY_LOOP",
+  "command": "MVP8-ONE-CONNECTED-TWO-CLIENT-GAMEPLAY-LOOP",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/verifications/MVP8-INDEPENDENT-REVIEW-DC6E7FFF-R1.v1.json",
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/verifications/MVP8-INDEPENDENT-VERIFICATION-DC6E7FFF-R1.v1.json",
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence/MVP8-LEAF-CLOSURE-DC6E7FFF-R1.v1.json"
+  ],
+  "summary": "Verifier raw evidence confirms one connected 12-round canonical gameplay lineage with two clients, six distinct phase1 processes including reconnect A, five disjoint phase2 processes after restart, and no duplicate truth owner."
+}

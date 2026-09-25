@@ -1,0 +1,87 @@
+{
+  "schema": "distributed_world_simulator.mvp5_independent_verification.v1",
+  "recorded_at_utc": "2026-09-16T08:15:30Z",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "predicate": "MVP_EXACTLY_ONCE_MATERIAL_OUTPUT",
+  "frozen_product": {
+    "branch": "feature/v0-mvp-playable-seamless-planet-r1",
+    "head_sha": "b78de4980328bb7b4d19e030bb7f0fa5d9976cd8",
+    "tree_sha": "0bfdd7595e10f007815bb666e62e7c5575172173"
+  },
+  "independent_verifier": {
+    "provider": "chatgpt-codex-connector[bot]",
+    "transport": "fresh GitHub pull-request review over evidence-only carrier",
+    "pull_request": 639,
+    "request_comment_id": 5694211671,
+    "review_summary_comment_id": 5680140884,
+    "reviewed_carrier_head": "8cd1623b193ff375c9e7d65d9d0bd20a2221f8ec",
+    "completed_at_utc": "2026-09-16T08:14:44.854489Z",
+    "status": "COMPLETED",
+    "new_inline_finding_count_since_final_request": 0,
+    "historical_preflight_finding_preserved": true,
+    "verdict": "VERIFIED"
+  },
+  "decision_derivation": {
+    "decision_rule_path": "config/control/harness/executions/E2026-09-09-V0-MVP-R1/supporting-evidence/MVP5-VERIFIER-DECISION-RULE-B78DE498-R1.v1.json",
+    "rule": "terminal_exact_carrier_review_completed_with_zero_findings -> VERIFIED",
+    "success_reaction_required": false,
+    "coordinator_invented_verdict": false,
+    "coordinator_serialized_external_terminal_result": true
+  },
+  "required_subgates": {
+    "MVP_EXACTLY_ONCE_MATERIAL_OUTPUT": "VERIFIED",
+    "LIVE_TOOL_GATED_DIG_TO_CANONICAL_OUTPUT": "VERIFIED",
+    "OUTPUT_EXACTLY_ONCE_UNDER_REPLAY": "VERIFIED",
+    "NO_SECOND_ITEM_IDENTITY_FOR_DUPLICATE_OPERATION": "VERIFIED"
+  },
+  "machine_evidence": {
+    "targeted_runtime_run": 34964304441,
+    "targeted_runtime_artifact": 10394302580,
+    "targeted_runtime_zip_sha256": "cb31317ba350b74c544704dc3741c362a7651b206eba5c662673254ff702746f",
+    "focused_assertions": 270,
+    "focused_failures": 0,
+    "failure_window_cases": 4,
+    "native_accounting_passed": true,
+    "graphical_five_process_passed": true,
+    "unchanged_mvp4_mvp3_passed": true,
+    "project_control_run": 34964308428,
+    "standard_pc0": "YELLOW_NON_RED",
+    "directional_pc0": "YELLOW_NON_RED",
+    "exact_world_core_run": 34967384187,
+    "exact_world_core_attempt": 2,
+    "exact_world_core_job": 104390100109,
+    "exact_world_core_artifact": 10400491187,
+    "exact_world_core_zip_sha256": "83d21a7ca4c4839b5c4f6295ce0e36065bee82b65f086721cf9772c81b95f250",
+    "exact_world_core_manifest_members": 1755,
+    "exact_world_core_manifest_mismatches": 0,
+    "world_core_declared_tests": 336,
+    "world_core_discovered_tests": 336,
+    "world_core_steps": 341,
+    "world_core_failed_steps": 0,
+    "thirty_minute_soak_seconds": 1804.028,
+    "main_scene_cli_all_passed": true
+  },
+  "historical_failure_integrity": {
+    "attempt_1_failure_preserved": true,
+    "attempt_1_artifact": 10396726706,
+    "attempt_1_error": "ITEM_INTERACTION_OUT_OF_RANGE",
+    "standalone_p2_repetitions": 3,
+    "standalone_p2_passes": 3,
+    "causal_race_proven": false,
+    "historical_failure_claimed_fixed": false
+  },
+  "terminal_world_core_locator": "config/control/harness/executions/E2026-09-09-V0-MVP-R1/supporting-evidence/MVP5-WORLD-CORE-B78DE498-R1.v1.json",
+  "reviewed_carrier_project_control": {
+    "run_id": 35072236020,
+    "conclusion": "success"
+  },
+  "closure_boundary": {
+    "mvp5_leaf_verified": true,
+    "parent_work_order_state": "IN_PROGRESS",
+    "whole_mvp_acceptance": false,
+    "runtime_merge_authorized": false,
+    "main_merge_authorized": false,
+    "next_product_predicate": "MVP_ITEM_CONSTRUCTION_PERSISTENCE_CONVERGENCE"
+  }
+}

@@ -1,0 +1,5 @@
+MVP6 WORLD/CORE EXACT R2
+
+Purpose: freeze the post-repair runtime and require the same exact subject to pass graphical five-process first, then the full unchanged canonical world/core regression.
+
+This marker changes no runtime, physics, Construction, Item Graph, transport, persistence, test threshold, or canonical world/core behavior.

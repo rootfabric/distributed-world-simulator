@@ -1,0 +1,21 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-09-09-V0-MVP-R1-V0-MVP-R1-WO-001-0045-MVP8-INDEPENDENT-VERIFIER-EVIDENCE-GAP",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "sequence": 45,
+  "event_type": "EVIDENCE_GAP",
+  "work_state": "IN_PROGRESS",
+  "recorded_at_utc": "2026-09-21T04:07:00Z",
+  "actor": "VERIFIER",
+  "branch": "feature/v0-mvp-playable-seamless-planet-r1",
+  "head_sha": "90bc1026f0f5749492107191233330f87c8c70df",
+  "predicate": "MVP8_INDEPENDENT_VERIFIER",
+  "command": "RECORD_FRESH_WINDOWS_VERIFIER_EVIDENCE_GAP",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/verifications/MVP8-INDEPENDENT-VERIFICATION-90BC1026-R1.v1.json",
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence/MVP8-FULL-WORLD-CORE-90BC1026-R1.v1.json"
+  ],
+  "summary": "Fresh Independent Windows Verifier found no product defect and independently passed the exact Windows MVP8 runtime gate, but issued EVIDENCE_GAP because independent Windows full world/core could not be run during documented host-level multi-process ENet degradation. Linux full world/core is now green. MVP8 leaf remains open pending one healthy-window independent Windows full world/core verification and a resulting VERIFIED verdict."
+}

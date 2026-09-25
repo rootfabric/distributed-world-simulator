@@ -1,0 +1,20 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-09-09-V0-MVP-R1-V0-MVP-R1-WO-001-0009",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "sequence": 9,
+  "event_type": "RECOVERY_RESUMED",
+  "work_state": "DISPATCHED",
+  "recorded_at_utc": "2026-09-13T02:04:43Z",
+  "actor": "INTEGRATOR",
+  "branch": "feature/v0-mvp-playable-seamless-planet-r1",
+  "head_sha": "7dfc68ab5a1e90254a1b7039807f275b5da04eef",
+  "predicate": "MVP3_CONTINUATION_EPOCH_AUDIT_NON_RED",
+  "command": "MVP_ACT0_POST_MERGE_EPOCH_AUDIT",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/audits/MVP3-CONTINUATION-AUDIT-7DFC68AB-R2.v1.json"
+  ],
+  "summary": "Fresh exact canonical-main audit is NON_RED and finds no changed MVP3 watched runtime dependency after the previous audit. Resume the existing bounded Work Order without claiming MVP3 verification, runtime merge or product acceptance."
+}

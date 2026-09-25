@@ -1,0 +1,23 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-09-09-V0-MVP-R1-V0-MVP-R1-WO-001-0058-MVP8-REPEATED-MOVE-SEAM-DIG-ITEM-BUILD",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "sequence": 58,
+  "event_type": "PREDICATE_VERIFIED",
+  "work_state": "IN_PROGRESS",
+  "recorded_at_utc": "2026-09-22T10:46:00Z",
+  "actor": "DIRECTOR",
+  "branch": "repair/v0-mvp8-cold-class-cache-r2",
+  "head_sha": "dc6e7fffa27d764ea09ded949d50b99a32fa4d9b",
+  "tree_sha": "8fc0044ff42ad502e6457593a185465af7d2a825",
+  "predicate": "REPEATED_MOVE_SEAM_DIG_ITEM_BUILD_OPERATIONS",
+  "command": "MVP8-REPEATED-MOVE-SEAM-DIG-ITEM-BUILD",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/verifications/MVP8-INDEPENDENT-REVIEW-DC6E7FFF-R1.v1.json",
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/verifications/MVP8-INDEPENDENT-VERIFICATION-DC6E7FFF-R1.v1.json",
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence/MVP8-LEAF-CLOSURE-DC6E7FFF-R1.v1.json"
+  ],
+  "summary": "Verifier binds contiguous rounds 0..11 with repeated movement and seam traffic plus DIG=4, ITEM=4, BUILD_ADD=2, BUILD_REMOVE=2, fixed_receipts=48 and seam_crossings=10 on one canonical lineage."
+}

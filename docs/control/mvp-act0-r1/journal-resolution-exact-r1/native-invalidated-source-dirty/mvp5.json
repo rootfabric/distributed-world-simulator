@@ -1,0 +1,1973 @@
+{
+  "assertions": 270,
+  "cases": [
+    {
+      "actor": "a",
+      "failure_window_graph": {
+        "authority_epoch": 1,
+        "authority_owner_id": "authority/a",
+        "checksum": "f7c6614a44c508aa810db0abef2ebcd0e5e2c2a445668ed3af5713998ff65ca3",
+        "containers": [
+          {
+            "capacity": 8,
+            "container_id": "container/shared/crate/1",
+            "owner_item_id": "item/shared/crate/1",
+            "slots": []
+          }
+        ],
+        "inventories": {
+          "a": {
+            "hotbar": [],
+            "inventory": [
+              "item/server-output/4fcc9377e4e568da05f97b5561bd5062",
+              "item/server-output/46129794e113c858be5fd532e13e0aa3"
+            ],
+            "selected_hotbar_index": 0
+          },
+          "b": {
+            "hotbar": [],
+            "inventory": [
+              "item/server-output/d8777a375c6602ba76f73b0ff85ff1a0"
+            ],
+            "selected_hotbar_index": 0
+          }
+        },
+        "items": [
+          {
+            "definition_id": "item/ore",
+            "item_id": "item/server-output/46129794e113c858be5fd532e13e0aa3",
+            "location": {
+              "kind": "INVENTORY",
+              "player_id": "a",
+              "slot_index": 1
+            },
+            "mounted": false,
+            "quantity": 24312
+          },
+          {
+            "definition_id": "item/tool/mining",
+            "equipment": {
+              "player_id": "a",
+              "slot_id": "tool/main"
+            },
+            "item_id": "item/server-output/4fcc9377e4e568da05f97b5561bd5062",
+            "location": {
+              "kind": "INVENTORY",
+              "player_id": "a",
+              "slot_index": 0
+            },
+            "mounted": false,
+            "quantity": 1
+          },
+          {
+            "definition_id": "item/tool/mining",
+            "equipment": {
+              "player_id": "b",
+              "slot_id": "tool/main"
+            },
+            "item_id": "item/server-output/d8777a375c6602ba76f73b0ff85ff1a0",
+            "location": {
+              "kind": "INVENTORY",
+              "player_id": "b",
+              "slot_index": 0
+            },
+            "mounted": false,
+            "quantity": 1
+          },
+          {
+            "definition_id": "item/beacon",
+            "item_id": "item/shared/beacon/1",
+            "location": {
+              "kind": "WORLD"
+            },
+            "mounted": false,
+            "quantity": 1
+          },
+          {
+            "definition_id": "item/crate",
+            "item_id": "item/shared/crate/1",
+            "location": {
+              "kind": "WORLD"
+            },
+            "mounted": false,
+            "quantity": 1
+          },
+          {
+            "definition_id": "item/ore",
+            "item_id": "item/shared/ore/1",
+            "location": {
+              "kind": "WORLD"
+            },
+            "mounted": false,
+            "quantity": 8
+          }
+        ],
+        "mounts": [
+          {
+            "item_id": "",
+            "mount_id": "mount/shared/socket/1"
+          }
+        ],
+        "open_containers": {},
+        "revision": 7,
+        "schema": "planet_simulator.canonical_multiplayer_item_graph_snapshot.v1",
+        "tick": 7
+      },
+      "final_graph": {
+        "authority_epoch": 1,
+        "authority_owner_id": "authority/a",
+        "checksum": "f7c6614a44c508aa810db0abef2ebcd0e5e2c2a445668ed3af5713998ff65ca3",
+        "containers": [
+          {
+            "capacity": 8,
+            "container_id": "container/shared/crate/1",
+            "owner_item_id": "item/shared/crate/1",
+            "slots": []
+          }
+        ],
+        "inventories": {
+          "a": {
+            "hotbar": [],
+            "inventory": [
+              "item/server-output/4fcc9377e4e568da05f97b5561bd5062",
+              "item/server-output/46129794e113c858be5fd532e13e0aa3"
+            ],
+            "selected_hotbar_index": 0
+          },
+          "b": {
+            "hotbar": [],
+            "inventory": [
+              "item/server-output/d8777a375c6602ba76f73b0ff85ff1a0"
+            ],
+            "selected_hotbar_index": 0
+          }
+        },
+        "items": [
+          {
+            "definition_id": "item/ore",
+            "item_id": "item/server-output/46129794e113c858be5fd532e13e0aa3",
+            "location": {
+              "kind": "INVENTORY",
+              "player_id": "a",
+              "slot_index": 1
+            },
+            "mounted": false,
+            "quantity": 24312
+          },
+          {
+            "definition_id": "item/tool/mining",
+            "equipment": {
+              "player_id": "a",
+              "slot_id": "tool/main"
+            },
+            "item_id": "item/server-output/4fcc9377e4e568da05f97b5561bd5062",
+            "location": {
+              "kind": "INVENTORY",
+              "player_id": "a",
+              "slot_index": 0
+            },
+            "mounted": false,
+            "quantity": 1
+          },
+          {
+            "definition_id": "item/tool/mining",
+            "equipment": {
+              "player_id": "b",
+              "slot_id": "tool/main"
+            },
+            "item_id": "item/server-output/d8777a375c6602ba76f73b0ff85ff1a0",
+            "location": {
+              "kind": "INVENTORY",
+              "player_id": "b",
+              "slot_index": 0
+            },
+            "mounted": false,
+            "quantity": 1
+          },
+          {
+            "definition_id": "item/beacon",
+            "item_id": "item/shared/beacon/1",
+            "location": {
+              "kind": "WORLD"
+            },
+            "mounted": false,
+            "quantity": 1
+          },
+          {
+            "definition_id": "item/crate",
+            "item_id": "item/shared/crate/1",
+            "location": {
+              "kind": "WORLD"
+            },
+            "mounted": false,
+            "quantity": 1
+          },
+          {
+            "definition_id": "item/ore",
+            "item_id": "item/shared/ore/1",
+            "location": {
+              "kind": "WORLD"
+            },
+            "mounted": false,
+            "quantity": 8
+          }
+        ],
+        "mounts": [
+          {
+            "item_id": "",
+            "mount_id": "mount/shared/socket/1"
+          }
+        ],
+        "open_containers": {},
+        "revision": 7,
+        "schema": "planet_simulator.canonical_multiplayer_item_graph_snapshot.v1",
+        "tick": 7
+      },
+      "initial_graph": {
+        "authority_epoch": 1,
+        "authority_owner_id": "authority/a",
+        "checksum": "d13c9207006009d208cbe393ffd1c23f48596687e257d247a26b9448ddd8645d",
+        "containers": [
+          {
+            "capacity": 8,
+            "container_id": "container/shared/crate/1",
+            "owner_item_id": "item/shared/crate/1",
+            "slots": []
+          }
+        ],
+        "inventories": {
+          "a": {
+            "hotbar": [],
+            "inventory": [
+              "item/server-output/4fcc9377e4e568da05f97b5561bd5062"
+            ],
+            "selected_hotbar_index": 0
+          },
+          "b": {
+            "hotbar": [],
+            "inventory": [
+              "item/server-output/d8777a375c6602ba76f73b0ff85ff1a0"
+            ],
+            "selected_hotbar_index": 0
+          }
+        },
+        "items": [
+          {
+            "definition_id": "item/tool/mining",
+            "equipment": {
+              "player_id": "a",
+              "slot_id": "tool/main"
+            },
+            "item_id": "item/server-output/4fcc9377e4e568da05f97b5561bd5062",
+            "location": {
+              "kind": "INVENTORY",
+              "player_id": "a",
+              "slot_index": 0
+            },
+            "mounted": false,
+            "quantity": 1
+          },
+          {
+            "definition_id": "item/tool/mining",
+            "equipment": {
+              "player_id": "b",
+              "slot_id": "tool/main"
+            },
+            "item_id": "item/server-output/d8777a375c6602ba76f73b0ff85ff1a0",
+            "location": {
+              "kind": "INVENTORY",
+              "player_id": "b",
+              "slot_index": 0
+            },
+            "mounted": false,
+            "quantity": 1
+          },
+          {
+            "definition_id": "item/beacon",
+            "item_id": "item/shared/beacon/1",
+            "location": {
+              "kind": "WORLD"
+            },
+            "mounted": false,
+            "quantity": 1
+          },
+          {
+            "definition_id": "item/crate",
+            "item_id": "item/shared/crate/1",
+            "location": {
+              "kind": "WORLD"
+            },
+            "mounted": false,
+            "quantity": 1
+          },
+          {
+            "definition_id": "item/ore",
+            "item_id": "item/shared/ore/1",
+            "location": {
+              "kind": "WORLD"
+            },
+            "mounted": false,
+            "quantity": 8
+          }
+        ],
+        "mounts": [
+          {
+            "item_id": "",
+            "mount_id": "mount/shared/socket/1"
+          }
+        ],
+        "open_containers": {},
+        "revision": 6,
+        "schema": "planet_simulator.canonical_multiplayer_item_graph_snapshot.v1",
+        "tick": 6
+      },
+      "material_view": {
+        "details": {
+          "authority_epoch": 1,
+          "authority_id": "authority/a",
+          "canonical_state_owned": false,
+          "item_graph_checksum": "f7c6614a44c508aa810db0abef2ebcd0e5e2c2a445668ed3af5713998ff65ca3",
+          "item_graph_revision": 7,
+          "item_graph_tick": 7,
+          "item_owner": "CANONICAL_ITEM_GRAPH",
+          "items": [
+            {
+              "definition_id": "item/ore",
+              "item_id": "item/server-output/46129794e113c858be5fd532e13e0aa3",
+              "player_id": "a",
+              "quantity": 24312,
+              "slot_index": 1
+            }
+          ],
+          "material_digest": "5c10867c6f6077f870d7b70d0131c0c16d4631b696c8658388f7fd4d6ac16ee6",
+          "matter_store_hash": "e1646dc59f08cfabe287ff414f633b57519bdd2df8df494b3b1e235ee8a46928",
+          "matter_stream_sequence": 1,
+          "schema": "distributed_world_simulator.mvp5_material_projection.v1",
+          "scope": "SHARED_A_B_INVENTORIES_SINGLE_REGION",
+          "totals": {
+            "a": 24312,
+            "b": 0
+          }
+        },
+        "error_code": "",
+        "success": true
+      },
+      "mode": "normal",
+      "port_apply_calls": 5,
+      "port_successful_inner_calls": 5,
+      "receipt": {
+        "batch_checksum": "0167eefeb358557b9d68f607b289c9072268f04d3d28fb5835eafe6abde4640c",
+        "batch_id": "matter-batch/dfa0872c9291e1d3644e7cdf0c693966997fac8548b53e9c43d0500047ca853e",
+        "conservation_error_kg": 0.0,
+        "current_item_graph_revision": 7,
+        "current_item_graph_tick": 7,
+        "delivery_status": "DELIVERABLE",
+        "issued_item_graph_revision": 7,
+        "issued_item_graph_tick": 7,
+        "item_graph_replay": false,
+        "kg_per_item_unit": 1.0,
+        "logical_player_id": "a",
+        "mapped_components": [
+          {
+            "mass_fraction": 1.0,
+            "material_id": "matter/regolith-loose",
+            "output_definition_id": "item/ore"
+          }
+        ],
+        "matter_replay": false,
+        "output_created_this_call": true,
+        "output_definition_id": "item/ore",
+        "output_item_id": "item/server-output/46129794e113c858be5fd532e13e0aa3",
+        "output_operation_id": "operation/p7-3/item-output/15dd497dd1147e3dc6faa450e2125be4",
+        "output_quantity": 24312,
+        "policy_id": "p7/matter-material-delivery/r1",
+        "receipt_source": "MW4_BATCH_AND_CANONICAL_ITEM_GRAPH_REPLAY_LOOKUP",
+        "receipt_store_owned": false,
+        "represented_mass_kg": 24312.0,
+        "residual_mass_kg": 0.3965291971107945,
+        "source_id": "matter-batch/dfa0872c9291e1d3644e7cdf0c693966997fac8548b53e9c43d0500047ca853e/0167eefeb358557b9d68f607b289c9072268f04d3d28fb5835eafe6abde4640c",
+        "source_operation_id": "operation/mvp4/a/mvp5-normal",
+        "total_mass_kg": 24312.39652919711
+      },
+      "retries": [
+        {
+          "batch_checksum": "0167eefeb358557b9d68f607b289c9072268f04d3d28fb5835eafe6abde4640c",
+          "batch_id": "matter-batch/dfa0872c9291e1d3644e7cdf0c693966997fac8548b53e9c43d0500047ca853e",
+          "conservation_error_kg": 0.0,
+          "current_item_graph_revision": 7,
+          "current_item_graph_tick": 7,
+          "delivery_status": "DELIVERABLE",
+          "issued_item_graph_revision": 7,
+          "issued_item_graph_tick": 7,
+          "item_graph_replay": true,
+          "kg_per_item_unit": 1.0,
+          "logical_player_id": "a",
+          "mapped_components": [
+            {
+              "mass_fraction": 1.0,
+              "material_id": "matter/regolith-loose",
+              "output_definition_id": "item/ore"
+            }
+          ],
+          "matter_replay": true,
+          "output_created_this_call": false,
+          "output_definition_id": "item/ore",
+          "output_item_id": "item/server-output/46129794e113c858be5fd532e13e0aa3",
+          "output_operation_id": "operation/p7-3/item-output/15dd497dd1147e3dc6faa450e2125be4",
+          "output_quantity": 24312,
+          "policy_id": "p7/matter-material-delivery/r1",
+          "receipt_source": "MW4_BATCH_AND_CANONICAL_ITEM_GRAPH_REPLAY_LOOKUP",
+          "receipt_store_owned": false,
+          "represented_mass_kg": 24312.0,
+          "residual_mass_kg": 0.3965291971107945,
+          "source_id": "matter-batch/dfa0872c9291e1d3644e7cdf0c693966997fac8548b53e9c43d0500047ca853e/0167eefeb358557b9d68f607b289c9072268f04d3d28fb5835eafe6abde4640c",
+          "source_operation_id": "operation/mvp4/a/mvp5-normal",
+          "total_mass_kg": 24312.39652919711
+        },
+        {
+          "batch_checksum": "0167eefeb358557b9d68f607b289c9072268f04d3d28fb5835eafe6abde4640c",
+          "batch_id": "matter-batch/dfa0872c9291e1d3644e7cdf0c693966997fac8548b53e9c43d0500047ca853e",
+          "conservation_error_kg": 0.0,
+          "current_item_graph_revision": 7,
+          "current_item_graph_tick": 7,
+          "delivery_status": "DELIVERABLE",
+          "issued_item_graph_revision": 7,
+          "issued_item_graph_tick": 7,
+          "item_graph_replay": true,
+          "kg_per_item_unit": 1.0,
+          "logical_player_id": "a",
+          "mapped_components": [
+            {
+              "mass_fraction": 1.0,
+              "material_id": "matter/regolith-loose",
+              "output_definition_id": "item/ore"
+            }
+          ],
+          "matter_replay": true,
+          "output_created_this_call": false,
+          "output_definition_id": "item/ore",
+          "output_item_id": "item/server-output/46129794e113c858be5fd532e13e0aa3",
+          "output_operation_id": "operation/p7-3/item-output/15dd497dd1147e3dc6faa450e2125be4",
+          "output_quantity": 24312,
+          "policy_id": "p7/matter-material-delivery/r1",
+          "receipt_source": "MW4_BATCH_AND_CANONICAL_ITEM_GRAPH_REPLAY_LOOKUP",
+          "receipt_store_owned": false,
+          "represented_mass_kg": 24312.0,
+          "residual_mass_kg": 0.3965291971107945,
+          "source_id": "matter-batch/dfa0872c9291e1d3644e7cdf0c693966997fac8548b53e9c43d0500047ca853e/0167eefeb358557b9d68f607b289c9072268f04d3d28fb5835eafe6abde4640c",
+          "source_operation_id": "operation/mvp4/a/mvp5-normal",
+          "total_mass_kg": 24312.39652919711
+        },
+        {
+          "batch_checksum": "0167eefeb358557b9d68f607b289c9072268f04d3d28fb5835eafe6abde4640c",
+          "batch_id": "matter-batch/dfa0872c9291e1d3644e7cdf0c693966997fac8548b53e9c43d0500047ca853e",
+          "conservation_error_kg": 0.0,
+          "current_item_graph_revision": 7,
+          "current_item_graph_tick": 7,
+          "delivery_status": "DELIVERABLE",
+          "issued_item_graph_revision": 7,
+          "issued_item_graph_tick": 7,
+          "item_graph_replay": true,
+          "kg_per_item_unit": 1.0,
+          "logical_player_id": "a",
+          "mapped_components": [
+            {
+              "mass_fraction": 1.0,
+              "material_id": "matter/regolith-loose",
+              "output_definition_id": "item/ore"
+            }
+          ],
+          "matter_replay": true,
+          "output_created_this_call": false,
+          "output_definition_id": "item/ore",
+          "output_item_id": "item/server-output/46129794e113c858be5fd532e13e0aa3",
+          "output_operation_id": "operation/p7-3/item-output/15dd497dd1147e3dc6faa450e2125be4",
+          "output_quantity": 24312,
+          "policy_id": "p7/matter-material-delivery/r1",
+          "receipt_source": "MW4_BATCH_AND_CANONICAL_ITEM_GRAPH_REPLAY_LOOKUP",
+          "receipt_store_owned": false,
+          "represented_mass_kg": 24312.0,
+          "residual_mass_kg": 0.3965291971107945,
+          "source_id": "matter-batch/dfa0872c9291e1d3644e7cdf0c693966997fac8548b53e9c43d0500047ca853e/0167eefeb358557b9d68f607b289c9072268f04d3d28fb5835eafe6abde4640c",
+          "source_operation_id": "operation/mvp4/a/mvp5-normal",
+          "total_mass_kg": 24312.39652919711
+        }
+      ]
+    },
+    {
+      "actor": "a",
+      "failure_window_graph": {
+        "authority_epoch": 1,
+        "authority_owner_id": "authority/a",
+        "checksum": "d13c9207006009d208cbe393ffd1c23f48596687e257d247a26b9448ddd8645d",
+        "containers": [
+          {
+            "capacity": 8,
+            "container_id": "container/shared/crate/1",
+            "owner_item_id": "item/shared/crate/1",
+            "slots": []
+          }
+        ],
+        "inventories": {
+          "a": {
+            "hotbar": [],
+            "inventory": [
+              "item/server-output/4fcc9377e4e568da05f97b5561bd5062"
+            ],
+            "selected_hotbar_index": 0
+          },
+          "b": {
+            "hotbar": [],
+            "inventory": [
+              "item/server-output/d8777a375c6602ba76f73b0ff85ff1a0"
+            ],
+            "selected_hotbar_index": 0
+          }
+        },
+        "items": [
+          {
+            "definition_id": "item/tool/mining",
+            "equipment": {
+              "player_id": "a",
+              "slot_id": "tool/main"
+            },
+            "item_id": "item/server-output/4fcc9377e4e568da05f97b5561bd5062",
+            "location": {
+              "kind": "INVENTORY",
+              "player_id": "a",
+              "slot_index": 0
+            },
+            "mounted": false,
+            "quantity": 1
+          },
+          {
+            "definition_id": "item/tool/mining",
+            "equipment": {
+              "player_id": "b",
+              "slot_id": "tool/main"
+            },
+            "item_id": "item/server-output/d8777a375c6602ba76f73b0ff85ff1a0",
+            "location": {
+              "kind": "INVENTORY",
+              "player_id": "b",
+              "slot_index": 0
+            },
+            "mounted": false,
+            "quantity": 1
+          },
+          {
+            "definition_id": "item/beacon",
+            "item_id": "item/shared/beacon/1",
+            "location": {
+              "kind": "WORLD"
+            },
+            "mounted": false,
+            "quantity": 1
+          },
+          {
+            "definition_id": "item/crate",
+            "item_id": "item/shared/crate/1",
+            "location": {
+              "kind": "WORLD"
+            },
+            "mounted": false,
+            "quantity": 1
+          },
+          {
+            "definition_id": "item/ore",
+            "item_id": "item/shared/ore/1",
+            "location": {
+              "kind": "WORLD"
+            },
+            "mounted": false,
+            "quantity": 8
+          }
+        ],
+        "mounts": [
+          {
+            "item_id": "",
+            "mount_id": "mount/shared/socket/1"
+          }
+        ],
+        "open_containers": {},
+        "revision": 6,
+        "schema": "planet_simulator.canonical_multiplayer_item_graph_snapshot.v1",
+        "tick": 6
+      },
+      "final_graph": {
+        "authority_epoch": 1,
+        "authority_owner_id": "authority/a",
+        "checksum": "7f0b5c02894b664f2ea1fa8a6b0e8bc5cdc3184d8827a51f30d12772a98e3468",
+        "containers": [
+          {
+            "capacity": 8,
+            "container_id": "container/shared/crate/1",
+            "owner_item_id": "item/shared/crate/1",
+            "slots": []
+          }
+        ],
+        "inventories": {
+          "a": {
+            "hotbar": [],
+            "inventory": [
+              "item/server-output/4fcc9377e4e568da05f97b5561bd5062",
+              "item/server-output/89f90a75b3ca2cbdc4e6ebb990848de8"
+            ],
+            "selected_hotbar_index": 0
+          },
+          "b": {
+            "hotbar": [],
+            "inventory": [
+              "item/server-output/d8777a375c6602ba76f73b0ff85ff1a0"
+            ],
+            "selected_hotbar_index": 0
+          }
+        },
+        "items": [
+          {
+            "definition_id": "item/tool/mining",
+            "equipment": {
+              "player_id": "a",
+              "slot_id": "tool/main"
+            },
+            "item_id": "item/server-output/4fcc9377e4e568da05f97b5561bd5062",
+            "location": {
+              "kind": "INVENTORY",
+              "player_id": "a",
+              "slot_index": 0
+            },
+            "mounted": false,
+            "quantity": 1
+          },
+          {
+            "definition_id": "item/ore",
+            "item_id": "item/server-output/89f90a75b3ca2cbdc4e6ebb990848de8",
+            "location": {
+              "kind": "INVENTORY",
+              "player_id": "a",
+              "slot_index": 1
+            },
+            "mounted": false,
+            "quantity": 24312
+          },
+          {
+            "definition_id": "item/tool/mining",
+            "equipment": {
+              "player_id": "b",
+              "slot_id": "tool/main"
+            },
+            "item_id": "item/server-output/d8777a375c6602ba76f73b0ff85ff1a0",
+            "location": {
+              "kind": "INVENTORY",
+              "player_id": "b",
+              "slot_index": 0
+            },
+            "mounted": false,
+            "quantity": 1
+          },
+          {
+            "definition_id": "item/beacon",
+            "item_id": "item/shared/beacon/1",
+            "location": {
+              "kind": "WORLD"
+            },
+            "mounted": false,
+            "quantity": 1
+          },
+          {
+            "definition_id": "item/crate",
+            "item_id": "item/shared/crate/1",
+            "location": {
+              "kind": "WORLD"
+            },
+            "mounted": false,
+            "quantity": 1
+          },
+          {
+            "definition_id": "item/ore",
+            "item_id": "item/shared/ore/1",
+            "location": {
+              "kind": "WORLD"
+            },
+            "mounted": false,
+            "quantity": 8
+          }
+        ],
+        "mounts": [
+          {
+            "item_id": "",
+            "mount_id": "mount/shared/socket/1"
+          }
+        ],
+        "open_containers": {},
+        "revision": 7,
+        "schema": "planet_simulator.canonical_multiplayer_item_graph_snapshot.v1",
+        "tick": 7
+      },
+      "initial_graph": {
+        "authority_epoch": 1,
+        "authority_owner_id": "authority/a",
+        "checksum": "d13c9207006009d208cbe393ffd1c23f48596687e257d247a26b9448ddd8645d",
+        "containers": [
+          {
+            "capacity": 8,
+            "container_id": "container/shared/crate/1",
+            "owner_item_id": "item/shared/crate/1",
+            "slots": []
+          }
+        ],
+        "inventories": {
+          "a": {
+            "hotbar": [],
+            "inventory": [
+              "item/server-output/4fcc9377e4e568da05f97b5561bd5062"
+            ],
+            "selected_hotbar_index": 0
+          },
+          "b": {
+            "hotbar": [],
+            "inventory": [
+              "item/server-output/d8777a375c6602ba76f73b0ff85ff1a0"
+            ],
+            "selected_hotbar_index": 0
+          }
+        },
+        "items": [
+          {
+            "definition_id": "item/tool/mining",
+            "equipment": {
+              "player_id": "a",
+              "slot_id": "tool/main"
+            },
+            "item_id": "item/server-output/4fcc9377e4e568da05f97b5561bd5062",
+            "location": {
+              "kind": "INVENTORY",
+              "player_id": "a",
+              "slot_index": 0
+            },
+            "mounted": false,
+            "quantity": 1
+          },
+          {
+            "definition_id": "item/tool/mining",
+            "equipment": {
+              "player_id": "b",
+              "slot_id": "tool/main"
+            },
+            "item_id": "item/server-output/d8777a375c6602ba76f73b0ff85ff1a0",
+            "location": {
+              "kind": "INVENTORY",
+              "player_id": "b",
+              "slot_index": 0
+            },
+            "mounted": false,
+            "quantity": 1
+          },
+          {
+            "definition_id": "item/beacon",
+            "item_id": "item/shared/beacon/1",
+            "location": {
+              "kind": "WORLD"
+            },
+            "mounted": false,
+            "quantity": 1
+          },
+          {
+            "definition_id": "item/crate",
+            "item_id": "item/shared/crate/1",
+            "location": {
+              "kind": "WORLD"
+            },
+            "mounted": false,
+            "quantity": 1
+          },
+          {
+            "definition_id": "item/ore",
+            "item_id": "item/shared/ore/1",
+            "location": {
+              "kind": "WORLD"
+            },
+            "mounted": false,
+            "quantity": 8
+          }
+        ],
+        "mounts": [
+          {
+            "item_id": "",
+            "mount_id": "mount/shared/socket/1"
+          }
+        ],
+        "open_containers": {},
+        "revision": 6,
+        "schema": "planet_simulator.canonical_multiplayer_item_graph_snapshot.v1",
+        "tick": 6
+      },
+      "material_view": {
+        "details": {
+          "authority_epoch": 1,
+          "authority_id": "authority/a",
+          "canonical_state_owned": false,
+          "item_graph_checksum": "7f0b5c02894b664f2ea1fa8a6b0e8bc5cdc3184d8827a51f30d12772a98e3468",
+          "item_graph_revision": 7,
+          "item_graph_tick": 7,
+          "item_owner": "CANONICAL_ITEM_GRAPH",
+          "items": [
+            {
+              "definition_id": "item/ore",
+              "item_id": "item/server-output/89f90a75b3ca2cbdc4e6ebb990848de8",
+              "player_id": "a",
+              "quantity": 24312,
+              "slot_index": 1
+            }
+          ],
+          "material_digest": "0381c0792bd23463f90b89ada4068bf0ceeb554f6b186917482f413b559d8786",
+          "matter_store_hash": "e1646dc59f08cfabe287ff414f633b57519bdd2df8df494b3b1e235ee8a46928",
+          "matter_stream_sequence": 1,
+          "schema": "distributed_world_simulator.mvp5_material_projection.v1",
+          "scope": "SHARED_A_B_INVENTORIES_SINGLE_REGION",
+          "totals": {
+            "a": 24312,
+            "b": 0
+          }
+        },
+        "error_code": "",
+        "success": true
+      },
+      "mode": "before_apply",
+      "port_apply_calls": 6,
+      "port_successful_inner_calls": 5,
+      "receipt": {
+        "batch_checksum": "557e71be8962d99fa93d687c1d3a3642b45953b9d8a54fbe598be6adde68d562",
+        "batch_id": "matter-batch/fe590e5bd58b76e33ef21b2ce8a5903f042a52e2fcd339931191165f8f246fb3",
+        "conservation_error_kg": 0.0,
+        "current_item_graph_revision": 7,
+        "current_item_graph_tick": 7,
+        "delivery_status": "DELIVERABLE",
+        "issued_item_graph_revision": 7,
+        "issued_item_graph_tick": 7,
+        "item_graph_replay": false,
+        "kg_per_item_unit": 1.0,
+        "logical_player_id": "a",
+        "mapped_components": [
+          {
+            "mass_fraction": 1.0,
+            "material_id": "matter/regolith-loose",
+            "output_definition_id": "item/ore"
+          }
+        ],
+        "matter_replay": true,
+        "output_created_this_call": true,
+        "output_definition_id": "item/ore",
+        "output_item_id": "item/server-output/89f90a75b3ca2cbdc4e6ebb990848de8",
+        "output_operation_id": "operation/p7-3/item-output/e99cf815eea82bb2eda0c05a76b98e88",
+        "output_quantity": 24312,
+        "policy_id": "p7/matter-material-delivery/r1",
+        "receipt_source": "MW4_BATCH_AND_CANONICAL_ITEM_GRAPH_REPLAY_LOOKUP",
+        "receipt_store_owned": false,
+        "represented_mass_kg": 24312.0,
+        "residual_mass_kg": 0.3965291971107945,
+        "source_id": "matter-batch/fe590e5bd58b76e33ef21b2ce8a5903f042a52e2fcd339931191165f8f246fb3/557e71be8962d99fa93d687c1d3a3642b45953b9d8a54fbe598be6adde68d562",
+        "source_operation_id": "operation/mvp4/a/mvp5-before_apply",
+        "total_mass_kg": 24312.39652919711
+      },
+      "retries": [
+        {
+          "batch_checksum": "557e71be8962d99fa93d687c1d3a3642b45953b9d8a54fbe598be6adde68d562",
+          "batch_id": "matter-batch/fe590e5bd58b76e33ef21b2ce8a5903f042a52e2fcd339931191165f8f246fb3",
+          "conservation_error_kg": 0.0,
+          "current_item_graph_revision": 7,
+          "current_item_graph_tick": 7,
+          "delivery_status": "DELIVERABLE",
+          "issued_item_graph_revision": 7,
+          "issued_item_graph_tick": 7,
+          "item_graph_replay": true,
+          "kg_per_item_unit": 1.0,
+          "logical_player_id": "a",
+          "mapped_components": [
+            {
+              "mass_fraction": 1.0,
+              "material_id": "matter/regolith-loose",
+              "output_definition_id": "item/ore"
+            }
+          ],
+          "matter_replay": true,
+          "output_created_this_call": false,
+          "output_definition_id": "item/ore",
+          "output_item_id": "item/server-output/89f90a75b3ca2cbdc4e6ebb990848de8",
+          "output_operation_id": "operation/p7-3/item-output/e99cf815eea82bb2eda0c05a76b98e88",
+          "output_quantity": 24312,
+          "policy_id": "p7/matter-material-delivery/r1",
+          "receipt_source": "MW4_BATCH_AND_CANONICAL_ITEM_GRAPH_REPLAY_LOOKUP",
+          "receipt_store_owned": false,
+          "represented_mass_kg": 24312.0,
+          "residual_mass_kg": 0.3965291971107945,
+          "source_id": "matter-batch/fe590e5bd58b76e33ef21b2ce8a5903f042a52e2fcd339931191165f8f246fb3/557e71be8962d99fa93d687c1d3a3642b45953b9d8a54fbe598be6adde68d562",
+          "source_operation_id": "operation/mvp4/a/mvp5-before_apply",
+          "total_mass_kg": 24312.39652919711
+        },
+        {
+          "batch_checksum": "557e71be8962d99fa93d687c1d3a3642b45953b9d8a54fbe598be6adde68d562",
+          "batch_id": "matter-batch/fe590e5bd58b76e33ef21b2ce8a5903f042a52e2fcd339931191165f8f246fb3",
+          "conservation_error_kg": 0.0,
+          "current_item_graph_revision": 7,
+          "current_item_graph_tick": 7,
+          "delivery_status": "DELIVERABLE",
+          "issued_item_graph_revision": 7,
+          "issued_item_graph_tick": 7,
+          "item_graph_replay": true,
+          "kg_per_item_unit": 1.0,
+          "logical_player_id": "a",
+          "mapped_components": [
+            {
+              "mass_fraction": 1.0,
+              "material_id": "matter/regolith-loose",
+              "output_definition_id": "item/ore"
+            }
+          ],
+          "matter_replay": true,
+          "output_created_this_call": false,
+          "output_definition_id": "item/ore",
+          "output_item_id": "item/server-output/89f90a75b3ca2cbdc4e6ebb990848de8",
+          "output_operation_id": "operation/p7-3/item-output/e99cf815eea82bb2eda0c05a76b98e88",
+          "output_quantity": 24312,
+          "policy_id": "p7/matter-material-delivery/r1",
+          "receipt_source": "MW4_BATCH_AND_CANONICAL_ITEM_GRAPH_REPLAY_LOOKUP",
+          "receipt_store_owned": false,
+          "represented_mass_kg": 24312.0,
+          "residual_mass_kg": 0.3965291971107945,
+          "source_id": "matter-batch/fe590e5bd58b76e33ef21b2ce8a5903f042a52e2fcd339931191165f8f246fb3/557e71be8962d99fa93d687c1d3a3642b45953b9d8a54fbe598be6adde68d562",
+          "source_operation_id": "operation/mvp4/a/mvp5-before_apply",
+          "total_mass_kg": 24312.39652919711
+        },
+        {
+          "batch_checksum": "557e71be8962d99fa93d687c1d3a3642b45953b9d8a54fbe598be6adde68d562",
+          "batch_id": "matter-batch/fe590e5bd58b76e33ef21b2ce8a5903f042a52e2fcd339931191165f8f246fb3",
+          "conservation_error_kg": 0.0,
+          "current_item_graph_revision": 7,
+          "current_item_graph_tick": 7,
+          "delivery_status": "DELIVERABLE",
+          "issued_item_graph_revision": 7,
+          "issued_item_graph_tick": 7,
+          "item_graph_replay": true,
+          "kg_per_item_unit": 1.0,
+          "logical_player_id": "a",
+          "mapped_components": [
+            {
+              "mass_fraction": 1.0,
+              "material_id": "matter/regolith-loose",
+              "output_definition_id": "item/ore"
+            }
+          ],
+          "matter_replay": true,
+          "output_created_this_call": false,
+          "output_definition_id": "item/ore",
+          "output_item_id": "item/server-output/89f90a75b3ca2cbdc4e6ebb990848de8",
+          "output_operation_id": "operation/p7-3/item-output/e99cf815eea82bb2eda0c05a76b98e88",
+          "output_quantity": 24312,
+          "policy_id": "p7/matter-material-delivery/r1",
+          "receipt_source": "MW4_BATCH_AND_CANONICAL_ITEM_GRAPH_REPLAY_LOOKUP",
+          "receipt_store_owned": false,
+          "represented_mass_kg": 24312.0,
+          "residual_mass_kg": 0.3965291971107945,
+          "source_id": "matter-batch/fe590e5bd58b76e33ef21b2ce8a5903f042a52e2fcd339931191165f8f246fb3/557e71be8962d99fa93d687c1d3a3642b45953b9d8a54fbe598be6adde68d562",
+          "source_operation_id": "operation/mvp4/a/mvp5-before_apply",
+          "total_mass_kg": 24312.39652919711
+        }
+      ]
+    },
+    {
+      "actor": "a",
+      "failure_window_graph": {
+        "authority_epoch": 1,
+        "authority_owner_id": "authority/a",
+        "checksum": "05ded2ecba1f2513159967122dc0c5121a00dc2175a3e2a8a4f451f0000d8b24",
+        "containers": [
+          {
+            "capacity": 8,
+            "container_id": "container/shared/crate/1",
+            "owner_item_id": "item/shared/crate/1",
+            "slots": []
+          }
+        ],
+        "inventories": {
+          "a": {
+            "hotbar": [],
+            "inventory": [
+              "item/server-output/4fcc9377e4e568da05f97b5561bd5062",
+              "item/server-output/08692af6007aea7a10dafb7093a963ef"
+            ],
+            "selected_hotbar_index": 0
+          },
+          "b": {
+            "hotbar": [],
+            "inventory": [
+              "item/server-output/d8777a375c6602ba76f73b0ff85ff1a0"
+            ],
+            "selected_hotbar_index": 0
+          }
+        },
+        "items": [
+          {
+            "definition_id": "item/ore",
+            "item_id": "item/server-output/08692af6007aea7a10dafb7093a963ef",
+            "location": {
+              "kind": "INVENTORY",
+              "player_id": "a",
+              "slot_index": 1
+            },
+            "mounted": false,
+            "quantity": 24312
+          },
+          {
+            "definition_id": "item/tool/mining",
+            "equipment": {
+              "player_id": "a",
+              "slot_id": "tool/main"
+            },
+            "item_id": "item/server-output/4fcc9377e4e568da05f97b5561bd5062",
+            "location": {
+              "kind": "INVENTORY",
+              "player_id": "a",
+              "slot_index": 0
+            },
+            "mounted": false,
+            "quantity": 1
+          },
+          {
+            "definition_id": "item/tool/mining",
+            "equipment": {
+              "player_id": "b",
+              "slot_id": "tool/main"
+            },
+            "item_id": "item/server-output/d8777a375c6602ba76f73b0ff85ff1a0",
+            "location": {
+              "kind": "INVENTORY",
+              "player_id": "b",
+              "slot_index": 0
+            },
+            "mounted": false,
+            "quantity": 1
+          },
+          {
+            "definition_id": "item/beacon",
+            "item_id": "item/shared/beacon/1",
+            "location": {
+              "kind": "WORLD"
+            },
+            "mounted": false,
+            "quantity": 1
+          },
+          {
+            "definition_id": "item/crate",
+            "item_id": "item/shared/crate/1",
+            "location": {
+              "kind": "WORLD"
+            },
+            "mounted": false,
+            "quantity": 1
+          },
+          {
+            "definition_id": "item/ore",
+            "item_id": "item/shared/ore/1",
+            "location": {
+              "kind": "WORLD"
+            },
+            "mounted": false,
+            "quantity": 8
+          }
+        ],
+        "mounts": [
+          {
+            "item_id": "",
+            "mount_id": "mount/shared/socket/1"
+          }
+        ],
+        "open_containers": {},
+        "revision": 7,
+        "schema": "planet_simulator.canonical_multiplayer_item_graph_snapshot.v1",
+        "tick": 7
+      },
+      "final_graph": {
+        "authority_epoch": 1,
+        "authority_owner_id": "authority/a",
+        "checksum": "05ded2ecba1f2513159967122dc0c5121a00dc2175a3e2a8a4f451f0000d8b24",
+        "containers": [
+          {
+            "capacity": 8,
+            "container_id": "container/shared/crate/1",
+            "owner_item_id": "item/shared/crate/1",
+            "slots": []
+          }
+        ],
+        "inventories": {
+          "a": {
+            "hotbar": [],
+            "inventory": [
+              "item/server-output/4fcc9377e4e568da05f97b5561bd5062",
+              "item/server-output/08692af6007aea7a10dafb7093a963ef"
+            ],
+            "selected_hotbar_index": 0
+          },
+          "b": {
+            "hotbar": [],
+            "inventory": [
+              "item/server-output/d8777a375c6602ba76f73b0ff85ff1a0"
+            ],
+            "selected_hotbar_index": 0
+          }
+        },
+        "items": [
+          {
+            "definition_id": "item/ore",
+            "item_id": "item/server-output/08692af6007aea7a10dafb7093a963ef",
+            "location": {
+              "kind": "INVENTORY",
+              "player_id": "a",
+              "slot_index": 1
+            },
+            "mounted": false,
+            "quantity": 24312
+          },
+          {
+            "definition_id": "item/tool/mining",
+            "equipment": {
+              "player_id": "a",
+              "slot_id": "tool/main"
+            },
+            "item_id": "item/server-output/4fcc9377e4e568da05f97b5561bd5062",
+            "location": {
+              "kind": "INVENTORY",
+              "player_id": "a",
+              "slot_index": 0
+            },
+            "mounted": false,
+            "quantity": 1
+          },
+          {
+            "definition_id": "item/tool/mining",
+            "equipment": {
+              "player_id": "b",
+              "slot_id": "tool/main"
+            },
+            "item_id": "item/server-output/d8777a375c6602ba76f73b0ff85ff1a0",
+            "location": {
+              "kind": "INVENTORY",
+              "player_id": "b",
+              "slot_index": 0
+            },
+            "mounted": false,
+            "quantity": 1
+          },
+          {
+            "definition_id": "item/beacon",
+            "item_id": "item/shared/beacon/1",
+            "location": {
+              "kind": "WORLD"
+            },
+            "mounted": false,
+            "quantity": 1
+          },
+          {
+            "definition_id": "item/crate",
+            "item_id": "item/shared/crate/1",
+            "location": {
+              "kind": "WORLD"
+            },
+            "mounted": false,
+            "quantity": 1
+          },
+          {
+            "definition_id": "item/ore",
+            "item_id": "item/shared/ore/1",
+            "location": {
+              "kind": "WORLD"
+            },
+            "mounted": false,
+            "quantity": 8
+          }
+        ],
+        "mounts": [
+          {
+            "item_id": "",
+            "mount_id": "mount/shared/socket/1"
+          }
+        ],
+        "open_containers": {},
+        "revision": 7,
+        "schema": "planet_simulator.canonical_multiplayer_item_graph_snapshot.v1",
+        "tick": 7
+      },
+      "initial_graph": {
+        "authority_epoch": 1,
+        "authority_owner_id": "authority/a",
+        "checksum": "d13c9207006009d208cbe393ffd1c23f48596687e257d247a26b9448ddd8645d",
+        "containers": [
+          {
+            "capacity": 8,
+            "container_id": "container/shared/crate/1",
+            "owner_item_id": "item/shared/crate/1",
+            "slots": []
+          }
+        ],
+        "inventories": {
+          "a": {
+            "hotbar": [],
+            "inventory": [
+              "item/server-output/4fcc9377e4e568da05f97b5561bd5062"
+            ],
+            "selected_hotbar_index": 0
+          },
+          "b": {
+            "hotbar": [],
+            "inventory": [
+              "item/server-output/d8777a375c6602ba76f73b0ff85ff1a0"
+            ],
+            "selected_hotbar_index": 0
+          }
+        },
+        "items": [
+          {
+            "definition_id": "item/tool/mining",
+            "equipment": {
+              "player_id": "a",
+              "slot_id": "tool/main"
+            },
+            "item_id": "item/server-output/4fcc9377e4e568da05f97b5561bd5062",
+            "location": {
+              "kind": "INVENTORY",
+              "player_id": "a",
+              "slot_index": 0
+            },
+            "mounted": false,
+            "quantity": 1
+          },
+          {
+            "definition_id": "item/tool/mining",
+            "equipment": {
+              "player_id": "b",
+              "slot_id": "tool/main"
+            },
+            "item_id": "item/server-output/d8777a375c6602ba76f73b0ff85ff1a0",
+            "location": {
+              "kind": "INVENTORY",
+              "player_id": "b",
+              "slot_index": 0
+            },
+            "mounted": false,
+            "quantity": 1
+          },
+          {
+            "definition_id": "item/beacon",
+            "item_id": "item/shared/beacon/1",
+            "location": {
+              "kind": "WORLD"
+            },
+            "mounted": false,
+            "quantity": 1
+          },
+          {
+            "definition_id": "item/crate",
+            "item_id": "item/shared/crate/1",
+            "location": {
+              "kind": "WORLD"
+            },
+            "mounted": false,
+            "quantity": 1
+          },
+          {
+            "definition_id": "item/ore",
+            "item_id": "item/shared/ore/1",
+            "location": {
+              "kind": "WORLD"
+            },
+            "mounted": false,
+            "quantity": 8
+          }
+        ],
+        "mounts": [
+          {
+            "item_id": "",
+            "mount_id": "mount/shared/socket/1"
+          }
+        ],
+        "open_containers": {},
+        "revision": 6,
+        "schema": "planet_simulator.canonical_multiplayer_item_graph_snapshot.v1",
+        "tick": 6
+      },
+      "material_view": {
+        "details": {
+          "authority_epoch": 1,
+          "authority_id": "authority/a",
+          "canonical_state_owned": false,
+          "item_graph_checksum": "05ded2ecba1f2513159967122dc0c5121a00dc2175a3e2a8a4f451f0000d8b24",
+          "item_graph_revision": 7,
+          "item_graph_tick": 7,
+          "item_owner": "CANONICAL_ITEM_GRAPH",
+          "items": [
+            {
+              "definition_id": "item/ore",
+              "item_id": "item/server-output/08692af6007aea7a10dafb7093a963ef",
+              "player_id": "a",
+              "quantity": 24312,
+              "slot_index": 1
+            }
+          ],
+          "material_digest": "4dd1cfa9caaa691556433b9bcc360605b8ef037fcbadf21481cfbfb56a4cf843",
+          "matter_store_hash": "e1646dc59f08cfabe287ff414f633b57519bdd2df8df494b3b1e235ee8a46928",
+          "matter_stream_sequence": 1,
+          "schema": "distributed_world_simulator.mvp5_material_projection.v1",
+          "scope": "SHARED_A_B_INVENTORIES_SINGLE_REGION",
+          "totals": {
+            "a": 24312,
+            "b": 0
+          }
+        },
+        "error_code": "",
+        "success": true
+      },
+      "mode": "after_apply",
+      "port_apply_calls": 6,
+      "port_successful_inner_calls": 6,
+      "receipt": {
+        "batch_checksum": "b341b2f41a38e6a8a67889100a715c1e5b1f75fc787dfcea2e94a858b3e400f6",
+        "batch_id": "matter-batch/70810721b31121f51a3a3ee81763c52fb7d72df5526bedd0b0f1bdce937bc429",
+        "conservation_error_kg": 0.0,
+        "current_item_graph_revision": 7,
+        "current_item_graph_tick": 7,
+        "delivery_status": "DELIVERABLE",
+        "issued_item_graph_revision": 7,
+        "issued_item_graph_tick": 7,
+        "item_graph_replay": true,
+        "kg_per_item_unit": 1.0,
+        "logical_player_id": "a",
+        "mapped_components": [
+          {
+            "mass_fraction": 1.0,
+            "material_id": "matter/regolith-loose",
+            "output_definition_id": "item/ore"
+          }
+        ],
+        "matter_replay": true,
+        "output_created_this_call": false,
+        "output_definition_id": "item/ore",
+        "output_item_id": "item/server-output/08692af6007aea7a10dafb7093a963ef",
+        "output_operation_id": "operation/p7-3/item-output/e27876b507cf6f26c6e318c23568ff54",
+        "output_quantity": 24312,
+        "policy_id": "p7/matter-material-delivery/r1",
+        "receipt_source": "MW4_BATCH_AND_CANONICAL_ITEM_GRAPH_REPLAY_LOOKUP",
+        "receipt_store_owned": false,
+        "represented_mass_kg": 24312.0,
+        "residual_mass_kg": 0.3965291971107945,
+        "source_id": "matter-batch/70810721b31121f51a3a3ee81763c52fb7d72df5526bedd0b0f1bdce937bc429/b341b2f41a38e6a8a67889100a715c1e5b1f75fc787dfcea2e94a858b3e400f6",
+        "source_operation_id": "operation/mvp4/a/mvp5-after_apply",
+        "total_mass_kg": 24312.39652919711
+      },
+      "retries": [
+        {
+          "batch_checksum": "b341b2f41a38e6a8a67889100a715c1e5b1f75fc787dfcea2e94a858b3e400f6",
+          "batch_id": "matter-batch/70810721b31121f51a3a3ee81763c52fb7d72df5526bedd0b0f1bdce937bc429",
+          "conservation_error_kg": 0.0,
+          "current_item_graph_revision": 7,
+          "current_item_graph_tick": 7,
+          "delivery_status": "DELIVERABLE",
+          "issued_item_graph_revision": 7,
+          "issued_item_graph_tick": 7,
+          "item_graph_replay": true,
+          "kg_per_item_unit": 1.0,
+          "logical_player_id": "a",
+          "mapped_components": [
+            {
+              "mass_fraction": 1.0,
+              "material_id": "matter/regolith-loose",
+              "output_definition_id": "item/ore"
+            }
+          ],
+          "matter_replay": true,
+          "output_created_this_call": false,
+          "output_definition_id": "item/ore",
+          "output_item_id": "item/server-output/08692af6007aea7a10dafb7093a963ef",
+          "output_operation_id": "operation/p7-3/item-output/e27876b507cf6f26c6e318c23568ff54",
+          "output_quantity": 24312,
+          "policy_id": "p7/matter-material-delivery/r1",
+          "receipt_source": "MW4_BATCH_AND_CANONICAL_ITEM_GRAPH_REPLAY_LOOKUP",
+          "receipt_store_owned": false,
+          "represented_mass_kg": 24312.0,
+          "residual_mass_kg": 0.3965291971107945,
+          "source_id": "matter-batch/70810721b31121f51a3a3ee81763c52fb7d72df5526bedd0b0f1bdce937bc429/b341b2f41a38e6a8a67889100a715c1e5b1f75fc787dfcea2e94a858b3e400f6",
+          "source_operation_id": "operation/mvp4/a/mvp5-after_apply",
+          "total_mass_kg": 24312.39652919711
+        },
+        {
+          "batch_checksum": "b341b2f41a38e6a8a67889100a715c1e5b1f75fc787dfcea2e94a858b3e400f6",
+          "batch_id": "matter-batch/70810721b31121f51a3a3ee81763c52fb7d72df5526bedd0b0f1bdce937bc429",
+          "conservation_error_kg": 0.0,
+          "current_item_graph_revision": 7,
+          "current_item_graph_tick": 7,
+          "delivery_status": "DELIVERABLE",
+          "issued_item_graph_revision": 7,
+          "issued_item_graph_tick": 7,
+          "item_graph_replay": true,
+          "kg_per_item_unit": 1.0,
+          "logical_player_id": "a",
+          "mapped_components": [
+            {
+              "mass_fraction": 1.0,
+              "material_id": "matter/regolith-loose",
+              "output_definition_id": "item/ore"
+            }
+          ],
+          "matter_replay": true,
+          "output_created_this_call": false,
+          "output_definition_id": "item/ore",
+          "output_item_id": "item/server-output/08692af6007aea7a10dafb7093a963ef",
+          "output_operation_id": "operation/p7-3/item-output/e27876b507cf6f26c6e318c23568ff54",
+          "output_quantity": 24312,
+          "policy_id": "p7/matter-material-delivery/r1",
+          "receipt_source": "MW4_BATCH_AND_CANONICAL_ITEM_GRAPH_REPLAY_LOOKUP",
+          "receipt_store_owned": false,
+          "represented_mass_kg": 24312.0,
+          "residual_mass_kg": 0.3965291971107945,
+          "source_id": "matter-batch/70810721b31121f51a3a3ee81763c52fb7d72df5526bedd0b0f1bdce937bc429/b341b2f41a38e6a8a67889100a715c1e5b1f75fc787dfcea2e94a858b3e400f6",
+          "source_operation_id": "operation/mvp4/a/mvp5-after_apply",
+          "total_mass_kg": 24312.39652919711
+        },
+        {
+          "batch_checksum": "b341b2f41a38e6a8a67889100a715c1e5b1f75fc787dfcea2e94a858b3e400f6",
+          "batch_id": "matter-batch/70810721b31121f51a3a3ee81763c52fb7d72df5526bedd0b0f1bdce937bc429",
+          "conservation_error_kg": 0.0,
+          "current_item_graph_revision": 7,
+          "current_item_graph_tick": 7,
+          "delivery_status": "DELIVERABLE",
+          "issued_item_graph_revision": 7,
+          "issued_item_graph_tick": 7,
+          "item_graph_replay": true,
+          "kg_per_item_unit": 1.0,
+          "logical_player_id": "a",
+          "mapped_components": [
+            {
+              "mass_fraction": 1.0,
+              "material_id": "matter/regolith-loose",
+              "output_definition_id": "item/ore"
+            }
+          ],
+          "matter_replay": true,
+          "output_created_this_call": false,
+          "output_definition_id": "item/ore",
+          "output_item_id": "item/server-output/08692af6007aea7a10dafb7093a963ef",
+          "output_operation_id": "operation/p7-3/item-output/e27876b507cf6f26c6e318c23568ff54",
+          "output_quantity": 24312,
+          "policy_id": "p7/matter-material-delivery/r1",
+          "receipt_source": "MW4_BATCH_AND_CANONICAL_ITEM_GRAPH_REPLAY_LOOKUP",
+          "receipt_store_owned": false,
+          "represented_mass_kg": 24312.0,
+          "residual_mass_kg": 0.3965291971107945,
+          "source_id": "matter-batch/70810721b31121f51a3a3ee81763c52fb7d72df5526bedd0b0f1bdce937bc429/b341b2f41a38e6a8a67889100a715c1e5b1f75fc787dfcea2e94a858b3e400f6",
+          "source_operation_id": "operation/mvp4/a/mvp5-after_apply",
+          "total_mass_kg": 24312.39652919711
+        }
+      ]
+    },
+    {
+      "actor": "b",
+      "failure_window_graph": {
+        "authority_epoch": 1,
+        "authority_owner_id": "authority/a",
+        "checksum": "1ff0189c15ef11d8131d56c1d2dfb7076eedc1bd10cfde38157e26b51240fcf3",
+        "containers": [
+          {
+            "capacity": 8,
+            "container_id": "container/shared/crate/1",
+            "owner_item_id": "item/shared/crate/1",
+            "slots": []
+          }
+        ],
+        "inventories": {
+          "a": {
+            "hotbar": [],
+            "inventory": [
+              "item/server-output/4fcc9377e4e568da05f97b5561bd5062"
+            ],
+            "selected_hotbar_index": 0
+          },
+          "b": {
+            "hotbar": [],
+            "inventory": [
+              "item/server-output/d8777a375c6602ba76f73b0ff85ff1a0",
+              "item/server-output/0ab21d0f8ad074d5ede41f5240f29d30"
+            ],
+            "selected_hotbar_index": 0
+          }
+        },
+        "items": [
+          {
+            "definition_id": "item/ore",
+            "item_id": "item/server-output/0ab21d0f8ad074d5ede41f5240f29d30",
+            "location": {
+              "kind": "INVENTORY",
+              "player_id": "b",
+              "slot_index": 1
+            },
+            "mounted": false,
+            "quantity": 24312
+          },
+          {
+            "definition_id": "item/tool/mining",
+            "equipment": {
+              "player_id": "a",
+              "slot_id": "tool/main"
+            },
+            "item_id": "item/server-output/4fcc9377e4e568da05f97b5561bd5062",
+            "location": {
+              "kind": "INVENTORY",
+              "player_id": "a",
+              "slot_index": 0
+            },
+            "mounted": false,
+            "quantity": 1
+          },
+          {
+            "definition_id": "item/tool/mining",
+            "equipment": {
+              "player_id": "b",
+              "slot_id": "tool/main"
+            },
+            "item_id": "item/server-output/d8777a375c6602ba76f73b0ff85ff1a0",
+            "location": {
+              "kind": "INVENTORY",
+              "player_id": "b",
+              "slot_index": 0
+            },
+            "mounted": false,
+            "quantity": 1
+          },
+          {
+            "definition_id": "item/beacon",
+            "item_id": "item/shared/beacon/1",
+            "location": {
+              "kind": "WORLD"
+            },
+            "mounted": false,
+            "quantity": 1
+          },
+          {
+            "definition_id": "item/crate",
+            "item_id": "item/shared/crate/1",
+            "location": {
+              "kind": "WORLD"
+            },
+            "mounted": false,
+            "quantity": 1
+          },
+          {
+            "definition_id": "item/ore",
+            "item_id": "item/shared/ore/1",
+            "location": {
+              "kind": "WORLD"
+            },
+            "mounted": false,
+            "quantity": 8
+          }
+        ],
+        "mounts": [
+          {
+            "item_id": "",
+            "mount_id": "mount/shared/socket/1"
+          }
+        ],
+        "open_containers": {},
+        "revision": 7,
+        "schema": "planet_simulator.canonical_multiplayer_item_graph_snapshot.v1",
+        "tick": 7
+      },
+      "final_graph": {
+        "authority_epoch": 1,
+        "authority_owner_id": "authority/a",
+        "checksum": "1ff0189c15ef11d8131d56c1d2dfb7076eedc1bd10cfde38157e26b51240fcf3",
+        "containers": [
+          {
+            "capacity": 8,
+            "container_id": "container/shared/crate/1",
+            "owner_item_id": "item/shared/crate/1",
+            "slots": []
+          }
+        ],
+        "inventories": {
+          "a": {
+            "hotbar": [],
+            "inventory": [
+              "item/server-output/4fcc9377e4e568da05f97b5561bd5062"
+            ],
+            "selected_hotbar_index": 0
+          },
+          "b": {
+            "hotbar": [],
+            "inventory": [
+              "item/server-output/d8777a375c6602ba76f73b0ff85ff1a0",
+              "item/server-output/0ab21d0f8ad074d5ede41f5240f29d30"
+            ],
+            "selected_hotbar_index": 0
+          }
+        },
+        "items": [
+          {
+            "definition_id": "item/ore",
+            "item_id": "item/server-output/0ab21d0f8ad074d5ede41f5240f29d30",
+            "location": {
+              "kind": "INVENTORY",
+              "player_id": "b",
+              "slot_index": 1
+            },
+            "mounted": false,
+            "quantity": 24312
+          },
+          {
+            "definition_id": "item/tool/mining",
+            "equipment": {
+              "player_id": "a",
+              "slot_id": "tool/main"
+            },
+            "item_id": "item/server-output/4fcc9377e4e568da05f97b5561bd5062",
+            "location": {
+              "kind": "INVENTORY",
+              "player_id": "a",
+              "slot_index": 0
+            },
+            "mounted": false,
+            "quantity": 1
+          },
+          {
+            "definition_id": "item/tool/mining",
+            "equipment": {
+              "player_id": "b",
+              "slot_id": "tool/main"
+            },
+            "item_id": "item/server-output/d8777a375c6602ba76f73b0ff85ff1a0",
+            "location": {
+              "kind": "INVENTORY",
+              "player_id": "b",
+              "slot_index": 0
+            },
+            "mounted": false,
+            "quantity": 1
+          },
+          {
+            "definition_id": "item/beacon",
+            "item_id": "item/shared/beacon/1",
+            "location": {
+              "kind": "WORLD"
+            },
+            "mounted": false,
+            "quantity": 1
+          },
+          {
+            "definition_id": "item/crate",
+            "item_id": "item/shared/crate/1",
+            "location": {
+              "kind": "WORLD"
+            },
+            "mounted": false,
+            "quantity": 1
+          },
+          {
+            "definition_id": "item/ore",
+            "item_id": "item/shared/ore/1",
+            "location": {
+              "kind": "WORLD"
+            },
+            "mounted": false,
+            "quantity": 8
+          }
+        ],
+        "mounts": [
+          {
+            "item_id": "",
+            "mount_id": "mount/shared/socket/1"
+          }
+        ],
+        "open_containers": {},
+        "revision": 7,
+        "schema": "planet_simulator.canonical_multiplayer_item_graph_snapshot.v1",
+        "tick": 7
+      },
+      "initial_graph": {
+        "authority_epoch": 1,
+        "authority_owner_id": "authority/a",
+        "checksum": "d13c9207006009d208cbe393ffd1c23f48596687e257d247a26b9448ddd8645d",
+        "containers": [
+          {
+            "capacity": 8,
+            "container_id": "container/shared/crate/1",
+            "owner_item_id": "item/shared/crate/1",
+            "slots": []
+          }
+        ],
+        "inventories": {
+          "a": {
+            "hotbar": [],
+            "inventory": [
+              "item/server-output/4fcc9377e4e568da05f97b5561bd5062"
+            ],
+            "selected_hotbar_index": 0
+          },
+          "b": {
+            "hotbar": [],
+            "inventory": [
+              "item/server-output/d8777a375c6602ba76f73b0ff85ff1a0"
+            ],
+            "selected_hotbar_index": 0
+          }
+        },
+        "items": [
+          {
+            "definition_id": "item/tool/mining",
+            "equipment": {
+              "player_id": "a",
+              "slot_id": "tool/main"
+            },
+            "item_id": "item/server-output/4fcc9377e4e568da05f97b5561bd5062",
+            "location": {
+              "kind": "INVENTORY",
+              "player_id": "a",
+              "slot_index": 0
+            },
+            "mounted": false,
+            "quantity": 1
+          },
+          {
+            "definition_id": "item/tool/mining",
+            "equipment": {
+              "player_id": "b",
+              "slot_id": "tool/main"
+            },
+            "item_id": "item/server-output/d8777a375c6602ba76f73b0ff85ff1a0",
+            "location": {
+              "kind": "INVENTORY",
+              "player_id": "b",
+              "slot_index": 0
+            },
+            "mounted": false,
+            "quantity": 1
+          },
+          {
+            "definition_id": "item/beacon",
+            "item_id": "item/shared/beacon/1",
+            "location": {
+              "kind": "WORLD"
+            },
+            "mounted": false,
+            "quantity": 1
+          },
+          {
+            "definition_id": "item/crate",
+            "item_id": "item/shared/crate/1",
+            "location": {
+              "kind": "WORLD"
+            },
+            "mounted": false,
+            "quantity": 1
+          },
+          {
+            "definition_id": "item/ore",
+            "item_id": "item/shared/ore/1",
+            "location": {
+              "kind": "WORLD"
+            },
+            "mounted": false,
+            "quantity": 8
+          }
+        ],
+        "mounts": [
+          {
+            "item_id": "",
+            "mount_id": "mount/shared/socket/1"
+          }
+        ],
+        "open_containers": {},
+        "revision": 6,
+        "schema": "planet_simulator.canonical_multiplayer_item_graph_snapshot.v1",
+        "tick": 6
+      },
+      "material_view": {
+        "details": {
+          "authority_epoch": 1,
+          "authority_id": "authority/a",
+          "canonical_state_owned": false,
+          "item_graph_checksum": "1ff0189c15ef11d8131d56c1d2dfb7076eedc1bd10cfde38157e26b51240fcf3",
+          "item_graph_revision": 7,
+          "item_graph_tick": 7,
+          "item_owner": "CANONICAL_ITEM_GRAPH",
+          "items": [
+            {
+              "definition_id": "item/ore",
+              "item_id": "item/server-output/0ab21d0f8ad074d5ede41f5240f29d30",
+              "player_id": "b",
+              "quantity": 24312,
+              "slot_index": 1
+            }
+          ],
+          "material_digest": "7424c2f102681415e8087c30e8d651d1c5c30ddc849e8d8a0ac06d4064bd76f9",
+          "matter_store_hash": "144edaa660a3de92bb57cd2383520d5bfa717459d1572d0c3775fc10740a5c37",
+          "matter_stream_sequence": 1,
+          "schema": "distributed_world_simulator.mvp5_material_projection.v1",
+          "scope": "SHARED_A_B_INVENTORIES_SINGLE_REGION",
+          "totals": {
+            "a": 0,
+            "b": 24312
+          }
+        },
+        "error_code": "",
+        "success": true
+      },
+      "mode": "actor_b",
+      "port_apply_calls": 5,
+      "port_successful_inner_calls": 5,
+      "receipt": {
+        "batch_checksum": "cacc583346d780bd83a39d5fa10338c763724dcf05656d5fafc2ad72605affbb",
+        "batch_id": "matter-batch/6256f03e8c63ff63a940a0de7a462ae9417c347f8614a54ad37ca72c0e1d3e51",
+        "conservation_error_kg": 0.0,
+        "current_item_graph_revision": 7,
+        "current_item_graph_tick": 7,
+        "delivery_status": "DELIVERABLE",
+        "issued_item_graph_revision": 7,
+        "issued_item_graph_tick": 7,
+        "item_graph_replay": false,
+        "kg_per_item_unit": 1.0,
+        "logical_player_id": "b",
+        "mapped_components": [
+          {
+            "mass_fraction": 1.0,
+            "material_id": "matter/regolith-loose",
+            "output_definition_id": "item/ore"
+          }
+        ],
+        "matter_replay": false,
+        "output_created_this_call": true,
+        "output_definition_id": "item/ore",
+        "output_item_id": "item/server-output/0ab21d0f8ad074d5ede41f5240f29d30",
+        "output_operation_id": "operation/p7-3/item-output/454c76aa812bf7833bf052923c3c53ee",
+        "output_quantity": 24312,
+        "policy_id": "p7/matter-material-delivery/r1",
+        "receipt_source": "MW4_BATCH_AND_CANONICAL_ITEM_GRAPH_REPLAY_LOOKUP",
+        "receipt_store_owned": false,
+        "represented_mass_kg": 24312.0,
+        "residual_mass_kg": 0.3965291971107945,
+        "source_id": "matter-batch/6256f03e8c63ff63a940a0de7a462ae9417c347f8614a54ad37ca72c0e1d3e51/cacc583346d780bd83a39d5fa10338c763724dcf05656d5fafc2ad72605affbb",
+        "source_operation_id": "operation/mvp4/b/mvp5-actor_b",
+        "total_mass_kg": 24312.39652919711
+      },
+      "retries": [
+        {
+          "batch_checksum": "cacc583346d780bd83a39d5fa10338c763724dcf05656d5fafc2ad72605affbb",
+          "batch_id": "matter-batch/6256f03e8c63ff63a940a0de7a462ae9417c347f8614a54ad37ca72c0e1d3e51",
+          "conservation_error_kg": 0.0,
+          "current_item_graph_revision": 7,
+          "current_item_graph_tick": 7,
+          "delivery_status": "DELIVERABLE",
+          "issued_item_graph_revision": 7,
+          "issued_item_graph_tick": 7,
+          "item_graph_replay": true,
+          "kg_per_item_unit": 1.0,
+          "logical_player_id": "b",
+          "mapped_components": [
+            {
+              "mass_fraction": 1.0,
+              "material_id": "matter/regolith-loose",
+              "output_definition_id": "item/ore"
+            }
+          ],
+          "matter_replay": true,
+          "output_created_this_call": false,
+          "output_definition_id": "item/ore",
+          "output_item_id": "item/server-output/0ab21d0f8ad074d5ede41f5240f29d30",
+          "output_operation_id": "operation/p7-3/item-output/454c76aa812bf7833bf052923c3c53ee",
+          "output_quantity": 24312,
+          "policy_id": "p7/matter-material-delivery/r1",
+          "receipt_source": "MW4_BATCH_AND_CANONICAL_ITEM_GRAPH_REPLAY_LOOKUP",
+          "receipt_store_owned": false,
+          "represented_mass_kg": 24312.0,
+          "residual_mass_kg": 0.3965291971107945,
+          "source_id": "matter-batch/6256f03e8c63ff63a940a0de7a462ae9417c347f8614a54ad37ca72c0e1d3e51/cacc583346d780bd83a39d5fa10338c763724dcf05656d5fafc2ad72605affbb",
+          "source_operation_id": "operation/mvp4/b/mvp5-actor_b",
+          "total_mass_kg": 24312.39652919711
+        },
+        {
+          "batch_checksum": "cacc583346d780bd83a39d5fa10338c763724dcf05656d5fafc2ad72605affbb",
+          "batch_id": "matter-batch/6256f03e8c63ff63a940a0de7a462ae9417c347f8614a54ad37ca72c0e1d3e51",
+          "conservation_error_kg": 0.0,
+          "current_item_graph_revision": 7,
+          "current_item_graph_tick": 7,
+          "delivery_status": "DELIVERABLE",
+          "issued_item_graph_revision": 7,
+          "issued_item_graph_tick": 7,
+          "item_graph_replay": true,
+          "kg_per_item_unit": 1.0,
+          "logical_player_id": "b",
+          "mapped_components": [
+            {
+              "mass_fraction": 1.0,
+              "material_id": "matter/regolith-loose",
+              "output_definition_id": "item/ore"
+            }
+          ],
+          "matter_replay": true,
+          "output_created_this_call": false,
+          "output_definition_id": "item/ore",
+          "output_item_id": "item/server-output/0ab21d0f8ad074d5ede41f5240f29d30",
+          "output_operation_id": "operation/p7-3/item-output/454c76aa812bf7833bf052923c3c53ee",
+          "output_quantity": 24312,
+          "policy_id": "p7/matter-material-delivery/r1",
+          "receipt_source": "MW4_BATCH_AND_CANONICAL_ITEM_GRAPH_REPLAY_LOOKUP",
+          "receipt_store_owned": false,
+          "represented_mass_kg": 24312.0,
+          "residual_mass_kg": 0.3965291971107945,
+          "source_id": "matter-batch/6256f03e8c63ff63a940a0de7a462ae9417c347f8614a54ad37ca72c0e1d3e51/cacc583346d780bd83a39d5fa10338c763724dcf05656d5fafc2ad72605affbb",
+          "source_operation_id": "operation/mvp4/b/mvp5-actor_b",
+          "total_mass_kg": 24312.39652919711
+        },
+        {
+          "batch_checksum": "cacc583346d780bd83a39d5fa10338c763724dcf05656d5fafc2ad72605affbb",
+          "batch_id": "matter-batch/6256f03e8c63ff63a940a0de7a462ae9417c347f8614a54ad37ca72c0e1d3e51",
+          "conservation_error_kg": 0.0,
+          "current_item_graph_revision": 7,
+          "current_item_graph_tick": 7,
+          "delivery_status": "DELIVERABLE",
+          "issued_item_graph_revision": 7,
+          "issued_item_graph_tick": 7,
+          "item_graph_replay": true,
+          "kg_per_item_unit": 1.0,
+          "logical_player_id": "b",
+          "mapped_components": [
+            {
+              "mass_fraction": 1.0,
+              "material_id": "matter/regolith-loose",
+              "output_definition_id": "item/ore"
+            }
+          ],
+          "matter_replay": true,
+          "output_created_this_call": false,
+          "output_definition_id": "item/ore",
+          "output_item_id": "item/server-output/0ab21d0f8ad074d5ede41f5240f29d30",
+          "output_operation_id": "operation/p7-3/item-output/454c76aa812bf7833bf052923c3c53ee",
+          "output_quantity": 24312,
+          "policy_id": "p7/matter-material-delivery/r1",
+          "receipt_source": "MW4_BATCH_AND_CANONICAL_ITEM_GRAPH_REPLAY_LOOKUP",
+          "receipt_store_owned": false,
+          "represented_mass_kg": 24312.0,
+          "residual_mass_kg": 0.3965291971107945,
+          "source_id": "matter-batch/6256f03e8c63ff63a940a0de7a462ae9417c347f8614a54ad37ca72c0e1d3e51/cacc583346d780bd83a39d5fa10338c763724dcf05656d5fafc2ad72605affbb",
+          "source_operation_id": "operation/mvp4/b/mvp5-actor_b",
+          "total_mass_kg": 24312.39652919711
+        }
+      ]
+    }
+  ],
+  "failures": [],
+  "independent_verdict": false,
+  "mvp5_predicate_verified": false,
+  "passed": true,
+  "restart_executed": false,
+  "schema": "distributed_world_simulator.mvp5_exactly_once_focused.v1",
+  "subject_head": "789c3af31d849f7f9dfc6af9ac0240fe2e33531f",
+  "subject_tree": "7c5f0c5e1d6fce8abf852f32918faa245c5f6507"
+}

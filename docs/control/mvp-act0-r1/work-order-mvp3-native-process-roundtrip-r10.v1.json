@@ -1,0 +1,70 @@
+{
+  "schema": "distributed_world_simulator.bounded_repair_work_order.v1",
+  "repair_id": "V0-MVP3-R10-NATIVE-PROCESS-ROUNDTRIP",
+  "parent_work_order_id": "V0-MVP-R1-WO-001",
+  "base_sha": "5dd1cbbef1ad955e7b94d0183f2f7af242b4ec11",
+  "base_tree": "ec3479a88befdf52b9456c8674522419a956b067",
+  "role": "IMPLEMENTER",
+  "independent_context": false,
+  "failure_evidence": {
+    "preserved_paths": [
+      "artifacts/mvp3-native-process-failed-001",
+      "artifacts/mvp3-native-process-failed-002",
+      "artifacts/mvp3-native-process-failed-003",
+      "artifacts/mvp3-native-process-failed-004",
+      "artifacts/mvp3-native-process-failed-005",
+      "artifacts/mvp3-native-process-failed-006",
+      "artifacts/mvp3-native-process-failed-007",
+      "artifacts/mvp3-native-process-failed-008",
+      "artifacts/mvp3-native-process-failed-009"
+    ],
+    "final_precommit_pass": "artifacts/mvp3-native-process/manifest.json"
+  },
+  "repair_map": {
+    "affected_modules": [
+      "MVP3 process protocol and backend link",
+      "MVP3 gateway/P6 remote command adapter",
+      "existing SM1/P6 decision and replay ports"
+    ],
+    "canonical_owners": "Native NetworkedGameplayService owns players and replay; P6 owns identity/admission ledger; SM1 owns transfer state and epoch. Gateway adapters own no canonical state.",
+    "root_causes": [
+      "The new process payload schema did not satisfy the existing ProtocolFrame planet_simulator namespace contract.",
+      "BackendLink.call collided with native Object.call and therefore failed under warnings-as-errors.",
+      "HMAC was calculated over a native double before the first transport JSON round-trip; tick_delta_seconds then shortened by one decimal digit and invalidated an intact reply.",
+      "The first gateway lookup read the native player one wrapper level too high.",
+      "Replay fingerprints were local to a per-authority adapter, so the receiving route could not reject a conflicting payload before the shared P6 ledger returned ALREADY_APPLIED.",
+      "During a second transfer the gateway sent the prior completed transfer beside the new post-commit epoch; the read model correctly rejected that inconsistent pair."
+    ],
+    "canonical_fixes": [
+      "Use the accepted ProtocolFrame namespace and sign the stabilized JSON round-trip representation.",
+      "Use an explicit rpc_call method and preserve fail-closed verification diagnostics.",
+      "Require a signed native owner receipt before P6 completion and share immutable operation fingerprints across both gateway routes.",
+      "Publish a completed transfer view only while its target epoch equals the current coordinator epoch."
+    ],
+    "sibling_paths_checked": [
+      "v0_mvp3_authority_process.gd",
+      "v0_mvp3_backend_link.gd",
+      "v0_mvp3_live_player_transfer_port.gd",
+      "p6_gateway_command_route.gd",
+      "sm1_authority_transfer_coordinator.gd",
+      "test_v0_mvp3_live_owner_handoff.gd"
+    ],
+    "not_symptom_patch": "The process gate uses three OS processes, real ENet frames, the accepted P6 admission/closure route, existing SM1 transfer state and the native Service. It checks causal state and signed receipts rather than accepting labels or process exit alone."
+  },
+  "allowed_paths": [
+    "scripts/runtime/networked_gameplay/mvp/**",
+    "tests/integration/test_v0_mvp3_*",
+    "RUN_V0_MVP_*",
+    "docs/control/mvp-act0-r1/**"
+  ],
+  "result": {
+    "precommit_pass": true,
+    "gateway_processes": 1,
+    "authority_processes": 2,
+    "transfers": 4,
+    "graphical_scene_proven": false,
+    "mvp3_predicate_verified": false
+  },
+  "runtime_merge_authorized": false,
+  "main_merge_authorized": false
+}

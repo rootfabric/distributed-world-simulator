@@ -1,0 +1,352 @@
+Godot Engine v4.7.1.stable.double.custom_build.a13da4feb (2026-07-13 21:00:28 UTC) - https://godotengine.org
+
+[   0% ] [90m[1mfirst_scan_filesystem[22m | Started Инициализация проекта (5 steps)[39m[0m
+[   0% ] [90m[1mfirst_scan_filesystem[22m | Сканирование структуры файлов…[39m[0m
+[  16% ] [90m[1mfirst_scan_filesystem[22m | Загрузка глобальных имен классов…[39m[0m
+[  33% ] [90m[1mfirst_scan_filesystem[22m | Проверка GDExtensions…[39m[0m
+[  50% ] [90m[1mfirst_scan_filesystem[22m | Создание скриптов автозагрузки…[39m[0m
+[  66% ] [90m[1mfirst_scan_filesystem[22m | Инициализация плагинов…[39m[0m
+[breakpoint_mcp] plugin enabled
+[breakpoint_mcp] listening on 127.0.0.1:9080
+[  83% ] [90m[1mfirst_scan_filesystem[22m | Начало сканирование файлов…[39m[0m
+[92m[ DONE ][39m [1mfirst_scan_filesystem[22m
+[0m
+WARNING: Missing .uid file for path "res://docs/control/p7-eg1-world-core-repair-r1/probes/enet_bandwidth_probe.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://docs/control/p7-eg1-world-core-repair-r1/probes/run_bandwidth_probe.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://docs/control/p7-eg1-world-core-repair-r1/probes/test_eg4_receipt_completion.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://docs/control/p7-eg1-world-core-repair-r1/probes/test_mw10_lock_lifecycle.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://scripts/ecology/production/ecology_client_read_model_v1.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://scripts/ecology/production/ecology_clock_v1.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://scripts/ecology/production/ecology_offline_catchup_v1.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://scripts/ecology/production/ecology_region_ownership_v1.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://scripts/ecology/production/ecology_region_persistence_v1.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://scripts/ecology/production/ecology_region_state_v1.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://scripts/labs/ecology/evo_morphology_lab_v2_model.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://scripts/labs/ecology/evo_morphology_lab_v2_renderer.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://scripts/research/ecology/v2/persistent_environmental_feedback_v1.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://scripts/research/ecology/v2/snapshot_seam_v1.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://scripts/research/ecology/plant_development_traits_extension_evo7_v1.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://scripts/runtime/networked_gameplay/mvp/v0_mvp3_authority_process.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://scripts/runtime/networked_gameplay/mvp/v0_mvp3_backend_link.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://scripts/runtime/networked_gameplay/mvp/v0_mvp3_fixed_tick_gameplay_service.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://scripts/runtime/networked_gameplay/mvp/v0_mvp3_gateway_process.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://scripts/runtime/networked_gameplay/mvp/v0_mvp3_live_graphical_client.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://scripts/runtime/networked_gameplay/mvp/v0_mvp3_live_player_gate.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://scripts/runtime/networked_gameplay/mvp/v0_mvp3_live_player_transfer_port.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://scripts/runtime/networked_gameplay/mvp/v0_mvp3_player_command_route.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://scripts/runtime/networked_gameplay/mvp/v0_mvp3_process_protocol.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://scripts/runtime/networked_gameplay/mvp/v0_mvp3_remote_owner_views.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://scripts/runtime/networked_gameplay/mvp/v0_mvp3_remote_player_command_route.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://scripts/runtime/networked_gameplay/mvp/v0_mvp4_authority_process.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://scripts/runtime/networked_gameplay/mvp/v0_mvp4_gateway_process.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://scripts/runtime/networked_gameplay/mvp/v0_mvp4_graphical_client.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://scripts/runtime/networked_gameplay/mvp/v0_mvp4_replica_surface.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://scripts/runtime/networked_gameplay/mvp/v0_mvp4_shared_dig_authority.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://scripts/runtime/networked_gameplay/mvp/v0_mvp5_authority_process.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://scripts/runtime/networked_gameplay/mvp/v0_mvp5_gateway_process.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://scripts/runtime/networked_gameplay/mvp/v0_mvp5_graphical_client.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://scripts/runtime/networked_gameplay/mvp/v0_mvp5_material_output_authority.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://scripts/runtime/networked_gameplay/mvp/v0_mvp6_gameplay_service.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://scripts/runtime/networked_gameplay/mvp/v0_mvp6_live_item_player_transfer_port.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://scripts/runtime/networked_gameplay/mvp/v0_mvp_bootstrap_surface.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://scripts/runtime/networked_gameplay/mvp/v0_mvp_seam_client.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://scripts/runtime/networked_gameplay/mvp/v0_mvp_seam_continuity.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://scripts/runtime/networked_gameplay/mvp/v0_mvp_two_client_shared_world.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://scripts/runtime/networked_gameplay/p7/p7_authoritative_item_graph_output_port.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://scripts/runtime/networked_gameplay/p7/p7_digging_playground.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://scripts/runtime/networked_gameplay/p7/p7_graphical_digging_slice.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://scripts/runtime/networked_gameplay/p7/p7_matter_command_authority_gate.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://scripts/runtime/networked_gameplay/p7/p7_matter_material_delivery_coordinator.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://scripts/runtime/networked_gameplay/p7/p7_matter_material_delivery_policy.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://scripts/runtime/networked_gameplay/p7/p7_matter_material_item_graph_adapter.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://scripts/runtime/networked_gameplay/p7/p7_persistence_restart_composition.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://scripts/runtime/networked_gameplay/p7/p7_seam_multi_region_composition.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://scripts/runtime/networked_gameplay/p7/p7_two_client_convergence_observer.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://scripts/runtime/networked_gameplay/sm1/sm1_6_authority_worker.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://scripts/runtime/networked_gameplay/sm1/sm1_6_gateway_worker.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://scripts/runtime/networked_gameplay/sm1/sm1_6_graphical_client.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://scripts/runtime/networked_gameplay/sm1/sm1_6_process_support.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://scripts/runtime/networked_gameplay/sm1/sm1_7_authority_recovery_client.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://scripts/runtime/networked_gameplay/sm1/sm1_7_concurrent_client.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://scripts/runtime/networked_gameplay/sm1/sm1_7_fault_driver.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://scripts/runtime/networked_gameplay/sm1/sm1_7_gateway_restart_client.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://scripts/runtime/networked_gameplay/sm1/sm1_7_impaired_crossing_client.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://scripts/runtime/networked_gameplay/sm1/sm1_7_reconnect_client.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://scripts/runtime/networked_gameplay/sm1/sm1_authority_transfer_coordinator.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://scripts/runtime/networked_gameplay/sm1/sm1_canonical_mutation_gate.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://scripts/runtime/networked_gameplay/sm1/sm1_gateway_route_pivot.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://scripts/runtime/networked_gameplay/sm1/sm1_owner_port_map.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://scripts/runtime/networked_gameplay/sm1/sm1_player_carrying_domain.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://scripts/runtime/networked_gameplay/sm1/sm1_world_state_continuity.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://scripts/simulation/matter/generation/moon_geology_sampler.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://scripts/simulation/matter/generation/moon_surface_feature_catalog.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://scripts/simulation/matter/transactions/distributed/matter_cross_region_physical_output.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://scripts/world/matter/legacy_moon_matter_seam_clipper.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://scripts/world/matter/legacy_moon_surface_adapter.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://scripts/world/matter/lunar_matter_bubble.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://scripts/world/matter/lunar_matter_bubble_presenter.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://scripts/world/matter/lunar_matter_bubble_runtime.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/fixtures/v0_mvp/seam_input_driver.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/fixtures/v0_mvp/two_client_process.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/fixtures/v0_playable_seamless/client/v0_test_client_items.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/fixtures/v0_playable_seamless/client/v0_test_client_seam.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/matter/product/test_v0_p7_2_lunar_matter_bubble.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/matter/transactions/test_mw10_canonical_physical_output.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/matter/transactions/test_mw10_physical_output_durability.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/network/test_eg5_correctness_repair.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/network/test_v0_sm1_player_carry_and_gateway_pivot.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/research/ecology/v2/arch2_a03_exact_acceptance.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/research/ecology/v2/arch2_a5_exact_acceptance.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/research/ecology/v2/arch2_a5_reviewer_repairs.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/research/ecology/v2/arch2_a6_adversarial.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/research/ecology/v2/arch2_a6_exact_acceptance.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/research/ecology/v2/arch2_a6_fixtures.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/research/ecology/v2/arch2_a6_lineage_energy.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/research/ecology/v2/arch2_a6_restart.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/research/ecology/v2/arch2_a7_acceptance.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/research/ecology/v2/arch2_a7_protocol_guard.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/research/ecology/v2/arch2_a7_restart.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/research/ecology/v2/arch2_a7_ui.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/research/ecology/v2/arch2_a8_acceptance.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/research/ecology/v2/arch2_a8_restart.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/runtime/support/m5_control_read_consistency_regression.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/runtime/test_m7_item_graph_replica_aggregate_compatibility.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/runtime/test_v0_mvp3_fixed_tick_input_contract.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/runtime/test_v0_mvp3_gateway_ledger_budget.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/runtime/test_v0_mvp3_live_owner_handoff.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/runtime/test_v0_mvp3_source_attestation_roundtrip.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/runtime/test_v0_mvp_4_replica_rejection.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/runtime/test_v0_mvp_4_shared_canonical_dig.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/runtime/test_v0_mvp_5_exactly_once_material.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/runtime/test_v0_mvp_6_item_construction_composition.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/runtime/test_v0_mvp_6_native_carry_prerequisite.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/runtime/test_v0_mvp_6_native_item_handoff.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/runtime/test_v0_mvp_6_native_replay_security.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/runtime/test_v0_mvp_seam_continuity.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/runtime/test_v0_mvp_two_client_shared_world.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/runtime/test_v0_p7_1_matter_command_authority_gate.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/runtime/test_v0_p7_1_tool_to_mw4_adapter.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/runtime/test_v0_p7_2_lunar_surface_seam.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/runtime/test_v0_p7_3_material_batch_to_item_graph.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/runtime/test_v0_p7_4_persistence_restart_composition.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/runtime/test_v0_p7_5_two_client_convergence.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/runtime/test_v0_p7_6_seam_multi_region_composition.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/runtime/test_v0_p7_7_a_digging_playground.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/runtime/test_v0_p7_7_b_seam_near_single_region.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/runtime/test_v0_p7_7_c2_mw10_physical_output_delivery.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/runtime/test_v0_p7_7_c3_true_ab_end_to_end.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/runtime/test_v0_p7_7_d_mw10_reservation_conflict.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/runtime/test_v0_p7_7_e_actor_handoff_no_false_mw10.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/runtime/test_v0_p7_7_graphical_digging_slice.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/runtime/test_v0_sm1_authority_recovery.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/runtime/test_v0_sm1_combined_carry_world_chain.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/runtime/test_v0_sm1_concurrent_crossings.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/runtime/test_v0_sm1_fault_matrix_1_6.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/runtime/test_v0_sm1_gateway_failure_restart.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/runtime/test_v0_sm1_graphical_handoff_processes.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/runtime/test_v0_sm1_historical_activation_replay.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/runtime/test_v0_sm1_owner_map_and_transfer.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/runtime/test_v0_sm1_reconnect_after_handoff.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/runtime/test_v0_sm1_repeated_crossings_impaired_network.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/runtime/test_v0_sm1_world_mutations_around_handoff.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/runtime/test_v0_sm1_world_state_continuity.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/runtime/test_v0_test_client_contracts.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/runtime/test_v0_test_client_items_processes.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/runtime/test_v0_test_client_seam_processes.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://validation/ecology/evo_arch2_a5/rm_a5_11_growth_headroom.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://validation/ecology/evo_arch2_a5/rm_a5_12_reserve_headroom.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://validation/ecology/evo_arch2_a5/rm_a5_13_starvation_policy.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://validation/ecology/evo_arch2_a5/rm_a5_14_reproduction_policy.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://validation/ecology/evo_arch2_a5/rm_a5_15_reproduction_ledger.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://validation/ecology/evo_arch2_a5/rm_a5_16_reproductive_module_history.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://validation/ecology/evo_arch2_a5/rm_a5_17_starvation_reproduction_window.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://validation/ecology/evo_arch2_a5/rm_a5_18_propagule_paid_parent_binding.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://validation/ecology/evo_arch2_a5/rm_a5_19_reproduction_maintenance_history.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://validation/ecology/evo_arch2_a5/rm_a5_20_development_lifecycle_age.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://validation/ecology/evo_arch2_a5/rm_a5_21_parent_transfer_constructor_seal.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://validation/ecology/evo_arch2_a5/rm_a5_22_maintenance_history_causality.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://validation/ecology/evo_arch2_a5/rm_a5_23_parent_transfer_state_provenance.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://validation/ecology/evo_arch2_a5/rm_a5_25_reproductive_module_maintenance_history.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://validation/ecology/evo_arch2_a5/rm_a5_26_development_starvation_window.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://validation/ecology/evo_arch2_a5/rm_a5_27_exact_parent_state_receipt.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://validation/ecology/evo_arch2_a5/rm_a5_28_post_event_root_maintenance.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://validation/ecology/evo_arch2_a5/rm_a5_29_bounded_parent_proof_depth.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://validation/ecology/evo_arch2_a5/rm_a5_30_canonical_parent_depth_budget.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://validation/ecology/evo_arch2_a5/rm_a5_32_field_intake_lifecycle_causality.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://validation/ecology/evo_arch2_a5/rm_a5_33_nonreproductive_module_maintenance_history.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://validation/ecology/evo_arch2_a5/rm_a5_34_verified_module_birth_maintenance.gd". The file was re-created from cache.
+   at: EditorFileSystem::_process_file_system (editor\file_system\editor_file_system.cpp:1391)
+[   0% ] [90m[1mupdate_scripts_classes[22m | Started Регистрация глобальных классов… (2 steps)[39m[0m
+[   0% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  33% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[92m[ DONE ][39m [1mupdate_scripts_classes[22m
+[0m
+[   0% ] [90m[1mloading_editor_layout[22m | Started Загрузка редактора (5 steps)[39m[0m
+[   0% ] [90m[1mloading_editor_layout[22m | Загрузка макета редактора…[39m[0m
+[  16% ] [90m[1mloading_editor_layout[22m | Загрузка док-панели…[39m[0m
+[92m[ DONE ][39m [1mloading_editor_layout[22m
+[0m
+[breakpoint_mcp] plugin disabled

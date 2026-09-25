@@ -1,0 +1,94 @@
+name: MVP3 Owner Hooks Scope Gate
+on:
+  push:
+    branches: [feature/v0-mvp-playable-seamless-planet-r1]
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  exact-scope-gate:
+    if: >-
+      github.repository == 'rootfabric/distributed-world-simulator' &&
+      github.actor == 'rootfabric' && github.triggering_actor == 'rootfabric' &&
+      github.ref == 'refs/heads/feature/v0-mvp-playable-seamless-planet-r1' &&
+      (github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[mvp3-scope-gate]'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      EXPECTED_HEAD: ${{ github.sha }}
+      PYTHONUTF8: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Verify exact control-only subject
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+          test -z "$(git status --porcelain --untracked-files=no)"
+          if [ "$(git branch --show-current)" != feature/v0-mvp-playable-seamless-planet-r1 ]; then
+            git switch -c feature/v0-mvp-playable-seamless-planet-r1 "$EXPECTED_HEAD"
+          fi
+          python3 - <<'PY'
+          import json, subprocess
+          git = lambda *a: subprocess.check_output(['git',*a],text=True).strip()
+          wo = json.load(open('docs/control/mvp-act0-r1/work-order-mvp3-scope-gate-validation-r7.v1.json'))
+          assert set(git('diff','--name-only',wo['base_sha'],'HEAD').splitlines()) == set(wo['allowed_paths'])
+          assert git('rev-parse','origin/main') == '7dfc68ab5a1e90254a1b7039807f275b5da04eef'
+          PY
+          git diff --check 6dca13bfc91698551544271a0245246e6d2ead12 HEAD
+          python3 -m venv "$RUNNER_TEMP/mvp3-scope-venv"
+          "$RUNNER_TEMP/mvp3-scope-venv/bin/python" -m pip install -r scripts/harness/requirements.txt
+      - name: Execute existing Drive and CloseMission
+        shell: bash
+        run: |
+          set -euo pipefail
+          export PYTHONPATH="$PWD/scripts:$PWD"
+          "$RUNNER_TEMP/mvp3-scope-venv/bin/python" - <<'PY'
+          import json, os, pathlib, subprocess, sys
+          out = pathlib.Path('artifacts/mvp3-scope-gate'); out.mkdir(parents=True, exist_ok=False)
+          commands=[]
+          for mode in ['drive', 'close-mission']:
+              argv=[sys.executable,'-m','harness.cli',mode,'--root','.', '--execution','config/control/harness/executions/E2026-09-09-V0-MVP-R1']
+              result=subprocess.run(argv,text=True,capture_output=True,timeout=180,check=False)
+              (out/(mode+'.json')).write_text(result.stdout)
+              (out/(mode+'.stderr.log')).write_text(result.stderr)
+              commands.append({'argv':argv,'exit_code':result.returncode})
+              (out/'commands.json').write_text(json.dumps(commands,indent=2)+'\n')
+              print(mode, 'exit=',result.returncode, result.stdout[-3500:])
+              assert result.returncode == 0, mode + ' failed'
+          drive=json.loads((out/'drive.json').read_text())
+          close=json.loads((out/'close-mission.json').read_text())
+          assert drive['drive']['status'] == 'WAITING_HUMAN'
+          for result in [drive, close]:
+              assert result['next']['human_decision_required'] is True
+              assert result['next']['mission_complete'] is False
+              assert result['next']['mission_exit_allowed'] is True
+              assert result['next']['handoff_class'] == 'HUMAN_DECISION_REQUIRED'
+          print('HUMAN_SCOPE_GATE_RECOGNIZED; MVP3_AND_WHOLE_MVP_ACCEPTANCE=false')
+          PY
+      - name: Preserve exact evidence manifest
+        if: always()
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib,subprocess
+          out=pathlib.Path('artifacts/mvp3-scope-gate');out.mkdir(parents=True,exist_ok=True)
+          git=lambda *a:subprocess.check_output(['git',*a],text=True).strip()
+          value={'schema':'distributed_world_simulator.mvp3_scope_gate_evidence.v1','subject_head':git('rev-parse','HEAD'),'subject_tree':git('rev-parse','HEAD^{tree}'),'runtime_code_subject':'6dca13bfc91698551544271a0245246e6d2ead12','run_id':os.environ['GITHUB_RUN_ID'],'tracked_after':git('status','--porcelain','--untracked-files=no'),'mvp3_predicate_verified':False,'whole_mvp_acceptance':False,'artifacts':[]}
+          for p in sorted(out.glob('*')):
+              if p.is_file() and p.name!='manifest.json':
+                  value['artifacts'].append({'path':p.name,'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()})
+          (out/'manifest.json').write_text(json.dumps(value,indent=2)+'\n')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mvp3-scope-gate-${{ github.sha }}-${{ github.run_id }}
+          path: artifacts/mvp3-scope-gate/
+          if-no-files-found: error
+          retention-days: 90

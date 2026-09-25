@@ -1,0 +1,23 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-09-09-V0-MVP-R1-V0-MVP-R1-WO-001-0064-MVP8-BOUNDED-INTERACTIVE-WORKLOAD-VERIFIED",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "sequence": 64,
+  "event_type": "PREDICATE_VERIFIED",
+  "work_state": "IN_PROGRESS",
+  "recorded_at_utc": "2026-09-22T10:52:00Z",
+  "actor": "DIRECTOR",
+  "branch": "repair/v0-mvp8-cold-class-cache-r2",
+  "head_sha": "dc6e7fffa27d764ea09ded949d50b99a32fa4d9b",
+  "tree_sha": "8fc0044ff42ad502e6457593a185465af7d2a825",
+  "predicate": "MVP_BOUNDED_INTERACTIVE_WORKLOAD",
+  "command": "MVP8-BOUNDED-INTERACTIVE-WORKLOAD-VERIFIED",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/verifications/MVP8-INDEPENDENT-REVIEW-DC6E7FFF-R1.v1.json",
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/verifications/MVP8-INDEPENDENT-VERIFICATION-DC6E7FFF-R1.v1.json",
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence/MVP8-LEAF-CLOSURE-DC6E7FFF-R1.v1.json"
+  ],
+  "summary": "MVP8 leaf is technically closed on frozen dc6e7fff/8fc0044f: all seven bounded-workload subpredicates are verified by Fresh Reviewer PASS and Fresh Independent Verifier VERIFIED, exact Windows cold-start runtime, canonical Windows world/core PASS, Linux corroboration and non-RED PC0. Parent Work Order remains IN_PROGRESS pending human MVP acceptance and merge approval."
+}
