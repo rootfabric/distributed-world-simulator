@@ -1,0 +1,89 @@
+name: FABRIC R5.2 T12 Control Diagnostic R1
+
+on:
+  push:
+    branches: [verify/fabric-r5-2-t12-control-diagnostic-r1]
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Fetch all refs
+        shell: bash
+        run: git fetch origin '+refs/heads/*:refs/remotes/origin/*' --prune
+
+      - name: Diagnose live directional RED
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          python3 - <<'PY'
+          import json, sys
+          from pathlib import Path
+          ROOT=Path('.').resolve()
+          sys.path.insert(0,str(ROOT/'scripts'/'control'))
+          import project_control as pc
+          import project_control_directional_watch as d
+
+          registry=d.load_main_owned(d.REGISTRY_PATH)
+          policy=d.load_main_owned(d.POLICY_PATH)
+          scopes=[
+              scope
+              for key,central in dict(registry.get('programs',{})).items()
+              if isinstance(central,dict)
+              for scope in [d.program_scope(key,central,policy)]
+              if scope is not None
+          ]
+          clearances,loaded=d.load_clearances()
+          print('CLEARANCE_REGISTRY_LOADED=',loaded)
+          print('SCOPES=',json.dumps([
+              {k:s.get(k) for k in ('program','branch','head_sha','stage_status','producer_enabled','blocks_global_progress')}
+              | {'changed_count':len(s.get('changed_files',[]))}
+              for s in scopes
+          ],sort_keys=True))
+          watched_level=str(dict(policy.get('directional_watch_policy',{})).get('watched_hit_health','YELLOW'))
+          critical_level=str(dict(policy.get('directional_watch_policy',{})).get('critical_hit_health','RED'))
+          overall='GREEN'
+          for p in scopes:
+              if not p['producer_enabled'] or not p['changed_files']:
+                  continue
+              for c in scopes:
+                  if p['program']==c['program'] or not bool(c.get('blocks_global_progress',True)):
+                      continue
+                  critical=[x for x in p['changed_files'] if d.matches_any(x,list(c['critical_watched_paths']))]
+                  cs=set(critical)
+                  watched=[x for x in p['changed_files'] if x not in cs and d.matches_any(x,list(c['watched_paths']))]
+                  if not critical and not watched:
+                      continue
+                  rec={
+                      'producer':p['program'],'producer_branch':p['branch'],'producer_head':p['head_sha'],
+                      'consumer':c['program'],'consumer_branch':c['branch'],'consumer_head':c['head_sha'],
+                      'consumer_passport_blob':c['passport_blob_sha'],
+                      'critical':critical,'watched':watched,
+                  }
+                  if critical:
+                      all_hits=sorted(set(critical+watched))
+                      accepted,rejections=d.resolve_critical_clearance(
+                          clearances,p,c,critical,all_hits,d.git_object_sha,d.is_ancestor
+                      )
+                      rec['accepted_clearance']=accepted
+                      rec['clearance_rejections']=rejections
+                      level=watched_level if accepted is not None else critical_level
+                  else:
+                      level=watched_level
+                  rec['effective_level']=level
+                  print('DIRECTIONAL_FINDING='+json.dumps(rec,sort_keys=True))
+                  if d.HEALTH_RANK[level]>d.HEALTH_RANK[overall]:
+                      overall=level
+          print('DIRECTIONAL_OVERALL='+overall)
+          if overall!='RED':
+              raise SystemExit('EXPECTED_CURRENT_RED_NOT_REPRODUCED')
+          PY
