@@ -88,8 +88,15 @@ static func step_population(field: Dictionary, population: Array, owner_token: S
 	propagules.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return a.id < b.id)
 	return {"success": true, "field": field_after, "population": next_population, "propagules": propagules, "field_hash": Field.state_hash(field_after)}
 
-static func materialize_propagule(propagule: Dictionary, blueprint: Dictionary, paid_parent_state: Dictionary = {}) -> Dictionary:
-	var state := LS.create_parent_transfer(blueprint, propagule, paid_parent_state)
+## Canonical propagule materialization (A5-owned admission).
+## Without a mutation receipt the v1 parent-transfer witness applies (child
+## blueprint hash bound to the parent's). With a sealed canonical mutation
+## receipt (genome_mutation_receipt_v1) plus the parent blueprint, the
+## mutated child genome is admitted through the receipt-binding witness.
+## Fail-closed: any witness or receipt error returns {} — there is no
+## fallback to the parent blueprint inside A5.
+static func materialize_propagule(propagule: Dictionary, blueprint: Dictionary, paid_parent_state: Dictionary = {}, mutation_receipt: Dictionary = {}, parent_blueprint: Dictionary = {}) -> Dictionary:
+	var state := LS.create_parent_transfer(blueprint, propagule, paid_parent_state, mutation_receipt, parent_blueprint)
 	return {"blueprint": blueprint.duplicate(true), "state": state} if not state.is_empty() else {}
 
 static func validate_propagule(v: Variant, blueprint: Dictionary, paid_parent_state: Dictionary = {}) -> String:
