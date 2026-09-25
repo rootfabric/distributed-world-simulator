@@ -1,6 +1,6 @@
 # FABRIC R5.2 / T12 — Ship Matryoshka
 
-Статус: **IMPLEMENTER_EXACT_3X_PASS_NOT_ACCEPTED**. Research-only; canonical owners — Construction/Matter. PR #690 остаётся draft.
+Статус: **T12-CLOSE ACCEPTANCE PASS / MERGE-READY**. Research-only; canonical owners — Construction/Matter.
 База: T11 merge `70979aaab49bd6413c628f9e98532944a4bd7c74`, tree `467e2dee02bdb2f95b1c85efce32223ef81ed07a`.
 
 ## Design Brief / bounded work order
@@ -126,15 +126,54 @@ canonical projector и не маскируется копированием чи
 Проба общей перегрузки выбрана внутри индивидуального current envelope T6,
 чтобы проверять именно общий предел батареи. Пороги тестов не ослаблялись.
 
-## Незакрытые acceptance gates
+## T12-CLOSE — закрытые acceptance gates
 
-Independent Reviewer: **PENDING**. Independent Verifier: **PENDING**.
-Общий Project Control run `36124929341` завершился FAILURE: из 65 compatibility
-тестов один `test_live_proposed_r3_standard_and_directional_are_non_red` получил
-`directional_health == RED`. Основные PC0 auditor steps после него не запустились.
-Control/Harness файлы T12 не менял; причина live directional RED в этой работе
-не устранена. Результат не объявляется merge-ready или принятой контрольной точкой.
+Fresh Reviewer на frozen head `5b317445ab5c43dd0d7370cf9c3d0e7f95969ef6` завершён:
+`PASS / 0 blocking findings` (review id `5318515714`).
 
-Следующая проверка должна отдельно подтвердить trust boundaries, единицы и знаки
-энергии, solver domain, snapshot/rebind semantics и локальность affected subtree,
-а также закрыть Project Control. Успех implementer-тестов не заменяет эти роли.
+Fresh Independent Verifier использовал отдельную ветку
+`verify/fabric-r5-2-t12-fresh-independent-verifier-r1`. Единственное отличие от
+frozen subject — verifier workflow; product diff равен нулю. GitHub-hosted source
+proof run `36144125759`, artifact `10869196607`, затем exact verifier bundle
+был развёрнут отдельно и выполнен тремя процессами canonical Linux-double Godot:
+
+```text
+sample 1 = PASS, 8386 assertions
+sample 2 = PASS, 8386 assertions
+sample 3 = PASS, 8386 assertions
+
+deterministic hash =
+f29401ce869faab44996420cddb983ec97c85032e04fd6febe2d565731c46cbd
+
+all verifier raw logs sha256 =
+2a063f9ed36521998ac16d17319abcb6817c272a8687eb1a4f305affd2efd49f
+```
+
+### Project Control
+
+Первоначальный RED оказался не дефектом T12. Live proposed-R3 compatibility test
+брал registry/policy из `origin/main`, но clearance registry — из старого
+research checkout. Так смешивались разные control-plane generations и уже
+принятый main-owned V0→NX clearance не был виден.
+
+Исправление вынесено в отдельный main-based PR #691: production directional-watch
+`load_clearances()` теперь используется и test oracle. Ни policy, ни clearance,
+ни health threshold не менялись. Project Control repair run `36144323392`
+полностью SUCCESS и repair merged в main как
+`cf217747e1d277eabc9c4b477299192f1cb8653d`.
+
+Тот же test-only fix синхронизирован в research base, поэтому T12 PR сохраняет
+строго T12-only diff. Собственный Project Control T12 run `36144903889`:
+
+```text
+architecture/ownership compatibility = PASS
+H0.2 regression                     = PASS
+V0 regression                       = PASS
+generation safety                   = PASS
+PC0 standard                        = PASS
+PC0 directional                     = PASS
+overall Project Control             = SUCCESS
+```
+
+T12 product/runtime после exact verification не менялся. Финальный closure-коммит
+меняет только эту документацию и durable evidence. **T12-CLOSE = PASS / MERGE-READY.**
