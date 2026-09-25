@@ -1,0 +1,22 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-09-09-V0-MVP-R1-V0-MVP-R1-WO-001-0040-MVP8-EVIDENCE-MAP-COMPLETE",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "sequence": 40,
+  "event_type": "PREDICATE_VERIFIED",
+  "work_state": "IN_PROGRESS",
+  "recorded_at_utc": "2026-09-20T12:46:02Z",
+  "actor": "IMPLEMENTER",
+  "branch": "feature/v0-mvp-playable-seamless-planet-r1",
+  "head_sha": "90bc1026f0f5749492107191233330f87c8c70df",
+  "predicate": "MVP8_EVIDENCE_MAP_COMPLETE",
+  "command": "MVP8-EVIDENCE-MAP-COMPLETE",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence/MVP8-EVIDENCE-MAP-90BC1026-R1.v1.json",
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence/MVP8-POST-BUILD-CRITIQUE-90BC1026-R1.v1.json",
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence/MVP8-IMPLEMENTER-EXACT-EVIDENCE-90BC1026-R1.v1.json"
+  ],
+  "summary": "MVP8 Evidence Map is frozen against exact product 90bc1026/4b6f2d48 and leaves independent review/verifier, full world/core and PC0 gaps open. This is evidence packaging only and does not verify MVP_BOUNDED_INTERACTIVE_WORKLOAD."
+}

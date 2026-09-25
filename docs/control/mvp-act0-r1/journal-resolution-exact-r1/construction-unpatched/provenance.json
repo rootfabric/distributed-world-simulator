@@ -1,0 +1,16 @@
+{
+  "feature_head": "73b8818184c93986e3313f35f9f4548c608e47e6",
+  "journal_source": "68433ec7",
+  "journal_blob": "ed23f0d2b7a9e6cfb3f13b78de70c7f552035b69",
+  "exact_clean_subject": false,
+  "purpose": "causal A/B only; report subject labels do not describe modified journal",
+  "argv": [
+    "C:/Godot/godot/bin/godot.windows.editor.double.x86_64.console.exe",
+    "--headless",
+    "--path",
+    "C:\\distributed-world-simulator\\worktrees\\mvp6-continuation",
+    "--script",
+    "res://tests/runtime/test_v0_mvp_6_item_construction_composition.gd"
+  ],
+  "exit_code": 1
+}

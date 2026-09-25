@@ -1,0 +1,97 @@
+{
+  "schema": "distributed_world_simulator.mvp6_cross_authority_construction_seam_evidence.v1",
+  "work_order": "V0-MVP-R1-WO-001",
+  "epoch": "E2026-09-09-V0-MVP-R1",
+  "checkpoint": "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE",
+  "work_state": "IN_PROGRESS",
+  "runtime_subject": {
+    "head": "95aed8683076ed6e03a976a6ccec6bd4130a8166",
+    "tree": "773e9cf221ce0c0e13f8bf83517765fb01be903d"
+  },
+  "exact_execution": {
+    "workflow": "MVP6 Item Construction Exact",
+    "run_id": 35210565719,
+    "job_id": 105167525721,
+    "run_attempt": 1,
+    "conclusion": "SUCCESS",
+    "godot_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+    "artifact_id": 10491249309,
+    "artifact_name": "mvp6-seam-repro-95aed8683076ed6e03a976a6ccec6bd4130a8166-35210565719-1",
+    "artifact_zip_sha256": "a2ccdc9d3039385c854998f959b90e3940c0286ab9721a06949b8fe7eefe0cbc",
+    "artifact_manifest_sha256": "311fa39c04d4a5a35248869fc487f17213b5367c841dbf09d0dc485d4c6c1072",
+    "artifact_manifest_members": 11,
+    "artifact_manifest_mismatches": 0,
+    "import_log_sha256": "4dbb8d96c236f7e957158080b3b2f50fb3f95cd14e86c8c76af09533e0a9474e",
+    "diagnostic_log_sha256": "cd4a4e750ab2190d43b2832edfbfcf69cf91308bb518dc3affccb2728677cbbd",
+    "product_log_sha256": "fba6a5600c28ea7608c0dc26a893e974a8a9da70d156bed9263bfe1f9274e975"
+  },
+  "diagnostic": {
+    "passed": true,
+    "assertions": 63,
+    "failures": 0,
+    "purpose": "Preserve the original C17 actor-context and C9 unconfigured reproductions plus authenticated positive control. This remains diagnostic evidence, not product acceptance."
+  },
+  "product_gate": {
+    "passed": true,
+    "assertions": 211,
+    "failures": 0,
+    "base_part_count": 100,
+    "add_part_count": 101,
+    "remove_part_count": 100,
+    "single_writer_c17_executed": true,
+    "east_read_replica_executed": true,
+    "cross_authority_add_executed": true,
+    "cross_authority_remove_executed": true,
+    "add_remove_replay_executed": true,
+    "wrong_epoch_negative_executed": true,
+    "nonempty_player_seam_carry_executed": true,
+    "same_canonical_m4_item_graph": true,
+    "real_canonical_ore_consumed": true,
+    "c9_damage_process_configured": true,
+    "detached_leaf_salvage_has_canonical_world_spatial_ref": true
+  },
+  "repair_lineage": [
+    {
+      "head": "b45aea4f908390682f5a7a1d3ba8973d5eddec2a",
+      "result": "FALSE_IDENTITY_FAILURE",
+      "finding": "Factory success helper flattened the details payload. Strict Item Graph identity itself was not defective."
+    },
+    {
+      "head": "687cd39fbb1978b77641060cfd228c7bb80e305b",
+      "result": "IDENTITY_REPAIR_PASS_THEN_SCHEMA_EXPECTATION_FAIL",
+      "finding": "Nested details contract restored; canonical pre-ADD snapshot is PARTIAL with semantic STRUCTURE, not build_state STRUCTURE."
+    },
+    {
+      "head": "2ce6c33d9db6207aef4667c155a7b995c3cf6e84",
+      "result": "ADD_REPLICA_REPLAY_PASS_THEN_C9_SALVAGE_POLICY_FAIL",
+      "finding": "Base-100 and ADD-101 path passed; clean REMOVE must detach the intact leaf rather than mark it DESTROYED with destroyed-salvage forbidden."
+    },
+    {
+      "head": "bc81e8907608a10019725816fbd6ac4cb88b52b8",
+      "result": "C9_PLANNED_THEN_ITEM_MUTATION_SCHEMA_FAIL",
+      "finding": "Construction-only WORLD relation lacked the ItemRegistry v2 spatial_ref required for persisted salvage items."
+    },
+    {
+      "head": "95aed8683076ed6e03a976a6ccec6bd4130a8166",
+      "result": "PASS",
+      "finding": "Detached leaf uses canonical ItemRelations.world(transform); full server-side 100->101->100 cross-authority flow passes."
+    }
+  ],
+  "controller_observation": {
+    "drive_exit_code": 0,
+    "close_mission_exit_code": 8,
+    "interpretation": "CONTINUE; parent mission remains non-terminal."
+  },
+  "not_yet_proven": {
+    "graphical_five_process_executed": false,
+    "derived_collision_executed": false,
+    "full_world_core_executed_for_this_subject": false,
+    "fresh_independent_reviewer": false,
+    "fresh_independent_verifier": false,
+    "mvp6_cross_authority_construction_seam_verified": false,
+    "mvp6_predicate_verified": false,
+    "whole_mvp_accepted": false,
+    "main_runtime_merge": false
+  },
+  "next_bounded_slice": "Generic derived Construction presentation/collision sourced from the canonical seam snapshot, followed by real five-process authority-A/authority-B/gateway/client-A/client-B execution."
+}

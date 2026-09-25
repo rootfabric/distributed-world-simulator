@@ -1,0 +1,80 @@
+{
+  "schema": "distributed_world_simulator.mvp8_repair_handoff.v1",
+  "recorded_at_utc": "2026-09-21T13:18:30Z",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "defect": {
+    "classification": "PRODUCT_VERIFICATION_HARNESS_DEFECT",
+    "frozen_head": "90bc1026f0f5749492107191233330f87c8c70df",
+    "frozen_tree": "4b6f2d48f7ef8d9c441ae89d2cbb02c730ef7f71",
+    "symptom": "Cold Windows multi-process MVP8 launches emitted real Godot Parse Error diagnostics for Inventory class_name types before global script class discovery completed. Attempt 9 completed functional workload checks but correctly failed strict fatal-log acceptance.",
+    "strict_fatal_log_gate_preserved": true
+  },
+  "repair_r1": {
+    "head": "cdcb517947218ec31d76cbbd7d55462d86813232",
+    "tree": "f0bcd8c9fe29a1a4a1bb82d0bb04101502da75c2",
+    "parent": "90bc1026f0f5749492107191233330f87c8c70df",
+    "changed_files": [
+      "tests/integration/test_v0_mvp_8_bounded_workload.py"
+    ],
+    "behavior": "Run one deterministic headless editor import before phase1, require non-empty .godot/global_script_class_cache.cfg, preserve editor-import.log, retain unchanged strict fatal-log scan."
+  },
+  "r1_validation": {
+    "windows": {
+      "run_id": 35602887124,
+      "job_id": 106342950592,
+      "mvp8_exact": "PASS",
+      "positive_checks": "20/20",
+      "negative_controls": "14/14",
+      "fatal_logs": [],
+      "raw_snapshot_binding": "PASS",
+      "artifact_id": 10639891600,
+      "artifact_digest": "sha256:930eb4acfc78496ac6013ac76760cd57a32a9306794ee54b8ca600c6800286f6",
+      "world_core": "FAILED_AT_LEGACY_M2_TRANSIENT_EXIT_MINUS_1"
+    },
+    "linux": {
+      "run_id": 35603063632,
+      "job_id": 106343523020,
+      "result": "SUCCESS",
+      "positive_checks": "20/20",
+      "negative_controls": "14/14",
+      "fatal_logs": [],
+      "artifact_id": 10640670776,
+      "artifact_digest": "sha256:d87273e942aff49c3b103b8f6f353d5ca5bea496e945b961c9d9ef33e8dc2e8b"
+    },
+    "focused_windows_m2": {
+      "run_id": 35603770473,
+      "job_id": 106345831996,
+      "attempt_1": "PASS",
+      "attempt_2": "PASS",
+      "artifact_id": 10641955288,
+      "artifact_digest": "sha256:038eaf4b924ee6f9e55fef28aaba407ffde17da2ca1908679346b0209d86a78a",
+      "classification": "prior full-suite M2 exit -1 not independently reproducible"
+    }
+  },
+  "final_repair_subject": {
+    "branch": "repair/v0-mvp8-cold-class-cache-r2",
+    "head": "dc6e7fffa27d764ea09ded949d50b99a32fa4d9b",
+    "tree": "8fc0044ff42ad502e6457593a185465af7d2a825",
+    "base": "6779af78c8cde642abf8bdfc868e905dc48a763f",
+    "commits_ahead": 1,
+    "changed_files": [
+      "tests/integration/test_v0_mvp_8_bounded_workload.py"
+    ],
+    "content_blob": "07c1f767a4db998561c3993b161c54f05bc6cd31",
+    "draft_pr": 680
+  },
+  "final_subject_validation_dispatch": {
+    "linux_run": 35604596753,
+    "windows_run": 35604611900,
+    "windows_world_core_r1_equivalent_run": 35604323365
+  },
+  "state": {
+    "merge_performed": false,
+    "predicate_verified": false,
+    "human_acceptance": false,
+    "fresh_reviewer_required": true,
+    "fresh_verifier_required": true,
+    "mvp8_closed": false
+  }
+}

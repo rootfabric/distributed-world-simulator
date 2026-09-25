@@ -1,0 +1,254 @@
+name: MVP4 Shared Canonical Dig Exact Validation
+on:
+  push:
+    branches: [feature/v0-mvp-playable-seamless-planet-r1]
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: mvp4-shared-dig-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  exact:
+    if: github.repository == 'rootfabric/distributed-world-simulator' && github.ref == 'refs/heads/feature/v0-mvp-playable-seamless-planet-r1' && (github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[mvp4-evidence]'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      EXPECTED_HEAD: ${{ github.sha }}
+      PYTHONUTF8: '1'
+      PYTHONPATH: scripts
+      BREAKPOINT_RUNTIME_DISABLED: '1'
+      GODOT_SILENCE_ROOT_WARNING: '1'
+      PLANET_SIMULATOR_INVENTORY_PROFILE: planet_default
+      LIBGL_ALWAYS_SOFTWARE: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Exact preflight
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+          test -z "$(git status --porcelain --untracked-files=no)"
+          git merge-base --is-ancestor e80ff5a37f30729509f0a7d307cbb44f44dc23ac HEAD
+          git diff --check e80ff5a37f30729509f0a7d307cbb44f44dc23ac HEAD
+          echo "EXPECTED_TREE=$(git rev-parse HEAD^{tree})" >> "$GITHUB_ENV"
+          mkdir -p artifacts/mvp4-exact
+          if ! command -v Xvfb >/dev/null || ! command -v xauth >/dev/null; then
+            sudo -n apt-get update
+            sudo -n env DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends xvfb xauth libgl1-mesa-dri
+          fi
+      - uses: actions/download-artifact@v4
+        with:
+          name: p7-repair-engine-34117353691
+          run-id: 34117353691
+          repository: rootfabric/distributed-world-simulator
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/mvp4-engine
+      - name: Focused and actual graphical execution with MVP3 regressions
+        shell: bash
+        run: |
+          set -euo pipefail
+          export GODOT_BIN="$RUNNER_TEMP/mvp4-engine/godot"
+          test "$(sha256sum "$GODOT_BIN" | cut -d' ' -f1)" = bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7
+          chmod u+x "$GODOT_BIN"
+          xvfb-run -a -s '-screen 0 1600x900x24' python3 docs/control/mvp-act0-r1/validate_mvp4_exact.py
+      - name: Bind raw evidence
+        if: always()
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib,subprocess
+          out=pathlib.Path('artifacts/mvp4-exact');out.mkdir(parents=True,exist_ok=True)
+          git=lambda *a:subprocess.check_output(['git',*a],text=True).strip()
+          m={'schema':'distributed_world_simulator.mvp4_exact_manifest.v1','subject_head':git('rev-parse','HEAD'),'subject_tree':git('rev-parse','HEAD^{tree}'),'run_id':os.environ['GITHUB_RUN_ID'],'run_attempt':os.environ['GITHUB_RUN_ATTEMPT'],'tracked_after':git('status','--porcelain','--untracked-files=no'),'mvp4_predicate_verified':False,'files':[]}
+          engine=pathlib.Path(os.environ['RUNNER_TEMP'])/'mvp4-engine/godot'
+          m['engine_sha256']=hashlib.sha256(engine.read_bytes()).hexdigest() if engine.is_file() else None
+          for p in sorted(out.rglob('*')):
+              if p.is_file() and p!=out/'manifest.json':m['files'].append({'path':p.relative_to(out).as_posix(),'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()})
+          (out/'manifest.json').write_text(json.dumps(m,indent=2)+'\n')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mvp4-exact-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: artifacts/mvp4-exact/
+          if-no-files-found: error
+          retention-days: 90
+
+  control-drive:
+    if: github.repository == 'rootfabric/distributed-world-simulator' && github.ref == 'refs/heads/feature/v0-mvp-playable-seamless-planet-r1' && (github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[mvp4-worldcore]') || contains(github.event.head_commit.message, '[mvp4-drive]'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      EXPECTED_HEAD: ${{ github.sha }}
+      PYTHONUTF8: '1'
+      PYTHONPATH: scripts
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Verify exact control subject
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+          test -z "$(git status --porcelain --untracked-files=no)"
+          git fetch origin '+refs/heads/*:refs/remotes/origin/*' --prune
+          mkdir -p artifacts/mvp4-control-drive
+          git rev-parse HEAD HEAD^{tree} origin/main > artifacts/mvp4-control-drive/subjects.txt
+      - name: Install pinned Harness dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install --disable-pip-version-check -r scripts/harness/requirements.txt
+          python3 - <<'PY'
+          import importlib.metadata
+          from pathlib import Path
+          required=Path('scripts/harness/requirements.txt').read_text(encoding='utf-8').strip()
+          expected=required.split('==',1)[1]
+          actual=importlib.metadata.version('jsonschema')
+          if actual != expected: raise SystemExit(f'PINNED_DEPENDENCY_VERSION_MISMATCH:jsonschema={actual}:expected={expected}')
+          print(f'PINNED DEPENDENCY OK: jsonschema=={actual}')
+          PY
+      - name: CONTROL_DEVELOPMENT Status Resume Drive
+        shell: bash
+        run: |
+          set -euo pipefail
+          pwsh -NoProfile -File ./CONTROL_DEVELOPMENT.ps1 -Status 2>&1 | tee artifacts/mvp4-control-drive/status.log
+          pwsh -NoProfile -File ./CONTROL_DEVELOPMENT.ps1 -Resume 2>&1 | tee artifacts/mvp4-control-drive/resume.log
+          pwsh -NoProfile -File ./CONTROL_DEVELOPMENT.ps1 -Drive 2>&1 | tee artifacts/mvp4-control-drive/drive.log
+          test -z "$(git status --porcelain --untracked-files=no)"
+      - name: Bind control-drive evidence
+        if: always()
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib,subprocess
+          out=pathlib.Path('artifacts/mvp4-control-drive');out.mkdir(parents=True,exist_ok=True)
+          def git(*a): return subprocess.check_output(['git',*a],text=True).strip()
+          files=[]
+          for p in sorted(out.rglob('*')):
+              if p.is_file() and p!=out/'manifest.json': files.append({'path':p.relative_to(out).as_posix(),'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()})
+          m={'schema':'distributed_world_simulator.mvp4_control_drive_exact.v1','subject_head':git('rev-parse','HEAD'),'subject_tree':git('rev-parse','HEAD^{tree}'),'canonical_main':git('rev-parse','origin/main'),'run_id':os.environ['GITHUB_RUN_ID'],'run_attempt':os.environ['GITHUB_RUN_ATTEMPT'],'tracked_after':git('status','--porcelain','--untracked-files=no'),'mvp4_predicate_verified':False,'files':files}
+          (out/'manifest.json').write_text(json.dumps(m,indent=2)+'\n')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mvp4-control-drive-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: artifacts/mvp4-control-drive/
+          if-no-files-found: error
+          retention-days: 90
+
+  full-world-core:
+    if: github.repository == 'rootfabric/distributed-world-simulator' && github.ref == 'refs/heads/feature/v0-mvp-playable-seamless-planet-r1' && (github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[mvp4-worldcore]'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 95
+    env:
+      EXPECTED_HEAD: ${{ github.sha }}
+      ENGINE_SHA: bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7
+      PYTHONUTF8: '1'
+      PYTHONPATH: scripts
+      BREAKPOINT_RUNTIME_DISABLED: '1'
+      PLANET_SIMULATOR_INVENTORY_PROFILE: planet_default
+      LIBGL_ALWAYS_SOFTWARE: '1'
+      GODOT_SILENCE_ROOT_WARNING: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Verify exact world-core subject and graphical prerequisites
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+          test -z "$(git status --porcelain --untracked-files=no)"
+          git fetch origin '+refs/heads/*:refs/remotes/origin/*' --prune
+          mkdir -p artifacts/mvp4-world-core
+          git rev-parse HEAD HEAD^{tree} origin/main > artifacts/mvp4-world-core/subjects.txt
+          if [ ! -x /usr/bin/Xvfb ] || ! command -v xauth >/dev/null; then
+            sudo -n apt-get update
+            sudo -n env DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends xvfb xauth libgl1-mesa-dri
+          fi
+          test -x /usr/bin/Xvfb
+      - uses: actions/download-artifact@v4
+        with:
+          name: p7-repair-engine-34117353691
+          run-id: 34117353691
+          repository: rootfabric/distributed-world-simulator
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/mvp4-world-core-engine
+      - name: Run canonical unchanged full world-core suite
+        shell: bash
+        run: |
+          set -euo pipefail
+          export GODOT_BIN="$RUNNER_TEMP/mvp4-world-core-engine/godot"
+          test "$(sha256sum "$GODOT_BIN" | cut -d' ' -f1)" = "$ENGINE_SHA"
+          chmod u+x "$GODOT_BIN"
+          "$GODOT_BIN" --version | tee artifacts/mvp4-world-core/godot-version.log
+          pwsh -NoProfile -File RUN_WORLD_REGRESSION_TESTS.ps1 2>&1 | tee artifacts/mvp4-world-core/world-core.log
+          test -z "$(git status --porcelain --untracked-files=no)"
+      - name: Prove literal soak and main-scene terminal gates
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json,pathlib
+          p=pathlib.Path('artifacts/test-results/world-regression-summary.json')
+          if not p.is_file(): raise SystemExit('WORLD_CORE_SUMMARY_MISSING')
+          d=json.loads(p.read_text())
+          if d.get('passed') is not True: raise SystemExit('WORLD_CORE_SUMMARY_NOT_PASS')
+          steps=d.get('steps') or []
+          failed=[s for s in steps if not bool(s.get('passed')) or int(s.get('exit_code',0)) != 0]
+          if failed: raise SystemExit('WORLD_CORE_FAILED_STEPS:'+json.dumps(failed[:5],sort_keys=True))
+          by_name={str(s.get('name','')):s for s in steps}
+          soak=by_name.get('test_v0_p6_thirty_minute_soak')
+          main=by_name.get('main_scene_cli_all')
+          if not soak or soak.get('passed') is not True or int(soak.get('exit_code',-1)) != 0: raise SystemExit('THIRTY_MINUTE_SOAK_NOT_PASS')
+          if float(soak.get('duration_seconds',0)) < 1800.0: raise SystemExit('THIRTY_MINUTE_SOAK_DURATION_TOO_SHORT')
+          if not main or main.get('passed') is not True or int(main.get('exit_code',-1)) != 0: raise SystemExit('MAIN_SCENE_CLI_ALL_NOT_PASS')
+          report={'schema':'distributed_world_simulator.mvp4_world_core_acceptance.v1','passed':True,'declared_test_count':d.get('declared_test_count'),'discovered_test_count':d.get('discovered_test_count'),'step_count':len(steps),'failed_step_count':0,'nonzero_exit_count':0,'thirty_minute_soak':soak,'main_scene_cli_all':main}
+          out=pathlib.Path('artifacts/mvp4-world-core/world-core-acceptance.json')
+          out.write_text(json.dumps(report,indent=2)+'\n')
+          print(json.dumps(report,indent=2))
+          PY
+      - name: Bind exact world-core evidence manifest
+        if: always()
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib,subprocess
+          out=pathlib.Path('artifacts/mvp4-world-core'); out.mkdir(parents=True,exist_ok=True)
+          def g(*a):
+              p=subprocess.run(['git',*a],capture_output=True,text=True)
+              return {'exit_code':p.returncode,'stdout':p.stdout.strip(),'stderr':p.stderr.strip()}
+          files=[]
+          for root in [out,pathlib.Path('artifacts/test-results')]:
+              if not root.exists(): continue
+              for p in sorted(root.rglob('*')):
+                  if p.is_file() and p != out/'manifest.json' and not any(x.startswith('world-profile-') or x in ('user-data','.godot') for x in p.parts):
+                      files.append({'path':str(p),'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()})
+          engine=pathlib.Path(os.environ['RUNNER_TEMP'])/'mvp4-world-core-engine/godot'
+          m={'schema':'distributed_world_simulator.mvp4_full_world_core_exact.v1','subject_head':g('rev-parse','HEAD'),'subject_tree':g('rev-parse','HEAD^{tree}'),'canonical_main':g('rev-parse','origin/main'),'expected_head':os.environ['EXPECTED_HEAD'],'run_id':os.environ['GITHUB_RUN_ID'],'run_attempt':os.environ['GITHUB_RUN_ATTEMPT'],'actual_engine_sha256':hashlib.sha256(engine.read_bytes()).hexdigest() if engine.is_file() else None,'tracked_after':g('status','--porcelain','--untracked-files=no'),'manual_input_executed':False,'independent_verdict':False,'mvp4_predicate_verified':False,'files':files}
+          (out/'manifest.json').write_text(json.dumps(m,indent=2)+'\n')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mvp4-world-core-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            artifacts/mvp4-world-core/
+            artifacts/test-results/
+            !artifacts/**/world-profile-*/**
+            !artifacts/**/user-data/**
+          if-no-files-found: error
+          retention-days: 90

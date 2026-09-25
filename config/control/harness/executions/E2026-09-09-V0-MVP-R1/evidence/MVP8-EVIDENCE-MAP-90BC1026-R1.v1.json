@@ -1,0 +1,86 @@
+{
+  "schema": "distributed_world_simulator.harness_evidence_map.v1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "program": "V0",
+  "checkpoint": "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE",
+  "risk_class": "CRITICAL",
+  "evidence_head_sha": "90bc1026f0f5749492107191233330f87c8c70df",
+  "intent": "Close MVP8 as the bounded interactive composition leaf of the still-open playable seamless planet Work Order: one two-client canonical lineage repeatedly moves across the authority seam, digs Matter, manipulates Item state and Construction, replaces one client with a fresh ENet process, performs an acknowledged quiescent server/world restart in new processes, resyncs current state and continues while queues/replay state remain explicitly bounded.",
+  "root_cause_or_reason": "MVP1-MVP7 proved the required capabilities separately. MVP8 composes those accepted owners into one bounded connected workload and proves reconnect plus restart continuation without creating another gameplay, Matter, Item Graph or Construction authority.",
+  "changed_surfaces": [
+    ".github/workflows/mvp6-native-prerequisite-diagnostic.yml",
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/events/V0-MVP-R1-WO-001/0037-mvp8-design-bound.v1.json",
+    "docs/control/mvp-act0-r1/MVP8_IMPLEMENTATION_R1_RU.md",
+    "scenes/labs/mvp/v0_mvp8_bounded_workload.tscn",
+    "scripts/runtime/networked_gameplay/mvp/v0_mvp8_authority_process.gd",
+    "scripts/runtime/networked_gameplay/mvp/v0_mvp8_gateway_process.gd",
+    "scripts/runtime/networked_gameplay/mvp/v0_mvp8_graphical_client.gd",
+    "scripts/runtime/networked_gameplay/mvp/v0_mvp8_resume_client.gd",
+    "tests/integration/test_v0_mvp_8_bounded_workload.py"
+  ],
+  "canonical_owner": "Player state remains the inherited networked gameplay/SM1 ownership path; canonical Item identity remains M4 Item Graph; terrain/material mutation remains MVP4/P7/MW4-MW6 and MW5 recovery; Construction remains M0/C17 with C9 DAMAGE_REPAIR for rebuild. MVP8 gateway owns only orchestration, bounded admission evidence and process coordination.",
+  "entry_points": [
+    "v0_mvp8_gateway_process.gd 12-round scheduler, seam handoff, reconnect, checkpoint and bounded-state gates",
+    "v0_mvp8_authority_process.gd existing-owner recovery orchestration and Construction mutation routing",
+    "v0_mvp8_graphical_client.gd initial connected workload clients",
+    "v0_mvp8_resume_client.gd fresh reconnect and post-restart clients",
+    "test_v0_mvp_8_bounded_workload.py exact two-phase process gate"
+  ],
+  "callers": [
+    "MVP8 branch-only exact Linux workflow job mvp8-workload",
+    "future fresh independent MVP8 Reviewer",
+    "future fresh independent MVP8 Verifier",
+    "final V0 playable seamless planet closure"
+  ],
+  "callees": [
+    "accepted MVP3 fixed-tick two-client gateway/authority/player transfer path",
+    "accepted MVP4/P7 shared Matter mutation and MW6 replication",
+    "accepted MVP5 exactly-once material delivery",
+    "accepted M4 canonical Item Graph",
+    "accepted MVP6 M0/C17 Construction composition",
+    "accepted MVP7 quiescent gameplay/Matter/Construction recovery"
+  ],
+  "sibling_surfaces_checked": [
+    "two exact runs on frozen 90bc1026/4b6f2d48 pass the same 12-round scenario",
+    "fresh client A reconnect has distinct process/peer and continues fixed-tick control",
+    "server/world restart uses a disjoint five-process phase2 set",
+    "checkpoint contains durable A and B player rows and separates SM1 decision epochs from player ownership epochs",
+    "post-restart Matter peers resync CURRENT state before new dig",
+    "four spatially distinct canonical Matter digs commit",
+    "two Construction add/remove cycles preserve one construct identity and final 100-part collision",
+    "14 MVP8 falsifiers are rejected",
+    "gateway/owner queue and replay ceilings remain within fixed bounds without eviction or cap increase"
+  ],
+  "canonical_truth_changed": false,
+  "architecture_ownership_changed": false,
+  "focused_validation": "PASS_TWO_EXACT_RUNS",
+  "full_regression": "PENDING",
+  "pc0": "PENDING",
+  "directional_pc0": "PENDING",
+  "production_diff_summary": "MVP8 adds only bounded orchestration and validation around accepted canonical owners. It keeps transport/failure semantics fail-closed, uses quiescent checkpoint recovery, separates recovery participants into authenticated stages to preserve ENet servicing, and carries no private world truth in the gateway.",
+  "remaining_risks": [
+    "Fresh independent Reviewer PASS is pending on exact freeze/v0-mvp8-review-90bc1026-r1.",
+    "Fresh independent Verifier PASS is pending; repository-owned CI provides machine evidence but not the independent verdict.",
+    "Exact-head full world/core and standard/directional PC0 closure evidence remain pending.",
+    "Attempt 2 phase1 authority/a backend sequence reached 498/512; Fresh Reviewer should inspect structural headroom.",
+    "Restart guarantee covers acknowledged quiescent checkpoints, not arbitrary uncheckpointed power loss."
+  ],
+  "required_fixes": [],
+  "rank_up_moves": [
+    "Run a third fresh machine rerun of exact frozen 90bc1026/4b6f2d48 after control evidence is durable.",
+    "Run exact PC0 and directional PC0 on the frozen product.",
+    "Run exact full world/core regression or obtain policy-backed exact Windows closure evidence.",
+    "Run fresh read-only Reviewer and fresh independent Verifier against the freeze ref.",
+    "Only after those gates, publish the seven MVP8 subpredicates and MVP_BOUNDED_INTERACTIVE_WORKLOAD leaf verdict."
+  ],
+  "evidence_gaps": [
+    "FRESH_MACHINE_RERUN_3 pending",
+    "INDEPENDENT_REVIEWER_PASS pending",
+    "INDEPENDENT_VERIFIER_PASS pending",
+    "FULL_WORLD_CORE_REGRESSION_PASS pending",
+    "STANDARD_PC0_NON_RED pending",
+    "DIRECTIONAL_PC0_NON_RED_FOR_CRITICAL_HITS pending",
+    "MVP_BOUNDED_INTERACTIVE_WORKLOAD Director leaf verdict pending"
+  ],
+  "review_verdict": "PASS_READY_FOR_FRESH_REVIEW"
+}

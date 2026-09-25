@@ -1,0 +1,52 @@
+{
+  "schema": "distributed_world_simulator.mvp6_native_carry_evidence.v1",
+  "evidence_class": "IMPLEMENTER_MACHINE_EVIDENCE_NOT_INDEPENDENT_VERDICT",
+  "subject_head": "da84552ccbc328aea991520035ed8ef8aad9bb22",
+  "subject_tree": "87ad524c589686a6b997524711457e7aecc21802",
+  "branch": "feature/v0-mvp-playable-seamless-planet-r1",
+  "parent_work_order": "V0-MVP-R1-WO-001",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "canonical_main": "675c04bb213bbb68b8cdb500d540d57ce1490318",
+  "approval": "HA-V0-MVP6-NATIVE-ITEM-CARRY-R1 RESOLVED",
+  "native_carry_passed": true,
+  "mvp6_predicate_verified": false,
+  "independent_verdict": false,
+  "whole_mvp_accepted": false,
+  "main_merge": false,
+  "execution": {
+    "run_id": 35081667593,
+    "job_id": 104746875783,
+    "artifact_id": 10440656966,
+    "artifact_bytes": 108288,
+    "artifact_sha256": "22b4870db0e2aee68251c51ed194675a57ee79c4055d815f7ac69365bac29417",
+    "artifact_rehashed_after_download": true,
+    "manifest_entries_rehashed": 16,
+    "manifest_hash_mismatches": [],
+    "engine_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+    "native_assertions": 408,
+    "native_failures": 0,
+    "native_cases": 6,
+    "native_nonempty_cases": 4,
+    "unchanged_mvp3_assertions": 232,
+    "unchanged_mvp5_assertions": 270,
+    "predecessor_failures": 0,
+    "tracked_clean_after": true,
+    "logs_sha256": {
+      "import": "7b68917327dac0567c9a03e74dafe687bf784b246de5a3602bc94f20eb7a806d",
+      "native": "0ced59dd3e16414f8c7bdb70634793dc5676ee01e635dec193d1788689aca28a",
+      "mvp3": "5a73271a0219dc27b2563f3278e472f993224e9a840e9b0fa0e10736a593c722",
+      "mvp5": "e135bbba9b50893c629612005eec2373d88d76d1efcada74ed999117e98dbcf9"
+    }
+  },
+  "coverage": ["Native empty A-B-A", "Native nonempty A-B-A for both actors", "Same item IDs, quantities, slots, hotbar and equipment", "Actor native replay follows ownership without full-world snapshots", "Source freeze and retirement reject direct graph writes, server output and Construction consume", "Exact native retirement and activation replay", "Stale session cannot replay known command", "Rehashed packet tampering rejected by bound source attestation", "Other actor keeps moving and mutating its own inventory", "Historical target activation cannot revive retired ownership", "No duplicate default fixtures on authority/b", "Existing restart guards retained"],
+  "historical_ci_failure": {
+    "head": "21a161781b9090d3288820d9443fbe99e5f58471",
+    "run_id": 35081362509,
+    "artifact_id": 10440188333,
+    "artifact_sha256": "4251cdb2cb882ba99caa4d050783e5f1eb9579dbaae7c166436aa64f434c3983",
+    "classification": "VALIDATOR_CONTROLLER_ENVELOPE_MISINTERPRETATION_BEFORE_GODOT",
+    "repair": "The read-only state_builder envelope hardcodes runtime_authorized=false. The corrected consumer checks actual canonical-main mutation lease, exact branch/head/epoch, no human hold and executable next_action. Eight falsifiers prove fail-closed behavior; Harness policy is unchanged."
+  },
+  "remaining": ["Expand adversarial replay/epoch tests before review", "Live five-process item/container/nonempty seam gameplay", "Trusted spatial validation evidence", "Real-resource Construction commit and two-client replication/collision", "Complete connected MVP6 evidence", "Full world/core and PC0", "Fresh independent Reviewer and Verifier"],
+  "resume_anchor": {"exact_subject": "da84552ccbc328aea991520035ed8ef8aad9bb22", "last_completed_durable_slice": "MVP6 native carrying 408/0 with unchanged predecessors", "next_action": "Harden uncovered native replay edge cases, compose live item and Construction scene, validate exact subject", "recovery_route": "GitHub connector, repository-owned CI, mounted ZIP bytes only for local parsing", "mission_state": "IN_PROGRESS_NOT_ACCEPTED"}
+}

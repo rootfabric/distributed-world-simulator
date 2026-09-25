@@ -1,0 +1,20 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-09-09-V0-MVP-R1-V0-MVP-R1-WO-001-0041-MVP8-FRESH-MACHINE-VERIFIER-EVIDENCE",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "sequence": 41,
+  "event_type": "PREDICATE_VERIFIED",
+  "work_state": "IN_PROGRESS",
+  "recorded_at_utc": "2026-09-20T13:16:00Z",
+  "actor": "IMPLEMENTER",
+  "branch": "feature/v0-mvp-playable-seamless-planet-r1",
+  "head_sha": "90bc1026f0f5749492107191233330f87c8c70df",
+  "predicate": "MVP8_FRESH_MACHINE_RERUN_PASS",
+  "command": "RECORD_FRESH_EXACT_MACHINE_RERUN_3",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence/MVP8-FRESH-MACHINE-VERIFIER-EVIDENCE-90BC1026-R1.v1.json"
+  ],
+  "summary": "Fresh exact machine rerun 3 passed on frozen MVP8 product 90bc1026/4b6f2d48: phase1 reconnect/checkpoint PASS and phase2 restart continuation to round 12 COMPLETE with both post-restart clients PASS, no fatal logs. This is machine evidence only and does not replace fresh independent Reviewer/Verifier verdicts or Director leaf closure."
+}

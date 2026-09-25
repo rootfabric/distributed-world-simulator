@@ -1,0 +1,106 @@
+[
+  {
+    "name": "import",
+    "argv": [
+      "C:\\Godot\\godot\\bin\\godot.windows.editor.double.x86_64.console.exe",
+      "--headless",
+      "--path",
+      "C:\\distributed-world-simulator\\worktrees\\mvp6-journal-exact-73b88181",
+      "--editor",
+      "--import",
+      "--quit"
+    ],
+    "exit_code": 0,
+    "error": "",
+    "fatal_markers": [],
+    "passed": true,
+    "duration_seconds": 50.09399999999732,
+    "log_sha256": "2da0d1e6b4d9ee1fa66125980e334c1906e41e346f4abe08dcfc5f7170fadbe1"
+  },
+  {
+    "name": "prediction_rollback",
+    "argv": [
+      "C:\\Godot\\godot\\bin\\godot.windows.editor.double.x86_64.console.exe",
+      "--headless",
+      "--path",
+      "C:\\distributed-world-simulator\\worktrees\\mvp6-journal-exact-73b88181",
+      "--script",
+      "res://tests/runtime/test_v0_mvp_6_prediction_rollback.gd"
+    ],
+    "exit_code": 0,
+    "error": "",
+    "fatal_markers": [],
+    "passed": true,
+    "duration_seconds": 0.75,
+    "log_sha256": "70b2f5a3e56fd9e1ba73d342dbbc0ea28597a55f209f06128494049dd3a8f5cb",
+    "assertions": 77
+  },
+  {
+    "name": "security",
+    "argv": [
+      "C:\\Godot\\godot\\bin\\godot.windows.editor.double.x86_64.console.exe",
+      "--headless",
+      "--path",
+      "C:\\distributed-world-simulator\\worktrees\\mvp6-journal-exact-73b88181",
+      "--script",
+      "res://tests/runtime/test_v0_mvp_6_native_replay_security.gd"
+    ],
+    "exit_code": 0,
+    "error": "",
+    "fatal_markers": [],
+    "passed": true,
+    "duration_seconds": 1.7660000000032596,
+    "log_sha256": "7c2525c9e8e2ce6f2d1a023941d2215a35a514f5cb559f82355420e25fdebdc6"
+  },
+  {
+    "name": "native",
+    "argv": [
+      "C:\\Godot\\godot\\bin\\godot.windows.editor.double.x86_64.console.exe",
+      "--headless",
+      "--path",
+      "C:\\distributed-world-simulator\\worktrees\\mvp6-journal-exact-73b88181",
+      "--script",
+      "res://tests/runtime/test_v0_mvp_6_native_item_handoff.gd"
+    ],
+    "exit_code": 0,
+    "error": "",
+    "fatal_markers": [],
+    "passed": true,
+    "duration_seconds": 2.514999999999418,
+    "log_sha256": "43e34b1c6ec4331d52814717c70f04346a6f30f86d702aecf562edfbd50b828c"
+  },
+  {
+    "name": "mvp3",
+    "argv": [
+      "C:\\Godot\\godot\\bin\\godot.windows.editor.double.x86_64.console.exe",
+      "--headless",
+      "--path",
+      "C:\\distributed-world-simulator\\worktrees\\mvp6-journal-exact-73b88181",
+      "--script",
+      "res://tests/runtime/test_v0_mvp3_live_owner_handoff.gd"
+    ],
+    "exit_code": 0,
+    "error": "",
+    "fatal_markers": [],
+    "passed": true,
+    "duration_seconds": 1.7660000000032596,
+    "log_sha256": "1a8c43f06444815ceba81d4a47bf347c69e25dd6009dc788f22342f3d927bb6b"
+  },
+  {
+    "name": "mvp5",
+    "argv": [
+      "C:\\Godot\\godot\\bin\\godot.windows.editor.double.x86_64.console.exe",
+      "--headless",
+      "--path",
+      "C:\\distributed-world-simulator\\worktrees\\mvp6-journal-exact-73b88181",
+      "--script",
+      "res://tests/runtime/test_v0_mvp_5_exactly_once_material.gd"
+    ],
+    "exit_code": 0,
+    "error": "",
+    "fatal_markers": [],
+    "passed": true,
+    "duration_seconds": 90.26499999999942,
+    "log_sha256": "f0ab7c1cc124a66799e8b2a456bdb9f84995733b8d67010448b8540c3d9968a8"
+  }
+]

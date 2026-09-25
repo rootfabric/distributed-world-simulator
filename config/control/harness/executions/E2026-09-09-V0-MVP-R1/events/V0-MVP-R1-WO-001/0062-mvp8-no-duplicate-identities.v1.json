@@ -1,0 +1,23 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-09-09-V0-MVP-R1-V0-MVP-R1-WO-001-0062-MVP8-NO-DUPLICATE-IDENTITIES",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "sequence": 62,
+  "event_type": "PREDICATE_VERIFIED",
+  "work_state": "IN_PROGRESS",
+  "recorded_at_utc": "2026-09-22T10:50:00Z",
+  "actor": "DIRECTOR",
+  "branch": "repair/v0-mvp8-cold-class-cache-r2",
+  "head_sha": "dc6e7fffa27d764ea09ded949d50b99a32fa4d9b",
+  "tree_sha": "8fc0044ff42ad502e6457593a185465af7d2a825",
+  "predicate": "NO_DUPLICATE_ITEM_OR_CONSTRUCTION_IDENTITIES",
+  "command": "MVP8-NO-DUPLICATE-ITEM-OR-CONSTRUCTION-IDENTITIES",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/verifications/MVP8-INDEPENDENT-REVIEW-DC6E7FFF-R1.v1.json",
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/verifications/MVP8-INDEPENDENT-VERIFICATION-DC6E7FFF-R1.v1.json",
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence/MVP8-LEAF-CLOSURE-DC6E7FFF-R1.v1.json"
+  ],
+  "summary": "Verifier evidence records item_count=10 equal to unique_item_count=10, duplicate_item_identity=false, stable Construction id construct/mvp6/seam-bridge, and final collision/part count 100."
+}

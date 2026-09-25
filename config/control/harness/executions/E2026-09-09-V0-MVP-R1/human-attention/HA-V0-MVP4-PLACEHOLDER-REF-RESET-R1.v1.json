@@ -1,0 +1,24 @@
+{
+  "schema": "distributed_world_simulator.harness_human_attention.v1",
+  "decision_id": "HA-V0-MVP4-PLACEHOLDER-REF-RESET-R1",
+  "program": "V0",
+  "checkpoint": "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE",
+  "risk_class": "CRITICAL",
+  "reason": "Placeholder/revert сдвинули feature HEAD после независимой проверки при одинаковом TREE.",
+  "decision_required": "Разрешить возврат feature 00b5645c -> e37f8182.",
+  "options": [
+    "Возврат на проверенный e37f8182 с точным force-with-lease.",
+    "Новая независимая проверка текущего 00b5645c."
+  ],
+  "recommended_option": "Возврат на проверенный e37f8182 с точным force-with-lease.",
+  "recommendation_reason": "Удаляется только ошибочная пара коммитов; восстанавливается проверенный exact subject.",
+  "blast_radius": [
+    "feature/v0-mvp-playable-seamless-planet-r1"
+  ],
+  "blocking": false,
+  "status": "RESOLVED",
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence/MVP4-AUTHORIZED-REF-RESET-R1.v1.json"
+  ],
+  "resolution": "Пользователь поручил реализовать предложенный оптимальный путь и закрыть пункт. Reset выполнен с точным lease; remote e37f8182 подтверждён, TREE неизменён. Разрешение ограничено этим исправлением истории; merge main и whole-MVP acceptance не разрешены."
+}

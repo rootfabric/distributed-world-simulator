@@ -1,0 +1,14 @@
+{
+  "d9706b157e84c653a753cc54243ce6651d53319c:docs/control/mvp-act0-r1/act0-journal-fence-r1/approved-ha.json": "c3a721dc016e3663fcdb582a286960a48f47435c7ff6b55ee0db33972810f608",
+  "d9706b157e84c653a753cc54243ce6651d53319c:docs/control/mvp-act0-r1/act0-journal-fence-r1/approved.patch": "f8ab87bdd39d3ea1d28105b6b110f39703d44885ef9def89e3e7315a8f9c596c",
+  "C:\\distributed-world-simulator\\artifacts\\mvp6-journal-73b88181\\act0-control-review-d9706b15\\review.json": "c51436c50263c53c4ae165c1a6e3ad1e804a34462b25fdc3408a043453b004ba",
+  "C:\\distributed-world-simulator\\artifacts\\mvp6-journal-73b88181\\act0-fence-exact-d9706b15\\summary.json": "3a1d32e43d651e5e607c7a59312acde50767043a39116a9759b7ca19e6874d8a",
+  "C:\\distributed-world-simulator\\artifacts\\mvp6-journal-73b88181\\act0-fence-exact-d9706b15\\tests.log": "9bf81b5154658af0e444e1dadd20d6de400bb70f3b2d761c5cb2fee7568f3246",
+  "C:\\distributed-world-simulator\\artifacts\\mvp6-journal-73b88181\\act0-fence-exact-d9706b15\\IMPLEMENTER_HANDOFF_RU.md": "8616b27537ceffa69369bf470244adbe94e43cd0eea5b89fee815073846fc3eb",
+  "C:\\distributed-world-simulator\\artifacts\\mvp6-journal-73b88181\\act0-full-harness-linux-d9706b15\\artifact.zip": "1a29620992c1d6cf280a68ed82075f34e1f79a465f598f781e62a7965a696fc4",
+  "C:\\distributed-world-simulator\\artifacts\\mvp6-journal-73b88181\\act0-full-harness-linux-d9706b15\\unpacked\\summary.json": "e6d9eccbb4ae551dd0856d41daa29c96d6851254cc0eed3de852d47fdb667423",
+  "C:\\distributed-world-simulator\\artifacts\\mvp6-journal-73b88181\\act0-full-harness-linux-d9706b15\\unpacked\\tests.log": "024b03d9f9ffa30a4a8ed9b350e298f5230a6442534b184d34a1c9285df23670",
+  "C:\\distributed-world-simulator\\artifacts\\mvp6-journal-73b88181\\act0-control-review-d9706b15\\source-audit.json": "1362c2dd452cfdd4fbca79d311014f7c3cbd5ec5ba78f95eab1441333314f21b",
+  "C:\\distributed-world-simulator\\worktrees\\mvp6-journal-act0-control\\tests\\harness\\test_v0_mvp_act0.py": "8afb752a15452b1ea83aa5104675369d9c5620c0ff533fb08a9ce6e8724b695a",
+  "C:\\distributed-world-simulator\\artifacts\\mvp6-journal-73b88181\\act0-control-verifier-d9706b15\\focused.log": "fc6262efab81e03cbc9f7c90891fface6d88abe3b92c1370a71e2941dc331660"
+}

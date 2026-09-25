@@ -1,0 +1,90 @@
+{
+  "schema": "distributed_world_simulator.mvp7_independent_review.v1",
+  "role": "FRESH_INDEPENDENT_REVIEWER",
+  "reviewed_head_sha": "ad48b24d8cde350db8c26adb958d9a0d62c6ff56",
+  "reviewed_tree_sha": "f306e84ebce87ea3644c60b5dd75779d7980f8bb",
+  "review_base_sha": "8d10bcf896547476d6f9a1db8769fa8c41110291",
+  "review_branch": "review/v0-mvp7-ad48b24d-r1",
+  "review_worktree": "worktrees/mvp7-review-ad48b24d (from origin/control/v0-mvp7-independent-handoff-r1)",
+  "reviewed_paths": [
+    ".github/workflows/mvp6-native-prerequisite-diagnostic.yml",
+    "docs/control/mvp-act0-r1/MVP7_IMPLEMENTATION_R1_RU.md",
+    "docs/control/mvp-act0-r1/MVP7_NATIVE_RECOVERY_R1_EVIDENCE_RU.md",
+    "docs/control/mvp-act0-r1/validate_mvp7_native.py",
+    "scripts/runtime/networked_gameplay/mvp/v0_mvp7_gameplay_service.gd(.uid)",
+    "scripts/runtime/networked_gameplay/mvp/v0_mvp7_live_player_transfer_port.gd(.uid)",
+    "scripts/runtime/networked_gameplay/mvp/v0_mvp7_matter_gameplay_authority_adapter.gd(.uid)",
+    "scripts/runtime/networked_gameplay/mvp/v0_mvp7_matter_recovery_coordinator.gd(.uid)",
+    "scripts/runtime/networked_gameplay/mvp/v0_mvp7_reconnect_client.gd",
+    "scripts/runtime/networked_gameplay/mvp/v0_mvp7_reconnect_gateway_process.gd",
+    "scripts/runtime/networked_gameplay/mvp/v0_mvp7_recovery_coordinator.gd(.uid)",
+    "scripts/runtime/networked_gameplay/mvp/v0_mvp7_shared_dig_authority.gd(.uid)",
+    "tests/integration/test_v0_mvp_7_graphical_reconnect.py",
+    "tests/runtime/test_v0_mvp_7_construction_restart.gd",
+    "tests/runtime/test_v0_mvp_7_matter_restart.gd(.uid)",
+    "tests/runtime/test_v0_mvp_7_quiescent_recovery.gd(.uid)"
+  ],
+  "source_clean_before": true,
+  "source_clean_after": true,
+  "evidence_checked": {
+    "frozen_subject": "HEAD=ad48b24d TREE=f306e84e FREEZE_REF=ad48b24d verified via git fetch/rev-parse; freeze/v0-mvp7-review-ad48b24d-r1 points at ad48b24d",
+    "bounded_diff": "24 changed paths, 2227 insertions, 0 deletions; git diff --check clean; all 24 paths inside V0-MVP-R1-WO-001 allowed_paths, none in forbidden_paths; inherited MVP3/MVP5/MVP6 test files unchanged (diff --exit-code verified in CI fence and locally by name-status)",
+    "native_ci": "workflow run 35447331651 attempt 3 job 105977766107 mvp7-recovery conclusion=success headSha=ad48b24d verified via gh; artifact 10594111480 digest sha256:5cbbf01e...3609bb6 verified via GitHub API; attempts 1/2 digests 799a2c27/e14d1904 also verified",
+    "artifact_primary_data": "downloaded attempt-3 artifact and verified: 9 native result JSONs all passed, total assertions=549, failures=0, all subject_head=ad48b24d, nine distinct OS PIDs (4312,4322,4332,4342,4355,4401,4424,4436,4447) across gameplay/world/construction families",
+    "graphical_reconnect": "manifest passed=true, error empty, 0 failed checks, subject head/tree exact, engine sha256 bfa7ce63...; gateway/authority/client/reconnect PIDs distinct (4938,4939,4968,4969,5067); reconnect peer != original peer; finish_ack_disconnect=true; collision_part_count=100; fixed_tick receipt=true; position changed; backend liveness cycles=13 with 0 disconnects; no backend reconnect; server_restart_executed=false (separate gate, documented)",
+    "negative_controls": "13/13 inherited MVP6 negative controls rejected and 7/7 MVP7 reconnect falsifiers (no_reconnect, same_peer, no_post_reconnect_motion, stale_construction, stale_matter, no_backend_liveness, no_finish_ack_disconnect) present in manifest and each verified to break at least one check by the in-test falsifier harness",
+    "pc0": "run 35473552815 job 105978749777 success; carrier head 8ba1594 is a descendant of ad48b24d changing only control evidence and a control-only workflow job; artifact 10593077063 digest sha256:3e0fb446...66d8d verified; artifact content independently read: standard_pc0=YELLOW directional_pc0=YELLOW bound to ad48b24d/f306e84e",
+    "evidence_files": "MVP7-PRODUCT-EVIDENCE (handoff branch), MVP7-EVIDENCE-MAP (handoff branch), MVP7-IMPLEMENTER-EXACT-EVIDENCE and MVP7-POST-BUILD-CRITIQUE read from origin/control/v0-mvp7-pc0-ad48-r1 (they are not on the handoff branch), MVP7-FRESH-MACHINE-VERIFIER-EVIDENCE (pc0 branch); all bind exact ad48b24d/f306e84e; no ancestor evidence substitution found; historical failed attempts 1/2 retained with distinct digests, not relabelled",
+    "pinned_engine": "Godot 4.7.1.stable.double.custom_build.a13da4feb sha256 bfa7ce63...51d7 pinned and enforced by sha256sum test in workflow and P4.PINNED_ENGINES check in the graphical harness"
+  },
+  "source_review": {
+    "canonical_ownership": "PASS - MVP7 only orchestrates existing owners: gameplay service extends MVP6 service; recovery coordinator extends M6 authoritative_recovery_coordinator; matter cut composes MW5 repository/coordinator via v0_mvp7_matter_recovery_coordinator (extends matter_state_coordinator, no new store/receiver/journal); Construction restart reuses M0 repository + C17 record + M4 restored graph via MVP6 Restorer; gateway reads current state through authenticated _owner4 RPCs and declares canonical_state_owned=false everywhere. No second Item Graph/terrain/Construction truth, no second persistence engine, no gateway gameplay authority.",
+    "quiescent_checkpoint": "PASS - seal_recovery_cut7 requires checkpoint_binding_view7 with zero in-flight transfers/stages and all ACTIVE decisions (pending SM1 handoff rejected: MVP7_HANDOFF_NOT_QUIESCENT); export_durable_state returns {} until sealed and re-verifies the binding hash at export; after seal all mutation ports (_validate_owner, join/leave, fixed tick, canonical output, dig, equip, replica connect) return MVP7_*_SEALED failures; quiescent-checkpoint failure model is explicit and arbitrary power-loss is not claimed.",
+    "recovery_ordering": "PASS - preflight_checkpoint7 validates checkpoint schema, generation floor, native validators, and identity BEFORE any restore; mixed/corrupt negatives (bad replay checksum, zeroed gameplay checksum mixed cut, generation rollback floor) are all rejected before mutation and proven not to partially mutate; recover_latest re-preflights the exact loaded checkpoint and verifies post-restore checksums; admission (bind/join) only after recover success.",
+    "auth_replay": "PASS - durable records drop transport_session_id/connected; stale session+epoch commands rejected after restart (both tested); old transient dig MAC invalid in a new process; authorize_committed_replay7 requires current-session identity, actor-bound operation prefix AND journal presence of the operation; terminal material replay and canonical server-output replay are marked replay with no new item, no second carve, no stream advance; Construction terminal ADD/REMOVE commands restored via state bundle with per-command checksum verification.",
+    "item_inventory_equipment_container": "PASS - exact M4 graph checksum restored across PIDs; inventory/hotbar/equipment (equip relation, hotbar alias) verified in durable snapshot; shared container graph durable while open-container lease is explicitly non-durable (asserted empty in cut) and correctly not treated as canonical-state loss.",
+    "terrain_matter": "PASS - MW5 repository restore with exact store/receiver/journal hashes and receipt binding (generation, server_tick, checksum); post-recovery canonical dig executes once with output_created_this_call=true, exactly one store-hash change and one stream advance, replicated to both independent surfaces; replay preserves original material identity and quantity.",
+    "construction": "PASS - new PID reopens the SAME M0 repository (recovered_from_existing_m0, no fresh build plan); C17 single-writer A / read-only B preserved (replica.can_write()==false); 100 parts/99 bonds/cross-seam bond exact; terminal commands >=3 restored; derived collision 100 parts as one StaticBody3D, continuous west/east/seam by real physics queries; removed east leaf absent from both Construction and collision.",
+    "fresh_enet_reconnect": "PASS - reconnect client is a genuinely separate OS process (headless SceneTree script) with distinct PID and distinct ENet peer id; gateway admission requires a new peer != original peer with sequence 1; current state read fresh from the authenticated owners (not the stale MVP4/5 observer cache _source4); resync includes terrain/Matter, material+item graph, Construction+replica, player; post-resync fixed-tick MOVEMENT_INTENT routed with world digest stable before/after and position changed; movement authority remains server-side.",
+    "backend_lifecycle": "PASS - MVP7 backend liveness is read-only SYNC traffic on already-authenticated links at a fixed 4s interval; no reconnect, no timeout/payload/order policy change; authority RPC failure is terminal (finish_interactive false); inherited MVP6 read-only witness preserved or reused, never synthesized; FINISH success is delivery-bound - gateway closes only after the reconnect client received FINISH ACK and its peer disconnect is observed (_mvp7_finish_ack_disconnect), closing_at_ms=0 prevents premature timer close; premature close cannot yield false PASS because finish_interactive requires proved AND finish_ack_disconnect.",
+    "inherited_gates": "PASS - MVP6 13/13 and MVP7 7/7 negative controls rejected in the exact-head manifest; MVP3/MVP5/MVP6 baseline tests unchanged and rerun as regressions in CI (regression-mvp3/mvp5/mvp6 logs in artifact).",
+    "scope": "PASS - no architecture ownership change, no main mutation (review branch only; product branch not merged), no acceptance mutation, no forbidden foundation rewrite, no MVP8 widening (server_restart_executed=false documented as separate gate; mvp8_started=false everywhere)."
+  },
+  "findings": [
+    {
+      "id": "MVP7-REV-F001",
+      "severity": "INFO",
+      "summary": "MVP7-IMPLEMENTER-EXACT-EVIDENCE and MVP7-POST-BUILD-CRITIQUE are not present on the control/v0-mvp7-independent-handoff-r1 branch this review was based on; they live on origin/control/v0-mvp7-pc0-ad48-r1 (commit e2512db7a). The files were retrieved and reviewed from that ref; content binds the exact frozen subject."
+    },
+    {
+      "id": "MVP7-REV-F002",
+      "severity": "INFO",
+      "summary": "MVP7-PRODUCT-EVIDENCE records only attempts 1-2 of run 35447331651; the authoritative fresh rerun (attempt 3, job 105977766107) is recorded only in MVP7-FRESH-MACHINE-VERIFIER-EVIDENCE on the pc0 control branch. All three attempts were independently verified via GitHub metadata; no substitution occurred."
+    },
+    {
+      "id": "MVP7-REV-F003",
+      "severity": "INFO",
+      "summary": "v0_mvp7_reconnect_client.gd and v0_mvp7_reconnect_gateway_process.gd have no committed .uid sidecar files while other new scripts do. Cosmetic; CI exact-subject fence and clean tracked checkout checks passed."
+    },
+    {
+      "id": "MVP7-REV-F004",
+      "severity": "INFO",
+      "summary": "Server/world restart and live ENet reconnect are proven as separate exact-head executions, not one simultaneous mid-session server-kill scenario. This boundary is explicitly declared in the evidence map and deferred to the MVP8 workload contract; it is not a hidden claim."
+    }
+  ],
+  "required_fixes": [],
+  "rank_up_moves": [
+    "Consolidate all four MVP7 evidence documents plus the fresh-rerun machine-verifier record onto a single control branch (or the handoff branch) so a fresh Reviewer/Verifier finds the complete package at one durable locator.",
+    "Commit .uid sidecars for the two new MVP7 scripts to keep the tree consistent with the other new scripts.",
+    "For MVP8, compose the restart and live reconnect into one connected bounded-workload scenario (mid-session server kill with live clients) as already planned."
+  ],
+  "evidence_gaps": [],
+  "risk_assessment": "LOW. No P0/P1 found in the bounded diff (24 paths, +2227/-0). Canonical ownership, quiescent checkpoint fencing, preflight-before-mutation recovery ordering, replay dedup, auth/epoch invalidation, and delivery-bound FINISH are all enforced in source and exercised by real multi-process evidence whose GitHub metadata, artifact digests and primary JSON contents were independently re-verified (gh CLI + artifact download). Residual risk is confined to the declared boundary: quiescent-checkpoint failure model (no arbitrary power-loss claim) and restart/reconnect proven on separate surfaces until MVP8.",
+  "verdict": "PASS",
+  "merge_performed": false,
+  "predicate_verified": false,
+  "human_acceptance": false,
+  "mvp8_started": false,
+  "recorded_at_utc": "2026-09-19T23:10:00Z",
+  "reviewer_context": "Fresh independent reviewer session; read-only product review; only this reviewer result was committed to the review branch."
+}

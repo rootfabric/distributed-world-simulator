@@ -1,0 +1,69 @@
+{
+  "schema": "distributed_world_simulator.mvp5_closure_control_manifest.v1",
+  "recorded_at_utc": "2026-09-16T08:19:20Z",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "frozen_product_head": "b78de4980328bb7b4d19e030bb7f0fa5d9976cd8",
+  "frozen_product_tree": "0bfdd7595e10f007815bb666e62e7c5575172173",
+  "closure_head": "79340f7421d4759bd5eb8ec41e8af12b76782b48",
+  "closure_tree": "eac35bbe5c64f9dccb9276ff2d1a655d515bb6b9",
+  "closure_diff": {
+    "control_files_only": true,
+    "changed_file_count": 3,
+    "runtime_or_test_file_count": 0
+  },
+  "driver": {
+    "branch": "control/v0-mvp5-exact-driver-b78de498-r1",
+    "head": "f0c5be65120946c0a9fd2830b6547664e185e484",
+    "run_id": 35073049934,
+    "job_id": 104718854360,
+    "conclusion": "success",
+    "artifact_id": 10437295310,
+    "artifact_zip_sha256": "f85f52d6fd2df0c10523549a39ddf996b1541c12dba07e61507945f546ff3789",
+    "manifest_sha256": "1e7eb169d581fcd1fc2599f386a139b900d0df43715cc9a03dd5af4aef7d5f1f",
+    "tracked_after_clean": true
+  },
+  "reducer": {
+    "state": "IN_PROGRESS",
+    "completed_predicates": [
+      "MVP_SHARED_GRAPHICAL_SCENE",
+      "MVP_TWO_CLIENT_SHARED_WORLD",
+      "MVP_SEAM_NO_RECONNECT_OR_RESPAWN",
+      "MVP_CANONICAL_DIG_VISIBLE_TO_BOTH_CLIENTS",
+      "MVP_EXACTLY_ONCE_MATERIAL_OUTPUT"
+    ],
+    "last_completed_predicate": "MVP_EXACTLY_ONCE_MATERIAL_OUTPUT",
+    "last_event_sequence": 18,
+    "last_event_type": "PREDICATE_VERIFIED",
+    "last_event_id": "E2026-09-09-V0-MVP-R1-V0-MVP-R1-WO-001-0018-MVP5-VERIFIED",
+    "event_subject_head_sha": "b78de4980328bb7b4d19e030bb7f0fa5d9976cd8",
+    "snapshot_matches_authoritative_state": true
+  },
+  "drive": {
+    "exit_code": 0,
+    "mission_complete": false,
+    "mission_exit_allowed": false,
+    "next_actor": "INTEGRATOR",
+    "next_action": "CONTINUE_ACTIVE_WORK_ORDER_TO_IMPLEMENTED_AND_VALIDATED",
+    "next_work_order": "V0-MVP-R1-WO-001",
+    "open_blocker": null,
+    "human_decision_required": false,
+    "hard_blocked": false
+  },
+  "close_gates": {
+    "close_role_exit_code": 7,
+    "close_role_expected": true,
+    "close_mission_exit_code": 8,
+    "close_mission_expected": true,
+    "meaning": "MVP5 leaf is complete, but the parent checkpoint mission must continue to remaining predicates beginning with MVP6."
+  },
+  "closure_claims": {
+    "mvp5_leaf_closed": true,
+    "mvp5_predicate_verified": true,
+    "parent_work_order_state": "IN_PROGRESS",
+    "next_product_predicate": "MVP_ITEM_CONSTRUCTION_PERSISTENCE_CONVERGENCE",
+    "whole_mvp_acceptance": false,
+    "runtime_merge_authorized": false,
+    "main_merge_authorized": false
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "schema": "distributed_world_simulator.harness_human_attention.v1",
+  "decision_id": "HA-V0-MVP6-NX-SAME-REVISION-ROLLBACK-R1",
+  "program": "V0",
+  "checkpoint": "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE",
+  "risk_class": "CRITICAL",
+  "reason": "FAILED_DEPENDENCY_REVALIDATION_REQUIRING_SCOPE_EXPANSION: corrected exact probe 970b4293 / tree 6a86c84e independently reproduces same-revision prediction rollback defect on both Windows and Linux, baseline and candidate, 1077 assertions / 3 failures per composition. Shared journal blob ed23f0d2b7a9e6cfb3f13b78de70c7f552035b69 is identical on main and NX. Parent forbids scripts/network/**; previous native-carry authorization does not cover this file. Historical run 35090924573 was false-green after script errors; raw evidence is preserved.",
+  "decision_required": "Разрешить bounded repair ровно одного дополнительного существующего owner-файла scripts/network/prediction/predicted_item_interaction_journal.gd: rebuild существующей presentation projection после resolve_prediction с duplicate authoritative snapshot, без изменения canonical truth, owners, ledger или NX authority. Конкретный неприменённый diff: docs/control/mvp-act0-r1/mvp6_nx_same_revision_rollback_proposed.patch. Тесты/evidence — в уже разрешённых MVP путях. Main merge и acceptance остаются отдельными gates.",
+  "options": [
+    "AUTHORIZE_ONE_FILE_SAME_REVISION_ROLLBACK_REPAIR",
+    "KEEP_NETWORK_WRITE_FENCE_AND_HOLD_MVP6_CLEARANCE"
+  ],
+  "recommended_option": "AUTHORIZE_ONE_FILE_SAME_REVISION_ROLLBACK_REPAIR",
+  "recommendation_reason": "Исправить native caller-visible rollback в существующем journal. Новый inventory/ledger или обход через MVP glue не устраняют прямой failing Journal API; ослабление assertions запрещено.",
+  "blast_radius": [
+    "NX6 predicted item presentation rollback",
+    "M7 item completion and stop-cancellation projection",
+    "V0 to NX dependency revalidation; canonical Item Graph unchanged"
+  ],
+  "blocking": true,
+  "status": "RESOLVED",
+  "evidence_paths": [
+    "docs/control/mvp-act0-r1/MVP6_NX_FALSE_GREEN_REPAIR_R1_RU.md",
+    "docs/control/mvp-act0-r1/MVP6_NX_ROLLBACK_REPAIR_MAP_R1_RU.md",
+    "docs/control/mvp-act0-r1/mvp6_nx_same_revision_rollback_proposed.patch",
+    "docs/control/mvp-act0-r1/nx-rollback-evidence-r1/manifest.json"
+  ],
+  "resolution": "AUTHORIZE_ONE_FILE_SAME_REVISION_ROLLBACK_REPAIR. Пользователь явно ответил «разрешаю» на запрос bounded repair ровно scripts/network/prediction/predicted_item_interaction_journal.gd в предыдущем отчёте PR #597. Разрешение зафиксировано на feature HEAD 9b8c2e03cc95ead72963af1b95c7a83843e73db0, main 6982a563dd0c88c81449566131852c601ae89868. Director синхронизирует точный write fence; разрешены существующие MVP tests/evidence. Никакого расширения на другие network paths, нового canonical owner/ledger, runtime/main merge или MVP acceptance."
+}

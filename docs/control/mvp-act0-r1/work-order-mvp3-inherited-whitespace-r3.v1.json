@@ -1,0 +1,34 @@
+{
+  "schema": "distributed_world_simulator.bounded_repair_work_order.v1",
+  "repair_id": "V0-MVP3-R3-INHERITED-DOCUMENT-WHITESPACE",
+  "parent_work_order_id": "V0-MVP-R1-WO-001",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "base_sha": "2e452cc7b31e108477c23c125bb5899fd8c705f2",
+  "base_tree": "b32945f37276cd90f1a465f42878c9d8cb4b37e2",
+  "role": "IMPLEMENTER",
+  "independent_context": false,
+  "runtime_mutation": false,
+  "failure_evidence": {
+    "run_id": 34697901921,
+    "job_id": 103564456461,
+    "artifact_id": 10299526204,
+    "archive_sha256": "2d43edb3ba304b10886702a99169ff7b2cfd7e86feecc0cb5526ee5a3007a547",
+    "member": "mvp2-exact/diff-check.log",
+    "signature": "docs/control/HARNESS_CHANNEL_RECOVERY_RU.md lines 3 and 4: trailing whitespace",
+    "runtime_subgate_passed": true,
+    "mvp2_regression_started": false
+  },
+  "allowed_paths": ["docs/control/HARNESS_CHANNEL_RECOVERY_RU.md", "docs/control/mvp-act0-r1/work-order-mvp3-inherited-whitespace-r3.v1.json"],
+  "source_blob": "f879bf21f60f7580f905f039d23bc4f15ae7a875",
+  "exact_change": "Remove the two trailing ASCII spaces on each of lines 3 and 4. No other byte or semantic rule change.",
+  "repair_map": {
+    "owner": "Documentation formatting only",
+    "root_cause": "Inherited Markdown hard-break spaces trip the existing strict BASE-to-HEAD diff-check before regression execution.",
+    "fix": "Remove four trailing whitespace bytes in the candidate document. Keep git diff --check enabled and unchanged.",
+    "not_a_guard_weakening": "No Harness code, policy, acceptance rule, validator, historical commit, closure evidence or main branch is changed."
+  },
+  "validation": ["Compare the two source blobs after line-end rstrip: identical", "No runtime or Harness policy changes", "Rerun exact graphical seam subgate and original full MVP1/MVP2 regression"],
+  "predicate_verified_authorized": false,
+  "runtime_merge_authorized": false,
+  "main_merge_authorized": false
+}

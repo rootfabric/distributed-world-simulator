@@ -1,0 +1,147 @@
+{
+  "schema": "distributed_world_simulator.mvp6_independent_verification.v1",
+  "recorded_at_utc": "2026-09-19T10:14:30Z",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "predicate": "MVP_ITEM_CONSTRUCTION_PERSISTENCE_CONVERGENCE",
+  "frozen_product": {
+    "branch": "feature/v0-mvp-playable-seamless-planet-r1",
+    "head_sha": "1d51b410925407ad1f83dc4ffa37b8a909bb6811",
+    "tree_sha": "fb51a7cab464404fc843cb1da2fac5419a1c6ee3"
+  },
+  "independent_verifier": {
+    "transport": "fresh local Windows agent, runtime verifier, no source repair",
+    "platform": "Windows",
+    "godot_version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "godot_sha256": "3633C3E609C8CE2F9BAE334A9C7E75C7F974DE3AF0415AB4A8050A625A15A7A5",
+    "source_clean_before": true,
+    "source_clean_after": true,
+    "verdict": "PASS",
+    "raw_report_locator": "C:\\distributed-world-simulator\\mvp6-fresh-verifier-r1\\MVP6_FRESH_WINDOWS_INDEPENDENT_VERIFIER_R1.md",
+    "raw_report_uploaded_to_repo": false
+  },
+  "focused_gates": {
+    "native": {
+      "status": "PASS",
+      "assertions": 408,
+      "failures": 0
+    },
+    "security": {
+      "status": "PASS",
+      "assertions": 48
+    },
+    "seam_prerequisites": {
+      "status": "PASS",
+      "diagnostic_passed": true
+    },
+    "construction_seam": {
+      "status": "PASS",
+      "assertions": 211,
+      "failures": 0
+    },
+    "collision": {
+      "status": "PASS",
+      "assertions": 228,
+      "failures": 0
+    },
+    "persistence": {
+      "status": "PASS",
+      "assertions": 244,
+      "failures": 0
+    },
+    "five_process_graphical": {
+      "status": "PASS",
+      "checks": 91,
+      "negative_controls_rejected": "13/13"
+    }
+  },
+  "five_process": {
+    "pids": {
+      "authority_a": 17048,
+      "authority_b": 8240,
+      "gateway": 13440,
+      "client_a": 10576,
+      "client_b": 7452
+    },
+    "distinct_pid_count": 5,
+    "authority_a_writer": true,
+    "authority_b_read_only": true,
+    "b_to_a_attestation_boundary": "CONFIRMED",
+    "final_checksums_equal": true,
+    "forged_b_attestation_rejected_at_protocol_layer": true,
+    "dedicated_mvp6_forged_attestation_negative_present": false,
+    "dedicated_gap_classification": "P2_NON_BLOCKING"
+  },
+  "resource_flow": {
+    "source": "MVP5_CANONICAL_MINING_OUTPUT",
+    "available": 19340,
+    "required": 101,
+    "topup_issued": false
+  },
+  "construction_sequence": {
+    "base100": {
+      "parts": 100,
+      "checksum_prefix": "e86ae9c8c719"
+    },
+    "add101": {
+      "parts": 101,
+      "checksum_prefix": "b6d21c1f5a6c"
+    },
+    "remove100": {
+      "parts": 100,
+      "checksum_prefix": "f686d5f502fb"
+    }
+  },
+  "runtime_contracts": {
+    "replay_security": "PASS",
+    "enet_guard_restored": "PASS",
+    "keepalive_read_only": "PASS",
+    "persistence_checksum_stable": "PASS",
+    "collision_derived_only": "PASS"
+  },
+  "full_world_core_windows": {
+    "exit_code": 0,
+    "passed": true,
+    "declared_tests": 346,
+    "discovered_tests": 346,
+    "steps": 351,
+    "duration_seconds": 3210.734,
+    "watchdog_seconds": 4500,
+    "runner_unchanged": true,
+    "same_head_graphical_bound": true
+  },
+  "supporting_linux_exact": {
+    "run_id": 35351922506,
+    "conclusion": "success",
+    "native_artifact": {
+      "id": 10550945273,
+      "digest": "sha256:03c857c760fa09a64763a90e08d7412640d0cf798a32dbecb035f102a2a6b2b1"
+    },
+    "graphical_artifact": {
+      "id": 10550625777,
+      "digest": "sha256:e005599aa48f30923e6eebe51289714a0ae68be11151195542d10577b6712f0d"
+    },
+    "world_core_artifact": {
+      "id": 10552647376,
+      "digest": "sha256:619958490779df4236c188cb63ffac78f89e72d77bbd97654c67dde5b3b83060"
+    }
+  },
+  "historical_failure_integrity": {
+    "intermittent_test": "test_v0_p2_live_shared_state_convergence",
+    "failure": "ITEM_INTERACTION_OUT_OF_RANGE on item.pickup",
+    "observed_red_runs": "2/5 Windows executions including first full-suite attempt",
+    "second_full_suite_attempt": "PASS",
+    "inside_mvp6_base_head_diff": false,
+    "claimed_fixed": false,
+    "blocking_for_mvp6": false
+  },
+  "closure_boundary": {
+    "verifier_pass": true,
+    "reviewer_pass_required_separately": true,
+    "parent_work_order_state": "IN_PROGRESS",
+    "whole_mvp_acceptance": false,
+    "runtime_merge_authorized": false,
+    "main_merge_authorized": false
+  },
+  "provenance_note": "Coordinator serialized the exact verifier verdict supplied by the user after the fresh local Windows run. The raw local report and raw Windows evidence remain on the user's machine; hashes not explicitly supplied are not invented."
+}

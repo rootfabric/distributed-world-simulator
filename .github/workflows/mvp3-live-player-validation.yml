@@ -1,0 +1,109 @@
+name: MVP3 Live Player Exact Validation
+on:
+  push:
+    branches: [feature/v0-mvp-playable-seamless-planet-r1]
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: mvp3-live-player-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  exact-live-owner-hooks:
+    if: >-
+      github.repository == 'rootfabric/distributed-world-simulator' &&
+      github.actor == 'rootfabric' && github.triggering_actor == 'rootfabric' &&
+      github.ref == 'refs/heads/feature/v0-mvp-playable-seamless-planet-r1' &&
+      (github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[mvp3-live-evidence]'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      EXPECTED_HEAD: ${{ github.sha }}
+      PYTHONUTF8: '1'
+      BREAKPOINT_RUNTIME_DISABLED: '1'
+      GODOT_SILENCE_ROOT_WARNING: '1'
+      PLANET_SIMULATOR_INVENTORY_PROFILE: planet_default
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Verify exact subject
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+          test -z "$(git status --porcelain --untracked-files=no)"
+          git merge-base --is-ancestor dee13512c05b992956de68d39d9851e4cb5964dd HEAD
+          git diff --check dee13512c05b992956de68d39d9851e4cb5964dd HEAD
+          echo "EXPECTED_TREE=$(git rev-parse HEAD^{tree})" >> "$GITHUB_ENV"
+          mkdir -p artifacts/mvp3-live-owner
+      - uses: actions/download-artifact@v4
+        with:
+          name: p7-repair-engine-34117353691
+          run-id: 34117353691
+          repository: rootfabric/distributed-world-simulator
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/mvp3-engine
+      - name: Compile and exercise actual owner hooks
+        shell: bash
+        run: |
+          set -euo pipefail
+          engine="$RUNNER_TEMP/mvp3-engine/godot"
+          test "$(sha256sum "$engine" | cut -d' ' -f1)" = bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7
+          chmod u+x "$engine"
+          export GODOT_BIN="$engine"
+          export MVP3_OWNER_HOOKS_RESULT="$PWD/artifacts/mvp3-live-owner/owner-hooks.json"
+          python3 - <<'PY'
+          import json, os, pathlib, re, subprocess
+          out=pathlib.Path('artifacts/mvp3-live-owner'); commands=[]
+          for name,args,limit in [
+              ('import',['--editor','--import','--quit'],120),
+              ('owner-hooks',['--script','res://tests/runtime/test_v0_mvp3_live_owner_handoff.gd'],60),
+              ('accepted-sm1',['--script','res://tests/network/test_v0_sm1_player_carry_and_gateway_pivot.gd'],60),
+              ('mvp2-focused',['--script','res://tests/runtime/test_v0_mvp_two_client_shared_world.gd'],90),
+          ]:
+              argv=[os.environ['GODOT_BIN'],'--headless','--path','.']+args
+              code=None; timed_out=False
+              with (out/(name+'.log')).open('w') as log:
+                  try:
+                      code=subprocess.run(argv,stdout=log,stderr=subprocess.STDOUT,timeout=limit,check=False).returncode
+                  except subprocess.TimeoutExpired:
+                      timed_out=True
+              commands.append({'argv':argv,'exit_code':code,'timeout':timed_out,'limit_seconds':limit})
+              (out/'commands.json').write_text(json.dumps(commands,indent=2)+'\n')
+              text=(out/(name+'.log')).read_text(errors='replace')
+              print(name,code,text[-10000:])
+              if code != 0 or timed_out or re.search(r'(?im)^\s*(?:SCRIPT ERROR|ERROR):|Parse Error|Compile Error',text):
+                  raise SystemExit('EXACT_COMMAND_FAILED:'+name)
+          report=json.loads((out/'owner-hooks.json').read_text())
+          assert report['passed'] is True and report['failures']==[]
+          assert report['subject_head']==os.environ['EXPECTED_HEAD'] and report['subject_tree']==os.environ['EXPECTED_TREE']
+          assert report['mvp3_predicate_verified'] is False
+          assert len(report['transfers'])==4
+          assert not subprocess.check_output(['git','status','--porcelain','--untracked-files=no'],text=True).strip()
+          print('LIVE_OWNER_HOOKS_PASS; INTEGRATED_MVP3_ACCEPTANCE_NOT_CLAIMED')
+          PY
+      - name: Preserve exact provenance
+        if: always()
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib,subprocess
+          out=pathlib.Path('artifacts/mvp3-live-owner');out.mkdir(parents=True,exist_ok=True)
+          git=lambda *a:subprocess.check_output(['git',*a],text=True).strip()
+          m={'schema':'distributed_world_simulator.mvp3_live_owner_manifest.v1','subject_head':git('rev-parse','HEAD'),'subject_tree':git('rev-parse','HEAD^{tree}'),'run_id':os.environ['GITHUB_RUN_ID'],'run_attempt':os.environ['GITHUB_RUN_ATTEMPT'],'engine_sha256':'bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7','tracked_after':git('status','--porcelain','--untracked-files=no'),'mvp3_predicate_verified':False,'files':[]}
+          for p in sorted(out.glob('*')):
+              if p.is_file() and p.name!='manifest.json':
+                  m['files'].append({'path':p.name,'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()})
+          (out/'manifest.json').write_text(json.dumps(m,indent=2)+'\n')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mvp3-live-owner-${{ github.sha }}-${{ github.run_id }}
+          path: artifacts/mvp3-live-owner/
+          if-no-files-found: error
+          retention-days: 90

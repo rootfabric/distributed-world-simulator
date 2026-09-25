@@ -1,0 +1,39 @@
+{
+  "schema": "distributed_world_simulator.bounded_repair_work_order.v1",
+  "repair_id": "V0-MVP2-R17-COHERENT-OBSERVATION-PERSISTENCE",
+  "parent_work_order_id": "V0-MVP-R1-WO-001",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "base_sha": "991c6f95806ea8b538d90baa46a1e4c40469b609",
+  "base_tree": "a59bc9c4a440f6596c9e183b5f8b075ab5c5d0cd",
+  "role": "IMPLEMENTER",
+  "runtime_mutation": false,
+  "independent_context": false,
+  "allowed_paths": [
+    "docs/control/mvp-act0-r1/validate_mvp2.py",
+    "tests/integration/test_v0_mvp_two_client_evidence.py",
+    "tests/fixtures/v0_mvp/two_client_process.gd",
+    "docs/control/mvp-act0-r1/work-order-mvp2-observation-snapshot-r17.v1.json"
+  ],
+  "forbidden_paths": ["scripts/**", "scenes/**", "config/control/harness/executions/**/events/**", "config/control/harness/acceptance/**", "RUN_WORLD_REGRESSION_TESTS.ps1"],
+  "trigger": {
+    "run_id": 34604028342,
+    "job_id": 103277985100,
+    "artifact_id": 10265767968,
+    "zip_sha256": "1cd85c99c2028ae841c45f9736dade80d8f23277114ef28a614dc792aa096672",
+    "witness_initial_sha256": "22165274507647a4187c84dcf4d0d53cc6471aa6469261650667abf2d2594db1",
+    "member_digests_recomputed": true,
+    "failure": "RuntimeError:UNSTABLE_WITNESS:initial"
+  },
+  "repair_map": {
+    "owner": "Test-only observation transport and evidence capture",
+    "cause": "converge() validates one set of reports then rereads files to persist a different set. The failing raw witness contains a={} while server and b have matching complete snapshots. The fixture truncates observation.json on each write; the second read can see incomplete JSON and return {}.",
+    "fix": "Persist the exact decoded sample that satisfied the predicate, without a second read. Publish fixture reports by writing and closing a sibling temporary file then renaming it onto the observation path. Treat rename failure as fixture failure, not PASS.",
+    "not_symptom_patch": "No tolerance, timeout, retry count or gameplay acceptance criterion is relaxed. Incomplete observations remain unacceptable. Runtime and network code are unchanged.",
+    "tests": ["valid sample is read once per participant and the same object is persisted", "incomplete sample is rejected before a later complete sample can be stored", "all R16 neutral acknowledgement falsifiers retained"]
+  },
+  "local_unit_result_before_publication": "19 tests OK",
+  "self_acceptance_authorized": false,
+  "predicate_verified_authorized": false,
+  "merge_authorized": false,
+  "issued_at_utc": "2026-09-11T13:30:12Z"
+}

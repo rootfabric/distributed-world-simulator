@@ -1,0 +1,179 @@
+{
+  "schema": "distributed_world_simulator.mvp8_windows_final_closure_evidence.v1",
+  "recorded_at_utc": "2026-09-21T21:30:00Z",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "subject": {
+    "branch": "repair/v0-mvp8-cold-class-cache-r2",
+    "head": "dc6e7fffa27d764ea09ded949d50b99a32fa4d9b",
+    "tree": "8fc0044ff42ad502e6457593a185465af7d2a825",
+    "freeze": "freeze/v0-mvp8-repair-dc6e7fff-r1",
+    "base": "6779af78c8cde642abf8bdfc868e905dc48a763f",
+    "pr": 680,
+    "tracked_clean_after": true
+  },
+  "windows_host": {
+    "runner": "desktop-qnagsti-eco-runner",
+    "powershell": "pwsh 7.6.6 via retained shim",
+    "godot_version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "godot_sha256": "3633C3E609C8CE2F9BAE334A9C7E75C7F974DE3AF0415AB4A8050A625A15A7A5",
+    "quiet_window_required": true,
+    "unrelated_parallel_godot_observed": true,
+    "host_interference_note": "Foreign Godot workload from repair-eco-a105-polygon-r1 overlapped failed transient attempts. Accepted gates were run only after confirmed quiet windows."
+  },
+  "deterministic_import": {
+    "accepted_attempt": 3,
+    "exit_code": 0,
+    "class_cache_bytes": 4229,
+    "fatal_markers": [],
+    "prior_transients": [
+      {
+        "attempt": 1,
+        "exit_code": -1,
+        "classification": "host/process interference",
+        "wer": "0xc0000005",
+        "overlapped_foreign_godot": true
+      },
+      {
+        "attempt": 2,
+        "exit_code": -1,
+        "class_cache_bytes": 4229,
+        "overlapped_foreign_godot": true
+      }
+    ]
+  },
+  "a3_focused": {
+    "attempts": [
+      {
+        "attempt": 1,
+        "exit_code": 0,
+        "assertions": 140,
+        "result": "PASS"
+      },
+      {
+        "attempt": 2,
+        "exit_code": 0,
+        "assertions": 140,
+        "result": "PASS"
+      },
+      {
+        "attempt": 3,
+        "exit_code": 0,
+        "assertions": 140,
+        "result": "PASS"
+      }
+    ],
+    "result": "3/3 PASS",
+    "crash_events_during_gate": []
+  },
+  "mvp8": {
+    "accepted_attempt": 4,
+    "exit_code": 0,
+    "passed": true,
+    "checks": "20/20",
+    "negative_controls": "14/14",
+    "fatal_logs": [],
+    "fixed_receipts": 48,
+    "seam_crossings": 7,
+    "phase1_pids": [
+      7128,
+      18592,
+      24512,
+      24804,
+      26012,
+      27236
+    ],
+    "phase2_pids": [
+      18568,
+      19036,
+      25748,
+      25912,
+      26372
+    ],
+    "pid_sets_disjoint": true,
+    "original_a_pid": 24512,
+    "reconnect_a_pid": 27236,
+    "original_peer": "peer/enet/111905200/mvp3-2bfef58a8093e58ab774b387d41cb177-a",
+    "reconnect_peer": "peer/enet/1057488068/mvp3-2bfef58a8093e58ab774b387d41cb177-a",
+    "dig_coordinates": [
+      [
+        1.5067,
+        1737425.1363,
+        0
+      ],
+      [
+        -1,
+        1737424.9596,
+        0
+      ],
+      [
+        3.5067,
+        1737425.1363,
+        0
+      ],
+      [
+        0.2,
+        1737425.0075,
+        0.7713
+      ]
+    ],
+    "min_pairwise_dig_distance_m": 1.427,
+    "item_count": 8,
+    "unique_item_count": 8,
+    "duplicate_item_identity": false,
+    "construction_id": "construct/mvp6/seam-bridge",
+    "collision_part_count": 100,
+    "construction_identity_stable": true,
+    "phase1_authority_a_backend_sequence": 487,
+    "rounds": "0..11",
+    "actions": {
+      "DIG": 4,
+      "ITEM": 4,
+      "BUILD_ADD": 2,
+      "BUILD_REMOVE": 2
+    },
+    "matter_resynced": {
+      "a": true,
+      "b": true
+    },
+    "ledger_records": "32/512",
+    "capacity_rejections": 0,
+    "snapshot_file_count": 74,
+    "all_raw_role_json_present": true,
+    "failed_transient_attempts_preserved": 3,
+    "transient_classification": "different failure point under overlapping foreign Godot load; accepted quiet-window attempt passed"
+  },
+  "world_core": {
+    "exit_code": 0,
+    "passed": true,
+    "declared": 349,
+    "discovered": 349,
+    "steps": 354,
+    "failed_steps": [],
+    "fatal_markers": [],
+    "a3_inside_full_suite": "PASS",
+    "canonical_env_note": "PASS used canonical validator environment including required MVP6 result variables plus bounded MVP7 produce variables and exact EXPECTED_HEAD/TREE. Bare bounded-MVP7-only invocation is documented invalid for auto-discovered MVP6 seam prerequisite and was preserved as non-product failure evidence."
+  },
+  "corroboration": {
+    "linux_exact_final_subject_run": 35604596753,
+    "linux_exact_final_subject_result": "SUCCESS",
+    "prior_linux_full_world_core_run": 35515256366,
+    "prior_linux_full_world_core_result": "SUCCESS",
+    "prior_linux_full_world_core_declared": 349,
+    "prior_linux_full_world_core_discovered": 349,
+    "prior_linux_full_world_core_steps": 354,
+    "pc0_run": 35513137221,
+    "pc0_standard": "YELLOW",
+    "pc0_directional": "YELLOW"
+  },
+  "state": {
+    "product_code_changed_by_windows_agent": false,
+    "merge_performed": false,
+    "predicate_verified": false,
+    "human_acceptance": false,
+    "local_verdict": "READY_FOR_FRESH_REVIEWER",
+    "fresh_reviewer_required": true,
+    "fresh_verifier_required": true,
+    "mvp8_closed": false
+  }
+}

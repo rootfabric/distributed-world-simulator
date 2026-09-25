@@ -1,0 +1,67 @@
+{
+  "schema": "distributed_world_simulator.mvp6_cross_authority_construction_gate.v1",
+  "predicate": "MVP6_CROSS_AUTHORITY_CONSTRUCTION_SEAM",
+  "parent_predicate": "MVP_ITEM_CONSTRUCTION_PERSISTENCE_CONVERGENCE",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "checkpoint": "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE",
+  "status": "PENDING",
+  "target_construction_elements": 100,
+  "element_count_variation": "Only justified natural canonical API limits; two adjacent blocks are insufficient",
+  "logical_construction_count": 1,
+  "live_process_roles": [
+    "client_A",
+    "client_B",
+    "authority_A",
+    "authority_B",
+    "gateway"
+  ],
+  "canonical_comparison_fields": [
+    "element_ids",
+    "transforms_positions",
+    "membership",
+    "resource_derived_state",
+    "revision_or_canonical_equivalent",
+    "authority_ownership_mapping",
+    "relationships"
+  ],
+  "seam_traversal_requirements": [
+    "reconnect=0",
+    "respawn=0",
+    "no_disappearance",
+    "no_visual_recreation",
+    "no_duplicates",
+    "continuous_collision_on_both_sides_and_at_boundary",
+    "active_carrying_preserved"
+  ],
+  "mutations": [
+    "canonical_ADD_near_or_across_seam",
+    "canonical_REMOVE_near_or_across_seam",
+    "exactly_once_replay_at_both_clients",
+    "intent_without_foreknown_canonical_result"
+  ],
+  "relationships": "At least one canonical A-to-B relation if model has primitive; otherwise explicit NOT_APPLICABLE_WITH_REASON, no invented graph",
+  "persistence": "Existing serialization/rehydration roundtrip preserves IDs/transforms/membership/authority/relations/collision and no loss/duplicates; full restart remains MVP7",
+  "negative_controls": [
+    "duplicate_mutation_replay",
+    "stale_revision",
+    "unauthorized_client",
+    "non_owner_authority_route",
+    "partial_one_sided_state",
+    "duplicate_element_identity"
+  ],
+  "forbidden": [
+    "second_construction_store",
+    "seam_only_truth_model",
+    "independent_half_base_copies",
+    "test_only_snapshots_instead_of_live_mutations",
+    "direct_construction_state_insertion",
+    "UI_only_PASS",
+    "weakened_MVP3_MVP5_regressions"
+  ],
+  "closure": "All original MVP6 requirements and this predicate on one admissible frozen candidate with exact platform/Godot identity, PC0 and fresh Reviewer then Verifier",
+  "failure_route": "Exact owner/API/data-model root cause and minimal failing reproduction; same-WO bounded scope amendment; foundation change requires Human Attention",
+  "source_request_sha256": "7d7e60ea6d8bc9a44552f223c6d2fc3a96a7c73d9b3ce74f4167a1ed69bc3920",
+  "previous_evidence_satisfies_gate": false,
+  "second_active_work_order_created": false
+}

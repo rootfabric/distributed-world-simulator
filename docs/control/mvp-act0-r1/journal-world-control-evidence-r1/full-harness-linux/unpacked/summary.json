@@ -1,0 +1,23 @@
+{
+  "head": "3b82145ae946bb51aebf67f048a28420368b40be",
+  "tree": "6b1b8c9ead5c16d15dc8565813d3abb1bf94d880",
+  "canonical_main": "6982a563dd0c88c81449566131852c601ae89868",
+  "argv": [
+    "python3",
+    "-m",
+    "unittest",
+    "discover",
+    "-s",
+    "tests/harness",
+    "-p",
+    "test_*.py",
+    "-v"
+  ],
+  "exit_code": 1,
+  "log_sha256": "a012080d5b52e5f08c930108fd2fe528a7451496972ec0daea2d02e63d5daadf",
+  "tracked_status": "",
+  "run_id": "35102014423",
+  "python": "3.12.3 (main, Jul 15 2026, 23:46:41) [GCC 13.3.0]",
+  "diagnostic_only": true,
+  "mvp6_verified": false
+}

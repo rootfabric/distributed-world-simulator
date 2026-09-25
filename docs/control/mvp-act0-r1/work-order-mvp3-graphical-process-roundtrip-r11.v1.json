@@ -1,0 +1,66 @@
+{
+  "schema": "distributed_world_simulator.bounded_repair_work_order.v1",
+  "repair_id": "V0-MVP3-R11-GRAPHICAL-PROCESS-ROUNDTRIP",
+  "parent_work_order_id": "V0-MVP-R1-WO-001",
+  "base_sha": "726084b1b056a39d388b0ec28e0df9661747238d",
+  "base_tree": "487a66a120518b7c6c562ea5637b832114bd3f81",
+  "role": "IMPLEMENTER",
+  "independent_context": false,
+  "failure_evidence": {
+    "preserved_paths": [
+      "artifacts/mvp3-graphical-process-failed-001",
+      "artifacts/mvp3-graphical-process-failed-002",
+      "artifacts/mvp3-graphical-process-failed-003"
+    ],
+    "final_precommit_pass": "artifacts/mvp3-graphical-process/manifest.json"
+  },
+  "repair_map": {
+    "affected_modules": [
+      "MVP3 interactive gateway and native backend link",
+      "MVP3 graphical client and shared-world scene",
+      "Windows five-process integration runner"
+    ],
+    "canonical_owners": "Native NetworkedGameplayService owns player state and replay; SM1 owns the transfer decision and epoch; P6 owns identity and command completion. Graphical clients render gateway snapshots and own no canonical simulation state.",
+    "root_causes": [
+      "A dynamically typed carrying result prevented the interactive gateway script from compiling.",
+      "The two graphical clients could start movement before both sessions had observed the initial shared snapshot.",
+      "The three-second synchronous backend bound was too short while two graphical Godot processes initialized on Windows.",
+      "The project preserves its configured 16:9 render aspect inside a requested 720x480 decorated window, producing a 720x404 viewport image.",
+      "The gateway read the nested REPORT payload one protocol wrapper too high and therefore omitted authority details from its own report."
+    ],
+    "canonical_fixes": [
+      "Use an explicit Dictionary result type and a two-client HELLO readiness barrier.",
+      "Keep backend RPC fail-closed and single-attempt while making its bound explicit and configurable for the graphical runner.",
+      "Validate the actual 16:9 viewport capture instead of treating decorated window dimensions as render dimensions.",
+      "Drive automatic movement through the same signed client input DTO and gateway route used by interactive input.",
+      "Read authority reports through the same nested native-result envelope used by LOOKUP and transfer replies."
+    ],
+    "sibling_paths_checked": [
+      "v0_mvp3_authority_process.gd",
+      "v0_mvp3_backend_link.gd",
+      "v0_mvp3_gateway_process.gd",
+      "v0_mvp3_process_protocol.gd",
+      "test_v0_mvp3_native_process_roundtrip.py",
+      "test_v0_mvp3_live_owner_handoff.gd"
+    ],
+    "not_symptom_patch": "The gate launches two native owners, one gateway and two rendered clients as distinct OS processes. It validates causal transfers, independent input, stable sessions and object instance IDs, clean logs and real viewport PNGs."
+  },
+  "allowed_paths": [
+    "scripts/runtime/networked_gameplay/mvp/**",
+    "scenes/labs/mvp/**",
+    "tests/integration/test_v0_mvp3_*",
+    "RUN_V0_MVP_*",
+    "docs/control/mvp-act0-r1/**"
+  ],
+  "result": {
+    "precommit_pass": true,
+    "gateway_processes": 1,
+    "authority_processes": 2,
+    "graphical_client_processes": 2,
+    "a_transfers": 2,
+    "viewport_captures": 2,
+    "mvp3_predicate_verified": false
+  },
+  "runtime_merge_authorized": false,
+  "main_merge_authorized": false
+}

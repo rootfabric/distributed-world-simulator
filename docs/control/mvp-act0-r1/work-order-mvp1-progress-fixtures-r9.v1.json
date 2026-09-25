@@ -1,0 +1,56 @@
+{
+  "schema": "distributed_world_simulator.act0_bounded_repair_work_order.v1",
+  "work_order_id": "V0-MVP-R1-R9-PROGRESS-FIXTURE-ISOLATION",
+  "parent_work_order": "V0-MVP-R1-WO-001",
+  "state": "IN_PROGRESS",
+  "risk_class": "HIGH",
+  "subject_before_repair": "53b7a8dce183eabec2c59408739f306866250940",
+  "trigger": {
+    "source": "MVP1_PROJECT_CONTROL",
+    "run": 34471485233,
+    "job": 102852162348,
+    "finding": "FULL_HARNESS_REGRESSION_AFTER_FIRST_REAL_MVP_IMPLEMENTATION_EVENT",
+    "observed_failures": [
+      "WORK_ORDER_SNAPSHOT_STATE_MISMATCH after IMPLEMENTATION_COMMITTED/IN_PROGRESS",
+      "EVENT_SEQUENCE_NOT_UNIQUE because ACT0 audit fixtures inject synthetic sequence 4 into a live ledger that now owns sequence 4",
+      "ACT0 immutable-P7 test incorrectly froze all scripts/runtime and scenes, including the newly authorized MVP namespace"
+    ]
+  },
+  "root_cause": "ACT0 historical fixtures were coupled to the moving real MVP execution directory, and the real Work Order snapshot was not advanced with the first IMPLEMENTATION_COMMITTED event. Once legitimate MVP1 work began, synthetic audit tests collided with live sequence 4 and a pre-implementation broad runtime freeze rejected the authorized MVP namespace.",
+  "repair": [
+    "Advance the real Work Order snapshot from DISPATCHED to IN_PROGRESS to match the append-only sequence-4 implementation event.",
+    "Run ACT0/audit regression fixtures against current Harness code but restore only the MVP execution directory from canonical pre-implementation main 127c732a, keeping synthetic sequences isolated from live MVP progress.",
+    "Preserve P7/foundation immutability narrowly; allow the Work Order-authorized scripts/runtime/networked_gameplay/mvp and scenes/labs/mvp namespaces.",
+    "Add a state-independent regression requiring the current MVP Work Order snapshot state to equal the latest committed event work_state."
+  ],
+  "allowed_paths": [
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/work-orders/V0-MVP-R1-WO-001.v1.json",
+    "tests/harness/test_v0_mvp_act0.py",
+    "docs/control/mvp-act0-r1/work-order-mvp1-progress-fixtures-r9.v1.json"
+  ],
+  "forbidden_paths": [
+    "scripts/runtime/**",
+    "scripts/network/**",
+    "scripts/simulation/**",
+    "scenes/**",
+    "project.godot",
+    "config/architecture/**",
+    "config/control/harness/acceptance/**",
+    "scripts/harness/**"
+  ],
+  "required_predicates": [
+    "WORK_ORDER_SNAPSHOT_MATCHES_REAL_SEQUENCE_4_IN_PROGRESS",
+    "ACT0_FIXTURES_USE_CURRENT_CODE_WITH_FROZEN_PRE_IMPLEMENTATION_LEDGER",
+    "SYNTHETIC_AUDIT_SEQUENCE_DOES_NOT_COLLIDE_WITH_REAL_MVP_PROGRESS",
+    "P7_AND_FOUNDATION_IMMUTABILITY_REMAINS_ENFORCED",
+    "AUTHORIZED_MVP_RUNTIME_NAMESPACE_IS_NOT_FALSELY_FROZEN",
+    "FULL_HARNESS_PASS",
+    "PROJECT_CONTROL_NON_RED"
+  ],
+  "stop_conditions": [
+    "Any MVP1 runtime/scene change is required to repair Harness fixtures",
+    "Any P7/foundation immutability check must be removed rather than narrowed to actual canonical owners",
+    "Any event history must be rewritten or renumbered"
+  ],
+  "notes": "This repair changes no MVP1 runtime behavior and proves no MVP product predicate. Real event sequence 4 remains immutable. Historical ACT0 tests are isolated in disposable Git clones while executing current Harness code."
+}

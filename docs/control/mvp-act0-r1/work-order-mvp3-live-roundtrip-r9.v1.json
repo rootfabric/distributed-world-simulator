@@ -1,0 +1,20 @@
+{
+  "schema": "distributed_world_simulator.bounded_repair_work_order.v1",
+  "repair_id": "V0-MVP3-R9-LIVE-ROUNDTRIP",
+  "parent_work_order_id": "V0-MVP-R1-WO-001",
+  "base_sha": "25d0b38162bf491fce65e6833311ef20a24e366b",
+  "base_tree": "00a512f715bb15cc9bfeb9126b3ab191d98236b7",
+  "role": "IMPLEMENTER",
+  "independent_context": false,
+  "failure_evidence": {"run": 34729653175, "artifact": 10309082777, "sha256": "393750dbdcfd034e461bf28599b3e7df4c0e9171e39616a215ee2bc80d343101", "assertions": 220, "failures": 13, "import_passed": true, "four_native_transfers_executed": true},
+  "repair_map": {
+    "root_cause": "Canonical JSON finalization round-trips integer counters through floats, so native Dictionary equality detects type loss. One test also changed B's -0.25 input to the identical -0.25 payload instead of a conflicting value.",
+    "fix": "Preserve native source packet integer types; normalize validated live counters at native staging; exercise actual JSON round-trip too. Make conflicting input mathematically different. Keep strict identity, checksums, source attestation and negative assertions.",
+    "additional_confirmed_boundary": "Frozen source presentation must remain a read-only row until explicit retirement, with a Service revision change at local membership changes; an SM1 label change alone must not alter a same-revision snapshot.",
+    "not_guard_weakening": "No assertion removal or error-scan suppression, no accepted foundation changes, no product PASS from a unit subgate."
+  },
+  "allowed_paths": ["scripts/runtime/networked_gameplay/mvp/**", "scripts/runtime/networked_gameplay/services/player_registry.gd", "scripts/runtime/networked_gameplay/services/player_ownership_service.gd", "scripts/runtime/networked_gameplay/networked_gameplay_service_p2.gd", "tests/runtime/test_v0_mvp3_*", "docs/control/mvp-act0-r1/**"],
+  "runtime_merge_authorized": false,
+  "main_merge_authorized": false,
+  "mvp3_predicate_verified": false
+}
