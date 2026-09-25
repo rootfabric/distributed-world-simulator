@@ -1,0 +1,191 @@
+{
+  "schema": "fabric.r5_2.t12_ship_matryoshka_exact_evidence.v1",
+  "status": "T12_CLOSE_REVIEW_VERIFIER_PROJECT_CONTROL_PASS",
+  "product_head": "c4a7e706f04355585fa4101365a9db4915f84f6e",
+  "product_tree": "03d7448c908a8feb3bc8521c4761a1d64e957859",
+  "base_t11_merge": "70979aaab49bd6413c628f9e98532944a4bd7c74",
+  "canonical_owner": "Construction/Matter",
+  "production_checkpoint": false,
+  "engine": {
+    "version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7"
+  },
+  "execution": {
+    "environment": "Linux x86_64 local container",
+    "cold_import": "PASS",
+    "independent_processes": 3,
+    "tracked_clean_before_after": true,
+    "head_tree_verified": true
+  },
+  "source_carrier": {
+    "run_id": 36124929437,
+    "artifact_id": 10859242569,
+    "artifact_sha256": "4b4749ee25664e9aa91deac75fa1481aa73150d5c31e26588270ba42875c2695",
+    "bundle_sha256": "b3d969e7233ca413b0f8d9d3abf7fb639549e2ee6d3431c1409ae046e2dd70d9",
+    "source_job_is_runtime_evidence": false
+  },
+  "deterministic_hash": "f29401ce869faab44996420cddb983ec97c85032e04fd6febe2d565731c46cbd",
+  "collector_evidence_hash": "7df2cd3881f998c3ef6a04058e608cd2fd8d85f8178bdb6d2bb69d10b6d118c0",
+  "claims": {
+    "boundary_calls": 249603,
+    "capsule_checksum": "98e2148b1ca1ab08c035976d65f51d0187016c6269cf330f2099f985bf404a39",
+    "checks": 8386,
+    "compiled_group_visits": 157644,
+    "evaluations": 13137,
+    "failures": [],
+    "final_state_hash": "e25739962809f126822fa8b554b3d0d2e272bd7eacfc887f1b528a0524b4bb10",
+    "instances": 3,
+    "leaf_components": 4275,
+    "leaf_traversals": 0,
+    "max_bus_residual_j": 5.938202559882533e-10,
+    "max_bus_voltage_v": 41.27892718027227,
+    "max_energy_residual_j": 1.141732486331648e-9,
+    "max_evaluations_per_step": 9,
+    "max_reference_current_error_a": 1.3995204842243147e-8,
+    "min_bus_voltage_v": 40.890668998036354,
+    "overload_error": "T12_SHARED_POWER_LIMIT",
+    "refine_path": "root/bank/unit03/cannon/emitter",
+    "regeneration_current_a": -4.206343267312907,
+    "schema": "fabric.t12.result.v1",
+    "state_scalars": 31,
+    "steps": 2048,
+    "total_optical_j": 497.62205349448413,
+    "total_pump_j": 8.584764658402023
+  },
+  "sample_logs_sha256": {
+    "sample-1.log": "55e35499a5cf391547c1948c842d4687c360d4cd42b507642c2f7abb6caa5ab7",
+    "sample-2.log": "55e35499a5cf391547c1948c842d4687c360d4cd42b507642c2f7abb6caa5ab7",
+    "sample-3.log": "55e35499a5cf391547c1948c842d4687c360d4cd42b507642c2f7abb6caa5ab7"
+  },
+  "observations": [
+    {
+      "sample": 1,
+      "elapsed_s": 26.2,
+      "max_rss_kib": 139180,
+      "exit_code": 0
+    },
+    {
+      "sample": 2,
+      "elapsed_s": 25.88,
+      "max_rss_kib": 139228,
+      "exit_code": 0
+    },
+    {
+      "sample": 3,
+      "elapsed_s": 25.66,
+      "max_rss_kib": 139124,
+      "exit_code": 0
+    }
+  ],
+  "regressions": {
+    "t3_battery": {
+      "verdict": "PASS",
+      "assertions": 41068,
+      "log_sha256": "18a494b86bb278468be0482314eeebb9d4d07e76ec7a3b6d600db066b0d25c37"
+    },
+    "t6_power_stage": {
+      "verdict": "PASS",
+      "assertions": 3627,
+      "log_sha256": "627a9e7912f9b25ea5b2405cdb7148f13f211503fc2cc0ebfd6e5066dcc7414e"
+    },
+    "t8_cooling": {
+      "verdict": "PASS",
+      "assertions": 4145,
+      "log_sha256": "2358019a184fe78b044bb4487db86e4db83c1b72f6ed196446afa5e7a24ca6fa"
+    },
+    "t9_laser_emitter": {
+      "verdict": "PASS",
+      "assertions": 3118,
+      "log_sha256": "5e71fc4e651242c5355bb1d98d348193c786c215ba4574d064e900d468e41ce3"
+    },
+    "t10_laser_cannon": {
+      "verdict": "PASS",
+      "assertions": 6311,
+      "log_sha256": "72a6b3bd1c8c290aad95da1d8647024bdcdca86b000eabe7201411050d4641ea"
+    },
+    "t11_smart_servo": {
+      "verdict": "PASS",
+      "assertions": 4388,
+      "log_sha256": "5b0c07b5f952eac412fa2f7dde3fde105d6c730386625b14db87b8ba44d49037"
+    }
+  },
+  "collector_unit_tests": {
+    "passed": 4,
+    "failed": 0
+  },
+  "ci": {
+    "t12_source_contracts_run": 36124902746,
+    "t12_source_contracts": "SUCCESS_NOT_RUNTIME",
+    "self_hosted_exact_job": "NOT_DISPATCHED_LOCAL_PINNED_RUN_USED",
+    "project_control_run": 36144903889,
+    "project_control": "PASS",
+    "project_control_failure": "",
+    "project_control_test_summary": "PASS",
+    "pc0_auditor_steps": "PASS",
+    "control_code_changed_by_t12": false,
+    "directional_failure_root_cause": "RESOLVED_AS_PROJECT_CONTROL_TEST_ORACLE_BUG_OUTSIDE_T12"
+  },
+  "boundaries": {
+    "reference": "alternative bisection of same child boundary laws; not an independent leaf-physics implementation",
+    "pump_conversion": "EXPLICIT_IDEAL_ETA_1_PAID_BY_BATTERY",
+    "servo_and_drive_heat": "EXPORTED_THERMAL_BOUNDARY",
+    "instance_range": "bounded 1..4 modules; 2 and 3 tested",
+    "atomic_failure": true,
+    "snapshot": "fixed binary64 layout in base64 JSON envelope with external SHA256",
+    "mutation": "Cannon 3 emitter rebuilt only with dependent ancestors; siblings and battery byte-identical",
+    "incompatible_storage_laws": "CANONICAL_STATE_PROJECTOR_REQUIRED",
+    "leaf_traversals_zero_is_not_zero_work": true,
+    "flight_hull_damage_or_production_integration_claimed": false
+  },
+  "acceptance": {
+    "independent_review": "PASS",
+    "independent_verifier": "PASS",
+    "project_control_clearance": "PASS",
+    "merge_ready": true,
+    "merged": false
+  },
+  "close": {
+    "frozen_review_head": "5b317445ab5c43dd0d7370cf9c3d0e7f95969ef6",
+    "reviewer": {
+      "verdict": "PASS",
+      "blocking_findings": 0,
+      "review_id": 5318515714
+    },
+    "independent_verifier": {
+      "verdict": "PASS",
+      "branch": "verify/fabric-r5-2-t12-fresh-independent-verifier-r1",
+      "verifier_head": "97dbf7cecd26f409e3ad9ea70c952ef5418f2f01",
+      "verifier_tree": "c592fa6fd8f37682e1d718e791d87bcd4abeb566",
+      "workflow_run": 36144125759,
+      "source_artifact": 10869196607,
+      "artifact_digest": "sha256:d5d419c0ffece05d582bfe7c4344f417440f3a7147b1a41d3a725cbf8e31348b",
+      "bundle_sha256": "5eff00e558161fbae2757424cd49d7648553e0399281838865b69e81e139b05b",
+      "canonical_processes": 3,
+      "assertions_per_sample": 8386,
+      "deterministic_hash": "f29401ce869faab44996420cddb983ec97c85032e04fd6febe2d565731c46cbd",
+      "evidence_hash": "a364dfa17cd205fd709b864db9d135ceffc8d54494c02e2739efca3aec034a48",
+      "sample_log_sha256": "2a063f9ed36521998ac16d17319abcb6817c272a8687eb1a4f305affd2efd49f",
+      "tracked_product_clean": true
+    },
+    "project_control": {
+      "verdict": "PASS",
+      "final_t12_run": 36144903889,
+      "control_job": 108103502795,
+      "architecture_compatibility": "PASS",
+      "pc0_standard": "PASS",
+      "pc0_directional": "PASS",
+      "historical_false_red_runs": [
+        36124929341,
+        36125966994
+      ],
+      "root_cause": "live R3 projection mixed origin/main registry+policy with stale candidate-checkout MAIN_OWNED_ONLY clearance registry",
+      "control_repair_pr": 691,
+      "control_repair_head": "ff1f9c4ea9bad720884a8116c848a6085a900fa7",
+      "control_repair_project_control_run": 36144323392,
+      "control_repair_merge": "cf217747e1d277eabc9c4b477299192f1cb8653d",
+      "research_base_sync": "74cea2d6c81a3ee933260ebaa8126a1224c69078",
+      "t12_base_sync_head": "cd2638eda87dd5904fce326d5893f3e4ed6db39b"
+    },
+    "product_unchanged_after_verification": true
+  }
+}

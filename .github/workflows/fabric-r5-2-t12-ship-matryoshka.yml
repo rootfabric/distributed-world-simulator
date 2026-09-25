@@ -1,0 +1,65 @@
+name: FABRIC R5.2 T12 Ship Matryoshka
+on:
+  push:
+    branches: [research/fabric-r5-2-t12-ship-matryoshka-r1]
+  workflow_dispatch:
+    inputs:
+      run_exact_runtime:
+        description: Run pinned Godot on the self-hosted Linux runner
+        type: boolean
+        default: false
+permissions:
+  contents: read
+concurrency:
+  group: fabric-t12-${{ github.ref }}-${{ github.event_name }}
+  cancel-in-progress: true
+jobs:
+  source-contracts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: T12 additive source scope (not a runtime verdict)
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          base=74cea2d6c81a3ee933260ebaa8126a1224c69078
+          test "$(git merge-base HEAD "$base")" = "$base"
+          allowed='^(.github/workflows/fabric-r5-2-t12-ship-matryoshka.yml|RUN_FABRIC_R5_2_T12_TESTS.sh|docs/research/FABRIC_R5_2_T12_SHIP_MATRYOSHKA_RU.md|scripts/research/fabric_bake0/(ship_matryoshka_contract_v1.gd|r5_t12_[^/]+|collect_r5_2_t12_evidence.py)|tests/research/fabric_bake0/(fabric_r5_2_t12_[^/]+|test_t12_evidence.py)|validation/fabric-r5-2-t12-[^/]+)$'
+          test -z "$(git diff --name-only "$base" HEAD | grep -Ev "$allowed" || true)"
+          git diff --check "$base" HEAD
+          bash -n RUN_FABRIC_R5_2_T12_TESTS.sh
+          python3 -m unittest discover -s tests/research/fabric_bake0 -p test_t12_evidence.py -v
+          mkdir -p source
+          git archive --format=tar HEAD | gzip -n > source/t12-source.tar.gz
+          printf 'HEAD=%s\nTREE=%s\nRUNTIME_VERDICT=NOT_RUN\n' "$(git rev-parse HEAD)" "$(git rev-parse 'HEAD^{tree}')" > source/identity.txt
+          sha256sum source/t12-source.tar.gz > source/source.sha256
+      - uses: actions/upload-artifact@v4
+        with:
+          name: t12-source-${{ github.sha }}
+          path: source/**
+          retention-days: 30
+  exact-runtime:
+    if: github.event_name == 'workflow_dispatch' && inputs.run_exact_runtime
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Canonical double three-process gate
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          export GODOT_BIN="${DWS_GODOT_DOUBLE_BIN:-$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64}"
+          bash RUN_FABRIC_R5_2_T12_TESTS.sh
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: t12-runtime-${{ github.sha }}
+          path: artifacts/fabric-r5-2-t12/**
+          retention-days: 90

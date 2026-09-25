@@ -1,0 +1,44 @@
+HEAD=c4a7e706f04355585fa4101365a9db4915f84f6e
+TREE=03d7448c908a8feb3bc8521c4761a1d64e957859
+GODOT_SHA256=bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7
+
+COLD_IMPORT=PASS
+TRACKED_SOURCE_CLEAN_BEFORE_AFTER=true
+ROLE=IMPLEMENTER
+
+=== SAMPLE 1 ===
+Godot Engine v4.7.1.stable.double.custom_build.a13da4feb (2026-07-13 21:00:28 UTC) - https://godotengine.org
+
+FABRIC_R5_2_T12_RESULT={"boundary_calls":249603,"capsule_checksum":"98e2148b1ca1ab08c035976d65f51d0187016c6269cf330f2099f985bf404a39","checks":8386,"compiled_group_visits":157644,"evaluations":13137,"failures":[],"final_state_hash":"e25739962809f126822fa8b554b3d0d2e272bd7eacfc887f1b528a0524b4bb10","instances":3,"leaf_components":4275,"leaf_traversals":0,"max_bus_residual_j":5.938202559882533e-10,"max_bus_voltage_v":41.27892718027227,"max_energy_residual_j":1.141732486331648e-09,"max_evaluations_per_step":9,"max_reference_current_error_a":1.3995204842243147e-08,"min_bus_voltage_v":40.890668998036354,"overload_error":"T12_SHARED_POWER_LIMIT","refine_path":"root/bank/unit03/cannon/emitter","regeneration_current_a":-4.206343267312907,"schema":"fabric.t12.result.v1","state_scalars":31,"steps":2048,"total_optical_j":497.62205349448413,"total_pump_j":8.584764658402023}
+FABRIC R5.2 T12 SHIP MATRYOSHKA: PASS (8386 assertions)
+
+=== SAMPLE 2 ===
+Godot Engine v4.7.1.stable.double.custom_build.a13da4feb (2026-07-13 21:00:28 UTC) - https://godotengine.org
+
+FABRIC_R5_2_T12_RESULT={"boundary_calls":249603,"capsule_checksum":"98e2148b1ca1ab08c035976d65f51d0187016c6269cf330f2099f985bf404a39","checks":8386,"compiled_group_visits":157644,"evaluations":13137,"failures":[],"final_state_hash":"e25739962809f126822fa8b554b3d0d2e272bd7eacfc887f1b528a0524b4bb10","instances":3,"leaf_components":4275,"leaf_traversals":0,"max_bus_residual_j":5.938202559882533e-10,"max_bus_voltage_v":41.27892718027227,"max_energy_residual_j":1.141732486331648e-09,"max_evaluations_per_step":9,"max_reference_current_error_a":1.3995204842243147e-08,"min_bus_voltage_v":40.890668998036354,"overload_error":"T12_SHARED_POWER_LIMIT","refine_path":"root/bank/unit03/cannon/emitter","regeneration_current_a":-4.206343267312907,"schema":"fabric.t12.result.v1","state_scalars":31,"steps":2048,"total_optical_j":497.62205349448413,"total_pump_j":8.584764658402023}
+FABRIC R5.2 T12 SHIP MATRYOSHKA: PASS (8386 assertions)
+
+=== SAMPLE 3 ===
+Godot Engine v4.7.1.stable.double.custom_build.a13da4feb (2026-07-13 21:00:28 UTC) - https://godotengine.org
+
+FABRIC_R5_2_T12_RESULT={"boundary_calls":249603,"capsule_checksum":"98e2148b1ca1ab08c035976d65f51d0187016c6269cf330f2099f985bf404a39","checks":8386,"compiled_group_visits":157644,"evaluations":13137,"failures":[],"final_state_hash":"e25739962809f126822fa8b554b3d0d2e272bd7eacfc887f1b528a0524b4bb10","instances":3,"leaf_components":4275,"leaf_traversals":0,"max_bus_residual_j":5.938202559882533e-10,"max_bus_voltage_v":41.27892718027227,"max_energy_residual_j":1.141732486331648e-09,"max_evaluations_per_step":9,"max_reference_current_error_a":1.3995204842243147e-08,"min_bus_voltage_v":40.890668998036354,"overload_error":"T12_SHARED_POWER_LIMIT","refine_path":"root/bank/unit03/cannon/emitter","regeneration_current_a":-4.206343267312907,"schema":"fabric.t12.result.v1","state_scalars":31,"steps":2048,"total_optical_j":497.62205349448413,"total_pump_j":8.584764658402023}
+FABRIC R5.2 T12 SHIP MATRYOSHKA: PASS (8386 assertions)
+
+=== COLLECTOR ===
+FABRIC R5.2 T12 SHIP MATRYOSHKA: PASS (8386 assertions)
+FABRIC R5.2 T12 SHIP MATRYOSHKA: PASS (8386 assertions)
+FABRIC R5.2 T12 SHIP MATRYOSHKA: PASS (8386 assertions)
+FABRIC_R5_2_T12_DETERMINISTIC_HASH=f29401ce869faab44996420cddb983ec97c85032e04fd6febe2d565731c46cbd
+FABRIC_R5_2_T12_EVIDENCE=PASS
+
+=== UNCHANGED REGRESSIONS ===
+t10_laser_cannon: PASS (6311 assertions)
+t11_smart_servo: PASS (4388 assertions)
+t3_battery: PASS (41068 assertions)
+t6_power_stage: PASS (3627 assertions)
+t8_cooling: PASS (4145 assertions)
+t9_laser_emitter: PASS (3118 assertions)
+
+Independent Reviewer=PENDING
+Independent Verifier=PENDING
+Project Control=FAILURE (live directional regression); merge not authorized
