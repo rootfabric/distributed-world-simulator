@@ -149,16 +149,14 @@ class ProposedR3OwnershipProjectionTests(unittest.TestCase):
         if watched_level not in directional.HEALTH_RANK or critical_level not in directional.HEALTH_RANK:
             raise AssertionError("invalid directional health policy")
 
-        clearance_path = ROOT / directional.CLEARANCE_REGISTRY_PATH
-        clearances: list[dict] = []
-        if clearance_path.exists():
-            clearance_document = json.loads(clearance_path.read_text(encoding="utf-8"))
-            if (
-                clearance_document.get("schema") == directional.CLEARANCE_REGISTRY_SCHEMA
-                and clearance_document.get("authority") == "MAIN_OWNED_ONLY"
-                and isinstance(clearance_document.get("clearances"), list)
-            ):
-                clearances = [item for item in clearance_document["clearances"] if isinstance(item, dict)]
+        # Directional clearances are explicitly MAIN_OWNED_ONLY. The live R3
+        # projection already loads registry/policy from origin/main, so reading
+        # the candidate checkout's clearance file here mixes control-plane
+        # generations and can manufacture a false RED for an already-cleared
+        # live producer/consumer pair.
+        clearances, clearance_registry_loaded = directional.load_clearances()
+        if not clearance_registry_loaded:
+            raise AssertionError("main-owned directional watch clearance registry missing")
 
         overall = "GREEN"
         for producer in scopes:
