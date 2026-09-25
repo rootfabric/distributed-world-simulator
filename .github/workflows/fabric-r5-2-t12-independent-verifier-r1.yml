@@ -1,0 +1,88 @@
+name: FABRIC R5.2 T12 Fresh Independent Verifier R1
+
+on:
+  push:
+    branches: [verify/fabric-r5-2-t12-fresh-independent-verifier-r1]
+
+permissions:
+  contents: read
+
+env:
+  SUBJECT_HEAD: 5b317445ab5c43dd0d7370cf9c3d0e7f95969ef6
+  PRODUCT_HEAD: c4a7e706f04355585fa4101365a9db4915f84f6e
+  EXPECTED_DETERMINISTIC_HASH: f29401ce869faab44996420cddb983ec97c85032e04fd6febe2d565731c46cbd
+
+jobs:
+  verifier-source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Prove frozen product identity
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$(git merge-base HEAD "$SUBJECT_HEAD")" = "$SUBJECT_HEAD"
+          changed="$(git diff --name-only "$SUBJECT_HEAD"...HEAD)"
+          test "$changed" = '.github/workflows/fabric-r5-2-t12-independent-verifier-r1.yml'
+          git diff --exit-code "$SUBJECT_HEAD"...HEAD -- \
+            scripts/research/fabric_bake0 \
+            tests/research/fabric_bake0 \
+            RUN_FABRIC_R5_2_T12_TESTS.sh \
+            validation/fabric-r5-2-t12-ship-matryoshka-exact-evidence.v1.json \
+            validation/fabric-r5-2-t12-runtime-transcript.txt \
+            docs/research/FABRIC_R5_2_T12_SHIP_MATRYOSHKA_RU.md
+
+      - name: Inspect durable implementer evidence
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          python3 - <<'PY'
+          import json
+          p='validation/fabric-r5-2-t12-ship-matryoshka-exact-evidence.v1.json'
+          d=json.load(open(p,encoding='utf-8'))
+          assert d['status']=='IMPLEMENTER_EXACT_3X_PASS_NOT_ACCEPTED'
+          assert d['product_head']=='c4a7e706f04355585fa4101365a9db4915f84f6e'
+          assert d['deterministic_hash']=='f29401ce869faab44996420cddb983ec97c85032e04fd6febe2d565731c46cbd'
+          assert d['claims']['leaf_components']==4275
+          assert d['claims']['state_scalars']==31
+          assert d['claims']['steps']==2048
+          assert d['claims']['leaf_traversals']==0
+          assert d['claims']['overload_error']=='T12_SHARED_POWER_LIMIT'
+          assert d['claims']['refine_path']=='root/bank/unit03/cannon/emitter'
+          assert d['boundaries']['atomic_failure'] is True
+          assert d['boundaries']['snapshot'].startswith('fixed binary64')
+          assert d['boundaries']['incompatible_storage_laws']=='CANONICAL_STATE_PROJECTOR_REQUIRED'
+          print('T12_DURABLE_IMPLEMENTER_EVIDENCE=PASS')
+          PY
+
+      - name: Run static T12 evidence tests
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          python3 -m unittest discover -s tests/research/fabric_bake0 -p test_t12_evidence.py -v
+          bash -n RUN_FABRIC_R5_2_T12_TESTS.sh
+
+      - name: Build exact verifier source bundle
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          mkdir -p verifier-source
+          git branch -f t12-verifier-exact HEAD
+          git bundle create verifier-source/t12-verifier-exact.bundle refs/heads/t12-verifier-exact
+          sha256sum verifier-source/t12-verifier-exact.bundle > verifier-source/t12-verifier-exact.bundle.sha256
+          printf 'SUBJECT_HEAD=%s\nPRODUCT_HEAD=%s\nVERIFIER_HEAD=%s\nVERIFIER_TREE=%s\nEXPECTED_DETERMINISTIC_HASH=%s\n' \
+            "$SUBJECT_HEAD" "$PRODUCT_HEAD" "$(git rev-parse HEAD)" "$(git rev-parse 'HEAD^{tree}')" "$EXPECTED_DETERMINISTIC_HASH" \
+            > verifier-source/identity.txt
+          git bundle verify verifier-source/t12-verifier-exact.bundle
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fabric-r5-2-t12-independent-verifier-source-${{ github.sha }}
+          path: verifier-source/**
+          if-no-files-found: error
+          retention-days: 90
