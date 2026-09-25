@@ -26,7 +26,7 @@ jobs:
         shell: bash
         run: |
           set -Eeuo pipefail
-          base=70979aaab49bd6413c628f9e98532944a4bd7c74
+          base=74cea2d6c81a3ee933260ebaa8126a1224c69078
           test "$(git merge-base HEAD "$base")" = "$base"
           allowed='^(.github/workflows/fabric-r5-2-t12-ship-matryoshka.yml|RUN_FABRIC_R5_2_T12_TESTS.sh|docs/research/FABRIC_R5_2_T12_SHIP_MATRYOSHKA_RU.md|scripts/research/fabric_bake0/(ship_matryoshka_contract_v1.gd|r5_t12_[^/]+|collect_r5_2_t12_evidence.py)|tests/research/fabric_bake0/(fabric_r5_2_t12_[^/]+|test_t12_evidence.py)|validation/fabric-r5-2-t12-[^/]+)$'
           test -z "$(git diff --name-only "$base" HEAD | grep -Ev "$allowed" || true)"
