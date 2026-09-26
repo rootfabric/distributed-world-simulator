@@ -54,6 +54,13 @@ func _initialize() -> void:
 	check(int(prepared.details.prepare_count) == 1, "single prepare")
 	check(int(prepared.details.source_component_count) == 4275, "shared model still represents 4275 leaf components")
 	check(int(prepared.details.state_scalars_per_instance) == 31, "31 physical scalars per instance")
+	check(shared.model_intact(), "frozen compiled model passes initial integrity audit")
+	# Prove prepare severed the caller alias: mutate then restore only the caller copy.
+	var caller_capsule_id: String = String(bundle.capsule.capsule_id)
+	bundle.capsule.capsule_id = caller_capsule_id + "-caller-probe"
+	check(shared.model_intact(), "caller bundle mutation cannot alter frozen compiled model")
+	bundle.capsule.capsule_id = caller_capsule_id
+	check(U.canonical_hash(bundle) == caller_model_hash_before, "caller probe restored byte-equivalent model")
 
 	if "--preflight" in OS.get_cmdline_user_args():
 		print("FABRIC_R5_2_T13_PREFLIGHT=PASS")
