@@ -1,11 +1,10 @@
 name: FABRIC R5.2 T13 Exact Control Carrier
 on:
-  push:
-    branches: [control/fabric-r5-2-t13-exact-r1]
+  pull_request:
 permissions:
   contents: read
 concurrency:
-  group: fabric-t13-exact-control-${{ github.ref }}
+  group: fabric-t13-exact-control-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 jobs:
   control-scope:
@@ -14,20 +13,23 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: e54622fe7286fed0a77c1f1fdb9c59a82cf94a14
           fetch-depth: 0
           persist-credentials: false
-      - name: Verify product-equivalent control carrier
+      - name: Verify exact T13 product subject
         shell: bash
         run: |
           set -Eeuo pipefail
           product=e54622fe7286fed0a77c1f1fdb9c59a82cf94a14
-          test "$(git merge-base HEAD "$product")" = "$product"
-          changed="$(git diff --name-only "$product" HEAD)"
-          test "$changed" = '.github/workflows/fabric-r5-2-t12-ship-matryoshka.yml'
-          git diff --check "$product" HEAD
+          test "$(git rev-parse HEAD)" = "$product"
+          base=c60960bee48aa7cc68a9035cff86d5567f6c89fc
+          test "$(git merge-base HEAD "$base")" = "$base"
+          allowed='^(.github/workflows/fabric-r5-2-t13-shared-instances.yml|RUN_FABRIC_R5_2_T13_TESTS.sh|docs/research/FABRIC_R5_2_T13_SHARED_INSTANCES_RU.md|scripts/research/fabric_bake0/(r5_t13_shared_instances_runtime_v1.gd|collect_r5_2_t13_evidence.py)|tests/research/fabric_bake0/(fabric_r5_2_t13_shared_instances_acceptance.gd|test_t13_evidence.py))$'
+          test -z "$(git diff --name-only "$base" HEAD | grep -Ev "$allowed" || true)"
+          git diff --check "$base" HEAD
           bash -n RUN_FABRIC_R5_2_T13_TESTS.sh
           python3 -m unittest discover -s tests/research/fabric_bake0 -p test_t13_evidence.py -v
-          printf 'PRODUCT_HEAD=%s\nCONTROL_HEAD=%s\nCONTROL_DIFF=%s\n' "$product" "$(git rev-parse HEAD)" "$changed"
+          printf 'PRODUCT_HEAD=%s\nPRODUCT_TREE=%s\n' "$product" "$(git rev-parse 'HEAD^{tree}')"
   exact-runtime:
     needs: control-scope
     runs-on: [self-hosted, Linux, X64]
@@ -35,15 +37,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: e54622fe7286fed0a77c1f1fdb9c59a82cf94a14
           fetch-depth: 0
           persist-credentials: false
-      - name: Verify exact product equivalence
+      - name: Verify exact checkout
         shell: bash
         run: |
           set -Eeuo pipefail
-          product=e54622fe7286fed0a77c1f1fdb9c59a82cf94a14
-          test "$(git diff --name-only "$product" HEAD)" = '.github/workflows/fabric-r5-2-t12-ship-matryoshka.yml'
-          printf 'PRODUCT_HEAD=%s\nCONTROL_HEAD=%s\nCONTROL_TREE=%s\n' "$product" "$(git rev-parse HEAD)" "$(git rev-parse 'HEAD^{tree}')"
+          test "$(git rev-parse HEAD)" = e54622fe7286fed0a77c1f1fdb9c59a82cf94a14
+          printf 'PRODUCT_HEAD=%s\nPRODUCT_TREE=%s\n' "$(git rev-parse HEAD)" "$(git rev-parse 'HEAD^{tree}')"
       - name: Canonical double T13 exact gate
         shell: bash
         run: |
@@ -53,6 +55,6 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: t13-exact-control-${{ github.sha }}
+          name: t13-exact-product-e54622fe
           path: artifacts/fabric-r5-2-t13/**
           retention-days: 90
