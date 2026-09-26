@@ -17,6 +17,9 @@ var state_signature_hash := ""
 var prepare_count := 0
 var ready := false
 
+func _ready_identity_ok() -> bool:
+	return ready and prepare_count == 1 and U.is_lower_hex_64(compiled_model_checksum) and U.is_lower_hex_64(compiled_model_hash) and U.is_lower_hex_64(state_signature_hash)
+
 func prepare(bundle: Dictionary, trusted_capsule_checksum: String) -> Dictionary:
 	if ready:
 		return U.failure("T13_MODEL_ALREADY_PREPARED")
@@ -25,13 +28,16 @@ func prepare(bundle: Dictionary, trusted_capsule_checksum: String) -> Dictionary
 		return checked
 	if String(bundle.capsule.executable_kind) != "T12_SHIP":
 		return U.failure("T13_MODEL_KIND_INVALID")
-	var prepared: Dictionary = runtime.prepare(bundle, trusted_capsule_checksum)
+	# Freeze exactly one internal deep copy. Instance hot paths never duplicate or
+	# canonical-hash the full compiled graph.
+	compiled_bundle = bundle.duplicate(true)
+	var prepared: Dictionary = runtime.prepare(compiled_bundle, trusted_capsule_checksum)
 	if not prepared.success:
+		compiled_bundle = {}
 		return prepared
-	compiled_bundle = bundle
-	live = C.live_tree(bundle)
+	live = C.live_tree(compiled_bundle)
 	compiled_model_checksum = trusted_capsule_checksum
-	compiled_model_hash = U.canonical_hash(bundle)
+	compiled_model_hash = U.canonical_hash(compiled_bundle)
 	state_signature_hash = runtime.state_signature()
 	prepare_count += 1
 	ready = true
@@ -41,7 +47,7 @@ func prepare(bundle: Dictionary, trusted_capsule_checksum: String) -> Dictionary
 		"compiled_model_hash": compiled_model_hash,
 		"state_signature": state_signature_hash,
 		"prepare_count": prepare_count,
-		"source_component_count": int(bundle.capsule.source_component_count),
+		"source_component_count": int(compiled_bundle.capsule.source_component_count),
 		"state_scalars_per_instance": int(prepared.details.state_scalars),
 	})
 
@@ -55,11 +61,11 @@ func model_identity() -> Dictionary:
 	}
 
 func model_intact() -> bool:
-	return ready and prepare_count == 1 and not compiled_bundle.is_empty() and U.canonical_hash(compiled_bundle) == compiled_model_hash
+	return _ready_identity_ok() and not compiled_bundle.is_empty() and U.canonical_hash(compiled_bundle) == compiled_model_hash
 
 func create_binding(instance_id: String, world_slot: String) -> Dictionary:
-	if not model_intact():
-		return U.failure("T13_COMPILED_MODEL_MUTATED")
+	if not _ready_identity_ok():
+		return U.failure("T13_MODEL_NOT_READY")
 	if instance_id.is_empty() or instance_id.length() > 128 or world_slot.is_empty() or world_slot.length() > 128:
 		return U.failure("T13_BINDING_ID_INVALID")
 	var binding := {
@@ -75,8 +81,8 @@ func create_binding(instance_id: String, world_slot: String) -> Dictionary:
 	return U.success(binding) if checked.success else checked
 
 func validate_binding(binding: Dictionary) -> Dictionary:
-	if not model_intact():
-		return U.failure("T13_COMPILED_MODEL_MUTATED")
+	if not _ready_identity_ok():
+		return U.failure("T13_MODEL_NOT_READY")
 	if binding.size() != 6 or binding.get("schema") != BINDING_SCHEMA:
 		return U.failure("T13_BINDING_SHAPE_INVALID")
 	if String(binding.get("instance_id", "")).is_empty() or String(binding.get("world_slot", "")).is_empty():
@@ -148,8 +154,8 @@ func _masked_commands(state: Dictionary, commands: Dictionary) -> Dictionary:
 	return masked
 
 func execute(binding: Dictionary, state: Dictionary, commands: Dictionary, ambient_k: float, dt: float) -> Dictionary:
-	if not model_intact():
-		return U.failure("T13_COMPILED_MODEL_MUTATED")
+	if not _ready_identity_ok():
+		return U.failure("T13_MODEL_NOT_READY")
 	if not state_valid(binding, state):
 		return U.failure("T13_INSTANCE_STATE_INVALID")
 	var before := state.duplicate(true)
