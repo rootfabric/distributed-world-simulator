@@ -1,16 +1,16 @@
-name: V0 FINAL.2 Fresh Independent Verifier R3
+name: V0 FINAL.2 Fresh Independent Verifier R4 Exclusive
 
 on:
   push:
     branches:
-      - control/v0-final-2-fresh-verifier-r3
+      - control/v0-final-2-fresh-verifier-r4-exclusive
 
 permissions:
   contents: read
   actions: read
 
 concurrency:
-  group: v0-final-2-fresh-verifier-r3
+  group: v0-final-2-fresh-verifier-r4-exclusive
   cancel-in-progress: false
 
 env:
@@ -30,7 +30,7 @@ env:
 jobs:
   verifier:
     name: Fresh Independent Verifier Windows exact
-    runs-on: [self-hosted, Windows, X64]
+    runs-on: [v0-final-exclusive]
     timeout-minutes: 330
     steps:
       - name: Checkout exact frozen product
