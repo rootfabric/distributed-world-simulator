@@ -1,8 +1,6 @@
 name: ECO ARCH2 A11 Persistent Habitat Exact
 
 on:
-  push:
-    branches: [feature/eco-arch2-a11-persistent-habitat-r1]
   pull_request:
     paths:
       - 'scripts/ecology/habitat/**'
@@ -17,7 +15,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: eco-a11-exact-${{ github.event.pull_request.number || github.ref }}
+  group: eco-a11-exact-refs/heads/${{ github.head_ref || github.ref_name }}
   cancel-in-progress: true
 
 jobs:
@@ -60,16 +58,27 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'A11_PYTHON_COMPILE' }
           python validation/ecology/evo_arch2_a11/run_exact.py --godot $godot
           if ($LASTEXITCODE -ne 0) { throw 'A11_EXACT_FAILED' }
-      - name: Verify clean tracked source
-        if: always()
+      - name: Verify clean tracked Linux source
+        if: always() && matrix.platform == 'Linux'
         shell: bash
         run: |
+          set -euo pipefail
           git diff --exit-code
           git diff --cached --exit-code
+      - name: Verify clean tracked Windows source
+        if: always() && matrix.platform == 'Windows'
+        shell: pwsh
+        run: |
+          git diff --exit-code
+          if ($LASTEXITCODE -ne 0) { throw 'TRACKED_WORKTREE_CHANGED' }
+          git diff --cached --exit-code
+          if ($LASTEXITCODE -ne 0) { throw 'TRACKED_INDEX_CHANGED' }
       - name: Upload exact habitat evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: eco-a11-exact-${{ matrix.platform }}-${{ github.run_id }}-${{ github.run_attempt }}
-          path: artifacts/runtime/eco-a11
+          path: |
+            artifacts/runtime/eco-a11
+            artifacts/runtime/eco-a11-fixtures
           if-no-files-found: warn
