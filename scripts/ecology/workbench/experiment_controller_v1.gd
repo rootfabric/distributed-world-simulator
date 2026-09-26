@@ -384,9 +384,10 @@ func apply_field_patch(patch: Dictionary) -> Dictionary:
 		var compatible: Dictionary = _world_authority.world_manifest_compatible(next_manifest)
 		if not bool(compatible.get("success", false)):
 			return _command_fail("CONTROLLER_FIELD_PATCH_WORLD:" + String(compatible.get("error", "?")))
-		var admitted: Dictionary = _world_authority.admit_execution()
-		if not bool(admitted.get("success", false)):
-			return _command_fail("CONTROLLER_FIELD_PATCH_AUTHORITY:" + String(admitted.get("error", "?")))
+		# There is no admitted live world-patch contract. Even a compatible
+		# no-op must not call admit_execution(), which advances the world cursor.
+		# World resource changes continue through the existing Matter adapter.
+		return _command_fail("CONTROLLER_FIELD_PATCH_WORLD:LIVE_EDIT_UNSUPPORTED")
 	# Deltas are relative to the immutable input manifest. They are applied to
 	# the current live field (not used as absolute replacement values), then the
 	# resulting field is adopted into the single runtime truth.
@@ -476,8 +477,8 @@ func apply_world_stocks(resources: Dictionary, source_tag: String) -> Dictionary
 		return _command_fail("CONTROLLER_WORLD_STOCKS_INPUT")
 	# A Matter admission supplies a total batch amount, not a spatial
 	# allocation. Replicating that total into every cell violates mass
-	# conservation. Until production provides an allocation witness, only a
-	# one-cell field can admit a total batch; multi-cell fails closed.
+	# conservation. Until production provides an allocation witness exists,
+	# only a one-cell field can admit a total batch; multi-cell fails closed.
 	if int(_runtime.field.width) * int(_runtime.field.depth) != 1:
 		return _command_fail("CONTROLLER_WORLD_STOCKS_SPATIAL_ALLOCATION_REQUIRED")
 	var field: Dictionary = _runtime.field
@@ -683,14 +684,14 @@ func _build_field(environment: Dictionary) -> Dictionary:
 	for index in total:
 		var zone: Dictionary = zones[mini(zones.size() - 1, index * zones.size() / total)]
 		var signals := FieldContract.signals(int(zone.light), int(zone.temperature), 0, 0)
-		var set := Field.set_cell_signals(
+		var signals_result := Field.set_cell_signals(
 			field,
 			index % int(spatial.width), int(index / int(spatial.width)),
 			signals, OWNER_TOKEN, 0, int(field.revision)
 		)
-		if not bool(set.get("success", false)):
-			return _command_fail("CONTROLLER_FIELD_SIGNALS:" + String(set.get("error", "?")))
-		field = set.state
+		if not bool(signals_result.get("success", false)):
+			return _command_fail("CONTROLLER_FIELD_SIGNALS:" + String(signals_result.get("error", "?")))
+		field = signals_result.state
 	return {"success": true, "field": field}
 
 func _build_population(manifest: Dictionary, blueprints: Dictionary, field: Dictionary) -> Dictionary:
