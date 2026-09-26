@@ -23,9 +23,11 @@ Acceptance обязан доказать лестницу **1 → 10 → 100** �
 ## Разделение model / binding / state
 
 `CompiledModel` — verified T12 Ship bundle и один prepared compact runtime.
-Его identity задаётся T12 capsule checksum, canonical hash всей compiled bundle и
-state signature. Runtime хранит ссылку на bundle только для проверки
-неизменности; любой внешний mutation меняет hash и блокирует T13 execution.
+При `prepare()` T13 делает **ровно одну deep copy** compiled bundle и дальше
+использует её как внутренний frozen model. Identity задаётся T12 capsule checksum,
+canonical hash этой frozen bundle и state signature. Instance hot path не копирует
+и не canonical-hash'ит полный compile graph; полный hash используется как отдельный
+integrity audit до/после масштабного прогона.
 
 `InstanceBinding` содержит только instance identity, world slot, checksum общей
 compiled model, state signature и собственный checksum. Он не копирует дерево
