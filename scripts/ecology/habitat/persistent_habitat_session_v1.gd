@@ -8,6 +8,8 @@ const Genome = preload("res://scripts/research/ecology/v2/organism_genome_v2.gd"
 const Manifest = preload("res://scripts/ecology/workbench/experiment_manifest_v1.gd")
 const Controller = preload("res://scripts/ecology/workbench/experiment_controller_v1.gd")
 const Checkpoint = preload("res://scripts/research/ecology/v2/ecology_runtime_checkpoint_v1.gd")
+const WorldBinding = preload("res://scripts/research/ecology/v2/world_binding_v1.gd")
+const NetworkUtils = preload("res://scripts/network/contracts/network_contract_utils.gd")
 
 const SCHEMA := "dws.ecology.habitat.checkpoint-transport.v1"
 const FIELDS := ["schema", "manifest", "founder_registry", "checkpoint_text", "checkpoint_sha256"]
@@ -68,7 +70,7 @@ func export_bundle() -> Dictionary:
 
 ## Failed restore leaves the current controller/registry untouched. WORLD_COMPAT
 ## requires a fresh caller-supplied adapter, never the adapter of the live session.
-## Its independent freshness/owner admission remains the responsibility of A10.
+## The saved cursor must be admitted against CURRENT authority before import.
 func restore_bundle(text: String, expected_sha256: String, fresh_world_authority: Object = null) -> Dictionary:
 	if not _is_sha(expected_sha256):
 		return _fail("HABITAT_EXTERNAL_ANCHOR_REQUIRED")
@@ -93,9 +95,14 @@ func restore_bundle(text: String, expected_sha256: String, fresh_world_authority
 	var validated := Checkpoint.deserialize(String(value.checkpoint_text), String(value.checkpoint_sha256), manifest_hash)
 	if validated.is_empty():
 		return _fail("HABITAT_CANONICAL_CHECKPOINT")
+	if int(validated.runtime_state.tick) > int(manifest.horizon_ticks):
+		return _fail("HABITAT_CHECKPOINT_BEYOND_HORIZON")
 	if String(manifest.mode) == "WORLD_COMPAT":
 		if fresh_world_authority == null or fresh_world_authority == _world_authority:
 			return _fail("HABITAT_FRESH_WORLD_AUTHORITY_REQUIRED")
+		var context_error := _world_restore_context(validated.external_state, fresh_world_authority)
+		if not context_error.is_empty():
+			return _fail(context_error)
 	elif fresh_world_authority != null:
 		return _fail("HABITAT_LAB_WORLD_AUTHORITY")
 	var staged := _stage(manifest, registry, fresh_world_authority)
@@ -105,8 +112,6 @@ func restore_bundle(text: String, expected_sha256: String, fresh_world_authority
 	var loaded: Dictionary = candidate.load_state(String(value.checkpoint_text), manifest_hash, String(value.checkpoint_sha256))
 	if not bool(loaded.get("success", false)):
 		return _fail("HABITAT_LOAD:" + String(loaded.get("error", "?")))
-	if int(candidate.tick()) > int(manifest.horizon_ticks):
-		return _fail("HABITAT_CHECKPOINT_BEYOND_HORIZON")
 	controller = candidate
 	founder_registry = registry.duplicate(true)
 	_world_authority = fresh_world_authority
@@ -114,17 +119,59 @@ func restore_bundle(text: String, expected_sha256: String, fresh_world_authority
 		"sha256": expected_sha256.to_lower(),
 		"state_hash": controller.get_snapshot().canonical_state_hash}
 
+## Reads existing A10 representations only. No world identity is invented and
+## no caller-owned authority is mutated during context validation.
+static func _world_restore_context(envelope: Dictionary, authority: Object) -> String:
+	for method in ["region", "cursor", "export_state"]:
+		if not authority.has_method(method):
+			return "HABITAT_WORLD_CONTEXT_API"
+	var saved := _world_raw(envelope)
+	var current_envelope: Dictionary = authority.export_state()
+	var current := _world_raw(current_envelope)
+	if saved.is_empty() or current.is_empty() or not saved.get("cursor") is Dictionary:
+		return "HABITAT_WORLD_CONTEXT_STATE"
+	var current_region: Dictionary = authority.region()
+	var admitted := WorldBinding.admit_cursor(saved.cursor, current_region)
+	if not bool(admitted.get("success", false)):
+		return "HABITAT_WORLD_CURRENT_AUTHORITY:" + String(admitted.get("error", "?"))
+	var current_cursor: Dictionary = authority.cursor()
+	if String(saved.cursor.get("entity_id", "")) != String(current_cursor.get("entity_id", "")):
+		return "HABITAT_WORLD_ENTITY_MISMATCH"
+	# Strict compatibility: a checkpoint may not overwrite current topology,
+	# owner epoch/lifecycle, catalog or mapping with its historical versions.
+	for field in ["manifest_hash", "region", "catalog", "mapping", "map_id"]:
+		if not saved.has(field) or not current.has(field) or saved[field] != current[field]:
+			return "HABITAT_WORLD_CONTEXT_MISMATCH:" + field
+	return ""
+
+static func _world_raw(envelope: Dictionary) -> Dictionary:
+	if not envelope.get("state_text") is String:
+		return {}
+	var decoded: Variant = JSON.parse_string(String(envelope.state_text))
+	if not decoded is Dictionary:
+		return {}
+	var normalized: Dictionary = NetworkUtils.canonicalize(decoded, "$.habitat_world_context")
+	if not bool(normalized.get("success", false)) or not normalized.get("value") is Dictionary:
+		return {}
+	return normalized.value
+
 ## Immutable content-addressed files. Never overwrite an earlier checkpoint.
 ## Failed/incomplete temporary files are never considered load candidates.
 func save(directory: String) -> Dictionary:
 	if directory.is_empty() or directory.length() > 2048:
 		return _fail("HABITAT_SAVE_DIRECTORY")
-	if directory.begins_with("res://") and not directory.begins_with("res://artifacts/"):
+	if not directory.is_absolute_path() and not directory.begins_with("user://") and not directory.begins_with("res://"):
+		return _fail("HABITAT_SAVE_ABSOLUTE_PATH_REQUIRED")
+	var absolute := ProjectSettings.globalize_path(directory).simplify_path()
+	var project := ProjectSettings.globalize_path("res://").simplify_path().trim_suffix("/")
+	var comparable := absolute.to_lower() if OS.has_feature("windows") else absolute
+	var project_comparable := project.to_lower() if OS.has_feature("windows") else project
+	if comparable == project_comparable or (comparable.begins_with(project_comparable + "/") \
+			and not comparable.begins_with(project_comparable + "/artifacts/")):
 		return _fail("HABITAT_SAVE_PROTECTED_PATH")
 	var exported := export_bundle()
 	if not bool(exported.get("success", false)):
 		return exported
-	var absolute := ProjectSettings.globalize_path(directory)
 	if DirAccess.make_dir_recursive_absolute(absolute) != OK:
 		return _fail("HABITAT_SAVE_MKDIR")
 	var path := directory.path_join(String(exported.sha256) + SUFFIX)
