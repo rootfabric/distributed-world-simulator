@@ -25,6 +25,12 @@ func commands_for(index: int) -> Dictionary:
 	var position := -0.12 + 0.06 * float(index % 5)
 	return F.commands(3, laser, position)
 
+func exact_binary_hash(value) -> String:
+	var context := HashingContext.new()
+	context.start(HashingContext.HASH_SHA256)
+	context.update(var_to_bytes(value))
+	return context.finish().hex_encode()
+
 func accumulate_metrics(result: Dictionary, metrics: Dictionary) -> void:
 	if not result.success:
 		return
@@ -43,7 +49,8 @@ func _initialize() -> void:
 		quit(1)
 		return
 	var bundle: Dictionary = compiled.details
-	var caller_model_hash_before := U.canonical_hash(bundle)
+	var caller_model_hash_before := exact_binary_hash(bundle)
+	check(U.is_lower_hex_64(caller_model_hash_before), "caller model binary hash valid")
 
 	var shared = Shared.new()
 	var prepared: Dictionary = shared.prepare(bundle, bundle.capsule.checksum)
@@ -60,7 +67,7 @@ func _initialize() -> void:
 	bundle.capsule.capsule_id = caller_capsule_id + "-caller-probe"
 	check(shared.model_intact(), "caller bundle mutation cannot alter frozen compiled model")
 	bundle.capsule.capsule_id = caller_capsule_id
-	check(U.canonical_hash(bundle) == caller_model_hash_before, "caller probe restored byte-equivalent model")
+	check(exact_binary_hash(bundle) == caller_model_hash_before, "caller probe restored byte-equivalent model")
 
 	if "--preflight" in OS.get_cmdline_user_args():
 		print("FABRIC_R5_2_T13_PREFLIGHT=PASS")
@@ -161,7 +168,7 @@ func _initialize() -> void:
 	check(healthy_equivalent == 99, "damage leaves other 99 byte-equivalent", healthy_equivalent)
 	check(damaged_diverged, "only target behavior diverged")
 	check(U.canonical_hash(states) == caller_states_hash_before, "all baseline caller states remain unchanged")
-	check(U.canonical_hash(bundle) == caller_model_hash_before, "caller compiled bundle remains immutable")
+	check(exact_binary_hash(bundle) == caller_model_hash_before, "caller compiled bundle remains immutable")
 	check(shared.model_intact(), "shared compiled model hash remains intact")
 	check(int(shared.model_identity().prepare_count) == 1, "prepare count remains one after 311 executions")
 	check(int(damaged.details.get("recompile_events", -1)) == 0, "damage repair path did not recompile")
@@ -196,7 +203,7 @@ func _initialize() -> void:
 		"damage_revision": int(damaged_state.get("damage_revision", -1)),
 		"healthy_equivalent_after_damage": healthy_equivalent,
 		"damaged_diverged": damaged_diverged,
-		"model_hash_unchanged": U.canonical_hash(bundle) == caller_model_hash_before and shared.model_intact(),
+		"model_hash_unchanged": exact_binary_hash(bundle) == caller_model_hash_before and shared.model_intact(),
 		"caller_states_unchanged": U.canonical_hash(states) == caller_states_hash_before,
 		"isolation_hash": U.canonical_hash({"control":control_hashes, "candidate":candidate_hashes}),
 	}
