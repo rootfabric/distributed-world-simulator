@@ -58,6 +58,8 @@ class EvidenceTests(unittest.TestCase):
         self.assertNotIn("_compiler_v1.gd", runtime)
         self.assertEqual(acceptance.count("F.make_ship()"), 1)
         self.assertNotIn("replace_third_emitter", acceptance)
+        self.assertNotIn("U.canonical_hash(bundle)", acceptance)
+        self.assertIn("exact_binary_hash(bundle)", acceptance)
 
 if __name__ == "__main__":
     unittest.main()
