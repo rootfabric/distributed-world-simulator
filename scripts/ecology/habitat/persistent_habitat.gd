@@ -22,15 +22,15 @@ var _inspector: Label = null
 var _entities: OptionButton = null
 var _path: LineEdit = null
 var _anchor: LineEdit = null
+var _panel: PanelContainer = null
+var _advanced_toggle: CheckBox = null
 var _selected_id := ""
 
 func _ready() -> void:
 	name = "PersistentEvolvingHabitat"
 	_build_controls()
 	if auto_boot:
-		var result := boot(OS.get_cmdline_user_args())
-		if not bool(result.get("success", false)):
-			_show_error(String(result.get("error", "HABITAT_BOOT")))
+		boot(OS.get_cmdline_user_args())
 
 ## No automatic fallback to new state when a requested restore is invalid.
 func boot(arguments: PackedStringArray) -> Dictionary:
@@ -182,6 +182,17 @@ func _fast() -> void:
 	if workbench != null:
 		workbench.command_fast()
 
+func show_advanced_tools(visible: bool) -> bool:
+	if workbench == null or _panel == null:
+		if _advanced_toggle != null:
+			_advanced_toggle.set_pressed_no_signal(false)
+		return false
+	var layer := workbench.get_node("WorkbenchUI") as CanvasLayer
+	layer.visible = visible
+	_panel.visible = not visible
+	_advanced_toggle.set_pressed_no_signal(visible)
+	return true
+
 func _render_selection() -> void:
 	if session.controller == null or _selected_id.is_empty():
 		_inspector.text = "Выберите организм: геном, тело, ресурсы и lineage берутся из canonical state."
@@ -244,17 +255,18 @@ func _build_controls() -> void:
 	var canvas := CanvasLayer.new()
 	canvas.name = "HabitatUI"
 	add_child(canvas)
-	var panel := PanelContainer.new()
-	panel.set_anchors_and_offsets_preset(Control.PRESET_LEFT_WIDE)
-	panel.offset_left = 16
-	panel.offset_right = 376
-	panel.offset_top = 16
-	panel.offset_bottom = -16
-	canvas.add_child(panel)
+	_panel = PanelContainer.new()
+	_panel.name = "HabitatPanel"
+	_panel.set_anchors_and_offsets_preset(Control.PRESET_LEFT_WIDE)
+	_panel.offset_left = 16
+	_panel.offset_right = 376
+	_panel.offset_top = 16
+	_panel.offset_bottom = -16
+	canvas.add_child(_panel)
 	var margin := MarginContainer.new()
 	for side in ["left", "top", "right", "bottom"]:
 		margin.add_theme_constant_override("margin_" + side, 12)
-	panel.add_child(margin)
+	_panel.add_child(margin)
 	var scroll := ScrollContainer.new()
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	margin.add_child(scroll)
@@ -299,23 +311,16 @@ func _build_controls() -> void:
 		_render_selection())
 	box.add_child(_entities)
 	_inspector = _label(box, "", 12)
-	var advanced := CheckBox.new()
-	advanced.text = "Показать исходные инструменты Polygon"
-	advanced.toggled.connect(func(value: bool):
-		if workbench != null:
-			var layer := workbench.get_node("WorkbenchUI") as CanvasLayer
-			layer.visible = value
-		panel.visible = not value)
-	box.add_child(advanced)
+	_advanced_toggle = CheckBox.new()
+	_advanced_toggle.name = "AdvancedToolsToggle"
+	_advanced_toggle.text = "Показать исходные инструменты Polygon"
+	_advanced_toggle.toggled.connect(show_advanced_tools)
+	box.add_child(_advanced_toggle)
 	_label(box, "F2 — вернуться из Polygon.\nМодель ограничена, это не production ecology authority.", 12)
 
 func _unhandled_key_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_F2:
-		if workbench != null:
-			var layer := workbench.get_node("WorkbenchUI") as CanvasLayer
-			layer.visible = false
-		var panel := get_node_or_null("HabitatUI/PanelContainer") as Control
-		if panel != null: panel.visible = true
+		show_advanced_tools(false)
 
 func _button(parent: Node, text: String, action: Callable) -> void:
 	var button := Button.new()
