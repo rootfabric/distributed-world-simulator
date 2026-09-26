@@ -137,6 +137,17 @@ static func _world_restore_context(envelope: Dictionary, authority: Object) -> S
 	var current_cursor: Dictionary = authority.cursor()
 	if String(saved.cursor.get("entity_id", "")) != String(current_cursor.get("entity_id", "")):
 		return "HABITAT_WORLD_ENTITY_MISMATCH"
+	# A trusted historical checkpoint is not permission to rewind the caller's
+	# already-advanced world bookkeeping inside the same owner/epoch. Cold
+	# restore from a fresh cursor (0 -> N) and exact/equal continuation remain
+	# valid; any component-wise rollback fails before import_state can mutate
+	# the supplied authority object.
+	for field in ["revision", "clock", "ecology_step"]:
+		if not C.integer(saved.cursor.get(field), 0, C.MAX_INT) \
+				or not C.integer(current_cursor.get(field), 0, C.MAX_INT):
+			return "HABITAT_WORLD_CONTEXT_CURSOR:" + field
+		if int(saved.cursor[field]) < int(current_cursor[field]):
+			return "HABITAT_WORLD_CURSOR_ROLLBACK:" + field
 	# Strict compatibility: a checkpoint may not overwrite current topology,
 	# owner epoch/lifecycle, catalog or mapping with its historical versions.
 	for field in ["manifest_hash", "region", "catalog", "mapping", "map_id"]:
