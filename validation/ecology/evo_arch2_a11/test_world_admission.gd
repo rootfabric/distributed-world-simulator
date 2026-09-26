@@ -22,9 +22,9 @@ func check(value: bool, message: String) -> void:
 		failures.append(message)
 		push_error("A11_WORLD_FAIL " + message)
 
-func region(lifecycle: String = "ACTIVE") -> Dictionary:
+func region(lifecycle: String = "ACTIVE", owner: String = "node/a", epoch: int = 1) -> Dictionary:
 	return Region.create("region/a11", "u", "i", "surface", "octree", 7,
-		{"kind": "GLOBAL_SPACE", "partition_prefix": "", "chunk_ids": []}, "node/a", 1, lifecycle, 10)
+		{"kind": "GLOBAL_SPACE", "partition_prefix": "", "chunk_ids": []}, owner, epoch, lifecycle, 10)
 
 func world_manifest() -> Dictionary:
 	var value := Preset.create(777, 64)
@@ -36,10 +36,11 @@ func world_manifest() -> Dictionary:
 	value.placement.entries = [{"founder_ref": "founder/a", "zone_id": "wet", "position_mm": [500, 0, 500]}]
 	return value
 
-func adapter(manifest: Dictionary) -> Object:
+func adapter(manifest: Dictionary, region_override: Dictionary = {}) -> Object:
 	var result := Adapter.new()
-	var configured: Dictionary = result.configure(manifest, {"region": region(),
-		"entity_id": "organism/a11", "owner_id": "node/a", "catalog": Catalog.default_catalog(),
+	var current_region: Dictionary = region() if region_override.is_empty() else region_override
+	var configured: Dictionary = result.configure(manifest, {"region": current_region,
+		"entity_id": "organism/a11", "owner_id": String(current_region.owner_node_id), "catalog": Catalog.default_catalog(),
 		"map_id": "eco-map/a11", "mapping_entries": [{"material_id": "matter/water-ice", "resource": "water_mg"}]})
 	check(configured.success, "real A10 world adapter configured")
 	return result
@@ -71,8 +72,6 @@ func _run() -> void:
 	check(session.controller.get_snapshot().canonical_state_hash == before, "rejected resource patch preserves runtime")
 	check(session.controller.get_manifest() == before_manifest, "rejected resource patch preserves manifest")
 	check(source_adapter.cursor() == before_cursor, "rejected resource patch preserves world cursor")
-	# Signals are declared by the configured authority manifest too: no implicit
-	# reconfiguration via controller patches, even for a non-resource field.
 	check(not session.controller.apply_field_patch(Patch.patch("wet", "light", 100)).success, "changed world signal requires explicit authority reconfiguration")
 	check(source_adapter.cursor() == before_cursor, "signal rejection does not advance cursor")
 	check(source_adapter.set_region(region("WARM")).success, "real region enters WARM")
@@ -91,6 +90,17 @@ func _run() -> void:
 	check(session.controller == original, "rejected adapter reuse leaves original live")
 	var restored := Session.new()
 	check(not restored.restore_bundle(exported.text, exported.sha256).success, "world restore needs fresh world context")
+	# An authentic historical save is not permission to resurrect a stale owner.
+	var successor: Object = adapter(manifest, region("ACTIVE", "node/b", 2))
+	var successor_before: Dictionary = successor.export_state()
+	var stale: Dictionary = restored.restore_bundle(exported.text, exported.sha256, successor)
+	check(not stale.success and String(stale.error).begins_with("HABITAT_WORLD_CURRENT_AUTHORITY:"), "old owner/epoch rejected against current Region")
+	check(successor.export_state() == successor_before and restored.controller == null, "stale restore does not mutate current authority")
+	var warm: Object = adapter(manifest)
+	check(warm.set_region(region("WARM")).success, "fresh world context becomes preparation-only")
+	var warm_state: Dictionary = warm.export_state()
+	check(not restored.restore_bundle(exported.text, exported.sha256, warm).success, "checkpoint cannot replace WARM context with historical ACTIVE")
+	check(warm.export_state() == warm_state and restored.controller == null, "WARM restore rejection is atomic")
 	var fresh_adapter: Object = adapter(manifest)
 	var loaded: Dictionary = restored.restore_bundle(exported.text, exported.sha256, fresh_adapter)
 	check(loaded.success, "world bundle restored into independently configured adapter")
