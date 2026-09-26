@@ -1,4 +1,4 @@
-Windows exact T13 control trigger v2.
-Product checkout pinned to repaired frozen subject:
-HEAD=0a0fc6a923c6e62b28ba2b4abcea4fbcf6e1b304
-TREE=68c32a96c11cd419532b93011031b763c983c324
+Windows exact T13 control trigger v3.
+Product checkout pinned to review-repair frozen subject:
+HEAD=4cae54d17838f12dd619289eed114332813ea094
+Reason=Fresh Review F1 oracle repair rerun
