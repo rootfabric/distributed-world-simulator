@@ -6,6 +6,8 @@ const Program = preload("res://scripts/research/ecology/v2/development_program_v
 const Genome = preload("res://scripts/research/ecology/v2/organism_genome_v2.gd")
 const Session = preload("res://scripts/ecology/habitat/persistent_habitat_session_v1.gd")
 const Preset = preload("res://scripts/ecology/habitat/habitat_preset_v1.gd")
+const Manifest = preload("res://scripts/ecology/workbench/experiment_manifest_v1.gd")
+const Protocol = preload("res://scripts/research/ecology/v2/observatory_protocol_v1.gd")
 
 var checks := 0
 var failures: Array[String] = []
@@ -64,17 +66,44 @@ func _evolution() -> void:
 		check(other.restore_bundle(saved.text, saved.sha256).success, "evolved lineage restores without regeneration")
 		check(other.controller.get_snapshot().canonical_state_hash == session.controller.get_snapshot().canonical_state_hash, "evolution checkpoint exact")
 
+## Canonical starvation fixture. Built as one explicit literal (the same
+## construction class as the accepted A10.5 S11 death scenario) instead of
+## partially mutating HabitatPreset.create(): a field-style assignment such as
+## `manifest.genesis = {...}` inserts a StringName key, `C.keys()` still accepts
+## it, but canonical_value_v1.encode() rejects any non-String key. The manifest
+## then validates as NONCANONICAL_MANIFEST and start() fails closed long before
+## any starvation semantics are exercised. Literal String keys keep the fixture
+## canonically encodable; the acceptance predicate is unchanged.
 func _starvation() -> void:
-	var manifest := Preset.create(20260912, 16)
-	manifest.environment.spatial.width = 1
-	manifest.environment.zones = [{"id": "wet", "water_mg": 0, "light": 0, "temperature": 100, "nutrient_mg": 0, "organic_mg": 0}]
-	manifest.placement.entries = [{"founder_ref": "founder/a", "zone_id": "wet", "position_mm": [500, 0, 500]}]
-	manifest.mutation.mutations_enabled = false
 	var endowment := Body.stock(0)
 	endowment.material_mg = 1000
-	manifest.genesis = {"founder_endowment": endowment}
+	var manifest := {
+		"schema": Manifest.SCHEMA,
+		"experiment_id": "eco/a11/starvation-death/v1",
+		"seed": 20260912,
+		"horizon_ticks": 16,
+		"founders": [{"founder_id": "founder/a", "biological_hash": null, "genome": Protocol.ancestor()}],
+		"environment": {
+			"spatial": {"origin_mm": [0, 0, 0], "cell_size_mm": 1000, "width": 1, "depth": 1},
+			"zones": [{"id": "wet", "water_mg": 0, "light": 0, "temperature": 100, "nutrient_mg": 0, "organic_mg": 0}],
+		},
+		"placement": {"entries": [{"founder_ref": "founder/a", "zone_id": "wet", "position_mm": [500, 0, 500]}]},
+		"mutation": {"operator": "small", "mutations_enabled": false},
+		"organization_profile": "FREE",
+		"feedback": {"enabled": true, "decomposition_enabled": true},
+		"metrics": {"requested": ["population", "resources", "lineage"]},
+		"checkpoint": {"interval_ticks": 16},
+		"mode": "LAB",
+		"genesis": {"founder_endowment": endowment},
+	}
+	check(Manifest.validate(manifest).is_empty(), "canonical starvation manifest: " + Manifest.validate(manifest))
 	var session := Session.new()
-	check(session.start(manifest).success, "explicit zero-water/energy founder input")
+	# The primary failure must stay visible: without this guard the secondary
+	# `debug_state` call on a Nil controller masked the real start() error.
+	var started: Dictionary = session.start(manifest)
+	check(bool(started.get("success", false)), "explicit zero-water/energy founder input: " + str(started))
+	if not bool(started.get("success", false)):
+		return
 	var limit := int(session.controller.debug_state().population[0].blueprint.life_history.survival.starvation_limit_ticks)
 	check(session.controller.run(limit).success, "canonical starvation horizon reached")
 	var state: Dictionary = session.controller.debug_state()
