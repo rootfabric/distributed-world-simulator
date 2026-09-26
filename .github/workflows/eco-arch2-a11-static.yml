@@ -1,0 +1,72 @@
+name: ECO ARCH2 A11 Auxiliary Syntax
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/ecology/habitat/**'
+      - 'scripts/ecology/workbench/experiment_controller_v1.gd'
+      - 'scenes/ecology/habitat/**'
+      - 'validation/ecology/evo_arch2_a11/**'
+      - 'RUN_ECO_A11_HABITAT.ps1'
+      - '.github/workflows/eco-arch2-a11-*.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: eco-a11-syntax-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  syntax:
+    name: Auxiliary syntax only (not Godot runtime acceptance)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install pinned GDScript grammar parser
+        run: python -m pip install 'gdtoolkit==4.3.4'
+      - name: GDScript and Python syntax
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/runtime/eco-a11-syntax
+          git rev-parse HEAD > artifacts/runtime/eco-a11-syntax/head.txt
+          git rev-parse 'HEAD^{tree}' > artifacts/runtime/eco-a11-syntax/tree.txt
+          python -m pip freeze > artifacts/runtime/eco-a11-syntax/parser-environment.txt
+          while IFS= read -r source; do
+            echo "PARSING $source"
+            gdparse "$source"
+          done < <(git ls-files scripts/ecology/habitat validation/ecology/evo_arch2_a11 scripts/ecology/workbench/experiment_controller_v1.gd | grep '\.gd$')
+          python -m py_compile validation/ecology/evo_arch2_a11/run_exact.py
+      - name: PowerShell launcher syntax
+        shell: pwsh
+        run: |
+          $tokens = $null
+          $parseErrors = $null
+          $path = (Resolve-Path 'RUN_ECO_A11_HABITAT.ps1').Path
+          [void][System.Management.Automation.Language.Parser]::ParseFile($path, [ref]$tokens, [ref]$parseErrors)
+          if ($parseErrors.Count -gt 0) {
+            $parseErrors | ForEach-Object { Write-Host $_ }
+            throw 'A11_POWERSHELL_SYNTAX'
+          }
+          Write-Host 'A11_POWERSHELL_SYNTAX=PASS'
+      - name: Preserve auxiliary result boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --exit-code
+          git diff --cached --exit-code
+          printf '%s\n' 'SYNTAX_ONLY=PASS' 'GODOT_RUNTIME_ACCEPTANCE=NOT_EXECUTED_BY_THIS_JOB' > artifacts/runtime/eco-a11-syntax/result.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: eco-a11-syntax-${{ github.run_id }}-${{ github.run_attempt }}
+          path: artifacts/runtime/eco-a11-syntax
+          if-no-files-found: warn
