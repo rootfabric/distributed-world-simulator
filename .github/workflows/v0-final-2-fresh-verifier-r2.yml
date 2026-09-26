@@ -1,16 +1,16 @@
-name: V0 FINAL.2 Fresh Independent Verifier R2
+name: V0 FINAL.2 Fresh Independent Verifier R3
 
 on:
   push:
     branches:
-      - control/v0-final-2-fresh-verifier-r2
+      - control/v0-final-2-fresh-verifier-r3
 
 permissions:
   contents: read
   actions: read
 
 concurrency:
-  group: v0-final-2-fresh-verifier-r2
+  group: v0-final-2-fresh-verifier-r3
   cancel-in-progress: false
 
 env:
@@ -31,7 +31,7 @@ jobs:
   verifier:
     name: Fresh Independent Verifier Windows exact
     runs-on: [self-hosted, Windows, X64]
-    timeout-minutes: 210
+    timeout-minutes: 330
     steps:
       - name: Checkout exact frozen product
         uses: actions/checkout@v4
@@ -39,6 +39,84 @@ jobs:
           ref: ${{ env.PRODUCT_HEAD }}
           fetch-depth: 0
           persist-credentials: false
+
+      - name: Wait for exclusive Godot host window
+        shell: pwsh
+        timeout-minutes: 120
+        run: |
+          $ErrorActionPreference='Stop'
+          $out='artifacts\\v0-final-2\\fresh-verifier'
+          New-Item -ItemType Directory -Force $out | Out-Null
+          $log=Join-Path $out 'host-quiescence.log'
+          $started=[DateTime]::UtcNow
+          $deadline=$started.AddMinutes(115)
+          $cleanStreak=0
+          $requiredCleanScans=6
+          $scanSeconds=20
+
+          while ([DateTime]::UtcNow -lt $deadline) {
+            $now=[DateTime]::UtcNow.ToString('o')
+            $godot=@(
+              Get-CimInstance Win32_Process -ErrorAction SilentlyContinue |
+              Where-Object { $_.Name -like 'godot*' }
+            )
+            $os=Get-CimInstance Win32_OperatingSystem
+            $free=[math]::Round(($os.FreePhysicalMemory*1KB)/1GB,2)
+
+            if ($godot.Count -eq 0 -and $free -ge 10) {
+              $cleanStreak++
+              "$now CLEAN streak=$cleanStreak/$requiredCleanScans free_ram_gb=$free" |
+                Tee-Object -FilePath $log -Append
+              if ($cleanStreak -ge $requiredCleanScans) {
+                [ordered]@{
+                  schema='distributed_world_simulator.host_quiescence.v1'
+                  passed=$true
+                  started_at_utc=$started.ToString('o')
+                  completed_at_utc=$now
+                  required_clean_scans=$requiredCleanScans
+                  scan_seconds=$scanSeconds
+                  free_ram_gb=$free
+                  foreign_godot_count=0
+                } | ConvertTo-Json | Set-Content (Join-Path $out 'host-quiescence.json') -Encoding UTF8
+                Write-Host "HOST_QUIESCENCE_PASS scans=$requiredCleanScans free_ram_gb=$free"
+                exit 0
+              }
+            } else {
+              $cleanStreak=0
+              $details=@($godot | ForEach-Object {
+                "pid=$($_.ProcessId) ppid=$($_.ParentProcessId) name=$($_.Name) cmd=$($_.CommandLine)"
+              })
+              "$now BUSY godot=$($godot.Count) free_ram_gb=$free $($details -join ' || ')" |
+                Tee-Object -FilePath $log -Append
+            }
+            Start-Sleep -Seconds $scanSeconds
+          }
+
+          $remaining=@(
+            Get-CimInstance Win32_Process -ErrorAction SilentlyContinue |
+            Where-Object { $_.Name -like 'godot*' }
+          )
+          $os=Get-CimInstance Win32_OperatingSystem
+          $free=[math]::Round(($os.FreePhysicalMemory*1KB)/1GB,2)
+          [ordered]@{
+            schema='distributed_world_simulator.host_quiescence.v1'
+            passed=$false
+            started_at_utc=$started.ToString('o')
+            completed_at_utc=[DateTime]::UtcNow.ToString('o')
+            required_clean_scans=$requiredCleanScans
+            scan_seconds=$scanSeconds
+            free_ram_gb=$free
+            foreign_godot_count=$remaining.Count
+            foreign_godot=@($remaining | ForEach-Object {
+              [ordered]@{
+                pid=$_.ProcessId
+                parent_pid=$_.ParentProcessId
+                name=$_.Name
+                command_line=$_.CommandLine
+              }
+            })
+          } | ConvertTo-Json -Depth 5 | Set-Content (Join-Path $out 'host-quiescence.json') -Encoding UTF8
+          throw "HOST_NOT_QUIESCENT_AFTER_WAIT:godot=$($remaining.Count):free_ram_gb=$free"
 
       - name: Preflight identity reviewer and main fence
         shell: pwsh
@@ -192,7 +270,7 @@ jobs:
           Write-Host "FRESH_VERIFIER_PC0_PASS standard=$sh directional=$dh"
 
       - name: Final race fence and bind verifier evidence
-        if: always()
+        if: success()
         shell: pwsh
         run: |
           $ErrorActionPreference='Stop'
@@ -250,6 +328,47 @@ jobs:
           }
           $manifest | ConvertTo-Json -Depth 8 | Set-Content (Join-Path $out 'verifier-manifest.json') -Encoding UTF8
           Write-Host ($manifest | ConvertTo-Json -Compress)
+
+      - name: Bind verifier failure evidence
+        if: failure()
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Continue'
+          $out='artifacts\\v0-final-2\\fresh-verifier'
+          New-Item -ItemType Directory -Force $out | Out-Null
+          $head=(git rev-parse HEAD 2>$null)
+          $tree=(git rev-parse 'HEAD^{tree}' 2>$null)
+          $main=(git rev-parse origin/main 2>$null)
+          $tracked=(git status --porcelain --untracked-files=no 2>$null)
+          $godot=@(
+            Get-CimInstance Win32_Process -ErrorAction SilentlyContinue |
+            Where-Object { $_.Name -like 'godot*' } |
+            ForEach-Object {
+              [ordered]@{
+                pid=$_.ProcessId
+                parent_pid=$_.ParentProcessId
+                name=$_.Name
+                command_line=$_.CommandLine
+              }
+            }
+          )
+          [ordered]@{
+            schema='distributed_world_simulator.v0_final_2_fresh_verifier_failure.v1'
+            verdict='EVIDENCE_GAP'
+            subject_head=$head
+            subject_tree=$tree
+            expected_head=$env:PRODUCT_HEAD
+            expected_tree=$env:PRODUCT_TREE
+            observed_main=$main
+            expected_main=$env:MAIN_HEAD
+            review_commit=$env:REVIEW_COMMIT
+            tracked_clean=[string]::IsNullOrWhiteSpace($tracked)
+            foreign_godot_count=$godot.Count
+            foreign_godot=$godot
+            merge_performed=$false
+            predicate_verified=$false
+            human_acceptance=$false
+          } | ConvertTo-Json -Depth 6 | Set-Content (Join-Path $out 'failure-manifest.json') -Encoding UTF8
 
       - name: Upload Fresh Verifier evidence
         if: always()
