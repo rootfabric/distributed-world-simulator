@@ -74,6 +74,10 @@ func _run() -> void:
 	check(source_adapter.cursor() == before_cursor, "rejected resource patch preserves world cursor")
 	check(not session.controller.apply_field_patch(Patch.patch("wet", "light", 100)).success, "changed world signal requires explicit authority reconfiguration")
 	check(source_adapter.cursor() == before_cursor, "signal rejection does not advance cursor")
+	var no_op: Dictionary = session.controller.apply_field_patch(Patch.patch("wet", "water_mg", 0))
+	check(not no_op.success and no_op.error == "CONTROLLER_FIELD_PATCH_WORLD:LIVE_EDIT_UNSUPPORTED", "ACTIVE no-op does not masquerade as an admitted tick")
+	check(source_adapter.cursor() == before_cursor, "ACTIVE no-op leaves authority clock/revision/ecology_step unchanged")
+	check(session.controller.get_snapshot().canonical_state_hash == before, "ACTIVE no-op leaves runtime unchanged")
 	check(source_adapter.set_region(region("WARM")).success, "real region enters WARM")
 	var warm_before: String = session.controller.get_snapshot().canonical_state_hash
 	var warm_patch: Dictionary = session.controller.apply_field_patch(Patch.patch("wet", "water_mg", 0))
