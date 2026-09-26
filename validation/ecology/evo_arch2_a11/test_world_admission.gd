@@ -36,12 +36,14 @@ func world_manifest() -> Dictionary:
 	value.placement.entries = [{"founder_ref": "founder/a", "zone_id": "wet", "position_mm": [500, 0, 500]}]
 	return value
 
-func adapter(manifest: Dictionary, region_override: Dictionary = {}) -> Object:
+func adapter(manifest: Dictionary, region_override: Dictionary = {}, cursor_value: int = 0) -> Object:
 	var result := Adapter.new()
 	var current_region: Dictionary = region() if region_override.is_empty() else region_override
-	var configured: Dictionary = result.configure(manifest, {"region": current_region,
+	var authority := {"region": current_region,
 		"entity_id": "organism/a11", "owner_id": String(current_region.owner_node_id), "catalog": Catalog.default_catalog(),
-		"map_id": "eco-map/a11", "mapping_entries": [{"material_id": "matter/water-ice", "resource": "water_mg"}]})
+		"map_id": "eco-map/a11", "mapping_entries": [{"material_id": "matter/water-ice", "resource": "water_mg"}],
+		"revision": cursor_value, "clock": cursor_value, "ecology_step": cursor_value}
+	var configured: Dictionary = result.configure(manifest, authority)
 	check(configured.success, "real A10 world adapter configured")
 	return result
 
@@ -105,9 +107,26 @@ func _run() -> void:
 	var warm_state: Dictionary = warm.export_state()
 	check(not restored.restore_bundle(exported.text, exported.sha256, warm).success, "checkpoint cannot replace WARM context with historical ACTIVE")
 	check(warm.export_state() == warm_state and restored.controller == null, "WARM restore rejection is atomic")
+	# Same owner/epoch is not enough: a historical checkpoint must not rewind
+	# an already-advanced current cursor. The source save is at 4/4/4 here.
+	var advanced: Object = adapter(manifest, region(), 10)
+	var advanced_state: Dictionary = advanced.export_state()
+	var rollback: Dictionary = restored.restore_bundle(exported.text, exported.sha256, advanced)
+	check(not rollback.success and String(rollback.error).begins_with("HABITAT_WORLD_CURSOR_ROLLBACK:"),
+		"same-owner same-epoch cursor rollback rejected")
+	check(advanced.export_state() == advanced_state and restored.controller == null,
+		"cursor rollback rejection leaves current authority and session untouched")
+	# Equal current cursor is a valid exact continuation.
+	var equal_adapter: Object = adapter(manifest, region(), 4)
+	var equal_restored := Session.new()
+	var equal_loaded: Dictionary = equal_restored.restore_bundle(exported.text, exported.sha256, equal_adapter)
+	check(equal_loaded.success, "equal current cursor restore accepted")
+	if equal_loaded.success:
+		check(equal_adapter.export_state() == source_adapter.export_state(), "equal cursor restore imports exact physical envelope")
+	# Fresh current cursor 0 -> saved cursor 4 is the intended cold/forward restore.
 	var fresh_adapter: Object = adapter(manifest)
 	var loaded: Dictionary = restored.restore_bundle(exported.text, exported.sha256, fresh_adapter)
-	check(loaded.success, "world bundle restored into independently configured adapter")
+	check(loaded.success, "forward saved cursor over fresh current context accepted")
 	if loaded.success:
 		check(restored.controller.get_snapshot().canonical_state_hash == session.controller.get_snapshot().canonical_state_hash, "world runtime exact across restart")
 		check(fresh_adapter.export_state() == source_adapter.export_state(), "entire physical authority envelope preserved")
