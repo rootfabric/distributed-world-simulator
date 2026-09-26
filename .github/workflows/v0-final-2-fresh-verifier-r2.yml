@@ -1,0 +1,261 @@
+name: V0 FINAL.2 Fresh Independent Verifier R2
+
+on:
+  push:
+    branches:
+      - control/v0-final-2-fresh-verifier-r2
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: v0-final-2-fresh-verifier-r2
+  cancel-in-progress: false
+
+env:
+  PRODUCT_HEAD: 8708cfac56346af0ec8c9e5599eb47fcfb751087
+  PRODUCT_TREE: c6ea0671d4850641daafaf63e79bb3431ff5ef65
+  MAIN_HEAD: 6b336af8faeadbd7f69c96b62dc30d25150f45a7
+  REVIEW_BRANCH: review/v0-final-2-8708cfac-r2
+  REVIEW_COMMIT: 6740db7827dbfa066a17cd620857f3473190ffd5
+  REVIEW_PATH: config/control/harness/executions/E2026-09-09-V0-MVP-R1/reviews/V0-FINAL-2-INDEPENDENT-REVIEW-8708CFAC-R2.v1.json
+  GODOT_BIN: C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe
+  PYTHONUTF8: '1'
+  PYTHONDONTWRITEBYTECODE: '1'
+  BREAKPOINT_RUNTIME_DISABLED: '1'
+  GODOT_SILENCE_ROOT_WARNING: '1'
+  PLANET_SIMULATOR_INVENTORY_PROFILE: planet_default
+
+jobs:
+  verifier:
+    name: Fresh Independent Verifier Windows exact
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 210
+    steps:
+      - name: Checkout exact frozen product
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.PRODUCT_HEAD }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Preflight identity reviewer and main fence
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          if ((git rev-parse HEAD).Trim() -ne $env:PRODUCT_HEAD) { throw 'HEAD_MISMATCH' }
+          if ((git rev-parse 'HEAD^{tree}').Trim() -ne $env:PRODUCT_TREE) { throw 'TREE_MISMATCH' }
+          if ((git status --porcelain --untracked-files=no)) { throw 'TRACKED_DIRTY_BEFORE' }
+
+          git fetch origin "+refs/heads/main:refs/remotes/origin/main" "+refs/heads/$($env:REVIEW_BRANCH):refs/remotes/origin/$($env:REVIEW_BRANCH)"
+          if ((git rev-parse origin/main).Trim() -ne $env:MAIN_HEAD) { throw 'MAIN_MOVED_BEFORE_VERIFICATION' }
+          if ((git rev-parse "origin/$($env:REVIEW_BRANCH)").Trim() -ne $env:REVIEW_COMMIT) { throw 'REVIEW_COMMIT_MISMATCH' }
+
+          $reviewText = git show "$($env:REVIEW_COMMIT):$($env:REVIEW_PATH)"
+          $review = $reviewText | ConvertFrom-Json
+          if ($review.verdict -ne 'PASS') { throw 'REVIEW_NOT_PASS' }
+          if ($review.subject_head -ne $env:PRODUCT_HEAD) { throw 'REVIEW_HEAD_MISMATCH' }
+          if ($review.subject_tree -ne $env:PRODUCT_TREE) { throw 'REVIEW_TREE_MISMATCH' }
+          if ($review.merge_performed -ne $false) { throw 'REVIEW_MERGE_FLAG_INVALID' }
+
+          git merge-base --is-ancestor $env:MAIN_HEAD $env:PRODUCT_HEAD
+          if ($LASTEXITCODE -ne 0) { throw 'MAIN_NOT_ANCESTOR' }
+
+          $sha=(Get-FileHash $env:GODOT_BIN -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($sha -ne '3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5') { throw "GODOT_SHA_MISMATCH:$sha" }
+          $ver=& $env:GODOT_BIN --version
+          if ($ver -notmatch '4\.7\.1.*double.*a13da4feb') { throw "GODOT_VERSION_MISMATCH:$ver" }
+
+          $existing=@(Get-Process -ErrorAction SilentlyContinue | Where-Object { $_.ProcessName -like 'godot*' })
+          if ($existing.Count -gt 0) { throw ('FOREIGN_GODOT_PROCESS:' + (($existing | Select-Object -ExpandProperty Id) -join ',')) }
+
+          $os=Get-CimInstance Win32_OperatingSystem
+          $free=[math]::Round(($os.FreePhysicalMemory*1KB)/1GB,2)
+          if ($free -lt 10) { throw "LOW_FREE_RAM:$free" }
+
+          New-Item -ItemType Directory -Force artifacts\v0-final-2\fresh-verifier | Out-Null
+          [ordered]@{
+            head=$env:PRODUCT_HEAD
+            tree=$env:PRODUCT_TREE
+            main=$env:MAIN_HEAD
+            review_commit=$env:REVIEW_COMMIT
+            godot_version=$ver
+            godot_sha256=$sha
+            free_ram_gb=$free
+          } | ConvertTo-Json | Set-Content artifacts\v0-final-2\fresh-verifier\preflight.json -Encoding UTF8
+
+      - name: Install pinned Harness dependency
+        shell: pwsh
+        run: python -m pip install --disable-pip-version-check -r scripts/harness/requirements.txt
+
+      - name: Exact MVP8 bounded workload
+        shell: pwsh
+        timeout-minutes: 45
+        run: |
+          $ErrorActionPreference='Stop'
+          if (Test-Path .godot) { Remove-Item .godot -Recurse -Force }
+          $out=(Join-Path (Resolve-Path artifacts\v0-final-2\fresh-verifier).Path 'mvp8')
+          $env:EXPECTED_HEAD=$env:PRODUCT_HEAD
+          python tests/integration/test_v0_mvp_8_bounded_workload.py --engine $env:GODOT_BIN --output $out
+          if ($LASTEXITCODE -ne 0) { throw "MVP8_FAILED:$LASTEXITCODE" }
+
+          $m=Get-Content -Raw (Join-Path $out 'manifest.json') | ConvertFrom-Json
+          if ($m.passed -ne $true) { throw 'MVP8_MANIFEST_RED' }
+          if ($m.subject_head -ne $env:PRODUCT_HEAD) { throw 'MVP8_HEAD_MISMATCH' }
+          if ($m.subject_tree -ne $env:PRODUCT_TREE) { throw 'MVP8_TREE_MISMATCH' }
+          $checks=@($m.checks.PSObject.Properties)
+          $failedChecks=@($checks | Where-Object { $_.Value -ne $true })
+          if ($checks.Count -eq 0 -or $failedChecks.Count -ne 0) { throw "MVP8_CHECKS_FAILED:$($failedChecks.Count)" }
+          if (@($m.negative_controls).Count -ne 14) { throw 'MVP8_NEGATIVE_CONTROL_COUNT' }
+          if (@($m.fatal_logs).Count -ne 0) { throw 'MVP8_FATAL_LOGS' }
+          if ($m.project_import.global_script_class_cache_bytes -le 0) { throw 'MVP8_CLASS_CACHE_EMPTY' }
+          if ($m.one_connected_two_client_gameplay_loop_executed -ne $true) { throw 'MVP8_GAMEPLAY_LOOP_MISSING' }
+          if ($m.client_reconnect_inside_workload_executed -ne $true) { throw 'MVP8_RECONNECT_MISSING' }
+          if ($m.server_world_restart_inside_workload_executed -ne $true) { throw 'MVP8_RESTART_MISSING' }
+          if ($m.bounded_state_checked -ne $true) { throw 'MVP8_BOUNDS_MISSING' }
+          Write-Host "FRESH_VERIFIER_MVP8_PASS checks=$($checks.Count) negatives=$(@($m.negative_controls).Count)"
+
+      - name: Exact full world core
+        shell: pwsh
+        timeout-minutes: 120
+        run: |
+          $ErrorActionPreference='Stop'
+          if (Test-Path .godot) { Remove-Item .godot -Recurse -Force }
+
+          $root=(Resolve-Path .).Path
+          $out=(Resolve-Path artifacts\v0-final-2\fresh-verifier).Path
+          $world=Join-Path $out 'world-core'
+          $mvp6=Join-Path $world 'mvp6-results'
+          $mvp7=Join-Path $world 'mvp7-managed'
+          New-Item -ItemType Directory -Force $world,$mvp6,$mvp7 | Out-Null
+
+          $env:EXPECTED_HEAD=$env:PRODUCT_HEAD
+          $env:EXPECTED_TREE=$env:PRODUCT_TREE
+          $env:MVP6_SEAM_DIAGNOSTIC_RESULT=Join-Path $mvp6 'diagnostic.json'
+          $env:MVP6_CROSS_AUTHORITY_SEAM_RESULT=Join-Path $mvp6 'product.json'
+          $env:MVP6_DERIVED_COLLISION_RESULT=Join-Path $mvp6 'collision.json'
+          $env:MVP6_PERSISTENCE_RESULT=Join-Path $mvp6 'persistence.json'
+
+          $env:MVP7_NATIVE_MODE='produce'
+          $env:MVP7_NATIVE_ROOT=Join-Path $mvp7 'native'
+          $env:MVP7_NATIVE_RESULT=Join-Path $mvp7 'native-result.json'
+          $env:MVP7_WORLD_MODE='produce'
+          $env:MVP7_WORLD_ROOT=Join-Path $mvp7 'world'
+          $env:MVP7_WORLD_RESULT=Join-Path $mvp7 'world-result.json'
+          $env:MVP7_CONSTRUCTION_MODE='produce'
+          $env:MVP7_CONSTRUCTION_ROOT=Join-Path $mvp7 'construction'
+          $env:MVP7_CONSTRUCTION_RESULT=Join-Path $mvp7 'construction-result.json'
+          New-Item -ItemType Directory -Force $env:MVP7_NATIVE_ROOT,$env:MVP7_WORLD_ROOT,$env:MVP7_CONSTRUCTION_ROOT | Out-Null
+
+          pwsh -NoProfile -File .\RUN_WORLD_REGRESSION_TESTS.ps1 *> (Join-Path $world 'full-world-core.log')
+          $code=$LASTEXITCODE
+          "$code" | Set-Content (Join-Path $world 'world-exit.txt') -Encoding ascii
+          if ($code -ne 0) {
+            Get-Content (Join-Path $world 'full-world-core.log') -Tail 300
+            throw "WORLD_CORE_FAILED:$code"
+          }
+
+          $summary='artifacts\test-results\world-regression-summary.json'
+          if (-not (Test-Path $summary)) { throw 'WORLD_SUMMARY_MISSING' }
+          Copy-Item $summary (Join-Path $world 'world-regression-summary.json')
+          $j=Get-Content -Raw $summary | ConvertFrom-Json
+          if ($j.passed -ne $true) { throw 'WORLD_SUMMARY_RED' }
+          if ([int]$j.declared_test_count -ne [int]$j.discovered_test_count) { throw 'DISCOVERY_PARITY_FAILED' }
+          $bad=@($j.steps | Where-Object { $_.passed -ne $true -or [int]$_.exit_code -ne 0 })
+          if ($bad.Count -ne 0) { throw "WORLD_STEPS_RED:$($bad.Count)" }
+          Write-Host "FRESH_VERIFIER_WORLD_CORE_PASS declared=$($j.declared_test_count) discovered=$($j.discovered_test_count) steps=$(@($j.steps).Count)"
+
+      - name: Exact Standard and Directional PC0
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          $pc0=(Join-Path (Resolve-Path artifacts\v0-final-2\fresh-verifier).Path 'pc0')
+          New-Item -ItemType Directory -Force $pc0 | Out-Null
+
+          python scripts/control/project_control.py --no-fetch --no-fail-on-red *> (Join-Path $pc0 'standard.log')
+          if ($LASTEXITCODE -ne 0) { throw "STANDARD_PC0_COMMAND_FAILED:$LASTEXITCODE" }
+          Copy-Item artifacts\control\project-control-report.json (Join-Path $pc0 'project-control-report.json')
+          Copy-Item artifacts\control\PROJECT_STATUS_RU.md (Join-Path $pc0 'PROJECT_STATUS_RU.md')
+          $s=Get-Content -Raw (Join-Path $pc0 'project-control-report.json') | ConvertFrom-Json
+          $sh=if ($s.overall_health) {$s.overall_health} elseif ($s.overall) {$s.overall} else {$s.health}
+          if (-not $sh -or $sh -eq 'RED') { throw "STANDARD_PC0_RED:$sh" }
+
+          python scripts/control/project_control_directional_watch.py --no-fail-on-red *> (Join-Path $pc0 'directional.log')
+          if ($LASTEXITCODE -ne 0) { throw "DIRECTIONAL_PC0_COMMAND_FAILED:$LASTEXITCODE" }
+          Copy-Item artifacts\control\directional-watch-report.json (Join-Path $pc0 'directional-watch-report.json')
+          Copy-Item artifacts\control\DIRECTIONAL_WATCH_STATUS_RU.md (Join-Path $pc0 'DIRECTIONAL_WATCH_STATUS_RU.md')
+          $d=Get-Content -Raw (Join-Path $pc0 'directional-watch-report.json') | ConvertFrom-Json
+          $dh=if ($d.overall_health) {$d.overall_health} elseif ($d.overall) {$d.overall} else {$d.health}
+          if (-not $dh -or $dh -eq 'RED') { throw "DIRECTIONAL_PC0_RED:$dh" }
+
+          Write-Host "FRESH_VERIFIER_PC0_PASS standard=$sh directional=$dh"
+
+      - name: Final race fence and bind verifier evidence
+        if: always()
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          $out=(Resolve-Path artifacts\v0-final-2\fresh-verifier).Path
+
+          git fetch origin "+refs/heads/main:refs/remotes/origin/main"
+          if ((git rev-parse origin/main).Trim() -ne $env:MAIN_HEAD) { throw 'MAIN_MOVED_DURING_VERIFICATION' }
+          if ((git rev-parse HEAD).Trim() -ne $env:PRODUCT_HEAD) { throw 'IDENTITY_CHANGED' }
+          if ((git rev-parse 'HEAD^{tree}').Trim() -ne $env:PRODUCT_TREE) { throw 'TREE_CHANGED' }
+          $tracked=(git status --porcelain --untracked-files=no)
+          if (-not [string]::IsNullOrWhiteSpace($tracked)) { throw 'TRACKED_DIRTY_AFTER' }
+
+          $mvp8=Get-Content -Raw (Join-Path $out 'mvp8\manifest.json') | ConvertFrom-Json
+          $world=Get-Content -Raw (Join-Path $out 'world-core\world-regression-summary.json') | ConvertFrom-Json
+          $s=Get-Content -Raw (Join-Path $out 'pc0\project-control-report.json') | ConvertFrom-Json
+          $d=Get-Content -Raw (Join-Path $out 'pc0\directional-watch-report.json') | ConvertFrom-Json
+          $sh=if ($s.overall_health) {$s.overall_health} elseif ($s.overall) {$s.overall} else {$s.health}
+          $dh=if ($d.overall_health) {$d.overall_health} elseif ($d.overall) {$d.overall} else {$d.health}
+
+          $files=@()
+          Get-ChildItem $out -Recurse -File | Sort-Object FullName | ForEach-Object {
+            if ($_.Name -ne 'verifier-manifest.json') {
+              $files += [ordered]@{
+                path=$_.FullName.Substring($out.Length).TrimStart('\')
+                bytes=$_.Length
+                sha256=(Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+              }
+            }
+          }
+
+          $manifest=[ordered]@{
+            schema='distributed_world_simulator.v0_final_2_fresh_verifier.v1'
+            verdict='VERIFIED'
+            subject_head=(git rev-parse HEAD).Trim()
+            subject_tree=(git rev-parse 'HEAD^{tree}').Trim()
+            main_head=(git rev-parse origin/main).Trim()
+            review_commit=$env:REVIEW_COMMIT
+            godot_sha256=(Get-FileHash $env:GODOT_BIN -Algorithm SHA256).Hash.ToLowerInvariant()
+            mvp8_passed=($mvp8.passed -eq $true)
+            mvp8_checks=@($mvp8.checks.PSObject.Properties).Count
+            mvp8_negative_controls=@($mvp8.negative_controls).Count
+            mvp8_fatal_logs=@($mvp8.fatal_logs).Count
+            world_core_passed=($world.passed -eq $true)
+            declared=[int]$world.declared_test_count
+            discovered=[int]$world.discovered_test_count
+            world_steps=@($world.steps).Count
+            failed_world_steps=@($world.steps | Where-Object { $_.passed -ne $true -or [int]$_.exit_code -ne 0 }).Count
+            standard_pc0=$sh
+            directional_pc0=$dh
+            tracked_clean=([string]::IsNullOrWhiteSpace($tracked))
+            merge_performed=$false
+            predicate_verified=$false
+            human_acceptance=$false
+            files=$files
+          }
+          $manifest | ConvertTo-Json -Depth 8 | Set-Content (Join-Path $out 'verifier-manifest.json') -Encoding UTF8
+          Write-Host ($manifest | ConvertTo-Json -Compress)
+
+      - name: Upload Fresh Verifier evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v0-final-2-fresh-verifier-${{ github.run_id }}-${{ github.run_attempt }}
+          path: artifacts/v0-final-2/fresh-verifier/
+          if-no-files-found: error
+          retention-days: 90
