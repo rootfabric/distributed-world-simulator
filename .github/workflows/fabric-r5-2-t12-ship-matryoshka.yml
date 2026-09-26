@@ -1,10 +1,10 @@
-name: FABRIC R5.2 T13 Exact Control Carrier
+name: FABRIC R5.2 T13 Windows Exact Control Carrier
 on:
   pull_request:
 permissions:
   contents: read
 concurrency:
-  group: fabric-t13-exact-control-${{ github.event.pull_request.number }}
+  group: fabric-t13-windows-exact-control-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 jobs:
   control-scope:
@@ -21,8 +21,8 @@ jobs:
         run: |
           set -Eeuo pipefail
           product=e54622fe7286fed0a77c1f1fdb9c59a82cf94a14
-          test "$(git rev-parse HEAD)" = "$product"
           base=c60960bee48aa7cc68a9035cff86d5567f6c89fc
+          test "$(git rev-parse HEAD)" = "$product"
           test "$(git merge-base HEAD "$base")" = "$base"
           allowed='^(.github/workflows/fabric-r5-2-t13-shared-instances.yml|RUN_FABRIC_R5_2_T13_TESTS.sh|docs/research/FABRIC_R5_2_T13_SHARED_INSTANCES_RU.md|scripts/research/fabric_bake0/(r5_t13_shared_instances_runtime_v1.gd|collect_r5_2_t13_evidence.py)|tests/research/fabric_bake0/(fabric_r5_2_t13_shared_instances_acceptance.gd|test_t13_evidence.py))$'
           test -z "$(git diff --name-only "$base" HEAD | grep -Ev "$allowed" || true)"
@@ -30,31 +30,101 @@ jobs:
           bash -n RUN_FABRIC_R5_2_T13_TESTS.sh
           python3 -m unittest discover -s tests/research/fabric_bake0 -p test_t13_evidence.py -v
           printf 'PRODUCT_HEAD=%s\nPRODUCT_TREE=%s\n' "$product" "$(git rev-parse 'HEAD^{tree}')"
-  exact-runtime:
+
+  exact-windows:
     needs: control-scope
-    runs-on: [self-hosted, Linux, X64]
+    runs-on: [self-hosted, Windows, X64]
     timeout-minutes: 30
+    env:
+      CONFIGURED_GODOT_BIN: C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe
     steps:
       - uses: actions/checkout@v4
         with:
           ref: e54622fe7286fed0a77c1f1fdb9c59a82cf94a14
           fetch-depth: 0
           persist-credentials: false
-      - name: Verify exact checkout
-        shell: bash
+
+      - name: Verify exact product and canonical Windows double
+        shell: pwsh
         run: |
-          set -Eeuo pipefail
-          test "$(git rev-parse HEAD)" = e54622fe7286fed0a77c1f1fdb9c59a82cf94a14
-          printf 'PRODUCT_HEAD=%s\nPRODUCT_TREE=%s\n' "$(git rev-parse HEAD)" "$(git rev-parse 'HEAD^{tree}')"
-      - name: Canonical double T13 exact gate
-        shell: bash
+          $ErrorActionPreference = 'Stop'
+          $product = 'e54622fe7286fed0a77c1f1fdb9c59a82cf94a14'
+          $actual = (git rev-parse HEAD).Trim()
+          if ($actual -ne $product) { throw "PRODUCT_HEAD_MISMATCH:$actual" }
+          $godot = $env:CONFIGURED_GODOT_BIN
+          if (-not (Test-Path -LiteralPath $godot)) { throw "EXACT_GODOT_NOT_FOUND:$godot" }
+          $version = (& $godot --version | Select-Object -First 1).Trim()
+          if ($version -ne '4.7.1.stable.double.custom_build.a13da4feb') { throw "GODOT_IDENTITY_MISMATCH:$version" }
+          $sha = (Get-FileHash -Algorithm SHA256 -LiteralPath $godot).Hash.ToLowerInvariant()
+          $expected = '3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5'
+          if ($sha -ne $expected) { throw "GODOT_SHA_MISMATCH:$sha" }
+          Write-Host "PRODUCT_HEAD=$actual"
+          Write-Host "PRODUCT_TREE=$((git rev-parse 'HEAD^{tree}').Trim())"
+          Write-Host "GODOT=$version"
+          Write-Host "GODOT_SHA256=$sha"
+          "GODOT_BIN=$godot" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: Fresh Godot import
+        shell: pwsh
         run: |
-          set -Eeuo pipefail
-          export GODOT_BIN="${DWS_GODOT_DOUBLE_BIN:-$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64}"
-          bash RUN_FABRIC_R5_2_T13_TESTS.sh
+          $ErrorActionPreference = 'Stop'
+          $out = 'artifacts\fabric-r5-2-t13-windows'
+          New-Item -ItemType Directory -Force -Path $out | Out-Null
+          $log = Join-Path $out 'import.log'
+          & $env:GODOT_BIN --headless --editor --path . --import 2>&1 | Tee-Object -FilePath $log
+          if ($LASTEXITCODE -ne 0) { throw "GODOT_IMPORT_FAILED:$LASTEXITCODE" }
+          if (Select-String -Path $log -Pattern 'SCRIPT ERROR|Parse Error|Compile Error|Invalid call|Invalid access|ERROR:' -Quiet) {
+            throw 'GODOT_IMPORT_FATAL_MARKER'
+          }
+
+      - name: Run T13 three-process exact gate
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $out = 'artifacts\fabric-r5-2-t13-windows'
+          $script = 'res://tests/research/fabric_bake0/fabric_r5_2_t13_shared_instances_acceptance.gd'
+          foreach ($i in 1..3) {
+            $log = Join-Path $out "sample-$i.log"
+            & $env:GODOT_BIN --headless --path . --script $script 2>&1 | Tee-Object -FilePath $log
+            $code = $LASTEXITCODE
+            if ($code -ne 0) { throw "T13_GODOT_TEST_FAILED:sample=$i exit=$code" }
+            if (-not (Select-String -Path $log -Pattern 'FABRIC R5.2 T13 SHARED INSTANCES: PASS' -SimpleMatch -Quiet)) {
+              throw "T13_PASS_MARKER_MISSING:sample=$i"
+            }
+            if (Select-String -Path $log -Pattern 'SCRIPT ERROR|Parse Error|Compile Error|Invalid call|Invalid access|ERROR:' -Quiet) {
+              throw "T13_FATAL_MARKER:sample=$i"
+            }
+          }
+
+      - name: Collect deterministic T13 evidence
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          python scripts/research/fabric_bake0/collect_r5_2_t13_evidence.py --root artifacts/fabric-r5-2-t13-windows --out artifacts/fabric-r5-2-t13-windows/evidence.json
+          if ($LASTEXITCODE -ne 0) { throw "T13_COLLECTOR_FAILED:$LASTEXITCODE" }
+
+      - name: Run unchanged T12 regression
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $out = 'artifacts\fabric-r5-2-t13-windows'
+          $log = Join-Path $out 't12-regression.log'
+          $script = 'res://tests/research/fabric_bake0/fabric_r5_2_t12_ship_acceptance.gd'
+          & $env:GODOT_BIN --headless --path . --script $script 2>&1 | Tee-Object -FilePath $log
+          $code = $LASTEXITCODE
+          if ($code -ne 0) { throw "T12_REGRESSION_FAILED:$code" }
+          if (-not (Select-String -Path $log -Pattern 'FABRIC R5.2 T12 SHIP MATRYOSHKA: PASS' -SimpleMatch -Quiet)) {
+            throw 'T12_REGRESSION_PASS_MARKER_MISSING'
+          }
+          if (Select-String -Path $log -Pattern 'SCRIPT ERROR|Parse Error|Compile Error|Invalid call|Invalid access|ERROR:' -Quiet) {
+            throw 'T12_REGRESSION_FATAL_MARKER'
+          }
+          $dirty = git status --porcelain=v1 --untracked-files=no
+          if ($dirty) { throw "TRACKED_TREE_DIRTY_AFTER_RUNTIME:$dirty" }
+
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: t13-exact-product-e54622fe
-          path: artifacts/fabric-r5-2-t13/**
+          name: t13-windows-exact-product-e54622fe
+          path: artifacts/fabric-r5-2-t13-windows/**
           retention-days: 90
