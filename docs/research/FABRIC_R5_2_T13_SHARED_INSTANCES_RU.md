@@ -1,6 +1,6 @@
 # FABRIC R5.2 / T13 — Shared Compiled Instances
 
-Статус: **IMPLEMENTED / EXACT GATE PENDING**. Research-only; canonical owners не меняются.
+Статус: **IMPLEMENTED / REVIEW REPAIR R1 — EXACT RERUN REQUIRED**. Research-only; canonical owners не меняются.
 База: T12 merge `c60960bee48aa7cc68a9035cff86d5567f6c89fc`.
 
 ## Цель
@@ -24,9 +24,10 @@ Acceptance обязан доказать лестницу **1 → 10 → 100** �
 
 `CompiledModel` — verified T12 Ship bundle и один prepared compact runtime.
 При `prepare()` T13 делает **ровно одну deep copy** compiled bundle и дальше
-использует её как внутренний frozen model. Identity задаётся T12 capsule checksum,
-canonical hash этой frozen bundle и state signature. Instance hot path не копирует
-и не canonical-hash'ит полный compile graph; полный hash используется как отдельный
+использует её как внутренний frozen model. Identity задаётся T12 capsule checksum, exact binary SHA-256 digest этой frozen
+bundle и state signature. JSON-canonical hash здесь намеренно не используется:
+в compiled graph есть integer-keyed dictionaries. Instance hot path не копирует
+и не хеширует полный compile graph; binary digest используется как отдельный
 integrity audit до/после масштабного прогона.
 
 `InstanceBinding` содержит только instance identity, world slot, checksum общей
