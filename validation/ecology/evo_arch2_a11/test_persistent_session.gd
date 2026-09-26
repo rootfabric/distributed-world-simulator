@@ -26,7 +26,7 @@ func write_file(path: String, text: String) -> bool:
 	return true
 
 func _run() -> void:
-	directory = "user://a11-test-session-%d-%d" % [OS.get_process_id(), Time.get_ticks_usec()]
+	directory = "res://artifacts/runtime/eco-a11-fixtures/session-%d-%d" % [OS.get_process_id(), Time.get_ticks_usec()]
 	var manifest := Preset.create(20260912, 64)
 	check(not manifest.is_empty() and Manifest.validate(manifest).is_empty(), "self-contained preset validates")
 	check(manifest.organization_profile == "FREE" and manifest.mode == "LAB", "FREE without archetype is default")
@@ -87,7 +87,7 @@ func _run() -> void:
 		check(FileAccess.file_exists(saved.path), "durable immutable file exists")
 		check(String(saved.path).get_file() == String(saved.sha256) + Session.SUFFIX, "content addressed path")
 		var saved_again: Dictionary = session.save(directory)
-		check(saved_again.success and saved_again.reused and saved_again.path == saved.path, "same state save is idempotent")
+		check(saved_again.success and saved_again.reused and saved_again.path == saved.path, "same state save is idempotentent")
 		var restored := Session.new()
 		var loaded: Dictionary = restored.load_file(saved.path, saved.sha256)
 		check(loaded.success and restored.controller.tick() == 8, "cold session restores disk state")
@@ -110,8 +110,23 @@ func _run() -> void:
 		check(not same.save(directory).success, "corrupt immutable save rejected, not overwritten")
 		check(FileAccess.get_file_as_string(saved.path) == "broken", "corrupt bytes retained for diagnosis")
 		check(not same.save("res://scripts/ecology").success, "source-tree write rejected")
+		check(not same.save("res://artifacts/../scripts/ecology").success, "source-tree traversal rejected")
+		check(not same.save(ProjectSettings.globalize_path("res://scripts/ecology")).success, "absolute source-tree path rejected")
+		check(not same.save("relative-unowned-folder").success, "implicit working-directory writes rejected")
 	var oversized := "x".repeat(C.MAX_BYTES + 1)
 	check(not session.restore_bundle(oversized, oversized.sha256_text()).success, "bounded transport decoding")
+	var quota := directory.path_join("quota")
+	check(DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(quota)) == OK, "quota fixture directory")
+	var filled := true
+	for index in Session.MAX_SAVED_CHECKPOINTS:
+		filled = write_file(quota.path_join("reserved-%03d.eco.json" % index), "retained") and filled
+	check(filled, "storage quota fixture populated")
+	var limited: Dictionary = session.save(quota)
+	check(not limited.success and limited.error == "HABITAT_CHECKPOINT_STORAGE_LIMIT", "storage bound fails closed rather than culling history")
+	check(DirAccess.get_files_at(ProjectSettings.globalize_path(quota)).size() == Session.MAX_SAVED_CHECKPOINTS, "quota failure leaves all existing files")
+	for filename in DirAccess.get_files_at(ProjectSettings.globalize_path(quota)):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(quota.path_join(filename)))
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(quota))
 	for filename in DirAccess.get_files_at(ProjectSettings.globalize_path(directory)):
 		DirAccess.remove_absolute(ProjectSettings.globalize_path(directory.path_join(filename)))
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(directory))
