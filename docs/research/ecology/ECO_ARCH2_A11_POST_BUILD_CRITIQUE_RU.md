@@ -71,3 +71,55 @@ Default visible host — LAB research habitat, не promotion production ecology
 На доступном Windows или Linux host сделать чистый detached worktree актуального HEAD, проверить TREE и canonical Godot, затем выполнить `RUN_ECO_A11_HABITAT.ps1 -Test` либо `python3 validation/ecology/evo_arch2_a11/run_exact.py --godot <exact binary>`. Сохранить `artifacts/runtime/eco-a11/**`, выполнить A10.5 regression, обновить machine evidence. При реальном failure фиксировать первый error и делать минимальный repair с новым exact subject, не переименовывать pending в PASS.
 
 Outcome: **IMPLEMENTATION_CANDIDATE / EXACT_EVIDENCE_PENDING**. PR остаётся draft, main не изменяется.
+
+## R1 runtime repair — Windows executor (2026-09-26)
+
+Записи выше о queued/pending exact jobs относятся к прежнему subject и здесь
+заменяются фактическим результатом.
+
+Исходный subject: HEAD `a162ddc8264cf2a67e2bb85ee9041cbdbcaf580b` / TREE
+`e8c4ec140106f02fa1b6ecbdfccc4d1dc63b29d1`. Exact run `36205618344`: Windows FAIL и
+Linux FAIL с **одинаковым** первым failure, то есть дефект не Windows-only.
+Auxiliary Syntax `36205618332` и Project Control `36205618392` на этом HEAD оставались PASS.
+
+Первый failure: `validation/ecology/evo_arch2_a11/test_habitat_lifecycle.gd:77`,
+assertion `explicit zero-water/energy founder input`. `Session.start(manifest)` вернул
+failure, после чего обращение к `session.controller.debug_state()` на `null` дало
+вторичный `SCRIPT ERROR: Nonexistent function 'debug_state' in base 'Nil'`. Вторичная
+ошибка маскировала первичную и root cause не является.
+
+Root cause (fixture, не transport и не biology): starvation scenario частично
+мутировал `HabitatPreset.create()` и добавлял необязательный вход `genesis` через
+field-style assignment `manifest.genesis = {...}`. GDScript хранит такой ключ как
+`StringName`; `canonical_value_v1.keys()` его принимает (`Dictionary.has()`), но
+`canonical_value_v1.encode()` отвергает любой не-`String` ключ и возвращает `""`.
+В результате `experiment_manifest_v1.validate()` возвращал `NONCANONICAL_MANIFEST`,
+`PersistentHabitatSession._stage()` — `HABITAT_INPUTS`, а canonical
+`ExperimentController.initialize()` — `CONTROLLER_MANIFEST:NONCANONICAL_MANIFEST`
+на том же manifest. Подтверждённый A10.5 S11 не затронут: он собирает manifest одним
+явным literal с `String` ключами.
+
+Repair (только fixture, product/runtime код не изменён): starvation manifest собран
+одним явным canonical literal того же construction class, что и A10.5 S11, с `String`
+ключами; добавлен fail-fast guard, который сохраняет первичную ошибку `start()` вместо
+вторичного `Nil`. Acceptance predicate не ослаблена: zero water/energy → canonical
+starvation → canonical death → canonical corpse → canonical return → mineralization.
+
+Machine evidence (Windows, canonical double Godot
+`4.7.1.stable.double.custom_build.a13da4feb`, SHA256
+`3633C3E609C8CE2F9BAE334A9C7E75C7F974DE3AF0415AB4A8050A625A15A7A5`):
+
+- focused `test_habitat_lifecycle.gd`: `EVO_ARCH2_A11_LIFECYCLE checks=30 failed=0` PASS
+  (было `checks=22 failed=1`; семь starvation assertions после `start()` теперь реально
+  исполняются, ни одна assertion не ослаблена).
+- полный A11 exact (`run_exact.py`): `ECO_A11_EXACT=PASS tests=4/4 checks=165 failures=0`,
+  включая четыре отчётных A11 suite и четыре **различных** процесса
+  baseline/checkpoint/resume/reject; baseline и resume совпали по tick/state_hash/
+  field_hash/population/presentation/metrics, negative control отвергнут.
+- A10.5 regression: `15/15 PASS`, `checks=1751`, `failures=0` (число не менялось).
+- Project Control: base `YELLOW`, directional `YELLOW` (оба non-RED). RED-записи семейств
+  `G` и `ECO` — предсуществующие ADVISORY и воспроизводятся на самом `main`.
+
+Этот repair **не закрывает A11**. Остаются: Linux exact, A10.5 Windows/Linux regression на
+новом subject, graphical/manual observation, fresh independent Reviewer, fresh independent
+Verifier, final main drift check и human merge gate.
