@@ -20,6 +20,19 @@ var ready := false
 func _ready_identity_ok() -> bool:
 	return ready and prepare_count == 1 and U.is_lower_hex_64(compiled_model_checksum) and U.is_lower_hex_64(compiled_model_hash) and U.is_lower_hex_64(state_signature_hash)
 
+# The compiled T12 graph stores its children dictionaries under integer keys,
+# which are intentionally outside the JSON-DTO canonical space: NetworkUtils
+# canonicalize rejects non-String keys, so U.canonical_hash/payload_hash
+# silently returns "" for the full compiled bundle and the model identity can
+# never satisfy its lowercase-hex64 contract. The frozen-model identity uses an
+# exact binary digest of the whole compiled bundle instead: deterministic for
+# the frozen model, sensitive to every byte, always lowercase hex64.
+func _model_hash(bundle: Dictionary) -> String:
+	var context := HashingContext.new()
+	context.start(HashingContext.HASH_SHA256)
+	context.update(var_to_bytes(bundle))
+	return context.finish().hex_encode()
+
 func prepare(bundle: Dictionary, trusted_capsule_checksum: String) -> Dictionary:
 	if ready:
 		return U.failure("T13_MODEL_ALREADY_PREPARED")
@@ -37,7 +50,7 @@ func prepare(bundle: Dictionary, trusted_capsule_checksum: String) -> Dictionary
 		return prepared
 	live = C.live_tree(compiled_bundle)
 	compiled_model_checksum = trusted_capsule_checksum
-	compiled_model_hash = U.canonical_hash(compiled_bundle)
+	compiled_model_hash = _model_hash(compiled_bundle)
 	state_signature_hash = runtime.state_signature()
 	prepare_count += 1
 	ready = true
@@ -61,7 +74,7 @@ func model_identity() -> Dictionary:
 	}
 
 func model_intact() -> bool:
-	return _ready_identity_ok() and not compiled_bundle.is_empty() and U.canonical_hash(compiled_bundle) == compiled_model_hash
+	return _ready_identity_ok() and not compiled_bundle.is_empty() and _model_hash(compiled_bundle) == compiled_model_hash
 
 func create_binding(instance_id: String, world_slot: String) -> Dictionary:
 	if not _ready_identity_ok():
