@@ -20,11 +20,12 @@ func _run() -> void:
 	var host: Node = Scene.instantiate()
 	host.auto_boot = false
 	host.autosave_enabled = false
-	host.save_directory = "user://a11-scene-%d-%d" % [OS.get_process_id(), Time.get_ticks_usec()]
+	host.save_directory = "res://artifacts/runtime/eco-a11-fixtures/scene-%d-%d" % [OS.get_process_id(), Time.get_ticks_usec()]
 	root.add_child(host)
 	await process_frame
-	check(host.has_node("HabitatUI"), "visible habitat has its own controls")
+	check(host.has_node("HabitatUI/HabitatPanel"), "visible habitat has explicitly named controls")
 	check(host.session.controller == null, "unbooted scene does not invent a controller")
+	check(not host.show_advanced_tools(true) and host.get_node("HabitatUI/HabitatPanel").visible, "unbooted advanced toggle cannot hide the only panel")
 	var manifest := Preset.create(20260912, 64)
 	var started: Dictionary = host.new_habitat(manifest)
 	check(started.success, "visible scene starts real canonical preset")
@@ -34,6 +35,16 @@ func _run() -> void:
 	check(host.workbench.organism_views.size() == 3, "three canonical organism views")
 	check(host.workbench.get_node("OrganismMarkers").get_child_count() == 3, "derived organism nodes instantiated")
 	check(not host.workbench.running, "new persistent scene starts paused")
+	var genesis_hash: String = host.session.controller.get_snapshot().canonical_state_hash
+	check(host.show_advanced_tools(true), "advanced tools explicitly selectable")
+	check(host.workbench.get_node("WorkbenchUI").visible and not host.get_node("HabitatUI/HabitatPanel").visible, "exactly one tool panel visible")
+	var return_key := InputEventKey.new()
+	return_key.keycode = KEY_F2
+	return_key.pressed = true
+	host._unhandled_key_input(return_key)
+	check(host.get_node("HabitatUI/HabitatPanel").visible and not host.workbench.get_node("WorkbenchUI").visible, "F2 restores the named habitat panel")
+	check(not host.find_child("AdvancedToolsToggle", true, false).button_pressed, "F2 also resets advanced toggle state")
+	check(host.session.controller.get_snapshot().canonical_state_hash == genesis_hash, "panel switching is noncausal")
 	var twin := Session.new()
 	check(twin.start(manifest).success, "direct comparison controller created")
 	check(host.workbench.command_step_n(4), "visible time command runs 4 ticks")
