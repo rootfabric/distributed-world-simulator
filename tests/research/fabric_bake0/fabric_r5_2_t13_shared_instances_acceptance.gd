@@ -152,7 +152,7 @@ func _initialize() -> void:
 			check(damaged_diverged, "damaged instance diverges from healthy control")
 			check(int(candidate.details.next_state.damage_revision) == 1, "damaged revision retained")
 		else:
-			var same := candidate.details.next_state == control.details.next_state and candidate.details.physical == control.details.physical
+			var same: bool = candidate.details.next_state == control.details.next_state and candidate.details.physical == control.details.physical
 			if same:
 				healthy_equivalent += 1
 			check(same, "healthy sibling byte-equivalent " + id)
