@@ -116,4 +116,3 @@ func _long_bounded() -> void:
 	var past: Dictionary = resumed.controller.step()
 	check(not past.success and past.error == "CONTROLLER_HORIZON", "declared horizon fails closed")
 	check(resumed.controller.get_snapshot().canonical_state_hash == before, "horizon rejection leaves state intact")
-}
