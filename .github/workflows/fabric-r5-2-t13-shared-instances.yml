@@ -1,0 +1,60 @@
+name: FABRIC R5.2 T13 Shared Compiled Instances
+on:
+  push:
+    branches: [research/fabric-r5-2-t13-shared-instances-r1]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: fabric-t13-${{ github.ref }}-${{ github.event_name }}
+  cancel-in-progress: true
+jobs:
+  source-contracts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: T13 additive source and ownership contract
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          base=c60960bee48aa7cc68a9035cff86d5567f6c89fc
+          test "$(git merge-base HEAD "$base")" = "$base"
+          allowed='^(.github/workflows/fabric-r5-2-t13-shared-instances.yml|RUN_FABRIC_R5_2_T13_TESTS.sh|docs/research/FABRIC_R5_2_T13_SHARED_INSTANCES_RU.md|scripts/research/fabric_bake0/(r5_t13_shared_instances_runtime_v1.gd|collect_r5_2_t13_evidence.py)|tests/research/fabric_bake0/(fabric_r5_2_t13_shared_instances_acceptance.gd|test_t13_evidence.py))$'
+          test -z "$(git diff --name-only "$base" HEAD | grep -Ev "$allowed" || true)"
+          git diff --check "$base" HEAD
+          bash -n RUN_FABRIC_R5_2_T13_TESTS.sh
+          python3 -m unittest discover -s tests/research/fabric_bake0 -p test_t13_evidence.py -v
+          mkdir -p source
+          git archive --format=tar HEAD | gzip -n > source/t13-source.tar.gz
+          printf 'HEAD=%s\nTREE=%s\nBASE_T12=%s\n' "$(git rev-parse HEAD)" "$(git rev-parse 'HEAD^{tree}')" "$base" > source/identity.txt
+          sha256sum source/t13-source.tar.gz > source/source.sha256
+      - uses: actions/upload-artifact@v4
+        with:
+          name: t13-source-${{ github.sha }}
+          path: source/**
+          retention-days: 30
+
+  exact-runtime:
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Canonical double 1-10-100 shared-instance gate
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          export GODOT_BIN="${DWS_GODOT_DOUBLE_BIN:-$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64}"
+          bash RUN_FABRIC_R5_2_T13_TESTS.sh
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: t13-runtime-${{ github.sha }}
+          path: artifacts/fabric-r5-2-t13/**
+          retention-days: 90
