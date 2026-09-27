@@ -1,0 +1,27 @@
+{
+  "schema": "distributed_world_simulator.v0_final_2_merge_receipt.v1",
+  "state": "COMPLETE_MERGED",
+  "pr_number": 692,
+  "subject_head": "8708cfac56346af0ec8c9e5599eb47fcfb751087",
+  "subject_tree": "c6ea0671d4850641daafaf63e79bb3431ff5ef65",
+  "premerge_main": "6b336af8faeadbd7f69c96b62dc30d25150f45a7",
+  "merge_commit": "eadb2b99320439a608cd6fdc3561993513baf0c0",
+  "postmerge_main": "eadb2b99320439a608cd6fdc3561993513baf0c0",
+  "merged_at_utc": "2026-09-27T02:10:00Z",
+  "reviewer_commit": "6740db7827dbfa066a17cd620857f3473190ffd5",
+  "verifier_commit": "d349a857b2e5203536845b6634c8a8781811cd88",
+  "verifier_artifact": {
+    "id": 10910876182,
+    "digest": "sha256:26ad39f8bc60f201f99af4d7290d55c38c0e81604b121472524a14adb07e1379"
+  },
+  "postmerge_checks": {
+    "pr_merged": true,
+    "main_points_to_merge_commit": true,
+    "candidate_to_merge_file_diff_count": 0,
+    "candidate_tree_preserved": true
+  },
+  "predicate_verified": true,
+  "human_acceptance": true,
+  "merge_performed": true,
+  "final_result": "V0_FINAL_2_COMPLETE_MERGED"
+}
