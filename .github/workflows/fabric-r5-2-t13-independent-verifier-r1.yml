@@ -1,0 +1,96 @@
+name: FABRIC R5.2 T13 Fresh Independent Verifier R1
+
+on:
+  push:
+    branches: [verify/fabric-r5-2-t13-fresh-independent-verifier-r1]
+
+permissions:
+  contents: read
+
+env:
+  SUBJECT_HEAD: 4cae54d17838f12dd619289eed114332813ea094
+  SUBJECT_TREE: 9b8aaa64f2114f1af99f0870004bf555aefecb16
+  EXPECTED_DETERMINISTIC_HASH: c43d4a4c568d38d3ff16a8f118927ba6c76aeefcb17a200cf7f1325a52ac62bf
+  EXPECTED_MODEL_CHECKSUM: 98e2148b1ca1ab08c035976d65f51d0187016c6269cf330f2099f985bf404a39
+  EXPECTED_MODEL_HASH: 484f0c0901b712119716983c41ecd33080d6bebe005f602abd8009a56e48fd16
+  EXPECTED_ISOLATION_HASH: 53c996b85419a9cc4999f804375dbde3912d91a5c06c6e7974f46030d99131dc
+
+jobs:
+  verifier-source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Prove product diff is zero
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$(git merge-base HEAD "$SUBJECT_HEAD")" = "$SUBJECT_HEAD"
+          changed="$(git diff --name-only "$SUBJECT_HEAD"...HEAD)"
+          test "$changed" = '.github/workflows/fabric-r5-2-t13-independent-verifier-r1.yml'
+          git diff --exit-code "$SUBJECT_HEAD"...HEAD --             scripts/research/fabric_bake0             tests/research/fabric_bake0             RUN_FABRIC_R5_2_T13_TESTS.sh             docs/research/FABRIC_R5_2_T13_SHARED_INSTANCES_RU.md
+          test "$(git rev-parse "$SUBJECT_HEAD^{tree}")" = "$SUBJECT_TREE"
+
+      - name: Independently inspect T13 source invariants
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          runtime = Path('scripts/research/fabric_bake0/r5_t13_shared_instances_runtime_v1.gd').read_text()
+          acceptance = Path('tests/research/fabric_bake0/fabric_r5_2_t13_shared_instances_acceptance.gd').read_text()
+          collector = Path('scripts/research/fabric_bake0/collect_r5_2_t13_evidence.py').read_text()
+
+          assert 'res://tests/' not in runtime
+          assert '_compiler_v1.gd' not in runtime
+          assert runtime.count('runtime.prepare(') == 1
+          assert 'compiled_bundle = bundle.duplicate(true)' in runtime
+          assert 'context.update(var_to_bytes(bundle))' in runtime
+          assert 'U.canonical_hash(compiled_bundle)' not in runtime
+
+          assert acceptance.count('F.make_ship()') == 1
+          assert 'U.canonical_hash(bundle)' not in acceptance
+          assert acceptance.count('exact_binary_hash(bundle)') >= 4
+          assert 'healthy_equivalent == 99' in acceptance
+          assert 'recompile_events' in acceptance
+          assert 'prepare_count' in acceptance
+          assert 'leaf_traversals' in acceptance
+          assert 'instance-042' not in acceptance  # target is generated from DAMAGE_INDEX, not hard-coded result oracle
+          assert 'const DAMAGE_INDEX := 41' in acceptance
+
+          assert 'healthy_equivalent_after_damage' in collector
+          assert 'prepare_count' in collector
+          assert 'recompile_events' in collector
+          assert 'runtime_steps' in collector
+          assert 'leaf_traversals' in collector
+          print('T13_INDEPENDENT_SOURCE_INVARIANTS=PASS')
+          PY
+
+      - name: Run existing adversarial evidence tests
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          python3 -m unittest discover -s tests/research/fabric_bake0 -p test_t13_evidence.py -v
+          bash -n RUN_FABRIC_R5_2_T13_TESTS.sh
+
+      - name: Build exact verifier source bundle
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          mkdir -p verifier-source
+          git branch -f t13-verifier-exact HEAD
+          git bundle create verifier-source/t13-verifier-exact.bundle refs/heads/t13-verifier-exact
+          sha256sum verifier-source/t13-verifier-exact.bundle > verifier-source/t13-verifier-exact.bundle.sha256
+          printf 'SUBJECT_HEAD=%s\nSUBJECT_TREE=%s\nVERIFIER_HEAD=%s\nVERIFIER_TREE=%s\nEXPECTED_DETERMINISTIC_HASH=%s\nEXPECTED_MODEL_CHECKSUM=%s\nEXPECTED_MODEL_HASH=%s\nEXPECTED_ISOLATION_HASH=%s\n'             "$SUBJECT_HEAD" "$SUBJECT_TREE" "$(git rev-parse HEAD)" "$(git rev-parse 'HEAD^{tree}')"             "$EXPECTED_DETERMINISTIC_HASH" "$EXPECTED_MODEL_CHECKSUM" "$EXPECTED_MODEL_HASH" "$EXPECTED_ISOLATION_HASH"             > verifier-source/identity.txt
+          git bundle verify verifier-source/t13-verifier-exact.bundle
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fabric-r5-2-t13-independent-verifier-source-${{ github.sha }}
+          path: verifier-source/**
+          if-no-files-found: error
+          retention-days: 90
