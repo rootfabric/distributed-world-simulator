@@ -1,0 +1,44 @@
+{
+  "head": "84ab0c0fba87f12dcfc94e32bb9cfa4eb8abb481",
+  "tree": "f7e3f255bcc4878f3e738e011e3d45bf3edcdb81",
+  "argv": [
+    "C:\\Godot\\godot\\bin\\godot.windows.editor.double.x86_64.console.exe",
+    "--headless",
+    "--path",
+    "C:\\distributed-world-simulator\\worktrees\\mvp6-continuation",
+    "--script",
+    "res://tests/runtime/test_v0_mvp_6_item_construction_composition.gd"
+  ],
+  "exit_code": 0,
+  "assertions": 223,
+  "log_sha256": "4d59b75d417bda9abb66de8b7e60e28eae6639ec1f7f4b8022af2eec12da0705",
+  "report_sha256": "b1f5a14a9dbc7d47078759458481cf3629deb09f03cbda27e5c4a104b14451de",
+  "engine_sha256": "3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5",
+  "tracked_clean": true,
+  "runtime_identical_to": "73b8818184c93986e3313f35f9f4548c608e47e6",
+  "stage_ore": [
+    [
+      8,
+      6
+    ],
+    [
+      6,
+      2
+    ],
+    [
+      2,
+      0
+    ]
+  ],
+  "single_operational_construct": true,
+  "two_native_handoffs": true,
+  "two_derived_presentations": true,
+  "trusted_windows_assertions": [
+    223,
+    64,
+    77
+  ],
+  "five_process_verified": false,
+  "physics_interaction_verified": false,
+  "mvp6_verified": false
+}

@@ -1,0 +1,55 @@
+{
+  "schema": "distributed_world_simulator.v0_final_1_main_catchup.v1",
+  "recorded_at_utc": "2026-09-22T13:45:00Z",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "stage": "V0-FINAL.1",
+  "status": "CANDIDATE_BUILT_VALIDATION_PENDING",
+  "main_head": "e200a61cb55930378d11c39dcc5950cf49db603c",
+  "accepted_v0_head": "a1db0c66762bee887f0bf2643f7c000961e64520",
+  "accepted_v0_tree": "8fc0044ff42ad502e6457593a185465af7d2a825",
+  "merge_base": "675c04bb213bbb68b8cdb500d540d57ce1490318",
+  "composition_merge_commit": "4fe42745e77f784fba52f1c11223ef002fccfb9a",
+  "composition_merge_tree": "32359294616315f22e97b210b7cf93ff2f2e32bd",
+  "integration_branch": "integration/v0-final-1-main-catchup-r1",
+  "analysis": {
+    "main_changed_files_full_tree": 62,
+    "v0_changed_files_full_tree": 662,
+    "overlapping_paths": 4,
+    "identical_overlap_paths": [
+      "scripts/network/prediction/predicted_item_interaction_journal.gd",
+      "tests/runtime/test_v0_mvp_6_prediction_rollback.gd",
+      "tests/runtime/test_v0_mvp_6_prediction_rollback.gd.uid"
+    ],
+    "resolved_overlap_paths": [
+      "tests/harness/test_v0_mvp_act0.py"
+    ],
+    "file_directory_collisions": 0,
+    "runtime_ownership_conflicts": 0,
+    "main_changes_preserved": "62/62",
+    "v0_changes_preserved": "662/662 except deliberate ACT0 harness composition paths",
+    "critical_v0_product_diff_after_catchup": 0
+  },
+  "act0_resolution": {
+    "canonical_base_path": "tests/harness/mvp_act0_base.py",
+    "canonical_base_blob": "a53b9eb080842a34b20419f1a8a8bb8a29b99463",
+    "canonical_source": "current main tests/harness/test_v0_mvp_act0.py",
+    "wrapper_path": "tests/harness/test_v0_mvp_act0.py",
+    "policy": "current-main ACT0 base + V0 candidate fixture/ledger assertions; candidate test asserts both main and accepted V0 ancestry and zero critical V0 product drift"
+  },
+  "closure_ledger": {
+    "added_files": 37,
+    "includes_reviewer_pass": true,
+    "includes_verifier_verified": true,
+    "includes_human_acceptance": true,
+    "includes_pr680_merge_receipt": true,
+    "includes_mvp8_complete_merged_event": true
+  },
+  "acceptance": {
+    "final_composition_accepted": false,
+    "main_merge_authorized": false,
+    "independent_reviewer_for_final_candidate": false,
+    "independent_verifier_for_final_candidate": false
+  },
+  "next": "Run repository-owned Ubuntu catch-up validation, then freeze exact candidate for V0-FINAL.2."
+}

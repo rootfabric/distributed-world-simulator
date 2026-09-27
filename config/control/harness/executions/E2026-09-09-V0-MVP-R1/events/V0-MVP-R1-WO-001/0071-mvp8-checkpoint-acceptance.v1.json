@@ -1,0 +1,21 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-09-09-V0-MVP-R1-V0-MVP-R1-WO-001-0071-MVP8-CHECKPOINT-ACCEPTANCE",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "sequence": 71,
+  "event_type": "PREDICATE_VERIFIED",
+  "work_state": "IN_PROGRESS",
+  "recorded_at_utc": "2026-09-22T10:42:00Z",
+  "actor": "HUMAN",
+  "branch": "repair/v0-mvp8-cold-class-cache-r2",
+  "head_sha": "dc6e7fffa27d764ea09ded949d50b99a32fa4d9b",
+  "tree_sha": "8fc0044ff42ad502e6457593a185465af7d2a825",
+  "predicate": "MVP_CHECKPOINT_ACCEPTANCE",
+  "command": "ACCEPT_MVP8_CHECKPOINT",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence/MVP8-HUMAN-ACCEPTANCE-AND-MERGE-AUTHORIZATION-DC6E7FFF-R1.v1.json"
+  ],
+  "summary": "Human gate accepts the MVP8 checkpoint corresponding to frozen dc6e7fff/8fc0044f. This does not by itself claim the entire parent Work Order complete beyond its already verified predicates."
+}

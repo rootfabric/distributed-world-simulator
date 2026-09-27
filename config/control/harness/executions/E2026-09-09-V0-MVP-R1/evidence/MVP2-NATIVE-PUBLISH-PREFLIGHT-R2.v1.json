@@ -1,0 +1,109 @@
+{
+  "schema": "distributed_world_simulator.mvp2_native_publication_preflight.v1",
+  "classification": "COORDINATOR_OBSERVATION_NOT_FORMAL_REVIEW_OR_VERIFIER_VERDICT",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "predicate": "MVP_TWO_CLIENT_SHARED_WORLD",
+  "runtime_subject_head_sha": "287df80c69840fea7ae9ac0ea69a07581f192d34",
+  "runtime_subject_tree_sha": "e591dc6c5346139bc1b4659915c54bf80603713e",
+  "observed_main_sha": "7dfc68ab5a1e90254a1b7039807f275b5da04eef",
+  "observed_evidence_parent_sha": "51c924053518c819c24780c8e4d7ee7d37098f51",
+  "artifact": {
+    "run_id": "34605253942",
+    "artifact_id": "10266940288",
+    "zip_bytes": 333581,
+    "zip_sha256": "850c2422884493c4bd8aeccc2e5dad286c7550610bf43397fe3722f05c746f1f",
+    "manifest_sha256": "885a15a7552918a67ada595796bb1e4cfe25fb77c68de5c896dac5cdaea4300f",
+    "native_sink": "config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence/MVP2-NATIVE-287df80c6984-34605253942",
+    "indexed_members": 35,
+    "files_including_manifest": 36,
+    "rehashed_members": 35,
+    "digest_mismatches": 0,
+    "unindexed_members": 0
+  },
+  "mechanical_preflight": {
+    "materializer_path": "docs/control/mvp-act0-r1/materialize_mvp2_evidence.py",
+    "materializer_local_copy_matches_repository_blob": "78dda222ec2ee1519424309c3d20a70c6e15d774",
+    "materializer_executed": true,
+    "materialized_file_count": 36,
+    "staged_git_blobs_match_original_archive": "36_OF_36",
+    "git_diff_cached_check": "PASS",
+    "binary_patch_apply_roundtrip": "PASS_36_OF_36_BYTE_IDENTICAL",
+    "bundle_import_roundtrip": "PASS_36_OF_36_COMMITTED_BLOBS",
+    "existing_sink_negative_control": "DESTINATION_ALREADY_EXISTS",
+    "corrupted_archive_negative_control": "ARCHIVE_DIGEST_MISMATCH",
+    "native_subtree_git_sha": "d242240346bb06b819fb1b37d2b8e74a6ed9e60a",
+    "runtime_execution_performed_this_slice": false,
+    "production_native_review_loader_executed": false
+  },
+  "portable_local_exports": {
+    "durability": "CHAT_ATTACHMENTS_NOT_REPOSITORY_AUTHORITY",
+    "raw_only_commit": "a68676665c2782c192f2339d09a89e8c62e4734c",
+    "raw_only_commit_is_runtime_descendant": false,
+    "bundle_name": "MVP2_NATIVE_36_FILES.bundle",
+    "bundle_sha256": "5d87a660fc4a369c82c20c0ea1dd10985c9c36e98ee0374facbfbec4b3573f14",
+    "patch_name": "MVP2_NATIVE_36_FILES.patch.gz",
+    "patch_sha256": "5ae46798608c1cc1d826b3c5b9747cb0bff2080e16755026aa9a49525a821c23",
+    "inventory_name": "MVP2_NATIVE_PUBLICATION_PREFLIGHT.json",
+    "inventory_sha256": "6f8d0de89941289a28e6a3e63dcc4a5ca0404293fd19bd8c9753ec7f252b0359",
+    "note": "Raw-only local commit contains the 36 files but no product ancestry. It cannot be selected as an MVP runtime/evidence subject. Transfer the additions onto the actual evidence branch and verify ancestry before formal consumption. Original GitHub artifact remains the durable raw source; these exports are optional transport aids."
+  },
+  "executor_attempts": [
+    {
+      "route": "CODEX_GITHUB_EXECUTION_TASK",
+      "request_pr": 605,
+      "request_comment_id": 5645334257,
+      "result_comment_id": 5645334945,
+      "result_author": "chatgpt-codex-connector[bot]",
+      "actual_result": "To use Codex here, create an environment for this repo.",
+      "execution_started": false,
+      "classification": "PREFERRED_EXECUTOR_CONFIGURATION_REQUIRED"
+    },
+    {
+      "route": "CURRENT_CONTAINER_NORMAL_GIT_PREFLIGHT",
+      "command": "GIT_TERMINAL_PROMPT=0 git ls-remote https://github.com/rootfabric/distributed-world-simulator.git refs/heads/control/v0-mvp2-evidence-287df80c-r1",
+      "exit_code": 128,
+      "failure_signature": "Could not resolve host: github.com",
+      "classification": "EXECUTOR_LOCAL_ROUTE_FAILURE_NOT_GITHUB_OUTAGE",
+      "clone_attempted": false,
+      "same_failed_route_repeated": false
+    },
+    {
+      "route": "CURRENT_CONTAINER_EXISTING_CHECKOUT_OR_CLI",
+      "git_available": true,
+      "existing_product_checkout_found_in_checked_workspace_roots": false,
+      "gh_cli_found": false,
+      "codex_cli_found": false
+    },
+    {
+      "route": "GITHUB_CONNECTOR",
+      "read_and_small_text_write_available": true,
+      "raw_tree_lookup_status": 404,
+      "raw_tree_uploaded": false,
+      "note": "Connector read/write works. No declared bulk local-file import action was found. No source transport through GitHub Actions or download-security bypass was attempted."
+    }
+  ],
+  "state": {
+    "remote_native_sink_committed": false,
+    "formal_reviewer_pass": false,
+    "formal_independent_verifier_pass": false,
+    "predicate_verified_event_created": false,
+    "parent_work_order_state": "IN_PROGRESS",
+    "mission_complete": false,
+    "hard_blocked": false,
+    "all_possible_executor_fallbacks_exhausted_claimed": false,
+    "runtime_or_freeze_ref_modified": false,
+    "main_modified": false
+  },
+  "next_actor": "EVIDENCE_PUBLISHER_WITH_AUTHORIZED_GIT_THEN_FRESH_REVIEWER_THEN_FRESH_VERIFIER",
+  "next_action": "PUBLISH_ORIGINAL_36_FILES_TO_EVIDENCE_BRANCH_VALIDATE_NATIVE_CONSUMER_AND_OBTAIN_SEPARATE_FORMAL_VERDICTS_BEFORE_NONTERMINAL_PREDICATE_EVENT",
+  "resume_conditions": [
+    "Use an available authorized repository executor; the observed Codex execution route first requires a repository environment. Do not assume a review-only integration can execute tasks.",
+    "Live-resolve main, runtime freeze, evidence branch and existing raw sink. Avoid duplicate publication; do not advance runtime just to add evidence.",
+    "Materialize original artifact using the byte-verified existing helper; publish all 36 files in one bounded commit with exact original paths and bytes.",
+    "Fresh Reviewer must assess source and native evidence, execute the unchanged validate_review_machine_evidence / validate_review_record consumer and return attributed schema-valid exact-subject verdict with required_fixes, evidence_gaps, rank_up_moves and risk_assessment.",
+    "A separate fresh Verifier must verify the committed package, role result, exact subject and current-main applicability. Coordinator or publisher must not invent this verdict or relabel a no-major-issues code-review comment as formal acceptance.",
+    "Before predicate closure, record the applicable current-main epoch audit. Historical audit for 127c732a is not an audit for 7dfc68ab. Main/control movement alone does not invalidate the immutable runtime evidence, but live continuation must satisfy its own audit gates.",
+    "Only after both valid formal verdicts and applicable audit, append the next valid non-terminal MVP_TWO_CLIENT_SHARED_WORLD PREDICATE_VERIFIED event. Preserve historical events and parent IN_PROGRESS. No full-MVP acceptance, runtime merge, MVP3 implementation or P8 activation."
+  ]
+}

@@ -1,0 +1,358 @@
+name: MVP6 Item Construction Exact
+on:
+  push:
+    branches: [feature/v0-mvp-playable-seamless-planet-r1]
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: mvp6-${{ github.ref }}-${{ contains(github.event.head_commit.message, '[mvp6-world-core]') }}
+  cancel-in-progress: false
+jobs:
+  native:
+    if: github.repository == 'rootfabric/distributed-world-simulator' && github.ref == 'refs/heads/feature/v0-mvp-playable-seamless-planet-r1' && (github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[mvp6-evidence]'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      EXPECTED_HEAD: ${{ github.sha }}
+      PYTHONUTF8: '1'
+      PYTHONDONTWRITEBYTECODE: '1'
+      PYTHONPATH: scripts
+      BREAKPOINT_RUNTIME_DISABLED: '1'
+      GODOT_SILENCE_ROOT_WARNING: '1'
+      PLANET_SIMULATOR_INVENTORY_PROFILE: planet_default
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Exact source and approved write fence
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+          git switch -c "$GITHUB_REF_NAME" "$EXPECTED_HEAD"
+          test -z "$(git status --porcelain --untracked-files=no)"
+          # Historical evidence under docs/control deliberately preserves raw
+          # Markdown/patch whitespace. Validate only executable/control surfaces;
+          # allowed/forbidden path checks below still fence the complete diff.
+          git diff --check 727b5d779543e74f254830acfd743d69fe1f7e4d HEAD -- \
+            .github/workflows \
+            scripts/runtime/networked_gameplay \
+            scripts/network/prediction \
+            tests/runtime \
+            tests/integration \
+            config/control/harness \
+            scenes/labs/mvp \
+            RUN_V0_MVP_JOURNAL_ROLLBACK.ps1
+          echo "EXPECTED_TREE=$(git rev-parse HEAD^{tree})" >> "$GITHUB_ENV"
+          python3 - <<'PY'
+          import fnmatch,json,subprocess
+          base='727b5d779543e74f254830acfd743d69fe1f7e4d'
+          path='config/control/harness/executions/E2026-09-09-V0-MVP-R1/work-orders/V0-MVP-R1-WO-001.v1.json'
+          old=json.loads(subprocess.check_output(['git','show',base+':'+path],text=True))
+          new=json.load(open(path))
+          assert new['base_sha']==old['base_sha']=='3d7672cba293d8e7bd72427b803f73fc8fcee5da'
+          seam='MVP6_CROSS_AUTHORITY_CONSTRUCTION_SEAM'
+          assert new['required_predicates'].count(seam)==1
+          assert [p for p in new['required_predicates'] if p!=seam]==old['required_predicates']
+          assert len(new['required_predicates'])==len(old['required_predicates'])+1
+          attention=json.load(open('config/control/harness/executions/E2026-09-09-V0-MVP-R1/human-attention/HA-V0-MVP6-NATIVE-ITEM-CARRY-R1.v1.json'))
+          assert attention['status']=='RESOLVED' and 'разрешаю, выполняй' in attention['resolution']
+          paths=subprocess.check_output(['git','diff','--name-only',base,'HEAD'],text=True).splitlines()
+          for p in paths:
+              assert any(fnmatch.fnmatchcase(p,g) for g in new['allowed_paths']), 'OUTSIDE_ALLOWED:'+p
+              assert not any(fnmatch.fnmatchcase(p,g) for g in new['forbidden_paths']), 'FORBIDDEN:'+p
+          subprocess.run(['git','diff','--exit-code',base,'HEAD','--','tests/runtime/test_v0_mvp3_live_owner_handoff.gd','tests/runtime/test_v0_mvp_5_exactly_once_material.gd','scripts/runtime/networked_gameplay/mvp/v0_mvp3_live_player_transfer_port.gd'],check=True)
+          print('MVP6_APPROVED_NATIVE_SCOPE_PASS',len(paths))
+          PY
+      - name: Canonical Harness continuation before native execution
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install --disable-pip-version-check -r scripts/harness/requirements.txt
+          git fetch origin '+refs/heads/*:refs/remotes/origin/*' --prune
+          export MVP6_MAIN_PC0_OUTPUT="$RUNNER_TEMP/mvp6-current-main-pc0"
+          export MVP6_MAIN_PC0_WORKTREE="$RUNNER_TEMP/mvp6-current-main-worktree"
+          python3 docs/control/mvp-act0-r1/mvp6_current_main_pc0_probe.py
+          test -z "$(git status --porcelain --untracked-files=all)"
+          control_tmp="$RUNNER_TEMP/mvp6-drive-before.log"
+          set +e
+          pwsh -NoProfile -File ./CONTROL_DEVELOPMENT.ps1 -Drive -Checkpoint V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE > "$control_tmp" 2>&1
+          drive_code=$?
+          set -e
+          mkdir -p artifacts/mvp6-exact/control artifacts/mvp6-exact/current-main-pc0
+          cp "$control_tmp" artifacts/mvp6-exact/control/drive-before.log
+          cp -a "$MVP6_MAIN_PC0_OUTPUT/." artifacts/mvp6-exact/current-main-pc0/
+          python3 - <<'PY'
+          import json,pathlib
+          p=pathlib.Path('artifacts/mvp6-exact/control/drive-before.log')
+          values=[json.loads(x) for x in p.read_text(encoding='utf-8-sig').splitlines() if x.startswith('{')]
+          assert values, 'MISSING_CONTROLLER_JSON'
+          p.with_suffix('.json').write_text(json.dumps(values[-1],indent=2)+'\n')
+          PY
+          if [ "$drive_code" -ne 0 ]; then
+            exit "$drive_code"
+          fi
+          python3 docs/control/mvp-act0-r1/mvp6_controller_preflight.py
+      - uses: actions/download-artifact@v4
+        with:
+          name: p7-repair-engine-34117353691
+          run-id: 34117353691
+          repository: rootfabric/distributed-world-simulator
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/mvp6-engine
+      - name: Native carrying and unchanged MVP3-MVP5 gates
+        shell: bash
+        run: |
+          set -euo pipefail
+          export GODOT_BIN="$RUNNER_TEMP/mvp6-engine/godot"
+          test "$(sha256sum "$GODOT_BIN" | cut -d' ' -f1)" = bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7
+          chmod u+x "$GODOT_BIN"
+          python3 docs/control/mvp-act0-r1/validate_mvp6_native.py
+      - name: Carried canonical resources to Construction, replication and collision
+        shell: bash
+        run: |
+          set -euo pipefail
+          export GODOT_BIN="$RUNNER_TEMP/mvp6-engine/godot"
+          mkdir -p artifacts/mvp6-exact/construction
+          export MVP6_CONSTRUCTION_RESULT="$PWD/artifacts/mvp6-exact/construction/result.json"
+          "$GODOT_BIN" --headless --path . --script res://tests/runtime/test_v0_mvp_6_item_construction_composition.gd | tee artifacts/mvp6-exact/construction/test.log
+          "$GODOT_BIN" --headless --path . --script res://tests/runtime/test_v0_p4_live_mvp_composition_ordering.gd | tee artifacts/mvp6-exact/construction/unchanged-p4.log
+          test -f "$MVP6_CONSTRUCTION_RESULT"
+          python3 - <<'PY'
+          import json
+          p=json.load(open('artifacts/mvp6-exact/construction/result.json'))
+          assert p['passed'] is True
+          assert p['native_nonempty_carry_executed'] is True
+          assert p['real_resource_construction_executed'] is True
+          assert p['two_client_derived_replication_executed'] is True
+          assert p['construction_collision_present'] is True
+          assert p['mvp6_predicate_verified'] is False
+          print('MVP6_CONSTRUCTION_FOCUSED_PASS',p['assertions'])
+          PY
+      - name: Observe non-terminal parent mission without accepting it
+        if: always()
+        shell: bash
+        run: |
+          mkdir -p artifacts/mvp6-exact/control
+          python3 - <<'PY'
+          import json,pathlib,subprocess
+          out=pathlib.Path('artifacts/mvp6-exact/control');rows=[]
+          for mode in ('Drive','CloseMission'):
+              log=out/(mode.lower()+'-after.log')
+              argv=['pwsh','-NoProfile','-File','./CONTROL_DEVELOPMENT.ps1','-'+mode,'-Checkpoint','V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE']
+              with log.open('w',encoding='utf-8') as stream:
+                  try: code=subprocess.run(argv,stdout=stream,stderr=subprocess.STDOUT,timeout=180,check=False).returncode
+                  except subprocess.TimeoutExpired: code=124
+              rows.append({'argv':argv,'exit_code':code})
+              print('MVP6_CONTROL',mode,'exit',code)
+          (out/'commands.json').write_text(json.dumps(rows,indent=2)+'\n')
+          PY
+      - name: Bind raw exact evidence
+        if: always()
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib,subprocess
+          out=pathlib.Path('artifacts/mvp6-exact');out.mkdir(parents=True,exist_ok=True)
+          git=lambda *a:subprocess.check_output(['git',*a],text=True).strip()
+          native=json.loads((out/'native/summary.json').read_text()) if (out/'native/summary.json').is_file() else {}
+          construction=json.loads((out/'construction/result.json').read_text()) if (out/'construction/result.json').is_file() else {}
+          main_probe=json.loads((out/'current-main-pc0/probe-summary.json').read_text()) if (out/'current-main-pc0/probe-summary.json').is_file() else {}
+          files=[{'path':p.relative_to(out).as_posix(),'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()} for p in sorted(out.rglob('*')) if p.is_file() and p!=out/'manifest.json']
+          result={'schema':'distributed_world_simulator.mvp6_ci_exact_manifest.v3','subject_head':git('rev-parse','HEAD'),'subject_tree':git('rev-parse','HEAD^{tree}'),'run_id':os.environ['GITHUB_RUN_ID'],'run_attempt':os.environ['GITHUB_RUN_ATTEMPT'],'tracked_after':git('status','--porcelain','--untracked-files=no'),'untracked_after':git('ls-files','--others','--exclude-standard'),'current_main_pc0_probe':main_probe,'native_passed':native.get('passed') is True,'construction_focused_passed':construction.get('passed') is True,'mvp6_predicate_verified':False,'independent_verdict':False,'files':files}
+          target=out/'manifest.json';target.write_text(json.dumps(result,indent=2)+'\n')
+          print('MVP6_CI_MANIFEST_SHA256='+hashlib.sha256(target.read_bytes()).hexdigest())
+          print(json.dumps({'head':result['subject_head'],'tree':result['subject_tree'],'main_probe':main_probe,'native_passed':result['native_passed'],'construction_focused_passed':result['construction_focused_passed'],'files':len(files)}))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mvp6-native-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: artifacts/mvp6-exact/
+          if-no-files-found: error
+          retention-days: 90
+  seam-prerequisites:
+    needs: graphical-five-process
+    if: always() && github.repository == 'rootfabric/distributed-world-simulator' && github.ref == 'refs/heads/feature/v0-mvp-playable-seamless-planet-r1' && (github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[mvp6-seam-repro]')) && (!contains(github.event.head_commit.message, '[mvp6-world-core]') || needs.graphical-five-process.result == 'success')
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      EXPECTED_HEAD: ${{ github.sha }}
+      PYTHONUTF8: '1'
+      PYTHONDONTWRITEBYTECODE: '1'
+      PYTHONPATH: scripts
+      BREAKPOINT_RUNTIME_DISABLED: '1'
+      GODOT_SILENCE_ROOT_WARNING: '1'
+      PLANET_SIMULATOR_INVENTORY_PROFILE: planet_default
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Bind exact named diagnostic checkout
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+          git switch -c "$GITHUB_REF_NAME" "$EXPECTED_HEAD"
+          test -z "$(git status --porcelain --untracked-files=no)"
+          python3 -m pip install --disable-pip-version-check -r scripts/harness/requirements.txt
+          python3 -m py_compile docs/control/mvp-act0-r1/validate_mvp6_seam_repro.py docs/control/mvp-act0-r1/validate_mvp6_full_world_core_result.py
+      - uses: actions/download-artifact@v4
+        if: contains(github.event.head_commit.message, '[mvp6-world-core]')
+        with:
+          name: mvp6-graphical-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/mvp6-same-head-graphical
+      - uses: actions/download-artifact@v4
+        with:
+          name: p7-repair-engine-34117353691
+          run-id: 34117353691
+          repository: rootfabric/distributed-world-simulator
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/mvp6-seam-engine
+      - name: Native RED reproductions and authenticated positive control only
+        shell: bash
+        run: |
+          set -euo pipefail
+          export GODOT_BIN="$RUNNER_TEMP/mvp6-seam-engine/godot"
+          export MVP6_GRAPHICAL_MANIFEST="$RUNNER_TEMP/mvp6-same-head-graphical/live/manifest.json"
+          test "$(sha256sum "$GODOT_BIN" | cut -d' ' -f1)" = bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7
+          chmod u+x "$GODOT_BIN"
+          python3 docs/control/mvp-act0-r1/validate_mvp6_seam_repro.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mvp6-seam-repro-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: artifacts/mvp6-seam-repro/
+          if-no-files-found: error
+          retention-days: 90
+  postmerge-baseline:
+    if: github.repository == 'rootfabric/distributed-world-simulator' && github.ref == 'refs/heads/feature/v0-mvp-playable-seamless-planet-r1' && contains(github.event.head_commit.message, '[mvp6-postmerge]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      EXPECTED_HEAD: ${{ github.sha }}
+      PYTHONUTF8: '1'
+      PYTHONDONTWRITEBYTECODE: '1'
+      PYTHONPATH: scripts
+      BREAKPOINT_RUNTIME_DISABLED: '1'
+      GODOT_SILENCE_ROOT_WARNING: '1'
+      PLANET_SIMULATOR_INVENTORY_PROFILE: planet_default
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Bind exact approved postmerge subject
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+          git switch -c "$GITHUB_REF_NAME" "$EXPECTED_HEAD"
+          git fetch --quiet origin '+refs/heads/*:refs/remotes/origin/*' --prune
+          test "$(git rev-parse origin/main)" = a6d5eb6b287130a638ba6cf397c34e29169948c1
+          test -z "$(git status --porcelain --untracked-files=all)"
+          git diff --check 17941a19c4e92473c440869148a25f0016f03d51 HEAD
+          python3 -m pip install --disable-pip-version-check -r scripts/harness/requirements.txt
+          python3 - <<'PY'
+          import json
+          p='config/control/harness/executions/E2026-09-09-V0-MVP-R1/human-attention/HA-V0-MVP6-JOURNAL-BASELINE-MERGE-R1.v1.json'
+          decision=json.load(open(p))
+          assert decision['status']=='RESOLVED'
+          assert 'a6d5eb6b287130a638ba6cf397c34e29169948c1' in decision['resolution']
+          PY
+      - uses: actions/download-artifact@v4
+        with:
+          name: p7-repair-engine-34117353691
+          run-id: 34117353691
+          repository: rootfabric/distributed-world-simulator
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/mvp6-postmerge-engine
+      - name: Default NX without journal override, raw PC0, actual Drive and Close
+        shell: bash
+        run: |
+          set -euo pipefail
+          export GODOT_BIN="$RUNNER_TEMP/mvp6-postmerge-engine/godot"
+          export MVP6_POSTMERGE_OUTPUT="$RUNNER_TEMP/mvp6-postmerge-evidence"
+          chmod u+x "$GODOT_BIN"
+          python3 docs/control/mvp-act0-r1/validate_mvp6_postmerge.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mvp6-postmerge-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/mvp6-postmerge-evidence/
+          if-no-files-found: error
+          retention-days: 90
+  graphical-five-process:
+    if: github.repository == 'rootfabric/distributed-world-simulator' && github.ref == 'refs/heads/feature/v0-mvp-playable-seamless-planet-r1' && (github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[mvp6-graphical]'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      EXPECTED_HEAD: ${{ github.sha }}
+      PYTHONUTF8: '1'
+      PYTHONDONTWRITEBYTECODE: '1'
+      PYTHONPATH: scripts
+      BREAKPOINT_RUNTIME_DISABLED: '1'
+      GODOT_SILENCE_ROOT_WARNING: '1'
+      PLANET_SIMULATOR_INVENTORY_PROFILE: planet_default
+      LIBGL_ALWAYS_SOFTWARE: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Exact subject and approved MVP6 scope
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+          git switch -c "$GITHUB_REF_NAME" "$EXPECTED_HEAD"
+          test -z "$(git status --porcelain --untracked-files=no)"
+          git diff --check 727b5d779543e74f254830acfd743d69fe1f7e4d HEAD -- .github/workflows scripts/runtime/networked_gameplay tests/integration scenes/labs/mvp
+          echo "EXPECTED_TREE=$(git rev-parse HEAD^{tree})" >> "$GITHUB_ENV"
+          python3 - <<'PY'
+          import fnmatch,json,subprocess
+          base='727b5d779543e74f254830acfd743d69fe1f7e4d'
+          path='config/control/harness/executions/E2026-09-09-V0-MVP-R1/work-orders/V0-MVP-R1-WO-001.v1.json'
+          w=json.load(open(path))
+          paths=subprocess.check_output(['git','diff','--name-only',base,'HEAD'],text=True).splitlines()
+          for p in paths:
+              assert any(fnmatch.fnmatchcase(p,g) for g in w['allowed_paths']), 'OUTSIDE_ALLOWED:'+p
+              assert not any(fnmatch.fnmatchcase(p,g) for g in w['forbidden_paths']), 'FORBIDDEN:'+p
+          print('MVP6_GRAPHICAL_SCOPE_PASS',len(paths))
+          PY
+          if ! command -v Xvfb >/dev/null || ! command -v xauth >/dev/null; then
+            sudo -n apt-get update
+            sudo -n env DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends xvfb xauth libgl1-mesa-dri
+          fi
+      - uses: actions/download-artifact@v4
+        with:
+          name: p7-repair-engine-34117353691
+          run-id: 34117353691
+          repository: rootfabric/distributed-world-simulator
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/mvp6-graphical-engine
+      - name: Five real processes with canonical cross-authority Construction
+        shell: bash
+        run: |
+          set -euo pipefail
+          export GODOT_BIN="$RUNNER_TEMP/mvp6-graphical-engine/godot"
+          test "$(sha256sum "$GODOT_BIN" | cut -d' ' -f1)" = bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7
+          chmod u+x "$GODOT_BIN"
+          mkdir -p artifacts/mvp6-graphical
+          "$GODOT_BIN" --headless --path . --editor --import --quit > artifacts/mvp6-graphical/import.log 2>&1
+          xvfb-run -a -s '-screen 0 1600x900x24' python3 tests/integration/test_v0_mvp_6_graphical_construction.py --engine "$GODOT_BIN" --output artifacts/mvp6-graphical/live
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mvp6-graphical-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: artifacts/mvp6-graphical/
+          if-no-files-found: error
+          retention-days: 90

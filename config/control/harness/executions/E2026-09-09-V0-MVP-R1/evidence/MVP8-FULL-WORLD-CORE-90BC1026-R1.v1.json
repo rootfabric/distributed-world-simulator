@@ -1,0 +1,38 @@
+{
+  "schema": "distributed_world_simulator.mvp8_full_world_core_evidence.v1",
+  "recorded_at_utc": "2026-09-21T04:06:00Z",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "subject_head": "90bc1026f0f5749492107191233330f87c8c70df",
+  "subject_tree": "4b6f2d48f7ef8d9c441ae89d2cbb02c730ef7f71",
+  "freeze_ref": "freeze/v0-mvp8-review-90bc1026-r1",
+  "carrier_branch": "control/v0-mvp8-closure-90bc-r1",
+  "carrier_head": "44daa03e0ff9963d66cc427d035ae0079021fa67",
+  "run_id": 35515256366,
+  "job_id": 106089996971,
+  "conclusion": "success",
+  "artifact": {
+    "id": 10607661947,
+    "name": "mvp8-closure-90bc1026-35515256366-1",
+    "digest": "sha256:9ed20f0d75f2809070e10f6247b4458309ed966de16b871104153a89be0be3a4",
+    "size_in_bytes": 1299933
+  },
+  "world_regression": {
+    "passed": true,
+    "declared_test_count": 349,
+    "discovered_test_count": 349,
+    "step_count": 354,
+    "failed_steps": 0
+  },
+  "correction_classification": {
+    "prior_run_id": 35513166911,
+    "prior_failure": "INFRASTRUCTURE_EVIDENCE_ROUTE",
+    "reason": "Bare world/core auto-discovery launched process-managed MVP7 restart tests without required bounded phase/root environment. Carrier-only rerun bound valid produce environments; frozen product source was unchanged."
+  },
+  "pc0": {
+    "standard": "YELLOW_NON_RED",
+    "directional": "YELLOW_NON_RED"
+  },
+  "independent_verdict": false,
+  "mvp8_predicate_verified": false
+}

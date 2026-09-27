@@ -1,0 +1,10 @@
+Godot Engine v4.7.1.stable.double.custom_build.a13da4feb (2026-07-13 21:00:28 UTC) - https://godotengine.org
+
+ERROR: real-resource Construction stage 1: CONSTRUCTION_MATERIAL_INSUFFICIENT
+   at: VariantUtilityFunctions::push_error (core\variant\variant_utility.cpp:1023)
+   GDScript backtrace (most recent call first):
+       [0] check (res://tests/runtime/test_v0_mvp3_live_owner_handoff.gd:34)
+       [1] success (res://tests/runtime/test_v0_mvp3_live_owner_handoff.gd:39)
+       [2] build6 (res://tests/runtime/test_v0_mvp_6_item_construction_composition.gd:108)
+       [3] run (res://tests/runtime/test_v0_mvp_6_item_construction_composition.gd:164)
+MVP6_ITEM_CONSTRUCTION_COMPOSITION assertions=183 failures=1 passed=false

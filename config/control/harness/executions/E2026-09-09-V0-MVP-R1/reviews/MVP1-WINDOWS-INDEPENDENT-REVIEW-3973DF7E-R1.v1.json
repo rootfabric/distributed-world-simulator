@@ -1,0 +1,81 @@
+{
+  "schema": "distributed_world_simulator.harness_review_result.v1",
+  "review_id": "V0-MVP-R1-WO-001-MVP1-WINDOWS-INDEPENDENT-REVIEW-3973DF7E-R1",
+  "review_type": "POST_BUILD_EXACT_HEAD_REVIEW",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "risk_class": "CRITICAL",
+
+  "reviewed_head_sha": "3973df7e53cbc9864c64448f26641a51f2a20465",
+  "reviewed_tree_sha": "8f5e14d8e4df84b6b9e0e8aa5846ba45af51976c",
+
+  "evidence_freeze_ref": "origin/freeze/v0-mvp1-evidence-827b03e5",
+  "evidence_freeze_head_sha": "827b03e553b8d37c64b7a98eb9fdb3a540e68931",
+  "evidence_freeze_tree_sha": "fe842f1282ed1865863dde6e40ea613fb9ff83a8",
+  "runtime_freeze_ref": "origin/freeze/v0-mvp1-review-3973df7e",
+  "implementer_source_runtime_head": "b645a738a6a143bee8f7f4a291a3e754cd399996",
+
+  "reviewer": "FRESH_INDEPENDENT_WINDOWS_REVIEWER_MVP1_R1",
+  "reviewed_at_utc": "2026-09-11T09:30:30Z",
+
+  "verdict": "PASS",
+  "required_fixes": [],
+
+  "machine_evidence": {
+    "mode": "REUSED",
+    "manifest_path": "config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence/MVP1-NATIVE-3973df7e53cb/manifest.v1.json",
+    "manifest_sha256": "afc38bfc41ec656a9b1e03bbe50d03f685126cddd2d475b1e0353eae377b98ea",
+    "runner_id": "GitHub Actions 1000005656",
+    "run_id": "34534956529",
+    "artifact_paths": [
+      "config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence/MVP1-NATIVE-3973df7e53cb/diff-check.log",
+      "config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence/MVP1-NATIVE-3973df7e53cb/godot-version.log",
+      "config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence/MVP1-NATIVE-3973df7e53cb/full-harness.log",
+      "config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence/MVP1-NATIVE-3973df7e53cb/pc0-standard.log",
+      "config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence/MVP1-NATIVE-3973df7e53cb/pc0-directional.log",
+      "config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence/MVP1-NATIVE-3973df7e53cb/godot-import.log",
+      "config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence/MVP1-NATIVE-3973df7e53cb/mvp1-focused.log",
+      "config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence/MVP1-NATIVE-3973df7e53cb/mvp1-headless-lifecycle.log"
+    ]
+  },
+
+  "rank_up_moves": [
+    "Fresh Windows reviewer executed the frozen scene through the project-approved breakpoint-mcp runtime path with live SceneTree inspection, MCP viewport screenshots, injected WASD camera movement (Camera3D global_position 0,5,7 -> 0,1.90,2.66) and one controlled left-click dig that committed through the canonical route (label: P7.7-A COMMITTED / route=MW4_SINGLE_REGION / MW10=false / changed=8 / removed=18735.198 kg / ItemGraph output=18735 / replay=false / presenters=4) with zero runtime warnings and errors; this scripted MCP graphical pass is reusable as a standard Windows graphical gate for later MVP leaves.",
+    "Deterministic rendering corroboration: three independent managed launches of the frozen scene produced a byte-identical initial viewport PNG (runtime_screenshot, 1280x720, sha256 prefix 676f42395277c9c4), strengthening reproducibility of the MVP1 visual baseline on the pinned double-Godot build.",
+    "Windows harness portability classification: in a clean pinned environment (venv, jsonschema==4.22.0 exactly as scripts/harness/contracts.py requires, repository root on PYTHONPATH) a fresh Windows harness run executed all 311 tests with 303 passed, 3 skipped and exactly 8 failures, all confined to one provenance fixture class whose tests construct two fixture files differing only in JSON extension case (docs/control/external-authority.v1.JSON vs .json), which a case-insensitive filesystem cannot represent; a bounded future repair could fence these fixtures for case-insensitive execution so fresh Windows harness runs reach full green parity with the native record."
+  ],
+
+  "evidence_gaps": [
+    "Fresh Windows full-harness parity is functional but not green: with the pinned dependency set all 311 tests execute (native discovery parity) and 303 pass, while exactly 8 provenance fixture tests fail solely because their fixtures rely on extension-case-paired file paths that Windows filesystems cannot represent; the committed native Linux run 34534956529 remains the only full 311-test green record for the exact reviewed subject.",
+    "Prior Windows visual evidence (C:\\distributed-world-simulator-mvp1-visual-evidence, subject b645a738) was compared at content level only: the historical PNGs are desktop-window captures at 1296x759 while this review used MCP runtime_screenshot at 1280x720, so byte or pixel identity is neither claimed nor required; the fresh launch independently observed the same initial view, the same COMMITTED route structure (changed=8, replay=false, presenters=4) with a different removed-mass value attributable to dig aim parameters.",
+    "Fresh Windows corroboration artifacts (import/focused/lifecycle logs, MCP screenshots, runtime tree and log captures) live in local git-ignored artifacts/mvp1-review-r1 and are not digest-committed; the committed machine record for this review remains the REUSED native manifest bound to run 34534956529."
+  ],
+
+  "findings": [],
+
+  "checked_items": [
+    {"item": "Frozen subjects resolved live: origin/freeze/v0-mvp1-review-3973df7e = 3973df7e53cbc9864c64448f26641a51f2a20465 tree 8f5e14d8e4df84b6b9e0e8aa5846ba45af51976c; origin/freeze/v0-mvp1-evidence-827b03e5 = 827b03e553b8d37c64b7a98eb9fdb3a540e68931 tree fe842f1282ed1865863dde6e40ea613fb9ff83a8; merge-base --is-ancestor runtime evidence = exit 0 with exactly one evidence commit on top", "disposition": "VERIFIED"},
+    {"item": "Two detached review worktrees created at the exact freeze commits, both status --porcelain --untracked-files=no empty before and after all runs", "disposition": "VERIFIED"},
+    {"item": "P1-A Implementer provenance: event 0004 blob 1005fea2edbb49775690e2554e3e8372e9f2cec8 identical at creation commit 53b7a8dc, at runtime freeze and at evidence freeze with a single-commit history (never rewritten); event 0005 appended in one commit 59f489f2 with sequence=5, event_type=IMPLEMENTATION_COMMITTED, work_state=IN_PROGRESS, actor=IMPLEMENTER, head_sha=b645a738", "disposition": "FIX_VERIFIED"},
+    {"item": "Provenance record honesty: MVP1-IMPLEMENTER-PROVENANCE-R11 declares independent_context=false, git_authorship_rewritten=false, historical_event_rewritten=false, independent_verdict_issued=false, mvp1_predicate_marked_verified=false, runtime_feature_merge_authorized=false, mvp_acceptance_authorized=false and explicitly states the author is not a new independent reviewer or verifier; scan of event 5 and both provenance documents found no assertion of independent verdict, MVP acceptance or completion", "disposition": "VERIFIED"},
+    {"item": "R11/R12 scope fence: git diff --name-only b645a738..3973df7e contains only CI workflow, event 5, two evidence JSONs and docs/control/mvp-act0-r1 files; scene v0_mvp_shared_graphical_scene.tscn, host script v0_mvp_shared_graphical_scene.gd and test test_v0_mvp_shared_graphical_scene.gd are blob-identical to b645a738", "disposition": "VERIFIED"},
+    {"item": "Work Order snapshot: V0-MVP-R1-WO-001 state=IN_PROGRESS, last ledger event sequence 5 work_state=IN_PROGRESS, snapshot consistent; parent MVP1-MVP8 work order intentionally not closed by this leaf review", "disposition": "VERIFIED"},
+    {"item": "Native manifest: schema distributed_world_simulator.harness_machine_evidence_manifest.v1 with work_order_id, project_epoch, subject_head_sha, subject_tree_sha, runner_id and run_id=34534956529 exactly as required; independently recomputed manifest SHA-256 equals afc38bfc41ec656a9b1e03bbe50d03f685126cddd2d475b1e0353eae377b98ea", "disposition": "FIX_VERIFIED"},
+    {"item": "All 8 committed logs re-hashed with Get-FileHash SHA256: 8/8 exact match against the manifest, no missing and no extra files in the evidence sink", "disposition": "VERIFIED"},
+    {"item": "Canonical consumer: unmodified frozen scripts/harness/evidence_provenance.py validate_review_machine_evidence accepted a disposable PASS candidate bound to the frozen package (fixture clone of 3973df7e plus committed evidence bytes); negative controls rejected foreign work_order_id with REVIEW_MANIFEST_IDENTITY_MISMATCH and wrong manifest digest with REVIEW_MANIFEST_DIGEST_MISMATCH", "disposition": "FIX_VERIFIED"},
+    {"item": "Windows Godot: C:\\Godot\\godot\\bin\\godot.windows.editor.double.x86_64.console.exe reports 4.7.1.stable.double.custom_build.a13da4feb and SHA-256 3633C3E609C8CE2F9BAE334A9C7E75C7F974DE3AF0415AB4A8050A625A15A7A5 (exact match)", "disposition": "VERIFIED"},
+    {"item": "Fresh Windows import: --headless --editor --import on the runtime worktree exit 0 with zero Parse Error / SCRIPT ERROR / Compile Error markers", "disposition": "VERIFIED"},
+    {"item": "Fresh Windows focused smoke: exit 0 with exact marker 'V0 MVP shared graphical scene: PASS (16 assertions)' and zero error markers", "disposition": "VERIFIED"},
+    {"item": "Fresh Windows headless lifecycle: frozen scene run with --quit-after 60 exit 0, zero error markers including generic ERROR scan", "disposition": "VERIFIED"},
+    {"item": "Fresh Windows graphical review via project-approved MCP runtime path: live tree root V0MVPSharedGraphicalScene with exactly one child AcceptedP7DiggingSlice (donor WorldEnvironment, DirectionalLight3D, status CanvasLayer, CanonicalMatterPresenter with 4 MatterBrick presenters, Camera3D) proving no empty/fake host and no duplicate canonical world; world visibly rendered with readable lighting; injected movement moved the camera; one controlled left-click dig committed (MW4_SINGLE_REGION, MW10=false, replay=false) without crashing; zero runtime warnings/errors; managed process stopped cleanly", "disposition": "VERIFIED"},
+    {"item": "Product boundary: composition_contract() declares composition_only=true, creates_canonical_foundation=false, canonical MW4/MW10 Matter truth, CANONICAL_ITEM_GRAPH, SM1/MW8/MW9 authority route, existing persistence owner, SERVER_PREDICTED network baseline; host script is 29 lines and creates no second Matter/ItemGraph/Persistence/Network/Seam/Terrain owner", "disposition": "VERIFIED"},
+    {"item": "Scope partition 127c732a..3973df7e: 11 commits split into MVP1 product implementation, ACT0/R9/R10 control repairs, R11 Implementer provenance and R12 evidence production; none of config/architecture/**, scripts/simulation/matter/**, scripts/network/**, scripts/runtime/networked_gameplay/{m4,sm1,p7}/**, project.godot or config/control/harness/acceptance/** touched", "disposition": "VERIFIED"},
+    {"item": "Fresh PC0 on the exact subject: standard exit 0 overall YELLOW with cross_branch_overlaps=[]; directional exit 0 overall YELLOW with the same WATCH_HIT pattern as the committed native log (4 CH->NX BLOCK paths, 1 NX->ECO ADVISORY, 1 NX->T BLOCK path); no RED, advisory findings not recoloured", "disposition": "CORROBORATED"},
+    {"item": "Fresh Windows full harness in a clean pinned venv (jsonschema==4.22.0 as pinned by scripts/harness/contracts.py, repository root on PYTHONPATH): all 311 tests discovered and executed (native discovery parity), 303 passed, 3 skipped, and exactly 8 failures all in test_scheduler_policy_provenance fixture tests that construct extension-case-paired paths (external-authority.v1.JSON vs .json) impossible on a case-insensitive filesystem; the committed native Linux log shows 311 tests OK on the identical subject", "disposition": "CORROBORATED"}
+  ],
+
+  "risk_assessment": "Runtime risk of the reviewed MVP1 leaf is LOW and remains inside the already accepted P7.7 donor boundary. The delta from the Implementer source runtime b645a738 to the reviewed freeze 3973df7e touches zero product files (scene, host script and focused test are blob-identical); R11/R12 only append provenance and evidence bytes. The composition host is 29 lines that add no canonical owner, and the live MCP tree showed exactly one child (AcceptedP7DiggingSlice) with all runtime content owned by the donor. The frozen native evidence package is bound to the exact head/tree/runner/run and every log digest re-verified; the unmodified production consumer accepts it and rejects tampered bindings with the expected codes. Both historical P1 defects are fixed append-only: event 4 is byte-immutable with honest event 5 attribution by the Implementer, and the native manifest replaces the earlier noncanonical package. Residual risk sits in explicitly deferred areas: fresh Windows harness parity is partial due to fixture portability (native Linux run covers the full 311-test green record), and all two-client, seam, exactly-once, restart and workload predicates are later MVP work. This review authorizes only safe non-terminal predicate closure preparation; merge_authorized stays false and the whole-MVP acceptance gate stays closed.",
+
+  "summary": "Fresh independent Windows review of frozen runtime subject 3973df7e53cbc9864c64448f26641a51f2a20465 (tree 8f5e14d8e4df84b6b9e0e8aa5846ba45af51976c) with frozen evidence package 827b03e553b8d37c64b7a98eb9fdb3a540e68931 (tree fe842f1282ed1865863dde6e40ea613fb9ff83a8, direct descendant of the runtime freeze). Both historical P1 blockers are FIX_VERIFIED: Implementer provenance is an honest append-only event 5 with byte-immutable event 4, and the native machine evidence manifest is schema-canonical, digest-exact and accepted by the unmodified production consumer with correct negative-control rejections. Fresh Windows execution on the pinned double-Godot build reproduced import, focused smoke (16 assertions), headless lifecycle and a full MCP-driven graphical session including a committed canonical dig and camera movement with zero runtime errors. PC0 standard and directional are NON_RED with zero cross-branch overlaps, matching the committed native logs. MVP_SHARED_GRAPHICAL_SCENE is READY FOR safe non-terminal predicate closure (R13); no product merge, whole-MVP acceptance or P8 activation is authorized by this review.",
+
+  "merge_authorized": false
+}

@@ -1,0 +1,28 @@
+{
+  "schema": "distributed_world_simulator.mvp8_human_acceptance.v1",
+  "recorded_at_utc": "2026-09-22T10:40:00Z",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "user_instruction": "мерджи",
+  "interpreted_in_context_as": {
+    "human_mvp_acceptance": true,
+    "runtime_feature_merge_approved": true,
+    "mvp_checkpoint_acceptance": true,
+    "pr_number": 680
+  },
+  "product": {
+    "head": "dc6e7fffa27d764ea09ded949d50b99a32fa4d9b",
+    "tree": "8fc0044ff42ad502e6457593a185465af7d2a825",
+    "freeze": "freeze/v0-mvp8-repair-dc6e7fff-r1"
+  },
+  "reviewer": {
+    "commit": "6d1f3fbcbebee31d9be9745f82becc3439de57cc",
+    "verdict": "PASS"
+  },
+  "verifier": {
+    "commit": "97e284c266e7ee2b72bffdde2c6a09ef8b36a453",
+    "verdict": "VERIFIED"
+  },
+  "director_technical_closure_branch": "control/v0-mvp8-repair-r2-leaf-closure-r1",
+  "merge_performed_at_record_time": false
+}

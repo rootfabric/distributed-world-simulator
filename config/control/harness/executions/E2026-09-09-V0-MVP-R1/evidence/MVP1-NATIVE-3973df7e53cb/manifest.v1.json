@@ -1,0 +1,160 @@
+{
+  "schema": "distributed_world_simulator.harness_machine_evidence_manifest.v1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "subject_head_sha": "3973df7e53cbc9864c64448f26641a51f2a20465",
+  "subject_tree_sha": "8f5e14d8e4df84b6b9e0e8aa5846ba45af51976c",
+  "runner_id": "GitHub Actions 1000005656",
+  "run_id": "34534956529",
+  "tracked_checkout_clean_before": true,
+  "tracked_checkout_clean_after": true,
+  "artifacts": [
+    {
+      "path": "config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence/MVP1-NATIVE-3973df7e53cb/diff-check.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "run_id": "34534956529",
+      "subject_head_sha": "3973df7e53cbc9864c64448f26641a51f2a20465",
+      "archive_member": "diff-check.log"
+    },
+    {
+      "path": "config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence/MVP1-NATIVE-3973df7e53cb/godot-version.log",
+      "sha256": "5f9a650ae0e4ec2d93122461dae280ba65215c0d1ffece8159f8ede41e9f82f3",
+      "run_id": "34534956529",
+      "subject_head_sha": "3973df7e53cbc9864c64448f26641a51f2a20465",
+      "archive_member": "godot-version.log"
+    },
+    {
+      "path": "config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence/MVP1-NATIVE-3973df7e53cb/full-harness.log",
+      "sha256": "bec8bee57bd8d91d07979829ca5a3d1aeb67c7ed3517a53b06897c47d8922ff1",
+      "run_id": "34534956529",
+      "subject_head_sha": "3973df7e53cbc9864c64448f26641a51f2a20465",
+      "archive_member": "full-harness.log"
+    },
+    {
+      "path": "config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence/MVP1-NATIVE-3973df7e53cb/pc0-standard.log",
+      "sha256": "e307bc49781dce906f2169596927f68789726c1e8c0c46970e66fa77830fa941",
+      "run_id": "34534956529",
+      "subject_head_sha": "3973df7e53cbc9864c64448f26641a51f2a20465",
+      "archive_member": "pc0-standard.log"
+    },
+    {
+      "path": "config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence/MVP1-NATIVE-3973df7e53cb/pc0-directional.log",
+      "sha256": "c595e574446438c3e4436153c2441f88f9ce6da59a43b1b0b41e993e99552338",
+      "run_id": "34534956529",
+      "subject_head_sha": "3973df7e53cbc9864c64448f26641a51f2a20465",
+      "archive_member": "pc0-directional.log"
+    },
+    {
+      "path": "config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence/MVP1-NATIVE-3973df7e53cb/godot-import.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "run_id": "34534956529",
+      "subject_head_sha": "3973df7e53cbc9864c64448f26641a51f2a20465",
+      "archive_member": "godot-import.log"
+    },
+    {
+      "path": "config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence/MVP1-NATIVE-3973df7e53cb/mvp1-focused.log",
+      "sha256": "e310dd15863f5cd4a221c6ed74105cea5edd94d2cf51e25cfabf9d9f53c98c17",
+      "run_id": "34534956529",
+      "subject_head_sha": "3973df7e53cbc9864c64448f26641a51f2a20465",
+      "archive_member": "mvp1-focused.log"
+    },
+    {
+      "path": "config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence/MVP1-NATIVE-3973df7e53cb/mvp1-headless-lifecycle.log",
+      "sha256": "7e13b74061328cb38002de86c89b160a49fe4d3df65f763fc0d8c691893803c2",
+      "run_id": "34534956529",
+      "subject_head_sha": "3973df7e53cbc9864c64448f26641a51f2a20465",
+      "archive_member": "mvp1-headless-lifecycle.log"
+    }
+  ],
+  "commands": [
+    {
+      "command": "git diff --check b645a738a6a143bee8f7f4a291a3e754cd399996 3973df7e53cbc9864c64448f26641a51f2a20465",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "log_path": "config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence/MVP1-NATIVE-3973df7e53cb/diff-check.log"
+    },
+    {
+      "command": "/home/runner/work/_temp/mvp1-r11-engine/godot --version",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "log_path": "config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence/MVP1-NATIVE-3973df7e53cb/godot-version.log"
+    },
+    {
+      "command": "/home/runner/work/_temp/mvp1-r11-venv/bin/python -m unittest discover -s tests/harness -p 'test_*.py' -q",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "log_path": "config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence/MVP1-NATIVE-3973df7e53cb/full-harness.log"
+    },
+    {
+      "command": "/home/runner/work/_temp/mvp1-r11-venv/bin/python scripts/control/project_control.py --no-fetch",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "log_path": "config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence/MVP1-NATIVE-3973df7e53cb/pc0-standard.log"
+    },
+    {
+      "command": "/home/runner/work/_temp/mvp1-r11-venv/bin/python scripts/control/project_control_directional_watch.py",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "log_path": "config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence/MVP1-NATIVE-3973df7e53cb/pc0-directional.log"
+    },
+    {
+      "command": "/home/runner/work/_temp/mvp1-r11-engine/godot --quiet --headless --editor --path /home/runner/work/distributed-world-simulator/distributed-world-simulator --import",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "log_path": "config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence/MVP1-NATIVE-3973df7e53cb/godot-import.log"
+    },
+    {
+      "command": "/home/runner/work/_temp/mvp1-r11-engine/godot --headless --path /home/runner/work/distributed-world-simulator/distributed-world-simulator --script res://tests/runtime/test_v0_mvp_shared_graphical_scene.gd",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "log_path": "config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence/MVP1-NATIVE-3973df7e53cb/mvp1-focused.log"
+    },
+    {
+      "command": "/home/runner/work/_temp/mvp1-r11-engine/godot --headless --path /home/runner/work/distributed-world-simulator/distributed-world-simulator res://scenes/labs/mvp/v0_mvp_shared_graphical_scene.tscn --quit-after 60",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "log_path": "config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence/MVP1-NATIVE-3973df7e53cb/mvp1-headless-lifecycle.log"
+    }
+  ],
+  "intended_manifest_path": "config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence/MVP1-NATIVE-3973df7e53cb/manifest.v1.json",
+  "publication_required_before_native_review_consumption": true,
+  "runner": {
+    "GITHUB_REPOSITORY": "rootfabric/distributed-world-simulator",
+    "GITHUB_RUN_ID": "34534956529",
+    "GITHUB_RUN_ATTEMPT": "1",
+    "GITHUB_JOB": "exact-evidence",
+    "GITHUB_WORKFLOW": "MVP1 R11 Exact Provenance and Runtime Evidence",
+    "RUNNER_NAME": "GitHub Actions 1000005656",
+    "RUNNER_OS": "Linux"
+  },
+  "supplementary_commands": [
+    {
+      "name": "drive",
+      "argv": [
+        "/home/runner/work/_temp/mvp1-r11-venv/bin/python",
+        "-m",
+        "harness.cli",
+        "drive"
+      ],
+      "exit_code": 0,
+      "expected_exit": 0,
+      "seconds": 0.615,
+      "log": "drive.log",
+      "sha256": "f21d2c8ee5b986cbaf8efc995f98360b64226884ce132296d8a1ee9f7a5a9da7"
+    },
+    {
+      "name": "close-mission",
+      "argv": [
+        "/home/runner/work/_temp/mvp1-r11-venv/bin/python",
+        "-m",
+        "harness.cli",
+        "close-mission"
+      ],
+      "exit_code": 8,
+      "expected_exit": 8,
+      "seconds": 0.615,
+      "log": "close-mission.log",
+      "sha256": "616daa6d2ce75f5a7b1188f2528d2b2caf84cead02a05b8fc065a586bcfa88eb"
+    }
+  ]
+}

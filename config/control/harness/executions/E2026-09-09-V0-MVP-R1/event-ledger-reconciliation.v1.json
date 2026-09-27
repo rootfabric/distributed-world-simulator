@@ -1,0 +1,45 @@
+{
+  "schema": "distributed_world_simulator.harness_event_ledger_reconciliation.v1",
+  "version": 1,
+  "reconciliation_id": "E2026-09-09-V0-MVP-R1-WO-001-LEDGER-RECONCILIATION-001",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "authority": "DIRECTOR_REPAIR_EXACT_PINNED_LEGACY_EVENTS",
+  "mode": "QUARANTINE_EXACT_IMMUTABLE_NONCANONICAL_EVENTS",
+  "reason": "Event 0009 recorded a continuation audit as a second DISPATCHED transition after the Work Order was already IN_PROGRESS. Preserve that event and the two implementation observations chained after it byte-identically, exclude only those exact pinned files from reducer input, and reconstruct their combined durable progress as one canonical IN_PROGRESS event.",
+  "canonical_reconstruction_event": "config/control/harness/executions/E2026-09-09-V0-MVP-R1/events/V0-MVP-R1-WO-001/0008-mvp2-two-client-shared-world-verified.v1.json",
+  "canonical_next_sequence": 9,
+  "constraints": {
+    "quarantine_exact_paths_only": true,
+    "git_blob_pin_required": true,
+    "quarantined_file_must_remain_present": true,
+    "quarantined_file_must_have_single_add_commit": true,
+    "wildcard_paths_forbidden": true,
+    "event_schema_unchanged": true,
+    "reducer_transition_table_unchanged": true,
+    "future_unlisted_events_are_authoritative": true
+  },
+  "quarantined_events": [
+    {
+      "path": "config/control/harness/executions/E2026-09-09-V0-MVP-R1/events/V0-MVP-R1-WO-001/0009-mvp3-continuation-audit-resumed.v1.json",
+      "git_blob_sha": "13e2b0429f5a6ceaac2b849963f0827edc6d109b",
+      "reasons": ["STATE_TRANSITION_INVALID_IN_PROGRESS_TO_DISPATCHED"]
+    },
+    {
+      "path": "config/control/harness/executions/E2026-09-09-V0-MVP-R1/events/V0-MVP-R1-WO-001/0010-mvp3-native-process-roundtrip-implemented.v1.json",
+      "git_blob_sha": "20e1f317cdc125d805bde5d168e19430167cd746",
+      "reasons": ["NONCANONICAL_SEQUENCE_CHAIN_AFTER_QUARANTINED_EVENT"]
+    },
+    {
+      "path": "config/control/harness/executions/E2026-09-09-V0-MVP-R1/events/V0-MVP-R1-WO-001/0011-mvp3-graphical-process-roundtrip-implemented.v1.json",
+      "git_blob_sha": "a9d5ce0b5f9c777a3d6280eb340bec85bf84a91b",
+      "reasons": ["NONCANONICAL_SEQUENCE_CHAIN_AFTER_QUARANTINED_EVENT"]
+    }
+  ],
+  "evidence": [
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/audits/MVP3-CONTINUATION-AUDIT-7DFC68AB-R2.v1.json",
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/supporting-evidence/MVP3-NATIVE-PROCESS-ROUNDTRIP-C2F5ED6A-R1.v1.json",
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/supporting-evidence/MVP3-GRAPHICAL-PROCESS-ROUNDTRIP-E0FAFDFE-R1.v1.json"
+  ],
+  "status": "ACTIVE_RECONCILIATION"
+}

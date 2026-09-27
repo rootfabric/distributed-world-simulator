@@ -1,0 +1,24 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-09-09-V0-MVP-R1-V0-MVP-R1-WO-001-0014-MVP4-VERIFIED",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "sequence": 14,
+  "event_type": "PREDICATE_VERIFIED",
+  "work_state": "IN_PROGRESS",
+  "recorded_at_utc": "2026-09-14T09:59:48Z",
+  "actor": "DIRECTOR",
+  "branch": "feature/v0-mvp-playable-seamless-planet-r1",
+  "head_sha": "e37f81821e98a4d00b04ea414722e550b328cd47",
+  "predicate": "MVP_CANONICAL_DIG_VISIBLE_TO_BOTH_CLIENTS",
+  "command": "MVP4_FRESH_INDEPENDENT_VERIFIER_R2_AND_EXACT_REVIEW_635_CLOSURE",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/verifications/MVP4-INDEPENDENT-VERIFICATION-E37F8182-R2.v1.json",
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence/MVP4-EXTERNAL-REVIEW-E37F8182-R1.v1.json",
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence/MVP4-AUTHORIZED-REF-RESET-R1.v1.json",
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/human-attention/HA-V0-MVP4-PLACEHOLDER-REF-RESET-R1.v1.json",
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence/MVP4-LEAF-CLOSURE-E37F8182-R1.v1.json"
+  ],
+  "summary": "MVP4 закрыт на exact e37f8182 / bcbde996 после независимого VERIFIED R2 и завершённого Reviewer #635 без серьёзных замечаний. Подтверждены canonical dig, один Matter owner, две read-only replicas, видимое изменение terrain обоим клиентам, HUD-only falsification, MVP3 regressions, full world/core и branch-aware control. Разрешённый пользователем reset удалил только placeholder/revert, TREE не изменился. Родительский WO остаётся IN_PROGRESS; следующий продуктовый predicate MVP5. Whole-MVP acceptance и merge main не заявляются."
+}

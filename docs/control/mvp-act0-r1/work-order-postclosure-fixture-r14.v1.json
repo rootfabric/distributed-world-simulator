@@ -1,0 +1,39 @@
+{
+  "schema": "distributed_world_simulator.mvp_bounded_repair.v1",
+  "repair_id": "V0-MVP1-R13-POSTCLOSURE-FIXTURE-R14",
+  "parent_work_order": "V0-MVP-R1-WO-001",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "risk_class": "HIGH",
+  "repair_base": "2aadb99dfc3dd3b798dfb12eb5f50417b4f5eb7c",
+  "trigger": {
+    "project_control_run": 34589409441,
+    "project_control_job": 103230988994,
+    "result": "FAIL_FULL_HARNESS_ONLY",
+    "failure": "R13 regression still synthesized sequence 6 after the real append-only MVP1 PREDICATE_VERIFIED sequence 6 had been committed, causing EVENT_SEQUENCE_NOT_UNIQUE and a stale max-sequence assertion."
+  },
+  "root_cause": "The R13 test was correct for pre-closure validation but encoded a temporary ledger cardinality (events 1-5). Once the authorized real sequence 6 was appended, the regression had to switch from simulating sequence 6 to validating the committed closure and simulating only sequence 7 continuation.",
+  "canonical_fix_owner": "R13 regression test fixture only. The committed sequence 6, execution transition table, Work Order snapshot, runtime product and global Harness semantics remain unchanged.",
+  "allowed_paths": [
+    "tests/harness/test_v0_mvp_nonterminal_predicate_r13.py",
+    "docs/control/mvp-act0-r1/work-order-postclosure-fixture-r14.v1.json"
+  ],
+  "forbidden_changes": [
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/events/**",
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/transition-table.v1.json",
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/work-orders/**",
+    "scripts/harness/** and all global Harness schemas/policies",
+    "Runtime/scenes/product tests/foundations/registry/acceptance/main"
+  ],
+  "repair": [
+    "Treat committed sequence 6 as the subject under test instead of appending another synthetic sequence 6.",
+    "Prove reduce_events over the real ledger yields parent state IN_PROGRESS and completed_predicates=[MVP_SHARED_GRAPHICAL_SCENE].",
+    "Append only a synthetic sequence 7 IMPLEMENTATION_COMMITTED/IN_PROGRESS to prove MVP2 continuation remains legal.",
+    "Run the old terminal-only transition table against the real sequence 6 to prove it still fails closed.",
+    "For the forbidden parent jump test, replace the real sequence 6 in-memory with work_state=VERIFIED and prove IN_PROGRESS->VERIFIED is rejected."
+  ],
+  "runtime_mutation": false,
+  "event_mutation": false,
+  "transition_semantics_changed": false,
+  "self_acceptance_authorized": false,
+  "merge_authorized": false
+}

@@ -1,0 +1,109 @@
+{
+  "schema": "distributed_world_simulator.mvp8_leaf_closure.v1",
+  "recorded_at_utc": "2026-09-22T10:35:00Z",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "product": {
+    "branch": "repair/v0-mvp8-cold-class-cache-r2",
+    "head": "dc6e7fffa27d764ea09ded949d50b99a32fa4d9b",
+    "tree": "8fc0044ff42ad502e6457593a185465af7d2a825",
+    "freeze": "freeze/v0-mvp8-repair-dc6e7fff-r1",
+    "base": "6779af78c8cde642abf8bdfc868e905dc48a763f",
+    "pr": 680
+  },
+  "reviewer": {
+    "branch": "review/v0-mvp8-dc6e7fff-r1",
+    "commit": "6d1f3fbcbebee31d9be9745f82becc3439de57cc",
+    "tree": "5946f247f66f5dfb083a35b8606f8ac8c6c57700",
+    "verdict": "PASS",
+    "result_path": "config/control/harness/executions/E2026-09-09-V0-MVP-R1/verifications/MVP8-INDEPENDENT-REVIEW-DC6E7FFF-R1.v1.json"
+  },
+  "verifier": {
+    "branch": "verify/v0-mvp8-dc6e7fff-r1",
+    "commit": "97e284c266e7ee2b72bffdde2c6a09ef8b36a453",
+    "tree": "bcdf4a199a6ad773dd1a0a0e52d86bc6da8d69a9",
+    "verdict": "VERIFIED",
+    "result_path": "config/control/harness/executions/E2026-09-09-V0-MVP-R1/verifications/MVP8-INDEPENDENT-VERIFICATION-DC6E7FFF-R1.v1.json"
+  },
+  "exact_windows": {
+    "godot_version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "godot_sha256": "3633C3E609C8CE2F9BAE334A9C7E75C7F974DE3AF0415AB4A8050A625A15A7A5",
+    "cold_import_pass": true,
+    "class_cache_bytes": 4229,
+    "import_fatal_markers": 0,
+    "mvp8_exit": 0,
+    "checks": "20/20",
+    "negative_controls": "14/14",
+    "fatal_logs": [],
+    "raw_role_json": "11/11",
+    "rounds": "0..11",
+    "action_counts": {
+      "DIG": 4,
+      "ITEM": 4,
+      "BUILD_ADD": 2,
+      "BUILD_REMOVE": 2
+    },
+    "fixed_receipts": 48,
+    "seam_crossings": 10,
+    "min_pairwise_dig_distance_m": 1.035896606954595,
+    "matter_resynced": {
+      "a": true,
+      "b": true
+    },
+    "item_count": 10,
+    "unique_item_count": 10,
+    "duplicate_item_identity": false,
+    "construction_id": "construct/mvp6/seam-bridge",
+    "collision_part_count": 100,
+    "phase1_authority_a_backend_sequence": 497,
+    "backend_sequence_cap": 512,
+    "all_caps_respected": true
+  },
+  "world_core": {
+    "windows": {
+      "passed": true,
+      "declared": 349,
+      "discovered": 349,
+      "steps": 354,
+      "failed": 0,
+      "fatal_markers": 0
+    },
+    "linux_corroboration": {
+      "run": 35515256366,
+      "passed": true,
+      "declared": 349,
+      "discovered": 349,
+      "steps": 354,
+      "failed": 0
+    },
+    "linux_exact_final_subject": {
+      "run": 35604596753,
+      "result": "SUCCESS"
+    }
+  },
+  "pc0": {
+    "run": 35513137221,
+    "standard": "YELLOW",
+    "directional": "YELLOW",
+    "non_red": true
+  },
+  "predicates_verified": [
+    "ONE_CONNECTED_TWO_CLIENT_GAMEPLAY_LOOP",
+    "REPEATED_MOVE_SEAM_DIG_ITEM_BUILD_OPERATIONS",
+    "ONE_CLIENT_RECONNECT_AND_CONTINUE",
+    "SERVER_OR_WORLD_RESTART_AND_CONTINUE",
+    "BOUNDED_QUEUES_AND_REPLAY_STATE",
+    "NO_DUPLICATE_ITEM_OR_CONSTRUCTION_IDENTITIES",
+    "RESPONSIVE_PLAYER_CONTROL_MAINTAINED",
+    "MVP_BOUNDED_INTERACTIVE_WORKLOAD"
+  ],
+  "closure": {
+    "mvp8_leaf_complete": true,
+    "work_order_state": "IN_PROGRESS",
+    "whole_mvp_acceptance_claimed": false,
+    "human_mvp_acceptance": false,
+    "runtime_feature_merge_approved": false,
+    "merge_performed": false,
+    "reason_parent_open": "Work Order requires HUMAN_MVP_ACCEPTANCE and explicit human approval for RUNTIME_FEATURE_MERGE / MVP_CHECKPOINT_ACCEPTANCE."
+  }
+}

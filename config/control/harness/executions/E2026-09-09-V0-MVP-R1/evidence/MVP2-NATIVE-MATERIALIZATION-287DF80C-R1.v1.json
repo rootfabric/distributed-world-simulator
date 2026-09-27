@@ -1,0 +1,58 @@
+{
+  "schema": "distributed_world_simulator.mvp2_native_materialization_observation.v1",
+  "classification": "IMPLEMENTER_EVIDENCE_PREPARATION_NOT_FORMAL_REVIEW_VERDICT",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "predicate": "MVP_TWO_CLIENT_SHARED_WORLD",
+  "runtime_subject_head_sha": "287df80c69840fea7ae9ac0ea69a07581f192d34",
+  "runtime_subject_tree_sha": "e591dc6c5346139bc1b4659915c54bf80603713e",
+  "runtime_freeze_ref": "refs/heads/freeze/v0-mvp2-287df80c-r1",
+  "canonical_main_after_h0_recovery_merge": "7dfc68ab5a1e90254a1b7039807f275b5da04eef",
+  "artifact": {
+    "run_id": 34605253942,
+    "artifact_id": 10266940288,
+    "artifact_name": "mvp2-exact-287df80c69840fea7ae9ac0ea69a07581f192d34-34605253942-1",
+    "metadata_sha256": "850c2422884493c4bd8aeccc2e5dad286c7550610bf43397fe3722f05c746f1f",
+    "downloaded_sha256": "850c2422884493c4bd8aeccc2e5dad286c7550610bf43397fe3722f05c746f1f",
+    "metadata_size_bytes": 333581,
+    "downloaded_size_bytes": 333581,
+    "byte_binding": "PASS"
+  },
+  "native_manifest": {
+    "archive_member": "manifest.v1.json",
+    "sha256": "885a15a7552918a67ada595796bb1e4cfe25fb77c68de5c896dac5cdaea4300f",
+    "indexed_artifacts": 35,
+    "all_indexed_member_sha256_checks": "PASS",
+    "mismatches": 0,
+    "unindexed_archive_members": 0,
+    "intended_sink": "config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence/MVP2-NATIVE-287df80c6984-34605253942"
+  },
+  "materializer": {
+    "path": "docs/control/mvp-act0-r1/materialize_mvp2_evidence.py",
+    "execution_result": "PASS",
+    "result": "RAW_EVIDENCE_MATERIALIZED_NOT_COMMITTED",
+    "files_materialized": 36,
+    "byte_identical_to_archive": true
+  },
+  "external_code_review": {
+    "request_comment_id": 5642087579,
+    "result_comment_id": 5642117789,
+    "reviewed_commit_prefix": "287df80c69",
+    "result": "NO_MAJOR_ISSUES_FOUND",
+    "formal_harness_verdict": false
+  },
+  "state": {
+    "runtime_branch_mutated": false,
+    "native_sink_committed": false,
+    "formal_reviewer_pass": false,
+    "formal_verifier_pass": false,
+    "predicate_verified_event_created": false,
+    "parent_work_order_state": "IN_PROGRESS"
+  },
+  "next_action": "PUBLISH_36_BYTE_IDENTICAL_NATIVE_EVIDENCE_FILES_ON_EVIDENCE_REVIEW_BRANCH_THEN_RUN_FORMAL_REVIEWER_AND_VERIFIER",
+  "notes": [
+    "H0 channel-recovery hardening is now canonical and post-merge verified; the primary mutation lane returns to MVP without modifying the frozen MVP2 runtime subject.",
+    "This observation durably records successful artifact download, byte binding, manifest/member rehash, and local materialization. It is not a substitute for committing the 36 native evidence files required by the REUSED review consumer.",
+    "Do not rebase or amend the frozen runtime merely to follow the newer canonical main. Reconcile control/main drift only at a later bounded integration boundary after MVP2 predicate closure."
+  ]
+}

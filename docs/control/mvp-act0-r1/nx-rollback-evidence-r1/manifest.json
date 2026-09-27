@@ -1,0 +1,241 @@
+{
+  "schema": "distributed_world_simulator.mvp6_nx_rollback_evidence.v1",
+  "subject_head": "970b4293ae303cda03cd99c5c77ddd54e0f41496",
+  "subject_tree": "6a86c84e57ef313ad841c6cb906bc7fd1daafb06",
+  "main_head": "6982a563dd0c88c81449566131852c601ae89868",
+  "consumer_head": "1a56fe0e845c941f14ce7b9296ee939e9d0ca8bc",
+  "critical_m4_blob": "44841fb3719b1cf36fd5afdfc0f8a0e4d0eacb30",
+  "unchanged_journal_blob": "ed23f0d2b7a9e6cfb3f13b78de70c7f552035b69",
+  "linux": {
+    "run_id": 35093369957,
+    "artifact_id": 10445650486,
+    "zip_sha256": "003e768759fb18227926d3b6fc6ec8a854ff26dc532e343f38ec2e3a4f8c59ab",
+    "zip_download_digest_verified": true,
+    "all_zip_members_verified": true,
+    "command": "python3 docs/control/mvp-act0-r1/mvp6_nx_dependency_probe.py",
+    "exit_code": 1
+  },
+  "windows": {
+    "executor": "local Windows clean linked worktree, canonical double Godot",
+    "command": "python docs/control/mvp-act0-r1/mvp6_nx_dependency_probe_exact_runner.py",
+    "exit_code": 1,
+    "environment": {
+      "PYTHONUTF8": "1",
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "BREAKPOINT_RUNTIME_DISABLED": "1",
+      "PLANET_SIMULATOR_INVENTORY_PROFILE": "planet_default",
+      "GODOT_BIN": "C:/Godot/godot/bin/godot.windows.editor.double.x86_64.console.exe",
+      "EXPECTED_HEAD": "970b4293ae303cda03cd99c5c77ddd54e0f41496",
+      "MVP6_NX_PROBE_OUTPUT": "C:\\distributed-world-simulator\\artifacts\\mvp6-clearance-r1\\nx-windows-970b4293",
+      "MVP6_NX_PROBE_WORKTREE": "C:/distributed-world-simulator/worktrees/mvp6-nx-windows-probe"
+    }
+  },
+  "each_platform_each_composition": {
+    "assertions": 1077,
+    "failures": 3,
+    "failed_test": "test_nx_owner_item_projection_rollback.gd",
+    "failed_test_assertions": 37,
+    "passing_test_counts": [
+      44,
+      31,
+      25,
+      940
+    ]
+  },
+  "interpretation": "BASELINE_AND_CANDIDATE_FAIL_IDENTICALLY; no V0 regression established; required baseline PASS missing",
+  "raw_pc0": {
+    "standard": "YELLOW",
+    "directional": "RED"
+  },
+  "probe_regression_tests": {
+    "command": "python docs/control/mvp-act0-r1/test_mvp6_nx_probe.py",
+    "tests": 5,
+    "exit_code": 0
+  },
+  "native_runtime_modified": false,
+  "dependency_clearance_written": false,
+  "mvp6_verified": false,
+  "independent_verdict": false,
+  "files": [
+    {
+      "path": "10444336824.metadata.json",
+      "bytes": 917,
+      "sha256": "caec7dd0500fb32ec64e50f93ae856c25b59620972fc1ed43819185c0478e4b6"
+    },
+    {
+      "path": "10445650486.metadata.json",
+      "bytes": 916,
+      "sha256": "dbfac7c3e45cfa8d8a01dfdf3820991d62e8cfc60c18a04bc57e0f224e7ad243"
+    },
+    {
+      "path": "linux/baseline-current-main-plus-nx/import.log",
+      "bytes": 100035,
+      "sha256": "3e3a2269f9fef726c4740afd07b65ac68e42377e393ee8915342b02aac176f5e"
+    },
+    {
+      "path": "linux/baseline-current-main-plus-nx/test_nx6_predicted_item_interactions.log",
+      "bytes": 174,
+      "sha256": "7b4dcb0bd9cb0b2a09acf2ba59c14d7548c325ee7bcb34ad8a7028cac6bf36ca"
+    },
+    {
+      "path": "linux/baseline-current-main-plus-nx/test_nx_client_tick_robustness.log",
+      "bytes": 170,
+      "sha256": "92657a19afeabf85eec302fe6a1c27c6fc449dad32904cd1319e2cc2f38b9264"
+    },
+    {
+      "path": "linux/baseline-current-main-plus-nx/test_nx_owner_item_projection_rollback.log",
+      "bytes": 1741,
+      "sha256": "bb82e04b9d0b66a71e0976f583c80ba53c87fe2d7d0e66cc470b1d53745706f5"
+    },
+    {
+      "path": "linux/baseline-current-main-plus-nx/test_nx_owner_movement_authority.log",
+      "bytes": 163,
+      "sha256": "44e1e30b89a98a8515fed0ca346b9bcf0b3f702e82697cb55e8a925ed72e9d2f"
+    },
+    {
+      "path": "linux/baseline-current-main-plus-nx/test_nx_render_physics_separation.log",
+      "bytes": 178,
+      "sha256": "642671d0d73f303dcb0bba9f81547c8eaeede7f94ff84dfbb57f45f57705d201"
+    },
+    {
+      "path": "linux/candidate-plus-mvp6-m4/import.log",
+      "bytes": 1164,
+      "sha256": "491cd6c6f1e8102925cd62e887366463b9d5326ca05b329aae8df1e7aa575ff6"
+    },
+    {
+      "path": "linux/candidate-plus-mvp6-m4/test_nx6_predicted_item_interactions.log",
+      "bytes": 174,
+      "sha256": "7b4dcb0bd9cb0b2a09acf2ba59c14d7548c325ee7bcb34ad8a7028cac6bf36ca"
+    },
+    {
+      "path": "linux/candidate-plus-mvp6-m4/test_nx_client_tick_robustness.log",
+      "bytes": 170,
+      "sha256": "92657a19afeabf85eec302fe6a1c27c6fc449dad32904cd1319e2cc2f38b9264"
+    },
+    {
+      "path": "linux/candidate-plus-mvp6-m4/test_nx_owner_item_projection_rollback.log",
+      "bytes": 1741,
+      "sha256": "bb82e04b9d0b66a71e0976f583c80ba53c87fe2d7d0e66cc470b1d53745706f5"
+    },
+    {
+      "path": "linux/candidate-plus-mvp6-m4/test_nx_owner_movement_authority.log",
+      "bytes": 163,
+      "sha256": "44e1e30b89a98a8515fed0ca346b9bcf0b3f702e82697cb55e8a925ed72e9d2f"
+    },
+    {
+      "path": "linux/candidate-plus-mvp6-m4/test_nx_render_physics_separation.log",
+      "bytes": 178,
+      "sha256": "642671d0d73f303dcb0bba9f81547c8eaeede7f94ff84dfbb57f45f57705d201"
+    },
+    {
+      "path": "linux/summary.json",
+      "bytes": 11053,
+      "sha256": "63a8fe1b227aa742c64827bc8fa2d0af5ba38272c53079f8bf5447964cd94f11"
+    },
+    {
+      "path": "nx-windows-970b4293-command.log",
+      "bytes": 9604,
+      "sha256": "fa0af2439a28fa9fe5e4bab7380e4da610499088475489d5c80d19af5fd176b3"
+    },
+    {
+      "path": "raw-main/directional-watch-report.json",
+      "bytes": 41760,
+      "sha256": "5aa677292b1471420099dabfdb5bef7c9d6a819d90086bebca4f487c19227162"
+    },
+    {
+      "path": "raw-main/directional.log",
+      "bytes": 364,
+      "sha256": "c277390af0a21ffef8b68d974a191c599dab2e400525bfc9f410d3ccebe06e3f"
+    },
+    {
+      "path": "raw-main/DIRECTIONAL_WATCH_STATUS_RU.md",
+      "bytes": 1767,
+      "sha256": "e4a291b776998c33e520624d3b7d36080748dd6881550d1d38822475f258f461"
+    },
+    {
+      "path": "raw-main/probe-summary.json",
+      "bytes": 784,
+      "sha256": "e4c415009934f42b5c99c5e3f82f4ec65751c673a2f64a73ddf168be49cb3a82"
+    },
+    {
+      "path": "raw-main/project-control-report.json",
+      "bytes": 90714,
+      "sha256": "b0c79b42e44c892584c85560a02c4acacaaa1d1ce66fe000d050c642ad9e0db5"
+    },
+    {
+      "path": "raw-main/PROJECT_STATUS_RU.md",
+      "bytes": 32102,
+      "sha256": "cb643d68ae354c11709e620ae9f7999acd3cb8afa13cf344d4bb56c3e913e6e2"
+    },
+    {
+      "path": "raw-main/standard.log",
+      "bytes": 1517,
+      "sha256": "7e02699a3d7a8203189d7c3f6d46d24278a726e0edc31a6b9aaf53db16468da0"
+    },
+    {
+      "path": "windows/baseline-current-main-plus-nx/import.log",
+      "bytes": 102820,
+      "sha256": "48823d850986e9d40e475f407ba4e42ecfe7c829d39a93d3300343c723ec9766"
+    },
+    {
+      "path": "windows/baseline-current-main-plus-nx/test_nx6_predicted_item_interactions.log",
+      "bytes": 177,
+      "sha256": "21d6fb98e60f04b2c23ce4adeb30d68b3071d744405228c645d55a00e0f87ac6"
+    },
+    {
+      "path": "windows/baseline-current-main-plus-nx/test_nx_client_tick_robustness.log",
+      "bytes": 173,
+      "sha256": "ee853fc7c456d729297d6bf651352d3a29b11c11adccb8bacfb78df126eee689"
+    },
+    {
+      "path": "windows/baseline-current-main-plus-nx/test_nx_owner_item_projection_rollback.log",
+      "bytes": 1840,
+      "sha256": "6282487c55acda5a88119bc3d3f6d5296cfed73d73b7d8c1f48df9e483e84638"
+    },
+    {
+      "path": "windows/baseline-current-main-plus-nx/test_nx_owner_movement_authority.log",
+      "bytes": 166,
+      "sha256": "a3b4385f1cb5e3b55d16d3dbe1a852a4f5fd7da577cbd373129f7209759fb0b1"
+    },
+    {
+      "path": "windows/baseline-current-main-plus-nx/test_nx_render_physics_separation.log",
+      "bytes": 181,
+      "sha256": "11052dabb4850cf03c83321aaf01f86d1c9be22bede4a636da1232340e1dbfcd"
+    },
+    {
+      "path": "windows/candidate-plus-mvp6-m4/import.log",
+      "bytes": 1436,
+      "sha256": "fafcc6690da9a0471e7a4615396f60e74d23fbfacbb076404a8482790a9f5fea"
+    },
+    {
+      "path": "windows/candidate-plus-mvp6-m4/test_nx6_predicted_item_interactions.log",
+      "bytes": 177,
+      "sha256": "21d6fb98e60f04b2c23ce4adeb30d68b3071d744405228c645d55a00e0f87ac6"
+    },
+    {
+      "path": "windows/candidate-plus-mvp6-m4/test_nx_client_tick_robustness.log",
+      "bytes": 173,
+      "sha256": "ee853fc7c456d729297d6bf651352d3a29b11c11adccb8bacfb78df126eee689"
+    },
+    {
+      "path": "windows/candidate-plus-mvp6-m4/test_nx_owner_item_projection_rollback.log",
+      "bytes": 1840,
+      "sha256": "6282487c55acda5a88119bc3d3f6d5296cfed73d73b7d8c1f48df9e483e84638"
+    },
+    {
+      "path": "windows/candidate-plus-mvp6-m4/test_nx_owner_movement_authority.log",
+      "bytes": 166,
+      "sha256": "a3b4385f1cb5e3b55d16d3dbe1a852a4f5fd7da577cbd373129f7209759fb0b1"
+    },
+    {
+      "path": "windows/candidate-plus-mvp6-m4/test_nx_render_physics_separation.log",
+      "bytes": 181,
+      "sha256": "11052dabb4850cf03c83321aaf01f86d1c9be22bede4a636da1232340e1dbfcd"
+    },
+    {
+      "path": "windows/summary.json",
+      "bytes": 11313,
+      "sha256": "2284c874aaf8bbe0a3adb526aa4daafe77e80468576f8b4d049a6ee820b1cdef"
+    }
+  ]
+}

@@ -1,0 +1,127 @@
+{
+  "role": "INDEPENDENT_VERIFIER",
+  "verdict": "PASS",
+  "scope": "FULL_WORLD_CORE_EVIDENCE_ADDENDUM_ONLY",
+  "head": "3b82145ae946bb51aebf67f048a28420368b40be",
+  "tree": "6b1b8c9ead5c16d15dc8565813d3abb1bf94d880",
+  "risk_class": "CRITICAL",
+  "required_fixes": [],
+  "summary": "Независимый audit подтверждает complete world/core evidence; это не error-free и не принятие MVP6.",
+  "checks": {
+    "manifest_members": 6,
+    "hashed_files": 18,
+    "standalone_scripts": 327,
+    "runner_steps": 332,
+    "all_step_exit_codes_zero": true,
+    "soak_elapsed_ms": 1800002,
+    "soak_checkpoints": 29,
+    "soak_assertions": 51,
+    "main_scene_cli_passes": 6,
+    "existing_assertions_and_runner_unchanged": true,
+    "baseline_error_matches": 5,
+    "intentional_negative_errors": 4,
+    "raw_errors": [
+      {
+        "line": 502,
+        "step": "test_m5_graphical_multiplayer_acceptance",
+        "message": "ERROR: Condition \"!PeekNamedPipe(fd[0], nullptr, 0, nullptr, &buf_rem, nullptr)\" is true. Returning: 0"
+      },
+      {
+        "line": 510,
+        "step": "test_m5_graphical_multiplayer_acceptance",
+        "message": "ERROR: Condition \"!PeekNamedPipe(fd[0], nullptr, 0, nullptr, &buf_rem, nullptr)\" is true. Returning: 0"
+      },
+      {
+        "line": 651,
+        "step": "test_m6_dedicated_recovery_contracts",
+        "message": "ERROR: 4 resources still in use at exit (run with --verbose for details)."
+      },
+      {
+        "line": 1692,
+        "step": "test_partition_foundation",
+        "message": "ERROR: Invalid partition namespace: universe=main instance=invalid/path space=moon"
+      },
+      {
+        "line": 1698,
+        "step": "test_partition_foundation",
+        "message": "ERROR: Invalid cube-sphere partition grid configuration: { \"scheme_id\": \"cube_sphere\", \"scheme_revision\": 1, \"body_frame_id\": \"body/moon/fixed\", \"body_radius_m\": 1737400.0, \"zones_per_face\": 0, \"chunks_per_zone\": 32 }"
+      },
+      {
+        "line": 2170,
+        "step": "test_persistence_roundtrip",
+        "message": "ERROR: World manifest identity mismatch (instance_id): user://tests/persistence_243/world.json"
+      },
+      {
+        "line": 2181,
+        "step": "test_persistence_roundtrip",
+        "message": "ERROR: World manifest identity mismatch (partition_grid): user://tests/persistence_243/world.json"
+      },
+      {
+        "line": 2876,
+        "step": "test_mw7_matter_interest_replication",
+        "message": "ERROR: 7 resources still in use at exit (run with --verbose for details)."
+      },
+      {
+        "line": 4175,
+        "step": "test_v0_p7_5_two_client_convergence",
+        "message": "ERROR: 8 resources still in use at exit (run with --verbose for details)."
+      }
+    ],
+    "raw_warnings": [
+      {
+        "line": 305,
+        "step": "test_m4_networked_playground_extension",
+        "message": "WARNING: [remote_player_presenter:b] apply_replica failed: CONFLICTING_REMOTE_SNAPSHOT_TICK"
+      },
+      {
+        "line": 649,
+        "step": "test_m6_dedicated_recovery_contracts",
+        "message": "WARNING: 8 ObjectDB instances were leaked at exit (run with `--verbose` for details)."
+      },
+      {
+        "line": 1628,
+        "step": "test_c23_production_hardening_contracts",
+        "message": "WARNING: 3 ObjectDB instances were leaked at exit (run with `--verbose` for details)."
+      },
+      {
+        "line": 1634,
+        "step": "test_c23_production_hardening_integration",
+        "message": "WARNING: 2 ObjectDB instances were leaked at exit (run with `--verbose` for details)."
+      },
+      {
+        "line": 2754,
+        "step": "test_nx5_remote_snapshot_interpolation_integration",
+        "message": "WARNING: [remote_player_presenter:b] apply_replica failed: CONFLICTING_REMOTE_SNAPSHOT_TICK"
+      },
+      {
+        "line": 2761,
+        "step": "test_nx5_remote_snapshot_interpolation_integration",
+        "message": "WARNING: [remote_player_presenter:c] apply_replica failed: STALE_REMOTE_AUTHORITY_EPOCH"
+      },
+      {
+        "line": 2874,
+        "step": "test_mw7_matter_interest_replication",
+        "message": "WARNING: 26 ObjectDB instances were leaked at exit (run with `--verbose` for details)."
+      },
+      {
+        "line": 4173,
+        "step": "test_v0_p7_5_two_client_convergence",
+        "message": "WARNING: 15 ObjectDB instances were leaked at exit (run with `--verbose` for details)."
+      }
+    ]
+  },
+  "harness": {
+    "linux": "FAIL: 325 tests, 2 failures; directional RED and stale ACT0 fence",
+    "windows": "FAIL: 303 tests, 4 failures, 8 errors, 3 skips"
+  },
+  "limits": [
+    "Trusted exact-head evidence reused; literal soak not rerun by verifier.",
+    "Cleanup/resource errors remain debt; no fatal-free claim.",
+    "No MVP6 five-process acceptance, canonical clearance, canonical-main acceptance or merge authorization.",
+    "Later control candidate requires its own fresh review and verification."
+  ],
+  "mvp6_verified": false,
+  "main_acceptance": false,
+  "canonical_clearance": false,
+  "source_edits": false
+}

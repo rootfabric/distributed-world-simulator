@@ -1,0 +1,78 @@
+name: MVP2 Exact Two Client Shared World
+on:
+  push:
+    branches: [feature/v0-mvp-playable-seamless-planet-r1]
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: mvp2-exact-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  exact-evidence:
+    if: >-
+      github.repository == 'rootfabric/distributed-world-simulator' &&
+      github.actor == 'rootfabric' && github.triggering_actor == 'rootfabric' &&
+      github.ref == 'refs/heads/feature/v0-mvp-playable-seamless-planet-r1' &&
+      (github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[mvp2-evidence]'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      PYTHONUTF8: '1'
+      BREAKPOINT_RUNTIME_DISABLED: '1'
+      PLANET_SIMULATOR_INVENTORY_PROFILE: planet_default
+      LIBGL_ALWAYS_SOFTWARE: '1'
+      EXPECTED_HEAD: ${{ github.sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Exact checkout and real ref topology
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+          git fetch origin '+refs/heads/*:refs/remotes/origin/*' --prune
+          git config --global advice.detachedHead false
+          if [ "$(git branch --show-current)" != feature/v0-mvp-playable-seamless-planet-r1 ]; then
+            git switch -c feature/v0-mvp-playable-seamless-planet-r1 "$EXPECTED_HEAD"
+          fi
+          test -z "$(git status --porcelain --untracked-files=no)"
+      - name: Pinned Harness and graphical prerequisites
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m venv "$RUNNER_TEMP/mvp2-venv"
+          "$RUNNER_TEMP/mvp2-venv/bin/python" -m pip install -r scripts/harness/requirements.txt
+          if ! command -v Xvfb >/dev/null || ! command -v xauth >/dev/null; then
+            sudo -n apt-get update
+            sudo -n env DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends xvfb xauth libgl1-mesa-dri
+          fi
+      - name: Obtain only the previously approved binary
+        uses: actions/download-artifact@v4
+        with:
+          name: p7-repair-engine-34117353691
+          run-id: 34117353691
+          repository: rootfabric/distributed-world-simulator
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/mvp2-engine
+      - name: Execute exact Harness PC0 and real three-process graphical workload
+        shell: bash
+        run: |
+          set -euo pipefail
+          engine="$RUNNER_TEMP/mvp2-engine/godot"
+          test "$(sha256sum "$engine" | cut -d' ' -f1)" = bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7
+          chmod u+x "$engine"
+          xvfb-run -a "$RUNNER_TEMP/mvp2-venv/bin/python" docs/control/mvp-act0-r1/validate_mvp2.py --engine "$engine"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mvp2-exact-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            artifacts/mvp2-exact/
+            !artifacts/mvp2-exact/**/user-data/**
+          if-no-files-found: error
+          retention-days: 90

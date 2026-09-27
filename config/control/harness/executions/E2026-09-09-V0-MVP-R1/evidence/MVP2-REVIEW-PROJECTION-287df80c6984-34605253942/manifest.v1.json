@@ -1,0 +1,100 @@
+{
+  "schema": "distributed_world_simulator.harness_machine_evidence_manifest.v1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "subject_head_sha": "287df80c69840fea7ae9ac0ea69a07581f192d34",
+  "subject_tree_sha": "e591dc6c5346139bc1b4659915c54bf80603713e",
+  "runner_id": "GitHub Actions 1000005740",
+  "run_id": "34605253942",
+  "tracked_checkout_clean_before": true,
+  "tracked_checkout_clean_after": true,
+  "artifacts": [
+    {
+      "path": "config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence/MVP2-REVIEW-PROJECTION-287df80c6984-34605253942/result.json",
+      "archive_member": "result.json",
+      "sha256": "19f7187d544b0a07fb6785928836ee8e0025438315914b3c0e5315da824c9662",
+      "run_id": "34605253942",
+      "subject_head_sha": "287df80c69840fea7ae9ac0ea69a07581f192d34"
+    },
+    {
+      "path": "config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence/MVP2-REVIEW-PROJECTION-287df80c6984-34605253942/mvp2-focused.log",
+      "archive_member": "mvp2-focused.log",
+      "sha256": "7b776c9d09d1a295a429d34046ea842cf6d3f1f339f8a7f340bb14eb2a05a86c",
+      "run_id": "34605253942",
+      "subject_head_sha": "287df80c69840fea7ae9ac0ea69a07581f192d34"
+    },
+    {
+      "path": "config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence/MVP2-REVIEW-PROJECTION-287df80c6984-34605253942/evidence-consumer-tests.log",
+      "archive_member": "evidence-consumer-tests.log",
+      "sha256": "1bb4af314a923662a91ec201de96eeae029cd6b8422609d6409b7f3c83743a6d",
+      "run_id": "34605253942",
+      "subject_head_sha": "287df80c69840fea7ae9ac0ea69a07581f192d34"
+    },
+    {
+      "path": "config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence/MVP2-REVIEW-PROJECTION-287df80c6984-34605253942/pc0-standard.log",
+      "archive_member": "pc0-standard.log",
+      "sha256": "e307bc49781dce906f2169596927f68789726c1e8c0c46970e66fa77830fa941",
+      "run_id": "34605253942",
+      "subject_head_sha": "287df80c69840fea7ae9ac0ea69a07581f192d34"
+    },
+    {
+      "path": "config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence/MVP2-REVIEW-PROJECTION-287df80c6984-34605253942/pc0-directional.log",
+      "archive_member": "pc0-directional.log",
+      "sha256": "c595e574446438c3e4436153c2441f88f9ce6da59a43b1b0b41e993e99552338",
+      "run_id": "34605253942",
+      "subject_head_sha": "287df80c69840fea7ae9ac0ea69a07581f192d34"
+    },
+    {
+      "path": "config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence/MVP2-REVIEW-PROJECTION-287df80c6984-34605253942/godot-version.log",
+      "archive_member": "godot-version.log",
+      "sha256": "5f9a650ae0e4ec2d93122461dae280ba65215c0d1ffece8159f8ede41e9f82f3",
+      "run_id": "34605253942",
+      "subject_head_sha": "287df80c69840fea7ae9ac0ea69a07581f192d34"
+    },
+    {
+      "path": "config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence/MVP2-REVIEW-PROJECTION-287df80c6984-34605253942/mvp1-regression.log",
+      "archive_member": "mvp1-regression.log",
+      "sha256": "e310dd15863f5cd4a221c6ed74105cea5edd94d2cf51e25cfabf9d9f53c98c17",
+      "run_id": "34605253942",
+      "subject_head_sha": "287df80c69840fea7ae9ac0ea69a07581f192d34"
+    }
+  ],
+  "commands": [
+    {
+      "command": "/home/runner/work/_temp/mvp2-venv/bin/python -m unittest discover -s tests/integration -p test_v0_mvp_two_client_evidence.py -v",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "log_path": "config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence/MVP2-REVIEW-PROJECTION-287df80c6984-34605253942/evidence-consumer-tests.log"
+    },
+    {
+      "command": "/home/runner/work/_temp/mvp2-venv/bin/python scripts/control/project_control.py --no-fetch",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "log_path": "config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence/MVP2-REVIEW-PROJECTION-287df80c6984-34605253942/pc0-standard.log"
+    },
+    {
+      "command": "/home/runner/work/_temp/mvp2-venv/bin/python scripts/control/project_control_directional_watch.py",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "log_path": "config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence/MVP2-REVIEW-PROJECTION-287df80c6984-34605253942/pc0-directional.log"
+    },
+    {
+      "command": "/home/runner/work/_temp/mvp2-engine/godot --version",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "log_path": "config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence/MVP2-REVIEW-PROJECTION-287df80c6984-34605253942/godot-version.log"
+    },
+    {
+      "command": "/home/runner/work/_temp/mvp2-engine/godot --headless --path /home/runner/work/distributed-world-simulator/distributed-world-simulator --script res://tests/runtime/test_v0_mvp_shared_graphical_scene.gd",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "log_path": "config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence/MVP2-REVIEW-PROJECTION-287df80c6984-34605253942/mvp1-regression.log"
+    },
+    {
+      "command": "/home/runner/work/_temp/mvp2-engine/godot --headless --path /home/runner/work/distributed-world-simulator/distributed-world-simulator --script res://tests/runtime/test_v0_mvp_two_client_shared_world.gd",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "log_path": "config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence/MVP2-REVIEW-PROJECTION-287df80c6984-34605253942/mvp2-focused.log"
+    }
+  ]
+}

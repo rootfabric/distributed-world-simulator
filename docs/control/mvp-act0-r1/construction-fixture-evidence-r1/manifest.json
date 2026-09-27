@@ -1,0 +1,183 @@
+{
+  "subject_head": "84ab0c0fba87f12dcfc94e32bb9cfa4eb8abb481",
+  "subject_tree": "f7e3f255bcc4878f3e738e011e3d45bf3edcdb81",
+  "scope": "TEST_ONLY_CANONICAL_HOTBAR_STAGING_FOCUSED",
+  "windows_assertions": [
+    223,
+    64,
+    77
+  ],
+  "linux_assertions": [
+    223,
+    64,
+    77
+  ],
+  "reviewer": "PASS_BOUNDED",
+  "verifier": "PASS_BOUNDED",
+  "mvp6_verified": false,
+  "physics_interaction_executed": false,
+  "five_process_executed": false,
+  "working_red_green_not_exact": true,
+  "files": [
+    {
+      "path": ".gitattributes",
+      "bytes": 44,
+      "sha256": "fc68f6f13b254c270dea5bbab51d36af00743a0f4898fd635bbecb401e346b34"
+    },
+    {
+      "path": "construction-fixture-exact-84ab0c0f/construction.json",
+      "bytes": 513253,
+      "sha256": "b1f5a14a9dbc7d47078759458481cf3629deb09f03cbda27e5c4a104b14451de"
+    },
+    {
+      "path": "construction-fixture-exact-84ab0c0f/construction.log",
+      "bytes": 186,
+      "sha256": "4d59b75d417bda9abb66de8b7e60e28eae6639ec1f7f4b8022af2eec12da0705"
+    },
+    {
+      "path": "construction-fixture-exact-84ab0c0f/p4.log",
+      "bytes": 171,
+      "sha256": "8bbce5ebf3c41306d0d1edd67fdd606db9ce6886fe6aba81edf48c894a4e9967"
+    },
+    {
+      "path": "construction-fixture-exact-84ab0c0f/rollback.log",
+      "bytes": 760,
+      "sha256": "70b2f5a3e56fd9e1ba73d342dbbc0ea28597a55f209f06128494049dd3a8f5cb"
+    },
+    {
+      "path": "construction-fixture-exact-84ab0c0f/summary.json",
+      "bytes": 2368,
+      "sha256": "519e12f5d97232c199c3d06b0beff6282d4966dff887730ad1c881ecbea7f850"
+    },
+    {
+      "path": "construction-fixture-linux/artifact.zip",
+      "bytes": 34995,
+      "sha256": "cfae9802f9e13e2314763ca3ec926a8a1bc65057fb68774ef3e59ed11d50d63a"
+    },
+    {
+      "path": "construction-fixture-linux/provenance.json",
+      "bytes": 367,
+      "sha256": "f8a3273e68ef1074e8e838679e22ad0662f49f0ff9cc79407766710b592c55d2"
+    },
+    {
+      "path": "construction-fixture-linux/unpacked/commands.json",
+      "bytes": 1586,
+      "sha256": "f941fc859e4f773159e8f8e9fd575ba3e84a8e43013325e21a289d9ffe164a6b"
+    },
+    {
+      "path": "construction-fixture-linux/unpacked/construction.json",
+      "bytes": 513253,
+      "sha256": "b1f5a14a9dbc7d47078759458481cf3629deb09f03cbda27e5c4a104b14451de"
+    },
+    {
+      "path": "construction-fixture-linux/unpacked/construction.log",
+      "bytes": 183,
+      "sha256": "26201bf53a5a23c85ebc055e7f5a4150e24c859c4d01b741f5ef8e04e99f993a"
+    },
+    {
+      "path": "construction-fixture-linux/unpacked/import.log",
+      "bytes": 102090,
+      "sha256": "193d621caa9cd88db89ee63b518f26719cc5464beab381b92f559e7b5eea6c86"
+    },
+    {
+      "path": "construction-fixture-linux/unpacked/journal.log",
+      "bytes": 755,
+      "sha256": "7d0d97baf69042ae7c0e3176f4a49f2daa6c1cb3a3d0c5348ceabb71a5e0500c"
+    },
+    {
+      "path": "construction-fixture-linux/unpacked/p4.log",
+      "bytes": 168,
+      "sha256": "cccd7428af7e4da9a5c5e3aa66c9ba585a37d1240ab496ce471fd6b72e20d1d2"
+    },
+    {
+      "path": "construction-fixture-linux/unpacked/summary.json",
+      "bytes": 2400,
+      "sha256": "8ac295c4ba38321b137bc6938e556c03ceffada777a30de8b60f4e984a9bd6b3"
+    },
+    {
+      "path": "construction-fixture-red.json",
+      "bytes": 51481,
+      "sha256": "101319d013244e10d18e3dee2c5408be41c0eb73cbe2435708ddb2a4e1e24c34"
+    },
+    {
+      "path": "construction-fixture-red.log",
+      "bytes": 738,
+      "sha256": "419469980ecc32fb29567960da76062a8e33c5df51487f4b8fe1432284c47855"
+    },
+    {
+      "path": "construction-fixture-review/baseline-diagnostics.json",
+      "bytes": 1344,
+      "sha256": "f34b01466a043a639f3e41a4f52c1aa6af3d5a3d6f8b0a4a1423b713bade8311"
+    },
+    {
+      "path": "construction-fixture-review/evidence-manifest.json",
+      "bytes": 2562,
+      "sha256": "df446871ebb7f1508aae066059caf3eb847be77ff0030743d9f109b8575115d1"
+    },
+    {
+      "path": "construction-fixture-review/review.json",
+      "bytes": 2471,
+      "sha256": "5d12281170f6fe2bf9861eb9a981118d56421ff0eb7aa6a4c5ba2e53a02bf1e7"
+    },
+    {
+      "path": "construction-fixture-review/review.md",
+      "bytes": 1485,
+      "sha256": "98ddf1d4f88b257ed9ae5862c3b83bf768f511a5b96172a7333cee27d9edd93f"
+    },
+    {
+      "path": "construction-fixture-verifier/audit.json",
+      "bytes": 1214,
+      "sha256": "cb111e1533e978ee000cebcc98e69318ea52680c6349725810fdec91452e892b"
+    },
+    {
+      "path": "construction-fixture-verifier/close-role.log",
+      "bytes": 59807,
+      "sha256": "f9321c517bf90f134f4c52eec2534013b72479b8649feed6c81621a10a84d5c7"
+    },
+    {
+      "path": "construction-fixture-verifier/construction.json",
+      "bytes": 513253,
+      "sha256": "b1f5a14a9dbc7d47078759458481cf3629deb09f03cbda27e5c4a104b14451de"
+    },
+    {
+      "path": "construction-fixture-verifier/construction.log",
+      "bytes": 186,
+      "sha256": "4d59b75d417bda9abb66de8b7e60e28eae6639ec1f7f4b8022af2eec12da0705"
+    },
+    {
+      "path": "construction-fixture-verifier/drive.log",
+      "bytes": 61601,
+      "sha256": "abd2db78534dd37e3177fb77b55807e88e6da8167c550afba184fe047136ef36"
+    },
+    {
+      "path": "construction-fixture-verifier/verification.json",
+      "bytes": 2369,
+      "sha256": "cd2dc0498cdd2f6d2564f7bef223cd4220101506465c5ae91800986317fbb62b"
+    },
+    {
+      "path": "construction-fixture-verifier/verification.md",
+      "bytes": 1617,
+      "sha256": "39e3387f79bebeb95e4fb082e4c27dabbe5b85e4d7e0a69d63ca355a18358af7"
+    },
+    {
+      "path": "construction-fixture-verifier/verify.py",
+      "bytes": 3026,
+      "sha256": "a27dcb72eb06be5b132fbeea3eca4fc9d6263d3b4a1f31a4296ed0289eaae70b"
+    },
+    {
+      "path": "construction-fixture-working.json",
+      "bytes": 513253,
+      "sha256": "f6be64c5a1df71207659353ebcf3b3a16ed080b8ebafa203a7073d4572e6b10a"
+    },
+    {
+      "path": "construction-fixture-working.log",
+      "bytes": 186,
+      "sha256": "4d59b75d417bda9abb66de8b7e60e28eae6639ec1f7f4b8022af2eec12da0705"
+    },
+    {
+      "path": "validate_construction_fixture.py",
+      "bytes": 2870,
+      "sha256": "d79ad9ab1aff0a1e2fbf6cd6859871255f230b7689d016e5c33f146f2b696fcc"
+    }
+  ]
+}

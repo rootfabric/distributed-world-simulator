@@ -1,0 +1,80 @@
+{
+  "schema": "distributed_world_simulator.harness_verification.v1",
+  "verification_id": "V0-MVP-R1-WO-001-MVP3-INDEPENDENT-VERIFICATION-F1D453FB-R3",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "program": "V0",
+  "checkpoint": "MVP ACT0",
+  "predicate": "MVP_SEAM_NO_RECONNECT_OR_RESPAWN",
+  "verifier": "FRESH_INDEPENDENT_VERIFIER_MVP3_R3",
+  "verifier_role_is_not_implementer_not_reviewer": true,
+  "verdict": "VERIFIED",
+  "verified_at_utc": "2026-09-13T11:35:53Z",
+  "frozen_runtime": {
+    "head_sha": "f1d453fb2af49231c30bdc5cbe415ad199394446",
+    "tree_sha": "f1697cc52c1abc7f1bb21922c5fab3b49a3c167d",
+    "freeze_ref": "freeze/v0-mvp3-r13b-f1d453fb-r1",
+    "freeze_ref_points_to_head": true
+  },
+  "verifier_carrier": {
+    "pull_request": 622,
+    "head_sha": "63a441f119b2997912d2cd907063f7cc4869ddf6",
+    "dispatch_comment_id": 5652977186,
+    "clean_result_comment_id": 5653011841,
+    "review_completed_at_utc": "2026-09-13T11:35:53Z",
+    "terminal_signal": "COMPLETED_EXACT_HEAD_REVIEW_NO_FINDINGS",
+    "unresolved_review_threads": 0,
+    "prior_required_fix_threads": 3,
+    "prior_required_fix_threads_resolved": 3,
+    "explicit_custom_pass_text_emitted": false,
+    "verdict_mapping_note": "VERIFIED is the durable coordinator reduction of a completed exact-head Fresh Independent Verifier R3 with no findings and zero unresolved threads; it does not attribute an unspoken literal PASS quote to the bot."
+  },
+  "fresh_product_reviewer": {
+    "pull_request": 621,
+    "reviewed_head_sha": "f1d453fb2af49231c30bdc5cbe415ad199394446",
+    "result_comment_id": 5652482446,
+    "result": "NO_MAJOR_ISSUES",
+    "blocking_inline_threads": 0
+  },
+  "evidence_bundle": {
+    "path": "config/control/harness/executions/E2026-09-09-V0-MVP-R1/supporting-evidence/MVP3-R13B-CLOSURE-EVIDENCE-F1D453FB-R1.v1.json",
+    "project_control_run_id": 34749699419,
+    "graphical_run_id": 34749737201,
+    "full_world_core_run_id": 34750914967,
+    "manual_manifest_bound_verifier_run_id": 34754453991
+  },
+  "predicate_checks": {
+    "five_distinct_processes": true,
+    "two_graphical_clients": true,
+    "route_a_to_b_to_a": true,
+    "post_activation_fixed_tick_movement_on_b": true,
+    "post_return_fixed_tick_movement_on_a": true,
+    "client_b_independent_fixed_tick_movement": true,
+    "stable_logical_player_entity_session": true,
+    "stable_body_camera_surface_instances": true,
+    "client_connects_exactly_one_each": true,
+    "disconnects_zero": true,
+    "reconnects_zero": true,
+    "respawns_zero": true,
+    "identity_changes_zero": true,
+    "gateway_reconnects_zero": true,
+    "immutable_p7_bootstrap_projection": true,
+    "mutable_canonical_matter_owner_introduced": false,
+    "carry_scope": "EMPTY_ONLY",
+    "negative_controls_fail_closed": true,
+    "automatic_ci_misrepresented_as_manual": false
+  },
+  "required_fixes": [],
+  "non_blocking_observations": [
+    "Fresh Independent Verifier R3 clean channel emitted its standard no-findings terminal signal rather than the custom PASS text requested in the dispatch; this record preserves that distinction explicitly."
+  ],
+  "closure_boundary": {
+    "predicate_eligible_for_recording": true,
+    "mvp3_leaf_only": true,
+    "parent_work_order_state_after_event": "IN_PROGRESS",
+    "whole_mvp_acceptance": false,
+    "runtime_merge_authorized": false,
+    "main_merge_authorized": false,
+    "item_bearing_transfer_claimed": false
+  }
+}

@@ -1,0 +1,307 @@
+{
+  "schema": "distributed_world_simulator.mvp2_exact_result.v1",
+  "passed": true,
+  "errors": [],
+  "commands": [
+    {
+      "name": "diff-check",
+      "argv": [
+        "git",
+        "diff",
+        "--check",
+        "6fd80b8dbc0cfc422c2ef9a05d2e60a4e7342b57",
+        "287df80c69840fea7ae9ac0ea69a07581f192d34"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "seconds": 0.004,
+      "log": "diff-check.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "evidence-consumer-tests",
+      "argv": [
+        "/home/runner/work/_temp/mvp2-venv/bin/python",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests/integration",
+        "-p",
+        "test_v0_mvp_two_client_evidence.py",
+        "-v"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "seconds": 0.164,
+      "log": "evidence-consumer-tests.log",
+      "sha256": "1bb4af314a923662a91ec201de96eeae029cd6b8422609d6409b7f3c83743a6d"
+    },
+    {
+      "name": "full-harness",
+      "argv": [
+        "/home/runner/work/_temp/mvp2-venv/bin/python",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests/harness",
+        "-p",
+        "test_*.py",
+        "-v"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "seconds": 120.357,
+      "log": "full-harness.log",
+      "sha256": "972ca43d967f87d84edf27362fb03e5205e7ef80b9d91d718e7c96277a691289"
+    },
+    {
+      "name": "pc0-standard",
+      "argv": [
+        "/home/runner/work/_temp/mvp2-venv/bin/python",
+        "scripts/control/project_control.py",
+        "--no-fetch"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "seconds": 0.565,
+      "log": "pc0-standard.log",
+      "sha256": "e307bc49781dce906f2169596927f68789726c1e8c0c46970e66fa77830fa941"
+    },
+    {
+      "name": "pc0-directional",
+      "argv": [
+        "/home/runner/work/_temp/mvp2-venv/bin/python",
+        "scripts/control/project_control_directional_watch.py"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "seconds": 0.164,
+      "log": "pc0-directional.log",
+      "sha256": "c595e574446438c3e4436153c2441f88f9ce6da59a43b1b0b41e993e99552338"
+    },
+    {
+      "name": "godot-version",
+      "argv": [
+        "/home/runner/work/_temp/mvp2-engine/godot",
+        "--version"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "seconds": 0.214,
+      "log": "godot-version.log",
+      "sha256": "5f9a650ae0e4ec2d93122461dae280ba65215c0d1ffece8159f8ede41e9f82f3"
+    },
+    {
+      "name": "godot-import",
+      "argv": [
+        "/home/runner/work/_temp/mvp2-engine/godot",
+        "--headless",
+        "--path",
+        "/home/runner/work/distributed-world-simulator/distributed-world-simulator",
+        "--editor",
+        "--import"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "seconds": 13.897,
+      "log": "godot-import.log",
+      "sha256": "03c308d35c165f2ceb2405796102102f0f9392afda38c8f39368b978a2ee4623"
+    },
+    {
+      "name": "mvp1-regression",
+      "argv": [
+        "/home/runner/work/_temp/mvp2-engine/godot",
+        "--headless",
+        "--path",
+        "/home/runner/work/distributed-world-simulator/distributed-world-simulator",
+        "--script",
+        "res://tests/runtime/test_v0_mvp_shared_graphical_scene.gd"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "seconds": 0.866,
+      "log": "mvp1-regression.log",
+      "sha256": "e310dd15863f5cd4a221c6ed74105cea5edd94d2cf51e25cfabf9d9f53c98c17"
+    },
+    {
+      "name": "mvp2-focused",
+      "argv": [
+        "/home/runner/work/_temp/mvp2-engine/godot",
+        "--headless",
+        "--path",
+        "/home/runner/work/distributed-world-simulator/distributed-world-simulator",
+        "--script",
+        "res://tests/runtime/test_v0_mvp_two_client_shared_world.gd"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "seconds": 11.437,
+      "log": "mvp2-focused.log",
+      "sha256": "7b776c9d09d1a295a429d34046ea842cf6d3f1f339f8a7f340bb14eb2a05a86c"
+    }
+  ],
+  "checks": {
+    "single_client_rejected": true,
+    "a_movement_replicated_to_both": true,
+    "b_movement_replicated_to_both": true,
+    "hidden_remote_rejected": true,
+    "tampered_state_rejected": true,
+    "foreign_session_rejected_before_join": true,
+    "all_owned_processes_stopped_cleanly": true
+  },
+  "independent_verdict": false,
+  "predicate_verified": false,
+  "world_core_regression": "NOT_RUN_THIS_LEAF",
+  "control_scope": "FULL_HARNESS_AND_PC0",
+  "started_at_utc": "2026-09-11T13:36:39.625615+00:00",
+  "subject_head_sha": "287df80c69840fea7ae9ac0ea69a07581f192d34",
+  "subject_tree_sha": "e591dc6c5346139bc1b4659915c54bf80603713e",
+  "main_head": "127c732a56cc5c25d5712f24a7627ed4bb877374",
+  "tracked_before": "",
+  "engine_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+  "processes": {
+    "server": {
+      "pid": 48595,
+      "argv": [
+        "/home/runner/work/_temp/mvp2-engine/godot",
+        "--path",
+        "/home/runner/work/distributed-world-simulator/distributed-world-simulator",
+        "--rendering-method",
+        "gl_compatibility",
+        "--audio-driver",
+        "Dummy",
+        "--resolution",
+        "1280x720",
+        "--headless",
+        "--script",
+        "res://tests/fixtures/v0_mvp/two_client_process.gd",
+        "--",
+        "--role=dedicated-server",
+        "--world=moon",
+        "--player-identity=server",
+        "--server-address=127.0.0.1",
+        "--server-port=40595",
+        "--network-session-token=session-id/mvp2-390377dfee3e4c458584c2c07ad70aac",
+        "--network-build-id=v0-mvp2-two-client-shared-world-r1",
+        "--network-git-commit=287df80c69840fea7ae9ac0ea69a07581f192d34",
+        "--connect-timeout-ms=15000"
+      ],
+      "graphical_requested": false,
+      "exit_code": 0
+    },
+    "a": {
+      "pid": 48605,
+      "argv": [
+        "/home/runner/work/_temp/mvp2-engine/godot",
+        "--path",
+        "/home/runner/work/distributed-world-simulator/distributed-world-simulator",
+        "--rendering-method",
+        "gl_compatibility",
+        "--audio-driver",
+        "Dummy",
+        "--resolution",
+        "1280x720",
+        "--script",
+        "res://tests/fixtures/v0_mvp/two_client_process.gd",
+        "--",
+        "--role=game-client",
+        "--world=moon",
+        "--player-identity=a",
+        "--server-address=127.0.0.1",
+        "--server-port=40595",
+        "--network-session-token=session-id/mvp2-390377dfee3e4c458584c2c07ad70aac",
+        "--network-build-id=v0-mvp2-two-client-shared-world-r1",
+        "--network-git-commit=287df80c69840fea7ae9ac0ea69a07581f192d34",
+        "--connect-timeout-ms=15000"
+      ],
+      "graphical_requested": true,
+      "exit_code": 0
+    },
+    "b": {
+      "pid": 48648,
+      "argv": [
+        "/home/runner/work/_temp/mvp2-engine/godot",
+        "--path",
+        "/home/runner/work/distributed-world-simulator/distributed-world-simulator",
+        "--rendering-method",
+        "gl_compatibility",
+        "--audio-driver",
+        "Dummy",
+        "--resolution",
+        "1280x720",
+        "--script",
+        "res://tests/fixtures/v0_mvp/two_client_process.gd",
+        "--",
+        "--role=game-client",
+        "--world=moon",
+        "--player-identity=b",
+        "--server-address=127.0.0.1",
+        "--server-port=40595",
+        "--network-session-token=session-id/mvp2-390377dfee3e4c458584c2c07ad70aac",
+        "--network-build-id=v0-mvp2-two-client-shared-world-r1",
+        "--network-git-commit=287df80c69840fea7ae9ac0ea69a07581f192d34",
+        "--connect-timeout-ms=15000"
+      ],
+      "graphical_requested": true,
+      "exit_code": 0
+    },
+    "foreign": {
+      "pid": 48693,
+      "argv": [
+        "/home/runner/work/_temp/mvp2-engine/godot",
+        "--path",
+        "/home/runner/work/distributed-world-simulator/distributed-world-simulator",
+        "--rendering-method",
+        "gl_compatibility",
+        "--audio-driver",
+        "Dummy",
+        "--resolution",
+        "1280x720",
+        "--headless",
+        "--script",
+        "res://tests/fixtures/v0_mvp/two_client_process.gd",
+        "--",
+        "--role=game-client",
+        "--world=moon",
+        "--player-identity=foreign",
+        "--server-address=127.0.0.1",
+        "--server-port=40595",
+        "--network-session-token=session-id/mvp2-390377dfee3e4c458584c2c07ad70aac-foreign",
+        "--network-build-id=v0-mvp2-two-client-shared-world-r1",
+        "--network-git-commit=287df80c69840fea7ae9ac0ea69a07581f192d34",
+        "--connect-timeout-ms=15000"
+      ],
+      "graphical_requested": false,
+      "exit_code": 0
+    }
+  },
+  "neutral_boundaries": {
+    "after-a": {
+      "expected_input_sequences": {
+        "a": 7,
+        "b": 0
+      },
+      "server_acknowledged_sequences": {
+        "a": 7.0,
+        "b": 0.0
+      },
+      "zero_planar_velocity": true
+    },
+    "after-b": {
+      "expected_input_sequences": {
+        "a": 7,
+        "b": 8
+      },
+      "server_acknowledged_sequences": {
+        "a": 7.0,
+        "b": 8.0
+      },
+      "zero_planar_velocity": true
+    }
+  },
+  "runtime_workload_pass": true,
+  "tracked_after": "",
+  "finished_at_utc": "2026-09-11T13:39:59.925669+00:00"
+}

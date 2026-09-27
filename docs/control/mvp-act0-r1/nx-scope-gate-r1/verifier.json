@@ -1,0 +1,36 @@
+{
+  "verification_id": "MVP6-NX-DIAGNOSTIC-VERIFY-6BD1-R1",
+  "role": "INDEPENDENT_VERIFIER",
+  "verifier_context": "/root/rollback_package_verify",
+  "verdict": "PASS",
+  "scope": "DIAGNOSTIC_REPAIR_EVIDENCE_AND_ONE_FILE_HUMAN_SCOPE_REQUEST_ONLY",
+  "subject_head": "6bd1ddefbd23b30636aff137cdb26e0102157bca",
+  "subject_tree": "00d163574b851d418d6eff02a67f23a03571d64a",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "human_attention_id": "HA-V0-MVP6-NX-SAME-REVISION-ROLLBACK-R1",
+  "checks": {
+    "manifest_git_byte_digests": "36/36 sizes and SHA256 PASS",
+    "historical_raw_log_digests": "12/12 PASS",
+    "diagnostic_subject": "970b4293ae303cda03cd99c5c77ddd54e0f41496",
+    "diagnostic_tree": "6a86c84e57ef313ad841c6cb906bc7fd1daafb06",
+    "windows_linux_baseline_and_candidate": "Each composition has 1077 assertions; rollback has 37 assertions and the same 3 failures; other tests pass with 44/31/25/940 assertions.",
+    "failure_identity": ["pickup rollback restores canonical world placement", "drop rollback restores authoritative quantity", "drop rollback removes predicted spawn"],
+    "journal_main_nx_feature_blob": "ed23f0d2b7a9e6cfb3f13b78de70c7f552035b69",
+    "runtime_diff_against_3a969296cadfe2f750d5c51cabc9c0792a66f6ee": "EMPTY",
+    "probe_regression_tests": "Independently executed 5/5 PASS",
+    "proposed_patch": "git apply --check PASS; not applied",
+    "human_attention_schema": "PASS",
+    "parent_identity_and_scope": "CRITICAL; goal_checkpoint matches; scripts/network/** forbidden; explicit additional owner-native scope gate applies",
+    "production_drive_log": {"next_actor": "HUMAN", "next_action": "RESOLVE_DECLARED_HUMAN_ATTENTION", "mission_exit_allowed": true, "role_exit_allowed": true}
+  },
+  "findings": [],
+  "limits": [
+    "Runtime evidence independently inspected and hash-verified; Godot not rerun by verifier.",
+    "A/B uses documented parser-normalized NX compositions.",
+    "Identical failures establish no MVP6 regression; required baseline PASS remains missing.",
+    "No runtime repair acceptance, dependency clearance, MVP6 verification, whole-MVP acceptance or merge authorization.",
+    "External validation/nx-prediction-rollback-r1 supplies no canonical approval.",
+    "Parent publishes this verdict and performs post-publication Drive, CloseRole and CloseMission."
+  ]
+}

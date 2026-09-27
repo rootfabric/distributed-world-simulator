@@ -1,0 +1,24 @@
+test_active_input_is_not_a_neutral_boundary (test_v0_mvp_two_client_evidence.MVP2EvidenceTests.test_active_input_is_not_a_neutral_boundary) ... ok
+test_complete_shared_observation_passes (test_v0_mvp_two_client_evidence.MVP2EvidenceTests.test_complete_shared_observation_passes) ... ok
+test_convergence_persists_the_same_validated_sample_without_rereading (test_v0_mvp_two_client_evidence.MVP2EvidenceTests.test_convergence_persists_the_same_validated_sample_without_rereading) ... ok
+test_driver_is_fixture_but_focused_test_is_standalone (test_v0_mvp_two_client_evidence.MVP2EvidenceTests.test_driver_is_fixture_but_focused_test_is_standalone) ... ok
+test_equal_checksum_does_not_hide_item_payload_mismatch (test_v0_mvp_two_client_evidence.MVP2EvidenceTests.test_equal_checksum_does_not_hide_item_payload_mismatch) ... ok
+test_foreign_exact_head_rejected (test_v0_mvp_two_client_evidence.MVP2EvidenceTests.test_foreign_exact_head_rejected) ... ok
+test_foreign_session_fingerprint_rejected (test_v0_mvp_two_client_evidence.MVP2EvidenceTests.test_foreign_session_fingerprint_rejected) ... ok
+test_hidden_remote_rejected (test_v0_mvp_two_client_evidence.MVP2EvidenceTests.test_hidden_remote_rejected) ... ok
+test_incomplete_sample_cannot_become_a_saved_witness (test_v0_mvp_two_client_evidence.MVP2EvidenceTests.test_incomplete_sample_cannot_become_a_saved_witness) ... ok
+test_missing_neutral_target_is_rejected (test_v0_mvp_two_client_evidence.MVP2EvidenceTests.test_missing_neutral_target_is_rejected) ... ok
+test_mutable_client_or_remote_input_owner_rejected (test_v0_mvp_two_client_evidence.MVP2EvidenceTests.test_mutable_client_or_remote_input_owner_rejected) ... ok
+test_neutral_barrier_accepts_only_acknowledged_stopped_state (test_v0_mvp_two_client_evidence.MVP2EvidenceTests.test_neutral_barrier_accepts_only_acknowledged_stopped_state) ... ok
+test_one_client_is_not_a_two_client_world (test_v0_mvp_two_client_evidence.MVP2EvidenceTests.test_one_client_is_not_a_two_client_world) ... ok
+test_only_clock_and_its_checksum_may_differ (test_v0_mvp_two_client_evidence.MVP2EvidenceTests.test_only_clock_and_its_checksum_may_differ) ... ok
+test_remote_outside_frustum_rejected (test_v0_mvp_two_client_evidence.MVP2EvidenceTests.test_remote_outside_frustum_rejected) ... ok
+test_same_process_or_data_directory_rejected (test_v0_mvp_two_client_evidence.MVP2EvidenceTests.test_same_process_or_data_directory_rejected) ... ok
+test_shared_but_moving_snapshot_is_not_a_neutral_boundary (test_v0_mvp_two_client_evidence.MVP2EvidenceTests.test_shared_but_moving_snapshot_is_not_a_neutral_boundary) ... ok
+test_stale_neutral_acknowledgement_is_rejected (test_v0_mvp_two_client_evidence.MVP2EvidenceTests.test_stale_neutral_acknowledgement_is_rejected) ... ok
+test_tampered_player_state_rejected (test_v0_mvp_two_client_evidence.MVP2EvidenceTests.test_tampered_player_state_rejected) ... ok
+
+----------------------------------------------------------------------
+Ran 19 tests in 0.007s
+
+OK

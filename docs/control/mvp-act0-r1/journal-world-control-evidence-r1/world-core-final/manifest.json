@@ -1,0 +1,36 @@
+{
+  "subject": "3b82145ae946bb51aebf67f048a28420368b40be",
+  "tree": "6b1b8c9ead5c16d15dc8565813d3abb1bf94d880",
+  "files": [
+    {
+      "path": "authoritative-checkpoint.json",
+      "size": 867294,
+      "sha256": "9a13f90b4c562ed025cbd08f6e44c58f49252ab9f51223ac98a2bb2cc7a28422"
+    },
+    {
+      "path": "authoritative-checkpoint.previous.json",
+      "size": 839090,
+      "sha256": "dcb3e02ac9288cb66122433322ab61389cc7531034954af87a400314a6b3bbb2"
+    },
+    {
+      "path": "provenance.json",
+      "size": 4289,
+      "sha256": "20e57804a7fa2fcd7b665d5cb96c88157976acfa71b5425b26476259bac83d1c"
+    },
+    {
+      "path": "summary.json",
+      "size": 86928,
+      "sha256": "4a57cb1c5b581bef30cc17095dc5c28d056616344d5c5ab6f759c82c0e676916"
+    },
+    {
+      "path": "windows-full-harness.log",
+      "size": 69588,
+      "sha256": "6af1295479362e9376bbe3f0f1a99bb7395f0efc459dd6ccad02ca77e583e128"
+    },
+    {
+      "path": "world.log",
+      "size": 1465282,
+      "sha256": "dffee613272381b5113b21cea4e7740fa50283495c42c08a69c6f3aa3477a64c"
+    }
+  ]
+}

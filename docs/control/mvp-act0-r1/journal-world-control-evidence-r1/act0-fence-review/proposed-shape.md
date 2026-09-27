@@ -1,0 +1,11 @@
+# ACT0 fence: требуется bounded control repair
+
+Subject3b82145ae946bb51aebf67f048a28420368b40be / tree6b1b8c9ead5c16d15dc8565813d3abb1bf94d880. Source не менялся.
+
+Реальная причина: test_all_p7_execution_and_acceptance_blobs_are_unchanged утверждает отсутствие любого scripts/network delta от BASE3d767 доHEAD. Canonical6982 проходит этот исторический fence; согласованный journalpatch даёт ровно один ожидаемый M-path и закономерно ломает assertion. Raw303/4fail/8error/3skip не является PASS. Остальные Windows failures требуют отдельной классификации.
+
+По моей оценке Director вправе подготовить control-only continuationWO: пользователь§8 явно поручил подготовить main-owned branch/PR и добиться всех автоматических gates. Это обслуживание доказательства уже разрешённых4строк, не расширение runtimeauthority. Но старый WO не разрешает harness-test path: сначала нужен отдельный durable replan и точный write fence для tests/harness/test_v0_mvp_act0.py плюс record/evidence. Сам one-fileHA не даёт это permission; основание — исходный control mandate пользователя. HUMAN merge остаётся закрыт. Если предлагаемая правка будет ослаблять историческую immutability или разрешать иной runtime delta, это уже новая authority/scope decision и потребует отдельного Human gate.
+
+Сохранить текущие P7 execution/acceptance assertions относительноBASE и точное сценовое ограничение. Дополнительно зафиксировать исторический ACT0/control anchor6982, на котором protected runtime набор неизменён. Для текущегоHEAD разрешать только нулевой protecteddiff либо ровно M journal с oldblobed23f0d2b7a9e6cfb3f13b78de70c7f552035b69 → newblobabdf0c0a335f4e2c968933156fb17f94a7b45bd1. Разрешение связано с точным durableHA/epoch/checkpoint/decision/patchdigest. Проверять весь diffset, а не удалять journal из diff. Не использовать skip/xfail/новыйBASE=HEAD.
+
+Негативы обязательны: лишнийruntimepath; изменённыйjournalbyte; неверныйbeforeblob; rename/delete; отсутствие/OPEN/foreignauthorization; изменение P7 acceptance; неожиданныйscene. Baseline6982 и точный approveddelta должны проходить отдельные положительные случаи. Новый controlsubject требует freshreview/Verifier; старый3b не становится автоматически green.

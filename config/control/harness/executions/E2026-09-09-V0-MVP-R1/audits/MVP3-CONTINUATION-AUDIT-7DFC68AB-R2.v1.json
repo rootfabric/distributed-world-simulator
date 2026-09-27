@@ -1,0 +1,54 @@
+{
+  "schema": "distributed_world_simulator.harness_epoch_audit.v1",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "base_sha": "3d7672cba293d8e7bd72427b803f73fc8fcee5da",
+  "main_sha": "7dfc68ab5a1e90254a1b7039807f275b5da04eef",
+  "decision": "CONTINUE",
+  "pc0": "NON_RED",
+  "directional_pc0": "NON_RED",
+  "evidence_class": "EXACT_LOCAL_WINDOWS_PROJECT_CONTROL",
+  "project_control": {
+    "executor": "WINDOWS_LOCAL",
+    "command": ".\\CONTROL_PROJECT.ps1 -NoFetch",
+    "exit_code": 0,
+    "head_sha": "7dfc68ab5a1e90254a1b7039807f275b5da04eef",
+    "registry_generation": 82,
+    "standard_overall": "YELLOW",
+    "v0_health": "YELLOW",
+    "cross_branch_overlaps": [],
+    "directional_overall": "YELLOW",
+    "directional_findings": 3,
+    "directional_blocking_red": 0,
+    "standard_report_sha256": "c9566cecd3fb205e9e95daa5f29635ba5c80594831c96d581a353aebe3b88df2",
+    "directional_report_sha256": "a320728dce733883acf4f838b2a7848f463cf1fadad83723ea3aa1e7386a1bef",
+    "combined_log_sha256": "ffadf326c10d1d3f23d4a8a38922fd39845a6360a011c7b806cb0e11244272a4"
+  },
+  "dependency_audit": {
+    "previous_audited_main": "127c732a56cc5c25d5712f24a7627ed4bb877374",
+    "current_main": "7dfc68ab5a1e90254a1b7039807f275b5da04eef",
+    "runtime_watched_path_changes": [],
+    "critical_watched_path_changes": [],
+    "control_changes_reviewed": [
+      "config/control/harness/continuation-policy.v1.json",
+      "config/control/harness/harness-policy.v1.json",
+      "docs/control/HARNESS_CHANNEL_RECOVERY_RU.md",
+      "scripts/harness/contracts.py",
+      "scripts/harness/project_overview.py"
+    ],
+    "conclusion": "No SM1, P7, Matter, M4 or networked gameplay dependency changed after the previous audit. Later main changes are Harness channel-recovery control only and do not invalidate the bounded MVP3 runtime design."
+  },
+  "runtime_state": {
+    "runtime_branch": "feature/v0-mvp-playable-seamless-planet-r1",
+    "runtime_head": "605e4634f147c34c9e98155d6f96853aeeec70a9",
+    "runtime_tree": "994fd72b163e72584e4d1a51d18259b682964d0a",
+    "mvp1_verified": true,
+    "mvp2_verified": true,
+    "mvp3_live_owner_hooks_implemented": true,
+    "mvp3_predicate_verified": false,
+    "runtime_feature_merge_authorized": false,
+    "mvp_acceptance_authorized": false
+  },
+  "recorded_at_utc": "2026-09-13T02:04:43Z",
+  "summary": "Exact canonical main 7dfc68ab is an ancestor successor of the epoch base. Fresh Windows standard and directional PC0 are NON_RED with zero cross-branch overlaps and zero blocking RED. Changes since the previous audited main are control-plane channel-recovery changes and do not touch MVP3 watched runtime dependencies. Continue the already-authorized bounded Work Order; no product predicate, merge or acceptance is claimed."
+}

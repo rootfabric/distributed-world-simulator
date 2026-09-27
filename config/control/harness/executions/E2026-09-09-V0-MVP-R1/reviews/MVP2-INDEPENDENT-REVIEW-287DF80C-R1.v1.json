@@ -1,0 +1,101 @@
+{
+  "schema": "distributed_world_simulator.harness_review_result.v1",
+  "review_id": "V0-MVP-R1-WO-001-MVP2-INDEPENDENT-REVIEW-287DF80C-R1",
+  "review_type": "POST_BUILD_EXACT_HEAD_REVIEW",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "risk_class": "CRITICAL",
+  "reviewed_head_sha": "287df80c69840fea7ae9ac0ea69a07581f192d34",
+  "reviewed_tree_sha": "e591dc6c5346139bc1b4659915c54bf80603713e",
+  "reviewer": "FRESH_INDEPENDENT_REVIEWER_MVP2_R1",
+  "reviewed_at_utc": "2026-09-12T11:15:46Z",
+  "verdict": "PASS",
+  "required_fixes": [],
+  "machine_evidence": {
+    "mode": "REUSED",
+    "manifest_path": "config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence/MVP2-REVIEW-PROJECTION-287df80c6984-34605253942/manifest.v1.json",
+    "manifest_sha256": "06638b1b4a111c0eef4cb2028c592ee3e0cfce18f2d9eb3a5922d52b4ec78c17",
+    "runner_id": "GitHub Actions 1000005740",
+    "run_id": "34605253942",
+    "artifact_paths": [
+      "config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence/MVP2-REVIEW-PROJECTION-287df80c6984-34605253942/result.json",
+      "config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence/MVP2-REVIEW-PROJECTION-287df80c6984-34605253942/mvp2-focused.log",
+      "config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence/MVP2-REVIEW-PROJECTION-287df80c6984-34605253942/evidence-consumer-tests.log",
+      "config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence/MVP2-REVIEW-PROJECTION-287df80c6984-34605253942/pc0-standard.log",
+      "config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence/MVP2-REVIEW-PROJECTION-287df80c6984-34605253942/pc0-directional.log",
+      "config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence/MVP2-REVIEW-PROJECTION-287df80c6984-34605253942/godot-version.log",
+      "config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence/MVP2-REVIEW-PROJECTION-287df80c6984-34605253942/mvp1-regression.log"
+    ]
+  },
+  "findings": [],
+  "checked_items": [
+    {
+      "item": "Exact subject resolved independently: 6fd80b8dbc0cfc422c2ef9a05d2e60a4e7342b57 is the merge-base and ancestor of 287df80c69840fea7ae9ac0ea69a07581f192d34; the reviewed runtime tree is e591dc6c5346139bc1b4659915c54bf80603713e.",
+      "disposition": "VERIFIED"
+    },
+    {
+      "item": "Production diff adds the bounded MVP2 scene/composition/bootstrap, fixture, runtime/integration tests, validation producer, workflow and append-only implementation evidence; protected M3/M4/P7/SM1/Matter/network owners are not modified.",
+      "disposition": "VERIFIED"
+    },
+    {
+      "item": "v0_mvp_two_client_shared_world.gd instantiates only existing M3DedicatedServerRuntime or M3GraphicalClientRuntime by role and existing RemotePlayerPresenter; it introduces no second authoritative server, network protocol, Item Graph owner, persistence owner or terrain mutation writer.",
+      "disposition": "VERIFIED"
+    },
+    {
+      "item": "v0_mvp_bootstrap_surface.gd uses a temporary P7 lunar builder/presenter only to materialize derived meshes, releases the mutable builder/presenter and reports canonical_state_owned=false, mutable_matter_store_retained=false, collision_enabled=false and network_mutation_proven=false.",
+      "disposition": "VERIFIED"
+    },
+    {
+      "item": "Observation captures server/client runtime role, process id, isolated user-data path, exact network fingerprint, authoritative player snapshot, complete Item Graph snapshot, remote presenter visibility/input-authority state, camera and immutable surface identity.",
+      "disposition": "VERIFIED"
+    },
+    {
+      "item": "validate_mvp2.py persists the exact sample that passed shared_errors / neutral_boundary_errors rather than rereading a racing process report; only top-level server_tick and its dependent checksum are excluded from gameplay equality.",
+      "disposition": "VERIFIED"
+    },
+    {
+      "item": "Neutral phase boundaries require both clients to have input_active=false, server/client snapshots to acknowledge the expected input sequence for both players, and planar x/z velocity to be zero across server, A and B.",
+      "disposition": "VERIFIED"
+    },
+    {
+      "item": "The real workload launches distinct server/A/B processes and a foreign-session negative client; it requires two peer mappings, separate process ids/user-data/transport sessions, A and B server-confirmed movement, shared snapshots/Item Graph, visible remote presenters, graphical viewport capture identity and clean stop of all owned processes.",
+      "disposition": "VERIFIED"
+    },
+    {
+      "item": "Synthetic evidence-consumer falsifiers reject one-client evidence, hidden/out-of-frustum remote, foreign exact head/session fingerprint, shared-process/user-data, tampered gameplay, equal-checksum item payload mismatch, mutable client Matter authority, remote input authority, moving or stale neutral boundaries and incomplete/racing witness samples; exact run reports all 19 tests PASS.",
+      "disposition": "VERIFIED"
+    },
+    {
+      "item": "Exact run 34605253942 result reports passed=true/errors=[], MVP2 focused 27 assertions, runtime_workload_pass=true, all declared negative checks true and all child exit codes zero. The result itself explicitly keeps independent_verdict=false and predicate_verified=false.",
+      "disposition": "VERIFIED"
+    },
+    {
+      "item": "Original artifact 10266940288 is bound to the exact runtime by ZIP SHA256 850c2422884493c4bd8aeccc2e5dad286c7550610bf43397fe3722f05c746f1f and native manifest SHA256 885a15a7552918a67ada595796bb1e4cfe25fb77c68de5c896dac5cdaea4300f; all 35 indexed member digests were rechecked with zero mismatch.",
+      "disposition": "VERIFIED"
+    },
+    {
+      "item": "Repository-committed REUSED projection contains byte-identical raw result/test/PC0/version witnesses from that artifact. Its standard Harness manifest binds work order, epoch, exact HEAD/TREE, runner, run and every reused artifact digest; PNG captures remain in the complete original digest-bound artifact and are not silently presented as committed projection members.",
+      "disposition": "VERIFIED"
+    },
+    {
+      "item": "Validation workflow uses exact github.sha checkout, persist-credentials=false, read-only permissions, pinned Godot artifact hash and no source export or Git write; changing the workflow therefore does not create a hidden transport/acceptance path.",
+      "disposition": "VERIFIED"
+    },
+    {
+      "item": "Append-only event 7 remains IMPLEMENTATION_COMMITTED / IN_PROGRESS / IMPLEMENTER and does not claim MVP2 verified, merge authorization or whole-MVP acceptance.",
+      "disposition": "VERIFIED"
+    }
+  ],
+  "rank_up_moves": [
+    "When MVP3+ begins, replace the immutable bootstrap-only visual surface with the already-owned canonical seam/mutation presentation route rather than extending MVP2 with a local terrain writer.",
+    "A later product checkpoint may add a fresh Windows graphical MVP2 corroboration, but it is not required to prove this Linux exact two-client leaf because the Work Order did not require independent-machine reexecution."
+  ],
+  "evidence_gaps": [
+    "Full world/core regression was not run for this MVP2 leaf; the exact result states NOT_RUN_THIS_LEAF. This remains a whole-MVP checkpoint requirement, not evidence for the bounded two-client predicate.",
+    "No fresh Windows MVP2 run is claimed. The exact machine execution is Ubuntu/X11 with the pinned Linux double-Godot binary.",
+    "The two viewport PNGs are retained in the complete digest-bound original artifact but are not members of the repository-committed authorizing projection because the available connector could not safely import their large binary payload byte-for-byte. Semantic visibility is separately enforced by live in-engine observation and negative hidden/out-of-frustum controls.",
+    "The exact run was made against then-canonical main 127c732a56cc5c25d5712f24a7627ed4bb877374. Current main movement to 7dfc68ab5a1e90254a1b7039807f275b5da04eef requires a separate continuation/main-move audit before the live predicate event; this review does not pretend the historical audit is current."
+  ],
+  "risk_assessment": "The reviewed MVP2 leaf is a CRITICAL parent-scope composition but the bounded implementation does not transfer canonical ownership. Runtime authority remains the existing M3/NX server path; clients use its prediction/replica APIs and existing read-only remote presenter. The P7-derived surface is explicitly immutable presentation cache with no retained mutable Matter store, collision, dig writer or network-mutation claim. The exact execution proves three isolated processes, two graphical game clients, both-direction movement observed through one authoritative snapshot, identical Item Graph, exact session/build/head fingerprint, neutral acknowledged boundaries, visibility and multiple negative falsifiers. The strongest residual risks are deliberately outside this leaf: seams, network digging, exactly-once material output, persistence/restart, full world/core and whole-MVP human acceptance. No required fix is identified for MVP_TWO_CLIENT_SHARED_WORLD itself.",
+  "summary": "PASS for the exact frozen MVP2 runtime subject 287df80c69840fea7ae9ac0ea69a07581f192d34 / tree e591dc6c5346139bc1b4659915c54bf80603713e, limited to MVP_TWO_CLIENT_SHARED_WORLD. Source review finds no duplicate canonical authority or hidden local Matter/Item/persistence/network owner. Exact digest-bound run 34605253942 plus repository-committed REUSED witnesses prove two distinct graphical clients share and observe one authoritative player/Item state, each can move through the existing input/prediction path, negative controls reject false evidence, and all owned processes stop cleanly. This PASS does not authorize runtime merge, whole-MVP acceptance, MVP3/P8 or claim the deferred seam/dig/restart predicates.",
+  "merge_authorized": false
+}

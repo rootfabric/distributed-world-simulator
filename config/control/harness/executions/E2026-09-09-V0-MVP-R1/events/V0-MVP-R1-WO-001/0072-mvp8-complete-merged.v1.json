@@ -1,0 +1,24 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-09-09-V0-MVP-R1-V0-MVP-R1-WO-001-0072-MVP8-COMPLETE-MERGED",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "sequence": 72,
+  "event_type": "MERGE_COMPLETED",
+  "work_state": "IN_PROGRESS",
+  "recorded_at_utc": "2026-09-22T11:29:01Z",
+  "actor": "DIRECTOR",
+  "branch": "feature/v0-mvp-playable-seamless-planet-r1",
+  "head_sha": "a1db0c66762bee887f0bf2643f7c000961e64520",
+  "tree_sha": "8fc0044ff42ad502e6457593a185465af7d2a825",
+  "predicate": "MVP_BOUNDED_INTERACTIVE_WORKLOAD",
+  "command": "MVP8-COMPLETE-MERGED",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence/MVP8-PR680-MERGE-RECEIPT-R1.v1.json",
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence/MVP8-LEAF-CLOSURE-DC6E7FFF-R1.v1.json",
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/verifications/MVP8-INDEPENDENT-REVIEW-DC6E7FFF-R1.v1.json",
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/verifications/MVP8-INDEPENDENT-VERIFICATION-DC6E7FFF-R1.v1.json"
+  ],
+  "summary": "MVP8 is COMPLETE_MERGED. Human acceptance and merge authorization were recorded, PR #680 merged exact reviewed/verifier subject dc6e7fff into feature/v0-mvp-playable-seamless-planet-r1 as merge commit a1db0c66. Merge tree equals reviewed product tree 8fc0044f; no additional product drift was introduced. Parent Work Order remains IN_PROGRESS for any remaining non-MVP8 gates."
+}

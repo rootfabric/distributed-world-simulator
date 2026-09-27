@@ -1,0 +1,32 @@
+{
+  "schema": "distributed_world_simulator.harness_human_attention.v1",
+  "decision_id": "HA-V0-MVP6-JOURNAL-BASELINE-MERGE-R1",
+  "program": "V0",
+  "checkpoint": "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE",
+  "risk_class": "CRITICAL",
+  "reason": "Causal canonical-baseline repair is complete and independently reviewed/verified. Main6982 still contains the demonstrated journal defect. Exact PR646 d9706b157e84c653a753cc54243ce6651d53319c / tree4925ea293c15d88153278437976a3b69f8985ccf contains the approved four-line repair and fail-closed ACT0 control maintenance. Runtime focused Windows/Linux and main full world327/332 PASS; final ACT0 Windows18 and Linux18 PASS. Full Linux Harness330/1failure and PR control65/1failure remain FAIL only on unchanged canonical directional PC0 RED. No clearance accepted or assertion weakened. Merge is the declared HUMAN prerequisite before default canonical NX revalidation.",
+  "decision_required": "Разрешить merge ровно PR #646 https://github.com/rootfabric/distributed-world-simulator/pull/646 с HEAD d9706b157e84c653a753cc54243ce6651d53319c, tree4925ea293c15d88153278437976a3b69f8985ccf в main6982a563dd0c88c81449566131852c601ae89868. Это journal baseline repair вместе с проверенным ACT0 guard при явно сохранённом directional RED; не acceptance clearance/MVP6. PR643 одновременно не merge. После merge обязательны default NX revalidation, реальные PC0 и отдельный main-owned clearance.",
+  "options": [
+    "AUTHORIZE_EXACT_PR646_JOURNAL_BASELINE_MERGE",
+    "HOLD_PR646_AND_KEEP_MVP6_CLEARANCE_BLOCKED"
+  ],
+  "recommended_option": "AUTHORIZE_EXACT_PR646_JOURNAL_BASELINE_MERGE",
+  "recommendation_reason": "Устранить доказанную причину failing canonical baseline в существующем owner. Все доступные bounded repair checks и независимые роли завершены; remaining directional RED нельзя честно устранить декларацией до canonical repair.",
+  "blast_radius": [
+    "NX6/M7 same-revision prediction projection rollback",
+    "ACT0 immutable runtime fence exact approved journal exception",
+    "Canonical main baseline required for subsequent V0 to NX revalidation"
+  ],
+  "blocking": true,
+  "status": "RESOLVED",
+  "resolution": "Владелец явно ответил «разрешаю» на exact PR646 merge request. Разрешение зафиксировано в PR comment5706008533. Повторно проверены HEAD d9706b157e84c653a753cc54243ce6651d53319c / TREE4925ea293c15d88153278437976a3b69f8985ccf и main6982a563dd0c88c81449566131852c601ae89868. PR646 переведён из draft и успешно merged с expected_head_sha guard: merge commit a6d5eb6b287130a638ba6cf397c34e29169948c1, TREE4925ea293c15d88153278437976a3b69f8985ccf, родители [6982a563dd0c88c81449566131852c601ae89868,d9706b157e84c653a753cc54243ce6651d53319c]. Git commit API подтвердил точное дерево и родителей; PR API подтвердил merged=true и merged_at=2026-09-16T23:25:58Z. PR643 и feature PR597 не сливались. Закрыт только этот выполненный merge gate; directional clearance, postmerge default NX validation и epoch audit не объявлены готовыми, MVP6 и parent Work Order остаются IN_PROGRESS.",
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/supporting-evidence/MVP6-JOURNAL-PR646-MERGE-RECEIPT-R1.v1.json",
+    "docs/control/mvp-act0-r1/MVP6_JOURNAL_MERGE_HANDOFF_R1_RU.md",
+    "docs/control/mvp-act0-r1/journal-resolution-exact-r1/machine-manifest.json",
+    "docs/control/mvp-act0-r1/journal-world-control-evidence-r1/world-core-verifier/result.json",
+    "docs/control/mvp-act0-r1/act0-control-evidence-r1/d9706b15/final-manifest.json",
+    "docs/control/mvp-act0-r1/act0-control-evidence-r1/d9706b15/reviewer/review.json",
+    "docs/control/mvp-act0-r1/act0-control-evidence-r1/d9706b15/verifier/result.json"
+  ]
+}

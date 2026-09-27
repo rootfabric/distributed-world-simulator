@@ -1,0 +1,75 @@
+{
+  "schema": "distributed_world_simulator.mvp8_windows_r2_carrier_dispatch.v1",
+  "recorded_at_utc": "2026-09-20T21:38:00Z",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "frozen_product": {
+    "head": "90bc1026f0f5749492107191233330f87c8c70df",
+    "tree": "4b6f2d48f7ef8d9c441ae89d2cbb02c730ef7f71",
+    "freeze_ref": "freeze/v0-mvp8-review-90bc1026-r1",
+    "product_source_changed": false
+  },
+  "prior_verifier": {
+    "branch": "verify/v0-mvp8-90bc1026-r1",
+    "commit": "502f5ea8d12f97b89577bc28d57f473918fe8f16",
+    "verdict": "EVIDENCE_GAP",
+    "blocking_gap": "MVP8-VER-GAP-001"
+  },
+  "r2_instruction": {
+    "branch": "control/v0-mvp8-independent-handoff-r1",
+    "commit": "7164f1b726e35dac66447676c70292f045711e4e",
+    "path": "config/control/harness/executions/E2026-09-09-V0-MVP-R1/verifications/MVP8-FRESH-INDEPENDENT-VERIFIER-90BC1026-R2-GAP-CLOSURE-INSTRUCTION.md"
+  },
+  "carrier": {
+    "branch": "control/v0-mvp8-windows-gap-carrier-r1",
+    "head": "a4ca381fb1766b72759308295321ba8ca47c0e7d",
+    "workflow": ".github/workflows/mvp8-windows-gap-closure-r2.yml",
+    "frozen_checkout": "90bc1026f0f5749492107191233330f87c8c70df",
+    "exact_subject_tree": "4b6f2d48f7ef8d9c441ae89d2cbb02c730ef7f71",
+    "preserves_raw_mvp8_snapshot": true,
+    "hashes_raw_files": true,
+    "binds_bounded_mvp7_world_core_env": true,
+    "sets_predicate_verified": false,
+    "sets_independent_verdict": false
+  },
+  "dispatch": {
+    "run_id": 35539050245,
+    "job_id": 106153224998,
+    "status": "queued",
+    "conclusion": null,
+    "runner_started": false,
+    "runner_name": null,
+    "created_at_utc": "2026-09-20T21:33:00Z",
+    "observed_at_utc": "2026-09-20T21:38:00Z"
+  },
+  "infrastructure_corroboration": {
+    "other_windows_run": {
+      "run_id": 35516641991,
+      "name": "FABRIC-BAKE B0.4-C Windows Double Runtime",
+      "status": "queued",
+      "created_at_utc": "2026-09-20T14:29:30Z"
+    },
+    "inference": "The repository Windows self-hosted executor is not currently accepting queued Windows jobs. This is infrastructure availability evidence, not an MVP8 frozen-product failure."
+  },
+  "already_green": {
+    "linux_world_core": {
+      "run_id": 35515256366,
+      "job_id": 106089996971,
+      "artifact_id": 10607661947,
+      "digest": "sha256:9ed20f0d75f2809070e10f6247b4458309ed966de16b871104153a89be0be3a4",
+      "declared": 349,
+      "discovered": 349,
+      "steps": 354,
+      "failed": 0
+    },
+    "windows_mvp8_prior_exact_pass": true,
+    "pc0": "YELLOW_NON_RED"
+  },
+  "state": {
+    "product_defect_known": false,
+    "verifier_r2_result_published": false,
+    "mvp8_verified": false,
+    "mvp8_closed": false,
+    "blocker": "Independent Windows R2 execution has not started because the self-hosted Windows executor is unavailable/idle from the queue perspective."
+  }
+}

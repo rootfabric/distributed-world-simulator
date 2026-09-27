@@ -1,0 +1,217 @@
+name: V0 FINAL.1 Main Catch-up Validation
+
+on:
+  push:
+    branches:
+      - integration/v0-final-1-main-catchup-r1
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: v0-final-1-main-catchup
+  cancel-in-progress: false
+
+env:
+  MAIN_HEAD: e200a61cb55930378d11c39dcc5950cf49db603c
+  V0_HEAD: a1db0c66762bee887f0bf2643f7c000961e64520
+  COMPOSITION_MERGE: 4fe42745e77f784fba52f1c11223ef002fccfb9a
+  PYTHONUTF8: '1'
+  PYTHONDONTWRITEBYTECODE: '1'
+  BREAKPOINT_RUNTIME_DISABLED: '1'
+  GODOT_SILENCE_ROOT_WARNING: '1'
+  PLANET_SIMULATOR_INVENTORY_PROFILE: planet_default
+
+jobs:
+  ubuntu-source:
+    name: Ubuntu source composition
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout exact catch-up candidate
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Bind ancestry and zero V0 product drift
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          git fetch --quiet origin main:refs/remotes/origin/main feature/v0-mvp-playable-seamless-planet-r1:refs/remotes/origin/feature/v0-mvp-playable-seamless-planet-r1
+          test "$(git rev-parse origin/main)" = "$MAIN_HEAD"
+          test "$(git rev-parse origin/feature/v0-mvp-playable-seamless-planet-r1)" = "$V0_HEAD"
+          git merge-base --is-ancestor "$MAIN_HEAD" HEAD
+          git merge-base --is-ancestor "$V0_HEAD" HEAD
+          test "$(git rev-parse "$COMPOSITION_MERGE^1")" = "$MAIN_HEAD"
+          test "$(git rev-parse "$COMPOSITION_MERGE^2")" = "$V0_HEAD"
+          test "$(git rev-parse HEAD:tests/harness/mvp_act0_base.py)" = "$(git rev-parse "$MAIN_HEAD":tests/harness/test_v0_mvp_act0.py)"
+          python3 - <<'PY'
+          import subprocess
+          prefixes = [
+              "scripts/runtime/networked_gameplay/mvp",
+              "scripts/runtime/networked_gameplay/m4",
+              "scripts/runtime/networked_gameplay/services",
+              "scripts/runtime/networked_gameplay/networked_gameplay_service_p2.gd",
+              "scripts/network/prediction/predicted_item_interaction_journal.gd",
+              "scripts/simulation",
+              "scenes/labs/mvp",
+              "tests/runtime/test_v0_mvp_",
+              "tests/integration/test_v0_mvp_",
+              "tests/fixtures/v0_mvp",
+          ]
+          drift=subprocess.check_output(
+              ["git","diff","--name-only","a1db0c66762bee887f0bf2643f7c000961e64520","HEAD","--",*prefixes],
+              text=True,
+          ).strip()
+          assert not drift, "CRITICAL_V0_PRODUCT_DRIFT:\n"+drift
+          print("V0_FINAL_1_CRITICAL_PRODUCT_DRIFT_ZERO")
+          PY
+          test -z "$(git status --porcelain --untracked-files=no)"
+
+      - name: Install Harness dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install --disable-pip-version-check -r scripts/harness/requirements.txt
+          python3 -m py_compile tests/harness/mvp_act0_base.py tests/harness/test_v0_mvp_act0.py
+
+      - name: Current-main plus V0 ACT0 compatibility
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/v0-final-1-source
+          python3 -m unittest tests.harness.test_v0_mvp_act0 | tee artifacts/v0-final-1-source/act0.log
+          python3 -m unittest tests.harness.test_project_control_directional_clearance tests.harness.test_mvp6_postmerge_directional_clearance tests.harness.test_optional_evidence_sink_contract | tee artifacts/v0-final-1-source/main-harness.log
+          test -z "$(git status --porcelain --untracked-files=no)"
+
+      - name: Bind Ubuntu source summary
+        if: always()
+        shell: bash
+        run: |
+          mkdir -p artifacts/v0-final-1-source
+          python3 - <<'PY'
+          import json,pathlib,subprocess
+          def git(*a): return subprocess.check_output(["git",*a],text=True).strip()
+          value={
+            "schema":"distributed_world_simulator.v0_final_1_source_validation.v1",
+            "head":git("rev-parse","HEAD"),
+            "tree":git("rev-parse","HEAD^{tree}"),
+            "main_head":"e200a61cb55930378d11c39dcc5950cf49db603c",
+            "v0_head":"a1db0c66762bee887f0bf2643f7c000961e64520",
+            "composition_merge":"4fe42745e77f784fba52f1c11223ef002fccfb9a",
+            "tracked_after":git("status","--porcelain","--untracked-files=no"),
+          }
+          pathlib.Path("artifacts/v0-final-1-source/summary.json").write_text(json.dumps(value,indent=2)+"\n")
+          print(json.dumps(value))
+          PY
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v0-final-1-source-${{ github.run_id }}-${{ github.run_attempt }}
+          path: artifacts/v0-final-1-source/
+          if-no-files-found: warn
+          retention-days: 90
+
+  windows-runtime:
+    name: Windows exact MVP8 composition
+    needs: ubuntu-source
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 75
+    defaults:
+      run:
+        shell: pwsh
+    env:
+      GODOT_BIN: C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe
+      EXPECTED_GODOT_VERSION: 4.7.1.stable.double.custom_build.a13da4feb
+      EXPECTED_GODOT_SHA256: 3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5
+
+    steps:
+      - name: Checkout exact combined candidate
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Host preflight and exact identity
+        run: |
+          $ErrorActionPreference = "Stop"
+          $head = (git rev-parse HEAD).Trim()
+          $tree = (git rev-parse "HEAD^{tree}").Trim()
+          if ($head -ne $env:GITHUB_SHA) { throw "HEAD_MISMATCH:$head" }
+          git merge-base --is-ancestor $env:MAIN_HEAD HEAD
+          if ($LASTEXITCODE -ne 0) { throw "MAIN_NOT_ANCESTOR" }
+          git merge-base --is-ancestor $env:V0_HEAD HEAD
+          if ($LASTEXITCODE -ne 0) { throw "V0_NOT_ANCESTOR" }
+          if (-not (Test-Path -LiteralPath $env:GODOT_BIN -PathType Leaf)) { throw "GODOT_NOT_FOUND:$env:GODOT_BIN" }
+          $version = (& $env:GODOT_BIN --version 2>&1 | Select-Object -First 1).Trim()
+          $sha = (Get-FileHash -Algorithm SHA256 -LiteralPath $env:GODOT_BIN).Hash.ToLowerInvariant()
+          if ($version -ne $env:EXPECTED_GODOT_VERSION) { throw "GODOT_VERSION_MISMATCH:$version" }
+          if ($sha -ne $env:EXPECTED_GODOT_SHA256) { throw "GODOT_SHA256_MISMATCH:$sha" }
+          $godotProcesses = @(Get-Process -ErrorAction SilentlyContinue | Where-Object { $_.ProcessName -like "godot*" })
+          if ($godotProcesses.Count -ne 0) { throw "HOST_PREFLIGHT_EXISTING_GODOT" }
+          $os = Get-CimInstance Win32_OperatingSystem
+          $freeGb = [Math]::Round(($os.FreePhysicalMemory * 1KB) / 1GB, 2)
+          if ($freeGb -lt 10.0) { throw "HOST_PREFLIGHT_LOW_RAM:$freeGb" }
+          $out = "artifacts\v0-final-1-windows"
+          New-Item -ItemType Directory -Force $out | Out-Null
+          [ordered]@{
+            schema="distributed_world_simulator.v0_final_1_windows_preflight.v1"
+            head=$head
+            tree=$tree
+            godot_version=$version
+            godot_sha256=$sha
+            free_ram_gb=$freeGb
+            existing_godot_processes=$godotProcesses.Count
+          } | ConvertTo-Json -Depth 5 | Set-Content -Encoding UTF8 "$out\preflight.json"
+
+      - name: Exact MVP8 cold-start workload on combined candidate
+        run: |
+          $ErrorActionPreference = "Stop"
+          $out = "artifacts\v0-final-1-windows"
+          $live = "$out\mvp8"
+          if (Test-Path $live) { throw "PRESERVE_PREVIOUS_EVIDENCE" }
+          $env:EXPECTED_HEAD = (git rev-parse HEAD).Trim()
+          & python tests/integration/test_v0_mvp_8_bounded_workload.py --engine "$env:GODOT_BIN" --output "$live" *> "$out\mvp8.stdout.log"
+          $code = $LASTEXITCODE
+          Get-Content "$out\mvp8.stdout.log"
+          if ($code -ne 0) { throw "MVP8_RUNTIME_FAILED:$code" }
+          $m = Get-Content -Raw "$live\manifest.json" | ConvertFrom-Json
+          if ($m.passed -ne $true) { throw "MVP8_MANIFEST_NOT_PASS" }
+          $checks = @($m.checks.PSObject.Properties)
+          if ($checks.Count -ne 20 -or @($checks | Where-Object { $_.Value -ne $true }).Count -ne 0) { throw "MVP8_CHECKS_NOT_20_OF_20" }
+          if (@($m.negative_controls).Count -ne 14) { throw "MVP8_NEGATIVES_NOT_14" }
+          if (@($m.fatal_logs).Count -ne 0) { throw "MVP8_FATAL_LOGS_PRESENT" }
+          if ($m.project_import.returncode -ne 0 -or $m.project_import.global_script_class_cache_bytes -le 0) { throw "MVP8_PROJECT_IMPORT_NOT_PASS" }
+          $head = (git rev-parse HEAD).Trim()
+          $tree = (git rev-parse "HEAD^{tree}").Trim()
+          if ($m.subject_head -ne $head -or $m.subject_tree -ne $tree) { throw "MVP8_SUBJECT_MISMATCH" }
+          $tracked = @(git status --porcelain --untracked-files=no)
+          if ($tracked.Count -ne 0) { throw "TRACKED_DIRTY_AFTER" }
+          [ordered]@{
+            schema="distributed_world_simulator.v0_final_1_windows_runtime.v1"
+            head=$head
+            tree=$tree
+            exit_code=$code
+            passed=$m.passed
+            checks=$checks.Count
+            negative_controls=@($m.negative_controls).Count
+            fatal_logs=@($m.fatal_logs).Count
+            project_import_exit=$m.project_import.returncode
+            class_cache_bytes=$m.project_import.global_script_class_cache_bytes
+          } | ConvertTo-Json -Depth 6 | Set-Content -Encoding UTF8 "$out\summary.json"
+          Write-Host "V0_FINAL_1_WINDOWS_MVP8_EXACT_PASS $head $tree"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v0-final-1-windows-${{ github.run_id }}-${{ github.run_attempt }}
+          path: artifacts/v0-final-1-windows/
+          if-no-files-found: warn
+          retention-days: 90

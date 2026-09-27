@@ -1,0 +1,21 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-09-09-V0-MVP-R1-V0-MVP-R1-WO-001-0019-MVP6-POSTCLEARANCE-MAIN-AUDIT-RESUMED",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "sequence": 19,
+  "event_type": "RECOVERY_RESUMED",
+  "work_state": "IN_PROGRESS",
+  "recorded_at_utc": "2026-09-17T06:47:00Z",
+  "actor": "INTEGRATOR",
+  "branch": "feature/v0-mvp-playable-seamless-planet-r1",
+  "head_sha": "b7898d306bb6452e2427cec10661a3570d1dd242",
+  "command": "MVP_ACT0_POST_MERGE_EPOCH_AUDIT",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/audits/MVP6-POSTCLEARANCE-MAIN-AUDIT-99E8EFE2-R1.v1.json",
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/supporting-evidence/MVP6-POSTCLEARANCE-99E8EFE2-PC0-R1.v1.json",
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/supporting-evidence/MVP6-NX-CLEARANCE-PR649-MERGE-RECEIPT-R1.v1.json"
+  ],
+  "summary": "Canonical main 99e8efe2 after explicitly approved PR646 journal repair and PR649 control-only V0-to-NX clearance was audited on the real main. Project Control run35190349772 is SUCCESS with Harness349/349 and raw standard/directional YELLOW/YELLOW; clearance005 blocks the former V0-to-NX critical watch with zero RED findings. Resume the same IN_PROGRESS MVP6 Work Order. This event does not accept NX, MVP6, the whole MVP, or authorize runtime/main feature merge."
+}

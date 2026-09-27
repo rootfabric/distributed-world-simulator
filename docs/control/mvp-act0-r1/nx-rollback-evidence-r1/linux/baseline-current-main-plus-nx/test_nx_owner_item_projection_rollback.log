@@ -1,0 +1,24 @@
+Godot Engine v4.7.1.stable.double.custom_build.a13da4feb (2026-07-13 21:00:28 UTC) - https://godotengine.org
+
+ERROR: NX.C1 item rollback: pickup rollback restores canonical world placement
+   at: push_error (core/variant/variant_utility.cpp:1023)
+   GDScript backtrace (most recent call first):
+       [0] _assert (res://tests/network/test_nx_owner_item_projection_rollback.gd:178)
+       [1] _test_same_revision_pickup_and_drop_rollback (res://tests/network/test_nx_owner_item_projection_rollback.gd:65)
+       [2] _run (res://tests/network/test_nx_owner_item_projection_rollback.gd:22)
+ERROR: NX.C1 item rollback: drop rollback restores authoritative quantity
+   at: push_error (core/variant/variant_utility.cpp:1023)
+   GDScript backtrace (most recent call first):
+       [0] _assert (res://tests/network/test_nx_owner_item_projection_rollback.gd:178)
+       [1] _test_same_revision_pickup_and_drop_rollback (res://tests/network/test_nx_owner_item_projection_rollback.gd:90)
+       [2] _run (res://tests/network/test_nx_owner_item_projection_rollback.gd:22)
+ERROR: NX.C1 item rollback: drop rollback removes predicted spawn
+   at: push_error (core/variant/variant_utility.cpp:1023)
+   GDScript backtrace (most recent call first):
+       [0] _assert (res://tests/network/test_nx_owner_item_projection_rollback.gd:178)
+       [1] _test_same_revision_pickup_and_drop_rollback (res://tests/network/test_nx_owner_item_projection_rollback.gd:91)
+       [2] _run (res://tests/network/test_nx_owner_item_projection_rollback.gd:22)
+NX.C1 owner item projection rollback: FAIL (37 assertions, 3 failures)
+ - pickup rollback restores canonical world placement
+ - drop rollback restores authoritative quantity
+ - drop rollback removes predicted spawn

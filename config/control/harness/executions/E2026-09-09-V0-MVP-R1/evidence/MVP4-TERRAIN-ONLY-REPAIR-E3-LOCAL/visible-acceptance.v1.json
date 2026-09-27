@@ -1,0 +1,81 @@
+{
+  "schema": "distributed_world_simulator.mvp4_visible_terrain_gate.v2",
+  "passed": true,
+  "process_exit_code": 0,
+  "positive_control_actual_terrain_mutation": {
+    "a": true,
+    "b": true
+  },
+  "checks": {
+    "a": {
+      "terrain_changed_pixels": 203,
+      "minimum_required": 32,
+      "ui_excluded_region": [
+        20,
+        18,
+        420,
+        237
+      ],
+      "before_terrain_sha256": "e3818670e66c8377e9830396e6fd7d15b40fcf8071ca0758cae1df879bed3931",
+      "after_terrain_sha256": "6c9937ebab9adc54fb5c8111c7b9efaaa16286917d8e77ef9ac5985eff56f525",
+      "passed": true
+    },
+    "b": {
+      "terrain_changed_pixels": 203,
+      "minimum_required": 32,
+      "ui_excluded_region": [
+        20,
+        18,
+        420,
+        237
+      ],
+      "before_terrain_sha256": "e3818670e66c8377e9830396e6fd7d15b40fcf8071ca0758cae1df879bed3931",
+      "after_terrain_sha256": "6c9937ebab9adc54fb5c8111c7b9efaaa16286917d8e77ef9ac5985eff56f525",
+      "passed": true
+    }
+  },
+  "hud_only_negative_control": {
+    "rejected_all": true,
+    "cases": [
+      {
+        "actor": "a",
+        "ui_region": [
+          20,
+          18,
+          420,
+          237
+        ],
+        "identical_terrain": true,
+        "gate_rejected": true,
+        "gate_changed_pixels": 0,
+        "legacy_row160_would_pass": true,
+        "legacy_row160_changed_pixels": 11024,
+        "hud_only_pair_sha256": [
+          "4e7315861320199082171bbe59789d6a20a5b996fd4aabb566dd77d6004f0840",
+          "be5345653ee25e9484f5bfe877612ed62ba7da115f0799b692b15be7e59e08f5"
+        ]
+      },
+      {
+        "actor": "b",
+        "ui_region": [
+          20,
+          18,
+          420,
+          237
+        ],
+        "identical_terrain": true,
+        "gate_rejected": true,
+        "gate_changed_pixels": 0,
+        "legacy_row160_would_pass": true,
+        "legacy_row160_changed_pixels": 11149,
+        "hud_only_pair_sha256": [
+          "45f1ea37cb5ac5b927d5a8b8ac4f564dfe846c23c41018985b67a370aea85cea",
+          "01bc5b4ae690133ebcc1fc106cf36db4677e3cdaed87de5ab09cc1952c39b39a"
+        ]
+      }
+    ]
+  },
+  "error": "",
+  "manual_input_executed": false,
+  "mvp4_predicate_verified": false
+}

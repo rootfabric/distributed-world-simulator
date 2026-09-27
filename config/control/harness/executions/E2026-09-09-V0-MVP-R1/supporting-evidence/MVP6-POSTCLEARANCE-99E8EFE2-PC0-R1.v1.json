@@ -1,0 +1,64 @@
+{
+  "schema": "distributed_world_simulator.mvp6_postclearance_pc0_evidence.v1",
+  "evidence_kind": "CANONICAL_MAIN_PROJECT_CONTROL_AFTER_APPROVED_CLEARANCE_MERGE",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "checkpoint": "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE",
+  "canonical_main": "99e8efe2422e02fedec40778e12748611d68fb5f",
+  "canonical_main_tree": "f4ae35216de7ed915fcb0c46b03b0f35baeccd6b",
+  "merged_clearance_pr": 649,
+  "clearance_id": "V0-MVP6-NX-POSTMERGE-CRITICAL-WATCH-CLEARANCE-005",
+  "human_gate": "HA-V0-MVP6-NX-DIRECTIONAL-CLEARANCE-MERGE-R2",
+  "workflow_run": 35190349772,
+  "job_id": 105101320511,
+  "job_conclusion": "success",
+  "full_harness": {
+    "tests": 349,
+    "failures": 0,
+    "errors": 0,
+    "skips": 0,
+    "result": "OK"
+  },
+  "focused_groups": [
+    {"name": "project_overview_and_control_validation", "tests": 37, "failures": 0},
+    {"name": "harness_checkpoint_session", "tests": 22, "failures": 0},
+    {"name": "architecture_compatibility", "tests": 65, "failures": 0},
+    {"name": "h0_2_checkpoint", "tests": 8, "failures": 0},
+    {"name": "product_train", "tests": 25, "failures": 0},
+    {"name": "generation80_and_directional_clearance", "tests": 19, "failures": 0}
+  ],
+  "canonical_pc0": {
+    "standard": "YELLOW",
+    "directional": "YELLOW",
+    "standard_non_red": true,
+    "directional_non_red": true,
+    "directional_red_findings": 0,
+    "v0_to_nx_finding": "CRITICAL_WATCH_HIT_BLOCKED_BY_ACCEPTED_CLEARANCE",
+    "v0_to_nx_clearance": "V0-MVP6-NX-POSTMERGE-CRITICAL-WATCH-CLEARANCE-005"
+  },
+  "artifact": {
+    "artifact_id": 10483362973,
+    "name": "project-control-report",
+    "zip_sha256": "153ecdd4e23274367cb9561c19c95016b221e1acd92a99b2851ed2cf07f28b49",
+    "project_control_report_sha256": "5b8003e6e075ca264b7395399e370606b8979f3dab7916bc78fef1871ffaa19b",
+    "directional_watch_report_sha256": "fd37d28167416c7ee9bb373dad6cd00f00f4d080400bac23cfc0802eaec54a49",
+    "project_status_sha256": "8ff710b7a17c49ed1c944a8fb230f2f8f7e5c0de14e0eb553073e015668d0088",
+    "directional_status_sha256": "be0e4ba2fb9c574a44df4064b0a52d32b64712b5e9610201507b89deb6d1e5fe"
+  },
+  "main_delta_from_previous_audited_main": {
+    "previous_audited_main": "675c04bb213bbb68b8cdb500d540d57ce1490318",
+    "ahead_by": 35,
+    "changed_paths": 27,
+    "classified_changes": [
+      "ECO A9 isolated ecology research/runtime/validation paths",
+      "approved PR646 journal baseline repair plus its bounded tests/control evidence",
+      "approved PR649 main-owned V0-to-NX directional clearance plus bounded harness tests/docs"
+    ],
+    "mvp6_runtime_owner_mutation_in_main_since_previous_audit": "journal repair only; M4 MVP6 feature runtime is not merged into main",
+    "feature_runtime_merge_authorized": false
+  },
+  "canonical_non_red_proven": true,
+  "epoch_audit_written_by_this_record": false,
+  "mvp6_predicate_verified": false,
+  "whole_mvp_accepted": false
+}

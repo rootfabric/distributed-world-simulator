@@ -1,0 +1,76 @@
+{
+  "head": "84ab0c0fba87f12dcfc94e32bb9cfa4eb8abb481",
+  "tree": "f7e3f255bcc4878f3e738e011e3d45bf3edcdb81",
+  "engine_sha256": "3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5",
+  "commands": [
+    {
+      "name": "construction",
+      "argv": [
+        "C:/Godot/godot/bin/godot.windows.editor.double.x86_64.console.exe",
+        "--headless",
+        "--path",
+        "C:\\distributed-world-simulator\\worktrees\\mvp6-continuation",
+        "--script",
+        "res://tests/runtime/test_v0_mvp_6_item_construction_composition.gd"
+      ],
+      "exit_code": 0,
+      "assertions": [
+        223
+      ],
+      "fatal": [],
+      "passed": true,
+      "sha256": "4d59b75d417bda9abb66de8b7e60e28eae6639ec1f7f4b8022af2eec12da0705"
+    },
+    {
+      "name": "p4",
+      "argv": [
+        "C:/Godot/godot/bin/godot.windows.editor.double.x86_64.console.exe",
+        "--headless",
+        "--path",
+        "C:\\distributed-world-simulator\\worktrees\\mvp6-continuation",
+        "--script",
+        "res://tests/runtime/test_v0_p4_live_mvp_composition_ordering.gd"
+      ],
+      "exit_code": 0,
+      "assertions": [
+        64
+      ],
+      "fatal": [],
+      "passed": true,
+      "sha256": "8bbce5ebf3c41306d0d1edd67fdd606db9ce6886fe6aba81edf48c894a4e9967"
+    },
+    {
+      "name": "rollback",
+      "argv": [
+        "C:/Godot/godot/bin/godot.windows.editor.double.x86_64.console.exe",
+        "--headless",
+        "--path",
+        "C:\\distributed-world-simulator\\worktrees\\mvp6-continuation",
+        "--script",
+        "res://tests/runtime/test_v0_mvp_6_prediction_rollback.gd"
+      ],
+      "exit_code": 0,
+      "assertions": [
+        77
+      ],
+      "fatal": [],
+      "passed": true,
+      "sha256": "70b2f5a3e56fd9e1ba73d342dbbc0ea28597a55f209f06128494049dd3a8f5cb"
+    }
+  ],
+  "checks": {
+    "passed": true,
+    "native_nonempty_carry_executed": true,
+    "real_resource_construction_executed": true,
+    "two_client_derived_replication_executed": true,
+    "construction_collision_present": true,
+    "exact_report": true,
+    "no_self_acceptance": true,
+    "clean_after": true
+  },
+  "passed": true,
+  "runtime_unchanged_since": "73b88181",
+  "five_process_executed": false,
+  "physics_interaction_executed": false,
+  "mvp6_verified": false
+}

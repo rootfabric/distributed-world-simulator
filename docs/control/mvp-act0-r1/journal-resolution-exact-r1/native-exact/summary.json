@@ -1,0 +1,45 @@
+{
+  "schema": "distributed_world_simulator.mvp6_native_exact_summary.v1",
+  "subject_head": "73b8818184c93986e3313f35f9f4548c608e47e6",
+  "subject_tree": "a1bbe30fd68af5db3a9535bee942683ebe761bc1",
+  "engine_sha256": "3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5",
+  "passed": true,
+  "checks": {
+    "all_commands": true,
+    "tracked_clean_after": true,
+    "native_passed": true,
+    "native_exact_subject": true,
+    "native_no_failures": true,
+    "security_passed": true,
+    "security_exact_subject": true,
+    "security_no_failures": true,
+    "mvp3_passed": true,
+    "mvp3_exact_subject": true,
+    "mvp3_no_failures": true,
+    "mvp5_passed": true,
+    "mvp5_exact_subject": true,
+    "mvp5_no_failures": true,
+    "six_actual_transfers": true,
+    "four_nonempty_transfers": true,
+    "no_self_acceptance": true
+  },
+  "assertions": {
+    "native": 408,
+    "security": 48,
+    "mvp3": 232,
+    "mvp5": 270
+  },
+  "failures": {
+    "native": [],
+    "security": [],
+    "mvp3": [],
+    "mvp5": []
+  },
+  "native_carry_passed": true,
+  "mvp6_predicate_verified": false,
+  "independent_verdict": false,
+  "graphical_clients_executed": false,
+  "construction_executed": false,
+  "world_restart_executed": false,
+  "full_world_core_executed": false
+}

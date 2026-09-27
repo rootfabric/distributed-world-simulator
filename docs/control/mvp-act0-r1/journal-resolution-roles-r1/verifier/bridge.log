@@ -1,0 +1,6 @@
+Godot Engine v4.7.1.stable.double.custom_build.a13da4feb (2026-07-13 21:00:28 UTC) - https://godotengine.org
+
+[m7_item_rejected] {"command_type":"predicted","details":{"wire_result":{"error_code":"ITEM_ALREADY_CLAIMED","operation_id":"operation/nx6/drop/1","status":"REJECTED"}},"error_code":"ITEM_ALREADY_CLAIMED","message":"Предмет уже подобрал другой игрок","operation_id":"operation/nx6/drop/1"}
+[m7_item_rejected] {"command_type":"predicted","details":{"operation_id":"operation/nx6/lifecycle/1"},"error_code":"NX6_TEST_UNLOAD","message":"Сервер отклонил действие с предметом: NX6_TEST_UNLOAD","operation_id":"operation/nx6/lifecycle/1"}
+[m7_item_rejected] {"command_type":"item.pickup","details":{},"error_code":"ITEM_ALREADY_CLAIMED","message":"Предмет уже подобрал другой игрок","operation_id":"operation/nx6/service/pickup/1"}
+NX6 predicted item integration: PASS (66 assertions)

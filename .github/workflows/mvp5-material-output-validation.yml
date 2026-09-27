@@ -1,0 +1,100 @@
+name: MVP5 Exactly Once Material Output
+on:
+  push:
+    branches: [feature/v0-mvp-playable-seamless-planet-r1]
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: mvp5-exact-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  exact:
+    if: github.repository == 'rootfabric/distributed-world-simulator' && github.ref == 'refs/heads/feature/v0-mvp-playable-seamless-planet-r1' && (github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[mvp5-evidence]'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      EXPECTED_HEAD: ${{ github.sha }}
+      PYTHONUTF8: '1'
+      PYTHONPATH: scripts
+      BREAKPOINT_RUNTIME_DISABLED: '1'
+      GODOT_SILENCE_ROOT_WARNING: '1'
+      PLANET_SIMULATOR_INVENTORY_PROFILE: planet_default
+      LIBGL_ALWAYS_SOFTWARE: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Exact subject and parent scope
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+          test -z "$(git status --porcelain --untracked-files=no)"
+          git merge-base --is-ancestor d78760738e8032b97de2a433382fc7ddafa17fbf HEAD
+          git diff --check d78760738e8032b97de2a433382fc7ddafa17fbf HEAD
+          echo "EXPECTED_TREE=$(git rev-parse HEAD^{tree})" >> "$GITHUB_ENV"
+          mkdir -p artifacts/mvp5-exact
+          python3 - <<'PY'
+          import fnmatch,json,subprocess
+          w=json.load(open('config/control/harness/executions/E2026-09-09-V0-MVP-R1/work-orders/V0-MVP-R1-WO-001.v1.json'))
+          base='d78760738e8032b97de2a433382fc7ddafa17fbf'
+          sync_main=subprocess.check_output(['git','merge-base','HEAD','origin/main'],text=True).strip()
+          paths=subprocess.check_output(['git','diff','--name-only',base,'HEAD'],text=True).splitlines()
+          feature_paths=[]
+          inherited_main_paths=[]
+          for p in paths:
+              inherited=subprocess.run(['git','diff','--quiet',sync_main,'HEAD','--',p],check=False).returncode == 0
+              if inherited:
+                  inherited_main_paths.append(p)
+                  continue
+              feature_paths.append(p)
+              if not any(fnmatch.fnmatchcase(p,g) for g in w['allowed_paths']) or any(fnmatch.fnmatchcase(p,g) for g in w['forbidden_paths']):
+                  raise SystemExit('MVP5_WRITE_FENCE:'+p)
+          print('MVP5_WRITE_FENCE_PASS',len(feature_paths),'feature_paths',len(inherited_main_paths),'inherited_main_paths','sync_main',sync_main)
+          PY
+          if ! command -v Xvfb >/dev/null || ! command -v xauth >/dev/null; then
+            sudo -n apt-get update
+            sudo -n env DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends xvfb xauth libgl1-mesa-dri
+          fi
+      - uses: actions/download-artifact@v4
+        with:
+          name: p7-repair-engine-34117353691
+          run-id: 34117353691
+          repository: rootfabric/distributed-world-simulator
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/mvp5-engine
+      - name: Exact focused, five-process material and unchanged MVP4-MVP3 regressions
+        shell: bash
+        run: |
+          set -euo pipefail
+          export GODOT_BIN="$RUNNER_TEMP/mvp5-engine/godot"
+          test "$(sha256sum "$GODOT_BIN" | cut -d' ' -f1)" = bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7
+          chmod u+x "$GODOT_BIN"
+          xvfb-run -a -s '-screen 0 1600x900x24' python3 docs/control/mvp-act0-r1/validate_mvp5_exact.py
+      - name: Bind exact raw evidence
+        if: always()
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib,subprocess
+          out=pathlib.Path('artifacts/mvp5-exact');out.mkdir(parents=True,exist_ok=True)
+          git=lambda *a:subprocess.check_output(['git',*a],text=True).strip()
+          engine=pathlib.Path(os.environ['RUNNER_TEMP'])/'mvp5-engine/godot'
+          summary=json.loads((out/'summary.json').read_text()) if (out/'summary.json').is_file() else {}
+          graphical=json.loads((out/'graphical/manifest.json').read_text()) if (out/'graphical/manifest.json').is_file() else {}
+          files=[{'path':p.relative_to(out).as_posix(),'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()} for p in sorted(out.rglob('*')) if p.is_file() and p!=out/'manifest.json']
+          m={'schema':'distributed_world_simulator.mvp5_exact_manifest.v1','subject_head':git('rev-parse','HEAD'),'subject_tree':git('rev-parse','HEAD^{tree}'),'run_id':os.environ['GITHUB_RUN_ID'],'run_attempt':os.environ['GITHUB_RUN_ATTEMPT'],'tracked_after':git('status','--porcelain','--untracked-files=no'),'engine_sha256':hashlib.sha256(engine.read_bytes()).hexdigest() if engine.is_file() else None,'ci_passed':summary.get('passed') is True,'mvp5_predicate_verified':False,'independent_verdict':False,'full_world_core_executed':False,'graphical_mvp5_executed':bool(graphical),'graphical_mvp5_passed':graphical.get('passed') is True,'files':files}
+          (out/'manifest.json').write_text(json.dumps(m,indent=2)+'\n')
+          print(json.dumps({'head':m['subject_head'],'tree':m['subject_tree'],'ci_passed':m['ci_passed'],'graphical_mvp5_passed':m['graphical_mvp5_passed'],'files':len(files)}))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mvp5-exact-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: artifacts/mvp5-exact/
+          if-no-files-found: error
+          retention-days: 90

@@ -1,0 +1,44 @@
+{
+  "schema": "distributed_world_simulator.mvp3_supporting_evidence.v1",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "subject_head": "99477c8a310be9f88b7baea5da36e7b41b41771b",
+  "subject_tree": "449ea9101c73354162ea8fcbcecad26701b967fe",
+  "runner": "WINDOWS_LOCAL_EXACT_GRAPHICAL_GODOT",
+  "engine_version": "4.7.1.stable.double.custom_build.a13da4feb",
+  "engine_sha256": "3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5",
+  "command": ".\\RUN_V0_MVP3_GRAPHICAL_ROUNDTRIP.ps1 -OutputPath artifacts/mvp3-graphical-manual-launcher-exact-99477c8a",
+  "exit_code": 0,
+  "run_id": "363937bccef93fea46b7d773f2e7546a",
+  "manifest_sha256": "b838c55e0432a3d343100b17e71ebaa8a1dccfc2a2c8cbc8839b7e633d8b8180",
+  "report_sha256": {
+    "gateway": "b8ec602532d1bd435f7f163c6c726da2f1035a0857cdfd4625a699c183453ecf",
+    "client_a": "e65bcb86f263a6819b474763f99b08e79b601038fb89250b39b890e0a28ad98a",
+    "client_b": "3e4b0cde12349c74fd969c4ee297801840f2fe6371979705d0756f661c1280a9"
+  },
+  "viewport_sha256": {
+    "client_a": "3541c206ea5a88ce23cf2163ca3d6d0c2e5fd0a99b543759b7a839c91f868e8a",
+    "client_b": "bd950c300ce6d86dda3e3a57befa7cb1fcbd626dc306559b365c40c923dc42cd"
+  },
+  "result": {
+    "passed": true,
+    "assertions": 59,
+    "processes": 5,
+    "a_transfers": 2,
+    "final_input_sequences": {"a": 22, "b": 30},
+    "snapshots": {"a": 25, "b": 32},
+    "manual_mode_available": true,
+    "automatic_mode_regression_passed": true,
+    "disconnects": 0,
+    "reconnects": 0,
+    "respawns": 0
+  },
+  "scope": "Exact automatic regression of the same five-process launcher after adding its manual keyboard mode and bounded manual timeout.",
+  "limitations": [
+    "Keyboard interaction is user-driven when -Manual is selected; this exact evidence covers the unchanged automatic route.",
+    "This is Implementer evidence and does not independently verify or accept MVP3."
+  ],
+  "mvp3_predicate_verified": false,
+  "runtime_merge_authorized": false,
+  "main_merge_authorized": false
+}

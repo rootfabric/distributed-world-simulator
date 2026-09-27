@@ -1,0 +1,48 @@
+{
+  "schema": "distributed_world_simulator.mvp_bounded_repair.v1",
+  "repair_id": "V0-MVP1-NATIVE-MACHINE-MANIFEST-R12",
+  "parent_work_order": "V0-MVP-R1-WO-001",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "risk_class": "CRITICAL",
+  "repair_base": "dc3b37d8963691e2004cb403350682f5343b46c6",
+  "trigger": {
+    "review_pr": 597,
+    "external_reviewer": "chatgpt-codex-connector[bot]",
+    "review_comment_id": 3983787950,
+    "reviewed_head": "dc3b37d8963691e2004cb403350682f5343b46c6",
+    "finding": "REVIEW_MANIFEST_SCHEMA_INVALID",
+    "scope_verdict": "INSUFFICIENT_EVIDENCE"
+  },
+  "root_cause": "R11 emitted a custom archive manifest rather than the existing native Harness machine-evidence manifest. The underlying commands passed, but a formal reused-evidence PASS could not be consumed by the canonical loader.",
+  "canonical_fix_owner": "Evidence producer only; do not weaken scripts/harness/evidence_provenance.py or any review/acceptance contract.",
+  "allowed_paths": [
+    "docs/control/mvp-act0-r1/work-order-native-manifest-r12.v1.json",
+    "docs/control/mvp-act0-r1/validate_mvp1_r11.py",
+    ".github/workflows/mvp1-r11-exact-validation.yml"
+  ],
+  "forbidden_changes": [
+    "Existing event 1-5 bytes, role record, Windows report, Work Order snapshot",
+    "Runtime, scenes, tests, addons, project.godot, main.tscn",
+    "Harness implementation, schema, review policy, transition table, registry and acceptance"
+  ],
+  "repair": [
+    "Emit distributed_world_simulator.harness_machine_evidence_manifest.v1 with exact work-order, epoch, head/tree, runner/run, clean-checkout, artifacts and commands.",
+    "Bind native artifact paths to a future append-only evidence sink; publish exact raw command-log bytes there outside the frozen subject before consuming a Reviewer PASS.",
+    "Keep a separate complete archive member inventory and checksums. Native review commands cover import, focused runtime, scene lifecycle, Harness and PC0; Drive/CloseMission remain complete supplementary logs in the same immutable CI packet.",
+    "Use unittest quiet verbosity and Godot quiet import to reduce progress-only output; retain exit checks and all actual error output. Do not remove tests or filters, retries, safety checks, or original failure artifacts.",
+    "Preserve the original R11 interval as a frozen scope check and bound the new R12 interval separately."
+  ],
+  "required_predicates": [
+    "NATIVE_MANIFEST_IDENTITY_AND_COMMAND_BINDINGS",
+    "RAW_LOG_DIGESTS_REPRODUCIBLE",
+    "EXISTING_REVIEW_CONSUMER_COMPATIBLE_WITH_COMMITTED_PACKET",
+    "ORIGINAL_EVENTS_AND_GAMEPLAY_BYTE_IDENTICAL",
+    "FULL_HARNESS_AND_PC0_NON_RED",
+    "PINNED_GODOT_IMPORT_FOCUSED_LIFECYCLE_PASS",
+    "FRESH_EXTERNAL_EXACT_HEAD_REVIEW"
+  ],
+  "authority_boundary": "This repair proves no whole-MVP acceptance and may not invent a native PREDICATE_VERIFIED transition while the parent is IN_PROGRESS. Windows PNG/log bytes remain unavailable to this executor; keep that boundary explicit.",
+  "runtime_mutation": false,
+  "self_acceptance_authorized": false,
+  "merge_authorized": false
+}

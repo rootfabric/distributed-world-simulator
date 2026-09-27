@@ -1,0 +1,221 @@
+{
+  "schema": "distributed_world_simulator.harness_verification.v1",
+  "verification_id": "V0-MVP-R1-WO-001-MVP2-INDEPENDENT-VERIFICATION-287DF80C-R1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "program": "V0",
+  "checkpoint": "MVP ACT0",
+  "predicate": "MVP_TWO_CLIENT_SHARED_WORLD",
+  "verifier": "FRESH_INDEPENDENT_WINDOWS_VERIFIER_MVP2_R1",
+  "verifier_role_is_not_implementer_not_reviewer": true,
+  "verdict": "VERIFIED",
+  "verified_at_utc": "2026-09-12T12:46:04Z",
+  "verification_base": {
+    "handoff_branch": "control/v0-mvp2-verifier-handoff-r1",
+    "handoff_head_sha": "717f87dd15b1389ea1b768d3895d3856f24512a4",
+    "handoff_tree_sha": "918284aa0fc7843c67308c8d83e18b6761433c67",
+    "verifier_branch": "verify/v0-mvp2-287df80c-current-main-r1"
+  },
+  "frozen_runtime": {
+    "head_sha": "287df80c69840fea7ae9ac0ea69a07581f192d34",
+    "tree_sha": "e591dc6c5346139bc1b4659915c54bf80603713e",
+    "freeze_ref": "freeze/v0-mvp2-287df80c-r1",
+    "freeze_ref_points_to_head": true,
+    "production_diff_base": "6fd80b8dbc0cfc422c2ef9a05d2e60a4e7342b57"
+  },
+  "current_main_head_sha": "7dfc68ab5a1e90254a1b7039807f275b5da04eef",
+  "current_main_composition": {
+    "head_sha": "8812e229e22a711338f9243f50350cca87cec3cf",
+    "parents": [
+      "7dfc68ab5a1e90254a1b7039807f275b5da04eef",
+      "666a6ff703c82de05307b2f55562000df7709101"
+    ]
+  },
+  "verification_carrier": {
+    "head_sha": "8e0782450a2c46e58c463e5a73e23bd656ba6273",
+    "tree_sha": "3018de2a955080835ba31523e2c1bf843a0554e6",
+    "composition_to_carrier_diff_scope": [
+      "tests/harness/mvp_act0_base.py",
+      "tests/harness/test_v0_mvp_act0.py"
+    ],
+    "composition_to_carrier_changes_only_test_fixture_scope": true
+  },
+  "reviewer_record": {
+    "path": "config/control/harness/executions/E2026-09-09-V0-MVP-R1/reviews/MVP2-INDEPENDENT-REVIEW-287DF80C-R1.v1.json",
+    "sha256": "0989f5d17b1c0df7688e376bc02ca2449ac555b37f468335cf76279b328a5502",
+    "review_type": "POST_BUILD_EXACT_HEAD_REVIEW",
+    "reviewed_head_sha": "287df80c69840fea7ae9ac0ea69a07581f192d34",
+    "reviewed_tree_sha": "e591dc6c5346139bc1b4659915c54bf80603713e",
+    "verdict": "PASS",
+    "required_fixes": [],
+    "production_consumer": {
+      "entry_point": "scripts/harness/evidence_provenance.py",
+      "function": "harness.evidence_provenance.validate_review_record",
+      "policy_loaded": "config/control/harness/review-policy.v1.json",
+      "epoch_loaded": "config/control/harness/executions/E2026-09-09-V0-MVP-R1/project-epoch.v1.json",
+      "registry_generation": 82,
+      "result": "PASS_NO_EXCEPTION",
+      "note": "The verifier instruction text names harness-policy.v1.json, but the machine_evidence_enforcement policy actually consumed by validate_review_record lives in review-policy.v1.json; with that current policy the record passes without exception. Loaded policy was read live from the verifier branch."
+    }
+  },
+  "original_execution_evidence": {
+    "mode": "REUSED_INHERITED_FROM_LINUX_EXACT_RUN",
+    "run_id": 34605253942,
+    "run_name": "MVP2 Exact Two Client Shared World",
+    "run_conclusion": "success",
+    "run_head_branch": "feature/v0-mvp-playable-seamless-planet-r1",
+    "run_head_sha": "287df80c69840fea7ae9ac0ea69a07581f192d34",
+    "artifact_id": 10266940288,
+    "artifact_bytes": 333581,
+    "artifact_zip_sha256_recomputed_live": "850c2422884493c4bd8aeccc2e5dad286c7550610bf43397fe3722f05c746f1f",
+    "native_manifest_sha256_recomputed_live": "885a15a7552918a67ada595796bb1e4cfe25fb77c68de5c896dac5cdaea4300f",
+    "native_manifest_member_count": 35,
+    "native_manifest_member_digest_mismatch_count": 0,
+    "zip_downloaded_and_rehashed_independently": true
+  },
+  "reused_projection_evidence": {
+    "manifest_path": "config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence/MVP2-REVIEW-PROJECTION-287df80c6984-34605253942/manifest.v1.json",
+    "manifest_sha256_recomputed": "06638b1b4a111c0eef4cb2028c592ee3e0cfce18f2d9eb3a5922d52b4ec78c17",
+    "manifest_artifact_count": 7,
+    "result_json": {
+      "passed": true,
+      "errors": [],
+      "runtime_workload_pass": true,
+      "independent_verdict": false,
+      "predicate_verified": false,
+      "subject_head_sha": "287df80c69840fea7ae9ac0ea69a07581f192d34",
+      "subject_tree_sha": "e591dc6c5346139bc1b4659915c54bf80603713e",
+      "historical_main_head": "127c732a56cc5c25d5712f24a7627ed4bb877374",
+      "all_child_exit_codes_zero": true,
+      "negative_checks_all_true": [
+        "single_client_rejected",
+        "hidden_remote_rejected",
+        "tampered_state_rejected",
+        "foreign_session_rejected_before_join",
+        "all_owned_processes_stopped_cleanly"
+      ],
+      "neutral_boundaries_acknowledged_zero_planar_velocity": true
+    },
+    "digests_verified_by_production_consumer": true
+  },
+  "current_main_machine_gate": {
+    "project_control_run_id": 34691381495,
+    "run_conclusion": "success",
+    "run_head_branch": "control/v0-mvp2-current-main-composition-repair-r1",
+    "run_head_sha": "8e0782450a2c46e58c463e5a73e23bd656ba6273",
+    "job_id": 103547126527,
+    "full_harness_summary": "Ran 333 tests in 126.893s / OK",
+    "full_harness_pass_count": 333,
+    "full_harness_failure_count": 0,
+    "artifact_id": 10296269475,
+    "artifact_bytes": 27586,
+    "artifact_zip_sha256_recomputed_live": "80d77e0ab45bc5979157e220112a5e809e3040e193048627de66e35f5cb165bc",
+    "artifact_main_head": "7dfc68ab5a1e90254a1b7039807f275b5da04eef",
+    "artifact_registry_generation": 82,
+    "run_log_verified_live_via_github": true
+  },
+  "source_review": {
+    "performed_independently": true,
+    "diff_range": "6fd80b8dbc0cfc422c2ef9a05d2e60a4e7342b57..287df80c69840fea7ae9ac0ea69a07581f192d34",
+    "files_changed": 16,
+    "second_canonical_network_owner_found": false,
+    "second_item_graph_owner_found": false,
+    "second_matter_or_persistence_owner_found": false,
+    "composition_root_reuses_existing_m3_server_and_client": true,
+    "composition_root_reuses_existing_remote_player_presenter": true,
+    "bootstrap_surface_retains_mutable_matter_authority": false,
+    "bootstrap_surface_contract_reports": {
+      "canonical_state_owned": false,
+      "mutable_matter_store_retained": false,
+      "collision_enabled": false,
+      "network_mutation_proven": false
+    }
+  },
+  "execution_performed": {
+    "windows_local": [
+      {
+        "command": "git fetch origin --prune",
+        "exit_code": 0
+      },
+      {
+        "command": "git checkout -b verify/v0-mvp2-287df80c-current-main-r1 origin/control/v0-mvp2-verifier-handoff-r1",
+        "exit_code": 0
+      },
+      {
+        "command": "python -m unittest discover -s tests/integration -p test_v0_mvp_two_client_evidence.py -v",
+        "exit_code": 0,
+        "detail": "Ran 19 tests / OK"
+      },
+      {
+        "command": "python scripts/control/project_control.py --no-fetch --no-fail-on-red",
+        "exit_code": 0,
+        "detail": "Overall YELLOW, HARNESS GREEN, no blocking RED beyond pre-existing cross-family states"
+      },
+      {
+        "command": "python scripts/control/project_control_directional_watch.py --no-fail-on-red",
+        "exit_code": 0,
+        "detail": "Overall YELLOW, blocking RED = 0"
+      },
+      {
+        "command": "<EXACT_GODOT_4.7.1_DOUBLE> --headless --path . --editor --import",
+        "exit_code": 0
+      },
+      {
+        "command": "<EXACT_GODOT_4.7.1_DOUBLE> --headless --path . --script res://tests/runtime/test_v0_mvp_two_client_shared_world.gd",
+        "exit_code": 0,
+        "detail": "MVP2 focused: PASS (27 assertions)"
+      },
+      {
+        "command": "python -m unittest discover -s tests/harness -p test_*.py -v",
+        "exit_code": 1,
+        "detail": "Ran 297 tests, failures=20, errors=10, skipped=3 on this Windows workstation. Investigated: loader errors are caused by a stray site-packages 'tests' package shadowing the repository namespace plus Windows charmap decoding of UTF-8 RU docs; the remaining failures cluster in launcher/PowerShell routing and synthetic temp-git-repo provenance-fence tests (core.autocrlf=true workstation). The identical suite on the exact carrier tree 8e078245 passed 333/333 on GitHub Actions Linux (run 34691381495, verified live including run log and artifact digest). Classified as local Windows environment corroboration gap, not a product defect of the frozen subject; the focused MVP2 evidence tests all pass locally."
+      }
+    ],
+    "github_remote": [
+      {
+        "action": "gh run view 34691381495",
+        "result": "success @ 8e0782450a2c46e58c463e5a73e23bd656ba6273; log contains 'Ran 333 tests ... OK'"
+      },
+      {
+        "action": "gh api actions/artifacts/10296269475/zip",
+        "result": "SHA256 80d77e0ab45bc5979157e220112a5e809e3040e193048627de66e35f5cb165bc, 27586 bytes, main_head 7dfc68ab"
+      },
+      {
+        "action": "gh run view 34605253942",
+        "result": "success @ 287df80c69840fea7ae9ac0ea69a07581f192d34"
+      },
+      {
+        "action": "gh api actions/artifacts/10266940288/zip",
+        "result": "SHA256 850c2422884493c4bd8aeccc2e5dad286c7550610bf43397fe3722f05c746f1f, 333581 bytes; native manifest 885a15a7...; 35/35 member digests match"
+      }
+    ],
+    "validate_mvp2_run_as_new_exact_validation": false,
+    "validate_mvp2_note": "Not run by design: the frozen producer binds historical main 127c732a and a current-main rerun would report MAIN_DRIFT; original/main-exact substitution was not performed."
+  },
+  "inherited_execution_evidence": true,
+  "environment": {
+    "os": "Microsoft Windows NT 10.0.19045 (Windows 10 x64)",
+    "git_version": "2.53.0.windows.1",
+    "python_version": "3.11.8",
+    "godot_version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "godot_binary_path": "C:\\Godot\\godot\\bin\\godot.windows.editor.double.x86_64.console.exe",
+    "godot_windows_sha256": "3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5",
+    "godot_sha256_matches_expected": true
+  },
+  "evidence_gaps": [
+    "Original exact two-client runtime evidence is REUSED/INHERITED from Linux run 34605253942; no fresh Windows two-client multi-process workload execution was performed (the Windows Godot focused in-engine test passed 27 assertions, but the three-process exact workload was not re-executed on Windows).",
+    "Local Windows full Harness discovery reports 297 tests with environment-caused failures/errors (stray site-packages 'tests' package shadowing, charmap decoding of UTF-8 docs, PowerShell launcher AttributeError, synthetic-repo fence tests under core.autocrlf). Authoritative full-suite PASS for the exact carrier tree is machine gate run 34691381495, verified live via GitHub run log and artifact digest.",
+    "The two viewport PNG captures exist only inside the digest-bound original artifact (verified members of the native manifest); they are not committed projection members.",
+    "Full world/core regression NOT_RUN_THIS_LEAF remains a whole-MVP checkpoint requirement, not part of this bounded predicate.",
+    "Verifier instruction text names harness-policy.v1.json as the consumer policy, but the machine-evidence enforcement policy actually consumed by validate_review_record is review-policy.v1.json; consumer PASS confirmed with the current committed review policy."
+  ],
+  "tracked_clean_before": true,
+  "tracked_clean_after": true,
+  "merge_performed": false,
+  "human_approval_created": false,
+  "predicate_verified_event_created": false,
+  "work_order_snapshot_updated": false,
+  "whole_mvp_acceptance": false,
+  "mvp3_started": false,
+  "summary": "Independent fresh Windows verification of MVP_TWO_CLIENT_SHARED_WORLD. Live-checked handoff HEAD/TREE, canonical main 7dfc68ab, frozen runtime 287df80c/e591dc6c, freeze ref, composition parents and test-fixture-only carrier repair. Reviewer record PASS passes the production consumer with the current committed review policy; all committed projection digests verified. Original Linux exact run artifact downloaded live: ZIP and native manifest SHA256 match expectations, 35/35 member digests recheck with zero mismatch; result.json reports passed=true, errors=[], runtime_workload_pass=true, negative controls true, and does not self-declare a verdict. Current-main machine gate run 34691381495 verified live: success at 8e078245, 333/333 Harness OK, artifact digest matches. Independent source review of the production diff found no second canonical network/Item/Matter/persistence owner; the composition root reuses existing M3 server/client and RemotePlayerPresenter and the bootstrap surface retains no mutable Matter authority. Windows corroboration with the exact Godot 4.7.1 double (SHA256 matches) passed import and the focused runtime test (27 assertions), the 19 focused evidence-consumer tests passed, and PC0 standard/directional exited 0. Local full-suite deviations are documented Windows-environment effects covered by the verified machine gate. No blocking evidence gap for MVP_TWO_CLIENT_SHARED_WORLD."
+}

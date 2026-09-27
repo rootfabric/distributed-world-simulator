@@ -1,0 +1,42 @@
+{
+  "schema": "distributed_world_simulator.mvp6_journal_merge_receipt.v1",
+  "role": "COORDINATOR_EXECUTION_RECEIPT_NOT_INDEPENDENT_VERDICT",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "decision_id": "HA-V0-MVP6-JOURNAL-BASELINE-MERGE-R1",
+  "repository": "rootfabric/distributed-world-simulator",
+  "pr_number": 646,
+  "human_approval": {
+    "utterance": "разрешаю",
+    "scope": "Merge only exact PR646 d9706b157e84c653a753cc54243ce6651d53319c into main6982a563dd0c88c81449566131852c601ae89868, retaining known directional RED; not MVP6 acceptance and not PR643 merge",
+    "pr_comment_id": 5706008533
+  },
+  "premerge": {
+    "main_head": "6982a563dd0c88c81449566131852c601ae89868",
+    "pr_head": "d9706b157e84c653a753cc54243ce6651d53319c",
+    "pr_tree": "4925ea293c15d88153278437976a3b69f8985ccf",
+    "head_tree_base_rechecked": true
+  },
+  "merge": {
+    "method": "merge",
+    "expected_head_sha_enforced": "d9706b157e84c653a753cc54243ce6651d53319c",
+    "merged": true,
+    "commit": "a6d5eb6b287130a638ba6cf397c34e29169948c1",
+    "tree": "4925ea293c15d88153278437976a3b69f8985ccf",
+    "parents": ["6982a563dd0c88c81449566131852c601ae89868", "d9706b157e84c653a753cc54243ce6651d53319c"],
+    "parents_and_tree_verified_by_git_commit_api": true,
+    "tree_equals_reviewed_candidate": true,
+    "pr_state": "closed",
+    "pr_merged_at_utc": "2026-09-16T23:25:58Z"
+  },
+  "next_action": "Resolve this executed merge Human Attention, run default canonical NX dependency revalidation without any journal repair override against the actual postmerge main, retain raw standard/directional PC0, then obtain the separate main-owned clearance and exact main-movement audit required by Harness. Do not start product acceptance from merge alone.",
+  "postmerge_nx_revalidation": "PENDING",
+  "postmerge_pc0": "PENDING",
+  "directional_clearance_accepted": false,
+  "epoch_audit_created": false,
+  "pr643_merged_by_this_action": false,
+  "feature_pr597_merged": false,
+  "mvp6_predicate_verified": false,
+  "whole_mvp_accepted": false,
+  "parent_state": "IN_PROGRESS"
+}

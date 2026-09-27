@@ -1,0 +1,87 @@
+{
+  "schema": "distributed_world_simulator.mvp2_current_main_machine_pass.v1",
+  "classification": "COORDINATOR_MACHINE_EVIDENCE_NOT_INDEPENDENT_VERIFIER_VERDICT",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "predicate": "MVP_TWO_CLIENT_SHARED_WORLD",
+  "runtime_subject": {
+    "head_sha": "287df80c69840fea7ae9ac0ea69a07581f192d34",
+    "tree_sha": "e591dc6c5346139bc1b4659915c54bf80603713e",
+    "freeze_ref": "freeze/v0-mvp2-287df80c-r1"
+  },
+  "reviewer_gate": {
+    "carrier_commit": "666a6ff703c82de05307b2f55562000df7709101",
+    "review_path": "config/control/harness/executions/E2026-09-09-V0-MVP-R1/reviews/MVP2-INDEPENDENT-REVIEW-287DF80C-R1.v1.json",
+    "verdict": "PASS",
+    "required_fixes": []
+  },
+  "current_main": {
+    "head_sha": "7dfc68ab5a1e90254a1b7039807f275b5da04eef",
+    "composition_commit": "8812e229e22a711338f9243f50350cca87cec3cf",
+    "composition_parents": [
+      "7dfc68ab5a1e90254a1b7039807f275b5da04eef",
+      "666a6ff703c82de05307b2f55562000df7709101"
+    ]
+  },
+  "verification_carrier": {
+    "head_sha": "8e0782450a2c46e58c463e5a73e23bd656ba6273",
+    "tree_sha": "3018de2a955080835ba31523e2c1bf843a0554e6",
+    "repair_scope": [
+      "tests/harness/mvp_act0_base.py",
+      "tests/harness/test_v0_mvp_act0.py"
+    ],
+    "production_runtime_changed": false,
+    "production_harness_changed": false
+  },
+  "project_control": {
+    "run_id": 34691381495,
+    "job_id": 103547126527,
+    "conclusion": "success",
+    "exact_checkout": "PASS",
+    "product_coordination": "PASS",
+    "full_harness": {
+      "tests": 333,
+      "failures": 0,
+      "errors": 0,
+      "seconds": 126.893
+    },
+    "pc0_standard": {
+      "overall": "YELLOW",
+      "harness": "GREEN",
+      "cross_branch_overlaps": []
+    },
+    "pc0_directional": {
+      "overall": "YELLOW",
+      "blocking_red": 0
+    }
+  },
+  "project_control_artifact": {
+    "artifact_id": 10296269475,
+    "bytes": 27586,
+    "sha256": "80d77e0ab45bc5979157e220112a5e809e3040e193048627de66e35f5cb165bc",
+    "downloaded_and_byte_rehashed": true,
+    "archive_members": [
+      "PROJECT_STATUS_RU.md",
+      "DIRECTIONAL_WATCH_STATUS_RU.md",
+      "project-control-report.json",
+      "directional-watch-report.json"
+    ]
+  },
+  "original_mvp2_machine_evidence": {
+    "run_id": 34605253942,
+    "artifact_id": 10266940288,
+    "zip_sha256": "850c2422884493c4bd8aeccc2e5dad286c7550610bf43397fe3722f05c746f1f",
+    "native_manifest_sha256": "885a15a7552918a67ada595796bb1e4cfe25fb77c68de5c896dac5cdaea4300f",
+    "indexed_members": 35,
+    "digest_mismatches": 0
+  },
+  "state": {
+    "machine_gate": "PASS",
+    "independent_verifier_gate": "PENDING",
+    "predicate_verified_event": false,
+    "parent_work_order_remains": "IN_PROGRESS",
+    "whole_mvp_acceptance": false,
+    "mvp3_started": false
+  },
+  "next_action": "FRESH_INDEPENDENT_WINDOWS_VERIFIER_THEN_APPEND_NONTERMINAL_PREDICATE_VERIFIED_IF_VERDICT_IS_VERIFIED"
+}

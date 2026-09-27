@@ -1,0 +1,16 @@
+{
+  "schema": "distributed_world_simulator.mvp6_base100_state_probe.v1",
+  "purpose": "Emit exact canonical stage-0 build_state, construction_semantic_state, operational, stage_id and stage_index without weakening the existing assertion.",
+  "runtime_subject": "687cd39fbb1978b77641060cfd228c7bb80e305b",
+  "diagnostic_test_commit": "a61750d80dfe7ea84b09e647a5ef3c134cedf595",
+  "expected": {
+    "build_state": "PARTIAL",
+    "construction_semantic_state": "STRUCTURE",
+    "operational": false,
+    "construction_stage_id": "stage/mvp6/seam/base",
+    "construction_stage_index": 0
+  },
+  "assertion_unchanged": true,
+  "acceptance": false,
+  "independent_verdict": false
+}

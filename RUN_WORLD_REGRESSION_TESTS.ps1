@@ -328,7 +328,7 @@ function Write-JsonFileAtomically {
             $Stream.Dispose()
         }
 
-        $TemporaryInfo = Get-Item -LiteralPath $TemporaryPath -ErrorAction Stop
+        $TemporaryInfo = Get-Item -LiteralPath $TemporaryPath -Force -ErrorAction Stop
         if ($TemporaryInfo.Length -le 0) {
             throw "Temporary summary is zero bytes: $TemporaryPath"
         }
@@ -362,7 +362,7 @@ function Write-JsonFileAtomically {
             throw "Atomic summary replacement did not complete: $Path"
         }
 
-        $FinalInfo = Get-Item -LiteralPath $Path -ErrorAction Stop
+        $FinalInfo = Get-Item -LiteralPath $Path -Force -ErrorAction Stop
         if ($FinalInfo.Length -le 0) {
             throw "Final summary is zero bytes after atomic replacement: $Path"
         }

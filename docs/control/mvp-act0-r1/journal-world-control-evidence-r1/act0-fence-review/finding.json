@@ -1,0 +1,65 @@
+{
+  "schema": "distributed_world_simulator.reviewer_control_finding.v1",
+  "reviewer": "/root/journal_repair_reviewer",
+  "reviewed_at_utc": "2026-09-16T13:28:13.5170866Z",
+  "subject_head": "3b82145ae946bb51aebf67f048a28420368b40be",
+  "subject_tree": "6b1b8c9ead5c16d15dc8565813d3abb1bf94d880",
+  "finding_id": "ACT0_HISTORICAL_RUNTIME_FENCE_REJECTS_AUTHORIZED_MAIN_JOURNAL_DELTA",
+  "severity": "BLOCKING_AUTOMATIC_GATE_BEFORE_MERGE",
+  "classification": "CONTROL_TEST_COMPATIBILITY_REPAIR_REQUIRED",
+  "implementation_verdict": "INSUFFICIENT_EVIDENCE",
+  "reason": "Existing ACT0 test asserts zero protected runtime/network delta BASE3d767 to arbitrary HEAD. Canonical6982 satisfies it; exact approved journal3b intentionally violates its only network clause. This failure must remain real until a bounded fail-closed control repair is independently validated.",
+  "evidence": {
+    "raw_log_sha256": "6af1295479362e9376bbe3f0f1a99bb7395f0efc459dd6ccad02ca77e583e128",
+    "test_path": "tests/harness/test_v0_mvp_act0.py",
+    "raw_log": "C:/distributed-world-simulator/worktrees/mvp6-journal-main-repair/artifacts/journal-full-harness.log",
+    "failing_test": "MVPAct0Tests.test_all_p7_execution_and_acceptance_blobs_are_unchanged",
+    "discovery_summary": "303 tests;4 failures;8 errors;3 skipped",
+    "test_blob": "43db3ef992430802dab3b7c60b3bb7d2801205f0"
+  },
+  "authority_assessment": {
+    "director_control_continuation_allowed": true,
+    "basis": [
+      "User original request section8 explicitly authorizes main-owned clearance branch/PR preparation and all automatic gates before HUMAN merge.",
+      "AGENTS routine A0-A3 + bounded Director continuation within existing mission/authority; repair doctrine scope expansion requires Director replan.",
+      "Existing parent allowed_paths does not cover tests/harness/test_v0_mvp_act0.py: must create durable exact control continuation/write fence before edits.",
+      "One-file runtimeHA permits only journal+existingMVPtest paths; it is not by itself authority to edit harness tests. Separate control mandate comes from user§8, not inference from resolvedHA."
+    ],
+    "new_human_required_for": [
+      "Any broader runtime allowlist or journal bytes other than approved old/new tuple.",
+      "Removal/weakening of P7 accepted evidence/ACT0 immutable history assertion.",
+      "Canonical merge, ownership/activation/acceptance policy change."
+    ],
+    "human_merge_still_required": true,
+    "interpretation_not_blanket_permission": true
+  },
+  "recommended_shape": [
+    "Retain BASE3d767 historical P7 execution+acceptance comparisons against currentHEAD unchanged.",
+    "Add immutable historical control anchor6982: BASE->6982 must retain zero protected runtime/network/simulation/project diff and the exact existing A7 scene delta. Never replace BASE with currentHEAD.",
+    "CurrentHEAD protected runtime/network/simulation/project set must be exactly the existing zero-delta state OR the one approved journal M delta; no glob ignore, filtering outpath, skip, xfail or catch-and-pass.",
+    "For journal exception require exact beforeblobed23f0d2b7a9e6cfb3f13b78de70c7f552035b69 and afterblobabdf0c0a335f4e2c968933156fb17f94a7b45bd1, change statusM, historical ancestry, completeprotected diff set equality.",
+    "Bind exception to durable authorization record exact decisionID/program/checkpoint/epoch/resolution/scope and frozen approvedpatch or contentdigest; missing/malformed/unresolved/foreignrecord mustreject.",
+    "Authorization evidence must travel with maincandidate or be fetched by immutable fullSHA; do not rely on moving featurebranch/currentlocalresolvedHA or unpinned arbitrary allowlist. Source locator68433ec7 and rawHA/patchdigest should be recorded before implementation.",
+    "Runtime authority, activation, riskfloors, mergerules, P7 acceptance and sceneimmutability checks remain untouched.",
+    "Frozen3b remains runtime evidence only; new controlsubject requires fresh control review/Verifier and all automatic gates, not a claim old exactHEAD passed them."
+  ],
+  "negative_tests": [
+    "Original canonical6982 passes without journalexception.",
+    "Exact approvedjournal plus valid fixedauthorization passes.",
+    "One-byte change in journalafterblob rejected.",
+    "Second protected runtime/network/simulation/project path rejected.",
+    "Deleted/renamed/addedjournal status rejected.",
+    "Wrongbeforeblob or wrongfrozenhistory rejected.",
+    "Missing, OPEN, foreignepoch/checkpoint/decision or malformedapprovalrecord rejected.",
+    "P7 execution/acceptance mutation rejected even with validjournalapproval.",
+    "Unexpected scenechange still rejected."
+  ],
+  "not_authorized": [
+    "Fixing Windows provenance/import errors by disabling tests.",
+    "Calling currentfullHarness green.",
+    "Using this sourceproposal as implementation review PASS."
+  ],
+  "source_changed": false,
+  "merge_authorized": false,
+  "mvp6_verified": false
+}

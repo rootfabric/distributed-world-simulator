@@ -18,9 +18,13 @@ var _tick := 0
 var _players: Dictionary = {}
 var _session_to_player: Dictionary = {}
 var _operation_ledger: Dictionary = {}
+var _live_gates: Dictionary = {}
+var _live_stages: Dictionary = {}
 
 
 func setup(authority_owner_id: String, authority_epoch: int, server_tick: int = 0) -> Dictionary:
+	if not _live_gates.is_empty():
+		return _failure("LIVE_PLAYER_GATE_REBIND_FORBIDDEN")
 	if authority_owner_id.strip_edges().is_empty() or authority_epoch < 1 or server_tick < 0:
 		return _failure("INVALID_OWNERSHIP_REGISTRY_CONFIGURATION")
 	_authority_owner_id = authority_owner_id.strip_edges()
@@ -94,12 +98,7 @@ func leave_transport_session(transport_session_id: String, operation_id: String)
 
 
 func create_snapshot() -> Dictionary:
-	var players: Array = []
-	var ids := _players.keys()
-	ids.sort()
-	for id in ids:
-		players.append(Dictionary(_players[id]).duplicate(true))
-	return OwnershipSnapshot.create(_authority_owner_id, _authority_epoch, _revision, _tick, players)
+	return OwnershipSnapshot.create(_authority_owner_id, _authority_epoch, _revision, _tick, get_players())
 
 
 func validate_snapshot(snapshot: Dictionary) -> Dictionary:
@@ -113,7 +112,10 @@ func validate_snapshot(snapshot: Dictionary) -> Dictionary:
 
 
 func get_player(logical_player_id: String) -> Dictionary:
-	return Dictionary(_players.get(logical_player_id.strip_edges().to_lower(), {})).duplicate(true)
+	var logical_id := logical_player_id.strip_edges().to_lower()
+	if _live_gates.has(logical_id) and not _live_gates[logical_id].is_locally_ready():
+		return {}
+	return Dictionary(_players.get(logical_id, {})).duplicate(true)
 
 
 func get_player_for_session(transport_session_id: String) -> Dictionary:
@@ -127,12 +129,15 @@ func get_players() -> Array:
 	var ids := _players.keys()
 	ids.sort()
 	for logical_id in ids:
-		result.append(Dictionary(_players[logical_id]).duplicate(true))
+		var row := get_player(String(logical_id))
+		if not row.is_empty():
+			result.append(row)
 	return result
 
 
-
 func export_durable_state() -> Dictionary:
+	if not _live_gates.is_empty():
+		return {}
 	var players: Array = []
 	var ids := _players.keys()
 	ids.sort()
@@ -154,6 +159,8 @@ func export_durable_state() -> Dictionary:
 
 
 func restore_durable_state(value: Dictionary) -> Dictionary:
+	if not _live_gates.is_empty():
+		return _failure("LIVE_HANDOFF_RESTART_RECONCILIATION_REQUIRED")
 	var validation := validate_durable_state(value)
 	if not bool(validation.get("success", false)):
 		return validation
@@ -230,6 +237,8 @@ func export_replay_state() -> Dictionary:
 
 
 func restore_replay_state(value: Dictionary) -> Dictionary:
+	if not _live_gates.is_empty():
+		return _failure("LIVE_HANDOFF_RESTART_RECONCILIATION_REQUIRED")
 	var validation := validate_replay_state(value)
 	if not bool(validation.get("success", false)):
 		return validation
@@ -263,7 +272,8 @@ func _state_checksum(value: Dictionary) -> String:
 
 func get_report() -> Dictionary:
 	var connected := 0
-	for record in _players.values():
+	var visible := get_players()
+	for record in visible:
 		if bool(record.get("connected", false)):
 			connected += 1
 	return {
@@ -272,7 +282,7 @@ func get_report() -> Dictionary:
 		"authority_epoch": _authority_epoch,
 		"revision": _revision,
 		"server_tick": _tick,
-		"player_count": _players.size(),
+		"player_count": visible.size(),
 		"connected_count": connected,
 		"operation_count": _operation_ledger.size(),
 		"wire_contract": OwnershipSnapshot.SCHEMA,
@@ -283,6 +293,8 @@ func _join(logical_player_id: String, transport_session_id: String, operation_id
 	logical_player_id = logical_player_id.strip_edges().to_lower()
 	transport_session_id = transport_session_id.strip_edges()
 	operation_id = operation_id.strip_edges()
+	if _live_gates.has(logical_player_id):
+		return _failure("LIVE_HANDOFF_ORDINARY_REJOIN_FORBIDDEN")
 	var replay := _replay(operation_id, fingerprint)
 	if not replay.is_empty():
 		return replay
@@ -323,6 +335,8 @@ func _leave(logical_player_id: String, transport_session_id: String, operation_i
 	logical_player_id = logical_player_id.strip_edges().to_lower()
 	transport_session_id = transport_session_id.strip_edges()
 	operation_id = operation_id.strip_edges()
+	if _live_gates.has(logical_player_id) and not _live_gates[logical_player_id].is_locally_ready():
+		return _failure("LIVE_PLAYER_SOURCE_NOT_WRITABLE")
 	var replay := _replay(operation_id, fingerprint)
 	if not replay.is_empty():
 		return replay
@@ -395,3 +409,109 @@ func _success(details: Dictionary = {}) -> Dictionary:
 
 func _failure(error_code: String, details: Dictionary = {}) -> Dictionary:
 	return {"success": false, "error_code": error_code, "details": details.duplicate(true)}
+
+
+func bind_live_player_gate(logical_player_id: String, gate) -> Dictionary:
+	if gate == null or not gate.has_method("is_locally_ready") or not gate.has_method("check_transfer_phase"):
+		return _failure("LIVE_PLAYER_GATE_REQUIRED")
+	if _live_gates.has(logical_player_id):
+		return _success({"replay": true}) if _live_gates[logical_player_id] == gate else _failure("LIVE_PLAYER_GATE_REBIND_FORBIDDEN")
+	_live_gates[logical_player_id] = gate
+	return _success()
+
+
+func capture_live_player(logical_player_id: String, gate, transfer_id: String) -> Dictionary:
+	if gate == null or _live_gates.get(logical_player_id) != gate:
+		return _failure("LIVE_PLAYER_GATE_MISMATCH")
+	var phase: Dictionary = gate.check_transfer_phase(transfer_id, "SOURCE_EXPORT")
+	if not bool(phase.get("success", false)):
+		return phase
+	var record: Dictionary = Dictionary(_players.get(logical_player_id, {})).duplicate(true)
+	var valid := validate_live_binding_record(record)
+	if not bool(valid.get("success", false)):
+		return valid
+	return _success({"player": record, "player_checksum": Utils.payload_hash(record)})
+
+
+func validate_live_binding_record(record: Dictionary) -> Dictionary:
+	var fields: Array[String] = ["logical_player_id", "player_entity_id", "transport_session_id", "ownership_epoch", "connected", "joined_tick", "left_tick"]
+	if record.size() != fields.size():
+		return _failure("LIVE_OWNERSHIP_RECORD_FIELDS_INVALID")
+	for field in fields:
+		if not record.has(field):
+			return _failure("LIVE_OWNERSHIP_RECORD_FIELDS_INVALID")
+	if record.get("connected") != true or typeof(record.get("transport_session_id")) != TYPE_STRING or not String(record["transport_session_id"]).begins_with("transport-session/"):
+		return _failure("LIVE_PLAYER_SESSION_REQUIRED")
+	for field in ["ownership_epoch", "joined_tick", "left_tick"]:
+		var number = record.get(field)
+		if typeof(number) not in [TYPE_INT, TYPE_FLOAT] or not is_finite(float(number)) or float(number) != floorf(float(number)) or float(number) < (1.0 if field == "ownership_epoch" else 0.0) or float(number) > 9007199254740991.0:
+			return _failure("LIVE_OWNERSHIP_INTEGER_INVALID")
+	var disconnected := record.duplicate(true)
+	disconnected["connected"] = false
+	disconnected["transport_session_id"] = ""
+	var dto := Utils.finalize_json_checksum({"schema": DURABLE_SCHEMA, "authority_owner_id": _authority_owner_id, "authority_epoch": _authority_epoch, "revision": 0, "server_tick": maxi(int(record["joined_tick"]), int(record["left_tick"])), "players": [disconnected], "checksum": ""})
+	return validate_durable_state(dto)
+
+
+func stage_live_player(logical_player_id: String, gate, transfer_id: String, record: Dictionary) -> Dictionary:
+	if gate == null or _live_gates.get(logical_player_id) != gate:
+		return _failure("LIVE_PLAYER_GATE_MISMATCH")
+	var phase: Dictionary = gate.check_transfer_phase(transfer_id, "TARGET_STAGE")
+	if not bool(phase.get("success", false)):
+		return phase
+	var valid := validate_live_binding_record(record)
+	if not bool(valid.get("success", false)):
+		return valid
+	if record["logical_player_id"] != logical_player_id:
+		return _failure("LIVE_PLAYER_SUBJECT_MISMATCH")
+	var session := String(record["transport_session_id"])
+	if _session_to_player.has(session) and _session_to_player[session] != logical_player_id:
+		return _failure("TRANSPORT_SESSION_ALREADY_BOUND")
+	var digest := Utils.payload_hash(record)
+	if _live_stages.has(logical_player_id):
+		var old: Dictionary = _live_stages[logical_player_id]
+		return _success({"replay": true, "checksum": digest}) if old["transfer_id"] == transfer_id and old["checksum"] == digest else _failure("LIVE_PLAYER_STAGE_CONFLICT")
+	_live_stages[logical_player_id] = {"transfer_id": transfer_id, "checksum": digest, "record": record.duplicate(true)}
+	return _success({"checksum": digest})
+
+
+func preflight_live_player_install(logical_player_id: String, gate, transfer_id: String, commit_token: String) -> Dictionary:
+	if gate == null or _live_gates.get(logical_player_id) != gate:
+		return _failure("LIVE_PLAYER_GATE_MISMATCH")
+	var checked: Dictionary = gate.check_transfer_phase(transfer_id, "TARGET_INSTALL", commit_token)
+	if not bool(checked.get("success", false)):
+		return checked
+	var stage: Dictionary = _live_stages.get(logical_player_id, {})
+	if stage.get("transfer_id") != transfer_id or Utils.payload_hash(stage.get("record", {})) != stage.get("checksum"):
+		return _failure("LIVE_PLAYER_STAGE_REQUIRED")
+	var session := String(stage["record"]["transport_session_id"])
+	if _session_to_player.has(session) and _session_to_player[session] != logical_player_id:
+		return _failure("TRANSPORT_SESSION_ALREADY_BOUND")
+	return _success()
+
+
+func install_live_player(logical_player_id: String, gate, transfer_id: String, commit_token: String) -> Dictionary:
+	var checked := preflight_live_player_install(logical_player_id, gate, transfer_id, commit_token)
+	if not bool(checked.get("success", false)):
+		return checked
+	var record: Dictionary = Dictionary(_live_stages[logical_player_id]["record"]).duplicate(true)
+	var previous: Dictionary = _players.get(logical_player_id, {})
+	if not previous.is_empty():
+		_session_to_player.erase(String(previous.get("transport_session_id", "")))
+	_players[logical_player_id] = record
+	_session_to_player[String(record["transport_session_id"])] = logical_player_id
+	# Preserve the exact live ownership_epoch and joined_tick: no _join call.
+	_tick = maxi(_tick, maxi(int(record["joined_tick"]), int(record["left_tick"])))
+	_revision += 1
+	_live_stages.erase(logical_player_id)
+	return _success()
+
+
+func discard_live_player_stage(logical_player_id: String, gate, transfer_id: String) -> Dictionary:
+	if gate == null or _live_gates.get(logical_player_id) != gate:
+		return _failure("LIVE_PLAYER_GATE_MISMATCH")
+	var stage: Dictionary = _live_stages.get(logical_player_id, {})
+	if not stage.is_empty() and stage.get("transfer_id") != transfer_id:
+		return _failure("LIVE_PLAYER_STAGE_CONFLICT")
+	_live_stages.erase(logical_player_id)
+	return _success()

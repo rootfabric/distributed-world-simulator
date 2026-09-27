@@ -1,0 +1,107 @@
+{
+  "schema": "distributed_world_simulator.mvp7_implementer_exact_evidence.v1",
+  "recorded_at_utc": "2026-09-19T14:17:04Z",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "predicate": "MVP_RECONNECT_AND_RESTART",
+  "frozen_product": {
+    "branch": "feature/v0-mvp-playable-seamless-planet-r1",
+    "freeze_ref": "freeze/v0-mvp7-review-ad48b24d-r1",
+    "head_sha": "ad48b24d8cde350db8c26adb958d9a0d62c6ff56",
+    "tree_sha": "f306e84ebce87ea3644c60b5dd75779d7980f8bb",
+    "pr": 597
+  },
+  "exact_linux_ci": {
+    "workflow": "MVP6 Native Prerequisite Diagnostic",
+    "run_id": 35447331651,
+    "run_attempt": 2,
+    "job_id": 105909777021,
+    "job": "mvp7-recovery",
+    "conclusion": "success",
+    "engine_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+    "artifact": {
+      "id": 10585912124,
+      "name": "mvp7-native-ad48b24d8cde350db8c26adb958d9a0d62c6ff56-35447331651-2",
+      "digest": "sha256:e14d190412999720257ffca0156e9efdc30236924d6e09437377e0473d7c093b",
+      "size_in_bytes": 3815709
+    },
+    "tracked_checkout_clean_after": true
+  },
+  "native_restart": {
+    "passed": true,
+    "assertions": 549,
+    "process_ids": {
+      "gameplay": [
+        4652,
+        4663,
+        4673
+      ],
+      "world": [
+        4684,
+        4705,
+        4723
+      ],
+      "construction": [
+        4744,
+        4757,
+        4769
+      ]
+    },
+    "terrain_mw5_recovered": true,
+    "canonical_item_graph_recovered": true,
+    "inventory_equipment_recovered": true,
+    "world_item_identities_recovered": true,
+    "required_replay_dedup_recovered": true,
+    "construction_m0_c17_recovered": true,
+    "collision_rederived_after_restart": true,
+    "distinct_os_process_restart": true
+  },
+  "live_graphical_reconnect": {
+    "passed": true,
+    "fresh_reconnect_process": true,
+    "enet_reconnect": true,
+    "current_state_resync": true,
+    "continued_fixed_tick_control": true,
+    "collision_part_count": 100,
+    "backend_links": {
+      "authority_a_disconnects": 0,
+      "authority_b_disconnects": 0
+    },
+    "backend_liveness_cycles": 16,
+    "backend_reconnect_performed": false,
+    "timeout_policy_changed": false,
+    "finish_ack_disconnect": true,
+    "mvp6_negative_controls_rejected": "13/13",
+    "mvp7_negative_controls_rejected": [
+      "no_reconnect",
+      "same_peer",
+      "no_post_reconnect_motion",
+      "stale_construction",
+      "stale_matter",
+      "no_backend_liveness",
+      "no_finish_ack_disconnect"
+    ]
+  },
+  "subpredicate_support": {
+    "RECOVER_TERRAIN_STATE": "SUPPORTED_BY_NATIVE_MW5_PROCESS_RESTART",
+    "RECOVER_ITEM_INVENTORY_EQUIPMENT_STATE": "SUPPORTED_BY_NATIVE_M6_PROCESS_RESTART",
+    "RECOVER_WORLD_ITEM_IDENTITIES": "SUPPORTED_BY_CANONICAL_M4_CHECKSUM_CONTINUITY",
+    "RECOVER_SHARED_CONTAINER_STATE": "SUPPORTED_BY_NATIVE_DURABLE_GAMEPLAY_RECOVERY_WITH_TRANSIENT_LEASE_RESET",
+    "RECOVER_CONSTRUCTION_STATE_AND_COLLISION": "SUPPORTED_BY_THREE_PROCESS_M0_C17_RESTART_AND_DERIVED_COLLISION",
+    "RECOVER_REQUIRED_OPERATION_DEDUP_STATE": "SUPPORTED_BY_NATIVE_REPLAY_AND_TERMINAL_OPERATION_RECOVERY",
+    "LATE_JOIN_OR_RESYNC_GETS_CURRENT_STATE": "SUPPORTED_BY_FRESH_ENET_PEER_CURRENT_STATE_RESYNC"
+  },
+  "boundaries": {
+    "implementer_mechanical_validation_only": true,
+    "independent_reviewer_verdict": false,
+    "independent_verifier_verdict": false,
+    "mvp7_predicate_verified": false,
+    "mvp8_started": false,
+    "parent_work_order_state": "IN_PROGRESS",
+    "full_world_core_for_leaf_closure": "PENDING",
+    "pc0_for_leaf_closure": "PENDING",
+    "runtime_merge_authorized": false,
+    "main_merge_authorized": false,
+    "whole_mvp_acceptance": false
+  }
+}

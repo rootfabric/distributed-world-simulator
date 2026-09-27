@@ -22,6 +22,7 @@ const MountInteractionService = preload("res://scripts/runtime/networked_gamepla
 const CanonicalPlayableBackend = preload("res://scripts/runtime/networked_gameplay/backends/canonical_playable_backend.gd")
 const CanonicalMultiplayerItemGraph = preload("res://scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service.gd")
 const PlayableStateCodec = preload("res://scripts/runtime/listen_host/playable_state_codec.gd")
+const LivePlayerTransferPort = preload("res://scripts/runtime/networked_gameplay/mvp/v0_mvp3_live_player_transfer_port.gd")
 
 const SCHEMA := "planet_simulator.networked_gameplay_service.v1"
 const SNAPSHOT_SCHEMA := PlayerSnapshot.SCHEMA
@@ -54,6 +55,7 @@ var _operation_ledger: Dictionary = {}
 var _canonical_multiplayer_items
 var _playable_sandbox := false
 var _fixed_tick_authority := false
+var _live_player_port = null
 
 
 func setup(authority_owner_id: String, authority_epoch: int, server_tick: int = 0, config: Dictionary = {}) -> Dictionary:
@@ -361,7 +363,6 @@ func move_player(logical_player_id: String, transport_session_id: String, owners
 	return handle_player_input(InputCommand.create("message/m1/move/%s" % operation_id.sha256_text().left(12), operation_id, logical_player_id, transport_session_id, _authority_epoch, ownership_epoch, input_sequence, "MOVEMENT_DELTA", {"delta_x": delta_x, "delta_z": delta_z}))
 
 
-
 func advance_fixed_server_tick(server_tick: int) -> Dictionary:
 	if not _configured or not _fixed_tick_authority:
 		return _failure("FIXED_TICK_AUTHORITY_NOT_ENABLED")
@@ -383,7 +384,7 @@ func simulate_fixed_movement_tick(
 	# Fixed-tick simulation is controlled by the explicit authority capability.
 	# playable_sandbox remains a separate gameplay/content policy used by the
 	# legacy direct MOVEMENT_INTENT path and sandbox Item Graph semantics.
-	var owner_check: Dictionary = _validate_owner(logical_player_id, transport_session_id, ownership_epoch)
+	var owner_check := _validate_owner(logical_player_id, transport_session_id, ownership_epoch)
 	if not bool(owner_check.get("success", false)):
 		return owner_check
 	var record: Dictionary = _players.get_player(logical_player_id)
@@ -445,7 +446,6 @@ func request_inventory_write(requester_player_id: String, target_player_id: Stri
 	return handle_item_command(ItemCommand.create("message/m1/inventory/%s" % operation_id.sha256_text().left(12), operation_id, requester_player_id, transport_session_id, _authority_epoch, ownership_epoch, 0, "inventory.permission_probe", {"target_player_id": target_player_id}))
 
 
-
 func handle_canonical_item_command(logical_player_id: String, transport_session_id: String, ownership_epoch: int, operation_id: String, command_type: String, payload: Dictionary) -> Dictionary:
 	if not _configured or _canonical_multiplayer_items == null:
 		return _failure("CANONICAL_ITEM_GRAPH_NOT_READY")
@@ -478,7 +478,7 @@ func validate_canonical_item_graph_snapshot(snapshot: Dictionary) -> Dictionary:
 	return _canonical_multiplayer_items.validate_snapshot(snapshot) if _canonical_multiplayer_items != null else _failure("CANONICAL_ITEM_GRAPH_NOT_READY")
 
 func export_durable_state() -> Dictionary:
-	if not _configured:
+	if not _configured or (_live_player_port != null and _live_player_port.has_bindings()):
 		return {}
 	var state: Dictionary = {
 		"schema": DURABLE_SCHEMA,
@@ -499,6 +499,8 @@ func export_durable_state() -> Dictionary:
 
 
 func restore_durable_state(value: Dictionary) -> Dictionary:
+	if _live_player_port != null and _live_player_port.has_bindings():
+		return _failure("LIVE_HANDOFF_RESTART_RECONCILIATION_REQUIRED")
 	var validation := validate_durable_state(value)
 	if not bool(validation.get("success", false)):
 		return validation
@@ -661,6 +663,8 @@ func export_replay_state() -> Dictionary:
 
 
 func restore_replay_state(value: Dictionary) -> Dictionary:
+	if _live_player_port != null and _live_player_port.has_bindings():
+		return _failure("LIVE_HANDOFF_RESTART_RECONCILIATION_REQUIRED")
 	var validation := validate_replay_state(value)
 	if not bool(validation.get("success", false)):
 		return validation
@@ -823,6 +827,9 @@ func get_item_controller_for_authority_tests():
 
 
 func shutdown() -> Dictionary:
+	if _live_player_port != null:
+		_live_player_port.shutdown()
+		_live_player_port = null
 	if _playable_backend != null:
 		_playable_backend.shutdown()
 		_playable_backend.free()
@@ -871,6 +878,8 @@ func get_report() -> Dictionary:
 		report["playable_backend"] = _playable_backend.get_report()
 		for field in ["player_entity_id", "item_graph_entity_id", "player_revision", "item_revision", "player_checksum", "item_checksum", "open_external_container_id", "handler_invocation_count", "mutation_count", "replay_count", "rejection_count", "operation_ledger_count", "item_graph_valid", "presentation_objects"]:
 			report[field] = report["playable_backend"].get(field)
+	if _live_player_port != null:
+		report["live_player_transfer"] = _live_player_port.get_report()
 	return report
 
 
@@ -984,3 +993,97 @@ func _success(details: Dictionary = {}) -> Dictionary:
 
 func _failure(error_code: String, details: Dictionary = {}) -> Dictionary:
 	return {"success": false, "error_code": error_code, "details": details.duplicate(true)}
+
+
+# R8: explicit owner-native live transfer port. No caller reaches private
+# registries, rewrites a restart DTO, or substitutes a second gameplay owner.
+func get_live_player_transfer_port():
+	if not _configured or _profile != PROFILE_MULTIPLAYER_CORE:
+		return null
+	if _live_player_port == null:
+		_live_player_port = LivePlayerTransferPort.new()
+		var result: Dictionary = _live_player_port.configure(self, _players, _ownership, _canonical_multiplayer_items, _authority_owner_id, _authority_epoch)
+		if not bool(result.get("success", false)):
+			_live_player_port = null
+	return _live_player_port
+
+
+func handle_live_player_input(command: Dictionary) -> Dictionary:
+	var logical_id := String(command.get("logical_player_id", ""))
+	if _live_player_port == null or not _live_player_port.actor_ready(logical_id):
+		return _failure("LIVE_PLAYER_AUTHORITY_NOT_READY")
+	var result := handle_player_input(command)
+	var operation_id := String(command.get("operation_id", ""))
+	if _operation_ledger.has(operation_id) and _operation_ledger[operation_id].get("fingerprint") == Utils.payload_hash(command):
+		_operation_ledger[operation_id]["live_player_id"] = logical_id
+	return result
+
+
+func export_live_player_replay(logical_id: String) -> Dictionary:
+	var exported: Dictionary = {}
+	var ids := _operation_ledger.keys()
+	ids.sort()
+	for operation_id in ids:
+		var entry: Dictionary = _operation_ledger[operation_id]
+		if entry.get("live_player_id") != logical_id:
+			continue
+		var result: Dictionary = entry.get("result", {})
+		var actor: Dictionary = result.get("details", {}).get("player", {})
+		var details: Dictionary = {}
+		if not actor.is_empty() and actor.get("logical_player_id") == logical_id:
+			details["player"] = actor.duplicate(true)
+		# Historical whole-world reply snapshots stay with the original owner.
+		# Only this actor's outcome and fingerprint migrate; the new shared view
+		# is published separately, never copied as another canonical world.
+		exported[operation_id] = {"fingerprint": entry["fingerprint"], "live_player_id": logical_id, "source_result_checksum": entry.get("source_result_checksum", Utils.payload_hash(result)), "result": {"success": result.get("success", false), "error_code": result.get("error_code", ""), "details": details}}
+	return exported
+
+
+func validate_live_player_replay(logical_id: String, entries: Dictionary) -> Dictionary:
+	if entries.size() > LivePlayerTransferPort.MAX_REPLAY_RECORDS:
+		return _failure("LIVE_PLAYER_REPLAY_BUDGET_EXCEEDED")
+	var hex := RegEx.new()
+	hex.compile("^[0-9a-f]{64}$")
+	for operation_id in entries:
+		if typeof(operation_id) != TYPE_STRING or not String(operation_id).begins_with("operation/") or not entries[operation_id] is Dictionary:
+			return _failure("LIVE_PLAYER_REPLAY_RECORD_INVALID")
+		var entry: Dictionary = entries[operation_id]
+		if entry.size() != 4 or entry.get("live_player_id") != logical_id or typeof(entry.get("fingerprint")) != TYPE_STRING or hex.search(String(entry.get("fingerprint", ""))) == null or typeof(entry.get("source_result_checksum")) != TYPE_STRING or hex.search(String(entry.get("source_result_checksum", ""))) == null or not entry.get("result") is Dictionary:
+			return _failure("LIVE_PLAYER_REPLAY_RECORD_INVALID")
+		var result: Dictionary = entry["result"]
+		if result.size() != 3 or typeof(result.get("success")) != TYPE_BOOL or typeof(result.get("error_code")) != TYPE_STRING or not result.get("details") is Dictionary:
+			return _failure("LIVE_PLAYER_REPLAY_RESULT_INVALID")
+		var details: Dictionary = result["details"]
+		if details.size() > 1 or (details.size() == 1 and not details.has("player")):
+			return _failure("LIVE_PLAYER_REPLAY_FOREIGN_STATE_FORBIDDEN")
+		if bool(result["success"]) and not details.has("player"):
+			return _failure("LIVE_PLAYER_REPLAY_ACTOR_REQUIRED")
+		if details.has("player"):
+			if not details["player"] is Dictionary or details["player"].get("logical_player_id") != logical_id:
+				return _failure("LIVE_PLAYER_REPLAY_ACTOR_MISMATCH")
+			var valid: Dictionary = _players.validate_live_player_record(details["player"])
+			if not bool(valid.get("success", false)):
+				return valid
+		if _operation_ledger.has(operation_id):
+			var previous: Dictionary = _operation_ledger[operation_id]
+			var previous_actor: String = String(previous.get("live_player_id", previous.get("result", {}).get("details", {}).get("player", {}).get("logical_player_id", "")))
+			if previous.get("fingerprint") != entry["fingerprint"] or previous_actor != logical_id:
+				return _failure("LIVE_PLAYER_REPLAY_IMPORT_CONFLICT")
+	return _success()
+
+
+func install_live_player_replay(logical_id: String, entries: Dictionary, gate) -> Dictionary:
+	if _live_player_port == null or not _live_player_port.replay_install_authorized(logical_id, entries, gate):
+		return _failure("LIVE_PLAYER_REPLAY_INSTALL_NOT_AUTHORIZED")
+	var validated := validate_live_player_replay(logical_id, entries)
+	if not bool(validated.get("success", false)):
+		return validated
+	for operation_id in entries:
+		if not _operation_ledger.has(operation_id):
+			_operation_ledger[operation_id] = Dictionary(entries[operation_id]).duplicate(true)
+	return _success()
+
+
+func note_live_player_install() -> void:
+	if _configured and _live_player_port != null and _live_player_port.has_bindings():
+		_revision += 1

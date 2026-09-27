@@ -1,0 +1,48 @@
+{
+  "role": "INDEPENDENT_VERIFIER",
+  "verdict": "PASS",
+  "scope": "BOUNDED_ACT0_CONTROL_REPAIR_ONLY",
+  "head": "d9706b157e84c653a753cc54243ce6651d53319c",
+  "tree": "4925ea293c15d88153278437976a3b69f8985ccf",
+  "risk_class": "CRITICAL",
+  "required_fixes": [],
+  "checks": {
+    "exact_head_tree": true,
+    "clean_checkout": true,
+    "work_order_precedes_code": true,
+    "immutable_authorization_git_bytes": true,
+    "source_68433_ha_patch_identical": true,
+    "old_fence_and_negative_test_AST_unchanged": true,
+    "strict_cleanup_preserved": true,
+    "runtime_unchanged_from": "3b82145ae946bb51aebf67f048a28420368b40be",
+    "windows_focused_tests": 18,
+    "committed_negative_cases": 23,
+    "independently_executed_tests": 3,
+    "linux_act0_passes": 18,
+    "linux_total_tests": 330,
+    "linux_failures": 1,
+    "linux_errors": 0,
+    "linux_skips": 0,
+    "all_zip_members_verified": true
+  },
+  "linux_result": "FAIL: only unchanged live directional PC0 RED assertion; full Harness is not PASS.",
+  "human_gate": "Exact PR #646 baseline repair/control candidate requires HUMAN merge; this verdict is not authorization to merge.",
+  "continuation_after_human_merge": [
+    "Fetch exact canonical main",
+    "Run default canonical NX baseline/candidate dependency revalidation",
+    "Run actual standard and directional PC0",
+    "Prepare fresh main-owned clearance with independent roles"
+  ],
+  "limits": [
+    "World/core remains exact 3b82145a evidence; runtime equivalence verified, no new d970 world execution claimed.",
+    "No MVP6 live five-process or physics acceptance.",
+    "Full Windows and Linux evidence reused with independently verified hashes; three focused checks executed by this verifier.",
+    "Do not substitute explicit repair composition for accepted default canonical NX baseline."
+  ],
+  "mvp6_verified": false,
+  "main_acceptance": false,
+  "merge_authorized": false,
+  "canonical_clearance": false,
+  "full_harness_pass": false,
+  "source_edits": false
+}

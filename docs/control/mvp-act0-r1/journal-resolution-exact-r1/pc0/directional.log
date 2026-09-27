@@ -1,0 +1,12 @@
+
+PC0 Directional Watch
+Registry: 82
+Overall:  RED
+  YELLOW CH -> NX WATCH_HIT BLOCK: 4 path(s)
+  YELLOW NX -> ECO WATCH_HIT ADVISORY: 1 path(s)
+  YELLOW NX -> T WATCH_HIT BLOCK: 1 path(s)
+  YELLOW V0 -> ECO WATCH_HIT ADVISORY: 1 path(s)
+  YELLOW V0 -> T WATCH_HIT BLOCK: 1 path(s)
+  RED    V0 -> NX CRITICAL_WATCH_HIT BLOCK: 1 path(s)
+  YELLOW V0 -> NX WATCH_HIT BLOCK: 1 path(s)
+Report: C:\distributed-world-simulator\worktrees\mvp6-journal-pc0\artifacts\control\DIRECTIONAL_WATCH_STATUS_RU.md

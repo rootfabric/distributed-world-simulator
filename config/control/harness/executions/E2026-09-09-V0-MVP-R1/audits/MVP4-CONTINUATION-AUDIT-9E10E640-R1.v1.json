@@ -1,0 +1,57 @@
+{
+  "schema": "distributed_world_simulator.harness_epoch_audit.v1",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "base_sha": "3d7672cba293d8e7bd72427b803f73fc8fcee5da",
+  "main_sha": "9e10e640ffc53f82195f1fd930ebafbbc85e482f",
+  "decision": "CONTINUE",
+  "pc0": "NON_RED",
+  "directional_pc0": "NON_RED",
+  "evidence_class": "EXACT_GITHUB_MAIN_PROJECT_CONTROL_AND_DEPENDENCY_DIFF",
+  "project_control": {
+    "executor": "GITHUB_ACTIONS",
+    "workflow": "Project Control",
+    "run_id": 34752963523,
+    "job_id": 103712483229,
+    "run_conclusion": "SUCCESS",
+    "head_sha": "9e10e640ffc53f82195f1fd930ebafbbc85e482f",
+    "head_tree_sha": "27c62c3774117c5163d0d5dacf789b1310638a92",
+    "registry_generation": 82,
+    "standard_overall": "YELLOW",
+    "cross_branch_overlaps": [],
+    "directional_overall": "YELLOW",
+    "directional_findings": 3,
+    "directional_blocking_red": 0,
+    "artifact_id": 10316323136,
+    "artifact_zip_sha256": "ea4802bf1733e41f894474c28d52bd668b992b4499b0c678341abf3c8633df5d",
+    "standard_report_sha256": "4b6072ae907dd3e1c89b0713c36ac657b3cfe0d559e256af0c458618b4449357",
+    "directional_report_sha256": "ea31c3635a58ca0261720c58ee334172fcb0c7e9476adf2bdf5f75202cd1beff",
+    "artifact_rehashed_independently": true
+  },
+  "dependency_audit": {
+    "previous_audited_main": "7dfc68ab5a1e90254a1b7039807f275b5da04eef",
+    "current_main": "9e10e640ffc53f82195f1fd930ebafbbc85e482f",
+    "commits_reviewed": 33,
+    "merge_base": "7dfc68ab5a1e90254a1b7039807f275b5da04eef",
+    "runtime_watched_path_changes": [],
+    "critical_watched_path_changes": [],
+    "v0_control_changes_reviewed": [
+      "tests/harness/test_v0_mvp_act0.py"
+    ],
+    "main_change_class": "ECO_ARCH2_A7_INTEGRATION_PLUS_V0_HARNESS_FIXTURE_ONLY",
+    "conclusion": "Canonical main advanced by the independently accepted ECO ARCH2 A7 integration. The 7dfc68ab..9e10e640 diff contains no V0 runtime, SM1, P7, Matter, network, Item Graph, construction or persistence owner changes. The only V0-specific file changed on main is the ACT0 Harness test fixture; current-main Project Control is NON_RED with zero cross-branch overlaps and zero directional RED. The already-verified MVP3 product remains valid and the parent may continue to MVP4."
+  },
+  "runtime_state": {
+    "runtime_branch": "repair/v0-mvp3-live-player-source-attestation-r13",
+    "runtime_head": "f1d453fb2af49231c30bdc5cbe415ad199394446",
+    "runtime_tree": "f1697cc52c1abc7f1bb21922c5fab3b49a3c167d",
+    "mvp1_verified": true,
+    "mvp2_verified": true,
+    "mvp3_verified": true,
+    "mvp3_predicate": "MVP_SEAM_NO_RECONNECT_OR_RESPAWN",
+    "runtime_feature_merge_authorized": false,
+    "whole_mvp_acceptance_authorized": false
+  },
+  "recorded_at_utc": "2026-09-13T12:29:00Z",
+  "summary": "Fresh continuation audit for canonical main 9e10e640 after formal MVP3 leaf closure. Exact main Project Control is SUCCESS/NON_RED; dependency diff from the prior audited main has no V0 runtime-owner drift. Continue the existing parent Work Order in IN_PROGRESS state toward MVP_CANONICAL_DIG_VISIBLE_TO_BOTH_CLIENTS. This audit creates no product predicate, acceptance or merge authorization."
+}

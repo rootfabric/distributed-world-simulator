@@ -1,0 +1,32 @@
+{
+  "schema": "distributed_world_simulator.bounded_repair_work_order.v1",
+  "repair_id": "V0-MVP3-R2-AUDITED-MAIN-REGRESSION",
+  "parent_work_order_id": "V0-MVP-R1-WO-001",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "role": "IMPLEMENTER",
+  "independent_context": false,
+  "base_sha": "4c6db18fb1d1130df9ed960f53ac4e3c38e51c0b",
+  "base_tree": "936212cae12c50af67b5a29baab76f932b299b8d",
+  "runtime_mutation": false,
+  "failure_evidence": {"run_id": 34697481334, "job_id": 103563346079, "artifact_id": 10299067971, "error": "MAIN_DRIFT_REQUIRES_EPOCH_AUDIT", "runtime_tests_started": false},
+  "audit": {
+    "historical_main": "127c732a56cc5c25d5712f24a7627ed4bb877374",
+    "audited_main": "7dfc68ab5a1e90254a1b7039807f275b5da04eef",
+    "status": "ahead", "ahead_by": 13, "behind_by": 0,
+    "changed_paths": ["AGENTS.md", "config/control/harness/continuation-policy.v1.json", "config/control/harness/harness-policy.v1.json", "docs/control/HARNESS_CHANNEL_RECOVERY_RU.md", "scripts/harness/contracts.py", "scripts/harness/project_overview.py", "tests/harness/test_execution_channel_recovery_policy.py", "tests/harness/test_execution_channel_routing_policy.py", "tests/harness/test_v0_product_train_policy.py"],
+    "runtime_or_architecture_changes": false,
+    "result": "CONTINUE_WITH_EXACT_AUDITED_MAIN_ONLY"
+  },
+  "allowed_paths": ["docs/control/mvp-act0-r1/validate_mvp3_regression.py", "docs/control/mvp-act0-r1/work-order-mvp3-main-audit-r2.v1.json", ".github/workflows/mvp3-exact-validation.yml"],
+  "forbidden_paths": ["scripts/runtime/**", "scripts/network/**", "scripts/simulation/**", "scripts/harness/**", "tests/harness/**", "config/architecture/**", "config/control/harness/acceptance/**", "docs/control/mvp-act0-r1/validate_mvp2.py"],
+  "repair_map": {
+    "root_cause": "The historical MVP2 consumer correctly rejects a newer main before runtime execution. This is an execution-context drift, not a demonstrated gameplay regression.",
+    "owner": "MVP validation execution context",
+    "fix": "New wrapper verifies exact known main, exact nine-file control-only diff, ancestry, unchanged historical consumer and unchanged MVP2 workload, then reuses every original regression assertion with full Harness and both PC0 gates. Only MAIN is explicitly rebound in memory after the audit; no source or refs are falsified.",
+    "negative_controls": ["different main SHA rejected", "runtime drift rejected", "incomplete audited changeset rejected"],
+    "acceptance_criteria": "Exact MVP3 process gate plus original MVP1/MVP2 runtime tests, full Harness, standard/directional PC0; no closure inferred."
+  },
+  "predicate_verified_authorized": false,
+  "runtime_merge_authorized": false,
+  "main_merge_authorized": false
+}

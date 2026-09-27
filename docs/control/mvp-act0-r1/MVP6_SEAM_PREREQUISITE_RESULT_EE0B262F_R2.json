@@ -1,0 +1,138 @@
+{
+  "schema": "distributed_world_simulator.mvp6_seam_prerequisite_handoff.v1",
+  "evidence_kind": "IMPLEMENTER_NATIVE_DIAGNOSTIC_NOT_PRODUCT_ACCEPTANCE",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "checkpoint": "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE",
+  "predicate": "MVP6_CROSS_AUTHORITY_CONSTRUCTION_SEAM",
+  "branch": "feature/v0-mvp-playable-seamless-planet-r1",
+  "parent_pr": 597,
+  "starting_handoff": {
+    "head": "182d93872bfddbf52a72ab170371ebb9489690bb",
+    "tree": "1f3a31e1aa2ea341ff164e96844e3686ed63af08",
+    "path": "docs/control/mvp-act0-r1/MVP6_CROSS_AUTHORITY_CONSTRUCTION_SEAM_HANDOFF_R1_RU.md"
+  },
+  "tested_subject": {
+    "head": "ee0b262fcea6de0d683de3c3a43972c6442e458f",
+    "tree": "b567e1882e13194a2620ed9ced997db25232eb66",
+    "main_observed": "6982a563dd0c88c81449566131852c601ae89868",
+    "platform": "GitHub-hosted Linux Ubuntu runner",
+    "engine_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+    "tracked_after": "",
+    "identity_unchanged": true,
+    "runtime_sources_changed_from_starting_handoff": false,
+    "predecessor_tests_changed": false
+  },
+  "changes": [
+    {
+      "path": "docs/control/mvp-act0-r1/MVP6_SEAM_CONTINUATION_R2_RU.md",
+      "purpose": "Bounded reproduction design and durable continuation constraints"
+    },
+    {
+      "path": "tests/runtime/test_v0_mvp_6_cross_authority_prerequisites.gd",
+      "purpose": "Executable native C17 missing-actor and C9 unconfigured-remove reproductions, with identical-command authenticated M3 positive control"
+    },
+    {
+      "path": "docs/control/mvp-act0-r1/validate_mvp6_seam_repro.py",
+      "purpose": "Exact subject and engine checks, scoped delta, raw command logs, error scans, real Drive/CloseMission decisions and SHA256 manifest"
+    },
+    {
+      "path": ".github/workflows/mvp6-item-construction-validation.yml",
+      "purpose": "Separate explicitly diagnostic job and predicate guard preserving all old predicates in order while admitting exactly the already-required seam predicate; original acceptance preflight not bypassed"
+    }
+  ],
+  "execution": {
+    "workflow": ".github/workflows/mvp6-item-construction-validation.yml",
+    "run_id": 35109483205,
+    "run_attempt": 1,
+    "job_id": 104839154207,
+    "job_name": "seam-prerequisites",
+    "job_status": "completed",
+    "job_conclusion": "success",
+    "original_native_acceptance_job": "SKIPPED_BY_EXPLICIT_DIAGNOSTIC_TRIGGER_NOT_CLAIMED",
+    "artifact_id": 10451293197,
+    "artifact_name": "mvp6-seam-repro-ee0b262fcea6de0d683de3c3a43972c6442e458f-35109483205-1",
+    "artifact_zip_bytes": 101493,
+    "artifact_zip_sha256": "486e59d6bde4cd55e3b8010bb68998b19b9ed300dbcb73f7e383b772166353eb",
+    "manifest_members_rehashed": 9,
+    "manifest_mismatches": [],
+    "manifest_sha256": "b53851565acf8caa2e084c1ddfb8226028e661f6e498f97623dbe7430c31f499",
+    "result_sha256": "c5b28937af861f641c4ee8b767d19b969b0ee037d8154b902f7aa33b52c0b9b1",
+    "summary_sha256": "f5a7091fe4d1b27157c411d5fb5497891a07e831d8d2559ea4fbd342d39fb93c",
+    "commands_sha256": "14ca4bb2f069a1cd110e1630c2fb705a9a0be07146981e1531ebe804a8519bbc",
+    "drive_json_sha256": "fe5a0234a5fa5aee1424c2afb70d6920bfa6708212dfaafd4088487a5b86babe",
+    "closemission_json_sha256": "a3b097c082be29603680bdcbe288b1f88d96655306a14d76408aa26bb9c2e2dc",
+    "diagnostic_passed": true,
+    "assertions": 63,
+    "failures": []
+  },
+  "findings": {
+    "C17_P4_TRUSTED_ACTOR_ROUTE": {
+      "reproduced": true,
+      "entrypoint": "scripts/construction/distributed/construction_authority_server_endpoint.gd::submit",
+      "native_error_code": "P4_BUILD_PLAYER_CONTEXT_REQUIRED",
+      "negative_result": "REJECTED",
+      "rejection_preserves_item_graph_and_construction_bundle": true,
+      "positive_entrypoint": "scripts/runtime/networked_gameplay/m3/m3_construction_replication_bridge.gd::submit_player_command",
+      "positive_same_full_command": true,
+      "positive_fresh_native_gateway_avoids_terminal_negative_replay": true,
+      "positive_stage_zero_ore_before": 8,
+      "positive_stage_zero_ore_after": 6,
+      "subsequent_native_stages_complete": true,
+      "final_ore_quantity": 0,
+      "final_legacy_parts": 6,
+      "transfer_witness_calls": 0,
+      "transfer_or_network_execution_claimed": false,
+      "interpretation_ru": "Валидный BUILD проходит через существующий M3 с authenticated actor и реально расходует native material. Raw C17 submit теряет trusted context. Это доказанный integration gap, не отказ BUILD planner и не доказательство готовой C17 live composition."
+    },
+    "P4_SEAM_REMOVE": {
+      "reproduced": true,
+      "entrypoint": "native M3 submit -> Construction gateway -> ACTION_DAMAGE -> C9 process",
+      "explicit_server_damage_grant_published": true,
+      "damage_request_and_multiplayer_envelope_validated": true,
+      "target": "non-root roof leaf of actual six-part P4 Construction",
+      "native_error_code": "CONSTRUCTION_DAMAGE_PROCESS_NOT_CONFIGURED",
+      "rejection_preserves_item_graph_construct_and_bundle": true,
+      "remove_succeeded": false,
+      "interpretation_ru": "REMOVE достигает C9 и отклоняется из-за ненастроенного process в существующем P4 factory. Это не permission failure. Canonical geometry, item graph и публикуемый bundle остаются прежними."
+    }
+  },
+  "controller_boundary": {
+    "drive_exit_code": 0,
+    "close_mission_exit_code": 0,
+    "runtime_authorized": false,
+    "handoff_class": "HUMAN_DECISION_REQUIRED",
+    "next_actor": "HUMAN",
+    "next_action": "RESOLVE_DECLARED_HUMAN_ATTENTION",
+    "resume_condition": "BLOCKING_HUMAN_ATTENTION_RESOLVED_DURABLY",
+    "mission_complete": false,
+    "mission_exit_allowed": true,
+    "only_open_human_attention": "HA-V0-MVP6-JOURNAL-BASELINE-MERGE-R1",
+    "merge_approval_in_this_continuation": false,
+    "pr": 646,
+    "pr_status_observed": "OPEN_DRAFT_NOT_MERGED",
+    "pr_head": "d9706b157e84c653a753cc54243ce6651d53319c",
+    "pr_tree": "4925ea293c15d88153278437976a3b69f8985ccf",
+    "pr_base": "6982a563dd0c88c81449566131852c601ae89868",
+    "do_not_also_merge_pr": 643
+  },
+  "next_actions": [
+    "Obtain the already-declared human decision for exact journal baseline repair PR646; do not infer merge permission from a request to continue implementation.",
+    "After authorized merge, refetch actual main and follow default canonical NX revalidation, real standard/directional PC0 and declared epoch/clearance route. Do not substitute a temporary repair composition or this diagnostic for canonical clearance.",
+    "When runtime is authorized, compose P4 build and configured C9 damage in existing-owner MVP glue; supply authenticated M3 actor/session context through C17 routing and keep all canonical owner/replay/permission gates. Any additional owner path requires bounded amendment of the same Work Order and its required Human gate.",
+    "Implement and test the server-planned approximately 100-part cross-seam Construction, cross-seam bonds, live five-process ADD/REMOVE and replay, actual canonical player movement over continuous derived collision, two-client identity/transform/membership/revision agreement and canonical plus C17 persistence roundtrip.",
+    "Only after focused and predecessor regressions, full world/core, critique, exact Evidence Map, required PC0 and independent Reviewer/Verifier may the strengthened MVP6 predicate be proposed for closure."
+  ],
+  "nonclaims": {
+    "new_runtime_gap_fixed": false,
+    "hundred_part_construction_implemented": false,
+    "five_process_gate_executed": false,
+    "physical_seam_traversal_executed": false,
+    "cross_authority_construction_seam_verified": false,
+    "full_world_core_executed": false,
+    "fresh_independent_review_or_verification": false,
+    "mvp6_predicate_verified": false,
+    "whole_mvp_accepted": false,
+    "main_merge": false
+  }
+}

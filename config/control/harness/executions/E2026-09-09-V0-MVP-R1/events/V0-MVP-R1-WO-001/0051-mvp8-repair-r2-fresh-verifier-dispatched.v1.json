@@ -1,0 +1,29 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-09-09-V0-MVP-R1-V0-MVP-R1-WO-001-0051-MVP8-REPAIR-R2-FRESH-VERIFIER-DISPATCHED",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "sequence": 51,
+  "event_type": "VERIFICATION_DISPATCHED",
+  "work_state": "IN_PROGRESS",
+  "recorded_at_utc": "2026-09-22T01:49:00Z",
+  "actor": "DIRECTOR",
+  "branch": "repair/v0-mvp8-cold-class-cache-r2",
+  "head_sha": "dc6e7fffa27d764ea09ded949d50b99a32fa4d9b",
+  "predicate": "MVP8_INDEPENDENT_VERIFIER",
+  "command": "DISPATCH_FRESH_VERIFIER_DC6E7FFF_R1",
+  "exit_code": 0,
+  "reviewer_consumed": {
+    "branch": "review/v0-mvp8-dc6e7fff-r1",
+    "commit": "6d1f3fbcbebee31d9be9745f82becc3439de57cc",
+    "tree": "5946f247f66f5dfb083a35b8606f8ac8c6c57700",
+    "verdict": "PASS",
+    "reviewed_head": "dc6e7fffa27d764ea09ded949d50b99a32fa4d9b",
+    "reviewed_tree": "8fc0044ff42ad502e6457593a185465af7d2a825"
+  },
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/verifications/MVP8-INDEPENDENT-REVIEW-DC6E7FFF-R1.v1.json",
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/verifications/MVP8-FRESH-INDEPENDENT-VERIFIER-DC6E7FFF-R1-INSTRUCTION.md"
+  ],
+  "summary": "Fresh Reviewer gate is satisfied exactly. Fresh Independent Verifier is now authorized to execute on frozen dc6e7fff/8fc0044f. Verifier must independently cold-start/import, run exact Windows MVP8 with raw evidence, run Windows full world/core under canonical validator environment, corroborate Linux and PC0, publish only its result on verify/v0-mvp8-dc6e7fff-r1, and stop. MVP8 remains open pending VERIFIED."
+}

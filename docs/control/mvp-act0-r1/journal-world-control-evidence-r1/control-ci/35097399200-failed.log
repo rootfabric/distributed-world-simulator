@@ -1,0 +1,21 @@
+control	Run architecture and ownership passport compatibility regression	﻿2026-09-16T12:42:55.8001145Z ##[group]Run python3 -m unittest \
+control	Run architecture and ownership passport compatibility regression	2026-09-16T12:42:55.8001636Z ^[[36;1mpython3 -m unittest \^[[0m
+control	Run architecture and ownership passport compatibility regression	2026-09-16T12:42:55.8002056Z ^[[36;1m  tests.harness.test_project_control_architecture_compatibility \^[[0m
+control	Run architecture and ownership passport compatibility regression	2026-09-16T12:42:55.8002720Z ^[[36;1m  tests.harness.test_project_control_historical_ownership_compatibility \^[[0m
+control	Run architecture and ownership passport compatibility regression	2026-09-16T12:42:55.8003231Z ^[[36;1m  tests.harness.test_project_control_proposed_r3_ownership_projection^[[0m
+control	Run architecture and ownership passport compatibility regression	2026-09-16T12:42:55.8026270Z shell: /usr/bin/bash -e {0}
+control	Run architecture and ownership passport compatibility regression	2026-09-16T12:42:55.8026695Z ##[endgroup]
+control	Run architecture and ownership passport compatibility regression	2026-09-16T12:42:57.1096181Z ................................................................F
+control	Run architecture and ownership passport compatibility regression	2026-09-16T12:42:57.1096903Z ======================================================================
+control	Run architecture and ownership passport compatibility regression	2026-09-16T12:42:57.1098842Z FAIL: test_live_proposed_r3_standard_and_directional_are_non_red (tests.harness.test_project_control_proposed_r3_ownership_projection.ProposedR3OwnershipProjectionTests.test_live_proposed_r3_standard_and_directional_are_non_red)
+control	Run architecture and ownership passport compatibility regression	2026-09-16T12:42:57.1100639Z ----------------------------------------------------------------------
+control	Run architecture and ownership passport compatibility regression	2026-09-16T12:42:57.1101487Z Traceback (most recent call last):
+control	Run architecture and ownership passport compatibility regression	2026-09-16T12:42:57.1103094Z   File "/home/runner/work/distributed-world-simulator/distributed-world-simulator/tests/harness/test_project_control_proposed_r3_ownership_projection.py", line 219, in test_live_proposed_r3_standard_and_directional_are_non_red
+control	Run architecture and ownership passport compatibility regression	2026-09-16T12:42:57.1104090Z     self.assertNotEqual("RED", directional_health)
+control	Run architecture and ownership passport compatibility regression	2026-09-16T12:42:57.1104445Z AssertionError: 'RED' == 'RED'
+control	Run architecture and ownership passport compatibility regression	2026-09-16T12:42:57.1104612Z 
+control	Run architecture and ownership passport compatibility regression	2026-09-16T12:42:57.1104987Z ----------------------------------------------------------------------
+control	Run architecture and ownership passport compatibility regression	2026-09-16T12:42:57.1105586Z Ran 65 tests in 1.247s
+control	Run architecture and ownership passport compatibility regression	2026-09-16T12:42:57.1106114Z 
+control	Run architecture and ownership passport compatibility regression	2026-09-16T12:42:57.1106214Z FAILED (failures=1)
+control	Run architecture and ownership passport compatibility regression	2026-09-16T12:42:57.1237653Z ##[error]Process completed with exit code 1.

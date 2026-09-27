@@ -1,0 +1,19 @@
+{
+  "schema": "distributed_world_simulator.harness_event.v1",
+  "event_id": "E2026-09-09-V0-MVP-R1-V0-MVP-R1-WO-001-0020-MVP6-MAIN-MOVE-AUDIT-RESUMED",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "sequence": 20,
+  "event_type": "RECOVERY_RESUMED",
+  "work_state": "IN_PROGRESS",
+  "recorded_at_utc": "2026-09-18T11:21:00Z",
+  "actor": "INTEGRATOR",
+  "branch": "feature/v0-mvp-playable-seamless-planet-r1",
+  "head_sha": "5ed4cbcdf59764f0d2f0d53f39a7f742fb3ef79b",
+  "command": "MVP_ACT0_POST_MERGE_EPOCH_AUDIT",
+  "exit_code": 0,
+  "evidence_paths": [
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/audits/MVP6-MAIN-MOVE-AUDIT-471210D-R1.v1.json"
+  ],
+  "summary": "Canonical main 471210d was re-audited after the Harness optional-evidence-sink merge. The merge tree is byte-identical to exact Project Control candidate 4563f326 (run 35329720911 SUCCESS, 355/355 Harness, YELLOW/YELLOW), and a detached current-main probe on 471210d itself is also YELLOW/YELLOW. Resume the same IN_PROGRESS MVP6 Work Order. This event does not verify MVP6, accept the checkpoint, or authorize runtime/main merge."
+}

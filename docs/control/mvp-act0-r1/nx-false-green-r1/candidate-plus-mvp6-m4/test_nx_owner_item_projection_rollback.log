@@ -1,0 +1,31 @@
+Godot Engine v4.7.1.stable.double.custom_build.a13da4feb (2026-07-13 21:00:28 UTC) - https://godotengine.org
+
+SCRIPT ERROR: Parse Error: Cannot infer the type of "validation" variable because the value doesn't have a set type.
+          at: GDScript::reload (res://scripts/runtime/networked_gameplay/networked_gameplay_service_owner_movement.gd:63)
+SCRIPT ERROR: Compile Error: Failed to compile depended scripts.
+          at: GDScript::reload (res://tests/network/test_nx_owner_item_projection_rollback.gd:0)
+ERROR: Failed to load script "res://tests/network/test_nx_owner_item_projection_rollback.gd" with error "Compilation failed".
+   at: load (modules/gdscript/gdscript_resource_format.cpp:46)
+SCRIPT ERROR: Invalid call. Nonexistent function 'new' in base 'GDScript'.
+          at: _configured_owner_service (res://tests/network/test_nx_owner_item_projection_rollback.gd:131)
+          GDScript backtrace (most recent call first):
+              [0] _configured_owner_service (res://tests/network/test_nx_owner_item_projection_rollback.gd:131)
+              [1] _test_same_revision_pickup_and_drop_rollback (res://tests/network/test_nx_owner_item_projection_rollback.gd:28)
+              [2] _run (res://tests/network/test_nx_owner_item_projection_rollback.gd:22)
+SCRIPT ERROR: Invalid call. Nonexistent function 'join' in base 'Nil'.
+          at: _test_same_revision_pickup_and_drop_rollback (res://tests/network/test_nx_owner_item_projection_rollback.gd:30)
+          GDScript backtrace (most recent call first):
+              [0] _test_same_revision_pickup_and_drop_rollback (res://tests/network/test_nx_owner_item_projection_rollback.gd:30)
+              [1] _run (res://tests/network/test_nx_owner_item_projection_rollback.gd:22)
+SCRIPT ERROR: Invalid call. Nonexistent function 'new' in base 'GDScript'.
+          at: _configured_owner_service (res://tests/network/test_nx_owner_item_projection_rollback.gd:131)
+          GDScript backtrace (most recent call first):
+              [0] _configured_owner_service (res://tests/network/test_nx_owner_item_projection_rollback.gd:131)
+              [1] _test_owner_locomotion_keeps_item_drop_server_authoritative (res://tests/network/test_nx_owner_item_projection_rollback.gd:98)
+              [2] _run (res://tests/network/test_nx_owner_item_projection_rollback.gd:23)
+SCRIPT ERROR: Invalid call. Nonexistent function 'join' in base 'Nil'.
+          at: _test_owner_locomotion_keeps_item_drop_server_authoritative (res://tests/network/test_nx_owner_item_projection_rollback.gd:100)
+          GDScript backtrace (most recent call first):
+              [0] _test_owner_locomotion_keeps_item_drop_server_authoritative (res://tests/network/test_nx_owner_item_projection_rollback.gd:100)
+              [1] _run (res://tests/network/test_nx_owner_item_projection_rollback.gd:23)
+NX.C1 owner item projection rollback: PASS (0 assertions)

@@ -1,0 +1,14 @@
+diff --git a/scripts/network/prediction/predicted_item_interaction_journal.gd b/scripts/network/prediction/predicted_item_interaction_journal.gd
+--- a/scripts/network/prediction/predicted_item_interaction_journal.gd
++++ b/scripts/network/prediction/predicted_item_interaction_journal.gd
+@@ -214,6 +214,10 @@ func resolve_prediction(
+ 		var adopted := adopt_authoritative(authoritative_snapshot, now_ms)
+ 		if not bool(adopted.get("success", false)):
+ 			return adopted
++		if bool(adopted.get("details", {}).get("duplicate", false)):
++			var rebuild := _rebuild_projection(false)
++			if not bool(rebuild.get("success", false)):
++				return rebuild
+ 	else:
+ 		var rebuild := _rebuild_projection(false)
+ 		if not bool(rebuild.get("success", false)):
