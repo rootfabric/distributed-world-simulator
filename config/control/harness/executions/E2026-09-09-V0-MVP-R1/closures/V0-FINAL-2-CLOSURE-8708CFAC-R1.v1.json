@@ -1,0 +1,36 @@
+{
+  "schema": "distributed_world_simulator.v0_final_2_closure.v1",
+  "state": "PRE_MERGE_READY",
+  "subject_head": "8708cfac56346af0ec8c9e5599eb47fcfb751087",
+  "subject_tree": "c6ea0671d4850641daafaf63e79bb3431ff5ef65",
+  "main_fence": "6b336af8faeadbd7f69c96b62dc30d25150f45a7",
+  "pr_number": 692,
+  "machine_validation": {
+    "run_id": 36202057196,
+    "artifact_id": 10893669084,
+    "verdict": "PASS"
+  },
+  "fresh_reviewer": {
+    "branch": "review/v0-final-2-8708cfac-r2",
+    "commit": "6740db7827dbfa066a17cd620857f3473190ffd5",
+    "verdict": "PASS"
+  },
+  "fresh_verifier": {
+    "branch": "verify/v0-final-2-8708cfac-r4",
+    "commit": "d349a857b2e5203536845b6634c8a8781811cd88",
+    "control_head": "2d8a286f9815242af883ba3b2b6c4b36974a8339",
+    "run_id": 36224414904,
+    "artifact_id": 10910876182,
+    "artifact_digest": "sha256:26ad39f8bc60f201f99af4d7290d55c38c0e81604b121472524a14adb07e1379",
+    "verdict": "VERIFIED"
+  },
+  "final_race_check": {
+    "main_matches": true,
+    "pr_head_matches": true,
+    "pr_base_matches": true,
+    "pr_mergeable": true
+  },
+  "predicate_verified": true,
+  "human_acceptance": true,
+  "merge_performed": false
+}
