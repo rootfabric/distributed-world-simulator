@@ -1,0 +1,49 @@
+{
+  "schema": "distributed_world_simulator.v0_final_2_independent_verification.v1",
+  "role": "FRESH_INDEPENDENT_VERIFIER",
+  "verdict": "VERIFIED",
+  "subject_head": "8708cfac56346af0ec8c9e5599eb47fcfb751087",
+  "subject_tree": "c6ea0671d4850641daafaf63e79bb3431ff5ef65",
+  "main_head": "6b336af8faeadbd7f69c96b62dc30d25150f45a7",
+  "review_commit": "6740db7827dbfa066a17cd620857f3473190ffd5",
+  "control_head": "2d8a286f9815242af883ba3b2b6c4b36974a8339",
+  "run_id": 36224414904,
+  "job_id": 108432489540,
+  "artifact": {
+    "id": 10910876182,
+    "name": "v0-final-2-fresh-verifier-36224414904-2",
+    "digest": "sha256:26ad39f8bc60f201f99af4d7290d55c38c0e81604b121472524a14adb07e1379"
+  },
+  "host_quiescence": {
+    "passed": true,
+    "required_clean_scans": 6,
+    "scan_seconds": 20,
+    "foreign_godot_count": 0
+  },
+  "godot": {
+    "version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "sha256": "3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5"
+  },
+  "mvp8": {
+    "passed": true,
+    "checks": 20,
+    "negative_controls": 14,
+    "fatal_logs": 0
+  },
+  "world_core": {
+    "passed": true,
+    "declared": 349,
+    "discovered": 349,
+    "steps": 354,
+    "failed_steps": 0
+  },
+  "pc0": {
+    "standard": "YELLOW",
+    "directional": "YELLOW"
+  },
+  "tracked_clean": true,
+  "main_race_fence": "PASS",
+  "merge_performed": false,
+  "predicate_verified": false,
+  "human_acceptance": false
+}
