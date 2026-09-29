@@ -9,6 +9,8 @@ const MVP_SURFACE_EYE_ALTITUDE_M := 1.75
 const MVP_PREFERRED_BIOMES: Array[String] = ["grassland", "forest", "desert"]
 const MVP_SPECTATOR_SPEED_MPS := 25.0
 const MVP_LOCAL_BODY_VISUAL_OFFSET_M := -0.85
+const LIVE2_MINING_TOOL_DEFINITION_ID := "item/tool/mining"
+const LIVE2_MINING_TOOL_SLOT_ID := "tool/main"
 const M5NetworkedInventoryShellScript = preload(
 	"res://scripts/ui/inventory/networked/m5_networked_inventory_shell.gd"
 )
@@ -32,6 +34,13 @@ var _mvp_spectator_saved_speed := 900.0
 var _mvp_spectator_saved_orientation := Basis.IDENTITY
 var _mvp_latest_local_record: Dictionary = {}
 var _mvp_local_body: MeshInstance3D
+var _live2_status_layer: CanvasLayer
+var _live2_status_root: Control
+var _live2_connection_label: Label
+var _live2_action_label: Label
+var _live2_connection_state := "CONNECTING"
+var _live2_last_action_text := ""
+var _live2_action_hide_at_msec := 0
 
 
 func attach_m3_multiplayer_client(runtime) -> Dictionary:
@@ -64,6 +73,8 @@ func attach_m3_multiplayer_client(runtime) -> Dictionary:
 		return inventory_setup
 	_ensure_mvp_local_body()
 	_update_mvp_local_body_visual()
+	_ensure_live2_status_overlay()
+	set_network_connection_status("CONNECTED", {"source": "attach_m3_multiplayer_client"})
 
 	var details: Dictionary = Dictionary(result.get("details", {})).duplicate(true)
 	details["mode"] = "EARTH_NETWORK_PLAYABLE_MVP"
@@ -95,6 +106,24 @@ func register_runtime_commands(registry, owner_id: String) -> void:
 		"category": "inventory",
 	}, Callable(self, "_command_mvp_inventory_drop"))
 	_register_command(registry, owner_id, {
+		"id": "tool.mining.equip",
+		"description": "Экипировать канонический добывающий инструмент.",
+		"usage": "tool.mining.equip",
+		"category": "gameplay",
+	}, Callable(self, "_command_live2_equip_mining_tool"))
+	_register_command(registry, owner_id, {
+		"id": "construction.build.next",
+		"description": "Построить следующий канонический этап MVP-базы из ресурсов игрока.",
+		"usage": "construction.build.next",
+		"category": "construction",
+	}, Callable(self, "_command_live2_build_next_stage"))
+	_register_command(registry, owner_id, {
+		"id": "network.reconnect",
+		"description": "Немедленно повторить подключение к текущему server.",
+		"usage": "network.reconnect",
+		"category": "network",
+	}, Callable(self, "_command_live2_reconnect"))
+	_register_command(registry, owner_id, {
 		"id": "player.spectator.toggle",
 		"description": "Отделить spectator-камеру от тела игрока или вернуться в тело.",
 		"usage": "player.spectator.toggle",
@@ -104,6 +133,14 @@ func register_runtime_commands(registry, owner_id: String) -> void:
 
 func _process(delta: float) -> void:
 	super._process(delta)
+	if (
+		_live2_action_label != null
+		and _live2_action_label.visible
+		and _live2_action_hide_at_msec > 0
+		and Time.get_ticks_msec() >= _live2_action_hide_at_msec
+	):
+		_live2_action_label.visible = false
+		_live2_action_hide_at_msec = 0
 	if _mvp_spectator_enabled:
 		_sync_remote_presenter_origins()
 		_update_mvp_local_body_visual()
@@ -369,12 +406,214 @@ func _command_mvp_inventory_hotbar_select(arguments: Array[String]) -> Dictionar
 func _command_mvp_inventory_drop(_arguments: Array[String]) -> Dictionary:
 	var item_id := _get_mvp_selected_hotbar_item_id()
 	if item_id.is_empty():
-		return {"success": false, "output": "В выбранном слоте хотбара нет предмета"}
+		var empty := {"success": false, "output": "В выбранном слоте хотбара нет предмета"}
+		_show_live2_action_feedback(String(empty["output"]), false)
+		return empty
 	var result := m4_execute_item_command("item.drop", {
 		"item_id": item_id,
 		"quantity": -1,
 	})
-	return _mvp_command_result(result, "Предмет выброшен")
+	var presented := _mvp_command_result(result, "Предмет выброшен")
+	_show_live2_action_feedback(String(presented.get("output", "")), bool(presented.get("success", false)))
+	return presented
+
+
+func is_mvp_inventory_visible() -> bool:
+	return _mvp_inventory_visible
+
+
+func set_network_connection_status(state: String, details: Dictionary = {}) -> void:
+	_ensure_live2_status_overlay()
+	_live2_connection_state = state.strip_edges().to_upper()
+	var suffix := ""
+	if _live2_connection_state == "RECONNECTING":
+		var attempt := int(details.get("attempt", 0))
+		suffix = " · попытка %d" % attempt if attempt > 0 else ""
+	elif _live2_connection_state in ["FAILED", "DISCONNECTED"]:
+		var reason := String(details.get("reason", details.get("error_code", "")))
+		if not reason.is_empty():
+			suffix = " · %s" % reason
+	var title := "Связь: %s%s" % [_live2_connection_state, suffix]
+	_live2_connection_label.text = title
+	match _live2_connection_state:
+		"CONNECTED":
+			_live2_connection_label.add_theme_color_override("font_color", Color(0.45, 1.0, 0.55))
+		"CONNECTING", "RECONNECTING":
+			_live2_connection_label.add_theme_color_override("font_color", Color(1.0, 0.82, 0.3))
+		_:
+			_live2_connection_label.add_theme_color_override("font_color", Color(1.0, 0.35, 0.35))
+	_live2_connection_label.visible = true
+
+
+func show_network_error(error_code: String, details: Dictionary = {}) -> void:
+	set_network_connection_status("DISCONNECTED", {
+		"reason": error_code,
+		"details": details.duplicate(true),
+	})
+	_show_live2_action_feedback(
+		"Связь потеряна · выполняется переподключение",
+		false,
+		5000
+	)
+
+
+func _ensure_live2_status_overlay() -> void:
+	if _live2_status_layer != null and is_instance_valid(_live2_status_layer):
+		return
+	_live2_status_layer = CanvasLayer.new()
+	_live2_status_layer.name = "V0Live2Status"
+	_live2_status_layer.layer = 90
+	add_child(_live2_status_layer)
+	_live2_status_root = Control.new()
+	_live2_status_root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_live2_status_root.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_live2_status_layer.add_child(_live2_status_root)
+
+	_live2_connection_label = Label.new()
+	_live2_connection_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_live2_connection_label.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	_live2_connection_label.offset_left = -520.0
+	_live2_connection_label.offset_right = -18.0
+	_live2_connection_label.offset_top = 16.0
+	_live2_connection_label.offset_bottom = 52.0
+	_live2_connection_label.add_theme_font_size_override("font_size", 18)
+	_live2_connection_label.add_theme_color_override("font_outline_color", Color(0.0, 0.0, 0.0, 0.9))
+	_live2_connection_label.add_theme_constant_override("outline_size", 4)
+	_live2_connection_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_live2_status_root.add_child(_live2_connection_label)
+
+	_live2_action_label = Label.new()
+	_live2_action_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_live2_action_label.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
+	_live2_action_label.offset_left = -420.0
+	_live2_action_label.offset_right = 420.0
+	_live2_action_label.offset_top = -170.0
+	_live2_action_label.offset_bottom = -125.0
+	_live2_action_label.add_theme_font_size_override("font_size", 19)
+	_live2_action_label.add_theme_color_override("font_outline_color", Color(0.0, 0.0, 0.0, 0.9))
+	_live2_action_label.add_theme_constant_override("outline_size", 4)
+	_live2_action_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_live2_action_label.visible = false
+	_live2_status_root.add_child(_live2_action_label)
+
+
+func _show_live2_action_feedback(
+	text: String,
+	success: bool = true,
+	duration_msec: int = 2800
+) -> void:
+	_ensure_live2_status_overlay()
+	_live2_last_action_text = text
+	_live2_action_label.text = text
+	_live2_action_label.add_theme_color_override(
+		"font_color",
+		Color(0.72, 1.0, 0.78) if success else Color(1.0, 0.5, 0.42)
+	)
+	_live2_action_label.visible = not text.is_empty()
+	_live2_action_hide_at_msec = (
+		Time.get_ticks_msec() + duration_msec
+		if not text.is_empty() and duration_msec > 0
+		else 0
+	)
+
+
+func _find_live2_mining_tool() -> Dictionary:
+	if m3_multiplayer_client_runtime == null or _m4_item_graph_snapshot.is_empty():
+		return {}
+	var player_id := String(m3_multiplayer_client_runtime.get_local_player_id())
+	for item_value in _m4_item_graph_snapshot.get("items", []):
+		if not item_value is Dictionary:
+			continue
+		var item: Dictionary = item_value
+		if String(item.get("definition_id", "")) != LIVE2_MINING_TOOL_DEFINITION_ID:
+			continue
+		var location_value = item.get("location", {})
+		if not location_value is Dictionary:
+			continue
+		var location: Dictionary = location_value
+		if (
+			String(location.get("kind", "")) == "INVENTORY"
+			and String(location.get("player_id", "")) == player_id
+		):
+			return item.duplicate(true)
+	return {}
+
+
+func _live2_mining_tool_is_equipped() -> bool:
+	var tool := _find_live2_mining_tool()
+	if tool.is_empty():
+		return false
+	var equipment_value = tool.get("equipment", {})
+	return (
+		equipment_value is Dictionary
+		and String(Dictionary(equipment_value).get("player_id", ""))
+			== String(m3_multiplayer_client_runtime.get_local_player_id())
+		and String(Dictionary(equipment_value).get("slot_id", ""))
+			== LIVE2_MINING_TOOL_SLOT_ID
+	)
+
+
+func ensure_live2_mining_tool_equipped() -> Dictionary:
+	if _live2_mining_tool_is_equipped():
+		return {"success": true, "already_equipped": true}
+	var tool := _find_live2_mining_tool()
+	if tool.is_empty():
+		return {"success": false, "error_code": "LIVE2_MINING_TOOL_NOT_IN_INVENTORY"}
+	var result := m4_execute_item_command("item.equip", {
+		"item_id": String(tool.get("item_id", "")),
+		"slot_id": LIVE2_MINING_TOOL_SLOT_ID,
+	})
+	if bool(result.get("success", false)):
+		_show_live2_action_feedback("Добывающий инструмент экипирован", true)
+	else:
+		_show_live2_action_feedback(
+			"Не удалось экипировать инструмент: %s" % String(result.get("error_code", "UNKNOWN")),
+			false
+		)
+	return result
+
+
+func _command_live2_equip_mining_tool(_arguments: Array[String]) -> Dictionary:
+	var result := ensure_live2_mining_tool_equipped()
+	return _mvp_command_result(result, "Добывающий инструмент экипирован")
+
+
+func _command_live2_build_next_stage(_arguments: Array[String]) -> Dictionary:
+	if _mvp_inventory_shell == null or not is_instance_valid(_mvp_inventory_shell):
+		var missing := {"success": false, "output": "Construction UI ещё не готов"}
+		_show_live2_action_feedback(String(missing["output"]), false)
+		return missing
+	if not _mvp_inventory_shell.has_method("build_next_stage_blocking"):
+		var unavailable := {"success": false, "output": "Construction action недоступен"}
+		_show_live2_action_feedback(String(unavailable["output"]), false)
+		return unavailable
+	var result: Dictionary = _mvp_inventory_shell.build_next_stage_blocking()
+	var presented := (
+		{"success": true, "output": "Этап строительства отправлен", "details": result}
+		if bool(result.get("success", false))
+		else {
+			"success": false,
+			"output": "Стройка: %s" % String(result.get("error_code", "UNKNOWN")),
+			"details": result,
+		}
+	)
+	_show_live2_action_feedback(
+		String(presented.get("output", "")),
+		bool(presented.get("success", false)),
+		4200
+	)
+	return presented
+
+
+func _command_live2_reconnect(_arguments: Array[String]) -> Dictionary:
+	if m3_multiplayer_client_runtime == null or not m3_multiplayer_client_runtime.has_method("request_reconnect_now"):
+		return {"success": false, "output": "Reconnect runtime недоступен"}
+	var result: Dictionary = m3_multiplayer_client_runtime.request_reconnect_now()
+	_show_live2_action_feedback(
+		"Повторное подключение запрошено",
+		bool(result.get("success", false))
+	)
+	return _mvp_command_result(result, "Повторное подключение запрошено")
 
 
 func _command_mvp_spectator_toggle(_arguments: Array[String]) -> Dictionary:
@@ -609,6 +848,9 @@ func create_m3_graphical_client_report() -> Dictionary:
 			else {}
 		),
 	}
+	report["live2_connection_state"] = _live2_connection_state
+	report["live2_last_action_text"] = _live2_last_action_text
+	report["live2_mining_tool_equipped"] = _live2_mining_tool_is_equipped()
 	report["spectator_enabled"] = _mvp_spectator_enabled
 	report["spectator_body_visible"] = (
 		_mvp_local_body != null
