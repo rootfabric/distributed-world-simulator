@@ -71,6 +71,14 @@ jobs:
           & $env:GODOT_BIN --headless --path . --script res://tests/network/test_v0_live2_enet_rollover.gd *> artifacts\live2-targeted\rollover.log
           if ($LASTEXITCODE -ne 0) { Get-Content artifacts\live2-targeted\rollover.log -Tail 300; throw "ROLLOVER_FAILED:$LASTEXITCODE" }
 
+      - name: LIVE2 human gameplay bridge regression
+        shell: pwsh
+        timeout-minutes: 8
+        run: |
+          $ErrorActionPreference='Stop'
+          & $env:GODOT_BIN --headless --path . --script res://tests/runtime/test_v0_live2_human_gameplay_bridge.gd *> artifacts\live2-targeted\human-bridge.log
+          if ($LASTEXITCODE -ne 0) { Get-Content artifacts\live2-targeted\human-bridge.log -Tail 300; throw "HUMAN_BRIDGE_FAILED:$LASTEXITCODE" }
+
       - name: NX2 physical channel regression
         shell: pwsh
         timeout-minutes: 10
@@ -100,6 +108,7 @@ jobs:
             tree=(git rev-parse 'HEAD^{tree}').Trim()
             import_pass=$true
             rollover_pass=$true
+            human_bridge_pass=$true
             nx2_physical_pass=$true
             mvp5_graphical_pass=$true
             tracked_clean=$true
