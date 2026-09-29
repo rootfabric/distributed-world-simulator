@@ -1212,6 +1212,9 @@ func _reset_transport_protocol_state() -> void:
 	_pending_input_batch_dirty = false
 	_pending_input_operation_id = ""
 	_last_input_batch_sent_ms = 0
+	_input_history.clear()
+	_prediction_input_accumulator = 0.0
+	_prediction_last_network_intent.clear()
 	_item_resync_pending = false
 
 
