@@ -1199,6 +1199,8 @@ func _set_connection_state(state: String, details: Dictionary = {}) -> void:
 func _reset_transport_protocol_state() -> void:
 	_join_sent = false
 	_join_operation_id = ""
+	_message_sequence = 0
+	_input_sequence = 0
 	_handshake_id = ""
 	_handshake_hello.clear()
 	_handshake_sent = false
@@ -1215,6 +1217,7 @@ func _reset_transport_protocol_state() -> void:
 	_input_history.clear()
 	_prediction_input_accumulator = 0.0
 	_prediction_last_network_intent.clear()
+	_prediction_reconciler = ClientPredictionReconciler.new()
 	_item_resync_pending = false
 	# A new transport session must consume a fresh canonical JOIN baseline.
 	# Client replicas are derived caches, not truth. Keeping their old revision
