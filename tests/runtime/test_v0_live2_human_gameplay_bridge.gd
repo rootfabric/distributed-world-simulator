@@ -101,7 +101,7 @@ func _test_canonical_human_actions() -> void:
 	_assert(earth._live2_connection_state == "RECONNECTING", "connection HUD consumes reconnect state")
 	_assert(earth._live2_connection_label != null, "connection HUD is created")
 	_assert(
-		"попытка 2" in earth._live2_connection_label.text,
+		earth._live2_connection_label.text.contains("попытка 2"),
 		"connection HUD exposes reconnect attempt"
 	)
 
