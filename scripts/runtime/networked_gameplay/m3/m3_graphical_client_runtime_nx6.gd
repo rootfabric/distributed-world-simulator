@@ -1216,6 +1216,22 @@ func _reset_transport_protocol_state() -> void:
 	_prediction_input_accumulator = 0.0
 	_prediction_last_network_intent.clear()
 	_item_resync_pending = false
+	# A new transport session must consume a fresh canonical JOIN baseline.
+	# Client replicas are derived caches, not truth. Keeping their old revision
+	# across a restarted server would incorrectly reject a valid new baseline as
+	# a rollback before recovery/resync can run.
+	_replica = Replica.new()
+	_item_graph_snapshot.clear()
+	_item_snapshot_updates = 0
+	_construction_replica = ConstructionReplica.new()
+	_construction_session.clear()
+	_construction_snapshot_updates = 0
+	_construction_event_updates = 0
+	_reset_extended_reconnect_replica_state()
+
+
+func _reset_extended_reconnect_replica_state() -> void:
+	pass
 
 
 func _start_transport_attempt() -> Dictionary:
