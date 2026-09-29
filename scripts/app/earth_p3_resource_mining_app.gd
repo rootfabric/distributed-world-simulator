@@ -228,12 +228,27 @@ func _mine_p3_resource(resource_node_id: String) -> Dictionary:
 	):
 		_p3_mining_rejections += 1
 		return {"success": false, "error_code": "V0_P3_RESOURCE_NETWORK_RUNTIME_REQUIRED", "details": {}}
+
+	# LIVE.2 consumes the canonical mining tool already seeded by the existing
+	# M4/P5 Item Graph. Human interaction may equip it on first use, but never
+	# creates a local/demo tool or bypasses ResourceMiningService capability.
+	var equip_result: Dictionary = ensure_live2_mining_tool_equipped()
+	if not bool(equip_result.get("success", false)):
+		_p3_mining_rejections += 1
+		return equip_result
+
 	var result: Dictionary = m3_multiplayer_client_runtime.execute_resource_mine_blocking(
 		resource_node_id,
 		1
 	)
 	if not bool(result.get("success", false)):
 		_p3_mining_rejections += 1
+		_show_live2_action_feedback(
+			"Добыча: %s" % String(result.get("error_code", "UNKNOWN")),
+			false
+		)
+		return result
+	_show_live2_action_feedback("Руда добыта · материал добавлен в инвентарь", true)
 	return result
 
 
