@@ -391,13 +391,18 @@ func _on_construction_updated(_bundle: Dictionary) -> void:
 	_refresh_construction_status()
 
 
-func _on_build_next_stage_pressed() -> void:
-	if _outpost_adapter == null or _construction_pending:
-		return
+func build_next_stage_blocking() -> Dictionary:
+	if _outpost_adapter == null:
+		return _failure("V0_OUTPOST_CONSTRUCTION_NOT_CONFIGURED")
+	if _construction_pending:
+		return _failure("V0_OUTPOST_CONSTRUCTION_PENDING")
 	var before: Dictionary = _outpost_adapter.get_status()
-	if not bool(before.get("ready", false)) or bool(before.get("complete", false)):
+	if not bool(before.get("ready", false)):
 		_refresh_construction_status()
-		return
+		return _failure("V0_OUTPOST_CONSTRUCTION_SESSION_NOT_READY", before)
+	if bool(before.get("complete", false)):
+		_refresh_construction_status()
+		return _failure("V0_OUTPOST_ALREADY_COMPLETE", before)
 	_construction_pending = true
 	_refresh_construction_status()
 	var result: Dictionary = _outpost_adapter.build_next_stage_blocking()
@@ -408,13 +413,18 @@ func _on_build_next_stage_pressed() -> void:
 		if construction_status_label != null:
 			construction_status_label.text = "Ошибка стройки: %s" % _last_error_code
 		_refresh_construction_status(false)
-		return
+		return result
 	var after: Dictionary = _outpost_adapter.get_status()
 	if int(after.get("completed_stage_count", 0)) > int(before.get("completed_stage_count", 0)):
 		_construction_pending = false
 		_refresh_construction_status()
 	elif construction_status_label != null:
 		construction_status_label.text = "Команда принята сервером · ожидаем репликацию…"
+	return result
+
+
+func _on_build_next_stage_pressed() -> void:
+	build_next_stage_blocking()
 
 
 func _refresh_construction_status(overwrite_error: bool = true) -> void:
