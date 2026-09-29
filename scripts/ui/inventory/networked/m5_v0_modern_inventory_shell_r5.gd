@@ -94,7 +94,26 @@ func set_inventory_visible(value: bool) -> void:
 
 
 func _input(event: InputEvent) -> void:
-	if not _inventory_visible or not event is InputEventMouseButton:
+	if not _inventory_visible:
+		return
+	if event is InputEventKey:
+		var key_event := event as InputEventKey
+		if key_event.pressed and not key_event.echo:
+			var keycode := (
+				key_event.physical_keycode
+				if key_event.physical_keycode != 0
+				else key_event.keycode
+			)
+			if keycode in [KEY_ESCAPE, KEY_TAB]:
+				set_inventory_visible(false)
+				get_viewport().set_input_as_handled()
+				return
+			if keycode == KEY_G:
+				if status_label != null:
+					status_label.text = "Закройте инвентарь перед действием G · Esc или Tab"
+				get_viewport().set_input_as_handled()
+				return
+	if not event is InputEventMouseButton:
 		return
 	var mouse_event := event as InputEventMouseButton
 	if mouse_event.button_index == MOUSE_BUTTON_LEFT and mouse_event.pressed:
