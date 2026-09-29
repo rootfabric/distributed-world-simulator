@@ -41,6 +41,7 @@ var _live2_action_label: Label
 var _live2_connection_state := "CONNECTING"
 var _live2_last_action_text := ""
 var _live2_action_hide_at_msec := 0
+var _live2_build_mode := false
 
 
 func attach_m3_multiplayer_client(runtime) -> Dictionary:
@@ -105,6 +106,24 @@ func register_runtime_commands(registry, owner_id: String) -> void:
 		"usage": "inventory.drop",
 		"category": "inventory",
 	}, Callable(self, "_command_mvp_inventory_drop"))
+	_register_command(registry, owner_id, {
+		"id": "player.primary",
+		"description": "Основное действие LIVE.2: interact либо placement в build mode.",
+		"usage": "player.primary",
+		"category": "gameplay",
+	}, Callable(self, "_command_live2_primary"))
+	_register_command(registry, owner_id, {
+		"id": "construction.mode.toggle",
+		"description": "Включить/выключить режим постановки выбранного основания.",
+		"usage": "construction.mode.toggle",
+		"category": "construction",
+	}, Callable(self, "_command_live2_build_mode_toggle"))
+	_register_command(registry, owner_id, {
+		"id": "construction.place",
+		"description": "Поставить выбранное canonical основание перед игроком.",
+		"usage": "construction.place",
+		"category": "construction",
+	}, Callable(self, "_command_live2_place_selected"))
 	_register_command(registry, owner_id, {
 		"id": "tool.mining.equip",
 		"description": "Экипировать канонический добывающий инструмент.",
@@ -418,6 +437,87 @@ func _command_mvp_inventory_drop(_arguments: Array[String]) -> Dictionary:
 	return presented
 
 
+func _command_live2_primary(_arguments: Array[String]) -> Dictionary:
+	if _mvp_inventory_visible:
+		return {"success": false, "output": "Закройте инвентарь перед действием"}
+	if _live2_build_mode:
+		return _command_live2_place_selected([])
+	return execute_runtime_command("player.interact")
+
+
+func _command_live2_build_mode_toggle(_arguments: Array[String]) -> Dictionary:
+	_live2_build_mode = not _live2_build_mode
+	var selected := _get_mvp_selected_hotbar_item_id()
+	var item := _live2_item_by_id(selected)
+	var definition := String(item.get("definition_id", ""))
+	var text := (
+		"BUILD MODE · LMB — поставить основание · B — выйти"
+		if _live2_build_mode
+		else "BUILD MODE выключен"
+	)
+	if _live2_build_mode and definition != "item/mount-base":
+		text = "BUILD MODE · выберите Основание (обычно слот 2) · LMB"
+	_show_live2_action_feedback(text, true, 5000)
+	return {
+		"success": true,
+		"output": text,
+		"build_mode": _live2_build_mode,
+		"selected_definition_id": definition,
+	}
+
+
+func _command_live2_place_selected(_arguments: Array[String]) -> Dictionary:
+	var item_id := _get_mvp_selected_hotbar_item_id()
+	var item := _live2_item_by_id(item_id)
+	if String(item.get("definition_id", "")) != "item/mount-base":
+		item = _find_live2_inventory_item("item/mount-base")
+		item_id = String(item.get("item_id", ""))
+	if item_id.is_empty():
+		var missing := {
+			"success": false,
+			"output": "Основание не найдено в инвентаре",
+		}
+		_show_live2_action_feedback(String(missing["output"]), false)
+		return missing
+	var result := m4_execute_item_command("item.place", {"item_id": item_id})
+	var presented := _mvp_command_result(result, "Основание установлено")
+	_show_live2_action_feedback(
+		String(presented.get("output", "")),
+		bool(presented.get("success", false)),
+		4200
+	)
+	return presented
+
+
+func _live2_item_by_id(item_id: String) -> Dictionary:
+	if item_id.is_empty():
+		return {}
+	for item_value in _m4_item_graph_snapshot.get("items", []):
+		if item_value is Dictionary and String(Dictionary(item_value).get("item_id", "")) == item_id:
+			return Dictionary(item_value).duplicate(true)
+	return {}
+
+
+func _find_live2_inventory_item(definition_id: String) -> Dictionary:
+	if m3_multiplayer_client_runtime == null:
+		return {}
+	var player_id := String(m3_multiplayer_client_runtime.get_local_player_id())
+	for item_value in _m4_item_graph_snapshot.get("items", []):
+		if not item_value is Dictionary:
+			continue
+		var item: Dictionary = item_value
+		if String(item.get("definition_id", "")) != definition_id:
+			continue
+		var location_value = item.get("location", {})
+		if (
+			location_value is Dictionary
+			and String(Dictionary(location_value).get("kind", "")) == "INVENTORY"
+			and String(Dictionary(location_value).get("player_id", "")) == player_id
+		):
+			return item.duplicate(true)
+	return {}
+
+
 func is_mvp_inventory_visible() -> bool:
 	return _mvp_inventory_visible
 
@@ -518,25 +618,7 @@ func _show_live2_action_feedback(
 
 
 func _find_live2_mining_tool() -> Dictionary:
-	if m3_multiplayer_client_runtime == null or _m4_item_graph_snapshot.is_empty():
-		return {}
-	var player_id := String(m3_multiplayer_client_runtime.get_local_player_id())
-	for item_value in _m4_item_graph_snapshot.get("items", []):
-		if not item_value is Dictionary:
-			continue
-		var item: Dictionary = item_value
-		if String(item.get("definition_id", "")) != LIVE2_MINING_TOOL_DEFINITION_ID:
-			continue
-		var location_value = item.get("location", {})
-		if not location_value is Dictionary:
-			continue
-		var location: Dictionary = location_value
-		if (
-			String(location.get("kind", "")) == "INVENTORY"
-			and String(location.get("player_id", "")) == player_id
-		):
-			return item.duplicate(true)
-	return {}
+	return _find_live2_inventory_item(LIVE2_MINING_TOOL_DEFINITION_ID)
 
 
 func _live2_mining_tool_is_equipped() -> bool:
@@ -851,6 +933,7 @@ func create_m3_graphical_client_report() -> Dictionary:
 	report["live2_connection_state"] = _live2_connection_state
 	report["live2_last_action_text"] = _live2_last_action_text
 	report["live2_mining_tool_equipped"] = _live2_mining_tool_is_equipped()
+	report["live2_build_mode"] = _live2_build_mode
 	report["spectator_enabled"] = _mvp_spectator_enabled
 	report["spectator_body_visible"] = (
 		_mvp_local_body != null
