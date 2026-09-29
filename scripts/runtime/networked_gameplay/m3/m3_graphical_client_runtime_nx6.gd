@@ -7,6 +7,7 @@ signal construction_updated(bundle: Dictionary)
 signal connection_failed(error_code: String, details: Dictionary)
 signal server_disconnected(report: Dictionary)
 signal prediction_updated(predicted_state: Dictionary, presentation_state: Dictionary, report: Dictionary)
+signal connection_state_changed(state: String, details: Dictionary)
 
 const Boundary = preload("res://scripts/network/transports/v2/network_transport_boundary_v2.gd")
 const Port = preload("res://scripts/network/transports/v2/enet_multi_peer_transport_port.gd")
@@ -29,6 +30,8 @@ const ConstructionReplica = preload("res://scripts/construction/multiplayer/cons
 const SCHEMA := "planet_simulator.m3_graphical_client_runtime.v1"
 const NX2_INPUT_SEND_INTERVAL_MS := 33
 const NX4_INPUT_SEND_INTERVAL_SECONDS := 1.0 / 30.0
+const LIVE2_RECONNECT_INITIAL_DELAY_MS := 1000
+const LIVE2_RECONNECT_MAX_DELAY_MS := 5000
 const SERVER_PEER_ID := "peer/enet/m3-dedicated-server"
 const M7_CHECKPOINT := "v16.10.6.1-testing-m7-playable-networked-playground"
 const M7_BUILD_ID := "m7-playable-networked-playground"
@@ -113,6 +116,12 @@ var _construction_session: Dictionary = {}
 var _construction_snapshot_updates := 0
 var _construction_event_updates := 0
 var _construction_rejections := 0
+var _connection_config: Dictionary = {}
+var _connection_state := "DISCONNECTED"
+var _reconnect_pending := false
+var _reconnect_attempts := 0
+var _reconnect_next_ms := 0
+var _reconnect_reason := ""
 
 func setup(config: Dictionary) -> Dictionary:
 	if _configured: return _failure("M3_CLIENT_ALREADY_CONFIGURED")
@@ -125,6 +134,12 @@ func setup(config: Dictionary) -> Dictionary:
 	_automated_acceptance = bool(config.get("automated_acceptance", false))
 	_playable_sandbox = bool(config.get("playable_sandbox", false))
 	_debug_logging = bool(config.get("debug_logging", false))
+	_connection_config = config.duplicate(true)
+	_connection_state = "DISCONNECTED"
+	_reconnect_pending = false
+	_reconnect_attempts = 0
+	_reconnect_next_ms = 0
+	_reconnect_reason = ""
 	_join_operation_id = ""
 	_handshake_id = ""
 	_handshake_hello.clear()
@@ -179,33 +194,28 @@ func setup(config: Dictionary) -> Dictionary:
 	if not bool(telemetry_setup.get("success", false)):
 		return telemetry_setup
 	_replica = Replica.new()
-	var condition_setup: Dictionary = _setup_network_condition_simulator(config)
-	if not bool(condition_setup.get("success", false)):
+	var transport_setup: Dictionary = _start_transport_attempt()
+	if not bool(transport_setup.get("success", false)):
 		_cleanup_setup_failure()
-		return condition_setup
-	_boundary = Boundary.new()
-	var configured: Dictionary = _boundary.configure(
-		_network_condition_simulator, 524288, 32, 1048576, _telemetry
-	)
-	if not bool(configured.get("success", false)):
-		_cleanup_setup_failure()
-		return configured
-	_transport_session_id = "transport-session/m3/%s/%d/%d" % [_logical_player_id, OS.get_process_id(), Time.get_ticks_msec()]
-	var connected: Dictionary = _boundary.connect_client(
-		Support.endpoint(_host, _port, false), SERVER_PEER_ID, _transport_session_id,
-		"route/m3/server/%s" % _logical_player_id, 1
-	)
-	if not bool(connected.get("success", false)):
-		_cleanup_setup_failure()
-		return connected
-	_started_ms = Time.get_ticks_msec(); _configured = true; set_process(true)
+		return transport_setup
+	_started_ms = Time.get_ticks_msec()
+	_configured = true
+	set_process(true)
 	_last_debug_report_ms = _started_ms
 	_debug_event("CLIENT_CONNECTING", {"host":_host,"port":_port,"player":_logical_player_id,"transport_session_id":_transport_session_id})
+	_set_connection_state("CONNECTING", {"attempt": 0})
 	_write_report("CONNECTING", false)
 	return _success()
 
 func _process(_delta: float) -> void:
-	if not _configured or _boundary == null: return
+	if not _configured:
+		return
+	if _reconnect_pending:
+		if Time.get_ticks_msec() >= _reconnect_next_ms:
+			_attempt_reconnect()
+		return
+	if _boundary == null:
+		return
 	var process_started_us: int = Time.get_ticks_usec()
 	var disconnected_this_poll: bool = false
 	_telemetry.increment("client_process_iterations")
@@ -249,11 +259,23 @@ func _process(_delta: float) -> void:
 			_server_disconnects += 1
 			_joined = false
 			_debug_event("SERVER_DISCONNECTED", event)
+			_set_connection_state("DISCONNECTED", {
+				"reason": "PEER_DISCONNECTED",
+				"server_disconnects": _server_disconnects,
+			})
 			_write_report("DISCONNECTED", false)
 			server_disconnected.emit(get_report())
 			disconnected_this_poll = true
-	if not _joined and _server_disconnects == 0 and not disconnected_this_poll and Time.get_ticks_msec() - _started_ms > _connect_timeout_ms:
+			if not _automated_acceptance:
+				_schedule_reconnect("PEER_DISCONNECTED")
+	if _reconnect_pending:
+		return
+	if not _joined and not disconnected_this_poll and Time.get_ticks_msec() - _started_ms > _connect_timeout_ms:
+		if not _automated_acceptance and _server_disconnects > 0:
+			_schedule_reconnect("RECONNECT_TIMEOUT")
+			return
 		_fail_connection("M3_CLIENT_CONNECT_TIMEOUT")
+		return
 	_flush_pending_input_batch(false)
 	_update_runtime_telemetry()
 	var process_duration_ms: float = float(Time.get_ticks_usec() - process_started_us) / 1000.0
@@ -376,9 +398,20 @@ func _handle_join_ack(payload: Dictionary) -> void:
 	_snapshot_updates += 1
 	_accept_item_snapshot(payload.get("item_graph_snapshot", {}))
 	_initialize_prediction_from_snapshot(_replica.get_snapshot())
-	_joined = true; _last_error_code = ""; _write_report("READY", false)
+	_joined = true
+	_last_error_code = ""
+	_reconnect_pending = false
+	_reconnect_attempts = 0
+	_reconnect_reason = ""
+	_set_connection_state("CONNECTED", {
+		"player_entity_id": _player_entity_id,
+		"ownership_epoch": _ownership_epoch,
+		"transport_session_id": _transport_session_id,
+	})
+	_write_report("READY", false)
 	_debug_event("CLIENT_READY", {"player_entity_id":_player_entity_id,"ownership_epoch":_ownership_epoch})
-	replica_updated.emit(_replica.get_snapshot()); session_ready.emit(self)
+	replica_updated.emit(_replica.get_snapshot())
+	session_ready.emit(self)
 
 func _accept_snapshot(snapshot: Dictionary) -> void:
 	var accepted: Dictionary = _replica.accept_snapshot(snapshot)
@@ -1143,6 +1176,133 @@ func get_remote_player_ids() -> Array[String]:
 func is_ready() -> bool: return _joined and _replica != null and not _replica.get_snapshot().is_empty()
 func is_automated_acceptance() -> bool: return _automated_acceptance
 
+func get_connection_state() -> String:
+	return _connection_state
+
+
+func request_reconnect_now() -> Dictionary:
+	if _automated_acceptance:
+		return _failure("AUTOMATED_ACCEPTANCE_RECONNECT_FORBIDDEN")
+	_schedule_reconnect("USER_REQUEST")
+	_reconnect_next_ms = Time.get_ticks_msec()
+	return _success({"state": _connection_state})
+
+
+func _set_connection_state(state: String, details: Dictionary = {}) -> void:
+	var normalized := state.strip_edges().to_upper()
+	if normalized.is_empty():
+		return
+	_connection_state = normalized
+	connection_state_changed.emit(_connection_state, details.duplicate(true))
+
+
+func _reset_transport_protocol_state() -> void:
+	_join_sent = false
+	_join_operation_id = ""
+	_handshake_id = ""
+	_handshake_hello.clear()
+	_handshake_sent = false
+	_handshake_verified = false
+	_handshake_rtt_ms = 0.0
+	_leave_acknowledged = false
+	_command_results.clear()
+	_awaited_command_ids.clear()
+	_operation_started_ms.clear()
+	_operation_types.clear()
+	_pending_input_batch_dirty = false
+	_pending_input_operation_id = ""
+	_last_input_batch_sent_ms = 0
+	_item_resync_pending = false
+
+
+func _start_transport_attempt() -> Dictionary:
+	if _boundary != null:
+		_boundary.stop()
+	_boundary = null
+	_network_condition_simulator = null
+	_reset_transport_protocol_state()
+	var condition_setup: Dictionary = _setup_network_condition_simulator(_connection_config)
+	if not bool(condition_setup.get("success", false)):
+		return condition_setup
+	_boundary = Boundary.new()
+	var configured: Dictionary = _boundary.configure(
+		_network_condition_simulator, 524288, 32, 1048576, _telemetry
+	)
+	if not bool(configured.get("success", false)):
+		_boundary = null
+		_network_condition_simulator = null
+		return configured
+	_transport_session_id = "transport-session/m3/%s/%d/%d" % [
+		_logical_player_id, OS.get_process_id(), Time.get_ticks_msec()
+	]
+	var connected: Dictionary = _boundary.connect_client(
+		Support.endpoint(_host, _port, false),
+		SERVER_PEER_ID,
+		_transport_session_id,
+		"route/m3/server/%s" % _logical_player_id,
+		1
+	)
+	if not bool(connected.get("success", false)):
+		_boundary.stop()
+		_boundary = null
+		_network_condition_simulator = null
+		return connected
+	_started_ms = Time.get_ticks_msec()
+	return _success({"transport_session_id": _transport_session_id})
+
+
+func _schedule_reconnect(reason: String) -> void:
+	if _automated_acceptance:
+		return
+	_joined = false
+	_reconnect_pending = true
+	_reconnect_reason = reason
+	var exponent := mini(_reconnect_attempts, 3)
+	var delay_ms := mini(
+		LIVE2_RECONNECT_INITIAL_DELAY_MS * (1 << exponent),
+		LIVE2_RECONNECT_MAX_DELAY_MS
+	)
+	_reconnect_next_ms = Time.get_ticks_msec() + delay_ms
+	_set_connection_state("RECONNECTING", {
+		"reason": reason,
+		"attempt": _reconnect_attempts + 1,
+		"delay_ms": delay_ms,
+	})
+	set_process(true)
+
+
+func _attempt_reconnect() -> void:
+	if not _reconnect_pending:
+		return
+	_reconnect_attempts += 1
+	_set_connection_state("RECONNECTING", {
+		"reason": _reconnect_reason,
+		"attempt": _reconnect_attempts,
+		"delay_ms": 0,
+	})
+	var result: Dictionary = _start_transport_attempt()
+	if bool(result.get("success", false)):
+		_reconnect_pending = false
+		_set_connection_state("CONNECTING", {
+			"reason": _reconnect_reason,
+			"attempt": _reconnect_attempts,
+			"transport_session_id": _transport_session_id,
+		})
+		return
+	_last_error_code = String(result.get("error_code", "RECONNECT_TRANSPORT_FAILED"))
+	var exponent := mini(_reconnect_attempts, 3)
+	var delay_ms := mini(
+		LIVE2_RECONNECT_INITIAL_DELAY_MS * (1 << exponent),
+		LIVE2_RECONNECT_MAX_DELAY_MS
+	)
+	_reconnect_next_ms = Time.get_ticks_msec() + delay_ms
+	_set_connection_state("RECONNECTING", {
+		"reason": _last_error_code,
+		"attempt": _reconnect_attempts + 1,
+		"delay_ms": delay_ms,
+	})
+
+
 func _cleanup_setup_failure() -> void:
 	set_process(false)
 	if _boundary != null:
@@ -1203,6 +1363,10 @@ func get_report() -> Dictionary:
 		"gameplay_checkpoint": M7_CHECKPOINT if _playable_sandbox else Support.CHECKPOINT,
 		"gameplay_build_id": M7_BUILD_ID if _playable_sandbox else Support.BUILD_ID,
 		"configured": _configured, "joined": _joined, "logical_player_id": _logical_player_id,
+		"connection_state": _connection_state,
+		"reconnect_pending": _reconnect_pending,
+		"reconnect_attempts": _reconnect_attempts,
+		"reconnect_reason": _reconnect_reason,
 		"player_entity_id": _player_entity_id, "ownership_epoch": _ownership_epoch,
 		"transport_session_id": _transport_session_id, "join_operation_id": _join_operation_id, "input_sequence": _input_sequence,
 		"messages_sent": _messages_sent, "messages_received": _messages_received,
@@ -1274,7 +1438,13 @@ func stop() -> Dictionary:
 	_operation_types.clear()
 	var leave_result := request_graceful_leave(1000) if _joined else _success()
 	if _boundary != null: _boundary.stop()
-	_boundary = null; _network_condition_simulator = null; _joined = false; _configured = false; _write_report("STOPPED", bool(leave_result.get("success", false)))
+	_boundary = null
+	_network_condition_simulator = null
+	_joined = false
+	_reconnect_pending = false
+	_configured = false
+	_set_connection_state("STOPPED")
+	_write_report("STOPPED", bool(leave_result.get("success", false)))
 	return leave_result
 
 func _fail_connection(error_code: String, details: Dictionary = {}) -> void:
@@ -1282,6 +1452,7 @@ func _fail_connection(error_code: String, details: Dictionary = {}) -> void:
 	_operation_types.clear()
 	_last_error_code = error_code
 	_debug_event("CLIENT_CONNECTION_FAILED", {"error_code":error_code,"details":details})
+	_set_connection_state("FAILED", {"error_code": error_code, "details": details.duplicate(true)})
 	_write_report("FAILED", false, details)
 	connection_failed.emit(error_code, details.duplicate(true))
 	set_process(false)
