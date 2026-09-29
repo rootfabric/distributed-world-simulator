@@ -485,6 +485,8 @@ func get_hotkey_command_candidates(keycode: int) -> Array[String]:
 			]
 		KEY_F5:
 			return ["player.camera.toggle"]
+		KEY_F6:
+			return ["network.reconnect"]
 		KEY_J:
 			return ["player.controller.toggle"]
 	return []
