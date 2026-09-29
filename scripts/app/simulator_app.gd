@@ -412,6 +412,8 @@ func _unhandled_input(event: InputEvent) -> void:
 				KEY_G:
 					command_line = "inventory.drop"
 				KEY_B:
+					command_line = "construction.mode.toggle"
+				KEY_N:
 					command_line = "construction.build.next"
 				KEY_Q:
 					command_line = "tool.mining.equip"
@@ -429,9 +431,16 @@ func _unhandled_input(event: InputEvent) -> void:
 		and event.button_index == MOUSE_BUTTON_LEFT
 		and event.pressed
 		and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED
-		and command_registry.has_command("player.interact")
+		and (
+			command_registry.has_command("player.primary")
+			or command_registry.has_command("player.interact")
+		)
 	):
-		execute_command("player.interact")
+		execute_command(
+			"player.primary"
+			if command_registry.has_command("player.primary")
+			else "player.interact"
+		)
 		get_viewport().set_input_as_handled()
 		return
 	if (
