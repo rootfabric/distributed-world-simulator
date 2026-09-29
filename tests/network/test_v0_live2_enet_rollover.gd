@@ -1,6 +1,9 @@
 extends SceneTree
 
 const ENetPort = preload("res://scripts/network/transports/v2/enet_multi_peer_transport_port.gd")
+const LiveEarth = preload("res://scripts/app/earth_p3_resource_mining_app.gd")
+const LiveClient = preload("res://scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime.gd")
+const LiveInventory = preload("res://scripts/ui/inventory/networked/m5_v0_modern_inventory_shell_r5.gd")
 const PACKET_TARGET := 131200
 const CHANNEL_COUNT := 6
 const TEST_CHANNEL := 1
@@ -15,6 +18,7 @@ func _init() -> void:
 
 
 func _run() -> void:
+	_test_live2_product_contracts()
 	var mapping_probe = ENetPort.new()
 	_assert(
 		mapping_probe._transfer_mode("UNRELIABLE_SEQUENCED")
@@ -95,6 +99,25 @@ func _run() -> void:
 	)
 	client.close()
 	server.close()
+
+
+func _test_live2_product_contracts() -> void:
+	var earth = LiveEarth.new()
+	_assert(earth.has_method("set_network_connection_status"), "Earth exposes connection status HUD seam")
+	_assert(earth.has_method("show_network_error"), "Earth exposes network error HUD seam")
+	_assert(earth.has_method("ensure_live2_mining_tool_equipped"), "Earth exposes canonical mining equip seam")
+	_assert(earth.has_method("is_mvp_inventory_visible"), "Earth exposes inventory ownership state")
+	root.add_child(earth)
+	earth.queue_free()
+
+	var runtime = LiveClient.new()
+	_assert(runtime.has_signal("connection_state_changed"), "client emits product connection state")
+	_assert(runtime.has_method("request_reconnect_now"), "client exposes bounded reconnect request")
+	runtime.queue_free()
+
+	var inventory = LiveInventory.new()
+	_assert(inventory.has_method("build_next_stage_blocking"), "inventory exposes canonical Construction action")
+	inventory.queue_free()
 
 
 func _wait_connected(server: ENetMultiplayerPeer, client: ENetMultiplayerPeer) -> bool:
