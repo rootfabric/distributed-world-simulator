@@ -1,0 +1,1502 @@
+{
+  "boundary": {
+    "failure_code": "",
+    "mode": "SERVER",
+    "outbound_pending_bytes": 0,
+    "outbound_pending_messages": 0,
+    "outbound_streams": {},
+    "peer_count": 0,
+    "peers": {
+      "peer/enet/1082597664/m3-a-8716-2983": {
+        "failure_code": "PHYSICAL_DELIVERY_MODE_MISMATCH",
+        "incoming_sequence": 65537,
+        "incoming_sequences": {
+          "RELIABLE|ENET_CHANNEL_0": 2,
+          "UNRELIABLE_SEQUENCED|ENET_CHANNEL_1": 65537
+        },
+        "max_pending_bytes": 2097152,
+        "max_pending_messages": 64,
+        "outgoing_sequence": 46437,
+        "peer_id": "peer/enet/1082597664/m3-a-8716-2983",
+        "queued_bytes": 0,
+        "queued_messages": 0,
+        "route_generation": 1,
+        "route_id": "route/enet/1082597664",
+        "schema": "planet_simulator.network_peer_session.v2",
+        "session_id": "transport-session/m3/a/8716/2983",
+        "state": "FAILED"
+      },
+      "peer/enet/1641933831/m3-b-4048-2959": {
+        "failure_code": "PHYSICAL_DELIVERY_MODE_MISMATCH",
+        "incoming_sequence": 65577,
+        "incoming_sequences": {
+          "RELIABLE|ENET_CHANNEL_0": 3291,
+          "RELIABLE|ENET_CHANNEL_3": 3743,
+          "UNRELIABLE_SEQUENCED|ENET_CHANNEL_1": 65577
+        },
+        "max_pending_bytes": 2097152,
+        "max_pending_messages": 64,
+        "outgoing_sequence": 47186,
+        "peer_id": "peer/enet/1641933831/m3-b-4048-2959",
+        "queued_bytes": 0,
+        "queued_messages": 0,
+        "route_generation": 1,
+        "route_id": "route/enet/1641933831",
+        "schema": "planet_simulator.network_peer_session.v2",
+        "session_id": "transport-session/m3/b/4048/2959",
+        "state": "FAILED"
+      },
+      "peer/enet/1866274619/m3-b-11084-2993": {
+        "failure_code": "PHYSICAL_DELIVERY_MODE_MISMATCH",
+        "incoming_sequence": 65537,
+        "incoming_sequences": {
+          "RELIABLE|ENET_CHANNEL_0": 2,
+          "UNRELIABLE_SEQUENCED|ENET_CHANNEL_1": 65537
+        },
+        "max_pending_bytes": 2097152,
+        "max_pending_messages": 64,
+        "outgoing_sequence": 46398,
+        "peer_id": "peer/enet/1866274619/m3-b-11084-2993",
+        "queued_bytes": 0,
+        "queued_messages": 0,
+        "route_generation": 1,
+        "route_id": "route/enet/1866274619",
+        "schema": "planet_simulator.network_peer_session.v2",
+        "session_id": "transport-session/m3/b/11084/2993",
+        "state": "FAILED"
+      },
+      "peer/enet/2131232338/m3-a-14560-2984": {
+        "failure_code": "PHYSICAL_DELIVERY_MODE_MISMATCH",
+        "incoming_sequence": 65537,
+        "incoming_sequences": {
+          "RELIABLE|ENET_CHANNEL_0": 2,
+          "UNRELIABLE_SEQUENCED|ENET_CHANNEL_1": 65537
+        },
+        "max_pending_bytes": 2097152,
+        "max_pending_messages": 64,
+        "outgoing_sequence": 46371,
+        "peer_id": "peer/enet/2131232338/m3-a-14560-2984",
+        "queued_bytes": 0,
+        "queued_messages": 0,
+        "route_generation": 1,
+        "route_id": "route/enet/2131232338",
+        "schema": "planet_simulator.network_peer_session.v2",
+        "session_id": "transport-session/m3/a/14560/2984",
+        "state": "FAILED"
+      }
+    },
+    "port_descriptor": {
+      "max_peers": 32,
+      "multi_peer": true,
+      "schema": "planet_simulator.network_transport_port.v2",
+      "supports_client": true,
+      "supports_server": true,
+      "synchronous_delivery": false,
+      "transport_kind": "NETWORK_CONDITION_SIMULATOR"
+    },
+    "port_runtime": {
+      "blackout_until_ms": {
+        "INCOMING": 0,
+        "OUTGOING": 0
+      },
+      "clock_mode": "REAL",
+      "configured": true,
+      "counters": {
+        "network_simulator_packets_passthrough": 448555,
+        "network_simulator_profile_switches": 1,
+        "network_simulator_server_starts": 1
+      },
+      "delegate": {
+        "logical_to_numeric": {},
+        "mode": "SERVER",
+        "peer_count": 0,
+        "peer_statistics": {},
+        "queued_events": 0,
+        "started": true
+      },
+      "incoming_queue_bytes": 0,
+      "incoming_queue_messages": 0,
+      "manual_spike_until_ms": {
+        "INCOMING": 0,
+        "OUTGOING": 0
+      },
+      "mode": "SERVER",
+      "now_ms": 6627379,
+      "outgoing_queue_bytes": 0,
+      "outgoing_queue_messages": 0,
+      "passthrough": true,
+      "profile": {
+        "bandwidth_limit_kbps": 0.0,
+        "burst_loss_duration_ms": 0.0,
+        "burst_loss_probability_percent": 0.0,
+        "checksum": "52a8e615a7f0b15a3066d866a2818cb36207da69d4fe78403cb128c79b6d1e2a",
+        "disconnect_duration_ms": 0.0,
+        "duplicate_percent": 0.0,
+        "incoming_latency_max_ms": 0.0,
+        "incoming_latency_min_ms": 0.0,
+        "jitter_ms": 0.0,
+        "lag_spike_ms": 0.0,
+        "outgoing_latency_max_ms": 0.0,
+        "outgoing_latency_min_ms": 0.0,
+        "packet_loss_percent": 0.0,
+        "profile_id": "LOCAL",
+        "queue_limit_bytes": 0.0,
+        "random_seed": 1001.0,
+        "reorder_percent": 0.0,
+        "schema": "planet_simulator.network_condition_profile.v1"
+      },
+      "profile_generation": 1,
+      "ready_events": 0,
+      "ready_message_events": 0,
+      "ready_message_events_blocked": 0,
+      "schema": "planet_simulator.network_condition_simulator_port.v1",
+      "started": true
+    },
+    "schema": "planet_simulator.network_transport_boundary.v2",
+    "state": "LISTENING",
+    "telemetry_attached": true
+  },
+  "broadcasts": 186336,
+  "build_id": "nx4-client-prediction-reconciliation",
+  "checkpoint": "v16.14.0-network-nx4-client-prediction-reconciliation",
+  "compatibility_handshake": {
+    "accepts": 4,
+    "attempts": 4,
+    "compatible_peers": {},
+    "last_error_code": "",
+    "rejections": 0,
+    "replays": 0
+  },
+  "configured": true,
+  "connected_peer_count": 0,
+  "direct_client_authority_references": 0,
+  "fixed_tick_simulation": {
+    "catch_up_batches": 67,
+    "failures": 0,
+    "input_buffers": {},
+    "input_hold_expirations": 0,
+    "last_tick_duration_ms": 0.155,
+    "pending_input_count": 0,
+    "scheduler": {
+      "accumulator_seconds": 0.006653333333316063,
+      "catch_up_limit_hits": 0,
+      "dropped_time_seconds": 0.0,
+      "max_catch_up_ticks": 8,
+      "max_frame_delta_seconds": 0.25,
+      "schema": "planet_simulator.fixed_tick_scheduler.v1",
+      "server_tick": 397031,
+      "tick_delta_seconds": 0.016666666666666666,
+      "tick_rate_hz": 60,
+      "ticks_emitted": 397031
+    },
+    "schema": "planet_simulator.fixed_tick_scheduler.v1",
+    "server_tick": 397031,
+    "stale_input_drops": 0,
+    "tick_delta_seconds": 0.016666666666666666,
+    "tick_rate_hz": 60,
+    "ticks_simulated": 397031
+  },
+  "gameplay_build_id": "m7-playable-networked-playground",
+  "gameplay_checkpoint": "v16.10.6.1-testing-m7-playable-networked-playground",
+  "host": "127.0.0.1",
+  "item_graph_snapshot": {
+    "authority_epoch": 1,
+    "authority_owner_id": "live1-server-restart3",
+    "checksum": "4cbef4e954a12a08e975c814c6f2b42eee088ea27f0966b1dd58908c09013e27",
+    "containers": [
+      {
+        "capacity": 8,
+        "container_id": "container/shared/crate/1",
+        "owner_item_id": "item/shared/crate/1",
+        "slots": []
+      }
+    ],
+    "inventories": {
+      "a": {
+        "hotbar": [
+          "item/player/a/beacons",
+          "item/player/a/mount-bases",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "inventory": [
+          "item/player/a/beacons",
+          "item/player/a/mount-bases",
+          "item/player/a/battery",
+          "item/player/a/p5-mining-tool"
+        ],
+        "selected_hotbar_index": 0
+      },
+      "b": {
+        "hotbar": [
+          "item/player/b/beacons",
+          "item/player/b/mount-bases",
+          "item/shared/mount-base/1",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "inventory": [
+          "item/player/b/beacons",
+          "item/player/b/mount-bases",
+          "item/player/b/battery",
+          "item/player/b/p5-mining-tool",
+          "item/shared/mount-base/1"
+        ],
+        "selected_hotbar_index": 2
+      }
+    },
+    "items": [
+      {
+        "definition_id": "item/battery",
+        "item_id": "item/player/a/battery",
+        "location": {
+          "kind": "INVENTORY",
+          "player_id": "a",
+          "slot_index": 2
+        },
+        "mounted": false,
+        "quantity": 1
+      },
+      {
+        "definition_id": "item/beacon",
+        "item_id": "item/player/a/beacons",
+        "location": {
+          "kind": "INVENTORY",
+          "player_id": "a"
+        },
+        "mounted": false,
+        "quantity": 3
+      },
+      {
+        "definition_id": "item/mount-base",
+        "item_id": "item/player/a/mount-bases",
+        "location": {
+          "kind": "INVENTORY",
+          "player_id": "a"
+        },
+        "mounted": false,
+        "quantity": 3
+      },
+      {
+        "definition_id": "item/tool/mining",
+        "item_id": "item/player/a/p5-mining-tool",
+        "location": {
+          "kind": "INVENTORY",
+          "player_id": "a",
+          "slot_index": 3
+        },
+        "mounted": false,
+        "quantity": 1
+      },
+      {
+        "definition_id": "item/battery",
+        "item_id": "item/player/b/battery",
+        "location": {
+          "kind": "INVENTORY",
+          "player_id": "b",
+          "slot_index": 2
+        },
+        "mounted": false,
+        "quantity": 1
+      },
+      {
+        "definition_id": "item/beacon",
+        "item_id": "item/player/b/beacons",
+        "location": {
+          "kind": "INVENTORY",
+          "player_id": "b"
+        },
+        "mounted": false,
+        "quantity": 3
+      },
+      {
+        "definition_id": "item/mount-base",
+        "item_id": "item/player/b/mount-bases",
+        "location": {
+          "kind": "INVENTORY",
+          "player_id": "b"
+        },
+        "mounted": false,
+        "quantity": 3
+      },
+      {
+        "definition_id": "item/tool/mining",
+        "item_id": "item/player/b/p5-mining-tool",
+        "location": {
+          "kind": "INVENTORY",
+          "player_id": "b",
+          "slot_index": 3
+        },
+        "mounted": false,
+        "quantity": 1
+      },
+      {
+        "definition_id": "item/beacon",
+        "item_id": "item/shared/beacon/1",
+        "location": {
+          "kind": "WORLD"
+        },
+        "mounted": false,
+        "quantity": 1,
+        "transform": {
+          "position_m": [
+            -8.191074432059514,
+            0.35,
+            -0.8642735189057271
+          ],
+          "rotation_xyzw": [
+            0.0,
+            0.9994957122726278,
+            0.0,
+            -0.03175407294556931
+          ],
+          "schema": "planet_simulator.transform3d_dto.v1"
+        }
+      },
+      {
+        "definition_id": "item/crate",
+        "item_id": "item/shared/crate/1",
+        "location": {
+          "kind": "WORLD"
+        },
+        "mounted": false,
+        "quantity": 1,
+        "transform": {
+          "position_m": [
+            3.0,
+            0.8,
+            -2.0
+          ],
+          "rotation_xyzw": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "schema": "planet_simulator.transform3d_dto.v1"
+        }
+      },
+      {
+        "definition_id": "item/mount-base",
+        "item_id": "item/shared/mount-base/1",
+        "location": {
+          "kind": "INVENTORY",
+          "player_id": "b"
+        },
+        "mount_id": "mount/shared/socket/1",
+        "mounted": false,
+        "quantity": 1,
+        "transform": {
+          "position_m": [
+            1.0372290753169666,
+            0.35,
+            -5.1377602808929375
+          ],
+          "rotation_xyzw": [
+            0.0,
+            0.1827670577782262,
+            0.0,
+            0.983156245258652
+          ],
+          "schema": "planet_simulator.transform3d_dto.v1"
+        }
+      },
+      {
+        "definition_id": "item/ore",
+        "item_id": "item/shared/ore/1",
+        "location": {
+          "kind": "WORLD"
+        },
+        "mounted": false,
+        "quantity": 8,
+        "transform": {
+          "position_m": [
+            -1.7701850165012334,
+            0.35,
+            -2.372682611397223
+          ],
+          "rotation_xyzw": [
+            0.0,
+            0.9834159187932294,
+            0.0,
+            0.18136463454617724
+          ],
+          "schema": "planet_simulator.transform3d_dto.v1"
+        }
+      }
+    ],
+    "mounts": [
+      {
+        "item_id": "",
+        "mount_id": "mount/shared/socket/1",
+        "parent_item_id": "item/shared/mount-base/1",
+        "socket_id": "beacon_socket"
+      }
+    ],
+    "open_containers": {},
+    "playable_sandbox": true,
+    "revision": 15,
+    "schema": "planet_simulator.canonical_multiplayer_item_graph_snapshot.v1",
+    "tick": 15
+  },
+  "joins": 4,
+  "last_error_code": "",
+  "last_two_connected_checksum": "f432e5274565a677a1ab0677017bb541ec1e21039219c3052b7a6df4339a36f1",
+  "leaves": 4,
+  "messages_received": 262163,
+  "messages_sent": 186392,
+  "movement_persistence": {
+    "checkpoint_count": 0,
+    "commands_since_checkpoint": 255176,
+    "dirty": true,
+    "interval_ms": 1500,
+    "mode": "THROTTLED_WORLD_CHECKPOINT"
+  },
+  "moves": 255176,
+  "network_conditions": {
+    "blackout_until_ms": {
+      "INCOMING": 0,
+      "OUTGOING": 0
+    },
+    "clock_mode": "REAL",
+    "configured": true,
+    "counters": {
+      "network_simulator_packets_passthrough": 448555,
+      "network_simulator_profile_switches": 1,
+      "network_simulator_server_starts": 1
+    },
+    "delegate": {
+      "logical_to_numeric": {},
+      "mode": "SERVER",
+      "peer_count": 0,
+      "peer_statistics": {},
+      "queued_events": 0,
+      "started": true
+    },
+    "incoming_queue_bytes": 0,
+    "incoming_queue_messages": 0,
+    "manual_spike_until_ms": {
+      "INCOMING": 0,
+      "OUTGOING": 0
+    },
+    "mode": "SERVER",
+    "now_ms": 6627464,
+    "outgoing_queue_bytes": 0,
+    "outgoing_queue_messages": 0,
+    "passthrough": true,
+    "profile": {
+      "bandwidth_limit_kbps": 0.0,
+      "burst_loss_duration_ms": 0.0,
+      "burst_loss_probability_percent": 0.0,
+      "checksum": "52a8e615a7f0b15a3066d866a2818cb36207da69d4fe78403cb128c79b6d1e2a",
+      "disconnect_duration_ms": 0.0,
+      "duplicate_percent": 0.0,
+      "incoming_latency_max_ms": 0.0,
+      "incoming_latency_min_ms": 0.0,
+      "jitter_ms": 0.0,
+      "lag_spike_ms": 0.0,
+      "outgoing_latency_max_ms": 0.0,
+      "outgoing_latency_min_ms": 0.0,
+      "packet_loss_percent": 0.0,
+      "profile_id": "LOCAL",
+      "queue_limit_bytes": 0.0,
+      "random_seed": 1001.0,
+      "reorder_percent": 0.0,
+      "schema": "planet_simulator.network_condition_profile.v1"
+    },
+    "profile_generation": 1,
+    "ready_events": 0,
+    "ready_message_events": 0,
+    "ready_message_events_blocked": 0,
+    "schema": "planet_simulator.network_condition_simulator_port.v1",
+    "started": true
+  },
+  "network_fingerprint": {
+    "build_id": "nx4-client-prediction-reconciliation",
+    "checksum": "dac8d4df1942c22900e8d3d272293d210cf5c173fe6e9155a17e91f7b7aa3dd0",
+    "git_commit": "ac8ae0afdd47e0f290dbbc8af396add7aba60cda",
+    "protocol_hash": "da5fe8191b14b39aa7cd6bbd91708e53e825135955ad7ca718fc04235e30b9d5",
+    "schema": "planet_simulator.network_build_fingerprint.v1",
+    "session_token": "session-id/local-development",
+    "world_id": "earth"
+  },
+  "network_protocol_manifest": {
+    "channel_policy": {
+      "canonical_channels": [
+        "CONTROL",
+        "INPUT",
+        "SNAPSHOT",
+        "ITEM",
+        "RESYNC",
+        "TELEMETRY"
+      ],
+      "delivery_modes": [
+        "RELIABLE_ORDERED",
+        "RELIABLE_UNORDERED",
+        "UNRELIABLE_SEQUENCED"
+      ],
+      "enet_channel_count": 6,
+      "frame_channels": [
+        "CONTROL",
+        "INPUT",
+        "SNAPSHOT",
+        "ITEM",
+        "RESYNC",
+        "TELEMETRY",
+        "COMMAND",
+        "STATE",
+        "EVENT",
+        "JOB",
+        "BULK"
+      ],
+      "legacy_aliases": {
+        "BULK": {
+          "coalesce_latest": false,
+          "default_delivery": "RELIABLE_ORDERED",
+          "index": 4,
+          "priority": 2
+        },
+        "COMMAND": {
+          "coalesce_latest": false,
+          "default_delivery": "RELIABLE_ORDERED",
+          "index": 3,
+          "priority": 1
+        },
+        "EVENT": {
+          "coalesce_latest": false,
+          "default_delivery": "RELIABLE_ORDERED",
+          "index": 2,
+          "priority": 4
+        },
+        "JOB": {
+          "coalesce_latest": false,
+          "default_delivery": "RELIABLE_ORDERED",
+          "index": 4,
+          "priority": 2
+        },
+        "STATE": {
+          "coalesce_latest": false,
+          "default_delivery": "RELIABLE_ORDERED",
+          "index": 2,
+          "priority": 4
+        }
+      },
+      "mapping": {
+        "CONTROL": {
+          "coalesce_latest": false,
+          "default_delivery": "RELIABLE_ORDERED",
+          "index": 0,
+          "priority": 0
+        },
+        "INPUT": {
+          "coalesce_latest": true,
+          "default_delivery": "UNRELIABLE_SEQUENCED",
+          "index": 1,
+          "priority": 3
+        },
+        "ITEM": {
+          "coalesce_latest": false,
+          "default_delivery": "RELIABLE_ORDERED",
+          "index": 3,
+          "priority": 1
+        },
+        "RESYNC": {
+          "coalesce_latest": false,
+          "default_delivery": "RELIABLE_ORDERED",
+          "index": 4,
+          "priority": 2
+        },
+        "SNAPSHOT": {
+          "coalesce_latest": true,
+          "default_delivery": "UNRELIABLE_SEQUENCED",
+          "index": 2,
+          "priority": 4
+        },
+        "TELEMETRY": {
+          "coalesce_latest": true,
+          "default_delivery": "UNRELIABLE_SEQUENCED",
+          "index": 5,
+          "priority": 5
+        }
+      },
+      "queue_policy": {
+        "flush_fairness": "PRIORITY_ROUND_ROBIN_V1",
+        "partition": "PEER_DELIVERY_CHANNEL_STREAM_V1",
+        "realtime_coalescing": "LATEST_PENDING_TRANSACTIONAL_REPLACEMENT_PER_STREAM_V1",
+        "reliable_ordering": "FIFO_PER_STREAM_V1",
+        "unreliable_transport_mapping": "RAW_ENET_UNRELIABLE_APPLICATION_SEQUENCED_V1"
+      },
+      "schema": "planet_simulator.realtime_channel_policy.v1"
+    },
+    "contract_versions": {
+      "canonical_item_graph_delta": {
+        "schema": "planet_simulator.canonical_item_graph_delta.v1",
+        "validation_policy": "STRICT_JSON_INTEGER_LOWERCASE_SHA256_V1"
+      },
+      "client_prediction_reconciler": {
+        "clock_only_snapshot_policy": "FUTURE_IDENTICAL_STATE_ADVANCES_CLOCK_PRESERVES_SMOOTHING_V2",
+        "correction_policy": "VISUAL_OFFSET_DECAY_THRESHOLDS_V1",
+        "hard_correction_threshold_m": 2.0,
+        "history_miss_policy": "AUTHORITATIVE_RESET_WHEN_SNAPSHOT_TICK_OUTSIDE_RING_V1",
+        "history_policy": "SERVER_TICK_KEYED_RING_BUFFER_V1",
+        "max_history_ticks": 256,
+        "replay_policy": "AUTHORITATIVE_BASELINE_REPLAY_UNACKNOWLEDGED_TICKS_V1",
+        "schema": "planet_simulator.client_prediction_reconciler.v1",
+        "tick_rate_hz": 60
+      },
+      "command_result": {
+        "schema": "planet_simulator.networked_gameplay_command_result.v1"
+      },
+      "compact_gameplay_snapshot": {
+        "schema": "planet_simulator.compact_gameplay_snapshot.v1"
+      },
+      "compatibility_ack": {
+        "schema": "planet_simulator.network_compatibility_ack.v1"
+      },
+      "compatibility_hello": {
+        "schema": "planet_simulator.network_compatibility_hello.v1"
+      },
+      "compatibility_rejection": {
+        "schema": "planet_simulator.network_compatibility_rejection.v1"
+      },
+      "enet_transport": {
+        "physical_frame_binding_policy": "STRICT_CHANNEL_AND_TRANSFER_MODE_V1",
+        "physical_mismatch_handling_policy": "PEER_LOCAL_QUARANTINE_V1"
+      },
+      "fixed_tick_input_buffer": {
+        "hold_policy": "LAST_INPUT_WITH_250MS_FAILSAFE_V1",
+        "jump_policy": "EDGE_ON_CONSUMED_INPUT_V1",
+        "max_pending_inputs": 64,
+        "max_queue_age_ticks": 120,
+        "max_sequence_ahead": 2048,
+        "schema": "planet_simulator.fixed_tick_input_buffer.v1",
+        "selection_policy": "FIFO_STATE_TRANSITIONS_ONE_PER_FIXED_TICK_V1"
+      },
+      "fixed_tick_scheduler": {
+        "max_catch_up_ticks": 8,
+        "schema": "planet_simulator.fixed_tick_scheduler.v1",
+        "tick_rate_hz": 60
+      },
+      "input_sequence": {
+        "half_range": 1073741823,
+        "max_sequence": 2147483647,
+        "schema": "planet_simulator.input_sequence.v1"
+      },
+      "item_graph_delta": {
+        "schema": "planet_simulator.item_graph_delta.v1"
+      },
+      "item_graph_snapshot": {
+        "schema": "planet_simulator.item_graph_snapshot.v1"
+      },
+      "m3_message": {
+        "schema": "planet_simulator.m3.graphical_multiplayer_message.v1"
+      },
+      "network_condition_profile": {
+        "schema": "planet_simulator.network_condition_profile.v1"
+      },
+      "network_condition_simulator_port": {
+        "schema": "planet_simulator.network_condition_simulator_port.v1"
+      },
+      "observability_sample": {
+        "schema": "planet_simulator.network_observability_sample.v1"
+      },
+      "peer_session": {
+        "incoming_sequence_stream_policy": "DELIVERY_CLASS_ENET_CHANNEL_V1",
+        "reliable_sequence_policy": "MONOTONIC_PER_STREAM_GLOBAL_GAPS_V1",
+        "schema": "planet_simulator.network_peer_session.v2",
+        "unreliable_sequence_policy": "GAP_TOLERANT_LATEST_WINS_V1"
+      },
+      "player_delta": {
+        "schema": "planet_simulator.player_state_delta.v1"
+      },
+      "player_input": {
+        "schema": "planet_simulator.player_input_command.v1"
+      },
+      "player_input_batch": {
+        "history_policy": "LAST_THREE_STATE_TRANSITIONS_FIXED_TICK_V1",
+        "max_inputs": 3,
+        "schema": "planet_simulator.player_input_batch.v2",
+        "sequence_order_policy": "WRAP_AWARE_FORWARD_ORDER_V1",
+        "server_delta_policy": "IGNORED_SERVER_FIXED_TICK_V1"
+      },
+      "player_snapshot": {
+        "schema": "planet_simulator.player_state_snapshot.v1"
+      },
+      "protocol_frame": {
+        "protocol_version": 2,
+        "schema": "planet_simulator.protocol_frame.v2"
+      },
+      "resource_mine_command": {
+        "command_type": "resource.mine",
+        "schema": "planet_simulator.resource_mine_command.v1",
+        "transport_message_type": "RESOURCE_COMMAND"
+      },
+      "resource_mining_delta": {
+        "schema": "planet_simulator.resource_mining_delta.v1",
+        "transport_message_type": "RESOURCE_DELTA"
+      },
+      "resource_mining_policy": {
+        "command_channel": "CONTROL",
+        "delta_channel": "ITEM",
+        "mining_range_m": 5.0,
+        "snapshot_channel": "RESYNC"
+      },
+      "resource_mining_snapshot": {
+        "schema": "planet_simulator.resource_mining_snapshot.v1",
+        "transport_message_type": "RESOURCE_SNAPSHOT"
+      },
+      "transport_boundary": {
+        "schema": "planet_simulator.network_transport_boundary.v2"
+      },
+      "transport_event": {
+        "schema": "planet_simulator.network_transport_event.v2"
+      },
+      "transport_port": {
+        "schema": "planet_simulator.network_transport_port.v2"
+      }
+    },
+    "manifest_version": 1,
+    "protocol_hash": "da5fe8191b14b39aa7cd6bbd91708e53e825135955ad7ca718fc04235e30b9d5",
+    "schema": "planet_simulator.network_protocol_manifest.v1"
+  },
+  "network_telemetry": {
+    "captured_at_ms": 6627464,
+    "channels": {
+      "control": {
+        "bytes_received": 28467,
+        "bytes_sent": 26660,
+        "packets_received": 35,
+        "packets_sent": 31
+      },
+      "input": {
+        "bytes_received": 243019674,
+        "bytes_sent": 0,
+        "packets_received": 262115,
+        "packets_sent": 0
+      },
+      "item": {
+        "bytes_received": 8540,
+        "bytes_sent": 45111,
+        "packets_received": 13,
+        "packets_sent": 26
+      },
+      "resync": {
+        "bytes_received": 0,
+        "bytes_sent": 105122,
+        "packets_received": 0,
+        "packets_sent": 48
+      },
+      "snapshot": {
+        "bytes_received": 0,
+        "bytes_sent": 227816290,
+        "packets_received": 0,
+        "packets_sent": 186287
+      }
+    },
+    "checksum": "b33d16d106bdb979116cde9f454b3f4cbf0d1de4fdae814c96d03fc87500ce55",
+    "counters": {
+      "handshake_accepts": 4,
+      "handshake_attempts": 4,
+      "network_simulator_packets_passthrough": 448555,
+      "network_simulator_profile_switches": 1,
+      "network_simulator_server_starts": 1,
+      "server_process_iterations": 957827,
+      "transport_frames_dispatched": 186392,
+      "transport_frames_queued": 186392,
+      "transport_message_events": 262163,
+      "transport_peer_connected_events": 4,
+      "transport_peer_disconnected_events": 4,
+      "transport_peer_protocol_violations": 4,
+      "transport_server_starts": 1,
+      "transport_unreliable_sequence_gaps": 7065
+    },
+    "distributions": {
+      "input_age_ms": {
+        "count": 512,
+        "max": 4256181.0,
+        "mean": 4256058.556640625,
+        "min": 4256054.0,
+        "p50": 4256058.0,
+        "p95": 4256061.0,
+        "p99": 4256062.0
+      },
+      "input_queue_age_ticks": {
+        "count": 512,
+        "max": 0.0,
+        "mean": 0.0,
+        "min": 0.0,
+        "p50": 0.0,
+        "p95": 0.0,
+        "p99": 0.0
+      },
+      "server_message_processing_ms": {
+        "count": 512,
+        "max": 0.528,
+        "mean": 0.24872851562499987,
+        "min": 0.187,
+        "p50": 0.233,
+        "p95": 0.3542499999999999,
+        "p99": 0.44277999999999995
+      },
+      "server_process_duration_ms": {
+        "count": 512,
+        "max": 6.315,
+        "mean": 1.1760781250000003,
+        "min": 0.301,
+        "p50": 0.485,
+        "p95": 4.4184,
+        "p99": 5.510159999999999
+      },
+      "server_tick_duration_ms": {
+        "count": 512,
+        "max": 0.327,
+        "mean": 0.1181464843750001,
+        "min": 0.089,
+        "p50": 0.108,
+        "p95": 0.17989999999999998,
+        "p99": 0.23688999999999996
+      },
+      "transport_poll_duration_ms": {
+        "count": 512,
+        "max": 1.585,
+        "mean": 0.3663652343750001,
+        "min": 0.172,
+        "p50": 0.218,
+        "p95": 0.9937999999999999,
+        "p99": 1.1824899999999994
+      }
+    },
+    "fingerprint": {
+      "build_id": "nx4-client-prediction-reconciliation",
+      "checksum": "dac8d4df1942c22900e8d3d272293d210cf5c173fe6e9155a17e91f7b7aa3dd0",
+      "git_commit": "ac8ae0afdd47e0f290dbbc8af396add7aba60cda",
+      "protocol_hash": "da5fe8191b14b39aa7cd6bbd91708e53e825135955ad7ca718fc04235e30b9d5",
+      "schema": "planet_simulator.network_build_fingerprint.v1",
+      "session_token": "session-id/local-development",
+      "world_id": "earth"
+    },
+    "gauges": {
+      "checkpoint_generation": 0.0,
+      "compatible_transport_peers": 1.0,
+      "connected_gameplay_peers": 1.0,
+      "fixed_server_tick": 397031.0,
+      "fixed_tick_failures": 0.0,
+      "handshake_replay_count": 0.0,
+      "network_simulator_incoming_blackout_remaining_ms": 0.0,
+      "network_simulator_incoming_queue_bytes": 0.0,
+      "network_simulator_incoming_queue_messages": 0.0,
+      "network_simulator_outgoing_blackout_remaining_ms": 0.0,
+      "network_simulator_outgoing_queue_bytes": 0.0,
+      "network_simulator_outgoing_queue_messages": 0.0,
+      "network_simulator_profile_generation": 1.0,
+      "network_simulator_ready_events": 0.0,
+      "network_simulator_ready_message_events": 0.0,
+      "network_simulator_ready_message_events_blocked": 0.0,
+      "pending_input_count": 0.0,
+      "reliable_queue_depth_bytes": 0.0,
+      "reliable_queue_depth_messages": 0.0,
+      "server_tick": 397031.0,
+      "transport_outbound_pending_bytes": 0.0,
+      "transport_outbound_pending_messages": 0.0
+    },
+    "runtime_role": "server",
+    "sample_id": "network-sample/server/44",
+    "schema": "planet_simulator.network_observability_sample.v1"
+  },
+  "passed": false,
+  "peer_to_player": {},
+  "persistence": {
+    "checkpoint_generation": 0,
+    "durable_commits": 0,
+    "enabled": false,
+    "failures": 0,
+    "fatal_failure": false,
+    "last_checkpoint_operation_id": "",
+    "last_error_details": {},
+    "outbox": {},
+    "recovered": false,
+    "recovery_source": "",
+    "root_path": "",
+    "service_recovery": {
+      "durable_state_checksum": "b06f594d0cd2c0d5f3cf10acb45a61fbbc0ba77204346b089db0c69c95879110",
+      "item_operation_count": 13,
+      "ownership_operation_count": 8,
+      "replay_state_checksum": "3f2a3d70c9d433a4f957afda73d912b4cd4ca7d3f47815f02839208ec6a5f1b5",
+      "resource_mining_checksum": "4004dc4844b499c717a1ce7e572d8a1c46ead2b7265b512e1ae6d05adcf9e833",
+      "resource_mining_generation": 1,
+      "resource_operation_count": 20,
+      "service_operation_count": 8
+    }
+  },
+  "playable_sandbox": true,
+  "port": 24580,
+  "presentation_updates": 0,
+  "process_id": 21896,
+  "realtime_traffic": {
+    "channel_policy": {
+      "canonical_channels": [
+        "CONTROL",
+        "INPUT",
+        "SNAPSHOT",
+        "ITEM",
+        "RESYNC",
+        "TELEMETRY"
+      ],
+      "enet_channel_count": 6,
+      "legacy_aliases": {
+        "BULK": {
+          "coalesce_latest": false,
+          "default_delivery": "RELIABLE_ORDERED",
+          "index": 4,
+          "priority": 2
+        },
+        "COMMAND": {
+          "coalesce_latest": false,
+          "default_delivery": "RELIABLE_ORDERED",
+          "index": 3,
+          "priority": 1
+        },
+        "EVENT": {
+          "coalesce_latest": false,
+          "default_delivery": "RELIABLE_ORDERED",
+          "index": 2,
+          "priority": 4
+        },
+        "JOB": {
+          "coalesce_latest": false,
+          "default_delivery": "RELIABLE_ORDERED",
+          "index": 4,
+          "priority": 2
+        },
+        "STATE": {
+          "coalesce_latest": false,
+          "default_delivery": "RELIABLE_ORDERED",
+          "index": 2,
+          "priority": 4
+        }
+      },
+      "mapping": {
+        "CONTROL": {
+          "coalesce_latest": false,
+          "default_delivery": "RELIABLE_ORDERED",
+          "index": 0,
+          "priority": 0
+        },
+        "INPUT": {
+          "coalesce_latest": true,
+          "default_delivery": "UNRELIABLE_SEQUENCED",
+          "index": 1,
+          "priority": 3
+        },
+        "ITEM": {
+          "coalesce_latest": false,
+          "default_delivery": "RELIABLE_ORDERED",
+          "index": 3,
+          "priority": 1
+        },
+        "RESYNC": {
+          "coalesce_latest": false,
+          "default_delivery": "RELIABLE_ORDERED",
+          "index": 4,
+          "priority": 2
+        },
+        "SNAPSHOT": {
+          "coalesce_latest": true,
+          "default_delivery": "UNRELIABLE_SEQUENCED",
+          "index": 2,
+          "priority": 4
+        },
+        "TELEMETRY": {
+          "coalesce_latest": true,
+          "default_delivery": "UNRELIABLE_SEQUENCED",
+          "index": 5,
+          "priority": 5
+        }
+      },
+      "schema": "planet_simulator.realtime_channel_policy.v1"
+    },
+    "compact_movement_snapshot_failures": 0,
+    "compact_movement_snapshots_published": 186283,
+    "item_graph_delta_build_failures": 0,
+    "item_graph_deltas_published": 26,
+    "item_graph_full_snapshots_published": 6,
+    "item_graph_resync_requests": 0,
+    "last_movement_rejection_error_code": "",
+    "last_movement_rejection_stage": "",
+    "movement_batches_received": 262115,
+    "movement_deltas_suppressed": 255176,
+    "movement_full_snapshots_suppressed": 255176,
+    "movement_inputs_applied": 255176,
+    "movement_inputs_received": 262284,
+    "movement_inputs_redundant": 7108,
+    "movement_inputs_rejected": 0,
+    "movement_results_suppressed": 255176,
+    "movement_snapshot_enqueue_failures": 0,
+    "movement_snapshot_interval_ms": 50,
+    "movement_snapshot_interval_ticks": 3,
+    "movement_snapshot_rate_hz": 20,
+    "movement_snapshot_retransmit_requests": 7030,
+    "movement_snapshots_published": 93553
+  },
+  "rejections": 27,
+  "resolved_user_data_dir": "C:/distributed-world-simulator/live1/wt-20260927-191145/artifacts/live1/20260927-191145/profiles/server/roaming/Godot/app_userdata/Real Scale Procedural Moon",
+  "schema": "planet_simulator.m3_dedicated_server_runtime.v1",
+  "service": {
+    "authority_epoch": 1,
+    "authority_owner_id": "live1-server-restart3",
+    "canonical_multiplayer_item_graph": {
+      "authority_epoch": 1,
+      "authority_owner_id": "live1-server-restart3",
+      "checksum": "4cbef4e954a12a08e975c814c6f2b42eee088ea27f0966b1dd58908c09013e27",
+      "containers": [
+        {
+          "capacity": 8,
+          "container_id": "container/shared/crate/1",
+          "owner_item_id": "item/shared/crate/1",
+          "slots": []
+        }
+      ],
+      "inventories": {
+        "a": {
+          "hotbar": [
+            "item/player/a/beacons",
+            "item/player/a/mount-bases",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            ""
+          ],
+          "inventory": [
+            "item/player/a/beacons",
+            "item/player/a/mount-bases",
+            "item/player/a/battery",
+            "item/player/a/p5-mining-tool"
+          ],
+          "selected_hotbar_index": 0
+        },
+        "b": {
+          "hotbar": [
+            "item/player/b/beacons",
+            "item/player/b/mount-bases",
+            "item/shared/mount-base/1",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            ""
+          ],
+          "inventory": [
+            "item/player/b/beacons",
+            "item/player/b/mount-bases",
+            "item/player/b/battery",
+            "item/player/b/p5-mining-tool",
+            "item/shared/mount-base/1"
+          ],
+          "selected_hotbar_index": 2
+        }
+      },
+      "items": [
+        {
+          "definition_id": "item/battery",
+          "item_id": "item/player/a/battery",
+          "location": {
+            "kind": "INVENTORY",
+            "player_id": "a",
+            "slot_index": 2
+          },
+          "mounted": false,
+          "quantity": 1
+        },
+        {
+          "definition_id": "item/beacon",
+          "item_id": "item/player/a/beacons",
+          "location": {
+            "kind": "INVENTORY",
+            "player_id": "a"
+          },
+          "mounted": false,
+          "quantity": 3
+        },
+        {
+          "definition_id": "item/mount-base",
+          "item_id": "item/player/a/mount-bases",
+          "location": {
+            "kind": "INVENTORY",
+            "player_id": "a"
+          },
+          "mounted": false,
+          "quantity": 3
+        },
+        {
+          "definition_id": "item/tool/mining",
+          "item_id": "item/player/a/p5-mining-tool",
+          "location": {
+            "kind": "INVENTORY",
+            "player_id": "a",
+            "slot_index": 3
+          },
+          "mounted": false,
+          "quantity": 1
+        },
+        {
+          "definition_id": "item/battery",
+          "item_id": "item/player/b/battery",
+          "location": {
+            "kind": "INVENTORY",
+            "player_id": "b",
+            "slot_index": 2
+          },
+          "mounted": false,
+          "quantity": 1
+        },
+        {
+          "definition_id": "item/beacon",
+          "item_id": "item/player/b/beacons",
+          "location": {
+            "kind": "INVENTORY",
+            "player_id": "b"
+          },
+          "mounted": false,
+          "quantity": 3
+        },
+        {
+          "definition_id": "item/mount-base",
+          "item_id": "item/player/b/mount-bases",
+          "location": {
+            "kind": "INVENTORY",
+            "player_id": "b"
+          },
+          "mounted": false,
+          "quantity": 3
+        },
+        {
+          "definition_id": "item/tool/mining",
+          "item_id": "item/player/b/p5-mining-tool",
+          "location": {
+            "kind": "INVENTORY",
+            "player_id": "b",
+            "slot_index": 3
+          },
+          "mounted": false,
+          "quantity": 1
+        },
+        {
+          "definition_id": "item/beacon",
+          "item_id": "item/shared/beacon/1",
+          "location": {
+            "kind": "WORLD"
+          },
+          "mounted": false,
+          "quantity": 1,
+          "transform": {
+            "position_m": [
+              -8.191074432059514,
+              0.35,
+              -0.8642735189057271
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.9994957122726278,
+              0.0,
+              -0.03175407294556931
+            ],
+            "schema": "planet_simulator.transform3d_dto.v1"
+          }
+        },
+        {
+          "definition_id": "item/crate",
+          "item_id": "item/shared/crate/1",
+          "location": {
+            "kind": "WORLD"
+          },
+          "mounted": false,
+          "quantity": 1,
+          "transform": {
+            "position_m": [
+              3.0,
+              0.8,
+              -2.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ],
+            "schema": "planet_simulator.transform3d_dto.v1"
+          }
+        },
+        {
+          "definition_id": "item/mount-base",
+          "item_id": "item/shared/mount-base/1",
+          "location": {
+            "kind": "INVENTORY",
+            "player_id": "b"
+          },
+          "mount_id": "mount/shared/socket/1",
+          "mounted": false,
+          "quantity": 1,
+          "transform": {
+            "position_m": [
+              1.0372290753169666,
+              0.35,
+              -5.1377602808929375
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.1827670577782262,
+              0.0,
+              0.983156245258652
+            ],
+            "schema": "planet_simulator.transform3d_dto.v1"
+          }
+        },
+        {
+          "definition_id": "item/ore",
+          "item_id": "item/shared/ore/1",
+          "location": {
+            "kind": "WORLD"
+          },
+          "mounted": false,
+          "quantity": 8,
+          "transform": {
+            "position_m": [
+              -1.7701850165012334,
+              0.35,
+              -2.372682611397223
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.9834159187932294,
+              0.0,
+              0.18136463454617724
+            ],
+            "schema": "planet_simulator.transform3d_dto.v1"
+          }
+        }
+      ],
+      "mounts": [
+        {
+          "item_id": "",
+          "mount_id": "mount/shared/socket/1",
+          "parent_item_id": "item/shared/mount-base/1",
+          "socket_id": "beacon_socket"
+        }
+      ],
+      "open_containers": {},
+      "playable_sandbox": true,
+      "revision": 15,
+      "schema": "planet_simulator.canonical_multiplayer_item_graph_snapshot.v1",
+      "tick": 15
+    },
+    "command_result_router": {
+      "routed": 40,
+      "schema": "planet_simulator.command_result_router.v1"
+    },
+    "configured": true,
+    "connected_count": 0,
+    "container_interaction_service": {},
+    "direct_client_authority_references": 0,
+    "fixed_tick_authority": true,
+    "item_graph_service": {},
+    "mount_interaction_service": {},
+    "movement_service": {
+      "gravity_mps2": 1.62,
+      "jump_speed_mps": 3.6,
+      "playground_authority": "SERVER_SIMULATED_INPUT_INTENT",
+      "run_speed_mps": 12.0,
+      "schema": "planet_simulator.player_movement_service.v1",
+      "walk_speed_mps": 6.0
+    },
+    "operation_count": 8,
+    "ownership_service": {
+      "authority_epoch": 1,
+      "authority_owner_id": "live1-server-restart3",
+      "connected_count": 0,
+      "operation_count": 8,
+      "player_count": 2,
+      "revision": 8,
+      "schema": "planet_simulator.player_ownership_service.v1",
+      "server_tick": 8,
+      "wire_contract": "planet_simulator.player_ownership_snapshot.v1"
+    },
+    "player_count": 2,
+    "player_registry": {
+      "live_binding_count": 0,
+      "player_count": 2,
+      "read_only_live_stage_count": 0,
+      "schema": "planet_simulator.player_registry.v1"
+    },
+    "profile": "MULTIPLAYER_CORE",
+    "recovery": {
+      "durable_state_checksum": "b06f594d0cd2c0d5f3cf10acb45a61fbbc0ba77204346b089db0c69c95879110",
+      "item_operation_count": 13,
+      "ownership_operation_count": 8,
+      "replay_state_checksum": "3f2a3d70c9d433a4f957afda73d912b4cd4ca7d3f47815f02839208ec6a5f1b5",
+      "resource_mining_checksum": "4004dc4844b499c717a1ce7e572d8a1c46ead2b7265b512e1ae6d05adcf9e833",
+      "resource_mining_generation": 1,
+      "resource_operation_count": 20,
+      "service_operation_count": 8
+    },
+    "replication_publisher": {
+      "deltas": 8,
+      "schema": "planet_simulator.replication_publisher.v1",
+      "snapshots": 93654
+    },
+    "resource_mining": {
+      "authority_epoch": 1,
+      "authority_owner_id": "live1-server-restart3",
+      "checksum": "4004dc4844b499c717a1ce7e572d8a1c46ead2b7265b512e1ae6d05adcf9e833",
+      "generation": 1,
+      "nodes": [
+        {
+          "output_definition_id": "item/ore",
+          "remaining_units": 8,
+          "resource_definition_id": "resource/ore",
+          "resource_node_id": "resource/earth/ore-demo/1",
+          "spatial": {
+            "altitude_m": 450.0,
+            "frame": "earth-fixed",
+            "latitude_deg": 45.0,
+            "longitude_deg": 25.0001
+          },
+          "unit_item_quantity": 1
+        }
+      ],
+      "schema": "planet_simulator.resource_mining_snapshot.v1"
+    },
+    "revision": 255797,
+    "schema": "planet_simulator.networked_gameplay_service.v1",
+    "server_tick": 397031,
+    "shared_item_available": true,
+    "shared_item_owner": "",
+    "topology_adapter": "ENET"
+  },
+  "snapshot": {
+    "authority_epoch": 1.0,
+    "authority_owner_id": "live1-server-restart3",
+    "checksum": "af601bee6d0605cfa678a07381f6d270bf646e4616b3262ce962bab1d5d23a89",
+    "players": [
+      {
+        "connected": false,
+        "flashlight_enabled": false,
+        "inventory": [],
+        "last_input_sequence": 127692.0,
+        "logical_player_id": "a",
+        "orientation_yaw": 0.06648888888888894,
+        "ownership_epoch": 2.0,
+        "player_entity_id": "player/a",
+        "position": {
+          "x": -5.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "state_revision": 127586.0,
+        "transport_session_id": "transport-session/m3/a/14560/2984",
+        "velocity": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        }
+      },
+      {
+        "connected": false,
+        "flashlight_enabled": false,
+        "inventory": [],
+        "last_input_sequence": 130123.0,
+        "logical_player_id": "b",
+        "orientation_yaw": 1.9906967842739087,
+        "ownership_epoch": 2.0,
+        "player_entity_id": "player/b",
+        "position": {
+          "x": 5.190196034740746,
+          "y": 0.0,
+          "z": -4.554542041829057
+        },
+        "state_revision": 128198.0,
+        "transport_session_id": "transport-session/m3/b/4048/2959",
+        "velocity": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        }
+      }
+    ],
+    "region_id": "region/m3/single-server",
+    "revision": 255797.0,
+    "schema": "planet_simulator.player_state_snapshot.v1",
+    "server_tick": 397031.0,
+    "shared_item": {
+      "available": true,
+      "item_id": "item/shared/beacon/1",
+      "owner_player_entity_id": "",
+      "revision": 0.0
+    }
+  },
+  "state": "READY",
+  "v0_p3_resource_mining": {
+    "resource_commands": 20,
+    "resource_delta_build_failures": 0,
+    "resource_deltas_published": 0,
+    "resource_rejections": 20,
+    "resource_resync_requests": 0,
+    "resource_snapshots_published": 4,
+    "snapshot": {
+      "authority_epoch": 1,
+      "authority_owner_id": "live1-server-restart3",
+      "checksum": "4004dc4844b499c717a1ce7e572d8a1c46ead2b7265b512e1ae6d05adcf9e833",
+      "generation": 1,
+      "nodes": [
+        {
+          "output_definition_id": "item/ore",
+          "remaining_units": 8,
+          "resource_definition_id": "resource/ore",
+          "resource_node_id": "resource/earth/ore-demo/1",
+          "spatial": {
+            "altitude_m": 450.0,
+            "frame": "earth-fixed",
+            "latitude_deg": 45.0,
+            "longitude_deg": 25.0001
+          },
+          "unit_item_quantity": 1
+        }
+      ],
+      "schema": "planet_simulator.resource_mining_snapshot.v1"
+    }
+  },
+  "v0_p4_live_composition": {
+    "bound_before_clients": true,
+    "build_plan_id": "build-plan/mvp/earth-outpost",
+    "construct_id": "construct/mvp/earth-outpost",
+    "enabled": true,
+    "fixture_material_truth_present": false,
+    "legacy_prebind_ignored": true,
+    "p4_construction_consume_ready": true,
+    "repository_root": "user://v0-p4-construction/runtime-21896-176815080942",
+    "resource_mining_bound_to_same_service": true,
+    "single_item_graph_identity": true
+  },
+  "v0_p4_post_commit_publication": {
+    "construction_snapshot_fallbacks": 0,
+    "item_snapshot_fallbacks": 0,
+    "publication_batches": 0,
+    "replay_publications_suppressed": 0
+  }
+}
