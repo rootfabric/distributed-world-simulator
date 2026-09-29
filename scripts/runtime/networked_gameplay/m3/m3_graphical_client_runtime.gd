@@ -17,6 +17,15 @@ var _resource_resync_pending := false
 var _resource_resync_requests_sent := 0
 
 
+func _reset_extended_reconnect_replica_state() -> void:
+	_resource_mining_snapshot.clear()
+	_resource_snapshot_updates = 0
+	_resource_delta_updates = 0
+	_resource_rejections = 0
+	_resource_resync_pending = false
+	_resource_resync_requests_sent = 0
+
+
 func setup(config: Dictionary) -> Dictionary:
 	_resource_mining_snapshot.clear()
 	_resource_snapshot_updates = 0
