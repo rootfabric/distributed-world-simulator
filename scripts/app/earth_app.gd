@@ -316,7 +316,21 @@ func attach_m3_multiplayer_client(runtime) -> Dictionary:
 	):
 		return {"success": false, "error_code": "INVALID_M3_CLIENT_RUNTIME"}
 	if _m3_attached:
-		return {"success": false, "error_code": "M3_CLIENT_ALREADY_ATTACHED"}
+		if m3_multiplayer_client_runtime != runtime:
+			return {"success": false, "error_code": "M3_CLIENT_ALREADY_ATTACHED"}
+		_on_m3_replica_updated(runtime.get_snapshot())
+		_on_m4_item_graph_updated(runtime.get_item_graph_snapshot())
+		if runtime.has_method("get_construction_bundle"):
+			_on_m3_construction_updated(runtime.get_construction_bundle())
+		return {
+			"success": true,
+			"error_code": "",
+			"details": {
+				"local_player_id": runtime.get_local_player_id(),
+				"mode": "EARTH_NETWORK_SPECTATOR",
+				"reconnected": true,
+			},
+		}
 	m3_multiplayer_client_runtime = runtime
 	if not runtime.replica_updated.is_connected(_on_m3_replica_updated):
 		runtime.replica_updated.connect(_on_m3_replica_updated)
