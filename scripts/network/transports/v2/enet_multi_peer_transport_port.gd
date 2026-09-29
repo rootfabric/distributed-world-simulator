@@ -376,15 +376,15 @@ func _channel_index(channel: String) -> int:
 
 
 func _transfer_mode(delivery_mode: String) -> int:
-	# Exact physical fidelity: Godot's ENET maps TRANSFER_MODE_UNRELIABLE to
-	# ENET_PACKET_FLAG_UNSEQUENCED and TRANSFER_MODE_UNRELIABLE_ORDERED to
-	# plain sequenced-unreliable on the wire, and get_packet_mode() decodes the
-	# SAME flags back — so the declared mode must map 1:1 or every receiver
-	# quarantines the frame as PHYSICAL_DELIVERY_MODE_MISMATCH (EG4 L2 leg-B).
-	if delivery_mode == "UNRELIABLE":
+	# LIVE.2 keeps realtime ordering at the application frame/session layer.
+	# INPUT/SNAPSHOT/TELEMETRY already carry monotonic ProtocolFrameV2
+	# sequences and NetworkPeerSession applies gap-tolerant latest-wins.
+	# Using ENet's unreliable-ordered mode adds a second 16-bit physical
+	# sequence which reproducibly disconnects long-lived clients near 2^16.
+	# Both application UNRELIABLE modes therefore use raw ENet unreliable;
+	# physical validation still rejects a frame sent as RELIABLE.
+	if delivery_mode in ["UNRELIABLE", "UNRELIABLE_SEQUENCED"]:
 		return MultiplayerPeer.TRANSFER_MODE_UNRELIABLE
-	if delivery_mode == "UNRELIABLE_SEQUENCED":
-		return MultiplayerPeer.TRANSFER_MODE_UNRELIABLE_ORDERED
 	return MultiplayerPeer.TRANSFER_MODE_RELIABLE
 
 
