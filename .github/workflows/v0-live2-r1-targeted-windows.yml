@@ -14,7 +14,7 @@ permissions:
 
 concurrency:
   group: v0-live2-r1-targeted-windows
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 env:
   GODOT_BIN: C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe
