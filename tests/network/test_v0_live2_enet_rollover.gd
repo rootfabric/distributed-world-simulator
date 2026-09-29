@@ -107,17 +107,16 @@ func _test_live2_product_contracts() -> void:
 	_assert(earth.has_method("show_network_error"), "Earth exposes network error HUD seam")
 	_assert(earth.has_method("ensure_live2_mining_tool_equipped"), "Earth exposes canonical mining equip seam")
 	_assert(earth.has_method("is_mvp_inventory_visible"), "Earth exposes inventory ownership state")
-	root.add_child(earth)
-	earth.queue_free()
+	earth.free()
 
 	var runtime = LiveClient.new()
 	_assert(runtime.has_signal("connection_state_changed"), "client emits product connection state")
 	_assert(runtime.has_method("request_reconnect_now"), "client exposes bounded reconnect request")
-	runtime.queue_free()
+	runtime.free()
 
 	var inventory = LiveInventory.new()
 	_assert(inventory.has_method("build_next_stage_blocking"), "inventory exposes canonical Construction action")
-	inventory.queue_free()
+	inventory.free()
 
 
 func _wait_connected(server: ENetMultiplayerPeer, client: ENetMultiplayerPeer) -> bool:
