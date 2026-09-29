@@ -251,6 +251,10 @@ func _ready() -> void:
 		graphical_game_client_runtime.session_ready.connect(_on_graphical_game_client_session_ready)
 		graphical_game_client_runtime.connection_failed.connect(_on_graphical_game_client_connection_failed)
 		graphical_game_client_runtime.server_disconnected.connect(_on_graphical_game_client_server_disconnected)
+		if graphical_game_client_runtime.has_signal("connection_state_changed"):
+			graphical_game_client_runtime.connection_state_changed.connect(
+				_on_graphical_game_client_connection_state_changed
+			)
 		graphical_game_client_setup = graphical_game_client_runtime.setup({
 			"host": String(launch_options.get("server_address", "127.0.0.1")),
 			"port": int(launch_options.get("server_port", 24580)),
@@ -374,6 +378,16 @@ func _unhandled_input(event: InputEvent) -> void:
 	if developer_console != null and developer_console.is_open():
 		return
 	if event is InputEventKey and event.pressed and not event.echo:
+		if event.keycode == KEY_ESCAPE:
+			if (
+				current_runtime != null
+				and current_runtime.has_method("is_mvp_inventory_visible")
+				and bool(current_runtime.call("is_mvp_inventory_visible"))
+				and command_registry.has_command("inventory.toggle")
+			):
+				execute_command("inventory.toggle")
+				get_viewport().set_input_as_handled()
+				return
 		if event.keycode == KEY_F1:
 			developer_console.set_open(true)
 			developer_console.execute_line("help")
@@ -397,6 +411,10 @@ func _unhandled_input(event: InputEvent) -> void:
 					command_line = "player.interact"
 				KEY_G:
 					command_line = "inventory.drop"
+				KEY_B:
+					command_line = "construction.build.next"
+				KEY_Q:
+					command_line = "tool.mining.equip"
 				KEY_F:
 					command_line = "player.flashlight.toggle"
 				_:
@@ -406,6 +424,16 @@ func _unhandled_input(event: InputEvent) -> void:
 			execute_command(command_line)
 			get_viewport().set_input_as_handled()
 			return
+	if (
+		event is InputEventMouseButton
+		and event.button_index == MOUSE_BUTTON_LEFT
+		and event.pressed
+		and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED
+		and command_registry.has_command("player.interact")
+	):
+		execute_command("player.interact")
+		get_viewport().set_input_as_handled()
+		return
 	if (
 		event is InputEventMouseButton
 		and event.button_index == MOUSE_BUTTON_LEFT
@@ -1891,20 +1919,27 @@ func _on_graphical_game_client_session_ready(session) -> void:
 	_refresh_runtime_descriptor()
 
 
+func _on_graphical_game_client_connection_state_changed(
+	state: String,
+	details: Dictionary
+) -> void:
+	if current_runtime != null and current_runtime.has_method("set_network_connection_status"):
+		current_runtime.call("set_network_connection_status", state, details)
+
+
 func _on_graphical_game_client_connection_failed(error_code: String, details: Dictionary) -> void:
 	push_error("Graphical game client connection failed: %s %s" % [error_code, details])
-	if _network_debug_stay_open:
-		if current_runtime != null and current_runtime.has_method("show_network_error"):
-			current_runtime.call("show_network_error", error_code, details)
+	if current_runtime != null and current_runtime.has_method("show_network_error"):
+		current_runtime.call("show_network_error", error_code, details)
+	if bool(launch_options.get("network_mvp", false)) or _network_debug_stay_open:
 		return
 	request_graceful_shutdown("graphical_game_client_connection_failed", 8)
 
+
 func _on_graphical_game_client_server_disconnected(report: Dictionary) -> void:
-	push_error("Graphical game client server disconnected: %s" % report)
-	if _network_debug_stay_open:
-		if current_runtime != null and current_runtime.has_method("show_network_error"):
-			current_runtime.call("show_network_error", "SERVER_DISCONNECTED", report)
-		return
+	push_warning("Graphical game client server disconnected: %s" % report)
+	if current_runtime != null and current_runtime.has_method("show_network_error"):
+		current_runtime.call("show_network_error", "SERVER_DISCONNECTED", report)
 
 
 func _setup_m2_graphical_acceptance_driver() -> void:
