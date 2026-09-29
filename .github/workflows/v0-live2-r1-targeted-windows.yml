@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - feature/v0-live2-playable-client-server-r1
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
