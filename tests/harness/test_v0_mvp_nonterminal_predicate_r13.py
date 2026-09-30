@@ -120,6 +120,41 @@ class MVPNonterminalPredicateR13Tests(unittest.TestCase):
         self.assertIn(MVP1, reduced["completed_predicates"])
         self.assertEqual(len(self.live_events), len({e["sequence"] for e in self.live_events}))
 
+    def test_legacy_branch_exception_is_exact_and_fail_closed(self):
+        event_47 = next(
+            event for event in self.live_events if event["sequence"] == 47
+        )
+        self.assertNotEqual(self.live_order["branch"], event_47["branch"])
+
+        no_exception = copy.deepcopy(self.transition)
+        no_exception.pop("legacy_branch_exceptions", None)
+        with self.assertRaisesRegex(
+            ContractValidationError, "EVENT_BRANCH_MISMATCH"
+        ):
+            reduce_events(
+                self.bundle,
+                self.live_order,
+                self.live_events,
+                no_exception,
+                self.context,
+            )
+
+        tampered_events = copy.deepcopy(self.live_events)
+        tampered_47 = next(
+            event for event in tampered_events if event["sequence"] == 47
+        )
+        tampered_47["branch"] = "repair/unapproved-branch"
+        with self.assertRaisesRegex(
+            ContractValidationError, "EVENT_BRANCH_MISMATCH"
+        ):
+            reduce_events(
+                self.bundle,
+                self.live_order,
+                tampered_events,
+                self.transition,
+                self.context,
+            )
+
     def test_legacy_timestamp_exception_is_exact_and_fail_closed(self):
         event_45 = next(
             event for event in self.live_events if event["sequence"] == 45
