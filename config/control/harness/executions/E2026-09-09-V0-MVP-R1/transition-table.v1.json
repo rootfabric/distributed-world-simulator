@@ -81,6 +81,11 @@
       "IN_PROGRESS",
       "IMPLEMENTED",
       "VERIFYING"
+    ],
+    "REVIEW_DISPATCHED": [
+      "IN_PROGRESS",
+      "IMPLEMENTED",
+      "VERIFYING"
     ]
   },
   "allowed_state_transitions": {
