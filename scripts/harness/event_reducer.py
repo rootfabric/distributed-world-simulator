@@ -435,6 +435,40 @@ def _enforce_guard(
             raise ContractValidationError("GUARDED_CHECKPOINT_PROPOSAL_EVIDENCE_MISSING")
 
 
+def _legacy_branch_exception_matches(
+    transition_table: dict[str, Any],
+    event: dict[str, Any],
+) -> bool:
+    records = transition_table.get("legacy_branch_exceptions", [])
+    if records is None:
+        return False
+    if not isinstance(records, list):
+        raise ContractValidationError("LEGACY_BRANCH_EXCEPTIONS_INVALID")
+    required = {"sequence", "branch", "reason"}
+    seen: set[int] = set()
+    matched = False
+    for item in records:
+        if not isinstance(item, dict) or set(item) != required:
+            raise ContractValidationError("LEGACY_BRANCH_EXCEPTION_INVALID")
+        sequence = item.get("sequence")
+        branch = item.get("branch")
+        reason = item.get("reason")
+        if (
+            not isinstance(sequence, int)
+            or sequence < 1
+            or sequence in seen
+            or not isinstance(branch, str)
+            or not branch
+            or not isinstance(reason, str)
+            or not reason
+        ):
+            raise ContractValidationError("LEGACY_BRANCH_EXCEPTION_INVALID")
+        seen.add(sequence)
+        if event.get("sequence") == sequence and event.get("branch") == branch:
+            matched = True
+    return matched
+
+
 def _legacy_timestamp_exception_matches(
     transition_table: dict[str, Any],
     previous_event: dict[str, Any],
@@ -528,7 +562,10 @@ def reduce_events(bundle: ContractBundle, work_order: dict[str, Any], events: li
         event_ids.add(event["event_id"])
         if event["work_order_id"] != work_order["work_order_id"] or event["project_epoch"] != work_order["project_epoch"]:
             raise ContractValidationError("EVENT_WORK_ORDER_OR_EPOCH_MISMATCH")
-        if event["branch"] != work_order["branch"]:
+        if (
+            event["branch"] != work_order["branch"]
+            and not _legacy_branch_exception_matches(transition_table, event)
+        ):
             raise ContractValidationError("EVENT_BRANCH_MISMATCH")
         allowed_event_states = transition_table["event_type_states"].get(event["event_type"], [])
         if event["work_state"] not in allowed_event_states:
