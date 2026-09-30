@@ -72,6 +72,28 @@
     ],
     "CANCELLED": [
       "CANCELLED"
+    ],
+    "EVIDENCE_GAP": [
+      "IN_PROGRESS",
+      "VERIFYING"
+    ],
+    "EVIDENCE_RECORDED": [
+      "IN_PROGRESS",
+      "IMPLEMENTED",
+      "VERIFYING"
+    ],
+    "REVIEW_DISPATCHED": [
+      "IN_PROGRESS",
+      "IMPLEMENTED",
+      "VERIFYING"
+    ],
+    "VERIFICATION_DISPATCHED": [
+      "IN_PROGRESS",
+      "IMPLEMENTED",
+      "VERIFYING"
+    ],
+    "MERGE_COMPLETED": [
+      "IN_PROGRESS"
     ]
   },
   "allowed_state_transitions": {
@@ -230,5 +252,157 @@
     "EPOCH_INVALIDATED",
     "CHECKPOINT_PROPOSED",
     "CANCELLED"
+  ],
+  "legacy_timestamp_exceptions": [
+    {
+      "previous_sequence": 45,
+      "previous_event_id": "E2026-09-09-V0-MVP-R1-V0-MVP-R1-WO-001-0045-MVP8-INDEPENDENT-VERIFIER-EVIDENCE-GAP",
+      "previous_recorded_at_utc": "2026-09-21T04:07:00Z",
+      "sequence": 46,
+      "event_id": "E2026-09-09-V0-MVP-R1-V0-MVP-R1-WO-001-0046-MVP8-WINDOWS-R2-CARRIER-DISPATCHED",
+      "recorded_at_utc": "2026-09-20T21:38:00Z",
+      "reason": "IMMUTABLE_LEGACY_RECORDED_AT_CLOCK_SKEW"
+    },
+    {
+      "previous_sequence": 68,
+      "previous_event_id": "E2026-09-09-V0-MVP-R1-V0-MVP-R1-WO-001-0068-MVP8-EVIDENCE-MAP-FINAL",
+      "previous_recorded_at_utc": "2026-09-22T10:56:00Z",
+      "sequence": 69,
+      "event_id": "E2026-09-09-V0-MVP-R1-V0-MVP-R1-WO-001-0069-MVP8-HUMAN-ACCEPTANCE",
+      "recorded_at_utc": "2026-09-22T10:40:00Z",
+      "reason": "IMMUTABLE_LEGACY_HUMAN_ACCEPTANCE_CLOCK_SKEW"
+    }
+  ],
+  "legacy_branch_exceptions": [
+    {
+      "sequence": 47,
+      "branch": "repair/v0-mvp8-cold-class-cache-r2",
+      "reason": "IMMUTABLE_V0_MVP8_REPAIR_BRANCH_PROVENANCE"
+    },
+    {
+      "sequence": 48,
+      "branch": "repair/v0-mvp8-cold-class-cache-r2",
+      "reason": "IMMUTABLE_V0_MVP8_REPAIR_BRANCH_PROVENANCE"
+    },
+    {
+      "sequence": 49,
+      "branch": "repair/v0-mvp8-cold-class-cache-r2",
+      "reason": "IMMUTABLE_V0_MVP8_REPAIR_BRANCH_PROVENANCE"
+    },
+    {
+      "sequence": 50,
+      "branch": "review/v0-mvp8-dc6e7fff-r1",
+      "reason": "IMMUTABLE_V0_MVP8_REVIEW_BRANCH_PROVENANCE"
+    },
+    {
+      "sequence": 51,
+      "branch": "repair/v0-mvp8-cold-class-cache-r2",
+      "reason": "IMMUTABLE_V0_MVP8_REPAIR_BRANCH_PROVENANCE"
+    },
+    {
+      "sequence": 52,
+      "branch": "repair/v0-mvp8-cold-class-cache-r2",
+      "reason": "IMMUTABLE_V0_MVP8_REPAIR_BRANCH_PROVENANCE"
+    },
+    {
+      "sequence": 53,
+      "branch": "repair/v0-mvp8-cold-class-cache-r2",
+      "reason": "IMMUTABLE_V0_MVP8_REPAIR_BRANCH_PROVENANCE"
+    },
+    {
+      "sequence": 54,
+      "branch": "repair/v0-mvp8-cold-class-cache-r2",
+      "reason": "IMMUTABLE_V0_MVP8_REPAIR_BRANCH_PROVENANCE"
+    },
+    {
+      "sequence": 55,
+      "branch": "repair/v0-mvp8-cold-class-cache-r2",
+      "reason": "IMMUTABLE_V0_MVP8_REPAIR_BRANCH_PROVENANCE"
+    },
+    {
+      "sequence": 56,
+      "branch": "repair/v0-mvp8-cold-class-cache-r2",
+      "reason": "IMMUTABLE_V0_MVP8_REPAIR_BRANCH_PROVENANCE"
+    },
+    {
+      "sequence": 57,
+      "branch": "repair/v0-mvp8-cold-class-cache-r2",
+      "reason": "IMMUTABLE_V0_MVP8_REPAIR_BRANCH_PROVENANCE"
+    },
+    {
+      "sequence": 58,
+      "branch": "repair/v0-mvp8-cold-class-cache-r2",
+      "reason": "IMMUTABLE_V0_MVP8_REPAIR_BRANCH_PROVENANCE"
+    },
+    {
+      "sequence": 59,
+      "branch": "repair/v0-mvp8-cold-class-cache-r2",
+      "reason": "IMMUTABLE_V0_MVP8_REPAIR_BRANCH_PROVENANCE"
+    },
+    {
+      "sequence": 60,
+      "branch": "repair/v0-mvp8-cold-class-cache-r2",
+      "reason": "IMMUTABLE_V0_MVP8_REPAIR_BRANCH_PROVENANCE"
+    },
+    {
+      "sequence": 61,
+      "branch": "repair/v0-mvp8-cold-class-cache-r2",
+      "reason": "IMMUTABLE_V0_MVP8_REPAIR_BRANCH_PROVENANCE"
+    },
+    {
+      "sequence": 62,
+      "branch": "repair/v0-mvp8-cold-class-cache-r2",
+      "reason": "IMMUTABLE_V0_MVP8_REPAIR_BRANCH_PROVENANCE"
+    },
+    {
+      "sequence": 63,
+      "branch": "repair/v0-mvp8-cold-class-cache-r2",
+      "reason": "IMMUTABLE_V0_MVP8_REPAIR_BRANCH_PROVENANCE"
+    },
+    {
+      "sequence": 64,
+      "branch": "repair/v0-mvp8-cold-class-cache-r2",
+      "reason": "IMMUTABLE_V0_MVP8_REPAIR_BRANCH_PROVENANCE"
+    },
+    {
+      "sequence": 65,
+      "branch": "repair/v0-mvp8-cold-class-cache-r2",
+      "reason": "IMMUTABLE_V0_MVP8_REPAIR_BRANCH_PROVENANCE"
+    },
+    {
+      "sequence": 66,
+      "branch": "repair/v0-mvp8-cold-class-cache-r2",
+      "reason": "IMMUTABLE_V0_MVP8_REPAIR_BRANCH_PROVENANCE"
+    },
+    {
+      "sequence": 67,
+      "branch": "repair/v0-mvp8-cold-class-cache-r2",
+      "reason": "IMMUTABLE_V0_MVP8_REPAIR_BRANCH_PROVENANCE"
+    },
+    {
+      "sequence": 68,
+      "branch": "repair/v0-mvp8-cold-class-cache-r2",
+      "reason": "IMMUTABLE_V0_MVP8_REPAIR_BRANCH_PROVENANCE"
+    },
+    {
+      "sequence": 69,
+      "branch": "repair/v0-mvp8-cold-class-cache-r2",
+      "reason": "IMMUTABLE_V0_MVP8_REPAIR_BRANCH_PROVENANCE"
+    },
+    {
+      "sequence": 70,
+      "branch": "repair/v0-mvp8-cold-class-cache-r2",
+      "reason": "IMMUTABLE_V0_MVP8_REPAIR_BRANCH_PROVENANCE"
+    },
+    {
+      "sequence": 71,
+      "branch": "repair/v0-mvp8-cold-class-cache-r2",
+      "reason": "IMMUTABLE_V0_MVP8_REPAIR_BRANCH_PROVENANCE"
+    },
+    {
+      "sequence": 73,
+      "branch": "integration/v0-final-1-main-catchup-r1",
+      "reason": "IMMUTABLE_V0_FINAL_CATCHUP_BRANCH_PROVENANCE"
+    }
   ]
 }
