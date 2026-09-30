@@ -1,65 +1,138 @@
-name: FABRIC R5.2 T12 Ship Matryoshka
+name: FABRIC R5.2 T13.5 Windows Exact Control Carrier
 on:
-  push:
-    branches: [research/fabric-r5-2-t12-ship-matryoshka-r1]
-  workflow_dispatch:
-    inputs:
-      run_exact_runtime:
-        description: Run pinned Godot on the self-hosted Linux runner
-        type: boolean
-        default: false
+  pull_request:
 permissions:
   contents: read
 concurrency:
-  group: fabric-t12-${{ github.ref }}-${{ github.event_name }}
+  group: fabric-t13-5-windows-exact-control-${{ github.event.pull_request.number }}
   cancel-in-progress: true
+
 jobs:
-  source-contracts:
+  control-scope:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: a592e95dd55fca6b71ae56936bd88a03deb499f4
           fetch-depth: 0
           persist-credentials: false
-      - name: T12 additive source scope (not a runtime verdict)
+      - name: Verify exact T13.5 product subject
         shell: bash
         run: |
           set -Eeuo pipefail
-          base=74cea2d6c81a3ee933260ebaa8126a1224c69078
+          product=a592e95dd55fca6b71ae56936bd88a03deb499f4
+          base=b41b07a988726e6c7a18a39819183e2a9ce6aefe
+          test "$(git rev-parse HEAD)" = "$product"
           test "$(git merge-base HEAD "$base")" = "$base"
-          allowed='^(.github/workflows/fabric-r5-2-t12-ship-matryoshka.yml|RUN_FABRIC_R5_2_T12_TESTS.sh|docs/research/FABRIC_R5_2_T12_SHIP_MATRYOSHKA_RU.md|scripts/research/fabric_bake0/(ship_matryoshka_contract_v1.gd|r5_t12_[^/]+|collect_r5_2_t12_evidence.py)|tests/research/fabric_bake0/(fabric_r5_2_t12_[^/]+|test_t12_evidence.py)|validation/fabric-r5-2-t12-[^/]+)$'
+          allowed='^(.github/workflows/fabric-r5-2-t13-5-shared-families.yml|RUN_FABRIC_R5_2_T13_5_TESTS.sh|docs/research/FABRIC_R5_2_T13_5_SHARED_FAMILIES_RU.md|scripts/research/fabric_bake0/(r5_t13_5_shared_families_runtime_v1.gd|collect_r5_2_t13_5_evidence.py)|tests/research/fabric_bake0/(fabric_r5_2_t13_5_family_fixture.gd|fabric_r5_2_t13_5_shared_families_acceptance.gd|test_t13_5_evidence.py))$'
           test -z "$(git diff --name-only "$base" HEAD | grep -Ev "$allowed" || true)"
           git diff --check "$base" HEAD
-          bash -n RUN_FABRIC_R5_2_T12_TESTS.sh
-          python3 -m unittest discover -s tests/research/fabric_bake0 -p test_t12_evidence.py -v
-          mkdir -p source
-          git archive --format=tar HEAD | gzip -n > source/t12-source.tar.gz
-          printf 'HEAD=%s\nTREE=%s\nRUNTIME_VERDICT=NOT_RUN\n' "$(git rev-parse HEAD)" "$(git rev-parse 'HEAD^{tree}')" > source/identity.txt
-          sha256sum source/t12-source.tar.gz > source/source.sha256
-      - uses: actions/upload-artifact@v4
-        with:
-          name: t12-source-${{ github.sha }}
-          path: source/**
-          retention-days: 30
-  exact-runtime:
-    if: github.event_name == 'workflow_dispatch' && inputs.run_exact_runtime
-    runs-on: [self-hosted, Linux, X64]
-    timeout-minutes: 20
+          bash -n RUN_FABRIC_R5_2_T13_5_TESTS.sh
+          python3 -m unittest discover -s tests/research/fabric_bake0 -p test_t13_5_evidence.py -v
+          printf 'PRODUCT_HEAD=%s\nPRODUCT_TREE=%s\n' "$product" "$(git rev-parse 'HEAD^{tree}')"
+
+  exact-windows:
+    needs: control-scope
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 45
+    env:
+      CONFIGURED_GODOT_BIN: C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe
+      BREAKPOINT_RUNTIME_DISABLED: 1
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: a592e95dd55fca6b71ae56936bd88a03deb499f4
           fetch-depth: 0
           persist-credentials: false
-      - name: Canonical double three-process gate
-        shell: bash
+
+      - name: Verify exact product and canonical Windows double
+        shell: pwsh
         run: |
-          set -Eeuo pipefail
-          export GODOT_BIN="${DWS_GODOT_DOUBLE_BIN:-$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64}"
-          bash RUN_FABRIC_R5_2_T12_TESTS.sh
+          $ErrorActionPreference = 'Stop'
+          $product = 'a592e95dd55fca6b71ae56936bd88a03deb499f4'
+          $actual = (git rev-parse HEAD).Trim()
+          if ($actual -ne $product) { throw "PRODUCT_HEAD_MISMATCH:$actual" }
+          $godot = $env:CONFIGURED_GODOT_BIN
+          if (-not (Test-Path -LiteralPath $godot)) { throw "EXACT_GODOT_NOT_FOUND:$godot" }
+          $version = (& $godot --version | Select-Object -First 1).Trim()
+          if ($version -ne '4.7.1.stable.double.custom_build.a13da4feb') { throw "GODOT_IDENTITY_MISMATCH:$version" }
+          $sha = (Get-FileHash -Algorithm SHA256 -LiteralPath $godot).Hash.ToLowerInvariant()
+          $expected = '3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5'
+          if ($sha -ne $expected) { throw "GODOT_SHA_MISMATCH:$sha" }
+          Write-Host "PRODUCT_HEAD=$actual"
+          Write-Host "PRODUCT_TREE=$((git rev-parse 'HEAD^{tree}').Trim())"
+          Write-Host "GODOT=$version"
+          Write-Host "GODOT_SHA256=$sha"
+          "GODOT_BIN=$godot" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: Fresh Godot import
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          if (Test-Path .godot) { Remove-Item -Recurse -Force .godot }
+          $out = 'artifacts\fabric-r5-2-t13-5-windows'
+          New-Item -ItemType Directory -Force -Path $out | Out-Null
+          $log = Join-Path $out 'import.log'
+          & $env:GODOT_BIN --headless --editor --path . --import 2>&1 | Tee-Object -FilePath $log
+          if ($LASTEXITCODE -ne 0) { throw "GODOT_IMPORT_FAILED:$LASTEXITCODE" }
+          if (Select-String -Path $log -Pattern 'SCRIPT ERROR|Parse Error|Compile Error|Invalid call|Invalid access|ERROR:' -Quiet) {
+            throw 'GODOT_IMPORT_FATAL_MARKER'
+          }
+
+      - name: Run T13.5 three-process exact gate
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $out = 'artifacts\fabric-r5-2-t13-5-windows'
+          $script = 'res://tests/research/fabric_bake0/fabric_r5_2_t13_5_shared_families_acceptance.gd'
+          foreach ($i in 1..3) {
+            $log = Join-Path $out ("sample-{0}.log" -f $i)
+            & $env:GODOT_BIN --headless --path . --script $script 2>&1 | Tee-Object -FilePath $log
+            $code = $LASTEXITCODE
+            if ($code -ne 0) { throw ("T13_5_GODOT_TEST_FAILED:sample={0}:exit={1}" -f $i, $code) }
+            if (-not (Select-String -Path $log -Pattern 'FABRIC R5.2 T13.5 SHARED FAMILIES: PASS' -SimpleMatch -Quiet)) {
+              throw ("T13_5_PASS_MARKER_MISSING:sample={0}" -f $i)
+            }
+            if (Select-String -Path $log -Pattern 'SCRIPT ERROR|Parse Error|Compile Error|Invalid call|Invalid access|ERROR:' -Quiet) {
+              throw ("T13_5_FATAL_MARKER:sample={0}" -f $i)
+            }
+          }
+
+      - name: Collect deterministic T13.5 evidence
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          python scripts/research/fabric_bake0/collect_r5_2_t13_5_evidence.py --root artifacts/fabric-r5-2-t13-5-windows --out artifacts/fabric-r5-2-t13-5-windows/evidence.json
+          if ($LASTEXITCODE -ne 0) { throw "T13_5_COLLECTOR_FAILED:$LASTEXITCODE" }
+
+      - name: Run unchanged T13 regression
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $out = 'artifacts\fabric-r5-2-t13-5-windows'
+          $log = Join-Path $out 't13-regression.log'
+          & $env:GODOT_BIN --headless --path . --script res://tests/research/fabric_bake0/fabric_r5_2_t13_shared_instances_acceptance.gd 2>&1 | Tee-Object -FilePath $log
+          if ($LASTEXITCODE -ne 0) { throw "T13_REGRESSION_FAILED:$LASTEXITCODE" }
+          if (-not (Select-String -Path $log -Pattern 'FABRIC R5.2 T13 SHARED INSTANCES: PASS' -SimpleMatch -Quiet)) { throw 'T13_REGRESSION_PASS_MARKER_MISSING' }
+          if (Select-String -Path $log -Pattern 'SCRIPT ERROR|Parse Error|Compile Error|Invalid call|Invalid access|ERROR:' -Quiet) { throw 'T13_REGRESSION_FATAL_MARKER' }
+
+      - name: Run unchanged T12 regression
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $out = 'artifacts\fabric-r5-2-t13-5-windows'
+          $log = Join-Path $out 't12-regression.log'
+          & $env:GODOT_BIN --headless --path . --script res://tests/research/fabric_bake0/fabric_r5_2_t12_ship_acceptance.gd 2>&1 | Tee-Object -FilePath $log
+          if ($LASTEXITCODE -ne 0) { throw "T12_REGRESSION_FAILED:$LASTEXITCODE" }
+          if (-not (Select-String -Path $log -Pattern 'FABRIC R5.2 T12 SHIP MATRYOSHKA: PASS' -SimpleMatch -Quiet)) { throw 'T12_REGRESSION_PASS_MARKER_MISSING' }
+          if (Select-String -Path $log -Pattern 'SCRIPT ERROR|Parse Error|Compile Error|Invalid call|Invalid access|ERROR:' -Quiet) { throw 'T12_REGRESSION_FATAL_MARKER' }
+          $dirty = git status --porcelain=v1 --untracked-files=no
+          if ($dirty) { throw "TRACKED_TREE_DIRTY_AFTER_RUNTIME:$dirty" }
+
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: t12-runtime-${{ github.sha }}
-          path: artifacts/fabric-r5-2-t12/**
+          name: t13-5-windows-exact-product-a592e95d
+          path: artifacts/fabric-r5-2-t13-5-windows/**
           retention-days: 90
