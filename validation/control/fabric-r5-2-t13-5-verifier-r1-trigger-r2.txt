@@ -1,0 +1,4 @@
+T13.5 Fresh Independent Verifier R1 trigger R2.
+SUBJECT_HEAD=2d8ad372af509f256fd648078c5cab2f0f776ed0
+VERIFIER_HEAD=617b5af55caa151f85d9723c7ddf249c8da60b7c
+PREVIOUS_CONTROL_DEFECT=heredoc-syntax
