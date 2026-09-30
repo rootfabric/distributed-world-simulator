@@ -4,9 +4,14 @@ const ENetPort = preload("res://scripts/network/transports/v2/enet_multi_peer_tr
 const LiveEarth = preload("res://scripts/app/earth_p3_resource_mining_app.gd")
 const LiveClient = preload("res://scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime.gd")
 const LiveInventory = preload("res://scripts/ui/inventory/networked/m5_v0_modern_inventory_shell_r5.gd")
-const PACKET_TARGET := 131200
-const CHANNEL_COUNT := 6
-const TEST_CHANNEL := 1
+
+const LOGICAL_SEND_TARGET := 131200
+
+class MockTelemetry:
+	extends RefCounted
+	var counters: Dictionary = {}
+	func increment(name: String, amount: int = 1) -> void:
+		counters[name] = int(counters.get(name, 0)) + amount
 
 var assertions := 0
 var failures: Array[String] = []
@@ -19,86 +24,109 @@ func _init() -> void:
 
 func _run() -> void:
 	_test_live2_product_contracts()
+	_test_eg4_physical_mapping_preserved()
+	_test_session_rotation_crosses_two_uint16_lifetimes()
+
+
+func _test_eg4_physical_mapping_preserved() -> void:
 	var mapping_probe = ENetPort.new()
 	_assert(
 		mapping_probe._transfer_mode("UNRELIABLE_SEQUENCED")
+		== MultiplayerPeer.TRANSFER_MODE_UNRELIABLE_ORDERED,
+		"LIVE2 must preserve EG4 UNRELIABLE_SEQUENCED -> ENet unreliable-ordered"
+	)
+	_assert(
+		mapping_probe._transfer_mode("UNRELIABLE")
 		== MultiplayerPeer.TRANSFER_MODE_UNRELIABLE,
-		"LIVE2 realtime mapping must use raw ENet unreliable"
+		"plain UNRELIABLE mapping changed"
 	)
 
-	var port_number := _find_port()
-	_assert(port_number > 0, "could not allocate UDP port")
-	if port_number <= 0:
-		return
 
-	var server := ENetMultiplayerPeer.new()
-	var client := ENetMultiplayerPeer.new()
+func _test_session_rotation_crosses_two_uint16_lifetimes() -> void:
+	var runtime = LiveClient.new()
+	var telemetry = MockTelemetry.new()
+	runtime._telemetry = telemetry
+	runtime._configured = true
+	runtime._joined = true
+
+	var rotations := 0
+	var maximum_session_count := 0
+	for ordinal in range(1, LOGICAL_SEND_TARGET + 1):
+		runtime._record_realtime_transport_send("INPUT", "UNRELIABLE_SEQUENCED")
+		var count := int(runtime._transport_realtime_sent_by_channel.get("INPUT", 0))
+		maximum_session_count = maxi(maximum_session_count, count)
+
+		if runtime._transport_rotation_pending:
+			# A blocking canonical command must delay, never suppress, rotation.
+			if rotations == 0:
+				runtime._awaited_command_ids["operation/live2/test"] = true
+				_assert(
+					not runtime._maybe_rotate_transport(),
+					"rotation must wait for an in-flight blocking command"
+				)
+				runtime._awaited_command_ids.clear()
+
+			_assert(
+				runtime._maybe_rotate_transport(),
+				"sequenced wrap guard did not schedule transport rotation"
+			)
+			rotations += 1
+			_assert(
+				runtime._reconnect_pending,
+				"transport rotation did not enter reconnect state"
+			)
+			_assert(
+				runtime._reconnect_next_ms <= Time.get_ticks_msec(),
+				"proactive transport rotation incorrectly uses failure backoff"
+			)
+
+			# Model the successful fresh transport attempt. Production executes
+			# this through _attempt_reconnect -> _start_transport_attempt; the
+			# reset below verifies the exact per-session state contract without
+			# requiring 131k physical packets in one ENet connection.
+			runtime._reset_transport_protocol_state()
+			runtime._reconnect_pending = false
+			runtime._joined = true
+
 	_assert(
-		server.create_server(port_number, 4, CHANNEL_COUNT) == OK,
-		"server failed to start"
-	)
-	_assert(
-		client.create_client("127.0.0.1", port_number, CHANNEL_COUNT) == OK,
-		"client failed to start"
-	)
-	if not failures.is_empty():
-		server.close()
-		client.close()
-		return
-
-	_assert(_wait_connected(server, client), "client did not connect")
-	if client.get_connection_status() != MultiplayerPeer.CONNECTION_CONNECTED:
-		server.close()
-		client.close()
-		return
-
-	client.transfer_channel = TEST_CHANNEL
-	client.transfer_mode = MultiplayerPeer.TRANSFER_MODE_UNRELIABLE
-	client.set_target_peer(MultiplayerPeer.TARGET_PEER_SERVER)
-
-	var sent := 0
-	var received := 0
-	for sequence in range(1, PACKET_TARGET + 1):
-		var packet := PackedByteArray()
-		packet.resize(8)
-		packet.encode_u32(0, sequence)
-		packet.encode_u32(4, 0x4c495645)
-		if client.put_packet(packet) != OK:
-			failures.append("put_packet failed at %d" % sequence)
-			break
-		sent = sequence
-		if sequence % 128 == 0:
-			received += _pump(server, client, 4)
-
-	var deadline := Time.get_ticks_msec() + 3000
-	while Time.get_ticks_msec() < deadline:
-		received += _pump(server, client, 2)
-		if received >= sent:
-			break
-
-	_assert(sent > 131072, "test did not cross second 16-bit sequence boundary")
-	_assert(
-		client.get_connection_status() == MultiplayerPeer.CONNECTION_CONNECTED,
-		"client disconnected after raw-unreliable rollover workload"
+		LOGICAL_SEND_TARGET > 131072,
+		"test must cross two complete 16-bit physical sequence lifetimes"
 	)
 	_assert(
-		server.get_connection_status() == MultiplayerPeer.CONNECTION_CONNECTED,
-		"server stopped after raw-unreliable rollover workload"
+		rotations == 2,
+		"131200 logical INPUT sends must rotate exactly twice at the 60000 guard"
 	)
-	# Unreliable delivery may legitimately drop packets. The regression is
-	# connection longevity and the absence of a physical ordered-sequence fence.
-	_assert(received > 0, "server received no packets")
+	_assert(
+		maximum_session_count == LiveClient.LIVE2_ENET_SEQUENCED_ROTATION_LIMIT,
+		"one transport session exceeded the configured sequenced rotation guard"
+	)
+	_assert(
+		int(runtime._transport_realtime_sent_by_channel.get("INPUT", 0))
+		== LOGICAL_SEND_TARGET - 2 * LiveClient.LIVE2_ENET_SEQUENCED_ROTATION_LIMIT,
+		"post-rotation realtime counter did not restart per transport session"
+	)
+	_assert(
+		int(runtime._transport_rotations) == 2,
+		"rotation telemetry did not preserve cumulative transport rotations"
+	)
+	_assert(
+		int(telemetry.counters.get("transport_rotation_guard_triggers", 0)) == 2,
+		"rotation guard telemetry count mismatch"
+	)
+	_assert(
+		int(telemetry.counters.get("transport_session_rotations", 0)) == 2,
+		"transport rotation telemetry count mismatch"
+	)
 	print(
-		"LIVE2 ENet rollover: sent=%d received=%d client_status=%d server_status=%d"
+		"LIVE2 sequenced rotation: logical_sends=%d rotations=%d max_session=%d remaining=%d"
 		% [
-			sent,
-			received,
-			client.get_connection_status(),
-			server.get_connection_status(),
+			LOGICAL_SEND_TARGET,
+			rotations,
+			maximum_session_count,
+			int(runtime._transport_realtime_sent_by_channel.get("INPUT", 0)),
 		]
 	)
-	client.close()
-	server.close()
+	runtime.free()
 
 
 func _test_live2_product_contracts() -> void:
@@ -112,48 +140,12 @@ func _test_live2_product_contracts() -> void:
 	var runtime = LiveClient.new()
 	_assert(runtime.has_signal("connection_state_changed"), "client emits product connection state")
 	_assert(runtime.has_method("request_reconnect_now"), "client exposes bounded reconnect request")
+	_assert(runtime.has_method("_maybe_rotate_transport"), "client exposes internal transport rotation guard")
 	runtime.free()
 
 	var inventory = LiveInventory.new()
 	_assert(inventory.has_method("build_next_stage_blocking"), "inventory exposes canonical Construction action")
 	inventory.free()
-
-
-func _wait_connected(server: ENetMultiplayerPeer, client: ENetMultiplayerPeer) -> bool:
-	var deadline := Time.get_ticks_msec() + 5000
-	while Time.get_ticks_msec() < deadline:
-		server.poll()
-		client.poll()
-		while server.get_available_packet_count() > 0:
-			server.get_packet()
-		if (
-			client.get_connection_status() == MultiplayerPeer.CONNECTION_CONNECTED
-			and server.get_connection_status() == MultiplayerPeer.CONNECTION_CONNECTED
-		):
-			return true
-		OS.delay_msec(2)
-	return false
-
-
-func _pump(server: ENetMultiplayerPeer, client: ENetMultiplayerPeer, delay_msec: int) -> int:
-	server.poll()
-	client.poll()
-	var received := 0
-	while server.get_available_packet_count() > 0:
-		server.get_packet()
-		received += 1
-	if delay_msec > 0:
-		OS.delay_msec(delay_msec)
-	return received
-
-
-func _find_port() -> int:
-	for port_number in range(31000 + OS.get_process_id() % 1000, 34000):
-		var probe := PacketPeerUDP.new()
-		if probe.bind(port_number, "127.0.0.1") == OK:
-			probe.close()
-			return port_number
-	return 0
 
 
 func _assert(ok: bool, message: String) -> void:
@@ -164,12 +156,12 @@ func _assert(ok: bool, message: String) -> void:
 
 func _finish() -> void:
 	if failures.is_empty():
-		print("V0-LIVE.2 ENet rollover: PASS (%d assertions)" % assertions)
+		print("V0-LIVE.2 ENet rollover guard: PASS (%d assertions)" % assertions)
 		quit(0)
 		return
 	for failure in failures:
 		push_error(failure)
-	print("V0-LIVE.2 ENet rollover: FAIL (%d failures, %d assertions)" % [
+	print("V0-LIVE.2 ENet rollover guard: FAIL (%d failures, %d assertions)" % [
 		failures.size(), assertions
 	])
 	quit(1)
