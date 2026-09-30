@@ -46,7 +46,7 @@ func add_metrics(result: Dictionary, metrics: Dictionary) -> void:
 	metrics.leaf_traversals += int(m.leaf_traversals)
 
 func same_path(registry, families: Array, path: String) -> bool:
-	var first := registry.family_subtree_hash(String(families[0]), path)
+	var first: String = registry.family_subtree_hash(String(families[0]), path)
 	if first.is_empty():
 		return false
 	for i in range(1, families.size()):
@@ -108,7 +108,7 @@ func _initialize() -> void:
 
 	var root_hashes := {}
 	for id in ["family-a", "family-b", "family-c", "family-d"]:
-		var root_hash := registry.family_subtree_hash(id, "root")
+		var root_hash: String = registry.family_subtree_hash(id, "root")
 		check(U.is_lower_hex_64(root_hash), "family root hash valid " + id)
 		check(not root_hashes.has(root_hash), "family root model unique " + id)
 		root_hashes[root_hash] = true
