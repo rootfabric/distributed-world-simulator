@@ -1,0 +1,84 @@
+name: ECO ARCH2 A11 Persistent Habitat Exact
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/ecology/habitat/**'
+      - 'scenes/ecology/habitat/**'
+      - 'scripts/ecology/workbench/**'
+      - 'validation/ecology/evo_arch2_a11/**'
+      - 'RUN_ECO_A11_HABITAT.ps1'
+      - '.github/workflows/eco-arch2-a11-exact.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: eco-a11-exact-refs/heads/${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  exact:
+    name: A11 ${{ matrix.platform }} Double Exact
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [Linux, Windows]
+    runs-on: [self-hosted, '${{ matrix.platform }}', X64]
+    timeout-minutes: 90
+    steps:
+      - name: Checkout exact event subject
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+      - name: A11 Linux exact
+        if: matrix.platform == 'Linux'
+        shell: bash
+        env:
+          CONFIGURED_GODOT: ${{ vars.DWS_GODOT_DOUBLE_LINUX_BIN }}
+        run: |
+          set -euo pipefail
+          godot="${CONFIGURED_GODOT:-${DWS_GODOT_DOUBLE_LINUX_BIN:-$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64}}"
+          python3 -m py_compile validation/ecology/evo_arch2_a11/run_exact.py
+          python3 validation/ecology/evo_arch2_a11/run_exact.py --godot "$godot"
+      - name: A11 Windows exact
+        if: matrix.platform == 'Windows'
+        shell: pwsh
+        env:
+          CONFIGURED_GODOT: ${{ vars.DWS_GODOT_DOUBLE_BIN }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $godot = $env:CONFIGURED_GODOT
+          if ([string]::IsNullOrWhiteSpace($godot)) {
+            $godot = 'C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe'
+          }
+          python -m py_compile validation/ecology/evo_arch2_a11/run_exact.py
+          if ($LASTEXITCODE -ne 0) { throw 'A11_PYTHON_COMPILE' }
+          python validation/ecology/evo_arch2_a11/run_exact.py --godot $godot
+          if ($LASTEXITCODE -ne 0) { throw 'A11_EXACT_FAILED' }
+      - name: Verify clean tracked Linux source
+        if: always() && matrix.platform == 'Linux'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --exit-code
+          git diff --cached --exit-code
+      - name: Verify clean tracked Windows source
+        if: always() && matrix.platform == 'Windows'
+        shell: pwsh
+        run: |
+          git diff --exit-code
+          if ($LASTEXITCODE -ne 0) { throw 'TRACKED_WORKTREE_CHANGED' }
+          git diff --cached --exit-code
+          if ($LASTEXITCODE -ne 0) { throw 'TRACKED_INDEX_CHANGED' }
+      - name: Upload exact habitat evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: eco-a11-exact-${{ matrix.platform }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            artifacts/runtime/eco-a11
+            artifacts/runtime/eco-a11-fixtures
+          if-no-files-found: warn
