@@ -8,8 +8,12 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: harness-v0-postclose-compat-targeted-r1
+  cancel-in-progress: true
+
 env:
-  REPAIR_HEAD: 1412492f9136be010964d2719236f7c40fe83582
+  REPAIR_HEAD: 119f8ed8af40bda3ea45f05e92a4b47cb7b8afea
   PYTHONUTF8: '1'
   PYTHONDONTWRITEBYTECODE: '1'
 
