@@ -1,5 +1,7 @@
 extends "res://scripts/ui/inventory/networked/m5_v0_modern_inventory_shell.gd"
 
+signal inventory_visibility_changed(value: bool)
+
 const P1InventoryBridge = preload(
 	"res://scripts/runtime/networked_gameplay/m5/m5_v0_inventory_ui_bridge.gd"
 )
@@ -89,8 +91,13 @@ func _on_interaction_requested(action_id: String, payload: Dictionary) -> void:
 
 
 func set_inventory_visible(value: bool) -> void:
+	var changed := is_inventory_visible() != value
 	super.set_inventory_visible(value)
 	_update_r5_sort_actions()
+	# R3: all close paths (Esc, Tab, buttons and app commands) publish the same
+	# state after the UI is updated. Observers must not call this setter back.
+	if changed:
+		inventory_visibility_changed.emit(is_inventory_visible())
 
 
 func _input(event: InputEvent) -> void:
@@ -267,6 +274,7 @@ func _sort_visible_container(container_id: String) -> void:
 			merged,
 			moved,
 		]
+	_update_network_carry_preview()
 	_update_r5_sort_actions()
 
 
