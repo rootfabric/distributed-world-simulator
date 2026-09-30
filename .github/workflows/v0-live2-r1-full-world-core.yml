@@ -1,4 +1,4 @@
-name: V0 LIVE.2 R1 Full World Core
+name: V0 LIVE.2 R2 Full World Core
 
 on:
   push:
@@ -14,7 +14,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  PRODUCT_HEAD: cbeee8cd3f63ef7a546d61f27b586c02d3136fa8
+  PRODUCT_HEAD: 75936927f9d7ff8e2a8be81e0f978ce3b0f761a7
   MAIN_HEAD: 323845379490b2acda1844c3799bb0275d8c2674
   PYTHONUTF8: '1'
   PYTHONDONTWRITEBYTECODE: '1'
