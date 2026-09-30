@@ -48,3 +48,5 @@ jobs:
         run: |
           set -euo pipefail
           test -z "$(git status --porcelain --untracked-files=no)"
+
+# trigger: targeted repair validation
