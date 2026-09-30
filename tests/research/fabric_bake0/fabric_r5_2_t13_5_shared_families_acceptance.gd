@@ -62,7 +62,8 @@ func _initialize() -> void:
 		return
 	var bundles: Dictionary = built.details
 	check(FF.compile_events == 42, "selective family compile work is exactly 42 events", FF.compile_events)
-	check(FF.compile_events < INSTANCE_COUNT * 30, "compile work follows unique structure not instance count")
+	var full_family_baseline_compile_events := 4 * 30
+	check(full_family_baseline_compile_events - FF.compile_events == 78, "cross-family subtree reuse avoids 78 compile events")
 	for id in ["family-a", "family-b", "family-c", "family-d"]:
 		check(bundles.has(id), "family bundle exists " + id)
 		check(int(bundles[id].capsule.source_component_count) == 4275, "family retains 4275 source components " + id)
@@ -197,8 +198,10 @@ func _initialize() -> void:
 		"family_aliases":int(reuse.alias_registrations),
 		"unique_family_models":int(reuse.unique_model_prepares),
 		"compile_events":FF.compile_events,
-		"naive_full_compile_events":INSTANCE_COUNT * 30,
-		"compile_events_avoided":INSTANCE_COUNT * 30 - FF.compile_events,
+		"full_family_baseline_compile_events":full_family_baseline_compile_events,
+		"cross_family_compile_events_avoided":full_family_baseline_compile_events - FF.compile_events,
+		"no_cache_instance_compile_events":INSTANCE_COUNT * 30,
+		"combined_no_cache_events_avoided":INSTANCE_COUNT * 30 - FF.compile_events,
 		"subtree_occurrences":int(reuse.subtree_occurrences),
 		"unique_subtree_hashes":int(reuse.unique_subtree_hashes),
 		"shared_subtree_hashes":int(reuse.shared_subtree_hashes),
