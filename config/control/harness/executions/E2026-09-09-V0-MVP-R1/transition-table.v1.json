@@ -43,6 +43,9 @@
       "VERIFYING",
       "VERIFIED"
     ],
+    "EVIDENCE_GAP": [
+      "IN_PROGRESS"
+    ],
     "AUDIT_COMPLETED": [
       "AUDITED"
     ],
