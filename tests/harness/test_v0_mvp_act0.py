@@ -30,7 +30,8 @@ git = base.git
 read = base.read
 
 V0_ACCEPTED_HEAD = "a1db0c66762bee887f0bf2643f7c000961e64520"
-ACT0_CONTROL_MAIN = "6b336af8faeadbd7f69c96b62dc30d25150f45a7"\nV0_FINAL_MERGE_HEAD = "eadb2b99320439a608cd6fdc3561993513baf0c0"
+ACT0_CONTROL_MAIN = "6b336af8faeadbd7f69c96b62dc30d25150f45a7"
+V0_FINAL_MERGE_HEAD = "eadb2b99320439a608cd6fdc3561993513baf0c0"
 CRITICAL_V0_PREFIXES = (
     "scripts/runtime/networked_gameplay/mvp",
     "scripts/runtime/networked_gameplay/m4",
