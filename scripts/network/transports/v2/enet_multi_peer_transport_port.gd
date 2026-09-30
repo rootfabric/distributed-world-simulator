@@ -376,15 +376,16 @@ func _channel_index(channel: String) -> int:
 
 
 func _transfer_mode(delivery_mode: String) -> int:
-	# LIVE.2 keeps realtime ordering at the application frame/session layer.
-	# INPUT/SNAPSHOT/TELEMETRY already carry monotonic ProtocolFrameV2
-	# sequences and NetworkPeerSession applies gap-tolerant latest-wins.
-	# Using ENet's unreliable-ordered mode adds a second 16-bit physical
-	# sequence which reproducibly disconnects long-lived clients near 2^16.
-	# Both application UNRELIABLE modes therefore use raw ENet unreliable;
-	# physical validation still rejects a frame sent as RELIABLE.
-	if delivery_mode in ["UNRELIABLE", "UNRELIABLE_SEQUENCED"]:
+	# Exact physical fidelity (EG4 decision): raw unreliable becomes
+	# packet-size-sensitive because Godot marks fragmented unreliable datagrams
+	# as UNRELIABLE_ORDERED on receive. Declared UNRELIABLE_SEQUENCED therefore
+	# maps to ENet sequenced-unreliable for both whole and fragmented packets.
+	# LIVE.2 handles the physical 16-bit lifetime separately by rotating the
+	# transport session before the per-channel sequence reaches its wrap.
+	if delivery_mode == "UNRELIABLE":
 		return MultiplayerPeer.TRANSFER_MODE_UNRELIABLE
+	if delivery_mode == "UNRELIABLE_SEQUENCED":
+		return MultiplayerPeer.TRANSFER_MODE_UNRELIABLE_ORDERED
 	return MultiplayerPeer.TRANSFER_MODE_RELIABLE
 
 
