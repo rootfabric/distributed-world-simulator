@@ -1221,7 +1221,7 @@ func _maybe_rotate_transport() -> bool:
 		"rotation": _transport_rotations,
 		"realtime_sent_by_channel": _transport_realtime_sent_by_channel.duplicate(true),
 	})
-	_schedule_reconnect(reason)
+	_schedule_reconnect(reason, true)
 	# Proactive rollover rotation is not a failure backoff. Start the fresh
 	# transport on the next process turn while the old connection is still
 	# below the physical 16-bit sequence cliff.
@@ -1329,8 +1329,8 @@ func _start_transport_attempt() -> Dictionary:
 	return _success({"transport_session_id": _transport_session_id})
 
 
-func _schedule_reconnect(reason: String) -> void:
-	if _automated_acceptance:
+func _schedule_reconnect(reason: String, force_transport_safety: bool = false) -> void:
+	if _automated_acceptance and not force_transport_safety:
 		return
 	_joined = false
 	_reconnect_pending = true
