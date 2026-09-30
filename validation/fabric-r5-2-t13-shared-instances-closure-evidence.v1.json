@@ -1,0 +1,82 @@
+{
+  "schema": "fabric.r5_2.t13.closure_evidence.v1",
+  "status": "FRESH_REVIEW_AND_VERIFIER_PASS",
+  "base_t12": "c60960bee48aa7cc68a9035cff86d5567f6c89fc",
+  "product_subject": {
+    "head": "4cae54d17838f12dd619289eed114332813ea094",
+    "tree": "9b8aaa64f2114f1af99f0870004bf555aefecb16"
+  },
+  "fresh_review_r2": {
+    "verdict": "PASS",
+    "review_id": 5328535104,
+    "blocking_findings": 0
+  },
+  "exact_windows": {
+    "run": 36255783511,
+    "job": 108442205722,
+    "conclusion": "success",
+    "assertions_per_sample": 1377,
+    "deterministic_hash": "c43d4a4c568d38d3ff16a8f118927ba6c76aeefcb17a200cf7f1325a52ac62bf",
+    "t12_regression_assertions": 8386,
+    "artifact_id": 10910303259,
+    "artifact_digest": "sha256:7faafe121464509111eeb8bc291120870332b4cdfb4013c5503a702817d88ef9"
+  },
+  "fresh_independent_verifier": {
+    "verdict": "VERIFIED",
+    "verifier_head": "9c00f4d147429d36357b0f4aed22a26c15f367f3",
+    "verifier_tree": "d4125f362fb395cee06eba80701bd3dc42756148",
+    "product_diff": 0,
+    "run": 36649983652,
+    "source_job": 109681633417,
+    "exact_windows_job": 109681673101,
+    "artifact_id": 11070351296,
+    "artifact_digest": "sha256:c637fed4d4257d7bb4f83e0d717fcb7d4934bb41d6085c0e9dd6347c1d1921c5",
+    "deterministic_hash": "c43d4a4c568d38d3ff16a8f118927ba6c76aeefcb17a200cf7f1325a52ac62bf"
+  },
+  "claims": {
+    "instance_gates": [
+      1,
+      10,
+      100
+    ],
+    "bindings": 100,
+    "unique_binding_checksums": 100,
+    "source_components_per_model": 4275,
+    "state_scalars_per_instance": 31,
+    "prepare_count": 1,
+    "recompile_events": 0,
+    "runtime_steps": 311,
+    "leaf_traversals": 0,
+    "evaluations": 2605,
+    "boundary_calls": 49495,
+    "compiled_group_visits": 31260,
+    "damaged_instance": "instance-042",
+    "damage_revision": 1,
+    "healthy_equivalent_after_damage": 99,
+    "damaged_diverged": true,
+    "model_hash_unchanged": true,
+    "caller_states_unchanged": true,
+    "shared_compiled_model_checksum": "98e2148b1ca1ab08c035976d65f51d0187016c6269cf330f2099f985bf404a39",
+    "shared_compiled_model_hash": "484f0c0901b712119716983c41ecd33080d6bebe005f602abd8009a56e48fd16",
+    "isolation_hash": "53c996b85419a9cc4999f804375dbde3912d91a5c06c6e7974f46030d99131dc"
+  },
+  "known_non_product_failures": [
+    {
+      "class": "CONTROL_CARRIER_DEFECT",
+      "run": 36293217612,
+      "job": 108547151101,
+      "root_cause": "PowerShell parser ambiguity in $i: interpolation"
+    },
+    {
+      "class": "HOST_NETWORK_INTERCEPTION",
+      "run": 36648707900,
+      "job": 109677992149,
+      "root_cause": "TLS certificate subject ISKRATEL != github.com during checkout"
+    }
+  ],
+  "closure_policy": {
+    "runtime_subject_frozen": true,
+    "closure_commits_may_change_docs_and_validation_only": true,
+    "product_runtime_retest_required_if_runtime_or_acceptance_changes": true
+  }
+}

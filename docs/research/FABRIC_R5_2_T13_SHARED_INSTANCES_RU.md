@@ -1,0 +1,108 @@
+# FABRIC R5.2 / T13 — Shared Compiled Instances
+
+Статус: **CLOSURE FROZEN — FRESH REVIEW R2 PASS / FRESH INDEPENDENT VERIFIER VERIFIED / FINAL PROJECT CONTROL PENDING**. Research-only; canonical owners не меняются.
+База: T12 merge `c60960bee48aa7cc68a9035cff86d5567f6c89fc`.
+
+## Цель
+
+T13 проверяет следующий уровень после Ship Matryoshka: один и тот же immutable
+compiled model должен обслуживать много одинаковых физических экземпляров без
+повторной компиляции модели на каждый object.
+
+Acceptance обязан доказать лестницу **1 → 10 → 100** экземпляров, при этом:
+
+- compiled T12 Ship создаётся fixture-компилятором ровно один раз;
+- T13 runtime выполняет `prepare()` ровно один раз;
+- каждый объект получает собственный `InstanceBinding` и caller-owned `InstanceState`;
+- все binding указывают на один `compiled_model_checksum`;
+- 100 binding имеют уникальные checksum и world slot;
+- execution не обходит source leaves и не вызывает compiler;
+- повреждение одного экземпляра не меняет compiled model;
+- остальные 99 экземпляров дают byte-equivalent результат относительно healthy control.
+
+## Разделение model / binding / state
+
+`CompiledModel` — verified T12 Ship bundle и один prepared compact runtime.
+При `prepare()` T13 делает **ровно одну deep copy** compiled bundle и дальше
+использует её как внутренний frozen model. Identity задаётся T12 capsule checksum, exact binary SHA-256 digest этой frozen
+bundle и state signature. JSON-canonical hash здесь намеренно не используется:
+в compiled graph есть integer-keyed dictionaries. Instance hot path не копирует
+и не хеширует полный compile graph; binary digest используется как отдельный
+integrity audit до/после масштабного прогона.
+
+`InstanceBinding` содержит только instance identity, world slot, checksum общей
+compiled model, state signature и собственный checksum. Он не копирует дерево
+T12 и не создаёт фиктивные новые source identities.
+
+`InstanceState` содержит binding checksum, model checksum, revision counters,
+instance-only damage overlay и собственное T12 physical state. Физическое
+состояние остаётся caller-owned: execute получает snapshot и возвращает новое
+состояние, не мутируя переданный Dictionary.
+
+## Damage isolation
+
+Для T13 damage — намеренно ограниченный **instance-level disable overlay**.
+Он не является новой моделью разрушения корпуса, брони или деталей. При disable
+команды emitter маскируются в ноль, servo удерживает текущую позицию, а существующая
+T12 физика продолжает считать battery/cooling/energy boundary.
+
+Acceptance создаёт две ветви из одного baseline для 100 объектов:
+
+1. healthy control;
+2. тот же набор, но `instance-042` получает damage revision 1.
+
+Для 99 незатронутых объектов next state и physical result должны совпасть с
+control точно. Повреждённый объект обязан отличиться. `prepare_count` остаётся
+1, `recompile_events` остаётся 0.
+
+## Масштабный exact gate
+
+Один процесс выполняет:
+
+- prefix из 1 instance;
+- prefix из 10 instances;
+- prefix из 100 instances;
+- затем 100 healthy control + 100 damage-isolation steps.
+
+Итого 311 T13 instance execution steps на одной compiled model. Все они должны
+сохранить `leaf_traversals = 0`. Runtime-work не скрывается: collector сохраняет
+solver evaluations, child boundary calls и compact battery-group visits.
+
+Три отдельных процесса canonical Linux double Godot должны вернуть один и тот же
+result payload и deterministic SHA-256. Дополнительно неизменённый T12 acceptance
+запускается как regression.
+
+## Что T13 не заявляет
+
+T13 не является production object registry, ECS, multithread scheduler,
+network replication или полноценной damage physics. Он доказывает более узкий
+архитектурный контракт: **compiled executable identity отделена от instance
+binding/state**, поэтому одинаковая сложная вещь не требует отдельного compile
+graph на каждый экземпляр.
+
+
+## Closure freeze
+
+Проверенный runtime subject:
+
+```text
+HEAD = 4cae54d17838f12dd619289eed114332813ea094
+TREE = 9b8aaa64f2114f1af99f0870004bf555aefecb16
+```
+
+Fresh Independent Review R2: **PASS** (review 5328535104).
+
+Fresh Independent Verifier R1: **VERIFIED**:
+- verifier HEAD `9c00f4d147429d36357b0f4aed22a26c15f367f3`;
+- product diff = 0;
+- run `36649983652`;
+- Windows exact job `109681673101` = SUCCESS;
+- 3×1377 assertions;
+- deterministic hash `c43d4a4c568d38d3ff16a8f118927ba6c76aeefcb17a200cf7f1325a52ac62bf`;
+- unchanged T12 regression = 8386 assertions PASS;
+- verifier artifact `11070351296`, digest `sha256:c637fed4d4257d7bb4f83e0d717fcb7d4934bb41d6085c0e9dd6347c1d1921c5`.
+
+Durable closure evidence:
+`validation/fabric-r5-2-t13-shared-instances-closure-evidence.v1.json`.
+
+После freeze runtime/test changes запрещены без нового exact review/verifier цикла. Evidence/doc-only closure commits не изменяют проверенный runtime subject.
