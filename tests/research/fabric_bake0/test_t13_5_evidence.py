@@ -72,6 +72,7 @@ class EvidenceTests(unittest.TestCase):
         self.assertEqual(acceptance.count("FF.build_families()"), 1)
         self.assertIn("FF.compile_events == 42", acceptance)
         self.assertIn("INSTANCE_COUNT * 30", acceptance)
+        self.assertNotIn(":= registry.family_subtree_hash", acceptance)
         self.assertIn('make_graph("NMC"', fixture)
         self.assertIn('make_graph("GLYCOL"', fixture)
         self.assertIn('make_graph("GAN"', fixture)
