@@ -72,6 +72,10 @@
     ],
     "CANCELLED": [
       "CANCELLED"
+    ],
+    "EVIDENCE_GAP": [
+      "IN_PROGRESS",
+      "VERIFYING"
     ]
   },
   "allowed_state_transitions": {
