@@ -1,0 +1,50 @@
+name: Harness V0 Post-Close Compatibility Targeted
+
+on:
+  push:
+    branches:
+      - control/harness-v0-postclose-compat-targeted-r1
+
+permissions:
+  contents: read
+
+env:
+  REPAIR_HEAD: 8a0d3908d9867ae0d53dd803a0d9c0fcc26a9fa9
+  PYTHONUTF8: '1'
+  PYTHONDONTWRITEBYTECODE: '1'
+
+jobs:
+  targeted:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout exact repair subject
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.REPAIR_HEAD }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Bind exact repair identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$REPAIR_HEAD"
+          git fetch origin main
+          test -z "$(git status --porcelain --untracked-files=no)"
+
+      - name: Install pinned Harness dependency
+        shell: bash
+        run: python3 -m pip install --disable-pip-version-check -r scripts/harness/requirements.txt
+
+      - name: Run V0 post-close compatibility regressions
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest -v             tests.harness.test_v0_mvp_act0             tests.harness.test_v0_mvp_audit_identity             tests.harness.test_v0_mvp_epoch_resume             tests.harness.test_v0_mvp_nonterminal_predicate_r13
+
+      - name: Verify repair paths only
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -z "$(git status --porcelain --untracked-files=no)"
