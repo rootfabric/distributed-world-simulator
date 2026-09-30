@@ -252,5 +252,16 @@
     "EPOCH_INVALIDATED",
     "CHECKPOINT_PROPOSED",
     "CANCELLED"
+  ],
+  "legacy_timestamp_exceptions": [
+    {
+      "previous_sequence": 45,
+      "previous_event_id": "E2026-09-09-V0-MVP-R1-V0-MVP-R1-WO-001-0045-MVP8-INDEPENDENT-VERIFIER-EVIDENCE-GAP",
+      "previous_recorded_at_utc": "2026-09-21T04:07:00Z",
+      "sequence": 46,
+      "event_id": "E2026-09-09-V0-MVP-R1-V0-MVP-R1-WO-001-0046-MVP8-WINDOWS-R2-CARRIER-DISPATCHED",
+      "recorded_at_utc": "2026-09-20T21:38:00Z",
+      "reason": "IMMUTABLE_LEGACY_RECORDED_AT_CLOCK_SKEW"
+    }
   ]
 }
