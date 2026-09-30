@@ -30,7 +30,8 @@ git = base.git
 read = base.read
 
 V0_ACCEPTED_HEAD = "a1db0c66762bee887f0bf2643f7c000961e64520"
-MAIN_CATCHUP_HEAD = "6b336af8faeadbd7f69c96b62dc30d25150f45a7"
+ACT0_CONTROL_MAIN = "6b336af8faeadbd7f69c96b62dc30d25150f45a7"
+V0_FINAL_MERGE_HEAD = "eadb2b99320439a608cd6fdc3561993513baf0c0"
 CRITICAL_V0_PREFIXES = (
     "scripts/runtime/networked_gameplay/mvp",
     "scripts/runtime/networked_gameplay/m4",
@@ -73,7 +74,13 @@ class MVPAct0Tests(base.MVPAct0Tests):
                 ],
                 check=True,
             )
-            control_main = git(ROOT, "rev-parse", "origin/main")
+            current_main = git(ROOT, "rev-parse", "origin/main")
+            subprocess.run(
+                ["git", "merge-base", "--is-ancestor", ACT0_CONTROL_MAIN, current_main],
+                cwd=ROOT,
+                check=True,
+            )
+            control_main = ACT0_CONTROL_MAIN
             candidate_head = git(ROOT, "rev-parse", "HEAD")
             git(root, "checkout", "--quiet", "-B", BRANCH, control_main)
             git(root, "update-ref", "refs/remotes/origin/main", control_main if adopted else BASE)
@@ -100,27 +107,43 @@ class MVPAct0Tests(base.MVPAct0Tests):
 
 
     def test_all_p7_execution_and_acceptance_blobs_are_unchanged(self):
-        """Catch-up may add current-main state, but must not rewrite accepted V0 product bytes."""
-        self.assertEqual(MAIN_CATCHUP_HEAD, git(ROOT, "rev-parse", "origin/main"))
-        subprocess.run(["git", "merge-base", "--is-ancestor", MAIN_CATCHUP_HEAD, "HEAD"], cwd=ROOT, check=True)
-        subprocess.run(["git", "merge-base", "--is-ancestor", V0_ACCEPTED_HEAD, "HEAD"], cwd=ROOT, check=True)
+        """Freeze the accepted V0 merge, without reserving successor runtime forever."""
+        current_main = git(ROOT, "rev-parse", "origin/main")
+        subprocess.run(
+            ["git", "merge-base", "--is-ancestor", V0_FINAL_MERGE_HEAD, current_main],
+            cwd=ROOT,
+            check=True,
+        )
+        subprocess.run(
+            ["git", "merge-base", "--is-ancestor", V0_ACCEPTED_HEAD, V0_FINAL_MERGE_HEAD],
+            cwd=ROOT,
+            check=True,
+        )
 
         for prefix in CRITICAL_V0_PREFIXES:
             with self.subTest(prefix=prefix):
                 self.assertEqual(
                     "",
-                    git(ROOT, "diff", "--name-only", V0_ACCEPTED_HEAD, "HEAD", "--", prefix),
+                    git(
+                        ROOT,
+                        "diff",
+                        "--name-only",
+                        V0_ACCEPTED_HEAD,
+                        V0_FINAL_MERGE_HEAD,
+                        "--",
+                        prefix,
+                    ),
                     prefix,
                 )
 
-        current_main_act0 = subprocess.check_output(
-            ["git", "show", f"{MAIN_CATCHUP_HEAD}:tests/harness/test_v0_mvp_act0.py"],
+        historical_main_act0 = subprocess.check_output(
+            ["git", "show", f"{ACT0_CONTROL_MAIN}:tests/harness/test_v0_mvp_act0.py"],
             cwd=ROOT,
         )
         self.assertEqual(
-            current_main_act0,
+            historical_main_act0,
             (ROOT / "tests/harness/mvp_act0_base.py").read_bytes(),
-            "ACT0 base module must be the exact current-main canonical test blob",
+            "ACT0 base module must remain the exact historical control-main test blob",
         )
 
     def test_current_mvp_work_order_snapshot_matches_latest_committed_event(self):

@@ -435,6 +435,107 @@ def _enforce_guard(
             raise ContractValidationError("GUARDED_CHECKPOINT_PROPOSAL_EVIDENCE_MISSING")
 
 
+def _legacy_branch_exception_matches(
+    transition_table: dict[str, Any],
+    event: dict[str, Any],
+) -> bool:
+    records = transition_table.get("legacy_branch_exceptions", [])
+    if records is None:
+        return False
+    if not isinstance(records, list):
+        raise ContractValidationError("LEGACY_BRANCH_EXCEPTIONS_INVALID")
+    required = {"sequence", "branch", "reason"}
+    seen: set[int] = set()
+    matched = False
+    for item in records:
+        if not isinstance(item, dict) or set(item) != required:
+            raise ContractValidationError("LEGACY_BRANCH_EXCEPTION_INVALID")
+        sequence = item.get("sequence")
+        branch = item.get("branch")
+        reason = item.get("reason")
+        if (
+            not isinstance(sequence, int)
+            or sequence < 1
+            or sequence in seen
+            or not isinstance(branch, str)
+            or not branch
+            or not isinstance(reason, str)
+            or not reason
+        ):
+            raise ContractValidationError("LEGACY_BRANCH_EXCEPTION_INVALID")
+        seen.add(sequence)
+        if event.get("sequence") == sequence and event.get("branch") == branch:
+            matched = True
+    return matched
+
+
+def _legacy_timestamp_exception_matches(
+    transition_table: dict[str, Any],
+    previous_event: dict[str, Any],
+    event: dict[str, Any],
+) -> bool:
+    records = transition_table.get("legacy_timestamp_exceptions", [])
+    if records is None:
+        return False
+    if not isinstance(records, list):
+        raise ContractValidationError("LEGACY_TIMESTAMP_EXCEPTIONS_INVALID")
+    required = {
+        "previous_sequence",
+        "previous_event_id",
+        "previous_recorded_at_utc",
+        "sequence",
+        "event_id",
+        "recorded_at_utc",
+        "reason",
+    }
+    matched = False
+    seen: set[tuple[int, int]] = set()
+    for item in records:
+        if not isinstance(item, dict) or set(item) != required:
+            raise ContractValidationError("LEGACY_TIMESTAMP_EXCEPTION_INVALID")
+        if (
+            not isinstance(item["previous_sequence"], int)
+            or not isinstance(item["sequence"], int)
+            or item["sequence"] != item["previous_sequence"] + 1
+            or not isinstance(item["previous_event_id"], str)
+            or not item["previous_event_id"]
+            or not isinstance(item["event_id"], str)
+            or not item["event_id"]
+            or not isinstance(item["previous_recorded_at_utc"], str)
+            or not item["previous_recorded_at_utc"]
+            or not isinstance(item["recorded_at_utc"], str)
+            or not item["recorded_at_utc"]
+            or not isinstance(item["reason"], str)
+            or not item["reason"]
+        ):
+            raise ContractValidationError("LEGACY_TIMESTAMP_EXCEPTION_INVALID")
+        key = (item["previous_sequence"], item["sequence"])
+        if key in seen:
+            raise ContractValidationError("LEGACY_TIMESTAMP_EXCEPTION_DUPLICATE")
+        seen.add(key)
+        try:
+            previous_recorded = datetime.fromisoformat(
+                item["previous_recorded_at_utc"].replace("Z", "+00:00")
+            )
+            current_recorded = datetime.fromisoformat(
+                item["recorded_at_utc"].replace("Z", "+00:00")
+            )
+        except ValueError as exc:
+            raise ContractValidationError("LEGACY_TIMESTAMP_EXCEPTION_INVALID") from exc
+        if current_recorded >= previous_recorded:
+            raise ContractValidationError("LEGACY_TIMESTAMP_EXCEPTION_NOT_DECREASING")
+        if (
+            previous_event.get("sequence") == item["previous_sequence"]
+            and previous_event.get("event_id") == item["previous_event_id"]
+            and previous_event.get("recorded_at_utc") == item["previous_recorded_at_utc"]
+            and event.get("sequence") == item["sequence"]
+            and event.get("event_id") == item["event_id"]
+            and event.get("recorded_at_utc") == item["recorded_at_utc"]
+        ):
+            matched = True
+    return matched
+
+
 def reduce_events(bundle: ContractBundle, work_order: dict[str, Any], events: list[dict[str, Any]], transition_table: dict[str, Any], guard_context: dict[str, Any] | None = None) -> dict[str, Any]:
     if not events:
         raise ContractValidationError("EVENT_LEDGER_EMPTY")
@@ -451,6 +552,7 @@ def reduce_events(bundle: ContractBundle, work_order: dict[str, Any], events: li
         raise ContractValidationError("EVENT_SEQUENCE_NOT_UNIQUE")
     ordered = sorted(events, key=lambda item: item["sequence"])
     previous_time: datetime | None = None
+    previous_event: dict[str, Any] | None = None
     for index, event in enumerate(ordered):
         if event["sequence"] != expected_sequence:
             raise ContractValidationError(f"EVENT_SEQUENCE_GAP:expected={expected_sequence}:actual={event['sequence']}")
@@ -460,7 +562,10 @@ def reduce_events(bundle: ContractBundle, work_order: dict[str, Any], events: li
         event_ids.add(event["event_id"])
         if event["work_order_id"] != work_order["work_order_id"] or event["project_epoch"] != work_order["project_epoch"]:
             raise ContractValidationError("EVENT_WORK_ORDER_OR_EPOCH_MISMATCH")
-        if event["branch"] != work_order["branch"]:
+        if (
+            event["branch"] != work_order["branch"]
+            and not _legacy_branch_exception_matches(transition_table, event)
+        ):
             raise ContractValidationError("EVENT_BRANCH_MISMATCH")
         allowed_event_states = transition_table["event_type_states"].get(event["event_type"], [])
         if event["work_state"] not in allowed_event_states:
@@ -473,8 +578,12 @@ def reduce_events(bundle: ContractBundle, work_order: dict[str, Any], events: li
         except ValueError as exc:
             raise ContractValidationError("EVENT_TIMESTAMP_INVALID") from exc
         if previous_time and recorded < previous_time:
-            raise ContractValidationError("EVENT_TIMESTAMP_DECREASES")
+            if previous_event is None or not _legacy_timestamp_exception_matches(
+                transition_table, previous_event, event
+            ):
+                raise ContractValidationError("EVENT_TIMESTAMP_DECREASES")
         previous_time = recorded
+        previous_event = event
         state = event["work_state"]
         predicate = event.get("predicate")
         if predicate and predicate not in observed_predicates:
