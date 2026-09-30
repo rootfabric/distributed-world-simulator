@@ -1,6 +1,6 @@
 # FABRIC R5.2 / T13 — Shared Compiled Instances
 
-Статус: **IMPLEMENTED / REVIEW REPAIR R1 — EXACT RERUN REQUIRED**. Research-only; canonical owners не меняются.
+Статус: **CLOSURE FROZEN — FRESH REVIEW R2 PASS / FRESH INDEPENDENT VERIFIER VERIFIED / FINAL PROJECT CONTROL PENDING**. Research-only; canonical owners не меняются.
 База: T12 merge `c60960bee48aa7cc68a9035cff86d5567f6c89fc`.
 
 ## Цель
@@ -79,3 +79,30 @@ network replication или полноценной damage physics. Он дока�
 архитектурный контракт: **compiled executable identity отделена от instance
 binding/state**, поэтому одинаковая сложная вещь не требует отдельного compile
 graph на каждый экземпляр.
+
+
+## Closure freeze
+
+Проверенный runtime subject:
+
+```text
+HEAD = 4cae54d17838f12dd619289eed114332813ea094
+TREE = 9b8aaa64f2114f1af99f0870004bf555aefecb16
+```
+
+Fresh Independent Review R2: **PASS** (review 5328535104).
+
+Fresh Independent Verifier R1: **VERIFIED**:
+- verifier HEAD `9c00f4d147429d36357b0f4aed22a26c15f367f3`;
+- product diff = 0;
+- run `36649983652`;
+- Windows exact job `109681673101` = SUCCESS;
+- 3×1377 assertions;
+- deterministic hash `c43d4a4c568d38d3ff16a8f118927ba6c76aeefcb17a200cf7f1325a52ac62bf`;
+- unchanged T12 regression = 8386 assertions PASS;
+- verifier artifact `11070351296`, digest `sha256:c637fed4d4257d7bb4f83e0d717fcb7d4934bb41d6085c0e9dd6347c1d1921c5`.
+
+Durable closure evidence:
+`validation/fabric-r5-2-t13-shared-instances-closure-evidence.v1.json`.
+
+После freeze runtime/test changes запрещены без нового exact review/verifier цикла. Evidence/doc-only closure commits не изменяют проверенный runtime subject.
