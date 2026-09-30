@@ -126,7 +126,7 @@ jobs:
           foreach ($i in 1..3) {
             $log = Join-Path $out "sample-$i.log"
             & $env:GODOT_BIN --headless --path . --script $script 2>&1 | Tee-Object -FilePath $log
-            if ($LASTEXITCODE -ne 0) { throw "T13_SAMPLE_FAILED:$i:$LASTEXITCODE" }
+            if ($LASTEXITCODE -ne 0) { throw ("T13_SAMPLE_FAILED:{0}:{1}" -f $i, $LASTEXITCODE) }
           }
 
       - name: Independent verifier oracle
