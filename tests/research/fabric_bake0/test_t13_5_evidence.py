@@ -18,7 +18,9 @@ class EvidenceTests(unittest.TestCase):
             "instances":100,
             "family_counts":{"family-a":40,"family-b":30,"family-c":20,"family-d":10},
             "family_registrations":5, "family_aliases":1, "unique_family_models":4,
-            "compile_events":42, "naive_full_compile_events":3000, "compile_events_avoided":2958,
+            "compile_events":42, "full_family_baseline_compile_events":120,
+            "cross_family_compile_events_avoided":78, "no_cache_instance_compile_events":3000,
+            "combined_no_cache_events_avoided":2958,
             "subtree_occurrences":120, "unique_subtree_hashes":42, "shared_subtree_hashes":29,
             "subtree_intern_events":42, "subtree_reuse_hits":78, "max_family_reuse":4,
             "runtime_steps":200, "evaluations":1000, "boundary_calls":19000,
@@ -36,6 +38,8 @@ class EvidenceTests(unittest.TestCase):
             ("instances", 99),
             ("unique_family_models", 5),
             ("compile_events", 3000),
+            ("full_family_baseline_compile_events", 3000),
+            ("cross_family_compile_events_avoided", 77),
             ("subtree_reuse_hits", 77),
             ("shared_subtree_hashes", 28),
             ("leaf_traversals", 1),
@@ -71,6 +75,7 @@ class EvidenceTests(unittest.TestCase):
         self.assertIn("unique_model_prepares", runtime)
         self.assertEqual(acceptance.count("FF.build_families()"), 1)
         self.assertIn("FF.compile_events == 42", acceptance)
+        self.assertIn("full_family_baseline_compile_events := 4 * 30", acceptance)
         self.assertIn("INSTANCE_COUNT * 30", acceptance)
         self.assertNotIn(":= registry.family_subtree_hash", acceptance)
         self.assertIn('make_graph("NMC"', fixture)
