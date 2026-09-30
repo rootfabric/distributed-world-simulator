@@ -262,6 +262,15 @@
       "event_id": "E2026-09-09-V0-MVP-R1-V0-MVP-R1-WO-001-0046-MVP8-WINDOWS-R2-CARRIER-DISPATCHED",
       "recorded_at_utc": "2026-09-20T21:38:00Z",
       "reason": "IMMUTABLE_LEGACY_RECORDED_AT_CLOCK_SKEW"
+    },
+    {
+      "previous_sequence": 68,
+      "previous_event_id": "E2026-09-09-V0-MVP-R1-V0-MVP-R1-WO-001-0068-MVP8-EVIDENCE-MAP-FINAL",
+      "previous_recorded_at_utc": "2026-09-22T10:56:00Z",
+      "sequence": 69,
+      "event_id": "E2026-09-09-V0-MVP-R1-V0-MVP-R1-WO-001-0069-MVP8-HUMAN-ACCEPTANCE",
+      "recorded_at_utc": "2026-09-22T10:40:00Z",
+      "reason": "IMMUTABLE_LEGACY_HUMAN_ACCEPTANCE_CLOCK_SKEW"
     }
   ],
   "legacy_branch_exceptions": [
