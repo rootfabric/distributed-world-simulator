@@ -32,6 +32,7 @@ const NX2_INPUT_SEND_INTERVAL_MS := 33
 const NX4_INPUT_SEND_INTERVAL_SECONDS := 1.0 / 30.0
 const LIVE2_RECONNECT_INITIAL_DELAY_MS := 1000
 const LIVE2_RECONNECT_MAX_DELAY_MS := 5000
+const LIVE2_ENET_SEQUENCED_ROTATION_LIMIT := 60000
 const SERVER_PEER_ID := "peer/enet/m3-dedicated-server"
 const M7_CHECKPOINT := "v16.10.6.1-testing-m7-playable-networked-playground"
 const M7_BUILD_ID := "m7-playable-networked-playground"
@@ -122,6 +123,10 @@ var _reconnect_pending := false
 var _reconnect_attempts := 0
 var _reconnect_next_ms := 0
 var _reconnect_reason := ""
+var _transport_realtime_sent_by_channel: Dictionary = {}
+var _transport_rotation_pending := false
+var _transport_rotation_reason := ""
+var _transport_rotations := 0
 
 func setup(config: Dictionary) -> Dictionary:
 	if _configured: return _failure("M3_CLIENT_ALREADY_CONFIGURED")
@@ -140,6 +145,10 @@ func setup(config: Dictionary) -> Dictionary:
 	_reconnect_attempts = 0
 	_reconnect_next_ms = 0
 	_reconnect_reason = ""
+	_transport_realtime_sent_by_channel.clear()
+	_transport_rotation_pending = false
+	_transport_rotation_reason = ""
+	_transport_rotations = 0
 	_join_operation_id = ""
 	_handshake_id = ""
 	_handshake_hello.clear()
@@ -213,6 +222,8 @@ func _process(_delta: float) -> void:
 	if _reconnect_pending:
 		if Time.get_ticks_msec() >= _reconnect_next_ms:
 			_attempt_reconnect()
+		return
+	if _maybe_rotate_transport():
 		return
 	if _boundary == null:
 		return
@@ -1072,6 +1083,7 @@ func _send_on_channel(
 			_discard_operation_timer(operation_id)
 		return false
 	_messages_sent += 1
+	_record_realtime_transport_send(channel, delivery_mode)
 	return true
 
 
@@ -1176,6 +1188,47 @@ func get_remote_player_ids() -> Array[String]:
 func is_ready() -> bool: return _joined and _replica != null and not _replica.get_snapshot().is_empty()
 func is_automated_acceptance() -> bool: return _automated_acceptance
 
+func _record_realtime_transport_send(channel: String, delivery_mode: String) -> void:
+	if delivery_mode != "UNRELIABLE_SEQUENCED":
+		return
+	var normalized_channel := channel.strip_edges().to_upper()
+	if normalized_channel.is_empty():
+		return
+	var next_count := int(_transport_realtime_sent_by_channel.get(normalized_channel, 0)) + 1
+	_transport_realtime_sent_by_channel[normalized_channel] = next_count
+	if next_count >= LIVE2_ENET_SEQUENCED_ROTATION_LIMIT and not _transport_rotation_pending:
+		_transport_rotation_pending = true
+		_transport_rotation_reason = "ENET_SEQUENCED_WRAP_GUARD:%s:%d" % [
+			normalized_channel,
+			next_count,
+		]
+		_telemetry.increment("transport_rotation_guard_triggers")
+
+
+func _maybe_rotate_transport() -> bool:
+	if (
+		not _transport_rotation_pending
+		or _reconnect_pending
+		or not _joined
+		or not _awaited_command_ids.is_empty()
+	):
+		return false
+	var reason := _transport_rotation_reason
+	_transport_rotations += 1
+	_telemetry.increment("transport_session_rotations")
+	_debug_event("TRANSPORT_SESSION_ROTATION", {
+		"reason": reason,
+		"rotation": _transport_rotations,
+		"realtime_sent_by_channel": _transport_realtime_sent_by_channel.duplicate(true),
+	})
+	_schedule_reconnect(reason)
+	# Proactive rollover rotation is not a failure backoff. Start the fresh
+	# transport on the next process turn while the old connection is still
+	# below the physical 16-bit sequence cliff.
+	_reconnect_next_ms = Time.get_ticks_msec()
+	return true
+
+
 func get_connection_state() -> String:
 	return _connection_state
 
@@ -1219,6 +1272,9 @@ func _reset_transport_protocol_state() -> void:
 	_prediction_last_network_intent.clear()
 	_prediction_reconciler = ClientPredictionReconciler.new()
 	_item_resync_pending = false
+	_transport_realtime_sent_by_channel.clear()
+	_transport_rotation_pending = false
+	_transport_rotation_reason = ""
 	# A new transport session must consume a fresh canonical JOIN baseline.
 	# Client replicas are derived caches, not truth. Keeping their old revision
 	# across a restarted server would incorrectly reject a valid new baseline as
@@ -1389,6 +1445,11 @@ func get_report() -> Dictionary:
 		"reconnect_pending": _reconnect_pending,
 		"reconnect_attempts": _reconnect_attempts,
 		"reconnect_reason": _reconnect_reason,
+		"transport_rotation_limit": LIVE2_ENET_SEQUENCED_ROTATION_LIMIT,
+		"transport_rotation_pending": _transport_rotation_pending,
+		"transport_rotation_reason": _transport_rotation_reason,
+		"transport_rotations": _transport_rotations,
+		"transport_realtime_sent_by_channel": _transport_realtime_sent_by_channel.duplicate(true),
 		"player_entity_id": _player_entity_id, "ownership_epoch": _ownership_epoch,
 		"transport_session_id": _transport_session_id, "join_operation_id": _join_operation_id, "input_sequence": _input_sequence,
 		"messages_sent": _messages_sent, "messages_received": _messages_received,
