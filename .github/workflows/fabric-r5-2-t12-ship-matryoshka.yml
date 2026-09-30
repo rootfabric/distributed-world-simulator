@@ -14,14 +14,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: a592e95dd55fca6b71ae56936bd88a03deb499f4
+          ref: e4b4d879436b99bf9a9379a229606e0553125064
           fetch-depth: 0
           persist-credentials: false
       - name: Verify exact T13.5 product subject
         shell: bash
         run: |
           set -Eeuo pipefail
-          product=a592e95dd55fca6b71ae56936bd88a03deb499f4
+          product=e4b4d879436b99bf9a9379a229606e0553125064
           base=b41b07a988726e6c7a18a39819183e2a9ce6aefe
           test "$(git rev-parse HEAD)" = "$product"
           test "$(git merge-base HEAD "$base")" = "$base"
@@ -42,7 +42,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: a592e95dd55fca6b71ae56936bd88a03deb499f4
+          ref: e4b4d879436b99bf9a9379a229606e0553125064
           fetch-depth: 0
           persist-credentials: false
 
@@ -50,7 +50,7 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
-          $product = 'a592e95dd55fca6b71ae56936bd88a03deb499f4'
+          $product = 'e4b4d879436b99bf9a9379a229606e0553125064'
           $actual = (git rev-parse HEAD).Trim()
           if ($actual -ne $product) { throw "PRODUCT_HEAD_MISMATCH:$actual" }
           $godot = $env:CONFIGURED_GODOT_BIN
@@ -133,6 +133,6 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: t13-5-windows-exact-product-a592e95d
+          name: t13-5-windows-exact-product-e4b4d879
           path: artifacts/fabric-r5-2-t13-5-windows/**
           retention-days: 90
