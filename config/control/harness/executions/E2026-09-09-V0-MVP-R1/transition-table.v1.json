@@ -75,6 +75,18 @@
     ],
     "CANCELLED": [
       "CANCELLED"
+    ],
+    "EVIDENCE_RECORDED": [
+      "IN_PROGRESS"
+    ],
+    "REVIEW_DISPATCHED": [
+      "IN_PROGRESS"
+    ],
+    "VERIFICATION_DISPATCHED": [
+      "IN_PROGRESS"
+    ],
+    "MERGE_COMPLETED": [
+      "IN_PROGRESS"
     ]
   },
   "allowed_state_transitions": {
