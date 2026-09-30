@@ -120,6 +120,48 @@ class MVPNonterminalPredicateR13Tests(unittest.TestCase):
         self.assertIn(MVP1, reduced["completed_predicates"])
         self.assertEqual(len(self.live_events), len({e["sequence"] for e in self.live_events}))
 
+    def test_legacy_timestamp_exception_is_exact_and_fail_closed(self):
+        event_45 = next(
+            event for event in self.live_events if event["sequence"] == 45
+        )
+        event_46 = next(
+            event for event in self.live_events if event["sequence"] == 46
+        )
+        self.assertGreater(
+            event_45["recorded_at_utc"],
+            event_46["recorded_at_utc"],
+            "historical timestamp inversion must remain byte-identical evidence",
+        )
+
+        no_exception = copy.deepcopy(self.transition)
+        no_exception.pop("legacy_timestamp_exceptions", None)
+        with self.assertRaisesRegex(
+            ContractValidationError, "EVENT_TIMESTAMP_DECREASES"
+        ):
+            reduce_events(
+                self.bundle,
+                self.live_order,
+                self.live_events,
+                no_exception,
+                self.context,
+            )
+
+        tampered_events = copy.deepcopy(self.live_events)
+        tampered_46 = next(
+            event for event in tampered_events if event["sequence"] == 46
+        )
+        tampered_46["recorded_at_utc"] = "2026-09-20T21:39:00Z"
+        with self.assertRaisesRegex(
+            ContractValidationError, "EVENT_TIMESTAMP_DECREASES"
+        ):
+            reduce_events(
+                self.bundle,
+                self.live_order,
+                tampered_events,
+                self.transition,
+                self.context,
+            )
+
     def test_unapproved_duplicate_sequence_still_rejected(self):
         duplicate = copy.deepcopy(self.live_events[-1])
         duplicate["event_id"] += "-R12-NEGATIVE-CONTROL"
