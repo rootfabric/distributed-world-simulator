@@ -263,5 +263,137 @@
       "recorded_at_utc": "2026-09-20T21:38:00Z",
       "reason": "IMMUTABLE_LEGACY_RECORDED_AT_CLOCK_SKEW"
     }
+  ],
+  "legacy_branch_exceptions": [
+    {
+      "sequence": 47,
+      "branch": "repair/v0-mvp8-cold-class-cache-r2",
+      "reason": "IMMUTABLE_V0_MVP8_REPAIR_BRANCH_PROVENANCE"
+    },
+    {
+      "sequence": 48,
+      "branch": "repair/v0-mvp8-cold-class-cache-r2",
+      "reason": "IMMUTABLE_V0_MVP8_REPAIR_BRANCH_PROVENANCE"
+    },
+    {
+      "sequence": 49,
+      "branch": "repair/v0-mvp8-cold-class-cache-r2",
+      "reason": "IMMUTABLE_V0_MVP8_REPAIR_BRANCH_PROVENANCE"
+    },
+    {
+      "sequence": 50,
+      "branch": "review/v0-mvp8-dc6e7fff-r1",
+      "reason": "IMMUTABLE_V0_MVP8_REVIEW_BRANCH_PROVENANCE"
+    },
+    {
+      "sequence": 51,
+      "branch": "repair/v0-mvp8-cold-class-cache-r2",
+      "reason": "IMMUTABLE_V0_MVP8_REPAIR_BRANCH_PROVENANCE"
+    },
+    {
+      "sequence": 52,
+      "branch": "repair/v0-mvp8-cold-class-cache-r2",
+      "reason": "IMMUTABLE_V0_MVP8_REPAIR_BRANCH_PROVENANCE"
+    },
+    {
+      "sequence": 53,
+      "branch": "repair/v0-mvp8-cold-class-cache-r2",
+      "reason": "IMMUTABLE_V0_MVP8_REPAIR_BRANCH_PROVENANCE"
+    },
+    {
+      "sequence": 54,
+      "branch": "repair/v0-mvp8-cold-class-cache-r2",
+      "reason": "IMMUTABLE_V0_MVP8_REPAIR_BRANCH_PROVENANCE"
+    },
+    {
+      "sequence": 55,
+      "branch": "repair/v0-mvp8-cold-class-cache-r2",
+      "reason": "IMMUTABLE_V0_MVP8_REPAIR_BRANCH_PROVENANCE"
+    },
+    {
+      "sequence": 56,
+      "branch": "repair/v0-mvp8-cold-class-cache-r2",
+      "reason": "IMMUTABLE_V0_MVP8_REPAIR_BRANCH_PROVENANCE"
+    },
+    {
+      "sequence": 57,
+      "branch": "repair/v0-mvp8-cold-class-cache-r2",
+      "reason": "IMMUTABLE_V0_MVP8_REPAIR_BRANCH_PROVENANCE"
+    },
+    {
+      "sequence": 58,
+      "branch": "repair/v0-mvp8-cold-class-cache-r2",
+      "reason": "IMMUTABLE_V0_MVP8_REPAIR_BRANCH_PROVENANCE"
+    },
+    {
+      "sequence": 59,
+      "branch": "repair/v0-mvp8-cold-class-cache-r2",
+      "reason": "IMMUTABLE_V0_MVP8_REPAIR_BRANCH_PROVENANCE"
+    },
+    {
+      "sequence": 60,
+      "branch": "repair/v0-mvp8-cold-class-cache-r2",
+      "reason": "IMMUTABLE_V0_MVP8_REPAIR_BRANCH_PROVENANCE"
+    },
+    {
+      "sequence": 61,
+      "branch": "repair/v0-mvp8-cold-class-cache-r2",
+      "reason": "IMMUTABLE_V0_MVP8_REPAIR_BRANCH_PROVENANCE"
+    },
+    {
+      "sequence": 62,
+      "branch": "repair/v0-mvp8-cold-class-cache-r2",
+      "reason": "IMMUTABLE_V0_MVP8_REPAIR_BRANCH_PROVENANCE"
+    },
+    {
+      "sequence": 63,
+      "branch": "repair/v0-mvp8-cold-class-cache-r2",
+      "reason": "IMMUTABLE_V0_MVP8_REPAIR_BRANCH_PROVENANCE"
+    },
+    {
+      "sequence": 64,
+      "branch": "repair/v0-mvp8-cold-class-cache-r2",
+      "reason": "IMMUTABLE_V0_MVP8_REPAIR_BRANCH_PROVENANCE"
+    },
+    {
+      "sequence": 65,
+      "branch": "repair/v0-mvp8-cold-class-cache-r2",
+      "reason": "IMMUTABLE_V0_MVP8_REPAIR_BRANCH_PROVENANCE"
+    },
+    {
+      "sequence": 66,
+      "branch": "repair/v0-mvp8-cold-class-cache-r2",
+      "reason": "IMMUTABLE_V0_MVP8_REPAIR_BRANCH_PROVENANCE"
+    },
+    {
+      "sequence": 67,
+      "branch": "repair/v0-mvp8-cold-class-cache-r2",
+      "reason": "IMMUTABLE_V0_MVP8_REPAIR_BRANCH_PROVENANCE"
+    },
+    {
+      "sequence": 68,
+      "branch": "repair/v0-mvp8-cold-class-cache-r2",
+      "reason": "IMMUTABLE_V0_MVP8_REPAIR_BRANCH_PROVENANCE"
+    },
+    {
+      "sequence": 69,
+      "branch": "repair/v0-mvp8-cold-class-cache-r2",
+      "reason": "IMMUTABLE_V0_MVP8_REPAIR_BRANCH_PROVENANCE"
+    },
+    {
+      "sequence": 70,
+      "branch": "repair/v0-mvp8-cold-class-cache-r2",
+      "reason": "IMMUTABLE_V0_MVP8_REPAIR_BRANCH_PROVENANCE"
+    },
+    {
+      "sequence": 71,
+      "branch": "repair/v0-mvp8-cold-class-cache-r2",
+      "reason": "IMMUTABLE_V0_MVP8_REPAIR_BRANCH_PROVENANCE"
+    },
+    {
+      "sequence": 73,
+      "branch": "integration/v0-final-1-main-catchup-r1",
+      "reason": "IMMUTABLE_V0_FINAL_CATCHUP_BRANCH_PROVENANCE"
+    }
   ]
 }
