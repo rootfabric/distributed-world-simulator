@@ -9,6 +9,12 @@ const V0P4EarthOutpostAuthority = preload(
 const V0P4ConstructionBridge = preload(
 	"res://scripts/runtime/networked_gameplay/m3/m3_construction_replication_bridge.gd"
 )
+const Live2PressureInputBuffer = preload(
+	"res://scripts/runtime/networked_gameplay/m3/live2_pressure_input_buffer.gd"
+)
+const Live2Diagnostics = preload(
+	"res://scripts/runtime/networked_gameplay/m3/live2_bounded_diagnostics.gd"
+)
 
 var _resource_commands := 0
 var _resource_rejections := 0
@@ -22,6 +28,7 @@ var _v0_p4_publication_batches := 0
 var _v0_p4_item_snapshot_fallbacks := 0
 var _v0_p4_construction_snapshot_fallbacks := 0
 var _v0_p4_replay_publications_suppressed := 0
+var _live2_diagnostics = Live2Diagnostics.new()
 
 
 func set_construction_bridge(bridge) -> Dictionary:
@@ -122,7 +129,54 @@ func get_v0_p4_composition_report() -> Dictionary:
 	return _v0_p4_composition_report.duplicate(true)
 
 
+func _ensure_input_buffer(peer_id: String, logical_id: String):
+	# The live Earth product opts into pressure compaction. Other compositions
+	# retain the accepted NX3 default FIFO implementation without modification.
+	if not bool(_v0_p4_composition_report.get("enabled", false)):
+		return super._ensure_input_buffer(peer_id, logical_id)
+	if _peer_input_buffers.has(peer_id):
+		return _peer_input_buffers[peer_id]
+	var buffer = Live2PressureInputBuffer.new()
+	var configured: Dictionary = buffer.configure(_last_processed_input_sequence(logical_id))
+	if not bool(configured.get("success", false)):
+		return null
+	_peer_input_buffers[peer_id] = buffer
+	return buffer
+
+
+func _send_result(peer_id: String, operation_id: String, command_type: String, result: Dictionary, item_graph_delta: Dictionary = {}) -> bool:
+	if not bool(result.get("success", false)):
+		var queue: Dictionary = {}
+		var buffer = _peer_input_buffers.get(peer_id)
+		if buffer != null:
+			queue = buffer.get_report(_server_tick)
+			queue["capacity"] = FixedTickInputBuffer.MAX_PENDING_INPUTS
+		var recorded: Dictionary = _live2_diagnostics.record_rejection({
+			"peer_id": peer_id,
+			"player_id": String(_peer_to_player.get(peer_id, "")),
+			"operation_id": operation_id,
+			"command_type": command_type,
+			"error_code": String(result.get("error_code", "COMMAND_REJECTED")),
+			"stage": _last_movement_rejection_stage if command_type == "PLAYER_INPUT" else "COMMAND",
+			"server_tick": _server_tick,
+			"queue": queue,
+		})
+		if bool(recorded.get("should_log", false)):
+			_debug_event("COMMAND_REJECTED", recorded.get("entry", {}))
+	# Diagnostics never rewrite the canonical result or suppress its delivery.
+	return super._send_result(peer_id, operation_id, command_type, result, item_graph_delta)
+
+
 func _handle_message(peer_id: String, session_id: String, payload: Dictionary) -> void:
+	var started_us := Time.get_ticks_usec()
+	_handle_v0_message(peer_id, session_id, payload)
+	_live2_diagnostics.observe_handler(
+		String(payload.get("type", "")),
+		float(Time.get_ticks_usec() - started_us) / 1000.0
+	)
+
+
+func _handle_v0_message(peer_id: String, session_id: String, payload: Dictionary) -> void:
 	var message_type := String(payload.get("type", ""))
 	if message_type == "RESOURCE_COMMAND" or message_type == "RESOURCE_RESYNC_REQUEST":
 		if not _is_peer_compatible(peer_id, session_id):
@@ -433,4 +487,5 @@ func get_report() -> Dictionary:
 		"construction_snapshot_fallbacks": _v0_p4_construction_snapshot_fallbacks,
 		"replay_publications_suppressed": _v0_p4_replay_publications_suppressed,
 	}
+	report["live2_r3_diagnostics"] = _live2_diagnostics.get_report()
 	return report
