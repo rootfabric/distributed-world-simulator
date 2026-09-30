@@ -52,12 +52,23 @@ emitter GAN:
   + turret + bank + ship    = 5
 ```
 
-Итого:
+Итого selective compile work:
 
 ```text
-unique structural compile work = 42
-naive 100 × full Ship           = 3000
-avoided                         = 2958
+4 full family × 30              = 120
+selective family compile        = 42
+cross-family avoided            = 78
+```
+
+Это именно инкрементальный результат T13.5 относительно уже закрытого T13.
+
+Для справки, совместный эффект T13 + T13.5 относительно полностью наивного
+подхода «компилировать каждый из 100 экземпляров целиком»:
+
+```text
+no-cache 100 × full Ship        = 3000
+selective family compile        = 42
+combined avoided                = 2958
 ```
 
 После регистрации family создание и исполнение 100 instance добавляет **0 compile events**.
@@ -120,9 +131,18 @@ all family models intact        = true
 Главный инвариант:
 
 ```text
-compile work ∝ unique structural deltas
-compile work ≠ instance count
+T13.5 incremental:
+4 full families = 120
+selective structural compile = 42
+cross-family reuse avoids = 78
+
+combined T13 + T13.5 no-cache comparison:
+100 full instance compiles = 3000
+selective family compile = 42
 ```
+
+Таким образом T13.5 отдельно доказывает **reuse между family**, а T13 уже
+отдельно доказал отсутствие compile-work на каждый instance.
 
 T13.5 является мостом:
 
