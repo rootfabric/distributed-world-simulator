@@ -76,6 +76,11 @@
     "EVIDENCE_GAP": [
       "IN_PROGRESS",
       "VERIFYING"
+    ],
+    "EVIDENCE_RECORDED": [
+      "IN_PROGRESS",
+      "IMPLEMENTED",
+      "VERIFYING"
     ]
   },
   "allowed_state_transitions": {
