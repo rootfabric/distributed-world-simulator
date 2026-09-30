@@ -1,0 +1,92 @@
+name: V0 LIVE.2 R2 Linux Targeted Exact
+
+on:
+  push:
+    branches:
+      - control/v0-live2-r2-linux-targeted-r1
+
+permissions:
+  contents: read
+
+env:
+  PRODUCT_HEAD: 75936927f9d7ff8e2a8be81e0f978ce3b0f761a7
+  PYTHONUTF8: '1'
+  PYTHONDONTWRITEBYTECODE: '1'
+  BREAKPOINT_RUNTIME_DISABLED: '1'
+  GODOT_SILENCE_ROOT_WARNING: '1'
+
+jobs:
+  linux-targeted:
+    name: LIVE2 R2 Linux exact targeted
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 30
+    steps:
+      - name: Checkout exact LIVE2 product
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.PRODUCT_HEAD }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Resolve canonical Linux double Godot
+        id: godot
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$PRODUCT_HEAD"
+          test -z "$(git status --porcelain --untracked-files=no)"
+          GODOT="${DWS_GODOT_DOUBLE_LINUX_BIN:-$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64}"
+          test -x "$GODOT"
+          VERSION="$("$GODOT" --version | head -n1)"
+          test "$VERSION" = "4.7.1.stable.double.custom_build.a13da4feb"
+          SHA="$(sha256sum "$GODOT" | awk '{print $1}')"
+          test "$SHA" = "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7"
+          echo "path=$GODOT" >> "$GITHUB_OUTPUT"
+          mkdir -p artifacts/live2-r2-linux
+          printf '%s\n' "HEAD=$(git rev-parse HEAD)" "TREE=$(git rev-parse 'HEAD^{tree}')" "GODOT_VERSION=$VERSION" "GODOT_SHA256=$SHA" > artifacts/live2-r2-linux/preflight.txt
+
+      - name: Cold import
+        shell: bash
+        timeout-minutes: 10
+        run: |
+          set -euo pipefail
+          rm -rf .godot
+          timeout 600s "${{ steps.godot.outputs.path }}" --headless --path . --editor --import --quit > artifacts/live2-r2-linux/import.log 2>&1
+          test -s .godot/global_script_class_cache.cfg
+
+      - name: Sequenced session rotation over 131072 logical sends
+        shell: bash
+        timeout-minutes: 8
+        run: |
+          set -euo pipefail
+          timeout 420s "${{ steps.godot.outputs.path }}" --headless --path . --script res://tests/network/test_v0_live2_enet_rollover.gd > artifacts/live2-r2-linux/rollover.log 2>&1
+
+      - name: NX2 realtime physical contract
+        shell: bash
+        timeout-minutes: 8
+        run: |
+          set -euo pipefail
+          timeout 420s "${{ steps.godot.outputs.path }}" --headless --path . --script res://tests/network/test_nx2_realtime_traffic_separation.gd > artifacts/live2-r2-linux/nx2.log 2>&1
+
+      - name: Human gameplay bridge
+        shell: bash
+        timeout-minutes: 8
+        run: |
+          set -euo pipefail
+          timeout 420s "${{ steps.godot.outputs.path }}" --headless --path . --script res://tests/runtime/test_v0_live2_human_gameplay_bridge.gd > artifacts/live2-r2-linux/human-bridge.log 2>&1
+
+      - name: Final identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$PRODUCT_HEAD"
+          test -z "$(git status --porcelain --untracked-files=no)"
+
+      - name: Upload Linux targeted evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v0-live2-r2-linux-targeted-${{ github.run_id }}-${{ github.run_attempt }}
+          path: artifacts/live2-r2-linux/
+          if-no-files-found: error
+          retention-days: 30
