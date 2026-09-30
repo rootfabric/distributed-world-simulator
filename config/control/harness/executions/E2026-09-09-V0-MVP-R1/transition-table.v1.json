@@ -86,6 +86,14 @@
       "IN_PROGRESS",
       "IMPLEMENTED",
       "VERIFYING"
+    ],
+    "VERIFICATION_DISPATCHED": [
+      "IN_PROGRESS",
+      "IMPLEMENTED",
+      "VERIFYING"
+    ],
+    "MERGE_COMPLETED": [
+      "IN_PROGRESS"
     ]
   },
   "allowed_state_transitions": {
