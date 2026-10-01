@@ -1,0 +1,3 @@
+T14 Windows exact trigger R3.
+PRODUCT_HEAD=69f90194ef536518fa3c34bb57903b4b69567643
+REPAIR=snapshot-integer-normalization
