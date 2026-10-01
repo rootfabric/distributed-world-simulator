@@ -1,6 +1,6 @@
 # FABRIC R5.2 / T13.5 — Shared Families & Parametric Variants
 
-Статус: **IMPLEMENTED / EXACT GATE PENDING**.
+Статус: **CLOSURE FROZEN — FRESH REVIEW R2 PASS / FRESH INDEPENDENT VERIFIER VERIFIED / FINAL PROJECT CONTROL PENDING**.
 
 База: закрытый T13 merge `b41b07a988726e6c7a18a39819183e2a9ce6aefe`.
 
@@ -153,3 +153,38 @@ T13.5 structural families + subtree reuse
   ↓
 T14 selective observation-driven refinement
 ```
+
+
+## Closure freeze
+
+Проверенный runtime subject:
+
+```text
+HEAD = 2d8ad372af509f256fd648078c5cab2f0f776ed0
+TREE = 894458702939a61bc5bf2b45f117043126e7b0f8
+```
+
+Fresh Independent Review R2: **PASS** (review 5367484727).
+
+Windows Exact R3:
+- run `36690744515`;
+- exact job `109807167095` = SUCCESS;
+- 3×777 assertions;
+- deterministic hash `5386816670e55fb1c6f45885a6c5862ddac5c9059b0681902c748d7e674abe1b`;
+- T13 regression = 1377 assertions PASS;
+- T12 regression = 8386 assertions PASS;
+- artifact `11086055675`, digest `sha256:c3cd0874f2d275a794dafb9199a28bf1de6ca92c0412cc8cb41baf37d2a79c1f`.
+
+Fresh Independent Verifier R1: **VERIFIED**:
+- verifier HEAD `617b5af55caa151f85d9723c7ddf249c8da60b7c`;
+- verifier TREE `22dd0a51d44dccfa4d338ee30821c35d78cd8394`;
+- product diff = 0;
+- run `36728672908`;
+- source job `109932128319` = SUCCESS;
+- Windows exact job `109932231609` = SUCCESS;
+- artifact `11110915907`, digest `sha256:c5f482325d97420ca39e8e37f237c01570455fd9a4bbfc6ad7c83d5cc5e5461c`.
+
+Durable closure evidence:
+`validation/fabric-r5-2-t13-5-shared-families-closure-evidence.v1.json`.
+
+После closure freeze runtime/family fixture/acceptance менять нельзя без нового exact review/verifier цикла. Evidence/doc-only closure commits не изменяют проверенный runtime subject.
