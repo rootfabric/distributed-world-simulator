@@ -835,19 +835,31 @@ func _handle_item_command(peer_id: String, session_id: String, payload: Dictiona
 	if not command_payload_value is Dictionary:
 		_reject_uncommitted_command(peer_id, operation_id, "ITEM_COMMAND", "ITEM_COMMAND_PAYLOAD_REQUIRED")
 		return
+	var stage_context := _stall_context(peer_id, operation_id, command_type)
+	var before_probe := _stall_enter("ITEM:BEFORE_SNAPSHOT", stage_context)
 	var before_item_snapshot: Dictionary = _service.create_canonical_item_graph_snapshot()
+	_stall_exit(before_probe)
+	var execute_probe := _stall_enter("ITEM:EXECUTE", stage_context)
 	var result: Dictionary = _service.handle_canonical_item_command(
 		logical_id, session_id, int(payload.get("ownership_epoch", 0)),
 		operation_id, command_type, Dictionary(command_payload_value)
 	)
-	if not _persist_command_result(operation_id, command_type, logical_id, result):
+	_stall_exit(execute_probe)
+	var persist_probe := _stall_enter("ITEM:PERSIST_RESULT", stage_context)
+	var persisted_result := _persist_command_result(operation_id, command_type, logical_id, result)
+	_stall_exit(persist_probe)
+	if not persisted_result:
 		_send_result(peer_id, operation_id, command_type, _failure("M6_DURABLE_COMMIT_FAILED"))
 		return
 	var item_delta: Dictionary = {}
 	var item_delta_fallback_required: bool = false
 	if bool(result.get("success", false)) and not _is_replay_result(result):
+		var after_probe := _stall_enter("ITEM:AFTER_SNAPSHOT", stage_context)
 		var after_item_snapshot: Dictionary = _service.create_canonical_item_graph_snapshot()
+		_stall_exit(after_probe)
+		var delta_probe := _stall_enter("ITEM:DELTA_BUILD", stage_context)
 		var delta_result: Dictionary = CanonicalItemGraphDelta.create(before_item_snapshot, after_item_snapshot)
+		_stall_exit(delta_probe)
 		if not bool(delta_result.get("success", false)):
 			# The authoritative mutation has already committed durably. Never convert it
 			# into a rejection after commit; recover replication with a full resync.
@@ -856,9 +868,12 @@ func _handle_item_command(peer_id: String, session_id: String, payload: Dictiona
 			_last_error_code = "ITEM_GRAPH_DELTA_BUILD_FAILED"
 		else:
 			item_delta = Dictionary(delta_result.get("details", {}).get("delta", {})).duplicate(true)
+	var send_probe := _stall_enter("ITEM:RESULT_SEND", stage_context)
 	var result_sent := _send_result(peer_id, operation_id, command_type, result, item_delta)
+	_stall_exit(send_probe)
 	if bool(result.get("success", false)):
 		if not _is_replay_result(result):
+			var replication_probe := _stall_enter("ITEM:REPLICATION", stage_context)
 			if item_delta_fallback_required:
 				_broadcast_item_snapshot("ITEM_GRAPH_DELTA_BUILD_FALLBACK")
 			else:
@@ -867,6 +882,7 @@ func _handle_item_command(peer_id: String, session_id: String, payload: Dictiona
 			# but never embed the full Item Graph in ordinary results.
 			_broadcast_snapshot("ITEM_GRAPH_UPDATED", RealtimeChannelPolicy.RESYNC, "RELIABLE_ORDERED")
 			_capture_two_connected_checksum()
+			_stall_exit(replication_probe)
 	else:
 		_rejections += 1
 	if result_sent:
