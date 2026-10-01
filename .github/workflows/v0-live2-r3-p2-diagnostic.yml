@@ -1,0 +1,90 @@
+name: V0 LIVE.2 R3 P2 Diagnostic
+
+on:
+  push:
+    branches:
+      - control/v0-live2-r3-p2-diagnostic-r1
+
+permissions:
+  contents: read
+
+env:
+  PRODUCT_HEAD: 5b5652cd479eaf9e3866b1ae27eb3cb3b2bbe356
+  GODOT_BIN: C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe
+  PYTHONUTF8: '1'
+  PYTHONDONTWRITEBYTECODE: '1'
+  BREAKPOINT_RUNTIME_DISABLED: '1'
+  GODOT_SILENCE_ROOT_WARNING: '1'
+
+jobs:
+  p2-diagnostic:
+    name: LIVE2 R3 P2 exact diagnostic
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 25
+    steps:
+      - name: Checkout exact R3
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.PRODUCT_HEAD }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Exact preflight
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          if ((git rev-parse HEAD).Trim() -ne $env:PRODUCT_HEAD) { throw 'HEAD_MISMATCH' }
+          if ((git status --porcelain --untracked-files=no)) { throw 'TRACKED_DIRTY_BEFORE' }
+          $sha=(Get-FileHash $env:GODOT_BIN -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($sha -ne '3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5') { throw "GODOT_SHA_MISMATCH:$sha" }
+          New-Item -ItemType Directory -Force artifacts\live2-r3-p2-diagnostic | Out-Null
+
+      - name: Cold import
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          if (Test-Path .godot) { Remove-Item .godot -Recurse -Force }
+          & $env:GODOT_BIN --headless --path . --editor --import --quit *> artifacts\live2-r3-p2-diagnostic\import.log
+          if ($LASTEXITCODE -ne 0) { throw "IMPORT_FAILED:$LASTEXITCODE" }
+
+      - name: Run exact P2 shared-state test
+        id: p2
+        continue-on-error: true
+        shell: pwsh
+        timeout-minutes: 15
+        run: |
+          $ErrorActionPreference='Continue'
+          & $env:GODOT_BIN --headless --path . --script res://tests/runtime/test_v0_p2_live_shared_state_convergence.gd *> artifacts\live2-r3-p2-diagnostic\parent.log
+          $code=$LASTEXITCODE
+          "$code" | Set-Content artifacts\live2-r3-p2-diagnostic\exit.txt -Encoding ascii
+          Write-Host "P2_EXIT=$code"
+          exit $code
+
+      - name: Collect child evidence
+        if: always()
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Continue'
+          $dst='artifacts\live2-r3-p2-diagnostic\child'
+          New-Item -ItemType Directory -Force $dst | Out-Null
+          Get-ChildItem artifacts\test-results -Directory -Filter 'v0-p2-live-shared-state-*' -ErrorAction SilentlyContinue | ForEach-Object {
+            $target=Join-Path $dst $_.Name
+            Copy-Item $_.FullName $target -Recurse -Force
+          }
+          Get-ChildItem $dst -Recurse -File | Select-Object FullName,Length | Format-Table -AutoSize
+
+      - name: Upload diagnostic
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v0-live2-r3-p2-diagnostic-${{ github.run_id }}-${{ github.run_attempt }}
+          path: artifacts/live2-r3-p2-diagnostic/
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Preserve verdict
+        if: always()
+        shell: pwsh
+        run: |
+          $code=[int](Get-Content artifacts\live2-r3-p2-diagnostic\exit.txt)
+          if ($code -ne 0) { throw "P2_DIAGNOSTIC_REPRODUCED:$code" }
