@@ -13,8 +13,8 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  PRODUCT_HEAD: 7340cb6c4db95ffbec3640ee59dfec7b21f42094
-  PRODUCT_TREE: 1511a08fc0e13fbf6177eb127bdafa2ce73eb24e
+  PRODUCT_HEAD: 2fc85d55fcc93340f2cd22e7743a2c0447970338
+  PRODUCT_TREE: a2dd19966f664aa2e645d36309e0089b17694242
   MAIN_FENCE: 323845379490b2acda1844c3799bb0275d8c2674
   GODOT_BIN: C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe
   PYTHONUTF8: '1'
