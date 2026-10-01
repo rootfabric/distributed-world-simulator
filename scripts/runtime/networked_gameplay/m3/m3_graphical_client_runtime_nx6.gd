@@ -8,6 +8,7 @@ signal connection_failed(error_code: String, details: Dictionary)
 signal server_disconnected(report: Dictionary)
 signal prediction_updated(predicted_state: Dictionary, presentation_state: Dictionary, report: Dictionary)
 signal connection_state_changed(state: String, details: Dictionary)
+signal command_result_received(result: Dictionary)
 
 const Boundary = preload("res://scripts/network/transports/v2/network_transport_boundary_v2.gd")
 const Port = preload("res://scripts/network/transports/v2/enet_multi_peer_transport_port.gd")
@@ -63,6 +64,8 @@ var _command_results: Dictionary = {}
 var _awaited_command_ids: Dictionary = {}
 var _async_command_results := 0
 var _async_command_rejections := 0
+var _async_command_timeouts := 0
+var _async_pending_operations: Dictionary = {}
 var _debug_logging := false
 var _last_debug_report_ms := 0
 var _leave_acknowledged := false
@@ -145,6 +148,8 @@ func setup(config: Dictionary) -> Dictionary:
 	_reconnect_attempts = 0
 	_reconnect_next_ms = 0
 	_reconnect_reason = ""
+	_async_pending_operations.clear()
+	_async_command_timeouts = 0
 	_transport_realtime_sent_by_channel.clear()
 	_transport_rotation_pending = false
 	_transport_rotation_reason = ""
@@ -281,6 +286,7 @@ func _process(_delta: float) -> void:
 				_schedule_reconnect("PEER_DISCONNECTED")
 	if _reconnect_pending:
 		return
+	_expire_async_operations()
 	if not _joined and not disconnected_this_poll and Time.get_ticks_msec() - _started_ms > _connect_timeout_ms:
 		if not _automated_acceptance and _server_disconnects > 0:
 			_schedule_reconnect("RECONNECT_TIMEOUT")
@@ -341,10 +347,14 @@ func _handle_message(payload: Dictionary) -> void:
 				_command_results[operation_id] = payload.duplicate(true)
 			else:
 				_async_command_results += 1
+				_async_pending_operations.erase(operation_id)
+				var async_result: Dictionary = payload.duplicate(true)
+				async_result["async"] = true
 				if String(payload.get("status", "")) != "SUCCEEDED":
 					_async_command_rejections += 1
 					_last_error_code = String(payload.get("error_code", "ASYNC_COMMAND_REJECTED"))
 					_debug_event("ASYNC_COMMAND_REJECTED", payload)
+				command_result_received.emit(async_result)
 		"LEAVE_ACK":
 			_observe_operation_latency(String(payload.get("operation_id", "")))
 			_leave_acknowledged = true
@@ -926,6 +936,52 @@ func _request_item_graph_resync(reason: String) -> void:
 		_item_resync_pending = true
 		_item_resync_requests_sent += 1
 
+func execute_item_command_async(
+	command_type: String,
+	payload: Dictionary,
+	operation_id: String = "",
+	ownership_epoch_override: int = 0
+) -> Dictionary:
+	if not is_ready():
+		return _failure("M4_CLIENT_NOT_READY")
+	var command_epoch := ownership_epoch_override if ownership_epoch_override > 0 else _ownership_epoch
+	var op := operation_id.strip_edges()
+	if op.is_empty():
+		op = "operation/m4/%s/%s/async/%d/%d/%d" % [
+			_logical_player_id,
+			command_type.replace(".", "-"),
+			OS.get_process_id(),
+			Time.get_ticks_msec(),
+			_message_sequence + 1,
+		]
+	if _async_pending_operations.has(op) or _awaited_command_ids.has(op):
+		return _failure("ASYNC_OPERATION_ALREADY_PENDING", {"operation_id": op})
+	if not _send_on_channel(
+		"ITEM_COMMAND",
+		{
+			"logical_player_id": _logical_player_id,
+			"ownership_epoch": command_epoch,
+			"operation_id": op,
+			"command_type": command_type,
+			"payload": payload.duplicate(true),
+		},
+		RealtimeChannelPolicy.ITEM,
+		"RELIABLE_ORDERED",
+		true
+	):
+		_discard_operation_timer(op)
+		return _failure("M4_ITEM_COMMAND_SEND_FAILED")
+	_async_pending_operations[op] = {
+		"command_type": command_type,
+		"started_ms": Time.get_ticks_msec(),
+	}
+	return _success({
+		"operation_id": op,
+		"command_type": command_type,
+		"pending": true,
+	})
+
+
 func execute_item_command_blocking(
 	command_type: String,
 	payload: Dictionary,
@@ -987,6 +1043,42 @@ func _accept_construction_event(event_value) -> void:
 		return
 	_construction_event_updates += 1
 	construction_updated.emit(_construction_replica.get_bundle())
+
+func execute_construction_command_async(
+	command: Dictionary,
+	operation_id: String = ""
+) -> Dictionary:
+	if not is_ready():
+		return _failure("M3_CONSTRUCTION_CLIENT_NOT_READY")
+	var op := operation_id.strip_edges()
+	if op.is_empty():
+		op = "operation/m3/%s/construction/async/%d/%d/%d" % [
+			_logical_player_id,
+			OS.get_process_id(),
+			Time.get_ticks_msec(),
+			_message_sequence + 1,
+		]
+	if _async_pending_operations.has(op) or _awaited_command_ids.has(op):
+		return _failure("ASYNC_OPERATION_ALREADY_PENDING", {"operation_id": op})
+	if not _send_on_channel(
+		"CONSTRUCTION_COMMAND",
+		{"operation_id": op, "command": command.duplicate(true)},
+		RealtimeChannelPolicy.CONTROL,
+		"RELIABLE_ORDERED",
+		true
+	):
+		_discard_operation_timer(op)
+		return _failure("M3_CONSTRUCTION_COMMAND_SEND_FAILED")
+	_async_pending_operations[op] = {
+		"command_type": "CONSTRUCTION_COMMAND",
+		"started_ms": Time.get_ticks_msec(),
+	}
+	return _success({
+		"operation_id": op,
+		"command_type": "CONSTRUCTION_COMMAND",
+		"pending": true,
+	})
+
 
 func execute_construction_command_blocking(command: Dictionary, operation_id: String = "") -> Dictionary:
 	if not is_ready(): return _failure("M3_CONSTRUCTION_CLIENT_NOT_READY")
@@ -1229,6 +1321,59 @@ func _maybe_rotate_transport() -> bool:
 	return true
 
 
+func _expire_async_operations() -> void:
+	if _async_pending_operations.is_empty():
+		return
+	var now_ms := Time.get_ticks_msec()
+	for operation_id_value in _async_pending_operations.keys().duplicate():
+		var operation_id := String(operation_id_value)
+		var pending: Dictionary = Dictionary(
+			_async_pending_operations.get(operation_id, {})
+		)
+		if now_ms - int(pending.get("started_ms", now_ms)) <= _command_timeout_ms:
+			continue
+		_async_pending_operations.erase(operation_id)
+		_discard_operation_timer(operation_id)
+		_async_command_results += 1
+		_async_command_rejections += 1
+		_async_command_timeouts += 1
+		_last_error_code = "ASYNC_COMMAND_TIMEOUT"
+		command_result_received.emit({
+			"type": "COMMAND_RESULT",
+			"operation_id": operation_id,
+			"command_type": String(pending.get("command_type", "")),
+			"status": "REJECTED",
+			"error_code": "ASYNC_COMMAND_TIMEOUT",
+			"details": {},
+			"async": true,
+			"timeout": true,
+		})
+
+
+func _cancel_async_operations(error_code: String) -> void:
+	if _async_pending_operations.is_empty():
+		return
+	for operation_id_value in _async_pending_operations.keys().duplicate():
+		var operation_id := String(operation_id_value)
+		var pending: Dictionary = Dictionary(
+			_async_pending_operations.get(operation_id, {})
+		)
+		_discard_operation_timer(operation_id)
+		_async_command_results += 1
+		_async_command_rejections += 1
+		command_result_received.emit({
+			"type": "COMMAND_RESULT",
+			"operation_id": operation_id,
+			"command_type": String(pending.get("command_type", "")),
+			"status": "REJECTED",
+			"error_code": error_code,
+			"details": {},
+			"async": true,
+			"cancelled": true,
+		})
+	_async_pending_operations.clear()
+
+
 func get_connection_state() -> String:
 	return _connection_state
 
@@ -1250,6 +1395,7 @@ func _set_connection_state(state: String, details: Dictionary = {}) -> void:
 
 
 func _reset_transport_protocol_state() -> void:
+	_cancel_async_operations("ASYNC_COMMAND_TRANSPORT_RESET")
 	_join_sent = false
 	_join_operation_id = ""
 	_message_sequence = 0
@@ -1464,6 +1610,8 @@ func get_report() -> Dictionary:
 		"pending_operation_timer_count": _operation_started_ms.size(),
 		"async_command_results": _async_command_results,
 		"async_command_rejections": _async_command_rejections,
+		"async_command_timeouts": _async_command_timeouts,
+		"pending_async_command_count": _async_pending_operations.size(),
 		"realtime_traffic": {
 			"channel_policy": RealtimeChannelPolicy.canonical_policy(),
 			"input_batches_sent": _input_batches_sent,
