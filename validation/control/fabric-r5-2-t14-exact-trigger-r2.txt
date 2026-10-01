@@ -1,0 +1,3 @@
+T14 Windows exact trigger R2.
+PRODUCT_HEAD=4323ceafc574506da0d281a5f0ba4ccfc370bb71
+PREVIOUS_CONTROL_DEFECT=heredoc-syntax
