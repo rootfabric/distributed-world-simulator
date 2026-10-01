@@ -4,9 +4,27 @@ const LiveEarth = preload("res://scripts/app/earth_p3_resource_mining_app.gd")
 
 class FakeRuntime:
 	extends RefCounted
+	signal command_result_received(result: Dictionary)
 	var commands: Array[Dictionary] = []
 	func get_local_player_id() -> String:
 		return "a"
+	func execute_item_command_async(
+		command_type: String,
+		payload: Dictionary,
+		operation_id: String = ""
+	) -> Dictionary:
+		var op := operation_id if not operation_id.is_empty() else "operation/fake/async/%d" % (commands.size() + 1)
+		commands.append({
+			"type": command_type,
+			"payload": payload.duplicate(true),
+			"operation_id": op,
+			"async": true,
+		})
+		return {
+			"success": true,
+			"error_code": "",
+			"details": {"operation_id": op, "pending": true},
+		}
 	func execute_item_command_blocking(
 		command_type: String,
 		payload: Dictionary,
@@ -88,9 +106,11 @@ func _test_canonical_human_actions() -> void:
 	_assert(bool(build_mode.get("success", false)), "build mode toggles on")
 	_assert(bool(build_mode.get("build_mode", false)), "build mode state is explicit")
 	var placed: Dictionary = earth._command_live2_primary([])
-	_assert(bool(placed.get("success", false)), "primary action places selected base in build mode")
+	_assert(bool(placed.get("success", false)), "primary action queues selected base in build mode")
+	_assert(bool(placed.get("pending", false)), "human placement is explicitly asynchronous")
 	_assert(runtime.commands.size() == 2, "placement adds exactly one canonical command")
 	_assert(String(runtime.commands[1].get("type", "")) == "item.place", "build mode uses canonical item.place")
+	_assert(bool(runtime.commands[1].get("async", false)), "human placement does not use blocking runtime path")
 	_assert(
 		String(runtime.commands[1].get("payload", {}).get("item_id", ""))
 		== "item/player/a/mount-bases",
