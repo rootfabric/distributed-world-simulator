@@ -276,6 +276,13 @@ func restore_refinement(instance: Dictionary, text: String, trusted_hash: String
 	if typeof(parsed.get("metadata")) != TYPE_DICTIONARY:
 		return U.failure("T14_SNAPSHOT_METADATA_INVALID")
 	var metadata: Dictionary = parsed.metadata
+	# JSON has one numeric type. Normalize integer-valued revision/count fields
+	# back to int before checksum validation so a valid snapshot round-trip does
+	# not depend on parser Variant numeric representation.
+	for field in ["state_revision", "damage_revision", "detail_node_count", "detail_leaf_count"]:
+		if not U.is_json_integer(metadata.get(field)):
+			return U.failure("T14_SNAPSHOT_METADATA_INVALID")
+		metadata[field] = int(metadata[field])
 	if not U.validate_checksum(metadata).success or metadata.get("schema") != REFINEMENT_SCHEMA:
 		return U.failure("T14_SNAPSHOT_METADATA_INVALID")
 	if metadata.get("binding_checksum") != _instance_key(instance) or metadata.get("instance_id") != _instance_id(instance):
