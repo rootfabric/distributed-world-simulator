@@ -42,6 +42,9 @@ var _live2_connection_state := "CONNECTING"
 var _live2_last_action_text := ""
 var _live2_action_hide_at_msec := 0
 var _live2_build_mode := false
+var _live2_pending_actions: Dictionary = {}
+var _live2_async_results := 0
+var _live2_async_rejections := 0
 
 
 func attach_m3_multiplayer_client(runtime) -> Dictionary:
@@ -56,6 +59,7 @@ func attach_m3_multiplayer_client(runtime) -> Dictionary:
 	_mvp_local_vertical_offset_m = 0.0
 	_mvp_latest_local_record.clear()
 	_mvp_spectator_enabled = false
+	_live2_pending_actions.clear()
 	_prepare_mvp_surface_anchor()
 
 	var result: Dictionary = super.attach_m3_multiplayer_client(runtime)
@@ -68,6 +72,10 @@ func attach_m3_multiplayer_client(runtime) -> Dictionary:
 		_mvp_prediction_signal_connected = true
 	else:
 		_mvp_prediction_signal_connected = false
+	if runtime != null and runtime.has_signal("command_result_received"):
+		var async_callback := Callable(self, "_on_live2_async_command_result")
+		if not runtime.is_connected("command_result_received", async_callback):
+			runtime.connect("command_result_received", async_callback)
 
 	var inventory_setup: Dictionary = _ensure_mvp_inventory_shell(runtime)
 	if not bool(inventory_setup.get("success", false)):
@@ -428,13 +436,16 @@ func _command_mvp_inventory_drop(_arguments: Array[String]) -> Dictionary:
 		var empty := {"success": false, "output": "В выбранном слоте хотбара нет предмета"}
 		_show_live2_action_feedback(String(empty["output"]), false)
 		return empty
-	var result := m4_execute_item_command("item.drop", {
-		"item_id": item_id,
-		"quantity": -1,
-	})
-	var presented := _mvp_command_result(result, "Предмет выброшен")
-	_show_live2_action_feedback(String(presented.get("output", "")), bool(presented.get("success", false)))
-	return presented
+	return _submit_live2_item_action_async(
+		"item.drop",
+		{"item_id": item_id, "quantity": -1},
+		{
+			"kind": "item_drop",
+			"pending_text": "Выбрасываем предмет…",
+			"success_text": "Предмет выброшен",
+			"error_prefix": "Выбросить предмет",
+		}
+	)
 
 
 func _command_live2_primary(_arguments: Array[String]) -> Dictionary:
@@ -479,14 +490,16 @@ func _command_live2_place_selected(_arguments: Array[String]) -> Dictionary:
 		}
 		_show_live2_action_feedback(String(missing["output"]), false)
 		return missing
-	var result := m4_execute_item_command("item.place", {"item_id": item_id})
-	var presented := _mvp_command_result(result, "Основание установлено")
-	_show_live2_action_feedback(
-		String(presented.get("output", "")),
-		bool(presented.get("success", false)),
-		4200
+	return _submit_live2_item_action_async(
+		"item.place",
+		{"item_id": item_id},
+		{
+			"kind": "item_place",
+			"pending_text": "Устанавливаем основание…",
+			"success_text": "Основание установлено",
+			"error_prefix": "Установка основания",
+		}
 	)
-	return presented
 
 
 func _live2_item_by_id(item_id: String) -> Dictionary:
@@ -617,6 +630,81 @@ func _show_live2_action_feedback(
 	)
 
 
+func _submit_live2_item_action_async(
+	command_type: String,
+	payload: Dictionary,
+	context: Dictionary
+) -> Dictionary:
+	var result: Dictionary = m4_execute_item_command_async(command_type, payload)
+	if not bool(result.get("success", false)):
+		var send_error := String(result.get("error_code", "ASYNC_ITEM_SEND_FAILED"))
+		_show_live2_action_feedback(
+			"%s: %s" % [String(context.get("error_prefix", "Команда")), send_error],
+			false,
+			4200
+		)
+		return result
+	var operation_id := String(result.get("details", {}).get(
+		"operation_id",
+		result.get("operation_id", "")
+	))
+	if operation_id.is_empty():
+		return {"success": false, "error_code": "ASYNC_OPERATION_ID_MISSING"}
+	_track_live2_async_action(operation_id, context)
+	_show_live2_action_feedback(
+		String(context.get("pending_text", "Команда отправлена…")),
+		true,
+		2400
+	)
+	return {
+		"success": true,
+		"operation_id": operation_id,
+		"pending": true,
+		"output": String(context.get("pending_text", "Команда отправлена…")),
+	}
+
+
+func _track_live2_async_action(operation_id: String, context: Dictionary) -> void:
+	if operation_id.is_empty():
+		return
+	_live2_pending_actions[operation_id] = context.duplicate(true)
+
+
+func _on_live2_async_command_result(result: Dictionary) -> void:
+	_live2_async_results += 1
+	var operation_id := String(result.get("operation_id", ""))
+	var context: Dictionary = Dictionary(
+		_live2_pending_actions.get(operation_id, {})
+	).duplicate(true)
+	if not context.is_empty():
+		_live2_pending_actions.erase(operation_id)
+		var succeeded := String(result.get("status", "")) == "SUCCEEDED"
+		if succeeded:
+			_show_live2_action_feedback(
+				String(context.get("success_text", "Команда подтверждена сервером")),
+				true,
+				3200
+			)
+		else:
+			_live2_async_rejections += 1
+			_show_live2_action_feedback(
+				"%s: %s" % [
+					String(context.get("error_prefix", "Команда")),
+					String(result.get("error_code", "REJECTED")),
+				],
+				false,
+				5000
+			)
+	_handle_live2_async_command_extension(result, context)
+
+
+func _handle_live2_async_command_extension(
+	_result: Dictionary,
+	_context: Dictionary
+) -> void:
+	pass
+
+
 func _find_live2_mining_tool() -> Dictionary:
 	return _find_live2_inventory_item(LIVE2_MINING_TOOL_DEFINITION_ID)
 
@@ -636,6 +724,7 @@ func _live2_mining_tool_is_equipped() -> bool:
 
 
 func ensure_live2_mining_tool_equipped() -> Dictionary:
+	# Blocking compatibility seam retained for deterministic integration tests.
 	if _live2_mining_tool_is_equipped():
 		return {"success": true, "already_equipped": true}
 	var tool := _find_live2_mining_tool()
@@ -655,9 +744,42 @@ func ensure_live2_mining_tool_equipped() -> Dictionary:
 	return result
 
 
+func ensure_live2_mining_tool_equipped_async(context: Dictionary = {}) -> Dictionary:
+	if _live2_mining_tool_is_equipped():
+		return {
+			"success": true,
+			"already_equipped": true,
+			"pending": false,
+		}
+	var tool := _find_live2_mining_tool()
+	if tool.is_empty():
+		var missing := {
+			"success": false,
+			"error_code": "LIVE2_MINING_TOOL_NOT_IN_INVENTORY",
+		}
+		_show_live2_action_feedback("Добывающий инструмент не найден", false)
+		return missing
+	var action_context := context.duplicate(true)
+	if String(action_context.get("kind", "")).is_empty():
+		action_context["kind"] = "tool_equip"
+	if String(action_context.get("pending_text", "")).is_empty():
+		action_context["pending_text"] = "Экипируем добывающий инструмент…"
+	if String(action_context.get("success_text", "")).is_empty():
+		action_context["success_text"] = "Добывающий инструмент экипирован"
+	if String(action_context.get("error_prefix", "")).is_empty():
+		action_context["error_prefix"] = "Экипировка инструмента"
+	return _submit_live2_item_action_async(
+		"item.equip",
+		{
+			"item_id": String(tool.get("item_id", "")),
+			"slot_id": LIVE2_MINING_TOOL_SLOT_ID,
+		},
+		action_context
+	)
+
+
 func _command_live2_equip_mining_tool(_arguments: Array[String]) -> Dictionary:
-	var result := ensure_live2_mining_tool_equipped()
-	return _mvp_command_result(result, "Добывающий инструмент экипирован")
+	return ensure_live2_mining_tool_equipped_async()
 
 
 func _command_live2_build_next_stage(_arguments: Array[String]) -> Dictionary:
@@ -665,26 +787,26 @@ func _command_live2_build_next_stage(_arguments: Array[String]) -> Dictionary:
 		var missing := {"success": false, "output": "Construction UI ещё не готов"}
 		_show_live2_action_feedback(String(missing["output"]), false)
 		return missing
-	if not _mvp_inventory_shell.has_method("build_next_stage_blocking"):
-		var unavailable := {"success": false, "output": "Construction action недоступен"}
+	if not _mvp_inventory_shell.has_method("build_next_stage_async"):
+		var unavailable := {"success": false, "output": "Construction async action недоступен"}
 		_show_live2_action_feedback(String(unavailable["output"]), false)
 		return unavailable
-	var result: Dictionary = _mvp_inventory_shell.build_next_stage_blocking()
-	var presented := (
-		{"success": true, "output": "Этап строительства отправлен", "details": result}
-		if bool(result.get("success", false))
-		else {
+	var result: Dictionary = _mvp_inventory_shell.build_next_stage_async()
+	if not bool(result.get("success", false)):
+		var failed := {
 			"success": false,
 			"output": "Стройка: %s" % String(result.get("error_code", "UNKNOWN")),
 			"details": result,
 		}
-	)
-	_show_live2_action_feedback(
-		String(presented.get("output", "")),
-		bool(presented.get("success", false)),
-		4200
-	)
-	return presented
+		_show_live2_action_feedback(String(failed["output"]), false, 4200)
+		return failed
+	_show_live2_action_feedback("Этап строительства отправлен · игра продолжается", true, 2600)
+	return {
+		"success": true,
+		"output": "Этап строительства отправлен",
+		"pending": true,
+		"details": result,
+	}
 
 
 func _command_live2_reconnect(_arguments: Array[String]) -> Dictionary:
@@ -914,6 +1036,11 @@ func create_m3_graphical_client_report() -> Dictionary:
 	report["playable_surface_biome"] = _mvp_surface_biome
 	report["playable_surface_eye_altitude_m"] = MVP_SURFACE_EYE_ALTITUDE_M
 	report["playable_surface_vertical_offset_m"] = _mvp_local_vertical_offset_m
+	report["live2_async_gameplay"] = {
+		"pending": _live2_pending_actions.size(),
+		"results": _live2_async_results,
+		"rejections": _live2_async_rejections,
+	}
 	report["playable_surface_anchor_direction"] = [
 		_mvp_surface_anchor_direction.x,
 		_mvp_surface_anchor_direction.y,
