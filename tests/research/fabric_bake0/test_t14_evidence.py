@@ -89,6 +89,8 @@ class EvidenceTests(unittest.TestCase):
         self.assertIn("T14_SNAPSHOT_INSTANCE_MISMATCH", runtime)
         self.assertIn("source_leaf_traversals", runtime)
         self.assertIn("recompile_events", runtime)
+        self.assertIn('for field in ["state_revision", "damage_revision", "detail_node_count", "detail_leaf_count"]:', runtime)
+        self.assertIn("U.is_json_integer(metadata.get(field))", runtime)
         self.assertEqual(acceptance.count("FF.build_families()"), 1)
         self.assertIn('REFINED_PATH := "root/bank/unit03/cannon"', acceptance)
         self.assertIn("physics_equivalent == 100", acceptance)
