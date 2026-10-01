@@ -1,0 +1,3 @@
+T14 Windows exact trigger.
+PRODUCT_HEAD=4323ceafc574506da0d281a5f0ba4ccfc370bb71
+BASE_T13_5=bb191ec4f610f1f879e48fa104ca3155464bbdc2
