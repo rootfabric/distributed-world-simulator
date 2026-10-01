@@ -14,14 +14,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: 4323ceafc574506da0d281a5f0ba4ccfc370bb71
+          ref: 69f90194ef536518fa3c34bb57903b4b69567643
           fetch-depth: 0
           persist-credentials: false
       - name: Verify exact T14 product subject
         shell: bash
         run: |
           set -Eeuo pipefail
-          product=4323ceafc574506da0d281a5f0ba4ccfc370bb71
+          product=69f90194ef536518fa3c34bb57903b4b69567643
           base=bb191ec4f610f1f879e48fa104ca3155464bbdc2
           test "$(git rev-parse HEAD)" = "$product"
           test "$(git merge-base HEAD "$base")" = "$base"
@@ -59,7 +59,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: 4323ceafc574506da0d281a5f0ba4ccfc370bb71
+          ref: 69f90194ef536518fa3c34bb57903b4b69567643
           fetch-depth: 0
           persist-credentials: false
 
@@ -67,7 +67,7 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
-          $product = '4323ceafc574506da0d281a5f0ba4ccfc370bb71'
+          $product = '69f90194ef536518fa3c34bb57903b4b69567643'
           $actual = (git rev-parse HEAD).Trim()
           if ($actual -ne $product) { throw "PRODUCT_HEAD_MISMATCH:$actual" }
           $tree = (git rev-parse 'HEAD^{tree}').Trim()
@@ -159,6 +159,6 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: t14-windows-exact-product-4323ceaf
+          name: t14-windows-exact-product-69f90194
           path: artifacts/fabric-r5-2-t14-windows/**
           retention-days: 90
