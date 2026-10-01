@@ -24,6 +24,9 @@ const CompactGameplaySnapshot = preload("res://scripts/runtime/networked_gamepla
 const FixedTickScheduler = preload("res://scripts/network/simulation/fixed_tick_scheduler.gd")
 const FixedTickInputBuffer = preload("res://scripts/network/simulation/fixed_tick_input_buffer.gd")
 const ConstructionBridge = preload("res://scripts/runtime/networked_gameplay/m3/m3_construction_replication_bridge.gd")
+const Live2ServerStallWatchdog = preload(
+	"res://scripts/runtime/networked_gameplay/m3/live2_server_stall_watchdog.gd"
+)
 
 const SCHEMA := "planet_simulator.m3_dedicated_server_runtime.v1"
 const M6_CHECKPOINT := "v16.10.5-persistence-m6-dedicated-recovery"
@@ -122,6 +125,7 @@ var _compact_movement_snapshot_failures := 0
 var _construction_bridge
 var _construction_events_published := 0
 var _construction_snapshots_published := 0
+var _live2_stall_watchdog
 
 func set_construction_bridge(bridge) -> Dictionary:
 	if _configured:
@@ -204,6 +208,12 @@ func setup(config: Dictionary) -> Dictionary:
 		_cleanup_setup_failure()
 		return started
 	_configured = true
+	if _debug_logging:
+		_live2_stall_watchdog = Live2ServerStallWatchdog.new()
+		var watchdog_start: Dictionary = _live2_stall_watchdog.start(OS.get_process_id())
+		if not bool(watchdog_start.get("success", false)):
+			_debug_event("STALL_WATCHDOG_START_FAILED", watchdog_start)
+			_live2_stall_watchdog = null
 	_last_movement_checkpoint_ms = Time.get_ticks_msec()
 	_last_movement_snapshot_tick = _server_tick
 	_last_debug_report_ms = _last_movement_checkpoint_ms
@@ -217,11 +227,23 @@ func _process(delta: float) -> void:
 	if not _configured or _boundary == null or _fatal_persistence_failure:
 		return
 	var process_started_us: int = Time.get_ticks_usec()
+	var process_probe := _stall_enter("SERVER_PROCESS", {
+		"server_tick": _server_tick,
+		"connected_peers": _peer_to_player.size(),
+		"messages_received": _messages_received,
+		"messages_sent": _messages_sent,
+	})
 	_telemetry.increment("server_process_iterations")
+	var poll_probe := _stall_enter("BOUNDARY_POLL", {
+		"server_tick": _server_tick,
+		"connected_peers": _peer_to_player.size(),
+	})
 	var polled: Dictionary = _boundary.poll_events(128)
+	_stall_exit(poll_probe)
 	if not bool(polled.get("success", false)):
 		_last_error_code = String(polled.get("error_code", "M3_SERVER_POLL_FAILED"))
 		_write_report("FAILED", false)
+		_stall_exit(process_probe)
 		return
 	for event_value in polled.get("details", {}).get("events", []):
 		if not event_value is Dictionary:
@@ -232,15 +254,49 @@ func _process(delta: float) -> void:
 		var session_id := String(event.get("session_id", ""))
 		if event_type == "MESSAGE_RECEIVED":
 			_messages_received += 1
-			_handle_message(peer_id, session_id, event.get("frame", {}).get("payload", {}))
+			var payload: Dictionary = Dictionary(
+				event.get("frame", {}).get("payload", {})
+			).duplicate(true)
+			var message_probe := _stall_enter(
+				"MESSAGE:%s" % String(payload.get("type", "UNKNOWN")),
+				_stall_context(
+					peer_id,
+					String(payload.get("operation_id", "")),
+					String(payload.get("type", "UNKNOWN"))
+				)
+			)
+			_handle_message(peer_id, session_id, payload)
+			_stall_exit(message_probe)
 		elif event_type == "PEER_DISCONNECTED":
+			var disconnect_probe := _stall_enter(
+				"PEER_DISCONNECT",
+				_stall_context(peer_id, "", "PEER_DISCONNECTED")
+			)
 			_handle_disconnect(peer_id, session_id)
+			_stall_exit(disconnect_probe)
+	var fixed_probe := _stall_enter("FIXED_SIMULATION", {
+		"server_tick": _server_tick,
+		"pending_inputs": _total_pending_input_count(),
+	})
 	_advance_fixed_simulation(delta)
+	_stall_exit(fixed_probe)
+	var snapshot_probe := _stall_enter("MOVEMENT_SNAPSHOT_PUBLICATION", {
+		"server_tick": _server_tick,
+		"movement_dirty": _movement_snapshot_dirty,
+	})
 	_maybe_publish_movement_snapshot()
+	_stall_exit(snapshot_probe)
+	var persistence_probe := _stall_enter("MOVEMENT_PERSISTENCE", {
+		"server_tick": _server_tick,
+		"movement_dirty": _movement_checkpoint_dirty,
+		"commands_since_checkpoint": _movement_commands_since_checkpoint,
+	})
 	_maybe_persist_movement_checkpoint()
+	_stall_exit(persistence_probe)
 	_update_runtime_telemetry()
 	var process_duration_ms: float = float(Time.get_ticks_usec() - process_started_us) / 1000.0
 	_telemetry.observe("server_process_duration_ms", process_duration_ms)
+	_stall_exit(process_probe)
 	if _debug_logging and Time.get_ticks_msec() - _last_debug_report_ms >= 2000:
 		_last_debug_report_ms = Time.get_ticks_msec()
 		_debug_event("SERVER_HEALTH", {
@@ -249,6 +305,10 @@ func _process(delta: float) -> void:
 			"checkpoint_generation":_checkpoint_generation,"movement_dirty":_movement_checkpoint_dirty,
 			"movement_commands_since_checkpoint":_movement_commands_since_checkpoint,
 			"last_error_code":_last_error_code,
+			"stall_watchdog": (
+				_live2_stall_watchdog.get_report()
+				if _live2_stall_watchdog != null else {}
+			),
 		})
 
 func _handle_message(peer_id: String, session_id: String, payload: Dictionary) -> void:
@@ -1280,6 +1340,36 @@ func _telemetry_sample() -> Dictionary:
 	return Dictionary(result.get("details", {}).get("sample", {})).duplicate(true) if bool(result.get("success", false)) else {}
 
 
+func _stall_enter(stage: String, context: Dictionary = {}) -> int:
+	if _live2_stall_watchdog == null:
+		return 0
+	return _live2_stall_watchdog.enter(stage, context)
+
+
+func _stall_exit(token: int) -> void:
+	if _live2_stall_watchdog == null or token < 1:
+		return
+	_live2_stall_watchdog.exit(token)
+
+
+func _stall_context(
+	peer_id: String,
+	operation_id: String,
+	command_type: String
+) -> Dictionary:
+	return {
+		"peer_id": peer_id,
+		"player_id": String(_peer_to_player.get(peer_id, "")),
+		"operation_id": operation_id,
+		"command_type": command_type,
+		"server_tick": _server_tick,
+		"messages_received": _messages_received,
+		"messages_sent": _messages_sent,
+		"moves": _moves,
+		"rejections": _rejections,
+	}
+
+
 func _debug_event(event_name: String, details: Dictionary = {}) -> void:
 	if not _debug_logging:
 		return
@@ -1454,6 +1544,10 @@ func get_report() -> Dictionary:
 			"scheduler": _fixed_tick_scheduler.get_report() if _fixed_tick_scheduler != null else {},
 			"input_buffers": _input_buffer_reports(),
 		},
+		"live2_server_stall_watchdog": (
+			_live2_stall_watchdog.get_report()
+			if _live2_stall_watchdog != null else {}
+		),
 		"movement_persistence": {
 			"mode":"THROTTLED_WORLD_CHECKPOINT",
 			"interval_ms":M7_MOVEMENT_CHECKPOINT_INTERVAL_MS,
@@ -1465,6 +1559,9 @@ func get_report() -> Dictionary:
 
 func stop() -> Dictionary:
 	set_process(false)
+	if _live2_stall_watchdog != null:
+		_live2_stall_watchdog.stop()
+		_live2_stall_watchdog = null
 	if _persistence_enabled and not _fatal_persistence_failure and _service != null and _recovery_coordinator != null:
 		var persisted: Dictionary = _persist_checkpoint("")
 		if not bool(persisted.get("success", false)):
