@@ -60,6 +60,9 @@ func setup(runtime, logical_player_id: String) -> Dictionary:
 	var outpost_setup: Dictionary = _outpost_adapter.setup(runtime)
 	if not bool(outpost_setup.get("success", false)):
 		_outpost_adapter = null
+	elif _outpost_adapter.has_signal("build_completed"):
+		if not _outpost_adapter.build_completed.is_connected(_on_async_build_completed):
+			_outpost_adapter.build_completed.connect(_on_async_build_completed)
 	_build_ui()
 	bridge.view_updated.connect(_on_view_updated)
 	bridge.command_completed.connect(_on_command_completed)
@@ -391,6 +394,49 @@ func _on_construction_updated(_bundle: Dictionary) -> void:
 	_refresh_construction_status()
 
 
+func build_next_stage_async() -> Dictionary:
+	if _outpost_adapter == null:
+		return _failure("V0_OUTPOST_CONSTRUCTION_NOT_CONFIGURED")
+	if _construction_pending:
+		return _failure("V0_OUTPOST_CONSTRUCTION_PENDING")
+	var before: Dictionary = _outpost_adapter.get_status()
+	if not bool(before.get("ready", false)):
+		_refresh_construction_status()
+		return _failure("V0_OUTPOST_CONSTRUCTION_SESSION_NOT_READY", before)
+	if bool(before.get("complete", false)):
+		_refresh_construction_status()
+		return _failure("V0_OUTPOST_ALREADY_COMPLETE", before)
+	if not _outpost_adapter.has_method("build_next_stage_async"):
+		return _failure("V0_OUTPOST_ASYNC_CONSTRUCTION_NOT_AVAILABLE")
+	_construction_pending = true
+	_refresh_construction_status()
+	var result: Dictionary = _outpost_adapter.build_next_stage_async()
+	_last_command_result = result.duplicate(true)
+	if not bool(result.get("success", false)):
+		_construction_pending = false
+		_last_error_code = String(result.get("error_code", "V0_OUTPOST_BUILD_SEND_REJECTED"))
+		if construction_status_label != null:
+			construction_status_label.text = "Ошибка отправки стройки: %s" % _last_error_code
+		_refresh_construction_status(false)
+		return result
+	if construction_status_label != null:
+		construction_status_label.text = "Команда отправлена · игра не блокируется"
+	return result
+
+
+func _on_async_build_completed(result: Dictionary) -> void:
+	_last_command_result = result.duplicate(true)
+	if not bool(result.get("success", false)):
+		_construction_pending = false
+		_last_error_code = String(result.get("error_code", "V0_OUTPOST_BUILD_REJECTED"))
+		if construction_status_label != null:
+			construction_status_label.text = "Ошибка стройки: %s" % _last_error_code
+		_refresh_construction_status(false)
+		return
+	if construction_status_label != null:
+		construction_status_label.text = "Сервер подтвердил этап · ожидаем репликацию…"
+
+
 func build_next_stage_blocking() -> Dictionary:
 	if _outpost_adapter == null:
 		return _failure("V0_OUTPOST_CONSTRUCTION_NOT_CONFIGURED")
@@ -424,7 +470,7 @@ func build_next_stage_blocking() -> Dictionary:
 
 
 func _on_build_next_stage_pressed() -> void:
-	build_next_stage_blocking()
+	build_next_stage_async()
 
 
 func _refresh_construction_status(overwrite_error: bool = true) -> void:
