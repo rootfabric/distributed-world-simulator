@@ -347,14 +347,16 @@ func _handle_message(payload: Dictionary) -> void:
 				_command_results[operation_id] = payload.duplicate(true)
 			else:
 				_async_command_results += 1
+				var tracked_async := _async_pending_operations.has(operation_id)
 				_async_pending_operations.erase(operation_id)
 				var async_result: Dictionary = payload.duplicate(true)
-				async_result["async"] = true
+				async_result["async"] = tracked_async
 				if String(payload.get("status", "")) != "SUCCEEDED":
 					_async_command_rejections += 1
 					_last_error_code = String(payload.get("error_code", "ASYNC_COMMAND_REJECTED"))
 					_debug_event("ASYNC_COMMAND_REJECTED", payload)
-				command_result_received.emit(async_result)
+				if tracked_async:
+					command_result_received.emit(async_result)
 		"LEAVE_ACK":
 			_observe_operation_latency(String(payload.get("operation_id", "")))
 			_leave_acknowledged = true
