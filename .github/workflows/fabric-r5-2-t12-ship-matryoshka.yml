@@ -30,7 +30,7 @@ jobs:
           git diff --check "$base" HEAD
           bash -n RUN_FABRIC_R5_2_T14_TESTS.sh
           python3 -m unittest discover -s tests/research/fabric_bake0 -p test_t14_evidence.py -v
-          python3 - ${{'PY'
+          python3 - <<'PY'
           from pathlib import Path
           runtime = Path('scripts/research/fabric_bake0/r5_t14_observation_refinement_runtime_v1.gd').read_text()
           acceptance = Path('tests/research/fabric_bake0/fabric_r5_2_t14_observation_refinement_acceptance.gd').read_text()
