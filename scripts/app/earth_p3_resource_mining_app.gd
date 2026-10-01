@@ -311,6 +311,7 @@ func _handle_live2_async_command_extension(
 	result: Dictionary,
 	context: Dictionary
 ) -> void:
+	super._handle_live2_async_command_extension(result, context)
 	var kind := String(context.get("kind", ""))
 	if kind == "mine_after_equip":
 		if String(result.get("status", "")) == "SUCCEEDED":
