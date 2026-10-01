@@ -142,6 +142,51 @@ func _request_resource_resync(reason: String) -> void:
 		_resource_resync_requests_sent += 1
 
 
+func execute_resource_mine_async(
+	resource_node_id: String,
+	requested_units: int = 1,
+	operation_id: String = ""
+) -> Dictionary:
+	if not is_ready():
+		return _failure("V0_P3_CLIENT_NOT_READY")
+	var op := operation_id.strip_edges()
+	if op.is_empty():
+		op = "operation/v0-p3/%s/mine/async/%d/%d/%d" % [
+			_logical_player_id,
+			OS.get_process_id(),
+			Time.get_ticks_msec(),
+			_message_sequence + 1,
+		]
+	if _async_pending_operations.has(op) or _awaited_command_ids.has(op):
+		return _failure("ASYNC_OPERATION_ALREADY_PENDING", {"operation_id": op})
+	if not _send_on_channel(
+		"RESOURCE_COMMAND",
+		{
+			"logical_player_id": _logical_player_id,
+			"ownership_epoch": _ownership_epoch,
+			"operation_id": op,
+			"payload": {
+				"resource_node_id": resource_node_id.strip_edges().to_lower(),
+				"requested_units": requested_units,
+			},
+		},
+		RealtimeChannelPolicy.CONTROL,
+		"RELIABLE_ORDERED",
+		true
+	):
+		_discard_operation_timer(op)
+		return _failure("V0_P3_RESOURCE_COMMAND_SEND_FAILED")
+	_async_pending_operations[op] = {
+		"command_type": "resource.mine",
+		"started_ms": Time.get_ticks_msec(),
+	}
+	return _success({
+		"operation_id": op,
+		"command_type": "resource.mine",
+		"pending": true,
+	})
+
+
 func execute_resource_mine_blocking(
 	resource_node_id: String,
 	requested_units: int = 1,
