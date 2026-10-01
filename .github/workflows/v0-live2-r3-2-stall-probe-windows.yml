@@ -1,0 +1,188 @@
+name: V0 LIVE.2 R3.2 Stall Probe Windows
+
+on:
+  push:
+    branches:
+      - control/v0-live2-r3-2-stall-probe-windows-r1
+
+permissions:
+  contents: read
+
+concurrency:
+  group: v0-live2-r3-2-stall-probe-windows
+  cancel-in-progress: true
+
+env:
+  PRODUCT_HEAD: 7340cb6c4db95ffbec3640ee59dfec7b21f42094
+  PRODUCT_TREE: 1511a08fc0e13fbf6177eb127bdafa2ce73eb24e
+  MAIN_FENCE: 323845379490b2acda1844c3799bb0275d8c2674
+  GODOT_BIN: C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe
+  PYTHONUTF8: '1'
+  PYTHONDONTWRITEBYTECODE: '1'
+  BREAKPOINT_RUNTIME_DISABLED: '1'
+  GODOT_SILENCE_ROOT_WARNING: '1'
+  PLANET_SIMULATOR_INVENTORY_PROFILE: planet_default
+
+jobs:
+  stall-probe:
+    name: LIVE2 R3.2 exact Windows stall probe
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 50
+    steps:
+      - name: Checkout frozen R3.2
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.PRODUCT_HEAD }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Exact identity and host preflight
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          if ((git rev-parse HEAD).Trim() -ne $env:PRODUCT_HEAD) { throw 'HEAD_MISMATCH' }
+          if ((git rev-parse 'HEAD^{tree}').Trim() -ne $env:PRODUCT_TREE) { throw 'TREE_MISMATCH' }
+          if ((git status --porcelain --untracked-files=no)) { throw 'TRACKED_DIRTY_BEFORE' }
+          git fetch origin "+refs/heads/main:refs/remotes/origin/main"
+          if ((git rev-parse origin/main).Trim() -ne $env:MAIN_FENCE) { throw 'MAIN_MOVED' }
+
+          $sha=(Get-FileHash $env:GODOT_BIN -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($sha -ne '3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5') {
+            throw "GODOT_SHA_MISMATCH:$sha"
+          }
+          $ver=& $env:GODOT_BIN --version
+          if ($ver -notmatch '4\.7\.1.*double.*a13da4feb') { throw "GODOT_VERSION_MISMATCH:$ver" }
+
+          $foreign=@(Get-Process -ErrorAction SilentlyContinue | Where-Object { $_.ProcessName -like 'godot*' })
+          if ($foreign.Count -gt 0) { throw ('FOREIGN_GODOT_PROCESS:' + (($foreign | Select-Object -ExpandProperty Id) -join ',')) }
+
+          New-Item -ItemType Directory -Force artifacts\live2-r3-2 | Out-Null
+          [ordered]@{
+            head=(git rev-parse HEAD).Trim()
+            tree=(git rev-parse 'HEAD^{tree}').Trim()
+            main=(git rev-parse origin/main).Trim()
+            godot_version=$ver
+            godot_sha256=$sha
+          } | ConvertTo-Json | Set-Content artifacts\live2-r3-2\preflight.json -Encoding UTF8
+
+      - name: Parse external watchdog PowerShell
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          $tokens=$null
+          $errors=$null
+          [System.Management.Automation.Language.Parser]::ParseFile(
+            (Resolve-Path .\tools\live2\watch_live2_server_stall.ps1),
+            [ref]$tokens,
+            [ref]$errors
+          ) | Out-Null
+          if (@($errors).Count -ne 0) {
+            $errors | Format-List *
+            throw "WATCHDOG_POWERSHELL_PARSE_FAILED:$(@($errors).Count)"
+          }
+
+      - name: Cold import
+        shell: pwsh
+        timeout-minutes: 10
+        run: |
+          $ErrorActionPreference='Stop'
+          if (Test-Path .godot) { Remove-Item .godot -Recurse -Force }
+          & $env:GODOT_BIN --headless --path . --editor --import --quit *> artifacts\live2-r3-2\import.log
+          if ($LASTEXITCODE -ne 0) {
+            Get-Content artifacts\live2-r3-2\import.log -Tail 300
+            throw "IMPORT_FAILED:$LASTEXITCODE"
+          }
+          if (-not (Test-Path .godot\global_script_class_cache.cfg)) { throw 'CLASS_CACHE_MISSING' }
+
+      - name: R3.2 stall watchdog and async interaction UX
+        shell: pwsh
+        timeout-minutes: 10
+        run: |
+          $ErrorActionPreference='Stop'
+          & $env:GODOT_BIN --headless --path . --script res://tests/runtime/test_v0_live2_r3_2_stall_probe.gd *> artifacts\live2-r3-2\r3-2.log
+          if ($LASTEXITCODE -ne 0) {
+            Get-Content artifacts\live2-r3-2\r3-2.log -Tail 350
+            throw "R3_2_FAILED:$LASTEXITCODE"
+          }
+
+      - name: R3.1 async gameplay compatibility
+        shell: pwsh
+        timeout-minutes: 8
+        run: |
+          $ErrorActionPreference='Stop'
+          & $env:GODOT_BIN --headless --path . --script res://tests/runtime/test_v0_live2_r3_1_async_gameplay.gd *> artifacts\live2-r3-2\r3-1.log
+          if ($LASTEXITCODE -ne 0) { Get-Content artifacts\live2-r3-2\r3-1.log -Tail 300; throw "R3_1_FAILED:$LASTEXITCODE" }
+
+      - name: LIVE2 human bridge compatibility
+        shell: pwsh
+        timeout-minutes: 8
+        run: |
+          $ErrorActionPreference='Stop'
+          & $env:GODOT_BIN --headless --path . --script res://tests/runtime/test_v0_live2_human_gameplay_bridge.gd *> artifacts\live2-r3-2\human-bridge.log
+          if ($LASTEXITCODE -ne 0) { Get-Content artifacts\live2-r3-2\human-bridge.log -Tail 300; throw "HUMAN_BRIDGE_FAILED:$LASTEXITCODE" }
+
+      - name: R3 inventory ownership
+        shell: pwsh
+        timeout-minutes: 8
+        run: |
+          $ErrorActionPreference='Stop'
+          & $env:GODOT_BIN --headless --path . --script res://tests/runtime/test_v0_live2_r3_inventory_ownership.gd *> artifacts\live2-r3-2\inventory.log
+          if ($LASTEXITCODE -ne 0) { Get-Content artifacts\live2-r3-2\inventory.log -Tail 300; throw "R3_INVENTORY_FAILED:$LASTEXITCODE" }
+
+      - name: R3 reliability
+        shell: pwsh
+        timeout-minutes: 8
+        run: |
+          $ErrorActionPreference='Stop'
+          & $env:GODOT_BIN --headless --path . --script res://tests/runtime/test_v0_live2_r3_reliability.gd *> artifacts\live2-r3-2\reliability.log
+          if ($LASTEXITCODE -ne 0) { Get-Content artifacts\live2-r3-2\reliability.log -Tail 300; throw "R3_RELIABILITY_FAILED:$LASTEXITCODE" }
+
+      - name: R2 rollover compatibility
+        shell: pwsh
+        timeout-minutes: 8
+        run: |
+          $ErrorActionPreference='Stop'
+          & $env:GODOT_BIN --headless --path . --script res://tests/network/test_v0_live2_enet_rollover.gd *> artifacts\live2-r3-2\rollover.log
+          if ($LASTEXITCODE -ne 0) { Get-Content artifacts\live2-r3-2\rollover.log -Tail 300; throw "ROLLOVER_FAILED:$LASTEXITCODE" }
+
+      - name: NX2 physical delivery contract
+        shell: pwsh
+        timeout-minutes: 8
+        run: |
+          $ErrorActionPreference='Stop'
+          & $env:GODOT_BIN --headless --path . --script res://tests/network/test_nx2_realtime_traffic_separation.gd *> artifacts\live2-r3-2\nx2.log
+          if ($LASTEXITCODE -ne 0) { Get-Content artifacts\live2-r3-2\nx2.log -Tail 300; throw "NX2_FAILED:$LASTEXITCODE" }
+
+      - name: Isolated P2 shared-state convergence
+        shell: pwsh
+        timeout-minutes: 15
+        run: |
+          $ErrorActionPreference='Stop'
+          & $env:GODOT_BIN --headless --path . --script res://tests/runtime/test_v0_p2_live_shared_state_convergence.gd *> artifacts\live2-r3-2\p2.log
+          if ($LASTEXITCODE -ne 0) { Get-Content artifacts\live2-r3-2\p2.log -Tail 300; throw "P2_FAILED:$LASTEXITCODE" }
+
+      - name: Final exact clean check
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          if ((git rev-parse HEAD).Trim() -ne $env:PRODUCT_HEAD) { throw 'IDENTITY_CHANGED' }
+          if ((git rev-parse 'HEAD^{tree}').Trim() -ne $env:PRODUCT_TREE) { throw 'TREE_CHANGED' }
+          if ((git status --porcelain --untracked-files=no)) { throw 'TRACKED_DIRTY_AFTER' }
+          git fetch origin "+refs/heads/main:refs/remotes/origin/main"
+          if ((git rev-parse origin/main).Trim() -ne $env:MAIN_FENCE) { throw 'MAIN_MOVED_DURING_RUN' }
+          [ordered]@{
+            passed=$true
+            subject_head=$env:PRODUCT_HEAD
+            subject_tree=$env:PRODUCT_TREE
+            main_head=$env:MAIN_FENCE
+            tracked_clean=$true
+          } | ConvertTo-Json | Set-Content artifacts\live2-r3-2\manifest.json -Encoding UTF8
+
+      - name: Upload R3.2 evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v0-live2-r3-2-stall-probe-${{ github.run_id }}-${{ github.run_attempt }}
+          path: artifacts/live2-r3-2/
+          if-no-files-found: error
+          retention-days: 90
