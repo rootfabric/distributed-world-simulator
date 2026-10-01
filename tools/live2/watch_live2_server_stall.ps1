@@ -77,7 +77,7 @@ while ($true) {
         process_id = $ProcessId
         alive = $true
         cpu_seconds = [math]::Round([double]$process.CPU, 4)
-        cpu_seconds_per_wall_second = (
+        cpu_seconds_per_wall_second = $(
             if ($null -eq $cpuRate) { $null }
             else { [math]::Round($cpuRate, 4) }
         )
