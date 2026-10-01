@@ -151,6 +151,12 @@ func register_runtime_commands(registry, owner_id: String) -> void:
 		"category": "network",
 	}, Callable(self, "_command_live2_reconnect"))
 	_register_command(registry, owner_id, {
+		"id": "network.jitter.snapshot",
+		"description": "Показать read-only local prediction и remote interpolation метрики.",
+		"usage": "network.jitter.snapshot",
+		"category": "network",
+	}, Callable(self, "_command_live2_jitter_snapshot"))
+	_register_command(registry, owner_id, {
 		"id": "player.spectator.toggle",
 		"description": "Отделить spectator-камеру от тела игрока или вернуться в тело.",
 		"usage": "player.spectator.toggle",
@@ -806,6 +812,60 @@ func _command_live2_build_next_stage(_arguments: Array[String]) -> Dictionary:
 		"output": "Этап строительства отправлен",
 		"pending": true,
 		"details": result,
+	}
+
+
+func _command_live2_jitter_snapshot(_arguments: Array[String]) -> Dictionary:
+	if m3_multiplayer_client_runtime == null:
+		return {"success": false, "output": "Network runtime недоступен"}
+	var runtime_report: Dictionary = m3_multiplayer_client_runtime.get_report()
+	var client_prediction: Dictionary = Dictionary(
+		runtime_report.get("client_prediction", {})
+	)
+	var prediction: Dictionary = Dictionary(client_prediction.get("runtime", {}))
+	var local := {
+		"last_error_m": float(prediction.get("last_error_m", 0.0)),
+		"maximum_error_m": float(prediction.get("maximum_error_m", 0.0)),
+		"correction_mode": String(prediction.get("last_correction_mode", "NONE")),
+		"hard_corrections": int(prediction.get("hard_corrections", 0)),
+		"history_miss_resets": int(prediction.get("history_miss_resets", 0)),
+		"ticks_replayed": int(prediction.get("ticks_replayed", 0)),
+		"visual_offset_m": float(prediction.get("visual_offset_m", 0.0)),
+		"submit_failures": int(client_prediction.get("submit_failures", 0)),
+		"reconcile_failures": int(client_prediction.get("reconcile_failures", 0)),
+	}
+	var earth_report: Dictionary = create_m3_graphical_client_report()
+	var remote_reports: Dictionary = Dictionary(
+		earth_report.get("remote_presenters", {})
+	)
+	var remotes: Dictionary = {}
+	for logical_id_value in remote_reports.keys():
+		var logical_id := String(logical_id_value)
+		var remote: Dictionary = Dictionary(remote_reports[logical_id_value])
+		var interpolation: Dictionary = Dictionary(remote.get("interpolation", {}))
+		remotes[logical_id] = {
+			"mode": String(remote.get("interpolation_mode", "UNKNOWN")),
+			"buffer_size": int(interpolation.get("buffer_size", 0)),
+			"interpolation_samples": int(interpolation.get("interpolation_samples", 0)),
+			"extrapolation_samples": int(interpolation.get("extrapolation_samples", 0)),
+			"hold_samples": int(interpolation.get("hold_samples", 0)),
+			"buffering_samples": int(interpolation.get("buffering_samples", 0)),
+			"identity_resets": int(interpolation.get("identity_resets", 0)),
+			"teleport_segments": int(interpolation.get("teleport_segments", 0)),
+			"max_snapshot_interval_ms": int(remote.get("max_snapshot_interval_ms", 0)),
+			"long_render_frames": int(remote.get("long_render_frames", 0)),
+			"max_render_delta_ms": float(remote.get("max_render_delta_ms", 0.0)),
+		}
+	var snapshot := {
+		"local": local,
+		"remotes": remotes,
+		"connection_state": _live2_connection_state,
+		"async_pending": _live2_pending_actions.size(),
+	}
+	return {
+		"success": true,
+		"output": JSON.stringify(snapshot),
+		"jitter": snapshot,
 	}
 
 
