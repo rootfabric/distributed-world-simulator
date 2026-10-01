@@ -213,8 +213,13 @@ func _handle_construction_command(peer_id: String, session_id: String, payload: 
 		_send_result(peer_id, operation_id, "CONSTRUCTION_COMMAND", _failure("CONSTRUCTION_COMMAND_REQUIRED"))
 		return
 	var logical_id := String(_peer_to_player.get(peer_id, ""))
+	var stage_context := _stall_context(peer_id, operation_id, "CONSTRUCTION_COMMAND")
+	var before_probe := _stall_enter("CONSTRUCTION:BEFORE_ITEM_SNAPSHOT", stage_context)
 	var before_item_snapshot: Dictionary = _service.create_canonical_item_graph_snapshot()
+	_stall_exit(before_probe)
+	var submit_probe := _stall_enter("CONSTRUCTION:GATEWAY_SUBMIT", stage_context)
 	var submitted: Dictionary = _construction_bridge.submit_player_command(logical_id, Dictionary(command_value))
+	_stall_exit(submit_probe)
 	if not bool(submitted.get("success", false)):
 		_send_result(peer_id, operation_id, "CONSTRUCTION_COMMAND", submitted)
 		_rejections += 1
@@ -231,13 +236,17 @@ func _handle_construction_command(peer_id: String, session_id: String, payload: 
 	# The cross-domain commit has succeeded at this point. From here onward all
 	# failures are replication failures and must recover with authoritative
 	# snapshots; they must never turn the committed build into a rejection.
+	var after_probe := _stall_enter("CONSTRUCTION:AFTER_ITEM_SNAPSHOT", stage_context)
 	var after_item_snapshot: Dictionary = _service.create_canonical_item_graph_snapshot()
+	_stall_exit(after_probe)
 	var item_delta: Dictionary = {}
 	var item_snapshot_fallback_required := false
+	var delta_probe := _stall_enter("CONSTRUCTION:ITEM_DELTA_BUILD", stage_context)
 	var item_delta_result: Dictionary = CanonicalItemGraphDelta.create(
 		before_item_snapshot,
 		after_item_snapshot
 	)
+	_stall_exit(delta_probe)
 	if not bool(item_delta_result.get("success", false)):
 		item_snapshot_fallback_required = true
 		_item_graph_delta_build_failures += 1
@@ -256,6 +265,7 @@ func _handle_construction_command(peer_id: String, session_id: String, payload: 
 		_v0_p4_construction_snapshot_fallbacks += 1
 		_last_error_code = "V0_P4_CONSTRUCTION_EVENT_BUILD_FAILED"
 
+	var send_probe := _stall_enter("CONSTRUCTION:RESULT_SEND", stage_context)
 	var result_sent := _send_result(
 		peer_id,
 		operation_id,
@@ -263,6 +273,8 @@ func _handle_construction_command(peer_id: String, session_id: String, payload: 
 		submitted,
 		{} if item_snapshot_fallback_required else item_delta
 	)
+	_stall_exit(send_probe)
+	var replication_probe := _stall_enter("CONSTRUCTION:REPLICATION", stage_context)
 	if item_snapshot_fallback_required:
 		_broadcast_item_snapshot("V0_P4_CONSTRUCTION_ITEM_DELTA_FALLBACK")
 	else:
@@ -280,6 +292,7 @@ func _handle_construction_command(peer_id: String, session_id: String, payload: 
 
 	_v0_p4_publication_batches += 1
 	_capture_two_connected_checksum()
+	_stall_exit(replication_probe)
 	if result_sent:
 		_mark_operation_delivered(operation_id)
 	_write_report("READY", false)
@@ -350,8 +363,12 @@ func _handle_resource_command(peer_id: String, session_id: String, payload: Dict
 		return
 
 	var logical_id := String(_peer_to_player.get(peer_id, ""))
+	var stage_context := _stall_context(peer_id, operation_id, "resource.mine")
+	var before_probe := _stall_enter("RESOURCE:BEFORE_SNAPSHOTS", stage_context)
 	var before_item_snapshot: Dictionary = _service.create_canonical_item_graph_snapshot()
 	var before_resource_snapshot: Dictionary = _service.create_resource_mining_snapshot()
+	_stall_exit(before_probe)
+	var execute_probe := _stall_enter("RESOURCE:EXECUTE", stage_context)
 	var result: Dictionary = _service.handle_resource_mine(
 		logical_id,
 		session_id,
@@ -359,7 +376,11 @@ func _handle_resource_command(peer_id: String, session_id: String, payload: Dict
 		operation_id,
 		Dictionary(command_payload_value)
 	)
-	if not _persist_command_result(operation_id, "resource.mine", logical_id, result):
+	_stall_exit(execute_probe)
+	var persist_probe := _stall_enter("RESOURCE:PERSIST_RESULT", stage_context)
+	var persisted_result := _persist_command_result(operation_id, "resource.mine", logical_id, result)
+	_stall_exit(persist_probe)
+	if not persisted_result:
 		_send_result(peer_id, operation_id, "resource.mine", _failure("M6_DURABLE_COMMIT_FAILED"))
 		return
 
@@ -368,6 +389,7 @@ func _handle_resource_command(peer_id: String, session_id: String, payload: Dict
 	var resource_delta: Dictionary = {}
 	var resource_fallback_required := false
 	if bool(result.get("success", false)) and not _is_replay_result(result):
+		var after_probe := _stall_enter("RESOURCE:AFTER_SNAPSHOTS", stage_context)
 		var after_item_snapshot: Dictionary = _service.create_canonical_item_graph_snapshot()
 		var item_delta_result: Dictionary = CanonicalItemGraphDelta.create(
 			before_item_snapshot,
@@ -381,6 +403,8 @@ func _handle_resource_command(peer_id: String, session_id: String, payload: Dict
 			item_delta = Dictionary(item_delta_result.get("details", {}).get("delta", {})).duplicate(true)
 
 		var after_resource_snapshot: Dictionary = _service.create_resource_mining_snapshot()
+		_stall_exit(after_probe)
+		var delta_probe := _stall_enter("RESOURCE:DELTA_BUILD", stage_context)
 		var resource_delta_result: Dictionary = ResourceMiningDelta.create(
 			before_resource_snapshot,
 			after_resource_snapshot
@@ -397,6 +421,7 @@ func _handle_resource_command(peer_id: String, session_id: String, payload: Dict
 	var result_sent := _send_result(peer_id, operation_id, "resource.mine", result, item_delta)
 	if bool(result.get("success", false)):
 		if not _is_replay_result(result):
+			var replication_probe := _stall_enter("RESOURCE:REPLICATION", stage_context)
 			if item_fallback_required:
 				_broadcast_item_snapshot("RESOURCE_MINE_ITEM_DELTA_FALLBACK")
 			else:
@@ -407,6 +432,7 @@ func _handle_resource_command(peer_id: String, session_id: String, payload: Dict
 				_broadcast_resource_delta(resource_delta)
 			_broadcast_snapshot("RESOURCE_MINED", RealtimeChannelPolicy.RESYNC, "RELIABLE_ORDERED")
 			_capture_two_connected_checksum()
+			_stall_exit(replication_probe)
 	else:
 		_rejections += 1
 		_resource_rejections += 1
