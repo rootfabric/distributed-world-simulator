@@ -1,0 +1,95 @@
+{
+  "schema": "fabric.r5_2.t13_5.closure_evidence.v1",
+  "status": "FRESH_REVIEW_AND_VERIFIER_PASS",
+  "base_t13": "b41b07a988726e6c7a18a39819183e2a9ce6aefe",
+  "product_subject": {
+    "head": "2d8ad372af509f256fd648078c5cab2f0f776ed0",
+    "tree": "894458702939a61bc5bf2b45f117043126e7b0f8"
+  },
+  "fresh_review_r2": {
+    "verdict": "PASS",
+    "review_id": 5367484727,
+    "blocking_findings": 0
+  },
+  "exact_windows_r3": {
+    "run": 36690744515,
+    "control_scope_job": 109807107158,
+    "exact_windows_job": 109807167095,
+    "conclusion": "success",
+    "assertions_per_sample": 777,
+    "deterministic_hash": "5386816670e55fb1c6f45885a6c5862ddac5c9059b0681902c748d7e674abe1b",
+    "artifact_id": 11086055675,
+    "artifact_digest": "sha256:c3cd0874f2d275a794dafb9199a28bf1de6ca92c0412cc8cb41baf37d2a79c1f",
+    "t13_regression_assertions": 1377,
+    "t12_regression_assertions": 8386
+  },
+  "fresh_independent_verifier": {
+    "verdict": "VERIFIED",
+    "verifier_head": "617b5af55caa151f85d9723c7ddf249c8da60b7c",
+    "verifier_tree": "22dd0a51d44dccfa4d338ee30821c35d78cd8394",
+    "product_diff": 0,
+    "run": 36728672908,
+    "source_job": 109932128319,
+    "exact_windows_job": 109932231609,
+    "artifact_id": 11110915907,
+    "artifact_digest": "sha256:c5f482325d97420ca39e8e37f237c01570455fd9a4bbfc6ad7c83d5cc5e5461c",
+    "deterministic_hash": "5386816670e55fb1c6f45885a6c5862ddac5c9059b0681902c748d7e674abe1b"
+  },
+  "claims": {
+    "instances": 100,
+    "family_counts": {
+      "family-a": 40,
+      "family-b": 30,
+      "family-c": 20,
+      "family-d": 10
+    },
+    "family_registrations": 5,
+    "family_aliases": 1,
+    "unique_family_models": 4,
+    "compile_events": 42,
+    "full_family_baseline_compile_events": 120,
+    "cross_family_compile_events_avoided": 78,
+    "no_cache_instance_compile_events": 3000,
+    "combined_no_cache_events_avoided": 2958,
+    "subtree_occurrences": 120,
+    "unique_subtree_hashes": 42,
+    "shared_subtree_hashes": 29,
+    "subtree_intern_events": 42,
+    "subtree_reuse_hits": 78,
+    "max_family_reuse": 4,
+    "runtime_steps": 200,
+    "evaluations": 1580,
+    "boundary_calls": 30020,
+    "compiled_group_visits": 18960,
+    "leaf_traversals": 0,
+    "damaged_instance": "family-instance-058",
+    "damaged_family": "family-b",
+    "damage_revision": 1,
+    "healthy_equivalent_after_damage": 99,
+    "damaged_diverged": true,
+    "all_models_intact": true
+  },
+  "known_non_product_failures": [
+    {
+      "class": "ACCEPTANCE_PARSE_DEFECT",
+      "run": 36663028924,
+      "job": 109721728433,
+      "root_cause": "Godot type inference on untyped registry method return"
+    },
+    {
+      "class": "CONTROL_CARRIER_DEFECT",
+      "root_cause": "verifier carrier heredoc syntax before R2 retrigger"
+    },
+    {
+      "class": "CONTROL_TOOLING_DEFECT",
+      "run": 36690667888,
+      "job": 109807017124,
+      "root_cause": "generic B0.4-C Windows workflow missing Get-FileHash before runtime"
+    }
+  ],
+  "closure_policy": {
+    "runtime_subject_frozen": true,
+    "closure_commits_may_change_docs_and_validation_only": true,
+    "retest_required_if_runtime_fixture_or_acceptance_changes": true
+  }
+}
