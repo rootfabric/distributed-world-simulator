@@ -505,6 +505,24 @@ func m3_apply_test_input_offset(offset: Vector3) -> Dictionary:
 	return m3_multiplayer_client_runtime.move_blocking(offset.x, offset.z)
 
 
+func m4_execute_item_command_async(
+	command_type: String,
+	payload: Dictionary,
+	operation_id: String = ""
+) -> Dictionary:
+	if not _m3_attached or m3_multiplayer_client_runtime == null:
+		return {"success": false, "error_code": "M4_EARTH_SPECTATOR_NOT_READY"}
+	if not m3_multiplayer_client_runtime.has_method("execute_item_command_async"):
+		return {"success": false, "error_code": "M4_ASYNC_COMMAND_RUNTIME_REQUIRED"}
+	var result: Dictionary = m3_multiplayer_client_runtime.execute_item_command_async(
+		command_type, payload, operation_id
+	)
+	_m4_item_commands += 1
+	if not bool(result.get("success", false)):
+		_m4_item_rejections += 1
+	return result
+
+
 func m4_execute_item_command(
 	command_type: String,
 	payload: Dictionary,
