@@ -806,10 +806,19 @@ func _command_live2_build_next_stage(_arguments: Array[String]) -> Dictionary:
 		}
 		_show_live2_action_feedback(String(failed["output"]), false, 4200)
 		return failed
+	var operation_id := String(result.get("details", {}).get("operation_id", ""))
+	if not operation_id.is_empty():
+		_track_live2_async_action(operation_id, {
+			"kind": "construction_stage",
+			"pending_text": "Этап строительства отправлен · игра продолжается",
+			"success_text": "Этап строительства подтверждён сервером",
+			"error_prefix": "Стройка",
+		})
 	_show_live2_action_feedback("Этап строительства отправлен · игра продолжается", true, 2600)
 	return {
 		"success": true,
 		"output": "Этап строительства отправлен",
+		"operation_id": operation_id,
 		"pending": true,
 		"details": result,
 	}
