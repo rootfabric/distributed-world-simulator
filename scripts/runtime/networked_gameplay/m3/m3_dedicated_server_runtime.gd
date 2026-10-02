@@ -409,6 +409,7 @@ func _handle_resource_command(peer_id: String, session_id: String, payload: Dict
 			before_resource_snapshot,
 			after_resource_snapshot
 		)
+		_stall_exit(delta_probe)
 		if not bool(resource_delta_result.get("success", false)):
 			resource_fallback_required = true
 			_resource_delta_build_failures += 1
@@ -418,7 +419,9 @@ func _handle_resource_command(peer_id: String, session_id: String, payload: Dict
 				resource_delta_result.get("details", {}).get("delta", {})
 			).duplicate(true)
 
+	var send_probe := _stall_enter("RESOURCE:RESULT_SEND", stage_context)
 	var result_sent := _send_result(peer_id, operation_id, "resource.mine", result, item_delta)
+	_stall_exit(send_probe)
 	if bool(result.get("success", false)):
 		if not _is_replay_result(result):
 			var replication_probe := _stall_enter("RESOURCE:REPLICATION", stage_context)
