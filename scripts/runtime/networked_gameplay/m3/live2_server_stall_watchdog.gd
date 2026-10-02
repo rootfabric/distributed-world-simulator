@@ -16,6 +16,7 @@ var _soft_reports := 0
 var _hard_reports := 0
 var _max_elapsed_ms := 0
 var _max_stage := ""
+var _unbalanced_scope_repairs := 0
 var _started := false
 
 
@@ -29,6 +30,7 @@ func start(process_id: int = 0) -> Dictionary:
 	_hard_reports = 0
 	_max_elapsed_ms = 0
 	_max_stage = ""
+	_unbalanced_scope_repairs = 0
 	var error := _thread.start(Callable(self, "_worker"))
 	if error != OK:
 		return _failure("STALL_WATCHDOG_THREAD_START_FAILED", {"error": error})
@@ -63,6 +65,7 @@ func exit(token: int) -> Dictionary:
 	var now_ms := Time.get_ticks_msec()
 	var elapsed := 0
 	var stage := ""
+	var repaired_children := 0
 	_mutex.lock()
 	var index := -1
 	for offset in range(_stack.size()):
@@ -74,12 +77,23 @@ func exit(token: int) -> Dictionary:
 		var entry: Dictionary = Dictionary(_stack[index])
 		elapsed = maxi(now_ms - int(entry.get("started_ms", now_ms)), 0)
 		stage = String(entry.get("stage", ""))
-		_stack.remove_at(index)
+		# If a parent scope returns, every nested scope above it must also have
+		# returned. Remove leaked child scopes defensively so diagnostics cannot
+		# manufacture a permanent false stall after normal control flow resumes.
+		repaired_children = maxi(_stack.size() - index - 1, 0)
+		if repaired_children > 0:
+			_unbalanced_scope_repairs += repaired_children
+		for remove_index in range(_stack.size() - 1, index - 1, -1):
+			_stack.remove_at(remove_index)
 		if elapsed > _max_elapsed_ms:
 			_max_elapsed_ms = elapsed
 			_max_stage = stage
 	_mutex.unlock()
-	return _success({"elapsed_ms": elapsed, "stage": stage})
+	return _success({
+		"elapsed_ms": elapsed,
+		"stage": stage,
+		"repaired_children": repaired_children,
+	})
 
 
 func stop() -> Dictionary:
@@ -111,6 +125,7 @@ func get_report() -> Dictionary:
 		"hard_reports": _hard_reports,
 		"max_elapsed_ms": _max_elapsed_ms,
 		"max_stage": _max_stage,
+		"unbalanced_scope_repairs": _unbalanced_scope_repairs,
 	}
 	_mutex.unlock()
 	return report
