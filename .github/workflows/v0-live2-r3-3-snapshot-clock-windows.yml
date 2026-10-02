@@ -1,0 +1,164 @@
+name: V0 LIVE.2 R3.3 Snapshot Clock Windows
+
+on:
+  push:
+    branches:
+      - control/v0-live2-r3-3-snapshot-clock-windows-r1
+
+permissions:
+  contents: read
+
+concurrency:
+  group: v0-live2-r3-3-snapshot-clock-windows
+  cancel-in-progress: false
+
+env:
+  PRODUCT_HEAD: 4e94464e7221ab96471d09b8f38c67ad769161fd
+  PRODUCT_TREE: 9cebe250fb43a13e9e5e338148197cfd65a3adbc
+  BASE_PRODUCT: 9299ef3e088d02eeee3b3eafaef5d256c782837e
+  MAIN_REFERENCE: bfc335a86153a9f12e03563901d26c3253130d65
+  GODOT_BIN: C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe
+  PYTHONUTF8: '1'
+  PYTHONDONTWRITEBYTECODE: '1'
+  BREAKPOINT_RUNTIME_DISABLED: '1'
+  GODOT_SILENCE_ROOT_WARNING: '1'
+  PLANET_SIMULATOR_INVENTORY_PROFILE: planet_default
+
+jobs:
+  clock-focused:
+    name: LIVE2 R3.3 exact Windows snapshot clock
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 45
+    steps:
+      - name: Checkout exact product
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.PRODUCT_HEAD }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Identity and host preflight
+        id: preflight
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          New-Item -ItemType Directory -Force artifacts\live2-r3-3-clock | Out-Null
+          if ((git rev-parse HEAD).Trim() -ne $env:PRODUCT_HEAD) { throw 'HEAD_MISMATCH' }
+          if ((git rev-parse 'HEAD^{tree}').Trim() -ne $env:PRODUCT_TREE) { throw 'TREE_MISMATCH' }
+          if ((git status --porcelain --untracked-files=no)) { throw 'TRACKED_DIRTY_BEFORE' }
+          git merge-base --is-ancestor $env:BASE_PRODUCT HEAD
+          if ($LASTEXITCODE -ne 0) { throw 'BASE_PRODUCT_NOT_ANCESTOR' }
+          git fetch origin '+refs/heads/main:refs/remotes/origin/main'
+          if ($LASTEXITCODE -ne 0) { throw 'MAIN_FETCH_FAILED' }
+          if ((git rev-parse origin/main).Trim() -ne $env:MAIN_REFERENCE) { throw 'MAIN_MOVED_BEFORE' }
+          $foreign=@(Get-Process -ErrorAction SilentlyContinue | Where-Object { $_.ProcessName -like 'godot*' })
+          if ($foreign.Count -gt 0) { throw ('FOREIGN_GODOT_PROCESS:' + (($foreign | Select-Object -ExpandProperty Id) -join ',')) }
+          $os=Get-CimInstance Win32_OperatingSystem
+          $free=[math]::Round(($os.FreePhysicalMemory*1KB)/1GB,2)
+          if ($free -lt 10) { throw "LOW_FREE_RAM:$free" }
+          $sha=(Get-FileHash $env:GODOT_BIN -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($sha -ne '3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5') { throw 'GODOT_SHA_MISMATCH' }
+          $version=(& $env:GODOT_BIN --version | Out-String).Trim()
+          if ($LASTEXITCODE -ne 0 -or $version -ne '4.7.1.stable.double.custom_build.a13da4feb') { throw "GODOT_VERSION_MISMATCH:$version" }
+          $files=@(git diff --name-only $env:BASE_PRODUCT HEAD)
+          $allowed=@('scripts/app/earth_m3_remote_spectator_presenter.gd','tests/runtime/test_v0_live2_r3_3_snapshot_clock.gd','docs/control/v0-live/V0_LIVE2_R3_3_SNAPSHOT_CLOCK_R1_RU.md')
+          foreach ($file in $files) { if ($file -notin $allowed) { throw "UNEXPECTED_PRODUCT_CHANGE:$file" } }
+          [ordered]@{head=$env:PRODUCT_HEAD;tree=$env:PRODUCT_TREE;base_product=$env:BASE_PRODUCT;main_reference=$env:MAIN_REFERENCE;current_main_integration_claim=$false;godot_version=$version;godot_sha256=$sha;free_ram_gb=$free;changed_files=$files} | ConvertTo-Json -Depth 5 | Set-Content artifacts\live2-r3-3-clock\preflight.json -Encoding UTF8
+
+      - name: Cold import
+        id: import
+        shell: pwsh
+        timeout-minutes: 10
+        run: |
+          $ErrorActionPreference='Stop'
+          if (Test-Path .godot) { Remove-Item .godot -Recurse -Force }
+          & $env:GODOT_BIN --headless --path . --editor --import --quit *> artifacts\live2-r3-3-clock\import.log
+          $code=$LASTEXITCODE
+          if ($code -ne 0) { Get-Content artifacts\live2-r3-3-clock\import.log -Tail 160; throw "IMPORT_FAILED:$code" }
+          if (-not (Test-Path .godot\global_script_class_cache.cfg)) { throw 'CLASS_CACHE_MISSING' }
+          if ((Get-Item .godot\global_script_class_cache.cfg).Length -eq 0) { throw 'CLASS_CACHE_EMPTY' }
+          if (Select-String -Path artifacts\live2-r3-3-clock\import.log -Pattern 'SCRIPT ERROR:|Parse Error:|Compile Error:' -Quiet) { Get-Content artifacts\live2-r3-3-clock\import.log -Tail 160; throw 'IMPORT_SCRIPT_ERRORS' }
+
+      - name: Exact old-source semantic negative control
+        id: negative
+        shell: pwsh
+        timeout-minutes: 5
+        run: |
+          $ErrorActionPreference='Stop'
+          $ref="$($env:BASE_PRODUCT):scripts/app/earth_m3_remote_spectator_presenter.gd"
+          $source=git show $ref
+          if ($LASTEXITCODE -ne 0) { throw 'BASELINE_SOURCE_MISSING' }
+          $path=Join-Path (Resolve-Path artifacts\live2-r3-3-clock).Path 'legacy-earth-presenter.gd'
+          [System.IO.File]::WriteAllText($path, ($source -join "`n") + "`n", [System.Text.UTF8Encoding]::new($false))
+          & $env:GODOT_BIN --headless --path . --script res://tests/runtime/test_v0_live2_r3_3_snapshot_clock.gd -- --negative-presenter=res://artifacts/live2-r3-3-clock/legacy-earth-presenter.gd *> artifacts\live2-r3-3-clock\negative.log
+          $code=$LASTEXITCODE
+          if ($code -ne 0) { Get-Content artifacts\live2-r3-3-clock\negative.log -Tail 160; throw "NEGATIVE_CONTROL_FAILED:$code" }
+          if (-not (Select-String -Path artifacts\live2-r3-3-clock\negative.log -Pattern 'BASELINE_CLOCK_MISMATCH_CONFIRMED expected_server_tick=6000 actual_tick=1' -SimpleMatch -Quiet)) { throw 'SEMANTIC_NEGATIVE_NOT_REPRODUCED' }
+          if (Select-String -Path artifacts\live2-r3-3-clock\negative.log -Pattern 'SCRIPT ERROR:|Parse Error:|Compile Error:' -Quiet) { throw 'PARSE_FAILURE_IS_NOT_SEMANTIC_NEGATIVE' }
+
+      - name: Clock regression and focused compatibility
+        id: focused
+        shell: pwsh
+        timeout-minutes: 25
+        run: |
+          $ErrorActionPreference='Stop'
+          $tests=@(
+            'tests/runtime/test_v0_live2_r3_3_snapshot_clock.gd',
+            'tests/network/test_nx5_remote_snapshot_interpolation.gd',
+            'tests/runtime/test_v0_live2_r3_reliability.gd',
+            'tests/runtime/test_v0_live2_r3_inventory_ownership.gd',
+            'tests/runtime/test_v0_live2_r3_1_async_gameplay.gd',
+            'tests/runtime/test_v0_live2_r3_2_stall_probe.gd',
+            'tests/runtime/test_v0_live2_human_gameplay_bridge.gd',
+            'tests/network/test_v0_live2_enet_rollover.gd',
+            'tests/network/test_nx2_realtime_traffic_separation.gd',
+            'tests/runtime/test_v0_p2_live_shared_state_convergence.gd'
+          )
+          $results=@()
+          foreach ($test in $tests) {
+            $log=Join-Path 'artifacts\live2-r3-3-clock' (([IO.Path]::GetFileNameWithoutExtension($test))+'.log')
+            $started=Get-Date
+            & $env:GODOT_BIN --headless --path . --script "res://$test" *> $log
+            $code=$LASTEXITCODE
+            $scriptErrors=[bool](Select-String -Path $log -Pattern 'SCRIPT ERROR:|Parse Error:|Compile Error:' -Quiet)
+            $passed=($code -eq 0 -and -not $scriptErrors)
+            $results += [ordered]@{test=$test;exit_code=$code;script_errors=$scriptErrors;passed=$passed;duration_ms=((Get-Date)-$started).TotalMilliseconds}
+            $results | ConvertTo-Json -Depth 5 | Set-Content artifacts\live2-r3-3-clock\test-results.json -Encoding UTF8
+            if (-not $passed) { Get-Content $log -Tail 180; throw "FOCUSED_FAILED:$test exit=$code" }
+          }
+          if (-not (Select-String -Path artifacts\live2-r3-3-clock\test_v0_live2_r3_3_snapshot_clock.log -Pattern 'snapshot clock POSITIVE:.*0 failures' -Quiet)) { throw 'CLOCK_SUCCESS_MARKER_MISSING' }
+
+      - name: Final identity
+        id: final_identity
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          if ((git rev-parse HEAD).Trim() -ne $env:PRODUCT_HEAD) { throw 'IDENTITY_CHANGED' }
+          if ((git rev-parse 'HEAD^{tree}').Trim() -ne $env:PRODUCT_TREE) { throw 'TREE_CHANGED' }
+          if ((git status --porcelain --untracked-files=no)) { throw 'TRACKED_DIRTY_AFTER' }
+          git fetch origin '+refs/heads/main:refs/remotes/origin/main'
+          if ($LASTEXITCODE -ne 0) { throw 'MAIN_FETCH_FAILED_AFTER' }
+          if ((git rev-parse origin/main).Trim() -ne $env:MAIN_REFERENCE) { throw 'MAIN_MOVED_AFTER' }
+
+      - name: Bind evidence including failures
+        if: always()
+        shell: pwsh
+        env:
+          PREFLIGHT_RESULT: ${{ steps.preflight.outcome }}
+          IMPORT_RESULT: ${{ steps.import.outcome }}
+          NEGATIVE_RESULT: ${{ steps.negative.outcome }}
+          FOCUSED_RESULT: ${{ steps.focused.outcome }}
+          FINAL_RESULT: ${{ steps.final_identity.outcome }}
+        run: |
+          New-Item -ItemType Directory -Force artifacts\live2-r3-3-clock | Out-Null
+          $all=@($env:PREFLIGHT_RESULT,$env:IMPORT_RESULT,$env:NEGATIVE_RESULT,$env:FOCUSED_RESULT,$env:FINAL_RESULT)
+          [ordered]@{schema='dws.live2.r3_3.clock.focused.v1';subject_head=$env:PRODUCT_HEAD;subject_tree=$env:PRODUCT_TREE;control_head=$env:GITHUB_SHA;main_reference=$env:MAIN_REFERENCE;run_id=$env:GITHUB_RUN_ID;attempt=$env:GITHUB_RUN_ATTEMPT;passed=(@($all | Where-Object { $_ -ne 'success' }).Count -eq 0);preflight=$env:PREFLIGHT_RESULT;import=$env:IMPORT_RESULT;negative=$env:NEGATIVE_RESULT;focused=$env:FOCUSED_RESULT;final_identity=$env:FINAL_RESULT;full_world_core='NOT_RUN';human_recheck='NOT_RUN';current_main_integration_claim=$false} | ConvertTo-Json -Depth 4 | Set-Content artifacts\live2-r3-3-clock\manifest.json -Encoding UTF8
+
+      - name: Upload clock evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v0-live2-r3-3-clock-${{ github.run_id }}-${{ github.run_attempt }}
+          path: artifacts/live2-r3-3-clock/
+          if-no-files-found: error
+          retention-days: 90
