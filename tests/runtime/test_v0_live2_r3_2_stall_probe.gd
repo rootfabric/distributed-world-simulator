@@ -6,6 +6,12 @@ const StallWatchdog = preload(
 const LiveEarth = preload(
 	"res://scripts/app/earth_p3_resource_mining_app.gd"
 )
+const ResourceMiningDelta = preload(
+	"res://scripts/runtime/networked_gameplay/p3/resource_mining_delta.gd"
+)
+const ResourceMiningSnapshot = preload(
+	"res://scripts/runtime/networked_gameplay/p3/resource_mining_snapshot.gd"
+)
 
 
 class FakeRuntime:
@@ -74,6 +80,8 @@ var failures: Array[String] = []
 
 func _init() -> void:
 	_test_independent_watchdog()
+	_test_watchdog_repairs_leaked_child_scope()
+	_test_resource_delta_builder_is_bounded()
 	_test_i2s_async_submitter()
 	_test_construction_rejection_feedback()
 	_finish()
@@ -99,6 +107,52 @@ func _test_independent_watchdog() -> void:
 	_assert(int(report.get("max_elapsed_ms", 0)) >= 2000, "watchdog records multi-second elapsed time")
 	watchdog.exit(token)
 	watchdog.stop()
+
+
+func _test_watchdog_repairs_leaked_child_scope() -> void:
+	var watchdog = StallWatchdog.new()
+	_assert(bool(watchdog.start(OS.get_process_id()).get("success", false)), "watchdog starts for leaked-scope regression")
+	var parent := watchdog.enter("TEST:PARENT", {"operation_id": "operation/r3-2/parent"})
+	var child := watchdog.enter("TEST:CHILD", {"operation_id": "operation/r3-2/child"})
+	_assert(parent > 0 and child > parent, "nested watchdog scopes allocate ordered tokens")
+	# Simulate the exact R3.2 bug: a nested stage forgets to exit, but the
+	# surrounding message handler returns normally.
+	var parent_exit: Dictionary = watchdog.exit(parent)
+	var report: Dictionary = watchdog.get_report()
+	_assert(int(parent_exit.get("details", {}).get("repaired_children", 0)) == 1, "parent exit repairs one leaked nested scope")
+	_assert(int(report.get("active_depth", -1)) == 0, "leaked child scope cannot survive returned parent")
+	_assert(int(report.get("unbalanced_scope_repairs", 0)) == 1, "watchdog reports repaired diagnostic imbalance")
+	watchdog.stop()
+
+
+func _test_resource_delta_builder_is_bounded() -> void:
+	var nodes: Array = []
+	for index in range(64):
+		nodes.append({
+			"resource_node_id": "resource/test/%03d" % index,
+			"resource_definition_id": "resource/ore",
+			"output_definition_id": "item/ore",
+			"remaining_units": 100,
+			"unit_item_quantity": 1,
+			"spatial": {
+				"frame": "earth-fixed",
+				"latitude_deg": 10.0 + float(index) * 0.001,
+				"longitude_deg": 20.0 + float(index) * 0.001,
+				"altitude_m": 0.0,
+			},
+		})
+	var before := ResourceMiningSnapshot.create("simulation/test", 1, 7, nodes)
+	var after_nodes: Array = nodes.duplicate(true)
+	var changed: Dictionary = Dictionary(after_nodes[31]).duplicate(true)
+	changed["remaining_units"] = 99
+	after_nodes[31] = changed
+	var after := ResourceMiningSnapshot.create("simulation/test", 1, 8, after_nodes)
+	var started_us := Time.get_ticks_usec()
+	for _iteration in range(100):
+		var built: Dictionary = ResourceMiningDelta.create(before, after)
+		_assert(bool(built.get("success", false)), "resource delta builds successfully")
+	var elapsed_ms := float(Time.get_ticks_usec() - started_us) / 1000.0
+	_assert(elapsed_ms < 2000.0, "100 resource delta builds remain bounded well below stall threshold")
 
 
 func _test_i2s_async_submitter() -> void:
