@@ -6,6 +6,7 @@ const RemotePlayerPresenterScript = preload(
 const EarthSurfaceRenderProjectorScript = preload(
 	"res://scripts/app/earth_surface_render_projector.gd"
 )
+const NetworkUtils = preload("res://scripts/network/contracts/network_contract_utils.gd")
 
 const VISUAL_VERTICAL_OFFSET_M := -0.85
 const PLANAR_EPSILON := 0.000001
@@ -27,11 +28,24 @@ var _max_snapshot_interval_ms := 0
 var _render_frames := 0
 var _long_render_frames := 0
 var _max_render_delta_ms := 0.0
+# These are presentation-stage observations, NOT raw network packet timestamps.
+var _presenter_arrivals := 0
+var _last_presenter_arrival_ms := -1
+var _max_presenter_arrival_interval_ms := 0
+var _accepted_presenter_samples := 0
+var _duplicate_presenter_samples := 0
+var _stale_presenter_samples := 0
+var _rejected_presenter_samples := 0
+var _last_snapshot_context: Dictionary = {}
+var _sample_mode_time_ms: Dictionary = {}
 
 
 func setup(record: Dictionary, snapshot: Dictionary, map_position: Callable) -> Dictionary:
 	if not map_position.is_valid():
 		return {"success": false, "error_code": "EARTH_POSITION_MAPPER_REQUIRED"}
+	var normalized := _normalize_snapshot_context(snapshot)
+	if not bool(normalized.get("success", false)):
+		return normalized
 	_map_position = map_position
 	# NX5 samples once per render frame. Applying engine physics interpolation
 	# to the same floating-origin transforms would interpolate them a second
@@ -43,10 +57,14 @@ func setup(record: Dictionary, snapshot: Dictionary, map_position: Callable) -> 
 	_delegate.process_priority = -1
 	process_priority = 1
 	add_child(_delegate)
-	var result: Dictionary = _delegate.setup(record, snapshot)
+	var context: Dictionary = normalized.get("context", {})
+	var result: Dictionary = _delegate.setup(record, context)
 	if not bool(result.get("success", false)):
 		return result
+	_last_snapshot_context = context.duplicate(true)
+	_record_presenter_arrival()
 	_last_snapshot_arrival_ms = Time.get_ticks_msec()
+	_accepted_presenter_samples += 1
 	_capture_delegate_positions()
 	_apply_earth_position()
 	_apply_delegate_visual_offset()
@@ -57,21 +75,75 @@ func setup(record: Dictionary, snapshot: Dictionary, map_position: Callable) -> 
 func apply_replica(record: Dictionary, snapshot: Dictionary) -> Dictionary:
 	if _delegate == null:
 		return {"success": false, "error_code": "EARTH_REMOTE_NOT_READY"}
-	var result: Dictionary = _delegate.apply_replica(record, false, snapshot)
+	_record_presenter_arrival()
+	var normalized := _normalize_snapshot_context(snapshot)
+	if not bool(normalized.get("success", false)):
+		_rejected_presenter_samples += 1
+		return normalized
+	var context: Dictionary = normalized.get("context", {})
+	var result: Dictionary = _delegate.apply_replica(record, false, context)
 	if bool(result.get("success", false)):
+		var details: Dictionary = result.get("details", {})
+		if bool(details.get("stale", false)):
+			_stale_presenter_samples += 1
+		else:
+			_last_snapshot_context = context.duplicate(true)
 		_target_planar_position = Vector2(
 			_delegate.target_position.x,
 			_delegate.target_position.z
 		)
 		_target_vertical_offset_m = maxf(_delegate.target_position.y, 0.0)
-		if bool(result.get("details", {}).get("accepted", false)):
+		if bool(details.get("duplicate", false)):
+			_duplicate_presenter_samples += 1
+		if bool(details.get("accepted", false)):
+			_accepted_presenter_samples += 1
 			var now_ms := Time.get_ticks_msec()
 			if _last_snapshot_arrival_ms >= 0:
 				_max_snapshot_interval_ms = maxi(
 					_max_snapshot_interval_ms, now_ms - _last_snapshot_arrival_ms
 				)
 			_last_snapshot_arrival_ms = now_ms
+	else:
+		_rejected_presenter_samples += 1
 	return result
+
+
+func _normalize_snapshot_context(snapshot: Dictionary) -> Dictionary:
+	# PlayerStateSnapshot's canonical wire field is "revision". NX5's compact
+	# context uses "snapshot_revision". Passing the raw envelope to the delegate
+	# previously caused its legacy fallback to invent time from state_revision:
+	# the delegate's parent is this wrapper, not the app that owns the runtime.
+	# Never let a production Earth snapshot use that synthetic fallback clock.
+	if snapshot.has("revision") and snapshot.has("snapshot_revision"):
+		if snapshot["revision"] != snapshot["snapshot_revision"]:
+			return {"success": false, "error_code": "EARTH_REMOTE_AMBIGUOUS_SNAPSHOT_REVISION"}
+	var revision_value = snapshot.get("snapshot_revision", snapshot.get("revision", -1))
+	var tick_value = snapshot.get("server_tick", -1)
+	var epoch_value = snapshot.get("authority_epoch", 0)
+	for value in [revision_value, tick_value, epoch_value]:
+		if not NetworkUtils.is_json_integer(value):
+			return {"success": false, "error_code": "EARTH_REMOTE_INVALID_SNAPSHOT_CLOCK"}
+	if int(revision_value) < 0 or int(tick_value) < 0 or int(epoch_value) < 1:
+		return {"success": false, "error_code": "EARTH_REMOTE_INVALID_SNAPSHOT_CLOCK"}
+	return {
+		"success": true,
+		"error_code": "",
+		"context": {
+			"server_tick": int(tick_value),
+			"snapshot_revision": int(revision_value),
+			"authority_epoch": int(epoch_value),
+		},
+	}
+
+
+func _record_presenter_arrival() -> void:
+	var now_ms := Time.get_ticks_msec()
+	if _last_presenter_arrival_ms >= 0:
+		_max_presenter_arrival_interval_ms = maxi(
+			_max_presenter_arrival_interval_ms, now_ms - _last_presenter_arrival_ms
+		)
+	_last_presenter_arrival_ms = now_ms
+	_presenter_arrivals += 1
 
 
 func set_local_planar_position(value: Vector2) -> void:
@@ -93,6 +165,12 @@ func _process(delta: float) -> void:
 	_max_render_delta_ms = maxf(_max_render_delta_ms, maxf(delta, 0.0) * 1000.0)
 	if delta > 0.1:
 		_long_render_frames += 1
+	# Weight by elapsed render time, not the number of frames. This makes
+	# 60fps/144fps/240fps measurements comparable without tuning smoothing.
+	var sample_mode := String(_delegate._last_mode)
+	_sample_mode_time_ms[sample_mode] = (
+		float(_sample_mode_time_ms.get(sample_mode, 0.0)) + maxf(delta, 0.0) * 1000.0
+	)
 	_capture_delegate_positions()
 	_apply_earth_position()
 	_apply_delegate_visual_offset()
@@ -213,7 +291,18 @@ func get_report() -> Dictionary:
 	)
 	report["input_authority"] = false
 	report["presentation_owner"] = "NX5_RENDER_SAMPLE"
+	# Keep the legacy field, but make its measurement boundary explicit.
 	report["max_snapshot_interval_ms"] = _max_snapshot_interval_ms
+	report["max_accepted_sample_interval_ms"] = _max_snapshot_interval_ms
+	report["max_presenter_arrival_interval_ms"] = _max_presenter_arrival_interval_ms
+	report["snapshot_clock_source"] = "CANONICAL_SNAPSHOT_CONTEXT"
+	report["snapshot_clock_context"] = _last_snapshot_context.duplicate(true)
+	report["presenter_arrivals"] = _presenter_arrivals
+	report["accepted_presenter_samples"] = _accepted_presenter_samples
+	report["duplicate_presenter_samples"] = _duplicate_presenter_samples
+	report["stale_presenter_samples"] = _stale_presenter_samples
+	report["rejected_presenter_samples"] = _rejected_presenter_samples
+	report["sample_mode_time_ms"] = _sample_mode_time_ms.duplicate(true)
 	report["render_frames"] = _render_frames
 	report["long_render_frames"] = _long_render_frames
 	report["max_render_delta_ms"] = _max_render_delta_ms
