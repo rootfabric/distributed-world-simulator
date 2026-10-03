@@ -138,7 +138,10 @@ func _reproductive_scale_policy() -> Dictionary:
 	policy["regulation"]["growth_temperature_max"] = 1000
 	policy["metabolism"]["maintenance_energy_per_module_mj"] = 0
 	policy["metabolism"]["maintenance_water_per_module_mg"] = 0
-	policy["growth"]["transfer_permille"] = 1000
+	# Keep growth and reproduction as competing paid budgets. 1000 would move
+	# the entire metabolic reserve into development every tick, making a child
+	# canonically unable to pay its own propagule even after it became mature.
+	policy["growth"]["transfer_permille"] = 500
 	policy["reproduction"]["maturity_ticks"] = 2
 	policy["reproduction"]["interval_ticks"] = 2
 	policy["reproduction"]["required_reproductive_modules"] = 1
