@@ -43,6 +43,10 @@ static func defaults() -> Dictionary:
 		"m7_result_file": "",
 		"network_debug": false,
 		"network_debug_stay_open": false,
+		"automation_control": false,
+		"automation_control_port": 0,
+		"automation_control_token": "",
+		"automation_control_output_dir": "user://live2-automation",
 		"network_session_token": NetworkRuntimeIdentityScript.DEFAULT_SESSION_TOKEN,
 		"network_build_id": NetworkRuntimeIdentityScript.BUILD_ID,
 		"network_git_commit": NetworkRuntimeIdentityScript.SOURCE_COMMIT,
@@ -80,6 +84,9 @@ static func parse(arguments) -> Dictionary:
 			continue
 		if argument == "--network-debug-stay-open":
 			options["network_debug_stay_open"] = true
+			continue
+		if argument == "--automation-control":
+			options["automation_control"] = true
 			continue
 		if not argument.begins_with("--") or not argument.contains("="):
 			errors.append("Unknown launch argument: %s" % argument)
@@ -142,6 +149,17 @@ static func parse(arguments) -> Dictionary:
 				options["network_mvp"] = value.to_lower() in ["1", "true", "yes", "on"]
 			"network-playground":
 				options["network_playground"] = value.to_lower() in ["1", "true", "yes", "on"]
+			"automation-control":
+				options["automation_control"] = value.to_lower() in ["1", "true", "yes", "on"]
+			"automation-control-port":
+				options["automation_control_port"] = _parse_non_negative_int(value, key, errors)
+				if int(options["automation_control_port"]) > 65535:
+					errors.append("Launch option --%s must be at most 65535" % key)
+					options["automation_control_port"] = 0
+			"automation-control-token":
+				options["automation_control_token"] = value
+			"automation-control-output-dir":
+				options["automation_control_output_dir"] = value
 			"m7-result-file":
 				options["m7_result_file"] = value
 			"m7-phase":
@@ -256,6 +274,19 @@ static func _validate(options: Dictionary, errors: Array[String]) -> void:
 		# protocol/authority contracts in this bounded fix.
 		if String(options.get("m3_result_file", "")).strip_edges().is_empty():
 			options["m3_result_file"] = NETWORK_MVP_RUNTIME_SENTINEL
+
+	if bool(options.get("automation_control", false)):
+		if role != RuntimeRoleScript.GAME_CLIENT:
+			errors.append("Automation control requires game-client role")
+		if not bool(options.get("network_debug", false)):
+			errors.append("Automation control requires --network-debug")
+		if int(options.get("automation_control_port", 0)) < 1:
+			errors.append("Automation control requires --automation-control-port")
+		var automation_token := String(options.get("automation_control_token", ""))
+		if automation_token.length() < 8:
+			errors.append("Automation control token must be at least 8 characters")
+		if String(options.get("automation_control_output_dir", "")).strip_edges().is_empty():
+			errors.append("Automation control output dir cannot be empty")
 
 	if bool(options.get("network_playground", false)):
 		if role not in [RuntimeRoleScript.GAME_CLIENT, RuntimeRoleScript.DEDICATED_SERVER]:
