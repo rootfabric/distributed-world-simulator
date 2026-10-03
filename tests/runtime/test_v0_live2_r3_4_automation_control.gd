@@ -259,9 +259,12 @@ func _run() -> void:
 		and is_equal_approx(float(pointer_position[1]), 80.0),
 		"pointer request position preserved by bridge"
 	)
+	var pointer_relative: Array = Array(pointer_result.get("relative", []))
 	_assert(
-		(input_probe.motions.back().get("relative", Vector2.ZERO) as Vector2).is_equal_approx(Vector2(5.0, -2.0)),
-		"pointer relative motion reaches Godot input pipeline"
+		pointer_relative.size() == 2
+		and is_equal_approx(float(pointer_relative[0]), 5.0)
+		and is_equal_approx(float(pointer_relative[1]), -2.0),
+		"pointer relative motion preserved by bridge"
 	)
 
 	var pointer_button := await _exchange(peer, _request(
