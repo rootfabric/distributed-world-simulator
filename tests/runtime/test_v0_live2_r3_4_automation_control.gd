@@ -66,6 +66,32 @@ class FakeRuntime:
 		}
 
 
+class InputProbe:
+	extends Node
+
+	var keys: Array[Dictionary] = []
+	var motions: Array[Dictionary] = []
+	var buttons: Array[Dictionary] = []
+
+	func _input(event: InputEvent) -> void:
+		if event is InputEventKey:
+			keys.append({
+				"keycode": event.keycode,
+				"pressed": event.pressed,
+			})
+		elif event is InputEventMouseMotion:
+			motions.append({
+				"position": event.position,
+				"relative": event.relative,
+			})
+		elif event is InputEventMouseButton:
+			buttons.append({
+				"position": event.position,
+				"button_index": event.button_index,
+				"pressed": event.pressed,
+			})
+
+
 class FakeApp:
 	extends Node
 
@@ -118,6 +144,8 @@ func _init() -> void:
 func _run() -> void:
 	var app := FakeApp.new()
 	root.add_child(app)
+	var input_probe := InputProbe.new()
+	root.add_child(input_probe)
 	await process_frame
 
 	var bridge := Bridge.new()
@@ -200,6 +228,40 @@ func _run() -> void:
 	_assert(bool(view.get("ok", false)), "view.set succeeds")
 	_assert(app.runtime.view_calls.size() == 1, "view.set reaches runtime seam")
 
+	var key_down := await _exchange(peer, _request(
+		"key-1",
+		"input.key",
+		{"key": "G", "pressed": true}
+	))
+	_assert(bool(key_down.get("ok", false)), "input.key succeeds")
+	await process_frame
+	_assert(not input_probe.keys.is_empty(), "injected key reaches Godot input pipeline")
+	_assert(int(input_probe.keys.back().get("keycode", 0)) == KEY_G, "injected keycode preserved")
+	_assert(bool(input_probe.keys.back().get("pressed", false)), "injected key press preserved")
+
+	var pointer_move := await _exchange(peer, _request(
+		"pointer-1",
+		"input.pointer_move",
+		{"x": 120.0, "y": 80.0, "dx": 5.0, "dy": -2.0}
+	))
+	_assert(bool(pointer_move.get("ok", false)), "pointer move succeeds")
+	await process_frame
+	_assert(not input_probe.motions.is_empty(), "pointer move reaches Godot input pipeline")
+	_assert(
+		(input_probe.motions.back().get("position", Vector2.ZERO) as Vector2).is_equal_approx(Vector2(120.0, 80.0)),
+		"pointer position preserved"
+	)
+
+	var pointer_button := await _exchange(peer, _request(
+		"button-1",
+		"input.pointer_button",
+		{"x": 120.0, "y": 80.0, "button": "left", "pressed": true}
+	))
+	_assert(bool(pointer_button.get("ok", false)), "pointer button succeeds")
+	await process_frame
+	_assert(not input_probe.buttons.is_empty(), "pointer button reaches Godot input pipeline")
+	_assert(int(input_probe.buttons.back().get("button_index", 0)) == MOUSE_BUTTON_LEFT, "pointer button preserved")
+
 	var automation_state := await _exchange(peer, _request(
 		"state-1",
 		"state.get",
@@ -251,6 +313,7 @@ func _run() -> void:
 	bridge.stop()
 	bridge.queue_free()
 	app.queue_free()
+	input_probe.queue_free()
 	await process_frame
 	_finish()
 
