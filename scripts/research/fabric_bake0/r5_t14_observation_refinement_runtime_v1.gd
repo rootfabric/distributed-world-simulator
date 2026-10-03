@@ -17,7 +17,7 @@ var successful_requests := 0
 var restore_count := 0
 var release_count := 0
 var materialization_count := 0
-var compiled_nodes_visited := 0
+var detail_nodes_materialized := 0
 var source_leaf_traversals := 0
 var recompile_events := 0
 
@@ -172,12 +172,12 @@ func request_refinement(instance: Dictionary, path: String, observation_id: Stri
 	}
 	successful_requests += 1
 	materialization_count += 1
-	compiled_nodes_visited += detail.size()
+	detail_nodes_materialized += detail.size()
 	return U.success({
 		"refinement": metadata.duplicate(true),
 		"detail": detail.duplicate(true),
 		"active_refinements": _refinements.size(),
-		"compiled_nodes_visited": compiled_nodes_visited,
+		"detail_nodes_materialized": detail_nodes_materialized,
 		"source_leaf_traversals": source_leaf_traversals,
 		"recompile_events": recompile_events,
 		"unique_model_prepares": int(families.reuse_stats().unique_model_prepares),
@@ -193,6 +193,12 @@ func refinement_info(instance: Dictionary) -> Dictionary:
 
 func path_resolution(instance: Dictionary, path: String) -> String:
 	if not families.instance_valid(instance):
+		return "INVALID"
+	var family_id := String(instance.family_id)
+	var owner := _owner_for_family(family_id)
+	if owner.is_empty() or owner != String(instance.owner_family_id):
+		return "INVALID"
+	if _subtree(owner, path).is_empty():
 		return "INVALID"
 	var key := _instance_key(instance)
 	if not _refinements.has(key):
@@ -289,6 +295,9 @@ func restore_refinement(instance: Dictionary, text: String, trusted_hash: String
 		return U.failure("T14_SNAPSHOT_INSTANCE_MISMATCH")
 	if metadata.get("family_id") != instance.family_id or metadata.get("owner_family_id") != instance.owner_family_id:
 		return U.failure("T14_SNAPSHOT_FAMILY_MISMATCH")
+	var current_model: Dictionary = families.family_identity(String(instance.family_id))
+	if metadata.get("compiled_model_checksum") != current_model.get("compiled_model_checksum") or metadata.get("compiled_model_hash") != current_model.get("compiled_model_hash"):
+		return U.failure("T14_SNAPSHOT_MODEL_MISMATCH")
 	if int(metadata.get("state_revision", -1)) != int(instance.state.state_revision) or int(metadata.get("damage_revision", -1)) != int(instance.state.damage_revision):
 		return U.failure("T14_SNAPSHOT_STATE_REVISION_MISMATCH")
 	var key := _instance_key(instance)
@@ -311,12 +320,12 @@ func restore_refinement(instance: Dictionary, text: String, trusted_hash: String
 	}
 	restore_count += 1
 	materialization_count += 1
-	compiled_nodes_visited += detail.size()
+	detail_nodes_materialized += detail.size()
 	return U.success({
 		"refinement": metadata.duplicate(true),
 		"detail": detail.duplicate(true),
 		"active_refinements": _refinements.size(),
-		"compiled_nodes_visited": compiled_nodes_visited,
+		"detail_nodes_materialized": detail_nodes_materialized,
 		"source_leaf_traversals": source_leaf_traversals,
 		"recompile_events": recompile_events,
 	})
@@ -327,7 +336,7 @@ func stats() -> Dictionary:
 		"restore_count": restore_count,
 		"release_count": release_count,
 		"materialization_count": materialization_count,
-		"compiled_nodes_visited": compiled_nodes_visited,
+		"detail_nodes_materialized": detail_nodes_materialized,
 		"source_leaf_traversals": source_leaf_traversals,
 		"recompile_events": recompile_events,
 		"active_refinements": _refinements.size(),
