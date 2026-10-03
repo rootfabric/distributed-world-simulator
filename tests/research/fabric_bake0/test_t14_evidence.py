@@ -29,7 +29,7 @@ class EvidenceTests(unittest.TestCase):
             "physics_equivalent_after_refinement":100,
             "snapshot_roundtrip":True,
             "successful_requests":1, "restore_count":1, "release_count":2,
-            "materialization_count":2, "compiled_nodes_visited":8,
+            "materialization_count":2, "detail_nodes_materialized":8,
             "source_leaf_traversals":0, "recompile_events":0,
             "active_refinements_final":0,
             "runtime_steps":200, "evaluations":1000,
@@ -50,7 +50,7 @@ class EvidenceTests(unittest.TestCase):
             ("compact_instances_during_observation", 98),
             ("same_instance_compact_siblings", 4),
             ("physics_equivalent_after_refinement", 99),
-            ("compiled_nodes_visited", 30),
+            ("detail_nodes_materialized", 30),
             ("source_leaf_traversals", 1),
             ("recompile_events", 1),
             ("active_refinements_final", 1),
@@ -87,6 +87,7 @@ class EvidenceTests(unittest.TestCase):
         self.assertIn("T14_ROOT_REFINEMENT_FORBIDDEN", runtime)
         self.assertIn("T14_INSTANCE_ALREADY_REFINED", runtime)
         self.assertIn("T14_SNAPSHOT_INSTANCE_MISMATCH", runtime)
+        self.assertIn("T14_SNAPSHOT_MODEL_MISMATCH", runtime)
         self.assertIn("source_leaf_traversals", runtime)
         self.assertIn("recompile_events", runtime)
         self.assertIn('for field in ["state_revision", "damage_revision", "detail_node_count", "detail_leaf_count"]:', runtime)
@@ -96,7 +97,9 @@ class EvidenceTests(unittest.TestCase):
         self.assertIn("physics_equivalent == 100", acceptance)
         self.assertIn("compact_siblings == 5", acceptance)
         self.assertIn("other_compact == 99", acceptance)
-        self.assertIn("compiled_nodes_visited) == 8", acceptance)
+        self.assertIn('REFINED_PATH + "/not-real"', acceptance)
+        self.assertIn("T14_SNAPSHOT_MODEL_MISMATCH", acceptance)
+        self.assertIn("detail_nodes_materialized) == 8", acceptance)
         self.assertIn("FF.compile_events == 42", acceptance)
 
 if __name__ == "__main__":
