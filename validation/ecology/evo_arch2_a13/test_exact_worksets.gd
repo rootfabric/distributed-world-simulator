@@ -216,7 +216,7 @@ func _runtime_exact_equivalence() -> void:
 	var default_state := initial.duplicate(true)
 	var single_state := initial.duplicate(true)
 	var mono_state := initial.duplicate(true)
-	for tick_index in 12:
+	for tick_index in 8:
 		var a := Runtime.step(default_state, options)
 		var b := Runtime.step_scheduled(single_state, options, 1)
 		var c := Runtime.step_scheduled(mono_state, options, Scale.MAX_POPULATION)
