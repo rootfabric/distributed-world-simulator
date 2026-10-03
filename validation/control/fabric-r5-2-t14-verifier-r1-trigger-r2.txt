@@ -1,0 +1,4 @@
+T14 Fresh Independent Verifier R1 trigger R2.
+SUBJECT_HEAD=5a65e6d245fda85de50d1cf6c4a551c6240677be
+VERIFIER_HEAD=cc2e712846e555fcde822f2e21281f52ebf1d0b2
+PREVIOUS_CONTROL_DEFECT=github-expression-syntax
