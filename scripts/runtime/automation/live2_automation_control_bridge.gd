@@ -8,6 +8,38 @@ const BIND_ADDRESS := "127.0.0.1"
 const MAX_CLIENTS := 4
 const MAX_REQUEST_BYTES := 64 * 1024
 const MAX_RESPONSE_BYTES := 2 * 1024 * 1024
+const AUTOMATION_KEYS := {
+	"TAB": KEY_TAB,
+	"ESC": KEY_ESCAPE,
+	"ESCAPE": KEY_ESCAPE,
+	"G": KEY_G,
+	"B": KEY_B,
+	"N": KEY_N,
+	"Q": KEY_Q,
+	"E": KEY_E,
+	"F1": KEY_F1,
+	"F3": KEY_F3,
+	"F6": KEY_F6,
+	"W": KEY_W,
+	"A": KEY_A,
+	"S": KEY_S,
+	"D": KEY_D,
+	"0": KEY_0,
+	"1": KEY_1,
+	"2": KEY_2,
+	"3": KEY_3,
+	"4": KEY_4,
+	"5": KEY_5,
+	"6": KEY_6,
+	"7": KEY_7,
+	"8": KEY_8,
+	"9": KEY_9,
+}
+const AUTOMATION_MOUSE_BUTTONS := {
+	"left": MOUSE_BUTTON_LEFT,
+	"right": MOUSE_BUTTON_RIGHT,
+	"middle": MOUSE_BUTTON_MIDDLE,
+}
 
 var _app
 var _server: TCPServer
@@ -206,6 +238,12 @@ func handle_request_for_testing(request: Dictionary) -> Dictionary:
 			return _movement_stop(request_id)
 		"view.set":
 			return _view_set(request_id, params)
+		"input.key":
+			return _input_key(request_id, params)
+		"input.pointer_move":
+			return _input_pointer_move(request_id, params)
+		"input.pointer_button":
+			return _input_pointer_button(request_id, params)
 		"state.get":
 			return _state_get(request_id, params)
 		"screenshot.capture":
@@ -264,6 +302,70 @@ func _view_set(request_id: String, params: Dictionary) -> Dictionary:
 		{"view": result},
 		String(result.get("error_code", "")) if not bool(result.get("success", false)) else ""
 	)
+
+
+func _input_key(request_id: String, params: Dictionary) -> Dictionary:
+	var key_name := String(params.get("key", "")).strip_edges().to_upper()
+	if not AUTOMATION_KEYS.has(key_name):
+		return _response(request_id, false, {}, "AUTOMATION_KEY_UNKNOWN")
+	var event := InputEventKey.new()
+	event.keycode = int(AUTOMATION_KEYS[key_name])
+	event.physical_keycode = int(AUTOMATION_KEYS[key_name])
+	event.pressed = bool(params.get("pressed", true))
+	event.echo = false
+	event.shift_pressed = bool(params.get("shift", false))
+	event.ctrl_pressed = bool(params.get("ctrl", false))
+	event.alt_pressed = bool(params.get("alt", false))
+	event.meta_pressed = bool(params.get("meta", false))
+	Input.parse_input_event(event)
+	return _response(request_id, true, {
+		"key": key_name,
+		"pressed": event.pressed,
+	})
+
+
+func _input_pointer_move(request_id: String, params: Dictionary) -> Dictionary:
+	for field in ["x", "y"]:
+		if typeof(params.get(field)) not in [TYPE_INT, TYPE_FLOAT]:
+			return _response(request_id, false, {}, "AUTOMATION_POINTER_POSITION_REQUIRED")
+	var position := Vector2(float(params.get("x", 0.0)), float(params.get("y", 0.0)))
+	var relative := Vector2(
+		float(params.get("dx", 0.0)),
+		float(params.get("dy", 0.0))
+	)
+	var event := InputEventMouseMotion.new()
+	event.position = position
+	event.global_position = position
+	event.relative = relative
+	event.button_mask = int(params.get("button_mask", 0))
+	Input.parse_input_event(event)
+	return _response(request_id, true, {
+		"position": [position.x, position.y],
+		"relative": [relative.x, relative.y],
+		"button_mask": event.button_mask,
+	})
+
+
+func _input_pointer_button(request_id: String, params: Dictionary) -> Dictionary:
+	for field in ["x", "y"]:
+		if typeof(params.get(field)) not in [TYPE_INT, TYPE_FLOAT]:
+			return _response(request_id, false, {}, "AUTOMATION_POINTER_POSITION_REQUIRED")
+	var button_name := String(params.get("button", "left")).strip_edges().to_lower()
+	if not AUTOMATION_MOUSE_BUTTONS.has(button_name):
+		return _response(request_id, false, {}, "AUTOMATION_MOUSE_BUTTON_UNKNOWN")
+	var position := Vector2(float(params.get("x", 0.0)), float(params.get("y", 0.0)))
+	var event := InputEventMouseButton.new()
+	event.position = position
+	event.global_position = position
+	event.button_index = int(AUTOMATION_MOUSE_BUTTONS[button_name])
+	event.pressed = bool(params.get("pressed", true))
+	event.double_click = bool(params.get("double_click", false))
+	Input.parse_input_event(event)
+	return _response(request_id, true, {
+		"position": [position.x, position.y],
+		"button": button_name,
+		"pressed": event.pressed,
+	})
 
 
 func _state_get(request_id: String, params: Dictionary) -> Dictionary:
