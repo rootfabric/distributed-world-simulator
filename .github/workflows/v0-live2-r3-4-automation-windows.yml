@@ -1,0 +1,155 @@
+name: V0 LIVE.2 R3.4 Automation Control Windows
+
+on:
+  push:
+    branches:
+      - control/v0-live2-r3-4-automation-windows-r1
+
+permissions:
+  contents: read
+
+concurrency:
+  group: v0-live2-r3-4-automation-windows
+  cancel-in-progress: true
+
+env:
+  PRODUCT_HEAD: bc207fac01314ea9a4ecf07b80fc24e7d85ed10f
+  PRODUCT_TREE: 20726dcd0a285532b78b1d2e9803369bc8203ab1
+  BASE_PRODUCT: 4e94464e7221ab96471d09b8f38c67ad769161fd
+  MAIN_REFERENCE: bfc335a86153a9f12e03563901d26c3253130d65
+  GODOT_BIN: C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe
+  PYTHONUTF8: '1'
+  PYTHONDONTWRITEBYTECODE: '1'
+  BREAKPOINT_RUNTIME_DISABLED: '1'
+  GODOT_SILENCE_ROOT_WARNING: '1'
+  PLANET_SIMULATOR_INVENTORY_PROFILE: planet_default
+
+jobs:
+  automation-control:
+    name: LIVE2 R3.4 exact Windows automation control
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 55
+    steps:
+      - name: Checkout exact product
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.PRODUCT_HEAD }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Identity and host preflight
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          New-Item -ItemType Directory -Force artifacts\live2-r3-4-automation | Out-Null
+          if ((git rev-parse HEAD).Trim() -ne $env:PRODUCT_HEAD) { throw 'HEAD_MISMATCH' }
+          if ((git rev-parse 'HEAD^{tree}').Trim() -ne $env:PRODUCT_TREE) { throw 'TREE_MISMATCH' }
+          if ((git status --porcelain --untracked-files=no)) { throw 'TRACKED_DIRTY_BEFORE' }
+          git merge-base --is-ancestor $env:BASE_PRODUCT HEAD
+          if ($LASTEXITCODE -ne 0) { throw 'BASE_PRODUCT_NOT_ANCESTOR' }
+          git fetch origin '+refs/heads/main:refs/remotes/origin/main'
+          if ((git rev-parse origin/main).Trim() -ne $env:MAIN_REFERENCE) { throw 'MAIN_MOVED_BEFORE' }
+          $foreign=@(Get-Process -ErrorAction SilentlyContinue | Where-Object { $_.ProcessName -like 'godot*' })
+          if ($foreign.Count -gt 0) { throw ('FOREIGN_GODOT_PROCESS:' + (($foreign | Select-Object -ExpandProperty Id) -join ',')) }
+          $sha=(Get-FileHash $env:GODOT_BIN -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($sha -ne '3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5') { throw 'GODOT_SHA_MISMATCH' }
+          $version=(& $env:GODOT_BIN --version | Out-String).Trim()
+          if ($version -ne '4.7.1.stable.double.custom_build.a13da4feb') { throw "GODOT_VERSION_MISMATCH:$version" }
+          $files=@(git diff --name-only $env:BASE_PRODUCT HEAD)
+          $allowed=@(
+            'scripts/runtime/launch_options.gd',
+            'scripts/runtime/automation/live2_automation_control_bridge.gd',
+            'scripts/actors/earth/earth_explorer.gd',
+            'scripts/app/earth_mvp_app.gd',
+            'scripts/app/simulator_app.gd',
+            'tools/live2/live2_automation_client.py',
+            'tests/runtime/test_launch_options.gd',
+            'tests/runtime/test_v0_live2_r3_4_automation_control.gd',
+            'docs/control/v0-live/V0_LIVE2_R3_4_AUTOMATION_CONTROL_R1_RU.md'
+          )
+          foreach ($file in $files) { if ($file -notin $allowed) { throw "UNEXPECTED_PRODUCT_CHANGE:$file" } }
+          [ordered]@{head=$env:PRODUCT_HEAD;tree=$env:PRODUCT_TREE;main=$env:MAIN_REFERENCE;changed_files=$files;godot_version=$version;godot_sha256=$sha} | ConvertTo-Json -Depth 5 | Set-Content artifacts\live2-r3-4-automation\preflight.json -Encoding UTF8
+
+      - name: Compile external automation CLI
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          python -m py_compile tools\live2\live2_automation_client.py
+          if ($LASTEXITCODE -ne 0) { throw 'AUTOMATION_CLI_PY_COMPILE_FAILED' }
+
+      - name: Cold import
+        shell: pwsh
+        timeout-minutes: 10
+        run: |
+          $ErrorActionPreference='Stop'
+          if (Test-Path .godot) { Remove-Item .godot -Recurse -Force }
+          & $env:GODOT_BIN --headless --path . --editor --import --quit *> artifacts\live2-r3-4-automation\import.log
+          $code=$LASTEXITCODE
+          if ($code -ne 0) { Get-Content artifacts\live2-r3-4-automation\import.log -Tail 240; throw "IMPORT_FAILED:$code" }
+          if (-not (Test-Path .godot\global_script_class_cache.cfg)) { throw 'CLASS_CACHE_MISSING' }
+          if (Select-String -Path artifacts\live2-r3-4-automation\import.log -Pattern 'SCRIPT ERROR:|Parse Error:|Compile Error:' -Quiet) { Get-Content artifacts\live2-r3-4-automation\import.log -Tail 240; throw 'IMPORT_SCRIPT_ERRORS' }
+
+      - name: Automation launch options
+        shell: pwsh
+        timeout-minutes: 8
+        run: |
+          $ErrorActionPreference='Stop'
+          & $env:GODOT_BIN --headless --path . --script res://tests/runtime/test_launch_options.gd *> artifacts\live2-r3-4-automation\launch-options.log
+          if ($LASTEXITCODE -ne 0) { Get-Content artifacts\live2-r3-4-automation\launch-options.log -Tail 260; throw "LAUNCH_OPTIONS_FAILED:$LASTEXITCODE" }
+
+      - name: Real localhost automation protocol
+        shell: pwsh
+        timeout-minutes: 10
+        run: |
+          $ErrorActionPreference='Stop'
+          & $env:GODOT_BIN --headless --path . --script res://tests/runtime/test_v0_live2_r3_4_automation_control.gd *> artifacts\live2-r3-4-automation\automation-control.log
+          if ($LASTEXITCODE -ne 0) { Get-Content artifacts\live2-r3-4-automation\automation-control.log -Tail 320; throw "AUTOMATION_CONTROL_FAILED:$LASTEXITCODE" }
+          if (-not (Select-String -Path artifacts\live2-r3-4-automation\automation-control.log -Pattern 'automation control:.*0 failures' -Quiet)) { throw 'AUTOMATION_SUCCESS_MARKER_MISSING' }
+
+      - name: R3.3 and compatibility regressions
+        shell: pwsh
+        timeout-minutes: 25
+        run: |
+          $ErrorActionPreference='Stop'
+          $tests=@(
+            'tests/runtime/test_v0_live2_r3_3_snapshot_clock.gd',
+            'tests/runtime/test_v0_live2_r3_2_stall_probe.gd',
+            'tests/runtime/test_v0_live2_r3_1_async_gameplay.gd',
+            'tests/runtime/test_v0_live2_r3_inventory_ownership.gd',
+            'tests/runtime/test_v0_live2_r3_reliability.gd',
+            'tests/runtime/test_v0_live2_human_gameplay_bridge.gd',
+            'tests/network/test_v0_live2_enet_rollover.gd',
+            'tests/network/test_nx2_realtime_traffic_separation.gd',
+            'tests/runtime/test_v0_p2_live_shared_state_convergence.gd'
+          )
+          $results=@()
+          foreach ($test in $tests) {
+            $log=Join-Path 'artifacts\live2-r3-4-automation' (([IO.Path]::GetFileNameWithoutExtension($test))+'.log')
+            & $env:GODOT_BIN --headless --path . --script "res://$test" *> $log
+            $code=$LASTEXITCODE
+            $scriptErrors=[bool](Select-String -Path $log -Pattern 'SCRIPT ERROR:|Parse Error:|Compile Error:' -Quiet)
+            $passed=($code -eq 0 -and -not $scriptErrors)
+            $results += [ordered]@{test=$test;exit_code=$code;script_errors=$scriptErrors;passed=$passed}
+            $results | ConvertTo-Json -Depth 5 | Set-Content artifacts\live2-r3-4-automation\test-results.json -Encoding UTF8
+            if (-not $passed) { Get-Content $log -Tail 220; throw "COMPAT_FAILED:$test exit=$code" }
+          }
+
+      - name: Final identity
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          if ((git rev-parse HEAD).Trim() -ne $env:PRODUCT_HEAD) { throw 'IDENTITY_CHANGED' }
+          if ((git rev-parse 'HEAD^{tree}').Trim() -ne $env:PRODUCT_TREE) { throw 'TREE_CHANGED' }
+          if ((git status --porcelain --untracked-files=no)) { throw 'TRACKED_DIRTY_AFTER' }
+          git fetch origin '+refs/heads/main:refs/remotes/origin/main'
+          if ((git rev-parse origin/main).Trim() -ne $env:MAIN_REFERENCE) { throw 'MAIN_MOVED_AFTER' }
+          [ordered]@{passed=$true;subject_head=$env:PRODUCT_HEAD;subject_tree=$env:PRODUCT_TREE;main_reference=$env:MAIN_REFERENCE;tracked_clean=$true} | ConvertTo-Json | Set-Content artifacts\live2-r3-4-automation\manifest.json -Encoding UTF8
+
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v0-live2-r3-4-automation-${{ github.run_id }}-${{ github.run_attempt }}
+          path: artifacts/live2-r3-4-automation/
+          if-no-files-found: error
+          retention-days: 90
