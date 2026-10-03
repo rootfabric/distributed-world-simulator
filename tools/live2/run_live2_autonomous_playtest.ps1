@@ -69,7 +69,7 @@ function Invoke-Control {
     $Parsed = $null
     try { $Parsed = $Output | ConvertFrom-Json -Depth 60 } catch {}
     Write-JsonLine ([ordered]@{at=(Get-Date).ToString("o");client=$Client;arguments=$Arguments;exit_code=$Code;response=$Parsed;raw=if($null -eq $Parsed){$Output.Trim()}else{$null}}) $ActionLog
-    if ($Code -ne 0 -and -not $AllowFailure) { throw "AUTOMATION_COMMAND_FAILED:$Client:$($Arguments -join ' '):$Output" }
+    if ($Code -ne 0 -and -not $AllowFailure) { throw "AUTOMATION_COMMAND_FAILED:${Client}:$($Arguments -join ' '):$Output" }
     return $Parsed
 }
 
