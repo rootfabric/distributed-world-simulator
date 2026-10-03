@@ -195,6 +195,35 @@ func apply_network_replica_pose(
 	set_network_replica_mode(true)
 
 
+func set_network_surface_view(yaw: float, pitch: float = 0.0) -> Dictionary:
+	if not network_replica_mode:
+		return {"success": false, "error_code": "NETWORK_SURFACE_VIEW_REQUIRES_REPLICA_MODE"}
+	if frame_position.length_squared() < 1.0:
+		return {"success": false, "error_code": "NETWORK_SURFACE_VIEW_POSITION_NOT_READY"}
+	if is_nan(yaw) or is_inf(yaw) or is_nan(pitch) or is_inf(pitch):
+		return {"success": false, "error_code": "NETWORK_SURFACE_VIEW_INVALID_ANGLE"}
+	_network_surface_yaw = wrapf(yaw, -PI, PI)
+	_network_surface_pitch = clampf(
+		pitch,
+		-NETWORK_SURFACE_PITCH_LIMIT_RAD,
+		NETWORK_SURFACE_PITCH_LIMIT_RAD
+	)
+	_network_surface_view_initialized = true
+	orientation = _compose_network_surface_view(
+		frame_position.normalized(),
+		_network_surface_yaw,
+		_network_surface_pitch
+	)
+	return {
+		"success": true,
+		"error_code": "",
+		"details": {
+			"yaw": _network_surface_yaw,
+			"pitch": _network_surface_pitch,
+		},
+	}
+
+
 func get_surface_relative_yaw() -> float:
 	if network_replica_mode and _network_surface_view_initialized:
 		return _network_surface_yaw
