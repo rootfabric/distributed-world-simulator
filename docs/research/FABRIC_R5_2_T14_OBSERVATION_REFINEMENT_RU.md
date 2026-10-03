@@ -97,7 +97,8 @@ root/bank/unit03/drive
 ```
 
 Предок `root/bank/unit03` имеет resolution `MIXED`, потому что внутри него
-только cannon detailed, а servo/drive compact.
+только cannon detailed, а servo/drive compact. Любой несуществующий path,
+включая descendant под selected subtree, возвращает `INVALID`, а не `DETAILED`.
 
 ## Identity / ownership
 
@@ -152,7 +153,7 @@ Snapshot содержит metadata/anchors, но не сериализует п�
 - detail node/leaf counts;
 - detail manifest hash.
 
-Cross-instance restore и byte tamper должны fail closed.
+Cross-instance restore, forged full-model identity и byte tamper должны fail closed.
 
 Acceptance выполняет:
 
@@ -182,7 +183,7 @@ successful requests = 1
 restore count = 1
 release count = 2
 materialization count = 2
-compiled nodes visited = 8
+detail nodes materialized = 8
 source leaf traversals = 0
 recompile events = 0
 family prepares = 4
