@@ -10,8 +10,9 @@ const K = preload("res://scripts/research/ecology/v2/development_interpreter_v1.
 const F = preload("res://scripts/research/ecology/v2/environment_field_contract_v1.gd")
 const Field = preload("res://scripts/research/ecology/v2/local_environment_field_v1.gd")
 const Ports = preload("res://scripts/research/ecology/v2/organism_environment_ports_v1.gd")
-const MAX_POPULATION := 128
-const MAX_PROPAGULES_PER_STEP := 512
+const Scale = preload("res://scripts/research/ecology/v2/ecology_scale_contract_v1.gd")
+const MAX_POPULATION := Scale.MAX_POPULATION
+const MAX_PROPAGULES_PER_STEP := Scale.MAX_PROPAGULES_PER_STEP
 const PROPAGULE_SCHEMA := "dws.ecology.propagule.v1"
 
 static func individual(blueprint: Dictionary, individual_id: String, position_mm: Array, endowment: Dictionary = {}, origin_kind: String = "FOUNDER_ENDOWMENT") -> Dictionary:

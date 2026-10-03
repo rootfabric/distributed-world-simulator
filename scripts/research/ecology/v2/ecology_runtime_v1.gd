@@ -28,6 +28,7 @@ const F = preload("res://scripts/research/ecology/v2/environment_field_contract_
 const Field = preload("res://scripts/research/ecology/v2/local_environment_field_v1.gd")
 const Lifecycle = preload("res://scripts/research/ecology/v2/resource_lifecycle_runtime_v1.gd")
 const Feedback = preload("res://scripts/research/ecology/v2/persistent_environmental_feedback_v1.gd")
+const Scale = preload("res://scripts/research/ecology/v2/ecology_scale_contract_v1.gd")
 
 const SCHEMA := "dws.ecology.ecology-runtime-state.v1"
 const FEEDBACK_SCHEMA := "dws.ecology.ecology-runtime-feedback.v1"
@@ -36,9 +37,9 @@ const OUTBOX_SCHEMA := "dws.ecology.ecology-runtime-outbox.v1"
 # Deterministic mutation seed stream key prefix. The workbench controller
 # passes its historical prefix so its public seed derivation is unchanged.
 const MUTATION_KEY_PREFIX_DEFAULT := "eco-runtime-v1/mut"
-const MAX_POPULATION := 128  # aligned with A5 lifecycle budget
-const MAX_CORPSES := 128
-const MAX_OUTBOX := 512  # aligned with A5 propagule budget
+const MAX_POPULATION := Scale.MAX_POPULATION
+const MAX_CORPSES := Scale.MAX_CORPSES
+const MAX_OUTBOX := Scale.MAX_OUTBOX
 
 const STATE_KEYS := ["schema", "session_id", "tick", "field", "population", "feedback", "accounting", "outbox", "integrity_hash"]
 const FEEDBACK_KEYS := ["schema", "enabled", "policy", "step", "corpses", "returned", "mineralized_mg", "dissipated_energy_mj"]
