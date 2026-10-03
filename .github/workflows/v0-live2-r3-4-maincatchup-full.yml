@@ -188,7 +188,7 @@ jobs:
             $results | ConvertTo-Json -Depth 5 | Set-Content "$out\focused-results.json" -Encoding UTF8
             if (-not $passed) {
               Get-Content $log -Tail 260
-              throw "FOCUSED_FAILED:$test:$code"
+              throw ("FOCUSED_FAILED:{0}:{1}" -f $test,$code)
             }
           }
 
