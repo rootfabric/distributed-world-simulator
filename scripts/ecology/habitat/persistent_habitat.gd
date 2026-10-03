@@ -5,6 +5,7 @@ const Session = preload("res://scripts/ecology/habitat/persistent_habitat_sessio
 const Preset = preload("res://scripts/ecology/habitat/habitat_preset_v1.gd")
 const WorkbenchScene = preload("res://scenes/ecology/workbench/ecology_workbench.tscn")
 const Inspector = preload("res://scripts/ecology/workbench/organism_inspector_v1.gd")
+const Scale = preload("res://scripts/research/ecology/v2/ecology_scale_contract_v1.gd")
 
 @export var auto_boot := true
 @export var autosave_enabled := true
@@ -138,11 +139,12 @@ func _on_snapshot(snapshot: Dictionary) -> void:
 		_entities.add_item(String(view.individual_id))
 		if String(view.individual_id) == _selected_id:
 			_entities.select(_entities.item_count - 1)
-	_info.text = "Такт %d / %d\nЖивых %d / всего %d · поколение %d\nSeed %d · %s · %s\nСостояние %s\nПределы модели: 128 особей / 128 останков.\nПредел — остановка с ошибкой, не скрытое удаление." % [
+	_info.text = "Такт %d / %d\nЖивых %d / всего %d · поколение %d\nSeed %d · %s · %s\nСостояние %s\nПределы модели: %d особей / %d останков.\nПредел — остановка с ошибкой, не скрытое удаление." % [
 		current_tick, int(manifest.horizon_ticks), int(metrics.get("alive", 0)),
 		int(metrics.get("population_size", 0)), generation, int(manifest.seed),
 		String(manifest.organization_profile), String(manifest.mode),
-		String(snapshot.canonical_state_hash).substr(0, 16)]
+		String(snapshot.canonical_state_hash).substr(0, 16),
+		Scale.MAX_POPULATION, Scale.MAX_CORPSES]
 	_render_selection()
 	if current_tick >= int(manifest.horizon_ticks):
 		_stop_playback()
