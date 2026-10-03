@@ -116,6 +116,12 @@ func _rich_multigeneration_manifest() -> Dictionary:
 			"nutrient_mg": 1000000, "organic_mg": 1000000}],
 	}
 	manifest["placement"] = {"entries": [{"founder_ref": "founder/a", "zone_id": "rich", "position_mm": [500, 0, 500]}]}
+	# Keep mutation causally real while preserving the reproductive topology:
+	# module_parameter changes a canonical BodyGraph-producing action parameter,
+	# unlike "small", which may deterministically alter a regulatory gene enough
+	# to make a child non-reproductive. A12 is a scale/replay gate, not a claim
+	# that every arbitrary mutation lineage must remain fertile.
+	manifest["mutation"] = {"operator": "module_parameter", "mutations_enabled": true}
 	var endowment := Body.stock(0)
 	endowment.material_mg = 200000
 	endowment.water_mg = 200000
@@ -132,6 +138,7 @@ func _multigeneration_replay() -> void:
 	if not started.success:
 		return
 	var middle: Dictionary = original.controller.run_to_generation(2)
+	print("A12_SCALE_GENERATION2 tick=%d generation=%d population=%d" % [int(middle.get("tick", -1)), int(middle.get("generation", -1)), int(original.controller.get_metrics().population_size)])
 	check(middle.success and int(middle.generation) >= 2, "real lineage reaches generation 2")
 	if not middle.success or int(middle.generation) < 2:
 		return
