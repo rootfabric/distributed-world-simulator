@@ -1,0 +1,61 @@
+{
+  "schema": "fabric.r5_2.t15.implementer_exact_evidence.v1",
+  "status": "IMPLEMENTER_LOCAL_EXACT_PASS",
+  "runtime_subject": {
+    "head": "14a5ec14f6421157321e8d4aa0c3809b84e0df94",
+    "tree": "0d60544ff930a8d6483403f4e0d14c6447e58673",
+    "base_t14": "5a65e6d245fda85de50d1cf6c4a551c6240677be"
+  },
+  "engine": {
+    "version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+    "platform": "linux-x86_64-double"
+  },
+  "t15": {
+    "samples": 3,
+    "assertions_per_sample": 491,
+    "raw_log_sha256": "c295f4d68b4f95f05723d4a21112d00b7516defc7757270a1add55cff7d93654",
+    "deterministic_result_hash": "daf068dac4b7fd002ab78007db171e02881807b83e05009b5ecf04b756025e8f",
+    "instances": 100,
+    "unaffected_exact_equivalent": 99,
+    "target": "t15-instance-058",
+    "selected_path": "root/bank/unit03/cannon/emitter",
+    "baseline_compile_events": 42,
+    "damage_compile_events": 5,
+    "repair_compile_events": 5,
+    "source_leaf_traversals_damage_repair": 256,
+    "source_anchor_checks": 2,
+    "changed_paths_per_mutation": 5,
+    "unchanged_subtrees_per_mutation": 25,
+    "final_unique_family_models": 6,
+    "final_unique_subtree_hashes": 52,
+    "final_subtree_occurrences": 180,
+    "final_subtree_reuse_hits": 128,
+    "steady_leaf_traversals_after_damage": 0,
+    "physical_state_preserved_on_damage": true,
+    "physical_state_preserved_on_repair": true,
+    "repair_restored_healthy_behavior": true,
+    "all_models_intact": true
+  },
+  "regressions": {
+    "t14": "PASS (1208 assertions)",
+    "t13_5": "PASS (777 assertions)",
+    "t13": "PASS (1377 assertions)",
+    "t12": "PASS (8386 assertions)",
+    "python_evidence_tests": "4/4 PASS",
+    "fresh_import_fatal_markers": 0
+  },
+  "observational_runtime": {
+    "sample_1_elapsed_s": 18.50,
+    "sample_1_max_rss_kib": 176984,
+    "sample_3_elapsed_s": 17.84,
+    "sample_3_max_rss_kib": 176824,
+    "note": "Timing/RSS are observations of this implementer container and are not acceptance budgets. Sample-2 log completed and was byte-identical; its /usr/bin/time sidecar was interrupted by the outer tool timeout."
+  },
+  "limitations": [
+    "Implementer evidence is not an independent Reviewer/Verifier verdict.",
+    "T15 is stacked on frozen T14; T14 human merge/closure remains separate.",
+    "Damage trigger is a controlled source mutation of one T9 gain cell, not impact/fracture damage from a hull stress solve.",
+    "No production/main integration is claimed."
+  ]
+}
