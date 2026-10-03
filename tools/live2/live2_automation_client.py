@@ -64,6 +64,27 @@ def build_parser() -> argparse.ArgumentParser:
     view.add_argument("--yaw", type=float, required=True)
     view.add_argument("--pitch", type=float, default=0.0)
 
+    key = sub.add_parser("key")
+    key.add_argument("key")
+    key.add_argument("--up", action="store_true")
+    key.add_argument("--shift", action="store_true")
+    key.add_argument("--ctrl", action="store_true")
+    key.add_argument("--alt", action="store_true")
+
+    pointer_move = sub.add_parser("pointer-move")
+    pointer_move.add_argument("--x", type=float, required=True)
+    pointer_move.add_argument("--y", type=float, required=True)
+    pointer_move.add_argument("--dx", type=float, default=0.0)
+    pointer_move.add_argument("--dy", type=float, default=0.0)
+    pointer_move.add_argument("--button-mask", type=int, default=0)
+
+    pointer_button = sub.add_parser("pointer-button")
+    pointer_button.add_argument("--x", type=float, required=True)
+    pointer_button.add_argument("--y", type=float, required=True)
+    pointer_button.add_argument("--button", choices=["left", "right", "middle"], default="left")
+    pointer_button.add_argument("--up", action="store_true")
+    pointer_button.add_argument("--double-click", action="store_true")
+
     state = sub.add_parser("state")
     state.add_argument(
         "--kind",
@@ -109,6 +130,33 @@ def main() -> int:
     elif args.action == "view":
         method = "view.set"
         params = {"yaw": args.yaw, "pitch": args.pitch}
+    elif args.action == "key":
+        method = "input.key"
+        params = {
+            "key": args.key,
+            "pressed": not args.up,
+            "shift": args.shift,
+            "ctrl": args.ctrl,
+            "alt": args.alt,
+        }
+    elif args.action == "pointer-move":
+        method = "input.pointer_move"
+        params = {
+            "x": args.x,
+            "y": args.y,
+            "dx": args.dx,
+            "dy": args.dy,
+            "button_mask": args.button_mask,
+        }
+    elif args.action == "pointer-button":
+        method = "input.pointer_button"
+        params = {
+            "x": args.x,
+            "y": args.y,
+            "button": args.button,
+            "pressed": not args.up,
+            "double_click": args.double_click,
+        }
     elif args.action == "state":
         method = "state.get"
         params = {"kind": args.kind}
