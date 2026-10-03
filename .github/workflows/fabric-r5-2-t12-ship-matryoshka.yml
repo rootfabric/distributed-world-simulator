@@ -1,65 +1,244 @@
-name: FABRIC R5.2 T12 Ship Matryoshka
+name: FABRIC R5.2 T14 Fresh Independent Verifier Carrier
 on:
-  push:
-    branches: [research/fabric-r5-2-t12-ship-matryoshka-r1]
-  workflow_dispatch:
-    inputs:
-      run_exact_runtime:
-        description: Run pinned Godot on the self-hosted Linux runner
-        type: boolean
-        default: false
+  pull_request:
 permissions:
   contents: read
 concurrency:
-  group: fabric-t12-${{ github.ref }}-${{ github.event_name }}
+  group: fabric-t14-verifier-${{{ github.event.pull_request.number }}
   cancel-in-progress: true
+
+env:
+  SUBJECT_HEAD: 5a65e6d245fda85de50d1cf6c4a551c6240677be
+  SUBJECT_TREE: 291048dae0044b28b013be045a05270a9b3e5220
+  VERIFIER_HEAD: cc2e712846e555fcde822f2e21281f52ebf1d0b2
+  EXPECTED_HASH: 1cc323de55150e2591544878ad4cc2471f5325c2c266429213eb09af01b353e8
+
 jobs:
-  source-contracts:
+  verifier-source:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: cc2e712846e555fcde822f2e21281f52ebf1d0b2
           fetch-depth: 0
           persist-credentials: false
-      - name: T12 additive source scope (not a runtime verdict)
+
+      - name: Prove verifier-only diff and frozen product
         shell: bash
         run: |
           set -Eeuo pipefail
-          base=74cea2d6c81a3ee933260ebaa8126a1224c69078
-          test "$(git merge-base HEAD "$base")" = "$base"
-          allowed='^(.github/workflows/fabric-r5-2-t12-ship-matryoshka.yml|RUN_FABRIC_R5_2_T12_TESTS.sh|docs/research/FABRIC_R5_2_T12_SHIP_MATRYOSHKA_RU.md|scripts/research/fabric_bake0/(ship_matryoshka_contract_v1.gd|r5_t12_[^/]+|collect_r5_2_t12_evidence.py)|tests/research/fabric_bake0/(fabric_r5_2_t12_[^/]+|test_t12_evidence.py)|validation/fabric-r5-2-t12-[^/]+)$'
-          test -z "$(git diff --name-only "$base" HEAD | grep -Ev "$allowed" || true)"
-          git diff --check "$base" HEAD
-          bash -n RUN_FABRIC_R5_2_T12_TESTS.sh
-          python3 -m unittest discover -s tests/research/fabric_bake0 -p test_t12_evidence.py -v
-          mkdir -p source
-          git archive --format=tar HEAD | gzip -n > source/t12-source.tar.gz
-          printf 'HEAD=%s\nTREE=%s\nRUNTIME_VERDICT=NOT_RUN\n' "$(git rev-parse HEAD)" "$(git rev-parse 'HEAD^{tree}')" > source/identity.txt
-          sha256sum source/t12-source.tar.gz > source/source.sha256
-      - uses: actions/upload-artifact@v4
-        with:
-          name: t12-source-${{ github.sha }}
-          path: source/**
-          retention-days: 30
-  exact-runtime:
-    if: github.event_name == 'workflow_dispatch' && inputs.run_exact_runtime
-    runs-on: [self-hosted, Linux, X64]
-    timeout-minutes: 20
+          test "$(git rev-parse HEAD)" = "$VERIFIER_HEAD"
+          test "$(git rev-parse "$SUBJECT_HEAD^{tree}")" = "$SUBJECT_TREE"
+          test "$(git merge-base HEAD "$SUBJECT_HEAD")" = "$SUBJECT_HEAD"
+          changed="$(git diff --name-only "$SUBJECT_HEAD"...HEAD)"
+          test "$changed" = '.github/workflows/fabric-r5-2-t14-independent-verifier-r1.yml'
+          git diff --exit-code "$SUBJECT_HEAD"...HEAD -- scripts/research/fabric_bake0 tests/research/fabric_bake0 RUN_FABRIC_R5_2_T14_TESTS.sh docs/research/FABRIC_R5_2_T14_OBSERVATION_REFINEMENT_RU.md
+          git diff --check "$SUBJECT_HEAD" HEAD
+
+      - name: Independent source checks
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          python3 -m unittest discover -s tests/research/fabric_bake0 -p test_t14_evidence.py -v
+          grep -F 'T14_SNAPSHOT_MODEL_MISMATCH' scripts/research/fabric_bake0/r5_t14_observation_refinement_runtime_v1.gd
+          grep -F '_subtree(owner, path).is_empty()' scripts/research/fabric_bake0/r5_t14_observation_refinement_runtime_v1.gd
+          grep -F 'detail_nodes_materialized' scripts/research/fabric_bake0/r5_t14_observation_refinement_runtime_v1.gd
+          grep -F 'physics_equivalent == 100' tests/research/fabric_bake0/fabric_r5_2_t14_observation_refinement_acceptance.gd
+          grep -F 'REFINED_PATH + "/not-real"' tests/research/fabric_bake0/fabric_r5_2_t14_observation_refinement_acceptance.gd
+          echo T14_VERIFIER_SOURCE_INSPECTION=PASS
+
+  exact-windows:
+    needs: verifier-source
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 55
+    env:
+      CONFIGURED_GODOT_BIN: C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe
+      BREAKPOINT_RUNTIME_DISABLED: 1
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: cc2e712846e555fcde822f2e21281f52ebf1d0b2
           fetch-depth: 0
           persist-credentials: false
-      - name: Canonical double three-process gate
-        shell: bash
+
+      - name: Verify verifier/product identity and canonical Godot
+        shell: pwsh
         run: |
-          set -Eeuo pipefail
-          export GODOT_BIN="${DWS_GODOT_DOUBLE_BIN:-$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64}"
-          bash RUN_FABRIC_R5_2_T12_TESTS.sh
+          $ErrorActionPreference = 'Stop'
+          $actual = (git rev-parse HEAD).Trim()
+          if ($actual -ne $env:VERIFIER_HEAD) { throw "VERIFIER_HEAD_MISMATCH:$actual" }
+          $changed = @(git diff --name-only "$env:SUBJECT_HEAD...HEAD")
+          if ($changed.Count -ne 1 -or $changed[0] -ne '.github/workflows/fabric-r5-2-t14-independent-verifier-r1.yml') {
+            throw "PRODUCT_DIFF_NOT_ZERO:$($changed -join ',')"
+          }
+          $subjectTree = (git rev-parse "$env:SUBJECT_HEAD^{tree}").Trim()
+          if ($subjectTree -ne $env:SUBJECT_TREE) { throw "SUBJECT_TREE_MISMATCH:$subjectTree" }
+          $godot = $env:CONFIGURED_GODOT_BIN
+          if (-not (Test-Path -LiteralPath $godot)) { throw "EXACT_GODOT_NOT_FOUND:$godot" }
+          $version = (& $godot --version | Select-Object -First 1).Trim()
+          if ($version -ne '4.7.1.stable.double.custom_build.a13da4feb') { throw "GODOT_IDENTITY_MISMATCH:$version" }
+          $sha = (Get-FileHash -Algorithm SHA256 -LiteralPath $godot).Hash.ToLowerInvariant()
+          $expected = '3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5'
+          if ($sha -ne $expected) { throw "GODOT_SHA_MISMATCH:$sha" }
+          Write-Host "SUBJECT_HEAD=$env:SUBJECT_HEAD"
+          Write-Host "SUBJECT_TREE=$subjectTree"
+          Write-Host "VERIFIER_HEAD=$actual"
+          Write-Host "VERIFIER_TREE=$((git rev-parse 'HEAD^{tree}').Trim())"
+          Write-Host "GODOT=$version"
+          Write-Host "GODOT_SHA256=$sha"
+          "GODOT_BIN=$godot" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: Fresh import
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          if (Test-Path .godot) { Remove-Item -Recurse -Force .godot }
+          $out = 'artifacts\fabric-r5-2-t14-verifier-r1'
+          New-Item -ItemType Directory -Force -Path $out | Out-Null
+          $log = Join-Path $out 'import.log'
+          & $env:GODOT_BIN --headless --editor --path . --import 2>&1 | Tee-Object -FilePath $log
+          if ($LASTEXITCODE -ne 0) { throw "IMPORT_FAILED:$LASTEXITCODE" }
+          if (Select-String -Path $log -Pattern 'SCRIPT ERROR|Parse Error|Compile Error|Invalid call|Invalid access|ERROR:' -Quiet) { throw 'IMPORT_FATAL_MARKER' }
+
+      - name: Run three fresh T14 processes
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $out = 'artifacts\fabric-r5-2-t14-verifier-r1'
+          $script = 'res://tests/research/fabric_bake0/fabric_r5_2_t14_observation_refinement_acceptance.gd'
+          foreach ($i in 1..3) {
+            $log = Join-Path $out ("sample-{0}.log" -f $i)
+            & $env:GODOT_BIN --headless --path . --script $script 2>&1 | Tee-Object -FilePath $log
+            $code = $LASTEXITCODE
+            if ($code -ne 0) { throw ("T14_SAMPLE_FAILED:{0}:{1}" -f $i, $code) }
+          }
+
+      - name: Independent T14 verifier oracle
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          @'
+          import hashlib, json, pathlib, re
+          root = pathlib.Path(r"artifacts/fabric-r5-2-t14-verifier-r1")
+          prefix = "FABRIC_R5_2_T14_RESULT="
+          pass_marker = "FABRIC R5.2 T14 OBSERVATION REFINEMENT: PASS (1208 assertions)"
+          fatal = re.compile(r"SCRIPT ERROR|Parse Error|Compile Error|Invalid call|Invalid access|ERROR:")
+          rows, parsed = [], []
+          for i in (1,2,3):
+              text = (root / f"sample-{i}.log").read_text(encoding="utf-8", errors="strict")
+              assert pass_marker in text, f"sample {i}: PASS marker missing"
+              assert not fatal.search(text), f"sample {i}: fatal marker"
+              found = [ln[len(prefix):] for ln in text.splitlines() if ln.startswith(prefix)]
+              assert len(found) == 1, f"sample {i}: result marker count"
+              rows.append(found[0])
+              parsed.append(json.loads(found[0]))
+          assert rows[0] == rows[1] == rows[2], "raw payloads differ"
+          d = parsed[0]
+          expected = {
+              "schema":"fabric.t14.result.v1",
+              "failures":[],
+              "checks":1208,
+              "instances":100,
+              "family_counts":{"family-a":40,"family-b":30,"family-c":20,"family-d":10},
+              "compile_events":42,
+              "unique_family_models":4,
+              "observed_instance":"t14-instance-058",
+              "observed_family":"family-b",
+              "refined_path":"root/bank/unit03/cannon",
+              "detail_node_count":4,
+              "detail_leaf_count":3,
+              "selected_subtree_hash":"795b48cdb5985bc81ebdf8f6d3a8ca2158d1b058b4f0813e1a9628e0d85bc055",
+              "detail_manifest_hash":"f4db39048a344f152bd50b23b6f34139a914c931875281563cb0c2bfc6134e6a",
+              "refined_instances_during_observation":1,
+              "compact_instances_during_observation":99,
+              "same_instance_compact_siblings":5,
+              "other_compact_instances":99,
+              "physics_equivalent_after_refinement":100,
+              "snapshot_roundtrip":True,
+              "successful_requests":1,
+              "restore_count":1,
+              "release_count":2,
+              "materialization_count":2,
+              "detail_nodes_materialized":8,
+              "source_leaf_traversals":0,
+              "recompile_events":0,
+              "active_refinements_final":0,
+              "runtime_steps":200,
+              "evaluations":1584,
+              "boundary_calls":30096,
+              "compiled_group_visits":19008,
+              "physics_leaf_traversals":0,
+              "caller_instances_unchanged":True,
+              "model_identities_unchanged":True,
+              "all_models_intact":True,
+          }
+          for k,v in expected.items():
+              assert d.get(k) == v, f"{k}: {d.get(k)!r} != {v!r}"
+          assert d["boundary_calls"] == 19 * d["evaluations"]
+          assert d["compiled_group_visits"] == 12 * d["evaluations"]
+          digest = hashlib.sha256(json.dumps(d, sort_keys=True, separators=(",",":"), allow_nan=False).encode()).hexdigest()
+          assert digest == "1cc323de55150e2591544878ad4cc2471f5325c2c266429213eb09af01b353e8", digest
+          (root / "independent-verifier.json").write_text(json.dumps({
+              "schema":"fabric.r5_2.t14.independent_verifier.r1",
+              "verdict":"PASS",
+              "deterministic_hash":digest,
+              "result":d,
+          }, indent=2, sort_keys=True)+"\n", encoding="utf-8")
+          print("T14_FRESH_INDEPENDENT_VERIFIER=PASS")
+          print("T14_VERIFIER_DETERMINISTIC_HASH="+digest)
+          '@ | python -
+          if ($LASTEXITCODE -ne 0) { throw "T14_VERIFIER_ORACLE_FAILED:$LASTEXITCODE" }
+
+      - name: Run unchanged T13.5 regression
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $out = 'artifacts\fabric-r5-2-t14-verifier-r1'
+          $log = Join-Path $out 't13-5-regression.log'
+          & $env:GODOT_BIN --headless --path . --script res://tests/research/fabric_bake0/fabric_r5_2_t13_5_shared_families_acceptance.gd 2>&1 | Tee-Object -FilePath $log
+          if ($LASTEXITCODE -ne 0) { throw "T13_5_REGRESSION_FAILED:$LASTEXITCODE" }
+          if (-not (Select-String -Path $log -Pattern 'FABRIC R5.2 T13.5 SHARED FAMILIES: PASS (777 assertions)' -SimpleMatch -Quiet)) { throw 'T13_5_REGRESSION_MARKER_MISSING' }
+
+      - name: Run unchanged T13 regression
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $out = 'artifacts\fabric-r5-2-t14-verifier-r1'
+          $log = Join-Path $out 't13-regression.log'
+          & $env:GODOT_BIN --headless --path . --script res://tests/research/fabric_bake0/fabric_r5_2_t13_shared_instances_acceptance.gd 2>&1 | Tee-Object -FilePath $log
+          if ($LASTEXITCODE -ne 0) { throw "T13_REGRESSION_FAILED:$LASTEXITCODE" }
+          if (-not (Select-String -Path $log -Pattern 'FABRIC R5.2 T13 SHARED INSTANCES: PASS (1377 assertions)' -SimpleMatch -Quiet)) { throw 'T13_REGRESSION_MARKER_MISSING' }
+
+      - name: Run unchanged T12 regression
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $out = 'artifacts\fabric-r5-2-t14-verifier-r1'
+          $log = Join-Path $out 't12-regression.log'
+          & $env:GODOT_BIN --headless --path . --script res://tests/research/fabric_bake0/fabric_r5_2_t12_ship_acceptance.gd 2>&1 | Tee-Object -FilePath $log
+          if ($LASTEXITCODE -ne 0) { throw "T12_REGRESSION_FAILED:$LASTEXITCODE" }
+          if (-not (Select-String -Path $log -Pattern 'FABRIC R5.2 T12 SHIP MATRYOSHKA: PASS (8386 assertions)' -SimpleMatch -Quiet)) { throw 'T12_REGRESSION_MARKER_MISSING' }
+          $dirty = git status --porcelain=v1 --untracked-files=no
+          if ($dirty) { throw "TRACKED_TREE_DIRTY:$dirty" }
+
+      - name: Record verifier identity
+        shell: pwsh
+        run: |
+          $out = 'artifacts\fabric-r5-2-t14-verifier-r1'
+          @(
+            "SUBJECT_HEAD=$env:SUBJECT_HEAD"
+            "SUBJECT_TREE=$env:SUBJECT_TREE"
+            "VERIFIER_HEAD=$env:VERIFIER_HEAD"
+            "VERIFIER_TREE=$((git rev-parse 'HEAD^{tree}').Trim())"
+            "PRODUCT_DIFF=0"
+            "EXPECTED_DETERMINISTIC_HASH=$env:EXPECTED_HASH"
+          ) | Set-Content -Path (Join-Path $out 'identity.txt')
+
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: t12-runtime-${{ github.sha }}
-          path: artifacts/fabric-r5-2-t12/**
+          name: t14-fresh-independent-verifier-r1-${{{ github.sha }}
+          path: artifacts/fabric-r5-2-t14-verifier-r1/**
+          if-no-files-found: error
           retention-days: 90
