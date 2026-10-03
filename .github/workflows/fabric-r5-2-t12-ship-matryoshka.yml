@@ -4,7 +4,7 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: fabric-t14-verifier-${{{ github.event.pull_request.number }}
+  group: fabric-t14-verifier-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
 env:
@@ -238,7 +238,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: t14-fresh-independent-verifier-r1-${{{ github.sha }}
+          name: t14-fresh-independent-verifier-r1-${{ github.sha }}
           path: artifacts/fabric-r5-2-t14-verifier-r1/**
           if-no-files-found: error
           retention-days: 90
