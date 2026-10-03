@@ -60,12 +60,20 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'A12_EXACT_FAILED' }
           python validation/ecology/evo_arch2_a11/run_exact.py --godot $godot
           if ($LASTEXITCODE -ne 0) { throw 'A11_REGRESSION_FAILED' }
-      - name: Verify clean tracked source
-        if: always()
+      - name: Verify clean tracked Linux source
+        if: always() && matrix.platform == 'Linux'
         shell: bash
         run: |
           git diff --exit-code
           git diff --cached --exit-code
+      - name: Verify clean tracked Windows source
+        if: always() && matrix.platform == 'Windows'
+        shell: pwsh
+        run: |
+          git diff --exit-code
+          if ($LASTEXITCODE -ne 0) { throw 'TRACKED_WORKTREE_CHANGED' }
+          git diff --cached --exit-code
+          if ($LASTEXITCODE -ne 0) { throw 'TRACKED_INDEX_CHANGED' }
       - uses: actions/upload-artifact@v4
         if: always()
         with:
