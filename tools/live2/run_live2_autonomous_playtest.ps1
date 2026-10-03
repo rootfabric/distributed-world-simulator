@@ -61,6 +61,20 @@ function Write-JsonLine {
     ($Value | ConvertTo-Json -Depth 40 -Compress) | Add-Content -Path $Path -Encoding UTF8
 }
 
+function Wait-UdpOwner {
+    param([int]$Port,[int]$TimeoutSeconds=20)
+    $Deadline=(Get-Date).AddSeconds($TimeoutSeconds)
+    while((Get-Date)-lt $Deadline){
+        $Endpoint=Get-NetUDPEndpoint -LocalPort $Port -ErrorAction SilentlyContinue |
+            Select-Object -First 1
+        if($null-ne $Endpoint -and [int]$Endpoint.OwningProcess -gt 0){
+            return [int]$Endpoint.OwningProcess
+        }
+        Start-Sleep -Milliseconds 250
+    }
+    throw "SERVER_UDP_OWNER_TIMEOUT:$Port"
+}
+
 function Invoke-Control {
     param([ValidateSet("A","B")][string]$Client,[string[]]$Arguments,[switch]$AllowFailure)
     $Port = if ($Client -eq "A") { $ClientAPort } else { $ClientBPort }
@@ -145,9 +159,11 @@ try {
     [ordered]@{schema="dws.live2.r3_4.autonomous_session.v1";product_head=$ProductHead;worktree=$Worktree;session=$SessionRoot;server_port=$ServerPort;client_a_port=$ClientAPort;client_b_port=$ClientBPort;created_at=(Get-Date).ToString("o")} | ConvertTo-Json -Depth 10 | Set-Content (Join-Path $SessionRoot "session.json") -Encoding UTF8
 
     $ServerArgs=@("--headless","--path",$Worktree,"--log-file",$ServerLog,"--","--network-mvp","--role=dedicated-server","--world=earth","--server-address=127.0.0.1","--server-port=$ServerPort","--node-id=live2-r3-4-auto-server","--network-debug")
-    $Processes.server=Start-Process -FilePath $GodotConsole -ArgumentList $ServerArgs -WorkingDirectory $Worktree -Environment @{APPDATA=$ServerProfile;LOCALAPPDATA=$ServerProfile} -PassThru
-    Start-Sleep -Seconds 2
-    if($Processes.server.HasExited){throw "SERVER_EXITED_EARLY:$($Processes.server.ExitCode)"}
+    $Processes.server_wrapper=Start-Process -FilePath $GodotConsole -ArgumentList $ServerArgs -WorkingDirectory $Worktree -Environment @{APPDATA=$ServerProfile;LOCALAPPDATA=$ServerProfile} -PassThru
+    Start-Sleep -Seconds 1
+    $ServerOwnerPid=Wait-UdpOwner -Port $ServerPort -TimeoutSeconds 25
+    $Processes.server=Get-Process -Id $ServerOwnerPid -ErrorAction Stop
+    Write-JsonLine ([ordered]@{at=(Get-Date).ToString("o");event="SERVER_PROCESS_RESOLVED";wrapper_pid=$Processes.server_wrapper.Id;server_pid=$Processes.server.Id;udp_port=$ServerPort}) $ActionLog
     $Processes.sampler=Start-Process -FilePath "pwsh" -ArgumentList @("-NoProfile","-File",$SamplerScript,"-ProcessId","$($Processes.server.Id)","-Port","$ServerPort","-OutputPath",$SamplerLog,"-ServerLog",$ServerLog,"-IntervalMs","500") -WorkingDirectory $Worktree -PassThru
 
     $Common=@("--path",$Worktree,"--resolution","900x650","--","--network-mvp","--role=game-client","--world=earth","--server-address=127.0.0.1","--server-port=$ServerPort","--network-debug","--network-debug-stay-open","--automation-control","--automation-control-token=$Token")
@@ -197,7 +213,7 @@ try {
     foreach($Client in @("A","B")){try{Invoke-Control $Client @("stop") -AllowFailure | Out-Null}catch{}}
     foreach($Client in @("A","B")){try{Invoke-Control $Client @("command","app.quit") -AllowFailure | Out-Null}catch{}}
     Start-Sleep -Seconds 2
-    foreach($Name in @("a","b","sampler","server")){
+    foreach($Name in @("a","b","sampler","server","server_wrapper")){
         if($Processes.Contains($Name)){
             try{$P=$Processes[$Name];$P.Refresh();if(-not $P.HasExited){Stop-Process -Id $P.Id -Force -ErrorAction SilentlyContinue}}catch{}
         }
