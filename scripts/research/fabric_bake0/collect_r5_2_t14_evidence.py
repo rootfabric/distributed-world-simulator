@@ -45,7 +45,7 @@ def validate_result(d: dict) -> None:
     require(d.get("restore_count") == 1, "wrong restore count")
     require(d.get("release_count") == 2, "wrong release count")
     require(d.get("materialization_count") == 2, "wrong materialization count")
-    require(d.get("compiled_nodes_visited") == 8, "refinement traversed outside selected compiled subtree")
+    require(d.get("detail_nodes_materialized") == 8, "refinement traversed outside selected compiled subtree")
     require(d.get("source_leaf_traversals") == 0, "observation traversed source leaves")
     require(d.get("recompile_events") == 0, "observation recompiled")
     require(d.get("active_refinements_final") == 0, "refinement leaked")
