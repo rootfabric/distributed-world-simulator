@@ -20,7 +20,11 @@ if ([string]::IsNullOrWhiteSpace($SessionRoot)) {
 New-Item -ItemType Directory -Force $SessionRoot | Out-Null
 $SessionRoot = (Resolve-Path $SessionRoot).Path
 $Cli = Join-Path $Worktree "tools\live2\live2_automation_client.py"
+$Analyzer = Join-Path $Worktree "tools\live2\analyze_live2_autonomous_playtest.py"
+$SamplerScript = Join-Path $Worktree "tools\live2\watch_live2_server_stall.ps1"
 if (-not (Test-Path $Cli)) { throw "AUTOMATION_CLI_NOT_FOUND:$Cli" }
+if (-not (Test-Path $Analyzer)) { throw "AUTOMATION_ANALYZER_NOT_FOUND:$Analyzer" }
+if (-not (Test-Path $SamplerScript)) { throw "SERVER_SAMPLER_NOT_FOUND:$SamplerScript" }
 foreach ($binary in @($GodotGui, $GodotConsole)) {
     if (-not (Test-Path $binary)) { throw "GODOT_NOT_FOUND:$binary" }
 }
@@ -46,6 +50,7 @@ $ClientBLog = Join-Path $SessionRoot "client-b.log"
 $ActionLog = Join-Path $SessionRoot "automation-actions.jsonl"
 $JitterLog = Join-Path $SessionRoot "jitter-samples.jsonl"
 $ReportPath = Join-Path $SessionRoot "AUTONOMOUS-PLAYTEST-REPORT.json"
+$SamplerLog = Join-Path $SessionRoot "server-process-sampler.jsonl"
 $Processes = [ordered]@{}
 $GameplayResults = @()
 $Outcome = "UNKNOWN"
@@ -143,6 +148,7 @@ try {
     $Processes.server=Start-Process -FilePath $GodotConsole -ArgumentList $ServerArgs -WorkingDirectory $Worktree -Environment @{APPDATA=$ServerProfile;LOCALAPPDATA=$ServerProfile} -PassThru
     Start-Sleep -Seconds 2
     if($Processes.server.HasExited){throw "SERVER_EXITED_EARLY:$($Processes.server.ExitCode)"}
+    $Processes.sampler=Start-Process -FilePath "pwsh" -ArgumentList @("-NoProfile","-File",$SamplerScript,"-ProcessId","$($Processes.server.Id)","-Port","$ServerPort","-OutputPath",$SamplerLog,"-ServerLog",$ServerLog,"-IntervalMs","500") -WorkingDirectory $Worktree -PassThru
 
     $Common=@("--path",$Worktree,"--resolution","900x650","--","--network-mvp","--role=game-client","--world=earth","--server-address=127.0.0.1","--server-port=$ServerPort","--network-debug","--network-debug-stay-open","--automation-control","--automation-control-token=$Token")
     $ArgsA=@("--position","20,50","--log-file",$ClientALog)+$Common+@("--player-identity=a","--node-id=live2-r3-4-auto-a","--automation-control-port=$ClientAPort","--automation-control-output-dir=$AutomationA")
@@ -191,12 +197,13 @@ try {
     foreach($Client in @("A","B")){try{Invoke-Control $Client @("stop") -AllowFailure | Out-Null}catch{}}
     foreach($Client in @("A","B")){try{Invoke-Control $Client @("command","app.quit") -AllowFailure | Out-Null}catch{}}
     Start-Sleep -Seconds 2
-    foreach($Name in @("a","b","server")){
+    foreach($Name in @("a","b","sampler","server")){
         if($Processes.Contains($Name)){
             try{$P=$Processes[$Name];$P.Refresh();if(-not $P.HasExited){Stop-Process -Id $P.Id -Force -ErrorAction SilentlyContinue}}catch{}
         }
     }
-    [ordered]@{schema="dws.live2.r3_4.autonomous_report.v1";outcome=$Outcome;failure=$Failure;product_head=$ProductHead;session=$SessionRoot;movement_phase_seconds=$MovementPhaseSeconds;gameplay_actions=$GameplayResults;action_log=$ActionLog;jitter_log=$JitterLog;automation_a=$AutomationA;automation_b=$AutomationB;server_log=$ServerLog;client_a_log=$ClientALog;client_b_log=$ClientBLog;completed_at=(Get-Date).ToString("o")} | ConvertTo-Json -Depth 60 | Set-Content $ReportPath -Encoding UTF8
+    [ordered]@{schema="dws.live2.r3_4.autonomous_report.v1";outcome=$Outcome;failure=$Failure;product_head=$ProductHead;session=$SessionRoot;movement_phase_seconds=$MovementPhaseSeconds;gameplay_actions=$GameplayResults;action_log=$ActionLog;jitter_log=$JitterLog;sampler_log=$SamplerLog;automation_a=$AutomationA;automation_b=$AutomationB;server_log=$ServerLog;client_a_log=$ClientALog;client_b_log=$ClientBLog;completed_at=(Get-Date).ToString("o")} | ConvertTo-Json -Depth 60 | Set-Content $ReportPath -Encoding UTF8
+    try { & python $Analyzer $SessionRoot | Set-Content (Join-Path $SessionRoot "analysis-console.txt") -Encoding UTF8 } catch { Write-Warning "AUTONOMOUS_ANALYZER_FAILED:$($_.Exception.Message)" }
 }
 
 Write-Host "LIVE2_R3_4_AUTONOMOUS_RESULT=$Outcome"
