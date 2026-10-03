@@ -201,6 +201,14 @@ jobs:
           $log='artifacts\live2-r3-4-maincatchup\p2-isolated.log'
           & $env:GODOT_BIN --headless --path . --script res://tests/runtime/test_v0_p2_live_shared_state_convergence.gd *> $log
           $code=$LASTEXITCODE
+          $diag='artifacts\live2-r3-4-maincatchup\p2-isolated-diagnostics'
+          New-Item -ItemType Directory -Force $diag | Out-Null
+          $p2roots=@(Get-ChildItem 'artifacts\test-results' -Directory -Filter 'v0-p2-live-shared-state-*' -ErrorAction SilentlyContinue)
+          foreach ($p2root in $p2roots) {
+            Copy-Item $p2root.FullName (Join-Path $diag $p2root.Name) -Recurse -Force
+          }
+          [ordered]@{count=$p2roots.Count;roots=@($p2roots | Select-Object -ExpandProperty Name)} |
+            ConvertTo-Json -Depth 4 | Set-Content (Join-Path $diag 'index.json') -Encoding UTF8
           if ($code -ne 0 -or (Get-Content -Raw $log) -match 'SCRIPT ERROR:|Parse Error:|Compile Error:') {
             Get-Content $log -Tail 300
             throw "P2_ISOLATED_FAILED:$code"
@@ -239,6 +247,14 @@ jobs:
           $code=$LASTEXITCODE
           "$code" | Set-Content (Join-Path $pass 'world-exit.txt') -Encoding ascii
           $source='artifacts\test-results\world-regression-summary.json'
+          $p2diag=Join-Path $pass 'p2-diagnostics'
+          New-Item -ItemType Directory -Force $p2diag | Out-Null
+          $p2roots=@(Get-ChildItem 'artifacts\test-results' -Directory -Filter 'v0-p2-live-shared-state-*' -ErrorAction SilentlyContinue)
+          foreach ($p2root in $p2roots) {
+            Copy-Item $p2root.FullName (Join-Path $p2diag $p2root.Name) -Recurse -Force
+          }
+          [ordered]@{count=$p2roots.Count;roots=@($p2roots | Select-Object -ExpandProperty Name)} |
+            ConvertTo-Json -Depth 4 | Set-Content (Join-Path $p2diag 'index.json') -Encoding UTF8
           if (Test-Path $source) { Copy-Item $source (Join-Path $pass 'world-regression-summary.json') -Force }
           if ($code -ne 0) {
             Get-Content (Join-Path $pass 'full-world-core.log') -Tail 350
@@ -286,6 +302,14 @@ jobs:
           $code=$LASTEXITCODE
           "$code" | Set-Content (Join-Path $pass 'world-exit.txt') -Encoding ascii
           $source='artifacts\test-results\world-regression-summary.json'
+          $p2diag=Join-Path $pass 'p2-diagnostics'
+          New-Item -ItemType Directory -Force $p2diag | Out-Null
+          $p2roots=@(Get-ChildItem 'artifacts\test-results' -Directory -Filter 'v0-p2-live-shared-state-*' -ErrorAction SilentlyContinue)
+          foreach ($p2root in $p2roots) {
+            Copy-Item $p2root.FullName (Join-Path $p2diag $p2root.Name) -Recurse -Force
+          }
+          [ordered]@{count=$p2roots.Count;roots=@($p2roots | Select-Object -ExpandProperty Name)} |
+            ConvertTo-Json -Depth 4 | Set-Content (Join-Path $p2diag 'index.json') -Encoding UTF8
           if (Test-Path $source) { Copy-Item $source (Join-Path $pass 'world-regression-summary.json') -Force }
           if ($code -ne 0) {
             Get-Content (Join-Path $pass 'full-world-core.log') -Tail 350
