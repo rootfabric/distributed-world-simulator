@@ -222,16 +222,27 @@ func _poll_peer() -> void:
 		var expected_mode: int = _transfer_mode(String(frame.get("delivery_mode", "")))
 		if packet_channel != expected_channel:
 			_quarantine_physical_mismatch(numeric_id, frame, "PHYSICAL_CHANNEL_MISMATCH", {
+				"packet_bytes": packet.size(),
 				"packet_channel": packet_channel,
 				"expected_channel": expected_channel,
+				"packet_mode": packet_mode,
 				"frame_channel": String(frame.get("channel", "")),
+				"frame_delivery_mode": String(frame.get("delivery_mode", "")),
+				"frame_type": String(frame.get("payload", {}).get("type", "")),
+				"frame_sequence": int(frame.get("sequence", 0)),
 			})
 			continue
 		if packet_mode != expected_mode:
 			_quarantine_physical_mismatch(numeric_id, frame, "PHYSICAL_DELIVERY_MODE_MISMATCH", {
+				"packet_bytes": packet.size(),
+				"packet_channel": packet_channel,
+				"expected_channel": expected_channel,
 				"packet_mode": packet_mode,
 				"expected_mode": expected_mode,
-				"delivery_mode": String(frame.get("delivery_mode", "")),
+				"frame_channel": String(frame.get("channel", "")),
+				"frame_delivery_mode": String(frame.get("delivery_mode", "")),
+				"frame_type": String(frame.get("payload", {}).get("type", "")),
+				"frame_sequence": int(frame.get("sequence", 0)),
 			})
 			continue
 		var logical_peer_id: String = _logical_peer_for_packet(numeric_id, frame)
@@ -272,7 +283,16 @@ func _quarantine_physical_mismatch(
 	quarantine_details["protocol_violation"] = true
 	quarantine_details["quarantine_policy"] = PHYSICAL_MISMATCH_HANDLING_POLICY
 	quarantine_details["numeric_peer_id"] = numeric_id
+	quarantine_details["transport_mode"] = _mode
 	quarantine_details["frame_session_id"] = frame_session_id
+	quarantine_details["registered_session_id"] = session_id
+	quarantine_details["frame_channel"] = String(frame.get("channel", quarantine_details.get("frame_channel", "")))
+	quarantine_details["frame_delivery_mode"] = String(frame.get("delivery_mode", quarantine_details.get("frame_delivery_mode", "")))
+	quarantine_details["frame_sequence"] = int(frame.get("sequence", quarantine_details.get("frame_sequence", 0)))
+	quarantine_details["frame_type"] = String(frame.get("payload", {}).get("type", quarantine_details.get("frame_type", "")))
+	quarantine_details["route_id"] = String(_route_by_peer.get(peer_id, ""))
+	quarantine_details["route_generation"] = int(_route_generation_by_peer.get(peer_id, 0))
+	quarantine_details["peer_statistics"] = _peer_statistics(peer_id)
 
 	if _peer != null:
 		if _mode == "SERVER" and numeric_id > 0:
@@ -376,11 +396,12 @@ func _channel_index(channel: String) -> int:
 
 
 func _transfer_mode(delivery_mode: String) -> int:
-	# Exact physical fidelity: Godot's ENET maps TRANSFER_MODE_UNRELIABLE to
-	# ENET_PACKET_FLAG_UNSEQUENCED and TRANSFER_MODE_UNRELIABLE_ORDERED to
-	# plain sequenced-unreliable on the wire, and get_packet_mode() decodes the
-	# SAME flags back — so the declared mode must map 1:1 or every receiver
-	# quarantines the frame as PHYSICAL_DELIVERY_MODE_MISMATCH (EG4 L2 leg-B).
+	# Exact physical fidelity (EG4 decision): raw unreliable becomes
+	# packet-size-sensitive because Godot marks fragmented unreliable datagrams
+	# as UNRELIABLE_ORDERED on receive. Declared UNRELIABLE_SEQUENCED therefore
+	# maps to ENet sequenced-unreliable for both whole and fragmented packets.
+	# LIVE.2 handles the physical 16-bit lifetime separately by rotating the
+	# transport session before the per-channel sequence reaches its wrap.
 	if delivery_mode == "UNRELIABLE":
 		return MultiplayerPeer.TRANSFER_MODE_UNRELIABLE
 	if delivery_mode == "UNRELIABLE_SEQUENCED":

@@ -7,6 +7,8 @@ signal construction_updated(bundle: Dictionary)
 signal connection_failed(error_code: String, details: Dictionary)
 signal server_disconnected(report: Dictionary)
 signal prediction_updated(predicted_state: Dictionary, presentation_state: Dictionary, report: Dictionary)
+signal connection_state_changed(state: String, details: Dictionary)
+signal command_result_received(result: Dictionary)
 
 const Boundary = preload("res://scripts/network/transports/v2/network_transport_boundary_v2.gd")
 const Port = preload("res://scripts/network/transports/v2/enet_multi_peer_transport_port.gd")
@@ -29,6 +31,9 @@ const ConstructionReplica = preload("res://scripts/construction/multiplayer/cons
 const SCHEMA := "planet_simulator.m3_graphical_client_runtime.v1"
 const NX2_INPUT_SEND_INTERVAL_MS := 33
 const NX4_INPUT_SEND_INTERVAL_SECONDS := 1.0 / 30.0
+const LIVE2_RECONNECT_INITIAL_DELAY_MS := 1000
+const LIVE2_RECONNECT_MAX_DELAY_MS := 5000
+const LIVE2_ENET_SEQUENCED_ROTATION_LIMIT := 60000
 const SERVER_PEER_ID := "peer/enet/m3-dedicated-server"
 const M7_CHECKPOINT := "v16.10.6.1-testing-m7-playable-networked-playground"
 const M7_BUILD_ID := "m7-playable-networked-playground"
@@ -59,6 +64,8 @@ var _command_results: Dictionary = {}
 var _awaited_command_ids: Dictionary = {}
 var _async_command_results := 0
 var _async_command_rejections := 0
+var _async_command_timeouts := 0
+var _async_pending_operations: Dictionary = {}
 var _debug_logging := false
 var _last_debug_report_ms := 0
 var _leave_acknowledged := false
@@ -113,6 +120,16 @@ var _construction_session: Dictionary = {}
 var _construction_snapshot_updates := 0
 var _construction_event_updates := 0
 var _construction_rejections := 0
+var _connection_config: Dictionary = {}
+var _connection_state := "DISCONNECTED"
+var _reconnect_pending := false
+var _reconnect_attempts := 0
+var _reconnect_next_ms := 0
+var _reconnect_reason := ""
+var _transport_realtime_sent_by_channel: Dictionary = {}
+var _transport_rotation_pending := false
+var _transport_rotation_reason := ""
+var _transport_rotations := 0
 
 func setup(config: Dictionary) -> Dictionary:
 	if _configured: return _failure("M3_CLIENT_ALREADY_CONFIGURED")
@@ -125,6 +142,18 @@ func setup(config: Dictionary) -> Dictionary:
 	_automated_acceptance = bool(config.get("automated_acceptance", false))
 	_playable_sandbox = bool(config.get("playable_sandbox", false))
 	_debug_logging = bool(config.get("debug_logging", false))
+	_connection_config = config.duplicate(true)
+	_connection_state = "DISCONNECTED"
+	_reconnect_pending = false
+	_reconnect_attempts = 0
+	_reconnect_next_ms = 0
+	_reconnect_reason = ""
+	_async_pending_operations.clear()
+	_async_command_timeouts = 0
+	_transport_realtime_sent_by_channel.clear()
+	_transport_rotation_pending = false
+	_transport_rotation_reason = ""
+	_transport_rotations = 0
 	_join_operation_id = ""
 	_handshake_id = ""
 	_handshake_hello.clear()
@@ -179,33 +208,30 @@ func setup(config: Dictionary) -> Dictionary:
 	if not bool(telemetry_setup.get("success", false)):
 		return telemetry_setup
 	_replica = Replica.new()
-	var condition_setup: Dictionary = _setup_network_condition_simulator(config)
-	if not bool(condition_setup.get("success", false)):
+	var transport_setup: Dictionary = _start_transport_attempt()
+	if not bool(transport_setup.get("success", false)):
 		_cleanup_setup_failure()
-		return condition_setup
-	_boundary = Boundary.new()
-	var configured: Dictionary = _boundary.configure(
-		_network_condition_simulator, 524288, 32, 1048576, _telemetry
-	)
-	if not bool(configured.get("success", false)):
-		_cleanup_setup_failure()
-		return configured
-	_transport_session_id = "transport-session/m3/%s/%d/%d" % [_logical_player_id, OS.get_process_id(), Time.get_ticks_msec()]
-	var connected: Dictionary = _boundary.connect_client(
-		Support.endpoint(_host, _port, false), SERVER_PEER_ID, _transport_session_id,
-		"route/m3/server/%s" % _logical_player_id, 1
-	)
-	if not bool(connected.get("success", false)):
-		_cleanup_setup_failure()
-		return connected
-	_started_ms = Time.get_ticks_msec(); _configured = true; set_process(true)
+		return transport_setup
+	_started_ms = Time.get_ticks_msec()
+	_configured = true
+	set_process(true)
 	_last_debug_report_ms = _started_ms
 	_debug_event("CLIENT_CONNECTING", {"host":_host,"port":_port,"player":_logical_player_id,"transport_session_id":_transport_session_id})
+	_set_connection_state("CONNECTING", {"attempt": 0})
 	_write_report("CONNECTING", false)
 	return _success()
 
 func _process(_delta: float) -> void:
-	if not _configured or _boundary == null: return
+	if not _configured:
+		return
+	if _reconnect_pending:
+		if Time.get_ticks_msec() >= _reconnect_next_ms:
+			_attempt_reconnect()
+		return
+	if _maybe_rotate_transport():
+		return
+	if _boundary == null:
+		return
 	var process_started_us: int = Time.get_ticks_usec()
 	var disconnected_this_poll: bool = false
 	_telemetry.increment("client_process_iterations")
@@ -249,11 +275,24 @@ func _process(_delta: float) -> void:
 			_server_disconnects += 1
 			_joined = false
 			_debug_event("SERVER_DISCONNECTED", event)
+			_set_connection_state("DISCONNECTED", {
+				"reason": "PEER_DISCONNECTED",
+				"server_disconnects": _server_disconnects,
+			})
 			_write_report("DISCONNECTED", false)
 			server_disconnected.emit(get_report())
 			disconnected_this_poll = true
-	if not _joined and _server_disconnects == 0 and not disconnected_this_poll and Time.get_ticks_msec() - _started_ms > _connect_timeout_ms:
+			if not _automated_acceptance:
+				_schedule_reconnect("PEER_DISCONNECTED")
+	if _reconnect_pending:
+		return
+	_expire_async_operations()
+	if not _joined and not disconnected_this_poll and Time.get_ticks_msec() - _started_ms > _connect_timeout_ms:
+		if not _automated_acceptance and _server_disconnects > 0:
+			_schedule_reconnect("RECONNECT_TIMEOUT")
+			return
 		_fail_connection("M3_CLIENT_CONNECT_TIMEOUT")
+		return
 	_flush_pending_input_batch(false)
 	_update_runtime_telemetry()
 	var process_duration_ms: float = float(Time.get_ticks_usec() - process_started_us) / 1000.0
@@ -308,10 +347,16 @@ func _handle_message(payload: Dictionary) -> void:
 				_command_results[operation_id] = payload.duplicate(true)
 			else:
 				_async_command_results += 1
+				var tracked_async := _async_pending_operations.has(operation_id)
+				_async_pending_operations.erase(operation_id)
+				var async_result: Dictionary = payload.duplicate(true)
+				async_result["async"] = tracked_async
 				if String(payload.get("status", "")) != "SUCCEEDED":
 					_async_command_rejections += 1
 					_last_error_code = String(payload.get("error_code", "ASYNC_COMMAND_REJECTED"))
 					_debug_event("ASYNC_COMMAND_REJECTED", payload)
+				if tracked_async:
+					command_result_received.emit(async_result)
 		"LEAVE_ACK":
 			_observe_operation_latency(String(payload.get("operation_id", "")))
 			_leave_acknowledged = true
@@ -376,9 +421,20 @@ func _handle_join_ack(payload: Dictionary) -> void:
 	_snapshot_updates += 1
 	_accept_item_snapshot(payload.get("item_graph_snapshot", {}))
 	_initialize_prediction_from_snapshot(_replica.get_snapshot())
-	_joined = true; _last_error_code = ""; _write_report("READY", false)
+	_joined = true
+	_last_error_code = ""
+	_reconnect_pending = false
+	_reconnect_attempts = 0
+	_reconnect_reason = ""
+	_set_connection_state("CONNECTED", {
+		"player_entity_id": _player_entity_id,
+		"ownership_epoch": _ownership_epoch,
+		"transport_session_id": _transport_session_id,
+	})
+	_write_report("READY", false)
 	_debug_event("CLIENT_READY", {"player_entity_id":_player_entity_id,"ownership_epoch":_ownership_epoch})
-	replica_updated.emit(_replica.get_snapshot()); session_ready.emit(self)
+	replica_updated.emit(_replica.get_snapshot())
+	session_ready.emit(self)
 
 func _accept_snapshot(snapshot: Dictionary) -> void:
 	var accepted: Dictionary = _replica.accept_snapshot(snapshot)
@@ -882,6 +938,52 @@ func _request_item_graph_resync(reason: String) -> void:
 		_item_resync_pending = true
 		_item_resync_requests_sent += 1
 
+func execute_item_command_async(
+	command_type: String,
+	payload: Dictionary,
+	operation_id: String = "",
+	ownership_epoch_override: int = 0
+) -> Dictionary:
+	if not is_ready():
+		return _failure("M4_CLIENT_NOT_READY")
+	var command_epoch := ownership_epoch_override if ownership_epoch_override > 0 else _ownership_epoch
+	var op := operation_id.strip_edges()
+	if op.is_empty():
+		op = "operation/m4/%s/%s/async/%d/%d/%d" % [
+			_logical_player_id,
+			command_type.replace(".", "-"),
+			OS.get_process_id(),
+			Time.get_ticks_msec(),
+			_message_sequence + 1,
+		]
+	if _async_pending_operations.has(op) or _awaited_command_ids.has(op):
+		return _failure("ASYNC_OPERATION_ALREADY_PENDING", {"operation_id": op})
+	if not _send_on_channel(
+		"ITEM_COMMAND",
+		{
+			"logical_player_id": _logical_player_id,
+			"ownership_epoch": command_epoch,
+			"operation_id": op,
+			"command_type": command_type,
+			"payload": payload.duplicate(true),
+		},
+		RealtimeChannelPolicy.ITEM,
+		"RELIABLE_ORDERED",
+		true
+	):
+		_discard_operation_timer(op)
+		return _failure("M4_ITEM_COMMAND_SEND_FAILED")
+	_async_pending_operations[op] = {
+		"command_type": command_type,
+		"started_ms": Time.get_ticks_msec(),
+	}
+	return _success({
+		"operation_id": op,
+		"command_type": command_type,
+		"pending": true,
+	})
+
+
 func execute_item_command_blocking(
 	command_type: String,
 	payload: Dictionary,
@@ -943,6 +1045,42 @@ func _accept_construction_event(event_value) -> void:
 		return
 	_construction_event_updates += 1
 	construction_updated.emit(_construction_replica.get_bundle())
+
+func execute_construction_command_async(
+	command: Dictionary,
+	operation_id: String = ""
+) -> Dictionary:
+	if not is_ready():
+		return _failure("M3_CONSTRUCTION_CLIENT_NOT_READY")
+	var op := operation_id.strip_edges()
+	if op.is_empty():
+		op = "operation/m3/%s/construction/async/%d/%d/%d" % [
+			_logical_player_id,
+			OS.get_process_id(),
+			Time.get_ticks_msec(),
+			_message_sequence + 1,
+		]
+	if _async_pending_operations.has(op) or _awaited_command_ids.has(op):
+		return _failure("ASYNC_OPERATION_ALREADY_PENDING", {"operation_id": op})
+	if not _send_on_channel(
+		"CONSTRUCTION_COMMAND",
+		{"operation_id": op, "command": command.duplicate(true)},
+		RealtimeChannelPolicy.CONTROL,
+		"RELIABLE_ORDERED",
+		true
+	):
+		_discard_operation_timer(op)
+		return _failure("M3_CONSTRUCTION_COMMAND_SEND_FAILED")
+	_async_pending_operations[op] = {
+		"command_type": "CONSTRUCTION_COMMAND",
+		"started_ms": Time.get_ticks_msec(),
+	}
+	return _success({
+		"operation_id": op,
+		"command_type": "CONSTRUCTION_COMMAND",
+		"pending": true,
+	})
+
 
 func execute_construction_command_blocking(command: Dictionary, operation_id: String = "") -> Dictionary:
 	if not is_ready(): return _failure("M3_CONSTRUCTION_CLIENT_NOT_READY")
@@ -1039,6 +1177,7 @@ func _send_on_channel(
 			_discard_operation_timer(operation_id)
 		return false
 	_messages_sent += 1
+	_record_realtime_transport_send(channel, delivery_mode)
 	return true
 
 
@@ -1143,6 +1282,253 @@ func get_remote_player_ids() -> Array[String]:
 func is_ready() -> bool: return _joined and _replica != null and not _replica.get_snapshot().is_empty()
 func is_automated_acceptance() -> bool: return _automated_acceptance
 
+func _record_realtime_transport_send(channel: String, delivery_mode: String) -> void:
+	if delivery_mode != "UNRELIABLE_SEQUENCED":
+		return
+	var normalized_channel := channel.strip_edges().to_upper()
+	if normalized_channel.is_empty():
+		return
+	var next_count := int(_transport_realtime_sent_by_channel.get(normalized_channel, 0)) + 1
+	_transport_realtime_sent_by_channel[normalized_channel] = next_count
+	if next_count >= LIVE2_ENET_SEQUENCED_ROTATION_LIMIT and not _transport_rotation_pending:
+		_transport_rotation_pending = true
+		_transport_rotation_reason = "ENET_SEQUENCED_WRAP_GUARD:%s:%d" % [
+			normalized_channel,
+			next_count,
+		]
+		_telemetry.increment("transport_rotation_guard_triggers")
+
+
+func _maybe_rotate_transport() -> bool:
+	if (
+		not _transport_rotation_pending
+		or _reconnect_pending
+		or not _joined
+		or not _awaited_command_ids.is_empty()
+	):
+		return false
+	var reason := _transport_rotation_reason
+	_transport_rotations += 1
+	_telemetry.increment("transport_session_rotations")
+	_debug_event("TRANSPORT_SESSION_ROTATION", {
+		"reason": reason,
+		"rotation": _transport_rotations,
+		"realtime_sent_by_channel": _transport_realtime_sent_by_channel.duplicate(true),
+	})
+	_schedule_reconnect(reason, true)
+	# Proactive rollover rotation is not a failure backoff. Start the fresh
+	# transport on the next process turn while the old connection is still
+	# below the physical 16-bit sequence cliff.
+	_reconnect_next_ms = Time.get_ticks_msec()
+	return true
+
+
+func _expire_async_operations() -> void:
+	if _async_pending_operations.is_empty():
+		return
+	var now_ms := Time.get_ticks_msec()
+	for operation_id_value in _async_pending_operations.keys().duplicate():
+		var operation_id := String(operation_id_value)
+		var pending: Dictionary = Dictionary(
+			_async_pending_operations.get(operation_id, {})
+		)
+		if now_ms - int(pending.get("started_ms", now_ms)) <= _command_timeout_ms:
+			continue
+		_async_pending_operations.erase(operation_id)
+		_discard_operation_timer(operation_id)
+		_async_command_results += 1
+		_async_command_rejections += 1
+		_async_command_timeouts += 1
+		_last_error_code = "ASYNC_COMMAND_TIMEOUT"
+		command_result_received.emit({
+			"type": "COMMAND_RESULT",
+			"operation_id": operation_id,
+			"command_type": String(pending.get("command_type", "")),
+			"status": "REJECTED",
+			"error_code": "ASYNC_COMMAND_TIMEOUT",
+			"details": {},
+			"async": true,
+			"timeout": true,
+		})
+
+
+func _cancel_async_operations(error_code: String) -> void:
+	if _async_pending_operations.is_empty():
+		return
+	for operation_id_value in _async_pending_operations.keys().duplicate():
+		var operation_id := String(operation_id_value)
+		var pending: Dictionary = Dictionary(
+			_async_pending_operations.get(operation_id, {})
+		)
+		_discard_operation_timer(operation_id)
+		_async_command_results += 1
+		_async_command_rejections += 1
+		command_result_received.emit({
+			"type": "COMMAND_RESULT",
+			"operation_id": operation_id,
+			"command_type": String(pending.get("command_type", "")),
+			"status": "REJECTED",
+			"error_code": error_code,
+			"details": {},
+			"async": true,
+			"cancelled": true,
+		})
+	_async_pending_operations.clear()
+
+
+func get_connection_state() -> String:
+	return _connection_state
+
+
+func request_reconnect_now() -> Dictionary:
+	if _automated_acceptance:
+		return _failure("AUTOMATED_ACCEPTANCE_RECONNECT_FORBIDDEN")
+	_schedule_reconnect("USER_REQUEST")
+	_reconnect_next_ms = Time.get_ticks_msec()
+	return _success({"state": _connection_state})
+
+
+func _set_connection_state(state: String, details: Dictionary = {}) -> void:
+	var normalized := state.strip_edges().to_upper()
+	if normalized.is_empty():
+		return
+	_connection_state = normalized
+	connection_state_changed.emit(_connection_state, details.duplicate(true))
+
+
+func _reset_transport_protocol_state() -> void:
+	_cancel_async_operations("ASYNC_COMMAND_TRANSPORT_RESET")
+	_join_sent = false
+	_join_operation_id = ""
+	_message_sequence = 0
+	_input_sequence = 0
+	_handshake_id = ""
+	_handshake_hello.clear()
+	_handshake_sent = false
+	_handshake_verified = false
+	_handshake_rtt_ms = 0.0
+	_leave_acknowledged = false
+	_command_results.clear()
+	_awaited_command_ids.clear()
+	_operation_started_ms.clear()
+	_operation_types.clear()
+	_pending_input_batch_dirty = false
+	_pending_input_operation_id = ""
+	_last_input_batch_sent_ms = 0
+	_input_history.clear()
+	_prediction_input_accumulator = 0.0
+	_prediction_last_network_intent.clear()
+	_prediction_reconciler = ClientPredictionReconciler.new()
+	_item_resync_pending = false
+	_transport_realtime_sent_by_channel.clear()
+	_transport_rotation_pending = false
+	_transport_rotation_reason = ""
+	# A new transport session must consume a fresh canonical JOIN baseline.
+	# Client replicas are derived caches, not truth. Keeping their old revision
+	# across a restarted server would incorrectly reject a valid new baseline as
+	# a rollback before recovery/resync can run.
+	_replica = Replica.new()
+	_item_graph_snapshot.clear()
+	_item_snapshot_updates = 0
+	_construction_replica = ConstructionReplica.new()
+	_construction_session.clear()
+	_construction_snapshot_updates = 0
+	_construction_event_updates = 0
+	_reset_extended_reconnect_replica_state()
+
+
+func _reset_extended_reconnect_replica_state() -> void:
+	pass
+
+
+func _start_transport_attempt() -> Dictionary:
+	if _boundary != null:
+		_boundary.stop()
+	_boundary = null
+	_network_condition_simulator = null
+	_reset_transport_protocol_state()
+	var condition_setup: Dictionary = _setup_network_condition_simulator(_connection_config)
+	if not bool(condition_setup.get("success", false)):
+		return condition_setup
+	_boundary = Boundary.new()
+	var configured: Dictionary = _boundary.configure(
+		_network_condition_simulator, 524288, 32, 1048576, _telemetry
+	)
+	if not bool(configured.get("success", false)):
+		_boundary = null
+		_network_condition_simulator = null
+		return configured
+	_transport_session_id = "transport-session/m3/%s/%d/%d" % [
+		_logical_player_id, OS.get_process_id(), Time.get_ticks_msec()
+	]
+	var connected: Dictionary = _boundary.connect_client(
+		Support.endpoint(_host, _port, false),
+		SERVER_PEER_ID,
+		_transport_session_id,
+		"route/m3/server/%s" % _logical_player_id,
+		1
+	)
+	if not bool(connected.get("success", false)):
+		_boundary.stop()
+		_boundary = null
+		_network_condition_simulator = null
+		return connected
+	_started_ms = Time.get_ticks_msec()
+	return _success({"transport_session_id": _transport_session_id})
+
+
+func _schedule_reconnect(reason: String, force_transport_safety: bool = false) -> void:
+	if _automated_acceptance and not force_transport_safety:
+		return
+	_joined = false
+	_reconnect_pending = true
+	_reconnect_reason = reason
+	var exponent := mini(_reconnect_attempts, 3)
+	var delay_ms := mini(
+		LIVE2_RECONNECT_INITIAL_DELAY_MS * (1 << exponent),
+		LIVE2_RECONNECT_MAX_DELAY_MS
+	)
+	_reconnect_next_ms = Time.get_ticks_msec() + delay_ms
+	_set_connection_state("RECONNECTING", {
+		"reason": reason,
+		"attempt": _reconnect_attempts + 1,
+		"delay_ms": delay_ms,
+	})
+	set_process(true)
+
+
+func _attempt_reconnect() -> void:
+	if not _reconnect_pending:
+		return
+	_reconnect_attempts += 1
+	_set_connection_state("RECONNECTING", {
+		"reason": _reconnect_reason,
+		"attempt": _reconnect_attempts,
+		"delay_ms": 0,
+	})
+	var result: Dictionary = _start_transport_attempt()
+	if bool(result.get("success", false)):
+		_reconnect_pending = false
+		_set_connection_state("CONNECTING", {
+			"reason": _reconnect_reason,
+			"attempt": _reconnect_attempts,
+			"transport_session_id": _transport_session_id,
+		})
+		return
+	_last_error_code = String(result.get("error_code", "RECONNECT_TRANSPORT_FAILED"))
+	var exponent := mini(_reconnect_attempts, 3)
+	var delay_ms := mini(
+		LIVE2_RECONNECT_INITIAL_DELAY_MS * (1 << exponent),
+		LIVE2_RECONNECT_MAX_DELAY_MS
+	)
+	_reconnect_next_ms = Time.get_ticks_msec() + delay_ms
+	_set_connection_state("RECONNECTING", {
+		"reason": _last_error_code,
+		"attempt": _reconnect_attempts + 1,
+		"delay_ms": delay_ms,
+	})
+
+
 func _cleanup_setup_failure() -> void:
 	set_process(false)
 	if _boundary != null:
@@ -1203,6 +1589,15 @@ func get_report() -> Dictionary:
 		"gameplay_checkpoint": M7_CHECKPOINT if _playable_sandbox else Support.CHECKPOINT,
 		"gameplay_build_id": M7_BUILD_ID if _playable_sandbox else Support.BUILD_ID,
 		"configured": _configured, "joined": _joined, "logical_player_id": _logical_player_id,
+		"connection_state": _connection_state,
+		"reconnect_pending": _reconnect_pending,
+		"reconnect_attempts": _reconnect_attempts,
+		"reconnect_reason": _reconnect_reason,
+		"transport_rotation_limit": LIVE2_ENET_SEQUENCED_ROTATION_LIMIT,
+		"transport_rotation_pending": _transport_rotation_pending,
+		"transport_rotation_reason": _transport_rotation_reason,
+		"transport_rotations": _transport_rotations,
+		"transport_realtime_sent_by_channel": _transport_realtime_sent_by_channel.duplicate(true),
 		"player_entity_id": _player_entity_id, "ownership_epoch": _ownership_epoch,
 		"transport_session_id": _transport_session_id, "join_operation_id": _join_operation_id, "input_sequence": _input_sequence,
 		"messages_sent": _messages_sent, "messages_received": _messages_received,
@@ -1217,6 +1612,8 @@ func get_report() -> Dictionary:
 		"pending_operation_timer_count": _operation_started_ms.size(),
 		"async_command_results": _async_command_results,
 		"async_command_rejections": _async_command_rejections,
+		"async_command_timeouts": _async_command_timeouts,
+		"pending_async_command_count": _async_pending_operations.size(),
 		"realtime_traffic": {
 			"channel_policy": RealtimeChannelPolicy.canonical_policy(),
 			"input_batches_sent": _input_batches_sent,
@@ -1274,7 +1671,13 @@ func stop() -> Dictionary:
 	_operation_types.clear()
 	var leave_result := request_graceful_leave(1000) if _joined else _success()
 	if _boundary != null: _boundary.stop()
-	_boundary = null; _network_condition_simulator = null; _joined = false; _configured = false; _write_report("STOPPED", bool(leave_result.get("success", false)))
+	_boundary = null
+	_network_condition_simulator = null
+	_joined = false
+	_reconnect_pending = false
+	_configured = false
+	_set_connection_state("STOPPED")
+	_write_report("STOPPED", bool(leave_result.get("success", false)))
 	return leave_result
 
 func _fail_connection(error_code: String, details: Dictionary = {}) -> void:
@@ -1282,6 +1685,7 @@ func _fail_connection(error_code: String, details: Dictionary = {}) -> void:
 	_operation_types.clear()
 	_last_error_code = error_code
 	_debug_event("CLIENT_CONNECTION_FAILED", {"error_code":error_code,"details":details})
+	_set_connection_state("FAILED", {"error_code": error_code, "details": details.duplicate(true)})
 	_write_report("FAILED", false, details)
 	connection_failed.emit(error_code, details.duplicate(true))
 	set_process(false)

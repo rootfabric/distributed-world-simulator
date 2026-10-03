@@ -1,5 +1,7 @@
 extends "res://scripts/ui/inventory/networked/m5_v0_modern_inventory_shell.gd"
 
+signal inventory_visibility_changed(value: bool)
+
 const P1InventoryBridge = preload(
 	"res://scripts/runtime/networked_gameplay/m5/m5_v0_inventory_ui_bridge.gd"
 )
@@ -89,12 +91,36 @@ func _on_interaction_requested(action_id: String, payload: Dictionary) -> void:
 
 
 func set_inventory_visible(value: bool) -> void:
+	var changed := is_inventory_visible() != value
 	super.set_inventory_visible(value)
 	_update_r5_sort_actions()
+	# R3: all close paths (Esc, Tab, buttons and app commands) publish the same
+	# state after the UI is updated. Observers must not call this setter back.
+	if changed:
+		inventory_visibility_changed.emit(is_inventory_visible())
 
 
 func _input(event: InputEvent) -> void:
-	if not _inventory_visible or not event is InputEventMouseButton:
+	if not _inventory_visible:
+		return
+	if event is InputEventKey:
+		var key_event := event as InputEventKey
+		if key_event.pressed and not key_event.echo:
+			var keycode := (
+				key_event.physical_keycode
+				if key_event.physical_keycode != 0
+				else key_event.keycode
+			)
+			if keycode in [KEY_ESCAPE, KEY_TAB]:
+				set_inventory_visible(false)
+				get_viewport().set_input_as_handled()
+				return
+			if keycode == KEY_G:
+				if status_label != null:
+					status_label.text = "Закройте инвентарь перед действием G · Esc или Tab"
+				get_viewport().set_input_as_handled()
+				return
+	if not event is InputEventMouseButton:
 		return
 	var mouse_event := event as InputEventMouseButton
 	if mouse_event.button_index == MOUSE_BUTTON_LEFT and mouse_event.pressed:
@@ -248,6 +274,7 @@ func _sort_visible_container(container_id: String) -> void:
 			merged,
 			moved,
 		]
+	_update_network_carry_preview()
 	_update_r5_sort_actions()
 
 

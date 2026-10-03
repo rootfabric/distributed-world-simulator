@@ -1,5 +1,7 @@
 extends RefCounted
 
+signal build_completed(result: Dictionary)
+
 # Thin V0 composition adapter. It creates canonical Construction commands from
 # the session/bundle replicated by M3; it owns no construct state and performs
 # no local Construction mutation.
@@ -21,6 +23,7 @@ const STAGE_LABELS: Array[String] = ["фундамент", "стены", "кры
 var _runtime
 var _session_id := ""
 var _local_next_sequence := 0
+var _pending_async_builds: Dictionary = {}
 
 
 func setup(runtime) -> Dictionary:
@@ -28,10 +31,18 @@ func setup(runtime) -> Dictionary:
 		runtime == null
 		or not runtime.has_method("get_construction_session")
 		or not runtime.has_method("get_construction_bundle")
-		or not runtime.has_method("execute_construction_command_blocking")
+		or (
+			not runtime.has_method("execute_construction_command_async")
+			and not runtime.has_method("execute_construction_command_blocking")
+		)
 	):
 		return _failure("V0_OUTPOST_CONSTRUCTION_RUNTIME_REQUIRED")
 	_runtime = runtime
+	_pending_async_builds.clear()
+	if runtime.has_signal("command_result_received"):
+		var callback := Callable(self, "_on_runtime_command_result")
+		if not runtime.is_connected("command_result_received", callback):
+			runtime.connect("command_result_received", callback)
 	_sync_sequence_from_runtime()
 	return _success()
 
@@ -72,6 +83,103 @@ func get_status() -> Dictionary:
 		"server_generation": int(bundle.get("server_generation", -1)),
 		"construct_checksum": String(snapshot.get("checksum", "")),
 	}
+
+
+func build_next_stage_async() -> Dictionary:
+	if _runtime == null:
+		return _failure("V0_OUTPOST_CONSTRUCTION_NOT_CONFIGURED")
+	if not _runtime.has_method("execute_construction_command_async"):
+		return _failure("V0_OUTPOST_ASYNC_CONSTRUCTION_RUNTIME_REQUIRED")
+	if not _pending_async_builds.is_empty():
+		return _failure("V0_OUTPOST_CONSTRUCTION_PENDING")
+	_sync_sequence_from_runtime()
+	var status := get_status()
+	if not bool(status.get("ready", false)):
+		return _failure("V0_OUTPOST_CONSTRUCTION_SESSION_NOT_READY")
+	if bool(status.get("complete", false)):
+		return _failure("V0_OUTPOST_ALREADY_COMPLETE", status)
+	var stage_index := int(status.get("next_stage_index", -1))
+	if stage_index < 0 or stage_index >= STAGE_LABELS.size():
+		return _failure("V0_OUTPOST_INVALID_NEXT_STAGE", status)
+
+	var session: Dictionary = _runtime.get_construction_session()
+	var bundle: Dictionary = _runtime.get_construction_bundle()
+	var sequence := maxi(int(session.get("next_sequence", 0)), _local_next_sequence)
+	var client_id := String(session.get("client_id", ""))
+	var session_id := String(session.get("session_id", ""))
+	var id_token := client_id.replace("/", "-")
+	var stage_operation_id := "operation/mvp/outpost/%s/stage-%d/seq-%d" % [
+		id_token, stage_index, sequence
+	]
+	var command_id := "multiplayer-command/mvp/outpost/%s/stage-%d/seq-%d" % [
+		id_token, stage_index, sequence
+	]
+	var provided_capabilities: Array = ["INSPECT"] if stage_index == 2 else ["FASTEN"]
+	var command := CommandScript.create(
+		command_id,
+		client_id,
+		session_id,
+		int(session.get("session_epoch", 0)),
+		sequence,
+		GrantScript.ACTION_BUILD,
+		CONSTRUCT_ID,
+		String(status.get("construct_checksum", "")),
+		int(bundle.get("server_generation", -1)),
+		int(session.get("permission_epoch", 0)),
+		{
+			"build_plan_id": BUILD_PLAN_ID,
+			"stage_index": stage_index,
+			"operation_id": stage_operation_id,
+			"provided_capabilities": provided_capabilities,
+			"options": {},
+		},
+		{"v0_checkpoint": "V0-C1"}
+	)
+	var outer_operation_id := "operation/m3/%s/v0-outpost/%d/%d" % [
+		id_token, stage_index, sequence
+	]
+	var submitted: Dictionary = _runtime.execute_construction_command_async(
+		command,
+		outer_operation_id
+	)
+	if not bool(submitted.get("success", false)):
+		return submitted
+	_pending_async_builds[outer_operation_id] = {
+		"stage_index": stage_index,
+		"stage_label": STAGE_LABELS[stage_index],
+		"sequence": sequence,
+		"command_id": command_id,
+	}
+	return _success({
+		"stage_index": stage_index,
+		"stage_label": STAGE_LABELS[stage_index],
+		"command_id": command_id,
+		"operation_id": outer_operation_id,
+		"pending": true,
+	})
+
+
+func _on_runtime_command_result(result: Dictionary) -> void:
+	var operation_id := String(result.get("operation_id", ""))
+	if not _pending_async_builds.has(operation_id):
+		return
+	var pending: Dictionary = Dictionary(_pending_async_builds[operation_id]).duplicate(true)
+	_pending_async_builds.erase(operation_id)
+	var succeeded := String(result.get("status", "")) == "SUCCEEDED"
+	if succeeded:
+		_local_next_sequence = maxi(
+			_local_next_sequence,
+			int(pending.get("sequence", 0)) + 1
+		)
+	build_completed.emit({
+		"success": succeeded,
+		"error_code": "" if succeeded else String(result.get("error_code", "V0_OUTPOST_BUILD_REJECTED")),
+		"operation_id": operation_id,
+		"stage_index": int(pending.get("stage_index", -1)),
+		"stage_label": String(pending.get("stage_label", "")),
+		"command_id": String(pending.get("command_id", "")),
+		"details": result.duplicate(true),
+	})
 
 
 func build_next_stage_blocking() -> Dictionary:

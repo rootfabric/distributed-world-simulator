@@ -122,7 +122,7 @@ func _ensure_i2s_runtime(runtime) -> Dictionary:
 	var setup_result: Dictionary = _i2s_world_runtime.setup(
 		self,
 		String(runtime.get_local_player_id()),
-		Callable(self, "m4_execute_item_command"),
+		Callable(self, "_submit_i2s_command_async"),
 		_i2s_spatial_projector
 	)
 	if not bool(setup_result.get("success", false)):
@@ -150,6 +150,65 @@ func _ensure_i2s_runtime(runtime) -> Dictionary:
 	}
 
 
+func _submit_i2s_command_async(
+	command_type: String,
+	payload: Dictionary,
+	_operation_id: String = ""
+) -> Dictionary:
+	var context: Dictionary = {}
+	match command_type:
+		"item.pickup":
+			context = {
+				"kind": "i2s_pickup",
+				"pending_text": "Подбираем предмет…",
+				"success_text": "Предмет подобран",
+				"error_prefix": "Подбор предмета",
+			}
+		"container.open":
+			context = {
+				"kind": "i2s_container_open",
+				"pending_text": "Открываем контейнер…",
+				"success_text": "Контейнер открыт",
+				"error_prefix": "Открытие контейнера",
+			}
+		"container.close":
+			context = {
+				"kind": "i2s_container_close",
+				"pending_text": "Закрываем контейнер…",
+				"success_text": "Контейнер закрыт",
+				"error_prefix": "Закрытие контейнера",
+			}
+		"item.drop":
+			context = {
+				"kind": "i2s_drop",
+				"pending_text": "Выбрасываем предмет…",
+				"success_text": "Предмет выброшен",
+				"error_prefix": "Выброс предмета",
+			}
+		_:
+			context = {
+				"kind": "i2s_item_command",
+				"pending_text": "Команда предмета отправлена…",
+				"success_text": "Команда предмета подтверждена",
+				"error_prefix": "Команда предмета",
+			}
+	return _submit_live2_item_action_async(command_type, payload, context)
+
+
+func _handle_live2_async_command_extension(
+	result: Dictionary,
+	context: Dictionary
+) -> void:
+	super._handle_live2_async_command_extension(result, context)
+	if String(result.get("status", "")) != "SUCCEEDED":
+		return
+	match String(context.get("kind", "")):
+		"i2s_container_open":
+			_set_mvp_inventory_visible(true)
+		"i2s_container_close":
+			_set_mvp_inventory_visible(false)
+
+
 func _command_i2s_player_interact(_arguments: Array[String]) -> Dictionary:
 	if _mvp_inventory_visible:
 		return {"success": false, "output": "Закройте инвентарь перед взаимодействием"}
@@ -167,6 +226,8 @@ func _command_i2s_player_interact(_arguments: Array[String]) -> Dictionary:
 	if not bool(result.get("success", false)):
 		_i2s_interaction_rejections += 1
 		return _mvp_command_result(result, "")
+	if bool(result.get("pending", false)):
+		return result
 	if String(descriptor.get("type", "")) == "external_container":
 		_set_mvp_inventory_visible(true)
 	var action_text := String(descriptor.get("prompt", "Взаимодействие"))
