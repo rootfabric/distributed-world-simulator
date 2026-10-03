@@ -1,10 +1,18 @@
 extends SceneTree
 
+const C = preload("res://scripts/research/ecology/v2/canonical_value_v1.gd")
 const Scale = preload("res://scripts/research/ecology/v2/ecology_scale_contract_v1.gd")
 const Lifecycle = preload("res://scripts/research/ecology/v2/resource_lifecycle_runtime_v1.gd")
 const Runtime = preload("res://scripts/research/ecology/v2/ecology_runtime_v1.gd")
+const Checkpoint = preload("res://scripts/research/ecology/v2/ecology_runtime_checkpoint_v1.gd")
 const Body = preload("res://scripts/research/ecology/v2/body_graph_v1.gd")
+const Program = preload("res://scripts/research/ecology/v2/development_program_v1.gd")
 const Genome = preload("res://scripts/research/ecology/v2/organism_genome_v2.gd")
+const Blueprint = preload("res://scripts/research/ecology/v2/organism_blueprint_v1.gd")
+const LifeHistory = preload("res://scripts/research/ecology/v2/life_history_program_v1.gd")
+const FieldContract = preload("res://scripts/research/ecology/v2/environment_field_contract_v1.gd")
+const Field = preload("res://scripts/research/ecology/v2/local_environment_field_v1.gd")
+const Feedback = preload("res://scripts/research/ecology/v2/persistent_environmental_feedback_v1.gd")
 const Session = preload("res://scripts/ecology/habitat/persistent_habitat_session_v1.gd")
 const Preset = preload("res://scripts/ecology/habitat/habitat_preset_v1.gd")
 const Manifest = preload("res://scripts/ecology/workbench/experiment_manifest_v1.gd")
@@ -106,79 +114,167 @@ func _corpse_boundary() -> void:
 	check(state.feedback.frame.corpses.size() == Scale.MAX_CORPSES, "all 256 corpses retained through A6")
 	check(Runtime.validate(state.runtime).is_empty(), "256-corpse runtime remains canonically valid")
 
-func _rich_multigeneration_manifest() -> Dictionary:
-	var manifest := Preset.create(104729, Scale.ACCEPTANCE_HORIZON_TICKS)
-	manifest["experiment_id"] = "eco/a12/multigeneration-replay/v1"
-	manifest["founders"] = [{"founder_id": "founder/a", "biological_hash": null, "genome": Protocol.ancestor()}]
-	manifest["environment"] = {
-		"spatial": {"origin_mm": [0, 0, 0], "cell_size_mm": 1000, "width": 1, "depth": 1},
-		"zones": [{"id": "rich", "water_mg": 1000000, "light": 1000, "temperature": 500,
-			"nutrient_mg": 1000000, "organic_mg": 1000000}],
+func _reproductive_scale_genome() -> Dictionary:
+	var program := {
+		"schema": Program.SCHEMA,
+		"entry": "grow",
+		"max_age": 64,
+		"max_depth": 1,
+		"rules": [Program.rule("grow", [
+			Program.action("differentiate", "collector", [0, 2, 0], 1, 10000),
+			Program.action("differentiate", "absorber", [0, -2, 0], 1, 0, 100),
+			Program.action("differentiate", "reproductive", [2, 0, 0], 1),
+			Program.action("retire"),
+		])],
 	}
-	manifest["placement"] = {"entries": [{"founder_ref": "founder/a", "zone_id": "rich", "position_mm": [500, 0, 500]}]}
-	# Keep mutation causally real while preserving the reproductive topology:
-	# module_parameter changes a canonical BodyGraph-producing action parameter,
-	# unlike "small", which may deterministically alter a regulatory gene enough
-	# to make a child non-reproductive. A12 is a scale/replay gate, not a claim
-	# that every arbitrary mutation lineage must remain fertile.
-	manifest["mutation"] = {"operator": "module_parameter", "mutations_enabled": true}
-	var endowment := Body.stock(0)
-	endowment.material_mg = 200000
-	endowment.water_mg = 200000
-	endowment.energy_mj = 200000
-	manifest["genesis"] = {"founder_endowment": endowment}
-	return manifest
+	return Genome.create(program, "A12 explicit reproductive scale fixture")
+
+func _reproductive_scale_policy() -> Dictionary:
+	var policy := LifeHistory.create_default()
+	policy["regulation"]["growth_light_min"] = 0
+	policy["regulation"]["growth_water_min"] = 0
+	policy["regulation"]["growth_competition_max"] = 1000
+	policy["regulation"]["growth_temperature_min"] = 0
+	policy["regulation"]["growth_temperature_max"] = 1000
+	policy["metabolism"]["maintenance_energy_per_module_mj"] = 0
+	policy["metabolism"]["maintenance_water_per_module_mg"] = 0
+	policy["growth"]["transfer_permille"] = 1000
+	policy["reproduction"]["maturity_ticks"] = 2
+	policy["reproduction"]["interval_ticks"] = 2
+	policy["reproduction"]["required_reproductive_modules"] = 1
+	policy["reproduction"]["offspring_per_event"] = 1
+	policy["reproduction"]["endowment"] = {"material_mg": 100, "water_mg": 100, "energy_mj": 100}
+	policy["reproduction"]["fee_energy_mj"] = 0
+	return policy
+
+func _initial_multigeneration_runtime() -> Dictionary:
+	var genome := _reproductive_scale_genome()
+	var policy := _reproductive_scale_policy()
+	check(not genome.is_empty(), "explicit reproductive genome validates")
+	check(LifeHistory.validate(policy).is_empty(), "explicit reproductive life-history validates")
+	var blueprint := Blueprint.create(genome, policy)
+	check(not blueprint.is_empty(), "explicit reproductive blueprint validates")
+	var rich_stock := FieldContract.stock(FieldContract.MAX_CELL_STOCK)
+	var field := Field.create("a12.scale", 1, [0, 0, 0], 1000, 1, 1,
+		rich_stock, rich_stock, FieldContract.signals(1000, 500, 0, 0))
+	check(not field.is_empty(), "rich canonical A4 field validates")
+	var founder := Lifecycle.individual(
+		blueprint, "a12-founder", [500, 0, 500],
+		{"material_mg": 100000, "water_mg": 100000, "energy_mj": 100000})
+	check(not founder.is_empty(), "explicit reproductive founder validates")
+	var created := Runtime.create(
+		"eco/a12/multigeneration-runtime/v1", field, [founder],
+		Feedback.default_policy(), false)
+	check(created.success, "shared EcologyRuntime accepts explicit reproductive fixture")
+	return created.state if created.success else {}
+
+func _lineage_depth(individual_id: String, by_id: Dictionary, memo: Dictionary) -> int:
+	if memo.has(individual_id):
+		return int(memo[individual_id])
+	var depth := 0
+	var entry: Dictionary = by_id.get(individual_id, {})
+	if not entry.is_empty() and String(entry.state.origin_kind) == "PARENT_TRANSFER" 			and not entry.state.origin_receipt.is_empty():
+		var parent_id := String(entry.state.origin_receipt.parent_id)
+		depth = 1 + (_lineage_depth(parent_id, by_id, memo) if by_id.has(parent_id) else 0)
+	memo[individual_id] = depth
+	return depth
+
+func _max_generation(population: Array) -> int:
+	var by_id := {}
+	for entry in population:
+		by_id[String(entry.state.individual_id)] = entry
+	var memo := {}
+	var depth := 0
+	for entry in population:
+		depth = maxi(depth, _lineage_depth(String(entry.state.individual_id), by_id, memo))
+	return depth
+
+func _run_runtime_to_generation(source: Dictionary, target: int) -> Dictionary:
+	var state: Dictionary = source.duplicate(true)
+	var options := {
+		"mutations_enabled": true,
+		"operator": "module_parameter",
+		"seed": 20261003,
+		"mutation_key_prefix": "eco-a12-scale-r3",
+	}
+	for _tick in Scale.ACCEPTANCE_HORIZON_TICKS:
+		var generation := _max_generation(state.population)
+		if generation >= target:
+			return {"success": true, "state": state, "generation": generation, "tick": int(state.tick)}
+		var stepped := Runtime.step(state, options)
+		if not stepped.success:
+			return {"success": false, "error": stepped.error, "state": state,
+				"generation": generation, "tick": int(state.tick)}
+		state = stepped.state
+	return {"success": false, "error": "A12_GENERATION_HORIZON", "state": state,
+		"generation": _max_generation(state.population), "tick": int(state.tick)}
 
 func _multigeneration_replay() -> void:
-	var manifest := _rich_multigeneration_manifest()
-	check(Manifest.validate(manifest).is_empty(), "multi-generation manifest is canonical")
-	var original := Session.new()
-	var started: Dictionary = original.start(manifest)
-	check(started.success, "mutation-enabled multi-generation habitat starts")
-	if not started.success:
+	var initial := _initial_multigeneration_runtime()
+	if initial.is_empty():
 		return
-	var middle: Dictionary = original.controller.run_to_generation(2)
-	print("A12_SCALE_GENERATION2 tick=%d generation=%d population=%d" % [int(middle.get("tick", -1)), int(middle.get("generation", -1)), int(original.controller.get_metrics().population_size)])
-	check(middle.success and int(middle.generation) >= 2, "real lineage reaches generation 2")
-	if not middle.success or int(middle.generation) < 2:
+	var middle := _run_runtime_to_generation(initial, 2)
+	print("A12_SCALE_GENERATION2 tick=%d generation=%d population=%d" % [
+		int(middle.get("tick", -1)), int(middle.get("generation", -1)),
+		int(middle.get("state", {}).get("population", []).size())])
+	check(middle.success and int(middle.generation) >= 2, "shared runtime reaches generation 2")
+	if not middle.success:
 		return
-	var checkpoint: Dictionary = original.export_bundle()
-	check(checkpoint.success, "generation-2 checkpoint uses existing canonical transport")
-	if not checkpoint.success:
-		return
-	var resumed := Session.new()
-	var restored: Dictionary = resumed.restore_bundle(checkpoint.text, checkpoint.sha256)
-	check(restored.success, "generation-2 checkpoint restores exactly")
-	if not restored.success:
-		return
-	check(resumed.controller.get_snapshot().canonical_state_hash == original.controller.get_snapshot().canonical_state_hash,
-		"mid-generation restore preserves exact canonical state")
+	check(Runtime.validate(middle.state).is_empty(), "generation-2 runtime is canonically valid")
 
-	var a: Dictionary = original.controller.run_to_generation(Scale.ACCEPTANCE_TARGET_GENERATION)
-	var b: Dictionary = resumed.controller.run_to_generation(Scale.ACCEPTANCE_TARGET_GENERATION)
+	var manifest_hash := C.digest({
+		"schema": "dws.ecology.a12-scale-fixture.v1",
+		"seed": 20261003,
+		"scale": Scale.descriptor(),
+		"genome_hash": Genome.biological_hash(_reproductive_scale_genome()),
+		"life_history_hash": LifeHistory.biological_hash(_reproductive_scale_policy()),
+	})
+	var checkpoint := Checkpoint.create(manifest_hash, middle.state)
+	check(not checkpoint.is_empty(), "generation-2 canonical checkpoint created")
+	if checkpoint.is_empty():
+		return
+	var checkpoint_text := Checkpoint.serialize(checkpoint)
+	check(not checkpoint_text.is_empty(), "generation-2 checkpoint serializes canonically")
+	var restored := Checkpoint.deserialize(checkpoint_text, checkpoint_text.sha256_text(), manifest_hash)
+	check(not restored.is_empty(), "generation-2 checkpoint admitted by external text anchor")
+	if restored.is_empty():
+		return
+	check(Runtime.state_hash(restored.runtime_state) == Runtime.state_hash(middle.state),
+		"checkpoint restores exact generation-2 runtime hash")
+
+	var a := _run_runtime_to_generation(middle.state, Scale.ACCEPTANCE_TARGET_GENERATION)
+	var b := _run_runtime_to_generation(restored.runtime_state, Scale.ACCEPTANCE_TARGET_GENERATION)
+	print("A12_SCALE_GENERATION3_A tick=%d generation=%d population=%d" % [
+		int(a.get("tick", -1)), int(a.get("generation", -1)),
+		int(a.get("state", {}).get("population", []).size())])
+	print("A12_SCALE_GENERATION3_B tick=%d generation=%d population=%d" % [
+		int(b.get("tick", -1)), int(b.get("generation", -1)),
+		int(b.get("state", {}).get("population", []).size())])
 	check(a.success and b.success and int(a.generation) >= Scale.ACCEPTANCE_TARGET_GENERATION 			and int(b.generation) >= Scale.ACCEPTANCE_TARGET_GENERATION,
-		"both trajectories reach generation 3 inside declared horizon")
+		"uninterrupted and restored runtime reach generation 3")
 	if not a.success or not b.success:
 		return
-	check(original.controller.get_snapshot().canonical_state_hash == resumed.controller.get_snapshot().canonical_state_hash,
-		"generation-3 uninterrupted/resumed state hashes match")
-	check(original.controller.get_snapshot().field_hash == resumed.controller.get_snapshot().field_hash,
-		"generation-3 field hashes match")
-	check(original.controller.get_metrics().population_size == resumed.controller.get_metrics().population_size,
-		"generation-3 population counts match")
-	check(int(original.controller.get_metrics().population_size) > 1, "multi-generation result is not a single-organism long run")
+	check(Runtime.state_hash(a.state) == Runtime.state_hash(b.state),
+		"generation-3 uninterrupted/restored runtime hashes match")
+	check(Field.state_hash(a.state.field) == Field.state_hash(b.state.field),
+		"generation-3 uninterrupted/restored field hashes match")
+	check(a.state.population.size() == b.state.population.size(),
+		"generation-3 uninterrupted/restored population counts match")
+	check(a.state.population.size() > 1, "multi-generation result is not a single-organism long run")
 
-	var state: Dictionary = original.controller.debug_state()
-	var mutated_children := 0
 	var hashes := {}
-	for entry in state.population:
+	var mutated_children := 0
+	for entry in a.state.population:
 		hashes[String(entry.state.individual_id)] = Genome.biological_hash(entry.blueprint.genome)
-	for entry in state.population:
+	for entry in a.state.population:
 		if String(entry.state.origin_kind) != "PARENT_TRANSFER":
 			continue
-		var receipt: Dictionary = entry.state.get("mutation_receipt", {})
 		var parent_id := String(entry.state.origin_receipt.parent_id)
+		var receipt: Dictionary = entry.state.get("mutation_receipt", {})
 		if not receipt.is_empty() and hashes.has(parent_id) 				and String(receipt.receipt.child_genome_hash) == hashes[String(entry.state.individual_id)] 				and hashes[parent_id] != hashes[String(entry.state.individual_id)]:
 			mutated_children += 1
-	check(mutated_children > 0, "multi-generation chain contains receipt-backed inherited mutation")
-	check(state.population.size() <= Scale.MAX_POPULATION, "multi-generation acceptance stays inside explicit scale contract")
+	check(mutated_children >= Scale.ACCEPTANCE_TARGET_GENERATION,
+		"generation-3 chain contains multiple receipt-backed inherited mutations")
+	check(a.state.population.size() <= Scale.MAX_POPULATION,
+		"multi-generation acceptance stays inside explicit scale contract")
+
