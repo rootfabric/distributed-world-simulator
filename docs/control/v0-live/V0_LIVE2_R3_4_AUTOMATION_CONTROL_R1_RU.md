@@ -136,3 +136,24 @@ Runner предназначен для базового полностью ав�
 - состояние до/после gameplay actions и reconnect.
 
 Важно: rejected gameplay command не считается failure автономного harness. Он сохраняется как product observation. Harness FAIL — это потеря control bridge, process crash, невозможность подключить клиентов или нарушение самого automation protocol.
+## Автоматический анализ лагов
+
+После playtest runner автоматически запускает `tools/live2/analyze_live2_autonomous_playtest.py`.
+
+Он создаёт:
+
+- `AUTONOMOUS-LAG-ANALYSIS.json` — структурированный машинный отчёт;
+- `AUTONOMOUS-LAG-ANALYSIS.md` — краткую читаемую сводку;
+- `analysis-console.txt` — консольный summary.
+
+Analyzer считает дельты по movement-фазам, а не сравнивает абсолютные lifetime counters. Он отдельно показывает:
+
+- local hard corrections/history-miss/ticks-replayed;
+- remote INTERPOLATE/EXTRAPOLATE/HOLD time ratios;
+- presenter arrivals против accepted presenter samples;
+- max presenter-arrival и accepted-sample gaps;
+- render stalls;
+- snapshot clock source;
+- watchdog/physical mismatch/input queue/async rejection counts.
+
+Пороговые finding-и диагностические, не заменяют product acceptance. Сырой JSONL и логи всегда сохраняются рядом.
