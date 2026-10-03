@@ -87,3 +87,52 @@ Godot MCP удобен как tooling adapter, но не должен стано
 ## Non-goals
 
 R3.4 не меняет network protocol, transport modes, prediction/reconciliation, interpolation coefficients и canonical ownership. Это только test/control surface.
+## Готовый автономный A/B playtest runner
+
+Для воспроизводимого smoke/lag измерения добавлен:
+
+`tools/live2/run_live2_autonomous_playtest.ps1`
+
+Он самостоятельно:
+
+1. проверяет, что нет чужих Godot-процессов;
+2. создаёт отдельные APPDATA/LOCALAPPDATA профили;
+3. запускает dedicated server;
+4. запускает GUI client A и B с разными automation ports;
+5. ждёт `ping` и `connection_state=CONNECTED`;
+6. делает baseline screenshots и jitter snapshots;
+7. двигает A при неподвижном B, затем B при неподвижном A;
+8. выполняет дополнительные zig-zag movement phases;
+9. пробует interact/equip/hotbar/build/place/construction;
+10. воспроизводит Tab/G/Esc через Godot InputEvent;
+11. делает reconnect и post-reconnect movement;
+12. собирает `automation-actions.jsonl`, `jitter-samples.jsonl`, PNG и client/server logs;
+13. вызывает `movement.stop`, `app.quit` и завершает оставшиеся процессы;
+14. пишет `AUTONOMOUS-PLAYTEST-REPORT.json`.
+
+Пример:
+
+```powershell
+pwsh tools/live2/run_live2_autonomous_playtest.ps1 `
+  -Worktree C:\distributed-world-simulator\live2-auto\wt `
+  -MovementPhaseSeconds 20
+```
+
+Runner предназначен для базового полностью автономного прогона. Агент может после него анализировать JSON/PNG, а затем использовать `live2_automation_client.py` адаптивно для дополнительных сценариев: приблизиться к конкретному объекту, повторить UI drag, сделать дополнительные screenshot/state probes и т.п.
+
+### Метрики лагов
+
+Основной машинный evidence хранится в `jitter-samples.jsonl`. Для каждого клиента сохраняется результат `network.jitter.snapshot`, включая local reconciliation и remote presenter/interpolation telemetry.
+
+При анализе сравнивать:
+
+- `local.maximum_error_m`, `hard_corrections`, `history_miss_resets`, `ticks_replayed`;
+- `snapshot_clock_context` и `snapshot_clock_source`;
+- `presenter_arrivals` и `accepted_presenter_samples`;
+- `max_presenter_arrival_interval_ms` и `max_accepted_sample_interval_ms`;
+- `sample_mode_time_ms` вместо сырых frame counters;
+- `long_render_frames` и `max_render_delta_ms`;
+- A-sees-B против B-sees-A;
+- состояние до/после gameplay actions и reconnect.
+
+Важно: rejected gameplay command не считается failure автономного harness. Он сохраняется как product observation. Harness FAIL — это потеря control bridge, process crash, невозможность подключить клиентов или нарушение самого automation protocol.
