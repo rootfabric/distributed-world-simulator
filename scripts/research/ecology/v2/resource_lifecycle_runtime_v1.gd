@@ -27,6 +27,9 @@ static func step_population(field: Dictionary, population: Array, owner_token: S
 	return step_population_scheduled(field, population, owner_token, owner_epoch, revision, Worksets.DEFAULT_WORKSET_SIZE)
 
 static func step_population_scheduled(field: Dictionary, population: Array, owner_token: String, owner_epoch: int, revision: int, workset_size: int) -> Dictionary:
+	var precondition := _precondition_error(field, population, owner_token, owner_epoch, revision)
+	if not precondition.is_empty():
+		return _fail(precondition)
 	var normalized := _canonical_entries(population)
 	if not bool(normalized.get("success", false)):
 		return normalized
@@ -37,6 +40,9 @@ static func step_population_scheduled(field: Dictionary, population: Array, owne
 	return _step_population_with_entries(field, entries, owner_token, owner_epoch, revision, plan)
 
 static func step_population_with_plan(field: Dictionary, population: Array, owner_token: String, owner_epoch: int, revision: int, plan: Dictionary) -> Dictionary:
+	var precondition := _precondition_error(field, population, owner_token, owner_epoch, revision)
+	if not precondition.is_empty():
+		return _fail(precondition)
 	var normalized := _canonical_entries(population)
 	if not bool(normalized.get("success", false)):
 		return normalized
@@ -45,6 +51,20 @@ static func step_population_with_plan(field: Dictionary, population: Array, owne
 	if not plan_error.is_empty():
 		return _fail("A5_WORKSET_PLAN:" + plan_error)
 	return _step_population_with_entries(field, entries, owner_token, owner_epoch, revision, plan)
+
+static func _precondition_error(field: Dictionary, population: Array, owner_token: String, owner_epoch: int, revision: int) -> String:
+	# Preserve the historical A5 public failure precedence exactly.
+	if not F.validate_state(field).is_empty():
+		return "A5_FIELD"
+	if population.is_empty() or population.size() > MAX_POPULATION:
+		return "A5_POPULATION_SIZE"
+	if owner_token != field.owner_token:
+		return "STALE_OWNER"
+	if owner_epoch != field.owner_epoch:
+		return "STALE_OWNER_EPOCH"
+	if revision != field.revision:
+		return "STALE_REVISION"
+	return ""
 
 static func _canonical_entries(population: Array) -> Dictionary:
 	if population.is_empty() or population.size() > MAX_POPULATION:
