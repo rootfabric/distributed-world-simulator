@@ -247,9 +247,21 @@ func _run() -> void:
 	_assert(bool(pointer_move.get("ok", false)), "pointer move succeeds")
 	await process_frame
 	_assert(not input_probe.motions.is_empty(), "pointer move reaches Godot input pipeline")
+	# Headless DisplayServer may rewrite absolute mouse position when an injected
+	# motion traverses Input.parse_input_event(). The bridge contract itself
+	# must preserve the requested absolute coordinates in its response, while
+	# the pipeline probe proves that the event and relative motion were emitted.
+	var pointer_result: Dictionary = Dictionary(pointer_move.get("result", {}))
+	var pointer_position: Array = Array(pointer_result.get("position", []))
 	_assert(
-		(input_probe.motions.back().get("position", Vector2.ZERO) as Vector2).is_equal_approx(Vector2(120.0, 80.0)),
-		"pointer position preserved"
+		pointer_position.size() == 2
+		and is_equal_approx(float(pointer_position[0]), 120.0)
+		and is_equal_approx(float(pointer_position[1]), 80.0),
+		"pointer request position preserved by bridge"
+	)
+	_assert(
+		(input_probe.motions.back().get("relative", Vector2.ZERO) as Vector2).is_equal_approx(Vector2(5.0, -2.0)),
+		"pointer relative motion reaches Godot input pipeline"
 	)
 
 	var pointer_button := await _exchange(peer, _request(
