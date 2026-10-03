@@ -1,0 +1,42 @@
+name: FABRIC R5.2 T15 Local Damage UNBAKE ReBAKE
+on:
+  push:
+    branches: [research/fabric-r5-2-t15-local-damage-r1]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: fabric-t15-${{ github.ref }}-${{ github.event_name }}
+  cancel-in-progress: true
+
+jobs:
+  source-contracts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: T15 additive source and evidence contract
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          base=5a65e6d245fda85de50d1cf6c4a551c6240677be
+          test "$(git merge-base HEAD "$base")" = "$base"
+          allowed='^(.github/workflows/fabric-r5-2-t15-local-damage.yml|RUN_FABRIC_R5_2_T15_TESTS.sh|docs/research/FABRIC_R5_2_T15_LOCAL_DAMAGE_UNBAKE_REBAKE_RU.md|scripts/research/fabric_bake0/(r5_t15_local_damage_runtime_v1.gd|collect_r5_2_t15_evidence.py)|tests/research/fabric_bake0/(fabric_r5_2_t15_local_damage_acceptance.gd|fabric_r5_2_t15_local_damage_fixture.gd|test_t15_evidence.py)|validation/fabric-r5-2-t15-local-damage-implementer-exact-evidence.v1.json)$'
+          test -z "$(git diff --name-only "$base" HEAD | grep -Ev "$allowed" || true)"
+          git diff --check "$base" HEAD
+          bash -n RUN_FABRIC_R5_2_T15_TESTS.sh
+          python3 -m unittest discover -s tests/research/fabric_bake0 -p test_t15_evidence.py -v
+          test "$(grep -c 'r5_t14_observation_refinement_runtime_v1.gd' scripts/research/fabric_bake0/r5_t15_local_damage_runtime_v1.gd)" -ge 1
+          ! grep -q 'res://tests/' scripts/research/fabric_bake0/r5_t15_local_damage_runtime_v1.gd
+          mkdir -p source
+          git archive --format=tar HEAD | gzip -n > source/t15-source.tar.gz
+          printf 'HEAD=%s\nTREE=%s\nBASE_T14=%s\n' "$(git rev-parse HEAD)" "$(git rev-parse 'HEAD^{tree}')" "$base" > source/identity.txt
+          sha256sum source/t15-source.tar.gz > source/source.sha256
+      - uses: actions/upload-artifact@v4
+        with:
+          name: t15-source-${{ github.sha }}
+          path: source/**
+          retention-days: 30
