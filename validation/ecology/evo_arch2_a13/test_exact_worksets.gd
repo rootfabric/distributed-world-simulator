@@ -136,11 +136,17 @@ func _a5_exact_equivalence(fixture: Dictionary) -> void:
 	if not mono.success or not work64.success or not work1.success or not defaulted.success:
 		return
 	var expected := _a5_signature(mono)
+	var population_bytes := C.encode(mono.population)
+	var propagule_bytes := C.encode(mono.propagules)
+	check(not String(expected.population_hash).is_empty() and not String(expected.propagules_hash).is_empty(),
+		"monolithic equivalence signatures are canonical and non-empty")
+	check(not population_bytes.is_empty() and not propagule_bytes.is_empty(),
+		"monolithic comparison payloads fit canonical byte bounds")
 	check(_a5_signature(work64) == expected, "64-member worksets are exact-equivalent to monolithic A5")
 	check(_a5_signature(work1) == expected, "size-1 worksets are exact-equivalent to monolithic A5")
 	check(_a5_signature(defaulted) == expected, "default A13 workset execution is exact-equivalent")
-	check(C.encode(work64.population) == C.encode(mono.population), "population bytes are identical across workset partitions")
-	check(C.encode(work64.propagules) == C.encode(mono.propagules), "propagule bytes are identical across workset partitions")
+	check(C.encode(work64.population) == population_bytes, "population bytes are identical across workset partitions")
+	check(C.encode(work64.propagules) == propagule_bytes, "propagule bytes are identical across workset partitions")
 
 	var plan := Worksets.create(population, 64)
 	var tampered := plan.duplicate(true)
