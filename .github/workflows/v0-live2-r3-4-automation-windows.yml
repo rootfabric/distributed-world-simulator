@@ -13,8 +13,8 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  PRODUCT_HEAD: 316cc8d0e3cc65ad8877c2acaf3c06e1ee78f66f
-  PRODUCT_TREE: 2d602b481190e613ea07058eadc6125ad3edc17e
+  PRODUCT_HEAD: 16649064d83ac9b4bf042e94b9718331fbdbf6ac
+  PRODUCT_TREE: 8a3740ca9dea6f3b94a962ed02f2d90338ef9bd0
   BASE_PRODUCT: 4e94464e7221ab96471d09b8f38c67ad769161fd
   MAIN_REFERENCE: bfc335a86153a9f12e03563901d26c3253130d65
   GODOT_BIN: C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe
@@ -63,6 +63,7 @@ jobs:
             'scripts/app/earth_mvp_app.gd',
             'scripts/app/simulator_app.gd',
             'tools/live2/live2_automation_client.py',
+            'tools/live2/analyze_live2_autonomous_playtest.py',
             'tools/live2/run_live2_autonomous_playtest.ps1',
             'tests/runtime/test_launch_options.gd',
             'tests/runtime/test_v0_live2_r3_4_automation_control.gd',
@@ -77,6 +78,8 @@ jobs:
           $ErrorActionPreference='Stop'
           python -m py_compile tools\live2\live2_automation_client.py
           if ($LASTEXITCODE -ne 0) { throw 'AUTOMATION_CLI_PY_COMPILE_FAILED' }
+          python -m py_compile tools\live2\analyze_live2_autonomous_playtest.py
+          if ($LASTEXITCODE -ne 0) { throw 'AUTOMATION_ANALYZER_PY_COMPILE_FAILED' }
 
       - name: Parse autonomous playtest runner
         shell: pwsh
