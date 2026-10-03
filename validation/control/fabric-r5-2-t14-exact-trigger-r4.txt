@@ -1,0 +1,3 @@
+T14 Windows exact trigger R4.
+PRODUCT_HEAD=5a65e6d245fda85de50d1cf6c4a551c6240677be
+REVIEW_REPAIR=fail-closed-resolution-model-anchor-metric-semantics
