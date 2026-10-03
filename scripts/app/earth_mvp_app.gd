@@ -46,6 +46,16 @@ var _live2_pending_actions: Dictionary = {}
 var _live2_async_results := 0
 var _live2_async_rejections := 0
 
+# R3.4 external automation is an opt-in input source only. It does not create
+# a second movement authority: the resulting intent still passes through the
+# existing prediction -> network input -> authoritative server path.
+var _automation_movement_enabled := false
+var _automation_movement_expires_ms := 0
+var _automation_movement_intent: Dictionary = {}
+var _automation_jump_pending := false
+var _automation_movement_updates := 0
+var _automation_expirations := 0
+
 
 func attach_m3_multiplayer_client(runtime) -> Dictionary:
 	_mvp_prediction_enabled = (
@@ -60,6 +70,10 @@ func attach_m3_multiplayer_client(runtime) -> Dictionary:
 	_mvp_latest_local_record.clear()
 	_mvp_spectator_enabled = false
 	_live2_pending_actions.clear()
+	_automation_movement_enabled = false
+	_automation_movement_expires_ms = 0
+	_automation_movement_intent.clear()
+	_automation_jump_pending = false
 	_prepare_mvp_surface_anchor()
 
 	var result: Dictionary = super.attach_m3_multiplayer_client(runtime)
@@ -355,21 +369,35 @@ func _apply_m3_network_input(delta: float) -> void:
 		super._apply_m3_network_input(delta)
 		return
 
-	var input_vector: Vector2 = Input.get_vector(
-		"move_left",
-		"move_right",
-		"move_forward",
-		"move_back"
-	)
-	var intent := {
-		"move_x": input_vector.x,
-		"move_z": -input_vector.y,
-		"look_yaw": earth_explorer.get_surface_relative_yaw(),
-		"look_pitch": 0.0,
-		"jump_pressed": Input.is_action_just_pressed("move_up"),
-		"sprint": Input.is_action_pressed("boost"),
-		"delta_seconds": maxf(delta, 0.000001),
-	}
+	var intent: Dictionary = {}
+	if _automation_movement_enabled:
+		if Time.get_ticks_msec() >= _automation_movement_expires_ms:
+			_automation_movement_enabled = false
+			_automation_movement_intent.clear()
+			_automation_jump_pending = false
+			_automation_expirations += 1
+			_submit_mvp_neutral_input()
+			return
+		intent = _automation_movement_intent.duplicate(true)
+		intent["jump_pressed"] = _automation_jump_pending
+		_automation_jump_pending = false
+		intent["delta_seconds"] = maxf(delta, 0.000001)
+	else:
+		var input_vector: Vector2 = Input.get_vector(
+			"move_left",
+			"move_right",
+			"move_forward",
+			"move_back"
+		)
+		intent = {
+			"move_x": input_vector.x,
+			"move_z": -input_vector.y,
+			"look_yaw": earth_explorer.get_surface_relative_yaw(),
+			"look_pitch": 0.0,
+			"jump_pressed": Input.is_action_just_pressed("move_up"),
+			"sprint": Input.is_action_pressed("boost"),
+			"delta_seconds": maxf(delta, 0.000001),
+		}
 	var advanced: Dictionary = m3_multiplayer_client_runtime.advance_local_prediction(
 		intent,
 		delta
@@ -386,6 +414,111 @@ func _apply_m3_network_input(delta: float) -> void:
 		if presentation_value is Dictionary and not Dictionary(presentation_value).is_empty():
 			_apply_mvp_presentation_record(Dictionary(presentation_value))
 			_mvp_prediction_updates += 1
+
+
+func automation_set_movement_intent(params: Dictionary) -> Dictionary:
+	if not _m3_attached or m3_multiplayer_client_runtime == null:
+		return {"success": false, "error_code": "AUTOMATION_NETWORK_RUNTIME_NOT_READY"}
+	if _mvp_spectator_enabled:
+		return {"success": false, "error_code": "AUTOMATION_MOVEMENT_BLOCKED_BY_SPECTATOR"}
+	if _mvp_inventory_visible:
+		return {"success": false, "error_code": "AUTOMATION_MOVEMENT_BLOCKED_BY_INVENTORY"}
+
+	var move_x_value = params.get("move_x", 0.0)
+	var move_z_value = params.get("move_z", 0.0)
+	var look_yaw_value = params.get(
+		"look_yaw",
+		earth_explorer.get_surface_relative_yaw() if earth_explorer != null else 0.0
+	)
+	var look_pitch_value = params.get("look_pitch", 0.0)
+	for value in [move_x_value, move_z_value, look_yaw_value, look_pitch_value]:
+		if typeof(value) not in [TYPE_INT, TYPE_FLOAT]:
+			return {"success": false, "error_code": "AUTOMATION_MOVEMENT_NUMBER_REQUIRED"}
+		if is_nan(float(value)) or is_inf(float(value)):
+			return {"success": false, "error_code": "AUTOMATION_MOVEMENT_NUMBER_INVALID"}
+
+	var move_x := clampf(float(move_x_value), -1.0, 1.0)
+	var move_z := clampf(float(move_z_value), -1.0, 1.0)
+	var look_yaw := wrapf(float(look_yaw_value), -PI, PI)
+	var look_pitch := clampf(float(look_pitch_value), -1.45, 1.45)
+	var sprint := bool(params.get("sprint", false))
+	var jump := bool(params.get("jump", false))
+	var ttl_ms := clampi(int(params.get("ttl_ms", 750)), 100, 10000)
+
+	if earth_explorer != null and earth_explorer.has_method("set_network_surface_view"):
+		var view_result: Dictionary = earth_explorer.set_network_surface_view(
+			look_yaw, look_pitch
+		)
+		if not bool(view_result.get("success", false)):
+			return view_result
+
+	_automation_movement_intent = {
+		"move_x": move_x,
+		"move_z": move_z,
+		"look_yaw": look_yaw,
+		"look_pitch": look_pitch,
+		"sprint": sprint,
+	}
+	_automation_jump_pending = _automation_jump_pending or jump
+	_automation_movement_enabled = true
+	_automation_movement_expires_ms = Time.get_ticks_msec() + ttl_ms
+	_automation_movement_updates += 1
+	return {
+		"success": true,
+		"error_code": "",
+		"details": automation_get_state(),
+	}
+
+
+func automation_stop_movement() -> Dictionary:
+	var was_enabled := _automation_movement_enabled
+	_automation_movement_enabled = false
+	_automation_movement_expires_ms = 0
+	_automation_movement_intent.clear()
+	_automation_jump_pending = false
+	if was_enabled:
+		_submit_mvp_neutral_input()
+	return {
+		"success": true,
+		"error_code": "",
+		"details": automation_get_state(),
+	}
+
+
+func automation_set_view(params: Dictionary) -> Dictionary:
+	if earth_explorer == null or not earth_explorer.has_method("set_network_surface_view"):
+		return {"success": false, "error_code": "AUTOMATION_VIEW_NOT_READY"}
+	var yaw_value = params.get("yaw", earth_explorer.get_surface_relative_yaw())
+	var pitch_value = params.get("pitch", 0.0)
+	if typeof(yaw_value) not in [TYPE_INT, TYPE_FLOAT] or typeof(pitch_value) not in [TYPE_INT, TYPE_FLOAT]:
+		return {"success": false, "error_code": "AUTOMATION_VIEW_NUMBER_REQUIRED"}
+	if (
+		is_nan(float(yaw_value))
+		or is_inf(float(yaw_value))
+		or is_nan(float(pitch_value))
+		or is_inf(float(pitch_value))
+	):
+		return {"success": false, "error_code": "AUTOMATION_VIEW_NUMBER_INVALID"}
+	return earth_explorer.set_network_surface_view(float(yaw_value), float(pitch_value))
+
+
+func automation_get_state() -> Dictionary:
+	return {
+		"schema": "dws.live2.automation.input_state.v1",
+		"movement_enabled": _automation_movement_enabled,
+		"expires_in_ms": (
+			maxi(_automation_movement_expires_ms - Time.get_ticks_msec(), 0)
+			if _automation_movement_enabled else 0
+		),
+		"movement_intent": _automation_movement_intent.duplicate(true),
+		"jump_pending": _automation_jump_pending,
+		"movement_updates": _automation_movement_updates,
+		"expirations": _automation_expirations,
+		"input_owner": _mvp_input_owner,
+		"inventory_visible": _mvp_inventory_visible,
+		"build_mode": _live2_build_mode,
+		"connection_state": _live2_connection_state,
+	}
 
 
 func _submit_mvp_neutral_input() -> void:
@@ -1130,6 +1263,7 @@ func create_m3_graphical_client_report() -> Dictionary:
 	report["live2_last_action_text"] = _live2_last_action_text
 	report["live2_mining_tool_equipped"] = _live2_mining_tool_is_equipped()
 	report["live2_build_mode"] = _live2_build_mode
+	report["automation_input"] = automation_get_state()
 	report["spectator_enabled"] = _mvp_spectator_enabled
 	report["spectator_body_visible"] = (
 		_mvp_local_body != null
