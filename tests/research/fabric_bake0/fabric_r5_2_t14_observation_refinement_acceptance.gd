@@ -172,6 +172,7 @@ func _initialize() -> void:
 	check(int(summary.active_refinements) == 1, "exactly one active refinement")
 	check(runtime.path_resolution(target, REFINED_PATH) == "DETAILED", "selected cannon is detailed")
 	check(runtime.path_resolution(target, REFINED_PATH + "/cooling") == "DETAILED", "selected subtree descendants are detailed")
+	check(runtime.path_resolution(target, REFINED_PATH + "/not-real") == "INVALID", "nonexistent selected descendant is invalid")
 	check(runtime.path_resolution(target, "root/bank/unit03") == "MIXED", "selected subtree ancestor is mixed")
 	var sibling_paths := [
 		"root/battery",
@@ -257,6 +258,18 @@ func _initialize() -> void:
 	var tampered_restore: Dictionary = runtime.restore_refinement(target, tampered_text, snap.details.sha256)
 	check(not tampered_restore.success and tampered_restore.error_code == "T14_SNAPSHOT_ANCHOR_MISMATCH", "snapshot byte tamper rejected")
 
+	# A forged envelope can recompute its own checksum/SHA, but it still cannot
+	# claim a different full compiled model for the same frozen instance.
+	var forged = JSON.parse_string(snap.details.text)
+	check(typeof(forged) == TYPE_DICTIONARY and typeof(forged.get("metadata")) == TYPE_DICTIONARY, "snapshot forge fixture parsed")
+	var forged_metadata: Dictionary = forged.metadata
+	forged_metadata.compiled_model_hash = "0000000000000000000000000000000000000000000000000000000000000000"
+	forged_metadata.checksum = U.compute_checksum(forged_metadata)
+	forged.metadata = forged_metadata
+	var forged_text := JSON.stringify(forged, "", true)
+	var forged_restore: Dictionary = runtime.restore_refinement(target, forged_text, forged_text.sha256_text())
+	check(not forged_restore.success and forged_restore.error_code == "T14_SNAPSHOT_MODEL_MISMATCH", "forged full-model identity rejected")
+
 	var restored: Dictionary = runtime.restore_refinement(target, snap.details.text, snap.details.sha256)
 	check(restored.success, "restore observation refinement", restored)
 	if restored.success:
@@ -274,7 +287,7 @@ func _initialize() -> void:
 	check(int(stats.restore_count) == 1, "one successful restore")
 	check(int(stats.release_count) == 2, "two successful releases")
 	check(int(stats.materialization_count) == 2, "request plus restore materialize twice")
-	check(int(stats.compiled_nodes_visited) == 8, "only four-node subtree visited twice")
+	check(int(stats.detail_nodes_materialized) == 8, "only four-node subtree visited twice")
 	check(int(stats.source_leaf_traversals) == 0, "T14 observation never traverses source leaves")
 	check(int(stats.recompile_events) == 0, "T14 observation never recompiles")
 	check(int(stats.active_refinements) == 0, "no refinement leak after release")
@@ -308,7 +321,7 @@ func _initialize() -> void:
 		"restore_count":int(stats.restore_count),
 		"release_count":int(stats.release_count),
 		"materialization_count":int(stats.materialization_count),
-		"compiled_nodes_visited":int(stats.compiled_nodes_visited),
+		"detail_nodes_materialized":int(stats.detail_nodes_materialized),
 		"source_leaf_traversals":int(stats.source_leaf_traversals),
 		"recompile_events":int(stats.recompile_events),
 		"active_refinements_final":int(stats.active_refinements),
