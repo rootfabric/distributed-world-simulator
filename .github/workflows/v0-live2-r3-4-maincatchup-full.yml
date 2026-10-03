@@ -1,0 +1,365 @@
+name: V0 LIVE.2 R3.4 Main Catchup Full Windows
+
+on:
+  push:
+    branches:
+      - control/v0-live2-r3-4-maincatchup-full-r1
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: v0-live2-r3-4-maincatchup-full
+  cancel-in-progress: true
+
+env:
+  PRODUCT_HEAD: f4626e2a9d3a54bc28a94455f029327b2ba4d412
+  PRODUCT_TREE: ee20f0155428caf3e1a3e936c499625c968ea21f
+  LIVE2_PARENT: c174a23c3eb7ec539e0804d25a292476348fab38
+  MAIN_FENCE: 99b7b0233a0d2658cba22440b97107d7d48f0ec4
+  GODOT_BIN: C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe
+  PYTHONUTF8: '1'
+  PYTHONDONTWRITEBYTECODE: '1'
+  BREAKPOINT_RUNTIME_DISABLED: '1'
+  GODOT_SILENCE_ROOT_WARNING: '1'
+  PLANET_SIMULATOR_INVENTORY_PROFILE: planet_default
+
+jobs:
+  full:
+    name: LIVE2 R3.4 main-catchup double full world-core
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 300
+
+    steps:
+      - name: Checkout exact merge subject
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.PRODUCT_HEAD }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Exact identity and catchup preflight
+        id: preflight
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          $out='artifacts\live2-r3-4-maincatchup'
+          New-Item -ItemType Directory -Force $out | Out-Null
+
+          if ((git rev-parse HEAD).Trim() -ne $env:PRODUCT_HEAD) { throw 'HEAD_MISMATCH' }
+          if ((git rev-parse 'HEAD^{tree}').Trim() -ne $env:PRODUCT_TREE) { throw 'TREE_MISMATCH' }
+          if ((git status --porcelain --untracked-files=no)) { throw 'TRACKED_DIRTY_BEFORE' }
+
+          $p1=(git rev-parse 'HEAD^1').Trim()
+          $p2=(git rev-parse 'HEAD^2').Trim()
+          if ($p1 -ne $env:LIVE2_PARENT) { throw "FIRST_PARENT_MISMATCH:$p1" }
+          if ($p2 -ne $env:MAIN_FENCE) { throw "SECOND_PARENT_MISMATCH:$p2" }
+
+          git fetch origin '+refs/heads/main:refs/remotes/origin/main'
+          if ($LASTEXITCODE -ne 0) { throw 'MAIN_FETCH_FAILED' }
+          if ((git rev-parse origin/main).Trim() -ne $env:MAIN_FENCE) { throw 'MAIN_MOVED_BEFORE' }
+          git merge-base --is-ancestor $env:MAIN_FENCE $env:PRODUCT_HEAD
+          if ($LASTEXITCODE -ne 0) { throw 'MAIN_NOT_ANCESTOR' }
+          git merge-base --is-ancestor $env:LIVE2_PARENT $env:PRODUCT_HEAD
+          if ($LASTEXITCODE -ne 0) { throw 'LIVE2_PARENT_NOT_ANCESTOR' }
+
+          $expected=@(
+            '.github/workflows/eco-arch2-a11-exact.yml',
+            '.github/workflows/eco-arch2-a11-static.yml',
+            '.github/workflows/eco-arch2-a12-scale-exact.yml',
+            'RUN_ECO_A11_HABITAT.ps1',
+            'docs/research/ecology/ECO_ARCH2_A11_HABITAT_RU.md',
+            'docs/research/ecology/ECO_ARCH2_A11_POST_BUILD_CRITIQUE_RU.md',
+            'docs/research/ecology/ECO_ARCH2_A11_WORK_ORDER_RU.md',
+            'docs/research/ecology/ECO_ARCH2_A12_WORK_ORDER_RU.md',
+            'docs/research/ecology/EVO_ARCH2_ROADMAP_R3_RU.md',
+            'scenes/ecology/habitat/persistent_habitat.tscn',
+            'scripts/ecology/habitat/habitat_preset_v1.gd',
+            'scripts/ecology/habitat/persistent_habitat.gd',
+            'scripts/ecology/habitat/persistent_habitat_session_v1.gd',
+            'scripts/ecology/workbench/experiment_controller_v1.gd',
+            'scripts/research/ecology/v2/ecology_runtime_v1.gd',
+            'scripts/research/ecology/v2/ecology_scale_contract_v1.gd',
+            'scripts/research/ecology/v2/resource_lifecycle_runtime_v1.gd',
+            'validation/ecology/evo_arch2_a11/habitat_restart_worker.gd',
+            'validation/ecology/evo_arch2_a11/run_exact.py',
+            'validation/ecology/evo_arch2_a11/test_habitat_lifecycle.gd',
+            'validation/ecology/evo_arch2_a11/test_habitat_scene.gd',
+            'validation/ecology/evo_arch2_a11/test_persistent_session.gd',
+            'validation/ecology/evo_arch2_a11/test_world_admission.gd',
+            'validation/ecology/evo_arch2_a12/run_exact.py',
+            'validation/ecology/evo_arch2_a12/test_population_scale.gd'
+          ) | Sort-Object
+          $actual=@(git diff --name-only $env:LIVE2_PARENT $env:PRODUCT_HEAD) | Sort-Object
+          $delta=@(Compare-Object -ReferenceObject $expected -DifferenceObject $actual)
+          if ($delta.Count -gt 0) {
+            $delta | Format-Table | Out-String | Write-Host
+            throw 'CATCHUP_FILESET_MISMATCH'
+          }
+
+          $foreign=@(Get-Process -ErrorAction SilentlyContinue | Where-Object {$_.ProcessName -like 'godot*'})
+          if ($foreign.Count -gt 0) { throw ('FOREIGN_GODOT_PROCESS:' + (($foreign | Select-Object -ExpandProperty Id) -join ',')) }
+
+          $sha=(Get-FileHash $env:GODOT_BIN -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($sha -ne '3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5') { throw 'GODOT_SHA_MISMATCH' }
+          $version=(& $env:GODOT_BIN --version | Out-String).Trim()
+          if ($version -ne '4.7.1.stable.double.custom_build.a13da4feb') { throw "GODOT_VERSION_MISMATCH:$version" }
+
+          $os=Get-CimInstance Win32_OperatingSystem
+          $free=[math]::Round(($os.FreePhysicalMemory*1KB)/1GB,2)
+          if ($free -lt 10) { throw "LOW_FREE_RAM:$free" }
+
+          [ordered]@{
+            head=$env:PRODUCT_HEAD
+            tree=$env:PRODUCT_TREE
+            live2_parent=$env:LIVE2_PARENT
+            main=$env:MAIN_FENCE
+            first_parent=$p1
+            second_parent=$p2
+            catchup_files=$actual
+            godot_version=$version
+            godot_sha256=$sha
+            free_ram_gb=$free
+          } | ConvertTo-Json -Depth 5 | Set-Content "$out\preflight.json" -Encoding UTF8
+
+      - name: Cold import
+        id: import
+        shell: pwsh
+        timeout-minutes: 15
+        run: |
+          $ErrorActionPreference='Stop'
+          if (Test-Path .godot) { Remove-Item .godot -Recurse -Force }
+          & $env:GODOT_BIN --headless --path . --editor --import --quit *> artifacts\live2-r3-4-maincatchup\import.log
+          $code=$LASTEXITCODE
+          if ($code -ne 0) {
+            Get-Content artifacts\live2-r3-4-maincatchup\import.log -Tail 260
+            throw "IMPORT_FAILED:$code"
+          }
+          if (-not (Test-Path .godot\global_script_class_cache.cfg)) { throw 'CLASS_CACHE_MISSING' }
+          if (Select-String -Path artifacts\live2-r3-4-maincatchup\import.log -Pattern 'SCRIPT ERROR:|Parse Error:|Compile Error:' -Quiet) {
+            Get-Content artifacts\live2-r3-4-maincatchup\import.log -Tail 260
+            throw 'IMPORT_SCRIPT_ERRORS'
+          }
+
+      - name: R3.4 focused and compatibility
+        id: focused
+        shell: pwsh
+        timeout-minutes: 35
+        run: |
+          $ErrorActionPreference='Stop'
+          $out='artifacts\live2-r3-4-maincatchup'
+          python -m py_compile tools\live2\live2_automation_client.py
+          if ($LASTEXITCODE -ne 0) { throw 'AUTOMATION_CLI_PY_COMPILE_FAILED' }
+          python -m py_compile tools\live2\analyze_live2_autonomous_playtest.py
+          if ($LASTEXITCODE -ne 0) { throw 'AUTOMATION_ANALYZER_PY_COMPILE_FAILED' }
+
+          $tokens=$null
+          $errors=$null
+          [System.Management.Automation.Language.Parser]::ParseFile(
+            (Resolve-Path .\tools\live2\run_live2_autonomous_playtest.ps1),
+            [ref]$tokens,
+            [ref]$errors
+          ) | Out-Null
+          if (@($errors).Count -ne 0) { throw "AUTONOMOUS_RUNNER_PARSE_FAILED:$(@($errors).Count)" }
+
+          $tests=@(
+            'tests/runtime/test_launch_options.gd',
+            'tests/runtime/test_v0_live2_r3_4_automation_control.gd',
+            'tests/runtime/test_v0_live2_r3_3_snapshot_clock.gd',
+            'tests/runtime/test_v0_live2_r3_2_stall_probe.gd',
+            'tests/runtime/test_v0_live2_r3_1_async_gameplay.gd',
+            'tests/runtime/test_v0_live2_r3_inventory_ownership.gd',
+            'tests/runtime/test_v0_live2_r3_reliability.gd',
+            'tests/runtime/test_v0_live2_human_gameplay_bridge.gd',
+            'tests/network/test_v0_live2_enet_rollover.gd',
+            'tests/network/test_nx2_realtime_traffic_separation.gd',
+            'tests/network/test_nx2_physical_channel_processes.gd'
+          )
+          $results=@()
+          foreach ($test in $tests) {
+            $log=Join-Path $out ((Split-Path $test -Leaf)+'.log')
+            & $env:GODOT_BIN --headless --path . --script ('res://'+$test) *> $log
+            $code=$LASTEXITCODE
+            $scriptErrors=[bool](Select-String -Path $log -Pattern 'SCRIPT ERROR:|Parse Error:|Compile Error:' -Quiet)
+            $passed=($code -eq 0 -and -not $scriptErrors)
+            $results += [ordered]@{test=$test;exit_code=$code;script_errors=$scriptErrors;passed=$passed}
+            $results | ConvertTo-Json -Depth 5 | Set-Content "$out\focused-results.json" -Encoding UTF8
+            if (-not $passed) {
+              Get-Content $log -Tail 260
+              throw "FOCUSED_FAILED:$test:$code"
+            }
+          }
+
+      - name: Isolated P2 exact
+        id: p2
+        shell: pwsh
+        timeout-minutes: 15
+        run: |
+          $ErrorActionPreference='Stop'
+          $log='artifacts\live2-r3-4-maincatchup\p2-isolated.log'
+          & $env:GODOT_BIN --headless --path . --script res://tests/runtime/test_v0_p2_live_shared_state_convergence.gd *> $log
+          $code=$LASTEXITCODE
+          if ($code -ne 0 -or (Get-Content -Raw $log) -match 'SCRIPT ERROR:|Parse Error:|Compile Error:') {
+            Get-Content $log -Tail 300
+            throw "P2_ISOLATED_FAILED:$code"
+          }
+
+      - name: Full world-core pass 1
+        id: world1
+        shell: pwsh
+        timeout-minutes: 120
+        run: |
+          $ErrorActionPreference='Stop'
+          $out=(Resolve-Path 'artifacts\live2-r3-4-maincatchup').Path
+          $pass=Join-Path $out 'world-pass-1'
+          New-Item -ItemType Directory -Force $pass | Out-Null
+          $mvp6=Join-Path $pass 'mvp6-results'
+          $mvp7=Join-Path $pass 'mvp7-managed'
+          New-Item -ItemType Directory -Force $mvp6,$mvp7 | Out-Null
+          $env:EXPECTED_HEAD=$env:PRODUCT_HEAD
+          $env:EXPECTED_TREE=$env:PRODUCT_TREE
+          $env:MVP6_SEAM_DIAGNOSTIC_RESULT=Join-Path $mvp6 'diagnostic.json'
+          $env:MVP6_CROSS_AUTHORITY_SEAM_RESULT=Join-Path $mvp6 'product.json'
+          $env:MVP6_DERIVED_COLLISION_RESULT=Join-Path $mvp6 'collision.json'
+          $env:MVP6_PERSISTENCE_RESULT=Join-Path $mvp6 'persistence.json'
+          $env:MVP7_NATIVE_MODE='produce'
+          $env:MVP7_NATIVE_ROOT=Join-Path $mvp7 'native'
+          $env:MVP7_NATIVE_RESULT=Join-Path $mvp7 'native-result.json'
+          $env:MVP7_WORLD_MODE='produce'
+          $env:MVP7_WORLD_ROOT=Join-Path $mvp7 'world'
+          $env:MVP7_WORLD_RESULT=Join-Path $mvp7 'world-result.json'
+          $env:MVP7_CONSTRUCTION_MODE='produce'
+          $env:MVP7_CONSTRUCTION_ROOT=Join-Path $mvp7 'construction'
+          $env:MVP7_CONSTRUCTION_RESULT=Join-Path $mvp7 'construction-result.json'
+          New-Item -ItemType Directory -Force $env:MVP7_NATIVE_ROOT,$env:MVP7_WORLD_ROOT,$env:MVP7_CONSTRUCTION_ROOT | Out-Null
+
+          pwsh -NoProfile -File .\RUN_WORLD_REGRESSION_TESTS.ps1 *> (Join-Path $pass 'full-world-core.log')
+          $code=$LASTEXITCODE
+          "$code" | Set-Content (Join-Path $pass 'world-exit.txt') -Encoding ascii
+          $source='artifacts\test-results\world-regression-summary.json'
+          if (Test-Path $source) { Copy-Item $source (Join-Path $pass 'world-regression-summary.json') -Force }
+          if ($code -ne 0) {
+            Get-Content (Join-Path $pass 'full-world-core.log') -Tail 350
+            throw "WORLD_CORE_PASS1_FAILED:$code"
+          }
+          if (-not (Test-Path $source)) { throw 'WORLD1_SUMMARY_MISSING' }
+          $summary=Get-Content -Raw $source | ConvertFrom-Json
+          if ($summary.passed -ne $true -or [int]$summary.declared_test_count -ne [int]$summary.discovered_test_count) { throw 'WORLD1_DISCOVERY_OR_SUMMARY_RED' }
+          $bad=@($summary.steps | Where-Object {$_.passed -ne $true -or [int]$_.exit_code -ne 0})
+          if (@($summary.steps).Count -eq 0 -or $bad.Count -gt 0) { throw 'WORLD1_STEPS_RED' }
+          Write-Host "WORLD1_PASS declared=$($summary.declared_test_count) discovered=$($summary.discovered_test_count) steps=$(@($summary.steps).Count)"
+
+      - name: Full world-core pass 2
+        id: world2
+        shell: pwsh
+        timeout-minutes: 120
+        run: |
+          $ErrorActionPreference='Stop'
+          $out=(Resolve-Path 'artifacts\live2-r3-4-maincatchup').Path
+          $pass=Join-Path $out 'world-pass-2'
+          New-Item -ItemType Directory -Force $pass | Out-Null
+          if (Test-Path 'artifacts\test-results') { Remove-Item 'artifacts\test-results' -Recurse -Force }
+
+          $mvp6=Join-Path $pass 'mvp6-results'
+          $mvp7=Join-Path $pass 'mvp7-managed'
+          New-Item -ItemType Directory -Force $mvp6,$mvp7 | Out-Null
+          $env:EXPECTED_HEAD=$env:PRODUCT_HEAD
+          $env:EXPECTED_TREE=$env:PRODUCT_TREE
+          $env:MVP6_SEAM_DIAGNOSTIC_RESULT=Join-Path $mvp6 'diagnostic.json'
+          $env:MVP6_CROSS_AUTHORITY_SEAM_RESULT=Join-Path $mvp6 'product.json'
+          $env:MVP6_DERIVED_COLLISION_RESULT=Join-Path $mvp6 'collision.json'
+          $env:MVP6_PERSISTENCE_RESULT=Join-Path $mvp6 'persistence.json'
+          $env:MVP7_NATIVE_MODE='produce'
+          $env:MVP7_NATIVE_ROOT=Join-Path $mvp7 'native'
+          $env:MVP7_NATIVE_RESULT=Join-Path $mvp7 'native-result.json'
+          $env:MVP7_WORLD_MODE='produce'
+          $env:MVP7_WORLD_ROOT=Join-Path $mvp7 'world'
+          $env:MVP7_WORLD_RESULT=Join-Path $mvp7 'world-result.json'
+          $env:MVP7_CONSTRUCTION_MODE='produce'
+          $env:MVP7_CONSTRUCTION_ROOT=Join-Path $mvp7 'construction'
+          $env:MVP7_CONSTRUCTION_RESULT=Join-Path $mvp7 'construction-result.json'
+          New-Item -ItemType Directory -Force $env:MVP7_NATIVE_ROOT,$env:MVP7_WORLD_ROOT,$env:MVP7_CONSTRUCTION_ROOT | Out-Null
+
+          pwsh -NoProfile -File .\RUN_WORLD_REGRESSION_TESTS.ps1 *> (Join-Path $pass 'full-world-core.log')
+          $code=$LASTEXITCODE
+          "$code" | Set-Content (Join-Path $pass 'world-exit.txt') -Encoding ascii
+          $source='artifacts\test-results\world-regression-summary.json'
+          if (Test-Path $source) { Copy-Item $source (Join-Path $pass 'world-regression-summary.json') -Force }
+          if ($code -ne 0) {
+            Get-Content (Join-Path $pass 'full-world-core.log') -Tail 350
+            throw "WORLD_CORE_PASS2_FAILED:$code"
+          }
+          if (-not (Test-Path $source)) { throw 'WORLD2_SUMMARY_MISSING' }
+          $summary=Get-Content -Raw $source | ConvertFrom-Json
+          if ($summary.passed -ne $true -or [int]$summary.declared_test_count -ne [int]$summary.discovered_test_count) { throw 'WORLD2_DISCOVERY_OR_SUMMARY_RED' }
+          $bad=@($summary.steps | Where-Object {$_.passed -ne $true -or [int]$_.exit_code -ne 0})
+          if (@($summary.steps).Count -eq 0 -or $bad.Count -gt 0) { throw 'WORLD2_STEPS_RED' }
+          Write-Host "WORLD2_PASS declared=$($summary.declared_test_count) discovered=$($summary.discovered_test_count) steps=$(@($summary.steps).Count)"
+
+      - name: Final exact identity and main fence
+        id: final
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          if ((git rev-parse HEAD).Trim() -ne $env:PRODUCT_HEAD) { throw 'HEAD_CHANGED' }
+          if ((git rev-parse 'HEAD^{tree}').Trim() -ne $env:PRODUCT_TREE) { throw 'TREE_CHANGED' }
+          if ((git status --porcelain --untracked-files=no)) { throw 'TRACKED_DIRTY_AFTER' }
+          git fetch origin '+refs/heads/main:refs/remotes/origin/main'
+          if ($LASTEXITCODE -ne 0) { throw 'FINAL_MAIN_FETCH_FAILED' }
+          if ((git rev-parse origin/main).Trim() -ne $env:MAIN_FENCE) { throw 'MAIN_MOVED_DURING_RUN' }
+
+      - name: Bind evidence manifest
+        if: always()
+        shell: pwsh
+        env:
+          PREFLIGHT: ${{ steps.preflight.outcome }}
+          IMPORT: ${{ steps.import.outcome }}
+          FOCUSED: ${{ steps.focused.outcome }}
+          P2: ${{ steps.p2.outcome }}
+          WORLD1: ${{ steps.world1.outcome }}
+          WORLD2: ${{ steps.world2.outcome }}
+          FINAL: ${{ steps.final.outcome }}
+        run: |
+          $ErrorActionPreference='Stop'
+          $out='artifacts\live2-r3-4-maincatchup'
+          New-Item -ItemType Directory -Force $out | Out-Null
+          $states=@($env:PREFLIGHT,$env:IMPORT,$env:FOCUSED,$env:P2,$env:WORLD1,$env:WORLD2,$env:FINAL)
+          $passed=@($states | Where-Object {$_ -ne 'success'}).Count -eq 0
+          $root=(Resolve-Path $out).Path
+          $files=@(Get-ChildItem $out -File -Recurse | Where-Object {$_.Name -ne 'manifest.json'} | ForEach-Object {
+            [ordered]@{
+              path=$_.FullName.Substring($root.Length).TrimStart('\')
+              bytes=$_.Length
+              sha256=(Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+            }
+          })
+          [ordered]@{
+            schema='distributed_world_simulator.live2_r3_4_maincatchup_full.v1'
+            passed=$passed
+            subject_head=$env:PRODUCT_HEAD
+            subject_tree=$env:PRODUCT_TREE
+            live2_parent=$env:LIVE2_PARENT
+            main_fence=$env:MAIN_FENCE
+            actual_head=(git rev-parse HEAD).Trim()
+            actual_tree=(git rev-parse 'HEAD^{tree}').Trim()
+            preflight=$env:PREFLIGHT
+            import=$env:IMPORT
+            focused=$env:FOCUSED
+            p2_isolated=$env:P2
+            world_core_pass_1=$env:WORLD1
+            world_core_pass_2=$env:WORLD2
+            final_identity=$env:FINAL
+            autonomous_gui_evidence_run=37107908360
+            files=$files
+          } | ConvertTo-Json -Depth 8 | Set-Content "$out\manifest.json" -Encoding UTF8
+
+      - name: Upload full evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v0-live2-r3-4-maincatchup-full-${{ github.run_id }}-${{ github.run_attempt }}
+          path: artifacts/live2-r3-4-maincatchup/
+          if-no-files-found: error
+          retention-days: 90
