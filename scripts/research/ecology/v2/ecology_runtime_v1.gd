@@ -29,6 +29,7 @@ const Field = preload("res://scripts/research/ecology/v2/local_environment_field
 const Lifecycle = preload("res://scripts/research/ecology/v2/resource_lifecycle_runtime_v1.gd")
 const Feedback = preload("res://scripts/research/ecology/v2/persistent_environmental_feedback_v1.gd")
 const Scale = preload("res://scripts/research/ecology/v2/ecology_scale_contract_v1.gd")
+const Worksets = preload("res://scripts/research/ecology/v2/population_workset_plan_v1.gd")
 
 const SCHEMA := "dws.ecology.ecology-runtime-state.v1"
 const FEEDBACK_SCHEMA := "dws.ecology.ecology-runtime-feedback.v1"
@@ -101,7 +102,13 @@ static func create(session_id: String, field: Dictionary, population: Array, pol
 ##  mutation_key_prefix: String (optional)}. Fail-closed: any primitive
 ## failure leaves the input state untouched and reports the error.
 static func step(state: Dictionary, options: Dictionary) -> Dictionary:
-	var lifecycle := step_lifecycle(state)
+	return step_scheduled(state, options, Worksets.DEFAULT_WORKSET_SIZE)
+
+## A13 scheduler entry point. workset_size changes execution partitioning only;
+## it is deliberately absent from canonical state/checkpoints and MUST NOT
+## change biological results.
+static func step_scheduled(state: Dictionary, options: Dictionary, workset_size: int) -> Dictionary:
+	var lifecycle := step_lifecycle_scheduled(state, workset_size)
 	if not bool(lifecycle.get("success", false)): return lifecycle
 	var admitted := admit_propagules(lifecycle.state, options)
 	if not bool(admitted.get("success", false)): return admitted
@@ -112,10 +119,14 @@ static func step(state: Dictionary, options: Dictionary) -> Dictionary:
 ## Emitted propagules enter the state outbox as paid-but-unmaterialized
 ## endowments (the value stays visible to the conservation invariant).
 static func step_lifecycle(state: Dictionary) -> Dictionary:
+	return step_lifecycle_scheduled(state, Worksets.DEFAULT_WORKSET_SIZE)
+
+static func step_lifecycle_scheduled(state: Dictionary, workset_size: int) -> Dictionary:
 	var error := validate(state)
 	if not error.is_empty(): return _fail(error)
 	var field: Dictionary = state.field
-	var result := Lifecycle.step_population(field, state.population, field.owner_token, field.owner_epoch, field.revision)
+	var result := Lifecycle.step_population_scheduled(
+		field, state.population, field.owner_token, field.owner_epoch, field.revision, workset_size)
 	if not result.success: return _fail("RUNTIME_LIFECYCLE:" + String(result.error))
 	var next := state.duplicate(true)
 	next.field = result.field
