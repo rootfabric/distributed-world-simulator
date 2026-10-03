@@ -150,7 +150,7 @@ func _poll_peer(index: int) -> void:
 		return
 	if peer.get_status() != StreamPeerTCP.STATUS_CONNECTED:
 		return
-	var available := peer.get_available_bytes()
+	var available: int = int(peer.get_available_bytes())
 	if available <= 0:
 		return
 	var read = peer.get_partial_data(available)
@@ -198,7 +198,7 @@ func _send_response(peer, response: Dictionary) -> void:
 		bytes = (JSON.stringify(
 			_response(String(response.get("id", "")), false, {}, "AUTOMATION_RESPONSE_TOO_LARGE")
 		) + "\n").to_utf8_buffer()
-	var error := peer.put_data(bytes)
+	var error: int = int(peer.put_data(bytes))
 	if error == OK:
 		_responses += 1
 	else:
