@@ -11,6 +11,7 @@ const F = preload("res://scripts/research/ecology/v2/environment_field_contract_
 const Field = preload("res://scripts/research/ecology/v2/local_environment_field_v1.gd")
 const Ports = preload("res://scripts/research/ecology/v2/organism_environment_ports_v1.gd")
 const Scale = preload("res://scripts/research/ecology/v2/ecology_scale_contract_v1.gd")
+const Worksets = preload("res://scripts/research/ecology/v2/population_workset_plan_v1.gd")
 const MAX_POPULATION := Scale.MAX_POPULATION
 const MAX_PROPAGULES_PER_STEP := Scale.MAX_PROPAGULES_PER_STEP
 const PROPAGULE_SCHEMA := "dws.ecology.propagule.v1"
@@ -21,11 +22,33 @@ static func individual(blueprint: Dictionary, individual_id: String, position_mm
 	return {"blueprint": blueprint.duplicate(true), "state": state} if not state.is_empty() else {}
 
 static func step_population(field: Dictionary, population: Array, owner_token: String, owner_epoch: int, revision: int) -> Dictionary:
-	if not F.validate_state(field).is_empty(): return _fail("A5_FIELD")
-	if population.is_empty() or population.size() > MAX_POPULATION: return _fail("A5_POPULATION_SIZE")
-	if owner_token != field.owner_token: return _fail("STALE_OWNER")
-	if owner_epoch != field.owner_epoch: return _fail("STALE_OWNER_EPOCH")
-	if revision != field.revision: return _fail("STALE_REVISION")
+	# A13 default execution is partitioned for computation but NOT for resource
+	# ownership/allocation. The exact same global allocation remains authoritative.
+	return step_population_scheduled(field, population, owner_token, owner_epoch, revision, Worksets.DEFAULT_WORKSET_SIZE)
+
+static func step_population_scheduled(field: Dictionary, population: Array, owner_token: String, owner_epoch: int, revision: int, workset_size: int) -> Dictionary:
+	var normalized := _canonical_entries(population)
+	if not bool(normalized.get("success", false)):
+		return normalized
+	var entries: Array = normalized.entries
+	var plan := Worksets.create(entries, workset_size)
+	if plan.is_empty():
+		return _fail("A5_WORKSET_PLAN")
+	return _step_population_with_entries(field, entries, owner_token, owner_epoch, revision, plan)
+
+static func step_population_with_plan(field: Dictionary, population: Array, owner_token: String, owner_epoch: int, revision: int, plan: Dictionary) -> Dictionary:
+	var normalized := _canonical_entries(population)
+	if not bool(normalized.get("success", false)):
+		return normalized
+	var entries: Array = normalized.entries
+	var plan_error := Worksets.validate(plan, entries)
+	if not plan_error.is_empty():
+		return _fail("A5_WORKSET_PLAN:" + plan_error)
+	return _step_population_with_entries(field, entries, owner_token, owner_epoch, revision, plan)
+
+static func _canonical_entries(population: Array) -> Dictionary:
+	if population.is_empty() or population.size() > MAX_POPULATION:
+		return _fail("A5_POPULATION_SIZE")
 	var entries: Array = []
 	var seen := {}
 	for entry in population:
@@ -34,57 +57,94 @@ static func step_population(field: Dictionary, population: Array, owner_token: S
 		if not BP.validate(entry.blueprint).is_empty() or not LS.validate(entry.state, entry.blueprint).is_empty():
 			return _fail("A5_ENTRY_INVALID")
 		var id: String = entry.state.individual_id
-		if seen.has(id): return _fail("A5_DUPLICATE_INDIVIDUAL")
+		if seen.has(id):
+			return _fail("A5_DUPLICATE_INDIVIDUAL")
 		seen[id] = true
 		entries.append({"blueprint": entry.blueprint.duplicate(true), "state": entry.state.duplicate(true)})
 	entries.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return a.state.individual_id < b.state.individual_id)
+	return {"success": true, "entries": entries}
 
+static func _step_population_with_entries(field: Dictionary, entries: Array, owner_token: String, owner_epoch: int, revision: int, plan: Dictionary) -> Dictionary:
+	if not F.validate_state(field).is_empty():
+		return _fail("A5_FIELD")
+	if owner_token != field.owner_token:
+		return _fail("STALE_OWNER")
+	if owner_epoch != field.owner_epoch:
+		return _fail("STALE_OWNER_EPOCH")
+	if revision != field.revision:
+		return _fail("STALE_REVISION")
+	var plan_error := Worksets.validate(plan, entries)
+	if not plan_error.is_empty():
+		return _fail("A5_WORKSET_PLAN:" + plan_error)
+
+	var by_id := {}
+	for entry in entries:
+		by_id[String(entry.state.individual_id)] = entry
+
+	# Phase 1 — pure preparation partitioned by workset.
+	# Nothing mutates the field/population in this phase.
 	var samples := {}
 	var demands: Array = []
-	for entry in entries:
-		var state: Dictionary = entry.state
-		if not state.alive:
-			continue
-		var phenotype := H.compile(state.development, entry.blueprint.genome)
-		if phenotype.is_empty(): return _fail("A5_PHENOTYPE")
-		var extent := Ports.sampling_extent_mm(phenotype)
-		var request := Ports.sample_request(state.individual_id, state.position_mm, extent)
-		var sampled := Field.sample(field, request)
-		if not sampled.success: return _fail("A5_SAMPLE:" + String(sampled.error))
-		samples[state.individual_id] = sampled.sample
-		var generated := _demands(state, entry.blueprint, phenotype)
-		for demand in generated:
-			demands.append(demand)
+	for unit in plan.worksets:
+		for raw_id in unit.member_ids:
+			var id := String(raw_id)
+			var entry: Dictionary = by_id[id]
+			var state: Dictionary = entry.state
+			if not state.alive:
+				continue
+			var phenotype := H.compile(state.development, entry.blueprint.genome)
+			if phenotype.is_empty():
+				return _fail("A5_PHENOTYPE")
+			var extent := Ports.sampling_extent_mm(phenotype)
+			var request := Ports.sample_request(state.individual_id, state.position_mm, extent)
+			var sampled := Field.sample(field, request)
+			if not sampled.success:
+				return _fail("A5_SAMPLE:" + String(sampled.error))
+			samples[id] = sampled.sample
+			var generated := _demands(state, entry.blueprint, phenotype)
+			for demand in generated:
+				demands.append(demand)
 
+	# Global barrier — exactly ONE allocation for the whole population.
 	var field_after := field.duplicate(true)
 	var intake_by_id := {}
 	for entry in entries:
-		intake_by_id[entry.state.individual_id] = F.stock()
+		intake_by_id[String(entry.state.individual_id)] = F.stock()
 	if not demands.is_empty():
 		var allocated := Field.allocate_demands(field, demands, owner_token, owner_epoch, revision)
-		if not allocated.success: return _fail("A5_ALLOCATION:" + String(allocated.error))
+		if not allocated.success:
+			return _fail("A5_ALLOCATION:" + String(allocated.error))
 		field_after = allocated.state
 		for grant in allocated.grants:
 			var id: String = grant.organism_id
-			if not intake_by_id.has(id): return _fail("A5_GRANT_OWNER")
+			if not intake_by_id.has(id):
+				return _fail("A5_GRANT_OWNER")
 			intake_by_id[id][grant.resource] += grant.granted
 
+	# Phase 2 — pure per-individual lifecycle advance partitioned by the SAME
+	# canonical worksets, using grants from the single global allocation.
 	var next_population: Array = []
 	var propagules: Array = []
-	for entry in entries:
-		var state: Dictionary = entry.state
-		var blueprint: Dictionary = entry.blueprint
-		if not state.alive:
-			var inert := state.duplicate(true)
-			inert.last_events = [{"outcome": "DEAD_INERT", "detail": "no resource requests or lifecycle transitions"}]
-			next_population.append({"blueprint": blueprint, "state": inert})
-			continue
-		var advanced := _advance_individual(state, blueprint, samples[state.individual_id], intake_by_id[state.individual_id])
-		if not advanced.success: return advanced
-		next_population.append({"blueprint": blueprint, "state": advanced.state})
-		for propagule in advanced.propagules:
-			if propagules.size() >= MAX_PROPAGULES_PER_STEP: return _fail("A5_PROPAGULE_LIMIT")
-			propagules.append(propagule)
+	for unit in plan.worksets:
+		for raw_id in unit.member_ids:
+			var id := String(raw_id)
+			var entry: Dictionary = by_id[id]
+			var state: Dictionary = entry.state
+			var blueprint: Dictionary = entry.blueprint
+			if not state.alive:
+				var inert := state.duplicate(true)
+				inert.last_events = [{"outcome": "DEAD_INERT", "detail": "no resource requests or lifecycle transitions"}]
+				next_population.append({"blueprint": blueprint, "state": inert})
+				continue
+			var advanced := _advance_individual(state, blueprint, samples[id], intake_by_id[id])
+			if not advanced.success:
+				return advanced
+			next_population.append({"blueprint": blueprint, "state": advanced.state})
+			for propagule in advanced.propagules:
+				if propagules.size() >= MAX_PROPAGULES_PER_STEP:
+					return _fail("A5_PROPAGULE_LIMIT")
+				propagules.append(propagule)
+
 	next_population.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return a.state.individual_id < b.state.individual_id)
 	propagules.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return a.id < b.id)
 	return {"success": true, "field": field_after, "population": next_population, "propagules": propagules, "field_hash": Field.state_hash(field_after)}
