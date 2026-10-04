@@ -1,0 +1,89 @@
+name: V0 LIVE3 exact Windows recovery
+on:
+  push:
+    branches: [feature/v0-live3-product-recovery-r1]
+    paths: [.github/workflows/v0-live3-exact.yml, validation/live3/trigger.txt]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: v0-live3-exact
+  cancel-in-progress: true
+env:
+  GODOT_BIN: C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe
+  PYTHONUTF8: '1'
+  PYTHONDONTWRITEBYTECODE: '1'
+  BREAKPOINT_RUNTIME_DISABLED: '1'
+  GODOT_SILENCE_ROOT_WARNING: '1'
+jobs:
+  windows:
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Exact subject and host
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          New-Item -ItemType Directory -Force artifacts/live3-exact | Out-Null
+          $head=(git rev-parse HEAD).Trim()
+          $tree=(git rev-parse 'HEAD^{tree}').Trim()
+          if ($head -ne '${{ github.sha }}') { throw 'HEAD_MISMATCH' }
+          if (git status --porcelain --untracked-files=no) { throw 'TRACKED_DIRTY' }
+          $foreign=@(Get-Process -ErrorAction SilentlyContinue | Where-Object {$_.ProcessName -like 'godot*'})
+          if ($foreign.Count) { throw ('FOREIGN_GODOT:' + (($foreign.Id) -join ',')) }
+          $sha=(Get-FileHash $env:GODOT_BIN -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($sha -ne '3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5') { throw 'GODOT_HASH_MISMATCH' }
+          $version=(& $env:GODOT_BIN --version | Out-String).Trim()
+          if ($version -ne '4.7.1.stable.double.custom_build.a13da4feb') { throw 'GODOT_VERSION_MISMATCH' }
+          $free=(Get-CimInstance Win32_OperatingSystem).FreePhysicalMemory*1KB/1GB
+          if ($free -lt 10) { throw "LOW_RAM:$free" }
+          @{head=$head;tree=$tree;host=$env:COMPUTERNAME;godot=$version;godot_sha256=$sha;free_ram_gb=$free} | ConvertTo-Json | Set-Content artifacts/live3-exact/identity.json
+      - name: Cold import
+        shell: pwsh
+        timeout-minutes: 15
+        run: |
+          $ErrorActionPreference='Stop'
+          if (Test-Path .godot) { Remove-Item .godot -Recurse -Force }
+          & $env:GODOT_BIN --headless --path . --editor --import --quit *> artifacts/live3-exact/import.log
+          $code=$LASTEXITCODE
+          if ($code -ne 0 -or (Select-String artifacts/live3-exact/import.log -Pattern 'SCRIPT ERROR:|Parse Error:|Compile Error:' -Quiet)) {
+            Get-Content artifacts/live3-exact/import.log -Tail 220
+            throw "IMPORT_FAILED:$code"
+          }
+      - name: LIVE3 and unchanged recovery regressions
+        shell: pwsh
+        timeout-minutes: 20
+        run: |
+          $ErrorActionPreference='Stop'
+          $tests=@('tests/runtime/test_v0_live3_recovery_contracts.gd','tests/runtime/test_launch_options.gd','tests/runtime/test_m6_dedicated_recovery_contracts.gd','tests/runtime/test_v0_live2_r3_4_automation_control.gd','tests/runtime/test_v0_live2_r3_3_snapshot_clock.gd','tests/runtime/test_v0_live2_r3_reliability.gd')
+          $results=@()
+          foreach($test in $tests) {
+            $log=Join-Path artifacts/live3-exact ((Split-Path $test -Leaf)+'.log')
+            & $env:GODOT_BIN --headless --path . --script ('res://'+$test) *> $log
+            $code=$LASTEXITCODE
+            $errors=[bool](Select-String $log -Pattern 'SCRIPT ERROR:|Parse Error:|Compile Error:' -Quiet)
+            $results+=@{test=$test;exit_code=$code;script_errors=$errors;passed=($code -eq 0 -and -not $errors)}
+            $results | ConvertTo-Json | Set-Content artifacts/live3-exact/focused.json
+            if ($code -ne 0 -or $errors) {
+              Get-Content $log -Tail 220
+              throw ('FOCUSED_FAILED:{0}:{1}' -f $test,$code)
+            }
+          }
+      - name: Final source identity
+        if: always()
+        shell: pwsh
+        run: |
+          @{head=(git rev-parse HEAD).Trim();tree=(git rev-parse 'HEAD^{tree}').Trim();tracked_clean=(-not [bool](git status --porcelain --untracked-files=no))} | ConvertTo-Json | Set-Content artifacts/live3-exact/final.json
+          if (git status --porcelain --untracked-files=no) { throw 'TRACKED_DIRTY_AFTER' }
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: live3-exact-${{ github.run_id }}-${{ github.run_attempt }}
+          path: artifacts/live3-exact/
+          if-no-files-found: error
+          retention-days: 30
