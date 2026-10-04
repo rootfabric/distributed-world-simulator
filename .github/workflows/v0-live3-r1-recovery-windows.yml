@@ -142,27 +142,62 @@ jobs:
         timeout-minutes: 15
         run: |
           $ErrorActionPreference='Stop'
-          $tests=@(
-            'tests/runtime/test_m6_dedicated_recovery_contracts.gd',
-            'tests/runtime/test_m6_dedicated_recovery_processes.gd',
-            'tests/runtime/test_v0_p3_resource_mining_aggregate_recovery.gd',
-            'tests/runtime/test_v0_mvp_7_construction_restart.gd',
-            'tests/runtime/test_v0_mvp_7_quiescent_recovery.gd',
-            'tests/runtime/test_v0_p4_live_two_client_reconnect_convergence.gd'
-          )
           $rows=@()
-          foreach($test in $tests){
-            $log=Join-Path 'artifacts\live3-r1' ((Split-Path $test -Leaf)+'.log')
-            & $env:GODOT_BIN --headless --path . --script ('res://'+$test) *> $log
+          function Invoke-Live3Regression([string]$Label,[string]$Test){
+            $log=Join-Path 'artifacts\live3-r1' ($Label+'.log')
+            & $env:GODOT_BIN --headless --path . --script ('res://'+$Test) *> $log
             $code=$LASTEXITCODE
             $scriptErrors=[bool](Select-String $log -Pattern 'SCRIPT ERROR:|Parse Error:|Compile Error:' -Quiet)
             $passed=($code -eq 0 -and -not $scriptErrors)
-            $rows += [ordered]@{test=$test;exit_code=$code;script_errors=$scriptErrors;passed=$passed}
             if(-not$passed){
               Get-Content $log -Tail 350
-              throw ("RECOVERY_REGRESSION_FAILED:{0}:{1}" -f $test,$code)
+              throw ("RECOVERY_REGRESSION_FAILED:{0}:{1}:{2}" -f $Label,$Test,$code)
             }
+            return [ordered]@{label=$Label;test=$Test;exit_code=$code;script_errors=$scriptErrors;passed=$passed}
           }
+
+          $directTests=@(
+            'tests/runtime/test_m6_dedicated_recovery_contracts.gd',
+            'tests/runtime/test_m6_dedicated_recovery_processes.gd',
+            'tests/runtime/test_v0_p3_resource_mining_aggregate_recovery.gd',
+            'tests/runtime/test_v0_p4_live_two_client_reconnect_convergence.gd'
+          )
+          foreach($test in $directTests){
+            $rows += Invoke-Live3Regression ((Split-Path $test -LeafBase)) $test
+          }
+
+          # MVP7 quiescent and Construction restart files are process workers,
+          # not standalone tests. Reproduce their accepted three-process
+          # produce -> recover1 -> recover2 contract instead of invoking them
+          # without the required environment.
+          $head=(git rev-parse HEAD).Trim()
+          $tree=(git rev-parse 'HEAD^{tree}').Trim()
+          $env:EXPECTED_HEAD=$head
+          $env:EXPECTED_TREE=$tree
+          $artifactRoot=(Resolve-Path 'artifacts\live3-r1').Path
+          $profileRoot=Join-Path $artifactRoot 'mvp7-regression-profile'
+          $env:APPDATA=Join-Path $profileRoot 'AppData\Roaming'
+          $env:LOCALAPPDATA=Join-Path $profileRoot 'AppData\Local'
+          New-Item -ItemType Directory -Force $env:APPDATA,$env:LOCALAPPDATA | Out-Null
+
+          $nativeRoot=Join-Path $artifactRoot 'mvp7-native-regression'
+          New-Item -ItemType Directory -Force $nativeRoot | Out-Null
+          $env:MVP7_NATIVE_ROOT=Join-Path $nativeRoot 'native-checkpoints'
+          foreach($mode in @('produce','recover1','recover2')){
+            $env:MVP7_NATIVE_MODE=$mode
+            $env:MVP7_NATIVE_RESULT=Join-Path $nativeRoot ($mode+'.json')
+            $rows += Invoke-Live3Regression ('mvp7-native-'+$mode) 'tests/runtime/test_v0_mvp_7_quiescent_recovery.gd'
+          }
+
+          $constructionRoot=Join-Path $artifactRoot 'mvp7-construction-regression'
+          New-Item -ItemType Directory -Force $constructionRoot | Out-Null
+          $env:MVP7_CONSTRUCTION_ROOT=$constructionRoot
+          foreach($mode in @('produce','recover1','recover2')){
+            $env:MVP7_CONSTRUCTION_MODE=$mode
+            $env:MVP7_CONSTRUCTION_RESULT=Join-Path $constructionRoot ($mode+'.json')
+            $rows += Invoke-Live3Regression ('mvp7-construction-'+$mode) 'tests/runtime/test_v0_mvp_7_construction_restart.gd'
+          }
+
           $rows | ConvertTo-Json -Depth 5 | Set-Content artifacts\live3-r1\recovery-regressions.json -Encoding UTF8
 
       - name: LIVE2 compatibility focused regressions
