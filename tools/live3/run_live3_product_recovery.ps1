@@ -276,15 +276,45 @@ function Drive-To {
         $distance=[math]::Sqrt($dx*$dx+$dz*$dz)
         if($distance-le$Radius){
             Invoke-Control $Client @("stop") | Out-Null
-            return Get-AutomationState $Client
+            # A stop request first neutralizes the local automation intent, then
+            # the authoritative fixed-tick/input path drains the last accepted
+            # movement sample. Observe the settled server state instead of the
+            # optimistic state returned by movement.stop.
+            Start-Sleep -Milliseconds 450
+            $settled=Get-AutomationState $Client
+            $settledX=[double]$settled.local_player.position.x
+            $settledZ=[double]$settled.local_player.position.z
+            $settledDx=$TargetX-$settledX
+            $settledDz=$TargetZ-$settledZ
+            $settledDistance=[math]::Sqrt($settledDx*$settledDx+$settledDz*$settledDz)
+            if($settledDistance-le($Radius+0.45)){
+                return $settled
+            }
+            continue
         }
         $yaw=[math]::Atan2(-$dx,-$dz)
+        # Full-speed 700 ms pulses are appropriate in open space, but close to
+        # a small interaction target they can cross the focus cone before the
+        # stop reaches authoritative simulation. Taper both input magnitude and
+        # TTL while preserving the normal prediction -> transport -> server path.
+        $throttle=[math]::Min(1.0,[math]::Max(0.20,$distance/4.0))
+        $ttlMs=700
+        $sleepMs=280
+        if($distance-lt4.0){
+            $ttlMs=240
+            $sleepMs=160
+        }
+        if($distance-lt1.5){
+            $ttlMs=140
+            $sleepMs=120
+        }
         Invoke-Control $Client @(
-            "move","--z","1","--yaw",
-            $yaw.ToString([cultureinfo]::InvariantCulture),
-            "--ttl-ms","700"
+            "move","--z",
+            $throttle.ToString([cultureinfo]::InvariantCulture),
+            "--yaw",$yaw.ToString([cultureinfo]::InvariantCulture),
+            "--ttl-ms",$ttlMs.ToString([cultureinfo]::InvariantCulture)
         ) | Out-Null
-        Start-Sleep -Milliseconds 280
+        Start-Sleep -Milliseconds $sleepMs
     }
     Invoke-Control $Client @("stop") -AllowFailure | Out-Null
     throw "MOVE_TARGET_NOT_REACHED:$($Client):$TargetX,$TargetZ"
@@ -394,7 +424,12 @@ try {
     $Observations.after_hotbar=$afterHotbar
 
     $nearOre=Drive-To A 4.0 0.0 0.7 80
-    Invoke-Control A @("view","--yaw","-1.5707963267948966","--pitch","0") | Out-Null
+    $Observations.near_ore=$nearOre
+    # The canonical ore node is lon +0.0001 deg from the Earth spawn (~x=7.86 m)
+    # and its presentation sits below the 1.75 m eye height. Horizontal pitch
+    # becomes marginal after normal stop latency, so aim down through the same
+    # product camera path before invoking the ordinary player.interact command.
+    Invoke-Control A @("view","--yaw","-1.5707963267948966","--pitch","-0.35") | Out-Null
     $equip=Invoke-Control A @("command","tool.mining.equip")
     if($null-eq$equip -or -not [bool]$equip.ok){throw "MINING_TOOL_EQUIP_FAILED"}
     Wait-AsyncIdle A
