@@ -36,6 +36,7 @@ V4 = load("mvp5_unchanged_mvp4_visible", "tests/integration/test_v0_mvp_4_visibl
 BASE, ROLES = P4.BASE, P4.ROLES
 
 RECEIPT_MASS_TOLERANCE_KG = 1e-12
+MIN_NEGATIVE_CONTROL_COUNT = 20
 
 
 def integer(value) -> bool:
@@ -217,7 +218,16 @@ def main() -> int:
             negatives += ["mvp4:" + name for name in P4.negative_controls(reports, captures, head, run_id)]
     except (OSError, KeyError, ValueError, RuntimeError, TypeError) as exc:
         error += ";" + type(exc).__name__ + ":" + str(exc)
-    passed = not error and all(checks.values()) and len(negatives) == 19 and len(hud_cases) == 2
+    negative_coverage_complete = (
+        len(negatives) >= MIN_NEGATIVE_CONTROL_COUNT
+        and len(negatives) == len(set(negatives))
+    )
+    passed = (
+        not error
+        and all(checks.values())
+        and negative_coverage_complete
+        and len(hud_cases) == 2
+    )
     manifest = {"schema": "distributed_world_simulator.mvp5_graphical_material_manifest.v1", "subject_head": head, "subject_tree": tree, "run_id": run_id, "engine_sha256": BASE.sha(engine), "commands": commands, "error": error, "checks": checks, "visible_terrain": visible, "hud_only_falsification": hud_cases, "negative_controls": negatives, "passed": passed, "duration_seconds": time.monotonic() - start, "manual_input_executed": False, "restart_executed": False, "mvp5_predicate_verified": False, "files": []}
     for path in sorted(output.iterdir()):
         if path.is_file() and path.name != "manifest.json": manifest["files"].append({"path": path.name, "bytes": path.stat().st_size, "sha256": BASE.sha(path)})
