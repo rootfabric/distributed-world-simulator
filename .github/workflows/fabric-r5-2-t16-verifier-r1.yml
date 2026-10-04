@@ -103,7 +103,8 @@ jobs:
           ! grep -q 'res://tests/' scripts/research/fabric_bake0/r5_t16_no_safe_bake_runtime_v1.gd
           ! grep -q 'register_family(' scripts/research/fabric_bake0/r5_t16_no_safe_bake_runtime_v1.gd
           grep -q 'CANONICAL_HANDOFF_REQUIRED' scripts/research/fabric_bake0/r5_t16_no_safe_bake_runtime_v1.gd
-          grep -q 'T16_TEMPORAL_POLICY_UNSUPPORTED' tests/research/fabric_bake0/fabric_r5_2_t16_thermal_backend.gd
+          grep -q 'full_substep_policy' tests/research/fabric_bake0/fabric_r5_2_t16_thermal_backend.gd
+          grep -q 'T16_TEMPORAL_POLICY_UNSUPPORTED' scripts/research/fabric_bake0/r5_t16_no_safe_bake_runtime_v1.gd
           grep -q 'T16_FULL_STATE_SCHEMA_INVALID' tests/research/fabric_bake0/fabric_r5_2_t16_thermal_backend.gd
 
       - name: Archive exact verifier source
