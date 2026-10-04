@@ -124,7 +124,7 @@ def main() -> int:
 
         discovered = sorted(path.name for path in Path(__file__).parent.glob("test_*.gd"))
         if discovered != sorted(TESTS):
-            raise RuntimeError("A13_ACTIVITY_TEST_SET_MISMATCH:" + repr(discovered))
+            raise RuntimeError("A13_PARALLEL_PREPARE_TEST_SET_MISMATCH:" + repr(discovered))
 
         for name, marker in TESTS.items():
             text = execute(
