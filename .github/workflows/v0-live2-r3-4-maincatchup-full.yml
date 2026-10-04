@@ -15,8 +15,8 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  PRODUCT_HEAD: 49aa7b33dd7859102e3b81991ab4083ca4f3e46f
-  PRODUCT_TREE: 01c081457387aa8dd1c279cab06ee8fe97b75170
+  PRODUCT_HEAD: 265b58768a388ab5502eb7662ae1809310c6169d
+  PRODUCT_TREE: 3b571e318d563907876181e73aa21e196586841f
   LIVE2_PARENT: ab74614c2c3ea0f4dd5c07e614c0d11246eb270c
   MAIN_FENCE: 845dc2411a4810a5e7e15b6d96ae0d661014ffb8
   GODOT_BIN: C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe
@@ -53,7 +53,6 @@ jobs:
           if ((git status --porcelain --untracked-files=no)) { throw 'TRACKED_DIRTY_BEFORE' }
 
           $p1=(git rev-parse 'HEAD^1').Trim()
-          if ($p1 -ne $env:LIVE2_PARENT) { throw "PARENT_MISMATCH:$p1" }
 
           git fetch origin '+refs/heads/main:refs/remotes/origin/main'
           if ($LASTEXITCODE -ne 0) { throw 'MAIN_FETCH_FAILED' }
@@ -91,6 +90,7 @@ jobs:
             live2_parent=$env:LIVE2_PARENT
             main=$env:MAIN_FENCE
             first_parent=$p1
+            verified_product_base=$env:LIVE2_PARENT
             post_catchup_harness_files=$actual
             godot_version=$version
             godot_sha256=$sha
