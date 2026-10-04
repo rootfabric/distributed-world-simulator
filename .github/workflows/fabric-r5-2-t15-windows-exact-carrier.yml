@@ -1,0 +1,213 @@
+name: FABRIC R5.2 T15 Windows Exact Carrier
+on:
+  push:
+    branches: [control/fabric-r5-2-t15-windows-exact-r2]
+permissions:
+  contents: read
+concurrency:
+  group: fabric-t15-windows-exact-r2
+  cancel-in-progress: true
+env:
+  SUBJECT_HEAD: 91570497a5ce947ea3352a9ad0befe0e34690473
+  SUBJECT_TREE: ce5c0faa0e67e847cb1a4557059790eb22024754
+  EXPECTED_HASH: 741ac5da0a11e28d1acba633323f16319ece5e5b550601fe26c96f8ccfbee55b
+jobs:
+  control-scope:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Prove control-only diff and frozen product
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$(git merge-base HEAD "$SUBJECT_HEAD")" = "$SUBJECT_HEAD"
+          test "$(git rev-parse "$SUBJECT_HEAD^{tree}")" = "$SUBJECT_TREE"
+          changed="$(git diff --name-only "$SUBJECT_HEAD"...HEAD)"
+          test "$changed" = '.github/workflows/fabric-r5-2-t15-windows-exact-carrier.yml'
+          git diff --check "$SUBJECT_HEAD" HEAD
+          python3 -m unittest discover -s tests/research/fabric_bake0 -p test_t15_evidence.py -v
+          bash -n RUN_FABRIC_R5_2_T15_TESTS.sh
+  exact-windows:
+    needs: control-scope
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 55
+    env:
+      CONFIGURED_GODOT_BIN: C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe
+      BREAKPOINT_RUNTIME_DISABLED: 1
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 91570497a5ce947ea3352a9ad0befe0e34690473
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Verify product identity and canonical Windows double
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $actual = (git rev-parse HEAD).Trim()
+          if ($actual -ne $env:SUBJECT_HEAD) { throw "SUBJECT_HEAD_MISMATCH:$actual" }
+          $tree = (git rev-parse "HEAD^{tree}").Trim()
+          if ($tree -ne $env:SUBJECT_TREE) { throw "SUBJECT_TREE_MISMATCH:$tree" }
+          $godot = $env:CONFIGURED_GODOT_BIN
+          if (-not (Test-Path -LiteralPath $godot)) { throw "EXACT_GODOT_NOT_FOUND:$godot" }
+          $version = (& $godot --version | Select-Object -First 1).Trim()
+          if ($version -ne '4.7.1.stable.double.custom_build.a13da4feb') { throw "GODOT_IDENTITY_MISMATCH:$version" }
+          $sha = (Get-FileHash -Algorithm SHA256 -LiteralPath $godot).Hash.ToLowerInvariant()
+          $expected = '3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5'
+          if ($sha -ne $expected) { throw "GODOT_SHA_MISMATCH:$sha" }
+          Write-Host "SUBJECT_HEAD=$actual"
+          Write-Host "SUBJECT_TREE=$tree"
+          Write-Host "GODOT=$version"
+          Write-Host "GODOT_SHA256=$sha"
+          "GODOT_BIN=$godot" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+      - name: Fresh import
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          if (Test-Path .godot) { Remove-Item -Recurse -Force .godot }
+          $out = 'artifacts\fabric-r5-2-t15-windows-exact-r2'
+          New-Item -ItemType Directory -Force -Path $out | Out-Null
+          $log = Join-Path $out 'import.log'
+          & $env:GODOT_BIN --headless --editor --path . --import 2>&1 | Tee-Object -FilePath $log
+          if ($LASTEXITCODE -ne 0) { throw "IMPORT_FAILED:$LASTEXITCODE" }
+          if (Select-String -Path $log -Pattern 'SCRIPT ERROR|Parse Error|Compile Error|Invalid call|Invalid access|ERROR:' -Quiet) { throw 'IMPORT_FATAL_MARKER' }
+      - name: Run three fresh T15 processes
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $out = 'artifacts\fabric-r5-2-t15-windows-exact-r2'
+          $script = 'res://tests/research/fabric_bake0/fabric_r5_2_t15_local_damage_acceptance.gd'
+          foreach ($i in 1..3) {
+            $log = Join-Path $out ("sample-{0}.log" -f $i)
+            & $env:GODOT_BIN --headless --path . --script $script 2>&1 | Tee-Object -FilePath $log
+            $code = $LASTEXITCODE
+            if ($code -ne 0) { throw ("T15_SAMPLE_FAILED:{0}:{1}" -f $i, $code) }
+          }
+      - name: T15 deterministic oracle
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          @'
+          import hashlib, json, pathlib, re
+          root = pathlib.Path(r"artifacts/fabric-r5-2-t15-windows-exact-r2")
+          prefix = "FABRIC_R5_2_T15_RESULT="
+          pass_marker = "FABRIC R5.2 T15 LOCAL DAMAGE UNBAKE REBAKE: PASS (506 assertions)"
+          fatal = re.compile(r"SCRIPT ERROR|Parse Error|Compile Error|Invalid call|Invalid access|ERROR:")
+          rows = []
+          parsed = []
+          for i in (1, 2, 3):
+              text = (root / f"sample-{i}.log").read_text(encoding="utf-8", errors="strict")
+              assert pass_marker in text, f"sample {i}: PASS marker missing"
+              assert not fatal.search(text), f"sample {i}: fatal marker"
+              found = [ln[len(prefix):] for ln in text.splitlines() if ln.startswith(prefix)]
+              assert len(found) == 1, f"sample {i}: result marker count"
+              rows.append(found[0])
+              parsed.append(json.loads(found[0]))
+          assert rows[0] == rows[1] == rows[2], "raw payloads differ"
+          d = parsed[0]
+          assert d["schema"] == "fabric.t15.result.v1"
+          assert d["failures"] == []
+          assert d["checks"] == 506
+          assert d["instances"] == 100
+          assert d["target_instance"] == "t15-instance-058"
+          assert d["target_original_family"] == "family-b"
+          assert d["selected_path"] == "root/bank/unit03/cannon/emitter"
+          assert d["baseline_compile_events"] == 42
+          assert d["damage_compile_events"] == 5
+          assert d["repair_compile_events"] == 5
+          assert d["local_compile_events_total"] == 10
+          assert d["source_leaf_traversals_rebuild"] == 256
+          assert d["source_anchor_checks"] == 2
+          assert d["source_components_per_ship"] == 4275
+          assert d["changed_paths_per_mutation"] == 5
+          assert d["unchanged_subtrees_per_mutation"] == 25
+          assert d["healthy_equivalent_after_damage"] == 99
+          assert d["damaged_target_diverged"] is True
+          assert d["repair_restored_healthy_behavior"] is True
+          assert d["physical_state_preserved_on_damage"] is True
+          assert d["physical_state_preserved_on_repair"] is True
+          assert d["final_damage_revision"] == 2
+          assert d["steady_leaf_traversals_after_damage"] == 0
+          assert d["fork_events"] == 2
+          assert d["state_projection_events"] == 2
+          assert d["event_receipts"] == 2
+          assert d["current_instances"] == 100
+          assert d["original_models_intact"] is True
+          assert d["all_models_intact"] is True
+          assert d["atomicity_unsafe_reject_clean"] is True
+          assert d["atomicity_retry_same_ids"] is True
+          assert d["atomicity_alias_reject_clean"] is True
+          assert d["atomicity_occupied_id_reject_clean"] is True
+          digest = hashlib.sha256(json.dumps(d, sort_keys=True, separators=(",",":"), allow_nan=False).encode()).hexdigest()
+          expected = "741ac5da0a11e28d1acba633323f16319ece5e5b550601fe26c96f8ccfbee55b"
+          assert digest == expected, (digest, expected)
+          (root / "windows-exact-oracle.json").write_text(json.dumps({
+              "schema": "fabric.r5_2.t15.windows_exact_oracle.v1",
+              "verdict": "PASS",
+              "deterministic_hash": digest,
+              "result": d,
+          }, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+          print("T15_WINDOWS_EXACT_ORACLE=PASS")
+          print("T15_WINDOWS_EXACT_HASH=" + digest)
+          '@ | python -
+          if ($LASTEXITCODE -ne 0) { throw "T15_ORACLE_FAILED:$LASTEXITCODE" }
+      - name: Run unchanged T14 regression
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $out = 'artifacts\fabric-r5-2-t15-windows-exact-r2'
+          $log = Join-Path $out 't14-regression.log'
+          & $env:GODOT_BIN --headless --path . --script res://tests/research/fabric_bake0/fabric_r5_2_t14_observation_refinement_acceptance.gd 2>&1 | Tee-Object -FilePath $log
+          if ($LASTEXITCODE -ne 0) { throw "T14_REGRESSION_FAILED:$LASTEXITCODE" }
+          if (-not (Select-String -Path $log -Pattern 'FABRIC R5.2 T14 OBSERVATION REFINEMENT: PASS (1208 assertions)' -SimpleMatch -Quiet)) { throw 'T14_MARKER_MISSING' }
+      - name: Run unchanged T13.5 regression
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $out = 'artifacts\fabric-r5-2-t15-windows-exact-r2'
+          $log = Join-Path $out 't13-5-regression.log'
+          & $env:GODOT_BIN --headless --path . --script res://tests/research/fabric_bake0/fabric_r5_2_t13_5_shared_families_acceptance.gd 2>&1 | Tee-Object -FilePath $log
+          if ($LASTEXITCODE -ne 0) { throw "T13_5_REGRESSION_FAILED:$LASTEXITCODE" }
+          if (-not (Select-String -Path $log -Pattern 'FABRIC R5.2 T13.5 SHARED FAMILIES: PASS (777 assertions)' -SimpleMatch -Quiet)) { throw 'T13_5_MARKER_MISSING' }
+      - name: Run unchanged T13 regression
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $out = 'artifacts\fabric-r5-2-t15-windows-exact-r2'
+          $log = Join-Path $out 't13-regression.log'
+          & $env:GODOT_BIN --headless --path . --script res://tests/research/fabric_bake0/fabric_r5_2_t13_shared_instances_acceptance.gd 2>&1 | Tee-Object -FilePath $log
+          if ($LASTEXITCODE -ne 0) { throw "T13_REGRESSION_FAILED:$LASTEXITCODE" }
+          if (-not (Select-String -Path $log -Pattern 'FABRIC R5.2 T13 SHARED INSTANCES: PASS (1377 assertions)' -SimpleMatch -Quiet)) { throw 'T13_MARKER_MISSING' }
+      - name: Run unchanged T12 regression and prove clean tracked tree
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $out = 'artifacts\fabric-r5-2-t15-windows-exact-r2'
+          $log = Join-Path $out 't12-regression.log'
+          & $env:GODOT_BIN --headless --path . --script res://tests/research/fabric_bake0/fabric_r5_2_t12_ship_acceptance.gd 2>&1 | Tee-Object -FilePath $log
+          if ($LASTEXITCODE -ne 0) { throw "T12_REGRESSION_FAILED:$LASTEXITCODE" }
+          if (-not (Select-String -Path $log -Pattern 'FABRIC R5.2 T12 SHIP MATRYOSHKA: PASS (8386 assertions)' -SimpleMatch -Quiet)) { throw 'T12_MARKER_MISSING' }
+          $dirty = git status --porcelain=v1 --untracked-files=no
+          if ($dirty) { throw "TRACKED_TREE_DIRTY:$dirty" }
+      - name: Record exact identity
+        shell: pwsh
+        run: |
+          $out = 'artifacts\fabric-r5-2-t15-windows-exact-r2'
+          @(
+            "SUBJECT_HEAD=$env:SUBJECT_HEAD"
+            "SUBJECT_TREE=$env:SUBJECT_TREE"
+            "EXPECTED_DETERMINISTIC_HASH=$env:EXPECTED_HASH"
+            "GODOT_VERSION=$(& $env:GODOT_BIN --version | Select-Object -First 1)"
+            "GODOT_SHA256=$((Get-FileHash -Algorithm SHA256 -LiteralPath $env:GODOT_BIN).Hash.ToLowerInvariant())"
+          ) | Set-Content -Path (Join-Path $out 'identity.txt')
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: t15-windows-exact-${{ github.sha }}
+          path: artifacts/fabric-r5-2-t15-windows-exact-r2/**
+          if-no-files-found: error
+          retention-days: 90
