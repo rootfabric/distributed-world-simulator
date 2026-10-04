@@ -1,0 +1,98 @@
+{
+  "schema": "distributed_world_simulator.harness_review_result.v1",
+  "review_id": "ECO-ARCH2-A13-PARALLEL-PREPARE-R1-FRESH-REVIEW-001",
+  "review_type": "POST_BUILD_EXACT_HEAD_REVIEW",
+  "work_order_id": "ECO-ARCH2-A13-PARALLEL-PREPARE-R1",
+  "risk_class": "MEDIUM",
+  "reviewed_head_sha": "cfb10f700202e8054fddc7c802491601b6e455d4",
+  "reviewed_tree_sha": "db6250cbf38cdbf63872738aaa3d72a49459ba63",
+  "activation_base_sha": "1f8a9debc4f8838569f818faa43bdadc0f23f965",
+  "freeze_ref": "freeze/eco-arch2-a13-parallel-prepare-cfb10f70-exact-r1",
+  "runtime_pr": 737,
+  "reviewer": "FRESH_REVIEWER_A13_PARALLEL_PREPARE_R1",
+  "verdict": "PASS",
+  "required_fixes": [],
+  "findings": [],
+  "evidence_gaps": [],
+  "rank_up_moves": [
+    "Profile per-wave Thread construction and deep-copy overhead before claiming a speedup; if setup dominates, migrate behind the same exact contract to a persistent pool or WorkerThreadPool.",
+    "Add focused malformed-input precedence tests for the new parallel-only worker-bound argument if the parallel entry points become public compatibility surfaces.",
+    "Keep bounded parallel post-allocation advance as a separate A13 checkpoint rather than extending this PR."
+  ],
+  "post_build_critique": {
+    "outcome": "NO_MATERIAL_REFACTOR_REQUIRED",
+    "unnecessary_complexity": "Bounded explicit Thread waves are justified for the first concurrency checkpoint because start/join/failure cleanup and worker limits are directly auditable.",
+    "duplicate_truth": "None. Worker-local field/entry copies, samples, demands and scheduler telemetry are execution-only and never enter canonical ecology state.",
+    "implicit_owner": "None. A5 remains lifecycle owner, A4 Field.allocate_demands remains the only resource allocator, SpatialWorksets remains the partition owner, and EcologyRuntime only composes existing canonical phases.",
+    "coupling_reduction": "Serial and parallel preparation converge into one _finish_population_step(), preventing allocator/grant/advance semantics from splitting.",
+    "sibling_surface_fix": "The accepted Activity API return shape is preserved; the new Activity parallel-prepare sibling is opt-in and existing Activity/Spatial/A13/A12/A11 suites are rerun.",
+    "removable_code": "No material production code can be removed without duplicating the finishing path or weakening explicit thread lifecycle handling.",
+    "design_regression": "No. Completion order is discarded, results are consumed by canonical workset index, all started threads are joined before allocation/return, and post-allocation advance remains serial.",
+    "refactor_if_redesigned": "Only after profiling: replace per-wave Thread creation/deep-copy with a bounded persistent pool while retaining canonical workset-order merge and one global allocator."
+  },
+  "checked_items": [
+    {
+      "item": "Exact subject HEAD/TREE frozen at cfb10f700202e8054fddc7c802491601b6e455d4 / db6250cbf38cdbf63872738aaa3d72a49459ba63.",
+      "disposition": "VERIFIED"
+    },
+    {
+      "item": "Main base remains 1f8a9debc4f8838569f818faa43bdadc0f23f965; subject is 0 behind main at review time.",
+      "disposition": "VERIFIED"
+    },
+    {
+      "item": "Scope is 7 files and does not modify Field allocator implementation, persistence/checkpoint schema, biology formulas, authority or network protocol.",
+      "disposition": "VERIFIED"
+    },
+    {
+      "item": "Parallelism is limited to A5 Phase 1 phenotype/sample/demand preparation; allocation and Phase 2 remain outside worker threads.",
+      "disposition": "VERIFIED"
+    },
+    {
+      "item": "Each workset worker receives deep-copied field and entries; no shared mutable samples/demands collector is written concurrently.",
+      "disposition": "VERIFIED"
+    },
+    {
+      "item": "Every successfully started Thread is joined before worker results are interpreted; start/member failures join already-started threads before returning.",
+      "disposition": "VERIFIED"
+    },
+    {
+      "item": "Worker completion timing is non-authoritative: joined results are consumed strictly by canonical workset index and demand arrays are appended in that same serial order.",
+      "disposition": "VERIFIED"
+    },
+    {
+      "item": "Serial and parallel paths share _finish_population_step(), which contains the sole Field.allocate_demands() invocation followed by serial canonical advance.",
+      "disposition": "VERIFIED"
+    },
+    {
+      "item": "Parallel scheduler telemetry is returned only by the low-level parallel A5 result and is not inserted into Runtime, organism, field or checkpoint state.",
+      "disposition": "VERIFIED"
+    },
+    {
+      "item": "Existing advance_spatial_activity_cadence() return contract remains unchanged; parallel composition is a separate opt-in entry point.",
+      "disposition": "VERIFIED"
+    },
+    {
+      "item": "Windows exact run 37210363778 job 111460134210 passed on the exact subject: Parallel Prepare 93/0, Activity 122/0, Spatial 108/0, A13 58/0, A12 38/0, A11 171/0, tracked checkout clean.",
+      "disposition": "CORROBORATED"
+    },
+    {
+      "item": "The 93-check suite executes worker bounds 1/2/4/8, asserts all worksets are off-main-thread, serial/parallel byte/hash equivalence, deterministic repeats, permutation invariance, failure closure, 8-tick reproduction+mutation equivalence, checkpoint equality and Activity catch-up composition.",
+      "disposition": "CORROBORATED"
+    },
+    {
+      "item": "Project Control run 37210363845 succeeded on exact HEAD, including full Harness regression, PC0 and directional audit.",
+      "disposition": "CORROBORATED"
+    },
+    {
+      "item": "A10.5 Windows exact run 37210363818 succeeded on exact HEAD.",
+      "disposition": "CORROBORATED"
+    },
+    {
+      "item": "Fresh Linux execution remains a separate Verifier machine gate; no cross-platform acceptance or merge authorization is claimed by this review.",
+      "disposition": "NOT_A_REVIEW_BLOCKER"
+    }
+  ],
+  "risk_assessment": "MEDIUM. The change introduces real multithreaded execution but only inside an already-pure A5 preparation phase. The high-risk canonical boundaries are deliberately unchanged: all worker tasks join before one global Field.allocate_demands(), and post-allocation lifecycle advance remains serial. Deep copies isolate worker inputs and deterministic workset-order consumption prevents completion timing from affecting demand order. Windows exact execution proves the threaded path and all closed ecology regressions on the exact subject. Remaining platform risk is Linux-specific thread/runtime behavior, explicitly reserved for Independent Verifier evidence before acceptance.",
+  "summary": "Fresh exact-head review PASS for A13 Bounded Parallel Prepare R1. Zero blocking findings and required_fixes=[]. The implementation performs real bounded off-main-thread preparation while preserving deterministic workset-order merge, one global allocator, serial post-allocation advance and unchanged canonical persistence. Windows exact and Project Control corroborate the review. Linux exact remains required for the separate Independent Verifier gate.",
+  "merge_authorized": false
+}
