@@ -51,6 +51,10 @@ def validate_result(d: dict) -> None:
     require(d.get("current_instances") == 100, "semantic population changed")
     require(d.get("original_models_intact") is True, "shared baseline models changed")
     require(d.get("all_models_intact") is True, "model integrity failed")
+    require(d.get("atomicity_unsafe_reject_clean") is True, "unsafe rejection leaked live state")
+    require(d.get("atomicity_retry_same_ids") is True, "rejected attempt consumed family/event ids")
+    require(d.get("atomicity_alias_reject_clean") is True, "alias rejection leaked live state")
+    require(d.get("atomicity_occupied_id_reject_clean") is True, "occupied-id rejection leaked live state")
 
 def read_sample(path: Path) -> tuple[str, dict]:
     text = path.read_text(encoding="utf-8", errors="strict")
