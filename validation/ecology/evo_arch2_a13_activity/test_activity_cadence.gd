@@ -261,6 +261,20 @@ func _runtime_contract(initial: Dictionary) -> void:
 	check(wake8.state.population.size() > initial.population.size(),
 		"exact catch-up includes real reproduction, not a synthetic tick jump")
 
+	var wake4_plan := Activity.create(initial.field, initial.population, active, 0, 4, 4, 4, 64)
+	var wake4 := Runtime.advance_spatial_activity_cadence(initial, _options(), wake4_plan)
+	check(wake4.success and int(wake4.canonical_tick) == 4, "first segmented wake reaches canonical tick 4")
+	var active4 := _addresses(wake4.state)
+	check(not active4.is_empty(), "post-wake spatial addresses recompute from canonical state")
+	var second_wake_plan := Activity.create(
+		wake4.state.field, wake4.state.population, active4, 4, 8, 4, 4, 64)
+	check(not second_wake_plan.is_empty(), "second cadence epoch anchors at committed canonical tick 4")
+	var segmented8 := Runtime.advance_spatial_activity_cadence(wake4.state, _options(), second_wake_plan)
+	check(segmented8.success and int(segmented8.replayed_ticks) == 4,
+		"second cadence epoch replays only its bounded debt")
+	check(C.encode(segmented8.state) == C.encode(continuous8),
+		"segmented 0->4->8 cadence is byte-identical to continuous execution")
+
 	var repeated := Runtime.advance_spatial_activity_cadence(initial, _options(), wake8_plan)
 	check(repeated.success, "repeated exact catch-up succeeds")
 	check(C.encode(repeated.state) == C.encode(wake8.state), "same input/plan produces deterministic catch-up bytes")
