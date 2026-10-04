@@ -275,7 +275,7 @@ func _runtime_contract(initial: Dictionary) -> void:
 	check(Checkpoint.serialize(cp_continuous) == Checkpoint.serialize(cp_wake),
 		"activity cadence metadata absent from checkpoint bytes")
 	check(not C.encode(wake8.state).contains(Activity.SCHEMA), "activity scheduler schema absent from runtime truth")
-	check(not Checkpoint.serialize(cp_wake).get_string_from_utf8().contains(Activity.SCHEMA),
+	check(not Checkpoint.serialize(cp_wake).contains(Activity.SCHEMA),
 		"activity scheduler schema absent from serialized checkpoint")
 
 	var all_addresses := _addresses(initial)
