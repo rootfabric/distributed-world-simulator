@@ -5,6 +5,7 @@ const Live3HostControl = preload("res://scripts/runtime/networked_gameplay/live3
 
 var _live3_control
 var _live3_bound := false
+var _live3_stop_completed := false
 
 # --network-mvp is still distinct from --network-playground at validation.
 # LIVE3 is explicit (--world-slot); old LIVE2/test invocations are unchanged.
@@ -44,9 +45,8 @@ func _ready() -> void:
 		_live3_control.publish("FAILED", {"saved": false, "error_code": "LIVE3_SERVER_NOT_READY"})
 		request_graceful_shutdown("live3_server_not_ready", 20)
 		return
-	# The parent setup is synchronous; no transport poll/admission can execute
-	# between it and this bind. Recovery must finish before the next SceneTree
-	# process iteration. Native M0 remains the sole Construction state owner.
+	# Parent setup is synchronous; no transport poll/admission executes between
+	# it and this bind. Recovery finishes before the next process iteration.
 	server.set_process(false)
 	var service = server.get("_service")
 	var bridge = server.get("_construction_bridge")
@@ -57,8 +57,8 @@ func _ready() -> void:
 		request_graceful_shutdown("live3_recovery_bind_failed", 21)
 		return
 	_live3_bound = true
-	# From this point M6's existing snapshot/checksum/commit path includes the
-	# native Construction state, build progress and terminal command receipts.
+	# M6's existing snapshot/checksum/commit path now includes native
+	# Construction state, build progress and terminal command receipts.
 	var persisted: Dictionary = server.call("_persist_checkpoint", "")
 	if not bool(persisted.get("success", false)):
 		server.call("_enter_persistence_failure", String(persisted.get("error_code", "LIVE3_INITIAL_CUT_FAILED")))
@@ -87,20 +87,27 @@ func _stop_networked_gameplay_runtimes() -> void:
 	if not bool(launch_options.get("live3_enabled", false)):
 		super._stop_networked_gameplay_runtimes()
 		return
+	# The parent calls this both from graceful shutdown and _exit_tree. Never
+	# replace the first, authoritative stop result with a second empty stop.
+	if _live3_stop_completed:
+		return
+	_live3_stop_completed = true
 	if graphical_game_client_runtime != null and is_instance_valid(graphical_game_client_runtime):
 		graphical_game_client_runtime.stop()
 	var result: Dictionary = {"success": false, "error_code": "LIVE3_NO_BOUND_PERSISTENT_SERVER"}
+	var generation := 0
 	var server = dedicated_gameplay_server_runtime
 	if server != null and is_instance_valid(server):
 		result = server.stop()
+		generation = int(server.get("_checkpoint_generation"))
 	var saved := _live3_bound and bool(result.get("success", false))
 	if not saved and _requested_exit_code == 0:
 		_requested_exit_code = 24
-	if _live3_control != null:
+	if _live3_control != null and is_instance_valid(_live3_control):
 		var written: Dictionary = _live3_control.publish("STOPPED" if saved else "FAILED", {
 			"saved": saved,
 			"exit_code": _requested_exit_code,
-			"generation": int(server.get("_checkpoint_generation")) if server != null else 0,
+			"generation": generation,
 			"stop_result": result,
 		})
 		if not bool(written.get("success", false)) and _requested_exit_code == 0:
