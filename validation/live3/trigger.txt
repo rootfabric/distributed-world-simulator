@@ -1,0 +1,4 @@
+LIVE3 exact implementer validation R3
+Prior run 37197113796: import failed at live3_launch_options.gd:110 (untyped M0 path inference).
+Repair 433ac2b9d1af4442014347994ca753d35602d1ee: explicit native repository path type; no acceptance weakening.
+Run contracts, unchanged LIVE2/M6 regressions and real product recovery. Full-world closure is not yet claimed.
