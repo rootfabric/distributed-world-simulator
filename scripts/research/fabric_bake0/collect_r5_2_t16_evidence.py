@@ -9,7 +9,7 @@ import re
 from pathlib import Path
 
 PREFIX = "FABRIC_R5_2_T16_RESULT="
-PASS = "FABRIC R5.2 T16 NO SAFE BAKE: PASS (533 assertions)"
+PASS = "FABRIC R5.2 T16 NO SAFE BAKE: PASS (980 assertions)"
 FATAL = re.compile(r"SCRIPT ERROR|Parse Error|Compile Error|Invalid call|Invalid access|ERROR:", re.I)
 CASES = {
     "hidden_mode": ("THERMAL_STATE_NOT_IN_REDUCTION_MANIFOLD", "FULL"),
@@ -31,9 +31,23 @@ CASES = {
     "missing_full_state": ("THERMAL_STATE_PROJECTOR_STATE_INVALID", "FULL_STEP_REFUSED"),
     "invalid_physical_state": ("THERMAL_STATE_PROJECTOR_STATE_INVALID", "FULL_STEP_REFUSED"),
     "compact_step_failure": ("T16_COMPACT_STEP_REFUSED", "COMPACT_STEP_REFUSED"),
+    "live_cross_authority": ("AUTHORITY_ENVELOPE_CROSSED", "CANONICAL_HANDOFF_REQUIRED"),
+    "live_epoch_mismatch": ("T16_AUTHORITY_EPOCH_MISMATCH", "CANONICAL_HANDOFF_REQUIRED"),
+    "live_frontier_advanced": ("T16_LIVE_PROVENANCE_MISMATCH", "CANONICAL_HANDOFF_REQUIRED"),
+    "live_missing": ("T16_LIVE_PROVENANCE_MISSING", "CANONICAL_HANDOFF_REQUIRED"),
+    "live_missing_authority": ("T16_LIVE_PROVENANCE_MISSING", "CANONICAL_HANDOFF_REQUIRED"),
+    "live_dependency_mismatch": ("T16_LIVE_PROVENANCE_MISMATCH", "CANONICAL_HANDOFF_REQUIRED"),
+    "live_graph_mismatch": ("T16_LIVE_GRAPH_MISMATCH", "CANONICAL_HANDOFF_REQUIRED"),
+    "live_material_mismatch": ("T16_LIVE_MATERIAL_MISMATCH", "CANONICAL_HANDOFF_REQUIRED"),
+    "live_owner_changed": ("T16_LIVE_PROVENANCE_MISMATCH", "CANONICAL_HANDOFF_REQUIRED"),
+    "extended_full_state": ("RECONSTRUCTION_NOT_EXACT", "FULL_STEP_REFUSED"),
+    "full_wrong_array": ("THERMAL_STATE_PROJECTOR_STATE_INVALID", "FULL_STEP_REFUSED"),
+    "full_wrong_count": ("THERMAL_STATE_PROJECTOR_STATE_INVALID", "FULL_STEP_REFUSED"),
+    "full_nonfinite_state": ("THERMAL_STATE_PROJECTOR_STATE_INVALID", "FULL_STEP_REFUSED"),
+    "full_out_of_domain": ("THERMAL_STATE_PROJECTOR_TEMPERATURE_OUT_OF_DOMAIN", "FULL_STEP_REFUSED"),
     "singular_elimination": ("RANK_DEFICIENCY", "FULL_SOLVER_DIAGNOSTIC_REQUIRED"),
 }
-COUNTS = {"checks":533, "case_count":20, "source_cells":128, "compact_states":8,
+COUNTS = {"checks":980, "case_count":34, "source_cells":128, "compact_states":8,
           "positive_variants":8, "full_continuation_ticks":104,
           "fallback_source_cell_updates":1792, "full_events_observed":223}
 REGRESSIONS = {
@@ -84,11 +98,27 @@ def validate_result(d: dict) -> None:
         require(type(c.get("candidate_calls")) is int and c["candidate_calls"] == int(execution != "CANONICAL_HANDOFF_REQUIRED"), "candidate count: " + name)
         expected_compiles = 0 if execution == "CANONICAL_HANDOFF_REQUIRED" or name in ("stale_frontier", "source_mutation_stale_capsule", "corrupt_capsule") else 1
         require(type(c.get("compile_calls")) is int and c["compile_calls"] == expected_compiles, "compiler count: " + name)
+        steps = (2 if name == "near_critical_step" else 1) if execution == "FULL" else 0
+        require(type(c.get("full_solver_calls")) is int and c["full_solver_calls"] == steps, "native solver count: " + name)
+        require(type(c.get("full_cell_updates")) is int and c["full_cell_updates"] == steps * 128, "native state updates: " + name)
+        expected_error = ""
+        if execution == "FULL_STEP_REFUSED":
+            expected_error = "T16_FULL_STATE_SCHEMA_INVALID" if name in ("extended_full_state", "missing_full_state") else "T16_FULL_STATE_DOMAIN_INVALID"
+        elif execution == "COMPACT_STEP_REFUSED":
+            expected_error = "TEST_COMPACT_STEP_FAILURE"
+        require(c.get("execution_error") == expected_error, "wrong execution error: " + name)
         if execution == "FULL":
-            steps = 2 if name == "near_critical_step" else 1
             require(c.get("full_substeps") == steps and c.get("source_cell_updates") == steps * 128, "fake FULL work: " + name)
             for field in ("physical_trace_hash", "events_hash"):
                 require(re.fullmatch(r"[0-9a-f]{64}", c.get(field, "")) is not None, "missing trace: " + name)
+    repair = d.get("repair_r2")
+    require(isinstance(repair, dict), "R2 repair evidence missing")
+    for key, expected in (("temporal_pairs", 22), ("temporal_compact_pairs", 10), ("temporal_full_pairs", 12)):
+        require(type(repair.get(key)) is int and repair[key] == expected, "temporal coverage: " + key)
+    for key, bound in (("max_temporal_output_error_k", 1e-7), ("r1_f1_discrepancy_k", 0.0)):
+        v = repair.get(key)
+        require(type(v) in (int, float) and math.isfinite(v) and 0 <= v <= bound, "temporal physical mismatch: " + key)
+    require(re.fullmatch(r"[0-9a-f]{64}", repair.get("temporal_trace_hash", "")) is not None, "missing paired physical trace")
     require(re.fullmatch(r"[0-9a-f]{64}", d.get("positive_trace_hash", "")) is not None, "missing compact trace")
     for key, bound in (("max_energy_residual_j", 1e-6), ("max_positive_boundary_error_k", 1e-7)):
         v = d.get(key)

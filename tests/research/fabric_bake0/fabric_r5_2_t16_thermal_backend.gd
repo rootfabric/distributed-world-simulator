@@ -15,6 +15,7 @@ var compile_calls := 0
 var compact_calls := 0
 var full_calls := 0
 var full_cell_updates := 0
+var full_solver_calls := 0
 
 static func make_graph(asymmetric: bool = false) -> Dictionary:
 	# Bounded 8x16 falsifier. T4's original 8x64 scaling/regression stays frozen.
@@ -60,6 +61,30 @@ static func maximum_rate(plan: Dictionary) -> float:
 			rate = maxf(rate, g / float(plan.capacity_j_k[layer * lanes + lane]))
 	return rate
 
+static func full_substep_policy(plan: Dictionary, cmd: Dictionary) -> Dictionary:
+	# One policy for certificate eligibility AND the actual fallback integrator.
+	# COMPACT remains the unchanged one-step T4 executor; >1 FULL substep is not
+	# certified. Never hide discretization error inside a looser tolerance.
+	var work_ratio := float(cmd.dt_s) * maximum_rate(plan) / 0.5
+	if not is_finite(work_ratio) or work_ratio > float(MAX_FULL_SUBSTEPS):
+		return U.failure("T16_FULL_SUBSTEP_BUDGET_EXCEEDED")
+	return U.success({"substeps":maxi(1, int(ceil(work_ratio)))})
+
+static func validate_full_state(plan: Dictionary, state: Dictionary) -> Dictionary:
+	# T4 consumes only temperatures. Unsupported physical fields must not be
+	# silently dropped from the published successor or blindly copied as physics.
+	var fields: Array[String] = ["cell_temperature_k"]
+	if not U.validate_exact_fields(state, fields).success:
+		return U.failure("T16_FULL_STATE_SCHEMA_INVALID")
+	if typeof(state.get("cell_temperature_k")) != TYPE_ARRAY or state.cell_temperature_k.size() != int(plan.source_cell_count):
+		return U.failure("T16_FULL_STATE_DOMAIN_INVALID")
+	for raw in state.cell_temperature_k:
+		if not U.is_positive_number(raw):
+			return U.failure("T16_FULL_STATE_DOMAIN_INVALID")
+		if float(raw) < float(plan.min_temperature_k) or float(raw) > float(plan.max_temperature_k):
+			return U.failure("T16_FULL_STATE_DOMAIN_INVALID")
+	return U.success()
+
 func validate_candidate(candidate: Dictionary, src: Dictionary) -> Dictionary:
 	if not Graph.validate(src.graph).success:
 		return U.failure("T16_GRAPH_INVALID")
@@ -94,6 +119,8 @@ func prepare_candidate(src: Dictionary, state: Dictionary, cmd: Dictionary) -> D
 	if not projected.success: return projected
 	var plan := Full.prepare(src.graph)
 	if not plan.success: return plan
+	var policy := full_substep_policy(plan.details, cmd)
+	if not policy.success: return policy
 	var rebuilt: Array = []
 	for t in projected.details.next_state.layer_temperature_k:
 		for _lane in range(int(src.graph.lane_count)): rebuilt.append(t)
@@ -134,6 +161,8 @@ func prepare_candidate(src: Dictionary, state: Dictionary, cmd: Dictionary) -> D
 		"observables":["output_temperature_k"], "events":[],
 		"boundary_error_bound":coefficient_error + arithmetic_envelope,
 		"step_margin":1.0 - float(cmd.dt_s) * rate,
+		"temporal_policy_matches":int(policy.details.substeps) == 1,
+		"full_substeps":int(policy.details.substeps),
 	})
 
 func execute_compact(probe: Dictionary, src: Dictionary, cmd: Dictionary) -> Dictionary:
@@ -150,11 +179,11 @@ func execute_full(src: Dictionary, state: Dictionary, cmd: Dictionary) -> Dictio
 	var prepared := Full.prepare(src.graph)
 	if not prepared.success: return prepared
 	var plan: Dictionary = prepared.details
-	# Domain/hidden-state errors must reach the FULL validator, never get repaired
-	# by a fabricated temperature or zeroed hidden mode.
-	var work_ratio := float(cmd.dt_s) * maximum_rate(plan) / 0.5
-	if not is_finite(work_ratio) or work_ratio > float(MAX_FULL_SUBSTEPS): return U.failure("T16_FULL_SUBSTEP_BUDGET_EXCEEDED")
-	var substeps: int = maxi(1, int(ceil(work_ratio)))
+	var checked := validate_full_state(plan, state)
+	if not checked.success: return checked
+	var policy := full_substep_policy(plan, cmd)
+	if not policy.success: return policy
+	var substeps := int(policy.details.substeps)
 	var current := state.duplicate(true)
 	var energy := 0.0
 	var exchange := 0.0
@@ -162,6 +191,7 @@ func execute_full(src: Dictionary, state: Dictionary, cmd: Dictionary) -> Dictio
 	var events: Array = []
 	var output := 0.0
 	for substep in range(substeps):
+		full_solver_calls += 1
 		var step := Full.execute(plan, current, float(cmd.heat_input_w), float(cmd.dt_s) / float(substeps), float(cmd.ambient_temperature_k))
 		if not step.success: return step
 		for i in range(int(plan.source_cell_count)):
