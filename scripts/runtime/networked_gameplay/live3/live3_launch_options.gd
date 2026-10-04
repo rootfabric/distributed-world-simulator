@@ -9,6 +9,7 @@ static func parse(arguments) -> Dictionary:
 	var forwarded: Array[String] = []
 	var extra: Dictionary = {}
 	var errors: Array[String] = []
+	var explicit_native_root := false
 	for raw in arguments:
 		var arg := String(raw)
 		var key := arg.trim_prefix("--").get_slice("=", 0)
@@ -19,19 +20,26 @@ static func parse(arguments) -> Dictionary:
 				extra[key] = arg.substr(arg.find("=") + 1)
 		else:
 			forwarded.append(arg)
+			if arg.begins_with("--m6-persistence-root="):
+				explicit_native_root = true
+	if extra.is_empty() and errors.is_empty():
+		return Launch.parse(forwarded)
+	var slot := String(extra.get("world-slot", ""))
+	var root := String(extra.get("world-save-root", "user://live3-worlds"))
+	var canonical_root := ProjectSettings.globalize_path(root).simplify_path()
+	# The existing parser must see the resolved native root when validating
+	# --m6-result-file. It still owns all old role/timeout/network validation.
+	if not explicit_native_root:
+		forwarded.append("--m6-persistence-root=" + canonical_root.path_join(slot))
 	var parsed: Dictionary = Launch.parse(forwarded)
 	errors.append_array(parsed.get("errors", []))
 	var options: Dictionary = parsed.get("options", {})
-	if extra.is_empty():
-		return {"success": errors.is_empty(), "options": options, "errors": errors}
-	var slot := String(extra.get("world-slot", ""))
 	if not valid_slot(slot):
 		errors.append("LIVE3_WORLD_SLOT_INVALID")
 	if not bool(options.get("network_mvp", false)) or options.get("role") != "dedicated-server":
 		errors.append("LIVE3_WORLD_SLOT_REQUIRES_NETWORK_MVP_SERVER")
-	if not String(options.get("m6_persistence_root", "")).is_empty():
+	if explicit_native_root:
 		errors.append("LIVE3_AMBIGUOUS_PERSISTENCE_ROOT")
-	var root := String(extra.get("world-save-root", "user://live3-worlds"))
 	if root.is_empty() or root.begins_with("res://") or (not root.begins_with("user://") and not root.is_absolute_path()):
 		errors.append("LIVE3_SAVE_ROOT_MUST_BE_ABSOLUTE")
 	var owner := "world/live3/" + slot
@@ -48,7 +56,6 @@ static func parse(arguments) -> Dictionary:
 		errors.append("LIVE3_CONTROL_TOKEN_WITHOUT_FILE")
 	if not status.is_empty() and not status.is_absolute_path():
 		errors.append("LIVE3_STATUS_PATH_MUST_BE_ABSOLUTE")
-	var canonical_root := ProjectSettings.globalize_path(root).simplify_path()
 	for path in [control, status]:
 		if not path.is_empty() and path_inside(path, canonical_root):
 			errors.append("LIVE3_OPERATOR_FILES_MUST_BE_OUTSIDE_SAVE_ROOT")
