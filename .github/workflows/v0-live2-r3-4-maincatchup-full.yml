@@ -15,10 +15,10 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  PRODUCT_HEAD: f4626e2a9d3a54bc28a94455f029327b2ba4d412
-  PRODUCT_TREE: ee20f0155428caf3e1a3e936c499625c968ea21f
-  LIVE2_PARENT: c174a23c3eb7ec539e0804d25a292476348fab38
-  MAIN_FENCE: 99b7b0233a0d2658cba22440b97107d7d48f0ec4
+  PRODUCT_HEAD: ab74614c2c3ea0f4dd5c07e614c0d11246eb270c
+  PRODUCT_TREE: fa2fda0bbf71b2b07f30a7136ab39784c41d4804
+  LIVE2_PARENT: 4ab3cb5d061121b3f02ed1a00dfa6a6373b5fead
+  MAIN_FENCE: 845dc2411a4810a5e7e15b6d96ae0d661014ffb8
   GODOT_BIN: C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe
   PYTHONUTF8: '1'
   PYTHONDONTWRITEBYTECODE: '1'
@@ -66,31 +66,14 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'LIVE2_PARENT_NOT_ANCESTOR' }
 
           $expected=@(
-            '.github/workflows/eco-arch2-a11-exact.yml',
-            '.github/workflows/eco-arch2-a11-static.yml',
-            '.github/workflows/eco-arch2-a12-scale-exact.yml',
-            'RUN_ECO_A11_HABITAT.ps1',
-            'docs/research/ecology/ECO_ARCH2_A11_HABITAT_RU.md',
-            'docs/research/ecology/ECO_ARCH2_A11_POST_BUILD_CRITIQUE_RU.md',
-            'docs/research/ecology/ECO_ARCH2_A11_WORK_ORDER_RU.md',
-            'docs/research/ecology/ECO_ARCH2_A12_WORK_ORDER_RU.md',
-            'docs/research/ecology/EVO_ARCH2_ROADMAP_R3_RU.md',
-            'scenes/ecology/habitat/persistent_habitat.tscn',
-            'scripts/ecology/habitat/habitat_preset_v1.gd',
-            'scripts/ecology/habitat/persistent_habitat.gd',
-            'scripts/ecology/habitat/persistent_habitat_session_v1.gd',
-            'scripts/ecology/workbench/experiment_controller_v1.gd',
+            '.github/workflows/eco-arch2-a13-exact.yml',
+            'docs/research/ecology/ECO_ARCH2_A13_WORK_ORDER_RU.md',
+            'docs/research/ecology/EVO_ARCH2_ROADMAP_R4_RU.md',
             'scripts/research/ecology/v2/ecology_runtime_v1.gd',
-            'scripts/research/ecology/v2/ecology_scale_contract_v1.gd',
+            'scripts/research/ecology/v2/population_workset_plan_v1.gd',
             'scripts/research/ecology/v2/resource_lifecycle_runtime_v1.gd',
-            'validation/ecology/evo_arch2_a11/habitat_restart_worker.gd',
-            'validation/ecology/evo_arch2_a11/run_exact.py',
-            'validation/ecology/evo_arch2_a11/test_habitat_lifecycle.gd',
-            'validation/ecology/evo_arch2_a11/test_habitat_scene.gd',
-            'validation/ecology/evo_arch2_a11/test_persistent_session.gd',
-            'validation/ecology/evo_arch2_a11/test_world_admission.gd',
-            'validation/ecology/evo_arch2_a12/run_exact.py',
-            'validation/ecology/evo_arch2_a12/test_population_scale.gd'
+            'validation/ecology/evo_arch2_a13/run_exact.py',
+            'validation/ecology/evo_arch2_a13/test_exact_worksets.gd'
           ) | Sort-Object
           $actual=@(git diff --name-only $env:LIVE2_PARENT $env:PRODUCT_HEAD) | Sort-Object
           $delta=@(Compare-Object -ReferenceObject $expected -DifferenceObject $actual)
