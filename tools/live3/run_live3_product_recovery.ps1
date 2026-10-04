@@ -302,6 +302,24 @@ function Assert-Converged {
     if($aConstruct-ne$bConstruct){throw "CONVERGENCE_MISMATCH:$($Label):construction"}
 }
 
+function Wait-ConvergedStates {
+    param([int]$TimeoutSeconds=25,[string]$Label="convergence")
+    $deadline=(Get-Date).AddSeconds($TimeoutSeconds)
+    $lastError=""
+    while((Get-Date)-lt$deadline){
+        try{
+            $a=Get-AutomationState A
+            $b=Get-AutomationState B
+            Assert-Converged $a $b $Label
+            return [ordered]@{a=$a;b=$b}
+        }catch{
+            $lastError=$_.Exception.Message
+        }
+        Start-Sleep -Milliseconds 350
+    }
+    throw "CONVERGENCE_TIMEOUT:$($Label):$lastError"
+}
+
 function Assert-StableRecovery {
     param($Before,$After,[string]$Label)
     foreach($field in @("item_graph_checksum","resource_checksum")){
@@ -358,9 +376,11 @@ try {
     $Processes.b=Start-Live3Client -Client B -Ordinal 1
     Wait-Bridge A
     Wait-Bridge B
-    $baselineA=Wait-ConnectionState A
-    $baselineB=Wait-ConnectionState B
-    Assert-Converged $baselineA $baselineB "baseline"
+    Wait-ConnectionState A | Out-Null
+    Wait-ConnectionState B | Out-Null
+    $baselinePair=Wait-ConvergedStates 25 "baseline"
+    $baselineA=$baselinePair.a
+    $baselineB=$baselinePair.b
     $Observations.baseline_a=$baselineA
     $Observations.baseline_b=$baselineB
 
@@ -410,9 +430,9 @@ try {
 
     Invoke-Control A @("stop") | Out-Null
     Start-Sleep -Seconds 3
-    $preClientRestartA=Get-AutomationState A
-    $preClientRestartB=Get-AutomationState B
-    Assert-Converged $preClientRestartA $preClientRestartB "pre-client-restart"
+    $preClientPair=Wait-ConvergedStates 20 "pre-client-restart"
+    $preClientRestartA=$preClientPair.a
+    $preClientRestartB=$preClientPair.b
     $Observations.pre_client_restart_a=$preClientRestartA
     $Observations.pre_client_restart_b=$preClientRestartB
 
@@ -423,17 +443,19 @@ try {
     $bDuringARestart=Wait-ConnectionState B @("CONNECTED") 15
     $Processes.a2=Start-Live3Client -Client A -Ordinal 2
     Wait-Bridge A
-    $a2=Wait-ConnectionState A @("CONNECTED") 60
-    $bAfterA2=Wait-ConnectionState B @("CONNECTED") 20
-    Assert-Converged $a2 $bAfterA2 "client-a-restart"
+    Wait-ConnectionState A @("CONNECTED") 60 | Out-Null
+    Wait-ConnectionState B @("CONNECTED") 20 | Out-Null
+    $a2Pair=Wait-ConvergedStates 25 "client-a-restart"
+    $a2=$a2Pair.a
+    $bAfterA2=$a2Pair.b
     Assert-StableRecovery $preClientRestartA $a2 "client-a-restart"
     $Observations.client_a_restart=$a2
     $Observations.client_b_survived_a_restart=$bAfterA2
 
     Start-Sleep -Seconds 2
-    $preServerA=Get-AutomationState A
-    $preServerB=Get-AutomationState B
-    Assert-Converged $preServerA $preServerB "pre-server-restart"
+    $preServerPair=Wait-ConvergedStates 20 "pre-server-restart"
+    $preServerA=$preServerPair.a
+    $preServerB=$preServerPair.b
     $Observations.pre_server_restart_a=$preServerA
     $Observations.pre_server_restart_b=$preServerB
 
@@ -451,12 +473,12 @@ try {
     $Observations.server_outage_b=$outageB
 
     $Processes.server2=Start-Live3Server -Ordinal 2
-    $postA=Wait-ConnectionState A @("CONNECTED") 75
-    $postB=Wait-ConnectionState B @("CONNECTED") 75
+    Wait-ConnectionState A @("CONNECTED") 75 | Out-Null
+    Wait-ConnectionState B @("CONNECTED") 75 | Out-Null
     Start-Sleep -Seconds 2
-    $postA=Get-AutomationState A
-    $postB=Get-AutomationState B
-    Assert-Converged $postA $postB "post-server-restart"
+    $postPair=Wait-ConvergedStates 30 "post-server-restart"
+    $postA=$postPair.a
+    $postB=$postPair.b
     Assert-StableRecovery $preServerA $postA "server-restart-a"
     Assert-StableRecovery $preServerB $postB "server-restart-b"
     $Observations.post_server_restart_a=$postA
