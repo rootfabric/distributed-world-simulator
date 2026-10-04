@@ -1,0 +1,178 @@
+{
+  "schema": "distributed_world_simulator.harness_verification.v1",
+  "verification_id": "ECO-ARCH2-A13-PARALLEL-PREPARE-R1-VERIFICATION-001",
+  "work_order_id": "ECO-ARCH2-A13-PARALLEL-PREPARE-R1",
+  "program": "ECO",
+  "checkpoint": "A13 Bounded Parallel Prepare R1",
+  "verifier": "FRESH_INDEPENDENT_VERIFIER_A13_PARALLEL_PREPARE_R1",
+  "verdict": "VERIFIED",
+  "verdict_reason": "The frozen exact subject passed the complete Parallel Prepare exact matrix on separate Windows and Linux self-hosted runners. Both platforms executed the new 93-check threaded suite and all closed ecology regressions with zero failures, exact HEAD/TREE remained unchanged and tracked-clean, artifact digests and embedded evidence hashes were independently rechecked, Fresh Reviewer R1 is PASS with zero blocking findings, Project Control is SUCCESS, and final main drift is zero.",
+  "execution_performed": true,
+  "inherited_execution_evidence": false,
+  "runtime_subject": {
+    "branch": "feature/eco-arch2-a13-parallel-prepare-r1",
+    "pr": 737,
+    "head": "cfb10f700202e8054fddc7c802491601b6e455d4",
+    "tree": "db6250cbf38cdbf63872738aaa3d72a49459ba63",
+    "base_main": "1f8a9debc4f8838569f818faa43bdadc0f23f965",
+    "freeze_ref": "freeze/eco-arch2-a13-parallel-prepare-cfb10f70-exact-r1",
+    "changed_files": 7,
+    "behind_main": 0
+  },
+  "reviewer_gate": {
+    "review_id": "ECO-ARCH2-A13-PARALLEL-PREPARE-R1-FRESH-REVIEW-001",
+    "review_result_commit": "b264ccf831d9ebf8de363895df749772806f76ef",
+    "review_result_file": "docs/research/ecology/ECO_ARCH2_A13_PARALLEL_PREPARE_FRESH_REVIEW_R1.json",
+    "github_review_id": 5406845797,
+    "review_type": "POST_BUILD_EXACT_HEAD_REVIEW",
+    "verdict": "PASS",
+    "required_fixes": [],
+    "blocking_findings": 0
+  },
+  "project_control": {
+    "run": 37210363845,
+    "conclusion": "success",
+    "exact_head": "cfb10f700202e8054fddc7c802491601b6e455d4",
+    "includes_full_harness_regression": true,
+    "includes_pc0": true,
+    "includes_directional_audit": true
+  },
+  "exact_run": {
+    "workflow_run": 37210363778,
+    "workflow": "ECO ARCH2 A13 Parallel Prepare Exact",
+    "conclusion": "success",
+    "head": "cfb10f700202e8054fddc7c802491601b6e455d4"
+  },
+  "windows": {
+    "job_id": 111460134210,
+    "runner": "desktop-qnagsti-eco-runner",
+    "os_label": "Windows",
+    "conclusion": "success",
+    "godot_version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "godot_sha256": "3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5",
+    "artifact_id": 11306517587,
+    "artifact_sha256": "9c3378bfc3cd476c92d02a56f440556828074f7b681f4a43ee29726d1f29ad27",
+    "parallel_prepare_evidence_sha256": "5e9287bc51b6823ad0bc4c589476534a8c6c65f314337ddd561dbcb78e6b45e3",
+    "stages": [
+      "A13 Parallel Prepare 93/0",
+      "A13 Activity 122/0",
+      "A13 Spatial 108/0",
+      "A13 Exact Worksets 58/0",
+      "A12 38/0",
+      "A11 171/0"
+    ],
+    "tracked_clean_before": true,
+    "tracked_clean_after": true,
+    "artifact_rechecked": true,
+    "evidence_sha256_rechecked": true,
+    "all_commands_exit_zero": true,
+    "timeouts": 0
+  },
+  "linux": {
+    "job_id": 111460134300,
+    "runner": "dws-linux-outenemy",
+    "os_label": "Linux",
+    "conclusion": "success",
+    "godot_version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "godot_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+    "artifact_id": 11310755978,
+    "artifact_sha256": "bfbe20acd35261671a23d585a99a56cae986c9e068fd994bbc240c7e281fad98",
+    "parallel_prepare_evidence_sha256": "f06bb09f7e4dc6a200b18827dd9b745783193bcb939774bf201872dcdf0ddf19",
+    "stages": [
+      "A13 Parallel Prepare 93/0",
+      "A13 Activity 122/0",
+      "A13 Spatial 108/0",
+      "A13 Exact Worksets 58/0",
+      "A12 38/0",
+      "A11 171/0"
+    ],
+    "tracked_clean_before": true,
+    "tracked_clean_after": true,
+    "artifact_rechecked": true,
+    "evidence_sha256_rechecked": true,
+    "all_commands_exit_zero": true,
+    "timeouts": 0
+  },
+  "independent_checks": [
+    {
+      "check": "Windows and Linux jobs checked out exact product HEAD cfb10f700202e8054fddc7c802491601b6e455d4.",
+      "result": "PASS"
+    },
+    {
+      "check": "Both platform evidence packages are bound to TREE db6250cbf38cdbf63872738aaa3d72a49459ba63.",
+      "result": "PASS"
+    },
+    {
+      "check": "Canonical Godot 4.7.1 double version and platform SHA256 values match the exact runner contract.",
+      "result": "PASS"
+    },
+    {
+      "check": "Parallel Prepare exact result is 93 assertions / 0 failures on Windows and Linux.",
+      "result": "PASS"
+    },
+    {
+      "check": "The exact suite covers worker bounds 1/2/4/8 and asserts all spatial worksets execute off the main thread.",
+      "result": "PASS"
+    },
+    {
+      "check": "Serial and parallel field, population and propagule bytes/hashes are exact-equivalent.",
+      "result": "PASS"
+    },
+    {
+      "check": "Repeated threaded execution and population input permutations remain deterministic.",
+      "result": "PASS"
+    },
+    {
+      "check": "Invalid worker bounds and stale spatial plans fail closed without mutating canonical source state.",
+      "result": "PASS"
+    },
+    {
+      "check": "Eight-tick reproduction+mutation runtime is byte/hash exact to serial spatial execution.",
+      "result": "PASS"
+    },
+    {
+      "check": "Checkpoint bytes are identical and scheduler/thread telemetry does not enter canonical Runtime/checkpoint state.",
+      "result": "PASS"
+    },
+    {
+      "check": "Activity cadence wake/catch-up through parallel prepare remains exact to the accepted serial catch-up path.",
+      "result": "PASS"
+    },
+    {
+      "check": "Activity, Spatial, A13 Exact Worksets, A12 and A11 regressions pass on both platforms.",
+      "result": "PASS"
+    },
+    {
+      "check": "Both artifact ZIP SHA256 values match GitHub artifact digests; all embedded evidence.sha256 files independently recompute correctly.",
+      "result": "PASS"
+    },
+    {
+      "check": "No exact command has nonzero exit or timeout; tracked source is clean before and after both runs.",
+      "result": "PASS"
+    },
+    {
+      "check": "Fresh Reviewer R1 remains exact-head fresh and PASS with required_fixes=[] / blocking_findings=0.",
+      "result": "PASS"
+    },
+    {
+      "check": "Project Control run 37210363845 is SUCCESS on the same exact product HEAD.",
+      "result": "PASS"
+    },
+    {
+      "check": "A10.5 Windows run 37210363818 and A10.5 Linux run 37210363797 are SUCCESS on the same product head.",
+      "result": "PASS"
+    },
+    {
+      "check": "Final main drift check: main remains 1f8a9debc4f8838569f818faa43bdadc0f23f965 and product subject is behind_by=0.",
+      "result": "PASS"
+    }
+  ],
+  "residual_non_blocking": [
+    "R1 makes no performance claim; per-wave Thread creation and deep-copy overhead should be profiled before changing the execution mechanism.",
+    "A persistent pool or WorkerThreadPool may replace explicit Thread waves later only if profiling shows material overhead and the same exact contract is retained.",
+    "Bounded parallel post-allocation advance remains a separate A13 checkpoint."
+  ],
+  "merge_performed": false,
+  "merge_authorized": false,
+  "gate_opened": "Human merge decision for PR #737 after this verification closure"
+}
