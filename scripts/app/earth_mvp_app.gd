@@ -529,7 +529,9 @@ func automation_get_state() -> Dictionary:
 		if not construct_id.is_empty() and not construct_checksum.is_empty():
 			construction_construct_checksums[construct_id] = construct_checksum
 	return {
-		"schema": "dws.live3.automation.product_state.v1",
+		# LIVE.3 extends the accepted LIVE.2 state payload additively. Keep the
+		# schema stable so existing automation clients remain compatible.
+		"schema": "dws.live2.automation.input_state.v1",
 		"movement_enabled": _automation_movement_enabled,
 		"expires_in_ms": (
 			maxi(_automation_movement_expires_ms - Time.get_ticks_msec(), 0)
