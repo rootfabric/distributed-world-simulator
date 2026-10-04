@@ -1,9 +1,10 @@
-extends "res://scripts/runtime/networked_gameplay/p5/networked_gameplay_service_p5.gd"
+extends "res://scripts/runtime/networked_gameplay/live3/live3_gameplay_recovery_service.gd"
 
 # V0-P5 product composition adapter.
 # The live M3 server preloads this stable path. P5 keeps exactly one canonical
 # M4 Item Graph, preserves P4 Construction consume support, and selects the P5
 # ResourceMining capability gate without changing M3 transport or authority.
+# LIVE3's parent is byte-compatible with P5 while its recovery port is unbound.
 
 func get_canonical_item_graph_port():
 	return _canonical_multiplayer_items if _configured else null
