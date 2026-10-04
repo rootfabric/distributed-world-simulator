@@ -258,6 +258,83 @@ function Start-Live3Client {
     return [ordered]@{process=$p;log=$Log;profile=$Profile}
 }
 
+function Resolve-EarthResourcePlanarTarget {
+    param([Parameter(Mandatory=$true)][string]$ResourceNodeId)
+
+    $earthPath=Join-Path $Worktree "config\planets\earth.json"
+    $resourcePath=Join-Path $Worktree "config\resources\v0_resource_nodes.json"
+    if(-not(Test-Path $earthPath)){throw "EARTH_CONFIG_MISSING:$earthPath"}
+    if(-not(Test-Path $resourcePath)){throw "RESOURCE_CONFIG_MISSING:$resourcePath"}
+
+    $earth=Get-Content $earthPath -Raw | ConvertFrom-Json
+    $catalog=Get-Content $resourcePath -Raw | ConvertFrom-Json
+    $node=@($catalog.nodes | Where-Object {
+        [string]$_.resource_node_id -eq $ResourceNodeId
+    } | Select-Object -First 1)
+    if($node.Count -ne 1){throw "RESOURCE_NODE_NOT_FOUND:$ResourceNodeId"}
+    $spatial=$node[0].spatial
+    if([string]$spatial.frame -ne "earth-fixed"){
+        throw "RESOURCE_NODE_FRAME_UNSUPPORTED:$ResourceNodeId:$($spatial.frame)"
+    }
+
+    # Mirror EarthResourceSpatialResolver exactly. Note that the accepted
+    # resolver defines east as UP x anchor; for increasing longitude at the
+    # canonical spawn this produces a negative planar X.
+    $deg=[math]::PI/180.0
+    $spawn=$earth.default_spawn
+    $lat0=[double]$spawn.latitude_deg*$deg
+    $lon0=[double]$spawn.longitude_deg*$deg
+    $lat1=[double]$spatial.latitude_deg*$deg
+    $lon1=[double]$spatial.longitude_deg*$deg
+
+    $anchorVector=@(
+        [math]::Cos($lat0)*[math]::Cos($lon0),
+        [math]::Sin($lat0),
+        [math]::Cos($lat0)*[math]::Sin($lon0)
+    )
+    $targetVector=@(
+        [math]::Cos($lat1)*[math]::Cos($lon1),
+        [math]::Sin($lat1),
+        [math]::Cos($lat1)*[math]::Sin($lon1)
+    )
+    $east=@($anchorVector[2],0.0,-$anchorVector[0])
+    $eastLength=[math]::Sqrt(
+        $east[0]*$east[0]+$east[1]*$east[1]+$east[2]*$east[2]
+    )
+    if($eastLength-le0.000001){throw "RESOURCE_EAST_AXIS_INVALID"}
+    $east=@($east[0]/$eastLength,$east[1]/$eastLength,$east[2]/$eastLength)
+
+    $north=@(
+        $anchorVector[1]*$east[2]-$anchorVector[2]*$east[1],
+        $anchorVector[2]*$east[0]-$anchorVector[0]*$east[2],
+        $anchorVector[0]*$east[1]-$anchorVector[1]*$east[0]
+    )
+    $northLength=[math]::Sqrt(
+        $north[0]*$north[0]+$north[1]*$north[1]+$north[2]*$north[2]
+    )
+    if($northLength-le0.000001){throw "RESOURCE_NORTH_AXIS_INVALID"}
+    $north=@(
+        $north[0]/$northLength,
+        $north[1]/$northLength,
+        $north[2]/$northLength
+    )
+
+    $radius=[double]$earth.radius_m
+    $anchorRadius=$radius+[double]$spawn.altitude_m
+    $targetRadius=$radius+[double]$spatial.altitude_m
+    $dx=$targetVector[0]*$targetRadius-$anchorVector[0]*$anchorRadius
+    $dy=$targetVector[1]*$targetRadius-$anchorVector[1]*$anchorRadius
+    $dz=$targetVector[2]*$targetRadius-$anchorVector[2]*$anchorRadius
+
+    return [ordered]@{
+        resource_node_id=$ResourceNodeId
+        x=$dx*$east[0]+$dy*$east[1]+$dz*$east[2]
+        y=$dx*$anchorVector[0]+$dy*$anchorVector[1]+$dz*$anchorVector[2]
+        z=-($dx*$north[0]+$dy*$north[1]+$dz*$north[2])
+    }
+}
+
+
 function Drive-To {
     param(
         [ValidateSet("A","B")][string]$Client,
@@ -423,13 +500,44 @@ try {
     } 15 "ITEM_GRAPH_DID_NOT_MUTATE"
     $Observations.after_hotbar=$afterHotbar
 
-    $nearOre=Drive-To A 4.0 0.0 0.7 80
+    $oreTarget=Resolve-EarthResourcePlanarTarget "resource/earth/ore-demo/1"
+    $nearOre=Get-AutomationState A
+    $oreDx=[double]$oreTarget.x-[double]$nearOre.local_player.position.x
+    $oreDz=[double]$oreTarget.z-[double]$nearOre.local_player.position.z
+    $oreHorizontal=[math]::Sqrt($oreDx*$oreDx+$oreDz*$oreDz)
+
+    # Spawn A is normally already within the five-metre P1 interaction range.
+    # If a future spawn/persistence state is farther away, approach from the
+    # current side and stop at a bounded 3.2 m standoff instead of hard-coding
+    # a world coordinate.
+    if($oreHorizontal-gt3.8){
+        $standoff=3.2
+        $approachX=[double]$oreTarget.x-($oreDx/$oreHorizontal)*$standoff
+        $approachZ=[double]$oreTarget.z-($oreDz/$oreHorizontal)*$standoff
+        $nearOre=Drive-To A $approachX $approachZ 0.55 80
+        $oreDx=[double]$oreTarget.x-[double]$nearOre.local_player.position.x
+        $oreDz=[double]$oreTarget.z-[double]$nearOre.local_player.position.z
+        $oreHorizontal=[math]::Sqrt($oreDx*$oreDx+$oreDz*$oreDz)
+    }
+    if($oreHorizontal-lt0.001){throw "RESOURCE_AIM_HORIZONTAL_DISTANCE_INVALID"}
+
+    # Aim at the actual projected resource centre through the normal product
+    # camera path. ResourceMiningTarget adds +0.52 m over the tangent surface;
+    # the playable camera is 1.75 m above it at ground level.
+    $aimYaw=[math]::Atan2(-$oreDx,-$oreDz)
+    $targetPresentationY=[double]$oreTarget.y+0.52
+    $eyePresentationY=1.75+[double]$nearOre.local_player.position.y
+    $aimPitch=[math]::Atan2(
+        $targetPresentationY-$eyePresentationY,
+        $oreHorizontal
+    )
+    $Observations.ore_target=$oreTarget
     $Observations.near_ore=$nearOre
-    # The canonical ore node is lon +0.0001 deg from the Earth spawn (~x=7.86 m)
-    # and its presentation sits below the 1.75 m eye height. Horizontal pitch
-    # becomes marginal after normal stop latency, so aim down through the same
-    # product camera path before invoking the ordinary player.interact command.
-    Invoke-Control A @("view","--yaw","-1.5707963267948966","--pitch","-0.35") | Out-Null
+    Invoke-Control A @(
+        "view",
+        "--yaw",$aimYaw.ToString([cultureinfo]::InvariantCulture),
+        "--pitch",$aimPitch.ToString([cultureinfo]::InvariantCulture)
+    ) | Out-Null
     $equip=Invoke-Control A @("command","tool.mining.equip")
     if($null-eq$equip -or -not [bool]$equip.ok){throw "MINING_TOOL_EQUIP_FAILED"}
     Wait-AsyncIdle A
