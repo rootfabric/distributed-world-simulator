@@ -102,6 +102,7 @@ var m5_graphical_acceptance_driver
 var _m3_mode: bool = false
 var _m5_mode: bool = false
 var _m6_mode: bool = false
+var _resolved_network_persistence_root: String = ""
 var _network_debug_stay_open: bool = false
 var _m7_mode: bool = false
 
@@ -184,8 +185,10 @@ func _ready() -> void:
 
 	_m7_mode = bool(launch_options.get("network_playground", false))
 	_network_debug_stay_open = bool(launch_options.get("network_debug_stay_open", false))
+	_resolved_network_persistence_root = LaunchOptionsScript.resolved_network_persistence_root(launch_options)
 	_m6_mode = (
-		not String(launch_options.get("m6_persistence_root", "")).strip_edges().is_empty()
+		not _resolved_network_persistence_root.is_empty()
+		or not String(launch_options.get("m6_persistence_root", "")).strip_edges().is_empty()
 		or not String(launch_options.get("m6_result_file", "")).strip_edges().is_empty()
 	)
 	_m5_mode = not String(launch_options.get("m5_result_file", "")).strip_edges().is_empty()
@@ -227,7 +230,12 @@ func _ready() -> void:
 			"authority_owner_id": String(launch_options.get("node_id", "local-dedicated-server")),
 			"authority_epoch": 1,
 			"gameplay_session_id": "session/m2/player/%s" % String(launch_options.get("player_identity", "local-astronaut")),
-			"persistence_root": String(launch_options.get("m6_persistence_root", "")) if _m6_mode else "",
+			"persistence_root": (
+				_resolved_network_persistence_root
+				if not _resolved_network_persistence_root.is_empty()
+				else String(launch_options.get("m6_persistence_root", "")) if _m6_mode
+				else ""
+			),
 			"playable_sandbox": _m7_mode,
 			"debug_logging": bool(launch_options.get("network_debug", false)),
 			"world_id": requested_world,
