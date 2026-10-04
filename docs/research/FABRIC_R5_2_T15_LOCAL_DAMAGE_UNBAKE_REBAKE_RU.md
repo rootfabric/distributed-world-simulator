@@ -150,6 +150,39 @@ Compile/build work и steady-state execution намеренно считаютс
 - old binding after fork → `T15_INSTANCE_SUPERSEDED`;
 - incompatible state projection → `T15_STATE_PROJECTION_UNSAFE`.
 
+## R2 — atomic structural fork
+
+После Fresh Review R1 structural fork усилен до двухфазного контракта:
+
+```text
+candidate
+  ↓
+isolated PRE-FLIGHT
+  - successor family id unused
+  - successor model not already interned/aliased
+  - replacement bundle verifies/prepares
+  - projected caller-owned physical state is valid
+  - physical bytes remain unchanged
+  - receipt is valid
+  ↓ PASS
+COMMIT
+  - register immutable successor family
+  - publish preflighted successor binding/state
+  - switch current binding
+  - record receipt/counters
+```
+
+Все ожидаемые candidate rejection выполняются **до изменения live registry**. Acceptance теперь поведенчески фальсифицирует `T15_STATE_PROJECTION_UNSAFE` валидным successor model с более узким servo state envelope и требует:
+
+- family/model/subtree/runtime accounting unchanged после reject;
+- rejected successor family невидима;
+- old binding остаётся current;
+- те же `new_family_id` + `event_id` можно повторно применить после исправления caller state;
+- model-alias reject не оставляет alias route;
+- occupied successor family id reject не меняет runtime.
+
+Локальный canonical Linux double после repair: **3 × 506 assertions PASS**, raw logs byte-identical, deterministic result hash `741ac5da0a11e28d1acba633323f16319ece5e5b550601fe26c96f8ccfbee55b`. Windows exact и Fresh Review R2/Verifier остаются отдельными gate после публикации repair HEAD.
+
 ## Что T15 пока не заявляет
 
 Этот checkpoint не является:
