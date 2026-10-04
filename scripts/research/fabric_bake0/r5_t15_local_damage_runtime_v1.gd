@@ -96,6 +96,66 @@ func _changed_paths(old_bundle: Dictionary, new_bundle: Dictionary) -> Dictionar
 		"new_manifest": new_manifest,
 	})
 
+
+func _preflight_successor(
+	instance: Dictionary,
+	new_family_id: String,
+	replacement_bundle: Dictionary,
+	trusted_checksum: String
+) -> Dictionary:
+	# Transactional barrier: every rejectable candidate/model/state check happens
+	# against an isolated T14 registry. The live registry is untouched until this
+	# function returns success.
+	if _family_bundles.has(new_family_id):
+		return U.failure("T15_FAMILY_ID_ALREADY_REGISTERED")
+	var candidate_model_hash := _binary_hash(replacement_bundle)
+	if not U.is_lower_hex_64(candidate_model_hash):
+		return U.failure("T15_CANDIDATE_MODEL_HASH_INVALID")
+	for existing_family_id in _family_bundles:
+		if _binary_hash(_family_bundles[existing_family_id]) == candidate_model_hash:
+			return U.failure("T15_DIVERGENT_FAMILY_UNEXPECTEDLY_ALIASED", {
+				"existing_family_id": String(existing_family_id),
+			})
+
+	var probe = T14.new()
+	var registered: Dictionary = probe.register_family(new_family_id, replacement_bundle, trusted_checksum)
+	if not registered.success:
+		return registered
+	if bool(registered.details.get("deduplicated", false)):
+		return U.failure("T15_PREFLIGHT_UNEXPECTED_ALIAS")
+	var created: Dictionary = probe.create_instance(
+		new_family_id,
+		_instance_id(instance),
+		String(instance.binding.world_slot),
+		0.5,
+		300.0
+	)
+	if not created.success:
+		return created
+	var next_instance: Dictionary = created.details
+	var projected: Dictionary = next_instance.state.duplicate(true)
+	projected.physical = instance.state.physical.duplicate(true)
+	projected.state_revision = int(instance.state.state_revision) + 1
+	projected.damage_revision = int(instance.state.damage_revision) + 1
+	projected.disabled = bool(instance.state.disabled)
+	next_instance.state = projected
+	if not probe.instance_valid(next_instance):
+		return U.failure("T15_STATE_PROJECTION_UNSAFE")
+	var before_physical_hash := _binary_hash(instance.state.physical)
+	var after_physical_hash := _binary_hash(next_instance.state.physical)
+	if before_physical_hash != after_physical_hash:
+		return U.failure("T15_STATE_PROJECTION_CHANGED_PHYSICS")
+	var new_model: Dictionary = probe.family_identity(new_family_id)
+	if new_model.is_empty():
+		return U.failure("T15_NEW_MODEL_IDENTITY_MISSING")
+	return U.success({
+		"next_instance": next_instance,
+		"new_model": new_model,
+		"candidate_model_hash": candidate_model_hash,
+		"physical_state_hash_before": before_physical_hash,
+		"physical_state_hash_after": after_physical_hash,
+	})
+
 func register_family(family_id: String, bundle: Dictionary, trusted_checksum: String) -> Dictionary:
 	var registered: Dictionary = base.register_family(family_id, bundle, trusted_checksum)
 	if registered.success:
@@ -186,37 +246,16 @@ func fork_instance(
 	var old_model: Dictionary = base.family_identity(old_family)
 	if old_model.is_empty():
 		return U.failure("T15_OLD_MODEL_IDENTITY_MISSING")
-	var registered: Dictionary = base.register_family(new_family_id, replacement_bundle, trusted_checksum)
-	if not registered.success:
-		return registered
-	if bool(registered.details.get("deduplicated", false)):
-		return U.failure("T15_DIVERGENT_FAMILY_UNEXPECTEDLY_ALIASED")
-	_family_bundles[new_family_id] = replacement_bundle.duplicate(true)
-	var created: Dictionary = base.create_instance(
-		new_family_id,
-		_instance_id(instance),
-		String(instance.binding.world_slot),
-		0.5,
-		300.0
-	)
-	if not created.success:
-		return created
-	var next_instance: Dictionary = created.details
-	var projected: Dictionary = next_instance.state.duplicate(true)
-	projected.physical = instance.state.physical.duplicate(true)
-	projected.state_revision = int(instance.state.state_revision) + 1
-	projected.damage_revision = int(instance.state.damage_revision) + 1
-	projected.disabled = bool(instance.state.disabled)
-	next_instance.state = projected
-	if not base.instance_valid(next_instance):
-		return U.failure("T15_STATE_PROJECTION_UNSAFE")
-	var before_physical_hash := _binary_hash(instance.state.physical)
-	var after_physical_hash := _binary_hash(next_instance.state.physical)
-	if before_physical_hash != after_physical_hash:
-		return U.failure("T15_STATE_PROJECTION_CHANGED_PHYSICS")
-	var new_model: Dictionary = base.family_identity(new_family_id)
-	if new_model.is_empty():
-		return U.failure("T15_NEW_MODEL_IDENTITY_MISSING")
+
+	# PRE-FLIGHT: no live registry mutation is allowed before all candidate,
+	# projection and receipt checks have passed.
+	var preflight := _preflight_successor(instance, new_family_id, replacement_bundle, trusted_checksum)
+	if not preflight.success:
+		return preflight
+	var next_instance: Dictionary = preflight.details.next_instance
+	var new_model: Dictionary = preflight.details.new_model
+	var before_physical_hash := String(preflight.details.physical_state_hash_before)
+	var after_physical_hash := String(preflight.details.physical_state_hash_after)
 	var receipt := {
 		"schema": RECEIPT_SCHEMA,
 		"event_id": event_id,
@@ -247,6 +286,19 @@ func fork_instance(
 	receipt.checksum = U.compute_checksum(receipt)
 	if not U.validate_checksum(receipt).success:
 		return U.failure("T15_RECEIPT_INVALID")
+
+	# COMMIT: deterministic pre-flight proved this exact immutable bundle, binding
+	# and projected state. From here there are no expected/user-controlled reject
+	# paths. Live family registration is the single structural commit boundary.
+	var registered: Dictionary = base.register_family(new_family_id, replacement_bundle, trusted_checksum)
+	if not registered.success:
+		return U.failure("T15_COMMIT_PRECONDITION_DRIFT", {"cause": registered})
+	_family_bundles[new_family_id] = replacement_bundle.duplicate(true)
+	# Binding/state identity is deterministic and was created in the isolated
+	# pre-flight registry. Validate it against the now-committed live family as an
+	# invariant; do not expose a post-commit candidate rejection path.
+	assert(not bool(registered.details.get("deduplicated", false)))
+	assert(base.instance_valid(next_instance))
 	_current_binding_by_instance[_instance_id(instance)] = _binding_checksum(next_instance)
 	_events[event_id] = receipt.duplicate(true)
 	fork_events += 1
