@@ -16,6 +16,8 @@ const SpatialWorksets = preload("res://scripts/research/ecology/v2/population_sp
 const MAX_POPULATION := Scale.MAX_POPULATION
 const MAX_PROPAGULES_PER_STEP := Scale.MAX_PROPAGULES_PER_STEP
 const PROPAGULE_SCHEMA := "dws.ecology.propagule.v1"
+const DEFAULT_PARALLEL_PREPARE_WORKERS := 4
+const MAX_PARALLEL_PREPARE_WORKERS := 8
 
 static func individual(blueprint: Dictionary, individual_id: String, position_mm: Array, endowment: Dictionary = {}, origin_kind: String = "FOUNDER_ENDOWMENT") -> Dictionary:
 	if origin_kind != "FOUNDER_ENDOWMENT": return {}
@@ -69,6 +71,49 @@ static func step_population_spatial_scheduled(field: Dictionary, population: Arr
 		return _fail("A5_SPATIAL_WORKSET_PLAN")
 	return _step_population_with_validated_units(
 		field, entries, owner_token, owner_epoch, revision, plan.worksets)
+
+static func step_population_spatial_parallel_prepare(field: Dictionary, population: Array,
+		owner_token: String, owner_epoch: int, revision: int,
+		tile_span_cells: int = SpatialWorksets.DEFAULT_TILE_SPAN_CELLS,
+		max_members: int = SpatialWorksets.DEFAULT_MAX_MEMBERS,
+		max_prepare_workers: int = DEFAULT_PARALLEL_PREPARE_WORKERS) -> Dictionary:
+	var precondition := _precondition_error(field, population, owner_token, owner_epoch, revision)
+	if not precondition.is_empty():
+		return _fail(precondition)
+	if not valid_parallel_prepare_workers(max_prepare_workers):
+		return _fail("A5_PARALLEL_PREPARE_WORKERS")
+	var normalized := _canonical_entries(population)
+	if not bool(normalized.get("success", false)):
+		return normalized
+	var entries: Array = normalized.entries
+	var plan := SpatialWorksets.create(field, entries, tile_span_cells, max_members)
+	if plan.is_empty():
+		return _fail("A5_SPATIAL_WORKSET_PLAN")
+	return _step_population_with_validated_units_parallel_prepare(
+		field, entries, owner_token, owner_epoch, revision, plan.worksets,
+		max_prepare_workers)
+
+static func step_population_with_spatial_plan_parallel_prepare(field: Dictionary, population: Array,
+		owner_token: String, owner_epoch: int, revision: int, plan: Dictionary,
+		max_prepare_workers: int = DEFAULT_PARALLEL_PREPARE_WORKERS) -> Dictionary:
+	var precondition := _precondition_error(field, population, owner_token, owner_epoch, revision)
+	if not precondition.is_empty():
+		return _fail(precondition)
+	if not valid_parallel_prepare_workers(max_prepare_workers):
+		return _fail("A5_PARALLEL_PREPARE_WORKERS")
+	var normalized := _canonical_entries(population)
+	if not bool(normalized.get("success", false)):
+		return normalized
+	var entries: Array = normalized.entries
+	var plan_error := SpatialWorksets.validate(plan, field, entries)
+	if not plan_error.is_empty():
+		return _fail("A5_SPATIAL_WORKSET_PLAN:" + plan_error)
+	return _step_population_with_validated_units_parallel_prepare(
+		field, entries, owner_token, owner_epoch, revision, plan.worksets,
+		max_prepare_workers)
+
+static func valid_parallel_prepare_workers(max_prepare_workers: int) -> bool:
+	return max_prepare_workers >= 1 and max_prepare_workers <= MAX_PARALLEL_PREPARE_WORKERS
 
 static func step_population_with_spatial_plan(field: Dictionary, population: Array,
 		owner_token: String, owner_epoch: int, revision: int, plan: Dictionary) -> Dictionary:
@@ -126,42 +171,177 @@ static func _step_population_with_entries(field: Dictionary, entries: Array, own
 
 static func _step_population_with_validated_units(field: Dictionary, entries: Array,
 		owner_token: String, owner_epoch: int, revision: int, units: Array) -> Dictionary:
-	if not F.validate_state(field).is_empty():
-		return _fail("A5_FIELD")
-	if owner_token != field.owner_token:
-		return _fail("STALE_OWNER")
-	if owner_epoch != field.owner_epoch:
-		return _fail("STALE_OWNER_EPOCH")
-	if revision != field.revision:
-		return _fail("STALE_REVISION")
+	var guard := _validated_units_precondition(field, owner_token, owner_epoch, revision)
+	if not guard.is_empty():
+		return _fail(guard)
+	var prepared := _prepare_units_serial(field, entries, units)
+	if not bool(prepared.get("success", false)):
+		return prepared
+	return _finish_population_step(
+		field, entries, owner_token, owner_epoch, revision, units,
+		prepared.samples, prepared.demands)
 
+static func _step_population_with_validated_units_parallel_prepare(field: Dictionary, entries: Array,
+		owner_token: String, owner_epoch: int, revision: int, units: Array,
+		max_prepare_workers: int) -> Dictionary:
+	var guard := _validated_units_precondition(field, owner_token, owner_epoch, revision)
+	if not guard.is_empty():
+		return _fail(guard)
+	if not valid_parallel_prepare_workers(max_prepare_workers):
+		return _fail("A5_PARALLEL_PREPARE_WORKERS")
+	var prepared := _prepare_units_parallel(field, entries, units, max_prepare_workers)
+	if not bool(prepared.get("success", false)):
+		return prepared
+	var finished := _finish_population_step(
+		field, entries, owner_token, owner_epoch, revision, units,
+		prepared.samples, prepared.demands)
+	if not bool(finished.get("success", false)):
+		return finished
+	finished["scheduler"] = {
+		"parallel_prepare": true,
+		"worker_bound": max_prepare_workers,
+		"peak_workers": int(prepared.peak_workers),
+		"workset_count": units.size(),
+	}
+	return finished
+
+static func _validated_units_precondition(field: Dictionary,
+		owner_token: String, owner_epoch: int, revision: int) -> String:
+	if not F.validate_state(field).is_empty():
+		return "A5_FIELD"
+	if owner_token != field.owner_token:
+		return "STALE_OWNER"
+	if owner_epoch != field.owner_epoch:
+		return "STALE_OWNER_EPOCH"
+	if revision != field.revision:
+		return "STALE_REVISION"
+	return ""
+
+static func _entries_by_id(entries: Array) -> Dictionary:
 	var by_id := {}
 	for entry in entries:
 		by_id[String(entry.state.individual_id)] = entry
+	return by_id
 
-	# Phase 1 — pure preparation partitioned by workset.
-	# Nothing mutates the field/population in this phase.
+static func _prepare_units_serial(field: Dictionary, entries: Array, units: Array) -> Dictionary:
+	var by_id := _entries_by_id(entries)
 	var samples := {}
 	var demands: Array = []
 	for unit in units:
+		var task_entries: Array = []
 		for raw_id in unit.member_ids:
 			var id := String(raw_id)
-			var entry: Dictionary = by_id[id]
-			var state: Dictionary = entry.state
-			if not state.alive:
-				continue
-			var phenotype := H.compile(state.development, entry.blueprint.genome)
-			if phenotype.is_empty():
-				return _fail("A5_PHENOTYPE")
-			var extent := Ports.sampling_extent_mm(phenotype)
-			var request := Ports.sample_request(state.individual_id, state.position_mm, extent)
-			var sampled := Field.sample(field, request)
-			if not sampled.success:
-				return _fail("A5_SAMPLE:" + String(sampled.error))
-			samples[id] = sampled.sample
-			var generated := _demands(state, entry.blueprint, phenotype)
-			for demand in generated:
+			if not by_id.has(id):
+				return _fail("A5_WORKSET_MEMBER")
+			task_entries.append(by_id[id])
+		var prepared := _prepare_unit_worker(field, task_entries, int(unit.index))
+		if not bool(prepared.get("success", false)):
+			return prepared
+		for id in prepared.samples:
+			samples[String(id)] = prepared.samples[id]
+		for demand in prepared.demands:
+			demands.append(demand)
+	return {
+		"success": true,
+		"samples": samples,
+		"demands": demands,
+		"peak_workers": 1 if not units.is_empty() else 0,
+	}
+
+static func _prepare_units_parallel(field: Dictionary, entries: Array, units: Array,
+		max_prepare_workers: int) -> Dictionary:
+	var by_id := _entries_by_id(entries)
+	var samples := {}
+	var demands: Array = []
+	var cursor := 0
+	var peak_workers := 0
+	while cursor < units.size():
+		var stop := mini(units.size(), cursor + max_prepare_workers)
+		var active: Array = []
+		for unit_index in range(cursor, stop):
+			var unit: Dictionary = units[unit_index]
+			var task_entries: Array = []
+			for raw_id in unit.member_ids:
+				var id := String(raw_id)
+				if not by_id.has(id):
+					for started in active:
+						started.thread.wait_to_finish()
+					return _fail("A5_WORKSET_MEMBER")
+				task_entries.append(by_id[id].duplicate(true))
+			var thread := Thread.new()
+			var task_field: Dictionary = field.duplicate(true)
+			var start_error := thread.start(
+				_prepare_unit_worker.bind(task_field, task_entries, int(unit.index)))
+			if start_error != OK:
+				for started in active:
+					started.thread.wait_to_finish()
+				return _fail("A5_PARALLEL_PREPARE_THREAD_START")
+			active.append({"index": int(unit.index), "thread": thread})
+		peak_workers = maxi(peak_workers, active.size())
+
+		var wave_results := {}
+		for started in active:
+			var result: Variant = started.thread.wait_to_finish()
+			wave_results[int(started.index)] = result
+
+		# Completion order is deliberately ignored. Consume results in the exact
+		# canonical workset order used by the serial path.
+		for unit_index in range(cursor, stop):
+			var unit: Dictionary = units[unit_index]
+			var result: Variant = wave_results.get(int(unit.index), null)
+			if not result is Dictionary:
+				return _fail("A5_PARALLEL_PREPARE_RESULT")
+			var prepared: Dictionary = result
+			if not bool(prepared.get("success", false)):
+				return prepared
+			if int(prepared.get("unit_index", -1)) != int(unit.index):
+				return _fail("A5_PARALLEL_PREPARE_INDEX")
+			for id in prepared.samples:
+				samples[String(id)] = prepared.samples[id]
+			for demand in prepared.demands:
 				demands.append(demand)
+		cursor = stop
+
+	return {
+		"success": true,
+		"samples": samples,
+		"demands": demands,
+		"peak_workers": peak_workers,
+	}
+
+static func _prepare_unit_worker(field: Dictionary, task_entries: Array, unit_index: int) -> Dictionary:
+	var samples := {}
+	var demands: Array = []
+	for entry in task_entries:
+		if not entry is Dictionary or not entry.has("blueprint") or not entry.has("state"):
+			return _fail("A5_ENTRY")
+		var state: Dictionary = entry.state
+		if not state.alive:
+			continue
+		var phenotype := H.compile(state.development, entry.blueprint.genome)
+		if phenotype.is_empty():
+			return _fail("A5_PHENOTYPE")
+		var extent := Ports.sampling_extent_mm(phenotype)
+		var request := Ports.sample_request(state.individual_id, state.position_mm, extent)
+		var sampled := Field.sample(field, request)
+		if not sampled.success:
+			return _fail("A5_SAMPLE:" + String(sampled.error))
+		var id := String(state.individual_id)
+		samples[id] = sampled.sample
+		var generated := _demands(state, entry.blueprint, phenotype)
+		for demand in generated:
+			demands.append(demand)
+	return {
+		"success": true,
+		"unit_index": unit_index,
+		"samples": samples,
+		"demands": demands,
+	}
+
+static func _finish_population_step(field: Dictionary, entries: Array,
+		owner_token: String, owner_epoch: int, revision: int, units: Array,
+		samples: Dictionary, demands: Array) -> Dictionary:
+	var by_id := _entries_by_id(entries)
 
 	# Global barrier — exactly ONE allocation for the whole population.
 	var field_after := field.duplicate(true)
@@ -179,8 +359,7 @@ static func _step_population_with_validated_units(field: Dictionary, entries: Ar
 				return _fail("A5_GRANT_OWNER")
 			intake_by_id[id][grant.resource] += grant.granted
 
-	# Phase 2 — pure per-individual lifecycle advance partitioned by the SAME
-	# canonical worksets, using grants from the single global allocation.
+	# Phase 2 remains serial/canonical in Parallel Prepare R1.
 	var next_population: Array = []
 	var propagules: Array = []
 	for unit in units:
@@ -194,6 +373,8 @@ static func _step_population_with_validated_units(field: Dictionary, entries: Ar
 				inert.last_events = [{"outcome": "DEAD_INERT", "detail": "no resource requests or lifecycle transitions"}]
 				next_population.append({"blueprint": blueprint, "state": inert})
 				continue
+			if not samples.has(id):
+				return _fail("A5_PREPARE_SAMPLE_MISSING")
 			var advanced := _advance_individual(state, blueprint, samples[id], intake_by_id[id])
 			if not advanced.success:
 				return advanced
@@ -205,7 +386,13 @@ static func _step_population_with_validated_units(field: Dictionary, entries: Ar
 
 	next_population.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return a.state.individual_id < b.state.individual_id)
 	propagules.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return a.id < b.id)
-	return {"success": true, "field": field_after, "population": next_population, "propagules": propagules, "field_hash": Field.state_hash(field_after)}
+	return {
+		"success": true,
+		"field": field_after,
+		"population": next_population,
+		"propagules": propagules,
+		"field_hash": Field.state_hash(field_after),
+	}
 
 ## Canonical propagule materialization (A5-owned admission).
 ## Without a mutation receipt the v1 parent-transfer witness applies (child
