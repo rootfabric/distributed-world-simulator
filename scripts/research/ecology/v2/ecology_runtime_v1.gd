@@ -189,7 +189,6 @@ static func _advance_spatial_activity_cadence(
 			"canonical_tick": int(state.tick),
 			"debt_ticks": 0,
 			"exact_catch_up": true,
-			"parallel_prepare": parallel_prepare,
 		}
 
 	if not bool(activity_plan.global_commit_ready):
@@ -202,7 +201,6 @@ static func _advance_spatial_activity_cadence(
 			"canonical_tick": int(state.tick),
 			"debt_ticks": debt_ticks,
 			"exact_catch_up": true,
-			"parallel_prepare": parallel_prepare,
 		}
 
 	var next := state.duplicate(true)
