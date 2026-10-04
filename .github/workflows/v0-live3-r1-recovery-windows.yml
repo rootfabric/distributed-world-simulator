@@ -46,7 +46,9 @@ jobs:
             "scripts/app/earth_mvp_app.gd"
             "scripts/app/simulator_app.gd"
             "scripts/runtime/launch_options.gd"
+            "scripts/runtime/networked_gameplay/services/player_movement_service.gd"
             "tests/runtime/test_launch_options.gd"
+            "tests/runtime/test_v0_live2_r3_reliability.gd"
             "tools/live3/run_live3_product_recovery.ps1"
           )
           mapfile -t expected_sorted < <(printf '%s\n' "${expected[@]}" | sort)
@@ -226,65 +228,8 @@ jobs:
         run: |
           $ErrorActionPreference='Stop'
           $session=(Join-Path (Resolve-Path artifacts\live3-r1).Path 'product-recovery')
-
-          # Diagnostic-only, fail-path instrumentation. The product checkout is
-          # restored byte-for-byte before this step returns so final clean-source
-          # remains an exact HEAD proof.
-          $protocolPath=(Resolve-Path .\scripts\network\transports\v2\protocol_frame_v2.gd).Path
-          $serverPath=(Resolve-Path .\scripts\runtime\networked_gameplay\m3\m3_dedicated_server_runtime_p2.gd).Path
-          $utf8=New-Object System.Text.UTF8Encoding($false)
-          $protocolOriginal=[IO.File]::ReadAllText($protocolPath)
-          $serverOriginal=[IO.File]::ReadAllText($serverPath)
-          try {
-            $protocolNeedle='\tif expected_checksum.is_empty() or expected_checksum != String(value["payload_checksum"]):' + "`r`n" + '\t\treturn UtilsScript.validation_failure("PAYLOAD_CHECKSUM_MISMATCH", "Payload checksum mismatch")'
-            if(-not $protocolOriginal.Contains($protocolNeedle)){
-              $protocolNeedle='\tif expected_checksum.is_empty() or expected_checksum != String(value["payload_checksum"]):' + "`n" + '\t\treturn UtilsScript.validation_failure("PAYLOAD_CHECKSUM_MISMATCH", "Payload checksum mismatch")'
-            }
-            if(-not $protocolOriginal.Contains($protocolNeedle)){throw 'LIVE3_DIAG_PROTOCOL_ANCHOR_MISSING'}
-            $nl=if($protocolNeedle.Contains("`r`n")){"`r`n"}else{"`n"}
-            $protocolReplacement=(
-              '\tif expected_checksum.is_empty() or expected_checksum != String(value["payload_checksum"]):' + $nl +
-              '\t\tif OS.get_environment("DWS_LIVE3_CHECKSUM_DIAG") == "1":' + $nl +
-              '\t\t\tprint("[live3_checksum_rx] " + JSON.stringify({' + $nl +
-              '\t\t\t\t"stored_checksum": String(value["payload_checksum"]),' + $nl +
-              '\t\t\t\t"expected_checksum": expected_checksum,' + $nl +
-              '\t\t\t\t"frame_channel": String(value.get("channel", "")),' + $nl +
-              '\t\t\t\t"delivery_mode": String(value.get("delivery_mode", "")),' + $nl +
-              '\t\t\t\t"frame_sequence": int(value.get("sequence", 0)),' + $nl +
-              '\t\t\t\t"payload": value.get("payload", {}),' + $nl +
-              '\t\t\t}, "", true, true))' + $nl +
-              '\t\treturn UtilsScript.validation_failure("PAYLOAD_CHECKSUM_MISMATCH", "Payload checksum mismatch")'
-            )
-            [IO.File]::WriteAllText($protocolPath,$protocolOriginal.Replace($protocolNeedle,$protocolReplacement),$utf8)
-
-            $serverNeedle='\tvar frame_result: Dictionary = _boundary.create_frame_for_peer('
-            $serverAt=$serverOriginal.IndexOf($serverNeedle)
-            if($serverAt -lt 0){throw 'LIVE3_DIAG_SERVER_ANCHOR_MISSING'}
-            $serverIf=$serverOriginal.IndexOf('\tif not bool(frame_result.get("success", false)):', $serverAt)
-            if($serverIf -lt 0){throw 'LIVE3_DIAG_SERVER_IF_ANCHOR_MISSING'}
-            $serverInsert=(
-              '\tif OS.get_environment("DWS_LIVE3_CHECKSUM_DIAG") == "1" and message_type == "COMPACT_GAMEPLAY_SNAPSHOT":' + $nl +
-              '\t\tvar diag_frame: Dictionary = frame_result.get("details", {}).get("frame", {})' + $nl +
-              '\t\tprint("[live3_checksum_tx] " + JSON.stringify({' + $nl +
-              '\t\t\t"peer_id": peer_id,' + $nl +
-              '\t\t\t"stored_checksum": String(diag_frame.get("payload_checksum", "")),' + $nl +
-              '\t\t\t"frame_sequence": int(diag_frame.get("sequence", 0)),' + $nl +
-              '\t\t\t"payload": diag_frame.get("payload", {}),' + $nl +
-              '\t\t}, "", true, true))' + $nl
-            )
-            $serverPatched=$serverOriginal.Insert($serverIf,$serverInsert)
-            [IO.File]::WriteAllText($serverPath,$serverPatched,$utf8)
-
-            $env:DWS_LIVE3_CHECKSUM_DIAG='1'
-            pwsh -NoProfile -File .\tools\live3\run_live3_product_recovery.ps1 -Worktree (Resolve-Path .).Path -SessionRoot $session -PhaseOneServerLifetimeSeconds 90 -SkipImport
-            $productExit=$LASTEXITCODE
-          }
-          finally {
-            Remove-Item Env:DWS_LIVE3_CHECKSUM_DIAG -ErrorAction SilentlyContinue
-            [IO.File]::WriteAllText($protocolPath,$protocolOriginal,$utf8)
-            [IO.File]::WriteAllText($serverPath,$serverOriginal,$utf8)
-          }
-          if($productExit -ne 0){throw "LIVE3_PRODUCT_RECOVERY_FAILED:$productExit"}
+          pwsh -NoProfile -File .\tools\live3\run_live3_product_recovery.ps1 -Worktree (Resolve-Path .).Path -SessionRoot $session -PhaseOneServerLifetimeSeconds 90 -SkipImport
+          if($LASTEXITCODE -ne 0){throw "LIVE3_PRODUCT_RECOVERY_FAILED:$LASTEXITCODE"}
           $report=Get-Content (Join-Path $session 'LIVE3-RECOVERY-REPORT.json') -Raw | ConvertFrom-Json
           if($report.outcome -ne 'PASS'){throw "LIVE3_REPORT_NOT_PASS:$($report.failure)"}
           if(-not[bool]$report.udp_port_free){throw 'LIVE3_UDP_PORT_LEAK'}
