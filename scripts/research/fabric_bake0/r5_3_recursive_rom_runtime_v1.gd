@@ -47,13 +47,26 @@ func refresh(new_root:Dictionary,expected_changed_paths:Array)->Dictionary:
 	for path in paths:
 		if String(nodes[path].node_hash)!=String(_hashes[path]):actual.append(String(path))
 	var expected:=expected_changed_paths.duplicate();expected.sort();actual.sort();if actual!=expected:return U.failure("R5_3_RUNTIME_CHANGED_PATH_MISMATCH",{"expected":expected,"actual":actual})
-	var prepared:=0;var reused:=0
-	for path in paths:
-		if actual.has(path):
-			var p:=_prepare_session(nodes[path]);if not p.success:return p
-			_sessions[path]=p.details.session;prepared+=1;prepare_events+=1
-		else:reused+=1;reuse_events+=1
-		_bundles[path]=nodes[path].duplicate(true);_hashes[path]=String(nodes[path].node_hash)
+
+	# PRE-FLIGHT: preparing one changed ancestor must not mutate the live registry
+	# before every changed descendant has also validated and prepared successfully.
+	# Reused sessions/bundles remain the exact previously prepared objects.
+	var staged_sessions:Dictionary={}
+	var staged_bundles:Dictionary={}
+	var staged_hashes:Dictionary={}
+	for path in actual:
+		var p:=_prepare_session(nodes[path]);if not p.success:return p
+		staged_sessions[path]=p.details.session
+		staged_bundles[path]=nodes[path].duplicate(true)
+		staged_hashes[path]=String(nodes[path].node_hash)
+
+	# COMMIT: after this point there are no rejectable candidate operations.
+	for path in actual:
+		_sessions[path]=staged_sessions[path]
+		_bundles[path]=staged_bundles[path]
+		_hashes[path]=staged_hashes[path]
+	var prepared:=actual.size();var reused:=paths.size()-prepared
+	prepare_events+=prepared;reuse_events+=reused
 	return U.success({"changed_paths":actual,"prepared_sessions":prepared,"reused_sessions":reused,"node_count":paths.size()})
 
 func bundle(path:String)->Dictionary:return _bundles.get(path,{}).duplicate(true)

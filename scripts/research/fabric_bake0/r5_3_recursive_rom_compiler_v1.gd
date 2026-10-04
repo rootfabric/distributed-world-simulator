@@ -8,6 +8,8 @@ const Graph = preload("res://scripts/research/fabric_bake0/linear_conductance_co
 const GraphCompiler = preload("res://scripts/research/fabric_bake0/linear_conductance_graph_compiler_v1.gd")
 const Reducer = preload("res://scripts/research/fabric_bake0/exact_boundary_reducer_v1.gd")
 const Descriptor = preload("res://scripts/research/fabric_bake0/exact_boundary_reduction_descriptor_v1.gd")
+const Artifact = preload("res://scripts/research/fabric_bake0/physical_bake_artifact_v1.gd")
+const T1Capsule = preload("res://scripts/research/fabric_bake0/behavior_capsule_contract_v1.gd")
 const T1 = preload("res://scripts/research/fabric_bake0/r5_t1_boundary_network_capsule_compiler_v1.gd")
 const SourceRevision = preload("res://scripts/simulation/representation/contracts/representation_source_revision.gd")
 const Frontier = preload("res://scripts/research/fabric_bake0/canonical_source_frontier_v1.gd")
@@ -21,6 +23,7 @@ const Conservation = preload("res://scripts/research/fabric_bake0/conservation_e
 const SCHEMA := "planet_simulator.fabric_r5_3_recursive_rom_node.v1"
 const CAPSULE_SCHEMA := "planet_simulator.fabric_r5_3_recursive_rom_capsule.v1"
 const PORTS := 4
+const BOUNDARY_PORT_IDS: Array[String] = ["port/electrical-a", "port/electrical-b", "port/electrical-c", "port/electrical-d"]
 const ZERO_TOL := 2.0e-10
 const VERSION := "FABRIC_R5_3_RECURSIVE_ROM_COMPILER_R1"
 const CAPSULE_FIELDS: Array[String] = ["schema","node_id","level","graph_hash","descriptor_checksum","child_node_hashes","topology_revision","physical_source_components","compiled_input_components","executable_equation_count","runtime_source_traversals_per_execute","build_generation","source_anchor","checksum"]
@@ -82,9 +85,59 @@ static func validate_node(node: Dictionary) -> Dictionary:
 	if typeof(node.get("live")) != TYPE_DICTIONARY or String(node.live.get("node_hash", "")) != String(node.node_hash) or int(node.live.get("build_generation", -1)) != int(node.build_generation): return U.failure("R5_3_NODE_LIVE_MISMATCH")
 	return U.success()
 
+static func _validate_t1_leaf_binding(graph: Dictionary, details: Dictionary) -> Dictionary:
+	var graph_checked := Graph.validate(graph)
+	if not graph_checked.success:
+		return U.failure("R5_3_LEAF_SOURCE_GRAPH_INVALID", {"cause":graph_checked})
+	for field in ["capsule", "artifact", "reduction", "graph_compile", "linear_system"]:
+		if typeof(details.get(field)) != TYPE_DICTIONARY:
+			return U.failure("R5_3_LEAF_T1_DETAILS_INCOMPLETE", {"field":field})
+	var capsule: Dictionary = details.capsule
+	var artifact: Dictionary = details.artifact
+	var reduction: Dictionary = details.reduction
+	var capsule_checked := T1Capsule.validate(capsule)
+	if not capsule_checked.success:
+		return U.failure("R5_3_LEAF_T1_CAPSULE_INVALID", {"cause":capsule_checked})
+	var artifact_checked := Artifact.validate(artifact)
+	if not artifact_checked.success:
+		return U.failure("R5_3_LEAF_T1_ARTIFACT_INVALID", {"cause":artifact_checked})
+	var reduction_checked := Descriptor.validate(reduction)
+	if not reduction_checked.success:
+		return U.failure("R5_3_LEAF_T1_REDUCTION_INVALID", {"cause":reduction_checked})
+	var graph_hash := String(graph.graph_hash)
+	if String(capsule.fabric_graph_hash) != graph_hash \
+	or String(artifact.source_binding.fabric_graph_hash) != graph_hash \
+	or String(details.graph_compile.get("graph_hash", "")) != graph_hash:
+		return U.failure("R5_3_LEAF_T1_GRAPH_BINDING_MISMATCH")
+	if int(details.graph_compile.get("component_count", -1)) != graph.components.size() \
+	or int(capsule.source_component_count) != graph.components.size():
+		return U.failure("R5_3_LEAF_T1_SOURCE_COUNT_MISMATCH")
+	if String(capsule.physical_bake_artifact_checksum) != String(artifact.checksum) \
+	or String(capsule.source_binding_checksum) != String(artifact.source_binding.checksum) \
+	or String(capsule.source_frontier_hash) != String(artifact.source_binding.frontier_hash) \
+	or String(capsule.boundary_contract_hash) != String(artifact.boundary_contract.contract_hash):
+		return U.failure("R5_3_LEAF_T1_ARTIFACT_BINDING_MISMATCH")
+	if String(capsule.executable_descriptor_hash) != String(reduction.checksum) \
+	or String(artifact.reduced_model_descriptor_hash) != String(reduction.checksum):
+		return U.failure("R5_3_LEAF_T1_DESCRIPTOR_BINDING_MISMATCH")
+	if String(capsule.reduced_state_schema_hash) != String(artifact.reduced_state_schema_hash):
+		return U.failure("R5_3_LEAF_T1_STATE_SCHEMA_BINDING_MISMATCH")
+	if int(capsule.full_equation_count) != int(reduction.full_equation_count) \
+	or int(capsule.executable_equation_count) != int(reduction.reduced_equation_count) \
+	or int(capsule.executable_equation_count) != PORTS \
+	or int(capsule.runtime_source_traversals_per_execute) != 0:
+		return U.failure("R5_3_LEAF_T1_EXECUTION_CONTRACT_MISMATCH")
+	if int(capsule.build_generation) != int(artifact.build_generation):
+		return U.failure("R5_3_LEAF_T1_GENERATION_MISMATCH")
+	return U.success()
+
 static func leaf_from_t1(node_id: String, graph: Dictionary, compiled: Dictionary) -> Dictionary:
 	if not bool(compiled.get("success", false)) or typeof(compiled.get("details")) != TYPE_DICTIONARY: return U.failure("R5_3_LEAF_T1_COMPILE_REQUIRED")
-	var d: Dictionary = compiled.details; var physical := int(graph.components.size())
+	var d: Dictionary = compiled.details
+	var binding := _validate_t1_leaf_binding(graph, d)
+	if not binding.success:
+		return binding
+	var physical := int(graph.components.size())
 	var capsule := _capsule(node_id, 0, String(graph.graph_hash), d.reduction, {}, 0, physical, physical, int(d.artifact.build_generation), String(d.capsule.checksum))
 	var node_hash := _node_hash(capsule, d.reduction)
 	var node := {"schema":SCHEMA, "node_id":node_id, "level":0, "node_hash":node_hash, "capsule":capsule, "reduction":d.reduction.duplicate(true), "live":{"node_hash":node_hash,"build_generation":int(d.artifact.build_generation)}, "children":{}, "topology_revision":0, "topology_edges":[], "physical_source_components":physical, "compiled_input_components":physical, "build_generation":int(d.artifact.build_generation), "source_graph":graph.duplicate(true), "compiled_graph":graph.duplicate(true), "source_capsule_checksum":String(d.capsule.checksum), "compile_events":1, "child_rom_reads":0}
@@ -97,8 +150,15 @@ static func _child_rom_components(children: Dictionary, nodes: Array, components
 		var checked := validate_node(child); if not checked.success: return U.failure("R5_3_CHILD_NODE_INVALID", {"child":key,"cause":checked})
 		var r: Dictionary = child.reduction
 		if int(r.reduced_equation_count) != PORTS or r.boundary_port_ids.size() != PORTS: return U.failure("R5_3_CHILD_PORT_COUNT_UNSUPPORTED", {"child":key})
+		if r.boundary_port_ids != BOUNDARY_PORT_IDS: return U.failure("R5_3_CHILD_PORT_CONTRACT_UNSUPPORTED", {"child":key,"ports":r.boundary_port_ids})
+		if not bool(r.passivity_certified): return U.failure("R5_3_CHILD_ROM_PASSIVITY_UNCERTIFIED", {"child":key})
 		for rhs in r.reduced_rhs:
 			if not U.is_finite_number(rhs) or absf(float(rhs)) > ZERO_TOL: return U.failure("R5_3_CHILD_AFFINE_SOURCE_UNSUPPORTED", {"child":key})
+		for i in range(PORTS):
+			var row_sum := 0.0
+			for j in range(PORTS): row_sum += float(r.schur_matrix[i][j])
+			if float(r.schur_matrix[i][i]) < -ZERO_TOL or absf(row_sum) > ZERO_TOL:
+				return U.failure("R5_3_CHILD_ROM_LAPLACIAN_MISMATCH", {"child":key,"row":i,"row_sum":row_sum})
 		var prefix := "node/%s" % _slug(key)
 		for p in range(PORTS): nodes.append("%s/p%02d" % [prefix,p])
 		for i in range(PORTS):

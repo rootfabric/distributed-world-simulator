@@ -34,4 +34,7 @@ class T(unittest.TestCase):
  def test_runtime_source_contract(self):
   runtime=(ROOT/"scripts/research/fabric_bake0/r5_3_recursive_rom_runtime_v1.gd").read_text();compiler=(ROOT/"scripts/research/fabric_bake0/r5_3_recursive_rom_compiler_v1.gd").read_text()
   self.assertNotIn("res://tests/",runtime);self.assertNotIn("res://tests/",compiler);self.assertIn("runtime_source_component_traversals\":0",runtime);self.assertIn("Reducer.reduce",compiler);self.assertNotIn("MIN_INTERNAL_VARIABLES",compiler)
+  self.assertIn("staged_sessions",runtime);self.assertIn("# COMMIT: after this point there are no rejectable candidate operations.",runtime)
+  self.assertIn("T1Capsule.validate",compiler);self.assertIn("Artifact.validate",compiler);self.assertIn("R5_3_LEAF_T1_GRAPH_BINDING_MISMATCH",compiler)
+  self.assertIn("R5_3_CHILD_ROM_LAPLACIAN_MISMATCH",compiler);self.assertIn("R5_3_CHILD_ROM_PASSIVITY_UNCERTIFIED",compiler);self.assertIn("R5_3_CHILD_PORT_CONTRACT_UNSUPPORTED",compiler)
 if __name__=="__main__":unittest.main()

@@ -1,6 +1,6 @@
 # FABRIC R5.3 — Recursive Hierarchical Execution
 
-Статус: implementer candidate. База — T16 merge `604192f07070d0f0e38a94445611d09d92cb7f7f`.
+Статус: R2 implementer candidate после falsifier-repair R1. База — T16 merge `604192f07070d0f0e38a94445611d09d92cb7f7f`.
 
 ## Что доказывается
 
@@ -16,7 +16,7 @@
 1 machine ROM
 ```
 
-T1 acceptance floor не ослабляется. Leaf проходит существующий T1 compiler. Parent R5.3 compiler получает только four-port Schur ROM детей и выполняет тот же exact Schur reducer на маленьком composition graph. Parent capsule содержит child node hashes, graph/descriptor hashes, topology revision, complexity accounting и checksum.
+T1 acceptance floor не ослабляется. Leaf проходит существующий T1 compiler, а R5.3 дополнительно fail-closed сверяет T1 capsule/artifact/reduction с тем же exact source graph: graph hash, artifact/source binding, descriptor, state schema, source count, equation counts и build generation. Повторное связывание ROM от graph A с graph B запрещено. Parent R5.3 compiler получает только four-port Schur ROM детей и выполняет тот же exact Schur reducer на маленьком composition graph. Parent capsule содержит child node hashes, graph/descriptor hashes, topology revision, complexity accounting и checksum.
 
 Baseline: 1812 physical components скрыты за machine compile graph из 24 derived/connectors components и machine executable из 4 equations. 512 steady machine executions не обходят leaf/source components.
 
@@ -31,7 +31,7 @@ assembly topology  → assembly + machine                 = 2
 machine topology   → machine                            = 1
 ```
 
-Runtime `refresh()` обязан повторно prepare только changed nodes и переиспользовать остальные prepared sessions. Неверная changed-path карта отклоняется до mutation runtime registry.
+Runtime `refresh()` обязан повторно prepare только changed nodes и переиспользовать остальные prepared sessions. Неверная changed-path карта отклоняется до mutation runtime registry. R2 дополнительно делает refresh транзакционным: **все** changed sessions сначала готовятся во временный staging; live registry меняется единым commit только если каждый changed node успешно прошёл validation/prepare. Ошибка глубокого descendant не может оставить уже обновлённый root/assembly session.
 
 Leaf mutation увеличивает hidden leaf topology с 100 до 120 internal nodes. Physical machine complexity растёт 1812 → 1852 components, но machine compilation graph остаётся 24 components, steady executable — 4 equations.
 
@@ -45,6 +45,17 @@ Leaf mutation увеличивает hidden leaf topology с 100 до 120 intern
 - после каждого уровня mutation parity проверяется снова.
 
 Максимальные наблюдавшиеся ошибки в implementer preliminary run: flow `6.394884621840902e-14`, power `2.2737367544323206e-11`.
+
+## R1 falsifier repair → R2
+
+Fresh implementer review R1 нашёл два blocking counterexample:
+
+1. rejected refresh мог частично изменить live registry, если ранний ancestor уже prepared, а более глубокий changed node падал;
+2. `leaf_from_t1()` принимал T1 reduction от одного source graph вместе с другим graph и тем самым позволял ложный provenance.
+
+Дополнительный recursive falsifier также запретил молчаливую реконструкцию child ROM из неполного Schur: parent теперь требует exact four-port contract, `passivity_certified=true` и фактический Laplacian row-sum contract до извлечения pairwise conductances.
+
+R2 закрывает все три класса отдельными acceptance falsifiers. После repair preliminary exact acceptance: **1212/0**, machine compile graph `24`, executable `4`, physical `1812 → 1852`, `prepare=25`, `reuse=50`, `execute=550`; max flow/power error остаются `6.394884621840902e-14` / `2.2737367544323206e-11`. Эти числа являются implementer evidence, не independent acceptance.
 
 ## Границы
 

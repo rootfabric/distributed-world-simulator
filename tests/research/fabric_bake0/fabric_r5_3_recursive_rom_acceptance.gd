@@ -1,6 +1,7 @@
 extends SceneTree
 const U = preload("res://scripts/research/fabric_bake0/fabric_bake_contract_utils_v1.gd")
 const Compiler = preload("res://scripts/research/fabric_bake0/r5_3_recursive_rom_compiler_v1.gd")
+const T1 = preload("res://scripts/research/fabric_bake0/r5_t1_boundary_network_capsule_compiler_v1.gd")
 const Runtime = preload("res://scripts/research/fabric_bake0/r5_3_recursive_rom_runtime_v1.gd")
 const Fixture = preload("res://tests/research/fabric_bake0/fabric_r5_3_recursive_rom_fixture.gd")
 const GraphCompiler = preload("res://scripts/research/fabric_bake0/linear_conductance_graph_compiler_v1.gd")
@@ -65,6 +66,14 @@ func _flat_module_parity(runtime, module: Dictionary, path: String, label: Strin
 		check(perr<=POWER_TOL,label+" flat boundary power parity",{"error":perr})
 	return {"expanded_components":expanded.components.size(),"expanded_nodes":expanded.nodes.size(),"system_hash":compiled.details.linear_system.system_hash}
 
+func _rehash_node(node: Dictionary) -> Dictionary:
+	node.reduction.checksum = U.compute_checksum(node.reduction)
+	node.capsule.descriptor_checksum = String(node.reduction.checksum)
+	node.capsule.checksum = U.compute_checksum(node.capsule)
+	node.node_hash = Compiler._node_hash(node.capsule, node.reduction)
+	node.live.node_hash = node.node_hash
+	return node
+
 func _changed(old_root: Dictionary, new_root: Dictionary, expected: Array, label: String) -> Array:
 	var actual := Compiler.changed_paths(old_root, new_root); var exp := expected.duplicate(); exp.sort(); actual.sort()
 	check(actual == exp, label + " exact causal changed path", {"expected":exp,"actual":actual})
@@ -80,7 +89,21 @@ func _refresh(runtime, new_root: Dictionary, changed: Array, expected_prepared: 
 		check(int(result.details.prepared_sessions) == expected_prepared, label + " only changed sessions prepared", result.details)
 		check(int(result.details.reused_sessions) == 15 - expected_prepared, label + " unaffected sessions reused", result.details)
 
+func _leaf_provenance_falsifier() -> void:
+	var graph_a := Fixture.leaf_graph("r53/provenance-a", 0, Fixture.LEAF_INTERNAL)
+	var graph_b := Fixture.leaf_graph("r53/provenance-b", 1, Fixture.LEAF_INTERNAL)
+	check(not graph_a.is_empty() and not graph_b.is_empty(), "T1 provenance falsifier graphs valid")
+	check(String(graph_a.get("graph_hash", "")) != String(graph_b.get("graph_hash", "")), "T1 provenance falsifier graphs differ")
+	if graph_a.is_empty() or graph_b.is_empty(): return
+	var request := Compiler._request(graph_a, "r53/provenance-a", [], 0, 1)
+	var compiled := T1.compile(graph_a, request, "capsule/r53-provenance-a")
+	check(compiled.success, "T1 provenance source compile succeeds", compiled)
+	if not compiled.success: return
+	var rebound := Compiler.leaf_from_t1("r53/provenance-b", graph_b, compiled)
+	check(not rebound.success and rebound.error_code == "R5_3_LEAF_T1_GRAPH_BINDING_MISMATCH", "R5.3 refuses T1 ROM rebound onto different source graph", rebound)
+
 func _initialize() -> void:
+	_leaf_provenance_falsifier()
 	m.begin_stage("baseline_hierarchy_compile")
 	var built := Fixture.build_hierarchy()
 	m.end_stage("baseline_hierarchy_compile")
@@ -136,6 +159,24 @@ func _initialize() -> void:
 	check(int(leaf_root.compiled_input_components) == old_compiled_input, "machine ROM compile size independent of hidden leaf growth")
 	var stale := runtime.execute("root", [1.0,0.0,0.0,0.0], leaf_root.live)
 	check(not stale.success, "old root session fenced by rebuilt live")
+
+	# Transactional refresh falsifier: root + assembly sessions validate first, while
+	# a deeper changed module is corrupted. A rejected refresh must leave every live
+	# prepared session and registry counter untouched.
+	var atomic_effort := [12.0,-7.0,3.5,0.25]
+	var atomic_before := runtime.execute_root(atomic_effort)
+	var atomic_stats_before := runtime.stats()
+	var atomic_bad: Dictionary = leaf_root.duplicate(true)
+	atomic_bad.children.assembly0.children.module0.compiled_graph.graph_hash = "0".repeat(64)
+	var atomic_rejected := runtime.refresh(atomic_bad, leaf_changed)
+	var atomic_after := runtime.execute_root(atomic_effort)
+	var atomic_stats_after := runtime.stats()
+	check(not atomic_rejected.success and atomic_rejected.error_code == "R5_3_CAPSULE_GRAPH_BINDING_MISMATCH", "failed deep prepare rejects refresh atomically", atomic_rejected)
+	check(atomic_before.success and atomic_after.success, "atomicity probe root remains executable")
+	if atomic_before.success and atomic_after.success:
+		check(atomic_before.details.boundary_flow == atomic_after.details.boundary_flow and atomic_before.details.boundary_power == atomic_after.details.boundary_power, "rejected refresh leaves root execution byte-equivalent")
+	check(String(runtime.bundle("root").node_hash) == String(root.node_hash), "rejected refresh leaves root bundle unchanged")
+	check(int(atomic_stats_after.prepare_events) == int(atomic_stats_before.prepare_events) and int(atomic_stats_after.reuse_events) == int(atomic_stats_before.reuse_events), "rejected refresh leaves prepare/reuse counters unchanged")
 	_refresh(runtime, leaf_root, leaf_changed, 4, "leaf mutation")
 	root = leaf_root
 	_parity(runtime, root, "root", "after leaf mutation", [[12.0,-7.0,3.5,0.25],[-4.25,2.75,8.5,-7.0]])
@@ -177,13 +218,27 @@ func _initialize() -> void:
 
 	var bad_child: Dictionary = root.children.assembly0.duplicate(true)
 	bad_child.reduction.reduced_rhs[0] = 1.0
-	bad_child.reduction.checksum = U.compute_checksum(bad_child.reduction)
-	bad_child.capsule.descriptor_checksum = String(bad_child.reduction.checksum)
-	bad_child.capsule.checksum = U.compute_checksum(bad_child.capsule)
-	bad_child.node_hash = Compiler._node_hash(bad_child.capsule, bad_child.reduction)
-	bad_child.live.node_hash = bad_child.node_hash
+	bad_child = _rehash_node(bad_child)
 	var rejected := Compiler.compose("r53/reject-affine", 3, {"bad":bad_child}, 0, 1)
 	check(not rejected.success and rejected.error_code == "R5_3_CHILD_AFFINE_SOURCE_UNSUPPORTED", "unsupported child affine source NO_SAFE_BAKE boundary", rejected)
+
+	var bad_diagonal: Dictionary = root.children.assembly0.duplicate(true)
+	bad_diagonal.reduction.schur_matrix[0][0] = float(bad_diagonal.reduction.schur_matrix[0][0]) + 1.0
+	bad_diagonal = _rehash_node(bad_diagonal)
+	var diagonal_rejected := Compiler.compose("r53/reject-diagonal", 3, {"bad":bad_diagonal}, 0, 1)
+	check(not diagonal_rejected.success and diagonal_rejected.error_code == "R5_3_CHILD_ROM_LAPLACIAN_MISMATCH", "child ROM diagonal cannot be silently reconstructed", diagonal_rejected)
+
+	var uncertified: Dictionary = root.children.assembly0.duplicate(true)
+	uncertified.reduction.passivity_certified = false
+	uncertified = _rehash_node(uncertified)
+	var uncertified_rejected := Compiler.compose("r53/reject-uncertified", 3, {"bad":uncertified}, 0, 1)
+	check(not uncertified_rejected.success and uncertified_rejected.error_code == "R5_3_CHILD_ROM_PASSIVITY_UNCERTIFIED", "uncertified child ROM cannot enter recursive composition", uncertified_rejected)
+
+	var bad_ports: Dictionary = root.children.assembly0.duplicate(true)
+	bad_ports.reduction.boundary_port_ids[3] = "port/electrical-z"
+	bad_ports = _rehash_node(bad_ports)
+	var ports_rejected := Compiler.compose("r53/reject-ports", 3, {"bad":bad_ports}, 0, 1)
+	check(not ports_rejected.success and ports_rejected.error_code == "R5_3_CHILD_PORT_CONTRACT_UNSUPPORTED", "child boundary port semantics are exact", ports_rejected)
 
 	var result := {
 		"schema":"fabric.r5_3.recursive_rom.result.v1", "checks":checks, "failures":failures,

@@ -3,15 +3,15 @@ from __future__ import annotations
 import argparse, hashlib, json, math, re
 from pathlib import Path
 PREFIX="FABRIC_R5_3_RESULT="
-PASS="FABRIC R5.3 RECURSIVE HIERARCHICAL EXECUTION: PASS (1200 assertions)"
+PASS="FABRIC R5.3 RECURSIVE HIERARCHICAL EXECUTION: PASS (1212 assertions)"
 FATAL=re.compile(r"SCRIPT ERROR|Parse Error|Compile Error|Invalid call|Invalid access|ERROR:",re.I)
 EXPECTED={
- "checks":1200,"levels":4,"nodes":15,"leaves":8,"steady_calls":512,
+ "checks":1212,"levels":4,"nodes":15,"leaves":8,"steady_calls":512,
  "baseline_physical_components":1812,"final_physical_components":1852,
  "machine_compiled_input_components":24,"machine_executable_equations":4,
  "parity_rows":21,"leaf_rebuild_levels":4,"module_rebuild_levels":3,
  "assembly_rebuild_levels":2,"machine_rebuild_levels":1,
- "runtime_prepare_events":25,"runtime_reuse_events":50,"runtime_execute_events":548,
+ "runtime_prepare_events":25,"runtime_reuse_events":50,"runtime_execute_events":550,
 }
 REGRESSIONS={
  "t16":"FABRIC R5.2 T16 NO SAFE BAKE: PASS (980 assertions)",
