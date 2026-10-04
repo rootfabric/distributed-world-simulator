@@ -1,0 +1,57 @@
+name: FABRIC R5.2 T16 NO SAFE BAKE Source
+on:
+  push:
+    branches: [research/fabric-r5-2-t16-no-safe-bake-r1]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: fabric-t16-source-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  source-contracts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Prove T16-only additive scope and source contracts
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          base=d53352bca414f806a1096633ea683ba21b955083
+          test "$(git merge-base HEAD "$base")" = "$base"
+          python3 - <<'PY'
+          import subprocess
+          allowed = {
+              '.github/workflows/fabric-r5-2-t16-no-safe-bake.yml',
+              'RUN_FABRIC_R5_2_T16_TESTS.sh', 'RUN_FABRIC_R5_2_T16_TESTS.ps1',
+              'scripts/research/fabric_bake0/r5_t16_no_safe_bake_runtime_v1.gd',
+              'scripts/research/fabric_bake0/collect_r5_2_t16_evidence.py',
+              'tests/research/fabric_bake0/fabric_r5_2_t16_thermal_backend.gd',
+              'tests/research/fabric_bake0/fabric_r5_2_t16_no_safe_bake_acceptance.gd',
+              'tests/research/fabric_bake0/test_t16_evidence.py',
+              'docs/research/FABRIC_R5_2_T16_WORK_ORDER_RU.md',
+              'docs/research/FABRIC_R5_2_T16_NO_SAFE_BAKE_RU.md',
+          }
+          rows = subprocess.check_output(['git','diff','--name-status','d53352bca414f806a1096633ea683ba21b955083','HEAD'], text=True).splitlines()
+          for row in rows:
+              status, path = row.split('\t')
+              assert status == 'A' and path in allowed, row
+          assert {row.split('\t')[1] for row in rows} == allowed, 'incomplete T16 delivery'
+          PY
+          git diff --check "$base" HEAD
+          bash -n RUN_FABRIC_R5_2_T16_TESTS.sh
+          python3 -m unittest discover -s tests/research/fabric_bake0 -p test_t16_evidence.py -v
+          mkdir -p source
+          git archive --format=tar HEAD | gzip -n > source/t16-source.tar.gz
+          printf 'HEAD=%s\nTREE=%s\nBASE_T15=%s\n' "$(git rev-parse HEAD)" "$(git rev-parse 'HEAD^{tree}')" "$base" > source/identity.txt
+          sha256sum source/t16-source.tar.gz > source/source.sha256
+      - uses: actions/upload-artifact@v4
+        with:
+          name: t16-source-${{ github.sha }}
+          path: source/**
+          if-no-files-found: error
+          retention-days: 30
