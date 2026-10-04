@@ -508,6 +508,7 @@ func automation_get_state() -> Dictionary:
 	var resource_mining: Dictionary = {}
 	var construction: Dictionary = {}
 	var local_player: Dictionary = {}
+	var construction_construct_checksums: Dictionary = {}
 	if m3_multiplayer_client_runtime != null:
 		if m3_multiplayer_client_runtime.has_method("get_snapshot"):
 			gameplay_snapshot = m3_multiplayer_client_runtime.get_snapshot()
@@ -519,6 +520,14 @@ func automation_get_state() -> Dictionary:
 			construction = m3_multiplayer_client_runtime.get_construction_bundle()
 		if m3_multiplayer_client_runtime.has_method("get_local_player_record"):
 			local_player = m3_multiplayer_client_runtime.get_local_player_record()
+	for snapshot_value in construction.get("constructs", []):
+		if not snapshot_value is Dictionary:
+			continue
+		var construct: Dictionary = snapshot_value
+		var construct_id := String(construct.get("construct_id", ""))
+		var construct_checksum := String(construct.get("checksum", ""))
+		if not construct_id.is_empty() and not construct_checksum.is_empty():
+			construction_construct_checksums[construct_id] = construct_checksum
 	return {
 		"schema": "dws.live3.automation.product_state.v1",
 		"movement_enabled": _automation_movement_enabled,
@@ -546,6 +555,7 @@ func automation_get_state() -> Dictionary:
 		"resource_checksum": String(resource_mining.get("checksum", "")),
 		"construction_generation": int(construction.get("server_generation", -1)),
 		"construction_checksum": String(construction.get("checksum", "")),
+		"construction_construct_checksums": construction_construct_checksums.duplicate(true),
 	}
 
 
