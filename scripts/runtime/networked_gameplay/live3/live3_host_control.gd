@@ -5,12 +5,12 @@ extends Node
 const REQUEST_SCHEMA := "dws.live3.host_request.v1"
 const STATUS_SCHEMA := "dws.live3.host_status.v1"
 const MAX_REQUEST_BYTES := 4096
+const REQUEST_FIELDS := ["schema", "action", "token", "process_id", "request_id"]
 
 var _app
 var _options: Dictionary = {}
 var _elapsed := 0.0
 var _requested := false
-var _last_request_id := ""
 
 func setup(app, options: Dictionary) -> Dictionary:
 	_app = app
@@ -19,11 +19,20 @@ func setup(app, options: Dictionary) -> Dictionary:
 	return {"success": true}
 
 static func validate_request(value, token: String, process_id: int) -> Dictionary:
-	if not value is Dictionary or value.size() != 5:
+	if not value is Dictionary or value.size() != REQUEST_FIELDS.size():
 		return {"success": false, "error_code": "LIVE3_HOST_REQUEST_INVALID"}
+	for field in REQUEST_FIELDS:
+		if not value.has(field):
+			return {"success": false, "error_code": "LIVE3_HOST_REQUEST_INVALID"}
+	var request_id = value.get("request_id")
+	if not request_id is String or request_id.is_empty() or request_id.length() > 128 or request_id != request_id.strip_edges():
+		return {"success": false, "error_code": "LIVE3_HOST_REQUEST_ID_INVALID"}
+	var supplied_pid = value.get("process_id")
+	if typeof(supplied_pid) not in [TYPE_INT, TYPE_FLOAT] or not is_finite(float(supplied_pid)) or float(supplied_pid) != float(int(supplied_pid)) or int(supplied_pid) < 1:
+		return {"success": false, "error_code": "LIVE3_HOST_PROCESS_ID_INVALID"}
 	if value.get("schema") != REQUEST_SCHEMA or value.get("action") != "SAVE_AND_STOP":
 		return {"success": false, "error_code": "LIVE3_HOST_ACTION_INVALID"}
-	if token.length() < 32 or value.get("token") != token or value.get("process_id") != process_id:
+	if token.length() < 32 or value.get("token") != token or int(supplied_pid) != process_id:
 		return {"success": false, "error_code": "LIVE3_HOST_REQUEST_STALE_OR_UNAUTHORIZED"}
 	return {"success": true}
 
