@@ -186,9 +186,11 @@ func _ready() -> void:
 	_m7_mode = bool(launch_options.get("network_playground", false))
 	_network_debug_stay_open = bool(launch_options.get("network_debug_stay_open", false))
 	_resolved_network_persistence_root = LaunchOptionsScript.resolved_network_persistence_root(launch_options)
+	# Keep the historical M6 acceptance-mode selector independent from LIVE.3
+	# product persistence. --network-mvp already selects the M3 product runtime;
+	# a resolved recovery root only enables the accepted recovery repository in it.
 	_m6_mode = (
-		not _resolved_network_persistence_root.is_empty()
-		or not String(launch_options.get("m6_persistence_root", "")).strip_edges().is_empty()
+		not String(launch_options.get("m6_persistence_root", "")).strip_edges().is_empty()
 		or not String(launch_options.get("m6_result_file", "")).strip_edges().is_empty()
 	)
 	_m5_mode = not String(launch_options.get("m5_result_file", "")).strip_edges().is_empty()
