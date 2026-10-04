@@ -23,6 +23,8 @@ class EvidenceTests(unittest.TestCase):
             "final_damage_revision":2,"steady_leaf_traversals_after_damage":0,
             "fork_events":2,"state_projection_events":2,"superseded_rejections":2,
             "event_receipts":2,"current_instances":100,"original_models_intact":True,"all_models_intact":True,
+            "atomicity_unsafe_reject_clean":True,"atomicity_retry_same_ids":True,
+            "atomicity_alias_reject_clean":True,"atomicity_occupied_id_reject_clean":True,
         }
     def test_valid(self): c.validate_result(self.payload())
     def test_adversarial(self):
@@ -31,6 +33,7 @@ class EvidenceTests(unittest.TestCase):
             ("unchanged_subtrees_per_mutation", 24),("healthy_equivalent_after_damage", 98),
             ("repair_restored_healthy_behavior", False),("physical_state_preserved_on_damage", False),
             ("steady_leaf_traversals_after_damage", 1),("original_models_intact", False),("all_models_intact", False),
+            ("atomicity_unsafe_reject_clean", False),("atomicity_retry_same_ids", False),
         ):
             with self.subTest(key=key):
                 d=self.payload(); d[key]=value
@@ -53,6 +56,8 @@ class EvidenceTests(unittest.TestCase):
         self.assertIn("T15_INSTANCE_SUPERSEDED", runtime)
         self.assertIn("T15_ACTIVE_OBSERVATION_MUST_RELEASE", runtime)
         self.assertIn("T15_DIVERGENCE_NOT_LOCAL_TO_SELECTED_CHAIN", runtime)
+        self.assertIn("_preflight_successor", runtime)
+        self.assertIn("T15_FAMILY_ID_ALREADY_REGISTERED", runtime)
         self.assertIn("physical_state_hash_before", runtime)
         self.assertIn('EF.make_graph("GAAS", current_disabled)', fixture)
         self.assertIn("T15_SOURCE_UNBAKE_ANCHOR_MISMATCH", fixture)
@@ -60,5 +65,8 @@ class EvidenceTests(unittest.TestCase):
         self.assertIn("DF.compile_events == 5", acceptance)
         self.assertIn("healthy_equivalent == 99", acceptance)
         self.assertIn("repair_restored_behavior", acceptance)
+        self.assertIn("T15_STATE_PROJECTION_UNSAFE", acceptance)
+        self.assertIn("unsafe_reject_clean", acceptance)
+        self.assertIn("retry_same_ids", acceptance)
 
 if __name__ == "__main__": unittest.main()
