@@ -264,8 +264,9 @@ func _runtime_contract(initial: Dictionary) -> void:
 	var wake4_plan := Activity.create(initial.field, initial.population, active, 0, 4, 4, 4, 64)
 	var wake4 := Runtime.advance_spatial_activity_cadence(initial, _options(), wake4_plan)
 	check(wake4.success and int(wake4.canonical_tick) == 4, "first segmented wake reaches canonical tick 4")
-	var active4 := _addresses(wake4.state)
-	check(not active4.is_empty(), "post-wake spatial addresses recompute from canonical state")
+	var addresses4 := _addresses(wake4.state)
+	check(addresses4.size() > 1, "post-wake spatial addresses recompute with sleeping candidates")
+	var active4 := [String(addresses4[0])]
 	var second_wake_plan := Activity.create(
 		wake4.state.field, wake4.state.population, active4, 4, 8, 4, 4, 64)
 	check(not second_wake_plan.is_empty(), "second cadence epoch anchors at committed canonical tick 4")
