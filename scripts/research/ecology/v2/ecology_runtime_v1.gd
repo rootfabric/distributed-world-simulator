@@ -232,7 +232,6 @@ static func _advance_spatial_activity_cadence(
 		"canonical_tick": int(next.tick),
 		"debt_ticks": 0,
 		"exact_catch_up": true,
-		"parallel_prepare": parallel_prepare,
 	}
 
 ## Primitive 1: the A5 lifecycle step — executed EXACTLY once per tick.
