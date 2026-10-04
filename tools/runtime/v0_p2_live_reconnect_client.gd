@@ -402,11 +402,25 @@ func _assert_runtime_healthy(report: Dictionary, label: String) -> void:
 
 
 func _move_toward(target: Vector3, steps: int) -> Dictionary:
+	# A blocking movement submit only proves that the authoritative replica has
+	# acknowledged that input sequence. Under fixed-tick simulation one newly
+	# consumed input advances the player by roughly one 60 Hz tick; the old
+	# helper sent a fixed four states and accidentally relied on wall-clock hold
+	# time between commands. That made isolated P2 pass while the same test could
+	# stop outside the server interaction range under a loaded full-suite run.
+	#
+	# Drive until the authoritative replica itself is within a bounded arrival
+	# radius, then submit an explicit stop and verify the stopped authoritative
+	# position again. The steps argument remains a compatibility hint, never an
+	# acceptance predicate.
+	const ARRIVAL_RADIUS_M := 1.0
+	var max_attempts := maxi(steps, 96)
 	var result: Dictionary = {"success": true, "error_code": ""}
-	for _index in range(steps):
+	var attempts := 0
+	while attempts < max_attempts:
 		var position := _player_position(client.get_local_player_record())
 		var direction := (target - position).slide(Vector3.UP)
-		if direction.length_squared() <= 0.000001:
+		if direction.length() <= ARRIVAL_RADIUS_M:
 			break
 		direction = direction.normalized()
 		var yaw := atan2(-direction.x, -direction.z)
@@ -416,16 +430,51 @@ func _move_toward(target: Vector3, steps: int) -> Dictionary:
 		})
 		if not bool(result.get("success", false)):
 			return result
-		await _wait_frames(3)
-	var position := _player_position(client.get_local_player_record())
-	var direction := (target - position).slide(Vector3.UP)
-	var yaw := atan2(-direction.x, -direction.z) if direction.length_squared() > 0.000001 else 0.0
+		attempts += 1
+
+	var before_stop := _player_position(client.get_local_player_record())
+	var stop_direction := (target - before_stop).slide(Vector3.UP)
+	var stop_yaw := atan2(-stop_direction.x, -stop_direction.z) if stop_direction.length_squared() > 0.000001 else 0.0
 	result = client.submit_movement_intent_blocking({
-		"move_x": 0.0, "move_z": 0.0, "look_yaw": yaw, "look_pitch": 0.0,
+		"move_x": 0.0, "move_z": 0.0, "look_yaw": stop_yaw, "look_pitch": 0.0,
 		"jump_pressed": false, "sprint": false, "delta_seconds": 0.05,
 	})
-	await _wait_frames(3)
-	return result
+	if not bool(result.get("success", false)):
+		return result
+
+	var stopped_position := _player_position(client.get_local_player_record())
+	var final_distance := (target - stopped_position).slide(Vector3.UP).length()
+	if final_distance > ARRIVAL_RADIUS_M:
+		return {
+			"success": false,
+			"error_code": "V0_P2_AUTHORITATIVE_MOVE_TARGET_NOT_REACHED",
+			"details": {
+				"attempts": attempts,
+				"max_attempts": max_attempts,
+				"arrival_radius_m": ARRIVAL_RADIUS_M,
+				"final_distance_m": final_distance,
+				"target": {"x": target.x, "y": target.y, "z": target.z},
+				"authoritative_position": {
+					"x": stopped_position.x,
+					"y": stopped_position.y,
+					"z": stopped_position.z,
+				},
+			},
+		}
+	return {
+		"success": true,
+		"error_code": "",
+		"details": {
+			"attempts": attempts,
+			"arrival_radius_m": ARRIVAL_RADIUS_M,
+			"final_distance_m": final_distance,
+			"authoritative_position": {
+				"x": stopped_position.x,
+				"y": stopped_position.y,
+				"z": stopped_position.z,
+			},
+		},
+	}
 
 
 func _wait_item_state(predicate: Callable, timeout_ms: int) -> bool:
