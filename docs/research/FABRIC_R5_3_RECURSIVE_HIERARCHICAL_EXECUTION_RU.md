@@ -1,6 +1,6 @@
 # FABRIC R5.3 — Recursive Hierarchical Execution
 
-Статус: R2 implementer candidate после falsifier-repair R1. База — T16 merge `604192f07070d0f0e38a94445611d09d92cb7f7f`.
+Статус: R3 implementer repair candidate после fresh falsifier-review R2. База — T16 merge `604192f07070d0f0e38a94445611d09d92cb7f7f`.
 
 ## Что доказывается
 
@@ -56,6 +56,15 @@ Fresh implementer review R1 нашёл два blocking counterexample:
 Дополнительный recursive falsifier также запретил молчаливую реконструкцию child ROM из неполного Schur: parent теперь требует exact four-port contract, `passivity_certified=true` и фактический Laplacian row-sum contract до извлечения pairwise conductances.
 
 R2 закрывает все три класса отдельными acceptance falsifiers. После repair preliminary exact acceptance: **1212/0**, machine compile graph `24`, executable `4`, physical `1812 → 1852`, `prepare=25`, `reuse=50`, `execute=550`; max flow/power error остаются `6.394884621840902e-14` / `2.2737367544323206e-11`. Эти числа являются implementer evidence, не independent acceptance.
+
+## R2 fresh falsifier review → R3
+
+Fresh review восстановленного R2 source artifact выявил ещё два blocking counterexample:
+
+1. compiler принимал `machine(level=3)` с прямым `leaf(level=0)` ребёнком, то есть позволял пропустить module/assembly уровни при сохранении внешне валидного ROM;
+2. T1 graph/capsule/artifact provenance можно было перехешировать под graph B, оставив reduction от graph A: descriptor `source_system_hash` не сверялся с независимо собранной linear system точного source graph.
+
+R3 делает hierarchy admission fail-closed по exact adjacent level и ограничивает R5.3 node levels диапазоном `0..3`. Leaf admission сверяет top-level T1 linear system, embedded graph-compile linear system и reduction source system с независимым `GraphCompiler.compile(graph)`. Эта проверка намеренно остаётся на leaf admission: parent composition продолжает читать только child ROM/capsule и не переходит к hidden leaf source graphs. Добавлены executable falsifiers для skipped-level composition и forged T1 descriptor rebinding.
 
 ## Границы
 

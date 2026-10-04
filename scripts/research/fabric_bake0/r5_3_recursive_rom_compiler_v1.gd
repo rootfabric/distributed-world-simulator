@@ -71,6 +71,13 @@ static func _node_hash(capsule: Dictionary, reduction: Dictionary) -> String:
 
 static func validate_node(node: Dictionary) -> Dictionary:
 	if node.get("schema") != SCHEMA or typeof(node.get("capsule")) != TYPE_DICTIONARY or typeof(node.get("reduction")) != TYPE_DICTIONARY or typeof(node.get("children")) != TYPE_DICTIONARY: return U.failure("R5_3_NODE_SHAPE_INVALID")
+	if not U.is_json_integer(node.get("level")) or int(node.level) < 0 or int(node.level) > 3: return U.failure("R5_3_NODE_LEVEL_INVALID")
+	var children: Dictionary = node.children
+	if (int(node.level) == 0 and not children.is_empty()) or (int(node.level) > 0 and children.is_empty()): return U.failure("R5_3_NODE_HIERARCHY_SHAPE_INVALID")
+	for raw_key in children.keys():
+		var child = children[raw_key]
+		if typeof(child) != TYPE_DICTIONARY: return U.failure("R5_3_CHILD_NODE_SHAPE_INVALID", {"child":String(raw_key)})
+		if not U.is_json_integer(child.get("level")) or int(child.level) != int(node.level) - 1: return U.failure("R5_3_CHILD_LEVEL_MISMATCH", {"child":String(raw_key),"parent_level":int(node.level),"child_level":child.get("level")})
 	var shape := U.validate_exact_fields(node.capsule, CAPSULE_FIELDS)
 	if not shape.success or node.capsule.get("schema") != CAPSULE_SCHEMA or not U.validate_checksum(node.capsule).success: return U.failure("R5_3_CAPSULE_INVALID")
 	var checked := Descriptor.validate(node.reduction); if not checked.success: return checked
@@ -109,6 +116,14 @@ static func _validate_t1_leaf_binding(graph: Dictionary, details: Dictionary) ->
 	or String(artifact.source_binding.fabric_graph_hash) != graph_hash \
 	or String(details.graph_compile.get("graph_hash", "")) != graph_hash:
 		return U.failure("R5_3_LEAF_T1_GRAPH_BINDING_MISMATCH")
+	var exact_graph_compile := GraphCompiler.compile(graph)
+	if not exact_graph_compile.success:
+		return U.failure("R5_3_LEAF_SOURCE_GRAPH_COMPILE_FAILED", {"cause":exact_graph_compile})
+	var exact_system_hash := String(exact_graph_compile.details.linear_system.system_hash)
+	if String(details.linear_system.get("system_hash", "")) != exact_system_hash \
+	or String(details.graph_compile.get("linear_system", {}).get("system_hash", "")) != exact_system_hash \
+	or String(reduction.get("source_system_hash", "")) != exact_system_hash:
+		return U.failure("R5_3_LEAF_T1_SYSTEM_BINDING_MISMATCH")
 	if int(details.graph_compile.get("component_count", -1)) != graph.components.size() \
 	or int(capsule.source_component_count) != graph.components.size():
 		return U.failure("R5_3_LEAF_T1_SOURCE_COUNT_MISMATCH")
@@ -143,11 +158,12 @@ static func leaf_from_t1(node_id: String, graph: Dictionary, compiled: Dictionar
 	var node := {"schema":SCHEMA, "node_id":node_id, "level":0, "node_hash":node_hash, "capsule":capsule, "reduction":d.reduction.duplicate(true), "live":{"node_hash":node_hash,"build_generation":int(d.artifact.build_generation)}, "children":{}, "topology_revision":0, "topology_edges":[], "physical_source_components":physical, "compiled_input_components":physical, "build_generation":int(d.artifact.build_generation), "source_graph":graph.duplicate(true), "compiled_graph":graph.duplicate(true), "source_capsule_checksum":String(d.capsule.checksum), "compile_events":1, "child_rom_reads":0}
 	var checked := validate_node(node); return U.success(node) if checked.success else checked
 
-static func _child_rom_components(children: Dictionary, nodes: Array, components: Array) -> Dictionary:
+static func _child_rom_components(children: Dictionary, parent_level: int, nodes: Array, components: Array) -> Dictionary:
 	var child_rom_reads := 0; var cid := components.size(); var keys: Array = children.keys(); keys.sort()
 	for raw_key in keys:
 		var key := String(raw_key); var child: Dictionary = children[key]
 		var checked := validate_node(child); if not checked.success: return U.failure("R5_3_CHILD_NODE_INVALID", {"child":key,"cause":checked})
+		if int(child.level) != parent_level - 1: return U.failure("R5_3_CHILD_LEVEL_MISMATCH", {"child":key,"parent_level":parent_level,"child_level":int(child.level)})
 		var r: Dictionary = child.reduction
 		if int(r.reduced_equation_count) != PORTS or r.boundary_port_ids.size() != PORTS: return U.failure("R5_3_CHILD_PORT_COUNT_UNSUPPORTED", {"child":key})
 		if r.boundary_port_ids != BOUNDARY_PORT_IDS: return U.failure("R5_3_CHILD_PORT_CONTRACT_UNSUPPORTED", {"child":key,"ports":r.boundary_port_ids})
@@ -192,8 +208,8 @@ static func _topology(children: Dictionary, topology_revision: int, nodes: Array
 	return edges
 
 static func compose(node_id: String, level: int, children: Dictionary, topology_revision: int = 0, build_generation: int = 1) -> Dictionary:
-	if level < 1 or children.is_empty(): return U.failure("R5_3_PARENT_SHAPE_INVALID")
-	var nodes: Array=[]; var components: Array=[]; var child_components := _child_rom_components(children,nodes,components)
+	if level < 1 or level > 3 or children.is_empty(): return U.failure("R5_3_PARENT_SHAPE_INVALID")
+	var nodes: Array=[]; var components: Array=[]; var child_components := _child_rom_components(children,level,nodes,components)
 	if not child_components.success: return child_components
 	var edges := _topology(children,topology_revision,nodes,components)
 	var ports: Array=[]; for suffix in ["a","b","c","d"]: ports.append({"port_id":"port/electrical-%s" % suffix,"node_id":"node/boundary-%s" % suffix})

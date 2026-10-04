@@ -101,6 +101,18 @@ func _leaf_provenance_falsifier() -> void:
 	if not compiled.success: return
 	var rebound := Compiler.leaf_from_t1("r53/provenance-b", graph_b, compiled)
 	check(not rebound.success and rebound.error_code == "R5_3_LEAF_T1_GRAPH_BINDING_MISMATCH", "R5.3 refuses T1 ROM rebound onto different source graph", rebound)
+	var compiled_b := T1.compile(graph_b, Compiler._request(graph_b, "r53/provenance-b", [], 1, 1), "capsule/r53-provenance-b")
+	check(compiled_b.success, "T1 provenance target compile succeeds", compiled_b)
+	if compiled_b.success:
+		var forged := compiled_b.duplicate(true)
+		forged.details.reduction = compiled.details.reduction.duplicate(true)
+		forged.details.artifact.reduced_model_descriptor_hash = String(forged.details.reduction.checksum)
+		forged.details.artifact.checksum = U.compute_checksum(forged.details.artifact)
+		forged.details.capsule.executable_descriptor_hash = String(forged.details.reduction.checksum)
+		forged.details.capsule.physical_bake_artifact_checksum = String(forged.details.artifact.checksum)
+		forged.details.capsule.checksum = U.compute_checksum(forged.details.capsule)
+		var forged_rebound := Compiler.leaf_from_t1("r53/provenance-b", graph_b, forged)
+		check(not forged_rebound.success and forged_rebound.error_code == "R5_3_LEAF_T1_SYSTEM_BINDING_MISMATCH", "R5.3 refuses descriptor rebound across source systems after contract rehash", forged_rebound)
 
 func _initialize() -> void:
 	_leaf_provenance_falsifier()
@@ -116,6 +128,8 @@ func _initialize() -> void:
 	check(int(root.capsule.runtime_source_traversals_per_execute) == 0, "machine source traversal contract zero")
 	check(int(root.physical_source_components) > int(root.compiled_input_components) * 10, "hidden physical complexity compressed", {"physical":root.physical_source_components,"compiled_input":root.compiled_input_components})
 	check(int(root.compiled_input_components) < 40, "machine compile input bounded by child ROM ports", root.compiled_input_components)
+	var skipped_level := Compiler.compose("r53/invalid-machine-direct-leaf", 3, {"leaf0":root.children.assembly0.children.module0.children.leaf0}, 0, 1)
+	check(not skipped_level.success and skipped_level.error_code == "R5_3_CHILD_LEVEL_MISMATCH", "parent composition cannot skip recursive hierarchy levels", skipped_level)
 
 	var runtime = Runtime.new()
 	var prepared := runtime.prepare(root)
