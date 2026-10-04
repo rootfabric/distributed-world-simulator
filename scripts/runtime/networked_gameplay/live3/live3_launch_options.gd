@@ -107,7 +107,7 @@ static func preflight_slot(options: Dictionary) -> Dictionary:
 			return checked
 		# Do not let native M0 bootstrap recreate missing storage underneath a
 		# saved Construction cut. Native M0 validates the actual bytes at bind.
-		var m0 := repository.root_path.path_join("v0-p4-construction-m0")
+		var m0: String = String(repository.root_path).path_join("v0-p4-construction-m0")
 		if not FileAccess.file_exists(m0.path_join("aggregate-transaction-state.json")) and not FileAccess.file_exists(m0.path_join("aggregate-transaction-state.previous.json")):
 			return {"success": false, "error_code": "LIVE3_NATIVE_CONSTRUCTION_STORAGE_MISSING"}
 		return loaded
