@@ -115,7 +115,6 @@ func _address_contract(fixture: Dictionary) -> void:
 
 	var exact := Exact.create(population, 64)
 	check(not exact.is_empty(), "closed exact-workset contract remains available")
-	check(Spatial.member_ids(plan).duplicate().sort() == null, "noop")
 	var spatial_ids := Spatial.member_ids(plan)
 	spatial_ids.sort()
 	var exact_ids := Exact.member_ids(exact)
