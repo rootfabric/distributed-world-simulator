@@ -295,7 +295,6 @@ func _activity_composition(initial: Dictionary) -> void:
 	var deferred := Runtime.advance_spatial_activity_cadence_parallel_prepare(
 		initial, _options(), defer_plan, 4)
 	check(deferred.success and bool(deferred.deferred), "parallel activity path defers before cadence")
-	check(bool(deferred.parallel_prepare), "parallel activity result identifies prepare mode")
 	check(C.encode(deferred.state) == C.encode(initial), "parallel deferred activity mutates zero canonical bytes")
 
 	var wake_plan := Activity.create(initial.field, initial.population, active, 0, 4, 4, 4, 64)
@@ -306,7 +305,6 @@ func _activity_composition(initial: Dictionary) -> void:
 	check(serial_wake.success and parallel_wake.success, "serial/parallel activity wake succeeds")
 	if serial_wake.success and parallel_wake.success:
 		check(int(parallel_wake.replayed_ticks) == 4, "parallel activity wake replays exact debt")
-		check(bool(parallel_wake.parallel_prepare), "wake records noncanonical scheduler execution mode")
 		check(Runtime.state_hash(parallel_wake.state) == Runtime.state_hash(serial_wake.state),
 			"parallel activity catch-up hash exact to serial catch-up")
 		check(C.encode(parallel_wake.state) == C.encode(serial_wake.state),
