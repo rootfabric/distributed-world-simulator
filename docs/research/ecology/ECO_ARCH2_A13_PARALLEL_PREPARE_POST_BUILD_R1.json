@@ -1,0 +1,47 @@
+{
+  "schema": "dws.ecology.a13-parallel-prepare.post-build-critique.v1",
+  "work_order": "ECO ARCH2 A13 Bounded Parallel Prepare R1",
+  "product_head": "cfb10f700202e8054fddc7c802491601b6e455d4",
+  "product_tree": "db6250cbf38cdbf63872738aaa3d72a49459ba63",
+  "base_main": "1f8a9debc4f8838569f818faa43bdadc0f23f965",
+  "risk_class": "MEDIUM",
+  "actor": "IMPLEMENTER_POST_BUILD_CRITIQUE",
+  "outcome": "NO_MATERIAL_REFACTOR_REQUIRED",
+  "questions": {
+    "unnecessary_complexity": "The implementation adds one explicit execution strategy around the existing A5 phase split. Thread waves, local worker results and one canonical merge are the minimum machinery needed to make concurrency bounded and auditable. No alternate lifecycle or allocator was introduced.",
+    "duplicate_truth": "None. Worker-local field/entry copies are ephemeral inputs. Samples/demands and scheduler telemetry are execution artifacts only. Canonical Runtime, organism, field and checkpoint schemas are unchanged.",
+    "implicit_owner": "None. A5 remains lifecycle owner; Field.allocate_demands remains the single resource authority; EcologyRuntime composes the lifecycle/admission/feedback sequence; SpatialWorksets remains scheduler partition owner.",
+    "coupling_reduction": "Serial and parallel paths share _finish_population_step(), so allocation, grants, post-allocation advance, propagule collection and canonical sorting cannot silently drift into two implementations.",
+    "sibling_surface_fix": "Activity cadence received an opt-in parallel sibling path while the accepted serial Activity API retains its existing result shape. Existing Activity/Spatial/A13/A12/A11 suites are rerun by the new exact workflow.",
+    "removable_code": "No material production code is removable without either duplicating the serial/parallel finishing path or losing explicit bounded-thread lifecycle handling.",
+    "design_regression": "No canonical design regression found. Completion order is discarded; failures/results are consumed by canonical workset index; every started Thread is joined before allocation or return; allocation remains exactly one global barrier.",
+    "refactor_if_redesigned": "For a measured performance stage, replace per-wave Thread construction and deep field copies with a persistent worker pool or WorkerThreadPool-compatible immutable preparation payloads. Do not do that before profiling proves the overhead matters and exact behavior remains frozen."
+  },
+  "residual_risks": [
+    "Per-wave Thread construction and deep copies may offset or exceed the CPU benefit for small worksets; R1 makes no performance claim.",
+    "Linux platform evidence is still required on the exact frozen subject before acceptance.",
+    "Parallel post-allocation advance is intentionally out of scope and remains serial."
+  ],
+  "required_repairs": [],
+  "rank_up_moves": [
+    "Add scheduler profiling that separately measures preparation CPU time, thread setup/copy overhead, allocation barrier time and post-allocation advance.",
+    "If profiling shows setup overhead is material, introduce a bounded persistent pool/WorkerThreadPool implementation behind the same exact contract.",
+    "Only after this checkpoint is accepted, implement bounded parallel post-allocation advance as a separate A13 stage."
+  ],
+  "evidence_at_critique": {
+    "project_control_run": 37210363845,
+    "project_control": "SUCCESS",
+    "windows_exact_run": 37210363778,
+    "windows_job": 111460134210,
+    "windows_parallel_prepare": "93/0",
+    "windows_activity": "122/0",
+    "windows_spatial": "108/0",
+    "windows_a13": "58/0",
+    "windows_a12": "38/0",
+    "windows_a11": "171/0",
+    "windows_tracked_clean": true,
+    "linux_exact": "QUEUED_BEHIND_STALE_MERGED_PR_JOB"
+  },
+  "acceptance_claimed": false,
+  "merge_authorized": false
+}
