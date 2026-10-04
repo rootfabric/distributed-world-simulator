@@ -1,7 +1,7 @@
 extends SceneTree
 
 const Options = preload("res://scripts/runtime/networked_gameplay/live3/live3_launch_options.gd")
-const Control = preload("res://scripts/runtime/networked_gameplay/live3/live3_host_control.gd")
+const HostControl = preload("res://scripts/runtime/networked_gameplay/live3/live3_host_control.gd")
 const Port = preload("res://scripts/runtime/networked_gameplay/live3/live3_construction_recovery_port.gd")
 const Service = preload("res://scripts/runtime/networked_gameplay/networked_gameplay_service.gd")
 const Legacy = preload("res://scripts/runtime/networked_gameplay/p5/networked_gameplay_service_p5.gd")
@@ -13,6 +13,7 @@ var assertions := 0
 var failures: Array[String] = []
 
 class FailedSaveServer extends Node:
+	var _checkpoint_generation := 0
 	func stop() -> Dictionary:
 		return {"success": false, "error_code": "INJECTED_DISK_WRITE_FAILURE"}
 
@@ -49,11 +50,27 @@ func run() -> void:
 	check(not Options.parse(args + ["--m6-persistence-root=user://other"])["success"], "ambiguous native root rejected")
 	check(not Options.parse(["--network-mvp", "--role=dedicated-server", "--world-slot=x", "--world-save-root=res://"])["success"], "source tree cannot be save root")
 	var nonce := "12345678901234567890123456789012"
-	var request := {"schema": Control.REQUEST_SCHEMA, "action": "SAVE_AND_STOP", "token": nonce, "process_id": 42, "request_id": "one"}
-	check(Control.validate_request(request, nonce, 42)["success"], "operator save request accepted")
-	check(not Control.validate_request(request, nonce, 43)["success"], "stale process request rejected")
-	check(not Control.validate_request(request, nonce + "x", 42)["success"], "wrong nonce rejected")
-	check(not Control.validate_request({}, nonce, 42)["success"], "malformed request rejected")
+	var request := {"schema": HostControl.REQUEST_SCHEMA, "action": "SAVE_AND_STOP", "token": nonce, "process_id": 42, "request_id": "one"}
+	check(HostControl.validate_request(request, nonce, 42)["success"], "operator save request accepted")
+	check(not HostControl.validate_request(request, nonce, 43)["success"], "stale process request rejected")
+	check(not HostControl.validate_request(request, nonce + "x", 42)["success"], "wrong nonce rejected")
+	check(not HostControl.validate_request({}, nonce, 42)["success"], "malformed request rejected")
+	var bad_request: Dictionary = request.duplicate(true)
+	bad_request.erase("request_id")
+	bad_request["unknown"] = "one"
+	check(not HostControl.validate_request(bad_request, nonce, 42)["success"], "same field count with substituted field rejected")
+	for invalid_id in ["", " ", 1, false]:
+		bad_request = request.duplicate(true)
+		bad_request["request_id"] = invalid_id
+		check(not HostControl.validate_request(bad_request, nonce, 42)["success"], "invalid operator request ID rejected: " + str(invalid_id))
+	for invalid_pid in [true, "42", 42.25, -1]:
+		bad_request = request.duplicate(true)
+		bad_request["process_id"] = invalid_pid
+		check(not HostControl.validate_request(bad_request, nonce, 42)["success"], "invalid operator PID rejected: " + str(invalid_pid))
+	var inside := ProjectSettings.globalize_path("user://live3-contracts/control.json")
+	var status := ProjectSettings.globalize_path("user://live3-status.json")
+	check(not Options.parse(args + ["--world-control-file=" + inside, "--world-status-file=" + status, "--world-control-token=" + nonce])["success"], "operator control cannot overwrite native save files")
+	check(not Options.parse(args + ["--world-control-file=" + status, "--world-status-file=" + status, "--world-control-token=" + nonce])["success"], "operator control and status must not alias")
 
 	var legacy = Legacy.new()
 	var live = Service.new()
