@@ -121,7 +121,13 @@ static func address_for_position(field: Dictionary, position_mm: Array,
 		tile_span_cells: int = DEFAULT_TILE_SPAN_CELLS) -> Dictionary:
 	if tile_span_cells < 1 or tile_span_cells > MAX_TILE_SPAN_CELLS:
 		return {}
-	if F.validate_state(field) != "" or not C.vector(position_mm, F.MAX_PORT_COORD_MM):
+	if F.validate_state(field) != "":
+		return {}
+	return _address_for_valid_field(field, position_mm, tile_span_cells)
+
+static func _address_for_valid_field(field: Dictionary, position_mm: Array,
+		tile_span_cells: int) -> Dictionary:
+	if not C.vector(position_mm, F.MAX_PORT_COORD_MM):
 		return {}
 	var rel_x: int = int(position_mm[0]) - int(field.origin_mm[0])
 	var rel_z: int = int(position_mm[2]) - int(field.origin_mm[2])
@@ -180,7 +186,7 @@ static func _rows(field: Dictionary, population: Array, tile_span_cells: int) ->
 		var position: Variant = entry.state.get("position_mm", null)
 		if not C.identifier(id) or seen.has(id) or not position is Array:
 			return []
-		var spatial := address_for_position(field, position, tile_span_cells)
+		var spatial := _address_for_valid_field(field, position, tile_span_cells)
 		if spatial.is_empty():
 			return []
 		seen[id] = true
