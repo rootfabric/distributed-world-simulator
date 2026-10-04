@@ -106,14 +106,14 @@ function Invoke-Control {
 function Get-AutomationState {
     param([ValidateSet("A","B")][string]$Client)
     $r=Invoke-Control $Client @("state","--kind","automation")
-    if($null-eq$r -or -not [bool]$r.ok){throw "AUTOMATION_STATE_FAILED:$Client"}
+    if($null-eq$r -or -not [bool]$r.ok){throw "AUTOMATION_STATE_FAILED:$($Client)"}
     return $r.result.automation
 }
 
 function Get-JitterState {
     param([ValidateSet("A","B")][string]$Client)
     $r=Invoke-Control $Client @("state","--kind","jitter")
-    if($null-eq$r -or -not [bool]$r.ok){throw "JITTER_STATE_FAILED:$Client"}
+    if($null-eq$r -or -not [bool]$r.ok){throw "JITTER_STATE_FAILED:$($Client)"}
     return $r.result.jitter
 }
 
@@ -127,7 +127,7 @@ function Wait-Bridge {
         }catch{}
         Start-Sleep -Milliseconds 400
     }
-    throw "AUTOMATION_BRIDGE_TIMEOUT:$Client"
+    throw "AUTOMATION_BRIDGE_TIMEOUT:$($Client)"
 }
 
 function Wait-ConnectionState {
@@ -156,7 +156,7 @@ function Wait-AsyncIdle {
         if([int]$j.async_pending -eq 0){return}
         Start-Sleep -Milliseconds 250
     }
-    throw "ASYNC_IDLE_TIMEOUT:$Client"
+    throw "ASYNC_IDLE_TIMEOUT:$($Client)"
 }
 
 function Wait-UdpOwner {
@@ -319,7 +319,7 @@ function Assert-StableRecovery {
         $beforeValue=[double]$Before.local_player.position.$axis
         $afterValue=[double]$After.local_player.position.$axis
         if([math]::Abs($beforeValue-$afterValue)-gt0.001){
-            throw "RECOVERY_PLAYER_POSITION_MISMATCH:$($Label):$axis:$beforeValue:$afterValue"
+            throw "RECOVERY_PLAYER_POSITION_MISMATCH:$($Label):$($axis):$($beforeValue):$($afterValue)"
         }
     }
 }
@@ -337,7 +337,7 @@ function Wait-StatePredicate {
         if(& $Predicate $s){return $s}
         Start-Sleep -Milliseconds 300
     }
-    throw "$ErrorCode:$Client"
+    throw "$($ErrorCode):$($Client)"
 }
 
 try {
