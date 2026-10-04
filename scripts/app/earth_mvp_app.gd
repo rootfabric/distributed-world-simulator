@@ -503,8 +503,24 @@ func automation_set_view(params: Dictionary) -> Dictionary:
 
 
 func automation_get_state() -> Dictionary:
+	var gameplay_snapshot: Dictionary = {}
+	var item_graph: Dictionary = {}
+	var resource_mining: Dictionary = {}
+	var construction: Dictionary = {}
+	var local_player: Dictionary = {}
+	if m3_multiplayer_client_runtime != null:
+		if m3_multiplayer_client_runtime.has_method("get_snapshot"):
+			gameplay_snapshot = m3_multiplayer_client_runtime.get_snapshot()
+		if m3_multiplayer_client_runtime.has_method("get_item_graph_snapshot"):
+			item_graph = m3_multiplayer_client_runtime.get_item_graph_snapshot()
+		if m3_multiplayer_client_runtime.has_method("get_resource_mining_snapshot"):
+			resource_mining = m3_multiplayer_client_runtime.get_resource_mining_snapshot()
+		if m3_multiplayer_client_runtime.has_method("get_construction_bundle"):
+			construction = m3_multiplayer_client_runtime.get_construction_bundle()
+		if m3_multiplayer_client_runtime.has_method("get_local_player_record"):
+			local_player = m3_multiplayer_client_runtime.get_local_player_record()
 	return {
-		"schema": "dws.live2.automation.input_state.v1",
+		"schema": "dws.live3.automation.product_state.v1",
 		"movement_enabled": _automation_movement_enabled,
 		"expires_in_ms": (
 			maxi(_automation_movement_expires_ms - Time.get_ticks_msec(), 0)
@@ -518,6 +534,18 @@ func automation_get_state() -> Dictionary:
 		"inventory_visible": _mvp_inventory_visible,
 		"build_mode": _live2_build_mode,
 		"connection_state": _live2_connection_state,
+		"logical_player_id": String(local_player.get("logical_player_id", "")),
+		"player_entity_id": String(local_player.get("player_entity_id", "")),
+		"ownership_epoch": int(local_player.get("ownership_epoch", 0)),
+		"local_player": local_player.duplicate(true),
+		"gameplay_revision": int(gameplay_snapshot.get("revision", -1)),
+		"gameplay_checksum": String(gameplay_snapshot.get("checksum", "")),
+		"item_graph_revision": int(item_graph.get("revision", -1)),
+		"item_graph_checksum": String(item_graph.get("checksum", "")),
+		"resource_generation": int(resource_mining.get("generation", -1)),
+		"resource_checksum": String(resource_mining.get("checksum", "")),
+		"construction_generation": int(construction.get("server_generation", -1)),
+		"construction_checksum": String(construction.get("checksum", "")),
 	}
 
 
