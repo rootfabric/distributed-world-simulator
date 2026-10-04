@@ -55,6 +55,13 @@ func identities(runtime, ids: Array) -> Dictionary:
 		out[id] = runtime.family_identity(String(id))
 	return out
 
+func atomic_snapshot(runtime) -> Dictionary:
+	return {
+		"family_stats": runtime.family_stats().duplicate(true),
+		"runtime_stats": runtime.stats().duplicate(true),
+		"all_models_intact": runtime.all_models_intact(),
+	}
+
 func _initialize() -> void:
 	var built: Dictionary = FF.build_families()
 	check(built.success, "build T13.5 family baseline", built)
@@ -126,6 +133,69 @@ func _initialize() -> void:
 	check(DF.source_leaf_traversals == 128, "damage source traversal bounded to 128-cell emitter", DF.source_leaf_traversals)
 	check(DF.source_anchor_checks == 1, "damage UNBAKE source graph anchored to compiled emitter")
 	check(int(damaged_bundle.capsule.source_component_count) == 4275, "damaged ship keeps 4275 physical source components")
+
+	# Transactional adversarial gate: a candidate can be structurally valid but
+	# unable to accept the caller-owned physical state. Rejection must leave the
+	# live registry byte/logically unchanged and the same family/event IDs reusable.
+	var unsafe_built: Dictionary = DF.make_projection_unsafe_motor_candidate(bundles["family-b"])
+	check(unsafe_built.success, "build valid projection-unsafe successor candidate", unsafe_built)
+	if not unsafe_built.success:
+		quit(1)
+		return
+	var unsafe_bundle: Dictionary = unsafe_built.details
+	var old_servo_max := float(bundles["family-b"].children.bank.children.unit03.children.servo.descriptor.max_abs_motor_omega_rad_s)
+	var new_servo_max := float(unsafe_bundle.children.bank.children.unit03.children.servo.descriptor.max_abs_motor_omega_rad_s)
+	check(new_servo_max < old_servo_max, "adversarial successor tightens valid servo state envelope", {"old":old_servo_max,"new":new_servo_max})
+
+	var atomic = Runtime.new()
+	var atomic_registered: Dictionary = atomic.register_family("family-b", bundles["family-b"], bundles["family-b"].capsule.checksum)
+	check(atomic_registered.success, "atomic probe registers baseline family", atomic_registered)
+	var atomic_a_created: Dictionary = atomic.create_instance("family-b", "t15-atomic-a", "world/atomic-a", 0.8, 300.0)
+	var atomic_b_created: Dictionary = atomic.create_instance("family-b", "t15-atomic-b", "world/atomic-b", 0.8, 300.0)
+	check(atomic_a_created.success and atomic_b_created.success, "atomic probe creates two baseline instances", {"a":atomic_a_created,"b":atomic_b_created})
+	var atomic_a: Dictionary = atomic_a_created.details
+	var atomic_b: Dictionary = atomic_b_created.details
+	var high_omega: Dictionary = atomic_a.duplicate(true)
+	high_omega.state.physical.bank.unit03.servo.motor_angular_velocity_rad_s = 0.5 * (old_servo_max + new_servo_max)
+	check(atomic.instance_valid(high_omega), "high-omega caller state remains valid in old family")
+	var rejected_before := atomic_snapshot(atomic)
+	var rejected: Dictionary = atomic.fork_instance(
+		high_omega, "family-b-atomic-tight", unsafe_bundle, unsafe_bundle.capsule.checksum,
+		"root/bank/unit03/servo/motor", "damage/t15-atomic-projection/1", "DAMAGE"
+	)
+	check(not rejected.success and rejected.error_code == "T15_STATE_PROJECTION_UNSAFE", "unsafe projection fails before live commit", rejected)
+	var unsafe_reject_clean: bool = atomic_snapshot(atomic) == rejected_before
+	check(unsafe_reject_clean, "unsafe projection rejection is transactionally side-effect free")
+	check(atomic.family_identity("family-b-atomic-tight").is_empty(), "rejected successor family is not visible")
+	check(atomic.instance_valid(high_omega) and atomic.instance_valid(atomic_b), "rejected fork keeps old bindings current")
+
+	# Retry the exact same family/event after correcting only caller state. If the
+	# rejected attempt leaked a route/event, this cannot succeed.
+	var retry: Dictionary = atomic.fork_instance(
+		atomic_a, "family-b-atomic-tight", unsafe_bundle, unsafe_bundle.capsule.checksum,
+		"root/bank/unit03/servo/motor", "damage/t15-atomic-projection/1", "DAMAGE"
+	)
+	var retry_same_ids: bool = bool(retry.success)
+	check(retry_same_ids, "same family/event IDs succeed after corrected retry", retry)
+	check(not atomic.family_identity("family-b-atomic-tight").is_empty(), "successful retry commits successor family")
+
+	# Alias and occupied-family rejects are also preflight-only. Neither may add a
+	# route/model/receipt nor disturb the still-current second baseline instance.
+	var alias_before := atomic_snapshot(atomic)
+	var alias_reject: Dictionary = atomic.fork_instance(
+		atomic_b, "family-b-atomic-alias", unsafe_bundle, unsafe_bundle.capsule.checksum,
+		"root/bank/unit03/servo/motor", "damage/t15-atomic-alias/1", "DAMAGE"
+	)
+	check(not alias_reject.success and alias_reject.error_code == "T15_DIVERGENT_FAMILY_UNEXPECTEDLY_ALIASED", "existing model alias rejected before live mutation", alias_reject)
+	var alias_reject_clean: bool = atomic_snapshot(atomic) == alias_before and atomic.family_identity("family-b-atomic-alias").is_empty()
+	check(alias_reject_clean, "alias rejection leaks no family/accounting state")
+	var occupied_reject: Dictionary = atomic.fork_instance(
+		atomic_b, "family-b-atomic-tight", unsafe_bundle, unsafe_bundle.capsule.checksum,
+		"root/bank/unit03/servo/motor", "damage/t15-atomic-occupied/1", "DAMAGE"
+	)
+	check(not occupied_reject.success and occupied_reject.error_code == "T15_FAMILY_ID_ALREADY_REGISTERED", "occupied successor family id rejected before live mutation", occupied_reject)
+	var occupied_reject_clean: bool = atomic_snapshot(atomic) == alias_before and atomic.instance_valid(atomic_b)
+	check(occupied_reject_clean, "occupied-id rejection leaves live state unchanged")
 
 	# T14 observation and T15 structural mutation cannot coexist on the same old binding.
 	var observed: Dictionary = runtime.request_observation(target, "root/bank/unit03/cannon", "observation/t15-pre-damage")
@@ -340,6 +410,10 @@ func _initialize() -> void:
 		"current_instances":int(runtime_stats.current_instances),
 		"original_models_intact":U.canonical_hash(identities(runtime, ["family-a","family-b","family-c","family-d"])) == original_model_hash,
 		"all_models_intact":runtime.all_models_intact(),
+		"atomicity_unsafe_reject_clean":unsafe_reject_clean,
+		"atomicity_retry_same_ids":retry_same_ids,
+		"atomicity_alias_reject_clean":alias_reject_clean,
+		"atomicity_occupied_id_reject_clean":occupied_reject_clean,
 	}
 	print("FABRIC_R5_2_T15_RESULT=" + JSON.stringify(result, "", true, true))
 	print("FABRIC R5.2 T15 LOCAL DAMAGE UNBAKE REBAKE: " + ("PASS" if failures.is_empty() else "FAIL") + " (%d assertions)" % checks)
