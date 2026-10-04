@@ -252,6 +252,13 @@ func _assert(condition: bool, message: String) -> void:
 		failures.append(message)
 
 
+func _has_error_fragment(result: Dictionary, fragment: String) -> bool:
+	for error_value in result.get("errors", []):
+		if String(error_value).contains(fragment):
+			return true
+	return false
+
+
 func _finish() -> void:
 	if failures.is_empty():
 		print("Runtime launch option contracts: PASS (%d assertions)" % assertions)
