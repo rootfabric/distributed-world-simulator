@@ -1,0 +1,181 @@
+name: FABRIC R5.2 T16 Fresh Independent Verifier R1
+on:
+  push:
+    branches: [control/fabric-r5-2-t16-verifier-r1]
+permissions:
+  contents: read
+concurrency:
+  group: fabric-t16-verifier-r1
+  cancel-in-progress: true
+
+env:
+  SUBJECT_HEAD: 37c7a606c70071e896797c73e4082745d78cfb82
+  SUBJECT_TREE: 919c69a68c4b169356a068272a7ffbab9a073cd2
+  BASE_T15: d53352bca414f806a1096633ea683ba21b955083
+  R1_HEAD: a34ab6409c35974b2499badd0bb3e3e1e5da04ff
+  EXPECTED_HASH: cf5f66dac6a89790c7fef20df582480d1044401f37dfb5d61befb9028a678fff
+
+jobs:
+  verifier-source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Prove carrier-only diff and exact subject
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$(git merge-base HEAD "$SUBJECT_HEAD")" = "$SUBJECT_HEAD"
+          test "$(git rev-parse "$SUBJECT_HEAD^{tree}")" = "$SUBJECT_TREE"
+          changed="$(git diff --name-only "$SUBJECT_HEAD" HEAD)"
+          test "$changed" = '.github/workflows/fabric-r5-2-t16-verifier-r1.yml'
+          git diff --check "$SUBJECT_HEAD" HEAD
+
+      - name: Prove T16 remains additive over T15
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          python3 - <<'PY'
+          import subprocess
+          base = "d53352bca414f806a1096633ea683ba21b955083"
+          subject = "37c7a606c70071e896797c73e4082745d78cfb82"
+          expected = {
+              ".github/workflows/fabric-r5-2-t16-no-safe-bake.yml",
+              "RUN_FABRIC_R5_2_T16_TESTS.sh",
+              "RUN_FABRIC_R5_2_T16_TESTS.ps1",
+              "scripts/research/fabric_bake0/r5_t16_no_safe_bake_runtime_v1.gd",
+              "scripts/research/fabric_bake0/collect_r5_2_t16_evidence.py",
+              "tests/research/fabric_bake0/fabric_r5_2_t16_thermal_backend.gd",
+              "tests/research/fabric_bake0/fabric_r5_2_t16_no_safe_bake_acceptance.gd",
+              "tests/research/fabric_bake0/test_t16_evidence.py",
+              "docs/research/FABRIC_R5_2_T16_WORK_ORDER_RU.md",
+              "docs/research/FABRIC_R5_2_T16_NO_SAFE_BAKE_RU.md",
+          }
+          rows = subprocess.check_output(
+              ["git","diff","--name-status",base,subject], text=True
+          ).splitlines()
+          got = set()
+          for row in rows:
+              status, path = row.split("\t", 1)
+              assert status == "A", row
+              got.add(path)
+          assert got == expected, (got ^ expected)
+          PY
+
+      - name: Prove R2 repair is narrow
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          python3 - <<'PY'
+          import subprocess
+          r1 = "a34ab6409c35974b2499badd0bb3e3e1e5da04ff"
+          r2 = "37c7a606c70071e896797c73e4082745d78cfb82"
+          expected = {
+              "docs/research/FABRIC_R5_2_T16_NO_SAFE_BAKE_RU.md",
+              "docs/research/FABRIC_R5_2_T16_WORK_ORDER_RU.md",
+              "scripts/research/fabric_bake0/collect_r5_2_t16_evidence.py",
+              "scripts/research/fabric_bake0/r5_t16_no_safe_bake_runtime_v1.gd",
+              "tests/research/fabric_bake0/fabric_r5_2_t16_no_safe_bake_acceptance.gd",
+              "tests/research/fabric_bake0/fabric_r5_2_t16_thermal_backend.gd",
+              "tests/research/fabric_bake0/test_t16_evidence.py",
+          }
+          rows = subprocess.check_output(
+              ["git","diff","--name-status",r1,r2], text=True
+          ).splitlines()
+          got = set()
+          for row in rows:
+              status, path = row.split("\t", 1)
+              assert status == "M", row
+              got.add(path)
+          assert got == expected, (got ^ expected)
+          PY
+
+      - name: Run independent source/evidence contracts
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          bash -n RUN_FABRIC_R5_2_T16_TESTS.sh
+          python3 -m unittest discover -s tests/research/fabric_bake0 -p test_t16_evidence.py -v
+          ! grep -q 'res://tests/' scripts/research/fabric_bake0/r5_t16_no_safe_bake_runtime_v1.gd
+          ! grep -q 'register_family(' scripts/research/fabric_bake0/r5_t16_no_safe_bake_runtime_v1.gd
+          grep -q 'CANONICAL_HANDOFF_REQUIRED' scripts/research/fabric_bake0/r5_t16_no_safe_bake_runtime_v1.gd
+          grep -q 'T16_TEMPORAL_POLICY_UNSUPPORTED' tests/research/fabric_bake0/fabric_r5_2_t16_thermal_backend.gd
+          grep -q 'T16_FULL_STATE_SCHEMA_INVALID' tests/research/fabric_bake0/fabric_r5_2_t16_thermal_backend.gd
+
+      - name: Archive exact verifier source
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          mkdir -p verifier-source
+          git archive --format=tar "$SUBJECT_HEAD" | gzip -n > verifier-source/t16-verifier-source.tar.gz
+          printf 'SUBJECT_HEAD=%s\nSUBJECT_TREE=%s\nBASE_T15=%s\nR1_HEAD=%s\n'             "$SUBJECT_HEAD" "$SUBJECT_TREE" "$BASE_T15" "$R1_HEAD" > verifier-source/identity.txt
+          sha256sum verifier-source/t16-verifier-source.tar.gz > verifier-source/source.sha256
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: t16-verifier-source-${{ github.sha }}
+          path: verifier-source/**
+          if-no-files-found: error
+          retention-days: 90
+
+  exact-windows:
+    needs: verifier-source
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 45
+    steps:
+      - name: Host precheck without interference
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          if ($PSVersionTable.PSVersion.Major -lt 7) { throw 'HOST_REQUIRES_PWSH7' }
+          $foreign = @(Get-CimInstance Win32_Process | Where-Object { $_.Name -like 'godot*.exe' })
+          if ($foreign.Count -gt 0) {
+            throw ('HOST_BUSY_GODOT:' + (($foreign | Select-Object -ExpandProperty ProcessId) -join ','))
+          }
+          $free = [double](Get-CimInstance Win32_OperatingSystem).FreePhysicalMemory / 1MB
+          Write-Host "HOST=$env:COMPUTERNAME FREE_RAM_GB=$free"
+          if ($free -lt 8) { throw 'HOST_LOW_MEMORY' }
+
+      - uses: actions/checkout@v4
+        with:
+          ref: 37c7a606c70071e896797c73e4082745d78cfb82
+          fetch-depth: 0
+          persist-credentials: false
+          path: t16-verifier-${{ github.run_id }}-${{ github.run_attempt }}
+
+      - name: Execute frozen product exact
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $checkout = Join-Path $env:GITHUB_WORKSPACE 't16-verifier-${{ github.run_id }}-${{ github.run_attempt }}'
+          $out = Join-Path $env:GITHUB_WORKSPACE 'artifacts/t16-verifier-${{ github.run_id }}-${{ github.run_attempt }}'
+          $runner = Join-Path $checkout 'RUN_FABRIC_R5_2_T16_TESTS.ps1'
+          & $runner             -GodotBin 'C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe'             -ExpectedHead $env:SUBJECT_HEAD             -ExpectedTree $env:SUBJECT_TREE             -ExpectedHash $env:EXPECTED_HASH             -EvidenceDir $out
+
+      - name: Independent final oracle
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $out = Join-Path $env:GITHUB_WORKSPACE 'artifacts/t16-verifier-${{ github.run_id }}-${{ github.run_attempt }}'
+          $evidence = Get-Content -LiteralPath (Join-Path $out 'evidence.json') -Raw | ConvertFrom-Json
+          if ($evidence.status -ne 'IMPLEMENTER_EXACT_PASS') { throw "BAD_EVIDENCE_STATUS:$($evidence.status)" }
+          if ($evidence.deterministic_hash -ne $env:EXPECTED_HASH) { throw "HASH_MISMATCH:$($evidence.deterministic_hash)" }
+          if ($evidence.result.checks -ne 980) { throw "CHECK_COUNT_MISMATCH:$($evidence.result.checks)" }
+          if (@($evidence.result.failures).Count -ne 0) { throw 'RUNTIME_FAILURES_PRESENT' }
+          $before = Get-Content -LiteralPath (Join-Path $out 'identity-before.txt')
+          $after  = Get-Content -LiteralPath (Join-Path $out 'identity-after.txt')
+          if (Compare-Object $before $after) { throw 'IDENTITY_MOVED' }
+          Write-Host "T16_VERIFIER_HASH=$($evidence.deterministic_hash)"
+          Write-Host "T16_VERIFIER_CHECKS=$($evidence.result.checks)"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: t16-verifier-windows-${{ github.sha }}-${{ github.run_attempt }}
+          path: artifacts/t16-verifier-${{ github.run_id }}-${{ github.run_attempt }}/**
+          if-no-files-found: error
+          retention-days: 90
