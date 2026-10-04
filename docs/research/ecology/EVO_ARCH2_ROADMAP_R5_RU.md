@@ -12,7 +12,8 @@
 | A12 | multi-generation population scale 256/256 — CLOSED |
 | A13 R3 | deterministic exact worksets — CLOSED |
 | A13 Spatial | Spatial Workset Addressing — CLOSED |
-| **A13 Activity** | **Active / Sleeping Population Scheduling — CURRENT** |
+| A13 Activity | Active / Sleeping Population Scheduling — CLOSED |
+| **A13 Parallel Prepare** | **Bounded Parallel Prepare — CURRENT** |
 
 ## A13 Population Scaling Architecture
 
@@ -46,7 +47,7 @@ Closed invariant:
 - spatial execution exact-equivalent to closed exact worksets;
 - reproduction/mutation/checkpoints remain byte-identical.
 
-### ▶ Active / Sleeping Population Scheduling — R1 exact cadence
+### ✅ Active / Sleeping Population Scheduling — R1 exact cadence
 
 R1 вводит scheduler-only activity classification и deterministic cadence поверх
 stable spatial addresses:
@@ -80,12 +81,44 @@ same canonical ecology truth
 R1 — reference exact semantics и фундамент для будущего sleeping fidelity. Это ещё
 не mixed ACTIVE/SLEEPING performance optimization.
 
+
+### ▶ Bounded Parallel Prepare — R1
+
+A5 Phase 1 preparation becomes bounded-parallel over the existing deterministic
+spatial worksets:
+
+```text
+spatial worksets
+→ bounded worker waves
+→ per-workset phenotype/sample/demand preparation
+→ join all workers
+→ canonical merge by workset index
+→ ONE GLOBAL RESOURCE ALLOCATION
+→ serial canonical post-allocation advance
+```
+
+R1 invariant:
+
+- worker completion order is never canonical order;
+- worker bound is explicit and <= 8;
+- each worker owns deep-copied input and local output;
+- every worker must execute off the main thread;
+- all workers join before global allocation;
+- demands merge in the same order as serial spatial scheduling;
+- exactly one global allocation remains authoritative;
+- post-allocation advance is still serial in this stage;
+- thread/scheduler telemetry is absent from Runtime/checkpoints;
+- serial and parallel paths must be byte/hash/checkpoint exact-equivalent on Windows and Linux.
+
+R1 is a correctness + concurrency foundation. Performance claims require the later
+profiling/telemetry stage.
+
 ### Следующие ступени A13
 
 1. ✅ deterministic exact worksets;
 2. ✅ spatial workset addressing;
-3. ▶ active/sleeping population scheduling — exact cadence R1;
-4. ⬜ bounded parallel prepare;
+3. ✅ active/sleeping population scheduling — exact cadence R1;
+4. ▶ bounded parallel prepare;
 5. ⬜ bounded parallel post-allocation advance;
 6. ⬜ fidelity-aware FULL/REDUCED/PATCH scheduling;
 7. ⬜ profiling / scheduler telemetry;
