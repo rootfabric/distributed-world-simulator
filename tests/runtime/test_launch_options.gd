@@ -188,6 +188,15 @@ func _init() -> void:
 	_assert(bool(live3_client.get("success", false)), "LIVE.3 client options were rejected")
 	_assert(LaunchOptionsScript.resolved_network_persistence_root(live3_client.get("options", {})).is_empty(), "LIVE.3 client unexpectedly owns a persistence root")
 
+	var live3_client_root: Dictionary = LaunchOptionsScript.parse(PackedStringArray([
+		"--role=game-client",
+		"--network-mvp",
+		"--player-identity=a",
+		"--persistence-root=user://forbidden-client-root",
+	]))
+	_assert(not bool(live3_client_root.get("success", false)), "LIVE.3 client accepted a server persistence root")
+	_assert(_has_error_fragment(live3_client_root, "persistence_root requires network MVP dedicated-server role"), "LIVE.3 client persistence-root rejection is not explicit")
+
 	var automation_client: Dictionary = LaunchOptionsScript.parse(PackedStringArray([
 		"--role=game-client",
 		"--network-mvp",
