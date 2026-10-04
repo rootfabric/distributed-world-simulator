@@ -35,8 +35,24 @@ P4 = load("mvp5_unchanged_mvp4_process", "tests/integration/test_v0_mvp_4_graphi
 V4 = load("mvp5_unchanged_mvp4_visible", "tests/integration/test_v0_mvp_4_visible_graphical_shared_dig.py")
 BASE, ROLES = P4.BASE, P4.ROLES
 
+RECEIPT_MASS_TOLERANCE_KG = 1e-12
+
+
 def integer(value) -> bool:
     return not isinstance(value, bool) and isinstance(value, (int, float)) and math.isfinite(value) and value == int(value)
+
+
+def mass_close(left, right) -> bool:
+    return (
+        isinstance(left, (int, float))
+        and not isinstance(left, bool)
+        and isinstance(right, (int, float))
+        and not isinstance(right, bool)
+        and math.isfinite(float(left))
+        and math.isfinite(float(right))
+        and abs(float(left) - float(right)) <= RECEIPT_MASS_TOLERANCE_KG
+    )
+
 
 def material_checks(reports: dict, material: dict, head: str, run_id: str) -> dict[str, bool]:
     checks = {}
@@ -57,12 +73,19 @@ def material_checks(reports: dict, material: dict, head: str, run_id: str) -> di
         first = receipts[0]
         quantity = first["output_quantity"]
         checks["positive_integral_output"] = integer(quantity) and quantity > 0 and first["logical_player_id"] == "a"
-        stable = ("batch_id", "batch_checksum", "source_operation_id", "output_operation_id", "output_item_id", "output_definition_id", "output_quantity", "source_id", "total_mass_kg", "represented_mass_kg", "residual_mass_kg")
+        exact_stable = ("batch_id", "batch_checksum", "source_operation_id", "output_operation_id", "output_item_id", "output_definition_id", "output_quantity", "source_id")
+        mass_stable = ("total_mass_kg", "represented_mass_kg", "residual_mass_kg")
+        stable = exact_stable + mass_stable
         checks["retries_keep_exact_output"] = all(all(r[k] == first[k] for k in stable) for r in receipts)
         checks["fresh_then_replayed"] = first["output_created_this_call"] is True and first["item_graph_replay"] is False and first["matter_replay"] is False and all(r["output_created_this_call"] is False and r["item_graph_replay"] is True and r["matter_replay"] is True for r in receipts[1:])
         checks["replay_does_not_advance_graph"] = all(r["current_item_graph_revision"] == canonical["item_graph_revision"] and r["current_item_graph_tick"] == canonical["item_graph_tick"] for r in receipts)
         native = source["dig_observations"][0]["output_delivery"]["delivery"]
-        checks["receipt_is_actual_p7_delivery"] = all(first[k] == native[k] for k in stable) and first["receipt_source"] == "MW4_BATCH_AND_CANONICAL_ITEM_GRAPH_REPLAY_LOOKUP" and all(r["receipt_store_owned"] is False for r in receipts)
+        checks["receipt_is_actual_p7_delivery"] = (
+            all(first[k] == native[k] for k in exact_stable)
+            and all(mass_close(first[k], native[k]) for k in mass_stable)
+            and first["receipt_source"] == "MW4_BATCH_AND_CANONICAL_ITEM_GRAPH_REPLAY_LOOKUP"
+            and all(r["receipt_store_owned"] is False for r in receipts)
+        )
         checks["mass_conserved_with_residual"] = math.isfinite(first["total_mass_kg"]) and abs(first["total_mass_kg"] - first["represented_mass_kg"] - first["residual_mass_kg"]) <= 1e-9 and first["represented_mass_kg"] == quantity and 0 <= first["residual_mass_kg"] < 1
         items = canonical["items"]
         ids = [item["item_id"] for item in items]
@@ -77,6 +100,10 @@ def material_checks(reports: dict, material: dict, head: str, run_id: str) -> di
     return checks
 
 def material_negatives(reports: dict, material: dict, head: str, run_id: str) -> list[str]:
+    def shift_native_residual_outside_tolerance(r, _m):
+        delivery = r["authority/a"]["mvp4"]["dig_observations"][0]["output_delivery"]["delivery"]
+        delivery["residual_mass_kg"] += RECEIPT_MASS_TOLERANCE_KG * 100.0
+
     mutations = {
         "inflated_receipt": lambda r, m: m["a"]["receipts"][0].update(output_quantity=m["a"]["receipts"][0]["output_quantity"] + 1),
         "different_replay_item": lambda r, m: m["a"]["receipts"][1].update(output_item_id="item/forged"),
@@ -88,6 +115,7 @@ def material_negatives(reports: dict, material: dict, head: str, run_id: str) ->
         "stale_subject": lambda r, m: m["a"].update(subject_head="0" * 40),
         "client_owns_material": lambda r, m: m["b"].update(canonical_state_owned=True),
         "fake_native_receipt": lambda r, m: r["authority/a"]["mvp4"]["dig_observations"][0]["output_delivery"]["delivery"].update(output_item_id="item/forged"),
+        "native_residual_outside_tolerance": shift_native_residual_outside_tolerance,
     }
     rejected = []
     for name, mutate in mutations.items():
