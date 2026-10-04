@@ -5,6 +5,10 @@ const LegacyBuffer = preload("res://scripts/network/simulation/fixed_tick_input_
 const Diagnostics = preload("res://scripts/runtime/networked_gameplay/m3/live2_bounded_diagnostics.gd")
 const EarthPresenter = preload("res://scripts/app/earth_m3_remote_spectator_presenter.gd")
 const LiveServer = preload("res://scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime.gd")
+const MovementService = preload("res://scripts/runtime/networked_gameplay/services/player_movement_service.gd")
+const PlayerSnapshot = preload("res://scripts/runtime/networked_gameplay/contracts/player_state_snapshot.gd")
+const CompactSnapshot = preload("res://scripts/runtime/networked_gameplay/contracts/compact_gameplay_snapshot.gd")
+const ProtocolFrame = preload("res://scripts/network/transports/v2/protocol_frame_v2.gd")
 
 class FakeResultService:
 	extends RefCounted
@@ -34,6 +38,7 @@ func _run() -> void:
 	_test_pressure_buffer()
 	_test_diagnostics()
 	_test_production_wiring()
+	_test_cardinal_movement_wire_stability()
 	_test_render_sample_isolation()
 	for failure in failures:
 		push_error(failure)
@@ -140,6 +145,75 @@ func _test_production_wiring() -> void:
 	_check(server.sent.size() == 1, "no duplicate result publication")
 	_check(int(server._live2_diagnostics.get_report().get("total_rejections_observed", 0)) == 1, "real server result path records cause")
 	server.free()
+
+
+func _test_cardinal_movement_wire_stability() -> void:
+	var movement = MovementService.new()
+	var record := {
+		"logical_player_id": "a",
+		"player_entity_id": "player/a",
+		"transport_session_id": "transport-session/m3/a/cardinal",
+		"ownership_epoch": 1,
+		"connected": true,
+		"position": {"x": -5.0, "y": 0.0, "z": 0.0},
+		"velocity": {"x": 0.0, "y": 0.0, "z": 0.0},
+		"inventory": [],
+		"last_input_sequence": 0,
+		"state_revision": 1,
+		"orientation_yaw": 0.0,
+		"flashlight_enabled": false,
+	}
+	var moved: Dictionary = movement.apply_fixed_tick(record, 1, {
+		"move_x": 0.0,
+		"move_z": 1.0,
+		"look_yaw": -PI / 2.0,
+		"look_pitch": 0.0,
+		"sprint": false,
+		"jump_pressed": false,
+	}, 1.0 / 60.0)
+	_check(bool(moved.get("success", false)), "cardinal fixed movement accepted")
+	if not bool(moved.get("success", false)):
+		return
+	var player: Dictionary = moved.get("details", {}).get("player", {})
+	_check(float(player.get("velocity", {}).get("z", 1.0)) == 0.0,
+		"cardinal movement removes sub-epsilon velocity residue")
+	_check(float(player.get("position", {}).get("z", 1.0)) == 0.0,
+		"cardinal movement keeps orthogonal position exactly canonical zero")
+
+	var snapshot: Dictionary = PlayerSnapshot.create(
+		"simulation/earth", 1, 2, 100, "region/earth", [player],
+		{"item_id": "item/shared/beacon/1", "available": true,
+			"owner_player_entity_id": "", "revision": 0}
+	)
+	_check(bool(PlayerSnapshot.validate(snapshot).get("success", false)),
+		"cardinal movement produces a valid canonical gameplay snapshot")
+	var compact_result: Dictionary = CompactSnapshot.encode(snapshot)
+	_check(bool(compact_result.get("success", false)),
+		"cardinal movement snapshot compact-encodes")
+	if not bool(compact_result.get("success", false)):
+		return
+	var compact: Dictionary = compact_result.get("details", {}).get("snapshot", {})
+	var frame: Dictionary = ProtocolFrame.create(
+		"frame/live2-r3/cardinal-wire",
+		"transport-session/live2-r3/cardinal-wire",
+		1,
+		"SNAPSHOT",
+		"UNRELIABLE_SEQUENCED",
+		"planet_simulator.m3_process_message.v1",
+		{
+			"type": "COMPACT_GAMEPLAY_SNAPSHOT",
+			"reason": "CARDINAL_WIRE_REGRESSION",
+			"server_sent_at_ms": 1000,
+			"snapshot": compact,
+		}
+	)
+	var encoded: Dictionary = ProtocolFrame.encode(frame)
+	_check(bool(encoded.get("success", false)), "cardinal compact frame encodes")
+	if not bool(encoded.get("success", false)):
+		return
+	var decoded: Dictionary = ProtocolFrame.decode(encoded.get("details", {}).get("packet", PackedByteArray()))
+	_check(bool(decoded.get("success", false)),
+		"cardinal compact frame survives JSON wire round-trip without payload checksum drift")
 
 
 func _test_render_sample_isolation() -> void:
