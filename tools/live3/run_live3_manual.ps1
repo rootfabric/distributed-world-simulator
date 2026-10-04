@@ -13,10 +13,12 @@ $ErrorActionPreference = 'Stop'
 $Repo = (Resolve-Path $Repo).Path
 if ($Repo -match '[\\/]runner[\\/].*[\\/]_work[\\/]') { throw 'DO_NOT_USE_RUNNER_CHECKOUT' }
 if ($Slot -match '^(con|prn|aux|nul|com[1-9]|lpt[1-9])$') { throw 'RESERVED_WORLD_SLOT' }
-$head = (& git -C $Repo rev-parse HEAD).Trim()
-if ($LASTEXITCODE -ne 0) { throw 'REPO_IS_NOT_A_GIT_CHECKOUT' }
-$tree = (& git -C $Repo rev-parse 'HEAD^{tree}').Trim()
-if ($LASTEXITCODE -ne 0) { throw 'TREE_READ_FAILED' }
+$head = & git -C $Repo rev-parse HEAD
+if ($LASTEXITCODE -ne 0 -or -not $head) { throw 'REPO_IS_NOT_A_GIT_CHECKOUT' }
+$head = $head.Trim()
+$tree = & git -C $Repo rev-parse 'HEAD^{tree}'
+if ($LASTEXITCODE -ne 0 -or -not $tree) { throw 'TREE_READ_FAILED' }
+$tree = $tree.Trim()
 if ($ExpectedHead -and $ExpectedHead -ne $head) { throw 'EXPECTED_HEAD_MISMATCH' }
 $dirty = & git -C $Repo status --porcelain --untracked-files=no
 if ($LASTEXITCODE -ne 0 -or $dirty) { throw 'TRACKED_CHECKOUT_NOT_CLEAN' }
@@ -150,13 +152,12 @@ function Stop-Client([ValidateSet('a','b')][string]$Identity) {
 try {
     $slotLock = [IO.File]::Open((Join-Path $Locks "$Slot.lock"),[IO.FileMode]::OpenOrCreate,[IO.FileAccess]::ReadWrite,[IO.FileShare]::None)
     @{head=$head;tree=$tree;slot=$Slot;worlds=$Worlds;session=$Session;port=$Port;started_at=(Get-Date).ToString('o')} | ConvertTo-Json | Set-Content (Join-Path $Session 'session.json')
-    # Mandatory even on a fresh clone: runtime global classes must be imported
-    # before starting concurrent clients. Import is isolated from personal data.
+    # Mandatory on every checkout; separate profile avoids changing personal data.
     $import = Start-Owned $GodotConsole @('--headless','--path',$Repo,'--editor','--import','--quit') 'import' (Join-Path $Session 'import-profile')
     if (-not $import.WaitForExit(900000)) { throw 'IMPORT_TIMEOUT_OWNED_PROCESS_NOT_KILLED' }
     $import.Refresh()
-    $errors = Select-String -Path (Join-Path $Session 'import.*.log') -Pattern 'SCRIPT ERROR:|Parse Error:|Compile Error:|Failed to load script' -Quiet
-    if ($import.ExitCode -ne 0 -or $errors) { throw "IMPORT_FAILED; logs=$Session" }
+    $errors = @(Select-String -Path (Join-Path $Session 'import.*.log') -Pattern 'SCRIPT ERROR:|Parse Error:|Compile Error:|Failed to load script')
+    if ($import.ExitCode -ne 0 -or $errors.Count -gt 0) { throw "IMPORT_FAILED; logs=$Session" }
     Start-Server
     Start-Client a
     Start-Client b
@@ -174,8 +175,7 @@ try {
         }
     }
 } finally {
-    # No Stop-Process by name and no taskkill of a server: a failed save is not
-    # converted into a successful shutdown. Foreign CI processes are untouched.
+    # A failed save is never converted into force-kill or successful shutdown.
     if ($null -ne $script:Server) {
         try { Stop-Server } catch { Write-Warning "World was NOT confirmed saved: $($_.Exception.Message)" }
     }
