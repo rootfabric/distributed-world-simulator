@@ -15,9 +15,9 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  PRODUCT_HEAD: ab74614c2c3ea0f4dd5c07e614c0d11246eb270c
-  PRODUCT_TREE: fa2fda0bbf71b2b07f30a7136ab39784c41d4804
-  LIVE2_PARENT: 4ab3cb5d061121b3f02ed1a00dfa6a6373b5fead
+  PRODUCT_HEAD: 49aa7b33dd7859102e3b81991ab4083ca4f3e46f
+  PRODUCT_TREE: 01c081457387aa8dd1c279cab06ee8fe97b75170
+  LIVE2_PARENT: ab74614c2c3ea0f4dd5c07e614c0d11246eb270c
   MAIN_FENCE: 845dc2411a4810a5e7e15b6d96ae0d661014ffb8
   GODOT_BIN: C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe
   PYTHONUTF8: '1'
@@ -53,9 +53,7 @@ jobs:
           if ((git status --porcelain --untracked-files=no)) { throw 'TRACKED_DIRTY_BEFORE' }
 
           $p1=(git rev-parse 'HEAD^1').Trim()
-          $p2=(git rev-parse 'HEAD^2').Trim()
-          if ($p1 -ne $env:LIVE2_PARENT) { throw "FIRST_PARENT_MISMATCH:$p1" }
-          if ($p2 -ne $env:MAIN_FENCE) { throw "SECOND_PARENT_MISMATCH:$p2" }
+          if ($p1 -ne $env:LIVE2_PARENT) { throw "PARENT_MISMATCH:$p1" }
 
           git fetch origin '+refs/heads/main:refs/remotes/origin/main'
           if ($LASTEXITCODE -ne 0) { throw 'MAIN_FETCH_FAILED' }
@@ -66,20 +64,13 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'LIVE2_PARENT_NOT_ANCESTOR' }
 
           $expected=@(
-            '.github/workflows/eco-arch2-a13-exact.yml',
-            'docs/research/ecology/ECO_ARCH2_A13_WORK_ORDER_RU.md',
-            'docs/research/ecology/EVO_ARCH2_ROADMAP_R4_RU.md',
-            'scripts/research/ecology/v2/ecology_runtime_v1.gd',
-            'scripts/research/ecology/v2/population_workset_plan_v1.gd',
-            'scripts/research/ecology/v2/resource_lifecycle_runtime_v1.gd',
-            'validation/ecology/evo_arch2_a13/run_exact.py',
-            'validation/ecology/evo_arch2_a13/test_exact_worksets.gd'
+            'tests/integration/test_v0_mvp_5_graphical_material.py'
           ) | Sort-Object
           $actual=@(git diff --name-only $env:LIVE2_PARENT $env:PRODUCT_HEAD) | Sort-Object
           $delta=@(Compare-Object -ReferenceObject $expected -DifferenceObject $actual)
           if ($delta.Count -gt 0) {
             $delta | Format-Table | Out-String | Write-Host
-            throw 'CATCHUP_FILESET_MISMATCH'
+            throw 'POST_CATCHUP_HARNESS_FILESET_MISMATCH'
           }
 
           $foreign=@(Get-Process -ErrorAction SilentlyContinue | Where-Object {$_.ProcessName -like 'godot*'})
@@ -100,8 +91,7 @@ jobs:
             live2_parent=$env:LIVE2_PARENT
             main=$env:MAIN_FENCE
             first_parent=$p1
-            second_parent=$p2
-            catchup_files=$actual
+            post_catchup_harness_files=$actual
             godot_version=$version
             godot_sha256=$sha
             free_ram_gb=$free
