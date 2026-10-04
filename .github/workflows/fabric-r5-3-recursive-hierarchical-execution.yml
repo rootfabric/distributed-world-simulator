@@ -1,0 +1,64 @@
+name: FABRIC R5.3 Recursive Hierarchical Execution Source
+on:
+  push:
+    branches: [research/fabric-r5-3-recursive-hierarchical-execution-r1]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: fabric-r5-3-source-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  source-contracts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Prove R5.3-only additive scope and source contracts
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          base=604192f07070d0f0e38a94445611d09d92cb7f7f
+          test "$(git merge-base HEAD "$base")" = "$base"
+          python3 - <<'PY'
+          import subprocess
+          allowed = {
+            '.github/workflows/fabric-r5-3-recursive-hierarchical-execution.yml',
+            'RUN_FABRIC_R5_3_TESTS.sh','RUN_FABRIC_R5_3_TESTS.ps1',
+            'scripts/research/fabric_bake0/r5_3_recursive_rom_compiler_v1.gd',
+            'scripts/research/fabric_bake0/r5_3_recursive_rom_runtime_v1.gd',
+            'scripts/research/fabric_bake0/collect_r5_3_evidence.py',
+            'tests/research/fabric_bake0/fabric_r5_3_recursive_rom_fixture.gd',
+            'tests/research/fabric_bake0/fabric_r5_3_recursive_rom_acceptance.gd',
+            'tests/research/fabric_bake0/test_r5_3_evidence.py',
+            'docs/research/FABRIC_R5_3_RECURSIVE_HIERARCHICAL_EXECUTION_RU.md',
+            'docs/research/FABRIC_R5_3_WORK_ORDER_RU.md',
+          }
+          rows=subprocess.check_output(['git','diff','--name-status','604192f07070d0f0e38a94445611d09d92cb7f7f','HEAD'],text=True).splitlines()
+          got=set()
+          for row in rows:
+            status,path=row.split('\t',1)
+            assert status=='A',row
+            got.add(path)
+          assert got==allowed,(got^allowed)
+          PY
+          git diff --check "$base" HEAD
+          bash -n RUN_FABRIC_R5_3_TESTS.sh
+          python3 -m unittest discover -s tests/research/fabric_bake0 -p test_r5_3_evidence.py -v
+          ! grep -q 'res://tests/' scripts/research/fabric_bake0/r5_3_recursive_rom_compiler_v1.gd
+          ! grep -q 'res://tests/' scripts/research/fabric_bake0/r5_3_recursive_rom_runtime_v1.gd
+          grep -q 'Reducer.reduce' scripts/research/fabric_bake0/r5_3_recursive_rom_compiler_v1.gd
+          grep -q 'runtime_source_component_traversals":0' scripts/research/fabric_bake0/r5_3_recursive_rom_runtime_v1.gd
+          mkdir -p source
+          git archive --format=tar HEAD | gzip -n > source/r5-3-source.tar.gz
+          printf 'HEAD=%s\nTREE=%s\nBASE_T16=%s\n' "$(git rev-parse HEAD)" "$(git rev-parse 'HEAD^{tree}')" "$base" > source/identity.txt
+          sha256sum source/r5-3-source.tar.gz > source/source.sha256
+      - uses: actions/upload-artifact@v4
+        with:
+          name: r5-3-source-${{ github.sha }}
+          path: source/**
+          if-no-files-found: error
+          retention-days: 90
