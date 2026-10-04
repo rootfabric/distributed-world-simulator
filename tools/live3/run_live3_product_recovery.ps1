@@ -274,7 +274,7 @@ function Resolve-EarthResourcePlanarTarget {
     if($node.Count -ne 1){throw "RESOURCE_NODE_NOT_FOUND:$ResourceNodeId"}
     $spatial=$node[0].spatial
     if([string]$spatial.frame -ne "earth-fixed"){
-        throw "RESOURCE_NODE_FRAME_UNSUPPORTED:$ResourceNodeId:$($spatial.frame)"
+        throw "RESOURCE_NODE_FRAME_UNSUPPORTED:${ResourceNodeId}:$($spatial.frame)"
     }
 
     # Mirror EarthResourceSpatialResolver exactly. Note that the accepted
