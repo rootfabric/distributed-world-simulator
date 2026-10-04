@@ -30,6 +30,8 @@ const Lifecycle = preload("res://scripts/research/ecology/v2/resource_lifecycle_
 const Feedback = preload("res://scripts/research/ecology/v2/persistent_environmental_feedback_v1.gd")
 const Scale = preload("res://scripts/research/ecology/v2/ecology_scale_contract_v1.gd")
 const Worksets = preload("res://scripts/research/ecology/v2/population_workset_plan_v1.gd")
+const SpatialWorksets = preload("res://scripts/research/ecology/v2/population_spatial_workset_plan_v1.gd")
+const ActivityCadence = preload("res://scripts/research/ecology/v2/population_activity_cadence_plan_v1.gd")
 
 const SCHEMA := "dws.ecology.ecology-runtime-state.v1"
 const FEEDBACK_SCHEMA := "dws.ecology.ecology-runtime-feedback.v1"
@@ -114,6 +116,89 @@ static func step_scheduled(state: Dictionary, options: Dictionary, workset_size:
 	if not bool(admitted.get("success", false)): return admitted
 	return step_feedback(admitted.state)
 
+## A13 spatial scheduler entry point. Spatial addressing is recomputed from
+## current canonical positions/field geometry every tick and is not persisted.
+static func step_spatial_scheduled(state: Dictionary, options: Dictionary,
+		tile_span_cells: int = SpatialWorksets.DEFAULT_TILE_SPAN_CELLS,
+		max_members: int = SpatialWorksets.DEFAULT_MAX_MEMBERS) -> Dictionary:
+	var lifecycle := step_lifecycle_spatial_scheduled(state, tile_span_cells, max_members)
+	if not bool(lifecycle.get("success", false)): return lifecycle
+	var admitted := admit_propagules(lifecycle.state, options)
+	if not bool(admitted.get("success", false)): return admitted
+	return step_feedback(admitted.state)
+
+## A13 Active/Sleeping R1 exact-catch-up entry point.
+##
+## The activity plan is scheduler-only and may defer a canonical commit while
+## SLEEPING tiles accumulate cadence debt. Because A5 has one global resource
+## allocation barrier, R1 never advances ACTIVE tiles canonically past sleeping
+## debt. Once the plan becomes due, every missed canonical tick is replayed in
+## order through step_spatial_scheduled(). This is an exact reference contract,
+## not yet a reduced-fidelity performance optimization.
+##
+## The caller owns scheduler time. Runtime state/checkpoints keep only canonical
+## ecology tick; no activity/cadence metadata is persisted.
+static func advance_spatial_activity_cadence(state: Dictionary, options: Dictionary,
+		activity_plan: Dictionary) -> Dictionary:
+	var error := validate(state)
+	if not error.is_empty():
+		return _fail(error)
+	var plan_error := ActivityCadence.validate(activity_plan, state.field, state.population)
+	if not plan_error.is_empty():
+		return _fail("RUNTIME_ACTIVITY_PLAN:" + plan_error)
+	if int(activity_plan.committed_scheduler_tick) != int(state.tick):
+		return _fail("RUNTIME_ACTIVITY_FRONTIER")
+
+	var target_tick := int(activity_plan.target_scheduler_tick)
+	var debt_ticks := int(activity_plan.debt_ticks)
+	if debt_ticks == 0:
+		return {
+			"success": true,
+			"state": state.duplicate(true),
+			"deferred": false,
+			"replayed_ticks": 0,
+			"scheduler_tick": target_tick,
+			"canonical_tick": int(state.tick),
+			"debt_ticks": 0,
+			"exact_catch_up": true,
+		}
+
+	if not bool(activity_plan.global_commit_ready):
+		return {
+			"success": true,
+			"state": state.duplicate(true),
+			"deferred": true,
+			"replayed_ticks": 0,
+			"scheduler_tick": target_tick,
+			"canonical_tick": int(state.tick),
+			"debt_ticks": debt_ticks,
+			"exact_catch_up": true,
+		}
+
+	var next := state.duplicate(true)
+	var replayed := 0
+	for _tick_index in int(activity_plan.catch_up_ticks):
+		var stepped := step_spatial_scheduled(
+			next, options,
+			int(activity_plan.tile_span_cells), int(activity_plan.max_members))
+		if not bool(stepped.get("success", false)):
+			return _fail("RUNTIME_ACTIVITY_CATCH_UP:" + String(stepped.get("error", "?")))
+		next = stepped.state
+		replayed += 1
+
+	if replayed != debt_ticks or int(next.tick) != target_tick:
+		return _fail("RUNTIME_ACTIVITY_CATCH_UP_FRONTIER")
+	return {
+		"success": true,
+		"state": next,
+		"deferred": false,
+		"replayed_ticks": replayed,
+		"scheduler_tick": target_tick,
+		"canonical_tick": int(next.tick),
+		"debt_ticks": 0,
+		"exact_catch_up": true,
+	}
+
 ## Primitive 1: the A5 lifecycle step — executed EXACTLY once per tick.
 ## Advances life state and field intake on the single current truth.
 ## Emitted propagules enter the state outbox as paid-but-unmaterialized
@@ -127,6 +212,24 @@ static func step_lifecycle_scheduled(state: Dictionary, workset_size: int) -> Di
 	var field: Dictionary = state.field
 	var result := Lifecycle.step_population_scheduled(
 		field, state.population, field.owner_token, field.owner_epoch, field.revision, workset_size)
+	if not result.success: return _fail("RUNTIME_LIFECYCLE:" + String(result.error))
+	var next := state.duplicate(true)
+	next.field = result.field
+	next.population = result.population.duplicate(true)
+	var outbox: Array = []
+	for propagule in result.propagules:
+		outbox.append({"schema": OUTBOX_SCHEMA, "propagule": propagule.duplicate(true)})
+	next.outbox = outbox
+	return {"success": true, "state": _seal(next)}
+
+static func step_lifecycle_spatial_scheduled(state: Dictionary,
+		tile_span_cells: int, max_members: int) -> Dictionary:
+	var error := validate(state)
+	if not error.is_empty(): return _fail(error)
+	var field: Dictionary = state.field
+	var result := Lifecycle.step_population_spatial_scheduled(
+		field, state.population, field.owner_token, field.owner_epoch, field.revision,
+		tile_span_cells, max_members)
 	if not result.success: return _fail("RUNTIME_LIFECYCLE:" + String(result.error))
 	var next := state.duplicate(true)
 	next.field = result.field

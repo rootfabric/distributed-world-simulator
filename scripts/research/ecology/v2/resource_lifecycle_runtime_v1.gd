@@ -12,6 +12,7 @@ const Field = preload("res://scripts/research/ecology/v2/local_environment_field
 const Ports = preload("res://scripts/research/ecology/v2/organism_environment_ports_v1.gd")
 const Scale = preload("res://scripts/research/ecology/v2/ecology_scale_contract_v1.gd")
 const Worksets = preload("res://scripts/research/ecology/v2/population_workset_plan_v1.gd")
+const SpatialWorksets = preload("res://scripts/research/ecology/v2/population_spatial_workset_plan_v1.gd")
 const MAX_POPULATION := Scale.MAX_POPULATION
 const MAX_PROPAGULES_PER_STEP := Scale.MAX_PROPAGULES_PER_STEP
 const PROPAGULE_SCHEMA := "dws.ecology.propagule.v1"
@@ -52,6 +53,38 @@ static func step_population_with_plan(field: Dictionary, population: Array, owne
 		return _fail("A5_WORKSET_PLAN:" + plan_error)
 	return _step_population_with_entries(field, entries, owner_token, owner_epoch, revision, plan)
 
+static func step_population_spatial_scheduled(field: Dictionary, population: Array,
+		owner_token: String, owner_epoch: int, revision: int,
+		tile_span_cells: int = SpatialWorksets.DEFAULT_TILE_SPAN_CELLS,
+		max_members: int = SpatialWorksets.DEFAULT_MAX_MEMBERS) -> Dictionary:
+	var precondition := _precondition_error(field, population, owner_token, owner_epoch, revision)
+	if not precondition.is_empty():
+		return _fail(precondition)
+	var normalized := _canonical_entries(population)
+	if not bool(normalized.get("success", false)):
+		return normalized
+	var entries: Array = normalized.entries
+	var plan := SpatialWorksets.create(field, entries, tile_span_cells, max_members)
+	if plan.is_empty():
+		return _fail("A5_SPATIAL_WORKSET_PLAN")
+	return _step_population_with_validated_units(
+		field, entries, owner_token, owner_epoch, revision, plan.worksets)
+
+static func step_population_with_spatial_plan(field: Dictionary, population: Array,
+		owner_token: String, owner_epoch: int, revision: int, plan: Dictionary) -> Dictionary:
+	var precondition := _precondition_error(field, population, owner_token, owner_epoch, revision)
+	if not precondition.is_empty():
+		return _fail(precondition)
+	var normalized := _canonical_entries(population)
+	if not bool(normalized.get("success", false)):
+		return normalized
+	var entries: Array = normalized.entries
+	var plan_error := SpatialWorksets.validate(plan, field, entries)
+	if not plan_error.is_empty():
+		return _fail("A5_SPATIAL_WORKSET_PLAN:" + plan_error)
+	return _step_population_with_validated_units(
+		field, entries, owner_token, owner_epoch, revision, plan.worksets)
+
 static func _precondition_error(field: Dictionary, population: Array, owner_token: String, owner_epoch: int, revision: int) -> String:
 	# Preserve the historical A5 public failure precedence exactly.
 	if not F.validate_state(field).is_empty():
@@ -85,6 +118,14 @@ static func _canonical_entries(population: Array) -> Dictionary:
 	return {"success": true, "entries": entries}
 
 static func _step_population_with_entries(field: Dictionary, entries: Array, owner_token: String, owner_epoch: int, revision: int, plan: Dictionary) -> Dictionary:
+	var plan_error := Worksets.validate(plan, entries)
+	if not plan_error.is_empty():
+		return _fail("A5_WORKSET_PLAN:" + plan_error)
+	return _step_population_with_validated_units(
+		field, entries, owner_token, owner_epoch, revision, plan.worksets)
+
+static func _step_population_with_validated_units(field: Dictionary, entries: Array,
+		owner_token: String, owner_epoch: int, revision: int, units: Array) -> Dictionary:
 	if not F.validate_state(field).is_empty():
 		return _fail("A5_FIELD")
 	if owner_token != field.owner_token:
@@ -93,9 +134,6 @@ static func _step_population_with_entries(field: Dictionary, entries: Array, own
 		return _fail("STALE_OWNER_EPOCH")
 	if revision != field.revision:
 		return _fail("STALE_REVISION")
-	var plan_error := Worksets.validate(plan, entries)
-	if not plan_error.is_empty():
-		return _fail("A5_WORKSET_PLAN:" + plan_error)
 
 	var by_id := {}
 	for entry in entries:
@@ -105,7 +143,7 @@ static func _step_population_with_entries(field: Dictionary, entries: Array, own
 	# Nothing mutates the field/population in this phase.
 	var samples := {}
 	var demands: Array = []
-	for unit in plan.worksets:
+	for unit in units:
 		for raw_id in unit.member_ids:
 			var id := String(raw_id)
 			var entry: Dictionary = by_id[id]
@@ -145,7 +183,7 @@ static func _step_population_with_entries(field: Dictionary, entries: Array, own
 	# canonical worksets, using grants from the single global allocation.
 	var next_population: Array = []
 	var propagules: Array = []
-	for unit in plan.worksets:
+	for unit in units:
 		for raw_id in unit.member_ids:
 			var id := String(raw_id)
 			var entry: Dictionary = by_id[id]

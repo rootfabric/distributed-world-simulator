@@ -1,7 +1,7 @@
 # V0-LIVE.3 R1 — Recovery as Product Behavior
 
 **Status:** IMPLEMENTATION CANDIDATE  
-**Base main:** `894f7033b16cefcf78e40d660bdbaf0c9b061afe`  
+**Base main:** `1f8a9debc4f8838569f818faa43bdadc0f23f965`  
 **Branch:** `feature/v0-live3-recovery-product-r1`
 
 ## Goal

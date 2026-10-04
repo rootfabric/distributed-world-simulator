@@ -14,7 +14,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  BASE_MAIN: 894f7033b16cefcf78e40d660bdbaf0c9b061afe
+  BASE_MAIN: 1f8a9debc4f8838569f818faa43bdadc0f23f965
   GODOT_BIN: C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe
   GODOT_GUI: C:\Godot\godot\bin\godot.windows.editor.double.x86_64.exe
   PYTHONUTF8: '1'
