@@ -322,6 +322,12 @@ static func _validate(options: Dictionary, errors: Array[String]) -> void:
 			options["world"] = "playground"
 		elif String(options.get("world", "")) != "playground":
 			errors.append("Network playground requires --world=playground")
+	var product_persistence_root := String(options.get("persistence_root", "")).strip_edges()
+	if not product_persistence_root.is_empty() and (
+		role != RuntimeRoleScript.DEDICATED_SERVER
+		or not bool(options.get("network_mvp", false))
+	):
+		errors.append("Launch option persistence_root requires network MVP dedicated-server role")
 	var m6_result_file := String(options.get("m6_result_file", "")).strip_edges()
 	var m6_persistence_root := String(options.get("m6_persistence_root", "")).strip_edges()
 	if (not m6_result_file.is_empty() or not m6_persistence_root.is_empty()) and role != RuntimeRoleScript.DEDICATED_SERVER:
