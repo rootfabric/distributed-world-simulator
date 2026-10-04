@@ -4,6 +4,8 @@ extends RefCounted
 ## positions + canonical field geometry. They own no biology/resources/state.
 const C = preload("res://scripts/research/ecology/v2/canonical_value_v1.gd")
 const F = preload("res://scripts/research/ecology/v2/environment_field_contract_v1.gd")
+const BP = preload("res://scripts/research/ecology/v2/organism_blueprint_v1.gd")
+const LS = preload("res://scripts/research/ecology/v2/organism_life_state_v1.gd")
 const Scale = preload("res://scripts/research/ecology/v2/ecology_scale_contract_v1.gd")
 const ExactWorksets = preload("res://scripts/research/ecology/v2/population_workset_plan_v1.gd")
 
@@ -170,7 +172,9 @@ static func _rows(field: Dictionary, population: Array, tile_span_cells: int) ->
 	var rows: Array = []
 	var seen := {}
 	for entry in population:
-		if not entry is Dictionary or not entry.get("state") is Dictionary:
+		if not entry is Dictionary or not C.keys(entry, ["blueprint", "state"]) 				or not entry.blueprint is Dictionary or not entry.state is Dictionary:
+			return []
+		if not BP.validate(entry.blueprint).is_empty() 				or not LS.validate(entry.state, entry.blueprint).is_empty():
 			return []
 		var id: Variant = entry.state.get("individual_id", null)
 		var position: Variant = entry.state.get("position_mm", null)
