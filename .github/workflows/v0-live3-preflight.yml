@@ -1,0 +1,56 @@
+name: V0 LIVE3 baseline recovery audit
+on:
+  push:
+    branches: [feature/v0-live3-product-recovery-r1]
+    paths: [.github/workflows/v0-live3-preflight.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Baseline recovery surface inventory
+        shell: bash
+        run: |
+          mkdir -p artifacts/live3-baseline
+          python - <<'PY' | tee artifacts/live3-baseline/recovery-surfaces.txt
+          from pathlib import Path
+          import re, subprocess
+          print('HEAD', subprocess.check_output(['git','rev-parse','HEAD'], text=True).strip())
+          print('BASE', subprocess.check_output(['git','rev-parse','origin/main'], text=True).strip())
+          for p in sorted(Path('.').rglob('AGENTS.md')):
+              if '.git' not in p.parts: print('GUIDANCE', p)
+          for root in ('scripts/persistence','scripts/runtime/networked_gameplay','scripts/construction'):
+              for p in sorted(Path(root).rglob('*.gd')):
+                  if any(t in str(p) for t in ('recovery','persistent','p6_', 'networked_gameplay_service_p5', 'networked_gameplay_service_p3', 'networked_gameplay_service_base')):
+                      text = p.read_text()
+                      print('OWNER', p, '\n', '\n'.join(re.findall(r'^(?:extends .+|(?:static )?func [^\n]+)', text, re.M)))
+          print('NATIVE_TESTS')
+          for p in sorted(Path('tests').rglob('*')):
+              if p.is_file() and p.suffix in ('.gd','.py') and any(t in p.name for t in ('v0_p6_', 'v0_mvp_7_', 'm6_dedicated', 'p5_durable', 'resource_mining_persistence', 'graceful_shutdown')):
+                  print(p)
+          print('LIVE3_DISCOVERY')
+          for p in sorted(Path('config/control').rglob('*.json')):
+              if any(t in p.read_text(errors='replace').lower() for t in ('live3', 'live.3', 'v0-live.3')): print(p)
+          PY
+      - name: Canonical overview diagnostic
+        shell: pwsh
+        run: |
+          ./CONTROL_DEVELOPMENT.ps1 -Overview *> artifacts/live3-baseline/overview.txt
+          $result=$LASTEXITCODE
+          Get-Content artifacts/live3-baseline/overview.txt
+          "overview_exit=$result" | Set-Content artifacts/live3-baseline/control-result.txt
+          exit 0
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: live3-baseline-${{ github.run_id }}
+          path: artifacts/live3-baseline/
+          if-no-files-found: error
+          retention-days: 30
