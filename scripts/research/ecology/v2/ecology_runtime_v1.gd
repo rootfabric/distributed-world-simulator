@@ -30,7 +30,8 @@ const Lifecycle = preload("res://scripts/research/ecology/v2/resource_lifecycle_
 const Feedback = preload("res://scripts/research/ecology/v2/persistent_environmental_feedback_v1.gd")
 const Scale = preload("res://scripts/research/ecology/v2/ecology_scale_contract_v1.gd")
 const Worksets = preload("res://scripts/research/ecology/v2/population_workset_plan_v1.gd")
-const SpatialWorksets = preload("res://scripts/research/ecology/v2/population_spatial_workset_plan_v1.gd")\nconst ActivityCadence = preload("res://scripts/research/ecology/v2/population_activity_cadence_plan_v1.gd")
+const SpatialWorksets = preload("res://scripts/research/ecology/v2/population_spatial_workset_plan_v1.gd")
+const ActivityCadence = preload("res://scripts/research/ecology/v2/population_activity_cadence_plan_v1.gd")
 
 const SCHEMA := "dws.ecology.ecology-runtime-state.v1"
 const FEEDBACK_SCHEMA := "dws.ecology.ecology-runtime-feedback.v1"
