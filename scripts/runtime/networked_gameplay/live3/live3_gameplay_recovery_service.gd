@@ -12,7 +12,8 @@ func bind_live3_construction(bridge) -> Dictionary:
 	if _live3_port != null:
 		return _failure("LIVE3_CONSTRUCTION_ALREADY_BOUND")
 	var port = Live3ConstructionPort.new()
-	var bound: Dictionary = port.bind(bridge, get_canonical_item_graph_port())
+	var graph = _canonical_multiplayer_items if _configured else null
+	var bound: Dictionary = port.bind(bridge, graph)
 	if not bool(bound.get("success", false)):
 		return bound
 	if not _live3_pending.is_empty():
