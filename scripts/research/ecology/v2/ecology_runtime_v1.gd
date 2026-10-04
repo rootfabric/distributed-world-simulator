@@ -30,6 +30,7 @@ const Lifecycle = preload("res://scripts/research/ecology/v2/resource_lifecycle_
 const Feedback = preload("res://scripts/research/ecology/v2/persistent_environmental_feedback_v1.gd")
 const Scale = preload("res://scripts/research/ecology/v2/ecology_scale_contract_v1.gd")
 const Worksets = preload("res://scripts/research/ecology/v2/population_workset_plan_v1.gd")
+const SpatialWorksets = preload("res://scripts/research/ecology/v2/population_spatial_workset_plan_v1.gd")
 
 const SCHEMA := "dws.ecology.ecology-runtime-state.v1"
 const FEEDBACK_SCHEMA := "dws.ecology.ecology-runtime-feedback.v1"
@@ -114,6 +115,17 @@ static func step_scheduled(state: Dictionary, options: Dictionary, workset_size:
 	if not bool(admitted.get("success", false)): return admitted
 	return step_feedback(admitted.state)
 
+## A13 spatial scheduler entry point. Spatial addressing is recomputed from
+## current canonical positions/field geometry every tick and is not persisted.
+static func step_spatial_scheduled(state: Dictionary, options: Dictionary,
+		tile_span_cells: int = SpatialWorksets.DEFAULT_TILE_SPAN_CELLS,
+		max_members: int = SpatialWorksets.DEFAULT_MAX_MEMBERS) -> Dictionary:
+	var lifecycle := step_lifecycle_spatial_scheduled(state, tile_span_cells, max_members)
+	if not bool(lifecycle.get("success", false)): return lifecycle
+	var admitted := admit_propagules(lifecycle.state, options)
+	if not bool(admitted.get("success", false)): return admitted
+	return step_feedback(admitted.state)
+
 ## Primitive 1: the A5 lifecycle step — executed EXACTLY once per tick.
 ## Advances life state and field intake on the single current truth.
 ## Emitted propagules enter the state outbox as paid-but-unmaterialized
@@ -127,6 +139,24 @@ static func step_lifecycle_scheduled(state: Dictionary, workset_size: int) -> Di
 	var field: Dictionary = state.field
 	var result := Lifecycle.step_population_scheduled(
 		field, state.population, field.owner_token, field.owner_epoch, field.revision, workset_size)
+	if not result.success: return _fail("RUNTIME_LIFECYCLE:" + String(result.error))
+	var next := state.duplicate(true)
+	next.field = result.field
+	next.population = result.population.duplicate(true)
+	var outbox: Array = []
+	for propagule in result.propagules:
+		outbox.append({"schema": OUTBOX_SCHEMA, "propagule": propagule.duplicate(true)})
+	next.outbox = outbox
+	return {"success": true, "state": _seal(next)}
+
+static func step_lifecycle_spatial_scheduled(state: Dictionary,
+		tile_span_cells: int, max_members: int) -> Dictionary:
+	var error := validate(state)
+	if not error.is_empty(): return _fail(error)
+	var field: Dictionary = state.field
+	var result := Lifecycle.step_population_spatial_scheduled(
+		field, state.population, field.owner_token, field.owner_epoch, field.revision,
+		tile_span_cells, max_members)
 	if not result.success: return _fail("RUNTIME_LIFECYCLE:" + String(result.error))
 	var next := state.duplicate(true)
 	next.field = result.field
