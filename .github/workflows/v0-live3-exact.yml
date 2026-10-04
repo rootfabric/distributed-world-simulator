@@ -16,9 +16,27 @@ env:
   BREAKPOINT_RUNTIME_DISABLED: '1'
   GODOT_SILENCE_ROOT_WARNING: '1'
 jobs:
+  source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Python syntax
+        run: python3 -m py_compile tests/integration/test_v0_live3_product_recovery.py
+      - name: PowerShell syntax
+        shell: pwsh
+        run: |
+          $tokens=$null
+          $errors=$null
+          [System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path tools/live3/run_live3_manual.ps1),[ref]$tokens,[ref]$errors) | Out-Null
+          if (@($errors).Count) { $errors | Format-List; throw 'LIVE3_MANUAL_PARSER_ERRORS' }
   windows:
+    needs: source
     runs-on: [self-hosted, Windows, X64]
-    timeout-minutes: 45
+    timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
         with:
@@ -74,16 +92,44 @@ jobs:
               throw ('FOCUSED_FAILED:{0}:{1}' -f $test,$code)
             }
           }
-      - name: Final source identity
+      - name: Real product server recovery
+        shell: pwsh
+        timeout-minutes: 15
+        run: |
+          $ErrorActionPreference='Stop'
+          $out=Join-Path (Resolve-Path artifacts/live3-exact) 'process-recovery'
+          python tests/integration/test_v0_live3_product_recovery.py --engine $env:GODOT_BIN --output $out *> artifacts/live3-exact/process-recovery.log
+          $code=$LASTEXITCODE
+          Get-Content artifacts/live3-exact/process-recovery.log -Tail 200
+          if ($code -ne 0) { throw "LIVE3_PROCESS_RECOVERY_FAILED:$code" }
+          $manifest=Get-Content (Join-Path $out 'manifest.json') -Raw | ConvertFrom-Json
+          if ($manifest.passed -ne $true -or $manifest.subject_head -ne '${{ github.sha }}') { throw 'LIVE3_PROCESS_MANIFEST_INVALID' }
+      - name: Full world-core on requested frozen candidate
+        if: contains(github.event.head_commit.message, '[live3-full]')
+        shell: pwsh
+        timeout-minutes: 75
+        run: |
+          $ErrorActionPreference='Stop'
+          ./RUN_WORLD_REGRESSION_TESTS.ps1 -GodotBin $env:GODOT_BIN *> artifacts/live3-exact/world-core.log
+          $code=$LASTEXITCODE
+          if (Test-Path artifacts/test-results/world-regression-summary.json) {
+            Copy-Item artifacts/test-results/world-regression-summary.json artifacts/live3-exact/world-core-summary.json
+          }
+          if ($code -ne 0) { Get-Content artifacts/live3-exact/world-core.log -Tail 250; throw "WORLD_CORE_FAILED:$code" }
+      - name: Final source identity and owned-process cleanup check
         if: always()
         shell: pwsh
         run: |
-          @{head=(git rev-parse HEAD).Trim();tree=(git rev-parse 'HEAD^{tree}').Trim();tracked_clean=(-not [bool](git status --porcelain --untracked-files=no))} | ConvertTo-Json | Set-Content artifacts/live3-exact/final.json
+          $godot=@(Get-Process -ErrorAction SilentlyContinue | Where-Object {$_.ProcessName -like 'godot*'})
+          @{head=(git rev-parse HEAD).Trim();tree=(git rev-parse 'HEAD^{tree}').Trim();tracked_clean=(-not [bool](git status --porcelain --untracked-files=no));remaining_godot_pids=@($godot.Id)} | ConvertTo-Json | Set-Content artifacts/live3-exact/final.json
           if (git status --porcelain --untracked-files=no) { throw 'TRACKED_DIRTY_AFTER' }
+          if ($godot.Count) { throw 'GODOT_PROCESSES_REMAIN_NO_MASS_KILL' }
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: live3-exact-${{ github.run_id }}-${{ github.run_attempt }}
-          path: artifacts/live3-exact/
+          path: |
+            artifacts/live3-exact/
+            !artifacts/live3-exact/process-recovery/profiles/
           if-no-files-found: error
           retention-days: 30
