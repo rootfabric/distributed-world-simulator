@@ -34,7 +34,10 @@ func attach_m3_multiplayer_client(runtime) -> Dictionary:
 		runtime == null
 		or not runtime.has_signal("resource_mining_updated")
 		or not runtime.has_method("get_resource_mining_snapshot")
-		or not runtime.has_method("execute_resource_mine_blocking")
+		or (
+			not runtime.has_method("execute_resource_mine_async")
+			and not runtime.has_method("execute_resource_mine_blocking")
+		)
 	):
 		_p3_setup_error = "V0_P3_RESOURCE_NETWORK_RUNTIME_REQUIRED"
 		return {"success": false, "error_code": _p3_setup_error, "details": {}}
@@ -224,17 +227,100 @@ func _mine_p3_resource(resource_node_id: String) -> Dictionary:
 	if (
 		m3_multiplayer_client_runtime == null
 		or not is_instance_valid(m3_multiplayer_client_runtime)
-		or not m3_multiplayer_client_runtime.has_method("execute_resource_mine_blocking")
 	):
 		_p3_mining_rejections += 1
 		return {"success": false, "error_code": "V0_P3_RESOURCE_NETWORK_RUNTIME_REQUIRED", "details": {}}
+
+	# Product/human path is asynchronous so mining cannot freeze render,
+	# interpolation or local prediction while waiting for the server.
+	if m3_multiplayer_client_runtime.has_method("execute_resource_mine_async"):
+		if not _live2_mining_tool_is_equipped():
+			var equip_result: Dictionary = ensure_live2_mining_tool_equipped_async({
+				"kind": "mine_after_equip",
+				"resource_node_id": resource_node_id,
+				"pending_text": "Экипируем инструмент перед добычей…",
+				"success_text": "Инструмент экипирован · начинаем добычу…",
+				"error_prefix": "Экипировка перед добычей",
+			})
+			if not bool(equip_result.get("success", false)):
+				_p3_mining_rejections += 1
+				return equip_result
+			if not bool(equip_result.get("already_equipped", false)):
+				return equip_result
+		return _submit_p3_resource_mine_async(resource_node_id)
+
+	# Blocking compatibility seam retained only for legacy deterministic probes.
+	if not m3_multiplayer_client_runtime.has_method("execute_resource_mine_blocking"):
+		_p3_mining_rejections += 1
+		return {"success": false, "error_code": "V0_P3_RESOURCE_NETWORK_RUNTIME_REQUIRED", "details": {}}
+	var equip_result: Dictionary = ensure_live2_mining_tool_equipped()
+	if not bool(equip_result.get("success", false)):
+		_p3_mining_rejections += 1
+		return equip_result
 	var result: Dictionary = m3_multiplayer_client_runtime.execute_resource_mine_blocking(
 		resource_node_id,
 		1
 	)
 	if not bool(result.get("success", false)):
 		_p3_mining_rejections += 1
+		_show_live2_action_feedback(
+			"Добыча: %s" % String(result.get("error_code", "UNKNOWN")),
+			false
+		)
+		return result
+	_show_live2_action_feedback("Руда добыта · материал добавлен в инвентарь", true)
 	return result
+
+
+func _submit_p3_resource_mine_async(resource_node_id: String) -> Dictionary:
+	var sent: Dictionary = m3_multiplayer_client_runtime.execute_resource_mine_async(
+		resource_node_id,
+		1
+	)
+	if not bool(sent.get("success", false)):
+		_p3_mining_rejections += 1
+		_show_live2_action_feedback(
+			"Добыча: %s" % String(sent.get("error_code", "SEND_FAILED")),
+			false
+		)
+		return sent
+	var operation_id := String(sent.get("details", {}).get(
+		"operation_id",
+		sent.get("operation_id", "")
+	))
+	if operation_id.is_empty():
+		_p3_mining_rejections += 1
+		return {"success": false, "error_code": "ASYNC_OPERATION_ID_MISSING"}
+	_track_live2_async_action(operation_id, {
+		"kind": "resource_mine",
+		"resource_node_id": resource_node_id,
+		"pending_text": "Добываем руду…",
+		"success_text": "Руда добыта · материал добавлен в инвентарь",
+		"error_prefix": "Добыча",
+	})
+	_show_live2_action_feedback("Добываем руду…", true, 2200)
+	return {
+		"success": true,
+		"operation_id": operation_id,
+		"pending": true,
+		"output": "Добываем руду…",
+	}
+
+
+func _handle_live2_async_command_extension(
+	result: Dictionary,
+	context: Dictionary
+) -> void:
+	super._handle_live2_async_command_extension(result, context)
+	var kind := String(context.get("kind", ""))
+	if kind == "mine_after_equip":
+		if String(result.get("status", "")) == "SUCCEEDED":
+			_submit_p3_resource_mine_async(String(context.get("resource_node_id", "")))
+		else:
+			_p3_mining_rejections += 1
+		return
+	if kind == "resource_mine" and String(result.get("status", "")) != "SUCCEEDED":
+		_p3_mining_rejections += 1
 
 
 func _refresh_p3_resource_projection() -> void:

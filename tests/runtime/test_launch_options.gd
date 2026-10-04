@@ -152,6 +152,52 @@ func _init() -> void:
 	]))
 	_assert(not bool(m7_wrong_role.get("success", true)), "M7 playground accepted listen-host authority")
 
+	var automation_client: Dictionary = LaunchOptionsScript.parse(PackedStringArray([
+		"--role=game-client",
+		"--network-mvp",
+		"--network-debug",
+		"--player-identity=a",
+		"--automation-control",
+		"--automation-control-port=27651",
+		"--automation-control-token=automation-test-token",
+		"--automation-control-output-dir=user://automation-test",
+	]))
+	_assert(bool(automation_client.get("success", false)), "Valid automation client options were rejected")
+	var automation_options: Dictionary = automation_client.get("options", {})
+	_assert(bool(automation_options.get("automation_control", false)), "Automation flag was not parsed")
+	_assert(int(automation_options.get("automation_control_port", 0)) == 27651, "Automation port was not parsed")
+	_assert(String(automation_options.get("automation_control_token", "")) == "automation-test-token", "Automation token was not parsed")
+	_assert(String(automation_options.get("automation_control_output_dir", "")) == "user://automation-test", "Automation output dir was not parsed")
+
+	var automation_without_debug: Dictionary = LaunchOptionsScript.parse(PackedStringArray([
+		"--role=game-client",
+		"--network-mvp",
+		"--player-identity=a",
+		"--automation-control",
+		"--automation-control-port=27651",
+		"--automation-control-token=automation-test-token",
+	]))
+	_assert(not bool(automation_without_debug.get("success", true)), "Automation control was accepted without network-debug")
+	var automation_short_token: Dictionary = LaunchOptionsScript.parse(PackedStringArray([
+		"--role=game-client",
+		"--network-mvp",
+		"--network-debug",
+		"--player-identity=a",
+		"--automation-control",
+		"--automation-control-port=27651",
+		"--automation-control-token=short",
+	]))
+	_assert(not bool(automation_short_token.get("success", true)), "Automation control accepted a short token")
+	var automation_server: Dictionary = LaunchOptionsScript.parse(PackedStringArray([
+		"--role=dedicated-server",
+		"--network-mvp",
+		"--network-debug",
+		"--automation-control",
+		"--automation-control-port=27651",
+		"--automation-control-token=automation-test-token",
+	]))
+	_assert(not bool(automation_server.get("success", true)), "Automation control was accepted on dedicated server")
+
 	_finish()
 
 

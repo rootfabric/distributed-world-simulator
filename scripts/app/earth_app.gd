@@ -316,7 +316,21 @@ func attach_m3_multiplayer_client(runtime) -> Dictionary:
 	):
 		return {"success": false, "error_code": "INVALID_M3_CLIENT_RUNTIME"}
 	if _m3_attached:
-		return {"success": false, "error_code": "M3_CLIENT_ALREADY_ATTACHED"}
+		if m3_multiplayer_client_runtime != runtime:
+			return {"success": false, "error_code": "M3_CLIENT_ALREADY_ATTACHED"}
+		_on_m3_replica_updated(runtime.get_snapshot())
+		_on_m4_item_graph_updated(runtime.get_item_graph_snapshot())
+		if runtime.has_method("get_construction_bundle"):
+			_on_m3_construction_updated(runtime.get_construction_bundle())
+		return {
+			"success": true,
+			"error_code": "",
+			"details": {
+				"local_player_id": runtime.get_local_player_id(),
+				"mode": "EARTH_NETWORK_SPECTATOR",
+				"reconnected": true,
+			},
+		}
 	m3_multiplayer_client_runtime = runtime
 	if not runtime.replica_updated.is_connected(_on_m3_replica_updated):
 		runtime.replica_updated.connect(_on_m3_replica_updated)
@@ -489,6 +503,24 @@ func m3_apply_test_input_offset(offset: Vector3) -> Dictionary:
 	if not _m3_attached or m3_multiplayer_client_runtime == null:
 		return {"success": false, "error_code": "M3_GAME_CLIENT_NOT_READY"}
 	return m3_multiplayer_client_runtime.move_blocking(offset.x, offset.z)
+
+
+func m4_execute_item_command_async(
+	command_type: String,
+	payload: Dictionary,
+	operation_id: String = ""
+) -> Dictionary:
+	if not _m3_attached or m3_multiplayer_client_runtime == null:
+		return {"success": false, "error_code": "M4_EARTH_SPECTATOR_NOT_READY"}
+	if not m3_multiplayer_client_runtime.has_method("execute_item_command_async"):
+		return {"success": false, "error_code": "M4_ASYNC_COMMAND_RUNTIME_REQUIRED"}
+	var result: Dictionary = m3_multiplayer_client_runtime.execute_item_command_async(
+		command_type, payload, operation_id
+	)
+	_m4_item_commands += 1
+	if not bool(result.get("success", false)):
+		_m4_item_rejections += 1
+	return result
 
 
 func m4_execute_item_command(

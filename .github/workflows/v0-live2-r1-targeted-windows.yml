@@ -1,0 +1,124 @@
+name: V0 LIVE.2 R1 Targeted Windows
+
+on:
+  push:
+    branches:
+      - feature/v0-live2-playable-client-server-r1
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: v0-live2-r1-targeted-windows
+  cancel-in-progress: true
+
+env:
+  GODOT_BIN: C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe
+  PYTHONUTF8: '1'
+  PYTHONDONTWRITEBYTECODE: '1'
+  BREAKPOINT_RUNTIME_DISABLED: '1'
+  GODOT_SILENCE_ROOT_WARNING: '1'
+
+jobs:
+  targeted-windows:
+    name: LIVE2 targeted exact Windows
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 55
+    steps:
+      - name: Checkout LIVE2
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Host and identity preflight
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          $sha=(Get-FileHash $env:GODOT_BIN -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($sha -ne '3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5') { throw "GODOT_SHA_MISMATCH:$sha" }
+          $ver=& $env:GODOT_BIN --version
+          if ($ver -notmatch '4\.7\.1.*double.*a13da4feb') { throw "GODOT_VERSION_MISMATCH:$ver" }
+          if ((git status --porcelain --untracked-files=no)) { throw 'TRACKED_DIRTY_BEFORE' }
+          New-Item -ItemType Directory -Force artifacts\live2-targeted | Out-Null
+          [ordered]@{
+            head=(git rev-parse HEAD).Trim()
+            tree=(git rev-parse 'HEAD^{tree}').Trim()
+            godot_version=$ver
+            godot_sha256=$sha
+          } | ConvertTo-Json | Set-Content artifacts\live2-targeted\preflight.json -Encoding UTF8
+
+      - name: Cold Godot import
+        shell: pwsh
+        timeout-minutes: 12
+        run: |
+          $ErrorActionPreference='Stop'
+          if (Test-Path .godot) { Remove-Item .godot -Recurse -Force }
+          & $env:GODOT_BIN --headless --path . --editor --import --quit *> artifacts\live2-targeted\import.log
+          if ($LASTEXITCODE -ne 0) { Get-Content artifacts\live2-targeted\import.log -Tail 300; throw "IMPORT_FAILED:$LASTEXITCODE" }
+          if (-not (Test-Path .godot\global_script_class_cache.cfg)) { throw 'CLASS_CACHE_MISSING' }
+          if ((Get-Item .godot\global_script_class_cache.cfg).Length -le 0) { throw 'CLASS_CACHE_EMPTY' }
+
+      - name: LIVE2 ENet rollover over 131072 packets
+        shell: pwsh
+        timeout-minutes: 12
+        run: |
+          $ErrorActionPreference='Stop'
+          & $env:GODOT_BIN --headless --path . --script res://tests/network/test_v0_live2_enet_rollover.gd *> artifacts\live2-targeted\rollover.log
+          if ($LASTEXITCODE -ne 0) { Get-Content artifacts\live2-targeted\rollover.log -Tail 300; throw "ROLLOVER_FAILED:$LASTEXITCODE" }
+
+      - name: LIVE2 human gameplay bridge regression
+        shell: pwsh
+        timeout-minutes: 8
+        run: |
+          $ErrorActionPreference='Stop'
+          & $env:GODOT_BIN --headless --path . --script res://tests/runtime/test_v0_live2_human_gameplay_bridge.gd *> artifacts\live2-targeted\human-bridge.log
+          if ($LASTEXITCODE -ne 0) { Get-Content artifacts\live2-targeted\human-bridge.log -Tail 300; throw "HUMAN_BRIDGE_FAILED:$LASTEXITCODE" }
+
+      - name: NX2 physical channel regression
+        shell: pwsh
+        timeout-minutes: 10
+        run: |
+          $ErrorActionPreference='Stop'
+          & $env:GODOT_BIN --headless --path . --script res://tests/network/test_nx2_physical_channel_processes.gd *> artifacts\live2-targeted\nx2-physical.log
+          if ($LASTEXITCODE -ne 0) { Get-Content artifacts\live2-targeted\nx2-physical.log -Tail 300; throw "NX2_PHYSICAL_FAILED:$LASTEXITCODE" }
+
+      - name: MVP5 graphical material regression
+        shell: pwsh
+        timeout-minutes: 18
+        run: |
+          $ErrorActionPreference='Stop'
+          $out=(Join-Path (Resolve-Path artifacts\live2-targeted).Path 'mvp5')
+          python tests/integration/test_v0_mvp_5_graphical_material.py --engine $env:GODOT_BIN --output $out *> artifacts\live2-targeted\mvp5.log
+          if ($LASTEXITCODE -ne 0) { Get-Content artifacts\live2-targeted\mvp5.log -Tail 350; throw "MVP5_GRAPHICAL_FAILED:$LASTEXITCODE" }
+
+      - name: Final clean source check
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          $tracked=(git status --porcelain --untracked-files=no)
+          if (-not [string]::IsNullOrWhiteSpace($tracked)) { throw "TRACKED_DIRTY_AFTER:$tracked" }
+          [ordered]@{
+            schema='distributed_world_simulator.v0_live2_targeted_windows.v1'
+            head=(git rev-parse HEAD).Trim()
+            tree=(git rev-parse 'HEAD^{tree}').Trim()
+            import_pass=$true
+            rollover_pass=$true
+            human_bridge_pass=$true
+            nx2_physical_pass=$true
+            mvp5_graphical_pass=$true
+            tracked_clean=$true
+          } | ConvertTo-Json | Set-Content artifacts\live2-targeted\summary.json -Encoding UTF8
+
+      - name: Upload targeted evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v0-live2-targeted-${{ github.run_id }}-${{ github.run_attempt }}
+          path: artifacts/live2-targeted/
+          if-no-files-found: error
+          retention-days: 30

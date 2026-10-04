@@ -25,6 +25,9 @@ var _interpolator
 var _fallback_server_tick := 0
 var _last_mode := "UNINITIALIZED"
 var _last_render_tick := 0.0
+# Logical sampled position is not the Node3D transform: Earth repositions the
+# visual delegate beneath its floating-origin wrapper after each sample.
+var _presented_position := Vector3.ZERO
 
 
 func setup(record: Dictionary, snapshot_context: Dictionary = {}) -> Dictionary:
@@ -147,7 +150,8 @@ func _process(delta: float) -> void:
 
 
 func _apply_interpolated_state(state: Dictionary) -> void:
-	position = state.get("position", position)
+	_presented_position = state.get("position", _presented_position)
+	position = _presented_position
 	target_velocity = state.get("velocity", target_velocity)
 	target_orientation_yaw = float(state.get(
 		"orientation_yaw", target_orientation_yaw
@@ -168,6 +172,10 @@ func _apply_interpolated_state(state: Dictionary) -> void:
 	_last_render_tick = float(state.get("render_tick", _last_render_tick))
 	_apply_orientation()
 	_apply_flashlight()
+
+
+func get_presented_position() -> Vector3:
+	return _presented_position
 
 
 func _resolve_snapshot_context(
@@ -265,6 +273,7 @@ func get_report() -> Dictionary:
 		"interpolation_failures": interpolation_failures,
 		"last_apply_error_code": last_apply_error_code,
 		"interpolation": get_interpolation_report(),
+		"sampled_position": [_presented_position.x, _presented_position.y, _presented_position.z],
 	}
 
 

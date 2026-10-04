@@ -27,6 +27,9 @@ const MvpEarthOutpostAuthorityScript = preload("res://scripts/construction/mvp/m
 const M3GraphicalClientRuntimeScript = preload("res://scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime.gd")
 const M3GraphicalAcceptanceDriverScript = preload("res://scripts/runtime/networked_gameplay/m3/m3_graphical_acceptance_driver.gd")
 const M5GraphicalAcceptanceDriverScript = preload("res://scripts/runtime/networked_gameplay/m5/m5_graphical_acceptance_driver.gd")
+const Live2AutomationControlBridgeScript = preload(
+	"res://scripts/runtime/automation/live2_automation_control_bridge.gd"
+)
 
 const WORLD_CATALOG_PATH := "res://config/worlds/catalog.json"
 const FOUNDATION_CHECKPOINT: String = "v16.10.6-architecture-a3-single-server-multiplayer"
@@ -77,6 +80,7 @@ var simulation_kernel
 var presentation_host
 var presentation_enabled: bool = true
 var local_input_enabled: bool = true
+var automation_control_bridge
 var _shutdown_in_progress: bool = false
 var _requested_exit_code: int = 0
 var _shutdown_reason: String = ""
@@ -251,6 +255,10 @@ func _ready() -> void:
 		graphical_game_client_runtime.session_ready.connect(_on_graphical_game_client_session_ready)
 		graphical_game_client_runtime.connection_failed.connect(_on_graphical_game_client_connection_failed)
 		graphical_game_client_runtime.server_disconnected.connect(_on_graphical_game_client_server_disconnected)
+		if graphical_game_client_runtime.has_signal("connection_state_changed"):
+			graphical_game_client_runtime.connection_state_changed.connect(
+				_on_graphical_game_client_connection_state_changed
+			)
 		graphical_game_client_setup = graphical_game_client_runtime.setup({
 			"host": String(launch_options.get("server_address", "127.0.0.1")),
 			"port": int(launch_options.get("server_port", 24580)),
@@ -315,6 +323,25 @@ func _ready() -> void:
 			get_tree().quit(1)
 		return
 	_refresh_runtime_descriptor()
+	if bool(launch_options.get("automation_control", false)):
+		automation_control_bridge = Live2AutomationControlBridgeScript.new()
+		automation_control_bridge.name = "Live2AutomationControlBridge"
+		add_child(automation_control_bridge)
+		var automation_setup: Dictionary = automation_control_bridge.setup(self, {
+			"port": int(launch_options.get("automation_control_port", 0)),
+			"token": String(launch_options.get("automation_control_token", "")),
+			"output_dir": String(
+				launch_options.get("automation_control_output_dir", "user://live2-automation")
+			),
+		})
+		if not bool(automation_setup.get("success", false)):
+			push_error("Automation control bridge setup failed: %s" % automation_setup)
+			lifecycle_coordinator.mark_failed(
+				String(automation_setup.get("error_code", "AUTOMATION_CONTROL_SETUP_FAILED"))
+			)
+			get_tree().quit(12)
+			return
+		_refresh_runtime_descriptor()
 	if bool(launch_options.get("print_runtime_descriptor", false)):
 		print("[runtime_descriptor] %s" % JSON.stringify(runtime_descriptor, "", true, true))
 	lifecycle_coordinator.mark_running("world_ready")
@@ -349,6 +376,8 @@ func _refresh_runtime_descriptor() -> void:
 		runtime_descriptor["dedicated_gameplay_server"] = dedicated_gameplay_server_runtime.get_report()
 	if graphical_game_client_runtime != null:
 		runtime_descriptor["graphical_game_client"] = graphical_game_client_runtime.get_report()
+	if automation_control_bridge != null:
+		runtime_descriptor["automation_control"] = automation_control_bridge.get_report()
 
 
 func _physics_process(delta: float) -> void:
@@ -374,6 +403,16 @@ func _unhandled_input(event: InputEvent) -> void:
 	if developer_console != null and developer_console.is_open():
 		return
 	if event is InputEventKey and event.pressed and not event.echo:
+		if event.keycode == KEY_ESCAPE:
+			if (
+				current_runtime != null
+				and current_runtime.has_method("is_mvp_inventory_visible")
+				and bool(current_runtime.call("is_mvp_inventory_visible"))
+				and command_registry.has_command("inventory.toggle")
+			):
+				execute_command("inventory.toggle")
+				get_viewport().set_input_as_handled()
+				return
 		if event.keycode == KEY_F1:
 			developer_console.set_open(true)
 			developer_console.execute_line("help")
@@ -397,6 +436,12 @@ func _unhandled_input(event: InputEvent) -> void:
 					command_line = "player.interact"
 				KEY_G:
 					command_line = "inventory.drop"
+				KEY_B:
+					command_line = "construction.mode.toggle"
+				KEY_N:
+					command_line = "construction.build.next"
+				KEY_Q:
+					command_line = "tool.mining.equip"
 				KEY_F:
 					command_line = "player.flashlight.toggle"
 				_:
@@ -406,6 +451,23 @@ func _unhandled_input(event: InputEvent) -> void:
 			execute_command(command_line)
 			get_viewport().set_input_as_handled()
 			return
+	if (
+		event is InputEventMouseButton
+		and event.button_index == MOUSE_BUTTON_LEFT
+		and event.pressed
+		and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED
+		and (
+			command_registry.has_command("player.primary")
+			or command_registry.has_command("player.interact")
+		)
+	):
+		execute_command(
+			"player.primary"
+			if command_registry.has_command("player.primary")
+			else "player.interact"
+		)
+		get_viewport().set_input_as_handled()
+		return
 	if (
 		event is InputEventMouseButton
 		and event.button_index == MOUSE_BUTTON_LEFT
@@ -457,6 +519,8 @@ func get_hotkey_command_candidates(keycode: int) -> Array[String]:
 			]
 		KEY_F5:
 			return ["player.camera.toggle"]
+		KEY_F6:
+			return ["network.reconnect"]
 		KEY_J:
 			return ["player.controller.toggle"]
 	return []
@@ -1589,6 +1653,8 @@ func request_graceful_shutdown(reason: String = "shutdown", exit_code: int = 0) 
 
 	_shutdown_in_progress = true
 	_shutdown_reason = requested_reason
+	if automation_control_bridge != null:
+		automation_control_bridge.stop()
 	_requested_exit_code = exit_code
 	_print_lifecycle_event("node_draining", {
 		"reason": _shutdown_reason,
@@ -1891,20 +1957,27 @@ func _on_graphical_game_client_session_ready(session) -> void:
 	_refresh_runtime_descriptor()
 
 
+func _on_graphical_game_client_connection_state_changed(
+	state: String,
+	details: Dictionary
+) -> void:
+	if current_runtime != null and current_runtime.has_method("set_network_connection_status"):
+		current_runtime.call("set_network_connection_status", state, details)
+
+
 func _on_graphical_game_client_connection_failed(error_code: String, details: Dictionary) -> void:
 	push_error("Graphical game client connection failed: %s %s" % [error_code, details])
-	if _network_debug_stay_open:
-		if current_runtime != null and current_runtime.has_method("show_network_error"):
-			current_runtime.call("show_network_error", error_code, details)
+	if current_runtime != null and current_runtime.has_method("show_network_error"):
+		current_runtime.call("show_network_error", error_code, details)
+	if bool(launch_options.get("network_mvp", false)) or _network_debug_stay_open:
 		return
 	request_graceful_shutdown("graphical_game_client_connection_failed", 8)
 
+
 func _on_graphical_game_client_server_disconnected(report: Dictionary) -> void:
-	push_error("Graphical game client server disconnected: %s" % report)
-	if _network_debug_stay_open:
-		if current_runtime != null and current_runtime.has_method("show_network_error"):
-			current_runtime.call("show_network_error", "SERVER_DISCONNECTED", report)
-		return
+	push_warning("Graphical game client server disconnected: %s" % report)
+	if current_runtime != null and current_runtime.has_method("show_network_error"):
+		current_runtime.call("show_network_error", "SERVER_DISCONNECTED", report)
 
 
 func _setup_m2_graphical_acceptance_driver() -> void:
