@@ -201,6 +201,7 @@ static func _step_population_with_validated_units_parallel_prepare(field: Dictio
 		"parallel_prepare": true,
 		"worker_bound": max_prepare_workers,
 		"peak_workers": int(prepared.peak_workers),
+		"threaded_worksets": int(prepared.threaded_worksets),
 		"workset_count": units.size(),
 	}
 	return finished
@@ -255,6 +256,7 @@ static func _prepare_units_parallel(field: Dictionary, entries: Array, units: Ar
 	var demands: Array = []
 	var cursor := 0
 	var peak_workers := 0
+	var threaded_worksets := 0
 	while cursor < units.size():
 		var stop := mini(units.size(), cursor + max_prepare_workers)
 		var active: Array = []
@@ -296,6 +298,9 @@ static func _prepare_units_parallel(field: Dictionary, entries: Array, units: Ar
 				return prepared
 			if int(prepared.get("unit_index", -1)) != int(unit.index):
 				return _fail("A5_PARALLEL_PREPARE_INDEX")
+			if bool(prepared.get("worker_is_main_thread", true)):
+				return _fail("A5_PARALLEL_PREPARE_THREAD_CONTEXT")
+			threaded_worksets += 1
 			for id in prepared.samples:
 				samples[String(id)] = prepared.samples[id]
 			for demand in prepared.demands:
@@ -307,6 +312,7 @@ static func _prepare_units_parallel(field: Dictionary, entries: Array, units: Ar
 		"samples": samples,
 		"demands": demands,
 		"peak_workers": peak_workers,
+		"threaded_worksets": threaded_worksets,
 	}
 
 static func _prepare_unit_worker(field: Dictionary, task_entries: Array, unit_index: int) -> Dictionary:
@@ -334,6 +340,7 @@ static func _prepare_unit_worker(field: Dictionary, task_entries: Array, unit_in
 	return {
 		"success": true,
 		"unit_index": unit_index,
+		"worker_is_main_thread": Thread.is_main_thread(),
 		"samples": samples,
 		"demands": demands,
 	}
