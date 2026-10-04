@@ -1,0 +1,126 @@
+{
+  "schema": "distributed_world_simulator.harness_verification.v1",
+  "verification_id": "ECO-ARCH2-A13-ACTIVITY-R1-VERIFICATION-001",
+  "work_order_id": "ECO-ARCH2-A13-ACTIVITY-R1",
+  "program": "ECO",
+  "checkpoint": "A13 Active / Sleeping Population Scheduling — exact cadence R1",
+  "verifier": "FRESH_INDEPENDENT_VERIFIER_A13_ACTIVITY_R1",
+  "verdict": "VERIFIED",
+  "verdict_reason": "The frozen exact subject passed the complete A13 Activity exact matrix on two separate self-hosted machines/OSes. Windows and Linux both executed Activity, Spatial, A13 exact worksets, A12 and A11 regressions with identical assertion counts and zero failures, exact HEAD/TREE remained unchanged, tracked checkout was clean after execution, and the fresh exact-head Reviewer reported PASS with zero blocking findings.",
+  "execution_performed": true,
+  "inherited_execution_evidence": false,
+  "runtime_subject": {
+    "branch": "feature/eco-arch2-a13-active-sleeping-r1",
+    "pr": 736,
+    "head": "e6db007e6f19fb30067d5ce8ce96f1aaa3f9c29d",
+    "tree": "d502947fbc75970e49c01bad35549a8fef43535a",
+    "base_main": "7ffff8aad3591a67972f89eeb506e9ec4ad0dc04",
+    "freeze_ref": "freeze/eco-arch2-a13-activity-e6db007e-exact-r1",
+    "changed_files": 7
+  },
+  "reviewer_gate": {
+    "review_id": "ECO-ARCH2-A13-ACTIVITY-R1-FRESH-REVIEW-001",
+    "review_result_commit": "271c983b2018a6bc304fd0411ef525a95ac4dc20",
+    "review_result_file": "docs/research/ecology/ECO_ARCH2_A13_ACTIVITY_FRESH_REVIEW_R1.json",
+    "github_review_id": 5406507490,
+    "review_type": "POST_BUILD_EXACT_HEAD_REVIEW",
+    "verdict": "PASS",
+    "required_fixes": [],
+    "blocking_findings": 0
+  },
+  "project_control": {
+    "run": 37202886616,
+    "conclusion": "success",
+    "exact_head": "e6db007e6f19fb30067d5ce8ce96f1aaa3f9c29d",
+    "includes_pc0": true,
+    "includes_directional_audit": true
+  },
+  "exact_run": {
+    "workflow_run": 37202886593,
+    "workflow": "ECO ARCH2 A13 Active Sleeping Cadence Exact",
+    "head": "e6db007e6f19fb30067d5ce8ce96f1aaa3f9c29d"
+  },
+  "windows": {
+    "job_id": 111438015011,
+    "runner": "desktop-qnagsti-eco-runner",
+    "os_label": "Windows",
+    "conclusion": "success",
+    "godot_version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "godot_sha256": "3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5",
+    "artifact_id": 11303887588,
+    "artifact_sha256": "28499b6d4beede762d23019532008922270798f6dcb54d0c22382864537a65e7",
+    "activity_evidence_sha256": "d981a1af561719af39d71d575c55a0bdeb4d05880c4505948646d1da7cc051ec",
+    "activity_test_log_sha256": "68c25d75c75475dd1793f47ad33d7bf7550f37daf9ec3ba265dd72f676496f22",
+    "stages": [
+      "A13 Activity 122/0",
+      "A13 Spatial 108/0",
+      "A13 Exact Worksets 58/0",
+      "A12 38/0",
+      "A11 171/0"
+    ],
+    "tracked_clean_after": true
+  },
+  "linux": {
+    "job_id": 111438015153,
+    "runner": "dws-linux-outenemy",
+    "os_label": "Linux",
+    "conclusion": "success",
+    "godot_version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "godot_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+    "artifact_id": 11304749150,
+    "artifact_sha256": "08b6f0adc73917412409c0391ca61ba9c60aa6e54707a7072df61d0a6002637b",
+    "stages": [
+      "A13 Activity 122/0",
+      "A13 Spatial 108/0",
+      "A13 Exact Worksets 58/0",
+      "A12 38/0",
+      "A11 171/0"
+    ],
+    "tracked_clean_after": true
+  },
+  "independent_checks": [
+    {
+      "check": "Both OS jobs checked out exact product HEAD e6db007e6f19fb30067d5ce8ce96f1aaa3f9c29d.",
+      "result": "PASS"
+    },
+    {
+      "check": "Evidence is bound to TREE d502947fbc75970e49c01bad35549a8fef43535a.",
+      "result": "PASS"
+    },
+    {
+      "check": "Activity exact result is 122 assertions / 0 failures on Windows and Linux.",
+      "result": "PASS"
+    },
+    {
+      "check": "Closed A13 Spatial, A13 Exact Worksets, A12 and A11 regressions pass on both OSes.",
+      "result": "PASS"
+    },
+    {
+      "check": "No timeout/non-zero command occurred in the exact suites.",
+      "result": "PASS"
+    },
+    {
+      "check": "Tracked source was clean after both exact jobs.",
+      "result": "PASS"
+    },
+    {
+      "check": "Windows artifact digest and embedded evidence/log SHA256 values were independently recomputed and matched.",
+      "result": "PASS"
+    },
+    {
+      "check": "Fresh Reviewer exact-head verdict is PASS with required_fixes=[] and no blocking findings.",
+      "result": "PASS"
+    },
+    {
+      "check": "Project Control/PC0 exact-head run is SUCCESS.",
+      "result": "PASS"
+    }
+  ],
+  "residual_non_blocking": [
+    "Permanent workflow trigger paths can later include resource_lifecycle_runtime_v1.gd and ecology_runtime_checkpoint_v1.gd.",
+    "Feedback-enabled catch-up and scheduler-debt restart policy belong to the later fidelity-aware stage, not exact R1."
+  ],
+  "merge_performed": false,
+  "merge_authorized": false,
+  "gate_opened": "Human merge decision for PR #736 after final main-drift check"
+}
