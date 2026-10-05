@@ -9,6 +9,9 @@ const ResourceMiningSnapshot = preload(
 const ResourceMiningDelta = preload(
 	"res://scripts/runtime/networked_gameplay/p3/resource_mining_delta.gd"
 )
+const User1ProductSeamState = preload(
+	"res://scripts/runtime/networked_gameplay/user1/user1_product_seam_state.gd"
+)
 
 var _resource_mining_snapshot: Dictionary = {}
 var _resource_snapshot_updates := 0
@@ -40,6 +43,9 @@ func setup(config: Dictionary) -> Dictionary:
 	_resource_rejections = 0
 	_resource_resync_pending = false
 	_resource_resync_requests_sent = 0
+	_product_seam_state.clear()
+	_product_seam_updates = 0
+	_product_seam_rejections = 0
 	return super.setup(config)
 
 
@@ -76,29 +82,19 @@ func _handle_message(payload: Dictionary) -> void:
 
 
 func _accept_product_seam_state(state: Dictionary) -> void:
-	if state.is_empty():
+	var validation: Dictionary = User1ProductSeamState.validate(state)
+	if not bool(validation.get("success", false)):
 		_product_seam_rejections += 1
+		_last_error_code = String(
+			validation.get("error_code", "USER1_PRODUCT_SEAM_STATE_REJECTED")
+		)
 		return
 	var player_id := String(state.get("logical_player_id", "")).strip_edges().to_lower()
-	var region_id := String(state.get("region_id", "")).strip_edges().to_lower()
-	var authority_id := String(state.get("active_authority_id", "")).strip_edges()
-	var authority_epoch := int(state.get("authority_epoch", 0))
 	var crossings := int(state.get("crossings", -1))
 	var roundtrips := int(state.get("roundtrips", -1))
-	if (
-		player_id.is_empty()
-		or player_id != _logical_player_id
-		or region_id not in ["region/user1/a", "region/user1/b"]
-		or authority_id.is_empty()
-		or authority_epoch < 1
-		or crossings < 0
-		or roundtrips < 0
-		or bool(state.get("canonical_state_owned", true))
-		or String(state.get("decision_owner", ""))
-			!= "SM1_AUTHORITY_TRANSFER_COORDINATOR"
-	):
+	if player_id != _logical_player_id:
 		_product_seam_rejections += 1
-		_last_error_code = "USER1_PRODUCT_SEAM_STATE_REJECTED"
+		_last_error_code = "USER1_PRODUCT_SEAM_PLAYER_MISMATCH"
 		return
 	if not _product_seam_state.is_empty():
 		if (
