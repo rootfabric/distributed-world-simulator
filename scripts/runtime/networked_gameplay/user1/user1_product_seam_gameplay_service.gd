@@ -618,16 +618,14 @@ func _perform_transfer(
 		manifest
 	)
 	if not bool(exported.get("success", false)):
-		coordinator.abort_before_commit(transfer_id, source_authority)
+		_abort_transfer_before_commit(player_id, source_authority, transfer_id)
 		return exported
 	var packet: Dictionary = Dictionary(
 		exported.get("details", {}).get("packet", {})
 	)
 	var staged: Dictionary = target_port.stage_export(player_id, packet)
 	if not bool(staged.get("success", false)):
-		source_port.discard_aborted_stage(player_id, transfer_id)
-		target_port.discard_aborted_stage(player_id, transfer_id)
-		coordinator.abort_before_commit(transfer_id, source_authority)
+		_abort_transfer_before_commit(player_id, source_authority, transfer_id)
 		return staged
 
 	var shadow: Dictionary = Dictionary(
@@ -644,8 +642,7 @@ func _perform_transfer(
 		warm_report
 	)
 	if not bool(warm.get("success", false)):
-		target_port.discard_aborted_stage(player_id, transfer_id)
-		coordinator.abort_before_commit(transfer_id, source_authority)
+		_abort_transfer_before_commit(player_id, source_authority, transfer_id)
 		return warm
 
 	var committed: Dictionary = coordinator.commit_ownership(
@@ -656,6 +653,7 @@ func _perform_transfer(
 		source_epoch + 1
 	)
 	if not bool(committed.get("success", false)):
+		_abort_transfer_before_commit(player_id, source_authority, transfer_id)
 		return committed
 	var token := String(committed.get("details", {}).get("commit_token", ""))
 	var source_retired: Dictionary = source_port.retire_source(
@@ -750,6 +748,49 @@ func _perform_transfer(
 		"crossed": true,
 		"transfer_id": transfer_id,
 		"state": get_product_seam_state(player_id),
+	})
+
+
+func _abort_transfer_before_commit(
+	player_id: String,
+	source_authority: String,
+	transfer_id: String
+) -> Dictionary:
+	if not _seam_coordinators.has(player_id):
+		return _success({"replay": true})
+	var coordinator = _seam_coordinators[player_id]
+	var aborted: Dictionary = coordinator.abort_before_commit(
+		transfer_id,
+		source_authority
+	)
+	if not bool(aborted.get("success", false)):
+		return aborted
+	var source_port = (
+		_primary_port
+		if source_authority == _primary_authority_id
+		else _secondary_port
+	)
+	var target_port = (
+		_secondary_port
+		if source_authority == _primary_authority_id
+		else _primary_port
+	)
+	# discard_aborted_stage requires the coordinator to be ACTIVE on the source,
+	# therefore cleanup intentionally happens after SM1 abort.
+	target_port.discard_aborted_stage(player_id, transfer_id)
+	source_port.discard_aborted_stage(player_id, transfer_id)
+	if source_authority == _primary_authority_id:
+		var primary_release: Dictionary = _primary_port.release_binding(player_id)
+		if not bool(primary_release.get("success", false)):
+			return primary_release
+		var secondary_release: Dictionary = _secondary_port.release_binding(player_id)
+		if not bool(secondary_release.get("success", false)):
+			return secondary_release
+		_seam_coordinators.erase(player_id)
+	return _success({
+		"aborted": true,
+		"source_authority_id": source_authority,
+		"persistence_quiescent": _seam_coordinators.is_empty(),
 	})
 
 
