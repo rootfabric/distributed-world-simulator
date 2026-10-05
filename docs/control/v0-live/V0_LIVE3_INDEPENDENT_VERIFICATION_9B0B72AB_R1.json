@@ -1,0 +1,115 @@
+{
+  "schema": "distributed_world_simulator.v0_live3_independent_verification.v1",
+  "role": "FRESH_INDEPENDENT_VERIFIER",
+  "verdict": "VERIFIED",
+  "repository": "rootfabric/distributed-world-simulator",
+  "pr_number": 735,
+  "product_head": "9b0b72aba4ecdfb8d50c3d4b3cd0119b55134075",
+  "product_tree": "a40047ce0ee07bddbe9831afcab55d97d0e2b15f",
+  "base_main": "c25a6b26d83b937acd1eb4cd4d92e2b44b40c678",
+  "freeze_ref": "freeze/v0-live3-r1-9b0b72ab-windows-r1",
+  "verify_branch": "verify/v0-live3-9b0b72ab-r1",
+  "verifier_workflow_commit": "996ef8103d679b5530d26419fde70021cd441aca",
+  "reviewer": {
+    "branch": "review/v0-live3-9b0b72ab-r1",
+    "commit": "821ec4dbb5b36e86fc005a1aa320baebe3c0eeb2",
+    "tree": "011e36732954a387e66e357f2453e8798c7cd0bd",
+    "result_path": "docs/control/v0-live/V0_LIVE3_FRESH_REVIEW_9B0B72AB_R1.json",
+    "verdict": "PASS",
+    "reviewed_head": "9b0b72aba4ecdfb8d50c3d4b3cd0119b55134075",
+    "reviewed_tree": "a40047ce0ee07bddbe9831afcab55d97d0e2b15f"
+  },
+  "independent_run": {
+    "run": 37256886035,
+    "source_job": 111595782365,
+    "windows_job": 111595814482,
+    "conclusion": "success",
+    "source_reviewer_gate": "success",
+    "windows_preflight": "success",
+    "cold_import": "success",
+    "launch_and_recovery_regressions": "success",
+    "product_reconnect_and_planned_restart": "success",
+    "final_cleanliness": "success",
+    "evidence_upload": "success",
+    "artifact_id": 11322634388,
+    "artifact_name": "v0-live3-independent-verifier-37256886035-1",
+    "artifact_sha256": "ef955201c5c249f56dacd56ecbf8d874fc956897738c2b254b65f95fac2f8619"
+  },
+  "platform": {
+    "host": "DESKTOP-QNAGSTI",
+    "godot_version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "godot_sha256": "3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5",
+    "free_ram_gb": 13.7
+  },
+  "independent_evidence": {
+    "preflight_sha256": "f6130a374ad8818474193672bc3d38d2be3ab7e1714b34bd3687213c63810349",
+    "product_report_sha256": "6bc803075e0250fe479d10e39b62ae647d52ba4b09b219d8f26041a6754c2cd8",
+    "product_summary_sha256": "6bcb284e92c94488d59a4be20976bd5c8d5793894e5d52dfa10c51b35dc337f8",
+    "final_sha256": "b8205aa8adb8d38c8ed7dbdd2bcb17ccd85453a33b38cf6333b84a30f51bd0ff",
+    "evidence_hash_manifest_sha256": "39eec43e94fef19a535fbe18f92b2d53cd4eafcdb438e343539de5011eab679d",
+    "server2_log_sha256": "82d36826ba2dc44c1b7aff58cf78477e346508ded186e2a58e6b34e7fd4e43f3"
+  },
+  "regression_results": {
+    "launch_options": "PASS",
+    "m6_contracts": "PASS",
+    "m6_processes": "PASS",
+    "resource_mining_recovery": "PASS",
+    "p4_two_client_reconnect": "PASS",
+    "live2_automation": "PASS",
+    "live2_snapshot_clock": "PASS",
+    "live2_reliability": "PASS (2571 assertions, 0 failures)",
+    "live2_enet_rollover": "PASS",
+    "mvp7_native": "PASS produce/recover1/recover2",
+    "mvp7_construction": "PASS produce/recover1/recover2"
+  },
+  "product_recovery": {
+    "outcome": "PASS",
+    "failure": "",
+    "item_graph_checksum": "ecdfd40b972067316f20640a076dedbc13a36aeaf3bb64ff14cc56e7fae65bc6",
+    "resource_generation": 3,
+    "resource_checksum": "7b182843732590cb02c708ef411d3ec999b581f2b4b21b84bb67f584a13427ae",
+    "construction_generation": 1,
+    "construction_checksum": "970d091738801a372884df7268d36bdf7b4fd2d71de86f6b288707ce3582523b",
+    "construct_checksum": "2b6fa16aea2a3e0211a7a8984887dfbf4c088bdd84d1a2d30110c6ef96e00854",
+    "player_a_epoch_after_restart": 3,
+    "player_b_epoch_after_restart": 2,
+    "movement_distance_m": 1.075624999999993,
+    "remote_samples_before": 28,
+    "remote_samples_after": 95,
+    "snapshot_clock_source": "CANONICAL_SNAPSHOT_CONTEXT",
+    "old_build_plan_transferability_failure_absent": true
+  },
+  "cleanliness": {
+    "source_clean_before": true,
+    "source_clean_after": true,
+    "final_remaining_godot_pids": [],
+    "udp_24580_free": true,
+    "identity_unchanged": true
+  },
+  "corroboration": {
+    "implementer_windows_exact_run": 37254326876,
+    "implementer_windows_exact_job": 111588122465,
+    "implementer_exact": "success",
+    "project_control_run": 37254330095,
+    "project_control": "success",
+    "live2_targeted_run": 37254330137,
+    "live2_targeted": "success"
+  },
+  "superseded_verifier_attempt": {
+    "run": 37256792997,
+    "conclusion": "failure",
+    "classification": "VERIFIER_HARNESS_PARSE_ERROR",
+    "detail": "PowerShell string interpolation in the verifier-only workflow failed before independent product execution; fixed only on verify branch. Frozen product HEAD/TREE were unchanged."
+  },
+  "blocking_findings": [],
+  "evidence_gaps": [],
+  "notes": [
+    "Independent verifier re-ran cold import, recovery regressions, LIVE2 focused regressions, and the full two-client planned-server-restart product flow from a fresh verifier evidence directory.",
+    "The verifier did not rely on implementer run 37254326876 as the acceptance gate; that run is corroboration only.",
+    "LIVE3-RECOVERY-REPORT.json can observe a process that is in the act of exiting during report serialization; the separate final verifier host check observed zero Godot processes and UDP 24580 free.",
+    "The in-tree LIVE.3 handoff markdown contains historical repair-required text. It is a non-product documentation follow-up and was intentionally not used to mutate the frozen verified subject."
+  ],
+  "merge_performed": false,
+  "predicate_verified": false,
+  "human_acceptance": false
+}
