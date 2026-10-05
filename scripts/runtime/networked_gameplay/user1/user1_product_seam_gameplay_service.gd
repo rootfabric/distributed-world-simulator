@@ -78,7 +78,7 @@ func setup(
 		super.shutdown()
 		_secondary = null
 		return _failure(
-			"USER1__secondary_authority_id_SETUP_FAILED",
+			"USER1_SECONDARY_AUTHORITY_SETUP_FAILED",
 			{"cause": secondary_setup}
 		)
 
@@ -192,7 +192,7 @@ func advance_fixed_server_tick(server_tick: int) -> Dictionary:
 	if not bool(primary.get("success", false)):
 		return primary
 	if _secondary == null:
-		return _failure("USER1__secondary_authority_id_MISSING")
+		return _failure("USER1_SECONDARY_AUTHORITY_MISSING")
 	var secondary: Dictionary = _secondary.advance_fixed_server_tick(server_tick)
 	if not bool(secondary.get("success", false)):
 		return _failure(
