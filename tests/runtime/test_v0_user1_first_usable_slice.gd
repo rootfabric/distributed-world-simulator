@@ -138,7 +138,7 @@ func _test_journey_progression() -> void:
 	)
 
 	var path := String(overlay.get_report().get("save_path", ""))
-	overlay.queue_free()
+	overlay.free()
 	if not path.is_empty():
 		DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
 
@@ -151,7 +151,7 @@ func _test_journey_ui() -> void:
 	_check(overlay.find_child("USER1JourneyRoot", true, false) != null, "USER1 journey root exists")
 	_check(overlay.find_child("USER1JourneyPanel", true, false) != null, "USER1 journey panel exists")
 	_check(Journey.STEP_DEFINITIONS.size() == 14, "USER1 journey exposes the full bounded route")
-	overlay.queue_free()
+	overlay.free()
 
 
 func _state(player: String) -> Dictionary:
