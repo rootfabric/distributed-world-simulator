@@ -23,7 +23,7 @@ env:
 jobs:
   linux_exact:
     name: USER1 SEM1 Linux Double Exact
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, X64]
     timeout-minutes: 25
     steps:
       - name: Checkout exact subject
@@ -42,21 +42,12 @@ jobs:
           git rev-parse HEAD > artifacts/user1-sem1-linux/head.txt
           git rev-parse 'HEAD^{tree}' > artifacts/user1-sem1-linux/tree.txt
 
-      - name: Obtain approved Linux double engine
-        uses: actions/download-artifact@v4
-        with:
-          name: p7-repair-engine-34117353691
-          run-id: 34117353691
-          repository: rootfabric/distributed-world-simulator
-          github-token: ${{ github.token }}
-          path: ${{ runner.temp }}/user1-sem1-engine
-
-      - name: Verify engine
+      - name: Resolve canonical Linux double engine
         shell: bash
         run: |
           set -euo pipefail
-          engine="$RUNNER_TEMP/user1-sem1-engine/godot"
-          chmod u+x "$engine"
+          engine="${DWS_GODOT_DOUBLE_LINUX_BIN:-$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64}"
+          test -x "$engine"
           test "$(sha256sum "$engine" | cut -d' ' -f1)" = "$ENGINE_SHA"
           version="$("$engine" --version | head -n1)"
           echo "$version" | tee artifacts/user1-sem1-linux/engine-version.txt
