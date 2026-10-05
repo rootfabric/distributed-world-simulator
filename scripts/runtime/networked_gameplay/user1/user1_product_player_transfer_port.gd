@@ -15,6 +15,35 @@ const PRODUCT_SCHEMA := "distributed_world_simulator.user1_product_player_export
 const PRODUCT_ITEM_POLICY := "USER1_EXTERNAL_GLOBAL_M4"
 
 
+func configure(
+	owner,
+	registry,
+	ownership,
+	_items_unused,
+	authority: String,
+	backend_epoch: int
+) -> Dictionary:
+	if (
+		_owner_ref != null
+		or owner == null
+		or registry == null
+		or ownership == null
+		or authority.strip_edges().is_empty()
+		or backend_epoch < 1
+	):
+		return _product_failure("LIVE_TRANSFER_PORT_CONFIGURATION_INVALID")
+	_owner_ref = weakref(owner)
+	_registry = registry
+	_ownership = ownership
+	_items = null
+	_authority = authority.strip_edges()
+	_backend_epoch = backend_epoch
+	return _product_success({
+		"movement_only_item_policy": PRODUCT_ITEM_POLICY,
+		"item_graph_bound": false,
+	})
+
+
 func bind_player(
 	logical_id: String,
 	session: String,
