@@ -1,0 +1,106 @@
+{
+  "schema": "distributed_world_simulator.harness_review_result.v1",
+  "review_id": "ECO-ARCH2-A13-PARALLEL-ADVANCE-R1-FRESH-REVIEW-001",
+  "review_type": "POST_BUILD_EXACT_HEAD_REVIEW",
+  "work_order_id": "ECO-ARCH2-A13-PARALLEL-ADVANCE-R1",
+  "risk_class": "MEDIUM",
+  "reviewed_head_sha": "c12f6ead6ea0374461e72f3dae803a3ada80e077",
+  "reviewed_tree_sha": "b0b413fbcf1bcf67c7220f329f9d2bf74f98989c",
+  "activation_base_sha": "f531499fb5efb17fd2ff8087bd5c3a65d8be3fa0",
+  "freeze_ref": "freeze/eco-arch2-a13-parallel-advance-c12f6ead-exact-r1",
+  "runtime_pr": 739,
+  "reviewer": "FRESH_REVIEWER_A13_PARALLEL_ADVANCE_R1",
+  "verdict": "CHANGES_REQUIRED",
+  "required_fixes": [
+    "Restore historical member-level failure precedence in the refactored serial Phase 2 path. The old _finish_population_step checked MAX_PROPAGULES_PER_STEP immediately after each member's _advance_individual() result, before advancing the next member. Current _advance_units_serial first runs _advance_unit_worker() over the whole workset and only afterwards applies the propagule limit, so a later member failure can mask an earlier canonical A5_PROPAGULE_LIMIT.",
+    "Make parallel advance return/interpret per-member outcomes (or an equivalent structure) in canonical member order so the main thread can interleave each member's semantic failure and propagule-limit check exactly as the accepted serial path did. Add a focused falsifier where an earlier member causes propagule overflow and a later member in the same workset fails; serial reference and parallel advance must both return the same earlier A5_PROPAGULE_LIMIT."
+  ],
+  "findings": [
+    {
+      "id": "A13-ADV-R1-F1",
+      "severity": "BLOCKING",
+      "category": "DETERMINISTIC_FAILURE_PRECEDENCE",
+      "paths": [
+        "scripts/research/ecology/v2/resource_lifecycle_runtime_v1.gd",
+        "validation/ecology/evo_arch2_a13_parallel_advance/test_parallel_advance.gd"
+      ],
+      "summary": "Whole-workset advance aggregation changes canonical failure precedence.",
+      "evidence": [
+        "Accepted main processes each member as: _advance_individual -> append that member -> enforce MAX_PROPAGULES_PER_STEP -> then move to the next member.",
+        "Reviewed HEAD c12f6ead changes serial Phase 2 to _advance_unit_worker(task_entries...) for the entire workset, where any later member failure returns immediately before _advance_units_serial sees propagules from earlier successful members.",
+        "The parallel path has the same aggregation boundary: _advance_unit_worker returns one success/failure dictionary for the whole workset, and main-thread canonical merge performs the propagule limit only after the worker reports overall success.",
+        "Therefore an earlier member that would canonically trigger A5_PROPAGULE_LIMIT can be masked by a later member failure inside the same workset. This violates the Work Order claim that failures are consumed in canonical workset/member order and also changes the pre-existing serial path."
+      ],
+      "required_disposition": "Repair the aggregation boundary so member results are interpreted canonically one member at a time; preserve no-shared-state worker execution."
+    }
+  ],
+  "evidence_gaps": [
+    "The 136-check Parallel Advance suite does not contain a mixed same-workset falsifier that forces propagule-limit overflow before a later member-level advance failure."
+  ],
+  "checked_items": [
+    {
+      "item": "Exact catch-up subject is c12f6ead6ea0374461e72f3dae803a3ada80e077 / b0b413fbcf1bcf67c7220f329f9d2bf74f98989c.",
+      "disposition": "VERIFIED"
+    },
+    {
+      "item": "Current main is f531499fb5efb17fd2ff8087bd5c3a65d8be3fa0 and subject is behind_by=0 at review time.",
+      "disposition": "VERIFIED"
+    },
+    {
+      "item": "Catch-up main drift and A13 feature changes had zero overlapping file paths; PR diff remains exactly seven A13 files.",
+      "disposition": "VERIFIED"
+    },
+    {
+      "item": "resource_lifecycle_runtime_v1.gd retains exactly one Field.allocate_demands() call and both serial/full-parallel paths pass the shared global allocation barrier before Phase 2.",
+      "disposition": "VERIFIED"
+    },
+    {
+      "item": "No parallel advance worker is started before _allocate_population_demands() succeeds.",
+      "disposition": "VERIFIED"
+    },
+    {
+      "item": "Parallel workers receive deep-copied entries, samples and intake values and are not given a mutable Field or Runtime owner.",
+      "disposition": "VERIFIED"
+    },
+    {
+      "item": "All successfully started threads are joined before wave result interpretation; thread completion order is ignored in favor of workset index.",
+      "disposition": "VERIFIED"
+    },
+    {
+      "item": "Scheduler metadata is returned only from the low-level lifecycle result and is not inserted into canonical Runtime/checkpoint state.",
+      "disposition": "VERIFIED"
+    },
+    {
+      "item": "Existing serial, Parallel Prepare and Activity public entry points remain present; new full-parallel APIs are opt-in siblings.",
+      "disposition": "VERIFIED"
+    },
+    {
+      "item": "Portable Godot 4.7.1 run 37279540403 job 111664114449 passed 136/0 with fresh import and tracked-clean checkout on exact HEAD.",
+      "disposition": "CORROBORATED"
+    },
+    {
+      "item": "Windows double exact run 37279540403 job 111664114702 passed on exact HEAD: Parallel Advance 136/0, Parallel Prepare 93/0, Activity 122/0, Spatial 108/0, A13 58/0, A12 38/0, A11 171/0.",
+      "disposition": "CORROBORATED"
+    },
+    {
+      "item": "Project Control run 37279540396 completed SUCCESS on exact catch-up HEAD, including full Harness regression, PC0 and directional audit.",
+      "disposition": "CORROBORATED"
+    },
+    {
+      "item": "Fresh Linux Parallel Advance double exact remains a separate verifier machine gate and is not required to identify or repair the blocking static semantic finding.",
+      "disposition": "NOT_A_REVIEW_BLOCKER"
+    }
+  ],
+  "post_build_critique": {
+    "outcome": "NARROW_REPAIR_REQUIRED",
+    "unnecessary_complexity": "The two-phase bounded Thread-wave design remains auditable and appropriately explicit for this checkpoint.",
+    "duplicate_truth": "None observed in canonical state; worker data and scheduler telemetry remain execution-only.",
+    "implicit_owner": "None. Field allocation remains A4-owned; A5 owns lifecycle transition; Runtime composes but does not acquire allocator ownership.",
+    "coupling_reduction": "The shared allocation helper is a good refactor, but serial and parallel Phase 2 must share a member-level canonical interpretation contract rather than a whole-workset success/failure aggregate.",
+    "design_regression": "Yes, limited to error precedence around global propagule admission limit versus later member failures within the same workset.",
+    "recommended_repair": "Have workers compute isolated per-member outcomes, then let the main thread consume those outcomes member-by-member in canonical order, applying A5_PROPAGULE_LIMIT after each successful member before considering the next member's outcome. Keep the serial reference member-by-member as the oracle."
+  },
+  "risk_assessment": "MEDIUM with one blocking deterministic semantics regression. Successful-state byte/hash equivalence is strongly covered and current Windows/portable execution is green, but acceptance requires exact failure behavior as well. The current workset-level result aggregation can reorder which canonical error wins without changing successful-state bytes, so the existing green equivalence tests do not falsify this edge case.",
+  "summary": "Fresh exact-head review found one blocking failure-precedence defect. The concurrency architecture and canonical-state isolation are otherwise sound. Repair must restore member-level canonical interpretation around A5_PROPAGULE_LIMIT and add a same-workset mixed-failure falsifier before a fresh review can PASS.",
+  "merge_authorized": false
+}
