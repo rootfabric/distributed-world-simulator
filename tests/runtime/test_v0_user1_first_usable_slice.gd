@@ -79,6 +79,7 @@ func _test_dual_stack_port_preflight() -> void:
 		not shell._udp_port_available(port),
 		"Product Shell rejects a port already owned through IPv6 wildcard"
 	)
+	shell.free()
 	holder.close()
 
 
