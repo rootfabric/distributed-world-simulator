@@ -1,6 +1,9 @@
 name: ECO ARCH2 A13 Fidelity Scheduling Exact
 
 on:
+  push:
+    branches:
+      - feature/eco-arch2-a13-fidelity-scheduling-r1
   pull_request:
     paths:
       - 'scripts/research/ecology/v2/ecology_runtime_v1.gd'
