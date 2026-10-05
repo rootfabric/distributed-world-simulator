@@ -141,6 +141,10 @@ jobs:
               Get-Content $log -Tail 350
               throw ("USER1_FOCUSED_SCRIPT_ERROR:{0}" -f $test)
             }
+            if($test -eq 'tests/runtime/test_v0_user1_first_usable_slice.gd' -and (Select-String $log -Pattern 'RID.*leaked|ObjectDB instances were leaked|resources still in use' -Quiet)){
+              Get-Content $log -Tail 120
+              throw 'USER1_TEST_RESOURCE_LEAK'
+            }
           }
 
       - name: Real Product Shell entry smoke
