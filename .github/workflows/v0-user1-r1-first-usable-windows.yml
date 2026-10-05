@@ -42,6 +42,7 @@ jobs:
           mapfile -t actual < <(git diff --name-only "$BASE_MAIN" HEAD | sort)
           expected=(
             ".github/workflows/v0-user1-r1-first-usable-windows.yml"
+            ".github/workflows/v0-user1-sem1-linux-exact.yml"
             "docs/control/v0-live/V0_USER1_FIRST_USABLE_SLICE_R1_RU.md"
             "scripts/app/earth_p3_resource_mining_app.gd"
             "scripts/app/simulator_app.gd"
