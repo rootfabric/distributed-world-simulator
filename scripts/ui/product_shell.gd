@@ -127,6 +127,7 @@ static func build_host_user_args(
 	return PackedStringArray([
 		"--role=dedicated-server",
 		"--network-mvp",
+		"--product-seam",
 		"--world=%s" % world,
 		"--server-address=127.0.0.1",
 		"--server-port=%d" % clampi(port, 1, 65535),
