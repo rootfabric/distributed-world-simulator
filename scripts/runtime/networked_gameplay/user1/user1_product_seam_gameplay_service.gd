@@ -21,14 +21,14 @@ const Carry = preload(
 )
 const SeamUtils = preload("res://scripts/network/contracts/network_contract_utils.gd")
 
-const PRIMARY_AUTHORITY := "authority/user1/a"
-const SECONDARY_AUTHORITY := "authority/user1/b"
 const PRIMARY_REGION := "region/user1/a"
 const SECONDARY_REGION := "region/user1/b"
 const SEAM_ENTER_X_M := 10.0
 const SEAM_RETURN_X_M := 0.0
 
 var _secondary
+var _primary_authority_id := ""
+var _secondary_authority_id := ""
 var _primary_port
 var _secondary_port
 var _seam_coordinators: Dictionary = {}
@@ -46,6 +46,8 @@ func setup(
 	server_tick: int = 0,
 	config: Dictionary = {}
 ) -> Dictionary:
+	_primary_authority_id = authority_owner_id.strip_edges()
+	_secondary_authority_id = "%s/user1-seam-b" % _primary_authority_id
 	var primary_config := config.duplicate(true)
 	primary_config["region_id"] = String(
 		config.get("region_id", "region/m3/single-server")
@@ -61,7 +63,7 @@ func setup(
 
 	_secondary = SecondaryAuthorityService.new()
 	var secondary_setup: Dictionary = _secondary.setup(
-		"%s/user1-seam-b" % authority_owner_id,
+		_secondary_authority_id,
 		authority_epoch,
 		server_tick,
 		{
@@ -76,7 +78,7 @@ func setup(
 		super.shutdown()
 		_secondary = null
 		return _failure(
-			"USER1_SECONDARY_AUTHORITY_SETUP_FAILED",
+			"USER1__secondary_authority_id_SETUP_FAILED",
 			{"cause": secondary_setup}
 		)
 
@@ -86,14 +88,14 @@ func setup(
 		shutdown()
 		return _failure("USER1_PRODUCT_SEAM_TRANSFER_PORT_REQUIRED")
 	var primary_peer := _primary_port.register_peer(
-		SECONDARY_AUTHORITY,
+		_secondary_authority_id,
 		_secondary_port
 	)
 	if not bool(primary_peer.get("success", false)):
 		shutdown()
 		return primary_peer
 	var secondary_peer := _secondary_port.register_peer(
-		PRIMARY_AUTHORITY,
+		_primary_authority_id,
 		_primary_port
 	)
 	if not bool(secondary_peer.get("success", false)):
@@ -105,8 +107,8 @@ func setup(
 	).duplicate(true)
 	details["product_seam"] = {
 		"enabled": true,
-		"primary_authority": PRIMARY_AUTHORITY,
-		"secondary_authority": SECONDARY_AUTHORITY,
+		"primary_authority": _primary_authority_id,
+		"secondary_authority": _secondary_authority_id,
 		"enter_x_m": SEAM_ENTER_X_M,
 		"return_x_m": SEAM_RETURN_X_M,
 		"item_graph_owner": "PRIMARY_PRODUCT_M4",
@@ -137,7 +139,7 @@ func join(
 			_seam_state[player_id] = _initial_seam_state(player_id)
 		else:
 			var state: Dictionary = Dictionary(_seam_state[player_id]).duplicate(true)
-			state["active_authority_id"] = PRIMARY_AUTHORITY
+			state["active_authority_id"] = _primary_authority_id
 			state["region_id"] = PRIMARY_REGION
 			state["transport_session_id"] = transport_session_id
 			_seam_state[player_id] = state
@@ -190,7 +192,7 @@ func advance_fixed_server_tick(server_tick: int) -> Dictionary:
 	if not bool(primary.get("success", false)):
 		return primary
 	if _secondary == null:
-		return _failure("USER1_SECONDARY_AUTHORITY_MISSING")
+		return _failure("USER1__secondary_authority_id_MISSING")
 	var secondary: Dictionary = _secondary.advance_fixed_server_tick(server_tick)
 	if not bool(secondary.get("success", false)):
 		return _failure(
@@ -215,7 +217,7 @@ func simulate_fixed_movement_tick(
 		return authorization
 
 	var result: Dictionary
-	if active_authority == SECONDARY_AUTHORITY:
+	if active_authority == _secondary_authority_id:
 		result = _secondary.simulate_fixed_movement_tick(
 			player_id,
 			transport_session_id,
@@ -253,7 +255,7 @@ func simulate_fixed_movement_tick(
 
 func get_player(logical_player_id: String) -> Dictionary:
 	var player_id := logical_player_id.strip_edges().to_lower()
-	if _active_authority(player_id) == SECONDARY_AUTHORITY:
+	if _active_authority(player_id) == _secondary_authority_id:
 		return _secondary.get_player(player_id) if _secondary != null else {}
 	return super.get_player(player_id)
 
@@ -272,7 +274,7 @@ func create_snapshot() -> Dictionary:
 		var active := _active_authority(player_id)
 		var player := (
 			_secondary.get_player(player_id)
-			if active == SECONDARY_AUTHORITY
+			if active == _secondary_authority_id
 			else super.get_player(player_id)
 		)
 		if player.is_empty():
@@ -403,7 +405,7 @@ func get_product_seam_state(logical_player_id: String) -> Dictionary:
 	if _seam_coordinators.has(player_id):
 		var decision: Dictionary = _seam_coordinators[player_id].snapshot()
 		var authority := String(
-			decision.get("active_authority_id", PRIMARY_AUTHORITY)
+			decision.get("active_authority_id", _primary_authority_id)
 		)
 		state["active_authority_id"] = authority
 		state["authority_epoch"] = int(
@@ -411,12 +413,12 @@ func get_product_seam_state(logical_player_id: String) -> Dictionary:
 		)
 		state["region_id"] = (
 			SECONDARY_REGION
-			if authority == SECONDARY_AUTHORITY
+			if authority == _secondary_authority_id
 			else PRIMARY_REGION
 		)
 		state["transfer_state"] = String(decision.get("state", "ACTIVE"))
 	else:
-		state["active_authority_id"] = PRIMARY_AUTHORITY
+		state["active_authority_id"] = _primary_authority_id
 		state["region_id"] = PRIMARY_REGION
 		state["transfer_state"] = "ACTIVE"
 	state["canonical_state_owned"] = false
@@ -433,8 +435,8 @@ func get_report() -> Dictionary:
 		seam_states[player_id] = get_product_seam_state(player_id)
 	report["user1_product_seam"] = {
 		"enabled": true,
-		"primary_authority": PRIMARY_AUTHORITY,
-		"secondary_authority": SECONDARY_AUTHORITY,
+		"primary_authority": _primary_authority_id,
+		"secondary_authority": _secondary_authority_id,
 		"enter_x_m": SEAM_ENTER_X_M,
 		"return_x_m": SEAM_RETURN_X_M,
 		"active_binding_count": _seam_coordinators.size(),
@@ -472,13 +474,13 @@ func _maybe_cross(player_id: String) -> Dictionary:
 	if player.is_empty():
 		return _failure("USER1_SEAM_PLAYER_NOT_FOUND")
 	var x := float(Dictionary(player.get("position", {})).get("x", 0.0))
-	if authority == PRIMARY_AUTHORITY and x >= SEAM_ENTER_X_M:
+	if authority == _primary_authority_id and x >= SEAM_ENTER_X_M:
 		var prepared := _ensure_seam_binding(player_id)
 		if not bool(prepared.get("success", false)):
 			return prepared
-		return _perform_transfer(player_id, SECONDARY_AUTHORITY, false)
-	if authority == SECONDARY_AUTHORITY and x < SEAM_RETURN_X_M:
-		return _perform_transfer(player_id, PRIMARY_AUTHORITY, true)
+		return _perform_transfer(player_id, _secondary_authority_id, false)
+	if authority == _secondary_authority_id and x < SEAM_RETURN_X_M:
+		return _perform_transfer(player_id, _primary_authority_id, true)
 	return _success({"crossed": false})
 
 
@@ -503,7 +505,7 @@ func _ensure_seam_binding(player_id: String) -> Dictionary:
 	)
 	var coordinator = SM1Coordinator.new()
 	var configured: Dictionary = coordinator.configure(
-		PRIMARY_AUTHORITY,
+		_primary_authority_id,
 		int(state.get("authority_epoch", 1)),
 		{
 			"logical_player_id": player_id,
@@ -547,25 +549,25 @@ func _perform_transfer(
 	var source_authority := String(decision.get("active_authority_id", ""))
 	var source_epoch := int(decision.get("authority_epoch", 0))
 	if (
-		source_authority not in [PRIMARY_AUTHORITY, SECONDARY_AUTHORITY]
-		or target_authority not in [PRIMARY_AUTHORITY, SECONDARY_AUTHORITY]
+		source_authority not in [_primary_authority_id, _secondary_authority_id]
+		or target_authority not in [_primary_authority_id, _secondary_authority_id]
 		or source_authority == target_authority
 	):
 		return _failure("USER1_SEAM_TRANSFER_TUPLE_INVALID")
 
 	var source_port = (
 		_primary_port
-		if source_authority == PRIMARY_AUTHORITY
+		if source_authority == _primary_authority_id
 		else _secondary_port
 	)
 	var target_port = (
 		_primary_port
-		if target_authority == PRIMARY_AUTHORITY
+		if target_authority == _primary_authority_id
 		else _secondary_port
 	)
 	var source_service = (
 		self
-		if source_authority == PRIMARY_AUTHORITY
+		if source_authority == _primary_authority_id
 		else _secondary
 	)
 	var before: Dictionary = source_service.get_player(player_id)
@@ -673,7 +675,7 @@ func _perform_transfer(
 
 	var after := (
 		super.get_player(player_id)
-		if target_authority == PRIMARY_AUTHORITY
+		if target_authority == _primary_authority_id
 		else _secondary.get_player(player_id)
 	)
 	if (
@@ -696,13 +698,13 @@ func _perform_transfer(
 	state["authority_epoch"] = source_epoch + 1
 	state["region_id"] = (
 		PRIMARY_REGION
-		if target_authority == PRIMARY_AUTHORITY
+		if target_authority == _primary_authority_id
 		else SECONDARY_REGION
 	)
 	state["crossings"] = int(state.get("crossings", 0)) + 1
-	if target_authority == SECONDARY_AUTHORITY:
+	if target_authority == _secondary_authority_id:
 		state["secondary_entries"] = int(state.get("secondary_entries", 0)) + 1
-	if target_authority == PRIMARY_AUTHORITY:
+	if target_authority == _primary_authority_id:
 		state["roundtrips"] = int(state.get("roundtrips", 0)) + 1
 	state["last_transfer_id"] = transfer_id
 	_seam_state[player_id] = state
@@ -740,10 +742,10 @@ func _force_all_primary() -> Dictionary:
 	var players := _seam_coordinators.keys().duplicate()
 	for player_id_value in players:
 		var player_id := String(player_id_value)
-		if _active_authority(player_id) == SECONDARY_AUTHORITY:
+		if _active_authority(player_id) == _secondary_authority_id:
 			var returned := _perform_transfer(
 				player_id,
-				PRIMARY_AUTHORITY,
+				_primary_authority_id,
 				true
 			)
 			if not bool(returned.get("success", false)):
@@ -758,7 +760,7 @@ func _force_all_primary() -> Dictionary:
 func _release_roundtrip_binding(player_id: String) -> Dictionary:
 	if not _seam_coordinators.has(player_id):
 		return _success({"replay": true})
-	if _active_authority(player_id) != PRIMARY_AUTHORITY:
+	if _active_authority(player_id) != _primary_authority_id:
 		return _failure("USER1_SEAM_RELEASE_REQUIRES_PRIMARY")
 	var primary_release: Dictionary = _primary_port.release_binding(player_id)
 	if not bool(primary_release.get("success", false)):
@@ -774,7 +776,7 @@ func _authorize_active(player_id: String, authority_id: String) -> Dictionary:
 	if not _seam_coordinators.has(player_id):
 		return (
 			_success()
-			if authority_id == PRIMARY_AUTHORITY
+			if authority_id == _primary_authority_id
 			else _failure("USER1_SEAM_PRIMARY_EXPECTED")
 		)
 	var decision: Dictionary = _seam_coordinators[player_id].snapshot()
@@ -786,11 +788,11 @@ func _authorize_active(player_id: String, authority_id: String) -> Dictionary:
 
 func _active_authority(player_id: String) -> String:
 	if not _seam_coordinators.has(player_id):
-		return PRIMARY_AUTHORITY
+		return _primary_authority_id
 	return String(
 		_seam_coordinators[player_id].snapshot().get(
 			"active_authority_id",
-			PRIMARY_AUTHORITY
+			_primary_authority_id
 		)
 	)
 
@@ -860,7 +862,7 @@ func _initial_seam_state(player_id: String) -> Dictionary:
 	return {
 		"logical_player_id": player_id,
 		"transport_session_id": String(_seam_sessions.get(player_id, "")),
-		"active_authority_id": PRIMARY_AUTHORITY,
+		"active_authority_id": _primary_authority_id,
 		"authority_epoch": 1,
 		"region_id": PRIMARY_REGION,
 		"transfer_state": "ACTIVE",
