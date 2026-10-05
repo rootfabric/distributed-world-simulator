@@ -328,6 +328,19 @@ func release_binding(logical_id: String) -> Dictionary:
 	if _staged.has(logical_id) or _installing.get("logical_id", "") == logical_id:
 		return _product_failure("LIVE_PLAYER_RELEASE_IN_FLIGHT")
 
+	var registry_preflight: Dictionary = _registry.preflight_live_player_gate_release(
+		logical_id,
+		gate
+	)
+	if not bool(registry_preflight.get("success", false)):
+		return registry_preflight
+	var ownership_preflight: Dictionary = _ownership.preflight_live_player_gate_release(
+		logical_id,
+		gate
+	)
+	if not bool(ownership_preflight.get("success", false)):
+		return ownership_preflight
+
 	var registry_release: Dictionary = _registry.release_live_player_gate(
 		logical_id,
 		gate
