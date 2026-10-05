@@ -19,6 +19,60 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  portable-smoke:
+    name: A13 Parallel Advance Portable Smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+
+      - name: Install official Godot 4.7.1 parser/runtime smoke
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fL --retry 3 -o /tmp/godot.zip https://github.com/godotengine/godot/releases/download/4.7.1-stable/Godot_v4.7.1-stable_linux.x86_64.zip
+          unzip -q /tmp/godot.zip -d /tmp/godot
+          chmod +x /tmp/godot/Godot_v4.7.1-stable_linux.x86_64
+          /tmp/godot/Godot_v4.7.1-stable_linux.x86_64 --version
+
+      - name: Fresh import
+        shell: bash
+        env:
+          GODOT: /tmp/godot/Godot_v4.7.1-stable_linux.x86_64
+        run: |
+          set -euo pipefail
+          "$GODOT" --headless --editor --path . --import
+
+      - name: Run focused parallel advance smoke
+        shell: bash
+        env:
+          GODOT: /tmp/godot/Godot_v4.7.1-stable_linux.x86_64
+        run: |
+          set -Eeuo pipefail
+          log="$(mktemp)"
+          set +e
+          "$GODOT" --headless --path . --script             res://validation/ecology/evo_arch2_a13_parallel_advance/test_parallel_advance.gd             2>&1 | tee "$log"
+          status=${PIPESTATUS[0]}
+          set -e
+          if [ "$status" -ne 0 ]; then
+            exit "$status"
+          fi
+          grep -F "EVO_ARCH2_A13_PARALLEL_ADVANCE PASS" "$log"
+          if grep -Eq 'SCRIPT ERROR:|Parse Error|Failed to load script|Error compiling' "$log"; then
+            echo "fatal GDScript marker detected" >&2
+            exit 4
+          fi
+          rm -f "$log"
+
+      - name: Verify clean tracked source
+        shell: bash
+        run: |
+          git diff --exit-code
+          git diff --cached --exit-code
+
   exact:
     name: A13 Parallel Advance ${{ matrix.platform }} Double Exact
     strategy:
