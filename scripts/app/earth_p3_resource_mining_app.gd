@@ -396,6 +396,7 @@ func create_user1_journey_state() -> Dictionary:
 	var position: Dictionary = {"x": 0.0, "y": 0.0, "z": 0.0}
 	var gameplay_snapshot: Dictionary = {}
 	var construction: Dictionary = {}
+	var product_seam: Dictionary = {}
 	if m3_multiplayer_client_runtime != null:
 		if m3_multiplayer_client_runtime.has_method("get_local_player_id"):
 			player_id = String(m3_multiplayer_client_runtime.get_local_player_id())
@@ -409,6 +410,8 @@ func create_user1_journey_state() -> Dictionary:
 			gameplay_snapshot = m3_multiplayer_client_runtime.get_snapshot()
 		if m3_multiplayer_client_runtime.has_method("get_construction_bundle"):
 			construction = m3_multiplayer_client_runtime.get_construction_bundle()
+		if m3_multiplayer_client_runtime.has_method("get_product_seam_state"):
+			product_seam = m3_multiplayer_client_runtime.get_product_seam_state()
 
 	var inventory_ore_quantity := 0
 	var world_item_count := 0
@@ -474,7 +477,18 @@ func create_user1_journey_state() -> Dictionary:
 		"player_id": player_id,
 		"ownership_epoch": ownership_epoch,
 		"position": position.duplicate(true),
-		"region_id": String(gameplay_snapshot.get("region_id", "")),
+		"region_id": String(
+			product_seam.get(
+				"region_id",
+				gameplay_snapshot.get("region_id", "")
+			)
+		),
+		"seam_active_authority_id": String(
+			product_seam.get("active_authority_id", "")
+		),
+		"seam_authority_epoch": int(product_seam.get("authority_epoch", 0)),
+		"seam_crossings": int(product_seam.get("crossings", 0)),
+		"seam_roundtrips": int(product_seam.get("roundtrips", -1)),
 		"remote_player_count": _m3_remote_presenters.size(),
 		"nearest_resource_distance_m": nearest_resource_distance_m,
 		"resource_generation": int(_p3_resource_snapshot.get("generation", -1)),
