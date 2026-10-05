@@ -1,0 +1,109 @@
+name: ECO ARCH2 A13 Parallel Advance Exact
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/research/ecology/v2/resource_lifecycle_runtime_v1.gd'
+      - 'scripts/research/ecology/v2/ecology_runtime_v1.gd'
+      - 'scripts/research/ecology/v2/population_spatial_workset_plan_v1.gd'
+      - 'scripts/research/ecology/v2/population_activity_cadence_plan_v1.gd'
+      - 'validation/ecology/evo_arch2_a13_parallel_advance/**'
+      - '.github/workflows/eco-arch2-a13-parallel-advance-exact.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: eco-a13-parallel-advance-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  exact:
+    name: A13 Parallel Advance ${{ matrix.platform }} Double Exact
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [Linux, Windows]
+    runs-on: [self-hosted, '${{ matrix.platform }}', X64]
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+
+      - name: A13 Parallel Advance Linux exact
+        if: matrix.platform == 'Linux'
+        shell: bash
+        env:
+          CONFIGURED_GODOT: ${{ vars.DWS_GODOT_DOUBLE_LINUX_BIN }}
+        run: |
+          set -euo pipefail
+          godot="${CONFIGURED_GODOT:-${DWS_GODOT_DOUBLE_LINUX_BIN:-$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64}}"
+          python3 -m py_compile validation/ecology/evo_arch2_a13_parallel_advance/run_exact.py
+          python3 validation/ecology/evo_arch2_a13_parallel_advance/run_exact.py --godot "$godot"
+          python3 validation/ecology/evo_arch2_a13_parallel_prepare/run_exact.py --godot "$godot"
+          python3 validation/ecology/evo_arch2_a13_activity/run_exact.py --godot "$godot"
+          python3 validation/ecology/evo_arch2_a13_spatial/run_exact.py --godot "$godot"
+          python3 validation/ecology/evo_arch2_a13/run_exact.py --godot "$godot"
+          python3 validation/ecology/evo_arch2_a12/run_exact.py --godot "$godot"
+          python3 validation/ecology/evo_arch2_a11/run_exact.py --godot "$godot"
+
+      - name: A13 Parallel Advance Windows exact
+        if: matrix.platform == 'Windows'
+        shell: pwsh
+        env:
+          CONFIGURED_GODOT: ${{ vars.DWS_GODOT_DOUBLE_BIN }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $godot = $env:CONFIGURED_GODOT
+          if ([string]::IsNullOrWhiteSpace($godot)) {
+            $godot = 'C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe'
+          }
+          python -m py_compile validation/ecology/evo_arch2_a13_parallel_advance/run_exact.py
+          if ($LASTEXITCODE -ne 0) { throw 'A13_PARALLEL_ADVANCE_PYTHON_COMPILE' }
+          python validation/ecology/evo_arch2_a13_parallel_advance/run_exact.py --godot $godot
+          if ($LASTEXITCODE -ne 0) { throw 'A13_PARALLEL_ADVANCE_EXACT_FAILED' }
+          python validation/ecology/evo_arch2_a13_parallel_prepare/run_exact.py --godot $godot
+          if ($LASTEXITCODE -ne 0) { throw 'A13_PARALLEL_PREPARE_REGRESSION_FAILED' }
+          python validation/ecology/evo_arch2_a13_activity/run_exact.py --godot $godot
+          if ($LASTEXITCODE -ne 0) { throw 'A13_ACTIVITY_REGRESSION_FAILED' }
+          python validation/ecology/evo_arch2_a13_spatial/run_exact.py --godot $godot
+          if ($LASTEXITCODE -ne 0) { throw 'A13_SPATIAL_REGRESSION_FAILED' }
+          python validation/ecology/evo_arch2_a13/run_exact.py --godot $godot
+          if ($LASTEXITCODE -ne 0) { throw 'A13_REGRESSION_FAILED' }
+          python validation/ecology/evo_arch2_a12/run_exact.py --godot $godot
+          if ($LASTEXITCODE -ne 0) { throw 'A12_REGRESSION_FAILED' }
+          python validation/ecology/evo_arch2_a11/run_exact.py --godot $godot
+          if ($LASTEXITCODE -ne 0) { throw 'A11_REGRESSION_FAILED' }
+
+      - name: Verify clean tracked Linux source
+        if: always() && matrix.platform == 'Linux'
+        shell: bash
+        run: |
+          git diff --exit-code
+          git diff --cached --exit-code
+
+      - name: Verify clean tracked Windows source
+        if: always() && matrix.platform == 'Windows'
+        shell: pwsh
+        run: |
+          git diff --exit-code
+          if ($LASTEXITCODE -ne 0) { throw 'TRACKED_WORKTREE_CHANGED' }
+          git diff --cached --exit-code
+          if ($LASTEXITCODE -ne 0) { throw 'TRACKED_INDEX_CHANGED' }
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: eco-a13-parallel-advance-${{ matrix.platform }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            artifacts/runtime/eco-a13-parallel-advance
+            artifacts/runtime/eco-a13-parallel-prepare
+            artifacts/runtime/eco-a13-activity
+            artifacts/runtime/eco-a13-spatial
+            artifacts/runtime/eco-a13
+            artifacts/runtime/eco-a12
+            artifacts/runtime/eco-a11
+          if-no-files-found: warn
