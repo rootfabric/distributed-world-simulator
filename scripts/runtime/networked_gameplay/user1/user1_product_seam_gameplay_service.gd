@@ -397,6 +397,18 @@ func can_persist_product_state() -> bool:
 	return _seam_coordinators.is_empty()
 
 
+func prepare_product_persistence() -> Dictionary:
+	var quiesced := _force_all_primary()
+	if not bool(quiesced.get("success", false)):
+		return quiesced
+	if not _seam_coordinators.is_empty():
+		return _failure("USER1_SEAM_PERSISTENCE_STILL_BOUND")
+	return _success({
+		"quiescent": true,
+		"primary_authority_id": _primary_authority_id,
+	})
+
+
 func get_product_seam_state(logical_player_id: String) -> Dictionary:
 	var player_id := logical_player_id.strip_edges().to_lower()
 	var state: Dictionary = Dictionary(
