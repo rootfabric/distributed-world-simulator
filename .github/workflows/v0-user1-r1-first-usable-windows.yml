@@ -44,9 +44,24 @@ jobs:
             ".github/workflows/v0-user1-r1-first-usable-windows.yml"
             "docs/control/v0-live/V0_USER1_FIRST_USABLE_SLICE_R1_RU.md"
             "scripts/app/earth_p3_resource_mining_app.gd"
+            "scripts/app/simulator_app.gd"
+            "scripts/network/observability/network_protocol_manifest.gd"
+            "scripts/runtime/launch_options.gd"
+            "scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime.gd"
+            "scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime_p2.gd"
+            "scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime.gd"
+            "scripts/runtime/networked_gameplay/services/player_ownership_service.gd"
+            "scripts/runtime/networked_gameplay/services/player_registry.gd"
+            "scripts/runtime/networked_gameplay/user1/user1_product_player_transfer_port.gd"
+            "scripts/runtime/networked_gameplay/user1/user1_product_seam_authority_service.gd"
+            "scripts/runtime/networked_gameplay/user1/user1_product_seam_gameplay_service.gd"
+            "scripts/runtime/networked_gameplay/user1/user1_product_seam_state.gd"
             "scripts/ui/product_shell.gd"
             "scripts/ui/user1_journey_overlay.gd"
+            "tests/runtime/test_launch_options.gd"
             "tests/runtime/test_v0_user1_first_usable_slice.gd"
+            "tests/runtime/test_v0_user1_product_seam_bridge.gd"
+            "tests/runtime/test_v0_ux0_product_shell.gd"
           )
           mapfile -t expected_sorted < <(printf '%s\n' "${expected[@]}" | sort)
           diff -u <(printf '%s\n' "${expected_sorted[@]}") <(printf '%s\n' "${actual[@]}")
@@ -57,11 +72,15 @@ jobs:
         run: |
           set -euo pipefail
           changed="$(git diff --name-only "$BASE_MAIN" HEAD)"
-          ! grep -Eq '^(scripts/(items|construction/authoritative|persistence|simulation/transactions)|scripts/runtime/networked_gameplay/(m3|m4)|config/control)/' <<<"$changed"
+          ! grep -Eq '^(scripts/(items|construction/authoritative|persistence|simulation/transactions)|scripts/runtime/networked_gameplay/m4|config/control)/' <<<"$changed"
           grep -q 'USER1Journey' scripts/app/earth_p3_resource_mining_app.gd
           grep -q 'last_host_player_name' scripts/ui/product_shell.gd
+          grep -q -- '--product-seam' scripts/ui/product_shell.gd
           grep -q '0.0.0.0' scripts/ui/product_shell.gd
           grep -q '"::"' scripts/ui/product_shell.gd
+          grep -q 'SM1AuthorityTransferCoordinator' scripts/runtime/networked_gameplay/user1/user1_product_seam_gameplay_service.gd || grep -q 'sm1_authority_transfer_coordinator' scripts/runtime/networked_gameplay/user1/user1_product_seam_gameplay_service.gd
+          grep -q 'USER1_EXTERNAL_GLOBAL_M4' scripts/runtime/networked_gameplay/user1/user1_product_player_transfer_port.gd
+          grep -q 'PRODUCT_SEAM_STATE' scripts/network/observability/network_protocol_manifest.gd
 
   windows:
     name: USER1 exact Windows readiness
@@ -122,9 +141,12 @@ jobs:
         run: |
           $ErrorActionPreference='Stop'
           $tests=@(
+            'tests/runtime/test_v0_user1_product_seam_bridge.gd',
             'tests/runtime/test_v0_user1_first_usable_slice.gd',
             'tests/runtime/test_v0_ux0_product_shell.gd',
             'tests/runtime/test_launch_options.gd',
+            'tests/runtime/test_v0_mvp_6_native_carry_prerequisite.gd',
+            'tests/runtime/test_v0_mvp_6_native_item_handoff.gd',
             'tests/runtime/test_v0_live2_human_gameplay_bridge.gd',
             'tests/runtime/test_v0_live2_r3_reliability.gd',
             'tests/runtime/test_v0_p4_live_two_client_reconnect_convergence.gd'
