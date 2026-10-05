@@ -11,7 +11,7 @@ extends "res://scripts/runtime/networked_gameplay/user1/user1_product_seam_autho
 # and the service is again an ordinary single-owner durable product service.
 
 const SecondaryAuthorityService = preload(
-	"res://scripts/runtime/networked_gameplay/user1/user1_product_seam_authority_service.gd"
+	"res://scripts/runtime/networked_gameplay/user1/user1_product_seam_movement_authority_service.gd"
 )
 const SM1Coordinator = preload(
 	"res://scripts/runtime/networked_gameplay/sm1/sm1_authority_transfer_coordinator.gd"
