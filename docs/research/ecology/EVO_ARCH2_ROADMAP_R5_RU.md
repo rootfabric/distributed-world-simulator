@@ -13,7 +13,8 @@
 | A13 R3 | deterministic exact worksets — CLOSED |
 | A13 Spatial | Spatial Workset Addressing — CLOSED |
 | A13 Activity | Active / Sleeping Population Scheduling — CLOSED |
-| **A13 Parallel Prepare** | **Bounded Parallel Prepare — CURRENT** |
+| A13 Parallel Prepare | Bounded Parallel Prepare — CLOSED |
+| **A13 Parallel Advance** | **Bounded Parallel Advance — CURRENT** |
 
 ## A13 Population Scaling Architecture
 
@@ -82,7 +83,7 @@ R1 — reference exact semantics и фундамент для будущего s
 не mixed ACTIVE/SLEEPING performance optimization.
 
 
-### ▶ Bounded Parallel Prepare — R1
+### ✅ Bounded Parallel Prepare — R1
 
 A5 Phase 1 preparation becomes bounded-parallel over the existing deterministic
 spatial worksets:
@@ -113,13 +114,43 @@ R1 invariant:
 R1 is a correctness + concurrency foundation. Performance claims require the later
 profiling/telemetry stage.
 
+### ▶ Bounded Parallel Advance — R1
+
+Поверх закрытого parallel-prepare добавляется второй bounded worker phase после
+единственного глобального resource-allocation barrier:
+
+```text
+parallel prepare
+→ join
+→ ONE GLOBAL Field.allocate_demands()
+→ parallel per-workset _advance_individual()
+→ join
+→ canonical workset/member merge
+→ canonical population / propagules
+```
+
+Инварианты R1:
+
+- ни один advance worker не стартует до успешной global allocation;
+- allocator остаётся единственным и вызывается один раз;
+- advance worker не владеет Field и не пишет в canonical Runtime;
+- вход worker — deep-copied entry/sample/grant;
+- completion order не влияет на result order;
+- failures принимаются только в canonical workset order;
+- global propagule limit проверяется при canonical merge;
+- prepare и advance worker bounds независимы и ограничены 1..8;
+- serial / parallel-prepare / full-parallel обязаны быть byte/hash/checkpoint exact-equivalent;
+- Activity catch-up остаётся exact.
+
+R1 не заявляет ускорение до отдельного profiling/telemetry checkpoint.
+
 ### Следующие ступени A13
 
 1. ✅ deterministic exact worksets;
 2. ✅ spatial workset addressing;
 3. ✅ active/sleeping population scheduling — exact cadence R1;
-4. ▶ bounded parallel prepare;
-5. ⬜ bounded parallel post-allocation advance;
+4. ✅ bounded parallel prepare;
+5. ▶ bounded parallel post-allocation advance;
 6. ⬜ fidelity-aware FULL/REDUCED/PATCH scheduling;
 7. ⬜ profiling / scheduler telemetry;
 8. ⬜ historical A6 replay-wrapper compatibility;
