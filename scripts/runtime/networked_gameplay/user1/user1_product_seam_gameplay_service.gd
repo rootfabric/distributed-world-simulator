@@ -90,14 +90,14 @@ func setup(
 	if _primary_port == null or _secondary_port == null:
 		shutdown()
 		return _failure("USER1_PRODUCT_SEAM_TRANSFER_PORT_REQUIRED")
-	var primary_peer := _primary_port.register_peer(
+	var primary_peer: Dictionary = _primary_port.register_peer(
 		_secondary_authority_id,
 		_secondary_port
 	)
 	if not bool(primary_peer.get("success", false)):
 		shutdown()
 		return primary_peer
-	var secondary_peer := _secondary_port.register_peer(
+	var secondary_peer: Dictionary = _secondary_port.register_peer(
 		_primary_authority_id,
 		_primary_port
 	)
@@ -275,7 +275,7 @@ func create_snapshot() -> Dictionary:
 	for player_id_value in _seam_coordinators:
 		var player_id := String(player_id_value)
 		var active := _active_authority(player_id)
-		var player := (
+		var player: Dictionary = (
 			_secondary.get_player(player_id)
 			if active == _secondary_authority_id
 			else super.get_player(player_id)
@@ -686,7 +686,7 @@ func _perform_transfer(
 	if not bool(target_activated.get("success", false)):
 		return target_activated
 
-	var after := (
+	var after: Dictionary = (
 		super.get_player(player_id)
 		if target_authority == _primary_authority_id
 		else _secondary.get_player(player_id)
