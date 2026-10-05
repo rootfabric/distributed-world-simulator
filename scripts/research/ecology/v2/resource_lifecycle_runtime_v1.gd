@@ -482,8 +482,14 @@ static func _advance_units_serial(entries: Array, units: Array,
 	var next_population: Array = []
 	var propagules: Array = []
 	for unit in units:
+		var task_entries: Array = []
+		for raw_id in unit.member_ids:
+			var id := String(raw_id)
+			if not by_id.has(id):
+				return _fail("A5_WORKSET_MEMBER")
+			task_entries.append(by_id[id])
 		var advanced := _advance_unit_worker(
-			_unit_entries(by_id, unit), samples, intake_by_id, int(unit.index))
+			task_entries, samples, intake_by_id, int(unit.index))
 		if not bool(advanced.get("success", false)):
 			return advanced
 		for entry in advanced.population:
@@ -567,14 +573,6 @@ static func _advance_units_parallel(entries: Array, units: Array,
 
 	return _canonical_advance_result(
 		next_population, propagules, peak_workers, threaded_worksets)
-
-static func _unit_entries(by_id: Dictionary, unit: Dictionary) -> Array:
-	var out: Array = []
-	for raw_id in unit.member_ids:
-		var id := String(raw_id)
-		if by_id.has(id):
-			out.append(by_id[id])
-	return out
 
 static func _advance_unit_worker(task_entries: Array, samples: Dictionary,
 		intake_by_id: Dictionary, unit_index: int) -> Dictionary:
