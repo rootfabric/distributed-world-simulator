@@ -69,7 +69,7 @@ static func _capsule(node_id: String, level: int, graph_hash: String, reduction:
 static func _node_hash(capsule: Dictionary, reduction: Dictionary) -> String:
 	return U.canonical_hash({"capsule_checksum":String(capsule.checksum), "reduction_checksum":String(reduction.checksum)})
 
-static func validate_node(node: Dictionary) -> Dictionary:
+static func validate_node_identity(node: Dictionary) -> Dictionary:
 	if node.get("schema") != SCHEMA or typeof(node.get("capsule")) != TYPE_DICTIONARY or typeof(node.get("reduction")) != TYPE_DICTIONARY or typeof(node.get("children")) != TYPE_DICTIONARY: return U.failure("R5_3_NODE_SHAPE_INVALID")
 	if not U.is_json_integer(node.get("level")) or int(node.level) < 0 or int(node.level) > 3: return U.failure("R5_3_NODE_LEVEL_INVALID")
 	var children: Dictionary = node.children
@@ -90,6 +90,14 @@ static func validate_node(node: Dictionary) -> Dictionary:
 	if typeof(node.get("compiled_graph")) != TYPE_DICTIONARY or String(node.compiled_graph.get("graph_hash", "")) != String(node.capsule.graph_hash): return U.failure("R5_3_CAPSULE_GRAPH_BINDING_MISMATCH")
 	if String(node.get("node_hash", "")) != _node_hash(node.capsule, node.reduction): return U.failure("R5_3_NODE_HASH_MISMATCH")
 	if typeof(node.get("live")) != TYPE_DICTIONARY or String(node.live.get("node_hash", "")) != String(node.node_hash) or int(node.live.get("build_generation", -1)) != int(node.build_generation): return U.failure("R5_3_NODE_LIVE_MISMATCH")
+	return U.success()
+
+static func validate_node(node: Dictionary, verify_leaf_source: bool = true) -> Dictionary:
+	var identity := validate_node_identity(node)
+	if not identity.success: return identity
+	var children: Dictionary = node.children
+	if int(node.level) == 0 and verify_leaf_source:
+		return _validate_leaf_node_source_binding(node)
 	if int(node.level) > 0:
 		var canonical_parent := _compile_parent_payload(String(node.node_id), int(node.level), children, int(node.topology_revision), false)
 		if not canonical_parent.success: return U.failure("R5_3_PARENT_CANONICAL_COMPILE_FAILED", {"cause":canonical_parent})
@@ -98,6 +106,25 @@ static func validate_node(node: Dictionary) -> Dictionary:
 		if U.canonical_hash(node.reduction) != U.canonical_hash(exact.reduction): return U.failure("R5_3_PARENT_REDUCTION_BINDING_MISMATCH")
 		if U.canonical_hash(node.topology_edges) != U.canonical_hash(exact.topology_edges): return U.failure("R5_3_PARENT_TOPOLOGY_BINDING_MISMATCH")
 		if int(node.compiled_input_components) != int(exact.compiled_input_components) or int(node.physical_source_components) != int(exact.physical_source_components): return U.failure("R5_3_PARENT_COMPLEXITY_BINDING_MISMATCH")
+	return U.success()
+
+# Runtime admission must re-establish source provenance even for an already
+# constructed mutable leaf node. Parent compilation deliberately does not call
+# this helper: parents consume only child boundary ROMs. Runtime prepare/refresh
+# separately validates each changed leaf before making a root executable.
+static func _validate_leaf_node_source_binding(node: Dictionary) -> Dictionary:
+	if typeof(node.get("source_graph")) != TYPE_DICTIONARY or typeof(node.get("source_t1_bake_request")) != TYPE_DICTIONARY or typeof(node.get("source_t1_capsule_id")) != TYPE_STRING:
+		return U.failure("R5_3_LEAF_NODE_SOURCE_PROOF_MISSING")
+	var graph: Dictionary = node.source_graph
+	var graph_checked := Graph.validate(graph)
+	if not graph_checked.success: return U.failure("R5_3_LEAF_NODE_SOURCE_GRAPH_INVALID", {"cause":graph_checked})
+	if U.canonical_hash(node.compiled_graph) != U.canonical_hash(graph): return U.failure("R5_3_LEAF_NODE_SOURCE_BINDING_MISMATCH", {"field":"compiled_graph"})
+	var exact := T1.compile(graph, node.source_t1_bake_request, String(node.source_t1_capsule_id))
+	if not bool(exact.get("success", false)): return U.failure("R5_3_LEAF_NODE_CANONICAL_RECOMPILE_FAILED", {"cause":exact})
+	var d: Dictionary = exact.details
+	if U.canonical_hash(node.reduction) != U.canonical_hash(d.reduction): return U.failure("R5_3_LEAF_NODE_SOURCE_BINDING_MISMATCH", {"field":"reduction"})
+	if String(node.get("source_capsule_checksum", "")) != String(d.capsule.checksum) or String(node.capsule.source_anchor) != String(d.capsule.checksum): return U.failure("R5_3_LEAF_NODE_SOURCE_BINDING_MISMATCH", {"field":"source_capsule"})
+	if int(node.physical_source_components) != graph.components.size() or int(node.compiled_input_components) != graph.components.size() or int(node.build_generation) != int(d.artifact.build_generation): return U.failure("R5_3_LEAF_NODE_SOURCE_BINDING_MISMATCH", {"field":"source_accounting"})
 	return U.success()
 
 static func _validate_t1_leaf_binding(graph: Dictionary, details: Dictionary) -> Dictionary:
@@ -174,8 +201,8 @@ static func leaf_from_t1(node_id: String, graph: Dictionary, compiled: Dictionar
 	var physical := int(graph.components.size())
 	var capsule := _capsule(node_id, 0, String(graph.graph_hash), d.reduction, {}, 0, physical, physical, int(d.artifact.build_generation), String(d.capsule.checksum))
 	var node_hash := _node_hash(capsule, d.reduction)
-	var node := {"schema":SCHEMA, "node_id":node_id, "level":0, "node_hash":node_hash, "capsule":capsule, "reduction":d.reduction.duplicate(true), "live":{"node_hash":node_hash,"build_generation":int(d.artifact.build_generation)}, "children":{}, "topology_revision":0, "topology_edges":[], "physical_source_components":physical, "compiled_input_components":physical, "build_generation":int(d.artifact.build_generation), "source_graph":graph.duplicate(true), "compiled_graph":graph.duplicate(true), "source_capsule_checksum":String(d.capsule.checksum), "compile_events":1, "child_rom_reads":0}
-	var checked := validate_node(node); return U.success(node) if checked.success else checked
+	var node := {"schema":SCHEMA, "node_id":node_id, "level":0, "node_hash":node_hash, "capsule":capsule, "reduction":d.reduction.duplicate(true), "live":{"node_hash":node_hash,"build_generation":int(d.artifact.build_generation)}, "children":{}, "topology_revision":0, "topology_edges":[], "physical_source_components":physical, "compiled_input_components":physical, "build_generation":int(d.artifact.build_generation), "source_graph":graph.duplicate(true), "compiled_graph":graph.duplicate(true), "source_capsule_checksum":String(d.capsule.checksum), "source_t1_bake_request":d.bake_request.duplicate(true), "source_t1_capsule_id":String(d.capsule.capsule_id), "compile_events":1, "child_rom_reads":0}
+	var checked := validate_node(node, false); return U.success(node) if checked.success else checked
 
 static func _child_rom_components(children: Dictionary, parent_level: int, nodes: Array, components: Array, validate_bindings: bool = true) -> Dictionary:
 	var child_rom_reads := 0; var cid := components.size(); var keys: Array = children.keys(); keys.sort()
@@ -197,7 +224,7 @@ static func _child_rom_components(children: Dictionary, parent_level: int, nodes
 			if float(r.schur_matrix[i][i]) < -ZERO_TOL or absf(row_sum) > ZERO_TOL:
 				return U.failure("R5_3_CHILD_ROM_LAPLACIAN_MISMATCH", {"child":key,"row":i,"row_sum":row_sum})
 		if validate_bindings:
-			var checked := validate_node(child); if not checked.success: return U.failure("R5_3_CHILD_NODE_INVALID", {"child":key,"cause":checked})
+			var checked := validate_node(child, false); if not checked.success: return U.failure("R5_3_CHILD_NODE_INVALID", {"child":key,"cause":checked})
 		var prefix := "node/%s" % _slug(key)
 		for p in range(PORTS): nodes.append("%s/p%02d" % [prefix,p])
 		for i in range(PORTS):

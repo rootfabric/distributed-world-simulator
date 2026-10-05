@@ -13,3 +13,9 @@ Implement Recursive Hierarchical Execution after verified/merged T16.
 - Use R5.0 measurement harness; compile/rebuild and steady stages remain distinct.
 - Exact Linux/Windows + T16/T15/T14/T13.5/T13/T12 regressions, strict evidence collector.
 - Fresh independent Reviewer and Verifier, then explicit human merge. No self-acceptance.
+
+## R6 bounded repair — mutable leaf runtime admission
+
+Premerge review reproduced a checksum-repaired mutable leaf ROM admitted by `validate_node()` and `Runtime.prepare()` despite unchanged source graph; source/full-solve flow error was `0.950000000000006` versus `2e-8` tolerance. R5 is therefore not merge-ready despite existing green tests.
+
+R6 must re-establish canonical T1 provenance for each leaf admitted by runtime initial prepare or changed-node refresh. Preserve exact T1 request/capsule identity for this check. Parent compilation stays ROM-only and must not traverse hidden leaf source graphs. Reused incoming node identities are checked before change classification so an unchanged claimed node hash cannot hide descriptor drift. Rejected refresh preserves live execution/registry/counters. Add executable falsifiers for direct leaf, nested machine, transactional refresh and reused-hash drift, then repeat exact Linux/Windows and fresh review/verifier on the new product HEAD. Scope remains the same 11 additive R5.3 files; no T1–T16/core/mainline changes.

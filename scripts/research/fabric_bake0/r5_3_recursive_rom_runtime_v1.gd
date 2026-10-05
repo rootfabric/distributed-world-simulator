@@ -45,6 +45,10 @@ func refresh(new_root:Dictionary,expected_changed_paths:Array)->Dictionary:
 	if paths!=old_paths:return U.failure("R5_3_RUNTIME_TOPOLOGY_SHAPE_CHANGED")
 	var actual:Array=[]
 	for path in paths:
+		# A reused hash is not proof that a mutable incoming node is unchanged.
+		# Check every ROM identity before classifying changed/reused nodes. This
+		# does not compile sources or re-prepare any unaffected session.
+		var identity:=Compiler.validate_node_identity(nodes[path]);if not identity.success:return identity
 		if String(nodes[path].node_hash)!=String(_hashes[path]):actual.append(String(path))
 	var expected:=expected_changed_paths.duplicate();expected.sort();actual.sort();if actual!=expected:return U.failure("R5_3_RUNTIME_CHANGED_PATH_MISMATCH",{"expected":expected,"actual":actual})
 

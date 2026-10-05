@@ -37,5 +37,6 @@ class T(unittest.TestCase):
   self.assertIn("staged_sessions",runtime);self.assertIn("# COMMIT: after this point there are no rejectable candidate operations.",runtime)
   self.assertIn("T1Capsule.validate",compiler);self.assertIn("Artifact.validate",compiler);self.assertIn("R5_3_LEAF_T1_GRAPH_BINDING_MISMATCH",compiler);self.assertIn("R5_3_LEAF_T1_SYSTEM_BINDING_MISMATCH",compiler);self.assertIn("R5_3_LEAF_T1_CANONICAL_RECOMPILE_MISMATCH",compiler)
   self.assertIn("R5_3_CHILD_LEVEL_MISMATCH",compiler);self.assertIn("R5_3_PARENT_REDUCTION_BINDING_MISMATCH",compiler)
+  self.assertIn("R5_3_LEAF_NODE_SOURCE_BINDING_MISMATCH",compiler);self.assertIn("Compiler.validate_node_identity(nodes[path])",runtime)
   self.assertIn("R5_3_CHILD_ROM_LAPLACIAN_MISMATCH",compiler);self.assertIn("R5_3_CHILD_ROM_PASSIVITY_UNCERTIFIED",compiler);self.assertIn("R5_3_CHILD_PORT_CONTRACT_UNSUPPORTED",compiler)
 if __name__=="__main__":unittest.main()

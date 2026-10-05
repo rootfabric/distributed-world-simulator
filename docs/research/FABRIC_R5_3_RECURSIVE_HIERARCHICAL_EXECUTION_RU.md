@@ -1,6 +1,6 @@
 # FABRIC R5.3 — Recursive Hierarchical Execution
 
-Статус: R5 implementer repair candidate после fresh independent falsifier-review R4. База — T16 merge `604192f07070d0f0e38a94445611d09d92cb7f7f`.
+Статус: R6 implementer repair candidate после blocking premerge review R5. База — T16 merge `604192f07070d0f0e38a94445611d09d92cb7f7f`.
 
 ## Что доказывается
 
@@ -83,3 +83,11 @@ Fresh independent review R4 выявил второй content-provenance gap у�
 R5 канонически пересобирает каждый parent payload **только из child boundary ROM + topology revision**: заново строит parent graph, компилирует linear system и выполняет exact reducer. `validate_node()` требует совпадения canonical graph, reduction, topology edges и complexity accounting. Проверка рекурсивна по parent levels, но не раскрывает hidden leaf source graph: для parent reconstruction используются только boundary ROM дочерних узлов.
 
 Fresh exact Linux/Windows, fresh review/verifier и human merge обязательны перед закрытием checkpoint.
+
+## R5 premerge falsifier → R6
+
+На frozen R5 повторены штатные exact Linux/Windows PASS, но новый исполняемый probe показал обход через уже созданный mutable leaf node: пассивная Schur delta `0.05`, пересчитанные descriptor/capsule/node hashes и неизменённый source graph допускались `validate_node()` / `Runtime.prepare()`. Ошибка потока против прямого source solve составила `0.950000000000006` при допуске `2e-8`. Зелёные старые тесты не являются merge acceptance.
+
+R6 сохраняет точный T1 bake request/capsule id в leaf node и повторяет canonical T1 source binding при runtime admission каждого leaf. Это отдельная от parent compilation граница: parent по-прежнему читает только immediate child boundary ROM и не раскрывает hidden source graphs. Initial prepare не делает machine executable при rejected leaf; refresh проверяет changed leaves в staging и не меняет live state при отказе. Перед классификацией changed/reused runtime проверяет lightweight identity каждого входящего узла: старый заявленный node hash не может скрыть изменённый descriptor.
+
+Добавлены 13 assertions для direct/nested leaf admission, запрета исполнения rejected hierarchy, атомарного refresh и reused-hash drift. Ожидаемый R6 acceptance — `1231/0`; новый frozen HEAD требует fresh exact Linux/Windows, review/verifier и explicit human merge. Этот раздел описывает repair, не self-acceptance.

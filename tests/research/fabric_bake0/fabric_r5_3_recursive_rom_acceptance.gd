@@ -125,6 +125,49 @@ func _leaf_provenance_falsifier() -> void:
 		var forged_content_rebound := Compiler.leaf_from_t1("r53/provenance-b", graph_b, forged_content)
 		check(not forged_content_rebound.success and forged_content_rebound.error_code == "R5_3_LEAF_T1_CANONICAL_RECOMPILE_MISMATCH", "R5.3 refuses forged Schur content even after source-system/hash repair", forged_content_rebound)
 
+func _mutable_leaf_admission_falsifier(root: Dictionary) -> void:
+	var original: Dictionary = root.children.assembly0.children.module0.children.leaf0
+	var forged: Dictionary = original.duplicate(true)
+	forged.reduction.schur_matrix[0][0] += 0.05
+	forged.reduction.schur_matrix[1][1] += 0.05
+	forged.reduction.schur_matrix[0][1] -= 0.05
+	forged.reduction.schur_matrix[1][0] -= 0.05
+	forged = _rehash_node(forged)
+	check(forged.source_graph == original.source_graph, "mutable leaf probe preserves exact source graph")
+	var checked := Compiler.validate_node(forged)
+	check(not checked.success and checked.error_code == "R5_3_LEAF_NODE_SOURCE_BINDING_MISMATCH", "rehashed leaf node cannot bypass canonical source admission", checked)
+	var leaf_runtime = Runtime.new()
+	var leaf_prepared: Dictionary = leaf_runtime.prepare(forged)
+	check(not leaf_prepared.success and not leaf_runtime.ready, "forged leaf initial prepare fails closed", leaf_prepared)
+	check(not leaf_runtime.execute_root([12.0,-7.0,3.5,0.25]).success, "rejected leaf cannot execute")
+	# Parent compilation remains ROM-only; runtime admission checks each leaf.
+	var rebuilt := Compiler.rebuild_path(root, ["assembly0","module0","leaf0"], forged)
+	check(rebuilt.success, "parent composition remains independent of hidden leaf sources", rebuilt)
+	if not rebuilt.success: return
+	var candidate: Dictionary = rebuilt.details.root
+	var machine_runtime = Runtime.new()
+	var machine_prepared: Dictionary = machine_runtime.prepare(candidate)
+	check(not machine_prepared.success and not machine_runtime.ready, "forged nested leaf prevents machine admission", machine_prepared)
+	check(not machine_runtime.execute_root([12.0,-7.0,3.5,0.25]).success, "machine with rejected leaf cannot execute")
+	var runtime = Runtime.new()
+	check(runtime.prepare(root).success, "leaf refresh probe prepares valid baseline")
+	var effort: Array = [12.0,-7.0,3.5,0.25]
+	var before: Dictionary = runtime.execute_root(effort)
+	var before_stats: Dictionary = runtime.stats()
+	var rejected: Dictionary = runtime.refresh(candidate, Compiler.changed_paths(root,candidate))
+	check(not rejected.success and rejected.error_code == "R5_3_LEAF_NODE_SOURCE_BINDING_MISMATCH", "forged leaf refresh is rejected", rejected)
+	var after: Dictionary = runtime.execute_root(effort)
+	check(before.success and after.success and before.details.boundary_flow == after.details.boundary_flow and before.details.boundary_power == after.details.boundary_power, "forged leaf refresh preserves baseline root execution")
+	check(runtime.stats().prepare_events == before_stats.prepare_events and runtime.stats().reuse_events == before_stats.reuse_events and runtime.bundle("root").node_hash == root.node_hash, "forged leaf refresh leaves registry and prepare/reuse counters unchanged")
+	# Attempt to hide a rehashed descriptor behind its previous node hash.
+	var stale: Dictionary = root.duplicate(true)
+	forged.node_hash = original.node_hash
+	forged.live.node_hash = original.node_hash
+	stale.children.assembly0.children.module0.children.leaf0 = forged
+	var stale_rejected: Dictionary = runtime.refresh(stale, [])
+	check(not stale_rejected.success and stale_rejected.error_code == "R5_3_NODE_HASH_MISMATCH", "reused node hash cannot hide descriptor content drift", stale_rejected)
+	check(runtime.stats().prepare_events == before_stats.prepare_events and runtime.stats().reuse_events == before_stats.reuse_events, "stale-hash rejection preserves prepare/reuse counters")
+
 func _initialize() -> void:
 	_leaf_provenance_falsifier()
 	m.begin_stage("baseline_hierarchy_compile")
@@ -133,6 +176,7 @@ func _initialize() -> void:
 	check(bool(built.get("success", false)), "baseline hierarchy build", built)
 	if not bool(built.get("success", false)): _finish({}); return
 	var root: Dictionary = built.details.root
+	_mutable_leaf_admission_falsifier(root)
 	var manifest := Compiler.manifest(root)
 	check(manifest.size() == 15 and int(built.details.leaf_count) == 8, "4-level 15-node hierarchy")
 	check(int(root.level) == 3 and int(root.capsule.executable_equation_count) == 4, "machine ROM is four-equation executable")
