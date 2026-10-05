@@ -1,0 +1,68 @@
+name: FABRIC R5.3 R5 Windows Exact Carrier
+on:
+  push:
+    branches: [control/fabric-r5-3-r5-windows-exact-r1]
+permissions:
+  contents: read
+concurrency:
+  group: fabric-r5-3-r5-windows-exact-r1
+  cancel-in-progress: true
+env:
+  SUBJECT_HEAD: 305b54bf127a910a515d02544a18d9a01a7afaa8
+  SUBJECT_TREE: 148f297b5698841ff1eb982e2a4123325d0c0a92
+  EXPECTED_HASH: 4664bd714a25f36a50efc7f562e6f43dd89af250e475ce7aae6b130003b4dd46
+jobs:
+  control-scope:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Prove control-only carrier and exact subject
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$(git merge-base HEAD "$SUBJECT_HEAD")" = "$SUBJECT_HEAD"
+          test "$(git rev-parse "$SUBJECT_HEAD^{tree}")" = "$SUBJECT_TREE"
+          test "$(git diff --name-only "$SUBJECT_HEAD" HEAD)" = '.github/workflows/fabric-r5-3-r5-windows-exact-carrier.yml'
+          git diff --check "$SUBJECT_HEAD" HEAD
+          bash -n RUN_FABRIC_R5_3_TESTS.sh
+          python3 -m unittest discover -s tests/research/fabric_bake0 -p test_r5_3_evidence.py -v
+  exact-windows:
+    needs: control-scope
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 50
+    steps:
+      - name: Do not interfere with live Godot sessions
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          if ($PSVersionTable.PSVersion.Major -lt 7) { throw 'HOST_REQUIRES_PWSH7' }
+          $foreign = @(Get-CimInstance Win32_Process | Where-Object { $_.Name -like 'godot*.exe' })
+          if ($foreign.Count -gt 0) { throw ('HOST_BUSY_GODOT:' + (($foreign | Select-Object -ExpandProperty ProcessId) -join ',')) }
+          $free = [double](Get-CimInstance Win32_OperatingSystem).FreePhysicalMemory / 1MB
+          Write-Host "HOST=$env:COMPUTERNAME FREE_RAM_GB=$free"
+          if ($free -lt 8) { throw 'HOST_LOW_MEMORY' }
+      - uses: actions/checkout@v4
+        with:
+          ref: 305b54bf127a910a515d02544a18d9a01a7afaa8
+          fetch-depth: 0
+          persist-credentials: false
+          path: r53-${{ github.run_id }}-${{ github.run_attempt }}
+      - name: Run frozen product exact R5.3 plus unchanged regressions
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $checkout = Join-Path $env:GITHUB_WORKSPACE 'r53-${{ github.run_id }}-${{ github.run_attempt }}'
+          $out = Join-Path $env:GITHUB_WORKSPACE 'artifacts/r53-${{ github.run_id }}-${{ github.run_attempt }}'
+          $runner = Join-Path $checkout 'RUN_FABRIC_R5_3_TESTS.ps1'
+          & $runner -GodotBin 'C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe' -ExpectedHead $env:SUBJECT_HEAD -ExpectedTree $env:SUBJECT_TREE -ExpectedHash $env:EXPECTED_HASH -EvidenceDir $out
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: r53-r5-windows-exact-${{ github.sha }}-${{ github.run_attempt }}
+          path: artifacts/r53-${{ github.run_id }}-${{ github.run_attempt }}/**
+          if-no-files-found: error
+          retention-days: 90
