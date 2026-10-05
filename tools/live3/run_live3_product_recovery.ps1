@@ -181,6 +181,44 @@ function Wait-PortFree {
     throw "UDP_PORT_NOT_RELEASED:$Port"
 }
 
+function Get-PersistedPlayerCut {
+    param([Parameter(Mandatory=$true)][string]$LogicalPlayerId)
+
+    $checkpointPath=Join-Path $PersistenceRoot "authoritative-checkpoint.json"
+    if(-not(Test-Path $checkpointPath)){
+        throw "AUTHORITATIVE_CHECKPOINT_MISSING:$checkpointPath"
+    }
+    $checkpoint=Get-Content $checkpointPath -Raw | ConvertFrom-Json -Depth 100
+    $gameplay=$checkpoint.authority_state.current_snapshot.domain_components.networked_gameplay_state
+    if($null-eq$gameplay){
+        throw "AUTHORITATIVE_GAMEPLAY_STATE_MISSING:$LogicalPlayerId"
+    }
+    $players=@($gameplay.players.players)
+    $match=@($players | Where-Object {
+        [string]$_.logical_player_id -eq $LogicalPlayerId
+    })
+    if($match.Count-ne1){
+        throw "AUTHORITATIVE_PLAYER_CUT_INVALID:$($LogicalPlayerId):$($match.Count)"
+    }
+    $player=$match[0]
+    return [ordered]@{
+        checkpoint_path=$checkpointPath
+        checkpoint_id=[string]$checkpoint.checkpoint_id
+        generation=[int]$checkpoint.generation
+        server_tick=[int]$checkpoint.server_tick
+        state_revision=[int]$checkpoint.state_revision
+        logical_player_id=[string]$player.logical_player_id
+        player_entity_id=[string]$player.player_entity_id
+        ownership_epoch=[int]$player.ownership_epoch
+        last_input_sequence=[int]$player.last_input_sequence
+        position=[ordered]@{
+            x=[double]$player.position.x
+            y=[double]$player.position.y
+            z=[double]$player.position.z
+        }
+    }
+}
+
 function Start-Live3Server {
     param([int]$Ordinal,[int]$ShutdownAfterMs=0)
     $Profile=Join-Path $Profiles ("server-{0}" -f $Ordinal)
@@ -468,7 +506,12 @@ function Wait-ConvergedStates {
 }
 
 function Assert-StableRecovery {
-    param($Before,$After,[string]$Label)
+    param(
+        $Before,
+        $After,
+        [string]$Label,
+        $PersistedPlayer=$null
+    )
     foreach($field in @("item_graph_checksum","resource_checksum")){
         if([string]$Before.$field -ne [string]$After.$field){
             throw "RECOVERY_MISMATCH:$($Label):$field"
@@ -477,14 +520,26 @@ function Assert-StableRecovery {
     $beforeConstruct=($Before.construction_construct_checksums | ConvertTo-Json -Depth 20 -Compress)
     $afterConstruct=($After.construction_construct_checksums | ConvertTo-Json -Depth 20 -Compress)
     if($beforeConstruct-ne$afterConstruct){throw "RECOVERY_MISMATCH:$($Label):construction"}
-    if([string]$Before.player_entity_id -ne [string]$After.player_entity_id){
+
+    # A client can continue to submit normal movement while server-1 waits for
+    # its planned shutdown deadline. The recovery truth is therefore the final
+    # committed authoritative checkpoint, not an earlier observation made when
+    # the countdown began. Client-restart checks still use the direct Before
+    # sample; planned-server-restart checks pass PersistedPlayer explicitly.
+    $expectedEntity=[string]$Before.player_entity_id
+    $expectedPosition=$Before.local_player.position
+    if($null-ne$PersistedPlayer){
+        $expectedEntity=[string]$PersistedPlayer.player_entity_id
+        $expectedPosition=$PersistedPlayer.position
+    }
+    if($expectedEntity-ne[string]$After.player_entity_id){
         throw "RECOVERY_PLAYER_ENTITY_MISMATCH:$Label"
     }
     foreach($axis in @("x","y","z")){
-        $beforeValue=[double]$Before.local_player.position.$axis
+        $expectedValue=[double]$expectedPosition.$axis
         $afterValue=[double]$After.local_player.position.$axis
-        if([math]::Abs($beforeValue-$afterValue)-gt0.001){
-            throw "RECOVERY_PLAYER_POSITION_MISMATCH:$($Label):$($axis):$($beforeValue):$($afterValue)"
+        if([math]::Abs($expectedValue-$afterValue)-gt0.001){
+            throw "RECOVERY_PLAYER_POSITION_MISMATCH:$($Label):$($axis):$($expectedValue):$($afterValue)"
         }
     }
 }
@@ -657,6 +712,15 @@ try {
     }
     Wait-PortFree -Port $ServerPort -TimeoutSeconds 5
 
+    # server-1 persists a final checkpoint during orderly shutdown. Bind the
+    # restart assertion to that exact committed cut; pre_server_restart_* above
+    # remains useful diagnostic evidence but may legitimately precede accepted
+    # movement that lands in the final checkpoint.
+    $shutdownPlayerA=Get-PersistedPlayerCut "a"
+    $shutdownPlayerB=Get-PersistedPlayerCut "b"
+    $Observations.shutdown_checkpoint_player_a=$shutdownPlayerA
+    $Observations.shutdown_checkpoint_player_b=$shutdownPlayerB
+
     $outageA=Wait-ConnectionState A @("DISCONNECTED","RECONNECTING","CONNECTING") 30
     $outageB=Wait-ConnectionState B @("DISCONNECTED","RECONNECTING","CONNECTING") 30
     $Observations.server_outage_a=$outageA
@@ -669,8 +733,8 @@ try {
     $postPair=Wait-ConvergedStates 30 "post-server-restart"
     $postA=$postPair.a
     $postB=$postPair.b
-    Assert-StableRecovery $preServerA $postA "server-restart-a"
-    Assert-StableRecovery $preServerB $postB "server-restart-b"
+    Assert-StableRecovery $preServerA $postA "server-restart-a" $shutdownPlayerA
+    Assert-StableRecovery $preServerB $postB "server-restart-b" $shutdownPlayerB
     $Observations.post_server_restart_a=$postA
     $Observations.post_server_restart_b=$postB
 
