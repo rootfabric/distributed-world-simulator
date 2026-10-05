@@ -187,7 +187,10 @@ static func _build(field: Dictionary, population: Array, fidelity_overrides: Dic
 		var mode := String(mode_value)
 		if not valid_addresses.has(address) or mode not in MODES:
 			return {}
-		normalized_overrides.append({"address": address, "fidelity": mode})
+		# FULL is the canonical default. Recording an explicit FULL override
+		# would create two plan byte encodings for identical scheduler semantics.
+		if mode != MODE_FULL:
+			normalized_overrides.append({"address": address, "fidelity": mode})
 	normalized_overrides.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
 		return a.address < b.address)
 
