@@ -26,6 +26,14 @@ func _test_shell_entry_contract() -> void:
 	_check(ProductShellScript.should_open_shell(PackedStringArray()), "empty user args open Product Shell")
 	_check(ProductShellScript.should_open_shell(PackedStringArray(["--product-shell"])), "explicit product-shell opens Product Shell")
 	_check(
+		ProductShellScript.should_open_shell(PackedStringArray(["--product-shell-smoke=C:/tmp/ux0.json"])),
+		"product shell smoke still boots Product Shell"
+	)
+	_check(
+		ProductShellScript.product_shell_smoke_path(PackedStringArray(["--product-shell-smoke=C:/tmp/ux0.json"])) == "C:/tmp/ux0.json",
+		"product shell smoke path parsed exactly"
+	)
+	_check(
 		not ProductShellScript.should_open_shell(PackedStringArray([
 			"--role=game-client",
 			"--network-mvp",
