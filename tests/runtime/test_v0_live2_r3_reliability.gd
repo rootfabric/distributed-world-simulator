@@ -9,6 +9,8 @@ const MovementService = preload("res://scripts/runtime/networked_gameplay/servic
 const PlayerSnapshot = preload("res://scripts/runtime/networked_gameplay/contracts/player_state_snapshot.gd")
 const CompactSnapshot = preload("res://scripts/runtime/networked_gameplay/contracts/compact_gameplay_snapshot.gd")
 const ProtocolFrame = preload("res://scripts/network/transports/v2/protocol_frame_v2.gd")
+const V0P4EarthOutpostAuthority = preload("res://scripts/construction/mvp/v0_p4_mvp_earth_outpost_authority.gd")
+const ConstructionStagePlanner = preload("res://scripts/construction/build/construction_stage_transaction_planner.gd")
 
 class FakeResultService:
 	extends RefCounted
@@ -26,6 +28,25 @@ class ServerProbe:
 		sent.append({"peer": peer_id, "type": message_type, "data": data.duplicate(true), "channel": channel, "delivery": delivery_mode})
 		return true
 
+class FakeP4CanonicalGraph:
+	extends RefCounted
+	func create_snapshot() -> Dictionary:
+		return {"items": [], "inventories": {}, "revision": 0, "tick": 0, "checksum": ""}
+	func validate_snapshot(_snapshot: Dictionary) -> Dictionary:
+		return {"success": true, "error_code": ""}
+	func export_durable_state() -> Dictionary:
+		return {"schema": "test.fake_p4_durable.v1"}
+	func restore_durable_state(_state: Dictionary) -> Dictionary:
+		return {"success": true, "error_code": ""}
+	func export_replay_state() -> Dictionary:
+		return {"schema": "test.fake_p4_replay.v1"}
+	func restore_replay_state(_state: Dictionary) -> Dictionary:
+		return {"success": true, "error_code": ""}
+	func preflight_server_construction_consume(_operation_id, _player_id, _allocations, _revision, _tick, _checksum, _plan_checksum) -> Dictionary:
+		return {"success": true, "error_code": ""}
+	func apply_server_construction_consume(_operation_id, _player_id, _allocations, _revision, _tick, _checksum, _plan_checksum) -> Dictionary:
+		return {"success": true, "error_code": ""}
+
 var assertions := 0
 var failures: Array[String] = []
 
@@ -38,6 +59,7 @@ func _run() -> void:
 	_test_pressure_buffer()
 	_test_diagnostics()
 	_test_production_wiring()
+	_test_v0_p4_restart_build_plan_bootstrap()
 	_test_cardinal_movement_wire_stability()
 	_test_render_sample_isolation()
 	for failure in failures:
@@ -145,6 +167,65 @@ func _test_production_wiring() -> void:
 	_check(server.sent.size() == 1, "no duplicate result publication")
 	_check(int(server._live2_diagnostics.get_report().get("total_rejections_observed", 0)) == 1, "real server result path records cause")
 	server.free()
+
+
+func _test_v0_p4_restart_build_plan_bootstrap() -> void:
+	var repository_root := "user://live3-p4-restart-regression/%d-%d" % [OS.get_process_id(), Time.get_ticks_usec()]
+	var canonical_graph = FakeP4CanonicalGraph.new()
+	var first: Dictionary = V0P4EarthOutpostAuthority.create_gateway(
+		canonical_graph,
+		"authority/live3-restart-regression",
+		1,
+		repository_root
+	)
+	_check(bool(first.get("success", false)), "P4 initial gateway bootstrap succeeds")
+	if not bool(first.get("success", false)):
+		return
+	var first_details: Dictionary = first.get("details", {})
+	var first_adapter = first_details.get("authoritative_adapter")
+	var first_registry = first_adapter.get("_items")
+	var base_plan: Dictionary = V0P4EarthOutpostAuthority._build_plan(first_registry)
+	var planned: Dictionary = ConstructionStagePlanner.build_stage_transaction_plan(
+		base_plan,
+		0,
+		"operation/live3/restart-regression/stage-0"
+	)
+	_check(bool(planned.get("success", false)), "P4 stage-0 transaction plan builds before restart")
+	if not bool(planned.get("success", false)):
+		return
+	var applied: Dictionary = first_adapter.apply_plan(planned.get("transaction_plan", {}))
+	_check(bool(applied.get("success", false)), "P4 stage-0 authoritative commit persists before restart")
+	if not bool(applied.get("success", false)):
+		return
+	var foundation: Dictionary = first_adapter.get_item_projection(V0P4EarthOutpostAuthority.FOUNDATION_ITEM_ID)
+	_check(
+		String(foundation.get("relation", {}).get("kind", "")) == "ATTACHMENT",
+		"P4 recovered fixture contains an attached completed foundation"
+	)
+
+	var reopened: Dictionary = V0P4EarthOutpostAuthority.create_gateway(
+		canonical_graph,
+		"authority/live3-restart-regression",
+		1,
+		repository_root
+	)
+	_check(bool(reopened.get("success", false)), "P4 gateway reopens same M0 after a completed stage")
+	if not bool(reopened.get("success", false)):
+		return
+	var reopened_gateway = reopened.get("details", {}).get("gateway")
+	var reopened_executor = reopened_gateway.get("_executor")
+	var reopened_build = reopened_executor.get("_build_process")
+	var ghost: Dictionary = reopened_build.get_ghost_projection(V0P4EarthOutpostAuthority.BUILD_PLAN_ID)
+	_check(
+		int(ghost.get("completed_stage_count", -1)) == 1,
+		"P4 reopened build plan reconciles completed stage instead of rebuilding sources from ATTACHMENT state"
+	)
+	var next_stage: Dictionary = reopened_build.get_stage_requirements(V0P4EarthOutpostAuthority.BUILD_PLAN_ID, 1)
+	_check(
+		int(next_stage.get("stage_index", -1)) == 1
+		and Array(next_stage.get("part_ids", [])).size() == 4,
+		"P4 restart remains ready to continue with stage 1"
+	)
 
 
 func _test_cardinal_movement_wire_stability() -> void:
