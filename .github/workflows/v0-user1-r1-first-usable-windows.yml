@@ -65,6 +65,7 @@ jobs:
             "tests/runtime/test_v0_user1_first_usable_slice.gd"
             "tests/runtime/test_v0_user1_product_seam_bridge.gd"
             "tests/runtime/test_v0_ux0_product_shell.gd"
+            "tools/live3/run_live3_product_recovery.ps1"
           )
           mapfile -t expected_sorted < <(printf '%s\n' "${expected[@]}" | sort)
           diff -u <(printf '%s\n' "${expected_sorted[@]}") <(printf '%s\n' "${actual[@]}")
