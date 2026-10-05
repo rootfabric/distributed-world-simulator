@@ -193,10 +193,18 @@ func get_report() -> Dictionary:
 
 
 func _write_smoke_report_and_quit(path: String) -> void:
+	await get_tree().process_frame
+	await get_tree().process_frame
 	var report := get_report()
 	report["smoke"] = true
 	report["root_present"] = _root != null and is_instance_valid(_root)
 	report["continue_enabled"] = _continue_button != null and not _continue_button.disabled
+	report["root_size"] = [_root.size.x, _root.size.y]
+	var view_sizes := {}
+	for key in _views:
+		var view: Control = _views[key]
+		view_sizes[String(key)] = [view.size.x, view.size.y]
+	report["view_sizes"] = view_sizes
 	var file := FileAccess.open(path, FileAccess.WRITE)
 	if file == null:
 		push_error("UX0_PRODUCT_SHELL_SMOKE_WRITE_FAILED:%s" % path)
@@ -333,6 +341,7 @@ func _build_ui() -> void:
 func _build_home_view(parent: Control) -> Control:
 	var view := _new_view(parent, "HomeView")
 	var column := VBoxContainer.new()
+	column.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	column.add_theme_constant_override("separation", 14)
 	view.add_child(column)
 
@@ -359,6 +368,7 @@ func _build_home_view(parent: Control) -> Control:
 func _build_host_view(parent: Control) -> Control:
 	var view := _new_view(parent, "HostView")
 	var column := VBoxContainer.new()
+	column.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	column.add_theme_constant_override("separation", 12)
 	view.add_child(column)
 	column.add_child(_view_title("Host World"))
@@ -396,6 +406,7 @@ func _build_host_view(parent: Control) -> Control:
 func _build_join_view(parent: Control) -> Control:
 	var view := _new_view(parent, "JoinView")
 	var column := VBoxContainer.new()
+	column.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	column.add_theme_constant_override("separation", 12)
 	view.add_child(column)
 	column.add_child(_view_title("Join World"))
@@ -422,6 +433,7 @@ func _build_join_view(parent: Control) -> Control:
 func _build_settings_view(parent: Control) -> Control:
 	var view := _new_view(parent, "SettingsView")
 	var column := VBoxContainer.new()
+	column.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	column.add_theme_constant_override("separation", 12)
 	view.add_child(column)
 	column.add_child(_view_title("Settings"))
