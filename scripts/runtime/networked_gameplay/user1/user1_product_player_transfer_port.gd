@@ -9,10 +9,60 @@ extends "res://scripts/runtime/networked_gameplay/mvp/v0_mvp3_live_player_transf
 
 const ProductUtils = preload("res://scripts/network/contracts/network_contract_utils.gd")
 const ProductGate = preload(
-	"res://scripts/runtime/networked_gameplay/mvp/v0_mvp3_live_player_gate.gd"
+	"res://scripts/runtime/networked_gameplay/user1/user1_product_live_player_gate.gd"
 )
 const PRODUCT_SCHEMA := "distributed_world_simulator.user1_product_player_export.v1"
 const PRODUCT_ITEM_POLICY := "USER1_EXTERNAL_GLOBAL_M4"
+
+
+func bind_player(
+	logical_id: String,
+	session: String,
+	ownership_epoch: int,
+	coordinator
+) -> Dictionary:
+	if _owner_ref == null or _owner_ref.get_ref() == null or coordinator == null:
+		return _product_failure("LIVE_TRANSFER_OWNER_REQUIRED")
+	if _gates.has(logical_id):
+		return _product_failure("LIVE_PLAYER_GATE_REBIND_FORBIDDEN")
+	var existing: Dictionary = _registry.get_player(logical_id)
+	var binding: Dictionary = _ownership.get_player(logical_id)
+	if existing.is_empty() != binding.is_empty():
+		return _product_failure("LIVE_PLAYER_OWNER_ROWS_DIVERGED")
+	var decision: Dictionary = coordinator.snapshot()
+	var ready_epoch := 0
+	if not existing.is_empty():
+		if (
+			String(decision.get("state", "")) != "ACTIVE"
+			or String(decision.get("active_authority_id", "")) != _authority
+		):
+			return _product_failure("LIVE_TARGET_EXISTING_PLAYER_COLLISION")
+		ready_epoch = int(decision.get("authority_epoch", 0))
+	var gate = ProductGate.new()
+	var configured: Dictionary = gate.configure(
+		coordinator,
+		_authority,
+		logical_id,
+		session,
+		ownership_epoch,
+		ready_epoch
+	)
+	if not bool(configured.get("success", false)):
+		return configured
+	if not existing.is_empty():
+		for row in [existing, binding]:
+			var identity: Dictionary = gate.validate_record_identity(row)
+			if not bool(identity.get("success", false)):
+				return identity
+	var registry_binding: Dictionary = _registry.bind_live_player_gate(logical_id, gate)
+	if not bool(registry_binding.get("success", false)):
+		return registry_binding
+	var ownership_binding: Dictionary = _ownership.bind_live_player_gate(logical_id, gate)
+	if not bool(ownership_binding.get("success", false)):
+		_registry.release_live_player_gate(logical_id, gate)
+		return ownership_binding
+	_gates[logical_id] = gate
+	return _product_success({"gate": gate.get_report()})
 
 
 func prepare_export(
