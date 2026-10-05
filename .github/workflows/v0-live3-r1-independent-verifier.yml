@@ -1,0 +1,300 @@
+name: V0 LIVE.3 R1 Fresh Independent Verifier
+
+on:
+  push:
+    branches:
+      - verify/v0-live3-9b0b72ab-r1
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: v0-live3-r1-fresh-independent-verifier
+  cancel-in-progress: true
+
+env:
+  PRODUCT_HEAD: 9b0b72aba4ecdfb8d50c3d4b3cd0119b55134075
+  PRODUCT_TREE: a40047ce0ee07bddbe9831afcab55d97d0e2b15f
+  BASE_MAIN: c25a6b26d83b937acd1eb4cd4d92e2b44b40c678
+  REVIEW_BRANCH: review/v0-live3-9b0b72ab-r1
+  REVIEW_COMMIT: 821ec4dbb5b36e86fc005a1aa320baebe3c0eeb2
+  REVIEW_TREE: 011e36732954a387e66e357f2453e8798c7cd0bd
+  REVIEW_PATH: docs/control/v0-live/V0_LIVE3_FRESH_REVIEW_9B0B72AB_R1.json
+  GODOT_BIN: C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe
+  GODOT_GUI: C:\Godot\godot\bin\godot.windows.editor.double.x86_64.exe
+  PYTHONUTF8: '1'
+  PYTHONDONTWRITEBYTECODE: '1'
+  BREAKPOINT_RUNTIME_DISABLED: '1'
+  GODOT_SILENCE_ROOT_WARNING: '1'
+
+jobs:
+  source:
+    name: Fresh verifier source/reviewer gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout frozen product subject
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.PRODUCT_HEAD }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Verify frozen identity and bounded product diff
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$PRODUCT_HEAD"
+          test "$(git rev-parse 'HEAD^{tree}')" = "$PRODUCT_TREE"
+          git merge-base --is-ancestor "$BASE_MAIN" HEAD
+          expected=(
+            ".github/workflows/v0-live3-r1-recovery-windows.yml"
+            "docs/control/v0-live/V0_LIVE3_RECOVERY_PRODUCT_R1_RU.md"
+            "scripts/app/earth_mvp_app.gd"
+            "scripts/app/simulator_app.gd"
+            "scripts/construction/mvp/v0_p4_mvp_earth_outpost_authority.gd"
+            "scripts/runtime/launch_options.gd"
+            "scripts/runtime/networked_gameplay/services/player_movement_service.gd"
+            "tests/runtime/test_launch_options.gd"
+            "tests/runtime/test_v0_live2_r3_reliability.gd"
+            "tools/live3/run_live3_product_recovery.ps1"
+          )
+          mapfile -t actual < <(git diff --name-only "$BASE_MAIN" HEAD | sort)
+          mapfile -t expected_sorted < <(printf '%s\n' "${expected[@]}" | sort)
+          diff -u <(printf '%s\n' "${expected_sorted[@]}") <(printf '%s\n' "${actual[@]}")
+          changed="$(git diff --name-only "$BASE_MAIN" HEAD)"
+          ! grep -Eq '^(scripts/(items|construction/authoritative|persistence|simulation/transactions)|config/control)/' <<<"$changed"
+          test -z "$(git status --porcelain --untracked-files=no)"
+
+      - name: Consume exact Fresh Reviewer result
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin "$REVIEW_BRANCH:refs/remotes/origin/$REVIEW_BRANCH"
+          test "$(git rev-parse "origin/$REVIEW_BRANCH")" = "$REVIEW_COMMIT"
+          test "$(git rev-parse "origin/$REVIEW_BRANCH^{tree}")" = "$REVIEW_TREE"
+          git show "origin/$REVIEW_BRANCH:$REVIEW_PATH" > /tmp/live3-review.json
+          python - <<'PY'
+          import json, os
+          p=json.load(open('/tmp/live3-review.json','r',encoding='utf-8'))
+          assert p['role']=='FRESH_REVIEWER'
+          assert p['verdict']=='PASS'
+          assert p['product_head']==os.environ['PRODUCT_HEAD']
+          assert p['product_tree']==os.environ['PRODUCT_TREE']
+          assert p['base_main']==os.environ['BASE_MAIN']
+          assert p.get('blocking_findings',[])==[]
+          assert p.get('required_fixes',[])==[]
+          assert p.get('evidence_gaps',[])==[]
+          print('FRESH_REVIEWER_PREREQUISITE=PASS')
+          PY
+
+  windows:
+    name: LIVE3 fresh independent Windows verifier
+    needs: source
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 45
+    steps:
+      - name: Checkout frozen product subject
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.PRODUCT_HEAD }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Independent host and identity preflight
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          New-Item -ItemType Directory -Force artifacts\live3-independent-verifier-r1 | Out-Null
+          $head=(git rev-parse HEAD).Trim()
+          $tree=(git rev-parse 'HEAD^{tree}').Trim()
+          if($head-ne$env:PRODUCT_HEAD){throw "VERIFIER_HEAD_DRIFT:$head"}
+          if($tree-ne$env:PRODUCT_TREE){throw "VERIFIER_TREE_DRIFT:$tree"}
+          $foreign=@(Get-Process -ErrorAction SilentlyContinue | Where-Object {$_.ProcessName -like 'godot*'})
+          if($foreign.Count-gt0){throw ('FOREIGN_GODOT_PROCESS:'+(($foreign|Select-Object -ExpandProperty Id)-join ','))}
+          $version=(& $env:GODOT_BIN --version | Out-String).Trim()
+          $sha=(Get-FileHash $env:GODOT_BIN -Algorithm SHA256).Hash.ToLowerInvariant()
+          if($version-ne'4.7.1.stable.double.custom_build.a13da4feb'){throw "GODOT_VERSION_MISMATCH:$version"}
+          if($sha-ne'3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5'){throw "GODOT_SHA_MISMATCH:$sha"}
+          $os=Get-CimInstance Win32_OperatingSystem
+          $free=[math]::Round(($os.FreePhysicalMemory*1KB)/1GB,2)
+          if($free-lt10){throw "LOW_FREE_RAM:$free"}
+          $tokens=$null; $errors=$null
+          [System.Management.Automation.Language.Parser]::ParseFile(
+            (Resolve-Path .\tools\live3\run_live3_product_recovery.ps1),
+            [ref]$tokens,[ref]$errors
+          ) | Out-Null
+          if(@($errors).Count-ne0){throw "LIVE3_RUNNER_PARSE_FAILED:$(@($errors).Count)"}
+          [ordered]@{
+            role='FRESH_INDEPENDENT_VERIFIER'
+            product_head=$head
+            product_tree=$tree
+            base_main=$env:BASE_MAIN
+            godot_version=$version
+            godot_sha256=$sha
+            free_ram_gb=$free
+            host=$env:COMPUTERNAME
+          } | ConvertTo-Json -Depth 6 | Set-Content artifacts\live3-independent-verifier-r1\preflight.json -Encoding UTF8
+
+      - name: Independent cold import
+        shell: pwsh
+        timeout-minutes: 15
+        run: |
+          $ErrorActionPreference='Stop'
+          if(Test-Path .godot){Remove-Item .godot -Recurse -Force}
+          & $env:GODOT_BIN --headless --path . --editor --import --quit *> artifacts\live3-independent-verifier-r1\cold-import.log
+          if($LASTEXITCODE-ne0){throw "VERIFIER_COLD_IMPORT_FAILED:$LASTEXITCODE"}
+          if(-not(Test-Path .godot\global_script_class_cache.cfg)){throw 'VERIFIER_CLASS_CACHE_MISSING'}
+          if(Select-String artifacts\live3-independent-verifier-r1\cold-import.log -Pattern 'SCRIPT ERROR:|Parse Error:|Compile Error:' -Quiet){throw 'VERIFIER_IMPORT_SCRIPT_ERRORS'}
+
+      - name: Independent launch and recovery regressions
+        shell: pwsh
+        timeout-minutes: 18
+        run: |
+          $ErrorActionPreference='Stop'
+          $root=(Resolve-Path artifacts\live3-independent-verifier-r1).Path
+          function Invoke-V([string]$Label,[string]$Test){
+            $log=Join-Path $root ($Label+'.log')
+            & $env:GODOT_BIN --headless --path . --script ('res://'+$Test) *> $log
+            $code=$LASTEXITCODE
+            if($code-ne0){Get-Content $log -Tail 250; throw "VERIFIER_TEST_FAILED:$Label:$code"}
+            if(Select-String $log -Pattern 'SCRIPT ERROR:|Parse Error:|Compile Error:' -Quiet){throw "VERIFIER_TEST_SCRIPT_ERROR:$Label"}
+          }
+          Invoke-V 'launch-options' 'tests/runtime/test_launch_options.gd'
+          Invoke-V 'm6-contracts' 'tests/runtime/test_m6_dedicated_recovery_contracts.gd'
+          Invoke-V 'm6-processes' 'tests/runtime/test_m6_dedicated_recovery_processes.gd'
+          Invoke-V 'resource-mining-recovery' 'tests/runtime/test_v0_p3_resource_mining_aggregate_recovery.gd'
+          Invoke-V 'p4-two-client-reconnect' 'tests/runtime/test_v0_p4_live_two_client_reconnect_convergence.gd'
+          Invoke-V 'live2-automation' 'tests/runtime/test_v0_live2_r3_4_automation_control.gd'
+          Invoke-V 'live2-snapshot-clock' 'tests/runtime/test_v0_live2_r3_3_snapshot_clock.gd'
+          Invoke-V 'live2-reliability' 'tests/runtime/test_v0_live2_r3_reliability.gd'
+          Invoke-V 'live2-enet-rollover' 'tests/network/test_v0_live2_enet_rollover.gd'
+
+          $env:EXPECTED_HEAD=$env:PRODUCT_HEAD
+          $env:EXPECTED_TREE=$env:PRODUCT_TREE
+          $profileRoot=Join-Path $root 'mvp7-profile'
+          $env:APPDATA=Join-Path $profileRoot 'AppData\Roaming'
+          $env:LOCALAPPDATA=Join-Path $profileRoot 'AppData\Local'
+          New-Item -ItemType Directory -Force $env:APPDATA,$env:LOCALAPPDATA | Out-Null
+
+          $nativeRoot=Join-Path $root 'mvp7-native'
+          New-Item -ItemType Directory -Force $nativeRoot | Out-Null
+          $env:MVP7_NATIVE_ROOT=Join-Path $nativeRoot 'checkpoints'
+          foreach($mode in @('produce','recover1','recover2')){
+            $env:MVP7_NATIVE_MODE=$mode
+            $env:MVP7_NATIVE_RESULT=Join-Path $nativeRoot ($mode+'.json')
+            Invoke-V ('mvp7-native-'+$mode) 'tests/runtime/test_v0_mvp_7_quiescent_recovery.gd'
+          }
+
+          $constructionRoot=Join-Path $root 'mvp7-construction'
+          New-Item -ItemType Directory -Force $constructionRoot | Out-Null
+          $env:MVP7_CONSTRUCTION_ROOT=$constructionRoot
+          foreach($mode in @('produce','recover1','recover2')){
+            $env:MVP7_CONSTRUCTION_MODE=$mode
+            $env:MVP7_CONSTRUCTION_RESULT=Join-Path $constructionRoot ($mode+'.json')
+            Invoke-V ('mvp7-construction-'+$mode) 'tests/runtime/test_v0_mvp_7_construction_restart.gd'
+          }
+
+      - name: Independent product reconnect and planned restart
+        shell: pwsh
+        timeout-minutes: 12
+        run: |
+          $ErrorActionPreference='Stop'
+          $root=(Resolve-Path artifacts\live3-independent-verifier-r1).Path
+          $session=Join-Path $root 'product-recovery'
+          pwsh -NoProfile -File .\tools\live3\run_live3_product_recovery.ps1 -Worktree (Resolve-Path .).Path -SessionRoot $session -PhaseOneServerLifetimeSeconds 90 -SkipImport
+          if($LASTEXITCODE-ne0){throw "VERIFIER_LIVE3_PRODUCT_FAILED:$LASTEXITCODE"}
+          $reportPath=Join-Path $session 'LIVE3-RECOVERY-REPORT.json'
+          $report=Get-Content $reportPath -Raw | ConvertFrom-Json
+          if($report.outcome-ne'PASS' -or -not[string]::IsNullOrEmpty([string]$report.failure)){throw "VERIFIER_REPORT_NOT_PASS:$($report.failure)"}
+          if([string]$report.product_head-ne$env:PRODUCT_HEAD){throw 'VERIFIER_REPORT_HEAD_MISMATCH'}
+          if([string]$report.product_tree-ne$env:PRODUCT_TREE){throw 'VERIFIER_REPORT_TREE_MISMATCH'}
+          if(-not[bool]$report.udp_port_free){throw 'VERIFIER_REPORT_UDP_LEAK'}
+
+          $o=$report.observations
+          $preA=$o.pre_server_restart_a
+          $preB=$o.pre_server_restart_b
+          $postA=$o.post_server_restart_a
+          $postB=$o.post_server_restart_b
+          foreach($field in @('item_graph_checksum','resource_checksum','construction_checksum')){
+            if([string]$preA.$field-ne[string]$postA.$field){throw "VERIFIER_A_RECOVERY_MISMATCH:$field"}
+            if([string]$preB.$field-ne[string]$postB.$field){throw "VERIFIER_B_RECOVERY_MISMATCH:$field"}
+          }
+          $preAC=($preA.construction_construct_checksums|ConvertTo-Json -Compress)
+          $postAC=($postA.construction_construct_checksums|ConvertTo-Json -Compress)
+          $preBC=($preB.construction_construct_checksums|ConvertTo-Json -Compress)
+          $postBC=($postB.construction_construct_checksums|ConvertTo-Json -Compress)
+          if($preAC-ne$postAC-or$preBC-ne$postBC){throw 'VERIFIER_CONSTRUCT_CHECKSUM_MISMATCH'}
+          if([string]$preA.player_entity_id-ne[string]$postA.player_entity_id){throw 'VERIFIER_PLAYER_A_IDENTITY_MISMATCH'}
+          if([string]$preB.player_entity_id-ne[string]$postB.player_entity_id){throw 'VERIFIER_PLAYER_B_IDENTITY_MISMATCH'}
+          if([int]$postA.ownership_epoch-le[int]$preA.ownership_epoch){throw 'VERIFIER_PLAYER_A_EPOCH_DID_NOT_ADVANCE'}
+          if([int]$postB.ownership_epoch-le[int]$preB.ownership_epoch){throw 'VERIFIER_PLAYER_B_EPOCH_DID_NOT_ADVANCE'}
+          $cont=$o.post_restart_continuation
+          if([double]$cont.movement_distance_m-lt0.5){throw 'VERIFIER_POST_RESTART_MOVEMENT_MISSING'}
+          if([int]$cont.remote_samples_after-le[int]$cont.remote_samples_before){throw 'VERIFIER_POST_RESTART_REMOTE_STREAM_STALLED'}
+          if([string]$cont.snapshot_clock_source-ne'CANONICAL_SNAPSHOT_CONTEXT'){throw 'VERIFIER_NON_CANONICAL_SNAPSHOT_CLOCK'}
+
+          $server2=Get-Content (Join-Path $session 'logs\server-2.log') -Raw
+          if($server2-notmatch '"recovered":true'){throw 'VERIFIER_SERVER2_RECOVERY_MARKER_MISSING'}
+          if($server2-match 'BUILD_PLAN_PART_SOURCE_NOT_TRANSFERABLE'){throw 'VERIFIER_OLD_CONSTRUCTION_FAILURE_REAPPEARED'}
+
+          [ordered]@{
+            verdict='PASS'
+            product_head=$report.product_head
+            product_tree=$report.product_tree
+            item_graph_checksum=[string]$postA.item_graph_checksum
+            resource_generation=[int]$postA.resource_generation
+            resource_checksum=[string]$postA.resource_checksum
+            construction_generation=[int]$postA.construction_generation
+            construction_checksum=[string]$postA.construction_checksum
+            construct_checksums=$postA.construction_construct_checksums
+            player_a_epoch=[int]$postA.ownership_epoch
+            player_b_epoch=[int]$postB.ownership_epoch
+            movement_distance_m=[double]$cont.movement_distance_m
+            remote_samples_before=[int]$cont.remote_samples_before
+            remote_samples_after=[int]$cont.remote_samples_after
+            snapshot_clock_source=[string]$cont.snapshot_clock_source
+          } | ConvertTo-Json -Depth 20 | Set-Content (Join-Path $root 'independent-product-summary.json') -Encoding UTF8
+
+      - name: Independent final cleanliness and evidence hashes
+        if: always()
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          $root=(Resolve-Path artifacts\live3-independent-verifier-r1).Path
+          $head=(git rev-parse HEAD).Trim()
+          $tree=(git rev-parse 'HEAD^{tree}').Trim()
+          $tracked=(git status --porcelain --untracked-files=no | Out-String).Trim()
+          $godot=@(Get-Process -ErrorAction SilentlyContinue | Where-Object {$_.ProcessName -like 'godot*'})
+          $udp=Get-NetUDPEndpoint -LocalPort 24580 -ErrorAction SilentlyContinue
+          $hashes=@()
+          Get-ChildItem $root -File -Recurse | Sort-Object FullName | ForEach-Object {
+            $hashes += [ordered]@{
+              path=$_.FullName.Substring($root.Length+1)
+              bytes=$_.Length
+              sha256=(Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+            }
+          }
+          $hashes | ConvertTo-Json -Depth 5 | Set-Content (Join-Path $root 'evidence-hashes.json') -Encoding UTF8
+          [ordered]@{
+            product_head=$head
+            product_tree=$tree
+            tracked_clean=[string]::IsNullOrWhiteSpace($tracked)
+            remaining_godot_pids=@($godot|Select-Object -ExpandProperty Id)
+            udp_24580_free=($null-eq$udp)
+          } | ConvertTo-Json -Depth 5 | Set-Content (Join-Path $root 'final.json') -Encoding UTF8
+          if($head-ne$env:PRODUCT_HEAD-or$tree-ne$env:PRODUCT_TREE){throw 'VERIFIER_FINAL_IDENTITY_DRIFT'}
+          if(-not[string]::IsNullOrWhiteSpace($tracked)){throw 'VERIFIER_TRACKED_DIRTY'}
+          if($godot.Count-gt0){throw ('VERIFIER_GODOT_PROCESS_LEAK:'+(($godot|Select-Object -ExpandProperty Id)-join ','))}
+          if($null-ne$udp){throw 'VERIFIER_UDP_24580_LEAK'}
+
+      - name: Upload independent verifier evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v0-live3-independent-verifier-${{ github.run_id }}-${{ github.run_attempt }}
+          path: artifacts/live3-independent-verifier-r1/
+          if-no-files-found: error
+          retention-days: 90
+          compression-level: 6
