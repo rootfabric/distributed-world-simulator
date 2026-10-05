@@ -193,8 +193,20 @@ func _test_v0_p4_restart_build_plan_bootstrap() -> void:
 	_check(bool(planned.get("success", false)), "P4 stage-0 transaction plan builds before restart")
 	if not bool(planned.get("success", false)):
 		return
-	var applied: Dictionary = first_adapter.apply_plan(planned.get("transaction_plan", {}))
-	_check(bool(applied.get("success", false)), "P4 stage-0 authoritative commit persists before restart")
+	var source_transaction: Dictionary = planned.get("transaction_plan", {})
+	var first_live_port = first_details.get("live_port")
+	var bridge_plan_result: Dictionary = first_live_port._build_construction_bridge_plan(
+		source_transaction,
+		Array(source_transaction.get("item_mutations", [])),
+		"restart-regression"
+	)
+	_check(bool(bridge_plan_result.get("success", false)), "P4 stage-0 bridge plan matches the live M4 Construction path")
+	if not bool(bridge_plan_result.get("success", false)):
+		return
+	var applied: Dictionary = first_adapter.apply_plan(
+		bridge_plan_result.get("details", {}).get("bridge_plan", {})
+	)
+	_check(bool(applied.get("success", false)), "P4 stage-0 authoritative commit persists before restart: %s" % applied)
 	if not bool(applied.get("success", false)):
 		return
 	var foundation: Dictionary = first_adapter.get_item_projection(V0P4EarthOutpostAuthority.FOUNDATION_ITEM_ID)
