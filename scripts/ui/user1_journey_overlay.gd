@@ -37,6 +37,7 @@ var _save_path := ""
 var _initialized := false
 var _initial_position := Vector2.ZERO
 var _initial_region_id := ""
+var _initial_seam_roundtrips := -1
 var _initial_resource_generation := -1
 var _initial_ore_quantity := -1
 var _initial_world_item_count := -1
@@ -126,10 +127,10 @@ func _accept_state(state: Dictionary) -> void:
 		_complete("move")
 
 	var region_id := String(state.get("region_id", "")).strip_edges()
+	var seam_roundtrips := int(state.get("seam_roundtrips", -1))
 	if (
-		not _initial_region_id.is_empty()
-		and not region_id.is_empty()
-		and region_id != _initial_region_id
+		_initial_seam_roundtrips >= 0
+		and seam_roundtrips > _initial_seam_roundtrips
 	):
 		_complete("seam")
 
@@ -218,6 +219,7 @@ func _load_or_initialize(state: Dictionary) -> void:
 			float(position.get("z", 0.0))
 		)
 		_initial_region_id = String(state.get("region_id", "")).strip_edges()
+		_initial_seam_roundtrips = int(state.get("seam_roundtrips", -1))
 		_initial_resource_generation = int(state.get("resource_generation", -1))
 		_initial_ore_quantity = int(state.get("inventory_ore_quantity", 0))
 		_initial_world_item_count = int(state.get("world_item_count", -1))
@@ -242,6 +244,7 @@ func _restore_progress(value: Dictionary) -> bool:
 		return false
 	_initial_position = Vector2(float(initial_position[0]), float(initial_position[1]))
 	_initial_region_id = String(baselines.get("region_id", ""))
+	_initial_seam_roundtrips = int(baselines.get("seam_roundtrips", -1))
 	_initial_resource_generation = int(baselines.get("resource_generation", -1))
 	_initial_ore_quantity = int(baselines.get("ore_quantity", 0))
 	_initial_world_item_count = int(baselines.get("world_item_count", -1))
@@ -273,6 +276,7 @@ func _save_progress() -> void:
 		"baselines": {
 			"position": [_initial_position.x, _initial_position.y],
 			"region_id": _initial_region_id,
+			"seam_roundtrips": _initial_seam_roundtrips,
 			"resource_generation": _initial_resource_generation,
 			"ore_quantity": _initial_ore_quantity,
 			"world_item_count": _initial_world_item_count,
@@ -396,7 +400,7 @@ func _instruction_for(step_id: String, state: Dictionary) -> String:
 		"move":
 			return "WASD + мышь; пройдите хотя бы метр."
 		"seam":
-			return "двигайтесь через границу region; текущий region: %s." % String(state.get("region_id", "?"))
+			return "пересеките authority seam и вернитесь обратно (A→B→A); текущий region: %s." % String(state.get("region_id", "?"))
 		"resource_near":
 			var distance := float(state.get("nearest_resource_distance_m", INF))
 			return (
@@ -428,9 +432,10 @@ func _instruction_for(step_id: String, state: Dictionary) -> String:
 func _detail_for_state(state: Dictionary) -> String:
 	var distance := float(state.get("nearest_resource_distance_m", INF))
 	var resource_text := "%.1f m" % distance if is_finite(distance) else "—"
-	return "player %s · region %s · ore %d · resource %s · construct gen %d" % [
+	return "player %s · region %s · seam %d · ore %d · resource %s · construct gen %d" % [
 		String(state.get("player_id", "—")),
 		String(state.get("region_id", "—")),
+		int(state.get("seam_roundtrips", 0)),
 		int(state.get("inventory_ore_quantity", 0)),
 		resource_text,
 		int(state.get("construction_generation", -1)),
@@ -443,6 +448,7 @@ func _baseline_ready(state: Dictionary) -> bool:
 		and not String(state.get("player_id", "")).strip_edges().is_empty()
 		and int(state.get("ownership_epoch", 0)) > 0
 		and not String(state.get("region_id", "")).strip_edges().is_empty()
+		and int(state.get("seam_roundtrips", -1)) >= 0
 		and int(state.get("resource_generation", -1)) >= 0
 		and int(state.get("item_graph_revision", -1)) >= 0
 		and int(state.get("world_item_count", -1)) >= 0
