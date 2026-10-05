@@ -80,7 +80,7 @@ jobs:
           grep -q '"::"' scripts/ui/product_shell.gd
           grep -q 'SM1AuthorityTransferCoordinator' scripts/runtime/networked_gameplay/user1/user1_product_seam_gameplay_service.gd || grep -q 'sm1_authority_transfer_coordinator' scripts/runtime/networked_gameplay/user1/user1_product_seam_gameplay_service.gd
           grep -q 'USER1_EXTERNAL_GLOBAL_M4' scripts/runtime/networked_gameplay/user1/user1_product_player_transfer_port.gd
-          grep -q 'PRODUCT_SEAM_STATE' scripts/network/observability/network_protocol_manifest.gd
+          grep -q 'user1_product_seam_state' scripts/network/observability/network_protocol_manifest.gd
 
   windows:
     name: USER1 exact Windows readiness
