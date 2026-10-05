@@ -1,0 +1,106 @@
+name: FABRIC R5.3 Fresh Independent Verifier R1
+
+on:
+  push:
+    branches: [verify/fabric-r5-3-fresh-independent-verifier-r1]
+
+permissions:
+  contents: read
+
+env:
+  SUBJECT_HEAD: 305b54bf127a910a515d02544a18d9a01a7afaa8
+  SUBJECT_TREE: 148f297b5698841ff1eb982e2a4123325d0c0a92
+  EXPECTED_DETERMINISTIC_HASH: 4664bd714a25f36a50efc7f562e6f43dd89af250e475ce7aae6b130003b4dd46
+
+jobs:
+  verifier-source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Prove frozen product identity and carrier isolation
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$(git merge-base HEAD "$SUBJECT_HEAD")" = "$SUBJECT_HEAD"
+          test "$(git rev-parse "$SUBJECT_HEAD^{tree}")" = "$SUBJECT_TREE"
+          changed="$(git diff --name-only "$SUBJECT_HEAD"...HEAD)"
+          test "$changed" = '.github/workflows/fabric-r5-3-independent-verifier-r1.yml'
+          git diff --check "$SUBJECT_HEAD" HEAD
+          git diff --exit-code "$SUBJECT_HEAD"...HEAD --             scripts/research/fabric_bake0             tests/research/fabric_bake0             RUN_FABRIC_R5_3_TESTS.sh             RUN_FABRIC_R5_3_TESTS.ps1             docs/research/FABRIC_R5_3_RECURSIVE_HIERARCHICAL_EXECUTION_RU.md             docs/research/FABRIC_R5_3_WORK_ORDER_RU.md
+
+      - name: Fresh adversarial source inspection
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          compiler = Path('scripts/research/fabric_bake0/r5_3_recursive_rom_compiler_v1.gd').read_text()
+          runtime = Path('scripts/research/fabric_bake0/r5_3_recursive_rom_runtime_v1.gd').read_text()
+          acceptance = Path('tests/research/fabric_bake0/fabric_r5_3_recursive_rom_acceptance.gd').read_text()
+          collector = Path('scripts/research/fabric_bake0/collect_r5_3_evidence.py').read_text()
+
+          assert 'res://tests/' not in compiler
+          assert 'res://tests/' not in runtime
+
+          # R4 leaf provenance repair: exact graph/request must recreate the full T1 bundle.
+          assert 'T1.compile(graph, details.bake_request, String(capsule.capsule_id))' in compiler
+          assert 'R5_3_LEAF_T1_CANONICAL_RECOMPILE_MISMATCH' in compiler
+          for field in ('linear_system', 'graph_compile', 'reduction', 'artifact', 'capsule'):
+              assert field in compiler
+          assert 'forged Schur content even after source-system/hash repair' in acceptance
+
+          # R5 parent provenance repair: parent content is canonical child-ROM composition.
+          assert 'static func _compile_parent_payload' in compiler
+          assert 'validate_child_bindings: bool = true' in compiler
+          assert '_compile_parent_payload(String(node.node_id), int(node.level), children, int(node.topology_revision), false)' in compiler
+          assert 'R5_3_PARENT_GRAPH_BINDING_MISMATCH' in compiler
+          assert 'R5_3_PARENT_REDUCTION_BINDING_MISMATCH' in compiler
+          assert 'R5_3_PARENT_TOPOLOGY_BINDING_MISMATCH' in compiler
+          assert 'parent ROM content must match canonical child-ROM composition' in acceptance
+          assert 'forged parent ROM cannot enter higher-level composition' in acceptance
+
+          # Causal rebuild and transactional refresh remain fail-closed.
+          assert 'static func rebuild_path' in compiler
+          assert 'R5_3_CHILD_LEVEL_MISMATCH' in compiler
+          assert 'staged_sessions' in runtime
+          assert '# COMMIT: after this point there are no rejectable candidate operations.' in runtime
+          assert 'R5_3_RUNTIME_CHANGED_PATH_MISMATCH' in runtime
+          assert 'failed deep prepare rejects refresh atomically' in acceptance
+          assert 'leaf mutation rebuilds four hierarchy levels' in acceptance
+          assert 'module mutation rebuilds three hierarchy levels' in acceptance
+          assert 'assembly mutation rebuilds two hierarchy levels' in acceptance
+
+          assert 'PASS="FABRIC R5.3 RECURSIVE HIERARCHICAL EXECUTION: PASS (1218 assertions)"' in collector
+          assert '"checks":1218' in collector
+          print('FABRIC_R5_3_FRESH_INDEPENDENT_SOURCE_INSPECTION=PASS')
+          PY
+
+      - name: Run independent source/evidence contract tests
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          python3 -m unittest discover -s tests/research/fabric_bake0 -p test_r5_3_evidence.py -v
+          bash -n RUN_FABRIC_R5_3_TESTS.sh
+
+      - name: Build exact verifier bundle
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          mkdir -p verifier-source
+          git branch -f r5-3-verifier-exact HEAD
+          git bundle create verifier-source/r5-3-verifier-exact.bundle refs/heads/r5-3-verifier-exact
+          sha256sum verifier-source/r5-3-verifier-exact.bundle > verifier-source/r5-3-verifier-exact.bundle.sha256
+          printf 'SUBJECT_HEAD=%s\nSUBJECT_TREE=%s\nVERIFIER_HEAD=%s\nVERIFIER_TREE=%s\nEXPECTED_DETERMINISTIC_HASH=%s\n'             "$SUBJECT_HEAD" "$SUBJECT_TREE" "$(git rev-parse HEAD)" "$(git rev-parse 'HEAD^{tree}')" "$EXPECTED_DETERMINISTIC_HASH"             > verifier-source/identity.txt
+          git bundle verify verifier-source/r5-3-verifier-exact.bundle
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fabric-r5-3-independent-verifier-source-${{ github.sha }}
+          path: verifier-source/**
+          if-no-files-found: error
+          retention-days: 90
