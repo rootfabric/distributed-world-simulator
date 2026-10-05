@@ -113,6 +113,17 @@ func _leaf_provenance_falsifier() -> void:
 		forged.details.capsule.checksum = U.compute_checksum(forged.details.capsule)
 		var forged_rebound := Compiler.leaf_from_t1("r53/provenance-b", graph_b, forged)
 		check(not forged_rebound.success and forged_rebound.error_code == "R5_3_LEAF_T1_SYSTEM_BINDING_MISMATCH", "R5.3 refuses descriptor rebound across source systems after contract rehash", forged_rebound)
+		var forged_content := compiled_b.duplicate(true)
+		forged_content.details.reduction = compiled.details.reduction.duplicate(true)
+		forged_content.details.reduction.source_system_hash = String(compiled_b.details.linear_system.system_hash)
+		forged_content.details.reduction.checksum = U.compute_checksum(forged_content.details.reduction)
+		forged_content.details.artifact.reduced_model_descriptor_hash = String(forged_content.details.reduction.checksum)
+		forged_content.details.artifact.checksum = U.compute_checksum(forged_content.details.artifact)
+		forged_content.details.capsule.executable_descriptor_hash = String(forged_content.details.reduction.checksum)
+		forged_content.details.capsule.physical_bake_artifact_checksum = String(forged_content.details.artifact.checksum)
+		forged_content.details.capsule.checksum = U.compute_checksum(forged_content.details.capsule)
+		var forged_content_rebound := Compiler.leaf_from_t1("r53/provenance-b", graph_b, forged_content)
+		check(not forged_content_rebound.success and forged_content_rebound.error_code == "R5_3_LEAF_T1_CANONICAL_RECOMPILE_MISMATCH", "R5.3 refuses forged Schur content even after source-system/hash repair", forged_content_rebound)
 
 func _initialize() -> void:
 	_leaf_provenance_falsifier()

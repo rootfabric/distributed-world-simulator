@@ -1,6 +1,6 @@
 # FABRIC R5.3 — Recursive Hierarchical Execution
 
-Статус: R3 implementer repair candidate после fresh falsifier-review R2. База — T16 merge `604192f07070d0f0e38a94445611d09d92cb7f7f`.
+Статус: R4 implementer repair candidate после fresh independent falsifier-review R3. База — T16 merge `604192f07070d0f0e38a94445611d09d92cb7f7f`.
 
 ## Что доказывается
 
@@ -69,5 +69,11 @@ R3 делает hierarchy admission fail-closed по exact adjacent level и о�
 ## Границы
 
 Это exact-linear recursive ROM falsifier, а не утверждение универсальной рекурсивной reduction для nonlinear/hybrid systems. R5.4 должен смешать разные классы сложности. R5.3 не вводит production state owner, network/persistence handoff или device-specific kernel. Parent compiler не читает hidden child source graph.
+
+## R3 fresh falsifier review → R4
+
+Fresh independent review byte-exact R3 нашёл ещё один blocking provenance counterexample: reduction от graph A можно было перенести в graph B, переписать `source_system_hash` на точный hash B и пересчитать reduction/artifact/capsule checksums. R3 сверял hash источника, но не доказывал, что сама Schur-матрица действительно выведена из этого source system. Исполняемый falsifier на frozen R3 подтвердил admission forged leaf.
+
+R4 закрывает этот класс canonical T1 recompile: leaf admission повторно запускает существующий T1 compiler на **том же exact graph, bake request и capsule id** и требует полного совпадения `linear_system`, `graph_compile`, `reduction`, `artifact` и `capsule`. Это одновременно наследует исходный T1 `>=100` internal-variable acceptance floor без копирования его policy в R5.3. Parent composition остаётся ROM-only и hidden leaf source graphs не читает.
 
 Fresh exact Linux/Windows, fresh review/verifier и human merge обязательны перед закрытием checkpoint.

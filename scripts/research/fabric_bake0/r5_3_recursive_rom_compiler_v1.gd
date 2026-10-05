@@ -96,7 +96,7 @@ static func _validate_t1_leaf_binding(graph: Dictionary, details: Dictionary) ->
 	var graph_checked := Graph.validate(graph)
 	if not graph_checked.success:
 		return U.failure("R5_3_LEAF_SOURCE_GRAPH_INVALID", {"cause":graph_checked})
-	for field in ["capsule", "artifact", "reduction", "graph_compile", "linear_system"]:
+	for field in ["capsule", "artifact", "reduction", "graph_compile", "linear_system", "bake_request"]:
 		if typeof(details.get(field)) != TYPE_DICTIONARY:
 			return U.failure("R5_3_LEAF_T1_DETAILS_INCOMPLETE", {"field":field})
 	var capsule: Dictionary = details.capsule
@@ -124,6 +124,17 @@ static func _validate_t1_leaf_binding(graph: Dictionary, details: Dictionary) ->
 	or String(details.graph_compile.get("linear_system", {}).get("system_hash", "")) != exact_system_hash \
 	or String(reduction.get("source_system_hash", "")) != exact_system_hash:
 		return U.failure("R5_3_LEAF_T1_SYSTEM_BINDING_MISMATCH")
+	# A checksum-repaired descriptor can lie about source_system_hash while retaining
+	# a Schur matrix from another graph. Re-run the canonical T1 compiler on the
+	# exact supplied source graph/request and require the complete derived bundle to
+	# be byte-semantically identical. This also inherits T1's >=100 internal gate.
+	var exact_t1 := T1.compile(graph, details.bake_request, String(capsule.capsule_id))
+	if not bool(exact_t1.get("success", false)) or typeof(exact_t1.get("details")) != TYPE_DICTIONARY:
+		return U.failure("R5_3_LEAF_T1_CANONICAL_RECOMPILE_FAILED", {"cause":exact_t1})
+	var exact_details: Dictionary = exact_t1.details
+	for field in ["linear_system", "graph_compile", "reduction", "artifact", "capsule"]:
+		if U.canonical_hash(details[field]) != U.canonical_hash(exact_details[field]):
+			return U.failure("R5_3_LEAF_T1_CANONICAL_RECOMPILE_MISMATCH", {"field":field})
 	if int(details.graph_compile.get("component_count", -1)) != graph.components.size() \
 	or int(capsule.source_component_count) != graph.components.size():
 		return U.failure("R5_3_LEAF_T1_SOURCE_COUNT_MISMATCH")
