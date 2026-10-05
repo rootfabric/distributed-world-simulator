@@ -18,6 +18,8 @@ const MAX_PROPAGULES_PER_STEP := Scale.MAX_PROPAGULES_PER_STEP
 const PROPAGULE_SCHEMA := "dws.ecology.propagule.v1"
 const DEFAULT_PARALLEL_PREPARE_WORKERS := 4
 const MAX_PARALLEL_PREPARE_WORKERS := 8
+const DEFAULT_PARALLEL_ADVANCE_WORKERS := 4
+const MAX_PARALLEL_ADVANCE_WORKERS := 8
 
 static func individual(blueprint: Dictionary, individual_id: String, position_mm: Array, endowment: Dictionary = {}, origin_kind: String = "FOUNDER_ENDOWMENT") -> Dictionary:
 	if origin_kind != "FOUNDER_ENDOWMENT": return {}
@@ -115,6 +117,55 @@ static func step_population_with_spatial_plan_parallel_prepare(field: Dictionary
 static func valid_parallel_prepare_workers(max_prepare_workers: int) -> bool:
 	return max_prepare_workers >= 1 and max_prepare_workers <= MAX_PARALLEL_PREPARE_WORKERS
 
+static func step_population_spatial_parallel_advance(field: Dictionary, population: Array,
+		owner_token: String, owner_epoch: int, revision: int,
+		tile_span_cells: int = SpatialWorksets.DEFAULT_TILE_SPAN_CELLS,
+		max_members: int = SpatialWorksets.DEFAULT_MAX_MEMBERS,
+		max_prepare_workers: int = DEFAULT_PARALLEL_PREPARE_WORKERS,
+		max_advance_workers: int = DEFAULT_PARALLEL_ADVANCE_WORKERS) -> Dictionary:
+	var precondition := _precondition_error(field, population, owner_token, owner_epoch, revision)
+	if not precondition.is_empty():
+		return _fail(precondition)
+	if not valid_parallel_prepare_workers(max_prepare_workers):
+		return _fail("A5_PARALLEL_PREPARE_WORKERS")
+	if not valid_parallel_advance_workers(max_advance_workers):
+		return _fail("A5_PARALLEL_ADVANCE_WORKERS")
+	var normalized := _canonical_entries(population)
+	if not bool(normalized.get("success", false)):
+		return normalized
+	var entries: Array = normalized.entries
+	var plan := SpatialWorksets.create(field, entries, tile_span_cells, max_members)
+	if plan.is_empty():
+		return _fail("A5_SPATIAL_WORKSET_PLAN")
+	return _step_population_with_validated_units_parallel_advance(
+		field, entries, owner_token, owner_epoch, revision, plan.worksets,
+		max_prepare_workers, max_advance_workers)
+
+static func step_population_with_spatial_plan_parallel_advance(field: Dictionary, population: Array,
+		owner_token: String, owner_epoch: int, revision: int, plan: Dictionary,
+		max_prepare_workers: int = DEFAULT_PARALLEL_PREPARE_WORKERS,
+		max_advance_workers: int = DEFAULT_PARALLEL_ADVANCE_WORKERS) -> Dictionary:
+	var precondition := _precondition_error(field, population, owner_token, owner_epoch, revision)
+	if not precondition.is_empty():
+		return _fail(precondition)
+	if not valid_parallel_prepare_workers(max_prepare_workers):
+		return _fail("A5_PARALLEL_PREPARE_WORKERS")
+	if not valid_parallel_advance_workers(max_advance_workers):
+		return _fail("A5_PARALLEL_ADVANCE_WORKERS")
+	var normalized := _canonical_entries(population)
+	if not bool(normalized.get("success", false)):
+		return normalized
+	var entries: Array = normalized.entries
+	var plan_error := SpatialWorksets.validate(plan, field, entries)
+	if not plan_error.is_empty():
+		return _fail("A5_SPATIAL_WORKSET_PLAN:" + plan_error)
+	return _step_population_with_validated_units_parallel_advance(
+		field, entries, owner_token, owner_epoch, revision, plan.worksets,
+		max_prepare_workers, max_advance_workers)
+
+static func valid_parallel_advance_workers(max_advance_workers: int) -> bool:
+	return max_advance_workers >= 1 and max_advance_workers <= MAX_PARALLEL_ADVANCE_WORKERS
+
 static func step_population_with_spatial_plan(field: Dictionary, population: Array,
 		owner_token: String, owner_epoch: int, revision: int, plan: Dictionary) -> Dictionary:
 	var precondition := _precondition_error(field, population, owner_token, owner_epoch, revision)
@@ -202,6 +253,47 @@ static func _step_population_with_validated_units_parallel_prepare(field: Dictio
 		"worker_bound": max_prepare_workers,
 		"peak_workers": int(prepared.peak_workers),
 		"threaded_worksets": int(prepared.threaded_worksets),
+		"workset_count": units.size(),
+	}
+	return finished
+
+static func _step_population_with_validated_units_parallel_advance(
+		field: Dictionary, entries: Array,
+		owner_token: String, owner_epoch: int, revision: int, units: Array,
+		max_prepare_workers: int, max_advance_workers: int) -> Dictionary:
+	var guard := _validated_units_precondition(field, owner_token, owner_epoch, revision)
+	if not guard.is_empty():
+		return _fail(guard)
+	if not valid_parallel_prepare_workers(max_prepare_workers):
+		return _fail("A5_PARALLEL_PREPARE_WORKERS")
+	if not valid_parallel_advance_workers(max_advance_workers):
+		return _fail("A5_PARALLEL_ADVANCE_WORKERS")
+
+	var prepared := _prepare_units_parallel(field, entries, units, max_prepare_workers)
+	if not bool(prepared.get("success", false)):
+		return prepared
+
+	var allocated := _allocate_population_demands(
+		field, entries, owner_token, owner_epoch, revision, prepared.demands)
+	if not bool(allocated.get("success", false)):
+		return allocated
+
+	var advanced := _advance_units_parallel(
+		entries, units, prepared.samples, allocated.intake_by_id, max_advance_workers)
+	if not bool(advanced.get("success", false)):
+		return advanced
+
+	var finished := _population_step_result(
+		allocated.field, advanced.population, advanced.propagules)
+	finished["scheduler"] = {
+		"parallel_prepare": true,
+		"prepare_worker_bound": max_prepare_workers,
+		"prepare_peak_workers": int(prepared.peak_workers),
+		"prepare_threaded_worksets": int(prepared.threaded_worksets),
+		"parallel_advance": true,
+		"advance_worker_bound": max_advance_workers,
+		"advance_peak_workers": int(advanced.peak_workers),
+		"advance_threaded_worksets": int(advanced.threaded_worksets),
 		"workset_count": units.size(),
 	}
 	return finished
@@ -348,15 +440,28 @@ static func _prepare_unit_worker(field: Dictionary, task_entries: Array, unit_in
 static func _finish_population_step(field: Dictionary, entries: Array,
 		owner_token: String, owner_epoch: int, revision: int, units: Array,
 		samples: Dictionary, demands: Array) -> Dictionary:
-	var by_id := _entries_by_id(entries)
+	var allocated := _allocate_population_demands(
+		field, entries, owner_token, owner_epoch, revision, demands)
+	if not bool(allocated.get("success", false)):
+		return allocated
+	var advanced := _advance_units_serial(
+		entries, units, samples, allocated.intake_by_id)
+	if not bool(advanced.get("success", false)):
+		return advanced
+	return _population_step_result(
+		allocated.field, advanced.population, advanced.propagules)
 
-	# Global barrier — exactly ONE allocation for the whole population.
+static func _allocate_population_demands(field: Dictionary, entries: Array,
+		owner_token: String, owner_epoch: int, revision: int, demands: Array) -> Dictionary:
+	# Absolute global barrier. Both serial and parallel-advance paths pass
+	# through this single helper exactly once before any Phase 2 advance.
 	var field_after := field.duplicate(true)
 	var intake_by_id := {}
 	for entry in entries:
 		intake_by_id[String(entry.state.individual_id)] = F.stock()
 	if not demands.is_empty():
-		var allocated := Field.allocate_demands(field, demands, owner_token, owner_epoch, revision)
+		var allocated := Field.allocate_demands(
+			field, demands, owner_token, owner_epoch, revision)
 		if not allocated.success:
 			return _fail("A5_ALLOCATION:" + String(allocated.error))
 		field_after = allocated.state
@@ -365,34 +470,172 @@ static func _finish_population_step(field: Dictionary, entries: Array,
 			if not intake_by_id.has(id):
 				return _fail("A5_GRANT_OWNER")
 			intake_by_id[id][grant.resource] += grant.granted
+	return {
+		"success": true,
+		"field": field_after,
+		"intake_by_id": intake_by_id,
+	}
 
-	# Phase 2 remains serial/canonical in Parallel Prepare R1.
+static func _advance_units_serial(entries: Array, units: Array,
+		samples: Dictionary, intake_by_id: Dictionary) -> Dictionary:
+	var by_id := _entries_by_id(entries)
 	var next_population: Array = []
 	var propagules: Array = []
 	for unit in units:
-		for raw_id in unit.member_ids:
-			var id := String(raw_id)
-			var entry: Dictionary = by_id[id]
-			var state: Dictionary = entry.state
-			var blueprint: Dictionary = entry.blueprint
-			if not state.alive:
-				var inert := state.duplicate(true)
-				inert.last_events = [{"outcome": "DEAD_INERT", "detail": "no resource requests or lifecycle transitions"}]
-				next_population.append({"blueprint": blueprint, "state": inert})
-				continue
-			if not samples.has(id):
-				return _fail("A5_PREPARE_SAMPLE_MISSING")
-			var advanced := _advance_individual(state, blueprint, samples[id], intake_by_id[id])
-			if not advanced.success:
+		var advanced := _advance_unit_worker(
+			_unit_entries(by_id, unit), samples, intake_by_id, int(unit.index))
+		if not bool(advanced.get("success", false)):
+			return advanced
+		for entry in advanced.population:
+			next_population.append(entry)
+		for propagule in advanced.propagules:
+			if propagules.size() >= MAX_PROPAGULES_PER_STEP:
+				return _fail("A5_PROPAGULE_LIMIT")
+			propagules.append(propagule)
+	return _canonical_advance_result(next_population, propagules, 0, 0)
+
+static func _advance_units_parallel(entries: Array, units: Array,
+		samples: Dictionary, intake_by_id: Dictionary,
+		max_advance_workers: int) -> Dictionary:
+	if not valid_parallel_advance_workers(max_advance_workers):
+		return _fail("A5_PARALLEL_ADVANCE_WORKERS")
+	var by_id := _entries_by_id(entries)
+	var next_population: Array = []
+	var propagules: Array = []
+	var cursor := 0
+	var peak_workers := 0
+	var threaded_worksets := 0
+
+	while cursor < units.size():
+		var stop := mini(units.size(), cursor + max_advance_workers)
+		var active: Array = []
+		for unit_index in range(cursor, stop):
+			var unit: Dictionary = units[unit_index]
+			var task_entries: Array = []
+			var task_samples := {}
+			var task_intake := {}
+			for raw_id in unit.member_ids:
+				var id := String(raw_id)
+				if not by_id.has(id):
+					for started in active:
+						started.thread.wait_to_finish()
+					return _fail("A5_WORKSET_MEMBER")
+				var entry: Dictionary = by_id[id]
+				task_entries.append(entry.duplicate(true))
+				if samples.has(id):
+					task_samples[id] = samples[id].duplicate(true)
+				if intake_by_id.has(id):
+					task_intake[id] = intake_by_id[id].duplicate(true)
+			var thread := Thread.new()
+			var start_error := thread.start(
+				_advance_unit_worker.bind(
+					task_entries, task_samples, task_intake, int(unit.index)))
+			if start_error != OK:
+				for started in active:
+					started.thread.wait_to_finish()
+				return _fail("A5_PARALLEL_ADVANCE_THREAD_START")
+			active.append({"index": int(unit.index), "thread": thread})
+		peak_workers = maxi(peak_workers, active.size())
+
+		var wave_results := {}
+		for started in active:
+			var result: Variant = started.thread.wait_to_finish()
+			wave_results[int(started.index)] = result
+
+		# Worker completion timing is non-authoritative. Interpret results only
+		# in canonical workset order and preserve member order within each unit.
+		for unit_index in range(cursor, stop):
+			var unit: Dictionary = units[unit_index]
+			var result: Variant = wave_results.get(int(unit.index), null)
+			if not result is Dictionary:
+				return _fail("A5_PARALLEL_ADVANCE_RESULT")
+			var advanced: Dictionary = result
+			if not bool(advanced.get("success", false)):
 				return advanced
-			next_population.append({"blueprint": blueprint, "state": advanced.state})
+			if int(advanced.get("unit_index", -1)) != int(unit.index):
+				return _fail("A5_PARALLEL_ADVANCE_INDEX")
+			if bool(advanced.get("worker_is_main_thread", true)):
+				return _fail("A5_PARALLEL_ADVANCE_THREAD_CONTEXT")
+			threaded_worksets += 1
+			for entry in advanced.population:
+				next_population.append(entry)
 			for propagule in advanced.propagules:
 				if propagules.size() >= MAX_PROPAGULES_PER_STEP:
 					return _fail("A5_PROPAGULE_LIMIT")
 				propagules.append(propagule)
+		cursor = stop
 
-	next_population.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return a.state.individual_id < b.state.individual_id)
-	propagules.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return a.id < b.id)
+	return _canonical_advance_result(
+		next_population, propagules, peak_workers, threaded_worksets)
+
+static func _unit_entries(by_id: Dictionary, unit: Dictionary) -> Array:
+	var out: Array = []
+	for raw_id in unit.member_ids:
+		var id := String(raw_id)
+		if by_id.has(id):
+			out.append(by_id[id])
+	return out
+
+static func _advance_unit_worker(task_entries: Array, samples: Dictionary,
+		intake_by_id: Dictionary, unit_index: int) -> Dictionary:
+	var next_population: Array = []
+	var propagules: Array = []
+	for entry in task_entries:
+		if not entry is Dictionary or not entry.has("blueprint") or not entry.has("state"):
+			return _fail("A5_ENTRY")
+		var state: Dictionary = entry.state
+		var blueprint: Dictionary = entry.blueprint
+		var id := String(state.individual_id)
+		if not state.alive:
+			var inert := state.duplicate(true)
+			inert.last_events = [{
+				"outcome": "DEAD_INERT",
+				"detail": "no resource requests or lifecycle transitions",
+			}]
+			next_population.append({
+				"blueprint": blueprint.duplicate(true),
+				"state": inert,
+			})
+			continue
+		if not samples.has(id):
+			return _fail("A5_PREPARE_SAMPLE_MISSING")
+		if not intake_by_id.has(id):
+			return _fail("A5_GRANT_OWNER")
+		var advanced := _advance_individual(
+			state, blueprint, samples[id], intake_by_id[id])
+		if not advanced.success:
+			return advanced
+		next_population.append({
+			"blueprint": blueprint.duplicate(true),
+			"state": advanced.state,
+		})
+		for propagule in advanced.propagules:
+			propagules.append(propagule)
+
+	return {
+		"success": true,
+		"unit_index": unit_index,
+		"worker_is_main_thread": Thread.is_main_thread(),
+		"population": next_population,
+		"propagules": propagules,
+	}
+
+static func _canonical_advance_result(next_population: Array, propagules: Array,
+		peak_workers: int, threaded_worksets: int) -> Dictionary:
+	next_population.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		return a.state.individual_id < b.state.individual_id)
+	propagules.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		return a.id < b.id)
+	return {
+		"success": true,
+		"population": next_population,
+		"propagules": propagules,
+		"peak_workers": peak_workers,
+		"threaded_worksets": threaded_worksets,
+	}
+
+static func _population_step_result(field_after: Dictionary,
+		next_population: Array, propagules: Array) -> Dictionary:
 	return {
 		"success": true,
 		"field": field_after,
