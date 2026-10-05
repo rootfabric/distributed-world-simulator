@@ -38,6 +38,7 @@ static func defaults() -> Dictionary:
 		"m5_phase": 0,
 		"m6_result_file": "",
 		"m6_persistence_root": "",
+		"persistence_root": "",
 		"network_mvp": false,
 		"network_playground": false,
 		"m7_result_file": "",
@@ -145,6 +146,8 @@ static func parse(arguments) -> Dictionary:
 				options["m6_result_file"] = value
 			"m6-persistence-root":
 				options["m6_persistence_root"] = value
+			"persistence-root":
+				options["persistence_root"] = value
 			"network-mvp":
 				options["network_mvp"] = value.to_lower() in ["1", "true", "yes", "on"]
 			"network-playground":
@@ -206,6 +209,30 @@ static func to_snapshot(options: Dictionary) -> Dictionary:
 		if options.has(key):
 			snapshot[key] = options[key]
 	return snapshot
+
+
+static func resolved_network_persistence_root(options: Dictionary) -> String:
+	var role := String(options.get("role", ""))
+	if role != RuntimeRoleScript.DEDICATED_SERVER or not bool(options.get("network_mvp", false)):
+		return ""
+	var explicit_root := String(options.get("persistence_root", "")).strip_edges()
+	if not explicit_root.is_empty():
+		return explicit_root
+	# Preserve the accepted M6 product override while removing the need for
+	# test-era launch vocabulary from normal LIVE.3 operation.
+	var legacy_root := String(options.get("m6_persistence_root", "")).strip_edges()
+	if not legacy_root.is_empty():
+		return legacy_root
+	var world_id := String(options.get("world", "earth")).strip_edges().to_lower()
+	if world_id.is_empty():
+		world_id = "earth"
+	var instance_id := String(options.get("instance_id", "persistent")).strip_edges()
+	if instance_id.is_empty():
+		instance_id = "persistent"
+	# instance_id is intentionally hashed for path safety; the logical identity
+	# itself remains unchanged in runtime/checkpoint state.
+	var slot_id := instance_id.sha256_text().left(16)
+	return "user://v0-live/recovery/%s/%s" % [world_id, slot_id]
 
 
 static func _parse_non_negative_int(value: String, key: String, errors: Array[String]) -> int:
@@ -295,6 +322,12 @@ static func _validate(options: Dictionary, errors: Array[String]) -> void:
 			options["world"] = "playground"
 		elif String(options.get("world", "")) != "playground":
 			errors.append("Network playground requires --world=playground")
+	var product_persistence_root := String(options.get("persistence_root", "")).strip_edges()
+	if not product_persistence_root.is_empty() and (
+		role != RuntimeRoleScript.DEDICATED_SERVER
+		or not bool(options.get("network_mvp", false))
+	):
+		errors.append("Launch option persistence_root requires network MVP dedicated-server role")
 	var m6_result_file := String(options.get("m6_result_file", "")).strip_edges()
 	var m6_persistence_root := String(options.get("m6_persistence_root", "")).strip_edges()
 	if (not m6_result_file.is_empty() or not m6_persistence_root.is_empty()) and role != RuntimeRoleScript.DEDICATED_SERVER:

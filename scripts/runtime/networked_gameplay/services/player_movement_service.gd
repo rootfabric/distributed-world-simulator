@@ -13,6 +13,12 @@ const PLAYGROUND_JUMP_SPEED_MPS := 3.6
 const PLAYGROUND_GROUND_HEIGHT_M := 0.0
 const PLAYGROUND_GROUND_EPSILON_M := 0.05
 const MAX_LOOK_PITCH_RAD := 1.45
+# Trigonometric cardinal directions can leave sub-picometer residuals (for
+# example cos(PI/2)). Godot 4.7.1.double JSON can alternate between two
+# decimal spellings for some of those values across parse/stringify cycles,
+# which makes an otherwise valid ProtocolFrame fail its payload checksum.
+# Canonical authoritative movement never needs precision at this scale.
+const NUMERICAL_ZERO_EPSILON := 1.0e-12
 
 func apply_delta(record: Dictionary, input_sequence: int, delta_x: float, delta_z: float) -> Dictionary:
 	if not _is_new_input_sequence(input_sequence, int(record.get("last_input_sequence", 0))):
@@ -59,10 +65,10 @@ func _apply_movement(
 	delta_seconds: float,
 	require_new_sequence: bool
 ) -> Dictionary:
-	var move_x := float(payload.get("move_x", 0.0))
-	var move_z := float(payload.get("move_z", 0.0))
-	var look_yaw := float(payload.get("look_yaw", 0.0))
-	var look_pitch := float(payload.get("look_pitch", 0.0))
+	var move_x := _canonical_zero(float(payload.get("move_x", 0.0)))
+	var move_z := _canonical_zero(float(payload.get("move_z", 0.0)))
+	var look_yaw := _canonical_zero(float(payload.get("look_yaw", 0.0)))
+	var look_pitch := _canonical_zero(float(payload.get("look_pitch", 0.0)))
 	if (
 		delta_seconds <= 0.0
 		or delta_seconds > MAX_MOVEMENT_DELTA_SECONDS
@@ -89,14 +95,14 @@ func _apply_movement(
 	var position_value: Dictionary = Dictionary(next.get("position", {}))
 	var velocity_value: Dictionary = Dictionary(next.get("velocity", {}))
 	var position := Vector3(
-		float(position_value.get("x", 0.0)),
-		float(position_value.get("y", PLAYGROUND_GROUND_HEIGHT_M)),
-		float(position_value.get("z", 0.0))
+		_canonical_zero(float(position_value.get("x", 0.0))),
+		_canonical_zero(float(position_value.get("y", PLAYGROUND_GROUND_HEIGHT_M))),
+		_canonical_zero(float(position_value.get("z", 0.0)))
 	)
 	var velocity := Vector3(
-		float(velocity_value.get("x", 0.0)),
-		float(velocity_value.get("y", 0.0)),
-		float(velocity_value.get("z", 0.0))
+		_canonical_zero(float(velocity_value.get("x", 0.0))),
+		_canonical_zero(float(velocity_value.get("y", 0.0))),
+		_canonical_zero(float(velocity_value.get("z", 0.0)))
 	)
 	var previous_position: Vector3 = position
 	var previous_velocity: Vector3 = velocity
@@ -108,9 +114,13 @@ func _apply_movement(
 	var direction := right * move_x + forward * move_z
 	if direction.length_squared() > 1.0:
 		direction = direction.normalized()
+	# Remove meaningless trigonometric residue before it becomes canonical state.
+	# Keep this at the movement boundary rather than weakening transport checksums.
+	direction.x = _canonical_zero(direction.x)
+	direction.z = _canonical_zero(direction.z)
 	var speed := PLAYGROUND_RUN_SPEED_MPS if bool(payload.get("sprint", false)) else PLAYGROUND_WALK_SPEED_MPS
-	velocity.x = direction.x * speed
-	velocity.z = direction.z * speed
+	velocity.x = _canonical_zero(direction.x * speed)
+	velocity.z = _canonical_zero(direction.z * speed)
 	var grounded := position.y <= PLAYGROUND_GROUND_HEIGHT_M + PLAYGROUND_GROUND_EPSILON_M and velocity.y <= 0.0
 	if grounded:
 		position.y = PLAYGROUND_GROUND_HEIGHT_M
@@ -179,6 +189,10 @@ func get_report() -> Dictionary:
 
 func _is_new_input_sequence(candidate: int, reference: int) -> bool:
 	return InputSequence.is_valid(candidate) and InputSequence.is_newer(candidate, reference)
+
+func _canonical_zero(value: float) -> float:
+	return 0.0 if absf(value) < NUMERICAL_ZERO_EPSILON else value
+
 
 func _finite(value: float) -> bool:
 	return not is_nan(value) and not is_inf(value)
