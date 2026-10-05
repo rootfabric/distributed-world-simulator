@@ -39,9 +39,21 @@ static func should_open_shell(arguments) -> bool:
 		return true
 	for raw in args:
 		var argument := String(raw).strip_edges()
-		if argument == "--product-shell" or argument.begins_with("--product-shell="):
+		if (
+			argument == "--product-shell"
+			or argument.begins_with("--product-shell=")
+			or argument.begins_with("--product-shell-smoke=")
+		):
 			return true
 	return false
+
+
+static func product_shell_smoke_path(arguments) -> String:
+	for raw in PackedStringArray(arguments):
+		var argument := String(raw).strip_edges()
+		if argument.begins_with("--product-shell-smoke="):
+			return argument.trim_prefix("--product-shell-smoke=").strip_edges()
+	return ""
 
 
 static func default_preferences() -> Dictionary:
@@ -163,6 +175,9 @@ func setup() -> void:
 	_build_ui()
 	_show_view("home")
 	set_process(true)
+	var smoke_path := product_shell_smoke_path(OS.get_cmdline_user_args())
+	if not smoke_path.is_empty():
+		call_deferred("_write_smoke_report_and_quit", smoke_path)
 
 
 func get_report() -> Dictionary:
@@ -175,6 +190,20 @@ func get_report() -> Dictionary:
 		"join_client_pids": _join_client_pids.duplicate(),
 		"busy": _busy,
 	}
+
+
+func _write_smoke_report_and_quit(path: String) -> void:
+	var report := get_report()
+	report["smoke"] = true
+	report["root_present"] = _root != null and is_instance_valid(_root)
+	report["continue_enabled"] = _continue_button != null and not _continue_button.disabled
+	var file := FileAccess.open(path, FileAccess.WRITE)
+	if file == null:
+		push_error("UX0_PRODUCT_SHELL_SMOKE_WRITE_FAILED:%s" % path)
+		get_tree().quit(3)
+		return
+	file.store_string(JSON.stringify(report, "  "))
+	get_tree().quit(0)
 
 
 func _process(_delta: float) -> void:
