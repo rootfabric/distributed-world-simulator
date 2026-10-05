@@ -1,6 +1,6 @@
 # V0-LIVE.3 R1 — Recovery as Product Behavior
 
-**Status:** IMPLEMENTATION CANDIDATE  
+**Status:** IMPLEMENTATION CANDIDATE — WINDOWS EXACT REPAIR REQUIRED  
 **Base main:** `1f8a9debc4f8838569f818faa43bdadc0f23f965`  
 **Branch:** `feature/v0-live3-recovery-product-r1`
 
@@ -151,3 +151,142 @@ R1 requires:
 - UX0 host/join menu.
 
 Those remain later work.
+
+
+## Current handoff — 2026-10-05
+
+This section records the exact point where LIVE.3 work stopped and the required closure
+sequence.
+
+### Repository / PR state at handoff
+
+```text
+PR                         = #735
+PR_STATE                   = OPEN / DRAFT / NOT MERGED
+BRANCH                     = feature/v0-live3-recovery-product-r1
+PRODUCT_CODE_HEAD          = 61c8022ff3497ea62ce51eafe70047287c76d53d
+CURRENT_MAIN               = c25a6b26d83b937acd1eb4cd4d92e2b44b40c678
+AHEAD_OF_MAIN              = 24 commits
+BEHIND_MAIN                = 13 commits
+MERGEABLE                  = true
+FRESH_REVIEW               = PASS_PENDING_EXACT
+```
+
+`PRODUCT_CODE_HEAD` is the exact product candidate exercised by the failing Windows
+run below. This handoff documentation commit is not itself a product-behavior change.
+
+### Last exact Windows result
+
+```text
+RUN                         = 37214363455
+JOB                         = 111471804852
+JOB_NAME                    = LIVE3 exact Windows product recovery
+RESULT                      = FAILURE
+FAILED_STEP                 = Product reconnect and planned restart
+```
+
+The following exact-job steps passed on `61c8022...`:
+
+- host and identity preflight;
+- cold Godot import;
+- LIVE3 launch contract;
+- existing recovery regressions;
+- LIVE2 compatibility focused regressions;
+- final clean source and host;
+- evidence upload.
+
+The product runner itself stopped with:
+
+```text
+LIVE3_PRODUCT_RECOVERY=FAIL
+LIVE3_PRODUCT_RECOVERY_FAILED:
+Сбой вызова метода, так как [System.Object[]] не содержит метод "op_Multiply".
+```
+
+This supersedes the earlier `player.interact` / wrong-side-of-ore failure as the
+current blocker. The current failure is in the PowerShell automation arithmetic added
+for the canonical Earth resource target calculation; it does **not** establish a
+product persistence/recovery failure. Conversely, LIVE.3 must not be declared PASS
+until the repaired runner completes the full product sequence.
+
+### How to finish LIVE.3
+
+Use one bounded repair line; do not create another persistence owner, recovery path or
+parallel LIVE.3 branch.
+
+1. **Repair the Earth resource target resolver in the existing runner.**
+   - Make every vector component an explicit scalar `[double]` before constructing
+     PowerShell arrays.
+   - Avoid arithmetic expressions adjacent to PowerShell comma/array construction;
+     calculate `anchor_x/y/z`, `target_x/y/z`, `north_x/y/z` as scalar locals,
+     then build the arrays.
+   - Keep the signs/axes identical to `EarthResourceSpatialResolver`.
+   - Add a deterministic resolver preflight proving finite scalar values and the
+     canonical ore target on the expected negative-X side (approximately `x=-7.863 m`
+     from the spawn tangent origin).
+   - Re-run the PowerShell parser check before any product processes are launched.
+
+2. **Run a narrow diagnostic smoke for the repaired runner.**
+   - Prove the resolver returns scalar values (not `System.Object[]`).
+   - Prove A approaches the canonical ore target, camera yaw/pitch are finite and
+     `player.interact` advances ResourceMining generation.
+   - Do not treat this smoke as the acceptance gate.
+
+3. **Catch the LIVE.3 branch up to current `main`.**
+   - The branch is currently 13 commits behind.
+   - Integrate canonical `main` without folding unrelated ECO/FABRIC feature work
+     beyond what is already merged to `main`.
+   - Re-check bounded diff, canonical-owner rejection and mergeability.
+   - If `main` moves again before freeze, repeat the drift check and use the final
+     caught-up commit as the acceptance subject.
+
+4. **Run the full Windows exact gate on the final caught-up candidate.**
+   Required result for the *same commit/tree*:
+   - LIVE3 source contract = SUCCESS;
+   - host/identity preflight = SUCCESS;
+   - cold import = SUCCESS;
+   - launch contract = SUCCESS;
+   - existing recovery regressions = SUCCESS;
+   - LIVE2 compatibility = SUCCESS;
+   - product reconnect + planned restart = SUCCESS;
+   - final clean source/host = SUCCESS;
+   - uploaded report has `outcome=PASS`.
+
+   The product runner must prove the full contract, not merely mining:
+   Item Graph mutation → mining → Construction → client-A restart → planned server
+   restart → A/B reconnect → exact state recovery → post-restart gameplay continues.
+
+5. **Fresh Review the final integrated diff.**
+   The previous review is `PASS_PENDING_EXACT` against the old base and is not the
+   final merge approval after `main` catch-up. Re-review ownership, recovery ordering,
+   persistence-root semantics, Construction composition and automation-only evidence
+   surfaces on the final candidate.
+
+6. **Fresh Independent Verification on the exact final subject.**
+   The verifier must independently reproduce the required gates and record:
+   `PRODUCT_HEAD`, `PRODUCT_TREE`, Windows run/job IDs and `VERDICT=VERIFIED`.
+   A verifier result for an earlier commit is not transferable.
+
+7. **Human merge gate and closure.**
+   - Convert PR #735 from draft only after exact Windows SUCCESS and independent
+     verification.
+   - Merge only if the PR is still mergeable and no new main drift invalidates the
+     frozen subject.
+   - Record the merge commit and resulting `main` HEAD.
+   - Run the normal post-merge project-control/cleanliness check and mark LIVE.3
+     complete.
+
+### Final definition of done
+
+LIVE.3 is complete only when all of the following describe the same final candidate:
+
+```text
+WINDOWS_EXACT               = SUCCESS
+PRODUCT_RECOVERY_REPORT     = PASS
+FRESH_REVIEW                = PASS
+FRESH_INDEPENDENT_VERIFIER  = VERIFIED
+PR_735                      = MERGED
+MAIN                        = <merge result containing the verified tree>
+```
+
+Until then the correct state is **IMPLEMENTATION CANDIDATE / EXACT REPAIR REQUIRED**.
