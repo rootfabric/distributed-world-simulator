@@ -52,6 +52,7 @@ jobs:
             "scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime.gd"
             "scripts/runtime/networked_gameplay/services/player_ownership_service.gd"
             "scripts/runtime/networked_gameplay/services/player_registry.gd"
+            "scripts/runtime/networked_gameplay/user1/user1_product_live_player_gate.gd"
             "scripts/runtime/networked_gameplay/user1/user1_product_player_transfer_port.gd"
             "scripts/runtime/networked_gameplay/user1/user1_product_seam_authority_service.gd"
             "scripts/runtime/networked_gameplay/user1/user1_product_seam_gameplay_service.gd"
