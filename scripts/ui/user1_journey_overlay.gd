@@ -130,7 +130,7 @@ func _accept_state(state: Dictionary) -> void:
 		_complete("seam")
 
 	var resource_distance := float(state.get("nearest_resource_distance_m", INF))
-	if is_finite(resource_distance) and resource_distance <= RESOURCE_NEAR_DISTANCE_M:
+	if _finite(resource_distance) and resource_distance <= RESOURCE_NEAR_DISTANCE_M:
 		_complete("resource_near")
 	if bool(state.get("mining_tool_equipped", false)):
 		_complete("tool_equipped")
@@ -429,6 +429,10 @@ func _detail_for_state(state: Dictionary) -> String:
 		resource_text,
 		int(state.get("construction_generation", -1)),
 	]
+
+
+func _finite(value: float) -> bool:
+	return not is_nan(value) and not is_inf(value)
 
 
 func _completed_count() -> int:
