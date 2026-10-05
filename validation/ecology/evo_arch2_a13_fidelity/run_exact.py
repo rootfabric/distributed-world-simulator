@@ -130,7 +130,7 @@ def main() -> int:
             text = execute(
                 name.removesuffix(".gd"),
                 [str(godot), "--headless", "--path", str(ROOT), "--script",
-                 "res://validation/ecology/evo_arch2_a13_activity/" + name],
+                 "res://validation/ecology/evo_arch2_a13_fidelity/" + name],
             )
             prefix = "EVO_ARCH2_A13_" + marker
             matches = re.findall(re.escape(prefix) + r" checks=(\d+) failed=(\d+)", text)
