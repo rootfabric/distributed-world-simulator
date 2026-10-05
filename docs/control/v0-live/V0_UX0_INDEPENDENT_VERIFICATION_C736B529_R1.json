@@ -1,0 +1,173 @@
+{
+  "schema": "distributed_world_simulator.v0_ux0_independent_verification.v1",
+  "role": "FRESH_INDEPENDENT_WINDOWS_VERIFIER",
+  "verdict": "VERIFIED",
+  "repository": "rootfabric/distributed-world-simulator",
+  "pr_number": 741,
+  "product_head": "c736b529767ae1d8b590ba00bdc25d0abb307777",
+  "product_tree": "06d91db9142d333ab8a0238319e4359e99e9297b",
+  "base_main": "9518d1cd6ea4b2cc61323f0c684d6905f24f367f",
+  "current_main": "9518d1cd6ea4b2cc61323f0c684d6905f24f367f",
+  "main_drift": 0,
+  "freeze_ref": "freeze/v0-ux0-r1-c736b529-windows-r1",
+  "verify_branch": "verify/v0-ux0-c736b529-r1",
+  "reviewer": {
+    "branch": "review/v0-ux0-c736b529-r1",
+    "commit": "360a010d0b1d75e56755d8d7b0547443197ef366",
+    "result_path": "docs/control/v0-live/V0_UX0_FRESH_REVIEW_C736B529_R1.json",
+    "verdict": "PASS",
+    "note": "Reviewer durable result was published after the independent Windows execution; product HEAD/TREE remained unchanged."
+  },
+  "platform": {
+    "worktree": "C:\\distributed-world-simulator\\work\\ux0-r1-independent-verify",
+    "pwsh": "7.x",
+    "godot_version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "godot_sha256": "3633C3E609C8CE2F9BAE334A9C7E75C7F974DE3AF0415AB4A8050A625A15A7A5",
+    "free_ram_gb": 13.7
+  },
+  "cold_import": {
+    "exit_code": 0,
+    "class_cache": true,
+    "script_errors": 0,
+    "log_sha256": "8044FF8034B13A59FE98C84A03BE820EE58DB2B41E83031F7DC7AD6D1C413503"
+  },
+  "focused_regressions": {
+    "ux0_product_shell": "PASS",
+    "ux0_assertions": 40,
+    "ux0_failures": 0,
+    "launch_options": "PASS (79 assertions)",
+    "live2_automation": "PASS (53 assertions, 0 failures)",
+    "live2_reliability": "PASS",
+    "live2_reliability_assertions": 2571,
+    "live2_reliability_failures": 0
+  },
+  "product_shell": {
+    "no_cli_opens_shell": true,
+    "continue_visible": true,
+    "host_visible": true,
+    "join_visible": true,
+    "settings_visible": true,
+    "developer_visible": true,
+    "root_size": [
+      1600,
+      900
+    ],
+    "home_size": [
+      1140,
+      583
+    ],
+    "host_size": [
+      1140,
+      583
+    ],
+    "join_size": [
+      1140,
+      583
+    ],
+    "settings_size": [
+      1140,
+      583
+    ]
+  },
+  "host_world": {
+    "player": "verifier-a",
+    "port": 24580,
+    "persistence_slot": "ux0-verifier-r1",
+    "server_pid": 1184,
+    "client_a_pid": 28296,
+    "shell_pid": 26340,
+    "pids_distinct": true,
+    "udp_bound": true,
+    "server_role": "dedicated-server",
+    "network_mvp": true,
+    "instance_id": "ux0-verifier-r1",
+    "new_persistence_owner": false
+  },
+  "join_world": {
+    "client_b_pid": 9600,
+    "client_b_connected": true,
+    "player_b": "verifier-b",
+    "client_persistence_root": false,
+    "client_host_slot": false,
+    "client_persistence_owner": false
+  },
+  "hud_gameplay": {
+    "connection_hud": "Связь: CONNECTED",
+    "player_hud": "Player: verifier-b · epoch 2",
+    "inventory_hud": "Inventory: 4",
+    "hotbar_hud": "Hotbar: item/beacon + visual hotbar",
+    "tool_hud": "Mining Tool: equipped",
+    "build_mode_hud": "BUILD ON",
+    "interaction_hint": "[E] Interact · [Q] Equip mining tool · [Tab] Inventory · [B] Build",
+    "movement": true,
+    "camera": true,
+    "remote_player": true,
+    "inventory": true,
+    "interact": true,
+    "mining_tool": true,
+    "build_mode": true
+  },
+  "reconnect_ux": {
+    "connected_before": true,
+    "outage_state": "Связь: RECONNECTING · попытка 2",
+    "reconnected": true,
+    "new_reconnect_mechanism": false
+  },
+  "continue_flow": {
+    "enabled": true,
+    "same_world": "earth",
+    "same_port": 24580,
+    "same_player": "verifier-b",
+    "same_persistence_slot": "ux0-verifier-r1",
+    "duplicate_server_created": false,
+    "note": "Join updated default_player_name before Continue; recorded as nonblocking UX polish in Fresh Review."
+  },
+  "preferences": {
+    "path": "user://v0-live/product-shell.json",
+    "non_canonical_only": true,
+    "canonical_gameplay_fields_found": []
+  },
+  "negative_controls": {
+    "explicit_client_bypasses_shell": true,
+    "explicit_server_bypasses_shell": true,
+    "client_persistence_rejected": true,
+    "duplicate_host_rejected": true,
+    "empty_player_normalized": true
+  },
+  "cleanliness": {
+    "tracked_source_clean": true,
+    "remaining_godot_pids": [],
+    "udp_24580_owner": null,
+    "identity_unchanged": true
+  },
+  "evidence": {
+    "root": "C:\\distributed-world-simulator\\evidence\\ux0-r1-independent-20261005\\",
+    "file_count": 96,
+    "hash_manifest": "evidence-hashes.json",
+    "hash_manifest_sha256": "F6E535DB56CB4E4FBA4A43300F48986ADEB785D01DD86868F3FC74895069A106"
+  },
+  "blocking_findings": [],
+  "evidence_gaps": [
+    {
+      "id": "UX0-VER-EG001",
+      "severity": "INFO",
+      "summary": "HUD for shell-spawned child clients was observed through a bridge-accessible client launched with identical shell arguments because breakpoint-mcp loopback port 9081 cannot attach to multiple shell child processes simultaneously. Shell-created PIDs/cmdlines/UDP and Shell status were independently observed."
+    },
+    {
+      "id": "UX0-VER-EG002",
+      "severity": "INFO",
+      "summary": "Continue same_player reflects local prefs at click time (verifier-b after Join) rather than a separately retained last-host player identity."
+    }
+  ],
+  "corroboration": {
+    "implementer_exact_run": 37262469991,
+    "implementer_exact": "success",
+    "live2_targeted_run": 37262472723,
+    "live2_targeted": "success",
+    "project_control_run": 37262472757,
+    "project_control": "success"
+  },
+  "merge_performed": false,
+  "product_code_changed": false,
+  "human_acceptance": false
+}
