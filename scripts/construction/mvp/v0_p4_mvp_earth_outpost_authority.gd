@@ -75,6 +75,15 @@ static func create_gateway(
 	if not bool(graph_validation.get("success", false)):
 		return _failure("V0_P4_CONSTRUCTION_STRUCTURAL_GRAPH_INVALID", {"cause": graph_validation})
 
+	# Capture the immutable build recipe before M0 bootstrap synchronizes any
+	# recovered ATTACHMENT relations into domain.items. Rebuilding the source
+	# projections from recovered runtime state makes the recipe self-invalidating
+	# after stage 0 (BUILD_PLAN_PART_SOURCE_NOT_TRANSFERABLE).
+	var plan: Dictionary = _build_plan(domain.items)
+	var plan_validation: Dictionary = BuildPlanScript.validate(plan)
+	if not bool(plan_validation.get("success", false)):
+		return plan_validation
+
 	var m0_bridge = M0BridgeScript.new()
 	var result: Dictionary = m0_bridge.setup(repository_root)
 	if not bool(result.get("success", false)):
@@ -110,10 +119,6 @@ static func create_gateway(
 	result = build.setup_live(live_port, canonical_item_graph, store, ORE_QUANTITY_BY_STAGE)
 	if not bool(result.get("success", false)):
 		return result
-	var plan: Dictionary = _build_plan(domain.items)
-	var plan_validation: Dictionary = BuildPlanScript.validate(plan)
-	if not bool(plan_validation.get("success", false)):
-		return plan_validation
 	result = build.register_plan(plan)
 	if not bool(result.get("success", false)):
 		return result

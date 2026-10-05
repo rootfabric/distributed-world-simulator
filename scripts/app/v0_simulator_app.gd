@@ -1,5 +1,22 @@
 extends "res://scripts/app/simulator_app.gd"
 
+const ProductShellScript = preload("res://scripts/ui/product_shell.gd")
+
+var _product_shell
+
+
+func _ready() -> void:
+	var user_args := OS.get_cmdline_user_args()
+	if ProductShellScript.should_open_shell(user_args):
+		name = "V0ProductShellHost"
+		get_tree().auto_accept_quit = false
+		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+		_product_shell = ProductShellScript.new()
+		add_child(_product_shell)
+		_product_shell.setup()
+		return
+	super._ready()
+
 # Generic V0 product composition bridge.
 #
 # --network-mvp remains a validated product mode distinct from the historical

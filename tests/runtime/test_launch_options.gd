@@ -152,6 +152,51 @@ func _init() -> void:
 	]))
 	_assert(not bool(m7_wrong_role.get("success", true)), "M7 playground accepted listen-host authority")
 
+	var live3_server: Dictionary = LaunchOptionsScript.parse(PackedStringArray([
+		"--role=dedicated-server",
+		"--network-mvp",
+		"--world=earth",
+		"--instance-id=live3-slot-a",
+	]))
+	_assert(bool(live3_server.get("success", false)), "LIVE.3 product server options were rejected")
+	var live3_server_options: Dictionary = live3_server.get("options", {})
+	var live3_root := LaunchOptionsScript.resolved_network_persistence_root(live3_server_options)
+	_assert(live3_root.begins_with("user://v0-live/recovery/earth/"), "LIVE.3 default persistence root is outside product namespace")
+	_assert(live3_root == LaunchOptionsScript.resolved_network_persistence_root(live3_server_options), "LIVE.3 persistence root is not deterministic")
+
+	var live3_explicit: Dictionary = LaunchOptionsScript.parse(PackedStringArray([
+		"--role=dedicated-server",
+		"--network-mvp",
+		"--persistence-root=user://live3-explicit",
+	]))
+	_assert(bool(live3_explicit.get("success", false)), "LIVE.3 explicit persistence root was rejected")
+	_assert(LaunchOptionsScript.resolved_network_persistence_root(live3_explicit.get("options", {})) == "user://live3-explicit", "LIVE.3 explicit persistence root was not preserved")
+
+	var live3_legacy: Dictionary = LaunchOptionsScript.parse(PackedStringArray([
+		"--role=dedicated-server",
+		"--network-mvp",
+		"--m6-persistence-root=user://live3-legacy-m6",
+	]))
+	_assert(bool(live3_legacy.get("success", false)), "LIVE.3 legacy M6 persistence override was rejected")
+	_assert(LaunchOptionsScript.resolved_network_persistence_root(live3_legacy.get("options", {})) == "user://live3-legacy-m6", "LIVE.3 legacy M6 persistence override was not preserved")
+
+	var live3_client: Dictionary = LaunchOptionsScript.parse(PackedStringArray([
+		"--role=game-client",
+		"--network-mvp",
+		"--player-identity=a",
+	]))
+	_assert(bool(live3_client.get("success", false)), "LIVE.3 client options were rejected")
+	_assert(LaunchOptionsScript.resolved_network_persistence_root(live3_client.get("options", {})).is_empty(), "LIVE.3 client unexpectedly owns a persistence root")
+
+	var live3_client_root: Dictionary = LaunchOptionsScript.parse(PackedStringArray([
+		"--role=game-client",
+		"--network-mvp",
+		"--player-identity=a",
+		"--persistence-root=user://forbidden-client-root",
+	]))
+	_assert(not bool(live3_client_root.get("success", false)), "LIVE.3 client accepted a server persistence root")
+	_assert(_has_error_fragment(live3_client_root, "persistence_root requires network MVP dedicated-server role"), "LIVE.3 client persistence-root rejection is not explicit")
+
 	var automation_client: Dictionary = LaunchOptionsScript.parse(PackedStringArray([
 		"--role=game-client",
 		"--network-mvp",
@@ -205,6 +250,13 @@ func _assert(condition: bool, message: String) -> void:
 	assertions += 1
 	if not condition:
 		failures.append(message)
+
+
+func _has_error_fragment(result: Dictionary, fragment: String) -> bool:
+	for error_value in result.get("errors", []):
+		if String(error_value).contains(fragment):
+			return true
+	return false
 
 
 func _finish() -> void:

@@ -1,0 +1,202 @@
+name: V0 UX0 R1 Product Shell Windows
+
+on:
+  push:
+    branches:
+      - feature/v0-ux0-product-shell-r1
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: v0-ux0-r1-product-shell-windows
+  cancel-in-progress: true
+
+env:
+  BASE_MAIN: 9518d1cd6ea4b2cc61323f0c684d6905f24f367f
+  GODOT_BIN: C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe
+  PYTHONUTF8: '1'
+  PYTHONDONTWRITEBYTECODE: '1'
+  BREAKPOINT_RUNTIME_DISABLED: '1'
+  GODOT_SILENCE_ROOT_WARNING: '1'
+
+jobs:
+  source:
+    name: UX0 source contract
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout candidate
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Prove bounded UX0 diff
+        shell: bash
+        run: |
+          set -euo pipefail
+          git merge-base --is-ancestor "$BASE_MAIN" HEAD
+          mapfile -t actual < <(git diff --name-only "$BASE_MAIN" HEAD | sort)
+          expected=(
+            ".github/workflows/v0-ux0-r1-product-shell-windows.yml"
+            "docs/control/v0-live/V0_UX0_PRODUCT_SHELL_R1_RU.md"
+            "scripts/app/earth_mvp_app.gd"
+            "scripts/app/v0_simulator_app.gd"
+            "scripts/ui/product_shell.gd"
+            "tests/runtime/test_v0_ux0_product_shell.gd"
+          )
+          mapfile -t expected_sorted < <(printf '%s\n' "${expected[@]}" | sort)
+          diff -u <(printf '%s\n' "${expected_sorted[@]}") <(printf '%s\n' "${actual[@]}")
+          test -z "$(git status --porcelain --untracked-files=no)"
+
+      - name: Reject new canonical owners
+        shell: bash
+        run: |
+          set -euo pipefail
+          changed="$(git diff --name-only "$BASE_MAIN" HEAD)"
+          ! grep -Eq '^(scripts/(items|construction/authoritative|persistence|simulation/transactions)|scripts/runtime/networked_gameplay/(m3|m4)|config/control)/' <<<"$changed"
+          grep -q 'build_host_user_args' scripts/ui/product_shell.gd
+          grep -q 'build_join_user_args' scripts/ui/product_shell.gd
+          grep -q 'instance-id=' scripts/ui/product_shell.gd
+          ! grep -q -- '--persistence-root=' scripts/ui/product_shell.gd
+
+  windows:
+    name: UX0 exact Windows product shell
+    needs: source
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 25
+    steps:
+      - name: Checkout candidate
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Host and identity preflight
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          New-Item -ItemType Directory -Force artifacts\ux0-r1 | Out-Null
+          $foreign=@(Get-Process -ErrorAction SilentlyContinue | Where-Object {$_.ProcessName -like 'godot*'})
+          if($foreign.Count -gt 0){throw ('FOREIGN_GODOT_PROCESS:'+(($foreign|Select-Object -ExpandProperty Id)-join ','))}
+          $version=(& $env:GODOT_BIN --version | Out-String).Trim()
+          $sha=(Get-FileHash $env:GODOT_BIN -Algorithm SHA256).Hash.ToLowerInvariant()
+          if($version -ne '4.7.1.stable.double.custom_build.a13da4feb'){throw "GODOT_VERSION_MISMATCH:$version"}
+          if($sha -ne '3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5'){throw "GODOT_SHA_MISMATCH:$sha"}
+          $os=Get-CimInstance Win32_OperatingSystem
+          $free=[math]::Round(($os.FreePhysicalMemory*1KB)/1GB,2)
+          if($free -lt 10){throw "LOW_FREE_RAM:$free"}
+          [ordered]@{
+            head=(git rev-parse HEAD).Trim()
+            tree=(git rev-parse 'HEAD^{tree}').Trim()
+            base_main=$env:BASE_MAIN
+            godot_version=$version
+            godot_sha256=$sha
+            free_ram_gb=$free
+            host=$env:COMPUTERNAME
+          } | ConvertTo-Json -Depth 5 | Set-Content artifacts\ux0-r1\preflight.json -Encoding UTF8
+
+      - name: Cold Godot import
+        shell: pwsh
+        timeout-minutes: 12
+        run: |
+          $ErrorActionPreference='Stop'
+          if(Test-Path .godot){Remove-Item .godot -Recurse -Force}
+          & $env:GODOT_BIN --headless --path . --editor --import --quit *> artifacts\ux0-r1\import.log
+          if($LASTEXITCODE -ne 0){
+            Get-Content artifacts\ux0-r1\import.log -Tail 300
+            throw "IMPORT_FAILED:$LASTEXITCODE"
+          }
+          if(-not(Test-Path .godot\global_script_class_cache.cfg)){throw 'CLASS_CACHE_MISSING'}
+          if(Select-String artifacts\ux0-r1\import.log -Pattern 'SCRIPT ERROR:|Parse Error:|Compile Error:' -Quiet){
+            Get-Content artifacts\ux0-r1\import.log -Tail 300
+            throw 'IMPORT_SCRIPT_ERRORS'
+          }
+
+      - name: Focused UX0 and compatibility regressions
+        shell: pwsh
+        timeout-minutes: 10
+        run: |
+          $ErrorActionPreference='Stop'
+          $tests=@(
+            'tests/runtime/test_v0_ux0_product_shell.gd',
+            'tests/runtime/test_launch_options.gd',
+            'tests/runtime/test_v0_live2_r3_4_automation_control.gd',
+            'tests/runtime/test_v0_live2_r3_reliability.gd'
+          )
+          foreach($test in $tests){
+            $name=(Split-Path $test -Leaf)
+            $log=Join-Path 'artifacts\ux0-r1' ($name+'.log')
+            & $env:GODOT_BIN --headless --path . --script ('res://'+$test) *> $log
+            if($LASTEXITCODE -ne 0){
+              Get-Content $log -Tail 300
+              throw ("UX0_FOCUSED_TEST_FAILED:{0}:{1}" -f $test,$LASTEXITCODE)
+            }
+            if(Select-String $log -Pattern 'SCRIPT ERROR:|Parse Error:|Compile Error:' -Quiet){
+              Get-Content $log -Tail 300
+              throw ("UX0_FOCUSED_SCRIPT_ERROR:{0}" -f $test)
+            }
+          }
+
+      - name: Real Product Shell entry smoke
+        shell: pwsh
+        timeout-minutes: 5
+        run: |
+          $ErrorActionPreference='Stop'
+          $root=(Resolve-Path artifacts\ux0-r1).Path
+          $smoke=Join-Path $root 'product-shell-smoke.json'
+          $stdout=Join-Path $root 'product-shell.stdout.log'
+          $stderr=Join-Path $root 'product-shell.stderr.log'
+          $project=(Resolve-Path .).Path
+          $arguments=@(
+            '--path',$project,
+            '--',
+            ('--product-shell-smoke='+$smoke.Replace('\','/'))
+          )
+          $p=Start-Process -FilePath $env:GODOT_BIN -ArgumentList $arguments -PassThru -Wait -RedirectStandardOutput $stdout -RedirectStandardError $stderr
+          if($p.ExitCode -ne 0){
+            if(Test-Path $stdout){Get-Content $stdout -Tail 200}
+            if(Test-Path $stderr){Get-Content $stderr -Tail 200}
+            throw "UX0_PRODUCT_SHELL_PROCESS_FAILED:$($p.ExitCode)"
+          }
+          if(-not(Test-Path $smoke)){throw 'UX0_PRODUCT_SHELL_SMOKE_MISSING'}
+          $report=Get-Content $smoke -Raw | ConvertFrom-Json
+          if(-not[bool]$report.smoke -or -not[bool]$report.root_present){throw 'UX0_PRODUCT_SHELL_ROOT_MISSING'}
+          foreach($view in @('home','host','join','settings')){
+            if(@($report.view_ids)-notcontains$view){throw "UX0_PRODUCT_SHELL_VIEW_MISSING:$view"}
+            $size=$report.view_sizes.$view
+            if($null-eq$size -or [double]$size[0]-lt500 -or [double]$size[1]-lt300){
+              throw "UX0_PRODUCT_SHELL_VIEW_NOT_LAID_OUT:$view"
+            }
+          }
+          if([double]$report.root_size[0]-lt1000 -or [double]$report.root_size[1]-lt600){throw 'UX0_PRODUCT_SHELL_ROOT_TOO_SMALL'}
+          if([string]$report.prefs.schema -ne 'dws.ux0.product_shell_prefs.v1'){throw 'UX0_PRODUCT_SHELL_PREFS_SCHEMA_MISMATCH'}
+
+      - name: Final clean source and host
+        if: always()
+        shell: pwsh
+        run: |
+          $head=(git rev-parse HEAD).Trim()
+          $tree=(git rev-parse 'HEAD^{tree}').Trim()
+          $tracked=(git status --porcelain --untracked-files=no | Out-String).Trim()
+          $godot=@(Get-Process -ErrorAction SilentlyContinue | Where-Object {$_.ProcessName -like 'godot*'})
+          [ordered]@{
+            head=$head
+            tree=$tree
+            tracked_clean=[string]::IsNullOrWhiteSpace($tracked)
+            remaining_godot_pids=@($godot|Select-Object -ExpandProperty Id)
+          } | ConvertTo-Json -Depth 5 | Set-Content artifacts\ux0-r1\final.json -Encoding UTF8
+          if(-not[string]::IsNullOrWhiteSpace($tracked)){throw 'TRACKED_DIRTY_AFTER'}
+          if($godot.Count -gt 0){throw ('GODOT_PROCESS_LEAK:'+(($godot|Select-Object -ExpandProperty Id)-join ','))}
+
+      - name: Upload UX0 evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v0-ux0-r1-${{ github.run_id }}-${{ github.run_attempt }}
+          path: artifacts/ux0-r1/
+          if-no-files-found: error
+          retention-days: 90
+          compression-level: 6

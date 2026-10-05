@@ -38,6 +38,10 @@ var _live2_status_layer: CanvasLayer
 var _live2_status_root: Control
 var _live2_connection_label: Label
 var _live2_action_label: Label
+var _ux0_identity_label: Label
+var _ux0_state_label: Label
+var _ux0_hint_label: Label
+var _ux0_hud_refresh_at_msec := 0
 var _live2_connection_state := "CONNECTING"
 var _live2_last_action_text := ""
 var _live2_action_hide_at_msec := 0
@@ -181,6 +185,12 @@ func register_runtime_commands(registry, owner_id: String) -> void:
 func _process(delta: float) -> void:
 	super._process(delta)
 	if (
+		_live2_status_root != null
+		and Time.get_ticks_msec() >= _ux0_hud_refresh_at_msec
+	):
+		_refresh_ux0_product_hud()
+		_ux0_hud_refresh_at_msec = Time.get_ticks_msec() + 250
+	if (
 		_live2_action_label != null
 		and _live2_action_label.visible
 		and _live2_action_hide_at_msec > 0
@@ -251,6 +261,7 @@ func _on_m4_item_graph_updated(snapshot: Dictionary) -> void:
 	# Keep Earth diagnostics synchronized. The V0-I1 shell listens directly to
 	# the same canonical runtime signal through M5InventoryUiBridge.
 	super._on_m4_item_graph_updated(snapshot)
+	_refresh_ux0_product_hud()
 
 
 func _apply_mvp_presentation_record(record: Dictionary) -> void:
@@ -503,7 +514,34 @@ func automation_set_view(params: Dictionary) -> Dictionary:
 
 
 func automation_get_state() -> Dictionary:
+	var gameplay_snapshot: Dictionary = {}
+	var item_graph: Dictionary = {}
+	var resource_mining: Dictionary = {}
+	var construction: Dictionary = {}
+	var local_player: Dictionary = {}
+	var construction_construct_checksums: Dictionary = {}
+	if m3_multiplayer_client_runtime != null:
+		if m3_multiplayer_client_runtime.has_method("get_snapshot"):
+			gameplay_snapshot = m3_multiplayer_client_runtime.get_snapshot()
+		if m3_multiplayer_client_runtime.has_method("get_item_graph_snapshot"):
+			item_graph = m3_multiplayer_client_runtime.get_item_graph_snapshot()
+		if m3_multiplayer_client_runtime.has_method("get_resource_mining_snapshot"):
+			resource_mining = m3_multiplayer_client_runtime.get_resource_mining_snapshot()
+		if m3_multiplayer_client_runtime.has_method("get_construction_bundle"):
+			construction = m3_multiplayer_client_runtime.get_construction_bundle()
+		if m3_multiplayer_client_runtime.has_method("get_local_player_record"):
+			local_player = m3_multiplayer_client_runtime.get_local_player_record()
+	for snapshot_value in construction.get("constructs", []):
+		if not snapshot_value is Dictionary:
+			continue
+		var construct: Dictionary = snapshot_value
+		var construct_id := String(construct.get("construct_id", ""))
+		var construct_checksum := String(construct.get("checksum", ""))
+		if not construct_id.is_empty() and not construct_checksum.is_empty():
+			construction_construct_checksums[construct_id] = construct_checksum
 	return {
+		# LIVE.3 extends the accepted LIVE.2 state payload additively. Keep the
+		# schema stable so existing automation clients remain compatible.
 		"schema": "dws.live2.automation.input_state.v1",
 		"movement_enabled": _automation_movement_enabled,
 		"expires_in_ms": (
@@ -518,6 +556,19 @@ func automation_get_state() -> Dictionary:
 		"inventory_visible": _mvp_inventory_visible,
 		"build_mode": _live2_build_mode,
 		"connection_state": _live2_connection_state,
+		"logical_player_id": String(local_player.get("logical_player_id", "")),
+		"player_entity_id": String(local_player.get("player_entity_id", "")),
+		"ownership_epoch": int(local_player.get("ownership_epoch", 0)),
+		"local_player": local_player.duplicate(true),
+		"gameplay_revision": int(gameplay_snapshot.get("revision", -1)),
+		"gameplay_checksum": String(gameplay_snapshot.get("checksum", "")),
+		"item_graph_revision": int(item_graph.get("revision", -1)),
+		"item_graph_checksum": String(item_graph.get("checksum", "")),
+		"resource_generation": int(resource_mining.get("generation", -1)),
+		"resource_checksum": String(resource_mining.get("checksum", "")),
+		"construction_generation": int(construction.get("server_generation", -1)),
+		"construction_checksum": String(construction.get("checksum", "")),
+		"construction_construct_checksums": construction_construct_checksums.duplicate(true),
 	}
 
 
@@ -551,6 +602,7 @@ func _command_mvp_inventory_toggle(_arguments: Array[String]) -> Dictionary:
 	if _mvp_inventory_shell == null or not is_instance_valid(_mvp_inventory_shell):
 		return {"success": false, "output": "Сетевой инвентарь ещё не готов"}
 	_set_mvp_inventory_visible(not _mvp_inventory_shell.is_inventory_visible())
+	_refresh_ux0_product_hud()
 	return {
 		"success": true,
 		"output": "Инвентарь открыт" if _mvp_inventory_visible else "Инвентарь закрыт",
@@ -566,6 +618,7 @@ func _command_mvp_inventory_hotbar_select(arguments: Array[String]) -> Dictionar
 	if _mvp_inventory_shell == null or not is_instance_valid(_mvp_inventory_shell):
 		return {"success": false, "output": "Сетевой инвентарь ещё не готов"}
 	var result: Dictionary = _mvp_inventory_shell.select_hotbar(slot_number - 1)
+	_refresh_ux0_product_hud()
 	return _mvp_command_result(result, "Выбран слот %d" % slot_number)
 
 
@@ -608,6 +661,7 @@ func _command_live2_build_mode_toggle(_arguments: Array[String]) -> Dictionary:
 	if _live2_build_mode and definition != "item/mount-base":
 		text = "BUILD MODE · выберите Основание (обычно слот 2) · LMB"
 	_show_live2_action_feedback(text, true, 5000)
+	_refresh_ux0_product_hud()
 	return {
 		"success": true,
 		"output": text,
@@ -695,6 +749,7 @@ func set_network_connection_status(state: String, details: Dictionary = {}) -> v
 		_:
 			_live2_connection_label.add_theme_color_override("font_color", Color(1.0, 0.35, 0.35))
 	_live2_connection_label.visible = true
+	_refresh_ux0_product_hud()
 
 
 func show_network_error(error_code: String, details: Dictionary = {}) -> void:
@@ -734,6 +789,32 @@ func _ensure_live2_status_overlay() -> void:
 	_live2_connection_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_live2_status_root.add_child(_live2_connection_label)
 
+	_ux0_identity_label = Label.new()
+	_ux0_identity_label.set_anchors_preset(Control.PRESET_TOP_LEFT)
+	_ux0_identity_label.offset_left = 18.0
+	_ux0_identity_label.offset_right = 560.0
+	_ux0_identity_label.offset_top = 16.0
+	_ux0_identity_label.offset_bottom = 50.0
+	_ux0_identity_label.add_theme_font_size_override("font_size", 17)
+	_ux0_identity_label.add_theme_color_override("font_color", Color(0.82, 0.91, 1.0))
+	_ux0_identity_label.add_theme_color_override("font_outline_color", Color(0.0, 0.0, 0.0, 0.9))
+	_ux0_identity_label.add_theme_constant_override("outline_size", 4)
+	_ux0_identity_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_live2_status_root.add_child(_ux0_identity_label)
+
+	_ux0_state_label = Label.new()
+	_ux0_state_label.set_anchors_preset(Control.PRESET_TOP_LEFT)
+	_ux0_state_label.offset_left = 18.0
+	_ux0_state_label.offset_right = 720.0
+	_ux0_state_label.offset_top = 48.0
+	_ux0_state_label.offset_bottom = 94.0
+	_ux0_state_label.add_theme_font_size_override("font_size", 15)
+	_ux0_state_label.add_theme_color_override("font_color", Color(0.70, 0.78, 0.88))
+	_ux0_state_label.add_theme_color_override("font_outline_color", Color(0.0, 0.0, 0.0, 0.9))
+	_ux0_state_label.add_theme_constant_override("outline_size", 4)
+	_ux0_state_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_live2_status_root.add_child(_ux0_state_label)
+
 	_live2_action_label = Label.new()
 	_live2_action_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_live2_action_label.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
@@ -747,6 +828,69 @@ func _ensure_live2_status_overlay() -> void:
 	_live2_action_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_live2_action_label.visible = false
 	_live2_status_root.add_child(_live2_action_label)
+
+	_ux0_hint_label = Label.new()
+	_ux0_hint_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_ux0_hint_label.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
+	_ux0_hint_label.offset_left = -520.0
+	_ux0_hint_label.offset_right = 520.0
+	_ux0_hint_label.offset_top = -112.0
+	_ux0_hint_label.offset_bottom = -72.0
+	_ux0_hint_label.add_theme_font_size_override("font_size", 16)
+	_ux0_hint_label.add_theme_color_override("font_color", Color(0.76, 0.84, 0.94))
+	_ux0_hint_label.add_theme_color_override("font_outline_color", Color(0.0, 0.0, 0.0, 0.9))
+	_ux0_hint_label.add_theme_constant_override("outline_size", 4)
+	_ux0_hint_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_live2_status_root.add_child(_ux0_hint_label)
+	_refresh_ux0_product_hud()
+
+
+func _refresh_ux0_product_hud() -> void:
+	if _ux0_identity_label == null or _ux0_state_label == null or _ux0_hint_label == null:
+		return
+	var player_id := ""
+	var ownership_epoch := 0
+	if m3_multiplayer_client_runtime != null:
+		if m3_multiplayer_client_runtime.has_method("get_local_player_id"):
+			player_id = String(m3_multiplayer_client_runtime.get_local_player_id())
+		if m3_multiplayer_client_runtime.has_method("get_local_player_record"):
+			var player: Dictionary = m3_multiplayer_client_runtime.get_local_player_record()
+			ownership_epoch = int(player.get("ownership_epoch", 0))
+	if player_id.is_empty():
+		player_id = "connecting"
+
+	var inventory_count := 0
+	var selected_item_id := _get_mvp_selected_hotbar_item_id()
+	var selected_item := _live2_item_by_id(selected_item_id)
+	var selected_name := String(selected_item.get("display_name", ""))
+	if selected_name.is_empty():
+		selected_name = String(selected_item.get("definition_id", "empty"))
+	if not _m4_item_graph_snapshot.is_empty():
+		var inventories_value = _m4_item_graph_snapshot.get("inventories", {})
+		if inventories_value is Dictionary:
+			var inventory_value = Dictionary(inventories_value).get(player_id, {})
+			if inventory_value is Dictionary:
+				var members_value = Dictionary(inventory_value).get("inventory", [])
+				if members_value is Array:
+					inventory_count = Array(members_value).size()
+
+	var tool_text := "Mining Tool: equipped" if _live2_mining_tool_is_equipped() else "Mining Tool: stowed"
+	var build_text := "BUILD ON" if _live2_build_mode else "BUILD OFF"
+	_ux0_identity_label.text = "Player: %s · epoch %d" % [player_id, ownership_epoch]
+	_ux0_state_label.text = "Inventory: %d · Hotbar: %s · %s · %s" % [
+		inventory_count,
+		selected_name,
+		tool_text,
+		build_text,
+	]
+	if _mvp_inventory_visible:
+		_ux0_hint_label.text = "Inventory open · [Tab / Esc] Close"
+	elif _live2_build_mode:
+		_ux0_hint_label.text = "[LMB] Place · [B] Exit build mode · [R] Rotate (when supported)"
+	elif _live2_mining_tool_is_equipped():
+		_ux0_hint_label.text = "[LMB] Mine / interact · [E] Interact · [Tab] Inventory · [B] Build"
+	else:
+		_ux0_hint_label.text = "[E] Interact · [Q] Equip mining tool · [Tab] Inventory · [B] Build"
 
 
 func _show_live2_action_feedback(
