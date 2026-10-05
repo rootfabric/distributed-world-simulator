@@ -56,6 +56,7 @@ func _test_host_join_arguments_stay_bounded() -> void:
 	var client := ProductShell.build_join_user_args("127.0.0.1", 24580, "host-player")
 	_check(host.has("--role=dedicated-server"), "USER1 host remains dedicated-server")
 	_check(host.has("--network-mvp"), "USER1 host remains network-mvp")
+	_check(host.has("--product-seam"), "USER1 Host enables the product seam bridge")
 	_check(host.has("--instance-id=warehouse-a"), "USER1 host keeps LIVE.3 instance slot")
 	_check(not _contains_prefix(host, "--persistence-root="), "USER1 host invents no persistence root")
 	_check(client.has("--role=game-client"), "USER1 player remains game-client")
@@ -102,11 +103,12 @@ func _test_journey_progression() -> void:
 	_check(_done(overlay, "second_player"), "journey observes second client")
 	_check(_done(overlay, "move"), "journey observes canonical movement")
 
-	state["region_id"] = "region/earth/b"
+	state["region_id"] = "region/user1/a"
+	state["seam_roundtrips"] = 1
 	state["nearest_resource_distance_m"] = 4.0
 	state["mining_tool_equipped"] = true
 	overlay._accept_state(state)
-	_check(_done(overlay, "seam"), "journey observes region seam transition")
+	_check(_done(overlay, "seam"), "journey requires a real A→B→A seam roundtrip")
 	_check(_done(overlay, "resource_near"), "journey observes nearby resource")
 	_check(_done(overlay, "tool_equipped"), "journey observes equipped mining tool")
 
@@ -162,7 +164,11 @@ func _state(player: String) -> Dictionary:
 		"player_id": player,
 		"ownership_epoch": 1,
 		"position": {"x": 0.0, "y": 0.0, "z": 0.0},
-		"region_id": "region/earth/a",
+		"region_id": "region/user1/a",
+		"seam_active_authority_id": "authority/test/a",
+		"seam_authority_epoch": 1,
+		"seam_crossings": 0,
+		"seam_roundtrips": 0,
 		"remote_player_count": 0,
 		"nearest_resource_distance_m": 12.0,
 		"resource_generation": 1,
