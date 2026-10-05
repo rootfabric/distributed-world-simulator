@@ -166,7 +166,12 @@ jobs:
           if(-not[bool]$report.smoke -or -not[bool]$report.root_present){throw 'UX0_PRODUCT_SHELL_ROOT_MISSING'}
           foreach($view in @('home','host','join','settings')){
             if(@($report.view_ids)-notcontains$view){throw "UX0_PRODUCT_SHELL_VIEW_MISSING:$view"}
+            $size=$report.view_sizes.$view
+            if($null-eq$size -or [double]$size[0]-lt500 -or [double]$size[1]-lt300){
+              throw "UX0_PRODUCT_SHELL_VIEW_NOT_LAID_OUT:$view"
+            }
           }
+          if([double]$report.root_size[0]-lt1000 -or [double]$report.root_size[1]-lt600){throw 'UX0_PRODUCT_SHELL_ROOT_TOO_SMALL'}
           if([string]$report.prefs.schema -ne 'dws.ux0.product_shell_prefs.v1'){throw 'UX0_PRODUCT_SHELL_PREFS_SCHEMA_MISMATCH'}
 
       - name: Final clean source and host
