@@ -1,6 +1,6 @@
 # ECO ARCH2 A13 — Fidelity-Aware FULL / REDUCED / PATCH Scheduling / Work Order R1
 
-Status: IMPLEMENTATION.
+Status: IMPLEMENTATION_CANDIDATE — PR #744.
 
 Base:
 `42dd7de5d9980e4491516fae459d3e0276d2ce8c`
