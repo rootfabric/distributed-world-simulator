@@ -22,19 +22,18 @@ jobs:
           mapfile -t files < <(git diff --name-only "$BASE" HEAD)
           printf '%s\n' "${files[@]}"
           test "${#files[@]}" -eq 9
-          expected=$(cat <<'LIST'
-.github/workflows/fabric-r5-4-mixed-complexity-100k.yml
-RUN_FABRIC_R5_4_TESTS.ps1
-RUN_FABRIC_R5_4_TESTS.sh
-docs/research/FABRIC_R5_4_MIXED_COMPLEXITY_100K_MACHINE_RU.md
-docs/research/FABRIC_R5_4_WORK_ORDER_RU.md
-scripts/research/fabric_bake0/collect_r5_4_evidence.py
-scripts/research/fabric_bake0/r5_4_mixed_complexity_machine_v1.gd
-tests/research/fabric_bake0/fabric_r5_4_mixed_complexity_100k_acceptance.gd
-tests/research/fabric_bake0/test_r5_4_evidence.py
-LIST
+          expected=(
+            .github/workflows/fabric-r5-4-mixed-complexity-100k.yml
+            RUN_FABRIC_R5_4_TESTS.ps1
+            RUN_FABRIC_R5_4_TESTS.sh
+            docs/research/FABRIC_R5_4_MIXED_COMPLEXITY_100K_MACHINE_RU.md
+            docs/research/FABRIC_R5_4_WORK_ORDER_RU.md
+            scripts/research/fabric_bake0/collect_r5_4_evidence.py
+            scripts/research/fabric_bake0/r5_4_mixed_complexity_machine_v1.gd
+            tests/research/fabric_bake0/fabric_r5_4_mixed_complexity_100k_acceptance.gd
+            tests/research/fabric_bake0/test_r5_4_evidence.py
           )
-          test "$(printf '%s\n' "${files[@]}")" = "$expected"
+          test "$(printf '%s\n' "${files[@]}")" = "$(printf '%s\n' "${expected[@]}")"
           git diff --check "$BASE" HEAD
           bash -n RUN_FABRIC_R5_4_TESTS.sh
           python3 -m py_compile scripts/research/fabric_bake0/collect_r5_4_evidence.py tests/research/fabric_bake0/test_r5_4_evidence.py
