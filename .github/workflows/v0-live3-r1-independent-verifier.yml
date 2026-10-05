@@ -158,7 +158,7 @@ jobs:
             $log=Join-Path $root ($Label+'.log')
             & $env:GODOT_BIN --headless --path . --script ('res://'+$Test) *> $log
             $code=$LASTEXITCODE
-            if($code-ne0){Get-Content $log -Tail 250; throw "VERIFIER_TEST_FAILED:$Label:$code"}
+            if($code-ne0){Get-Content $log -Tail 250; throw ("VERIFIER_TEST_FAILED:{0}:{1}" -f $Label,$code)}
             if(Select-String $log -Pattern 'SCRIPT ERROR:|Parse Error:|Compile Error:' -Quiet){throw "VERIFIER_TEST_SCRIPT_ERROR:$Label"}
           }
           Invoke-V 'launch-options' 'tests/runtime/test_launch_options.gd'
