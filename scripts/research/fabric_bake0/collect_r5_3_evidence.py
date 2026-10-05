@@ -3,10 +3,10 @@ from __future__ import annotations
 import argparse, hashlib, json, math, re
 from pathlib import Path
 PREFIX="FABRIC_R5_3_RESULT="
-PASS="FABRIC R5.3 RECURSIVE HIERARCHICAL EXECUTION: PASS (1216 assertions)"
+PASS="FABRIC R5.3 RECURSIVE HIERARCHICAL EXECUTION: PASS (1218 assertions)"
 FATAL=re.compile(r"SCRIPT ERROR|Parse Error|Compile Error|Invalid call|Invalid access|ERROR:",re.I)
 EXPECTED={
- "checks":1216,"levels":4,"nodes":15,"leaves":8,"steady_calls":512,
+ "checks":1218,"levels":4,"nodes":15,"leaves":8,"steady_calls":512,
  "baseline_physical_components":1812,"final_physical_components":1852,
  "machine_compiled_input_components":24,"machine_executable_equations":4,
  "parity_rows":21,"leaf_rebuild_levels":4,"module_rebuild_levels":3,

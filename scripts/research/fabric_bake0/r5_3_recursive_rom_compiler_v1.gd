@@ -90,6 +90,14 @@ static func validate_node(node: Dictionary) -> Dictionary:
 	if typeof(node.get("compiled_graph")) != TYPE_DICTIONARY or String(node.compiled_graph.get("graph_hash", "")) != String(node.capsule.graph_hash): return U.failure("R5_3_CAPSULE_GRAPH_BINDING_MISMATCH")
 	if String(node.get("node_hash", "")) != _node_hash(node.capsule, node.reduction): return U.failure("R5_3_NODE_HASH_MISMATCH")
 	if typeof(node.get("live")) != TYPE_DICTIONARY or String(node.live.get("node_hash", "")) != String(node.node_hash) or int(node.live.get("build_generation", -1)) != int(node.build_generation): return U.failure("R5_3_NODE_LIVE_MISMATCH")
+	if int(node.level) > 0:
+		var canonical_parent := _compile_parent_payload(String(node.node_id), int(node.level), children, int(node.topology_revision), false)
+		if not canonical_parent.success: return U.failure("R5_3_PARENT_CANONICAL_COMPILE_FAILED", {"cause":canonical_parent})
+		var exact: Dictionary = canonical_parent.details
+		if U.canonical_hash(node.compiled_graph) != U.canonical_hash(exact.graph): return U.failure("R5_3_PARENT_GRAPH_BINDING_MISMATCH")
+		if U.canonical_hash(node.reduction) != U.canonical_hash(exact.reduction): return U.failure("R5_3_PARENT_REDUCTION_BINDING_MISMATCH")
+		if U.canonical_hash(node.topology_edges) != U.canonical_hash(exact.topology_edges): return U.failure("R5_3_PARENT_TOPOLOGY_BINDING_MISMATCH")
+		if int(node.compiled_input_components) != int(exact.compiled_input_components) or int(node.physical_source_components) != int(exact.physical_source_components): return U.failure("R5_3_PARENT_COMPLEXITY_BINDING_MISMATCH")
 	return U.success()
 
 static func _validate_t1_leaf_binding(graph: Dictionary, details: Dictionary) -> Dictionary:
@@ -169,13 +177,15 @@ static func leaf_from_t1(node_id: String, graph: Dictionary, compiled: Dictionar
 	var node := {"schema":SCHEMA, "node_id":node_id, "level":0, "node_hash":node_hash, "capsule":capsule, "reduction":d.reduction.duplicate(true), "live":{"node_hash":node_hash,"build_generation":int(d.artifact.build_generation)}, "children":{}, "topology_revision":0, "topology_edges":[], "physical_source_components":physical, "compiled_input_components":physical, "build_generation":int(d.artifact.build_generation), "source_graph":graph.duplicate(true), "compiled_graph":graph.duplicate(true), "source_capsule_checksum":String(d.capsule.checksum), "compile_events":1, "child_rom_reads":0}
 	var checked := validate_node(node); return U.success(node) if checked.success else checked
 
-static func _child_rom_components(children: Dictionary, parent_level: int, nodes: Array, components: Array) -> Dictionary:
+static func _child_rom_components(children: Dictionary, parent_level: int, nodes: Array, components: Array, validate_bindings: bool = true) -> Dictionary:
 	var child_rom_reads := 0; var cid := components.size(); var keys: Array = children.keys(); keys.sort()
 	for raw_key in keys:
-		var key := String(raw_key); var child: Dictionary = children[key]
-		var checked := validate_node(child); if not checked.success: return U.failure("R5_3_CHILD_NODE_INVALID", {"child":key,"cause":checked})
-		if int(child.level) != parent_level - 1: return U.failure("R5_3_CHILD_LEVEL_MISMATCH", {"child":key,"parent_level":parent_level,"child_level":int(child.level)})
-		var r: Dictionary = child.reduction
+		var key := String(raw_key); var child = children[key]
+		if typeof(child) != TYPE_DICTIONARY: return U.failure("R5_3_CHILD_NODE_SHAPE_INVALID", {"child":key})
+		if not U.is_json_integer(child.get("level")) or int(child.level) != parent_level - 1: return U.failure("R5_3_CHILD_LEVEL_MISMATCH", {"child":key,"parent_level":parent_level,"child_level":child.get("level")})
+		var r = child.get("reduction", {})
+		if typeof(r) != TYPE_DICTIONARY: return U.failure("R5_3_CHILD_NODE_INVALID", {"child":key,"cause":U.failure("R5_3_CHILD_REDUCTION_MISSING")})
+		var descriptor_checked := Descriptor.validate(r); if not descriptor_checked.success: return U.failure("R5_3_CHILD_NODE_INVALID", {"child":key,"cause":descriptor_checked})
 		if int(r.reduced_equation_count) != PORTS or r.boundary_port_ids.size() != PORTS: return U.failure("R5_3_CHILD_PORT_COUNT_UNSUPPORTED", {"child":key})
 		if r.boundary_port_ids != BOUNDARY_PORT_IDS: return U.failure("R5_3_CHILD_PORT_CONTRACT_UNSUPPORTED", {"child":key,"ports":r.boundary_port_ids})
 		if not bool(r.passivity_certified): return U.failure("R5_3_CHILD_ROM_PASSIVITY_UNCERTIFIED", {"child":key})
@@ -186,6 +196,8 @@ static func _child_rom_components(children: Dictionary, parent_level: int, nodes
 			for j in range(PORTS): row_sum += float(r.schur_matrix[i][j])
 			if float(r.schur_matrix[i][i]) < -ZERO_TOL or absf(row_sum) > ZERO_TOL:
 				return U.failure("R5_3_CHILD_ROM_LAPLACIAN_MISMATCH", {"child":key,"row":i,"row_sum":row_sum})
+		if validate_bindings:
+			var checked := validate_node(child); if not checked.success: return U.failure("R5_3_CHILD_NODE_INVALID", {"child":key,"cause":checked})
 		var prefix := "node/%s" % _slug(key)
 		for p in range(PORTS): nodes.append("%s/p%02d" % [prefix,p])
 		for i in range(PORTS):
@@ -218,22 +230,30 @@ static func _topology(children: Dictionary, topology_revision: int, nodes: Array
 			edges.append({"a_child":akey,"a_port":p,"b_child":bkey,"b_port":p,"conductance":g})
 	return edges
 
-static func compose(node_id: String, level: int, children: Dictionary, topology_revision: int = 0, build_generation: int = 1) -> Dictionary:
+static func _reduction_policy() -> Dictionary:
+	return {"pivot_relative_tolerance":1.0e-12,"symmetry_tolerance":2.0e-10,"passivity_tolerance":2.0e-10,"require_symmetric":true,"require_passive_laplacian":true}
+
+static func _compile_parent_payload(node_id: String, level: int, children: Dictionary, topology_revision: int, validate_child_bindings: bool = true) -> Dictionary:
 	if level < 1 or level > 3 or children.is_empty(): return U.failure("R5_3_PARENT_SHAPE_INVALID")
-	var nodes: Array=[]; var components: Array=[]; var child_components := _child_rom_components(children,level,nodes,components)
+	var nodes: Array=[]; var components: Array=[]; var child_components := _child_rom_components(children,level,nodes,components,validate_child_bindings)
 	if not child_components.success: return child_components
 	var edges := _topology(children,topology_revision,nodes,components)
 	var ports: Array=[]; for suffix in ["a","b","c","d"]: ports.append({"port_id":"port/electrical-%s" % suffix,"node_id":"node/boundary-%s" % suffix})
 	var graph := Graph.create("graph/r5-3-%s" % _slug(node_id),nodes,ports,components); if graph.is_empty(): return U.failure("R5_3_PARENT_GRAPH_INVALID")
 	var gc := GraphCompiler.compile(graph); if not gc.success: return gc
-	var policy := {"pivot_relative_tolerance":1.0e-12,"symmetry_tolerance":2.0e-10,"passivity_tolerance":2.0e-10,"require_symmetric":true,"require_passive_laplacian":true}
-	var reduced := Reducer.reduce(gc.details.linear_system,policy)
+	var reduced := Reducer.reduce(gc.details.linear_system,_reduction_policy())
 	if not bool(reduced.get("success",false)) or String(reduced.get("status","")) != Reducer.REDUCED: return reduced
-	var reduction: Dictionary = reduced.descriptor; var physical := edges.size(); var keys: Array=children.keys(); keys.sort()
+	var physical := edges.size(); var keys: Array=children.keys(); keys.sort()
 	for key in keys: physical += int(children[key].physical_source_components)
-	var capsule := _capsule(node_id,level,String(graph.graph_hash),reduction,children,topology_revision,physical,components.size(),build_generation,U.canonical_hash(_child_hashes(children)))
+	return U.success({"graph":graph,"reduction":reduced.descriptor,"topology_edges":edges,"physical_source_components":physical,"compiled_input_components":components.size(),"child_rom_reads":int(child_components.details.child_rom_reads)})
+
+static func compose(node_id: String, level: int, children: Dictionary, topology_revision: int = 0, build_generation: int = 1) -> Dictionary:
+	var compiled := _compile_parent_payload(node_id,level,children,topology_revision)
+	if not compiled.success: return compiled
+	var d: Dictionary = compiled.details; var reduction: Dictionary = d.reduction; var graph: Dictionary = d.graph
+	var capsule := _capsule(node_id,level,String(graph.graph_hash),reduction,children,topology_revision,int(d.physical_source_components),int(d.compiled_input_components),build_generation,U.canonical_hash(_child_hashes(children)))
 	var node_hash := _node_hash(capsule,reduction)
-	var node := {"schema":SCHEMA,"node_id":node_id,"level":level,"node_hash":node_hash,"capsule":capsule,"reduction":reduction.duplicate(true),"live":{"node_hash":node_hash,"build_generation":build_generation},"children":children.duplicate(true),"topology_revision":topology_revision,"topology_edges":edges.duplicate(true),"physical_source_components":physical,"compiled_input_components":components.size(),"build_generation":build_generation,"source_graph":{},"compiled_graph":graph.duplicate(true),"source_capsule_checksum":"","compile_events":1,"child_rom_reads":int(child_components.details.child_rom_reads)}
+	var node := {"schema":SCHEMA,"node_id":node_id,"level":level,"node_hash":node_hash,"capsule":capsule,"reduction":reduction.duplicate(true),"live":{"node_hash":node_hash,"build_generation":build_generation},"children":children.duplicate(true),"topology_revision":topology_revision,"topology_edges":d.topology_edges.duplicate(true),"physical_source_components":int(d.physical_source_components),"compiled_input_components":int(d.compiled_input_components),"build_generation":build_generation,"source_graph":{},"compiled_graph":graph.duplicate(true),"source_capsule_checksum":"","compile_events":1,"child_rom_reads":int(d.child_rom_reads)}
 	var checked := validate_node(node); return U.success(node) if checked.success else checked
 
 static func manifest(root: Dictionary, path: String="root", out: Dictionary={}) -> Dictionary:

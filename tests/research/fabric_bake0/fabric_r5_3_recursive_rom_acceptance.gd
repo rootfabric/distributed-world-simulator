@@ -141,6 +141,17 @@ func _initialize() -> void:
 	check(int(root.compiled_input_components) < 40, "machine compile input bounded by child ROM ports", root.compiled_input_components)
 	var skipped_level := Compiler.compose("r53/invalid-machine-direct-leaf", 3, {"leaf0":root.children.assembly0.children.module0.children.leaf0}, 0, 1)
 	check(not skipped_level.success and skipped_level.error_code == "R5_3_CHILD_LEVEL_MISMATCH", "parent composition cannot skip recursive hierarchy levels", skipped_level)
+	var forged_parent: Dictionary = root.children.assembly0.duplicate(true)
+	var forged_delta := 0.05
+	forged_parent.reduction.schur_matrix[0][0] = float(forged_parent.reduction.schur_matrix[0][0]) + forged_delta
+	forged_parent.reduction.schur_matrix[1][1] = float(forged_parent.reduction.schur_matrix[1][1]) + forged_delta
+	forged_parent.reduction.schur_matrix[0][1] = float(forged_parent.reduction.schur_matrix[0][1]) - forged_delta
+	forged_parent.reduction.schur_matrix[1][0] = float(forged_parent.reduction.schur_matrix[1][0]) - forged_delta
+	forged_parent = _rehash_node(forged_parent)
+	var forged_parent_checked := Compiler.validate_node(forged_parent)
+	check(not forged_parent_checked.success and forged_parent_checked.error_code == "R5_3_PARENT_REDUCTION_BINDING_MISMATCH", "parent ROM content must match canonical child-ROM composition", forged_parent_checked)
+	var forged_parent_composed := Compiler.compose("r53/reject-forged-parent", 3, {"assembly0":forged_parent,"assembly1":root.children.assembly1}, 0, 1)
+	check(not forged_parent_composed.success and forged_parent_composed.error_code == "R5_3_CHILD_NODE_INVALID" and String(forged_parent_composed.details.cause.get("error_code", "")) == "R5_3_PARENT_REDUCTION_BINDING_MISMATCH", "forged parent ROM cannot enter higher-level composition", forged_parent_composed)
 
 	var runtime = Runtime.new()
 	var prepared := runtime.prepare(root)

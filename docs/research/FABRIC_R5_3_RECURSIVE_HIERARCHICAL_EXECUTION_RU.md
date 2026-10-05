@@ -1,6 +1,6 @@
 # FABRIC R5.3 — Recursive Hierarchical Execution
 
-Статус: R4 implementer repair candidate после fresh independent falsifier-review R3. База — T16 merge `604192f07070d0f0e38a94445611d09d92cb7f7f`.
+Статус: R5 implementer repair candidate после fresh independent falsifier-review R4. База — T16 merge `604192f07070d0f0e38a94445611d09d92cb7f7f`.
 
 ## Что доказывается
 
@@ -75,5 +75,11 @@ R3 делает hierarchy admission fail-closed по exact adjacent level и о�
 Fresh independent review byte-exact R3 нашёл ещё один blocking provenance counterexample: reduction от graph A можно было перенести в graph B, переписать `source_system_hash` на точный hash B и пересчитать reduction/artifact/capsule checksums. R3 сверял hash источника, но не доказывал, что сама Schur-матрица действительно выведена из этого source system. Исполняемый falsifier на frozen R3 подтвердил admission forged leaf.
 
 R4 закрывает этот класс canonical T1 recompile: leaf admission повторно запускает существующий T1 compiler на **том же exact graph, bake request и capsule id** и требует полного совпадения `linear_system`, `graph_compile`, `reduction`, `artifact` и `capsule`. Это одновременно наследует исходный T1 `>=100` internal-variable acceptance floor без копирования его policy в R5.3. Parent composition остаётся ROM-only и hidden leaf source graphs не читает.
+
+## R4 fresh falsifier review → R5
+
+Fresh independent review R4 выявил второй content-provenance gap уже на parent ROM: assembly/module reduction можно было изменить как валидный симметричный пассивный Laplacian, пересчитать descriptor/capsule/node checksums и успешно подать его в следующий уровень, хотя reduction больше не соответствовал сохранённому `compiled_graph` и реальной композиции child ROM.
+
+R5 канонически пересобирает каждый parent payload **только из child boundary ROM + topology revision**: заново строит parent graph, компилирует linear system и выполняет exact reducer. `validate_node()` требует совпадения canonical graph, reduction, topology edges и complexity accounting. Проверка рекурсивна по parent levels, но не раскрывает hidden leaf source graph: для parent reconstruction используются только boundary ROM дочерних узлов.
 
 Fresh exact Linux/Windows, fresh review/verifier и human merge обязательны перед закрытием checkpoint.
