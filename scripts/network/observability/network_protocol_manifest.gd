@@ -18,6 +18,9 @@ const ResourceMiningDelta = preload(
 const ResourceMiningService = preload(
 	"res://scripts/runtime/networked_gameplay/p3/resource_mining_service.gd"
 )
+const User1ProductSeamState = preload(
+	"res://scripts/runtime/networked_gameplay/user1/user1_product_seam_state.gd"
+)
 
 const SCHEMA: String = P2Manifest.SCHEMA
 const MANIFEST_VERSION: int = P2Manifest.MANIFEST_VERSION
@@ -63,6 +66,12 @@ static func contract_versions() -> Dictionary:
 		"command_channel": "CONTROL",
 		"delta_channel": "ITEM",
 		"snapshot_channel": "RESYNC",
+	}
+	contracts["user1_product_seam_state"] = {
+		"schema": User1ProductSeamState.SCHEMA,
+		"transport_message_type": User1ProductSeamState.MESSAGE_TYPE,
+		"channel": "RESYNC",
+		"canonical_state_owned": false,
 	}
 	return contracts
 
