@@ -72,3 +72,12 @@ recursive reused nodes = 0
 ## Non-claims
 
 R5.4 не вводит production ownership, persistence/network handoff, universal nonlinear/hybrid recursive reduction или integration в current `main`. После R5.4 нужен `R5 CLOSE`, затем `INTEGRATION-R6`.
+
+
+## R1 Windows exact falsifier → R2
+
+Fresh Windows exact verification на frozen R1 подтвердил весь runtime/deterministic payload (3 × 1001/0, R5.3 1231/0, R5.1-100k 93/0, Linux/Windows result payload identical), но штатный collector завершился FAIL. Причина: `collect_r5_4_evidence.py` принимал только canonical Linux Godot SHA256 `bfa7ce63…517d7`, тогда как `RUN_FABRIC_R5_4_TESTS.ps1` правильно требует canonical Windows Godot SHA256 `3633c3e6…5a7a5`.
+
+R2 исправляет только evidence identity contract: collector принимает ровно два разрешённых canonical engine SHA (Linux и Windows) при неизменной версии `4.7.1.stable.double.custom_build.a13da4feb`; любой неизвестный SHA остаётся fail-closed. Physics/runtime/acceptance/deterministic payload не меняются. Добавлены unit tests: Linux accepted, Windows accepted, unknown rejected.
+
+После R2 требуются новый exact Linux evidence на R2 HEAD и повтор Windows exact на том же R2 HEAD; R1 runtime PASS не переносится формально на новый HEAD без fresh evidence.
