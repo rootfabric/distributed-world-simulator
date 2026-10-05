@@ -1,0 +1,104 @@
+{
+  "schema": "distributed_world_simulator.harness_review_result.v1",
+  "review_id": "ECO-ARCH2-A13-PARALLEL-ADVANCE-R2-FRESH-REVIEW-001",
+  "review_type": "POST_REPAIR_EXACT_HEAD_REVIEW",
+  "work_order_id": "ECO-ARCH2-A13-PARALLEL-ADVANCE-R1",
+  "repair_id": "A13-PARALLEL-ADVANCE-R2",
+  "risk_class": "MEDIUM",
+  "reviewed_head_sha": "2dc38180e8c9d22ce33f36a3fefc5818d0660165",
+  "reviewed_tree_sha": "ce7fd5c22851d1b86bdbf0a14d47d79528ef8ac0",
+  "activation_base_sha": "f531499fb5efb17fd2ff8087bd5c3a65d8be3fa0",
+  "freeze_ref": "freeze/eco-arch2-a13-parallel-advance-2dc38180-r2",
+  "runtime_pr": 739,
+  "reviewer": "FRESH_REVIEWER_A13_PARALLEL_ADVANCE_R2",
+  "supersedes_review": "ECO-ARCH2-A13-PARALLEL-ADVANCE-R1-FRESH-REVIEW-001",
+  "verdict": "PASS",
+  "required_fixes": [],
+  "findings": [],
+  "evidence_gaps": [
+    "Canonical Windows and Linux double exact jobs on R2 HEAD are still queued; they remain Independent Verifier machine gates and are not inferred from Portable Smoke."
+  ],
+  "repaired_finding": {
+    "id": "A13-ADV-R1-F1",
+    "previous_severity": "BLOCKING",
+    "disposition": "CLOSED",
+    "summary": "Member-level deterministic failure precedence restored.",
+    "evidence": [
+      "Repair is exactly two commits / two files relative to reviewed R1 subject c12f6ead6ea0374461e72f3dae803a3ada80e077.",
+      "_advance_unit_worker now emits ordered per-member outcomes and stops after recording the first member-level semantic failure instead of collapsing the whole workset into a single semantic outcome.",
+      "Both _advance_units_serial and _advance_units_parallel invoke one shared _consume_advance_outcomes() interpreter.",
+      "_consume_advance_outcomes processes outcomes in canonical unit.member_ids order, checks each successful member's propagules against MAX_PROPAGULES_PER_STEP before considering the next member outcome, then returns a later member failure only if earlier propagules fit.",
+      "Focused falsifier preloads MAX_PROPAGULES_PER_STEP-1, gives member A two propagules and member B A5_AGE_LIMIT, and proves A5_PROPAGULE_LIMIT wins. Control with MAX-2 proves A5_AGE_LIMIT remains visible when no overflow occurs."
+    ]
+  },
+  "checked_items": [
+    {
+      "item": "Exact R2 subject frozen at 2dc38180e8c9d22ce33f36a3fefc5818d0660165 / ce7fd5c22851d1b86bdbf0a14d47d79528ef8ac0.",
+      "disposition": "VERIFIED"
+    },
+    {
+      "item": "Current main is f531499fb5efb17fd2ff8087bd5c3a65d8be3fa0; subject is behind_by=0 and merge base equals current main.",
+      "disposition": "VERIFIED"
+    },
+    {
+      "item": "R2 repair delta from c12f6ead is exactly two files: lifecycle runtime + focused Parallel Advance test.",
+      "disposition": "VERIFIED"
+    },
+    {
+      "item": "Historical serial member-level error/propagule precedence is restored through the shared canonical interpreter.",
+      "disposition": "VERIFIED"
+    },
+    {
+      "item": "Parallel worker completion timing remains non-authoritative; wave results are interpreted by canonical workset index and then canonical member order.",
+      "disposition": "VERIFIED"
+    },
+    {
+      "item": "Worker computes isolated outcomes only; authoritative failure selection and propagule-limit enforcement happen on the main thread.",
+      "disposition": "VERIFIED"
+    },
+    {
+      "item": "All successfully started advance threads are joined before any wave outcome is interpreted.",
+      "disposition": "VERIFIED"
+    },
+    {
+      "item": "Exactly one Field.allocate_demands() invocation remains in resource_lifecycle_runtime_v1.gd and no advance worker starts before allocation succeeds.",
+      "disposition": "VERIFIED"
+    },
+    {
+      "item": "Parallel workers still receive deep-copied entries, samples and intake values; no mutable Field or Runtime owner crosses the thread boundary.",
+      "disposition": "VERIFIED"
+    },
+    {
+      "item": "Public serial, Parallel Prepare, Parallel Advance and Activity sibling APIs remain unchanged by R2.",
+      "disposition": "VERIFIED"
+    },
+    {
+      "item": "Scheduler metadata remains execution-only and absent from canonical Runtime/checkpoint state.",
+      "disposition": "VERIFIED"
+    },
+    {
+      "item": "Portable Godot 4.7.1 R2 run 37294026205 job 111710915300 passed 140/0, including the four new precedence assertions, fresh import and tracked-clean checkout.",
+      "disposition": "CORROBORATED"
+    },
+    {
+      "item": "Project Control run 37294026338 completed SUCCESS on exact R2 HEAD, including full Harness regression discovery, PC0 and directional audit.",
+      "disposition": "CORROBORATED"
+    },
+    {
+      "item": "Canonical Windows/Linux double exact jobs are still queued and therefore explicitly reserved for Independent Verifier evidence.",
+      "disposition": "NOT_A_REVIEW_BLOCKER"
+    }
+  ],
+  "post_build_critique": {
+    "outcome": "NO_MATERIAL_REFACTOR_REQUIRED",
+    "unnecessary_complexity": "The explicit per-member outcome array is justified because it separates parallel computation from canonical interpretation and makes failure precedence auditable.",
+    "duplicate_truth": "No new canonical truth. Outcomes are transient execution records consumed before Runtime sealing.",
+    "implicit_owner": "None. Workers compute, main-thread A5 interpreter decides canonical ordering/errors, A4 Field allocator remains sole allocation owner.",
+    "coupling_reduction": "Serial and parallel Phase 2 now converge on the same _consume_advance_outcomes() contract, reducing semantic drift risk.",
+    "design_regression": "The R1 regression is closed. No new blocking regression found in the narrow R2 repair.",
+    "recommended_future_move": "Keep any future batching/pool optimization behind the same per-member outcome + canonical interpreter contract."
+  },
+  "risk_assessment": "MEDIUM. The repair changes only the transient Phase 2 result boundary and the test surface. Successful-state semantics remain covered by the existing full suite; the previously missing failure-precedence edge is now directly falsified. Remaining platform-specific thread risk is reserved for the Independent Verifier's canonical Windows/Linux double exact evidence.",
+  "summary": "Fresh Reviewer R2 PASS. The sole R1 blocking finding is closed by per-member worker outcomes plus one shared main-thread canonical interpreter. Portable 140/0 and Project Control corroborate the repair. No required fixes remain. Windows/Linux double exact is still required for Independent Verification before merge.",
+  "merge_authorized": false
+}
