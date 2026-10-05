@@ -75,6 +75,7 @@ func _test_host_join_arguments() -> void:
 	var host := ProductShellScript.build_host_user_args("earth", 24580, "warehouse-a")
 	_check(host.has("--role=dedicated-server"), "Host uses dedicated-server role")
 	_check(host.has("--network-mvp"), "Host uses product network MVP")
+	_check(host.has("--product-seam"), "Host enables USER1 product seam")
 	_check(host.has("--world=earth"), "Host binds Earth product world")
 	_check(host.has("--server-port=24580"), "Host preserves requested port")
 	_check(host.has("--instance-id=warehouse-a"), "Host persistence slot maps to instance-id")
