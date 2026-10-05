@@ -258,6 +258,25 @@ function Start-Live3Client {
     return [ordered]@{process=$p;log=$Log;profile=$Profile}
 }
 
+function Assert-FiniteScalar {
+    param(
+        [Parameter(Mandatory=$true)][string]$Name,
+        [Parameter(Mandatory=$true)]$Value
+    )
+    if($Value -is [System.Array]){
+        throw ("RESOURCE_SCALAR_EXPECTED:{0}:{1}" -f $Name,$Value.GetType().FullName)
+    }
+    try{
+        $scalar=[double]$Value
+    }catch{
+        throw ("RESOURCE_SCALAR_CONVERSION_FAILED:{0}:{1}" -f $Name,$_.Exception.Message)
+    }
+    if([double]::IsNaN($scalar)-or[double]::IsInfinity($scalar)){
+        throw ("RESOURCE_SCALAR_NOT_FINITE:{0}:{1}" -f $Name,$scalar)
+    }
+    return $scalar
+}
+
 function Resolve-EarthResourcePlanarTarget {
     param([Parameter(Mandatory=$true)][string]$ResourceNodeId)
 
@@ -277,60 +296,81 @@ function Resolve-EarthResourcePlanarTarget {
         throw "RESOURCE_NODE_FRAME_UNSUPPORTED:${ResourceNodeId}:$($spatial.frame)"
     }
 
-    # Mirror EarthResourceSpatialResolver exactly. Note that the accepted
-    # resolver defines east as UP x anchor; for increasing longitude at the
-    # canonical spawn this produces a negative planar X.
-    $deg=[math]::PI/180.0
+    # Mirror EarthResourceSpatialResolver exactly, but keep every intermediate
+    # component scalar. PowerShell array construction next to arithmetic can
+    # promote an expression to System.Object[], which caused RUN 37214363455
+    # to fail before product recovery was exercised.
+    $deg=[double]([math]::PI/180.0)
     $spawn=$earth.default_spawn
-    $lat0=[double]$spawn.latitude_deg*$deg
-    $lon0=[double]$spawn.longitude_deg*$deg
-    $lat1=[double]$spatial.latitude_deg*$deg
-    $lon1=[double]$spatial.longitude_deg*$deg
+    $lat0=[double]([double]$spawn.latitude_deg*$deg)
+    $lon0=[double]([double]$spawn.longitude_deg*$deg)
+    $lat1=[double]([double]$spatial.latitude_deg*$deg)
+    $lon1=[double]([double]$spatial.longitude_deg*$deg)
 
-    $anchorVector=@(
-        [math]::Cos($lat0)*[math]::Cos($lon0),
-        [math]::Sin($lat0),
-        [math]::Cos($lat0)*[math]::Sin($lon0)
-    )
-    $targetVector=@(
-        [math]::Cos($lat1)*[math]::Cos($lon1),
-        [math]::Sin($lat1),
-        [math]::Cos($lat1)*[math]::Sin($lon1)
-    )
-    $east=@($anchorVector[2],0.0,-$anchorVector[0])
-    $eastLength=[math]::Sqrt(
-        $east[0]*$east[0]+$east[1]*$east[1]+$east[2]*$east[2]
+    $anchorX=[double]([math]::Cos($lat0)*[math]::Cos($lon0))
+    $anchorY=[double]([math]::Sin($lat0))
+    $anchorZ=[double]([math]::Cos($lat0)*[math]::Sin($lon0))
+    $targetX=[double]([math]::Cos($lat1)*[math]::Cos($lon1))
+    $targetY=[double]([math]::Sin($lat1))
+    $targetZ=[double]([math]::Cos($lat1)*[math]::Sin($lon1))
+
+    # Accepted resolver: east = UP x anchor. At the canonical spawn,
+    # increasing longitude therefore maps to negative planar X.
+    $eastX=[double]$anchorZ
+    $eastY=[double]0.0
+    $eastZ=[double](-$anchorX)
+    $eastLength=[double][math]::Sqrt(
+        ($eastX*$eastX)+($eastY*$eastY)+($eastZ*$eastZ)
     )
     if($eastLength-le0.000001){throw "RESOURCE_EAST_AXIS_INVALID"}
-    $east=@($east[0]/$eastLength,$east[1]/$eastLength,$east[2]/$eastLength)
+    $eastX=[double]($eastX/$eastLength)
+    $eastY=[double]($eastY/$eastLength)
+    $eastZ=[double]($eastZ/$eastLength)
 
-    $north=@(
-        $anchorVector[1]*$east[2]-$anchorVector[2]*$east[1],
-        $anchorVector[2]*$east[0]-$anchorVector[0]*$east[2],
-        $anchorVector[0]*$east[1]-$anchorVector[1]*$east[0]
-    )
-    $northLength=[math]::Sqrt(
-        $north[0]*$north[0]+$north[1]*$north[1]+$north[2]*$north[2]
+    $northX=[double](($anchorY*$eastZ)-($anchorZ*$eastY))
+    $northY=[double](($anchorZ*$eastX)-($anchorX*$eastZ))
+    $northZ=[double](($anchorX*$eastY)-($anchorY*$eastX))
+    $northLength=[double][math]::Sqrt(
+        ($northX*$northX)+($northY*$northY)+($northZ*$northZ)
     )
     if($northLength-le0.000001){throw "RESOURCE_NORTH_AXIS_INVALID"}
-    $north=@(
-        $north[0]/$northLength,
-        $north[1]/$northLength,
-        $north[2]/$northLength
-    )
+    $northX=[double]($northX/$northLength)
+    $northY=[double]($northY/$northLength)
+    $northZ=[double]($northZ/$northLength)
 
     $radius=[double]$earth.radius_m
-    $anchorRadius=$radius+[double]$spawn.altitude_m
-    $targetRadius=$radius+[double]$spatial.altitude_m
-    $dx=$targetVector[0]*$targetRadius-$anchorVector[0]*$anchorRadius
-    $dy=$targetVector[1]*$targetRadius-$anchorVector[1]*$anchorRadius
-    $dz=$targetVector[2]*$targetRadius-$anchorVector[2]*$anchorRadius
+    $anchorRadius=[double]($radius+[double]$spawn.altitude_m)
+    $targetRadius=[double]($radius+[double]$spatial.altitude_m)
+    $dx=[double](($targetX*$targetRadius)-($anchorX*$anchorRadius))
+    $dy=[double](($targetY*$targetRadius)-($anchorY*$anchorRadius))
+    $dz=[double](($targetZ*$targetRadius)-($anchorZ*$anchorRadius))
+
+    $resultX=[double](($dx*$eastX)+($dy*$eastY)+($dz*$eastZ))
+    $resultY=[double](($dx*$anchorX)+($dy*$anchorY)+($dz*$anchorZ))
+    $resultZ=[double](-(($dx*$northX)+($dy*$northY)+($dz*$northZ)))
+
+    $resultX=Assert-FiniteScalar "resource.x" $resultX
+    $resultY=Assert-FiniteScalar "resource.y" $resultY
+    $resultZ=Assert-FiniteScalar "resource.z" $resultZ
+
+    if($ResourceNodeId-eq"resource/earth/ore-demo/1"){
+        $canonicalOreX=-7.8632240268
+        if($resultX-ge0.0){
+            throw ("RESOURCE_CANONICAL_SIDE_MISMATCH:{0}" -f $resultX)
+        }
+        if([math]::Abs($resultX-$canonicalOreX)-gt0.05){
+            throw ("RESOURCE_CANONICAL_X_MISMATCH:{0}:{1}" -f $resultX,$canonicalOreX)
+        }
+        if([math]::Abs($resultZ)-gt0.05){
+            throw ("RESOURCE_CANONICAL_Z_MISMATCH:{0}" -f $resultZ)
+        }
+    }
 
     return [ordered]@{
         resource_node_id=$ResourceNodeId
-        x=$dx*$east[0]+$dy*$east[1]+$dz*$east[2]
-        y=$dx*$anchorVector[0]+$dy*$anchorVector[1]+$dz*$anchorVector[2]
-        z=-($dx*$north[0]+$dy*$north[1]+$dz*$north[2])
+        x=$resultX
+        y=$resultY
+        z=$resultZ
     }
 }
 
@@ -466,6 +506,12 @@ function Wait-StatePredicate {
 }
 
 try {
+    # Harness preflight must complete before any Godot process starts. Reuse this
+    # exact result later for movement/aiming so the acceptance run cannot execute
+    # a different resolver path from the one that was sanity-checked.
+    $resourceResolverPreflight=Resolve-EarthResourcePlanarTarget "resource/earth/ore-demo/1"
+    $Observations.resource_resolver_preflight=$resourceResolverPreflight
+
     [ordered]@{
         schema="dws.live3.product_recovery_session.v1"
         product_head=$ProductHead
@@ -474,6 +520,7 @@ try {
         session=$SessionRoot
         persistence_root=$PersistenceRoot
         server_port=$ServerPort
+        resource_resolver_preflight=$resourceResolverPreflight
         created_at=(Get-Date).ToString("o")
     } | ConvertTo-Json -Depth 10 | Set-Content (Join-Path $SessionRoot "session.json") -Encoding UTF8
 
@@ -500,7 +547,7 @@ try {
     } 15 "ITEM_GRAPH_DID_NOT_MUTATE"
     $Observations.after_hotbar=$afterHotbar
 
-    $oreTarget=Resolve-EarthResourcePlanarTarget "resource/earth/ore-demo/1"
+    $oreTarget=$resourceResolverPreflight
     $nearOre=Get-AutomationState A
     $oreDx=[double]$oreTarget.x-[double]$nearOre.local_player.position.x
     $oreDz=[double]$oreTarget.z-[double]$nearOre.local_player.position.z
