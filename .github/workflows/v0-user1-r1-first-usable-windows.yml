@@ -82,6 +82,10 @@ jobs:
           grep -q '"::"' scripts/ui/product_shell.gd
           grep -q 'SM1AuthorityTransferCoordinator' scripts/runtime/networked_gameplay/user1/user1_product_seam_gameplay_service.gd || grep -q 'sm1_authority_transfer_coordinator' scripts/runtime/networked_gameplay/user1/user1_product_seam_gameplay_service.gd
           grep -q 'USER1_EXTERNAL_GLOBAL_M4' scripts/runtime/networked_gameplay/user1/user1_product_player_transfer_port.gd
+          movement_authority='scripts/runtime/networked_gameplay/user1/user1_product_seam_movement_authority_service.gd'
+          grep -q 'canonical_domain_count.*0' "$movement_authority"
+          ! grep -q 'super.setup' "$movement_authority"
+          ! grep -Eq 'CanonicalMultiplayerItemGraph\.new|ResourceMiningService\.new|SharedItemService\.new' "$movement_authority"
           grep -q 'user1_product_seam_state' scripts/network/observability/network_protocol_manifest.gd
 
   windows:
