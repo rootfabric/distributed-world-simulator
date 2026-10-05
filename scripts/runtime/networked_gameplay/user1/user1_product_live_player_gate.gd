@@ -35,17 +35,3 @@ func decision_snapshot() -> Dictionary:
 		return {}
 	_highest_observed_epoch = epoch
 	return state
-
-
-static func normalize_live_record(record: Dictionary) -> Dictionary:
-	var normalized := record.duplicate(true)
-	for field in [
-		"ownership_epoch",
-		"last_input_sequence",
-		"state_revision",
-		"joined_tick",
-		"left_tick",
-	]:
-		if normalized.has(field):
-			normalized[field] = int(normalized[field])
-	return normalized
