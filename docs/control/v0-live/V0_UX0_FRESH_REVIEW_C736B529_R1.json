@@ -1,0 +1,61 @@
+{
+  "schema": "distributed_world_simulator.v0_ux0_fresh_review.v1",
+  "role": "FRESH_REVIEWER",
+  "verdict": "PASS",
+  "repository": "rootfabric/distributed-world-simulator",
+  "pr_number": 741,
+  "product_head": "c736b529767ae1d8b590ba00bdc25d0abb307777",
+  "product_tree": "06d91db9142d333ab8a0238319e4359e99e9297b",
+  "base_main": "9518d1cd6ea4b2cc61323f0c684d6905f24f367f",
+  "freeze_ref": "freeze/v0-ux0-r1-c736b529-windows-r1",
+  "review_branch": "review/v0-ux0-c736b529-r1",
+  "main_drift": 0,
+  "bounded_files": 6,
+  "exact_windows": {
+    "run": 37262469991,
+    "source_job": 111612394470,
+    "windows_job": 111612427293,
+    "conclusion": "success",
+    "artifact_id": 11324699458,
+    "artifact_sha256": "a40a80e9c1739e3e1f0d41fdbff28a8117f1a8825da948787bc2b24175908e58"
+  },
+  "corroboration": {
+    "live2_targeted_run": 37262472723,
+    "live2_targeted": "success",
+    "project_control_run": 37262472757,
+    "project_control": "success"
+  },
+  "review_checks": {
+    "no_new_canonical_owner": true,
+    "no_new_persistence_owner": true,
+    "no_new_reconnect_mechanism": true,
+    "shell_is_process_orchestration_only": true,
+    "explicit_runtime_cli_bypasses_shell": true,
+    "host_maps_slot_to_existing_instance_id": true,
+    "join_has_no_persistence_root": true,
+    "launcher_preferences_noncanonical": true,
+    "hud_is_read_only_projection": true,
+    "existing_live2_gameplay_path_preserved": true,
+    "existing_live3_recovery_path_preserved": true,
+    "real_no_cli_shell_entry_proven": true,
+    "final_source_clean": true
+  },
+  "blocking_findings": [],
+  "non_blocking_findings": [
+    {
+      "id": "UX0-REV-NB001",
+      "severity": "UX_POLISH",
+      "summary": "Join updates default_player_name, so Continue uses the latest local default player identity rather than retaining a distinct last-hosted player identity. World/port/persistence-slot continuity remains correct. Consider a separate last_host_player_name in UX0 R2."
+    },
+    {
+      "id": "UX0-REV-NB002",
+      "severity": "UX_ROBUSTNESS",
+      "summary": "The shell's 127.0.0.1 UDP availability probe can miss a server bound via IPv6 wildcard on Windows. The authoritative runtime still rejects the duplicate bind and no second persistent server is created, but UX0 R2 should verify spawned-server liveness/ownership before reporting Host success."
+    }
+  ],
+  "required_fixes": [],
+  "evidence_gaps": [],
+  "merge_performed": false,
+  "predicate_verified": false,
+  "human_acceptance": false
+}
