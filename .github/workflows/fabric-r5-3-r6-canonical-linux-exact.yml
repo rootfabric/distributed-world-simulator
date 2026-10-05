@@ -1,0 +1,176 @@
+name: FABRIC R5.3 R6 Canonical Linux Exact
+on:
+  push:
+    branches: [verify/fabric-r5-3-r6-canonical-linux-exact-r1]
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: fabric-r5-3-r6-canonical-linux-exact-r1
+  cancel-in-progress: false
+env:
+  SUBJECT_HEAD: 08fa81ebd860e98e655f4f403ed136a89e2ec074
+  SUBJECT_TREE: c1253db8c0c07cd46ab95b032e34d3e8ef4eb658
+  BASE_HEAD: 604192f07070d0f0e38a94445611d09d92cb7f7f
+  EXPECTED_HASH: 3035a57a288929598255d1814c0121b9c5d11eca0dc86b96a421063e7501eb8c
+  ENGINE_SHA: bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7
+jobs:
+  control-scope:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Verify carrier isolation and frozen subject
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$(git merge-base HEAD "$SUBJECT_HEAD")" = "$SUBJECT_HEAD"
+          test "$(git rev-parse "$SUBJECT_HEAD^{tree}")" = "$SUBJECT_TREE"
+          test "$(git diff --name-only "$SUBJECT_HEAD" HEAD)" = '.github/workflows/fabric-r5-3-r6-canonical-linux-exact.yml'
+          test "$(git diff --name-status "$BASE_HEAD" "$SUBJECT_HEAD" | wc -l)" -eq 11
+          test -z "$(git diff --name-status "$BASE_HEAD" "$SUBJECT_HEAD" | grep -v $'^A\t' || true)"
+          git diff --check "$SUBJECT_HEAD" HEAD
+          bash -n RUN_FABRIC_R5_3_TESTS.sh
+          python3 -m unittest discover -s tests/research/fabric_bake0 -p test_r5_3_evidence.py -v
+  exact-linux:
+    needs: control-scope
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 40
+    steps:
+      - name: Isolated workspace and canonical engine preflight
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          work="$RUNNER_TEMP/r53-r6-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          test ! -e "$work"
+          mkdir -p "$work/evidence/meta" "$work/input"
+          echo "WORK=$work" >> "$GITHUB_ENV"
+          { uname -a; free -h; ps -eo pid,comm | awk '$2 ~ /^godot/'; } > "$work/evidence/meta/host.txt"
+          if ps -eo comm= | grep -E '^godot' > "$work/evidence/meta/foreign-godot.txt"; then
+            echo 'HOST_BUSY_GODOT: no foreign process is stopped'; exit 1
+          fi
+          bin="${DWS_GODOT_DOUBLE_BIN:-$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64}"
+          test -f "$bin" || { echo 'CANONICAL_LINUX_ENGINE_MISSING'; exit 1; }
+          test "$(sha256sum "$bin" | awk '{print $1}')" = "$ENGINE_SHA"
+          cp "$bin" "$work/godot.linuxbsd.editor.double.x86_64"
+          chmod u+x "$work/godot.linuxbsd.editor.double.x86_64"
+          test "$(sha256sum "$work/godot.linuxbsd.editor.double.x86_64" | awk '{print $1}')" = "$ENGINE_SHA"
+          test "$("$work/godot.linuxbsd.editor.double.x86_64" --version | head -n1 | tr -d '\r')" = '4.7.1.stable.double.custom_build.a13da4feb'
+      - name: Download durable R6 source and Windows evidence with exact digests
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -Eeuo pipefail
+          api="https://api.github.com/repos/$GITHUB_REPOSITORY/actions/artifacts"
+          curl --fail --silent --show-error --location --retry 3 -H "Authorization: Bearer $GH_TOKEN" "$api/11321968160/zip" -o "$WORK/input/source.zip"
+          curl --fail --silent --show-error --location --retry 3 -H "Authorization: Bearer $GH_TOKEN" "$api/11322581494/zip" -o "$WORK/input/windows.zip"
+          echo "c3064f1e6476e2927021e43b0c31e7bb6efd5b5a4ff4d0a1b8c863346b55b4b8  $WORK/input/source.zip" | sha256sum -c -
+          echo "21d55301e72e7be5d9986cf796d82697598408e63e82675439488b06f4310a8a  $WORK/input/windows.zip" | sha256sum -c -
+          python3 - <<'PY'
+          import os, pathlib, zipfile, hashlib
+          w = pathlib.Path(os.environ['WORK'])
+          with zipfile.ZipFile(w/'input/source.zip') as z:
+              data = z.read('r5-3-r6-product-exact.bundle')
+              assert hashlib.sha256(data).hexdigest() == '9e6f84094dee5d49f68df13574b8c7f7b4f955d003452de44b42485689d517b6'
+              (w/'input/product.bundle').write_bytes(data)
+              assert hashlib.sha256(z.read('r5-3-source.tar.gz')).hexdigest() == 'c7a87c5a4382582bc28f3d72df837a647fe6f373d76b4b519d40a1b8bded032e'
+          out = w/'evidence/windows'; out.mkdir()
+          with zipfile.ZipFile(w/'input/windows.zip') as z:
+              for n in z.namelist():
+                  p = pathlib.PurePosixPath(n)
+                  assert len(p.parts) == 1 and not p.is_absolute() and n not in ('.','..')
+                  (out/n).write_bytes(z.read(n))
+          PY
+          git clone --no-checkout "$WORK/input/product.bundle" "$WORK/product"
+          git -C "$WORK/product" checkout --detach "$SUBJECT_HEAD"
+          test "$(git -C "$WORK/product" rev-parse HEAD)" = "$SUBJECT_HEAD"
+          test "$(git -C "$WORK/product" rev-parse 'HEAD^{tree}')" = "$SUBJECT_TREE"
+          test -z "$(git -C "$WORK/product" status --porcelain)"
+          sha256sum "$WORK/input/source.zip" "$WORK/input/windows.zip" "$WORK/input/product.bundle" > "$WORK/evidence/meta/input-sha256.txt"
+      - name: Pin live feature freeze and base before execution
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          git ls-remote --heads "https://github.com/$GITHUB_REPOSITORY.git" \
+            refs/heads/research/fabric-r5-3-recursive-hierarchical-execution-r1 \
+            refs/heads/freeze/fabric-r5-3-r6-08fa81eb-exact-r1 \
+            refs/heads/research/fabric-r5-2-t14-observation-refinement-r1 | sort > "$WORK/evidence/meta/refs-before.txt"
+          python3 - <<'PY'
+          import os, pathlib
+          p=pathlib.Path(os.environ['WORK'])/'evidence/meta/refs-before.txt'
+          actual={line.split()[1]:line.split()[0] for line in p.read_text().splitlines()}
+          expected={'refs/heads/research/fabric-r5-3-recursive-hierarchical-execution-r1':os.environ['SUBJECT_HEAD'], 'refs/heads/freeze/fabric-r5-3-r6-08fa81eb-exact-r1':os.environ['SUBJECT_HEAD'], 'refs/heads/research/fabric-r5-2-t14-observation-refinement-r1':os.environ['BASE_HEAD']}
+          assert actual == expected, 'REMOTE_SUBJECT_OR_BASE_DRIFT'
+          PY
+      - name: Unchanged canonical Linux runner and strict collector
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          cd "$WORK/product"
+          export GODOT_BIN="$WORK/godot.linuxbsd.editor.double.x86_64"
+          export R53_EVIDENCE_DIR="$WORK/evidence/linux"
+          bash RUN_FABRIC_R5_3_TESTS.sh
+          python3 scripts/research/fabric_bake0/collect_r5_3_evidence.py --root "$R53_EVIDENCE_DIR" --expected-hash "$EXPECTED_HASH"
+          test "$(git rev-parse HEAD)" = "$SUBJECT_HEAD"
+          test "$(git rev-parse 'HEAD^{tree}')" = "$SUBJECT_TREE"
+          test -z "$(git status --porcelain=v1 --untracked-files=no)"
+      - name: Validate original Windows evidence and full cross-platform payload
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          cd "$WORK/product"
+          python3 - <<'PY'
+          import os, sys, json, pathlib, hashlib
+          sys.path.insert(0, 'scripts/research/fabric_bake0')
+          import collect_r5_3_evidence as c
+          root=pathlib.Path(os.environ['WORK'])/'evidence'
+          reports={}
+          for platform in ('linux','windows'):
+              d=root/platform
+              original=c.strict((d/'evidence.json').read_text(encoding='utf-8-sig'))
+              recalculated=c.collect(d, os.environ['EXPECTED_HASH'])
+              assert original == recalculated, platform + ': evidence/log hash mismatch'
+              assert len(original['logs']) == 12, 'unexpected log count'
+              assert original['identity'][:2] == ['HEAD='+os.environ['SUBJECT_HEAD'],'TREE='+os.environ['SUBJECT_TREE']]
+              t=(d/'python-tests.log').read_text(encoding='utf-8-sig')
+              assert 'Ran 8 tests' in t and '\nOK' in t and not c.FATAL.search(t), 'Python test evidence'
+              reports[platform]=original
+          assert reports['linux']['identity'][3] == 'GODOT_SHA256='+os.environ['ENGINE_SHA']
+          a=c.sample(root/'linux/sample-1.log')[0]
+          b=c.sample(root/'windows/sample-1.log')[0]
+          assert a.encode() == b.encode(), 'full raw result payload differs'
+          assert reports['linux']['result'] == reports['windows']['result']
+          comparison={'status':'PASS','subject_head':os.environ['SUBJECT_HEAD'],'subject_tree':os.environ['SUBJECT_TREE'],'canonical_linux_binary_sha256':os.environ['ENGINE_SHA'],'deterministic_hash':os.environ['EXPECTED_HASH'],'full_raw_payload_byte_match':True,'linux_logs_verified':12,'windows_logs_verified':12,'windows_artifact':11322581494,'linux_evidence_sha256':hashlib.sha256((root/'linux/evidence.json').read_bytes()).hexdigest()}
+          (root/'comparison.json').write_text(json.dumps(comparison,sort_keys=True,indent=2)+'\n')
+          print(json.dumps(comparison,sort_keys=True))
+          PY
+      - name: Final ref freshness and evidence manifest
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          git ls-remote --heads "https://github.com/$GITHUB_REPOSITORY.git" \
+            refs/heads/research/fabric-r5-3-recursive-hierarchical-execution-r1 \
+            refs/heads/freeze/fabric-r5-3-r6-08fa81eb-exact-r1 \
+            refs/heads/research/fabric-r5-2-t14-observation-refinement-r1 | sort > "$WORK/evidence/meta/refs-after.txt"
+          cmp "$WORK/evidence/meta/refs-before.txt" "$WORK/evidence/meta/refs-after.txt"
+          cd "$WORK/evidence"
+          find . -type f ! -name SHA256SUMS -print0 | sort -z | xargs -0 sha256sum > SHA256SUMS
+          {
+            echo '## R5.3 R6 canonical Linux exact supplement: PASS'
+            echo "Product: $SUBJECT_HEAD / $SUBJECT_TREE"
+            echo "Canonical Linux engine SHA256: $ENGINE_SHA"
+            echo "Deterministic hash: $EXPECTED_HASH"
+            echo 'Unchanged runner/collector; R5.3 3 x 1231/0; T12-T16 regressions; Python 8/8; complete Windows payload MATCH.'
+            echo 'Fresh worker evidence only; existing semantic reviewer verdict is retained. No product edits, merge, self-approval or protection bypass.'
+          } >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: r53-r6-canonical-linux-exact-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/r53-r6-${{ github.run_id }}-${{ github.run_attempt }}/evidence/**
+          if-no-files-found: error
+          retention-days: 90
