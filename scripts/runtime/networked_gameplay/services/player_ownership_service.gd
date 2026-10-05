@@ -578,7 +578,7 @@ func retire_live_player_source(
 	return _success({"retired": true, "transport_session_id": session_id})
 
 
-func release_live_player_gate(logical_player_id: String, gate) -> Dictionary:
+func preflight_live_player_gate_release(logical_player_id: String, gate) -> Dictionary:
 	if gate == null or _live_gates.get(logical_player_id) != gate:
 		return _failure("LIVE_PLAYER_GATE_MISMATCH")
 	if _live_stages.has(logical_player_id):
@@ -599,8 +599,17 @@ func release_live_player_gate(logical_player_id: String, gate) -> Dictionary:
 			or String(_session_to_player.get(session_id, "")) != logical_player_id
 		):
 			return _failure("LIVE_PLAYER_RELEASE_SESSION_INDEX_MISMATCH")
+	return _success({"local_row_retained": row_present})
+
+
+func release_live_player_gate(logical_player_id: String, gate) -> Dictionary:
+	var checked := preflight_live_player_gate_release(logical_player_id, gate)
+	if not bool(checked.get("success", false)):
+		return checked
 	_live_gates.erase(logical_player_id)
 	return _success({
 		"released": true,
-		"local_row_retained": row_present,
+		"local_row_retained": bool(
+			checked.get("details", {}).get("local_row_retained", false)
+		),
 	})
