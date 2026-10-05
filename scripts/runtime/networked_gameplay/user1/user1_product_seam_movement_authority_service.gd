@@ -100,12 +100,20 @@ func create_resource_mining_snapshot() -> Dictionary:
 
 func product_seam_authority_report() -> Dictionary:
 	var report: Dictionary = super.product_seam_authority_report()
+	var item_ready := get_canonical_item_graph_port() != null
+	var resource_ready := get_resource_mining_port() != null
+	var shared_ready := _shared_items != null
+	var canonical_domain_count := (
+		(1 if item_ready else 0)
+		+ (1 if resource_ready else 0)
+		+ (1 if shared_ready else 0)
+	)
 	report["movement_only"] = true
 	report["canonical_state_owned"] = false
-	report["canonical_domain_count"] = 0
-	report["canonical_item_graph_ready"] = false
-	report["resource_mining_ready"] = false
-	report["shared_item_ready"] = false
+	report["canonical_domain_count"] = canonical_domain_count
+	report["canonical_item_graph_ready"] = item_ready
+	report["resource_mining_ready"] = resource_ready
+	report["shared_item_ready"] = shared_ready
 	return report
 
 
