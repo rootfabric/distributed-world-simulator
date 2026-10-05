@@ -547,6 +547,15 @@ func _ensure_seam_binding(player_id: String) -> Dictionary:
 		coordinator
 	)
 	if not bool(secondary_bound.get("success", false)):
+		var primary_release: Dictionary = _primary_port.release_binding(player_id)
+		if not bool(primary_release.get("success", false)):
+			return _failure(
+				"USER1_SEAM_BIND_ROLLBACK_FAILED",
+				{
+					"secondary_cause": secondary_bound,
+					"primary_release_cause": primary_release,
+				}
+			)
 		return secondary_bound
 	_seam_coordinators[player_id] = coordinator
 	return _success({"bound": true})
