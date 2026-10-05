@@ -1,0 +1,102 @@
+name: FABRIC R5.3 R6 Guarded Repair Publication
+on:
+  push:
+    branches: [control/fabric-r5-3-r6-publish-repair-r1]
+permissions:
+  contents: write
+concurrency:
+  group: fabric-r5-3-r6-publish-repair-r1
+  cancel-in-progress: false
+env:
+  TARGET_BRANCH: research/fabric-r5-3-recursive-hierarchical-execution-r1
+  EXPECTED_PARENT: 305b54bf127a910a515d02544a18d9a01a7afaa8
+  EXPECTED_TREE: c1253db8c0c07cd46ab95b032e34d3e8ef4eb658
+  EXPECTED_HEAD: 08fa81ebd860e98e655f4f403ed136a89e2ec074
+  PATCH_SHA256: 8a5e9dd3aef5994da79b502923c45ff0200ba9c2229cb730ef6942b70d00623c
+  GIT_AUTHOR_NAME: github-actions[bot]
+  GIT_AUTHOR_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
+  GIT_COMMITTER_NAME: github-actions[bot]
+  GIT_COMMITTER_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
+  GIT_AUTHOR_DATE: '2026-10-05T02:14:32Z'
+  GIT_COMMITTER_DATE: '2026-10-05T02:14:32Z'
+jobs:
+  scope-and-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: '305b54bf127a910a515d02544a18d9a01a7afaa8'
+          fetch-depth: 0
+      - name: Decode the exact reviewed repair patch
+        shell: bash
+        env:
+          PATCH_ZLIB_B64: >-
+            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
+        run: |
+          set -Eeuo pipefail
+          test "$(git rev-parse HEAD)" = "$EXPECTED_PARENT"
+          test -z "$(git status --porcelain)"
+          python3 - <<'PY'
+          import os, base64, zlib, hashlib
+          from pathlib import Path
+          data=zlib.decompress(base64.b64decode(os.environ['PATCH_ZLIB_B64'], validate=True))
+          assert hashlib.sha256(data).hexdigest()==os.environ['PATCH_SHA256']
+          Path(os.environ['RUNNER_TEMP'],'r6.patch').write_bytes(data)
+          PY
+          git apply --check --index "$RUNNER_TEMP/r6.patch"
+          git apply --index "$RUNNER_TEMP/r6.patch"
+          test "$(git write-tree)" = "$EXPECTED_TREE"
+      - name: Enforce bounded repair and exact source contracts
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          python3 - <<'PY'
+          import subprocess
+          expected={
+            'docs/research/FABRIC_R5_3_RECURSIVE_HIERARCHICAL_EXECUTION_RU.md',
+            'docs/research/FABRIC_R5_3_WORK_ORDER_RU.md',
+            'scripts/research/fabric_bake0/collect_r5_3_evidence.py',
+            'scripts/research/fabric_bake0/r5_3_recursive_rom_compiler_v1.gd',
+            'scripts/research/fabric_bake0/r5_3_recursive_rom_runtime_v1.gd',
+            'tests/research/fabric_bake0/fabric_r5_3_recursive_rom_acceptance.gd',
+            'tests/research/fabric_bake0/test_r5_3_evidence.py',
+          }
+          rows=subprocess.check_output(['git','diff','--cached','--name-status'],text=True).splitlines()
+          assert set(row.split('\t')[1] for row in rows)==expected
+          assert all(row.startswith('M\t') for row in rows)
+          rows=subprocess.check_output(['git','diff','--cached','--name-status','604192f07070d0f0e38a94445611d09d92cb7f7f'],text=True).splitlines()
+          assert len(rows)==11 and all(row.startswith('A\t') for row in rows)
+          PY
+          git diff --cached --check
+          bash -n RUN_FABRIC_R5_3_TESTS.sh
+          python3 -m unittest discover -s tests/research/fabric_bake0 -p test_r5_3_evidence.py -v
+      - name: Commit exact product and non-force push with drift guard
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          git -c commit.gpgsign=false commit -m 'fix(fabric): revalidate R5.3 mutable leaf runtime provenance (R6)'
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+          test "$(git rev-parse 'HEAD^{tree}')" = "$EXPECTED_TREE"
+          remote=$(git ls-remote origin "refs/heads/$TARGET_BRANCH" | cut -f1)
+          test "$remote" = "$EXPECTED_PARENT"
+          git push origin "HEAD:refs/heads/$TARGET_BRANCH"
+          test "$(git ls-remote origin "refs/heads/$TARGET_BRANCH" | cut -f1)" = "$EXPECTED_HEAD"
+      - name: Preserve exact source and Git recovery bundle
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          mkdir -p "$RUNNER_TEMP/r6-source"
+          out="$RUNNER_TEMP/r6-source"
+          git archive --format=tar "$EXPECTED_HEAD" | gzip -n > "$out/r5-3-source.tar.gz"
+          git branch r53-r6-product-exact "$EXPECTED_HEAD"
+          git bundle create "$out/r5-3-r6-product-exact.bundle" r53-r6-product-exact
+          printf 'HEAD=%s\nTREE=%s\nBASE_T16=%s\nPARENT=%s\n' "$EXPECTED_HEAD" "$EXPECTED_TREE" 604192f07070d0f0e38a94445611d09d92cb7f7f "$EXPECTED_PARENT" > "$out/identity.txt"
+          cd "$out"
+          sha256sum r5-3-source.tar.gz r5-3-r6-product-exact.bundle > SHA256SUMS
+      - uses: actions/upload-artifact@v4
+        with:
+          name: r53-r6-source-08fa81eb
+          path: ${{ runner.temp }}/r6-source/**
+          if-no-files-found: error
+          retention-days: 90
