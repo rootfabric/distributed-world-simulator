@@ -20,6 +20,9 @@ const Carry = preload(
 	"res://scripts/runtime/networked_gameplay/sm1/sm1_player_carrying_domain.gd"
 )
 const SeamUtils = preload("res://scripts/network/contracts/network_contract_utils.gd")
+const ProductSeamState = preload(
+	"res://scripts/runtime/networked_gameplay/user1/user1_product_seam_state.gd"
+)
 
 const PRIMARY_REGION := "region/user1/a"
 const SECONDARY_REGION := "region/user1/b"
@@ -436,7 +439,7 @@ func get_product_seam_state(logical_player_id: String) -> Dictionary:
 	state["canonical_state_owned"] = false
 	state["decision_owner"] = "SM1_AUTHORITY_TRANSFER_COORDINATOR"
 	state["item_graph_owner"] = "PRIMARY_PRODUCT_M4"
-	return state
+	return ProductSeamState.create(state)
 
 
 func get_report() -> Dictionary:
