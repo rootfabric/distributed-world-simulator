@@ -103,6 +103,10 @@ func _accept_state(state: Dictionary) -> void:
 	if player_id != _player_id:
 		_player_id = player_id
 		_save_path = _save_path_for_player(player_id)
+		_initialized = false
+	if not _initialized:
+		if not _baseline_ready(state):
+			return
 		_load_or_initialize(state)
 	if not _initialized:
 		return
@@ -356,6 +360,8 @@ func _build_ui() -> void:
 
 
 func _render(state: Dictionary) -> void:
+	if _panel != null:
+		_panel.visible = not bool(state.get("inventory_visible", false))
 	var completed_count := _completed_count()
 	_progress_label.text = "%d / %d шагов" % [completed_count, STEP_DEFINITIONS.size()]
 	for definition in STEP_DEFINITIONS:
@@ -429,6 +435,20 @@ func _detail_for_state(state: Dictionary) -> String:
 		resource_text,
 		int(state.get("construction_generation", -1)),
 	]
+
+
+func _baseline_ready(state: Dictionary) -> bool:
+	return (
+		String(state.get("connection_state", "")).strip_edges().to_upper() == "CONNECTED"
+		and not String(state.get("player_id", "")).strip_edges().is_empty()
+		and int(state.get("ownership_epoch", 0)) > 0
+		and not String(state.get("region_id", "")).strip_edges().is_empty()
+		and int(state.get("resource_generation", -1)) >= 0
+		and int(state.get("item_graph_revision", -1)) >= 0
+		and int(state.get("world_item_count", -1)) >= 0
+		and int(state.get("shared_container_item_count", -1)) >= 0
+		and int(state.get("construction_generation", -1)) >= 0
+	)
 
 
 func _finite(value: float) -> bool:
