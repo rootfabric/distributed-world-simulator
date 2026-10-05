@@ -14,6 +14,7 @@ func _init() -> void:
 func _run() -> void:
 	_test_host_identity_preferences()
 	_test_host_join_arguments_stay_bounded()
+	_test_dual_stack_port_preflight()
 	_test_journey_progression()
 	_test_journey_ui()
 	for failure in failures:
@@ -60,6 +61,25 @@ func _test_host_join_arguments_stay_bounded() -> void:
 	_check(client.has("--role=game-client"), "USER1 player remains game-client")
 	_check(client.has("--player-identity=host-player"), "USER1 Continue can relaunch the same host player")
 	_check(not _contains_prefix(client, "--persistence-root="), "USER1 client owns no persistence root")
+
+
+func _test_dual_stack_port_preflight() -> void:
+	if not OS.has_feature("windows"):
+		_check(true, "dual-stack preflight is Windows-specific")
+		return
+	var port := 31000 + (OS.get_process_id() % 1000)
+	var holder := PacketPeerUDP.new()
+	var bind_error := holder.bind(port, "::")
+	if bind_error != OK:
+		_check(true, "Windows host has no IPv6 wildcard bind for falsifier")
+		holder.close()
+		return
+	var shell = ProductShell.new()
+	_check(
+		not shell._udp_port_available(port),
+		"Product Shell rejects a port already owned through IPv6 wildcard"
+	)
+	holder.close()
 
 
 func _test_journey_progression() -> void:
