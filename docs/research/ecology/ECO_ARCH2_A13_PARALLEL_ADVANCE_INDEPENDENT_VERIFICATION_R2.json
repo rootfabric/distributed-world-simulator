@@ -1,0 +1,114 @@
+{
+  "schema": "distributed_world_simulator.harness_independent_verification_result.v1",
+  "verification_id": "ECO-ARCH2-A13-PARALLEL-ADVANCE-R2-INDEPENDENT-VERIFY-001",
+  "work_order_id": "ECO-ARCH2-A13-PARALLEL-ADVANCE-R1",
+  "repair_id": "A13-PARALLEL-ADVANCE-R2",
+  "risk_class": "MEDIUM",
+  "subject": {
+    "head": "2dc38180e8c9d22ce33f36a3fefc5818d0660165",
+    "tree": "ce7fd5c22851d1b86bdbf0a14d47d79528ef8ac0",
+    "base_main": "f531499fb5efb17fd2ff8087bd5c3a65d8be3fa0",
+    "freeze_ref": "freeze/eco-arch2-a13-parallel-advance-2dc38180-r2",
+    "pr": 739
+  },
+  "fresh_review": {
+    "verdict": "PASS",
+    "commit": "3cdf0ec961ae3c25dd78e51dd16ebdee771fd66b",
+    "github_review_id": 5412910403,
+    "blocking_findings": 0,
+    "required_fixes": []
+  },
+  "windows": {
+    "provenance": "fresh independent Windows verifier handoff supplied from detached worktree",
+    "host": "Windows 10 10.0.19045 x64",
+    "pwsh": "7.6.6",
+    "godot_version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "godot_sha256": "3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5",
+    "counts": {
+      "parallel_advance": "140/0",
+      "parallel_prepare": "93/0",
+      "activity": "122/0",
+      "spatial": "108/0",
+      "a13": "58/0",
+      "a12": "38/0",
+      "a11": "171/0"
+    },
+    "semantic_review": {
+      "field_allocate_demands_calls": 1,
+      "global_allocation_barrier": "PASS",
+      "no_advance_before_allocation": "PASS",
+      "worker_input_isolation": "PASS",
+      "all_started_threads_joined": "PASS",
+      "canonical_workset_order": "PASS",
+      "canonical_member_order": "PASS",
+      "r2_per_member_outcomes": "PASS",
+      "r2_shared_canonical_interpreter": "PASS",
+      "r1_failure_precedence_finding": "CLOSED",
+      "focused_overflow_then_late_failure": "A5_PROPAGULE_LIMIT",
+      "focused_control_no_overflow": "A5_AGE_LIMIT"
+    },
+    "tracked_tree_after": "CLEAN",
+    "findings": [
+      "Non-blocking: Godot --import generated untracked .gid/.uid sidecars; tracked tree remained clean.",
+      "Non-blocking: PowerShell Get-FileHash was used instead of sha256sum; all seven evidence and command-log hashes independently matched."
+    ],
+    "verdict": "VERIFIED"
+  },
+  "linux": {
+    "workflow_run": 37294026205,
+    "job": 111710915125,
+    "conclusion": "success",
+    "artifact_id": 11347007934,
+    "artifact_name": "eco-a13-parallel-advance-Linux-37294026205-1",
+    "artifact_sha256": "1ecf60b82fdfe9fba46c7b52e5fe0753a9870dd80aa2f516916c838b2d1107aa",
+    "godot_version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "godot_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+    "counts": {
+      "parallel_advance": "140/0",
+      "parallel_prepare": "93/0",
+      "activity": "122/0",
+      "spatial": "108/0",
+      "a13": "58/0",
+      "a12": "38/0",
+      "a11": "171/0"
+    },
+    "evidence_sha256": {
+      "parallel_advance": "363ffe14066173888bdade6fbbcf526a244860aa502e1e50f775723529102f7b",
+      "parallel_prepare": "01db599be38861ad71a8972cca72d2994135909a8fba65c5bd653de776723f14",
+      "activity": "863fe7911ac164325e1d2b1e3f5bfba70f52f8ef27e1194313a74e60aee28e67",
+      "spatial": "6f63d540d5bf00011ce74aead6a290d7c2b0ae7e1878b22cb0b9b311d126ddfe",
+      "a13": "eb08b2877f58e4b1a40fb7c343e237e386c1a5adae8238231714ead8e1104d54",
+      "a12": "cce5d9aeef5a6afd4630daebf942455900074df4932c99237a6a9ac7877affe0",
+      "a11": "e874b5334655575275dfdb708ed497a5891f6f1eadc808adc8d9979d8d1d82a4"
+    },
+    "artifact_checks": [
+      "Downloaded ZIP SHA256 independently matched GitHub artifact digest.",
+      "All seven evidence.json SHA256 values matched evidence.sha256.",
+      "All command-log SHA256 values matched evidence.json.",
+      "All commands exited 0 and timed_out=false.",
+      "All before/after HEAD and TREE exactly matched frozen subject.",
+      "All tracked_status values were empty.",
+      "No SCRIPT ERROR:, Parse Error, Failed to load script, or Error compiling markers found."
+    ],
+    "verdict": "VERIFIED"
+  },
+  "project_control": {
+    "run": 37294026338,
+    "job": 111710910718,
+    "conclusion": "success",
+    "full_harness_regression": "PASS",
+    "pc0": "PASS",
+    "directional_audit": "PASS"
+  },
+  "final_main_check": {
+    "current_main": "f531499fb5efb17fd2ff8087bd5c3a65d8be3fa0",
+    "behind_by": 0,
+    "merge_base": "f531499fb5efb17fd2ff8087bd5c3a65d8be3fa0",
+    "unreviewed_ecology_overlap": false
+  },
+  "verdict": "VERIFIED",
+  "required_fixes": [],
+  "blocking_findings": [],
+  "merge_authorized": false,
+  "note": "Independent verification is complete. Human merge authorization remains a separate gate."
+}
