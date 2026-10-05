@@ -1,0 +1,69 @@
+{
+  "schema": "distributed_world_simulator.v0_live3_fresh_review.v1",
+  "role": "FRESH_REVIEWER",
+  "verdict": "PASS",
+  "repository": "rootfabric/distributed-world-simulator",
+  "pr_number": 735,
+  "product_head": "9b0b72aba4ecdfb8d50c3d4b3cd0119b55134075",
+  "product_tree": "a40047ce0ee07bddbe9831afcab55d97d0e2b15f",
+  "base_main": "c25a6b26d83b937acd1eb4cd4d92e2b44b40c678",
+  "freeze_ref": "freeze/v0-live3-r1-9b0b72ab-windows-r1",
+  "review_branch": "review/v0-live3-9b0b72ab-r1",
+  "main_drift": 0,
+  "bounded_files": 10,
+  "exact_windows": {
+    "run": 37254326876,
+    "job": 111588122465,
+    "conclusion": "success",
+    "artifact_id": 11322308211,
+    "artifact_name": "v0-live3-r1-recovery-37254326876-1",
+    "artifact_sha256": "434f164cfe82d43db5c84f28d4271cf4df61dcb50b48a67be0477f4ad487f4d9"
+  },
+  "corroboration": {
+    "project_control_run": 37254330095,
+    "project_control": "success",
+    "live2_targeted_run": 37254330137,
+    "live2_targeted": "success"
+  },
+  "review_checks": {
+    "no_new_canonical_persistence_owner": true,
+    "persistence_root_server_only": true,
+    "m6_recovery_repository_reused": true,
+    "construction_m0_repository_reused": true,
+    "construction_recipe_captured_before_recovery_sync": true,
+    "transferability_validator_unchanged": true,
+    "automation_evidence_read_only": true,
+    "movement_canonicalization_bounded_to_sub_epsilon_zero": true,
+    "exact_product_flow_proven": true,
+    "client_reconnect_preserves_identity": true,
+    "planned_server_restart_recovers_state": true,
+    "post_restart_gameplay_continues": true,
+    "final_source_clean": true,
+    "final_host_clean": true
+  },
+  "evidence_facts": {
+    "item_graph_checksum_after_build": "ecdfd40b972067316f20640a076dedbc13a36aeaf3bb64ff14cc56e7fae65bc6",
+    "resource_generation_after_mining": 3,
+    "resource_checksum_after_mining": "7b182843732590cb02c708ef411d3ec999b581f2b4b21b84bb67f584a13427ae",
+    "construction_generation": 1,
+    "construction_checksum": "970d091738801a372884df7268d36bdf7b4fd2d71de86f6b288707ce3582523b",
+    "construct_checksum": "2b6fa16aea2a3e0211a7a8984887dfbf4c088bdd84d1a2d30110c6ef96e00854",
+    "post_restart_movement_distance_m": 1.1774999999999922,
+    "remote_samples_before": 13,
+    "remote_samples_after": 81,
+    "snapshot_clock_source": "CANONICAL_SNAPSHOT_CONTEXT"
+  },
+  "blocking_findings": [],
+  "non_blocking_findings": [
+    {
+      "id": "LIVE3-REV-NB001",
+      "severity": "DOC_ONLY",
+      "summary": "The in-tree LIVE.3 control markdown still contains historical handoff status text saying Windows exact repair is required. This is stale after the frozen exact PASS but does not affect product behavior or verifier identity. Do not mutate the frozen product subject before independent verification; refresh documentation after closure."
+    }
+  ],
+  "required_fixes": [],
+  "evidence_gaps": [],
+  "merge_performed": false,
+  "predicate_verified": false,
+  "human_acceptance": false
+}
