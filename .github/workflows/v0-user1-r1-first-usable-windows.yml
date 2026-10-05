@@ -56,6 +56,7 @@ jobs:
             "scripts/runtime/networked_gameplay/user1/user1_product_player_transfer_port.gd"
             "scripts/runtime/networked_gameplay/user1/user1_product_seam_authority_service.gd"
             "scripts/runtime/networked_gameplay/user1/user1_product_seam_gameplay_service.gd"
+            "scripts/runtime/networked_gameplay/user1/user1_product_seam_movement_authority_service.gd"
             "scripts/runtime/networked_gameplay/user1/user1_product_seam_state.gd"
             "scripts/ui/product_shell.gd"
             "scripts/ui/user1_journey_overlay.gd"
