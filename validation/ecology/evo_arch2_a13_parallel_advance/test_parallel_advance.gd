@@ -36,6 +36,7 @@ func _run() -> void:
 	check(not fixture.is_empty(), "256-founder advance fixture starts")
 	if not fixture.is_empty():
 		_parallel_a5_contract(fixture)
+	_failure_precedence_contract()
 	var initial := _dynamic_runtime()
 	check(not initial.is_empty(), "dynamic advance runtime starts")
 	if not initial.is_empty():
@@ -206,6 +207,66 @@ func _parallel_a5_contract(fixture: Dictionary) -> void:
 		check(not rejected.success and String(rejected.error).begins_with("A5_SPATIAL_WORKSET_PLAN:"),
 			"full parallel path rejects stale spatial plan before execution")
 		check(Field.state_hash(field) == source_field_hash, "stale-plan rejection leaves source field unchanged")
+
+func _failure_precedence_contract() -> void:
+	# R2 falsifier: the global propagule bound is defense-in-depth under the
+	# current 256 * 4 envelope, so inject canonical member outcomes directly at
+	# the shared interpreter boundary. Both serial and parallel Phase 2 use this
+	# exact interpreter after the repair.
+	var unit := {
+		"index": 0,
+		"member_ids": ["precedence/a", "precedence/b"],
+	}
+	var first_entry := {
+		"blueprint": {},
+		"state": {"individual_id": "precedence/a"},
+	}
+	var outcomes := [
+		{
+			"success": true,
+			"member_id": "precedence/a",
+			"entry": first_entry,
+			"propagules": [
+				{"id": "precedence/propagule/0"},
+				{"id": "precedence/propagule/1"},
+			],
+		},
+		{
+			"success": false,
+			"member_id": "precedence/b",
+			"error": "A5_AGE_LIMIT",
+		},
+	]
+
+	var serial_population: Array = []
+	var serial_propagules: Array = []
+	for index in Lifecycle.MAX_PROPAGULES_PER_STEP - 1:
+		serial_propagules.append({"id": "serial/preexisting/%04d" % index})
+	var serial_result := Lifecycle._consume_advance_outcomes(
+		unit, outcomes.duplicate(true), serial_population, serial_propagules)
+	check(not serial_result.success and String(serial_result.error) == "A5_PROPAGULE_LIMIT",
+		"serial canonical interpreter preserves earlier propagule limit over later member failure")
+
+	var parallel_population: Array = []
+	var parallel_propagules: Array = []
+	for index in Lifecycle.MAX_PROPAGULES_PER_STEP - 1:
+		parallel_propagules.append({"id": "parallel/preexisting/%04d" % index})
+	var parallel_result := Lifecycle._consume_advance_outcomes(
+		unit, outcomes.duplicate(true), parallel_population, parallel_propagules)
+	check(not parallel_result.success and String(parallel_result.error) == "A5_PROPAGULE_LIMIT",
+		"parallel canonical interpreter preserves earlier propagule limit over later member failure")
+	check(String(serial_result.error) == String(parallel_result.error),
+		"serial and parallel canonical failure precedence is identical")
+
+	# Control: without overflow, the later member failure must remain visible.
+	var control_population: Array = []
+	var control_propagules: Array = []
+	for index in Lifecycle.MAX_PROPAGULES_PER_STEP - 2:
+		control_propagules.append({"id": "control/preexisting/%04d" % index})
+	var control := Lifecycle._consume_advance_outcomes(
+		unit, outcomes.duplicate(true), control_population, control_propagules)
+	check(not control.success and String(control.error) == "A5_AGE_LIMIT",
+		"later member failure remains authoritative when earlier propagules fit the global bound")
 
 func _reproductive_blueprint() -> Dictionary:
 	var program := {
