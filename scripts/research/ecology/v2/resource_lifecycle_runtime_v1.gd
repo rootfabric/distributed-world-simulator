@@ -492,12 +492,10 @@ static func _advance_units_serial(entries: Array, units: Array,
 			task_entries, samples, intake_by_id, int(unit.index))
 		if not bool(advanced.get("success", false)):
 			return advanced
-		for entry in advanced.population:
-			next_population.append(entry)
-		for propagule in advanced.propagules:
-			if propagules.size() >= MAX_PROPAGULES_PER_STEP:
-				return _fail("A5_PROPAGULE_LIMIT")
-			propagules.append(propagule)
+		var consumed := _consume_advance_outcomes(
+			unit, advanced.outcomes, next_population, propagules)
+		if not bool(consumed.get("success", false)):
+			return consumed
 	return _canonical_advance_result(next_population, propagules, 0, 0)
 
 static func _advance_units_parallel(entries: Array, units: Array,
@@ -548,8 +546,8 @@ static func _advance_units_parallel(entries: Array, units: Array,
 			var result: Variant = started.thread.wait_to_finish()
 			wave_results[int(started.index)] = result
 
-		# Worker completion timing is non-authoritative. Interpret results only
-		# in canonical workset order and preserve member order within each unit.
+		# Completion order is non-authoritative. Workset and member outcomes are
+		# interpreted only on the main thread in canonical order.
 		for unit_index in range(cursor, stop):
 			var unit: Dictionary = units[unit_index]
 			var result: Variant = wave_results.get(int(unit.index), null)
@@ -563,12 +561,10 @@ static func _advance_units_parallel(entries: Array, units: Array,
 			if bool(advanced.get("worker_is_main_thread", true)):
 				return _fail("A5_PARALLEL_ADVANCE_THREAD_CONTEXT")
 			threaded_worksets += 1
-			for entry in advanced.population:
-				next_population.append(entry)
-			for propagule in advanced.propagules:
-				if propagules.size() >= MAX_PROPAGULES_PER_STEP:
-					return _fail("A5_PROPAGULE_LIMIT")
-				propagules.append(propagule)
+			var consumed := _consume_advance_outcomes(
+				unit, advanced.outcomes, next_population, propagules)
+			if not bool(consumed.get("success", false)):
+				return consumed
 		cursor = stop
 
 	return _canonical_advance_result(
@@ -576,8 +572,7 @@ static func _advance_units_parallel(entries: Array, units: Array,
 
 static func _advance_unit_worker(task_entries: Array, samples: Dictionary,
 		intake_by_id: Dictionary, unit_index: int) -> Dictionary:
-	var next_population: Array = []
-	var propagules: Array = []
+	var outcomes: Array = []
 	for entry in task_entries:
 		if not entry is Dictionary or not entry.has("blueprint") or not entry.has("state"):
 			return _fail("A5_ENTRY")
@@ -590,33 +585,91 @@ static func _advance_unit_worker(task_entries: Array, samples: Dictionary,
 				"outcome": "DEAD_INERT",
 				"detail": "no resource requests or lifecycle transitions",
 			}]
-			next_population.append({
-				"blueprint": blueprint.duplicate(true),
-				"state": inert,
+			outcomes.append({
+				"success": true,
+				"member_id": id,
+				"entry": {
+					"blueprint": blueprint.duplicate(true),
+					"state": inert,
+				},
+				"propagules": [],
 			})
 			continue
 		if not samples.has(id):
-			return _fail("A5_PREPARE_SAMPLE_MISSING")
+			outcomes.append({
+				"success": false,
+				"member_id": id,
+				"error": "A5_PREPARE_SAMPLE_MISSING",
+			})
+			break
 		if not intake_by_id.has(id):
-			return _fail("A5_GRANT_OWNER")
+			outcomes.append({
+				"success": false,
+				"member_id": id,
+				"error": "A5_GRANT_OWNER",
+			})
+			break
 		var advanced := _advance_individual(
 			state, blueprint, samples[id], intake_by_id[id])
 		if not advanced.success:
-			return advanced
-		next_population.append({
-			"blueprint": blueprint.duplicate(true),
-			"state": advanced.state,
+			outcomes.append({
+				"success": false,
+				"member_id": id,
+				"error": String(advanced.error),
+			})
+			break
+		outcomes.append({
+			"success": true,
+			"member_id": id,
+			"entry": {
+				"blueprint": blueprint.duplicate(true),
+				"state": advanced.state,
+			},
+			"propagules": advanced.propagules.duplicate(true),
 		})
-		for propagule in advanced.propagules:
-			propagules.append(propagule)
 
 	return {
 		"success": true,
 		"unit_index": unit_index,
 		"worker_is_main_thread": Thread.is_main_thread(),
-		"population": next_population,
-		"propagules": propagules,
+		"outcomes": outcomes,
 	}
+
+static func _consume_advance_outcomes(unit: Dictionary, outcomes: Array,
+		next_population: Array, propagules: Array) -> Dictionary:
+	if outcomes.is_empty() and not unit.member_ids.is_empty():
+		return _fail("A5_ADVANCE_OUTCOME_COUNT")
+	if outcomes.size() > unit.member_ids.size():
+		return _fail("A5_ADVANCE_OUTCOME_COUNT")
+
+	for member_index in outcomes.size():
+		var outcome: Variant = outcomes[member_index]
+		if not outcome is Dictionary:
+			return _fail("A5_ADVANCE_OUTCOME")
+		var expected_id := String(unit.member_ids[member_index])
+		if String(outcome.get("member_id", "")) != expected_id:
+			return _fail("A5_ADVANCE_OUTCOME_MEMBER")
+
+		# This order is the historical canonical contract:
+		# member semantic failure is considered at its member position, while a
+		# successful earlier member's propagules are admitted/limited before the
+		# next member outcome is considered.
+		if not bool(outcome.get("success", false)):
+			var error := String(outcome.get("error", ""))
+			return _fail(error if not error.is_empty() else "A5_ADVANCE_OUTCOME_ERROR")
+		var entry: Variant = outcome.get("entry", null)
+		var member_propagules: Variant = outcome.get("propagules", null)
+		if not entry is Dictionary or not member_propagules is Array:
+			return _fail("A5_ADVANCE_OUTCOME")
+		next_population.append(entry)
+		for propagule in member_propagules:
+			if propagules.size() >= MAX_PROPAGULES_PER_STEP:
+				return _fail("A5_PROPAGULE_LIMIT")
+			propagules.append(propagule)
+
+	if outcomes.size() != unit.member_ids.size():
+		return _fail("A5_ADVANCE_OUTCOME_COUNT")
+	return {"success": true}
 
 static func _canonical_advance_result(next_population: Array, propagules: Array,
 		peak_workers: int, threaded_worksets: int) -> Dictionary:
