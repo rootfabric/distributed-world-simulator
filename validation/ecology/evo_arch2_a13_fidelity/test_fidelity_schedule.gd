@@ -241,6 +241,13 @@ func _plan_contract(initial: Dictionary) -> void:
 	var canonical_b := Fidelity.create(initial.field, initial.population, unordered_b, 0, 1, 4, 4, 4, 64)
 	check(C.encode(canonical_a) == C.encode(canonical_b),
 		"override insertion order cannot affect fidelity plan bytes")
+	var implicit_full := Fidelity.create(initial.field, initial.population, {}, 0, 1, 4, 4, 4, 64)
+	var explicit_full := Fidelity.create(
+		initial.field, initial.population,
+		{"tile/0000/0000": Fidelity.MODE_FULL},
+		0, 1, 4, 4, 4, 64)
+	check(C.encode(implicit_full) == C.encode(explicit_full),
+		"redundant explicit FULL override canonicalizes to default plan bytes")
 
 	var reversed_population: Array = initial.population.duplicate(true)
 	reversed_population.reverse()
