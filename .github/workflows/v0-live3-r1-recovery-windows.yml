@@ -45,6 +45,7 @@ jobs:
             "docs/control/v0-live/V0_LIVE3_RECOVERY_PRODUCT_R1_RU.md"
             "scripts/app/earth_mvp_app.gd"
             "scripts/app/simulator_app.gd"
+            "scripts/construction/mvp/v0_p4_mvp_earth_outpost_authority.gd"
             "scripts/runtime/launch_options.gd"
             "scripts/runtime/networked_gameplay/services/player_movement_service.gd"
             "tests/runtime/test_launch_options.gd"
