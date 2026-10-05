@@ -5,6 +5,12 @@ from pathlib import Path
 PREFIX="FABRIC_R5_4_RESULT="
 PASS="FABRIC R5.4 MIXED COMPLEXITY 100K MACHINE: PASS ("
 FATAL=re.compile(r"SCRIPT ERROR|Parse Error|Compile Error|Invalid call|Invalid access|ERROR:",re.I)
+LINUX_GODOT_SHA256="bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7"
+WINDOWS_GODOT_SHA256="3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5"
+CANONICAL_ENGINE_IDENTITY_LINES={
+    "GODOT_SHA256="+LINUX_GODOT_SHA256,
+    "GODOT_SHA256="+WINDOWS_GODOT_SHA256,
+}
 EXPECTED={
  "checks":1001,"machine_parts":100000,"recursive_levels":4,"recursive_nodes":15,
  "baseline_recursive_physical_components":1812,"final_recursive_physical_components":1852,
@@ -28,15 +34,20 @@ def sample(path:Path):
     for k,v in EXPECTED.items(): req(d.get(k)==v,"mismatch "+k)
     req(re.fullmatch(r"[0-9a-f]{64}",d.get("final_machine_hash","")) is not None,"machine hash")
     return rows[0],d
+def validate_identity(before:list[str],after:list[str]):
+    req(before==after,"identity moved")
+    req(len(before)==4,"identity shape")
+    req(re.fullmatch(r"HEAD=[0-9a-f]{40}",before[0]) is not None,"head identity")
+    req(re.fullmatch(r"TREE=[0-9a-f]{40}",before[1]) is not None,"tree identity")
+    req(before[2]=="GODOT_VERSION=4.7.1.stable.double.custom_build.a13da4feb","engine version")
+    req(before[3] in CANONICAL_ENGINE_IDENTITY_LINES,"engine sha")
 def collect(root:Path):
     rows=[sample(root/f"sample-{i}.log") for i in (1,2,3)];req(rows[0][0]==rows[1][0]==rows[2][0],"payload mismatch")
     for name,marker in (("r53","FABRIC R5.3 RECURSIVE HIERARCHICAL EXECUTION: PASS (1231 assertions)"),("r51","FABRIC R5.1 QUANTITATIVE SCALE: PASS")):
         t=(root/f"{name}-regression.log").read_text(encoding="utf-8-sig");req(marker in t and not FATAL.search(t),"regression "+name)
     for name in ("import","parse"):
         req(not FATAL.search((root/f"{name}.log").read_text(encoding="utf-8-sig")),name+" fatal")
-    before=(root/"identity-before.txt").read_text().splitlines();after=(root/"identity-after.txt").read_text().splitlines();req(before==after,"identity moved")
-    req(before[2]=="GODOT_VERSION=4.7.1.stable.double.custom_build.a13da4feb","engine version")
-    req(before[3]=="GODOT_SHA256=bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7","engine sha")
+    before=(root/"identity-before.txt").read_text().splitlines();after=(root/"identity-after.txt").read_text().splitlines();validate_identity(before,after)
     h=digest(rows[0][1])
     return {"schema":"fabric.r5_4.exact_evidence.v1","status":"IMPLEMENTER_EXACT_PASS","identity":before,"deterministic_hash":h,"result":rows[0][1],"logs":{p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(root.glob("*.log"))}}
 def main():
