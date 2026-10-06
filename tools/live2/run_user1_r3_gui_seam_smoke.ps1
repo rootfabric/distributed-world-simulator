@@ -63,6 +63,20 @@ function Wait-UdpOwner{
     }
     throw "UDP_OWNER_TIMEOUT:$Port"
 }
+function Wait-ServerRuntimeReady{
+    param([int]$TimeoutSeconds=90)
+    $deadline=(Get-Date).AddSeconds($TimeoutSeconds)
+    while((Get-Date)-lt$deadline){
+        if(Test-Path $ServerLog){
+            $tail=Get-Content $ServerLog -Tail 120 -ErrorAction SilentlyContinue|Out-String
+            if($tail -match '"event":"node_ready"' -or $tail -match '\[lifecycle\].*"event":"node_ready"'){
+                return
+            }
+        }
+        Start-Sleep -Milliseconds 500
+    }
+    throw 'SERVER_WORLD_RUNTIME_READY_TIMEOUT'
+}
 function Invoke-Control{
     param([ValidateSet("A","B")][string]$Client,[string[]]$Arguments,[switch]$AllowFailure)
     $port=if($Client-eq"A"){$ClientAPort}else{$ClientBPort}
@@ -152,6 +166,7 @@ try{
     Start-Sleep -Seconds 1
     $serverPid=Wait-UdpOwner -Port $ServerPort
     $Processes.server=Get-Process -Id $serverPid -ErrorAction Stop
+    Wait-ServerRuntimeReady 90
 
     $common=@("--path",$Worktree,"--resolution","900x650","--","--network-mvp","--role=game-client","--world=earth","--server-address=127.0.0.1","--server-port=$ServerPort","--network-debug","--network-debug-stay-open","--automation-control","--automation-control-token=$Token")
     $argsA=@("--position","20,50","--log-file",$ClientALog)+$common+@("--player-identity=a","--node-id=user1-r3-smoke-a","--automation-control-port=$ClientAPort","--automation-control-output-dir=$AutomationA")
