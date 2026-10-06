@@ -76,7 +76,7 @@ func _run() -> void:
 			{
 				"move_x": move_x,
 				"move_z": 0.0,
-				"look_yaw": 0.0,
+				"look_yaw": 0.4251206143591745,
 				"look_pitch": 0.0,
 				"jump_pressed": false,
 				"sprint": true,
@@ -273,7 +273,7 @@ func _test_two_player_visibility_roundtrip() -> void:
 				{
 					"move_x": direction,
 					"move_z": 0.0,
-					"look_yaw": 0.0,
+					"look_yaw": 0.4251206143591745,
 					"look_pitch": 0.0,
 					"jump_pressed": false,
 					"sprint": true,
