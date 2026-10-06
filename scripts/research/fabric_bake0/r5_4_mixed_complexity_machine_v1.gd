@@ -28,6 +28,7 @@ var local_recursive_reused := 0
 var global_recursive_changed := 0
 var global_recursive_reused := 0
 var global_structural_parts_scanned := 0
+var explicit_global_control_parts_scanned := 0
 var steady_calls := 0
 var last_machine_hash := ""
 
@@ -107,13 +108,36 @@ func execute_steady(boundary_effort: Array) -> Dictionary:
 		"machine_hash": machine_hash(),
 	})
 
+func _stage_structural_local_event() -> Dictionary:
+	var captured: Dictionary = structural_runtime.capture_capsule()
+	if not captured.success:
+		return U.failure("R5_4_STRUCTURAL_STAGE_CAPTURE_FAILED", {"cause":captured})
+	var staged = Life.new()
+	var attached: Dictionary = staged.attach_range_index(structural_index, structural_source)
+	if not attached.success:
+		return U.failure("R5_4_STRUCTURAL_STAGE_INDEX_FAILED", {"cause":attached})
+	var restored: Dictionary = staged.restore_capsule(structural_source, captured.details.capsule)
+	if not restored.success:
+		return U.failure("R5_4_STRUCTURAL_STAGE_RESTORE_FAILED", {"cause":restored})
+	var local: Dictionary = staged.local_unbake(1, Life.IMPACT_LOAD)
+	if not local.success:
+		return U.failure("R5_4_STRUCTURAL_LOCAL_UNBAKE_FAILED", {"cause":local})
+	var successor: Dictionary = Source.create_subject(MACHINE_PARTS, true)
+	if not bool(successor.get("success", false)):
+		return U.failure("R5_4_STRUCTURAL_SUCCESSOR_FAILED", {"cause":successor})
+	var observed: Dictionary = staged.observe_canonical_break(successor, "topology-event/r5-4-local-break", 2)
+	if not observed.success:
+		return U.failure("R5_4_STRUCTURAL_MUTATION_FAILED", {"cause":observed})
+	var rebaked: Dictionary = staged.rebake_after_settle(true)
+	if not rebaked.success:
+		return U.failure("R5_4_STRUCTURAL_REBAKE_FAILED", {"cause":rebaked})
+	return U.success({"runtime":staged,"source":successor,"local":local,"rebaked":rebaked})
+
 func local_damage_and_refine() -> Dictionary:
 	if structural_runtime == null or recursive_runtime == null:
 		return U.failure("R5_4_NOT_INITIALIZED")
 	var before_root: Dictionary = recursive_root
-	var local: Dictionary = structural_runtime.local_unbake(1, Life.IMPACT_LOAD)
-	if not local.success:
-		return U.failure("R5_4_STRUCTURAL_LOCAL_UNBAKE_FAILED", {"cause": local})
+	# Stage the recursive candidate before touching any live representation.
 	var leaf: Dictionary = Fixture.compile_leaf("r53/leaf-0-0-0", 1, 2, 120)
 	if not leaf.success:
 		return U.failure("R5_4_RECURSIVE_LEAF_REFINE_FAILED", {"cause": leaf})
@@ -126,20 +150,19 @@ func local_damage_and_refine() -> Dictionary:
 	var expected := LOCAL_EXPECTED_CHANGED.duplicate(); expected.sort()
 	if changed != expected:
 		return U.failure("R5_4_LOCAL_CAUSAL_WORKSET_MISMATCH", {"expected":expected,"actual":changed})
+	# Stage the complete structural transition in a restored scratch runtime. Live
+	# structural state remains untouched until the recursive refresh also succeeds.
+	var staged_structural: Dictionary = _stage_structural_local_event()
+	if not staged_structural.success:
+		return staged_structural
+	# R5.3 refresh is already transactional internally. Once it succeeds, the only
+	# remaining operation is swapping the fully staged structural runtime/source.
 	var refreshed: Dictionary = recursive_runtime.refresh(next_root, changed)
 	if not refreshed.success:
 		return U.failure("R5_4_RECURSIVE_LOCAL_REFRESH_FAILED", {"cause": refreshed})
 	recursive_root = next_root
-	var successor: Dictionary = Source.create_subject(MACHINE_PARTS, true)
-	if not bool(successor.get("success", false)):
-		return U.failure("R5_4_STRUCTURAL_SUCCESSOR_FAILED", {"cause": successor})
-	var observed: Dictionary = structural_runtime.observe_canonical_break(successor, "topology-event/r5-4-local-break", 2)
-	if not observed.success:
-		return U.failure("R5_4_STRUCTURAL_MUTATION_FAILED", {"cause": observed})
-	var rebaked: Dictionary = structural_runtime.rebake_after_settle(true)
-	if not rebaked.success:
-		return U.failure("R5_4_STRUCTURAL_REBAKE_FAILED", {"cause": rebaked})
-	structural_source = successor
+	structural_runtime = staged_structural.details.runtime
+	structural_source = staged_structural.details.source
 	local_event_count += 1
 	local_recursive_changed = changed.size()
 	local_recursive_reused = int(refreshed.details.reused_sessions)
@@ -154,14 +177,24 @@ func local_damage_and_refine() -> Dictionary:
 		"machine_hash": last_machine_hash,
 	})
 
+func explicit_global_control_scan() -> Dictionary:
+	if structural_runtime == null:
+		return U.failure("R5_4_NOT_INITIALIZED")
+	# Deliberately non-causal O(N) control. This preserves the R5.1 distinction:
+	# scanning the unchanged canonical source is measurement/control, not a global
+	# physical event and not evidence that causality required expansion.
+	var global: Dictionary = Source.aggregate_span(structural_source.spec, 0, MACHINE_PARTS)
+	if not global.success:
+		return U.failure("R5_4_GLOBAL_CONTROL_SCAN_FAILED", {"cause":global})
+	explicit_global_control_parts_scanned = int(global.details.parts_scanned)
+	return U.success({"parts_scanned":explicit_global_control_parts_scanned,"descriptor_checksum":String(global.details.descriptor.checksum)})
+
 func global_reconfigure() -> Dictionary:
 	if structural_runtime == null or recursive_runtime == null:
 		return U.failure("R5_4_NOT_INITIALIZED")
-	# This is deliberately a true machine-wide causal event: the global structural
-	# aggregate is re-derived and every recursive leaf receives a new source revision.
-	var global: Dictionary = Source.aggregate_span(structural_source.spec, 0, MACHINE_PARTS)
-	if not global.success:
-		return U.failure("R5_4_GLOBAL_STRUCTURAL_REBUILD_FAILED", {"cause": global})
+	# Global causality exists only inside the recursive dependency hierarchy in
+	# this fixture. Structural source/runtime are intentionally untouched because
+	# there is no canonical structural dependency requiring expansion.
 	var next: Dictionary = _build_recursive(2, true)
 	if not next.success:
 		return U.failure("R5_4_GLOBAL_RECURSIVE_REBUILD_FAILED", {"cause": next})
@@ -174,7 +207,7 @@ func global_reconfigure() -> Dictionary:
 		return U.failure("R5_4_GLOBAL_RECURSIVE_REFRESH_FAILED", {"cause": refreshed})
 	recursive_root = next_root
 	global_event_count += 1
-	global_structural_parts_scanned = int(global.details.parts_scanned)
+	global_structural_parts_scanned = 0
 	global_recursive_changed = changed.size()
 	global_recursive_reused = int(refreshed.details.reused_sessions)
 	last_machine_hash = machine_hash()
@@ -195,7 +228,8 @@ func machine_hash() -> String:
 		"recursive_root_node_hash": String(recursive_root.node_hash),
 		"dependencies": {
 			"local_structural_damage": LOCAL_EXPECTED_CHANGED,
-			"global_reconfigure": "all-structural+all-recursive",
+			"global_reconfigure": "recursive-all;structural-unaffected",
+			"explicit_global_control": "structural-full-scan;non-causal",
 		},
 	})
 
@@ -223,6 +257,7 @@ func status() -> Dictionary:
 		"global_recursive_changed": global_recursive_changed,
 		"global_recursive_reused": global_recursive_reused,
 		"global_structural_parts_scanned": global_structural_parts_scanned,
+		"explicit_global_control_parts_scanned": explicit_global_control_parts_scanned,
 		"steady_calls": steady_calls,
 		"machine_hash": machine_hash(),
 	}
