@@ -53,6 +53,7 @@ var _authority_epoch := 1
 var _peer_to_player: Dictionary = {}
 var _peer_to_session: Dictionary = {}
 var _joins := 0
+var _fast_join_acks := 0
 var _leaves := 0
 var _moves := 0
 var _presentation_updates := 0
@@ -425,7 +426,15 @@ func _handle_join(peer_id: String, session_id: String, payload: Dictionary) -> v
 		_send(peer_id, "JOIN_REJECTED", {"operation_id": operation_id, "error_code": "INVALID_JOIN_PAYLOAD"})
 		return
 	var result: Dictionary = _service.join(logical_id, session_id, operation_id)
-	if not _persist_command_result(operation_id, "JOIN", logical_id, result):
+	var immediate_join_persistence := true
+	if _service.has_method("requires_immediate_join_persistence"):
+		immediate_join_persistence = bool(
+			_service.requires_immediate_join_persistence()
+		)
+	if (
+		immediate_join_persistence
+		and not _persist_command_result(operation_id, "JOIN", logical_id, result)
+	):
 		_send(peer_id, "JOIN_REJECTED", {"operation_id": operation_id, "error_code": "M6_DURABLE_COMMIT_FAILED"})
 		return
 	if not bool(result.get("success", false)):
@@ -451,6 +460,14 @@ func _handle_join(peer_id: String, session_id: String, payload: Dictionary) -> v
 	}, RealtimeChannelPolicy.RESYNC, "RELIABLE_ORDERED")
 	if join_sent:
 		_item_graph_full_snapshots_published += 1
+		if not immediate_join_persistence:
+			_fast_join_acks += 1
+			_telemetry.increment("fast_join_acks")
+			_debug_event("JOIN_ACK_FAST_PATH", {
+				"logical_player_id": logical_id,
+				"operation_id": operation_id,
+				"persistence_deferred": true,
+			})
 	if _construction_bridge != null:
 		var player: Dictionary = Dictionary(result.get("details", {}).get("player", {}))
 		var construction_join: Dictionary = _construction_bridge.connect_player(logical_id, int(player.get("ownership_epoch", 0)))
@@ -1540,6 +1557,7 @@ func get_report() -> Dictionary:
 		"connected_peer_count": _peer_to_player.size(),
 		"peer_to_player": _peer_to_player.duplicate(true),
 		"joins": _joins,
+		"fast_join_acks": _fast_join_acks,
 		"leaves": _leaves,
 		"moves": _moves,
 		"presentation_updates": _presentation_updates,
