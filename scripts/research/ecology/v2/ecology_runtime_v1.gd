@@ -141,6 +141,23 @@ static func step_spatial_parallel_prepare(state: Dictionary, options: Dictionary
 	if not bool(admitted.get("success", false)): return admitted
 	return step_feedback(admitted.state)
 
+## A13 bounded full parallel lifecycle entry point.
+## Phase 1 preparation and Phase 2 per-individual advance are threaded in
+## separate bounded waves. The single global allocation barrier remains
+## between them and no advance worker starts before allocation succeeds.
+static func step_spatial_parallel_advance(state: Dictionary, options: Dictionary,
+		tile_span_cells: int = SpatialWorksets.DEFAULT_TILE_SPAN_CELLS,
+		max_members: int = SpatialWorksets.DEFAULT_MAX_MEMBERS,
+		max_prepare_workers: int = Lifecycle.DEFAULT_PARALLEL_PREPARE_WORKERS,
+		max_advance_workers: int = Lifecycle.DEFAULT_PARALLEL_ADVANCE_WORKERS) -> Dictionary:
+	var lifecycle := step_lifecycle_spatial_parallel_advance(
+		state, tile_span_cells, max_members,
+		max_prepare_workers, max_advance_workers)
+	if not bool(lifecycle.get("success", false)): return lifecycle
+	var admitted := admit_propagules(lifecycle.state, options)
+	if not bool(admitted.get("success", false)): return admitted
+	return step_feedback(admitted.state)
+
 ## A13 Active/Sleeping R1 exact-catch-up entry point.
 ##
 ## The activity plan is scheduler-only and may defer a canonical commit while
@@ -155,7 +172,9 @@ static func step_spatial_parallel_prepare(state: Dictionary, options: Dictionary
 static func advance_spatial_activity_cadence(state: Dictionary, options: Dictionary,
 		activity_plan: Dictionary) -> Dictionary:
 	return _advance_spatial_activity_cadence(
-		state, options, activity_plan, false, Lifecycle.DEFAULT_PARALLEL_PREPARE_WORKERS)
+		state, options, activity_plan,
+		false, Lifecycle.DEFAULT_PARALLEL_PREPARE_WORKERS,
+		false, Lifecycle.DEFAULT_PARALLEL_ADVANCE_WORKERS)
 
 static func advance_spatial_activity_cadence_parallel_prepare(
 		state: Dictionary, options: Dictionary, activity_plan: Dictionary,
@@ -163,11 +182,27 @@ static func advance_spatial_activity_cadence_parallel_prepare(
 	if not Lifecycle.valid_parallel_prepare_workers(max_prepare_workers):
 		return _fail("RUNTIME_PARALLEL_PREPARE_WORKERS")
 	return _advance_spatial_activity_cadence(
-		state, options, activity_plan, true, max_prepare_workers)
+		state, options, activity_plan,
+		true, max_prepare_workers,
+		false, Lifecycle.DEFAULT_PARALLEL_ADVANCE_WORKERS)
+
+static func advance_spatial_activity_cadence_parallel_advance(
+		state: Dictionary, options: Dictionary, activity_plan: Dictionary,
+		max_prepare_workers: int = Lifecycle.DEFAULT_PARALLEL_PREPARE_WORKERS,
+		max_advance_workers: int = Lifecycle.DEFAULT_PARALLEL_ADVANCE_WORKERS) -> Dictionary:
+	if not Lifecycle.valid_parallel_prepare_workers(max_prepare_workers):
+		return _fail("RUNTIME_PARALLEL_PREPARE_WORKERS")
+	if not Lifecycle.valid_parallel_advance_workers(max_advance_workers):
+		return _fail("RUNTIME_PARALLEL_ADVANCE_WORKERS")
+	return _advance_spatial_activity_cadence(
+		state, options, activity_plan,
+		true, max_prepare_workers,
+		true, max_advance_workers)
 
 static func _advance_spatial_activity_cadence(
 		state: Dictionary, options: Dictionary, activity_plan: Dictionary,
-		parallel_prepare: bool, max_prepare_workers: int) -> Dictionary:
+		parallel_prepare: bool, max_prepare_workers: int,
+		parallel_advance: bool, max_advance_workers: int) -> Dictionary:
 	var error := validate(state)
 	if not error.is_empty():
 		return _fail(error)
@@ -207,7 +242,12 @@ static func _advance_spatial_activity_cadence(
 	var replayed := 0
 	for _tick_index in int(activity_plan.catch_up_ticks):
 		var stepped: Dictionary
-		if parallel_prepare:
+		if parallel_advance:
+			stepped = step_spatial_parallel_advance(
+				next, options,
+				int(activity_plan.tile_span_cells), int(activity_plan.max_members),
+				max_prepare_workers, max_advance_workers)
+		elif parallel_prepare:
 			stepped = step_spatial_parallel_prepare(
 				next, options,
 				int(activity_plan.tile_span_cells), int(activity_plan.max_members),
@@ -284,6 +324,26 @@ static func step_lifecycle_spatial_parallel_prepare(state: Dictionary,
 	var result := Lifecycle.step_population_spatial_parallel_prepare(
 		field, state.population, field.owner_token, field.owner_epoch, field.revision,
 		tile_span_cells, max_members, max_prepare_workers)
+	if not result.success: return _fail("RUNTIME_LIFECYCLE:" + String(result.error))
+	var next := state.duplicate(true)
+	next.field = result.field
+	next.population = result.population.duplicate(true)
+	var outbox: Array = []
+	for propagule in result.propagules:
+		outbox.append({"schema": OUTBOX_SCHEMA, "propagule": propagule.duplicate(true)})
+	next.outbox = outbox
+	return {"success": true, "state": _seal(next)}
+
+static func step_lifecycle_spatial_parallel_advance(state: Dictionary,
+		tile_span_cells: int, max_members: int,
+		max_prepare_workers: int = Lifecycle.DEFAULT_PARALLEL_PREPARE_WORKERS,
+		max_advance_workers: int = Lifecycle.DEFAULT_PARALLEL_ADVANCE_WORKERS) -> Dictionary:
+	var error := validate(state)
+	if not error.is_empty(): return _fail(error)
+	var field: Dictionary = state.field
+	var result := Lifecycle.step_population_spatial_parallel_advance(
+		field, state.population, field.owner_token, field.owner_epoch, field.revision,
+		tile_span_cells, max_members, max_prepare_workers, max_advance_workers)
 	if not result.success: return _fail("RUNTIME_LIFECYCLE:" + String(result.error))
 	var next := state.duplicate(true)
 	next.field = result.field
