@@ -175,6 +175,7 @@ func _run() -> void:
 	_check(Array(seam_report.get("transfers", [])).size() == 2, "two SM1 transfer receipts are retained as bounded evidence")
 
 	service.shutdown()
+	_test_two_player_visibility_roundtrip()
 	if failures.is_empty():
 		print("USER1 PRODUCT SEAM BRIDGE: PASS (%d assertions, 0 failures)" % assertions)
 		quit(0)
@@ -186,6 +187,162 @@ func _run() -> void:
 		failures.size(),
 	])
 	quit(1)
+
+
+func _test_two_player_visibility_roundtrip() -> void:
+	var service = SeamService.new()
+	var setup: Dictionary = service.setup(
+		"authority/product/user1-two-player-test",
+		1,
+		0,
+		{
+			"profile": "MULTIPLAYER_CORE",
+			"topology_adapter": "ENET",
+			"region_id": "region/m3/single-server",
+			"playable_sandbox": true,
+			"fixed_tick_authority": true,
+		}
+	)
+	_ok(setup, "two-player seam service setup")
+	if not bool(setup.get("success", false)):
+		service.shutdown()
+		return
+
+	var players := ["user1-seam-a", "user1-seam-b"]
+	var sessions := {
+		"user1-seam-a": "transport-session/user1-seam/two/a",
+		"user1-seam-b": "transport-session/user1-seam/two/b",
+	}
+	var sequences := {"user1-seam-a": 0, "user1-seam-b": 0}
+	for player_id in players:
+		_ok(
+			service.join(
+				player_id,
+				String(sessions[player_id]),
+				"operation/user1/seam/two/join/%s" % player_id
+			),
+			"two-player ordinary join %s" % player_id
+		)
+
+	_check(
+		_snapshot_has_players(service.create_snapshot(), players),
+		"two-player initial snapshot contains both actors"
+	)
+
+	var tick := 0
+	var both_secondary := false
+	var both_returned := false
+	for _step in range(1800):
+		tick += 1
+		var advanced: Dictionary = service.advance_fixed_server_tick(tick)
+		if not bool(advanced.get("success", false)):
+			_fail(
+				"two-player fixed tick failed at %d: %s" % [
+					tick,
+					String(advanced.get("error_code", "")),
+				]
+			)
+			break
+
+		var states: Dictionary = {}
+		for player_id in players:
+			states[player_id] = service.get_product_seam_state(player_id)
+		var on_b_a := String(Dictionary(states[players[0]]).get("region_id", "")) == "region/user1/b"
+		var on_b_b := String(Dictionary(states[players[1]]).get("region_id", "")) == "region/user1/b"
+		if on_b_a and on_b_b:
+			both_secondary = true
+		var direction := -1.0 if both_secondary else 1.0
+
+		for player_id in players:
+			sequences[player_id] = int(sequences[player_id]) + 1
+			var current: Dictionary = service.get_player(player_id)
+			if current.is_empty():
+				_fail(
+					"two-player actor missing before movement: %s tick=%d report=%s" % [
+						player_id,
+						tick,
+						JSON.stringify(service.get_report()),
+					]
+				)
+				break
+			var moved: Dictionary = service.simulate_fixed_movement_tick(
+				player_id,
+				String(sessions[player_id]),
+				int(current.get("ownership_epoch", 0)),
+				int(sequences[player_id]),
+				{
+					"move_x": direction,
+					"move_z": 0.0,
+					"look_yaw": 0.0,
+					"look_pitch": 0.0,
+					"jump_pressed": false,
+					"sprint": true,
+					"delta_seconds": 1.0 / 60.0,
+				},
+				1.0 / 60.0
+			)
+			if not bool(moved.get("success", false)):
+				_fail(
+					"two-player movement/seam failed: player=%s tick=%d code=%s report=%s" % [
+						player_id,
+						tick,
+						String(moved.get("error_code", "")),
+						JSON.stringify(service.get_report()),
+					]
+				)
+				break
+
+		var aggregate: Dictionary = service.create_snapshot()
+		if not _snapshot_has_players(aggregate, players):
+			_fail(
+				"two-player aggregate lost actor: tick=%d players=%s report=%s" % [
+					tick,
+					JSON.stringify(aggregate.get("players", [])),
+					JSON.stringify(service.get_report()),
+				]
+			)
+			break
+
+		if both_secondary:
+			var seam_a: Dictionary = service.get_product_seam_state(players[0])
+			var seam_b: Dictionary = service.get_product_seam_state(players[1])
+			if (
+				int(seam_a.get("roundtrips", 0)) >= 1
+				and int(seam_b.get("roundtrips", 0)) >= 1
+			):
+				both_returned = true
+				break
+
+	_check(both_secondary, "both product players reached secondary authority B")
+	_check(both_returned, "both product players completed A-B-A roundtrip")
+	_check(
+		_snapshot_has_players(service.create_snapshot(), players),
+		"two-player final snapshot still contains both actors"
+	)
+	var report: Dictionary = service.get_report()
+	var seam_report: Dictionary = Dictionary(report.get("user1_product_seam", {}))
+	_check(
+		int(seam_report.get("transfer_failures", -1)) == 0,
+		"two-player roundtrip has zero transfer failures"
+	)
+	_check(
+		int(seam_report.get("active_binding_count", -1)) == 0,
+		"two-player roundtrip releases all temporary gates"
+	)
+	service.shutdown()
+
+
+func _snapshot_has_players(snapshot: Dictionary, expected_ids: Array) -> bool:
+	var seen: Dictionary = {}
+	for player_value in snapshot.get("players", []):
+		if player_value is Dictionary:
+			var player: Dictionary = player_value
+			if bool(player.get("connected", false)):
+				seen[String(player.get("logical_player_id", ""))] = true
+	for player_id in expected_ids:
+		if not seen.has(String(player_id)):
+			return false
+	return seen.size() == expected_ids.size()
 
 
 func _ok(result: Dictionary, message: String) -> void:
