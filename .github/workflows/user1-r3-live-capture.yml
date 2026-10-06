@@ -9,6 +9,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: user1-r3-live-capture
+  cancel-in-progress: true
+
 jobs:
   capture:
     runs-on: [self-hosted, Windows, X64]
@@ -90,6 +94,55 @@ jobs:
           "CAPTURE_DIR=$out" | Set-Content (Join-Path $env:RUNNER_TEMP 'user1-r3-live-capture.env') -Encoding ASCII
           "SESSION_DIR=$sessionDir" | Add-Content (Join-Path $env:RUNNER_TEMP 'user1-r3-live-capture.env') -Encoding ASCII
           "SNAPSHOT2_SHA256=$($meta.source_sha256)" | Add-Content (Join-Path $env:RUNNER_TEMP 'user1-r3-live-capture.env') -Encoding ASCII
+
+      - name: Retire captured legacy USER1 live session
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          Set-StrictMode -Version Latest
+          $envFile=Join-Path $env:RUNNER_TEMP 'user1-r3-live-capture.env'
+          if(-not(Test-Path $envFile)){throw 'CAPTURE_ENV_MISSING'}
+          $captureDir=((Get-Content $envFile | Where-Object {$_ -like 'CAPTURE_DIR=*'}) -replace '^CAPTURE_DIR=','')
+          if([string]::IsNullOrWhiteSpace($captureDir)-or-not(Test-Path $captureDir)){throw 'CAPTURE_DIR_MISSING'}
+          $cli=Join-Path $env:GITHUB_WORKSPACE 'tools\live2\live2_automation_client.py'
+          $rows=@()
+          $networkGodot=@(Get-CimInstance Win32_Process -ErrorAction SilentlyContinue | Where-Object {
+            $_.Name -like 'godot*.exe' -and
+            [string]$_.CommandLine -match '--network-mvp' -and
+            [string]$_.CommandLine -match '--server-port=24580'
+          })
+          foreach($p in $networkGodot){
+            $row=[ordered]@{pid=[int]$p.ProcessId;name=[string]$p.Name;command_line=[string]$p.CommandLine;graceful_attempted=$false;graceful_ok=$false;forced=$false}
+            $portMatch=[regex]::Match([string]$p.CommandLine,'--automation-control-port=(\d+)')
+            $tokenMatch=[regex]::Match([string]$p.CommandLine,'--automation-control-token=([A-Za-z0-9]+)')
+            if($portMatch.Success -and $tokenMatch.Success -and (Test-Path $cli)){
+              $row.graceful_attempted=$true
+              try{
+                & python $cli --port ([int]$portMatch.Groups[1].Value) --token $tokenMatch.Groups[1].Value command app.quit *> $null
+                Start-Sleep -Milliseconds 700
+                if(-not(Get-Process -Id $p.ProcessId -ErrorAction SilentlyContinue)){$row.graceful_ok=$true}
+              }catch{}
+            }
+            $rows += $row
+          }
+          Start-Sleep -Seconds 3
+          foreach($row in $rows){
+            if(Get-Process -Id $row.pid -ErrorAction SilentlyContinue){
+              Stop-Process -Id $row.pid -Force -ErrorAction SilentlyContinue
+              $row.forced=$true
+            }
+          }
+          Start-Sleep -Seconds 2
+          $remaining=@(Get-CimInstance Win32_Process -ErrorAction SilentlyContinue | Where-Object {
+            $_.Name -like 'godot*.exe' -and [string]$_.CommandLine -match '--network-mvp' -and [string]$_.CommandLine -match '--server-port=24580'
+          } | ForEach-Object {[ordered]@{pid=[int]$_.ProcessId;name=[string]$_.Name;command_line=[string]$_.CommandLine}})
+          [ordered]@{
+            captured_processes=$rows
+            remaining_processes=$remaining
+            retired=($remaining.Count -eq 0)
+            at=(Get-Date).ToString('o')
+          } | ConvertTo-Json -Depth 10 | Set-Content (Join-Path $captureDir 'session-retirement.json') -Encoding UTF8
+          if($remaining.Count -gt 0){throw 'USER1_OLD_SESSION_RETIRE_INCOMPLETE'}
 
       - name: Upload live capture
         if: always()
