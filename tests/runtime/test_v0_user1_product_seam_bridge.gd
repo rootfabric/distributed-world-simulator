@@ -32,6 +32,10 @@ func _run() -> void:
 		}
 	)
 	_ok(setup, "product seam service setup")
+	_check(
+		not service.requires_immediate_join_persistence(),
+		"USER1 transient JOIN does not require a full checkpoint before ACK"
+	)
 
 	var join: Dictionary = service.join(
 		PLAYER,
