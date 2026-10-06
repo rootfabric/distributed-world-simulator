@@ -295,6 +295,180 @@ func create_snapshot() -> Dictionary:
 	return snapshot
 
 
+func requires_immediate_join_persistence() -> bool:
+	# A transport JOIN is intentionally transient. Durable player exports clear
+	# connected/session fields, so blocking JOIN_ACK on a full-world fsync buys
+	# no recoverable transport state. Canonical mutations remain sync-durable.
+	return false
+
+
+func _seam_transfers_quiescent() -> bool:
+	for player_id_value in _seam_coordinators:
+		var player_id := String(player_id_value)
+		var decision: Dictionary = _seam_coordinators[player_id].snapshot()
+		if String(decision.get("state", "")) != "ACTIVE":
+			return false
+	return true
+
+
+func _active_ownership_record(player_id: String) -> Dictionary:
+	if _active_authority(player_id) == _secondary_authority_id:
+		return (
+			_secondary.get_movement_ownership_record(player_id)
+			if _secondary != null
+			else {}
+		)
+	return _ownership.get_player(player_id) if _ownership != null else {}
+
+
+func _validate_product_actor(
+	logical_player_id: String,
+	transport_session_id: String,
+	ownership_epoch: int
+) -> Dictionary:
+	var player_id := logical_player_id.strip_edges().to_lower()
+	if not product_mutation_allowed(player_id):
+		return _failure("USER1_SEAM_GAMEPLAY_MUTATION_FROZEN")
+	var active_authority := _active_authority(player_id)
+	var authorized := _authorize_active(player_id, active_authority)
+	if not bool(authorized.get("success", false)):
+		return authorized
+	var player: Dictionary = get_player(player_id)
+	var ownership: Dictionary = _active_ownership_record(player_id)
+	if player.is_empty() or ownership.is_empty():
+		return _failure("PLAYER_NOT_FOUND")
+	if (
+		not bool(player.get("connected", false))
+		or not bool(ownership.get("connected", false))
+	):
+		return _failure("PLAYER_NOT_CONNECTED")
+	if (
+		String(player.get("transport_session_id", "")) != transport_session_id
+		or String(ownership.get("transport_session_id", "")) != transport_session_id
+	):
+		return _failure("STALE_PLAYER_SESSION")
+	if (
+		int(player.get("ownership_epoch", 0)) != ownership_epoch
+		or int(ownership.get("ownership_epoch", 0)) != ownership_epoch
+	):
+		return _failure("STALE_PLAYER_OWNERSHIP_EPOCH")
+	return _success({
+		"player": player.duplicate(true),
+		"ownership": ownership.duplicate(true),
+		"active_authority_id": active_authority,
+	})
+
+
+func _product_actor_context(player: Dictionary) -> Dictionary:
+	var position_value: Dictionary = Dictionary(player.get("position", {}))
+	var position := Vector3(
+		float(position_value.get("x", 0.0)),
+		float(position_value.get("y", 0.0)),
+		float(position_value.get("z", 0.0))
+	)
+	var yaw := float(player.get("orientation_yaw", 0.0))
+	var view_direction := (-Basis(Vector3.UP, yaw).z).normalized()
+	var interaction_origin := position + Vector3(0.0, 0.9, 0.0)
+	return {
+		"player_position": {"x": position.x, "y": position.y, "z": position.z},
+		"interaction_origin": {
+			"x": interaction_origin.x,
+			"y": interaction_origin.y,
+			"z": interaction_origin.z,
+		},
+		"view_direction": {
+			"x": view_direction.x,
+			"y": view_direction.y,
+			"z": view_direction.z,
+		},
+		"orientation_yaw": yaw,
+		"server_tick": _tick,
+	}
+
+
+func _build_remote_player_durable_state() -> Dictionary:
+	var rows: Array = []
+	for player_value in create_snapshot().get("players", []):
+		if not player_value is Dictionary:
+			continue
+		var row: Dictionary = Dictionary(player_value).duplicate(true)
+		row["connected"] = false
+		row["transport_session_id"] = ""
+		rows.append(row)
+	var state := SeamUtils.finalize_json_checksum({
+		"schema": "planet_simulator.player_registry_state.v1",
+		"players": rows,
+		"checksum": "",
+	})
+	var checked := _players.validate_durable_state(state)
+	return state if bool(checked.get("success", false)) else {}
+
+
+func _build_remote_ownership_durable_state() -> Dictionary:
+	var rows: Array = []
+	for player_value in create_snapshot().get("players", []):
+		if not player_value is Dictionary:
+			continue
+		var player_id := String(player_value.get("logical_player_id", ""))
+		var row: Dictionary = _active_ownership_record(player_id).duplicate(true)
+		if row.is_empty():
+			return {}
+		row["connected"] = false
+		row["transport_session_id"] = ""
+		rows.append(row)
+	rows.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		return String(a.get("logical_player_id", "")) < String(b.get("logical_player_id", ""))
+	)
+	var ownership_report: Dictionary = _ownership.get_report()
+	var state := SeamUtils.finalize_json_checksum({
+		"schema": "planet_simulator.player_ownership_state.v1",
+		"authority_owner_id": _authority_owner_id,
+		"authority_epoch": _authority_epoch,
+		"revision": int(ownership_report.get("revision", 0)),
+		"server_tick": _tick,
+		"players": rows,
+		"checksum": "",
+	})
+	var checked := _ownership.validate_durable_state(state)
+	return state if bool(checked.get("success", false)) else {}
+
+
+func export_durable_state() -> Dictionary:
+	if _seam_coordinators.is_empty():
+		return super.export_durable_state()
+	if not _seam_transfers_quiescent():
+		return {}
+	var players_state := _build_remote_player_durable_state()
+	var ownership_state := _build_remote_ownership_durable_state()
+	if (
+		players_state.is_empty()
+		or ownership_state.is_empty()
+		or _shared_items == null
+		or _canonical_multiplayer_items == null
+		or _resource_mining == null
+	):
+		return {}
+	var state: Dictionary = {
+		"schema": DURABLE_SCHEMA,
+		"authority_owner_id": _authority_owner_id,
+		"authority_epoch": _authority_epoch,
+		"revision": _revision,
+		"server_tick": _tick,
+		"region_id": _region_id,
+		"topology_adapter": _topology_adapter,
+		"profile": _profile,
+		"players": players_state,
+		"ownership": ownership_state,
+		"shared_item": _shared_items.export_durable_state(),
+		"canonical_item_graph": _canonical_multiplayer_items.export_durable_state(),
+		"resource_mining": _resource_mining.export_durable_state(),
+		"checksum": "",
+	}
+	state = SeamUtils.finalize_json_checksum(state)
+	var validated := validate_durable_state(state)
+	return state if bool(validated.get("success", false)) else {}
+
+
 func set_player_presentation(
 	logical_player_id: String,
 	transport_session_id: String,
@@ -303,16 +477,65 @@ func set_player_presentation(
 	flashlight_enabled: bool,
 	operation_id: String
 ) -> Dictionary:
-	if not product_mutation_allowed(logical_player_id):
+	var player_id := logical_player_id.strip_edges().to_lower()
+	if not product_mutation_allowed(player_id):
 		return _failure("USER1_SEAM_GAMEPLAY_MUTATION_FROZEN")
-	return super.set_player_presentation(
-		logical_player_id,
+	if _active_authority(player_id) == _primary_authority_id:
+		return super.set_player_presentation(
+			player_id,
+			transport_session_id,
+			ownership_epoch,
+			orientation_yaw,
+			flashlight_enabled,
+			operation_id
+		)
+	var fingerprint := SeamUtils.payload_hash({
+		"kind": "PLAYER_PRESENTATION",
+		"logical_player_id": player_id,
+		"transport_session_id": transport_session_id,
+		"ownership_epoch": ownership_epoch,
+		"orientation_yaw": orientation_yaw,
+		"flashlight_enabled": flashlight_enabled,
+	})
+	var replay := _replay(operation_id, fingerprint)
+	if not replay.is_empty():
+		return replay
+	var actor := _validate_product_actor(
+		player_id, transport_session_id, ownership_epoch
+	)
+	if not bool(actor.get("success", false)):
+		return _record_failure(
+			operation_id,
+			fingerprint,
+			String(actor.get("error_code", "PLAYER_OWNERSHIP_REJECTED"))
+		)
+	var before_revision := _revision
+	var updated: Dictionary = _secondary.update_movement_presentation(
+		player_id,
 		transport_session_id,
 		ownership_epoch,
 		orientation_yaw,
-		flashlight_enabled,
-		operation_id
+		flashlight_enabled
 	)
+	if not bool(updated.get("success", false)):
+		return _record_failure(
+			operation_id,
+			fingerprint,
+			String(updated.get("error_code", "PLAYER_PRESENTATION_REJECTED"))
+		)
+	note_product_seam_projection_change()
+	var player: Dictionary = Dictionary(updated.get("details", {}).get("player", {}))
+	var delta := _create_delta(
+		before_revision, "PLAYER_PRESENTATION_UPDATED", player, {}
+	)
+	var result := _success({
+		"replay": false,
+		"player": player.duplicate(true),
+		"delta": delta,
+		"snapshot": create_snapshot(),
+	})
+	_record(operation_id, fingerprint, result)
+	return result
 
 
 func handle_canonical_item_command(
@@ -323,16 +546,45 @@ func handle_canonical_item_command(
 	command_type: String,
 	payload: Dictionary
 ) -> Dictionary:
-	if not product_mutation_allowed(logical_player_id):
+	var player_id := logical_player_id.strip_edges().to_lower()
+	if not product_mutation_allowed(player_id):
 		return _failure("USER1_SEAM_GAMEPLAY_MUTATION_FROZEN")
-	return super.handle_canonical_item_command(
-		logical_player_id,
-		transport_session_id,
+	if _active_authority(player_id) == _primary_authority_id:
+		return super.handle_canonical_item_command(
+			player_id,
+			transport_session_id,
+			ownership_epoch,
+			operation_id,
+			command_type,
+			payload
+		)
+	if _canonical_multiplayer_items == null:
+		return _failure("CANONICAL_ITEM_GRAPH_NOT_READY")
+	var replay_lookup: Dictionary = _canonical_multiplayer_items.lookup_replay(
+		player_id, ownership_epoch, operation_id, command_type, payload
+	)
+	if bool(replay_lookup.get("found", false)):
+		return Dictionary(replay_lookup.get("result", {})).duplicate(true)
+	var actor := _validate_product_actor(
+		player_id, transport_session_id, ownership_epoch
+	)
+	if not bool(actor.get("success", false)):
+		return _failure(
+			String(actor.get("error_code", "PLAYER_OWNERSHIP_REJECTED"))
+		)
+	var result: Dictionary = _canonical_multiplayer_items.execute(
+		player_id,
 		ownership_epoch,
 		operation_id,
 		command_type,
-		payload
+		payload,
+		_product_actor_context(
+			Dictionary(actor.get("details", {}).get("player", {}))
+		)
 	)
+	if bool(result.get("success", false)) and not bool(result.get("replay", false)):
+		_advance()
+	return result
 
 
 func handle_resource_mine(
@@ -342,15 +594,39 @@ func handle_resource_mine(
 	operation_id: String,
 	payload: Dictionary
 ) -> Dictionary:
-	if not product_mutation_allowed(logical_player_id):
+	var player_id := logical_player_id.strip_edges().to_lower()
+	if not product_mutation_allowed(player_id):
 		return _failure("USER1_SEAM_GAMEPLAY_MUTATION_FROZEN")
-	return super.handle_resource_mine(
-		logical_player_id,
-		transport_session_id,
-		ownership_epoch,
-		operation_id,
-		payload
+	if _active_authority(player_id) == _primary_authority_id:
+		return super.handle_resource_mine(
+			player_id,
+			transport_session_id,
+			ownership_epoch,
+			operation_id,
+			payload
+		)
+	if _resource_mining == null:
+		return _failure("RESOURCE_MINING_NOT_READY")
+	var actor := _validate_product_actor(
+		player_id, transport_session_id, ownership_epoch
 	)
+	if not bool(actor.get("success", false)):
+		return actor
+	var player: Dictionary = Dictionary(
+		actor.get("details", {}).get("player", {})
+	)
+	var position_value = player.get("position", {})
+	if not position_value is Dictionary:
+		return _failure("RESOURCE_OUT_OF_RANGE")
+	var result: Dictionary = _resource_mining.mine(
+		player_id,
+		operation_id,
+		payload,
+		Dictionary(position_value)
+	)
+	if bool(result.get("success", false)) and not bool(result.get("replay", false)):
+		_advance()
+	return result
 
 
 func preflight_canonical_server_output(
@@ -389,26 +665,32 @@ func apply_canonical_server_output(
 	)
 
 
-func product_mutation_allowed(_logical_player_id: String = "") -> bool:
-	# M6 persists the primary product owner. While any player is physically on
-	# B, all non-movement canonical mutations fail closed instead of creating a
-	# successful mutation that cannot yet be checkpointed.
-	return _seam_coordinators.is_empty()
+func product_mutation_allowed(logical_player_id: String = "") -> bool:
+	var player_id := logical_player_id.strip_edges().to_lower()
+	if player_id.is_empty():
+		return _seam_transfers_quiescent()
+	if not _seam_coordinators.has(player_id):
+		return true
+	return String(
+		_seam_coordinators[player_id].snapshot().get("state", "")
+	) == "ACTIVE"
 
 
 func can_persist_product_state() -> bool:
-	return _seam_coordinators.is_empty()
+	return _seam_transfers_quiescent()
 
 
 func prepare_product_persistence() -> Dictionary:
-	var quiesced := _force_all_primary()
-	if not bool(quiesced.get("success", false)):
-		return quiesced
-	if not _seam_coordinators.is_empty():
-		return _failure("USER1_SEAM_PERSISTENCE_STILL_BOUND")
+	if not _seam_transfers_quiescent():
+		return _failure("USER1_SEAM_PERSISTENCE_TRANSFER_IN_FLIGHT")
+	var durable := export_durable_state()
+	if durable.is_empty():
+		return _failure("USER1_SEAM_DURABLE_PROJECTION_FAILED")
 	return _success({
 		"quiescent": true,
 		"primary_authority_id": _primary_authority_id,
+		"remote_binding_count": _seam_coordinators.size(),
+		"durable_state_checksum": String(durable.get("checksum", "")),
 	})
 
 
