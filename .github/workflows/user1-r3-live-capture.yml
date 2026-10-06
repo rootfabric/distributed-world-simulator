@@ -1,0 +1,104 @@
+name: USER1 R3 Live Session Capture
+
+on:
+  push:
+    branches:
+      - verify/user1-r3-live-capture-r1
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  capture:
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Capture live USER1 session evidence without touching processes
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          Set-StrictMode -Version Latest
+          $out=Join-Path $env:RUNNER_TEMP ('user1-r3-live-capture-'+[guid]::NewGuid().ToString('N'))
+          New-Item -ItemType Directory -Path $out -Force | Out-Null
+
+          $processes=@(Get-Process -ErrorAction SilentlyContinue | Where-Object {$_.ProcessName -like 'godot*'} | ForEach-Object {
+            [ordered]@{ id=$_.Id; process_name=$_.ProcessName; path=$_.Path; start_time=(try {$_.StartTime.ToString('o')} catch {''}) }
+          })
+          $processes | ConvertTo-Json -Depth 5 | Set-Content (Join-Path $out 'godot-processes.json') -Encoding UTF8
+
+          $roots=@(
+            (Join-Path $env:APPDATA 'Godot\app_userdata'),
+            (Join-Path $env:LOCALAPPDATA 'Godot'),
+            'C:\distributed-world-simulator'
+          ) | Where-Object { Test-Path $_ }
+
+          $candidates=@()
+          foreach($root in $roots){
+            try {
+              $candidates += @(Get-ChildItem -LiteralPath $root -Filter 'v0-s1-network-mvp-runtime.json' -File -Recurse -ErrorAction SilentlyContinue)
+            } catch {}
+          }
+          $candidates=@($candidates | Sort-Object LastWriteTimeUtc -Descending)
+          if($candidates.Count -eq 0){ throw 'USER1_RUNTIME_REPORT_NOT_FOUND' }
+
+          $latest=$candidates[0]
+          $meta=[ordered]@{
+            source_path=$latest.FullName
+            source_length=$latest.Length
+            source_last_write_utc=$latest.LastWriteTimeUtc.ToString('o')
+            source_sha256=(Get-FileHash $latest.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+            candidate_count=$candidates.Count
+            candidates=@($candidates | Select-Object -First 20 | ForEach-Object {
+              [ordered]@{path=$_.FullName;length=$_.Length;last_write_utc=$_.LastWriteTimeUtc.ToString('o')}
+            })
+          }
+          $meta | ConvertTo-Json -Depth 10 | Set-Content (Join-Path $out 'capture-meta.json') -Encoding UTF8
+
+          Copy-Item -LiteralPath $latest.FullName -Destination (Join-Path $out 'v0-s1-network-mvp-runtime.snapshot2.json') -Force
+
+          $sessionDir=$latest.Directory.FullName
+          $neighbors=@(
+            Get-ChildItem -LiteralPath $sessionDir -File -ErrorAction SilentlyContinue |
+              Where-Object {$_.Extension -in @('.json','.jsonl','.log','.txt')} |
+              Sort-Object LastWriteTimeUtc -Descending |
+              Select-Object -First 120
+          )
+          $neighborDir=Join-Path $out 'session-neighbors'
+          New-Item -ItemType Directory -Path $neighborDir -Force | Out-Null
+          foreach($file in $neighbors){
+            Copy-Item -LiteralPath $file.FullName -Destination (Join-Path $neighborDir $file.Name) -Force -ErrorAction SilentlyContinue
+          }
+
+          $manifest=@()
+          Get-ChildItem -LiteralPath $out -Recurse -File | ForEach-Object {
+            $manifest += [ordered]@{
+              relative_path=$_.FullName.Substring($out.Length).TrimStart('\')
+              length=$_.Length
+              sha256=(Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+            }
+          }
+          $manifest | ConvertTo-Json -Depth 10 | Set-Content (Join-Path $out 'SHA256-MANIFEST.json') -Encoding UTF8
+
+          Compress-Archive -Path (Join-Path $out '*') -DestinationPath (Join-Path $env:RUNNER_TEMP 'user1-r3-live-session-archive.zip') -CompressionLevel Optimal -Force
+          "CAPTURE_DIR=$out" | Set-Content (Join-Path $env:RUNNER_TEMP 'user1-r3-live-capture.env') -Encoding ASCII
+          "SESSION_DIR=$sessionDir" | Add-Content (Join-Path $env:RUNNER_TEMP 'user1-r3-live-capture.env') -Encoding ASCII
+          "SNAPSHOT2_SHA256=$($meta.source_sha256)" | Add-Content (Join-Path $env:RUNNER_TEMP 'user1-r3-live-capture.env') -Encoding ASCII
+
+      - name: Upload live capture
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: user1-r3-live-session-capture-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}\user1-r3-live-capture-*/**
+            ${{ runner.temp }}\user1-r3-live-session-archive.zip
+            ${{ runner.temp }}\user1-r3-live-capture.env
+          if-no-files-found: error
+          retention-days: 90
