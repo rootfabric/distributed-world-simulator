@@ -167,6 +167,20 @@ func _run() -> void:
 	_check(int(final_seam.get("roundtrips", 0)) == 1, "roundtrip evidence increments once")
 	_check(service.can_persist_product_state(), "temporary seam gates are released after roundtrip")
 	_check(service.product_mutation_allowed(PLAYER), "product mutation resumes after roundtrip")
+	var remote_presentation_replay: Dictionary = service.set_player_presentation(
+		PLAYER,
+		SESSION_A,
+		ownership_epoch,
+		0.75,
+		true,
+		"operation/user1/seam/remote-presentation"
+	)
+	_ok(remote_presentation_replay, "remote presentation replays exactly after B->A")
+	_check(
+		bool(remote_presentation_replay.get("replay", false))
+		or bool(remote_presentation_replay.get("details", {}).get("replay", false)),
+		"presentation retry is replay, not second mutation"
+	)
 
 	var after_player: Dictionary = service.get_player(PLAYER)
 	_check(String(after_player.get("player_entity_id", "")) == player_entity_id, "player entity survives seam")
