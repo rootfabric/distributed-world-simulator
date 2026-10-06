@@ -489,14 +489,17 @@ func set_player_presentation(
 			flashlight_enabled,
 			operation_id
 		)
-	var fingerprint := SeamUtils.payload_hash({
-		"kind": "PLAYER_PRESENTATION",
-		"logical_player_id": player_id,
-		"transport_session_id": transport_session_id,
-		"ownership_epoch": ownership_epoch,
-		"orientation_yaw": orientation_yaw,
-		"flashlight_enabled": flashlight_enabled,
-	})
+	var presentation_command: Dictionary = PresentationCommand.create(
+		"message/m3/presentation/%s" % operation_id.sha256_text().left(12),
+		operation_id,
+		player_id,
+		transport_session_id,
+		_authority_epoch,
+		ownership_epoch,
+		orientation_yaw,
+		flashlight_enabled
+	)
+	var fingerprint := SeamUtils.payload_hash(presentation_command)
 	var replay := _replay(operation_id, fingerprint)
 	if not replay.is_empty():
 		return replay
