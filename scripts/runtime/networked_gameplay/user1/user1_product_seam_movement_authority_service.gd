@@ -84,6 +84,56 @@ func setup(
 	})
 
 
+
+func get_movement_ownership_record(logical_player_id: String) -> Dictionary:
+	if _ownership == null:
+		return {}
+	return _ownership.get_player(logical_player_id.strip_edges().to_lower())
+
+
+func update_movement_presentation(
+	logical_player_id: String,
+	transport_session_id: String,
+	ownership_epoch: int,
+	orientation_yaw: float,
+	flashlight_enabled: bool
+) -> Dictionary:
+	if not _configured or _players == null or _ownership == null:
+		return _movement_failure("NETWORKED_GAMEPLAY_SERVICE_NOT_READY")
+	var player_id := logical_player_id.strip_edges().to_lower()
+	var ownership: Dictionary = _ownership.get_player(player_id)
+	var record: Dictionary = _players.get_player(player_id)
+	if record.is_empty() or ownership.is_empty():
+		return _movement_failure("PLAYER_NOT_FOUND")
+	if (
+		not bool(record.get("connected", false))
+		or not bool(ownership.get("connected", false))
+	):
+		return _movement_failure("PLAYER_NOT_CONNECTED")
+	if (
+		String(record.get("transport_session_id", "")) != transport_session_id
+		or String(ownership.get("transport_session_id", "")) != transport_session_id
+	):
+		return _movement_failure("STALE_PLAYER_SESSION")
+	if (
+		int(record.get("ownership_epoch", 0)) != ownership_epoch
+		or int(ownership.get("ownership_epoch", 0)) != ownership_epoch
+	):
+		return _movement_failure("STALE_PLAYER_OWNERSHIP_EPOCH")
+	record["orientation_yaw"] = orientation_yaw
+	record["flashlight_enabled"] = flashlight_enabled
+	record["state_revision"] = int(record.get("state_revision", 0)) + 1
+	var updated: Dictionary = _players.upsert(record)
+	if not bool(updated.get("success", false)):
+		return updated
+	_revision += 1
+	return _movement_success({
+		"player": record.duplicate(true),
+		"revision": _revision,
+		"server_tick": _tick,
+	})
+
+
 func create_snapshot() -> Dictionary:
 	# Secondary snapshots are never product/world snapshots. The primary product
 	# service merges the active player row into its one canonical snapshot.
