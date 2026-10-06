@@ -56,7 +56,8 @@ func _run() -> void:
 	var tick := 0
 	var sequence := 0
 	var saw_secondary := false
-	var frozen_mutation_checked := false
+	var remote_mutation_checked := false
+	var graph_checksum_after_remote_mutation := graph_checksum
 	var reached_roundtrip := false
 	for _step in range(900):
 		tick += 1
@@ -91,22 +92,65 @@ func _run() -> void:
 		seam = service.get_product_seam_state(PLAYER)
 		if String(seam.get("region_id", "")) == "region/user1/b":
 			saw_secondary = true
-			if not frozen_mutation_checked:
-				_check(not service.product_mutation_allowed(PLAYER), "non-movement product mutation is fenced on B")
-				var blocked: Dictionary = service.handle_canonical_item_command(
+			if not remote_mutation_checked:
+				_check(
+					service.product_mutation_allowed(PLAYER),
+					"canonical product mutation remains available while movement owner is B"
+				)
+				_check(
+					service.can_persist_product_state(),
+					"active remote movement row has a durable primary projection"
+				)
+				var remote_item: Dictionary = service.handle_canonical_item_command(
 					PLAYER,
 					SESSION_A,
 					ownership_epoch,
-					"operation/user1/seam/blocked-item",
+					"operation/user1/seam/remote-item",
 					"inventory.select_hotbar",
 					{"selected_hotbar_index": 0}
 				)
-				_check(
-					not bool(blocked.get("success", false))
-					and String(blocked.get("error_code", "")) == "USER1_SEAM_GAMEPLAY_MUTATION_FROZEN",
-					"item mutation fails closed while movement owner is B"
+				_ok(remote_item, "item mutation routes to primary canonical owner while on B")
+				graph_checksum_after_remote_mutation = String(
+					service.create_canonical_item_graph_snapshot().get("checksum", "")
 				)
-				frozen_mutation_checked = true
+				_check(
+					not graph_checksum_after_remote_mutation.is_empty(),
+					"remote item mutation leaves a canonical Item Graph checksum"
+				)
+				var remote_presentation: Dictionary = service.set_player_presentation(
+					PLAYER,
+					SESSION_A,
+					ownership_epoch,
+					0.75,
+					true,
+					"operation/user1/seam/remote-presentation"
+				)
+				_ok(
+					remote_presentation,
+					"presentation updates active secondary movement row without creating gameplay owner"
+				)
+				var remote_mine: Dictionary = service.handle_resource_mine(
+					PLAYER,
+					SESSION_A,
+					ownership_epoch,
+					"operation/user1/seam/remote-mine-probe",
+					{}
+				)
+				_check(
+					String(remote_mine.get("error_code", ""))
+					!= "USER1_SEAM_GAMEPLAY_MUTATION_FROZEN",
+					"remote mining reaches primary canonical mining owner instead of seam freeze"
+				)
+				var remote_durable: Dictionary = service.export_durable_state()
+				_check(
+					not remote_durable.is_empty(),
+					"durable state exports while movement row is active on B"
+				)
+				_ok(
+					service.validate_durable_state(remote_durable),
+					"remote durable projection validates"
+				)
+				remote_mutation_checked = true
 		if int(seam.get("roundtrips", 0)) >= 1:
 			reached_roundtrip = true
 			break
@@ -128,7 +172,10 @@ func _run() -> void:
 
 	var graph_after: Dictionary = service.create_canonical_item_graph_snapshot()
 	var resource_after: Dictionary = service.create_resource_mining_snapshot()
-	_check(String(graph_after.get("checksum", "")) == graph_checksum, "global M4 Item Graph is not copied or mutated by movement seam")
+	_check(
+		String(graph_after.get("checksum", "")) == graph_checksum_after_remote_mutation,
+		"movement seam preserves the one primary Item Graph after remote mutation"
+	)
 	_check(String(resource_after.get("checksum", "")) == resource_checksum, "ResourceMining owner is unchanged by movement seam")
 
 	var aggregate: Dictionary = service.create_snapshot()
