@@ -1,5 +1,7 @@
 param(
     [Parameter(Mandatory=$true)][string]$Worktree,
+    [Parameter(Mandatory=$true)][string]$ExpectedProductHead,
+    [Parameter(Mandatory=$true)][string]$ExpectedProductTree,
     [string]$GodotGui="C:\Godot\godot\bin\godot.windows.editor.double.x86_64.exe",
     [string]$GodotConsole="C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe",
     [int]$ServerPort=24680,
@@ -10,8 +12,13 @@ param(
 $ErrorActionPreference="Stop"
 Set-StrictMode -Version Latest
 $Worktree=(Resolve-Path $Worktree).Path
-$ProductHead=(git -C $Worktree rev-parse HEAD).Trim()
-$ProductTree=(git -C $Worktree rev-parse 'HEAD^{tree}').Trim()
+$CarrierHead=(git -C $Worktree rev-parse HEAD).Trim()
+$ProductHead=$ExpectedProductHead.Trim()
+$ProductTree=$ExpectedProductTree.Trim()
+if((git -C $Worktree rev-parse "$ProductHead^{tree}").Trim()-ne$ProductTree){throw 'PRODUCT_TREE_MISMATCH'}
+$carrierDiff=@(git -C $Worktree diff --name-only $ProductHead $CarrierHead)
+$allowed=@('.github/workflows/user1-r3-gui-seam-smoke.yml','tools/live2/run_user1_r3_gui_seam_smoke.ps1')
+if(@($carrierDiff|Where-Object{$_-notin$allowed}).Count-gt0){throw "CARRIER_SCOPE_VIOLATION:$($carrierDiff-join',')"}
 $Stamp=Get-Date -Format "yyyyMMdd-HHmmss"
 if([string]::IsNullOrWhiteSpace($SessionRoot)){
     $SessionRoot=Join-Path $env:RUNNER_TEMP "user1-r3-gui-smoke-$Stamp"
