@@ -400,7 +400,7 @@ func _build_remote_player_durable_state() -> Dictionary:
 		"players": rows,
 		"checksum": "",
 	})
-	var checked := _players.validate_durable_state(state)
+	var checked: Dictionary = _players.validate_durable_state(state)
 	return state if bool(checked.get("success", false)) else {}
 
 
@@ -429,7 +429,7 @@ func _build_remote_ownership_durable_state() -> Dictionary:
 		"players": rows,
 		"checksum": "",
 	})
-	var checked := _ownership.validate_durable_state(state)
+	var checked: Dictionary = _ownership.validate_durable_state(state)
 	return state if bool(checked.get("success", false)) else {}
 
 
