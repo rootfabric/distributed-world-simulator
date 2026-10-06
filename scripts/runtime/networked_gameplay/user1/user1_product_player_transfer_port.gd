@@ -14,6 +14,13 @@ const ProductGate = preload(
 const PRODUCT_SCHEMA := "distributed_world_simulator.user1_product_player_export.v1"
 const PRODUCT_ITEM_POLICY := "USER1_EXTERNAL_GLOBAL_M4"
 
+# The transport packet is JSON-canonicalized before attestation. Native source
+# rows must be retired against the exact frozen native checksums captured
+# before that wire canonicalization; otherwise ordinary trig-generated double
+# values can compare unequal after a JSON round trip even though the source
+# row never changed.
+var _source_record_checksums: Dictionary = {}
+
 
 func configure(
 	owner,
@@ -122,6 +129,28 @@ func prepare_export(
 		var identity: Dictionary = gate.validate_record_identity(row)
 		if not bool(identity.get("success", false)):
 			return identity
+	var source_player_checksum := String(
+		capture.get("details", {}).get("player_checksum", "")
+	)
+	var source_ownership_checksum := String(
+		ownership_capture.get("details", {}).get("player_checksum", "")
+	)
+	if source_player_checksum.is_empty() or source_ownership_checksum.is_empty():
+		return _product_failure("LIVE_PLAYER_SOURCE_NATIVE_CHECKSUM_REQUIRED")
+	var previous_source: Dictionary = Dictionary(
+		_source_record_checksums.get(logical_id, {})
+	)
+	if (
+		not previous_source.is_empty()
+		and String(previous_source.get("transfer_id", "")) == transfer_id
+		and (
+			String(previous_source.get("player_checksum", ""))
+				!= source_player_checksum
+			or String(previous_source.get("ownership_checksum", ""))
+				!= source_ownership_checksum
+		)
+	):
+		return _product_failure("LIVE_PLAYER_FROZEN_NATIVE_SOURCE_CHANGED")
 
 	# Unlike the old MVP3 lab port, product players may already carry canonical
 	# M4 inventory. That inventory deliberately stays in the global primary M4
@@ -183,6 +212,11 @@ func prepare_export(
 	):
 		return _product_failure("LIVE_PLAYER_FROZEN_EXPORT_CHANGED")
 	_prepared[logical_id] = packet.duplicate(true)
+	_source_record_checksums[logical_id] = {
+		"transfer_id": transfer_id,
+		"player_checksum": source_player_checksum,
+		"ownership_checksum": source_ownership_checksum,
+	}
 	return _product_success({"packet": packet.duplicate(true)})
 
 
@@ -334,12 +368,17 @@ func retire_source(
 			})
 		return _product_failure("LIVE_PLAYER_RETIRE_REPLAY_CONFLICT")
 
-	var player_checksum := ProductUtils.payload_hash(
-		Dictionary(packet.get("player", {}))
+	var source_checksums: Dictionary = Dictionary(
+		_source_record_checksums.get(logical_id, {})
 	)
-	var ownership_checksum := ProductUtils.payload_hash(
-		Dictionary(packet.get("ownership", {}))
+	if String(source_checksums.get("transfer_id", "")) != transfer_id:
+		return _product_failure("LIVE_PLAYER_SOURCE_NATIVE_CHECKSUM_REQUIRED")
+	var player_checksum := String(source_checksums.get("player_checksum", ""))
+	var ownership_checksum := String(
+		source_checksums.get("ownership_checksum", "")
 	)
+	if player_checksum.is_empty() or ownership_checksum.is_empty():
+		return _product_failure("LIVE_PLAYER_SOURCE_NATIVE_CHECKSUM_REQUIRED")
 	var registry_preflight: Dictionary = _registry.preflight_live_player_retire(
 		logical_id,
 		gate,
@@ -435,6 +474,7 @@ func release_binding(logical_id: String) -> Dictionary:
 
 	_gates.erase(logical_id)
 	_prepared.erase(logical_id)
+	_source_record_checksums.erase(logical_id)
 	_staged.erase(logical_id)
 	_retired.erase(logical_id)
 	_installing.erase(logical_id)
@@ -448,6 +488,11 @@ func release_binding(logical_id: String) -> Dictionary:
 
 func binding_count() -> int:
 	return _gates.size()
+
+
+func shutdown() -> void:
+	_source_record_checksums.clear()
+	super.shutdown()
 
 
 func _validate_carry_manifest(
@@ -504,6 +549,7 @@ func get_report() -> Dictionary:
 	report["resource_owner"] = "PRIMARY_PRODUCT_RESOURCE_MINING"
 	report["construction_owner"] = "PRIMARY_PRODUCT_CONSTRUCTION"
 	report["binding_count"] = _gates.size()
+	report["native_source_checksum_count"] = _source_record_checksums.size()
 	return report
 
 
