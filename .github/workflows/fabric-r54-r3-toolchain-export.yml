@@ -1,0 +1,30 @@
+name: FABRIC R5.4 R3 Canonical Toolchain Export
+on:
+  push:
+    branches: [control/fabric-r54-r3-toolchain-export]
+permissions:
+  contents: read
+jobs:
+  export:
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 8
+    steps:
+      - name: Export only the pinned canonical engine
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          bin="${DWS_GODOT_DOUBLE_BIN:-$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64}"
+          test -x "$bin"
+          expected=bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7
+          test "$(sha256sum "$bin" | cut -d' ' -f1)" = "$expected"
+          out="$(mktemp -d "$RUNNER_TEMP/r54-toolchain-XXXXXX")"
+          cp -- "$bin" "$out/godot.linuxbsd.editor.double.x86_64"
+          test "$(sha256sum "$out/godot.linuxbsd.editor.double.x86_64" | cut -d' ' -f1)" = "$expected"
+          (cd "$out" && sha256sum godot.linuxbsd.editor.double.x86_64 > SHA256SUMS)
+          printf 'TOOLCHAIN_DIR=%s\n' "$out" >> "$GITHUB_ENV"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fabric-r54-r3-canonical-linux-toolchain
+          path: ${{ env.TOOLCHAIN_DIR }}/*
+          if-no-files-found: error
+          retention-days: 14
