@@ -273,7 +273,13 @@ func handle_player_presentation(command: Dictionary) -> Dictionary:
 	if int(command.get("authority_epoch", 0)) != _authority_epoch:
 		return _failure("STALE_AUTHORITY_EPOCH")
 	var operation_id := String(command.get("operation_id", ""))
-	var fingerprint := Utils.payload_hash(command)
+	var fingerprint := _presentation_replay_fingerprint(
+		String(command.get("logical_player_id", "")),
+		String(command.get("transport_session_id", "")),
+		int(command.get("ownership_epoch", 0)),
+		float(command.get("orientation_yaw", 0.0)),
+		bool(command.get("flashlight_enabled", false))
+	)
 	var replay := _replay(operation_id, fingerprint)
 	if not replay.is_empty():
 		return replay
@@ -962,6 +968,29 @@ func _advance() -> void:
 	_revision += 1
 	if not _fixed_tick_authority:
 		_tick += 1
+
+
+# USER1 R4: the presentation idempotency fingerprint is the semantic operation,
+# never its transport serialization. message_id and authority_epoch are routing
+# metadata: they must not turn one logical presentation retry (including a
+# retry that arrives through a different seam authority path) into a second
+# canonical mutation. A genuinely different presentation payload still hashes
+# differently and is rejected as OPERATION_REPLAY_CONFLICT.
+func _presentation_replay_fingerprint(
+	logical_player_id: String,
+	transport_session_id: String,
+	ownership_epoch: int,
+	orientation_yaw: float,
+	flashlight_enabled: bool
+) -> String:
+	return Utils.payload_hash({
+		"kind": "PLAYER_PRESENTATION",
+		"logical_player_id": logical_player_id.strip_edges().to_lower(),
+		"transport_session_id": transport_session_id.strip_edges(),
+		"ownership_epoch": ownership_epoch,
+		"orientation_yaw": orientation_yaw,
+		"flashlight_enabled": flashlight_enabled,
+	})
 
 
 func _replay(operation_id: String, fingerprint: String) -> Dictionary:

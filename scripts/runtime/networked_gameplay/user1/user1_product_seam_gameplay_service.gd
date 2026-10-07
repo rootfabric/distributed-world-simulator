@@ -489,17 +489,18 @@ func set_player_presentation(
 			flashlight_enabled,
 			operation_id
 		)
-	var presentation_command: Dictionary = PresentationCommand.create(
-		"message/m3/presentation/%s" % operation_id.sha256_text().left(12),
-		operation_id,
+	# USER1 R4: same semantic fingerprint as the primary presentation path, so a
+	# retry of one logical operation replays identically whether it is applied
+	# while movement is owned by A or by B, and across a B->A handoff.
+	# PresentationCommand stays a command-path/validation concept only; its
+	# serialized routing metadata is not an idempotency key.
+	var fingerprint := _presentation_replay_fingerprint(
 		player_id,
 		transport_session_id,
-		_authority_epoch,
 		ownership_epoch,
 		orientation_yaw,
 		flashlight_enabled
 	)
-	var fingerprint := SeamUtils.payload_hash(presentation_command)
 	var replay := _replay(operation_id, fingerprint)
 	if not replay.is_empty():
 		return replay
