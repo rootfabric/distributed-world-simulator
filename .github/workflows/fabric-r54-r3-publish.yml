@@ -1,0 +1,106 @@
+name: FABRIC R5.4 R3 Guarded Exact Publisher
+on:
+  push:
+    branches: [control/fabric-r54-r3-publish]
+permissions:
+  contents: write
+concurrency:
+  group: fabric-r54-r3-publish
+  cancel-in-progress: false
+jobs:
+  publish-object:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: carrier
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: 5a5be1b3e5eeb3f9a46a0585e09486ac80a4491c
+          path: product
+          fetch-depth: 0
+      - name: Validate exact patch, additive scope and original commit object
+        shell: bash
+        working-directory: product
+        run: |
+          set -Eeuo pipefail
+          python3 - <<'PY'
+          import base64, hashlib, os, pathlib, subprocess, zlib
+          head='75d418f97766ed8b66f4e24962055b8419d03793'
+          tree='659ea9382b1bc3d7ec0afc848fc2362cd5404cae'
+          parent='5a5be1b3e5eeb3f9a46a0585e09486ac80a4491c'
+          base='044eab40803acf51ffc8bc8ff59ae7e8727947de'
+          def git(*args):
+              return subprocess.check_output(['git',*args],text=True).strip()
+          assert git('rev-parse','HEAD') == parent
+          assert not git('status','--porcelain=v1','--untracked-files=no')
+          live=git('ls-remote','origin','refs/heads/research/fabric-r5-4-mixed-complexity-100k-machine-r1').split()[0]
+          assert live == parent, ('FEATURE_DRIFT',live)
+          payload=pathlib.Path(os.environ['GITHUB_WORKSPACE'])/'carrier/control/r54-r3-publication'
+          encoded=''.join((payload/f'patch.{i}.b64').read_text().strip() for i in range(3))
+          assert len(encoded)==20780
+          patch=zlib.decompress(base64.b64decode(encoded,validate=True))
+          assert hashlib.sha256(patch).hexdigest()=='b5353ae7e8093816573d8788be6b27e1968c0cbd41a9b32b16e4142ab699d25c'
+          out=pathlib.Path(os.environ['RUNNER_TEMP'])/'r54-r3-publication'
+          out.mkdir(exist_ok=False)
+          patchfile=out/'r54-r3-repair.patch'; patchfile.write_bytes(patch)
+          subprocess.run(['git','apply','--index','--check',str(patchfile)],check=True)
+          subprocess.run(['git','apply','--index',str(patchfile)],check=True)
+          changed={
+              'docs/research/FABRIC_R5_4_MIXED_COMPLEXITY_100K_MACHINE_RU.md',
+              'docs/research/FABRIC_R5_4_WORK_ORDER_RU.md',
+              'scripts/research/fabric_bake0/collect_r5_4_evidence.py',
+              'scripts/research/fabric_bake0/r5_4_mixed_complexity_machine_v1.gd',
+              'tests/research/fabric_bake0/fabric_r5_4_mixed_complexity_100k_acceptance.gd',
+              'tests/research/fabric_bake0/test_r5_4_evidence.py',
+          }
+          assert set(git('diff','--cached','--name-only').splitlines())==changed
+          added=changed|{'.github/workflows/fabric-r5-4-mixed-complexity-100k.yml','RUN_FABRIC_R5_4_TESTS.sh','RUN_FABRIC_R5_4_TESTS.ps1'}
+          assert set(git('diff','--cached','--name-status',base).splitlines())=={'A\t'+p for p in added}
+          subprocess.run(['git','diff','--cached','--check'],check=True)
+          assert git('write-tree')==tree
+          raw=(f'tree {tree}\nparent {parent}\n'
+               'author FABRIC repair implementer <fabric-repair@users.noreply.github.com> 1791385380 +0000\n'
+               'committer FABRIC repair implementer <fabric-repair@users.noreply.github.com> 1791385380 +0000\n\n'
+               'fix(FABRIC R5.4): close causal-control and mixed rollback repair R3\n\n'
+               'Preserve R5.1/R5.3 kernels; distinguish recursive-global revisions from non-causal structural control. Prove eleven rejected mixed events are state preserving and retry succeeds. Bind strict v2 evidence to executable rollback and causality tests. Independent review and merge remain separate gates.\n').encode()
+          assert hashlib.sha1(b'commit '+str(len(raw)).encode()+b'\0'+raw).hexdigest()==head
+          actual=subprocess.check_output(['git','hash-object','-t','commit','-w','--stdin'],input=raw).decode().strip()
+          assert actual==head
+          subprocess.run(['git','checkout','--detach',head],check=True)
+          assert git('rev-parse','HEAD^{tree}')==tree
+          (out/'identity.txt').write_text(f'HEAD={head}\nTREE={tree}\nPARENT={parent}\nBASE={base}\n')
+          with open(os.environ['GITHUB_ENV'],'a') as f: f.write('PUBLICATION_DIR='+str(out)+'\n')
+          PY
+          bash -n RUN_FABRIC_R5_4_TESTS.sh
+          python3 -m py_compile scripts/research/fabric_bake0/collect_r5_4_evidence.py tests/research/fabric_bake0/test_r5_4_evidence.py
+          python3 -m unittest discover -s tests/research/fabric_bake0 -p test_r5_4_evidence.py -v
+          test -z "$(git status --porcelain=v1 --untracked-files=no)"
+      - name: Publish durable source and only the control object ref
+        shell: bash
+        working-directory: product
+        run: |
+          set -Eeuo pipefail
+          head=75d418f97766ed8b66f4e24962055b8419d03793
+          test "$(git rev-parse HEAD)" = "$head"
+          git archive --format=tar.gz -o "$PUBLICATION_DIR/r54-r3-source.tar.gz" "$head"
+          git bundle create "$PUBLICATION_DIR/r54-r3-exact.bundle" HEAD
+          (cd "$PUBLICATION_DIR" && sha256sum r54-r3-source.tar.gz r54-r3-exact.bundle r54-r3-repair.patch identity.txt > SHA256SUMS)
+          ref=refs/heads/control/fabric-r54-r3-product-object
+          remote="$(git ls-remote origin "$ref" | cut -f1)"
+          if [ -n "$remote" ]; then
+            test "$remote" = "$head"
+          else
+            git push origin "$head:$ref"
+          fi
+          test "$(git ls-remote origin "$ref" | cut -f1)" = "$head"
+          echo 'Product feature, merge target and main refs were NOT written.'
+      - uses: actions/upload-artifact@v4
+        if: always() && env.PUBLICATION_DIR != ''
+        with:
+          name: fabric-r54-r3-exact-source-75d418f9
+          path: ${{ env.PUBLICATION_DIR }}/*
+          if-no-files-found: error
+          retention-days: 90
