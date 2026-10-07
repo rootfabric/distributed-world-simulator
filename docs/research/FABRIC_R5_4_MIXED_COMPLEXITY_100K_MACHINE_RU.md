@@ -1,6 +1,6 @@
 # FABRIC R5.4 — Mixed-Complexity 100k Machine
 
-Статус: implementer candidate после merged R5.3 (`044eab40803acf51ffc8bc8ff59ae7e8727947de`).
+Статус: R3 repair candidate после merged R5.3 (`044eab40803acf51ffc8bc8ff59ae7e8727947de`). Независимая приёмка и merge не заявляются; результаты exact-прогонов публикуются в PR #743 с точным HEAD/TREE.
 
 ## Цель
 
@@ -42,17 +42,41 @@ root executable = 4 equations
 
 То есть expensive detail растёт только в causal workset; остальные 99k+ structural records и 11 recursive nodes остаются compact/reused.
 
-## Global causal event
+## Recursive-global revision и отдельный контрольный обход
 
-Отдельный machine-wide reconfiguration намеренно объявлен глобальной причинностью. Для него допустима O(N) structural re-derivation и полный recursive rebuild:
+R2 ошибочно называл полное чтение неизменённой structural source глобальным физическим событием. Исполняемый reviewer falsifier в PR #743, comment 6016469344, опроверг это: structural revision, checksum, transitions и applied events не менялись. Старые Linux/Windows PASS не закрывают эту семантическую ошибку.
+
+R3 использует явно разрешённый reviewer вариант разделения двух операций:
 
 ```text
-structural parts scanned = 100000
-recursive changed nodes = 15
-recursive reused nodes = 0
+global_reconfigure():
+  реальная смена source revisions всей recursive hierarchy
+  recursive changed/reused = 15/0
+  structural parts scanned = 0
+  structural source + capsule + runtime + ownership = UNCHANGED
+
+explicit_global_control_scan():
+  non-causal O(N) aggregate control
+  structural parts scanned = 100000
+  physical machine identity / source / runtime / events = UNCHANGED
+  меняется только диагностический счётчик контрольного обхода
 ```
 
-Это не маскируется под local scaling. R5.4 таким образом проверяет обе стороны правила: locality когда causal scope локален и глобальное расширение только когда dependency scope действительно global.
+Это **не** доказательство физической причины, которая требует раскрытия всех 100k structural parts. Такой mixed-domain global causal event данным fixture не моделируется. Его нельзя объявлять пройденным по результату control scan или подменять изменением counters.
+
+## Атомарное локальное событие
+
+`local_damage_and_refine()` сначала восстанавливает capsule в отдельном R5.1 lifecycle, затем полностью выполняет на нём UNBAKE → canonical break observation → ReBAKE. Live structural source/runtime остаются прежними. После построения recursive candidate вызывается неизменённый транзакционный R5.3 `refresh`; только после его успеха устанавливаются готовые structural runtime/source и event/work counters. После успешного refresh нет отклоняемой операции над кандидатом.
+
+Range index переиспользуется только для чтения; его полный снимок также проверяется отрицательными тестами. Перенос capsule сохраняет work counters и execution-slot history. Физические kernels и R5.1/R5.3 contracts не редактируются.
+
+Fixture одноразовый: initialize → local event → recursive-global revision. Неинициализированные вызовы, преждевременный global, повтор local/global и local после global отклоняются без изменения состояния. Это ограничение конкретного research fixture, не новый production event owner.
+
+### Исполняемые проверки отказов
+
+Acceptance-only subclasses вводят отказы **после настоящих inherited операций**: restore, UNBAKE, canonical break observation, ReBAKE, а также при подготовке leaf после трёх prepared ancestors внутри настоящего R5.3 refresh. Дополнительно проверяется реальный отказ admission повреждённого range-index schema. В product runtime нет fault flags; два обычных instance factory метода позволяют подставить subclasses в тесте.
+
+Каждый из 11 отклонённых initialized events сравнивает полный снимок обеих live representations: source, index, structural capsule, status/ownership, recursive root, sessions, bundles, hashes, ready-state, instance identities, work/event counters и machine identity. После отказов выполняется успешный retry. Ещё три cold entrypoints обязаны отклоняться без изменения состояния.
 
 ## Acceptance
 
@@ -60,7 +84,10 @@ recursive reused nodes = 0
 - local FULL peak/reconstruction = 20;
 - local residual full scans = 0;
 - local recursive changed/reused = 4/11;
-- global structural scan = 100000;
+- recursive-global structural scan = 0; полный structural state неизменён;
+- explicit non-causal control scan = 100000; physical state/identity неизменны;
+- 11 rejected initialized events / 11 полных неизменённых снимков;
+- 3 uninitialized rejections без изменения состояния;
 - global recursive changed/reused = 15/0;
 - baseline/final recursive hidden physical = 1812/1852;
 - recursive root compile graph = 24;
@@ -71,7 +98,9 @@ recursive reused nodes = 0
 
 ## Non-claims
 
-R5.4 не вводит production ownership, persistence/network handoff, universal nonlinear/hybrid recursive reduction или integration в current `main`. После R5.4 нужен `R5 CLOSE`, затем `INTEGRATION-R6`.
+R5.4 не вводит production ownership, persistence/network handoff, universal nonlinear/hybrid recursive reduction или integration в current `main`. Не доказана structural-global physical causality. После независимого решения по R5.4 нужен `R5 CLOSE`, затем `INTEGRATION-R6`.
+
+`local_metadata_parts_scanned = 0` относится к residual aggregate queries внутри lifecycle. Это **не** end-to-end O(1): неизменённый `Source.create_subject()` строит canonical fixture с expanded source digests за O(N). Создание source fixture, тестовые полные снимки и контрольный обход не выдаются за стоимость compact physical execution.
 
 
 ## R1 Windows exact falsifier → R2
@@ -81,3 +110,18 @@ Fresh Windows exact verification на frozen R1 подтвердил весь ru
 R2 исправляет только evidence identity contract: collector принимает ровно два разрешённых canonical engine SHA (Linux и Windows) при неизменной версии `4.7.1.stable.double.custom_build.a13da4feb`; любой неизвестный SHA остаётся fail-closed. Physics/runtime/acceptance/deterministic payload не меняются. Добавлены unit tests: Linux accepted, Windows accepted, unknown rejected.
 
 После R2 требуются новый exact Linux evidence на R2 HEAD и повтор Windows exact на том же R2 HEAD; R1 runtime PASS не переносится формально на новый HEAD без fresh evidence.
+
+
+## R3 evidence contract и граница приёмки
+
+R3 вводит `fabric.r5_4.mixed_complexity_100k.result.v2` и `fabric.r5_4.exact_evidence.v2`. Старый R1/R2 result v1 не принимается новым collector. Точные predicates включают 1048 assertions, local 20 / 4 changed / 11 reused, recursive-global 15/0 с structural scan=0, отдельный control=100000, 11/11 rollback и три cold rejection.
+
+Collector проверяет форму и типы полей, отсутствие failures, ровно один result/PASS/hash marker, совпадение указанного hash с полным result, одинаковые payload трёх samples, exact engine identity до/после, R5.3 1231/0 и R5.1-100k 93/0, import/parse и Python contract. Duplicate JSON keys, nonfinite числа, bool/float вместо integer counters, старый schema, неполный rollback, ложная structural causality и физическое изменение при control отвергаются. Unit tests вызывают настоящий collector на временных synthetic campaigns; они не являются runtime evidence.
+
+Предварительный implementer Linux run: 1048/0; Python collector tests: 28/28. Предварительный deterministic hash:
+
+```text
+2e099bd76c89edf9abe75663e0eee6317170d1d9fd72ffc13cb5400306e822db
+```
+
+Этот результат не заменяет fresh 3× exact campaign на опубликованном R3 HEAD, Windows reproduction, fresh adversarial Reviewer и independent Verifier. Implementer не выпускает собственный independent verdict. Merge остаётся отдельным человеческим решением.

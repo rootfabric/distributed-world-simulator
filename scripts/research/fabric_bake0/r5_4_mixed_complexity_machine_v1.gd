@@ -59,6 +59,14 @@ static func _build_recursive(revision: int, grown_leaf0: bool) -> Dictionary:
 		return machine
 	return U.success(machine.details)
 
+# Instance factories keep the existing kernels unchanged and allow boundary
+# fault injection by an acceptance-only subclass. No runtime fault flags.
+func _new_recursive_runtime():
+	return Runtime.new()
+
+func _new_structural_stage():
+	return Life.new()
+
 func initialize() -> Dictionary:
 	if not structural_source.is_empty():
 		return U.failure("R5_4_ALREADY_INITIALIZED")
@@ -83,7 +91,7 @@ func initialize() -> Dictionary:
 	if not built.success:
 		return built
 	recursive_root = built.details
-	recursive_runtime = Runtime.new()
+	recursive_runtime = _new_recursive_runtime()
 	var prepared: Dictionary = recursive_runtime.prepare(recursive_root)
 	if not prepared.success:
 		return prepared
@@ -112,7 +120,7 @@ func _stage_structural_local_event() -> Dictionary:
 	var captured: Dictionary = structural_runtime.capture_capsule()
 	if not captured.success:
 		return U.failure("R5_4_STRUCTURAL_STAGE_CAPTURE_FAILED", {"cause":captured})
-	var staged = Life.new()
+	var staged = _new_structural_stage()
 	var attached: Dictionary = staged.attach_range_index(structural_index, structural_source)
 	if not attached.success:
 		return U.failure("R5_4_STRUCTURAL_STAGE_INDEX_FAILED", {"cause":attached})
@@ -136,8 +144,17 @@ func _stage_structural_local_event() -> Dictionary:
 func local_damage_and_refine() -> Dictionary:
 	if structural_runtime == null or recursive_runtime == null:
 		return U.failure("R5_4_NOT_INITIALIZED")
+	# This bounded research fixture has one local event, then one global revision.
+	# Reject replay/order violations rather than regressing canonical revisions.
+	if local_event_count != 0 or global_event_count != 0:
+		return U.failure("R5_4_LOCAL_EVENT_ORDER_INVALID")
+	# Prepare the complete structural transition first. Even a late staging
+	# failure leaves both live representations and all their counters untouched.
+	var staged_structural: Dictionary = _stage_structural_local_event()
+	if not staged_structural.success:
+		return staged_structural
 	var before_root: Dictionary = recursive_root
-	# Stage the recursive candidate before touching any live representation.
+	# The recursive candidate is also built without mutating a live runtime.
 	var leaf: Dictionary = Fixture.compile_leaf("r53/leaf-0-0-0", 1, 2, 120)
 	if not leaf.success:
 		return U.failure("R5_4_RECURSIVE_LEAF_REFINE_FAILED", {"cause": leaf})
@@ -150,11 +167,6 @@ func local_damage_and_refine() -> Dictionary:
 	var expected := LOCAL_EXPECTED_CHANGED.duplicate(); expected.sort()
 	if changed != expected:
 		return U.failure("R5_4_LOCAL_CAUSAL_WORKSET_MISMATCH", {"expected":expected,"actual":changed})
-	# Stage the complete structural transition in a restored scratch runtime. Live
-	# structural state remains untouched until the recursive refresh also succeeds.
-	var staged_structural: Dictionary = _stage_structural_local_event()
-	if not staged_structural.success:
-		return staged_structural
 	# R5.3 refresh is already transactional internally. Once it succeeds, the only
 	# remaining operation is swapping the fully staged structural runtime/source.
 	var refreshed: Dictionary = recursive_runtime.refresh(next_root, changed)
@@ -192,6 +204,8 @@ func explicit_global_control_scan() -> Dictionary:
 func global_reconfigure() -> Dictionary:
 	if structural_runtime == null or recursive_runtime == null:
 		return U.failure("R5_4_NOT_INITIALIZED")
+	if local_event_count != 1 or global_event_count != 0:
+		return U.failure("R5_4_GLOBAL_EVENT_ORDER_INVALID")
 	# Global causality exists only inside the recursive dependency hierarchy in
 	# this fixture. Structural source/runtime are intentionally untouched because
 	# there is no canonical structural dependency requiring expansion.
