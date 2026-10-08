@@ -123,7 +123,7 @@ jobs:
           )){
             $log=Join-Path 'artifacts\char1-windows' ((Split-Path $test -Leaf)+'.log')
             & $env:GODOT_BIN --headless --path . --script ('res://'+$test) *> $log
-            if($LASTEXITCODE -ne 0){Get-Content $log -Tail 300; throw "CHAR1_INHERITED_REGRESSION:$test:$LASTEXITCODE"}
+            if($LASTEXITCODE -ne 0){Get-Content $log -Tail 300; throw "CHAR1_INHERITED_REGRESSION:${test}:$LASTEXITCODE"}
             if(Select-String $log -Pattern 'SCRIPT ERROR:|Parse Error:|Compile Error:' -Quiet){Get-Content $log -Tail 300; throw "CHAR1_INHERITED_SCRIPT_ERROR:$test"}
           }
 
@@ -141,7 +141,7 @@ jobs:
             tracked_clean=[string]::IsNullOrWhiteSpace($tracked)
             remaining_godot_pids=@($godot|Select-Object -ExpandProperty Id)
           } | ConvertTo-Json -Depth 5 | Set-Content artifacts\char1-windows\final.json -Encoding UTF8
-          if(-not[string]::IsNullOrWhiteSpace($tracked)){throw 'TRACKED_DIRTY_AFTER'}
+          if (-not [string]::IsNullOrWhiteSpace($tracked)){throw 'TRACKED_DIRTY_AFTER'}
           if($godot.Count -gt 0){throw ('GODOT_PROCESS_LEAK:'+(($godot|Select-Object -ExpandProperty Id)-join ','))}
 
       - name: Upload CHAR1 Windows evidence
