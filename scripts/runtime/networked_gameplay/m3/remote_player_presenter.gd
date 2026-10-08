@@ -4,6 +4,7 @@ const RemoteSnapshotInterpolator = preload(
 	"res://scripts/network/interpolation/remote_snapshot_interpolator.gd"
 )
 
+const AvatarRegistry = preload("res://scripts/presentation/avatar/avatar_registry.gd")
 const SCHEMA := "planet_simulator.remote_player_presenter.v2"
 const LEGACY_SCHEMA := "planet_simulator.remote_player_presenter.v1"
 
@@ -19,8 +20,9 @@ var replica_revision := 0
 var updates := 0
 var interpolation_failures := 0
 var last_apply_error_code := ""
-var _visual: MeshInstance3D
-var _flashlight: SpotLight3D
+var _visual: Node3D
+var _avatar_registry = AvatarRegistry.new()
+var _appearance_id := "default"
 var _interpolator
 var _fallback_server_tick := 0
 var _last_mode := "UNINITIALIZED"
@@ -36,20 +38,10 @@ func setup(record: Dictionary, snapshot_context: Dictionary = {}) -> Dictionary:
 	if logical_player_id.is_empty() or player_entity_id != "player/%s" % logical_player_id:
 		return _failure("INVALID_REMOTE_PLAYER_IDENTITY")
 	name = "RemotePlayer_%s" % logical_player_id
-	_visual = MeshInstance3D.new()
-	_visual.name = "RemoteBody"
-	var capsule := CapsuleMesh.new()
-	capsule.radius = 0.35
-	capsule.height = 1.8
-	_visual.mesh = capsule
-	add_child(_visual)
-	_flashlight = SpotLight3D.new()
-	_flashlight.name = "RemoteFlashlight"
-	_flashlight.spot_range = 14.0
-	_flashlight.spot_angle = 32.0
-	_flashlight.light_energy = 2.0
-	_flashlight.visible = false
-	add_child(_flashlight)
+	_appearance_id = String(record.get("appearance_id", "default")).strip_edges().to_lower()
+	var appearance_result := set_appearance(_appearance_id)
+	if not bool(appearance_result.get("success", false)):
+		return appearance_result
 	_interpolator = RemoteSnapshotInterpolator.new()
 	var configured: Dictionary = _interpolator.configure()
 	if not bool(configured.get("success", false)):
@@ -147,6 +139,7 @@ func _process(delta: float) -> void:
 	if not bool(sampled.get("success", false)):
 		return
 	_apply_interpolated_state(sampled.get("details", {}))
+	_update_avatar_visual(delta)
 
 
 func _apply_interpolated_state(state: Dictionary) -> void:
@@ -171,7 +164,7 @@ func _apply_interpolated_state(state: Dictionary) -> void:
 	_last_mode = String(state.get("mode", "UNKNOWN"))
 	_last_render_tick = float(state.get("render_tick", _last_render_tick))
 	_apply_orientation()
-	_apply_flashlight()
+	_update_avatar_visual(0.0)
 
 
 func get_presented_position() -> Vector3:
@@ -232,9 +225,36 @@ func _apply_orientation() -> void:
 	rotation.y = target_orientation_yaw
 
 
-func _apply_flashlight() -> void:
-	if _flashlight != null:
-		_flashlight.visible = target_flashlight
+# Any appearance scene is accepted through the same visual-only interface.
+# Selection never mutates replicated player state or changes movement ownership.
+func register_appearance_scene(appearance_id: String, scene_path: String) -> bool:
+	return _avatar_registry.register_scene(appearance_id, scene_path)
+
+
+func set_appearance(appearance_id: String) -> Dictionary:
+	var candidate: Node3D = _avatar_registry.create_visual(appearance_id)
+	if candidate == null:
+		return _failure("AVATAR_VISUAL_CREATION_FAILED")
+	if _visual != null and is_instance_valid(_visual):
+		remove_child(_visual)
+		_visual.queue_free()
+	_visual = candidate
+	_visual.name = "RemoteBody"
+	add_child(_visual)
+	_appearance_id = appearance_id
+	_update_avatar_visual(0.0)
+	return _success({"appearance_id": _appearance_id})
+
+
+func _update_avatar_visual(delta: float) -> void:
+	if _visual == null or not is_instance_valid(_visual):
+		return
+	_visual.call("apply_avatar_state", {
+		"velocity": target_velocity,
+		"orientation_yaw": target_orientation_yaw,
+		"flashlight_enabled": target_flashlight,
+		"motion_authority": "remote",
+	}, delta)
 
 
 func has_input_authority() -> bool:
@@ -264,6 +284,8 @@ func get_report() -> Dictionary:
 		],
 		"orientation_yaw": target_orientation_yaw,
 		"flashlight_enabled": target_flashlight,
+		"appearance_id": _appearance_id,
+		"avatar": _visual.call("get_avatar_report") if _visual != null and is_instance_valid(_visual) else {},
 		"replica_revision": replica_revision,
 		"updates": updates,
 		"input_authority": false,
