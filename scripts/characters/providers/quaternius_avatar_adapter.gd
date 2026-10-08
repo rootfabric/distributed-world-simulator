@@ -2,7 +2,7 @@ class_name QuaterniusAvatarAdapter
 extends "res://scripts/characters/avatar/avatar_presenter.gd"
 
 const Contract = preload("res://scripts/characters/avatar/avatar_contract.gd")
-const Engine = preload(
+const QuaterniusEngine = preload(
 	"res://scripts/characters/providers/quaternius_avatar_engine.gd"
 )
 
@@ -21,7 +21,7 @@ func configure(
 	)
 	if not bool(base.get("success", false)):
 		return base
-	_engine = Engine.new()
+	_engine = QuaterniusEngine.new()
 	_engine.name = "QuaterniusAvatarEngine"
 	add_child(_engine)
 	var options: Dictionary = definition.get(
