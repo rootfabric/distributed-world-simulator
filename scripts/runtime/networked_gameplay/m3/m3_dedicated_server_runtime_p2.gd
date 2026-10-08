@@ -6,6 +6,9 @@ const NetworkUtilsScript = preload("res://scripts/network/contracts/network_cont
 const Boundary = preload("res://scripts/network/transports/v2/network_transport_boundary_v2.gd")
 const Port = preload("res://scripts/network/transports/v2/enet_multi_peer_transport_port.gd")
 const Service = preload("res://scripts/runtime/networked_gameplay/networked_gameplay_service.gd")
+const User1ProductSeamService = preload(
+	"res://scripts/runtime/networked_gameplay/user1/user1_product_seam_gameplay_service.gd"
+)
 const Support = preload("res://scripts/runtime/networked_gameplay/m3/m3_process_support.gd")
 const RecoveryRepository = preload("res://scripts/persistence/authoritative_recovery_repository.gd")
 const RecoveryCoordinator = preload("res://scripts/persistence/authoritative_recovery_coordinator.gd")
@@ -50,6 +53,7 @@ var _authority_epoch := 1
 var _peer_to_player: Dictionary = {}
 var _peer_to_session: Dictionary = {}
 var _joins := 0
+var _fast_join_acks := 0
 var _leaves := 0
 var _moves := 0
 var _presentation_updates := 0
@@ -166,13 +170,18 @@ func setup(config: Dictionary) -> Dictionary:
 	_handshake_rejections = 0
 	_handshake_replays = 0
 	_last_handshake_error_code = ""
-	_service = Service.new()
+	_service = (
+		User1ProductSeamService.new()
+		if bool(config.get("product_seam_enabled", false))
+		else Service.new()
+	)
 	var service_setup: Dictionary = _service.setup(_authority_owner_id, _authority_epoch, 0, {
 		"profile": Service.PROFILE_MULTIPLAYER_CORE,
 		"topology_adapter": "ENET",
 		"region_id": "region/m3/single-server",
 		"playable_sandbox": _playable_sandbox,
 		"fixed_tick_authority": true,
+		"product_seam_enabled": bool(config.get("product_seam_enabled", false)),
 	})
 	if not bool(service_setup.get("success", false)):
 		return service_setup
@@ -417,7 +426,15 @@ func _handle_join(peer_id: String, session_id: String, payload: Dictionary) -> v
 		_send(peer_id, "JOIN_REJECTED", {"operation_id": operation_id, "error_code": "INVALID_JOIN_PAYLOAD"})
 		return
 	var result: Dictionary = _service.join(logical_id, session_id, operation_id)
-	if not _persist_command_result(operation_id, "JOIN", logical_id, result):
+	var immediate_join_persistence := true
+	if _service.has_method("requires_immediate_join_persistence"):
+		immediate_join_persistence = bool(
+			_service.requires_immediate_join_persistence()
+		)
+	if (
+		immediate_join_persistence
+		and not _persist_command_result(operation_id, "JOIN", logical_id, result)
+	):
 		_send(peer_id, "JOIN_REJECTED", {"operation_id": operation_id, "error_code": "M6_DURABLE_COMMIT_FAILED"})
 		return
 	if not bool(result.get("success", false)):
@@ -443,6 +460,14 @@ func _handle_join(peer_id: String, session_id: String, payload: Dictionary) -> v
 	}, RealtimeChannelPolicy.RESYNC, "RELIABLE_ORDERED")
 	if join_sent:
 		_item_graph_full_snapshots_published += 1
+		if not immediate_join_persistence:
+			_fast_join_acks += 1
+			_telemetry.increment("fast_join_acks")
+			_debug_event("JOIN_ACK_FAST_PATH", {
+				"logical_player_id": logical_id,
+				"operation_id": operation_id,
+				"persistence_deferred": true,
+			})
 	if _construction_bridge != null:
 		var player: Dictionary = Dictionary(result.get("details", {}).get("player", {}))
 		var construction_join: Dictionary = _construction_bridge.connect_player(logical_id, int(player.get("ownership_epoch", 0)))
@@ -459,6 +484,7 @@ func _handle_join(peer_id: String, session_id: String, payload: Dictionary) -> v
 		_capture_two_connected_checksum()
 	if join_sent:
 		_mark_operation_delivered(operation_id)
+		_send_product_seam_state(peer_id, logical_id, "PLAYER_JOINED")
 	_write_report("READY", false)
 
 func _handle_move(peer_id: String, session_id: String, payload: Dictionary) -> void:
@@ -730,12 +756,43 @@ func _maybe_publish_movement_snapshot() -> void:
 		):
 			_broadcasts += 1
 			_compact_movement_snapshots_published += 1
+			_send_product_seam_state(
+				String(peer_id_value),
+				String(_peer_to_player.get(peer_id_value, "")),
+				"MOVEMENT_NETWORK_TICK"
+			)
 		else:
 			all_enqueued = false
 			_movement_snapshot_enqueue_failures += 1
 	_movement_snapshot_dirty = target_count > 0 and not all_enqueued
 	if all_enqueued and target_count > 0:
 		_movement_snapshots_published += 1
+
+
+func _send_product_seam_state(
+	peer_id: String,
+	logical_player_id: String,
+	reason: String
+) -> bool:
+	if (
+		_service == null
+		or not _service.has_method("get_product_seam_state")
+		or logical_player_id.is_empty()
+	):
+		return false
+	var state_value = _service.get_product_seam_state(logical_player_id)
+	if not state_value is Dictionary or Dictionary(state_value).is_empty():
+		return false
+	return _send_on_channel(
+		peer_id,
+		"PRODUCT_SEAM_STATE",
+		{
+			"reason": reason,
+			"state": Dictionary(state_value).duplicate(true),
+		},
+		RealtimeChannelPolicy.RESYNC,
+		"RELIABLE_ORDERED"
+	)
 
 
 func _handle_player_state_rejected(peer_id: String, session_id: String, payload: Dictionary) -> void:
@@ -1215,6 +1272,12 @@ func _persist_command_result(operation_id: String, command_type: String, logical
 func _persist_checkpoint(operation_id: String) -> Dictionary:
 	if not _persistence_enabled or _recovery_coordinator == null:
 		return _success({"skipped": true})
+	if _service != null and _service.has_method("prepare_product_persistence"):
+		var quiesced: Dictionary = _service.prepare_product_persistence()
+		if not bool(quiesced.get("success", false)):
+			return _failure("USER1_SEAM_PERSISTENCE_NOT_QUIESCENT", {
+				"cause": quiesced,
+			})
 	var persistence_started_us: int = Time.get_ticks_usec()
 	var next_generation := _checkpoint_generation + 1
 	var checkpoint_id := "checkpoint/m6/dedicated/%d" % next_generation
@@ -1300,6 +1363,12 @@ func _persistence_report() -> Dictionary:
 
 
 func _maybe_persist_movement_checkpoint() -> void:
+	if (
+		_service != null
+		and _service.has_method("can_persist_product_state")
+		and not bool(_service.can_persist_product_state())
+	):
+		return
 	if (
 		not _playable_sandbox
 		or not _persistence_enabled
@@ -1488,6 +1557,7 @@ func get_report() -> Dictionary:
 		"connected_peer_count": _peer_to_player.size(),
 		"peer_to_player": _peer_to_player.duplicate(true),
 		"joins": _joins,
+		"fast_join_acks": _fast_join_acks,
 		"leaves": _leaves,
 		"moves": _moves,
 		"presentation_updates": _presentation_updates,

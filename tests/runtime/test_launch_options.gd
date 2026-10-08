@@ -164,6 +164,29 @@ func _init() -> void:
 	_assert(live3_root.begins_with("user://v0-live/recovery/earth/"), "LIVE.3 default persistence root is outside product namespace")
 	_assert(live3_root == LaunchOptionsScript.resolved_network_persistence_root(live3_server_options), "LIVE.3 persistence root is not deterministic")
 
+	var user1_seam_server: Dictionary = LaunchOptionsScript.parse(PackedStringArray([
+		"--role=dedicated-server",
+		"--network-mvp",
+		"--product-seam",
+		"--world=earth",
+	]))
+	_assert(bool(user1_seam_server.get("success", false)), "USER1 product seam server options were rejected")
+	_assert(bool(user1_seam_server.get("options", {}).get("product_seam", false)), "USER1 product seam flag was not parsed")
+	var user1_seam_client: Dictionary = LaunchOptionsScript.parse(PackedStringArray([
+		"--role=game-client",
+		"--network-mvp",
+		"--product-seam",
+		"--world=earth",
+		"--player-identity=a",
+	]))
+	_assert(not bool(user1_seam_client.get("success", true)), "USER1 product seam was accepted on a client")
+	var user1_seam_without_mvp: Dictionary = LaunchOptionsScript.parse(PackedStringArray([
+		"--role=dedicated-server",
+		"--product-seam",
+		"--world=earth",
+	]))
+	_assert(not bool(user1_seam_without_mvp.get("success", true)), "USER1 product seam was accepted without network MVP")
+
 	var live3_explicit: Dictionary = LaunchOptionsScript.parse(PackedStringArray([
 		"--role=dedicated-server",
 		"--network-mvp",

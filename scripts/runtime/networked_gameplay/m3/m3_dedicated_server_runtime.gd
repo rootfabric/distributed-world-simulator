@@ -213,6 +213,19 @@ func _handle_construction_command(peer_id: String, session_id: String, payload: 
 		_send_result(peer_id, operation_id, "CONSTRUCTION_COMMAND", _failure("CONSTRUCTION_COMMAND_REQUIRED"))
 		return
 	var logical_id := String(_peer_to_player.get(peer_id, ""))
+	if (
+		_service != null
+		and _service.has_method("product_mutation_allowed")
+		and not bool(_service.product_mutation_allowed(logical_id))
+	):
+		_send_result(
+			peer_id,
+			operation_id,
+			"CONSTRUCTION_COMMAND",
+			_failure("USER1_SEAM_GAMEPLAY_MUTATION_FROZEN")
+		)
+		_rejections += 1
+		return
 	var stage_context := _stall_context(peer_id, operation_id, "CONSTRUCTION_COMMAND")
 	var before_probe := _stall_enter("CONSTRUCTION:BEFORE_ITEM_SNAPSHOT", stage_context)
 	var before_item_snapshot: Dictionary = _service.create_canonical_item_graph_snapshot()

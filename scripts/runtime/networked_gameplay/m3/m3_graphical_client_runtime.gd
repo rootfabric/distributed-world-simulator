@@ -1,12 +1,16 @@
 extends "res://scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime_p2.gd"
 
 signal resource_mining_updated(snapshot: Dictionary)
+signal product_seam_updated(state: Dictionary)
 
 const ResourceMiningSnapshot = preload(
 	"res://scripts/runtime/networked_gameplay/p3/resource_mining_snapshot.gd"
 )
 const ResourceMiningDelta = preload(
 	"res://scripts/runtime/networked_gameplay/p3/resource_mining_delta.gd"
+)
+const User1ProductSeamState = preload(
+	"res://scripts/runtime/networked_gameplay/user1/user1_product_seam_state.gd"
 )
 
 var _resource_mining_snapshot: Dictionary = {}
@@ -15,6 +19,9 @@ var _resource_delta_updates := 0
 var _resource_rejections := 0
 var _resource_resync_pending := false
 var _resource_resync_requests_sent := 0
+var _product_seam_state: Dictionary = {}
+var _product_seam_updates := 0
+var _product_seam_rejections := 0
 
 
 func _reset_extended_reconnect_replica_state() -> void:
@@ -24,6 +31,9 @@ func _reset_extended_reconnect_replica_state() -> void:
 	_resource_rejections = 0
 	_resource_resync_pending = false
 	_resource_resync_requests_sent = 0
+	_product_seam_state.clear()
+	_product_seam_updates = 0
+	_product_seam_rejections = 0
 
 
 func setup(config: Dictionary) -> Dictionary:
@@ -33,6 +43,9 @@ func setup(config: Dictionary) -> Dictionary:
 	_resource_rejections = 0
 	_resource_resync_pending = false
 	_resource_resync_requests_sent = 0
+	_product_seam_state.clear()
+	_product_seam_updates = 0
+	_product_seam_rejections = 0
 	return super.setup(config)
 
 
@@ -55,6 +68,9 @@ func _accept_compact_snapshot(snapshot: Dictionary) -> void:
 func _handle_message(payload: Dictionary) -> void:
 	var message_type := String(payload.get("type", ""))
 	match message_type:
+		"PRODUCT_SEAM_STATE":
+			_accept_product_seam_state(Dictionary(payload.get("state", {})))
+			return
 		"RESOURCE_SNAPSHOT":
 			_accept_resource_snapshot(Dictionary(payload.get("snapshot", {})))
 			return
@@ -63,6 +79,40 @@ func _handle_message(payload: Dictionary) -> void:
 			return
 		_:
 			super._handle_message(payload)
+
+
+func _accept_product_seam_state(state: Dictionary) -> void:
+	var validation: Dictionary = User1ProductSeamState.validate(state)
+	if not bool(validation.get("success", false)):
+		_product_seam_rejections += 1
+		_last_error_code = String(
+			validation.get("error_code", "USER1_PRODUCT_SEAM_STATE_REJECTED")
+		)
+		return
+	var player_id := String(state.get("logical_player_id", "")).strip_edges().to_lower()
+	var crossings := int(state.get("crossings", -1))
+	var roundtrips := int(state.get("roundtrips", -1))
+	if player_id != _logical_player_id:
+		_product_seam_rejections += 1
+		_last_error_code = "USER1_PRODUCT_SEAM_PLAYER_MISMATCH"
+		return
+	if not _product_seam_state.is_empty():
+		if (
+			crossings < int(_product_seam_state.get("crossings", 0))
+			or roundtrips < int(_product_seam_state.get("roundtrips", 0))
+		):
+			_product_seam_rejections += 1
+			_last_error_code = "USER1_PRODUCT_SEAM_STATE_STALE"
+			return
+	_product_seam_state = state.duplicate(true)
+	_product_seam_updates += 1
+	if _last_error_code.begins_with("USER1_PRODUCT_SEAM_"):
+		_last_error_code = ""
+	product_seam_updated.emit(_product_seam_state.duplicate(true))
+
+
+func get_product_seam_state() -> Dictionary:
+	return _product_seam_state.duplicate(true)
 
 
 func _accept_resource_snapshot(snapshot: Dictionary) -> void:
@@ -242,6 +292,11 @@ func get_resource_mining_snapshot() -> Dictionary:
 
 func get_report() -> Dictionary:
 	var report: Dictionary = super.get_report()
+	report["user1_product_seam"] = {
+		"state": _product_seam_state.duplicate(true),
+		"updates": _product_seam_updates,
+		"rejections": _product_seam_rejections,
+	}
 	report["v0_p3_resource_mining"] = {
 		"snapshot_updates": _resource_snapshot_updates,
 		"delta_updates": _resource_delta_updates,
