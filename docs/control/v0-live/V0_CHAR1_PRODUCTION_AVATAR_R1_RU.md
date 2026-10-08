@@ -14,7 +14,7 @@ gameplay/player record
   -> AvatarPresenter
 ```
 
-Core AvatarDefinition содержит `provider_id`, semantic animation mapping, sockets и appearance, но не содержит scene/model/animation asset paths. Конкретные asset paths принадлежат provider implementation/options.
+Core AvatarDefinition содержит `provider_id`, semantic animation mapping, sockets и appearance, но не содержит scene/model/animation asset paths. Конкретные asset paths принадлежат provider implementation/options.\n\nComposition root тоже не `preload`-ит конкретные providers: `ProductionAvatarBootstrap` читает `avatar-provider-manifest.v1.json`, динамически создаёт фабрики и проверяет их через `AvatarProvider` interface. Новый provider добавляется manifest-записью + реализацией интерфейса, без изменения Earth/gameplay/bootstrap.
 
 ## Providers
 
