@@ -40,6 +40,7 @@ static func defaults() -> Dictionary:
 		"m6_persistence_root": "",
 		"persistence_root": "",
 		"network_mvp": false,
+		"product_seam": false,
 		"network_playground": false,
 		"m7_result_file": "",
 		"network_debug": false,
@@ -76,6 +77,9 @@ static func parse(arguments) -> Dictionary:
 			continue
 		if argument == "--network-mvp":
 			options["network_mvp"] = true
+			continue
+		if argument == "--product-seam":
+			options["product_seam"] = true
 			continue
 		if argument == "--network-playground":
 			options["network_playground"] = true
@@ -150,6 +154,8 @@ static func parse(arguments) -> Dictionary:
 				options["persistence_root"] = value
 			"network-mvp":
 				options["network_mvp"] = value.to_lower() in ["1", "true", "yes", "on"]
+			"product-seam":
+				options["product_seam"] = value.to_lower() in ["1", "true", "yes", "on"]
 			"network-playground":
 				options["network_playground"] = value.to_lower() in ["1", "true", "yes", "on"]
 			"automation-control":
@@ -301,6 +307,14 @@ static func _validate(options: Dictionary, errors: Array[String]) -> void:
 		# protocol/authority contracts in this bounded fix.
 		if String(options.get("m3_result_file", "")).strip_edges().is_empty():
 			options["m3_result_file"] = NETWORK_MVP_RUNTIME_SENTINEL
+
+	if bool(options.get("product_seam", false)):
+		if role != RuntimeRoleScript.DEDICATED_SERVER:
+			errors.append("Product seam requires dedicated-server role")
+		if not bool(options.get("network_mvp", false)):
+			errors.append("Product seam requires --network-mvp")
+		if String(options.get("world", "")) != "earth":
+			errors.append("Product seam requires --world=earth")
 
 	if bool(options.get("automation_control", false)):
 		if role != RuntimeRoleScript.GAME_CLIENT:

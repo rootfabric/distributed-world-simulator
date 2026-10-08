@@ -1,0 +1,246 @@
+name: V0 USER1 R1 First Usable Windows
+
+on:
+  push:
+    branches:
+      - feature/v0-user1-first-usable-slice-r1
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: v0-user1-r1-first-usable-windows
+  cancel-in-progress: true
+
+env:
+  BASE_MAIN: 42dd7de5d9980e4491516fae459d3e0276d2ce8c
+  GODOT_BIN: C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe
+  GODOT_GUI: C:\Godot\godot\bin\godot.windows.editor.double.x86_64.exe
+  PYTHONUTF8: '1'
+  PYTHONDONTWRITEBYTECODE: '1'
+  BREAKPOINT_RUNTIME_DISABLED: '1'
+  GODOT_SILENCE_ROOT_WARNING: '1'
+
+jobs:
+  source:
+    name: USER1 source contract
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout candidate
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Prove bounded USER1 diff
+        shell: bash
+        run: |
+          set -euo pipefail
+          git merge-base --is-ancestor "$BASE_MAIN" HEAD
+          mapfile -t actual < <(git diff --name-only "$BASE_MAIN" HEAD | sort)
+          expected=(
+            ".github/workflows/v0-user1-r1-first-usable-windows.yml"
+            ".github/workflows/v0-user1-sem1-linux-exact.yml"
+            "docs/control/v0-live/V0_USER1_FIRST_USABLE_SLICE_R1_RU.md"
+            "scripts/app/earth_p3_resource_mining_app.gd"
+            "scripts/app/simulator_app.gd"
+            "scripts/network/observability/network_protocol_manifest.gd"
+            "scripts/runtime/launch_options.gd"
+            "scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime.gd"
+            "scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime_p2.gd"
+            "scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime.gd"
+            "scripts/runtime/networked_gameplay/services/player_ownership_service.gd"
+            "scripts/runtime/networked_gameplay/services/player_registry.gd"
+            "scripts/runtime/networked_gameplay/user1/user1_product_live_player_gate.gd"
+            "scripts/runtime/networked_gameplay/user1/user1_product_player_transfer_port.gd"
+            "scripts/runtime/networked_gameplay/user1/user1_product_seam_authority_service.gd"
+            "scripts/runtime/networked_gameplay/user1/user1_product_seam_gameplay_service.gd"
+            "scripts/runtime/networked_gameplay/user1/user1_product_seam_movement_authority_service.gd"
+            "scripts/runtime/networked_gameplay/user1/user1_product_seam_state.gd"
+            "scripts/ui/product_shell.gd"
+            "scripts/ui/user1_journey_overlay.gd"
+            "tests/runtime/test_launch_options.gd"
+            "tests/runtime/test_v0_user1_first_usable_slice.gd"
+            "tests/runtime/test_v0_user1_product_seam_bridge.gd"
+            "tests/runtime/test_v0_ux0_product_shell.gd"
+            "tools/live3/run_live3_product_recovery.ps1"
+          )
+          mapfile -t expected_sorted < <(printf '%s\n' "${expected[@]}" | sort)
+          diff -u <(printf '%s\n' "${expected_sorted[@]}") <(printf '%s\n' "${actual[@]}")
+          test -z "$(git status --porcelain --untracked-files=no)"
+
+      - name: Reject new canonical owners
+        shell: bash
+        run: |
+          set -euo pipefail
+          changed="$(git diff --name-only "$BASE_MAIN" HEAD)"
+          ! grep -Eq '^(scripts/(items|construction/authoritative|persistence|simulation/transactions)|scripts/runtime/networked_gameplay/m4|config/control)/' <<<"$changed"
+          grep -q 'USER1Journey' scripts/app/earth_p3_resource_mining_app.gd
+          grep -q 'last_host_player_name' scripts/ui/product_shell.gd
+          grep -q -- '--product-seam' scripts/ui/product_shell.gd
+          grep -q '0.0.0.0' scripts/ui/product_shell.gd
+          grep -q '"::"' scripts/ui/product_shell.gd
+          grep -q 'SM1AuthorityTransferCoordinator' scripts/runtime/networked_gameplay/user1/user1_product_seam_gameplay_service.gd || grep -q 'sm1_authority_transfer_coordinator' scripts/runtime/networked_gameplay/user1/user1_product_seam_gameplay_service.gd
+          grep -q 'USER1_EXTERNAL_GLOBAL_M4' scripts/runtime/networked_gameplay/user1/user1_product_player_transfer_port.gd
+          movement_authority='scripts/runtime/networked_gameplay/user1/user1_product_seam_movement_authority_service.gd'
+          grep -q 'canonical_domain_count' "$movement_authority"
+          grep -q 'get_canonical_item_graph_port() != null' "$movement_authority"
+          grep -q 'get_resource_mining_port() != null' "$movement_authority"
+          ! grep -q 'super.setup' "$movement_authority"
+          ! grep -Eq 'CanonicalMultiplayerItemGraph\.new|ResourceMiningService\.new|SharedItemService\.new' "$movement_authority"
+          grep -q 'user1_product_seam_state' scripts/network/observability/network_protocol_manifest.gd
+
+  windows:
+    name: USER1 exact Windows readiness
+    needs: source
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 35
+    steps:
+      - name: Checkout candidate
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Host and identity preflight
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          New-Item -ItemType Directory -Force artifacts\user1-r1 | Out-Null
+          $foreign=@(Get-Process -ErrorAction SilentlyContinue | Where-Object {$_.ProcessName -like 'godot*'})
+          if($foreign.Count -gt 0){throw ('FOREIGN_GODOT_PROCESS:'+(($foreign|Select-Object -ExpandProperty Id)-join ','))}
+          $version=(& $env:GODOT_BIN --version | Out-String).Trim()
+          $sha=(Get-FileHash $env:GODOT_BIN -Algorithm SHA256).Hash.ToLowerInvariant()
+          if($version -ne '4.7.1.stable.double.custom_build.a13da4feb'){throw "GODOT_VERSION_MISMATCH:$version"}
+          if($sha -ne '3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5'){throw "GODOT_SHA_MISMATCH:$sha"}
+          $os=Get-CimInstance Win32_OperatingSystem
+          $free=[math]::Round(($os.FreePhysicalMemory*1KB)/1GB,2)
+          if($free -lt 10){throw "LOW_FREE_RAM:$free"}
+          [ordered]@{
+            head=(git rev-parse HEAD).Trim()
+            tree=(git rev-parse 'HEAD^{tree}').Trim()
+            base_main=$env:BASE_MAIN
+            godot_version=$version
+            godot_sha256=$sha
+            free_ram_gb=$free
+            host=$env:COMPUTERNAME
+          } | ConvertTo-Json -Depth 5 | Set-Content artifacts\user1-r1\preflight.json -Encoding UTF8
+
+      - name: Cold Godot import
+        shell: pwsh
+        timeout-minutes: 12
+        run: |
+          $ErrorActionPreference='Stop'
+          if(Test-Path .godot){Remove-Item .godot -Recurse -Force}
+          & $env:GODOT_BIN --headless --path . --editor --import --quit *> artifacts\user1-r1\import.log
+          if($LASTEXITCODE -ne 0){
+            Get-Content artifacts\user1-r1\import.log -Tail 300
+            throw "IMPORT_FAILED:$LASTEXITCODE"
+          }
+          if(-not(Test-Path .godot\global_script_class_cache.cfg)){throw 'CLASS_CACHE_MISSING'}
+          if(Select-String artifacts\user1-r1\import.log -Pattern 'SCRIPT ERROR:|Parse Error:|Compile Error:' -Quiet){
+            Get-Content artifacts\user1-r1\import.log -Tail 300
+            throw 'IMPORT_SCRIPT_ERRORS'
+          }
+
+      - name: USER1 focused and inherited regressions
+        shell: pwsh
+        timeout-minutes: 12
+        run: |
+          $ErrorActionPreference='Stop'
+          $tests=@(
+            'tests/runtime/test_v0_user1_product_seam_bridge.gd',
+            'tests/runtime/test_v0_user1_first_usable_slice.gd',
+            'tests/runtime/test_v0_ux0_product_shell.gd',
+            'tests/runtime/test_launch_options.gd',
+            'tests/runtime/test_v0_mvp_6_native_carry_prerequisite.gd',
+            'tests/runtime/test_v0_mvp_6_native_item_handoff.gd',
+            'tests/runtime/test_v0_live2_human_gameplay_bridge.gd',
+            'tests/runtime/test_v0_live2_r3_reliability.gd',
+            'tests/runtime/test_v0_p4_live_two_client_reconnect_convergence.gd'
+          )
+          foreach($test in $tests){
+            $name=(Split-Path $test -Leaf)
+            $log=Join-Path 'artifacts\user1-r1' ($name+'.log')
+            & $env:GODOT_BIN --headless --path . --script ('res://'+$test) *> $log
+            if($LASTEXITCODE -ne 0){
+              Get-Content $log -Tail 350
+              throw ("USER1_FOCUSED_TEST_FAILED:{0}:{1}" -f $test,$LASTEXITCODE)
+            }
+            if(Select-String $log -Pattern 'SCRIPT ERROR:|Parse Error:|Compile Error:' -Quiet){
+              Get-Content $log -Tail 350
+              throw ("USER1_FOCUSED_SCRIPT_ERROR:{0}" -f $test)
+            }
+            if($test -eq 'tests/runtime/test_v0_user1_first_usable_slice.gd' -and (Select-String $log -Pattern 'RID.*leaked|ObjectDB instances were leaked|resources still in use' -Quiet)){
+              Get-Content $log -Tail 120
+              throw 'USER1_TEST_RESOURCE_LEAK'
+            }
+          }
+
+      - name: Real Product Shell entry smoke
+        shell: pwsh
+        timeout-minutes: 5
+        run: |
+          $ErrorActionPreference='Stop'
+          $root=(Resolve-Path artifacts\user1-r1).Path
+          $smoke=Join-Path $root 'product-shell-smoke.json'
+          $stdout=Join-Path $root 'product-shell.stdout.log'
+          $stderr=Join-Path $root 'product-shell.stderr.log'
+          $project=(Resolve-Path .).Path
+          $arguments=@(
+            '--path',$project,
+            '--',
+            ('--product-shell-smoke='+$smoke.Replace('\','/'))
+          )
+          $p=Start-Process -FilePath $env:GODOT_BIN -ArgumentList $arguments -PassThru -Wait -RedirectStandardOutput $stdout -RedirectStandardError $stderr
+          if($p.ExitCode -ne 0){throw "USER1_PRODUCT_SHELL_PROCESS_FAILED:$($p.ExitCode)"}
+          if(-not(Test-Path $smoke)){throw 'USER1_PRODUCT_SHELL_SMOKE_MISSING'}
+          $report=Get-Content $smoke -Raw | ConvertFrom-Json
+          if(-not[bool]$report.root_present){throw 'USER1_PRODUCT_SHELL_ROOT_MISSING'}
+          foreach($view in @('home','host','join','settings')){
+            if(@($report.view_ids)-notcontains$view){throw "USER1_PRODUCT_SHELL_VIEW_MISSING:$view"}
+          }
+
+      - name: LIVE3 planned restart compatibility
+        shell: pwsh
+        timeout-minutes: 12
+        run: |
+          $ErrorActionPreference='Stop'
+          $session=(Join-Path (Resolve-Path artifacts\user1-r1).Path 'live3-product-recovery')
+          pwsh -NoProfile -File .\tools\live3\run_live3_product_recovery.ps1 -Worktree (Resolve-Path .).Path -SessionRoot $session -PhaseOneServerLifetimeSeconds 90 -SkipImport
+          if($LASTEXITCODE -ne 0){throw "USER1_LIVE3_PRODUCT_RECOVERY_FAILED:$LASTEXITCODE"}
+          $report=Get-Content (Join-Path $session 'LIVE3-RECOVERY-REPORT.json') -Raw | ConvertFrom-Json
+          if($report.outcome -ne 'PASS'){throw "USER1_LIVE3_REPORT_NOT_PASS:$($report.failure)"}
+          if(-not[bool]$report.udp_port_free){throw 'USER1_LIVE3_UDP_PORT_LEAK'}
+
+      - name: Final clean source and host
+        if: always()
+        shell: pwsh
+        run: |
+          $head=(git rev-parse HEAD).Trim()
+          $tree=(git rev-parse 'HEAD^{tree}').Trim()
+          $tracked=(git status --porcelain --untracked-files=no | Out-String).Trim()
+          $godot=@(Get-Process -ErrorAction SilentlyContinue | Where-Object {$_.ProcessName -like 'godot*'})
+          $udp=Get-NetUDPEndpoint -LocalPort 24580 -ErrorAction SilentlyContinue
+          [ordered]@{
+            head=$head
+            tree=$tree
+            tracked_clean=[string]::IsNullOrWhiteSpace($tracked)
+            remaining_godot_pids=@($godot|Select-Object -ExpandProperty Id)
+            udp_24580_free=($null-eq$udp)
+          } | ConvertTo-Json -Depth 5 | Set-Content artifacts\user1-r1\final.json -Encoding UTF8
+          if(-not[string]::IsNullOrWhiteSpace($tracked)){throw 'TRACKED_DIRTY_AFTER'}
+          if($godot.Count -gt 0){throw ('GODOT_PROCESS_LEAK:'+(($godot|Select-Object -ExpandProperty Id)-join ','))}
+          if($null-ne$udp){throw 'UDP_24580_LEAK'}
+
+      - name: Upload USER1 evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v0-user1-r1-${{ github.run_id }}-${{ github.run_attempt }}
+          path: artifacts/user1-r1/
+          if-no-files-found: error
+          retention-days: 90
+          compression-level: 6

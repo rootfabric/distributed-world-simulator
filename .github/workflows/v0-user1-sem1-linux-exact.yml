@@ -1,0 +1,133 @@
+name: V0 USER1 SEM1 Linux Exact
+
+on:
+  push:
+    branches:
+      - feature/v0-user1-first-usable-slice-r1
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: v0-user1-sem1-linux-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  ENGINE_SHA: bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7
+  GODOT_SILENCE_ROOT_WARNING: '1'
+  BREAKPOINT_RUNTIME_DISABLED: '1'
+  PYTHONUTF8: '1'
+
+jobs:
+  source_snapshot:
+    name: USER1 SEM1 Exact Source Snapshot
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout exact subject
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Pack exact tracked source
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -z "$(git status --porcelain --untracked-files=no)"
+          mkdir -p "$RUNNER_TEMP/user1-sem1-source"
+          git rev-parse HEAD > "$RUNNER_TEMP/user1-sem1-source/HEAD.txt"
+          git rev-parse 'HEAD^{tree}' > "$RUNNER_TEMP/user1-sem1-source/TREE.txt"
+          git archive --format=tar.gz --output="$RUNNER_TEMP/user1-sem1-source/source.tar.gz" HEAD
+
+      - name: Upload exact source snapshot
+        uses: actions/upload-artifact@v4
+        with:
+          name: v0-user1-sem1-source-${{ github.sha }}-${{ github.run_id }}
+          path: ${{ runner.temp }}/user1-sem1-source/
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 0
+
+  linux_exact:
+    name: USER1 SEM1 Linux Double Exact
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 25
+    steps:
+      - name: Checkout exact subject
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Record exact subject
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/user1-sem1-linux
+          test -z "$(git status --porcelain --untracked-files=no)"
+          git rev-parse HEAD > artifacts/user1-sem1-linux/head.txt
+          git rev-parse 'HEAD^{tree}' > artifacts/user1-sem1-linux/tree.txt
+
+      - name: Resolve canonical Linux double engine
+        shell: bash
+        run: |
+          set -euo pipefail
+          engine="${DWS_GODOT_DOUBLE_LINUX_BIN:-$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64}"
+          test -x "$engine"
+          test "$(sha256sum "$engine" | cut -d' ' -f1)" = "$ENGINE_SHA"
+          version="$("$engine" --version | head -n1)"
+          echo "$version" | tee artifacts/user1-sem1-linux/engine-version.txt
+          test "$version" = "4.7.1.stable.double.custom_build.a13da4feb"
+          echo "GODOT_BIN=$engine" >> "$GITHUB_ENV"
+
+      - name: Cold import
+        shell: bash
+        run: |
+          set -euo pipefail
+          "$GODOT_BIN" --headless --path . --editor --import --quit > artifacts/user1-sem1-linux/import.log 2>&1
+          ! grep -E 'SCRIPT ERROR:|Parse Error:|Compile Error:' artifacts/user1-sem1-linux/import.log
+
+      - name: USER1 SEM1 focused and inherited regressions
+        shell: bash
+        run: |
+          set -euo pipefail
+          tests=(
+            tests/runtime/test_v0_user1_product_seam_bridge.gd
+            tests/runtime/test_v0_user1_first_usable_slice.gd
+            tests/runtime/test_v0_ux0_product_shell.gd
+            tests/runtime/test_launch_options.gd
+            tests/runtime/test_v0_mvp_6_native_carry_prerequisite.gd
+            tests/runtime/test_v0_mvp_6_native_item_handoff.gd
+            tests/runtime/test_v0_live2_human_gameplay_bridge.gd
+            tests/runtime/test_v0_live2_r3_reliability.gd
+            tests/runtime/test_v0_p4_live_two_client_reconnect_convergence.gd
+          )
+          for test_file in "${tests[@]}"; do
+            name="$(basename "$test_file")"
+            log="artifacts/user1-sem1-linux/${name}.log"
+            "$GODOT_BIN" --headless --path . --script "res://$test_file" > "$log" 2>&1
+            ! grep -E 'SCRIPT ERROR:|Parse Error:|Compile Error:' "$log"
+          done
+
+      - name: Verify clean tracked source
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          git status --porcelain --untracked-files=no | tee artifacts/user1-sem1-linux/tracked-after.txt
+          test -z "$(git status --porcelain --untracked-files=no)"
+
+      - name: Upload Linux exact evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v0-user1-sem1-linux-${{ github.sha }}-${{ github.run_id }}
+          path: artifacts/user1-sem1-linux/
+          if-no-files-found: error
+          retention-days: 90
+          compression-level: 6

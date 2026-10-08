@@ -9,6 +9,9 @@ const EarthResourceSpatialResolver = preload(
 const ResourceMiningTarget = preload(
 	"res://scripts/runtime/networked_gameplay/p3/resource_mining_target.gd"
 )
+const User1JourneyOverlayScript = preload(
+	"res://scripts/ui/user1_journey_overlay.gd"
+)
 
 # Resource targets share the canonical P1 interaction layer with ordinary world
 # items. A small priority bonus only breaks near-ties inside the same aim cone;
@@ -24,6 +27,7 @@ var _p3_mining_attempts := 0
 var _p3_mining_rejections := 0
 var _p3_projection_failures := 0
 var _p3_setup_error := ""
+var _user1_journey_overlay
 
 
 func attach_m3_multiplayer_client(runtime) -> Dictionary:
@@ -57,9 +61,13 @@ func attach_m3_multiplayer_client(runtime) -> Dictionary:
 			_p3_setup_error = String(accepted.get("error_code", "V0_P3_INITIAL_RESOURCE_SYNC_FAILED"))
 			return accepted
 	_p3_setup_error = ""
+	var journey_setup: Dictionary = _ensure_user1_journey_overlay()
+	if not bool(journey_setup.get("success", false)):
+		return journey_setup
 	var details: Dictionary = Dictionary(result.get("details", {})).duplicate(true)
 	details["v0_p3_resource_mining"] = true
 	details["resource_generation"] = int(_p3_resource_snapshot.get("generation", 0))
+	details["user1_journey"] = true
 	result["details"] = details
 	return result
 
@@ -70,6 +78,9 @@ func _process(delta: float) -> void:
 
 
 func prepare_for_unload() -> void:
+	if _user1_journey_overlay != null and is_instance_valid(_user1_journey_overlay):
+		_user1_journey_overlay.queue_free()
+	_user1_journey_overlay = null
 	if (
 		_p3_resource_signal_connected
 		and m3_multiplayer_client_runtime != null
@@ -363,8 +374,144 @@ func _refresh_p3_resource_projection() -> void:
 		target.transform = transform_value
 
 
+func _ensure_user1_journey_overlay() -> Dictionary:
+	if _user1_journey_overlay != null and is_instance_valid(_user1_journey_overlay):
+		return {"success": true, "error_code": "", "details": {"reused": true}}
+	_user1_journey_overlay = User1JourneyOverlayScript.new()
+	_user1_journey_overlay.name = "USER1Journey"
+	add_child(_user1_journey_overlay)
+	var setup_result: Dictionary = _user1_journey_overlay.setup(
+		Callable(self, "create_user1_journey_state")
+	)
+	if not bool(setup_result.get("success", false)):
+		_user1_journey_overlay.queue_free()
+		_user1_journey_overlay = null
+		return setup_result
+	return {"success": true, "error_code": "", "details": {"ui": "USER1_JOURNEY"}}
+
+
+func create_user1_journey_state() -> Dictionary:
+	var player_id := ""
+	var ownership_epoch := 0
+	var position: Dictionary = {"x": 0.0, "y": 0.0, "z": 0.0}
+	var gameplay_snapshot: Dictionary = {}
+	var construction: Dictionary = {}
+	var product_seam: Dictionary = {}
+	if m3_multiplayer_client_runtime != null:
+		if m3_multiplayer_client_runtime.has_method("get_local_player_id"):
+			player_id = String(m3_multiplayer_client_runtime.get_local_player_id())
+		if m3_multiplayer_client_runtime.has_method("get_local_player_record"):
+			var player: Dictionary = m3_multiplayer_client_runtime.get_local_player_record()
+			ownership_epoch = int(player.get("ownership_epoch", 0))
+			var position_value = player.get("position", {})
+			if position_value is Dictionary:
+				position = Dictionary(position_value).duplicate(true)
+		if m3_multiplayer_client_runtime.has_method("get_snapshot"):
+			gameplay_snapshot = m3_multiplayer_client_runtime.get_snapshot()
+		if m3_multiplayer_client_runtime.has_method("get_construction_bundle"):
+			construction = m3_multiplayer_client_runtime.get_construction_bundle()
+		if m3_multiplayer_client_runtime.has_method("get_product_seam_state"):
+			product_seam = m3_multiplayer_client_runtime.get_product_seam_state()
+
+	var inventory_ore_quantity := 0
+	var world_item_count := 0
+	var open_container_id := ""
+	var shared_container_item_count := 0
+	if not _m4_item_graph_snapshot.is_empty():
+		for item_value in _m4_item_graph_snapshot.get("items", []):
+			if not item_value is Dictionary:
+				continue
+			var item: Dictionary = item_value
+			var location_value = item.get("location", {})
+			if not location_value is Dictionary:
+				continue
+			var location: Dictionary = location_value
+			var kind := String(location.get("kind", ""))
+			if kind == "WORLD":
+				world_item_count += 1
+			if (
+				String(item.get("definition_id", "")) == "item/ore"
+				and kind == "INVENTORY"
+				and String(location.get("player_id", "")) == player_id
+			):
+				inventory_ore_quantity += int(item.get("quantity", 0))
+		var open_containers_value = _m4_item_graph_snapshot.get("open_containers", {})
+		if open_containers_value is Dictionary:
+			open_container_id = String(
+				Dictionary(open_containers_value).get(player_id, "")
+			)
+		for container_value in _m4_item_graph_snapshot.get("containers", []):
+			if not container_value is Dictionary:
+				continue
+			var container: Dictionary = container_value
+			if String(container.get("container_id", "")) == "container/shared/crate/1":
+				shared_container_item_count = Array(container.get("slots", [])).size()
+				break
+
+	var nearest_resource_distance_m := INF
+	if _p3_resource_resolver != null and not _p3_resource_snapshot.is_empty():
+		var player_x := float(position.get("x", 0.0))
+		var player_z := float(position.get("z", 0.0))
+		for node_value in _p3_resource_snapshot.get("nodes", []):
+			if not node_value is Dictionary:
+				continue
+			var node: Dictionary = node_value
+			var resolved: Dictionary = _p3_resource_resolver.resolve_planar(
+				Dictionary(node.get("spatial", {}))
+			)
+			if not bool(resolved.get("success", false)):
+				continue
+			var planar: Dictionary = Dictionary(
+				resolved.get("details", {}).get("planar_position", {})
+			)
+			var dx := float(planar.get("x", 0.0)) - player_x
+			var dz := float(planar.get("z", 0.0)) - player_z
+			nearest_resource_distance_m = minf(
+				nearest_resource_distance_m,
+				sqrt(dx * dx + dz * dz)
+			)
+
+	return {
+		"schema": User1JourneyOverlayScript.STATE_SCHEMA,
+		"connection_state": _live2_connection_state,
+		"player_id": player_id,
+		"ownership_epoch": ownership_epoch,
+		"position": position.duplicate(true),
+		"region_id": String(
+			product_seam.get(
+				"region_id",
+				gameplay_snapshot.get("region_id", "")
+			)
+		),
+		"seam_active_authority_id": String(
+			product_seam.get("active_authority_id", "")
+		),
+		"seam_authority_epoch": int(product_seam.get("authority_epoch", 0)),
+		"seam_crossings": int(product_seam.get("crossings", 0)),
+		"seam_roundtrips": int(product_seam.get("roundtrips", -1)),
+		"remote_player_count": _m3_remote_presenters.size(),
+		"nearest_resource_distance_m": nearest_resource_distance_m,
+		"resource_generation": int(_p3_resource_snapshot.get("generation", -1)),
+		"mining_tool_equipped": _live2_mining_tool_is_equipped(),
+		"inventory_ore_quantity": inventory_ore_quantity,
+		"item_graph_revision": int(_m4_item_graph_snapshot.get("revision", -1)),
+		"world_item_count": world_item_count,
+		"open_container_id": open_container_id,
+		"shared_container_item_count": shared_container_item_count,
+		"construction_generation": int(construction.get("server_generation", -1)),
+		"construct_count": Array(construction.get("constructs", [])).size(),
+		"inventory_visible": is_mvp_inventory_visible(),
+		"build_mode": _live2_build_mode,
+	}
+
+
 func create_m3_graphical_client_report() -> Dictionary:
 	var report: Dictionary = super.create_m3_graphical_client_report()
+	report["user1_journey"] = (
+		_user1_journey_overlay.get_report()
+		if _user1_journey_overlay != null and is_instance_valid(_user1_journey_overlay)
+		else {}
+	)
 	report["v0_p3"] = {
 		"checkpoint": "V0-P3-R1",
 		"ready": (

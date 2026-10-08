@@ -60,6 +60,7 @@ static func default_preferences() -> Dictionary:
 	return {
 		"schema": PREFS_SCHEMA,
 		"default_player_name": DEFAULT_PLAYER,
+		"last_host_player_name": DEFAULT_PLAYER,
 		"default_port": DEFAULT_PORT,
 		"last_server_address": "127.0.0.1",
 		"last_hosted_world": DEFAULT_WORLD,
@@ -74,6 +75,11 @@ static func normalize_preferences(value: Dictionary) -> Dictionary:
 	var player := String(value.get("default_player_name", DEFAULT_PLAYER)).strip_edges()
 	if not player.is_empty():
 		result["default_player_name"] = player.left(48)
+	var last_host_player := String(
+		value.get("last_host_player_name", result["default_player_name"])
+	).strip_edges()
+	if not last_host_player.is_empty():
+		result["last_host_player_name"] = last_host_player.left(48)
 	var port := int(value.get("default_port", DEFAULT_PORT))
 	if port >= 1 and port <= 65535:
 		result["default_port"] = port
@@ -121,6 +127,7 @@ static func build_host_user_args(
 	return PackedStringArray([
 		"--role=dedicated-server",
 		"--network-mvp",
+		"--product-seam",
 		"--world=%s" % world,
 		"--server-address=127.0.0.1",
 		"--server-port=%d" % clampi(port, 1, 65535),
@@ -520,6 +527,7 @@ func _refresh_from_preferences() -> void:
 	if _prefs.is_empty():
 		return
 	var player := String(_prefs.get("default_player_name", DEFAULT_PLAYER))
+	var host_player := String(_prefs.get("last_host_player_name", player))
 	var port := int(_prefs.get("default_port", DEFAULT_PORT))
 	var address := String(_prefs.get("last_server_address", "127.0.0.1"))
 	var slot := String(_prefs.get("last_persistence_slot", DEFAULT_SLOT))
@@ -539,7 +547,7 @@ func _refresh_from_preferences() -> void:
 	if _home_summary != null:
 		_home_summary.text = (
 			"Последний hosted world: Earth · slot %s · port %d · player %s"
-			% [slot, port, player]
+			% [slot, port, host_player]
 			if bool(_prefs.get("has_host_history", false))
 			else "Hosted world ещё не запускался. Выберите Host World."
 		)
@@ -557,6 +565,7 @@ func _on_host_pressed() -> void:
 	if player.is_empty():
 		player = DEFAULT_PLAYER
 	_prefs["default_player_name"] = player.left(48)
+	_prefs["last_host_player_name"] = player.left(48)
 	_prefs["default_port"] = port
 	_prefs["last_server_address"] = "127.0.0.1"
 	_prefs["last_hosted_world"] = DEFAULT_WORLD
@@ -572,7 +581,12 @@ func _on_continue_pressed() -> void:
 		return
 	var port := int(_prefs.get("default_port", DEFAULT_PORT))
 	var slot := String(_prefs.get("last_persistence_slot", DEFAULT_SLOT))
-	var player := String(_prefs.get("default_player_name", DEFAULT_PLAYER))
+	var player := String(
+		_prefs.get(
+			"last_host_player_name",
+			_prefs.get("default_player_name", DEFAULT_PLAYER)
+		)
+	)
 	await _launch_host(DEFAULT_WORLD, port, slot, player, true)
 
 
@@ -599,6 +613,14 @@ func _launch_host(
 		_host_server_pid = int(server_result.get("pid", -1))
 		_set_status("Dedicated server PID %d запускается…" % _host_server_pid, true)
 		await get_tree().create_timer(0.65).timeout
+		if _host_server_pid <= 0 or not OS.is_process_running(_host_server_pid):
+			_host_server_pid = -1
+			_set_status(
+				"Dedicated server завершился во время запуска. Проверьте порт и runtime logs.",
+				false
+			)
+			_set_busy(false)
+			return
 	else:
 		_set_status("Port %d уже занят: Continue подключается к существующему local server." % port, true)
 
@@ -695,10 +717,20 @@ func _spawn_runtime(user_args: PackedStringArray, headless: bool) -> Dictionary:
 
 
 func _udp_port_available(port: int) -> bool:
-	var probe := PacketPeerUDP.new()
-	var error := probe.bind(port, "127.0.0.1")
-	probe.close()
-	return error == OK
+	# Probe wildcard binds, not only 127.0.0.1. On Windows ENet may own
+	# [::]:port while a loopback IPv4 bind still succeeds, which previously let
+	# Host spawn a doomed duplicate server. Product runtime remains the final
+	# authority, but the shell should reject the common dual-stack case first.
+	var addresses := PackedStringArray(["0.0.0.0"])
+	if OS.has_feature("windows"):
+		addresses.append("::")
+	for address in addresses:
+		var probe := PacketPeerUDP.new()
+		var error := probe.bind(port, address)
+		probe.close()
+		if error != OK:
+			return false
+	return true
 
 
 func _load_preferences() -> Dictionary:

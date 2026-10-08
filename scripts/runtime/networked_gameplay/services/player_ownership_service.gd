@@ -515,3 +515,101 @@ func discard_live_player_stage(logical_player_id: String, gate, transfer_id: Str
 		return _failure("LIVE_PLAYER_STAGE_CONFLICT")
 	_live_stages.erase(logical_player_id)
 	return _success()
+
+
+# USER1-SEM1 trusted live-handoff lifecycle. The SM1 gate is the decision
+# owner; this service only removes the already-fenced source binding and later
+# releases the temporary gate after the roundtrip is quiescent.
+func preflight_live_player_retire(
+	logical_player_id: String,
+	gate,
+	transfer_id: String,
+	commit_token: String,
+	expected_record_checksum: String
+) -> Dictionary:
+	if gate == null or _live_gates.get(logical_player_id) != gate:
+		return _failure("LIVE_PLAYER_GATE_MISMATCH")
+	if _live_stages.has(logical_player_id):
+		return _failure("LIVE_PLAYER_STAGE_STILL_PRESENT")
+	var phase: Dictionary = gate.check_transfer_phase(
+		transfer_id,
+		"SOURCE_RETIRE",
+		commit_token
+	)
+	if not bool(phase.get("success", false)):
+		return phase
+	var record: Dictionary = Dictionary(_players.get(logical_player_id, {}))
+	if record.is_empty():
+		return _failure("LIVE_PLAYER_SOURCE_ROW_REQUIRED")
+	if (
+		expected_record_checksum.is_empty()
+		or Utils.payload_hash(record) != expected_record_checksum
+	):
+		return _failure("LIVE_PLAYER_SOURCE_ROW_CHANGED")
+	return _success({
+		"record_checksum": expected_record_checksum,
+		"transport_session_id": String(record.get("transport_session_id", "")),
+	})
+
+
+func retire_live_player_source(
+	logical_player_id: String,
+	gate,
+	transfer_id: String,
+	commit_token: String,
+	expected_record_checksum: String
+) -> Dictionary:
+	var checked := preflight_live_player_retire(
+		logical_player_id,
+		gate,
+		transfer_id,
+		commit_token,
+		expected_record_checksum
+	)
+	if not bool(checked.get("success", false)):
+		return checked
+	var session_id := String(
+		Dictionary(_players.get(logical_player_id, {})).get("transport_session_id", "")
+	)
+	if not session_id.is_empty():
+		_session_to_player.erase(session_id)
+	_players.erase(logical_player_id)
+	_revision += 1
+	return _success({"retired": true, "transport_session_id": session_id})
+
+
+func preflight_live_player_gate_release(logical_player_id: String, gate) -> Dictionary:
+	if gate == null or _live_gates.get(logical_player_id) != gate:
+		return _failure("LIVE_PLAYER_GATE_MISMATCH")
+	if _live_stages.has(logical_player_id):
+		return _failure("LIVE_PLAYER_STAGE_STILL_PRESENT")
+	var decision: Dictionary = gate.decision_snapshot()
+	if String(decision.get("state", "")) != "ACTIVE":
+		return _failure("LIVE_PLAYER_RELEASE_REQUIRES_ACTIVE_DECISION")
+	var local_ready := bool(gate.is_locally_ready())
+	var row_present := _players.has(logical_player_id)
+	if local_ready != row_present:
+		return _failure("LIVE_PLAYER_RELEASE_ROW_READINESS_MISMATCH")
+	if row_present:
+		var session_id := String(
+			Dictionary(_players[logical_player_id]).get("transport_session_id", "")
+		)
+		if (
+			session_id.is_empty()
+			or String(_session_to_player.get(session_id, "")) != logical_player_id
+		):
+			return _failure("LIVE_PLAYER_RELEASE_SESSION_INDEX_MISMATCH")
+	return _success({"local_row_retained": row_present})
+
+
+func release_live_player_gate(logical_player_id: String, gate) -> Dictionary:
+	var checked := preflight_live_player_gate_release(logical_player_id, gate)
+	if not bool(checked.get("success", false)):
+		return checked
+	_live_gates.erase(logical_player_id)
+	return _success({
+		"released": true,
+		"local_row_retained": bool(
+			checked.get("details", {}).get("local_row_retained", false)
+		),
+	})

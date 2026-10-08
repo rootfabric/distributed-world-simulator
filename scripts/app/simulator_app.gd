@@ -239,6 +239,7 @@ func _ready() -> void:
 				else ""
 			),
 			"playable_sandbox": _m7_mode,
+			"product_seam_enabled": bool(launch_options.get("product_seam", false)),
 			"debug_logging": bool(launch_options.get("network_debug", false)),
 			"world_id": requested_world,
 			"network_session_token": String(launch_options.get("network_session_token", "")),
