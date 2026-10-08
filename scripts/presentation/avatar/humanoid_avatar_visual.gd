@@ -66,7 +66,7 @@ func apply_avatar_state(state: Dictionary, delta: float) -> void:
 	_left_leg.rotation.x = swing
 	_right_leg.rotation.x = -swing
 	_body.position.y = absf(sin(_phase)) * 0.035 * weight
-	rotation.y = float(state.get("orientation_yaw", 0.0))
+	# The presenter/root owns heading. Avoid applying yaw twice on its child visual.
 	_lamp.visible = bool(state.get("flashlight_enabled", false))
 
 func get_avatar_report() -> Dictionary:
