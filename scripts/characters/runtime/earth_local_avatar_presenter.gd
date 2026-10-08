@@ -86,7 +86,7 @@ func apply_explorer_motion() -> Dictionary:
 	if _network_record_seen or _host == null or _earth_explorer == null:
 		return Contract.success({"skipped": true})
 	var velocity_value = _earth_explorer.get("linear_velocity_mps")
-	var velocity := (
+	var velocity: Vector3 = (
 		velocity_value
 		if velocity_value is Vector3
 		else Vector3.ZERO
