@@ -20,7 +20,9 @@ var _motion_updates := 0
 var _network_motion_updates := 0
 var _last_error_code := ""
 var _network_record_seen := false
-var _visual_vertical_offset_m := -0.85
+var _first_person_mode := true
+var _eye_height_m := 1.62
+var _visual_vertical_offset_m := -1.62
 
 func setup(
 	earth_world,
@@ -48,7 +50,7 @@ func setup(
 		_host.queue_free()
 		_host = null
 		return host_setup
-	_host.set_first_person_mode(true)
+	_host.set_first_person_mode(_first_person_mode)
 	_refresh_definition_projection_options()
 	refresh_projection()
 	return Contract.success({
@@ -164,12 +166,29 @@ func get_active_character_id() -> String:
 		else ""
 	)
 
+func set_first_person_mode(enabled: bool) -> void:
+	_first_person_mode = enabled
+	if _host != null:
+		_host.set_first_person_mode(enabled)
+	_refresh_definition_projection_options()
+	refresh_projection()
+
+static func resolve_visual_vertical_offset(
+	definition: Dictionary,
+	first_person_mode: bool
+) -> float:
+	if first_person_mode:
+		return -float(definition.get("eye_height_m", 1.62))
+	return float(definition.get("visual_vertical_offset_m", -0.85))
+
 func _refresh_definition_projection_options() -> void:
 	if _host == null:
 		return
 	var definition: Dictionary = _host.get_active_definition()
-	_visual_vertical_offset_m = float(
-		definition.get("visual_vertical_offset_m", -0.85)
+	_eye_height_m = float(definition.get("eye_height_m", 1.62))
+	_visual_vertical_offset_m = resolve_visual_vertical_offset(
+		definition,
+		_first_person_mode
 	)
 
 func shutdown() -> void:
@@ -180,6 +199,8 @@ func create_report() -> Dictionary:
 	return {
 		"schema": "planet_simulator.earth_local_avatar_presenter.v1",
 		"active_character_id": get_active_character_id(),
+		"first_person_mode": _first_person_mode,
+		"eye_height_m": _eye_height_m,
 		"visual_vertical_offset_m": _visual_vertical_offset_m,
 		"projection_updates": _projection_updates,
 		"motion_updates": _motion_updates,

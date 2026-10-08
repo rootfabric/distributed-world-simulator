@@ -9,6 +9,9 @@ const Bootstrap = preload(
 const Host = preload(
 	"res://scripts/characters/avatar/player_avatar_host.gd"
 )
+const EarthPresenter = preload(
+	"res://scripts/characters/runtime/earth_local_avatar_presenter.gd"
+)
 
 var assertions := 0
 var failures: Array[String] = []
@@ -46,6 +49,27 @@ func _run() -> void:
 	_check(
 		providers.get_provider_ids().has("avatar/quaternius"),
 		"quaternius provider missing"
+	)
+	var offset_definition: Dictionary = catalog.get_definition_exact(
+		"character/procedural/standard"
+	)
+	_check(
+		absf(
+			EarthPresenter.resolve_visual_vertical_offset(
+				offset_definition,
+				true
+			) + 1.62
+		) < 0.0001,
+		"first-person avatar must place camera at configured eye height"
+	)
+	_check(
+		absf(
+			EarthPresenter.resolve_visual_vertical_offset(
+				offset_definition,
+				false
+			) + 0.85
+		) < 0.0001,
+		"third-person presentation offset must remain provider data"
 	)
 	for character_id in catalog.get_character_ids():
 		var definition: Dictionary = (
