@@ -1,0 +1,228 @@
+name: FABRIC R5.4 R3 Canonical Linux Windows Exact
+
+on:
+  push:
+    branches:
+      - verify/fabric-r5-4-r3-crossplatform-exact-r1
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  PRODUCT_HEAD: 75d418f97766ed8b66f4e24962055b8419d03793
+  PRODUCT_TREE: 659ea9382b1bc3d7ec0afc848fc2362cd5404cae
+  PRODUCT_BASE: 044eab40803acf51ffc8bc8ff59ae7e8727947de
+  EXPECTED_GODOT_SHA: bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7
+  EXPECTED_GODOT_VERSION: 4.7.1.stable.double.custom_build.a13da4feb
+  EXPECTED_R54_HASH: 2e099bd76c89edf9abe75663e0eee6317170d1d9fd72ffc13cb5400306e822db
+
+jobs:
+  control-scope:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Verify carrier isolation and frozen subject
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$(git rev-parse HEAD^)" = "$PRODUCT_HEAD"
+          mapfile -t changed < <(git diff --name-only "$PRODUCT_HEAD" HEAD)
+          printf '%s\n' "${changed[@]}"
+          test "${#changed[@]}" -eq 1
+          test "${changed[0]}" = ".github/workflows/fabric-r5-4-r3-crossplatform-exact.yml"
+          test "$(git rev-parse "$PRODUCT_HEAD^{tree}")" = "$PRODUCT_TREE"
+          test "$(git merge-base "$PRODUCT_BASE" "$PRODUCT_HEAD")" = "$PRODUCT_BASE"
+          git diff --check "$PRODUCT_HEAD" HEAD
+
+  exact-linux:
+    needs: control-scope
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 90
+    steps:
+      - name: Refuse foreign Godot processes
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          if pgrep -a -f '[g]odot' > foreign-godot.txt; then
+            cat foreign-godot.txt
+            echo "Foreign Godot process detected; fail closed." >&2
+            exit 1
+          fi
+      - name: Checkout frozen R5.4 product
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.PRODUCT_HEAD }}
+          fetch-depth: 0
+          persist-credentials: false
+          path: product
+      - name: Locate and verify canonical Linux Godot
+        id: godot
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          candidate="${DWS_GODOT_DOUBLE_BIN:-$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64}"
+          test -x "$candidate"
+          sha="$(sha256sum "$candidate" | awk '{print $1}')"
+          version="$("$candidate" --version | head -n1 | tr -d '\r')"
+          test "$sha" = "$EXPECTED_GODOT_SHA"
+          test "$version" = "$EXPECTED_GODOT_VERSION"
+          mkdir -p isolated-engine
+          cp "$candidate" isolated-engine/godot.linuxbsd.editor.double.x86_64
+          chmod +x isolated-engine/godot.linuxbsd.editor.double.x86_64
+          test "$(sha256sum isolated-engine/godot.linuxbsd.editor.double.x86_64 | awk '{print $1}')" = "$EXPECTED_GODOT_SHA"
+          echo "bin=$GITHUB_WORKSPACE/isolated-engine/godot.linuxbsd.editor.double.x86_64" >> "$GITHUB_OUTPUT"
+      - name: Verify exact product identity
+        shell: bash
+        working-directory: product
+        run: |
+          set -Eeuo pipefail
+          test "$(git rev-parse HEAD)" = "$PRODUCT_HEAD"
+          test "$(git rev-parse HEAD^{tree})" = "$PRODUCT_TREE"
+          test -z "$(git status --porcelain=v1 --untracked-files=no)"
+      - name: Run canonical Linux exact campaign
+        shell: bash
+        working-directory: product
+        env:
+          GODOT_BIN: ${{ steps.godot.outputs.bin }}
+          R54_EVIDENCE_DIR: ${{ github.workspace }}/evidence-r54-linux
+        run: |
+          set -Eeuo pipefail
+          mkdir -p "$R54_EVIDENCE_DIR"
+          bash RUN_FABRIC_R5_4_TESTS.sh
+      - name: Verify strict evidence and deterministic hash
+        if: always()
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test -f evidence-r54-linux/evidence.json
+          python3 - <<'PY'
+          import json, os, pathlib
+          e=json.loads(pathlib.Path("evidence-r54-linux/evidence.json").read_text())
+          assert e["status"] == "IMPLEMENTER_EXACT_PASS"
+          assert e["deterministic_hash"] == os.environ["EXPECTED_R54_HASH"]
+          r=e["result"]
+          assert r["checks"] == 1048 and r["failures"] == []
+          assert r["machine_parts"] == 100000
+          assert r["local_full_peak"] == 20
+          assert (r["local_recursive_changed"],r["local_recursive_reused"]) == (4,11)
+          assert r["global_structural_parts_scanned"] == 0
+          assert (r["global_recursive_changed"],r["global_recursive_reused"]) == (15,0)
+          assert r["recursive_compiled_input_components"] == 24
+          assert r["recursive_executable_equations"] == 4
+          assert r["explicit_global_control_parts_scanned"] == 100000
+          assert r["global_structural_state_unchanged"] is True
+          assert r["explicit_global_control_state_unchanged"] is True
+          assert r["rollback_rejected_events"] == 11
+          assert r["rollback_state_unchanged_events"] == 11
+          assert r["uninitialized_rejections"] == 3
+          print("R5.4 R3 strict v2 evidence = PASS")
+          PY
+      - name: Record final refs and checksums
+        if: always()
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          mkdir -p supplement
+          {
+            echo "PRODUCT_HEAD=$PRODUCT_HEAD"
+            echo "PRODUCT_TREE=$PRODUCT_TREE"
+            echo "PRODUCT_BASE=$PRODUCT_BASE"
+            echo "GODOT_SHA256=$EXPECTED_GODOT_SHA"
+            echo "GODOT_VERSION=$EXPECTED_GODOT_VERSION"
+            echo "EXPECTED_R54_HASH=$EXPECTED_R54_HASH"
+            if [ -f evidence-r54-linux/evidence.json ]; then
+              echo "EVIDENCE_JSON_SHA256=$(sha256sum evidence-r54-linux/evidence.json | awk '{print $1}')"
+            fi
+          } | tee supplement/summary.txt
+          find evidence-r54-linux supplement -type f -print0 2>/dev/null | sort -z | xargs -0 sha256sum > supplement/SHA256SUMS || true
+      - name: Upload Linux exact evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fabric-r54-r3-linux-evidence
+          path: evidence-r54-linux/
+          if-no-files-found: warn
+          retention-days: 90
+
+  exact-windows:
+    needs: control-scope
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 120
+    steps:
+      - name: Preserve foreign Godot and verify host
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          if ($PSVersionTable.PSVersion.Major -lt 7) { throw 'HOST_REQUIRES_PWSH7' }
+          $foreign = @(Get-CimInstance Win32_Process | Where-Object { $_.Name -like 'godot*.exe' })
+          if ($foreign.Count -gt 0) { throw ('HOST_BUSY_GODOT:' + (($foreign | Select-Object -ExpandProperty ProcessId) -join ',')) }
+          $free = [double](Get-CimInstance Win32_OperatingSystem).FreePhysicalMemory / 1MB
+          Write-Host "HOST=$env:COMPUTERNAME FREE_RAM_GB=$free"
+          if ($free -lt 8) { throw 'HOST_LOW_MEMORY' }
+      - uses: actions/checkout@v4
+        with:
+          ref: 75d418f97766ed8b66f4e24962055b8419d03793
+          fetch-depth: 0
+          persist-credentials: false
+          path: r54-product
+      - name: Canonical Windows R3 exact acceptance and regressions
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $checkout = Join-Path $env:GITHUB_WORKSPACE 'r54-product'
+          $out = Join-Path $env:GITHUB_WORKSPACE 'evidence-r54-windows'
+          & (Join-Path $checkout 'RUN_FABRIC_R5_4_TESTS.ps1') -GodotBin 'C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe' -ExpectedHead $env:PRODUCT_HEAD -ExpectedTree $env:PRODUCT_TREE -ExpectedHash $env:EXPECTED_R54_HASH -EvidenceDir $out
+          if ($LASTEXITCODE -ne 0) { throw "R54_R3_WINDOWS_FAILED:$LASTEXITCODE" }
+          $e = Get-Content (Join-Path $out 'evidence.json') -Raw | ConvertFrom-Json
+          if ($e.status -cne 'IMPLEMENTER_EXACT_PASS' -or $e.result.checks -ne 1048 -or $e.result.rollback_state_unchanged_events -ne 11 -or $e.result.global_structural_parts_scanned -ne 0) { throw 'R54_R3_WINDOWS_CONTRACT_MISMATCH' }
+          Write-Host 'R5.4 R3 Windows canonical exact + strict v2 collector = PASS'
+      - name: Upload Windows exact evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fabric-r54-r3-windows-evidence
+          path: evidence-r54-windows/
+          if-no-files-found: warn
+          retention-days: 90
+
+  cross-platform-payload:
+    needs: [exact-linux, exact-windows]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: fabric-r54-r3-linux-evidence
+          path: compare/linux
+      - uses: actions/download-artifact@v4
+        with:
+          name: fabric-r54-r3-windows-evidence
+          path: compare/windows
+      - name: Prove full deterministic payload and immutable exact refs
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          python3 - <<'PY'
+          import json, os
+          from pathlib import Path
+          root=Path("compare")
+          left=json.loads((root/"linux/evidence.json").read_text())
+          right=json.loads((root/"windows/evidence.json").read_text())
+          for name,e in (("linux",left),("windows",right)):
+              assert e["status"] == "IMPLEMENTER_EXACT_PASS", name
+              assert e["deterministic_hash"] == os.environ["EXPECTED_R54_HASH"], name
+              assert e["result"]["checks"] == 1048 and e["result"]["failures"] == [], name
+              before=(root/name/"identity-before.txt").read_text().splitlines()
+              after=(root/name/"identity-after.txt").read_text().splitlines()
+              assert before == after, name
+              assert before[0] == "HEAD=" + os.environ["PRODUCT_HEAD"]
+              assert before[1] == "TREE=" + os.environ["PRODUCT_TREE"]
+          assert left["result"] == right["result"], "full Linux/Windows result payload mismatch"
+          assert left["deterministic_hash"] == right["deterministic_hash"]
+          print("R5.4 R3 Linux/Windows full deterministic payload MATCH")
+          PY
