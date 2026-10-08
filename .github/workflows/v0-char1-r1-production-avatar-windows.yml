@@ -1,0 +1,94 @@
+name: V0 CHAR1 R1 Production Avatar Windows
+
+on:
+  push:
+    branches:
+      - feature/v0-char1-production-avatar-r1
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: v0-char1-r1-production-avatar-windows
+  cancel-in-progress: true
+
+env:
+  BASE_MAIN: 53567c0b98d032260dfe81df4bd43a131e32da54
+  GODOT_BIN: C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe
+  PYTHONUTF8: '1'
+  BREAKPOINT_RUNTIME_DISABLED: '1'
+  GODOT_SILENCE_ROOT_WARNING: '1'
+
+jobs:
+  source:
+    name: CHAR1 source contract
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Validate CHAR1 boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+          git merge-base --is-ancestor "$BASE_MAIN" HEAD
+          test "$(git merge-base "$BASE_MAIN" HEAD)" = "$BASE_MAIN"
+          changed="$(git diff --name-only "$BASE_MAIN" HEAD)"
+          ! grep -Eq '^(scripts/runtime/networked_gameplay|scripts/items|scripts/construction|scripts/persistence)/' <<<"$changed"
+          grep -q 'earth_char1_avatar_app.gd' config/worlds/catalog.json
+          grep -q 'provider_id' config/characters/production-avatar-catalog.v1.json
+          ! grep -q 'presentation_scene_path' config/characters/production-avatar-catalog.v1.json
+          ! grep -q 'quaternius_avatar_provider' scripts/app/earth_char1_avatar_app.gd
+          ! grep -q 'procedural_humanoid_avatar_provider' scripts/app/earth_char1_avatar_app.gd
+
+  windows:
+    name: CHAR1 exact Windows
+    needs: source
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Preflight
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          $foreign=@(Get-Process -ErrorAction SilentlyContinue | Where-Object {$_.ProcessName -like 'godot*'})
+          if($foreign.Count -gt 0){throw ('FOREIGN_GODOT_PROCESS:'+(($foreign|Select-Object -ExpandProperty Id)-join ','))}
+          $version=(& $env:GODOT_BIN --version | Out-String).Trim()
+          $sha=(Get-FileHash $env:GODOT_BIN -Algorithm SHA256).Hash.ToLowerInvariant()
+          if($version -ne '4.7.1.stable.double.custom_build.a13da4feb'){throw "GODOT_VERSION_MISMATCH:$version"}
+          if($sha -ne '3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5'){throw "GODOT_SHA_MISMATCH:$sha"}
+      - name: Cold import
+        shell: pwsh
+        timeout-minutes: 12
+        run: |
+          $ErrorActionPreference='Stop'
+          if(Test-Path .godot){Remove-Item .godot -Recurse -Force}
+          & $env:GODOT_BIN --headless --path . --editor --import --quit *> char1-import.log
+          if($LASTEXITCODE -ne 0){Get-Content char1-import.log -Tail 300; throw "IMPORT_FAILED:$LASTEXITCODE"}
+          if(Select-String char1-import.log -Pattern 'SCRIPT ERROR:|Parse Error:|Compile Error:' -Quiet){Get-Content char1-import.log -Tail 300; throw 'IMPORT_SCRIPT_ERRORS'}
+      - name: CHAR1 interfaces and runtime swap
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          & $env:GODOT_BIN --headless --path . --script res://tests/characters/test_char1_production_avatar.gd
+          if($LASTEXITCODE -ne 0){throw "CHAR1_TEST_FAILED:$LASTEXITCODE"}
+      - name: USER1 inherited regressions
+        shell: pwsh
+        timeout-minutes: 12
+        run: |
+          $ErrorActionPreference='Stop'
+          foreach($test in @(
+            'tests/runtime/test_v0_user1_product_seam_bridge.gd',
+            'tests/runtime/test_v0_user1_first_usable_slice.gd',
+            'tests/runtime/test_v0_ux0_product_shell.gd'
+          )){
+            & $env:GODOT_BIN --headless --path . --script ('res://'+$test)
+            if($LASTEXITCODE -ne 0){throw "CHAR1_INHERITED_REGRESSION:$test:$LASTEXITCODE"}
+          }

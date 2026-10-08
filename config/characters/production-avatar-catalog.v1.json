@@ -1,0 +1,141 @@
+{
+  "schema": "planet_simulator.avatar_catalog.v1",
+  "fallback_character_id": "character/quaternius/regular",
+  "characters": [
+    {
+      "character_id": "character/quaternius/regular",
+      "display_name": "Quaternius Regular",
+      "provider_id": "avatar/quaternius",
+      "asset_revision": 1,
+      "visual_vertical_offset_m": -0.85,
+      "eye_height_m": 1.62,
+      "provider_options": {
+        "run_threshold_mps": 5,
+        "model_yaw_offset_deg": 0,
+        "force_fallback": false
+      },
+      "animation_semantics": {
+        "locomotion/idle": "idle",
+        "locomotion/walk": "walk",
+        "locomotion/run": "run",
+        "locomotion/jump_start": "jump_start",
+        "locomotion/fall": "fall",
+        "locomotion/land": "land",
+        "action/pickup": "pickup",
+        "action/use": "use"
+      },
+      "sockets": {},
+      "default_appearance": {
+        "appearance_id": "appearance/quaternius/default",
+        "appearance_revision": 1,
+        "parameters": {}
+      }
+    },
+    {
+      "character_id": "character/procedural/standard",
+      "display_name": "Procedural Standard",
+      "provider_id": "avatar/procedural_humanoid",
+      "asset_revision": 1,
+      "visual_vertical_offset_m": -0.85,
+      "eye_height_m": 1.62,
+      "provider_options": {
+        "run_threshold_mps": 4.5
+      },
+      "animation_semantics": {
+        "locomotion/idle": "idle",
+        "locomotion/walk": "walk",
+        "locomotion/run": "run",
+        "locomotion/jump_start": "jump_start",
+        "locomotion/fall": "fall",
+        "locomotion/land": "land",
+        "action/pickup": "pickup",
+        "action/use": "use"
+      },
+      "sockets": {
+        "head": "VisualRoot/Sockets/Head",
+        "hand_left": "VisualRoot/Sockets/HandLeft",
+        "hand_right": "VisualRoot/Sockets/HandRight",
+        "chest": "VisualRoot/Sockets/Chest",
+        "back": "VisualRoot/Sockets/Back",
+        "hip": "VisualRoot/Sockets/Hip"
+      },
+      "default_appearance": {
+        "appearance_id": "appearance/procedural/standard",
+        "appearance_revision": 1,
+        "parameters": {
+          "body_color": [
+            0.18,
+            0.45,
+            0.82,
+            1
+          ],
+          "accent_color": [
+            0.08,
+            0.12,
+            0.2,
+            1
+          ],
+          "skin_color": [
+            0.72,
+            0.52,
+            0.38,
+            1
+          ]
+        }
+      }
+    },
+    {
+      "character_id": "character/procedural/high_visibility",
+      "display_name": "Procedural High Visibility",
+      "provider_id": "avatar/procedural_humanoid",
+      "asset_revision": 1,
+      "visual_vertical_offset_m": -0.85,
+      "eye_height_m": 1.62,
+      "provider_options": {
+        "run_threshold_mps": 4.5
+      },
+      "animation_semantics": {
+        "locomotion/idle": "idle",
+        "locomotion/walk": "walk",
+        "locomotion/run": "run",
+        "locomotion/jump_start": "jump_start",
+        "locomotion/fall": "fall",
+        "locomotion/land": "land",
+        "action/pickup": "pickup",
+        "action/use": "use"
+      },
+      "sockets": {
+        "head": "VisualRoot/Sockets/Head",
+        "hand_left": "VisualRoot/Sockets/HandLeft",
+        "hand_right": "VisualRoot/Sockets/HandRight",
+        "chest": "VisualRoot/Sockets/Chest",
+        "back": "VisualRoot/Sockets/Back",
+        "hip": "VisualRoot/Sockets/Hip"
+      },
+      "default_appearance": {
+        "appearance_id": "appearance/procedural/high_visibility",
+        "appearance_revision": 1,
+        "parameters": {
+          "body_color": [
+            0.95,
+            0.48,
+            0.08,
+            1
+          ],
+          "accent_color": [
+            0.09,
+            0.09,
+            0.09,
+            1
+          ],
+          "skin_color": [
+            0.72,
+            0.52,
+            0.38,
+            1
+          ]
+        }
+      }
+    }
+  ]
+}
