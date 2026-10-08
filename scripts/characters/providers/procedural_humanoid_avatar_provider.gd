@@ -1,7 +1,6 @@
 class_name ProceduralHumanoidAvatarProvider
 extends "res://scripts/characters/avatar/avatar_provider.gd"
 
-const Contract = preload("res://scripts/characters/avatar/avatar_contract.gd")
 const Presenter = preload(
 	"res://scripts/characters/providers/procedural_humanoid_avatar_presenter.gd"
 )
