@@ -1,7 +1,6 @@
 class_name QuaterniusAvatarAdapter
 extends "res://scripts/characters/avatar/avatar_presenter.gd"
 
-const Contract = preload("res://scripts/characters/avatar/avatar_contract.gd")
 const QuaterniusEngine = preload(
 	"res://scripts/characters/providers/quaternius_avatar_engine.gd"
 )
