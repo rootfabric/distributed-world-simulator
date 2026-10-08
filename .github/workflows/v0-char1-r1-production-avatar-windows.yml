@@ -103,14 +103,19 @@ jobs:
           & $env:GODOT_BIN --headless --path . --editor --import --quit *> artifacts\char1-windows\import.log
           if($LASTEXITCODE -ne 0){Get-Content artifacts\char1-windows\import.log -Tail 300; throw "IMPORT_FAILED:$LASTEXITCODE"}
           if(Select-String artifacts\char1-windows\import.log -Pattern 'SCRIPT ERROR:|Parse Error:|Compile Error:' -Quiet){Get-Content artifacts\char1-windows\import.log -Tail 300; throw 'IMPORT_SCRIPT_ERRORS'}
-      - name: CHAR1 interfaces and runtime swap
+      - name: CHAR1 interfaces and external-provider injection
         shell: pwsh
         run: |
           $ErrorActionPreference='Stop'
-          $log='artifacts\char1-windows\test_char1_production_avatar.gd.log'
-          & $env:GODOT_BIN --headless --path . --script res://tests/characters/test_char1_production_avatar.gd *> $log
-          if($LASTEXITCODE -ne 0){Get-Content $log -Tail 300; throw "CHAR1_TEST_FAILED:$LASTEXITCODE"}
-          if(Select-String $log -Pattern 'SCRIPT ERROR:|Parse Error:|Compile Error:' -Quiet){Get-Content $log -Tail 300; throw 'CHAR1_TEST_SCRIPT_ERRORS'}
+          foreach($test in @(
+            'tests/characters/test_char1_production_avatar.gd',
+            'tests/characters/test_char1_external_provider.gd'
+          )){
+            $log=Join-Path 'artifacts\char1-windows' ((Split-Path $test -Leaf)+'.log')
+            & $env:GODOT_BIN --headless --path . --script ('res://'+$test) *> $log
+            if($LASTEXITCODE -ne 0){Get-Content $log -Tail 300; throw ("CHAR1_TEST_FAILED:{0}:{1}" -f $test,$LASTEXITCODE)}
+            if(Select-String $log -Pattern 'SCRIPT ERROR:|Parse Error:|Compile Error:' -Quiet){Get-Content $log -Tail 300; throw ("CHAR1_TEST_SCRIPT_ERRORS:{0}" -f $test)}
+          }
       - name: USER1 inherited regressions
         shell: pwsh
         timeout-minutes: 12
