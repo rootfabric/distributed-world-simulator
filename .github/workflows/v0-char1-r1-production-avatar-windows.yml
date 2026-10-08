@@ -116,6 +116,21 @@ jobs:
             if($LASTEXITCODE -ne 0){Get-Content $log -Tail 300; throw ("CHAR1_TEST_FAILED:{0}:{1}" -f $test,$LASTEXITCODE)}
             if(Select-String $log -Pattern 'SCRIPT ERROR:|Parse Error:|Compile Error:' -Quiet){Get-Content $log -Tail 300; throw ("CHAR1_TEST_SCRIPT_ERRORS:{0}" -f $test)}
           }
+      - name: Product Shell UI smoke
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          $smoke=Join-Path (Resolve-Path 'artifacts\char1-windows').Path 'product-shell-smoke.json'
+          $log='artifacts\char1-windows\product-shell-smoke.log'
+          & $env:GODOT_BIN --headless --path . -- ('--product-shell-smoke='+$smoke.Replace('\','/')) *> $log
+          if($LASTEXITCODE -ne 0){Get-Content $log -Tail 200; throw ('CHAR1_PRODUCT_SHELL_EXIT:{0}' -f $LASTEXITCODE)}
+          if(-not(Test-Path $smoke)){throw 'CHAR1_PRODUCT_SHELL_REPORT_MISSING'}
+          $report=Get-Content $smoke -Raw | ConvertFrom-Json
+          if(-not [bool]$report.root_present){throw 'CHAR1_PRODUCT_SHELL_ROOT_MISSING'}
+          foreach($view in @('home','host','join','settings')){
+            if(@($report.view_ids) -notcontains $view){throw ('CHAR1_PRODUCT_SHELL_VIEW_MISSING:{0}' -f $view)}
+          }
+
       - name: USER1 inherited regressions
         shell: pwsh
         timeout-minutes: 12
