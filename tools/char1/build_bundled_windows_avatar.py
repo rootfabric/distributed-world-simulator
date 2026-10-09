@@ -164,7 +164,7 @@ def extract_source(source_zip: pathlib.Path, dest: pathlib.Path) -> None:
 
 
 def make_launchers(folder: pathlib.Path) -> None:
-    for filename in ["START_CHAR1.cmd", "VERIFY_CHAR1.cmd"]:
+    for filename in ["START_CHAR1.cmd", "VERIFY_CHAR1.cmd", "START_NETWORK_CHAR1.cmd", "START_TWO_CLIENTS_CHAR1.cmd"]:
         dest = folder / filename
         if not dest.is_file():
             raise RuntimeError("Missing tracked Windows launcher: " + filename)
@@ -260,6 +260,12 @@ def build(args: argparse.Namespace) -> dict:
             ("avatar-strict", ASSET_MODE_TEST, "CHAR1 EMBEDDED REAL AVATAR: PASS"),
             ("body-visibility", BODY_VISIBILITY_TEST, "CHAR1 FIRST-PERSON BODY VISIBILITY: PASS"),
             ("char1-provider", SOURCE_TEST, "CHAR1 PRODUCTION AVATAR: PASS"),
+            ("char2-network-avatar",
+                "tests/characters/test_char2_network_avatar_client_presentation.gd",
+                "CHAR2 NETWORK AVATAR CLIENT: PASS"),
+            ("char2-product-camera",
+                "tests/characters/test_char2_product_camera_toggle.gd",
+                "CHAR2 PRODUCT CAMERA: PASS"),
         ]
         for name, scene, marker in checks:
             log = run_checked([
@@ -301,6 +307,10 @@ def build(args: argparse.Namespace) -> dict:
         (package / "README_WITH_AVATAR_RU.txt").write_text(
             "CHAR1: ready-to-run Windows preview with real Quaternius avatar.\n"
             "Unpack to a writable directory and run START_CHAR1.cmd.\n"
+            "For actual dedicated server + two ENet clients use START_NETWORK_CHAR1.cmd.\n"
+            "For automatic three-process test use START_TWO_CLIENTS_CHAR1.cmd.\n"
+            "Host World as a, then Join World as b on port 24580.\n"
+            "In actual game clients V/F7 toggles camera; remote avatars always visible.\n"
             "No Godot installation and no separate Quaternius downloads required.\n"
             "First launch may re-import assets. C/V switches first/third person;\n"
             "first person hides the local body. 1 selects real Quaternius,\n"

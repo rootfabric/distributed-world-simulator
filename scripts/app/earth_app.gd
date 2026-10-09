@@ -369,7 +369,7 @@ func _on_m3_replica_updated(snapshot: Dictionary) -> void:
 		seen[logical_id] = true
 		var presenter = _m3_remote_presenters.get(logical_id)
 		if presenter == null or not is_instance_valid(presenter):
-			presenter = RemotePlayerPresenterScript.new()
+			presenter = _create_m3_remote_player_presenter()
 			add_child(presenter)
 			var setup_result: Dictionary = presenter.setup(
 				record, snapshot, Callable(self, "_map_m3_position_to_earth_world")
@@ -393,6 +393,13 @@ func _on_m3_replica_updated(snapshot: Dictionary) -> void:
 			stale_presenter.queue_free()
 		_m3_remote_presenters.erase(logical_id)
 		_m3_remote_despawn_count += 1
+
+
+# Display-only factory hook: gameplay, ENet and interpolator own the canonical
+# state. Character layers can inject a different visual presenter without
+# changing M3/SM1 network code or the historical default capsule presenter.
+func _create_m3_remote_player_presenter():
+	return RemotePlayerPresenterScript.new()
 
 
 func _apply_m3_local_spectator_record(record: Dictionary) -> void:
