@@ -36,6 +36,7 @@ jobs:
           grep -q '_create_m3_remote_player_presenter()' scripts/app/earth_app.gd
           grep -q 'remote_avatar' scripts/characters/runtime/earth_network_avatar_presenter.gd
           grep -q 'set_char1_camera_third_person' scripts/app/earth_char1_avatar_app.gd
+          test -f tests/characters/test_char2_product_camera_toggle.gd
           grep -q 'START_NETWORK_CHAR1.cmd' tools/char1/build_bundled_windows_avatar.py
           grep -q 'START_TWO_CLIENTS_CHAR1.cmd' tools/char1/build_bundled_windows_avatar.py
           grep -q 'character.remote.status' scripts/app/earth_char1_avatar_app.gd
@@ -85,6 +86,7 @@ jobs:
           $godot = 'C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe'
           foreach($test in @(
             'tests/characters/test_char2_network_avatar_client_presentation.gd',
+            'tests/characters/test_char2_product_camera_toggle.gd',
             'tests/characters/test_char1_production_avatar.gd',
             'tests/characters/test_char1_external_provider.gd',
             'tests/characters/test_char1_first_person_body_visibility.gd',
