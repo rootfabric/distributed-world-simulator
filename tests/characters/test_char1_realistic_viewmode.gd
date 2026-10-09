@@ -43,6 +43,10 @@ func _run() -> void:
 		String(initial_report.get("view_mode", "")) == "THIRD_PERSON",
 		"third-person is the start view mode"
 	)
+	_check(
+		bool(initial_report.get("local_body_visible", false)),
+		"local body is visible in third-person"
+	)
 	_capture("viewmode-third-person")
 	_check(
 		_image_has_visible_subject(),
@@ -58,6 +62,10 @@ func _run() -> void:
 		"toggle switches to first-person"
 	)
 	_check(bool(fp_report.get("first_person_mode", false)), "host reports first-person mode")
+	_check(
+		not bool(fp_report.get("local_body_visible", true)),
+		"local body is completely hidden in first-person"
+	)
 	var engine_report: Dictionary = _engine_report(viewer)
 	_check(
 		bool(engine_report.get("head_suppressed", false)),
@@ -78,6 +86,10 @@ func _run() -> void:
 		"toggle returns to third-person"
 	)
 	_check(
+		bool(back_report.get("local_body_visible", false)),
+		"local body is visible again after returning to third-person"
+	)
+	_check(
 		not bool(_engine_report(viewer).get("head_suppressed", true)),
 		"local head mask is released back in third-person"
 	)
@@ -92,9 +104,22 @@ func _run() -> void:
 			"semantic animation %s plays (engine reported %s)" % [semantic, engine_semantic]
 		)
 
-	var swap: Dictionary = viewer._host.switch_avatar("character/procedural/standard")
-	_check(bool(swap.get("success", false)), "hot-swap to procedural fallback path works")
-	viewer._host.switch_avatar("character/quaternius/regular")
+	viewer.toggle_view_mode()
+	viewer.switch_character("character/procedural/standard")
+	_check(
+		not bool(viewer.create_report().get("local_body_visible", true)),
+		"changing avatar does not show local body in first-person"
+	)
+	viewer.switch_character("character/quaternius/regular")
+	_check(
+		not bool(viewer.create_report().get("local_body_visible", true)),
+		"Quaternius remains hidden in first-person after hot-swap"
+	)
+	viewer.toggle_view_mode()
+	_check(
+		bool(viewer.create_report().get("local_body_visible", false)),
+		"real Quaternius body visible after hot-swap and return to third-person"
+	)
 	_finish(viewer)
 
 
