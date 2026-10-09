@@ -4,7 +4,8 @@ extends Node3D
 # CHAR1 realistic avatar preview viewer.
 # Integration check mode over the CHAR1 provider-driven avatar line:
 # the real Quaternius Universal Base Character is the default presenter,
-# with third-person (start mode) / full-body first-person toggle.
+# with third-person (start mode) / first-person toggle.
+# The local world body is temporarily hidden for first-person preview.
 #
 # Controls:
 #   1 / 2 / 3 - character: Quaternius real / procedural standard / high visibility
@@ -202,6 +203,7 @@ func create_report() -> Dictionary:
 		"semantic": semantic,
 		"engine_semantic": get_current_engine_semantic(),
 		"first_person_mode": bool(report.get("first_person_mode", false)),
+		"local_body_visible": bool(_host.visible) if _host != null else false,
 	}
 
 
@@ -267,6 +269,11 @@ func _apply_view_mode() -> void:
 		return
 	var first_person := view_mode == "FIRST_PERSON"
 	_host.set_first_person_mode(first_person)
+	# Temporary preview-only first-person policy: hide the entire local avatar,
+	# not just its head. The host/presenter keeps processing locomotion and
+	# action animation while hidden; third-person restores visibility.
+	# The camera and HUD are siblings, so they remain visible and independent.
+	_host.visible = not first_person
 	_first_person_camera.current = first_person
 	_third_person_camera.current = not first_person
 	if not first_person:
@@ -313,8 +320,8 @@ func _update_first_person_camera(_delta: float) -> void:
 	if _first_person_camera == null:
 		return
 	# Stable eye-height camera: independent node, never a child of the
-	# animated head bone. Only the local head mask (bone scale) hides the
-	# obstructing geometry; the body, arms and legs stay visible.
+	# animated head bone. The local body is hidden in this preview while
+	# first-person camera placement is being refined.
 	var forward := Vector3(sin(facing_yaw), 0.0, cos(facing_yaw))
 	_first_person_camera.global_position = (
 		Vector3(0.0, _eye_height_m, 0.0) + forward * FIRST_PERSON_FORWARD_OFFSET
@@ -335,6 +342,7 @@ func _update_hud(force: bool) -> void:
 		"provider_id:  " + String(report.get("provider_id", "")),
 		"asset_mode:   " + asset_mode,
 		"view_mode:    " + view_mode,
+		"local_body:   " + ("VISIBLE" if bool(report.get("local_body_visible", false)) else "HIDDEN (first-person preview)"),
 		"semantic:     " + semantic + " (engine: " + String(report.get("engine_semantic", "")) + ")",
 		"",
 		"[1] Quaternius real   [2] Procedural standard   [3] High visibility",
