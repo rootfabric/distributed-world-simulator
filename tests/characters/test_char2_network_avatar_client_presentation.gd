@@ -67,7 +67,7 @@ func _run() -> void:
 	_check(int(visual.get("motion_updates", 0)) >= 1, "remote semantic motion follows interpolator")
 	_check(String(visual.get("provider_state", {}).get("presenter", {}).get("engine", {}).get("current_semantic", "")) == "walk", "remote animation follows velocity")
 	_check(int(visual.get("motion_failures", -1)) == 0, "no rejected animation mapping")
-	var projected := remote.position
+	var projected: Vector3 = remote.position
 	world.render_origin += Vector3(0.0, 25.0, 0.0)
 	await process_frame
 	_check(absf(remote.position.y - projected.y + 25.0) < 0.01, "remote model follows shared floating-origin frame")
