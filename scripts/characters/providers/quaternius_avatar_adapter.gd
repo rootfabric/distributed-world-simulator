@@ -65,6 +65,7 @@ func get_socket(_socket_id: StringName) -> Node3D:
 func _apply_first_person_visibility() -> void:
 	if _engine == null:
 		return
+	_engine.set_head_suppressed(first_person_mode)
 	_set_visual_visibility(_engine, false)
 
 func _set_visual_visibility(
