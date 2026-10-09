@@ -124,6 +124,12 @@ func register_runtime_commands(registry, owner_id: String) -> void:
 		"category": "character",
 	}, Callable(self, "_command_char1_camera_status"))
 	_register_command(registry, owner_id, {
+		"id": "character.remote.status",
+		"description": "Read-only remote Quaternius avatars from canonical NX5 snapshots.",
+		"usage": "character.remote.status",
+		"category": "character",
+	}, Callable(self, "_command_char2_remote_avatar_status"))
+	_register_command(registry, owner_id, {
 		"id": "character.avatar.list",
 		"description": "Показать доступные сменные CHAR1 avatar definitions.",
 		"usage": "character.avatar.list",
@@ -167,6 +173,33 @@ func _command_char1_camera_status(_arguments: Array[String]) -> Dictionary:
 		"remote_presenter_count": _m3_remote_presenters.size(),
 	}
 	return {"success": true, "output": JSON.stringify(data), "details": data}
+
+
+func _command_char2_remote_avatar_status(_arguments: Array[String]) -> Dictionary:
+	var players: Dictionary = {}
+	for player_id_value in _m3_remote_presenters.keys():
+		var player_id := String(player_id_value)
+		var presenter = _m3_remote_presenters.get(player_id)
+		if presenter == null or not is_instance_valid(presenter):
+			continue
+		var full: Dictionary = presenter.get_report()
+		var avatar: Dictionary = full.get("char2_remote_avatar", {})
+		players[player_id] = {
+			"ready": bool(avatar.get("ready", false)),
+			"character_id": String(avatar.get("character_id", "")),
+			"provider_id": String(avatar.get("provider_id", "")),
+			"asset_mode": String(avatar.get("asset_mode", "")),
+			"motion_updates": int(avatar.get("motion_updates", 0)),
+			"legacy_capsule_visible": bool(avatar.get("legacy_capsule_visible", true)),
+			"interpolation_mode": String(full.get("interpolation_mode", "")),
+			"input_authority": false,
+		}
+	var result := {
+		"remote_count": players.size(),
+		"remote_players": players,
+		"protocol_changed": false,
+	}
+	return {"success": true, "output": JSON.stringify(result, "  "), "details": result}
 
 
 func _on_m3_replica_updated(snapshot: Dictionary) -> void:
