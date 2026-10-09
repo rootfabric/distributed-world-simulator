@@ -1,0 +1,114 @@
+name: CHAR2 Network Avatar Exact
+
+on:
+  push:
+    branches:
+      - feature/char2-network-avatar-product-r1
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: char2-network-avatar-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  source:
+    name: Exact source / static boundary
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Enforce presentation-only delta and freeze exact tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          git merge-base --is-ancestor 9821cc47f0adfc6a4107ee211e913cabc2a0e944 HEAD
+          changed="$(git diff --name-only 9821cc47f0adfc6a4107ee211e913cabc2a0e944 HEAD)"
+          ! grep -Eq '^(scripts/runtime/networked_gameplay/|scripts/network/|scripts/items/|scripts/construction/|scripts/persistence/)' <<<"$changed"
+          test -z "$(git status --porcelain --untracked-files=no)"
+          test -f scripts/characters/runtime/earth_network_avatar_presenter.gd
+          grep -q '_create_m3_remote_player_presenter()' scripts/app/earth_app.gd
+          grep -q 'remote_avatar' scripts/characters/runtime/earth_network_avatar_presenter.gd
+          grep -q 'set_char1_camera_third_person' scripts/app/earth_char1_avatar_app.gd
+          grep -q 'START_NETWORK_CHAR1.cmd' tools/char1/build_bundled_windows_avatar.py
+          mkdir -p "$RUNNER_TEMP/char2-exact-source"
+          git rev-parse HEAD > "$RUNNER_TEMP/char2-exact-source/HEAD.txt"
+          git rev-parse 'HEAD^{tree}' > "$RUNNER_TEMP/char2-exact-source/TREE.txt"
+          git archive --format=tar.gz --output="$RUNNER_TEMP/char2-exact-source/source.tar.gz" HEAD
+      - uses: actions/upload-artifact@v4
+        with:
+          name: char2-exact-source-${{ github.sha }}-${{ github.run_id }}
+          path: ${{ runner.temp }}/char2-exact-source/
+          retention-days: 7
+          if-no-files-found: error
+          compression-level: 0
+
+  windows:
+    name: CHAR2 exact Windows headless regression
+    needs: source
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Canonical Godot and cold import
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $godot = 'C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe'
+          if (-not (Test-Path $godot)) {throw 'CHAR2_GODOT_MISSING'}
+          $version=(& $godot --version | Out-String).Trim()
+          $hash=(Get-FileHash $godot -Algorithm SHA256).Hash.ToLowerInvariant()
+          if($version -ne '4.7.1.stable.double.custom_build.a13da4feb'){throw "CHAR2_GODOT_VERSION:$version"}
+          if($hash -ne '3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5'){throw "CHAR2_GODOT_SHA:$hash"}
+          New-Item -ItemType Directory -Force artifacts\char2-windows | Out-Null
+          & $godot --headless --editor --import --path . --quit *> artifacts\char2-windows\import.log
+          if($LASTEXITCODE -ne 0){Get-Content artifacts\char2-windows\import.log -Tail 120;throw 'CHAR2_COLD_IMPORT_FAILED'}
+          if(Select-String artifacts\char2-windows\import.log -Pattern 'SCRIPT ERROR:|Parse Error:|Compile Error:' -Quiet){throw 'CHAR2_IMPORT_PARSE_ERROR'}
+      - name: Network avatar and inherited regressions
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $godot = 'C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe'
+          foreach($test in @(
+            'tests/characters/test_char2_network_avatar_client_presentation.gd',
+            'tests/characters/test_char1_production_avatar.gd',
+            'tests/characters/test_char1_external_provider.gd',
+            'tests/characters/test_char1_first_person_body_visibility.gd',
+            'tests/network/test_nx5_remote_snapshot_interpolation_integration.gd',
+            'tests/runtime/test_v0_sp1_remote_earth_render_frame.gd',
+            'tests/runtime/test_v0_user1_product_seam_bridge.gd',
+            'tests/runtime/test_v0_user1_first_usable_slice.gd',
+            'tests/runtime/test_v0_ux0_product_shell.gd'
+          )){
+            $log=Join-Path 'artifacts\char2-windows' ((Split-Path $test -Leaf)+'.log')
+            & $godot --headless --path . --script ('res://'+$test) *> $log
+            if($LASTEXITCODE -ne 0){Get-Content $log -Tail 120;throw ("CHAR2_TEST_FAILED:{0}" -f $test)}
+            if(Select-String $log -Pattern 'SCRIPT ERROR:|Parse Error:|Compile Error:' -Quiet){throw ("CHAR2_SCRIPT_ERROR:{0}" -f $test)}
+          }
+      - name: Exact subject and clean tree
+        if: always()
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force artifacts\char2-windows | Out-Null
+          $head=(git rev-parse HEAD).Trim()
+          $tree=(git rev-parse 'HEAD^{tree}').Trim()
+          [ordered]@{
+            HEAD=$head;TREE=$tree;tracked_clean= [string]::IsNullOrWhiteSpace((git status --porcelain --untracked-files=no | Out-String).Trim())
+          } | ConvertTo-Json | Set-Content artifacts\char2-windows\identity.json -Encoding UTF8
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: char2-windows-${{ github.sha }}-${{ github.run_id }}
+          path: artifacts/char2-windows/
+          retention-days: 30
+          if-no-files-found: error
