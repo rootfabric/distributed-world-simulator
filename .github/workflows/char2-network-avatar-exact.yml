@@ -37,6 +37,10 @@ jobs:
           grep -q 'remote_avatar' scripts/characters/runtime/earth_network_avatar_presenter.gd
           grep -q 'set_char1_camera_third_person' scripts/app/earth_char1_avatar_app.gd
           grep -q 'START_NETWORK_CHAR1.cmd' tools/char1/build_bundled_windows_avatar.py
+          grep -q 'START_TWO_CLIENTS_CHAR1.cmd' tools/char1/build_bundled_windows_avatar.py
+          grep -q 'character.remote.status' scripts/app/earth_char1_avatar_app.gd
+          test -f tools/char1/portable_windows/tools/START_TWO_CLIENTS_CHAR1.ps1
+          test -f tools/char1/portable_windows/START_TWO_CLIENTS_CHAR1.cmd
           mkdir -p "$RUNNER_TEMP/char2-exact-source"
           git rev-parse HEAD > "$RUNNER_TEMP/char2-exact-source/HEAD.txt"
           git rev-parse 'HEAD^{tree}' > "$RUNNER_TEMP/char2-exact-source/TREE.txt"
