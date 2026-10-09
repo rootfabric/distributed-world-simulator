@@ -298,6 +298,12 @@ func _find_best_model_scene(root_path: String) -> String:
 	for path in candidates:
 		var normalized := path.to_lower()
 		var score := 0
+		# Keep the verified CH4/CH9 clothing-compatible rig stable when
+		# several official character variants coexist in a pack.
+		# This preference lives inside the Quaternius provider, never
+		# in the generic character/catalog or network contracts.
+		if normalized.get_file() == "superhero_male_fullbody.gltf":
+			score += 200
 		if normalized.contains("regular"):
 			score += 50
 		if normalized.contains("male") and not normalized.contains("female"):
