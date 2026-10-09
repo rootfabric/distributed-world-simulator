@@ -260,6 +260,12 @@ def build(args: argparse.Namespace) -> dict:
             ("avatar-strict", ASSET_MODE_TEST, "CHAR1 EMBEDDED REAL AVATAR: PASS"),
             ("body-visibility", BODY_VISIBILITY_TEST, "CHAR1 FIRST-PERSON BODY VISIBILITY: PASS"),
             ("char1-provider", SOURCE_TEST, "CHAR1 PRODUCTION AVATAR: PASS"),
+            ("char2-network-avatar",
+                "tests/characters/test_char2_network_avatar_client_presentation.gd",
+                "CHAR2 NETWORK AVATAR CLIENT: PASS"),
+            ("char2-product-camera",
+                "tests/characters/test_char2_product_camera_toggle.gd",
+                "CHAR2 PRODUCT CAMERA: PASS"),
         ]
         for name, scene, marker in checks:
             log = run_checked([
