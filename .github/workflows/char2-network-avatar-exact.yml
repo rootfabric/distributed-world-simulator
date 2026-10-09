@@ -116,3 +116,35 @@ jobs:
           path: artifacts/char2-windows/
           retention-days: 30
           if-no-files-found: error
+      - name: Build ready-to-run Quaternius network avatar Windows ZIP
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $known = @(
+            $env:DWS_QUATERNIUS_ASSET_ROOT,
+            'C:\dwsv-char1-git-hotfix-test\CHAR1_REALISTIC_WINDOWS_TEST\project\assets\external\quaternius',
+            'C:\distributed-world-simulator\char1-realistic-r1\assets\external\quaternius'
+          )
+          $source = $null
+          foreach($value in $known){
+            if([string]::IsNullOrWhiteSpace($value)){continue}
+            if((Test-Path (Join-Path $value 'base_characters')) -and (Test-Path (Join-Path $value 'animation_library'))){$source=$value;break}
+          }
+          if($null -eq $source){throw 'CHAR2_BUNDLE_HOST_GAP_REAL_CC0_ASSETS_MISSING'}
+          $godot='C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe'
+          if(-not(Test-Path $godot)){throw 'CHAR2_BUNDLE_HOST_GAP_GODOT_MISSING'}
+          $output=Join-Path $env:RUNNER_TEMP 'char2-network-release'
+          New-Item -ItemType Directory -Force -Path $output | Out-Null
+          & .\BUILD_CHAR1_WITH_AVATAR.ps1 -GodotConsole $godot -AssetSource $source -OutputDirectory $output
+          if($LASTEXITCODE -and $LASTEXITCODE -ne 0){throw 'CHAR2_BUNDLE_SCRIPT_FAILED'}
+          $zip=@(Get-ChildItem $output -File -Filter 'CHAR1_REALISTIC_WITH_AVATAR_*_Windows.zip')
+          if($zip.Count -ne 1){throw 'CHAR2_BUNDLE_OUTPUT_MISSING_OR_AMBIGUOUS'}
+          Write-Output ('CHAR2_BUNDLE_SHA256='+(Get-FileHash $zip[0].FullName -Algorithm SHA256).Hash.ToLowerInvariant())
+      - uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: char2-real-avatar-windows-${{ github.sha }}-${{ github.run_id }}
+          path: ${{ runner.temp }}/char2-network-release/
+          retention-days: 30
+          if-no-files-found: error
+          compression-level: 0
