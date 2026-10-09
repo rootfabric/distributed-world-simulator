@@ -164,7 +164,7 @@ def extract_source(source_zip: pathlib.Path, dest: pathlib.Path) -> None:
 
 
 def make_launchers(folder: pathlib.Path) -> None:
-    for filename in ["START_CHAR1.cmd", "VERIFY_CHAR1.cmd", "START_NETWORK_CHAR1.cmd"]:
+    for filename in ["START_CHAR1.cmd", "VERIFY_CHAR1.cmd", "START_NETWORK_CHAR1.cmd", "START_TWO_CLIENTS_CHAR1.cmd"]:
         dest = folder / filename
         if not dest.is_file():
             raise RuntimeError("Missing tracked Windows launcher: " + filename)
@@ -302,6 +302,7 @@ def build(args: argparse.Namespace) -> dict:
             "CHAR1: ready-to-run Windows preview with real Quaternius avatar.\n"
             "Unpack to a writable directory and run START_CHAR1.cmd.\n"
             "For actual dedicated server + two ENet clients use START_NETWORK_CHAR1.cmd.\n"
+            "For automatic three-process test use START_TWO_CLIENTS_CHAR1.cmd.\n"
             "Host World as a, then Join World as b on port 24580.\n"
             "In actual game clients V/F7 toggles camera; remote avatars always visible.\n"
             "No Godot installation and no separate Quaternius downloads required.\n"
