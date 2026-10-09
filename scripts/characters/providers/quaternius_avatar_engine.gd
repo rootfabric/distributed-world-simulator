@@ -13,6 +13,8 @@ const SEMANTIC_CANDIDATES := {
 	"run": ["run", "runforward", "running", "jog", "jogforward", "sprint"],
 }
 
+const HEAD_SUPPRESSION_SCALE := Vector3(0.001, 0.001, 0.001)
+
 var asset_mode := "UNINITIALIZED"
 var model_path := ""
 var animation_path := ""
@@ -34,6 +36,10 @@ var _source_skeleton: Skeleton3D
 var _animation_player: AnimationPlayer
 var _bone_map: Array[Vector2i] = []
 var _fallback_parts: Dictionary = {}
+var head_suppressed := false
+var head_bone_name := ""
+var _head_bone_index := -1
+var _head_default_scale := Vector3.ONE
 
 
 func setup(options: Dictionary = {}) -> Dictionary:
@@ -96,6 +102,44 @@ func _process(delta: float) -> void:
 		_copy_animation_pose()
 	if asset_mode == "FALLBACK":
 		_animate_fallback()
+	if head_suppressed:
+		_apply_head_suppression()
+
+
+func set_head_suppressed(enabled: bool) -> void:
+	head_suppressed = enabled
+	_apply_head_suppression()
+
+
+func _apply_head_suppression() -> void:
+	if _target_skeleton == null or _head_bone_index < 0:
+		return
+	_target_skeleton.set_bone_pose_scale(
+		_head_bone_index,
+		HEAD_SUPPRESSION_SCALE if head_suppressed else _head_default_scale
+	)
+
+
+func _bind_head_bone() -> void:
+	_head_bone_index = _find_head_bone(_target_skeleton)
+	if _head_bone_index >= 0:
+		head_bone_name = String(_target_skeleton.get_bone_name(_head_bone_index))
+		_head_default_scale = _target_skeleton.get_bone_pose_scale(_head_bone_index)
+
+
+func _find_head_bone(skeleton: Skeleton3D) -> int:
+	if skeleton == null:
+		return -1
+	var exact := -1
+	var suffix := -1
+	for index in range(skeleton.get_bone_count()):
+		var normalized := _normalized_bone_name(skeleton.get_bone_name(index))
+		if normalized == "head":
+			exact = index
+			break
+		if suffix < 0 and normalized.ends_with("head"):
+			suffix = index
+	return exact if exact >= 0 else suffix
 
 
 func _try_load_quaternius(options: Dictionary) -> bool:
@@ -119,6 +163,7 @@ func _try_load_quaternius(options: Dictionary) -> bool:
 		_model_root.queue_free()
 		_model_root = null
 		return false
+	_bind_head_bone()
 
 	_animation_player = _find_first_animation_player(_model_root)
 	if _animation_player != null and _resolve_required_animations():
@@ -436,6 +481,8 @@ func create_report() -> Dictionary:
 		"source_skeleton": _source_skeleton != null,
 		"animation_ready": _animation_player != null and _resolve_required_animations(),
 		"root_motion_applied": root_motion_applied,
+		"head_bone": head_bone_name,
+		"head_suppressed": head_suppressed,
 	}
 
 
