@@ -1,0 +1,112 @@
+name: CHAR1 Real Quaternius Bundled Windows
+
+on:
+  push:
+    branches:
+      - feature/char1-realistic-avatar-preview-r1
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: char1-bundled-avatar-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  source:
+    name: Bundled build source preflight
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Verify script and fail-closed asset contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/char1/build_bundled_windows_avatar.py tools/char1/build_windows_test.py
+          test -f tests/characters/test_char1_embedded_quaternius_assets.gd
+          test -f scripts/characters/importing/quaternius_asset_preflight.gd
+          grep -q 'superhero_male_fullbody' scripts/characters/providers/quaternius_avatar_engine.gd
+          grep -q 'QUATERNIUS_RETARGET' tests/characters/test_char1_embedded_quaternius_assets.gd
+          test -z "$(git status --porcelain --untracked-files=no)"
+          git rev-parse HEAD
+          git rev-parse 'HEAD^{tree}'
+
+  windows:
+    name: Real-avatar Windows bundle (canonical double)
+    needs: source
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 60
+    env:
+      GODOT_SILENCE_ROOT_WARNING: '1'
+      BREAKPOINT_RUNTIME_DISABLED: '1'
+      PYTHONUTF8: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Build package with real CC0 Quaternius and double Godot runtime
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $console = 'C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe'
+          if (-not (Test-Path -LiteralPath $console)) {
+            throw 'CHAR1_GODOT_DOUBLE_NOT_INSTALLED'
+          }
+          $candidateAssets = @(
+            $env:DWS_QUATERNIUS_ASSET_ROOT,
+            'C:\distributed-world-simulator\char1-realistic-r1\assets\external\quaternius',
+            'C:\distributed-world-simulator\distributed-world-simulator\char1-realistic-r1\assets\external\quaternius',
+            'C:\dwsv-char1-git-hotfix-test\CHAR1_REALISTIC_WINDOWS_TEST\project\assets\external\quaternius'
+          )
+          $assetRoot = $null
+          foreach ($candidate in $candidateAssets) {
+            if ([string]::IsNullOrWhiteSpace($candidate)) { continue }
+            if ((Test-Path -LiteralPath (Join-Path $candidate 'base_characters')) -and
+                (Test-Path -LiteralPath (Join-Path $candidate 'animation_library'))) {
+              $assetRoot = $candidate
+              break
+            }
+          }
+          if ($null -eq $assetRoot) {
+            throw 'CHAR1_REAL_ASSETS_NOT_AVAILABLE_ON_RUNNER'
+          }
+          $output = Join-Path $env:RUNNER_TEMP 'CHAR1_REALISTIC_WITH_AVATAR_Windows.zip'
+          python --version
+          python tools/char1/build_bundled_windows_avatar.py --repo . --expected-head $env:GITHUB_SHA --godot-console $console --assets-root $assetRoot --output $output 2>&1 | Tee-Object -FilePath (Join-Path $env:RUNNER_TEMP 'char1-bundle-build.log')
+          if ($LASTEXITCODE -ne 0) {
+            throw ('CHAR1_EMBEDDED_BUILD_FAILED:{0}' -f $LASTEXITCODE)
+          }
+          if (-not (Test-Path -LiteralPath $output)) {
+            throw 'CHAR1_BUNDLE_OUTPUT_MISSING'
+          }
+          $hash = (Get-FileHash -LiteralPath $output -Algorithm SHA256).Hash.ToLowerInvariant()
+          [ordered]@{
+            product_head = (git rev-parse HEAD).Trim()
+            product_tree = (git rev-parse 'HEAD^{tree}').Trim()
+            zip_sha256 = $hash
+            zip_bytes = (Get-Item -LiteralPath $output).Length
+            test_result = 'BUILT_AND_STRICT_HEADLESS_VERIFIED'
+            real_avatar_included = $true
+            source_assets = $assetRoot
+          } | ConvertTo-Json -Depth 5 | Set-Content -Encoding UTF8 (Join-Path $env:RUNNER_TEMP 'CHAR1_BUNDLE_EVIDENCE.json')
+      - name: Upload exact ready-to-run avatar bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: char1-real-avatar-windows-${{ github.sha }}-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/CHAR1_REALISTIC_WITH_AVATAR_Windows.zip
+            ${{ runner.temp }}/CHAR1_BUNDLE_EVIDENCE.json
+            ${{ runner.temp }}/char1-bundle-build.log
+          if-no-files-found: error
+          retention-days: 30
+          compression-level: 0
