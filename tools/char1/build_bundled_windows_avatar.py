@@ -241,6 +241,10 @@ def build(args: argparse.Namespace) -> dict:
         ], "quaternius-uri-preflight", project, evidence, 180)
         if "asset preflight: PASS" not in imported:
             raise RuntimeError("Quaternius URI preflight did not prove PASS")
+        # The validated CH4 preflight may safely normalize glTF texture URI
+        # spelling/case. Hash the *post*-normalization bytes actually shipped.
+        asset_data["model_sha256"] = sha(project / asset_data["model_relative_path"])
+        asset_data["animation_sha256"] = sha(project / asset_data["animation_relative_path"])
         run_checked([
             str(console), "--headless", "--editor", "--import", "--path",
             str(project), "--quit"
