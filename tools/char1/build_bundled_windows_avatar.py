@@ -231,6 +231,13 @@ def build(args: argparse.Namespace) -> dict:
         for dll in console.parent.glob("*.dll"):
             shutil.copy2(dll, engine_folder / dll.name)
         make_launchers(package)
+        license_dest = package / "LICENSES"
+        license_dest.mkdir()
+        for notice in ("GODOT_MIT_LICENSE.txt", "QUATERNIUS_CC0_PROVENANCE.txt"):
+            source = project / "tools" / "char1" / "licenses" / notice
+            if not source.is_file():
+                raise RuntimeError("Required redistributed license notice missing: " + notice)
+            shutil.copy2(source, license_dest / notice)
 
         evidence = package / "evidence"
         evidence.mkdir(exist_ok=True)
@@ -302,7 +309,8 @@ def build(args: argparse.Namespace) -> dict:
             "an exported standalone production game binary.\n"
             "Quaternius Universal Base Characters and Universal Animation\n"
             "Library are CC0 1.0 Universal: https://creativecommons.org/publicdomain/zero/1.0/\n"
-            "Godot engine license: https://godotengine.org/license/\n",
+            "Licenses: LICENSES/GODOT_MIT_LICENSE.txt and\n"
+            "LICENSES/QUATERNIUS_CC0_PROVENANCE.txt.\n",
             encoding="utf-8"
         )
         with zipfile.ZipFile(output, "w", compression=zipfile.ZIP_DEFLATED,
