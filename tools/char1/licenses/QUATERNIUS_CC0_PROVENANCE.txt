@@ -1,0 +1,14 @@
+Quaternius Universal Base Characters [Standard]
+https://quaternius.itch.io/universal-base-characters
+
+Quaternius Universal Animation Library [Standard]
+https://quaternius.itch.io/universal-animation-library
+
+Creator: Quaternius.
+The official packs are licensed Creative Commons CC0 1.0 Universal.
+https://creativecommons.org/publicdomain/zero/1.0/
+
+This package embeds only locally provided, official CC0 asset files.
+The exact selected GLTF and GLB SHA256 hashes are in EMBEDDED_BUILD_INFO.json.
+
+Godot runtime copyright and license are in GODOT_MIT_LICENSE.txt.
