@@ -775,14 +775,19 @@ func _maybe_publish_movement_snapshot() -> void:
 	if _server_tick - _last_movement_snapshot_tick < NX3_MOVEMENT_SNAPSHOT_INTERVAL_TICKS:
 		return
 	_last_movement_snapshot_tick = _server_tick
-	var compact_result: Dictionary = CompactGameplaySnapshot.encode(_service.create_snapshot())
+	var snapshot_started_us := Time.get_ticks_usec()
+	var authoritative_snapshot: Dictionary = _service.create_snapshot()
+	var snapshot_captured_us := Time.get_ticks_usec()
+	var compact_result: Dictionary = CompactGameplaySnapshot.encode(authoritative_snapshot)
+	var snapshot_encoded_us := Time.get_ticks_usec()
 	if not bool(compact_result.get("success", false)):
 		_compact_movement_snapshot_failures += 1
 		_last_error_code = String(compact_result.get("error_code", "COMPACT_GAMEPLAY_SNAPSHOT_BUILD_FAILED"))
 		return
-	var compact_snapshot: Dictionary = Dictionary(
-		compact_result.get("details", {}).get("snapshot", {})
-	).duplicate(true)
+	# encode() returns a new value object. FrameScript.create() converts it to
+	# isolated canonical JSON per peer; no extra full snapshot copy here.
+	var compact_snapshot: Dictionary = Dictionary(compact_result.get("details", {}).get("snapshot", {}))
+	var sent_started_us := Time.get_ticks_usec()
 	var all_enqueued := true
 	var target_count := 0
 	for peer_id_value in _peer_to_player.keys():
@@ -807,6 +812,13 @@ func _maybe_publish_movement_snapshot() -> void:
 	_movement_snapshot_dirty = target_count > 0 and not all_enqueued
 	if all_enqueued and target_count > 0:
 		_movement_snapshots_published += 1
+	if SmoothTrace.enabled():
+		SmoothTrace.emit("movement_snapshot_stages", {
+			"tick": _server_tick, "peers": target_count,
+			"capture_ms": float(snapshot_captured_us - snapshot_started_us) / 1000.0,
+			"encode_ms": float(snapshot_encoded_us - snapshot_captured_us) / 1000.0,
+			"send_and_seam_ms": float(Time.get_ticks_usec() - sent_started_us) / 1000.0,
+		})
 
 
 func _send_product_seam_state(
@@ -1147,7 +1159,13 @@ func _send_on_channel(
 		return false
 	if not _ensure_peer_ready(peer_id):
 		return false
-	var payload: Dictionary = data.duplicate(true)
+	# The broadcaster owns a fresh compact snapshot and never mutates it.
+	# FrameScript.create() JSON-roundtrips into a detached per-peer payload;
+	# the envelope alone needs copying in this specific realtime path.
+	var payload: Dictionary = (
+		data.duplicate(false) if message_type == "COMPACT_GAMEPLAY_SNAPSHOT"
+		else data.duplicate(true)
+	)
 	payload["type"] = message_type
 	payload["server_sent_at_ms"] = Time.get_ticks_msec()
 	var frame_result: Dictionary = _boundary.create_frame_for_peer(

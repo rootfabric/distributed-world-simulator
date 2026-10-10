@@ -456,13 +456,16 @@ func _accept_snapshot(snapshot: Dictionary) -> void:
 	replica_updated.emit(_replica.get_snapshot())
 
 func _accept_compact_snapshot(snapshot: Dictionary) -> void:
+	var smooth_decode_started_us := Time.get_ticks_usec()
 	var decoded: Dictionary = CompactGameplaySnapshot.decode(snapshot)
+	var smooth_decoded_us := Time.get_ticks_usec()
 	if not bool(decoded.get("success", false)):
 		_compact_snapshot_rejections += 1
 		_last_error_code = String(decoded.get("error_code", "COMPACT_GAMEPLAY_SNAPSHOT_REJECTED"))
 		return
 	var decoded_snapshot: Dictionary = Dictionary(decoded.get("details", {}).get("snapshot", {}))
 	var accepted: Dictionary = _replica.accept_snapshot(decoded_snapshot)
+	var smooth_accepted_us := Time.get_ticks_usec()
 	if not bool(accepted.get("success", false)):
 		var error_code: String = String(accepted.get("error_code", "M3_COMPACT_SNAPSHOT_REJECTED"))
 		if (
@@ -480,9 +483,22 @@ func _accept_compact_snapshot(snapshot: Dictionary) -> void:
 	if not bool(accepted.get("details", {}).get("replay", false)):
 		_snapshot_updates += 1
 		_compact_snapshot_updates += 1
-	_reconcile_prediction_from_snapshot(_replica.get_snapshot())
+	# get_snapshot() already returns a detached deep copy. Reuse that exact
+	# immutable-for-this-callback value for reconcile and public presentation;
+	# avoid copying the full player state twice for every 20Hz update.
+	var current_snapshot: Dictionary = _replica.get_snapshot()
+	_reconcile_prediction_from_snapshot(current_snapshot)
 	_prune_acknowledged_inputs()
-	replica_updated.emit(_replica.get_snapshot())
+	var smooth_reconciled_us := Time.get_ticks_usec()
+	replica_updated.emit(current_snapshot)
+	if SmoothTrace.enabled():
+		SmoothTrace.emit("compact_snapshot_stages", {
+			"tick": int(current_snapshot.get("server_tick", -1)),
+			"decode_ms": float(smooth_decoded_us - smooth_decode_started_us) / 1000.0,
+			"accept_ms": float(smooth_accepted_us - smooth_decoded_us) / 1000.0,
+			"reconcile_ms": float(smooth_reconciled_us - smooth_accepted_us) / 1000.0,
+			"presentation_ms": float(Time.get_ticks_usec() - smooth_reconciled_us) / 1000.0,
+		})
 
 
 func _same_snapshot_state_except_clock(current: Dictionary, incoming: Dictionary) -> bool:

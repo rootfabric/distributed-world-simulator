@@ -119,7 +119,9 @@ func poll_events(max_events: int = 64) -> Dictionary:
 		if not bool(applied.get("success", false)):
 			return applied
 		if bool(applied.get("details", {}).get("deliver_event", true)):
-			accepted.append(raw_event.duplicate(true))
+			# success() detaches the entire returned event batch below; avoid
+			# another full copy for each already-validated inbound snapshot.
+			accepted.append(raw_event)
 			_record_received_event(raw_event)
 	_update_queue_telemetry()
 	_telemetry_observe("transport_poll_duration_ms", float(Time.get_ticks_usec() - poll_started_us) / 1000.0)
