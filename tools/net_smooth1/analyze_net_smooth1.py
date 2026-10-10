@@ -22,12 +22,17 @@ def stats(values: list[float]) -> dict[str, Any]:
 
 
 def analyze_trace(path: Path, role: str, run_id: str, min_seconds: float = 10.0,
-                  local_profile: bool = True, checkpoint_mode: str | None = None) -> dict[str, Any]:
+                  local_profile: bool = True, checkpoint_mode: str | None = None,
+                  require_snapshot_stages: bool = False) -> dict[str, Any]:
     problems: list[str] = []
     failures: list[str] = []
     samples: dict[str, list[float]] = {k: [] for k in (
         "frame_ms", "server_ms", "message_ms", "fixed_ms", "snapshot_ms", "persistence_ms",
         "capture_ms", "reconcile_ms", "correction_m", "replayed_ticks", "snapshot_interval_ms")}
+    stage_samples: dict[str, list[float]] = {k: [] for k in (
+        "capture_ms", "encode_ms", "compact_send_ms", "seam_check_send_ms", "send_and_seam_ms",
+        "decode_ms", "accept_ms", "reconcile_ms", "presentation_ms")}
+    seam_sent = 0; seam_skipped = 0
     first: dict[str, Any] = {}; last: dict[str, Any] = {}
     header: dict[str, Any] = {}; footer: dict[str, Any] = {}
     previous: dict[str, dict[str, Any]] = {}
@@ -90,6 +95,26 @@ def analyze_trace(path: Path, role: str, run_id: str, min_seconds: float = 10.0,
                         samples[target].append(float(data[source]))
                     if float(data["process_ms"]) > 50 and len(anomalies)<200:
                         anomalies.append({"kind":"server_stall", "local_t_us":timestamp, **data})
+                elif kind == "movement_snapshot_stages" and role == "server":
+                    fields = ("capture_ms", "encode_ms", "compact_send_ms", "seam_check_send_ms", "send_and_seam_ms")
+                    for field in fields:
+                        if field in data:
+                            value = float(data[field])
+                            if not math.isfinite(value) or value < 0:
+                                raise ValueError(f"invalid movement snapshot stage {field}")
+                            stage_samples[field].append(value)
+                    for name in ("seam_sent", "seam_skipped_unchanged"):
+                        if name in data and (type(data[name]) is not int or data[name] < 0):
+                            raise ValueError(f"invalid seam counter {name}")
+                    seam_sent += data.get("seam_sent", 0)
+                    seam_skipped += data.get("seam_skipped_unchanged", 0)
+                elif kind == "compact_snapshot_stages" and role != "server":
+                    for field in ("decode_ms", "accept_ms", "reconcile_ms", "presentation_ms"):
+                        if field in data:
+                            value = float(data[field])
+                            if not math.isfinite(value) or value < 0:
+                                raise ValueError(f"invalid client snapshot stage {field}")
+                            stage_samples[field].append(value)
                 elif kind == "client_loop":
                     client_state = data["state"]
                     if client_state != "CONNECTED": unexpected_states += 1
@@ -117,6 +142,17 @@ def analyze_trace(path: Path, role: str, run_id: str, min_seconds: float = 10.0,
                     previous[key] = data
     except (OSError, ValueError, TypeError, KeyError, OverflowError) as exc:
         problems.append(f"trace unreadable: {exc}")
+    if require_snapshot_stages:
+        required_kind = "movement_snapshot_stages" if role == "server" else "compact_snapshot_stages"
+        required_fields = (
+            ("compact_send_ms", "seam_check_send_ms", "send_and_seam_ms")
+            if role == "server" else ("decode_ms", "accept_ms", "reconcile_ms", "presentation_ms")
+        )
+        if counts.get(required_kind, 0) < 10:
+            problems.append(f"missing/incomplete {required_kind} evidence")
+        for key in required_fields:
+            if len(stage_samples[key]) < 10:
+                problems.append(f"missing/incomplete snapshot stage {key}")
     if header.get("schema") != "dws.net_smooth.trace.v1": problems.append("missing/invalid header")
     if header.get("run_id") != run_id or header.get("role") != role: problems.append("identity mismatch")
     if not footer: problems.append("missing END / process did not drain")
@@ -158,6 +194,8 @@ def analyze_trace(path: Path, role: str, run_id: str, min_seconds: float = 10.0,
     verdict = "INCONCLUSIVE" if problems else "FAIL" if failures else "PASS"
     return {"role":role,"verdict":verdict,"duration_s":duration,"problems":problems,
             "failures":failures,"metrics":{k:stats(v) for k,v in samples.items()},
+            "snapshot_stage_metrics":{k:stats(v) for k,v in stage_samples.items()},
+            "seam_messages_sent":seam_sent,"seam_unchanged_skipped":seam_skipped,
             "tick_hz":tick_hz,"dropped_time_delta_s":dropped_delta,
             "max_server_event_gap_ms":max_silence,"remote_distance_m":distance,
             "backwards_holds":backwards_holds,"counts":counts,"anomalies":anomalies}
@@ -167,7 +205,8 @@ def analyze_run(root: Path) -> dict[str, Any]:
     manifest = json.loads((root/"manifest.json").read_text(encoding="utf-8"))
     reports = [analyze_trace(root/role/"trace.jsonl",role,manifest["run_id"],
                             max(10,manifest["duration_s"]*.90), manifest["profile"]=="LOCAL",
-                            manifest.get("checkpoint_mode"))
+                            manifest.get("checkpoint_mode"),
+                            manifest.get("snapshot_stages_required", False))
                for role in ("server","a","b")]
     infrastructure = manifest.get("errors", [])
     if manifest.get("completed") is not True: infrastructure = infrastructure+["orchestrator incomplete"]

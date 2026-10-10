@@ -114,6 +114,12 @@ var _handshake_rejections := 0
 var _handshake_replays := 0
 var _last_handshake_error_code := ""
 var _movement_snapshot_dirty := false
+# Last confirmed reliable PRODUCT_SEAM_STATE per transport session. Movement
+# snapshots already carry the rapidly changing player state; the seam contract
+# contains only authority/region transition state, not movement position.
+var _seam_sent_state_by_peer: Dictionary = {}
+var _seam_messages_sent := 0
+var _seam_unchanged_skipped := 0
 var _movement_batches_received := 0
 var _movement_inputs_received := 0
 var _movement_inputs_applied := 0
@@ -172,6 +178,9 @@ func setup(config: Dictionary) -> Dictionary:
 	if not bool(telemetry_setup.get("success", false)):
 		return telemetry_setup
 	_peer_compatibility.clear()
+	_seam_sent_state_by_peer.clear()
+	_seam_messages_sent = 0
+	_seam_unchanged_skipped = 0
 	_handshake_attempts = 0
 	_handshake_accepts = 0
 	_handshake_rejections = 0
@@ -788,24 +797,34 @@ func _maybe_publish_movement_snapshot() -> void:
 	# isolated canonical JSON per peer; no extra full snapshot copy here.
 	var compact_snapshot: Dictionary = Dictionary(compact_result.get("details", {}).get("snapshot", {}))
 	var sent_started_us := Time.get_ticks_usec()
+	var compact_send_us := 0
+	var seam_check_send_us := 0
+	var seam_sent_before := _seam_messages_sent
+	var seam_skipped_before := _seam_unchanged_skipped
 	var all_enqueued := true
 	var target_count := 0
 	for peer_id_value in _peer_to_player.keys():
 		target_count += 1
-		if _send_on_channel(
-			String(peer_id_value),
+		var peer_id := String(peer_id_value)
+		var compact_started_us := Time.get_ticks_usec()
+		var compact_queued := _send_on_channel(
+			peer_id,
 			"COMPACT_GAMEPLAY_SNAPSHOT",
 			{"reason": "MOVEMENT_NETWORK_TICK", "snapshot": compact_snapshot},
 			RealtimeChannelPolicy.SNAPSHOT,
 			"UNRELIABLE_SEQUENCED"
-		):
+		)
+		compact_send_us += Time.get_ticks_usec() - compact_started_us
+		if compact_queued:
 			_broadcasts += 1
 			_compact_movement_snapshots_published += 1
+			var seam_started_us := Time.get_ticks_usec()
 			_send_product_seam_state(
-				String(peer_id_value),
+				peer_id,
 				String(_peer_to_player.get(peer_id_value, "")),
 				"MOVEMENT_NETWORK_TICK"
 			)
+			seam_check_send_us += Time.get_ticks_usec() - seam_started_us
 		else:
 			all_enqueued = false
 			_movement_snapshot_enqueue_failures += 1
@@ -818,6 +837,10 @@ func _maybe_publish_movement_snapshot() -> void:
 			"capture_ms": float(snapshot_captured_us - snapshot_started_us) / 1000.0,
 			"encode_ms": float(snapshot_encoded_us - snapshot_captured_us) / 1000.0,
 			"send_and_seam_ms": float(Time.get_ticks_usec() - sent_started_us) / 1000.0,
+			"compact_send_ms": float(compact_send_us) / 1000.0,
+			"seam_check_send_ms": float(seam_check_send_us) / 1000.0,
+			"seam_sent": _seam_messages_sent - seam_sent_before,
+			"seam_skipped_unchanged": _seam_unchanged_skipped - seam_skipped_before,
 		})
 
 
@@ -835,16 +858,43 @@ func _send_product_seam_state(
 	var state_value = _service.get_product_seam_state(logical_player_id)
 	if not state_value is Dictionary or Dictionary(state_value).is_empty():
 		return false
-	return _send_on_channel(
+	var state: Dictionary = Dictionary(state_value)
+	var session_id := String(_peer_to_session.get(peer_id, ""))
+	var last_value: Dictionary = Dictionary(_seam_sent_state_by_peer.get(peer_id, {}))
+	# Never suppress the initial or repeat JOIN: it is a reliable resync fence.
+	# Subsequent movement frames must not flood the RELIABLE_ORDERED RESYNC
+	# channel with the same 13-field seam state 20 times per second. A new
+	# session, changed player identity, or actual authority transfer resends.
+	if (
+		reason != "PLAYER_JOINED"
+		and bool(last_value.get("sent", false))
+		and String(last_value.get("session_id", "")) == session_id
+		and String(last_value.get("logical_player_id", "")) == logical_player_id
+		and Dictionary(last_value.get("state", {})) == state
+	):
+		_seam_unchanged_skipped += 1
+		return true
+	var sent := _send_on_channel(
 		peer_id,
 		"PRODUCT_SEAM_STATE",
 		{
 			"reason": reason,
-			"state": Dictionary(state_value).duplicate(true),
+			"state": state,  # The service getter already returns a detached projection.
 		},
 		RealtimeChannelPolicy.RESYNC,
 		"RELIABLE_ORDERED"
 	)
+	if sent:
+		# Only cache a successfully queued, reliable frame. Failed dispatches
+		# must be retried; never advance a cache on a rejected send.
+		_seam_sent_state_by_peer[peer_id] = {
+			"sent": true,
+			"session_id": session_id,
+			"logical_player_id": logical_player_id,
+			"state": state.duplicate(true),
+		}
+		_seam_messages_sent += 1
+	return sent
 
 
 func _handle_player_state_rejected(peer_id: String, session_id: String, payload: Dictionary) -> void:
@@ -1058,6 +1108,7 @@ func _handle_leave(peer_id: String, session_id: String, payload: Dictionary) -> 
 			_broadcast_delta(result.get("details", {}).get("delta", {}), peer_id)
 		_peer_to_player.erase(peer_id)
 		_peer_to_session.erase(peer_id)
+		_seam_sent_state_by_peer.erase(peer_id)
 		if not _is_replay_result(result):
 			_broadcast_snapshot("PLAYER_LEFT")
 	else:
@@ -1076,6 +1127,7 @@ func _handle_disconnect(peer_id: String, session_id: String) -> void:
 	if _service == null or session_id.is_empty() or mapped_session != session_id:
 		_peer_to_player.erase(peer_id)
 		_peer_to_session.erase(peer_id)
+		_seam_sent_state_by_peer.erase(peer_id)
 		_write_report("READY", false)
 		return
 	var operation_id := "operation/m3/disconnect/%s" % session_id.sha256_text().left(16)
@@ -1091,6 +1143,7 @@ func _handle_disconnect(peer_id: String, session_id: String) -> void:
 	_mark_operation_delivered(operation_id)
 	_peer_to_player.erase(peer_id)
 	_peer_to_session.erase(peer_id)
+	_seam_sent_state_by_peer.erase(peer_id)
 	_broadcast_snapshot("PEER_DISCONNECTED")
 	_write_report("READY", false)
 
@@ -1715,6 +1768,8 @@ func get_report() -> Dictionary:
 		"broadcasts": _broadcasts,
 		"messages_sent": _messages_sent,
 		"messages_received": _messages_received,
+		"seam_messages_sent": _seam_messages_sent,
+		"seam_unchanged_skipped": _seam_unchanged_skipped,
 		"last_error_code": _last_error_code,
 		"last_two_connected_checksum": _last_two_connected_checksum,
 		"snapshot": _service.create_snapshot() if _service != null else {},
@@ -1822,6 +1877,7 @@ func stop() -> Dictionary:
 	_service = null
 	_fixed_tick_scheduler = null
 	_peer_input_buffers.clear()
+	_seam_sent_state_by_peer.clear()
 	_configured = false
 	if _fatal_persistence_failure:
 		return _failure(_last_error_code if not _last_error_code.is_empty() else "M6_DURABLE_COMMIT_FAILED")

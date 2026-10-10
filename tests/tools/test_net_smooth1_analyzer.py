@@ -10,7 +10,8 @@ analyzer=importlib.util.module_from_spec(spec);spec.loader.exec_module(analyzer)
 
 class AnalysisTests(unittest.TestCase):
     def fixture(self, role='server', stall=False, missing_end=False, missing_events=False,
-                move=True, bad_number=False, wrong_identity=False, nonmonotonic=False):
+                move=True, bad_number=False, wrong_identity=False, nonmonotonic=False,
+                with_stages=False, invalid_stage=False):
         events=[];n=0
         def emit(kind,data,t,measure=True):
             nonlocal n
@@ -23,11 +24,19 @@ class AnalysisTests(unittest.TestCase):
             if role=='server' and not missing_events:
                 emit('server_loop',dict(tick=i,peers=2,rejections=0,process_ms=3,message_ms=1,
                      fixed_ms=1,snapshot_ms=.5,persistence_ms=.5,capture_ms=1,dropped_time_s=0),t+1)
+                if with_stages:
+                    emit('movement_snapshot_stages',{
+                        'capture_ms':1,'encode_ms':2,'compact_send_ms':-1 if invalid_stage else 4,
+                        'seam_check_send_ms':.1,'send_and_seam_ms':4.1,
+                        'seam_sent':1 if i==0 else 0,'seam_skipped_unchanged':2},t+2)
             elif role!='server' and not missing_events:
                 emit('client_loop',{'state':'CONNECTED','reconcile_failures':0},t+1)
                 emit('remote_visual',{'id':'x','position':[i*.1 if move else 0,0,0],
                      'velocity':[6,0,0],'mode':'INTERPOLATE','yaw':0},t+2)
                 if i%3==0:emit('snapshot_received',{'session':'one','tick':i},t+3)
+                if with_stages:
+                    emit('compact_snapshot_stages',{'decode_ms':1,'accept_ms':1,
+                        'reconcile_ms':2,'presentation_ms':-.01 if invalid_stage else .5},t+4)
         emit('measure_end',{},12000000)
         if nonmonotonic:events[-2]['t_us']=-1
         if not missing_end:events.append({'kind':'end','t_us':12000001,
@@ -35,10 +44,11 @@ class AnalysisTests(unittest.TestCase):
         return events
     def evaluate(self,**kwargs):
         role=kwargs.get('role','server')
+        require_stages=kwargs.pop('require_snapshot_stages',False)
         with tempfile.TemporaryDirectory() as directory:
             path=Path(directory)/'trace.jsonl'
             path.write_text(''.join(json.dumps(x)+'\n' for x in self.fixture(**kwargs)))
-            return analyzer.analyze_trace(path,role,'run')
+            return analyzer.analyze_trace(path,role,'run',require_snapshot_stages=require_stages)
     def test_healthy_server(self):self.assertEqual(self.evaluate()['verdict'],'PASS')
     def test_server_freeze_is_failure(self):self.assertEqual(self.evaluate(stall=True)['verdict'],'FAIL')
     def test_client_freeze_is_failure(self):self.assertEqual(self.evaluate(role='a',stall=True)['verdict'],'FAIL')
@@ -49,6 +59,22 @@ class AnalysisTests(unittest.TestCase):
     def test_bad_number_not_pass(self):self.assertEqual(self.evaluate(bad_number=True)['verdict'],'INCONCLUSIVE')
     def test_wrong_identity_not_pass(self):self.assertEqual(self.evaluate(wrong_identity=True)['verdict'],'INCONCLUSIVE')
     def test_clock_not_monotonic(self):self.assertEqual(self.evaluate(nonmonotonic=True)['verdict'],'INCONCLUSIVE')
+    def test_r3_server_snapshot_stage_metrics(self):
+        report=self.evaluate(with_stages=True,require_snapshot_stages=True)
+        self.assertEqual(report['verdict'],'PASS')
+        self.assertEqual(report['seam_messages_sent'],1)
+        self.assertEqual(report['seam_unchanged_skipped'],1440)
+        self.assertEqual(report['snapshot_stage_metrics']['compact_send_ms']['count'],720)
+    def test_r3_client_snapshot_stage_metrics(self):
+        report=self.evaluate(role='a',with_stages=True,require_snapshot_stages=True)
+        self.assertEqual(report['verdict'],'PASS')
+        self.assertEqual(report['snapshot_stage_metrics']['decode_ms']['count'],720)
+    def test_r3_missing_stage_is_inconclusive(self):
+        self.assertEqual(self.evaluate(require_snapshot_stages=True)['verdict'],'INCONCLUSIVE')
+    def test_r3_invalid_server_stage_is_inconclusive(self):
+        self.assertEqual(self.evaluate(with_stages=True,invalid_stage=True,require_snapshot_stages=True)['verdict'],'INCONCLUSIVE')
+    def test_r3_invalid_client_stage_is_inconclusive(self):
+        self.assertEqual(self.evaluate(role='a',with_stages=True,invalid_stage=True,require_snapshot_stages=True)['verdict'],'INCONCLUSIVE')
     def test_missing_file_not_pass(self):
         self.assertEqual(analyzer.analyze_trace(Path('/not-a-file.trace'),'a','run')['verdict'],'INCONCLUSIVE')
 

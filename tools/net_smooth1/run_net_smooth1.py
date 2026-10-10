@@ -22,6 +22,7 @@ from live2_automation_client import request
 from analyze_net_smooth1 import write_report
 
 TESTS = [
+ 'tests/network/test_net_smooth1_seam_change_delivery.gd',
  'tests/network/test_net_smooth1_snapshot_hotpath.gd',
  'tests/network/test_net_smooth1_hold_continuity.gd',
  'tests/network/test_net_smooth1_gap_semantics.gd',
@@ -125,6 +126,7 @@ def play(args, manifest: dict) -> None:
     while ports['a']==ports['b']: ports['b']=free_port()
     token=secrets.token_urlsafe(24)
     manifest.update(udp_port=udp,automation_ports=ports,process_exit_codes={},errors=[],completed=False,
+                    snapshot_stages_required=True,
                     renderer='opengl3' if args.mode=='gui' else 'headless',resolution='900x600',max_fps=60,
                     vsync='disabled',phase_results=[],checkpoint_mode=args.checkpoint_mode,scenario=args.scenario)
     processes: dict[str,subprocess.Popen] = {}; streams=[]
