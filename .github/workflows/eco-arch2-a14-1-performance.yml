@@ -55,6 +55,15 @@ jobs:
           grep -Fx 'ECO_A14_BENCH PASS' /tmp/eco-a14-bench.log
           test "$(grep -c '^ECO_A14_SAMPLE ' /tmp/eco-a14-bench.log)" -eq 10
           if grep -Ei 'SCRIPT ERROR|Parse Error|Failed to load script|Error compiling' /tmp/eco-a14-bench.log; then exit 1; fi
+          set +e
+          "$godot" --headless --path . --script res://validation/ecology/evo_arch2_a14_performance/bench_scaling.gd > /tmp/eco-a14-scale.log 2>&1
+          code=$?
+          set -e
+          cat /tmp/eco-a14-scale.log
+          test "$code" -eq 0
+          grep -Fx 'ECO_A14_SCALE PASS' /tmp/eco-a14-scale.log
+          test "$(grep -c '^ECO_A14_SCALE_SAMPLE ' /tmp/eco-a14-scale.log)" -eq 28
+          if grep -Ei 'SCRIPT ERROR|Parse Error|Failed to load script|Error compiling' /tmp/eco-a14-scale.log; then exit 1; fi
       - name: Verify tracked tree clean
         shell: bash
         run: |
