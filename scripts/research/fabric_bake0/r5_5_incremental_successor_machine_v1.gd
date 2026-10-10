@@ -61,8 +61,13 @@ func _stage_structural_local_event() -> Dictionary:
     var rebaked: Dictionary = staged.rebake_after_settle(true)
     if not rebaked.success:
         return U55.failure("R5_4_STRUCTURAL_REBAKE_FAILED", {"cause": rebaked})
-    successor_cached_attempts += 1
     return U55.success({"runtime": staged, "source": successor, "local": local, "rebaked": rebaked})
+
+func local_damage_and_refine() -> Dictionary:
+    var r: Dictionary = super.local_damage_and_refine()
+    if r.success:
+        successor_cached_attempts += 1
+    return r
 
 func status() -> Dictionary:
     var s: Dictionary = super.status()
