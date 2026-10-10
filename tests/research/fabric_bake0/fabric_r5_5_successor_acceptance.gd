@@ -24,6 +24,29 @@ func _initialize() -> void:
     check(int(new_machine.status().r5_5_successor_full_builds) == 1, "one canonical prebuild")
     check(int(new_machine.status().r5_5_successor_attempt_full_builds) == 0, "no event-path full builds")
     check(bool(new_machine.status().r5_5_stage_index_isolated), "scratch prefix index is independent")
+    check(int(new_machine.status().r5_5_sealed_prefix_endpoints) == 5, "five canonical prefix boundaries sealed")
+    # Original silent-corruption falsifier: mutate a consumed interior prefix.
+    # The derived descriptor used to be silently wrong while machine_hash
+    # remained canonical. Now admission must reject before any live commit.
+    var corrupted = New.new()
+    check(corrupted.initialize().success, "prefix tamper fixture initializes")
+    if not corrupted.structural_source.is_empty():
+        var boundary := int(corrupted.structural_source.spec.break_index)
+        var before_hash := corrupted.machine_hash()
+        var before_status: Dictionary = corrupted.status().duplicate(true)
+        var before_capsule: Dictionary = corrupted.structural_runtime.capture_capsule()
+        corrupted._private_stage_index.prefix.mass[boundary] += 12.5
+        var denied: Dictionary = corrupted.local_damage_and_refine()
+        check(not denied.success and denied.error_code == "R5_4_STRUCTURAL_REBAKE_FAILED", "corrupted used prefix rejects rebake")
+        if not denied.success:
+            check(denied.get("details", {}).get("cause", {}).get("error_code", "") == "R5_5_PREFIX_INTEGRITY_MISMATCH", "failure preserves exact prefix integrity cause")
+        check(corrupted.machine_hash() == before_hash, "prefix rejection preserves live machine identity")
+        check(corrupted.status() == before_status, "prefix rejection preserves live work and events")
+        check(corrupted.structural_runtime.capture_capsule() == before_capsule, "prefix rejection preserves live capsule")
+    # A non-sealed query boundary is never implicitly trusted.
+    var guarded_stage = new_machine._new_structural_stage()
+    var unchecked: Dictionary = guarded_stage._r5_query(new_machine.structural_source.spec, 9, 17)
+    check(not unchecked.success and unchecked.error_code == "R5_5_PREFIX_INTEGRITY_MISMATCH", "unsealed endpoints fail closed")
     var rejected: Dictionary = new_machine.global_reconfigure()
     check(not rejected.success, "early global attempt rejected")
     var old_local: Dictionary = old.local_damage_and_refine()
