@@ -9,6 +9,8 @@ import os
 from pathlib import Path
 import platform
 import re
+import statistics
+import math
 import subprocess
 import sys
 import time
@@ -16,6 +18,9 @@ import time
 ROOT = Path(__file__).resolve().parents[3]
 SCRIPT = "res://validation/ecology/evo_arch2_a14_performance/bench_fidelity.gd"
 SCALE_SCRIPT = "res://validation/ecology/evo_arch2_a14_performance/bench_scaling.gd"
+PHASE_SCRIPT = "res://validation/ecology/evo_arch2_a14_performance/bench_phases.gd"
+PHASE_MARKER = "ECO_A14_PHASE_SAMPLE "
+PHASE_LABELS = {"lifecycle_including_global_A5", "propagule_admission", "feedback_and_seal", "runtime_validate", "spatial_create", "deep_copy", "canonical_digest"}
 SCALE_MARKER = "ECO_A14_SCALE_SAMPLE "
 SCALE_COUNTS = {4, 64, 128, 256}
 SCALE_LABELS = {"fixture_create", "spatial_create", "spatial_serial",
@@ -84,6 +89,8 @@ def main() -> int:
                                "--script", SCRIPT]) for idx in range(args.runs)],
             *[(f"scale-{idx}", [str(binary), "--headless", "--path", str(ROOT),
                                "--script", SCALE_SCRIPT]) for idx in range(args.runs)],
+            *[(f"phase-{idx}", [str(binary), "--headless", "--path", str(ROOT),
+                               "--script", PHASE_SCRIPT]) for idx in range(args.runs)],
         ]
         for label, command in commands:
             started = time.perf_counter()
@@ -101,6 +108,27 @@ def main() -> int:
             if result.returncode != 0 or FATAL.search(message):
                 raise RuntimeError(f"{label}:NONZERO_OR_PARSE:{result.returncode}")
             if label == "import":
+                continue
+            if label.startswith("phase-"):
+                if message.splitlines().count("ECO_A14_PHASE PASS") != 1:
+                    raise RuntimeError(f"{label}:MISSING_PHASE_PASS")
+                raw = [line[len(PHASE_MARKER):] for line in message.splitlines()
+                       if line.startswith(PHASE_MARKER)]
+                phase_samples = [json.loads(line) for line in raw]
+                identities = [(s.get("founders"), s.get("label")) for s in phase_samples]
+                expected = {(n, phase) for n in SCALE_COUNTS for phase in PHASE_LABELS}
+                if len(identities) != len(expected) or set(identities) != expected:
+                    raise RuntimeError(f"{label}:PHASE_SAMPLE_SET_MISMATCH")
+                for item in phase_samples:
+                    if (item.get("schema") != "dws.ecology.a14-1.phase-sample.v1"
+                            or type(item.get("wall_us")) is not int or item["wall_us"] < 0
+                            or not re.fullmatch(r"[0-9a-f]{64}", str(item.get("result_state_hash", "")))):
+                        raise RuntimeError(f"{label}:INVALID_PHASE_SAMPLE")
+                    item["iteration"] = int(label.split("-")[1])
+                for founders in SCALE_COUNTS:
+                    if len({item["result_state_hash"] for item in phase_samples if item["founders"] == founders}) != 1:
+                        raise RuntimeError(f"{label}:PHASE_END_STATE_PARITY")
+                evidence.setdefault("phase_samples", []).extend(phase_samples)
                 continue
             if label.startswith("scale-"):
                 if message.splitlines().count("ECO_A14_SCALE PASS") != 1:
@@ -146,6 +174,26 @@ def main() -> int:
                     raise RuntimeError(f"{label}:INVALID_SAMPLE")
                 sample["iteration"] = int(label.split("-")[1])
             evidence["samples"].extend(parsed)
+        expected_counts = {"samples": len(LABELS), "scale_samples": len(SCALE_COUNTS) * len(SCALE_LABELS),
+                           "phase_samples": len(SCALE_COUNTS) * len(PHASE_LABELS)}
+        for sample_kind, per_run in expected_counts.items():
+            if len(evidence.get(sample_kind, [])) != args.runs * per_run:
+                raise RuntimeError("MISSING_COMPLETE_EVIDENCE:" + sample_kind)
+        def describe(samples: list[dict]) -> list[dict]:
+            groups: dict[tuple, list[int]] = {}
+            for sample in samples:
+                group = (sample.get("founders"), sample["label"])
+                groups.setdefault(group, []).append(sample["wall_us"])
+            out = []
+            for (founders, sample_label), raw in sorted(groups.items(), key=lambda item: (item[0][0] or 0, item[0][1])):
+                values = sorted(raw)
+                n = len(values)
+                out.append({"founders": founders, "label": sample_label, "n": n,
+                            "median_us": statistics.median(values), "min_us": values[0],
+                            "max_us": values[-1], "p95_nearest_rank_us": values[math.ceil(.95 * n) - 1]})
+            return out
+        evidence["statistics"] = {k: describe(evidence[k]) for k in expected_counts}
+        evidence["statistics_note"] = "Nearest-rank p95 with n=3 equals max; NOT a stable tail estimate."
         evidence["verdict"] = "PASS"
         exit_code = 0
     except Exception as exc:
