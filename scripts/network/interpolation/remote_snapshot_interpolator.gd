@@ -298,7 +298,8 @@ func sample_at_render_tick(render_tick: float) -> Dictionary:
 	# This remains visual-only; the timeline and canonical records are untouched.
 	var held: Dictionary = _extrapolated_result(latest, _max_extrapolation_ticks, render_tick)
 	held["details"]["mode"] = "HOLD_EXTRAPOLATION_LIMIT"
-	held["details"]["velocity"] = Vector3.ZERO
+	# NET-SMOOTH1: presentation semantics must keep following the latest
+	# authoritative velocity; only the position horizon is clamped.
 	return held
 
 
