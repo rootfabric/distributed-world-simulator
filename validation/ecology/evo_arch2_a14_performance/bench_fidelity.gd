@@ -47,7 +47,7 @@ func _reproductive_blueprint() -> Dictionary:
 	policy.reproduction.fee_energy_mj = 0
 	return Blueprint.create(genome, policy)
 
-func _dynamic_runtime() -> Dictionary:
+func _dynamic_runtime(founder_count: int = 4) -> Dictionary:
 	var blueprint := _reproductive_blueprint()
 	
 	var stock := FieldContract.stock(FieldContract.MAX_CELL_STOCK)
@@ -64,11 +64,15 @@ func _dynamic_runtime() -> Dictionary:
 		[4500, 0, 4500],
 	]
 	var population: Array = []
-	for i in positions.size():
+	if founder_count < 1 or founder_count > Runtime.MAX_POPULATION:
+		return {}
+	for i in founder_count:
+		var position: Array = positions[i % positions.size()]
 		var individual := Lifecycle.individual(
-			blueprint, "fidelity-founder-%d" % i, positions[i],
+			blueprint, "fidelity-founder-%d" % i, position,
 			{"material_mg": 100000, "water_mg": 100000, "energy_mj": 100000})
-		
+		if individual.is_empty():
+			return {}
 		population.append(individual)
 	var created := Runtime.create(
 		"eco/a13/fidelity-runtime/v1", field, population,
