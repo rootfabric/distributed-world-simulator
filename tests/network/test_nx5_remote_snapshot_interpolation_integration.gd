@@ -149,7 +149,7 @@ func _test_bounded_extrapolation_and_reconnect_reset() -> void:
 		presenter._process(1.0 / 60.0)
 	_assert(presenter.position.distance_to(Vector3(1.2, 0.0, 0.0)) < 0.000001, "extrapolation bounded at 100ms")
 	presenter._process(1.0 / 60.0)
-	_assert(presenter.position.distance_to(Vector3(0.6, 0.0, 0.0)) < 0.000001, "past horizon holds latest authoritative state")
+	_assert(presenter.position.distance_to(Vector3(1.2, 0.0, 0.0)) < 0.000001, "past horizon holds bounded visual endpoint without reverse jump")
 	_assert(String(presenter.get_report().get("interpolation_mode", "")) == "HOLD_EXTRAPOLATION_LIMIT", "hold mode reported")
 
 	var reconnect := _record("c", Vector3(20.0, 0.0, 0.0), Vector3.ZERO, 1, 2)
