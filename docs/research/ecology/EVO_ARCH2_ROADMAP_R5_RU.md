@@ -14,7 +14,8 @@
 | A13 Spatial | Spatial Workset Addressing — CLOSED |
 | A13 Activity | Active / Sleeping Population Scheduling — CLOSED |
 | A13 Parallel Prepare | Bounded Parallel Prepare — CLOSED |
-| **A13 Parallel Advance** | **Bounded Parallel Advance — CURRENT** |
+| A13 Parallel Advance | Bounded Parallel Advance — CLOSED |
+| **A13 Fidelity Scheduling** | **FULL / REDUCED / PATCH — CURRENT** |
 
 ## A13 Population Scaling Architecture
 
@@ -114,7 +115,7 @@ R1 invariant:
 R1 is a correctness + concurrency foundation. Performance claims require the later
 profiling/telemetry stage.
 
-### ▶ Bounded Parallel Advance — R1
+### ✅ Bounded Parallel Advance — R1
 
 Поверх закрытого parallel-prepare добавляется второй bounded worker phase после
 единственного глобального resource-allocation barrier:
@@ -144,14 +145,55 @@ parallel prepare
 
 R1 не заявляет ускорение до отдельного profiling/telemetry checkpoint.
 
+### ▶ Fidelity-Aware FULL / REDUCED / PATCH Scheduling — R1
+
+Следующий слой наследует уже принятые A9 fidelity semantics и накладывает их
+на A13 spatial scheduler без второго biological kernel:
+
+```text
+spatial address
+→ FULL / REDUCED / PATCH
+→ one global canonical frontier
+
+FULL:
+  exact history retained, cadence 1
+
+REDUCED:
+  exact history retained losslessly
+  → bounded defer
+  → complete exact replay through Parallel Advance
+
+PATCH:
+  lossy authenticated projection, historical individuals absent
+  → bounded defer
+  → at due boundary: REFINEMENT_REQUIRED
+  → zero canonical mutation
+  → after external exact refinement caller explicitly reclassifies to FULL/REDUCED
+```
+
+R1 invariants:
+
+- FULL/REDUCED/PATCH are scheduler/representation choices, not new biology owners;
+- REDUCED is not approximate dynamics: wake replays every missed exact tick;
+- PATCH cannot execute exact ecology and never reconstructs individuals from totals/cohorts;
+- one global A5 allocator still couples all tiles, therefore FULL cannot commit ahead of REDUCED/PATCH debt;
+- no independent per-tile canonical timeline;
+- no partial catch-up publish;
+- every exact replay tick uses the verified Parallel Advance path;
+- fidelity metadata never enters Runtime/checkpoints;
+- unknown/tampered/stale fidelity plans fail closed;
+- PATCH refinement is explicit and caller-owned;
+- AGGREGATE remains report-only and is not a scheduling mode;
+- performance claims remain deferred to profiling/telemetry.
+
 ### Следующие ступени A13
 
 1. ✅ deterministic exact worksets;
 2. ✅ spatial workset addressing;
 3. ✅ active/sleeping population scheduling — exact cadence R1;
 4. ✅ bounded parallel prepare;
-5. ▶ bounded parallel post-allocation advance;
-6. ⬜ fidelity-aware FULL/REDUCED/PATCH scheduling;
+5. ✅ bounded parallel post-allocation advance;
+6. ▶ fidelity-aware FULL/REDUCED/PATCH scheduling;
 7. ⬜ profiling / scheduler telemetry;
 8. ⬜ historical A6 replay-wrapper compatibility;
 9. ⬜ evidence-backed scale increment >256.

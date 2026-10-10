@@ -32,6 +32,7 @@ const Scale = preload("res://scripts/research/ecology/v2/ecology_scale_contract_
 const Worksets = preload("res://scripts/research/ecology/v2/population_workset_plan_v1.gd")
 const SpatialWorksets = preload("res://scripts/research/ecology/v2/population_spatial_workset_plan_v1.gd")
 const ActivityCadence = preload("res://scripts/research/ecology/v2/population_activity_cadence_plan_v1.gd")
+const FidelitySchedule = preload("res://scripts/research/ecology/v2/population_fidelity_schedule_plan_v1.gd")
 
 const SCHEMA := "dws.ecology.ecology-runtime-state.v1"
 const FEEDBACK_SCHEMA := "dws.ecology.ecology-runtime-feedback.v1"
@@ -272,6 +273,116 @@ static func _advance_spatial_activity_cadence(
 		"canonical_tick": int(next.tick),
 		"debt_ticks": 0,
 		"exact_catch_up": true,
+	}
+
+## A13 fidelity-aware FULL / REDUCED / PATCH scheduler.
+##
+## FULL and REDUCED retain exact history. REDUCED may defer bounded scheduler
+## debt but wakes by replaying every canonical tick through the verified
+## Parallel Advance path. PATCH is lossy: when its cadence is due exact
+## progression fails closed with REFINEMENT_REQUIRED before any canonical work.
+## The caller must restore exact external history and build a new plan that
+## reclassifies the refined address as FULL or REDUCED.
+static func advance_spatial_fidelity(state: Dictionary, options: Dictionary,
+		fidelity_plan: Dictionary,
+		max_prepare_workers: int = Lifecycle.DEFAULT_PARALLEL_PREPARE_WORKERS,
+		max_advance_workers: int = Lifecycle.DEFAULT_PARALLEL_ADVANCE_WORKERS) -> Dictionary:
+	if not Lifecycle.valid_parallel_prepare_workers(max_prepare_workers):
+		return _fail("RUNTIME_PARALLEL_PREPARE_WORKERS")
+	if not Lifecycle.valid_parallel_advance_workers(max_advance_workers):
+		return _fail("RUNTIME_PARALLEL_ADVANCE_WORKERS")
+	var error := validate(state)
+	if not error.is_empty():
+		return _fail(error)
+	var plan_error := FidelitySchedule.validate(
+		fidelity_plan, state.field, state.population)
+	if not plan_error.is_empty():
+		return _fail("RUNTIME_FIDELITY_PLAN:" + plan_error)
+	if int(fidelity_plan.committed_scheduler_tick) != int(state.tick):
+		return _fail("RUNTIME_FIDELITY_FRONTIER")
+
+	var target_tick := int(fidelity_plan.target_scheduler_tick)
+	var debt_ticks := int(fidelity_plan.debt_ticks)
+	var plan_hash := C.digest(fidelity_plan)
+	var counts := {
+		"full": int(fidelity_plan.full_tile_count),
+		"reduced": int(fidelity_plan.reduced_tile_count),
+		"patch": int(fidelity_plan.patch_tile_count),
+	}
+
+	if debt_ticks == 0:
+		return {
+			"success": true,
+			"state": state.duplicate(true),
+			"deferred": false,
+			"refinement_required": false,
+			"refinement_addresses": [],
+			"replayed_ticks": 0,
+			"scheduler_tick": target_tick,
+			"canonical_tick": int(state.tick),
+			"debt_ticks": 0,
+			"exact_catch_up": true,
+			"fidelity_counts": counts,
+			"fidelity_plan_hash": plan_hash,
+		}
+
+	if bool(fidelity_plan.refinement_required):
+		return {
+			"success": false,
+			"error": "RUNTIME_FIDELITY_REFINEMENT_REQUIRED",
+			"refinement_required": true,
+			"refinement_addresses": fidelity_plan.refinement_addresses.duplicate(true),
+			"scheduler_tick": target_tick,
+			"canonical_tick": int(state.tick),
+			"debt_ticks": debt_ticks,
+			"fidelity_counts": counts,
+			"fidelity_plan_hash": plan_hash,
+		}
+
+	if not bool(fidelity_plan.global_commit_ready):
+		return {
+			"success": true,
+			"state": state.duplicate(true),
+			"deferred": true,
+			"refinement_required": false,
+			"refinement_addresses": [],
+			"replayed_ticks": 0,
+			"scheduler_tick": target_tick,
+			"canonical_tick": int(state.tick),
+			"debt_ticks": debt_ticks,
+			"exact_catch_up": int(fidelity_plan.patch_tile_count) == 0,
+			"fidelity_counts": counts,
+			"fidelity_plan_hash": plan_hash,
+		}
+
+	var next := state.duplicate(true)
+	var replayed := 0
+	for _tick_index in int(fidelity_plan.catch_up_ticks):
+		var stepped := step_spatial_parallel_advance(
+			next, options,
+			int(fidelity_plan.tile_span_cells), int(fidelity_plan.max_members),
+			max_prepare_workers, max_advance_workers)
+		if not bool(stepped.get("success", false)):
+			return _fail(
+				"RUNTIME_FIDELITY_CATCH_UP:" + String(stepped.get("error", "?")))
+		next = stepped.state
+		replayed += 1
+
+	if replayed != debt_ticks or int(next.tick) != target_tick:
+		return _fail("RUNTIME_FIDELITY_CATCH_UP_FRONTIER")
+	return {
+		"success": true,
+		"state": next,
+		"deferred": false,
+		"refinement_required": false,
+		"refinement_addresses": [],
+		"replayed_ticks": replayed,
+		"scheduler_tick": target_tick,
+		"canonical_tick": int(next.tick),
+		"debt_ticks": 0,
+		"exact_catch_up": true,
+		"fidelity_counts": counts,
+		"fidelity_plan_hash": plan_hash,
 	}
 
 ## Primitive 1: the A5 lifecycle step — executed EXACTLY once per tick.
