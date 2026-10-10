@@ -1,5 +1,7 @@
 extends Node
 
+const SmoothTrace = preload("res://scripts/network/smoothness/net_smooth_trace.gd")
+
 signal ready_for_clients(report: Dictionary)
 
 const NetworkUtilsScript = preload("res://scripts/network/contracts/network_contract_utils.gd")
@@ -12,6 +14,7 @@ const User1ProductSeamService = preload(
 const Support = preload("res://scripts/runtime/networked_gameplay/m3/m3_process_support.gd")
 const RecoveryRepository = preload("res://scripts/persistence/authoritative_recovery_repository.gd")
 const RecoveryCoordinator = preload("res://scripts/persistence/authoritative_recovery_coordinator.gd")
+const AsyncCheckpointWriter = preload("res://scripts/persistence/async_checkpoint_writer.gd")
 const M6AuthorityAdapter = preload("res://scripts/runtime/networked_gameplay/m6/m6_dedicated_gameplay_authority_adapter.gd")
 const M6ReplayOutbox = preload("res://scripts/runtime/networked_gameplay/m6/m6_durable_replay_outbox.gd")
 const RuntimeIdentity = preload("res://scripts/network/observability/network_runtime_identity.gd")
@@ -78,6 +81,10 @@ var _last_persistence_error_details: Dictionary = {}
 var _durable_commits := 0
 var _fatal_persistence_failure := false
 var _playable_sandbox := false
+var _movement_checkpoint_writer
+var _async_checkpoint_capture_ms := 0.0
+var _async_checkpoint_started_us := 0
+var _async_checkpoint_last: Dictionary = {}
 var _movement_checkpoint_dirty := false
 var _last_movement_checkpoint_ms := 0
 var _movement_checkpoints := 0
@@ -191,6 +198,15 @@ func setup(config: Dictionary) -> Dictionary:
 			_service.shutdown()
 			_service = null
 			return recovery_setup
+	if (_persistence_enabled and _playable_sandbox
+		and bool(config.get("async_movement_checkpoints", true))
+		and not (SmoothTrace.enabled() and OS.get_environment("DWS_NET_SMOOTH_SYNC_CHECKPOINTS") == "1")):
+
+		_movement_checkpoint_writer = AsyncCheckpointWriter.new()
+		var writer_setup: Dictionary = _movement_checkpoint_writer.setup(_persistence_root)
+		if not bool(writer_setup.get("success", false)):
+			_cleanup_setup_failure()
+			return writer_setup
 	_fixed_tick_scheduler = FixedTickScheduler.new()
 	_server_tick = int(_service.get_report().get("server_tick", 0))
 	var fixed_tick_setup: Dictionary = _fixed_tick_scheduler.configure(
@@ -234,6 +250,10 @@ func setup(config: Dictionary) -> Dictionary:
 
 func _process(delta: float) -> void:
 	if not _configured or _boundary == null or _fatal_persistence_failure:
+		return
+	var smooth_started := Time.get_ticks_usec()
+	_complete_async_movement_checkpoint(false)
+	if _fatal_persistence_failure:
 		return
 	var process_started_us: int = Time.get_ticks_usec()
 	var process_probe := _stall_enter("SERVER_PROCESS", {
@@ -283,18 +303,21 @@ func _process(delta: float) -> void:
 			)
 			_handle_disconnect(peer_id, session_id)
 			_stall_exit(disconnect_probe)
+	var smooth_messages_done := Time.get_ticks_usec()
 	var fixed_probe := _stall_enter("FIXED_SIMULATION", {
 		"server_tick": _server_tick,
 		"pending_inputs": _total_pending_input_count(),
 	})
 	_advance_fixed_simulation(delta)
 	_stall_exit(fixed_probe)
+	var smooth_fixed_done := Time.get_ticks_usec()
 	var snapshot_probe := _stall_enter("MOVEMENT_SNAPSHOT_PUBLICATION", {
 		"server_tick": _server_tick,
 		"movement_dirty": _movement_snapshot_dirty,
 	})
 	_maybe_publish_movement_snapshot()
 	_stall_exit(snapshot_probe)
+	var smooth_snapshot_done := Time.get_ticks_usec()
 	var persistence_probe := _stall_enter("MOVEMENT_PERSISTENCE", {
 		"server_tick": _server_tick,
 		"movement_dirty": _movement_checkpoint_dirty,
@@ -306,6 +329,19 @@ func _process(delta: float) -> void:
 	var process_duration_ms: float = float(Time.get_ticks_usec() - process_started_us) / 1000.0
 	_telemetry.observe("server_process_duration_ms", process_duration_ms)
 	_stall_exit(process_probe)
+	if SmoothTrace.enabled():
+		SmoothTrace.emit("server_loop", {"tick": _server_tick,
+			"peers": _peer_to_player.size(), "rejections": _rejections,
+			"process_ms": float(Time.get_ticks_usec() - smooth_started) / 1000.0,
+			"message_ms": float(smooth_messages_done - smooth_started) / 1000.0,
+			"fixed_ms": float(smooth_fixed_done - smooth_messages_done) / 1000.0,
+			"snapshot_ms": float(smooth_snapshot_done - smooth_fixed_done) / 1000.0,
+			"persistence_ms": float(Time.get_ticks_usec() - smooth_snapshot_done) / 1000.0,
+			"dropped_time_s": _fixed_tick_scheduler.get_report().get("dropped_time_seconds", 0.0),
+			"checkpoint_generation": _checkpoint_generation,
+			"capture_ms": _async_checkpoint_capture_ms,
+			"async_enabled": _movement_checkpoint_writer != null,
+			"async_busy": _movement_checkpoint_writer != null and _movement_checkpoint_writer.is_busy()})
 	if _debug_logging and Time.get_ticks_msec() - _last_debug_report_ms >= 2000:
 		_last_debug_report_ms = Time.get_ticks_msec()
 		_debug_event("SERVER_HEALTH", {
@@ -344,6 +380,10 @@ func _handle_message(peer_id: String, session_id: String, payload: Dictionary) -
 			"LEAVE": _handle_leave(peer_id, session_id, payload)
 			_: _send_result(peer_id, String(payload.get("operation_id", "")), "UNKNOWN", _failure("UNKNOWN_M3_MESSAGE_TYPE"))
 	_telemetry.observe("server_message_processing_ms", float(Time.get_ticks_usec() - handled_started_us) / 1000.0)
+	if SmoothTrace.enabled():
+		SmoothTrace.emit("server_message", {"type": message_type, "peer": peer_id,
+			"operation_id": payload.get("operation_id", ""), "tick": _server_tick,
+			"duration_ms": float(Time.get_ticks_usec() - handled_started_us) / 1000.0})
 
 
 func _handle_compatibility_hello(peer_id: String, session_id: String, payload: Dictionary) -> void:
@@ -1272,6 +1312,11 @@ func _persist_command_result(operation_id: String, command_type: String, logical
 func _persist_checkpoint(operation_id: String) -> Dictionary:
 	if not _persistence_enabled or _recovery_coordinator == null:
 		return _success({"skipped": true})
+	# Commands retain the accepted durable-before-ACK contract. A newer sync
+	# generation must never race an older periodic writer.
+	_complete_async_movement_checkpoint(true)
+	if _fatal_persistence_failure:
+		return _failure(_last_error_code)
 	if _service != null and _service.has_method("prepare_product_persistence"):
 		var quiesced: Dictionary = _service.prepare_product_persistence()
 		if not bool(quiesced.get("success", false)):
@@ -1362,6 +1407,87 @@ func _persistence_report() -> Dictionary:
 	}
 
 
+func _complete_async_movement_checkpoint(wait: bool) -> void:
+	if _movement_checkpoint_writer == null:
+		return
+	var completed: Dictionary = (
+		_movement_checkpoint_writer.wait_completed() if wait
+		else _movement_checkpoint_writer.poll_completed()
+	)
+	if completed.is_empty():
+		return
+	if not bool(completed.get("success", false)):
+		_last_persistence_error_details = completed
+		_enter_persistence_failure(String(completed.get("error_code", "M7_ASYNC_CHECKPOINT_FAILED")))
+		return
+	var details: Dictionary = completed.get("details", {})
+	var generation := int(details.get("generation", 0))
+	if generation != _checkpoint_generation + 1:
+		_enter_persistence_failure("M7_ASYNC_CHECKPOINT_GENERATION_MISMATCH")
+		return
+	_checkpoint_generation = generation
+	_last_checkpoint_operation_id = ""
+	_movement_checkpoints += 1
+	_async_checkpoint_last = details.duplicate(true)
+	_async_checkpoint_last["capture_ms"] = _async_checkpoint_capture_ms
+	_async_checkpoint_last["elapsed_ms"] = float(Time.get_ticks_usec() - _async_checkpoint_started_us) / 1000.0
+	if SmoothTrace.enabled():
+		SmoothTrace.emit("checkpoint_complete", _async_checkpoint_last)
+	if _telemetry != null:
+		_telemetry.observe("persistence_duration_ms", float(details.get("worker_ms", 0.0)))
+		_telemetry.observe("persistence_capture_ms", _async_checkpoint_capture_ms)
+		_telemetry.increment("persistence_commits")
+	# Do NOT clear dirty/counters here: movement after submission is newer than
+	# the detached checkpoint. The next request will capture that newer state.
+	_debug_event("MOVEMENT_CHECKPOINT_COMMITTED", {"generation": generation, "async": true})
+	_write_report("READY", false)
+
+
+func _submit_async_movement_checkpoint() -> void:
+	if _movement_checkpoint_writer.is_busy():
+		return
+	var started := Time.get_ticks_usec()
+	if _service.has_method("prepare_product_persistence"):
+		var quiesced: Dictionary = _service.prepare_product_persistence()
+		if not bool(quiesced.get("success", false)):
+			_last_persistence_error_details = quiesced
+			_enter_persistence_failure("USER1_SEAM_PERSISTENCE_NOT_QUIESCENT")
+			return
+	# Both exports are captured on the authoritative thread at one quiescent
+	# boundary. Workers may only consume detached value data, never live owners.
+	var after_quiesce := Time.get_ticks_usec()
+	var authority: Dictionary = _recovery_authority.export_recovery_state()
+	var after_authority := Time.get_ticks_usec()
+	var replay: Dictionary = _replay_outbox.to_dict()
+	var after_replay := Time.get_ticks_usec()
+	if authority.is_empty() or replay.is_empty():
+		_enter_persistence_failure("M7_ASYNC_CHECKPOINT_CAPTURE_EMPTY")
+		return
+	var generation := _checkpoint_generation + 1
+	var submitted: Dictionary = _movement_checkpoint_writer.submit(
+		authority, replay, "checkpoint/m6/dedicated/%d" % generation,
+		generation, _checkpoint_generation)
+	if not bool(submitted.get("success", false)):
+		_last_persistence_error_details = submitted
+		_enter_persistence_failure(String(submitted.get("error_code", "M7_ASYNC_CHECKPOINT_SUBMIT_FAILED")))
+		return
+	_async_checkpoint_started_us = started
+	_async_checkpoint_capture_ms = float(Time.get_ticks_usec() - started) / 1000.0
+	if SmoothTrace.enabled():
+		var gameplay: Dictionary = replay.get("gameplay_replay", {})
+		SmoothTrace.emit("checkpoint_capture", {"generation": generation,
+			"capture_ms": _async_checkpoint_capture_ms,
+			"quiesce_ms": float(after_quiesce - started) / 1000.0,
+			"authority_ms": float(after_authority - after_quiesce) / 1000.0,
+			"replay_ms": float(after_replay - after_authority) / 1000.0,
+			"handoff_ms": float(Time.get_ticks_usec() - after_replay) / 1000.0,
+			"ledger_count": Dictionary(gameplay.get("service_operation_ledger", {})).size(),
+			"outbox_count": Array(replay.get("committed_outbox", [])).size()})
+	_movement_checkpoint_dirty = false
+	_movement_commands_since_checkpoint = 0
+	_last_movement_checkpoint_ms = Time.get_ticks_msec()
+
+
 func _maybe_persist_movement_checkpoint() -> void:
 	if (
 		_service != null
@@ -1376,6 +1502,9 @@ func _maybe_persist_movement_checkpoint() -> void:
 		or _fatal_persistence_failure
 		or Time.get_ticks_msec() - _last_movement_checkpoint_ms < M7_MOVEMENT_CHECKPOINT_INTERVAL_MS
 	):
+		return
+	if _movement_checkpoint_writer != null:
+		_submit_async_movement_checkpoint()
 		return
 	var persisted := _persist_checkpoint("")
 	if not bool(persisted.get("success", false)):
@@ -1474,6 +1603,9 @@ func get_world_entity_store_for_kernel():
 
 func _cleanup_setup_failure() -> void:
 	set_process(false)
+	if _movement_checkpoint_writer != null:
+		_movement_checkpoint_writer.stop()
+		_movement_checkpoint_writer = null
 	if _boundary != null:
 		_boundary.stop()
 	elif _network_condition_simulator != null:
@@ -1635,7 +1767,10 @@ func get_report() -> Dictionary:
 			if _live2_stall_watchdog != null else {}
 		),
 		"movement_persistence": {
-			"mode":"THROTTLED_WORLD_CHECKPOINT",
+			"mode": "ASYNC_PERIODIC_WORLD_CHECKPOINT" if _movement_checkpoint_writer != null else "THROTTLED_WORLD_CHECKPOINT",
+			"writer_busy": _movement_checkpoint_writer.is_busy() if _movement_checkpoint_writer != null else false,
+			"last_async_checkpoint": _async_checkpoint_last.duplicate(true),
+			"command_durability": "SYNCHRONOUS_BARRIER_PRESERVED",
 			"interval_ms":M7_MOVEMENT_CHECKPOINT_INTERVAL_MS,
 			"dirty":_movement_checkpoint_dirty,
 			"checkpoint_count":_movement_checkpoints,
@@ -1645,6 +1780,10 @@ func get_report() -> Dictionary:
 
 func stop() -> Dictionary:
 	set_process(false)
+	_complete_async_movement_checkpoint(true)
+	if _movement_checkpoint_writer != null:
+		_movement_checkpoint_writer.stop()
+		_movement_checkpoint_writer = null
 	if _live2_stall_watchdog != null:
 		_live2_stall_watchdog.stop()
 		_live2_stall_watchdog = null
