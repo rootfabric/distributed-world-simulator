@@ -22,7 +22,7 @@ def stats(values: list[float]) -> dict[str, Any]:
 
 
 def analyze_trace(path: Path, role: str, run_id: str, min_seconds: float = 10.0,
-                  local_profile: bool = True) -> dict[str, Any]:
+                  local_profile: bool = True, checkpoint_mode: str | None = None) -> dict[str, Any]:
     problems: list[str] = []
     failures: list[str] = []
     samples: dict[str, list[float]] = {k: [] for k in (
@@ -77,6 +77,9 @@ def analyze_trace(path: Path, role: str, run_id: str, min_seconds: float = 10.0,
                     if any(not isinstance(data[k],(float,int)) or not math.isfinite(data[k]) or data[k]<0
                            for k in ('tick','peers','rejections','dropped_time_s')):
                         raise ValueError('invalid server counters')
+                    if checkpoint_mode is not None and data.get('async_enabled') is not (checkpoint_mode=='async'):
+                        if 'checkpoint mode differs from manifest' not in problems:
+                            problems.append('checkpoint mode differs from manifest')
                     point = dict(data, t_us=timestamp)
                     if not first: first = point
                     if last: max_silence = max(max_silence, (timestamp-last["t_us"])/1000)
@@ -163,7 +166,8 @@ def analyze_trace(path: Path, role: str, run_id: str, min_seconds: float = 10.0,
 def analyze_run(root: Path) -> dict[str, Any]:
     manifest = json.loads((root/"manifest.json").read_text(encoding="utf-8"))
     reports = [analyze_trace(root/role/"trace.jsonl",role,manifest["run_id"],
-                            max(10,manifest["duration_s"]*.90), manifest["profile"]=="LOCAL")
+                            max(10,manifest["duration_s"]*.90), manifest["profile"]=="LOCAL",
+                            manifest.get("checkpoint_mode"))
                for role in ("server","a","b")]
     infrastructure = manifest.get("errors", [])
     if manifest.get("completed") is not True: infrastructure = infrastructure+["orchestrator incomplete"]
@@ -174,6 +178,7 @@ def analyze_run(root: Path) -> dict[str, Any]:
     label = "GUI_LOCAL_CANDIDATE" if manifest["mode"]=="gui" and manifest["profile"]=="LOCAL" else "DIAGNOSTIC_ONLY"
     return {"schema":"dws.net_smooth.report.v1","run_id":manifest["run_id"],"verdict":verdict,
             "evidence_class":label,"independent_acceptance":False,"infrastructure":infrastructure,
+            "functional_scenario": "PASS" if not infrastructure and all(r["remote_distance_m"]>.2 for r in reports if r["role"]!="server") else "INCONCLUSIVE",
             "processes":reports,"thresholds":{"frame_p99_ms":25,"frame_p999_ms":50,
             "max_frame_ms":100,"server_min_hz":59},"one_way_latency_measured":False}
 
