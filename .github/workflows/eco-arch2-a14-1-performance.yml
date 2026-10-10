@@ -1,0 +1,109 @@
+name: ECO ARCH2 A14.1 Performance Research
+
+on:
+  push:
+    branches:
+      - research/eco-arch2-a14-1-fidelity-performance-r1
+  pull_request:
+    paths:
+      - 'validation/ecology/evo_arch2_a14_performance/**'
+      - '.github/workflows/eco-arch2-a14-1-performance.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: eco-a14-perf-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  portable-smoke:
+    name: A14.1 Portable Parser + Runtime Smoke (NOT exact)
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Python syntax and harness contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile validation/ecology/evo_arch2_a14_performance/run_benchmark.py
+          python3 validation/ecology/evo_arch2_a14_performance/run_benchmark.py --help
+      - name: Download official Godot parser smoke
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fL --retry 3 -o /tmp/godot.zip https://github.com/godotengine/godot/releases/download/4.7.1-stable/Godot_v4.7.1-stable_linux.x86_64.zip
+          unzip -q /tmp/godot.zip -d /tmp/godot
+          chmod +x /tmp/godot/Godot_v4.7.1-stable_linux.x86_64
+      - name: Import and run benchmark parser/runtime smoke
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          godot=/tmp/godot/Godot_v4.7.1-stable_linux.x86_64
+          "$godot" --headless --editor --path . --import > /tmp/eco-a14-import.log 2>&1 || { cat /tmp/eco-a14-import.log; exit 1; }
+          set +e
+          "$godot" --headless --path . --script res://validation/ecology/evo_arch2_a14_performance/bench_fidelity.gd > /tmp/eco-a14-bench.log 2>&1
+          code=$?
+          set -e
+          cat /tmp/eco-a14-bench.log
+          test "$code" -eq 0
+          grep -Fx 'ECO_A14_BENCH PASS' /tmp/eco-a14-bench.log
+          test "$(grep -c '^ECO_A14_SAMPLE ' /tmp/eco-a14-bench.log)" -eq 10
+          if grep -Ei 'SCRIPT ERROR|Parse Error|Failed to load script|Error compiling' /tmp/eco-a14-bench.log; then exit 1; fi
+      - name: Verify tracked tree clean
+        shell: bash
+        run: |
+          git diff --exit-code && git diff --cached --exit-code
+
+  exact:
+    name: A14.1 ${{ matrix.platform }} Double Exact
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [Linux, Windows]
+    runs-on: [self-hosted, '${{ matrix.platform }}', X64]
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Linux exact benchmark
+        if: matrix.platform == 'Linux'
+        shell: bash
+        env:
+          CONFIGURED_GODOT: ${{ vars.DWS_GODOT_DOUBLE_LINUX_BIN }}
+        run: |
+          set -euo pipefail
+          godot="${CONFIGURED_GODOT:-${DWS_GODOT_DOUBLE_LINUX_BIN:-$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64}}"
+          python3 validation/ecology/evo_arch2_a14_performance/run_benchmark.py --godot "$godot" --runs 3
+      - name: Windows exact benchmark
+        if: matrix.platform == 'Windows'
+        shell: pwsh
+        env:
+          CONFIGURED_GODOT: ${{ vars.DWS_GODOT_DOUBLE_BIN }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $godot = $env:CONFIGURED_GODOT
+          if ([string]::IsNullOrWhiteSpace($godot)) {
+            $godot = 'C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe'
+          }
+          python validation/ecology/evo_arch2_a14_performance/run_benchmark.py --godot $godot --runs 3
+          if ($LASTEXITCODE -ne 0) { throw 'A14_1_WINDOWS_EXACT_FAILED' }
+      - name: Tracked source clean
+        if: always()
+        shell: bash
+        run: |
+          git diff --exit-code
+          git diff --cached --exit-code
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: eco-a14-1-${{ matrix.platform }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: artifacts/runtime/eco-a14-1
+          if-no-files-found: warn
