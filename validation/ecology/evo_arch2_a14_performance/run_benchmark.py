@@ -15,6 +15,11 @@ import time
 
 ROOT = Path(__file__).resolve().parents[3]
 SCRIPT = "res://validation/ecology/evo_arch2_a14_performance/bench_fidelity.gd"
+SCALE_SCRIPT = "res://validation/ecology/evo_arch2_a14_performance/bench_scaling.gd"
+SCALE_MARKER = "ECO_A14_SCALE_SAMPLE "
+SCALE_COUNTS = {4, 64, 128, 256}
+SCALE_LABELS = {"fixture_create", "spatial_create", "spatial_serial",
+                *(f"parallel_advance_{n}" for n in (1, 2, 4, 8))}
 MARKER = "ECO_A14_SAMPLE "
 VERSION = "4.7.1.stable.double.custom_build.a13da4feb"
 HASHES = {
@@ -77,6 +82,8 @@ def main() -> int:
             ("import", [str(binary), "--headless", "--editor", "--path", str(ROOT), "--import"]),
             *[(f"bench-{idx}", [str(binary), "--headless", "--path", str(ROOT),
                                "--script", SCRIPT]) for idx in range(args.runs)],
+            *[(f"scale-{idx}", [str(binary), "--headless", "--path", str(ROOT),
+                               "--script", SCALE_SCRIPT]) for idx in range(args.runs)],
         ]
         for label, command in commands:
             started = time.perf_counter()
@@ -94,6 +101,34 @@ def main() -> int:
             if result.returncode != 0 or FATAL.search(message):
                 raise RuntimeError(f"{label}:NONZERO_OR_PARSE:{result.returncode}")
             if label == "import":
+                continue
+            if label.startswith("scale-"):
+                if message.splitlines().count("ECO_A14_SCALE PASS") != 1:
+                    raise RuntimeError(f"{label}:MISSING_SCALE_PASS")
+                raw = [line[len(SCALE_MARKER):] for line in message.splitlines()
+                       if line.startswith(SCALE_MARKER)]
+                samples = [json.loads(line) for line in raw]
+                if len(samples) != len(SCALE_COUNTS) * len(SCALE_LABELS):
+                    raise RuntimeError(f"{label}:SCALE_SAMPLE_COUNT")
+                for sample in samples:
+                    founders, sample_label = sample.get("founders"), sample.get("label")
+                    if (sample.get("schema") != "dws.ecology.a14-1.scale-sample.v1"
+                            or founders not in SCALE_COUNTS or sample_label not in SCALE_LABELS
+                            or not isinstance(sample.get("wall_us"), int) or sample["wall_us"] < 0
+                            or not re.fullmatch(r"[0-9a-f]{64}", str(sample.get("state_hash", "")))):
+                        raise RuntimeError(f"{label}:INVALID_SCALE_SAMPLE")
+                identities = [(s["founders"], s["label"]) for s in samples]
+                if len(set(identities)) != len(samples):
+                    raise RuntimeError(f"{label}:DUPLICATE_SCALE_SAMPLE")
+                for founders in SCALE_COUNTS:
+                    same = [s for s in samples if s["founders"] == founders
+                            and (s["label"] == "spatial_serial" or
+                                 s["label"].startswith("parallel_advance_"))]
+                    if len({s["state_hash"] for s in same}) != 1:
+                        raise RuntimeError(f"{label}:SCALE_HASH_MISMATCH")
+                for sample in samples:
+                    sample["iteration"] = int(label.split("-")[1])
+                evidence.setdefault("scale_samples", []).extend(samples)
                 continue
             lines = [line[len(MARKER):] for line in message.splitlines()
                      if line.startswith(MARKER)]
