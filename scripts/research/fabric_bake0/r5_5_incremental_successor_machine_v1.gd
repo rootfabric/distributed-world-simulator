@@ -5,10 +5,12 @@ extends "res://scripts/research/fabric_bake0/r5_4_mixed_complexity_machine_v1.gd
 const U55 = preload("res://scripts/research/fabric_bake0/fabric_bake_contract_utils_v1.gd")
 const S55 = preload("res://scripts/research/fabric_bake0/complex3_streaming_canonical_structure_v1.gd")
 const L55 = preload("res://scripts/research/fabric_bake0/r5_indexed_sparse_damage_lifecycle_v1.gd")
+const Guard55 = preload("res://scripts/research/fabric_bake0/r5_5_guarded_index_lifecycle_v1.gd")
 
 var _prepared_successor: Dictionary = {}
 var _prepared_successor_hash := ""
 var _private_stage_index: Dictionary = {}
+var _trusted_endpoint_seals: Dictionary = {}
 var successor_full_builds := 0
 var successor_attempt_full_builds := 0
 var successor_cached_attempts := 0
@@ -27,8 +29,24 @@ func initialize() -> Dictionary:
     _prepared_successor_hash = U55.canonical_hash(_prepared_successor)
     # Copy once: no live/staged prefix-array alias, and no per-attempt clone.
     _private_stage_index = structural_index.duplicate(true)
+    # The one-bond fixture accesses only these range endpoints. Seal each of
+    # the ten prefix moments at initialization; reject any unsealed endpoint.
+    var count := MACHINE_PARTS
+    var first := S55.target_region_start(count)
+    var last := mini(first + S55.REGION_SIZE, count)
+    var cut := S55.break_index(count)
+    for endpoint in [0, first, last, cut, count]:
+        var seal := Guard55.endpoint_seal(_private_stage_index, endpoint)
+        if seal.is_empty():
+            return U55.failure("R5_5_PREFIX_SEAL_PREPARE_FAILED")
+        _trusted_endpoint_seals[str(endpoint)] = seal
     successor_full_builds = 1
     return U55.success(status())
+
+func _new_structural_stage():
+    var stage = Guard55.new()
+    stage.configure_seals(_trusted_endpoint_seals)
+    return stage
 
 func _stage_structural_local_event() -> Dictionary:
     if _prepared_successor.is_empty() or _private_stage_index.is_empty():
@@ -74,5 +92,6 @@ func status() -> Dictionary:
     s["r5_5_successor_full_builds"] = successor_full_builds
     s["r5_5_successor_attempt_full_builds"] = successor_attempt_full_builds
     s["r5_5_successor_cached_attempts"] = successor_cached_attempts
+    s["r5_5_sealed_prefix_endpoints"] = _trusted_endpoint_seals.size()
     s["r5_5_stage_index_isolated"] = not _private_stage_index.is_empty() and not is_same(_private_stage_index, structural_index)
     return s
