@@ -8,7 +8,7 @@ $sample='res://tests/research/fabric_bake0/fabric_r5_5_successor_acceptance.gd'
 $adv='res://tests/research/fabric_bake0/fabric_r5_5_adversarial_evidence.gd'
 RunG parse @('--check-only','--script',$sample)|Out-Null;RunG parse @('--check-only','--script',$adv)|Out-Null
 $payloads=@();1..3|%{$text=RunG "r55-acceptance-$_" @('--script',$sample);if($text -notmatch 'FABRIC_R5_5_RESULT=(\{.*\})'){throw 'R55_PAYLOAD_MISSING'};$payloads+=,$Matches[1]}
-if(($payloads|Select-Object -Unique).Count -ne 1){throw 'R55_DETERMINISM_MISMATCH'};[IO.File]::WriteAllLines((Join-Path $Out 'r55-deterministic-payload.txt'),$payloads[0],$Utf8)
+if(@($payloads|Select-Object -Unique).Count -ne 1){throw 'R55_DETERMINISM_MISMATCH'};[IO.File]::WriteAllLines((Join-Path $Out 'r55-deterministic-payload.txt'),$payloads[0],$Utf8)
 $atext=RunG 'r55-adversarial' @('--script',$adv);if($atext -notmatch 'FABRIC_R5_5_ADVERSARIAL=(\{.*\})'){throw 'R55_ADV_PAYLOAD_MISSING'};[IO.File]::WriteAllText((Join-Path $Out 'r55-adversarial-payload.txt'),$Matches[1],$Utf8)
 &$PythonBin -c "import json,sys;d=json.load(open(sys.argv[1],encoding='utf-8'));sys.exit(0 if not d['failures'] else 1)" (Join-Path $Out 'r55-adversarial-payload.txt');if($LASTEXITCODE-ne 0){throw 'R55_ADV_CHECKS_FAILED'}
 Write-Host 'R5_5_FOCUSED=PASS';Write-Host "EVIDENCE_DIR=$Out"
