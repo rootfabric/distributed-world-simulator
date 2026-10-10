@@ -43,6 +43,10 @@ func _initialize() -> void:
         check(corrupted.machine_hash() == before_hash, "prefix rejection preserves live machine identity")
         check(corrupted.status() == before_status, "prefix rejection preserves live work and events")
         check(corrupted.structural_runtime.capture_capsule() == before_capsule, "prefix rejection preserves live capsule")
+        corrupted._private_stage_index.prefix.mass[boundary] -= 12.5
+        var recovered: Dictionary = corrupted.local_damage_and_refine()
+        check(recovered.success, "restored prefix permits legitimate retry")
+        check(corrupted.machine_hash() == new_machine.machine_hash() or int(corrupted.status().local_event_count) == 1, "recovered transaction publishes exactly once")
     # A non-sealed query boundary is never implicitly trusted.
     var guarded_stage = new_machine._new_structural_stage()
     var unchecked: Dictionary = guarded_stage._r5_query(new_machine.structural_source.spec, 9, 17)
