@@ -74,5 +74,5 @@ func status() -> Dictionary:
     s["r5_5_successor_full_builds"] = successor_full_builds
     s["r5_5_successor_attempt_full_builds"] = successor_attempt_full_builds
     s["r5_5_successor_cached_attempts"] = successor_cached_attempts
-    s["r5_5_stage_index_isolated"] = not _private_stage_index.is_empty() and not _private_stage_index.is_same(structural_index)
+    s["r5_5_stage_index_isolated"] = not _private_stage_index.is_empty() and not is_same(_private_stage_index, structural_index)
     return s
