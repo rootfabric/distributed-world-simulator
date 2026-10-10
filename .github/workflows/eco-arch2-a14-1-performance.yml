@@ -95,12 +95,20 @@ jobs:
           }
           python validation/ecology/evo_arch2_a14_performance/run_benchmark.py --godot $godot --runs 3
           if ($LASTEXITCODE -ne 0) { throw 'A14_1_WINDOWS_EXACT_FAILED' }
-      - name: Tracked source clean
-        if: always()
+      - name: Tracked source clean Linux
+        if: always() && matrix.platform == 'Linux'
         shell: bash
         run: |
           git diff --exit-code
           git diff --cached --exit-code
+      - name: Tracked source clean Windows
+        if: always() && matrix.platform == 'Windows'
+        shell: pwsh
+        run: |
+          git diff --exit-code
+          if ($LASTEXITCODE -ne 0) { throw 'TRACKED_WORKTREE_CHANGED' }
+          git diff --cached --exit-code
+          if ($LASTEXITCODE -ne 0) { throw 'TRACKED_INDEX_CHANGED' }
       - uses: actions/upload-artifact@v4
         if: always()
         with:
