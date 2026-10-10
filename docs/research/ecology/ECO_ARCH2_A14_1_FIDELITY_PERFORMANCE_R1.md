@@ -18,7 +18,7 @@ Quantify CPU work, wall-clock time, peak process memory, replay burst cost, and 
 
 ## Experiment matrix
 
-1. Worksets: 1 / 4 / 16 / 64, founders: 64 / 256 / 1024 / 4096 (subject to bounded fixture feasibility).
+1. Initial *canonical* fixture sizes: 4 / 64 / 128 / 256 founders. A12 scale contract caps the current authoritative population at 256; 1024/4096 are NOT supported and must not be benchmarked as canonical throughput or bypassed by patching the scale contract inside the harness. Record requested larger configurations as OUT_OF_SCOPE / CAPACITY_LIMIT instead.
 2. Serial baseline, Parallel Prepare (worker bounds 1/2/4/8), Parallel Advance (1/2/4/8), with a single A5 global allocator.
 3. FULL cadence 1; REDUCED bounded defer + full catch-up at debt 1/4/16/64; PATCH due must fail closed and is measured separately as refusal overhead, never approximated as successful advancement.
 4. Distinguish first-run/cold import from warmed measurements; record warm-up, iterations, median/p95/max and raw samples (no pooled cross-platform speedup).
@@ -58,3 +58,12 @@ R1: locate existing test fixtures/runners and implement an external noncanonical
 R2: capture Linux baseline with deterministic equivalence predicates.
 R3: capture Windows exact baseline and cross-check parity.
 R4: evaluate bottlenecks and propose separately reviewed bounded optimizations.
+
+## R2 implementation progress (2026-10-10)
+
+- Benchmark implementations: `bench_fidelity.gd` for executor parity and fidelity replay; `bench_scaling.gd` for canonical 4/64/128/256 founders with one-tick exact state hash equality.
+- Evidence runner `run_benchmark.py` accepts only verified double Godot (SHA/version), executes three repeat samples of each suite by default, enforces all expected sample identities and checks scaling parity across 1/2/4/8 workers.
+- CI `.github/workflows/eco-arch2-a14-1-performance.yml` adds official Godot parser smoke (not exact) and self-hosted Linux/Windows double exact.
+- **CURRENT STATUS: SOURCE_PUBLISHED / EXECUTION_UNVERIFIED.** No exact PASS or speedup claim until the workflow jobs produce validated evidence. Host availability and benchmark performance remain unknown.
+- Measurement limitations: GDScript memory monitor is a Godot internal metric, **not process RSS**; the runner currently measures wall time and stores execution samples. CPU-time, host RSS, warmup stratification and p95 aggregation remain R3 work.
+- The initial 256-founder one-tick fixture must stay below canonical MAX_POPULATION throughout the test; otherwise report failure rather than truncating or silently increasing the cap.
