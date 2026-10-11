@@ -291,14 +291,15 @@ def play(args, manifest: dict) -> None:
                int(a_now.get('seam_authority_epoch', 0)) != sec_epoch or \
                int(a_now.get('ownership_epoch', 0)) != sec_own:
                 raise RuntimeError(f'r31 B reconnect disturbed remote A: {a_now}')
-            # B stays simulatable right after reconnect.
-            drive('b', x=0.0, z=-1.0)
-            time.sleep(1.5)
-            b_moved = automation('b')
+            # B stays simulatable right after reconnect. The client may stall
+            # for seconds while rebuilding its session, so poll with real
+            # movement input instead of a fixed sleep.
             bpos0 = b_after.get('local_player', {}).get('position', {})
-            bpos1 = b_moved.get('local_player', {}).get('position', {})
-            if abs(float(bpos1.get('z', 0.0)) - float(bpos0.get('z', 0.0))) < 0.2:
-                raise RuntimeError('r31 B not simulatable after reconnect')
+            def b_moved(states: dict) -> bool:
+                p = states['b'].get('local_player', {}).get('position', {})
+                return abs(float(p.get('z', 0.0)) - float(bpos0.get('z', 0.0))) >= 0.2
+            poll_r31('b_post_reconnect_movement', 30.0,
+                     {'a': {'x': 0.0, 'z': 0.0}, 'b': {'x': 0.0, 'z': -1.0}}, b_moved)
             r31['stages']['b_reconnect'] = {
                 'b_epoch_before': int(b_before.get('ownership_epoch', 0)),
                 'b_epoch_after': int(b_after.get('ownership_epoch', 0)),
