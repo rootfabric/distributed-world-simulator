@@ -6,9 +6,11 @@ function RunG([string]$N,[string[]]$A){$i=[Diagnostics.ProcessStartInfo]::new();
 Identity 'identity-before.txt';$cache=Join-Path $Root '.godot';if(Test-Path $cache){Remove-Item $cache -Recurse -Force};RunG import @('--editor','--import')|Out-Null
 $sample='res://tests/research/fabric_bake0/fabric_r5_5_successor_acceptance.gd'
 $adv='res://tests/research/fabric_bake0/fabric_r5_5_adversarial_evidence.gd'
-RunG parse @('--check-only','--script',$sample)|Out-Null;RunG parse @('--check-only','--script',$adv)|Out-Null
+$matrix='res://tests/research/fabric_bake0/fabric_r5_5_prefix_integrity_matrix.gd'
+RunG parse @('--check-only','--script',$sample)|Out-Null;RunG parse @('--check-only','--script',$adv)|Out-Null;RunG parse_matrix @('--check-only','--script',$matrix)|Out-Null
 $payloads=@();1..3|%{$text=RunG "r55-acceptance-$_" @('--script',$sample);if($text -notmatch 'FABRIC_R5_5_RESULT=(\{.*\})'){throw 'R55_PAYLOAD_MISSING'};$payloads+=,$Matches[1]}
 if(@($payloads|Select-Object -Unique).Count -ne 1){throw 'R55_DETERMINISM_MISMATCH'};[IO.File]::WriteAllLines((Join-Path $Out 'r55-deterministic-payload.txt'),$payloads[0],$Utf8)
 $atext=RunG 'r55-adversarial' @('--script',$adv);if($atext -notmatch 'FABRIC_R5_5_ADVERSARIAL=(\{.*\})'){throw 'R55_ADV_PAYLOAD_MISSING'};[IO.File]::WriteAllText((Join-Path $Out 'r55-adversarial-payload.txt'),$Matches[1],$Utf8)
 &$PythonBin -c "import json,sys;d=json.load(open(sys.argv[1],encoding='utf-8'));sys.exit(0 if not d['failures'] else 1)" (Join-Path $Out 'r55-adversarial-payload.txt');if($LASTEXITCODE-ne 0){throw 'R55_ADV_CHECKS_FAILED'}
+$mtext=RunG 'r55-prefix-matrix' @('--script',$matrix);if($mtext -notmatch 'FABRIC_R5_5_PREFIX_MATRIX=(\{.*\})'){throw 'R55_MATRIX_PAYLOAD_MISSING'};[IO.File]::WriteAllText((Join-Path $Out 'r55-prefix-matrix-payload.json'),$Matches[1],$Utf8);&$PythonBin -c "import json,sys;d=json.load(open(sys.argv[1],encoding='utf-8'));sys.exit(0 if d['rejected_mutations']==100 and not d['failures'] else 1)" (Join-Path $Out 'r55-prefix-matrix-payload.json');if($LASTEXITCODE-ne 0){throw 'R55_MATRIX_REJECTION_FAILED'}
 Write-Host 'R5_5_FOCUSED=PASS';Write-Host "EVIDENCE_DIR=$Out"
