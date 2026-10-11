@@ -39,6 +39,7 @@ func can_accept_mutation() -> bool:
 	return _fatal_error.is_empty() and _pending.is_empty() and _ready.size() < _ready_limit
 
 func stage(operation_id: String, peer_id: String, session_id: String,
+		logical_player_id: String, ownership_epoch: int,
 		command_type: String, result: Dictionary, generation: int) -> Dictionary:
 	if not _fatal_error.is_empty():
 		return _failure("DURABLE_GATE_FATAL")
@@ -46,7 +47,7 @@ func stage(operation_id: String, peer_id: String, session_id: String,
 		return _failure("DURABLE_GATE_COMMIT_PENDING")
 	if _ready.size() >= _ready_limit:
 		return _failure("DURABLE_GATE_BACKPRESSURE")
-	if operation_id.is_empty() or peer_id.is_empty() or session_id.is_empty() or command_type.is_empty():
+	if operation_id.is_empty() or peer_id.is_empty() or session_id.is_empty() or logical_player_id.is_empty() or ownership_epoch < 1 or command_type.is_empty():
 		return _failure("DURABLE_GATE_IDENTITY_REQUIRED")
 	if generation != _persisted_generation + 1:
 		return _failure("DURABLE_GATE_GENERATION_OUT_OF_ORDER")
@@ -56,6 +57,7 @@ func stage(operation_id: String, peer_id: String, session_id: String,
 	_pending = {
 		"state": "STAGED", "operation_id": operation_id,
 		"peer_id": peer_id, "session_id": session_id,
+		"logical_player_id": logical_player_id, "ownership_epoch": ownership_epoch,
 		"command_type": command_type,
 		"result": result.duplicate(true), "generation": generation,
 	}
@@ -89,12 +91,21 @@ func complete(operation_id: String, generation: int, committed: Dictionary) -> D
 	_pending = {}
 	return _success({"generation": generation, "ack_eligible": true})
 
-func peek_ack() -> Dictionary:
+func peek_ack(peer_id: String, session_id: String,
+		logical_player_id: String, ownership_epoch: int) -> Dictionary:
+	# The caller receives no successful result for a stale transport or
+	# ownership epoch even before attempting reliable enqueue.
 	if _ready.is_empty() or not _fatal_error.is_empty():
 		return {}
-	return _ready[0].duplicate(true)
+	var first: Dictionary = _ready[0]
+	if String(first.get("peer_id", "")) != peer_id or String(first.get("session_id", "")) != session_id:
+		return {}
+	if String(first.get("logical_player_id", "")) != logical_player_id or int(first.get("ownership_epoch", 0)) != ownership_epoch:
+		return {}
+	return first.duplicate(true)
 
-func mark_delivered(operation_id: String, peer_id: String, session_id: String) -> Dictionary:
+func mark_delivered(operation_id: String, peer_id: String, session_id: String,
+		logical_player_id: String, ownership_epoch: int) -> Dictionary:
 	if _ready.is_empty():
 		return _failure("DURABLE_GATE_NO_ACK")
 	var first: Dictionary = _ready[0]
@@ -102,6 +113,8 @@ func mark_delivered(operation_id: String, peer_id: String, session_id: String) -
 		return _failure("DURABLE_GATE_ACK_OUT_OF_ORDER")
 	if String(first.get("peer_id", "")) != peer_id or String(first.get("session_id", "")) != session_id:
 		return _failure("DURABLE_GATE_SESSION_MISMATCH")
+	if String(first.get("logical_player_id", "")) != logical_player_id or int(first.get("ownership_epoch", 0)) != ownership_epoch:
+		return _failure("DURABLE_GATE_OWNERSHIP_MISMATCH")
 	_ready.remove_at(0)
 	return _success()
 

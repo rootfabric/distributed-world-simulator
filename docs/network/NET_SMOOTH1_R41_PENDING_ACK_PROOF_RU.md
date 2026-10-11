@@ -8,8 +8,8 @@ R4.0 exact Windows: 24 успешных durable-коммита, checksum player/
 
 ## Скоуп этой поставки
 
-- `scripts/persistence/m6_pending_durable_ack_gate.gd`: чистый однопоточный **escrow/state machine**, не пишет на диск и не рассылает пакеты. Хранит только один незафиксированный command generation, ограниченный готовый ACK буфер, строгую монотонность поколений и session fence.
-- `tests/runtime/test_net_smooth1_r41_pending_durable_gate.gd`: 63 детерминированных assert (локально Godot Linux 4.7.1 double PASS), включая no early ACK, out-of-order generation, duplicate, backpressure, lost peer during worker commit, failure closed, M6-restart semantics и периодический writer generation.
+- `scripts/persistence/m6_pending_durable_ack_gate.gd`: чистый однопоточный **escrow/state machine**, не пишет на диск и не рассылает пакеты. Хранит только один незафиксированный command generation, ограниченный готовый ACK буфер, строгую монотонность поколений и session + logical-player + ownership-epoch fence.
+- `tests/runtime/test_net_smooth1_r41_pending_durable_gate.gd`: 66 детерминированных assert (локально Godot Linux 4.7.1 double PASS), включая no early ACK, out-of-order generation, duplicate, backpressure, lost peer during worker commit, failure closed, M6-restart semantics и периодический writer generation.
 - Добавить тест в `tools/net_smooth1/run_net_smooth1.py`: ожидается **21** focused tests (17 обычных + 4 process), до полноценного Windows подтверждения тест считается Implementer-only.
 - Живой runtime `m3_dedicated_server_runtime_p2.gd` в R4.1-core **не изменён**. Не приписывать данному PR устранение фризов или перевод команд на async.
 

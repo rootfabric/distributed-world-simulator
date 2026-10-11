@@ -26,6 +26,6 @@ $FocusedExit=$LASTEXITCODE
 Get-Content "$WT\artifacts\net-smooth1\r41-core-focused\focused.json"
 ```
 
-Ожидается 21 focused suite, новый `test_net_smooth1_r41_pending_durable_gate.gd` 63/63 PASS. Project Control `--candidate` выполнять отдельно от обычной `-CheckConsistency`, особенно old observed main drift. В focused случае известного M6 ENet timing flake не снижать пороги, сохранить все логи и replay/durability факты.
+Ожидается 21 focused suite, новый `test_net_smooth1_r41_pending_durable_gate.gd` 66/66 PASS. Project Control `--candidate` выполнять отдельно от обычной `-CheckConsistency`, особенно old observed main drift. В focused случае известного M6 ENet timing flake не снижать пороги, сохранить все логи и replay/durability факты.
 
 Следующая реализация P1: подключить gate ко всем мутирующим handlers только после review и матрицы, запустить настоящий durable workload из R4.0 (`-Scenario durable-commands`), проверить `no ACK before durable`, no uncommitted snapshots/broadcasts, fault points, replay under restart, preserving 60 Hz. Публиковать отдельный candidate exact head; ни на каком этапе не мержить в PR #754/#753/#751/main без human gate.
