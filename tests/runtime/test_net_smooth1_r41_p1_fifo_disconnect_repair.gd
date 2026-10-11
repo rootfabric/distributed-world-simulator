@@ -11,6 +11,29 @@ class FakeService:
 	func leave_transport_session(_session_id: String, _operation_id: String) -> Dictionary:
 		leave_calls += 1
 		return {"success": false, "error_code": "FAKE_SERVICE_MUST_NOT_BE_CALLED"}
+	func create_targeted_command_result(_message_id: String, _operation_id: String, result: Dictionary) -> Dictionary:
+		return {"status": "COMMITTED" if bool(result.get("success", false)) else "REJECTED",
+			"error_code": String(result.get("error_code", "")), "payload": {}, "checksum": ""}
+
+class FakeBoundary:
+	extends RefCounted
+	var sent: Array[Dictionary] = []
+	func get_peer_snapshot(_peer_id: String) -> Dictionary:
+		return {"state": "READY"}
+	func create_frame_for_peer(_peer_id: String, channel: String, _schema: String, payload: Dictionary, _delivery_mode: String) -> Dictionary:
+		return {"success": true, "details": {"frame": {"channel": channel, "payload": payload.duplicate(true)}}}
+	func send_to_peer(peer_id: String, frame: Dictionary) -> Dictionary:
+		sent.append({"peer_id": peer_id, "frame": frame.duplicate(true)})
+		return {"success": true, "details": {}}
+	func flush_outbound(_max_frames: int, _peer_id: String) -> Dictionary:
+		return {"success": true, "details": {}}
+
+class FakeConstruction:
+	extends RefCounted
+	var submit_calls := 0
+	func submit_player_command(_logical_player_id: String, _command: Dictionary) -> Dictionary:
+		submit_calls += 1
+		return {"success": false, "error_code": "FAKE_CONSTRUCTION_REJECT"}
 
 var assertions := 0
 var failures: Array[String] = []
@@ -69,8 +92,22 @@ func _run() -> void:
 	check(String(server._peer_to_player.get("peer/reused", "")) == "player/new", "stale event cannot evict newer player")
 	check(service.leave_calls == 0, "stale disconnect cannot mutate canonical world")
 	check(not server._construction_durability_allowed(), "Construction without M6 checkpoint proof fails closed")
+	var construction = FakeConstruction.new()
+	var boundary = FakeBoundary.new()
+	server._construction_bridge = construction
+	server._boundary = boundary
+	server._peer_to_player["peer/build"] = "player/build"
+	server._peer_to_session["peer/build"] = "session/build"
+	server._handle_construction_command("peer/build", "session/build", {"operation_id": "op/build", "command": {"action": "place"}})
+	check(construction.submit_calls == 0, "persisted Construction never mutates unbound gateway")
+	check(boundary.sent.size() == 1, "persisted Construction rejects via normal control reply")
+	if boundary.sent.size() == 1:
+		var rejected_payload: Dictionary = Dictionary(boundary.sent[0].get("frame", {})).get("payload", {})
+		check(String(rejected_payload.get("error_code", "")) == "M3_CONSTRUCTION_DURABILITY_CONTRACT_REQUIRED", "exact persisted Construction error")
 	server._persistence_enabled = false
 	check(server._construction_durability_allowed(), "nonpersistent construction compatibility remains")
+	server._handle_construction_command("peer/build", "session/build", {"operation_id": "op/build/nonpersistent", "command": {"action": "place"}})
+	check(construction.submit_calls == 1, "nonpersistent Construction gateway remains callable")
 	server.free()
 
 	for reason in failures:

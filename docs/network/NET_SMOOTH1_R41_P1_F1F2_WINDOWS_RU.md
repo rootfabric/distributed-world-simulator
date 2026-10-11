@@ -35,7 +35,7 @@ Godot должен быть 4.7.1 double, SHA256 = 3633c3e609c8ce2f9bae334a9c7e7
     Get-Content "$WT\artifacts\net-smooth1\r41-f1f2-focused\focused.json"
     if ($FocusedExit -ne 0) { throw 'FOCUSED_FAILED' }
 
-Ожидается 20 analyzer-tests и 22 Godot focused suites (18 обычных, 4 process). Новый test_net_smooth1_r41_p1_fifo_disconnect_repair.gd проверяет FIFO ACK, failed enqueue/quarantine, M6 replay, busy disconnect, stale session и Construction fail-closed. Проверить исходный pending durable kernel 66/66 и M6 force-kill/recovery, M7, NX3, USER1, CHAR2. При timing-flake сохранять исходные логи и фактический FAIL, не снижать критерии.
+Ожидается 20 analyzer-tests и 22 Godot focused suites (18 обычных, 4 process). Новый test_net_smooth1_r41_p1_fifo_disconnect_repair.gd проверяет FIFO ACK, failed enqueue/quarantine, M6 replay, busy disconnect, stale session и Construction fail-closed. Ожидается 39/39 asserts: тест дополнительно вызывает реальный server CONSTRUCTION_COMMAND handler через контролируемый fake gateway и доказывает отсутствие mutation на persistence-enabled server и совместимость persistence-disabled. Проверить исходный pending durable kernel 66/66 и M6 force-kill/recovery, M7, NX3, USER1, CHAR2. При timing-flake сохранять исходные логи и фактический FAIL, не снижать критерии.
 
 ## 3. Negative contract F1/F2
 
