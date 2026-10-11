@@ -1,0 +1,101 @@
+name: ECO ARCH2 A14.2 Adaptive Fidelity Exact
+
+on:
+  push:
+    branches:
+      - feature/eco-arch2-a14-2-adaptive-fidelity-r1
+  pull_request:
+    paths:
+      - 'scripts/research/ecology/v2/population_adaptive_fidelity_advice_v1.gd'
+      - 'validation/ecology/evo_arch2_a14_adaptive/**'
+      - '.github/workflows/eco-arch2-a14-2-adaptive-exact.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: eco-a14-2-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  portable:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Download official Godot 4.7.1 smoke engine
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fL --retry 3 -o /tmp/godot.zip https://github.com/godotengine/godot/releases/download/4.7.1-stable/Godot_v4.7.1-stable_linux.x86_64.zip
+          unzip -q /tmp/godot.zip -d /tmp/godot
+          chmod +x /tmp/godot/Godot_v4.7.1-stable_linux.x86_64
+      - name: Import and run adaptive smoke
+        shell: bash
+        run: |
+          set -euo pipefail
+          godot=/tmp/godot/Godot_v4.7.1-stable_linux.x86_64
+          "$godot" --headless --editor --path . --import > /tmp/import.log 2>&1 || { cat /tmp/import.log; exit 1; }
+          "$godot" --headless --path . --script res://validation/ecology/evo_arch2_a14_adaptive/test_adaptive_fidelity.gd > /tmp/adaptive.log 2>&1 || { cat /tmp/adaptive.log; exit 1; }
+          cat /tmp/adaptive.log
+          grep -Fx 'ECO_ARCH2_A14_2_ADAPTIVE PASS' /tmp/adaptive.log
+          if grep -Ei 'SCRIPT ERROR|Parse Error|Failed to load script|Error compiling' /tmp/adaptive.log; then exit 1; fi
+          git diff --exit-code && git diff --cached --exit-code
+
+  exact:
+    name: A14.2 ${{ matrix.platform }} Exact
+    runs-on: [self-hosted, '${{ matrix.platform }}', X64]
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [Linux, Windows]
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Linux double exact
+        if: matrix.platform == 'Linux'
+        shell: bash
+        env:
+          CONFIGURED_GODOT: ${{ vars.DWS_GODOT_DOUBLE_LINUX_BIN }}
+        run: |
+          set -euo pipefail
+          godot="${CONFIGURED_GODOT:-${DWS_GODOT_DOUBLE_LINUX_BIN:-$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64}}"
+          "$godot" --headless --editor --path . --import
+          "$godot" --headless --path . --script res://validation/ecology/evo_arch2_a14_adaptive/test_adaptive_fidelity.gd | tee /tmp/a14-2.log
+          grep -Fx 'ECO_ARCH2_A14_2_ADAPTIVE PASS' /tmp/a14-2.log
+          python3 validation/ecology/evo_arch2_a13_fidelity/run_exact.py --godot "$godot"
+      - name: Windows double exact
+        if: matrix.platform == 'Windows'
+        shell: pwsh
+        env:
+          CONFIGURED_GODOT: ${{ vars.DWS_GODOT_DOUBLE_BIN }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $godot = $env:CONFIGURED_GODOT
+          if ([string]::IsNullOrWhiteSpace($godot)) { $godot = 'C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe' }
+          & $godot --headless --editor --path . --import
+          if ($LASTEXITCODE -ne 0) { throw 'IMPORT_FAIL' }
+          & $godot --headless --path . --script res://validation/ecology/evo_arch2_a14_adaptive/test_adaptive_fidelity.gd
+          if ($LASTEXITCODE -ne 0) { throw 'ADAPTIVE_EXACT_FAIL' }
+          python validation/ecology/evo_arch2_a13_fidelity/run_exact.py --godot $godot
+          if ($LASTEXITCODE -ne 0) { throw 'A13_REGRESSION_FAIL' }
+      - name: Clean tracked Linux
+        if: always() && matrix.platform == 'Linux'
+        shell: bash
+        run: |
+          git diff --exit-code && git diff --cached --exit-code
+      - name: Clean tracked Windows
+        if: always() && matrix.platform == 'Windows'
+        shell: pwsh
+        run: |
+          git diff --exit-code
+          if ($LASTEXITCODE -ne 0) { throw 'DIRTY_WORKTREE' }
+          git diff --cached --exit-code
+          if ($LASTEXITCODE -ne 0) { throw 'DIRTY_INDEX' }
