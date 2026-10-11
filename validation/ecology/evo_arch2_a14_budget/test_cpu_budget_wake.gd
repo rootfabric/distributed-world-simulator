@@ -141,7 +141,7 @@ func _f1_budget_and_f3_clamped_exact_replay(initial: Dictionary) -> void:
 	for slice_index in 4:
 		# Once the globally exact wake began, the remaining debt is an
 		# explicit FULL continuation, even if smaller than REDUCED cadence.
-		var fidelity := sleep.fidelity_plan if slice_index == 0 else Fidelity.create(
+		var fidelity: Dictionary = sleep.fidelity_plan if slice_index == 0 else Fidelity.create(
 			cursor.field, cursor.population, {},
 			int(cursor.tick), 8, 4, 16, 4, 64)
 		_check(not fidelity.is_empty(), "F3: continuation fidelity plan")
