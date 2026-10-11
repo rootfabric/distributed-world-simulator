@@ -202,59 +202,190 @@ def play(args, manifest: dict) -> None:
                 command(role,'character.camera.toggle')
             dump(root/role/'initial-state.json',bridge(ports[role],token,'state.get',{'kind':'automation'}))
         for role in processes: (root/role/'measure.start').touch()
-        started=time.monotonic();last_phase=-1;phase_states={}
-        while time.monotonic()-started < args.duration:
-            alive();elapsed=time.monotonic()-started
-            # 8 phases: A observer/B moving, reverse, simultaneous straight,
-            # strafe, circle, turn-only, sprint, stop/start. No position setters.
-            phase=int(elapsed//8)%8
-            phase_changed=phase!=last_phase
-            if phase_changed:
+        started=time.monotonic()
+        def automation(role: str) -> dict:
+            return bridge(ports[role], token, 'state.get', {'kind': 'automation'})['automation']
+        def drive(role: str, x: float, z: float, yaw: float = 0.0, sprint: bool = False) -> None:
+            bridge(ports[role], token, 'movement.set', {'move_x': x, 'move_z': z,
+                'look_yaw': yaw, 'sprint': sprint, 'ttl_ms': 900})
+        if args.scenario == 'r31-reconnect-roundtrip':
+            # R3.1: A crosses to secondary via real movement only, B reconnects
+            # mid-remote, A must stay secondary (no foreign handback), then A
+            # returns to primary. Acceptance reads server-pushed authoritative
+            # product seam state (region_id/epoch/crossings/roundtrips), never
+            # client-side position alone. Absence of a crossing is a hard FAIL.
+            def poll_r31(title: str, budget_s: float, feed: dict, accept) -> dict:
+                deadline = time.monotonic() + budget_s
+                last_feed = 0.0
+                while True:
+                    alive()
+                    states = {role: automation(role) for role in ('a', 'b')}
+                    if accept(states):
+                        return states
+                    now = time.monotonic()
+                    if now - last_feed >= 0.2:
+                        last_feed = now
+                        for role, move in feed.items():
+                            drive(role, **move)
+                    if now > deadline:
+                        a = states['a']
+                        raise RuntimeError(
+                            f'r31 stage {title} timeout; a_region={a.get("region_id")} '
+                            f'a_x={a.get("local_player", {}).get("position", {}).get("x")} '
+                            f'crossings={a.get("seam_crossings")}')
+                    time.sleep(0.05)
+            budget = max(60.0, args.duration)
+            r31: dict = {'schema': 'dws.net_smooth.r31_roundtrip.v1', 'stages': {}}
+            base = {role: automation(role) for role in ('a', 'b')}
+            a_region0 = str(base['a'].get('region_id', ''))
+            a_cross0 = int(base['a'].get('seam_crossings', 0))
+            a_round0 = int(base['a'].get('seam_roundtrips', 0))
+            a_epoch0 = int(base['a'].get('seam_authority_epoch', 0))
+            a_own0 = int(base['a'].get('ownership_epoch', 0))
+            if a_region0 != 'region/user1/a' or a_cross0 != 0 or a_round0 != 0:
+                raise RuntimeError(f'r31 baseline not clean primary: region={a_region0} '
+                                   f'crossings={a_cross0} roundtrips={a_round0}')
+            r31['baseline'] = {'a_region': a_region0, 'a_authority_epoch': a_epoch0,
+                               'a_ownership_epoch': a_own0}
+            dump(root/'r31-roundtrip.json', r31)
+
+            def crossed_to_secondary(states: dict) -> bool:
+                a = states['a']
+                return str(a.get('region_id', '')) != a_region0 and \
+                    int(a.get('seam_crossings', 0)) > a_cross0
+            sprint_feed = {'a': {'x': 1.0, 'z': 0.0, 'sprint': True},
+                           'b': {'x': 0.0, 'z': 0.0}}
+            secondary = poll_r31('a_to_secondary', budget, sprint_feed, crossed_to_secondary)
+            sec = secondary['a']
+            sec_region = str(sec.get('region_id', ''))
+            sec_epoch = int(sec.get('seam_authority_epoch', 0))
+            sec_cross = int(sec.get('seam_crossings', 0))
+            sec_own = int(sec.get('ownership_epoch', 0))
+            # Authoritative crossing, not just a client-side position change:
+            # the region push must carry a bumped authority epoch.
+            if sec_epoch <= a_epoch0:
+                raise RuntimeError(f'r31 crossing not authoritative: epoch {a_epoch0}->{sec_epoch}')
+            # A must remain simulatable under secondary movement authority.
+            sec_x0 = float(sec['local_player']['position']['x'])
+            moved = poll_r31('a_secondary_movement', 10.0, sprint_feed,
+                             lambda st: abs(float(st['a']['local_player']['position']['x']) - sec_x0) > 0.5)
+            r31['stages']['a_secondary'] = {
+                'region_id': sec_region, 'authority_epoch': sec_epoch,
+                'crossings': sec_cross, 'ownership_epoch': sec_own,
+                'position': secondary['a']['local_player']['position'],
+                'movement_continues': True}
+            dump(root/'r31-roundtrip.json', r31)
+
+            # B reconnects while A is remote. A must not be force-returned or
+            # handed back on B's behalf; only B's own ownership epoch advances.
+            b_before = automation('b')
+            reconnect = command('b', 'network.reconnect')
+            time.sleep(1)
+            wait_ready('b')
+            b_after = automation('b')
+            if int(b_after.get('ownership_epoch', 0)) <= int(b_before.get('ownership_epoch', 0)):
+                raise RuntimeError('r31 B reconnect did not advance ownership epoch')
+            a_now = automation('a')
+            if str(a_now.get('region_id', '')) != sec_region or \
+               int(a_now.get('seam_crossings', 0)) != sec_cross or \
+               int(a_now.get('seam_authority_epoch', 0)) != sec_epoch or \
+               int(a_now.get('ownership_epoch', 0)) != sec_own:
+                raise RuntimeError(f'r31 B reconnect disturbed remote A: {a_now}')
+            # B stays simulatable right after reconnect.
+            drive('b', x=0.0, z=-1.0)
+            time.sleep(1.5)
+            b_moved = automation('b')
+            bpos0 = b_after.get('local_player', {}).get('position', {})
+            bpos1 = b_moved.get('local_player', {}).get('position', {})
+            if abs(float(bpos1.get('z', 0.0)) - float(bpos0.get('z', 0.0))) < 0.2:
+                raise RuntimeError('r31 B not simulatable after reconnect')
+            r31['stages']['b_reconnect'] = {
+                'b_epoch_before': int(b_before.get('ownership_epoch', 0)),
+                'b_epoch_after': int(b_after.get('ownership_epoch', 0)),
+                'a_region_unchanged': True, 'a_authority_epoch': sec_epoch}
+            dump(root/'r31-roundtrip.json', r31)
+
+            def returned_to_primary(states: dict) -> bool:
+                a = states['a']
+                return str(a.get('region_id', '')) == a_region0 and \
+                    int(a.get('seam_roundtrips', 0)) > a_round0
+            return_feed = {'a': {'x': -1.0, 'z': 0.0, 'sprint': True},
+                           'b': {'x': 0.0, 'z': 0.0}}
+            primary = poll_r31('a_to_primary', budget, return_feed, returned_to_primary)
+            prim = primary['a']
+            prim_epoch = int(prim.get('seam_authority_epoch', 0))
+            if prim_epoch <= sec_epoch:
+                raise RuntimeError(f'r31 return not authoritative: epoch {sec_epoch}->{prim_epoch}')
+            r31['stages']['a_primary_return'] = {
+                'region_id': a_region0, 'authority_epoch': prim_epoch,
+                'roundtrips': int(prim.get('seam_roundtrips', 0)),
+                'ownership_epoch': int(prim.get('ownership_epoch', 0)),
+                'position': prim['local_player']['position']}
+            dump(root/'r31-roundtrip.json', r31)
+            manifest['phase_results'].append({'phase': 'r31_reconnect_roundtrip',
+                                              'result': r31['stages']})
+        else:
+            last_phase=-1;phase_states={}
+            while time.monotonic()-started < args.duration:
+                alive();elapsed=time.monotonic()-started
+                # 8 phases: A observer/B moving, reverse, simultaneous straight,
+                # strafe, circle, turn-only, sprint, stop/start. No position setters.
+                phase=int(elapsed//8)%8
+                phase_changed=phase!=last_phase
+                if phase_changed:
+                    for role in ('a','b'):
+                        phase_states[role]=bridge(ports[role],token,'state.get',{'kind':'automation'})
                 for role in ('a','b'):
-                    phase_states[role]=bridge(ports[role],token,'state.get',{'kind':'automation'})
+                    x,z,yaw,sprint=0.0,-1.0,0.0,False
+                    if phase==0 and role=='a': z=0.0
+                    if phase==1 and role=='b': z=0.0
+                    if phase==3: x,z=1.0,0.0
+                    if phase==4: yaw=(elapsed*.6)%(2*math.pi)
+                    if phase==5: z=0.0;yaw=(elapsed*.9)%(2*math.pi)
+                    if phase==6: sprint=True
+                    if phase==7: z=-1.0 if int(elapsed*2)%2==0 else 0.0
+                    if role=='b': x=-x;z=-z
+                    if args.scenario=='local':
+                        # Stay in primary; do not conflate network smoothness with
+                        # the separate USER1 remote-owner reconnect restriction.
+                        # Feedback only at phase boundaries, through read-only state.
+                        pos=phase_states[role]['automation']['local_player']['position']
+                        toward_z=1.0 if pos['z']>0 else -1.0
+                        if phase in (0,1,2,6,7) and z: z=toward_z
+                        if phase==3: x=.2 if pos['x'] < -7 else -.2
+                        if phase==4: z=.4;yaw=(elapsed*math.pi)%(2*math.pi)
+                    bridge(ports[role],token,'movement.set',{'move_x':x,'move_z':z,
+                        'look_yaw':yaw,'sprint':sprint,'ttl_ms':900})
+                if phase_changed:
+                    entry={'elapsed_s':elapsed,'phase':phase,**phase_states}
+                    with (root/'phases.jsonl').open('a',encoding='utf-8') as stream:
+                        stream.write(json.dumps(entry,ensure_ascii=False)+'\n')
+                    last_phase=phase
+                time.sleep(.2)
+            for role in processes: (root/role/'measure.end').touch()
+            time.sleep(.5)
             for role in ('a','b'):
-                x,z,yaw,sprint=0.0,-1.0,0.0,False
-                if phase==0 and role=='a': z=0.0
-                if phase==1 and role=='b': z=0.0
-                if phase==3: x,z=1.0,0.0
-                if phase==4: yaw=(elapsed*.6)%(2*math.pi)
-                if phase==5: z=0.0;yaw=(elapsed*.9)%(2*math.pi)
-                if phase==6: sprint=True
-                if phase==7: z=-1.0 if int(elapsed*2)%2==0 else 0.0
-                if role=='b': x=-x;z=-z
-                if args.scenario=='local':
-                    # Stay in primary; do not conflate network smoothness with
-                    # the separate USER1 remote-owner reconnect restriction.
-                    # Feedback only at phase boundaries, through read-only state.
-                    pos=phase_states[role]['automation']['local_player']['position']
-                    toward_z=1.0 if pos['z']>0 else -1.0
-                    if phase in (0,1,2,6,7) and z: z=toward_z
-                    if phase==3: x=.2 if pos['x'] < -7 else -.2
-                    if phase==4: z=.4;yaw=(elapsed*math.pi)%(2*math.pi)
-                bridge(ports[role],token,'movement.set',{'move_x':x,'move_z':z,
-                    'look_yaw':yaw,'sprint':sprint,'ttl_ms':900})
-            if phase_changed:
-                entry={'elapsed_s':elapsed,'phase':phase,**phase_states}
-                with (root/'phases.jsonl').open('a',encoding='utf-8') as stream:
-                    stream.write(json.dumps(entry,ensure_ascii=False)+'\n')
-                last_phase=phase
-            time.sleep(.2)
-        for role in processes: (root/role/'measure.end').touch()
-        time.sleep(.5)
-        for role in ('a','b'):
-            bridge(ports[role],token,'movement.stop')
-            dump(root/role/'final-state.json',bridge(ports[role],token,'state.get',{'kind':'automation'}))
-            if args.mode=='gui':
-                dump(root/role/'screenshot.json',bridge(ports[role],token,'screenshot.capture',{'filename':f'{role}-final.png'}))
-        # Reconnect is outside the perf window; it still must execute and recover.
-        old=bridge(ports['b'],token,'state.get',{'kind':'automation'})['automation']
-        reconnect=command('b','network.reconnect')
-        time.sleep(1);wait_ready('b')
-        after=bridge(ports['b'],token,'state.get',{'kind':'automation'})['automation']
-        manifest['phase_results'].append({'phase':'reconnect_b','result':reconnect,
-                                         'before_epoch':old.get('ownership_epoch'),'after_epoch':after.get('ownership_epoch')})
-        if after.get('ownership_epoch',0)<=old.get('ownership_epoch',0):
-            raise RuntimeError('reconnect did not advance ownership epoch')
+                bridge(ports[role],token,'movement.stop')
+                dump(root/role/'final-state.json',bridge(ports[role],token,'state.get',{'kind':'automation'}))
+                if args.mode=='gui':
+                    dump(root/role/'screenshot.json',bridge(ports[role],token,'screenshot.capture',{'filename':f'{role}-final.png'}))
+            # Reconnect is outside the perf window; it still must execute and recover.
+            old=bridge(ports['b'],token,'state.get',{'kind':'automation'})['automation']
+            reconnect=command('b','network.reconnect')
+            time.sleep(1);wait_ready('b')
+            after=bridge(ports['b'],token,'state.get',{'kind':'automation'})['automation']
+            manifest['phase_results'].append({'phase':'reconnect_b','result':reconnect,
+                                             'before_epoch':old.get('ownership_epoch'),'after_epoch':after.get('ownership_epoch')})
+            if after.get('ownership_epoch',0)<=old.get('ownership_epoch',0):
+                raise RuntimeError('reconnect did not advance ownership epoch')
+        if args.scenario == 'r31-reconnect-roundtrip':
+            for role in processes: (root/role/'measure.end').touch()
+            time.sleep(.5)
+            for role in ('a','b'):
+                bridge(ports[role],token,'movement.stop')
+                dump(root/role/'final-state.json',bridge(ports[role],token,'state.get',{'kind':'automation'}))
+                if args.mode=='gui':
+                    dump(root/role/'screenshot.json',bridge(ports[role],token,'screenshot.capture',{'filename':f'{role}-final.png'}))
         manifest['completed']=True
     except Exception as exc:
         manifest['errors'].append(f'{type(exc).__name__}: {exc}')
@@ -296,7 +427,7 @@ def main() -> int:
     parser.add_argument('--include-process-tests',action='store_true')
     parser.add_argument('--skip-import',action='store_true')
     parser.add_argument('--profile',default='LOCAL')
-    parser.add_argument('--scenario',choices=('local','seam-stress'),default='local')
+    parser.add_argument('--scenario',choices=('local','seam-stress','r31-reconnect-roundtrip'),default='local')
     parser.add_argument('--checkpoint-mode',choices=('async','sync'),default='async')
     parser.add_argument('--inject-stall-role',choices=('server','a','b'))
     parser.add_argument('--inject-stall-ms',type=int,default=250)

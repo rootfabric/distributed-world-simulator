@@ -520,6 +520,7 @@ func automation_get_state() -> Dictionary:
 	var construction: Dictionary = {}
 	var local_player: Dictionary = {}
 	var construction_construct_checksums: Dictionary = {}
+	var product_seam: Dictionary = {}
 	if m3_multiplayer_client_runtime != null:
 		if m3_multiplayer_client_runtime.has_method("get_snapshot"):
 			gameplay_snapshot = m3_multiplayer_client_runtime.get_snapshot()
@@ -531,6 +532,8 @@ func automation_get_state() -> Dictionary:
 			construction = m3_multiplayer_client_runtime.get_construction_bundle()
 		if m3_multiplayer_client_runtime.has_method("get_local_player_record"):
 			local_player = m3_multiplayer_client_runtime.get_local_player_record()
+		if m3_multiplayer_client_runtime.has_method("get_product_seam_state"):
+			product_seam = m3_multiplayer_client_runtime.get_product_seam_state()
 	for snapshot_value in construction.get("constructs", []):
 		if not snapshot_value is Dictionary:
 			continue
@@ -569,6 +572,14 @@ func automation_get_state() -> Dictionary:
 		"construction_generation": int(construction.get("server_generation", -1)),
 		"construction_checksum": String(construction.get("checksum", "")),
 		"construction_construct_checksums": construction_construct_checksums.duplicate(true),
+		# NET-SMOOTH1 R3.1: expose the server-pushed authoritative product seam
+		# state additively (new keys only, schema stays stable) so automation
+		# acceptance can assert real authority crossings and roundtrips.
+		"region_id": String(product_seam.get("region_id", "")),
+		"seam_active_authority_id": String(product_seam.get("active_authority_id", "")),
+		"seam_authority_epoch": int(product_seam.get("authority_epoch", 0)),
+		"seam_crossings": int(product_seam.get("crossings", 0)),
+		"seam_roundtrips": int(product_seam.get("roundtrips", -1)),
 	}
 
 
