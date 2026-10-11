@@ -77,6 +77,9 @@ var _replay_outbox
 # broadcast is published for an uncommitted checkpoint generation.
 var _durable_ack_gate
 var _player_ownership_epochs: Dictionary = {}
+# Bound disconnected sessions while a durable generation is pending.
+const MAX_DEFERRED_DISCONNECTS := 64
+var _deferred_disconnects: Array[Dictionary] = []
 var _checkpoint_generation := 0
 var _recovered := false
 var _recovery_source := ""
@@ -183,6 +186,7 @@ func setup(config: Dictionary) -> Dictionary:
 	if not bool(telemetry_setup.get("success", false)):
 		return telemetry_setup
 	_peer_compatibility.clear()
+	_deferred_disconnects.clear()
 	_seam_sent_state_by_peer.clear()
 	_seam_messages_sent = 0
 	_seam_unchanged_skipped = 0
@@ -267,6 +271,11 @@ func _process(delta: float) -> void:
 		return
 	var smooth_started := Time.get_ticks_usec()
 	_complete_async_movement_checkpoint(false)
+	if _fatal_persistence_failure:
+		return
+	# A transport leave must not mutate the authority during an in-flight
+	# durable generation. Drain one deferred leave when the gate is clear.
+	_drain_deferred_disconnects()
 	if _fatal_persistence_failure:
 		return
 	var process_started_us: int = Time.get_ticks_usec()
@@ -516,6 +525,10 @@ func _handle_join(peer_id: String, session_id: String, payload: Dictionary) -> v
 	var replay := _is_replay_result(result)
 	if not replay:
 		_joins += 1
+	if immediate_join_persistence and not _gate_preflight_success_result(
+		operation_id, peer_id, session_id, logical_id, join_ownership_epoch, result
+	):
+		return
 	var join_sent := _send_on_channel(peer_id, "JOIN_ACK", {
 		"operation_id": operation_id,
 		"player": result.get("details", {}).get("player", {}),
@@ -526,7 +539,8 @@ func _handle_join(peer_id: String, session_id: String, payload: Dictionary) -> v
 		_item_graph_full_snapshots_published += 1
 		# The JOIN_ACK left only after the real reliable enqueue; the escrowed
 		# record may be dropped for this exact session/epoch fence.
-		_gate_mark_result_delivered(operation_id, peer_id, session_id, logical_id, join_ownership_epoch)
+		if immediate_join_persistence:
+			_gate_after_result_enqueue(operation_id, peer_id, session_id, logical_id, join_ownership_epoch, result, true)
 		if not immediate_join_persistence:
 			_fast_join_acks += 1
 			_telemetry.increment("fast_join_acks")
@@ -535,6 +549,10 @@ func _handle_join(peer_id: String, session_id: String, payload: Dictionary) -> v
 				"operation_id": operation_id,
 				"persistence_deferred": true,
 			})
+	if immediate_join_persistence and not join_sent:
+		_gate_after_result_enqueue(operation_id, peer_id, session_id, logical_id, join_ownership_epoch, result, false)
+	if _fatal_persistence_failure:
+		return
 	if _construction_bridge != null:
 		var player: Dictionary = Dictionary(result.get("details", {}).get("player", {}))
 		var construction_join: Dictionary = _construction_bridge.connect_player(logical_id, int(player.get("ownership_epoch", 0)))
@@ -584,9 +602,12 @@ func _handle_move(peer_id: String, session_id: String, payload: Dictionary) -> v
 	if not _persist_command_result(operation_id, "MOVE", logical_id, result, peer_id, session_id, move_ownership_epoch):
 		_send_result(peer_id, operation_id, "MOVE", _failure("M6_DURABLE_COMMIT_FAILED"))
 		return
+	if not _gate_preflight_success_result(operation_id, peer_id, session_id, logical_id, move_ownership_epoch, result):
+		return
 	var result_sent := _send_result(peer_id, operation_id, "MOVE", result)
-	if result_sent:
-		_gate_mark_result_delivered(operation_id, peer_id, session_id, logical_id, move_ownership_epoch)
+	_gate_after_result_enqueue(operation_id, peer_id, session_id, logical_id, move_ownership_epoch, result, result_sent)
+	if _fatal_persistence_failure:
+		return
 	if bool(result.get("success", false)):
 		if not _is_replay_result(result):
 			_moves += 1
@@ -954,9 +975,12 @@ func _handle_presentation(peer_id: String, session_id: String, payload: Dictiona
 	if not _persist_command_result(operation_id, "PRESENTATION", logical_id, result, peer_id, session_id, presentation_epoch):
 		_send_result(peer_id, operation_id, "PRESENTATION", _failure("M6_DURABLE_COMMIT_FAILED"))
 		return
+	if not _gate_preflight_success_result(operation_id, peer_id, session_id, logical_id, presentation_epoch, result):
+		return
 	var result_sent := _send_result(peer_id, operation_id, "PRESENTATION", result)
-	if result_sent:
-		_gate_mark_result_delivered(operation_id, peer_id, session_id, logical_id, presentation_epoch)
+	_gate_after_result_enqueue(operation_id, peer_id, session_id, logical_id, presentation_epoch, result, result_sent)
+	if _fatal_persistence_failure:
+		return
 	if bool(result.get("success", false)):
 		if not _is_replay_result(result):
 			_presentation_updates += 1
@@ -1063,11 +1087,14 @@ func _handle_item_command(peer_id: String, session_id: String, payload: Dictiona
 			_last_error_code = "ITEM_GRAPH_DELTA_BUILD_FAILED"
 		else:
 			item_delta = Dictionary(delta_result.get("details", {}).get("delta", {})).duplicate(true)
+	if not _gate_preflight_success_result(operation_id, peer_id, session_id, logical_id, item_epoch, result):
+		return
 	var send_probe := _stall_enter("ITEM:RESULT_SEND", stage_context)
 	var result_sent := _send_result(peer_id, operation_id, command_type, result, item_delta)
-	if result_sent:
-		_gate_mark_result_delivered(operation_id, peer_id, session_id, logical_id, item_epoch)
+	_gate_after_result_enqueue(operation_id, peer_id, session_id, logical_id, item_epoch, result, result_sent)
 	_stall_exit(send_probe)
+	if _fatal_persistence_failure:
+		return
 	if bool(result.get("success", false)):
 		if not _is_replay_result(result):
 			var replication_probe := _stall_enter("ITEM:REPLICATION", stage_context)
@@ -1098,6 +1125,16 @@ func _handle_construction_command(peer_id: String, session_id: String, payload: 
 	var command_value = payload.get("command", {})
 	if not command_value is Dictionary:
 		_send_result(peer_id, operation_id, "CONSTRUCTION_COMMAND", _failure("CONSTRUCTION_COMMAND_REQUIRED"))
+		return
+	# Construction gateway mutates a separate owner. Its submit() is not an
+	# M6 checkpoint; never promise durable ACK on the back of the M6 escrow.
+	# Persistence-enabled construction must expose an independently verified
+	# durable gateway contract before an acceptance result can be published.
+	if not _gate_can_accept():
+		_reject_uncommitted_command(peer_id, operation_id, "CONSTRUCTION_COMMAND", _gate_reject_code())
+		return
+	if not _construction_durability_allowed():
+		_reject_uncommitted_command(peer_id, operation_id, "CONSTRUCTION_COMMAND", "M3_CONSTRUCTION_DURABILITY_CONTRACT_REQUIRED")
 		return
 	var logical_id := String(_peer_to_player.get(peer_id, ""))
 	var submitted: Dictionary = _construction_bridge.submit_player_command(logical_id, Dictionary(command_value))
@@ -1142,11 +1179,14 @@ func _handle_leave(peer_id: String, session_id: String, payload: Dictionary) -> 
 	if not _persist_command_result(operation_id, "LEAVE", logical_id, result, peer_id, session_id, leave_epoch):
 		_send(peer_id, "LEAVE_REJECTED", {"operation_id": operation_id, "error_code": "M6_DURABLE_COMMIT_FAILED"})
 		return
+	if not _gate_preflight_success_result(operation_id, peer_id, session_id, logical_id, leave_epoch, result):
+		return
 	var leave_sent := false
 	if bool(result.get("success", false)):
 		leave_sent = _send(peer_id, "LEAVE_ACK", {"operation_id": operation_id, "logical_player_id": logical_id})
-		if leave_sent:
-			_gate_mark_result_delivered(operation_id, peer_id, session_id, logical_id, leave_epoch)
+		_gate_after_result_enqueue(operation_id, peer_id, session_id, logical_id, leave_epoch, result, leave_sent)
+		if _fatal_persistence_failure:
+			return
 		if not _is_replay_result(result):
 			_leaves += 1
 			_broadcast_delta(result.get("details", {}).get("delta", {}), peer_id)
@@ -1164,15 +1204,48 @@ func _handle_leave(peer_id: String, session_id: String, payload: Dictionary) -> 
 
 
 func _handle_disconnect(peer_id: String, session_id: String) -> void:
+	# Transport cleanup is immediate; authoritative LEAVE is serialized behind
+	# any in-flight checkpoint. Never invalidate a newer session on stale events.
+	var mapped_session := String(_peer_to_session.get(peer_id, ""))
+	if _durable_ack_gate != null and not session_id.is_empty():
+		_durable_ack_gate.discard_stale_session(peer_id, session_id)
+	if session_id.is_empty() or mapped_session != session_id:
+		_debug_event("STALE_PEER_DISCONNECT_IGNORED", {"peer_id": peer_id, "session_id": session_id})
+		return
 	_peer_input_buffers.erase(peer_id)
 	_peer_compatibility.erase(peer_id)
-	_debug_event("PEER_DISCONNECTED", {"peer_id":peer_id,"session_id":session_id})
-	var mapped_session := String(_peer_to_session.get(peer_id, ""))
-	if _service == null or session_id.is_empty() or mapped_session != session_id:
-		_peer_to_player.erase(peer_id)
-		_peer_to_session.erase(peer_id)
-		_seam_sent_state_by_peer.erase(peer_id)
-		_write_report("READY", false)
+	_debug_event("PEER_DISCONNECTED", {"peer_id": peer_id, "session_id": session_id})
+	if not _gate_can_accept():
+		_queue_deferred_disconnect(peer_id, session_id)
+		return
+	_commit_disconnect(peer_id, session_id)
+
+
+func _queue_deferred_disconnect(peer_id: String, session_id: String) -> void:
+	for pending in _deferred_disconnects:
+		if String(pending.get("peer_id", "")) == peer_id and String(pending.get("session_id", "")) == session_id:
+			return
+	if _deferred_disconnects.size() >= MAX_DEFERRED_DISCONNECTS:
+		_enter_persistence_failure("M6_DEFERRED_DISCONNECT_CAPACITY_EXCEEDED")
+		return
+	_deferred_disconnects.append({"peer_id": peer_id, "session_id": session_id})
+
+
+func _drain_deferred_disconnects() -> void:
+	if _deferred_disconnects.is_empty() or not _gate_can_accept():
+		return
+	# One terminal leave per frame bounds catch-up work and allows a new
+	# reliable ACK/checkpoint fence to settle before the next disconnect.
+	var pending: Dictionary = _deferred_disconnects.pop_front()
+	_commit_disconnect(String(pending.get("peer_id", "")), String(pending.get("session_id", "")))
+
+
+func _commit_disconnect(peer_id: String, session_id: String) -> void:
+	# A reused peer id must never allow an old disconnect to evict its new session.
+	if _service == null or String(_peer_to_session.get(peer_id, "")) != session_id or session_id.is_empty():
+		return
+	if not _gate_can_accept():
+		_queue_deferred_disconnect(peer_id, session_id)
 		return
 	var operation_id := "operation/m3/disconnect/%s" % session_id.sha256_text().left(16)
 	var logical_id := String(_peer_to_player.get(peer_id, ""))
@@ -1180,9 +1253,8 @@ func _handle_disconnect(peer_id: String, session_id: String) -> void:
 	var result: Dictionary = _service.leave_transport_session(session_id, operation_id)
 	if not _persist_command_result(operation_id, "DISCONNECT", logical_id, result, peer_id, session_id, disconnect_epoch):
 		return
-	# R4.1-P1: a disconnect quarantines every not-yet-delivered ACK of the old
-	# transport session. Committed durability is untouched; a retry of the same
-	# operation id resolves through canonical M6 replay, not a re-mutation.
+	# Disconnects never send an old-session ACK. Canonical M6 replay retains
+	# any committed outcome and the escrow entry is quarantined.
 	if _durable_ack_gate != null:
 		_durable_ack_gate.discard_stale_session(peer_id, session_id)
 	if bool(result.get("success", false)) and not _is_replay_result(result):
@@ -1196,6 +1268,7 @@ func _handle_disconnect(peer_id: String, session_id: String) -> void:
 	_seam_sent_state_by_peer.erase(peer_id)
 	_broadcast_snapshot("PEER_DISCONNECTED")
 	_write_report("READY", false)
+
 
 func _reject_uncommitted_command(peer_id: String, operation_id: String, command_type: String, error_code: String) -> void:
 	_rejections += 1
@@ -1664,7 +1737,18 @@ func _gate_can_accept() -> bool:
 	# contract to fence; the gate only guards persistence-enabled servers.
 	if not _persistence_enabled:
 		return true
-	return _durable_ack_gate != null and _durable_ack_gate.can_accept_mutation()
+	if _durable_ack_gate == null or not _durable_ack_gate.can_accept_mutation():
+		return false
+	# Product ACK publication is serial even if the proof kernel has multiple
+	# ready slots. No new mutation may overtake an untransmitted durable reply.
+	return int(_durable_ack_gate.get_report().get("ready_count", 0)) == 0
+
+
+func _construction_durability_allowed() -> bool:
+	# The existing Construction gateway has export/load helpers but submit()
+	# does not synchronously persist a durable transaction or join the M6
+	# authoritative checkpoint. Reject rather than claim a false durable ACK.
+	return not _persistence_enabled
 
 
 func _gate_reject_code() -> String:
@@ -1680,17 +1764,58 @@ func _stored_ownership_epoch(logical_id: String, payload_epoch: int) -> int:
 	return int(_player_ownership_epochs.get(logical_id, 0))
 
 
-func _gate_mark_result_delivered(
+func _gate_is_ack_head(
 	operation_id: String, peer_id: String, session_id: String,
 	logical_player_id: String, ownership_epoch: int
-) -> void:
+) -> bool:
 	if _durable_ack_gate == null or operation_id.is_empty():
-		return
-	# Only a real reliable enqueue authorizes dropping the escrowed ACK; a
-	# failed enqueue leaves the record for the disconnect quarantine path.
-	_durable_ack_gate.mark_delivered(
+		return false
+	var head: Dictionary = _durable_ack_gate.peek_ack(peer_id, session_id, logical_player_id, ownership_epoch)
+	return String(head.get("operation_id", "")) == operation_id
+
+
+func _gate_preflight_success_result(
+	operation_id: String, peer_id: String, session_id: String,
+	logical_player_id: String, ownership_epoch: int, result: Dictionary
+) -> bool:
+	if not _persistence_enabled or _durable_ack_gate == null or not bool(result.get("success", false)):
+		return true
+	if _gate_is_ack_head(operation_id, peer_id, session_id, logical_player_id, ownership_epoch):
+		return true
+	var report: Dictionary = _durable_ack_gate.get_report()
+	if _is_replay_result(result) and int(report.get("ready_count", 0)) == 0 and not bool(report.get("pending", false)):
+		return true
+	# The mutation is already durable; do not fabricate a rejection or send
+	# out-of-order success. Fail-stop on a broken escrow invariant.
+	_enter_persistence_failure("M6_DURABLE_ACK_FIFO_PRECHECK_FAILED")
+	return false
+
+
+func _gate_after_result_enqueue(
+	operation_id: String, peer_id: String, session_id: String,
+	logical_player_id: String, ownership_epoch: int,
+	result: Dictionary, enqueued: bool
+) -> bool:
+	if not _persistence_enabled or _durable_ack_gate == null or not bool(result.get("success", false)):
+		return enqueued
+	var head: Dictionary = _durable_ack_gate.peek_ack(peer_id, session_id, logical_player_id, ownership_epoch)
+	if String(head.get("operation_id", "")) != operation_id:
+		# M6 can replay previously delivered outcomes from a fresh transport.
+		return enqueued if _is_replay_result(result) and int(_durable_ack_gate.get_report().get("ready_count", 0)) == 0 else false
+	if not enqueued:
+		# A failed reliable enqueue is NOT a delivered ACK. Quarantine the
+		# undeliverable session result; M6 replay resolves retries after reconnect.
+		var quarantined: Dictionary = _durable_ack_gate.discard_stale_session(peer_id, session_id)
+		if not bool(quarantined.get("success", false)):
+			_enter_persistence_failure("M6_DURABLE_ACK_QUARANTINE_FAILED")
+		return false
+	var marked: Dictionary = _durable_ack_gate.mark_delivered(
 		operation_id, peer_id, session_id, logical_player_id, ownership_epoch
 	)
+	if not bool(marked.get("success", false)):
+		_enter_persistence_failure(String(marked.get("error_code", "M6_DURABLE_ACK_DELIVERY_FAILED")))
+		return false
+	return true
 
 
 func _complete_async_movement_checkpoint(wait: bool) -> void:
