@@ -127,7 +127,12 @@ func join(
 	transport_session_id: String,
 	operation_id: String
 ) -> Dictionary:
-	if not _seam_coordinators.is_empty():
+	# Other players can hold ACTIVE movement bindings on the secondary
+	# authority without freezing a new local player JOIN. Do not admit a
+	# reconnect of the SAME remote player or JOIN during an in-flight SM1
+	# handoff: those rows still require an explicit transfer fence.
+	var player_id := logical_player_id.strip_edges().to_lower()
+	if _seam_coordinators.has(player_id) or not _seam_transfers_quiescent():
 		return _failure("USER1_SEAM_JOIN_FROZEN_WHILE_PLAYER_REMOTE")
 	var result: Dictionary = super.join(
 		logical_player_id,
@@ -135,7 +140,6 @@ func join(
 		operation_id
 	)
 	if bool(result.get("success", false)):
-		var player_id := logical_player_id.strip_edges().to_lower()
 		_seam_sessions[player_id] = transport_session_id
 		_seam_last_operation[player_id] = operation_id
 		if not _seam_state.has(player_id):
@@ -154,9 +158,13 @@ func leave(
 	transport_session_id: String,
 	operation_id: String
 ) -> Dictionary:
-	var returned := _force_all_primary()
-	if not bool(returned.get("success", false)):
-		return returned
+	# A leave is scoped to its own transport identity. Handing back every
+	# remote movement player would silently change unrelated ownership.
+	var player_id := logical_player_id.strip_edges().to_lower()
+	if String(_seam_sessions.get(player_id, "")) == transport_session_id:
+		var returned := _force_player_primary(player_id)
+		if not bool(returned.get("success", false)):
+			return returned
 	var result: Dictionary = super.leave(
 		logical_player_id,
 		transport_session_id,
@@ -172,14 +180,16 @@ func leave_transport_session(
 	transport_session_id: String,
 	operation_id: String
 ) -> Dictionary:
-	var returned := _force_all_primary()
-	if not bool(returned.get("success", false)):
-		return returned
 	var logical_id := ""
 	for player_id_value in _seam_sessions:
 		if String(_seam_sessions[player_id_value]) == transport_session_id:
 			logical_id = String(player_id_value)
 			break
+	# Unknown/stale sessions cannot force a handback of other players.
+	if not logical_id.is_empty():
+		var returned := _force_player_primary(logical_id)
+		if not bool(returned.get("success", false)):
+			return returned
 	var result: Dictionary = super.leave_transport_session(
 		transport_session_id,
 		operation_id
@@ -1089,22 +1099,22 @@ func _abort_transfer_before_commit(
 	})
 
 
+func _force_player_primary(player_id: String) -> Dictionary:
+	if not _seam_coordinators.has(player_id):
+		return _success({"replay": true})
+	if _active_authority(player_id) == _secondary_authority_id:
+		return _perform_transfer(player_id, _primary_authority_id, true)
+	return _release_roundtrip_binding(player_id)
+
+
 func _force_all_primary() -> Dictionary:
+	# This is intentionally global only for shutdown/full recovery. Ordinary
+	# transport LEAVE must call _force_player_primary for its own identity.
 	var players := _seam_coordinators.keys().duplicate()
 	for player_id_value in players:
-		var player_id := String(player_id_value)
-		if _active_authority(player_id) == _secondary_authority_id:
-			var returned := _perform_transfer(
-				player_id,
-				_primary_authority_id,
-				true
-			)
-			if not bool(returned.get("success", false)):
-				return returned
-		elif _seam_coordinators.has(player_id):
-			var released := _release_roundtrip_binding(player_id)
-			if not bool(released.get("success", false)):
-				return released
+		var returned := _force_player_primary(String(player_id_value))
+		if not bool(returned.get("success", false)):
+			return returned
 	return _success({"quiescent": true})
 
 

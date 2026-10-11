@@ -23,6 +23,7 @@ from analyze_net_smooth1 import write_report
 
 TESTS = [
  'tests/network/test_net_smooth1_seam_change_delivery.gd',
+ 'tests/runtime/test_net_smooth1_remote_owner_reconnect.gd',
  'tests/network/test_net_smooth1_snapshot_hotpath.gd',
  'tests/network/test_net_smooth1_hold_continuity.gd',
  'tests/network/test_net_smooth1_gap_semantics.gd',
