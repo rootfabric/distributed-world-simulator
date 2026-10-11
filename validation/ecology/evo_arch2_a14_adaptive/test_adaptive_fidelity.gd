@@ -26,7 +26,7 @@ func _check(ok: bool, label: String) -> void:
 		failed += 1
 		push_error("A14_ADAPTIVE_FAIL " + label)
 
-func _reproductive_blueprint() -> Dictionary:
+func _reproductive_blueprint(stable_population: bool = false) -> Dictionary:
 	var program := {
 		"schema": Program.SCHEMA,
 		"entry": "grow",
@@ -55,10 +55,15 @@ func _reproductive_blueprint() -> Dictionary:
 	policy.reproduction.offspring_per_event = 1
 	policy.reproduction.endowment = {"material_mg": 100, "water_mg": 100, "energy_mj": 100}
 	policy.reproduction.fee_energy_mj = 0
+	if stable_population:
+		# Large-debt equivalence needs a stable canonical fixture: the
+		# reproductive fixture hits RUNTIME_POPULATION_LIMIT after ~14 ticks
+		# (exponential growth). Reproduction simply never matures here.
+		policy.reproduction.maturity_ticks = 1000
 	return Blueprint.create(genome, policy)
 
-func _dynamic_runtime() -> Dictionary:
-	var blueprint := _reproductive_blueprint()
+func _dynamic_runtime(stable_population: bool = false) -> Dictionary:
+	var blueprint := _reproductive_blueprint(stable_population)
 	var stock := FieldContract.stock(FieldContract.MAX_CELL_STOCK)
 	var field := Field.create(
 		"a13.fidelity.dynamic", 1, [0, 0, 0], 1000, 8, 8,
@@ -138,6 +143,89 @@ func _run() -> void:
 		_check(ok and replay.success, "four ticks replay")
 		if ok and replay.success:
 			_check(C.encode(replay.state) == C.encode(continuous_state), "wake equals continuous")
+	# ---- A14.2 R1 falsifier matrix (mission section 5) ----
+	# REDUCED -> exact wake for debts 2/4/16/64 must equal continuous execution.
+	# The stable fixture keeps the canonical population fixed so 64 continuous
+	# ticks remain within RUNTIME_POPULATION_LIMIT.
+	var stable := _dynamic_runtime(true)
+	_check(not stable.is_empty(), "stable debt fixture")
+	var stable_before := C.encode(stable)
+	for debt in [2, 4, 16, 64]:
+		var wake_advice := Adaptive.create(stable.field, stable.population,
+			[], 20000, 1000, 0, debt, 2, 4, 64)
+		_check(not wake_advice.is_empty(), "wake debt=%d constructed" % debt)
+		if wake_advice.is_empty():
+			continue
+		var continuous_state := stable.duplicate(true)
+		var continuous_ok := true
+		for i in debt:
+			var stepped := Runtime.step_spatial_parallel_advance(
+				continuous_state, _options(), 4, 64, 4, 4)
+			if not stepped.success:
+				continuous_ok = false
+				break
+			continuous_state = stepped.state
+		_check(continuous_ok, "continuous debt=%d baseline" % debt)
+		if not continuous_ok:
+			continue
+		var replayed := Runtime.advance_spatial_fidelity(
+			stable, _options(), wake_advice.fidelity_plan, 4, 4)
+		_check(replayed.success and not bool(replayed.deferred),
+			"wake debt=%d exact catch-up" % debt)
+		if replayed.success:
+			_check(int(replayed.replayed_ticks) == debt,
+				"wake debt=%d replays all ticks" % debt)
+			_check(C.encode(replayed.state) == C.encode(continuous_state),
+				"wake debt=%d equals continuous bytes" % debt)
+		# state must remain at the pre-wake frontier: advance_spatial_fidelity
+		# returns a duplicate and never mutates its input.
+		_check(C.encode(stable) == stable_before, "input untouched after wake debt=%d" % debt)
+		# Repeated wake on the same frontier is idempotent: identical inputs,
+		# identical output bytes, canonical frontier still untouched.
+		var repeat := Runtime.advance_spatial_fidelity(
+			stable, _options(), wake_advice.fidelity_plan, 4, 4)
+		_check(repeat.success and C.encode(repeat.state) == C.encode(replayed.state),
+			"repeated wake debt=%d idempotent" % debt)
+		_check(C.encode(stable) == stable_before,
+			"frontier untouched after repeated wake debt=%d" % debt)
+	# Cadence boundary: debt 1 < cadence 2 must defer, never partially commit.
+	var boundary := Adaptive.create(state.field, state.population,
+		[], 20000, 1000, 0, 1, 4, 2, 64)
+	_check(not boundary.is_empty(), "boundary advice constructed")
+	if not boundary.is_empty():
+		_check(not bool(boundary.fidelity_plan.global_commit_ready),
+			"boundary debt below cadence not ready")
+		var deferred := Runtime.advance_spatial_fidelity(
+			state, _options(), boundary.fidelity_plan, 4, 4)
+		_check(deferred.success and bool(deferred.deferred) and int(deferred.replayed_ticks) == 0,
+			"boundary defer replays nothing")
+		_check(C.encode(state) == before, "boundary defer leaves state untouched")
+	# Debt above the hard limit must be rejected outright.
+	_check(Adaptive.create(state.field, state.population,
+		[], 20000, 1000, 0, 65, 4, 2, 64).is_empty(), "debt 65 rejected")
+	# PATCH must never be selected for any legal budget, and plan bytes must
+	# be a pure function of inputs.
+	var patch_seen := false
+	for budget in [1, 999, 20000, 19999, 1000000000]:
+		var advice := Adaptive.create(state.field, state.population,
+			[], budget, budget, 0, 1, 4, 4, 64)
+		if advice.is_empty():
+			continue
+		if advice.mode == Fidelity.MODE_PATCH:
+			patch_seen = true
+		var again := Adaptive.create(state.field, state.population,
+			[], budget, budget, 0, 1, 4, 4, 64)
+		_check(C.encode(advice) == C.encode(again), "advice deterministic budget=%d" % budget)
+	_check(not patch_seen, "patch never auto-selected")
+	# Fail-closed mid-catch-up: invalid worker parameters abort before any
+	# canonical work and leave the input state byte-identical.
+	var fail_plan := Adaptive.create(state.field, state.population,
+		[], 20000, 1000, 0, 4, 2, 4, 64)
+	if not fail_plan.is_empty():
+		var aborted := Runtime.advance_spatial_fidelity(
+			state, _options(), fail_plan.fidelity_plan, 0, 4)
+		_check(not aborted.success, "invalid workers fail closed")
+		_check(C.encode(state) == before, "aborted catch-up leaves state untouched")
 	var within := Adaptive.create(state.field, state.population, [], 1000, 20000, 0, 1, 4, 4, 64)
 	_check(not within.is_empty() and within.mode == Fidelity.MODE_FULL, "within budget full")
 	var shuffled := Adaptive.create(state.field, state.population,
@@ -160,7 +248,7 @@ func _run() -> void:
 		tamper = reduced.duplicate(true)
 		tamper.fidelity_plan.debt_ticks = 3
 		_check(not Adaptive.validate(tamper, state.field, state.population).is_empty(), "tamper plan rejected")
-		var changed := state.population.duplicate(true)
+		var changed: Array = state.population.duplicate(true)
 		changed[0].state.position_mm = [1500, 0, 500]
 		_check(not Adaptive.validate(reduced, state.field, changed).is_empty(), "stale population rejected")
 	_check(C.encode(state) == before, "input state remains untouched")
