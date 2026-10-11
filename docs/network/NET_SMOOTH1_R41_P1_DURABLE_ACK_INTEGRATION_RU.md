@@ -26,6 +26,14 @@
 - Persist остаётся синхронным на main thread: этот slice подключает контракт escrow/fencing/fail-closed, но **не** устраняет фризы и не переводит checkpoint в async. Производительность всё ещё ожидается FAIL против порогов 25/50/100 мс.
 - Performance-пороги не менялись. Сравнение p99 с R4.0 и 24+ durable-команды на Windows GUI, crash/fault matrix и независимый Reviewer/Verifier — обязательные следующие шаги до какого-либо VERIFIED.
 
+## Durable workload, Windows GUI exact (этот HEAD)
+
+Запуск: `run_net_smooth1.py --mode gui --scenario durable-commands --duration 120`, артефакты `artifacts/net-smooth1/r41-p1-durable-commands-r3/` (r1 — без внешних Quaternius-ассетов, r2 — cold-import ERROR на отсутствующих gltf-текстурах `T_*_png.png`, добавлены локальные alias-копии; ассеты gitignored, tree не изменён).
+
+- Функционально: 2 GUI Quaternius клиента (QUATERNIUS_RETARGET), **24/24 успешных durable-команд** (`inventory.select_hotbar`, `inventory.permission_probe`), duplicate operation_id — идемпотентный replay без повторной мутации, item graph revision монотонно растёт, 0 rejections, 0 persistence failures, сервер вне fail-stop.
+- Функциональная crash/recovery-матрица покрыта process-наборами: M6 force-kill crash+restart+M6 replay+reconnect, M7 reconnect+ownership epoch+continuation, NX2 physical channel (21/21 focused).
+- Производительность: FAIL, как и предсказано для R4.1-P1 (persist всё ещё синхронный). Server frame p99 ≈ 1782 мс, message_ms p99 ≈ 1515 мс, frame p999/max ≈ 6348/9543 мс; client p99 ≈ 36–44 мс с редкими >5 с gap'ами при 20 Гц movement snapshot. Профиль того же порядка, что R4.0 (frame p99 1274 мс, message p99 883 мс); пороги 25/50/100 мс и 59 Гц не изменялись. Парные A/B прогоны R4.0/R4.1 (3×) — задача Windows Verifier, не implementer self-accept.
+
 ## Валидация implementer (этот HEAD)
 
 - Analyzer unittest: 20/20 OK.
