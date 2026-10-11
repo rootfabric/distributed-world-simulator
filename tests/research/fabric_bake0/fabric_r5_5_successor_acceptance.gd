@@ -2,6 +2,7 @@ extends SceneTree
 ## R5.5 R1 focused acceptance. Do not label exact until executed on canonical Godot.
 const Old = preload("res://scripts/research/fabric_bake0/r5_4_mixed_complexity_machine_v1.gd")
 const New = preload("res://scripts/research/fabric_bake0/r5_5_incremental_successor_machine_v1.gd")
+const Guard = preload("res://scripts/research/fabric_bake0/r5_5_guarded_index_lifecycle_v1.gd")
 
 var checks := 0
 var failures: Array = []
@@ -47,6 +48,34 @@ func _initialize() -> void:
         var recovered: Dictionary = corrupted.local_damage_and_refine()
         check(recovered.success, "restored prefix permits legitimate retry")
         check(int(corrupted.status().local_event_count) == 1 and int(corrupted.structural_source.spec.source_revision) == 1, "recovered transaction publishes exactly once")
+    # R3 product falsifier: coordinated attack on the *used* physical moment
+    # and the runtime seal must reject before publishing any structural or
+    # recursive state, despite the forged seal matching the forged data.
+    var joint = New.new()
+    check(joint.initialize().success, "joint prefix+seal tamper fixture initializes")
+    var split := int(joint.structural_source.spec.break_index)
+    var original_seal: String = String(joint._trusted_endpoint_seals[str(split)])
+    var before_joint_hash: String = joint.machine_hash()
+    var before_joint_status: Dictionary = joint.status().duplicate(true)
+    var before_joint_capsule: Dictionary = joint.structural_runtime.capture_capsule()
+    var before_joint_sessions: Dictionary = joint.recursive_runtime._sessions.duplicate(true)
+    joint._private_stage_index.prefix.mass[split] += 12.5
+    joint._trusted_endpoint_seals[str(split)] = Guard.endpoint_seal(joint._private_stage_index, split)
+    check(String(joint._trusted_endpoint_seals[str(split)]) != original_seal, "joint adversary forged a different matching runtime seal")
+    var joint_rejected: Dictionary = joint.local_damage_and_refine()
+    check(not joint_rejected.success and joint_rejected.error_code == "R5_4_STRUCTURAL_REBAKE_FAILED", "joint tamper rejected before commit")
+    if not joint_rejected.success:
+        check(String(joint_rejected.get("details", {}).get("cause", {}).get("error_code", "")) == "R5_5_PREFIX_INTEGRITY_MISMATCH", "joint rejection has exact integrity cause")
+    check(joint.machine_hash() == before_joint_hash and joint.status() == before_joint_status, "joint rejection leaves live identity and counters unchanged")
+    check(joint.structural_runtime.capture_capsule() == before_joint_capsule and joint.recursive_runtime._sessions == before_joint_sessions, "joint rejection preserves live structural and recursive snapshots")
+    joint._private_stage_index.prefix.mass[split] -= 12.5
+    # Restoring only the data, but NOT the forged seal, must still fail closed.
+    var seals_only_rejected: Dictionary = joint.local_damage_and_refine()
+    check(not seals_only_rejected.success and seals_only_rejected.error_code == "R5_4_STRUCTURAL_REBAKE_FAILED", "poisoned runtime seal alone cannot authorize query")
+    check(joint.machine_hash() == before_joint_hash and joint.status() == before_joint_status, "seals-only rejection preserves live identity")
+    joint._trusted_endpoint_seals[str(split)] = original_seal
+    var joint_recovered: Dictionary = joint.local_damage_and_refine()
+    check(joint_recovered.success and int(joint.status().local_event_count) == 1, "fully repaired joint state commits exactly once")
     # A non-sealed query boundary is never implicitly trusted.
     var guarded_stage = new_machine._new_structural_stage()
     var unchecked: Dictionary = guarded_stage._r5_query(new_machine.structural_source.spec, 9, 17)

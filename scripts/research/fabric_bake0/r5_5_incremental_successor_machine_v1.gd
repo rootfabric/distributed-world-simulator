@@ -19,6 +19,8 @@ func initialize() -> Dictionary:
     var initialized: Dictionary = super.initialize()
     if not initialized.success:
         return initialized
+    if String(structural_source.spec.get("checksum", "")) != Guard55.canonical_base_source_checksum():
+        return U55.failure("R5_5_BASE_SOURCE_ANCHOR_MISMATCH")
     # Work outside the event path: exactly one canonical full digest build.
     var canonical: Dictionary = S55.create_subject(MACHINE_PARTS, true)
     if not bool(canonical.get("success", false)):
@@ -37,8 +39,8 @@ func initialize() -> Dictionary:
     var cut := S55.break_index(count)
     for endpoint in [0, first, last, cut, count]:
         var seal := Guard55.endpoint_seal(_private_stage_index, endpoint)
-        if seal.is_empty():
-            return U55.failure("R5_5_PREFIX_SEAL_PREPARE_FAILED")
+        if seal.is_empty() or seal != Guard55.canonical_endpoint_seal(endpoint):
+            return U55.failure("R5_5_PREFIX_ANCHOR_INIT_MISMATCH", {"endpoint": endpoint})
         _trusted_endpoint_seals[str(endpoint)] = seal
     successor_full_builds = 1
     return U55.success(status())

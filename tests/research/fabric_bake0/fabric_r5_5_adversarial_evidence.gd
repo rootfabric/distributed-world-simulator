@@ -5,6 +5,7 @@ extends SceneTree
 const Old = preload("res://scripts/research/fabric_bake0/r5_4_mixed_complexity_machine_v1.gd")
 const New = preload("res://scripts/research/fabric_bake0/r5_5_incremental_successor_machine_v1.gd")
 const Life = preload("res://scripts/research/fabric_bake0/r5_indexed_sparse_damage_lifecycle_v1.gd")
+const Guard = preload("res://scripts/research/fabric_bake0/r5_5_guarded_index_lifecycle_v1.gd")
 
 var checks := 0
 var failures: Array = []
@@ -63,27 +64,34 @@ func _initialize() -> void:
 		check(not fail.success and fail.error_code == "R5_5_SUCCESSOR_CACHE_MUTATED",
 			"C: %s tamper fails closed" % field)
 		check(probe.status() == prior, "C: %s tamper preserves live state" % field)
-	# --- D. Stage prefix-array tamper: detection vs silent corruption ---------
+	# --- D. Authenticated prefix/claim tamper must both fail closed -----------
 	var canonical = New.new()
 	check(canonical.initialize().success and canonical.local_damage_and_refine().success, "D: canonical post-event fixture")
 	var tm = New.new()
 	check(tm.initialize().success, "D: tamper fixture init")
 	var baseline_hash: String = tm.machine_hash()
+	var baseline_status: Dictionary = tm.status().duplicate(true)
+	var endpoint: int = int(tm.structural_source.spec.break_index)
 	var mass: PackedFloat64Array = tm._private_stage_index.prefix.mass
-	mass[5] = float(mass[5]) + 100.0
+	mass[endpoint] = float(mass[endpoint]) + 100.0
 	tm._private_stage_index.prefix.mass = mass
 	var staged_fail: Dictionary = tm.local_damage_and_refine()
-	# Characterization, not an assertion of detection: scratch prefix tampering is
-	# mutation-prevented only by ownership. If it commits, canonical identity must
-	# still match (corruption is confined to derived descriptors). If it fails, the
-	# transaction must roll back to the exact pre-event identity.
-	if staged_fail.success:
-		out["prefix_tamper"] = {"committed": true, "error_code": "", "detection": "NOT_DETECTED",
-			"note": "residual limitation: scratch prefix integrity is trust-based; derived descriptors can be corrupted silently while canonical identity stays blind"}
-		check(tm.machine_hash() == canonical.machine_hash(), "D: committed tamper keeps canonical identity")
-	else:
-		out["prefix_tamper"] = {"committed": false, "error_code": String(staged_fail.get("error_code", "")), "detection": "FAIL_CLOSED"}
-		check(tm.machine_hash() == baseline_hash, "D: failed transaction preserves live identity")
+	check(not staged_fail.success and staged_fail.error_code == "R5_4_STRUCTURAL_REBAKE_FAILED", "D: consumed prefix tamper rejected")
+	check(String(staged_fail.get("details", {}).get("cause", {}).get("error_code", "")) == "R5_5_PREFIX_INTEGRITY_MISMATCH", "D: exact integrity cause")
+	check(tm.machine_hash() == baseline_hash and tm.status() == baseline_status, "D: rollback preserves live identity")
+	out["prefix_tamper"] = {"committed": staged_fail.success, "detection": "FAIL_CLOSED", "endpoint": endpoint}
+	# A second fresh machine simulates the original R2 bypass: data and its
+	# runtime seal are modified in tandem. Code-anchored evidence must win.
+	var jm = New.new()
+	check(jm.initialize().success, "D: coordinated tamper fixture")
+	var before_joint: String = jm.machine_hash()
+	jm._private_stage_index.prefix.mass[endpoint] += 12.5
+	jm._trusted_endpoint_seals[str(endpoint)] = Guard.endpoint_seal(jm._private_stage_index, endpoint)
+	var joint_fail: Dictionary = jm.local_damage_and_refine()
+	check(not joint_fail.success and joint_fail.error_code == "R5_4_STRUCTURAL_REBAKE_FAILED", "D: coordinated prefix+seal tamper rejected")
+	check(String(joint_fail.get("details", {}).get("cause", {}).get("error_code", "")) == "R5_5_PREFIX_INTEGRITY_MISMATCH", "D: coordinated integrity error")
+	check(jm.machine_hash() == before_joint and int(jm.status().local_event_count) == 0, "D: coordinated rollback intact")
+	out["coordinated_tamper"] = {"committed": joint_fail.success, "error_code": String(joint_fail.get("error_code", "")), "endpoint": endpoint}
 	# --- E. Live range-index tamper cannot leak into the staged event ---------
 	var lv = New.new()
 	check(lv.initialize().success, "E: live tamper fixture init")
