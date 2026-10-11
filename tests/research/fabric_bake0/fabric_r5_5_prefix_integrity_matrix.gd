@@ -42,11 +42,11 @@ func _initialize() -> void:
                 values[endpoint] = original + delta
                 machine._private_stage_index.prefix[field] = values
                 var range_first := 0
-                var range_end := endpoint
+                var range_end: int = int(endpoint)
                 if endpoint == 0:
                     range_end = count
                 var got: Dictionary = guard._r5_query(machine.structural_source.spec, range_first, range_end)
-                var detected := not bool(got.get("success", false)) and String(got.get("error_code", "")) == "R5_5_PREFIX_INTEGRITY_MISMATCH" and int(got.get("details", {}).get("endpoint", -1)) == endpoint
+                var detected: bool = not bool(got.get("success", false)) and String(got.get("error_code", "")) == "R5_5_PREFIX_INTEGRITY_MISMATCH" and int(got.get("details", {}).get("endpoint", -1)) == endpoint
                 expect(detected, "detected %s at %d delta %s" % [field, endpoint, str(delta)])
                 if detected:
                     rejected_mutations += 1
