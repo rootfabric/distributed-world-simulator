@@ -1355,18 +1355,47 @@ func _persist_command_result(operation_id: String, command_type: String, logical
 			_enter_persistence_failure("M6_SUCCESS_RESULT_NOT_REPLAY_DURABLE")
 			return false
 		return true
+	# R4.0: sample independent, bounded stages before changing any ACK contract.
+	# Canonical snapshots and the outbox are unchanged; these measurements run
+	# only for the durable command path, never for NX3 realtime inputs.
+	var checksum_started_us: int = Time.get_ticks_usec()
+	var player_checksum: String = String(_service.create_snapshot().get("checksum", ""))
+	var item_graph_started_us: int = Time.get_ticks_usec()
+	var item_graph_checksum: String = String(_service.create_canonical_item_graph_snapshot().get("checksum", ""))
+	var outbox_started_us: int = Time.get_ticks_usec()
 	var staged: Dictionary = _replay_outbox.stage_committed(operation_id, command_type, {
 		"logical_player_id": logical_player_id,
 		"success": bool(result.get("success", false)),
 		"error_code": String(result.get("error_code", "")),
 		"result": result.duplicate(true),
-		"player_snapshot_checksum": String(_service.create_snapshot().get("checksum", "")),
-		"item_graph_checksum": String(_service.create_canonical_item_graph_snapshot().get("checksum", "")),
+		"player_snapshot_checksum": player_checksum,
+		"item_graph_checksum": item_graph_checksum,
 	})
+	var outbox_done_us: int = Time.get_ticks_usec()
 	if not bool(staged.get("success", false)):
+		if SmoothTrace.enabled():
+			SmoothTrace.emit("durable_command_stages", {
+				"command_type": command_type,
+				"player_checksum_ms": float(item_graph_started_us - checksum_started_us) / 1000.0,
+				"item_graph_checksum_ms": float(outbox_started_us - item_graph_started_us) / 1000.0,
+				"outbox_stage_ms": float(outbox_done_us - outbox_started_us) / 1000.0,
+				"checkpoint_total_ms": 0.0, "success": false,
+				"failure_stage": "OUTBOX_STAGE",
+			})
 		_enter_persistence_failure(String(staged.get("error_code", "M6_OUTBOX_STAGE_FAILED")))
 		return false
-	var persisted := _persist_checkpoint(operation_id)
+	var checkpoint_started_us: int = Time.get_ticks_usec()
+	var persisted: Dictionary = _persist_checkpoint(operation_id)
+	if SmoothTrace.enabled():
+		SmoothTrace.emit("durable_command_stages", {
+			"command_type": command_type,
+			"player_checksum_ms": float(item_graph_started_us - checksum_started_us) / 1000.0,
+			"item_graph_checksum_ms": float(outbox_started_us - item_graph_started_us) / 1000.0,
+			"outbox_stage_ms": float(outbox_done_us - outbox_started_us) / 1000.0,
+			"checkpoint_total_ms": float(Time.get_ticks_usec() - checkpoint_started_us) / 1000.0,
+			"success": bool(persisted.get("success", false)),
+			"failure_stage": "" if bool(persisted.get("success", false)) else "CHECKPOINT",
+		})
 	if not bool(persisted.get("success", false)):
 		_enter_persistence_failure(String(persisted.get("error_code", "M6_DURABLE_COMMIT_FAILED")))
 		return false
@@ -1385,15 +1414,33 @@ func _persist_checkpoint(operation_id: String) -> Dictionary:
 		return _success({"skipped": true})
 	# Commands retain the accepted durable-before-ACK contract. A newer sync
 	# generation must never race an older periodic writer.
+	var wait_started_us: int = Time.get_ticks_usec()
 	_complete_async_movement_checkpoint(true)
+	var waited_us: int = Time.get_ticks_usec() - wait_started_us
+	var origin: String = "COMMAND" if not operation_id.is_empty() else "PERIODIC"
 	if _fatal_persistence_failure:
+		if SmoothTrace.enabled():
+			SmoothTrace.emit("durable_checkpoint_stages", {
+				"origin": origin, "wait_async_ms": float(waited_us) / 1000.0,
+				"quiesce_ms": 0.0, "persist_atomic_ms": 0.0,
+				"success": false, "failure_stage": "WAIT_ASYNC",
+			})
 		return _failure(_last_error_code)
+	var quiesce_started_us: int = Time.get_ticks_usec()
 	if _service != null and _service.has_method("prepare_product_persistence"):
 		var quiesced: Dictionary = _service.prepare_product_persistence()
 		if not bool(quiesced.get("success", false)):
+			if SmoothTrace.enabled():
+				SmoothTrace.emit("durable_checkpoint_stages", {
+					"origin": origin, "wait_async_ms": float(waited_us) / 1000.0,
+					"quiesce_ms": float(Time.get_ticks_usec() - quiesce_started_us) / 1000.0,
+					"persist_atomic_ms": 0.0,
+					"success": false, "failure_stage": "QUIESCE",
+				})
 			return _failure("USER1_SEAM_PERSISTENCE_NOT_QUIESCENT", {
 				"cause": quiesced,
 			})
+	var quiesce_done_us: int = Time.get_ticks_usec()
 	var persistence_started_us: int = Time.get_ticks_usec()
 	var next_generation := _checkpoint_generation + 1
 	var checkpoint_id := "checkpoint/m6/dedicated/%d" % next_generation
@@ -1403,6 +1450,15 @@ func _persist_checkpoint(operation_id: String) -> Dictionary:
 		_checkpoint_generation,
 		operation_id
 	)
+	var persistence_done_us: int = Time.get_ticks_usec()
+	if SmoothTrace.enabled():
+		SmoothTrace.emit("durable_checkpoint_stages", {
+			"origin": origin, "wait_async_ms": float(waited_us) / 1000.0,
+			"quiesce_ms": float(quiesce_done_us - quiesce_started_us) / 1000.0,
+			"persist_atomic_ms": float(persistence_done_us - persistence_started_us) / 1000.0,
+			"success": bool(persisted.get("success", false)),
+			"failure_stage": "" if bool(persisted.get("success", false)) else "PERSIST_ATOMIC",
+		})
 	if not bool(persisted.get("success", false)):
 		_last_persistence_error_details = persisted.duplicate(true)
 		_debug_event("CHECKPOINT_PERSIST_REJECTED", {
