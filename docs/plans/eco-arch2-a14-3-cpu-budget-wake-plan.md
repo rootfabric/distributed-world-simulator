@@ -48,3 +48,50 @@ PRODUCT_TREE `5e4d23982e381c9aa81327cb2a932544d80b8dd8`.
 Portable GitHub CI, Linux double exact, Windows self-hosted double exact,
 Project Control, fresh independent Windows verifier — all at one frozen
 PRODUCT_HEAD/TREE before PR is readied for merge.
+
+
+## Implementer R1 — conservative architecture correction
+
+A5 currently has ONE GLOBAL canonical resource allocator. The initial F1
+wording about physically servicing only a subset of regions is UNSAFE as an
+ecology evolution step. A14.3 R1 therefore must NOT implement region-local
+canonical advances or pretend they have taken place.
+
+Implemented split (feature-branch only):
+- population_cpu_budget_wake_v1.gd admits at most
+  min(global debt, floor(available_budget_us / estimated_full_tick_us),
+  max_replay_ticks) COMPLETE global canonical ticks in one call. Its public
+  execute method only publishes a valid intermediate canonical tick frontier
+  after a whole successful slice; any mid-slice error publishes no state.
+  The next invocation must rebuild a Fidelity plan at that new canonical
+  frontier for the SAME target tick. Once REDUCED wakes, a FULL continuation
+  is required to avoid a cadence-induced stall on residual debt < cadence.
+  Inputs/events must be held at the scheduler barrier during catch-up.
+- population_wake_priority_v1.gd deterministically grants preparation-only
+  opportunities by overdue wait, active flag, pending preparation debt, and
+  canonical address. Its output is recomputable and budget-bounded in
+  estimated cost credits; it NEVER triggers organism transitions. Starvation
+  is bounded only if every requested preparation job individually fits the
+  budget and caller advances its epoch/last-served counters honestly.
+
+New falsifiers:
+- F1: budget below one estimated full tick → exact defer and no overspend;
+  a larger credit window admits a predictable number of full-world ticks.
+- F2: active-biased noncanonical preparation queue still services every
+  waiting address via overdue priority; forged/duplicate inputs fail closed.
+- F3: eight owed canonical ticks replay in four independent 2-tick slices,
+  each intermediate frontier and final checkpoint byte-equal to continuous
+  execution; one late natural failure aborts its ENTIRE attempted slice.
+
+### Explicit gaps and next gates
+
+The credit model is an EXTERNALLY supplied estimate, not actual CPU usage.
+No wall-clock deadline can be guaranteed for an indivisible A5 tick, and no
+actual region-selective canonical progress occurs. Profiling, calibrated cost
+estimates, stricter per-step guards, lifecycle-level resumable preparation,
+and independent region safety proofs are follow-up R2/R3 work, not falsely
+claimed R1 achievements.
+
+Run portable parser, Linux double exact, Windows double exact, A14.2
+regression, A13 exact regression, Project Control and independent verifier
+on the exact frozen HEAD/TREE. Do NOT MERGE until all gates are green.
