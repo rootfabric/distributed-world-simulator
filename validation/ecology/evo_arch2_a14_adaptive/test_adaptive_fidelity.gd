@@ -1,11 +1,12 @@
 extends SceneTree
-## A14.2 R1 adversarial exact compatibility regression.
+## A14.2 R2 adversarial exact compatibility regression.
 const C = preload("res://scripts/research/ecology/v2/canonical_value_v1.gd")
 const Adaptive = preload("res://scripts/research/ecology/v2/population_adaptive_fidelity_advice_v1.gd")
 const Fidelity = preload("res://scripts/research/ecology/v2/population_fidelity_schedule_plan_v1.gd")
 const Spatial = preload("res://scripts/research/ecology/v2/population_spatial_workset_plan_v1.gd")
 const Lifecycle = preload("res://scripts/research/ecology/v2/resource_lifecycle_runtime_v1.gd")
 const Runtime = preload("res://scripts/research/ecology/v2/ecology_runtime_v1.gd")
+const Checkpoint = preload("res://scripts/research/ecology/v2/ecology_runtime_checkpoint_v1.gd")
 const Program = preload("res://scripts/research/ecology/v2/development_program_v1.gd")
 const Genome = preload("res://scripts/research/ecology/v2/organism_genome_v2.gd")
 const Blueprint = preload("res://scripts/research/ecology/v2/organism_blueprint_v1.gd")
@@ -217,8 +218,8 @@ func _run() -> void:
 			[], budget, budget, 0, 1, 4, 4, 64)
 		_check(C.encode(advice) == C.encode(again), "advice deterministic budget=%d" % budget)
 	_check(not patch_seen, "patch never auto-selected")
-	# Fail-closed mid-catch-up: invalid worker parameters abort before any
-	# canonical work and leave the input state byte-identical.
+	# Entry-only validation (not a mid-replay rollback test): invalid workers
+	# abort before any replay work; the late-failure falsifier below is distinct.
 	var fail_plan := Adaptive.create(state.field, state.population,
 		[], 20000, 1000, 0, 4, 2, 4, 64)
 	if not fail_plan.is_empty():
@@ -252,9 +253,155 @@ func _run() -> void:
 		changed[0].state.position_mm = [1500, 0, 500]
 		_check(not Adaptive.validate(reduced, state.field, changed).is_empty(), "stale population rejected")
 	_check(C.encode(state) == before, "input state remains untouched")
+	_r2_switch_on_pending_debt()
+	_r2_late_failure_atomicity()
 	_finish()
+
+
+## R2: keep the same canonical frontier throughout three sleeping scheduler
+## observations, then activate an occupied tile BEFORE REDUCED cadence=4.
+func _r2_switch_on_pending_debt() -> void:
+	var initial := _dynamic_runtime(true)
+	_check(not initial.is_empty(), "R2 wake: fixture")
+	if initial.is_empty():
+		return
+	var original := C.encode(initial)
+	var spatial := Spatial.create(initial.field, initial.population, 4, 64)
+	_check(not spatial.is_empty(), "R2 wake: spatial addressing")
+	if spatial.is_empty():
+		return
+	var address := String(spatial.worksets[0].address)
+	for tick in [1, 2, 3]:
+		var sleep := Adaptive.create(initial.field, initial.population,
+			[], 20000, 1000, 0, tick, 4, 4, 64)
+		_check(not sleep.is_empty(), "R2 wake: REDUCED plan tick=%d" % tick)
+		if sleep.is_empty():
+			return
+		_check(sleep.mode == Fidelity.MODE_REDUCED
+			and not bool(sleep.fidelity_plan.global_commit_ready)
+			and int(sleep.fidelity_plan.catch_up_ticks) == 0,
+			"R2 wake: tick=%d deferred below cadence=4" % tick)
+		var held := Runtime.advance_spatial_fidelity(initial, _options(), sleep.fidelity_plan, 4, 4)
+		_check(bool(held.get("success", false))
+			and bool(held.get("deferred", false))
+			and int(held.get("debt_ticks", -1)) == tick
+			and int(held.get("replayed_ticks", -1)) == 0,
+			"R2 wake: tick=%d retains entire debt" % tick)
+		if not bool(held.get("success", false)):
+			return
+		_check(C.encode(held.state) == original,
+			"R2 wake: tick=%d has zero canonical side effects" % tick)
+	var awake := Adaptive.create(initial.field, initial.population,
+		[address], 20000, 1000, 0, 3, 4, 4, 64)
+	_check(not awake.is_empty(), "R2 wake: active plan constructed")
+	if awake.is_empty():
+		return
+	_check(awake.mode == Fidelity.MODE_FULL
+		and awake.active_addresses == [address]
+		and int(awake.fidelity_plan.reduced_tile_count) == 0
+		and int(awake.fidelity_plan.full_tile_count) == int(awake.fidelity_plan.tile_count)
+		and bool(awake.fidelity_plan.global_commit_ready)
+		and int(awake.fidelity_plan.debt_ticks) == 3
+		and int(awake.fidelity_plan.catch_up_ticks) == 3,
+		"R2 wake: real active tile forces FULL replay of all three ticks")
+	_check(Adaptive.validate(awake, initial.field, initial.population).is_empty(),
+		"R2 wake: recomputed FULL plan valid")
+	var replay := Runtime.advance_spatial_fidelity(initial, _options(), awake.fidelity_plan, 4, 4)
+	_check(bool(replay.get("success", false))
+		and not bool(replay.get("deferred", true))
+		and int(replay.get("replayed_ticks", -1)) == 3
+		and int(replay.get("canonical_tick", -1)) == 3,
+		"R2 wake: exactly three replay ticks committed")
+	if not bool(replay.get("success", false)):
+		return
+	var continuous := initial.duplicate(true)
+	for index in 3:
+		var step := Runtime.step_spatial_parallel_advance(continuous, _options(), 4, 64, 4, 4)
+		_check(bool(step.get("success", false)), "R2 wake: continuous tick %d" % (index + 1))
+		if not bool(step.get("success", false)):
+			return
+		continuous = step.state
+	_check(C.encode(replay.state) == C.encode(continuous), "R2 wake: identical canonical bytes")
+	_check(Runtime.state_hash(replay.state) == Runtime.state_hash(continuous),
+		"R2 wake: identical canonical state hash")
+	var manifest := C.digest({"schema": "dws.ecology.a14-2.r2-wake.v1", "seed": 20261011})
+	var a := Checkpoint.create(manifest, replay.state)
+	var b := Checkpoint.create(manifest, continuous)
+	_check(not a.is_empty() and not b.is_empty(), "R2 wake: both checkpoints valid")
+	if not a.is_empty() and not b.is_empty():
+		_check(Checkpoint.serialize(a) == Checkpoint.serialize(b),
+			"R2 wake: identical serialized checkpoints")
+	_check(C.encode(initial) == original and int(initial.tick) == 0,
+		"R2 wake: original frontier unchanged")
+
+
+## R2: Generate a REAL failure at a later canonical tick through the
+## reproductive fixture's bounded population. No runtime or biology test hook:
+## snapshot the frontier two steps before the first natural failure, so that
+## replay step #1 succeeds and step #2 fails inside the replay loop.
+func _r2_late_failure_atomicity() -> void:
+	var cursor := _dynamic_runtime()
+	_check(not cursor.is_empty(), "R2 atomic: reproductive fixture")
+	if cursor.is_empty():
+		return
+	var previous: Dictionary = {}
+	var origin: Dictionary = {}
+	var one_step: Dictionary = {}
+	var causal_error := ""
+	for tick in 32:
+		var advanced := Runtime.step_spatial_parallel_advance(cursor, _options(), 4, 64, 4, 4)
+		if not bool(advanced.get("success", false)):
+			if not previous.is_empty():
+				origin = previous
+				one_step = cursor
+				causal_error = String(advanced.get("error", ""))
+			break
+		previous = cursor
+		cursor = advanced.state
+	_check(not origin.is_empty() and not one_step.is_empty() and not causal_error.is_empty(),
+		"R2 atomic: natural failure found after at least one successful step")
+	if origin.is_empty():
+		return
+	_check(Runtime.validate(origin).is_empty() and Runtime.validate(one_step).is_empty()
+		and int(one_step.tick) == int(origin.tick) + 1,
+		"R2 atomic: two sequential valid canonical frontiers")
+	var first := Runtime.step_spatial_parallel_advance(origin, _options(), 4, 64, 4, 4)
+	_check(bool(first.get("success", false)), "R2 atomic: first replay step succeeds")
+	if not bool(first.get("success", false)):
+		return
+	_check(C.encode(first.state) == C.encode(one_step),
+		"R2 atomic: first step deterministically replays")
+	var before_bytes := C.encode(origin)
+	var before_hash := Runtime.state_hash(origin)
+	var manifest := C.digest({"schema": "dws.ecology.a14-2.r2-fail.v1", "seed": 20261011})
+	var cp_before := Checkpoint.create(manifest, origin)
+	_check(not cp_before.is_empty(), "R2 atomic: baseline checkpoint valid")
+	if cp_before.is_empty():
+		return
+	var advice := Adaptive.create(origin.field, origin.population,
+		[], 20000, 1000, int(origin.tick), int(origin.tick) + 2, 2, 4, 64)
+	_check(not advice.is_empty(), "R2 atomic: two-tick REDUCED replay plan")
+	if advice.is_empty():
+		return
+	_check(advice.mode == Fidelity.MODE_REDUCED
+		and bool(advice.fidelity_plan.global_commit_ready)
+		and int(advice.fidelity_plan.catch_up_ticks) == 2,
+		"R2 atomic: plan must run two replay steps")
+	var result := Runtime.advance_spatial_fidelity(origin, _options(), advice.fidelity_plan, 4, 4)
+	_check(not bool(result.get("success", false))
+		and String(result.get("error", "")) == "RUNTIME_FIDELITY_CATCH_UP:" + causal_error,
+		"R2 atomic: second replay step fails with true canonical error")
+	_check(not result.has("state") and not result.has("canonical_tick"),
+		"R2 atomic: failed replay publishes no partial frontier")
+	_check(C.encode(origin) == before_bytes and Runtime.state_hash(origin) == before_hash,
+		"R2 atomic: original input bytes/hash unchanged after late failure")
+	var cp_after := Checkpoint.create(manifest, origin)
+	_check(not cp_after.is_empty()
+		and Checkpoint.serialize(cp_before) == Checkpoint.serialize(cp_after),
+		"R2 atomic: checkpoint bytes unchanged after late failure")
 
 func _finish() -> void:
 	print("ECO_ARCH2_A14_2_ADAPTIVE checks=%d failed=%d" % [checks, failed])
+	print("ECO_ARCH2_A14_2_ADAPTIVE_R2 " + ("PASS" if failed == 0 else "FAIL"))
 	print("ECO_ARCH2_A14_2_ADAPTIVE " + ("PASS" if failed == 0 else "FAIL"))
 	quit(0 if failed == 0 else 1)

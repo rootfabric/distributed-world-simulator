@@ -1,6 +1,6 @@
-# ECO ARCH2 A14.2 — Adaptive Fidelity R1
+# ECO ARCH2 A14.2 — Adaptive Fidelity R1/R2
 
-Status: IMPLEMENTED / EXACT_PENDING. Base main: `fc69771a6a536463010ca880f03c27b3aa66e45e` (A14.1 merge).
+Status: R2 NARROW TESTS PUBLISHED / FRESH EXACT PENDING. Base main: `fc69771a6a536463010ca880f03c27b3aa66e45e` (A14.1 merge).
 
 ## Contract and intentional limitation
 
@@ -32,3 +32,37 @@ No per-tile resource allocator, no extra ecological truth, no partial canonical 
 ## Current verification
 
 Source published, exact execution not yet confirmed. PR must remain Draft until portable parser smoke and fresh Windows/Linux double-exact results are captured on the final frozen HEAD. No merge without separate human authorization.
+
+
+## A14.2 R2 — narrow adversarial closure (production code unchanged)
+
+- Real REDUCED -> newly active FULL transition: scheduler tick 1/2/3
+  is deliberately held back under reduced cadence=4 with identical canonical
+  state. At tick=3 (before the cadence boundary) one actually occupied tile
+  activates. Advisory mode becomes globally FULL with all 3 debt ticks due.
+  Replay output must match a continuous 3-tick baseline in canonical bytes,
+  Runtime.state_hash and A8 serialized checkpoint, and must leave source
+  untouched. Mode, tile counts and plan validation are checked.
+- Real mid-replay failure: reproductive fixture is stepped to the *first*
+  naturally failing canonical tick under bounded population pressure.
+  Capture the state two ticks earlier; separately confirm tick #1 succeeds
+  and creates the expected next canonical state. Now replay both steps in
+  Runtime.advance_spatial_fidelity. Tick #2 must surface the same underlying
+  error via RUNTIME_FIDELITY_CATCH_UP, return no state or canonical frontier
+  and leave original bytes, state hash and A8 checkpoint unchanged.
+- Previous invalid-workers falsifier is explicitly labelled *entry-only*:
+  it cannot substitute for the new after-one-tick atomicity test.
+- Production Adaptive/Fidelity/Runtime/A5 biology is NOT modified.
+  No artificial runtime fault-injection seam has been introduced.
+
+R2 test emits ECO_ARCH2_A14_2_ADAPTIVE_R2 PASS alongside original
+ECO_ARCH2_A14_2_ADAPTIVE PASS only when all assertions pass.
+
+### Release gates
+
+R2 source publication is not execution evidence. Freeze one exact commit
+and independently demonstrate portable Godot smoke + Linux double exact +
+Windows double exact + A13 regression, then separate fresh independent
+source review and runtime verification. Record HEAD/TREE, Godot hashes,
+logs and exit codes. Remain DRAFT and DO NOT MERGE until all gates succeed.
+A14.3 CPU Budget & Wake Scheduling stays in a separate follow-on branch.
