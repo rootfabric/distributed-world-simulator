@@ -11,7 +11,8 @@ analyzer=importlib.util.module_from_spec(spec);spec.loader.exec_module(analyzer)
 class AnalysisTests(unittest.TestCase):
     def fixture(self, role='server', stall=False, missing_end=False, missing_events=False,
                 move=True, bad_number=False, wrong_identity=False, nonmonotonic=False,
-                with_stages=False, invalid_stage=False):
+                with_stages=False, invalid_stage=False,
+                durable=False, invalid_durable=False, failed_durable=False):
         events=[];n=0
         def emit(kind,data,t,measure=True):
             nonlocal n
@@ -29,6 +30,19 @@ class AnalysisTests(unittest.TestCase):
                         'capture_ms':1,'encode_ms':2,'compact_send_ms':-1 if invalid_stage else 4,
                         'seam_check_send_ms':.1,'send_and_seam_ms':4.1,
                         'seam_sent':1 if i==0 else 0,'seam_skipped_unchanged':2},t+2)
+                if durable and i in (100, 300, 500):
+                    good = not failed_durable
+                    emit('durable_command_stages',{
+                        'command_type':'ITEM_COMMAND',
+                        'player_checksum_ms':0.7,
+                        'item_graph_checksum_ms':0.6,
+                        'outbox_stage_ms':-0.5 if invalid_durable else 1.2,
+                        'checkpoint_total_ms':45.0,
+                        'success':good,'failure_stage':'' if good else 'CHECKPOINT'},t+3)
+                    emit('durable_checkpoint_stages',{
+                        'origin':'COMMAND','wait_async_ms':12.0,
+                        'quiesce_ms':1.5,'persist_atomic_ms':32.0,
+                        'success':good,'failure_stage':'' if good else 'PERSIST_ATOMIC'},t+4)
             elif role!='server' and not missing_events:
                 emit('client_loop',{'state':'CONNECTED','reconcile_failures':0},t+1)
                 emit('remote_visual',{'id':'x','position':[i*.1 if move else 0,0,0],
@@ -45,10 +59,12 @@ class AnalysisTests(unittest.TestCase):
     def evaluate(self,**kwargs):
         role=kwargs.get('role','server')
         require_stages=kwargs.pop('require_snapshot_stages',False)
+        require_durable=kwargs.pop('require_durable_stages',False)
         with tempfile.TemporaryDirectory() as directory:
             path=Path(directory)/'trace.jsonl'
             path.write_text(''.join(json.dumps(x)+'\n' for x in self.fixture(**kwargs)))
-            return analyzer.analyze_trace(path,role,'run',require_snapshot_stages=require_stages)
+            return analyzer.analyze_trace(path,role,'run',require_snapshot_stages=require_stages,
+                                          require_durable_stages=require_durable)
     def test_healthy_server(self):self.assertEqual(self.evaluate()['verdict'],'PASS')
     def test_server_freeze_is_failure(self):self.assertEqual(self.evaluate(stall=True)['verdict'],'FAIL')
     def test_client_freeze_is_failure(self):self.assertEqual(self.evaluate(role='a',stall=True)['verdict'],'FAIL')
@@ -75,6 +91,20 @@ class AnalysisTests(unittest.TestCase):
         self.assertEqual(self.evaluate(with_stages=True,invalid_stage=True,require_snapshot_stages=True)['verdict'],'INCONCLUSIVE')
     def test_r3_invalid_client_stage_is_inconclusive(self):
         self.assertEqual(self.evaluate(role='a',with_stages=True,invalid_stage=True,require_snapshot_stages=True)['verdict'],'INCONCLUSIVE')
+    def test_r4_durable_stages_valid(self):
+        report=self.evaluate(durable=True,require_durable_stages=True)
+        self.assertEqual(report['verdict'],'PASS')
+        self.assertEqual(report['durable_stage_metrics']['checkpoint_wait_async_ms']['count'],3)
+        self.assertEqual(report['durable_stage_metrics']['command_checkpoint_total_ms']['count'],3)
+    def test_r4_missing_durable_stage_not_pass(self):
+        self.assertEqual(self.evaluate(require_durable_stages=True)['verdict'],'INCONCLUSIVE')
+    def test_r4_negative_durable_stage_not_pass(self):
+        self.assertEqual(self.evaluate(durable=True,invalid_durable=True,
+                                       require_durable_stages=True)['verdict'],'INCONCLUSIVE')
+    def test_r4_failed_checkpoint_is_failure(self):
+        report=self.evaluate(durable=True,failed_durable=True,require_durable_stages=True)
+        self.assertEqual(report['verdict'],'FAIL')
+        self.assertEqual(report['durable_stage_failures'],6)
     def test_missing_file_not_pass(self):
         self.assertEqual(analyzer.analyze_trace(Path('/not-a-file.trace'),'a','run')['verdict'],'INCONCLUSIVE')
 
