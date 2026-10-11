@@ -6,7 +6,7 @@
 
 R3 Windows seam-stress: `USER1_SEAM_JOIN_FROZEN_WHILE_PLAYER_REMOTE`, 5/5 запусков, ни одного доказанного A↔B roundtrip. Базовый `user1_product_seam_gameplay_service.gd:join()` блокирует *любого* JOIN при непустом словаре `_seam_coordinators`. `leave()` и `leave_transport_session()` вызывают `_force_all_primary()`, возвращая **других** игроков из secondary, даже если их session не затронут. Это глобальный freeze и чужая authority mutation на локальном транспортном событии.
 
-Фальсификатор `tests/runtime/test_net_smooth1_remote_owner_reconnect.gd`: два игрока A/B, реальное движение A через х=10 в secondary; C JOIN, B leave_transport_session, B reconnect с новой session/epoch, A должен всё время оставаться у secondary с прежними entity, session и epoch. Переподключение самого remote A должно оставаться запрещённым без разрешения его transfer. До исправления: **24 assertions / 5 FAIL** на CHAR2 базовом файле (его Git blob `4dbcc684...` тождественен R3).
+Фальсификатор `tests/runtime/test_net_smooth1_remote_owner_reconnect.gd`: два игрока A/B, реальное движение A через х=10 в secondary; C JOIN, B leave_transport_session, B reconnect с новой session/epoch, A должен всё время оставаться у secondary с прежними entity, session и epoch. Переподключение самого remote A должно оставаться запрещённым без разрешения его transfer. До исправления: **24 assertions / 5 FAIL** на CHAR2 базовом файле (его Git blob `4dbcc684...` тождественен R3). После исправления: **37 assertions / 0 FAIL**, включая фактическое продолжение fixed movement обоих игроков после reconnect B.
 
 ## Выбранная реализация и границы
 

@@ -84,6 +84,24 @@ func _run() -> void:
 	check(String(a_after.get("transport_session_id", "")) == A1, "A session unaffected")
 	check(int(service.get_product_seam_state(A).get("authority_epoch", 0)) == remote_a_epoch, "A remote authority epoch unaffected")
 	check(String(service.get_product_seam_state(A).get("region_id", "")) == "region/user1/b", "A stays secondary after B rejoin")
+	# Both players must remain simulatable immediately after the transport
+	# ownership transition; inspecting snapshots alone is insufficient.
+	tick += 1
+	check_ok(service.advance_fixed_server_tick(tick), "fixed tick continues after B reconnect")
+	seq += 1
+	check_ok(service.simulate_fixed_movement_tick(
+		A, A1, a_epoch, seq,
+		{"move_x":1.0,"move_z":0.0,"look_yaw":0.4251206143591745,
+		 "look_pitch":0.0,"jump_pressed":false,"sprint":true,"delta_seconds":1.0/60.0},
+		1.0/60.0
+	), "A remote fixed movement after B rejoin")
+	check_ok(service.simulate_fixed_movement_tick(
+		B, B2, b_epoch+1, 1,
+		{"move_x":0.0,"move_z":-1.0,"look_yaw":0.0,
+		 "look_pitch":0.0,"jump_pressed":false,"sprint":false,"delta_seconds":1.0/60.0},
+		1.0/60.0
+	), "B fixed movement after reconnect")
+	check(String(service.get_product_seam_state(A).get("region_id", "")) == "region/user1/b", "A remains remote after both movement updates")
 	var snapshot: Dictionary = service.create_snapshot()
 	check_ok(service.validate_snapshot(snapshot), "aggregate snapshot validates with A remote and B rejoined")
 	var durable: Dictionary = service.export_durable_state()
