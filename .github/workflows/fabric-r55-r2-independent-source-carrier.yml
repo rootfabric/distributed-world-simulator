@@ -28,8 +28,9 @@ jobs:
           set -Eeuo pipefail
           mkdir -p export
           git archive --format=tar.gz --output=export/fabric-r55-r2-frozen-source.tar.gz HEAD
+          git bundle create export/fabric-r55-r2-incremental.bundle HEAD ^c5c2190c0f868568112b2a6e0a08e2315fc7a74f
           printf 'HEAD=%s\nTREE=%s\nBASE=%s\n' "$(git rev-parse HEAD)" "$(git rev-parse 'HEAD^{tree}')" "56ab06936b902e8c752be06eafa2e4d16465cc82" > export/IDENTITY.txt
-          (cd export && sha256sum fabric-r55-r2-frozen-source.tar.gz > SHA256SUMS)
+          (cd export && sha256sum fabric-r55-r2-frozen-source.tar.gz fabric-r55-r2-incremental.bundle > SHA256SUMS)
       - uses: actions/upload-artifact@v4
         with:
           name: fabric-r55-r2-frozen-source-f6ef2070
