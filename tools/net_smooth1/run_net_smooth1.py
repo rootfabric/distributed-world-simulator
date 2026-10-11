@@ -324,7 +324,7 @@ def play(args, manifest: dict) -> None:
             dump(root/'r31-roundtrip.json', r31)
             manifest['phase_results'].append({'phase': 'r31_reconnect_roundtrip',
                                               'result': r31['stages']})
-        else:
+        def standard_phase_loop() -> None:
             last_phase=-1;phase_states={}
             while time.monotonic()-started < args.duration:
                 alive();elapsed=time.monotonic()-started
@@ -362,13 +362,12 @@ def play(args, manifest: dict) -> None:
                         stream.write(json.dumps(entry,ensure_ascii=False)+'\n')
                     last_phase=phase
                 time.sleep(.2)
-            for role in processes: (root/role/'measure.end').touch()
-            time.sleep(.5)
-            for role in ('a','b'):
-                bridge(ports[role],token,'movement.stop')
-                dump(root/role/'final-state.json',bridge(ports[role],token,'state.get',{'kind':'automation'}))
-                if args.mode=='gui':
-                    dump(root/role/'screenshot.json',bridge(ports[role],token,'screenshot.capture',{'filename':f'{role}-final.png'}))
+        if args.scenario == 'r31-reconnect-roundtrip':
+            # Keep a full measurement window after the roundtrip stages so the
+            # same GUI run also carries complete perf coverage.
+            standard_phase_loop()
+        else:
+            standard_phase_loop()
             # Reconnect is outside the perf window; it still must execute and recover.
             old=bridge(ports['b'],token,'state.get',{'kind':'automation'})['automation']
             reconnect=command('b','network.reconnect')
@@ -378,14 +377,13 @@ def play(args, manifest: dict) -> None:
                                              'before_epoch':old.get('ownership_epoch'),'after_epoch':after.get('ownership_epoch')})
             if after.get('ownership_epoch',0)<=old.get('ownership_epoch',0):
                 raise RuntimeError('reconnect did not advance ownership epoch')
-        if args.scenario == 'r31-reconnect-roundtrip':
-            for role in processes: (root/role/'measure.end').touch()
-            time.sleep(.5)
-            for role in ('a','b'):
-                bridge(ports[role],token,'movement.stop')
-                dump(root/role/'final-state.json',bridge(ports[role],token,'state.get',{'kind':'automation'}))
-                if args.mode=='gui':
-                    dump(root/role/'screenshot.json',bridge(ports[role],token,'screenshot.capture',{'filename':f'{role}-final.png'}))
+        for role in processes: (root/role/'measure.end').touch()
+        time.sleep(.5)
+        for role in ('a','b'):
+            bridge(ports[role],token,'movement.stop')
+            dump(root/role/'final-state.json',bridge(ports[role],token,'state.get',{'kind':'automation'}))
+            if args.mode=='gui':
+                dump(root/role/'screenshot.json',bridge(ports[role],token,'screenshot.capture',{'filename':f'{role}-final.png'}))
         manifest['completed']=True
     except Exception as exc:
         manifest['errors'].append(f'{type(exc).__name__}: {exc}')
