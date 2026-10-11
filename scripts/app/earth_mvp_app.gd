@@ -481,6 +481,79 @@ func automation_set_movement_intent(params: Dictionary) -> Dictionary:
 	}
 
 
+# NET-SMOOTH1 R4.0 durable-workload diagnostics: a strict allowlist of real,
+# authoritative, reversible-free Item Graph commands submitted through the
+# ordinary blocking M4 client seam. No direct world-state writes, no local
+# coordinate substitution, and rejections are never treated as commits.
+const AUTOMATION_ITEM_COMMAND_ALLOWLIST := {
+	"inventory.select_hotbar": ["selected_hotbar_index"],
+	"inventory.permission_probe": ["target_player_id"],
+}
+
+
+func automation_submit_item_command(params: Dictionary) -> Dictionary:
+	if not _m3_attached or m3_multiplayer_client_runtime == null:
+		return {"success": false, "error_code": "AUTOMATION_NETWORK_RUNTIME_NOT_READY"}
+	if not m3_multiplayer_client_runtime.has_method("execute_item_command_blocking"):
+		return {"success": false, "error_code": "AUTOMATION_ITEM_COMMAND_NOT_SUPPORTED"}
+	var command_type := String(params.get("command_type", "")).strip_edges()
+	if command_type.is_empty():
+		return {"success": false, "error_code": "AUTOMATION_ITEM_COMMAND_TYPE_REQUIRED"}
+	if not AUTOMATION_ITEM_COMMAND_ALLOWLIST.has(command_type):
+		return {"success": false, "error_code": "AUTOMATION_ITEM_COMMAND_NOT_ALLOWED"}
+	var payload_value = params.get("payload", {})
+	if not payload_value is Dictionary:
+		return {"success": false, "error_code": "AUTOMATION_ITEM_PAYLOAD_REQUIRED"}
+	var payload: Dictionary = payload_value
+	var allowed_fields: Array = AUTOMATION_ITEM_COMMAND_ALLOWLIST[command_type]
+	for field in payload.keys():
+		if field not in allowed_fields:
+			return {
+				"success": false,
+				"error_code": "AUTOMATION_ITEM_PAYLOAD_FIELD_NOT_ALLOWED",
+				"details": {"field": String(field)},
+			}
+	for field in allowed_fields:
+		if not payload.has(field):
+			return {
+				"success": false,
+				"error_code": "AUTOMATION_ITEM_PAYLOAD_FIELD_REQUIRED",
+				"details": {"field": String(field)},
+			}
+	if command_type == "inventory.select_hotbar":
+		var index_value = payload.get("selected_hotbar_index")
+		if typeof(index_value) not in [TYPE_INT, TYPE_FLOAT]:
+			return {"success": false, "error_code": "AUTOMATION_ITEM_PAYLOAD_FIELD_INVALID"}
+	var operation_id := String(params.get("operation_id", "")).strip_edges()
+	var before_revision := int(
+		m3_multiplayer_client_runtime.get_item_graph_snapshot().get("revision", -1)
+	)
+	var result: Dictionary = m3_multiplayer_client_runtime.execute_item_command_blocking(
+		command_type,
+		payload.duplicate(true),
+		operation_id
+	)
+	var details: Dictionary = Dictionary(result.get("details", {}))
+	var wire_result: Dictionary = Dictionary(details.get("result", {}))
+	var wire_details: Dictionary = Dictionary(wire_result.get("details", {}))
+	return {
+		"success": bool(result.get("success", false)),
+		"error_code": String(result.get("error_code", "")) if not bool(result.get("success", false)) else "",
+		"details": {
+			"operation_id": String(
+				details.get("operation_id", result.get("operation_id", operation_id))
+			),
+			"command_type": command_type,
+			"replay": bool(wire_result.get("replay", false))
+				or bool(wire_details.get("replay", false)),
+			"item_graph_revision_before": before_revision,
+			"item_graph_revision_after": int(
+				m3_multiplayer_client_runtime.get_item_graph_snapshot().get("revision", -1)
+			),
+		},
+	}
+
+
 func automation_stop_movement() -> Dictionary:
 	var was_enabled := _automation_movement_enabled
 	_automation_movement_enabled = false
