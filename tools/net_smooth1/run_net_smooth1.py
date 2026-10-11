@@ -22,6 +22,8 @@ from live2_automation_client import request
 from analyze_net_smooth1 import write_report
 
 TESTS = [
+ 'tests/network/test_net_smooth1_r31_compact_wire_checksum.gd',
+ 'tests/runtime/test_net_smooth1_r41_p1_fifo_disconnect_repair.gd',
  'tests/runtime/test_net_smooth1_r41_pending_durable_gate.gd',
  'tests/network/test_net_smooth1_seam_change_delivery.gd',
  'tests/runtime/test_net_smooth1_remote_owner_reconnect.gd',
