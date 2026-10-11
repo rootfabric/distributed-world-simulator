@@ -1,0 +1,42 @@
+name: FABRIC R5.5 R3 Frozen Source Carrier
+on:
+  push:
+    branches:
+      - verify/fabric-r55-r3-source-325e5986-r1
+permissions:
+  contents: read
+jobs:
+  frozen-source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 325e598665414a7ea8e7c5240c52d2029b113410
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Assert exact frozen product identity and additive scope
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$(git rev-parse HEAD)" = "325e598665414a7ea8e7c5240c52d2029b113410"
+          test "$(git rev-parse 'HEAD^{tree}')" = "1b9e5936eb833c750a62aa311dbf021760cc280f"
+          test -z "$(git status --porcelain=v1 --untracked-files=no)"
+          BASE=56ab06936b902e8c752be06eafa2e4d16465cc82
+          test "$(git merge-base HEAD "$BASE")" = "$BASE"
+          git diff --check "$BASE" HEAD
+          test -z "$(git diff --name-only "$BASE" HEAD -- 'scripts/research/fabric_bake0/r5_3_*' 'scripts/research/fabric_bake0/r5_4_*' 'scripts/research/fabric_bake0/r5_indexed_sparse_damage_lifecycle_v1.gd' 'scripts/research/fabric_bake0/r5_range_aggregate_index_v1.gd' 'tests/research/fabric_bake0/fabric_r5_3_*' 'tests/research/fabric_bake0/fabric_r5_4_*')"
+      - name: Publish exact source and incremental Git bundle
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          mkdir -p artifact
+          git archive --format=tar.gz --output=artifact/fabric-r55-r3-source.tar.gz HEAD
+          git bundle create artifact/fabric-r55-r3-incremental.bundle HEAD ^c5c2190c0f868568112b2a6e0a08e2315fc7a74f
+          printf 'HEAD=%s\nTREE=%s\nBASE=%s\n' "$(git rev-parse HEAD)" "$(git rev-parse 'HEAD^{tree}')" "56ab06936b902e8c752be06eafa2e4d16465cc82" > artifact/IDENTITY.txt
+          (cd artifact && sha256sum fabric-r55-r3-source.tar.gz fabric-r55-r3-incremental.bundle > SHA256SUMS)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fabric-r55-r3-frozen-source-325e5986
+          path: artifact/**
+          retention-days: 30
