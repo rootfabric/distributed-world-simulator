@@ -199,6 +199,11 @@ static func _first_revision_difference(left: Variant, right: Variant, path: Stri
 		var right_map: Dictionary = right
 		var keys: Array = left_map.keys()
 		keys.sort()
+		# Prefer the causal field over a nested derived checksum.
+		# The checksum remains part of the canonical semantic hash.
+		if keys.has("checksum"):
+			keys.erase("checksum")
+			keys.append("checksum")
 		for index in range(mini(keys.size(), 256)):
 			var key: Variant = keys[index]
 			var next_path: String = "%s.%s" % [path, _revision_diagnostic_key(String(key))]
