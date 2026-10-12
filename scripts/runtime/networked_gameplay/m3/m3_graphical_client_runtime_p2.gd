@@ -1,5 +1,7 @@
 extends "res://scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime_nx6.gd"
 
+const SnapshotWireProbeP2 = preload("res://scripts/network/smoothness/net_full_snapshot_wire_probe.gd")
+
 # INT0 composition boundary:
 # - the inherited script remains the accepted NX6 transport, fixed-tick,
 #   prediction, reconciliation and predicted-item runtime;
@@ -34,6 +36,7 @@ func _handle_join_ack(payload: Dictionary) -> void:
 func _accept_snapshot(snapshot: Dictionary) -> void:
 	var accepted: Dictionary = _replica.accept_snapshot(snapshot)
 	if not bool(accepted.get("success", false)):
+		SnapshotWireProbeP2.capture("CLIENT_FULL_SNAPSHOT_REJECTED_AFTER_FRAME", snapshot)
 		_last_error_code = String(
 			accepted.get("error_code", "M3_SNAPSHOT_REJECTED")
 		)
