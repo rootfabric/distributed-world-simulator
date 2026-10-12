@@ -92,8 +92,7 @@ jobs:
               throw ("P1A_SCRIPT_ERROR:"+$test)
             }
           }
-          python -m unittest discover -s tests/tools -p test_net_smooth1_analyzer.py -v *>
-            artifacts\net-smooth1\r42-p1a-exact\analyzer.log
+          python -m unittest discover -s tests/tools -p test_net_smooth1_analyzer.py -v *> artifacts\net-smooth1\r42-p1a-exact\analyzer.log
           if($LASTEXITCODE -ne 0) {throw 'P1A_ANALYZER_RED'}
           if((git status --porcelain --untracked-files=no)) {throw 'P1A_TRACKED_SOURCE_CHANGED'}
 
