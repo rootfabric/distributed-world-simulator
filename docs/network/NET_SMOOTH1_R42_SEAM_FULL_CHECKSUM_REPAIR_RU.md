@@ -72,6 +72,20 @@ foreach ($n in 1..10) {
 Remove-Item Env:DWS_NET_FULL_CHECKSUM_PROBE -ErrorAction SilentlyContinue
 ```
 
+Дополнительный независимый Python-инструмент (без расширения прежних analyzer 20/20) агрегирует SHA-трейсы по ролям, отказывается объявлять PASS при отсутствии JOIN probes, trace `end` или потере данных и **не пишет raw payload**. Его unit tests обязательны:
+
+```powershell
+python -m unittest discover -s tests/tools -p test_net_smooth1_full_snapshot_probe.py -v
+if ($LASTEXITCODE -ne 0) { throw 'FORENSIC_ANALYZER_TESTS_RED' }
+foreach ($n in 1..10) {
+  $Run = "$WT\\artifacts\\net-smooth1\\r42-checksum-durable-$n"
+  python tools/net_smooth1/report_full_snapshot_probe.py --run $Run --out "$Run\\full-wire-probe-report.json"
+  Write-Host "forensics-durable-$n exit=$LASTEXITCODE (0=SHA_MATCH_ONLY, 1=MISMATCH, 2=INCONCLUSIVE)"
+}
+```
+
+Выход `PROBE_HASHES_MATCH_NOT_PRODUCT_PASS` относится только к forensic fingerprints. Он не отменяет GUI FAIL (p99, connectivity), ограничение Construction durable, ULP/falsifier или Project Control gate.
+
 Каждый `FAIL` или `INCONCLUSIVE` сохранять как отдельную запись, даже если общая функциональность пройдена. Сравнить `declared_sha256`, `source_sha256`, `after_json_sha256` между SERVER/JOIN и CLIENT/JOIN после frame — **сопоставлять по SHA**, а не вычитать wall-clock разных процессов. Сохранять trace `end` и `dropped=0`, original log + evidence SHA. Проверить не только B на reconnect (D2/D7/D9/D10), но A full snapshot (D5), старые r31 compact/full falsifiers, F1/F2, M6 FIFO/fatal.
 
 ## Приёмка
