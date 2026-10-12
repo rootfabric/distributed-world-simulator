@@ -1,6 +1,7 @@
 extends Node
 
 const SmoothTrace = preload("res://scripts/network/smoothness/net_smooth_trace.gd")
+const FullSnapshotWireProbe = preload("res://scripts/network/smoothness/net_full_snapshot_wire_probe.gd")
 
 signal ready_for_clients(report: Dictionary)
 
@@ -529,10 +530,12 @@ func _handle_join(peer_id: String, session_id: String, payload: Dictionary) -> v
 		operation_id, peer_id, session_id, logical_id, join_ownership_epoch, result
 	):
 		return
+	var join_snapshot: Dictionary = Dictionary(result.get("details", {}).get("snapshot", {}))
+	FullSnapshotWireProbe.capture("SERVER_JOIN_ACK_BEFORE_FRAME", join_snapshot)
 	var join_sent := _send_on_channel(peer_id, "JOIN_ACK", {
 		"operation_id": operation_id,
 		"player": result.get("details", {}).get("player", {}),
-		"snapshot": result.get("details", {}).get("snapshot", {}),
+		"snapshot": join_snapshot,
 		"item_graph_snapshot": _service.create_canonical_item_graph_snapshot(),
 	}, RealtimeChannelPolicy.RESYNC, "RELIABLE_ORDERED")
 	if join_sent:
@@ -1315,6 +1318,7 @@ func _broadcast_snapshot(
 	delivery_mode: String = "RELIABLE_ORDERED"
 ) -> void:
 	var snapshot: Dictionary = _service.create_snapshot()
+	FullSnapshotWireProbe.capture("SERVER_GAMEPLAY_SNAPSHOT_BEFORE_FRAME", snapshot)
 	for peer_id_value in _peer_to_player.keys():
 		if _send_on_channel(String(peer_id_value), "GAMEPLAY_SNAPSHOT", {"reason": reason, "snapshot": snapshot}, channel, delivery_mode):
 			_broadcasts += 1
