@@ -1,0 +1,118 @@
+name: NET-SMOOTH1 R4.2 P1-A Windows Proof
+
+on:
+  push:
+    branches:
+      - feature/net-smooth1-r42-p1-async-durable-design-r1
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: net-smooth-r42-p1a-exact-windows
+  cancel-in-progress: true
+
+jobs:
+  proof-windows:
+    name: R4.2 P1-A exact Windows source and real M6 worker
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 40
+    env:
+      BREAKPOINT_RUNTIME_DISABLED: '1'
+      GODOT_SILENCE_ROOT_WARNING: '1'
+      PYTHONUTF8: '1'
+    steps:
+      - name: Checkout exact candidate
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Freeze identity / canonical Godot double
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $godot='C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe'
+          if (-not (Test-Path $godot)) { throw 'P1A_GODOT_BINARY_MISSING' }
+          $version=(& $godot --version | Out-String).Trim()
+          $sha=(Get-FileHash $godot -Algorithm SHA256).Hash.ToLowerInvariant()
+          if($version -ne '4.7.1.stable.double.custom_build.a13da4feb') {
+            throw "P1A_GODOT_VERSION_MISMATCH:$version"
+          }
+          if($sha -ne '3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5') {
+            throw "P1A_GODOT_SHA_MISMATCH:$sha"
+          }
+          if((git status --porcelain --untracked-files=no)) {throw 'P1A_DIRTY_SOURCE'}
+          New-Item -ItemType Directory -Force artifacts\net-smooth1\r42-p1a-exact | Out-Null
+          [ordered]@{HEAD=(git rev-parse HEAD).Trim();TREE=(git rev-parse 'HEAD^{tree}').Trim();
+            version=$version;godot_sha256=$sha;isolation='P1A_PROOF_NOT_PRODUCTION'} |
+            ConvertTo-Json | Set-Content artifacts\net-smooth1\r42-p1a-exact\identity.json -Encoding UTF8
+
+      - name: Cold import, fail closed on GDScript parse errors
+        shell: pwsh
+        timeout-minutes: 12
+        run: |
+          $ErrorActionPreference='Stop'
+          $godot='C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe'
+          $out='artifacts\net-smooth1\r42-p1a-exact\import.log'
+          & $godot --headless --editor --path . --import --quit *> $out
+          if($LASTEXITCODE -ne 0) {Get-Content $out -Tail 150;throw 'P1A_IMPORT_FAILED'}
+          if(Select-String -Path $out -Pattern 'SCRIPT ERROR:|Parse Error:|Compile Error:' -Quiet) {
+            Get-Content $out -Tail 150
+            throw 'P1A_IMPORT_PARSERED'
+          }
+
+      - name: Exact proof, FIFO, M6 and USER1 neighboring regressions
+        shell: pwsh
+        timeout-minutes: 19
+        run: |
+          $ErrorActionPreference='Stop'
+          $godot='C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe'
+          $tests=@(
+            'tests/runtime/test_net_smooth1_r42_p1_async_durable_proof.gd',
+            'tests/runtime/test_net_smooth1_r41_pending_durable_gate.gd',
+            'tests/runtime/test_net_smooth1_r41_p1_fifo_disconnect_repair.gd',
+            'tests/runtime/test_net_smooth1_async_checkpoint.gd',
+            'tests/runtime/test_m6_dedicated_recovery_contracts.gd',
+            'tests/runtime/test_net_smooth1_r42_revision_fence_diagnostics.gd',
+            'tests/runtime/test_v0_user1_product_seam_bridge.gd'
+          )
+          foreach($test in $tests) {
+            $name=(Split-Path $test -Leaf) + '.log'
+            $out=Join-Path 'artifacts\net-smooth1\r42-p1a-exact' $name
+            & $godot --headless --path . --script ("res://"+$test) *> $out
+            if($LASTEXITCODE -ne 0) {
+              Get-Content $out -Tail 150
+              throw ("P1A_EXACT_TEST_RED:"+$test)
+            }
+            if(Select-String -Path $out -Pattern 'SCRIPT ERROR:|Parse Error:|Compile Error:|ERROR:' -Quiet) {
+              Get-Content $out -Tail 150
+              throw ("P1A_SCRIPT_ERROR:"+$test)
+            }
+          }
+          python -m unittest discover -s tests/tools -p test_net_smooth1_analyzer.py -v *>
+            artifacts\net-smooth1\r42-p1a-exact\analyzer.log
+          if($LASTEXITCODE -ne 0) {throw 'P1A_ANALYZER_RED'}
+          if((git status --porcelain --untracked-files=no)) {throw 'P1A_TRACKED_SOURCE_CHANGED'}
+
+      - name: SHA256 evidence
+        if: always()
+        shell: pwsh
+        run: |
+          $dir='artifacts\net-smooth1\r42-p1a-exact'
+          New-Item -ItemType Directory -Force $dir | Out-Null
+          Get-ChildItem $dir -File -ErrorAction SilentlyContinue |
+            Where-Object { $_.Name -ne 'hashes.json' } |
+            ForEach-Object { [ordered]@{file=$_.Name; sha256=(Get-FileHash $_.FullName -Algorithm SHA256).Hash} } |
+            ConvertTo-Json -Depth 4 | Set-Content (Join-Path $dir 'hashes.json') -Encoding UTF8
+
+      - name: Persist immutable Windows P1-A evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: net-smooth-r42-p1a-windows-${{ github.sha }}-${{ github.run_id }}
+          path: artifacts/net-smooth1/r42-p1a-exact/
+          if-no-files-found: error
+          retention-days: 21
