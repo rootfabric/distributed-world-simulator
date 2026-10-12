@@ -1,0 +1,29 @@
+name: NET-SMOOTH1 R4.2 Wire Forensics
+
+on:
+  push:
+    branches:
+      - repair/net-smooth1-r42-p0-seam-full-checksum-r1
+  pull_request:
+    paths:
+      - "tools/net_smooth1/report_full_snapshot_probe.py"
+      - "tests/tools/test_net_smooth1_full_snapshot_probe.py"
+      - ".github/workflows/net-smooth-r42-wire-forensics.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  python-forensic-selftests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Exact metadata-only checksum trace selftests (not product acceptance)
+        run: python -m unittest discover -s tests/tools -p test_net_smooth1_full_snapshot_probe.py -v
+      - name: Existing NET-SMOOTH1 analyzer regression
+        run: python -m unittest discover -s tests/tools -p test_net_smooth1_analyzer.py -v
