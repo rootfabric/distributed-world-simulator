@@ -65,7 +65,9 @@ func submit(authority_state: Dictionary, replay_state: Dictionary,
 
 func poll_completed() -> Dictionary:
 	_mutex.lock()
-	var result := _completion
+	# P1-B: detach even the bounded worker-completion metadata. The owning
+	# main thread cannot retain a mutable alias of writer-owned state.
+	var result: Dictionary = _completion.duplicate(true)
 	if not result.is_empty():
 		_completion = {}
 		_busy = false
