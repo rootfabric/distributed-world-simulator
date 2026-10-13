@@ -154,6 +154,31 @@ func _test_real_m3_item_and_crash_safe_replay() -> void:
 	check(int(service.get_report().get("revision", -1)) == revision_before_second,
 		"rejected concurrent ITEM command never advances revision")
 
+	# The actual V0 subclass used by Earth clients must not bypass the
+	# pending ITEM gate through Construction or ResourceMining.
+	var construction_attempt := "operation/net-r42-p1b/construction/rejected"
+	runtime.call("_handle_construction_command", PEER, SESSION, {
+		"operation_id": construction_attempt,
+		"command": {"command_type": "construction.test"},
+	})
+	check(fake_bridge.submitted == 0,
+		"V0 Construction gateway cannot apply while M6 ITEM is pending")
+	var resource_attempt := "operation/net-r42-p1b/resource/rejected"
+	var revision_before_resource := int(service.get_report().get("revision", -1))
+	runtime.call("_handle_resource_command", PEER, SESSION, {
+		"operation_id": resource_attempt, "ownership_epoch": 1,
+		"payload": {"resource_node_id": "resource/invalid", "requested_units": 1},
+	})
+	check(not bool(service.has_durable_replay_operation(resource_attempt)),
+		"RESOURCE_COMMAND cannot create canonical replay over pending ITEM")
+	check(int(service.get_report().get("revision", -1)) == revision_before_resource,
+		"RESOURCE_COMMAND cannot advance authority under ITEM gate")
+	runtime.call("_handle_resource_resync_request", PEER, SESSION, {})
+	check(Dictionary(runtime.get("_p1b_resource_resync_waiters")).size() == 1,
+		"V0 ResourceMining resync is deferred with peer/session fence")
+	check(int(runtime.get("_resource_snapshots_published")) == 0,
+		"no ResourceMining snapshot is published before durable ITEM")
+
 	# Simulated transport drop while the original ITEM commit may still be
 	# in flight; no ACK to the obsolete peer, only M6 replay on reconnect.
 	runtime.call("_handle_disconnect", PEER, SESSION)
