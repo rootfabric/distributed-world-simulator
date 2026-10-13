@@ -1110,6 +1110,16 @@ func _handle_item_command(peer_id: String, session_id: String, payload: Dictiona
 		_reject_uncommitted_command(peer_id, operation_id, "ITEM_COMMAND", _gate_reject_code())
 		return
 	var item_epoch := _stored_ownership_epoch(logical_id, int(payload.get("ownership_epoch", 0)))
+	var p1b_reserved := false
+	if _p1b_item_async_enabled and not _service.has_durable_replay_operation(operation_id):
+		var reservation: Dictionary = _p1b_item_async_owner.reserve_mutation(
+			operation_id, peer_id, session_id, logical_id, item_epoch, command_type
+		)
+		if not bool(reservation.get("success", false)):
+			_reject_uncommitted_command(peer_id, operation_id, command_type,
+				String(reservation.get("error_code", "P1B_ITEM_RESERVATION_FAILED")))
+			return
+		p1b_reserved = true
 	var stage_context := _stall_context(peer_id, operation_id, command_type)
 	var before_probe := _stall_enter("ITEM:BEFORE_SNAPSHOT", stage_context)
 	var before_item_snapshot: Dictionary = _service.create_canonical_item_graph_snapshot()
