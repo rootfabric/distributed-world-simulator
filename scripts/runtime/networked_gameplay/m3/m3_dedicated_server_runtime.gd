@@ -1,5 +1,9 @@
 extends "res://scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime_p2.gd"
 
+# P1-B R2: V0 resource resync readers also respect ITEM commit visibility.
+const P1B_MAX_RESOURCE_RESYNC_WAITERS := 32
+var _p1b_resource_resync_waiters: Dictionary = {}
+
 const ResourceMiningDelta = preload(
 	"res://scripts/runtime/networked_gameplay/p3/resource_mining_delta.gd"
 )
