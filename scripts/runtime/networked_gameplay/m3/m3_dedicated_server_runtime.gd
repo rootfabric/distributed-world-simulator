@@ -486,6 +486,15 @@ func _handle_resource_resync_request(
 	if not _peer_to_player.has(peer_id) or String(_peer_to_session.get(peer_id, "")) != session_id:
 		return
 	_resource_resync_requests += 1
+	if not _p1b_item_pending.is_empty():
+		if (
+			_p1b_resource_resync_waiters.has(peer_id)
+			or _p1b_resource_resync_waiters.size() < P1B_MAX_RESOURCE_RESYNC_WAITERS
+		):
+			_p1b_resource_resync_waiters[peer_id] = session_id
+		else:
+			_last_error_code = "P1B_RESOURCE_RESYNC_QUEUE_FULL"
+		return
 	_send_resource_snapshot(peer_id, "EXPLICIT_RESYNC")
 
 
