@@ -1354,6 +1354,78 @@ func _p1b_finish_item_committed(accepted: Dictionary, publish: bool) -> void:
 	_p1b_publish_committed_item(pending)
 
 
+func _p1b_publish_committed_item(pending: Dictionary) -> void:
+	var operation_id := String(pending.get("operation_id", ""))
+	var peer_id := String(pending.get("peer_id", ""))
+	var session_id := String(pending.get("session_id", ""))
+	var player_id := String(pending.get("logical_id", ""))
+	var ownership_epoch := int(pending.get("ownership_epoch", 0))
+	var command_type := String(pending.get("command_type", ""))
+	var result: Dictionary = Dictionary(pending.get("result", {})).duplicate(true)
+	var before_item: Dictionary = Dictionary(pending.get("before_item", {}))
+	var after_item: Dictionary = _service.create_canonical_item_graph_snapshot()
+	var delta_result: Dictionary = CanonicalItemGraphDelta.create(before_item, after_item)
+	var item_delta: Dictionary = {}
+	var delta_failed := not bool(delta_result.get("success", false))
+	if delta_failed:
+		_item_graph_delta_build_failures += 1
+		_last_error_code = "ITEM_GRAPH_DELTA_BUILD_FAILED"
+	else:
+		item_delta = Dictionary(delta_result.get("details", {}).get("delta", {})).duplicate(true)
+	# FIFO ACK is exposed ONLY after the exact repository commit, and never
+	# to an old transport session or a replacement ownership epoch.
+	var ready: Dictionary = _p1b_item_async_owner.peek_publication(
+		peer_id, session_id, player_id, ownership_epoch
+	)
+	var delivered := false
+	if bool(ready.get("success", false)):
+		if String(_peer_to_session.get(peer_id, "")) == session_id:
+			delivered = _send_result(peer_id, operation_id, command_type, result, item_delta)
+		var enqueued: Dictionary = _p1b_item_async_owner.mark_enqueued(
+			operation_id, peer_id, session_id, player_id, ownership_epoch, delivered
+		)
+		if not bool(enqueued.get("success", false)):
+			_enter_persistence_failure("P1B_ITEM_ACK_ENQUEUE_FENCE_FAILED")
+			return
+		if delivered:
+			_mark_operation_delivered(operation_id)
+	else:
+		# The command completed after disconnect; leave its canonical
+		# replay-outbox record durable, with no false delivery marker.
+		_p1b_item_async_owner.discard_stale_session(peer_id, session_id)
+	if delta_failed:
+		_broadcast_item_snapshot("P1B_ITEM_DELTA_FALLBACK")
+	else:
+		_broadcast_item_delta(item_delta, peer_id, command_type)
+	_broadcast_snapshot("ITEM_GRAPH_UPDATED", RealtimeChannelPolicy.RESYNC, "RELIABLE_ORDERED")
+	_capture_two_connected_checksum()
+	_p1b_flush_item_resync_waiters()
+	_write_report("READY", false)
+
+
+func _p1b_flush_item_resync_waiters() -> void:
+	if _p1b_item_resync_waiters.is_empty():
+		return
+	# Snapshot is created only AFTER the ITEM generation was committed.
+	var snapshot: Dictionary = _service.create_canonical_item_graph_snapshot()
+	var waiters: Dictionary = _p1b_item_resync_waiters.duplicate(true)
+	_p1b_item_resync_waiters.clear()
+	for peer_id_value in waiters.keys():
+		var peer_id := String(peer_id_value)
+		var request: Dictionary = Dictionary(waiters[peer_id])
+		if String(_peer_to_session.get(peer_id, "")) != String(request.get("session_id", "")):
+			continue
+		if _send_on_channel(
+			peer_id, "ITEM_GRAPH_SNAPSHOT",
+			{
+				"reason": "P1B_AFTER_DURABLE_RESYNC",
+				"operation_id": String(request.get("operation_id", "")),
+				"snapshot": snapshot,
+			}, RealtimeChannelPolicy.RESYNC, "RELIABLE_ORDERED"
+		):
+			_item_graph_full_snapshots_published += 1
+
+
 func _handle_construction_command(peer_id: String, session_id: String, payload: Dictionary) -> void:
 	var operation_id := String(payload.get("operation_id", "")).strip_edges()
 	if not _peer_to_player.has(peer_id) or String(_peer_to_session.get(peer_id, "")) != session_id:
