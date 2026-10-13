@@ -1274,6 +1274,86 @@ func _p1b_begin_item_async_commit(
 	return true
 
 
+func _p1b_poll_item_async_commit() -> void:
+	if _p1b_item_pending.is_empty() or _p1b_item_async_owner == null:
+		return
+	var committed: Dictionary = _p1b_item_async_owner.poll_command_completion()
+	if not bool(committed.get("success", false)):
+		_last_persistence_error_details = committed.duplicate(true)
+		_enter_persistence_failure(
+			String(committed.get("error_code", "P1B_ITEM_ATOMIC_COMMIT_FAILED"))
+		)
+		return
+	if bool(committed.get("details", {}).get("pending", false)):
+		return
+	if not bool(committed.get("details", {}).get("committed", false)):
+		_enter_persistence_failure("P1B_ITEM_COMPLETION_NOT_DURABLE")
+		return
+	_p1b_finish_item_committed(committed, true)
+
+
+func _p1b_finish_item_shutdown_barrier() -> void:
+	# This is the ONLY intentional blocking wait: explicit stop/shutdown.
+	if _p1b_item_pending.is_empty():
+		return
+	if _movement_checkpoint_writer == null or _p1b_item_async_owner == null:
+		_enter_persistence_failure("P1B_ITEM_SHUTDOWN_WRITER_MISSING")
+		return
+	var completed: Dictionary = _movement_checkpoint_writer.wait_completed()
+	if completed.is_empty():
+		_enter_persistence_failure("P1B_ITEM_SHUTDOWN_COMPLETION_MISSING")
+		return
+	var accepted: Dictionary = _p1b_item_async_owner.accept_command_completion(completed)
+	if not bool(accepted.get("success", false)):
+		_last_persistence_error_details = accepted.duplicate(true)
+		_enter_persistence_failure(
+			String(accepted.get("error_code", "P1B_ITEM_SHUTDOWN_COMMIT_FAILED"))
+		)
+		return
+	_p1b_finish_item_committed(accepted, false)
+
+
+func _p1b_finish_item_committed(accepted: Dictionary, publish: bool) -> void:
+	if _p1b_item_pending.is_empty() or not bool(accepted.get("details", {}).get("committed", false)):
+		_enter_persistence_failure("P1B_ITEM_COMMITTED_RESULT_REQUIRED")
+		return
+	var pending: Dictionary = _p1b_item_pending.duplicate(true)
+	var generation := int(accepted.get("details", {}).get("generation", -1))
+	if (
+		generation != _checkpoint_generation + 1
+		or generation != int(_durable_ack_gate.get_report().get("generation", -2))
+	):
+		_enter_persistence_failure("P1B_ITEM_COMMITTED_GENERATION_MISMATCH")
+		return
+	_checkpoint_generation = generation
+	_last_checkpoint_operation_id = String(pending.get("operation_id", ""))
+	_durable_commits += 1
+	_p1b_item_commits += 1
+	var worker_result: Dictionary = _movement_checkpoint_writer.get("unused") if false else {}
+	_p1b_item_last_ack_wait_ms = float(
+		Time.get_ticks_usec() - int(pending.get("started_us", Time.get_ticks_usec()))
+	) / 1000.0
+	# Later movement mutations happened AFTER frozen capture; keep their
+	# dirty marker for a subsequent periodic checkpoint.
+	_p1b_item_pending.clear()
+	if SmoothTrace.enabled():
+		SmoothTrace.emit("p1b_item_async_stages", {
+			"stage": "DURABLE_COMMIT",
+			"operation_hash": String(pending.get("operation_id", "")).sha256_text().left(16),
+			"generation": generation,
+			"ack_wait_ms": _p1b_item_last_ack_wait_ms,
+			"held_snapshot_count": _p1b_item_precommit_snapshot_holds,
+		})
+	if not publish:
+		# Graceful shutdown never lies about delivery to the vanished peer.
+		_p1b_item_async_owner.discard_stale_session(
+			String(pending.get("peer_id", "")), String(pending.get("session_id", ""))
+		)
+		_p1b_item_resync_waiters.clear()
+		return
+	_p1b_publish_committed_item(pending)
+
+
 func _handle_construction_command(peer_id: String, session_id: String, payload: Dictionary) -> void:
 	var operation_id := String(payload.get("operation_id", "")).strip_edges()
 	if not _peer_to_player.has(peer_id) or String(_peer_to_session.get(peer_id, "")) != session_id:
