@@ -518,6 +518,18 @@ func _send_resource_snapshot(peer_id: String, reason: String) -> bool:
 	return sent
 
 
+func _p1b_flush_resource_resync_waiters() -> void:
+	if not _p1b_item_pending.is_empty() or _p1b_resource_resync_waiters.is_empty():
+		return
+	var queued: Dictionary = _p1b_resource_resync_waiters.duplicate(true)
+	_p1b_resource_resync_waiters.clear()
+	for peer_value in queued.keys():
+		var peer_id := String(peer_value)
+		if String(_peer_to_session.get(peer_id, "")) != String(queued[peer_id]):
+			continue
+		_send_resource_snapshot(peer_id, "P1B_AFTER_ITEM_COMMIT")
+
+
 func _broadcast_resource_snapshot(reason: String) -> void:
 	for peer_id_value in _peer_to_player.keys():
 		if _send_resource_snapshot(String(peer_id_value), reason):
