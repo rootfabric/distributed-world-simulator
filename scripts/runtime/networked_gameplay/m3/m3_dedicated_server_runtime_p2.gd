@@ -303,6 +303,9 @@ func _process(delta: float) -> void:
 	if not _configured or _boundary == null or _fatal_persistence_failure:
 		return
 	var smooth_started := Time.get_ticks_usec()
+	_p1b_poll_item_async_commit()
+	if _fatal_persistence_failure:
+		return
 	_complete_async_movement_checkpoint(false)
 	if _fatal_persistence_failure:
 		return
