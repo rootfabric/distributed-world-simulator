@@ -2564,6 +2564,9 @@ func stop() -> Dictionary:
 	_boundary = null
 	_network_condition_simulator = null
 	_service = null
+	_p1b_item_async_owner = null
+	_p1b_item_pending.clear()
+	_p1b_item_resync_waiters.clear()
 	_fixed_tick_scheduler = null
 	_peer_input_buffers.clear()
 	_seam_sent_state_by_peer.clear()
