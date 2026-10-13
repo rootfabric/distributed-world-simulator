@@ -2372,6 +2372,9 @@ func _cleanup_setup_failure() -> void:
 	_boundary = null
 	_network_condition_simulator = null
 	_service = null
+	_p1b_item_async_owner = null
+	_p1b_item_pending.clear()
+	_p1b_item_resync_waiters.clear()
 
 
 func _setup_network_condition_simulator(config: Dictionary) -> Dictionary:
