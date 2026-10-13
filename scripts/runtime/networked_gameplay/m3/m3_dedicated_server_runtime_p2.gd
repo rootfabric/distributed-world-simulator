@@ -1404,6 +1404,8 @@ func _p1b_publish_committed_item(pending: Dictionary) -> void:
 	_broadcast_snapshot("ITEM_GRAPH_UPDATED", RealtimeChannelPolicy.RESYNC, "RELIABLE_ORDERED")
 	_capture_two_connected_checksum()
 	_p1b_flush_item_resync_waiters()
+	if has_method("_p1b_flush_resource_resync_waiters"):
+		call("_p1b_flush_resource_resync_waiters")
 	_write_report("READY", false)
 
 
