@@ -183,6 +183,16 @@ func setup(config: Dictionary) -> Dictionary:
 	_persistence_root = String(config.get("persistence_root", "")).strip_edges()
 	_persistence_enabled = not _persistence_root.is_empty()
 	_playable_sandbox = bool(config.get("playable_sandbox", false))
+	_p1b_item_async_enabled = (
+		bool(config.get("async_durable_item_canary", false))
+		or OS.get_environment("DWS_NET_P1B_ITEM_ASYNC") == "1"
+	)
+	if _p1b_item_async_enabled and (not _persistence_enabled or not _playable_sandbox):
+		return _failure("P1B_CANARY_REQUIRES_PERSISTENT_PLAYABLE_WORLD")
+	_p1b_item_pending.clear()
+	_p1b_item_resync_waiters.clear()
+	_p1b_item_commits = 0
+	_p1b_item_precommit_snapshot_holds = 0
 	_debug_logging = bool(config.get("debug_logging", false))
 	if _host.is_empty() or _port < 1 or _port > 65535 or _authority_owner_id.is_empty() or _authority_epoch < 1:
 		return _failure("INVALID_M3_SERVER_CONFIGURATION")
