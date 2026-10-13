@@ -164,6 +164,8 @@ func _test_real_m3_item_and_crash_safe_replay() -> void:
 	check(fake_bridge.submitted == 0,
 		"V0 Construction gateway cannot apply while M6 ITEM is pending")
 	var resource_attempt := "operation/net-r42-p1b/resource/rejected"
+	check(service.has_method("handle_resource_mine"),
+		"actual V0 authority exposes resource-mine command contract")
 	var revision_before_resource := int(service.get_report().get("revision", -1))
 	runtime.call("_handle_resource_command", PEER, SESSION, {
 		"operation_id": resource_attempt, "ownership_epoch": 1,
