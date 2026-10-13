@@ -22,6 +22,8 @@ from live2_automation_client import request
 from analyze_net_smooth1 import write_report
 
 TESTS = [
+ 'tests/runtime/test_net_smooth1_r42_p1b_item_async_canary.gd',
+ 'tests/runtime/test_net_smooth1_r42_seam_full_snapshot_wire_checksum.gd',
  'tests/runtime/test_net_smooth1_r42_p1b_periodic_completion_order.gd',
  'tests/runtime/test_net_smooth1_r42_p1_async_durable_proof.gd',
  'tests/runtime/test_net_smooth1_r42_revision_fence_diagnostics.gd',
