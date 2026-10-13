@@ -20,6 +20,9 @@ const Carry = preload(
 	"res://scripts/runtime/networked_gameplay/sm1/sm1_player_carrying_domain.gd"
 )
 const SeamUtils = preload("res://scripts/network/contracts/network_contract_utils.gd")
+const PlayerStateSnapshot = preload(
+	"res://scripts/runtime/networked_gameplay/contracts/player_state_snapshot.gd"
+)
 const ProductSeamState = preload(
 	"res://scripts/runtime/networked_gameplay/user1/user1_product_seam_state.gd"
 )
@@ -299,7 +302,11 @@ func create_snapshot() -> Dictionary:
 	var players: Array = []
 	for player_id_value in ids:
 		players.append(Dictionary(by_id[player_id_value]).duplicate(true))
-	snapshot["players"] = players
+	# R4.2-P0 repair: secondary-owned live rows were previously hashed raw,
+	# bypassing the r31 wire-number fixed point used by ordinary snapshots.
+	# Keep only the existing DTO projection, never normalize live authority.
+	# Avoid a second full JSON round trip on the hot 20 Hz seam path.
+	snapshot["players"] = PlayerStateSnapshot.normalize_wire_players(players)
 	snapshot.erase("checksum")
 	snapshot["checksum"] = SeamUtils.payload_hash(snapshot)
 	return snapshot

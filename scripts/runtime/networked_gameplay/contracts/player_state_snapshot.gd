@@ -8,6 +8,13 @@ const PLAYER_FIELDS: Array[String] = ["logical_player_id", "player_entity_id", "
 const SHARED_ITEM_FIELDS: Array[String] = ["item_id", "available", "owner_player_entity_id", "revision"]
 
 static func create(authority_owner_id: String, authority_epoch: int, revision: int, server_tick: int, region_id: String, players: Array, shared_item: Dictionary) -> Dictionary:
+	var wire_players: Array = normalize_wire_players(players)
+	return Wire.create(SCHEMA, {"authority_owner_id": authority_owner_id, "authority_epoch": authority_epoch, "revision": revision, "server_tick": server_tick, "region_id": region_id, "players": wire_players, "shared_item": shared_item.duplicate(true)})
+
+
+# Public, DTO-only normalization shared by ordinary and USER1 seam projections.
+# No mutation of gameplay records and no additional full-snapshot JSON pass.
+static func normalize_wire_players(players: Array) -> Array:
 	# Normalize only network DTO floats, not authoritative simulation state.
 	# Compute the minimal JSON parse fixed point for each scalar under
 	# Godot 4.7.1 double; no decimal quantization of gameplay coordinates.
@@ -24,7 +31,8 @@ static func create(authority_owner_id: String, authority_epoch: int, revision: i
 						vector[axis] = _wire_number(float(vector[axis]))
 		if typeof(record.get("orientation_yaw")) in [TYPE_INT, TYPE_FLOAT]:
 			record["orientation_yaw"] = _wire_number(float(record["orientation_yaw"]))
-	return Wire.create(SCHEMA, {"authority_owner_id": authority_owner_id, "authority_epoch": authority_epoch, "revision": revision, "server_tick": server_tick, "region_id": region_id, "players": wire_players, "shared_item": shared_item.duplicate(true)})
+	return wire_players
+
 
 static func _wire_number(number: float) -> float:
 	# Normalize only a single scalar, without an expensive second deep JSON

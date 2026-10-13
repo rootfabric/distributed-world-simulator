@@ -1,0 +1,29 @@
+name: NET-SMOOTH1 R4.2 P1-B R2 Source Contract
+
+on:
+  push:
+    branches:
+      - feature/net-smooth1-r42-p1b-r2-item-async-canary-r1
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  source-contract:
+    name: Async ITEM gate static checks (NOT Godot acceptance)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Verify async ITEM and V0 subclass fail-closed source contracts
+        run: python -m unittest discover -s tests/tools -p test_net_smooth1_p1b_r2_source_contract.py -v
+      - name: Run existing NET-SMOOTH1 analyzer regressions
+        run: python -m unittest discover -s tests/tools -p test_net_smooth1_analyzer.py -v

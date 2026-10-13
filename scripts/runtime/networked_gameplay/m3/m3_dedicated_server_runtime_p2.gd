@@ -18,6 +18,7 @@ const AsyncCheckpointWriter = preload("res://scripts/persistence/async_checkpoin
 const M6AuthorityAdapter = preload("res://scripts/runtime/networked_gameplay/m6/m6_dedicated_gameplay_authority_adapter.gd")
 const M6ReplayOutbox = preload("res://scripts/runtime/networked_gameplay/m6/m6_durable_replay_outbox.gd")
 const M6PendingDurableAckGate = preload("res://scripts/persistence/m6_pending_durable_ack_gate.gd")
+const M6AsyncDurableCommandProof = preload("res://scripts/persistence/m6_async_durable_command_proof.gd")
 const RuntimeIdentity = preload("res://scripts/network/observability/network_runtime_identity.gd")
 const ProtocolManifest = preload("res://scripts/network/observability/network_protocol_manifest.gd")
 const CompatibilityHandshake = preload("res://scripts/network/observability/network_compatibility_handshake.gd")
@@ -76,6 +77,17 @@ var _replay_outbox
 # R4.1-P1: ordered durable-ACK escrow. No mutation entry, success result, or
 # broadcast is published for an uncommitted checkpoint generation.
 var _durable_ack_gate
+# P1-B R2 opt-in ITEM canary (off in normal production).
+var _p1b_item_async_enabled := false
+var _p1b_item_async_owner
+var _p1b_item_pending: Dictionary = {}
+const P1B_MAX_DEFERRED_ITEM_RESYNCS := 32
+var _p1b_item_resync_waiters: Dictionary = {}
+var _p1b_item_commits := 0
+var _p1b_item_precommit_snapshot_holds := 0
+var _p1b_item_last_capture_ms := 0.0
+var _p1b_item_last_worker_ms := 0.0
+var _p1b_item_last_ack_wait_ms := 0.0
 var _player_ownership_epochs: Dictionary = {}
 # Bound disconnected sessions while a durable generation is pending.
 const MAX_DEFERRED_DISCONNECTS := 64
@@ -171,6 +183,16 @@ func setup(config: Dictionary) -> Dictionary:
 	_persistence_root = String(config.get("persistence_root", "")).strip_edges()
 	_persistence_enabled = not _persistence_root.is_empty()
 	_playable_sandbox = bool(config.get("playable_sandbox", false))
+	_p1b_item_async_enabled = (
+		bool(config.get("async_durable_item_canary", false))
+		or OS.get_environment("DWS_NET_P1B_ITEM_ASYNC") == "1"
+	)
+	if _p1b_item_async_enabled and (not _persistence_enabled or not _playable_sandbox):
+		return _failure("P1B_CANARY_REQUIRES_PERSISTENT_PLAYABLE_WORLD")
+	_p1b_item_pending.clear()
+	_p1b_item_resync_waiters.clear()
+	_p1b_item_commits = 0
+	_p1b_item_precommit_snapshot_holds = 0
 	_debug_logging = bool(config.get("debug_logging", false))
 	if _host.is_empty() or _port < 1 or _port > 65535 or _authority_owner_id.is_empty() or _authority_epoch < 1:
 		return _failure("INVALID_M3_SERVER_CONFIGURATION")
@@ -225,6 +247,17 @@ func setup(config: Dictionary) -> Dictionary:
 		if not bool(writer_setup.get("success", false)):
 			_cleanup_setup_failure()
 			return writer_setup
+	if _p1b_item_async_enabled:
+		if _movement_checkpoint_writer == null or _durable_ack_gate == null:
+			_cleanup_setup_failure()
+			return _failure("P1B_ITEM_SINGLE_WRITER_REQUIRED")
+		_p1b_item_async_owner = M6AsyncDurableCommandProof.new()
+		var p1b_owner_setup: Dictionary = _p1b_item_async_owner.configure(
+			_movement_checkpoint_writer, _durable_ack_gate
+		)
+		if not bool(p1b_owner_setup.get("success", false)):
+			_cleanup_setup_failure()
+			return _failure("P1B_ITEM_ASYNC_SETUP_FAILED", {"cause": p1b_owner_setup})
 	_fixed_tick_scheduler = FixedTickScheduler.new()
 	_server_tick = int(_service.get_report().get("server_tick", 0))
 	var fixed_tick_setup: Dictionary = _fixed_tick_scheduler.configure(
@@ -270,6 +303,9 @@ func _process(delta: float) -> void:
 	if not _configured or _boundary == null or _fatal_persistence_failure:
 		return
 	var smooth_started := Time.get_ticks_usec()
+	_p1b_poll_item_async_commit()
+	if _fatal_persistence_failure:
+		return
 	_complete_async_movement_checkpoint(false)
 	if _fatal_persistence_failure:
 		return
@@ -828,6 +864,11 @@ func _last_processed_input_sequence(logical_id: String) -> int:
 func _maybe_publish_movement_snapshot() -> void:
 	if not _movement_snapshot_dirty or _service == null:
 		return
+	# R2 safe (not yet smooth) canary: a compact frame must not reveal
+	# inventory and revision from an uncommitted ITEM mutation.
+	if not _p1b_item_pending.is_empty():
+		_p1b_item_precommit_snapshot_holds += 1
+		return
 	if _server_tick - _last_movement_snapshot_tick < NX3_MOVEMENT_SNAPSHOT_INTERVAL_TICKS:
 		return
 	_last_movement_snapshot_tick = _server_tick
@@ -998,6 +1039,19 @@ func _handle_item_graph_resync_request(peer_id: String, session_id: String, payl
 		return
 	_item_graph_resync_requests += 1
 	var operation_id: String = String(payload.get("operation_id", ""))
+	if not _p1b_item_pending.is_empty():
+		# A reliable resync requested mid-commit must NOT read a mutable graph.
+		# Keep one bounded waiter per peer/session; serve after worker commit.
+		if (
+			_p1b_item_resync_waiters.has(peer_id)
+			or _p1b_item_resync_waiters.size() < P1B_MAX_DEFERRED_ITEM_RESYNCS
+		):
+			_p1b_item_resync_waiters[peer_id] = {
+				"session_id": session_id, "operation_id": operation_id
+			}
+		else:
+			_last_error_code = "P1B_ITEM_RESYNC_QUEUE_FULL"
+		return
 	var sent: bool = _send_on_channel(
 		peer_id,
 		"ITEM_GRAPH_SNAPSHOT",
@@ -1014,6 +1068,8 @@ func _handle_item_graph_resync_request(peer_id: String, session_id: String, payl
 
 
 func _broadcast_item_snapshot(reason: String, excluded_peer_id: String = "") -> void:
+	if not _p1b_item_pending.is_empty():
+		return
 	var snapshot: Dictionary = _service.create_canonical_item_graph_snapshot()
 	for peer_id_value in _peer_to_player.keys():
 		var peer_id: String = String(peer_id_value)
@@ -1054,6 +1110,16 @@ func _handle_item_command(peer_id: String, session_id: String, payload: Dictiona
 		_reject_uncommitted_command(peer_id, operation_id, "ITEM_COMMAND", _gate_reject_code())
 		return
 	var item_epoch := _stored_ownership_epoch(logical_id, int(payload.get("ownership_epoch", 0)))
+	var p1b_reserved := false
+	if _p1b_item_async_enabled and not _service.has_durable_replay_operation(operation_id):
+		var reservation: Dictionary = _p1b_item_async_owner.reserve_mutation(
+			operation_id, peer_id, session_id, logical_id, item_epoch, command_type
+		)
+		if not bool(reservation.get("success", false)):
+			_reject_uncommitted_command(peer_id, operation_id, command_type,
+				String(reservation.get("error_code", "P1B_ITEM_RESERVATION_FAILED")))
+			return
+		p1b_reserved = true
 	var stage_context := _stall_context(peer_id, operation_id, command_type)
 	var before_probe := _stall_enter("ITEM:BEFORE_SNAPSHOT", stage_context)
 	var before_item_snapshot: Dictionary = _service.create_canonical_item_graph_snapshot()
@@ -1064,6 +1130,22 @@ func _handle_item_command(peer_id: String, session_id: String, payload: Dictiona
 		operation_id, command_type, Dictionary(command_payload_value)
 	)
 	_stall_exit(execute_probe)
+	if p1b_reserved:
+		if bool(result.get("success", false)) and not _is_replay_result(result):
+			if not _p1b_begin_item_async_commit(
+				operation_id, command_type, logical_id, result,
+				peer_id, session_id, item_epoch, before_item_snapshot
+			):
+				# The mutation happened, so failure is fatal and no success
+				# result may escape as an uncommitted state.
+				return
+			return
+		var released: Dictionary = _p1b_item_async_owner.release_noncommitting_reservation(
+			operation_id, result
+		)
+		if not bool(released.get("success", false)):
+			_enter_persistence_failure("P1B_ITEM_RESERVATION_RELEASE_FAILED")
+			return
 	var persist_probe := _stall_enter("ITEM:PERSIST_RESULT", stage_context)
 	var persisted_result := _persist_command_result(operation_id, command_type, logical_id, result, peer_id, session_id, item_epoch)
 	_stall_exit(persist_probe)
@@ -1114,6 +1196,242 @@ func _handle_item_command(peer_id: String, session_id: String, payload: Dictiona
 	_write_report("READY", false)
 
 
+# P1-B R2 canary: the authoritative ITEM mutation has occurred, but until the
+# detached worker commits it, no success result, delta, full or compact frame
+# can reveal the uncommitted canonical item state.
+func _p1b_begin_item_async_commit(
+	operation_id: String, command_type: String, logical_id: String,
+	result: Dictionary, peer_id: String, session_id: String, ownership_epoch: int,
+	before_item_snapshot: Dictionary
+) -> bool:
+	if not _p1b_item_pending.is_empty() or _p1b_item_async_owner == null:
+		_enter_persistence_failure("P1B_ITEM_SINGLE_INFLIGHT_REQUIRED")
+		return false
+	if not _service.has_durable_replay_operation(operation_id):
+		_enter_persistence_failure("P1B_ITEM_M6_REPLAY_OWNER_REQUIRED")
+		return false
+	var capture_start_us := Time.get_ticks_usec()
+	var player_checksum := String(_service.create_snapshot().get("checksum", ""))
+	var item_checksum := String(_service.create_canonical_item_graph_snapshot().get("checksum", ""))
+	var outbox_staged: Dictionary = _replay_outbox.stage_committed(
+		operation_id, command_type,
+		{
+			"logical_player_id": logical_id,
+			"success": true,
+			"error_code": "",
+			"result": result.duplicate(true),
+			"player_snapshot_checksum": player_checksum,
+			"item_graph_checksum": item_checksum,
+		}
+	)
+	if not bool(outbox_staged.get("success", false)):
+		_enter_persistence_failure("P1B_ITEM_OUTBOX_STAGE_FAILED")
+		return false
+	if _service.has_method("prepare_product_persistence"):
+		var quiesced: Dictionary = _service.prepare_product_persistence()
+		if not bool(quiesced.get("success", false)):
+			_last_persistence_error_details = quiesced.duplicate(true)
+			_enter_persistence_failure("P1B_ITEM_SEAM_QUIESCENCE_FAILED")
+			return false
+	var authority: Dictionary = _recovery_authority.export_recovery_state()
+	var replay: Dictionary = _replay_outbox.to_dict()
+	if authority.is_empty() or replay.is_empty():
+		_enter_persistence_failure("P1B_ITEM_EMPTY_FROZEN_STATE")
+		return false
+	var capture_done_us := Time.get_ticks_usec()
+	# Set the visibility barrier BEFORE submitting to the worker. The main
+	# thread can still accept movement inputs, but cannot publish the
+	# speculative ITEM/inventory state through any full/compact resync.
+	_p1b_item_pending = {
+		"operation_id": operation_id,
+		"command_type": command_type,
+		"logical_id": logical_id,
+		"peer_id": peer_id,
+		"session_id": session_id,
+		"ownership_epoch": ownership_epoch,
+		"before_item": before_item_snapshot.duplicate(true),
+		"result": result.duplicate(true),
+		"started_us": capture_start_us,
+	}
+	var submitted: Dictionary = _p1b_item_async_owner.submit_frozen(
+		operation_id, result, authority, replay
+	)
+	if not bool(submitted.get("success", false)):
+		_last_persistence_error_details = submitted.duplicate(true)
+		_enter_persistence_failure(
+			String(submitted.get("error_code", "P1B_ITEM_ASYNC_SUBMIT_FAILED"))
+		)
+		return false
+	_p1b_item_last_capture_ms = float(capture_done_us - capture_start_us) / 1000.0
+	if SmoothTrace.enabled():
+		SmoothTrace.emit("p1b_item_async_stages", {
+			"stage": "SUBMIT",
+			"operation_hash": operation_id.sha256_text().left(16),
+			"generation": int(submitted.get("details", {}).get("generation", -1)),
+			"capture_ms": _p1b_item_last_capture_ms,
+			"submit_ms": float(Time.get_ticks_usec() - capture_done_us) / 1000.0,
+		})
+	return true
+
+
+func _p1b_poll_item_async_commit() -> void:
+	if _p1b_item_pending.is_empty() or _p1b_item_async_owner == null:
+		return
+	var committed: Dictionary = _p1b_item_async_owner.poll_command_completion()
+	if not bool(committed.get("success", false)):
+		_last_persistence_error_details = committed.duplicate(true)
+		_enter_persistence_failure(
+			String(committed.get("error_code", "P1B_ITEM_ATOMIC_COMMIT_FAILED"))
+		)
+		return
+	if bool(committed.get("details", {}).get("pending", false)):
+		return
+	if not bool(committed.get("details", {}).get("committed", false)):
+		_enter_persistence_failure("P1B_ITEM_COMPLETION_NOT_DURABLE")
+		return
+	_p1b_finish_item_committed(committed, true)
+
+
+func _p1b_finish_item_shutdown_barrier() -> void:
+	# This is the ONLY intentional blocking wait: explicit stop/shutdown.
+	if _p1b_item_pending.is_empty():
+		return
+	if _movement_checkpoint_writer == null or _p1b_item_async_owner == null:
+		_enter_persistence_failure("P1B_ITEM_SHUTDOWN_WRITER_MISSING")
+		return
+	var completed: Dictionary = _movement_checkpoint_writer.wait_completed()
+	if completed.is_empty():
+		_enter_persistence_failure("P1B_ITEM_SHUTDOWN_COMPLETION_MISSING")
+		return
+	var accepted: Dictionary = _p1b_item_async_owner.accept_command_completion(completed)
+	if not bool(accepted.get("success", false)):
+		_last_persistence_error_details = accepted.duplicate(true)
+		_enter_persistence_failure(
+			String(accepted.get("error_code", "P1B_ITEM_SHUTDOWN_COMMIT_FAILED"))
+		)
+		return
+	_p1b_finish_item_committed(accepted, false)
+
+
+func _p1b_finish_item_committed(accepted: Dictionary, publish: bool) -> void:
+	if _p1b_item_pending.is_empty() or not bool(accepted.get("details", {}).get("committed", false)):
+		_enter_persistence_failure("P1B_ITEM_COMMITTED_RESULT_REQUIRED")
+		return
+	var pending: Dictionary = _p1b_item_pending.duplicate(true)
+	var generation := int(accepted.get("details", {}).get("generation", -1))
+	if (
+		generation != _checkpoint_generation + 1
+		or generation != int(_durable_ack_gate.get_report().get("generation", -2))
+	):
+		_enter_persistence_failure("P1B_ITEM_COMMITTED_GENERATION_MISMATCH")
+		return
+	_checkpoint_generation = generation
+	_last_checkpoint_operation_id = String(pending.get("operation_id", ""))
+	_durable_commits += 1
+	_p1b_item_commits += 1
+	_p1b_item_last_worker_ms = float(accepted.get("details", {}).get("worker_ms", 0.0))
+	if _telemetry != null:
+		_telemetry.observe("persistence_duration_ms", _p1b_item_last_worker_ms)
+		_telemetry.observe("persistence_capture_ms", _p1b_item_last_capture_ms)
+		_telemetry.increment("persistence_commits")
+	_p1b_item_last_ack_wait_ms = float(
+		Time.get_ticks_usec() - int(pending.get("started_us", Time.get_ticks_usec()))
+	) / 1000.0
+	# Later movement mutations happened AFTER frozen capture; keep their
+	# dirty marker for a subsequent periodic checkpoint.
+	_p1b_item_pending.clear()
+	if SmoothTrace.enabled():
+		SmoothTrace.emit("p1b_item_async_stages", {
+			"stage": "DURABLE_COMMIT",
+			"operation_hash": String(pending.get("operation_id", "")).sha256_text().left(16),
+			"generation": generation,
+			"ack_wait_ms": _p1b_item_last_ack_wait_ms,
+			"held_snapshot_count": _p1b_item_precommit_snapshot_holds,
+		})
+	if not publish:
+		# Graceful shutdown never lies about delivery to the vanished peer.
+		_p1b_item_async_owner.discard_stale_session(
+			String(pending.get("peer_id", "")), String(pending.get("session_id", ""))
+		)
+		_p1b_item_resync_waiters.clear()
+		return
+	_p1b_publish_committed_item(pending)
+
+
+func _p1b_publish_committed_item(pending: Dictionary) -> void:
+	var operation_id := String(pending.get("operation_id", ""))
+	var peer_id := String(pending.get("peer_id", ""))
+	var session_id := String(pending.get("session_id", ""))
+	var player_id := String(pending.get("logical_id", ""))
+	var ownership_epoch := int(pending.get("ownership_epoch", 0))
+	var command_type := String(pending.get("command_type", ""))
+	var result: Dictionary = Dictionary(pending.get("result", {})).duplicate(true)
+	var before_item: Dictionary = Dictionary(pending.get("before_item", {}))
+	var after_item: Dictionary = _service.create_canonical_item_graph_snapshot()
+	var delta_result: Dictionary = CanonicalItemGraphDelta.create(before_item, after_item)
+	var item_delta: Dictionary = {}
+	var delta_failed := not bool(delta_result.get("success", false))
+	if delta_failed:
+		_item_graph_delta_build_failures += 1
+		_last_error_code = "ITEM_GRAPH_DELTA_BUILD_FAILED"
+	else:
+		item_delta = Dictionary(delta_result.get("details", {}).get("delta", {})).duplicate(true)
+	# FIFO ACK is exposed ONLY after the exact repository commit, and never
+	# to an old transport session or a replacement ownership epoch.
+	var ready: Dictionary = _p1b_item_async_owner.peek_publication(
+		peer_id, session_id, player_id, ownership_epoch
+	)
+	var delivered := false
+	if bool(ready.get("success", false)):
+		if String(_peer_to_session.get(peer_id, "")) == session_id:
+			delivered = _send_result(peer_id, operation_id, command_type, result, item_delta)
+		var enqueued: Dictionary = _p1b_item_async_owner.mark_enqueued(
+			operation_id, peer_id, session_id, player_id, ownership_epoch, delivered
+		)
+		if not bool(enqueued.get("success", false)):
+			_enter_persistence_failure("P1B_ITEM_ACK_ENQUEUE_FENCE_FAILED")
+			return
+		if delivered:
+			_mark_operation_delivered(operation_id)
+	else:
+		# The command completed after disconnect; leave its canonical
+		# replay-outbox record durable, with no false delivery marker.
+		_p1b_item_async_owner.discard_stale_session(peer_id, session_id)
+	if delta_failed:
+		_broadcast_item_snapshot("P1B_ITEM_DELTA_FALLBACK")
+	else:
+		_broadcast_item_delta(item_delta, peer_id, command_type)
+	_broadcast_snapshot("ITEM_GRAPH_UPDATED", RealtimeChannelPolicy.RESYNC, "RELIABLE_ORDERED")
+	_capture_two_connected_checksum()
+	_p1b_flush_item_resync_waiters()
+	if has_method("_p1b_flush_resource_resync_waiters"):
+		call("_p1b_flush_resource_resync_waiters")
+	_write_report("READY", false)
+
+
+func _p1b_flush_item_resync_waiters() -> void:
+	if _p1b_item_resync_waiters.is_empty():
+		return
+	# Snapshot is created only AFTER the ITEM generation was committed.
+	var snapshot: Dictionary = _service.create_canonical_item_graph_snapshot()
+	var waiters: Dictionary = _p1b_item_resync_waiters.duplicate(true)
+	_p1b_item_resync_waiters.clear()
+	for peer_id_value in waiters.keys():
+		var peer_id := String(peer_id_value)
+		var request: Dictionary = Dictionary(waiters[peer_id])
+		if String(_peer_to_session.get(peer_id, "")) != String(request.get("session_id", "")):
+			continue
+		if _send_on_channel(
+			peer_id, "ITEM_GRAPH_SNAPSHOT",
+			{
+				"reason": "P1B_AFTER_DURABLE_RESYNC",
+				"operation_id": String(request.get("operation_id", "")),
+				"snapshot": snapshot,
+			}, RealtimeChannelPolicy.RESYNC, "RELIABLE_ORDERED"
+		):
+			_item_graph_full_snapshots_published += 1
+
+
 func _handle_construction_command(peer_id: String, session_id: String, payload: Dictionary) -> void:
 	var operation_id := String(payload.get("operation_id", "")).strip_edges()
 	if not _peer_to_player.has(peer_id) or String(_peer_to_session.get(peer_id, "")) != session_id:
@@ -1152,6 +1470,8 @@ func _handle_construction_command(peer_id: String, session_id: String, payload: 
 	_write_report("READY", false)
 
 func _broadcast_item_delta(delta: Dictionary, excluded_peer_id: String, reason: String) -> void:
+	if not _p1b_item_pending.is_empty():
+		return
 	if delta.is_empty():
 		return
 	for peer_id_value in _peer_to_player.keys():
@@ -1207,6 +1527,8 @@ func _handle_disconnect(peer_id: String, session_id: String) -> void:
 	# Transport cleanup is immediate; authoritative LEAVE is serialized behind
 	# any in-flight checkpoint. Never invalidate a newer session on stale events.
 	var mapped_session := String(_peer_to_session.get(peer_id, ""))
+	if _p1b_item_async_owner != null and not session_id.is_empty():
+		_p1b_item_async_owner.discard_stale_session(peer_id, session_id)
 	if _durable_ack_gate != null and not session_id.is_empty():
 		_durable_ack_gate.discard_stale_session(peer_id, session_id)
 	if session_id.is_empty() or mapped_session != session_id:
@@ -1314,6 +1636,9 @@ func _broadcast_snapshot(
 	channel: String = RealtimeChannelPolicy.RESYNC,
 	delivery_mode: String = "RELIABLE_ORDERED"
 ) -> void:
+	if not _p1b_item_pending.is_empty():
+		_p1b_item_precommit_snapshot_holds += 1
+		return
 	var snapshot: Dictionary = _service.create_snapshot()
 	for peer_id_value in _peer_to_player.keys():
 		if _send_on_channel(String(peer_id_value), "GAMEPLAY_SNAPSHOT", {"reason": reason, "snapshot": snapshot}, channel, delivery_mode):
@@ -1728,6 +2053,17 @@ func _persistence_report() -> Dictionary:
 		"last_error_details": _last_persistence_error_details.duplicate(true),
 		"outbox": _replay_outbox.get_report() if _replay_outbox != null else {},
 		"durable_ack_gate": _durable_ack_gate.get_report() if _durable_ack_gate != null else {},
+		"item_async_canary_enabled": _p1b_item_async_enabled,
+		"item_async_pending": not _p1b_item_pending.is_empty(),
+		"item_async_commits": _p1b_item_commits,
+		"item_async_snapshot_holds": _p1b_item_precommit_snapshot_holds,
+		"item_async_capture_ms": _p1b_item_last_capture_ms,
+		"item_async_worker_ms": _p1b_item_last_worker_ms,
+		"item_async_ack_wait_ms": _p1b_item_last_ack_wait_ms,
+		"item_async_owner": (
+			_p1b_item_async_owner.get_report()
+			if _p1b_item_async_owner != null else {}
+		),
 		"service_recovery": _service.get_recovery_report() if _service != null else {},
 	}
 
@@ -1819,6 +2155,12 @@ func _gate_after_result_enqueue(
 
 
 func _complete_async_movement_checkpoint(wait: bool) -> void:
+	# Command and periodic checkpoints share one worker; only the proof
+	# owner may consume an ITEM completion.
+	if not _p1b_item_pending.is_empty():
+		if wait:
+			_p1b_finish_item_shutdown_barrier()
+		return
 	if _movement_checkpoint_writer == null:
 		return
 	var completed: Dictionary = (
@@ -2038,6 +2380,9 @@ func _cleanup_setup_failure() -> void:
 	_boundary = null
 	_network_condition_simulator = null
 	_service = null
+	_p1b_item_async_owner = null
+	_p1b_item_pending.clear()
+	_p1b_item_resync_waiters.clear()
 
 
 func _setup_network_condition_simulator(config: Dictionary) -> Dictionary:
@@ -2227,6 +2572,9 @@ func stop() -> Dictionary:
 	_boundary = null
 	_network_condition_simulator = null
 	_service = null
+	_p1b_item_async_owner = null
+	_p1b_item_pending.clear()
+	_p1b_item_resync_waiters.clear()
 	_fixed_tick_scheduler = null
 	_peer_input_buffers.clear()
 	_seam_sent_state_by_peer.clear()
