@@ -1519,6 +1519,8 @@ func _handle_disconnect(peer_id: String, session_id: String) -> void:
 	# Transport cleanup is immediate; authoritative LEAVE is serialized behind
 	# any in-flight checkpoint. Never invalidate a newer session on stale events.
 	var mapped_session := String(_peer_to_session.get(peer_id, ""))
+	if _p1b_item_async_owner != null and not session_id.is_empty():
+		_p1b_item_async_owner.discard_stale_session(peer_id, session_id)
 	if _durable_ack_gate != null and not session_id.is_empty():
 		_durable_ack_gate.discard_stale_session(peer_id, session_id)
 	if session_id.is_empty() or mapped_session != session_id:
