@@ -205,6 +205,15 @@ func _test_real_m3_item_and_crash_safe_replay() -> void:
 	check(Dictionary(runtime.get("_p1b_resource_resync_waiters")).is_empty(),
 		"queued stale resource resync is drained without crossing a new session")
 
+	# The V0 Construction override must also reject in a quiescent
+	# persistent server, not only while the ITEM pending gate is busy.
+	runtime.call("_handle_construction_command", PEER, SESSION, {
+		"operation_id": "operation/net-r42-p1b/construction/still-rejected",
+		"command": {"command_type": "construction.test"},
+	})
+	check(fake_bridge.submitted == 0,
+		"persistent V0 Construction remains fail-closed without M6 owner")
+
 	var repository = Repository.new()
 	check(_ok(repository.configure(path)), "independent durable repository opened")
 	var loaded: Dictionary = repository.load_committed()
