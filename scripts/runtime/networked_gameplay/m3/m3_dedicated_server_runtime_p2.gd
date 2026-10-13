@@ -1055,6 +1055,8 @@ func _handle_item_graph_resync_request(peer_id: String, session_id: String, payl
 
 
 func _broadcast_item_snapshot(reason: String, excluded_peer_id: String = "") -> void:
+	if not _p1b_item_pending.is_empty():
+		return
 	var snapshot: Dictionary = _service.create_canonical_item_graph_snapshot()
 	for peer_id_value in _peer_to_player.keys():
 		var peer_id: String = String(peer_id_value)
