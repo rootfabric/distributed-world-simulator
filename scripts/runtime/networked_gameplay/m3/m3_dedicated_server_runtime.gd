@@ -499,6 +499,8 @@ func _handle_resource_resync_request(
 
 
 func _send_resource_snapshot(peer_id: String, reason: String) -> bool:
+	if not _p1b_item_pending.is_empty():
+		return false
 	if _service == null or not _service.has_method("create_resource_mining_snapshot"):
 		return false
 	var snapshot: Dictionary = _service.create_resource_mining_snapshot()
