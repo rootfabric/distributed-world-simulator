@@ -1855,6 +1855,12 @@ func _gate_after_result_enqueue(
 
 
 func _complete_async_movement_checkpoint(wait: bool) -> void:
+	# Command and periodic checkpoints share one worker; only the proof
+	# owner may consume an ITEM completion.
+	if not _p1b_item_pending.is_empty():
+		if wait:
+			_p1b_finish_item_shutdown_barrier()
+		return
 	if _movement_checkpoint_writer == null:
 		return
 	var completed: Dictionary = (
