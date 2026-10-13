@@ -1196,6 +1196,84 @@ func _handle_item_command(peer_id: String, session_id: String, payload: Dictiona
 	_write_report("READY", false)
 
 
+# P1-B R2 canary: the authoritative ITEM mutation has occurred, but until the
+# detached worker commits it, no success result, delta, full or compact frame
+# can reveal the uncommitted canonical item state.
+func _p1b_begin_item_async_commit(
+	operation_id: String, command_type: String, logical_id: String,
+	result: Dictionary, peer_id: String, session_id: String, ownership_epoch: int,
+	before_item_snapshot: Dictionary
+) -> bool:
+	if not _p1b_item_pending.is_empty() or _p1b_item_async_owner == null:
+		_enter_persistence_failure("P1B_ITEM_SINGLE_INFLIGHT_REQUIRED")
+		return false
+	if not _service.has_durable_replay_operation(operation_id):
+		_enter_persistence_failure("P1B_ITEM_M6_REPLAY_OWNER_REQUIRED")
+		return false
+	var capture_start_us := Time.get_ticks_usec()
+	var player_checksum := String(_service.create_snapshot().get("checksum", ""))
+	var item_checksum := String(_service.create_canonical_item_graph_snapshot().get("checksum", ""))
+	var outbox_staged: Dictionary = _replay_outbox.stage_committed(
+		operation_id, command_type,
+		{
+			"logical_player_id": logical_id,
+			"success": true,
+			"error_code": "",
+			"result": result.duplicate(true),
+			"player_snapshot_checksum": player_checksum,
+			"item_graph_checksum": item_checksum,
+		}
+	)
+	if not bool(outbox_staged.get("success", false)):
+		_enter_persistence_failure("P1B_ITEM_OUTBOX_STAGE_FAILED")
+		return false
+	if _service.has_method("prepare_product_persistence"):
+		var quiesced: Dictionary = _service.prepare_product_persistence()
+		if not bool(quiesced.get("success", false)):
+			_last_persistence_error_details = quiesced.duplicate(true)
+			_enter_persistence_failure("P1B_ITEM_SEAM_QUIESCENCE_FAILED")
+			return false
+	var authority: Dictionary = _recovery_authority.export_recovery_state()
+	var replay: Dictionary = _replay_outbox.to_dict()
+	if authority.is_empty() or replay.is_empty():
+		_enter_persistence_failure("P1B_ITEM_EMPTY_FROZEN_STATE")
+		return false
+	var capture_done_us := Time.get_ticks_usec()
+	# Set the visibility barrier BEFORE submitting to the worker. The main
+	# thread can still accept movement inputs, but cannot publish the
+	# speculative ITEM/inventory state through any full/compact resync.
+	_p1b_item_pending = {
+		"operation_id": operation_id,
+		"command_type": command_type,
+		"logical_id": logical_id,
+		"peer_id": peer_id,
+		"session_id": session_id,
+		"ownership_epoch": ownership_epoch,
+		"before_item": before_item_snapshot.duplicate(true),
+		"result": result.duplicate(true),
+		"started_us": capture_start_us,
+	}
+	var submitted: Dictionary = _p1b_item_async_owner.submit_frozen(
+		operation_id, result, authority, replay
+	)
+	if not bool(submitted.get("success", false)):
+		_last_persistence_error_details = submitted.duplicate(true)
+		_enter_persistence_failure(
+			String(submitted.get("error_code", "P1B_ITEM_ASYNC_SUBMIT_FAILED"))
+		)
+		return false
+	_p1b_item_last_capture_ms = float(capture_done_us - capture_start_us) / 1000.0
+	if SmoothTrace.enabled():
+		SmoothTrace.emit("p1b_item_async_stages", {
+			"stage": "SUBMIT",
+			"operation_hash": operation_id.sha256_text().left(16),
+			"generation": int(submitted.get("details", {}).get("generation", -1)),
+			"capture_ms": _p1b_item_last_capture_ms,
+			"submit_ms": float(Time.get_ticks_usec() - capture_done_us) / 1000.0,
+		})
+	return true
+
+
 func _handle_construction_command(peer_id: String, session_id: String, payload: Dictionary) -> void:
 	var operation_id := String(payload.get("operation_id", "")).strip_edges()
 	if not _peer_to_player.has(peer_id) or String(_peer_to_session.get(peer_id, "")) != session_id:
