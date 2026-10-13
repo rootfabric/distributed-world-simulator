@@ -1464,6 +1464,8 @@ func _handle_construction_command(peer_id: String, session_id: String, payload: 
 	_write_report("READY", false)
 
 func _broadcast_item_delta(delta: Dictionary, excluded_peer_id: String, reason: String) -> void:
+	if not _p1b_item_pending.is_empty():
+		return
 	if delta.is_empty():
 		return
 	for peer_id_value in _peer_to_player.keys():
