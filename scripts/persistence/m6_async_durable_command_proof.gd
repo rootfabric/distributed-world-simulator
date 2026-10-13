@@ -178,9 +178,18 @@ func accept_command_completion(completion: Dictionary) -> Dictionary:
 	if bool(_held.get("stale_session", false)):
 		_held.clear()
 		_phase = PHASE_IDLE
-		return _success({"committed": true, "ack_eligible": false, "stale_session": true})
-	return _success({"committed": true, "ack_eligible": true,
-		"generation": int(details["generation"])})
+		return _success({
+			"committed": true, "ack_eligible": false, "stale_session": true,
+			"generation": int(details["generation"]),
+			"worker_ms": float(details.get("worker_ms", 0.0)),
+			"write_ms": float(details.get("write_ms", 0.0)),
+		})
+	return _success({
+		"committed": true, "ack_eligible": true,
+		"generation": int(details["generation"]),
+		"worker_ms": float(details.get("worker_ms", 0.0)),
+		"write_ms": float(details.get("write_ms", 0.0)),
+	})
 
 
 # The prior periodic checkpoint belongs to the SAME writer instance. Its
