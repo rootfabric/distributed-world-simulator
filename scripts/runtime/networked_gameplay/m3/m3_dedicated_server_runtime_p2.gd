@@ -2046,6 +2046,16 @@ func _persistence_report() -> Dictionary:
 		"last_error_details": _last_persistence_error_details.duplicate(true),
 		"outbox": _replay_outbox.get_report() if _replay_outbox != null else {},
 		"durable_ack_gate": _durable_ack_gate.get_report() if _durable_ack_gate != null else {},
+		"item_async_canary_enabled": _p1b_item_async_enabled,
+		"item_async_pending": not _p1b_item_pending.is_empty(),
+		"item_async_commits": _p1b_item_commits,
+		"item_async_snapshot_holds": _p1b_item_precommit_snapshot_holds,
+		"item_async_capture_ms": _p1b_item_last_capture_ms,
+		"item_async_ack_wait_ms": _p1b_item_last_ack_wait_ms,
+		"item_async_owner": (
+			_p1b_item_async_owner.get_report()
+			if _p1b_item_async_owner != null else {}
+		),
 		"service_recovery": _service.get_recovery_report() if _service != null else {},
 	}
 
