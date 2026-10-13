@@ -864,6 +864,11 @@ func _last_processed_input_sequence(logical_id: String) -> int:
 func _maybe_publish_movement_snapshot() -> void:
 	if not _movement_snapshot_dirty or _service == null:
 		return
+	# R2 safe (not yet smooth) canary: a compact frame must not reveal
+	# inventory and revision from an uncommitted ITEM mutation.
+	if not _p1b_item_pending.is_empty():
+		_p1b_item_precommit_snapshot_holds += 1
+		return
 	if _server_tick - _last_movement_snapshot_tick < NX3_MOVEMENT_SNAPSHOT_INTERVAL_TICKS:
 		return
 	_last_movement_snapshot_tick = _server_tick
