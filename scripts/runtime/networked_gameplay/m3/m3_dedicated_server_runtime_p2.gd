@@ -1355,6 +1355,9 @@ func _broadcast_snapshot(
 	channel: String = RealtimeChannelPolicy.RESYNC,
 	delivery_mode: String = "RELIABLE_ORDERED"
 ) -> void:
+	if not _p1b_item_pending.is_empty():
+		_p1b_item_precommit_snapshot_holds += 1
+		return
 	var snapshot: Dictionary = _service.create_snapshot()
 	for peer_id_value in _peer_to_player.keys():
 		if _send_on_channel(String(peer_id_value), "GAMEPLAY_SNAPSHOT", {"reason": reason, "snapshot": snapshot}, channel, delivery_mode):
