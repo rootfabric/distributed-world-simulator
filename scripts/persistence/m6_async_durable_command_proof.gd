@@ -84,6 +84,22 @@ func reserve_mutation(operation_id: String, peer_id: String, session_id: String,
 		"previous_generation": current_generation})
 
 
+# A rejected/replayed call has no successful new authority mutation.
+# Its pre-reservation can be released, with failure ledger persistence left to
+# the existing M6 contract. Never use this to cancel a successful mutation.
+func release_noncommitting_reservation(operation_id: String, result: Dictionary) -> Dictionary:
+	if _phase != PHASE_APPLYING or String(_held.get("operation_id", "")) != operation_id:
+		return _failure("P1B_NO_RESERVED_OPERATION")
+	if bool(result.get("success", false)) and not (
+		bool(result.get("replay", false))
+		or bool(Dictionary(result.get("details", {})).get("replay", false))
+	):
+		return fail_closed("P1B_SUCCESS_CANNOT_RELEASE_RESERVATION")
+	_held.clear()
+	_phase = PHASE_IDLE
+	return _success()
+
+
 # Called ONLY after successful canonical mutation + durable replay/outbox stage.
 # Caller-supplied dictionaries are detached by the existing writer.submit().
 # A failed submit after mutation is fatal; never issue an early ACK or retry
