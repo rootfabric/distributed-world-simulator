@@ -1330,6 +1330,10 @@ func _p1b_finish_item_committed(accepted: Dictionary, publish: bool) -> void:
 	_durable_commits += 1
 	_p1b_item_commits += 1
 	_p1b_item_last_worker_ms = float(accepted.get("details", {}).get("worker_ms", 0.0))
+	if _telemetry != null:
+		_telemetry.observe("persistence_duration_ms", _p1b_item_last_worker_ms)
+		_telemetry.observe("persistence_capture_ms", _p1b_item_last_capture_ms)
+		_telemetry.increment("persistence_commits")
 	_p1b_item_last_ack_wait_ms = float(
 		Time.get_ticks_usec() - int(pending.get("started_us", Time.get_ticks_usec()))
 	) / 1000.0
