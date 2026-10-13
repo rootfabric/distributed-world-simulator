@@ -3,13 +3,22 @@ extends SceneTree
 # R4.2-P1-B R2: real M3 ITEM handler → M6 outbox → one async writer →
 # authoritative repository commit. A dummy peer cannot receive ACK, so the
 # durable replay stays pending delivery. GUI/real transport is a later gate.
-const Runtime = preload("res://scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime_p2.gd")
+const Runtime = preload("res://scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime.gd")
 const Repository = preload("res://scripts/persistence/authoritative_recovery_repository.gd")
 
 const PEER := "peer/net-r42-p1b/a"
 const SESSION := "transport-session/net-r42-p1b/a/1"
 const PLAYER := "a"
 const OP := "operation/net-r42-p1b/item/hotbar0"
+
+class FakeConstructionBridge:
+	extends RefCounted
+	var submitted := 0
+	func connect_player(_player_id: String, _ownership_epoch: int) -> Dictionary:
+		return {"success": true, "error_code": "", "details": {"snapshot": {}}}
+	func submit_player_command(_player_id: String, _command: Dictionary) -> Dictionary:
+		submitted += 1
+		return {"success": true, "error_code": "", "details": {}}
 
 var assertions := 0
 var failures: Array[String] = []
@@ -58,6 +67,9 @@ func _test_real_m3_item_and_crash_safe_replay() -> void:
 	)
 	var runtime = Runtime.new()
 	get_root().add_child(runtime)
+	var fake_bridge = FakeConstructionBridge.new()
+	check(_ok(runtime.set_construction_bridge(fake_bridge)),
+		"test-only construction owner installed before real M3 setup")
 	var configured: Dictionary = runtime.setup({
 		"host": "127.0.0.1", "port": _port(),
 		"playable_sandbox": true, "persistence_root": path,
