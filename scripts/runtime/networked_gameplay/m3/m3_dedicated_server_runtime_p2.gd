@@ -1130,6 +1130,22 @@ func _handle_item_command(peer_id: String, session_id: String, payload: Dictiona
 		operation_id, command_type, Dictionary(command_payload_value)
 	)
 	_stall_exit(execute_probe)
+	if p1b_reserved:
+		if bool(result.get("success", false)) and not _is_replay_result(result):
+			if not _p1b_begin_item_async_commit(
+				operation_id, command_type, logical_id, result,
+				peer_id, session_id, item_epoch, before_item_snapshot
+			):
+				# The mutation happened, so failure is fatal and no success
+				# result may escape as an uncommitted state.
+				return
+			return
+		var released: Dictionary = _p1b_item_async_owner.release_noncommitting_reservation(
+			operation_id, result
+		)
+		if not bool(released.get("success", false)):
+			_enter_persistence_failure("P1B_ITEM_RESERVATION_RELEASE_FAILED")
+			return
 	var persist_probe := _stall_enter("ITEM:PERSIST_RESULT", stage_context)
 	var persisted_result := _persist_command_result(operation_id, command_type, logical_id, result, peer_id, session_id, item_epoch)
 	_stall_exit(persist_probe)
