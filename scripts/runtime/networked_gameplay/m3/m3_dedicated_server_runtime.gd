@@ -384,6 +384,13 @@ func _handle_resource_command(peer_id: String, session_id: String, payload: Dict
 		_send_result(peer_id, operation_id, "resource.mine", _failure("RESOURCE_MINING_NOT_READY"))
 		_resource_rejections += 1
 		return
+	# V0-P3 mining is also a canonical mutation. Never let it race an
+	# unresolved ITEM generation or steal that worker's completion.
+	if not _gate_can_accept():
+		_reject_uncommitted_command(peer_id, operation_id, "resource.mine",
+			_gate_reject_code())
+		_resource_rejections += 1
+		return
 
 	var logical_id := String(_peer_to_player.get(peer_id, ""))
 	var stage_context := _stall_context(peer_id, operation_id, "resource.mine")
