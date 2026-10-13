@@ -18,6 +18,7 @@ const AsyncCheckpointWriter = preload("res://scripts/persistence/async_checkpoin
 const M6AuthorityAdapter = preload("res://scripts/runtime/networked_gameplay/m6/m6_dedicated_gameplay_authority_adapter.gd")
 const M6ReplayOutbox = preload("res://scripts/runtime/networked_gameplay/m6/m6_durable_replay_outbox.gd")
 const M6PendingDurableAckGate = preload("res://scripts/persistence/m6_pending_durable_ack_gate.gd")
+const M6AsyncDurableCommandProof = preload("res://scripts/persistence/m6_async_durable_command_proof.gd")
 const RuntimeIdentity = preload("res://scripts/network/observability/network_runtime_identity.gd")
 const ProtocolManifest = preload("res://scripts/network/observability/network_protocol_manifest.gd")
 const CompatibilityHandshake = preload("res://scripts/network/observability/network_compatibility_handshake.gd")
