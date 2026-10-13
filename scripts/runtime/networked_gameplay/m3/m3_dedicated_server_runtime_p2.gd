@@ -1039,6 +1039,19 @@ func _handle_item_graph_resync_request(peer_id: String, session_id: String, payl
 		return
 	_item_graph_resync_requests += 1
 	var operation_id: String = String(payload.get("operation_id", ""))
+	if not _p1b_item_pending.is_empty():
+		# A reliable resync requested mid-commit must NOT read a mutable graph.
+		# Keep one bounded waiter per peer/session; serve after worker commit.
+		if (
+			_p1b_item_resync_waiters.has(peer_id)
+			or _p1b_item_resync_waiters.size() < P1B_MAX_DEFERRED_ITEM_RESYNCS
+		):
+			_p1b_item_resync_waiters[peer_id] = {
+				"session_id": session_id, "operation_id": operation_id
+			}
+		else:
+			_last_error_code = "P1B_ITEM_RESYNC_QUEUE_FULL"
+		return
 	var sent: bool = _send_on_channel(
 		peer_id,
 		"ITEM_GRAPH_SNAPSHOT",
