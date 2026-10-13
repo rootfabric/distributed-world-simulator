@@ -26,6 +26,18 @@
 7. `stop()` может подождать завершения in-flight ITEM **только как explicit shutdown barrier**, после чего старый peer не получает success и durable outbox остаётся для replay. Никаких ожиданий в `_process`.
 8. MOVE, PRESENTATION, LEAVE, DISCONNECT, canonical RESOURCE и некоторые другие команды ещё используют старую R4.1 sync durability; persistent CONSTRUCTION по-прежнему fail-closed. **Этот R2 не устраняет все серверные фризы**, хотя новый ITEM-success path переносит IO с main-thread. Claim о perf улучшениях возможен только по настоящим GUI traces.
 
+## Важный P1-B R2 narrow fix в реальном V0 наследнике
+
+Реальный `scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime.gd` переопределяет `_handle_construction_command` и отдельно обрабатывает `RESOURCE_COMMAND`. Предыдущий p2 safety gate **не действовал автоматически на эти методы наследника**. Проверка показала, что оба пути могли мутировать соседний gameplay domain при in-flight ITEM checkpoint, а persistent Construction могла получать успех от отдельного gateway без доказанного M6 durable owner.
+
+R2 добавляет в реальный V0 наследник:
+- обязательный `_gate_can_accept()` до resource mutation; возвращает ретраибельный отказ при pending;
+- для persistent Construction `_construction_durability_allowed()` с fail-closed `M3_CONSTRUCTION_DURABILITY_CONTRACT_REQUIRED` **даже при свободном gate**;
+- bounded ожидание `RESOURCE_RESYNC_REQUEST` и запрет `RESOURCE_SNAPSHOT` во время in-flight ITEM; flush только после durable commit и с peer/session fence;
+- тест через реальный V0 subclass и dummy Construction gateway проверяет отсутствие вызова `submit_player_command` как при pending, так и после commit в persistent world; также проверяет resource replay/revision и отсутствие precommit resource publication.
+
+Это защитный узкий ремонт R4.1/V0 наследования, **не разрешение на полноценную persistent стройку**.
+
 ## Тесты и gates
 
 - Новый настоящий M3 тест `tests/runtime/test_net_smooth1_r42_p1b_item_async_canary.gd`: opt-in без persistence fail; real runtime/service/canonical item graph; async ITEM stage; преждевременный ACK запрещён; другой ITEM до commit не применяется; compact/full/item resync блокируются; disconnect/retained durable replay; repository generation + restart recovery.
