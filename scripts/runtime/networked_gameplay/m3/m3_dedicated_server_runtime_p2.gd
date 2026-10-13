@@ -1329,7 +1329,6 @@ func _p1b_finish_item_committed(accepted: Dictionary, publish: bool) -> void:
 	_last_checkpoint_operation_id = String(pending.get("operation_id", ""))
 	_durable_commits += 1
 	_p1b_item_commits += 1
-	var worker_result: Dictionary = _movement_checkpoint_writer.get("unused") if false else {}
 	_p1b_item_last_ack_wait_ms = float(
 		Time.get_ticks_usec() - int(pending.get("started_us", Time.get_ticks_usec()))
 	) / 1000.0
