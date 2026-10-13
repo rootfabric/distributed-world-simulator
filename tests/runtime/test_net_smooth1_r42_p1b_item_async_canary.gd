@@ -201,7 +201,9 @@ func _test_real_m3_item_and_crash_safe_replay() -> void:
 	check(proof.get_report().get("phase", "") == "IDLE",
 		"quarantined ACK escrow is drained without a false delivery")
 	check(Dictionary(runtime.get("_p1b_item_resync_waiters")).is_empty(),
-		"queued stale resync cannot reach disconnected peer")
+		"queued stale item resync cannot reach disconnected peer")
+	check(Dictionary(runtime.get("_p1b_resource_resync_waiters")).is_empty(),
+		"queued stale resource resync is drained without crossing a new session")
 
 	var repository = Repository.new()
 	check(_ok(repository.configure(path)), "independent durable repository opened")
