@@ -518,6 +518,13 @@ func _send_resource_snapshot(peer_id: String, reason: String) -> bool:
 	return sent
 
 
+# Drop session-scoped read-only resync waiters on an explicit shutdown.
+# Canonical replay/outbox is separate and remains durable.
+func stop() -> Dictionary:
+	_p1b_resource_resync_waiters.clear()
+	return super.stop()
+
+
 func _p1b_flush_resource_resync_waiters() -> void:
 	if not _p1b_item_pending.is_empty() or _p1b_resource_resync_waiters.is_empty():
 		return
