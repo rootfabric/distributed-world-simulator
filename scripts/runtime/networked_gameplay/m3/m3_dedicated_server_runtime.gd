@@ -212,6 +212,16 @@ func _handle_construction_command(peer_id: String, session_id: String, payload: 
 	if not command_value is Dictionary:
 		_send_result(peer_id, operation_id, "CONSTRUCTION_COMMAND", _failure("CONSTRUCTION_COMMAND_REQUIRED"))
 		return
+	# The V0/P4 override must obey the SAME M6 durability gate as the P2
+	# base handler. Construction's separate gateway has no proven M6 owner.
+	if not _gate_can_accept():
+		_reject_uncommitted_command(peer_id, operation_id, "CONSTRUCTION_COMMAND",
+			_gate_reject_code())
+		return
+	if not _construction_durability_allowed():
+		_reject_uncommitted_command(peer_id, operation_id, "CONSTRUCTION_COMMAND",
+			"M3_CONSTRUCTION_DURABILITY_CONTRACT_REQUIRED")
+		return
 	var logical_id := String(_peer_to_player.get(peer_id, ""))
 	if (
 		_service != null
