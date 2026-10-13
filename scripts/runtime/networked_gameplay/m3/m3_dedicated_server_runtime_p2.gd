@@ -1329,6 +1329,7 @@ func _p1b_finish_item_committed(accepted: Dictionary, publish: bool) -> void:
 	_last_checkpoint_operation_id = String(pending.get("operation_id", ""))
 	_durable_commits += 1
 	_p1b_item_commits += 1
+	_p1b_item_last_worker_ms = float(accepted.get("details", {}).get("worker_ms", 0.0))
 	_p1b_item_last_ack_wait_ms = float(
 		Time.get_ticks_usec() - int(pending.get("started_us", Time.get_ticks_usec()))
 	) / 1000.0
@@ -2051,6 +2052,7 @@ func _persistence_report() -> Dictionary:
 		"item_async_commits": _p1b_item_commits,
 		"item_async_snapshot_holds": _p1b_item_precommit_snapshot_holds,
 		"item_async_capture_ms": _p1b_item_last_capture_ms,
+		"item_async_worker_ms": _p1b_item_last_worker_ms,
 		"item_async_ack_wait_ms": _p1b_item_last_ack_wait_ms,
 		"item_async_owner": (
 			_p1b_item_async_owner.get_report()
