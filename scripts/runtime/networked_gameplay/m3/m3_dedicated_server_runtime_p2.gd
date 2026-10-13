@@ -77,6 +77,17 @@ var _replay_outbox
 # R4.1-P1: ordered durable-ACK escrow. No mutation entry, success result, or
 # broadcast is published for an uncommitted checkpoint generation.
 var _durable_ack_gate
+# P1-B R2 opt-in ITEM canary (off in normal production).
+var _p1b_item_async_enabled := false
+var _p1b_item_async_owner
+var _p1b_item_pending: Dictionary = {}
+const P1B_MAX_DEFERRED_ITEM_RESYNCS := 32
+var _p1b_item_resync_waiters: Dictionary = {}
+var _p1b_item_commits := 0
+var _p1b_item_precommit_snapshot_holds := 0
+var _p1b_item_last_capture_ms := 0.0
+var _p1b_item_last_worker_ms := 0.0
+var _p1b_item_last_ack_wait_ms := 0.0
 var _player_ownership_epochs: Dictionary = {}
 # Bound disconnected sessions while a durable generation is pending.
 const MAX_DEFERRED_DISCONNECTS := 64
