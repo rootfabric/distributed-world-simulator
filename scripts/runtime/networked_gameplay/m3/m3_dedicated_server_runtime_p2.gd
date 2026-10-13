@@ -247,6 +247,17 @@ func setup(config: Dictionary) -> Dictionary:
 		if not bool(writer_setup.get("success", false)):
 			_cleanup_setup_failure()
 			return writer_setup
+	if _p1b_item_async_enabled:
+		if _movement_checkpoint_writer == null or _durable_ack_gate == null:
+			_cleanup_setup_failure()
+			return _failure("P1B_ITEM_SINGLE_WRITER_REQUIRED")
+		_p1b_item_async_owner = M6AsyncDurableCommandProof.new()
+		var p1b_owner_setup: Dictionary = _p1b_item_async_owner.configure(
+			_movement_checkpoint_writer, _durable_ack_gate
+		)
+		if not bool(p1b_owner_setup.get("success", false)):
+			_cleanup_setup_failure()
+			return _failure("P1B_ITEM_ASYNC_SETUP_FAILED", {"cause": p1b_owner_setup})
 	_fixed_tick_scheduler = FixedTickScheduler.new()
 	_server_tick = int(_service.get_report().get("server_tick", 0))
 	var fixed_tick_setup: Dictionary = _fixed_tick_scheduler.configure(
