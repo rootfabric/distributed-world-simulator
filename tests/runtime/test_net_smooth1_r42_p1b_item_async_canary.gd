@@ -89,8 +89,12 @@ func _test_real_m3_item_and_crash_safe_replay() -> void:
 		runtime.stop()
 		runtime.free()
 		return
-	runtime.set("_peer_to_player", {PEER: PLAYER})
-	runtime.set("_peer_to_session", {PEER: SESSION})
+	var player_by_peer: Dictionary = {}
+	player_by_peer[PEER] = PLAYER
+	var session_by_peer: Dictionary = {}
+	session_by_peer[PEER] = SESSION
+	runtime.set("_peer_to_player", player_by_peer)
+	runtime.set("_peer_to_session", session_by_peer)
 	var old_generation := int(runtime.get("_checkpoint_generation"))
 	var old_item_hash := String(service.create_canonical_item_graph_snapshot().get("checksum", ""))
 	var before_revision := int(service.get_report().get("revision", -1))
