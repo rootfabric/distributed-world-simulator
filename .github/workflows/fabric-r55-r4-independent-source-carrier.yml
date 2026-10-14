@@ -1,0 +1,43 @@
+name: FABRIC R5.5 R4 Frozen Source Carrier
+on:
+  push:
+    branches:
+      - verify/fabric-r55-r4-source-fd60c81b-r1
+permissions:
+  contents: read
+jobs:
+  frozen-r55-r4:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fd60c81bb95bb006ab02a302cce3f80c4045a337
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Check exact frozen product and additive repair
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$(git rev-parse HEAD)" = "fd60c81bb95bb006ab02a302cce3f80c4045a337"
+          test "$(git rev-parse 'HEAD^{tree}')" = "14e47ee9b5678a2b62e4f64c1a9cef1a828c061c"
+          test -z "$(git status --porcelain=v1 --untracked-files=no)"
+          BASE=325e598665414a7ea8e7c5240c52d2029b113410
+          test "$(git merge-base HEAD "$BASE")" = "$BASE"
+          git diff --check "$BASE" HEAD
+          test -z "$(git diff --name-only "$BASE" HEAD -- 'scripts/research/fabric_bake0/r5_3_*' 'scripts/research/fabric_bake0/r5_4_*' 'scripts/research/fabric_bake0/r5_indexed_sparse_damage_lifecycle_v1.gd' 'scripts/research/fabric_bake0/r5_range_aggregate_index_v1.gd')"
+          bash -n RUN_FABRIC_R5_5_TESTS.sh
+      - name: Export exact product source and incremental bundle
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          mkdir -p export
+          git archive --format=tar.gz --output=export/r55-r4-exact-source.tar.gz HEAD
+          git bundle create export/r55-r4-from-r3.bundle HEAD ^325e598665414a7ea8e7c5240c52d2029b113410
+          printf 'HEAD=%s\nTREE=%s\nBASE=%s\n' "$(git rev-parse HEAD)" "$(git rev-parse 'HEAD^{tree}')" "325e598665414a7ea8e7c5240c52d2029b113410" > export/IDENTITY.txt
+          (cd export && sha256sum r55-r4-exact-source.tar.gz r55-r4-from-r3.bundle > SHA256SUMS)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fabric-r55-r4-source-fd60c81b
+          path: export/**
+          retention-days: 30
