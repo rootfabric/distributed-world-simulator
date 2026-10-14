@@ -44,6 +44,10 @@ func _run() -> void:
 		"canonical player joins")
 	runtime.set("_peer_to_player", {PEER: PLAYER})
 	runtime.set("_peer_to_session", {PEER: SESSION})
+	# Direct service.join() bypasses M3 join-handler bookkeeping in this
+	# standalone test. Restore the exact ownership epoch the real handler
+	# normally captures before reserving the M6 durability generation.
+	runtime.set("_player_ownership_epochs", {PLAYER: 1})
 	var initial_generation := int(runtime.get("_checkpoint_generation"))
 	var started := Time.get_ticks_msec()
 	runtime.call("_handle_disconnect", PEER, SESSION)
