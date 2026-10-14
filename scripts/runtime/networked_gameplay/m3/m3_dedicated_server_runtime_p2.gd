@@ -29,6 +29,8 @@ const RealtimeChannelPolicy = preload("res://scripts/network/realtime/realtime_c
 const PlayerInputBatch = preload("res://scripts/runtime/networked_gameplay/contracts/player_input_batch.gd")
 const CanonicalItemGraphDelta = preload("res://scripts/runtime/networked_gameplay/contracts/canonical_item_graph_delta.gd")
 const CompactGameplaySnapshot = preload("res://scripts/runtime/networked_gameplay/contracts/compact_gameplay_snapshot.gd")
+const FullSnapshot = preload("res://scripts/runtime/networked_gameplay/contracts/player_state_snapshot.gd")
+const CommittedView = preload("res://scripts/runtime/networked_gameplay/contracts/committed_movement_view.gd")
 const FixedTickScheduler = preload("res://scripts/network/simulation/fixed_tick_scheduler.gd")
 const FixedTickInputBuffer = preload("res://scripts/network/simulation/fixed_tick_input_buffer.gd")
 const ConstructionBridge = preload("res://scripts/runtime/networked_gameplay/m3/m3_construction_replication_bridge.gd")
@@ -81,6 +83,11 @@ var _durable_ack_gate
 var _p1b_item_async_enabled := false
 var _p1b_item_async_owner
 var _p1b_item_pending: Dictionary = {}
+# Full wire snapshot captured before ITEM, never aliased to canonical state.
+var _p1b_committed_view: Dictionary = {}
+var _p1b_committed_frames := 0
+var _p1b_committed_enqueues := 0
+var _p1b_committed_rejections := 0
 const P1B_MAX_DEFERRED_ITEM_RESYNCS := 32
 var _p1b_item_resync_waiters: Dictionary = {}
 var _p1b_item_commits := 0
@@ -190,6 +197,10 @@ func setup(config: Dictionary) -> Dictionary:
 	if _p1b_item_async_enabled and (not _persistence_enabled or not _playable_sandbox):
 		return _failure("P1B_CANARY_REQUIRES_PERSISTENT_PLAYABLE_WORLD")
 	_p1b_item_pending.clear()
+	_p1b_committed_view.clear()
+	_p1b_committed_frames = 0
+	_p1b_committed_enqueues = 0
+	_p1b_committed_rejections = 0
 	_p1b_item_resync_waiters.clear()
 	_p1b_item_commits = 0
 	_p1b_item_precommit_snapshot_holds = 0
@@ -864,16 +875,24 @@ func _last_processed_input_sequence(logical_id: String) -> int:
 func _maybe_publish_movement_snapshot() -> void:
 	if not _movement_snapshot_dirty or _service == null:
 		return
-	# R2 safe (not yet smooth) canary: a compact frame must not reveal
-	# inventory and revision from an uncommitted ITEM mutation.
-	if not _p1b_item_pending.is_empty():
-		_p1b_item_precommit_snapshot_holds += 1
-		return
+	# R3.1: retain the 20Hz 60/3 tick while the ITEM writer is pending.
+	# The full/ITEM resync barrier is NOT relaxed.
 	if _server_tick - _last_movement_snapshot_tick < NX3_MOVEMENT_SNAPSHOT_INTERVAL_TICKS:
 		return
 	_last_movement_snapshot_tick = _server_tick
 	var snapshot_started_us := Time.get_ticks_usec()
-	var authoritative_snapshot: Dictionary = _service.create_snapshot()
+	var pending_view := not _p1b_item_pending.is_empty()
+	var authoritative_snapshot: Dictionary
+	if pending_view:
+		var view: Dictionary = _build_p1b_committed_movement_snapshot()
+		if not bool(view.get("success", false)):
+			_p1b_committed_rejections += 1
+			_last_error_code = String(view.get("error_code", "P1B_COMMITTED_VIEW_REJECTED"))
+			return  # fail closed; never fall back to speculative live snapshot
+		authoritative_snapshot = Dictionary(view.get("details", {}).get("snapshot", {}))
+		_p1b_committed_frames += 1
+	else:
+		authoritative_snapshot = _service.create_snapshot()
 	var snapshot_captured_us := Time.get_ticks_usec()
 	var compact_result: Dictionary = CompactGameplaySnapshot.encode(authoritative_snapshot)
 	var snapshot_encoded_us := Time.get_ticks_usec()
@@ -894,6 +913,11 @@ func _maybe_publish_movement_snapshot() -> void:
 	for peer_id_value in _peer_to_player.keys():
 		target_count += 1
 		var peer_id := String(peer_id_value)
+		if pending_view and not CommittedView.peer_is_fenced(
+			authoritative_snapshot, String(_peer_to_player.get(peer_id, "")),
+			String(_peer_to_session.get(peer_id, ""))
+		):
+			continue  # changed transport session never inherits committed view
 		var compact_started_us := Time.get_ticks_usec()
 		var compact_queued := _send_on_channel(
 			peer_id,
@@ -906,13 +930,17 @@ func _maybe_publish_movement_snapshot() -> void:
 		if compact_queued:
 			_broadcasts += 1
 			_compact_movement_snapshots_published += 1
-			var seam_started_us := Time.get_ticks_usec()
-			_send_product_seam_state(
-				peer_id,
-				String(_peer_to_player.get(peer_id_value, "")),
-				"MOVEMENT_NETWORK_TICK"
-			)
-			seam_check_send_us += Time.get_ticks_usec() - seam_started_us
+			if pending_view:
+				_p1b_committed_enqueues += 1
+			else:
+				# USER1 seam resync remains reliable and live only after commit.
+				var seam_started_us := Time.get_ticks_usec()
+				_send_product_seam_state(
+					peer_id,
+					String(_peer_to_player.get(peer_id_value, "")),
+					"MOVEMENT_NETWORK_TICK"
+				)
+				seam_check_send_us += Time.get_ticks_usec() - seam_started_us
 		else:
 			all_enqueued = false
 			_movement_snapshot_enqueue_failures += 1
@@ -922,6 +950,7 @@ func _maybe_publish_movement_snapshot() -> void:
 	if SmoothTrace.enabled():
 		SmoothTrace.emit("movement_snapshot_stages", {
 			"tick": _server_tick, "peers": target_count,
+			"committed_view": pending_view,
 			"capture_ms": float(snapshot_captured_us - snapshot_started_us) / 1000.0,
 			"encode_ms": float(snapshot_encoded_us - snapshot_captured_us) / 1000.0,
 			"send_and_seam_ms": float(Time.get_ticks_usec() - sent_started_us) / 1000.0,
@@ -930,6 +959,22 @@ func _maybe_publish_movement_snapshot() -> void:
 			"seam_sent": _seam_messages_sent - seam_sent_before,
 			"seam_skipped_unchanged": _seam_unchanged_skipped - seam_skipped_before,
 		})
+
+
+# This reader only fetches *movement* records from the live service; every
+# durable field is sourced from the verified snapshot captured pre-ITEM.
+func _build_p1b_committed_movement_snapshot() -> Dictionary:
+	if _p1b_committed_view.is_empty() or _service == null:
+		return _failure("P1B_COMMITTED_VIEW_BASE_REQUIRED")
+	var moving: Array = []
+	for player_value in _p1b_committed_view.get("players", []):
+		if not player_value is Dictionary:
+			return _failure("P1B_COMMITTED_VIEW_PLAYER_INVALID")
+		var id := String(Dictionary(player_value).get("logical_player_id", ""))
+		var live: Dictionary = _service.get_player(id)
+		if not live.is_empty():
+			moving.append(live)
+	return CommittedView.project(_p1b_committed_view, moving, _server_tick)
 
 
 func _send_product_seam_state(
@@ -1123,6 +1168,16 @@ func _handle_item_command(peer_id: String, session_id: String, payload: Dictiona
 	var stage_context := _stall_context(peer_id, operation_id, command_type)
 	var before_probe := _stall_enter("ITEM:BEFORE_SNAPSHOT", stage_context)
 	var before_item_snapshot: Dictionary = _service.create_canonical_item_graph_snapshot()
+	var before_gameplay_snapshot: Dictionary = {}
+	if p1b_reserved:
+		before_gameplay_snapshot = _service.create_snapshot()
+		if not bool(FullSnapshot.validate(before_gameplay_snapshot).get("success", false)):
+			_p1b_item_async_owner.release_noncommitting_reservation(
+				operation_id, _failure("P1B_PREITEM_VIEW_INVALID")
+			)
+			_stall_exit(before_probe)
+			_enter_persistence_failure("P1B_PREITEM_VIEW_INVALID")
+			return
 	_stall_exit(before_probe)
 	var execute_probe := _stall_enter("ITEM:EXECUTE", stage_context)
 	var result: Dictionary = _service.handle_canonical_item_command(
@@ -1134,7 +1189,8 @@ func _handle_item_command(peer_id: String, session_id: String, payload: Dictiona
 		if bool(result.get("success", false)) and not _is_replay_result(result):
 			if not _p1b_begin_item_async_commit(
 				operation_id, command_type, logical_id, result,
-				peer_id, session_id, item_epoch, before_item_snapshot
+				peer_id, session_id, item_epoch, before_item_snapshot,
+				before_gameplay_snapshot
 			):
 				# The mutation happened, so failure is fatal and no success
 				# result may escape as an uncommitted state.
@@ -1202,7 +1258,8 @@ func _handle_item_command(peer_id: String, session_id: String, payload: Dictiona
 func _p1b_begin_item_async_commit(
 	operation_id: String, command_type: String, logical_id: String,
 	result: Dictionary, peer_id: String, session_id: String, ownership_epoch: int,
-	before_item_snapshot: Dictionary
+	before_item_snapshot: Dictionary,
+	before_gameplay_snapshot: Dictionary
 ) -> bool:
 	if not _p1b_item_pending.is_empty() or _p1b_item_async_owner == null:
 		_enter_persistence_failure("P1B_ITEM_SINGLE_INFLIGHT_REQUIRED")
@@ -1210,6 +1267,10 @@ func _p1b_begin_item_async_commit(
 	if not _service.has_durable_replay_operation(operation_id):
 		_enter_persistence_failure("P1B_ITEM_M6_REPLAY_OWNER_REQUIRED")
 		return false
+	if before_gameplay_snapshot.is_empty():
+		_enter_persistence_failure("P1B_PREITEM_VIEW_REQUIRED")
+		return false
+	_p1b_committed_view = before_gameplay_snapshot  # already detached DTO
 	var capture_start_us := Time.get_ticks_usec()
 	var player_checksum := String(_service.create_snapshot().get("checksum", ""))
 	var item_checksum := String(_service.create_canonical_item_graph_snapshot().get("checksum", ""))
@@ -1340,6 +1401,7 @@ func _p1b_finish_item_committed(accepted: Dictionary, publish: bool) -> void:
 	# Later movement mutations happened AFTER frozen capture; keep their
 	# dirty marker for a subsequent periodic checkpoint.
 	_p1b_item_pending.clear()
+	_p1b_committed_view.clear()
 	if SmoothTrace.enabled():
 		SmoothTrace.emit("p1b_item_async_stages", {
 			"stage": "DURABLE_COMMIT",
@@ -2057,6 +2119,9 @@ func _persistence_report() -> Dictionary:
 		"item_async_pending": not _p1b_item_pending.is_empty(),
 		"item_async_commits": _p1b_item_commits,
 		"item_async_snapshot_holds": _p1b_item_precommit_snapshot_holds,
+		"item_committed_view_frames": _p1b_committed_frames,
+		"item_committed_view_enqueues": _p1b_committed_enqueues,
+		"item_committed_view_rejections": _p1b_committed_rejections,
 		"item_async_capture_ms": _p1b_item_last_capture_ms,
 		"item_async_worker_ms": _p1b_item_last_worker_ms,
 		"item_async_ack_wait_ms": _p1b_item_last_ack_wait_ms,
@@ -2574,6 +2639,7 @@ func stop() -> Dictionary:
 	_service = null
 	_p1b_item_async_owner = null
 	_p1b_item_pending.clear()
+	_p1b_committed_view.clear()
 	_p1b_item_resync_waiters.clear()
 	_fixed_tick_scheduler = null
 	_peer_input_buffers.clear()
