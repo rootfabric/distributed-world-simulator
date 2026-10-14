@@ -44,13 +44,28 @@ class R3SourceContract(unittest.TestCase):
 
     def test_async_writer_ownership_and_m6_barrier(self):
         self.assertIn('func submit_owned(', self.writer)
-        self.assertIn('return submit_owned(authority_state.duplicate(true)', self.writer)
+        self.assertIn('return submit_owned(authority_state, replay_state,', self.writer)
+        self.assertIn('"authority": authority_state.duplicate(true)', self.writer)
+        self.assertIn('"replay": replay_state.duplicate(true)', self.writer)
+        self.assertIn('No live Node or Resource may enter this interface', self.writer)
         self.assertIn('if _writer.has_method("submit_owned")', self.proof)
         self.assertIn('mark_submitted(operation_id, generation)', self.proof)
         self.assertIn('poll_command_completion()', self.server)
         self.assertIn('accept_command_completion(completed)', self.server)
         self.assertIn('DWS_NET_SMOOTH_TEST_HOOKS', self.writer)
         self.assertIn('OS.delay_msec(test_delay_ms)', self.writer)
+
+    def test_r2_full_item_holds_still_observable(self):
+        item = self.server.split("func _broadcast_item_snapshot(", 1)[1].split("\nfunc ", 1)[0]
+        full = self.server.split("func _broadcast_snapshot(", 1)[1].split("\nfunc ", 1)[0]
+        self.assertIn('if not _p1b_item_pending.is_empty():', item)
+        self.assertIn('_p1b_item_precommit_snapshot_holds += 1', item)
+        self.assertIn('_p1b_item_graph_snapshot_holds += 1', item)
+        self.assertIn('_p1b_item_precommit_snapshot_holds += 1', full)
+        self.assertIn('"item_async_item_graph_snapshot_holds"', self.server)
+        # Movement continuity must not increment a blocked full-state counter.
+        movement = self.server.split("func _maybe_publish_movement_snapshot(", 1)[1].split("\nfunc ", 1)[0]
+        self.assertNotIn('_p1b_item_precommit_snapshot_holds += 1', movement)
 
     def test_nonblocking_20hz_and_true_periodic_route_evidence(self):
         self.assertIn('NX3_MOVEMENT_SNAPSHOT_INTERVAL_TICKS', self.server)
@@ -65,7 +80,11 @@ class R3SourceContract(unittest.TestCase):
     def test_only_detached_state_enters_writer(self):
         self.assertIn('export_recovery_state()', self.server)
         self.assertIn('_replay_outbox.to_dict()', self.server)
-        self.assertNotIn('authority_state.duplicate(true),\n\t\t"replay": replay_state.duplicate(true)', self.writer)
+        # The P1-A Windows falsifier mutates the caller's authority and replay
+        # after submit_frozen(). Both fields MUST be deep-copied in the writer.
+        self.assertIn('"authority": authority_state.duplicate(true)', self.writer)
+        self.assertIn('"replay": replay_state.duplicate(true)', self.writer)
+        self.assertNotIn('"authority": authority_state,\n\t\t"replay": replay_state,', self.writer)
         self.assertIn('var durable_players_view: Dictionary = create_snapshot()', self.service)
 
 if __name__ == '__main__':

@@ -1,0 +1,135 @@
+name: NET-SMOOTH1 R4.2 R3 Windows Narrow Repair (no merge)
+
+on:
+  push:
+    branches:
+      - repair/net-smooth1-r42-r3-windows-r1
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: net-smooth-r42-r3-narrow-repair
+  cancel-in-progress: true
+
+jobs:
+  source-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: R3 source safety contracts (not a Godot verdict)
+        run: python -m unittest discover -s tests/tools -p test_net_smooth1_r42_r3_source_contract.py -v
+      - name: R3/R2 and M6 source contracts
+        run: python -m unittest discover -s tests/tools -p test_net_smooth1_p1b_r2_source_contract.py -v
+      - name: Analyzer regressions
+        run: python -m unittest discover -s tests/tools -p test_net_smooth1_analyzer.py -v
+
+  windows-exact:
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 40
+    env:
+      BREAKPOINT_RUNTIME_DISABLED: "1"
+      GODOT_SILENCE_ROOT_WARNING: "1"
+      PYTHONUTF8: "1"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Exact identity and Windows Godot double
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $ExpectedParent = '9a03757d3bd88e0e767f1d583148544912563e7d'
+          $Engine = 'C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe'
+          if ((git rev-parse HEAD).Trim() -ne $env:GITHUB_SHA) { throw 'R3_REPAIR_HEAD_MISMATCH' }
+          git merge-base --is-ancestor $ExpectedParent HEAD
+          if ($LASTEXITCODE -ne 0) { throw 'R3_PARENT_ANCESTRY_MISMATCH' }
+          if (git status --porcelain --untracked-files=no) { throw 'R3_TRACKED_DIRTY' }
+          if (-not (Test-Path $Engine)) { throw 'R3_GODOT_NOT_FOUND' }
+          $Version = (& $Engine --version | Out-String).Trim()
+          $SHA = (Get-FileHash $Engine -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($Version -ne '4.7.1.stable.double.custom_build.a13da4feb') { throw "R3_GODOT_VERSION_MISMATCH:$Version" }
+          if ($SHA -ne '3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5') { throw "R3_GODOT_SHA_MISMATCH:$SHA" }
+          $Evidence = 'artifacts\net-smooth1\r42-r3-windows-repair'
+          New-Item -ItemType Directory -Force $Evidence | Out-Null
+          [ordered]@{
+            head=(git rev-parse HEAD).Trim()
+            tree=(git rev-parse 'HEAD^{tree}').Trim()
+            expected_parent=$ExpectedParent
+            engine_version=$Version
+            engine_sha256=$SHA
+            scope='FRESH_NARROW_REPAIR_RUNTIME_NOT_GUI_ACCEPTANCE'
+          } | ConvertTo-Json | Set-Content "$Evidence\identity.json" -Encoding UTF8
+      - name: Cold import, reject parser/compiler warnings
+        shell: pwsh
+        timeout-minutes: 12
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $Engine = 'C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe'
+          $Log = 'artifacts\net-smooth1\r42-r3-windows-repair\cold-import.log'
+          & $Engine --headless --editor --path . --import --quit *> $Log
+          if ($LASTEXITCODE -ne 0) { Get-Content $Log -Tail 120; throw 'R3_REPAIR_COLD_IMPORT_FAILED' }
+          if (Select-String -Path $Log -Pattern 'SCRIPT ERROR:|Parse Error:|Compile Error:' -Quiet) { throw 'R3_REPAIR_IMPORT_PARSE_ERROR' }
+      - name: Real M6 writer, R3 movement, R2 backwards compatibility
+        shell: pwsh
+        timeout-minutes: 25
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $Engine = 'C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe'
+          $Evidence = 'artifacts\net-smooth1\r42-r3-windows-repair'
+          $Suites = @(
+            'tests/runtime/test_net_smooth1_r42_r3_writer_nested_alias.gd',
+            'tests/runtime/test_net_smooth1_r42_p1_async_durable_proof.gd',
+            'tests/runtime/test_net_smooth1_r42_r3_slow_item_movement.gd',
+            'tests/runtime/test_net_smooth1_r42_p1b_item_async_canary.gd',
+            'tests/runtime/test_net_smooth1_r42_r3_committed_view.gd',
+            'tests/runtime/test_net_smooth1_r42_p1b_periodic_completion_order.gd',
+            'tests/runtime/test_net_smooth1_r42_seam_full_snapshot_wire_checksum.gd',
+            'tests/runtime/test_net_smooth1_r41_pending_durable_gate.gd',
+            'tests/runtime/test_net_smooth1_r41_p1_fifo_disconnect_repair.gd',
+            'tests/runtime/test_net_smooth1_async_checkpoint.gd',
+            'tests/runtime/test_m6_dedicated_recovery_contracts.gd',
+            'tests/runtime/test_v0_user1_product_seam_bridge.gd',
+            'tests/network/test_nx3_fixed_tick_authoritative_simulation.gd'
+          )
+          foreach ($Suite in $Suites) {
+            $Log = Join-Path $Evidence ((Split-Path $Suite -Leaf) + '.log')
+            & $Engine --headless --path . --script ("res://" + $Suite) *> $Log
+            if ($LASTEXITCODE -ne 0) {
+              Get-Content $Log -Tail 130
+              throw "R3_SUITE_FAILED:$Suite"
+            }
+            if (Select-String -Path $Log -Pattern 'SCRIPT ERROR:|Parse Error:|Compile Error:|ERROR:' -Quiet) {
+              Get-Content $Log -Tail 130
+              throw "R3_RUNTIME_ERROR:$Suite"
+            }
+          }
+          if (git status --porcelain --untracked-files=no) { throw 'R3_REPAIR_POST_TEST_DIRTY' }
+      - name: Hash immutable evidence
+        shell: pwsh
+        if: always()
+        run: |
+          $Evidence = 'artifacts\net-smooth1\r42-r3-windows-repair'
+          New-Item -ItemType Directory -Force $Evidence | Out-Null
+          @(Get-ChildItem -Path $Evidence -File -ErrorAction SilentlyContinue |
+            Where-Object { $_.Name -ne 'hashes.json' } |
+            ForEach-Object { [ordered]@{file=$_.Name;sha256=(Get-FileHash $_.FullName -Algorithm SHA256).Hash} }) |
+            ConvertTo-Json -Depth 4 | Set-Content "$Evidence\hashes.json" -Encoding UTF8
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: net-smooth-r42-r3-repair-${{ github.sha }}-${{ github.run_id }}
+          path: artifacts/net-smooth1/r42-r3-windows-repair/
+          if-no-files-found: error
+          retention-days: 21
