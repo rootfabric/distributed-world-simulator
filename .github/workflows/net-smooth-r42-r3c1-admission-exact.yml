@@ -62,6 +62,15 @@ jobs:
           $E='artifacts\net-smooth1\r3c1-windows-exact'
           New-Item -ItemType Directory -Force $E | Out-Null
           [ordered]@{head=(git rev-parse HEAD).Trim();tree=(git rev-parse 'HEAD^{tree}').Trim();parent=$Parent;engine_sha256=$Hash;scope='R3C1_NARROW_NOT_GUI_PERFORMANCE'} | ConvertTo-Json | Set-Content "$E\identity.json" -Encoding UTF8
+      - name: Targeted standalone GDScript parser diagnostic
+        shell: pwsh
+        continue-on-error: true
+        run: |
+          $Godot='C:\\Godot\\godot\\bin\\godot.windows.editor.double.x86_64.console.exe'
+          $Log='artifacts\\net-smooth1\\r3c1-windows-exact\\direct-parse-probe.log'
+          & $Godot --headless --path . --check-only --script res://scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime_p2.gd *> $Log
+          Get-Content $Log -Tail 120
+          Write-Host "R3C1_DIRECT_PARSE_EXIT=$LASTEXITCODE"
       - name: Cold import
         shell: pwsh
         timeout-minutes: 12
@@ -71,7 +80,7 @@ jobs:
           $Log='artifacts\net-smooth1\r3c1-windows-exact\cold-import.log'
           & $Godot --headless --editor --path . --import --quit *> $Log
           if ($LASTEXITCODE -ne 0) { Get-Content $Log -Tail 100; throw 'R3C1_IMPORT_FAIL' }
-          if (Select-String -Path $Log -Pattern 'SCRIPT ERROR:|Parse Error:|Compile Error:' -Quiet) { throw 'R3C1_PARSE_FAIL' }
+          if (Select-String -Path $Log -Pattern 'SCRIPT ERROR:|Parse Error:|Compile Error:' -Quiet) { Get-Content $Log -Tail 120; throw 'R3C1_PARSE_FAIL' }
       - name: Real M3/M6 and older durability regression
         shell: pwsh
         timeout-minutes: 30
