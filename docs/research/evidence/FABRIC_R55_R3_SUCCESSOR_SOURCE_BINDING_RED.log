@@ -1,0 +1,8 @@
+Godot Engine v4.7.1.stable.double.custom_build.a13da4feb (2026-07-13 21:00:28 UTC) - https://godotengine.org
+
+ERROR: source digest tamper MUST be rejected before commit
+   at: push_error (core/variant/variant_utility.cpp:1023)
+   GDScript backtrace (most recent call first):
+       [0] ck (res://tests/research/fabric_bake0/review_r55_successor_binding_falsifier.gd:13)
+       [1] _initialize (res://tests/research/fabric_bake0/review_r55_successor_binding_falsifier.gd:45)
+FABRIC_R55_REVIEW_SUCCESSOR_BINDING_FALSIFIER={"checks":7,"failures":["source digest tamper MUST be rejected before commit"],"observations":{"canonical_broken_spec_checksum":"c6378b862ce376f9e32ad671701b10ce7ca5896d549fd6df21893f094bc633c3","canonical_cached_hash":"30579f4208d5a033d3c6ad616702c44a271a6a4c1226d149ff05a325de7a7f3b","committed_bond_digest":"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff","event_cause":"","event_error":"","event_success":true,"is_successor":true,"live_capsule_changed":true,"machine_hash_drift":true,"old_bond_digest":"c515ae265c9a236d428b2a0db9075b049596adfbd170b2ab94688274d9132080","recursive_sessions_changed":true,"rederived_error":"COMPLEX3_BOND_DIGEST_MISMATCH","rederived_success":false,"source_validate_false":true}}
