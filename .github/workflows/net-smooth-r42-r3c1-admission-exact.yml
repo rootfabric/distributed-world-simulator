@@ -64,16 +64,6 @@ jobs:
           test "$sha" = 'bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7'
           echo "GODOT_BIN=$godot" >> "$GITHUB_ENV"
           { echo "HEAD=$(git rev-parse HEAD)"; echo "TREE=$(git rev-parse 'HEAD^{tree}')"; echo "PARENT=67764d121ce92ab5a22ba92031835dbc880e167d"; echo "ENGINE_SHA256=$sha"; } > artifacts/net-smooth1/r3c1-linux-exact/identity.txt
-      - name: Direct parser probe including compiler line numbers
-        shell: bash
-        continue-on-error: true
-        run: |
-          set +e
-          "$GODOT_BIN" --headless --path . --check-only --script res://scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime_p2.gd > artifacts/net-smooth1/r3c1-linux-exact/direct-parse.log 2>&1
-          ec=$?
-          echo "$ec" > artifacts/net-smooth1/r3c1-linux-exact/direct-parse.exit
-          cat artifacts/net-smooth1/r3c1-linux-exact/direct-parse.log | tail -n 180
-          exit "$ec"
       - name: Cold import and compile
         shell: bash
         run: |
@@ -84,6 +74,17 @@ jobs:
           fi
           if grep -E 'SCRIPT ERROR:|Parse Error:|Compile Error:' "$log"; then
             tail -n 160 "$log"; exit 1
+          fi
+      - name: Exact direct GDScript parse after class-cache cold import
+        shell: bash
+        run: |
+          set -euo pipefail
+          log=artifacts/net-smooth1/r3c1-linux-exact/post-import-direct-parse.log
+          if ! "$GODOT_BIN" --headless --path . --check-only --script res://scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime_p2.gd > "$log" 2>&1; then
+            tail -n 120 "$log"; exit 1
+          fi
+          if grep -E 'SCRIPT ERROR:|Parse Error:|Compile Error:' "$log"; then
+            tail -n 120 "$log"; exit 1
           fi
       - name: Real M3 M6 focused R3C runtime
         shell: bash
@@ -143,15 +144,6 @@ jobs:
           $E='artifacts\net-smooth1\r3c1-windows-exact'
           New-Item -ItemType Directory -Force $E | Out-Null
           [ordered]@{head=(git rev-parse HEAD).Trim();tree=(git rev-parse 'HEAD^{tree}').Trim();parent=$Parent;engine_sha256=$Hash;scope='R3C1_NARROW_NOT_GUI_PERFORMANCE'} | ConvertTo-Json | Set-Content "$E\identity.json" -Encoding UTF8
-      - name: Targeted standalone GDScript parser diagnostic
-        shell: pwsh
-        continue-on-error: true
-        run: |
-          $Godot='C:\\Godot\\godot\\bin\\godot.windows.editor.double.x86_64.console.exe'
-          $Log='artifacts\\net-smooth1\\r3c1-windows-exact\\direct-parse-probe.log'
-          & $Godot --headless --path . --check-only --script res://scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime_p2.gd *> $Log
-          Get-Content $Log -Tail 120
-          Write-Host "R3C1_DIRECT_PARSE_EXIT=$LASTEXITCODE"
       - name: Cold import
         shell: pwsh
         timeout-minutes: 12
@@ -162,6 +154,17 @@ jobs:
           & $Godot --headless --editor --path . --import --quit *> $Log
           if ($LASTEXITCODE -ne 0) { Get-Content $Log -Tail 100; throw 'R3C1_IMPORT_FAIL' }
           if (Select-String -Path $Log -Pattern 'SCRIPT ERROR:|Parse Error:|Compile Error:' -Quiet) { Get-Content $Log -Tail 120; throw 'R3C1_PARSE_FAIL' }
+      - name: Exact Windows GDScript parse after cold import
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          $Godot='C:\\Godot\\godot\\bin\\godot.windows.editor.double.x86_64.console.exe'
+          $Log='artifacts\\net-smooth1\\r3c1-windows-exact\\post-import-direct-parse.log'
+          & $Godot --headless --path . --check-only --script res://scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime_p2.gd *> $Log
+          if ($LASTEXITCODE -ne 0 -or (Select-String -Path $Log -Pattern 'SCRIPT ERROR:|Parse Error:|Compile Error:' -Quiet)) {
+            Get-Content $Log -Tail 120
+            throw 'R3C1_POST_IMPORT_DIRECT_PARSE_FAIL'
+          }
       - name: Real M3/M6 and older durability regression
         shell: pwsh
         timeout-minutes: 30
