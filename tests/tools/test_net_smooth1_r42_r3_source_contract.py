@@ -44,7 +44,10 @@ class R3SourceContract(unittest.TestCase):
 
     def test_async_writer_ownership_and_m6_barrier(self):
         self.assertIn('func submit_owned(', self.writer)
-        self.assertIn('return submit_owned(authority_state.duplicate(true)', self.writer)
+        self.assertIn('return submit_owned(authority_state, replay_state,', self.writer)
+        self.assertIn('"authority": authority_state.duplicate(true)', self.writer)
+        self.assertIn('"replay": replay_state.duplicate(true)', self.writer)
+        self.assertIn('No live Node or Resource may enter this interface', self.writer)
         self.assertIn('if _writer.has_method("submit_owned")', self.proof)
         self.assertIn('mark_submitted(operation_id, generation)', self.proof)
         self.assertIn('poll_command_completion()', self.server)
@@ -65,7 +68,11 @@ class R3SourceContract(unittest.TestCase):
     def test_only_detached_state_enters_writer(self):
         self.assertIn('export_recovery_state()', self.server)
         self.assertIn('_replay_outbox.to_dict()', self.server)
-        self.assertNotIn('authority_state.duplicate(true),\n\t\t"replay": replay_state.duplicate(true)', self.writer)
+        # The P1-A Windows falsifier mutates the caller's authority and replay
+        # after submit_frozen(). Both fields MUST be deep-copied in the writer.
+        self.assertIn('"authority": authority_state.duplicate(true)', self.writer)
+        self.assertIn('"replay": replay_state.duplicate(true)', self.writer)
+        self.assertNotIn('"authority": authority_state,\n\t\t"replay": replay_state,', self.writer)
         self.assertIn('var durable_players_view: Dictionary = create_snapshot()', self.service)
 
 if __name__ == '__main__':

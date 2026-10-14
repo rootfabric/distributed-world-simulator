@@ -64,14 +64,16 @@ func is_busy() -> bool:
 func submit(authority_state: Dictionary, replay_state: Dictionary,
 		checkpoint_id: String, generation: int, previous_generation: int,
 		operation_id: String = "") -> Dictionary:
-	# Preserve the defensive-copy contract for ordinary callers.
-	return submit_owned(authority_state.duplicate(true), replay_state.duplicate(true),
+	# All mutable caller dictionaries need exactly one deep copy at the
+	# cross-thread boundary, irrespective of which entry point submits them.
+	return submit_owned(authority_state, replay_state,
 		checkpoint_id, generation, previous_generation, operation_id)
 
 
-# Only the M6 frozen-state proof uses this ownership-transfer entry point.
-# Both value trees were freshly exported, validated, detached from live state.
-# The submitting main thread must not mutate them after this call.
+# R3 Windows repair: submit_owned() is a compatibility name, NOT a guarantee
+# of exclusive ownership. The caller can still mutate nested Dictionary
+# values immediately after submission (proven by the M6 real-worker falsifier).
+# Never hand an alias of caller-owned durable state to an async thread.
 func submit_owned(authority_state: Dictionary, replay_state: Dictionary,
 		checkpoint_id: String, generation: int, previous_generation: int,
 		operation_id: String = "") -> Dictionary:
@@ -85,10 +87,13 @@ func submit_owned(authority_state: Dictionary, replay_state: Dictionary,
 		return _failure("ASYNC_CHECKPOINT_BUSY")
 	_busy = true
 	_mutex.unlock()
-	# The worker owns the detached trees; avoid another whole-world copy.
+	# Snapshot BOTH trees once before posting the worker semaphore.
+	# A shallow duplicate or a direct alias corrupts authoritative-checkpoint
+	# SHA when the submitting side edits nested replay/authority dictionaries.
+	# No live Node or Resource may enter this interface.
 	var job := {
-		"authority": authority_state,
-		"replay": replay_state,
+		"authority": authority_state.duplicate(true),
+		"replay": replay_state.duplicate(true),
 		"checkpoint_id": checkpoint_id, "generation": generation,
 		"previous_generation": previous_generation, "operation_id": operation_id,
 	}
