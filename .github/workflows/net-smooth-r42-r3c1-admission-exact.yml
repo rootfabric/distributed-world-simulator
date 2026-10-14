@@ -158,8 +158,8 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference='Stop'
-          $Godot='C:\\Godot\\godot\\bin\\godot.windows.editor.double.x86_64.console.exe'
-          $Log='artifacts\\net-smooth1\\r3c1-windows-exact\\post-import-direct-parse.log'
+          $Godot='C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe'
+          $Log='artifacts\net-smooth1\r3c1-windows-exact\post-import-direct-parse.log'
           & $Godot --headless --path . --check-only --script res://scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime_p2.gd *> $Log
           if ($LASTEXITCODE -ne 0 -or (Select-String -Path $Log -Pattern 'SCRIPT ERROR:|Parse Error:|Compile Error:' -Quiet)) {
             Get-Content $Log -Tail 120
