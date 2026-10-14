@@ -107,6 +107,9 @@ var _recovered := false
 var _recovery_source := ""
 var _last_checkpoint_operation_id := ""
 var _persistence_failures := 0
+var _legacy_sync_commit_count := 0
+var _legacy_last_main_thread_ms := 0.0
+var _legacy_last_writer_wait_ms := 0.0
 var _last_persistence_error_details: Dictionary = {}
 var _durable_commits := 0
 var _fatal_persistence_failure := false
@@ -1876,7 +1879,7 @@ func _setup_recovery() -> Dictionary:
 	var load_error := String(loaded.get("error_code", ""))
 	if load_error != "AUTHORITATIVE_CHECKPOINT_NOT_FOUND":
 		return _failure("M6_DEDICATED_RECOVERY_LOAD_FAILED", {"cause": loaded})
-	var seeded := _persist_checkpoint("")
+	var seeded := _persist_checkpoint("", "BOOTSTRAP_SEED")
 	if not bool(seeded.get("success", false)):
 		return seeded
 	var gate_ready_fresh: Dictionary = _ensure_durable_ack_gate()
@@ -1922,11 +1925,22 @@ func _persist_command_result(
 			_enter_persistence_failure("M6_SUCCESS_RESULT_NOT_REPLAY_DURABLE")
 			return false
 		return true
+	var legacy_started_us := Time.get_ticks_usec()
+	var prior_writer_drained := false
 	if bool(result.get("success", false)):
 		# R4.1-P1: drain the async movement writer BEFORE escrow. The staged
 		# generation must equal the actual next free generation; completing an
 		# in-flight periodic checkpoint after staging would steal that slot.
+		var legacy_wait_started_us := Time.get_ticks_usec()
 		_complete_async_movement_checkpoint(true)
+		_legacy_last_writer_wait_ms = float(Time.get_ticks_usec() - legacy_wait_started_us) / 1000.0
+		prior_writer_drained = true
+		if SmoothTrace.enabled():
+			SmoothTrace.emit("legacy_command_prior_writer_wait", {
+				"command_type": command_type,
+				"wait_ms": _legacy_last_writer_wait_ms,
+				"writer_available": _movement_checkpoint_writer != null,
+			})
 		if _fatal_persistence_failure:
 			return false
 		# R4.1-P1: escrow the successful result before any persistence. While a
@@ -1975,7 +1989,9 @@ func _persist_command_result(
 		_enter_persistence_failure(String(staged.get("error_code", "M6_OUTBOX_STAGE_FAILED")))
 		return false
 	var checkpoint_started_us: int = Time.get_ticks_usec()
-	var persisted: Dictionary = _persist_checkpoint(operation_id)
+	var persisted: Dictionary = _persist_checkpoint(
+		operation_id, "LEGACY_COMMAND_SYNC", prior_writer_drained
+	)
 	if SmoothTrace.enabled():
 		SmoothTrace.emit("durable_command_stages", {
 			"command_type": command_type,
@@ -1985,6 +2001,15 @@ func _persist_command_result(
 			"checkpoint_total_ms": float(Time.get_ticks_usec() - checkpoint_started_us) / 1000.0,
 			"success": bool(persisted.get("success", false)),
 			"failure_stage": "" if bool(persisted.get("success", false)) else "CHECKPOINT",
+		})
+	_legacy_sync_commit_count += 1
+	_legacy_last_main_thread_ms = float(Time.get_ticks_usec() - legacy_started_us) / 1000.0
+	if SmoothTrace.enabled():
+		SmoothTrace.emit("legacy_command_main_thread", {
+			"command_type": command_type, "operation_hash": operation_id.sha256_text().left(16),
+			"total_ms": _legacy_last_main_thread_ms,
+			"prior_writer_wait_ms": _legacy_last_writer_wait_ms,
+			"success": bool(persisted.get("success", false)),
 		})
 	if not bool(persisted.get("success", false)):
 		_enter_persistence_failure(String(persisted.get("error_code", "M6_DURABLE_COMMIT_FAILED")))
@@ -2008,15 +2033,21 @@ func _persist_command_result(
 	return true
 
 
-func _persist_checkpoint(operation_id: String) -> Dictionary:
+func _persist_checkpoint(
+	operation_id: String, origin_override: String = "", prior_writer_drained: bool = false
+) -> Dictionary:
 	if not _persistence_enabled or _recovery_coordinator == null:
 		return _success({"skipped": true})
 	# Commands retain the accepted durable-before-ACK contract. A newer sync
 	# generation must never race an older periodic writer.
 	var wait_started_us: int = Time.get_ticks_usec()
-	_complete_async_movement_checkpoint(true)
+	if not prior_writer_drained:
+		_complete_async_movement_checkpoint(true)
 	var waited_us: int = Time.get_ticks_usec() - wait_started_us
-	var origin: String = "COMMAND" if not operation_id.is_empty() else "PERIODIC"
+	var origin: String = (
+		origin_override if not origin_override.is_empty()
+		else "COMMAND" if not operation_id.is_empty() else "PERIODIC_UNCLASSIFIED"
+	)
 	if _fatal_persistence_failure:
 		if SmoothTrace.enabled():
 			SmoothTrace.emit("durable_checkpoint_stages", {
@@ -2141,6 +2172,9 @@ func _persistence_report() -> Dictionary:
 		"last_checkpoint_operation_id": _last_checkpoint_operation_id,
 		"durable_commits": _durable_commits,
 		"failures": _persistence_failures,
+		"legacy_sync_command_count": _legacy_sync_commit_count,
+		"legacy_sync_last_main_thread_ms": _legacy_last_main_thread_ms,
+		"legacy_sync_last_writer_wait_ms": _legacy_last_writer_wait_ms,
 		"fatal_failure": _fatal_persistence_failure,
 		"last_error_details": _last_persistence_error_details.duplicate(true),
 		"outbox": _replay_outbox.get_report() if _replay_outbox != null else {},
@@ -2372,10 +2406,18 @@ func _maybe_persist_movement_checkpoint() -> void:
 		or Time.get_ticks_msec() - _last_movement_checkpoint_ms < M7_MOVEMENT_CHECKPOINT_INTERVAL_MS
 	):
 		return
+	if SmoothTrace.enabled():
+		SmoothTrace.emit("periodic_checkpoint_dispatch", {
+			"origin": "MOVEMENT_PERIODIC",
+			"route": "ASYNC_WRITER" if _movement_checkpoint_writer != null else "SYNC_FALLBACK",
+			"writer_busy": _movement_checkpoint_writer != null and _movement_checkpoint_writer.is_busy(),
+			"generation": _checkpoint_generation,
+			"item_pending": not _p1b_item_pending.is_empty(),
+		})
 	if _movement_checkpoint_writer != null:
 		_submit_async_movement_checkpoint()
 		return
-	var persisted := _persist_checkpoint("")
+	var persisted := _persist_checkpoint("", "PERIODIC_SYNC_FALLBACK")
 	if not bool(persisted.get("success", false)):
 		_enter_persistence_failure(String(persisted.get("error_code", "M7_MOVEMENT_CHECKPOINT_FAILED")))
 		return
@@ -2662,7 +2704,7 @@ func stop() -> Dictionary:
 		_live2_stall_watchdog.stop()
 		_live2_stall_watchdog = null
 	if _persistence_enabled and not _fatal_persistence_failure and _service != null and _recovery_coordinator != null:
-		var persisted: Dictionary = _persist_checkpoint("")
+		var persisted: Dictionary = _persist_checkpoint("", "SHUTDOWN_FINAL")
 		if not bool(persisted.get("success", false)):
 			_enter_persistence_failure(String(persisted.get("error_code", "M6_FINAL_CHECKPOINT_FAILED")))
 	if _fatal_persistence_failure:
