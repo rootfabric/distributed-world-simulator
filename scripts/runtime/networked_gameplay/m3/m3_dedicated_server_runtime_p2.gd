@@ -922,7 +922,8 @@ func _maybe_publish_movement_snapshot() -> void:
 		var compact_queued := _send_on_channel(
 			peer_id,
 			"COMPACT_GAMEPLAY_SNAPSHOT",
-			{"reason": "MOVEMENT_NETWORK_TICK", "snapshot": compact_snapshot},
+			{"reason": "P1B_COMMITTED_VIEW_MOVEMENT" if pending_view else "MOVEMENT_NETWORK_TICK",
+			"snapshot": compact_snapshot},
 			RealtimeChannelPolicy.SNAPSHOT,
 			"UNRELIABLE_SEQUENCED"
 		)
