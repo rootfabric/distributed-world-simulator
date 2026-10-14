@@ -35,6 +35,13 @@ func setup(root_path: String) -> Dictionary:
 	if _thread != null:
 		return _failure("ASYNC_CHECKPOINT_ALREADY_STARTED")
 	_stopping = false
+	# CLI/process fault injection requires both test-only env variables;
+	# ordinary production environment cannot slow the writer.
+	_test_command_delay_ms = 0
+	if OS.get_environment("DWS_NET_SMOOTH_TEST_HOOKS") == "1":
+		var configured_delay := OS.get_environment("DWS_NET_SMOOTH_TEST_ITEM_DELAY_MS").to_int()
+		if configured_delay >= 0 and configured_delay <= 2000:
+			_test_command_delay_ms = configured_delay
 	_repository = Repository.new()
 	var configured: Dictionary = _repository.configure(root_path)
 	if not bool(configured.get("success", false)):

@@ -531,7 +531,10 @@ func _accept_committed_view_movement_snapshot(wire: Dictionary) -> void:
 		_committed_view_rejections += 1
 		return
 	var canonical: Dictionary = _replica.get_snapshot()
-	if canonical.is_empty() or int(incoming.get("revision", -1)) != int(canonical.get("revision", -2)):
+	# The last reliable client snapshot can trail the pre-ITEM server view by
+	# a few 20Hz frames. Never roll back; compare pinned durable domains
+	# separately, and do not import incoming revisions into _replica.
+	if canonical.is_empty() or int(incoming.get("revision", -1)) < int(canonical.get("revision", -2)):
 		_committed_view_rejections += 1
 		return
 	for field in ["authority_owner_id", "authority_epoch", "region_id", "shared_item"]:
@@ -558,7 +561,7 @@ func _accept_committed_view_movement_snapshot(wire: Dictionary) -> void:
 			return
 		var frozen: Dictionary = canonical_rows[id]
 		for field in ["player_entity_id", "transport_session_id", "ownership_epoch",
-			"connected", "state_revision", "inventory", "flashlight_enabled"]:
+			"connected", "inventory", "flashlight_enabled"]:
 			if moving.get(field) != frozen.get(field):
 				_committed_view_rejections += 1
 				return
