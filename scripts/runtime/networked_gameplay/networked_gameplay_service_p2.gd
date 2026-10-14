@@ -729,6 +729,17 @@ func has_durable_replay_operation(operation_id: String) -> bool:
 	)
 
 
+# R3B: a constant-size clock for the M6 outbox transaction envelope.
+# Never call get_report() on the ITEM main-thread capture path: the full
+# report includes durable and replay SHA exports, both O(total history).
+# These counters are the same authoritative fields used by get_report().
+func get_outbox_clock() -> Dictionary:
+	return {
+		"server_tick": _tick,
+		"revision": _revision,
+	}
+
+
 func get_recovery_report() -> Dictionary:
 	return {
 		"durable_state_checksum": String(export_durable_state().get("checksum", "")),
