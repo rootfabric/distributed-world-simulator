@@ -580,9 +580,9 @@ func _r3c_defer_admission(
 	if _movement_checkpoint_writer == null or _p1b_item_async_owner == null:
 		_enter_persistence_failure("R3C_SINGLE_WRITER_REQUIRED")
 		return true
-	var busy := (
+	var busy: bool = (
 		not _gate_can_accept()
-		or _movement_checkpoint_writer.is_busy()
+		or bool(_movement_checkpoint_writer.is_busy())
 		or not _p1b_item_pending.is_empty()
 		or String(_p1b_item_async_owner.get_report().get("phase", "")) != "IDLE"
 	)
