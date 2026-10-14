@@ -967,6 +967,7 @@ func _maybe_publish_movement_snapshot() -> void:
 		SmoothTrace.emit("movement_snapshot_stages", {
 			"tick": _server_tick, "peers": target_count,
 			"committed_view": pending_view,
+			"pending_kind": String(_p1b_item_pending.get("kind", "ITEM")) if pending_view else "",
 			"committed_enqueues": _p1b_committed_enqueues - committed_enqueues_before,
 			"all_enqueued": all_enqueued,
 			"capture_ms": float(snapshot_captured_us - snapshot_started_us) / 1000.0,

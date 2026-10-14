@@ -97,6 +97,9 @@ def examine(root: Path) -> dict[str, Any]:
         kind = event.get("kind")
         data = event.get("data", {})
         if kind == "p1b_item_async_stages":
+            # The shared M6 writer has non-ITEM generations too.
+            if data.get("kind", "ITEM") != "ITEM":
+                continue
             stage = data.get("stage")
             if stage == "SUBMIT":
                 submissions += 1
@@ -123,7 +126,9 @@ def examine(root: Path) -> dict[str, Any]:
                 else:
                     complete_windows.append(pending)
                     pending = None
-        elif kind == "movement_snapshot_stages" and data.get("committed_view") is True:
+        elif (kind == "movement_snapshot_stages"
+              and data.get("committed_view") is True
+              and data.get("pending_kind", "ITEM") == "ITEM"):
             if pending is None:
                 issues.append("committed-view movement outside an ITEM pending window")
                 continue
