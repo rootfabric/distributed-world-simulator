@@ -36,6 +36,19 @@ static func canonical_part_digest() -> String:
 static func canonical_base_source_checksum() -> String:
     return "24e146e453bf414621ec721c01a6571a732e429c5de56cdb262fa24f3ac0f08e"
 
+# R4 independent source-provenance witnesses for the exact frozen one-bond
+# successor. All three are values from a canonical Godot 4.7.1 double source
+# build, not derived from the runtime cache or its mutable cached hash.
+# This is a fixed research fixture, not general tamper-proof ROM storage.
+static func canonical_successor_subject_hash() -> String:
+    return "30579f4208d5a033d3c6ad616702c44a271a6a4c1226d149ff05a325de7a7f3b"
+
+static func canonical_successor_spec_checksum() -> String:
+    return "c6378b862ce376f9e32ad671701b10ce7ca5896d549fd6df21893f094bc633c3"
+
+static func canonical_successor_bond_digest() -> String:
+    return "c515ae265c9a236d428b2a0db9075b049596adfbd170b2ab94688274d9132080"
+
 static func endpoint_seal(index: Dictionary, endpoint: int) -> String:
     var prefix: Dictionary = index.get("prefix", {})
     var values: Array = []

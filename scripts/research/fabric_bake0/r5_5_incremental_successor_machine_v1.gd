@@ -27,6 +27,13 @@ func initialize() -> Dictionary:
         return U55.failure("R5_5_SUCCESSOR_PREPARE_FAILED")
     if not S55.is_successor(structural_source, canonical):
         return U55.failure("R5_5_SUCCESSOR_BINDING_INVALID")
+    # A runtime checksum cannot authenticate itself. Bind the complete cached
+    # successor to a code-backed reference at construction, including its
+    # canonical bond digest, source frontier and authority envelope.
+    if String(canonical.spec.get("checksum", "")) != Guard55.canonical_successor_spec_checksum() \
+            or String(canonical.spec.get("expanded_bond_digest", "")) != Guard55.canonical_successor_bond_digest() \
+            or U55.canonical_hash(canonical) != Guard55.canonical_successor_subject_hash():
+        return U55.failure("R5_5_SUCCESSOR_CANONICAL_INIT_MISMATCH")
     _prepared_successor = canonical.duplicate(true)
     _prepared_successor_hash = U55.canonical_hash(_prepared_successor)
     # Copy once: no live/staged prefix-array alias, and no per-attempt clone.
@@ -53,8 +60,15 @@ func _new_structural_stage():
 func _stage_structural_local_event() -> Dictionary:
     if _prepared_successor.is_empty() or _private_stage_index.is_empty():
         return U55.failure("R5_5_SUCCESSOR_NOT_PREPARED")
-    if U55.canonical_hash(_prepared_successor) != _prepared_successor_hash:
+    # R3 compared two mutable fields; forging the payload and cached hash
+    # together bypassed admission. R4 additionally authenticates BOTH against
+    # an independent, executable fixed-fixture witness BEFORE staging begins.
+    var actual_successor_hash: String = U55.canonical_hash(_prepared_successor)
+    if actual_successor_hash != _prepared_successor_hash:
         return U55.failure("R5_5_SUCCESSOR_CACHE_MUTATED")
+    if actual_successor_hash != Guard55.canonical_successor_subject_hash() \
+            or _prepared_successor_hash != Guard55.canonical_successor_subject_hash():
+        return U55.failure("R5_5_SUCCESSOR_PROVENANCE_MISMATCH")
     if not S55.is_successor(structural_source, _prepared_successor):
         return U55.failure("R5_5_SUCCESSOR_BINDING_DRIFT")
     var captured: Dictionary = structural_runtime.capture_capsule()

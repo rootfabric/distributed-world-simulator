@@ -7,10 +7,14 @@ Identity 'identity-before.txt';$cache=Join-Path $Root '.godot';if(Test-Path $cac
 $sample='res://tests/research/fabric_bake0/fabric_r5_5_successor_acceptance.gd'
 $adv='res://tests/research/fabric_bake0/fabric_r5_5_adversarial_evidence.gd'
 $matrix='res://tests/research/fabric_bake0/fabric_r5_5_prefix_integrity_matrix.gd'
-RunG parse @('--check-only','--script',$sample)|Out-Null;RunG parse @('--check-only','--script',$adv)|Out-Null;RunG parse_matrix @('--check-only','--script',$matrix)|Out-Null
+$source='res://tests/research/fabric_bake0/fabric_r5_5_r4_source_binding_acceptance.gd'
+RunG parse @('--check-only','--script',$sample)|Out-Null;RunG parse @('--check-only','--script',$adv)|Out-Null;RunG parse_matrix @('--check-only','--script',$matrix)|Out-Null;RunG parse_source @('--check-only','--script',$source)|Out-Null
 $payloads=@();1..3|%{$text=RunG "r55-acceptance-$_" @('--script',$sample);if($text -notmatch 'FABRIC_R5_5_RESULT=(\{.*\})'){throw 'R55_PAYLOAD_MISSING'};$payloads+=,$Matches[1]}
 if(@($payloads|Select-Object -Unique).Count -ne 1){throw 'R55_DETERMINISM_MISMATCH'};[IO.File]::WriteAllLines((Join-Path $Out 'r55-deterministic-payload.txt'),$payloads[0],$Utf8)
 $atext=RunG 'r55-adversarial' @('--script',$adv);if($atext -notmatch 'FABRIC_R5_5_ADVERSARIAL=(\{.*\})'){throw 'R55_ADV_PAYLOAD_MISSING'};[IO.File]::WriteAllText((Join-Path $Out 'r55-adversarial-payload.txt'),$Matches[1],$Utf8)
 &$PythonBin -c "import json,sys;d=json.load(open(sys.argv[1],encoding='utf-8'));sys.exit(0 if not d['failures'] else 1)" (Join-Path $Out 'r55-adversarial-payload.txt');if($LASTEXITCODE-ne 0){throw 'R55_ADV_CHECKS_FAILED'}
 $mtext=RunG 'r55-prefix-matrix' @('--script',$matrix);if($mtext -notmatch 'FABRIC_R5_5_PREFIX_MATRIX=(\{.*\})'){throw 'R55_MATRIX_PAYLOAD_MISSING'};[IO.File]::WriteAllText((Join-Path $Out 'r55-prefix-matrix-payload.json'),$Matches[1],$Utf8);&$PythonBin -c "import json,sys;d=json.load(open(sys.argv[1],encoding='utf-8'));sys.exit(0 if d['rejected_mutations']==100 and d['rejected_joint_mutations']==100 and not d['failures'] else 1)" (Join-Path $Out 'r55-prefix-matrix-payload.json');if($LASTEXITCODE-ne 0){throw 'R55_MATRIX_REJECTION_FAILED'}
-Write-Host 'R5_5_FOCUSED=PASS';Write-Host "EVIDENCE_DIR=$Out"
+$stext=RunG 'r55-r4-source-binding' @('--script',$source);if($stext -notmatch 'FABRIC_R5_5_R4_SOURCE_RESULT=(\{.*\})'){throw 'R55_SOURCE_BINDING_PAYLOAD_MISSING'};[IO.File]::WriteAllText((Join-Path $Out 'r55-r4-source-binding-payload.json'),$Matches[1],$Utf8)
+&$PythonBin -c "import json,sys;d=json.load(open(sys.argv[1],encoding='utf-8'));sys.exit(0 if d['rejected_attacks']==4 and d['full_rederived_success'] and not d['failures'] and d['checks']>=25 else 1)" (Join-Path $Out 'r55-r4-source-binding-payload.json');if($LASTEXITCODE-ne 0){throw 'R55_SOURCE_BINDING_NOT_REJECTED'}
+Identity 'identity-after.txt'
+Write-Host 'R5_5_R4_FOCUSED=PASS';Write-Host "EVIDENCE_DIR=$Out"
