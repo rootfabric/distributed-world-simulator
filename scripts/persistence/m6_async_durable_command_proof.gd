@@ -129,9 +129,18 @@ func submit_frozen(operation_id: String, result: Dictionary,
 	# ACK/outbound payloads are copied independently of the caller after stage.
 	_held["result"] = result.duplicate(true)
 	var checkpoint_id := "checkpoint/m6/dedicated/%d" % generation
-	var submitted: Dictionary = _writer.submit(
-		authority_state, replay_state, checkpoint_id,
-		generation, previous_generation, operation_id
+	# Shared M6 writer takes the freshly detached exports by ownership;
+	# legacy/fake writers keep their original submit() contract.
+	var submitted: Dictionary = (
+		_writer.submit_owned(
+			authority_state, replay_state, checkpoint_id,
+			generation, previous_generation, operation_id
+		)
+		if _writer.has_method("submit_owned")
+		else _writer.submit(
+			authority_state, replay_state, checkpoint_id,
+			generation, previous_generation, operation_id
+		)
 	)
 	if not bool(submitted.get("success", false)):
 		return fail_closed("P1A_WRITER_SUBMISSION_FAILED")
@@ -183,12 +192,14 @@ func accept_command_completion(completion: Dictionary) -> Dictionary:
 			"generation": int(details["generation"]),
 			"worker_ms": float(details.get("worker_ms", 0.0)),
 			"write_ms": float(details.get("write_ms", 0.0)),
+			"build_ms": float(details.get("build_ms", 0.0)),
 		})
 	return _success({
 		"committed": true, "ack_eligible": true,
 		"generation": int(details["generation"]),
 		"worker_ms": float(details.get("worker_ms", 0.0)),
 		"write_ms": float(details.get("write_ms", 0.0)),
+		"build_ms": float(details.get("build_ms", 0.0)),
 	})
 
 

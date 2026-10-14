@@ -403,9 +403,10 @@ func _product_actor_context(player: Dictionary) -> Dictionary:
 	}
 
 
-func _build_remote_player_durable_state() -> Dictionary:
+func _build_remote_player_durable_state(snapshot: Dictionary = {}) -> Dictionary:
 	var rows: Array = []
-	for player_value in create_snapshot().get("players", []):
+	var view: Dictionary = snapshot if not snapshot.is_empty() else create_snapshot()
+	for player_value in view.get("players", []):
 		if not player_value is Dictionary:
 			continue
 		var row: Dictionary = Dictionary(player_value).duplicate(true)
@@ -421,9 +422,10 @@ func _build_remote_player_durable_state() -> Dictionary:
 	return state if bool(checked.get("success", false)) else {}
 
 
-func _build_remote_ownership_durable_state() -> Dictionary:
+func _build_remote_ownership_durable_state(snapshot: Dictionary = {}) -> Dictionary:
 	var rows: Array = []
-	for player_value in create_snapshot().get("players", []):
+	var view: Dictionary = snapshot if not snapshot.is_empty() else create_snapshot()
+	for player_value in view.get("players", []):
 		if not player_value is Dictionary:
 			continue
 		var player_id := String(player_value.get("logical_player_id", ""))
@@ -455,8 +457,10 @@ func export_durable_state() -> Dictionary:
 		return super.export_durable_state()
 	if not _seam_transfers_quiescent():
 		return {}
-	var players_state := _build_remote_player_durable_state()
-	var ownership_state := _build_remote_ownership_durable_state()
+	# R3.2: reuse one snapshot for both durable player/ownership rows.
+	var durable_players_view: Dictionary = create_snapshot()
+	var players_state := _build_remote_player_durable_state(durable_players_view)
+	var ownership_state := _build_remote_ownership_durable_state(durable_players_view)
 	if (
 		players_state.is_empty()
 		or ownership_state.is_empty()
@@ -699,6 +703,14 @@ func product_mutation_allowed(logical_player_id: String = "") -> bool:
 
 func can_persist_product_state() -> bool:
 	return _seam_transfers_quiescent()
+
+
+# R3.2: quiescence-only probe. The one immediately following M6 export
+# creates and validates the durable checkpoint itself; do not export twice.
+func prepare_product_persistence_quiescence_only() -> Dictionary:
+	if not _seam_transfers_quiescent():
+		return _failure("USER1_SEAM_PERSISTENCE_TRANSFER_IN_FLIGHT")
+	return _success({"quiescent": true, "remote_binding_count": _seam_coordinators.size()})
 
 
 func prepare_product_persistence() -> Dictionary:

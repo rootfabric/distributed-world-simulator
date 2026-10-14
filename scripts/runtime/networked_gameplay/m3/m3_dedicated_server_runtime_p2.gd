@@ -94,6 +94,9 @@ var _p1b_item_commits := 0
 var _p1b_item_precommit_snapshot_holds := 0
 var _p1b_item_last_capture_ms := 0.0
 var _p1b_item_last_worker_ms := 0.0
+var _p1b_item_last_build_ms := 0.0
+var _p1b_item_last_write_ms := 0.0
+var _p1b_item_capture_stages: Dictionary = {}
 var _p1b_item_last_ack_wait_ms := 0.0
 var _player_ownership_epochs: Dictionary = {}
 # Bound disconnected sessions while a durable generation is pending.
@@ -1274,7 +1277,9 @@ func _p1b_begin_item_async_commit(
 	_p1b_committed_view = before_gameplay_snapshot  # already detached DTO
 	var capture_start_us := Time.get_ticks_usec()
 	var player_checksum := String(_service.create_snapshot().get("checksum", ""))
+	var player_done_us := Time.get_ticks_usec()
 	var item_checksum := String(_service.create_canonical_item_graph_snapshot().get("checksum", ""))
+	var item_done_us := Time.get_ticks_usec()
 	var outbox_staged: Dictionary = _replay_outbox.stage_committed(
 		operation_id, command_type,
 		{
@@ -1286,17 +1291,27 @@ func _p1b_begin_item_async_commit(
 			"item_graph_checksum": item_checksum,
 		}
 	)
+	var outbox_done_us := Time.get_ticks_usec()
 	if not bool(outbox_staged.get("success", false)):
 		_enter_persistence_failure("P1B_ITEM_OUTBOX_STAGE_FAILED")
 		return false
-	if _service.has_method("prepare_product_persistence"):
+	if _service.has_method("prepare_product_persistence_quiescence_only"):
+		var quiesced: Dictionary = _service.prepare_product_persistence_quiescence_only()
+		if not bool(quiesced.get("success", false)):
+			_last_persistence_error_details = quiesced.duplicate(true)
+			_enter_persistence_failure("P1B_ITEM_SEAM_QUIESCENCE_FAILED")
+			return false
+	elif _service.has_method("prepare_product_persistence"):
 		var quiesced: Dictionary = _service.prepare_product_persistence()
 		if not bool(quiesced.get("success", false)):
 			_last_persistence_error_details = quiesced.duplicate(true)
 			_enter_persistence_failure("P1B_ITEM_SEAM_QUIESCENCE_FAILED")
 			return false
+	var quiesce_done_us := Time.get_ticks_usec()
 	var authority: Dictionary = _recovery_authority.export_recovery_state()
+	var authority_done_us := Time.get_ticks_usec()
 	var replay: Dictionary = _replay_outbox.to_dict()
+	var replay_done_us := Time.get_ticks_usec()
 	if authority.is_empty() or replay.is_empty():
 		_enter_persistence_failure("P1B_ITEM_EMPTY_FROZEN_STATE")
 		return false
@@ -1325,7 +1340,17 @@ func _p1b_begin_item_async_commit(
 		)
 		return false
 	_p1b_item_last_capture_ms = float(capture_done_us - capture_start_us) / 1000.0
+	_p1b_item_capture_stages = {
+		"player_checksum_ms": float(player_done_us - capture_start_us) / 1000.0,
+		"item_checksum_ms": float(item_done_us - player_done_us) / 1000.0,
+		"outbox_stage_ms": float(outbox_done_us - item_done_us) / 1000.0,
+		"quiesce_ms": float(quiesce_done_us - outbox_done_us) / 1000.0,
+		"authority_export_ms": float(authority_done_us - quiesce_done_us) / 1000.0,
+		"replay_export_ms": float(replay_done_us - authority_done_us) / 1000.0,
+		"worker_handoff_ms": float(Time.get_ticks_usec() - capture_done_us) / 1000.0,
+	}
 	if SmoothTrace.enabled():
+		SmoothTrace.emit("p1b_item_capture_breakdown", _p1b_item_capture_stages)
 		SmoothTrace.emit("p1b_item_async_stages", {
 			"stage": "SUBMIT",
 			"operation_hash": operation_id.sha256_text().left(16),
@@ -1392,6 +1417,8 @@ func _p1b_finish_item_committed(accepted: Dictionary, publish: bool) -> void:
 	_durable_commits += 1
 	_p1b_item_commits += 1
 	_p1b_item_last_worker_ms = float(accepted.get("details", {}).get("worker_ms", 0.0))
+	_p1b_item_last_build_ms = float(accepted.get("details", {}).get("build_ms", 0.0))
+	_p1b_item_last_write_ms = float(accepted.get("details", {}).get("write_ms", 0.0))
 	if _telemetry != null:
 		_telemetry.observe("persistence_duration_ms", _p1b_item_last_worker_ms)
 		_telemetry.observe("persistence_capture_ms", _p1b_item_last_capture_ms)
@@ -1409,6 +1436,8 @@ func _p1b_finish_item_committed(accepted: Dictionary, publish: bool) -> void:
 			"operation_hash": String(pending.get("operation_id", "")).sha256_text().left(16),
 			"generation": generation,
 			"ack_wait_ms": _p1b_item_last_ack_wait_ms,
+			"worker_build_ms": _p1b_item_last_build_ms,
+			"worker_write_ms": _p1b_item_last_write_ms,
 			"held_snapshot_count": _p1b_item_precommit_snapshot_holds,
 		})
 	if not publish:
@@ -2125,6 +2154,9 @@ func _persistence_report() -> Dictionary:
 		"item_committed_view_rejections": _p1b_committed_rejections,
 		"item_async_capture_ms": _p1b_item_last_capture_ms,
 		"item_async_worker_ms": _p1b_item_last_worker_ms,
+		"item_async_build_ms": _p1b_item_last_build_ms,
+		"item_async_write_ms": _p1b_item_last_write_ms,
+		"item_async_capture_breakdown": _p1b_item_capture_stages.duplicate(true),
 		"item_async_ack_wait_ms": _p1b_item_last_ack_wait_ms,
 		"item_async_owner": (
 			_p1b_item_async_owner.get_report()
@@ -2278,7 +2310,13 @@ func _submit_async_movement_checkpoint() -> void:
 	if _movement_checkpoint_writer.is_busy():
 		return
 	var started := Time.get_ticks_usec()
-	if _service.has_method("prepare_product_persistence"):
+	if _service.has_method("prepare_product_persistence_quiescence_only"):
+		var quiesced: Dictionary = _service.prepare_product_persistence_quiescence_only()
+		if not bool(quiesced.get("success", false)):
+			_last_persistence_error_details = quiesced
+			_enter_persistence_failure("USER1_SEAM_PERSISTENCE_NOT_QUIESCENT")
+			return
+	elif _service.has_method("prepare_product_persistence"):
 		var quiesced: Dictionary = _service.prepare_product_persistence()
 		if not bool(quiesced.get("success", false)):
 			_last_persistence_error_details = quiesced

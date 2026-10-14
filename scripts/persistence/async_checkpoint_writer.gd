@@ -14,6 +14,22 @@ var _completion: Dictionary = {}
 var _busy := false
 var _stopping := false
 var _repository
+var _test_command_delay_ms := 0
+
+# Test-only slow writer (inside the worker, never on the game thread).
+func configure_test_command_delay_ms(delay_ms: int) -> Dictionary:
+	if OS.get_environment("DWS_NET_SMOOTH_TEST_HOOKS") != "1":
+		return _failure("ASYNC_CHECKPOINT_TEST_HOOK_DISABLED")
+	if delay_ms < 0 or delay_ms > 2000:
+		return _failure("ASYNC_CHECKPOINT_TEST_DELAY_INVALID")
+	_mutex.lock()
+	if _busy:
+		_mutex.unlock()
+		return _failure("ASYNC_CHECKPOINT_BUSY")
+	_test_command_delay_ms = delay_ms
+	_mutex.unlock()
+	return {"success": true, "error_code": "", "details": {"delay_ms": delay_ms}}
+
 
 func setup(root_path: String) -> Dictionary:
 	if _thread != null:
@@ -41,6 +57,19 @@ func is_busy() -> bool:
 func submit(authority_state: Dictionary, replay_state: Dictionary,
 		checkpoint_id: String, generation: int, previous_generation: int,
 		operation_id: String = "") -> Dictionary:
+	# Preserve the defensive-copy contract for ordinary callers.
+	return submit_owned(authority_state.duplicate(true), replay_state.duplicate(true),
+		checkpoint_id, generation, previous_generation, operation_id)
+
+
+# Only the M6 frozen-state proof uses this ownership-transfer entry point.
+# Both value trees were freshly exported, validated, detached from live state.
+# The submitting main thread must not mutate them after this call.
+func submit_owned(authority_state: Dictionary, replay_state: Dictionary,
+		checkpoint_id: String, generation: int, previous_generation: int,
+		operation_id: String = "") -> Dictionary:
+	if authority_state.is_empty() or replay_state.is_empty():
+		return _failure("ASYNC_CHECKPOINT_FROZEN_STATE_REQUIRED")
 	if _thread == null:
 		return _failure("ASYNC_CHECKPOINT_NOT_STARTED")
 	_mutex.lock()
@@ -49,11 +78,10 @@ func submit(authority_state: Dictionary, replay_state: Dictionary,
 		return _failure("ASYNC_CHECKPOINT_BUSY")
 	_busy = true
 	_mutex.unlock()
-	# Defensive copy before handoff. Hashing, JSON round-trip, validation and
-	# file IO happen in the persistent worker, not in the simulation loop.
+	# The worker owns the detached trees; avoid another whole-world copy.
 	var job := {
-		"authority": authority_state.duplicate(true),
-		"replay": replay_state.duplicate(true),
+		"authority": authority_state,
+		"replay": replay_state,
 		"checkpoint_id": checkpoint_id, "generation": generation,
 		"previous_generation": previous_generation, "operation_id": operation_id,
 	}
@@ -103,6 +131,7 @@ func _run() -> void:
 		_mutex.lock()
 		var stopping := _stopping
 		var job := _job
+		var test_delay_ms := _test_command_delay_ms
 		_job = {}
 		_mutex.unlock()
 		if stopping:
@@ -110,6 +139,10 @@ func _run() -> void:
 		if job.is_empty():
 			continue
 		var started := Time.get_ticks_usec()
+		var injected_ms := 0
+		if not String(job.get("operation_id", "")).is_empty() and test_delay_ms > 0:
+			OS.delay_msec(test_delay_ms)
+			injected_ms = test_delay_ms
 		var authority: Dictionary = job["authority"]
 		var checkpoint: Dictionary = Checkpoint.create(
 			String(job["checkpoint_id"]), int(job["generation"]),
@@ -130,6 +163,7 @@ func _run() -> void:
 				"server_tick": int(authority.get("server_tick", -1)),
 				"build_ms": float(built - started) / 1000.0,
 				"write_ms": float(finished - built) / 1000.0,
+				"injected_ms": injected_ms,
 				"worker_ms": float(finished - started) / 1000.0,
 			},
 		}
