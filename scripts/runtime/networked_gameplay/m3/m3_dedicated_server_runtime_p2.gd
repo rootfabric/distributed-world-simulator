@@ -94,6 +94,16 @@ var _p1b_item_commits := 0
 # R3B: only the DISCONNECT legacy command uses this new asynchronous
 # single-writer path; other legacy command contracts are not broadened.
 var _r3b_async_disconnect_commits := 0
+# R3C is strictly opt-in pending independent Windows verification.
+var _r3c_async_admission_enabled := false
+var _r3c_async_leave_commits := 0
+const R3C_MAX_DEFERRED_ADMISSIONS := 32
+const R3C_ADMISSION_TIMEOUT_MS := 20000
+var _r3c_deferred_admissions: Array[Dictionary] = []
+var _r3c_queued_joins := 0
+var _r3c_queued_leaves := 0
+var _r3c_admissions_drained := 0
+var _r3c_admissions_dropped := 0
 # Count ONLY unsafe full/ITEM snapshots blocked during a pending mutation.
 # Movement committed-view frames are permitted and are never counted as holds.
 var _p1b_item_precommit_snapshot_holds := 0
@@ -202,9 +212,14 @@ func setup(config: Dictionary) -> Dictionary:
 	_persistence_root = String(config.get("persistence_root", "")).strip_edges()
 	_persistence_enabled = not _persistence_root.is_empty()
 	_playable_sandbox = bool(config.get("playable_sandbox", false))
+	_r3c_async_admission_enabled = (
+		bool(config.get("r3c_async_admission_canary", false))
+		or OS.get_environment("DWS_NET_R3C_ASYNC_ADMISSION") == "1"
+	)
 	_p1b_item_async_enabled = (
 		bool(config.get("async_durable_item_canary", false))
 		or OS.get_environment("DWS_NET_P1B_ITEM_ASYNC") == "1"
+		or _r3c_async_admission_enabled
 	)
 	if _p1b_item_async_enabled and (not _persistence_enabled or not _playable_sandbox):
 		return _failure("P1B_CANARY_REQUIRES_PERSISTENT_PLAYABLE_WORLD")
@@ -216,6 +231,12 @@ func setup(config: Dictionary) -> Dictionary:
 	_p1b_item_resync_waiters.clear()
 	_p1b_item_commits = 0
 	_r3b_async_disconnect_commits = 0
+	_r3c_async_leave_commits = 0
+	_r3c_deferred_admissions.clear()
+	_r3c_queued_joins = 0
+	_r3c_queued_leaves = 0
+	_r3c_admissions_drained = 0
+	_r3c_admissions_dropped = 0
 	_p1b_item_precommit_snapshot_holds = 0
 	_p1b_item_graph_snapshot_holds = 0
 	_debug_logging = bool(config.get("debug_logging", false))
@@ -337,6 +358,11 @@ func _process(delta: float) -> void:
 	# A transport leave must not mutate the authority during an in-flight
 	# durable generation. Drain one deferred leave when the gate is clear.
 	_drain_deferred_disconnects()
+	if _fatal_persistence_failure:
+		return
+	# R3C: one bounded pending JOIN/LEAVE admission per frame, never while an
+	# older generation is inflight. Old transport-session disconnects win.
+	_r3c_drain_deferred_admissions()
 	if _fatal_persistence_failure:
 		return
 	var process_started_us: int = Time.get_ticks_usec()
@@ -543,14 +569,143 @@ func _is_peer_compatible(peer_id: String, session_id: String) -> bool:
 	var value = _peer_compatibility.get(peer_id)
 	return value is Dictionary and String(value.get("session_id", "")) == session_id
 
+# A deferred admission is an in-memory transport envelope, NOT a canonical
+# mutation. It may be dropped on stale session / timeout without affecting M6.
+func _r3c_defer_admission(
+	kind: String, peer_id: String, session_id: String,
+	logical_id: String, operation_id: String, payload: Dictionary
+) -> bool:
+	if not _r3c_async_admission_enabled or _fatal_persistence_failure:
+		return false
+	if _movement_checkpoint_writer == null or _p1b_item_async_owner == null:
+		_enter_persistence_failure("R3C_SINGLE_WRITER_REQUIRED")
+		return true
+	var busy := (
+		not _gate_can_accept()
+		or _movement_checkpoint_writer.is_busy()
+		or not _p1b_item_pending.is_empty()
+		or String(_p1b_item_async_owner.get_report().get("phase", "")) != "IDLE"
+	)
+	if not busy:
+		return false
+	for queued in _r3c_deferred_admissions:
+		var same_operation := String(queued.get("operation_id", "")) == operation_id
+		var same_actor := (
+			String(queued.get("peer_id", "")) == peer_id
+			and String(queued.get("session_id", "")) == session_id
+			and String(queued.get("logical_id", "")) == logical_id
+			and String(queued.get("kind", "")) == kind
+		)
+		if same_operation and same_actor:
+			return true  # exact retransmission: one queued mutation
+		if same_operation or (same_actor and kind == "JOIN"):
+			_r3c_reject_deferred_admission(kind, peer_id, operation_id, "R3C_ADMISSION_IDENTITY_CONFLICT")
+			return true
+	if _r3c_deferred_admissions.size() >= R3C_MAX_DEFERRED_ADMISSIONS:
+		_r3c_reject_deferred_admission(kind, peer_id, operation_id, "R3C_ADMISSION_QUEUE_FULL")
+		return true
+	_r3c_deferred_admissions.append({
+		"kind": kind, "peer_id": peer_id, "session_id": session_id,
+		"logical_id": logical_id, "operation_id": operation_id,
+		"payload": payload.duplicate(true),
+		"queued_at_ms": Time.get_ticks_msec(),
+	})
+	if kind == "JOIN":
+		_r3c_queued_joins += 1
+	else:
+		_r3c_queued_leaves += 1
+	if SmoothTrace.enabled():
+		SmoothTrace.emit("r3c_admission_queued", {
+			"kind": kind, "operation_hash": operation_id.sha256_text().left(16),
+			"queued_count": _r3c_deferred_admissions.size(),
+			"generation": _checkpoint_generation,
+		})
+	return true
+
+
+func _r3c_reject_deferred_admission(
+	kind: String, peer_id: String, operation_id: String, code: String
+) -> void:
+	_rejections += 1
+	if kind == "LEAVE":
+		_send(peer_id, "LEAVE_REJECTED", {"operation_id": operation_id, "error_code": code})
+	else:
+		_send(peer_id, "JOIN_REJECTED", {"operation_id": operation_id, "error_code": code})
+
+
+func _r3c_discard_session_admissions(peer_id: String, session_id: String) -> void:
+	for i in range(_r3c_deferred_admissions.size() - 1, -1, -1):
+		var queued: Dictionary = _r3c_deferred_admissions[i]
+		if String(queued.get("peer_id", "")) == peer_id and String(queued.get("session_id", "")) == session_id:
+			_r3c_deferred_admissions.remove_at(i)
+			_r3c_admissions_dropped += 1
+
+
+func _r3c_drain_deferred_admissions() -> void:
+	if not _r3c_async_admission_enabled or _r3c_deferred_admissions.is_empty():
+		return
+	# Retire stale peers even when the writer remains continuously busy.
+	for i in range(_r3c_deferred_admissions.size() - 1, -1, -1):
+		var queued: Dictionary = _r3c_deferred_admissions[i]
+		var peer_id := String(queued.get("peer_id", ""))
+		var session_id := String(queued.get("session_id", ""))
+		var expired := Time.get_ticks_msec() - int(queued.get("queued_at_ms", 0)) > R3C_ADMISSION_TIMEOUT_MS
+		var compatible := _is_peer_compatible(peer_id, session_id)
+		if expired or not compatible:
+			if expired and compatible:
+				_r3c_reject_deferred_admission(
+					String(queued.get("kind", "")), peer_id,
+					String(queued.get("operation_id", "")), "R3C_ADMISSION_TIMEOUT"
+				)
+			_r3c_deferred_admissions.remove_at(i)
+			_r3c_admissions_dropped += 1
+	if _r3c_deferred_admissions.is_empty() or not _gate_can_accept():
+		return
+	if _movement_checkpoint_writer == null or _movement_checkpoint_writer.is_busy():
+		return
+	# LEAVE must precede replacement JOIN for the same logical player. At most
+	# one admission is retried per server frame; no unbounded catch-up loop.
+	var selected := 0
+	for i in range(_r3c_deferred_admissions.size()):
+		if String(_r3c_deferred_admissions[i].get("kind", "")) == "LEAVE":
+			selected = i
+			break
+	var next: Dictionary = _r3c_deferred_admissions[selected]
+	_r3c_deferred_admissions.remove_at(selected)
+	var peer_id := String(next.get("peer_id", ""))
+	var session_id := String(next.get("session_id", ""))
+	if not _is_peer_compatible(peer_id, session_id):
+		_r3c_admissions_dropped += 1
+		return
+	var kind := String(next.get("kind", ""))
+	var operation_id := String(next.get("operation_id", ""))
+	if kind == "LEAVE" and String(_peer_to_session.get(peer_id, "")) != session_id:
+		_r3c_admissions_dropped += 1
+		return
+	_r3c_admissions_drained += 1
+	if SmoothTrace.enabled():
+		SmoothTrace.emit("r3c_admission_drained", {
+			"kind": kind, "operation_hash": operation_id.sha256_text().left(16),
+			"wait_ms": Time.get_ticks_msec() - int(next.get("queued_at_ms", 0)),
+			"queue_remaining": _r3c_deferred_admissions.size(),
+		})
+	if kind == "LEAVE":
+		_handle_leave(peer_id, session_id, Dictionary(next.get("payload", {})))
+	elif kind == "JOIN":
+		_handle_join(peer_id, session_id, Dictionary(next.get("payload", {})))
+
+
 func _handle_join(peer_id: String, session_id: String, payload: Dictionary) -> void:
 	var logical_id := String(payload.get("logical_player_id", "")).strip_edges().to_lower()
 	var operation_id := String(payload.get("operation_id", "")).strip_edges()
 	if logical_id.is_empty() or not _is_canonical_operation_id(operation_id):
 		_send(peer_id, "JOIN_REJECTED", {"operation_id": operation_id, "error_code": "INVALID_JOIN_PAYLOAD"})
 		return
-	# R4.1-P1: a JOIN is a durable mutation. Backpressure or a fatal gate state
-	# must fail closed instead of publishing an uncommitted join state.
+	# R3C: retain a bounded, identity-fenced admission instead of rejecting
+	# reconnect JOIN while an older M6 generation owns the single writer.
+	# No service.join(), replay record or ACK exists while this is queued.
+	if _r3c_defer_admission("JOIN", peer_id, session_id, logical_id, operation_id, payload):
+		return
 	if not _gate_can_accept():
 		_send(peer_id, "JOIN_REJECTED", {"operation_id": operation_id, "error_code": _gate_reject_code()})
 		return
@@ -1295,7 +1450,7 @@ func _p1b_begin_item_async_commit(
 	if before_gameplay_snapshot.is_empty():
 		_enter_persistence_failure("P1B_PREITEM_VIEW_REQUIRED")
 		return false
-	if commit_kind not in ["ITEM", "DISCONNECT"]:
+	if commit_kind not in ["ITEM", "DISCONNECT", "LEAVE"]:
 		_enter_persistence_failure("R3B_DURABLE_COMMIT_KIND_UNSUPPORTED")
 		return false
 	_p1b_committed_view = before_gameplay_snapshot  # already detached DTO
@@ -1441,10 +1596,13 @@ func _p1b_finish_item_committed(accepted: Dictionary, publish: bool) -> void:
 	_checkpoint_generation = generation
 	_last_checkpoint_operation_id = String(pending.get("operation_id", ""))
 	_durable_commits += 1
-	if String(pending.get("kind", "ITEM")) == "DISCONNECT":
-		_r3b_async_disconnect_commits += 1
-	else:
-		_p1b_item_commits += 1
+	match String(pending.get("kind", "ITEM")):
+		"DISCONNECT":
+			_r3b_async_disconnect_commits += 1
+		"LEAVE":
+			_r3c_async_leave_commits += 1
+		_:
+			_p1b_item_commits += 1
 	_p1b_item_last_worker_ms = float(accepted.get("details", {}).get("worker_ms", 0.0))
 	_p1b_item_last_build_ms = float(accepted.get("details", {}).get("build_ms", 0.0))
 	_p1b_item_last_write_ms = float(accepted.get("details", {}).get("write_ms", 0.0))
@@ -1477,10 +1635,61 @@ func _p1b_finish_item_committed(accepted: Dictionary, publish: bool) -> void:
 		)
 		_p1b_item_resync_waiters.clear()
 		return
-	if String(pending.get("kind", "ITEM")) == "DISCONNECT":
-		_r3b_publish_committed_disconnect(pending)
+	match String(pending.get("kind", "ITEM")):
+		"DISCONNECT":
+			_r3b_publish_committed_disconnect(pending)
+		"LEAVE":
+			_r3c_publish_committed_leave(pending)
+		_:
+			_p1b_publish_committed_item(pending)
+
+
+# R3C LEAVE becomes visible only after this exact M6 generation committed.
+# A failed/stale reliable transport never receives an early or fabricated ACK.
+func _r3c_publish_committed_leave(pending: Dictionary) -> void:
+	var operation_id := String(pending.get("operation_id", ""))
+	var peer_id := String(pending.get("peer_id", ""))
+	var session_id := String(pending.get("session_id", ""))
+	var logical_id := String(pending.get("logical_id", ""))
+	var epoch := int(pending.get("ownership_epoch", 0))
+	var result: Dictionary = Dictionary(pending.get("result", {}))
+	var mapped_to_original := String(_peer_to_session.get(peer_id, "")) == session_id
+	var publication: Dictionary = _p1b_item_async_owner.peek_publication(
+		peer_id, session_id, logical_id, epoch
+	)
+	var eligible := (
+		bool(publication.get("success", false))
+		and mapped_to_original
+		and _is_peer_compatible(peer_id, session_id)
+	)
+	var delivered := false
+	if eligible:
+		delivered = _send(peer_id, "LEAVE_ACK", {
+			"operation_id": operation_id, "logical_player_id": logical_id,
+		})
+		var marked: Dictionary = _p1b_item_async_owner.mark_enqueued(
+			operation_id, peer_id, session_id, logical_id, epoch, delivered
+		)
+		if not bool(marked.get("success", false)):
+			_enter_persistence_failure("R3C_LEAVE_ACK_ESCROW_FAILED")
+			return
 	else:
-		_p1b_publish_committed_item(pending)
+		var discarded: Dictionary = _p1b_item_async_owner.discard_stale_session(peer_id, session_id)
+		if not bool(discarded.get("success", false)):
+			_enter_persistence_failure("R3C_LEAVE_ACK_QUARANTINE_FAILED")
+			return
+	if bool(result.get("success", false)) and not _is_replay_result(result):
+		_leaves += 1
+		_broadcast_delta(result.get("details", {}).get("delta", {}), peer_id)
+	if mapped_to_original:
+		_peer_to_player.erase(peer_id)
+		_peer_to_session.erase(peer_id)
+		_peer_input_buffers.erase(peer_id)
+		_seam_sent_state_by_peer.erase(peer_id)
+	_broadcast_snapshot("PLAYER_LEFT")
+	if delivered:
+		_mark_operation_delivered(operation_id)
+	_write_report("READY", false)
 
 
 # No old-session ACK is ever published. The generic M6 proof accepted the
@@ -1647,11 +1856,49 @@ func _handle_leave(peer_id: String, session_id: String, payload: Dictionary) -> 
 			"OPERATION_ID_REQUIRED" if operation_id.is_empty() else "INVALID_OPERATION_ID"
 		)
 		return
+	if _r3c_defer_admission("LEAVE", peer_id, session_id, logical_id, operation_id, payload):
+		return
 	if not _gate_can_accept():
 		_reject_uncommitted_leave(peer_id, operation_id, _gate_reject_code())
 		return
 	var leave_epoch := _stored_ownership_epoch(logical_id, 0)
+	var reserved_async := false
+	var before_gameplay_snapshot: Dictionary = {}
+	if _r3c_async_admission_enabled and _persistence_enabled and not _service.has_durable_replay_operation(operation_id):
+		if String(_peer_to_session.get(peer_id, "")) != session_id or leave_epoch < 1:
+			_reject_uncommitted_leave(peer_id, operation_id, "STALE_TRANSPORT_SESSION")
+			return
+		var reserved: Dictionary = _p1b_item_async_owner.reserve_mutation(
+			operation_id, peer_id, session_id, logical_id, leave_epoch, "LEAVE"
+		)
+		if not bool(reserved.get("success", false)):
+			_reject_uncommitted_leave(
+				peer_id, operation_id, String(reserved.get("error_code", "R3C_LEAVE_RESERVATION_FAILED"))
+			)
+			return
+		reserved_async = true
+		before_gameplay_snapshot = _service.create_snapshot()
+		if not bool(FullSnapshot.validate(before_gameplay_snapshot).get("success", false)):
+			_enter_persistence_failure("R3C_LEAVE_PREVIEW_INVALID")
+			return
 	var result: Dictionary = _service.leave(logical_id, session_id, operation_id)
+	if reserved_async:
+		if bool(result.get("success", false)) and not _is_replay_result(result):
+			if not _p1b_begin_item_async_commit(
+				operation_id, "LEAVE", logical_id, result,
+				peer_id, session_id, leave_epoch, {},
+				before_gameplay_snapshot, "LEAVE"
+			):
+				# A successful canonical mutation without the M6 durable
+				# generation must freeze the runtime, never issue LEAVE_ACK.
+				return
+			return
+		var released: Dictionary = _p1b_item_async_owner.release_noncommitting_reservation(
+			operation_id, result
+		)
+		if not bool(released.get("success", false)):
+			_enter_persistence_failure("R3C_LEAVE_RESERVATION_RELEASE_FAILED")
+			return
 	if not _persist_command_result(operation_id, "LEAVE", logical_id, result, peer_id, session_id, leave_epoch):
 		_send(peer_id, "LEAVE_REJECTED", {"operation_id": operation_id, "error_code": "M6_DURABLE_COMMIT_FAILED"})
 		return
@@ -1680,6 +1927,11 @@ func _handle_leave(peer_id: String, session_id: String, payload: Dictionary) -> 
 
 
 func _handle_disconnect(peer_id: String, session_id: String) -> void:
+	_r3c_discard_session_admissions(peer_id, session_id)
+	# A queued JOIN has not entered _peer_to_player yet, but its handshake
+	# must still be forgotten so a stale transport can never drain later.
+	if String(Dictionary(_peer_compatibility.get(peer_id, {})).get("session_id", "")) == session_id:
+		_peer_compatibility.erase(peer_id)
 	# Transport cleanup is immediate; authoritative LEAVE is serialized behind
 	# any in-flight checkpoint. Never invalidate a newer session on stale events.
 	var mapped_session := String(_peer_to_session.get(peer_id, ""))
@@ -2282,6 +2534,13 @@ func _persistence_report() -> Dictionary:
 		"item_async_pending": not _p1b_item_pending.is_empty(),
 		"item_async_commits": _p1b_item_commits,
 		"r3b_async_disconnect_commits": _r3b_async_disconnect_commits,
+		"r3c_async_admission_enabled": _r3c_async_admission_enabled,
+		"r3c_async_leave_commits": _r3c_async_leave_commits,
+		"r3c_deferred_admissions": _r3c_deferred_admissions.size(),
+		"r3c_queued_joins": _r3c_queued_joins,
+		"r3c_queued_leaves": _r3c_queued_leaves,
+		"r3c_admissions_drained": _r3c_admissions_drained,
+		"r3c_admissions_dropped": _r3c_admissions_dropped,
 		"item_async_snapshot_holds": _p1b_item_precommit_snapshot_holds,
 		"item_async_item_graph_snapshot_holds": _p1b_item_graph_snapshot_holds,
 		"item_committed_view_frames": _p1b_committed_frames,
@@ -2823,6 +3082,7 @@ func stop() -> Dictionary:
 	_p1b_item_pending.clear()
 	_p1b_committed_view.clear()
 	_p1b_item_resync_waiters.clear()
+	_r3c_deferred_admissions.clear()
 	_fixed_tick_scheduler = null
 	_peer_input_buffers.clear()
 	_seam_sent_state_by_peer.clear()
