@@ -575,6 +575,12 @@ func _accept_committed_view_movement_snapshot(wire: Dictionary) -> void:
 	_committed_view_presentation = presentation
 	_committed_view_last_tick = tick
 	_committed_view_updates += 1
+	if SmoothTrace.enabled():
+		SmoothTrace.emit("r3_committed_view_received", {
+			"tick": tick,
+			"committed_revision": int(canonical.get("revision", -1)),
+			"session": _transport_session_id,
+		})
 	# Every active consumer sees motion; only _replica owns durable progress.
 	_reconcile_prediction_from_snapshot(presentation)
 	_prune_acknowledged_inputs()

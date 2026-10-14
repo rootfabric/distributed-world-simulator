@@ -133,7 +133,10 @@ def analyze_trace(path: Path, role: str, run_id: str, min_seconds: float = 10.0,
                                   ("outbox_stage_ms","command_outbox_stage_ms"),
                                   ("checkpoint_total_ms","command_checkpoint_total_ms"))
                     else:
-                        if data.get("origin") not in ("COMMAND", "PERIODIC"):
+                        if data.get("origin") not in (
+                            "COMMAND", "PERIODIC", "BOOTSTRAP_SEED",
+                            "LEGACY_COMMAND_SYNC", "SHUTDOWN_FINAL",
+                            "PERIODIC_SYNC_FALLBACK", "PERIODIC_UNCLASSIFIED"):
                             raise ValueError("invalid durable checkpoint origin")
                         fields = (("wait_async_ms","checkpoint_wait_async_ms"),
                                   ("quiesce_ms","checkpoint_quiesce_ms"),
@@ -184,12 +187,20 @@ def analyze_trace(path: Path, role: str, run_id: str, min_seconds: float = 10.0,
             if len(stage_samples[key]) < 10:
                 problems.append(f"missing/incomplete snapshot stage {key}")
     if require_durable_stages and role == "server":
-        for kind in ("durable_command_stages", "durable_checkpoint_stages"):
-            if counts.get(kind, 0) < 1:
-                problems.append(f"missing {kind} durable workload evidence")
-        for key, values in durable_samples.items():
-            if not values:
-                problems.append(f"missing durable stage {key}")
+        # Legacy synchronous M6 and R3 P1-B asynchronous M6 are both legal
+        # durability paths. Require complete proof from ONE path, never a
+        # fabricated mixture of partial stages.
+        legacy_complete = (
+            counts.get("durable_command_stages", 0) >= 1
+            and counts.get("durable_checkpoint_stages", 0) >= 1
+            and all(bool(values) for values in durable_samples.values())
+        )
+        r3_complete = (
+            counts.get("p1b_item_async_stages", 0) >= 2
+            and counts.get("p1b_item_capture_breakdown", 0) >= 1
+        )
+        if not legacy_complete and not r3_complete:
+            problems.append("missing complete legacy M6 or R3 P1B async durability evidence")
     if header.get("schema") != "dws.net_smooth.trace.v1": problems.append("missing/invalid header")
     if header.get("run_id") != run_id or header.get("role") != role: problems.append("identity mismatch")
     if not footer: problems.append("missing END / process did not drain")
