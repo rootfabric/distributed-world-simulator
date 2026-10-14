@@ -186,6 +186,18 @@ func _f1_budget_and_f3_clamped_exact_replay(initial: Dictionary) -> void:
 			"F3: final checkpoint bytes equal continuous")
 	_check(C.encode(initial) == original_bytes, "F3: source frontier untouched")
 
+	# Entry bounds are mandatory even if scheduler credits allow ZERO ticks.
+	var invalid_prepare := Budget.execute(initial, _options(), too_small, 0, 4)
+	var invalid_advance := Budget.execute(initial, _options(), too_small, 4, 0)
+	_check(not bool(invalid_prepare.get("success", false))
+		and String(invalid_prepare.get("error", "")) == "CPU_BUDGET_PARALLEL_PREPARE_WORKERS",
+		"F1: zero-budget defer does not bypass invalid prepare workers")
+	_check(not bool(invalid_advance.get("success", false))
+		and String(invalid_advance.get("error", "")) == "CPU_BUDGET_PARALLEL_ADVANCE_WORKERS",
+		"F1: zero-budget defer does not bypass invalid advance workers")
+	_check(C.encode(initial) == original_bytes,
+		"F1: invalid worker exits never mutate source")
+
 	var corrupted := too_small.duplicate(true)
 	corrupted.allowed_ticks = 1
 	_check(not Budget.validate(corrupted, initial).is_empty(),

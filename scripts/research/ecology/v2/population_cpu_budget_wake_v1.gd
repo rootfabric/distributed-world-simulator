@@ -9,6 +9,7 @@ extends RefCounted
 const C = preload("res://scripts/research/ecology/v2/canonical_value_v1.gd")
 const Fidelity = preload("res://scripts/research/ecology/v2/population_fidelity_schedule_plan_v1.gd")
 const Runtime = preload("res://scripts/research/ecology/v2/ecology_runtime_v1.gd")
+const Lifecycle = preload("res://scripts/research/ecology/v2/resource_lifecycle_runtime_v1.gd")
 
 const SCHEMA := "dws.ecology.cpu-budget-replay-plan.v1"
 const MAX_BUDGET_US := 1000000000
@@ -54,6 +55,12 @@ static func validate(value: Variant, state: Dictionary) -> String:
 
 static func execute(state: Dictionary, options: Dictionary, budget_plan: Dictionary,
 		max_prepare_workers: int = 4, max_advance_workers: int = 4) -> Dictionary:
+	# Reject invalid worker bounds before zero-budget / zero-debt early exit.
+	# Match canonical Runtime's fail-closed entry contract on EVERY path.
+	if not Lifecycle.valid_parallel_prepare_workers(max_prepare_workers):
+		return _fail("CPU_BUDGET_PARALLEL_PREPARE_WORKERS")
+	if not Lifecycle.valid_parallel_advance_workers(max_advance_workers):
+		return _fail("CPU_BUDGET_PARALLEL_ADVANCE_WORKERS")
 	var error := validate(budget_plan, state)
 	if not error.is_empty():
 		return _fail(error)

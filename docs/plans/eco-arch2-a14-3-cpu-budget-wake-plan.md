@@ -95,3 +95,13 @@ claimed R1 achievements.
 Run portable parser, Linux double exact, Windows double exact, A14.2
 regression, A13 exact regression, Project Control and independent verifier
 on the exact frozen HEAD/TREE. Do NOT MERGE until all gates are green.
+
+
+## R1.1 narrow fail-closed preflight
+
+A source review identified that zero-credit / zero-debt scheduler early exits
+could bypass canonical Runtime parallel worker bound validation. Executor now
+explicitly validates BOTH worker limits on every path before returning
+DEFERRED/SUCCESS. An adversarial regression asserts that zero-credit plans
+with prepare-workers=0 or advance-workers=0 fail closed while preserving the
+canonical state. No biology or accepted A14.2 Runtime is changed.
