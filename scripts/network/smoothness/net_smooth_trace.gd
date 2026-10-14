@@ -90,6 +90,10 @@ func _write_loop() -> void:
 				io_errors += 1
 				continue
 			file.store_string(line)
+			# R3 process-kill falsifier must observe SUBMIT before a hard kill.
+			# Flush only this trace-worker evidence, never the simulation thread.
+			if String(record.get("kind", "")) == "p1b_item_async_stages" and String(record.get("data", {}).get("stage", "")) == "SUBMIT":
+				file.flush()
 			bytes += length
 			written += 1
 			if file.get_error() != OK:

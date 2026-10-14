@@ -9,6 +9,7 @@ import os
 from pathlib import Path
 import platform
 import secrets
+import threading
 import shutil
 import socket
 import subprocess
@@ -139,7 +140,7 @@ def play(args, manifest: dict) -> None:
     token=secrets.token_urlsafe(24)
     manifest.update(udp_port=udp,automation_ports=ports,process_exit_codes={},errors=[],completed=False,
                     snapshot_stages_required=True,
-                    durable_stages_required=args.scenario=='durable-commands',
+                    durable_stages_required=args.scenario in ('durable-commands', 'r3-slow-item'),
                     renderer='opengl3' if args.mode=='gui' else 'headless',resolution='900x600',max_fps=60,
                     vsync='disabled',phase_results=[],checkpoint_mode=args.checkpoint_mode,scenario=args.scenario)
     processes: dict[str,subprocess.Popen] = {}; streams=[]
@@ -152,6 +153,10 @@ def play(args, manifest: dict) -> None:
             env['DWS_NET_SMOOTH_INJECT_STALL_MS']=str(args.inject_stall_ms)
         if role == 'server' and args.checkpoint_mode=='sync':
             env['DWS_NET_SMOOTH_SYNC_CHECKPOINTS']='1'
+        if role == 'server' and args.slow_item_writer_ms > 0:
+            # Test-only worker injection, never delay the main-thread loop.
+            env['DWS_NET_SMOOTH_TEST_HOOKS']='1'
+            env['DWS_NET_SMOOTH_TEST_ITEM_DELAY_MS']=str(args.slow_item_writer_ms)
         engine=[str(args.godot),'--path',str(ROOT),'--max-fps','60','--disable-vsync']
         if role=='server' or args.mode=='headless': engine += ['--headless']
         else: engine += ['--rendering-driver','opengl3','--windowed','--resolution','900x600',
@@ -481,6 +486,40 @@ def play(args, manifest: dict) -> None:
             # Keep a full measurement window after the roundtrip stages so the
             # same GUI run also carries complete perf coverage.
             standard_phase_loop()
+        elif args.scenario == 'r3-slow-item':
+            # Concurrent automation control: both users keep issuing movement
+            # while 24 real ITEM commands pass through the exact M6 writer.
+            stop_feed = threading.Event()
+            feed_errors: list[str] = []
+            def feed_both_players() -> None:
+                while not stop_feed.is_set():
+                    for role, x in (('a', 1.0), ('b', -1.0)):
+                        try:
+                            drive(role, x, 0.0, sprint=False)
+                        except (OSError, RuntimeError, ValueError, KeyError) as exc:
+                            feed_errors.append(f'{role}: {exc}')
+                            stop_feed.set()
+                            return
+                    stop_feed.wait(.20)
+            feeder = threading.Thread(target=feed_both_players, daemon=True)
+            feeder.start()
+            try:
+                durable_phase()
+            finally:
+                stop_feed.set()
+                feeder.join(timeout=10)
+            if feed_errors:
+                raise RuntimeError(f'concurrent R3 feed failed: {feed_errors[:3]}')
+            standard_phase_loop()
+            old=bridge(ports['b'],token,'state.get',{'kind':'automation'})['automation']
+            reconnect=command('b','network.reconnect')
+            time.sleep(1);wait_ready('b')
+            after=bridge(ports['b'],token,'state.get',{'kind':'automation'})['automation']
+            manifest['phase_results'].append({'phase':'r3_reconnect_b','result':reconnect,
+                                             'before_epoch':old.get('ownership_epoch'),
+                                             'after_epoch':after.get('ownership_epoch')})
+            if after.get('ownership_epoch',0)<=old.get('ownership_epoch',0):
+                raise RuntimeError('R3 reconnect did not advance ownership epoch')
         elif args.scenario == 'durable-commands':
             # Durable commands run inside the measured window; the standard
             # movement loop afterwards keeps full movement/perf coverage.
@@ -553,7 +592,9 @@ def main() -> int:
     parser.add_argument('--include-process-tests',action='store_true')
     parser.add_argument('--skip-import',action='store_true')
     parser.add_argument('--profile',default='LOCAL')
-    parser.add_argument('--scenario',choices=('local','seam-stress','r31-reconnect-roundtrip','durable-commands'),default='local')
+    parser.add_argument('--scenario',choices=('local','seam-stress','r31-reconnect-roundtrip','durable-commands','r3-slow-item'),default='local')
+    parser.add_argument('--slow-item-writer-ms',type=int,default=0,
+                        help='Test-only delayed ITEM worker in milliseconds (max 2000)')
     parser.add_argument('--checkpoint-mode',choices=('async','sync'),default='async')
     parser.add_argument('--inject-stall-role',choices=('server','a','b'))
     parser.add_argument('--inject-stall-ms',type=int,default=250)
@@ -561,6 +602,10 @@ def main() -> int:
     args.godot=args.godot.resolve()
     if not args.godot.is_file(): parser.error('Godot executable not found')
     if args.duration<12 or args.warmup<0 or args.startup_timeout<=0: parser.error('invalid duration/budgets')
+    if args.slow_item_writer_ms < 0 or args.slow_item_writer_ms > 2000:
+        parser.error('slow ITEM writer delay must be 0..2000ms')
+    if args.slow_item_writer_ms and args.scenario != 'r3-slow-item':
+        parser.error('test delay only allowed in R3 slow-item scenario')
     run_id=uuid.uuid4().hex[:16]
     args.output=(args.output or ROOT/'artifacts/net-smooth1'/run_id).resolve()
     args.output.mkdir(parents=True,exist_ok=False)

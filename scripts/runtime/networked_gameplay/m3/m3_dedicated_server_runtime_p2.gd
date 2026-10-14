@@ -915,6 +915,7 @@ func _maybe_publish_movement_snapshot() -> void:
 	var seam_sent_before := _seam_messages_sent
 	var seam_skipped_before := _seam_unchanged_skipped
 	var all_enqueued := true
+	var committed_enqueues_before := _p1b_committed_enqueues
 	var target_count := 0
 	for peer_id_value in _peer_to_player.keys():
 		target_count += 1
@@ -958,6 +959,8 @@ func _maybe_publish_movement_snapshot() -> void:
 		SmoothTrace.emit("movement_snapshot_stages", {
 			"tick": _server_tick, "peers": target_count,
 			"committed_view": pending_view,
+			"committed_enqueues": _p1b_committed_enqueues - committed_enqueues_before,
+			"all_enqueued": all_enqueued,
 			"capture_ms": float(snapshot_captured_us - snapshot_started_us) / 1000.0,
 			"encode_ms": float(snapshot_encoded_us - snapshot_captured_us) / 1000.0,
 			"send_and_seam_ms": float(Time.get_ticks_usec() - sent_started_us) / 1000.0,

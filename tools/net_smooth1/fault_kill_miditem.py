@@ -50,7 +50,14 @@ def spawn(tag: str, port: int, persistence_root: Path | None = None,
             f'--instance-id={instance_id or f"fault-{tag}"}',
             '--product-seam', f'--persistence-root={proot}']
     log = (target / 'runtime.log').open('w', encoding='utf-8')
-    return subprocess.Popen(engine + game, cwd=ROOT, env=env_for(target), stdout=log,
+    env = env_for(target)
+    if tag == 'server1':
+        env.update(DWS_NET_SMOOTH_TRACE_DIR=str(target),
+                   DWS_NET_SMOOTH_RUN_ID='r3-fault-kill',
+                   DWS_NET_SMOOTH_ROLE='server',
+                   DWS_NET_SMOOTH_TEST_HOOKS='1',
+                   DWS_NET_SMOOTH_TEST_ITEM_DELAY_MS='1800')
+    return subprocess.Popen(engine + game, cwd=ROOT, env=env, stdout=log,
                             stderr=subprocess.STDOUT)
 
 
@@ -166,20 +173,24 @@ def _submit() -> None:
 
 t = threading.Thread(target=_submit)
 t.start()
-# Kill the moment the async worker accepts the ITEM (SUBMIT stage emitted)
-# while the durable worker commit is still in flight (ack_wait ~500ms).
+# R3 exact: confirm worker submission in the trace, then kill before its
+# artificial 1800ms delay permits a durable completion or successful ACK.
 killed = False
 kill_deadline = time.monotonic() + 90
 while time.monotonic() < kill_deadline and t.is_alive():
-    log1 = (OUT / 'server1' / 'runtime.log').read_text(encoding='utf-8', errors='replace')
-    if '"stage":"SUBMIT"' in log1 or '"stage": "SUBMIT"' in log1:
-        time.sleep(0.05)
-        p1.kill()
-        killed = True
-        break
-    time.sleep(0.005)
+    trace_file = OUT / 'server1' / 'trace.jsonl'
+    if trace_file.is_file():
+        evidence = trace_file.read_text(encoding='utf-8', errors='replace')
+        if '"stage":"SUBMIT"' in evidence or '"stage": "SUBMIT"' in evidence:
+            time.sleep(0.05)
+            p1.kill()
+            killed = True
+            break
+    time.sleep(0.01)
 if not killed:
     p1.kill()
+    ca.terminate()
+    raise RuntimeError('R3_MID_ITEM_KILL_MISSING_SUBMIT_EVIDENCE')
 p1.wait(timeout=15)
 t.join(timeout=30)
 result['submit_reply'] = submit_holder.get('reply')
