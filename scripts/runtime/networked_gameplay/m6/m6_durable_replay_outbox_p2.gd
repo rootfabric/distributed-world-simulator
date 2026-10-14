@@ -34,20 +34,28 @@ func stage_committed(operation_id: String, command_type: String, payload: Dictio
 		return _failure("INVALID_M6_OUTBOX_OPERATION")
 	if not bool(_service.has_durable_replay_operation(normalized_operation)):
 		return _failure("M6_OUTBOX_OPERATION_NOT_REPLAY_DURABLE", {"operation_id": normalized_operation})
-	var safe := Utils.canonicalize(payload, "$.m6_outbox_payload")
-	if not bool(safe.get("success", false)):
-		return _failure("M6_OUTBOX_PAYLOAD_NOT_JSON_SAFE", {"message": String(safe.get("error", ""))})
+	# One JSON-safe canonical round trip is enough to validate and detach.
+	# The old canonicalize() + json_round_trip() + duplicate(true) path
+	# traversed the entire (potentially large) command result three times.
 	var payload_round_trip: Dictionary = Utils.json_round_trip(payload)
 	if not bool(payload_round_trip.get("success", false)) or not payload_round_trip.get("value") is Dictionary:
 		return _failure("M6_OUTBOX_PAYLOAD_NOT_JSON_SAFE", {"message": String(payload_round_trip.get("error", ""))})
-	var stable_payload: Dictionary = Dictionary(payload_round_trip.get("value", {})).duplicate(true)
+	var stable_payload: Dictionary = Dictionary(payload_round_trip.get("value", {}))
 	for record_value in _records:
 		if String(Dictionary(record_value).get("operation_id", "")) == normalized_operation:
 			return _failure("M6_OUTBOX_OPERATION_ALREADY_STAGED", {"operation_id": normalized_operation})
 	_prune_for_new_record()
 	if _records.size() >= MAX_OUTBOX_RECORDS:
 		return _failure("M6_OUTBOX_CAPACITY_EXCEEDED")
-	var report: Dictionary = _service.get_report()
+	# get_report() recursively exports ALL durable and replay state just
+	# to read a tick and revision. That O(history) work is not part of M6
+	# durability and caused escalating main-thread ITEM capture latency.
+	# Support older fake services while production exposes a cheap clock.
+	var report: Dictionary = (
+		_service.get_outbox_clock()
+		if _service.has_method("get_outbox_clock")
+		else _service.get_report()
+	)
 	var record: Dictionary = {
 		"sequence": _next_sequence,
 		"operation_id": normalized_operation,
@@ -128,7 +136,9 @@ func to_dict() -> Dictionary:
 		"schema": SCHEMA,
 		"next_sequence": _next_sequence,
 		"gameplay_replay": _service.export_replay_state(),
-		"committed_outbox": get_records(),
+		# finalize_json_checksum() creates a detached deep copy/roundtrip;
+		# get_records() performs another redundant copy on this hot path.
+		"committed_outbox": _records,
 		"checksum": "",
 	}
 	return Utils.finalize_json_checksum(value)
