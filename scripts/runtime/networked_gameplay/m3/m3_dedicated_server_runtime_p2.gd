@@ -91,7 +91,10 @@ var _p1b_committed_rejections := 0
 const P1B_MAX_DEFERRED_ITEM_RESYNCS := 32
 var _p1b_item_resync_waiters: Dictionary = {}
 var _p1b_item_commits := 0
+# Count ONLY unsafe full/ITEM snapshots blocked during a pending mutation.
+# Movement committed-view frames are permitted and are never counted as holds.
 var _p1b_item_precommit_snapshot_holds := 0
+var _p1b_item_graph_snapshot_holds := 0
 var _p1b_item_last_capture_ms := 0.0
 var _p1b_item_last_worker_ms := 0.0
 var _p1b_item_last_build_ms := 0.0
@@ -210,6 +213,7 @@ func setup(config: Dictionary) -> Dictionary:
 	_p1b_item_resync_waiters.clear()
 	_p1b_item_commits = 0
 	_p1b_item_precommit_snapshot_holds = 0
+	_p1b_item_graph_snapshot_holds = 0
 	_debug_logging = bool(config.get("debug_logging", false))
 	if _host.is_empty() or _port < 1 or _port > 65535 or _authority_owner_id.is_empty() or _authority_epoch < 1:
 		return _failure("INVALID_M3_SERVER_CONFIGURATION")
@@ -1124,6 +1128,11 @@ func _handle_item_graph_resync_request(peer_id: String, session_id: String, payl
 
 func _broadcast_item_snapshot(reason: String, excluded_peer_id: String = "") -> void:
 	if not _p1b_item_pending.is_empty():
+		# R3: compact committed-view MOVEMENT is allowed, but this is a
+		# canonical full ITEM graph snapshot and remains strictly blocked.
+		# Both full gameplay and item-graph holds are observable.
+		_p1b_item_precommit_snapshot_holds += 1
+		_p1b_item_graph_snapshot_holds += 1
 		return
 	var snapshot: Dictionary = _service.create_canonical_item_graph_snapshot()
 	for peer_id_value in _peer_to_player.keys():
@@ -2186,6 +2195,7 @@ func _persistence_report() -> Dictionary:
 		"item_async_pending": not _p1b_item_pending.is_empty(),
 		"item_async_commits": _p1b_item_commits,
 		"item_async_snapshot_holds": _p1b_item_precommit_snapshot_holds,
+		"item_async_item_graph_snapshot_holds": _p1b_item_graph_snapshot_holds,
 		"item_committed_view_frames": _p1b_committed_frames,
 		"item_committed_view_enqueues": _p1b_committed_enqueues,
 		"item_committed_view_rejections": _p1b_committed_rejections,

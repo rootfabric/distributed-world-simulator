@@ -55,6 +55,18 @@ class R3SourceContract(unittest.TestCase):
         self.assertIn('DWS_NET_SMOOTH_TEST_HOOKS', self.writer)
         self.assertIn('OS.delay_msec(test_delay_ms)', self.writer)
 
+    def test_r2_full_item_holds_still_observable(self):
+        item = self.server.split("func _broadcast_item_snapshot(", 1)[1].split("\nfunc ", 1)[0]
+        full = self.server.split("func _broadcast_snapshot(", 1)[1].split("\nfunc ", 1)[0]
+        self.assertIn('if not _p1b_item_pending.is_empty():', item)
+        self.assertIn('_p1b_item_precommit_snapshot_holds += 1', item)
+        self.assertIn('_p1b_item_graph_snapshot_holds += 1', item)
+        self.assertIn('_p1b_item_precommit_snapshot_holds += 1', full)
+        self.assertIn('"item_async_item_graph_snapshot_holds"', self.server)
+        # Movement continuity must not increment a blocked full-state counter.
+        movement = self.server.split("func _maybe_publish_movement_snapshot(", 1)[1].split("\nfunc ", 1)[0]
+        self.assertNotIn('_p1b_item_precommit_snapshot_holds += 1', movement)
+
     def test_nonblocking_20hz_and_true_periodic_route_evidence(self):
         self.assertIn('NX3_MOVEMENT_SNAPSHOT_INTERVAL_TICKS', self.server)
         self.assertIn('"periodic_checkpoint_dispatch"', self.server)
