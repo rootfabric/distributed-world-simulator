@@ -647,14 +647,14 @@ func _r3c_drain_deferred_admissions() -> void:
 	# Retire stale peers even when the writer remains continuously busy.
 	for i in range(_r3c_deferred_admissions.size() - 1, -1, -1):
 		var queued: Dictionary = _r3c_deferred_admissions[i]
-		var peer_id := String(queued.get("peer_id", ""))
-		var session_id := String(queued.get("session_id", ""))
+		var queued_peer_id := String(queued.get("peer_id", ""))
+		var queued_session_id := String(queued.get("session_id", ""))
 		var expired := Time.get_ticks_msec() - int(queued.get("queued_at_ms", 0)) > R3C_ADMISSION_TIMEOUT_MS
-		var compatible := _is_peer_compatible(peer_id, session_id)
+		var compatible := _is_peer_compatible(queued_peer_id, queued_session_id)
 		if expired or not compatible:
 			if expired and compatible:
 				_r3c_reject_deferred_admission(
-					String(queued.get("kind", "")), peer_id,
+					String(queued.get("kind", "")), queued_peer_id,
 					String(queued.get("operation_id", "")), "R3C_ADMISSION_TIMEOUT"
 				)
 			_r3c_deferred_admissions.remove_at(i)
