@@ -1,0 +1,126 @@
+name: NET-SMOOTH1 R4.2 R3C1 Admission Exact
+
+on:
+  push:
+    branches:
+      - repair/net-smooth1-r42-r3c-leave-join-admission-r1
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: net-smooth-r3c1-admission-exact
+  cancel-in-progress: true
+
+jobs:
+  linux-contracts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: R3C source contracts
+        run: python -m unittest discover -s tests/tools -p test_net_smooth1_r42_r3c_source_contract.py -v
+      - name: M6 and R3B static regression
+        run: |
+          python -m unittest discover -s tests/tools -p test_net_smooth1_r42_r3b_analyzer.py -v
+          python -m unittest discover -s tests/tools -p test_net_smooth1_r42_r3_source_contract.py -v
+          python -m unittest discover -s tests/tools -p test_net_smooth1_p1b_r2_source_contract.py -v
+          python -m unittest discover -s tests/tools -p test_net_smooth1_analyzer.py -v
+
+  windows-exact:
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Verify source identity and Godot double binary
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          $Parent='67764d121ce92ab5a22ba92031835dbc880e167d'
+          $Godot='C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe'
+          if ((git rev-parse HEAD).Trim() -ne $env:GITHUB_SHA) { throw 'R3C1_HEAD_MISMATCH' }
+          git merge-base --is-ancestor $Parent HEAD
+          if ($LASTEXITCODE -ne 0) { throw 'R3C1_PARENT_MISSING' }
+          if (git status --porcelain --untracked-files=no) { throw 'R3C1_DIRTY' }
+          if (-not (Test-Path $Godot)) { throw 'R3C1_ENGINE_NOT_FOUND' }
+          $Version=(& $Godot --version | Out-String).Trim()
+          $Hash=(Get-FileHash $Godot -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($Version -ne '4.7.1.stable.double.custom_build.a13da4feb') { throw 'R3C1_ENGINE_VERSION_MISMATCH' }
+          if ($Hash -ne '3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5') { throw 'R3C1_ENGINE_SHA_MISMATCH' }
+          $E='artifacts\net-smooth1\r3c1-windows-exact'
+          New-Item -ItemType Directory -Force $E | Out-Null
+          [ordered]@{head=(git rev-parse HEAD).Trim();tree=(git rev-parse 'HEAD^{tree}').Trim();parent=$Parent;engine_sha256=$Hash;scope='R3C1_NARROW_NOT_GUI_PERFORMANCE'} | ConvertTo-Json | Set-Content "$E\identity.json" -Encoding UTF8
+      - name: Cold import
+        shell: pwsh
+        timeout-minutes: 12
+        run: |
+          $ErrorActionPreference='Stop'
+          $Godot='C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe'
+          $Log='artifacts\net-smooth1\r3c1-windows-exact\cold-import.log'
+          & $Godot --headless --editor --path . --import --quit *> $Log
+          if ($LASTEXITCODE -ne 0) { Get-Content $Log -Tail 100; throw 'R3C1_IMPORT_FAIL' }
+          if (Select-String -Path $Log -Pattern 'SCRIPT ERROR:|Parse Error:|Compile Error:' -Quiet) { throw 'R3C1_PARSE_FAIL' }
+      - name: Real M3/M6 and older durability regression
+        shell: pwsh
+        timeout-minutes: 30
+        run: |
+          $ErrorActionPreference='Stop'
+          $Godot='C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe'
+          $E='artifacts\net-smooth1\r3c1-windows-exact'
+          $Suites=@(
+            'tests/runtime/test_net_smooth1_r42_r3c_async_leave.gd',
+            'tests/runtime/test_net_smooth1_r42_r3c_queued_join.gd',
+            'tests/runtime/test_net_smooth1_r42_r3b_async_disconnect.gd',
+            'tests/runtime/test_net_smooth1_r42_r3b_outbox_hotpath.gd',
+            'tests/runtime/test_net_smooth1_r42_r3_writer_nested_alias.gd',
+            'tests/runtime/test_net_smooth1_r42_p1_async_durable_proof.gd',
+            'tests/runtime/test_net_smooth1_r42_r3_slow_item_movement.gd',
+            'tests/runtime/test_net_smooth1_r42_r3_committed_view.gd',
+            'tests/runtime/test_net_smooth1_r42_p1b_item_async_canary.gd',
+            'tests/runtime/test_net_smooth1_r42_p1b_periodic_completion_order.gd',
+            'tests/runtime/test_net_smooth1_r42_seam_full_snapshot_wire_checksum.gd',
+            'tests/runtime/test_net_smooth1_r41_pending_durable_gate.gd',
+            'tests/runtime/test_net_smooth1_r41_p1_fifo_disconnect_repair.gd',
+            'tests/runtime/test_net_smooth1_async_checkpoint.gd',
+            'tests/runtime/test_m6_dedicated_recovery_contracts.gd',
+            'tests/runtime/test_v0_user1_product_seam_bridge.gd',
+            'tests/network/test_nx3_fixed_tick_authoritative_simulation.gd'
+          )
+          foreach ($Suite in $Suites) {
+            $Log=Join-Path $E ((Split-Path $Suite -Leaf)+'.log')
+            & $Godot --headless --path . --script ("res://"+$Suite) *> $Log
+            if ($LASTEXITCODE -ne 0 -or (Select-String -Path $Log -Pattern 'SCRIPT ERROR:|Parse Error:|Compile Error:|ERROR:' -Quiet)) {
+              Get-Content $Log -Tail 120
+              throw "R3C1_SUITE_FAIL:$Suite"
+            }
+          }
+          if (git status --porcelain --untracked-files=no) { throw 'R3C1_POST_TEST_DIRTY' }
+      - name: SHA256 evidence
+        shell: pwsh
+        if: always()
+        run: |
+          $E='artifacts\net-smooth1\r3c1-windows-exact'
+          New-Item -ItemType Directory -Force $E | Out-Null
+          @(Get-ChildItem $E -File -ErrorAction SilentlyContinue |
+            Where-Object { $_.Name -ne 'sha256.json' } |
+            ForEach-Object { [ordered]@{file=$_.Name;sha256=(Get-FileHash $_.FullName -Algorithm SHA256).Hash} }) |
+            ConvertTo-Json -Depth 4 | Set-Content "$E\sha256.json" -Encoding UTF8
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: r3c1-exact-${{ github.sha }}-${{ github.run_id }}
+          path: artifacts/net-smooth1/r3c1-windows-exact/
+          if-no-files-found: error
+          retention-days: 21
