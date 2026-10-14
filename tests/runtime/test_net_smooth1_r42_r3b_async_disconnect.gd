@@ -9,7 +9,7 @@ const Repository = preload("res://scripts/persistence/authoritative_recovery_rep
 const PEER := "peer/r3b/async-disconnect/a"
 const SESSION := "transport-session/r3b/async-disconnect/a/1"
 const PLAYER := "a"
-const OP := "operation/m3/disconnect/%s" % SESSION.sha256_text().left(16)
+var OP := "operation/m3/disconnect/%s" % SESSION.sha256_text().left(16)
 
 var checks := 0
 var failures: Array[String] = []
