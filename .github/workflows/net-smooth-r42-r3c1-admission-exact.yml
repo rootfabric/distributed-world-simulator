@@ -35,6 +35,87 @@ jobs:
           python -m unittest discover -s tests/tools -p test_net_smooth1_p1b_r2_source_contract.py -v
           python -m unittest discover -s tests/tools -p test_net_smooth1_analyzer.py -v
 
+  linux-godot-exact:
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 35
+    env:
+      GODOT_SILENCE_ROOT_WARNING: '1'
+      BREAKPOINT_RUNTIME_DISABLED: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Linux double identity and clean subject
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/net-smooth1/r3c1-linux-exact
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          git merge-base --is-ancestor 67764d121ce92ab5a22ba92031835dbc880e167d HEAD
+          test -z "$(git status --porcelain --untracked-files=no)"
+          godot="${DWS_GODOT_DOUBLE_LINUX_BIN:-$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64}"
+          test -x "$godot" || { echo "LINUX_ENGINE_MISSING:$godot"; exit 1; }
+          ver="$("$godot" --version | head -n1)"
+          sha="$(sha256sum "$godot" | awk '{print $1}')"
+          echo "Godot=$ver SHA256=$sha"
+          test "$ver" = '4.7.1.stable.double.custom_build.a13da4feb'
+          test "$sha" = 'bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7'
+          echo "GODOT_BIN=$godot" >> "$GITHUB_ENV"
+          { echo "HEAD=$(git rev-parse HEAD)"; echo "TREE=$(git rev-parse 'HEAD^{tree}')"; echo "PARENT=67764d121ce92ab5a22ba92031835dbc880e167d"; echo "ENGINE_SHA256=$sha"; } > artifacts/net-smooth1/r3c1-linux-exact/identity.txt
+      - name: Direct parser probe including compiler line numbers
+        shell: bash
+        continue-on-error: true
+        run: |
+          set +e
+          "$GODOT_BIN" --headless --path . --check-only --script res://scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime_p2.gd > artifacts/net-smooth1/r3c1-linux-exact/direct-parse.log 2>&1
+          ec=$?
+          echo "$ec" > artifacts/net-smooth1/r3c1-linux-exact/direct-parse.exit
+          cat artifacts/net-smooth1/r3c1-linux-exact/direct-parse.log | tail -n 180
+          exit "$ec"
+      - name: Cold import and compile
+        shell: bash
+        run: |
+          set -euo pipefail
+          log=artifacts/net-smooth1/r3c1-linux-exact/cold-import.log
+          if ! "$GODOT_BIN" --headless --path . --editor --import --quit > "$log" 2>&1; then
+            tail -n 160 "$log"; exit 1
+          fi
+          if grep -E 'SCRIPT ERROR:|Parse Error:|Compile Error:' "$log"; then
+            tail -n 160 "$log"; exit 1
+          fi
+      - name: Real M3 M6 focused R3C runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          dir=artifacts/net-smooth1/r3c1-linux-exact
+          for file in tests/runtime/test_net_smooth1_r42_r3c_async_leave.gd tests/runtime/test_net_smooth1_r42_r3c_queued_join.gd tests/runtime/test_net_smooth1_r42_r3b_async_disconnect.gd tests/runtime/test_net_smooth1_r42_r3b_outbox_hotpath.gd tests/runtime/test_net_smooth1_r42_r3_slow_item_movement.gd; do
+            name="$(basename "$file")"
+            log="$dir/$name.log"
+            if ! "$GODOT_BIN" --headless --path . --script "res://$file" > "$log" 2>&1; then
+              tail -n 130 "$log"; exit 1
+            fi
+            if grep -E 'SCRIPT ERROR:|Parse Error:|Compile Error:|ERROR:' "$log"; then
+              tail -n 130 "$log"; exit 1
+            fi
+          done
+      - name: Evidence hash and tracked check
+        shell: bash
+        if: always()
+        run: |
+          dir=artifacts/net-smooth1/r3c1-linux-exact
+          mkdir -p "$dir"
+          (cd "$dir" && sha256sum *.log *.txt *.exit 2>/dev/null > sha256.txt || true)
+          git status --porcelain --untracked-files=no > "$dir/tracked.txt"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: r3c1-linux-exact-${{ github.sha }}-${{ github.run_id }}
+          path: artifacts/net-smooth1/r3c1-linux-exact/
+          if-no-files-found: error
+          retention-days: 14
+
   windows-exact:
     runs-on: [self-hosted, Windows, X64]
     timeout-minutes: 45
