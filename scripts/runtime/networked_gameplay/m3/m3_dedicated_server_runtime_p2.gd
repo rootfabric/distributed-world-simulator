@@ -1683,6 +1683,8 @@ func _p1b_finish_item_committed(accepted: Dictionary, publish: bool) -> void:
 		_r3c2_postcommit_pending = {
 			"stage": 0, "pending": pending, "after_item": {},
 			"delta": {}, "fallback": false,
+			"committed_at_ms": Time.get_ticks_msec(),
+			"test_hold_reported": false,
 		}
 		return
 	if not publish:
@@ -1794,6 +1796,30 @@ func _r3c2_drain_postcommit_stage() -> void:
 	var session_id := String(pending.get("session_id", ""))
 	var player_id := String(pending.get("logical_id", ""))
 	var ownership_epoch := int(pending.get("ownership_epoch", 0))
+	# R3C2 exact-process falsifier: a main-loop-NONBLOCKING window after
+	# verified atomic worker completion, strictly before any M6 ACK enqueue.
+	# Both environment gates are REQUIRED; ordinary gameplay is unchanged.
+	if (
+		stage == 2
+		and _r3c2_phased_item_publication_enabled
+		and OS.get_environment("DWS_NET_SMOOTH_TEST_HOOKS") == "1"
+	):
+		var requested_hold_ms := clampi(
+			int(OS.get_environment("DWS_NET_R3C2_TEST_PRE_ACK_HOLD_MS")), 0, 10000
+		)
+		var elapsed_ms := Time.get_ticks_msec() - int(
+			_r3c2_postcommit_pending.get("committed_at_ms", Time.get_ticks_msec())
+		)
+		if requested_hold_ms > 0 and elapsed_ms < requested_hold_ms:
+			if not bool(_r3c2_postcommit_pending.get("test_hold_reported", false)):
+				_r3c2_postcommit_pending["test_hold_reported"] = true
+				if SmoothTrace.enabled():
+					SmoothTrace.emit("r3c2_pre_ack_hold", {
+						"operation_hash": operation_id.sha256_text().left(16),
+						"generation": _checkpoint_generation,
+						"hold_budget_ms": requested_hold_ms,
+					})
+			return
 	match stage:
 		0:
 			var after_item: Dictionary = _service.create_canonical_item_graph_snapshot()
