@@ -1823,13 +1823,19 @@ func _r3c2_drain_postcommit_stage() -> void:
 		and _r3c2_phased_item_publication_enabled
 		and OS.get_environment("DWS_NET_SMOOTH_TEST_HOOKS") == "1"
 	):
+		var forced_kill_window := (
+			OS.get_environment("DWS_NET_R3C2_TEST_FORCE_PRE_ACK_HOLD") == "1"
+		)
 		var requested_hold_ms := clampi(
 			int(OS.get_environment("DWS_NET_R3C2_TEST_PRE_ACK_HOLD_MS")), 0, 10000
 		)
 		var elapsed_ms := Time.get_ticks_msec() - int(
 			_r3c2_postcommit_pending.get("committed_at_ms", Time.get_ticks_msec())
 		)
-		if requested_hold_ms > 0 and elapsed_ms < requested_hold_ms:
+		# Exact process-crash proof uses a test-only hold that never expires
+		# by wall clock; otherwise a heavily loaded runner might send an ACK
+		# before the harness kills server1, falsely passing the kill window.
+		if forced_kill_window or (requested_hold_ms > 0 and elapsed_ms < requested_hold_ms):
 			if not bool(_r3c2_postcommit_pending.get("test_hold_reported", false)):
 				_r3c2_postcommit_pending["test_hold_reported"] = true
 				if SmoothTrace.enabled():
@@ -1837,6 +1843,7 @@ func _r3c2_drain_postcommit_stage() -> void:
 						"operation_hash": operation_id.sha256_text().left(16),
 						"generation": _checkpoint_generation,
 						"hold_budget_ms": requested_hold_ms,
+						"forced_until_kill": forced_kill_window,
 					})
 			return
 	match stage:

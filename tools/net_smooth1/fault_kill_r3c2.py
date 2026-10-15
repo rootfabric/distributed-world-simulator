@@ -109,7 +109,7 @@ def role_env(target: Path, role: str, window: str) -> dict[str, str]:
             DWS_NET_SMOOTH_TEST_ITEM_DELAY_MS="1800",
         )
         if window == "after-commit-before-ack":
-            env["DWS_NET_R3C2_TEST_PRE_ACK_HOLD_MS"] = "6000"
+            env["DWS_NET_R3C2_TEST_FORCE_PRE_ACK_HOLD"] = "1"
     return env
 
 
@@ -282,6 +282,8 @@ class Run:
             hold = self.wait_trace_event(trace, "r3c2_pre_ack_hold")
             require(commit["t_us"] < hold["t_us"],
                     "exact durable generation committed before test-only no-ACK hold", self.evidence)
+            require(hold.get("data", {}).get("forced_until_kill") is True,
+                    "test-only pre-ACK hold cannot expire before server1 is killed", self.evidence)
             on_disk = active_checkpoint(self.world)
             require(int(on_disk["generation"]) == int(before["generation"]) + 1,
                     "single atomic checkpoint generation durable BEFORE ACK", self.evidence)

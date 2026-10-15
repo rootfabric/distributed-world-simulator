@@ -68,6 +68,10 @@ class R3C2KillEvidenceTest(unittest.TestCase):
     def test_window_requires_exact_durable_before_no_ack(self):
         source = MODULE.read_text(encoding="utf-8")
         self.assertIn('commit["t_us"] < hold["t_us"]', source)
+        self.assertIn('hold.get("data", {}).get("forced_until_kill") is True', source)
+        server = (MODULE.parent.parent.parent / "scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime_p2.gd").read_text(encoding="utf-8")
+        self.assertIn('DWS_NET_R3C2_TEST_FORCE_PRE_ACK_HOLD', server)
+        self.assertIn("if forced_kill_window or (requested_hold_ms", server)
         self.assertIn('recovery.get("recovered") is True', source)
         self.assertIn('recovery.get("recovery_source") == "ACTIVE"', source)
         self.assertIn('recovery.get("r3c2_test_operation_recovered")', source)
