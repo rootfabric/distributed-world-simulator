@@ -220,3 +220,70 @@ jobs:
           path: artifacts/net-smooth1/r3c2-windows-exact/
           if-no-files-found: error
           retention-days: 21
+
+  linux-fault-process-exact:
+    name: R3C2 real OS crash windows, Linux double
+    needs: linux-exact
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 45
+    env:
+      GODOT_SILENCE_ROOT_WARNING: '1'
+      BREAKPOINT_RUNTIME_DISABLED: '1'
+      PYTHONUTF8: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Exact lineage and Linux double identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          E=artifacts/net-smooth1/r3c2-linux-fault
+          mkdir -p "$E"
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          git merge-base --is-ancestor c68f35b68203e812f81e87b56fc3a76b37da58a3 HEAD
+          test -z "$(git status --porcelain --untracked-files=no)"
+          B="${DWS_GODOT_DOUBLE_LINUX_BIN:-$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64}"
+          test -x "$B"
+          test "$("$B" --version | head -n1)" = "4.7.1.stable.double.custom_build.a13da4feb"
+          test "$(sha256sum "$B" | cut -d' ' -f1)" = "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7"
+          echo "GODOT_BIN=$B" >> "$GITHUB_ENV"
+          { git rev-parse HEAD; git rev-parse 'HEAD^{tree}'; sha256sum "$B"; } > "$E/identity.txt"
+      - name: Cold import on dedicated fault worker
+        shell: bash
+        run: |
+          set -euo pipefail
+          L=artifacts/net-smooth1/r3c2-linux-fault/import.log
+          "$GODOT_BIN" --headless --editor --path . --import --quit > "$L" 2>&1 || { tail -n 120 "$L"; exit 1; }
+          ! grep -E 'SCRIPT ERROR:|Parse Error:|Compile Error:' "$L" || { tail -n 120 "$L"; exit 1; }
+      - name: Hard kill after SUBMIT and before commit
+        shell: bash
+        timeout-minutes: 18
+        run: |
+          set -euo pipefail
+          python3 tools/net_smooth1/fault_kill_r3c2.py --godot "$GODOT_BIN" --window before-commit --output artifacts/net-smooth1/r3c2-linux-fault/before
+          python3 -c 'import json;from pathlib import Path;p=Path("artifacts/net-smooth1/r3c2-linux-fault/before/fault-result.json");r=json.loads(p.read_text());assert r["passed"] is True and r["completed"] is True and r["server2_in_memory_operation_recovered"] is False'
+      - name: Hard kill after verified atomic commit, before ACK
+        shell: bash
+        timeout-minutes: 18
+        run: |
+          set -euo pipefail
+          python3 tools/net_smooth1/fault_kill_r3c2.py --godot "$GODOT_BIN" --window after-commit-before-ack --output artifacts/net-smooth1/r3c2-linux-fault/after
+          python3 -c 'import json;from pathlib import Path;p=Path("artifacts/net-smooth1/r3c2-linux-fault/after/fault-result.json");r=json.loads(p.read_text());assert r["passed"] is True and r["completed"] is True and r["server2_in_memory_operation_recovered"] is True'
+      - name: Capture negative evidence hashes
+        shell: bash
+        if: always()
+        run: |
+          E=artifacts/net-smooth1/r3c2-linux-fault
+          mkdir -p "$E"
+          (cd "$E" && find . -type f ! -name SHA256SUMS.txt -print0 | sort -z | xargs -0 -r sha256sum > SHA256SUMS.txt)
+          git status --porcelain --untracked-files=no > "$E/tracked-after.txt"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: r3c2-linux-real-kill-${{ github.sha }}-${{ github.run_id }}
+          path: artifacts/net-smooth1/r3c2-linux-fault/
+          if-no-files-found: error
+          retention-days: 21
