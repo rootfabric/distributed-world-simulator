@@ -146,7 +146,8 @@ def play(args, manifest: dict) -> None:
                     durable_stages_required=args.scenario in ('durable-commands', 'r3-slow-item'),
                     renderer='opengl3' if args.mode=='gui' else 'headless',resolution='900x600',max_fps=60,
                     vsync='disabled',phase_results=[],checkpoint_mode=args.checkpoint_mode,
-                    r3c_async_admission=args.r3c_async_admission,scenario=args.scenario)
+                    r3c_async_admission=args.r3c_async_admission,
+                    slow_item_writer_ms=args.slow_item_writer_ms,scenario=args.scenario)
     processes: dict[str,subprocess.Popen] = {}; streams=[]
     def spawn(role: str) -> None:
         target=root/role;target.mkdir(parents=True)
