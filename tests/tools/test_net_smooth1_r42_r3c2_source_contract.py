@@ -73,6 +73,35 @@ class R3C2SourceSafety(unittest.TestCase):
         self.assertIn("_r3c2_postcommit_pending.clear()", drained)
         self.assertIn("R3C2_POSTCOMMIT_ACK_FIFO_FAILED", drained)
 
+    def test_exact_frozen_item_graph_is_reused_with_no_second_export(self):
+        begin = func(SERVER, "_p1b_begin_item_async_commit")
+        self.assertIn("var frozen_after_item: Dictionary = _service.create_canonical_item_graph_snapshot()", begin)
+        self.assertIn('"after_item_frozen": frozen_after_item if _r3c2_phased_item_publication_enabled', begin)
+        self.assertIn('"after_item_checksum": item_checksum if _r3c2_phased_item_publication_enabled', begin)
+        finish = func(SERVER, "_p1b_finish_item_committed")
+        self.assertIn("_p1b_item_pending.duplicate(false)", finish)
+        self.assertIn("_p1b_item_pending.duplicate(true)", finish)
+        self.assertIn("if is_phased_item else", finish)
+        staged = func(SERVER, "_r3c2_drain_postcommit_stage")
+        self.assertIn('pending.get("after_item_frozen", {})', staged)
+        self.assertIn('R3C2_FROZEN_ITEM_CHECKSUM_MISMATCH', staged)
+        self.assertNotIn("_service.create_canonical_item_graph_snapshot()", staged)
+
+    def test_periodic_completion_full_report_is_diagnostic_only(self):
+        callback = func(SERVER, "_complete_async_movement_checkpoint")
+        self.assertIn("if _r3c2_phased_item_publication_enabled:", callback)
+        self.assertIn('_r3c2_deferred_diagnostic_reports += 1', callback)
+        self.assertIn('SmoothTrace.emit("r3c2_periodic_report_deferred"', callback)
+        self.assertIn('else:\n\t\t_write_report("READY", false)', callback)
+        self.assertIn('SmoothTrace.emit("checkpoint_complete"', callback)
+
+    def test_real_server2_replay_oracle_requires_explicit_test_hooks(self):
+        report = func(SERVER, "_persistence_report")
+        self.assertIn('DWS_NET_SMOOTH_TEST_HOOKS', report)
+        self.assertIn('DWS_NET_R3C2_TEST_OPERATION_ID', report)
+        self.assertIn('_service.has_durable_replay_operation(operation_id)', report)
+        self.assertNotIn('"operation_id": operation_id', report)
+
     def test_shutdown_uses_quarantine_not_pretend_delivery(self):
         stop = func(SERVER,"_p1b_finish_item_shutdown_barrier")
         self.assertIn("_p1b_item_async_owner.discard_stale_session(", stop)

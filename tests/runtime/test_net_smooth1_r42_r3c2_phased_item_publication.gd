@@ -55,6 +55,13 @@ func _run() -> void:
 	})
 	check(String(server.get("_p1b_item_pending").get("operation_id", "")) == OP,
 		"canonical ITEM applied under one M6 pending fence")
+	var pending_capture: Dictionary = Dictionary(server.get("_p1b_item_pending"))
+	var frozen_item: Dictionary = Dictionary(pending_capture.get("after_item_frozen", {}))
+	var frozen_checksum := String(frozen_item.get("checksum", ""))
+	check(not frozen_item.is_empty() and not frozen_checksum.is_empty(),
+		"exact canonical after-ITEM DTO is frozen before worker submit")
+	check(frozen_checksum == String(pending_capture.get("after_item_checksum", "")),
+		"frozen ITEM snapshot checksum is bound to durable outbox stage")
 	check(server.get("_r3c2_postcommit_pending").is_empty(), "postcommit not opened before commit")
 	check(int(server.get("_checkpoint_generation")) == generation,
 		"no generation advance before worker completion")
@@ -95,6 +102,12 @@ func _run() -> void:
 		check(int(server.get("_r3c2_postcommit_pending").get("stage", -1)) == phase,
 			"phase %d starts in exact FIFO order" % phase)
 		server.call("_r3c2_drain_postcommit_stage")
+		if phase == 0:
+			var phased_after: Dictionary = Dictionary(
+				server.get("_r3c2_postcommit_pending").get("after_item", {})
+			)
+			check(String(phased_after.get("checksum", "")) == frozen_checksum,
+				"phase zero reuses original exact frozen ITEM checksum, not a new export")
 		check(not bool(server.get("_fatal_persistence_failure")),
 			"phase %d did not break M6 ACK/delta/snapshot fencing" % phase)
 		if phase < 4:
