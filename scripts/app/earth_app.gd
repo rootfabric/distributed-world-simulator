@@ -1,5 +1,6 @@
 extends Node3D
 
+const SmoothTrace = preload("res://scripts/network/smoothness/net_smooth_trace.gd")
 const EarthWorldScript = preload(
 	"res://scripts/world/earth/procedural_earth_world.gd"
 )
@@ -301,6 +302,7 @@ func create_runtime_snapshot() -> Dictionary:
 
 
 func attach_m3_multiplayer_client(runtime) -> Dictionary:
+	var attached_started_us := Time.get_ticks_usec()
 	if runtime_role != "game-client":
 		return {"success": false, "error_code": "M3_GAME_CLIENT_ROLE_REQUIRED"}
 	if (
@@ -342,10 +344,21 @@ func attach_m3_multiplayer_client(runtime) -> Dictionary:
 	_m3_attached = true
 	if earth_explorer != null:
 		earth_explorer.set_network_replica_mode(true)
+	var replica_started_us := Time.get_ticks_usec()
 	_on_m3_replica_updated(runtime.get_snapshot())
+	var replica_done_us := Time.get_ticks_usec()
 	_on_m4_item_graph_updated(runtime.get_item_graph_snapshot())
+	var item_done_us := Time.get_ticks_usec()
 	if runtime.has_method("get_construction_bundle"):
 		_on_m3_construction_updated(runtime.get_construction_bundle())
+	if SmoothTrace.enabled():
+		SmoothTrace.emit("r3c2_earth_attach", {
+			"total_ms": float(Time.get_ticks_usec() - attached_started_us) / 1000.0,
+			"replica_visual_ms": float(replica_done_us - replica_started_us) / 1000.0,
+			"item_ms": float(item_done_us - replica_done_us) / 1000.0,
+			"construction_ms": float(Time.get_ticks_usec() - item_done_us) / 1000.0,
+			"remote_count": _m3_remote_presenters.size(),
+		})
 	return {"success": true, "error_code": "", "details": {"local_player_id": runtime.get_local_player_id(), "mode": "EARTH_NETWORK_SPECTATOR", "m4_item_graph": not _m4_item_graph_snapshot.is_empty()}}
 
 
