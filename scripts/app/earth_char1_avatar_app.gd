@@ -12,6 +12,14 @@ var _char1_setup_error := ""
 var _char1_third_person_camera: Camera3D
 var _char1_third_person := false
 var _char1_camera_toggles := 0
+# R3C.2: visual-only cache. Untracked remote slots never become canonical
+# players, active presenter counts, ownership records or durable replay.
+const R3C2_MAX_RETAINED_REMOTE_VISUALS := 2
+var _r3c2_visual_prewarm_enabled := false
+var _r3c2_prewarmed_remote_presenter
+var _r3c2_retained_remote_presenters: Dictionary = {}
+var _r3c2_prewarm_ms := 0.0
+var _r3c2_visual_reuses := 0
 
 
 func _ready() -> void:
@@ -46,6 +54,27 @@ func _ready() -> void:
 		_char1_third_person_camera.far = earth_explorer.get_camera().far
 		earth_explorer.add_child(_char1_third_person_camera)
 		set_char1_camera_third_person(false)
+	# Heavy GLTF/PackedScene instantiation is a loading responsibility.
+	# Do it before the client can reach CONNECTING->CONNECTED. A later
+	# session_ready only rebinds the same read-only visual to a new NX5
+	# interpolator; nothing here changes the M3 replica or transport owner.
+	_r3c2_visual_prewarm_enabled = (
+		runtime_role == "game-client"
+		and OS.get_environment("DWS_NET_R3C2_AVATAR_PREWARM") == "1"
+	)
+	if _r3c2_visual_prewarm_enabled:
+		var started_us := Time.get_ticks_usec()
+		var candidate = _create_m3_remote_player_presenter()
+		candidate.name = "R3C2PrewarmedRemoteAvatar"
+		candidate.visible = false
+		add_child(candidate)
+		var warmed: Dictionary = candidate.prewarm_visual()
+		_r3c2_prewarm_ms = float(Time.get_ticks_usec() - started_us) / 1000.0
+		if bool(warmed.get("success", false)):
+			_r3c2_prewarmed_remote_presenter = candidate
+		else:
+			_char1_setup_error = String(warmed.get("error_code", "R3C2_REMOTE_VISUAL_PREWARM_FAILED"))
+			candidate.queue_free()
 
 
 func _create_m3_remote_player_presenter():
@@ -58,6 +87,46 @@ func _create_m3_remote_player_presenter():
 		))
 	)
 	return presenter
+
+
+func _create_m3_remote_player_presenter_for(logical_id: String):
+	if _r3c2_visual_prewarm_enabled:
+		var retained = _r3c2_retained_remote_presenters.get(logical_id)
+		if retained != null and is_instance_valid(retained):
+			_r3c2_retained_remote_presenters.erase(logical_id)
+			retained.visible = true
+			_r3c2_visual_reuses += 1
+			return retained
+		if _r3c2_prewarmed_remote_presenter != null and is_instance_valid(_r3c2_prewarmed_remote_presenter):
+			var warmed = _r3c2_prewarmed_remote_presenter
+			_r3c2_prewarmed_remote_presenter = null
+			warmed.visible = true
+			_r3c2_visual_reuses += 1
+			return warmed
+	return _create_m3_remote_player_presenter()
+
+
+func _retire_m3_remote_player_presenter(logical_id: String, presenter) -> void:
+	if not _r3c2_visual_prewarm_enabled:
+		super._retire_m3_remote_player_presenter(logical_id, presenter)
+		return
+	if _r3c2_retained_remote_presenters.has(logical_id):
+		var old = _r3c2_retained_remote_presenters[logical_id]
+		if old != null and old != presenter and is_instance_valid(old):
+			old.queue_free()
+	if _r3c2_retained_remote_presenters.size() >= R3C2_MAX_RETAINED_REMOTE_VISUALS:
+		var ids: Array = _r3c2_retained_remote_presenters.keys()
+		ids.sort()
+		var victim_id := String(ids[0])
+		var victim = _r3c2_retained_remote_presenters[victim_id]
+		if victim != null and is_instance_valid(victim):
+			victim.queue_free()
+		_r3c2_retained_remote_presenters.erase(victim_id)
+	# Hide a derived render subtree instead of unloading Quaternius rig and
+	# reloading its GLTF at the next network reconnect (the 3s baseline stall).
+	presenter.visible = false
+	presenter.set_process(false)
+	_r3c2_retained_remote_presenters[logical_id] = presenter
 
 
 func set_char1_camera_third_person(enabled: bool) -> Dictionary:
@@ -232,6 +301,13 @@ func create_m3_graphical_client_report() -> Dictionary:
 		"remote_avatar_count": _m3_remote_presenters.size(),
 		"canonical_owner_created": false,
 		"protocol_changed": false,
+		"r3c2_visual_prewarm": {
+			"enabled": _r3c2_visual_prewarm_enabled,
+			"prewarm_ms": _r3c2_prewarm_ms,
+			"reuses": _r3c2_visual_reuses,
+			"retained_count": _r3c2_retained_remote_presenters.size(),
+			"prewarmed_available": _r3c2_prewarmed_remote_presenter != null,
+		},
 	}
 	report["char1_avatar"] = (
 		char1_avatar_presentation.create_report()
@@ -248,6 +324,13 @@ func create_m3_graphical_client_report() -> Dictionary:
 	return report
 
 func prepare_for_unload() -> void:
+	if _r3c2_prewarmed_remote_presenter != null and is_instance_valid(_r3c2_prewarmed_remote_presenter):
+		_r3c2_prewarmed_remote_presenter.queue_free()
+	_r3c2_prewarmed_remote_presenter = null
+	for retained in _r3c2_retained_remote_presenters.values():
+		if retained != null and is_instance_valid(retained):
+			retained.queue_free()
+	_r3c2_retained_remote_presenters.clear()
 	if _char1_third_person_camera != null and is_instance_valid(_char1_third_person_camera):
 		_char1_third_person_camera.queue_free()
 	_char1_third_person_camera = null
