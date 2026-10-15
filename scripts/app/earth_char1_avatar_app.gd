@@ -71,6 +71,9 @@ func _ready() -> void:
 		var warmed: Dictionary = candidate.prewarm_visual()
 		_r3c2_prewarm_ms = float(Time.get_ticks_usec() - started_us) / 1000.0
 		if bool(warmed.get("success", false)):
+			# A hidden prewarmed visual must not continue idle animation or
+			# interpolation until a canonical peer actually joins.
+			candidate.process_mode = Node.PROCESS_MODE_DISABLED
 			_r3c2_prewarmed_remote_presenter = candidate
 		else:
 			_char1_setup_error = String(warmed.get("error_code", "R3C2_REMOTE_VISUAL_PREWARM_FAILED"))
@@ -94,12 +97,16 @@ func _create_m3_remote_player_presenter_for(logical_id: String):
 		var retained = _r3c2_retained_remote_presenters.get(logical_id)
 		if retained != null and is_instance_valid(retained):
 			_r3c2_retained_remote_presenters.erase(logical_id)
+			retained.process_mode = Node.PROCESS_MODE_INHERIT
+			retained.set_process(true)
 			retained.visible = true
 			_r3c2_visual_reuses += 1
 			return retained
 		if _r3c2_prewarmed_remote_presenter != null and is_instance_valid(_r3c2_prewarmed_remote_presenter):
 			var warmed = _r3c2_prewarmed_remote_presenter
 			_r3c2_prewarmed_remote_presenter = null
+			warmed.process_mode = Node.PROCESS_MODE_INHERIT
+			warmed.set_process(true)
 			warmed.visible = true
 			_r3c2_visual_reuses += 1
 			return warmed
@@ -126,6 +133,7 @@ func _retire_m3_remote_player_presenter(logical_id: String, presenter) -> void:
 	# reloading its GLTF at the next network reconnect (the 3s baseline stall).
 	presenter.visible = false
 	presenter.set_process(false)
+	presenter.process_mode = Node.PROCESS_MODE_DISABLED
 	_r3c2_retained_remote_presenters[logical_id] = presenter
 
 

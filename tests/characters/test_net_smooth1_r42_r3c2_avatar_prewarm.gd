@@ -75,11 +75,15 @@ func _run() -> void:
 	app.add_child(retained)
 	app.call("_retire_m3_remote_player_presenter", "b", retained)
 	check(not retained.visible, "stale remote visual hidden")
+	check(retained.process_mode == Node.PROCESS_MODE_DISABLED,
+		"retired visual cannot advance child animation/interpolator while hidden")
 	check(int(app.get("_r3c2_retained_remote_presenters").size()) == 1,
 		"exact one bounded detached presentation cache record")
 	var reused = app.call("_create_m3_remote_player_presenter_for", "b")
 	check(reused == retained, "matching logical-player presenter reclaimed")
 	check(reused.visible, "reclaimed visual is visible again")
+	check(reused.process_mode == Node.PROCESS_MODE_INHERIT,
+		"reclaimed visual resumes all child processing on fresh session")
 	check(app.get("_r3c2_retained_remote_presenters").is_empty(),
 		"claimed cache record removed, no duplicates")
 	app.free()
