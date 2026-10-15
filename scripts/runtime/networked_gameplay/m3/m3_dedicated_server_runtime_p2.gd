@@ -2734,7 +2734,7 @@ func _enter_persistence_failure(error_code: String) -> void:
 
 
 func _persistence_report() -> Dictionary:
-	return {
+	var report: Dictionary = {
 		"enabled": _persistence_enabled,
 		"root_path": _persistence_root,
 		"checkpoint_generation": _checkpoint_generation,
@@ -2783,6 +2783,17 @@ func _persistence_report() -> Dictionary:
 		),
 		"service_recovery": _service.get_recovery_report() if _service != null else {},
 	}
+	# A READ-ONLY, opt-in recovery oracle for a real second server process.
+	# Expose just a boolean, not replay IDs or an authoritative dictionary.
+	# Never enabled by product configs, and never modifies M6 ACK/durability.
+	if OS.get_environment("DWS_NET_SMOOTH_TEST_HOOKS") == "1":
+		var operation_id := OS.get_environment("DWS_NET_R3C2_TEST_OPERATION_ID")
+		if not operation_id.is_empty():
+			report["r3c2_test_operation_recovered"] = (
+				_service != null
+				and _service.has_durable_replay_operation(operation_id)
+			)
+	return report
 
 
 func _gate_can_accept() -> bool:
