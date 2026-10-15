@@ -50,10 +50,19 @@ class R3C2KillEvidenceTest(unittest.TestCase):
     def test_missing_replay_or_checksum_fails_closed(self):
         with tempfile.TemporaryDirectory() as tmp:
             p = Path(tmp)
-            (p / "authoritative-checkpoint.json").write_text(
-                json.dumps({"generation": 1, "checksum": "abc",
-                            "authority_state": {}}), encoding="utf-8")
+            path = p / "authoritative-checkpoint.json"
+            base = {
+                "schema": "planet_simulator.authoritative_checkpoint.v1",
+                "schema_version": 1,
+                "generation": 1, "previous_generation": 0,
+                "checksum": "1" * 64, "authority_state": {},
+            }
+            path.write_text(json.dumps(base), encoding="utf-8")
             with self.assertRaisesRegex(ValueError, "replay_state"):
+                fault.active_checkpoint(p)
+            missing_checksum = dict(base, replay_state={}, checksum="abc")
+            path.write_text(json.dumps(missing_checksum), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "lowercase SHA-256"):
                 fault.active_checkpoint(p)
 
     def test_window_requires_exact_durable_before_no_ack(self):
