@@ -13,6 +13,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import re
 import socket
 import subprocess
 import sys
@@ -37,12 +38,22 @@ def active_checkpoint(root: Path) -> dict:
     record = json.loads(path.read_text(encoding="utf-8"))
     if not isinstance(record, dict) or int(record.get("generation", -1)) < 1:
         raise ValueError(f"invalid durable checkpoint: {path}")
+    if record.get("schema") != "planet_simulator.authoritative_checkpoint.v1":
+        raise ValueError("durable checkpoint schema mismatch")
+    generation = int(record["generation"])
+    if int(record.get("previous_generation", -1)) != generation - 1:
+        raise ValueError("non-contiguous checkpoint generation")
+    if record.get("schema_version") != 1:
+        raise ValueError("durable checkpoint schema version mismatch")
     if not isinstance(record.get("replay_state"), dict):
         raise ValueError("checkpoint has no M6 replay_state")
     if not isinstance(record.get("authority_state"), dict):
         raise ValueError("checkpoint has no M6 authority_state")
-    if not isinstance(record.get("checksum"), str) or not record["checksum"]:
-        raise ValueError("checkpoint checksum absent")
+    if not isinstance(record.get("checksum"), str) or not re.fullmatch(r"[0-9a-f]{64}", record["checksum"]):
+        raise ValueError("checkpoint checksum must be lowercase SHA-256")
+    # This is structural verification, not a SHA proof. The independent
+    # Godot Repository.load_committed() validates the actual M6 checksum.
+    # Do not claim Python structural check alone is scientific recovery.
     return record
 
 
@@ -69,6 +80,18 @@ def role_env(target: Path, role: str, window: str) -> dict[str, str]:
             del env[key]
     userdata = target / "userdata"
     userdata.mkdir(parents=True, exist_ok=True)
+    # Windows and Linux Godot use different data/cache base directories.
+    # Redirect both so no process inherits another runner job's user:// state.
+    dirs = {
+        "APPDATA": userdata / "appdata",
+        "LOCALAPPDATA": userdata / "localappdata",
+        "XDG_DATA_HOME": userdata / "xdg-data",
+        "XDG_CONFIG_HOME": userdata / "xdg-config",
+        "XDG_CACHE_HOME": userdata / "xdg-cache",
+    }
+    for directory in dirs.values():
+        directory.mkdir(parents=True, exist_ok=True)
+    env.update({key: str(value) for key, value in dirs.items()})
     env.update(
         HOME=str(userdata),
         BREAKPOINT_RUNTIME_DISABLED="1",
@@ -117,6 +140,10 @@ class Run:
         stream = (target / "runtime.log").open("w", encoding="utf-8")
         self.logs.append(stream)
         env = role_env(target, role, self.window if fault_server else "none")
+        if role == "server":
+            # A test-hook-guarded boolean in the actual server2 memory; this
+            # is not inferred from rereading the same disk file twice.
+            env["DWS_NET_R3C2_TEST_OPERATION_ID"] = self.operation
         cmd = [str(self.godot), "--path", str(ROOT), "--headless",
                "--max-fps", "60", "--disable-vsync", "--"] + args
         proc = subprocess.Popen(cmd, cwd=ROOT, env=env, stdout=stream, stderr=subprocess.STDOUT)
@@ -308,7 +335,14 @@ class Run:
                 "server2 exposes validated canonical Item Graph after recovery", self.evidence)
         committed_replay = committed_operation(active_checkpoint(self.world), self.operation)
         require(committed_replay == has_record,
-                "server2 recovered same replay/outbox without duplicate mutation", self.evidence)
+                "server2 persisted active M6 replay identity without duplication", self.evidence)
+        in_memory = recovery.get("r3c2_test_operation_recovered")
+        require(type(in_memory) is bool and in_memory is has_record,
+                "actual server2 service holds exact expected M6 operation replay", self.evidence)
+        outbox_count = int(recovery.get("outbox", {}).get("outbox_count", -1))
+        expected_outbox = len(disk_after_kill["replay_state"]["committed_outbox"])
+        require(outbox_count == expected_outbox,
+                "server2 in-memory outbox count matches validated active M6 checkpoint", self.evidence)
         self.summary.update({
             "before_generation": before["generation"],
             "killed_generation": disk_after_kill["generation"],
@@ -316,6 +350,8 @@ class Run:
             "disk_checksum_before_kill": on_disk["checksum"],
             "disk_checksum_after_kill": disk_after_kill["checksum"],
             "outbox_has_operation": committed_replay,
+            "server2_in_memory_operation_recovered": in_memory,
+            "server2_outbox_count": outbox_count,
             "server2_recovered": True,
             "server2_recovery_source": recovery["recovery_source"],
             "server2_item_revision": item.get("revision"),

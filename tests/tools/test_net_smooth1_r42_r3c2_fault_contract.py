@@ -15,8 +15,11 @@ class R3C2KillEvidenceTest(unittest.TestCase):
     def checkpoint(self, root, generation, op=""):
         root.mkdir(parents=True, exist_ok=True)
         record = {
+            "schema": "planet_simulator.authoritative_checkpoint.v1",
+            "schema_version": 1,
             "generation": generation,
-            "checksum": "1234-valid-placeholder",
+            "previous_generation": generation - 1,
+            "checksum": "1" * 64,
             "authority_state": {"server_tick": 100},
             "replay_state": {"committed_outbox": [{"operation_id": op}] if op else []},
         }
@@ -58,6 +61,9 @@ class R3C2KillEvidenceTest(unittest.TestCase):
         self.assertIn('commit["t_us"] < hold["t_us"]', source)
         self.assertIn('recovery.get("recovered") is True', source)
         self.assertIn('recovery.get("recovery_source") == "ACTIVE"', source)
+        self.assertIn('recovery.get("r3c2_test_operation_recovered")', source)
+        self.assertIn('in_memory is has_record', source)
+        self.assertIn('outbox_count == expected_outbox', source)
         self.assertIn("server1.kill()", source)
         self.assertIn("server2 is a different OS process", source)
         self.assertIn("same_generation and same_checksum", source)
