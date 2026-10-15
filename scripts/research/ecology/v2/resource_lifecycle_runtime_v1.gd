@@ -695,6 +695,156 @@ static func _population_step_result(field_after: Dictionary,
 		"field_hash": Field.state_hash(field_after),
 	}
 
+
+## A14.5 R1 EXPERIMENTAL: an interruptible A5 lifecycle over immutable
+## source inputs. The cursor is NONCANONICAL, transient and fail-closed.
+## PREPARE and ADVANCE run bounded *workset counts*. The single global
+## ALLOCATE barrier is deliberately indivisible; no wall deadline is claimed.
+## A caller may publish biology ONLY after COMPLETE, never between phases.
+const STAGED_SCHEMA := "dws.ecology.a5-staged-lifecycle.v1"
+const STAGED_CURSOR_KEYS := [
+	"schema", "source_hash", "field", "entries", "units",
+	"owner_token", "owner_epoch", "revision", "phase", "index",
+	"samples", "demands", "allocated_field", "intake_by_id",
+	"next_population", "propagules", "checksum",
+]
+
+static func staged_begin(field: Dictionary, population: Array,
+		owner_token: String, owner_epoch: int, revision: int,
+		tile_span_cells: int = SpatialWorksets.DEFAULT_TILE_SPAN_CELLS,
+		max_members: int = SpatialWorksets.DEFAULT_MAX_MEMBERS) -> Dictionary:
+	var guard := _precondition_error(field, population, owner_token, owner_epoch, revision)
+	if not guard.is_empty():
+		return _fail(guard)
+	var canonical := _canonical_entries(population)
+	if not bool(canonical.get("success", false)):
+		return canonical
+	var entries: Array = canonical.entries
+	var plan := SpatialWorksets.create(field, entries, tile_span_cells, max_members)
+	if plan.is_empty():
+		return _fail("A5_STAGED_SPATIAL_PLAN")
+	var error := SpatialWorksets.validate(plan, field, entries)
+	if not error.is_empty():
+		return _fail("A5_STAGED_SPATIAL_PLAN:" + error)
+	var fingerprint := C.digest({"field": field, "population": population})
+	if fingerprint.is_empty():
+		return _fail("A5_STAGED_SOURCE_HASH")
+	var cursor := {
+		"schema": STAGED_SCHEMA,
+		"source_hash": fingerprint,
+		"field": field.duplicate(true),
+		"entries": entries,
+		"units": plan.worksets.duplicate(true),
+		"owner_token": owner_token, "owner_epoch": owner_epoch,
+		"revision": revision, "phase": "PREPARE", "index": 0,
+		"samples": {}, "demands": [], "allocated_field": {},
+		"intake_by_id": {}, "next_population": [], "propagules": [],
+		"checksum": "",
+	}
+	cursor = _seal_staged_cursor(cursor)
+	if cursor.is_empty():
+		return _fail("A5_STAGED_CURSOR_SEAL")
+	return {"success": true, "complete": false, "phase": "PREPARE", "cursor": cursor}
+
+static func staged_resume(cursor: Dictionary, source_field: Dictionary,
+		source_population: Array, max_worksets_per_call: int = 1) -> Dictionary:
+	if not C.integer(max_worksets_per_call, 1, 4096):
+		return _fail("A5_STAGED_QUOTA")
+	if not C.keys(cursor, STAGED_CURSOR_KEYS) or String(cursor.schema) != STAGED_SCHEMA:
+		return _fail("A5_STAGED_CURSOR_SCHEMA")
+	if not cursor.field is Dictionary or not cursor.entries is Array \
+			or not cursor.units is Array or not cursor.samples is Dictionary \
+			or not cursor.demands is Array or not cursor.allocated_field is Dictionary \
+			or not cursor.intake_by_id is Dictionary \
+			or not cursor.next_population is Array or not cursor.propagules is Array:
+		return _fail("A5_STAGED_CURSOR_TYPES")
+	var unsigned: Dictionary = cursor.duplicate(true)
+	unsigned.checksum = ""
+	var digest := C.digest(unsigned)
+	if digest.is_empty() or digest != String(cursor.checksum):
+		return _fail("A5_STAGED_CURSOR_CHECKSUM")
+	var current_source := C.digest({"field": source_field, "population": source_population})
+	if current_source.is_empty() or current_source != String(cursor.source_hash):
+		return _fail("A5_STAGED_SOURCE_CHANGED")
+	if not C.integer(cursor.index, 0, cursor.units.size()):
+		return _fail("A5_STAGED_CURSOR_INDEX")
+	var phase := String(cursor.phase)
+	if not phase in ["PREPARE", "ALLOCATE", "ADVANCE"]:
+		return _fail("A5_STAGED_PHASE")
+	var next: Dictionary = cursor.duplicate(true)
+	var units: Array = next.units
+	var entries: Array = next.entries
+	var index: int = int(next.index)
+	if phase == "PREPARE":
+		var stop := mini(units.size(), index + max_worksets_per_call)
+		var fragment := _prepare_units_serial(next.field, entries, units.slice(index, stop))
+		if not bool(fragment.get("success", false)):
+			return fragment
+		for id in fragment.samples:
+			next.samples[String(id)] = fragment.samples[id]
+		for demand in fragment.demands:
+			next.demands.append(demand)
+		next.index = stop
+		if stop == units.size():
+			next.phase = "ALLOCATE"
+			next.index = 0
+	elif phase == "ALLOCATE":
+		# Exactly one global field allocation; never allocate per tile.
+		if index != 0:
+			return _fail("A5_STAGED_ALLOCATION_INDEX")
+		var allocated := _allocate_population_demands(next.field, entries,
+			String(next.owner_token), int(next.owner_epoch),
+			int(next.revision), next.demands)
+		if not bool(allocated.get("success", false)):
+			return allocated
+		next.allocated_field = allocated.field
+		next.intake_by_id = allocated.intake_by_id
+		next.phase = "ADVANCE"
+		next.index = 0
+	elif phase == "ADVANCE":
+		var by_id := _entries_by_id(entries)
+		var stop := mini(units.size(), index + max_worksets_per_call)
+		for unit_index in range(index, stop):
+			var unit: Dictionary = units[unit_index]
+			var task_entries: Array = []
+			for raw_id in unit.member_ids:
+				var id := String(raw_id)
+				if not by_id.has(id):
+					return _fail("A5_WORKSET_MEMBER")
+				task_entries.append(by_id[id])
+			var advanced := _advance_unit_worker(task_entries, next.samples,
+				next.intake_by_id, int(unit.index))
+			if not bool(advanced.get("success", false)):
+				return advanced
+			var consumed := _consume_advance_outcomes(
+				unit, advanced.outcomes, next.next_population, next.propagules)
+			if not bool(consumed.get("success", false)):
+				return consumed
+		next.index = stop
+		if stop == units.size():
+			var finalized := _canonical_advance_result(
+				next.next_population, next.propagules, 0, 0)
+			var result := _population_step_result(
+				next.allocated_field, finalized.population, finalized.propagules)
+			result["complete"] = true
+			result["phase"] = "COMPLETE"
+			return result
+	next = _seal_staged_cursor(next)
+	if next.is_empty():
+		return _fail("A5_STAGED_CURSOR_SEAL")
+	return {"success": true, "complete": false, "phase": String(next.phase),
+		"cursor": next, "processed_worksets": max_worksets_per_call
+			if phase != "ALLOCATE" else 0}
+
+static func _seal_staged_cursor(cursor: Dictionary) -> Dictionary:
+	var next: Dictionary = cursor.duplicate(true)
+	next["checksum"] = ""
+	var digest := C.digest(next)
+	if digest.is_empty():
+		return {}
+	next["checksum"] = digest
+	return next
+
 ## Canonical propagule materialization (A5-owned admission).
 ## Without a mutation receipt the v1 parent-transfer witness applies (child
 ## blueprint hash bound to the parent's). With a sealed canonical mutation
