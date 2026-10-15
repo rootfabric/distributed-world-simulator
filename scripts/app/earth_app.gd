@@ -369,8 +369,13 @@ func _on_m3_replica_updated(snapshot: Dictionary) -> void:
 		seen[logical_id] = true
 		var presenter = _m3_remote_presenters.get(logical_id)
 		if presenter == null or not is_instance_valid(presenter):
-			presenter = _create_m3_remote_player_presenter()
-			add_child(presenter)
+			presenter = _create_m3_remote_player_presenter_for(logical_id)
+			# R3C.2: a Quaternius presenter prepared during Earth loading is
+			# already scene-owned. Reuse that exact visual rather than loading
+			# another GLTF synchronously from the first JOIN_ACK.
+			if presenter.get_parent() == null:
+				add_child(presenter)
+			presenter.visible = true
 			var setup_result: Dictionary = presenter.setup(
 				record, snapshot, Callable(self, "_map_m3_position_to_earth_world")
 			)
@@ -390,7 +395,7 @@ func _on_m3_replica_updated(snapshot: Dictionary) -> void:
 			continue
 		var stale_presenter = _m3_remote_presenters.get(logical_id)
 		if stale_presenter != null and is_instance_valid(stale_presenter):
-			stale_presenter.queue_free()
+			_retire_m3_remote_player_presenter(logical_id, stale_presenter)
 		_m3_remote_presenters.erase(logical_id)
 		_m3_remote_despawn_count += 1
 
@@ -400,6 +405,16 @@ func _on_m3_replica_updated(snapshot: Dictionary) -> void:
 # changing M3/SM1 network code or the historical default capsule presenter.
 func _create_m3_remote_player_presenter():
 	return RemotePlayerPresenterScript.new()
+
+
+# Presentation factory lifecycle hooks; network identity, authority and M6
+# replay do not depend on this cache. Default world keeps exact old behavior.
+func _create_m3_remote_player_presenter_for(_logical_id: String):
+	return _create_m3_remote_player_presenter()
+
+
+func _retire_m3_remote_player_presenter(_logical_id: String, presenter) -> void:
+	presenter.queue_free()
 
 
 func _apply_m3_local_spectator_record(record: Dictionary) -> void:
