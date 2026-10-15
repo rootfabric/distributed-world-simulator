@@ -147,7 +147,8 @@ def play(args, manifest: dict) -> None:
                     renderer='opengl3' if args.mode=='gui' else 'headless',resolution='900x600',max_fps=60,
                     vsync='disabled',phase_results=[],checkpoint_mode=args.checkpoint_mode,
                     r3c_async_admission=args.r3c_async_admission,
-                    slow_item_writer_ms=args.slow_item_writer_ms,scenario=args.scenario)
+                    slow_item_writer_ms=args.slow_item_writer_ms,
+                    r3c2_avatar_prewarm=args.r3c2_avatar_prewarm,scenario=args.scenario)
     processes: dict[str,subprocess.Popen] = {}; streams=[]
     def spawn(role: str) -> None:
         target=root/role;target.mkdir(parents=True)
@@ -161,6 +162,10 @@ def play(args, manifest: dict) -> None:
         if role == 'server' and args.r3c_async_admission:
             # The canary flag is passed only to the authoritative server.
             env['DWS_NET_R3C_ASYNC_ADMISSION']='1'
+        if role in ('a', 'b') and args.r3c2_avatar_prewarm:
+            # Visual-only: only clients prewarm reusable Quaternius rigs during
+            # Earth scene loading, never at JOIN_ACK or while applying ITEM.
+            env['DWS_NET_R3C2_AVATAR_PREWARM']='1'
         if role == 'server' and args.slow_item_writer_ms > 0:
             # Test-only worker injection, never delay the main-thread loop.
             env['DWS_NET_SMOOTH_TEST_HOOKS']='1'
@@ -606,6 +611,8 @@ def main() -> int:
     parser.add_argument('--checkpoint-mode',choices=('async','sync'),default='async')
     parser.add_argument('--r3c-async-admission',action='store_true',
                         help='Opt-in R3C bounded JOIN queue and async durable LEAVE')
+    parser.add_argument('--r3c2-avatar-prewarm',action='store_true',
+                        help='Opt-in bounded Quaternius visual prewarm/reuse before JOIN_ACK')
     parser.add_argument('--inject-stall-role',choices=('server','a','b'))
     parser.add_argument('--inject-stall-ms',type=int,default=250)
     args=parser.parse_args()
