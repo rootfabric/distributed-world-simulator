@@ -36,7 +36,7 @@ jobs:
           curl -fL --retry 3 -o /tmp/godot.zip https://github.com/godotengine/godot/releases/download/4.7.1-stable/Godot_v4.7.1-stable_linux.x86_64.zip
           unzip -q /tmp/godot.zip -d /tmp/godot
           chmod +x /tmp/godot/Godot_v4.7.1-stable_linux.x86_64
-      - name: Real LAB frame loop and scale smoke
+      - name: Run real LAB frame-loop and measured scale
         shell: bash
         run: |
           set -euo pipefail
@@ -113,48 +113,10 @@ jobs:
           if ((Get-FileHash $godot -Algorithm SHA256).Hash.ToLowerInvariant() -ne '3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5') { throw 'GODOT_SHA256_MISMATCH' }
           & $godot --headless --path . --script res://validation/ecology/evo_arch2_a14_live/test_live_integration.gd | Tee-Object -FilePath a144-live.log
           if ($LASTEXITCODE -ne 0) { throw 'A14_4_LIVE_FAIL' }
-          if (-not (Select-String -Path a144-live.log -Pattern '^ECO_ARCH2_A14_4_LIVE PASS
-          if ($LASTEXITCODE -ne 0) { throw 'A14_3_BUDGET_EXACT_FAIL' }
-          & $godot --headless --path . --script res://validation/ecology/evo_arch2_a14_adaptive/test_adaptive_fidelity.gd
-          if ($LASTEXITCODE -ne 0) { throw 'A14_2_REGRESSION_FAIL' }
-          python validation/ecology/evo_arch2_a13_fidelity/run_exact.py --godot $godot
-          if ($LASTEXITCODE -ne 0) { throw 'A13_REGRESSION_FAIL' }
-      - name: Clean tracked Linux
-        if: always() && matrix.platform == 'Linux'
-        shell: bash
-        run: |
-          git diff --exit-code && git diff --cached --exit-code
-      - name: Clean tracked Windows
-        if: always() && matrix.platform == 'Windows'
-        shell: pwsh
-        run: |
-          git diff --exit-code
-          if ($LASTEXITCODE -ne 0) { throw 'DIRTY_WORKTREE' }
-          git diff --cached --exit-code
-          if ($LASTEXITCODE -ne 0) { throw 'DIRTY_INDEX' }
-)) { throw 'LIVE_MARKER_MISSING' }
+          if (-not (Select-String -Path a144-live.log -Pattern '^ECO_ARCH2_A14_4_LIVE PASS$')) { throw 'LIVE_MARKER_MISSING' }
           & $godot --headless --path . --script res://validation/ecology/evo_arch2_a14_live/test_live_scale_profile.gd | Tee-Object -FilePath a144-profile.log
           if ($LASTEXITCODE -ne 0) { throw 'A14_4_PROFILE_FAIL' }
-          if (-not (Select-String -Path a144-profile.log -Pattern '^ECO_ARCH2_A14_4_PROFILE PASS
-          if ($LASTEXITCODE -ne 0) { throw 'A14_3_BUDGET_EXACT_FAIL' }
-          & $godot --headless --path . --script res://validation/ecology/evo_arch2_a14_adaptive/test_adaptive_fidelity.gd
-          if ($LASTEXITCODE -ne 0) { throw 'A14_2_REGRESSION_FAIL' }
-          python validation/ecology/evo_arch2_a13_fidelity/run_exact.py --godot $godot
-          if ($LASTEXITCODE -ne 0) { throw 'A13_REGRESSION_FAIL' }
-      - name: Clean tracked Linux
-        if: always() && matrix.platform == 'Linux'
-        shell: bash
-        run: |
-          git diff --exit-code && git diff --cached --exit-code
-      - name: Clean tracked Windows
-        if: always() && matrix.platform == 'Windows'
-        shell: pwsh
-        run: |
-          git diff --exit-code
-          if ($LASTEXITCODE -ne 0) { throw 'DIRTY_WORKTREE' }
-          git diff --cached --exit-code
-          if ($LASTEXITCODE -ne 0) { throw 'DIRTY_INDEX' }
-)) { throw 'PROFILE_MARKER_MISSING' }
+          if (-not (Select-String -Path a144-profile.log -Pattern '^ECO_ARCH2_A14_4_PROFILE PASS$')) { throw 'PROFILE_MARKER_MISSING' }
           Get-Content a144-profile.log | Where-Object { $_ -match '^ECO_A14_4_PROFILE_JSON ' } | ForEach-Object { $_.Substring(23) } | Set-Content a144-profiles.jsonl
           if ((Get-Content a144-profiles.jsonl).Count -ne 5) { throw 'PROFILE_RECORD_COUNT' }
           & $godot --headless --path . --script res://validation/ecology/evo_arch2_a14_budget/test_cpu_budget_wake.gd
