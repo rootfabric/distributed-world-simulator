@@ -1,9 +1,6 @@
 name: ECO ARCH2 A14.5 Staged Global Tick Exact
 
 on:
-  push:
-    branches:
-      - feature/eco-arch2-a14-5-staged-global-tick-r1
   pull_request:
     paths:
       - 'scripts/research/ecology/v2/resource_lifecycle_runtime_v1.gd'
