@@ -15,9 +15,9 @@ from collections import defaultdict
 
 KNOWN_STAGES = {
     "a": ("r3c2_client_connect_attach", "r3c2_earth_attach",
-          "r3c2_resource_attach", "frame"),
+          "r3c2_resource_attach", "r3c2_join_ack_breakdown", "frame"),
     "b": ("r3c2_client_connect_attach", "r3c2_earth_attach",
-          "r3c2_resource_attach", "frame"),
+          "r3c2_resource_attach", "r3c2_join_ack_breakdown", "frame"),
     "server": ("r3c2_postcommit_stage", "p1b_item_capture_breakdown",
                "checkpoint_capture", "server_loop"),
 }
@@ -25,6 +25,9 @@ METRICS = {
     "r3c2_client_connect_attach": ("attach_ms", "descriptor_ms", "total_ms"),
     "r3c2_earth_attach": ("total_ms", "replica_visual_ms", "item_ms", "construction_ms"),
     "r3c2_resource_attach": ("total_ms", "earth_ms", "resource_projection_ms"),
+    "r3c2_join_ack_breakdown": ("identity_ms", "snapshot_accept_ms",
+        "item_accept_ms", "prediction_init_ms", "ready_report_ms",
+        "replica_signal_ms", "session_ready_signal_ms", "total_ms"),
     "frame": ("interval_ms",),
     "r3c2_postcommit_stage": ("duration_ms",),
     "p1b_item_capture_breakdown": ("player_checksum_ms", "item_checksum_ms",

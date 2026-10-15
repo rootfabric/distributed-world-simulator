@@ -87,6 +87,8 @@ class R3C2SourceSafety(unittest.TestCase):
 
     def test_client_attach_counters_do_not_mutate_m6(self):
         self.assertIn('SmoothTrace.emit("r3c2_client_connect_attach"', APP)
+        self.assertIn('SmoothTrace.emit("r3c2_join_ack_breakdown"',
+                      read("scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime_nx6.gd"))
         self.assertIn('SmoothTrace.emit("r3c2_earth_attach"', EARTH)
         self.assertIn("r3c2_resource_attach", read("scripts/app/earth_p3_resource_mining_app.gd"))
         self.assertIn('--r3c2-avatar-prewarm', HARNESS)
