@@ -24,6 +24,8 @@ const Ports = preload("res://scripts/research/ecology/v2/organism_environment_po
 const Lifecycle = preload("res://scripts/research/ecology/v2/resource_lifecycle_runtime_v1.gd")
 const Runtime = preload("res://scripts/research/ecology/v2/ecology_runtime_v1.gd")
 const Checkpoint = preload("res://scripts/research/ecology/v2/ecology_runtime_checkpoint_v1.gd")
+const LiveBudget = preload("res://scripts/research/ecology/v2/population_budget_live_driver_v1.gd")
+const Fidelity = preload("res://scripts/research/ecology/v2/population_fidelity_schedule_plan_v1.gd")
 const Feedback = preload("res://scripts/research/ecology/v2/persistent_environmental_feedback_v1.gd")
 const OrganizationProfile = preload("res://scripts/ecology/workbench/organization_profile_v1.gd")
 const EnvironmentPatch = preload("res://scripts/ecology/workbench/environment_patch_v1.gd")
@@ -48,6 +50,9 @@ var _error := ""
 # P12 WORLD_COMPAT: dependency-injected world authority adapter
 # (EcoWorkbenchPolygonWorldAdapterV1). Null in LAB mode.
 var _world_authority: Object = null
+# A14.4 host-local measurements; excluded from all canonical snapshots.
+var _live_estimate_us := LiveBudget.DEFAULT_ESTIMATE_US
+var _budget_telemetry: Dictionary = {}
 
 ## Attach the WORLD_COMPAT world authority adapter (P12). The adapter is the
 ## source of world/environment authority (region ACTIVE gate, matter-mapped
@@ -101,6 +106,7 @@ func initialize(manifest: Dictionary, founder_registry: Dictionary = {}) -> Dict
 	_runtime = created.state
 	_status = "READY"
 	_error = ""
+	_reset_live_budget_metrics()
 	return {"success": true, "tick": tick(), "status": _status}
 
 ## Advance exactly n canonical ticks. Speed = more ticks per call; dt never
@@ -115,6 +121,97 @@ func run(n_ticks: int) -> Dictionary:
 			return {"success": false, "error": _error, "status": _status, "tick": tick()}
 	_status = "RUNNING"
 	return {"success": true, "tick": tick(), "status": _status}
+
+
+## Run a bounded number of WHOLE-WORLD canonical ticks through accepted
+## A14.3, on the real controller's unique current ecology state.
+## WORLD_COMPAT authority must be consulted per tick; keep the old path until
+## it has its own proven transactional/replay admission protocol.
+## The budget is estimated credits, not a hard wall-time deadline.
+func run_budgeted_to_tick(target_tick: int,
+		budget_us: int = LiveBudget.DEFAULT_BUDGET_US,
+		max_replay_ticks: int = LiveBudget.DEFAULT_MAX_TICKS,
+		estimate_tick_us: int = -1) -> Dictionary:
+	if _status == "IDLE":
+		return _command_fail("CONTROLLER_NOT_INITIALIZED")
+	if _status == "FAILED":
+		return _failed_command()
+	if String(_manifest.mode) != "LAB":
+		return _command_fail("CONTROLLER_BUDGET_WORLD_AUTHORITY_UNPROVEN")
+	if not C.integer(target_tick, tick(), int(_manifest.horizon_ticks)):
+		return _command_fail("CONTROLLER_BUDGET_TARGET")
+	if not C.integer(budget_us, 1, 1000000000) \
+			or not C.integer(max_replay_ticks, 1, Fidelity.MAX_CATCH_UP_TICKS):
+		return _command_fail("CONTROLLER_BUDGET_PARAMETERS")
+	var estimate: int = _live_estimate_us if estimate_tick_us == -1 else estimate_tick_us
+	if not C.integer(estimate, 1, 1000000000):
+		return _command_fail("CONTROLLER_BUDGET_ESTIMATE")
+	var source_tick: int = tick()
+	if target_tick == source_tick:
+		return {"success": true, "tick": source_tick, "status": _status,
+			"replayed_ticks": 0, "remaining_debt_ticks": 0, "deferred": false}
+	var opts: Dictionary = _canonical_step_options()
+	if not bool(opts.get("success", false)):
+		_fail(String(opts.get("error", "CONTROLLER_DEVELOPMENT_BIAS")))
+		return _failed_command()
+	var slice_target: int = mini(target_tick, source_tick + Fidelity.MAX_CATCH_UP_TICKS)
+	var measured: Dictionary = LiveBudget.advance(
+		_runtime, opts.options, slice_target, budget_us, estimate, max_replay_ticks)
+	if not bool(measured.get("success", false)):
+		_fail("CONTROLLER_BUDGET:" + String(measured.get("error", "?")))
+		return _failed_command()
+	# Single atomic canonical publication after an entire successful slice.
+	_runtime = measured.state
+	_status = "RUNNING"
+	var committed: int = int(measured.replayed_ticks)
+	var wall_us: int = int(measured.total_wall_us)
+	if committed > 0:
+		var observed: int = mini(1000000000,
+			maxi(1, int(ceil(float(wall_us) / float(committed)))))
+		# EWMA affects later scheduling only; NOT the canonical seed/state.
+		_live_estimate_us = maxi(1, int(
+			(3 * _live_estimate_us + observed + 2) / 4))
+	_budget_telemetry.calls = int(_budget_telemetry.calls) + 1
+	_budget_telemetry.replayed_ticks = int(_budget_telemetry.replayed_ticks) + committed
+	_budget_telemetry.last_call_wall_us = wall_us
+	_budget_telemetry.peak_call_wall_us = maxi(int(_budget_telemetry.peak_call_wall_us), wall_us)
+	_budget_telemetry.total_call_wall_us = int(_budget_telemetry.total_call_wall_us) + wall_us
+	_budget_telemetry.budget_us = budget_us
+	_budget_telemetry.estimated_tick_us = _live_estimate_us
+	_budget_telemetry.last_execution_wall_us = int(measured.execution_wall_us)
+	_budget_telemetry.last_planning_wall_us = int(measured.planning_wall_us)
+	_budget_telemetry.last_estimated_spend_us = int(measured.estimated_spend_us)
+	_budget_telemetry.last_overrun_us = int(measured.overrun_us)
+	if int(measured.overrun_us) > 0:
+		_budget_telemetry.overrun_calls = int(_budget_telemetry.overrun_calls) + 1
+	_budget_telemetry.remaining_debt_ticks = target_tick - tick()
+	_budget_telemetry.last_target_tick = target_tick
+	return {
+		"success": true, "tick": tick(), "status": _status,
+		"replayed_ticks": committed,
+		"remaining_debt_ticks": target_tick - tick(),
+		"deferred": bool(measured.deferred),
+		"wall_us": wall_us, "overrun_us": int(measured.overrun_us),
+		"estimated_spend_us": int(measured.estimated_spend_us),
+		"canonical_state_hash": Runtime.state_hash(_runtime),
+	}
+
+func get_budget_telemetry() -> Dictionary:
+	var result: Dictionary = _budget_telemetry.duplicate(true)
+	result["canonical_tick"] = tick()
+	return result
+
+func _reset_live_budget_metrics() -> void:
+	_live_estimate_us = LiveBudget.DEFAULT_ESTIMATE_US
+	_budget_telemetry = {
+		"calls": 0, "replayed_ticks": 0, "overrun_calls": 0,
+		"last_call_wall_us": 0, "peak_call_wall_us": 0,
+		"total_call_wall_us": 0, "last_execution_wall_us": 0,
+		"last_planning_wall_us": 0, "last_estimated_spend_us": 0,
+		"last_overrun_us": 0, "budget_us": 0,
+		"estimated_tick_us": _live_estimate_us, "remaining_debt_ticks": 0,
+		"last_target_tick": tick(),
+	}
 
 ## Pause the loop (no tick is in flight; run/step resume from PAUSED).
 func pause() -> Dictionary:
@@ -367,6 +464,7 @@ func load_state(state_text: String, expected_manifest_hash: String = "", expecte
 	_runtime = checkpoint.runtime_state.duplicate(true)
 	_status = "READY"
 	_error = ""
+	_reset_live_budget_metrics()
 	return {"success": true, "tick": tick(), "status": _status}
 
 func apply_field_patch(patch: Dictionary) -> Dictionary:
@@ -585,25 +683,32 @@ func _tick_once() -> void:
 		if not bool(admitted.get("success", false)):
 			_fail("CONTROLLER_WORLD_AUTHORITY:" + String(admitted.get("error", "?")))
 			return
-	var profile := OrganizationProfile.preset(String(_manifest.organization_profile))
-	var bias := {}
-	if String(profile.rule_class) == "DEVELOPMENT_BIAS":
-		var applied_bias := OrganizationProfile.apply_development_bias(profile)
-		if not bool(applied_bias.get("success", false)) or not bool(applied_bias.get("applied", false)):
-			_fail("CONTROLLER_DEVELOPMENT_BIAS")
-			return
-		bias = applied_bias.bias
-	var stepped := Runtime.step(_runtime, {
-		"mutations_enabled": bool(_manifest.mutation.mutations_enabled),
-		"operator": String(_manifest.mutation.operator),
-		"bias": bias,
-		"seed": int(_manifest.seed),
-		"mutation_key_prefix": MUTATION_KEY_PREFIX,
-	})
+	var opts: Dictionary = _canonical_step_options()
+	if not bool(opts.get("success", false)):
+		_fail(String(opts.get("error", "CONTROLLER_DEVELOPMENT_BIAS")))
+		return
+	var stepped := Runtime.step(_runtime, opts.options)
 	if not bool(stepped.get("success", false)):
 		_fail("CONTROLLER_TICK:" + String(stepped.get("error", "?")))
 		return
 	_runtime = stepped.state
+
+## Exactly the SAME manifest-origin, deterministic mutation options are
+## consumed by legacy sequential and bounded parallel exact tick paths.
+func _canonical_step_options() -> Dictionary:
+	var profile: Dictionary = OrganizationProfile.preset(String(_manifest.organization_profile))
+	var bias: Dictionary = {}
+	if String(profile.rule_class) == "DEVELOPMENT_BIAS":
+		var applied: Dictionary = OrganizationProfile.apply_development_bias(profile)
+		if not bool(applied.get("success", false)) or not bool(applied.get("applied", false)):
+			return {"success": false, "error": "CONTROLLER_DEVELOPMENT_BIAS"}
+		bias = applied.bias
+	return {"success": true, "options": {
+		"mutations_enabled": bool(_manifest.mutation.mutations_enabled),
+		"operator": String(_manifest.mutation.operator),
+		"bias": bias, "seed": int(_manifest.seed),
+		"mutation_key_prefix": MUTATION_KEY_PREFIX,
+	}}
 
 # --- deterministic seed derivation (no own RNG) ------------------------------
 
