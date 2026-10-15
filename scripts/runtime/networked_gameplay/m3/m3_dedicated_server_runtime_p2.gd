@@ -1479,7 +1479,11 @@ func _p1b_begin_item_async_commit(
 	var capture_start_us := Time.get_ticks_usec()
 	var player_checksum := String(_service.create_snapshot().get("checksum", ""))
 	var player_done_us := Time.get_ticks_usec()
-	var item_checksum := String(_service.create_canonical_item_graph_snapshot().get("checksum", ""))
+	# This detached canonical ITEM snapshot is already built to bind the
+	# outbox checksum. Keep it for post-durable replication in R3C2 instead
+	# of recomputing the whole graph after the worker finishes.
+	var frozen_after_item: Dictionary = _service.create_canonical_item_graph_snapshot()
+	var item_checksum := String(frozen_after_item.get("checksum", ""))
 	var item_done_us := Time.get_ticks_usec()
 	var outbox_staged: Dictionary = _replay_outbox.stage_committed(
 		operation_id, command_type,
@@ -1529,6 +1533,8 @@ func _p1b_begin_item_async_commit(
 		"session_id": session_id,
 		"ownership_epoch": ownership_epoch,
 		"before_item": before_item_snapshot.duplicate(true),
+		"after_item_frozen": frozen_after_item if _r3c2_phased_item_publication_enabled else {},
+		"after_item_checksum": item_checksum if _r3c2_phased_item_publication_enabled else "",
 		"result": result.duplicate(true),
 		"started_us": capture_start_us,
 	}
@@ -1627,7 +1633,18 @@ func _p1b_finish_item_committed(accepted: Dictionary, publish: bool) -> void:
 	if _p1b_item_pending.is_empty() or not bool(accepted.get("details", {}).get("committed", false)):
 		_enter_persistence_failure("P1B_ITEM_COMMITTED_RESULT_REQUIRED")
 		return
-	var pending: Dictionary = _p1b_item_pending.duplicate(true)
+	# R3C2 frozen_before/after ITEM DTOs were detached at capture. Copy only
+	# the immutable envelope here: duplicate(true) of both full graphs on
+	# durable-completion reintroduced a 100ms+ main-thread stall. Leave the
+	# previous deep-copy behavior intact for every non-opt-in command.
+	var is_phased_item := (
+		_r3c2_phased_item_publication_enabled
+		and String(_p1b_item_pending.get("kind", "ITEM")) == "ITEM"
+	)
+	var pending: Dictionary = (
+		_p1b_item_pending.duplicate(false)
+		if is_phased_item else _p1b_item_pending.duplicate(true)
+	)
 	var generation := int(accepted.get("details", {}).get("generation", -1))
 	if (
 		generation != _checkpoint_generation + 1
@@ -1824,9 +1841,19 @@ func _r3c2_drain_postcommit_stage() -> void:
 			return
 	match stage:
 		0:
-			var after_item: Dictionary = _service.create_canonical_item_graph_snapshot()
-			if after_item.is_empty():
-				_enter_persistence_failure("R3C2_POSTCOMMIT_ITEM_SNAPSHOT_REQUIRED")
+			# Immutable exact-checksum DTO captured before submission: ITEM
+			# cannot mutate while M6 owns this generation. No second graph
+			# export after the worker completes.
+			var after_item: Dictionary = Dictionary(
+				pending.get("after_item_frozen", {})
+			)
+			if (
+				after_item.is_empty()
+				or String(after_item.get("checksum", "")).is_empty()
+				or String(after_item.get("checksum", "")) !=
+					String(pending.get("after_item_checksum", ""))
+			):
+				_enter_persistence_failure("R3C2_FROZEN_ITEM_CHECKSUM_MISMATCH")
 				return
 			_r3c2_postcommit_pending["after_item"] = after_item
 			_r3c2_postcommit_pending["stage"] = 1
@@ -2897,7 +2924,20 @@ func _complete_async_movement_checkpoint(wait: bool) -> void:
 	# Do NOT clear dirty/counters here: movement after submission is newer than
 	# the detached checkpoint. The next request will capture that newer state.
 	_debug_event("MOVEMENT_CHECKPOINT_COMMITTED", {"generation": generation, "async": true})
-	_write_report("READY", false)
+	# get_report() recursively builds a full game/ItemGraph/M6 snapshot and
+	# writes JSON to the runtime result file. It is not the atomic checkpoint
+	# nor the M6 proof; during R3C2 this main-thread diagnostics-only report
+	# must not create a new >100ms stall right after worker completion.
+	if _r3c2_phased_item_publication_enabled:
+		_r3c2_deferred_diagnostic_reports += 1
+		if SmoothTrace.enabled():
+			SmoothTrace.emit("r3c2_periodic_report_deferred", {
+				"generation": generation,
+				"worker_ms": float(details.get("worker_ms", 0.0)),
+				"capture_ms": _async_checkpoint_capture_ms,
+			})
+	else:
+		_write_report("READY", false)
 
 
 func _submit_async_movement_checkpoint() -> void:
