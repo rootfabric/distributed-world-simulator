@@ -90,9 +90,16 @@ func _write_loop() -> void:
 				io_errors += 1
 				continue
 			file.store_string(line)
-			# R3 process-kill falsifier must observe SUBMIT before a hard kill.
-			# Flush only this trace-worker evidence, never the simulation thread.
-			if String(record.get("kind", "")) == "p1b_item_async_stages" and String(record.get("data", {}).get("stage", "")) == "SUBMIT":
+			# Exact process-kill falsifiers need durable-commit and held-preACK
+			# proof while the server is alive. This flush is on the trace IO
+			# worker ONLY; it never blocks the game or M6 checkpoint thread.
+			var record_kind := String(record.get("kind", ""))
+			var record_stage := String(record.get("data", {}).get("stage", ""))
+			if (
+				(record_kind == "p1b_item_async_stages"
+					and record_stage in ["SUBMIT", "DURABLE_COMMIT"])
+				or record_kind == "r3c2_pre_ack_hold"
+			):
 				file.flush()
 			bytes += length
 			written += 1

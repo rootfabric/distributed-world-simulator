@@ -61,6 +61,9 @@ class R3C2KillEvidenceTest(unittest.TestCase):
         self.assertIn("server1.kill()", source)
         self.assertIn("server2 is a different OS process", source)
         self.assertIn("same_generation and same_checksum", source)
+        trace = (MODULE.parent.parent.parent / "scripts/network/smoothness/net_smooth_trace.gd").read_text(encoding="utf-8")
+        self.assertIn('record_kind == "r3c2_pre_ack_hold"', trace)
+        self.assertIn('"DURABLE_COMMIT"', trace)
         self.assertIn("passed\": True, \"completed\": True", source)
 
 

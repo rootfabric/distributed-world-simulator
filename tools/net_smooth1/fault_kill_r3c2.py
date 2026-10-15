@@ -202,8 +202,13 @@ class Run:
             if path.exists():
                 # Append-only writer: tolerate only the *unfinished last line*
                 # while OS writes. No invented trace events.
-                lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
-                for line in reversed(lines[:-1]):
+                raw = path.read_text(encoding="utf-8", errors="replace")
+                lines = raw.splitlines()
+                # Preserve the last event when it has a terminating newline.
+                # Drop only an actual incomplete final JSONL fragment.
+                if not raw.endswith("\n") and lines:
+                    lines = lines[:-1]
+                for line in reversed(lines):
                     try:
                         event = json.loads(line)
                     except json.JSONDecodeError:

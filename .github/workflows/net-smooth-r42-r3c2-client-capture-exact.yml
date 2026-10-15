@@ -28,6 +28,8 @@ jobs:
           python-version: '3.11'
       - name: R3C2 bounded source and manifest contracts
         run: python -m unittest discover -s tests/tools -p test_net_smooth1_r42_r3c2_source_contract.py -v
+      - name: R3C2 real-process fault falsifiers (source + synthetic negative cases)
+        run: python -m unittest discover -s tests/tools -p test_net_smooth1_r42_r3c2_fault_contract.py -v
       - name: Inherited R3C1, R3B, R3 source regression
         run: |
           python -m unittest discover -s tests/tools -p test_net_smooth1_r42_r3c_source_contract.py -v
