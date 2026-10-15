@@ -20,10 +20,18 @@ func set_visual_character_id(character_id: String) -> void:
 	_avatar_character_id = character_id.strip_edges().to_lower()
 
 
-func setup(record: Dictionary, snapshot: Dictionary, map_position: Callable) -> Dictionary:
-	var inherited: Dictionary = super.setup(record, snapshot, map_position)
-	if not bool(inherited.get("success", false)):
-		return inherited
+# R3C.2: visual model/animation instantiation belongs to the world-loading
+# phase, not the synchronous JOIN_ACK / CONNECTED network callback. Call this
+# on the Earth scene before transport admission; it creates NO network owner.
+# The same presenter/rig can be rebound to a later transport snapshot.
+func prewarm_visual(character_id: String = "") -> Dictionary:
+	var requested := character_id.strip_edges().to_lower()
+	if not requested.is_empty() and _avatar_host == null:
+		_avatar_character_id = requested
+	if _avatar_host != null:
+		if not requested.is_empty() and requested != _avatar_character_id:
+			return {"success": false, "error_code": "R3C2_AVATAR_PREWARM_IDENTITY_MISMATCH"}
+		return {"success": true, "error_code": "", "details": {"reused": true}}
 	var runtime: Dictionary = Bootstrap.create_runtime()
 	if not bool(runtime.get("success", false)):
 		_avatar_setup_error = String(runtime.get("error_code", "CHAR2_BOOTSTRAP_FAILED"))
@@ -43,21 +51,34 @@ func setup(record: Dictionary, snapshot: Dictionary, map_position: Callable) -> 
 		_avatar_host.queue_free()
 		_avatar_host = null
 		return installed
-	# The networked spectator wrapper is at canonical eye altitude. Avatar root
-	# goes down to the provider-defined feet, rather than inheriting the legacy
-	# centered CapsuleMesh offset. Never modify canonical player coordinates.
+	_avatar_host.set_first_person_mode(false)
+	_avatar_setup_error = ""
+	return {"success": true, "error_code": "", "details": {"reused": false}}
+
+
+func setup(record: Dictionary, snapshot: Dictionary, map_position: Callable) -> Dictionary:
+	# A retired visual is allowed to rebind to a genuinely new canonical
+	# transport epoch. The old derived NX5 delegate is discarded; the costly
+	# provider/Quaternius rig is retained and never becomes authoritative.
+	if _delegate != null:
+		_delegate.free()
+		_delegate = null
+	var inherited: Dictionary = super.setup(record, snapshot, map_position)
+	if not bool(inherited.get("success", false)):
+		return inherited
+	var prepared: Dictionary = prewarm_visual(_avatar_character_id)
+	if not bool(prepared.get("success", false)):
+		return prepared
 	var definition: Dictionary = _avatar_host.get_active_definition()
 	_avatar_host.position = Vector3(
 		0.0, -float(definition.get("eye_height_m", 1.62)), 0.0
 	)
 	_avatar_host.set_first_person_mode(false)
 	_remote_legacy_body = _delegate.get_node_or_null("RemoteBody") as GeometryInstance3D
-	# Keep the original capsule until a real provider has been initialized.
 	if _remote_legacy_body != null:
 		_remote_legacy_body.visible = false
 	_apply_avatar_sample()
 	return inherited
-
 
 func _process(delta: float) -> void:
 	# Preserve interpolation, Earth floating origin and render-frame projection.
