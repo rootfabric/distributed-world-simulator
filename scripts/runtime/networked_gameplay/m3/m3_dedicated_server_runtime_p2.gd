@@ -102,6 +102,7 @@ var _r3c2_phased_item_publication_enabled := false
 var _r3c2_postcommit_pending: Dictionary = {}
 var _r3c2_postcommit_phases_completed := 0
 var _r3c2_postcommit_last_stage_ms := 0.0
+var _r3c2_deferred_diagnostic_reports := 0
 var _r3c_async_leave_commits := 0
 const R3C_MAX_DEFERRED_ADMISSIONS := 32
 const R3C_ADMISSION_TIMEOUT_MS := 20000
@@ -247,6 +248,7 @@ func setup(config: Dictionary) -> Dictionary:
 	_r3c2_postcommit_pending.clear()
 	_r3c2_postcommit_phases_completed = 0
 	_r3c2_postcommit_last_stage_ms = 0.0
+	_r3c2_deferred_diagnostic_reports = 0
 	_r3c_queued_joins = 0
 	_r3c_queued_leaves = 0
 	_r3c_admissions_drained = 0
@@ -1893,7 +1895,12 @@ func _r3c2_drain_postcommit_stage() -> void:
 			_p1b_flush_item_resync_waiters()
 			if has_method("_p1b_flush_resource_resync_waiters"):
 				call("_p1b_flush_resource_resync_waiters")
-			_write_report("READY", false)
+			# _write_report() builds a FULL gameplay+M6 recovery export and
+			# writes it synchronously. It is diagnostic, not the durability
+			# checkpoint/ACK receipt. During opt-in real-time R3C2, defer
+			# this unbounded report until explicit stop or other quiet gate.
+			# The true durable result and every stage remain in bounded trace.
+			_r3c2_deferred_diagnostic_reports += 1
 			_r3c2_postcommit_pending.clear()
 		_:
 			_enter_persistence_failure("R3C2_POSTCOMMIT_INVALID_STAGE")
@@ -2725,6 +2732,7 @@ func _persistence_report() -> Dictionary:
 		"r3c2_postcommit_stage": int(_r3c2_postcommit_pending.get("stage", -1)),
 		"r3c2_postcommit_phases_completed": _r3c2_postcommit_phases_completed,
 		"r3c2_postcommit_last_stage_ms": _r3c2_postcommit_last_stage_ms,
+		"r3c2_deferred_diagnostic_reports": _r3c2_deferred_diagnostic_reports,
 		"r3c_async_leave_commits": _r3c_async_leave_commits,
 		"r3c_deferred_admissions": _r3c_deferred_admissions.size(),
 		"r3c_queued_joins": _r3c_queued_joins,
