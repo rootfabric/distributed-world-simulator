@@ -124,7 +124,7 @@ func _test_at_scale(n: int, blueprint: Dictionary) -> void:
 		reference.state, opts, started.cursor, 1)
 	_check(not bool(stale_source.get("success", false)),
 		"n=%d source frontier changed rejected" % n)
-	var forged := started.cursor.duplicate(true)
+	var forged: Dictionary = started.cursor.duplicate(true)
 	forged.lifecycle.index = 987
 	var forged_result := Runtime.resume_staged_global_tick(
 		initial, opts, forged, 1)
