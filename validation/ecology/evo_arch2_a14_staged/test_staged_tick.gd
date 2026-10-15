@@ -97,13 +97,18 @@ func _test_at_scale(n: int, blueprint: Dictionary) -> void:
 	if initial.is_empty():
 		return
 	var opts := _options()
+	# At the accepted 256-cap use 64-member canonical worksets and two
+	# per resume: still crosses both barriers without O(worksets²) harness
+	# re-hashing dominating the correctness proof.
+	var members: int = 64 if n == 256 else 16
+	var quota: int = 2 if n == 256 else 1
 	var original_bytes := C.encode(initial)
 	var reference := Runtime.step_spatial_parallel_advance(
-		initial, opts, 4, 16, 4, 4)
+		initial, opts, 4, members, 4, 4)
 	_check(bool(reference.get("success", false)), "n=%d reference global tick" % n)
 	if not bool(reference.get("success", false)):
 		return
-	var started := Runtime.begin_staged_global_tick(initial, opts, 4, 16)
+	var started := Runtime.begin_staged_global_tick(initial, opts, 4, members)
 	_check(bool(started.get("success", false))
 		and not bool(started.get("complete", true)), "n=%d stage begins" % n)
 	if not bool(started.get("success", false)):
@@ -137,7 +142,7 @@ func _test_at_scale(n: int, blueprint: Dictionary) -> void:
 	var rounds := 0
 	while rounds < 128:
 		rounds += 1
-		var result := Runtime.resume_staged_global_tick(initial, opts, cursor, 1)
+		var result := Runtime.resume_staged_global_tick(initial, opts, cursor, quota)
 		_check(bool(result.get("success", false)),
 			"n=%d resume %d" % [n, rounds])
 		if not bool(result.get("success", false)):
@@ -177,12 +182,12 @@ func _test_at_scale(n: int, blueprint: Dictionary) -> void:
 
 	# A second consecutive tick must also match the accepted global path.
 	var next_reference := Runtime.step_spatial_parallel_advance(
-		reference.state, opts, 4, 16, 4, 4)
+		reference.state, opts, 4, members, 4, 4)
 	_check(bool(next_reference.get("success", false)),
 		"n=%d canonical reference tick two" % n)
 	if not bool(next_reference.get("success", false)):
 		return
-	var second := Runtime.begin_staged_global_tick(finished.state, opts, 4, 16)
+	var second := Runtime.begin_staged_global_tick(finished.state, opts, 4, members)
 	_check(bool(second.get("success", false)),
 		"n=%d stages restart only after first commit" % n)
 	if not bool(second.get("success", false)):
@@ -190,7 +195,7 @@ func _test_at_scale(n: int, blueprint: Dictionary) -> void:
 	var second_cursor: Dictionary = second.cursor
 	for attempt in 128:
 		var advanced := Runtime.resume_staged_global_tick(
-			finished.state, opts, second_cursor, 2)
+			finished.state, opts, second_cursor, quota)
 		_check(bool(advanced.get("success", false)), "n=%d tick two stage" % n)
 		if not bool(advanced.get("success", false)):
 			return
