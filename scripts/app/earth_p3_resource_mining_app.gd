@@ -1,6 +1,6 @@
 extends "res://scripts/app/earth_p1_modern_inventory_app.gd"
 
-const SmoothTrace = preload("res://scripts/network/smoothness/net_smooth_trace.gd")
+# SmoothTrace is inherited from EarthApp; never shadow its constant here.
 
 const ResourceMiningSnapshot = preload(
 	"res://scripts/runtime/networked_gameplay/p3/resource_mining_snapshot.gd"
