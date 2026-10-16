@@ -28,6 +28,7 @@ const R3C3R2_PHASE_GPU_UPLOAD := "GPU_UPLOAD_CHUNKS"
 const R3C3R2_PHASE_VERIFY := "VERIFY_CANDIDATE"
 const R3C3R2_PHASE_COMMIT := "ATOMIC_VISUAL_COMMIT"
 const R3C3R2_PHASE_DONE := "READY"
+const R3C21_PHASE_PREATTACH := "GPU_PREATTACH"
 
 const BODY_CONFIG_PATH: String = "res://config/planets/earth.json"
 const LOD_CONFIG_PATH: String = "res://config/generation/earth_lod.json"
@@ -119,8 +120,22 @@ var _r3c3r2_verify_ms := 0.0
 var _r3c3r2_visual_commit_ms := 0.0
 var _r3c3r2_stale_cancellations := 0
 
+# R2.1 opt-in: register detached, fully uploaded but invisible renderer nodes
+# at one candidate per frame, then atomic swap of visibility at final commit.
+var _r3c21_frame_paced_enabled := false
+var _r3c21_preattach_slice_ms_max := 0.0
+var _r3c21_preattached_nodes := 0
+var _r3c21_first_visible_frames_left := 0
+var _r3c21_last_committed_token := 0
+var _r3c21_last_recenter_dedup := 0
+var _r3c21_first_visible_max_gap_ms := 0.0
+var _r3c21_last_phase_budget_us := 0
 
-func setup(logger_reference = null, r3c3_staged_geometry: bool = false) -> bool:
+
+func setup(
+	logger_reference = null, r3c3_staged_geometry: bool = false,
+	r3c21_frame_paced_presentation: bool = false
+) -> bool:
 	if initialized:
 		return true
 	logger = logger_reference
@@ -128,6 +143,9 @@ func setup(logger_reference = null, r3c3_staged_geometry: bool = false) -> bool:
 	# R2 staged vegetation rides the same explicit opt-in as R1 staging: one
 	# env/flag surface, default-off keeps the legacy synchronous path intact.
 	_r3c3r2_enabled = r3c3_staged_geometry
+	_r3c21_frame_paced_enabled = (
+		r3c3_staged_geometry and r3c21_frame_paced_presentation
+	)
 	body_config = _load_json(BODY_CONFIG_PATH)
 	lod_config = _load_json(LOD_CONFIG_PATH)
 	if body_config.is_empty() or lod_config.is_empty():
@@ -147,6 +165,7 @@ func setup(logger_reference = null, r3c3_staged_geometry: bool = false) -> bool:
 	assets.setup()
 	assets.set_surface_debug_mode(false)
 	_create_nodes()
+	placement_system.configure_frame_paced_preattach(_r3c21_frame_paced_enabled)
 	var global_profile: Dictionary = {}
 	var default_direction: Vector3 = get_canonical_spawn_direction()
 	if _r3c3_staged_geometry_enabled:
@@ -169,6 +188,7 @@ func setup(logger_reference = null, r3c3_staged_geometry: bool = false) -> bool:
 		"global_generation": global_profile,
 		"local_generation": last_rebuild_summary,
 		"r3c3_staged_geometry": _r3c3_staged_geometry_enabled,
+		"r3c21_frame_paced_presentation": _r3c21_frame_paced_enabled,
 	})
 	return true
 
@@ -289,6 +309,19 @@ func update_for_view(
 	var target_surface: Vector3 = get_surface_point(target_direction)
 	var distance_from_anchor: float = (target_surface - surface_anchor_world).length()
 	if distance_from_anchor > local_recenter_distance_m and rebuild_cooldown_sec <= 0.0:
+		# During a CPU/GPU generation the committed anchor may be 6,500km
+		# behind the requested target. Never reset the 76k-attempt job every
+		# 750ms merely because the player moved a few real metres. Retarget
+		# only once the player crosses the pending region's coverage too.
+		if _r3c21_frame_paced_enabled and (
+			_r3c3_local_job != null or _r3c3r2_phase not in [
+				R3C3R2_PHASE_IDLE, R3C3R2_PHASE_DONE
+			]
+		):
+			var pending_surface: Vector3 = get_surface_point(_r3c3_requested_direction)
+			if (target_surface - pending_surface).length() <= local_recenter_distance_m:
+				_r3c21_last_recenter_dedup += 1
+				return
 		prepare_surface_region(target_direction, false)
 		rebuild_cooldown_sec = 0.75
 
@@ -370,11 +403,33 @@ func _r3c3_request_surface_region(center_direction: Vector3, force: bool = false
 	_begin_r3c3r2_vegetation_cpu(_r3c3_token)
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	if not initialized or not _r3c3_staged_geometry_enabled:
 		return
 	if not _r3c3_last_error.is_empty():
 		return
+	if _r3c21_frame_paced_enabled:
+		# A finished region can release detached old GPU groups on separate
+		# renderer frames, rather than paying all deallocation at swap.
+		if placement_system != null:
+			placement_system.drain_retired_visuals(1)
+		if _r3c21_first_visible_frames_left > 0:
+			var actual_gap_ms: float = delta * 1000.0
+			_r3c21_first_visible_max_gap_ms = maxf(
+				_r3c21_first_visible_max_gap_ms, actual_gap_ms
+			)
+			if SmoothTrace.enabled():
+				SmoothTrace.emit("r3c21_first_visible_frame", {
+					"token": _r3c21_last_committed_token,
+					"frame_gap_ms": actual_gap_ms,
+					"frames_after_commit": 9 - _r3c21_first_visible_frames_left,
+					"retired_remaining": int(
+						placement_system.get_staged_upload_report().get(
+							"r21_retired_remaining", 0
+						)
+					),
+				})
+			_r3c21_first_visible_frames_left -= 1
 	# Exactly ONE CPU job slice per process tick. No SceneTree/GPU manipulation
 	# during these slices: only immutable scratch packed arrays are mutated.
 	if _r3c3_global_job != null:
@@ -393,10 +448,22 @@ func _process(_delta: float) -> void:
 			_r3c3_local_batch_started = true
 		_r3c3_advance_job("local", _r3c3_local_job, _r3c3_token)
 	if _r3c3r2_phase != R3C3R2_PHASE_IDLE and _r3c3r2_phase != R3C3R2_PHASE_DONE:
-		_r3c3r2_process_vegetation(
+		var cpu_budget: int = (
 			R3C3R2_CPU_BUDGET_FIRST_REGION_US if not _r3c3_local_ready
 			else R3C3R2_CPU_BUDGET_US
 		)
+		if _r3c21_frame_paced_enabled:
+			# Smoothness-first cooperative CPU pacing. A heavy previous
+			# frame must not receive another 8ms vegetation slice. Restore
+			# headroom when the frame is healthy, without changing RNG order.
+			if delta >= 0.025:
+				cpu_budget = 600
+			elif delta >= 0.020:
+				cpu_budget = 1200
+			else:
+				cpu_budget = 3500 if not _r3c3_local_ready else 1800
+		_r3c21_last_phase_budget_us = cpu_budget
+		_r3c3r2_process_vegetation(cpu_budget)
 
 
 func _r3c3_advance_job(mode: String, job, token: int) -> void:
@@ -604,6 +671,37 @@ func _r3c3r2_process_vegetation(cpu_budget_us: int = R3C3R2_CPU_BUDGET_US) -> vo
 				"elapsed_us": int(details.get("elapsed_us", 0)),
 			})
 		if bool(details.get("ready", false)):
+			_r3c3r2_phase = (
+				R3C21_PHASE_PREATTACH if _r3c21_frame_paced_enabled
+				else R3C3R2_PHASE_VERIFY
+			)
+		return
+	if _r3c3r2_phase == R3C21_PHASE_PREATTACH:
+		# Hidden candidates are added one per frame on the owning Godot main
+		# thread. They cannot appear in the old visible region before commit.
+		var token: int = _r3c3r2_vegetation_job.get_generation_token()
+		if token != _r3c3_token:
+			_r3c3r2_stale_cancellations += 1
+			_r3c3r2_cancel_pending()
+			return
+		var attached: Dictionary = placement_system.advance_staged_preattach(token, 1)
+		if not bool(attached.get("success", false)):
+			_r3c3_fail(String(attached.get("error_code", "R3C21_PREATTACH_FAILED")))
+			return
+		var progress: Dictionary = attached.get("details", {})
+		_r3c21_preattached_nodes += int(progress.get("attached", 0))
+		_r3c21_preattach_slice_ms_max = maxf(
+			_r3c21_preattach_slice_ms_max,
+			float(progress.get("elapsed_us", 0)) / 1000.0
+		)
+		if SmoothTrace.enabled():
+			SmoothTrace.emit("r3c21_preattach_slice", {
+				"token": token, "attached": int(progress.get("attached", 0)),
+				"attached_total": int(progress.get("attached_total", 0)),
+				"elapsed_us": int(progress.get("elapsed_us", 0)),
+				"ready": bool(progress.get("ready", false)),
+			})
+		if bool(progress.get("ready", false)):
 			_r3c3r2_phase = R3C3R2_PHASE_VERIFY
 		return
 	if _r3c3r2_phase == R3C3R2_PHASE_VERIFY:
@@ -706,6 +804,10 @@ func _r3c3r2_commit_visual() -> void:
 	}
 	placement_system.apply_staged_generation_summary(placement_summary)
 	_r3c3r2_visual_commit_ms = float(Time.get_ticks_usec() - started) / 1000.0
+	if _r3c21_frame_paced_enabled:
+		_r3c21_last_committed_token = token
+		_r3c21_first_visible_frames_left = 8
+		_r3c21_first_visible_max_gap_ms = 0.0
 	_r3c3_local_ready = true
 	_r3c3_generation_committed = token
 	_r3c3r2_vegetation_job = null
@@ -734,6 +836,8 @@ func _r3c3r2_commit_visual() -> void:
 			"mesh_upload_ms": _r3c3r2_mesh_upload_ms,
 			"cpu_slice_max_ms": _r3c3r2_cpu_slice_ms_max,
 			"verify_ms": _r3c3r2_verify_ms,
+			"r21_frame_paced": _r3c21_frame_paced_enabled,
+			"r21_preattach_ms_max": _r3c21_preattach_slice_ms_max,
 		})
 
 
@@ -803,6 +907,14 @@ func get_r3c3_staged_geometry_report() -> Dictionary:
 			"verify_ms": _r3c3r2_verify_ms,
 			"visual_commit_ms": _r3c3r2_visual_commit_ms,
 			"stale_cancellations": _r3c3r2_stale_cancellations,
+		},
+		"r3c21": {
+			"enabled": _r3c21_frame_paced_enabled,
+			"preattached_nodes": _r3c21_preattached_nodes,
+			"preattach_slice_ms_max": _r3c21_preattach_slice_ms_max,
+			"pending_recenter_dedup": _r3c21_last_recenter_dedup,
+			"first_visible_max_gap_ms": _r3c21_first_visible_max_gap_ms,
+			"cpu_budget_us": _r3c21_last_phase_budget_us,
 		},
 	}
 
