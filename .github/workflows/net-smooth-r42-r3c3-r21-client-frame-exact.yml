@@ -1,0 +1,202 @@
+name: NET-SMOOTH1 R4.2 R3C3 R2.1 Client Frame Exact
+
+on:
+  push:
+    branches:
+      - repair/net-smooth1-r42-r3c3-r21-client-frame-pacing-r1
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: net-smooth-r42-r3c3-r21-client-frame-exact
+  cancel-in-progress: true
+
+jobs:
+  source-contracts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Frame-paced renderer owner and negative source proofs
+        run: |
+          set -euo pipefail
+          python -m unittest discover -s tests/tools -p 'test_net_smooth1_r42_r3c21_frame_pacing_source_contract.py' -v
+          python -m unittest discover -s tests/tools -p 'test_net_smooth1_r42_r3c21_visual_analyzer.py' -v
+          python -m unittest discover -s tests/tools -p 'test_net_smooth1_r42_r3c3_r1_source_contract.py' -v
+          python -m unittest discover -s tests/tools -p 'test_net_smooth1_r42_r3c2_source_contract.py' -v
+          python -m unittest discover -s tests/tools -p 'test_net_smooth1_r42_r3c2_fault_contract.py' -v
+
+  windows-exact:
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 70
+    env:
+      GODOT_SILENCE_ROOT_WARNING: '1'
+      BREAKPOINT_RUNTIME_DISABLED: '1'
+      PYTHONUTF8: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Verify exact parent and Windows double SHA
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          $Base='1645bba8af775fb989717b8a556f7431ca347dc4'
+          $B='C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe'
+          if ((git rev-parse HEAD).Trim() -ne $env:GITHUB_SHA) { throw 'R3C21_HEAD_MISMATCH' }
+          git merge-base --is-ancestor $Base HEAD
+          if ($LASTEXITCODE -ne 0) { throw 'R3C21_PARENT_NOT_ANCESTOR' }
+          if (git status --porcelain --untracked-files=no) { throw 'R3C21_TRACKED_DIRTY' }
+          if (-not (Test-Path $B)) { throw 'R3C21_GODOT_MISSING' }
+          $Version=(& $B --version | Out-String).Trim()
+          $Hash=(Get-FileHash $B -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($Version -ne '4.7.1.stable.double.custom_build.a13da4feb') { throw 'R3C21_GODOT_VERSION' }
+          if ($Hash -ne '3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5') { throw 'R3C21_GODOT_HASH' }
+          $E='artifacts\net-smooth1\r3c21-windows-exact'
+          New-Item -ItemType Directory -Force $E | Out-Null
+          [ordered]@{head=(git rev-parse HEAD).Trim();tree=(git rev-parse 'HEAD^{tree}').Trim();parent=$Base;godot=$Version;sha256=$Hash} | ConvertTo-Json | Set-Content "$E\identity.json" -Encoding UTF8
+      - name: Cold import and parse fail-closed
+        shell: pwsh
+        timeout-minutes: 15
+        run: |
+          $ErrorActionPreference='Stop'
+          $B='C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe'
+          $L='artifacts\net-smooth1\r3c21-windows-exact\cold-import.log'
+          & $B --headless --editor --path . --import --quit *> $L
+          if ($LASTEXITCODE -ne 0 -or (Select-String -Path $L -Pattern 'SCRIPT ERROR:|Parse Error:|Compile Error:' -Quiet)) {
+            Get-Content $L -Tail 140; throw 'R3C21_COLD_IMPORT_FAILED'
+          }
+      - name: Exact hidden-forest candidate and retained M6 safety matrix
+        shell: pwsh
+        timeout-minutes: 48
+        run: |
+          $ErrorActionPreference='Stop'
+          $B='C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe'
+          $E='artifacts\net-smooth1\r3c21-windows-exact'
+          $Suites=@(
+            'tests/runtime/test_net_smooth1_r42_r3c21_frame_paced_visual.gd',
+            'tests/runtime/test_net_smooth1_r42_r3c3_r2_staged_vegetation.gd',
+            'tests/runtime/test_net_smooth1_r42_r3c3_staged_earth_geometry.gd',
+            'tests/runtime/test_v0_p1_earth_wiring.gd',
+            'tests/runtime/test_mvp_earth_m3_spectator.gd',
+            'tests/runtime/test_net_smooth1_r42_r3c2_phased_item_publication.gd',
+            'tests/runtime/test_net_smooth1_r42_r3c_async_leave.gd',
+            'tests/runtime/test_net_smooth1_r42_r3c_queued_join.gd',
+            'tests/characters/test_char2_network_avatar_client_presentation.gd'
+          )
+          foreach ($P in $Suites) {
+            $Stem=Join-Path $E (Split-Path $P -Leaf)
+            $Stdout="$Stem.stdout.log"; $Stderr="$Stem.stderr.log"
+            $Proc=Start-Process -FilePath $B -WorkingDirectory (Get-Location).Path -ArgumentList @('--headless','--path','.','--script',("res://"+$P)) -RedirectStandardOutput $Stdout -RedirectStandardError $Stderr -PassThru
+            try {
+              $TimeoutMS=390000
+              if (-not $Proc.WaitForExit($TimeoutMS)) {
+                $Proc.Kill($true); $Proc.WaitForExit()
+                Get-Content $Stdout -Tail 100; Get-Content $Stderr -Tail 100
+                throw "R3C21_OS_TIMEOUT:$P"
+              }
+              $Code=$Proc.ExitCode
+              $Errors=@(Select-String -Path $Stdout,$Stderr -Pattern 'SCRIPT ERROR:|Parse Error:|Compile Error:|ERROR:' -ErrorAction SilentlyContinue)
+              if ($Code -ne 0 -or $Errors.Count -gt 0) {
+                Get-Content $Stdout -Tail 100; Get-Content $Stderr -Tail 100
+                throw "R3C21_RUNTIME_FAIL:$P EXIT=$Code ERRORS=$($Errors.Count)"
+              }
+            } finally { $Proc.Dispose() }
+          }
+          if (git status --porcelain --untracked-files=no) { throw 'R3C21_POST_TEST_TRACKED_DIRTY' }
+      - name: Exact evidence hashes
+        if: always()
+        shell: pwsh
+        run: |
+          $E='artifacts\net-smooth1\r3c21-windows-exact'
+          New-Item -ItemType Directory -Force $E | Out-Null
+          @(Get-ChildItem $E -File | Where-Object { $_.Name -ne 'sha256.json' } |
+            ForEach-Object { [ordered]@{file=$_.Name;sha256=(Get-FileHash $_.FullName -Algorithm SHA256).Hash} }) | ConvertTo-Json -Depth 4 | Set-Content "$E\sha256.json" -Encoding UTF8
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: r3c21-windows-exact-${{ github.sha }}-${{ github.run_id }}
+          path: artifacts/net-smooth1/r3c21-windows-exact/
+          if-no-files-found: error
+          retention-days: 21
+
+  linux-exact:
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 65
+    env:
+      GODOT_SILENCE_ROOT_WARNING: '1'
+      BREAKPOINT_RUNTIME_DISABLED: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Linux double hash and exact ancestor
+        shell: bash
+        run: |
+          set -euo pipefail
+          E=artifacts/net-smooth1/r3c21-linux-exact
+          mkdir -p "$E"
+          BASE='1645bba8af775fb989717b8a556f7431ca347dc4'
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          git merge-base --is-ancestor "$BASE" HEAD
+          test -z "$(git status --porcelain --untracked-files=no)"
+          B="${DWS_GODOT_DOUBLE_LINUX_BIN:-$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64}"
+          test -x "$B"
+          test "$("$B" --version | head -1)" = "4.7.1.stable.double.custom_build.a13da4feb"
+          test "$(sha256sum "$B" | cut -d' ' -f1)" = "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7"
+          echo "GODOT_BIN=$B" >> "$GITHUB_ENV"
+          { git rev-parse HEAD; git rev-parse 'HEAD^{tree}'; sha256sum "$B"; } > "$E/identity.txt"
+      - name: Cold import exact
+        shell: bash
+        run: |
+          set -euo pipefail
+          L=artifacts/net-smooth1/r3c21-linux-exact/import.log
+          "$GODOT_BIN" --headless --editor --path . --import --quit > "$L" 2>&1 || { tail -n 120 "$L"; exit 1; }
+          ! grep -E 'SCRIPT ERROR:|Parse Error:|Compile Error:' "$L"
+      - name: R2.1 visual and inherited R2/R3C2 regression
+        shell: bash
+        timeout-minutes: 50
+        run: |
+          set -euo pipefail
+          E=artifacts/net-smooth1/r3c21-linux-exact
+          for P in \
+            tests/runtime/test_net_smooth1_r42_r3c21_frame_paced_visual.gd \
+            tests/runtime/test_net_smooth1_r42_r3c3_r2_staged_vegetation.gd \
+            tests/runtime/test_net_smooth1_r42_r3c3_staged_earth_geometry.gd \
+            tests/runtime/test_net_smooth1_r42_r3c2_phased_item_publication.gd \
+            tests/runtime/test_net_smooth1_r42_r3c_async_leave.gd \
+            tests/runtime/test_net_smooth1_r42_r3c_queued_join.gd
+          do
+            L="$E/$(basename "$P").log"
+            timeout --signal=TERM --kill-after=5s 390s "$GODOT_BIN" --headless --path . --script "res://$P" > "$L" 2>&1 || { code=$?; tail -n 130 "$L"; echo "R3C21_LINUX_TEST_FAIL:$P:$code"; exit 1; }
+            if grep -E 'SCRIPT ERROR:|Parse Error:|Compile Error:|ERROR:' "$L"; then tail -n 130 "$L"; exit 1; fi
+          done
+          test -z "$(git status --porcelain --untracked-files=no)"
+      - name: Evidence hashes
+        shell: bash
+        if: always()
+        run: |
+          E=artifacts/net-smooth1/r3c21-linux-exact
+          mkdir -p "$E"
+          (cd "$E" && find . -type f ! -name SHA256SUMS.txt -print0 | sort -z | xargs -0 -r sha256sum > SHA256SUMS.txt)
+          git status --porcelain --untracked-files=no > "$E/tracked.txt"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: r3c21-linux-exact-${{ github.sha }}-${{ github.run_id }}
+          path: artifacts/net-smooth1/r3c21-linux-exact/
+          retention-days: 21
+          if-no-files-found: error
