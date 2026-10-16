@@ -32,7 +32,9 @@ identity > "$OUT/identity-before.txt"
 rm -rf .godot
 run import --editor --import
 run parse --check-only --script res://tests/research/fabric_bake0/fabric_r5_6_1_canonical_delta_acceptance.gd
+run parse-source-admission --check-only --script res://tests/research/fabric_bake0/fabric_r5_6_1_r1_source_admission_acceptance.gd
 for i in 1 2 3; do run "sample-$i" --script res://tests/research/fabric_bake0/fabric_r5_6_1_canonical_delta_acceptance.gd; done
+run narrow-source-admission --script res://tests/research/fabric_bake0/fabric_r5_6_1_r1_source_admission_acceptance.gd
 run bridge4-regression --script res://tests/research/fabric1/fabric_bridge4_canonical_world_acceptance.gd
 identity > "$OUT/identity-after.txt"
 python3 scripts/research/fabric_bake0/collect_r5_6_1_evidence.py --root "$OUT" --expected-head "$R56_EXPECTED_HEAD" --expected-tree "$R56_EXPECTED_TREE"

@@ -35,7 +35,7 @@ def sample(path: Path):
     obj = load_unique(rows[0]); req(type(obj) is dict, "result object")
     req(set(obj) == {"schema", "checks", "failures", "independent_variants", "sequence_events", "scenario_a_final_hash", "scenario_b_final_hash"}, "fields")
     req(obj.get("schema") == SCHEMA and obj.get("failures") == [], "schema/failures")
-    req(type(obj["checks"]) is int and obj["checks"] >= 180, "assertion count")
+    req(type(obj["checks"]) is int and obj["checks"] == 203, "R5.6.1 full assertion count")
     req(type(obj["independent_variants"]) is int and obj["independent_variants"] == 2, "variants")
     req(type(obj["sequence_events"]) is int and obj["sequence_events"] == 3, "events")
     for k in ("scenario_a_final_hash", "scenario_b_final_hash"):
@@ -44,6 +44,26 @@ def sample(path: Path):
     canonical = hashlib.sha256(json.dumps(obj, sort_keys=True, separators=(",", ":"), ensure_ascii=True).encode()).hexdigest()
     req(hashes == [canonical], "result hash mismatch")
     return rows[0], obj, canonical
+
+def source_admission_evidence(path: Path) -> dict:
+    raw = path.read_text(encoding="utf-8-sig")
+    req(not FATAL.search(raw), "narrow source admission Godot fatal")
+    rows = [line[len("FABRIC_R56_R1_NARROW_REPAIR_RESULT="):]
+            for line in raw.splitlines()
+            if line.startswith("FABRIC_R56_R1_NARROW_REPAIR_RESULT=")]
+    req(len(rows) == 1, "narrow source admission payload absent or duplicated")
+    obj = load_unique(rows[0])
+    req(type(obj) is dict and set(obj) == {"checks", "failures", "observations"}, "narrow result fields")
+    req(type(obj["checks"]) is int and obj["checks"] == 26 and obj["failures"] == [], "narrow assertion count / failures")
+    obs = obj["observations"]
+    req(type(obs) is dict, "narrow observations")
+    req(obs.get("duck_store_start_accepted") is False, "fake Construction Store accepted")
+    req(obs.get("forged_pending_observed") is False, "forged pending proposal accepted")
+    req(obs.get("forged_pending_error") == "R56_PENDING_PROVENANCE_MISMATCH", "wrong pending provenance error")
+    req(obs.get("original_prepared_action") == "BREAK_BOND" and
+        obs.get("external_actual_action") == "SET_BOND_STRENGTH", "independent falsifier intent")
+    req(obs.get("canonical_changed") is True, "adversarial mutation was not committed externally")
+    return obj
 
 def collect(root: Path, expected_head: str = "", expected_tree: str = "") -> dict:
     before = (root / "identity-before.txt").read_text().splitlines()
@@ -56,18 +76,20 @@ def collect(root: Path, expected_head: str = "", expected_tree: str = "") -> dic
     if expected_head: req(before[0] == "HEAD=" + expected_head, "expected HEAD")
     if expected_tree: req(before[1] == "TREE=" + expected_tree, "expected TREE")
     rows = [sample(root / f"sample-{i}.log") for i in (1,2,3)]
+    narrow = source_admission_evidence(root / "narrow-source-admission.log")
     req(rows[0][0] == rows[1][0] == rows[2][0], "deterministic payload mismatch")
-    for name in ("import", "parse", "bridge4-regression"):
+    for name in ("import", "parse", "parse-source-admission", "bridge4-regression"):
         content = (root / (name + ".log")).read_text(encoding="utf-8-sig")
         req(not FATAL.search(content), "fatal " + name)
         if name == "bridge4-regression":
-            req(re.search(r"FABRIC BRIDGE-4 Canonical World: PASS \(\d+ assertions\)", content) is not None, "Bridge-4 regression missing")
+            req(re.search(r"FABRIC BRIDGE-4 Canonical World: PASS \(49 assertions\)", content) is not None, "Bridge-4 regression missing")
     result = {
-        "schema": "fabric.r5_6_1.exact_evidence.v1",
+        "schema": "fabric.r5_6_1.exact_evidence.v2",
         "status": "IMPLEMENTER_EXACT_PASS",
         "identity": before,
         "deterministic_hash": rows[0][2],
         "result": rows[0][1],
+        "source_admission": narrow,
         "logs": {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(root.glob("*.log"))},
     }
     (root / "evidence.json").write_text(json.dumps(result, ensure_ascii=False, sort_keys=True, indent=2) + "\n", encoding="utf-8")

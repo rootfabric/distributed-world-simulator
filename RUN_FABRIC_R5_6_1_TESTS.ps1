@@ -72,7 +72,10 @@ if (Test-Path '.godot') { Remove-Item '.godot' -Force -Recurse }
 RunGodot 'import' @('--editor','--import')
 $sample = 'res://tests/research/fabric_bake0/fabric_r5_6_1_canonical_delta_acceptance.gd'
 RunGodot 'parse' @('--check-only','--script',$sample)
+$narrow = 'res://tests/research/fabric_bake0/fabric_r5_6_1_r1_source_admission_acceptance.gd'
+RunGodot 'parse-source-admission' @('--check-only','--script',$narrow)
 1..3 | ForEach-Object { RunGodot "sample-$_" @('--script',$sample) }
+RunGodot 'narrow-source-admission' @('--script',$narrow)
 RunGodot 'bridge4-regression' @('--script','res://tests/research/fabric1/fabric_bridge4_canonical_world_acceptance.gd')
 Identity 'identity-after.txt'
 & $PythonBin 'scripts/research/fabric_bake0/collect_r5_6_1_evidence.py' '--root' $Out '--expected-head' $ExpectedHead '--expected-tree' $ExpectedTree

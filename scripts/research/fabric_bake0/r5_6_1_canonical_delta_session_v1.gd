@@ -5,27 +5,34 @@ extends RefCounted
 const U = preload("res://scripts/research/fabric_bake0/fabric_bake_contract_utils_v1.gd")
 const Delta = preload("res://scripts/research/fabric_bake0/r5_6_1_canonical_delta_contract_v1.gd")
 const Adapter = preload("res://scripts/research/fabric_bake0/bridge4_canonical_world_adapter_v1.gd")
+const CanonicalStore = preload("res://scripts/construction/authoritative/construction_construct_store.gd")
 
 const SCHEMA := "planet_simulator.fabric_r5_6_1_delta_session.v1"
 var _store
+var _store_instance_id := 0
 var _snapshot: Dictionary = {}
 var _matter: Dictionary = {}
 var _authority: Dictionary = {}
 var _context: Dictionary = {}
 var _events: Array = []
 var _pending: Dictionary = {}
+# Lexical snapshot of the ORIGINAL proposal identity, captured at prepare-time.
+# Unlike a second mutable checksum field this closure does not read `_pending`
+# to decide which action was originally proposed. Session script code is trusted.
+var _prepared_admission: Callable = Callable()
 var _observed := 0
 
 func start(store, construct_id: String, matter: Dictionary, authority: Dictionary, events: Array = []) -> Dictionary:
 	if not _snapshot.is_empty():
 		return U.failure("R56_ALREADY_STARTED")
-	if store == null or not store.has_method("get_snapshot"):
+	if store == null or not (store is CanonicalStore) or store.get_script() != CanonicalStore:
 		return U.failure("R56_CANONICAL_STORE_REQUIRED")
 	var current: Dictionary = store.get_snapshot(construct_id)
 	var compiled := Adapter.compile_authoritative(current, matter, authority, events)
 	if not compiled.success:
 		return U.failure("R56_CANONICAL_START_INVALID", {"cause": compiled.get("error_code", "")})
 	_store = store # only borrow! No writes, no store replacement, no epoch minting.
+	_store_instance_id = store.get_instance_id()
 	_snapshot = current.duplicate(true)
 	_matter = matter.duplicate(true)
 	_authority = authority.duplicate(true)
@@ -36,7 +43,7 @@ func start(store, construct_id: String, matter: Dictionary, authority: Dictionar
 func prepare(action: String, bond_id: String, event_id: String, strength_n: float = 0.0) -> Dictionary:
 	if _snapshot.is_empty():
 		return U.failure("R56_NOT_STARTED")
-	if not _pending.is_empty():
+	if not _pending.is_empty() or _prepared_admission.is_valid():
 		return U.failure("R56_PENDING_PROPOSAL_EXISTS")
 	var live := _fence()
 	if not live.success:
@@ -44,12 +51,27 @@ func prepare(action: String, bond_id: String, event_id: String, strength_n: floa
 	var result := Delta.prepare(_snapshot, _matter, _authority, _events, event_id, action, bond_id, strength_n)
 	if not result.success:
 		return result
+	# Seal the ORIGINAL prepared intent inside a one-way lexical capture.
+	# Mutating the public/detached proposal or _pending afterwards cannot change
+	# the captured hash, initial revision, event ID or actual Store identity.
+	var initial_hash: String = U.canonical_hash(result.details)
+	var initial_event_id: String = event_id
+	var initial_source_checksum: String = String(_snapshot.checksum)
+	var initial_store_id: int = _store_instance_id
+	_prepared_admission = func(candidate: Dictionary, source_checksum: String, store_id: int) -> bool:
+		return store_id == initial_store_id and source_checksum == initial_source_checksum \
+			and String(candidate.get("event_id", "")) == initial_event_id \
+			and U.canonical_hash(candidate) == initial_hash
 	_pending = result.details.duplicate(true)
 	return U.success({"proposal": _pending.duplicate(true), "status": status()})
 
 func observe_external_commit(event_id: String, current_matter: Dictionary, current_authority: Dictionary) -> Dictionary:
 	if _pending.is_empty() or event_id != String(_pending.get("event_id", "")):
 		return U.failure("R56_NO_MATCHING_PROPOSAL")
+	if not _store_is_authoritative():
+		return U.failure("R56_CANONICAL_STORE_BINDING_DRIFT")
+	if not _pending_intent_matches():
+		return U.failure("R56_PENDING_PROVENANCE_MISMATCH")
 	if U.canonical_hash(current_matter) != U.canonical_hash(_matter):
 		return U.failure("R56_MATTER_CHANGED_REBIND_REQUIRED")
 	if U.canonical_hash(current_authority) != U.canonical_hash(_authority):
@@ -72,16 +94,20 @@ func observe_external_commit(event_id: String, current_matter: Dictionary, curre
 	_context = next_context.details.duplicate(true)
 	_events = _pending.next_events.duplicate()
 	_pending = {}
+	_prepared_admission = Callable()
 	_observed += 1
 	return U.success(status())
 
 func abandon_proposal() -> Dictionary:
 	if _pending.is_empty():
 		return U.failure("R56_NO_PENDING_PROPOSAL")
+	if not _pending_intent_matches():
+		return U.failure("R56_PENDING_PROVENANCE_MISMATCH")
 	var live := _fence()
 	if not live.success:
 		return live # canonical commit could already exist; do not hide stale state
 	_pending = {}
+	_prepared_admission = Callable()
 	return U.success(status())
 
 func read_binding() -> Dictionary:
@@ -94,7 +120,9 @@ func read_binding() -> Dictionary:
 func status() -> Dictionary:
 	var stale := false
 	if not _snapshot.is_empty() and _store != null:
-		stale = U.canonical_hash(_store.get_snapshot(String(_snapshot.construct_id))) != U.canonical_hash(_snapshot)
+		stale = not _store_is_authoritative()
+		if not stale:
+			stale = U.canonical_hash(_store.get_snapshot(String(_snapshot.construct_id))) != U.canonical_hash(_snapshot)
 	return {"schema": SCHEMA, "canonical_writes": 0, "started": not _snapshot.is_empty(),
 		"construct_id": String(_snapshot.get("construct_id", "")),
 		"revision": int(_snapshot.get("state_revision", -1)),
@@ -104,9 +132,19 @@ func status() -> Dictionary:
 		"events": _events.duplicate(), "observed_changes": _observed,
 		"pending": not _pending.is_empty(), "stale": stale}
 
+func _pending_intent_matches() -> bool:
+	return _prepared_admission.is_valid() and bool(_prepared_admission.call(
+		_pending, String(_snapshot.get("checksum", "")), _store_instance_id))
+
+func _store_is_authoritative() -> bool:
+	return _store != null and is_instance_valid(_store) and (_store is CanonicalStore) \
+		and _store.get_script() == CanonicalStore and _store.get_instance_id() == _store_instance_id
+
 func _fence() -> Dictionary:
 	if _snapshot.is_empty() or _store == null:
 		return U.failure("R56_NOT_STARTED")
+	if not _store_is_authoritative():
+		return U.failure("R56_CANONICAL_STORE_BINDING_DRIFT")
 	if U.canonical_hash(_store.get_snapshot(String(_snapshot.construct_id))) != U.canonical_hash(_snapshot):
 		return U.failure("R56_STALE_CANONICAL_SOURCE")
 	return U.success()
