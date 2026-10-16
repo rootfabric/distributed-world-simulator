@@ -70,7 +70,11 @@ jobs:
           foreach ($P in @(
             'tests/runtime/test_v0_p1_earth_wiring.gd',
             'tests/runtime/test_net_smooth1_r42_r3c3_staged_earth_geometry.gd',
-            'tests/runtime/test_mvp_earth_m3_spectator.gd'
+            'tests/runtime/test_mvp_earth_m3_spectator.gd',
+            'tests/runtime/test_v0_p1_earth_surface_presentation.gd',
+            'tests/runtime/test_net_smooth1_r42_r3c2_phased_item_publication.gd',
+            'tests/runtime/test_net_smooth1_r42_r3c_async_leave.gd',
+            'tests/runtime/test_net_smooth1_r42_r3c_queued_join.gd'
           )) {
             $Stem=Join-Path $E (Split-Path $P -Leaf)
             $Out="$Stem.stdout.log"; $Err="$Stem.stderr.log"
