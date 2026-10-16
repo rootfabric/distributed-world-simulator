@@ -1,0 +1,56 @@
+{
+  "schema": "fabric.r5_6_1.r1_narrow_linux_exact.record.v1",
+  "verdict": "IMPLEMENTER_LINUX_EXACT_PASS",
+  "product_head": "fd83b61f87d27ba812fe058c6d3a728c4d54588e",
+  "product_tree": "000f15d373b396520042b663b59fc84c734180c9",
+  "product_parent": "ee1fa655981bba4c7adadd3e7d1d64b3635dfae1",
+  "canonical_linux_godot_version": "4.7.1.stable.double.custom_build.a13da4feb",
+  "canonical_linux_godot_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+  "exact_source_carrier": {
+    "run": 38864531934,
+    "artifact": 12030676467
+  },
+  "frozen_identity_before_after_match": true,
+  "changed_product_paths": 6,
+  "checks": {
+    "r56_acceptance": [
+      203,
+      203,
+      203
+    ],
+    "r56_deterministic_result_hash": "29defdc33cb1192b9e1577517561c6fcc0f5693daa889deebe585ab8816e043b",
+    "narrow_source_admission": {
+      "checks": 26,
+      "failures": 0
+    },
+    "original_reviewer_red_to_green": {
+      "original_frozen_head": "ee1fa655981bba4c7adadd3e7d1d64b3635dfae1",
+      "original_result": "RED 3 expected negative assertions",
+      "repair_result": "GREEN 7/7"
+    },
+    "bridge4_regression": {
+      "checks": 49,
+      "failures": 0
+    },
+    "negative_collector_falsifiers": {
+      "rejected": 6,
+      "total": 6
+    },
+    "strict_evidence_collector": "PASS",
+    "sha256_manifest": {
+      "validated": 14,
+      "total": 14
+    }
+  },
+  "local_evidence_zip": {
+    "name": "FABRIC_R5_6_1_R1_NARROW_REPAIR_EVIDENCE.zip",
+    "sha256": "09c20b9af0959299d84a50d353c306ecfdc68895dc456f115587fec1c7a44fde"
+  },
+  "remaining_gates": [
+    "canonical Windows exact on frozen HEAD",
+    "fresh separate actor reviewer",
+    "fresh independent verifier",
+    "explicit human research merge authorization"
+  ],
+  "merge_ready": false
+}
