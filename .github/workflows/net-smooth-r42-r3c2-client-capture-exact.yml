@@ -103,7 +103,7 @@ jobs:
             tests/runtime/test_net_smooth1_r42_p1_async_durable_proof.gd
           do
             L="$D/$(basename "$P").log"
-            "$GODOT_BIN" --headless --path . --script "res://$P" > "$L" 2>&1 || { tail -n 140 "$L"; exit 1; }
+            timeout --signal=TERM --kill-after=5s 180s "$GODOT_BIN" --headless --path . --script "res://$P" > "$L" 2>&1 || { code=$?; tail -n 140 "$L"; echo "R3C2_LINUX_SUITE_EXIT_OR_TIMEOUT=$code:$P"; exit 1; }
             ! grep -E 'SCRIPT ERROR:|Parse Error:|Compile Error:|ERROR:' "$L" || { tail -n 140 "$L"; exit 1; }
           done
           test -z "$(git status --porcelain --untracked-files=no)"
@@ -196,11 +196,34 @@ jobs:
             'tests/network/test_nx3_fixed_tick_authoritative_simulation.gd'
           )
           foreach ($P in $Suites) {
-            $Log=Join-Path $D ((Split-Path $P -Leaf)+'.log')
-            & $Godot --headless --path . --script ("res://"+$P) *> $Log
-            if ($LASTEXITCODE -ne 0 -or (Select-String -Path $Log -Pattern 'SCRIPT ERROR:|Parse Error:|Compile Error:|ERROR:' -Quiet)) {
-              Get-Content $Log -Tail 140
-              throw "R3C2_RUNTIME_FAIL:$P"
+            # Start ONLY this owned Godot process. A runtime SCRIPT ERROR can
+            # abort SceneTree._run without exiting; never wait for the 60min job.
+            $Base = Join-Path $D (Split-Path $P -Leaf)
+            $Stdout = "$Base.stdout.log"
+            $Stderr = "$Base.stderr.log"
+            $Proc = Start-Process -FilePath $Godot -WorkingDirectory (Get-Location).Path `
+              -ArgumentList @('--headless','--path','.','--script',("res://"+$P)) `
+              -RedirectStandardOutput $Stdout -RedirectStandardError $Stderr -PassThru
+            try {
+              if (-not $Proc.WaitForExit(180000)) {
+                $Proc.Kill($true)
+                $Proc.WaitForExit()
+                Write-Host "R3C2_OS_TEST_WATCHDOG_TIMEOUT:$P"
+                Get-Content $Stdout -Tail 100
+                Get-Content $Stderr -Tail 100
+                throw "R3C2_RUNTIME_TIMEOUT_180S:$P"
+              }
+              $Code = $Proc.ExitCode
+              $Errors = @(Select-String -Path $Stdout,$Stderr `
+                -Pattern 'SCRIPT ERROR:|Parse Error:|Compile Error:|ERROR:' `
+                -ErrorAction SilentlyContinue)
+              if ($Code -ne 0 -or $Errors.Count -gt 0) {
+                Get-Content $Stdout -Tail 100
+                Get-Content $Stderr -Tail 100
+                throw "R3C2_RUNTIME_FAIL:$P EXIT=$Code ERRORS=$($Errors.Count)"
+              }
+            } finally {
+              $Proc.Dispose()
             }
           }
           if (git status --porcelain --untracked-files=no) { throw 'R3C2_POST_TEST_TRACKED_DIRTY' }

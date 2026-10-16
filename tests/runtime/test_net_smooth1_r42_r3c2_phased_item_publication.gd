@@ -10,13 +10,32 @@ const PEER := "peer/r3c2/item/a"
 const SESSION := "transport-session/r3c2/item/a/1"
 const PLAYER := "a"
 const OP := "operation/r3c2/item/hotbar0"
+# A GDScript runtime error can abort _run() without calling quit(). Keep a
+# SceneTree-timer guard independent of the test body; CI has an OS-level guard.
+const R3C2_TEST_WATCHDOG_SECONDS := 90.0
 
 var assertions := 0
 var failures: Array[String] = []
+var _finished := false
 
 
 func _init() -> void:
+	# Install the guard BEFORE running _run; a script error leaves the tree
+	# alive but the SceneTreeTimer still fires and exits nonzero.
+	call_deferred("_arm_watchdog")
 	call_deferred("_run")
+
+
+func _arm_watchdog() -> void:
+	var timer := create_timer(R3C2_TEST_WATCHDOG_SECONDS)
+	timer.timeout.connect(_watchdog_expired)
+
+
+func _watchdog_expired() -> void:
+	if _finished:
+		return
+	failures.append("R3C2_TEST_WATCHDOG_EXPIRED_OR_SCRIPT_ERROR")
+	_finish()
 
 
 func _run() -> void:
@@ -78,7 +97,7 @@ func _run() -> void:
 	check(not bool(server.get("_fatal_persistence_failure")), "worker did not fail closed")
 	check(int(server.get("_checkpoint_generation")) == generation + 1,
 		"atomic ITEM generation committed exactly once")
-	check(String(server.get("_r3c2_postcommit_pending").get("stage", -1)) == "0",
+	check(int(server.get("_r3c2_postcommit_pending").get("stage", -1)) == 0,
 		"durable completion only schedules first phase")
 	check(String(server.get("_p1b_item_pending").get("operation_id", "")) == OP,
 		"visibility fence retained after disk commit until staged publication")
@@ -167,6 +186,9 @@ func check(value: bool, message: String) -> void:
 
 
 func _finish() -> void:
+	if _finished:
+		return
+	_finished = true
 	for problem in failures:
 		push_error("[R3C2] " + problem)
 	print("NET_SMOOTH_R3C2_PHASED_ITEM %s assertions=%d failures=%d" % [
