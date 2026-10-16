@@ -432,6 +432,7 @@ func _handle_compatibility_rejection(payload: Dictionary) -> void:
 
 
 func _handle_join_ack(payload: Dictionary) -> void:
+	var started_us := Time.get_ticks_usec()
 	var player_value = payload.get("player", {})
 	if not player_value is Dictionary:
 		_fail_connection("INVALID_M3_JOIN_ACK"); return
@@ -441,12 +442,16 @@ func _handle_join_ack(payload: Dictionary) -> void:
 	_adopt_authoritative_input_sequence(int(player.get("last_input_sequence", 0)))
 	if _player_entity_id != "player/%s" % _logical_player_id or _ownership_epoch < 1:
 		_fail_connection("INVALID_M3_JOIN_IDENTITY", {"player": player}); return
+	var identity_done_us := Time.get_ticks_usec()
 	var accepted: Dictionary = _replica.accept_snapshot(payload.get("snapshot", {}))
 	if not bool(accepted.get("success", false)):
 		_fail_connection(String(accepted.get("error_code", "M3_JOIN_SNAPSHOT_REJECTED"))); return
+	var snapshot_done_us := Time.get_ticks_usec()
 	_snapshot_updates += 1
 	_accept_item_snapshot(payload.get("item_graph_snapshot", {}))
+	var item_done_us := Time.get_ticks_usec()
 	_initialize_prediction_from_snapshot(_replica.get_snapshot())
+	var prediction_done_us := Time.get_ticks_usec()
 	_joined = true
 	_last_error_code = ""
 	_reconnect_pending = false
@@ -459,8 +464,22 @@ func _handle_join_ack(payload: Dictionary) -> void:
 	})
 	_write_report("READY", false)
 	_debug_event("CLIENT_READY", {"player_entity_id":_player_entity_id,"ownership_epoch":_ownership_epoch})
+	var ready_done_us := Time.get_ticks_usec()
 	replica_updated.emit(_replica.get_snapshot())
+	var replica_done_us := Time.get_ticks_usec()
 	session_ready.emit(self)
+	if SmoothTrace.enabled():
+		SmoothTrace.emit("r3c2_join_ack_breakdown", {
+			"identity_ms": float(identity_done_us - started_us) / 1000.0,
+			"snapshot_accept_ms": float(snapshot_done_us - identity_done_us) / 1000.0,
+			"item_accept_ms": float(item_done_us - snapshot_done_us) / 1000.0,
+			"prediction_init_ms": float(prediction_done_us - item_done_us) / 1000.0,
+			"ready_report_ms": float(ready_done_us - prediction_done_us) / 1000.0,
+			"replica_signal_ms": float(replica_done_us - ready_done_us) / 1000.0,
+			"session_ready_signal_ms": float(Time.get_ticks_usec() - replica_done_us) / 1000.0,
+			"total_ms": float(Time.get_ticks_usec() - started_us) / 1000.0,
+			"ownership_epoch": _ownership_epoch,
+		})
 
 func _accept_snapshot(snapshot: Dictionary) -> void:
 	var accepted: Dictionary = _replica.accept_snapshot(snapshot)

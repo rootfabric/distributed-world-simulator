@@ -1,5 +1,6 @@
 extends Node3D
 
+const SmoothTrace = preload("res://scripts/network/smoothness/net_smooth_trace.gd")
 const CommandRegistryScript = preload("res://scripts/core/command_registry.gd")
 const RuntimeTestRegistryScript = preload("res://scripts/core/runtime_test_registry.gd")
 const WorldCatalogScript = preload("res://scripts/core/world_catalog.gd")
@@ -1957,11 +1958,13 @@ func _setup_m5_graphical_acceptance_driver() -> void:
 func _on_graphical_game_client_session_ready(session) -> void:
 	if current_runtime == null or not is_instance_valid(current_runtime):
 		return
+	var started_us := Time.get_ticks_usec()
 	var attached: Dictionary = (
 		_attach_m3_graphical_game_client(current_runtime, session)
 		if _m3_mode
 		else _attach_graphical_game_client(current_runtime, session)
 	)
+	var attached_us := Time.get_ticks_usec()
 	if not bool(attached.get("success", false)):
 		push_error("Graphical game client attach failed: %s" % attached)
 		if _network_debug_stay_open:
@@ -1970,6 +1973,14 @@ func _on_graphical_game_client_session_ready(session) -> void:
 			return
 		request_graceful_shutdown("graphical_game_client_attach_failed", 7)
 	_refresh_runtime_descriptor()
+	if SmoothTrace.enabled():
+		SmoothTrace.emit("r3c2_client_connect_attach", {
+			"attach_ms": float(attached_us - started_us) / 1000.0,
+			"descriptor_ms": float(Time.get_ticks_usec() - attached_us) / 1000.0,
+			"total_ms": float(Time.get_ticks_usec() - started_us) / 1000.0,
+			"world": current_world_id, "m3": _m3_mode,
+			"success": bool(attached.get("success", false)),
+		})
 
 
 func _on_graphical_game_client_connection_state_changed(
