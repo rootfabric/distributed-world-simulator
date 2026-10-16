@@ -2,6 +2,15 @@ extends Node3D
 
 signal earth_rebuilt(summary: Dictionary)
 
+const StagedSurfaceJobScript = preload(
+	"res://scripts/world/earth/earth_surface_build_job.gd"
+)
+const SmoothTrace = preload(
+	"res://scripts/network/smoothness/net_smooth_trace.gd"
+)
+const R3C3_DEFAULT_MAX_STEPS_PER_FRAME := 128
+const R3C3_DEFAULT_BUDGET_US := 2000
+
 const BODY_CONFIG_PATH: String = "res://config/planets/earth.json"
 const LOD_CONFIG_PATH: String = "res://config/generation/earth_lod.json"
 const EarthRulePipelineScript = preload(
@@ -55,11 +64,33 @@ var cached_biome_directions: Dictionary = {}
 var last_local_mesh_statistics: Dictionary = {}
 var last_global_mesh_statistics: Dictionary = {}
 
+# Opt-in ONLY: presentation jobs and trace state. No new authority or
+# topology. Old committed region remains untouched during a recenter request.
+var _r3c3_staged_geometry_enabled := false
+var _r3c3_global_job
+var _r3c3_local_job
+var _r3c3_global_ready := false
+var _r3c3_local_ready := false
+var _r3c3_requested_direction := Vector3.UP
+var _r3c3_requested_east := Vector3.RIGHT
+var _r3c3_requested_north := Vector3.FORWARD
+var _r3c3_requested_anchor := Vector3.ZERO
+var _r3c3_token := 0
+var _r3c3_global_token := 0
+var _r3c3_generation_committed := 0
+var _r3c3_last_slice_us := 0
+var _r3c3_last_commit_us := 0
+var _r3c3_stale_cancellations := 0
+var _r3c3_last_error := ""
+var _r3c3_local_batch_started := false
+var _r3c3_target_initialized := false
 
-func setup(logger_reference = null) -> bool:
+
+func setup(logger_reference = null, r3c3_staged_geometry: bool = false) -> bool:
 	if initialized:
 		return true
 	logger = logger_reference
+	_r3c3_staged_geometry_enabled = r3c3_staged_geometry
 	body_config = _load_json(BODY_CONFIG_PATH)
 	lod_config = _load_json(LOD_CONFIG_PATH)
 	if body_config.is_empty() or lod_config.is_empty():
@@ -79,17 +110,28 @@ func setup(logger_reference = null) -> bool:
 	assets.setup()
 	assets.set_surface_debug_mode(false)
 	_create_nodes()
-	pipeline.begin_batch("global_earth")
-	global_earth.mesh = _build_global_mesh()
-	var global_profile: Dictionary = pipeline.end_batch()
+	var global_profile: Dictionary = {}
 	var default_direction: Vector3 = get_canonical_spawn_direction()
-	prepare_surface_region(default_direction, false)
+	if _r3c3_staged_geometry_enabled:
+		# Scene shells exist immediately. Global and local CPU mesh generation
+		# will be advanced in _process, not during client CONNECTED attach.
+		# The canonical position/height pipeline is already initialized.
+		_r3c3_begin_global_job()
+		prepare_surface_region(default_direction, false)
+		set_process(true)
+	else:
+		pipeline.begin_batch("global_earth")
+		global_earth.mesh = _build_global_mesh()
+		global_profile = pipeline.end_batch()
+		prepare_surface_region(default_direction, false)
+		set_process(false)
 	initialized = true
 	_log_info("earth_world_initialized", {
 		"radius_m": planet_radius_m,
 		"active_rules": pipeline.get_active_rule_ids(),
 		"global_generation": global_profile,
 		"local_generation": last_rebuild_summary,
+		"r3c3_staged_geometry": _r3c3_staged_geometry_enabled,
 	})
 	return true
 
@@ -153,6 +195,9 @@ func _create_nodes() -> void:
 func prepare_surface_region(center_direction: Vector3, _include_collision: bool = false) -> void:
 	if pipeline == null:
 		return
+	if _r3c3_staged_geometry_enabled:
+		_r3c3_request_surface_region(center_direction)
+		return
 	var started_usec: int = Time.get_ticks_usec()
 	surface_center_direction = center_direction.normalized()
 	surface_east = _make_east(surface_center_direction)
@@ -209,6 +254,235 @@ func update_for_view(
 	if distance_from_anchor > local_recenter_distance_m and rebuild_cooldown_sec <= 0.0:
 		prepare_surface_region(target_direction, false)
 		rebuild_cooldown_sec = 0.75
+
+
+
+# R3C3 R1 geometry-only time slicing. Global geometry first, then the newest
+# local target. The legacy synchronous mesh, vegetation and LOD contracts stay
+# unchanged when disabled. Vegetation/regenerate + ArrayMesh upload remain
+# blocking at commit in R1 and are strictly R2 work, NOT performance PASS.
+func _r3c3_begin_global_job() -> void:
+	_r3c3_global_token += 1
+	_r3c3_global_ready = false
+	_r3c3_global_job = StagedSurfaceJobScript.new()
+	var configured: Dictionary = _r3c3_global_job.configure_global(
+		pipeline, planet_radius_m, global_rings, global_segments,
+		global_surface_offset_m, debug_view
+	)
+	if not bool(configured.get("success", false)):
+		_r3c3_fail(String(configured.get("error_code", "R3C3_GLOBAL_CONFIG_FAILED")))
+		return
+	pipeline.begin_batch("global_earth_r3c3")
+	if SmoothTrace.enabled():
+		SmoothTrace.emit("r3c3_earth_geometry_requested", {
+			"mode": "global", "global_token": _r3c3_global_token,
+			"sample_count": (global_rings + 1) * (global_segments + 1),
+		})
+
+
+func _r3c3_request_surface_region(center_direction: Vector3, force: bool = false) -> void:
+	if not _r3c3_staged_geometry_enabled or pipeline == null:
+		return
+	if center_direction.length_squared() < 0.000001:
+		_r3c3_fail("R3C3_LOCAL_DIRECTION_INVALID")
+		return
+	var direction: Vector3 = center_direction.normalized()
+	# Deduplicate EarthWorld.setup + EarthExplorer.activate at identical spawn;
+	# they previously built the full 13825-point region twice synchronously.
+	if not force:
+		if _r3c3_local_job != null and direction.is_equal_approx(_r3c3_requested_direction):
+			return
+		if _r3c3_local_job == null and _r3c3_local_ready and direction.is_equal_approx(surface_center_direction):
+			return
+	if _r3c3_local_job != null:
+		_r3c3_stale_cancellations += 1
+		_r3c3_local_job = null
+	_r3c3_token += 1
+	_r3c3_requested_direction = direction
+	_r3c3_requested_east = _make_east(direction)
+	_r3c3_requested_north = _r3c3_requested_east.cross(direction).normalized()
+	_r3c3_requested_anchor = get_surface_point(direction)
+	_r3c3_target_initialized = true
+	_r3c3_local_batch_started = false
+	_r3c3_local_job = StagedSurfaceJobScript.new()
+	var configured: Dictionary = _r3c3_local_job.configure_local(
+		pipeline, planet_radius_m, local_radius_m, local_rings, local_segments,
+		direction, _r3c3_requested_east, _r3c3_requested_north,
+		_r3c3_requested_anchor, debug_view
+	)
+	if not bool(configured.get("success", false)):
+		_r3c3_fail(String(configured.get("error_code", "R3C3_LOCAL_CONFIG_FAILED")))
+		return
+	if SmoothTrace.enabled():
+		SmoothTrace.emit("r3c3_earth_geometry_requested", {
+			"mode": "local", "token": _r3c3_token,
+			"sample_count": 1 + local_rings * local_segments,
+			"cancelled": _r3c3_stale_cancellations,
+		})
+
+
+func _process(_delta: float) -> void:
+	if not initialized or not _r3c3_staged_geometry_enabled:
+		return
+	if not _r3c3_last_error.is_empty():
+		return
+	# Exactly ONE CPU job slice per process tick. No SceneTree/GPU manipulation
+	# during these slices: only immutable scratch packed arrays are mutated.
+	if _r3c3_global_job != null:
+		_r3c3_advance_job("global", _r3c3_global_job, _r3c3_global_token)
+		return
+	if _r3c3_local_job != null:
+		if not _r3c3_local_batch_started:
+			pipeline.begin_batch("local_earth_surface_r3c3")
+			_r3c3_local_batch_started = true
+		_r3c3_advance_job("local", _r3c3_local_job, _r3c3_token)
+
+
+func _r3c3_advance_job(mode: String, job, token: int) -> void:
+	var started: int = Time.get_ticks_usec()
+	var result: Dictionary = job.advance(
+		R3C3_DEFAULT_MAX_STEPS_PER_FRAME, R3C3_DEFAULT_BUDGET_US
+	)
+	_r3c3_last_slice_us = Time.get_ticks_usec() - started
+	if not bool(result.get("success", false)):
+		_r3c3_fail(String(result.get("error_code", "R3C3_GEOMETRY_SLICE_FAILED")))
+		return
+	if SmoothTrace.enabled():
+		var progress: Dictionary = result.get("details", {})
+		SmoothTrace.emit("r3c3_earth_geometry_slice", {
+			"mode": mode, "token": token,
+			"phase": String(progress.get("phase", "")),
+			"processed_units": int(progress.get("processed_units", 0)),
+			"elapsed_us": _r3c3_last_slice_us,
+			"sampled": int(progress.get("sampled", 0)),
+			"sample_total": int(progress.get("sample_total", 0)),
+		})
+	if not job.is_ready():
+		return
+	# Output is generated only by the matching requested job generation.
+	# There is no worker thread, no future callback to a freed Node and no
+	# stale terrain allowed to replace a later teleport/recenter target.
+	if mode == "global":
+		if token != _r3c3_global_token or job != _r3c3_global_job:
+			_r3c3_stale_cancellations += 1
+			return
+		_r3c3_commit_global_geometry(job, token)
+	else:
+		if token != _r3c3_token or job != _r3c3_local_job:
+			_r3c3_stale_cancellations += 1
+			return
+		_r3c3_commit_local_geometry(job, token)
+
+
+func _r3c3_commit_global_geometry(job, token: int) -> void:
+	var started: int = Time.get_ticks_usec()
+	var arrays: Array = job.get_arrays()
+	if arrays.is_empty():
+		_r3c3_fail("R3C3_GLOBAL_ARRAYS_EMPTY")
+		return
+	var committed_mesh := ArrayMesh.new()
+	committed_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+	if committed_mesh.get_surface_count() != 1:
+		_r3c3_fail("R3C3_GLOBAL_MESH_UPLOAD_FAILED")
+		return
+	global_earth.mesh = committed_mesh
+	last_global_mesh_statistics = job.get_statistics()
+	var profile: Dictionary = pipeline.end_batch()
+	_r3c3_global_ready = true
+	_r3c3_global_job = null
+	_r3c3_last_commit_us = Time.get_ticks_usec() - started
+	if SmoothTrace.enabled():
+		SmoothTrace.emit("r3c3_earth_geometry_committed", {
+			"mode": "global", "global_token": token,
+			"upload_ms": float(_r3c3_last_commit_us) / 1000.0,
+			"vertices": int(last_global_mesh_statistics.get("sample_count", 0)),
+			"profile_samples": int(profile.get("last_batch_sample_count", 0)),
+		})
+
+
+func _r3c3_commit_local_geometry(job, token: int) -> void:
+	var started: int = Time.get_ticks_usec()
+	var arrays: Array = job.get_arrays()
+	if arrays.is_empty():
+		_r3c3_fail("R3C3_LOCAL_ARRAYS_EMPTY")
+		return
+	var committed_mesh := ArrayMesh.new()
+	committed_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+	if committed_mesh.get_surface_count() != 1:
+		_r3c3_fail("R3C3_LOCAL_MESH_UPLOAD_FAILED")
+		return
+	var terrain_profile: Dictionary = pipeline.end_batch()
+	# All data was built against this exact target. Publish the center basis
+	# only when its complete mesh exists; the previous mesh stays untouched
+	# throughout region sampling/normal computation.
+	surface_center_direction = _r3c3_requested_direction
+	surface_east = _r3c3_requested_east
+	surface_north = _r3c3_requested_north
+	surface_anchor_world = _r3c3_requested_anchor
+	# R1 deliberately retains deterministic legacy vegetation placement.
+	# It remains a synchronous expensive commit until R2 staged vegetation.
+	var placement_summary: Dictionary = placement_system.regenerate(
+		surface_center_direction, surface_east, surface_north, surface_anchor_world
+	)
+	local_surface.mesh = committed_mesh
+	last_local_mesh_statistics = job.get_statistics()
+	_update_root_positions()
+	_apply_lod_visibility()
+	_r3c3_local_ready = true
+	_r3c3_generation_committed = token
+	_r3c3_local_job = null
+	_r3c3_local_batch_started = false
+	_r3c3_last_commit_us = Time.get_ticks_usec() - started
+	last_rebuild_summary = {
+		"elapsed_ms": float(_r3c3_last_commit_us) / 1000.0,
+		"terrain": terrain_profile,
+		"mesh": last_local_mesh_statistics.duplicate(true),
+		"placement": placement_summary,
+		"center_direction": [
+			surface_center_direction.x,
+			surface_center_direction.y,
+			surface_center_direction.z,
+		],
+		"biome": get_biome_name_at(surface_center_direction),
+	}
+	earth_rebuilt.emit(last_rebuild_summary.duplicate(true))
+	_log_info("earth_surface_rebuilt", last_rebuild_summary)
+	if logger != null:
+		logger.performance("earth_surface_rebuild", last_rebuild_summary)
+	if SmoothTrace.enabled():
+		SmoothTrace.emit("r3c3_earth_geometry_committed", {
+			"mode": "local", "token": token,
+			"commit_ms": float(_r3c3_last_commit_us) / 1000.0,
+			"vertices": int(last_local_mesh_statistics.get("sample_count", 0)),
+			"vegetation_still_synchronous_r1": true,
+		})
+
+
+func _r3c3_fail(code: String) -> void:
+	_r3c3_last_error = code
+	_r3c3_global_job = null
+	_r3c3_local_job = null
+	set_process(false)
+	_log_error("r3c3_earth_geometry_failure", {"error_code": code})
+
+
+func get_r3c3_staged_geometry_report() -> Dictionary:
+	return {
+		"enabled": _r3c3_staged_geometry_enabled,
+		"global_ready": _r3c3_global_ready,
+		"local_ready": _r3c3_local_ready,
+		"visual_region_ready": _r3c3_global_ready and _r3c3_local_ready,
+		"target_token": _r3c3_token,
+		"committed_token": _r3c3_generation_committed,
+		"global": _r3c3_global_job.get_report() if _r3c3_global_job != null else {},
+		"local": _r3c3_local_job.get_report() if _r3c3_local_job != null else {},
+		"last_slice_us": _r3c3_last_slice_us,
+		"last_commit_us": _r3c3_last_commit_us,
+		"stale_cancellations": _r3c3_stale_cancellations,
+		"last_error": _r3c3_last_error,
+		"vegetation_staged": false,  # R2 (do not advertise ready R3 performance)
+		"gpu_upload_staged": false,  # R2
+	}
 
 
 func set_render_origin(new_origin_world: Vector3) -> void:
@@ -374,7 +648,10 @@ func cycle_debug_view() -> String:
 	debug_view = (debug_view + 1) % 4
 	if assets != null:
 		assets.set_surface_debug_mode(debug_view != 0)
-	prepare_surface_region(surface_center_direction, false)
+	if _r3c3_staged_geometry_enabled:
+		_r3c3_request_surface_region(surface_center_direction, true)
+	else:
+		prepare_surface_region(surface_center_direction, false)
 	return get_debug_view_name()
 
 
@@ -400,10 +677,14 @@ func reload_rules() -> bool:
 	pipeline = new_pipeline
 	placement_system.setup(self, pipeline, assets)
 	assets.set_surface_debug_mode(debug_view != 0)
-	pipeline.begin_batch("global_earth_reload")
-	global_earth.mesh = _build_global_mesh()
-	pipeline.end_batch()
-	prepare_surface_region(surface_center_direction, false)
+	if _r3c3_staged_geometry_enabled:
+		_r3c3_begin_global_job()
+		_r3c3_request_surface_region(surface_center_direction, true)
+	else:
+		pipeline.begin_batch("global_earth_reload")
+		global_earth.mesh = _build_global_mesh()
+		pipeline.end_batch()
+		prepare_surface_region(surface_center_direction, false)
 	cached_biome_directions.clear()
 	return true
 
