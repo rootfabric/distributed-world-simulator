@@ -1,0 +1,45 @@
+name: FABRIC R5.6.1 R1 Narrow Repair Frozen Source
+on:
+  push:
+    branches:
+      - verify/fabric-r56-r1-narrow-source-fd83b61f-r1
+permissions:
+  contents: read
+jobs:
+  frozen-source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fd83b61f87d27ba812fe058c6d3a728c4d54588e
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Verify exact product and repair scope
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$(git rev-parse HEAD)" = "fd83b61f87d27ba812fe058c6d3a728c4d54588e"
+          test "$(git rev-parse 'HEAD^{tree}')" = "000f15d373b396520042b663b59fc84c734180c9"
+          test -z "$(git status --porcelain=v1 --untracked-files=no)"
+          BASE=ee1fa655981bba4c7adadd3e7d1d64b3635dfae1
+          test "$(git merge-base HEAD "$BASE")" = "$BASE"
+          test "$(git diff --name-only "$BASE" HEAD | wc -l)" -eq 6
+          git diff --check "$BASE" HEAD
+          test -z "$(git diff --name-only "$BASE" HEAD -- 'scripts/construction/**' 'scripts/simulation/matter/**' 'scripts/research/fabric_bake0/r5_1_*' 'scripts/research/fabric_bake0/r5_3_*' 'scripts/research/fabric_bake0/r5_4_*' 'scripts/research/fabric_bake0/r5_5_*')"
+          bash -n RUN_FABRIC_R5_6_1_TESTS.sh
+          python3 -m py_compile scripts/research/fabric_bake0/collect_r5_6_1_evidence.py
+      - name: Publish frozen exact source
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          mkdir -p artifact
+          git archive --format=tar.gz --output=artifact/fabric-r56-r1-narrow-source.tar.gz HEAD
+          git bundle create artifact/fabric-r56-r1-narrow-incremental.bundle HEAD ^ee1fa655981bba4c7adadd3e7d1d64b3635dfae1
+          printf 'HEAD=%s\nTREE=%s\nBASE=%s\n' "$(git rev-parse HEAD)" "$(git rev-parse 'HEAD^{tree}')" "ee1fa655981bba4c7adadd3e7d1d64b3635dfae1" > artifact/IDENTITY.txt
+          (cd artifact && sha256sum fabric-r56-r1-narrow-source.tar.gz fabric-r56-r1-narrow-incremental.bundle > SHA256SUMS)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fabric-r56-r1-narrow-fd83b61f
+          path: artifact/**
+          retention-days: 30
