@@ -47,6 +47,10 @@ const MORPHOLOGY_BASE_OFFSET_Y := 0.5
 var controller: Object = null
 var founder_registry: Dictionary = {}
 var ticks_per_second: float = DEFAULT_TICKS_PER_SECOND
+# A14.4 live LAB frame budget, not a canonical biology parameter.
+var budgeted_live_enabled := true
+var live_cpu_budget_us := 30000
+var live_max_ticks_per_call := 2
 var running := false
 # Pending run target (P5): {"kind": "tick"|"generation"|"condition", ...} or {}.
 var pending_target: Dictionary = {}
@@ -363,7 +367,15 @@ func _process(delta: float) -> void:
 	_wall_elapsed += delta
 	_elapsed += delta
 	var interval := 1.0 / ticks_per_second
-	if String(pending_target.get("kind", "")) == "tick":
+	# Live A14.4 orchestration for LAB only. WORLD_COMPAT still needs
+	# per-tick world-authority admission through legacy controller.run().
+	var kind := String(pending_target.get("kind", ""))
+	if budgeted_live_enabled and kind != "generation" and kind != "condition" 			and controller.has_method("run_budgeted_to_tick"):
+		var manifest: Dictionary = controller.get_manifest()
+		if String(manifest.mode) == "LAB":
+			_process_budgeted_live(interval)
+			return
+	if kind == "tick":
 		_process_run_to_tick(interval)
 		return
 	var executed := 0
@@ -374,6 +386,47 @@ func _process(delta: float) -> void:
 			running = false
 			return
 	_refresh_from_controller(false)
+
+
+## Actual _process path: account logical time only when a WHOLE canonical
+## tick was successfully committed. Unspent ticks remain owed on later frames.
+func _process_budgeted_live(interval: float) -> void:
+	var due: int = mini(int(_elapsed / interval), MAX_TICKS_PER_FRAME)
+	if due <= 0:
+		return
+	var current: int = int(controller.tick())
+	var remaining: int = _manifest_horizon() - current
+	if String(pending_target.get("kind", "")) == "tick":
+		remaining = mini(remaining, int(pending_target.value) - current)
+	if remaining <= 0:
+		running = false
+		_refresh_from_controller(false)
+		return
+	var target: int = current + mini(due, remaining)
+	var result: Dictionary = controller.run_budgeted_to_tick(
+		target, live_cpu_budget_us, live_max_ticks_per_call)
+	if not bool(result.get("success", false)):
+		running = false
+		_refresh_from_controller(false)
+		return
+	var completed: int = int(result.get("replayed_ticks", 0))
+	_consume_due(float(completed) * interval)
+	if int(controller.tick()) >= _manifest_horizon() or (
+			String(pending_target.get("kind", "")) == "tick" \
+			and int(controller.tick()) >= int(pending_target.value)):
+		running = false
+	_refresh_from_controller(false)
+
+## Host settings, outside manifest and never persisted as biology truth.
+func configure_live_cpu_budget(enabled: bool, budget_us: int = 30000,
+		max_ticks_per_call: int = 2) -> bool:
+	if budget_us < 1 or budget_us > 1000000000 \
+			or max_ticks_per_call < 1 or max_ticks_per_call > 64:
+		return false
+	budgeted_live_enabled = enabled
+	live_cpu_budget_us = budget_us
+	live_max_ticks_per_call = max_ticks_per_call
+	return true
 
 ## RUN TO TICK executes whole batches through controller.run (still bounded
 ## by the wall-clock cadence and MAX_TICKS_PER_FRAME per frame).
@@ -490,6 +543,15 @@ func _update_status_bar(snapshot: Dictionary) -> void:
 		int(snapshot.get("tick", 0)), _wall_elapsed, organism_views.size(),
 		String(snapshot.get("status", "?")), hash_short,
 	]
+	if budgeted_live_enabled and controller.has_method("get_budget_telemetry"):
+		var metrics: Dictionary = controller.get_budget_telemetry()
+		if int(metrics.get("calls", 0)) > 0:
+			_status_bar.text += " | CPU %.1fms est %dus | debt %d | overruns %d" % [
+				float(metrics.get("last_call_wall_us", 0)) / 1000.0,
+				int(metrics.get("estimated_tick_us", 0)),
+				int(metrics.get("remaining_debt_ticks", 0)),
+				int(metrics.get("overrun_calls", 0)),
+			]
 
 # --- P3 organism markers + P6 generic morphology meshes -----------------------
 
