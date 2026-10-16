@@ -739,6 +739,14 @@ func advance_staged_preattach(token: int, max_nodes: int = 1) -> Dictionary:
 		var candidate: MultiMeshInstance3D = _r3c3r2_candidate_nodes[_r3c21_preattached_count]
 		if candidate == null or not is_instance_valid(candidate) or candidate.get_parent() != null:
 			return _r3c3r2_fail("R3C21_PREATTACH_CANDIDATE_INVALID")
+		# Old and pending trees/grass may have the same canonical name.
+		# Temporarily prefix invisible siblings to avoid Godot's automatic
+		# Node.name collision suffix, then restore accepted name at commit.
+		var canonical_name := String(candidate.name)
+		if canonical_name.is_empty():
+			return _r3c3r2_fail("R3C21_CANDIDATE_NAME_REQUIRED")
+		candidate.set_meta("r3c21_canonical_name", canonical_name)
+		candidate.name = "_R3C21_PENDING_%d_%d" % [token, _r3c21_preattached_count]
 		candidate.visible = false
 		add_child(candidate)
 		_r3c21_preattached_count += 1
@@ -804,6 +812,13 @@ func commit_staged_generation(token: int) -> Dictionary:
 		for instance in _r3c3r2_candidate_nodes:
 			if instance.get_parent() != self or instance.visible:
 				return _r3c3r2_fail("R3C21_INCOMPLETE_HIDDEN_CANDIDATE")
+			var canonical_name := String(
+				instance.get_meta("r3c21_canonical_name", "")
+			)
+			if canonical_name.is_empty() or not String(instance.name).begins_with("_R3C21_PENDING_"):
+				return _r3c3r2_fail("R3C21_CANONICAL_NAME_FENCE_FAILED")
+			instance.name = canonical_name
+			instance.remove_meta("r3c21_canonical_name")
 			instance.visible = true
 	else:
 		_clear_instances()

@@ -53,6 +53,8 @@ class R3C21Source(unittest.TestCase):
         self.assertIn("max_nodes: int = 1", m)
         self.assertIn("_r3c21_preattached_count", m)
         self.assertIn("candidate.visible = false", m)
+        self.assertIn('candidate.set_meta("r3c21_canonical_name"', m)
+        self.assertIn('candidate.name = "_R3C21_PENDING_%d_%d"', m)
         self.assertIn("add_child(candidate)", m)
         self.assertIn("R3C21_STALE_PREATTACH_TOKEN", m)
         self.assertIn("R3C21_PREATTACH_BEFORE_UPLOAD_COMPLETE", m)
@@ -64,10 +66,15 @@ class R3C21Source(unittest.TestCase):
         m = method(PLACE, "commit_staged_generation")
         self.assertIn("R3C21_PREATTACH_NOT_COMPLETE", m)
         self.assertIn('R3C21_INCOMPLETE_HIDDEN_CANDIDATE', m)
+        self.assertIn('R3C21_CANONICAL_NAME_FENCE_FAILED', m)
+        self.assertIn('instance.get_meta("r3c21_canonical_name"', m)
+        self.assertIn('instance.remove_meta("r3c21_canonical_name")', m)
         self.assertIn("if instance.get_parent() != self or instance.visible:", m)
         self.assertIn("_r3c21_retired_nodes.append(child)", m)
         self.assertIn("_rebuild_live_lists_from_children()", m)
         self.assertIn("_r3c3r2_phase = R3C3R2_PHASE_COMMITTED", m)
+        self.assertIn('candidate.get_meta("r3c21_canonical_name", "")',
+            method(WORLD, "_r3c3r2_verify_uploaded_transforms"))
 
     def test_abort_invisible_candidates_and_drain_old_gpu(self):
         cancel=method(PLACE,"cancel_staged_generation")

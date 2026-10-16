@@ -76,6 +76,53 @@ func _run() -> void:
 	check(candidate.get_r3c3_staged_geometry_report().get("last_error", "") == "",
 		"no dropped CPU or preattach state")
 
+	# Real Godot Node-name collision falsifier: old Grass_short remains visible
+	# while a NEW Grass_short candidate is registered hidden in the same
+	# SceneTree parent. Only the accepted name may appear after commit.
+	var miniature = Preattach.new()
+	miniature.name = "R3C21SameNameFalsifier"
+	root.add_child(miniature)
+	check(bool(miniature.setup(legacy, legacy.pipeline, legacy.assets)),
+		"synthetic one-transform scene uses accepted Earth assets")
+	miniature.configure_frame_paced_preattach(true)
+	var occupied = MultiMeshInstance3D.new()
+	occupied.name = "Grass_short"
+	miniature.add_child(occupied)
+	var started: Dictionary = miniature.begin_staged_generation(
+		989, {}, {}, {"short": [Transform3D.IDENTITY]}, [[], [], []]
+	)
+	check(bool(started.get("success", false)),
+		"same-name new grass candidate allocated detached")
+	var uploaded: Dictionary = miniature.advance_staged_upload(8)
+	check(bool(uploaded.get("success", false)) and
+		bool(uploaded.get("details", {}).get("ready", false)),
+		"one exact GPU transform uploaded")
+	var attached: Dictionary = miniature.advance_staged_preattach(989, 1)
+	check(bool(attached.get("success", false)) and
+		bool(attached.get("details", {}).get("ready", false)),
+		"new grass candidate registered while old name is occupied")
+	check(occupied.name == "Grass_short" and occupied.visible,
+		"old same-name visible group remains unchanged")
+	check(miniature.get_child_count() == 2,
+		"old and new hidden vegetation coexist in SceneTree")
+	var hidden = miniature.get_child(1)
+	check(not hidden.visible and String(hidden.name).begins_with("_R3C21_PENDING_"),
+		"new candidate name collision prevented before commit")
+	check(String(hidden.get_meta("r3c21_canonical_name", "")) == "Grass_short",
+		"exact accepted grass bucket name preserved as private metadata")
+	var committed_mini: Dictionary = miniature.commit_staged_generation(989)
+	check(bool(committed_mini.get("success", false)),
+		"same-name candidate canonical swap succeeds")
+	check(miniature.get_child_count() == 1 and
+		String(miniature.get_child(0).name) == "Grass_short" and
+		miniature.get_child(0).visible,
+		"canonical Grass_short restored, exactly one visible group remains")
+	check(int(miniature.get_staged_upload_report().get("r21_retired_remaining", -1)) == 1,
+		"old same-name group queued for bounded retirement")
+	check(bool(miniature.drain_retired_visuals(1).get("success", false)),
+		"detached old GPU object drained safely")
+	miniature.queue_free()
+
 	# Forest guarantees visible tree/grass candidates. The accepted R2 fixture
 	# already demonstrated full transform-by-transform parity at this biome.
 	var forest: Vector3 = legacy.find_biome_direction("forest")

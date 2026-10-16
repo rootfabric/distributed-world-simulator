@@ -744,7 +744,10 @@ func _r3c3r2_verify_uploaded_transforms(token: int) -> bool:
 		expected_by_name["Rocks_%d" % variant] = job.get_rock_buckets()[variant]
 	var verified_total := 0
 	for candidate in placement_system._r3c3r2_candidate_nodes:
-		var node_name: String = String(candidate.name)
+		var node_name: String = (
+			String(candidate.get_meta("r3c21_canonical_name", ""))
+			if _r3c21_frame_paced_enabled else String(candidate.name)
+		)
 		if not expected_by_name.has(node_name):
 			_r3c3_fail("R3C3R2_VERIFY_UNKNOWN_CANDIDATE:" + node_name)
 			return false
