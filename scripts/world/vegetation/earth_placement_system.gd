@@ -722,7 +722,9 @@ func advance_staged_preattach(token: int, max_nodes: int = 1) -> Dictionary:
 		return _r3c3r2_reject("R3C21_STALE_PREATTACH_TOKEN")
 	if max_nodes < 1:
 		return _r3c3r2_reject("R3C21_PREATTACH_BUDGET_REQUIRED")
-	if _r3c3r2_phase not in [R3C3R2_PHASE_READY, R3C21_PHASE_PREATTACH, R3C21_PHASE_PREATTACHED]:
+	if not (_r3c3r2_phase in [
+		R3C3R2_PHASE_READY, R3C21_PHASE_PREATTACH, R3C21_PHASE_PREATTACHED
+	]):
 		return _r3c3r2_reject("R3C21_PREATTACH_BEFORE_GPU_READY")
 	if _r3c3r2_instances_uploaded != _r3c3r2_instance_count_total:
 		return _r3c3r2_reject("R3C21_PREATTACH_BEFORE_UPLOAD_COMPLETE")

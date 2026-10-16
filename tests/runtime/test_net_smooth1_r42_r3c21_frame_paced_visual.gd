@@ -59,7 +59,7 @@ func _run() -> void:
 	check(int(candidate.get_r3c3_staged_geometry_report().get("target_token", 0)) == 1,
 		"duplicate default spawn remains coalesced")
 	var ready := await _await_visual_ready(candidate, MAX_WAIT_MS)
-	check(ready, "first Earth presentation committed after paced CPU/GPU");
+	check(ready, "first Earth presentation committed after paced CPU/GPU")
 	if not ready:
 		legacy.queue_free()
 		candidate.queue_free()
