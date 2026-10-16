@@ -1,0 +1,50 @@
+name: NET-SMOOTH1 R4.2 R3C3 Earth Work Order R0
+
+on:
+  push:
+    branches:
+      - plan/net-smooth1-r42-r3c3-earth-streaming-r0
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: net-smooth-r3c3-earth-work-order-r0
+  cancel-in-progress: true
+
+jobs:
+  baseline-source-only:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Baseline source call graph and config counts (NOT Godot acceptance)
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/net-smooth1/r3c3-earth-source-r0
+          python -m unittest discover -s tests/tools -p test_net_smooth1_r42_r3c3_earth_hotpath_audit.py -v 2>&1 | tee artifacts/net-smooth1/r3c3-earth-source-r0/source-test.log
+          python tools/net_smooth1/r3c3_earth_hotpath_audit.py --require-baseline-blocking --output artifacts/net-smooth1/r3c3-earth-source-r0/baseline.json
+          git rev-parse HEAD > artifacts/net-smooth1/r3c3-earth-source-r0/HEAD.txt
+          git rev-parse 'HEAD^{tree}' > artifacts/net-smooth1/r3c3-earth-source-r0/TREE.txt
+          git status --porcelain --untracked-files=no > artifacts/net-smooth1/r3c3-earth-source-r0/tracked.txt
+          test ! -s artifacts/net-smooth1/r3c3-earth-source-r0/tracked.txt
+      - name: Evidence manifest
+        if: always()
+        run: |
+          mkdir -p artifacts/net-smooth1/r3c3-earth-source-r0
+          cd artifacts/net-smooth1/r3c3-earth-source-r0
+          find . -type f ! -name SHA256SUMS.txt -print0 | sort -z | xargs -0 -r sha256sum > SHA256SUMS.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: r3c3-earth-r0-source-baseline
+          path: artifacts/net-smooth1/r3c3-earth-source-r0/
+          if-no-files-found: error
+          retention-days: 21
