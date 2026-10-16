@@ -15,6 +15,16 @@ const FieldContract = preload("res://scripts/research/ecology/v2/environment_fie
 const Field = preload("res://scripts/research/ecology/v2/local_environment_field_v1.gd")
 const Feedback = preload("res://scripts/research/ecology/v2/persistent_environmental_feedback_v1.gd")
 
+# Frozen A14.4 R1 3-tick state hashes from independent Linux/Windows exact
+# at e826a3f9bea3f2a96a8a98979a65671e25fdd616 (not computed from
+# current implementation under test). Fail closed on biological drift.
+const GOLDEN_TICK3_SHA256 := {
+	4: "52f5b3db3502313ad64d26b5b9ff0aebfe72ca8765ff9d9b2bf93c937c98a92c",
+	32: "e49d17c9761025db56218c7ceb2c3da569d8d951cc649dc352adeb888b55e399",
+	96: "bb02e20bdc3ddf8c714885673995a11cd573a70adfcca04b23b6d3a069a444d0",
+	192: "43c30e4202634ee27f8514028469b09b505cca470e39b9b7801b1d9c939e5f71",
+	256: "05c2c2c626f2e37c715581dd80a047aa635b747e4aa33a983c68cdc6798fbc9d",
+}
 const SIZES := [4, 32, 96, 192, 256]
 const TICKS := 3
 var checks := 0
@@ -139,6 +149,8 @@ func _profile(n: int, blueprint: Dictionary) -> void:
 		"population=%d global replay equals continuous bytes" % n)
 	_check(Runtime.state_hash(reference) == Runtime.state_hash(cursor),
 		"population=%d canonical state integrity equal" % n)
+	_check(Runtime.state_hash(cursor) == String(GOLDEN_TICK3_SHA256.get(n, "")),
+		"population=%d frozen A14.4 three-tick golden state hash" % n)
 	var manifest_hash := C.digest({
 		"schema": "dws.ecology.a14-4-scale-profile.v1", "population": n})
 	var a := Checkpoint.create(manifest_hash, reference)
