@@ -86,15 +86,23 @@ class R3C3R1SourceContract(unittest.TestCase):
         process = method(WORLD, "_r3c3_advance_job")
         self.assertIn("if not job.is_ready():", process)
         commit = method(WORLD, "_r3c3_commit_local_geometry")
-        self.assertLess(commit.index("job.get_arrays()"), commit.index("local_surface.mesh = committed_mesh"))
-        self.assertIn("placement_system.regenerate(", commit)
-        self.assertIn("_r3c3_generation_committed = token", commit)
-        self.assertIn("earth_rebuilt.emit(", commit)
+        # R2: the geometry commit publishes NOTHING visual; the mesh is only
+        # staged pending and vegetation moves to the staged CPU job.
+        self.assertIn("job.get_arrays()", commit)
+        self.assertNotIn("local_surface.mesh =", commit)
+        self.assertNotIn("placement_system.regenerate(", commit)
+        visual = method(WORLD, "_r3c3r2_commit_visual")
+        # R2 atomic swap: vegetation commit precedes the terrain publication.
+        self.assertLess(visual.index("commit_staged_generation("), visual.index("local_surface.mesh ="))
+        self.assertIn("_r3c3_generation_committed = token", visual)
+        self.assertIn("earth_rebuilt.emit(", visual)
 
     def test_explicit_r2_limits_and_no_false_perf_pass(self):
         report = method(WORLD, "get_r3c3_staged_geometry_report")
-        self.assertIn('"vegetation_staged": false', report)
-        self.assertIn('"gpu_upload_staged": false', report)
+        # R2: staged vegetation/GPU upload are gated behind the same explicit
+        # opt-in flag and must never claim an unconditional performance pass.
+        self.assertIn('"vegetation_staged": _r3c3r2_enabled', report)
+        self.assertIn('"gpu_upload_staged": _r3c3r2_enabled', report)
         self.assertIn('"visual_region_ready": (', report)
         self.assertIn('"last_slice_us"', report)
         self.assertIn('"last_commit_us"', report)
