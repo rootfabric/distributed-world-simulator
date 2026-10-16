@@ -25,6 +25,7 @@ var _generation_token := 0
 var _seed := 0
 var _stage := STAGE_FAILED
 var _attempt_cursor := 0
+var _attempts_total := 0
 var _rng := RandomNumberGenerator.new()
 var _near_buckets: Dictionary = {}
 var _billboard_buckets: Dictionary = {}
@@ -174,6 +175,12 @@ func get_rng_draw_count() -> int:
 	return _sample_draw_count
 
 
+# Exactly one pipeline.sample per attempt: this equals the legacy placement
+# `pipeline_samples` accounting even when slices interleave with geometry.
+func get_total_attempts() -> int:
+	return _attempts_total
+
+
 func get_summary() -> Dictionary:
 	return {
 		"seed": _seed,
@@ -213,6 +220,7 @@ func _step_trees() -> void:
 		return
 	var rng := _rng
 	_attempt_cursor += 1
+	_attempts_total += 1
 	var offset: Vector2 = _random_disk(rng, billboard_radius)
 	var distance: float = offset.length()
 	var direction: Vector3 = _offset_direction(_anchor_direction, _east, _north, offset)
@@ -263,6 +271,7 @@ func _step_grass() -> void:
 		return
 	var rng := _rng
 	_attempt_cursor += 1
+	_attempts_total += 1
 	var offset: Vector2 = _random_disk(rng, radius)
 	var direction: Vector3 = _offset_direction(_anchor_direction, _east, _north, offset)
 	var state: Dictionary = _pipeline_sample(direction)
@@ -305,6 +314,7 @@ func _step_rocks() -> void:
 		return
 	var rng := _rng
 	_attempt_cursor += 1
+	_attempts_total += 1
 	var offset: Vector2 = _random_disk(rng, radius)
 	var direction: Vector3 = _offset_direction(_anchor_direction, _east, _north, offset)
 	var state: Dictionary = _pipeline_sample(direction)

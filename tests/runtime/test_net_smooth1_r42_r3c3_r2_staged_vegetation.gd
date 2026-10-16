@@ -59,8 +59,8 @@ func _run() -> void:
 	var early: Dictionary = staged.get_r3c3_staged_geometry_report()
 	check(bool(early.get("vegetation_staged", false)), "R2 staged vegetation advertised")
 	check(bool(early.get("gpu_upload_staged", false)), "R2 staged GPU upload advertised")
-	check(String(early.get("vegetation_phase", "")) == "IDLE",
-		"no vegetation phase before geometry ready")
+	check(String(early.get("vegetation_phase", "")) == "VEGETATION_CPU",
+		"vegetation CPU preparation starts with the initial region request")
 	var ready: bool = await _await_staged_world(staged, MAX_VISUAL_WAIT_MS)
 	check(ready, "R2 staged global/local geometry plus vegetation complete")
 	if not ready:
