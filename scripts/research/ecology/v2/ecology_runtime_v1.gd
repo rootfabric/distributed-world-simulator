@@ -391,7 +391,7 @@ static func advance_spatial_fidelity(state: Dictionary, options: Dictionary,
 ## the original tick until A5 prepare -> one global allocation -> A5 advance
 ## -> propagule admission -> A6 feedback have ALL completed successfully.
 ## Host must hold inputs/options and never checkpoint the speculative cursor.
-const STAGED_TICK_SCHEMA := "dws.ecology.staged-global-tick.v1"
+const STAGED_TICK_SCHEMA := "dws.ecology.staged-global-tick.v2"
 const STAGED_TICK_KEYS := [
 	"schema", "source_hash", "options_hash", "lifecycle", "checksum",
 ]
@@ -413,7 +413,7 @@ static func begin_staged_global_tick(state: Dictionary, options: Dictionary,
 		return _fail("RUNTIME_STAGED_A5:" + String(started.get("error", "?")))
 	return {"success": true, "complete": false, "phase": "PREPARE",
 		"cursor": _staged_tick_cursor(
-			Runtime_state_hash_for_staging(state), options_hash, started.cursor)}
+			String(state.integrity_hash), options_hash, started.cursor)}
 
 static func resume_staged_global_tick(state: Dictionary, options: Dictionary,
 		cursor: Dictionary, max_worksets_per_call: int = 1) -> Dictionary:
@@ -426,12 +426,15 @@ static func resume_staged_global_tick(state: Dictionary, options: Dictionary,
 			or String(cursor.schema) != STAGED_TICK_SCHEMA \
 			or not cursor.lifecycle is Dictionary:
 		return _fail("RUNTIME_STAGED_CURSOR_SCHEMA")
-	var unsigned: Dictionary = cursor.duplicate(true)
-	unsigned.checksum = ""
-	if C.digest(unsigned).is_empty() \
-			or C.digest(unsigned) != String(cursor.checksum):
+	# The inner lifecycle checksum protects every deep field/partial result.
+	# Bind that checksum and immutable source/options in a small outer envelope.
+	# Lifecycle.staged_resume verifies the full inner payload separately.
+	var expected_checksum := _staged_tick_envelope_hash(
+		String(cursor.source_hash), String(cursor.options_hash),
+		String(cursor.lifecycle.get("checksum", "")))
+	if expected_checksum.is_empty() or expected_checksum != String(cursor.checksum):
 		return _fail("RUNTIME_STAGED_CURSOR_CHECKSUM")
-	if String(cursor.source_hash) != Runtime_state_hash_for_staging(state):
+	if String(cursor.source_hash) != String(state.integrity_hash):
 		return _fail("RUNTIME_STAGED_SOURCE_CHANGED")
 	if String(cursor.options_hash) != C.digest(options):
 		return _fail("RUNTIME_STAGED_OPTIONS_CHANGED")
@@ -471,12 +474,28 @@ static func resume_staged_global_tick(state: Dictionary, options: Dictionary,
 static func Runtime_state_hash_for_staging(state: Dictionary) -> String:
 	return state_hash(state)
 
+static func _staged_tick_envelope_hash(source_hash: String,
+		options_hash: String, lifecycle_checksum: String) -> String:
+	# Only a cursor checksum is stored here; staged A5 checks the complete
+	# owned lifecycle cursor at resume. Hashing the entire nested A5 payload
+	# twice provided no extra corruption coverage but multiplied O(N) cost.
+	if source_hash.length() != 64 or options_hash.length() != 64 \
+			or lifecycle_checksum.length() != 64:
+		return ""
+	return C.digest({
+		"schema": STAGED_TICK_SCHEMA, "source_hash": source_hash,
+		"options_hash": options_hash, "lifecycle_checksum": lifecycle_checksum,
+	})
+
 static func _staged_tick_cursor(source_hash: String, options_hash: String,
 		lifecycle_cursor: Dictionary) -> Dictionary:
+	# Lifecycle.staged_begin/resume return a detached owned cursor. Avoid a
+	# second deep copy in the wrapper; the canonical state remains unchanged.
 	var value := {"schema": STAGED_TICK_SCHEMA, "source_hash": source_hash,
-		"options_hash": options_hash, "lifecycle": lifecycle_cursor.duplicate(true),
+		"options_hash": options_hash, "lifecycle": lifecycle_cursor,
 		"checksum": ""}
-	value.checksum = C.digest(value)
+	value.checksum = _staged_tick_envelope_hash(
+		source_hash, options_hash, String(lifecycle_cursor.get("checksum", "")))
 	return value
 
 ## Primitive 1: the A5 lifecycle step — executed EXACTLY once per tick.
