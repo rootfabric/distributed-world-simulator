@@ -115,7 +115,14 @@ func _ready() -> void:
 	earth_world = EarthWorldScript.new()
 	earth_world.name = "ProceduralEarthWorld"
 	add_child(earth_world)
-	if not earth_world.setup(logger):
+	# R3C3 R1 has no server/authority effect: only the local graphical Earth
+	# game-client may advance staged CPU geometry over presentation frames.
+	# Legacy world setup remains byte-identical with the env flag disabled.
+	var staged_client_earth := (
+		runtime_role == "game-client"
+		and OS.get_environment("DWS_NET_R3C3_STAGED_EARTH") == "1"
+	)
+	if not earth_world.setup(logger, staged_client_earth):
 		push_error("Earth runtime failed to initialize procedural terrain.")
 		return
 
