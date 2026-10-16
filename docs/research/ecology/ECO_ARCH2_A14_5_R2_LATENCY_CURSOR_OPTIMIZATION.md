@@ -28,6 +28,8 @@ A14.4 Linux/Windows profiles demonstrate that the budget scheduler carries 1.5â€
 - exactly one global ALLOCATE call, bounded PREPARE/ADVANCE slices;
 - per-phase p50/p95/p99/peak/call count, max cursor encoded bytes, and an apples-to-apples microbenchmark of full nested copy+hash against compact envelope hash.
 
+**Independent golden vectors:** the existing A14.4 scale suite now asserts five frozen three-tick SHA-256 vectors at 4/32/96/192/256 organisms, extracted from the accepted A14.4 R1 Linux double exact evidence (run 38743787171, attempt 2, HEAD e826a3f9...). This guards against *both* current code paths drifting together while remaining internally equal. The fixture, seed, tick count and canonical runtime inputs are unchanged.
+
 The wall-time and memory measurements are *observations* emitted as JSONL artifacts, never canonical inputs or determinism gates. No speedup threshold is asserted until cross-host data exists. A14.5 R1 staged tests and A14.4/A14.3/A14.2/A13 regressions remain mandatory. Exact Linux and Windows use Godot 4.7.1 double and frozen engine hashes.
 
 ## Remaining risks / R2 next slice
