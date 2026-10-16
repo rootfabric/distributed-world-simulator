@@ -94,11 +94,20 @@ func _write_loop() -> void:
 			# proof while the server is alive. This flush is on the trace IO
 			# worker ONLY; it never blocks the game or M6 checkpoint thread.
 			var record_kind := String(record.get("kind", ""))
-			var record_stage := String(record.get("data", {}).get("stage", ""))
+			# R3C2-R2 trace-worker repair: stage may be an integer (e.g.
+			# r3c2_postcommit_stage). Godot has no String(int) constructor; a
+			# String(int) call here raised a SCRIPT ERROR inside this IO
+			# worker, killing the trace thread so END was never written.
+			# str() accepts both String and int stage values.
+			var record_stage := str(record.get("data", {}).get("stage", ""))
 			if (
 				(record_kind == "p1b_item_async_stages"
 					and record_stage in ["SUBMIT", "DURABLE_COMMIT"])
 				or record_kind == "r3c2_pre_ack_hold"
+				# Fault falsifiers must observe durable generation progress on
+				# disk-backed evidence while the server is alive; buffered rows
+				# would force the driver to race an unknown writer state.
+				or record_kind == "checkpoint_complete"
 			):
 				file.flush()
 			bytes += length

@@ -128,6 +128,9 @@ class Run:
         self.token = uuid.uuid4().hex + uuid.uuid4().hex
         self.operation = f"operation/r3c2/fault/{uuid.uuid4().hex[:16]}"
         self.operation_hash = hashlib.sha256(self.operation.encode()).hexdigest()[:16]
+        self.settled_generation = 0
+        self.submit_thread = None
+        self.submit_received: dict = {}
         self.evidence: list[str] = []
         self.summary: dict = {"schema": "dws.net_smooth.r3c2_fault_process.v1",
             "window": window, "operation_id": self.operation,
@@ -222,6 +225,96 @@ class Run:
             time.sleep(.25)
         raise TimeoutError("client never reached connected state")
 
+    def wait_periodic_settled(self, trace: Path, min_generation: int,
+                              deadline: float = 90) -> None:
+        """Wait until the in-flight periodic checkpoint generation has landed.
+
+        The exact ITEM submit must not race a busy async writer: a reservation
+        while a periodic checkpoint is still committing is rejected with
+        P1A_WAIT_PRIOR_PERIODIC backpressure (observed on the Windows double).
+        checkpoint_complete rows are flush-pinned by the trace IO worker, so
+        this observes real durable generation progress, not buffered state.
+        """
+        stop = time.monotonic() + deadline
+        seen_events = 0
+        while time.monotonic() < stop:
+            try:
+                event, seen_events = self.next_checkpoint_complete(
+                    trace, seen_events, deadline=deadline)
+                if int(event.get("data", {}).get("generation", 0)) >= min_generation:
+                    self.settled_generation = int(
+                        event.get("data", {}).get("generation", 0))
+                    return
+                # An older generation completed; keep waiting for a newer one.
+                deadline = max(5.0, stop - time.monotonic())
+            except TimeoutError:
+                break
+        raise TimeoutError(
+            f"no checkpoint_complete generation >= {min_generation}")
+
+    def next_checkpoint_complete(self, trace: Path, already_seen: int,
+                                 deadline: float) -> tuple[dict, int]:
+        """Return the `already_seen+1`-th flush-pinned checkpoint_complete."""
+        stop = time.monotonic() + deadline
+        while time.monotonic() < stop:
+            if trace.exists():
+                raw = trace.read_text(encoding="utf-8", errors="replace")
+                lines = raw.splitlines()
+                if not raw.endswith("\n") and lines:
+                    lines = lines[:-1]
+                matches = 0
+                for line in lines:
+                    try:
+                        event = json.loads(line)
+                    except json.JSONDecodeError:
+                        continue
+                    if event.get("kind") != "checkpoint_complete":
+                        continue
+                    matches += 1
+                    if matches > already_seen:
+                        return event, matches
+            time.sleep(.05)
+        raise TimeoutError("no new checkpoint_complete event")
+
+    def submit_exact_item(self, trace: Path, attempts: int = 3) -> dict:
+        """Submit the exact fault ITEM, tolerating bounded writer backpressure.
+
+        A rejected submit is never durable (no ledger entry, no checkpoint
+        mutation), so retrying the same operation_id cannot replay or double
+        commit. Each attempt waits for a fresh settled generation first.
+        """
+        last_error: Exception | None = None
+        for _ in range(attempts):
+            received: dict = {}
+            def submit() -> None:
+                try:
+                    received["reply"] = self.bridge("item.command", {
+                        "command_type": "inventory.select_hotbar",
+                        "payload": {"selected_hotbar_index": 3},
+                        "operation_id": self.operation,
+                    }, timeout=30)
+                except (OSError, RuntimeError, ValueError, KeyError) as exc:
+                    received["transport_error"] = str(exc)
+            thread = threading.Thread(target=submit, daemon=True)
+            thread.start()
+            self.submit_thread = thread
+            self.submit_received = received
+            try:
+                self.wait_trace_event(trace, "p1b_item_async_stages", "SUBMIT")
+                return received
+            except TimeoutError as exc:
+                last_error = exc
+                reply = received.get("reply", {})
+                error_code = str(reply.get("item_command", {}).get("error_code", ""))
+                if error_code not in (
+                    "P1A_WAIT_PRIOR_PERIODIC",
+                    "P1A_GATE_BACKPRESSURE",
+                    "P1A_MUTATION_FENCED",
+                ):
+                    raise
+                self.wait_periodic_settled(trace, self.settled_generation + 1)
+        raise TimeoutError(f"no exact p1b_item_async_stages/SUBMIT marker: {last_error}")
+
     def wait_trace_event(self, path: Path, expected_kind: str, stage: str | None = None,
                          deadline: float = 40) -> dict:
         stop = time.monotonic() + deadline
@@ -261,21 +354,18 @@ class Run:
         self.wait_client_connected(client)
         require(client.poll() is None, "client A independently connected", self.evidence)
 
-        received: dict = {}
-        def submit() -> None:
-            try:
-                received["reply"] = self.bridge("item.command", {
-                    "command_type": "inventory.select_hotbar",
-                    "payload": {"selected_hotbar_index": 3},
-                    "operation_id": self.operation,
-                }, timeout=30)
-            except (OSError, RuntimeError, ValueError, KeyError) as exc:
-                received["transport_error"] = str(exc)
-        thread = threading.Thread(target=submit, daemon=True)
-        thread.start()
-
+        # The exact ITEM submit must not race the join's deferred periodic
+        # checkpoint: wait for a settled generation, then submit with bounded
+        # backpressure retry (a rejected submit is never durable). After the
+        # settle the writer is idle and periodic dispatch is skipped while the
+        # exact ITEM occupies the writer, so re-reading `before` here is the
+        # last generation the precommit/commit assertions can be pinned to.
         trace = self.output / "server1" / "trace.jsonl"
-        self.wait_trace_event(trace, "p1b_item_async_stages", "SUBMIT")
+        self.wait_periodic_settled(trace, int(before["generation"]) + 1)
+        before = active_checkpoint(self.world)
+        require(int(before["generation"]) == self.settled_generation,
+                "settled baseline equals last durable generation", self.evidence)
+        self.submit_exact_item(trace)
         require(server1.poll() is None, "exact ITEM writer submitted under live server1", self.evidence)
         if self.window == "after-commit-before-ack":
             commit = self.wait_trace_event(trace, "p1b_item_async_stages", "DURABLE_COMMIT")
@@ -311,7 +401,9 @@ class Run:
         except subprocess.TimeoutExpired:
             client.kill()
             client.wait(timeout=10)
-        thread.join(timeout=1)
+        received = self.submit_received
+        if self.submit_thread is not None:
+            self.submit_thread.join(timeout=1)
         self.summary["old_client_reply"] = received.get("reply", {})
         self.summary["old_client_transport_error"] = received.get("transport_error", "")
 
