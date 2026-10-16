@@ -1,6 +1,9 @@
-# FABRIC — Current Roadmap after HOLDOUT-R4 Audit
+# FABRIC — Historical Roadmap after HOLDOUT-R4 Audit (superseded)
 
-Дата: 20 сентября 2026.
+Дата исторического среза: 20 сентября 2026.
+
+> **Актуальная карта с 16 октября 2026:** [`FABRIC_ROADMAP_POST_R5_5_2026_10_RU.md`](FABRIC_ROADMAP_POST_R5_5_2026_10_RU.md). R5.5 R4 уже MERGED (#750); здесь ниже сохранена историческая R4/R5 исходная программа, её пометки «CURRENT» больше не являются текущим статусом. Следующий исследовательский срез — R5.6.1 (Construction delta binding), затем R5.6.2–R5.6.5, R5 CLOSE и INTEGRATION-R6. SHIP-LAB-1 — отдельный planned lab; PR #730 ещё требует синхронизации.
+
 
 ## Неизменяемая история
 
@@ -113,13 +116,13 @@ R4.2 TOPOLOGY + DYNAMIC HOLDOUT          ✅ CLOSED
   - independent oracle
               │
               ▼
-SCALE-R5 EXECUTABLE CAMPAIGN             ← CURRENT
+SCALE-R5 EXECUTABLE CAMPAIGN             [HISTORICAL 2026-09-20]
   │
   ├─ R5.0 MEASUREMENT HARNESS + 5k BASELINE      ✅ CLOSED
   │    - разложить стоимость по scan/hash/solve/reconstruct/alloc/RSS/CPU
   │    - зафиксировать корректные измерители до больших оптимизаций
   │
-  ├─ R5.1 QUANTITATIVE SCALE                     ← CURRENT
+  ├─ R5.1 QUANTITATIVE SCALE                     [HISTORICAL 2026-09-20]
   │    - 5k / 20k / 100k canonical parts
   │    - axes: canonical N / active DOF k / boundary b / events / changed deps
   │    - local event vs genuinely global propagation
