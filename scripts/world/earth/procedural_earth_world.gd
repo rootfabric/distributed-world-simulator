@@ -83,6 +83,7 @@ var _r3c3_last_commit_us := 0
 var _r3c3_stale_cancellations := 0
 var _r3c3_last_error := ""
 var _r3c3_local_batch_started := false
+var _r3c3_global_batch_started := false
 var _r3c3_target_initialized := false
 
 
@@ -272,7 +273,10 @@ func _r3c3_begin_global_job() -> void:
 	if not bool(configured.get("success", false)):
 		_r3c3_fail(String(configured.get("error_code", "R3C3_GLOBAL_CONFIG_FAILED")))
 		return
-	pipeline.begin_batch("global_earth_r3c3")
+	# Defer begin_batch until the first actual job slice. The Earth initial
+	# anchor query occurs during setup; counting it in the global mesh batch
+	# would incorrectly inflate baseline geometry sample telemetry.
+	_r3c3_global_batch_started = false
 	if SmoothTrace.enabled():
 		SmoothTrace.emit("r3c3_earth_geometry_requested", {
 			"mode": "global", "global_token": _r3c3_global_token,
@@ -329,6 +333,9 @@ func _process(_delta: float) -> void:
 	# Exactly ONE CPU job slice per process tick. No SceneTree/GPU manipulation
 	# during these slices: only immutable scratch packed arrays are mutated.
 	if _r3c3_global_job != null:
+		if not _r3c3_global_batch_started:
+			pipeline.begin_batch("global_earth_r3c3")
+			_r3c3_global_batch_started = true
 		_r3c3_advance_job("global", _r3c3_global_job, _r3c3_global_token)
 		return
 	if _r3c3_local_job != null:
@@ -390,6 +397,7 @@ func _r3c3_commit_global_geometry(job, token: int) -> void:
 	var profile: Dictionary = pipeline.end_batch()
 	_r3c3_global_ready = true
 	_r3c3_global_job = null
+	_r3c3_global_batch_started = false
 	_r3c3_last_commit_us = Time.get_ticks_usec() - started
 	if SmoothTrace.enabled():
 		SmoothTrace.emit("r3c3_earth_geometry_committed", {
@@ -471,7 +479,13 @@ func get_r3c3_staged_geometry_report() -> Dictionary:
 		"enabled": _r3c3_staged_geometry_enabled,
 		"global_ready": _r3c3_global_ready,
 		"local_ready": _r3c3_local_ready,
-		"visual_region_ready": _r3c3_global_ready and _r3c3_local_ready,
+		"visual_region_ready": (
+			_r3c3_global_ready and _r3c3_local_ready
+			and _r3c3_global_job == null and _r3c3_local_job == null
+		),
+		"old_complete_region_remains_visible_during_recenter": (
+			_r3c3_local_ready and _r3c3_local_job != null
+		),
 		"target_token": _r3c3_token,
 		"committed_token": _r3c3_generation_committed,
 		"global": _r3c3_global_job.get_report() if _r3c3_global_job != null else {},
