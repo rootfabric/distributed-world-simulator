@@ -486,6 +486,8 @@ const R3C3R2_PHASE_UPLOADING := "GPU_UPLOAD_CHUNKS"
 const R3C3R2_PHASE_READY := "UPLOAD_READY"
 const R3C3R2_PHASE_COMMITTED := "COMMITTED"
 const R3C3R2_PHASE_FAILED := "FAILED"
+const R3C21_PHASE_PREATTACH := "GPU_PREATTACH"
+const R3C21_PHASE_PREATTACHED := "GPU_PREATTACHED"
 
 var _r3c3r2_candidate_nodes: Array[MultiMeshInstance3D] = []
 var _r3c3r2_upload_queue: Array = []
@@ -499,6 +501,25 @@ var _r3c3r2_commit_ms := 0.0
 var _r3c3r2_instance_count_total := 0
 var _r3c3r2_instances_uploaded := 0
 var _r3c3r2_source_transforms: Dictionary = {}
+
+# R3C3 R2.1: candidates are still fully GPU-uploaded off-tree. Afterward,
+# register ONE invisible render node per frame rather than registering every
+# MultiMeshInstance3D on the same first-visible commit frame. Only client
+# staged-Earth opt-in activates this behavior. Original R2 is unchanged.
+var _r3c21_pre_attach_enabled := false
+var _r3c21_preattached_count := 0
+var _r3c21_preattach_ms_max := 0.0
+var _r3c21_preattach_ms_total := 0.0
+var _r3c21_retired_nodes: Array[MultiMeshInstance3D] = []
+var _r3c21_retired_released := 0
+var _r3c21_visibility_swap_ms := 0.0
+
+
+func configure_frame_paced_preattach(enabled: bool) -> void:
+	# Called on the scene's main thread before its first vegetation build.
+	# Turning it off cannot strand already preattached candidates in-tree.
+	if _r3c3r2_phase == R3C3R2_PHASE_IDLE 			or _r3c3r2_phase == R3C3R2_PHASE_COMMITTED:
+		_r3c21_pre_attach_enabled = enabled
 
 
 func begin_staged_generation(
@@ -538,6 +559,10 @@ func begin_staged_generation(
 	_r3c3r2_instance_count_total = 0
 	_r3c3r2_instances_uploaded = 0
 	_r3c3r2_source_transforms = {}
+	_r3c21_preattached_count = 0
+	_r3c21_preattach_ms_max = 0.0
+	_r3c21_preattach_ms_total = 0.0
+	_r3c21_visibility_swap_ms = 0.0
 	# Candidates are created detached from the scene tree: the old complete
 	# region remains visible and untouched during the entire upload.
 	var started: int = Time.get_ticks_usec()
@@ -686,11 +711,73 @@ func advance_staged_upload(max_instances: int = 2048) -> Dictionary:
 	}}
 
 
+# R2.1 registration is intentionally after all GPU transforms upload. The
+# candidates join the same parent as the old visible nodes but stay invisible
+# until an atomic visual commit; neither the old LOD lists nor canonical world
+# data are changed during preattach.
+func advance_staged_preattach(token: int, max_nodes: int = 1) -> Dictionary:
+	if not _r3c21_pre_attach_enabled:
+		return _r3c3r2_reject("R3C21_PREATTACH_DISABLED")
+	if token != _r3c3r2_token:
+		return _r3c3r2_reject("R3C21_STALE_PREATTACH_TOKEN")
+	if max_nodes < 1:
+		return _r3c3r2_reject("R3C21_PREATTACH_BUDGET_REQUIRED")
+	if not (_r3c3r2_phase in [
+		R3C3R2_PHASE_READY, R3C21_PHASE_PREATTACH, R3C21_PHASE_PREATTACHED
+	]):
+		return _r3c3r2_reject("R3C21_PREATTACH_BEFORE_GPU_READY")
+	if _r3c3r2_instances_uploaded != _r3c3r2_instance_count_total:
+		return _r3c3r2_reject("R3C21_PREATTACH_BEFORE_UPLOAD_COMPLETE")
+	if _r3c3r2_phase == R3C21_PHASE_PREATTACHED:
+		return {"success": true, "error_code": "", "details": {
+			"ready": true, "attached": 0, "attached_total": _r3c21_preattached_count,
+			"elapsed_us": 0, "token": token,
+		}}
+	var started := Time.get_ticks_usec()
+	var attached := 0
+	while attached < max_nodes and _r3c21_preattached_count < _r3c3r2_candidate_nodes.size():
+		var candidate: MultiMeshInstance3D = _r3c3r2_candidate_nodes[_r3c21_preattached_count]
+		if candidate == null or not is_instance_valid(candidate) or candidate.get_parent() != null:
+			return _r3c3r2_fail("R3C21_PREATTACH_CANDIDATE_INVALID")
+		# Old and pending trees/grass may have the same canonical name.
+		# Temporarily prefix invisible siblings to avoid Godot's automatic
+		# Node.name collision suffix, then restore accepted name at commit.
+		var canonical_name := String(candidate.name)
+		if canonical_name.is_empty():
+			return _r3c3r2_fail("R3C21_CANDIDATE_NAME_REQUIRED")
+		candidate.set_meta("r3c21_canonical_name", canonical_name)
+		candidate.name = "_R3C21_PENDING_%d_%d" % [token, _r3c21_preattached_count]
+		candidate.visible = false
+		add_child(candidate)
+		_r3c21_preattached_count += 1
+		attached += 1
+	var elapsed_us := Time.get_ticks_usec() - started
+	var elapsed_ms := float(elapsed_us) / 1000.0
+	_r3c21_preattach_ms_max = maxf(_r3c21_preattach_ms_max, elapsed_ms)
+	_r3c21_preattach_ms_total += elapsed_ms
+	_r3c3r2_phase = (
+		R3C21_PHASE_PREATTACHED if _r3c21_preattached_count == _r3c3r2_candidate_nodes.size()
+		else R3C21_PHASE_PREATTACH
+	)
+	return {"success": true, "error_code": "", "details": {
+		"ready": _r3c3r2_phase == R3C21_PHASE_PREATTACHED,
+		"attached": attached, "attached_total": _r3c21_preattached_count,
+		"elapsed_us": elapsed_us, "token": token,
+	}}
+
+
 func is_staged_upload_ready(token: int) -> bool:
 	return (
-		_r3c3r2_phase == R3C3R2_PHASE_READY
+		_r3c3r2_phase == (
+			R3C21_PHASE_PREATTACHED if _r3c21_pre_attach_enabled
+			else R3C3R2_PHASE_READY
+		)
 		and _r3c3r2_token == token
 		and _r3c3r2_instances_uploaded == _r3c3r2_instance_count_total
+		and (
+			not _r3c21_pre_attach_enabled
+			or _r3c21_preattached_count == _r3c3r2_candidate_nodes.size()
+		)
 	)
 
 
@@ -703,16 +790,41 @@ func commit_staged_generation(token: int) -> Dictionary:
 		return _r3c3r2_reject("R3C3R2_DOUBLE_COMMIT_SAME_REGION")
 	if _r3c3r2_token != token:
 		return _r3c3r2_reject("R3C3R2_STALE_GENERATION_TOKEN")
-	if _r3c3r2_phase != R3C3R2_PHASE_READY:
+	if _r3c3r2_phase != (
+		R3C21_PHASE_PREATTACHED if _r3c21_pre_attach_enabled
+		else R3C3R2_PHASE_READY
+	):
 		return _r3c3r2_reject("R3C3R2_COMMIT_BEFORE_UPLOAD_READY")
 	if _r3c3r2_instances_uploaded != _r3c3r2_instance_count_total:
 		return _r3c3r2_reject("R3C3R2_INCOMPLETE_GPU_UPLOAD")
 	var started: int = Time.get_ticks_usec()
-	# Atomic point: clear old, attach complete new candidates.
-	_clear_instances()
-	for instance in _r3c3r2_candidate_nodes:
-		instance.visible = true
-		add_child(instance)
+	# Atomic point: clear old, show complete new candidates. R2.1 moved
+	# their expensive SceneTree registration onto earlier separate frames.
+	# Only current live nodes are detached, not the invisible candidates.
+	if _r3c21_pre_attach_enabled:
+		if _r3c21_preattached_count != _r3c3r2_candidate_nodes.size():
+			return _r3c3r2_reject("R3C21_PREATTACH_NOT_COMPLETE")
+		for child in get_children():
+			if child is MultiMeshInstance3D and not _r3c3r2_candidate_nodes.has(child):
+				remove_child(child)
+				child.visible = false
+				_r3c21_retired_nodes.append(child)
+		for instance in _r3c3r2_candidate_nodes:
+			if instance.get_parent() != self or instance.visible:
+				return _r3c3r2_fail("R3C21_INCOMPLETE_HIDDEN_CANDIDATE")
+			var canonical_name := String(
+				instance.get_meta("r3c21_canonical_name", "")
+			)
+			if canonical_name.is_empty() or not String(instance.name).begins_with("_R3C21_PENDING_"):
+				return _r3c3r2_fail("R3C21_CANONICAL_NAME_FENCE_FAILED")
+			instance.name = canonical_name
+			instance.remove_meta("r3c21_canonical_name")
+			instance.visible = true
+	else:
+		_clear_instances()
+		for instance in _r3c3r2_candidate_nodes:
+			instance.visible = true
+			add_child(instance)
 	var committed: Array[MultiMeshInstance3D] = []
 	committed.assign(_r3c3r2_candidate_nodes)
 	_r3c3r2_candidate_nodes = []
@@ -721,6 +833,7 @@ func commit_staged_generation(token: int) -> Dictionary:
 	_r3c3r2_source_transforms = {}
 	_rebuild_live_lists_from_children()
 	_r3c3r2_commit_ms = float(Time.get_ticks_usec() - started) / 1000.0
+	_r3c21_visibility_swap_ms = _r3c3r2_commit_ms
 	_r3c3r2_phase = R3C3R2_PHASE_COMMITTED
 	return {"success": true, "error_code": "", "details": {
 		"token": token,
@@ -734,14 +847,38 @@ func cancel_staged_generation() -> void:
 	# Free detached scratch GPU candidates; nothing invisible accumulates.
 	for instance in _r3c3r2_candidate_nodes:
 		if instance != null and is_instance_valid(instance):
+			if instance.get_parent() == self:
+				remove_child(instance)
 			instance.queue_free()
 	_r3c3r2_candidate_nodes = []
+	_r3c21_preattached_count = 0
 	_r3c3r2_upload_queue = []
 	_r3c3r2_source_transforms = {}
 	_r3c3r2_phase = R3C3R2_PHASE_IDLE
 	_r3c3r2_failure = ""
 	_r3c3r2_instances_uploaded = 0
 	_r3c3r2_instance_count_total = 0
+
+
+# Releasing every old MultiMesh on one render frame can introduce a second
+# renderer spike after an otherwise tiny swap. Detach all old visuals at the
+# atomic handoff, but drain their already-hidden GPU resources one per frame.
+# The queue is bounded by the finite number of renderer instance groups.
+func drain_retired_visuals(max_nodes: int = 1) -> Dictionary:
+	if max_nodes < 1:
+		return _r3c3r2_reject("R3C21_RETIRED_DRAIN_BUDGET_REQUIRED")
+	var drained := 0
+	while drained < max_nodes and not _r3c21_retired_nodes.is_empty():
+		var old = _r3c21_retired_nodes.pop_front()
+		if old != null and is_instance_valid(old):
+			if old.get_parent() != null:
+				return _r3c3r2_fail("R3C21_RETIRED_VISUAL_STILL_PARENTED")
+			old.queue_free()
+		drained += 1
+		_r3c21_retired_released += 1
+	return {"success": true, "error_code": "", "details": {
+		"drained": drained, "remaining": _r3c21_retired_nodes.size(),
+	}}
 
 
 func _rebuild_live_lists_from_children() -> void:
@@ -778,6 +915,13 @@ func get_staged_upload_report() -> Dictionary:
 		"upload_ms_total": _r3c3r2_upload_ms_total,
 		"upload_ms_max": _r3c3r2_upload_ms_max,
 		"commit_ms": _r3c3r2_commit_ms,
+		"r21_preattach_enabled": _r3c21_pre_attach_enabled,
+		"r21_preattach_nodes": _r3c21_preattached_count,
+		"r21_preattach_ms_max": _r3c21_preattach_ms_max,
+		"r21_preattach_ms_total": _r3c21_preattach_ms_total,
+		"r21_visibility_swap_ms": _r3c21_visibility_swap_ms,
+		"r21_retired_remaining": _r3c21_retired_nodes.size(),
+		"r21_retired_released": _r3c21_retired_released,
 	}
 
 

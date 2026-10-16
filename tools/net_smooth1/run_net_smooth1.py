@@ -152,7 +152,9 @@ def play(args, manifest: dict) -> None:
                     slow_item_writer_ms=args.slow_item_writer_ms,
                     r3c2_avatar_prewarm=args.r3c2_avatar_prewarm,
                     r3c2_server_phased=args.r3c2_server_phased,
-                    r3c3_staged_earth=args.r3c3_staged_earth,scenario=args.scenario)
+                    r3c3_staged_earth=args.r3c3_staged_earth,
+                    r3c21_frame_paced_presentation=args.r3c21_frame_paced_presentation,
+                    scenario=args.scenario)
     processes: dict[str,subprocess.Popen] = {}; streams=[]
     def spawn(role: str) -> None:
         target=root/role;target.mkdir(parents=True)
@@ -172,6 +174,8 @@ def play(args, manifest: dict) -> None:
             env['DWS_NET_R3C2_AVATAR_PREWARM']='1'
         if role in ('a','b') and args.r3c3_staged_earth:
             env['DWS_NET_R3C3_STAGED_EARTH']='1'
+        if role in ('a','b') and args.r3c21_frame_paced_presentation:
+            env['DWS_NET_R3C21_FRAME_PACED_PRESENTATION']='1'
         if role == 'server' and args.r3c2_server_phased:
             env['DWS_NET_R3C2_PHASED_ITEM_PUBLICATION']='1'
         if role == 'server' and args.slow_item_writer_ms > 0:
@@ -624,7 +628,9 @@ def main() -> int:
     parser.add_argument('--r3c2-server-phased',action='store_true',
                         help='Opt-in exact-M6-gated ITEM postcommit publication across server frames')
     parser.add_argument('--r3c3-staged-earth',action='store_true',
-                        help='Client-only opt-in incremental Earth geometry, R1 only; vegetation still synchronous')
+                        help='Client-only staged Earth geometry and R2 vegetation')
+    parser.add_argument('--r3c21-frame-paced-presentation', action='store_true',
+                        help='R3C3 R2.1: preattach hidden vegetation nodes per frame before atomic visual swap')
     parser.add_argument('--inject-stall-role',choices=('server','a','b'))
     parser.add_argument('--inject-stall-ms',type=int,default=250)
     args=parser.parse_args()
@@ -635,6 +641,8 @@ def main() -> int:
         parser.error('slow ITEM writer delay must be 0..2000ms')
     if args.slow_item_writer_ms and args.scenario != 'r3-slow-item':
         parser.error('test delay only allowed in R3 slow-item scenario')
+    if args.r3c21_frame_paced_presentation and not args.r3c3_staged_earth:
+        parser.error('R3C21 presentation requires --r3c3-staged-earth')
     run_id=uuid.uuid4().hex[:16]
     args.output=(args.output or ROOT/'artifacts/net-smooth1'/run_id).resolve()
     args.output.mkdir(parents=True,exist_ok=False)
