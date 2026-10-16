@@ -1,0 +1,18 @@
+Godot Engine v4.7.1.stable.double.custom_build.a13da4feb (2026-07-13 21:00:28 UTC) - https://godotengine.org
+
+ERROR: R56 REVIEW: reject duck-typed fake canonical store
+   at: push_error (core/variant/variant_utility.cpp:1023)
+   GDScript backtrace (most recent call first):
+       [0] expect (res://tests/research/fabric_bake0/review_r56_1_owner_and_proposal_falsifier.gd:31)
+       [1] _initialize (res://tests/research/fabric_bake0/review_r56_1_owner_and_proposal_falsifier.gd:65)
+ERROR: R56 REVIEW: reject fake-store commit as authoritative
+   at: push_error (core/variant/variant_utility.cpp:1023)
+   GDScript backtrace (most recent call first):
+       [0] expect (res://tests/research/fabric_bake0/review_r56_1_owner_and_proposal_falsifier.gd:31)
+       [1] _initialize (res://tests/research/fabric_bake0/review_r56_1_owner_and_proposal_falsifier.gd:75)
+ERROR: R56 REVIEW: reject coordinated post-prepare pending rewrite
+   at: push_error (core/variant/variant_utility.cpp:1023)
+   GDScript backtrace (most recent call first):
+       [0] expect (res://tests/research/fabric_bake0/review_r56_1_owner_and_proposal_falsifier.gd:31)
+       [1] _initialize (res://tests/research/fabric_bake0/review_r56_1_owner_and_proposal_falsifier.gd:110)
+FABRIC_R56_REVIEW_FALSIFIER={"checks":9,"failures":["reject duck-typed fake canonical store","reject fake-store commit as authoritative","reject coordinated post-prepare pending rewrite"],"observations":{"accepted_graph_hash":"8d9db86c17e88c7641cba6f76e9d4b07439ad5b03bda4bd56bfdb86d3972050f","canonical_changed":true,"duck_store_start_accepted":true,"external_actual_action":"SET_BOND_STRENGTH","fake_commit_error":"","fake_commit_observed":true,"fake_proposal_prepared":true,"forged_pending_error":"","forged_pending_observed":true,"original_prepared_action":"BREAK_BOND"}}
