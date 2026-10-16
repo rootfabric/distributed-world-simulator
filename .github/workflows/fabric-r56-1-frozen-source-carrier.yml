@@ -1,0 +1,44 @@
+name: FABRIC R5.6.1 R1 Frozen Source Carrier
+on:
+  push:
+    branches: [verify/fabric-r56-1-frozen-source-ee1fa655-r1]
+permissions:
+  contents: read
+jobs:
+  frozen-source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ee1fa655981bba4c7adadd3e7d1d64b3635dfae1
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Assert frozen product and bounded 9-file R5.6.1 scope
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$(git rev-parse HEAD)" = "ee1fa655981bba4c7adadd3e7d1d64b3635dfae1"
+          test "$(git rev-parse 'HEAD^{tree}')" = "52b2c8c94ad69faeff824e9208b5849fcc68268b"
+          test -z "$(git status --porcelain=v1 --untracked-files=no)"
+          BASE=e74c20725a760e56cac01ffd9eaf39a5e9ad5a90
+          test "$(git merge-base HEAD "$BASE")" = "$BASE"
+          git diff --check "$BASE" HEAD
+          test "$(git diff --name-only "$BASE" HEAD | wc -l)" -eq 9
+          test -z "$(git diff --name-only "$BASE" HEAD -- 'scripts/research/fabric_bake0/r5_3_*' 'scripts/research/fabric_bake0/r5_4_*' 'scripts/research/fabric_bake0/r5_5_*' 'scripts/construction/**' 'scripts/simulation/matter/**')"
+          bash -n RUN_FABRIC_R5_6_1_TESTS.sh
+          python3 -m py_compile scripts/research/fabric_bake0/collect_r5_6_1_evidence.py
+      - name: Exact product archive and small ancestry bundle
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          mkdir -p artifact
+          git archive --format=tar.gz --output=artifact/r56-r1-source.tar.gz HEAD
+          git bundle create artifact/r56-r1-incremental.bundle HEAD ^fd60c81bb95bb006ab02a302cce3f80c4045a337 ^56ab06936b902e8c752be06eafa2e4d16465cc82
+          printf 'HEAD=%s\nTREE=%s\nBASE=%s\n' "$(git rev-parse HEAD)" "$(git rev-parse 'HEAD^{tree}')" "e74c20725a760e56cac01ffd9eaf39a5e9ad5a90" > artifact/IDENTITY.txt
+          (cd artifact && sha256sum r56-r1-source.tar.gz r56-r1-incremental.bundle > SHA256SUMS)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fabric-r56-1-frozen-ee1fa655
+          path: artifact/**
+          retention-days: 21
