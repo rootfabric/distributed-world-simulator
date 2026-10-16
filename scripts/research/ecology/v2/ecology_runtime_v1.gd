@@ -385,6 +385,100 @@ static func advance_spatial_fidelity(state: Dictionary, options: Dictionary,
 		"fidelity_plan_hash": plan_hash,
 	}
 
+
+## A14.5 R1 EXPERIMENTAL staged GLOBAL tick. Every incomplete return
+## carries ONLY a host-local cursor. The authoritative runtime remains at
+## the original tick until A5 prepare -> one global allocation -> A5 advance
+## -> propagule admission -> A6 feedback have ALL completed successfully.
+## Host must hold inputs/options and never checkpoint the speculative cursor.
+const STAGED_TICK_SCHEMA := "dws.ecology.staged-global-tick.v1"
+const STAGED_TICK_KEYS := [
+	"schema", "source_hash", "options_hash", "lifecycle", "checksum",
+]
+
+static func begin_staged_global_tick(state: Dictionary, options: Dictionary,
+		tile_span_cells: int = 4, max_members: int = 64) -> Dictionary:
+	var error := validate(state)
+	if not error.is_empty():
+		return _fail(error)
+	var options_hash := C.digest(options)
+	if options_hash.is_empty():
+		return _fail("RUNTIME_STAGED_OPTIONS")
+	var field: Dictionary = state.field
+	var started := Lifecycle.staged_begin(
+		field, state.population, String(field.owner_token),
+		int(field.owner_epoch), int(field.revision),
+		tile_span_cells, max_members)
+	if not bool(started.get("success", false)):
+		return _fail("RUNTIME_STAGED_A5:" + String(started.get("error", "?")))
+	return {"success": true, "complete": false, "phase": "PREPARE",
+		"cursor": _staged_tick_cursor(
+			Runtime_state_hash_for_staging(state), options_hash, started.cursor)}
+
+static func resume_staged_global_tick(state: Dictionary, options: Dictionary,
+		cursor: Dictionary, max_worksets_per_call: int = 1) -> Dictionary:
+	# Strictly check the same authoritative frontier before ANY staged work,
+	# including a no-op and a final publish. Never accept a moved source.
+	var error := validate(state)
+	if not error.is_empty():
+		return _fail(error)
+	if not C.keys(cursor, STAGED_TICK_KEYS) \
+			or String(cursor.schema) != STAGED_TICK_SCHEMA \
+			or not cursor.lifecycle is Dictionary:
+		return _fail("RUNTIME_STAGED_CURSOR_SCHEMA")
+	var unsigned: Dictionary = cursor.duplicate(true)
+	unsigned.checksum = ""
+	if C.digest(unsigned).is_empty() \
+			or C.digest(unsigned) != String(cursor.checksum):
+		return _fail("RUNTIME_STAGED_CURSOR_CHECKSUM")
+	if String(cursor.source_hash) != Runtime_state_hash_for_staging(state):
+		return _fail("RUNTIME_STAGED_SOURCE_CHANGED")
+	if String(cursor.options_hash) != C.digest(options):
+		return _fail("RUNTIME_STAGED_OPTIONS_CHANGED")
+	var progressed := Lifecycle.staged_resume(
+		cursor.lifecycle, state.field, state.population, max_worksets_per_call)
+	if not bool(progressed.get("success", false)):
+		return _fail("RUNTIME_STAGED_A5:" + String(progressed.get("error", "?")))
+	if not bool(progressed.complete):
+		return {"success": true, "complete": false,
+			"phase": String(progressed.phase),
+			"cursor": _staged_tick_cursor(
+				String(cursor.source_hash), String(cursor.options_hash),
+				progressed.cursor)}
+	# The ONLY publication point. Build exactly the intermediate state that
+	# step_lifecycle_spatial_scheduled() would have sealed.
+	var next := state.duplicate(true)
+	next.field = progressed.field
+	next.population = progressed.population.duplicate(true)
+	var outbox: Array = []
+	for propagule in progressed.propagules:
+		outbox.append({"schema": OUTBOX_SCHEMA,
+			"propagule": propagule.duplicate(true)})
+	next.outbox = outbox
+	next = _seal(next)
+	var interim_error := validate(next)
+	if not interim_error.is_empty():
+		return _fail("RUNTIME_STAGED_INTERMEDIATE:" + interim_error)
+	var admitted := admit_propagules(next, options)
+	if not bool(admitted.get("success", false)):
+		return _fail("RUNTIME_STAGED_ADMISSION:" + String(admitted.get("error", "?")))
+	var finished := step_feedback(admitted.state)
+	if not bool(finished.get("success", false)):
+		return _fail("RUNTIME_STAGED_FEEDBACK:" + String(finished.get("error", "?")))
+	return {"success": true, "complete": true, "phase": "COMPLETE",
+		"state": finished.state, "canonical_tick": int(finished.state.tick)}
+
+static func Runtime_state_hash_for_staging(state: Dictionary) -> String:
+	return state_hash(state)
+
+static func _staged_tick_cursor(source_hash: String, options_hash: String,
+		lifecycle_cursor: Dictionary) -> Dictionary:
+	var value := {"schema": STAGED_TICK_SCHEMA, "source_hash": source_hash,
+		"options_hash": options_hash, "lifecycle": lifecycle_cursor.duplicate(true),
+		"checksum": ""}
+	value.checksum = C.digest(value)
+	return value
+
 ## Primitive 1: the A5 lifecycle step — executed EXACTLY once per tick.
 ## Advances life state and field intake on the single current truth.
 ## Emitted propagules enter the state outbox as paid-but-unmaterialized
