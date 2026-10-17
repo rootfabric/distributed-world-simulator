@@ -128,7 +128,7 @@ func _run() -> void:
 	var forest: Vector3 = legacy.find_biome_direction("forest")
 	check(forest.length_squared() > 0.8, "independent forest anchor found")
 	var committed_before = candidate.local_surface.mesh
-	var anchor_before := candidate.surface_anchor_world
+	var anchor_before: Vector3 = candidate.surface_anchor_world
 	var token_before := int(data.get("committed_token", 0))
 	var old_live: Array = candidate.placement_system.get_children().duplicate()
 
