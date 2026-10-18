@@ -135,3 +135,28 @@ independent adversarial Reviewer and Verifier (including new falsifiers),
 zero blocking defects, documented numerical error envelope, source identity
 unchanged, research-only human merge authorization. Do not mark MERGE_READY on
 implementer evidence alone.
+
+## R2 R1 numerical conditioning repair (mandatory)
+
+Independent canonical Linux Godot falsifier on the initial R2 HEAD proved an
+unsafe finite result for a physically valid point-mass pair: x=100000000 m
+and x=100000001 m, both 1 kg. Original index returned Iyy=0 instead of
+0.5 kg m^2 due to raw-moment/centroid catastrophic cancellation.
+
+The narrow fix stores all ten Fenwick moments in a **source-anchored translated
+frame** (reference point = first canonical part's position at initialization),
+returns center of mass in original construct-local coordinates, and performs
+all sparse updates in that same immutable per-index frame. It also conservatively
+rejects a range with `R56_R2_RANGE_NUMERIC_PRECISION_UNSAFE` if the estimated
+double-roundoff from prefix differences/parallel-axis subtraction exceeds the
+required tensor accuracy. Rejection changes no live index state. The threshold
+is an engineering fail-closed heuristic, not a mathematical proof of universal
+error bounds and does not grant arbitrary-coordinate dynamic-body support.
+
+Mandatory numeric regression: 54/0, five large-offset point pairs through
+10^9 m with inertia parity, one sparse update preserving O(log N) BIT work,
+and a separate narrow remote span that must fail closed as ill-conditioned.
+Original independent RED falsifier is retained outside the product regression
+to prove RED->GREEN on old and repaired HEAD. Native Linux/Windows runners and
+strict collector v2 require the new numeric gate; eleven synthetic evidence
+corruptions must fail closed.

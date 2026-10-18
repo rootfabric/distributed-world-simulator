@@ -74,10 +74,12 @@ RunGodot 'import' @('--editor','--import')
 $Tests = 'res://tests/research/fabric_bake0'
 RunGodot 'parse-r2' @('--check-only','--script',"$Tests/fabric_r5_6_1_r2_dynamic_aggregate_acceptance.gd")
 RunGodot 'parse-scale' @('--check-only','--script',"$Tests/fabric_r5_6_1_r2_dynamic_index_scale.gd")
+RunGodot 'parse-numeric' @('--check-only','--script',"$Tests/fabric_r5_6_1_r2_numeric_conditioning_acceptance.gd")
 RunGodot 'parse-r1' @('--check-only','--script',"$Tests/fabric_r5_6_1_canonical_delta_acceptance.gd")
 RunGodot 'parse-r1-narrow' @('--check-only','--script',"$Tests/fabric_r5_6_1_r1_source_admission_acceptance.gd")
 1..3 | ForEach-Object { RunGodot "r2-acceptance-$_" @('--script',"$Tests/fabric_r5_6_1_r2_dynamic_aggregate_acceptance.gd") }
 RunGodot 'r2-scale' @('--script',"$Tests/fabric_r5_6_1_r2_dynamic_index_scale.gd")
+RunGodot 'r2-numeric' @('--script',"$Tests/fabric_r5_6_1_r2_numeric_conditioning_acceptance.gd")
 RunGodot 'r1-acceptance' @('--script',"$Tests/fabric_r5_6_1_canonical_delta_acceptance.gd")
 RunGodot 'r1-narrow-admission' @('--script',"$Tests/fabric_r5_6_1_r1_source_admission_acceptance.gd")
 RunGodot 'bridge4-regression' @('--script','res://tests/research/fabric1/fabric_bridge4_canonical_world_acceptance.gd')

@@ -16,11 +16,21 @@ const MAX_CHANGED_PARTS := 16
 const MAX_PARTS := 100000
 const MASS_ABS_TOL := 1.0e-8
 const MASS_REL_TOL := 1.0e-10
+## Conservative numerical conditioning, NOT a rigorous interval proof.
+## The raw-minus-centroid inertia formula can silently lose all variance
+## when finite source coordinates have a very large shared offset. Index
+## moments are therefore relative to one source part; range subtraction
+## additionally fails closed when double-roundoff could dominate the result.
+const DOUBLE_EPSILON := 2.220446049250313e-16
+const ROUNDING_GUARD_FACTOR := 64.0
+const INERTIA_ABS_PRECISION := 1.0e-6
+const INERTIA_REL_PRECISION := 1.0e-8
 
 var _count: int = 0
 var _construct_id := ""
 var _source_checksum := ""
 var _revision: int = -1
+var _origin: Vector3 = Vector3.ZERO
 var _index_by_id: Dictionary = {}
 var _mass := PackedFloat64Array()
 var _x := PackedFloat64Array()
@@ -53,9 +63,13 @@ func initialize(snapshot: Dictionary) -> Dictionary:
 	var next_y := PackedFloat64Array(); next_y.resize(n)
 	var next_z := PackedFloat64Array(); next_z.resize(n)
 	var id_to_index: Dictionary = {}
+	# Per-subject reference cancels a common offset before squaring positions.
+	# This reference never changes during sparse updates, preserving BIT cost.
+	var r0: Array = rows[0].local_position_m
+	var origin := Vector3(float(r0[0]), float(r0[1]), float(r0[2]))
 	for i in range(n):
 		var part: Dictionary = rows[i]
-		var moment: PackedFloat64Array = _moment(part)
+		var moment: PackedFloat64Array = _moment(part, origin)
 		if moment.size() != MOMENTS.size():
 			return U.failure("R56_R2_PART_MOMENT_INVALID", {"id": part.get("part_id", "")})
 		var part_id := String(part.part_id)
@@ -84,6 +98,7 @@ func initialize(snapshot: Dictionary) -> Dictionary:
 	_x = next_x
 	_y = next_y
 	_z = next_z
+	_origin = origin
 	_construct_id = String(snapshot.construct_id)
 	_source_checksum = String(snapshot.checksum)
 	_revision = int(snapshot.state_revision)
@@ -123,8 +138,8 @@ func apply_owner_verified(changed_rows: Array, old_checksum: String, new_checksu
 		var offset: int = int(_index_by_id[part_id])
 		if float(before.mass_kg) != _mass[offset] or float(before.local_position_m[0]) != _x[offset] or float(before.local_position_m[1]) != _y[offset] or float(before.local_position_m[2]) != _z[offset]:
 			return U.failure("R56_R2_CACHED_PART_MISMATCH", {"part_id": part_id})
-		var old_mom: PackedFloat64Array = _moment(before)
-		var new_mom: PackedFloat64Array = _moment(after)
+		var old_mom: PackedFloat64Array = _moment(before, _origin)
+		var new_mom: PackedFloat64Array = _moment(after, _origin)
 		if old_mom.size() != MOMENTS.size() or new_mom.size() != MOMENTS.size():
 			return U.failure("R56_R2_PART_MOMENT_INVALID", {"part_id": part_id})
 		var differences := PackedFloat64Array()
@@ -206,11 +221,30 @@ func query_range(first: int, end_exclusive: int) -> Dictionary:
 	var iy := m[7] - m[0] * (cx * cx + cz * cz)
 	var iyz := m[8] + m[0] * cy * cz
 	var iz := m[9] - m[0] * (cx * cx + cy * cy)
+	# Numerical risk is dominated by differences of two large Fenwick
+	# prefixes and the subsequent parallel-axis shift. Reject an ill-conditioned
+	# range rather than publishing a finite but physically false tensor.
+	var axes := [4, 5, 6, 7, 8, 9]
+	var shifts := [m[0]*(cy*cy+cz*cz), m[0]*cx*cy, m[0]*cx*cz,
+		m[0]*(cx*cx+cz*cz), m[0]*cy*cz, m[0]*(cx*cx+cy*cy)]
+	var centered := [ix, ixy, ixz, iy, iyz, iz]
+	for i in range(axes.size()):
+		var k: int = axes[i]
+		var uncertainty := ROUNDING_GUARD_FACTOR * DOUBLE_EPSILON * (
+			absf(prefix_right[k]) + absf(prefix_left[k]) + absf(shifts[i]))
+		var budget := INERTIA_ABS_PRECISION + INERTIA_REL_PRECISION * absf(centered[i])
+		if not is_finite(uncertainty) or uncertainty > budget:
+			return U.failure("R56_R2_RANGE_NUMERIC_PRECISION_UNSAFE",
+				{"component": k, "roundoff_estimate": uncertainty, "accuracy_budget": budget})
+	var world_center := [cx + _origin.x, cy + _origin.y, cz + _origin.z]
+	for component in world_center:
+		if not is_finite(component):
+			return U.failure("R56_R2_RANGE_CENTER_NONFINITE")
 	var descriptor := {
 		"schema": RESULT_SCHEMA, "construct_id": _construct_id,
 		"source_checksum": _source_checksum, "revision": _revision,
 		"first": first, "end_exclusive": end_exclusive,
-		"total_mass": m[0], "center_of_mass": [cx, cy, cz],
+		"total_mass": m[0], "center_of_mass": world_center,
 		"inertia_tensor_body": [[ix, ixy, ixz], [ixy, iy, iyz], [ixz, iyz, iz]],
 		"checksum": "",
 	}
@@ -238,14 +272,14 @@ func _prefix(end_exclusive: int) -> PackedFloat64Array:
 		j -= j & -j
 	return result
 
-static func _moment(part: Dictionary) -> PackedFloat64Array:
+static func _moment(part: Dictionary, origin: Vector3 = Vector3.ZERO) -> PackedFloat64Array:
 	if not U.is_finite_number(part.get("mass_kg", null)) or float(part.mass_kg) <= 0.0:
 		return PackedFloat64Array()
 	var xyz: Array = part.get("local_position_m", [])
 	if xyz.size() != 3 or not U.is_finite_number(xyz[0]) or not U.is_finite_number(xyz[1]) or not U.is_finite_number(xyz[2]):
 		return PackedFloat64Array()
 	var m := float(part.mass_kg)
-	var x := float(xyz[0]); var y := float(xyz[1]); var z := float(xyz[2])
+	var x := float(xyz[0]) - origin.x; var y := float(xyz[1]) - origin.y; var z := float(xyz[2]) - origin.z
 	var values := PackedFloat64Array([m, m*x, m*y, m*z, m*(y*y+z*z), -m*x*y,
 		-m*x*z, m*(x*x+z*z), -m*y*z, m*(x*x+y*y)])
 	for v in values:

@@ -71,21 +71,32 @@ def collect(root: Path, expected_head: str='', expected_tree: str='') -> dict:
         need(row.get('sparse_updated_parts')==3,'SCALE_CHANGED_PARTS')
         need(type(row.get('max_nodes_per_part_update')) is int and 1<=row['max_nodes_per_part_update']<=18,'SCALE_UPDATE_BOUND')
         need(type(row.get('total_fenwick_nodes_touched')) is int and row['total_fenwick_nodes_touched']<=3*18,'SCALE_NODE_COUNT')
+    numeric_raw, numeric = unique_payload(root/'r2-numeric.log', 'FABRIC_R56_R2_NUMERIC=')
+    need(set(numeric)=={'schema','checks','failures','stable_offsets',
+        'sparse_update_ok','unsafe_ranges_rejected'}, 'NUMERIC_FIELDS')
+    need(numeric.get('schema')=='fabric.r56_r2.numeric_conditioning.v1', 'NUMERIC_SCHEMA')
+    need(type(numeric.get('checks')) is int and numeric['checks']==54
+        and numeric.get('failures')==[], 'NUMERIC_CHECKS')
+    need(numeric.get('stable_offsets')==[1.0,1.0e5,1.0e7,1.0e8,1.0e9], 'NUMERIC_OFFSETS')
+    need(numeric.get('sparse_update_ok') is True, 'NUMERIC_SPARSE_UPDATE')
+    need(type(numeric.get('unsafe_ranges_rejected')) is int
+        and numeric['unsafe_ranges_rejected']==1, 'NUMERIC_FAIL_CLOSED')
     original=r1_sample(root/'r1-acceptance.log')
     need(original[2]=='29defdc33cb1192b9e1577517561c6fcc0f5693daa889deebe585ab8816e043b','R1_HASH_DRIFT')
     narrow=r1_source(root/'r1-narrow-admission.log')
-    for name in ('import','parse-r2','parse-scale','parse-r1','parse-r1-narrow','bridge4-regression'):
+    for name in ('import','parse-r2','parse-scale','parse-numeric','parse-r1','parse-r1-narrow','bridge4-regression'):
         log=read_log(root/(name+'.log'))
         if name=='bridge4-regression':
             need('FABRIC BRIDGE-4 Canonical World: PASS (49 assertions)' in log, 'BRIDGE4_RESULT')
     deterministic_hash=hashlib.sha256(results[0][0].encode('utf-8')).hexdigest()
     result={
-        'schema':'fabric.r56_r2.dynamic_aggregates.exact_evidence.v1',
+        'schema':'fabric.r56_r2.dynamic_aggregates.exact_evidence.v2',
         'verdict':'IMPLEMENTER_EXACT_PASS',
         'identity':{'head':before[0],'tree':before[1],'engine_sha256':before[2]},
         'r2_hash':deterministic_hash,
         'r2_acceptance':results[0][1],
         'r2_scale':scale,
+        'r2_numeric':numeric,
         'r1_baseline_hash':original[2],
         'r1_narrow':narrow,
         'logs':{p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(root.glob('*.log'))},

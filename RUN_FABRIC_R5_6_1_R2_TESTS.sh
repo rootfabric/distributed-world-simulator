@@ -32,10 +32,12 @@ run import --editor --import
 R=res://tests/research/fabric_bake0
 run parse-r2 --check-only --script "$R/fabric_r5_6_1_r2_dynamic_aggregate_acceptance.gd"
 run parse-scale --check-only --script "$R/fabric_r5_6_1_r2_dynamic_index_scale.gd"
+run parse-numeric --check-only --script "$R/fabric_r5_6_1_r2_numeric_conditioning_acceptance.gd"
 run parse-r1 --check-only --script "$R/fabric_r5_6_1_canonical_delta_acceptance.gd"
 run parse-r1-narrow --check-only --script "$R/fabric_r5_6_1_r1_source_admission_acceptance.gd"
 for i in 1 2 3; do run "r2-acceptance-$i" --script "$R/fabric_r5_6_1_r2_dynamic_aggregate_acceptance.gd";done
 run r2-scale --script "$R/fabric_r5_6_1_r2_dynamic_index_scale.gd"
+run r2-numeric --script "$R/fabric_r5_6_1_r2_numeric_conditioning_acceptance.gd"
 run r1-acceptance --script "$R/fabric_r5_6_1_canonical_delta_acceptance.gd"
 run r1-narrow-admission --script "$R/fabric_r5_6_1_r1_source_admission_acceptance.gd"
 run bridge4-regression --script res://tests/research/fabric1/fabric_bridge4_canonical_world_acceptance.gd
