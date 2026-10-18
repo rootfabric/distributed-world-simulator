@@ -265,6 +265,14 @@ def play(args, manifest: dict) -> None:
         # closes the window (measure.end) before any planned reconnect and,
         # for r31, opens it only after the roundtrip stages have finished.
         measure_closed = False
+        def close_measure_window() -> None:
+            # Touch measure.end and wait past one probe poll period (200ms)
+            # so the planned reconnect can never land inside the still-open
+            # normative window by racing the probe's file observation.
+            nonlocal measure_closed
+            for role in processes: (root/role/'measure.end').touch()
+            measure_closed = True
+            time.sleep(1.2)
         if args.scenario != 'r31-reconnect-roundtrip':
             for role in processes: (root/role/'measure.start').touch()
         started=time.monotonic()
@@ -547,8 +555,7 @@ def play(args, manifest: dict) -> None:
             if feed_errors:
                 raise RuntimeError(f'concurrent R3 feed failed: {feed_errors[:3]}')
             standard_phase_loop()
-            for role in processes: (root/role/'measure.end').touch()
-            measure_closed = True
+            close_measure_window()
             old=bridge(ports['b'],token,'state.get',{'kind':'automation'})['automation']
             reconnect=command('b','network.reconnect')
             time.sleep(1);wait_ready('b')
@@ -563,8 +570,7 @@ def play(args, manifest: dict) -> None:
             # movement loop afterwards keeps full movement/perf coverage.
             durable_phase()
             standard_phase_loop()
-            for role in processes: (root/role/'measure.end').touch()
-            measure_closed = True
+            close_measure_window()
             old=bridge(ports['b'],token,'state.get',{'kind':'automation'})['automation']
             reconnect=command('b','network.reconnect')
             time.sleep(1);wait_ready('b')
@@ -575,8 +581,7 @@ def play(args, manifest: dict) -> None:
                 raise RuntimeError('reconnect did not advance ownership epoch')
         elif args.scenario in ('local', 'seam-stress'):
             standard_phase_loop()
-            for role in processes: (root/role/'measure.end').touch()
-            measure_closed = True
+            close_measure_window()
             # Reconnect is outside the perf window; it still must execute and recover.
             old=bridge(ports['b'],token,'state.get',{'kind':'automation'})['automation']
             reconnect=command('b','network.reconnect')
