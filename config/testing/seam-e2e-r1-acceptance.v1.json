@@ -1,0 +1,352 @@
+{
+  "schema": "dws.seam_e2e.acceptance_contract.v1",
+  "id": "SEAM-E2E-R1",
+  "status": "PROPOSED_CONTRACT_NOT_ACTIVATED",
+  "scope": "FULL_DISTRIBUTED_EARTH_MULTI_SERVER_MULTIPLAYER",
+  "base_main_head": "ae9a669336d93b3497fa78e5bb6d8eb3a21a0211",
+  "product_release_must_not_be_claimed_from_this_spec_alone": true,
+  "same_live_topology_for_all_product_scenarios": true,
+  "component_lab_evidence_only_as_regression": true,
+  "topology": {
+    "min_authority_processes": 3,
+    "min_distinct_authority_ids": 3,
+    "min_gateway_processes": 1,
+    "min_graphical_game_clients": 2,
+    "min_distinct_os_processes": 6,
+    "min_distinct_physical_or_independent_vm_hosts": 2,
+    "remote_non_loopback_gateway_authority_path_required": true,
+    "real_clients_must_use_earth_and_quaternius": true,
+    "stable_world_id_required": true,
+    "client_world_transports_during_normal_handoff_exact": 1,
+    "direct_client_simulation_server_transport_forbidden": true,
+    "gateway_canonical_gameplay_writes_max": 0,
+    "warm_authority_canonical_writes_max": 0,
+    "max_canonical_writers_per_authority_domain": 1,
+    "full_acceptance_on_one_host_forbidden": true,
+    "full_acceptance_with_internal_primary_secondary_only_forbidden": true
+  },
+  "minimum_coverage": {
+    "directed_chain": [
+      "A->B",
+      "B->C",
+      "C->B",
+      "B->A"
+    ],
+    "min_crossings_per_directed_edge": 10,
+    "min_distinct_player_owners_during_co_presence": 2,
+    "min_distinct_players_interacting_across_authority_boundary": 2,
+    "min_matched_windows_gui_runs": 3,
+    "min_measured_seconds_per_gui_run": 108,
+    "target_measured_seconds_per_gui_run": 120,
+    "minimum_soak_seconds": 1800,
+    "min_crash_fault_stage_types": 5,
+    "min_negative_falsifiers": 8
+  },
+  "quality_targets": {
+    "client_frame_p99_ms_max": 25,
+    "client_frame_p999_ms_max": 50,
+    "client_max_frame_gap_ms": 100,
+    "authority_process_loop_hz_min": 59,
+    "canonical_simulation_hz": 20,
+    "seam_unexplained_input_blackout_ms_max": 100,
+    "seam_unexplained_avatar_blackout_ms_max": 100,
+    "seam_position_correction_m_max": 0.25,
+    "seam_camera_angular_discontinuity_deg_max": 3,
+    "lan_cross_owner_visibility_latency_p99_ms_max": 250,
+    "split_brain_canonical_write_count_max": 0,
+    "duplicate_canonical_effect_count_max": 0,
+    "lost_committed_operation_count_max": 0,
+    "early_ack_count_max": 0,
+    "phantom_or_missing_seam_tile_count_max": 0,
+    "conflicting_cross_server_collision_count_max": 0
+  },
+  "failure_classification": {
+    "MISSING_CAPABILITY": "BLOCKED_NOT_IMPLEMENTED",
+    "MISSING_EVIDENCE": "INCONCLUSIVE",
+    "MISSING_REAL_HOST": "INCONCLUSIVE",
+    "SCREENSHOT_ONLY": "INCONCLUSIVE",
+    "SYNTHETIC_INSTEAD_OF_PRODUCT": "INCONCLUSIVE",
+    "WRONG_HEAD_TREE": "INCONCLUSIVE",
+    "COMPONENT_ONLY_SM1_OR_R31": "NOT_FULL_E2E",
+    "SAFETY_VIOLATION": "FAIL_CLOSED",
+    "NORMATIVE_PERFORMANCE_EXCEEDED": "PERF_FAIL",
+    "PROJECT_CONTROL_RED": "BLOCKED"
+  },
+  "required_proof_types": [
+    "process_manifest",
+    "host_attestation",
+    "gateway_trace",
+    "authority_trace",
+    "client_trace",
+    "directory_trace",
+    "canonical_state_digest",
+    "terrain_trace",
+    "collision_trace",
+    "video_capture",
+    "fault_injection",
+    "performance_report",
+    "project_control_report",
+    "review_report",
+    "verifier_report",
+    "evidence_manifest"
+  ],
+  "hard_invariants": [
+    "ONE_CANONICAL_WRITER_PER_DOMAIN",
+    "AUTHORITY_EPOCH_MONOTONIC",
+    "FENCED_OLD_WRITER_CANNOT_MUTATE",
+    "WARM_AND_OBSERVER_CANONICAL_WRITES_ZERO",
+    "NO_GATEWAY_AUTHORITY_OR_GAMEPLAY_TRUTH",
+    "ONE_CANONICAL_ITEM_GRAPH",
+    "ONE_CANONICAL_CONSTRUCTION_TRUTH",
+    "NO_DOUBLE_RESOURCE_OR_TERRAIN_TRUTH",
+    "ONE_CLIENT_WORLD_CONNECTION_NORMAL_HANDOFF",
+    "NO_CLIENT_RESPAWN_OR_MANUAL_RECONNECT_ON_CROSSING",
+    "STABLE_PLAYER_ENTITY_AND_ITEM_IDS",
+    "INPUT_SEQUENCE_CONTINUITY",
+    "STABLE_OPERATION_ID_AND_IDEMPOTENT_REPLAY",
+    "DURABLE_BEFORE_ACK",
+    "SHARED_CANONICAL_PHYSICS_AND_COLLISION_OUTCOMES",
+    "PROJECTION_READ_ONLY_AOI_FENCED",
+    "CLIENTS_SHARE_SAME_WORLD_SPATIAL_FRAME",
+    "NO_UNATTRIBUTED_FRAME_GAPS_OR_HIDDEN_MEASUREMENT_WINDOWS"
+  ],
+  "forbidden_substitutions": [
+    "SINGLE_SERVER_WITH_TWO_SERVICE_AUTHORITIES_AS_THREE_PROCESSES",
+    "TWO_AUTHORITY_SM1_LAB_AS_FULL_N_SERVER_ACCEPTANCE",
+    "R31_INTERNAL_SEAM_AS_PHYSICAL_SERVER_HANDOFF",
+    "TWO_UNRELATED_SCENARIOS_AS_SINGLE_LIVE_WORLD_INTERACTION",
+    "UNVERIFIED_CLIENT_MIRROR_AS_CANONICAL_STATE",
+    "HEADLESS_ONLY_AS_GRAPHICAL_PRODUCT_ACCEPTANCE",
+    "PROJECTION_AS_SECOND_GAMEPLAY_WRITER",
+    "HIDDEN_FAILURES_BY_MOVING_MEASUREMENT_WINDOW",
+    "FAKE_ITEM_GRAPH_OR_TEST_ONLY_HANDOFF_PROTOCOL",
+    "NETWORK_TEST_RESULT_FROM_DIFFERENT_COMMIT"
+  ],
+  "acceptance_gates": [
+    {
+      "id": "S01_PHYSICAL_MULTISERVER_TOPOLOGY",
+      "group": "topology",
+      "required": true,
+      "min_runs": 1,
+      "proof_types": [
+        "process_manifest",
+        "host_attestation",
+        "gateway_trace",
+        "authority_trace"
+      ],
+      "objective": "3 separate authority processes across >=2 machines, independent process/host identity and real non-loopback backend path"
+    },
+    {
+      "id": "S02_SINGLE_CLIENT_WORLD_CONNECTION",
+      "group": "routing",
+      "required": true,
+      "min_runs": 3,
+      "proof_types": [
+        "gateway_trace",
+        "client_trace",
+        "authority_trace"
+      ],
+      "objective": "Single logical client world connection to gateway despite backend handoff, projection subscriptions, route changes"
+    },
+    {
+      "id": "S03_A_B_C_B_A_AUTHORITY_CHAIN",
+      "group": "handoff",
+      "required": true,
+      "min_runs": 3,
+      "proof_types": [
+        "directory_trace",
+        "authority_trace",
+        "gateway_trace",
+        "client_trace"
+      ],
+      "objective": "A→B→C→B→A on actual processes; >=10 crossings per directed edge, stable player/entity identity and monotonically fenced epochs"
+    },
+    {
+      "id": "S04_SIMULTANEOUS_CROSS_BORDER_CO_PRESENCE",
+      "group": "interaction",
+      "required": true,
+      "min_runs": 3,
+      "proof_types": [
+        "authority_trace",
+        "gateway_trace",
+        "client_trace",
+        "video_capture"
+      ],
+      "objective": "Players A and B under different owners remain mutually visible, can move/interact simultaneously and have consistent AOI and remote avatar animation"
+    },
+    {
+      "id": "S05_CROSS_OWNER_ITEM_EXCHANGE",
+      "group": "interaction",
+      "required": true,
+      "min_runs": 3,
+      "proof_types": [
+        "authority_trace",
+        "gateway_trace",
+        "client_trace",
+        "canonical_state_digest"
+      ],
+      "objective": "Player A drops/trades item near seam; player B under other authority picks it up; stable ItemId, exactly one graph membership and no ghost items"
+    },
+    {
+      "id": "S06_CROSS_OWNER_CONSTRUCTION",
+      "group": "interaction",
+      "required": true,
+      "min_runs": 3,
+      "proof_types": [
+        "authority_trace",
+        "client_trace",
+        "canonical_state_digest",
+        "collision_trace"
+      ],
+      "objective": "Two players concurrently add/remove elements of one shared construction spanning two authorities; single Construction truth, valid attachments and collision"
+    },
+    {
+      "id": "S07_CROSS_OWNER_MINING_AND_TERRAIN",
+      "group": "interaction",
+      "required": true,
+      "min_runs": 3,
+      "proof_types": [
+        "authority_trace",
+        "client_trace",
+        "canonical_state_digest",
+        "terrain_trace"
+      ],
+      "objective": "Mining/digging on both sides including a boundary cell yields one canonical resource change, shared inventory/material deltas and equal terrain versions"
+    },
+    {
+      "id": "S08_CROSS_OWNER_PHYSICAL_INTERACTION",
+      "group": "interaction",
+      "required": true,
+      "min_runs": 3,
+      "proof_types": [
+        "authority_trace",
+        "client_trace",
+        "collision_trace"
+      ],
+      "objective": "A cross-owner interactive physical entity/contact and player interaction are resolved once by canonical owner; no independent collision outcomes"
+    },
+    {
+      "id": "S09_VISUAL_CAMERA_GEOMETRY_CONTINUITY",
+      "group": "visual",
+      "required": true,
+      "min_runs": 3,
+      "proof_types": [
+        "client_trace",
+        "terrain_trace",
+        "video_capture",
+        "authority_trace"
+      ],
+      "objective": "No missing planet tile/terrain seam, camera pop, avatar disappearance, motion rewind or duplicate entity across authority boundary"
+    },
+    {
+      "id": "S10_OWNERSHIP_FENCING_AND_EXACTLY_ONCE",
+      "group": "safety",
+      "required": true,
+      "min_runs": 3,
+      "proof_types": [
+        "directory_trace",
+        "authority_trace",
+        "gateway_trace",
+        "canonical_state_digest"
+      ],
+      "objective": "Old writer fenced after CAS; WARM writes zero; stale route, lost ACK, duplicate OperationId and cross-boundary race commit exactly once"
+    },
+    {
+      "id": "S11_SERVER_GATEWAY_CRASH_RECOVERY",
+      "group": "fault",
+      "required": true,
+      "min_runs": 3,
+      "proof_types": [
+        "fault_injection",
+        "directory_trace",
+        "authority_trace",
+        "client_trace",
+        "canonical_state_digest"
+      ],
+      "objective": "Target/source crash before and after ownership commit, old owner restart, gateway loss/rehome and disk recovery preserve authoritative truth"
+    },
+    {
+      "id": "S12_WAN_PARTITION_AND_FAIRNESS",
+      "group": "fault",
+      "required": true,
+      "min_runs": 3,
+      "proof_types": [
+        "fault_injection",
+        "gateway_trace",
+        "authority_trace",
+        "client_trace"
+      ],
+      "objective": "Separate client↔gateway and gateway↔authority latency/loss/reorder, partition, shared-link congestion and slow client isolation"
+    },
+    {
+      "id": "S13_NORMATIVE_E2E_PERFORMANCE",
+      "group": "performance",
+      "required": true,
+      "min_runs": 3,
+      "proof_types": [
+        "client_trace",
+        "authority_trace",
+        "gateway_trace",
+        "performance_report",
+        "video_capture"
+      ],
+      "objective": "Three real 120s per-role measured windows, p99/p999/max and cross-seam perceptual metrics; no threshold waivers"
+    },
+    {
+      "id": "S14_THIRTY_MINUTE_MIXED_SOAK",
+      "group": "soak",
+      "required": true,
+      "min_runs": 1,
+      "proof_types": [
+        "client_trace",
+        "authority_trace",
+        "gateway_trace",
+        "performance_report",
+        "canonical_state_digest"
+      ],
+      "objective": "30min continuous two-player three-authority roundtrips, cross-owner interactions, observer churn and sampled durable checksums"
+    },
+    {
+      "id": "S15_CONTROL_FRESH_INDEPENDENT_REVIEW",
+      "group": "control",
+      "required": true,
+      "min_runs": 1,
+      "proof_types": [
+        "project_control_report",
+        "review_report",
+        "verifier_report",
+        "evidence_manifest"
+      ],
+      "objective": "Canonical Project Control non-red, independent reviewer/verifier on exact HEAD+TREE+machine evidence, human final gate"
+    }
+  ],
+  "release_decision": {
+    "mandatory_all_gates_pass": true,
+    "exact_product_head_tree_and_build_hash": true,
+    "evidence_sha256_and_raw_traces": true,
+    "project_control_non_red": true,
+    "independent_reviewer_pass": true,
+    "independent_verifier_pass": true,
+    "human_merge_and_release_gate": true,
+    "no_metric_waivers": true,
+    "no_soak_before_exact_and_functional_green": true,
+    "no_automatic_merge": true
+  },
+  "known_prior_evidence_not_substitute": [
+    {
+      "source": "V0-SM1 R9",
+      "coverage": "two authority OS processes plus gateway and graphical lab clients",
+      "missing": "three authoritative product regions/two hosts and live Earth cross-player interaction"
+    },
+    {
+      "source": "NET-SMOOTH1 R31",
+      "coverage": "server-side seamless authority switch, stable reconnect and Quaternius",
+      "missing": "independent authority server processes and cross-owner canonical interactions"
+    },
+    {
+      "source": "NET-SMOOTH1 R3C.4",
+      "coverage": "server frame pacing and M6 durability optimization",
+      "missing": "full multi-server live topology and multi-authority interactions"
+    }
+  ]
+}
