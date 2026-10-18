@@ -1,0 +1,94 @@
+name: FABRIC R5.6.1 R2 Windows Arg Binding & Frozen Carrier
+on:
+  push:
+    branches:
+      - verify/fabric-r56-r2-pwsh-args-1b2e707c-r1
+permissions:
+  contents: read
+jobs:
+  source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 1b2e707c3605c502280efe157ed112816f85c6df
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Frozen exact identity and narrow diff
+        run: |
+          set -Eeuo pipefail
+          test "$(git rev-parse HEAD)" = '1b2e707c3605c502280efe157ed112816f85c6df'
+          test "$(git rev-parse HEAD^{tree})" = 'a5ddadb521d07afff5b4758d627c34a63ad2d629'
+          test "$(git rev-parse HEAD^)" = '716cddeee0cb479bcf4d96496510c0be033f5e64'
+          test -z "$(git status --porcelain=v1 --untracked-files=no)"
+          git diff --check HEAD^ HEAD
+          test "$(git diff --name-only HEAD^ HEAD)" = 'RUN_FABRIC_R5_6_1_R2_TESTS.ps1'
+          test "$(git diff --numstat HEAD^ HEAD | awk '{print $1 " " $2}')" = '2 2'
+      - name: Export exact frozen Git and source archive
+        run: |
+          set -Eeuo pipefail
+          mkdir -p artifacts
+          git archive --format=tar.gz --output=artifacts/r56-r2-pwsh-args-exact-source.tar.gz HEAD
+          git bundle create artifacts/r56-r2-pwsh-args-full.bundle HEAD
+          printf 'HEAD=%s\nTREE=%s\nPARENT=%s\n' "$(git rev-parse HEAD)" "$(git rev-parse HEAD^{tree})" "$(git rev-parse HEAD^)" > artifacts/IDENTITY.txt
+          (cd artifacts && sha256sum r56-r2-pwsh-args-exact-source.tar.gz r56-r2-pwsh-args-full.bundle > SHA256SUMS)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fabric-r56-r2-pwsh-args-1b2e707c
+          path: artifacts/**
+          retention-days: 30
+  windows-args:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 1b2e707c3605c502280efe157ed112816f85c6df
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Exact published RunGodot argument binding smoke
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          Set-StrictMode -Version Latest
+          if ((git rev-parse HEAD).Trim() -ne '1b2e707c3605c502280efe157ed112816f85c6df') { throw 'HEAD_MISMATCH' }
+          if ((git rev-parse 'HEAD^{tree}').Trim() -ne 'a5ddadb521d07afff5b4758d627c34a63ad2d629') { throw 'TREE_MISMATCH' }
+          $runner = Get-Content -Path 'RUN_FABRIC_R5_6_1_R2_TESTS.ps1' -Raw
+          $tokens = $null; $errors = $null
+          $ast = [System.Management.Automation.Language.Parser]::ParseInput($runner, [ref]$tokens, [ref]$errors)
+          if (@($errors).Count -ne 0) { throw 'PWSH_AST_PARSE_FAILED' }
+          $functions = @($ast.FindAll({param($node) ($node -is [System.Management.Automation.Language.FunctionDefinitionAst]) -and $node.Name -eq 'RunGodot'}, $true))
+          if ($functions.Count -ne 1) { throw 'RUNGODOT_FUNCTION_MISSING' }
+          $code = $functions[0].Extent.Text
+          if ($code -notmatch '\[string\[\]\]\$GateArgs') { throw 'GATEARGS_PARAMETER_MISSING' }
+          if ($code -match '(?i)\$args\b') { throw 'RESERVED_ARGS_VARIABLE_STILL_USED' }
+          $tmp = Join-Path $env:RUNNER_TEMP 'fabric-r56-pwsh-args'
+          New-Item -Path $tmp -ItemType Directory -Force | Out-Null
+          $fake = Join-Path $tmp 'mock-godot.exe'
+          $mockCode = @'
+          using System;
+          public class MockGodot {
+              public static int Main(string[] args) {
+                  Console.WriteLine("MOCK_ARGV=" + string.Join("|", args));
+                  return 0;
+              }
+          }
+          '@
+          Add-Type -TypeDefinition $mockCode -OutputAssembly $fake -OutputType ConsoleApplication -ErrorAction Stop
+          $GodotBin = $fake
+          $Root = (Get-Location).Path
+          $Out = $tmp
+          $Utf8 = [Text.UTF8Encoding]::new($false)
+          $Fatal = 'SCRIPT ERROR|Parse Error|Compile Error|Invalid call|Invalid access|ERROR:'
+          Invoke-Expression $code
+          RunGodot 'import' @('--editor','--import')
+          RunGodot 'parse-numeric' @('--check-only','--script','res://tests/research/fabric_bake0/fabric_r5_6_1_r2_numeric_conditioning_acceptance.gd')
+          RunGodot 'bridge4-regression' @('--script','res://tests/research/fabric1/fabric_bridge4_canonical_world_acceptance.gd')
+          $import = Get-Content (Join-Path $tmp 'import.log') -Raw
+          $parse = Get-Content (Join-Path $tmp 'parse-numeric.log') -Raw
+          $bridge = Get-Content (Join-Path $tmp 'bridge4-regression.log') -Raw
+          if ($import -notmatch 'MOCK_ARGV=--headless\|--path\|.*\|--editor\|--import') { throw "IMPORT_ARGS_MISSING: $import" }
+          if ($parse -notmatch 'MOCK_ARGV=--headless\|--path\|.*\|--check-only\|--script\|res://tests/research/fabric_bake0/fabric_r5_6_1_r2_numeric_conditioning_acceptance.gd') { throw "PARSE_ARGS_MISSING: $parse" }
+          if ($bridge -notmatch 'MOCK_ARGV=--headless\|--quit-after\|2\|--path\|.*\|--script\|res://tests/research/fabric1/fabric_bridge4_canonical_world_acceptance.gd') { throw "BRIDGE_ARGS_MISSING: $bridge" }
+          Write-Host 'R56_R2_WINDOWS_RUNNER_ARGUMENT_BINDING=PASS'
