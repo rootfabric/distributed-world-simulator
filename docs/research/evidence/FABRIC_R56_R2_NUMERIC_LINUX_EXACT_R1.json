@@ -1,0 +1,74 @@
+{
+  "schema": "fabric.r56_r2.numeric_repair.frozen_linux_exact.v1",
+  "verdict": "IMPLEMENTER_LINUX_EXACT_PASS",
+  "product_head": "716cddeee0cb479bcf4d96496510c0be033f5e64",
+  "product_tree": "8457feca07484eb9d4d7f0824af8dea962e66052",
+  "numeric_red_parent": "2ea4debdcef7a38dc1de2a0acc9a906ccfcea442",
+  "research_base_r1_merged": "4f301fae461567362d408a51802cc3dde6730999",
+  "engine": {
+    "version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "linux_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7"
+  },
+  "carrier": {
+    "run_id": 39110982417,
+    "artifact_id": 12129954316,
+    "sha256_manifest": "PASS",
+    "full_bundle_cloned": true
+  },
+  "identity": {
+    "head_before_after_match": true,
+    "tree_before_after_match": true,
+    "tracked_clean": true
+  },
+  "exact": {
+    "import_parse": "PASS",
+    "r2_acceptance": [
+      "626/0",
+      "626/0",
+      "626/0"
+    ],
+    "raw_payload_byte_match": true,
+    "r2_scale": "255/0",
+    "numeric_conditioning": "54/0",
+    "numeric_offsets": [
+      1,
+      100000,
+      10000000,
+      100000000,
+      1000000000
+    ],
+    "unsafe_range_rejected": 1,
+    "r1_regression": "203/0",
+    "r1_narrow": "26/0",
+    "bridge4": "49/0",
+    "collector": "PASS",
+    "collector_schema": "fabric.r56_r2.dynamic_aggregates.exact_evidence.v2",
+    "collector_tamper_rejected": "11/11",
+    "runner_exit": 0,
+    "evidence_sha256sum_rows": "17/17",
+    "deterministic_hash": "7fb3eb72caec05dd5341399c8f032f90165a4459610ab3058d798a97fa98dd43"
+  },
+  "falsifier": {
+    "original_red": "two finite-offset inertia cases returned zero instead of 0.5",
+    "repair_green": "correct Iyy=0.5 on five offsets",
+    "separate_review_branch": "review/fabric-r56-r2-numeric-cancellation-falsifier-r1"
+  },
+  "local_artifacts": {
+    "report": "FABRIC_R5_6_1_R2_NUMERIC_REPAIR_LINUX_REPORT_RU.md",
+    "report_sha256": "7e7bba1fd798d6195d660bd943848111c008b7c7937747e551a6157269a46af8",
+    "zip": "FABRIC_R5_6_1_R2_NUMERIC_REPAIR_LINUX_EVIDENCE.zip",
+    "zip_sha256": "c64c43be5e5a3940897a6e7d0561af14db2c56a70528275ac3548f5a9d898efd",
+    "zip_member_checksums": "27/27"
+  },
+  "restrictions": {
+    "proof": "canonical point-mass floor; conservative roundoff heuristic not rigorous arbitrary-coordinate certificate",
+    "index_update": "O(k log N) moments only, canonical owner and BRIDGE-4 graph compile can be O(N)",
+    "research_only": true
+  },
+  "pending": [
+    "canonical Windows exact on final HEAD/TREE",
+    "fresh separate-actor Reviewer and Verifier",
+    "explicit human authorization for research merge"
+  ],
+  "merge_ready": false
+}
