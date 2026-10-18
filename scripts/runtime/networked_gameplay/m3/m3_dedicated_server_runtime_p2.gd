@@ -103,6 +103,18 @@ var _r3c2_postcommit_pending: Dictionary = {}
 var _r3c2_postcommit_phases_completed := 0
 var _r3c2_postcommit_last_stage_ms := 0.0
 var _r3c2_deferred_diagnostic_reports := 0
+# R3C.4: opt-in frame separation of the periodic checkpoint from the same-frame
+# 20Hz movement snapshot burst. Frame pacing only; the single-writer M6
+# pipeline, generation semantics and durable-before-ACK barrier are unchanged.
+var _r3c4_periodic_frame_pacing_enabled := false
+var _r3c4_deferral_started_ms := 0
+var _r3c4_deferred_frames := 0
+var _r3c4_capture_slots := 0
+var _r3c4_forced_captures := 0
+var _r3c4_precapture_work_ms := 0.0
+# Bounded starvation guard: a due capture is forced no later than the next
+# eligible process frame after 64ms, even if the frame is still heavy.
+const R3C4_MAX_DEFERRAL_MS := 64
 var _r3c_async_leave_commits := 0
 const R3C_MAX_DEFERRED_ADMISSIONS := 32
 const R3C_ADMISSION_TIMEOUT_MS := 20000
@@ -227,6 +239,13 @@ func setup(config: Dictionary) -> Dictionary:
 		bool(config.get("r3c2_phased_publication_canary", false))
 		or OS.get_environment("DWS_NET_R3C2_PHASED_ITEM_PUBLICATION") == "1"
 	)
+	var r3c4_mode := OS.get_environment("DWS_NET_R3C4_PERIODIC_FRAME_PACING")
+	if not r3c4_mode.is_empty() and r3c4_mode != "0" and r3c4_mode != "1":
+		return _failure("R3C4_INVALID_PACING_MODE")
+	_r3c4_periodic_frame_pacing_enabled = (
+		bool(config.get("r3c4_periodic_frame_pacing_canary", false))
+		or r3c4_mode == "1"
+	)
 	_p1b_item_async_enabled = (
 		bool(config.get("async_durable_item_canary", false))
 		or OS.get_environment("DWS_NET_P1B_ITEM_ASYNC") == "1"
@@ -249,6 +268,11 @@ func setup(config: Dictionary) -> Dictionary:
 	_r3c2_postcommit_phases_completed = 0
 	_r3c2_postcommit_last_stage_ms = 0.0
 	_r3c2_deferred_diagnostic_reports = 0
+	_r3c4_deferral_started_ms = 0
+	_r3c4_deferred_frames = 0
+	_r3c4_capture_slots = 0
+	_r3c4_forced_captures = 0
+	_r3c4_precapture_work_ms = 0.0
 	_r3c_queued_joins = 0
 	_r3c_queued_leaves = 0
 	_r3c_admissions_drained = 0
@@ -450,6 +474,9 @@ func _process(delta: float) -> void:
 	_maybe_publish_movement_snapshot()
 	_stall_exit(snapshot_probe)
 	var smooth_snapshot_done := Time.get_ticks_usec()
+	# R3C.4: main-thread work already spent this frame BEFORE the periodic
+	# capture stage (messages + fixed simulation + snapshot serialization).
+	_r3c4_precapture_work_ms = float(smooth_snapshot_done - smooth_started) / 1000.0
 	var persistence_probe := _stall_enter("MOVEMENT_PERSISTENCE", {
 		"server_tick": _server_tick,
 		"movement_dirty": _movement_checkpoint_dirty,
@@ -2762,6 +2789,10 @@ func _persistence_report() -> Dictionary:
 		"item_async_commits": _p1b_item_commits,
 		"r3b_async_disconnect_commits": _r3b_async_disconnect_commits,
 		"r3c_async_admission_enabled": _r3c_async_admission_enabled,
+		"r3c4_periodic_frame_pacing_enabled": _r3c4_periodic_frame_pacing_enabled,
+		"r3c4_deferred_frames": _r3c4_deferred_frames,
+		"r3c4_capture_slots": _r3c4_capture_slots,
+		"r3c4_forced_captures": _r3c4_forced_captures,
 		"r3c2_phased_item_publication_enabled": _r3c2_phased_item_publication_enabled,
 		"r3c2_postcommit_stage": int(_r3c2_postcommit_pending.get("stage", -1)),
 		"r3c2_postcommit_phases_completed": _r3c2_postcommit_phases_completed,
@@ -3029,6 +3060,12 @@ func _maybe_persist_movement_checkpoint() -> void:
 		or Time.get_ticks_msec() - _last_movement_checkpoint_ms < M7_MOVEMENT_CHECKPOINT_INTERVAL_MS
 	):
 		return
+	# R3C.4: a due periodic capture never runs on the same heavy frame that
+	# just prepared a 20Hz movement snapshot, unless the bounded 64ms
+	# deferral elapsed. This only delays dispatch; dirty data stays live and
+	# the existing single-writer pipeline below is untouched.
+	if not _r3c4_periodic_capture_slot_available():
+		return
 	if SmoothTrace.enabled():
 		SmoothTrace.emit("periodic_checkpoint_dispatch", {
 			"origin": "MOVEMENT_PERIODIC",
@@ -3050,6 +3087,50 @@ func _maybe_persist_movement_checkpoint() -> void:
 	_last_movement_checkpoint_ms = Time.get_ticks_msec()
 	_debug_event("MOVEMENT_CHECKPOINT_COMMITTED", {"generation":_checkpoint_generation})
 	_write_report("READY", false)
+
+func _r3c4_periodic_capture_slot_available() -> bool:
+	if not _r3c4_periodic_frame_pacing_enabled:
+		return true
+	var now_ms := Time.get_ticks_msec()
+	var snapshot_this_frame := _last_movement_snapshot_tick == _server_tick
+	if not snapshot_this_frame:
+		# Low-work frame: the original capture pipeline owns this frame.
+		_r3c4_deferral_started_ms = 0
+		_r3c4_capture_slots += 1
+		if SmoothTrace.enabled():
+			SmoothTrace.emit("r3c4_periodic_capture_slot", {
+				"tick": _server_tick,
+				"forced": false,
+				"deferred_frames": _r3c4_deferred_frames,
+				"precapture_work_ms": _r3c4_precapture_work_ms,
+			})
+		return true
+	if _r3c4_deferral_started_ms <= 0:
+		_r3c4_deferral_started_ms = now_ms
+	_r3c4_deferred_frames += 1
+	var deferral_ms := now_ms - _r3c4_deferral_started_ms
+	if SmoothTrace.enabled():
+		SmoothTrace.emit("r3c4_periodic_frame_deferred", {
+			"tick": _server_tick,
+			"deferral_ms": float(deferral_ms),
+			"precapture_work_ms": _r3c4_precapture_work_ms,
+		})
+	if deferral_ms <= R3C4_MAX_DEFERRAL_MS:
+		return false
+	# Bounded starvation guard: force the capture on this eligible frame even
+	# though it is still heavy. No alternate generation, no dirty clearing.
+	_r3c4_forced_captures += 1
+	_r3c4_deferral_started_ms = 0
+	_r3c4_capture_slots += 1
+	if SmoothTrace.enabled():
+		SmoothTrace.emit("r3c4_periodic_capture_slot", {
+			"tick": _server_tick,
+			"forced": true,
+			"deferred_frames": _r3c4_deferred_frames,
+			"precapture_work_ms": _r3c4_precapture_work_ms,
+		})
+	return true
+
 
 func _update_runtime_telemetry() -> void:
 	if _telemetry == null:
@@ -3346,6 +3427,7 @@ func stop() -> Dictionary:
 	_p1b_committed_view.clear()
 	_p1b_item_resync_waiters.clear()
 	_r3c2_postcommit_pending.clear()
+	_r3c4_deferral_started_ms = 0
 	_r3c_deferred_admissions.clear()
 	_fixed_tick_scheduler = null
 	_peer_input_buffers.clear()
