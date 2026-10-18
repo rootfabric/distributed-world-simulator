@@ -107,6 +107,11 @@ var _r3c2_deferred_diagnostic_reports := 0
 # 20Hz movement snapshot burst. Frame pacing only; the single-writer M6
 # pipeline, generation semantics and durable-before-ACK barrier are unchanged.
 var _r3c4_periodic_frame_pacing_enabled := false
+# R3C.4 R2: opt-in worker-envelope capture. The authoritative frame detaches
+# ONE service durable DTO and ONE replay outbox projection together; the
+# existing single worker deep-copies both before wakeup and constructs the
+# normalized M6 envelope and SHA256 through the unchanged Checkpoint.create.
+var _r3c4r2_worker_envelope_enabled := false
 var _r3c4_deferral_started_ms := 0
 var _r3c4_deferred_frames := 0
 var _r3c4_capture_slots := 0
@@ -246,6 +251,18 @@ func setup(config: Dictionary) -> Dictionary:
 		bool(config.get("r3c4_periodic_frame_pacing_canary", false))
 		or r3c4_mode == "1"
 	)
+	var r3c4r2_mode := OS.get_environment("DWS_NET_R3C4R2_WORKER_ENVELOPE")
+	if not r3c4r2_mode.is_empty() and r3c4r2_mode != "0" and r3c4r2_mode != "1":
+		return _failure("R3C4R2_INVALID_WORKER_ENVELOPE_MODE")
+	_r3c4r2_worker_envelope_enabled = (
+		bool(config.get("r3c4r2_worker_envelope_canary", false))
+		or r3c4r2_mode == "1"
+	)
+	# R2 is a refinement of the R1 periodic pacing dispatch, never a
+	# standalone mode: fail closed when enabled without R1.
+	if _r3c4r2_worker_envelope_enabled and not _r3c4_periodic_frame_pacing_enabled:
+		_r3c4r2_worker_envelope_enabled = false
+		return _failure("R3C4R2_REQUIRES_PERIODIC_FRAME_PACING")
 	_p1b_item_async_enabled = (
 		bool(config.get("async_durable_item_canary", false))
 		or OS.get_environment("DWS_NET_P1B_ITEM_ASYNC") == "1"
@@ -2793,6 +2810,7 @@ func _persistence_report() -> Dictionary:
 		"r3c4_deferred_frames": _r3c4_deferred_frames,
 		"r3c4_capture_slots": _r3c4_capture_slots,
 		"r3c4_forced_captures": _r3c4_forced_captures,
+		"r3c4r2_worker_envelope_enabled": _r3c4r2_worker_envelope_enabled,
 		"r3c2_phased_item_publication_enabled": _r3c2_phased_item_publication_enabled,
 		"r3c2_postcommit_stage": int(_r3c2_postcommit_pending.get("stage", -1)),
 		"r3c2_postcommit_phases_completed": _r3c2_postcommit_phases_completed,
@@ -3008,9 +3026,32 @@ func _submit_async_movement_checkpoint() -> void:
 	# Both exports are captured on the authoritative thread at one quiescent
 	# boundary. Workers may only consume detached value data, never live owners.
 	var after_quiesce := Time.get_ticks_usec()
-	var authority: Dictionary = _recovery_authority.export_recovery_state()
+	var durable_dto_ms := 0.0
+	var authority: Dictionary
+	var replay: Dictionary
+	if _r3c4r2_worker_envelope_enabled:
+		# R3C.4 R2: the expensive service durable DTO export stays on this
+		# authoritative frame (single-frame source, no multi-frame read) and
+		# is detached together with the replay outbox projection. The
+		# normalized M6 envelope is a pure function of these two detached
+		# values; the existing worker deep-copies both BEFORE wakeup and
+		# constructs the envelope + SHA256 via the unchanged Checkpoint.create.
+		var dto_started := Time.get_ticks_usec()
+		var durable_dto: Dictionary = _service.export_durable_state()
+		durable_dto_ms = float(Time.get_ticks_usec() - dto_started) / 1000.0
+		replay = _replay_outbox.to_dict()
+		if durable_dto.is_empty() or replay.is_empty():
+			_enter_persistence_failure("M7_ASYNC_CHECKPOINT_CAPTURE_EMPTY")
+			return
+		authority = M6AuthorityAdapter.normalize_durable_state(
+			durable_dto, String(_recovery_authority.get("_logical_session_id")))
+		if authority.is_empty():
+			_enter_persistence_failure("R3C4R2_ENVELOPE_NORMALIZATION_FAILED")
+			return
+	else:
+		authority = _recovery_authority.export_recovery_state()
+		replay = _replay_outbox.to_dict()
 	var after_authority := Time.get_ticks_usec()
-	var replay: Dictionary = _replay_outbox.to_dict()
 	var after_replay := Time.get_ticks_usec()
 	if authority.is_empty() or replay.is_empty():
 		_enter_persistence_failure("M7_ASYNC_CHECKPOINT_CAPTURE_EMPTY")
@@ -3033,6 +3074,8 @@ func _submit_async_movement_checkpoint() -> void:
 			"authority_ms": float(after_authority - after_quiesce) / 1000.0,
 			"replay_ms": float(after_replay - after_authority) / 1000.0,
 			"handoff_ms": float(Time.get_ticks_usec() - after_replay) / 1000.0,
+			"r3c4r2_worker_envelope": _r3c4r2_worker_envelope_enabled,
+			"r3c4r2_durable_dto_ms": durable_dto_ms,
 			"ledger_count": Dictionary(gameplay.get("service_operation_ledger", {})).size(),
 			"outbox_count": Array(replay.get("committed_outbox", [])).size()})
 	_movement_checkpoint_dirty = false
@@ -3428,6 +3471,7 @@ func stop() -> Dictionary:
 	_p1b_item_resync_waiters.clear()
 	_r3c2_postcommit_pending.clear()
 	_r3c4_deferral_started_ms = 0
+	_r3c4r2_worker_envelope_enabled = false
 	_r3c_deferred_admissions.clear()
 	_fixed_tick_scheduler = null
 	_peer_input_buffers.clear()

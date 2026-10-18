@@ -31,6 +31,15 @@ func export_recovery_state() -> Dictionary:
 	var durable_state: Dictionary = _service.export_durable_state()
 	if durable_state.is_empty():
 		return {}
+	# R3C.4 R2: the normalized M6 envelope is a pure function of one detached
+	# durable DTO plus the logical session id, so the periodic capture path can
+	# normalize a DTO it already exported without re-reading live service state.
+	return normalize_durable_state(durable_state, _logical_session_id)
+
+
+static func normalize_durable_state(durable_state: Dictionary, logical_session_id: String) -> Dictionary:
+	if durable_state.is_empty():
+		return {}
 	var authority_owner_id := String(durable_state.get("authority_owner_id", ""))
 	var authority_epoch := int(durable_state.get("authority_epoch", 0))
 	var state_revision := int(durable_state.get("revision", 0))
@@ -58,7 +67,7 @@ func export_recovery_state() -> Dictionary:
 		"authority_owner_id": authority_owner_id,
 		"authority_epoch": authority_epoch,
 		"server_tick": server_tick,
-		"session_id": _logical_session_id,
+		"session_id": logical_session_id,
 		"current_snapshot": snapshot,
 		"durable_state_checksum": String(durable_state.get("checksum", "")),
 	}
@@ -133,7 +142,7 @@ func validate_recovery_state(value: Dictionary) -> Dictionary:
 	return _success()
 
 
-func _spatial_ref(server_tick: int) -> Dictionary:
+static func _spatial_ref(server_tick: int) -> Dictionary:
 	return {
 		"schema": EntitySnapshot.SPATIAL_REF_SCHEMA,
 		"universe_id": "planet-simulator",
