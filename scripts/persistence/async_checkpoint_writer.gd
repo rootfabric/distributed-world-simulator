@@ -5,6 +5,7 @@ extends RefCounted
 # Periodic callers coalesce through their dirty flag, not an unbounded queue.
 const Repository = preload("res://scripts/persistence/authoritative_recovery_repository.gd")
 const Checkpoint = preload("res://scripts/persistence/authoritative_checkpoint.gd")
+const M6Adapter = preload("res://scripts/runtime/networked_gameplay/m6/m6_dedicated_gameplay_authority_adapter.gd")
 
 var _thread: Thread
 var _mutex := Mutex.new()
@@ -103,6 +104,40 @@ func submit_owned(authority_state: Dictionary, replay_state: Dictionary,
 	_wake.post()
 	return {"success": true, "error_code": "", "details": {"generation": generation}}
 
+
+# R3C.4 R2 periodic-only handoff. The raw durable gameplay DTO is frozen at
+# the same authoritative frame as the replay outbox. A DEEP COPY of both
+# structures precedes worker wakeup, exactly like submit_owned(); no Node,
+# Service, Mutable outbox or live authority may enter the worker thread.
+func submit_frozen_gameplay_source(
+	frozen_gameplay: Dictionary, replay_state: Dictionary,
+	checkpoint_id: String, generation: int, previous_generation: int
+) -> Dictionary:
+	if frozen_gameplay.is_empty() or replay_state.is_empty():
+		return _failure("R3C4_R2_FROZEN_SOURCE_REQUIRED")
+	if _thread == null:
+		return _failure("ASYNC_CHECKPOINT_NOT_STARTED")
+	_mutex.lock()
+	if _busy or _stopping:
+		_mutex.unlock()
+		return _failure("ASYNC_CHECKPOINT_BUSY")
+	_busy = true
+	_mutex.unlock()
+	var job: Dictionary = {
+		"job_kind": "R3C4_R2_PERIODIC_FROZEN_GAMEPLAY",
+		"frozen_gameplay": frozen_gameplay.duplicate(true),
+		"replay": replay_state.duplicate(true),
+		"checkpoint_id": checkpoint_id,
+		"generation": generation, "previous_generation": previous_generation,
+		"operation_id": "",
+	}
+	_mutex.lock()
+	_job = job
+	_mutex.unlock()
+	_wake.post()
+	return {"success": true, "error_code": "", "details": {"generation": generation}}
+
+
 func poll_completed() -> Dictionary:
 	_mutex.lock()
 	# P1-B: detach even the bounded worker-completion metadata. The owning
@@ -155,14 +190,28 @@ func _run() -> void:
 		if not String(job.get("operation_id", "")).is_empty() and test_delay_ms > 0:
 			OS.delay_msec(test_delay_ms)
 			injected_ms = test_delay_ms
-		var authority: Dictionary = job["authority"]
-		var checkpoint: Dictionary = Checkpoint.create(
-			String(job["checkpoint_id"]), int(job["generation"]),
-			int(job["previous_generation"]), authority, job["replay"],
-			String(job["operation_id"]), int(authority.get("server_tick", -1)))
-		var built := Time.get_ticks_usec()
-		var saved: Dictionary = _repository.save_atomic(checkpoint)
-		var finished := Time.get_ticks_usec()
+		var authority: Dictionary = Dictionary(job.get("authority", {}))
+		var wrap_started: int = Time.get_ticks_usec()
+		if String(job.get("job_kind", "")) == "R3C4_R2_PERIODIC_FROZEN_GAMEPLAY":
+			# Only pure value-envelope work here. The writer is the ONLY disk
+			# owner for periodic and command generations; ACK gates stay on main.
+			authority = M6Adapter.wrap_frozen_gameplay_source(
+				Dictionary(job.get("frozen_gameplay", {}))
+			)
+		var wrap_ms: float = float(Time.get_ticks_usec() - wrap_started) / 1000.0
+		var checkpoint: Dictionary = {}
+		var saved: Dictionary = {}
+		if authority.is_empty():
+			saved = _failure("R3C4_R2_WORKER_ENVELOPE_INVALID")
+		else:
+			checkpoint = Checkpoint.create(
+				String(job["checkpoint_id"]), int(job["generation"]),
+				int(job["previous_generation"]), authority, job["replay"],
+				String(job["operation_id"]), int(authority.get("server_tick", -1)))
+		var built: int = Time.get_ticks_usec()
+		if not authority.is_empty():
+			saved = _repository.save_atomic(checkpoint)
+		var finished: int = Time.get_ticks_usec()
 		# Return bounded metadata, never copy the full checkpoint into the main
 		# thread again. Failure cause is retained for fail-closed recovery.
 		var result := {
@@ -174,6 +223,7 @@ func _run() -> void:
 				"operation_id": String(job["operation_id"]),
 				"server_tick": int(authority.get("server_tick", -1)),
 				"build_ms": float(built - started) / 1000.0,
+				"wrap_ms": wrap_ms,
 				"write_ms": float(finished - built) / 1000.0,
 				"injected_ms": injected_ms,
 				"worker_ms": float(finished - started) / 1000.0,
