@@ -758,7 +758,10 @@ static func staged_resume(cursor: Dictionary, source_field: Dictionary,
 			or not cursor.intake_by_id is Dictionary \
 			or not cursor.next_population is Array or not cursor.propagules is Array:
 		return _fail("A5_STAGED_CURSOR_TYPES")
-	var unsigned: Dictionary = cursor.duplicate(true)
+	# A shallow envelope copy keeps the supplied cursor and every nested
+	# array immutable. Deep-cloning the full source/partial outcomes solely
+	# for the checksum doubled resident memory and resume latency.
+	var unsigned: Dictionary = cursor.duplicate(false)
 	unsigned.checksum = ""
 	var digest := C.digest(unsigned)
 	if digest.is_empty() or digest != String(cursor.checksum):
@@ -837,13 +840,15 @@ static func staged_resume(cursor: Dictionary, source_field: Dictionary,
 			if phase != "ALLOCATE" else 0}
 
 static func _seal_staged_cursor(cursor: Dictionary) -> Dictionary:
-	var next: Dictionary = cursor.duplicate(true)
-	next["checksum"] = ""
-	var digest := C.digest(next)
+	# Called ONLY for an owned cursor from staged_begin() or the detached
+	# staged_resume() work copy. No source/host-provided cursor is mutated.
+	# Removing this redundant full deep copy does not change seal bytes.
+	cursor["checksum"] = ""
+	var digest := C.digest(cursor)
 	if digest.is_empty():
 		return {}
-	next["checksum"] = digest
-	return next
+	cursor["checksum"] = digest
+	return cursor
 
 ## Canonical propagule materialization (A5-owned admission).
 ## Without a mutation receipt the v1 parent-transfer witness applies (child
