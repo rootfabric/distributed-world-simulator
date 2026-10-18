@@ -259,7 +259,14 @@ def play(args, manifest: dict) -> None:
             for _ in range(2):
                 command(role,'character.camera.toggle')
             dump(root/role/'initial-state.json',bridge(ports[role],token,'state.get',{'kind':'automation'}))
-        for role in processes: (root/role/'measure.start').touch()
+        # The normative measurement window must contain only the continuous
+        # connected movement phase. Scenario reconnect stages are functional
+        # acceptance and are deliberately measured separately: the probe
+        # closes the window (measure.end) before any planned reconnect and,
+        # for r31, opens it only after the roundtrip stages have finished.
+        measure_closed = False
+        if args.scenario != 'r31-reconnect-roundtrip':
+            for role in processes: (root/role/'measure.start').touch()
         started=time.monotonic()
         def automation(role: str) -> dict:
             return bridge(ports[role], token, 'state.get', {'kind': 'automation'})['automation']
@@ -469,6 +476,9 @@ def play(args, manifest: dict) -> None:
             dump(root/'r31-roundtrip.json', r31)
             manifest['phase_results'].append({'phase': 'r31_reconnect_roundtrip',
                                               'result': r31['stages']})
+            # Functional r31 stages (including B's mid-remote reconnect) are
+            # complete; only now open the normative perf window.
+            for role in processes: (root/role/'measure.start').touch()
         def standard_phase_loop() -> None:
             last_phase=-1;phase_states={}
             while time.monotonic()-started < args.duration:
@@ -514,6 +524,7 @@ def play(args, manifest: dict) -> None:
         elif args.scenario == 'r3-slow-item':
             # Concurrent automation control: both users keep issuing movement
             # while 24 real ITEM commands pass through the exact M6 writer.
+            # Close the perf window before the end-of-run reconnect.
             stop_feed = threading.Event()
             feed_errors: list[str] = []
             def feed_both_players() -> None:
@@ -536,6 +547,8 @@ def play(args, manifest: dict) -> None:
             if feed_errors:
                 raise RuntimeError(f'concurrent R3 feed failed: {feed_errors[:3]}')
             standard_phase_loop()
+            for role in processes: (root/role/'measure.end').touch()
+            measure_closed = True
             old=bridge(ports['b'],token,'state.get',{'kind':'automation'})['automation']
             reconnect=command('b','network.reconnect')
             time.sleep(1);wait_ready('b')
@@ -550,6 +563,8 @@ def play(args, manifest: dict) -> None:
             # movement loop afterwards keeps full movement/perf coverage.
             durable_phase()
             standard_phase_loop()
+            for role in processes: (root/role/'measure.end').touch()
+            measure_closed = True
             old=bridge(ports['b'],token,'state.get',{'kind':'automation'})['automation']
             reconnect=command('b','network.reconnect')
             time.sleep(1);wait_ready('b')
@@ -560,6 +575,8 @@ def play(args, manifest: dict) -> None:
                 raise RuntimeError('reconnect did not advance ownership epoch')
         elif args.scenario in ('local', 'seam-stress'):
             standard_phase_loop()
+            for role in processes: (root/role/'measure.end').touch()
+            measure_closed = True
             # Reconnect is outside the perf window; it still must execute and recover.
             old=bridge(ports['b'],token,'state.get',{'kind':'automation'})['automation']
             reconnect=command('b','network.reconnect')
@@ -569,7 +586,8 @@ def play(args, manifest: dict) -> None:
                                              'before_epoch':old.get('ownership_epoch'),'after_epoch':after.get('ownership_epoch')})
             if after.get('ownership_epoch',0)<=old.get('ownership_epoch',0):
                 raise RuntimeError('reconnect did not advance ownership epoch')
-        for role in processes: (root/role/'measure.end').touch()
+        if not measure_closed:
+            for role in processes: (root/role/'measure.end').touch()
         time.sleep(.5)
         for role in ('a','b'):
             bridge(ports[role],token,'movement.stop')
