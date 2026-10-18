@@ -1,0 +1,106 @@
+name: ECO A14.5 R2 Fresh Independent Frozen Verifier
+
+on:
+  push:
+    branches:
+      - verify/eco-arch2-a14-5-r2-fb692441-independent-r1
+
+permissions:
+  contents: read
+
+concurrency:
+  group: eco-a14-5-r2-independent-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PRODUCT_HEAD: fb6924415fb23786ea71f5d57430780e60e7238e
+  PRODUCT_TREE: 564fc6a7ecaf8ba5bad06c2fc1b18f665930a7b3
+
+jobs:
+  portable:
+    name: R2 fresh verifier portable
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Frozen product identity and scope
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD^)" = "$PRODUCT_HEAD"
+          test "$(git rev-parse "$PRODUCT_HEAD^{tree}")" = "$PRODUCT_TREE"
+          git diff --exit-code "$PRODUCT_HEAD" HEAD -- scripts/research/ecology/v2/ecology_runtime_v1.gd scripts/research/ecology/v2/resource_lifecycle_runtime_v1.gd validation/ecology/evo_arch2_a14_staged/test_staged_r2_latency.gd
+      - name: Download Godot 4.7.1
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fL --retry 3 -o /tmp/godot.zip https://github.com/godotengine/godot/releases/download/4.7.1-stable/Godot_v4.7.1-stable_linux.x86_64.zip
+          mkdir -p /tmp/godot-r2
+          unzip -q /tmp/godot.zip -d /tmp/godot-r2
+          chmod +x /tmp/godot-r2/Godot_v4.7.1-stable_linux.x86_64
+      - name: Independent staged global tick falsifiers
+        shell: bash
+        run: |
+          set -euo pipefail
+          godot=/tmp/godot-r2/Godot_v4.7.1-stable_linux.x86_64
+          "$godot" --headless --editor --path . --import > /tmp/a145-r2-import.log 2>&1 || { cat /tmp/a145-r2-import.log; exit 1; }
+          "$godot" --headless --path . --script res://validation/ecology/evo_arch2_a14_staged/test_independent_r2_falsifiers.gd > /tmp/a145-r2-fresh.log 2>&1 || { cat /tmp/a145-r2-fresh.log; exit 1; }
+          cat /tmp/a145-r2-fresh.log
+          grep -Fx 'ECO_ARCH2_A14_5_R2_INDEPENDENT PASS' /tmp/a145-r2-fresh.log
+          if grep -Ei 'SCRIPT ERROR|Parse Error|Failed to load script|Error compiling' /tmp/a145-r2-fresh.log; then exit 1; fi
+          git diff --exit-code && git diff --cached --exit-code
+
+  exact:
+    name: R2 independent ${{ matrix.platform }} double
+    runs-on: [self-hosted, '${{ matrix.platform }}', X64]
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [Linux, Windows]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Linux frozen double exact
+        if: matrix.platform == 'Linux'
+        shell: bash
+        env:
+          CONFIGURED_GODOT: ${{ vars.DWS_GODOT_DOUBLE_LINUX_BIN }}
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD^)" = "$PRODUCT_HEAD"
+          test "$(git rev-parse "$PRODUCT_HEAD^{tree}")" = "$PRODUCT_TREE"
+          git diff --exit-code "$PRODUCT_HEAD" HEAD -- scripts/research/ecology/v2/ecology_runtime_v1.gd scripts/research/ecology/v2/resource_lifecycle_runtime_v1.gd
+          godot="${CONFIGURED_GODOT:-$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64}"
+          test "$(sha256sum "$godot" | cut -d' ' -f1)" = "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7"
+          "$godot" --headless --editor --path . --import
+          "$godot" --headless --path . --script res://validation/ecology/evo_arch2_a14_staged/test_independent_r2_falsifiers.gd | tee /tmp/a145-r2-fresh.log
+          grep -Fx 'ECO_ARCH2_A14_5_R2_INDEPENDENT PASS' /tmp/a145-r2-fresh.log
+          git diff --exit-code && git diff --cached --exit-code
+      - name: Windows frozen double exact
+        if: matrix.platform == 'Windows'
+        shell: pwsh
+        env:
+          CONFIGURED_GODOT: ${{ vars.DWS_GODOT_DOUBLE_BIN }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          if ((git rev-parse 'HEAD^').Trim() -ne $env:PRODUCT_HEAD) { throw 'PRODUCT_HEAD_MISMATCH' }
+          if ((git rev-parse "$($env:PRODUCT_HEAD)^{tree}").Trim() -ne $env:PRODUCT_TREE) { throw 'PRODUCT_TREE_MISMATCH' }
+          git diff --exit-code $env:PRODUCT_HEAD HEAD -- scripts/research/ecology/v2/ecology_runtime_v1.gd scripts/research/ecology/v2/resource_lifecycle_runtime_v1.gd
+          if ($LASTEXITCODE -ne 0) { throw 'PRODUCT_SOURCE_CHANGED' }
+          $godot = $env:CONFIGURED_GODOT
+          if ([string]::IsNullOrWhiteSpace($godot)) { $godot = 'C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe' }
+          if ((Get-FileHash $godot -Algorithm SHA256).Hash.ToLowerInvariant() -ne '3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5') { throw 'GODOT_BINARY_MISMATCH' }
+          & $godot --headless --editor --path . --import
+          if ($LASTEXITCODE -ne 0) { throw 'COLD_IMPORT_FAIL' }
+          & $godot --headless --path . --script res://validation/ecology/evo_arch2_a14_staged/test_independent_r2_falsifiers.gd
+          if ($LASTEXITCODE -ne 0) { throw 'INDEPENDENT_EXACT_FAIL' }
+          git diff --exit-code
+          if ($LASTEXITCODE -ne 0) { throw 'TRACKED_DIRTY' }
+          git diff --cached --exit-code
+          if ($LASTEXITCODE -ne 0) { throw 'INDEX_DIRTY' }
