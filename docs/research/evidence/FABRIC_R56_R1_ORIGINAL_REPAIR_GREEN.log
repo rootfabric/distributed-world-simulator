@@ -1,0 +1,3 @@
+Godot Engine v4.7.1.stable.double.custom_build.a13da4feb (2026-07-13 21:00:28 UTC) - https://godotengine.org
+
+FABRIC_R56_REVIEW_FALSIFIER={"checks":7,"failures":[],"observations":{"accepted_graph_hash":"a72aefe3d025f6368eedca28cef6a46348dcbb2ff61503d1afea5376a433bc4c","canonical_changed":true,"duck_store_start_accepted":false,"external_actual_action":"SET_BOND_STRENGTH","forged_pending_error":"R56_PENDING_PROVENANCE_MISMATCH","forged_pending_observed":false,"original_prepared_action":"BREAK_BOND"}}
