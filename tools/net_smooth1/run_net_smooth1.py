@@ -487,6 +487,11 @@ def play(args, manifest: dict) -> None:
             # Functional r31 stages (including B's mid-remote reconnect) are
             # complete; only now open the normative perf window.
             for role in processes: (root/role/'measure.start').touch()
+            # The earlier r31 authority/remote-owner roundtrip is FUNCTIONAL
+            # coverage, not part of the 120s normative movement frame window.
+            # Reset the loop clock here or a slow roundtrip shortens/erases
+            # the measured interval despite a fresh measure.start marker.
+            started = time.monotonic()
         def standard_phase_loop() -> None:
             last_phase=-1;phase_states={}
             while time.monotonic()-started < args.duration:
