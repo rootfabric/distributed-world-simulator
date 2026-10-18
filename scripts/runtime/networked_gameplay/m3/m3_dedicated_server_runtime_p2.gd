@@ -44,6 +44,11 @@ const M6_BUILD_ID := "m6-dedicated-persistence-recovery"
 const M7_CHECKPOINT := "v16.10.6.1-testing-m7-playable-networked-playground"
 const M7_BUILD_ID := "m7-playable-networked-playground"
 const M7_MOVEMENT_CHECKPOINT_INTERVAL_MS := 1500
+# R3C.4 R1: keep the 1.5s durability cadence. When it falls on the same
+# frame as a 20Hz compact snapshot, choose a different frame for capture.
+# Defer for at most 64ms (never an unbounded "wait until idle" policy).
+const R3C4_PERIODIC_MAX_DEFER_MS := 64
+const R3C4_PERIODIC_MAX_PRE_CAPTURE_US := 6000
 const NX2_MOVEMENT_SNAPSHOT_INTERVAL_MS := 50
 const NX3_FIXED_TICK_RATE_HZ := 60
 const NX3_FIXED_TICK_DELTA_SECONDS := 1.0 / 60.0
@@ -142,6 +147,14 @@ var _async_checkpoint_capture_ms := 0.0
 var _async_checkpoint_started_us := 0
 var _async_checkpoint_last: Dictionary = {}
 var _movement_checkpoint_dirty := false
+# R3C.4 opt-in periodic frame-headroom scheduler; no change to M6 writer,
+# ACK escrow, command checkpoints, or the crash/restart checkpoint format.
+var _r3c4_periodic_frame_pacing := false
+var _r3c4_snapshot_published_this_frame := false
+var _r3c4_pre_capture_work_us := 0
+var _r3c4_due_since_ms := -1
+var _r3c4_deferred_frames := 0
+var _r3c4_forced_captures := 0
 var _last_movement_checkpoint_ms := 0
 var _movement_checkpoints := 0
 var _movement_commands_since_checkpoint := 0
@@ -227,6 +240,17 @@ func setup(config: Dictionary) -> Dictionary:
 		bool(config.get("r3c2_phased_publication_canary", false))
 		or OS.get_environment("DWS_NET_R3C2_PHASED_ITEM_PUBLICATION") == "1"
 	)
+	_r3c4_periodic_frame_pacing = (
+		bool(config.get("r3c4_periodic_frame_pacing_canary", false))
+		or OS.get_environment("DWS_NET_R3C4_PERIODIC_FRAME_PACING") == "1"
+	)
+	if _r3c4_periodic_frame_pacing and (not _persistence_enabled or not _playable_sandbox):
+		return _failure("R3C4_PERSISTENT_PLAYABLE_WORLD_REQUIRED")
+	_r3c4_snapshot_published_this_frame = false
+	_r3c4_pre_capture_work_us = 0
+	_r3c4_due_since_ms = -1
+	_r3c4_deferred_frames = 0
+	_r3c4_forced_captures = 0
 	_p1b_item_async_enabled = (
 		bool(config.get("async_durable_item_canary", false))
 		or OS.get_environment("DWS_NET_P1B_ITEM_ASYNC") == "1"
@@ -447,9 +471,13 @@ func _process(delta: float) -> void:
 		"server_tick": _server_tick,
 		"movement_dirty": _movement_snapshot_dirty,
 	})
+	_r3c4_snapshot_published_this_frame = false
 	_maybe_publish_movement_snapshot()
 	_stall_exit(snapshot_probe)
 	var smooth_snapshot_done := Time.get_ticks_usec()
+	# Snapshot+compact transport must not share a heavy periodic checkpoint
+	# capture frame when the opt-in R3C4 policy has a spare bounded frame.
+	_r3c4_pre_capture_work_us = smooth_snapshot_done - smooth_started
 	var persistence_probe := _stall_enter("MOVEMENT_PERSISTENCE", {
 		"server_tick": _server_tick,
 		"movement_dirty": _movement_checkpoint_dirty,
@@ -1071,6 +1099,9 @@ func _maybe_publish_movement_snapshot() -> void:
 	if _server_tick - _last_movement_snapshot_tick < NX3_MOVEMENT_SNAPSHOT_INTERVAL_TICKS:
 		return
 	_last_movement_snapshot_tick = _server_tick
+	# Mark even unsuccessful compact publication: the expensive full snapshot
+	# or committed view preparation has already been attempted on this frame.
+	_r3c4_snapshot_published_this_frame = true
 	var snapshot_started_us := Time.get_ticks_usec()
 	var pending_view := not _p1b_item_pending.is_empty()
 	var authoritative_snapshot: Dictionary
@@ -2763,6 +2794,9 @@ func _persistence_report() -> Dictionary:
 		"r3b_async_disconnect_commits": _r3b_async_disconnect_commits,
 		"r3c_async_admission_enabled": _r3c_async_admission_enabled,
 		"r3c2_phased_item_publication_enabled": _r3c2_phased_item_publication_enabled,
+		"r3c4_periodic_frame_pacing": _r3c4_periodic_frame_pacing,
+		"r3c4_deferred_frames": _r3c4_deferred_frames,
+		"r3c4_forced_captures": _r3c4_forced_captures,
 		"r3c2_postcommit_stage": int(_r3c2_postcommit_pending.get("stage", -1)),
 		"r3c2_postcommit_phases_completed": _r3c2_postcommit_phases_completed,
 		"r3c2_postcommit_last_stage_ms": _r3c2_postcommit_last_stage_ms,
@@ -3021,6 +3055,11 @@ func _maybe_persist_movement_checkpoint() -> void:
 		and not bool(_service.can_persist_product_state())
 	):
 		return
+	if _r3c4_periodic_frame_pacing and not _movement_checkpoint_dirty:
+		# A synchronous command checkpoint may have already covered this
+		# movement. Clear the due latch so the next dirty epoch gets a fresh
+		# bounded deferral rather than inheriting a stale deadline.
+		_r3c4_due_since_ms = -1
 	if (
 		not _playable_sandbox
 		or not _persistence_enabled
@@ -3029,6 +3068,46 @@ func _maybe_persist_movement_checkpoint() -> void:
 		or Time.get_ticks_msec() - _last_movement_checkpoint_ms < M7_MOVEMENT_CHECKPOINT_INTERVAL_MS
 	):
 		return
+	# R3C.4 only schedules PERIODIC capture, never command durability.
+	# A full M6 export on a 20Hz snapshot frame stacks two checksum-heavy
+	# workloads and produces a repeatable 1.5s p99 spike. Keep exactly the
+	# same generation/worker/barrier path, moving capture <=64ms later.
+	if _r3c4_periodic_frame_pacing and _movement_checkpoint_writer != null:
+		if _movement_checkpoint_writer.is_busy():
+			return  # Existing single-writer backpressure, no second generation.
+		var now_ms: int = Time.get_ticks_msec()
+		if _r3c4_due_since_ms < 0:
+			_r3c4_due_since_ms = now_ms
+		var deferred_ms: int = now_ms - _r3c4_due_since_ms
+		var frame_busy: bool = (
+			_r3c4_snapshot_published_this_frame
+			or _r3c4_pre_capture_work_us > R3C4_PERIODIC_MAX_PRE_CAPTURE_US
+		)
+		if frame_busy and deferred_ms < R3C4_PERIODIC_MAX_DEFER_MS:
+			_r3c4_deferred_frames += 1
+			if SmoothTrace.enabled():
+				SmoothTrace.emit("r3c4_periodic_frame_deferred", {
+					"generation": _checkpoint_generation + 1,
+					"deferred_ms": deferred_ms,
+					"snapshot_frame": _r3c4_snapshot_published_this_frame,
+					"other_work_us": _r3c4_pre_capture_work_us,
+				})
+			return
+		if frame_busy:
+			_r3c4_forced_captures += 1
+			if SmoothTrace.enabled():
+				SmoothTrace.emit("r3c4_periodic_deferral_bound", {
+					"generation": _checkpoint_generation + 1,
+					"deferred_ms": deferred_ms,
+				})
+		if SmoothTrace.enabled():
+			SmoothTrace.emit("r3c4_periodic_capture_slot", {
+				"generation": _checkpoint_generation + 1,
+				"deferred_ms": deferred_ms,
+				"snapshot_frame": _r3c4_snapshot_published_this_frame,
+				"other_work_us": _r3c4_pre_capture_work_us,
+			})
+		_r3c4_due_since_ms = -1
 	if SmoothTrace.enabled():
 		SmoothTrace.emit("periodic_checkpoint_dispatch", {
 			"origin": "MOVEMENT_PERIODIC",

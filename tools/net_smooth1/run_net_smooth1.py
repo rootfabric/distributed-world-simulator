@@ -154,6 +154,7 @@ def play(args, manifest: dict) -> None:
                     r3c2_server_phased=args.r3c2_server_phased,
                     r3c3_staged_earth=args.r3c3_staged_earth,
                     r3c21_frame_paced_presentation=args.r3c21_frame_paced_presentation,
+                    r3c4_periodic_frame_pacing=args.r3c4_periodic_frame_pacing,
                     scenario=args.scenario)
     processes: dict[str,subprocess.Popen] = {}; streams=[]
     def spawn(role: str) -> None:
@@ -178,6 +179,8 @@ def play(args, manifest: dict) -> None:
             env['DWS_NET_R3C21_FRAME_PACED_PRESENTATION']='1'
         if role == 'server' and args.r3c2_server_phased:
             env['DWS_NET_R3C2_PHASED_ITEM_PUBLICATION']='1'
+        if role == 'server' and args.r3c4_periodic_frame_pacing:
+            env['DWS_NET_R3C4_PERIODIC_FRAME_PACING']='1'
         if role == 'server' and args.slow_item_writer_ms > 0:
             # Test-only worker injection, never delay the main-thread loop.
             env['DWS_NET_SMOOTH_TEST_HOOKS']='1'
@@ -659,6 +662,8 @@ def main() -> int:
                         help='Client-only staged Earth geometry and R2 vegetation')
     parser.add_argument('--r3c21-frame-paced-presentation', action='store_true',
                         help='R3C3 R2.1: preattach hidden vegetation nodes per frame before atomic visual swap')
+    parser.add_argument('--r3c4-periodic-frame-pacing', action='store_true',
+                        help='R3C4 R1: server-only periodic M6 capture on non-snapshot frame (<=64ms bounded delay)')
     parser.add_argument('--inject-stall-role',choices=('server','a','b'))
     parser.add_argument('--inject-stall-ms',type=int,default=250)
     args=parser.parse_args()
