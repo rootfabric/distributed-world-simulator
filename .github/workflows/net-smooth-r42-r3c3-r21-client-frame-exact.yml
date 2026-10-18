@@ -5,6 +5,7 @@ on:
     branches:
       - repair/net-smooth1-r42-r3c3-r21-client-frame-pacing-r1
       - repair/net-smooth1-r42-r3c21-r2-exact-parse-r1
+      - review/net-smooth1-r42-r3c21-persistence-exact-r1
   workflow_dispatch:
 
 permissions:
@@ -31,6 +32,7 @@ jobs:
         run: |
           set -euo pipefail
           python -m unittest discover -s tests/tools -p 'test_net_smooth1_r42_r3c21_frame_pacing_source_contract.py' -v
+          python -m unittest discover -s tests/tools -p 'test_net_smooth1_r42_r3c21_persistence_projection_source_contract.py' -v
           python -m unittest discover -s tests/tools -p 'test_net_smooth1_r42_r3c21_visual_analyzer.py' -v
           python -m unittest discover -s tests/tools -p 'test_net_smooth1_r42_r3c3_r1_source_contract.py' -v
           python -m unittest discover -s tests/tools -p 'test_net_smooth1_r42_r3c2_source_contract.py' -v
@@ -54,10 +56,13 @@ jobs:
         run: |
           $ErrorActionPreference='Stop'
           $Base='1645bba8af775fb989717b8a556f7431ca347dc4'
+          $RepairBase='1205996dbf3e17295b88e7c4142bb209d1ca7320'
           $B='C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe'
           if ((git rev-parse HEAD).Trim() -ne $env:GITHUB_SHA) { throw 'R3C21_HEAD_MISMATCH' }
           git merge-base --is-ancestor $Base HEAD
           if ($LASTEXITCODE -ne 0) { throw 'R3C21_PARENT_NOT_ANCESTOR' }
+          git merge-base --is-ancestor $RepairBase HEAD
+          if ($LASTEXITCODE -ne 0) { throw 'R3C21_REPAIR_PARENT_NOT_ANCESTOR' }
           if (git status --porcelain --untracked-files=no) { throw 'R3C21_TRACKED_DIRTY' }
           if (-not (Test-Path $B)) { throw 'R3C21_GODOT_MISSING' }
           $Version=(& $B --version | Out-String).Trim()
@@ -87,6 +92,7 @@ jobs:
           $E='artifacts\net-smooth1\r3c21-windows-exact'
           $Suites=@(
             'tests/runtime/test_net_smooth1_r42_r3c21_frame_paced_visual.gd',
+            'tests/runtime/test_net_smooth1_r42_r3c21_same_revision_tick_mirror.gd',
             'tests/runtime/test_net_smooth1_r42_r3c3_r2_staged_vegetation.gd',
             'tests/runtime/test_net_smooth1_r42_r3c3_staged_earth_geometry.gd',
             'tests/runtime/test_v0_p1_earth_wiring.gd',
@@ -151,8 +157,10 @@ jobs:
           E=artifacts/net-smooth1/r3c21-linux-exact
           mkdir -p "$E"
           BASE='1645bba8af775fb989717b8a556f7431ca347dc4'
+          REPAIR_BASE='1205996dbf3e17295b88e7c4142bb209d1ca7320'
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
           git merge-base --is-ancestor "$BASE" HEAD
+          git merge-base --is-ancestor "$REPAIR_BASE" HEAD
           test -z "$(git status --porcelain --untracked-files=no)"
           B="${DWS_GODOT_DOUBLE_LINUX_BIN:-$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64}"
           test -x "$B"
@@ -175,6 +183,7 @@ jobs:
           E=artifacts/net-smooth1/r3c21-linux-exact
           for P in \
             tests/runtime/test_net_smooth1_r42_r3c21_frame_paced_visual.gd \
+            tests/runtime/test_net_smooth1_r42_r3c21_same_revision_tick_mirror.gd \
             tests/runtime/test_net_smooth1_r42_r3c3_r2_staged_vegetation.gd \
             tests/runtime/test_net_smooth1_r42_r3c3_staged_earth_geometry.gd \
             tests/runtime/test_net_smooth1_r42_r3c2_phased_item_publication.gd \
