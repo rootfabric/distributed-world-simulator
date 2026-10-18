@@ -100,9 +100,9 @@ Gate не подавлялся, проверки не отключались.
   focused-тестами и durable-commands прогоном.
 - Windows/Linux Godot Exact + Source Contracts: workflow
   `NET-SMOOTH1 R4.2 R3C3 R2.1 Client Frame Exact`, run 39087435988 на
-  repair-ветке (source-contracts success; windows/linux — self-hosted
-  runners, ожидают освобождения; предыдущий эквивалентный run 39084453789
-  на BASE_HEAD — все три job success).
+  repair-ветке — ИТОГ: source-contracts/windows-exact/linux-exact
+  **все success** (финальная фиксация 2026-10-18); эквивалентный run 39084453789
+  на BASE_HEAD — все три job success.
 
 ## Evidence
 
