@@ -64,6 +64,84 @@ func export_recovery_state() -> Dictionary:
 	}
 
 
+# R3C.4 R2, PERIODIC ONLY. Captured on the authoritative server thread:
+# export_durable_state() already returns a detached JSON-safe durable DTO.
+# Envelope normalization and repeated full-snapshot hashing are deferred to
+# the SAME existing checkpoint worker. No live service/Node crosses threads.
+func capture_frozen_gameplay_source_for_worker() -> Dictionary:
+	if _service == null:
+		return {}
+	var durable: Dictionary = _service.export_durable_state()
+	if durable.is_empty():
+		return {}
+	return {"durable_state": durable, "logical_session_id": _logical_session_id}
+
+
+# Pure worker-side version of the accepted export_recovery_state envelope.
+# Inputs MUST be deep-copied by AsyncCheckpointWriter before the semaphore.
+# On invalid DTO, fail closed; never write a partially wrapped checkpoint.
+static func wrap_frozen_gameplay_source(frozen: Dictionary) -> Dictionary:
+	var raw_value = frozen.get("durable_state", null)
+	if not raw_value is Dictionary:
+		return {}
+	var durable: Dictionary = Dictionary(raw_value)
+	if durable.is_empty():
+		return {}
+	var session_id: String = String(frozen.get("logical_session_id", ""))
+	if session_id.is_empty() or session_id != session_id.strip_edges().to_lower():
+		return {}
+	for ch in session_id:
+		if not (
+			(ch >= "a" and ch <= "z") or (ch >= "0" and ch <= "9")
+			or ch in ["/", "_", ".", "-"]
+		):
+			return {}
+	var owner: String = String(durable.get("authority_owner_id", ""))
+	var epoch: int = int(durable.get("authority_epoch", 0))
+	var revision: int = int(durable.get("revision", -1))
+	var tick: int = int(durable.get("server_tick", -1))
+	if owner.is_empty() or epoch < 1 or revision < 0 or tick < 0:
+		return {}
+	var snapshot: Dictionary = EntitySnapshot.normalize(EntitySnapshot.create(
+		"snapshot/m6/dedicated/%d" % revision,
+		ENTITY_ID, ENTITY_TYPE, revision, owner, epoch, tick,
+		_r3c4_worker_spatial_ref(tick),
+		{"region_id": String(durable.get("region_id", ""))},
+		{},
+		{
+			"networked_gameplay_state": durable,
+			"durable_state_checksum": String(durable.get("checksum", "")),
+		}
+	))
+	if snapshot.is_empty():
+		return {}
+	return {
+		"schema": SCHEMA,
+		"authority_owner_id": owner,
+		"authority_epoch": epoch,
+		"server_tick": tick,
+		"session_id": session_id,
+		"current_snapshot": snapshot,
+		"durable_state_checksum": String(durable.get("checksum", "")),
+	}
+
+
+static func _r3c4_worker_spatial_ref(server_tick: int) -> Dictionary:
+	# Literal parity with _spatial_ref() used by the unchanged legacy path.
+	return {
+		"schema": EntitySnapshot.SPATIAL_REF_SCHEMA,
+		"universe_id": "planet-simulator",
+		"instance_id": "m6-dedicated",
+		"space_id": "networked-gameplay",
+		"frame_id": "frame/m6/dedicated",
+		"position_m": [0.0, 0.0, 0.0],
+		"rotation_xyzw": [0.0, 0.0, 0.0, 1.0],
+		"linear_velocity_mps": [0.0, 0.0, 0.0],
+		"angular_velocity_rps": [0.0, 0.0, 0.0],
+		"sample_time_s": float(server_tick),
+	}
+
+
 func restore_recovery_state(value: Dictionary) -> Dictionary:
 	if _service == null:
 		return _failure("M6_AUTHORITY_ADAPTER_NOT_CONFIGURED")
