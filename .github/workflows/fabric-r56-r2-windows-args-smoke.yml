@@ -65,17 +65,35 @@ jobs:
           if ($code -match '(?i)\$args\b') { throw 'RESERVED_ARGS_VARIABLE_STILL_USED' }
           $tmp = Join-Path $env:RUNNER_TEMP 'fabric-r56-pwsh-args'
           New-Item -Path $tmp -ItemType Directory -Force | Out-Null
-          $fake = Join-Path $tmp 'mock-godot.exe'
-          $mockCode = @'
+          # PowerShell 7 Add-Type can build libraries but not ConsoleApplication.
+          # Build a real Windows executable apphost, then execute the exact
+          # published RunGodot function against it to verify its argv binding.
+          $src = Join-Path $tmp 'mocksrc'
+          New-Item -ItemType Directory -Path $src -Force | Out-Null
+          $proj = Join-Path $src 'MockGodot.csproj'
+          [IO.File]::WriteAllText($proj, @'
+          <Project Sdk="Microsoft.NET.Sdk">
+            <PropertyGroup>
+              <OutputType>Exe</OutputType>
+              <TargetFramework>net8.0</TargetFramework>
+              <UseAppHost>true</UseAppHost>
+            </PropertyGroup>
+          </Project>
+          '@)
+          [IO.File]::WriteAllText((Join-Path $src 'Program.cs'), @'
           using System;
-          public class MockGodot {
+          public class Program {
               public static int Main(string[] args) {
                   Console.WriteLine("MOCK_ARGV=" + string.Join("|", args));
                   return 0;
               }
           }
-          '@
-          Add-Type -TypeDefinition $mockCode -OutputAssembly $fake -OutputType ConsoleApplication -ErrorAction Stop
+          '@)
+          $publish = Join-Path $tmp 'publish'
+          dotnet publish $proj -c Release -r win-x64 --self-contained false -o $publish --nologo
+          if ($LASTEXITCODE -ne 0) { throw 'MOCK_GODOT_BUILD_FAILED' }
+          $fake = Join-Path $publish 'MockGodot.exe'
+          if (!(Test-Path $fake)) { throw 'MOCK_GODOT_EXE_MISSING' }
           $GodotBin = $fake
           $Root = (Get-Location).Path
           $Out = $tmp
