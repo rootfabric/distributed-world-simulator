@@ -38,7 +38,7 @@ function Identity([string]$Name) {
         "HEAD=$head", "TREE=$tree", "GODOT_VERSION=$version", "GODOT_SHA256=$sha"
     ), $Utf8)
 }
-function RunGodot([string]$Name, [string[]]$Args) {
+function RunGodot([string]$Name, [string[]]$GateArgs) {
     $start = [Diagnostics.ProcessStartInfo]::new()
     $start.FileName = $GodotBin
     $start.WorkingDirectory = $Root
@@ -49,7 +49,7 @@ function RunGodot([string]$Name, [string[]]$Args) {
     $start.StandardErrorEncoding = $Utf8
     $common = @('--headless','--path',$Root)
     if ($Name -eq 'bridge4-regression') { $common = @('--headless','--quit-after','2','--path',$Root) }
-    foreach ($arg in ($common + $Args)) { $start.ArgumentList.Add($arg) }
+    foreach ($arg in ($common + $GateArgs)) { $start.ArgumentList.Add($arg) }
     $process = [Diagnostics.Process]::new()
     $process.StartInfo = $start
     try {
