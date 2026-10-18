@@ -125,7 +125,10 @@ func advance(state: Dictionary, options: Dictionary,
 			if int(step.state.tick) != int(state.tick) + 1:
 				return _error("STAGED_SESSION_FINAL_TICK", true)
 			var completed: Dictionary = step.state
-			cancel()
+			# A successful commit closes the cursor, but is NOT cancellation.
+			_cursor = {}
+			_members = 0
+			_cursor_bytes = 0
 			_completed_ticks += 1
 			var wall_us := _finish_wall(started_us, soft_budget_us)
 			return {"success": true, "complete": true, "pending": false,
