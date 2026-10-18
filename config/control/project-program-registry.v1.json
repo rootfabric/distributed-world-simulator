@@ -1,7 +1,7 @@
 {
   "schema": "distributed_world_simulator.project_program_registry.v1",
   "control_plane_revision": "PC0-2026-08-10-R1",
-  "registry_generation": 83,
+  "registry_generation": 82,
   "architecture_revision": "GLOBAL-P0-2026-08-12-R3-REFRESH-R1",
   "canonical_branch": "main",
   "updated_at_utc": "2026-09-09T10:18:03Z",

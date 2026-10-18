@@ -232,7 +232,7 @@
     ]
   },
   "pre_h0_3_runtime_mutation_lease": {
-    "effective_registry_generation": 83,
+    "effective_registry_generation": 82,
     "capacity": 1,
     "holder_program": "V0",
     "holder_checkpoint": "V0_PLAYABLE_SEAMLESS_PLANET_COMPOSITION_ACCEPTANCE",
