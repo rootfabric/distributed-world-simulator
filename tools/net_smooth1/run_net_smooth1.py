@@ -24,6 +24,7 @@ from analyze_net_smooth1 import write_report
 
 TESTS = [
  'tests/runtime/test_net_smooth1_r3c4_periodic_frame_headroom.gd',
+ 'tests/runtime/test_net_smooth1_r3c4r2_worker_envelope.gd',
  'tests/runtime/test_net_smooth1_r42_r3c2_phased_item_publication.gd',
  'tests/characters/test_net_smooth1_r42_r3c2_avatar_prewarm.gd',
  'tests/runtime/test_net_smooth1_r42_r3c_async_leave.gd',
@@ -156,6 +157,7 @@ def play(args, manifest: dict) -> None:
                     r3c3_staged_earth=args.r3c3_staged_earth,
                     r3c21_frame_paced_presentation=args.r3c21_frame_paced_presentation,
                     r3c4_periodic_frame_pacing=args.r3c4_periodic_frame_pacing,
+                    r3c4r2_worker_envelope=args.r3c4r2_worker_envelope,
                     scenario=args.scenario)
     processes: dict[str,subprocess.Popen] = {}; streams=[]
     def spawn(role: str) -> None:
@@ -183,6 +185,9 @@ def play(args, manifest: dict) -> None:
         if role == 'server' and args.r3c4_periodic_frame_pacing:
             # R3C.4 frame pacing is a server-only authority concern.
             env['DWS_NET_R3C4_PERIODIC_FRAME_PACING']='1'
+        if role == 'server' and args.r3c4r2_worker_envelope:
+            # R3C.4 R2 requires R1; the runtime fails closed without it.
+            env['DWS_NET_R3C4R2_WORKER_ENVELOPE']='1'
         if role == 'server' and args.slow_item_writer_ms > 0:
             # Test-only worker injection, never delay the main-thread loop.
             env['DWS_NET_SMOOTH_TEST_HOOKS']='1'
@@ -666,6 +671,8 @@ def main() -> int:
                         help='R3C3 R2.1: preattach hidden vegetation nodes per frame before atomic visual swap')
     parser.add_argument('--r3c4-periodic-frame-pacing', action='store_true',
                         help='R3C.4: defer a due periodic checkpoint off the same-frame snapshot burst (bounded 64ms)')
+    parser.add_argument('--r3c4r2-worker-envelope', action='store_true',
+                        help='R3C.4 R2 (requires R1): detach service durable DTO + replay outbox together; worker builds the normalized M6 envelope')
     parser.add_argument('--inject-stall-role',choices=('server','a','b'))
     parser.add_argument('--inject-stall-ms',type=int,default=250)
     args=parser.parse_args()
