@@ -247,7 +247,8 @@
         "directory_trace",
         "authority_trace",
         "gateway_trace",
-        "canonical_state_digest"
+        "canonical_state_digest",
+        "client_trace"
       ],
       "objective": "Old writer fenced after CAS; WARM writes zero; stale route, lost ACK, duplicate OperationId and cross-boundary race commit exactly once"
     },
