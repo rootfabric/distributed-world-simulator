@@ -51,6 +51,13 @@ var ticks_per_second: float = DEFAULT_TICKS_PER_SECOND
 var budgeted_live_enabled := true
 var live_cpu_budget_us := 30000
 var live_max_ticks_per_call := 2
+# R3 explicit LAB opt-in: accepted A14.4 frame behavior remains default.
+var staged_live_enabled := false
+var staged_wall_budget_us := 30000
+var staged_resumes_per_frame := 1
+var staged_worksets_per_resume := 1
+var staged_max_members := 8
+var staged_cursor_cap_bytes := 8388608
 var running := false
 # Pending run target (P5): {"kind": "tick"|"generation"|"condition", ...} or {}.
 var pending_target: Dictionary = {}
@@ -93,6 +100,7 @@ func setup(deps: Dictionary) -> void:
 		zone_color_provider = deps.zone_color_provider
 
 func bind_controller(new_controller: Object) -> void:
+	_cancel_staged_pending()
 	controller = new_controller
 	running = false
 	pending_target = {}
@@ -111,6 +119,7 @@ func bind_controller(new_controller: Object) -> void:
 func command_run() -> void:
 	if controller == null:
 		return
+	_cancel_staged_pending()
 	pending_target = {}
 	running = true
 	_elapsed = 0.0
@@ -125,12 +134,14 @@ func command_pause() -> void:
 	_refresh_from_controller(false)
 
 func command_step() -> bool:
+	_cancel_staged_pending()
 	# Single canonical tick through the controller, then publish.
 	running = false
 	pending_target = {}
 	return _step_once()
 
 func command_step_n(n_ticks: int) -> bool:
+	_cancel_staged_pending()
 	# Exactly n canonical ticks in one controller batch (P5 STEP N).
 	running = false
 	pending_target = {}
@@ -164,6 +175,7 @@ func set_ticks_per_second(value: float) -> void:
 		ticks_per_second = value
 
 func command_run_to_tick(target_tick: int) -> bool:
+	_cancel_staged_pending()
 	running = true
 	pending_target = {"kind": "tick", "value": int(target_tick)}
 	_elapsed = 0.0
@@ -172,6 +184,7 @@ func command_run_to_tick(target_tick: int) -> bool:
 	return controller != null
 
 func command_run_to_generation(target_generation: int) -> bool:
+	_cancel_staged_pending()
 	running = true
 	pending_target = {"kind": "generation", "value": int(target_generation)}
 	_elapsed = 0.0
@@ -180,6 +193,7 @@ func command_run_to_generation(target_generation: int) -> bool:
 	return controller != null
 
 func command_run_to_condition(value_kind: String, value: int) -> bool:
+	_cancel_staged_pending()
 	running = true
 	pending_target = {"kind": "condition", "value_kind": value_kind, "value": int(value)}
 	_elapsed = 0.0
@@ -192,6 +206,7 @@ func command_run_to_condition(value_kind: String, value: int) -> bool:
 ## Generate placement entries from a preset and re-initialize the controller
 ## with the new immutable manifest (commands go through the controller).
 func command_generate_placement(preset: String) -> bool:
+	_cancel_staged_pending()
 	if controller == null:
 		return false
 	running = false
@@ -212,6 +227,7 @@ func command_generate_placement(preset: String) -> bool:
 ## Apply an environment patch (existing zone field, canonical bounds) as a
 ## NEW immutable manifest; the controller is re-initialized from it.
 func command_apply_environment_patch(zone_id: String, field: String, value: int) -> bool:
+	_cancel_staged_pending()
 	if controller == null:
 		return false
 	running = false
@@ -305,6 +321,7 @@ func command_checkpoint() -> bool:
 	return true
 
 func command_restore() -> bool:
+	_cancel_staged_pending()
 	if branch_manager == null or _last_checkpoint.is_empty():
 		_set_branch_status("RESTORE: no checkpoint")
 		return false
@@ -321,6 +338,7 @@ func command_restore() -> bool:
 ## FORK: new branch from the last checkpoint; when an env-zone field is
 ## selected, the optional environment patch is applied to the new branch.
 func command_fork() -> bool:
+	_cancel_staged_pending()
 	if branch_manager == null or _last_checkpoint.is_empty():
 		_set_branch_status("FORK: no checkpoint")
 		return false
@@ -370,6 +388,12 @@ func _process(delta: float) -> void:
 	# Live A14.4 orchestration for LAB only. WORLD_COMPAT still needs
 	# per-tick world-authority admission through legacy controller.run().
 	var kind := String(pending_target.get("kind", ""))
+	# Opt-in staged global tick: no canonical biology before all barriers.
+	if staged_live_enabled and kind != "generation" and kind != "condition" 			and controller.has_method("run_staged_frame"):
+		var staged_manifest: Dictionary = controller.get_manifest()
+		if String(staged_manifest.mode) == "LAB":
+			_process_staged_live(interval)
+			return
 	if budgeted_live_enabled and kind != "generation" and kind != "condition" 			and controller.has_method("run_budgeted_to_tick"):
 		var manifest: Dictionary = controller.get_manifest()
 		if String(manifest.mode) == "LAB":
@@ -387,6 +411,66 @@ func _process(delta: float) -> void:
 			return
 	_refresh_from_controller(false)
 
+
+## R3: true LAB _process staging across frames. Logical simulation time
+## decreases by exactly one tick ONLY after a fully committed global tick.
+## Workbench never owns A5 cursor/biology; host controller owns it transiently.
+func _process_staged_live(interval: float) -> void:
+	var due: int = mini(int(_elapsed / interval), MAX_TICKS_PER_FRAME)
+	if due <= 0:
+		return
+	var now_tick: int = int(controller.tick())
+	var remaining: int = _manifest_horizon() - now_tick
+	if String(pending_target.get("kind", "")) == "tick":
+		remaining = mini(remaining, int(pending_target.value) - now_tick)
+	if remaining <= 0:
+		_cancel_staged_pending()
+		running = false
+		_refresh_from_controller(false)
+		return
+	var result: Dictionary = controller.run_staged_frame(
+		staged_wall_budget_us, staged_resumes_per_frame,
+		staged_worksets_per_resume, staged_max_members,
+		staged_cursor_cap_bytes)
+	if not bool(result.get("success", false)):
+		running = false
+		_refresh_from_controller(false)
+		return
+	var committed: int = int(result.get("replayed_ticks", 0))
+	if committed > 0:
+		_consume_due(float(committed) * interval)
+		if int(controller.tick()) >= _manifest_horizon() or (
+				String(pending_target.get("kind", "")) == "tick" \
+				and int(controller.tick()) >= int(pending_target.value)):
+			running = false
+		_refresh_from_controller(false)
+	elif _status_bar != null:
+		# No speculative organism presentation is ever published.
+		_update_status_bar(controller.get_snapshot())
+
+## Opt-in control. Disabling/reconfiguring while a tick is half-prepared
+## cancels its host-only cursor and leaves the committed tick unchanged.
+func configure_staged_live(enabled: bool, soft_budget_us: int = 30000,
+		resumes_per_frame: int = 1, worksets_per_resume: int = 1,
+		max_members: int = 8, cursor_cap_bytes: int = 8388608) -> bool:
+	if soft_budget_us < 1 or soft_budget_us > 1000000000 \
+			or resumes_per_frame < 1 or resumes_per_frame > 16 \
+			or worksets_per_resume < 1 or worksets_per_resume > 64 \
+			or max_members < 1 or max_members > 256 \
+			or cursor_cap_bytes < 1024 or cursor_cap_bytes > 16777216:
+		return false
+	_cancel_staged_pending()
+	staged_live_enabled = enabled
+	staged_wall_budget_us = soft_budget_us
+	staged_resumes_per_frame = resumes_per_frame
+	staged_worksets_per_resume = worksets_per_resume
+	staged_max_members = max_members
+	staged_cursor_cap_bytes = cursor_cap_bytes
+	return true
+
+func _cancel_staged_pending() -> void:
+	if controller != null and controller.has_method("cancel_staged_tick"):
+		controller.cancel_staged_tick()
 
 ## Actual _process path: account logical time only when a WHOLE canonical
 ## tick was successfully committed. Unspent ticks remain owed on later frames.
@@ -552,6 +636,14 @@ func _update_status_bar(snapshot: Dictionary) -> void:
 				int(metrics.get("remaining_debt_ticks", 0)),
 				int(metrics.get("overrun_calls", 0)),
 			]
+	if staged_live_enabled and controller.has_method("get_staged_telemetry"):
+		var staged: Dictionary = controller.get_staged_telemetry()
+		_status_bar.text += " | STAGED %s %dKiB | p95 %dms | cancel %d" % [
+			String(staged.get("phase", "NONE")),
+			int(staged.get("cursor_bytes", 0)) / 1024,
+			int(staged.get("phase_stats", {}).get("ALLOCATE", {}).get("p95_us", 0)) / 1000,
+			int(staged.get("cancellations", 0)),
+		]
 
 # --- P3 organism markers + P6 generic morphology meshes -----------------------
 

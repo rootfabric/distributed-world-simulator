@@ -25,6 +25,7 @@ const Lifecycle = preload("res://scripts/research/ecology/v2/resource_lifecycle_
 const Runtime = preload("res://scripts/research/ecology/v2/ecology_runtime_v1.gd")
 const Checkpoint = preload("res://scripts/research/ecology/v2/ecology_runtime_checkpoint_v1.gd")
 const LiveBudget = preload("res://scripts/research/ecology/v2/population_budget_live_driver_v1.gd")
+const StagedSession = preload("res://scripts/ecology/workbench/staged_frame_session_v1.gd")
 const Fidelity = preload("res://scripts/research/ecology/v2/population_fidelity_schedule_plan_v1.gd")
 const Feedback = preload("res://scripts/research/ecology/v2/persistent_environmental_feedback_v1.gd")
 const OrganizationProfile = preload("res://scripts/ecology/workbench/organization_profile_v1.gd")
@@ -53,12 +54,17 @@ var _world_authority: Object = null
 # A14.4 host-local measurements; excluded from all canonical snapshots.
 var _live_estimate_us := LiveBudget.DEFAULT_ESTIMATE_US
 var _budget_telemetry: Dictionary = {}
+# R3 speculative host-only cursor, never part of Runtime, checkpoint,
+# manifest, mutation seed, world authority or committed simulation state.
+var _staged_session: RefCounted = StagedSession.new()
 
 ## Attach the WORLD_COMPAT world authority adapter (P12). The adapter is the
 ## source of world/environment authority (region ACTIVE gate, matter-mapped
 ## stocks). It MUST be attached before initialize() when manifest.mode ==
 ## "WORLD_COMPAT" (fail-closed otherwise). LAB mode ignores it.
 func attach_world_authority(authority: Object) -> Dictionary:
+	if _staged_session.has_pending():
+		return _command_fail("CONTROLLER_STAGED_PENDING")
 	if authority == null \
 			or not authority.has_method("admit_execution") \
 			or not authority.has_method("world_manifest_compatible") \
@@ -106,6 +112,7 @@ func initialize(manifest: Dictionary, founder_registry: Dictionary = {}) -> Dict
 	_runtime = created.state
 	_status = "READY"
 	_error = ""
+	_staged_session.reset_telemetry()
 	_reset_live_budget_metrics()
 	return {"success": true, "tick": tick(), "status": _status}
 
@@ -132,6 +139,8 @@ func run_budgeted_to_tick(target_tick: int,
 		budget_us: int = LiveBudget.DEFAULT_BUDGET_US,
 		max_replay_ticks: int = LiveBudget.DEFAULT_MAX_TICKS,
 		estimate_tick_us: int = -1) -> Dictionary:
+	if _staged_session.has_pending():
+		return _command_fail("CONTROLLER_STAGED_PENDING")
 	if _status == "IDLE":
 		return _command_fail("CONTROLLER_NOT_INITIALIZED")
 	if _status == "FAILED":
@@ -196,6 +205,70 @@ func run_budgeted_to_tick(target_tick: int,
 		"canonical_state_hash": Runtime.state_hash(_runtime),
 	}
 
+
+## A14.5 R3 — live LAB-only speculative whole-global-tick progression.
+## State is assigned ONLY after A5 PREPARE+one GLOBAL ALLOCATE+ADVANCE,
+## propagule admission and A6 feedback have all succeeded.
+## Bound by stage calls/worksets and a *soft* wall budget. A single workset,
+## allocator or final admission can still exceed the wall target.
+func run_staged_frame(soft_budget_us: int = StagedSession.DEFAULT_SOFT_BUDGET_US,
+		max_resumes: int = StagedSession.DEFAULT_MAX_RESUMES,
+		max_worksets: int = StagedSession.DEFAULT_MAX_WORKSETS,
+		max_members: int = StagedSession.DEFAULT_MEMBERS,
+		cursor_cap_bytes: int = StagedSession.DEFAULT_CURSOR_BYTES) -> Dictionary:
+	if _status == "IDLE":
+		return _command_fail("CONTROLLER_NOT_INITIALIZED")
+	if _status == "FAILED":
+		return _failed_command()
+	if String(_manifest.mode) != "LAB":
+		return _command_fail("CONTROLLER_STAGED_WORLD_AUTHORITY_UNPROVEN")
+	if tick() >= int(_manifest.horizon_ticks):
+		return {"success": true, "complete": true, "pending": false,
+			"tick": tick(), "replayed_ticks": 0, "phase": "HORIZON"}
+	var opts: Dictionary = _canonical_step_options()
+	if not bool(opts.get("success", false)):
+		_staged_session.cancel()
+		_fail("CONTROLLER_STAGED_OPTIONS:" + String(opts.get("error", "?")))
+		return _failed_command()
+	var result: Dictionary = _staged_session.advance(
+		_runtime, opts.options, soft_budget_us, max_resumes,
+		max_worksets, max_members, cursor_cap_bytes)
+	if not bool(result.get("success", false)):
+		# Transient plan/resource errors fail closed. If the underlying
+		# canonical worker fails, mark FAILED until reset, as run() does.
+		var reason := String(result.get("error", "?"))
+		if reason.begins_with("STAGED_SESSION_RESUME:") \
+				or reason.begins_with("STAGED_SESSION_BEGIN:"):
+			_fail("CONTROLLER_STAGED:" + reason)
+			return _failed_command()
+		return _command_fail("CONTROLLER_STAGED:" + reason)
+	if bool(result.get("complete", false)):
+		if not result.has("state") or not result.state is Dictionary:
+			_fail("CONTROLLER_STAGED_FINAL_STATE")
+			return _failed_command()
+		_runtime = result.state
+		_status = "RUNNING"
+	return {"success": true, "complete": bool(result.complete),
+		"pending": bool(result.pending), "phase": String(result.phase),
+		"tick": tick(), "status": _status,
+		"replayed_ticks": int(result.replayed_ticks),
+		"resume_calls": int(result.resume_calls),
+		"cursor_bytes": int(result.cursor_bytes),
+		"wall_us": int(result.wall_us),
+		"overrun_us": int(result.overrun_us)}
+
+func cancel_staged_tick() -> Dictionary:
+	var result: Dictionary = _staged_session.cancel()
+	return {"success": true, "cancelled": bool(result.cancelled), "tick": tick()}
+
+func has_pending_staged_tick() -> bool:
+	return _staged_session.has_pending()
+
+func get_staged_telemetry() -> Dictionary:
+	var result: Dictionary = _staged_session.status()
+	result["canonical_tick"] = tick()
+	return result
+
 func get_budget_telemetry() -> Dictionary:
 	var result: Dictionary = _budget_telemetry.duplicate(true)
 	result["canonical_tick"] = tick()
@@ -215,6 +288,8 @@ func _reset_live_budget_metrics() -> void:
 
 ## Pause the loop (no tick is in flight; run/step resume from PAUSED).
 func pause() -> Dictionary:
+	# PAUSE abandons speculative work without moving the canonical frontier.
+	_staged_session.cancel()
 	if _status == "FAILED":
 		return _failed_command()
 	if _status == "RUNNING":
@@ -232,6 +307,8 @@ func run_n(n_ticks: int) -> Dictionary:
 ## Advance to an absolute simulation tick (P5 time control). Exactly
 ## equivalent to run(target - current_tick); wall-clock independent.
 func run_to_tick(target_tick: int) -> Dictionary:
+	if _staged_session.has_pending():
+		return _command_fail("CONTROLLER_STAGED_PENDING")
 	if _status == "IDLE":
 		return _command_fail("CONTROLLER_NOT_INITIALIZED")
 	if _status == "FAILED":
@@ -464,10 +541,13 @@ func load_state(state_text: String, expected_manifest_hash: String = "", expecte
 	_runtime = checkpoint.runtime_state.duplicate(true)
 	_status = "READY"
 	_error = ""
+	_staged_session.reset_telemetry()
 	_reset_live_budget_metrics()
 	return {"success": true, "tick": tick(), "status": _status}
 
 func apply_field_patch(patch: Dictionary) -> Dictionary:
+	if _staged_session.has_pending():
+		return _command_fail("CONTROLLER_STAGED_PENDING")
 	if _status == "IDLE" or _status == "FAILED":
 		return _command_fail("CONTROLLER_NOT_INITIALIZED")
 	var applied := EnvironmentPatch.apply_patch(_manifest, patch)
@@ -565,6 +645,8 @@ func apply_field_patch(patch: Dictionary) -> Dictionary:
 ## API. A total has no spatial meaning, so multi-cell fields fail closed until
 ## a production allocation witness exists. WORLD_COMPAT only.
 func apply_world_stocks(resources: Dictionary, source_tag: String) -> Dictionary:
+	if _staged_session.has_pending():
+		return _command_fail("CONTROLLER_STAGED_PENDING")
 	if _status == "IDLE":
 		return _command_fail("CONTROLLER_NOT_INITIALIZED")
 	if _status == "FAILED":
@@ -819,6 +901,8 @@ func _build_population(manifest: Dictionary, blueprints: Dictionary, field: Dict
 # --- helpers ------------------------------------------------------------------
 
 func _run_guard(n_ticks: int) -> Dictionary:
+	if _staged_session.has_pending():
+		return _command_fail("CONTROLLER_STAGED_PENDING")
 	if _status == "IDLE":
 		return _command_fail("CONTROLLER_NOT_INITIALIZED")
 	if _status == "FAILED":
