@@ -1,0 +1,43 @@
+{
+  "deterministic_hash": "29defdc33cb1192b9e1577517561c6fcc0f5693daa889deebe585ab8816e043b",
+  "identity": [
+    "HEAD=fd83b61f87d27ba812fe058c6d3a728c4d54588e",
+    "TREE=000f15d373b396520042b663b59fc84c734180c9",
+    "GODOT_VERSION=4.7.1.stable.double.custom_build.a13da4feb",
+    "GODOT_SHA256=bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7"
+  ],
+  "logs": {
+    "bridge4-regression.log": "5f3c3774f4c4083c94bd117524c619753fecebf732f1cb514840525f983dc425",
+    "import.log": "582d92828ee45a8efd485aef52a144b4d846f6e69cffe8fd7374c8afb90b7001",
+    "narrow-source-admission.log": "27d46b354ce13012337313b1ff9e0b9f85b917ed535eda61810bf785b0bac5b3",
+    "parse-source-admission.log": "7e13b74061328cb38002de86c89b160a49fe4d3df65f763fc0d8c691893803c2",
+    "parse.log": "7e13b74061328cb38002de86c89b160a49fe4d3df65f763fc0d8c691893803c2",
+    "sample-1.log": "1e8bcc161377d3e2ed53bb6bdd146ef1ff2cc661cc4d93885f8d7350c75ccfed",
+    "sample-2.log": "1e8bcc161377d3e2ed53bb6bdd146ef1ff2cc661cc4d93885f8d7350c75ccfed",
+    "sample-3.log": "1e8bcc161377d3e2ed53bb6bdd146ef1ff2cc661cc4d93885f8d7350c75ccfed"
+  },
+  "result": {
+    "checks": 203,
+    "failures": [],
+    "independent_variants": 2,
+    "scenario_a_final_hash": "80bf751992b1cea2fdd06fd5381da01f3e84422db2d6849686c0772f64c6335d",
+    "scenario_b_final_hash": "ab8a70eb666f8f20b10c9b3e3c5d9a47bbdd3c24d71280eebe6c01af957d5755",
+    "schema": "fabric.r5_6_1.canonical_delta.result.v1",
+    "sequence_events": 3
+  },
+  "schema": "fabric.r5_6_1.exact_evidence.v2",
+  "source_admission": {
+    "checks": 26,
+    "failures": [],
+    "observations": {
+      "accepted_graph_hash": "a72aefe3d025f6368eedca28cef6a46348dcbb2ff61503d1afea5376a433bc4c",
+      "canonical_changed": true,
+      "duck_store_start_accepted": false,
+      "external_actual_action": "SET_BOND_STRENGTH",
+      "forged_pending_error": "R56_PENDING_PROVENANCE_MISMATCH",
+      "forged_pending_observed": false,
+      "original_prepared_action": "BREAK_BOND"
+    }
+  },
+  "status": "IMPLEMENTER_EXACT_PASS"
+}
