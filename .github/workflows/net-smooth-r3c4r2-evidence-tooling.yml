@@ -1,0 +1,55 @@
+name: NET-SMOOTH1 R3C4 R2 Evidence Tooling
+
+on:
+  push:
+    branches:
+      - work/net-smooth1-r3c4r2-independent-gui-evidence-r1
+  pull_request:
+    paths:
+      - "tools/net_smooth1/compare_r3c4r2_gui_evidence.py"
+      - "tools/net_smooth1/run_r3c4r2_windows_acceptance.ps1"
+      - "tests/tools/test_compare_r3c4r2_gui_evidence.py"
+      - ".github/workflows/net-smooth-r3c4r2-evidence-tooling.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  reducer-fixtures:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Compile reducer and fail-closed synthetic fixtures
+        run: |
+          python -m py_compile tools/net_smooth1/compare_r3c4r2_gui_evidence.py tests/tools/test_compare_r3c4r2_gui_evidence.py
+          python -m unittest discover -s tests/tools -p 'test_compare_r3c4r2_gui_evidence.py' -v
+
+  powershell-static:
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+      - name: PowerShell 7 parsing (does NOT claim GUI acceptance)
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $path = Join-Path $pwd 'tools/net_smooth1/run_r3c4r2_windows_acceptance.ps1'
+          $tokens = $null
+          $parseErrors = $null
+          [System.Management.Automation.Language.Parser]::ParseFile($path, [ref]$tokens, [ref]$parseErrors) | Out-Null
+          if ($parseErrors.Count -gt 0) {
+            $parseErrors | ForEach-Object { Write-Host $_.ToString() }
+            throw "WINDOWS_ACCEPTANCE_LAUNCHER_PARSE_FAILED"
+          }
+          Write-Host "WINDOWS_ACCEPTANCE_LAUNCHER_PARSE_PASS"
