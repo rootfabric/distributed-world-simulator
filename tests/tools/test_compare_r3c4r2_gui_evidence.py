@@ -31,6 +31,7 @@ def create_run(root: Path, arm: str, idx: int, server_p99: float = 40) -> Path:
         },
         "mode": "gui", "profile": "LOCAL", "scenario": "r31-reconnect-roundtrip",
         "duration_s": 120, "completed": True, "errors": [],
+        "phase_results": [{"phase": "r31_reconnect_roundtrip", "result": {"ok": True}}],
         "process_exit_codes": {"server": 0, "a": 0, "b": 0},
         "r3c4_periodic_frame_pacing": True, "r3c4r2_worker_envelope": on,
         "r3c_async_admission": True, "r3c2_avatar_prewarm": True,
@@ -38,6 +39,7 @@ def create_run(root: Path, arm: str, idx: int, server_p99: float = 40) -> Path:
         "r3c21_frame_paced_presentation": True,
     }
     write_json(path / "manifest.json", manifest)
+    write_json(path / "r31-roundtrip.json", {"stages": {"ok": True}})
     reports = []
     for role in ("server", "a", "b"):
         p99 = server_p99 if role == "server" else 16
@@ -53,6 +55,13 @@ def create_run(root: Path, arm: str, idx: int, server_p99: float = 40) -> Path:
         loc = path / role
         loc.mkdir()
         (loc / "runtime.log").write_text("ok\n", encoding="utf-8")
+        if role in ("a", "b"):
+            write_json(loc / "screenshot.json", {"success": True})
+            write_json(loc / "avatar-status.json", {"details": {"remote_players": {
+                "remote-player": {"provider_id": "avatar/quaternius",
+                                  "asset_mode": "QUATERNIUS_RETARGET",
+                                  "ready": True, "legacy_capsule_visible": False}
+            }}})
         lines = []
         if role == "server":
             lines = [
