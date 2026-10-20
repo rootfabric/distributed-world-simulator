@@ -56,6 +56,13 @@ if (-not (Test-Path -LiteralPath $Runner -PathType Leaf)) { throw "RUNNER_NOT_FO
 if (-not (Test-Path -LiteralPath $Analyzer -PathType Leaf)) { throw "ANALYZER_NOT_FOUND: $Analyzer" }
 if (-not (Test-Path -LiteralPath $Comparator -PathType Leaf)) { throw "COMPARATOR_NOT_FOUND: $Comparator" }
 
+# Avoid an inherited ON canary contaminating the OFF control arm.
+# The runner passes requested DWS_NET_* options explicitly per process.
+$InheritedCanaries = @(Get-ChildItem Env: | Where-Object { $_.Name -like 'DWS_NET_*' } |
+    ForEach-Object { $_.Name })
+foreach ($CanaryName in $InheritedCanaries) {
+    Remove-Item -Path ("Env:" + $CanaryName) -ErrorAction Stop
+}
 New-Item -ItemType Directory -Path $OutputRoot -Force | Out-Null
 $Identity = [ordered]@{
     head = $ExpectedHead
@@ -64,6 +71,7 @@ $Identity = [ordered]@{
     godot_version = $ExpectedVersion
     godot_sha256 = $ExpectedHash
     quaternius_asset_count = $assetCount
+    cleared_inherited_canary_names = $InheritedCanaries
     machine = $env:COMPUTERNAME
     pwsh = $PSVersionTable.PSVersion.ToString()
     python = (& $Python --version | Out-String).Trim()
