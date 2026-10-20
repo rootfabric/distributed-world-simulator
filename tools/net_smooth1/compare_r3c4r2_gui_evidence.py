@@ -119,6 +119,11 @@ def inspect_run(path: Path, arm: str, idx: int) -> dict:
             entry["problems"].append(f"nonzero/missing process exit codes: {codes}")
         if report.get("evidence_class") != "GUI_LOCAL_CANDIDATE":
             entry["problems"].append("wrong evidence class")
+        if not any(x.get("phase") == "r31_reconnect_roundtrip"
+                   for x in manifest.get("phase_results", [])):
+            entry["functional_failures"].append("missing R31 authoritative roundtrip")
+        if not (path / "r31-roundtrip.json").is_file():
+            entry["functional_failures"].append("missing R31 roundtrip evidence")
         if report.get("functional_scenario") != "PASS":
             entry["functional_failures"].append("functional_scenario != PASS")
         processes = {x["role"]: x for x in report["processes"]}
@@ -144,6 +149,20 @@ def inspect_run(path: Path, arm: str, idx: int) -> dict:
                     entry["perf_failures"].append("server: scheduler dropped time")
                 if item.get("durable_stage_failures", 0):
                     entry["functional_failures"].append("server: durable stage failures")
+        for role in ("a", "b"):
+            screenshot = path / role / "screenshot.json"
+            avatar_file = path / role / "avatar-status.json"
+            if not screenshot.is_file() or not avatar_file.is_file():
+                entry["problems"].append(f"{role}: GUI screenshot/avatar evidence missing")
+                continue
+            avatar = json.loads(avatar_file.read_text(encoding="utf-8"))
+            details = avatar.get("details", {})
+            remote = list(details.get("remote_players", {}).values())
+            if (len(remote) != 1 or remote[0].get("provider_id") != "avatar/quaternius"
+                    or remote[0].get("asset_mode") != "QUATERNIUS_RETARGET"
+                    or remote[0].get("ready") is not True
+                    or remote[0].get("legacy_capsule_visible") is not False):
+                entry["functional_failures"].append(f"{role}: fallback/nonready Quaternius avatar")
         for role in ("server", "a", "b"):
             if not (path / role / "trace.jsonl").is_file():
                 entry["problems"].append(f"{role}: trace missing")
