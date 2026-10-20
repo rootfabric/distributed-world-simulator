@@ -10,6 +10,7 @@ param(
 )
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+$PSNativeCommandUseErrorActionPreference = $false
 $RepoPath = (Resolve-Path -LiteralPath $RepoPath).Path
 $OutputRoot = [IO.Path]::GetFullPath($OutputRoot)
 $ExpectedHead = 'f64fed2430f1292773d1561f881e5c8a4cc89075'
@@ -85,6 +86,16 @@ try {
     $FocusedArgs = @($Runner, '--godot', $GodotPath, '--mode', 'focused',
         '--output', (Join-Path $OutputRoot 'focused'))
     [void](Invoke-Native 'focused-native' $FocusedArgs)
+    [void](Invoke-Native 'r2-source-contract' @(
+        '-m', 'unittest', 'discover', '-s', 'tests/tools',
+        '-p', 'test_net_smooth1_r3c4_r2_worker_envelope_source.py', '-v'
+    ))
+    $NativeLog = Join-Path $OutputRoot 'r2-native.log'
+    & $GodotPath --headless --path $RepoPath --script 'res://tests/runtime/test_net_smooth1_r3c4_r2_worker_envelope.gd' *> $NativeLog
+    if ($LASTEXITCODE -ne 0 -or (Select-String -LiteralPath $NativeLog -Pattern 'SCRIPT ERROR:|Parse Error:|Compile Error:|ERROR:' -Quiet)) {
+        Get-Content -LiteralPath $NativeLog -Tail 100
+        throw 'R2_NATIVE_FALSIFIER_FAIL'
+    }
 
     # Run alternating pairs: OFF/ON, ON/OFF, OFF/ON. All arms same pinned HEAD.
     # Exit=1 on performance regression is EXPECTED and must not truncate batch.
@@ -92,12 +103,12 @@ try {
         $arms = if ($pair -eq 2) { @('on','off') } else { @('off','on') }
         foreach ($arm in $arms) {
             $name = "gui-$arm-$pair"
-            $Args = @($Runner, '--godot', $GodotPath, '--mode', 'gui',
+            $RunArgs = @($Runner, '--godot', $GodotPath, '--mode', 'gui',
                 '--scenario', 'r31-reconnect-roundtrip', '--duration', '120',
                 '--warmup', '20', '--profile', 'LOCAL',
                 '--output', (Join-Path $OutputRoot $name)) + $CommonFlags
-            if ($arm -eq 'on') { $Args += '--r3c4r2-worker-envelope' }
-            $rc = Invoke-Native $name $Args @(0, 1)
+            if ($arm -eq 'on') { $RunArgs += '--r3c4r2-worker-envelope' }
+            $rc = Invoke-Native $name $RunArgs @(0, 1)
             $Dir = Join-Path $OutputRoot $name
             if (-not (Test-Path -LiteralPath (Join-Path $Dir 'manifest.json'))) {
                 throw "MANIFEST_MISSING: $name"
@@ -115,13 +126,13 @@ try {
     # Fault-injected ITEM canary; its frame thresholds can fail under injected delay.
     for ($i = 1; $i -le 3; $i++) {
         $name = "slow-item-on-$i"
-        $Args = @($Runner, '--godot', $GodotPath, '--mode', 'gui',
+        $RunArgs = @($Runner, '--godot', $GodotPath, '--mode', 'gui',
             '--scenario', 'r3-slow-item', '--slow-item-writer-ms', '1800',
             '--duration', '120', '--warmup', '20', '--profile', 'LOCAL',
             '--output', (Join-Path $OutputRoot $name),
             '--r3c4r2-worker-envelope') + $CommonFlags
-        [void](Invoke-Native $name $Args @(0,1))
-        $m = Get-Content (Join-Path $OutputRoot $name 'manifest.json') -Raw | ConvertFrom-Json
+        [void](Invoke-Native $name $RunArgs @(0,1))
+        $m = Get-Content (Join-Path (Join-Path $OutputRoot $name) 'manifest.json') -Raw | ConvertFrom-Json
         if ($m.completed -ne $true -or @($m.errors).Count -gt 0) {
             throw "SLOW_ITEM_INCONCLUSIVE: $name"
         }
