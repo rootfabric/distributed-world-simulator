@@ -1,0 +1,27 @@
+Godot Engine v4.7.1.stable.double.custom_build.a13da4feb (2026-07-13 21:00:28 UTC) - https://godotengine.org
+
+ERROR: REVIEW_R56_R2_COM: reject or faithfully represent center of mass at 1000000000000.0; {"absolute_com_error_m":0.00006103515625,"error_code":"","offset":1000000000000.0,"published_iyy":0.00000000745058059692383,"query_success":true,"relative_expected_com":0.00006103515625,"relative_published_com":0.0,"step":0.0001220703125}
+   at: push_error (core/variant/variant_utility.cpp:1023)
+   GDScript backtrace (most recent call first):
+       [0] ck (res://tests/research/fabric_bake0/review_r56_r2_com_precision_falsifier.gd:18)
+       [1] run_case (res://tests/research/fabric_bake0/review_r56_r2_com_precision_falsifier.gd:38)
+       [2] _initialize (res://tests/research/fabric_bake0/review_r56_r2_com_precision_falsifier.gd:44)
+ERROR: REVIEW_R56_R2_COM: reject or faithfully represent center of mass at 10000000000000.0; {"absolute_com_error_m":0.0009765625,"error_code":"","offset":10000000000000.0,"published_iyy":0.0000019073486328125,"query_success":true,"relative_expected_com":0.0009765625,"relative_published_com":0.0,"step":0.001953125}
+   at: push_error (core/variant/variant_utility.cpp:1023)
+   GDScript backtrace (most recent call first):
+       [0] ck (res://tests/research/fabric_bake0/review_r56_r2_com_precision_falsifier.gd:18)
+       [1] run_case (res://tests/research/fabric_bake0/review_r56_r2_com_precision_falsifier.gd:38)
+       [2] _initialize (res://tests/research/fabric_bake0/review_r56_r2_com_precision_falsifier.gd:45)
+ERROR: REVIEW_R56_R2_COM: reject or faithfully represent center of mass at 100000000000000.0; {"absolute_com_error_m":0.0078125,"error_code":"","offset":100000000000000.0,"published_iyy":0.0001220703125,"query_success":true,"relative_expected_com":0.0078125,"relative_published_com":0.0,"step":0.015625}
+   at: push_error (core/variant/variant_utility.cpp:1023)
+   GDScript backtrace (most recent call first):
+       [0] ck (res://tests/research/fabric_bake0/review_r56_r2_com_precision_falsifier.gd:18)
+       [1] run_case (res://tests/research/fabric_bake0/review_r56_r2_com_precision_falsifier.gd:38)
+       [2] _initialize (res://tests/research/fabric_bake0/review_r56_r2_com_precision_falsifier.gd:46)
+ERROR: REVIEW_R56_R2_COM: reject or faithfully represent center of mass at 1000000000000000.0; {"absolute_com_error_m":0.0625,"error_code":"","offset":1000000000000000.0,"published_iyy":0.0078125,"query_success":true,"relative_expected_com":0.0625,"relative_published_com":0.0,"step":0.125}
+   at: push_error (core/variant/variant_utility.cpp:1023)
+   GDScript backtrace (most recent call first):
+       [0] ck (res://tests/research/fabric_bake0/review_r56_r2_com_precision_falsifier.gd:18)
+       [1] run_case (res://tests/research/fabric_bake0/review_r56_r2_com_precision_falsifier.gd:38)
+       [2] _initialize (res://tests/research/fabric_bake0/review_r56_r2_com_precision_falsifier.gd:47)
+FABRIC_R56_R2_INDEPENDENT_COM_PRECISION_FALSIFIER={"cases":[{"absolute_com_error_m":0.0000000596046447753906,"error_code":"","offset":1000000000.0,"published_iyy":0.000000000000007105427357601,"query_success":true,"relative_expected_com":0.0000000596046447753906,"relative_published_com":0.0,"step":0.00000011920928955},{"absolute_com_error_m":0.00006103515625,"error_code":"","offset":1000000000000.0,"published_iyy":0.00000000745058059692383,"query_success":true,"relative_expected_com":0.00006103515625,"relative_published_com":0.0,"step":0.0001220703125},{"absolute_com_error_m":0.0009765625,"error_code":"","offset":10000000000000.0,"published_iyy":0.0000019073486328125,"query_success":true,"relative_expected_com":0.0009765625,"relative_published_com":0.0,"step":0.001953125},{"absolute_com_error_m":0.0078125,"error_code":"","offset":100000000000000.0,"published_iyy":0.0001220703125,"query_success":true,"relative_expected_com":0.0078125,"relative_published_com":0.0,"step":0.015625},{"absolute_com_error_m":0.0625,"error_code":"","offset":1000000000000000.0,"published_iyy":0.0078125,"query_success":true,"relative_expected_com":0.0625,"relative_published_com":0.0,"step":0.125}],"checks":20,"failures":["reject or faithfully represent center of mass at 1000000000000.0","reject or faithfully represent center of mass at 10000000000000.0","reject or faithfully represent center of mass at 100000000000000.0","reject or faithfully represent center of mass at 1000000000000000.0"]}
