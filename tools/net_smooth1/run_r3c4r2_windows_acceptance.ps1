@@ -133,8 +133,18 @@ try {
             '--r3c4r2-worker-envelope') + $CommonFlags
         [void](Invoke-Native $name $RunArgs @(0,1))
         $m = Get-Content (Join-Path (Join-Path $OutputRoot $name) 'manifest.json') -Raw | ConvertFrom-Json
-        if ($m.completed -ne $true -or @($m.errors).Count -gt 0) {
+        if ($m.completed -ne $true -or @($m.errors).Count -gt 0 -or $m.r3c4r2_worker_envelope -ne $true) {
             throw "SLOW_ITEM_INCONCLUSIVE: $name"
+        }
+        $DurableFile = Join-Path (Join-Path $OutputRoot $name) 'durable-commands.json'
+        if (-not (Test-Path -LiteralPath $DurableFile -PathType Leaf)) {
+            throw "SLOW_ITEM_DURABLE_EVIDENCE_MISSING: $name"
+        }
+        $Durable = Get-Content -LiteralPath $DurableFile -Raw | ConvertFrom-Json
+        if ($Durable.committed_durable_count -lt 24 -or
+            @($Durable.command_types).Count -lt 2 -or
+            $Durable.duplicate_replay_idempotent -ne $true) {
+            throw "SLOW_ITEM_DURABLE_WORKLOAD_FAIL: $name"
         }
     }
 
