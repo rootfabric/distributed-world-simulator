@@ -231,12 +231,6 @@ func _tests_state_and_integrity() -> void:
 	_check(not bool(R2.begin(field, [], String(field.owner_token),
 		int(field.owner_epoch), int(field.revision)).get("success", false)),
 		"empty demand batch rejected exactly as A4")
-	_check(not bool(R2.begin(field, [
-		_d("a", "org-a", "water_mg", 2, 500),
-		_d("a", "org-b", "water_mg", 2, 500)],
-		String(field.owner_token), int(field.owner_epoch),
-		int(field.revision)).get("success", false)) or true,
-		"duplicate checked on bounded NORMALIZE (may reject during resume)")
 	# Actual fail-closed duplicate and invalid input after BEGIN.
 	var duplicates: Array = [demands[0], demands[0].duplicate(true)]
 	var db: Dictionary = R2.begin(field, duplicates,
@@ -284,7 +278,7 @@ func _tests_stress() -> void:
 		"full current A12 256 scale and 768 explicit A4 requests proven")
 
 func _finish() -> void:
-	_check(records == 5, "all five reference-exact profile scenarios completed")
+	_check(records == 6, "all six reference-exact profile scenarios completed")
 	print("ECO_ARCH2_A14_6_R2_ALLOC checks=%d failed=%d profiles=%d" %
 		[checks, failures, records])
 	print("ECO_ARCH2_A14_6_R2_ALLOC " + ("PASS" if failures == 0 else "FAIL"))
