@@ -21,6 +21,7 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / 'tools/live2'))
 from live2_automation_client import request
 from analyze_net_smooth1 import write_report
+from retry_prior_periodic_admission import retry_prior_periodic
 
 TESTS = [
  'tests/runtime/test_net_smooth1_r3c4_periodic_frame_headroom.gd',
@@ -151,6 +152,7 @@ def play(args, manifest: dict) -> None:
                     vsync='disabled',phase_results=[],checkpoint_mode=args.checkpoint_mode,
                     r3c_async_admission=args.r3c_async_admission,
                     slow_item_writer_ms=args.slow_item_writer_ms,
+                    retry_prior_periodic_admission=args.retry_prior_periodic_admission,
                     r3c2_avatar_prewarm=args.r3c2_avatar_prewarm,
                     r3c2_server_phased=args.r3c2_server_phased,
                     r3c3_staged_earth=args.r3c3_staged_earth,
@@ -301,23 +303,38 @@ def play(args, manifest: dict) -> None:
                        operation_id: str) -> dict:
                 params={'command_type': command_type, 'payload': payload,
                         'operation_id': operation_id}
-                reply=None
-                for attempt in range(3):
-                    try:
-                        reply=bridge(ports[role], token, 'item.command', params,
-                                     timeout=60.0)
-                        break
-                    except (OSError, RuntimeError, ValueError, KeyError) as exc:
-                        if attempt==2:
-                            raise RuntimeError(
-                                f'item.command transport failure {operation_id}: {exc}')
-                        time.sleep(1.0)
+                def send_once() -> dict:
+                    return bridge(ports[role], token, 'item.command', params,
+                                  timeout=60.0)
+                if args.retry_prior_periodic_admission:
+                    # Test-only: prior periodic writer is a transient REJECTION.
+                    # Retry exactly this operation_id and immutable params.
+                    # Never count a rejected attempt as durable success.
+                    reply, admission = retry_prior_periodic(
+                        send_once, operation_id, budget_s=30.0)
+                else:
+                    # Existing test behavior preserved by default.
+                    reply=None
+                    for attempt in range(3):
+                        try:
+                            reply=send_once()
+                            break
+                        except (OSError, RuntimeError, ValueError, KeyError) as exc:
+                            if attempt==2:
+                                raise RuntimeError(
+                                    f'item.command transport failure {operation_id}: {exc}')
+                            time.sleep(1.0)
+                    admission={'operation_id': operation_id, 'attempts': 1,
+                               'prior_periodic_rejections': 0, 'wait_ms': 0.0}
                 command_result=reply.get('item_command', {})
                 details=command_result.get('details', {})
                 entry={'role': role, 'command_type': command_type,
                        'operation_id': operation_id,
                        'ok': bool(command_result.get('success', False)),
-                       'error_code': command_result.get('error_code', '')}
+                       'error_code': command_result.get('error_code', ''),
+                       'prior_periodic_rejections': admission['prior_periodic_rejections'],
+                       'admission_attempts': admission['attempts'],
+                       'admission_wait_ms': admission['wait_ms']}
                 entry.update(replay=bool(details.get('replay', False)),
                              revision_before=details.get('item_graph_revision_before'),
                              revision_after=details.get('item_graph_revision_after'))
@@ -374,7 +391,11 @@ def play(args, manifest: dict) -> None:
             manifest['phase_results'].append({'phase':'durable_workload','result':{
                 'committed_durable_count':len(committed),
                 'command_types':summary['command_types'],
-                'duplicate_replay_idempotent':True}})
+                'duplicate_replay_idempotent':True,
+                'prior_periodic_rejections':sum(
+                    e['prior_periodic_rejections'] for e in results),
+                'total_admission_attempts':sum(
+                    e['admission_attempts'] for e in results)}})
             return summary
         if args.scenario == 'r31-reconnect-roundtrip':
             # R3.1: A crosses to secondary via real movement only, B reconnects
@@ -657,6 +678,8 @@ def main() -> int:
     parser.add_argument('--scenario',choices=('local','seam-stress','r31-reconnect-roundtrip','durable-commands','r3-slow-item'),default='local')
     parser.add_argument('--slow-item-writer-ms',type=int,default=0,
                         help='Test-only delayed ITEM worker in milliseconds (max 2000)')
+    parser.add_argument('--retry-prior-periodic-admission',action='store_true',
+                        help='R3 slow ITEM test-only: bounded retry of P1A_WAIT_PRIOR_PERIODIC')
     parser.add_argument('--checkpoint-mode',choices=('async','sync'),default='async')
     parser.add_argument('--r3c-async-admission',action='store_true',
                         help='Opt-in R3C bounded JOIN queue and async durable LEAVE')
@@ -682,6 +705,8 @@ def main() -> int:
         parser.error('slow ITEM writer delay must be 0..2000ms')
     if args.slow_item_writer_ms and args.scenario != 'r3-slow-item':
         parser.error('test delay only allowed in R3 slow-item scenario')
+    if args.retry_prior_periodic_admission and args.scenario != 'r3-slow-item':
+        parser.error('prior-periodic retry allowed only with r3-slow-item')
     if args.r3c21_frame_paced_presentation and not args.r3c3_staged_earth:
         parser.error('R3C21 presentation requires --r3c3-staged-earth')
     if args.r3c4r2_worker_envelope and not args.r3c4_periodic_frame_pacing:
