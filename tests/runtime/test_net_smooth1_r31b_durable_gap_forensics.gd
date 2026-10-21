@@ -147,6 +147,19 @@ func _test_server_gates() -> void:
 			"R3C4_R31B_REQUIRES_R31_REPLAY_PROJECTION",
 		"R31b refuses attribution without R31")
 	denied.free()
+	var wrong_service = Runtime.new()
+	var wrong: Dictionary = wrong_service.setup({
+		"host": "127.0.0.1", "port": _port(),
+		"playable_sandbox": true, "persistence_root": _path("wrong-service"),
+		"r3c4_periodic_frame_pacing_canary": true,
+		"r3c4r2_worker_envelope_canary": true,
+		"r3c4r31_replay_projection_canary": true,
+		"r3c4r31b_durable_attribution_canary": true,
+	})
+	check(not bool(wrong.get("success", false)) and
+		String(wrong.get("error_code", "")) == "R3C4_R31B_REQUIRES_PRODUCT_SEAM",
+		"R31b refuses non-USER1 owner before any worker starts")
+	wrong_service.free()
 	var live = Runtime.new()
 	var result: Dictionary = live.setup({
 		"host": "127.0.0.1", "port": _port(),
