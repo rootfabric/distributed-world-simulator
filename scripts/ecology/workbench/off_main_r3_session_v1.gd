@@ -47,7 +47,26 @@ func has_pending() -> bool:
 func is_draining() -> bool:
 	return _task_id >= 0 and _abandoned
 
+## Reap an abandoned completed pool task WITHOUT blocking the main thread.
+## Call while paused/reconfigured as well, otherwise Godot retains task IDs.
+func reap_discarded() -> bool:
+	if not is_draining() or not WorkerThreadPool.is_task_completed(_task_id):
+		return false
+	var joined: Error = WorkerThreadPool.wait_for_task_completion(_task_id)
+	_task_id = -1
+	_drained += 1
+	_abandoned = false
+	_mutex.lock()
+	_worker_result = {}
+	_cancel_requested = false
+	_mutex.unlock()
+	if joined != OK:
+		_jobs_failed += 1
+		_last_error = "R3_ASYNC_ABANDONED_TASK_JOIN"
+	return true
+
 func cancel() -> bool:
+	reap_discarded()
 	var was_pending := has_pending()
 	if was_pending:
 		_mutex.lock()
@@ -60,6 +79,7 @@ func cancel() -> bool:
 	return was_pending
 
 func status() -> Dictionary:
+	reap_discarded()
 	return {
 		"schema": SCHEMA,
 		"pending": has_pending(),
@@ -78,6 +98,7 @@ func advance(state: Dictionary, options: Dictionary,
 		max_members: int = 8, allocator_items: int = 64,
 		cursor_cap_bytes: int = 8388608) -> Dictionary:
 	var t0: int = Time.get_ticks_usec()
+	reap_discarded()
 	if not C.integer(max_members, 1, Spatial.MAX_MEMBERS) \
 			or not C.integer(allocator_items, 1, MAX_ALLOCATOR_ITEMS) \
 			or not C.integer(cursor_cap_bytes, 1024, MAX_CURSOR_BYTES):
@@ -137,8 +158,10 @@ func advance(state: Dictionary, options: Dictionary,
 		}
 	# Exactly one job can run per host session. Starting with
 	# shallow read-only input avoids a full main-thread deep copy.
-	if not Runtime.validate(state).is_empty():
-		return _failed("R3_ASYNC_INVALID_SOURCE", t0)
+	# Heavy Runtime.validate runs in the CPU worker's begin and once on
+	# final source admission, never in the GUI dispatch frame.
+	if not state.has("integrity_hash") or not state.has("tick") 			or not state.integrity_hash is String or not state.tick is int:
+		return _failed("R3_ASYNC_INVALID_SOURCE_HEADER", t0)
 	var options_hash: String = C.digest(options)
 	if options_hash.is_empty():
 		return _failed("R3_ASYNC_INVALID_OPTIONS", t0)
