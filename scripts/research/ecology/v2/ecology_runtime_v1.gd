@@ -397,7 +397,8 @@ const STAGED_TICK_KEYS := [
 ]
 
 static func begin_staged_global_tick(state: Dictionary, options: Dictionary,
-		tile_span_cells: int = 4, max_members: int = 64) -> Dictionary:
+		tile_span_cells: int = 4, max_members: int = 64,
+		use_r3_allocator: bool = false) -> Dictionary:
 	var error := validate(state)
 	if not error.is_empty():
 		return _fail(error)
@@ -408,7 +409,7 @@ static func begin_staged_global_tick(state: Dictionary, options: Dictionary,
 	var started := Lifecycle.staged_begin(
 		field, state.population, String(field.owner_token),
 		int(field.owner_epoch), int(field.revision),
-		tile_span_cells, max_members)
+		tile_span_cells, max_members, use_r3_allocator)
 	if not bool(started.get("success", false)):
 		return _fail("RUNTIME_STAGED_A5:" + String(started.get("error", "?")))
 	return {"success": true, "complete": false, "phase": "PREPARE",
@@ -416,7 +417,9 @@ static func begin_staged_global_tick(state: Dictionary, options: Dictionary,
 			String(state.integrity_hash), options_hash, started.cursor)}
 
 static func resume_staged_global_tick(state: Dictionary, options: Dictionary,
-		cursor: Dictionary, max_worksets_per_call: int = 1) -> Dictionary:
+		cursor: Dictionary, max_worksets_per_call: int = 1,
+		max_allocator_items_per_call: int = 16,
+		allocator_cap_bytes: int = 8388608) -> Dictionary:
 	# Strictly check the same authoritative frontier before ANY staged work,
 	# including a no-op and a final publish. Never accept a moved source.
 	var error := validate(state)
@@ -439,7 +442,8 @@ static func resume_staged_global_tick(state: Dictionary, options: Dictionary,
 	if String(cursor.options_hash) != C.digest(options):
 		return _fail("RUNTIME_STAGED_OPTIONS_CHANGED")
 	var progressed := Lifecycle.staged_resume(
-		cursor.lifecycle, state.field, state.population, max_worksets_per_call)
+		cursor.lifecycle, state.field, state.population, max_worksets_per_call,
+		max_allocator_items_per_call, allocator_cap_bytes)
 	if not bool(progressed.get("success", false)):
 		return _fail("RUNTIME_STAGED_A5:" + String(progressed.get("error", "?")))
 	if not bool(progressed.complete):
