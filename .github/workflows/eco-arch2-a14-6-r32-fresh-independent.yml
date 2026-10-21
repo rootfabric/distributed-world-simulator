@@ -1,0 +1,100 @@
+name: ECO ARCH2 A14.6 R3.2 Fresh Independent Exact
+
+on:
+  push:
+    branches:
+      - verify/eco-arch2-a14-6-r32-e33427a5-fresh-r1
+
+permissions:
+  contents: read
+
+env:
+  PRODUCT_HEAD: e33427a54cbdbeaba1e865c630b8ef076476444a
+  PRODUCT_TREE: f3520289b08b2e41b0c61beaa50a254208906bdd
+
+jobs:
+  portable:
+    name: R3.2 independent portable
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Exact frozen subject and verifier-only diff
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD^)" = "$PRODUCT_HEAD"
+          test "$(git rev-parse "$PRODUCT_HEAD^{tree}")" = "$PRODUCT_TREE"
+          git diff --name-only "$PRODUCT_HEAD" HEAD | sort > /tmp/changed
+          printf '%s\n' '.github/workflows/eco-arch2-a14-6-r32-fresh-independent.yml' 'validation/ecology/evo_arch2_a14_staged/test_r32_fresh_independent.gd' | sort > /tmp/allowed
+          diff -u /tmp/allowed /tmp/changed
+      - name: Independent Godot 4.7.1 native CPU worker falsifiers
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fL --retry 3 -o /tmp/godot.zip https://github.com/godotengine/godot/releases/download/4.7.1-stable/Godot_v4.7.1-stable_linux.x86_64.zip
+          mkdir -p /tmp/a146-r32-ind
+          unzip -q /tmp/godot.zip -d /tmp/a146-r32-ind
+          godot=/tmp/a146-r32-ind/Godot_v4.7.1-stable_linux.x86_64
+          chmod +x "$godot"
+          "$godot" --headless --editor --path . --import > /tmp/r32-import.log 2>&1 || { cat /tmp/r32-import.log; exit 1; }
+          "$godot" --headless --path . --script res://validation/ecology/evo_arch2_a14_staged/test_r32_fresh_independent.gd > /tmp/r32-ind.log 2>&1 || { cat /tmp/r32-ind.log; exit 1; }
+          cat /tmp/r32-ind.log
+          grep -Fx 'ECO_ARCH2_A14_6_R32_INDEPENDENT PASS' /tmp/r32-ind.log
+          if grep -Ei 'SCRIPT ERROR|Parse Error|Failed to load script|Error compiling' /tmp/r32-ind.log; then exit 1; fi
+          git diff --exit-code && git diff --cached --exit-code
+
+  linux:
+    name: R3.2 independent Linux double
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 80
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Frozen Linux double and native verifier
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD^)" = "$PRODUCT_HEAD"
+          test "$(git rev-parse "$PRODUCT_HEAD^{tree}")" = "$PRODUCT_TREE"
+          test "$(git diff --name-only "$PRODUCT_HEAD" HEAD | wc -l)" -eq 2
+          godot="$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64"
+          test "$(sha256sum "$godot" | cut -d' ' -f1)" = "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7"
+          "$godot" --headless --editor --path . --import
+          "$godot" --headless --path . --script res://validation/ecology/evo_arch2_a14_staged/test_r32_fresh_independent.gd | tee r32-independent.log
+          grep -Fx 'ECO_ARCH2_A14_6_R32_INDEPENDENT PASS' r32-independent.log
+          git diff --exit-code && git diff --cached --exit-code
+
+  windows:
+    name: R3.2 independent Windows double
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 80
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Frozen Windows double and native verifier
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          if ((git rev-parse 'HEAD^').Trim() -ne $env:PRODUCT_HEAD) { throw 'PARENT_HEAD_MISMATCH' }
+          if ((git rev-parse "$($env:PRODUCT_HEAD)^{tree}").Trim() -ne $env:PRODUCT_TREE) { throw 'PRODUCT_TREE_MISMATCH' }
+          $changed = @(git diff --name-only $env:PRODUCT_HEAD HEAD)
+          if ($changed.Count -ne 2) { throw 'VERIFIER_SCOPE_MISMATCH' }
+          $godot = 'C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe'
+          if ((Get-FileHash $godot -Algorithm SHA256).Hash.ToLowerInvariant() -ne '3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5') { throw 'GODOT_BINARY_MISMATCH' }
+          & $godot --headless --editor --path . --import
+          if ($LASTEXITCODE -ne 0) { throw 'COLD_IMPORT_FAIL' }
+          & $godot --headless --path . --script res://validation/ecology/evo_arch2_a14_staged/test_r32_fresh_independent.gd | Tee-Object -FilePath r32-independent.log
+          if ($LASTEXITCODE -ne 0) { throw 'R32_FRESH_INDEPENDENT_FAIL' }
+          if (-not (Select-String -Path r32-independent.log -Pattern '^ECO_ARCH2_A14_6_R32_INDEPENDENT PASS$' -Quiet)) { throw 'VERIFIER_MARKER_MISSING' }
+          git diff --exit-code
+          if ($LASTEXITCODE -ne 0) { throw 'DIRTY_TRACKED' }
+          git diff --cached --exit-code
+          if ($LASTEXITCODE -ne 0) { throw 'DIRTY_INDEX' }
