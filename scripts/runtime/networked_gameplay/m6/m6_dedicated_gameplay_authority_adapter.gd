@@ -94,6 +94,25 @@ func capture_frozen_gameplay_source_r31b_profiled() -> Dictionary:
 	}
 
 
+# R31b P1: the only optimized periodic source. This remains a single-frame,
+# owner-native export; caller and worker receive detached DTO values only.
+func capture_frozen_gameplay_source_r31bp1_chunks() -> Dictionary:
+	if _service == null or not _service.has_method("export_durable_state_r31bp1_chunks"):
+		return {}
+	var observed: Dictionary = _service.export_durable_state_r31bp1_chunks()
+	var durable: Dictionary = Dictionary(observed.get("value", {}))
+	if durable.is_empty():
+		return {}
+	return {
+		"frozen_gameplay": {
+			"durable_state": durable, "logical_session_id": _logical_session_id,
+		},
+		"stages": Dictionary(observed.get("stages", {})),
+	}
+
+
+
+
 # Pure worker-side version of the accepted export_recovery_state envelope.
 # Inputs MUST be deep-copied by AsyncCheckpointWriter before the semaphore.
 # On invalid DTO, fail closed; never write a partially wrapped checkpoint.

@@ -160,6 +160,7 @@ def play(args, manifest: dict) -> None:
                     r3c4r30_stage_attribution=args.r3c4r30_stage_attribution,
                     r3c4r31_replay_projection=args.r3c4r31_replay_projection,
                     r3c4r31b_durable_attribution=args.r3c4r31b_durable_attribution,
+                    r31bp1_durable_chunks=args.r31bp1_durable_chunks,
                     scenario=args.scenario)
     processes: dict[str,subprocess.Popen] = {}; streams=[]
     def spawn(role: str) -> None:
@@ -198,6 +199,8 @@ def play(args, manifest: dict) -> None:
             env['DWS_NET_R3C4_R31_REPLAY_PROJECTION']='1'
         if role == 'server' and args.r3c4r31b_durable_attribution:
             env['DWS_NET_R3C4_R31B_DURABLE_ATTRIBUTION']='1'
+        if role == 'server' and args.r31bp1_durable_chunks:
+            env['DWS_NET_R31BP1_DURABLE_CHUNKS']='1'
         if role == 'server' and args.slow_item_writer_ms > 0:
             # Test-only worker injection, never delay the main-thread loop.
             env['DWS_NET_SMOOTH_TEST_HOOKS']='1'
@@ -690,6 +693,8 @@ def main() -> int:
                         help='R3.1a: bounded versioned replay projection; requires R2, excludes R3.0 timing')
     parser.add_argument('--r3c4r31b-durable-attribution', action='store_true',
                         help='R3.1b P0: server-only per-domain gameplay source timing, requires R3.1a')
+    parser.add_argument('--r31bp1-durable-chunks', action='store_true',
+                        help='R3.1b P1: bounded M4/resource durable chunk cache; requires P0 attribution')
     parser.add_argument('--inject-stall-role',choices=('server','a','b'))
     parser.add_argument('--inject-stall-ms',type=int,default=250)
     args=parser.parse_args()
@@ -713,6 +718,8 @@ def main() -> int:
         parser.error('R3C4 R3.1 cache excludes R3.0 uncached attribution')
     if args.r3c4r31b_durable_attribution and not args.r3c4r31_replay_projection:
         parser.error('R3C4 R3.1b durable attribution requires --r3c4r31-replay-projection')
+    if args.r31bp1_durable_chunks and not args.r3c4r31b_durable_attribution:
+        parser.error('R31BP1 durable chunks requires --r3c4r31b-durable-attribution')
     run_id=uuid.uuid4().hex[:16]
     args.output=(args.output or ROOT/'artifacts/net-smooth1'/run_id).resolve()
     args.output.mkdir(parents=True,exist_ok=False)
