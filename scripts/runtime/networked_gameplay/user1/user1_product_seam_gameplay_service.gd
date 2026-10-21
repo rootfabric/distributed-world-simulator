@@ -501,6 +501,86 @@ func export_durable_state() -> Dictionary:
 	return state if bool(validated.get("success", false)) else {}
 
 
+
+# R3C.4 R3.1b P0 — independent *measurement* of the existing PRODUCT durable
+# export, not a multi-frame exporter, cache, or second owner. This reproduces
+# the same export_DTO fields and validation within one authoritative frame.
+# Default export_durable_state() is left untouched.
+func export_durable_state_r31b_profiled() -> Dictionary:
+	var began_us: int = Time.get_ticks_usec()
+	if _seam_coordinators.is_empty():
+		var fallback: Dictionary = super.export_durable_state()
+		return {
+			"value": fallback,
+			"stages": {
+				"fallback_ms": float(Time.get_ticks_usec() - began_us) / 1000.0,
+				"total_ms": float(Time.get_ticks_usec() - began_us) / 1000.0,
+				"seam_coordinator_count": 0,
+			},
+		}
+	if not _seam_transfers_quiescent():
+		return {"value": {}, "stages": {"error": "SEAM_NOT_QUIESCENT"}}
+	var snapshot: Dictionary = create_snapshot()
+	var after_snapshot_us: int = Time.get_ticks_usec()
+	var players_state: Dictionary = _build_remote_player_durable_state(snapshot)
+	var after_players_us: int = Time.get_ticks_usec()
+	var ownership_state: Dictionary = _build_remote_ownership_durable_state(snapshot)
+	var after_ownership_us: int = Time.get_ticks_usec()
+	if (
+		players_state.is_empty()
+		or ownership_state.is_empty()
+		or _shared_items == null
+		or _canonical_multiplayer_items == null
+		or _resource_mining == null
+	):
+		return {"value": {}, "stages": {"error": "REQUIRED_DOMAIN_MISSING"}}
+	var shared_state: Dictionary = _shared_items.export_durable_state()
+	var after_shared_us: int = Time.get_ticks_usec()
+	var item_state: Dictionary = _canonical_multiplayer_items.export_durable_state()
+	var after_item_us: int = Time.get_ticks_usec()
+	var resource_state: Dictionary = _resource_mining.export_durable_state()
+	var after_resource_us: int = Time.get_ticks_usec()
+	var durable: Dictionary = {
+		"schema": DURABLE_SCHEMA,
+		"authority_owner_id": _authority_owner_id,
+		"authority_epoch": _authority_epoch,
+		"revision": _revision,
+		"server_tick": _tick,
+		"region_id": _region_id,
+		"topology_adapter": _topology_adapter,
+		"profile": _profile,
+		"players": players_state,
+		"ownership": ownership_state,
+		"shared_item": shared_state,
+		"canonical_item_graph": item_state,
+		"resource_mining": resource_state,
+		"checksum": "",
+	}
+	durable = SeamUtils.finalize_json_checksum(durable)
+	var after_final_checksum_us: int = Time.get_ticks_usec()
+	var validated: Dictionary = validate_durable_state(durable)
+	var done_us: int = Time.get_ticks_usec()
+	return {
+		"value": durable if bool(validated.get("success", false)) else {},
+		"stages": {
+			"snapshot_ms": float(after_snapshot_us - began_us) / 1000.0,
+			"players_ms": float(after_players_us - after_snapshot_us) / 1000.0,
+			"ownership_ms": float(after_ownership_us - after_players_us) / 1000.0,
+			"shared_item_ms": float(after_shared_us - after_ownership_us) / 1000.0,
+			"item_graph_ms": float(after_item_us - after_shared_us) / 1000.0,
+			"resource_ms": float(after_resource_us - after_item_us) / 1000.0,
+			"final_checksum_ms": float(after_final_checksum_us - after_resource_us) / 1000.0,
+			"validation_ms": float(done_us - after_final_checksum_us) / 1000.0,
+			"total_ms": float(done_us - began_us) / 1000.0,
+			"seam_coordinator_count": _seam_coordinators.size(),
+			"player_count": Array(snapshot.get("players", [])).size(),
+			"valid": bool(validated.get("success", false)),
+		},
+	}
+
+
+
+
 func set_player_presentation(
 	logical_player_id: String,
 	transport_session_id: String,
