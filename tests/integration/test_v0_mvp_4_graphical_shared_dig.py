@@ -27,6 +27,18 @@ PINNED_ENGINES = {
     "linux": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
     "win32": "3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5",
 }
+# ENGINE48: strict fail-closed override for the Godot 4.8 beta1 double migration gate.
+# The canonical 4.7.1 pins above remain the baseline when the override is absent.
+# When DWS_ENGINE48_GODOT_SHA256 is set, it REPLACES the pin for the current
+# platform, so the engine argument must still match one exact SHA256 — the guard
+# is never skipped. Engine version identity is additionally enforced by callers
+# expecting "4.8.beta1.double.custom_build.4d10419ca" via DWS_ENGINE48_STRICT=1.
+_engine48_sha = os.environ.get("DWS_ENGINE48_GODOT_SHA256", "").strip().lower()
+if _engine48_sha:
+    import re as _re
+    if not _re.fullmatch(r"[0-9a-f]{64}", _engine48_sha):
+        raise RuntimeError("DWS_ENGINE48_GODOT_SHA256_INVALID")
+    PINNED_ENGINES[sys.platform] = _engine48_sha
 ROLES = ("authority/a", "authority/b", "gateway", "client/a", "client/b")
 
 
