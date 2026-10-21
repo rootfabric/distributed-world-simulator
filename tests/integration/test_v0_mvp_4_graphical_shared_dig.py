@@ -24,7 +24,7 @@ assert SPEC is not None and SPEC.loader is not None
 BASE = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(BASE)
 PINNED_ENGINES = {
-    "linux": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+    "linux": "4d72a93edf3b4193bdbf22f72c0c9d15c14aa7130c07cf1638f88ca1f9744f6f",
     "win32": "3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5",
 }
 ROLES = ("authority/a", "authority/b", "gateway", "client/a", "client/b")
