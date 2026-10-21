@@ -96,7 +96,7 @@ run_contract "p7-2-seam" \
   "V0-P7.2 lunar surface seam: PASS (50 assertions, 0 failures)"
 run_contract "p7-1-authority" \
   "res://tests/runtime/test_v0_p7_1_matter_command_authority_gate.gd" \
-  "V0-P7.1 authority gate: PASS (83 assertions, 0 failures)"
+  "V0-P7.1 authority gate: PASS (88 assertions, 0 failures)"
 run_contract "p7-1-tool-to-mw4" \
   "res://tests/runtime/test_v0_p7_1_tool_to_mw4_adapter.gd" \
   "V0-P7.1 Tool->MW4 integration: PASS (30 assertions, 0 failures)"
