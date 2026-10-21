@@ -18,6 +18,20 @@ const Checkpoint = preload("res://scripts/persistence/authoritative_checkpoint.g
 const Runtime = preload(
 	"res://scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime_p2.gd")
 
+# Synthetic detached port targets the cache boundary only; production cache
+# still uses real M4/ResourceMining owners in the integration test below.
+class FakeDurablePort extends RefCounted:
+	var generation := 1
+	var payload_bytes := 32
+	var mutate_during_export := false
+	func get_r31bp1_durable_source_fence() -> Dictionary:
+		return {"schema": "test-only", "generation": generation}
+	func export_durable_state() -> Dictionary:
+		var value: Dictionary = {"schema": "test-only", "payload": "x".repeat(payload_bytes)}
+		if mutate_during_export:
+			generation += 1
+		return value
+
 var assertions := 0
 var failures: Array[String] = []
 
@@ -26,6 +40,7 @@ func _init() -> void:
 
 func _run() -> void:
 	OS.set_environment("DWS_NET_R31BP1_DURABLE_CHUNKS", "")
+	_test_reject_changed_fence_and_memory_budget()
 	_test_owner_native_m4_fence()
 	_test_cached_immutable_real_seam()
 	_test_real_server_config()
@@ -51,6 +66,32 @@ func _port() -> int:
 func _path(label: String) -> String:
 	return ProjectSettings.globalize_path(
 		"res://artifacts/net-smooth1/r31bp1-%s-%d" % [label, Time.get_ticks_usec()])
+
+
+func _test_reject_changed_fence_and_memory_budget() -> void:
+	var service = Service.new()
+	var fake = FakeDurablePort.new()
+	fake.mutate_during_export = true
+	var rejected: Dictionary = service.call("_r31bp1_export_chunk", fake, "item_graph")
+	_check(String(rejected.get("bypass", "")) == "FENCE_CHANGED",
+		"source version changed during export is explicitly rejected")
+	_check(Dictionary(rejected.get("value", {})).is_empty(),
+		"changed source fence cannot produce a disk-bound DTO")
+	fake.mutate_during_export = false
+	var first: Dictionary = service.call("_r31bp1_export_chunk", fake, "item_graph")
+	_check(not bool(first.get("cache_hit", true)), "new exact fake version miss")
+	var second: Dictionary = service.call("_r31bp1_export_chunk", fake, "item_graph")
+	_check(bool(second.get("cache_hit", false)), "identical frozen fake cache hit")
+	fake.generation += 1
+	fake.payload_bytes = 4 * 1024 * 1024
+	var oversize: Dictionary = service.call("_r31bp1_export_chunk", fake, "item_graph")
+	_check(String(oversize.get("bypass", "")) == "CHUNK_MEMORY_BUDGET",
+		"over 4MiB source bypasses private cache")
+	_check(not Dictionary(oversize.get("value", {})).is_empty(),
+		"over-budget case retains canonical legacy source")
+	var repeated: Dictionary = service.call("_r31bp1_export_chunk", fake, "item_graph")
+	_check(not bool(repeated.get("cache_hit", true)),
+		"over-budget values never become cached authority")
 
 
 func _test_owner_native_m4_fence() -> void:
