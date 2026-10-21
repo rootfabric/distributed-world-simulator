@@ -1,0 +1,27 @@
+{
+  "acceptance": {
+    "checks": 616,
+    "cold_restarts": 30,
+    "committed_events": 10,
+    "disk_roundtrips": 42,
+    "failures": [],
+    "full_oracle_queries": 14,
+    "negative_rejections": 72,
+    "schema": "fabric.r56_2_r1.lifecycle.acceptance.v1"
+  },
+  "deterministic_result_sha256": "9d41965820ce13967a5850fcbfca29b0acc41203cc4086f4952cd313e7a62cd0",
+  "engine": "4.7.1.stable.double.custom_build.a13da4feb",
+  "engine_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+  "gates": {
+    "cold_import_twice": "PASS",
+    "identity_exact": "PASS",
+    "inherited_regressions": "PASS",
+    "lifecycle_triple": "PASS",
+    "user_data_isolation": "PASS"
+  },
+  "head": "c9966b4f51dd623ddc6ec335b67452ccf96f7090",
+  "schema": "fabric.r56_2_r1.exact_evidence.v2",
+  "scope": "PROCESS_RESTART_ONLY_NOT_DISTRIBUTED_EXACTLY_ONCE",
+  "tree": "5a8db3a3ba25f1ecd86636b8461af7e8bf68cce3",
+  "windows_launches_verified": null
+}
