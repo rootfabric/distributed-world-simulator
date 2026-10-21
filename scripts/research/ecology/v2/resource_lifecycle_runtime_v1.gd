@@ -9,6 +9,7 @@ const H = preload("res://scripts/research/ecology/v2/phenotype_snapshot_v1.gd")
 const K = preload("res://scripts/research/ecology/v2/development_interpreter_v1.gd")
 const F = preload("res://scripts/research/ecology/v2/environment_field_contract_v1.gd")
 const Field = preload("res://scripts/research/ecology/v2/local_environment_field_v1.gd")
+const StagedA4R2 = preload("res://scripts/research/ecology/v2/a4_staged_global_allocator_probe_v1.gd")
 const Ports = preload("res://scripts/research/ecology/v2/organism_environment_ports_v1.gd")
 const Scale = preload("res://scripts/research/ecology/v2/ecology_scale_contract_v1.gd")
 const Worksets = preload("res://scripts/research/ecology/v2/population_workset_plan_v1.gd")
@@ -702,17 +703,29 @@ static func _population_step_result(field_after: Dictionary,
 ## ALLOCATE barrier is deliberately indivisible; no wall deadline is claimed.
 ## A caller may publish biology ONLY after COMPLETE, never between phases.
 const STAGED_SCHEMA := "dws.ecology.a5-staged-lifecycle.v1"
+## Opt-in LAB R3: host-private nonpersistent R2 global A4 scratch.
+## Accepted v1 cursor and default A5 execution are unchanged.
+const STAGED_SCHEMA_R3 := "dws.ecology.a5-staged-lifecycle-r3.v1"
+const STAGED_R3_ALLOCATOR_MODE := "R2_DETACHED_GLOBAL"
 const STAGED_CURSOR_KEYS := [
 	"schema", "source_hash", "field", "entries", "units",
 	"owner_token", "owner_epoch", "revision", "phase", "index",
 	"samples", "demands", "allocated_field", "intake_by_id",
 	"next_population", "propagules", "checksum",
 ]
+const STAGED_R3_CURSOR_KEYS := [
+	"schema", "source_hash", "field", "entries", "units",
+	"owner_token", "owner_epoch", "revision", "phase", "index",
+	"samples", "demands", "allocated_field", "intake_by_id",
+	"next_population", "propagules", "allocator_mode",
+	"allocator_cursor", "checksum",
+]
 
 static func staged_begin(field: Dictionary, population: Array,
 		owner_token: String, owner_epoch: int, revision: int,
 		tile_span_cells: int = SpatialWorksets.DEFAULT_TILE_SPAN_CELLS,
-		max_members: int = SpatialWorksets.DEFAULT_MAX_MEMBERS) -> Dictionary:
+		max_members: int = SpatialWorksets.DEFAULT_MAX_MEMBERS,
+		use_r3_allocator: bool = false) -> Dictionary:
 	var guard := _precondition_error(field, population, owner_token, owner_epoch, revision)
 	if not guard.is_empty():
 		return _fail(guard)
@@ -741,17 +754,33 @@ static func staged_begin(field: Dictionary, population: Array,
 		"intake_by_id": {}, "next_population": [], "propagules": [],
 		"checksum": "",
 	}
+	if use_r3_allocator:
+		cursor.schema = STAGED_SCHEMA_R3
+		cursor["allocator_mode"] = STAGED_R3_ALLOCATOR_MODE
+		cursor["allocator_cursor"] = {}
 	cursor = _seal_staged_cursor(cursor)
 	if cursor.is_empty():
 		return _fail("A5_STAGED_CURSOR_SEAL")
 	return {"success": true, "complete": false, "phase": "PREPARE", "cursor": cursor}
 
 static func staged_resume(cursor: Dictionary, source_field: Dictionary,
-		source_population: Array, max_worksets_per_call: int = 1) -> Dictionary:
+		source_population: Array, max_worksets_per_call: int = 1,
+		max_allocator_items_per_call: int = 16,
+		allocator_cap_bytes: int = StagedA4R2.DEFAULT_CURSOR_CAP_BYTES) -> Dictionary:
 	if not C.integer(max_worksets_per_call, 1, 4096):
 		return _fail("A5_STAGED_QUOTA")
-	if not C.keys(cursor, STAGED_CURSOR_KEYS) or String(cursor.schema) != STAGED_SCHEMA:
+	var r3_mode: bool = String(cursor.get("schema", "")) == STAGED_SCHEMA_R3
+	var expected_keys: Array = STAGED_R3_CURSOR_KEYS if r3_mode else STAGED_CURSOR_KEYS
+	if not C.keys(cursor, expected_keys) or (not r3_mode \
+			and String(cursor.get("schema", "")) != STAGED_SCHEMA):
 		return _fail("A5_STAGED_CURSOR_SCHEMA")
+	if r3_mode:
+		if String(cursor.allocator_mode) != STAGED_R3_ALLOCATOR_MODE \
+				or not cursor.allocator_cursor is Dictionary:
+			return _fail("A5_STAGED_R3_ALLOCATOR_MODE")
+		if not C.integer(max_allocator_items_per_call, 1, StagedA4R2.MAX_QUOTA) \
+				or not C.integer(allocator_cap_bytes, 1024, StagedA4R2.MAX_CURSOR_CAP_BYTES):
+			return _fail("A5_STAGED_R3_ALLOCATOR_QUOTA")
 	if not cursor.field is Dictionary or not cursor.entries is Array \
 			or not cursor.units is Array or not cursor.samples is Dictionary \
 			or not cursor.demands is Array or not cursor.allocated_field is Dictionary \
@@ -761,9 +790,12 @@ static func staged_resume(cursor: Dictionary, source_field: Dictionary,
 	# A shallow envelope copy keeps the supplied cursor and every nested
 	# array immutable. Deep-cloning the full source/partial outcomes solely
 	# for the checksum doubled resident memory and resume latency.
-	var unsigned: Dictionary = cursor.duplicate(false)
-	unsigned.checksum = ""
-	var digest := C.digest(unsigned)
+	# The experimental R3 nested A4 scratch has its OWN full checksum,
+	# checked by StagedA4R2.resume before every speculative allocation
+	# step. Bind that checksum in the A5 envelope instead of digesting
+	# megabytes of already-sealed inner data for a second time. Accepted
+	# A14.5 v1 continues hashing its complete cursor exactly as before.
+	var digest: String = _staged_cursor_checksum(cursor)
 	if digest.is_empty() or digest != String(cursor.checksum):
 		return _fail("A5_STAGED_CURSOR_CHECKSUM")
 	var current_source := C.digest({"field": source_field, "population": source_population})
@@ -774,7 +806,14 @@ static func staged_resume(cursor: Dictionary, source_field: Dictionary,
 	var phase := String(cursor.phase)
 	if not phase in ["PREPARE", "ALLOCATE", "ADVANCE"]:
 		return _fail("A5_STAGED_PHASE")
-	var next: Dictionary = cursor.duplicate(true)
+	if r3_mode and phase != "ALLOCATE" and not cursor.allocator_cursor.is_empty():
+		return _fail("A5_STAGED_R3_ALLOCATOR_PHASE")
+	# During R3 ALLOCATE only top-level phase/index/allocated results and
+	# nested R2 cursor ownership are replaced. Neither the source field,
+	# PREPARE samples, entries, demands nor old R2 cursor is modified.
+	# Avoid full deep-copying ALL biological state for each R2 item quota.
+	# PREPARE and ADVANCE still deep-copy their mutable outcome arrays.
+	var next: Dictionary = cursor.duplicate(false) if r3_mode and phase == "ALLOCATE" else cursor.duplicate(true)
 	var units: Array = next.units
 	var entries: Array = next.entries
 	var index: int = int(next.index)
@@ -792,18 +831,64 @@ static func staged_resume(cursor: Dictionary, source_field: Dictionary,
 			next.phase = "ALLOCATE"
 			next.index = 0
 	elif phase == "ALLOCATE":
-		# Exactly one global field allocation; never allocate per tile.
+		# Full PREPARE frontier joins before the ONE global allocation.
+		# No speculative resource/grant or organism state is published.
 		if index != 0:
 			return _fail("A5_STAGED_ALLOCATION_INDEX")
-		var allocated := _allocate_population_demands(next.field, entries,
-			String(next.owner_token), int(next.owner_epoch),
-			int(next.revision), next.demands)
-		if not bool(allocated.get("success", false)):
-			return allocated
-		next.allocated_field = allocated.field
-		next.intake_by_id = allocated.intake_by_id
-		next.phase = "ADVANCE"
-		next.index = 0
+		if r3_mode and not next.demands.is_empty():
+			if next.allocator_cursor.is_empty():
+				# Begin R2 detached allocator; it can yield between the
+				# NORMALIZE, CLAIM, PRIMARY and RESIDUAL steps.
+				var started_a4: Dictionary = StagedA4R2.begin(
+					next.field, next.demands, String(next.owner_token),
+					int(next.owner_epoch), int(next.revision),
+					allocator_cap_bytes)
+				if not bool(started_a4.get("success", false)):
+					return _fail("A5_STAGED_R3_ALLOCATOR_BEGIN:" +
+						String(started_a4.get("error", "?")))
+				next.allocator_cursor = started_a4.cursor
+			else:
+				var progressed_a4: Dictionary = StagedA4R2.resume(
+					next.field, next.demands, String(next.owner_token),
+					int(next.owner_epoch), int(next.revision),
+					next.allocator_cursor, max_allocator_items_per_call,
+					allocator_cap_bytes)
+				if not bool(progressed_a4.get("success", false)):
+					return _fail("A5_STAGED_R3_ALLOCATOR_RESUME:" +
+						String(progressed_a4.get("error", "?")))
+				if bool(progressed_a4.get("complete", false)):
+					# R2 FINALIZE independently runs the original A4
+					# authoritative allocator and compares every byte.
+					if not bool(progressed_a4.get("reference_equal", false)):
+						return _fail("A5_STAGED_R3_REFERENCE_NOT_EQUAL")
+					var r3_intake := {}
+					for entry in entries:
+						r3_intake[String(entry.state.individual_id)] = F.stock()
+					for grant in progressed_a4.grants:
+						var id: String = String(grant.organism_id)
+						if not r3_intake.has(id):
+							return _fail("A5_GRANT_OWNER")
+						r3_intake[id][String(grant.resource)] += int(grant.granted)
+					next.allocated_field = progressed_a4.state
+					next.intake_by_id = r3_intake
+					next.allocator_cursor = {}
+					next.phase = "ADVANCE"
+					next.index = 0
+				else:
+					if progressed_a4.has("state") or not progressed_a4.has("cursor"):
+						return _fail("A5_STAGED_R3_PARTIAL_GRANTS")
+					next.allocator_cursor = progressed_a4.cursor
+		else:
+			# Historical accepted path, or exact no-demands R3 case.
+			var allocated := _allocate_population_demands(next.field, entries,
+				String(next.owner_token), int(next.owner_epoch),
+				int(next.revision), next.demands)
+			if not bool(allocated.get("success", false)):
+				return allocated
+			next.allocated_field = allocated.field
+			next.intake_by_id = allocated.intake_by_id
+			next.phase = "ADVANCE"
+			next.index = 0
 	elif phase == "ADVANCE":
 		var by_id := _entries_by_id(entries)
 		var stop := mini(units.size(), index + max_worksets_per_call)
@@ -840,15 +925,38 @@ static func staged_resume(cursor: Dictionary, source_field: Dictionary,
 			if phase != "ALLOCATE" else 0}
 
 static func _seal_staged_cursor(cursor: Dictionary) -> Dictionary:
-	# Called ONLY for an owned cursor from staged_begin() or the detached
-	# staged_resume() work copy. No source/host-provided cursor is mutated.
-	# Removing this redundant full deep copy does not change seal bytes.
+	# Called ONLY for the owned cursor from staged_begin() or a detached
+	# top-level/per-phase work copy. Never change a caller-provided cursor.
 	cursor["checksum"] = ""
-	var digest := C.digest(cursor)
+	var digest: String = _staged_cursor_checksum(cursor)
 	if digest.is_empty():
 		return {}
 	cursor["checksum"] = digest
 	return cursor
+
+static func _staged_cursor_checksum(cursor: Dictionary) -> String:
+	# The A14.5 accepted schema MUST keep its historical whole-envelope
+	# digest. Only the versioned nonpersistent R3 schema may use a compact
+	# binding to the independently sealed A4 R2 nested cursor.
+	var unsigned: Dictionary = cursor.duplicate(false)
+	unsigned["checksum"] = ""
+	if String(cursor.get("schema", "")) == STAGED_SCHEMA_R3:
+		var inner: Variant = cursor.get("allocator_cursor", null)
+		if not inner is Dictionary:
+			return ""
+		if not inner.is_empty():
+			if not C.keys(inner, StagedA4R2.KEYS) \
+					or String(inner.get("schema", "")) != StagedA4R2.SCHEMA:
+				return ""
+			var inner_hash: String = String(inner.get("checksum", ""))
+			if inner_hash.length() != 64:
+				return ""
+			# The checksum covers the original full R2 cursor. Its
+			# contents are verified by R2.resume before any modification.
+			unsigned["allocator_cursor"] = {
+				"schema": StagedA4R2.SCHEMA, "checksum": inner_hash,
+			}
+	return C.digest(unsigned)
 
 ## Canonical propagule materialization (A5-owned admission).
 ## Without a mutation receipt the v1 parent-transfer witness applies (child
