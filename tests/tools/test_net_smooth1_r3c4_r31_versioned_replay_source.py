@@ -68,11 +68,11 @@ class R31ImmutableReplayContract(unittest.TestCase):
         for path, method, mark in pairs:
             with self.subTest(path=path.name, method=method):
                 self.assertIn(mark, func(self.get(path), method))
-        for path in (OWN, MINING, P2, M4_BASE):
+        for path in (OWN, MINING, M4_BASE):
             body = self.get(path)
             self.assertIn("get_replay_projection_generation", body)
-            if path is not P2:
-                self.assertIn("_replay_projection_generation", body)
+            self.assertIn("_replay_projection_generation", body)
+        self.assertIn("get_service_replay_projection_generation", self.get(P2))
 
     def test_replay_load_restore_bumps_generation(self):
         for path in (OWN, MINING, P2, M4_BASE):
