@@ -76,6 +76,7 @@ class Source(unittest.TestCase):
         self.assertIn('DWS_NET_R3C4_R31B_DURABLE_ATTRIBUTION', setup)
         self.assertIn("R3C4_R31B_INVALID_MODE", setup)
         self.assertIn("R3C4_R31B_REQUIRES_R31_REPLAY_PROJECTION", setup)
+        self.assertIn("R3C4_R31B_REQUIRES_PRODUCT_SEAM", setup)
         self.assertIn("r3c4r31b_durable_attribution_canary", setup)
         submit = method(self.srv, "_submit_async_movement_checkpoint")
         self.assertIn("_recovery_authority.capture_frozen_gameplay_source_r31b_profiled()", submit)
