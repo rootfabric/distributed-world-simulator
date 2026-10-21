@@ -52,6 +52,7 @@ var _container_interactions
 var _mount_interactions
 var _playable_backend
 var _operation_ledger: Dictionary = {}
+var _replay_projection_generation := 0
 var _canonical_multiplayer_items
 var _playable_sandbox := false
 var _fixed_tick_authority := false
@@ -75,6 +76,7 @@ func setup(authority_owner_id: String, authority_epoch: int, server_tick: int = 
 	if _region_id.is_empty() or _topology_adapter.is_empty() or _profile not in [PROFILE_MULTIPLAYER_CORE, PROFILE_CANONICAL_PLAYABLE]:
 		return _failure("INVALID_NETWORKED_GAMEPLAY_CONFIGURATION")
 	_operation_ledger.clear()
+	_replay_projection_generation += 1
 	_ownership = OwnershipService.new()
 	var ownership_setup: Dictionary = _ownership.setup(_authority_owner_id, _authority_epoch, server_tick)
 	if not bool(ownership_setup.get("success", false)):
@@ -567,6 +569,7 @@ func restore_durable_state(value: Dictionary) -> Dictionary:
 	_result_router = ResultRouter.new()
 	_replication = ReplicationPublisher.new()
 	_operation_ledger.clear()
+	_replay_projection_generation += 1
 	_configured = true
 	return _success({
 		"revision": _revision,
@@ -650,6 +653,11 @@ func validate_durable_state(value: Dictionary) -> Dictionary:
 	return _success()
 
 
+
+func get_service_replay_projection_generation() -> int:
+	return _replay_projection_generation
+
+
 func export_replay_state() -> Dictionary:
 	if not _configured:
 		return {}
@@ -681,6 +689,7 @@ func restore_replay_state(value: Dictionary) -> Dictionary:
 	if not bool(item_result.get("success", false)):
 		return _failure("GAMEPLAY_ITEM_REPLAY_RECOVERY_FAILED", {"cause": item_result})
 	_operation_ledger = Dictionary(value.get("service_operation_ledger", {})).duplicate(true)
+	_replay_projection_generation += 1
 	return _success({
 		"service_operation_count": _operation_ledger.size(),
 		"ownership_operation_count": int(ownership_result.get("details", {}).get("operation_count", 0)),
@@ -1019,6 +1028,7 @@ func _replay(operation_id: String, fingerprint: String) -> Dictionary:
 
 func _record(operation_id: String, fingerprint: String, result: Dictionary) -> void:
 	_operation_ledger[operation_id] = {"fingerprint": fingerprint, "result": result.duplicate(true)}
+	_replay_projection_generation += 1
 
 
 func _record_failure(operation_id: String, fingerprint: String, error_code: String, details: Dictionary = {}) -> Dictionary:
@@ -1056,6 +1066,7 @@ func handle_live_player_input(command: Dictionary) -> Dictionary:
 	var operation_id := String(command.get("operation_id", ""))
 	if _operation_ledger.has(operation_id) and _operation_ledger[operation_id].get("fingerprint") == Utils.payload_hash(command):
 		_operation_ledger[operation_id]["live_player_id"] = logical_id
+		_replay_projection_generation += 1
 	return result
 
 
@@ -1121,6 +1132,7 @@ func install_live_player_replay(logical_id: String, entries: Dictionary, gate) -
 	for operation_id in entries:
 		if not _operation_ledger.has(operation_id):
 			_operation_ledger[operation_id] = Dictionary(entries[operation_id]).duplicate(true)
+			_replay_projection_generation += 1
 	return _success()
 
 
