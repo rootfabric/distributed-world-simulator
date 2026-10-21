@@ -1,0 +1,3 @@
+Godot Engine v4.7.1.stable.double.custom_build.a13da4feb (2026-07-13 21:00:28 UTC) - https://godotengine.org
+
+FABRIC_R56_R2_INDEPENDENT_OWNER_COM_RECOVERY={"checks":18,"failures":[],"observations":{"first_observe_error":"","first_prepare_error":"","second_observe_error":"","second_prepare_error":"","session_start_error":"","unsafe_query_error":"R56_R2_RANGE_CENTER_PRECISION_UNSAFE"}}
