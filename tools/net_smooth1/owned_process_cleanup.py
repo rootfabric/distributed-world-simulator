@@ -82,14 +82,49 @@ def select_windows_owned_godot(rows: list[dict], run_id: str,
 def windows_process_rows(run_id: str) -> list[dict]:
     if RUN_ID.fullmatch(run_id) is None:
         raise ValueError("NET_SMOOTH_INVALID_RUN_ID")
+    return _query_windows_godot_rows("--instance-id=" + run_id)
+
+
+def windows_smooth_process_rows() -> list[dict]:
+    # Read-only preflight: refuse to start performance tests while another
+    # smooth-run Godot instance is already alive. NEVER kill unrelated runs.
+    return _query_windows_godot_rows("--node-id=smooth-")
+
+
+def preflight_no_smooth_godot(godot_binary: Path,
+                             scanner: Callable[[], list[dict]] | None = None) -> list[int]:
+    rows = scanner() if scanner is not None else windows_smooth_process_rows()
+    engine_dir = ntpath.normcase(ntpath.normpath(ntpath.dirname(str(godot_binary))))
+    found: list[int] = []
+    for row in rows:
+        if not isinstance(row, dict) or type(row.get("pid")) is not int:
+            raise RuntimeError("NET_SMOOTH_PREFLIGHT_BAD_PROCESS_ROW")
+        name = str(row.get("name", ""))
+        command = str(row.get("command_line", ""))
+        executable = str(row.get("executable", ""))
+        if not re.fullmatch(r"(?i)godot.*\.exe", name):
+            continue
+        if "--node-id=smooth-" not in command:
+            continue
+        folder = ntpath.normcase(ntpath.normpath(ntpath.dirname(executable))) if executable else ""
+        if folder == engine_dir:
+            found.append(row["pid"])
+    if found:
+        raise RuntimeError("NET_SMOOTH_OTHER_GODOT_RUN_ALREADY_ACTIVE:" +
+                           ",".join(str(x) for x in sorted(found)))
+    return found
+
+
+def _query_windows_godot_rows(needle: str) -> list[dict]:
     shell = shutil.which("pwsh") or shutil.which("powershell")
     if not shell:
         raise RuntimeError("NET_SMOOTH_WINDOWS_PROCESS_QUERY_UNAVAILABLE")
-    # Match UUID in Powershell but do NOT interpolate it into script source.
-    # The PowerShell process itself cannot match the Godot executable-name gate.
+    # Match exact run marker / read-only preflight marker via env, NEVER
+    # interpolate input into PowerShell source. A pwsh process is excluded by
+    # the executable-name gate.
     script = r"""
 $ErrorActionPreference='Stop'
-$needle = '--instance-id=' + $env:DWS_NET_SMOOTH_CLEANUP_RUN_ID
+$needle = $env:DWS_NET_SMOOTH_PROCESS_NEEDLE
 $rows = @(
   Get-CimInstance -ClassName Win32_Process -ErrorAction Stop |
   Where-Object { $_.Name -match '(?i)^godot.*\.exe$' -and
@@ -106,7 +141,7 @@ $rows = @(
 ConvertTo-Json -InputObject $rows -Compress -Depth 5
 """
     env = dict(os.environ)
-    env["DWS_NET_SMOOTH_CLEANUP_RUN_ID"] = run_id
+    env["DWS_NET_SMOOTH_PROCESS_NEEDLE"] = needle
     p = subprocess.run([shell, "-NoProfile", "-NonInteractive", "-Command", script],
                        capture_output=True, text=True, encoding="utf-8", errors="replace",
                        env=env, timeout=35, check=False)
