@@ -44,6 +44,16 @@ var _seam_state: Dictionary = {}
 var _transfer_serial := 0
 var _transfer_failures := 0
 var _transfer_log: Array[Dictionary] = []
+# R31b P1 — derived, private immutable chunks ONLY. No gameplay shadow owner.
+# Two chunks maximum, each <=4MiB, main-thread-only access.
+const R31BP1_MAX_CHUNK_BYTES := 4 * 1024 * 1024
+var _r31bp1_item_chunk: Dictionary = {}
+var _r31bp1_resource_chunk: Dictionary = {}
+var _r31bp1_item_hits := 0
+var _r31bp1_resource_hits := 0
+var _r31bp1_chunk_misses := 0
+var _r31bp1_bypasses := 0
+
 
 
 func setup(
@@ -576,6 +586,188 @@ func export_durable_state_r31b_profiled() -> Dictionary:
 			"player_count": Array(snapshot.get("players", [])).size(),
 			"valid": bool(validated.get("success", false)),
 		},
+	}
+
+
+
+
+
+# Private main-thread component cache, never a worker interface. The real M4
+# and ResourceMining ports own all mutable state; this is a derived detached
+# durable DTO that is invalidated via owner-native mutation fences.
+func _r31bp1_export_chunk(port, component: String) -> Dictionary:
+	if port == null or not port.has_method("get_r31bp1_durable_source_fence"):
+		_r31bp1_bypasses += 1
+		return {"value": {}, "cache_hit": false, "bypass": "SOURCE_FENCE_MISSING"}
+	var fence: Dictionary = port.get_r31bp1_durable_source_fence()
+	if fence.is_empty():
+		_r31bp1_bypasses += 1
+		return {"value": {}, "cache_hit": false, "bypass": "SOURCE_FENCE_EMPTY"}
+	var owned: Dictionary = (
+		_r31bp1_item_chunk if component == "item_graph" else _r31bp1_resource_chunk
+	)
+	if not owned.is_empty() and Dictionary(owned.get("fence", {})) == fence:
+		var cached: Dictionary = Dictionary(owned.get("value", {}))
+		if not cached.is_empty():
+			if component == "item_graph":
+				_r31bp1_item_hits += 1
+			else:
+				_r31bp1_resource_hits += 1
+			return {
+				"value": cached.duplicate(true), "cache_hit": true,
+				"bypass": "", "chunk_bytes": int(owned.get("bytes", -1)),
+			}
+	_r31bp1_chunk_misses += 1
+	var source: Dictionary = port.export_durable_state()
+	if source.is_empty():
+		return {"value": {}, "cache_hit": false, "bypass": "EMPTY_COMPONENT"}
+	# A changed source during export is never stored. Re-export by the
+	# unchanged legacy path, not from two different authority revisions.
+	if port.get_r31bp1_durable_source_fence() != fence:
+		if component == "item_graph":
+			_r31bp1_item_chunk.clear()
+		else:
+			_r31bp1_resource_chunk.clear()
+		_r31bp1_bypasses += 1
+		return {
+			"value": port.export_durable_state(), "cache_hit": false,
+			"bypass": "FENCE_CHANGED", "chunk_bytes": -1,
+		}
+	var size_bytes: int = JSON.stringify(source).to_utf8_buffer().size()
+	if size_bytes > R31BP1_MAX_CHUNK_BYTES:
+		if component == "item_graph":
+			_r31bp1_item_chunk.clear()
+		else:
+			_r31bp1_resource_chunk.clear()
+		_r31bp1_bypasses += 1
+		return {
+			"value": source, "cache_hit": false,
+			"bypass": "CHUNK_MEMORY_BUDGET", "chunk_bytes": size_bytes,
+		}
+	var private_copy: Dictionary = {
+		"fence": fence.duplicate(true),
+		"value": source.duplicate(true),
+		"bytes": size_bytes,
+	}
+	if component == "item_graph":
+		_r31bp1_item_chunk = private_copy
+	else:
+		_r31bp1_resource_chunk = private_copy
+	return {
+		"value": source, "cache_hit": false, "bypass": "",
+		"chunk_bytes": size_bytes,
+	}
+
+
+func get_r31bp1_durable_chunk_report() -> Dictionary:
+	return {
+		"item_hits": _r31bp1_item_hits,
+		"resource_hits": _r31bp1_resource_hits,
+		"misses": _r31bp1_chunk_misses,
+		"bypasses": _r31bp1_bypasses,
+		"cached_item_bytes": int(_r31bp1_item_chunk.get("bytes", 0)),
+		"cached_resource_bytes": int(_r31bp1_resource_chunk.get("bytes", 0)),
+	}
+
+
+# R31b P1 exact canonical export, with cached M4 and mining chunks ONLY.
+# Live players and ownership are always rebuilt at the SAME quiescent tick;
+# global checksum AND full gameplay validation remain exactly unchanged.
+# May run only under R31b P0 + R31a opt-in server flag after seam quiescence.
+func export_durable_state_r31bp1_chunks() -> Dictionary:
+	var started_us: int = Time.get_ticks_usec()
+	if _seam_coordinators.is_empty():
+		var fallback: Dictionary = super.export_durable_state()
+		return {
+			"value": fallback,
+			"stages": {
+				"fallback_ms": float(Time.get_ticks_usec() - started_us) / 1000.0,
+				"total_ms": float(Time.get_ticks_usec() - started_us) / 1000.0,
+				"seam_coordinator_count": 0,
+			},
+		}
+	if not _seam_transfers_quiescent():
+		return {"value": {}, "stages": {"error": "SEAM_NOT_QUIESCENT"}}
+	var fenced_tick: int = _tick
+	var fenced_revision: int = _revision
+	var fenced_serial: int = _transfer_serial
+	var snapshot: Dictionary = create_snapshot()
+	var after_snapshot_us: int = Time.get_ticks_usec()
+	var players_state: Dictionary = _build_remote_player_durable_state(snapshot)
+	var after_players_us: int = Time.get_ticks_usec()
+	var ownership_state: Dictionary = _build_remote_ownership_durable_state(snapshot)
+	var after_ownership_us: int = Time.get_ticks_usec()
+	if (
+		players_state.is_empty()
+		or ownership_state.is_empty()
+		or _shared_items == null
+		or _canonical_multiplayer_items == null
+		or _resource_mining == null
+	):
+		return {"value": {}, "stages": {"error": "REQUIRED_DOMAIN_MISSING"}}
+	var shared_state: Dictionary = _shared_items.export_durable_state()
+	var after_shared_us: int = Time.get_ticks_usec()
+	var item_chunk: Dictionary = _r31bp1_export_chunk(
+		_canonical_multiplayer_items, "item_graph"
+	)
+	var item_state: Dictionary = Dictionary(item_chunk.get("value", {}))
+	var after_item_us: int = Time.get_ticks_usec()
+	var resource_chunk: Dictionary = _r31bp1_export_chunk(
+		_resource_mining, "resource"
+	)
+	var resource_state: Dictionary = Dictionary(resource_chunk.get("value", {}))
+	var after_resource_us: int = Time.get_ticks_usec()
+	if item_state.is_empty() or resource_state.is_empty():
+		return {"value": {}, "stages": {"error": "DURABLE_CHUNK_MISSING"}}
+	var durable: Dictionary = {
+		"schema": DURABLE_SCHEMA,
+		"authority_owner_id": _authority_owner_id,
+		"authority_epoch": _authority_epoch,
+		"revision": _revision,
+		"server_tick": _tick,
+		"region_id": _region_id,
+		"topology_adapter": _topology_adapter,
+		"profile": _profile,
+		"players": players_state,
+		"ownership": ownership_state,
+		"shared_item": shared_state,
+		"canonical_item_graph": item_state,
+		"resource_mining": resource_state,
+		"checksum": "",
+	}
+	durable = SeamUtils.finalize_json_checksum(durable)
+	var after_final_checksum_us: int = Time.get_ticks_usec()
+	var validated: Dictionary = validate_durable_state(durable)
+	var finished_us: int = Time.get_ticks_usec()
+	if (
+		_tick != fenced_tick or _revision != fenced_revision
+		or _transfer_serial != fenced_serial
+		or not _seam_transfers_quiescent()
+	):
+		return {"value": {}, "stages": {"error": "R31BP1_AUTHORITY_FENCE_CHANGED"}}
+	var stages := {
+		"snapshot_ms": float(after_snapshot_us - started_us) / 1000.0,
+		"players_ms": float(after_players_us - after_snapshot_us) / 1000.0,
+		"ownership_ms": float(after_ownership_us - after_players_us) / 1000.0,
+		"shared_item_ms": float(after_shared_us - after_ownership_us) / 1000.0,
+		"item_graph_ms": float(after_item_us - after_shared_us) / 1000.0,
+		"resource_ms": float(after_resource_us - after_item_us) / 1000.0,
+		"final_checksum_ms": float(after_final_checksum_us - after_resource_us) / 1000.0,
+		"validation_ms": float(finished_us - after_final_checksum_us) / 1000.0,
+		"total_ms": float(finished_us - started_us) / 1000.0,
+		"seam_coordinator_count": _seam_coordinators.size(),
+		"player_count": Array(snapshot.get("players", [])).size(),
+		"valid": bool(validated.get("success", false)),
+		"item_graph_cache_hit": bool(item_chunk.get("cache_hit", false)),
+		"resource_cache_hit": bool(resource_chunk.get("cache_hit", false)),
+		"item_graph_bypass": String(item_chunk.get("bypass", "")),
+		"resource_bypass": String(resource_chunk.get("bypass", "")),
+		"item_graph_cache_bytes": int(item_chunk.get("chunk_bytes", -1)),
+		"resource_cache_bytes": int(resource_chunk.get("chunk_bytes", -1)),
+	}
+	return {
+		"value": durable if bool(validated.get("success", false)) else {},
+		"stages": stages,
 	}
 
 
