@@ -1,0 +1,44 @@
+Godot Engine v4.7.1.stable.double.custom_build.a13da4feb (2026-07-13 21:00:28 UTC) - https://godotengine.org
+
+ERROR: R56_R2_COM_PRECISION: x-1e12 nonrepresentable COM fails closed {"details":{"center_of_mass":[1000000000000.0,0.0,0.0],"checksum":"20277eea37f369ef511b6e5587dc0b919a82298e054a6a56b802e9e410b54aed","construct_id":"construct/com/x-1e12","end_exclusive":2,"first":0,"inertia_tensor_body":[[0.0,0.0,0.0],[0.0,0.00000000745058059692383,0.0],[0.0,0.0,0.00000000745058059692383]],"revision":0,"schema":"planet_simulator.fabric_r56_r2_point_mass_aggregate.v1","source_checksum":"d0609ebc24ee85b8413858c0e308dd309460a84cab50802e5c31eedfdf9575b5","total_mass":2.0},"error_code":"","success":true}
+   at: push_error (core/variant/variant_utility.cpp:1023)
+   GDScript backtrace (most recent call first):
+       [0] ck (res://tests/research/fabric_bake0/fabric_r5_6_1_r2_center_precision_acceptance.gd:21)
+       [1] check_midpoint (res://tests/research/fabric_bake0/fabric_r5_6_1_r2_center_precision_acceptance.gd:47)
+       [2] _initialize (res://tests/research/fabric_bake0/fabric_r5_6_1_r2_center_precision_acceptance.gd:68)
+ERROR: R56_R2_COM_PRECISION: x-1e13 nonrepresentable COM fails closed {"details":{"center_of_mass":[10000000000000.0,0.0,0.0],"checksum":"62d355caafdccf72bcf46ecbc80e611ee49ec27d4c3b2bce54b4b2ff82ed9fee","construct_id":"construct/com/x-1e13","end_exclusive":2,"first":0,"inertia_tensor_body":[[0.0,0.0,0.0],[0.0,0.0000019073486328125,0.0],[0.0,0.0,0.0000019073486328125]],"revision":0,"schema":"planet_simulator.fabric_r56_r2_point_mass_aggregate.v1","source_checksum":"619310644412b0c209972d44378bd519cb6d5a0dfdaccdc4ff6175e366f49633","total_mass":2.0},"error_code":"","success":true}
+   at: push_error (core/variant/variant_utility.cpp:1023)
+   GDScript backtrace (most recent call first):
+       [0] ck (res://tests/research/fabric_bake0/fabric_r5_6_1_r2_center_precision_acceptance.gd:21)
+       [1] check_midpoint (res://tests/research/fabric_bake0/fabric_r5_6_1_r2_center_precision_acceptance.gd:47)
+       [2] _initialize (res://tests/research/fabric_bake0/fabric_r5_6_1_r2_center_precision_acceptance.gd:69)
+ERROR: R56_R2_COM_PRECISION: x-1e14 nonrepresentable COM fails closed {"details":{"center_of_mass":[100000000000000.0,0.0,0.0],"checksum":"3c67456867d17323d56d4c7e8e331d96cdaa1f89c3fad2e88d001f6a4a3e233b","construct_id":"construct/com/x-1e14","end_exclusive":2,"first":0,"inertia_tensor_body":[[0.0,0.0,0.0],[0.0,0.0001220703125,0.0],[0.0,0.0,0.0001220703125]],"revision":0,"schema":"planet_simulator.fabric_r56_r2_point_mass_aggregate.v1","source_checksum":"4a65d22896d882a1c65e058ed93229be39bea8fa8aea9a257a04fb0b25c5e06e","total_mass":2.0},"error_code":"","success":true}
+   at: push_error (core/variant/variant_utility.cpp:1023)
+   GDScript backtrace (most recent call first):
+       [0] ck (res://tests/research/fabric_bake0/fabric_r5_6_1_r2_center_precision_acceptance.gd:21)
+       [1] check_midpoint (res://tests/research/fabric_bake0/fabric_r5_6_1_r2_center_precision_acceptance.gd:47)
+       [2] _initialize (res://tests/research/fabric_bake0/fabric_r5_6_1_r2_center_precision_acceptance.gd:70)
+ERROR: R56_R2_COM_PRECISION: x-1e15 nonrepresentable COM fails closed {"details":{"center_of_mass":[1000000000000000.0,0.0,0.0],"checksum":"a55b427f891045d3fc9f0543d022e6181b1dd6d859335c9ce1f6eacea6b9fcc4","construct_id":"construct/com/x-1e15","end_exclusive":2,"first":0,"inertia_tensor_body":[[0.0,0.0,0.0],[0.0,0.0078125,0.0],[0.0,0.0,0.0078125]],"revision":0,"schema":"planet_simulator.fabric_r56_r2_point_mass_aggregate.v1","source_checksum":"8e72d969054be3af12f19bd41b7700b48ae4b0443fb17b5d76dbc7eece5bd83b","total_mass":2.0},"error_code":"","success":true}
+   at: push_error (core/variant/variant_utility.cpp:1023)
+   GDScript backtrace (most recent call first):
+       [0] ck (res://tests/research/fabric_bake0/fabric_r5_6_1_r2_center_precision_acceptance.gd:21)
+       [1] check_midpoint (res://tests/research/fabric_bake0/fabric_r5_6_1_r2_center_precision_acceptance.gd:47)
+       [2] _initialize (res://tests/research/fabric_bake0/fabric_r5_6_1_r2_center_precision_acceptance.gd:71)
+ERROR: R56_R2_COM_PRECISION: y-negative-1e13 nonrepresentable COM fails closed {"details":{"center_of_mass":[0.0,-10000000000000.0,0.0],"checksum":"cfdb97a05946d814f856682a3bec869c3f45011eae23cbbaa3815904ba648df3","construct_id":"construct/com/y-negative-1e13","end_exclusive":2,"first":0,"inertia_tensor_body":[[0.0000019073486328125,0.0,0.0],[0.0,0.0,0.0],[0.0,0.0,0.0000019073486328125]],"revision":0,"schema":"planet_simulator.fabric_r56_r2_point_mass_aggregate.v1","source_checksum":"338e81ea0c9dcc42216e049634309e9018c3c8583fbf023fe23b18dae29b18a7","total_mass":2.0},"error_code":"","success":true}
+   at: push_error (core/variant/variant_utility.cpp:1023)
+   GDScript backtrace (most recent call first):
+       [0] ck (res://tests/research/fabric_bake0/fabric_r5_6_1_r2_center_precision_acceptance.gd:21)
+       [1] check_midpoint (res://tests/research/fabric_bake0/fabric_r5_6_1_r2_center_precision_acceptance.gd:47)
+       [2] _initialize (res://tests/research/fabric_bake0/fabric_r5_6_1_r2_center_precision_acceptance.gd:75)
+ERROR: R56_R2_COM_PRECISION: z-positive-1e13 nonrepresentable COM fails closed {"details":{"center_of_mass":[0.0,0.0,10000000000000.0],"checksum":"7d8906b8224679e676b85cda4005b737489f2ad02408c07f18e4728e6681ee16","construct_id":"construct/com/z-positive-1e13","end_exclusive":2,"first":0,"inertia_tensor_body":[[0.0000019073486328125,0.0,0.0],[0.0,0.0000019073486328125,0.0],[0.0,0.0,0.0]],"revision":0,"schema":"planet_simulator.fabric_r56_r2_point_mass_aggregate.v1","source_checksum":"def3a9530d3af118a136799d5d0ccf92e187062c09078591b4fd953991a3f171","total_mass":2.0},"error_code":"","success":true}
+   at: push_error (core/variant/variant_utility.cpp:1023)
+   GDScript backtrace (most recent call first):
+       [0] ck (res://tests/research/fabric_bake0/fabric_r5_6_1_r2_center_precision_acceptance.gd:21)
+       [1] check_midpoint (res://tests/research/fabric_bake0/fabric_r5_6_1_r2_center_precision_acceptance.gd:47)
+       [2] _initialize (res://tests/research/fabric_bake0/fabric_r5_6_1_r2_center_precision_acceptance.gd:76)
+ERROR: R56_R2_COM_PRECISION: six unrepresentable centers rejected null
+   at: push_error (core/variant/variant_utility.cpp:1023)
+   GDScript backtrace (most recent call first):
+       [0] ck (res://tests/research/fabric_bake0/fabric_r5_6_1_r2_center_precision_acceptance.gd:21)
+       [1] _initialize (res://tests/research/fabric_bake0/fabric_r5_6_1_r2_center_precision_acceptance.gd:77)
+FABRIC_R56_R2_COM_PRECISION={"cases":[{"accepted":true,"axis":0,"error_code":"","expected_reject":false,"label":"x-1e9","offset":1000000000.0,"separation":0.000000119209289550781},{"accepted":true,"axis":0,"error_code":"","expected_reject":true,"label":"x-1e12","offset":1000000000000.0,"separation":0.0001220703125},{"accepted":true,"axis":0,"error_code":"","expected_reject":true,"label":"x-1e13","offset":10000000000000.0,"separation":0.001953125},{"accepted":true,"axis":0,"error_code":"","expected_reject":true,"label":"x-1e14","offset":100000000000000.0,"separation":0.015625},{"accepted":true,"axis":0,"error_code":"","expected_reject":true,"label":"x-1e15","offset":1000000000000000.0,"separation":0.125},{"accepted":true,"axis":0,"error_code":"","expected_reject":false,"label":"x-safe-1e12","offset":1000000000000.0,"separation":1.0},{"accepted":true,"axis":1,"error_code":"","expected_reject":true,"label":"y-negative-1e13","offset":-10000000000000.0,"separation":0.001953125},{"accepted":true,"axis":2,"error_code":"","expected_reject":true,"label":"z-positive-1e13","offset":10000000000000.0,"separation":0.001953125}],"center_budget_m":0.000001,"checks":52,"failures":["x-1e12 nonrepresentable COM fails closed","x-1e13 nonrepresentable COM fails closed","x-1e14 nonrepresentable COM fails closed","x-1e15 nonrepresentable COM fails closed","y-negative-1e13 nonrepresentable COM fails closed","z-positive-1e13 nonrepresentable COM fails closed","six unrepresentable centers rejected"],"multi_axis_rejections":2,"safe_centers":2,"schema":"fabric.r56_r2.center_precision.v1","state_unchanged":true,"unsafe_centers_rejected":0}
