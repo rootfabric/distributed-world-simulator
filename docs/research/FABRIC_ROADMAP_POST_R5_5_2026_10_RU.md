@@ -34,8 +34,11 @@ R5.5 R4 MERGED / fixed-scene reference
 R5.6.1 — GENERAL CANONICAL SOURCE & DELTAS        ◀ CURRENT RESEARCH
     R1 read-only Construction delta proposal/observation
        external authoritative commit, two different constructions, repeated events
-    R2 dynamic indexed aggregates & incremental successor for bounded edits
-       (separate gate; NOT achieved by R1)
+    R2 dynamic indexed aggregates & bounded part successor (MOVE_PART, TRANSFER_MASS)
+       • 10 Fenwick physical moments; 5k/20k/100k scaling and FULL oracle
+       • O(k log N) only for moment-index update; full canonical validation remains O(N)
+       • point-mass physical floor; no arbitrary topology/intrinsic inertia
+       (separate R2 acceptance, NOT achieved by R1)
             │
             ▼
 R5.6.2 — MULTI-EVENT LIFECYCLE / COLD RECOVERY
@@ -127,3 +130,9 @@ canonical Linux/Windows если затронуты численные/physical 
 separate independent Reviewer и Verifier, PC0 directional audit при актуальном
 интеграционном checkpoint. Merge в исследовательскую ветку — отдельный human gate;
 `main` напрямую не изменять. Roadmap publication ≠ acceptance runtime.
+
+## R5.6.1 R2 — динамические агрегаты (implementation handoff)
+
+Проверяемый scoped Work Order: [`FABRIC_R5_6_1_R2_DYNAMIC_AGGREGATES_WORK_ORDER_RU.md`](FABRIC_R5_6_1_R2_DYNAMIC_AGGREGATES_WORK_ORDER_RU.md).
+Исследовательский R2 индексирует десять физических моментов, проверяет независимый FULL-оракул и работает только через уже существующий внешний Construction owner.
+**Это не O(local) всей транзакции**: канонические снимки, checksum, BRIDGE-4 и гарантия неизменности источника всё ещё могут стоить O(N). Включение детерминированного бюджета и restart-recovery не переносится из будущих этапов задним числом.
