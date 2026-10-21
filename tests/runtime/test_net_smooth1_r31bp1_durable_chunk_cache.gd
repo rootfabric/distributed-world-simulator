@@ -10,6 +10,11 @@ extends SceneTree
 
 const SeamService = preload("res://scripts/runtime/networked_gameplay/user1/user1_product_seam_gameplay_service.gd")
 const ChunkCache = preload("res://scripts/runtime/networked_gameplay/m6/r31bp1_durable_chunk_cache.gd")
+const Adapter = preload("res://scripts/runtime/networked_gameplay/m6/m6_dedicated_gameplay_authority_adapter.gd")
+const Outbox = preload("res://scripts/runtime/networked_gameplay/m6/m6_durable_replay_outbox.gd")
+const Writer = preload("res://scripts/persistence/async_checkpoint_writer.gd")
+const Checkpoint = preload("res://scripts/persistence/authoritative_checkpoint.gd")
+const Repository = preload("res://scripts/persistence/authoritative_recovery_repository.gd")
 const Runtime = preload("res://scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime_p2.gd")
 
 var assertions := 0
@@ -27,6 +32,8 @@ func _run() -> void:
 	_test_nested_poison_isolation()
 	_test_invalidation_fences()
 	_test_oversize_bypass()
+	_test_changed_source_fence()
+	_test_exact_m6_disk_periodic_vs_direct_export()
 	_test_runtime_gates()
 	for failure in failures:
 		push_error("R31BP1_FAIL:" + failure)
@@ -290,6 +297,112 @@ func _test_oversize_bypass() -> void:
 		"oversize: bypass counter exposed")
 	check(report.get("resource_mining", {}).get("cached", true) == false,
 		"oversize: component NOT cached")
+
+
+
+class _ChangingSource:
+	extends RefCounted
+	var serial := 1
+	func get_r31bp1_chunk_fence() -> Dictionary:
+		return {
+			"kind": "item_graph", "instance_id": get_instance_id(),
+			"authority_owner_id": "authority/test", "authority_epoch": 1,
+			"revision": 5, "tick": 5, "state_serial": serial,
+		}
+	func export_durable_state() -> Dictionary:
+		# Adversarial *synchronous* source mutation while exporting, even if
+		# no threads or await appear in production source methods.
+		serial += 1
+		return {"schema": "test", "value": serial, "checksum": "test-only"}
+
+
+func _test_changed_source_fence() -> void:
+	var cache = ChunkCache.new()
+	check(bool(cache.configure(true).get("success", false)),
+		"changed fence cache configured")
+	var source = _ChangingSource.new()
+	var before: Dictionary = source.get_r31bp1_chunk_fence()
+	var first: Dictionary = cache.export_component(source, "item_graph")
+	check(source.get_r31bp1_chunk_fence() != before,
+		"source serial actually changed synchronously during export")
+	check(String(first.get("bypass", "")) == "SOURCE_FENCE_CHANGED",
+		"post-export fence mismatch classified")
+	check(Dictionary(first.get("value", {})).is_empty(),
+		"changed source cannot yield any cacheable durable DTO")
+	var report: Dictionary = cache.get_report()
+	check(report.get("item_graph", {}).get("cached", true) == false,
+		"changed source never populates private cache")
+	check(int(report.get("item_graph", {}).get(
+		"bypass_reasons", {}).get("SOURCE_FENCE_CHANGED", 0)) == 1,
+		"fail-closed SOURCE_FENCE_CHANGED reason recorded")
+	var service = _make_bound_service("changed-source")
+	if service == null:
+		return
+	check(bool(service.configure_r31bp1_durable_chunk_cache(cache).get(
+		"success", false)), "real ProductSeam attaches cache")
+	var mediated: Dictionary = service.call(
+		"_r31bp1_export_component", source, "item_graph")
+	check(mediated.is_empty(),
+		"ProductSeam does not hide changed source with a second live export")
+	service.shutdown()
+
+
+func _test_exact_m6_disk_periodic_vs_direct_export() -> void:
+	var service = _make_bound_service("m6-periodic")
+	if service == null:
+		return
+	var adapter = Adapter.new()
+	check(bool(adapter.setup(service).get("success", false)),
+		"M6 adapter configured")
+	var cache = ChunkCache.new()
+	check(bool(cache.configure(true).get("success", false)),
+		"M6 active cache configured")
+	check(bool(service.configure_r31bp1_durable_chunk_cache(cache).get(
+		"success", false)), "M6 owner P1 cache attached")
+	var canonical: Dictionary = adapter.export_recovery_state()
+	check(not canonical.is_empty(), "M6 direct command export valid")
+	var before_direct: Dictionary = cache.get_report()
+	adapter.export_recovery_state()
+	check(cache.get_report() == before_direct,
+		"M6 direct command export never hits P1 cache")
+	var source: Dictionary = adapter.capture_frozen_gameplay_source_r31b_profiled()
+	var frozen: Dictionary = Dictionary(source.get("frozen_gameplay", {}))
+	var wrapped: Dictionary = Adapter.wrap_frozen_gameplay_source(frozen)
+	check(wrapped == canonical,
+		"periodic P1 frozen M6 envelope exactly matches legacy direct M6")
+	var replay_owner = Outbox.new()
+	check(bool(replay_owner.setup(service).get("success", false)),
+		"M6 outbox ready")
+	var replay: Dictionary = replay_owner.to_dict()
+	var expected: Dictionary = Checkpoint.create(
+		"checkpoint/r31bp1/fence/1", 1, 0, wrapped, replay, "",
+		int(wrapped.get("server_tick", -1)))
+	check(bool(Checkpoint.validate(expected).get("success", false)),
+		"M6 checksum and canonical checkpoint validate")
+	var disk_root := _path("fenced-disk")
+	var writer = Writer.new()
+	var ready: Dictionary = writer.setup(disk_root)
+	check(bool(ready.get("success", false)), "one M6 disk writer configured")
+	if bool(ready.get("success", false)):
+		var submitted: Dictionary = writer.submit_frozen_gameplay_source(
+			frozen, replay, "checkpoint/r31bp1/fence/1", 1, 0)
+		check(bool(submitted.get("success", false)), "durable generation admitted")
+		check(writer.is_busy(), "no pre-disk generation ACK")
+		var source_mutable: Dictionary = Dictionary(frozen.get("durable_state", {}))
+		source_mutable["checksum"] = "tampered-after-submit"
+		replay.clear()
+		var finished: Dictionary = writer.wait_completed()
+		check(bool(finished.get("success", false)), "writer committed checkpoint")
+		var repository = Repository.new()
+		check(bool(repository.configure(disk_root).get("success", false)),
+			"recovery root configured")
+		var saved: Dictionary = repository.load_committed()
+		check(bool(saved.get("success", false)), "disk checkpoint restored")
+		if bool(saved.get("success", false)):
+			check(Dictionary(saved.get("details", {}).get("checkpoint", {})) == expected,
+				"disk checksum/DTO parity despite caller alias poison")
+		writer.stop()
+	service.shutdown()
 
 
 func _test_runtime_gates() -> void:
