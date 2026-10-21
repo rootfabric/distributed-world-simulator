@@ -54,6 +54,12 @@ var _r31bp1_chunk_cache = null
 
 var _r31bp1_last_item_graph_hit := false
 var _r31bp1_last_resource_hit := false
+# R31b P2.0 attribution-only, default OFF, no validator bypass.
+var _r31bp20_validation_attribution_enabled := false
+
+func configure_r31bp20_validation_attribution(enabled: bool) -> Dictionary:
+	_r31bp20_validation_attribution_enabled = enabled
+	return _success({"enabled": _r31bp20_validation_attribution_enabled})
 
 
 # R31b P1: attach the private immutable chunk cache. Passing null (or a
@@ -635,7 +641,14 @@ func export_durable_state_r31b_profiled() -> Dictionary:
 	}
 	durable = SeamUtils.finalize_json_checksum(durable)
 	var after_final_checksum_us: int = Time.get_ticks_usec()
-	var validated: Dictionary = validate_durable_state(durable)
+	var validated: Dictionary = {}
+	var p20_validation_stages: Dictionary = {}
+	if _r31bp20_validation_attribution_enabled:
+		var observed: Dictionary = validate_durable_state_p20_profiled(durable)
+		validated = Dictionary(observed.get("validation", {}))
+		p20_validation_stages = Dictionary(observed.get("stages", {}))
+	else:
+		validated = validate_durable_state(durable)
 	var done_us: int = Time.get_ticks_usec()
 	if _r31bp1_chunk_cache != null and (
 		_tick != frozen_tick or _revision != frozen_revision
@@ -657,6 +670,7 @@ func export_durable_state_r31b_profiled() -> Dictionary:
 			"resource_ms": float(after_resource_us - after_item_us) / 1000.0,
 			"final_checksum_ms": float(after_final_checksum_us - after_resource_us) / 1000.0,
 			"validation_ms": float(done_us - after_final_checksum_us) / 1000.0,
+			"r31bp20_validation_stages": p20_validation_stages.duplicate(true),
 			"total_ms": float(done_us - began_us) / 1000.0,
 			"seam_coordinator_count": _seam_coordinators.size(),
 			"player_count": Array(snapshot.get("players", [])).size(),
