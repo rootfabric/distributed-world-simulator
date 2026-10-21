@@ -1,0 +1,94 @@
+name: FABRIC R562 PowerShell argv diagnostic
+on:
+  push:
+    branches: [verify/fabric-r562-r12-launcher-diagnostic-r1]
+permissions:
+  contents: read
+jobs:
+  probe:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Obtain pinned PowerShell 7.6.7
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          New-Item -ItemType Directory -Force artifacts,artifacts/toolchain,artifacts/probe | Out-Null
+          if ($IsWindows) {
+            $archive = 'PowerShell-7.6.7-win-x64.zip'
+            $expected = 'd2f952ebdbf24386cb8923553aa58e41a846db35a6155ea04c58142a4b16dbb7'
+          } else {
+            $archive = 'powershell-7.6.7-linux-x64.tar.gz'
+            $expected = '6896f9e3a6b0a354bf470835a96da76d2f801cd50dcf047ad7c4563bf93bf431'
+          }
+          $destination = Join-Path artifacts/toolchain $archive
+          Invoke-WebRequest "https://github.com/PowerShell/PowerShell/releases/download/v7.6.7/$archive" -OutFile $destination
+          if ((Get-FileHash $destination -Algorithm SHA256).Hash.ToLowerInvariant() -cne $expected) { throw 'POWERSHELL_ARCHIVE_SHA_MISMATCH' }
+          "$expected  $archive" | Set-Content artifacts/toolchain/SHA256SUMS
+          $install = Join-Path $env:RUNNER_TEMP 'r562-pwsh-7.6.7'
+          New-Item -ItemType Directory -Force $install | Out-Null
+          if ($IsWindows) {
+            Expand-Archive $destination $install
+            "PINNED_PWSH=$install/pwsh.exe" >> $env:GITHUB_ENV
+          } else {
+            tar -xzf $destination -C $install
+            if ($LASTEXITCODE -ne 0) { throw 'EXTRACT_FAILED' }
+            chmod +x "$install/pwsh"
+            "PINNED_PWSH=$install/pwsh" >> $env:GITHUB_ENV
+          }
+      - name: Extract real launch function and observe argv before Start
+        shell: pwsh
+        run: |
+          $probe = @'
+          $ErrorActionPreference = 'Stop'
+          Set-StrictMode -Version Latest
+          $tokens = $null; $errors = $null
+          $path = Join-Path $PWD 'RUN_FABRIC_R5_6_2_R1_TESTS.ps1'
+          $ast = [Management.Automation.Language.Parser]::ParseFile($path,[ref]$tokens,[ref]$errors)
+          if ($errors.Count) { throw 'RUNNER_PARSE_FAILED' }
+          $function = $ast.Find({param($n) $n -is [Management.Automation.Language.FunctionDefinitionAst] -and $n.Name -eq 'RunGodot'},$false)
+          $code = $function.Extent.Text
+          $cut = $code.IndexOf('    $proc = ')
+          if ($cut -lt 0) { throw 'PROBE_BOUNDARY_MISSING' }
+          # No product execution: return the actual ProcessStartInfo immediately
+          # before Process creation. Signature and argv builder are unchanged.
+          $capture = $code.Substring(0,$cut) + "`n    return ,`$info`n}"
+          $Root = 'C:/probe path/with spaces'
+          $GodotBin = 'NOT_EXECUTED_GODOT'
+          $Utf8 = [Text.UTF8Encoding]::new($false)
+          Invoke-Expression $capture
+          $old = RunGodot 'import-recovery' @('--editor','--import','--recovery-mode')
+          $oldArgv = @($old.ArgumentList)
+          if ($oldArgv -contains '--editor' -or $oldArgv -contains '--import') { throw 'LEGACY_DEFECT_NOT_REPRODUCED' }
+          # One-token fix experiment; not a claim of product/Windows exact.
+          Invoke-Expression ($capture.Replace('$Args','$GateArgs'))
+          $new = RunGodot 'import-recovery' @('--editor','--import','--recovery-mode')
+          $newArgv = @($new.ArgumentList)
+          $expected = @('--headless','--path',$Root,'--editor','--import','--recovery-mode')
+          if ((ConvertTo-Json -InputObject $newArgv -Compress) -cne (ConvertTo-Json -InputObject $expected -Compress)) { throw 'RENAMED_ARGUMENTS_MISMATCH' }
+          $record = [ordered]@{schema='fabric.r562.argv_diagnostic.v1';powershell=$PSVersionTable.PSVersion.ToString();os=[Environment]::OSVersion.VersionString;old_argv=$oldArgv;renamed_argv=$newArgv;legacy_red=$true;rename_green=$true;godot_launched=$false}
+          $record | ConvertTo-Json -Depth 6 | Tee-Object -FilePath artifacts/probe/argv-diagnostic.json
+          '@
+          $probe | Set-Content -Encoding utf8NoBOM artifacts/probe/probe.ps1
+          & $env:PINNED_PWSH -NoLogo -NoProfile -File artifacts/probe/probe.ps1
+          if ($LASTEXITCODE -ne 0) { throw 'ARGV_DIAGNOSTIC_FAILED' }
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: fabric-r562-argv-diagnostic-${{ matrix.os }}
+          path: artifacts/probe/**
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        if: matrix.os == 'ubuntu-latest'
+        with:
+          name: fabric-r562-pwsh-linux-toolchain
+          path: artifacts/toolchain/**
+          if-no-files-found: error
+          retention-days: 3
