@@ -75,12 +75,22 @@ func export_component(service, kind: String) -> Dictionary:
 	if source.is_empty():
 		# Fail CLOSED: never serve a stale chunk when the source cannot export.
 		_chunks.erase(kind)
+		_note_bypass(kind, "SOURCE_EXPORT_EMPTY")
 		return {"value": {}, "hit": false, "bypass": "SOURCE_EXPORT_EMPTY", "bytes": 0}
+	# Deterministic future-proof fence: no source callback may change its
+	# revision/epoch/serial while materializing a cacheable snapshot. No
+	# second exporter invocation can make that mixed snapshot coherent.
+	var after_fence: Dictionary = service.get_r31bp1_chunk_fence()
+	if not _fence_matches(fence, after_fence):
+		_chunks.erase(kind)
+		_note_bypass(kind, "SOURCE_FENCE_CHANGED")
+		return {"value": {}, "hit": false, "bypass": "SOURCE_FENCE_CHANGED", "bytes": 0}
 	var bytes := _json_byte_size(source)
 	if bytes > MAX_CHUNK_BYTES:
 		# Oversize bypass: unchanged full component export, measured, not hidden.
 		_chunks.erase(kind)
-		_metrics[kind]["bypasses"] = int(_metrics[kind]["bypasses"]) + 1
+		_note_bypass(kind, "CHUNK_OVERSIZE")
+		_metrics[kind]["bytes"] = 0
 		return {
 			"value": source.duplicate(true),
 			"hit": false,
@@ -114,21 +124,40 @@ func _fence_matches(stored: Dictionary, live: Dictionary) -> bool:
 	for field in ["kind", "instance_id", "authority_owner_id", "authority_epoch", "state_serial"]:
 		if stored.get(field, null) != live.get(field, null):
 			return false
-	# revision (item graph) / generation (resource mining) per kind.
-	var monotone_field := "revision" if String(live.get("kind", "")) == "item_graph" else "generation"
-	return stored.get(monotone_field, null) == live.get(monotone_field, null)
+	# ItemGraph's snapshot includes BOTH revision and tick; ownership
+	# changes outside the main command path also have a separate serial.
+	if String(live.get("kind", "")) == "item_graph":
+		return (
+			stored.get("revision", null) == live.get("revision", null)
+			and stored.get("tick", null) == live.get("tick", null)
+		)
+	return stored.get("generation", null) == live.get("generation", null)
 
 
 func _chunk_bytes_within_budget(entry) -> bool:
-	return entry is Dictionary and not entry.is_empty() and int(entry.get("bytes", 0)) <= MAX_CHUNK_BYTES
+	return (
+		entry is Dictionary and not entry.is_empty()
+		and int(entry.get("bytes", 0)) > 0
+		and int(entry.get("bytes", 0)) <= MAX_CHUNK_BYTES
+	)
 
 
 func _json_byte_size(value: Dictionary) -> int:
 	return JSON.stringify(value).to_utf8_buffer().size()
 
 
+func _note_bypass(kind: String, reason: String) -> void:
+	_metrics[kind]["bypasses"] = int(_metrics[kind]["bypasses"]) + 1
+	var reasons: Dictionary = Dictionary(_metrics[kind].get("bypass_reasons", {}))
+	reasons[reason] = int(reasons.get(reason, 0)) + 1
+	_metrics[kind]["bypass_reasons"] = reasons
+
+
 func _fresh_component_metrics() -> Dictionary:
-	return {"hits": 0, "misses": 0, "bypasses": 0, "bytes": 0}
+	return {
+		"hits": 0, "misses": 0, "bypasses": 0, "bytes": 0,
+		"bypass_reasons": {},
+	}
 
 
 func _success(details: Dictionary = {}) -> Dictionary:
