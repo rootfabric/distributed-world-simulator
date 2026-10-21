@@ -877,6 +877,7 @@ func get_r31bp1_chunk_fence() -> Dictionary:
 		"authority_owner_id": _authority_owner_id,
 		"authority_epoch": _authority_epoch,
 		"revision": _revision,
+		"tick": _tick,
 		"state_serial": _r31bp1_state_serial,
 	}
 
