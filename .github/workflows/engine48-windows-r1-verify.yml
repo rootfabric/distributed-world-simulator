@@ -17,6 +17,10 @@ on:
         description: "Verified SHA256 of the pinned Godot 4.8 R1 console editor"
         required: true
         type: string
+      godot_console_path:
+        description: "Optional absolute runner-local Godot 4.8 console editor path"
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -36,6 +40,10 @@ jobs:
       PYTHONUTF8: "1"
       DWS_ENGINE48_GODOT_SHA256: f53f90f686a4eb05df076692c1b67a9e3d12d7c6c981cf86f1015d1ec36a2636
       ENGINE48_EXPECTED_VERSION: "4.8.beta1.double.custom_build.4d10419ca"
+      ENGINE48_PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+      ENGINE48_INPUT_SUBJECT_SHA: ${{ inputs.subject_sha }}
+      ENGINE48_INPUT_CONSOLE_SHA256: ${{ inputs.godot48_console_sha256 }}
+      ENGINE48_INPUT_CONSOLE_PATH: ${{ inputs.godot_console_path }}
     steps:
       - name: Checkout exact subject commit
         uses: actions/checkout@v4
@@ -49,11 +57,11 @@ jobs:
           $ErrorActionPreference='Stop'
           New-Item -ItemType Directory -Force artifacts\engine48 | Out-Null
           $head=(git rev-parse HEAD).Trim()
-          $subject=if ($env:GITHUB_EVENT_NAME -eq 'pull_request') { "${{ github.event.pull_request.head.sha }}" } else { "${{ inputs.subject_sha }}" }
+          $subject=if ($env:GITHUB_EVENT_NAME -eq 'pull_request') { $env:ENGINE48_PR_HEAD_SHA } else { $env:ENGINE48_INPUT_SUBJECT_SHA }
           if ($subject -notmatch '^[0-9a-fA-F]{40}$' -or $head -ne $subject) { throw "ENGINE48_SUBJECT_MISMATCH:expected=$($subject):actual=$head" }
           git merge-base --is-ancestor a936412cc3d597a88fa789fc73c6ac7dcfd7a4e9 HEAD
           if ($LASTEXITCODE -ne 0) { throw 'ENGINE48_MIGRATION_ANCESTRY_MISMATCH' }
-          $requested="${{ inputs.godot48_console_sha256 }}".Trim().ToLowerInvariant()
+          $requested=([string]$env:ENGINE48_INPUT_CONSOLE_SHA256).Trim().ToLowerInvariant()
           if ($env:GITHUB_EVENT_NAME -eq 'workflow_dispatch' -and $requested -ne $env:DWS_ENGINE48_GODOT_SHA256) { throw "ENGINE48_REQUESTED_HASH_NOT_PINNED:$requested" }
           if (git status --porcelain --untracked-files=no) { throw 'ENGINE48_TRACKED_DIRTY_BEFORE' }
           [ordered]@{
@@ -69,7 +77,9 @@ jobs:
         run: |
           $ErrorActionPreference='Stop'
           $g=$env:ENGINE48_GODOT_CONSOLE
-          if (-not $g -or -not (Test-Path -LiteralPath $g -PathType Leaf)) { throw 'ENGINE48_GODOT_CONSOLE is required as runner environment variable and must point to the custom 4.8 double console editor' }
+          if (-not $g) { $g=$env:ENGINE48_INPUT_CONSOLE_PATH }
+          if (-not $g -or -not (Test-Path -LiteralPath $g -PathType Leaf)) { throw 'Set ENGINE48_GODOT_CONSOLE on self-hosted runner or provide godot_console_path for dispatch; exact 4.8 editor is required' }
+          "ENGINE48_GODOT_CONSOLE=$g" | Out-File $env:GITHUB_ENV -Append -Encoding utf8
           $actualHash=(Get-FileHash -LiteralPath $g -Algorithm SHA256).Hash.ToLowerInvariant()
           if ($actualHash -ne $env:DWS_ENGINE48_GODOT_SHA256) { throw "ENGINE48_BINARY_SHA_MISMATCH:$actualHash" }
           $ver=(& $g --version | Select-Object -First 1).Trim()
