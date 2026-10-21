@@ -1,0 +1,3 @@
+Godot Engine v4.7.1.stable.double.custom_build.a13da4feb (2026-07-13 21:00:28 UTC) - https://godotengine.org
+
+FABRIC_R56_R2_FRESH_MULTI_RANGE_REVIEW={"checks":51,"failures":[],"observations":[{"error":"","name":"initial region A","success":true},{"error":"","name":"initial region B","success":true},{"error":"R56_R2_RANGE_CENTER_PRECISION_UNSAFE","name":"A withheld","success":false},{"error":"","name":"B unaffected","success":true},{"error":"","name":"recovered A","success":true},{"error":"","name":"A stays safe","success":true},{"error":"R56_R2_RANGE_CENTER_PRECISION_UNSAFE","name":"B withheld","success":false},{"error":"","name":"recovered B","success":true}]}
