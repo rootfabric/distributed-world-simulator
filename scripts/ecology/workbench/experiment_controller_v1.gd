@@ -217,7 +217,10 @@ func run_staged_frame(soft_budget_us: int = StagedSession.DEFAULT_SOFT_BUDGET_US
 		max_members: int = StagedSession.DEFAULT_MEMBERS,
 		cursor_cap_bytes: int = StagedSession.DEFAULT_CURSOR_BYTES,
 		use_r3_allocator: bool = false,
-		allocator_items_per_call: int = 16) -> Dictionary:
+		allocator_items_per_call: int = 16,
+		use_off_main_r3: bool = false) -> Dictionary:
+	if use_off_main_r3 and not use_r3_allocator:
+		return _command_fail("CONTROLLER_OFFMAIN_REQUIRES_R3")
 	if _status == "IDLE":
 		return _command_fail("CONTROLLER_NOT_INITIALIZED")
 	if _status == "FAILED":
@@ -235,7 +238,7 @@ func run_staged_frame(soft_budget_us: int = StagedSession.DEFAULT_SOFT_BUDGET_US
 	var result: Dictionary = _staged_session.advance(
 		_runtime, opts.options, soft_budget_us, max_resumes,
 		max_worksets, max_members, cursor_cap_bytes,
-		use_r3_allocator, allocator_items_per_call)
+		use_r3_allocator, allocator_items_per_call, use_off_main_r3)
 	if not bool(result.get("success", false)):
 		# Transient plan/resource errors fail closed. If the underlying
 		# canonical worker fails, mark FAILED until reset, as run() does.
