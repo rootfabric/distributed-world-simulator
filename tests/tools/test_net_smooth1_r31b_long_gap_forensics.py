@@ -11,7 +11,8 @@ sys.path.insert(0, str(ROOT / "tools/net_smooth1"))
 from diagnose_r31_long_gaps import read_events, role_metrics, compare
 
 
-def write_run(root: Path, arm: str, *, sha: str = "same", max_gap: float = 136.0) -> None:
+def write_run(root: Path, arm: str, *, sha: str = "same", max_gap: float = 136.0,
+              pause_after: bool = False) -> None:
     root.mkdir()
     manifest = {
         "mode": "gui", "profile": "LOCAL", "completed": True, "errors": [],
@@ -28,7 +29,7 @@ def write_run(root: Path, arm: str, *, sha: str = "same", max_gap: float = 136.0
         folder.mkdir()
         ev = [{"kind": "header", "t_us": 0, "data": {}}]
         for i in range(360):
-            t = 20000 + 16667*i
+            t = 20000 + 16667*i + (150000 if pause_after and i >= 110 else 0)
             gap = max_gap if i == 100 and role == "server" else 16.7
             ev.append({"kind": "frame", "t_us": t, "measure": True,
                        "data": {"interval_ms": gap}})
@@ -54,6 +55,15 @@ class GapTests(unittest.TestCase):
             self.assertEqual(near["nearby_engine_stage_counts_125ms"]["checkpoint_capture"], 1)
             self.assertEqual(near["nearby_server_process_max_ms"], 5.0)
             self.assertTrue(near["engine_stage_association_is_not_causality"])
+
+    def test_loop_wall_gap_with_short_process_duration_is_not_causal(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)/"on"
+            write_run(root, "on", pause_after=True)
+            report = role_metrics(root, "server")
+            self.assertGreaterEqual(report["server_loop_gaps_over_100ms"], 1)
+            self.assertAlmostEqual(report["server_process_p99_ms"], 5.0)
+            self.assertGreater(report["server_loop_gap_max_ms"], 100.0)
 
     def test_paired_control(self):
         with tempfile.TemporaryDirectory() as d:
