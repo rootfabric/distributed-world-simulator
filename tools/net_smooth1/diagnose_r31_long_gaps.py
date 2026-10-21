@@ -80,6 +80,17 @@ def role_metrics(root: Path, role: str) -> dict:
     gaps = [e for e in frames if e["gap_ms"] > 100]
     long_50 = [e for e in frames if e["gap_ms"] > 50]
     loop_times = [x["t_us"] for x in loops]
+    # Exact server-loop interarrival gaps: a long wall gap paired with a
+    # short _process() duration is observable but not proof of DPC/OS/GPU.
+    long_server_intervals = [
+        {
+            "local_t_us": curr["t_us"],
+            "server_loop_interarrival_ms": (curr["t_us"] - prior["t_us"]) / 1000.0,
+            "server_process_ms": curr["process_ms"],
+        }
+        for prior, curr in zip(loops, loops[1:])
+        if (curr["t_us"] - prior["t_us"]) / 1000.0 > 100.0
+    ]
     diagnostics = []
     for gap in gaps:
         t = gap["t_us"]
@@ -109,6 +120,10 @@ def role_metrics(root: Path, role: str) -> dict:
         "p99_gap_ms": percentile([e["gap_ms"] for e in frames], .99),
         "server_loop_count": len(loops),
         "server_process_p99_ms": percentile([e["process_ms"] for e in loops], .99),
+        "server_loop_gaps_over_100ms": len(long_server_intervals),
+        "server_loop_gap_max_ms": max(
+            [x["server_loop_interarrival_ms"] for x in long_server_intervals], default=0.0),
+        "server_loop_gap_examples": long_server_intervals[:40],
         "long_gaps": diagnostics[:40],
         "long_gaps_truncated": len(diagnostics) > 40,
     }
@@ -149,6 +164,7 @@ def compare(pairs: list[tuple[Path, Path]]) -> dict:
         return {
             "runs": len(runs),
             "server_long_gap_counts": [r["gaps_over_100ms"] for r in runs],
+            "server_loop_gaps_over_100ms": [r["server_loop_gaps_over_100ms"] for r in runs],
             "server_max_ms": [r["max_gap_ms"] for r in runs],
             "server_process_p99_ms": [r["server_process_p99_ms"] for r in runs],
         }
