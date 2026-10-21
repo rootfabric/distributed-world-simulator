@@ -9,7 +9,9 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "tools/net_smooth1"))
-from owned_process_cleanup import select_windows_owned_godot, finalize_owned_processes
+from owned_process_cleanup import (select_windows_owned_godot,
+                                  finalize_owned_processes,
+                                  preflight_no_smooth_godot)
 
 RUN_ID = "0123456789abcdef"
 GODOT = Path(r"C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe")
@@ -143,6 +145,24 @@ class WindowsScopedCleanup(unittest.TestCase):
             self.assertIn("server: GRACEFUL_SHUTDOWN_TIMEOUT", result["errors"])
             self.assertTrue(process.terminated)
             self.assertTrue(result["verified"])
+
+    def test_preflight_rejects_live_smooth_godot_without_killing(self):
+        with self.assertRaisesRegex(RuntimeError, "OTHER_GODOT_RUN_ALREADY_ACTIVE"):
+            preflight_no_smooth_godot(
+                GODOT, scanner=lambda: [row(7, run_id="f"*16)])
+
+    def test_preflight_ignores_other_project_editor(self):
+        result = preflight_no_smooth_godot(
+            GODOT, scanner=lambda: [
+                row(7, run_id="f"*16, exe=r"C:\Unrelated\godot.exe",
+                    name="godot.exe")])
+        self.assertEqual(result, [])
+
+    def test_preflight_does_not_confuse_regular_godot_editor(self):
+        edit = row(88)
+        edit["command_line"] = edit["command_line"].replace("--node-id=smooth-", "--node-id=editor-")
+        result = preflight_no_smooth_godot(GODOT, scanner=lambda: [edit])
+        self.assertEqual(result, [])
 
     def test_query_failure_prevents_acceptance(self):
         with tempfile.TemporaryDirectory() as d:
