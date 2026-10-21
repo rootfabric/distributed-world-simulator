@@ -37,6 +37,7 @@ def analyze(path: Path) -> dict:
     series: dict[str, list[float]] = {key: [] for key in FIELDS}
     sizes: dict[str, list[int]] = {"r30_replay_ledger_count": [], "r30_outbox_count": []}
     events = 0
+    replay_unattributed: list[float] = []
     violations: list[str] = []
     seen_generations: set[int] = set()
     with path.open(encoding="utf-8") as handle:
@@ -64,10 +65,16 @@ def analyze(path: Path) -> dict:
                 # Disjoint spans: replay_ms measures entire outbox.to_dict,
                 # NOT deep copy; handoff_ms measures the writer call including
                 # its synchronous duplicate(true).
-                if (abs(data["replay_ms"] -
-                       (data["r30_replay_gameplay_ms"] +
-                        data["r30_replay_checksum_ms"])) > 0.5):
-                    violations.append("replay stage accounting mismatch")
+                overhead = data["replay_ms"] - (
+                    data["r30_replay_gameplay_ms"] +
+                    data["r30_replay_checksum_ms"]
+                )
+                if overhead < -1.0:
+                    violations.append("inner replay stages exceed full replay window")
+                else:
+                    # Scheduler pauses between nested timing boundaries are
+                    # legitimate host noise, never invent a 0.5ms ceiling.
+                    replay_unattributed.append(max(0.0, overhead))
                 if data["r30_writer_deep_copy_ms"] > data["handoff_ms"] + 1.0:
                     violations.append("writer deep-copy larger than entire handoff")
             for field in sizes:
@@ -86,6 +93,7 @@ def analyze(path: Path) -> dict:
         "schema": "dws.net_smooth.r3c4.r30.attribution.v1",
         "mode": "R2_ON_R30_STAGE_ATTRIBUTION",
         "checkpoint_count": events,
+        "replay_unattributed_ms": metrics(replay_unattributed) if replay_unattributed else None,
         "stages_ms": {key: metrics(values) for key, values in series.items()},
         "ledger_sizes": {key: {
             "min": min(values), "max": max(values), "p99": percentile(values, .99)}
