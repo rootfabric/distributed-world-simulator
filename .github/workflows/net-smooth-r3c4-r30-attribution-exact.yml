@@ -29,6 +29,8 @@ jobs:
       - name: Strict R3C4 and inherited persistence source proofs
         run: |
           set -euo pipefail
+          python -m py_compile tools/net_smooth1/analyze_r3c4_r30_capture_stages.py
+          python -m unittest discover -s tests/tools -p 'test_net_smooth1_r3c4_r30_capture_stages.py' -v
           python -m unittest discover -s tests/tools -p 'test_net_smooth1_r3c4_r30_source_attribution.py' -v
           python -m unittest discover -s tests/tools -p 'test_net_smooth1_r3c4_r2_worker_envelope_source.py' -v
           python -m unittest discover -s tests/tools -p 'test_net_smooth1_r3c4_periodic_frame_headroom_source.py' -v
