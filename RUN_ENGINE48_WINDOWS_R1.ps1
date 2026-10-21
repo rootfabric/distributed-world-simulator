@@ -4,8 +4,7 @@
 # modified and remain the product baseline.
 param(
     [Parameter(Mandatory = $true)][string]$GodotPath,
-    [string]$ExpectedVersion = "4.8.beta1.double.custom_build.4d10419ca",
-    [string]$ExpectedSha256 = ""
+    [string]$ExpectedVersion = "4.8.beta1.double.custom_build.4d10419ca"
 )
 $ErrorActionPreference = 'Stop'
 $Root = Split-Path -Parent $MyInvocation.MyCommand.Path
@@ -13,10 +12,12 @@ $Out = Join-Path $Root "artifacts\engine48\windows\r1"
 New-Item -ItemType Directory -Force $Out | Out-Null
 $Godot = (Resolve-Path $GodotPath).Path
 
-$sha = (Get-FileHash $Godot -Algorithm SHA256).Hash.ToLowerInvariant()
-$ver = & $Godot --version
-if ($ver -ne $ExpectedVersion) { throw "ENGINE48_VERSION_MISMATCH:$ver" }
-if ($ExpectedSha256 -and $sha -ne $ExpectedSha256) { throw "ENGINE48_SHA_MISMATCH:$sha" }
+# This pinned machine binary was independently checked for Windows R1.
+$ExpectedSha256 = 'f53f90f686a4eb05df076692c1b67a9e3d12d7c6c981cf86f1015d1ec36a2636'
+$sha = (Get-FileHash -LiteralPath $Godot -Algorithm SHA256).Hash.ToLowerInvariant()
+if ($sha -ne $ExpectedSha256) { throw "ENGINE48_SHA_MISMATCH:$sha" }
+$ver = (& $Godot --version | Select-Object -First 1).Trim()
+if ($LASTEXITCODE -ne 0 -or $ver -ne $ExpectedVersion) { throw "ENGINE48_VERSION_MISMATCH:$ver" }
 if ((git -C $Root status --porcelain --untracked-files=no)) { throw 'TRACKED_DIRTY' }
 
 [ordered]@{
