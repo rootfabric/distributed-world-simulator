@@ -270,16 +270,18 @@ func _seal_pending() -> void:
 	_intent_guard = Callable()
 	if _journal.get("pending", {}).is_empty():
 		return
+	# Never capture self in a Callable stored ON self. This would leak a
+	# RefCounted session through a reference cycle after simulated process kill.
 	var original_hash: String = U.canonical_hash(_journal.pending)
 	var original_store_id: int = _store_id
 	var original_source: String = String(_snapshot.get("checksum", ""))
-	_intent_guard = func() -> bool:
-		return _store_id == original_store_id and String(_snapshot.get("checksum", "")) == original_source \
-			and U.canonical_hash(_journal.get("pending", {})) == original_hash
+	_intent_guard = func(candidate: Dictionary, source_checksum: String, store_id: int) -> bool:
+		return store_id == original_store_id and source_checksum == original_source \
+			and U.canonical_hash(candidate) == original_hash
 
 func _pending_intact() -> bool:
-	return _intent_guard.is_valid() and bool(_intent_guard.call()) and \
-		U.validate_checksum(_journal).success
+	return _intent_guard.is_valid() and bool(_intent_guard.call(_journal.get("pending", {}), \
+		String(_snapshot.get("checksum", "")), _store_id)) and U.validate_checksum(_journal).success
 
 static func _validate_entry(entry: Dictionary, before: Dictionary,
 		matter: Dictionary, authority: Dictionary, events: Array) -> Dictionary:
