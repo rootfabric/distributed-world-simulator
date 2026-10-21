@@ -94,16 +94,14 @@ class WindowsScopedCleanup(unittest.TestCase):
 
     def test_clean_owned_processes_allow_next_arm(self):
         with tempfile.TemporaryDirectory() as d:
+            (Path(d)/"server").mkdir()
             proc = FakeProc()
             result = finalize_owned_processes(
                 {"server": proc}, Path(d), RUN_ID, GODOT,
                 windows=True, scanner=lambda _: [], tree_killer=lambda _: self.fail("kill"))
             self.assertTrue(result["verified"])
             self.assertEqual(result["errors"], [])
-            self.assertTrue((Path(d)/"server"/"stop.signal").exists() is False)
-            # stop signal directory must exist for real spawned process; the
-            # synthetic test deliberately omitted it and must fail closed.
-            self.assertIn("server: STOP_SIGNAL_FAILED", result["errors"])
+            self.assertTrue((Path(d)/"server"/"stop.signal").exists())
 
     def test_orphan_main_process_is_killed_and_declared_unaccepted(self):
         with tempfile.TemporaryDirectory() as d:
