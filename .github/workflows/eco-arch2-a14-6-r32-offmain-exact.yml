@@ -1,0 +1,109 @@
+name: ECO ARCH2 A14.6 R3.2 Off-Main LAB Exact
+
+on:
+  push:
+    branches:
+      - feature/eco-arch2-a14-6-r3-2-offmain-lab-r1
+  pull_request:
+    paths:
+      - 'scripts/ecology/workbench/off_main_r3_session_v1.gd'
+      - 'scripts/ecology/workbench/staged_frame_session_v1.gd'
+      - 'scripts/ecology/workbench/experiment_controller_v1.gd'
+      - 'scripts/ecology/workbench/ecology_workbench.gd'
+      - 'validation/ecology/evo_arch2_a14_staged/test_r32_off_main_lab.gd'
+      - '.github/workflows/eco-arch2-a14-6-r32-offmain-exact.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: eco-a146-r32-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  portable:
+    name: R3.2 official portable off-main smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Portable Godot 4.7.1 off-main LAB check
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fL --retry 3 -o /tmp/godot.zip https://github.com/godotengine/godot/releases/download/4.7.1-stable/Godot_v4.7.1-stable_linux.x86_64.zip
+          mkdir -p /tmp/godot-r32
+          unzip -q /tmp/godot.zip -d /tmp/godot-r32
+          godot=/tmp/godot-r32/Godot_v4.7.1-stable_linux.x86_64
+          chmod +x "$godot"
+          "$godot" --headless --editor --path . --import > /tmp/import-r32.log 2>&1 || { cat /tmp/import-r32.log; exit 1; }
+          "$godot" --headless --path . --script res://validation/ecology/evo_arch2_a14_staged/test_r32_off_main_lab.gd > /tmp/r32.log 2>&1 || { cat /tmp/r32.log; exit 1; }
+          cat /tmp/r32.log
+          grep -Fx 'ECO_ARCH2_A14_6_R32_OFFMAIN PASS' /tmp/r32.log
+          grep '^ECO_A14_6_R32_OFFMAIN_PROFILE_JSON ' /tmp/r32.log | sed 's/^ECO_A14_6_R32_OFFMAIN_PROFILE_JSON //' > r32-profiles.jsonl
+          test "$(wc -l < r32-profiles.jsonl)" -eq 2
+          if grep -Ei 'SCRIPT ERROR|Parse Error|Failed to load script|Error compiling' /tmp/r32.log; then exit 1; fi
+          git diff --exit-code && git diff --cached --exit-code
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: eco-a146-r32-portable
+          path: r32-profiles.jsonl
+          if-no-files-found: ignore
+
+  exact:
+    name: R3.2 ${{ matrix.platform }} Double Exact
+    runs-on: [self-hosted, '${{ matrix.platform }}', X64]
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [Linux, Windows]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Linux pinned double
+        if: matrix.platform == 'Linux'
+        shell: bash
+        env:
+          CONFIGURED_GODOT: ${{ vars.DWS_GODOT_DOUBLE_LINUX_BIN }}
+        run: |
+          set -euo pipefail
+          godot="${CONFIGURED_GODOT:-$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64}"
+          test "$(sha256sum "$godot" | cut -d' ' -f1)" = "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7"
+          "$godot" --headless --editor --path . --import
+          "$godot" --headless --path . --script res://validation/ecology/evo_arch2_a14_staged/test_r32_off_main_lab.gd | tee r32.log
+          grep -Fx 'ECO_ARCH2_A14_6_R32_OFFMAIN PASS' r32.log
+      - name: Windows pinned double
+        if: matrix.platform == 'Windows'
+        shell: pwsh
+        env:
+          CONFIGURED_GODOT: ${{ vars.DWS_GODOT_DOUBLE_BIN }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $godot = $env:CONFIGURED_GODOT
+          if ([string]::IsNullOrWhiteSpace($godot)) { $godot = 'C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe' }
+          if ((Get-FileHash $godot -Algorithm SHA256).Hash.ToLowerInvariant() -ne '3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5') { throw 'GODOT_SHA256_MISMATCH' }
+          & $godot --headless --editor --path . --import
+          if ($LASTEXITCODE -ne 0) { throw 'COLD_IMPORT_FAIL' }
+          & $godot --headless --path . --script res://validation/ecology/evo_arch2_a14_staged/test_r32_off_main_lab.gd | Tee-Object -FilePath r32.log
+          if ($LASTEXITCODE -ne 0) { throw 'OFFMAIN_R32_TEST_FAIL' }
+          if (-not (Select-String -Path r32.log -Pattern '^ECO_ARCH2_A14_6_R32_OFFMAIN PASS$')) { throw 'OFFMAIN_MARKER_MISSING' }
+      - name: Clean tracked Linux
+        if: always() && matrix.platform == 'Linux'
+        shell: bash
+        run: git diff --exit-code && git diff --cached --exit-code
+      - name: Clean tracked Windows
+        if: always() && matrix.platform == 'Windows'
+        shell: pwsh
+        run: |
+          git diff --exit-code
+          if ($LASTEXITCODE -ne 0) { throw 'DIRTY_WORKTREE' }
+          git diff --cached --exit-code
+          if ($LASTEXITCODE -ne 0) { throw 'DIRTY_INDEX' }
