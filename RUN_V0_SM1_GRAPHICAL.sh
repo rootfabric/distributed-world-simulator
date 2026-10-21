@@ -33,7 +33,7 @@ if [[ -n "$(git -C "$ROOT" status --porcelain --untracked-files=all)" ]]; then
   git -C "$ROOT" status --short >&2
   exit 5
 fi
-if [[ "$(uname -s)" == "Linux" && ! -x /usr/bin/Xvfb ]]; then
+if [[ "$(uname -s)" == "Linux" && ! -x "${XVFB_BIN:-/usr/bin/Xvfb}" ]]; then
   echo "SM1_6_XVFB_REQUIRED" >&2
   exit 6
 fi

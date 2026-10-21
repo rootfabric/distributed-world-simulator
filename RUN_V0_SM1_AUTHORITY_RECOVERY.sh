@@ -37,7 +37,7 @@ if ! [[ "$ITERATIONS" =~ ^[0-9]+$ ]] || (( ITERATIONS < 1 )); then
   echo "SM1_7_10_ITERATIONS_INVALID: $ITERATIONS" >&2
   exit 6
 fi
-if [[ "$(uname -s)" == "Linux" && ! -x /usr/bin/Xvfb ]]; then
+if [[ "$(uname -s)" == "Linux" && ! -x "${XVFB_BIN:-/usr/bin/Xvfb}" ]]; then
   echo "SM1_7_10_XVFB_REQUIRED" >&2
   exit 7
 fi
