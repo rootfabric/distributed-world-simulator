@@ -24,6 +24,9 @@ func configure_live_items(fixture_owner: bool, spatial_validation: bool = true) 
 	_live_enabled6 = true
 	_live_spatial6 = spatial_validation
 	_live_fixture_owner6 = fixture_owner
+	# R31b P1: zero-revision native live item policy bootstrap mutates fixture
+	# items; a cached durable chunk must never alias this pre-bootstrap source.
+	_note_r31bp1_state_change()
 	if not fixture_owner:
 		_items.clear()
 		_containers.clear()

@@ -16,6 +16,7 @@ const RecoveryRepository = preload("res://scripts/persistence/authoritative_reco
 const RecoveryCoordinator = preload("res://scripts/persistence/authoritative_recovery_coordinator.gd")
 const AsyncCheckpointWriter = preload("res://scripts/persistence/async_checkpoint_writer.gd")
 const M6AuthorityAdapter = preload("res://scripts/runtime/networked_gameplay/m6/m6_dedicated_gameplay_authority_adapter.gd")
+const R31Bp1DurableChunkCache = preload("res://scripts/runtime/networked_gameplay/m6/r31bp1_durable_chunk_cache.gd")
 const M6ReplayOutbox = preload("res://scripts/runtime/networked_gameplay/m6/m6_durable_replay_outbox.gd")
 const M6PendingDurableAckGate = preload("res://scripts/persistence/m6_pending_durable_ack_gate.gd")
 const M6AsyncDurableCommandProof = preload("res://scripts/persistence/m6_async_durable_command_proof.gd")
@@ -118,6 +119,10 @@ var _r3c4r30_stage_attribution_enabled := false
 var _r3c4r31_replay_projection_enabled := false
 # R3C.4 R3.1b P0: per-domain durable export attribution only (opt-in).
 var _r3c4r31b_durable_attribution_enabled := false
+# R31b P1: opt-in source-fenced immutable durable chunk cache for the M4 Item
+# Graph and ResourceMining durable components. Server-only, default OFF.
+var _r31bp1_durable_chunks_enabled := false
+var _r31bp1_chunk_cache = null
 var _r3c4_deferral_started_ms := 0
 var _r3c4_deferred_frames := 0
 var _r3c4_capture_slots := 0
@@ -303,6 +308,23 @@ func setup(config: Dictionary) -> Dictionary:
 		return _failure("R3C4_R31B_REQUIRES_R31_REPLAY_PROJECTION")
 	if _r3c4r31b_durable_attribution_enabled and not bool(config.get("product_seam_enabled", false)):
 		return _failure("R3C4_R31B_REQUIRES_PRODUCT_SEAM")
+	# R31b P1: the chunk cache is an implementation candidate layered on the
+	# FULL P0 stack. Any missing prerequisite fails CLOSED.
+	var r31bp1_mode := OS.get_environment("DWS_NET_R31BP1_DURABLE_CHUNKS")
+	if not r31bp1_mode.is_empty() and r31bp1_mode not in ["0", "1"]:
+		return _failure("R31BP1_INVALID_MODE")
+	_r31bp1_durable_chunks_enabled = (
+		bool(config.get("r31bp1_durable_chunks_canary", false))
+		or r31bp1_mode == "1"
+	)
+	if _r31bp1_durable_chunks_enabled and (
+		not _r3c4r31b_durable_attribution_enabled
+		or not _r3c4r31_replay_projection_enabled
+		or not _r3c4r2_worker_envelope_enabled
+		or not _persistence_enabled
+		or not bool(config.get("product_seam_enabled", false))
+	):
+		return _failure("R31BP1_REQUIRES_P0_ATTRIBUTION_REPLAY_R2_PERSISTENCE")
 	_p1b_item_async_enabled = (
 		bool(config.get("async_durable_item_canary", false))
 		or OS.get_environment("DWS_NET_P1B_ITEM_ASYNC") == "1"
@@ -375,6 +397,14 @@ func setup(config: Dictionary) -> Dictionary:
 	})
 	if not bool(service_setup.get("success", false)):
 		return service_setup
+	if _r31bp1_durable_chunks_enabled:
+		# Fail CLOSED: a misconfigured cache must abort server startup rather
+		# than silently degrade to the legacy path with the flag advertised ON.
+		var chunk_cache_setup: Dictionary = _setup_r31bp1_durable_chunk_cache()
+		if not bool(chunk_cache_setup.get("success", false)):
+			_service.shutdown()
+			_service = null
+			return chunk_cache_setup
 	if _persistence_enabled:
 		var recovery_setup := _setup_recovery()
 		if not bool(recovery_setup.get("success", false)):
@@ -2491,6 +2521,22 @@ func _capture_two_connected_checksum() -> void:
 	if _peer_to_player.size() == 2 and _service != null:
 		_last_two_connected_checksum = String(_service.create_snapshot().get("checksum", ""))
 
+func _setup_r31bp1_durable_chunk_cache() -> Dictionary:
+	# R31b P1: the cache exists only for the product seam service; the plain
+	# service has no seam export and must never run with the flag ON.
+	if _service == null or not _service.has_method("configure_r31bp1_durable_chunk_cache"):
+		return _failure("R31BP1_REQUIRES_PRODUCT_SEAM_SERVICE")
+	var cache := R31Bp1DurableChunkCache.new()
+	var configured: Dictionary = cache.configure(true)
+	if not bool(configured.get("success", false)):
+		return configured
+	var attached: Dictionary = _service.configure_r31bp1_durable_chunk_cache(cache)
+	if not bool(attached.get("success", false)):
+		return attached
+	_r31bp1_chunk_cache = cache
+	return _success({"enabled": true})
+
+
 func _setup_recovery() -> Dictionary:
 	_recovery_repository = RecoveryRepository.new()
 	var repository_result: Dictionary = _recovery_repository.configure(_persistence_root)
@@ -3135,6 +3181,8 @@ func _submit_async_movement_checkpoint() -> void:
 			"outbox_count": Array(replay.get("committed_outbox", [])).size()}
 		if _r3c4r31b_durable_attribution_enabled:
 			capture_event["r31b_durable_stages"] = r31b_durable_stages.duplicate(true)
+		if _r31bp1_durable_chunks_enabled and _service != null and _service.has_method("get_r31bp1_durable_chunk_report"):
+			capture_event["r31bp1_durable_chunks"] = _service.get_r31bp1_durable_chunk_report()
 		if _r3c4r31_replay_projection_enabled:
 			capture_event["r31_cache_hit"] = bool(
 				replay_projection_result.get("cache_hit", false))
