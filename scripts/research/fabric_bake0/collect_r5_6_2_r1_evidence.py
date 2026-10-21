@@ -50,7 +50,7 @@ def run(args):
         require(data.get("failures") == [], "LIFECYCLE_FAILURES")
         require(data.get("committed_events") == 10, "MIXED_EVENTS_MISSING")
         require(data.get("cold_restarts") == 30, "COLD_RECOVERY_WINDOWS_MISSING")
-        require(data.get("disk_roundtrips") == 22, "PROCESS_CRASH_DISK_ROUNDTRIPS_MISSING")
+        require(data.get("disk_roundtrips") == 42, "PROCESS_CRASH_DISK_ROUNDTRIPS_MISSING")
         require(data.get("full_oracle_queries", 0) >= 14, "FULL_ORACLES_MISSING")
         require(data.get("negative_rejections", 0) >= 60, "FAIL_CLOSED_MATRIX_MISSING")
         require(data.get("checks", 0) >= 200, "ACCEPTANCE_COVERAGE_TOO_LOW")
