@@ -34,4 +34,4 @@ Status: **R2 local repair candidate, independent verification pending**.
 
 Обязательный новый gate: `18/0` checks, `FABRIC_R56_R2_COM_RECOVERY`. Linux/Windows штатные runner'ы включают parse и execution; strict collector v4 связывает payload со всеми прежними R2 3×626/0, scale 255/0, numeric 54/0, COM 52/0, R1 203/0, narrow 26/0 и BRIDGE-4 49/0. Negative collector matrix расширена с 16 до 21 отказов.
 
-Текущие pre-existing safety limits (точечные массы, numeric guard heuristic, no production writer) не меняются. R2 не является MERGE_READY до fresh exact на опубликованном HEAD, отдельного Reviewer/Verifier и human merge gate. 
+Текущие pre-existing safety limits (точечные массы, numeric guard heuristic, no production writer) не меняются. R2 не является MERGE_READY до fresh exact на опубликованном HEAD, отдельного Reviewer/Verifier и human merge gate.
