@@ -291,13 +291,35 @@ def play(args, manifest: dict) -> None:
         # for r31, opens it only after the roundtrip stages have finished.
         measure_closed = False
         def close_measure_window() -> None:
-            # Touch measure.end and wait past one probe poll period (200ms)
-            # so the planned reconnect can never land inside the still-open
-            # normative window by racing the probe's file observation.
+            # Each probe must ACK the local measure.end fence before any
+            # planned reconnect, final screenshot, checkpoint or teardown.
+            # Waiting an arbitrary 0.5/1.2s under high host load is not
+            # enough; missing ACK is INCONCLUSIVE, never frame PASS.
             nonlocal measure_closed
-            for role in processes: (root/role/'measure.end').touch()
+            if measure_closed:
+                return
+            for role in processes:
+                (root/role/'measure.end').touch()
             measure_closed = True
-            time.sleep(1.2)
+            pending=set(processes)
+            deadline=time.monotonic()+max(5.0,min(45.0,args.startup_timeout/4))
+            while pending and time.monotonic()<deadline:
+                alive()
+                for role in tuple(pending):
+                    ack=root/role/'measure.end.ack'
+                    if not ack.is_file():
+                        continue
+                    value=ack.read_text(encoding='utf-8').strip()
+                    if not value.isdigit() or int(value)<=0:
+                        raise RuntimeError(f'{role}: INVALID_MEASURE_END_ACK')
+                    pending.remove(role)
+                if pending:
+                    time.sleep(.05)
+            if pending:
+                raise RuntimeError('NET_SMOOTH_MEASURE_END_ACK_TIMEOUT:'+
+                                   ','.join(sorted(pending)))
+            manifest['measurement_closed_roles']=sorted(processes)
+            manifest['measurement_close_ack_complete']=True
         if args.scenario != 'r31-reconnect-roundtrip':
             for role in processes: (root/role/'measure.start').touch()
         started=time.monotonic()
@@ -622,8 +644,7 @@ def play(args, manifest: dict) -> None:
             if after.get('ownership_epoch',0)<=old.get('ownership_epoch',0):
                 raise RuntimeError('reconnect did not advance ownership epoch')
         if not measure_closed:
-            for role in processes: (root/role/'measure.end').touch()
-        time.sleep(.5)
+            close_measure_window()
         for role in ('a','b'):
             bridge(ports[role],token,'movement.stop')
             dump(root/role/'final-state.json',bridge(ports[role],token,'state.get',{'kind':'automation'}))
