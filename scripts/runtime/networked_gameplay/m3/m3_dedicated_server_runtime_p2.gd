@@ -301,6 +301,8 @@ func setup(config: Dictionary) -> Dictionary:
 	)
 	if _r3c4r31b_durable_attribution_enabled and not _r3c4r31_replay_projection_enabled:
 		return _failure("R3C4_R31B_REQUIRES_R31_REPLAY_PROJECTION")
+	if _r3c4r31b_durable_attribution_enabled and not bool(config.get("product_seam_enabled", false)):
+		return _failure("R3C4_R31B_REQUIRES_PRODUCT_SEAM")
 	_p1b_item_async_enabled = (
 		bool(config.get("async_durable_item_canary", false))
 		or OS.get_environment("DWS_NET_P1B_ITEM_ASYNC") == "1"
