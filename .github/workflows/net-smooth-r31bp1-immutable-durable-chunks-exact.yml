@@ -3,7 +3,7 @@ name: NET-SMOOTH1 R3C4 R3.1b P1 Immutable Durable Chunks Exact
 on:
   push:
     branches:
-      - feature/net-smooth1-r3c4-r31bp1-p1-durable-chunk-cache-r1
+      - feature/net-smooth1-r3c4-r31b-p1-durable-chunk-cache-r1
   workflow_dispatch:
 
 permissions:
