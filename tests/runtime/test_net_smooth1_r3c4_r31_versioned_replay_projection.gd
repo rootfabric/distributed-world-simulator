@@ -75,6 +75,19 @@ func _test_replay_projection_parity() -> void:
 		"movement clock never invalidates replay cache")
 	check(bool(outbox.to_dict_r31_versioned().get("cache_hit", false)),
 		"cache reuse across movement ticks")
+	var item_before: Dictionary = service.get_r31_replay_source_fence()
+	var item_action: Dictionary = service.handle_canonical_item_command(
+		"a", "transport-session/r31/a/1", 1,
+		"operation/r31/item/hotbar/a", "inventory.select_hotbar",
+		{"selected_hotbar_index": 1})
+	check(bool(item_action.get("success", false)), "canonical ITEM changes real ledger")
+	check(service.get_r31_replay_source_fence() != item_before,
+		"item graph replay generation invalidates projection")
+	var after_item: Dictionary = outbox.to_dict_r31_versioned()
+	check(not bool(after_item.get("cache_hit", true)),
+		"item mutation forces replay rebuild")
+	check(Dictionary(after_item.get("value", {})) == outbox.to_dict(),
+		"item mutation replay byte parity")
 	check(bool(service.join("b", "transport-session/r31/b/1",
 		"operation/r31/join/b").get("success", false)), "second command replay mutation")
 	check(service.get_r31_replay_source_fence() != stable_fence,
