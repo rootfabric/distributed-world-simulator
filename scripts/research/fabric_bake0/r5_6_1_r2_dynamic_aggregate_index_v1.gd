@@ -173,10 +173,18 @@ func apply_owner_verified(changed_rows: Array, old_checksum: String, new_checksu
 					return U.failure("R56_R2_COMBINED_DELTA_NONFINITE")
 			node_deltas[node] = vec
 			node += node & -node
-	var previous_total: Dictionary = query_range(0, _count)
-	if not previous_total.success:
-		return previous_total
-	var predicted_mass := float(previous_total.details.total_mass) + total_mass_delta
+	# Mass conservation is independent of whether the *old* source COM can
+	# be represented as a single absolute Float64.  Querying the full descriptor
+	# here would deadlock valid owner-verified repairs out of a numerically
+	# unsupported COM state.  Only the zero-order Fenwick mass moment is needed.
+	var previous_mass := 0.0
+	var mass_node := _count
+	while mass_node > 0:
+		previous_mass += float(_trees[0][mass_node])
+		mass_node -= mass_node & -mass_node
+	if not is_finite(previous_mass) or previous_mass <= 0.0:
+		return U.failure("R56_R2_RANGE_MASS_INVALID")
+	var predicted_mass := previous_mass + total_mass_delta
 	if not _near(predicted_mass, matter_mass_kg):
 		return U.failure("R56_R2_MATTER_MASS_MISMATCH", {"predicted": predicted_mass, "matter": matter_mass_kg})
 	# Validate every prospective tree node BEFORE any observable mutation.

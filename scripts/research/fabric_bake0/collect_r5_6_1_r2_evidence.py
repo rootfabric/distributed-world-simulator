@@ -113,16 +113,41 @@ def collect(root: Path, expected_head: str='', expected_tree: str='') -> dict:
             'COM_CASE_RESULT')
         need(type(row['separation']) is float and row['separation']>0.0,
             'COM_CASE_SEPARATION')
+    recovery_raw,recovery=unique_payload(root/'r2-com-recovery.log','FABRIC_R56_R2_COM_RECOVERY=')
+    need(set(recovery)=={'schema','checks','failures','observations'}, 'COM_RECOVERY_FIELDS')
+    need(recovery.get('schema')=='fabric.r56_r2.com_recovery.v1', 'COM_RECOVERY_SCHEMA')
+    need(type(recovery.get('checks')) is int and recovery['checks']==18
+         and recovery.get('failures')==[], 'COM_RECOVERY_ASSERTIONS')
+    observed=recovery.get('observations')
+    need(type(observed) is dict and set(observed)=={
+         'first_update_success','unsafe_query_success','unsafe_error',
+         'incorrect_matter_refused','stale_source_refused','recovery_success',
+         'recovery_error','final_status'}, 'COM_RECOVERY_OBSERVATIONS')
+    need(observed['first_update_success'] is True and
+         observed['unsafe_query_success'] is False and
+         observed['unsafe_error']=='R56_R2_RANGE_CENTER_PRECISION_UNSAFE', 'COM_RECOVERY_INITIAL_FAIL_CLOSED')
+    need(observed['incorrect_matter_refused'] is True and
+         observed['stale_source_refused'] is True, 'COM_RECOVERY_MASS_SOURCE_SAFETY')
+    need(observed['recovery_success'] is True and
+         observed['recovery_error']=='', 'COM_RECOVERY_LIVENESS')
+    stat=observed['final_status']
+    need(type(stat) is dict and stat.get('schema')=='planet_simulator.fabric_r56_r2_dynamic_moments.v1', 'COM_RECOVERY_INDEX_SCHEMA')
+    for key,expect in [('count',2),('build_scanned_parts',2),('revision',2),
+                       ('accepted_updates',2),('updated_parts',2),
+                       ('update_full_moment_scans',0)]:
+        need(type(stat.get(key)) is int and stat[key]==expect, 'COM_RECOVERY_STATUS_'+key)
+    need(type(stat.get('source_checksum')) is str and re.fullmatch(r'[0-9a-f]{64}',stat['source_checksum']) is not None,
+         'COM_RECOVERY_SOURCE_CHECKSUM')
     original=r1_sample(root/'r1-acceptance.log')
     need(original[2]=='29defdc33cb1192b9e1577517561c6fcc0f5693daa889deebe585ab8816e043b','R1_HASH_DRIFT')
     narrow=r1_source(root/'r1-narrow-admission.log')
-    for name in ('import','parse-r2','parse-scale','parse-numeric','parse-com','parse-r1','parse-r1-narrow','bridge4-regression'):
+    for name in ('import','parse-r2','parse-scale','parse-numeric','parse-com','parse-com-recovery','parse-r1','parse-r1-narrow','bridge4-regression'):
         log=read_log(root/(name+'.log'))
         if name=='bridge4-regression':
             need('FABRIC BRIDGE-4 Canonical World: PASS (49 assertions)' in log, 'BRIDGE4_RESULT')
     deterministic_hash=hashlib.sha256(results[0][0].encode('utf-8')).hexdigest()
     result={
-        'schema':'fabric.r56_r2.dynamic_aggregates.exact_evidence.v3',
+        'schema':'fabric.r56_r2.dynamic_aggregates.exact_evidence.v4',
         'verdict':'IMPLEMENTER_EXACT_PASS',
         'identity':{'head':before[0],'tree':before[1],'engine_sha256':before[2]},
         'r2_hash':deterministic_hash,
@@ -130,6 +155,7 @@ def collect(root: Path, expected_head: str='', expected_tree: str='') -> dict:
         'r2_scale':scale,
         'r2_numeric':numeric,
         'r2_center_precision':com,
+        'r2_com_recovery':recovery,
         'r1_baseline_hash':original[2],
         'r1_narrow':narrow,
         'logs':{p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(root.glob('*.log'))},

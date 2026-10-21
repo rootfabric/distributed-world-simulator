@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Sixteen independent tamper fixtures must be rejected by the R2 exact collector."""
+"""Twenty-one independent tamper fixtures must be rejected by the R2 exact collector."""
 from __future__ import annotations
 import argparse
 from pathlib import Path
@@ -33,6 +33,12 @@ def main():
         ('com-budget',lambda p:edit(p/'r2-com.log','"center_budget_m":0.000001','"center_budget_m":0.01')),
         ('com-unsafe-admitted',lambda p:edit(p/'r2-com.log','"unsafe_centers_rejected":6','"unsafe_centers_rejected":5')),
         ('com-false-admission',lambda p:edit(p/'r2-com.log','"accepted":false','"accepted":true')),
+        ('recovery-missing',lambda p:(p/'r2-com-recovery.log').unlink()),
+        ('recovery-assertion',lambda p:edit(p/'r2-com-recovery.log','"checks":18','"checks":17')),
+        ('recovery-fake-success',lambda p:edit(p/'r2-com-recovery.log','"recovery_success":true','"recovery_success":false')),
+        ('recovery-mass-bypass',lambda p:edit(p/'r2-com-recovery.log','"incorrect_matter_refused":true','"incorrect_matter_refused":false')),
+        ('recovery-scan',lambda p:edit(p/'r2-com-recovery.log','"update_full_moment_scans":0','"update_full_moment_scans":100000')),
+
     ]
     good=collect(args.root)
     assert good['verdict']=='IMPLEMENTER_EXACT_PASS'
@@ -47,5 +53,5 @@ def main():
                 print('R56_R2_EVIDENCE_TAMPER_REJECTED='+name+':'+type(err).__name__)
             else:
                 raise AssertionError('collector accepted bad evidence: '+name)
-    print('R56_R2_EVIDENCE_TAMPER_MATRIX=PASS 16/16')
+    print('R56_R2_EVIDENCE_TAMPER_MATRIX=PASS 21/21')
 if __name__=='__main__':main()
