@@ -11,6 +11,7 @@ on:
       - 'scripts/ecology/workbench/experiment_controller_v1.gd'
       - 'scripts/ecology/workbench/ecology_workbench.gd'
       - 'validation/ecology/evo_arch2_a14_staged/test_r32_off_main_lab.gd'
+      - 'validation/ecology/evo_arch2_a14_staged/test_r32_off_main_scale.gd'
       - '.github/workflows/eco-arch2-a14-6-r32-offmain-exact.yml'
   workflow_dispatch:
 
@@ -46,13 +47,20 @@ jobs:
           grep -Fx 'ECO_ARCH2_A14_6_R32_OFFMAIN PASS' /tmp/r32.log
           grep '^ECO_A14_6_R32_OFFMAIN_PROFILE_JSON ' /tmp/r32.log | sed 's/^ECO_A14_6_R32_OFFMAIN_PROFILE_JSON //' > r32-profiles.jsonl
           test "$(wc -l < r32-profiles.jsonl)" -eq 2
-          if grep -Ei 'SCRIPT ERROR|Parse Error|Failed to load script|Error compiling' /tmp/r32.log; then exit 1; fi
+          "$godot" --headless --path . --script res://validation/ecology/evo_arch2_a14_staged/test_r32_off_main_scale.gd > /tmp/r32-scale.log 2>&1 || { cat /tmp/r32-scale.log; exit 1; }
+          cat /tmp/r32-scale.log
+          grep -Fx 'ECO_ARCH2_A14_6_R32_SCALE PASS' /tmp/r32-scale.log
+          grep '^ECO_A14_6_R32_SCALE_PROFILE_JSON ' /tmp/r32-scale.log | sed 's/^ECO_A14_6_R32_SCALE_PROFILE_JSON //' > r32-scale-profiles.jsonl
+          test "$(wc -l < r32-scale-profiles.jsonl)" -eq 4
+          if grep -Ei 'SCRIPT ERROR|Parse Error|Failed to load script|Error compiling' /tmp/r32.log /tmp/r32-scale.log; then exit 1; fi
           git diff --exit-code && git diff --cached --exit-code
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: eco-a146-r32-portable
-          path: r32-profiles.jsonl
+          path: |
+            r32-profiles.jsonl
+            r32-scale-profiles.jsonl
           if-no-files-found: ignore
 
   exact:
@@ -80,6 +88,8 @@ jobs:
           "$godot" --headless --editor --path . --import
           "$godot" --headless --path . --script res://validation/ecology/evo_arch2_a14_staged/test_r32_off_main_lab.gd | tee r32.log
           grep -Fx 'ECO_ARCH2_A14_6_R32_OFFMAIN PASS' r32.log
+          "$godot" --headless --path . --script res://validation/ecology/evo_arch2_a14_staged/test_r32_off_main_scale.gd | tee r32-scale.log
+          grep -Fx 'ECO_ARCH2_A14_6_R32_SCALE PASS' r32-scale.log
       - name: Windows pinned double
         if: matrix.platform == 'Windows'
         shell: pwsh
@@ -94,7 +104,36 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'COLD_IMPORT_FAIL' }
           & $godot --headless --path . --script res://validation/ecology/evo_arch2_a14_staged/test_r32_off_main_lab.gd | Tee-Object -FilePath r32.log
           if ($LASTEXITCODE -ne 0) { throw 'OFFMAIN_R32_TEST_FAIL' }
-          if (-not (Select-String -Path r32.log -Pattern '^ECO_ARCH2_A14_6_R32_OFFMAIN PASS$')) { throw 'OFFMAIN_MARKER_MISSING' }
+          if (-not (Select-String -Path r32.log -Pattern '^ECO_ARCH2_A14_6_R32_OFFMAIN PASS
+      - name: Clean tracked Linux
+        if: always() && matrix.platform == 'Linux'
+        shell: bash
+        run: git diff --exit-code && git diff --cached --exit-code
+      - name: Clean tracked Windows
+        if: always() && matrix.platform == 'Windows'
+        shell: pwsh
+        run: |
+          git diff --exit-code
+          if ($LASTEXITCODE -ne 0) { throw 'DIRTY_WORKTREE' }
+          git diff --cached --exit-code
+          if ($LASTEXITCODE -ne 0) { throw 'DIRTY_INDEX' }
+)) { throw 'OFFMAIN_MARKER_MISSING' }
+          & $godot --headless --path . --script res://validation/ecology/evo_arch2_a14_staged/test_r32_off_main_scale.gd | Tee-Object -FilePath r32-scale.log
+          if ($LASTEXITCODE -ne 0) { throw 'OFFMAIN_SCALE_FAIL' }
+          if (-not (Select-String -Path r32-scale.log -Pattern '^ECO_ARCH2_A14_6_R32_SCALE PASS
+      - name: Clean tracked Linux
+        if: always() && matrix.platform == 'Linux'
+        shell: bash
+        run: git diff --exit-code && git diff --cached --exit-code
+      - name: Clean tracked Windows
+        if: always() && matrix.platform == 'Windows'
+        shell: pwsh
+        run: |
+          git diff --exit-code
+          if ($LASTEXITCODE -ne 0) { throw 'DIRTY_WORKTREE' }
+          git diff --cached --exit-code
+          if ($LASTEXITCODE -ne 0) { throw 'DIRTY_INDEX' }
+)) { throw 'OFFMAIN_SCALE_MARKER_MISSING' }
       - name: Clean tracked Linux
         if: always() && matrix.platform == 'Linux'
         shell: bash
