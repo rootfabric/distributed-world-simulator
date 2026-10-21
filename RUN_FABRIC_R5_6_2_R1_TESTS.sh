@@ -24,8 +24,16 @@ run(){
     if grep -Eiq 'SCRIPT ERROR|Parse Error|Compile Error|Invalid call|Invalid access|ERROR:' "$OUT/$label.log";then echo "GODOT_ERROR:$label" >&2;exit 1;fi
     echo "$label=PASS"
 }
+# Keep research user:// fixtures out of any pre-existing game profile.
+export XDG_DATA_HOME="$OUT/isolated-user/data"
+export XDG_CONFIG_HOME="$OUT/isolated-user/config"
+export XDG_CACHE_HOME="$OUT/isolated-user/cache"
+mkdir -p "$XDG_DATA_HOME" "$XDG_CONFIG_HOME" "$XDG_CACHE_HOME"
 identity >"$OUT/identity-before.txt"
 rm -rf "$ROOT/.godot"
+# Both cold phases are strict. The recovery-mode pass builds the script cache
+# without editor plugins/tool scripts; the normal import is mandatory as well.
+run import-recovery --editor --import --recovery-mode
 run import --editor --import
 T=res://tests/research/fabric_bake0
 run parse-lifecycle --check-only --script "$T/fabric_r5_6_2_r1_lifecycle_acceptance.gd"
