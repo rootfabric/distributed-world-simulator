@@ -1,0 +1,66 @@
+name: FABRIC R5.6.1 R2 COM Recovery Frozen Source
+on:
+  push:
+    branches: [verify/fabric-r56-r2-recovery-1ad08cae-source-r1]
+permissions:
+  contents: read
+jobs:
+  frozen-source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 1ad08cae98fb5a537577d27b77519f4ee89aa1fc
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Exact identity and seven-path narrow repair
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$(git rev-parse HEAD)" = "1ad08cae98fb5a537577d27b77519f4ee89aa1fc"
+          test "$(git rev-parse 'HEAD^{tree}')" = "cf66e3b34736716d2cee9e59167db99589637f5d"
+          test "$(git rev-parse HEAD^)" = "91223acb7bf79c37e12fc11d44054ad3e2732455"
+          test -z "$(git status --porcelain=v1 --untracked-files=no)"
+          git diff --check HEAD^ HEAD
+          test "$(git diff --name-only HEAD^ HEAD | wc -l)" -eq 7
+          test -z "$(git diff --name-only HEAD^ HEAD -- 'scripts/construction/**' 'scripts/simulation/matter/**' 'scripts/research/fabric_bake0/r5_1_*' 'scripts/research/fabric_bake0/r5_3_*' 'scripts/research/fabric_bake0/r5_4_*' 'scripts/research/fabric_bake0/r5_5_*' 'scripts/research/fabric_bake0/r5_6_1_canonical_delta*' 'scripts/research/fabric_bake0/r5_6_1_r1_*')"
+          bash -n RUN_FABRIC_R5_6_1_R2_TESTS.sh
+          python3 -m py_compile scripts/research/fabric_bake0/collect_r5_6_1_r2_evidence.py scripts/research/fabric_bake0/test_r5_6_1_r2_evidence_collector.py
+      - name: Export exact source and complete Git ancestry
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          mkdir -p artifact
+          git archive --format=tar.gz --output=artifact/r56-r2-com-recovery-source.tar.gz HEAD
+          git bundle create artifact/r56-r2-com-recovery-full.bundle HEAD
+          printf 'HEAD=%s\nTREE=%s\nPARENT=%s\n' "$(git rev-parse HEAD)" "$(git rev-parse 'HEAD^{tree}')" "$(git rev-parse HEAD^)" > artifact/IDENTITY.txt
+          (cd artifact && sha256sum r56-r2-com-recovery-source.tar.gz r56-r2-com-recovery-full.bundle > SHA256SUMS)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fabric-r56-r2-com-recovery-1ad08cae
+          path: artifact/**
+          retention-days: 30
+  windows-syntax:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 1ad08cae98fb5a537577d27b77519f4ee89aa1fc
+      - name: Published Windows runner syntax and recovery args
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          Set-StrictMode -Version Latest
+          $code = Get-Content RUN_FABRIC_R5_6_1_R2_TESTS.ps1 -Raw
+          $tokens=$null; $parseErrors=$null
+          $ast = [System.Management.Automation.Language.Parser]::ParseInput($code,[ref]$tokens,[ref]$parseErrors)
+          if (@($parseErrors).Count -ne 0) { throw 'WINDOWS_PWSH_PARSE_FAILED' }
+          if ($code -notmatch '\[string\[\]\]\$GateArgs' -or $code -match '(?i)\[string\[\]\]\$Args\b') { throw 'GATE_ARGUMENT_BINDING_INVALID' }
+          foreach ($needle in @('parse-com-recovery','r2-com-recovery','fabric_r5_6_1_r2_com_recovery_acceptance.gd','FABRIC_R56_R2_EXACT=PASS')) {
+            if (!$code.Contains($needle)) { throw "MISSING_RUNNER_GATE:$needle" }
+          }
+          $collector=Get-Content scripts/research/fabric_bake0/collect_r5_6_1_r2_evidence.py -Raw
+          if (!$collector.Contains('fabric.r56_r2.dynamic_aggregates.exact_evidence.v4')) { throw 'COLLECTOR_V4_MISSING' }
+          Write-Host 'FABRIC_R56_R2_RECOVERY_WINDOWS_SYNTAX=PASS'
