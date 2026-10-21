@@ -49,8 +49,14 @@ def _parse_component(kind: str, component: dict, line: int) -> dict:
         if (not isinstance(fence, dict)
                 or any(fence.get(field) is None for field in FENCE_FIELDS)
                 or fence.get("kind") != kind
+                # Object.get_instance_id() is an opaque 64-bit object
+                # identity. Win64 may expose its high bit as a NEGATIVE
+                # signed integer; nonzero is valid, zero is reserved/invalid.
+                # Never apply abs() or stringify the ID: preserve exact
+                # signed value for the owner-native equality fence.
                 or type(fence.get("instance_id")) is not int
-                or fence["instance_id"] <= 0
+                or not (-9223372036854775808 <= fence["instance_id"] <= 9223372036854775807)
+                or fence["instance_id"] == 0
                 or not isinstance(fence.get("authority_owner_id"), str)
                 or not fence["authority_owner_id"]
                 or type(fence.get("authority_epoch")) is not int
