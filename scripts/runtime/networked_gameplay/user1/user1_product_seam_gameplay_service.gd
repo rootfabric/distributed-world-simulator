@@ -95,9 +95,15 @@ func _r31bp1_export_component(service, kind: String) -> Dictionary:
 		_r31bp1_last_item_graph_hit = hit
 	else:
 		_r31bp1_last_resource_hit = hit
+	# A source which changed while exporting must NEVER produce a second
+	# mixed-revision snapshot. Abort this periodic generation fail-closed.
+	if String(exported.get("bypass", "")) == "SOURCE_FENCE_CHANGED":
+		return {}
 	var value = exported.get("value", null)
 	if value is Dictionary and not Dictionary(value).is_empty():
 		return Dictionary(value)
+	# Other explicit non-cache cases use the canonical legacy source; P1
+	# periodic export rejects an empty result before M6 worker submission.
 	return service.export_durable_state()
 
 
@@ -547,8 +553,8 @@ func export_durable_state() -> Dictionary:
 		"players": players_state,
 		"ownership": ownership_state,
 		"shared_item": _shared_items.export_durable_state(),
-		"canonical_item_graph": _r31bp1_export_component(_canonical_multiplayer_items, "item_graph"),
-		"resource_mining": _r31bp1_export_component(_resource_mining, "resource_mining"),
+		"canonical_item_graph": _canonical_multiplayer_items.export_durable_state(),
+		"resource_mining": _resource_mining.export_durable_state(),
 		"checksum": "",
 	}
 	state = SeamUtils.finalize_json_checksum(state)
@@ -575,6 +581,13 @@ func export_durable_state_r31b_profiled() -> Dictionary:
 		}
 	if not _seam_transfers_quiescent():
 		return {"value": {}, "stages": {"error": "SEAM_NOT_QUIESCENT"}}
+	# One authoritative fixed tick for the entire periodic export. Cached
+	# domains do NOT permit mutable player/ownership rows to span ticks.
+	var frozen_tick: int = _tick
+	var frozen_revision: int = _revision
+	var frozen_transfer_serial: int = _transfer_serial
+	var frozen_owner: String = _authority_owner_id
+	var frozen_epoch: int = _authority_epoch
 	var snapshot: Dictionary = create_snapshot()
 	var after_snapshot_us: int = Time.get_ticks_usec()
 	var players_state: Dictionary = _build_remote_player_durable_state(snapshot)
@@ -589,12 +602,21 @@ func export_durable_state_r31b_profiled() -> Dictionary:
 		or _resource_mining == null
 	):
 		return {"value": {}, "stages": {"error": "REQUIRED_DOMAIN_MISSING"}}
+	var item_fence: Dictionary = {}
+	var resource_fence: Dictionary = {}
+	if _r31bp1_chunk_cache != null:
+		item_fence = _canonical_multiplayer_items.get_r31bp1_chunk_fence()
+		resource_fence = _resource_mining.get_r31bp1_chunk_fence()
+		if item_fence.is_empty() or resource_fence.is_empty():
+			return {"value": {}, "stages": {"error": "R31BP1_SOURCE_FENCE_MISSING"}}
 	var shared_state: Dictionary = _shared_items.export_durable_state()
 	var after_shared_us: int = Time.get_ticks_usec()
 	var item_state: Dictionary = _r31bp1_export_component(_canonical_multiplayer_items, "item_graph")
 	var after_item_us: int = Time.get_ticks_usec()
 	var resource_state: Dictionary = _r31bp1_export_component(_resource_mining, "resource_mining")
 	var after_resource_us: int = Time.get_ticks_usec()
+	if item_state.is_empty() or resource_state.is_empty():
+		return {"value": {}, "stages": {"error": "R31BP1_COMPONENT_EXPORT_FAILED"}}
 	var durable: Dictionary = {
 		"schema": DURABLE_SCHEMA,
 		"authority_owner_id": _authority_owner_id,
@@ -615,6 +637,15 @@ func export_durable_state_r31b_profiled() -> Dictionary:
 	var after_final_checksum_us: int = Time.get_ticks_usec()
 	var validated: Dictionary = validate_durable_state(durable)
 	var done_us: int = Time.get_ticks_usec()
+	if _r31bp1_chunk_cache != null and (
+		_tick != frozen_tick or _revision != frozen_revision
+		or _transfer_serial != frozen_transfer_serial
+		or _authority_owner_id != frozen_owner or _authority_epoch != frozen_epoch
+		or not _seam_transfers_quiescent()
+		or _canonical_multiplayer_items.get_r31bp1_chunk_fence() != item_fence
+		or _resource_mining.get_r31bp1_chunk_fence() != resource_fence
+	):
+		return {"value": {}, "stages": {"error": "R31BP1_GLOBAL_SOURCE_FENCE_CHANGED"}}
 	return {
 		"value": durable if bool(validated.get("success", false)) else {},
 		"stages": {
