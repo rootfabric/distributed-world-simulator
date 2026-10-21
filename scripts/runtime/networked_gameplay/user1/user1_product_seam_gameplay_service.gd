@@ -452,6 +452,17 @@ func _build_remote_ownership_durable_state(snapshot: Dictionary = {}) -> Diction
 	return state if bool(checked.get("success", false)) else {}
 
 
+# Additional seam fence: source lineage may change without creating a local
+# gameplay command. B->A or A->B transfers invalidate a cached replay result.
+func get_r31_replay_source_fence() -> Dictionary:
+	var fence: Dictionary = super.get_r31_replay_source_fence()
+	if fence.is_empty() or not _seam_transfers_quiescent():
+		return {}
+	fence["seam_transfer_serial"] = _transfer_serial
+	fence["seam_coordinator_count"] = _seam_coordinators.size()
+	return fence
+
+
 func export_durable_state() -> Dictionary:
 	if _seam_coordinators.is_empty():
 		return super.export_durable_state()

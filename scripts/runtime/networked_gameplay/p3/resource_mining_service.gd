@@ -16,6 +16,7 @@ var _authority_epoch := 0
 var _generation := 0
 var _nodes: Dictionary = {}
 var _ledger: Dictionary = {}
+var _replay_projection_generation := 0
 var _item_graph
 var _spatial_resolver
 
@@ -49,6 +50,7 @@ func setup(
 	_generation = 1
 	_nodes = Dictionary(catalog_result.get("details", {}).get("nodes", {})).duplicate(true)
 	_ledger.clear()
+	_replay_projection_generation += 1
 	_item_graph = item_graph
 	_spatial_resolver = spatial_resolver
 	_configured = true
@@ -250,6 +252,7 @@ func restore_replay_state(value: Dictionary) -> Dictionary:
 	if not bool(validation.get("success", false)):
 		return validation
 	_ledger = Dictionary(value.get("records", {})).duplicate(true)
+	_replay_projection_generation += 1
 	return _success({"operation_count": _ledger.size()})
 
 
@@ -259,6 +262,10 @@ func has_replay_operation(operation_id: String) -> bool:
 
 func get_replay_operation_count() -> int:
 	return _ledger.size()
+
+
+func get_replay_projection_generation() -> int:
+	return _replay_projection_generation
 
 
 func _validate_mining_capability(_logical_player_id: String) -> Dictionary:
@@ -358,6 +365,7 @@ func _record_result(operation_id: String, fingerprint: String, result: Dictionar
 		"fingerprint": fingerprint,
 		"result": result.duplicate(true),
 	}
+	_replay_projection_generation += 1
 	return result
 
 

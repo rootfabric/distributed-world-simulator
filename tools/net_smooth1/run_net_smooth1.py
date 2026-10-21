@@ -158,6 +158,7 @@ def play(args, manifest: dict) -> None:
                     r3c4_periodic_frame_pacing=args.r3c4_periodic_frame_pacing,
                     r3c4r2_worker_envelope=args.r3c4r2_worker_envelope,
                     r3c4r30_stage_attribution=args.r3c4r30_stage_attribution,
+                    r3c4r31_replay_projection=args.r3c4r31_replay_projection,
                     scenario=args.scenario)
     processes: dict[str,subprocess.Popen] = {}; streams=[]
     def spawn(role: str) -> None:
@@ -188,9 +189,12 @@ def play(args, manifest: dict) -> None:
         if role == 'server' and args.r3c4r2_worker_envelope:
             # Immutable periodic M6 envelope only; never mutate client env.
             env['DWS_NET_R3C4_R2_WORKER_ENVELOPE']='1'
+
         if role == 'server' and args.r3c4r30_stage_attribution:
             # Diagnostics only; never route to clients or alter M6 semantics.
             env['DWS_NET_R3C4_R30_STAGE_ATTRIBUTION']='1'
+        if role == 'server' and args.r3c4r31_replay_projection:
+            env['DWS_NET_R3C4_R31_REPLAY_PROJECTION']='1'
         if role == 'server' and args.slow_item_writer_ms > 0:
             # Test-only worker injection, never delay the main-thread loop.
             env['DWS_NET_SMOOTH_TEST_HOOKS']='1'
@@ -676,8 +680,11 @@ def main() -> int:
                         help='R3C.4: defer a due periodic checkpoint off the same-frame snapshot burst (bounded 64ms)')
     parser.add_argument('--r3c4r2-worker-envelope', action='store_true',
                         help='R3C.4 R2: server-only immutable periodic envelope hashing on existing async writer')
+
     parser.add_argument('--r3c4r30-stage-attribution', action='store_true',
                         help='R3.0: diagnostic replay-export/checksum/deep-copy timing; requires R2')
+    parser.add_argument('--r3c4r31-replay-projection', action='store_true',
+                        help='R3.1a: bounded versioned replay projection; requires R2, excludes R3.0 timing')
     parser.add_argument('--inject-stall-role',choices=('server','a','b'))
     parser.add_argument('--inject-stall-ms',type=int,default=250)
     args=parser.parse_args()
@@ -692,8 +699,13 @@ def main() -> int:
         parser.error('R3C21 presentation requires --r3c3-staged-earth')
     if args.r3c4r2_worker_envelope and not args.r3c4_periodic_frame_pacing:
         parser.error('R3C4 R2 worker envelope requires --r3c4-periodic-frame-pacing')
+
     if args.r3c4r30_stage_attribution and not args.r3c4r2_worker_envelope:
         parser.error('R3C4 R3.0 attribution requires --r3c4r2-worker-envelope')
+    if args.r3c4r31_replay_projection and not args.r3c4r2_worker_envelope:
+        parser.error('R3C4 R3.1 replay projection requires --r3c4r2-worker-envelope')
+    if args.r3c4r31_replay_projection and args.r3c4r30_stage_attribution:
+        parser.error('R3C4 R3.1 cache excludes R3.0 uncached attribution')
     run_id=uuid.uuid4().hex[:16]
     args.output=(args.output or ROOT/'artifacts/net-smooth1'/run_id).resolve()
     args.output.mkdir(parents=True,exist_ok=False)
