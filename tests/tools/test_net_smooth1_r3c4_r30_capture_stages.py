@@ -34,12 +34,12 @@ class R30StageTest(unittest.TestCase):
             self.assertTrue(result["notes"]["not_normative"])
             self.assertFalse(result["notes"]["merge_approval"])
 
-    def test_disagreeing_replay_accounting_is_inconclusive(self):
+    def test_outer_replay_window_may_include_host_pause(self):
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "server.jsonl"
             path.write_text(json.dumps(capture_event(replay=20)) + "\n")
-            with self.assertRaisesRegex(ValueError, "replay stage accounting mismatch"):
-                stages.analyze(path)
+            result = stages.analyze(path)
+            self.assertEqual(result["replay_unattributed_ms"]["p99"], 15.0)
 
     def test_impossible_copy_stage_is_inconclusive(self):
         with tempfile.TemporaryDirectory() as tmp:
