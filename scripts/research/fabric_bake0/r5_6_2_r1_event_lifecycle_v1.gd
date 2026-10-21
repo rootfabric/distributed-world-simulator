@@ -240,7 +240,7 @@ func journal_copy() -> Dictionary:
 	return _journal.duplicate(true)
 
 func status() -> Dictionary:
-	var stale := not _snapshot.is_empty() and (not _same_store() or
+	var stale := not _snapshot.is_empty() and (not _same_store() or \
 		U.canonical_hash(_store.get_snapshot(String(_snapshot.construct_id))) != U.canonical_hash(_snapshot))
 	return {"schema": SCHEMA, "mode": _mode, "started": _mode != "NEW",
 		"canonical_writes": 0, "construct_id": String(_snapshot.get("construct_id", "")),
@@ -278,7 +278,7 @@ func _seal_pending() -> void:
 			and U.canonical_hash(_journal.get("pending", {})) == original_hash
 
 func _pending_intact() -> bool:
-	return _intent_guard.is_valid() and bool(_intent_guard.call()) and
+	return _intent_guard.is_valid() and bool(_intent_guard.call()) and \
 		U.validate_checksum(_journal).success
 
 static func _validate_entry(entry: Dictionary, before: Dictionary,
@@ -302,7 +302,7 @@ static func _validate_entry(entry: Dictionary, before: Dictionary,
 				return U.failure("R562_ENTRY_STRENGTH_INVALID")
 			checked = BondDelta.validate_external(before, after, matter, authority, events, proposal)
 		PART:
-			if not U.is_finite_number(proposal.get("delta_mass_kg", null)) or
+			if not U.is_finite_number(proposal.get("delta_mass_kg", null)) or \
 					typeof(proposal.get("new_position")) != TYPE_ARRAY:
 				return U.failure("R562_ENTRY_PART_ARGUMENTS_INVALID")
 			checked = PartDelta.validate_external(before, after, matter, authority, events, proposal)
@@ -315,21 +315,21 @@ static func _validate_entry(entry: Dictionary, before: Dictionary,
 ## A checksummed, append-only DERIVED record. It is not an authenticated owner
 ## receipt; owner truth is still checked against the exact terminal snapshot.
 static func _replay(journal: Dictionary, matter: Dictionary, authority: Dictionary) -> Dictionary:
-	if not U.validate_exact_fields(journal, JOURNAL_FIELDS).success or
+	if not U.validate_exact_fields(journal, JOURNAL_FIELDS).success or \
 			String(journal.get("schema", "")) != SCHEMA:
 		return U.failure("R562_JOURNAL_SCHEMA_INVALID")
 	if not U.validate_checksum(journal).success:
 		return U.failure("R562_JOURNAL_CHECKSUM_INVALID")
-	if typeof(journal.get("initial_snapshot")) != TYPE_DICTIONARY or
-			typeof(journal.get("initial_events")) != TYPE_ARRAY or
-			typeof(journal.get("committed")) != TYPE_ARRAY or
+	if typeof(journal.get("initial_snapshot")) != TYPE_DICTIONARY or \
+			typeof(journal.get("initial_events")) != TYPE_ARRAY or \
+			typeof(journal.get("committed")) != TYPE_ARRAY or \
 			typeof(journal.get("pending")) != TYPE_DICTIONARY:
 		return U.failure("R562_JOURNAL_SHAPE_INVALID")
-	if String(journal.get("matter_checksum", "")) != String(matter.get("checksum", "")) or
+	if String(journal.get("matter_checksum", "")) != String(matter.get("checksum", "")) or \
 			String(journal.get("authority_checksum", "")) != String(authority.get("checksum", "")):
 		return U.failure("R562_OWNER_CONTEXT_DRIFT")
 	var snapshot: Dictionary = journal.initial_snapshot.duplicate(true)
-	if not Snapshot.validate(snapshot).success or
+	if not Snapshot.validate(snapshot).success or \
 			String(snapshot.construct_id) != String(journal.construct_id):
 		return U.failure("R562_GENESIS_INVALID")
 	if snapshot.parts.size() < 1 or snapshot.parts.size() > MAX_PARTS:
