@@ -106,23 +106,24 @@ func oracle(session, snapshot: Dictionary, label: String) -> void:
 
 ## FileAccess flush is a PROCESS-crash fixture; power-loss fsync and durability
 ## of the canonical owner transaction are deliberately NOT claimed here.
+## Lossless Variant receipts: JSON.parse_string may round accepted Float64 bits.
+## Never enable object instantiation on restore, and revalidate owner and journal.
 func disk_copy(value: Dictionary, label: String) -> Dictionary:
-	var path := "user://fabric_r562_r1_"+label+"_"+str(disk_roundtrips)+".json"
+	var path := "user://fabric_r562_r1_"+label+"_"+str(disk_roundtrips)+".bin"
 	var file := FileAccess.open(path,FileAccess.WRITE)
-	ck(file != null,label+": open journal file")
+	ck(file != null,label+": open binary receipt")
 	if file == null:
 		return {}
-	file.store_string(JSON.stringify(value))
+	file.store_var(value, false)
 	file.flush()
 	file.close()
 	var reader := FileAccess.open(path,FileAccess.READ)
-	ck(reader != null,label+": read journal file")
+	ck(reader != null,label+": read binary receipt")
 	if reader == null:
 		return {}
-	var raw := reader.get_as_text()
+	var parsed = reader.get_var(false)
 	reader.close()
-	var parsed = JSON.parse_string(raw)
-	ck(typeof(parsed)==TYPE_DICTIONARY,label+": parsed durable journal",raw)
+	ck(typeof(parsed)==TYPE_DICTIONARY,label+": decoded safe Variant DTO")
 	disk_roundtrips+=1
 	return parsed if typeof(parsed)==TYPE_DICTIONARY else {}
 
@@ -131,6 +132,7 @@ func rehydrate_store(store, label: String):
 	if disk.is_empty():
 		return null
 	var next_store = Store.new()
+	ck(U.canonical_hash(disk)==U.canonical_hash(store.to_dict()),label+": exact binary64 payload roundtrip")
 	var loaded: Dictionary = next_store.load_dict(disk)
 	ck(loaded.success,label+": canonical owner cold load",loaded)
 	return next_store if loaded.success else null
