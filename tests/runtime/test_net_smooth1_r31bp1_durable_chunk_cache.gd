@@ -74,6 +74,13 @@ func _test_cached_immutable_real_seam() -> void:
 	if not bool(bound.get("success", false)):
 		service.shutdown()
 		return
+	# Actual joined_tick is 1; do not test ProductSeam durable state at
+	# synthetic server tick 0 (PLAYER_OWNERSHIP_TICK_AHEAD_OF_SERVER).
+	var ticked: Dictionary = service.advance_fixed_server_tick(1)
+	_check(bool(ticked.get("success", false)), "owner tick >= joined_tick")
+	if not bool(ticked.get("success", false)):
+		service.shutdown()
+		return
 	var baseline: Dictionary = service.export_durable_state()
 	_check(not baseline.is_empty(), "accepted baseline durable DTO")
 	var first: Dictionary = service.export_durable_state_r31bp1_chunks()
