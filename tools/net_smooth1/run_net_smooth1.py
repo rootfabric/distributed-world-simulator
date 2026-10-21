@@ -21,7 +21,7 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / 'tools/live2'))
 from live2_automation_client import request
 from analyze_net_smooth1 import write_report
-from owned_process_cleanup import finalize_owned_processes
+from owned_process_cleanup import finalize_owned_processes, preflight_no_smooth_godot
 
 TESTS = [
  'tests/runtime/test_net_smooth1_r3c4_periodic_frame_headroom.gd',
@@ -251,6 +251,12 @@ def play(args, manifest: dict) -> None:
     def command(role: str, line: str) -> dict:
         return bridge(ports[role],token,'command.execute',{'line':line})['result']
     try:
+        if args.mode == 'gui' and os.name == 'nt':
+            # Do not kill Godot editors or another agent's runs. Refuse to
+            # start if another net-smooth Godot from this binary directory
+            # is alive: previous failure must not pollute this paired arm.
+            preflight_no_smooth_godot(args.godot)
+            manifest['preflight_no_other_smooth_godot'] = True
         spawn('server');wait_ready('server')
         for role in ('a','b'): spawn(role)
         for role in ('a','b'): wait_ready(role)
