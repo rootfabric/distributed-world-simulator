@@ -30,6 +30,7 @@ def analyze(path: Path, min_captures: int = 10) -> dict:
     stages: dict[str, list[float]] = {key: [] for key in FIELDS}
     hits = 0
     seen = 0
+    fallbacks = 0
     player_counts = []
     errors = []
     with path.open(encoding="utf-8") as source:
@@ -50,7 +51,15 @@ def analyze(path: Path, min_captures: int = 10) -> dict:
             elif data["r31_cache_hit"]:
                 hits += 1
             details = data.get("r31b_durable_stages", {})
-            if not isinstance(details, dict) or type(details.get("valid")) is not bool:
+            if not isinstance(details, dict):
+                errors.append("R31B_DOMAIN_STAGES_MISSING")
+                continue
+            if "fallback_ms" in details and type(details.get("valid")) is not bool:
+                # Seam-unbound quiescent export: the profiled wrapper measured
+                # the unchanged base path. No per-domain stage population.
+                fallbacks += 1
+                continue
+            if type(details.get("valid")) is not bool:
                 errors.append("R31B_DOMAIN_STAGES_MISSING")
                 continue
             if details["valid"] is not True:
@@ -74,16 +83,16 @@ def analyze(path: Path, min_captures: int = 10) -> dict:
             elif isinstance(details.get("total_ms"), (float,int)):
                 if details["total_ms"] > measured_authority_ms + 1.0:
                     errors.append("R31B_TOTAL_EXCEEDS_AUTHORITY_CAPTURE")
-    if seen < min_captures:
+    if len(stages["total_ms"]) < min_captures:
         errors.append("R31B_INSUFFICIENT_SAMPLES")
-    if any(len(values) != seen for values in stages.values()):
-        errors.append("R31B_INCOMPLETE_STAGES")
     if errors:
         raise ValueError("; ".join(sorted(set(errors))))
-    return {
+    result = {
         "schema": "dws.net_smooth.r31b.durable_stage.v1",
         "verdict": "R31B_SOURCE_ATTRIBUTION_VALID_ONLY",
         "checkpoint_count": seen,
+        "fallback_captures": fallbacks,
+        "domain_captures": len(stages["total_ms"]),
         "replay_cache_hits": hits,
         "player_counts": sorted(set(player_counts)),
         "metrics_ms": {
@@ -100,6 +109,7 @@ def analyze(path: Path, min_captures: int = 10) -> dict:
             "This is diagnostic only; full M6 and GUI norm gates remain separate.",
         ],
     }
+    return result
 
 
 def main() -> int:

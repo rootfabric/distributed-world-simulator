@@ -56,5 +56,43 @@ class DurableMetrics(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,"R31B_INSUFFICIENT_SAMPLES"):
             run([])
 
+    def test_fallback_captures_are_separate_population(self):
+        # Warmup seam-unbound fallback captures must not poison the domain
+        # population, but the run still needs enough seam-bound captures.
+        fallback = {
+            "t_us": 0, "kind": "checkpoint_capture", "measure": True,
+            "data": {"r3c4r2_worker_envelope": True, "r31_cache_hit": True,
+                     "authority_ms": 9.0,
+                     "r31b_durable_stages": {"fallback_ms": 8.9,
+                                             "total_ms": 8.9,
+                                             "seam_coordinator_count": 0}},
+        }
+        r = run([fallback] * 5 + [capture(i) for i in range(20)])
+        self.assertEqual(r["verdict"], "R31B_SOURCE_ATTRIBUTION_VALID_ONLY")
+        self.assertEqual(r["fallback_captures"], 5)
+        self.assertEqual(r["domain_captures"], 20)
+        self.assertEqual(r["checkpoint_count"], 25)
+
+    def test_zero_domain_captures_fails(self):
+        fallback = {
+            "t_us": 0, "kind": "checkpoint_capture", "measure": True,
+            "data": {"r3c4r2_worker_envelope": True, "r31_cache_hit": True,
+                     "authority_ms": 9.0,
+                     "r31b_durable_stages": {"fallback_ms": 8.9,
+                                             "total_ms": 8.9,
+                                             "seam_coordinator_count": 0}},
+        }
+        with self.assertRaisesRegex(ValueError, "R31B_INSUFFICIENT_SAMPLES"):
+            run([fallback] * 30)
+
+    def test_broken_stage_dict_still_fails(self):
+        broken = {
+            "t_us": 0, "kind": "checkpoint_capture", "measure": True,
+            "data": {"r3c4r2_worker_envelope": True, "r31_cache_hit": True,
+                     "authority_ms": 9.0, "r31b_durable_stages": {}},
+        }
+        with self.assertRaisesRegex(ValueError, "R31B_DOMAIN_STAGES_MISSING"):
+            run([capture(i) for i in range(20)] + [broken])
+
 if __name__ == "__main__":
     unittest.main()
