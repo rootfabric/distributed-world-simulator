@@ -50,7 +50,7 @@ jobs:
           New-Item -ItemType Directory -Force artifacts\engine48 | Out-Null
           $head=(git rev-parse HEAD).Trim()
           $subject=if ($env:GITHUB_EVENT_NAME -eq 'pull_request') { "${{ github.event.pull_request.head.sha }}" } else { "${{ inputs.subject_sha }}" }
-          if ($subject -notmatch '^[0-9a-fA-F]{40}$' -or $head -ne $subject) { throw "ENGINE48_SUBJECT_MISMATCH:expected=$subject:actual=$head" }
+          if ($subject -notmatch '^[0-9a-fA-F]{40}$' -or $head -ne $subject) { throw "ENGINE48_SUBJECT_MISMATCH:expected=$($subject):actual=$head" }
           git merge-base --is-ancestor a936412cc3d597a88fa789fc73c6ac7dcfd7a4e9 HEAD
           if ($LASTEXITCODE -ne 0) { throw 'ENGINE48_MIGRATION_ANCESTRY_MISMATCH' }
           $requested="${{ inputs.godot48_console_sha256 }}".Trim().ToLowerInvariant()
