@@ -1,0 +1,49 @@
+Godot Engine v4.7.1.stable.double.custom_build.a13da4feb (2026-07-13 21:00:28 UTC) - https://godotengine.org
+
+ERROR: R56_REVIEW_COM_RANGE: bad Matter refused while A unsafe
+   at: push_error (core/variant/variant_utility.cpp:1023)
+   GDScript backtrace (most recent call first):
+       [0] ck (res://tests/research/fabric_bake0/review_r56_r2_multi_range_com_recovery.gd:16)
+       [1] _initialize (res://tests/research/fabric_bake0/review_r56_r2_multi_range_com_recovery.gd:61)
+ERROR: R56_REVIEW_COM_RANGE: A safely recovers legitimate successor allowed
+   at: push_error (core/variant/variant_utility.cpp:1023)
+   GDScript backtrace (most recent call first):
+       [0] ck (res://tests/research/fabric_bake0/review_r56_r2_multi_range_com_recovery.gd:16)
+       [1] update (res://tests/research/fabric_bake0/review_r56_r2_multi_range_com_recovery.gd:40)
+       [2] _initialize (res://tests/research/fabric_bake0/review_r56_r2_multi_range_com_recovery.gd:63)
+ERROR: R56_REVIEW_COM_RANGE: recovered A query succeeds
+   at: push_error (core/variant/variant_utility.cpp:1023)
+   GDScript backtrace (most recent call first):
+       [0] ck (res://tests/research/fabric_bake0/review_r56_r2_multi_range_com_recovery.gd:16)
+       [1] check_range (res://tests/research/fabric_bake0/review_r56_r2_multi_range_com_recovery.gd:27)
+       [2] _initialize (res://tests/research/fabric_bake0/review_r56_r2_multi_range_com_recovery.gd:64)
+ERROR: R56_REVIEW_COM_RANGE: B enters COM unsafe legitimate successor allowed
+   at: push_error (core/variant/variant_utility.cpp:1023)
+   GDScript backtrace (most recent call first):
+       [0] ck (res://tests/research/fabric_bake0/review_r56_r2_multi_range_com_recovery.gd:16)
+       [1] update (res://tests/research/fabric_bake0/review_r56_r2_multi_range_com_recovery.gd:40)
+       [2] _initialize (res://tests/research/fabric_bake0/review_r56_r2_multi_range_com_recovery.gd:65)
+ERROR: R56_REVIEW_COM_RANGE: A stays safe query succeeds
+   at: push_error (core/variant/variant_utility.cpp:1023)
+   GDScript backtrace (most recent call first):
+       [0] ck (res://tests/research/fabric_bake0/review_r56_r2_multi_range_com_recovery.gd:16)
+       [1] check_range (res://tests/research/fabric_bake0/review_r56_r2_multi_range_com_recovery.gd:27)
+       [2] _initialize (res://tests/research/fabric_bake0/review_r56_r2_multi_range_com_recovery.gd:66)
+ERROR: R56_REVIEW_COM_RANGE: B withheld query refused
+   at: push_error (core/variant/variant_utility.cpp:1023)
+   GDScript backtrace (most recent call first):
+       [0] ck (res://tests/research/fabric_bake0/review_r56_r2_multi_range_com_recovery.gd:16)
+       [1] check_range (res://tests/research/fabric_bake0/review_r56_r2_multi_range_com_recovery.gd:34)
+       [2] _initialize (res://tests/research/fabric_bake0/review_r56_r2_multi_range_com_recovery.gd:67)
+ERROR: R56_REVIEW_COM_RANGE: B safely recovers legitimate successor allowed
+   at: push_error (core/variant/variant_utility.cpp:1023)
+   GDScript backtrace (most recent call first):
+       [0] ck (res://tests/research/fabric_bake0/review_r56_r2_multi_range_com_recovery.gd:16)
+       [1] update (res://tests/research/fabric_bake0/review_r56_r2_multi_range_com_recovery.gd:40)
+       [2] _initialize (res://tests/research/fabric_bake0/review_r56_r2_multi_range_com_recovery.gd:68)
+ERROR: R56_REVIEW_COM_RANGE: four owner updates and no full scans
+   at: push_error (core/variant/variant_utility.cpp:1023)
+   GDScript backtrace (most recent call first):
+       [0] ck (res://tests/research/fabric_bake0/review_r56_r2_multi_range_com_recovery.gd:16)
+       [1] _initialize (res://tests/research/fabric_bake0/review_r56_r2_multi_range_com_recovery.gd:74)
+FABRIC_R56_R2_FRESH_MULTI_RANGE_REVIEW={"checks":38,"failures":["bad Matter refused while A unsafe","A safely recovers legitimate successor allowed","recovered A query succeeds","B enters COM unsafe legitimate successor allowed","A stays safe query succeeds","B withheld query refused","B safely recovers legitimate successor allowed","four owner updates and no full scans"],"observations":[{"error":"","name":"initial region A","success":true},{"error":"","name":"initial region B","success":true},{"error":"R56_R2_RANGE_CENTER_PRECISION_UNSAFE","name":"A withheld","success":false},{"error":"","name":"B unaffected","success":true},{"error":"R56_R2_RANGE_CENTER_PRECISION_UNSAFE","name":"recovered A","success":false},{"error":"R56_R2_RANGE_CENTER_PRECISION_UNSAFE","name":"A stays safe","success":false},{"error":"","name":"B withheld","success":true},{"error":"","name":"recovered B","success":true}]}
