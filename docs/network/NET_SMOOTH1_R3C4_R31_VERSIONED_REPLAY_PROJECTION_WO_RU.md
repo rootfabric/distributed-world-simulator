@@ -78,7 +78,20 @@ Common flags:
 Only ON adds `--r3c4r31-replay-projection`. OFF and ON must run on same
 **new R3.1a HEAD** (NOT historic #795 or #787 HEAD). Alternate order.
 Separate each output root and preserve all manifest, report.json, trace,
-raw screenshots and asset hashes. Compare per checkpoint replay_ms,
+raw screenshots and asset hashes.
+
+After the unmodified normative analyzer, run for **each R3.1a ON**
+measured server trace:
+
+`python tools/net_smooth1/analyze_r3c4_r31_cache.py <OutputRoot>/server/trace.jsonl --output <OutputRoot>/r31_cache.json`
+
+The dedicated read-only diagnostic fails closed for missing stage samples,
+source flags, unknown bypasses, invalid generation, <10 captures,
+<90% replay cache hit rate or a generation reversal. In an R31 moving
+phase with ~78 checkpoints and no new replay commands, expect one cache
+materialization then mostly hits. The diagnostic's PASS is **not** the
+normative GUI PERF_PASS, nor an M6 correctness acceptance.
+Preserve legacy and candidate per-run reports even on negative results. Compare per checkpoint replay_ms,
 authority_ms, capture_ms, cache hits/misses, bypass error codes,
 server/client frame p99/p999/max and loop Hz. Evidence is invalid if
 a cache-bypass occurs in an accepted fast-path run without explanation.
