@@ -42,6 +42,21 @@ jobs:
           git diff --check "$base" HEAD
           bash -n RUN_FABRIC_R5_6_2_R1_TESTS.sh
           python3 -m py_compile scripts/research/fabric_bake0/collect_r5_6_2_r1_evidence.py
+      - name: Freeze exact source for offline local reproduction
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          mkdir -p source-package
+          git archive --format=tar.gz -o source-package/fabric-r562-source.tar.gz HEAD
+          printf 'HEAD=%s\nTREE=%s\n' "$(git rev-parse HEAD)" "$(git rev-parse 'HEAD^{tree}')" > source-package/IDENTITY
+          (cd source-package && sha256sum fabric-r562-source.tar.gz > SHA256SUMS)
+      - name: Upload offline source
+        uses: actions/upload-artifact@v4
+        with:
+          name: fabric-r562-offline-source-${{ github.sha }}
+          path: source-package/**
+          if-no-files-found: error
+          retention-days: 21
   linux-exact:
     needs: source-contracts
     runs-on: [self-hosted, Linux, X64]
