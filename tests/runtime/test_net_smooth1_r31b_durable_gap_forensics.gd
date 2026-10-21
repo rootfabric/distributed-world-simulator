@@ -119,7 +119,8 @@ func _test_real_seam_profile_parity() -> void:
 			frozen, replay, "checkpoint/r31b/test/1", 1, 0)
 		check(bool(submit.get("success", false)), "single writer source accepted")
 		check(writer.is_busy(), "no pre-ACK completion")
-		Dictionary(frozen.get("durable_state", {}))["checksum"] = "caller-poison"
+		var caller_durable: Dictionary = Dictionary(frozen.get("durable_state", {}))
+		caller_durable["checksum"] = "caller-poison"
 		replay.clear()
 		var complete: Dictionary = writer.wait_completed()
 		check(bool(complete.get("success", false)), "writer durable commit")
