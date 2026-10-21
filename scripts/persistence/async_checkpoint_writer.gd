@@ -111,7 +111,8 @@ func submit_owned(authority_state: Dictionary, replay_state: Dictionary,
 # Service, Mutable outbox or live authority may enter the worker thread.
 func submit_frozen_gameplay_source(
 	frozen_gameplay: Dictionary, replay_state: Dictionary,
-	checkpoint_id: String, generation: int, previous_generation: int
+	checkpoint_id: String, generation: int, previous_generation: int,
+	profile_handoff_copy: bool = false
 ) -> Dictionary:
 	if frozen_gameplay.is_empty() or replay_state.is_empty():
 		return _failure("R3C4_R2_FROZEN_SOURCE_REQUIRED")
@@ -123,6 +124,9 @@ func submit_frozen_gameplay_source(
 		return _failure("ASYNC_CHECKPOINT_BUSY")
 	_busy = true
 	_mutex.unlock()
+	# R3.0 diagnostic only: the deep copies are still on the authoritative
+	# thread. Measuring them does NOT move mutable state across the worker fence.
+	var copy_started_us: int = Time.get_ticks_usec() if profile_handoff_copy else 0
 	var job: Dictionary = {
 		"job_kind": "R3C4_R2_PERIODIC_FROZEN_GAMEPLAY",
 		"frozen_gameplay": frozen_gameplay.duplicate(true),
@@ -131,11 +135,18 @@ func submit_frozen_gameplay_source(
 		"generation": generation, "previous_generation": previous_generation,
 		"operation_id": "",
 	}
+	var copy_ms: float = (
+		float(Time.get_ticks_usec() - copy_started_us) / 1000.0
+		if profile_handoff_copy else 0.0
+	)
 	_mutex.lock()
 	_job = job
 	_mutex.unlock()
 	_wake.post()
-	return {"success": true, "error_code": "", "details": {"generation": generation}}
+	var result_details: Dictionary = {"generation": generation}
+	if profile_handoff_copy:
+		result_details["handoff_copy_ms"] = copy_ms
+	return {"success": true, "error_code": "", "details": result_details}
 
 
 func poll_completed() -> Dictionary:
