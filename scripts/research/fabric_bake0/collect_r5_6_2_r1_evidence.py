@@ -61,6 +61,9 @@ def run(args):
     for name in mandatory:
         data = (root / name).read_text(encoding="utf-8")
         require(not BAD.search(data), f"{name}: error output")
+    isolation = (root / "isolation.txt").read_text(encoding="utf-8").splitlines()
+    require(isolation == ["RECEIPTS_IN_SANDBOX=42", "LIVE_WORLD_LOGS=0"],
+            "USER_DATA_ISOLATION_NOT_PROVEN")
     report = {
         "schema": "fabric.r56_2_r1.exact_evidence.v1",
         "head": before["HEAD"], "tree": before["TREE"],
@@ -68,7 +71,8 @@ def run(args):
         "acceptance": json.loads(actual[0]),
         "deterministic_result_sha256": hashlib.sha256(actual[0]).hexdigest(),
         "gates": {"lifecycle_triple": "PASS", "inherited_regressions": "PASS",
-                  "identity_exact": "PASS"},
+                  "identity_exact": "PASS", "cold_import_twice": "PASS",
+                  "user_data_isolation": "PASS"},
         "scope": "PROCESS_RESTART_ONLY_NOT_DISTRIBUTED_EXACTLY_ONCE",
     }
     (root / "evidence.json").write_text(json.dumps(report, indent=2, sort_keys=True) + "\n",
