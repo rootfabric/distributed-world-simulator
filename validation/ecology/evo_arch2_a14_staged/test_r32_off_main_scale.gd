@@ -86,7 +86,19 @@ func _run() -> void:
 	if blueprint.is_empty():
 		_finish()
 		return
-	for n in SIZES:
+	# One canonical population per fresh Godot process is an optional
+	# independent diagnostic; default still exercises all four.
+	var args: PackedStringArray = OS.get_cmdline_user_args()
+	var sizes: Array = SIZES.duplicate()
+	if not args.is_empty():
+		if args.size() != 2 or String(args[0]) != "--r32-population" \
+				or not String(args[1]) in ["4", "32", "96", "256"]:
+			_check(false, "R32_SCALE_INVALID_POPULATION_ARGUMENT")
+			_finish()
+			return
+		sizes = [int(args[1])]
+	for n in sizes:
+		print("ECO_A14_6_R32_SCALE_BEGIN population=%d" % n)
 		await _profile(n, blueprint)
 	_finish()
 
