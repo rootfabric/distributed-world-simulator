@@ -21,6 +21,7 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / 'tools/live2'))
 from live2_automation_client import request
 from analyze_net_smooth1 import write_report
+from owned_process_cleanup import finalize_owned_processes
 
 TESTS = [
  'tests/runtime/test_net_smooth1_r3c4_periodic_frame_headroom.gd',
@@ -632,28 +633,48 @@ def play(args, manifest: dict) -> None:
     except Exception as exc:
         manifest['errors'].append(f'{type(exc).__name__}: {exc}')
     finally:
-        # Graceful shutdown only these owned processes. Keep server alive until
-        # both clients have drained, then stop server through the opt-in marker.
-        for roles in (('a','b'),('server',)):
-            for role in roles:
-                if role in processes: (root/role/'stop.signal').touch()
-            for role in roles:
-                if role not in processes: continue
-                p=processes[role]
-                try: p.wait(timeout=60)
-                except subprocess.TimeoutExpired:
-                    manifest['errors'].append(f'{role}: graceful shutdown timeout')
-                    p.terminate()
-                    try: p.wait(timeout=10)
-                    except subprocess.TimeoutExpired: p.kill();p.wait(timeout=10)
-                manifest['process_exit_codes'][role]=p.returncode
-        for stream in streams: stream.close()
+        # B3: Windows console-wrapper can exit leaving a Godot MAIN child.
+        # Isolate by THIS RUN's unguessable instance/node IDs and Godot bin
+        # directory; never taskkill other Godot sessions or unrelated projects.
+        try:
+            cleanup = finalize_owned_processes(
+                processes, root, manifest['run_id'], args.godot)
+        except Exception as exc:
+            # Unexpected scanner/runtime exception is INCONCLUSIVE, not PASS.
+            # Always best-effort reap only Popen handles already registered.
+            cleanup = {'verified': False,
+                       'errors': ['CLEANUP_EXCEPTION:' + type(exc).__name__],
+                       'role_exit_codes': {}, 'exception': type(exc).__name__}
+            for role, proc in processes.items():
+                if proc.poll() is None:
+                    try:
+                        proc.kill()
+                        proc.wait(timeout=10)
+                    except (OSError, subprocess.TimeoutExpired):
+                        cleanup['errors'].append(f'{role}: EMERGENCY_KILL_FAILED')
+                cleanup['role_exit_codes'][role] = proc.poll()
+        manifest['cleanup'] = cleanup
+        manifest['process_exit_codes'].update(cleanup.get('role_exit_codes', {}))
+        manifest['errors'].extend(cleanup.get('errors', []))
+        if not bool(cleanup.get('verified', False)):
+            manifest['errors'].append('NET_SMOOTH_RUN_PROCESS_ISOLATION_UNVERIFIED')
+        for stream in streams:
+            try:
+                stream.close()
+            except OSError:
+                manifest['errors'].append('RUNTIME_LOG_CLOSE_FAILED')
         for role in processes:
-            text=(root/role/'runtime.log').read_text(encoding='utf-8',errors='replace')
-            errors=[line for line in text.splitlines() if any(e in line for e in BAD_LOG)]
-            if errors:
-                manifest['errors'].append(f'{role}: runtime error lines ({len(errors)})')
-                (root/role/'errors.txt').write_text('\n'.join(errors),encoding='utf-8')
+            try:
+                text=(root/role/'runtime.log').read_text(encoding='utf-8',
+                                                        errors='replace')
+                errors=[line for line in text.splitlines()
+                        if any(e in line for e in BAD_LOG)]
+                if errors:
+                    manifest['errors'].append(f'{role}: runtime error lines ({len(errors)})')
+                    (root/role/'errors.txt').write_text(
+                        '\n'.join(errors),encoding='utf-8')
+            except OSError:
+                manifest['errors'].append(f'{role}: RUNTIME_LOG_MISSING')
         dump(root/'manifest.json',manifest)
 
 
