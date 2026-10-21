@@ -65,21 +65,45 @@ function RunGodot([string]$Name, [string[]]$Args) {
         Write-Host "$Name=PASS"
     } finally { $proc.Dispose() }
 }
-Identity 'identity-before.txt'
-if (Test-Path '.godot') { Remove-Item '.godot' -Force -Recurse }
-RunGodot 'import' @('--editor','--import')
-$T = 'res://tests/research/fabric_bake0'
-RunGodot 'parse-lifecycle' @('--check-only','--script',"$T/fabric_r5_6_2_r1_lifecycle_acceptance.gd")
-1..3 | ForEach-Object { RunGodot "lifecycle-$_" @('--script',"$T/fabric_r5_6_2_r1_lifecycle_acceptance.gd") }
-RunGodot 'r2-regression' @('--script',"$T/fabric_r5_6_1_r2_dynamic_aggregate_acceptance.gd")
-RunGodot 'com-recovery-regression' @('--script',"$T/fabric_r5_6_1_r2_com_recovery_acceptance.gd")
-RunGodot 'r1-regression' @('--script',"$T/fabric_r5_6_1_canonical_delta_acceptance.gd")
-RunGodot 'bridge4-regression' @('--quit-after','2','--script','res://tests/research/fabric1/fabric_bridge4_canonical_world_acceptance.gd')
-Identity 'identity-after.txt'
-& $PythonBin 'scripts/research/fabric_bake0/collect_r5_6_2_r1_evidence.py' '--root' $Out '--expected-head' $ExpectedHead '--expected-tree' $ExpectedTree '--platform' 'windows'
-if ($LASTEXITCODE -ne 0) { throw 'R562_R1_STRICT_COLLECTOR_FAILED' }
-$files = @(Get-ChildItem $Out -File | Where-Object { $_.Name -ne 'SHA256SUMS' } | Sort-Object Name)
-$hashes = $files | ForEach-Object { "$( (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant() )  $($_.Name)" }
-[IO.File]::WriteAllLines((Join-Path $Out 'SHA256SUMS'), @($hashes), $Utf8)
-Write-Host 'FABRIC_R562_R1_WINDOWS_EXACT=PASS'
-Write-Host "EVIDENCE_DIR=$Out"
+# Godot normally stores user:// under the real user's roaming APPDATA.
+# These changes apply ONLY to spawned test/editor processes, never the
+# production game profile. Always restore the caller's environment.
+$SavedUserEnv = @{}
+foreach ($variable in @('APPDATA','LOCALAPPDATA')) {
+    $SavedUserEnv[$variable] = [Environment]::GetEnvironmentVariable($variable, 'Process')
+}
+try {
+    $UserRoot = Join-Path $Out 'isolated-user'
+    $Roaming = Join-Path $UserRoot 'Roaming'
+    $Local = Join-Path $UserRoot 'Local'
+    New-Item -ItemType Directory -Force -Path $Roaming,$Local | Out-Null
+    $env:APPDATA = $Roaming
+    $env:LOCALAPPDATA = $Local
+
+    Identity 'identity-before.txt'
+    if (Test-Path '.godot') { Remove-Item '.godot' -Force -Recurse }
+    # Recovery mode avoids activating editor plugins/tool scripts before the
+    # global GDScript class cache exists. BOTH phases remain strict: no error
+    # filtering, no ignored import failures, same project/Godot binary.
+    RunGodot 'import-recovery' @('--editor','--import','--recovery-mode')
+    RunGodot 'import' @('--editor','--import')
+    $T = 'res://tests/research/fabric_bake0'
+    RunGodot 'parse-lifecycle' @('--check-only','--script',"$T/fabric_r5_6_2_r1_lifecycle_acceptance.gd")
+    1..3 | ForEach-Object { RunGodot "lifecycle-$_" @('--script',"$T/fabric_r5_6_2_r1_lifecycle_acceptance.gd") }
+    RunGodot 'r2-regression' @('--script',"$T/fabric_r5_6_1_r2_dynamic_aggregate_acceptance.gd")
+    RunGodot 'com-recovery-regression' @('--script',"$T/fabric_r5_6_1_r2_com_recovery_acceptance.gd")
+    RunGodot 'r1-regression' @('--script',"$T/fabric_r5_6_1_canonical_delta_acceptance.gd")
+    RunGodot 'bridge4-regression' @('--quit-after','2','--script','res://tests/research/fabric1/fabric_bridge4_canonical_world_acceptance.gd')
+    Identity 'identity-after.txt'
+    & $PythonBin 'scripts/research/fabric_bake0/collect_r5_6_2_r1_evidence.py' '--root' $Out '--expected-head' $ExpectedHead '--expected-tree' $ExpectedTree '--platform' 'windows'
+    if ($LASTEXITCODE -ne 0) { throw 'R562_R1_STRICT_COLLECTOR_FAILED' }
+    $files = @(Get-ChildItem $Out -File | Where-Object { $_.Name -ne 'SHA256SUMS' } | Sort-Object Name)
+    $hashes = $files | ForEach-Object { "$( (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant() )  $($_.Name)" }
+    [IO.File]::WriteAllLines((Join-Path $Out 'SHA256SUMS'), @($hashes), $Utf8)
+    Write-Host 'FABRIC_R562_R1_WINDOWS_EXACT=PASS'
+    Write-Host "EVIDENCE_DIR=$Out"
+} finally {
+    foreach ($variable in @('APPDATA','LOCALAPPDATA')) {
+        [Environment]::SetEnvironmentVariable($variable,$SavedUserEnv[$variable],'Process')
+    }
+}
