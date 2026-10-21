@@ -23,6 +23,9 @@ func ensure_player(logical_player_id: String) -> void:
 	var tool_id := "item/player/%s/p5-mining-tool" % player_id
 	if _items.has(tool_id):
 		return
+	# R31b P1: zero-revision P5 mining tool seeding must invalidate any cached
+	# durable item-graph chunk even though _revision does not move here.
+	_note_r31bp1_state_change()
 	var slot_index := Array(Dictionary(_inventories[player_id]).get("inventory", [])).size()
 	_items[tool_id] = {
 		"item_id": tool_id,

@@ -31,11 +31,14 @@ class Source(unittest.TestCase):
         self.assertIn("_build_remote_player_durable_state", normal)
         self.assertIn("_build_remote_ownership_durable_state", normal)
         self.assertIn("_shared_items.export_durable_state()", normal)
-        self.assertIn("_canonical_multiplayer_items.export_durable_state()", normal)
-        self.assertIn("_resource_mining.export_durable_state()", normal)
+        # R31b P1: the two immutable chunk components flow through the
+        # fail-closed cache helper; every other component export is unchanged.
+        self.assertIn('_r31bp1_export_component(_canonical_multiplayer_items, "item_graph")', normal)
+        self.assertIn('_r31bp1_export_component(_resource_mining, "resource_mining")', normal)
         self.assertIn("SeamUtils.finalize_json_checksum(state)", normal)
         self.assertIn("validate_durable_state(state)", normal)
-        self.assertNotIn("r31b", normal)
+        self.assertNotIn("await ", normal)
+        self.assertNotIn("Thread.new", normal)
 
     def test_new_path_is_explicitly_seam_fenced_and_validation_equivalent(self):
         observed = method(self.seam, "export_durable_state_r31b_profiled")
@@ -46,8 +49,9 @@ class Source(unittest.TestCase):
             "_build_remote_player_durable_state(snapshot)",
             "_build_remote_ownership_durable_state(snapshot)",
             "_shared_items.export_durable_state()",
-            "_canonical_multiplayer_items.export_durable_state()",
-            "_resource_mining.export_durable_state()",
+            # R31b P1: same fail-closed cache-mediated component exports.
+            '_r31bp1_export_component(_canonical_multiplayer_items, "item_graph")',
+            '_r31bp1_export_component(_resource_mining, "resource_mining")',
             "SeamUtils.finalize_json_checksum(durable)",
             "validate_durable_state(durable)",
             '"server_tick": _tick',

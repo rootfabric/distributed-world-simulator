@@ -17,6 +17,10 @@ var _generation := 0
 var _nodes: Dictionary = {}
 var _ledger: Dictionary = {}
 var _replay_projection_generation := 0
+# R31b P1: monotone durable-source serial. Moves on setup and on EVERY restore
+# even for an identical generation (ABA protection), so a cached durable chunk
+# can never alias a re-seeded source.
+var _r31bp1_state_serial := 0
 var _item_graph
 var _spatial_resolver
 
@@ -51,6 +55,7 @@ func setup(
 	_nodes = Dictionary(catalog_result.get("details", {}).get("nodes", {})).duplicate(true)
 	_ledger.clear()
 	_replay_projection_generation += 1
+	_r31bp1_state_serial += 1
 	_item_graph = item_graph
 	_spatial_resolver = spatial_resolver
 	_configured = true
@@ -206,6 +211,8 @@ func restore_durable_state(value: Dictionary) -> Dictionary:
 	_generation = int(snapshot.get("generation", 0))
 	_nodes = staged_nodes
 	_configured = true
+	# R31b P1: a same-generation restore is still a source change (ABA): bump.
+	_r31bp1_state_serial += 1
 	return _success({
 		"generation": _generation,
 		"node_count": _nodes.size(),
@@ -253,6 +260,7 @@ func restore_replay_state(value: Dictionary) -> Dictionary:
 		return validation
 	_ledger = Dictionary(value.get("records", {})).duplicate(true)
 	_replay_projection_generation += 1
+	_r31bp1_state_serial += 1
 	return _success({"operation_count": _ledger.size()})
 
 
@@ -266,6 +274,23 @@ func get_replay_operation_count() -> int:
 
 func get_replay_projection_generation() -> int:
 	return _replay_projection_generation
+
+
+# R31b P1: durable chunk fence. generation covers ordinary mine operations;
+# state_serial additionally covers setup and every restore (ABA protection).
+func get_r31bp1_state_serial() -> int:
+	return _r31bp1_state_serial
+
+
+func get_r31bp1_chunk_fence() -> Dictionary:
+	return {
+		"kind": "resource_mining",
+		"instance_id": get_instance_id(),
+		"authority_owner_id": _authority_owner_id,
+		"authority_epoch": _authority_epoch,
+		"generation": _generation,
+		"state_serial": _r31bp1_state_serial,
+	}
 
 
 func _validate_mining_capability(_logical_player_id: String) -> Dictionary:
