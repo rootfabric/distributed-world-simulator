@@ -27,6 +27,9 @@ jobs:
           allowed={
             '.github/workflows/fabric-r5-6-2-r1-unified-lifecycle.yml',
             'RUN_FABRIC_R5_6_2_R1_TESTS.ps1',
+            'docs/research/FABRIC_R5_6_2_R1_2_WINDOWS_LAUNCH_REPAIR_RU.md',
+            'tests/research/fabric_bake0/test_r5_6_2_r1_windows_launcher.ps1',
+            'tests/research/fabric_bake0/test_r5_6_2_r1_launch_evidence.py',
             'RUN_FABRIC_R5_6_2_R1_TESTS.sh',
             'docs/research/FABRIC_R5_6_2_R1_UNIFIED_LIFECYCLE_WORK_ORDER_RU.md',
             'scripts/research/fabric_bake0/collect_r5_6_2_r1_evidence.py',
@@ -42,6 +45,16 @@ jobs:
           git diff --check "$base" HEAD
           bash -n RUN_FABRIC_R5_6_2_R1_TESTS.sh
           python3 -m py_compile scripts/research/fabric_bake0/collect_r5_6_2_r1_evidence.py
+          python3 -m unittest discover -s tests/research/fabric_bake0 -p test_r5_6_2_r1_launch_evidence.py -v
+          mkdir -p artifacts/launcher-input
+          git show d3e3d3b29c9ef068937048ef14aa6c7114700904:RUN_FABRIC_R5_6_2_R1_TESTS.ps1 > artifacts/launcher-input/legacy.ps1
+          pwsh -NoLogo -NoProfile -File tests/research/fabric_bake0/test_r5_6_2_r1_windows_launcher.ps1 -LegacyRunnerPath artifacts/launcher-input/legacy.ps1 -PythonBin python3 -EvidenceDir artifacts/launcher-linux
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: fabric-r562-launcher-linux-${{ github.sha }}
+          path: artifacts/launcher-*/**
+          if-no-files-found: warn
       - name: Freeze exact source for offline local reproduction
         shell: bash
         run: |
@@ -49,7 +62,8 @@ jobs:
           mkdir -p source-package
           git archive --format=tar.gz -o source-package/fabric-r562-source.tar.gz HEAD
           printf 'HEAD=%s\nTREE=%s\n' "$(git rev-parse HEAD)" "$(git rev-parse 'HEAD^{tree}')" > source-package/IDENTITY
-          (cd source-package && sha256sum fabric-r562-source.tar.gz > SHA256SUMS)
+          git bundle create source-package/fabric-r562-source.bundle HEAD
+          (cd source-package && sha256sum fabric-r562-source.tar.gz fabric-r562-source.bundle > SHA256SUMS)
       - name: Upload offline source
         uses: actions/upload-artifact@v4
         with:
@@ -57,6 +71,35 @@ jobs:
           path: source-package/**
           if-no-files-found: error
           retention-days: 21
+  windows-launcher-contract:
+    needs: source-contracts
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Pinned PowerShell 7.6.7 and native child argv tests (not Godot exact)
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $install = Join-Path $env:RUNNER_TEMP 'fabric-r562-pwsh-7.6.7'
+          $archive = Join-Path $env:RUNNER_TEMP 'PowerShell-7.6.7-win-x64.zip'
+          Invoke-WebRequest 'https://github.com/PowerShell/PowerShell/releases/download/v7.6.7/PowerShell-7.6.7-win-x64.zip' -OutFile $archive
+          if ((Get-FileHash $archive -Algorithm SHA256).Hash.ToLowerInvariant() -cne 'd2f952ebdbf24386cb8923553aa58e41a846db35a6155ea04c58142a4b16dbb7') { throw 'POWERSHELL_SHA_MISMATCH' }
+          Expand-Archive $archive $install
+          New-Item -ItemType Directory -Force artifacts/launcher-input | Out-Null
+          git show d3e3d3b29c9ef068937048ef14aa6c7114700904:RUN_FABRIC_R5_6_2_R1_TESTS.ps1 | Set-Content -Encoding utf8NoBOM artifacts/launcher-input/legacy.ps1
+          if ($LASTEXITCODE -ne 0) { throw 'LEGACY_RUNNER_FETCH_FAILED' }
+          & (Join-Path $install 'pwsh.exe') -NoLogo -NoProfile -File tests/research/fabric_bake0/test_r5_6_2_r1_windows_launcher.ps1 -LegacyRunnerPath artifacts/launcher-input/legacy.ps1 -PythonBin python -EvidenceDir artifacts/launcher-windows
+          if ($LASTEXITCODE -ne 0) { throw 'WINDOWS_LAUNCHER_CONTRACT_FAIL' }
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: fabric-r562-launcher-windows-${{ github.sha }}
+          path: artifacts/launcher-*/**
+          if-no-files-found: error
   linux-exact:
     needs: source-contracts
     runs-on: [self-hosted, Linux, X64]

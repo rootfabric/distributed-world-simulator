@@ -28,6 +28,65 @@ def identity(path):
     return dict(line.split("=", 1) for line in lines)
 
 
+
+def windows_stage_args():
+    tests = "res://tests/research/fabric_bake0"
+    stages = {
+        "import-recovery": ["--editor", "--import", "--recovery-mode"],
+        "import": ["--editor", "--import"],
+        "parse-lifecycle": ["--check-only", "--script", f"{tests}/fabric_r5_6_2_r1_lifecycle_acceptance.gd"],
+        **{f"lifecycle-{i}": ["--script", f"{tests}/fabric_r5_6_2_r1_lifecycle_acceptance.gd"] for i in range(1, 4)},
+        "r2-regression": ["--script", f"{tests}/fabric_r5_6_1_r2_dynamic_aggregate_acceptance.gd"],
+        "com-recovery-regression": ["--script", f"{tests}/fabric_r5_6_1_r2_com_recovery_acceptance.gd"],
+        "r1-regression": ["--script", f"{tests}/fabric_r5_6_1_canonical_delta_acceptance.gd"],
+        "bridge4-regression": ["--quit-after", "2", "--script", "res://tests/research/fabric1/fabric_bridge4_canonical_world_acceptance.gd"],
+    }
+    return stages
+
+
+def validate_windows_launches(root):
+    """Independently reject missing/altered CLI intent and false process PASS.
+
+    These local receipts are evidence, not authenticated OS attestation.
+    Exact runtime still requires the pinned binary and independent execution.
+    """
+    common_identity = None
+    command_fields = {"schema", "stage", "executable", "working_directory", "argv", "timeout_seconds"}
+    process_fields = {"schema", "stage", "started", "exit_code", "timed_out", "gameplay_detected", "verdict"}
+    for stage, gate_args in windows_stage_args().items():
+        command = json.loads((root / f"{stage}.argv.json").read_text(encoding="utf-8"))
+        outcome = json.loads((root / f"{stage}.process.json").read_text(encoding="utf-8"))
+        require(type(command) is dict and set(command) == command_fields, f"{stage}: INVALID_LAUNCH_FIELDS")
+        require(command["schema"] == "fabric.r562.windows_launch.v1" and command["stage"] == stage,
+                f"{stage}: INVALID_LAUNCH_SCHEMA")
+        executable, cwd = command["executable"], command["working_directory"]
+        require(type(executable) is str and bool(executable) and type(cwd) is str and bool(cwd),
+                f"{stage}: INVALID_LAUNCH_IDENTITY")
+        current_identity = (executable, cwd)
+        if common_identity is None:
+            common_identity = current_identity
+        require(current_identity == common_identity, f"{stage}: LAUNCH_IDENTITY_DRIFT")
+        require(command["argv"] == ["--headless", "--path", cwd] + gate_args,
+                f"{stage}: GODOT_STAGE_ARGV_MISMATCH")
+        require(type(command["timeout_seconds"]) is int and 1 <= command["timeout_seconds"] <= 1800,
+                f"{stage}: INVALID_TIMEOUT")
+        require(type(outcome) is dict and set(outcome) == process_fields, f"{stage}: INVALID_PROCESS_FIELDS")
+        require(outcome["schema"] == "fabric.r562.windows_process.v1" and outcome["stage"] == stage,
+                f"{stage}: INVALID_PROCESS_SCHEMA")
+        require(outcome["started"] is True and outcome["timed_out"] is False
+                and outcome["gameplay_detected"] is False and type(outcome["exit_code"]) is int
+                and outcome["exit_code"] == 0 and outcome["verdict"] == "PASS",
+                f"{stage}: PROCESS_NOT_CLEAN_PASS")
+        # Read bytes: newline translation must not hide differences on Windows.
+        combined = (root / f"{stage}.log").read_bytes()
+        require(combined == (root / f"{stage}.stdout.log").read_bytes()
+                + (root / f"{stage}.stderr.log").read_bytes(), f"{stage}: RAW_STREAM_MISMATCH")
+        require(not BAD.search(combined.decode("utf-8")), f"{stage}: RUNTIME_ERROR")
+        if stage in ("import", "import-recovery"):
+            require(not re.search(r"listen-host|user://worlds/|terrain_streaming_summary|spectator_predictive_stream",
+                                  combined.decode("utf-8"), re.I), f"{stage}: IMPORT_GAMEPLAY_SIDE_EFFECT")
+    return len(windows_stage_args())
+
 def run(args):
     root = Path(args.root).resolve()
     require(root.is_dir(), "EVIDENCE_DIR_MISSING")
@@ -64,8 +123,10 @@ def run(args):
     isolation = (root / "isolation.txt").read_text(encoding="utf-8").splitlines()
     require(isolation == ["RECEIPTS_IN_SANDBOX=42", "LIVE_WORLD_LOGS=0"],
             "USER_DATA_ISOLATION_NOT_PROVEN")
+    launch_count = validate_windows_launches(root) if args.platform == "windows" else None
     report = {
-        "schema": "fabric.r56_2_r1.exact_evidence.v1",
+        "schema": "fabric.r56_2_r1.exact_evidence.v2",
+        "windows_launches_verified": launch_count,
         "head": before["HEAD"], "tree": before["TREE"],
         "engine": VERSION, "engine_sha256": before["GODOT_SHA256"],
         "acceptance": json.loads(actual[0]),
