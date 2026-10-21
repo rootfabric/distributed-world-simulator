@@ -56,7 +56,7 @@ def run(args):
         require(data.get("checks", 0) >= 200, "ACCEPTANCE_COVERAGE_TOO_LOW")
         actual.append(matches[0].encode("utf-8"))
     require(actual[0] == actual[1] == actual[2], "R1_NONDETERMINISTIC_RESULT")
-    mandatory = ["import.log", "parse-lifecycle.log", "r2-regression.log",
+    mandatory = ["import-recovery.log", "import.log", "parse-lifecycle.log", "r2-regression.log",
                  "com-recovery-regression.log", "r1-regression.log", "bridge4-regression.log"]
     for name in mandatory:
         data = (root / name).read_text(encoding="utf-8")
