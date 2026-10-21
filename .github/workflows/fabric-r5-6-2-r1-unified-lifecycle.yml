@@ -1,0 +1,137 @@
+name: FABRIC R5.6.2 R1 Unified Lifecycle
+on:
+  push:
+    branches: [research/fabric-r5-6-2-r1-unified-lifecycle-r1]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  source-contracts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Verify exact R2 ancestry and additive scope
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          base=60f193d6602d2d6ebb62393d3db6633b14623627
+          test "$(git merge-base HEAD "$base")" = "$base"
+          test -z "$(git status --porcelain=v1 --untracked-files=no)"
+          python3 - <<'PY'
+          import subprocess
+          base='60f193d6602d2d6ebb62393d3db6633b14623627'
+          allowed={
+            '.github/workflows/fabric-r5-6-2-r1-unified-lifecycle.yml',
+            'RUN_FABRIC_R5_6_2_R1_TESTS.ps1',
+            'docs/research/FABRIC_R5_6_2_R1_2_WINDOWS_LAUNCH_REPAIR_RU.md',
+            'tests/research/fabric_bake0/test_r5_6_2_r1_windows_launcher.ps1',
+            'tests/research/fabric_bake0/test_r5_6_2_r1_launch_evidence.py',
+            'RUN_FABRIC_R5_6_2_R1_TESTS.sh',
+            'docs/research/FABRIC_R5_6_2_R1_UNIFIED_LIFECYCLE_WORK_ORDER_RU.md',
+            'scripts/research/fabric_bake0/collect_r5_6_2_r1_evidence.py',
+            'scripts/research/fabric_bake0/r5_6_2_r1_event_lifecycle_v1.gd',
+            'tests/research/fabric_bake0/fabric_r5_6_2_r1_lifecycle_acceptance.gd',
+          }
+          rows=subprocess.check_output(['git','diff','--name-status',base,'HEAD'],text=True).splitlines()
+          for row in rows:
+              status,path=row.split('\t')
+              assert status=='A' and path in allowed, row
+          assert {row.split('\t')[1] for row in rows}==allowed, 'incomplete delivery'
+          PY
+          git diff --check "$base" HEAD
+          bash -n RUN_FABRIC_R5_6_2_R1_TESTS.sh
+          python3 -m py_compile scripts/research/fabric_bake0/collect_r5_6_2_r1_evidence.py
+          python3 -m unittest discover -s tests/research/fabric_bake0 -p test_r5_6_2_r1_launch_evidence.py -v
+          mkdir -p artifacts/launcher-input
+          git show d3e3d3b29c9ef068937048ef14aa6c7114700904:RUN_FABRIC_R5_6_2_R1_TESTS.ps1 > artifacts/launcher-input/legacy.ps1
+          pwsh -NoLogo -NoProfile -File tests/research/fabric_bake0/test_r5_6_2_r1_windows_launcher.ps1 -LegacyRunnerPath artifacts/launcher-input/legacy.ps1 -PythonBin python3 -EvidenceDir artifacts/launcher-linux
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: fabric-r562-launcher-linux-${{ github.sha }}
+          path: artifacts/launcher-*/**
+          if-no-files-found: warn
+      - name: Freeze exact source for offline local reproduction
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          mkdir -p source-package
+          git archive --format=tar.gz -o source-package/fabric-r562-source.tar.gz HEAD
+          printf 'HEAD=%s\nTREE=%s\n' "$(git rev-parse HEAD)" "$(git rev-parse 'HEAD^{tree}')" > source-package/IDENTITY
+          git bundle create source-package/fabric-r562-source.bundle HEAD
+          (cd source-package && sha256sum fabric-r562-source.tar.gz fabric-r562-source.bundle > SHA256SUMS)
+      - name: Upload offline source
+        uses: actions/upload-artifact@v4
+        with:
+          name: fabric-r562-offline-source-${{ github.sha }}
+          path: source-package/**
+          if-no-files-found: error
+          retention-days: 21
+  windows-launcher-contract:
+    needs: source-contracts
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Pinned PowerShell 7.6.7 and native child argv tests (not Godot exact)
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $install = Join-Path $env:RUNNER_TEMP 'fabric-r562-pwsh-7.6.7'
+          $archive = Join-Path $env:RUNNER_TEMP 'PowerShell-7.6.7-win-x64.zip'
+          Invoke-WebRequest 'https://github.com/PowerShell/PowerShell/releases/download/v7.6.7/PowerShell-7.6.7-win-x64.zip' -OutFile $archive
+          if ((Get-FileHash $archive -Algorithm SHA256).Hash.ToLowerInvariant() -cne 'd2f952ebdbf24386cb8923553aa58e41a846db35a6155ea04c58142a4b16dbb7') { throw 'POWERSHELL_SHA_MISMATCH' }
+          Expand-Archive $archive $install
+          New-Item -ItemType Directory -Force artifacts/launcher-input | Out-Null
+          git show d3e3d3b29c9ef068937048ef14aa6c7114700904:RUN_FABRIC_R5_6_2_R1_TESTS.ps1 | Set-Content -Encoding utf8NoBOM artifacts/launcher-input/legacy.ps1
+          if ($LASTEXITCODE -ne 0) { throw 'LEGACY_RUNNER_FETCH_FAILED' }
+          & (Join-Path $install 'pwsh.exe') -NoLogo -NoProfile -File tests/research/fabric_bake0/test_r5_6_2_r1_windows_launcher.ps1 -LegacyRunnerPath artifacts/launcher-input/legacy.ps1 -PythonBin python -EvidenceDir artifacts/launcher-windows
+          if ($LASTEXITCODE -ne 0) { throw 'WINDOWS_LAUNCHER_CONTRACT_FAIL' }
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: fabric-r562-launcher-windows-${{ github.sha }}
+          path: artifacts/launcher-*/**
+          if-no-files-found: error
+  linux-exact:
+    needs: source-contracts
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 70
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Resolve canonical Linux double Godot
+        id: godot
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          bin="${DWS_GODOT_DOUBLE_BIN:-$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64}"
+          test -x "$bin"
+          test "$(sha256sum "$bin" | cut -d' ' -f1)" = 'bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7'
+          echo "path=$bin" >>"$GITHUB_OUTPUT"
+      - name: Execute exact lifecycle and inherited regressions
+        shell: bash
+        env:
+          GODOT_BIN: ${{ steps.godot.outputs.path }}
+        run: |
+          set -Eeuo pipefail
+          export R562_R1_EXPECTED_HEAD="$(git rev-parse HEAD)"
+          export R562_R1_EXPECTED_TREE="$(git rev-parse 'HEAD^{tree}')"
+          export R562_R1_EVIDENCE_DIR="$PWD/artifacts/ci-r562-${GITHUB_RUN_ID}"
+          bash RUN_FABRIC_R5_6_2_R1_TESTS.sh
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: fabric-r562-r1-linux-evidence-${{ github.sha }}
+          path: artifacts/ci-r562-${{ github.run_id }}/**
+          if-no-files-found: warn
+          retention-days: 30
