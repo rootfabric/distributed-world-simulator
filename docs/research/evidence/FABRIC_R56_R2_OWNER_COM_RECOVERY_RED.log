@@ -1,0 +1,8 @@
+Godot Engine v4.7.1.stable.double.custom_build.a13da4feb (2026-07-13 21:00:28 UTC) - https://godotengine.org
+
+ERROR: REVIEW_R56_R2_OWNER_COM_RECOVERY: derived R2 rebind accepts recovery into safe COM: {"details":{"absolute_accuracy_budget_m":0.000001,"axis":0,"representation_error_m":0.0000152587890625},"error_code":"R56_R2_RANGE_CENTER_PRECISION_UNSAFE","success":false}
+   at: push_error (core/variant/variant_utility.cpp:1023)
+   GDScript backtrace (most recent call first):
+       [0] ck (res://tests/research/fabric_bake0/review_r56_r2_owner_com_recovery.gd:22)
+       [1] _initialize (res://tests/research/fabric_bake0/review_r56_r2_owner_com_recovery.gd:84)
+FABRIC_R56_R2_INDEPENDENT_OWNER_COM_RECOVERY={"checks":12,"failures":["derived R2 rebind accepts recovery into safe COM"],"observations":{"first_observe_error":"","first_prepare_error":"","second_observe_error":"R56_R2_RANGE_CENTER_PRECISION_UNSAFE","second_prepare_error":"","session_start_error":"","unsafe_query_error":"R56_R2_RANGE_CENTER_PRECISION_UNSAFE"}}
