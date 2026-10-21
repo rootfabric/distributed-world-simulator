@@ -126,6 +126,15 @@ func disk_copy(value: Dictionary, label: String) -> Dictionary:
 	disk_roundtrips+=1
 	return parsed if typeof(parsed)==TYPE_DICTIONARY else {}
 
+func rehydrate_store(store, label: String):
+	var disk := disk_copy(store.to_dict(),label+"_owner")
+	if disk.is_empty():
+		return null
+	var next_store = Store.new()
+	var loaded: Dictionary = next_store.load_dict(disk)
+	ck(loaded.success,label+": canonical owner cold load",loaded)
+	return next_store if loaded.success else null
+
 func fresh(f: Dictionary) -> Dictionary:
 	var store=Store.new()
 	ck(store.apply_mutation(Mutation.create(Mutation.OP_CREATE,
@@ -164,6 +173,10 @@ func transition(env: Dictionary, kind: String, action: String, a: int, b: int,
 		f.name+": durable PREPARE barrier")
 	neg(session.query_range(0,f.count),"R562_PHYSICS_NOT_READY",
 		f.name+": physical execution blocked during prepare")
+	var before_owner = rehydrate_store(store,f.name+"_before_"+str(seq))
+	if before_owner == null:return
+	store=before_owner
+	env.store=store
 	var before_restart=Life.new()
 	var resumed: Dictionary=before_restart.recover(store,String(f.source.construct_id),
 		f.matter,f.authority,durable_pending)
@@ -180,6 +193,10 @@ func transition(env: Dictionary, kind: String, action: String, a: int, b: int,
 		f.name+": canonical CAS prevents duplicate owner mutation")
 	neg(before_restart.query_range(0,f.count),"R562_PHYSICS_NOT_READY",
 		f.name+": stale old physical index is nonexecutable")
+	var after_owner = rehydrate_store(store,f.name+"_after_"+str(seq))
+	if after_owner == null:return
+	store=after_owner
+	env.store=store
 	var after_restart=Life.new()
 	var recovered: Dictionary=after_restart.recover(store,String(f.source.construct_id),
 		f.matter,f.authority,durable_pending)
