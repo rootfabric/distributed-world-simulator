@@ -81,22 +81,55 @@ def collect(root: Path, expected_head: str='', expected_tree: str='') -> dict:
     need(numeric.get('sparse_update_ok') is True, 'NUMERIC_SPARSE_UPDATE')
     need(type(numeric.get('unsafe_ranges_rejected')) is int
         and numeric['unsafe_ranges_rejected']==1, 'NUMERIC_FAIL_CLOSED')
+    com_raw,com = unique_payload(root/'r2-com.log', 'FABRIC_R56_R2_COM_PRECISION=')
+    need(set(com)=={'schema','checks','failures','center_budget_m',
+        'unsafe_centers_rejected','safe_centers','multi_axis_rejections',
+        'state_unchanged','cases'}, 'COM_FIELDS')
+    need(com.get('schema')=='fabric.r56_r2.center_precision.v1','COM_SCHEMA')
+    need(type(com.get('checks')) is int and com['checks']==52 and
+        com.get('failures')==[], 'COM_ASSERTIONS')
+    need(type(com.get('center_budget_m')) is float and
+        com['center_budget_m']==1.0e-6, 'COM_PRECISION_BUDGET')
+    need(type(com.get('unsafe_centers_rejected')) is int and
+        com['unsafe_centers_rejected']==6, 'COM_FAIL_CLOSED')
+    need(type(com.get('safe_centers')) is int and
+        com['safe_centers']==2, 'COM_POSITIVE_CASES')
+    need(type(com.get('multi_axis_rejections')) is int and
+        com['multi_axis_rejections']==2 and com.get('state_unchanged') is True,
+        'COM_AXES_AND_ROLLBACK')
+    need(type(com.get('cases')) is list and len(com['cases'])==8, 'COM_CASES')
+    cases=[('x-1e9',0,False),('x-1e12',0,True),('x-1e13',0,True),
+        ('x-1e14',0,True),('x-1e15',0,True),('x-safe-1e12',0,False),
+        ('y-negative-1e13',1,True),('z-positive-1e13',2,True)]
+    for row,(label,axis,reject) in zip(com['cases'], cases):
+        need(type(row) is dict and set(row)=={'label','axis','offset',
+            'separation','expected_reject','accepted','error_code'},
+            'COM_CASE_SHAPE')
+        need(row['label']==label and type(row['axis']) is int and
+            row['axis']==axis and type(row['expected_reject']) is bool and
+            row['expected_reject'] is reject, 'COM_CASE_IDENTITY')
+        need(type(row['accepted']) is bool and row['accepted'] is (not reject) and
+            row['error_code']==('R56_R2_RANGE_CENTER_PRECISION_UNSAFE' if reject else ''),
+            'COM_CASE_RESULT')
+        need(type(row['separation']) is float and row['separation']>0.0,
+            'COM_CASE_SEPARATION')
     original=r1_sample(root/'r1-acceptance.log')
     need(original[2]=='29defdc33cb1192b9e1577517561c6fcc0f5693daa889deebe585ab8816e043b','R1_HASH_DRIFT')
     narrow=r1_source(root/'r1-narrow-admission.log')
-    for name in ('import','parse-r2','parse-scale','parse-numeric','parse-r1','parse-r1-narrow','bridge4-regression'):
+    for name in ('import','parse-r2','parse-scale','parse-numeric','parse-com','parse-r1','parse-r1-narrow','bridge4-regression'):
         log=read_log(root/(name+'.log'))
         if name=='bridge4-regression':
             need('FABRIC BRIDGE-4 Canonical World: PASS (49 assertions)' in log, 'BRIDGE4_RESULT')
     deterministic_hash=hashlib.sha256(results[0][0].encode('utf-8')).hexdigest()
     result={
-        'schema':'fabric.r56_r2.dynamic_aggregates.exact_evidence.v2',
+        'schema':'fabric.r56_r2.dynamic_aggregates.exact_evidence.v3',
         'verdict':'IMPLEMENTER_EXACT_PASS',
         'identity':{'head':before[0],'tree':before[1],'engine_sha256':before[2]},
         'r2_hash':deterministic_hash,
         'r2_acceptance':results[0][1],
         'r2_scale':scale,
         'r2_numeric':numeric,
+        'r2_center_precision':com,
         'r1_baseline_hash':original[2],
         'r1_narrow':narrow,
         'logs':{p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(root.glob('*.log'))},

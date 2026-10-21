@@ -160,3 +160,9 @@ Original independent RED falsifier is retained outside the product regression
 to prove RED->GREEN on old and repaired HEAD. Native Linux/Windows runners and
 strict collector v2 require the new numeric gate; eleven synthetic evidence
 corruptions must fail closed.
+
+## R2 COM absolute-Float64 representation envelope repair (required)
+
+Following accepted Windows exact for prior numeric/harness repairs, a new independent COM falsifier showed valid floating-point input locations at 1e12…1e15 where returned absolute Float64 center loses 0.000061…0.0625m, although source-relative Fenwick moments and inertia remain physically consistent. The narrow R2 repair declares **a bounded research-only 1e-6m precision budget for the COM output conversion**, checks a round-trip back to the source anchor, and returns `R56_R2_RANGE_CENTER_PRECISION_UNSAFE` before publishing an unreliable descriptor. The original index 10-moment update and physical/canonical ownership rules remain unchanged.
+
+Mandatory COM test 52 assertions/0 failures, including two accepted representable sources, six rejected unrepresentable center cases in X/Y/Z, unchanged index state on refusal; strict collector v3 and required Linux/Windows `r2-com` logs. See `docs/research/FABRIC_R5_6_1_R2_COM_REPRESENTATION_ENVELOPE_REPAIR_RU.md`. No claim is made that this bounds all Fenwick/source rounding or replaces a future anchored-output interface for R6.

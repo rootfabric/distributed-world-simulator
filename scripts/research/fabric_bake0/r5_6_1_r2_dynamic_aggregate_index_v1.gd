@@ -25,6 +25,12 @@ const DOUBLE_EPSILON := 2.220446049250313e-16
 const ROUNDING_GUARD_FACTOR := 64.0
 const INERTIA_ABS_PRECISION := 1.0e-6
 const INERTIA_REL_PRECISION := 1.0e-8
+## Research point-mass descriptor contract: at most 1 micrometer of error
+## solely from representing a source-relative COM in an absolute Float64.
+## This is a bounded publication envelope, not a universal physical error
+## guarantee for Fenwick rounding, canonical geometry or other worlds.
+## Returning an anchored pair would require a new consumer/schema contract.
+const COM_ABS_PRECISION_M := 1.0e-6
 
 var _count: int = 0
 var _construct_id := ""
@@ -236,10 +242,24 @@ func query_range(first: int, end_exclusive: int) -> Dictionary:
 		if not is_finite(uncertainty) or uncertainty > budget:
 			return U.failure("R56_R2_RANGE_NUMERIC_PRECISION_UNSAFE",
 				{"component": k, "roundoff_estimate": uncertainty, "accuracy_budget": budget})
+	var local_center := [cx, cy, cz]
+	var origin_xyz := [_origin.x, _origin.y, _origin.z]
 	var world_center := [cx + _origin.x, cy + _origin.y, cz + _origin.z]
-	for component in world_center:
-		if not is_finite(component):
+	# The source-anchored moments can be accurate while the published absolute
+	# Float64 COM cannot represent a sub-ULP local displacement. Round-trip the
+	# *actual published value* into the anchor frame and compare the loss to
+	# the declared bounded research envelope. Do not claim world-wide accuracy.
+	for axis in range(3):
+		var published: float = float(world_center[axis])
+		var anchored: float = float(local_center[axis])
+		if not is_finite(published) or not is_finite(anchored):
 			return U.failure("R56_R2_RANGE_CENTER_NONFINITE")
+		var reconstructed: float = published - float(origin_xyz[axis])
+		var representation_loss: float = absf(reconstructed - anchored)
+		if not is_finite(representation_loss) or representation_loss > COM_ABS_PRECISION_M:
+			return U.failure("R56_R2_RANGE_CENTER_PRECISION_UNSAFE",
+				{"axis": axis, "representation_error_m": representation_loss,
+				"absolute_accuracy_budget_m": COM_ABS_PRECISION_M})
 	var descriptor := {
 		"schema": RESULT_SCHEMA, "construct_id": _construct_id,
 		"source_checksum": _source_checksum, "revision": _revision,

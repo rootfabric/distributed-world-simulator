@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Eleven independent tamper fixtures must be rejected by the R2 exact collector."""
+"""Sixteen independent tamper fixtures must be rejected by the R2 exact collector."""
 from __future__ import annotations
 import argparse
 from pathlib import Path
@@ -28,6 +28,11 @@ def main():
         ('numeric-assertion',lambda p:edit(p/'r2-numeric.log','"checks":54','"checks":53')),
         ('numeric-missing',lambda p:(p/'r2-numeric.log').unlink()),
         ('numeric-unsafe-admitted',lambda p:edit(p/'r2-numeric.log','"unsafe_ranges_rejected":1','"unsafe_ranges_rejected":0')),
+        ('com-missing',lambda p:(p/'r2-com.log').unlink()),
+        ('com-assertion',lambda p:edit(p/'r2-com.log','"checks":52','"checks":51')),
+        ('com-budget',lambda p:edit(p/'r2-com.log','"center_budget_m":0.000001','"center_budget_m":0.01')),
+        ('com-unsafe-admitted',lambda p:edit(p/'r2-com.log','"unsafe_centers_rejected":6','"unsafe_centers_rejected":5')),
+        ('com-false-admission',lambda p:edit(p/'r2-com.log','"accepted":false','"accepted":true')),
     ]
     good=collect(args.root)
     assert good['verdict']=='IMPLEMENTER_EXACT_PASS'
@@ -42,5 +47,5 @@ def main():
                 print('R56_R2_EVIDENCE_TAMPER_REJECTED='+name+':'+type(err).__name__)
             else:
                 raise AssertionError('collector accepted bad evidence: '+name)
-    print('R56_R2_EVIDENCE_TAMPER_MATRIX=PASS 11/11')
+    print('R56_R2_EVIDENCE_TAMPER_MATRIX=PASS 16/16')
 if __name__=='__main__':main()
