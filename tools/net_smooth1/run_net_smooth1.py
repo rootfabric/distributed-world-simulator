@@ -21,6 +21,7 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / 'tools/live2'))
 from live2_automation_client import request
 from analyze_net_smooth1 import write_report
+from owned_process_cleanup import finalize_owned_processes, preflight_no_smooth_godot
 
 TESTS = [
  'tests/runtime/test_net_smooth1_r3c4_periodic_frame_headroom.gd',
@@ -250,6 +251,12 @@ def play(args, manifest: dict) -> None:
     def command(role: str, line: str) -> dict:
         return bridge(ports[role],token,'command.execute',{'line':line})['result']
     try:
+        if args.mode == 'gui' and os.name == 'nt':
+            # Do not kill Godot editors or another agent's runs. Refuse to
+            # start if another net-smooth Godot from this binary directory
+            # is alive: previous failure must not pollute this paired arm.
+            preflight_no_smooth_godot(args.godot)
+            manifest['preflight_no_other_smooth_godot'] = True
         spawn('server');wait_ready('server')
         for role in ('a','b'): spawn(role)
         for role in ('a','b'): wait_ready(role)
@@ -290,13 +297,35 @@ def play(args, manifest: dict) -> None:
         # for r31, opens it only after the roundtrip stages have finished.
         measure_closed = False
         def close_measure_window() -> None:
-            # Touch measure.end and wait past one probe poll period (200ms)
-            # so the planned reconnect can never land inside the still-open
-            # normative window by racing the probe's file observation.
+            # Each probe must ACK the local measure.end fence before any
+            # planned reconnect, final screenshot, checkpoint or teardown.
+            # Waiting an arbitrary 0.5/1.2s under high host load is not
+            # enough; missing ACK is INCONCLUSIVE, never frame PASS.
             nonlocal measure_closed
-            for role in processes: (root/role/'measure.end').touch()
+            if measure_closed:
+                return
+            for role in processes:
+                (root/role/'measure.end').touch()
             measure_closed = True
-            time.sleep(1.2)
+            pending=set(processes)
+            deadline=time.monotonic()+max(5.0,min(45.0,args.startup_timeout/4))
+            while pending and time.monotonic()<deadline:
+                alive()
+                for role in tuple(pending):
+                    ack=root/role/'measure.end.ack'
+                    if not ack.is_file():
+                        continue
+                    value=ack.read_text(encoding='utf-8').strip()
+                    if not value.isdigit() or int(value)<=0:
+                        raise RuntimeError(f'{role}: INVALID_MEASURE_END_ACK')
+                    pending.remove(role)
+                if pending:
+                    time.sleep(.05)
+            if pending:
+                raise RuntimeError('NET_SMOOTH_MEASURE_END_ACK_TIMEOUT:'+
+                                   ','.join(sorted(pending)))
+            manifest['measurement_closed_roles']=sorted(processes)
+            manifest['measurement_close_ack_complete']=True
         if args.scenario != 'r31-reconnect-roundtrip':
             for role in processes: (root/role/'measure.start').touch()
         started=time.monotonic()
@@ -621,8 +650,7 @@ def play(args, manifest: dict) -> None:
             if after.get('ownership_epoch',0)<=old.get('ownership_epoch',0):
                 raise RuntimeError('reconnect did not advance ownership epoch')
         if not measure_closed:
-            for role in processes: (root/role/'measure.end').touch()
-        time.sleep(.5)
+            close_measure_window()
         for role in ('a','b'):
             bridge(ports[role],token,'movement.stop')
             dump(root/role/'final-state.json',bridge(ports[role],token,'state.get',{'kind':'automation'}))
@@ -632,28 +660,48 @@ def play(args, manifest: dict) -> None:
     except Exception as exc:
         manifest['errors'].append(f'{type(exc).__name__}: {exc}')
     finally:
-        # Graceful shutdown only these owned processes. Keep server alive until
-        # both clients have drained, then stop server through the opt-in marker.
-        for roles in (('a','b'),('server',)):
-            for role in roles:
-                if role in processes: (root/role/'stop.signal').touch()
-            for role in roles:
-                if role not in processes: continue
-                p=processes[role]
-                try: p.wait(timeout=60)
-                except subprocess.TimeoutExpired:
-                    manifest['errors'].append(f'{role}: graceful shutdown timeout')
-                    p.terminate()
-                    try: p.wait(timeout=10)
-                    except subprocess.TimeoutExpired: p.kill();p.wait(timeout=10)
-                manifest['process_exit_codes'][role]=p.returncode
-        for stream in streams: stream.close()
+        # B3: Windows console-wrapper can exit leaving a Godot MAIN child.
+        # Isolate by THIS RUN's unguessable instance/node IDs and Godot bin
+        # directory; never taskkill other Godot sessions or unrelated projects.
+        try:
+            cleanup = finalize_owned_processes(
+                processes, root, manifest['run_id'], args.godot)
+        except Exception as exc:
+            # Unexpected scanner/runtime exception is INCONCLUSIVE, not PASS.
+            # Always best-effort reap only Popen handles already registered.
+            cleanup = {'verified': False,
+                       'errors': ['CLEANUP_EXCEPTION:' + type(exc).__name__],
+                       'role_exit_codes': {}, 'exception': type(exc).__name__}
+            for role, proc in processes.items():
+                if proc.poll() is None:
+                    try:
+                        proc.kill()
+                        proc.wait(timeout=10)
+                    except (OSError, subprocess.TimeoutExpired):
+                        cleanup['errors'].append(f'{role}: EMERGENCY_KILL_FAILED')
+                cleanup['role_exit_codes'][role] = proc.poll()
+        manifest['cleanup'] = cleanup
+        manifest['process_exit_codes'].update(cleanup.get('role_exit_codes', {}))
+        manifest['errors'].extend(cleanup.get('errors', []))
+        if not bool(cleanup.get('verified', False)):
+            manifest['errors'].append('NET_SMOOTH_RUN_PROCESS_ISOLATION_UNVERIFIED')
+        for stream in streams:
+            try:
+                stream.close()
+            except OSError:
+                manifest['errors'].append('RUNTIME_LOG_CLOSE_FAILED')
         for role in processes:
-            text=(root/role/'runtime.log').read_text(encoding='utf-8',errors='replace')
-            errors=[line for line in text.splitlines() if any(e in line for e in BAD_LOG)]
-            if errors:
-                manifest['errors'].append(f'{role}: runtime error lines ({len(errors)})')
-                (root/role/'errors.txt').write_text('\n'.join(errors),encoding='utf-8')
+            try:
+                text=(root/role/'runtime.log').read_text(encoding='utf-8',
+                                                        errors='replace')
+                errors=[line for line in text.splitlines()
+                        if any(e in line for e in BAD_LOG)]
+                if errors:
+                    manifest['errors'].append(f'{role}: runtime error lines ({len(errors)})')
+                    (root/role/'errors.txt').write_text(
+                        '\n'.join(errors),encoding='utf-8')
+            except OSError:
+                manifest['errors'].append(f'{role}: RUNTIME_LOG_MISSING')
         dump(root/'manifest.json',manifest)
 
 

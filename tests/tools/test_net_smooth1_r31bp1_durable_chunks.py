@@ -14,7 +14,8 @@ from analyze_r31bp1_durable_chunks import analyze
 
 def report(i: int, *, hits: int | None = None, misses: int = 1,
            bypasses: int = 0, reason: str = "", bytes_: int = 2048,
-           cached: bool = True, fence: bool = True) -> dict:
+           cached: bool = True, fence: bool = True,
+           instance_id: int = 7) -> dict:
     def component(kind: str) -> dict:
         return {
             "hits": 100 + i if hits is None else hits,
@@ -24,7 +25,7 @@ def report(i: int, *, hits: int | None = None, misses: int = 1,
             "bytes": bytes_ if cached else 0,
             "cached": cached,
             "fence": {
-                "kind": kind, "instance_id": 7,
+                "kind": kind, "instance_id": instance_id,
                 "authority_owner_id": "authority/m3",
                 "authority_epoch": 1, "state_serial": 3,
                 **({"revision": 10, "tick": 10}
@@ -136,6 +137,33 @@ class MeasuredWindowFalsifiers(unittest.TestCase):
         rows = [event(i, rep=report(i, bytes_=9*1024*1024))
                 for i in range(20)]
         with self.assertRaisesRegex(ValueError, "SIZE_INVALID"):
+            run(rows)
+
+    def test_win64_signed_negative_instance_id_is_valid(self):
+        # Real Win64 Godot Object.get_instance_id() carries the high bit;
+        # the value is opaque, signed, and must NOT be normalized with abs().
+        windows_id = -9223371846030719459
+        rows = [event(i, rep=report(i, instance_id=windows_id))
+                for i in range(20)]
+        parsed = run(rows)
+        self.assertEqual(parsed["components"]["item_graph"]["hit_rate"], 1.0)
+        self.assertEqual(parsed["components"]["resource_mining"]["hit_rate"], 1.0)
+
+    def test_zero_instance_id_is_rejected(self):
+        rows = [event(i, rep=report(i, instance_id=0)) for i in range(20)]
+        with self.assertRaisesRegex(ValueError, "FENCE_INVALID"):
+            run(rows)
+
+    def test_non_int_instance_id_rejected(self):
+        rows = [event(i, rep=report(i, instance_id="9223371846030719459"))
+                for i in range(20)]
+        with self.assertRaisesRegex(ValueError, "FENCE_INVALID"):
+            run(rows)
+
+    def test_instance_id_out_of_signed64_range_rejected(self):
+        rows = [event(i, rep=report(i, instance_id=-(2**63)-1))
+                for i in range(20)]
+        with self.assertRaisesRegex(ValueError, "FENCE_INVALID"):
             run(rows)
 
     def test_invalid_fence_fails(self):
