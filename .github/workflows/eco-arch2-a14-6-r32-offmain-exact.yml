@@ -104,36 +104,10 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'COLD_IMPORT_FAIL' }
           & $godot --headless --path . --script res://validation/ecology/evo_arch2_a14_staged/test_r32_off_main_lab.gd | Tee-Object -FilePath r32.log
           if ($LASTEXITCODE -ne 0) { throw 'OFFMAIN_R32_TEST_FAIL' }
-          if (-not (Select-String -Path r32.log -Pattern '^ECO_ARCH2_A14_6_R32_OFFMAIN PASS
-      - name: Clean tracked Linux
-        if: always() && matrix.platform == 'Linux'
-        shell: bash
-        run: git diff --exit-code && git diff --cached --exit-code
-      - name: Clean tracked Windows
-        if: always() && matrix.platform == 'Windows'
-        shell: pwsh
-        run: |
-          git diff --exit-code
-          if ($LASTEXITCODE -ne 0) { throw 'DIRTY_WORKTREE' }
-          git diff --cached --exit-code
-          if ($LASTEXITCODE -ne 0) { throw 'DIRTY_INDEX' }
-)) { throw 'OFFMAIN_MARKER_MISSING' }
+          if (-not (Select-String -Path r32.log -Pattern '^ECO_ARCH2_A14_6_R32_OFFMAIN PASS$')) { throw 'OFFMAIN_MARKER_MISSING' }
           & $godot --headless --path . --script res://validation/ecology/evo_arch2_a14_staged/test_r32_off_main_scale.gd | Tee-Object -FilePath r32-scale.log
           if ($LASTEXITCODE -ne 0) { throw 'OFFMAIN_SCALE_FAIL' }
-          if (-not (Select-String -Path r32-scale.log -Pattern '^ECO_ARCH2_A14_6_R32_SCALE PASS
-      - name: Clean tracked Linux
-        if: always() && matrix.platform == 'Linux'
-        shell: bash
-        run: git diff --exit-code && git diff --cached --exit-code
-      - name: Clean tracked Windows
-        if: always() && matrix.platform == 'Windows'
-        shell: pwsh
-        run: |
-          git diff --exit-code
-          if ($LASTEXITCODE -ne 0) { throw 'DIRTY_WORKTREE' }
-          git diff --cached --exit-code
-          if ($LASTEXITCODE -ne 0) { throw 'DIRTY_INDEX' }
-)) { throw 'OFFMAIN_SCALE_MARKER_MISSING' }
+          if (-not (Select-String -Path r32-scale.log -Pattern '^ECO_ARCH2_A14_6_R32_SCALE PASS$')) { throw 'OFFMAIN_SCALE_MARKER_MISSING' }
       - name: Clean tracked Linux
         if: always() && matrix.platform == 'Linux'
         shell: bash
