@@ -5,6 +5,8 @@ extends SceneTree
 # durable-before-ACK. No GUI performance inferred from this headless suite.
 const Service = preload(
 	"res://scripts/runtime/networked_gameplay/user1/user1_product_seam_gameplay_service.gd")
+const Graph = preload(
+	"res://scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service.gd")
 const Adapter = preload(
 	"res://scripts/runtime/networked_gameplay/m6/m6_dedicated_gameplay_authority_adapter.gd")
 const Outbox = preload(
@@ -24,6 +26,7 @@ func _init() -> void:
 
 func _run() -> void:
 	OS.set_environment("DWS_NET_R31BP1_DURABLE_CHUNKS", "")
+	_test_owner_native_m4_fence()
 	_test_cached_immutable_real_seam()
 	_test_real_server_config()
 	for reason in failures:
@@ -48,6 +51,38 @@ func _port() -> int:
 func _path(label: String) -> String:
 	return ProjectSettings.globalize_path(
 		"res://artifacts/net-smooth1/r31bp1-%s-%d" % [label, Time.get_ticks_usec()])
+
+
+func _test_owner_native_m4_fence() -> void:
+	var graph = Graph.new()
+	var boot: Dictionary = graph.setup("authority/r31bp1/m4", 1, {
+		"playable_sandbox": true})
+	_check(bool(boot.get("success", false)), "M4 source graph setup")
+	if not bool(boot.get("success", false)):
+		return
+	var before: Dictionary = graph.get_r31bp1_durable_source_fence()
+	graph.ensure_player("new-actor")
+	var after: Dictionary = graph.get_r31bp1_durable_source_fence()
+	_check(after != before, "new player and P5 tool invalidate M4 durable source")
+	_check(int(before.get("revision", -1)) == int(after.get("revision", -2)),
+		"inventory seeding changes durable rows WITHOUT global item revision")
+	var stable: Dictionary = graph.export_durable_state()
+	_check(not stable.is_empty(), "M4 durable state exists")
+	var restored: Dictionary = graph.restore_durable_state(stable)
+	_check(bool(restored.get("success", false)), "M4 restore exact")
+	_check(graph.get_r31bp1_durable_source_fence() != after,
+		"restore cannot resurrect stale source fence via revision ABA")
+	var live_graph = Graph.new()
+	var live_boot: Dictionary = live_graph.setup("authority/r31bp1/live-m4", 1, {
+		"playable_sandbox": false})
+	_check(bool(live_boot.get("success", false)), "native M4 bootstrap")
+	if bool(live_boot.get("success", false)):
+		var previous: Dictionary = live_graph.get_r31bp1_durable_source_fence()
+		var configured: Dictionary = live_graph.configure_live_items(true, true)
+		_check(bool(configured.get("success", false)), "live item fixture opt-in")
+		_check(live_graph.get_r31bp1_durable_source_fence() != previous,
+			"live policy and transform boot invalidates source stamp")
+
 
 func _test_cached_immutable_real_seam() -> void:
 	var service = Service.new()
