@@ -71,6 +71,15 @@ func _test_real_seam_profile_parity() -> void:
 	if not bool(bound.get("success", false)):
 		service.shutdown()
 		return
+	# Join records joined_tick=1 in the ownership registry while a fresh unit
+	# service still stands at _tick=0; advance the fixed tick so the durable
+	# export validation (PLAYER_OWNERSHIP_TICK_AHEAD_OF_SERVER) sees a
+	# consistent authority tick, exactly as a real server frame would.
+	var ticked: Dictionary = service.advance_fixed_server_tick(1)
+	check(bool(ticked.get("success", false)), "fixed server tick advanced after join")
+	if not bool(ticked.get("success", false)):
+		service.shutdown()
+		return
 	var original: Dictionary = service.export_durable_state()
 	var profiled: Dictionary = service.export_durable_state_r31b_profiled()
 	var actual: Dictionary = Dictionary(profiled.get("value", {}))
