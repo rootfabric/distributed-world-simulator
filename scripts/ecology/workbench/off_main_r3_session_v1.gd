@@ -38,6 +38,12 @@ var _jobs_abandoned := 0
 var _jobs_failed := 0
 var _drained := 0
 var _max_poll_us := 0
+# R3.2.1 host-only phase attribution. No canonical state/checkpoint changes.
+var _peak_background_poll_us := 0
+var _peak_complete_poll_us := 0
+var _last_join_us := 0
+var _last_source_admission_us := 0
+var _peak_source_admission_us := 0
 var _last_worker_wall_us := 0
 var _last_error := ""
 
@@ -90,6 +96,11 @@ func status() -> Dictionary:
 		"jobs_failed": _jobs_failed,
 		"tasks_joined": _drained,
 		"peak_poll_wall_us": _max_poll_us,
+		"peak_background_poll_us": _peak_background_poll_us,
+		"peak_complete_poll_us": _peak_complete_poll_us,
+		"last_join_wall_us": _last_join_us,
+		"last_source_admission_wall_us": _last_source_admission_us,
+		"peak_source_admission_wall_us": _peak_source_admission_us,
 		"last_worker_wall_us": _last_worker_wall_us,
 		"last_error": _last_error,
 	}
@@ -108,7 +119,10 @@ func advance(state: Dictionary, options: Dictionary,
 			return _pending(t0, "DRAINING" if _abandoned else "BACKGROUND")
 		# Non-blocking by contract: the task is already completed. Always
 		# wait exactly once so Godot releases the task's pool resources.
+		var join_started_us: int = Time.get_ticks_usec()
 		var joined: Error = WorkerThreadPool.wait_for_task_completion(_task_id)
+		var join_wall_us: int = maxi(0, Time.get_ticks_usec() - join_started_us)
+		_last_join_us = join_wall_us
 		_task_id = -1
 		_drained += 1
 		if joined != OK:
@@ -136,13 +150,19 @@ func advance(state: Dictionary, options: Dictionary,
 			return _failed("R3_ASYNC_FINAL_STATE", t0)
 		# Main-thread final source admission runs ONCE, not on each
 		# pending frame. Error => no canonical result adoption.
+		var source_validation_started_us: int = Time.get_ticks_usec()
 		var canonical_error: String = Runtime.validate(state)
+		var source_admission_wall_us: int = maxi(0, Time.get_ticks_usec() - source_validation_started_us)
+		_last_source_admission_us = source_admission_wall_us
+		_peak_source_admission_us = maxi(_peak_source_admission_us, source_admission_wall_us)
 		if not canonical_error.is_empty():
 			_jobs_failed += 1
 			return _failed("R3_ASYNC_SOURCE_INVALID:" + canonical_error, t0)
 		_jobs_committed += 1
 		_last_worker_wall_us = int(payload.get("worker_wall_us", 0))
 		var result: Dictionary = payload.state
+		var complete_poll_wall_us: int = maxi(0, Time.get_ticks_usec() - t0)
+		_peak_complete_poll_us = maxi(_peak_complete_poll_us, complete_poll_wall_us)
 		_source_hash = ""
 		_options_hash = ""
 		_source_tick = -1
@@ -155,6 +175,9 @@ func advance(state: Dictionary, options: Dictionary,
 			"wall_us": maxi(0, Time.get_ticks_usec() - t0),
 			"overrun_us": 0,
 			"worker_wall_us": _last_worker_wall_us,
+			"join_wall_us": join_wall_us,
+			"source_admission_wall_us": source_admission_wall_us,
+			"complete_poll_wall_us": complete_poll_wall_us,
 		}
 	# Exactly one job can run per host session. Starting with
 	# shallow read-only input avoids a full main-thread deep copy.
@@ -241,6 +264,8 @@ func _is_cancel_requested() -> bool:
 func _pending(started_us: int, phase: String) -> Dictionary:
 	var wall: int = maxi(0, Time.get_ticks_usec() - started_us)
 	_max_poll_us = maxi(_max_poll_us, wall)
+	if phase == "BACKGROUND" or phase == "DRAINING":
+		_peak_background_poll_us = maxi(_peak_background_poll_us, wall)
 	return {
 		"success": true, "complete": false, "pending": true,
 		"phase": phase, "replayed_ticks": 0, "resume_calls": 0,

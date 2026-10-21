@@ -109,6 +109,10 @@ func _test_direct_service(m: Dictionary) -> void:
 		"scenario": "cpu-only-real-global-tick",
 		"dispatch_wall_us": dispatch_us, "peak_poll_wall_us": peak_poll_us,
 		"polls": polls, "worker_wall_us": int(done.worker_wall_us),
+		"peak_background_poll_us": int(own.status().peak_background_poll_us),
+		"main_join_wall_us": int(done.join_wall_us),
+		"main_source_admission_wall_us": int(done.source_admission_wall_us),
+		"main_complete_poll_wall_us": int(done.complete_poll_wall_us),
 		"canonical_hash": Runtime.state_hash(done.state),
 		"state_equal": C.encode(done.state) == C.encode(reference.debug_state().runtime),
 		"hard_frame_deadline_claim": false,
@@ -133,6 +137,8 @@ func _test_real_workbench(m: Dictionary) -> void:
 	var frames := 0
 	var pending := 0
 	var gui_peak_us := 0
+	var gui_pending_peak_us := 0
+	var gui_commit_us := -1
 	for i in POLL_LIMIT:
 		var began := Time.get_ticks_usec()
 		bench._process(1.0 if i == 0 else 0.0)
@@ -140,7 +146,9 @@ func _test_real_workbench(m: Dictionary) -> void:
 		gui_peak_us = maxi(gui_peak_us, gui_wall)
 		frames += 1
 		if actual.tick() == 1:
+			gui_commit_us = gui_wall
 			break
+		gui_pending_peak_us = maxi(gui_pending_peak_us, gui_wall)
 		pending += 1
 		_check(actual.tick() == 0
 			and String(actual.serialize_state().state_text) == String(checkpoint.state_text),
@@ -162,6 +170,9 @@ func _test_real_workbench(m: Dictionary) -> void:
 		"scenario": "real-workbench-process",
 		"frames": frames, "pending_frames": pending,
 		"main_process_peak_wall_us": gui_peak_us,
+		"main_pending_process_peak_wall_us": gui_pending_peak_us,
+		"main_commit_process_wall_us": gui_commit_us,
+		"main_source_admission_wall_us": int(actual.get_staged_telemetry().off_main.last_source_admission_wall_us),
 		"checkpoint_equal": String(actual.serialize_state().state_text) ==
 			String(ref.serialize_state().state_text),
 		"hard_frame_deadline_claim": false,

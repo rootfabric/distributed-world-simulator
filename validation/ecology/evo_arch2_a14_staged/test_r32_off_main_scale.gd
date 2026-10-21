@@ -168,6 +168,11 @@ func _profile(n: int, blueprint: Dictionary) -> void:
 	_check(C.encode(source) == original_bytes and int(source.tick) == 0,
 		"n=%d immutable source never mutates during background A4" % n)
 	var status: Dictionary = session.status()
+	# Attribution fields are host-only; none may affect canonical results.
+	_check(int(result.get("source_admission_wall_us", -1)) >= 0
+		and int(result.get("join_wall_us", -1)) >= 0
+		and int(result.get("complete_poll_wall_us", -1)) >= 0,
+		"n=%d main-thread completion broken down into join/admission/total" % n)
 	_check(int(status.jobs_started) == 1
 		and int(status.jobs_committed) == 1
 		and int(status.jobs_failed) == 0,
@@ -177,6 +182,10 @@ func _profile(n: int, blueprint: Dictionary) -> void:
 		"population": n,
 		"dispatch_wall_us": dispatch_us,
 		"peak_main_poll_us": max_poll,
+		"peak_background_poll_us": int(status.peak_background_poll_us),
+		"main_join_wall_us": int(result.join_wall_us),
+		"main_source_admission_wall_us": int(result.source_admission_wall_us),
+		"main_complete_poll_wall_us": int(result.complete_poll_wall_us),
 		"worker_wall_us": int(result.worker_wall_us),
 		"poll_count": polls,
 		"canonical_hash": Runtime.state_hash(result.state),
