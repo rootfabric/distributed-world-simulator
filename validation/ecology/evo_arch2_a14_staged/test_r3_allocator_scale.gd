@@ -137,9 +137,13 @@ func _run_session(initial: Dictionary, options: Dictionary,
 	_check(int(telemetry.peak_cursor_bytes) > 0
 		and int(telemetry.peak_cursor_bytes) <= 8388608,
 		"nested R2 + A5 cursor fits host byte cap")
-	_check(stages.has("PREPARE") and stages.has("ALLOCATE")
-		and stages.has("ADVANCE"),
-		"all global tick stages executed")
+	# The final ADVANCE may complete the tick and immediately reset
+	# status.phase to NONE. Use measured execution counters, not an
+	# already-closed cursor's presentation state, for the exact witness.
+	_check(int(telemetry.phase_stats.PREPARE.samples) > 0
+		and int(telemetry.phase_stats.ALLOCATE.samples) > 0
+		and int(telemetry.phase_stats.ADVANCE.samples) > 0,
+		"all global tick stages actually executed (including terminal ADVANCE)")
 	if r3:
 		_check(allocator_pending > 1 and int(telemetry.r3_allocator_calls) > 4,
 			"R2 allocator materially resumes across host frame boundaries")
