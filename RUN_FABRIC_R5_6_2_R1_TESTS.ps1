@@ -87,6 +87,14 @@ try {
     # filtering, no ignored import failures, same project/Godot binary.
     RunGodot 'import-recovery' @('--editor','--import','--recovery-mode')
     RunGodot 'import' @('--editor','--import')
+    foreach ($stage in @('import-recovery','import')) {
+        $text = [IO.File]::ReadAllText((Join-Path $Out "$stage.log"),$Utf8)
+        if ($text -match '(?i)listen-host|user://worlds/') { throw "IMPORT_GAMEPLAY_SIDE_EFFECT:$stage" }
+    }
+    if (@(Get-ChildItem -Path $UserRoot -Directory -Recurse -ErrorAction Stop |
+        Where-Object { $_.Name -ceq 'worlds' }).Count -ne 0) {
+        throw 'IMPORT_OPENED_GAME_WORLD'
+    }
     $T = 'res://tests/research/fabric_bake0'
     RunGodot 'parse-lifecycle' @('--check-only','--script',"$T/fabric_r5_6_2_r1_lifecycle_acceptance.gd")
     1..3 | ForEach-Object { RunGodot "lifecycle-$_" @('--script',"$T/fabric_r5_6_2_r1_lifecycle_acceptance.gd") }
@@ -95,6 +103,11 @@ try {
     RunGodot 'r1-regression' @('--script',"$T/fabric_r5_6_1_canonical_delta_acceptance.gd")
     RunGodot 'bridge4-regression' @('--quit-after','2','--script','res://tests/research/fabric1/fabric_bridge4_canonical_world_acceptance.gd')
     Identity 'identity-after.txt'
+    $ReceiptCount = @(Get-ChildItem -Path $UserRoot -Recurse -File -Filter 'fabric_r562_r1_*.bin').Count
+    if ($ReceiptCount -ne 42) { throw "USERDATA_SANDBOX_RECEIPTS_MISSING:$ReceiptCount" }
+    [IO.File]::WriteAllLines((Join-Path $Out 'isolation.txt'), @(
+        "RECEIPTS_IN_SANDBOX=$ReceiptCount", 'LIVE_WORLD_LOGS=0'
+    ), $Utf8)
     & $PythonBin 'scripts/research/fabric_bake0/collect_r5_6_2_r1_evidence.py' '--root' $Out '--expected-head' $ExpectedHead '--expected-tree' $ExpectedTree '--platform' 'windows'
     if ($LASTEXITCODE -ne 0) { throw 'R562_R1_STRICT_COLLECTOR_FAILED' }
     $files = @(Get-ChildItem $Out -File | Where-Object { $_.Name -ne 'SHA256SUMS' } | Sort-Object Name)
