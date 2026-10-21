@@ -95,7 +95,7 @@ func oracle(session, snapshot: Dictionary, label: String) -> void:
 				inertia[j][k] += term
 	var desc: Dictionary = query.details
 	ck(near(float(desc.total_mass),mass),label+": mass conservation")
-	ck(String(desc.source_checksum)==String(snapshot.checksum) and
+	ck(String(desc.source_checksum)==String(snapshot.checksum) and \
 		int(desc.revision)==int(snapshot.state_revision), label+": exact owner source identity")
 	for j in range(3):
 		ck(near(float(desc.center_of_mass[j]),float(com[j])),label+": COM "+str(j))
