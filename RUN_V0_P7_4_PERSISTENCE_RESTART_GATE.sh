@@ -3,7 +3,7 @@ set -euo pipefail
 
 GODOT_BIN="${1:-}"
 EXPECTED_HEAD="${2:-}"
-EXPECTED_GODOT="4.7.1.stable.double.custom_build.a13da4feb"
+EXPECTED_GODOT="4.8.beta1.double.custom_build.4d10419ca"
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ARTIFACT_ROOT="$ROOT/artifacts/runtime/v0-p7-4-persistence-restart"
 TEST_HOME="$ARTIFACT_ROOT/user-home"
