@@ -5,6 +5,8 @@ extends SceneTree
 const Controller = preload("res://scripts/ecology/workbench/experiment_controller_v1.gd")
 const Workbench = preload("res://scripts/ecology/workbench/ecology_workbench.gd")
 const LabHost = preload("res://scripts/labs/ecology/eco_arch2_polygon_lab.gd")
+const Runtime = preload("res://scripts/research/ecology/v2/ecology_runtime_v1.gd")
+const C = preload("res://scripts/research/ecology/v2/canonical_value_v1.gd")
 
 var checks := 0
 var failed := 0
@@ -54,6 +56,7 @@ func _run() -> void:
 		return
 	_test_direct_controller(m)
 	_test_cancel_restore_and_change(m)
+	_test_compact_cursor_hash_and_immutable_resume(m)
 	_test_real_frame_path(m)
 	_finish()
 
@@ -173,6 +176,83 @@ func _test_cancel_restore_and_change(m: Dictionary) -> void:
 		and not cap_controller.has_pending_staged_tick()
 		and cap_controller.tick() == 0,
 		"small transient cursor cap refuses before any canonical mutation")
+
+func _test_compact_cursor_hash_and_immutable_resume(m: Dictionary) -> void:
+	# R3 nested R2 scratch is sealed independently. A5's compact envelope
+	# binds its checksum, and R2 STILL validates every nested byte before
+	# any global grant can advance. Old A14.5 v1 never uses this checksum.
+	var ctrl = _new_controller(m)
+	var state: Dictionary = ctrl.debug_state().runtime
+	var opts: Dictionary = ctrl._canonical_step_options()
+	_check(bool(opts.get("success", false)),
+		"real LAB exposes accepted canonical step options")
+	if not bool(opts.get("success", false)):
+		return
+	var source_bytes: String = C.encode(state)
+	var begin: Dictionary = Runtime.begin_staged_global_tick(
+		state, opts.options, 4, 1, true)
+	_check(bool(begin.get("success", false)), "R3 compact cursor begin")
+	if not bool(begin.get("success", false)):
+		return
+	var cursor: Dictionary = begin.cursor
+	for i in 64:
+		if String(cursor.lifecycle.phase) == "ALLOCATE":
+			break
+		var prepared: Dictionary = Runtime.resume_staged_global_tick(
+			state, opts.options, cursor, 1, 1)
+		_check(bool(prepared.get("success", false))
+			and not bool(prepared.get("complete", true)),
+			"R3 PREPARE preserves original global source")
+		if not bool(prepared.get("success", false)):
+			return
+		cursor = prepared.cursor
+	_check(String(cursor.lifecycle.phase) == "ALLOCATE",
+		"real A5 reaches complete global ALLOCATE frontier")
+	if String(cursor.lifecycle.phase) != "ALLOCATE":
+		return
+	var started: Dictionary = Runtime.resume_staged_global_tick(
+		state, opts.options, cursor, 1, 1)
+	_check(bool(started.get("success", false))
+		and not bool(started.get("complete", true))
+		and not started.cursor.lifecycle.allocator_cursor.is_empty(),
+		"R2 detached cursor sealed inside R3 A5 envelope")
+	if not bool(started.get("success", false)):
+		return
+	cursor = started.cursor
+	var original: String = C.encode(cursor)
+	# Change R2 scratch WITHOUT changing its own checksum: A5 compact
+	# outer checksum still matches, but the mandatory R2 digest rejects.
+	var nested: Dictionary = cursor.duplicate(true)
+	nested.lifecycle.allocator_cursor.working_field.cells[0].stocks.water_mg += 1
+	var denied: Dictionary = Runtime.resume_staged_global_tick(
+		state, opts.options, nested, 1, 1)
+	_check(not bool(denied.get("success", false)) and
+		String(denied.get("error", "")).contains("A14_6_R2_CURSOR_CHECKSUM"),
+		"tampered nested A4 scratch rejected by full R2 integrity digest")
+	# A new inner checksum changes the digest bound by outer A5. Nothing
+	# can silently rebind a new global grants frontier between frames.
+	var wrong_hash: Dictionary = cursor.duplicate(true)
+	wrong_hash.lifecycle.allocator_cursor.checksum = "0".repeat(64)
+	denied = Runtime.resume_staged_global_tick(
+		state, opts.options, wrong_hash, 1, 1)
+	_check(not bool(denied.get("success", false)) and
+		String(denied.get("error", "")).contains("A5_STAGED_CURSOR_CHECKSUM"),
+		"R3 A5 compact envelope detects replaced R2 nested checksum")
+	# R3 ALLOCATE now shallow-copies only the A5 envelope and transfers
+	# an independently detached R2 result. Neither caller cursor nor
+	# authoritative biological state may be mutated by a resume.
+	var resumed_a: Dictionary = Runtime.resume_staged_global_tick(
+		state, opts.options, cursor, 1, 1)
+	var resumed_b: Dictionary = Runtime.resume_staged_global_tick(
+		state, opts.options, cursor, 1, 1)
+	_check(bool(resumed_a.get("success", false))
+		and bool(resumed_b.get("success", false))
+		and C.encode(resumed_a) == C.encode(resumed_b),
+		"repeat R3 ALLOCATE resume is deterministic and separately owned")
+	_check(C.encode(cursor) == original and C.encode(state) == source_bytes,
+		"shallow R3 envelope never modifies original nested cursor or Runtime")
+	_check(ctrl.tick() == 0 and not ctrl.has_pending_staged_tick(),
+		"raw detached diagnostics never publish into the LAB controller")
 
 func _test_real_frame_path(m: Dictionary) -> void:
 	var old = _new_controller(m)
