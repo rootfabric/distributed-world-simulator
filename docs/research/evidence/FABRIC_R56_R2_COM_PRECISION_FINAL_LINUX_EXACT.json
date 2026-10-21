@@ -1,0 +1,178 @@
+{
+  "identity": {
+    "engine_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+    "head": "91223acb7bf79c37e12fc11d44054ad3e2732455",
+    "tree": "3bb5f214a563ce2bb66b548555cf5f049e6fe932"
+  },
+  "logs": {
+    "bridge4-regression.log": "5f3c3774f4c4083c94bd117524c619753fecebf732f1cb514840525f983dc425",
+    "import.log": "3489009124136cb17c687d2810b1e43acc7d27a2464987309c86e5f124d502e8",
+    "parse-com.log": "7e13b74061328cb38002de86c89b160a49fe4d3df65f763fc0d8c691893803c2",
+    "parse-numeric.log": "7e13b74061328cb38002de86c89b160a49fe4d3df65f763fc0d8c691893803c2",
+    "parse-r1-narrow.log": "7e13b74061328cb38002de86c89b160a49fe4d3df65f763fc0d8c691893803c2",
+    "parse-r1.log": "7e13b74061328cb38002de86c89b160a49fe4d3df65f763fc0d8c691893803c2",
+    "parse-r2.log": "7e13b74061328cb38002de86c89b160a49fe4d3df65f763fc0d8c691893803c2",
+    "parse-scale.log": "7e13b74061328cb38002de86c89b160a49fe4d3df65f763fc0d8c691893803c2",
+    "r1-acceptance.log": "1e8bcc161377d3e2ed53bb6bdd146ef1ff2cc661cc4d93885f8d7350c75ccfed",
+    "r1-narrow-admission.log": "27d46b354ce13012337313b1ff9e0b9f85b917ed535eda61810bf785b0bac5b3",
+    "r2-acceptance-1.log": "d857fe85eb8eb967deb6446df832b1bf4abe9e2a4ff234a52a978e6dc298fede",
+    "r2-acceptance-2.log": "d857fe85eb8eb967deb6446df832b1bf4abe9e2a4ff234a52a978e6dc298fede",
+    "r2-acceptance-3.log": "d857fe85eb8eb967deb6446df832b1bf4abe9e2a4ff234a52a978e6dc298fede",
+    "r2-com.log": "a828b0cca9869b892734711b2942b52cafde1d1a2230ed77d001aa0a5592fe03",
+    "r2-numeric.log": "38f4e9a68a5df836f8acecdfad2c1b5003b7df2529fa5e2931c23273e26b15e1",
+    "r2-scale.log": "f934ab02e62556628672a15435258a1368a103c64e314f1434b6023749c2aad1"
+  },
+  "r1_baseline_hash": "29defdc33cb1192b9e1577517561c6fcc0f5693daa889deebe585ab8816e043b",
+  "r1_narrow": {
+    "checks": 26,
+    "failures": [],
+    "observations": {
+      "accepted_graph_hash": "a72aefe3d025f6368eedca28cef6a46348dcbb2ff61503d1afea5376a433bc4c",
+      "canonical_changed": true,
+      "duck_store_start_accepted": false,
+      "external_actual_action": "SET_BOND_STRENGTH",
+      "forged_pending_error": "R56_PENDING_PROVENANCE_MISMATCH",
+      "forged_pending_observed": false,
+      "original_prepared_action": "BREAK_BOND"
+    }
+  },
+  "r2_acceptance": {
+    "checks": 626,
+    "events": 8,
+    "failures": [],
+    "full_oracle_queries": 32,
+    "max_touched_nodes": 7,
+    "rejected_cases": 44,
+    "scenarios": 2,
+    "schema": "fabric.r56_r2.dynamic_aggregate.acceptance.v1"
+  },
+  "r2_center_precision": {
+    "cases": [
+      {
+        "accepted": true,
+        "axis": 0,
+        "error_code": "",
+        "expected_reject": false,
+        "label": "x-1e9",
+        "offset": 1000000000.0,
+        "separation": 1.19209289550781e-07
+      },
+      {
+        "accepted": false,
+        "axis": 0,
+        "error_code": "R56_R2_RANGE_CENTER_PRECISION_UNSAFE",
+        "expected_reject": true,
+        "label": "x-1e12",
+        "offset": 1000000000000.0,
+        "separation": 0.0001220703125
+      },
+      {
+        "accepted": false,
+        "axis": 0,
+        "error_code": "R56_R2_RANGE_CENTER_PRECISION_UNSAFE",
+        "expected_reject": true,
+        "label": "x-1e13",
+        "offset": 10000000000000.0,
+        "separation": 0.001953125
+      },
+      {
+        "accepted": false,
+        "axis": 0,
+        "error_code": "R56_R2_RANGE_CENTER_PRECISION_UNSAFE",
+        "expected_reject": true,
+        "label": "x-1e14",
+        "offset": 100000000000000.0,
+        "separation": 0.015625
+      },
+      {
+        "accepted": false,
+        "axis": 0,
+        "error_code": "R56_R2_RANGE_CENTER_PRECISION_UNSAFE",
+        "expected_reject": true,
+        "label": "x-1e15",
+        "offset": 1000000000000000.0,
+        "separation": 0.125
+      },
+      {
+        "accepted": true,
+        "axis": 0,
+        "error_code": "",
+        "expected_reject": false,
+        "label": "x-safe-1e12",
+        "offset": 1000000000000.0,
+        "separation": 1.0
+      },
+      {
+        "accepted": false,
+        "axis": 1,
+        "error_code": "R56_R2_RANGE_CENTER_PRECISION_UNSAFE",
+        "expected_reject": true,
+        "label": "y-negative-1e13",
+        "offset": -10000000000000.0,
+        "separation": 0.001953125
+      },
+      {
+        "accepted": false,
+        "axis": 2,
+        "error_code": "R56_R2_RANGE_CENTER_PRECISION_UNSAFE",
+        "expected_reject": true,
+        "label": "z-positive-1e13",
+        "offset": 10000000000000.0,
+        "separation": 0.001953125
+      }
+    ],
+    "center_budget_m": 1e-06,
+    "checks": 52,
+    "failures": [],
+    "multi_axis_rejections": 2,
+    "safe_centers": 2,
+    "schema": "fabric.r56_r2.center_precision.v1",
+    "state_unchanged": true,
+    "unsafe_centers_rejected": 6
+  },
+  "r2_hash": "7fb3eb72caec05dd5341399c8f032f90165a4459610ab3058d798a97fa98dd43",
+  "r2_numeric": {
+    "checks": 54,
+    "failures": [],
+    "schema": "fabric.r56_r2.numeric_conditioning.v1",
+    "sparse_update_ok": true,
+    "stable_offsets": [
+      1.0,
+      100000.0,
+      10000000.0,
+      100000000.0,
+      1000000000.0
+    ],
+    "unsafe_ranges_rejected": 1
+  },
+  "r2_scale": {
+    "cases": [
+      {
+        "initial_parts_scanned": 5000,
+        "max_nodes_per_part_update": 12,
+        "n": 5000,
+        "sparse_updated_parts": 3,
+        "total_fenwick_nodes_touched": 22
+      },
+      {
+        "initial_parts_scanned": 20000,
+        "max_nodes_per_part_update": 14,
+        "n": 20000,
+        "sparse_updated_parts": 3,
+        "total_fenwick_nodes_touched": 26
+      },
+      {
+        "initial_parts_scanned": 100000,
+        "max_nodes_per_part_update": 16,
+        "n": 100000,
+        "sparse_updated_parts": 3,
+        "total_fenwick_nodes_touched": 29
+      }
+    ],
+    "checks": 255,
+    "failures": [],
+    "schema": "fabric.r56_r2.dynamic_index_scale.v1"
+  },
+  "schema": "fabric.r56_r2.dynamic_aggregates.exact_evidence.v3",
+  "verdict": "IMPLEMENTER_EXACT_PASS"
+}
