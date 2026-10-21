@@ -790,9 +790,12 @@ static func staged_resume(cursor: Dictionary, source_field: Dictionary,
 	# A shallow envelope copy keeps the supplied cursor and every nested
 	# array immutable. Deep-cloning the full source/partial outcomes solely
 	# for the checksum doubled resident memory and resume latency.
-	var unsigned: Dictionary = cursor.duplicate(false)
-	unsigned.checksum = ""
-	var digest := C.digest(unsigned)
+	# The experimental R3 nested A4 scratch has its OWN full checksum,
+	# checked by StagedA4R2.resume before every speculative allocation
+	# step. Bind that checksum in the A5 envelope instead of digesting
+	# megabytes of already-sealed inner data for a second time. Accepted
+	# A14.5 v1 continues hashing its complete cursor exactly as before.
+	var digest: String = _staged_cursor_checksum(cursor)
 	if digest.is_empty() or digest != String(cursor.checksum):
 		return _fail("A5_STAGED_CURSOR_CHECKSUM")
 	var current_source := C.digest({"field": source_field, "population": source_population})
@@ -805,7 +808,12 @@ static func staged_resume(cursor: Dictionary, source_field: Dictionary,
 		return _fail("A5_STAGED_PHASE")
 	if r3_mode and phase != "ALLOCATE" and not cursor.allocator_cursor.is_empty():
 		return _fail("A5_STAGED_R3_ALLOCATOR_PHASE")
-	var next: Dictionary = cursor.duplicate(true)
+	# During R3 ALLOCATE only top-level phase/index/allocated results and
+	# nested R2 cursor ownership are replaced. Neither the source field,
+	# PREPARE samples, entries, demands nor old R2 cursor is modified.
+	# Avoid full deep-copying ALL biological state for each R2 item quota.
+	# PREPARE and ADVANCE still deep-copy their mutable outcome arrays.
+	var next: Dictionary = cursor.duplicate(false) if r3_mode and phase == "ALLOCATE" else cursor.duplicate(true)
 	var units: Array = next.units
 	var entries: Array = next.entries
 	var index: int = int(next.index)
@@ -917,15 +925,38 @@ static func staged_resume(cursor: Dictionary, source_field: Dictionary,
 			if phase != "ALLOCATE" else 0}
 
 static func _seal_staged_cursor(cursor: Dictionary) -> Dictionary:
-	# Called ONLY for an owned cursor from staged_begin() or the detached
-	# staged_resume() work copy. No source/host-provided cursor is mutated.
-	# Removing this redundant full deep copy does not change seal bytes.
+	# Called ONLY for the owned cursor from staged_begin() or a detached
+	# top-level/per-phase work copy. Never change a caller-provided cursor.
 	cursor["checksum"] = ""
-	var digest := C.digest(cursor)
+	var digest: String = _staged_cursor_checksum(cursor)
 	if digest.is_empty():
 		return {}
 	cursor["checksum"] = digest
 	return cursor
+
+static func _staged_cursor_checksum(cursor: Dictionary) -> String:
+	# The A14.5 accepted schema MUST keep its historical whole-envelope
+	# digest. Only the versioned nonpersistent R3 schema may use a compact
+	# binding to the independently sealed A4 R2 nested cursor.
+	var unsigned: Dictionary = cursor.duplicate(false)
+	unsigned["checksum"] = ""
+	if String(cursor.get("schema", "")) == STAGED_SCHEMA_R3:
+		var inner: Variant = cursor.get("allocator_cursor", null)
+		if not inner is Dictionary:
+			return ""
+		if not inner.is_empty():
+			if not C.keys(inner, StagedA4R2.KEYS) \
+					or String(inner.get("schema", "")) != StagedA4R2.SCHEMA:
+				return ""
+			var inner_hash: String = String(inner.get("checksum", ""))
+			if inner_hash.length() != 64:
+				return ""
+			# The checksum covers the original full R2 cursor. Its
+			# contents are verified by R2.resume before any modification.
+			unsigned["allocator_cursor"] = {
+				"schema": StagedA4R2.SCHEMA, "checksum": inner_hash,
+			}
+	return C.digest(unsigned)
 
 ## Canonical propagule materialization (A5-owned admission).
 ## Without a mutation receipt the v1 parent-transfer witness applies (child
