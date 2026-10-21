@@ -616,13 +616,14 @@ func _r31bp1_export_chunk(port, component: String) -> Dictionary:
 			return {
 				"value": cached.duplicate(true), "cache_hit": true,
 				"bypass": "", "chunk_bytes": int(owned.get("bytes", -1)),
+				"source_fence": fence.duplicate(true),
 			}
 	_r31bp1_chunk_misses += 1
 	var source: Dictionary = port.export_durable_state()
 	if source.is_empty():
 		return {"value": {}, "cache_hit": false, "bypass": "EMPTY_COMPONENT"}
-	# A changed source during export is never stored. Re-export by the
-	# unchanged legacy path, not from two different authority revisions.
+	# A changed source during export is never stored and fails CLOSED.
+	# Never read live state twice across two authority revisions.
 	if port.get_r31bp1_durable_source_fence() != fence:
 		if component == "item_graph":
 			_r31bp1_item_chunk.clear()
@@ -630,7 +631,7 @@ func _r31bp1_export_chunk(port, component: String) -> Dictionary:
 			_r31bp1_resource_chunk.clear()
 		_r31bp1_bypasses += 1
 		return {
-			"value": port.export_durable_state(), "cache_hit": false,
+			"value": {}, "cache_hit": false,
 			"bypass": "FENCE_CHANGED", "chunk_bytes": -1,
 		}
 	var size_bytes: int = JSON.stringify(source).to_utf8_buffer().size()
@@ -643,6 +644,7 @@ func _r31bp1_export_chunk(port, component: String) -> Dictionary:
 		return {
 			"value": source, "cache_hit": false,
 			"bypass": "CHUNK_MEMORY_BUDGET", "chunk_bytes": size_bytes,
+			"source_fence": fence.duplicate(true),
 		}
 	var private_copy: Dictionary = {
 		"fence": fence.duplicate(true),
@@ -656,6 +658,7 @@ func _r31bp1_export_chunk(port, component: String) -> Dictionary:
 	return {
 		"value": source, "cache_hit": false, "bypass": "",
 		"chunk_bytes": size_bytes,
+		"source_fence": fence.duplicate(true),
 	}
 
 
@@ -743,6 +746,10 @@ func export_durable_state_r31bp1_chunks() -> Dictionary:
 		_tick != fenced_tick or _revision != fenced_revision
 		or _transfer_serial != fenced_serial
 		or not _seam_transfers_quiescent()
+		or _canonical_multiplayer_items.get_r31bp1_durable_source_fence() !=
+			Dictionary(item_chunk.get("source_fence", {}))
+		or _resource_mining.get_r31bp1_durable_source_fence() !=
+			Dictionary(resource_chunk.get("source_fence", {}))
 	):
 		return {"value": {}, "stages": {"error": "R31BP1_AUTHORITY_FENCE_CHANGED"}}
 	var stages := {
