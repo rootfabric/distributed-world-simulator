@@ -267,6 +267,10 @@ func cancel_staged_tick() -> Dictionary:
 	var result: Dictionary = _staged_session.cancel()
 	return {"success": true, "cancelled": bool(result.cancelled), "tick": tick()}
 
+func reap_cancelled_staged_worker() -> bool:
+	# Pump only completed ABANDONED pool tasks, never block on CPU work.
+	return _staged_session.reap_cancelled_off_main()
+
 func has_pending_staged_tick() -> bool:
 	return _staged_session.has_pending()
 

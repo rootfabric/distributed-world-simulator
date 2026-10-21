@@ -386,6 +386,11 @@ func _set_branch_status(text: String) -> void:
 # --- Tick-driven update with wall-clock budget ------------------------------
 
 func _process(delta: float) -> void:
+	# Even after PAUSE or opt-out, continue nonblocking cleanup of an
+	# abandoned CPU worker so its pool task is eventually joined exactly
+	# once. This operation NEVER starts or commits ecology.
+	if controller != null and controller.has_method("reap_cancelled_staged_worker"):
+		controller.reap_cancelled_staged_worker()
 	if not running or controller == null:
 		return
 	_wall_elapsed += delta

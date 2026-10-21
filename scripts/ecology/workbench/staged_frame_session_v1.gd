@@ -62,6 +62,9 @@ func cancel() -> Dictionary:
 		_cancelled += 1
 	return {"success": true, "cancelled": was_pending}
 
+func reap_cancelled_off_main() -> bool:
+	return _off_main.reap_discarded()
+
 func reset_telemetry() -> void:
 	cancel()
 	_calls = 0
