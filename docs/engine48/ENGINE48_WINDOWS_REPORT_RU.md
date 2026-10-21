@@ -1,7 +1,7 @@
 # ENGINE48 WINDOWS R1 — отчёт о сборке, тестировании и публикации (Godot 4.8 beta 1 double)
 
 Дата: 2026-10-21 (Asia/Vladivostok). Роль: ENGINE48-B1-WIN implementer/executor.
-Продукт: distributed-world-simulator, ветка `feature/engine48-windows-r1` → Draft PR в `feature/engine48-beta1-double-migration-r1` (PR #794 контекст).
+Продукт: distributed-world-simulator, ветка `feature/engine48-windows-r1` → Draft PR #806 в `feature/engine48-beta1-double-migration-r1` (контекст миграции: PR #794).
 
 ## 1. Идентичность
 
