@@ -116,6 +116,8 @@ var _r3c4r30_stage_attribution_enabled := false
 # Replay-only immutable derived cache, NOT an authority gameplay snapshot.
 # R3.1a opt-in does not change command paths, ACK gate or disk format.
 var _r3c4r31_replay_projection_enabled := false
+# R3C.4 R3.1b P0: per-domain durable export attribution only (opt-in).
+var _r3c4r31b_durable_attribution_enabled := false
 var _r3c4_deferral_started_ms := 0
 var _r3c4_deferred_frames := 0
 var _r3c4_capture_slots := 0
@@ -290,6 +292,17 @@ func setup(config: Dictionary) -> Dictionary:
 	# opt-in modes mutually exclusive to prevent false source attribution.
 	if _r3c4r31_replay_projection_enabled and _r3c4r30_stage_attribution_enabled:
 		return _failure("R3C4_R31_R30_ATTRIBUTION_MODE_CONFLICT")
+	var r31b_mode := OS.get_environment("DWS_NET_R3C4_R31B_DURABLE_ATTRIBUTION")
+	if not r31b_mode.is_empty() and r31b_mode not in ["0", "1"]:
+		return _failure("R3C4_R31B_INVALID_MODE")
+	_r3c4r31b_durable_attribution_enabled = (
+		bool(config.get("r3c4r31b_durable_attribution_canary", false))
+		or r31b_mode == "1"
+	)
+	if _r3c4r31b_durable_attribution_enabled and not _r3c4r31_replay_projection_enabled:
+		return _failure("R3C4_R31B_REQUIRES_R31_REPLAY_PROJECTION")
+	if _r3c4r31b_durable_attribution_enabled and not bool(config.get("product_seam_enabled", false)):
+		return _failure("R3C4_R31B_REQUIRES_PRODUCT_SEAM")
 	_p1b_item_async_enabled = (
 		bool(config.get("async_durable_item_canary", false))
 		or OS.get_environment("DWS_NET_P1B_ITEM_ASYNC") == "1"
@@ -2836,6 +2849,7 @@ func _persistence_report() -> Dictionary:
 		"r3c4_periodic_frame_pacing_enabled": _r3c4_periodic_frame_pacing_enabled,
 		"r3c4r2_worker_envelope_enabled": _r3c4r2_worker_envelope_enabled,
 		"r3c4r31_replay_projection_enabled": _r3c4r31_replay_projection_enabled,
+		"r3c4r31b_durable_attribution_enabled": _r3c4r31b_durable_attribution_enabled,
 		"r3c4_deferred_frames": _r3c4_deferred_frames,
 		"r3c4_capture_slots": _r3c4_capture_slots,
 		"r3c4_forced_captures": _r3c4_forced_captures,
@@ -3056,10 +3070,18 @@ func _submit_async_movement_checkpoint() -> void:
 	var after_quiesce := Time.get_ticks_usec()
 	var authority: Dictionary = {}
 	var frozen_gameplay: Dictionary = {}
+	var r31b_durable_stages: Dictionary = {}
 	if _r3c4r2_worker_envelope_enabled:
 		# Exactly one immutable value projection from the quiescent server
 		# state; the checksum-heavy EntitySnapshot envelope is made on worker.
-		frozen_gameplay = _recovery_authority.capture_frozen_gameplay_source_for_worker()
+		if _r3c4r31b_durable_attribution_enabled:
+			var profiled_source: Dictionary = (
+				_recovery_authority.capture_frozen_gameplay_source_r31b_profiled()
+			)
+			frozen_gameplay = Dictionary(profiled_source.get("frozen_gameplay", {}))
+			r31b_durable_stages = Dictionary(profiled_source.get("stages", {}))
+		else:
+			frozen_gameplay = _recovery_authority.capture_frozen_gameplay_source_for_worker()
 	else:
 		authority = _recovery_authority.export_recovery_state()
 	var after_authority := Time.get_ticks_usec()
@@ -3111,6 +3133,8 @@ func _submit_async_movement_checkpoint() -> void:
 			"handoff_ms": float(Time.get_ticks_usec() - after_replay) / 1000.0,
 			"ledger_count": Dictionary(gameplay.get("service_operation_ledger", {})).size(),
 			"outbox_count": Array(replay.get("committed_outbox", [])).size()}
+		if _r3c4r31b_durable_attribution_enabled:
+			capture_event["r31b_durable_stages"] = r31b_durable_stages.duplicate(true)
 		if _r3c4r31_replay_projection_enabled:
 			capture_event["r31_cache_hit"] = bool(
 				replay_projection_result.get("cache_hit", false))

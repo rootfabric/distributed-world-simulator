@@ -77,6 +77,23 @@ func capture_frozen_gameplay_source_for_worker() -> Dictionary:
 	return {"durable_state": durable, "logical_session_id": _logical_session_id}
 
 
+# R3C.4 R3.1b P0: opt-in per-domain timers; the source is still captured in
+# ONE quiescent authoritative frame and the same R2 writer clones it.
+func capture_frozen_gameplay_source_r31b_profiled() -> Dictionary:
+	if _service == null or not _service.has_method("export_durable_state_r31b_profiled"):
+		return {}
+	var observed: Dictionary = _service.export_durable_state_r31b_profiled()
+	var durable: Dictionary = Dictionary(observed.get("value", {}))
+	if durable.is_empty():
+		return {}
+	return {
+		"frozen_gameplay": {
+			"durable_state": durable, "logical_session_id": _logical_session_id,
+		},
+		"stages": Dictionary(observed.get("stages", {})),
+	}
+
+
 # Pure worker-side version of the accepted export_recovery_state envelope.
 # Inputs MUST be deep-copied by AsyncCheckpointWriter before the semaphore.
 # On invalid DTO, fail closed; never write a partially wrapped checkpoint.
