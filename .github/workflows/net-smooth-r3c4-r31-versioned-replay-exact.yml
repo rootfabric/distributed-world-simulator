@@ -31,6 +31,8 @@ jobs:
           set -euo pipefail
           python -m py_compile tools/net_smooth1/analyze_r3c4_r30_capture_stages.py
           python -m unittest discover -s tests/tools -p 'test_net_smooth1_r3c4_r30_capture_stages.py' -v
+          python -m py_compile tools/net_smooth1/analyze_r3c4_r31_cache.py
+          python -m unittest discover -s tests/tools -p 'test_net_smooth1_r3c4_r31_cache_analysis.py' -v
           python -m unittest discover -s tests/tools -p 'test_net_smooth1_r3c4_r31_versioned_replay_source.py' -v
           python -m unittest discover -s tests/tools -p 'test_net_smooth1_r3c4_r30_source_attribution.py' -v
           python -m unittest discover -s tests/tools -p 'test_net_smooth1_r3c4_r2_worker_envelope_source.py' -v
