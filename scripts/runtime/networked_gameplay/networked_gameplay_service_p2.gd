@@ -53,6 +53,9 @@ var _mount_interactions
 var _playable_backend
 var _operation_ledger: Dictionary = {}
 var _replay_projection_generation := 0
+# R31b P2.0: owner-local, synchronous validator stage attribution.
+# Blank in all default/M6 command paths; not a validated shadow state.
+var _r31bp20_validation_profile_sink: Dictionary = {}
 var _canonical_multiplayer_items
 var _playable_sandbox := false
 var _fixed_tick_authority := false
@@ -580,7 +583,39 @@ func restore_durable_state(value: Dictionary) -> Dictionary:
 	})
 
 
+# Return exact normal validation result PLUS timings; no skipped checks,
+# changed error codes, or second validation invocation.
+func validate_durable_state_p20_profiled(value: Dictionary) -> Dictionary:
+	if not _r31bp20_validation_profile_sink.is_empty():
+		return {
+			"validation": _failure("R31BP20_REENTRANT_VALIDATION_FORBIDDEN"),
+			"stages": {},
+		}
+	_r31bp20_validation_profile_sink = {"stages": {}}
+	var started_us: int = Time.get_ticks_usec()
+	# Dynamically dispatches to P3 (resource layer) and all inherited
+	# validators of the actual User1ProductSeamService instance.
+	var result: Dictionary = validate_durable_state(value)
+	var stages: Dictionary = Dictionary(
+		_r31bp20_validation_profile_sink.get("stages", {})).duplicate(true)
+	_r31bp20_validation_profile_sink.clear()
+	stages["total_ms"] = float(Time.get_ticks_usec() - started_us) / 1000.0
+	return {"validation": result, "stages": stages}
+
+
+func _r31bp20_stage_start_us() -> int:
+	return Time.get_ticks_usec() if not _r31bp20_validation_profile_sink.is_empty() else 0
+
+
+func _r31bp20_stage_end(name: String, started_us: int) -> void:
+	if started_us <= 0 or _r31bp20_validation_profile_sink.is_empty():
+		return
+	var stages: Dictionary = _r31bp20_validation_profile_sink["stages"]
+	stages[name] = float(Time.get_ticks_usec() - started_us) / 1000.0
+
+
 func validate_durable_state(value: Dictionary) -> Dictionary:
+	var r31bp20_started_us: int = _r31bp20_stage_start_us()
 	if String(value.get("schema", "")) != DURABLE_SCHEMA:
 		return _failure("INVALID_GAMEPLAY_DURABLE_SCHEMA")
 	var required := [
@@ -604,20 +639,30 @@ func validate_durable_state(value: Dictionary) -> Dictionary:
 	for section in ["players", "ownership", "shared_item", "canonical_item_graph"]:
 		if typeof(value.get(section)) != TYPE_DICTIONARY:
 			return _failure("INVALID_GAMEPLAY_DURABLE_SECTION", {"section": section})
+	_r31bp20_stage_end("envelope_ms", r31bp20_started_us)
+	r31bp20_started_us = _r31bp20_stage_start_us()
 	if typeof(value.get("checksum")) != TYPE_STRING or String(value.get("checksum", "")) != _state_checksum(value):
 		return _failure("GAMEPLAY_DURABLE_CHECKSUM_MISMATCH")
+	_r31bp20_stage_end("outer_checksum_validation_ms", r31bp20_started_us)
+	r31bp20_started_us = _r31bp20_stage_start_us()
 	var players_validator = PlayerRegistry.new()
 	var players_result: Dictionary = players_validator.validate_durable_state(Dictionary(value.get("players", {})))
+	_r31bp20_stage_end("player_registry_ms", r31bp20_started_us)
 	if not bool(players_result.get("success", false)):
 		return _failure("INVALID_GAMEPLAY_PLAYER_STATE", {"cause": players_result})
+	r31bp20_started_us = _r31bp20_stage_start_us()
 	var ownership_validator = OwnershipService.new()
 	var ownership_result: Dictionary = ownership_validator.validate_durable_state(Dictionary(value.get("ownership", {})))
+	_r31bp20_stage_end("ownership_ms", r31bp20_started_us)
 	if not bool(ownership_result.get("success", false)):
 		return _failure("INVALID_GAMEPLAY_OWNERSHIP_STATE", {"cause": ownership_result})
+	r31bp20_started_us = _r31bp20_stage_start_us()
 	var shared_validator = SharedItemService.new()
 	var shared_result: Dictionary = shared_validator.validate_durable_state(Dictionary(value.get("shared_item", {})))
+	_r31bp20_stage_end("shared_item_ms", r31bp20_started_us)
 	if not bool(shared_result.get("success", false)):
 		return _failure("INVALID_GAMEPLAY_SHARED_ITEM_STATE", {"cause": shared_result})
+	r31bp20_started_us = _r31bp20_stage_start_us()
 	var item_validator = CanonicalMultiplayerItemGraph.new()
 	var durable_item_state: Dictionary = Dictionary(value.get("canonical_item_graph", {}))
 	var durable_item_snapshot: Dictionary = Dictionary(durable_item_state.get("snapshot", {}))
@@ -626,11 +671,15 @@ func validate_durable_state(value: Dictionary) -> Dictionary:
 		int(value.get("authority_epoch", 0)),
 		{"playable_sandbox": bool(durable_item_snapshot.get("playable_sandbox", false))}
 	)
+	_r31bp20_stage_end("item_validator_setup_ms", r31bp20_started_us)
 	if not bool(validator_setup.get("success", false)):
 		return _failure("INVALID_GAMEPLAY_ITEM_GRAPH_VALIDATOR_SETUP", {"cause": validator_setup})
+	r31bp20_started_us = _r31bp20_stage_start_us()
 	var item_result: Dictionary = item_validator.validate_durable_state(durable_item_state)
+	_r31bp20_stage_end("item_validator_validate_ms", r31bp20_started_us)
 	if not bool(item_result.get("success", false)):
 		return _failure("INVALID_GAMEPLAY_ITEM_GRAPH_STATE", {"cause": item_result})
+	r31bp20_started_us = _r31bp20_stage_start_us()
 	var ownership_state: Dictionary = value.get("ownership", {})
 	var item_state: Dictionary = value.get("canonical_item_graph", {})
 	var item_snapshot: Dictionary = item_state.get("snapshot", {})
@@ -647,7 +696,10 @@ func validate_durable_state(value: Dictionary) -> Dictionary:
 	for inventory_player_id_value in Dictionary(item_snapshot.get("inventories", {})).keys():
 		if not player_ids.has(String(inventory_player_id_value)):
 			return _failure("ITEM_GRAPH_INVENTORY_PLAYER_MISSING", {"logical_player_id": String(inventory_player_id_value)})
+	_r31bp20_stage_end("cross_domain_ms", r31bp20_started_us)
+	r31bp20_started_us = _r31bp20_stage_start_us()
 	var safe := Utils.canonicalize(value, "$.networked_gameplay_durable_state")
+	_r31bp20_stage_end("json_safety_ms", r31bp20_started_us)
 	if not bool(safe.get("success", false)):
 		return _failure("GAMEPLAY_DURABLE_STATE_NOT_JSON_SAFE", {"message": String(safe.get("error", ""))})
 	return _success()
