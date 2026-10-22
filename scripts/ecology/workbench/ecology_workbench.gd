@@ -518,6 +518,7 @@ func configure_staged_live(enabled: bool, soft_budget_us: int = 30000,
 			or cursor_cap_bytes < 1024 or cursor_cap_bytes > 16777216 \
 			or allocator_items_per_call < 1 or allocator_items_per_call > 4096:
 		return false
+	var had_deferred_ui: bool = _r323_pending
 	_cancel_staged_pending()
 	staged_live_enabled = enabled
 	staged_wall_budget_us = soft_budget_us
@@ -530,6 +531,10 @@ func configure_staged_live(enabled: bool, soft_budget_us: int = 30000,
 	staged_r3_off_main_enabled = enabled and use_r3_allocator and use_off_main_r3
 	staged_r323_presentation_enabled = enabled and use_r323_presentation \
 		and use_r3_allocator and use_off_main_r3
+	if had_deferred_ui:
+		# Explicit human mode change discards unfinished geometry and
+		# redraws the currently admitted canonical snapshot exactly.
+		_refresh_from_controller(false)
 	return true
 
 func _cancel_staged_pending() -> void:
@@ -704,6 +709,12 @@ func _r323_pump_presentation() -> void:
 			or not controller.r323_presentation_is_current(_r323_tick, _r323_hash):
 		_r323_last_error = "R323_PRESENTATION_STALE"
 		_r323_cancel_presentation()
+		# A real restore or owner write may replace the canonical frontier
+		# during a partially-drawn frame. The OLD UI queue is discarded,
+		# then the historical exact public snapshot restores CURRENT visuals.
+		# This exceptional manual edit path may be costly, but never shows
+		# stale biology as if it belonged to the new canonical tick.
+		_refresh_from_controller(false)
 		return
 	var started_us: int = Time.get_ticks_usec()
 	var operations := 0

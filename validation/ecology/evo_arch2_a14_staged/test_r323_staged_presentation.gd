@@ -110,6 +110,8 @@ func _run() -> void:
 	for n in sizes:
 		print("ECO_A14_6_R323_PRESENTATION_BEGIN population=%d" % n)
 		await _profile(n, blueprint)
+		if n == 4:
+			await _stale_projection_restore_falsifier()
 	_finish()
 
 func _profile(n: int, blueprint: Dictionary) -> void:
@@ -243,6 +245,66 @@ func _profile(n: int, blueprint: Dictionary) -> void:
 		"throughput_improvement_claim": false,
 		"fixture_injected_test_only": true,
 	}))
+	bench._status_bar.free()
+	bench.free()
+
+## Independent read-only UI queue lifecycle: an externally anchored restore
+## can supersede a fully committed tick BEFORE its meshes were drawn.
+## Only the restored current snapshot may be signaled after the rollback.
+func _stale_projection_restore_falsifier() -> void:
+	var host = LabHost.new()
+	host._build_manifest()
+	var m: Dictionary = host.manifest.duplicate(true)
+	host.free()
+	var ctrl = Controller.new()
+	var initialized: Dictionary = ctrl.initialize(m, {})
+	_check(bool(initialized.get("success", false)), "stale test LAB initialized")
+	if not bool(initialized.get("success", false)):
+		return
+	var anchored: Dictionary = ctrl.serialize_state()
+	var bench = Workbench.new()
+	bench.controller = ctrl
+	bench._status_bar = Label.new()
+	bench.running = true
+	bench.ticks_per_second = 1.0
+	bench.pending_target = {"kind": "tick", "value": 1}
+	var deliveries: Array = []
+	bench.snapshot_updated.connect(func(snapshot: Dictionary) -> void:
+		deliveries.append(snapshot)
+	)
+	_check(bench.configure_staged_live(true, 1000000000, 1, 1,
+		8, 8388608, true, 4096, true, true),
+		"stale test explicit R3.2.3 LAB config")
+	for i in 900:
+		bench._process(1.0 if i == 0 else 0.0)
+		if int(ctrl.tick()) == 1:
+			break
+		await create_timer(0.02).timeout
+	_check(ctrl.tick() == 1 and bool(bench.get_r323_ui_telemetry().pending) \
+		and deliveries.is_empty(),
+		"committed tick 1 is still pending visual projection")
+	if ctrl.tick() != 1:
+		bench._status_bar.free()
+		bench.free()
+		return
+	var restored: Dictionary = ctrl.load_state(
+		String(anchored.state_text), String(anchored.manifest_hash),
+		String(anchored.state_checksum))
+	_check(bool(restored.get("success", false)) and ctrl.tick() == 0,
+		"anchored restore supersedes pending visual state")
+	bench._process(0.0)
+	var telemetry: Dictionary = bench.get_r323_ui_telemetry()
+	_check(not bool(telemetry.pending) and int(telemetry.abandoned) == 1 \
+		and String(telemetry.last_error) == "R323_PRESENTATION_STALE",
+		"stale partial presentation cancelled on generation drift")
+	_check(deliveries.size() == 1 and int(deliveries[0].tick) == 0 \
+		and String(deliveries[0].canonical_state_hash) == \
+			String(ctrl._runtime.integrity_hash),
+		"stale tick 1 never signaled; exact RESTORED tick 0 signaled")
+	_check(bench.organism_views.size() == ctrl._runtime.population.size(),
+		"stale visuals restored to current population")
+	_check(String(ctrl.serialize_state().state_text) == String(anchored.state_text),
+		"visual fallback cannot alter canonical checkpoint")
 	bench._status_bar.free()
 	bench.free()
 
