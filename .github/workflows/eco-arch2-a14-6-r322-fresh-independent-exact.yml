@@ -1,0 +1,92 @@
+name: ECO ARCH2 A14.6 R3.2.2 Fresh Independent Exact
+
+on:
+  push:
+    branches:
+      - verify/eco-arch2-a14-6-r322-ee9daa93-fresh-r1
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  portable:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Portable independently authored falsifiers
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fL --retry 3 -o /tmp/godot-r322-ver.zip https://github.com/godotengine/godot/releases/download/4.7.1-stable/Godot_v4.7.1-stable_linux.x86_64.zip
+          mkdir -p /tmp/godot-r322-ver
+          unzip -q /tmp/godot-r322-ver.zip -d /tmp/godot-r322-ver
+          godot=/tmp/godot-r322-ver/Godot_v4.7.1-stable_linux.x86_64
+          chmod +x "$godot"
+          "$godot" --headless --editor --path . --import > r322-verify-import.log 2>&1 || { cat r322-verify-import.log; exit 1; }
+          "$godot" --headless --path . --script res://validation/ecology/evo_arch2_a14_staged/test_r322_fresh_independent_lease.gd > r322-verify-portable.log 2>&1 || { cat r322-verify-portable.log; exit 1; }
+          cat r322-verify-portable.log
+          grep -Fx 'ECO_A14_6_R322_FRESH_VERIFIER PASS' r322-verify-portable.log
+          if grep -Ei 'SCRIPT ERROR|Parse Error|Failed to load script|Error compiling' r322-verify-portable.log; then exit 1; fi
+          git diff --exit-code && git diff --cached --exit-code
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: r322-independent-portable
+          path: r322-verify-*.log
+          if-no-files-found: ignore
+
+  double:
+    name: independent ${{ matrix.platform }} Double
+    runs-on: [self-hosted, '${{ matrix.platform }}', X64]
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [Linux, Windows]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Linux verified Godot double
+        if: matrix.platform == 'Linux'
+        shell: bash
+        env:
+          CONFIGURED_GODOT: ${{ vars.DWS_GODOT_DOUBLE_LINUX_BIN }}
+        run: |
+          set -euo pipefail
+          godot="${CONFIGURED_GODOT:-$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64}"
+          test "$(sha256sum "$godot" | cut -d' ' -f1)" = "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7"
+          "$godot" --headless --editor --path . --import > r322-verify-linux-import.log 2>&1 || { cat r322-verify-linux-import.log; exit 1; }
+          "$godot" --headless --path . --script res://validation/ecology/evo_arch2_a14_staged/test_r322_fresh_independent_lease.gd > r322-verify-linux.log 2>&1 || { cat r322-verify-linux.log; exit 1; }
+          cat r322-verify-linux.log
+          grep -Fx 'ECO_A14_6_R322_FRESH_VERIFIER PASS' r322-verify-linux.log
+          git diff --exit-code && git diff --cached --exit-code
+      - name: Windows verified Godot double
+        if: matrix.platform == 'Windows'
+        shell: pwsh
+        env:
+          CONFIGURED_GODOT: ${{ vars.DWS_GODOT_DOUBLE_BIN }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $godot = $env:CONFIGURED_GODOT
+          if ([string]::IsNullOrWhiteSpace($godot)) { $godot = 'C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe' }
+          if ((Get-FileHash $godot -Algorithm SHA256).Hash.ToLowerInvariant() -ne '3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5') { throw 'GODOT_SHA256_MISMATCH' }
+          & $godot --headless --editor --path . --import *> r322-verify-win-import.log
+          if ($LASTEXITCODE -ne 0) { throw 'INDEPENDENT_IMPORT_FAIL' }
+          & $godot --headless --path . --script res://validation/ecology/evo_arch2_a14_staged/test_r322_fresh_independent_lease.gd *> r322-verify-win.log
+          if ($LASTEXITCODE -ne 0) { Get-Content r322-verify-win.log; throw 'INDEPENDENT_TEST_FAIL' }
+          if (-not (Select-String -Path r322-verify-win.log -Pattern '^ECO_A14_6_R322_FRESH_VERIFIER PASS$' -Quiet)) { throw 'INDEPENDENT_MARKER_MISSING' }
+          git diff --exit-code
+          if ($LASTEXITCODE -ne 0) { throw 'DIRTY_WORKTREE' }
+          git diff --cached --exit-code
+          if ($LASTEXITCODE -ne 0) { throw 'DIRTY_INDEX' }
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: r322-independent-${{ matrix.platform }}
+          path: r322-verify-*.log
+          if-no-files-found: ignore
