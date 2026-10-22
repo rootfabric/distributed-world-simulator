@@ -1,7 +1,7 @@
 # FABRIC R5.6.2 R1.3 — GENESIS EVENT BUDGET (narrow repair)
 
 **Status:** narrow implementer repair candidate; not merge / not accepted.
-**Risk:** HIGH — protocol/recovery admission. **Parent:** frozen R5.6.2 R1.2 `c9966b4f51dd623ddc6ec335b67452ccf96f7090`, TREE `5a8db3a3ba25f1ecd86636b8461af7e8bf68cce3`. 
+**Risk:** HIGH — protocol/recovery admission. **Parent:** frozen R5.6.2 R1.2 `c9966b4f51dd623ddc6ec335b67452ccf96f7090`, TREE `5a8db3a3ba25f1ecd86636b8461af7e8bf68cce3`.
 **Delivery:** separate branch `repair/fabric-r562-r13-genesis-admission-r1` and Draft PR, based on frozen R1.2; `main`, R5.6.1 R2 PR #784 and R1.2 branch must stay unchanged.
 
 ## Fresh reviewer / RED
