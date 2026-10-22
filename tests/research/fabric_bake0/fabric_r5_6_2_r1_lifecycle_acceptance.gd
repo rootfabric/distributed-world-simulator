@@ -255,6 +255,34 @@ func negatives(env: Dictionary) -> void:
 	neg(Life.new().recover(env.store,String(f.source.construct_id),f.matter,
 		wrong_authority,journal),"R562_OWNER_CONTEXT_DRIFT",f.name+": authority mismatch")
 
+## Fresh adversarial boundary: an admitted genesis MUST cold-recover.
+func genesis_budget(f: Dictionary) -> void:
+	var store = Store.new()
+	ck(store.apply_mutation(Mutation.create(Mutation.OP_CREATE,
+		String(f.source.construct_id), {}, f.source)).success,
+		f.name+": genesis owner created")
+	var ids: Array = []
+	for i in range(Life.MAX_EVENTS + 1):
+		ids.append("event/r562/%s/genesis-%02d" % [f.name, i])
+	neg(Life.new().bootstrap(store, String(f.source.construct_id),
+		f.matter, f.authority, ids), "R562_EVENT_BUDGET_EXCEEDED",
+		f.name+": 17-event genesis rejected rather than unrecoverable READY")
+	var accepted = Life.new().bootstrap(store, String(f.source.construct_id),
+		f.matter, f.authority, ids.slice(0,Life.MAX_EVENTS))
+	ck(accepted.success, f.name+": 16-event boundary admitted", accepted)
+	if accepted.success:
+		var resumed = Life.new()
+		var result = resumed.recover(store, String(f.source.construct_id),
+			f.matter, f.authority, accepted.details.journal)
+		ck(result.success, f.name+": boundary journal cold-recovers", result)
+		if result.success:
+			ck(resumed.status().mode=="READY", f.name+": boundary executes after recovery")
+			neg(resumed.prepare_bond(BondDelta.BREAK,
+				String(f.source.bonds[0].bond_id),
+				"event/r562/%s/new-event" % f.name),
+				"R562_EVENT_BUDGET_OR_PENDING",
+				f.name+": no 17th lifecycle event after recovery")
+
 func conflict(f: Dictionary) -> void:
 	var env=fresh(f)
 	var source:Dictionary=env.store.get_snapshot(String(f.source.construct_id))
@@ -287,6 +315,7 @@ func _initialize() -> void:
 		transition(env,Life.BOND,BondDelta.REPAIR,0,-1,4)
 		transition(env,Life.BOND,BondDelta.BREAK,3,-1,5)
 		negatives(env)
+		genesis_budget(f)
 		conflict(f)
 	var report := {"schema":"fabric.r56_2_r1.lifecycle.acceptance.v1",
 		"checks":checks,"failures":failures,"committed_events":events,
