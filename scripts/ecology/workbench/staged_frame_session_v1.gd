@@ -90,7 +90,9 @@ func advance(state: Dictionary, options: Dictionary,
 		cursor_cap_bytes: int = DEFAULT_CURSOR_BYTES,
 		use_r3_allocator: bool = false,
 		allocator_items_per_call: int = 16,
-		use_off_main_r3: bool = false) -> Dictionary:
+		use_off_main_r3: bool = false,
+		lease_owner: Object = null, lease_token: RefCounted = null,
+		lease_generation: int = -1) -> Dictionary:
 	if not C.integer(soft_budget_us, 1, 1000000000) \
 			or not C.integer(max_resumes, 1, MAX_RESUMES) \
 			or not C.integer(max_worksets, 1, MAX_WORKSETS) \
@@ -107,7 +109,8 @@ func advance(state: Dictionary, options: Dictionary,
 			return _error("STAGED_SESSION_LEGACY_PENDING", false)
 		_calls += 1
 		var async_step: Dictionary = _off_main.advance(
-			state, options, max_members, allocator_items_per_call, cursor_cap_bytes)
+			state, options, max_members, allocator_items_per_call, cursor_cap_bytes,
+			lease_owner, lease_token, lease_generation)
 		if not bool(async_step.get("success", false)):
 			return _error("STAGED_SESSION_OFFMAIN:" +
 				String(async_step.get("error", "?")), true)
