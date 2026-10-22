@@ -76,15 +76,46 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference='Stop'
-          $g=$env:ENGINE48_GODOT_CONSOLE
-          if (-not $g) { $g=$env:ENGINE48_INPUT_CONSOLE_PATH }
-          if (-not $g -or -not (Test-Path -LiteralPath $g -PathType Leaf)) { throw 'Set ENGINE48_GODOT_CONSOLE on self-hosted runner or provide godot_console_path for dispatch; exact 4.8 editor is required' }
-          "ENGINE48_GODOT_CONSOLE=$g" | Out-File $env:GITHUB_ENV -Append -Encoding utf8
+          # Explicit input wins. Otherwise search only documented local build roots.
+          # Never accept the stock 4.7.1 binary or an unpinned executable.
+          $explicit=@([string]$env:ENGINE48_INPUT_CONSOLE_PATH, [string]$env:ENGINE48_GODOT_CONSOLE) |
+            Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
+          $candidates=@()
+          if ($explicit.Count -gt 0) {
+            foreach ($candidate in $explicit) {
+              if (-not (Test-Path -LiteralPath $candidate -PathType Leaf)) { throw "ENGINE48_EXPLICIT_BINARY_NOT_FOUND:$candidate" }
+              $candidates += (Resolve-Path -LiteralPath $candidate).Path
+            }
+          } else {
+            $roots=@(
+              'C:\build-engine48',
+              'C:\Godot\godot-4.8-beta1-src',
+              'C:\Godot',
+              'C:\distributed-world-simulator\worktrees\engine48-windows'
+            )
+            foreach ($root in ($roots | Select-Object -Unique)) {
+              if (-not (Test-Path -LiteralPath $root -PathType Container)) { continue }
+              Write-Host "ENGINE48_SEARCH_ROOT=$root"
+              $found=@(Get-ChildItem -LiteralPath $root -File -Recurse -Depth 7 -Filter 'godot.windows.editor.double.x86_64.console.exe' -ErrorAction SilentlyContinue)
+              $candidates += @($found | ForEach-Object { $_.FullName })
+            }
+          }
+          $candidates=@($candidates | Where-Object { $_ } | Sort-Object -Unique)
+          if ($candidates.Count -eq 0) { throw 'ENGINE48_BINARY_NOT_FOUND_IN_BUILD_ROOTS' }
+          $matches=@()
+          foreach ($candidate in $candidates) {
+            $candidateHash=(Get-FileHash -LiteralPath $candidate -Algorithm SHA256).Hash.ToLowerInvariant()
+            if ($candidateHash -eq $env:DWS_ENGINE48_GODOT_SHA256) { $matches += $candidate }
+          }
+          if ($matches.Count -eq 0) { throw "ENGINE48_NO_PINNED_BINARY_MATCH:checked=$($candidates.Count)" }
+          $g=($matches | Sort-Object | Select-Object -First 1)
           $actualHash=(Get-FileHash -LiteralPath $g -Algorithm SHA256).Hash.ToLowerInvariant()
           if ($actualHash -ne $env:DWS_ENGINE48_GODOT_SHA256) { throw "ENGINE48_BINARY_SHA_MISMATCH:$actualHash" }
           $ver=(& $g --version | Select-Object -First 1).Trim()
           if ($LASTEXITCODE -ne 0 -or $ver -ne $env:ENGINE48_EXPECTED_VERSION) { throw "ENGINE48_VERSION_MISMATCH:$ver" }
-          [ordered]@{ engine=$g; sha256=$actualHash; version=$ver } | ConvertTo-Json | Set-Content artifacts\engine48\verified-binary.json -Encoding UTF8
+          "ENGINE48_GODOT_CONSOLE=$g" | Out-File $env:GITHUB_ENV -Append -Encoding utf8
+          Write-Host "ENGINE48_PINNED_EDITOR_FOUND=$g"
+          [ordered]@{ engine=$g; sha256=$actualHash; version=$ver; candidate_count=$candidates.Count; match_count=$matches.Count } | ConvertTo-Json | Set-Content artifacts\engine48\verified-binary.json -Encoding UTF8
 
       - name: Cold import fail closed
         shell: pwsh
