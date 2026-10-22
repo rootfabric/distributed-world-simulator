@@ -63,8 +63,13 @@ var _staged_session: RefCounted = StagedSession.new()
 var _r322_lease_token: RefCounted = null
 var _r322_lease_options_hash := ""
 var _r322_generation := 0
+# R3.2.3: a completed read-only snapshot precomputed by the validated
+# CPU worker. Never the source of biology; invalidated on every owner write.
+# Only enabled for LAB Controller's explicit R3.2.3 opt-in.
+var _r323_snapshot: Dictionary = {}
 
 func _r322_revoke_lease() -> void:
+	_r323_snapshot = {}
 	_r322_lease_token = null
 	_r322_lease_options_hash = ""
 	_r322_generation += 1
@@ -248,7 +253,10 @@ func run_staged_frame(soft_budget_us: int = StagedSession.DEFAULT_SOFT_BUDGET_US
 		cursor_cap_bytes: int = StagedSession.DEFAULT_CURSOR_BYTES,
 		use_r3_allocator: bool = false,
 		allocator_items_per_call: int = 16,
-		use_off_main_r3: bool = false) -> Dictionary:
+		use_off_main_r3: bool = false,
+		use_r323_presentation: bool = false) -> Dictionary:
+	if use_r323_presentation and not use_off_main_r3:
+		return _command_fail("CONTROLLER_R323_REQUIRES_OFFMAIN")
 	if use_off_main_r3 and not use_r3_allocator:
 		return _command_fail("CONTROLLER_OFFMAIN_REQUIRES_R3")
 	if _status == "IDLE":
@@ -286,7 +294,8 @@ func run_staged_frame(soft_budget_us: int = StagedSession.DEFAULT_SOFT_BUDGET_US
 		use_r3_allocator, allocator_items_per_call, use_off_main_r3,
 		self if use_off_main_r3 else null,
 		_r322_lease_token if use_off_main_r3 else null,
-		_r322_generation if use_off_main_r3 else -1)
+		_r322_generation if use_off_main_r3 else -1,
+		_manifest.duplicate(true) if use_r323_presentation else {})
 	if not bool(result.get("success", false)):
 		_r322_revoke_lease()
 		# Transient plan/resource errors fail closed. If the underlying
@@ -301,9 +310,22 @@ func run_staged_frame(soft_budget_us: int = StagedSession.DEFAULT_SOFT_BUDGET_US
 		if not result.has("state") or not result.state is Dictionary:
 			_fail("CONTROLLER_STAGED_FINAL_STATE")
 			return _failed_command()
+		var completed_snapshot: Dictionary = {}
+		if use_r323_presentation:
+			completed_snapshot = result.get("presentation_snapshot", {})
+			if completed_snapshot.is_empty() or not bool(completed_snapshot.get("success", false)) \
+					or int(completed_snapshot.get("tick", -1)) != int(result.state.tick) \
+					or String(completed_snapshot.get("canonical_state_hash", "")) != \
+						String(result.state.integrity_hash):
+				_r322_revoke_lease()
+				return _command_fail("CONTROLLER_R323_SNAPSHOT_NOT_VERIFIED")
 		_r322_revoke_lease()
 		_runtime = result.state
 		_status = "RUNNING"
+		if use_r323_presentation:
+			# This is transient presentation-only evidence from the same
+			# fully validated worker candidate just adopted atomically.
+			_r323_snapshot = completed_snapshot
 	return {"success": true, "complete": bool(result.complete),
 		"pending": bool(result.pending), "phase": String(result.phase),
 		"tick": tick(), "status": _status,
@@ -329,6 +351,38 @@ func get_staged_telemetry() -> Dictionary:
 	var result: Dictionary = _staged_session.status()
 	result["canonical_tick"] = tick()
 	return result
+
+## R3.2.3 LAB-only completed presentation DTO, exactly bound to the
+## currently canonical tick/hash. A stale or absent cache is never served.
+## Return detached data so no UI caller can mutate the authoritative cache.
+func get_r323_snapshot() -> Dictionary:
+	if _status == "IDLE" or _status == "FAILED" or _r323_snapshot.is_empty():
+		return {"success": false, "error": "CONTROLLER_R323_SNAPSHOT_UNAVAILABLE"}
+	if int(_r323_snapshot.get("tick", -1)) != tick() \
+			or String(_r323_snapshot.get("canonical_state_hash", "")) != \
+				String(_runtime.get("integrity_hash", "")):
+		return {"success": false, "error": "CONTROLLER_R323_SNAPSHOT_STALE"}
+	var result: Dictionary = _r323_snapshot.duplicate(true)
+	result["status"] = _status
+	return result
+
+## Fetch at most ONE detached morphology body for bounded main-thread
+## geometry staging. This accessor can never return a writable Runtime.
+func get_r323_morphology_entry(index: int, expected_tick: int,
+		expected_hash: String) -> Dictionary:
+	if _r323_snapshot.is_empty() or tick() != expected_tick \
+			or String(_runtime.get("integrity_hash", "")) != expected_hash \
+			or int(_r323_snapshot.get("tick", -1)) != expected_tick \
+			or String(_r323_snapshot.get("canonical_state_hash", "")) != expected_hash \
+			or index < 0 or index >= _runtime.population.size():
+		return {"success": false, "error": "CONTROLLER_R323_MORPHOLOGY_STALE"}
+	var entry: Dictionary = _runtime.population[index].state
+	return {"success": true,
+		"individual_id": String(entry.individual_id),
+		"modules": entry.development.modules.duplicate(true),
+		"position_mm": entry.position_mm.duplicate(true),
+		"alive": bool(entry.alive)}
+
 
 func get_budget_telemetry() -> Dictionary:
 	var result: Dictionary = _budget_telemetry.duplicate(true)
