@@ -64,6 +64,27 @@ var staged_r3_allocator_items := 16
 # Extra R3.2 opt-in: CPU-only global A4 works away from the UI thread.
 # Disabled by default, including when R3 allocator is enabled.
 var staged_r3_off_main_enabled := false
+# R3.2.3 explicitly opt-in: precomputed worker snapshot and staged visuals.
+# Both A14.5 and R3.2.2 continue to use their legacy synchronous GUI path.
+var staged_r323_presentation_enabled := false
+var staged_r323_items_per_frame := 6
+var staged_r323_soft_budget_us := 12000
+var _r323_pending := false
+var _r323_phase := "NONE"
+var _r323_snapshot: Dictionary = {}
+var _r323_tick := -1
+var _r323_hash := ""
+var _r323_cursor := 0
+var _r323_stale_ids: Array = []
+var _r323_stale_morph_ids: Array = []
+var _r323_seen: Dictionary = {}
+var _r323_ui_samples: Array = []
+var _r323_peak_pump_us := 0
+var _r323_peak_begin_us := 0
+var _r323_completed := 0
+var _r323_abandoned := 0
+var _r323_fallbacks := 0
+var _r323_last_error := ""
 var running := false
 # Pending run target (P5): {"kind": "tick"|"generation"|"condition", ...} or {}.
 var pending_target: Dictionary = {}
@@ -391,6 +412,14 @@ func _process(delta: float) -> void:
 	# once. This operation NEVER starts or commits ecology.
 	if controller != null and controller.has_method("reap_cancelled_staged_worker"):
 		controller.reap_cancelled_staged_worker()
+	# R3.2.3 presentation may continue after the requested tick finishes
+	# and running becomes false. Canonical time/debt is unaffected.
+	if _r323_pending:
+		if running:
+			_wall_elapsed += delta
+			_elapsed += delta
+		_r323_pump_presentation()
+		return
 	if not running or controller == null:
 		return
 	_wall_elapsed += delta
@@ -443,7 +472,8 @@ func _process_staged_live(interval: float) -> void:
 		staged_wall_budget_us, staged_resumes_per_frame,
 		staged_worksets_per_resume, staged_max_members,
 		staged_cursor_cap_bytes, staged_r3_allocator_enabled,
-		staged_r3_allocator_items, staged_r3_off_main_enabled)
+		staged_r3_allocator_items, staged_r3_off_main_enabled,
+		staged_r323_presentation_enabled)
 	if not bool(result.get("success", false)):
 		running = false
 		_refresh_from_controller(false)
@@ -455,7 +485,10 @@ func _process_staged_live(interval: float) -> void:
 				String(pending_target.get("kind", "")) == "tick" \
 				and int(controller.tick()) >= int(pending_target.value)):
 			running = false
-		_refresh_from_controller(false)
+		if staged_r323_presentation_enabled:
+			_r323_begin_presentation()
+		else:
+			_refresh_from_controller(false)
 	elif _status_bar != null:
 		# Pending asynchronous frames avoid the expensive canonical
 		# get_snapshot() presentation rebuild on the MAIN thread.
@@ -472,8 +505,11 @@ func configure_staged_live(enabled: bool, soft_budget_us: int = 30000,
 		resumes_per_frame: int = 1, worksets_per_resume: int = 1,
 		max_members: int = 8, cursor_cap_bytes: int = 8388608,
 		use_r3_allocator: bool = false, allocator_items_per_call: int = 16,
-		use_off_main_r3: bool = false) -> bool:
+		use_off_main_r3: bool = false,
+		use_r323_presentation: bool = false) -> bool:
 	if use_off_main_r3 and not use_r3_allocator:
+		return false
+	if use_r323_presentation and not (enabled and use_r3_allocator and use_off_main_r3):
 		return false
 	if soft_budget_us < 1 or soft_budget_us > 1000000000 \
 			or resumes_per_frame < 1 or resumes_per_frame > 16 \
@@ -492,9 +528,12 @@ func configure_staged_live(enabled: bool, soft_budget_us: int = 30000,
 	staged_r3_allocator_enabled = enabled and use_r3_allocator
 	staged_r3_allocator_items = allocator_items_per_call
 	staged_r3_off_main_enabled = enabled and use_r3_allocator and use_off_main_r3
+	staged_r323_presentation_enabled = enabled and use_r323_presentation \
+		and use_r3_allocator and use_off_main_r3
 	return true
 
 func _cancel_staged_pending() -> void:
+	_r323_cancel_presentation()
 	if controller != null and controller.has_method("cancel_staged_tick"):
 		controller.cancel_staged_tick()
 
@@ -601,6 +640,9 @@ func _step_once() -> bool:
 # --- Presentation state (descriptor only; no biology truth stored) ----------
 
 func _refresh_from_controller(rebuild_all: bool) -> void:
+	# Commands outside R3.2.3 invalidate any partial presentation
+	# immediately; the legacy public snapshot path remains exact.
+	_r323_cancel_presentation()
 	if controller == null:
 		return
 	var snapshot: Dictionary = controller.get_snapshot()
@@ -615,6 +657,211 @@ func _refresh_from_controller(rebuild_all: bool) -> void:
 	_update_status_bar(snapshot)
 	if rebuild_all:
 		_sync_placement_panel(snapshot)
+
+
+## R3.2.3: presentation-only, nonpersistent progression. The canonical
+## Runtime was ALREADY atomically published before this method. Unlike
+## _refresh_from_controller(), this path never rebuilds a full synchronous
+## snapshot or geometry in the commit frame.
+func _r323_begin_presentation() -> void:
+	var started_us: int = Time.get_ticks_usec()
+	_r323_cancel_presentation()
+	if controller == null or not controller.has_method("get_r323_snapshot"):
+		_r323_fallbacks += 1
+		_r323_last_error = "R323_SNAPSHOT_PROVIDER_MISSING"
+		_refresh_from_controller(false)
+		return
+	var snapshot: Dictionary = controller.get_r323_snapshot()
+	if not bool(snapshot.get("success", false)) or not snapshot.has("presentation"):
+		_r323_fallbacks += 1
+		_r323_last_error = String(snapshot.get("error", "R323_SNAPSHOT_UNAVAILABLE"))
+		_refresh_from_controller(false)
+		return
+	_r323_tick = int(snapshot.tick)
+	_r323_hash = String(snapshot.canonical_state_hash)
+	_r323_snapshot = snapshot
+	organism_views = _build_views(snapshot)
+	_r323_seen = {}
+	for view in organism_views:
+		_r323_seen[String(view.canonical_entity_id)] = true
+	_r323_stale_ids = _marker_by_id.keys()
+	_r323_stale_morph_ids = _morphology_by_id.keys()
+	_r323_cursor = 0
+	_r323_phase = "MARKERS"
+	_r323_pending = true
+	_r323_peak_begin_us = maxi(_r323_peak_begin_us,
+		maxi(0, Time.get_ticks_usec() - started_us))
+	if _status_bar != null:
+		_status_bar.text = "LAB R3.2.3 canonical tick %d | presentation staged" % _r323_tick
+
+## Called before returning to the normal simulation loop on EVERY frame.
+## A bounded number of Node operations per call, plus a soft wall budget;
+## an indivisible mesh build may exceed the target. No hard 30 ms claim.
+func _r323_pump_presentation() -> void:
+	if not _r323_pending:
+		return
+	if controller == null or not controller.has_method("r323_presentation_is_current") \
+			or not controller.r323_presentation_is_current(_r323_tick, _r323_hash):
+		_r323_last_error = "R323_PRESENTATION_STALE"
+		_r323_cancel_presentation()
+		return
+	var started_us: int = Time.get_ticks_usec()
+	var operations := 0
+	while _r323_pending and operations < staged_r323_items_per_frame \
+			and (operations == 0 or Time.get_ticks_usec() - started_us < staged_r323_soft_budget_us):
+		match _r323_phase:
+			"MARKERS":
+				if _r323_cursor >= organism_views.size():
+					_r323_phase = "REMOVE_MARKERS"
+					_r323_cursor = 0
+					continue
+				if _markers_root != null:
+					_r323_sync_marker(organism_views[_r323_cursor])
+				_r323_cursor += 1
+				operations += 1
+			"REMOVE_MARKERS":
+				if _r323_cursor >= _r323_stale_ids.size():
+					_r323_phase = "MORPHOLOGY"
+					_r323_cursor = 0
+					continue
+				var obsolete_id: String = String(_r323_stale_ids[_r323_cursor])
+				if not _r323_seen.has(obsolete_id) and _marker_by_id.has(obsolete_id):
+					var stale: Node = _marker_by_id[obsolete_id]
+					_marker_by_id.erase(obsolete_id)
+					stale.queue_free()
+				_r323_cursor += 1
+				operations += 1
+			"MORPHOLOGY":
+				if not morphology_enabled or _morphology_root == null:
+					_r323_phase = "REMOVE_MORPHOLOGY"
+					_r323_cursor = 0
+					continue
+				if _r323_cursor >= organism_views.size():
+					_r323_phase = "REMOVE_MORPHOLOGY"
+					_r323_cursor = 0
+					continue
+				var view: Dictionary = organism_views[_r323_cursor]
+				var body: Dictionary = controller.get_r323_morphology_entry(
+					_r323_cursor, _r323_tick, _r323_hash)
+				if not bool(body.get("success", false)) \
+						or String(body.get("individual_id", "")) != \
+							String(view.canonical_entity_id):
+					_r323_last_error = "R323_MORPHOLOGY_SOURCE_STALE"
+					_r323_cancel_presentation()
+					return
+				_r323_sync_morphology_one(view, body)
+				_r323_cursor += 1
+				operations += 1
+			"REMOVE_MORPHOLOGY":
+				if _r323_cursor >= _r323_stale_morph_ids.size():
+					_r323_phase = "FINALIZE"
+					continue
+				var obsolete_morph_id: String = String(_r323_stale_morph_ids[_r323_cursor])
+				if not _r323_seen.has(obsolete_morph_id) and \
+						_morphology_by_id.has(obsolete_morph_id):
+					_morphology_by_id[obsolete_morph_id].queue_free()
+					_morphology_by_id.erase(obsolete_morph_id)
+				_r323_cursor += 1
+				operations += 1
+			"FINALIZE":
+				_r323_finish_presentation()
+				break
+			_:
+				_r323_last_error = "R323_UNKNOWN_PHASE"
+				_r323_cancel_presentation()
+				return
+	var elapsed_us: int = maxi(0, Time.get_ticks_usec() - started_us)
+	_r323_peak_pump_us = maxi(_r323_peak_pump_us, elapsed_us)
+	_r323_ui_samples.append(elapsed_us)
+	if _r323_ui_samples.size() > 128:
+		_r323_ui_samples.pop_front()
+
+func _r323_sync_marker(view: Dictionary) -> void:
+	var entity_id: String = String(view.canonical_entity_id)
+	var descriptor: Dictionary = view.presentation_descriptor
+	var marker: MeshInstance3D = _marker_by_id.get(entity_id)
+	if marker == null:
+		marker = MeshInstance3D.new()
+		marker.name = "OrganismMarker"
+		var mesh := SphereMesh.new()
+		mesh.radius = 0.25
+		mesh.height = 0.5
+		marker.mesh = mesh
+		marker.material_override = StandardMaterial3D.new()
+		_markers_root.add_child(marker)
+		_marker_by_id[entity_id] = marker
+	marker.visible = not morphology_enabled
+	var position: Array = descriptor.position_mm
+	marker.position = Vector3(float(position[0]) / 100.0,
+		0.5 + float(position[1]) / 100.0,
+		float(position[2]) / 100.0)
+	var material: StandardMaterial3D = marker.material_override
+	material.albedo_color = _marker_color(descriptor,
+		String(view.selection_state) == "selected")
+
+func _r323_sync_morphology_one(view: Dictionary, body: Dictionary) -> void:
+	var entity_id: String = String(view.canonical_entity_id)
+	var holder: Node3D = _morphology_by_id.get(entity_id)
+	if holder == null:
+		holder = Node3D.new()
+		holder.name = "Morphology_" + entity_id.replace("/", "_")
+		_morphology_root.add_child(holder)
+		_morphology_by_id[entity_id] = holder
+	for child in holder.get_children():
+		child.queue_free()
+	var descriptor: Dictionary = MorphologyDescriptor.compile(
+		body.modules, entity_id, body.position_mm)
+	if descriptor.is_empty():
+		return
+	var realized: Dictionary = GenericRealizer.realize(descriptor,
+		{"lod": morphology_lod, "palette_seed": entity_id.hash()})
+	var primitives: Array = realized.get("primitives", [])
+	for primitive in primitives:
+		var color: Array = primitive.color
+		if not bool(body.alive):
+			color = [color[0] * 0.35, color[1] * 0.35, color[2] * 0.35, 1.0]
+		if String(view.selection_state) == "selected":
+			color = [1.0, 0.9, 0.2, 1.0]
+		primitive.color = color
+	build_meshes(primitives, holder)
+
+func _r323_finish_presentation() -> void:
+	if not _r323_pending:
+		return
+	var snapshot: Dictionary = _r323_snapshot
+	_r323_pending = false
+	_r323_completed += 1
+	_r323_phase = "NONE"
+	_r323_snapshot = {}
+	_r323_stale_ids = []
+	_r323_stale_morph_ids = []
+	_r323_seen = {}
+	_r323_cursor = 0
+	snapshot_updated.emit(snapshot)
+	if observatory_enabled:
+		_observe_and_render(snapshot)
+	_update_status_bar(snapshot)
+
+func _r323_cancel_presentation() -> void:
+	if _r323_pending:
+		_r323_abandoned += 1
+	_r323_pending = false
+	_r323_phase = "NONE"
+	_r323_snapshot = {}
+	_r323_stale_ids = []
+	_r323_stale_morph_ids = []
+	_r323_seen = {}
+	_r323_cursor = 0
+	_r323_tick = -1
+	_r323_hash = ""
+
+func get_r323_ui_telemetry() -> Dictionary:
+	return {"pending": _r323_pending, "phase": _r323_phase,
+		"completed": _r323_completed, "abandoned": _r323_abandoned,
+		"fallbacks": _r323_fallbacks, "last_error": _r323_last_error,
+		"peak_begin_us": _r323_peak_begin_us,
+		"peak_pump_us": _r323_peak_pump_us,
+		"recent_pump_us": _r323_ui_samples.duplicate()}
 
 ## Views are built ONLY from the snapshot's read-only presentation views
 ## (P4 extension) — no debug_state dependency in the UI layer.

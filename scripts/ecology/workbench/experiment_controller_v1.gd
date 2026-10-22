@@ -366,6 +366,15 @@ func get_r323_snapshot() -> Dictionary:
 	result["status"] = _status
 	return result
 
+## Cheap independent fence for Workbench's host-private projection queue.
+## Does not return or validate/mutate the canonical Runtime.
+func r323_presentation_is_current(expected_tick: int, expected_hash: String) -> bool:
+	return _status != "IDLE" and _status != "FAILED" \
+		and not _r323_snapshot.is_empty() and tick() == expected_tick \
+		and int(_r323_snapshot.get("tick", -1)) == expected_tick \
+		and String(_runtime.get("integrity_hash", "")) == expected_hash \
+		and String(_r323_snapshot.get("canonical_state_hash", "")) == expected_hash
+
 ## Fetch at most ONE detached morphology body for bounded main-thread
 ## geometry staging. This accessor can never return a writable Runtime.
 func get_r323_morphology_entry(index: int, expected_tick: int,
