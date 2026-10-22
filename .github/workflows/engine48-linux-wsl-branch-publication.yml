@@ -1,0 +1,126 @@
+name: engine48-linux-wsl-branch-publication
+
+# Temporary one-shot Git-object transfer. This runner must be the Windows host
+# that owns the Ubuntu WSL checkout; no synthetic Git commits are permitted.
+# Remove this workflow from the final production integration.
+on:
+  pull_request:
+    branches:
+      - feature/engine48-windows-r1
+    paths:
+      - '.github/workflows/engine48-linux-wsl-branch-publication.yml'
+      - 'tools/engine48/publish_linux_branch_from_wsl.sh'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: engine48-linux-wsl-publish
+  cancel-in-progress: false
+
+jobs:
+  publish-linux-branch:
+    if: github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'repair/engine48-windows-r2-ci-identity-pin'
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 15
+    env:
+      ENGINE48_BASE_SHA: a936412cc3d597a88fa789fc73c6ac7dcfd7a4e9
+      ENGINE48_SOURCE_REF: refs/heads/repair/engine48-linux-runner-guards-r1
+      ENGINE48_TARGET_REF: refs/heads/feature/engine48-linux-r1
+    steps:
+      - name: Checkout exact trusted publication carrier
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Prepare original Linux Git objects from local WSL
+        shell: pwsh
+        timeout-minutes: 8
+        run: |
+          $ErrorActionPreference='Stop'
+          $PSNativeCommandUseErrorActionPreference=$false
+          New-Item -ItemType Directory -Force artifacts\engine48\linux-publish | Out-Null
+          $script='tools/engine48/publish_linux_branch_from_wsl.sh'
+          if (-not (Test-Path -LiteralPath $script -PathType Leaf)) { throw 'ENGINE48_LINUX_BUNDLE_SCRIPT_MISSING' }
+          $wsl=Get-Command wsl.exe -ErrorAction SilentlyContinue
+          if (-not $wsl) { throw 'ENGINE48_WSL_NOT_INSTALLED_ON_WINDOWS_RUNNER' }
+          $names=@(& wsl.exe --list --quiet 2>&1)
+          $distros=@($names | ForEach-Object { ([string]$_).Replace([char]0,'').Trim() } | Where-Object { $_ -match '^Ubuntu' } | Sort-Object -Unique)
+          if ($distros.Count -eq 0) { throw 'ENGINE48_UBUNTU_DISTRO_NOT_REGISTERED_FOR_RUNNER_ACCOUNT' }
+          $encoded=[Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes((Get-Content -LiteralPath $script -Raw)))
+          $command="printf '%s' '$encoded' | base64 --decode | bash"
+          $ready=$false
+          foreach ($distro in $distros) {
+            Write-Host "ENGINE48_CHECK_WSL_DISTRO=$distro"
+            $messages=@(& wsl.exe --distribution $distro --exec bash -lc $command 2>&1)
+            $rc=$LASTEXITCODE
+            $messages | ForEach-Object { Write-Host "$_" }
+            if ($rc -eq 0 -and (@($messages | Where-Object { "$_" -eq 'ENGINE48_LINUX_BUNDLE_READY' }).Count -gt 0)) {
+              $ready=$true
+              $distroUsed=$distro
+              break
+            }
+          }
+          if (-not $ready) { throw 'ENGINE48_LINUX_ORIGINAL_BRANCH_NOT_ACCESSIBLE_ON_WINDOWS_RUNNER_WSL' }
+          $bundle='C:\DWS-Transfers\engine48-linux-r1.bundle'
+          if (-not (Test-Path -LiteralPath $bundle -PathType Leaf)) { throw 'ENGINE48_LINUX_BUNDLE_TRANSFER_MISSING' }
+          [ordered]@{
+            wsl_distro=$distroUsed
+            bundle_path=$bundle
+            bundle_sha256=(Get-FileHash -LiteralPath $bundle -Algorithm SHA256).Hash.ToLowerInvariant()
+            bundle_bytes=(Get-Item -LiteralPath $bundle).Length
+          } | ConvertTo-Json | Set-Content artifacts\engine48\linux-publish\bundle-preflight.json -Encoding UTF8
+
+      - name: Verify original lineage and push Linux ref without force
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          $bundle='C:\DWS-Transfers\engine48-linux-r1.bundle'
+          git bundle verify $bundle
+          if ($LASTEXITCODE -ne 0) { throw 'ENGINE48_LINUX_BUNDLE_VERIFY_FAILED' }
+          git fetch --no-tags $bundle "$($env:ENGINE48_SOURCE_REF):$($env:ENGINE48_TARGET_REF)"
+          if ($LASTEXITCODE -ne 0) { throw 'ENGINE48_LINUX_BUNDLE_FETCH_FAILED' }
+          $tip=(git rev-parse $env:ENGINE48_TARGET_REF).Trim()
+          if (-not $tip.StartsWith('7aaa7fa9e')) { throw "ENGINE48_LINUX_TIP_MISMATCH:$tip" }
+          git merge-base --is-ancestor $env:ENGINE48_BASE_SHA $tip
+          if ($LASTEXITCODE -ne 0) { throw 'ENGINE48_LINUX_BASE_ANCESTRY_FAILED' }
+          $count=(git rev-list --count "$($env:ENGINE48_BASE_SHA)..$tip").Trim()
+          if ($count -ne '7') { throw "ENGINE48_LINUX_COMMIT_COUNT_MISMATCH:$count" }
+          $tree=(git rev-parse "$tip^{tree}").Trim()
+          $commits=@(git rev-list --reverse "$($env:ENGINE48_BASE_SHA)..$tip")
+          $remoteLines=@(git ls-remote --heads origin $env:ENGINE48_TARGET_REF)
+          if ($LASTEXITCODE -ne 0) { throw 'ENGINE48_LINUX_REMOTE_READ_FAILED' }
+          $exists=($remoteLines.Count -gt 0 -and -not [string]::IsNullOrWhiteSpace($remoteLines[0]))
+          if ($exists) {
+            $remoteTip=([string]$remoteLines[0]).Split([char]9)[0]
+            if ($remoteTip -ne $tip) { throw "ENGINE48_LINUX_REMOTE_REF_ALREADY_EXISTS_AT_OTHER_TIP:$remoteTip" }
+            Write-Host "ENGINE48_LINUX_BRANCH_ALREADY_PUBLISHED:$tip"
+          } else {
+            git push origin "$($env:ENGINE48_TARGET_REF):$($env:ENGINE48_TARGET_REF)"
+            if ($LASTEXITCODE -ne 0) { throw 'ENGINE48_LINUX_PUSH_FAILED_CHECK_GITHUB_ACTIONS_WRITE_PERMISSION' }
+            Write-Host "ENGINE48_LINUX_BRANCH_PUBLISHED:$tip"
+          }
+          [ordered]@{
+            schema='dws.engine48.linux_publication_receipt.v1'
+            base=$env:ENGINE48_BASE_SHA
+            tip=$tip
+            tree=$tree
+            commit_count=[int]$count
+            commits=$commits
+            remote_ref=$env:ENGINE48_TARGET_REF
+            bundle_sha256=(Get-FileHash -LiteralPath $bundle -Algorithm SHA256).Hash.ToLowerInvariant()
+            published=$true
+          } | ConvertTo-Json -Depth 4 | Set-Content artifacts\engine48\linux-publish\publication.json -Encoding UTF8
+
+      - name: Upload publication evidence and original Git bundle
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: engine48-linux-publication-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            artifacts/engine48/linux-publish/
+            C:\DWS-Transfers\engine48-linux-r1.bundle
+          if-no-files-found: warn
+          retention-days: 30
