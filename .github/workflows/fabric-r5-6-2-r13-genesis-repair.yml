@@ -1,0 +1,93 @@
+name: FABRIC R5.6.2 R1.3 Genesis Admission Repair
+on:
+  push:
+    branches: [repair/fabric-r562-r13-genesis-admission-r1]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  scope-and-source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Prove exact R1.2 ancestry and narrow additive change
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          base=c9966b4f51dd623ddc6ec335b67452ccf96f7090
+          test "$(git merge-base "$base" HEAD)" = "$base"
+          test -z "$(git status --porcelain=v1 --untracked-files=no)"
+          python3 - <<'PY'
+          import subprocess
+          base="c9966b4f51dd623ddc6ec335b67452ccf96f7090"
+          rows=subprocess.check_output(["git","diff","--name-status",base,"HEAD"],text=True).splitlines()
+          expected={
+              ".github/workflows/fabric-r5-6-2-r13-genesis-repair.yml":"A",
+              "docs/research/FABRIC_R562_R13_GENESIS_EVENT_BUDGET_REPAIR_RU.md":"A",
+              "scripts/research/fabric_bake0/r5_6_2_r1_event_lifecycle_v1.gd":"M",
+              "tests/research/fabric_bake0/fabric_r5_6_2_r1_lifecycle_acceptance.gd":"M",
+          }
+          seen={}
+          for row in rows:
+              status,path=row.split("\t")
+              assert path in expected and status==expected[path],row
+              seen[path]=status
+          assert seen==expected, (seen,expected)
+          PY
+          git diff --check "$base" HEAD
+          bash -n RUN_FABRIC_R5_6_2_R1_TESTS.sh
+          python3 -m py_compile scripts/research/fabric_bake0/collect_r5_6_2_r1_evidence.py
+      - name: Publish exact offline source and Git recovery bundle
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          mkdir -p source
+          git archive --format=tar.gz --output=source/fabric-r562-r13-source.tar.gz HEAD
+          git bundle create source/fabric-r562-r13-exact.bundle HEAD
+          printf 'HEAD=%s\nTREE=%s\nBASE=%s\n' "$(git rev-parse HEAD)" "$(git rev-parse 'HEAD^{tree}')" c9966b4f51dd623ddc6ec335b67452ccf96f7090 >source/IDENTITY
+          (cd source && sha256sum fabric-r562-r13-source.tar.gz fabric-r562-r13-exact.bundle >SHA256SUMS)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fabric-r562-r13-source-${{ github.sha }}
+          path: source/**
+          if-no-files-found: error
+          retention-days: 30
+  linux-exact:
+    needs: scope-and-source
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 70
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Resolve canonical Godot and run unmodified exact
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          export GODOT_BIN="${DWS_GODOT_DOUBLE_BIN:-$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64}"
+          test -x "$GODOT_BIN"
+          test "$(sha256sum "$GODOT_BIN" | cut -d' ' -f1)" = bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7
+          export R562_R1_EXPECTED_HEAD="$(git rev-parse HEAD)"
+          export R562_R1_EXPECTED_TREE="$(git rev-parse 'HEAD^{tree}')"
+          export R562_R1_EVIDENCE_DIR="$PWD/artifacts/ci-r562-r13-${GITHUB_RUN_ID}"
+          bash RUN_FABRIC_R5_6_2_R1_TESTS.sh
+          python3 - <<'PY'
+          import json,os
+          from pathlib import Path
+          obj=json.loads((Path(os.environ["R562_R1_EVIDENCE_DIR"])/"evidence.json").read_text())
+          a=obj["acceptance"]
+          assert a["checks"]==628 and a["negative_rejections"]==76 and a["failures"]==[],a
+          print("FABRIC_R562_R13_GENESIS_BUDGET_EXACT=PASS")
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: fabric-r562-r13-linux-evidence-${{ github.sha }}
+          path: artifacts/ci-r562-r13-${{ github.run_id }}/**
+          if-no-files-found: warn
+          retention-days: 30
