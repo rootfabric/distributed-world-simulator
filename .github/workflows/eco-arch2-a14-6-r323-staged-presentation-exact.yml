@@ -1,0 +1,182 @@
+name: ECO ARCH2 A14.6 R3.2.3 Trusted Source Lease Exact
+
+on:
+  push:
+    branches:
+      - feature/eco-arch2-a14-6-r3-2-3-staged-presentation-r1
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: eco-a146-r323-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  portable:
+    name: R3.2.3 portable trusted LAB / tamper / scale
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Pinned Godot 4.7.1 portable admission and exact proof
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fL --retry 3 -o /tmp/godot-r323.zip https://github.com/godotengine/godot/releases/download/4.7.1-stable/Godot_v4.7.1-stable_linux.x86_64.zip
+          mkdir -p /tmp/godot-r323
+          unzip -q /tmp/godot-r323.zip -d /tmp/godot-r323
+          godot=/tmp/godot-r323/Godot_v4.7.1-stable_linux.x86_64
+          chmod +x "$godot"
+          "$godot" --headless --editor --path . --import > r323-import.log 2>&1 || { cat r323-import.log; exit 1; }
+          "$godot" --headless --path . --script res://validation/ecology/evo_arch2_a14_staged/test_r32_off_main_lab.gd > r323-lab.log 2>&1 || { cat r323-lab.log; exit 1; }
+          cat r323-lab.log
+          grep -Fx 'ECO_ARCH2_A14_6_R32_OFFMAIN PASS' r323-lab.log
+          : > r323-profiles.jsonl
+          for n in 4 32 96 256; do
+            "$godot" --headless --path . --script res://validation/ecology/evo_arch2_a14_staged/test_r323_staged_presentation.gd -- --r32-population "$n" > "r323-scale-$n.log" 2>&1 || { cat "r323-scale-$n.log"; exit 1; }
+            cat "r323-scale-$n.log"
+            grep -Fx "ECO_A14_6_R323_PRESENTATION_BEGIN population=$n" "r323-scale-$n.log"
+            grep -Fx 'ECO_ARCH2_A14_6_R323_PRESENTATION PASS' "r323-scale-$n.log"
+            grep '^ECO_A14_6_R323_PRESENTATION_PROFILE_JSON ' "r323-scale-$n.log" | sed 's/^ECO_A14_6_R323_PRESENTATION_PROFILE_JSON //' >> r323-profiles.jsonl
+            if grep -Ei 'SCRIPT ERROR|Parse Error|Failed to load script|Error compiling' "r323-scale-$n.log"; then exit 1; fi
+          done
+          python3 - <<'PY'
+          import json
+          with open("r323-profiles.jsonl", encoding="utf-8") as f:
+              profiles = [json.loads(line) for line in f if line.strip()]
+          assert [p["population"] for p in profiles] == [4,32,96,256]
+          for p in profiles:
+              assert p["checkpoint_equal"] and p["source_unchanged"] and p["snapshot_equal"]
+              assert p["fixture_injected_test_only"] and not p["hard_frame_deadline_claim"]
+              assert p["worker_projection_wall_us"] > 0
+              assert p["ui_completed"] == 1 and p["fallbacks"] == 0
+              assert p["main_commit_process_wall_us"] >= 0 and p["main_presentation_pump_peak_us"] >= 0
+          print("R323_ALL_FOUR_TRUSTED_PROFILES_PASS")
+          PY
+          if grep -Ei 'SCRIPT ERROR|Parse Error|Failed to load script|Error compiling' r323-lab.log; then exit 1; fi
+          git diff --exit-code && git diff --cached --exit-code
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: eco-a146-r323-portable
+          path: |
+            r323-import.log
+            r323-lab.log
+            r323-scale-*.log
+            r323-profiles.jsonl
+          if-no-files-found: ignore
+
+  linux:
+    name: R3.2.3 Linux Double Exact
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 95
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Linux pinned double exact
+        shell: bash
+        env:
+          CONFIGURED_GODOT: ${{ vars.DWS_GODOT_DOUBLE_LINUX_BIN }}
+        run: |
+          set -euo pipefail
+          godot="${CONFIGURED_GODOT:-$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64}"
+          test "$(sha256sum "$godot" | cut -d' ' -f1)" = "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7"
+          "$godot" --headless --editor --path . --import > r323-import-linux.log 2>&1 || { cat r323-import-linux.log; exit 1; }
+          "$godot" --headless --path . --script res://validation/ecology/evo_arch2_a14_staged/test_r32_off_main_lab.gd > r323-lab-linux.log 2>&1 || { cat r323-lab-linux.log; exit 1; }
+          grep -Fx 'ECO_ARCH2_A14_6_R32_OFFMAIN PASS' r323-lab-linux.log
+          : > r323-profiles-linux.jsonl
+          for n in 4 32 96 256; do
+            "$godot" --headless --path . --script res://validation/ecology/evo_arch2_a14_staged/test_r323_staged_presentation.gd -- --r32-population "$n" > "r323-scale-linux-$n.log" 2>&1 || { cat "r323-scale-linux-$n.log"; exit 1; }
+            grep -Fx "ECO_A14_6_R323_PRESENTATION_BEGIN population=$n" "r323-scale-linux-$n.log"
+            grep -Fx 'ECO_ARCH2_A14_6_R323_PRESENTATION PASS' "r323-scale-linux-$n.log"
+            grep '^ECO_A14_6_R323_PRESENTATION_PROFILE_JSON ' "r323-scale-linux-$n.log" | sed 's/^ECO_A14_6_R323_PRESENTATION_PROFILE_JSON //' >> r323-profiles-linux.jsonl
+          done
+          test "$(wc -l < r323-profiles-linux.jsonl)" -eq 4
+          git diff --exit-code && git diff --cached --exit-code
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: eco-a146-r323-linux
+          path: |
+            r323-import-linux.log
+            r323-lab-linux.log
+            r323-scale-linux-*.log
+            r323-profiles-linux.jsonl
+          if-no-files-found: ignore
+
+  windows:
+    name: R3.2.3 Windows Double Exact
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 95
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Windows pinned double exact and per-size native exits
+        shell: pwsh
+        env:
+          CONFIGURED_GODOT: ${{ vars.DWS_GODOT_DOUBLE_BIN }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $godot = $env:CONFIGURED_GODOT
+          if ([string]::IsNullOrWhiteSpace($godot)) { $godot = 'C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe' }
+          if ((Get-FileHash $godot -Algorithm SHA256).Hash.ToLowerInvariant() -ne '3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5') { throw 'GODOT_SHA256_MISMATCH' }
+          & $godot --headless --editor --path . --import *> r323-win-import.log
+          if ($LASTEXITCODE -ne 0) { throw 'COLD_IMPORT_FAIL' }
+          & $godot --headless --path . --script res://validation/ecology/evo_arch2_a14_staged/test_r32_off_main_lab.gd *> r323-win-lab.log
+          if ($LASTEXITCODE -ne 0) { Get-Content r323-win-lab.log; throw 'R323_LAB_FAIL' }
+          if (-not (Select-String -Path r323-win-lab.log -Pattern '^ECO_ARCH2_A14_6_R32_OFFMAIN PASS$' -Quiet)) { throw 'R323_LAB_MARKER_MISSING' }
+          New-Item -ItemType Directory -Force -Path r323-windows-diagnostics | Out-Null
+          $profiles = Join-Path (Get-Location).Path 'r323-win-profiles.jsonl'
+          Set-Content -Path $profiles -Value $null -NoNewline
+          foreach ($n in @(4, 32, 96, 256)) {
+            $out = Join-Path (Get-Location).Path "r323-windows-diagnostics\r323-$n.stdout.log"
+            $err = Join-Path (Get-Location).Path "r323-windows-diagnostics\r323-$n.stderr.log"
+            $argv = @('--headless', '--path', '.', '--script', 'res://validation/ecology/evo_arch2_a14_staged/test_r323_staged_presentation.gd', '--', '--r32-population', "$n")
+            $start = Get-Date
+            $proc = Start-Process -FilePath $godot -ArgumentList $argv -WorkingDirectory (Get-Location).Path -PassThru -RedirectStandardOutput $out -RedirectStandardError $err
+            $peakBytes = [int64]0
+            while (-not $proc.HasExited) {
+              $proc.Refresh()
+              if (-not $proc.HasExited) { $peakBytes = [Math]::Max($peakBytes, [int64]$proc.PeakWorkingSet64) }
+              Start-Sleep -Milliseconds 500
+            }
+            $proc.WaitForExit()
+            $code = [int64]$proc.ExitCode
+            $hex = '0x{0:X8}' -f ([uint32]($code -band [int64]0xffffffff))
+            Write-Host "R323_NATIVE_EXIT population=$n code=$code hex=$hex peak_process_working_set_bytes=$peakBytes duration_s=$((Get-Date).Subtract($start).TotalSeconds)"
+            if (Test-Path $out) { Get-Content $out }
+            if (Test-Path $err) { Get-Content $err }
+            if ($code -ne 0) { throw "R323_NATIVE_FAILURE population=$n code=$code hex=$hex" }
+            if (-not (Select-String -Path $out -Pattern "^ECO_A14_6_R323_PRESENTATION_BEGIN population=$n$" -Quiet)) { throw "R323_BEGIN_MISSING population=$n" }
+            if (-not (Select-String -Path $out -Pattern '^ECO_ARCH2_A14_6_R323_PRESENTATION PASS$' -Quiet)) { throw "R323_PASS_MISSING population=$n" }
+            $rows = @(Get-Content $out | Where-Object { $_ -match '^ECO_A14_6_R323_PRESENTATION_PROFILE_JSON ' })
+            if ($rows.Count -ne 1) { throw "R323_PROFILE_COUNT population=$n count=$($rows.Count)" }
+            $entry = ($rows[0] -replace '^ECO_A14_6_R323_PRESENTATION_PROFILE_JSON ', '') | ConvertFrom-Json
+            if ([int]$entry.population -ne $n -or -not [bool]$entry.checkpoint_equal -or -not [bool]$entry.source_unchanged -or -not [bool]$entry.snapshot_equal -or [int]$entry.ui_completed -ne 1 -or [int]$entry.fallbacks -ne 0) { throw "R323_CANONICAL_PROFILE_FAIL population=$n" }
+            Add-Content -Path $profiles -Value ($rows[0] -replace '^ECO_A14_6_R323_PRESENTATION_PROFILE_JSON ', '')
+            if (Select-String -Path $out,$err -Pattern 'SCRIPT ERROR|Parse Error|Failed to load script|Error compiling' -Quiet) { throw "R323_GDSCRIPT_FATAL population=$n" }
+          }
+          if (@(Get-Content $profiles).Count -ne 4) { throw 'R323_ALL_FOUR_PROFILES_REQUIRED' }
+          git diff --exit-code
+          if ($LASTEXITCODE -ne 0) { throw 'DIRTY_WORKTREE' }
+          git diff --cached --exit-code
+          if ($LASTEXITCODE -ne 0) { throw 'DIRTY_INDEX' }
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: eco-a146-r323-windows
+          path: |
+            r323-win-import.log
+            r323-win-lab.log
+            r323-win-profiles.jsonl
+            r323-windows-diagnostics/
+          if-no-files-found: ignore
