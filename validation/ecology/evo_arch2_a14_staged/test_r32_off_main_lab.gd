@@ -45,6 +45,7 @@ func _run() -> void:
 		_finish()
 		return
 	await _test_direct_service(m)
+	await _test_untrusted_post_worker_mutation(m)
 	await _test_real_workbench(m)
 	await _test_cancel_and_resume(m)
 	_finish()
@@ -104,6 +105,10 @@ func _test_direct_service(m: Dictionary) -> void:
 		"canonical state hash independent of worker threading")
 	_check(C.encode(source) == frozen_bytes and int(ctrl.tick()) == 0,
 		"source biology remains untouched by background task")
+	_check(String(done.source_admission_mode) == "FULL_SOURCE_VALIDATE" \
+		and int(done.worker_source_validate_wall_us) > 0 \
+		and int(done.worker_candidate_validate_wall_us) > 0,
+		"direct caller stays strict and worker validates both source/candidate")
 	print("ECO_A14_6_R32_OFFMAIN_PROFILE_JSON " + JSON.stringify({
 		"schema": "dws.ecology.a14-6-r3-2-offmain-observation.v1",
 		"scenario": "cpu-only-real-global-tick",
@@ -117,6 +122,45 @@ func _test_direct_service(m: Dictionary) -> void:
 		"state_equal": C.encode(done.state) == C.encode(reference.debug_state().runtime),
 		"hard_frame_deadline_claim": false,
 	}))
+
+## An untrusted caller may mutate a nested alias AFTER the worker finished.
+## Hash and tick headers remain unchanged; only final MAIN validation can
+## reject it. The controller-exclusive path never exposes such aliases.
+func _test_untrusted_post_worker_mutation(m: Dictionary) -> void:
+	var ctrl = _controller(m)
+	var state: Dictionary = ctrl.debug_state().runtime
+	var options: Dictionary = ctrl._canonical_step_options().options
+	var session = Async.new()
+	var spawned: Dictionary = session.advance(state, options, 8, 4096, 8388608)
+	_check(bool(spawned.get("success", false)) and session.has_pending(),
+		"untrusted mutation falsifier started")
+	var done := false
+	for i in POLL_LIMIT:
+		if WorkerThreadPool.is_task_completed(session._task_id):
+			done = true
+			break
+		await create_timer(POLL_INTERVAL).timeout
+	_check(done, "untrusted task fully finishes before nested source tamper")
+	if not done:
+		session.cancel()
+		return
+	# Nested mutation deliberately leaves public integrity_hash and tick
+	# untouched. It must NOT publish the already-validated worker result.
+	state.population[0].state.age_ticks = int(state.population[0].state.age_ticks) + 1
+	var rejected: Dictionary = session.advance(state, options, 8, 4096, 8388608)
+	_check(not bool(rejected.get("success", true)) \
+		and String(rejected.get("error", "")).begins_with("R3_ASYNC_SOURCE_INVALID:"),
+		"untrusted post-completion nested tamper is fail-closed on main")
+	_check(not rejected.has("state") and int(session.status().jobs_committed) == 0,
+		"no corrupted worker state can publish")
+	var forged = Async.new()
+	var forged_result: Dictionary = forged.advance(ctrl.debug_state().runtime,
+		options, 8, 4096, 8388608, RefCounted.new(), RefCounted.new(), 1)
+	_check(not bool(forged_result.get("success", true)) \
+		and String(forged_result.get("error", "")).begins_with("R3_ASYNC_TRUSTED_LEASE"),
+		"arbitrary fake lease owner rejected before task dispatch")
+	_check(int(forged.status().jobs_started) == 0,
+		"forged lease never starts a CPU worker")
 
 func _test_real_workbench(m: Dictionary) -> void:
 	var actual = _controller(m)
@@ -166,6 +210,12 @@ func _test_real_workbench(m: Dictionary) -> void:
 	_check(pending > 0 and frames > 1
 		and int(actual.get_staged_telemetry().off_main.jobs_committed) == 1,
 		"actual GUI witnessed offmain async deferral and one atomic commit")
+	_check(String(actual.get_staged_telemetry().off_main.last_admission_mode) \
+		== "TRUSTED_CONTROLLER_LEASE",
+		"only actual LAB Controller uses generation-fenced fast admission")
+	_check(int(actual.get_staged_telemetry().off_main.last_worker_source_validate_wall_us) > 0 \
+		and int(actual.get_staged_telemetry().off_main.last_worker_candidate_validate_wall_us) > 0,
+		"trusted fast admission still fully validates source and candidate in worker")
 	print("ECO_A14_6_R32_OFFMAIN_PROFILE_JSON " + JSON.stringify({
 		"scenario": "real-workbench-process",
 		"frames": frames, "pending_frames": pending,
@@ -195,7 +245,17 @@ func _test_cancel_and_resume(m: Dictionary) -> void:
 	_check(not bool(denied.get("success", false))
 		and String(denied.get("error", "")).contains("STAGED_PENDING"),
 		"legacy synchronous entrypoint blocked while CPU worker is authoritative")
+	var old_lease: RefCounted = ctrl._r322_lease_token
+	var old_generation: int = int(ctrl._r322_generation)
+	_check(old_lease != null and ctrl._r322_source_lease_valid(
+		ctrl._runtime, String(ctrl._runtime.integrity_hash), ctrl.tick(),
+		C.digest(ctrl._canonical_step_options().options), old_lease, old_generation),
+		"current active lease checks exact source identity, token and epoch")
 	var paused: Dictionary = ctrl.pause()
+	_check(not ctrl._r322_source_lease_valid(
+		ctrl._runtime, String(ctrl._runtime.integrity_hash), ctrl.tick(),
+		C.digest(ctrl._canonical_step_options().options), old_lease, old_generation),
+		"PAUSE invalidates old generation even when frontier hash is unchanged")
 	_check(bool(paused.get("success", false))
 		and not ctrl.has_pending_staged_tick() and ctrl.tick() == 0,
 		"PAUSE immediately discards pending worker publication")
