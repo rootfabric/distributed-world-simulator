@@ -8,9 +8,12 @@ extends RefCounted
 ## The entire task is atomic from the caller's perspective. No worker result
 ## may be committed after a cancellation/PAUSE/restore or changed source.
 ##
-## The source is a shallow outer copy of a *trusted*, controller-private
-## immutable canonical frontier; the worker does NOT write any source member.
-## Host MUST disallow concurrent mutable aliases, just like A14.5 staging.
+## Direct OffMain clients are UNTRUSTED: full final Runtime.validate stays
+## on main. Only the real LAB Controller can issue an exclusive generation
+## lease for its private canonical frontier (no public mutable aliases).
+## The worker always fully validates both source and candidate at finish.
+## A hash/tick alone cannot prove a mutable Dictionary has not changed.
+## Bypassing the Controller to mutate _runtime directly voids its lease.
 ## True cancellation is cooperative BETWEEN indivisible Runtime steps.
 ## A canceled task is drained before a new task is enqueued.
 ## No hard deadline, guaranteed throughput, or WORLD_COMPAT activation.
@@ -31,6 +34,14 @@ var _worker_result: Dictionary = {}
 var _source_hash := ""
 var _options_hash := ""
 var _source_tick := -1
+# R3.2.2 transient, controller-only authority to skip the duplicate main
+# validate after the worker fully validated BOTH frontier and next state.
+var _trusted_owner: Object = null
+var _trusted_token: RefCounted = null
+var _trusted_generation := -1
+var _last_admission_mode := "FULL_SOURCE_VALIDATE"
+var _last_worker_source_validate_us := 0
+var _last_worker_candidate_validate_us := 0
 var _job_started_us := 0
 var _jobs_started := 0
 var _jobs_committed := 0
@@ -62,6 +73,7 @@ func reap_discarded() -> bool:
 	_task_id = -1
 	_drained += 1
 	_abandoned = false
+	_clear_trusted_lease()
 	_mutex.lock()
 	_worker_result = {}
 	_cancel_requested = false
@@ -101,13 +113,18 @@ func status() -> Dictionary:
 		"last_join_wall_us": _last_join_us,
 		"last_source_admission_wall_us": _last_source_admission_us,
 		"peak_source_admission_wall_us": _peak_source_admission_us,
+		"last_admission_mode": _last_admission_mode,
+		"last_worker_source_validate_wall_us": _last_worker_source_validate_us,
+		"last_worker_candidate_validate_wall_us": _last_worker_candidate_validate_us,
 		"last_worker_wall_us": _last_worker_wall_us,
 		"last_error": _last_error,
 	}
 
 func advance(state: Dictionary, options: Dictionary,
 		max_members: int = 8, allocator_items: int = 64,
-		cursor_cap_bytes: int = 8388608) -> Dictionary:
+		cursor_cap_bytes: int = 8388608,
+		lease_owner: Object = null, lease_token: RefCounted = null,
+		lease_generation: int = -1) -> Dictionary:
 	var t0: int = Time.get_ticks_usec()
 	reap_discarded()
 	if not C.integer(max_members, 1, Spatial.MAX_MEMBERS) \
@@ -134,8 +151,8 @@ func advance(state: Dictionary, options: Dictionary,
 		_mutex.unlock()
 		if _abandoned:
 			_abandoned = false
-			# The caller may re-run from a trusted new frontier on its next
-			# frame, but no result from the cancelled generation is returned.
+			_clear_trusted_lease()
+			# Cancelled work is discarded even when it finished before polling.
 			return _pending(t0, "DRAINED")
 		if String(state.get("integrity_hash", "")) != _source_hash \
 				or int(state.get("tick", -1)) != _source_tick \
@@ -148,13 +165,34 @@ func advance(state: Dictionary, options: Dictionary,
 				or int(payload.state.tick) != _source_tick + 1:
 			_jobs_failed += 1
 			return _failed("R3_ASYNC_FINAL_STATE", t0)
-		# Main-thread final source admission runs ONCE, not on each
-		# pending frame. Error => no canonical result adoption.
+		# Worker must attest full validation of source AND candidate on the
+		# frozen exact generation. A cheap hash is not a replacement.
+		if not bool(payload.get("source_validated", false)) \
+				or not bool(payload.get("candidate_validated", false)) \
+				or String(payload.get("validated_source_hash", "")) != _source_hash \
+				or int(payload.get("validated_source_tick", -1)) != _source_tick \
+				or String(payload.get("validated_options_hash", "")) != _options_hash \
+				or int(payload.get("validated_generation", -2)) != _trusted_generation:
+			_jobs_failed += 1
+			return _failed("R3_ASYNC_WORKER_VALIDATION_RECEIPT", t0)
+		_last_worker_source_validate_us = int(payload.get("source_validate_us", 0))
+		_last_worker_candidate_validate_us = int(payload.get("candidate_validate_us", 0))
 		var source_validation_started_us: int = Time.get_ticks_usec()
-		var canonical_error: String = Runtime.validate(state)
+		var canonical_error := ""
+		var admission_mode := "FULL_SOURCE_VALIDATE"
+		if _trusted_owner != null:
+			admission_mode = "TRUSTED_CONTROLLER_LEASE"
+			if not _trusted_lease_current(state):
+				_jobs_failed += 1
+				return _failed("R3_ASYNC_TRUSTED_LEASE_REVOKED", t0)
+		else:
+			# Untrusted callers still require the full LAST-MOMENT check;
+			# worker validation alone cannot protect a mutable caller alias.
+			canonical_error = Runtime.validate(state)
 		var source_admission_wall_us: int = maxi(0, Time.get_ticks_usec() - source_validation_started_us)
 		_last_source_admission_us = source_admission_wall_us
 		_peak_source_admission_us = maxi(_peak_source_admission_us, source_admission_wall_us)
+		_last_admission_mode = admission_mode
 		if not canonical_error.is_empty():
 			_jobs_failed += 1
 			return _failed("R3_ASYNC_SOURCE_INVALID:" + canonical_error, t0)
@@ -166,6 +204,7 @@ func advance(state: Dictionary, options: Dictionary,
 		_source_hash = ""
 		_options_hash = ""
 		_source_tick = -1
+		_clear_trusted_lease()
 		return {
 			"success": true, "complete": true, "pending": false,
 			"phase": "COMPLETE", "state": result,
@@ -177,6 +216,9 @@ func advance(state: Dictionary, options: Dictionary,
 			"worker_wall_us": _last_worker_wall_us,
 			"join_wall_us": join_wall_us,
 			"source_admission_wall_us": source_admission_wall_us,
+			"source_admission_mode": admission_mode,
+			"worker_source_validate_wall_us": _last_worker_source_validate_us,
+			"worker_candidate_validate_wall_us": _last_worker_candidate_validate_us,
 			"complete_poll_wall_us": complete_poll_wall_us,
 		}
 	# Exactly one job can run per host session. Starting with
@@ -189,6 +231,26 @@ func advance(state: Dictionary, options: Dictionary,
 	if options_hash.is_empty():
 		return _failed("R3_ASYNC_INVALID_OPTIONS", t0)
 	var anchor: String = String(state.integrity_hash)
+	var use_lease: bool = lease_owner != null or lease_token != null \
+		or lease_generation >= 0
+	_clear_trusted_lease()
+	_source_hash = anchor
+	_options_hash = options_hash
+	_source_tick = int(state.tick)
+	if use_lease:
+		if lease_owner == null or lease_token == null or lease_generation < 0 \
+				or not lease_owner.has_method("_r322_source_lease_valid"):
+			return _failed("R3_ASYNC_TRUSTED_LEASE_ARGUMENTS", t0)
+		var owner_script: Script = lease_owner.get_script() as Script
+		if owner_script == null or String(owner_script.resource_path) != \
+				"res://scripts/ecology/workbench/experiment_controller_v1.gd":
+			return _failed("R3_ASYNC_TRUSTED_LEASE_OWNER", t0)
+		_trusted_owner = lease_owner
+		_trusted_token = lease_token
+		_trusted_generation = lease_generation
+		if not _trusted_lease_current(state):
+			_clear_trusted_lease()
+			return _failed("R3_ASYNC_TRUSTED_LEASE_AT_DISPATCH", t0)
 	_mutex.lock()
 	_cancel_requested = false
 	_worker_result = {}
@@ -205,15 +267,18 @@ func advance(state: Dictionary, options: Dictionary,
 	_task_id = WorkerThreadPool.add_task(
 		Callable(self, "_compute").bind(
 			frozen_state, frozen_options, max_members,
-			allocator_items, cursor_cap_bytes),
+			allocator_items, cursor_cap_bytes,
+			anchor, _source_tick, options_hash, _trusted_generation),
 		false, "eco-a146-r3-2-global-a4")
 	if _task_id < 0:
+		_clear_trusted_lease()
 		return _failed("R3_ASYNC_SPAWN_FAILED", t0)
 	_jobs_started += 1
 	return _pending(t0, "BACKGROUND")
 
 func _compute(frozen: Dictionary, options: Dictionary, members: int,
-		items: int, cursor_cap: int) -> void:
+		items: int, cursor_cap: int, anchor: String, source_tick: int,
+		options_hash: String, generation: int) -> void:
 	var started_us: int = Time.get_ticks_usec()
 	var payload: Dictionary = {}
 	var started: Dictionary = Runtime.begin_staged_global_tick(
@@ -250,6 +315,34 @@ func _compute(frozen: Dictionary, options: Dictionary, members: int,
 			cursor = step.cursor
 		if payload.is_empty():
 			payload = {"success": false, "error": "WORKER_RESUME_LIMIT"}
+	# The final full validation runs only on the CPU worker. Retain the
+	# direct-service full MAIN check until an exclusive owner lease exists.
+	if bool(payload.get("success", false)):
+		var validation_started_us: int = Time.get_ticks_usec()
+		var source_error: String = Runtime.validate(frozen)
+		var source_validate_us: int = maxi(0, Time.get_ticks_usec() - validation_started_us)
+		validation_started_us = Time.get_ticks_usec()
+		var candidate_error: String = Runtime.validate(payload.state)
+		var candidate_validate_us: int = maxi(0, Time.get_ticks_usec() - validation_started_us)
+		if not source_error.is_empty():
+			payload = {"success": false, "error": "FINAL_SOURCE:" + source_error}
+		elif not candidate_error.is_empty():
+			payload = {"success": false, "error": "FINAL_CANDIDATE:" + candidate_error}
+		elif String(frozen.get("integrity_hash", "")) != anchor \
+				or int(frozen.get("tick", -1)) != source_tick \
+				or C.digest(options) != options_hash:
+			payload = {"success": false, "error": "FINAL_SOURCE_FRONTIER"}
+		elif _is_cancel_requested():
+			payload = {"success": false, "error": "CANCELLED"}
+		else:
+			payload["source_validated"] = true
+			payload["candidate_validated"] = true
+			payload["validated_source_hash"] = anchor
+			payload["validated_source_tick"] = source_tick
+			payload["validated_options_hash"] = options_hash
+			payload["validated_generation"] = generation
+			payload["source_validate_us"] = source_validate_us
+			payload["candidate_validate_us"] = candidate_validate_us
 	payload["worker_wall_us"] = maxi(0, Time.get_ticks_usec() - started_us)
 	_mutex.lock()
 	_worker_result = payload
@@ -260,6 +353,18 @@ func _is_cancel_requested() -> bool:
 	var cancelled: bool = _cancel_requested
 	_mutex.unlock()
 	return cancelled
+
+func _trusted_lease_current(state: Dictionary) -> bool:
+	if _trusted_owner == null or _trusted_token == null:
+		return false
+	return bool(_trusted_owner._r322_source_lease_valid(
+		state, _source_hash, _source_tick, _options_hash,
+		_trusted_token, _trusted_generation))
+
+func _clear_trusted_lease() -> void:
+	_trusted_owner = null
+	_trusted_token = null
+	_trusted_generation = -1
 
 func _pending(started_us: int, phase: String) -> Dictionary:
 	var wall: int = maxi(0, Time.get_ticks_usec() - started_us)
