@@ -30,6 +30,14 @@ def analyze(root:Path,minimum_wire_events:int=10)->dict:
         or manifest.get("r31bp1_durable_chunks") is not True
         or manifest.get("r3c4r2_worker_envelope") is not True):
         raise ValueError("P23R2_INVALID_CANARY_OR_RUN_ID")
+    # Historical R2.0 traces have no R2.1 field; on a NEW R2.1
+    # OFF/ON comparison the run's own manifest and every COMPACT's actual
+    # nested simulator+ENet receipt MUST agree. A disabled/unexecuted fast
+    # path can never masquerade as the optimized ON arm.
+    r21_expected=manifest.get("r31p23r21_single_pass_compact")
+    if r21_expected is not None and type(r21_expected) is not bool:
+        raise ValueError("R21_INVALID_MANIFEST_CANARY")
+    r21_confirmed=0
     trace_path=root/"server"/"trace.jsonl"
     trace=read_trace(trace_path,run_id)
     old=analyze_events(trace, minimum_frames=100, minimum_snapshots=10)
@@ -72,6 +80,11 @@ def analyze(root:Path,minimum_wire_events:int=10)->dict:
             sim=d.get("simulator")
             if not isinstance(sim,dict) or type(sim.get("passthrough")) is not bool:
                 raise ValueError("P23R2_SIMULATOR_PROFILE_MISSING")
+            if r21_expected is not None and sim["passthrough"]:
+                if (sim.get("r31p23r21_size_reused") is not r21_expected
+                    or sim.get("r31p23r21_fast_encode") is not r21_expected):
+                    raise ValueError("R21_FAST_ENCODE_OR_SIZE_RECEIPT_MISMATCH")
+                r21_confirmed+=1
             sim_parts={key:number(sim.get(key),key) for key in SIM_STAGES}
             if sum(sim_parts.values())>bstage["port_call_ms"]+TOLERANCE_MS:
                 raise ValueError("P23R2_SIMULATOR_EXCEEDS_PORT_CALL")
@@ -145,6 +158,8 @@ def analyze(root:Path,minimum_wire_events:int=10)->dict:
         "all_nested_flush_events":observed_total,
         "passthrough_events":passthrough_count,
         "condition_queued_events":nonpassthrough_count,
+        "r21_requested":r21_expected,
+        "r21_confirmed_passthrough_events":r21_confirmed,
         "boundary_stage_ms":{k:dist(v) for k,v in stage_series.items()},
         "simulator_stage_ms":{k:dist(v) for k,v in simulator_series.items()},
         "enet_stage_ms":{k:dist(v) for k,v in enet_series.items()},
