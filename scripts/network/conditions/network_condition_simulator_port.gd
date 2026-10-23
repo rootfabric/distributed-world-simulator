@@ -44,6 +44,18 @@ var _stream_rngs: Dictionary = {}
 var _counters: Dictionary = {}
 # R31P23 R2.0 — OBSERVER ONLY, propagates exactly to delegate ENet.
 var _r31p23r2_attribution_enabled := false
+# R2.1: only LOCAL real ENet passthrough reuses actual encoded byte-count.
+# The original pre-delegate FrameScript.validate(frame) remains mandatory.
+var _r31p23r21_single_pass_compact_enabled := false
+
+func configure_r31p23r21_single_pass_compact(enabled: bool) -> Dictionary:
+	if _delegate == null or not _delegate.has_method("configure_r31p23r21_single_pass_compact"):
+		return TransportUtilsScript.failure("R31P23R21_ENET_DELEGATE_REQUIRED")
+	var r: Dictionary = _delegate.configure_r31p23r21_single_pass_compact(enabled)
+	if not bool(r.get("success", false)):
+		return r
+	_r31p23r21_single_pass_compact_enabled = enabled
+	return TransportUtilsScript.success({"enabled": enabled})
 
 
 func configure_r31p23r2_flush_attribution(enabled: bool) -> Dictionary:
@@ -151,17 +163,39 @@ func send_to_peer(peer_id: String, frame: Dictionary) -> Dictionary:
 	var p23_validated_us: int = Time.get_ticks_usec() if p23_probe else 0
 	if not bool(frame_check.get("success", false)):
 		return TransportUtilsScript.failure(String(frame_check.get("error_code", "INVALID_FRAME")))
-	var packet_bytes: int = NetworkUtilsScript.canonical_json(frame).to_utf8_buffer().size()
+	var real_passthrough: bool = _passthrough and not _has_active_manual_condition(OUTGOING)
+	var r21_reuse_encoded_size: bool = (
+		_r31p23r21_single_pass_compact_enabled
+		and real_passthrough
+		and String(Dictionary(frame.get("payload", {})).get("type", "")) == "COMPACT_GAMEPLAY_SNAPSHOT"
+		and _delegate != null
+		and String(_delegate.get_descriptor().get("transport_kind", "")) == "ENET_MULTI_PEER"
+	)
+	# Original frame checksum/JSON safety validation already succeeded above.
+	# In a real passthrough the ENet delegate MUST produce canonical packet
+	# bytes and return their exact count; reserializing just to count bytes
+	# here was an extra full JSON traversal. Simulated/dropped profiles keep
+	# the original size calculation, queue policy and failure codes.
+	var packet_bytes: int = (
+		-1 if r21_reuse_encoded_size
+		else NetworkUtilsScript.canonical_json(frame).to_utf8_buffer().size()
+	)
 	var p23_canonical_us: int = Time.get_ticks_usec() if p23_probe else 0
-	if _passthrough and not _has_active_manual_condition(OUTGOING):
+	if real_passthrough:
 		var p23_before_delegate_us: int = Time.get_ticks_usec() if p23_probe else 0
 		var direct: Dictionary = _normalize_result(_delegate.send_to_peer(peer_id, frame))
 		var p23_delegate_us: int = Time.get_ticks_usec() if p23_probe else 0
+		if r21_reuse_encoded_size and bool(direct.get("success", false)):
+			var exact_bytes = Dictionary(direct.get("details", {})).get("packet_bytes")
+			if type(exact_bytes) != TYPE_INT or int(exact_bytes) < 1:
+				return TransportUtilsScript.failure("R31P23R21_DELEGATE_PACKET_SIZE_MISSING")
+			packet_bytes = int(exact_bytes)
 		if bool(direct.get("success", false)):
 			_increment("network_simulator_packets_passthrough")
 		var result: Dictionary = _with_simulator_details(direct, packet_bytes, false, false, _now_ms())
 		if p23_probe and bool(result.get("success", false)):
 			var extras: Dictionary = Dictionary(result.get("details", {}))
+			extras["r31p23r21_size_reused"] = r21_reuse_encoded_size
 			extras["r31p23r2_simulator_stages"] = {
 				"passthrough": true,
 				"frame_validate_ms": float(p23_validated_us - p23_start_us) / 1000.0,
