@@ -1,0 +1,114 @@
+name: ECO ARCH2 A14.7 R2B Workset Batch 1-vs-16 Exact
+
+on:
+  push:
+    branches:
+      - feature/eco-arch2-a14-7-r2b-batched-worksets-r1
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: eco-a147-r2b-${{ github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  portable:
+    runs-on: ubuntu-latest
+    timeout-minutes: 65
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Godot 4.7.1 paired CPU worker n4/32/96/256 original exact
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fL --retry 3 -o /tmp/godot-r2b.zip https://github.com/godotengine/godot/releases/download/4.7.1-stable/Godot_v4.7.1-stable_linux.x86_64.zip
+          mkdir -p /tmp/godot-r2b
+          unzip -q /tmp/godot-r2b.zip -d /tmp/godot-r2b
+          godot=/tmp/godot-r2b/Godot_v4.7.1-stable_linux.x86_64
+          chmod +x "$godot"
+          "$godot" --headless --editor --path . --import > r2b-import.log 2>&1 || { cat r2b-import.log; exit 1; }
+          mkdir -p r2b-evidence
+          for n in 4 32 96 256; do
+            "$godot" --headless --path . --script res://validation/ecology/evo_arch2_a14_7/test_a147_r2b_workset_batching.gd -- --r2-population "$n" > "r2b-evidence/n$n.stdout.log" 2> "r2b-evidence/n$n.stderr.log" || { cat "r2b-evidence/n$n.stdout.log"; cat "r2b-evidence/n$n.stderr.log"; exit 1; }
+            grep -Fx 'A147_R2B_BATCH PASS' "r2b-evidence/n$n.stdout.log"
+            grep '^A147_R2B_BATCH_COMPARE_JSON ' "r2b-evidence/n$n.stdout.log" | sed 's/^A147_R2B_BATCH_COMPARE_JSON //' > "r2b-evidence/n$n.json"
+            if grep -Ei 'SCRIPT ERROR|Parse Error|Failed to load script|Error compiling' "r2b-evidence/n$n.stdout.log" "r2b-evidence/n$n.stderr.log"; then exit 1; fi
+          done
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          for n in [4,32,96,256]:
+              p=json.loads(Path(f"r2b-evidence/n{n}.json").read_text())
+              assert p["schema"]=="dws.ecology.a14-7-r2b-batching-observation.v1"
+              assert p["population"]==n and p["checkpoint_equal"] and p["source_unchanged"]
+              assert p["new_canonical_owner"] is False and p["target_one_second_not_claimed"]
+              assert p["old_worker_wall_us"]>0 and p["batch_worker_wall_us"]>0
+              assert p["batch_phase"]["allocate_begin_calls"]==1
+              assert p["old_phase"]["allocate_begin_calls"]==1
+              assert p["batch_phase"]["prepare_calls"]<=p["old_phase"]["prepare_calls"]
+              assert p["batch_phase"]["advance_calls"]<=p["old_phase"]["advance_calls"]
+              print(f'R2B_OBSERVED population={n} baseline_ms={p["old_worker_wall_us"]/1000:.3f} batch16_ms={p["batch_worker_wall_us"]/1000:.3f} speedup={p["improvement_ratio"]:.3f}x')
+          print("A147_R2B_ALL_FOUR_CANONICAL_PARITY_PASS")
+          PY
+          git diff --exit-code && git diff --cached --exit-code
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: eco-a147-r2b-portable-paired
+          path: |
+            r2b-import.log
+            r2b-evidence/
+          if-no-files-found: ignore
+
+  windows:
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 130
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Windows pinned 4.7.1 Double paired exact
+        shell: pwsh
+        env:
+          CONFIGURED_GODOT: ${{ vars.DWS_GODOT_DOUBLE_BIN }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $godot = $env:CONFIGURED_GODOT
+          if ([string]::IsNullOrWhiteSpace($godot)) { $godot = 'C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe' }
+          if ((Get-FileHash $godot -Algorithm SHA256).Hash.ToLowerInvariant() -ne '3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5') { throw 'A147_R2B_GODOT_SHA_MISMATCH' }
+          & $godot --headless --editor --path . --import *> r2b-win-import.log
+          if ($LASTEXITCODE -ne 0) { throw 'A147_R2B_IMPORT_FAIL' }
+          New-Item -ItemType Directory -Force -Path r2b-win-evidence | Out-Null
+          foreach ($n in @(4,32,96,256)) {
+            $out = Join-Path (Get-Location).Path "r2b-win-evidence\n$n.stdout.log"
+            $err = Join-Path (Get-Location).Path "r2b-win-evidence\n$n.stderr.log"
+            $args = @('--headless','--path','.','--script','res://validation/ecology/evo_arch2_a14_7/test_a147_r2b_workset_batching.gd','--','--r2-population',"$n")
+            $proc = Start-Process -FilePath $godot -ArgumentList $args -WorkingDirectory (Get-Location).Path -PassThru -RedirectStandardOutput $out -RedirectStandardError $err
+            $proc.WaitForExit()
+            $code = [int64]$proc.ExitCode
+            $hex = '0x{0:X8}' -f ([uint32]($code -band [int64]0xffffffff))
+            Write-Host "A147_R2B_NATIVE_EXIT population=$n code=$code hex=$hex"
+            if ($code -ne 0) { Get-Content $out; Get-Content $err; throw "A147_R2B_NATIVE_CRASH_$n" }
+            if (-not (Select-String -Path $out -Pattern '^A147_R2B_BATCH PASS$' -Quiet)) { throw "A147_R2B_CANONICAL_PASS_MISSING_$n" }
+            $rows = @(Get-Content $out | Where-Object { $_ -match '^A147_R2B_BATCH_COMPARE_JSON ' })
+            if ($rows.Count -ne 1) { throw "A147_R2B_PROFILE_MISSING_$n" }
+            $entry = ($rows[0] -replace '^A147_R2B_BATCH_COMPARE_JSON ','') | ConvertFrom-Json
+            if (-not [bool]$entry.checkpoint_equal -or [int]$entry.population -ne $n) { throw "A147_R2B_A8_MISMATCH_$n" }
+            Set-Content -Path "r2b-win-evidence\n$n.json" -Value ($rows[0] -replace '^A147_R2B_BATCH_COMPARE_JSON ','') -Encoding utf8
+          }
+          git diff --exit-code
+          if ($LASTEXITCODE -ne 0) { throw 'DIRTY_WORKTREE' }
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: eco-a147-r2b-windows-paired
+          path: |
+            r2b-win-import.log
+            r2b-win-evidence/
+          if-no-files-found: ignore
