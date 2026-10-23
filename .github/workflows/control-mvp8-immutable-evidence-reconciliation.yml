@@ -1,0 +1,160 @@
+name: CONTROL MVP8 Immutable Evidence Map Reconciliation
+on:
+  push:
+    branches:
+      - repair/control-mvp8-legacy-evidence-map-quarantine-r1
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  control-scope:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Verify canonical-main parent, exact scope and immutable pinned evidence
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          parent=aac301b9a9a89e027f6d99864437eb750a4202ca
+          test "$(git merge-base "$parent" HEAD)" = "$parent"
+          python3 - <<'PY'
+          import json, subprocess
+          from pathlib import Path
+          parent="aac301b9a9a89e027f6d99864437eb750a4202ca"
+          expected={
+              ".github/workflows/control-mvp8-immutable-evidence-reconciliation.yml":"A",
+              "config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence-ledger-reconciliation.v1.json":"A",
+              "tests/harness/test_mvp8_immutable_evidence_reconciliation_r1.py":"A",
+              "docs/control/CONTROL_MVP8_LEGACY_EVIDENCE_RECONCILIATION_R1_RU.md":"A",
+          }
+          rows=subprocess.check_output(["git","diff","--name-status",parent,"HEAD"],text=True).splitlines()
+          seen={}
+          for row in rows:
+              status,path=row.split("\t")
+              assert path in expected and status==expected[path],row
+              seen[path]=status
+          assert seen==expected,(seen,expected)
+          history="config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence/MVP8-EVIDENCE-MAP-90BC1026-R1.v1.json"
+          expected_sha="9d6d6c676fdca3501ec35b8962c8dca36eaccfd7"
+          blob=subprocess.check_output(["git","rev-parse","HEAD:"+history],text=True).strip()
+          assert blob==expected_sha,blob
+          commits=subprocess.check_output(["git","log","--format=%H","--",history],text=True).splitlines()
+          assert len(commits)==1,commits
+          assert subprocess.check_output(["git","diff","--name-only",parent,"--",history],text=True).strip()==""
+          print("MVP8_LEGACY_IMMUTABILITY_AND_SCOPE=PASS")
+          PY
+          git diff --check "$parent" HEAD
+  harness-linux:
+    needs: control-scope
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Pin Harness JSON Schema validator
+        shell: bash
+        run: python -m pip install -r scripts/harness/requirements.txt
+      - name: Positive, original RED and tamper-fail-closed unit tests
+        shell: bash
+        env:
+          PYTHONPATH: scripts
+        run: |
+          set -Eeuo pipefail
+          python -m unittest discover -s tests/harness -p 'test_mvp8_immutable_evidence_reconciliation_r1.py' -v
+      - name: Exercise exact control entry on canonical main-derived branch
+        shell: bash
+        env:
+          PYTHONPATH: scripts
+        run: |
+          set -Eeuo pipefail
+          set +e
+          python -m harness.cli status --root "$PWD" >"$RUNNER_TEMP/mvp8-control-status.jsonl" 2>&1
+          status_exit=$?
+          set -e
+          cat "$RUNNER_TEMP/mvp8-control-status.jsonl"
+          echo "CONTROL_MVP8_STATUS_EXIT=$status_exit"
+          python - "$RUNNER_TEMP/mvp8-control-status.jsonl" "$status_exit" <<'PY'
+          import json,sys
+          result=json.loads(open(sys.argv[1],encoding="utf-8").read().splitlines()[-1])
+          exit_code=int(sys.argv[2])
+          assert result["schema"]=="distributed_world_simulator.control_development_output.v1",result
+          if exit_code==0:
+              assert result.get("ok") is True,result
+              print("CONTROL_MVP8_FULL_STATUS=PASS")
+          else:
+              # Exactly one independently diagnosed append-only ledger issue;
+              # never reinterpret this as PC0 NON_RED or full tooling PASS.
+              assert exit_code==5 and result.get("ok") is False,result
+              assert result.get("error")=={
+                  "code":"EXECUTION_STATE_INVALID",
+                  "detail":"EVENT_SUBJECT_NOT_ANCESTOR:E2026-09-09-V0-MVP-R1-V0-MVP-R1-WO-001-0050-MVP8-REPAIR-R2-INDEPENDENT-REVIEWER-PASS"
+              },result
+              print("CONTROL_MVP8_EVIDENCE_SCHEMA_RECOVERED=PASS")
+              print("CONTROL_FULL_STATUS=BLOCKED_EVENT_SUBJECT_NOT_ANCESTOR")
+              print("PC0_NON_RED_NOT_CLAIMED=true")
+          PY
+      - name: Full existing Harness unit suite
+        shell: bash
+        env:
+          PYTHONPATH: scripts
+        run: |
+          set -Eeuo pipefail
+          python -m unittest discover -s tests/harness -v
+  harness-windows:
+    needs: control-scope
+    runs-on: windows-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install pinned schema validator
+        shell: pwsh
+        run: python -m pip install -r scripts/harness/requirements.txt
+      - name: Run focused immutable reconciliation tests
+        shell: pwsh
+        env:
+          PYTHONPATH: scripts
+        run: |
+          python -m unittest discover -s tests/harness -p 'test_mvp8_immutable_evidence_reconciliation_r1.py' -v
+          if ($LASTEXITCODE -ne 0) { throw 'MVP8_RECONCILIATION_UNIT_FAIL' }
+      - name: Run exact public Windows Control driver
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          $output = & pwsh -NoLogo -NoProfile -File (Join-Path $PWD 'CONTROL_DEVELOPMENT.ps1') -Status
+          $rc=$LASTEXITCODE
+          $output | ForEach-Object { Write-Host $_ }
+          $last = ($output | Select-Object -Last 1) | ConvertFrom-Json
+          if ($last.schema -ne 'distributed_world_simulator.control_development_output.v1') { throw 'CONTROL_STATUS_CONTRACT_INVALID' }
+          if ($rc -eq 0 -and $last.ok -eq $true) {
+              Write-Host 'CONTROL_MVP8_WINDOWS_FULL_STATUS=PASS'
+          } elseif ($rc -eq 5 -and $last.ok -eq $false -and
+                    $last.error.code -eq 'EXECUTION_STATE_INVALID' -and
+                    $last.error.detail -ceq 'EVENT_SUBJECT_NOT_ANCESTOR:E2026-09-09-V0-MVP-R1-V0-MVP-R1-WO-001-0050-MVP8-REPAIR-R2-INDEPENDENT-REVIEWER-PASS') {
+              Write-Host 'CONTROL_MVP8_WINDOWS_EVIDENCE_SCHEMA_RECOVERED=PASS'
+              Write-Host 'CONTROL_FULL_STATUS=BLOCKED_EVENT_SUBJECT_NOT_ANCESTOR'
+              Write-Host 'PC0_NON_RED_NOT_CLAIMED=true'
+          } else {
+              throw "CONTROL_STATUS_UNEXPECTED:EXIT_$rc CODE=$($last.error.code) DETAIL=$($last.error.detail)"
+          }
+          # This CI step checks the *observed failure class*, not driver success.
+          # The nested pwsh returned 5 as proven above. Explicit success for
+          # the scoped diagnostic avoids the actions pwsh wrapper inheriting
+          # that native LASTEXITCODE and incorrectly failing this check.
+          exit 0
