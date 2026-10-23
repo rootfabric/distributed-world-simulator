@@ -645,7 +645,7 @@ func _process(delta: float) -> void:
 	_telemetry.observe("server_process_duration_ms", process_duration_ms)
 	_stall_exit(process_probe)
 	if SmoothTrace.enabled():
-		SmoothTrace.emit("server_loop", {"tick": _server_tick,
+		var p22_server_loop_record: Dictionary = {"tick": _server_tick,
 			"peers": _peer_to_player.size(), "rejections": _rejections,
 			"process_ms": float(Time.get_ticks_usec() - smooth_started) / 1000.0,
 			"message_ms": float(smooth_messages_done - smooth_started) / 1000.0,
@@ -656,7 +656,10 @@ func _process(delta: float) -> void:
 			"checkpoint_generation": _checkpoint_generation,
 			"capture_ms": _async_checkpoint_capture_ms,
 			"async_enabled": _movement_checkpoint_writer != null,
-			"async_busy": _movement_checkpoint_writer != null and _movement_checkpoint_writer.is_busy()})
+			"async_busy": _movement_checkpoint_writer != null and _movement_checkpoint_writer.is_busy()}
+		if _r31p22_loop_attribution_enabled:
+			p22_server_loop_record["engine_frame"] = Engine.get_process_frames()
+		SmoothTrace.emit("server_loop", p22_server_loop_record)
 	if _r31p22_loop_attribution_enabled and SmoothTrace.enabled():
 		# One event per server frame; Engine.get_process_frames() matches
 		# the high-priority NetSmoothProbe on this SAME process/frame.
