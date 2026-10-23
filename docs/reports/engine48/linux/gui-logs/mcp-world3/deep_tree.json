@@ -1,0 +1,501 @@
+{
+  "child_count": 1,
+  "children": [
+    {
+      "child_count": 1,
+      "children": [
+        {
+          "child_count": 2,
+          "children": [
+            {
+              "child_count": 0,
+              "name": "@ColorRect@3",
+              "path": "UX0ProductShell/ProductShellRoot/@ColorRect@3",
+              "type": "ColorRect",
+              "visible": true
+            },
+            {
+              "child_count": 1,
+              "children": [
+                {
+                  "child_count": 2,
+                  "children": [
+                    {
+                      "child_count": 1,
+                      "children": [
+                        {
+                          "child_count": 1,
+                          "children": [
+                            {
+                              "child_count": 10,
+                              "children": [
+                                {
+                                  "child_count": 0,
+                                  "name": "@Label@9",
+                                  "path": "UX0ProductShell/ProductShellRoot/@MarginContainer@4/@HBoxContainer@5/@PanelContainer@6/@MarginContainer@7/@VBoxContainer@8/@Label@9",
+                                  "type": "Label",
+                                  "visible": true
+                                },
+                                {
+                                  "child_count": 0,
+                                  "name": "@Label@10",
+                                  "path": "UX0ProductShell/ProductShellRoot/@MarginContainer@4/@HBoxContainer@5/@PanelContainer@6/@MarginContainer@7/@VBoxContainer@8/@Label@10",
+                                  "type": "Label",
+                                  "visible": true
+                                },
+                                {
+                                  "child_count": 0,
+                                  "name": "@HSeparator@11",
+                                  "path": "UX0ProductShell/ProductShellRoot/@MarginContainer@4/@HBoxContainer@5/@PanelContainer@6/@MarginContainer@7/@VBoxContainer@8/@HSeparator@11",
+                                  "type": "HSeparator",
+                                  "visible": true
+                                },
+                                {
+                                  "child_count": 0,
+                                  "name": "@Button@12",
+                                  "path": "UX0ProductShell/ProductShellRoot/@MarginContainer@4/@HBoxContainer@5/@PanelContainer@6/@MarginContainer@7/@VBoxContainer@8/@Button@12",
+                                  "type": "Button",
+                                  "visible": true
+                                },
+                                {
+                                  "child_count": 0,
+                                  "name": "@Button@13",
+                                  "path": "UX0ProductShell/ProductShellRoot/@MarginContainer@4/@HBoxContainer@5/@PanelContainer@6/@MarginContainer@7/@VBoxContainer@8/@Button@13",
+                                  "type": "Button",
+                                  "visible": true
+                                },
+                                {
+                                  "child_count": 0,
+                                  "name": "@Button@14",
+                                  "path": "UX0ProductShell/ProductShellRoot/@MarginContainer@4/@HBoxContainer@5/@PanelContainer@6/@MarginContainer@7/@VBoxContainer@8/@Button@14",
+                                  "type": "Button",
+                                  "visible": true
+                                },
+                                {
+                                  "child_count": 0,
+                                  "name": "@Button@15",
+                                  "path": "UX0ProductShell/ProductShellRoot/@MarginContainer@4/@HBoxContainer@5/@PanelContainer@6/@MarginContainer@7/@VBoxContainer@8/@Button@15",
+                                  "type": "Button",
+                                  "visible": true
+                                },
+                                {
+                                  "child_count": 0,
+                                  "name": "@Button@16",
+                                  "path": "UX0ProductShell/ProductShellRoot/@MarginContainer@4/@HBoxContainer@5/@PanelContainer@6/@MarginContainer@7/@VBoxContainer@8/@Button@16",
+                                  "type": "Button",
+                                  "visible": true
+                                },
+                                {
+                                  "child_count": 0,
+                                  "name": "@Control@17",
+                                  "path": "UX0ProductShell/ProductShellRoot/@MarginContainer@4/@HBoxContainer@5/@PanelContainer@6/@MarginContainer@7/@VBoxContainer@8/@Control@17",
+                                  "type": "Control",
+                                  "visible": true
+                                },
+                                {
+                                  "child_count": 0,
+                                  "name": "@Button@18",
+                                  "path": "UX0ProductShell/ProductShellRoot/@MarginContainer@4/@HBoxContainer@5/@PanelContainer@6/@MarginContainer@7/@VBoxContainer@8/@Button@18",
+                                  "type": "Button",
+                                  "visible": true
+                                }
+                              ],
+                              "name": "@VBoxContainer@8",
+                              "path": "UX0ProductShell/ProductShellRoot/@MarginContainer@4/@HBoxContainer@5/@PanelContainer@6/@MarginContainer@7/@VBoxContainer@8",
+                              "type": "VBoxContainer",
+                              "visible": true
+                            }
+                          ],
+                          "name": "@MarginContainer@7",
+                          "path": "UX0ProductShell/ProductShellRoot/@MarginContainer@4/@HBoxContainer@5/@PanelContainer@6/@MarginContainer@7",
+                          "type": "MarginContainer",
+                          "visible": true
+                        }
+                      ],
+                      "name": "@PanelContainer@6",
+                      "path": "UX0ProductShell/ProductShellRoot/@MarginContainer@4/@HBoxContainer@5/@PanelContainer@6",
+                      "type": "PanelContainer",
+                      "visible": true
+                    },
+                    {
+                      "child_count": 1,
+                      "children": [
+                        {
+                          "child_count": 1,
+                          "children": [
+                            {
+                              "child_count": 6,
+                              "children": [
+                                {
+                                  "child_count": 0,
+                                  "name": "@Label@22",
+                                  "path": "UX0ProductShell/ProductShellRoot/@MarginContainer@4/@HBoxContainer@5/@PanelContainer@19/@MarginContainer@20/@VBoxContainer@21/@Label@22",
+                                  "type": "Label",
+                                  "visible": true
+                                },
+                                {
+                                  "child_count": 0,
+                                  "name": "@Label@23",
+                                  "path": "UX0ProductShell/ProductShellRoot/@MarginContainer@4/@HBoxContainer@5/@PanelContainer@19/@MarginContainer@20/@VBoxContainer@21/@Label@23",
+                                  "type": "Label",
+                                  "visible": true
+                                },
+                                {
+                                  "child_count": 0,
+                                  "name": "@HSeparator@24",
+                                  "path": "UX0ProductShell/ProductShellRoot/@MarginContainer@4/@HBoxContainer@5/@PanelContainer@19/@MarginContainer@20/@VBoxContainer@21/@HSeparator@24",
+                                  "type": "HSeparator",
+                                  "visible": true
+                                },
+                                {
+                                  "child_count": 4,
+                                  "children": [
+                                    {
+                                      "child_count": 1,
+                                      "children": [
+                                        {
+                                          "child_count": 4,
+                                          "children": [
+                                            {
+                                              "child_count": 0,
+                                              "name": "@Label@27",
+                                              "path": "UX0ProductShell/ProductShellRoot/@MarginContainer@4/@HBoxContainer@5/@PanelContainer@19/@MarginContainer@20/@VBoxContainer@21/@Control@25/HomeView/@VBoxContainer@26/@Label@27",
+                                              "type": "Label",
+                                              "visible": true
+                                            },
+                                            {
+                                              "child_count": 0,
+                                              "name": "@Label@28",
+                                              "path": "UX0ProductShell/ProductShellRoot/@MarginContainer@4/@HBoxContainer@5/@PanelContainer@19/@MarginContainer@20/@VBoxContainer@21/@Control@25/HomeView/@VBoxContainer@26/@Label@28",
+                                              "type": "Label",
+                                              "visible": true
+                                            },
+                                            {
+                                              "child_count": 0,
+                                              "name": "@Button@29",
+                                              "path": "UX0ProductShell/ProductShellRoot/@MarginContainer@4/@HBoxContainer@5/@PanelContainer@19/@MarginContainer@20/@VBoxContainer@21/@Control@25/HomeView/@VBoxContainer@26/@Button@29",
+                                              "type": "Button",
+                                              "visible": true
+                                            },
+                                            {
+                                              "child_count": 0,
+                                              "name": "@Label@30",
+                                              "path": "UX0ProductShell/ProductShellRoot/@MarginContainer@4/@HBoxContainer@5/@PanelContainer@19/@MarginContainer@20/@VBoxContainer@21/@Control@25/HomeView/@VBoxContainer@26/@Label@30",
+                                              "type": "Label",
+                                              "visible": true
+                                            }
+                                          ],
+                                          "name": "@VBoxContainer@26",
+                                          "path": "UX0ProductShell/ProductShellRoot/@MarginContainer@4/@HBoxContainer@5/@PanelContainer@19/@MarginContainer@20/@VBoxContainer@21/@Control@25/HomeView/@VBoxContainer@26",
+                                          "type": "VBoxContainer",
+                                          "visible": true
+                                        }
+                                      ],
+                                      "name": "HomeView",
+                                      "path": "UX0ProductShell/ProductShellRoot/@MarginContainer@4/@HBoxContainer@5/@PanelContainer@19/@MarginContainer@20/@VBoxContainer@21/@Control@25/HomeView",
+                                      "type": "Control",
+                                      "visible": false
+                                    },
+                                    {
+                                      "child_count": 1,
+                                      "children": [
+                                        {
+                                          "child_count": 11,
+                                          "children": [
+                                            {
+                                              "child_count": 0,
+                                              "name": "@Label@32",
+                                              "path": "UX0ProductShell/ProductShellRoot/@MarginContainer@4/@HBoxContainer@5/@PanelContainer@19/@MarginContainer@20/@VBoxContainer@21/@Control@25/HostView/@VBoxContainer@31/@Label@32",
+                                              "type": "Label",
+                                              "visible": true
+                                            },
+                                            {
+                                              "child_count": 0,
+                                              "name": "@Label@33",
+                                              "path": "UX0ProductShell/ProductShellRoot/@MarginContainer@4/@HBoxContainer@5/@PanelContainer@19/@MarginContainer@20/@VBoxContainer@21/@Control@25/HostView/@VBoxContainer@31/@Label@33",
+                                              "type": "Label",
+                                              "visible": true
+                                            },
+                                            {
+                                              "child_count": 0,
+                                              "name": "@OptionButton@44",
+                                              "path": "UX0ProductShell/ProductShellRoot/@MarginContainer@4/@HBoxContainer@5/@PanelContainer@19/@MarginContainer@20/@VBoxContainer@21/@Control@25/HostView/@VBoxContainer@31/@OptionButton@44",
+                                              "type": "OptionButton",
+                                              "visible": true
+                                            },
+                                            {
+                                              "child_count": 0,
+                                              "name": "@Label@45",
+                                              "path": "UX0ProductShell/ProductShellRoot/@MarginContainer@4/@HBoxContainer@5/@PanelContainer@19/@MarginContainer@20/@VBoxContainer@21/@Control@25/HostView/@VBoxContainer@31/@Label@45",
+                                              "type": "Label",
+                                              "visible": true
+                                            },
+                                            {
+                                              "child_count": 0,
+                                              "name": "@LineEdit@46",
+                                              "path": "UX0ProductShell/ProductShellRoot/@MarginContainer@4/@HBoxContainer@5/@PanelContainer@19/@MarginContainer@20/@VBoxContainer@21/@Control@25/HostView/@VBoxContainer@31/@LineEdit@46",
+                                              "type": "LineEdit",
+                                              "visible": true
+                                            },
+                                            {
+                                              "child_count": 0,
+                                              "name": "@Label@47",
+                                              "path": "UX0ProductShell/ProductShellRoot/@MarginContainer@4/@HBoxContainer@5/@PanelContainer@19/@MarginContainer@20/@VBoxContainer@21/@Control@25/HostView/@VBoxContainer@31/@Label@47",
+                                              "type": "Label",
+                                              "visible": true
+                                            },
+                                            {
+                                              "child_count": 0,
+                                              "name": "@SpinBox@50",
+                                              "path": "UX0ProductShell/ProductShellRoot/@MarginContainer@4/@HBoxContainer@5/@PanelContainer@19/@MarginContainer@20/@VBoxContainer@21/@Control@25/HostView/@VBoxContainer@31/@SpinBox@50",
+                                              "type": "SpinBox",
+                                              "visible": true
+                                            },
+                                            {
+                                              "child_count": 0,
+                                              "name": "@Label@51",
+                                              "path": "UX0ProductShell/ProductShellRoot/@MarginContainer@4/@HBoxContainer@5/@PanelContainer@19/@MarginContainer@20/@VBoxContainer@21/@Control@25/HostView/@VBoxContainer@31/@Label@51",
+                                              "type": "Label",
+                                              "visible": true
+                                            },
+                                            {
+                                              "child_count": 0,
+                                              "name": "@LineEdit@52",
+                                              "path": "UX0ProductShell/ProductShellRoot/@MarginContainer@4/@HBoxContainer@5/@PanelContainer@19/@MarginContainer@20/@VBoxContainer@21/@Control@25/HostView/@VBoxContainer@31/@LineEdit@52",
+                                              "type": "LineEdit",
+                                              "visible": true
+                                            },
+                                            {
+                                              "child_count": 0,
+                                              "name": "@Label@53",
+                                              "path": "UX0ProductShell/ProductShellRoot/@MarginContainer@4/@HBoxContainer@5/@PanelContainer@19/@MarginContainer@20/@VBoxContainer@21/@Control@25/HostView/@VBoxContainer@31/@Label@53",
+                                              "type": "Label",
+                                              "visible": true
+                                            },
+                                            {
+                                              "child_count": 0,
+                                              "name": "@Button@54",
+                                              "path": "UX0ProductShell/ProductShellRoot/@MarginContainer@4/@HBoxContainer@5/@PanelContainer@19/@MarginContainer@20/@VBoxContainer@21/@Control@25/HostView/@VBoxContainer@31/@Button@54",
+                                              "type": "Button",
+                                              "visible": true
+                                            }
+                                          ],
+                                          "name": "@VBoxContainer@31",
+                                          "path": "UX0ProductShell/ProductShellRoot/@MarginContainer@4/@HBoxContainer@5/@PanelContainer@19/@MarginContainer@20/@VBoxContainer@21/@Control@25/HostView/@VBoxContainer@31",
+                                          "type": "VBoxContainer",
+                                          "visible": true
+                                        }
+                                      ],
+                                      "name": "HostView",
+                                      "path": "UX0ProductShell/ProductShellRoot/@MarginContainer@4/@HBoxContainer@5/@PanelContainer@19/@MarginContainer@20/@VBoxContainer@21/@Control@25/HostView",
+                                      "type": "Control",
+                                      "visible": true
+                                    },
+                                    {
+                                      "child_count": 1,
+                                      "children": [
+                                        {
+                                          "child_count": 8,
+                                          "children": [
+                                            {
+                                              "child_count": 0,
+                                              "name": "@Label@56",
+                                              "path": "UX0ProductShell/ProductShellRoot/@MarginContainer@4/@HBoxContainer@5/@PanelContainer@19/@MarginContainer@20/@VBoxContainer@21/@Control@25/JoinView/@VBoxContainer@55/@Label@56",
+                                              "type": "Label",
+                                              "visible": true
+                                            },
+                                            {
+                                              "child_count": 0,
+                                              "name": "@Label@57",
+                                              "path": "UX0ProductShell/ProductShellRoot/@MarginContainer@4/@HBoxContainer@5/@PanelContainer@19/@MarginContainer@20/@VBoxContainer@21/@Control@25/JoinView/@VBoxContainer@55/@Label@57",
+                                              "type": "Label",
+                                              "visible": true
+                                            },
+                                            {
+                                              "child_count": 0,
+                                              "name": "@LineEdit@58",
+                                              "path": "UX0ProductShell/ProductShellRoot/@MarginContainer@4/@HBoxContainer@5/@PanelContainer@19/@MarginContainer@20/@VBoxContainer@21/@Control@25/JoinView/@VBoxContainer@55/@LineEdit@58",
+                                              "type": "LineEdit",
+                                              "visible": true
+                                            },
+                                            {
+                                              "child_count": 0,
+                                              "name": "@Label@59",
+                                              "path": "UX0ProductShell/ProductShellRoot/@MarginContainer@4/@HBoxContainer@5/@PanelContainer@19/@MarginContainer@20/@VBoxContainer@21/@Control@25/JoinView/@VBoxContainer@55/@Label@59",
+                                              "type": "Label",
+                                              "visible": true
+                                            },
+                                            {
+                                              "child_count": 0,
+                                              "name": "@SpinBox@62",
+                                              "path": "UX0ProductShell/ProductShellRoot/@MarginContainer@4/@HBoxContainer@5/@PanelContainer@19/@MarginContainer@20/@VBoxContainer@21/@Control@25/JoinView/@VBoxContainer@55/@SpinBox@62",
+                                              "type": "SpinBox",
+                                              "visible": true
+                                            },
+                                            {
+                                              "child_count": 0,
+                                              "name": "@Label@63",
+                                              "path": "UX0ProductShell/ProductShellRoot/@MarginContainer@4/@HBoxContainer@5/@PanelContainer@19/@MarginContainer@20/@VBoxContainer@21/@Control@25/JoinView/@VBoxContainer@55/@Label@63",
+                                              "type": "Label",
+                                              "visible": true
+                                            },
+                                            {
+                                              "child_count": 0,
+                                              "name": "@LineEdit@64",
+                                              "path": "UX0ProductShell/ProductShellRoot/@MarginContainer@4/@HBoxContainer@5/@PanelContainer@19/@MarginContainer@20/@VBoxContainer@21/@Control@25/JoinView/@VBoxContainer@55/@LineEdit@64",
+                                              "type": "LineEdit",
+                                              "visible": true
+                                            },
+                                            {
+                                              "child_count": 0,
+                                              "name": "@Button@65",
+                                              "path": "UX0ProductShell/ProductShellRoot/@MarginContainer@4/@HBoxContainer@5/@PanelContainer@19/@MarginContainer@20/@VBoxContainer@21/@Control@25/JoinView/@VBoxContainer@55/@Button@65",
+                                              "type": "Button",
+                                              "visible": true
+                                            }
+                                          ],
+                                          "name": "@VBoxContainer@55",
+                                          "path": "UX0ProductShell/ProductShellRoot/@MarginContainer@4/@HBoxContainer@5/@PanelContainer@19/@MarginContainer@20/@VBoxContainer@21/@Control@25/JoinView/@VBoxContainer@55",
+                                          "type": "VBoxContainer",
+                                          "visible": true
+                                        }
+                                      ],
+                                      "name": "JoinView",
+                                      "path": "UX0ProductShell/ProductShellRoot/@MarginContainer@4/@HBoxContainer@5/@PanelContainer@19/@MarginContainer@20/@VBoxContainer@21/@Control@25/JoinView",
+                                      "type": "Control",
+                                      "visible": false
+                                    },
+                                    {
+                                      "child_count": 1,
+                                      "children": [
+                                        {
+                                          "child_count": 7,
+                                          "children": [
+                                            {
+                                              "child_count": 0,
+                                              "name": "@Label@67",
+                                              "path": "UX0ProductShell/ProductShellRoot/@MarginContainer@4/@HBoxContainer@5/@PanelContainer@19/@MarginContainer@20/@VBoxContainer@21/@Control@25/SettingsView/@VBoxContainer@66/@Label@67",
+                                              "type": "Label",
+                                              "visible": true
+                                            },
+                                            {
+                                              "child_count": 0,
+                                              "name": "@Label@68",
+                                              "path": "UX0ProductShell/ProductShellRoot/@MarginContainer@4/@HBoxContainer@5/@PanelContainer@19/@MarginContainer@20/@VBoxContainer@21/@Control@25/SettingsView/@VBoxContainer@66/@Label@68",
+                                              "type": "Label",
+                                              "visible": true
+                                            },
+                                            {
+                                              "child_count": 0,
+                                              "name": "@LineEdit@69",
+                                              "path": "UX0ProductShell/ProductShellRoot/@MarginContainer@4/@HBoxContainer@5/@PanelContainer@19/@MarginContainer@20/@VBoxContainer@21/@Control@25/SettingsView/@VBoxContainer@66/@LineEdit@69",
+                                              "type": "LineEdit",
+                                              "visible": true
+                                            },
+                                            {
+                                              "child_count": 0,
+                                              "name": "@Label@70",
+                                              "path": "UX0ProductShell/ProductShellRoot/@MarginContainer@4/@HBoxContainer@5/@PanelContainer@19/@MarginContainer@20/@VBoxContainer@21/@Control@25/SettingsView/@VBoxContainer@66/@Label@70",
+                                              "type": "Label",
+                                              "visible": true
+                                            },
+                                            {
+                                              "child_count": 0,
+                                              "name": "@SpinBox@73",
+                                              "path": "UX0ProductShell/ProductShellRoot/@MarginContainer@4/@HBoxContainer@5/@PanelContainer@19/@MarginContainer@20/@VBoxContainer@21/@Control@25/SettingsView/@VBoxContainer@66/@SpinBox@73",
+                                              "type": "SpinBox",
+                                              "visible": true
+                                            },
+                                            {
+                                              "child_count": 0,
+                                              "name": "@Label@74",
+                                              "path": "UX0ProductShell/ProductShellRoot/@MarginContainer@4/@HBoxContainer@5/@PanelContainer@19/@MarginContainer@20/@VBoxContainer@21/@Control@25/SettingsView/@VBoxContainer@66/@Label@74",
+                                              "type": "Label",
+                                              "visible": true
+                                            },
+                                            {
+                                              "child_count": 0,
+                                              "name": "@Button@75",
+                                              "path": "UX0ProductShell/ProductShellRoot/@MarginContainer@4/@HBoxContainer@5/@PanelContainer@19/@MarginContainer@20/@VBoxContainer@21/@Control@25/SettingsView/@VBoxContainer@66/@Button@75",
+                                              "type": "Button",
+                                              "visible": true
+                                            }
+                                          ],
+                                          "name": "@VBoxContainer@66",
+                                          "path": "UX0ProductShell/ProductShellRoot/@MarginContainer@4/@HBoxContainer@5/@PanelContainer@19/@MarginContainer@20/@VBoxContainer@21/@Control@25/SettingsView/@VBoxContainer@66",
+                                          "type": "VBoxContainer",
+                                          "visible": true
+                                        }
+                                      ],
+                                      "name": "SettingsView",
+                                      "path": "UX0ProductShell/ProductShellRoot/@MarginContainer@4/@HBoxContainer@5/@PanelContainer@19/@MarginContainer@20/@VBoxContainer@21/@Control@25/SettingsView",
+                                      "type": "Control",
+                                      "visible": false
+                                    }
+                                  ],
+                                  "name": "@Control@25",
+                                  "path": "UX0ProductShell/ProductShellRoot/@MarginContainer@4/@HBoxContainer@5/@PanelContainer@19/@MarginContainer@20/@VBoxContainer@21/@Control@25",
+                                  "type": "Control",
+                                  "visible": true
+                                },
+                                {
+                                  "child_count": 0,
+                                  "name": "@HSeparator@76",
+                                  "path": "UX0ProductShell/ProductShellRoot/@MarginContainer@4/@HBoxContainer@5/@PanelContainer@19/@MarginContainer@20/@VBoxContainer@21/@HSeparator@76",
+                                  "type": "HSeparator",
+                                  "visible": true
+                                },
+                                {
+                                  "child_count": 0,
+                                  "name": "@Label@77",
+                                  "path": "UX0ProductShell/ProductShellRoot/@MarginContainer@4/@HBoxContainer@5/@PanelContainer@19/@MarginContainer@20/@VBoxContainer@21/@Label@77",
+                                  "type": "Label",
+                                  "visible": true
+                                }
+                              ],
+                              "name": "@VBoxContainer@21",
+                              "path": "UX0ProductShell/ProductShellRoot/@MarginContainer@4/@HBoxContainer@5/@PanelContainer@19/@MarginContainer@20/@VBoxContainer@21",
+                              "type": "VBoxContainer",
+                              "visible": true
+                            }
+                          ],
+                          "name": "@MarginContainer@20",
+                          "path": "UX0ProductShell/ProductShellRoot/@MarginContainer@4/@HBoxContainer@5/@PanelContainer@19/@MarginContainer@20",
+                          "type": "MarginContainer",
+                          "visible": true
+                        }
+                      ],
+                      "name": "@PanelContainer@19",
+                      "path": "UX0ProductShell/ProductShellRoot/@MarginContainer@4/@HBoxContainer@5/@PanelContainer@19",
+                      "type": "PanelContainer",
+                      "visible": true
+                    }
+                  ],
+                  "name": "@HBoxContainer@5",
+                  "path": "UX0ProductShell/ProductShellRoot/@MarginContainer@4/@HBoxContainer@5",
+                  "type": "HBoxContainer",
+                  "visible": true
+                }
+              ],
+              "name": "@MarginContainer@4",
+              "path": "UX0ProductShell/ProductShellRoot/@MarginContainer@4",
+              "type": "MarginContainer",
+              "visible": true
+            }
+          ],
+          "name": "ProductShellRoot",
+          "path": "UX0ProductShell/ProductShellRoot",
+          "type": "Control",
+          "visible": true
+        }
+      ],
+      "name": "UX0ProductShell",
+      "path": "UX0ProductShell",
+      "type": "CanvasLayer"
+    }
+  ],
+  "name": "V0ProductShellHost",
+  "path": ".",
+  "type": "Node3D",
+  "visible": true
+}

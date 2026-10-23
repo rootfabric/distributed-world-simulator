@@ -1,0 +1,152 @@
+Godot Engine v4.8.beta1.double.custom_build.4d10419ca - https://godotengine.org
+
+[   0% ] [90m[1mfirst_scan_filesystem[22m | Started Project initialization (5 steps)[39m[0m
+[   0% ] [90m[1mfirst_scan_filesystem[22m | Scanning file structure...[39m[0m
+[  16% ] [90m[1mfirst_scan_filesystem[22m | Loading global class names...[39m[0m
+[  33% ] [90m[1mfirst_scan_filesystem[22m | Verifying GDExtensions...[39m[0m
+[  50% ] [90m[1mfirst_scan_filesystem[22m | Creating autoload scripts...[39m[0m
+[  66% ] [90m[1mfirst_scan_filesystem[22m | Initializing plugins...[39m[0m
+[breakpoint_mcp] plugin enabled
+[breakpoint_mcp] listening on 127.0.0.1:9080
+[  83% ] [90m[1mfirst_scan_filesystem[22m | Starting file scan...[39m[0m
+[92m[ DONE ][39m [1mfirst_scan_filesystem[22m
+[0m
+[   0% ] [90m[1mloading_editor_layout[22m | Started Loading editor (5 steps)[39m[0m
+[   0% ] [90m[1mloading_editor_layout[22m | Loading editor layout...[39m[0m
+[  16% ] [90m[1mloading_editor_layout[22m | Loading docks...[39m[0m
+[92m[ DONE ][39m [1mloading_editor_layout[22m
+[0m
+[breakpoint_mcp] plugin disabled
+Godot Engine v4.8.beta1.double.custom_build.4d10419ca - https://godotengine.org
+
+V0-P7.5 two-client convergence: PASS (85 assertions, 0 failures)
+[V0-P7.5] PASS p7-5-two-client
+Godot Engine v4.8.beta1.double.custom_build.4d10419ca - https://godotengine.org
+
+M7 aggregate replica compatibility: PASS (5 assertions, 0 failures)
+[V0-P7.5] PASS m7-aggregate-replica
+Godot Engine v4.8.beta1.double.custom_build.4d10419ca - https://godotengine.org
+
+V0-P7.4 seed: PASS (21 assertions, 0 failures)
+[V0-P7.5] PASS p7-4-seed
+Godot Engine v4.8.beta1.double.custom_build.4d10419ca - https://godotengine.org
+
+V0-P7.4 recover-deliver: PASS (25 assertions, 0 failures)
+[V0-P7.5] PASS p7-4-recover-deliver
+Godot Engine v4.8.beta1.double.custom_build.4d10419ca - https://godotengine.org
+
+V0-P7.4 recover-replay: PASS (17 assertions, 0 failures)
+[V0-P7.5] PASS p7-4-recover-replay
+Godot Engine v4.8.beta1.double.custom_build.4d10419ca - https://godotengine.org
+
+V0-P7.3 material batch to Item Graph: PASS (116 assertions, 0 failures)
+[V0-P7.5] PASS p7-3-material-delivery
+Godot Engine v4.8.beta1.double.custom_build.4d10419ca - https://godotengine.org
+
+V0-P7.2 lunar Matter bubble: PASS (53 assertions, 0 failures)
+[V0-P7.5] PASS p7-2-bubble
+Godot Engine v4.8.beta1.double.custom_build.4d10419ca - https://godotengine.org
+
+V0-P7.2 lunar surface seam: PASS (50 assertions, 0 failures)
+[V0-P7.5] PASS p7-2-seam
+Godot Engine v4.8.beta1.double.custom_build.4d10419ca - https://godotengine.org
+
+V0-P7.1 authority gate: PASS (88 assertions, 0 failures)
+[V0-P7.5] PASS p7-1-authority
+Godot Engine v4.8.beta1.double.custom_build.4d10419ca - https://godotengine.org
+
+V0-P7.1 Tool->MW4 integration: PASS (30 assertions, 0 failures)
+[V0-P7.5] PASS p7-1-tool-to-mw4
+Godot Engine v4.8.beta1.double.custom_build.4d10419ca - https://godotengine.org
+
+PASS: P5 gameplay configures: 
+PASS: player A joins: 
+PASS: player B joins: 
+PASS: player A starts on ownership epoch 1
+PASS: P5 exposes the single canonical Item Graph port
+PASS: server provisions one canonical mining tool: 
+PASS: provisioned tool has stable canonical item id
+PASS: client A accepts pre-equip canonical snapshot: 
+PASS: client B accepts pre-equip canonical snapshot: 
+PASS: client A initially sees no equipped tool
+PASS: client B initially sees no equipped tool
+PASS: server-authoritative equip succeeds: 
+PASS: equip advances canonical Item Graph once
+PASS: canonical Item Graph delta serializes equipment relation: 
+PASS: client A applies equipment delta: 
+PASS: client B applies equipment delta: 
+PASS: client A commits equipment replica: 
+PASS: client B commits equipment replica: 
+PASS: client A checksum converges to authority
+PASS: client B checksum converges to authority
+PASS: two independent client replicas converge exactly
+PASS: client A sees exact equipped item identity
+PASS: remote client B sees exact equipped item identity
+PASS: client A contains one canonical tool identity
+PASS: client B contains one canonical tool identity
+PASS: equipped tool remains exactly once in owner inventory
+PASS: P5 aggregate durable state validates with equipment relation: 
+PASS: P5 aggregate replay state validates: 
+PASS: fresh P5 aggregate restores durable equipment state: 
+PASS: fresh P5 aggregate restores replay ledgers: 
+PASS: restored Item Graph checksum matches pre-disconnect authority
+PASS: restored aggregate preserves exact equipped item
+PASS: restored aggregate contains no duplicate tool identity
+PASS: restored aggregate keeps one inventory reference
+PASS: fresh reconnect client accepts canonical restored snapshot: 
+PASS: reconnect client reconstructs exact equipment relation
+PASS: player A rejoins recovered aggregate with new transport session: 
+PASS: reconnect advances ownership epoch
+PASS: reconnect preserves canonical player entity
+PASS: rejoin does not mutate equipped relation
+PASS: reconnected owner can unequip exact canonical tool: 
+PASS: unequip serializes through the same canonical delta codec: 
+PASS: reconnect client applies unequip delta: 
+PASS: reconnect client commits unequip replica: 
+PASS: reconnect client sees equipment relation removed
+PASS: unequip keeps one canonical tool identity
+PASS: unequip keeps one canonical inventory reference
+V0-P5 two-client replication/reconnect: 47 assertions, 0 failures
+[V0-P7.5] PASS p5-two-client
+Godot Engine v4.8.beta1.double.custom_build.4d10419ca - https://godotengine.org
+
+V0-P5 mining tool gate: 36 assertions, 0 failures
+[V0-P7.5] PASS p5-mining-tool
+Godot Engine v4.8.beta1.double.custom_build.4d10419ca - https://godotengine.org
+
+MW6 matter network authority: START
+MW6 stage manifest: START
+MW6 stage manifest: DONE (0.000 s)
+MW6 stage durable-bootstrap: START
+MW6 stage durable-bootstrap: DONE (8.887 s)
+MW6 stage authority-broadcast-replay: START
+MW6 stage authority-broadcast-replay: DONE (12.841 s)
+MW6 stage reconnect-delta-replay: START
+MW6 stage reconnect-delta-replay: DONE (10.921 s)
+MW6 stage snapshot-fallback-gap: START
+MW6 stage snapshot-fallback-gap: DONE (22.526 s)
+MW6 matter network authority: PASS (130 assertions / 55.177 s)
+[V0-P7.5] PASS mw6
+Godot Engine v4.8.beta1.double.custom_build.4d10419ca - https://godotengine.org
+
+MW7 matter interest replication: START
+MW7 stage manifest-region-contract: START
+MW7 stage manifest-region-contract: DONE (2.432 s)
+MW7 stage filtered-stream-interest-move: START
+MW7 stage filtered-stream-interest-move: DONE (49.451 s)
+MW7 stage reconnect-replay-snapshot: START
+MW7 stage reconnect-replay-snapshot: DONE (102.022 s)
+MW7 matter interest replication: PASS (114 assertions / 153.907 s)
+[V0-P7.5] PASS mw7
+Godot Engine v4.8.beta1.double.custom_build.4d10419ca - https://godotengine.org
+
+RL2 Matter multiresolution meshing: PASS (153 assertions)
+[V0-P7.5] PASS rl2
+Godot Engine v4.8.beta1.double.custom_build.4d10419ca - https://godotengine.org
+
+RL3 representation-aware network streaming: PASS (175 assertions)
+[V0-P7.5] PASS rl3
+V0-P7.5 TWO CLIENT CONVERGENCE GATE GREEN
+EXACT_HEAD=5f71900ff2668f32b42588581b80eaa89e1c876e
+GODOT=4.8.beta1.double.custom_build.4d10419ca
+P7_5_EXIT=0

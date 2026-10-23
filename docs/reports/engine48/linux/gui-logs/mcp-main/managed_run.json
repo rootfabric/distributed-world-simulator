@@ -1,0 +1,17 @@
+{
+ "content": [
+  {
+   "type": "text",
+   "text": "{\n  \"id\": \"godot-1\",\n  \"pid\": 2447541,\n  \"running\": true,\n  \"scene\": null,\n  \"bridge_ready\": true,\n  \"bridge_wait_ms\": 5871,\n  \"bridge_note\": null\n}"
+  }
+ ],
+ "structuredContent": {
+  "id": "godot-1",
+  "pid": 2447541,
+  "running": true,
+  "scene": null,
+  "bridge_ready": true,
+  "bridge_wait_ms": 5871,
+  "bridge_note": null
+ }
+}

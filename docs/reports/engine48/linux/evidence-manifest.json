@@ -1,0 +1,88 @@
+{
+  "report_id": "ENGINE48_LINUX_R2_EVIDENCE_MANIFEST",
+  "generated_utc": "2026-10-23",
+  "generator": "Ubuntu standalone host 'outenemy' (Ubuntu 22.04.5, x86_64), ENGINE48 R2 publication mission",
+  "git": {
+    "repo": "rootfabric/distributed-world-simulator",
+    "base_head": "a936412cc3d597a88fa789fc73c6ac7dcfd7a4e9",
+    "base_tree": "3c0a04c78eca918717e8e836b1c1bf2836cb5596",
+    "local_branch": "repair/engine48-linux-runner-guards-r1",
+    "local_tip_head": "7aaa7fa9ebcabeeca33f15696002ff3907c22ffb",
+    "local_tip_tree": "0d49082be99b0bb125d26c28f45ac19840426f0d",
+    "published_remote_branch": "feature/engine48-linux-r1",
+    "published_remote_tip_head": "7aaa7fa9ebcabeeca33f15696002ff3907c22ffb",
+    "publish_route": "git push over SSH (existing github.com SSH key of account rootfabric on this host); HTTPS PAT route is read-only (403)",
+    "commit_count_over_base": 7,
+    "seven_commits": [
+      "29d2e4af4678745d59e2dbc7a4f8902121851702",
+      "231b3e9b2b7f7d7810c6729dd59b4a1db3ed075d",
+      "24fc10ee1dedfe5b49d8b819fe7ef6591f5c0750",
+      "c1d3070fec0cd2cb87d002bb8bd3205bd0d7a4ca",
+      "5f71900ff2668f32b42588581b80eaa89e1c876e",
+      "841cf13e2c3435a04da30a65062a722ed6f704c2",
+      "7aaa7fa9ebcabeeca33f15696002ff3907c22ffb"
+    ],
+    "tracked_clean": true
+  },
+  "engine": {
+    "godot_version": "4.8.beta1.double.custom_build.4d10419ca",
+    "baseline_version": "4.7.1.stable.double.custom_build.a13da4feb",
+    "editor_sha256": "4d72a93edf3b4193bdbf22f72c0c9d15c14aa7130c07cf1638f88ca1f9744f6f",
+    "template_debug_sha256": "af1e29d1c53688786e0551c54b1d1105300955302180b02a7fdf5711d46ff897",
+    "template_release_sha256": "fffb8f53f85bda1757572638d88386e80f90a7e0abf1be61638544197f4506e7",
+    "baseline_editor_sha256": "f8dbe9d873d368e1b7587ce3aae022b980e8176e9d1fd237894764d574fc272a",
+    "work_order_editor_sha256_discrepancy": "25047b82ab92aaf83753ff33d4f7847994ccb5627e10a602706cee116e647a65 (from task text) not present on this machine; all R1 durable artifacts and on-disk binary agree on 4d72a93e... (see ENGINE48_UBUNTU_R2_PUBLICATION_ADDENDUM.md §2)"
+  },
+  "transfers": {
+    "bundle_path": "/home/rdpuser/DWS-Transfers/engine48-linux-r1.bundle",
+    "bundle_sha256": "2ae4652b8bcca9477b5fe17d7a9534b26e37de4967f190f4a2ad7f3a9684eff9",
+    "bundle_bytes": 49972,
+    "bundle_requires": "a936412cc3d597a88fa789fc73c6ac7dcfd7a4e9",
+    "evidence_archive_path": "/home/rdpuser/DWS-Transfers/engine48-linux-r2-evidence.tar.gz",
+    "evidence_archive_sha256_sidecar": "/home/rdpuser/DWS-Transfers/engine48-linux-r2-evidence.tar.gz.sha256 (SHA not embedded in archive to avoid self-reference)",
+    "evidence_archive_bytes": 4657134,
+    "evidence_archive_files": 207,
+    "note": "/mnt/c absent on this host (standalone Linux, not WSL); ~/DWS-Transfers is the transfer directory"
+  },
+  "independent_verification": {
+    "state": "FINDINGS_REPORTED",
+    "report": "artifacts/engine48/linux/verification/INDEPENDENT_VERIFIER_REPORT_R2.md",
+    "raw_logs": "artifacts/engine48/linux/verification/r2_*.log (16 files)",
+    "git_identity": "PASS",
+    "guards_integrity": "PASS",
+    "engine_strict_checks": "PASS",
+    "cold_import_fresh_tip": "PASS",
+    "headless_reruns_48": "PASS 7/7 (MW0 2011, MW4 187, C22 29+52+35+75, P7.2 GREEN, P7.3 GREEN 88-pin, PLAYABLE_SEAMLESS, SM1_L0)",
+    "parity_471_mw10": "PASS (201/53 assertions on BOTH engines, direct runs)",
+    "m7_multiplayer_live": "PASS substance (2 peers, 0 script errors, acceptance 55/0 on retry)",
+    "regressions_attributable_to_48": "NONE_FOUND",
+    "findings": [
+      "B8: work-order editor SHA 25047b82... not found on machine; real editor 4d72a93e... matches all evidence",
+      "F-1: M7 terminal result=PASS unreachable via STOP mechanics (SIGTERM/SIGKILL bypass runtime stop(), m3_dedicated_server_runtime_p2.gd:1656-1658)",
+      "F-2: M7 test script exits 0 even with failures",
+      "F-3: one-off convergence flake, not reproduced (retry 55/0)"
+    ]
+  },
+  "evidence_index": {
+    "r1_report": "artifacts/engine48/linux/ENGINE48_UBUNTU_REPORT.md",
+    "r2_addendum_tree_vs_file_sha256": "artifacts/engine48/linux/ENGINE48_UBUNTU_R2_PUBLICATION_ADDENDUM.md",
+    "draft_pr_body": "artifacts/engine48/linux/DRAFT_PR_BODY.md",
+    "issue_811_comment": "artifacts/engine48/linux/ISSUE_811_COMMENT.md",
+    "source_identity": "artifacts/engine48/linux/source.json",
+    "build_identity": "artifacts/engine48/linux/build.json",
+    "binary_sha256_table": "artifacts/engine48/linux/build/binary-sha256.txt",
+    "cold_import": "artifacts/engine48/linux/build/cold-import.log + cold-import.exit",
+    "gates": "artifacts/engine48/linux/gates/",
+    "matrix": "artifacts/engine48/linux/matrix/",
+    "gui": "artifacts/engine48/linux/gui/",
+    "perf_paired": "artifacts/engine48/linux/perf/PERF_PAIRED_RESULTS.md + perf-summary.json",
+    "reproduction": "artifacts/engine48/linux/reproduction.md",
+    "seven_commit_patch": "artifacts/engine48/linux/repair-branch.patch",
+    "independent_verification": "artifacts/engine48/linux/verification/INDEPENDENT_VERIFIER_REPORT_R2.md"
+  },
+  "limitations": {
+    "real_gpu_evidence": "INSUFFICIENT_EVIDENCE (llvmpipe software GL under Xvfb :99)",
+    "net_smooth1_p99": "INSUFFICIENT_EVIDENCE on this snapshot (instrumentation not merged)",
+    "m3_client_connect_timeout": "PRE_EXISTING on 4.7.1 and 4.8 (paired), routed to issue #804, outside ENGINE48 migration"
+  }
+}

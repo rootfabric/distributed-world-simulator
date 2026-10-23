@@ -1,0 +1,1801 @@
+SM1_7_GODOT_VERSION=4.8.beta1.double.custom_build.4d10419ca
+SM1_7_TESTED_HEAD=24fc10ee1dedfe5b49d8b819fe7ef6591f5c0750
+SM1_7_ITERATIONS=10
+SM1_7_ITERATION=1/10
+Godot Engine v4.8.beta1.double.custom_build.4d10419ca - https://godotengine.org
+
+[sm1.7] SUBCASE 01 7.1A source death before FREEZE
+[sm1.7] PASS: 7.1A canonical tuple unchanged: state=ACTIVE
+[sm1.7] PASS: 7.1A canonical tuple unchanged: authority=authority/a
+[sm1.7] PASS: 7.1A canonical tuple unchanged: epoch=1
+[sm1.7] PASS: 7.1A canonical tuple unchanged: no private Item Graph
+[sm1.7] PASS: 7.1A canonical tuple unchanged: no private Construction truth
+[sm1.7] PASS: 7.1A canonical tuple unchanged: no private persistence owner
+[sm1.7] PASS: 7.1A canonical tuple unchanged: no private replay owner
+[sm1.7] PASS: 7.1A target cannot self-promote after source death
+[sm1.7] PASS: 7.1A real source Authority A OS process is killable at pre-FREEZE boundary: { "success": true, "error_code": "", "process_id": 1520936, "authority_id": "authority/a", "initial_active": true, "authority_epoch": 1, "dead": true }
+[sm1.7] PASS: 7.1A source death evidence carries a real OS pid
+[sm1.7] SUBCASE 02 7.1B source death after FREEZE sent before result
+[sm1.7] PASS: 7.1B transfer enters frozen gap
+[sm1.7] PASS: 7.1B source remains canonical but no writer is admitted: state=SOURCE_FROZEN
+[sm1.7] PASS: 7.1B source remains canonical but no writer is admitted: authority=authority/a
+[sm1.7] PASS: 7.1B source remains canonical but no writer is admitted: epoch=1
+[sm1.7] PASS: 7.1B source remains canonical but no writer is admitted: no private Item Graph
+[sm1.7] PASS: 7.1B source remains canonical but no writer is admitted: no private Construction truth
+[sm1.7] PASS: 7.1B source remains canonical but no writer is admitted: no private persistence owner
+[sm1.7] PASS: 7.1B source remains canonical but no writer is admitted: no private replay owner
+[sm1.7] PASS: 7.1B transfer gap rejects canonical tuple writes
+[sm1.7] PASS: 7.1B transfer gap rejects target/other writes
+[sm1.7] PASS: 7.1B commit forbidden without WARM proof
+[sm1.7] PASS: 7.1B commit counter unchanged
+[sm1.7] SUBCASE 03 7.1C source death after frozen proof
+[sm1.7] PASS: 7.1C transfer completes from frozen/WARM proof
+[sm1.7] PASS: 7.1C target becomes sole active authority: state=ACTIVE
+[sm1.7] PASS: 7.1C target becomes sole active authority: authority=authority/b
+[sm1.7] PASS: 7.1C target becomes sole active authority: epoch=2
+[sm1.7] PASS: 7.1C target becomes sole active authority: no private Item Graph
+[sm1.7] PASS: 7.1C target becomes sole active authority: no private Construction truth
+[sm1.7] PASS: 7.1C target becomes sole active authority: no private persistence owner
+[sm1.7] PASS: 7.1C target becomes sole active authority: no private replay owner
+[sm1.7] PASS: 7.1C dead/stale source permanently fenced
+[sm1.7] PASS: 7.1C target writer admitted only after activation
+[sm1.7] SUBCASE 04 7.2A target death before WARM
+[sm1.7] PASS: 7.2A freeze admitted
+[sm1.7] PASS: 7.2A transfer gap rejects canonical tuple writes
+[sm1.7] PASS: 7.2A transfer gap rejects target/other writes
+[sm1.7] PASS: 7.2A target death cannot commit ownership
+[sm1.7] PASS: 7.2A ownership tuple not promoted: state=SOURCE_FROZEN
+[sm1.7] PASS: 7.2A ownership tuple not promoted: authority=authority/a
+[sm1.7] PASS: 7.2A ownership tuple not promoted: epoch=1
+[sm1.7] PASS: 7.2A ownership tuple not promoted: no private Item Graph
+[sm1.7] PASS: 7.2A ownership tuple not promoted: no private Construction truth
+[sm1.7] PASS: 7.2A ownership tuple not promoted: no private persistence owner
+[sm1.7] PASS: 7.2A ownership tuple not promoted: no private replay owner
+[sm1.7] PASS: 7.2A real WARM-target Authority B OS process is killable before WARM: { "success": true, "error_code": "", "process_id": 1521478, "authority_id": "authority/b", "initial_active": false, "authority_epoch": 1, "dead": true }
+[sm1.7] PASS: 7.2A target death evidence carries a real OS pid
+[sm1.7] SUBCASE 05 7.2B target death during WARM before result
+[sm1.7] PASS: 7.2B transfer gap rejects canonical tuple writes
+[sm1.7] PASS: 7.2B transfer gap rejects target/other writes
+[sm1.7] PASS: 7.2B ambiguous WARM outcome cannot commit
+[sm1.7] PASS: 7.2B no WARM validation recorded
+[sm1.7] SUBCASE 06 7.2C target death after WARM before COMMIT
+[sm1.7] PASS: 7.2C WARM proof accepted before target loss
+[sm1.7] PASS: 7.2C no ownership commit occurred: state=TARGET_WARM_VALIDATED
+[sm1.7] PASS: 7.2C no ownership commit occurred: authority=authority/a
+[sm1.7] PASS: 7.2C no ownership commit occurred: epoch=1
+[sm1.7] PASS: 7.2C no ownership commit occurred: no private Item Graph
+[sm1.7] PASS: 7.2C no ownership commit occurred: no private Construction truth
+[sm1.7] PASS: 7.2C no ownership commit occurred: no private persistence owner
+[sm1.7] PASS: 7.2C no ownership commit occurred: no private replay owner
+[sm1.7] PASS: 7.2C transfer gap rejects canonical tuple writes
+[sm1.7] PASS: 7.2C transfer gap rejects target/other writes
+[sm1.7] PASS: 7.2C restarted target may reuse exact current WARM evidence
+[sm1.7] PASS: 7.2C stale/different transfer WARM evidence rejected
+[sm1.7] PASS: 7.2C target death leaves commit counter zero
+[sm1.7] SUBCASE 07 7.3A COMMIT result lost then retried
+[sm1.7] PASS: 7.3A ready to commit
+[sm1.7] PASS: 7.3A first COMMIT linearizes
+[sm1.7] PASS: 7.3A retry converges to already committed
+[sm1.7] PASS: 7.3A retry returns identical commit proof
+[sm1.7] PASS: 7.3A retry does not linearize twice
+[sm1.7] PASS: 7.3A exactly one commit plus one replay
+[sm1.7] PASS: 7.3A post-commit/pre-retire transfer gap rejects canonical tuple writes
+[sm1.7] PASS: 7.3A post-commit/pre-retire transfer gap rejects target/other writes
+[sm1.7] SUBCASE 08 7.3B ACTIVATE result lost then retried
+[sm1.7] PASS: 7.3B ready to commit
+[sm1.7] PASS: 7.3B source retired
+[sm1.7] PASS: 7.3B target activation linearizes once
+[sm1.7] PASS: 7.3B activation retry converges
+[sm1.7] PASS: 7.3B activation occurs once
+[sm1.7] PASS: 7.3B B remains sole active authority: state=ACTIVE
+[sm1.7] PASS: 7.3B B remains sole active authority: authority=authority/b
+[sm1.7] PASS: 7.3B B remains sole active authority: epoch=2
+[sm1.7] PASS: 7.3B B remains sole active authority: no private Item Graph
+[sm1.7] PASS: 7.3B B remains sole active authority: no private Construction truth
+[sm1.7] PASS: 7.3B B remains sole active authority: no private persistence owner
+[sm1.7] PASS: 7.3B B remains sole active authority: no private replay owner
+[sm1.7] SUBCASE 09 7.4A stale source route rejected by coordinator
+[sm1.7] PASS: 7.4A A->B complete
+[sm1.7] PASS: 7.4A stale A/1 write fenced
+[sm1.7] PASS: 7.4A stale write cannot advance epoch
+[sm1.7] PASS: 7.4A current B/2 write admitted
+[sm1.7] SUBCASE 10 7.4B direct retired authority worker rejects stale write
+[sm1.7] PASS: 7.4B direct ENET probe reached real SM1.6 authority worker: { "success": true, "error_code": "SM1_AUTHORITY_NOT_ACTIVE", "process_id": 1521585, "response": { "error_code": "SM1_AUTHORITY_NOT_ACTIVE", "request_id": "fault/stale-execute", "success": false, "type": "EXECUTE_RESULT" } }
+[sm1.7] PASS: 7.4B retired source rejects direct stale EXECUTE
+[sm1.7] PASS: 7.4B direct probe used a separate OS authority process
+[sm1.7] SUBCASE 11 7.5A duplicate transfer messages converge or reject safely
+[sm1.7] PASS: 7.5A first FREEZE admitted
+[sm1.7] PASS: 7.5A duplicate FREEZE safely rejected
+[sm1.7] PASS: 7.5A duplicate WARM converges
+[sm1.7] PASS: 7.5A duplicate COMMIT converges
+[sm1.7] PASS: 7.5A duplicate RETIRE converges
+[sm1.7] PASS: 7.5A duplicate ACTIVATE converges
+[sm1.7] PASS: 7.5A duplicate sequence mutates commit/activation exactly once
+[sm1.7] SUBCASE 12 7.5B invalid reorder is fail-closed
+[sm1.7] PASS: 7.5B FREEZE admitted
+[sm1.7] PASS: 7.5B COMMIT before WARM rejected
+[sm1.7] PASS: 7.5B RETIRE before COMMIT rejected
+[sm1.7] PASS: 7.5B ACTIVATE before COMMIT rejected
+[sm1.7] PASS: 7.5B invalid early messages do not advance state: state=SOURCE_FROZEN
+[sm1.7] PASS: 7.5B invalid early messages do not advance state: authority=authority/a
+[sm1.7] PASS: 7.5B invalid early messages do not advance state: epoch=1
+[sm1.7] PASS: 7.5B invalid early messages do not advance state: no private Item Graph
+[sm1.7] PASS: 7.5B invalid early messages do not advance state: no private Construction truth
+[sm1.7] PASS: 7.5B invalid early messages do not advance state: no private persistence owner
+[sm1.7] PASS: 7.5B invalid early messages do not advance state: no private replay owner
+[sm1.7] PASS: 7.5B valid WARM accepted
+[sm1.7] PASS: 7.5B ACTIVATE before RETIRE rejected
+[sm1.7] PASS: 7.5B rejected activation cannot make target writable: state=OWNERSHIP_COMMITTED
+[sm1.7] PASS: 7.5B rejected activation cannot make target writable: authority=authority/b
+[sm1.7] PASS: 7.5B rejected activation cannot make target writable: epoch=2
+[sm1.7] PASS: 7.5B rejected activation cannot make target writable: no private Item Graph
+[sm1.7] PASS: 7.5B rejected activation cannot make target writable: no private Construction truth
+[sm1.7] PASS: 7.5B rejected activation cannot make target writable: no private persistence owner
+[sm1.7] PASS: 7.5B rejected activation cannot make target writable: no private replay owner
+[sm1.7] PASS: 7.5B post-commit/pre-retire transfer gap rejects canonical tuple writes
+[sm1.7] PASS: 7.5B post-commit/pre-retire transfer gap rejects target/other writes
+[sm1.7] SUBCASE 13 7.5C completed-transfer FREEZE replay cannot reopen transfer
+[sm1.7] PASS: 7.5C initial transfer completes
+[sm1.7] PASS: 7.5C old FREEZE replay rejected
+[sm1.7] PASS: 7.5C completed replay leaves current owner unchanged: state=ACTIVE
+[sm1.7] PASS: 7.5C completed replay leaves current owner unchanged: authority=authority/b
+[sm1.7] PASS: 7.5C completed replay leaves current owner unchanged: epoch=2
+[sm1.7] PASS: 7.5C completed replay leaves current owner unchanged: no private Item Graph
+[sm1.7] PASS: 7.5C completed replay leaves current owner unchanged: no private Construction truth
+[sm1.7] PASS: 7.5C completed replay leaves current owner unchanged: no private persistence owner
+[sm1.7] PASS: 7.5C completed replay leaves current owner unchanged: no private replay owner
+[sm1.7] SUBCASE 14 7.6 replay old T1 after A->B->A
+[sm1.7] PASS: 7.6 T1 A->B complete
+[sm1.7] PASS: 7.6 T1 completion proof retained
+[sm1.7] PASS: 7.6 T2 B->A complete
+[sm1.7] PASS: 7.6 current owner A/3 before replay: state=ACTIVE
+[sm1.7] PASS: 7.6 current owner A/3 before replay: authority=authority/a
+[sm1.7] PASS: 7.6 current owner A/3 before replay: epoch=3
+[sm1.7] PASS: 7.6 current owner A/3 before replay: no private Item Graph
+[sm1.7] PASS: 7.6 current owner A/3 before replay: no private Construction truth
+[sm1.7] PASS: 7.6 current owner A/3 before replay: no private persistence owner
+[sm1.7] PASS: 7.6 current owner A/3 before replay: no private replay owner
+[sm1.7] PASS: 7.6 historical COMMIT returns proof only
+[sm1.7] PASS: 7.6 historical COMMIT cannot roll back owner: state=ACTIVE
+[sm1.7] PASS: 7.6 historical COMMIT cannot roll back owner: authority=authority/a
+[sm1.7] PASS: 7.6 historical COMMIT cannot roll back owner: epoch=3
+[sm1.7] PASS: 7.6 historical COMMIT cannot roll back owner: no private Item Graph
+[sm1.7] PASS: 7.6 historical COMMIT cannot roll back owner: no private Construction truth
+[sm1.7] PASS: 7.6 historical COMMIT cannot roll back owner: no private persistence owner
+[sm1.7] PASS: 7.6 historical COMMIT cannot roll back owner: no private replay owner
+[sm1.7] PASS: 7.6 historical ACTIVATE recognized
+[sm1.7] PASS: 7.6 historical target explicitly reported inactive
+[sm1.7] PASS: 7.6 replay reports current A/3 tuple
+[sm1.7] PASS: 7.6 resurrected B/2 write fenced
+[sm1.7] PASS: 7.6 current A/3 write remains admitted
+[sm1.7] PASS: 7.6 full T1 replay changes nothing: state=ACTIVE
+[sm1.7] PASS: 7.6 full T1 replay changes nothing: authority=authority/a
+[sm1.7] PASS: 7.6 full T1 replay changes nothing: epoch=3
+[sm1.7] PASS: 7.6 full T1 replay changes nothing: no private Item Graph
+[sm1.7] PASS: 7.6 full T1 replay changes nothing: no private Construction truth
+[sm1.7] PASS: 7.6 full T1 replay changes nothing: no private persistence owner
+[sm1.7] PASS: 7.6 full T1 replay changes nothing: no private replay owner
+SM1.7.1-7.6 fault matrix: 157 assertions, 0 failures
+SM1_7_FAULT_MATRIX_1_6_PASS
+scenarios=6
+subcases=14
+failures=0
+SM1_7_ITERATION=2/10
+Godot Engine v4.8.beta1.double.custom_build.4d10419ca - https://godotengine.org
+
+[sm1.7] SUBCASE 01 7.1A source death before FREEZE
+[sm1.7] PASS: 7.1A canonical tuple unchanged: state=ACTIVE
+[sm1.7] PASS: 7.1A canonical tuple unchanged: authority=authority/a
+[sm1.7] PASS: 7.1A canonical tuple unchanged: epoch=1
+[sm1.7] PASS: 7.1A canonical tuple unchanged: no private Item Graph
+[sm1.7] PASS: 7.1A canonical tuple unchanged: no private Construction truth
+[sm1.7] PASS: 7.1A canonical tuple unchanged: no private persistence owner
+[sm1.7] PASS: 7.1A canonical tuple unchanged: no private replay owner
+[sm1.7] PASS: 7.1A target cannot self-promote after source death
+[sm1.7] PASS: 7.1A real source Authority A OS process is killable at pre-FREEZE boundary: { "success": true, "error_code": "", "process_id": 1521948, "authority_id": "authority/a", "initial_active": true, "authority_epoch": 1, "dead": true }
+[sm1.7] PASS: 7.1A source death evidence carries a real OS pid
+[sm1.7] SUBCASE 02 7.1B source death after FREEZE sent before result
+[sm1.7] PASS: 7.1B transfer enters frozen gap
+[sm1.7] PASS: 7.1B source remains canonical but no writer is admitted: state=SOURCE_FROZEN
+[sm1.7] PASS: 7.1B source remains canonical but no writer is admitted: authority=authority/a
+[sm1.7] PASS: 7.1B source remains canonical but no writer is admitted: epoch=1
+[sm1.7] PASS: 7.1B source remains canonical but no writer is admitted: no private Item Graph
+[sm1.7] PASS: 7.1B source remains canonical but no writer is admitted: no private Construction truth
+[sm1.7] PASS: 7.1B source remains canonical but no writer is admitted: no private persistence owner
+[sm1.7] PASS: 7.1B source remains canonical but no writer is admitted: no private replay owner
+[sm1.7] PASS: 7.1B transfer gap rejects canonical tuple writes
+[sm1.7] PASS: 7.1B transfer gap rejects target/other writes
+[sm1.7] PASS: 7.1B commit forbidden without WARM proof
+[sm1.7] PASS: 7.1B commit counter unchanged
+[sm1.7] SUBCASE 03 7.1C source death after frozen proof
+[sm1.7] PASS: 7.1C transfer completes from frozen/WARM proof
+[sm1.7] PASS: 7.1C target becomes sole active authority: state=ACTIVE
+[sm1.7] PASS: 7.1C target becomes sole active authority: authority=authority/b
+[sm1.7] PASS: 7.1C target becomes sole active authority: epoch=2
+[sm1.7] PASS: 7.1C target becomes sole active authority: no private Item Graph
+[sm1.7] PASS: 7.1C target becomes sole active authority: no private Construction truth
+[sm1.7] PASS: 7.1C target becomes sole active authority: no private persistence owner
+[sm1.7] PASS: 7.1C target becomes sole active authority: no private replay owner
+[sm1.7] PASS: 7.1C dead/stale source permanently fenced
+[sm1.7] PASS: 7.1C target writer admitted only after activation
+[sm1.7] SUBCASE 04 7.2A target death before WARM
+[sm1.7] PASS: 7.2A freeze admitted
+[sm1.7] PASS: 7.2A transfer gap rejects canonical tuple writes
+[sm1.7] PASS: 7.2A transfer gap rejects target/other writes
+[sm1.7] PASS: 7.2A target death cannot commit ownership
+[sm1.7] PASS: 7.2A ownership tuple not promoted: state=SOURCE_FROZEN
+[sm1.7] PASS: 7.2A ownership tuple not promoted: authority=authority/a
+[sm1.7] PASS: 7.2A ownership tuple not promoted: epoch=1
+[sm1.7] PASS: 7.2A ownership tuple not promoted: no private Item Graph
+[sm1.7] PASS: 7.2A ownership tuple not promoted: no private Construction truth
+[sm1.7] PASS: 7.2A ownership tuple not promoted: no private persistence owner
+[sm1.7] PASS: 7.2A ownership tuple not promoted: no private replay owner
+[sm1.7] PASS: 7.2A real WARM-target Authority B OS process is killable before WARM: { "success": true, "error_code": "", "process_id": 1522258, "authority_id": "authority/b", "initial_active": false, "authority_epoch": 1, "dead": true }
+[sm1.7] PASS: 7.2A target death evidence carries a real OS pid
+[sm1.7] SUBCASE 05 7.2B target death during WARM before result
+[sm1.7] PASS: 7.2B transfer gap rejects canonical tuple writes
+[sm1.7] PASS: 7.2B transfer gap rejects target/other writes
+[sm1.7] PASS: 7.2B ambiguous WARM outcome cannot commit
+[sm1.7] PASS: 7.2B no WARM validation recorded
+[sm1.7] SUBCASE 06 7.2C target death after WARM before COMMIT
+[sm1.7] PASS: 7.2C WARM proof accepted before target loss
+[sm1.7] PASS: 7.2C no ownership commit occurred: state=TARGET_WARM_VALIDATED
+[sm1.7] PASS: 7.2C no ownership commit occurred: authority=authority/a
+[sm1.7] PASS: 7.2C no ownership commit occurred: epoch=1
+[sm1.7] PASS: 7.2C no ownership commit occurred: no private Item Graph
+[sm1.7] PASS: 7.2C no ownership commit occurred: no private Construction truth
+[sm1.7] PASS: 7.2C no ownership commit occurred: no private persistence owner
+[sm1.7] PASS: 7.2C no ownership commit occurred: no private replay owner
+[sm1.7] PASS: 7.2C transfer gap rejects canonical tuple writes
+[sm1.7] PASS: 7.2C transfer gap rejects target/other writes
+[sm1.7] PASS: 7.2C restarted target may reuse exact current WARM evidence
+[sm1.7] PASS: 7.2C stale/different transfer WARM evidence rejected
+[sm1.7] PASS: 7.2C target death leaves commit counter zero
+[sm1.7] SUBCASE 07 7.3A COMMIT result lost then retried
+[sm1.7] PASS: 7.3A ready to commit
+[sm1.7] PASS: 7.3A first COMMIT linearizes
+[sm1.7] PASS: 7.3A retry converges to already committed
+[sm1.7] PASS: 7.3A retry returns identical commit proof
+[sm1.7] PASS: 7.3A retry does not linearize twice
+[sm1.7] PASS: 7.3A exactly one commit plus one replay
+[sm1.7] PASS: 7.3A post-commit/pre-retire transfer gap rejects canonical tuple writes
+[sm1.7] PASS: 7.3A post-commit/pre-retire transfer gap rejects target/other writes
+[sm1.7] SUBCASE 08 7.3B ACTIVATE result lost then retried
+[sm1.7] PASS: 7.3B ready to commit
+[sm1.7] PASS: 7.3B source retired
+[sm1.7] PASS: 7.3B target activation linearizes once
+[sm1.7] PASS: 7.3B activation retry converges
+[sm1.7] PASS: 7.3B activation occurs once
+[sm1.7] PASS: 7.3B B remains sole active authority: state=ACTIVE
+[sm1.7] PASS: 7.3B B remains sole active authority: authority=authority/b
+[sm1.7] PASS: 7.3B B remains sole active authority: epoch=2
+[sm1.7] PASS: 7.3B B remains sole active authority: no private Item Graph
+[sm1.7] PASS: 7.3B B remains sole active authority: no private Construction truth
+[sm1.7] PASS: 7.3B B remains sole active authority: no private persistence owner
+[sm1.7] PASS: 7.3B B remains sole active authority: no private replay owner
+[sm1.7] SUBCASE 09 7.4A stale source route rejected by coordinator
+[sm1.7] PASS: 7.4A A->B complete
+[sm1.7] PASS: 7.4A stale A/1 write fenced
+[sm1.7] PASS: 7.4A stale write cannot advance epoch
+[sm1.7] PASS: 7.4A current B/2 write admitted
+[sm1.7] SUBCASE 10 7.4B direct retired authority worker rejects stale write
+[sm1.7] PASS: 7.4B direct ENET probe reached real SM1.6 authority worker: { "success": true, "error_code": "SM1_AUTHORITY_NOT_ACTIVE", "process_id": 1522652, "response": { "error_code": "SM1_AUTHORITY_NOT_ACTIVE", "request_id": "fault/stale-execute", "success": false, "type": "EXECUTE_RESULT" } }
+[sm1.7] PASS: 7.4B retired source rejects direct stale EXECUTE
+[sm1.7] PASS: 7.4B direct probe used a separate OS authority process
+[sm1.7] SUBCASE 11 7.5A duplicate transfer messages converge or reject safely
+[sm1.7] PASS: 7.5A first FREEZE admitted
+[sm1.7] PASS: 7.5A duplicate FREEZE safely rejected
+[sm1.7] PASS: 7.5A duplicate WARM converges
+[sm1.7] PASS: 7.5A duplicate COMMIT converges
+[sm1.7] PASS: 7.5A duplicate RETIRE converges
+[sm1.7] PASS: 7.5A duplicate ACTIVATE converges
+[sm1.7] PASS: 7.5A duplicate sequence mutates commit/activation exactly once
+[sm1.7] SUBCASE 12 7.5B invalid reorder is fail-closed
+[sm1.7] PASS: 7.5B FREEZE admitted
+[sm1.7] PASS: 7.5B COMMIT before WARM rejected
+[sm1.7] PASS: 7.5B RETIRE before COMMIT rejected
+[sm1.7] PASS: 7.5B ACTIVATE before COMMIT rejected
+[sm1.7] PASS: 7.5B invalid early messages do not advance state: state=SOURCE_FROZEN
+[sm1.7] PASS: 7.5B invalid early messages do not advance state: authority=authority/a
+[sm1.7] PASS: 7.5B invalid early messages do not advance state: epoch=1
+[sm1.7] PASS: 7.5B invalid early messages do not advance state: no private Item Graph
+[sm1.7] PASS: 7.5B invalid early messages do not advance state: no private Construction truth
+[sm1.7] PASS: 7.5B invalid early messages do not advance state: no private persistence owner
+[sm1.7] PASS: 7.5B invalid early messages do not advance state: no private replay owner
+[sm1.7] PASS: 7.5B valid WARM accepted
+[sm1.7] PASS: 7.5B ACTIVATE before RETIRE rejected
+[sm1.7] PASS: 7.5B rejected activation cannot make target writable: state=OWNERSHIP_COMMITTED
+[sm1.7] PASS: 7.5B rejected activation cannot make target writable: authority=authority/b
+[sm1.7] PASS: 7.5B rejected activation cannot make target writable: epoch=2
+[sm1.7] PASS: 7.5B rejected activation cannot make target writable: no private Item Graph
+[sm1.7] PASS: 7.5B rejected activation cannot make target writable: no private Construction truth
+[sm1.7] PASS: 7.5B rejected activation cannot make target writable: no private persistence owner
+[sm1.7] PASS: 7.5B rejected activation cannot make target writable: no private replay owner
+[sm1.7] PASS: 7.5B post-commit/pre-retire transfer gap rejects canonical tuple writes
+[sm1.7] PASS: 7.5B post-commit/pre-retire transfer gap rejects target/other writes
+[sm1.7] SUBCASE 13 7.5C completed-transfer FREEZE replay cannot reopen transfer
+[sm1.7] PASS: 7.5C initial transfer completes
+[sm1.7] PASS: 7.5C old FREEZE replay rejected
+[sm1.7] PASS: 7.5C completed replay leaves current owner unchanged: state=ACTIVE
+[sm1.7] PASS: 7.5C completed replay leaves current owner unchanged: authority=authority/b
+[sm1.7] PASS: 7.5C completed replay leaves current owner unchanged: epoch=2
+[sm1.7] PASS: 7.5C completed replay leaves current owner unchanged: no private Item Graph
+[sm1.7] PASS: 7.5C completed replay leaves current owner unchanged: no private Construction truth
+[sm1.7] PASS: 7.5C completed replay leaves current owner unchanged: no private persistence owner
+[sm1.7] PASS: 7.5C completed replay leaves current owner unchanged: no private replay owner
+[sm1.7] SUBCASE 14 7.6 replay old T1 after A->B->A
+[sm1.7] PASS: 7.6 T1 A->B complete
+[sm1.7] PASS: 7.6 T1 completion proof retained
+[sm1.7] PASS: 7.6 T2 B->A complete
+[sm1.7] PASS: 7.6 current owner A/3 before replay: state=ACTIVE
+[sm1.7] PASS: 7.6 current owner A/3 before replay: authority=authority/a
+[sm1.7] PASS: 7.6 current owner A/3 before replay: epoch=3
+[sm1.7] PASS: 7.6 current owner A/3 before replay: no private Item Graph
+[sm1.7] PASS: 7.6 current owner A/3 before replay: no private Construction truth
+[sm1.7] PASS: 7.6 current owner A/3 before replay: no private persistence owner
+[sm1.7] PASS: 7.6 current owner A/3 before replay: no private replay owner
+[sm1.7] PASS: 7.6 historical COMMIT returns proof only
+[sm1.7] PASS: 7.6 historical COMMIT cannot roll back owner: state=ACTIVE
+[sm1.7] PASS: 7.6 historical COMMIT cannot roll back owner: authority=authority/a
+[sm1.7] PASS: 7.6 historical COMMIT cannot roll back owner: epoch=3
+[sm1.7] PASS: 7.6 historical COMMIT cannot roll back owner: no private Item Graph
+[sm1.7] PASS: 7.6 historical COMMIT cannot roll back owner: no private Construction truth
+[sm1.7] PASS: 7.6 historical COMMIT cannot roll back owner: no private persistence owner
+[sm1.7] PASS: 7.6 historical COMMIT cannot roll back owner: no private replay owner
+[sm1.7] PASS: 7.6 historical ACTIVATE recognized
+[sm1.7] PASS: 7.6 historical target explicitly reported inactive
+[sm1.7] PASS: 7.6 replay reports current A/3 tuple
+[sm1.7] PASS: 7.6 resurrected B/2 write fenced
+[sm1.7] PASS: 7.6 current A/3 write remains admitted
+[sm1.7] PASS: 7.6 full T1 replay changes nothing: state=ACTIVE
+[sm1.7] PASS: 7.6 full T1 replay changes nothing: authority=authority/a
+[sm1.7] PASS: 7.6 full T1 replay changes nothing: epoch=3
+[sm1.7] PASS: 7.6 full T1 replay changes nothing: no private Item Graph
+[sm1.7] PASS: 7.6 full T1 replay changes nothing: no private Construction truth
+[sm1.7] PASS: 7.6 full T1 replay changes nothing: no private persistence owner
+[sm1.7] PASS: 7.6 full T1 replay changes nothing: no private replay owner
+SM1.7.1-7.6 fault matrix: 157 assertions, 0 failures
+SM1_7_FAULT_MATRIX_1_6_PASS
+scenarios=6
+subcases=14
+failures=0
+SM1_7_ITERATION=3/10
+Godot Engine v4.8.beta1.double.custom_build.4d10419ca - https://godotengine.org
+
+[sm1.7] SUBCASE 01 7.1A source death before FREEZE
+[sm1.7] PASS: 7.1A canonical tuple unchanged: state=ACTIVE
+[sm1.7] PASS: 7.1A canonical tuple unchanged: authority=authority/a
+[sm1.7] PASS: 7.1A canonical tuple unchanged: epoch=1
+[sm1.7] PASS: 7.1A canonical tuple unchanged: no private Item Graph
+[sm1.7] PASS: 7.1A canonical tuple unchanged: no private Construction truth
+[sm1.7] PASS: 7.1A canonical tuple unchanged: no private persistence owner
+[sm1.7] PASS: 7.1A canonical tuple unchanged: no private replay owner
+[sm1.7] PASS: 7.1A target cannot self-promote after source death
+[sm1.7] PASS: 7.1A real source Authority A OS process is killable at pre-FREEZE boundary: { "success": true, "error_code": "", "process_id": 1522887, "authority_id": "authority/a", "initial_active": true, "authority_epoch": 1, "dead": true }
+[sm1.7] PASS: 7.1A source death evidence carries a real OS pid
+[sm1.7] SUBCASE 02 7.1B source death after FREEZE sent before result
+[sm1.7] PASS: 7.1B transfer enters frozen gap
+[sm1.7] PASS: 7.1B source remains canonical but no writer is admitted: state=SOURCE_FROZEN
+[sm1.7] PASS: 7.1B source remains canonical but no writer is admitted: authority=authority/a
+[sm1.7] PASS: 7.1B source remains canonical but no writer is admitted: epoch=1
+[sm1.7] PASS: 7.1B source remains canonical but no writer is admitted: no private Item Graph
+[sm1.7] PASS: 7.1B source remains canonical but no writer is admitted: no private Construction truth
+[sm1.7] PASS: 7.1B source remains canonical but no writer is admitted: no private persistence owner
+[sm1.7] PASS: 7.1B source remains canonical but no writer is admitted: no private replay owner
+[sm1.7] PASS: 7.1B transfer gap rejects canonical tuple writes
+[sm1.7] PASS: 7.1B transfer gap rejects target/other writes
+[sm1.7] PASS: 7.1B commit forbidden without WARM proof
+[sm1.7] PASS: 7.1B commit counter unchanged
+[sm1.7] SUBCASE 03 7.1C source death after frozen proof
+[sm1.7] PASS: 7.1C transfer completes from frozen/WARM proof
+[sm1.7] PASS: 7.1C target becomes sole active authority: state=ACTIVE
+[sm1.7] PASS: 7.1C target becomes sole active authority: authority=authority/b
+[sm1.7] PASS: 7.1C target becomes sole active authority: epoch=2
+[sm1.7] PASS: 7.1C target becomes sole active authority: no private Item Graph
+[sm1.7] PASS: 7.1C target becomes sole active authority: no private Construction truth
+[sm1.7] PASS: 7.1C target becomes sole active authority: no private persistence owner
+[sm1.7] PASS: 7.1C target becomes sole active authority: no private replay owner
+[sm1.7] PASS: 7.1C dead/stale source permanently fenced
+[sm1.7] PASS: 7.1C target writer admitted only after activation
+[sm1.7] SUBCASE 04 7.2A target death before WARM
+[sm1.7] PASS: 7.2A freeze admitted
+[sm1.7] PASS: 7.2A transfer gap rejects canonical tuple writes
+[sm1.7] PASS: 7.2A transfer gap rejects target/other writes
+[sm1.7] PASS: 7.2A target death cannot commit ownership
+[sm1.7] PASS: 7.2A ownership tuple not promoted: state=SOURCE_FROZEN
+[sm1.7] PASS: 7.2A ownership tuple not promoted: authority=authority/a
+[sm1.7] PASS: 7.2A ownership tuple not promoted: epoch=1
+[sm1.7] PASS: 7.2A ownership tuple not promoted: no private Item Graph
+[sm1.7] PASS: 7.2A ownership tuple not promoted: no private Construction truth
+[sm1.7] PASS: 7.2A ownership tuple not promoted: no private persistence owner
+[sm1.7] PASS: 7.2A ownership tuple not promoted: no private replay owner
+[sm1.7] PASS: 7.2A real WARM-target Authority B OS process is killable before WARM: { "success": true, "error_code": "", "process_id": 1522982, "authority_id": "authority/b", "initial_active": false, "authority_epoch": 1, "dead": true }
+[sm1.7] PASS: 7.2A target death evidence carries a real OS pid
+[sm1.7] SUBCASE 05 7.2B target death during WARM before result
+[sm1.7] PASS: 7.2B transfer gap rejects canonical tuple writes
+[sm1.7] PASS: 7.2B transfer gap rejects target/other writes
+[sm1.7] PASS: 7.2B ambiguous WARM outcome cannot commit
+[sm1.7] PASS: 7.2B no WARM validation recorded
+[sm1.7] SUBCASE 06 7.2C target death after WARM before COMMIT
+[sm1.7] PASS: 7.2C WARM proof accepted before target loss
+[sm1.7] PASS: 7.2C no ownership commit occurred: state=TARGET_WARM_VALIDATED
+[sm1.7] PASS: 7.2C no ownership commit occurred: authority=authority/a
+[sm1.7] PASS: 7.2C no ownership commit occurred: epoch=1
+[sm1.7] PASS: 7.2C no ownership commit occurred: no private Item Graph
+[sm1.7] PASS: 7.2C no ownership commit occurred: no private Construction truth
+[sm1.7] PASS: 7.2C no ownership commit occurred: no private persistence owner
+[sm1.7] PASS: 7.2C no ownership commit occurred: no private replay owner
+[sm1.7] PASS: 7.2C transfer gap rejects canonical tuple writes
+[sm1.7] PASS: 7.2C transfer gap rejects target/other writes
+[sm1.7] PASS: 7.2C restarted target may reuse exact current WARM evidence
+[sm1.7] PASS: 7.2C stale/different transfer WARM evidence rejected
+[sm1.7] PASS: 7.2C target death leaves commit counter zero
+[sm1.7] SUBCASE 07 7.3A COMMIT result lost then retried
+[sm1.7] PASS: 7.3A ready to commit
+[sm1.7] PASS: 7.3A first COMMIT linearizes
+[sm1.7] PASS: 7.3A retry converges to already committed
+[sm1.7] PASS: 7.3A retry returns identical commit proof
+[sm1.7] PASS: 7.3A retry does not linearize twice
+[sm1.7] PASS: 7.3A exactly one commit plus one replay
+[sm1.7] PASS: 7.3A post-commit/pre-retire transfer gap rejects canonical tuple writes
+[sm1.7] PASS: 7.3A post-commit/pre-retire transfer gap rejects target/other writes
+[sm1.7] SUBCASE 08 7.3B ACTIVATE result lost then retried
+[sm1.7] PASS: 7.3B ready to commit
+[sm1.7] PASS: 7.3B source retired
+[sm1.7] PASS: 7.3B target activation linearizes once
+[sm1.7] PASS: 7.3B activation retry converges
+[sm1.7] PASS: 7.3B activation occurs once
+[sm1.7] PASS: 7.3B B remains sole active authority: state=ACTIVE
+[sm1.7] PASS: 7.3B B remains sole active authority: authority=authority/b
+[sm1.7] PASS: 7.3B B remains sole active authority: epoch=2
+[sm1.7] PASS: 7.3B B remains sole active authority: no private Item Graph
+[sm1.7] PASS: 7.3B B remains sole active authority: no private Construction truth
+[sm1.7] PASS: 7.3B B remains sole active authority: no private persistence owner
+[sm1.7] PASS: 7.3B B remains sole active authority: no private replay owner
+[sm1.7] SUBCASE 09 7.4A stale source route rejected by coordinator
+[sm1.7] PASS: 7.4A A->B complete
+[sm1.7] PASS: 7.4A stale A/1 write fenced
+[sm1.7] PASS: 7.4A stale write cannot advance epoch
+[sm1.7] PASS: 7.4A current B/2 write admitted
+[sm1.7] SUBCASE 10 7.4B direct retired authority worker rejects stale write
+[sm1.7] PASS: 7.4B direct ENET probe reached real SM1.6 authority worker: { "success": true, "error_code": "SM1_AUTHORITY_NOT_ACTIVE", "process_id": 1523073, "response": { "error_code": "SM1_AUTHORITY_NOT_ACTIVE", "request_id": "fault/stale-execute", "success": false, "type": "EXECUTE_RESULT" } }
+[sm1.7] PASS: 7.4B retired source rejects direct stale EXECUTE
+[sm1.7] PASS: 7.4B direct probe used a separate OS authority process
+[sm1.7] SUBCASE 11 7.5A duplicate transfer messages converge or reject safely
+[sm1.7] PASS: 7.5A first FREEZE admitted
+[sm1.7] PASS: 7.5A duplicate FREEZE safely rejected
+[sm1.7] PASS: 7.5A duplicate WARM converges
+[sm1.7] PASS: 7.5A duplicate COMMIT converges
+[sm1.7] PASS: 7.5A duplicate RETIRE converges
+[sm1.7] PASS: 7.5A duplicate ACTIVATE converges
+[sm1.7] PASS: 7.5A duplicate sequence mutates commit/activation exactly once
+[sm1.7] SUBCASE 12 7.5B invalid reorder is fail-closed
+[sm1.7] PASS: 7.5B FREEZE admitted
+[sm1.7] PASS: 7.5B COMMIT before WARM rejected
+[sm1.7] PASS: 7.5B RETIRE before COMMIT rejected
+[sm1.7] PASS: 7.5B ACTIVATE before COMMIT rejected
+[sm1.7] PASS: 7.5B invalid early messages do not advance state: state=SOURCE_FROZEN
+[sm1.7] PASS: 7.5B invalid early messages do not advance state: authority=authority/a
+[sm1.7] PASS: 7.5B invalid early messages do not advance state: epoch=1
+[sm1.7] PASS: 7.5B invalid early messages do not advance state: no private Item Graph
+[sm1.7] PASS: 7.5B invalid early messages do not advance state: no private Construction truth
+[sm1.7] PASS: 7.5B invalid early messages do not advance state: no private persistence owner
+[sm1.7] PASS: 7.5B invalid early messages do not advance state: no private replay owner
+[sm1.7] PASS: 7.5B valid WARM accepted
+[sm1.7] PASS: 7.5B ACTIVATE before RETIRE rejected
+[sm1.7] PASS: 7.5B rejected activation cannot make target writable: state=OWNERSHIP_COMMITTED
+[sm1.7] PASS: 7.5B rejected activation cannot make target writable: authority=authority/b
+[sm1.7] PASS: 7.5B rejected activation cannot make target writable: epoch=2
+[sm1.7] PASS: 7.5B rejected activation cannot make target writable: no private Item Graph
+[sm1.7] PASS: 7.5B rejected activation cannot make target writable: no private Construction truth
+[sm1.7] PASS: 7.5B rejected activation cannot make target writable: no private persistence owner
+[sm1.7] PASS: 7.5B rejected activation cannot make target writable: no private replay owner
+[sm1.7] PASS: 7.5B post-commit/pre-retire transfer gap rejects canonical tuple writes
+[sm1.7] PASS: 7.5B post-commit/pre-retire transfer gap rejects target/other writes
+[sm1.7] SUBCASE 13 7.5C completed-transfer FREEZE replay cannot reopen transfer
+[sm1.7] PASS: 7.5C initial transfer completes
+[sm1.7] PASS: 7.5C old FREEZE replay rejected
+[sm1.7] PASS: 7.5C completed replay leaves current owner unchanged: state=ACTIVE
+[sm1.7] PASS: 7.5C completed replay leaves current owner unchanged: authority=authority/b
+[sm1.7] PASS: 7.5C completed replay leaves current owner unchanged: epoch=2
+[sm1.7] PASS: 7.5C completed replay leaves current owner unchanged: no private Item Graph
+[sm1.7] PASS: 7.5C completed replay leaves current owner unchanged: no private Construction truth
+[sm1.7] PASS: 7.5C completed replay leaves current owner unchanged: no private persistence owner
+[sm1.7] PASS: 7.5C completed replay leaves current owner unchanged: no private replay owner
+[sm1.7] SUBCASE 14 7.6 replay old T1 after A->B->A
+[sm1.7] PASS: 7.6 T1 A->B complete
+[sm1.7] PASS: 7.6 T1 completion proof retained
+[sm1.7] PASS: 7.6 T2 B->A complete
+[sm1.7] PASS: 7.6 current owner A/3 before replay: state=ACTIVE
+[sm1.7] PASS: 7.6 current owner A/3 before replay: authority=authority/a
+[sm1.7] PASS: 7.6 current owner A/3 before replay: epoch=3
+[sm1.7] PASS: 7.6 current owner A/3 before replay: no private Item Graph
+[sm1.7] PASS: 7.6 current owner A/3 before replay: no private Construction truth
+[sm1.7] PASS: 7.6 current owner A/3 before replay: no private persistence owner
+[sm1.7] PASS: 7.6 current owner A/3 before replay: no private replay owner
+[sm1.7] PASS: 7.6 historical COMMIT returns proof only
+[sm1.7] PASS: 7.6 historical COMMIT cannot roll back owner: state=ACTIVE
+[sm1.7] PASS: 7.6 historical COMMIT cannot roll back owner: authority=authority/a
+[sm1.7] PASS: 7.6 historical COMMIT cannot roll back owner: epoch=3
+[sm1.7] PASS: 7.6 historical COMMIT cannot roll back owner: no private Item Graph
+[sm1.7] PASS: 7.6 historical COMMIT cannot roll back owner: no private Construction truth
+[sm1.7] PASS: 7.6 historical COMMIT cannot roll back owner: no private persistence owner
+[sm1.7] PASS: 7.6 historical COMMIT cannot roll back owner: no private replay owner
+[sm1.7] PASS: 7.6 historical ACTIVATE recognized
+[sm1.7] PASS: 7.6 historical target explicitly reported inactive
+[sm1.7] PASS: 7.6 replay reports current A/3 tuple
+[sm1.7] PASS: 7.6 resurrected B/2 write fenced
+[sm1.7] PASS: 7.6 current A/3 write remains admitted
+[sm1.7] PASS: 7.6 full T1 replay changes nothing: state=ACTIVE
+[sm1.7] PASS: 7.6 full T1 replay changes nothing: authority=authority/a
+[sm1.7] PASS: 7.6 full T1 replay changes nothing: epoch=3
+[sm1.7] PASS: 7.6 full T1 replay changes nothing: no private Item Graph
+[sm1.7] PASS: 7.6 full T1 replay changes nothing: no private Construction truth
+[sm1.7] PASS: 7.6 full T1 replay changes nothing: no private persistence owner
+[sm1.7] PASS: 7.6 full T1 replay changes nothing: no private replay owner
+SM1.7.1-7.6 fault matrix: 157 assertions, 0 failures
+SM1_7_FAULT_MATRIX_1_6_PASS
+scenarios=6
+subcases=14
+failures=0
+SM1_7_ITERATION=4/10
+Godot Engine v4.8.beta1.double.custom_build.4d10419ca - https://godotengine.org
+
+[sm1.7] SUBCASE 01 7.1A source death before FREEZE
+[sm1.7] PASS: 7.1A canonical tuple unchanged: state=ACTIVE
+[sm1.7] PASS: 7.1A canonical tuple unchanged: authority=authority/a
+[sm1.7] PASS: 7.1A canonical tuple unchanged: epoch=1
+[sm1.7] PASS: 7.1A canonical tuple unchanged: no private Item Graph
+[sm1.7] PASS: 7.1A canonical tuple unchanged: no private Construction truth
+[sm1.7] PASS: 7.1A canonical tuple unchanged: no private persistence owner
+[sm1.7] PASS: 7.1A canonical tuple unchanged: no private replay owner
+[sm1.7] PASS: 7.1A target cannot self-promote after source death
+[sm1.7] PASS: 7.1A real source Authority A OS process is killable at pre-FREEZE boundary: { "success": true, "error_code": "", "process_id": 1523580, "authority_id": "authority/a", "initial_active": true, "authority_epoch": 1, "dead": true }
+[sm1.7] PASS: 7.1A source death evidence carries a real OS pid
+[sm1.7] SUBCASE 02 7.1B source death after FREEZE sent before result
+[sm1.7] PASS: 7.1B transfer enters frozen gap
+[sm1.7] PASS: 7.1B source remains canonical but no writer is admitted: state=SOURCE_FROZEN
+[sm1.7] PASS: 7.1B source remains canonical but no writer is admitted: authority=authority/a
+[sm1.7] PASS: 7.1B source remains canonical but no writer is admitted: epoch=1
+[sm1.7] PASS: 7.1B source remains canonical but no writer is admitted: no private Item Graph
+[sm1.7] PASS: 7.1B source remains canonical but no writer is admitted: no private Construction truth
+[sm1.7] PASS: 7.1B source remains canonical but no writer is admitted: no private persistence owner
+[sm1.7] PASS: 7.1B source remains canonical but no writer is admitted: no private replay owner
+[sm1.7] PASS: 7.1B transfer gap rejects canonical tuple writes
+[sm1.7] PASS: 7.1B transfer gap rejects target/other writes
+[sm1.7] PASS: 7.1B commit forbidden without WARM proof
+[sm1.7] PASS: 7.1B commit counter unchanged
+[sm1.7] SUBCASE 03 7.1C source death after frozen proof
+[sm1.7] PASS: 7.1C transfer completes from frozen/WARM proof
+[sm1.7] PASS: 7.1C target becomes sole active authority: state=ACTIVE
+[sm1.7] PASS: 7.1C target becomes sole active authority: authority=authority/b
+[sm1.7] PASS: 7.1C target becomes sole active authority: epoch=2
+[sm1.7] PASS: 7.1C target becomes sole active authority: no private Item Graph
+[sm1.7] PASS: 7.1C target becomes sole active authority: no private Construction truth
+[sm1.7] PASS: 7.1C target becomes sole active authority: no private persistence owner
+[sm1.7] PASS: 7.1C target becomes sole active authority: no private replay owner
+[sm1.7] PASS: 7.1C dead/stale source permanently fenced
+[sm1.7] PASS: 7.1C target writer admitted only after activation
+[sm1.7] SUBCASE 04 7.2A target death before WARM
+[sm1.7] PASS: 7.2A freeze admitted
+[sm1.7] PASS: 7.2A transfer gap rejects canonical tuple writes
+[sm1.7] PASS: 7.2A transfer gap rejects target/other writes
+[sm1.7] PASS: 7.2A target death cannot commit ownership
+[sm1.7] PASS: 7.2A ownership tuple not promoted: state=SOURCE_FROZEN
+[sm1.7] PASS: 7.2A ownership tuple not promoted: authority=authority/a
+[sm1.7] PASS: 7.2A ownership tuple not promoted: epoch=1
+[sm1.7] PASS: 7.2A ownership tuple not promoted: no private Item Graph
+[sm1.7] PASS: 7.2A ownership tuple not promoted: no private Construction truth
+[sm1.7] PASS: 7.2A ownership tuple not promoted: no private persistence owner
+[sm1.7] PASS: 7.2A ownership tuple not promoted: no private replay owner
+[sm1.7] PASS: 7.2A real WARM-target Authority B OS process is killable before WARM: { "success": true, "error_code": "", "process_id": 1523796, "authority_id": "authority/b", "initial_active": false, "authority_epoch": 1, "dead": true }
+[sm1.7] PASS: 7.2A target death evidence carries a real OS pid
+[sm1.7] SUBCASE 05 7.2B target death during WARM before result
+[sm1.7] PASS: 7.2B transfer gap rejects canonical tuple writes
+[sm1.7] PASS: 7.2B transfer gap rejects target/other writes
+[sm1.7] PASS: 7.2B ambiguous WARM outcome cannot commit
+[sm1.7] PASS: 7.2B no WARM validation recorded
+[sm1.7] SUBCASE 06 7.2C target death after WARM before COMMIT
+[sm1.7] PASS: 7.2C WARM proof accepted before target loss
+[sm1.7] PASS: 7.2C no ownership commit occurred: state=TARGET_WARM_VALIDATED
+[sm1.7] PASS: 7.2C no ownership commit occurred: authority=authority/a
+[sm1.7] PASS: 7.2C no ownership commit occurred: epoch=1
+[sm1.7] PASS: 7.2C no ownership commit occurred: no private Item Graph
+[sm1.7] PASS: 7.2C no ownership commit occurred: no private Construction truth
+[sm1.7] PASS: 7.2C no ownership commit occurred: no private persistence owner
+[sm1.7] PASS: 7.2C no ownership commit occurred: no private replay owner
+[sm1.7] PASS: 7.2C transfer gap rejects canonical tuple writes
+[sm1.7] PASS: 7.2C transfer gap rejects target/other writes
+[sm1.7] PASS: 7.2C restarted target may reuse exact current WARM evidence
+[sm1.7] PASS: 7.2C stale/different transfer WARM evidence rejected
+[sm1.7] PASS: 7.2C target death leaves commit counter zero
+[sm1.7] SUBCASE 07 7.3A COMMIT result lost then retried
+[sm1.7] PASS: 7.3A ready to commit
+[sm1.7] PASS: 7.3A first COMMIT linearizes
+[sm1.7] PASS: 7.3A retry converges to already committed
+[sm1.7] PASS: 7.3A retry returns identical commit proof
+[sm1.7] PASS: 7.3A retry does not linearize twice
+[sm1.7] PASS: 7.3A exactly one commit plus one replay
+[sm1.7] PASS: 7.3A post-commit/pre-retire transfer gap rejects canonical tuple writes
+[sm1.7] PASS: 7.3A post-commit/pre-retire transfer gap rejects target/other writes
+[sm1.7] SUBCASE 08 7.3B ACTIVATE result lost then retried
+[sm1.7] PASS: 7.3B ready to commit
+[sm1.7] PASS: 7.3B source retired
+[sm1.7] PASS: 7.3B target activation linearizes once
+[sm1.7] PASS: 7.3B activation retry converges
+[sm1.7] PASS: 7.3B activation occurs once
+[sm1.7] PASS: 7.3B B remains sole active authority: state=ACTIVE
+[sm1.7] PASS: 7.3B B remains sole active authority: authority=authority/b
+[sm1.7] PASS: 7.3B B remains sole active authority: epoch=2
+[sm1.7] PASS: 7.3B B remains sole active authority: no private Item Graph
+[sm1.7] PASS: 7.3B B remains sole active authority: no private Construction truth
+[sm1.7] PASS: 7.3B B remains sole active authority: no private persistence owner
+[sm1.7] PASS: 7.3B B remains sole active authority: no private replay owner
+[sm1.7] SUBCASE 09 7.4A stale source route rejected by coordinator
+[sm1.7] PASS: 7.4A A->B complete
+[sm1.7] PASS: 7.4A stale A/1 write fenced
+[sm1.7] PASS: 7.4A stale write cannot advance epoch
+[sm1.7] PASS: 7.4A current B/2 write admitted
+[sm1.7] SUBCASE 10 7.4B direct retired authority worker rejects stale write
+[sm1.7] PASS: 7.4B direct ENET probe reached real SM1.6 authority worker: { "success": true, "error_code": "SM1_AUTHORITY_NOT_ACTIVE", "process_id": 1523894, "response": { "error_code": "SM1_AUTHORITY_NOT_ACTIVE", "request_id": "fault/stale-execute", "success": false, "type": "EXECUTE_RESULT" } }
+[sm1.7] PASS: 7.4B retired source rejects direct stale EXECUTE
+[sm1.7] PASS: 7.4B direct probe used a separate OS authority process
+[sm1.7] SUBCASE 11 7.5A duplicate transfer messages converge or reject safely
+[sm1.7] PASS: 7.5A first FREEZE admitted
+[sm1.7] PASS: 7.5A duplicate FREEZE safely rejected
+[sm1.7] PASS: 7.5A duplicate WARM converges
+[sm1.7] PASS: 7.5A duplicate COMMIT converges
+[sm1.7] PASS: 7.5A duplicate RETIRE converges
+[sm1.7] PASS: 7.5A duplicate ACTIVATE converges
+[sm1.7] PASS: 7.5A duplicate sequence mutates commit/activation exactly once
+[sm1.7] SUBCASE 12 7.5B invalid reorder is fail-closed
+[sm1.7] PASS: 7.5B FREEZE admitted
+[sm1.7] PASS: 7.5B COMMIT before WARM rejected
+[sm1.7] PASS: 7.5B RETIRE before COMMIT rejected
+[sm1.7] PASS: 7.5B ACTIVATE before COMMIT rejected
+[sm1.7] PASS: 7.5B invalid early messages do not advance state: state=SOURCE_FROZEN
+[sm1.7] PASS: 7.5B invalid early messages do not advance state: authority=authority/a
+[sm1.7] PASS: 7.5B invalid early messages do not advance state: epoch=1
+[sm1.7] PASS: 7.5B invalid early messages do not advance state: no private Item Graph
+[sm1.7] PASS: 7.5B invalid early messages do not advance state: no private Construction truth
+[sm1.7] PASS: 7.5B invalid early messages do not advance state: no private persistence owner
+[sm1.7] PASS: 7.5B invalid early messages do not advance state: no private replay owner
+[sm1.7] PASS: 7.5B valid WARM accepted
+[sm1.7] PASS: 7.5B ACTIVATE before RETIRE rejected
+[sm1.7] PASS: 7.5B rejected activation cannot make target writable: state=OWNERSHIP_COMMITTED
+[sm1.7] PASS: 7.5B rejected activation cannot make target writable: authority=authority/b
+[sm1.7] PASS: 7.5B rejected activation cannot make target writable: epoch=2
+[sm1.7] PASS: 7.5B rejected activation cannot make target writable: no private Item Graph
+[sm1.7] PASS: 7.5B rejected activation cannot make target writable: no private Construction truth
+[sm1.7] PASS: 7.5B rejected activation cannot make target writable: no private persistence owner
+[sm1.7] PASS: 7.5B rejected activation cannot make target writable: no private replay owner
+[sm1.7] PASS: 7.5B post-commit/pre-retire transfer gap rejects canonical tuple writes
+[sm1.7] PASS: 7.5B post-commit/pre-retire transfer gap rejects target/other writes
+[sm1.7] SUBCASE 13 7.5C completed-transfer FREEZE replay cannot reopen transfer
+[sm1.7] PASS: 7.5C initial transfer completes
+[sm1.7] PASS: 7.5C old FREEZE replay rejected
+[sm1.7] PASS: 7.5C completed replay leaves current owner unchanged: state=ACTIVE
+[sm1.7] PASS: 7.5C completed replay leaves current owner unchanged: authority=authority/b
+[sm1.7] PASS: 7.5C completed replay leaves current owner unchanged: epoch=2
+[sm1.7] PASS: 7.5C completed replay leaves current owner unchanged: no private Item Graph
+[sm1.7] PASS: 7.5C completed replay leaves current owner unchanged: no private Construction truth
+[sm1.7] PASS: 7.5C completed replay leaves current owner unchanged: no private persistence owner
+[sm1.7] PASS: 7.5C completed replay leaves current owner unchanged: no private replay owner
+[sm1.7] SUBCASE 14 7.6 replay old T1 after A->B->A
+[sm1.7] PASS: 7.6 T1 A->B complete
+[sm1.7] PASS: 7.6 T1 completion proof retained
+[sm1.7] PASS: 7.6 T2 B->A complete
+[sm1.7] PASS: 7.6 current owner A/3 before replay: state=ACTIVE
+[sm1.7] PASS: 7.6 current owner A/3 before replay: authority=authority/a
+[sm1.7] PASS: 7.6 current owner A/3 before replay: epoch=3
+[sm1.7] PASS: 7.6 current owner A/3 before replay: no private Item Graph
+[sm1.7] PASS: 7.6 current owner A/3 before replay: no private Construction truth
+[sm1.7] PASS: 7.6 current owner A/3 before replay: no private persistence owner
+[sm1.7] PASS: 7.6 current owner A/3 before replay: no private replay owner
+[sm1.7] PASS: 7.6 historical COMMIT returns proof only
+[sm1.7] PASS: 7.6 historical COMMIT cannot roll back owner: state=ACTIVE
+[sm1.7] PASS: 7.6 historical COMMIT cannot roll back owner: authority=authority/a
+[sm1.7] PASS: 7.6 historical COMMIT cannot roll back owner: epoch=3
+[sm1.7] PASS: 7.6 historical COMMIT cannot roll back owner: no private Item Graph
+[sm1.7] PASS: 7.6 historical COMMIT cannot roll back owner: no private Construction truth
+[sm1.7] PASS: 7.6 historical COMMIT cannot roll back owner: no private persistence owner
+[sm1.7] PASS: 7.6 historical COMMIT cannot roll back owner: no private replay owner
+[sm1.7] PASS: 7.6 historical ACTIVATE recognized
+[sm1.7] PASS: 7.6 historical target explicitly reported inactive
+[sm1.7] PASS: 7.6 replay reports current A/3 tuple
+[sm1.7] PASS: 7.6 resurrected B/2 write fenced
+[sm1.7] PASS: 7.6 current A/3 write remains admitted
+[sm1.7] PASS: 7.6 full T1 replay changes nothing: state=ACTIVE
+[sm1.7] PASS: 7.6 full T1 replay changes nothing: authority=authority/a
+[sm1.7] PASS: 7.6 full T1 replay changes nothing: epoch=3
+[sm1.7] PASS: 7.6 full T1 replay changes nothing: no private Item Graph
+[sm1.7] PASS: 7.6 full T1 replay changes nothing: no private Construction truth
+[sm1.7] PASS: 7.6 full T1 replay changes nothing: no private persistence owner
+[sm1.7] PASS: 7.6 full T1 replay changes nothing: no private replay owner
+SM1.7.1-7.6 fault matrix: 157 assertions, 0 failures
+SM1_7_FAULT_MATRIX_1_6_PASS
+scenarios=6
+subcases=14
+failures=0
+SM1_7_ITERATION=5/10
+Godot Engine v4.8.beta1.double.custom_build.4d10419ca - https://godotengine.org
+
+[sm1.7] SUBCASE 01 7.1A source death before FREEZE
+[sm1.7] PASS: 7.1A canonical tuple unchanged: state=ACTIVE
+[sm1.7] PASS: 7.1A canonical tuple unchanged: authority=authority/a
+[sm1.7] PASS: 7.1A canonical tuple unchanged: epoch=1
+[sm1.7] PASS: 7.1A canonical tuple unchanged: no private Item Graph
+[sm1.7] PASS: 7.1A canonical tuple unchanged: no private Construction truth
+[sm1.7] PASS: 7.1A canonical tuple unchanged: no private persistence owner
+[sm1.7] PASS: 7.1A canonical tuple unchanged: no private replay owner
+[sm1.7] PASS: 7.1A target cannot self-promote after source death
+[sm1.7] PASS: 7.1A real source Authority A OS process is killable at pre-FREEZE boundary: { "success": true, "error_code": "", "process_id": 1524243, "authority_id": "authority/a", "initial_active": true, "authority_epoch": 1, "dead": true }
+[sm1.7] PASS: 7.1A source death evidence carries a real OS pid
+[sm1.7] SUBCASE 02 7.1B source death after FREEZE sent before result
+[sm1.7] PASS: 7.1B transfer enters frozen gap
+[sm1.7] PASS: 7.1B source remains canonical but no writer is admitted: state=SOURCE_FROZEN
+[sm1.7] PASS: 7.1B source remains canonical but no writer is admitted: authority=authority/a
+[sm1.7] PASS: 7.1B source remains canonical but no writer is admitted: epoch=1
+[sm1.7] PASS: 7.1B source remains canonical but no writer is admitted: no private Item Graph
+[sm1.7] PASS: 7.1B source remains canonical but no writer is admitted: no private Construction truth
+[sm1.7] PASS: 7.1B source remains canonical but no writer is admitted: no private persistence owner
+[sm1.7] PASS: 7.1B source remains canonical but no writer is admitted: no private replay owner
+[sm1.7] PASS: 7.1B transfer gap rejects canonical tuple writes
+[sm1.7] PASS: 7.1B transfer gap rejects target/other writes
+[sm1.7] PASS: 7.1B commit forbidden without WARM proof
+[sm1.7] PASS: 7.1B commit counter unchanged
+[sm1.7] SUBCASE 03 7.1C source death after frozen proof
+[sm1.7] PASS: 7.1C transfer completes from frozen/WARM proof
+[sm1.7] PASS: 7.1C target becomes sole active authority: state=ACTIVE
+[sm1.7] PASS: 7.1C target becomes sole active authority: authority=authority/b
+[sm1.7] PASS: 7.1C target becomes sole active authority: epoch=2
+[sm1.7] PASS: 7.1C target becomes sole active authority: no private Item Graph
+[sm1.7] PASS: 7.1C target becomes sole active authority: no private Construction truth
+[sm1.7] PASS: 7.1C target becomes sole active authority: no private persistence owner
+[sm1.7] PASS: 7.1C target becomes sole active authority: no private replay owner
+[sm1.7] PASS: 7.1C dead/stale source permanently fenced
+[sm1.7] PASS: 7.1C target writer admitted only after activation
+[sm1.7] SUBCASE 04 7.2A target death before WARM
+[sm1.7] PASS: 7.2A freeze admitted
+[sm1.7] PASS: 7.2A transfer gap rejects canonical tuple writes
+[sm1.7] PASS: 7.2A transfer gap rejects target/other writes
+[sm1.7] PASS: 7.2A target death cannot commit ownership
+[sm1.7] PASS: 7.2A ownership tuple not promoted: state=SOURCE_FROZEN
+[sm1.7] PASS: 7.2A ownership tuple not promoted: authority=authority/a
+[sm1.7] PASS: 7.2A ownership tuple not promoted: epoch=1
+[sm1.7] PASS: 7.2A ownership tuple not promoted: no private Item Graph
+[sm1.7] PASS: 7.2A ownership tuple not promoted: no private Construction truth
+[sm1.7] PASS: 7.2A ownership tuple not promoted: no private persistence owner
+[sm1.7] PASS: 7.2A ownership tuple not promoted: no private replay owner
+[sm1.7] PASS: 7.2A real WARM-target Authority B OS process is killable before WARM: { "success": true, "error_code": "", "process_id": 1524509, "authority_id": "authority/b", "initial_active": false, "authority_epoch": 1, "dead": true }
+[sm1.7] PASS: 7.2A target death evidence carries a real OS pid
+[sm1.7] SUBCASE 05 7.2B target death during WARM before result
+[sm1.7] PASS: 7.2B transfer gap rejects canonical tuple writes
+[sm1.7] PASS: 7.2B transfer gap rejects target/other writes
+[sm1.7] PASS: 7.2B ambiguous WARM outcome cannot commit
+[sm1.7] PASS: 7.2B no WARM validation recorded
+[sm1.7] SUBCASE 06 7.2C target death after WARM before COMMIT
+[sm1.7] PASS: 7.2C WARM proof accepted before target loss
+[sm1.7] PASS: 7.2C no ownership commit occurred: state=TARGET_WARM_VALIDATED
+[sm1.7] PASS: 7.2C no ownership commit occurred: authority=authority/a
+[sm1.7] PASS: 7.2C no ownership commit occurred: epoch=1
+[sm1.7] PASS: 7.2C no ownership commit occurred: no private Item Graph
+[sm1.7] PASS: 7.2C no ownership commit occurred: no private Construction truth
+[sm1.7] PASS: 7.2C no ownership commit occurred: no private persistence owner
+[sm1.7] PASS: 7.2C no ownership commit occurred: no private replay owner
+[sm1.7] PASS: 7.2C transfer gap rejects canonical tuple writes
+[sm1.7] PASS: 7.2C transfer gap rejects target/other writes
+[sm1.7] PASS: 7.2C restarted target may reuse exact current WARM evidence
+[sm1.7] PASS: 7.2C stale/different transfer WARM evidence rejected
+[sm1.7] PASS: 7.2C target death leaves commit counter zero
+[sm1.7] SUBCASE 07 7.3A COMMIT result lost then retried
+[sm1.7] PASS: 7.3A ready to commit
+[sm1.7] PASS: 7.3A first COMMIT linearizes
+[sm1.7] PASS: 7.3A retry converges to already committed
+[sm1.7] PASS: 7.3A retry returns identical commit proof
+[sm1.7] PASS: 7.3A retry does not linearize twice
+[sm1.7] PASS: 7.3A exactly one commit plus one replay
+[sm1.7] PASS: 7.3A post-commit/pre-retire transfer gap rejects canonical tuple writes
+[sm1.7] PASS: 7.3A post-commit/pre-retire transfer gap rejects target/other writes
+[sm1.7] SUBCASE 08 7.3B ACTIVATE result lost then retried
+[sm1.7] PASS: 7.3B ready to commit
+[sm1.7] PASS: 7.3B source retired
+[sm1.7] PASS: 7.3B target activation linearizes once
+[sm1.7] PASS: 7.3B activation retry converges
+[sm1.7] PASS: 7.3B activation occurs once
+[sm1.7] PASS: 7.3B B remains sole active authority: state=ACTIVE
+[sm1.7] PASS: 7.3B B remains sole active authority: authority=authority/b
+[sm1.7] PASS: 7.3B B remains sole active authority: epoch=2
+[sm1.7] PASS: 7.3B B remains sole active authority: no private Item Graph
+[sm1.7] PASS: 7.3B B remains sole active authority: no private Construction truth
+[sm1.7] PASS: 7.3B B remains sole active authority: no private persistence owner
+[sm1.7] PASS: 7.3B B remains sole active authority: no private replay owner
+[sm1.7] SUBCASE 09 7.4A stale source route rejected by coordinator
+[sm1.7] PASS: 7.4A A->B complete
+[sm1.7] PASS: 7.4A stale A/1 write fenced
+[sm1.7] PASS: 7.4A stale write cannot advance epoch
+[sm1.7] PASS: 7.4A current B/2 write admitted
+[sm1.7] SUBCASE 10 7.4B direct retired authority worker rejects stale write
+[sm1.7] PASS: 7.4B direct ENET probe reached real SM1.6 authority worker: { "success": true, "error_code": "SM1_AUTHORITY_NOT_ACTIVE", "process_id": 1524792, "response": { "error_code": "SM1_AUTHORITY_NOT_ACTIVE", "request_id": "fault/stale-execute", "success": false, "type": "EXECUTE_RESULT" } }
+[sm1.7] PASS: 7.4B retired source rejects direct stale EXECUTE
+[sm1.7] PASS: 7.4B direct probe used a separate OS authority process
+[sm1.7] SUBCASE 11 7.5A duplicate transfer messages converge or reject safely
+[sm1.7] PASS: 7.5A first FREEZE admitted
+[sm1.7] PASS: 7.5A duplicate FREEZE safely rejected
+[sm1.7] PASS: 7.5A duplicate WARM converges
+[sm1.7] PASS: 7.5A duplicate COMMIT converges
+[sm1.7] PASS: 7.5A duplicate RETIRE converges
+[sm1.7] PASS: 7.5A duplicate ACTIVATE converges
+[sm1.7] PASS: 7.5A duplicate sequence mutates commit/activation exactly once
+[sm1.7] SUBCASE 12 7.5B invalid reorder is fail-closed
+[sm1.7] PASS: 7.5B FREEZE admitted
+[sm1.7] PASS: 7.5B COMMIT before WARM rejected
+[sm1.7] PASS: 7.5B RETIRE before COMMIT rejected
+[sm1.7] PASS: 7.5B ACTIVATE before COMMIT rejected
+[sm1.7] PASS: 7.5B invalid early messages do not advance state: state=SOURCE_FROZEN
+[sm1.7] PASS: 7.5B invalid early messages do not advance state: authority=authority/a
+[sm1.7] PASS: 7.5B invalid early messages do not advance state: epoch=1
+[sm1.7] PASS: 7.5B invalid early messages do not advance state: no private Item Graph
+[sm1.7] PASS: 7.5B invalid early messages do not advance state: no private Construction truth
+[sm1.7] PASS: 7.5B invalid early messages do not advance state: no private persistence owner
+[sm1.7] PASS: 7.5B invalid early messages do not advance state: no private replay owner
+[sm1.7] PASS: 7.5B valid WARM accepted
+[sm1.7] PASS: 7.5B ACTIVATE before RETIRE rejected
+[sm1.7] PASS: 7.5B rejected activation cannot make target writable: state=OWNERSHIP_COMMITTED
+[sm1.7] PASS: 7.5B rejected activation cannot make target writable: authority=authority/b
+[sm1.7] PASS: 7.5B rejected activation cannot make target writable: epoch=2
+[sm1.7] PASS: 7.5B rejected activation cannot make target writable: no private Item Graph
+[sm1.7] PASS: 7.5B rejected activation cannot make target writable: no private Construction truth
+[sm1.7] PASS: 7.5B rejected activation cannot make target writable: no private persistence owner
+[sm1.7] PASS: 7.5B rejected activation cannot make target writable: no private replay owner
+[sm1.7] PASS: 7.5B post-commit/pre-retire transfer gap rejects canonical tuple writes
+[sm1.7] PASS: 7.5B post-commit/pre-retire transfer gap rejects target/other writes
+[sm1.7] SUBCASE 13 7.5C completed-transfer FREEZE replay cannot reopen transfer
+[sm1.7] PASS: 7.5C initial transfer completes
+[sm1.7] PASS: 7.5C old FREEZE replay rejected
+[sm1.7] PASS: 7.5C completed replay leaves current owner unchanged: state=ACTIVE
+[sm1.7] PASS: 7.5C completed replay leaves current owner unchanged: authority=authority/b
+[sm1.7] PASS: 7.5C completed replay leaves current owner unchanged: epoch=2
+[sm1.7] PASS: 7.5C completed replay leaves current owner unchanged: no private Item Graph
+[sm1.7] PASS: 7.5C completed replay leaves current owner unchanged: no private Construction truth
+[sm1.7] PASS: 7.5C completed replay leaves current owner unchanged: no private persistence owner
+[sm1.7] PASS: 7.5C completed replay leaves current owner unchanged: no private replay owner
+[sm1.7] SUBCASE 14 7.6 replay old T1 after A->B->A
+[sm1.7] PASS: 7.6 T1 A->B complete
+[sm1.7] PASS: 7.6 T1 completion proof retained
+[sm1.7] PASS: 7.6 T2 B->A complete
+[sm1.7] PASS: 7.6 current owner A/3 before replay: state=ACTIVE
+[sm1.7] PASS: 7.6 current owner A/3 before replay: authority=authority/a
+[sm1.7] PASS: 7.6 current owner A/3 before replay: epoch=3
+[sm1.7] PASS: 7.6 current owner A/3 before replay: no private Item Graph
+[sm1.7] PASS: 7.6 current owner A/3 before replay: no private Construction truth
+[sm1.7] PASS: 7.6 current owner A/3 before replay: no private persistence owner
+[sm1.7] PASS: 7.6 current owner A/3 before replay: no private replay owner
+[sm1.7] PASS: 7.6 historical COMMIT returns proof only
+[sm1.7] PASS: 7.6 historical COMMIT cannot roll back owner: state=ACTIVE
+[sm1.7] PASS: 7.6 historical COMMIT cannot roll back owner: authority=authority/a
+[sm1.7] PASS: 7.6 historical COMMIT cannot roll back owner: epoch=3
+[sm1.7] PASS: 7.6 historical COMMIT cannot roll back owner: no private Item Graph
+[sm1.7] PASS: 7.6 historical COMMIT cannot roll back owner: no private Construction truth
+[sm1.7] PASS: 7.6 historical COMMIT cannot roll back owner: no private persistence owner
+[sm1.7] PASS: 7.6 historical COMMIT cannot roll back owner: no private replay owner
+[sm1.7] PASS: 7.6 historical ACTIVATE recognized
+[sm1.7] PASS: 7.6 historical target explicitly reported inactive
+[sm1.7] PASS: 7.6 replay reports current A/3 tuple
+[sm1.7] PASS: 7.6 resurrected B/2 write fenced
+[sm1.7] PASS: 7.6 current A/3 write remains admitted
+[sm1.7] PASS: 7.6 full T1 replay changes nothing: state=ACTIVE
+[sm1.7] PASS: 7.6 full T1 replay changes nothing: authority=authority/a
+[sm1.7] PASS: 7.6 full T1 replay changes nothing: epoch=3
+[sm1.7] PASS: 7.6 full T1 replay changes nothing: no private Item Graph
+[sm1.7] PASS: 7.6 full T1 replay changes nothing: no private Construction truth
+[sm1.7] PASS: 7.6 full T1 replay changes nothing: no private persistence owner
+[sm1.7] PASS: 7.6 full T1 replay changes nothing: no private replay owner
+SM1.7.1-7.6 fault matrix: 157 assertions, 0 failures
+SM1_7_FAULT_MATRIX_1_6_PASS
+scenarios=6
+subcases=14
+failures=0
+SM1_7_ITERATION=6/10
+Godot Engine v4.8.beta1.double.custom_build.4d10419ca - https://godotengine.org
+
+[sm1.7] SUBCASE 01 7.1A source death before FREEZE
+[sm1.7] PASS: 7.1A canonical tuple unchanged: state=ACTIVE
+[sm1.7] PASS: 7.1A canonical tuple unchanged: authority=authority/a
+[sm1.7] PASS: 7.1A canonical tuple unchanged: epoch=1
+[sm1.7] PASS: 7.1A canonical tuple unchanged: no private Item Graph
+[sm1.7] PASS: 7.1A canonical tuple unchanged: no private Construction truth
+[sm1.7] PASS: 7.1A canonical tuple unchanged: no private persistence owner
+[sm1.7] PASS: 7.1A canonical tuple unchanged: no private replay owner
+[sm1.7] PASS: 7.1A target cannot self-promote after source death
+[sm1.7] PASS: 7.1A real source Authority A OS process is killable at pre-FREEZE boundary: { "success": true, "error_code": "", "process_id": 1525051, "authority_id": "authority/a", "initial_active": true, "authority_epoch": 1, "dead": true }
+[sm1.7] PASS: 7.1A source death evidence carries a real OS pid
+[sm1.7] SUBCASE 02 7.1B source death after FREEZE sent before result
+[sm1.7] PASS: 7.1B transfer enters frozen gap
+[sm1.7] PASS: 7.1B source remains canonical but no writer is admitted: state=SOURCE_FROZEN
+[sm1.7] PASS: 7.1B source remains canonical but no writer is admitted: authority=authority/a
+[sm1.7] PASS: 7.1B source remains canonical but no writer is admitted: epoch=1
+[sm1.7] PASS: 7.1B source remains canonical but no writer is admitted: no private Item Graph
+[sm1.7] PASS: 7.1B source remains canonical but no writer is admitted: no private Construction truth
+[sm1.7] PASS: 7.1B source remains canonical but no writer is admitted: no private persistence owner
+[sm1.7] PASS: 7.1B source remains canonical but no writer is admitted: no private replay owner
+[sm1.7] PASS: 7.1B transfer gap rejects canonical tuple writes
+[sm1.7] PASS: 7.1B transfer gap rejects target/other writes
+[sm1.7] PASS: 7.1B commit forbidden without WARM proof
+[sm1.7] PASS: 7.1B commit counter unchanged
+[sm1.7] SUBCASE 03 7.1C source death after frozen proof
+[sm1.7] PASS: 7.1C transfer completes from frozen/WARM proof
+[sm1.7] PASS: 7.1C target becomes sole active authority: state=ACTIVE
+[sm1.7] PASS: 7.1C target becomes sole active authority: authority=authority/b
+[sm1.7] PASS: 7.1C target becomes sole active authority: epoch=2
+[sm1.7] PASS: 7.1C target becomes sole active authority: no private Item Graph
+[sm1.7] PASS: 7.1C target becomes sole active authority: no private Construction truth
+[sm1.7] PASS: 7.1C target becomes sole active authority: no private persistence owner
+[sm1.7] PASS: 7.1C target becomes sole active authority: no private replay owner
+[sm1.7] PASS: 7.1C dead/stale source permanently fenced
+[sm1.7] PASS: 7.1C target writer admitted only after activation
+[sm1.7] SUBCASE 04 7.2A target death before WARM
+[sm1.7] PASS: 7.2A freeze admitted
+[sm1.7] PASS: 7.2A transfer gap rejects canonical tuple writes
+[sm1.7] PASS: 7.2A transfer gap rejects target/other writes
+[sm1.7] PASS: 7.2A target death cannot commit ownership
+[sm1.7] PASS: 7.2A ownership tuple not promoted: state=SOURCE_FROZEN
+[sm1.7] PASS: 7.2A ownership tuple not promoted: authority=authority/a
+[sm1.7] PASS: 7.2A ownership tuple not promoted: epoch=1
+[sm1.7] PASS: 7.2A ownership tuple not promoted: no private Item Graph
+[sm1.7] PASS: 7.2A ownership tuple not promoted: no private Construction truth
+[sm1.7] PASS: 7.2A ownership tuple not promoted: no private persistence owner
+[sm1.7] PASS: 7.2A ownership tuple not promoted: no private replay owner
+[sm1.7] PASS: 7.2A real WARM-target Authority B OS process is killable before WARM: { "success": true, "error_code": "", "process_id": 1525140, "authority_id": "authority/b", "initial_active": false, "authority_epoch": 1, "dead": true }
+[sm1.7] PASS: 7.2A target death evidence carries a real OS pid
+[sm1.7] SUBCASE 05 7.2B target death during WARM before result
+[sm1.7] PASS: 7.2B transfer gap rejects canonical tuple writes
+[sm1.7] PASS: 7.2B transfer gap rejects target/other writes
+[sm1.7] PASS: 7.2B ambiguous WARM outcome cannot commit
+[sm1.7] PASS: 7.2B no WARM validation recorded
+[sm1.7] SUBCASE 06 7.2C target death after WARM before COMMIT
+[sm1.7] PASS: 7.2C WARM proof accepted before target loss
+[sm1.7] PASS: 7.2C no ownership commit occurred: state=TARGET_WARM_VALIDATED
+[sm1.7] PASS: 7.2C no ownership commit occurred: authority=authority/a
+[sm1.7] PASS: 7.2C no ownership commit occurred: epoch=1
+[sm1.7] PASS: 7.2C no ownership commit occurred: no private Item Graph
+[sm1.7] PASS: 7.2C no ownership commit occurred: no private Construction truth
+[sm1.7] PASS: 7.2C no ownership commit occurred: no private persistence owner
+[sm1.7] PASS: 7.2C no ownership commit occurred: no private replay owner
+[sm1.7] PASS: 7.2C transfer gap rejects canonical tuple writes
+[sm1.7] PASS: 7.2C transfer gap rejects target/other writes
+[sm1.7] PASS: 7.2C restarted target may reuse exact current WARM evidence
+[sm1.7] PASS: 7.2C stale/different transfer WARM evidence rejected
+[sm1.7] PASS: 7.2C target death leaves commit counter zero
+[sm1.7] SUBCASE 07 7.3A COMMIT result lost then retried
+[sm1.7] PASS: 7.3A ready to commit
+[sm1.7] PASS: 7.3A first COMMIT linearizes
+[sm1.7] PASS: 7.3A retry converges to already committed
+[sm1.7] PASS: 7.3A retry returns identical commit proof
+[sm1.7] PASS: 7.3A retry does not linearize twice
+[sm1.7] PASS: 7.3A exactly one commit plus one replay
+[sm1.7] PASS: 7.3A post-commit/pre-retire transfer gap rejects canonical tuple writes
+[sm1.7] PASS: 7.3A post-commit/pre-retire transfer gap rejects target/other writes
+[sm1.7] SUBCASE 08 7.3B ACTIVATE result lost then retried
+[sm1.7] PASS: 7.3B ready to commit
+[sm1.7] PASS: 7.3B source retired
+[sm1.7] PASS: 7.3B target activation linearizes once
+[sm1.7] PASS: 7.3B activation retry converges
+[sm1.7] PASS: 7.3B activation occurs once
+[sm1.7] PASS: 7.3B B remains sole active authority: state=ACTIVE
+[sm1.7] PASS: 7.3B B remains sole active authority: authority=authority/b
+[sm1.7] PASS: 7.3B B remains sole active authority: epoch=2
+[sm1.7] PASS: 7.3B B remains sole active authority: no private Item Graph
+[sm1.7] PASS: 7.3B B remains sole active authority: no private Construction truth
+[sm1.7] PASS: 7.3B B remains sole active authority: no private persistence owner
+[sm1.7] PASS: 7.3B B remains sole active authority: no private replay owner
+[sm1.7] SUBCASE 09 7.4A stale source route rejected by coordinator
+[sm1.7] PASS: 7.4A A->B complete
+[sm1.7] PASS: 7.4A stale A/1 write fenced
+[sm1.7] PASS: 7.4A stale write cannot advance epoch
+[sm1.7] PASS: 7.4A current B/2 write admitted
+[sm1.7] SUBCASE 10 7.4B direct retired authority worker rejects stale write
+[sm1.7] PASS: 7.4B direct ENET probe reached real SM1.6 authority worker: { "success": true, "error_code": "SM1_AUTHORITY_NOT_ACTIVE", "process_id": 1525244, "response": { "error_code": "SM1_AUTHORITY_NOT_ACTIVE", "request_id": "fault/stale-execute", "success": false, "type": "EXECUTE_RESULT" } }
+[sm1.7] PASS: 7.4B retired source rejects direct stale EXECUTE
+[sm1.7] PASS: 7.4B direct probe used a separate OS authority process
+[sm1.7] SUBCASE 11 7.5A duplicate transfer messages converge or reject safely
+[sm1.7] PASS: 7.5A first FREEZE admitted
+[sm1.7] PASS: 7.5A duplicate FREEZE safely rejected
+[sm1.7] PASS: 7.5A duplicate WARM converges
+[sm1.7] PASS: 7.5A duplicate COMMIT converges
+[sm1.7] PASS: 7.5A duplicate RETIRE converges
+[sm1.7] PASS: 7.5A duplicate ACTIVATE converges
+[sm1.7] PASS: 7.5A duplicate sequence mutates commit/activation exactly once
+[sm1.7] SUBCASE 12 7.5B invalid reorder is fail-closed
+[sm1.7] PASS: 7.5B FREEZE admitted
+[sm1.7] PASS: 7.5B COMMIT before WARM rejected
+[sm1.7] PASS: 7.5B RETIRE before COMMIT rejected
+[sm1.7] PASS: 7.5B ACTIVATE before COMMIT rejected
+[sm1.7] PASS: 7.5B invalid early messages do not advance state: state=SOURCE_FROZEN
+[sm1.7] PASS: 7.5B invalid early messages do not advance state: authority=authority/a
+[sm1.7] PASS: 7.5B invalid early messages do not advance state: epoch=1
+[sm1.7] PASS: 7.5B invalid early messages do not advance state: no private Item Graph
+[sm1.7] PASS: 7.5B invalid early messages do not advance state: no private Construction truth
+[sm1.7] PASS: 7.5B invalid early messages do not advance state: no private persistence owner
+[sm1.7] PASS: 7.5B invalid early messages do not advance state: no private replay owner
+[sm1.7] PASS: 7.5B valid WARM accepted
+[sm1.7] PASS: 7.5B ACTIVATE before RETIRE rejected
+[sm1.7] PASS: 7.5B rejected activation cannot make target writable: state=OWNERSHIP_COMMITTED
+[sm1.7] PASS: 7.5B rejected activation cannot make target writable: authority=authority/b
+[sm1.7] PASS: 7.5B rejected activation cannot make target writable: epoch=2
+[sm1.7] PASS: 7.5B rejected activation cannot make target writable: no private Item Graph
+[sm1.7] PASS: 7.5B rejected activation cannot make target writable: no private Construction truth
+[sm1.7] PASS: 7.5B rejected activation cannot make target writable: no private persistence owner
+[sm1.7] PASS: 7.5B rejected activation cannot make target writable: no private replay owner
+[sm1.7] PASS: 7.5B post-commit/pre-retire transfer gap rejects canonical tuple writes
+[sm1.7] PASS: 7.5B post-commit/pre-retire transfer gap rejects target/other writes
+[sm1.7] SUBCASE 13 7.5C completed-transfer FREEZE replay cannot reopen transfer
+[sm1.7] PASS: 7.5C initial transfer completes
+[sm1.7] PASS: 7.5C old FREEZE replay rejected
+[sm1.7] PASS: 7.5C completed replay leaves current owner unchanged: state=ACTIVE
+[sm1.7] PASS: 7.5C completed replay leaves current owner unchanged: authority=authority/b
+[sm1.7] PASS: 7.5C completed replay leaves current owner unchanged: epoch=2
+[sm1.7] PASS: 7.5C completed replay leaves current owner unchanged: no private Item Graph
+[sm1.7] PASS: 7.5C completed replay leaves current owner unchanged: no private Construction truth
+[sm1.7] PASS: 7.5C completed replay leaves current owner unchanged: no private persistence owner
+[sm1.7] PASS: 7.5C completed replay leaves current owner unchanged: no private replay owner
+[sm1.7] SUBCASE 14 7.6 replay old T1 after A->B->A
+[sm1.7] PASS: 7.6 T1 A->B complete
+[sm1.7] PASS: 7.6 T1 completion proof retained
+[sm1.7] PASS: 7.6 T2 B->A complete
+[sm1.7] PASS: 7.6 current owner A/3 before replay: state=ACTIVE
+[sm1.7] PASS: 7.6 current owner A/3 before replay: authority=authority/a
+[sm1.7] PASS: 7.6 current owner A/3 before replay: epoch=3
+[sm1.7] PASS: 7.6 current owner A/3 before replay: no private Item Graph
+[sm1.7] PASS: 7.6 current owner A/3 before replay: no private Construction truth
+[sm1.7] PASS: 7.6 current owner A/3 before replay: no private persistence owner
+[sm1.7] PASS: 7.6 current owner A/3 before replay: no private replay owner
+[sm1.7] PASS: 7.6 historical COMMIT returns proof only
+[sm1.7] PASS: 7.6 historical COMMIT cannot roll back owner: state=ACTIVE
+[sm1.7] PASS: 7.6 historical COMMIT cannot roll back owner: authority=authority/a
+[sm1.7] PASS: 7.6 historical COMMIT cannot roll back owner: epoch=3
+[sm1.7] PASS: 7.6 historical COMMIT cannot roll back owner: no private Item Graph
+[sm1.7] PASS: 7.6 historical COMMIT cannot roll back owner: no private Construction truth
+[sm1.7] PASS: 7.6 historical COMMIT cannot roll back owner: no private persistence owner
+[sm1.7] PASS: 7.6 historical COMMIT cannot roll back owner: no private replay owner
+[sm1.7] PASS: 7.6 historical ACTIVATE recognized
+[sm1.7] PASS: 7.6 historical target explicitly reported inactive
+[sm1.7] PASS: 7.6 replay reports current A/3 tuple
+[sm1.7] PASS: 7.6 resurrected B/2 write fenced
+[sm1.7] PASS: 7.6 current A/3 write remains admitted
+[sm1.7] PASS: 7.6 full T1 replay changes nothing: state=ACTIVE
+[sm1.7] PASS: 7.6 full T1 replay changes nothing: authority=authority/a
+[sm1.7] PASS: 7.6 full T1 replay changes nothing: epoch=3
+[sm1.7] PASS: 7.6 full T1 replay changes nothing: no private Item Graph
+[sm1.7] PASS: 7.6 full T1 replay changes nothing: no private Construction truth
+[sm1.7] PASS: 7.6 full T1 replay changes nothing: no private persistence owner
+[sm1.7] PASS: 7.6 full T1 replay changes nothing: no private replay owner
+SM1.7.1-7.6 fault matrix: 157 assertions, 0 failures
+SM1_7_FAULT_MATRIX_1_6_PASS
+scenarios=6
+subcases=14
+failures=0
+SM1_7_ITERATION=7/10
+Godot Engine v4.8.beta1.double.custom_build.4d10419ca - https://godotengine.org
+
+[sm1.7] SUBCASE 01 7.1A source death before FREEZE
+[sm1.7] PASS: 7.1A canonical tuple unchanged: state=ACTIVE
+[sm1.7] PASS: 7.1A canonical tuple unchanged: authority=authority/a
+[sm1.7] PASS: 7.1A canonical tuple unchanged: epoch=1
+[sm1.7] PASS: 7.1A canonical tuple unchanged: no private Item Graph
+[sm1.7] PASS: 7.1A canonical tuple unchanged: no private Construction truth
+[sm1.7] PASS: 7.1A canonical tuple unchanged: no private persistence owner
+[sm1.7] PASS: 7.1A canonical tuple unchanged: no private replay owner
+[sm1.7] PASS: 7.1A target cannot self-promote after source death
+[sm1.7] PASS: 7.1A real source Authority A OS process is killable at pre-FREEZE boundary: { "success": true, "error_code": "", "process_id": 1525714, "authority_id": "authority/a", "initial_active": true, "authority_epoch": 1, "dead": true }
+[sm1.7] PASS: 7.1A source death evidence carries a real OS pid
+[sm1.7] SUBCASE 02 7.1B source death after FREEZE sent before result
+[sm1.7] PASS: 7.1B transfer enters frozen gap
+[sm1.7] PASS: 7.1B source remains canonical but no writer is admitted: state=SOURCE_FROZEN
+[sm1.7] PASS: 7.1B source remains canonical but no writer is admitted: authority=authority/a
+[sm1.7] PASS: 7.1B source remains canonical but no writer is admitted: epoch=1
+[sm1.7] PASS: 7.1B source remains canonical but no writer is admitted: no private Item Graph
+[sm1.7] PASS: 7.1B source remains canonical but no writer is admitted: no private Construction truth
+[sm1.7] PASS: 7.1B source remains canonical but no writer is admitted: no private persistence owner
+[sm1.7] PASS: 7.1B source remains canonical but no writer is admitted: no private replay owner
+[sm1.7] PASS: 7.1B transfer gap rejects canonical tuple writes
+[sm1.7] PASS: 7.1B transfer gap rejects target/other writes
+[sm1.7] PASS: 7.1B commit forbidden without WARM proof
+[sm1.7] PASS: 7.1B commit counter unchanged
+[sm1.7] SUBCASE 03 7.1C source death after frozen proof
+[sm1.7] PASS: 7.1C transfer completes from frozen/WARM proof
+[sm1.7] PASS: 7.1C target becomes sole active authority: state=ACTIVE
+[sm1.7] PASS: 7.1C target becomes sole active authority: authority=authority/b
+[sm1.7] PASS: 7.1C target becomes sole active authority: epoch=2
+[sm1.7] PASS: 7.1C target becomes sole active authority: no private Item Graph
+[sm1.7] PASS: 7.1C target becomes sole active authority: no private Construction truth
+[sm1.7] PASS: 7.1C target becomes sole active authority: no private persistence owner
+[sm1.7] PASS: 7.1C target becomes sole active authority: no private replay owner
+[sm1.7] PASS: 7.1C dead/stale source permanently fenced
+[sm1.7] PASS: 7.1C target writer admitted only after activation
+[sm1.7] SUBCASE 04 7.2A target death before WARM
+[sm1.7] PASS: 7.2A freeze admitted
+[sm1.7] PASS: 7.2A transfer gap rejects canonical tuple writes
+[sm1.7] PASS: 7.2A transfer gap rejects target/other writes
+[sm1.7] PASS: 7.2A target death cannot commit ownership
+[sm1.7] PASS: 7.2A ownership tuple not promoted: state=SOURCE_FROZEN
+[sm1.7] PASS: 7.2A ownership tuple not promoted: authority=authority/a
+[sm1.7] PASS: 7.2A ownership tuple not promoted: epoch=1
+[sm1.7] PASS: 7.2A ownership tuple not promoted: no private Item Graph
+[sm1.7] PASS: 7.2A ownership tuple not promoted: no private Construction truth
+[sm1.7] PASS: 7.2A ownership tuple not promoted: no private persistence owner
+[sm1.7] PASS: 7.2A ownership tuple not promoted: no private replay owner
+[sm1.7] PASS: 7.2A real WARM-target Authority B OS process is killable before WARM: { "success": true, "error_code": "", "process_id": 1525934, "authority_id": "authority/b", "initial_active": false, "authority_epoch": 1, "dead": true }
+[sm1.7] PASS: 7.2A target death evidence carries a real OS pid
+[sm1.7] SUBCASE 05 7.2B target death during WARM before result
+[sm1.7] PASS: 7.2B transfer gap rejects canonical tuple writes
+[sm1.7] PASS: 7.2B transfer gap rejects target/other writes
+[sm1.7] PASS: 7.2B ambiguous WARM outcome cannot commit
+[sm1.7] PASS: 7.2B no WARM validation recorded
+[sm1.7] SUBCASE 06 7.2C target death after WARM before COMMIT
+[sm1.7] PASS: 7.2C WARM proof accepted before target loss
+[sm1.7] PASS: 7.2C no ownership commit occurred: state=TARGET_WARM_VALIDATED
+[sm1.7] PASS: 7.2C no ownership commit occurred: authority=authority/a
+[sm1.7] PASS: 7.2C no ownership commit occurred: epoch=1
+[sm1.7] PASS: 7.2C no ownership commit occurred: no private Item Graph
+[sm1.7] PASS: 7.2C no ownership commit occurred: no private Construction truth
+[sm1.7] PASS: 7.2C no ownership commit occurred: no private persistence owner
+[sm1.7] PASS: 7.2C no ownership commit occurred: no private replay owner
+[sm1.7] PASS: 7.2C transfer gap rejects canonical tuple writes
+[sm1.7] PASS: 7.2C transfer gap rejects target/other writes
+[sm1.7] PASS: 7.2C restarted target may reuse exact current WARM evidence
+[sm1.7] PASS: 7.2C stale/different transfer WARM evidence rejected
+[sm1.7] PASS: 7.2C target death leaves commit counter zero
+[sm1.7] SUBCASE 07 7.3A COMMIT result lost then retried
+[sm1.7] PASS: 7.3A ready to commit
+[sm1.7] PASS: 7.3A first COMMIT linearizes
+[sm1.7] PASS: 7.3A retry converges to already committed
+[sm1.7] PASS: 7.3A retry returns identical commit proof
+[sm1.7] PASS: 7.3A retry does not linearize twice
+[sm1.7] PASS: 7.3A exactly one commit plus one replay
+[sm1.7] PASS: 7.3A post-commit/pre-retire transfer gap rejects canonical tuple writes
+[sm1.7] PASS: 7.3A post-commit/pre-retire transfer gap rejects target/other writes
+[sm1.7] SUBCASE 08 7.3B ACTIVATE result lost then retried
+[sm1.7] PASS: 7.3B ready to commit
+[sm1.7] PASS: 7.3B source retired
+[sm1.7] PASS: 7.3B target activation linearizes once
+[sm1.7] PASS: 7.3B activation retry converges
+[sm1.7] PASS: 7.3B activation occurs once
+[sm1.7] PASS: 7.3B B remains sole active authority: state=ACTIVE
+[sm1.7] PASS: 7.3B B remains sole active authority: authority=authority/b
+[sm1.7] PASS: 7.3B B remains sole active authority: epoch=2
+[sm1.7] PASS: 7.3B B remains sole active authority: no private Item Graph
+[sm1.7] PASS: 7.3B B remains sole active authority: no private Construction truth
+[sm1.7] PASS: 7.3B B remains sole active authority: no private persistence owner
+[sm1.7] PASS: 7.3B B remains sole active authority: no private replay owner
+[sm1.7] SUBCASE 09 7.4A stale source route rejected by coordinator
+[sm1.7] PASS: 7.4A A->B complete
+[sm1.7] PASS: 7.4A stale A/1 write fenced
+[sm1.7] PASS: 7.4A stale write cannot advance epoch
+[sm1.7] PASS: 7.4A current B/2 write admitted
+[sm1.7] SUBCASE 10 7.4B direct retired authority worker rejects stale write
+[sm1.7] PASS: 7.4B direct ENET probe reached real SM1.6 authority worker: { "success": true, "error_code": "SM1_AUTHORITY_NOT_ACTIVE", "process_id": 1526041, "response": { "error_code": "SM1_AUTHORITY_NOT_ACTIVE", "request_id": "fault/stale-execute", "success": false, "type": "EXECUTE_RESULT" } }
+[sm1.7] PASS: 7.4B retired source rejects direct stale EXECUTE
+[sm1.7] PASS: 7.4B direct probe used a separate OS authority process
+[sm1.7] SUBCASE 11 7.5A duplicate transfer messages converge or reject safely
+[sm1.7] PASS: 7.5A first FREEZE admitted
+[sm1.7] PASS: 7.5A duplicate FREEZE safely rejected
+[sm1.7] PASS: 7.5A duplicate WARM converges
+[sm1.7] PASS: 7.5A duplicate COMMIT converges
+[sm1.7] PASS: 7.5A duplicate RETIRE converges
+[sm1.7] PASS: 7.5A duplicate ACTIVATE converges
+[sm1.7] PASS: 7.5A duplicate sequence mutates commit/activation exactly once
+[sm1.7] SUBCASE 12 7.5B invalid reorder is fail-closed
+[sm1.7] PASS: 7.5B FREEZE admitted
+[sm1.7] PASS: 7.5B COMMIT before WARM rejected
+[sm1.7] PASS: 7.5B RETIRE before COMMIT rejected
+[sm1.7] PASS: 7.5B ACTIVATE before COMMIT rejected
+[sm1.7] PASS: 7.5B invalid early messages do not advance state: state=SOURCE_FROZEN
+[sm1.7] PASS: 7.5B invalid early messages do not advance state: authority=authority/a
+[sm1.7] PASS: 7.5B invalid early messages do not advance state: epoch=1
+[sm1.7] PASS: 7.5B invalid early messages do not advance state: no private Item Graph
+[sm1.7] PASS: 7.5B invalid early messages do not advance state: no private Construction truth
+[sm1.7] PASS: 7.5B invalid early messages do not advance state: no private persistence owner
+[sm1.7] PASS: 7.5B invalid early messages do not advance state: no private replay owner
+[sm1.7] PASS: 7.5B valid WARM accepted
+[sm1.7] PASS: 7.5B ACTIVATE before RETIRE rejected
+[sm1.7] PASS: 7.5B rejected activation cannot make target writable: state=OWNERSHIP_COMMITTED
+[sm1.7] PASS: 7.5B rejected activation cannot make target writable: authority=authority/b
+[sm1.7] PASS: 7.5B rejected activation cannot make target writable: epoch=2
+[sm1.7] PASS: 7.5B rejected activation cannot make target writable: no private Item Graph
+[sm1.7] PASS: 7.5B rejected activation cannot make target writable: no private Construction truth
+[sm1.7] PASS: 7.5B rejected activation cannot make target writable: no private persistence owner
+[sm1.7] PASS: 7.5B rejected activation cannot make target writable: no private replay owner
+[sm1.7] PASS: 7.5B post-commit/pre-retire transfer gap rejects canonical tuple writes
+[sm1.7] PASS: 7.5B post-commit/pre-retire transfer gap rejects target/other writes
+[sm1.7] SUBCASE 13 7.5C completed-transfer FREEZE replay cannot reopen transfer
+[sm1.7] PASS: 7.5C initial transfer completes
+[sm1.7] PASS: 7.5C old FREEZE replay rejected
+[sm1.7] PASS: 7.5C completed replay leaves current owner unchanged: state=ACTIVE
+[sm1.7] PASS: 7.5C completed replay leaves current owner unchanged: authority=authority/b
+[sm1.7] PASS: 7.5C completed replay leaves current owner unchanged: epoch=2
+[sm1.7] PASS: 7.5C completed replay leaves current owner unchanged: no private Item Graph
+[sm1.7] PASS: 7.5C completed replay leaves current owner unchanged: no private Construction truth
+[sm1.7] PASS: 7.5C completed replay leaves current owner unchanged: no private persistence owner
+[sm1.7] PASS: 7.5C completed replay leaves current owner unchanged: no private replay owner
+[sm1.7] SUBCASE 14 7.6 replay old T1 after A->B->A
+[sm1.7] PASS: 7.6 T1 A->B complete
+[sm1.7] PASS: 7.6 T1 completion proof retained
+[sm1.7] PASS: 7.6 T2 B->A complete
+[sm1.7] PASS: 7.6 current owner A/3 before replay: state=ACTIVE
+[sm1.7] PASS: 7.6 current owner A/3 before replay: authority=authority/a
+[sm1.7] PASS: 7.6 current owner A/3 before replay: epoch=3
+[sm1.7] PASS: 7.6 current owner A/3 before replay: no private Item Graph
+[sm1.7] PASS: 7.6 current owner A/3 before replay: no private Construction truth
+[sm1.7] PASS: 7.6 current owner A/3 before replay: no private persistence owner
+[sm1.7] PASS: 7.6 current owner A/3 before replay: no private replay owner
+[sm1.7] PASS: 7.6 historical COMMIT returns proof only
+[sm1.7] PASS: 7.6 historical COMMIT cannot roll back owner: state=ACTIVE
+[sm1.7] PASS: 7.6 historical COMMIT cannot roll back owner: authority=authority/a
+[sm1.7] PASS: 7.6 historical COMMIT cannot roll back owner: epoch=3
+[sm1.7] PASS: 7.6 historical COMMIT cannot roll back owner: no private Item Graph
+[sm1.7] PASS: 7.6 historical COMMIT cannot roll back owner: no private Construction truth
+[sm1.7] PASS: 7.6 historical COMMIT cannot roll back owner: no private persistence owner
+[sm1.7] PASS: 7.6 historical COMMIT cannot roll back owner: no private replay owner
+[sm1.7] PASS: 7.6 historical ACTIVATE recognized
+[sm1.7] PASS: 7.6 historical target explicitly reported inactive
+[sm1.7] PASS: 7.6 replay reports current A/3 tuple
+[sm1.7] PASS: 7.6 resurrected B/2 write fenced
+[sm1.7] PASS: 7.6 current A/3 write remains admitted
+[sm1.7] PASS: 7.6 full T1 replay changes nothing: state=ACTIVE
+[sm1.7] PASS: 7.6 full T1 replay changes nothing: authority=authority/a
+[sm1.7] PASS: 7.6 full T1 replay changes nothing: epoch=3
+[sm1.7] PASS: 7.6 full T1 replay changes nothing: no private Item Graph
+[sm1.7] PASS: 7.6 full T1 replay changes nothing: no private Construction truth
+[sm1.7] PASS: 7.6 full T1 replay changes nothing: no private persistence owner
+[sm1.7] PASS: 7.6 full T1 replay changes nothing: no private replay owner
+SM1.7.1-7.6 fault matrix: 157 assertions, 0 failures
+SM1_7_FAULT_MATRIX_1_6_PASS
+scenarios=6
+subcases=14
+failures=0
+SM1_7_ITERATION=8/10
+Godot Engine v4.8.beta1.double.custom_build.4d10419ca - https://godotengine.org
+
+[sm1.7] SUBCASE 01 7.1A source death before FREEZE
+[sm1.7] PASS: 7.1A canonical tuple unchanged: state=ACTIVE
+[sm1.7] PASS: 7.1A canonical tuple unchanged: authority=authority/a
+[sm1.7] PASS: 7.1A canonical tuple unchanged: epoch=1
+[sm1.7] PASS: 7.1A canonical tuple unchanged: no private Item Graph
+[sm1.7] PASS: 7.1A canonical tuple unchanged: no private Construction truth
+[sm1.7] PASS: 7.1A canonical tuple unchanged: no private persistence owner
+[sm1.7] PASS: 7.1A canonical tuple unchanged: no private replay owner
+[sm1.7] PASS: 7.1A target cannot self-promote after source death
+[sm1.7] PASS: 7.1A real source Authority A OS process is killable at pre-FREEZE boundary: { "success": true, "error_code": "", "process_id": 1526337, "authority_id": "authority/a", "initial_active": true, "authority_epoch": 1, "dead": true }
+[sm1.7] PASS: 7.1A source death evidence carries a real OS pid
+[sm1.7] SUBCASE 02 7.1B source death after FREEZE sent before result
+[sm1.7] PASS: 7.1B transfer enters frozen gap
+[sm1.7] PASS: 7.1B source remains canonical but no writer is admitted: state=SOURCE_FROZEN
+[sm1.7] PASS: 7.1B source remains canonical but no writer is admitted: authority=authority/a
+[sm1.7] PASS: 7.1B source remains canonical but no writer is admitted: epoch=1
+[sm1.7] PASS: 7.1B source remains canonical but no writer is admitted: no private Item Graph
+[sm1.7] PASS: 7.1B source remains canonical but no writer is admitted: no private Construction truth
+[sm1.7] PASS: 7.1B source remains canonical but no writer is admitted: no private persistence owner
+[sm1.7] PASS: 7.1B source remains canonical but no writer is admitted: no private replay owner
+[sm1.7] PASS: 7.1B transfer gap rejects canonical tuple writes
+[sm1.7] PASS: 7.1B transfer gap rejects target/other writes
+[sm1.7] PASS: 7.1B commit forbidden without WARM proof
+[sm1.7] PASS: 7.1B commit counter unchanged
+[sm1.7] SUBCASE 03 7.1C source death after frozen proof
+[sm1.7] PASS: 7.1C transfer completes from frozen/WARM proof
+[sm1.7] PASS: 7.1C target becomes sole active authority: state=ACTIVE
+[sm1.7] PASS: 7.1C target becomes sole active authority: authority=authority/b
+[sm1.7] PASS: 7.1C target becomes sole active authority: epoch=2
+[sm1.7] PASS: 7.1C target becomes sole active authority: no private Item Graph
+[sm1.7] PASS: 7.1C target becomes sole active authority: no private Construction truth
+[sm1.7] PASS: 7.1C target becomes sole active authority: no private persistence owner
+[sm1.7] PASS: 7.1C target becomes sole active authority: no private replay owner
+[sm1.7] PASS: 7.1C dead/stale source permanently fenced
+[sm1.7] PASS: 7.1C target writer admitted only after activation
+[sm1.7] SUBCASE 04 7.2A target death before WARM
+[sm1.7] PASS: 7.2A freeze admitted
+[sm1.7] PASS: 7.2A transfer gap rejects canonical tuple writes
+[sm1.7] PASS: 7.2A transfer gap rejects target/other writes
+[sm1.7] PASS: 7.2A target death cannot commit ownership
+[sm1.7] PASS: 7.2A ownership tuple not promoted: state=SOURCE_FROZEN
+[sm1.7] PASS: 7.2A ownership tuple not promoted: authority=authority/a
+[sm1.7] PASS: 7.2A ownership tuple not promoted: epoch=1
+[sm1.7] PASS: 7.2A ownership tuple not promoted: no private Item Graph
+[sm1.7] PASS: 7.2A ownership tuple not promoted: no private Construction truth
+[sm1.7] PASS: 7.2A ownership tuple not promoted: no private persistence owner
+[sm1.7] PASS: 7.2A ownership tuple not promoted: no private replay owner
+[sm1.7] PASS: 7.2A real WARM-target Authority B OS process is killable before WARM: { "success": true, "error_code": "", "process_id": 1526461, "authority_id": "authority/b", "initial_active": false, "authority_epoch": 1, "dead": true }
+[sm1.7] PASS: 7.2A target death evidence carries a real OS pid
+[sm1.7] SUBCASE 05 7.2B target death during WARM before result
+[sm1.7] PASS: 7.2B transfer gap rejects canonical tuple writes
+[sm1.7] PASS: 7.2B transfer gap rejects target/other writes
+[sm1.7] PASS: 7.2B ambiguous WARM outcome cannot commit
+[sm1.7] PASS: 7.2B no WARM validation recorded
+[sm1.7] SUBCASE 06 7.2C target death after WARM before COMMIT
+[sm1.7] PASS: 7.2C WARM proof accepted before target loss
+[sm1.7] PASS: 7.2C no ownership commit occurred: state=TARGET_WARM_VALIDATED
+[sm1.7] PASS: 7.2C no ownership commit occurred: authority=authority/a
+[sm1.7] PASS: 7.2C no ownership commit occurred: epoch=1
+[sm1.7] PASS: 7.2C no ownership commit occurred: no private Item Graph
+[sm1.7] PASS: 7.2C no ownership commit occurred: no private Construction truth
+[sm1.7] PASS: 7.2C no ownership commit occurred: no private persistence owner
+[sm1.7] PASS: 7.2C no ownership commit occurred: no private replay owner
+[sm1.7] PASS: 7.2C transfer gap rejects canonical tuple writes
+[sm1.7] PASS: 7.2C transfer gap rejects target/other writes
+[sm1.7] PASS: 7.2C restarted target may reuse exact current WARM evidence
+[sm1.7] PASS: 7.2C stale/different transfer WARM evidence rejected
+[sm1.7] PASS: 7.2C target death leaves commit counter zero
+[sm1.7] SUBCASE 07 7.3A COMMIT result lost then retried
+[sm1.7] PASS: 7.3A ready to commit
+[sm1.7] PASS: 7.3A first COMMIT linearizes
+[sm1.7] PASS: 7.3A retry converges to already committed
+[sm1.7] PASS: 7.3A retry returns identical commit proof
+[sm1.7] PASS: 7.3A retry does not linearize twice
+[sm1.7] PASS: 7.3A exactly one commit plus one replay
+[sm1.7] PASS: 7.3A post-commit/pre-retire transfer gap rejects canonical tuple writes
+[sm1.7] PASS: 7.3A post-commit/pre-retire transfer gap rejects target/other writes
+[sm1.7] SUBCASE 08 7.3B ACTIVATE result lost then retried
+[sm1.7] PASS: 7.3B ready to commit
+[sm1.7] PASS: 7.3B source retired
+[sm1.7] PASS: 7.3B target activation linearizes once
+[sm1.7] PASS: 7.3B activation retry converges
+[sm1.7] PASS: 7.3B activation occurs once
+[sm1.7] PASS: 7.3B B remains sole active authority: state=ACTIVE
+[sm1.7] PASS: 7.3B B remains sole active authority: authority=authority/b
+[sm1.7] PASS: 7.3B B remains sole active authority: epoch=2
+[sm1.7] PASS: 7.3B B remains sole active authority: no private Item Graph
+[sm1.7] PASS: 7.3B B remains sole active authority: no private Construction truth
+[sm1.7] PASS: 7.3B B remains sole active authority: no private persistence owner
+[sm1.7] PASS: 7.3B B remains sole active authority: no private replay owner
+[sm1.7] SUBCASE 09 7.4A stale source route rejected by coordinator
+[sm1.7] PASS: 7.4A A->B complete
+[sm1.7] PASS: 7.4A stale A/1 write fenced
+[sm1.7] PASS: 7.4A stale write cannot advance epoch
+[sm1.7] PASS: 7.4A current B/2 write admitted
+[sm1.7] SUBCASE 10 7.4B direct retired authority worker rejects stale write
+[sm1.7] PASS: 7.4B direct ENET probe reached real SM1.6 authority worker: { "success": true, "error_code": "SM1_AUTHORITY_NOT_ACTIVE", "process_id": 1526581, "response": { "error_code": "SM1_AUTHORITY_NOT_ACTIVE", "request_id": "fault/stale-execute", "success": false, "type": "EXECUTE_RESULT" } }
+[sm1.7] PASS: 7.4B retired source rejects direct stale EXECUTE
+[sm1.7] PASS: 7.4B direct probe used a separate OS authority process
+[sm1.7] SUBCASE 11 7.5A duplicate transfer messages converge or reject safely
+[sm1.7] PASS: 7.5A first FREEZE admitted
+[sm1.7] PASS: 7.5A duplicate FREEZE safely rejected
+[sm1.7] PASS: 7.5A duplicate WARM converges
+[sm1.7] PASS: 7.5A duplicate COMMIT converges
+[sm1.7] PASS: 7.5A duplicate RETIRE converges
+[sm1.7] PASS: 7.5A duplicate ACTIVATE converges
+[sm1.7] PASS: 7.5A duplicate sequence mutates commit/activation exactly once
+[sm1.7] SUBCASE 12 7.5B invalid reorder is fail-closed
+[sm1.7] PASS: 7.5B FREEZE admitted
+[sm1.7] PASS: 7.5B COMMIT before WARM rejected
+[sm1.7] PASS: 7.5B RETIRE before COMMIT rejected
+[sm1.7] PASS: 7.5B ACTIVATE before COMMIT rejected
+[sm1.7] PASS: 7.5B invalid early messages do not advance state: state=SOURCE_FROZEN
+[sm1.7] PASS: 7.5B invalid early messages do not advance state: authority=authority/a
+[sm1.7] PASS: 7.5B invalid early messages do not advance state: epoch=1
+[sm1.7] PASS: 7.5B invalid early messages do not advance state: no private Item Graph
+[sm1.7] PASS: 7.5B invalid early messages do not advance state: no private Construction truth
+[sm1.7] PASS: 7.5B invalid early messages do not advance state: no private persistence owner
+[sm1.7] PASS: 7.5B invalid early messages do not advance state: no private replay owner
+[sm1.7] PASS: 7.5B valid WARM accepted
+[sm1.7] PASS: 7.5B ACTIVATE before RETIRE rejected
+[sm1.7] PASS: 7.5B rejected activation cannot make target writable: state=OWNERSHIP_COMMITTED
+[sm1.7] PASS: 7.5B rejected activation cannot make target writable: authority=authority/b
+[sm1.7] PASS: 7.5B rejected activation cannot make target writable: epoch=2
+[sm1.7] PASS: 7.5B rejected activation cannot make target writable: no private Item Graph
+[sm1.7] PASS: 7.5B rejected activation cannot make target writable: no private Construction truth
+[sm1.7] PASS: 7.5B rejected activation cannot make target writable: no private persistence owner
+[sm1.7] PASS: 7.5B rejected activation cannot make target writable: no private replay owner
+[sm1.7] PASS: 7.5B post-commit/pre-retire transfer gap rejects canonical tuple writes
+[sm1.7] PASS: 7.5B post-commit/pre-retire transfer gap rejects target/other writes
+[sm1.7] SUBCASE 13 7.5C completed-transfer FREEZE replay cannot reopen transfer
+[sm1.7] PASS: 7.5C initial transfer completes
+[sm1.7] PASS: 7.5C old FREEZE replay rejected
+[sm1.7] PASS: 7.5C completed replay leaves current owner unchanged: state=ACTIVE
+[sm1.7] PASS: 7.5C completed replay leaves current owner unchanged: authority=authority/b
+[sm1.7] PASS: 7.5C completed replay leaves current owner unchanged: epoch=2
+[sm1.7] PASS: 7.5C completed replay leaves current owner unchanged: no private Item Graph
+[sm1.7] PASS: 7.5C completed replay leaves current owner unchanged: no private Construction truth
+[sm1.7] PASS: 7.5C completed replay leaves current owner unchanged: no private persistence owner
+[sm1.7] PASS: 7.5C completed replay leaves current owner unchanged: no private replay owner
+[sm1.7] SUBCASE 14 7.6 replay old T1 after A->B->A
+[sm1.7] PASS: 7.6 T1 A->B complete
+[sm1.7] PASS: 7.6 T1 completion proof retained
+[sm1.7] PASS: 7.6 T2 B->A complete
+[sm1.7] PASS: 7.6 current owner A/3 before replay: state=ACTIVE
+[sm1.7] PASS: 7.6 current owner A/3 before replay: authority=authority/a
+[sm1.7] PASS: 7.6 current owner A/3 before replay: epoch=3
+[sm1.7] PASS: 7.6 current owner A/3 before replay: no private Item Graph
+[sm1.7] PASS: 7.6 current owner A/3 before replay: no private Construction truth
+[sm1.7] PASS: 7.6 current owner A/3 before replay: no private persistence owner
+[sm1.7] PASS: 7.6 current owner A/3 before replay: no private replay owner
+[sm1.7] PASS: 7.6 historical COMMIT returns proof only
+[sm1.7] PASS: 7.6 historical COMMIT cannot roll back owner: state=ACTIVE
+[sm1.7] PASS: 7.6 historical COMMIT cannot roll back owner: authority=authority/a
+[sm1.7] PASS: 7.6 historical COMMIT cannot roll back owner: epoch=3
+[sm1.7] PASS: 7.6 historical COMMIT cannot roll back owner: no private Item Graph
+[sm1.7] PASS: 7.6 historical COMMIT cannot roll back owner: no private Construction truth
+[sm1.7] PASS: 7.6 historical COMMIT cannot roll back owner: no private persistence owner
+[sm1.7] PASS: 7.6 historical COMMIT cannot roll back owner: no private replay owner
+[sm1.7] PASS: 7.6 historical ACTIVATE recognized
+[sm1.7] PASS: 7.6 historical target explicitly reported inactive
+[sm1.7] PASS: 7.6 replay reports current A/3 tuple
+[sm1.7] PASS: 7.6 resurrected B/2 write fenced
+[sm1.7] PASS: 7.6 current A/3 write remains admitted
+[sm1.7] PASS: 7.6 full T1 replay changes nothing: state=ACTIVE
+[sm1.7] PASS: 7.6 full T1 replay changes nothing: authority=authority/a
+[sm1.7] PASS: 7.6 full T1 replay changes nothing: epoch=3
+[sm1.7] PASS: 7.6 full T1 replay changes nothing: no private Item Graph
+[sm1.7] PASS: 7.6 full T1 replay changes nothing: no private Construction truth
+[sm1.7] PASS: 7.6 full T1 replay changes nothing: no private persistence owner
+[sm1.7] PASS: 7.6 full T1 replay changes nothing: no private replay owner
+SM1.7.1-7.6 fault matrix: 157 assertions, 0 failures
+SM1_7_FAULT_MATRIX_1_6_PASS
+scenarios=6
+subcases=14
+failures=0
+SM1_7_ITERATION=9/10
+Godot Engine v4.8.beta1.double.custom_build.4d10419ca - https://godotengine.org
+
+[sm1.7] SUBCASE 01 7.1A source death before FREEZE
+[sm1.7] PASS: 7.1A canonical tuple unchanged: state=ACTIVE
+[sm1.7] PASS: 7.1A canonical tuple unchanged: authority=authority/a
+[sm1.7] PASS: 7.1A canonical tuple unchanged: epoch=1
+[sm1.7] PASS: 7.1A canonical tuple unchanged: no private Item Graph
+[sm1.7] PASS: 7.1A canonical tuple unchanged: no private Construction truth
+[sm1.7] PASS: 7.1A canonical tuple unchanged: no private persistence owner
+[sm1.7] PASS: 7.1A canonical tuple unchanged: no private replay owner
+[sm1.7] PASS: 7.1A target cannot self-promote after source death
+[sm1.7] PASS: 7.1A real source Authority A OS process is killable at pre-FREEZE boundary: { "success": true, "error_code": "", "process_id": 1526944, "authority_id": "authority/a", "initial_active": true, "authority_epoch": 1, "dead": true }
+[sm1.7] PASS: 7.1A source death evidence carries a real OS pid
+[sm1.7] SUBCASE 02 7.1B source death after FREEZE sent before result
+[sm1.7] PASS: 7.1B transfer enters frozen gap
+[sm1.7] PASS: 7.1B source remains canonical but no writer is admitted: state=SOURCE_FROZEN
+[sm1.7] PASS: 7.1B source remains canonical but no writer is admitted: authority=authority/a
+[sm1.7] PASS: 7.1B source remains canonical but no writer is admitted: epoch=1
+[sm1.7] PASS: 7.1B source remains canonical but no writer is admitted: no private Item Graph
+[sm1.7] PASS: 7.1B source remains canonical but no writer is admitted: no private Construction truth
+[sm1.7] PASS: 7.1B source remains canonical but no writer is admitted: no private persistence owner
+[sm1.7] PASS: 7.1B source remains canonical but no writer is admitted: no private replay owner
+[sm1.7] PASS: 7.1B transfer gap rejects canonical tuple writes
+[sm1.7] PASS: 7.1B transfer gap rejects target/other writes
+[sm1.7] PASS: 7.1B commit forbidden without WARM proof
+[sm1.7] PASS: 7.1B commit counter unchanged
+[sm1.7] SUBCASE 03 7.1C source death after frozen proof
+[sm1.7] PASS: 7.1C transfer completes from frozen/WARM proof
+[sm1.7] PASS: 7.1C target becomes sole active authority: state=ACTIVE
+[sm1.7] PASS: 7.1C target becomes sole active authority: authority=authority/b
+[sm1.7] PASS: 7.1C target becomes sole active authority: epoch=2
+[sm1.7] PASS: 7.1C target becomes sole active authority: no private Item Graph
+[sm1.7] PASS: 7.1C target becomes sole active authority: no private Construction truth
+[sm1.7] PASS: 7.1C target becomes sole active authority: no private persistence owner
+[sm1.7] PASS: 7.1C target becomes sole active authority: no private replay owner
+[sm1.7] PASS: 7.1C dead/stale source permanently fenced
+[sm1.7] PASS: 7.1C target writer admitted only after activation
+[sm1.7] SUBCASE 04 7.2A target death before WARM
+[sm1.7] PASS: 7.2A freeze admitted
+[sm1.7] PASS: 7.2A transfer gap rejects canonical tuple writes
+[sm1.7] PASS: 7.2A transfer gap rejects target/other writes
+[sm1.7] PASS: 7.2A target death cannot commit ownership
+[sm1.7] PASS: 7.2A ownership tuple not promoted: state=SOURCE_FROZEN
+[sm1.7] PASS: 7.2A ownership tuple not promoted: authority=authority/a
+[sm1.7] PASS: 7.2A ownership tuple not promoted: epoch=1
+[sm1.7] PASS: 7.2A ownership tuple not promoted: no private Item Graph
+[sm1.7] PASS: 7.2A ownership tuple not promoted: no private Construction truth
+[sm1.7] PASS: 7.2A ownership tuple not promoted: no private persistence owner
+[sm1.7] PASS: 7.2A ownership tuple not promoted: no private replay owner
+[sm1.7] PASS: 7.2A real WARM-target Authority B OS process is killable before WARM: { "success": true, "error_code": "", "process_id": 1527032, "authority_id": "authority/b", "initial_active": false, "authority_epoch": 1, "dead": true }
+[sm1.7] PASS: 7.2A target death evidence carries a real OS pid
+[sm1.7] SUBCASE 05 7.2B target death during WARM before result
+[sm1.7] PASS: 7.2B transfer gap rejects canonical tuple writes
+[sm1.7] PASS: 7.2B transfer gap rejects target/other writes
+[sm1.7] PASS: 7.2B ambiguous WARM outcome cannot commit
+[sm1.7] PASS: 7.2B no WARM validation recorded
+[sm1.7] SUBCASE 06 7.2C target death after WARM before COMMIT
+[sm1.7] PASS: 7.2C WARM proof accepted before target loss
+[sm1.7] PASS: 7.2C no ownership commit occurred: state=TARGET_WARM_VALIDATED
+[sm1.7] PASS: 7.2C no ownership commit occurred: authority=authority/a
+[sm1.7] PASS: 7.2C no ownership commit occurred: epoch=1
+[sm1.7] PASS: 7.2C no ownership commit occurred: no private Item Graph
+[sm1.7] PASS: 7.2C no ownership commit occurred: no private Construction truth
+[sm1.7] PASS: 7.2C no ownership commit occurred: no private persistence owner
+[sm1.7] PASS: 7.2C no ownership commit occurred: no private replay owner
+[sm1.7] PASS: 7.2C transfer gap rejects canonical tuple writes
+[sm1.7] PASS: 7.2C transfer gap rejects target/other writes
+[sm1.7] PASS: 7.2C restarted target may reuse exact current WARM evidence
+[sm1.7] PASS: 7.2C stale/different transfer WARM evidence rejected
+[sm1.7] PASS: 7.2C target death leaves commit counter zero
+[sm1.7] SUBCASE 07 7.3A COMMIT result lost then retried
+[sm1.7] PASS: 7.3A ready to commit
+[sm1.7] PASS: 7.3A first COMMIT linearizes
+[sm1.7] PASS: 7.3A retry converges to already committed
+[sm1.7] PASS: 7.3A retry returns identical commit proof
+[sm1.7] PASS: 7.3A retry does not linearize twice
+[sm1.7] PASS: 7.3A exactly one commit plus one replay
+[sm1.7] PASS: 7.3A post-commit/pre-retire transfer gap rejects canonical tuple writes
+[sm1.7] PASS: 7.3A post-commit/pre-retire transfer gap rejects target/other writes
+[sm1.7] SUBCASE 08 7.3B ACTIVATE result lost then retried
+[sm1.7] PASS: 7.3B ready to commit
+[sm1.7] PASS: 7.3B source retired
+[sm1.7] PASS: 7.3B target activation linearizes once
+[sm1.7] PASS: 7.3B activation retry converges
+[sm1.7] PASS: 7.3B activation occurs once
+[sm1.7] PASS: 7.3B B remains sole active authority: state=ACTIVE
+[sm1.7] PASS: 7.3B B remains sole active authority: authority=authority/b
+[sm1.7] PASS: 7.3B B remains sole active authority: epoch=2
+[sm1.7] PASS: 7.3B B remains sole active authority: no private Item Graph
+[sm1.7] PASS: 7.3B B remains sole active authority: no private Construction truth
+[sm1.7] PASS: 7.3B B remains sole active authority: no private persistence owner
+[sm1.7] PASS: 7.3B B remains sole active authority: no private replay owner
+[sm1.7] SUBCASE 09 7.4A stale source route rejected by coordinator
+[sm1.7] PASS: 7.4A A->B complete
+[sm1.7] PASS: 7.4A stale A/1 write fenced
+[sm1.7] PASS: 7.4A stale write cannot advance epoch
+[sm1.7] PASS: 7.4A current B/2 write admitted
+[sm1.7] SUBCASE 10 7.4B direct retired authority worker rejects stale write
+[sm1.7] PASS: 7.4B direct ENET probe reached real SM1.6 authority worker: { "success": true, "error_code": "SM1_AUTHORITY_NOT_ACTIVE", "process_id": 1527143, "response": { "error_code": "SM1_AUTHORITY_NOT_ACTIVE", "request_id": "fault/stale-execute", "success": false, "type": "EXECUTE_RESULT" } }
+[sm1.7] PASS: 7.4B retired source rejects direct stale EXECUTE
+[sm1.7] PASS: 7.4B direct probe used a separate OS authority process
+[sm1.7] SUBCASE 11 7.5A duplicate transfer messages converge or reject safely
+[sm1.7] PASS: 7.5A first FREEZE admitted
+[sm1.7] PASS: 7.5A duplicate FREEZE safely rejected
+[sm1.7] PASS: 7.5A duplicate WARM converges
+[sm1.7] PASS: 7.5A duplicate COMMIT converges
+[sm1.7] PASS: 7.5A duplicate RETIRE converges
+[sm1.7] PASS: 7.5A duplicate ACTIVATE converges
+[sm1.7] PASS: 7.5A duplicate sequence mutates commit/activation exactly once
+[sm1.7] SUBCASE 12 7.5B invalid reorder is fail-closed
+[sm1.7] PASS: 7.5B FREEZE admitted
+[sm1.7] PASS: 7.5B COMMIT before WARM rejected
+[sm1.7] PASS: 7.5B RETIRE before COMMIT rejected
+[sm1.7] PASS: 7.5B ACTIVATE before COMMIT rejected
+[sm1.7] PASS: 7.5B invalid early messages do not advance state: state=SOURCE_FROZEN
+[sm1.7] PASS: 7.5B invalid early messages do not advance state: authority=authority/a
+[sm1.7] PASS: 7.5B invalid early messages do not advance state: epoch=1
+[sm1.7] PASS: 7.5B invalid early messages do not advance state: no private Item Graph
+[sm1.7] PASS: 7.5B invalid early messages do not advance state: no private Construction truth
+[sm1.7] PASS: 7.5B invalid early messages do not advance state: no private persistence owner
+[sm1.7] PASS: 7.5B invalid early messages do not advance state: no private replay owner
+[sm1.7] PASS: 7.5B valid WARM accepted
+[sm1.7] PASS: 7.5B ACTIVATE before RETIRE rejected
+[sm1.7] PASS: 7.5B rejected activation cannot make target writable: state=OWNERSHIP_COMMITTED
+[sm1.7] PASS: 7.5B rejected activation cannot make target writable: authority=authority/b
+[sm1.7] PASS: 7.5B rejected activation cannot make target writable: epoch=2
+[sm1.7] PASS: 7.5B rejected activation cannot make target writable: no private Item Graph
+[sm1.7] PASS: 7.5B rejected activation cannot make target writable: no private Construction truth
+[sm1.7] PASS: 7.5B rejected activation cannot make target writable: no private persistence owner
+[sm1.7] PASS: 7.5B rejected activation cannot make target writable: no private replay owner
+[sm1.7] PASS: 7.5B post-commit/pre-retire transfer gap rejects canonical tuple writes
+[sm1.7] PASS: 7.5B post-commit/pre-retire transfer gap rejects target/other writes
+[sm1.7] SUBCASE 13 7.5C completed-transfer FREEZE replay cannot reopen transfer
+[sm1.7] PASS: 7.5C initial transfer completes
+[sm1.7] PASS: 7.5C old FREEZE replay rejected
+[sm1.7] PASS: 7.5C completed replay leaves current owner unchanged: state=ACTIVE
+[sm1.7] PASS: 7.5C completed replay leaves current owner unchanged: authority=authority/b
+[sm1.7] PASS: 7.5C completed replay leaves current owner unchanged: epoch=2
+[sm1.7] PASS: 7.5C completed replay leaves current owner unchanged: no private Item Graph
+[sm1.7] PASS: 7.5C completed replay leaves current owner unchanged: no private Construction truth
+[sm1.7] PASS: 7.5C completed replay leaves current owner unchanged: no private persistence owner
+[sm1.7] PASS: 7.5C completed replay leaves current owner unchanged: no private replay owner
+[sm1.7] SUBCASE 14 7.6 replay old T1 after A->B->A
+[sm1.7] PASS: 7.6 T1 A->B complete
+[sm1.7] PASS: 7.6 T1 completion proof retained
+[sm1.7] PASS: 7.6 T2 B->A complete
+[sm1.7] PASS: 7.6 current owner A/3 before replay: state=ACTIVE
+[sm1.7] PASS: 7.6 current owner A/3 before replay: authority=authority/a
+[sm1.7] PASS: 7.6 current owner A/3 before replay: epoch=3
+[sm1.7] PASS: 7.6 current owner A/3 before replay: no private Item Graph
+[sm1.7] PASS: 7.6 current owner A/3 before replay: no private Construction truth
+[sm1.7] PASS: 7.6 current owner A/3 before replay: no private persistence owner
+[sm1.7] PASS: 7.6 current owner A/3 before replay: no private replay owner
+[sm1.7] PASS: 7.6 historical COMMIT returns proof only
+[sm1.7] PASS: 7.6 historical COMMIT cannot roll back owner: state=ACTIVE
+[sm1.7] PASS: 7.6 historical COMMIT cannot roll back owner: authority=authority/a
+[sm1.7] PASS: 7.6 historical COMMIT cannot roll back owner: epoch=3
+[sm1.7] PASS: 7.6 historical COMMIT cannot roll back owner: no private Item Graph
+[sm1.7] PASS: 7.6 historical COMMIT cannot roll back owner: no private Construction truth
+[sm1.7] PASS: 7.6 historical COMMIT cannot roll back owner: no private persistence owner
+[sm1.7] PASS: 7.6 historical COMMIT cannot roll back owner: no private replay owner
+[sm1.7] PASS: 7.6 historical ACTIVATE recognized
+[sm1.7] PASS: 7.6 historical target explicitly reported inactive
+[sm1.7] PASS: 7.6 replay reports current A/3 tuple
+[sm1.7] PASS: 7.6 resurrected B/2 write fenced
+[sm1.7] PASS: 7.6 current A/3 write remains admitted
+[sm1.7] PASS: 7.6 full T1 replay changes nothing: state=ACTIVE
+[sm1.7] PASS: 7.6 full T1 replay changes nothing: authority=authority/a
+[sm1.7] PASS: 7.6 full T1 replay changes nothing: epoch=3
+[sm1.7] PASS: 7.6 full T1 replay changes nothing: no private Item Graph
+[sm1.7] PASS: 7.6 full T1 replay changes nothing: no private Construction truth
+[sm1.7] PASS: 7.6 full T1 replay changes nothing: no private persistence owner
+[sm1.7] PASS: 7.6 full T1 replay changes nothing: no private replay owner
+SM1.7.1-7.6 fault matrix: 157 assertions, 0 failures
+SM1_7_FAULT_MATRIX_1_6_PASS
+scenarios=6
+subcases=14
+failures=0
+SM1_7_ITERATION=10/10
+Godot Engine v4.8.beta1.double.custom_build.4d10419ca - https://godotengine.org
+
+[sm1.7] SUBCASE 01 7.1A source death before FREEZE
+[sm1.7] PASS: 7.1A canonical tuple unchanged: state=ACTIVE
+[sm1.7] PASS: 7.1A canonical tuple unchanged: authority=authority/a
+[sm1.7] PASS: 7.1A canonical tuple unchanged: epoch=1
+[sm1.7] PASS: 7.1A canonical tuple unchanged: no private Item Graph
+[sm1.7] PASS: 7.1A canonical tuple unchanged: no private Construction truth
+[sm1.7] PASS: 7.1A canonical tuple unchanged: no private persistence owner
+[sm1.7] PASS: 7.1A canonical tuple unchanged: no private replay owner
+[sm1.7] PASS: 7.1A target cannot self-promote after source death
+[sm1.7] PASS: 7.1A real source Authority A OS process is killable at pre-FREEZE boundary: { "success": true, "error_code": "", "process_id": 1527628, "authority_id": "authority/a", "initial_active": true, "authority_epoch": 1, "dead": true }
+[sm1.7] PASS: 7.1A source death evidence carries a real OS pid
+[sm1.7] SUBCASE 02 7.1B source death after FREEZE sent before result
+[sm1.7] PASS: 7.1B transfer enters frozen gap
+[sm1.7] PASS: 7.1B source remains canonical but no writer is admitted: state=SOURCE_FROZEN
+[sm1.7] PASS: 7.1B source remains canonical but no writer is admitted: authority=authority/a
+[sm1.7] PASS: 7.1B source remains canonical but no writer is admitted: epoch=1
+[sm1.7] PASS: 7.1B source remains canonical but no writer is admitted: no private Item Graph
+[sm1.7] PASS: 7.1B source remains canonical but no writer is admitted: no private Construction truth
+[sm1.7] PASS: 7.1B source remains canonical but no writer is admitted: no private persistence owner
+[sm1.7] PASS: 7.1B source remains canonical but no writer is admitted: no private replay owner
+[sm1.7] PASS: 7.1B transfer gap rejects canonical tuple writes
+[sm1.7] PASS: 7.1B transfer gap rejects target/other writes
+[sm1.7] PASS: 7.1B commit forbidden without WARM proof
+[sm1.7] PASS: 7.1B commit counter unchanged
+[sm1.7] SUBCASE 03 7.1C source death after frozen proof
+[sm1.7] PASS: 7.1C transfer completes from frozen/WARM proof
+[sm1.7] PASS: 7.1C target becomes sole active authority: state=ACTIVE
+[sm1.7] PASS: 7.1C target becomes sole active authority: authority=authority/b
+[sm1.7] PASS: 7.1C target becomes sole active authority: epoch=2
+[sm1.7] PASS: 7.1C target becomes sole active authority: no private Item Graph
+[sm1.7] PASS: 7.1C target becomes sole active authority: no private Construction truth
+[sm1.7] PASS: 7.1C target becomes sole active authority: no private persistence owner
+[sm1.7] PASS: 7.1C target becomes sole active authority: no private replay owner
+[sm1.7] PASS: 7.1C dead/stale source permanently fenced
+[sm1.7] PASS: 7.1C target writer admitted only after activation
+[sm1.7] SUBCASE 04 7.2A target death before WARM
+[sm1.7] PASS: 7.2A freeze admitted
+[sm1.7] PASS: 7.2A transfer gap rejects canonical tuple writes
+[sm1.7] PASS: 7.2A transfer gap rejects target/other writes
+[sm1.7] PASS: 7.2A target death cannot commit ownership
+[sm1.7] PASS: 7.2A ownership tuple not promoted: state=SOURCE_FROZEN
+[sm1.7] PASS: 7.2A ownership tuple not promoted: authority=authority/a
+[sm1.7] PASS: 7.2A ownership tuple not promoted: epoch=1
+[sm1.7] PASS: 7.2A ownership tuple not promoted: no private Item Graph
+[sm1.7] PASS: 7.2A ownership tuple not promoted: no private Construction truth
+[sm1.7] PASS: 7.2A ownership tuple not promoted: no private persistence owner
+[sm1.7] PASS: 7.2A ownership tuple not promoted: no private replay owner
+[sm1.7] PASS: 7.2A real WARM-target Authority B OS process is killable before WARM: { "success": true, "error_code": "", "process_id": 1527998, "authority_id": "authority/b", "initial_active": false, "authority_epoch": 1, "dead": true }
+[sm1.7] PASS: 7.2A target death evidence carries a real OS pid
+[sm1.7] SUBCASE 05 7.2B target death during WARM before result
+[sm1.7] PASS: 7.2B transfer gap rejects canonical tuple writes
+[sm1.7] PASS: 7.2B transfer gap rejects target/other writes
+[sm1.7] PASS: 7.2B ambiguous WARM outcome cannot commit
+[sm1.7] PASS: 7.2B no WARM validation recorded
+[sm1.7] SUBCASE 06 7.2C target death after WARM before COMMIT
+[sm1.7] PASS: 7.2C WARM proof accepted before target loss
+[sm1.7] PASS: 7.2C no ownership commit occurred: state=TARGET_WARM_VALIDATED
+[sm1.7] PASS: 7.2C no ownership commit occurred: authority=authority/a
+[sm1.7] PASS: 7.2C no ownership commit occurred: epoch=1
+[sm1.7] PASS: 7.2C no ownership commit occurred: no private Item Graph
+[sm1.7] PASS: 7.2C no ownership commit occurred: no private Construction truth
+[sm1.7] PASS: 7.2C no ownership commit occurred: no private persistence owner
+[sm1.7] PASS: 7.2C no ownership commit occurred: no private replay owner
+[sm1.7] PASS: 7.2C transfer gap rejects canonical tuple writes
+[sm1.7] PASS: 7.2C transfer gap rejects target/other writes
+[sm1.7] PASS: 7.2C restarted target may reuse exact current WARM evidence
+[sm1.7] PASS: 7.2C stale/different transfer WARM evidence rejected
+[sm1.7] PASS: 7.2C target death leaves commit counter zero
+[sm1.7] SUBCASE 07 7.3A COMMIT result lost then retried
+[sm1.7] PASS: 7.3A ready to commit
+[sm1.7] PASS: 7.3A first COMMIT linearizes
+[sm1.7] PASS: 7.3A retry converges to already committed
+[sm1.7] PASS: 7.3A retry returns identical commit proof
+[sm1.7] PASS: 7.3A retry does not linearize twice
+[sm1.7] PASS: 7.3A exactly one commit plus one replay
+[sm1.7] PASS: 7.3A post-commit/pre-retire transfer gap rejects canonical tuple writes
+[sm1.7] PASS: 7.3A post-commit/pre-retire transfer gap rejects target/other writes
+[sm1.7] SUBCASE 08 7.3B ACTIVATE result lost then retried
+[sm1.7] PASS: 7.3B ready to commit
+[sm1.7] PASS: 7.3B source retired
+[sm1.7] PASS: 7.3B target activation linearizes once
+[sm1.7] PASS: 7.3B activation retry converges
+[sm1.7] PASS: 7.3B activation occurs once
+[sm1.7] PASS: 7.3B B remains sole active authority: state=ACTIVE
+[sm1.7] PASS: 7.3B B remains sole active authority: authority=authority/b
+[sm1.7] PASS: 7.3B B remains sole active authority: epoch=2
+[sm1.7] PASS: 7.3B B remains sole active authority: no private Item Graph
+[sm1.7] PASS: 7.3B B remains sole active authority: no private Construction truth
+[sm1.7] PASS: 7.3B B remains sole active authority: no private persistence owner
+[sm1.7] PASS: 7.3B B remains sole active authority: no private replay owner
+[sm1.7] SUBCASE 09 7.4A stale source route rejected by coordinator
+[sm1.7] PASS: 7.4A A->B complete
+[sm1.7] PASS: 7.4A stale A/1 write fenced
+[sm1.7] PASS: 7.4A stale write cannot advance epoch
+[sm1.7] PASS: 7.4A current B/2 write admitted
+[sm1.7] SUBCASE 10 7.4B direct retired authority worker rejects stale write
+[sm1.7] PASS: 7.4B direct ENET probe reached real SM1.6 authority worker: { "success": true, "error_code": "SM1_AUTHORITY_NOT_ACTIVE", "process_id": 1528087, "response": { "error_code": "SM1_AUTHORITY_NOT_ACTIVE", "request_id": "fault/stale-execute", "success": false, "type": "EXECUTE_RESULT" } }
+[sm1.7] PASS: 7.4B retired source rejects direct stale EXECUTE
+[sm1.7] PASS: 7.4B direct probe used a separate OS authority process
+[sm1.7] SUBCASE 11 7.5A duplicate transfer messages converge or reject safely
+[sm1.7] PASS: 7.5A first FREEZE admitted
+[sm1.7] PASS: 7.5A duplicate FREEZE safely rejected
+[sm1.7] PASS: 7.5A duplicate WARM converges
+[sm1.7] PASS: 7.5A duplicate COMMIT converges
+[sm1.7] PASS: 7.5A duplicate RETIRE converges
+[sm1.7] PASS: 7.5A duplicate ACTIVATE converges
+[sm1.7] PASS: 7.5A duplicate sequence mutates commit/activation exactly once
+[sm1.7] SUBCASE 12 7.5B invalid reorder is fail-closed
+[sm1.7] PASS: 7.5B FREEZE admitted
+[sm1.7] PASS: 7.5B COMMIT before WARM rejected
+[sm1.7] PASS: 7.5B RETIRE before COMMIT rejected
+[sm1.7] PASS: 7.5B ACTIVATE before COMMIT rejected
+[sm1.7] PASS: 7.5B invalid early messages do not advance state: state=SOURCE_FROZEN
+[sm1.7] PASS: 7.5B invalid early messages do not advance state: authority=authority/a
+[sm1.7] PASS: 7.5B invalid early messages do not advance state: epoch=1
+[sm1.7] PASS: 7.5B invalid early messages do not advance state: no private Item Graph
+[sm1.7] PASS: 7.5B invalid early messages do not advance state: no private Construction truth
+[sm1.7] PASS: 7.5B invalid early messages do not advance state: no private persistence owner
+[sm1.7] PASS: 7.5B invalid early messages do not advance state: no private replay owner
+[sm1.7] PASS: 7.5B valid WARM accepted
+[sm1.7] PASS: 7.5B ACTIVATE before RETIRE rejected
+[sm1.7] PASS: 7.5B rejected activation cannot make target writable: state=OWNERSHIP_COMMITTED
+[sm1.7] PASS: 7.5B rejected activation cannot make target writable: authority=authority/b
+[sm1.7] PASS: 7.5B rejected activation cannot make target writable: epoch=2
+[sm1.7] PASS: 7.5B rejected activation cannot make target writable: no private Item Graph
+[sm1.7] PASS: 7.5B rejected activation cannot make target writable: no private Construction truth
+[sm1.7] PASS: 7.5B rejected activation cannot make target writable: no private persistence owner
+[sm1.7] PASS: 7.5B rejected activation cannot make target writable: no private replay owner
+[sm1.7] PASS: 7.5B post-commit/pre-retire transfer gap rejects canonical tuple writes
+[sm1.7] PASS: 7.5B post-commit/pre-retire transfer gap rejects target/other writes
+[sm1.7] SUBCASE 13 7.5C completed-transfer FREEZE replay cannot reopen transfer
+[sm1.7] PASS: 7.5C initial transfer completes
+[sm1.7] PASS: 7.5C old FREEZE replay rejected
+[sm1.7] PASS: 7.5C completed replay leaves current owner unchanged: state=ACTIVE
+[sm1.7] PASS: 7.5C completed replay leaves current owner unchanged: authority=authority/b
+[sm1.7] PASS: 7.5C completed replay leaves current owner unchanged: epoch=2
+[sm1.7] PASS: 7.5C completed replay leaves current owner unchanged: no private Item Graph
+[sm1.7] PASS: 7.5C completed replay leaves current owner unchanged: no private Construction truth
+[sm1.7] PASS: 7.5C completed replay leaves current owner unchanged: no private persistence owner
+[sm1.7] PASS: 7.5C completed replay leaves current owner unchanged: no private replay owner
+[sm1.7] SUBCASE 14 7.6 replay old T1 after A->B->A
+[sm1.7] PASS: 7.6 T1 A->B complete
+[sm1.7] PASS: 7.6 T1 completion proof retained
+[sm1.7] PASS: 7.6 T2 B->A complete
+[sm1.7] PASS: 7.6 current owner A/3 before replay: state=ACTIVE
+[sm1.7] PASS: 7.6 current owner A/3 before replay: authority=authority/a
+[sm1.7] PASS: 7.6 current owner A/3 before replay: epoch=3
+[sm1.7] PASS: 7.6 current owner A/3 before replay: no private Item Graph
+[sm1.7] PASS: 7.6 current owner A/3 before replay: no private Construction truth
+[sm1.7] PASS: 7.6 current owner A/3 before replay: no private persistence owner
+[sm1.7] PASS: 7.6 current owner A/3 before replay: no private replay owner
+[sm1.7] PASS: 7.6 historical COMMIT returns proof only
+[sm1.7] PASS: 7.6 historical COMMIT cannot roll back owner: state=ACTIVE
+[sm1.7] PASS: 7.6 historical COMMIT cannot roll back owner: authority=authority/a
+[sm1.7] PASS: 7.6 historical COMMIT cannot roll back owner: epoch=3
+[sm1.7] PASS: 7.6 historical COMMIT cannot roll back owner: no private Item Graph
+[sm1.7] PASS: 7.6 historical COMMIT cannot roll back owner: no private Construction truth
+[sm1.7] PASS: 7.6 historical COMMIT cannot roll back owner: no private persistence owner
+[sm1.7] PASS: 7.6 historical COMMIT cannot roll back owner: no private replay owner
+[sm1.7] PASS: 7.6 historical ACTIVATE recognized
+[sm1.7] PASS: 7.6 historical target explicitly reported inactive
+[sm1.7] PASS: 7.6 replay reports current A/3 tuple
+[sm1.7] PASS: 7.6 resurrected B/2 write fenced
+[sm1.7] PASS: 7.6 current A/3 write remains admitted
+[sm1.7] PASS: 7.6 full T1 replay changes nothing: state=ACTIVE
+[sm1.7] PASS: 7.6 full T1 replay changes nothing: authority=authority/a
+[sm1.7] PASS: 7.6 full T1 replay changes nothing: epoch=3
+[sm1.7] PASS: 7.6 full T1 replay changes nothing: no private Item Graph
+[sm1.7] PASS: 7.6 full T1 replay changes nothing: no private Construction truth
+[sm1.7] PASS: 7.6 full T1 replay changes nothing: no private persistence owner
+[sm1.7] PASS: 7.6 full T1 replay changes nothing: no private replay owner
+SM1.7.1-7.6 fault matrix: 157 assertions, 0 failures
+SM1_7_FAULT_MATRIX_1_6_PASS
+scenarios=6
+subcases=14
+failures=0
+SM1_7_FAULT_MATRIX_1_6_PASS
+scenarios=6
+subcases=14
+failures=0
+iterations=10
+head=24fc10ee1dedfe5b49d8b819fe7ef6591f5c0750
+godot=4.8.beta1.double.custom_build.4d10419ca
+SM1_FAULT_MATRIX_EXIT=0

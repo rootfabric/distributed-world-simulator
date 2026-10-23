@@ -1,0 +1,97 @@
+Godot Engine v4.8.beta1.double.custom_build.4d10419ca - https://godotengine.org
+
+[   0% ] [90m[1mfirst_scan_filesystem[22m | Started Project initialization (5 steps)[39m[0m
+[   0% ] [90m[1mfirst_scan_filesystem[22m | Scanning file structure...[39m[0m
+[  16% ] [90m[1mfirst_scan_filesystem[22m | Loading global class names...[39m[0m
+[  33% ] [90m[1mfirst_scan_filesystem[22m | Verifying GDExtensions...[39m[0m
+[  50% ] [90m[1mfirst_scan_filesystem[22m | Creating autoload scripts...[39m[0m
+[  66% ] [90m[1mfirst_scan_filesystem[22m | Initializing plugins...[39m[0m
+[breakpoint_mcp] plugin enabled
+[breakpoint_mcp] listening on 127.0.0.1:9080
+[  83% ] [90m[1mfirst_scan_filesystem[22m | Starting file scan...[39m[0m
+[92m[ DONE ][39m [1mfirst_scan_filesystem[22m
+[0m
+[   0% ] [90m[1mloading_editor_layout[22m | Started Loading editor (5 steps)[39m[0m
+[   0% ] [90m[1mloading_editor_layout[22m | Loading editor layout...[39m[0m
+[  16% ] [90m[1mloading_editor_layout[22m | Loading docks...[39m[0m
+[92m[ DONE ][39m [1mloading_editor_layout[22m
+[0m
+[breakpoint_mcp] plugin disabled
+Godot Engine v4.8.beta1.double.custom_build.4d10419ca - https://godotengine.org
+
+V0-P7.2 lunar Matter bubble: PASS (53 assertions, 0 failures)
+[V0-P7.2] PASS p7-2-bubble
+Godot Engine v4.8.beta1.double.custom_build.4d10419ca - https://godotengine.org
+
+V0-P7.2 lunar surface seam: PASS (50 assertions, 0 failures)
+[V0-P7.2] PASS p7-2-seam
+Godot Engine v4.8.beta1.double.custom_build.4d10419ca - https://godotengine.org
+
+V0-P7.1 authority gate: PASS (88 assertions, 0 failures)
+[V0-P7.2] PASS p7-1-authority
+Godot Engine v4.8.beta1.double.custom_build.4d10419ca - https://godotengine.org
+
+V0-P7.1 Tool->MW4 integration: PASS (30 assertions, 0 failures)
+[V0-P7.2] PASS p7-1-tool-to-mw4
+Godot Engine v4.8.beta1.double.custom_build.4d10419ca - https://godotengine.org
+
+MW4 matter mutations: START
+MW4 stage manifest: START
+MW4 stage manifest: DONE (0.000 s)
+MW4 stage swept-shape: START
+MW4 stage swept-shape: DONE (1.533 s)
+MW4 stage receiver-journal: START
+MW4 stage receiver-journal: DONE (0.056 s)
+MW4 stage atomic-store: START
+MW4 stage atomic-store: DONE (3.761 s)
+MW4 stage single-cell: START
+MW4 stage single-cell: DONE (2.083 s)
+MW4 stage cross-brick: START
+MW4 stage cross-brick: DONE (9.685 s)
+MW4 stage rejections: START
+MW4 stage rejections: DONE (4.343 s)
+MW4 stage rollback: START
+MW4 stage rollback: DONE (1.548 s)
+MW4 stage streamer: START
+MW4 stage streamer: DONE (2.123 s)
+MW4 matter mutations: PASS (187 assertions / 25.149 s)
+[V0-P7.2] PASS mw4
+Godot Engine v4.8.beta1.double.custom_build.4d10419ca - https://godotengine.org
+
+MW5 matter persistence: START
+MW5 stage manifest: START
+MW5 stage manifest: DONE (0.000 s)
+MW5 stage binary64-transport: START
+MW5 stage binary64-transport: DONE (0.003 s)
+MW5 stage checkpoint-roundtrip: START
+MW5 stage checkpoint-roundtrip: DONE (18.997 s)
+MW5 stage atomic-repository: START
+MW5 stage atomic-repository: DONE (32.247 s)
+MW5 stage identity-rejection: START
+MW5 stage identity-rejection: DONE (6.864 s)
+MW5 stage process-restart: START
+Godot Engine v4.8.beta1.double.custom_build.4d10419ca - https://godotengine.org
+
+Godot Engine v4.8.beta1.double.custom_build.4d10419ca - https://godotengine.org
+
+MW5 stage process-restart: DONE (11.903 s)
+MW5 matter persistence: PASS (142 assertions / 70.018 s)
+[V0-P7.2] PASS mw5
+Godot Engine v4.8.beta1.double.custom_build.4d10419ca - https://godotengine.org
+
+MW6 matter network authority: START
+MW6 stage manifest: START
+MW6 stage manifest: DONE (0.000 s)
+MW6 stage durable-bootstrap: START
+MW6 stage durable-bootstrap: DONE (6.980 s)
+MW6 stage authority-broadcast-replay: START
+MW6 stage authority-broadcast-replay: DONE (9.884 s)
+MW6 stage reconnect-delta-replay: START
+MW6 stage reconnect-delta-replay: DONE (8.513 s)
+MW6 stage snapshot-fallback-gap: START
+MW6 stage snapshot-fallback-gap: DONE (17.574 s)
+MW6 matter network authority: PASS (130 assertions / 42.954 s)
+[V0-P7.2] PASS mw6
+V0-P7.2 BOUNDED LUNAR MATTER BUBBLE GATE GREEN
+EXACT_HEAD=7aaa7fa9ebcabeeca33f15696002ff3907c22ffb
+GODOT=4.8.beta1.double.custom_build.4d10419ca

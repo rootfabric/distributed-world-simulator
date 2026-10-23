@@ -1,0 +1,56 @@
+MW10 runner: suite [contracts/runtime]
+MW10 runner: suite [contracts/runtime] still running (5s)
+MW10 runner: suite [contracts/runtime] still running (10s)
+MW10 runner: suite [contracts/runtime] still running (15s)
+MW10 runner: suite [contracts/runtime] still running (20s)
+MW10 runner: suite [contracts/runtime] still running (25s)
+MW10 runner: suite [contracts/runtime] still running (30s)
+MW10 runner: suite [contracts/runtime] still running (35s)
+MW10 runner: suite [contracts/runtime] still running (40s)
+MW10 runner: suite [contracts/runtime] still running (45s)
+MW10 runner: suite [contracts/runtime] still running (50s)
+MW10 runner: suite [contracts/runtime] still running (55s)
+MW10 runner: suite [contracts/runtime] still running (60s)
+MW10 runner: suite [contracts/runtime] still running (65s)
+MW10 runner: suite [contracts/runtime] still running (70s)
+MW10 runner: suite [contracts/runtime] still running (75s)
+MW10 runner: suite [contracts/runtime] still running (80s)
+MW10 runner: suite [contracts/runtime] still running (85s)
+MW10 runner: suite [contracts/runtime] still running (90s)
+MW10 runner: suite [contracts/runtime] still running (95s)
+MW10 runner: suite [contracts/runtime] still running (100s)
+MW10 runner: suite [contracts/runtime] still running (105s)
+MW10 runner: suite [contracts/runtime] still running (110s)
+MW10 runner: suite [contracts/runtime] still running (115s)
+MW10 runner: suite [contracts/runtime] still running (120s)
+MW10 runner: suite [contracts/runtime] still running (125s)
+Godot Engine v4.8.beta1.double.custom_build.4d10419ca - https://godotengine.org
+
+MW10 cross-region Matter transactions: PASS (201 assertions)
+MW10 runner: suite [multi-process]
+MW10 runner: suite [multi-process] still running (5s)
+MW10 runner: suite [multi-process] still running (10s)
+MW10 runner: suite [multi-process] still running (15s)
+MW10 runner: suite [multi-process] still running (20s)
+MW10 runner: suite [multi-process] still running (25s)
+MW10 runner: suite [multi-process] still running (30s)
+MW10 runner: suite [multi-process] still running (35s)
+Godot Engine v4.8.beta1.double.custom_build.4d10419ca - https://godotengine.org
+
+Godot Engine v4.8.beta1.double.custom_build.4d10419ca - https://godotengine.org
+
+Godot Engine v4.8.beta1.double.custom_build.4d10419ca - https://godotengine.org
+
+Godot Engine v4.8.beta1.double.custom_build.4d10419ca - https://godotengine.org
+
+Godot Engine v4.8.beta1.double.custom_build.4d10419ca - https://godotengine.org
+
+Godot Engine v4.8.beta1.double.custom_build.4d10419ca - https://godotengine.org
+
+Godot Engine v4.8.beta1.double.custom_build.4d10419ca - https://godotengine.org
+Godot Engine v4.8.beta1.double.custom_build.4d10419ca - https://godotengine.org
+
+
+MW10 cross-region Matter processes: PASS (53 assertions)
+MW10 runner: PASS (2/2 suites)
+MW10_EXIT=0

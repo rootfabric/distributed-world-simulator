@@ -1,0 +1,17 @@
+{
+ "content": [
+  {
+   "type": "text",
+   "text": "{\n  \"version\": \"4.8.beta1.double.custom_build.4d10419ca\",\n  \"raw\": {\n    \"code\": 0,\n    \"stdout\": \"4.8.beta1.double.custom_build.4d10419ca\\n\",\n    \"stderr\": \"\",\n    \"timedOut\": false\n  }\n}"
+  }
+ ],
+ "structuredContent": {
+  "version": "4.8.beta1.double.custom_build.4d10419ca",
+  "raw": {
+   "code": 0,
+   "stdout": "4.8.beta1.double.custom_build.4d10419ca\n",
+   "stderr": "",
+   "timedOut": false
+  }
+ }
+}

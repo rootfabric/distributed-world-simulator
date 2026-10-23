@@ -1,0 +1,23 @@
+MW4 runner: starting with 300s timeout
+Godot Engine v4.8.beta1.double.custom_build.4d10419ca - https://godotengine.org
+
+MW4 matter mutations: START
+MW4 stage manifest: START
+MW4 stage manifest: DONE (0.000 s)
+MW4 stage swept-shape: START
+MW4 stage swept-shape: DONE (1.604 s)
+MW4 stage receiver-journal: START
+MW4 stage receiver-journal: DONE (0.058 s)
+MW4 stage atomic-store: START
+MW4 stage atomic-store: DONE (3.908 s)
+MW4 stage single-cell: START
+MW4 stage single-cell: DONE (2.124 s)
+MW4 stage cross-brick: START
+MW4 stage cross-brick: DONE (9.704 s)
+MW4 stage rejections: START
+MW4 stage rejections: DONE (4.239 s)
+MW4 stage rollback: START
+MW4 stage rollback: DONE (1.473 s)
+MW4 stage streamer: START
+MW4 stage streamer: DONE (2.142 s)
+MW4 matter mutations: PASS (187 assertions / 25.269 s)

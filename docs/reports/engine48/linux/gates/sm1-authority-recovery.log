@@ -1,0 +1,988 @@
+SM1_7_10_GODOT_VERSION=4.8.beta1.double.custom_build.4d10419ca
+SM1_7_10_TESTED_HEAD=5f71900ff2668f32b42588581b80eaa89e1c876e
+SM1_7_10_ITERATIONS=10
+SM1_7_10_ITERATION=1/10
+Godot Engine v4.8.beta1.double.custom_build.4d10419ca - https://godotengine.org
+
+[sm1.7.10] PASS: 7.10 three isolated ENET ports allocated
+[sm1.7.10] PASS: 7.10 Xvfb graphical display started
+[sm1.7.10] PASS: 7.10 original Authority A/B processes launched
+[sm1.7.10] PASS: 7.10 original Authority A listening
+[sm1.7.10] PASS: 7.10 original Authority B listening
+[sm1.7.10] PASS: 7.10 Gateway process launched
+[sm1.7.10] PASS: 7.10 Gateway listening
+[sm1.7.10] PASS: 7.10 two graphical clients launched
+WARNING: Could not set V-Sync mode, as changing V-Sync mode is not supported by the graphics driver.
+     at: set_use_vsync (platform/linuxbsd/x11/gl_manager_x11.cpp:372)
+WARNING: Could not set V-Sync mode, as changing V-Sync mode is not supported by the graphics driver.
+     at: set_use_vsync (platform/linuxbsd/x11/gl_manager_x11.cpp:372)
+[sm1.7.10] PASS: 7.10 writer reaches B/epoch2 before standby crash
+[sm1.7.10] PASS: 7.10 observer reaches B/epoch2 before standby crash
+[sm1.7.10] PASS: 7.10 checkpoint observes B epoch2
+[sm1.7.10] PASS: 7.10 checkpoint carries revision1 observed-state identity
+[sm1.7.10] PASS: 7.10 checkpoint observes B epoch2
+[sm1.7.10] PASS: 7.10 checkpoint carries revision1 observed-state identity
+[sm1.7.10] PASS: 7.10 retired Authority A receives real OS kill
+[sm1.7.10] PASS: 7.10 original retired Authority A is dead
+[sm1.7.10] PASS: 7.10 Authority A port released after crash
+[sm1.7.10] PASS: 7.10 replacement Authority A launches as new inactive process
+[sm1.7.10] PASS: 7.10 replacement A starts inactive and cannot self-promote
+[sm1.7.10] PASS: 7.10 writer observes zero-write standby A recovery
+[sm1.7.10] PASS: 7.10 observer observes zero-write standby A recovery
+[sm1.7.10] PASS: 7.10 standby recovery leaves B/epoch2 ownership unchanged
+[sm1.7.10] PASS: 7.10 standby recovery leaves world revision unchanged
+[sm1.7.10] PASS: 7.10 standby recovery leaves B/epoch2 ownership unchanged
+[sm1.7.10] PASS: 7.10 standby recovery leaves world revision unchanged
+[sm1.7.10] PASS: 7.10 active Authority B receives real OS kill
+[sm1.7.10] PASS: 7.10 original active Authority B is dead
+[sm1.7.10] PASS: 7.10 Authority B port released after crash
+[sm1.7.10] PASS: 7.10 replacement Authority B launches as new inactive process
+[sm1.7.10] PASS: 7.10 replacement B starts inactive and cannot self-promote
+[sm1.7.10] PASS: 7.10 client A process PASS: { "active_recovered": true, "client_id": "a", "command_results": 4.0, "commands_sent": 4.0, "connect_count": 1.0, "display_server": "X11", "epochs": [1.0, 2.0, 3.0], "gateway_endpoint_id": "gateway/sm1/graphical-primary", "logical_player_id": "player/sm1-graphical-a", "passed": true, "player_entity_id": "entity/sm1-graphical-a", "process_id": 1561202.0, "reconnect_count": 0.0, "recovery_complete_events": 2.0, "recovery_pending_events": 2.0, "rendering_method": "gl_compatibility", "respawn_count": 0.0, "revisions": [1.0, 2.0, 3.0, 4.0], "route_history": ["authority/a", "authority/b", "authority/a"], "schema": "planet_simulator.sm1_authority_recovery_client_report.v1", "shared_state": { "action_count": 2.0, "last_input_sequence": 4.0, "last_operation_id": "operation/sm1/graphical/5", "logical_player_id": "player/sm1-graphical-a", "operation_ids": ["operation/sm1/authority-recovery/1", "operation/sm1/authority-recovery/2", "operation/sm1/authority-recovery/3", "operation/sm1/graphical/5"], "player_entity_id": "entity/sm1-graphical-a", "position_x": 0.0, "product_session_id": "session/sm1/graphical-acceptance", "schema": "planet_simulator.sm1_graphical_shared_state.v1", "spawn_generation": 1.0, "world_revision": 4.0 }, "spawn_generation": 1.0, "standby_recovered": true, "state": "COMPLETE" }
+[sm1.7.10] PASS: 7.10 client B process PASS: { "active_recovered": true, "client_id": "b", "command_results": 0.0, "commands_sent": 0.0, "connect_count": 1.0, "display_server": "X11", "epochs": [1.0, 2.0, 3.0], "gateway_endpoint_id": "gateway/sm1/graphical-primary", "logical_player_id": "player/sm1-graphical-a", "passed": true, "player_entity_id": "entity/sm1-graphical-a", "process_id": 1561203.0, "reconnect_count": 0.0, "recovery_complete_events": 2.0, "recovery_pending_events": 2.0, "rendering_method": "gl_compatibility", "respawn_count": 0.0, "revisions": [1.0, 2.0, 3.0, 4.0], "route_history": ["authority/a", "authority/b", "authority/a"], "schema": "planet_simulator.sm1_authority_recovery_client_report.v1", "shared_state": { "action_count": 2.0, "last_input_sequence": 4.0, "last_operation_id": "operation/sm1/graphical/5", "logical_player_id": "player/sm1-graphical-a", "operation_ids": ["operation/sm1/authority-recovery/1", "operation/sm1/authority-recovery/2", "operation/sm1/authority-recovery/3", "operation/sm1/graphical/5"], "player_entity_id": "entity/sm1-graphical-a", "position_x": 0.0, "product_session_id": "session/sm1/graphical-acceptance", "schema": "planet_simulator.sm1_graphical_shared_state.v1", "spawn_generation": 1.0, "world_revision": 4.0 }, "spawn_generation": 1.0, "standby_recovered": true, "state": "COMPLETE" }
+[sm1.7.10] PASS: 7.10 Gateway process PASS: { "active_authority_id": "authority/a", "authority_epoch": 3.0, "authority_recovery_blocks_writes": false, "authority_recovery_complete": true, "authority_runtime_recovery_pending": false, "bootstrap_authority_epoch": 1.0, "bootstrap_authority_id": "authority/a", "canonical_gameplay_owner": false, "client_connection_count": 2.0, "client_endpoint_changed": false, "client_ids": ["b", "a"], "counters": { "active_authority_recoveries": 1.0, "authority_disconnects": 2.0, "authority_messages": 21.0, "authority_reconnects": 2.0, "authority_recoveries": 1.0, "authority_recovery_events": 2.0, "authority_recovery_state_queries": 2.0, "authority_recovery_status_queries": 2.0, "authority_status_queries": 2.0, "busy_rejections": 0.0, "client_disconnects": 0.0, "client_messages": 6.0, "client_reconnects": 0.0, "commands": 4.0, "handoffs": 2.0, "restart_resume_sessions": 0.0, "resume_queries": 0.0, "resume_successes": 0.0, "route_changes": 2.0, "session_ready_announcements": 0.0, "standby_syncs": 2.0, "state_broadcasts": 4.0 }, "gateway_endpoint_id": "gateway/sm1/graphical-primary", "handoff_count": 2.0, "last_state_checksum": "4c539c71cc56512e42f875c96b422540799f259db27709aeea68764ab3893e71", "last_world_revision": 4.0, "network_conditions": { "authorities": { "authority/a": { "profile": {  }, "snapshot": {  } }, "authority/b": { "profile": {  }, "snapshot": {  } } }, "client": { "profile": {  }, "snapshot": {  } } }, "passed": true, "process_id": 1561114.0, "schema": "planet_simulator.sm1_graphical_gateway_report.v1", "state": "COMPLETE", "transfer_payload_retained": false }
+[sm1.7.10] PASS: 7.10 replacement Authority A process PASS: { "active": true, "authority_epoch": 3.0, "authority_id": "authority/a", "counters": { "activations": 1.0, "execute_requests": 1.0, "executed": 1.0, "freezes": 0.0, "recovery_activations": 0.0, "recovery_state_queries": 1.0, "replays": 0.0, "retires": 0.0, "standby_syncs": 1.0, "state_queries": 0.0, "status_queries": 1.0, "warm_loads": 1.0, "write_rejections": 0.0 }, "passed": true, "private_persistence_owner": false, "process_id": 1562146.0, "schema": "planet_simulator.sm1_graphical_authority_report.v1", "shared_state": { "action_count": 2.0, "last_input_sequence": 4.0, "last_operation_id": "operation/sm1/graphical/5", "logical_player_id": "player/sm1-graphical-a", "operation_ids": ["operation/sm1/authority-recovery/1", "operation/sm1/authority-recovery/2", "operation/sm1/authority-recovery/3", "operation/sm1/graphical/5"], "player_entity_id": "entity/sm1-graphical-a", "position_x": 0.0, "product_session_id": "session/sm1/graphical-acceptance", "schema": "planet_simulator.sm1_graphical_shared_state.v1", "spawn_generation": 1.0, "world_revision": 4.0 }, "state": "COMPLETE", "state_checksum": "4c539c71cc56512e42f875c96b422540799f259db27709aeea68764ab3893e71", "warm": false }
+[sm1.7.10] PASS: 7.10 replacement Authority B process PASS: { "active": false, "authority_epoch": 2.0, "authority_id": "authority/b", "counters": { "activations": 0.0, "execute_requests": 2.0, "executed": 2.0, "freezes": 1.0, "recovery_activations": 1.0, "recovery_state_queries": 0.0, "replays": 0.0, "retires": 1.0, "standby_syncs": 1.0, "state_queries": 0.0, "status_queries": 1.0, "warm_loads": 0.0, "write_rejections": 0.0 }, "passed": true, "private_persistence_owner": false, "process_id": 1563253.0, "schema": "planet_simulator.sm1_graphical_authority_report.v1", "shared_state": { "action_count": 1.0, "last_input_sequence": 3.0, "last_operation_id": "operation/sm1/authority-recovery/3", "logical_player_id": "player/sm1-graphical-a", "operation_ids": ["operation/sm1/authority-recovery/1", "operation/sm1/authority-recovery/2", "operation/sm1/authority-recovery/3"], "player_entity_id": "entity/sm1-graphical-a", "position_x": 0.0, "product_session_id": "session/sm1/graphical-acceptance", "schema": "planet_simulator.sm1_graphical_shared_state.v1", "spawn_generation": 1.0, "world_revision": 3.0 }, "state": "COMPLETE", "state_checksum": "c6791f6bce8500877767b01309fdbfedd1e133fba4d58685d926bde7d8dd4b9e", "warm": false }
+[sm1.7.10] PASS: 7.10 authority crash/restart uses seven distinct product OS process identities
+[sm1.7.10] PASS: 7.10 client uses real graphical DisplayServer
+[sm1.7.10] PASS: 7.10 client uses GL compatibility renderer
+[sm1.7.10] PASS: 7.10 clients remain on one Gateway transport connection
+[sm1.7.10] PASS: 7.10 Authority recovery causes zero respawn
+[sm1.7.10] PASS: 7.10 client observes standby and active Authority recovery
+[sm1.7.10] PASS: 7.10 client observes exactly two recovery windows
+[sm1.7.10] PASS: 7.10 Gateway endpoint stays stable
+[sm1.7.10] PASS: 7.10 player identity stays stable
+[sm1.7.10] PASS: 7.10 spawn generation remains one
+[sm1.7.10] PASS: 7.10 client sees epochs 1->2->3 with no recovery epoch inflation
+[sm1.7.10] PASS: 7.10 client sees revisions 1..4 without recovery mutation
+[sm1.7.10] PASS: 7.10 route changes only on gameplay handoffs
+[sm1.7.10] PASS: 7.10 client uses real graphical DisplayServer
+[sm1.7.10] PASS: 7.10 client uses GL compatibility renderer
+[sm1.7.10] PASS: 7.10 clients remain on one Gateway transport connection
+[sm1.7.10] PASS: 7.10 Authority recovery causes zero respawn
+[sm1.7.10] PASS: 7.10 client observes standby and active Authority recovery
+[sm1.7.10] PASS: 7.10 client observes exactly two recovery windows
+[sm1.7.10] PASS: 7.10 Gateway endpoint stays stable
+[sm1.7.10] PASS: 7.10 player identity stays stable
+[sm1.7.10] PASS: 7.10 spawn generation remains one
+[sm1.7.10] PASS: 7.10 client sees epochs 1->2->3 with no recovery epoch inflation
+[sm1.7.10] PASS: 7.10 client sees revisions 1..4 without recovery mutation
+[sm1.7.10] PASS: 7.10 route changes only on gameplay handoffs
+[sm1.7.10] PASS: 7.10 writer completes four logical operations across two Authority restarts
+[sm1.7.10] PASS: 7.10 observer remains read-only
+[sm1.7.10] PASS: 7.10 final owner is A epoch3
+[sm1.7.10] PASS: 7.10 two gameplay handoffs and revision4 survive Authority restarts
+[sm1.7.10] PASS: 7.10 Gateway observes and reconnects exactly two Authority processes
+[sm1.7.10] PASS: 7.10 each replacement is validated and sourced read-only
+[sm1.7.10] PASS: 7.10 both replacements receive one zero-write standby sync
+[sm1.7.10] PASS: 7.10 only the crashed active B is recovery-activated
+[sm1.7.10] PASS: 7.10 exactly two Authority recoveries complete
+[sm1.7.10] PASS: 7.10 recovery itself adds no gameplay revision
+[sm1.7.10] PASS: 7.10 Gateway ends with no recovery pending or write block
+[sm1.7.10] PASS: 7.10 Gateway remains non-canonical and retains no transfer payload
+[sm1.7.10] PASS: 7.10 replacement A becomes final active authority only through normal B->A handoff
+[sm1.7.10] PASS: 7.10 recovered B retires normally after B->A
+[sm1.7.10] PASS: 7.10 final revision/input watermark is monotonic
+[sm1.7.10] PASS: 7.10 OperationId ledger contains each logical operation exactly once
+[sm1.7.10] PASS: 7.10 final world state is correct
+[sm1.7.10] PASS: 7.10 replacement A is synced zero-write and never recovery-self-activates
+[sm1.7.10] PASS: 7.10 replacement B activates only after recovery sync
+[sm1.7.10] PASS: 7.10 recovered standby A supplies one read-only historical state query for B recovery
+[sm1.7.10] PASS: 7.10 post-restart executions partition 1 on A + 2 on B
+[sm1.7.10] PASS: 7.10 recovery causes zero OperationId replay
+[sm1.7.10] PASS: 7.10 recovery causes zero stale-authority writes
+[sm1.7.10] PASS: 7.10 replacements create no private persistence owner
+[sm1.7.10] PASS: 7.10 child process 1561202 exited cleanly
+[sm1.7.10] PASS: 7.10 child process 1561203 exited cleanly
+[sm1.7.10] PASS: 7.10 child process 1561114 exited cleanly
+[sm1.7.10] PASS: 7.10 child process 1562146 exited cleanly
+[sm1.7.10] PASS: 7.10 child process 1563253 exited cleanly
+SM1.7.10 Authority recovery: 89 assertions, 0 failures
+SM1_7_10_AUTHORITY_RECOVERY_PASS
+SM1_7_10_ITERATION=2/10
+Godot Engine v4.8.beta1.double.custom_build.4d10419ca - https://godotengine.org
+
+[sm1.7.10] PASS: 7.10 three isolated ENET ports allocated
+[sm1.7.10] PASS: 7.10 Xvfb graphical display started
+[sm1.7.10] PASS: 7.10 original Authority A/B processes launched
+[sm1.7.10] PASS: 7.10 original Authority A listening
+[sm1.7.10] PASS: 7.10 original Authority B listening
+[sm1.7.10] PASS: 7.10 Gateway process launched
+[sm1.7.10] PASS: 7.10 Gateway listening
+[sm1.7.10] PASS: 7.10 two graphical clients launched
+WARNING: Could not set V-Sync mode, as changing V-Sync mode is not supported by the graphics driver.
+     at: set_use_vsync (platform/linuxbsd/x11/gl_manager_x11.cpp:372)
+WARNING: Could not set V-Sync mode, as changing V-Sync mode is not supported by the graphics driver.
+     at: set_use_vsync (platform/linuxbsd/x11/gl_manager_x11.cpp:372)
+[sm1.7.10] PASS: 7.10 writer reaches B/epoch2 before standby crash
+[sm1.7.10] PASS: 7.10 observer reaches B/epoch2 before standby crash
+[sm1.7.10] PASS: 7.10 checkpoint observes B epoch2
+[sm1.7.10] PASS: 7.10 checkpoint carries revision1 observed-state identity
+[sm1.7.10] PASS: 7.10 checkpoint observes B epoch2
+[sm1.7.10] PASS: 7.10 checkpoint carries revision1 observed-state identity
+[sm1.7.10] PASS: 7.10 retired Authority A receives real OS kill
+[sm1.7.10] PASS: 7.10 original retired Authority A is dead
+[sm1.7.10] PASS: 7.10 Authority A port released after crash
+[sm1.7.10] PASS: 7.10 replacement Authority A launches as new inactive process
+[sm1.7.10] PASS: 7.10 replacement A starts inactive and cannot self-promote
+[sm1.7.10] PASS: 7.10 writer observes zero-write standby A recovery
+[sm1.7.10] PASS: 7.10 observer observes zero-write standby A recovery
+[sm1.7.10] PASS: 7.10 standby recovery leaves B/epoch2 ownership unchanged
+[sm1.7.10] PASS: 7.10 standby recovery leaves world revision unchanged
+[sm1.7.10] PASS: 7.10 standby recovery leaves B/epoch2 ownership unchanged
+[sm1.7.10] PASS: 7.10 standby recovery leaves world revision unchanged
+[sm1.7.10] PASS: 7.10 active Authority B receives real OS kill
+[sm1.7.10] PASS: 7.10 original active Authority B is dead
+[sm1.7.10] PASS: 7.10 Authority B port released after crash
+[sm1.7.10] PASS: 7.10 replacement Authority B launches as new inactive process
+[sm1.7.10] PASS: 7.10 replacement B starts inactive and cannot self-promote
+[sm1.7.10] PASS: 7.10 client A process PASS: { "active_recovered": true, "client_id": "a", "command_results": 4.0, "commands_sent": 4.0, "connect_count": 1.0, "display_server": "X11", "epochs": [1.0, 2.0, 3.0], "gateway_endpoint_id": "gateway/sm1/graphical-primary", "logical_player_id": "player/sm1-graphical-a", "passed": true, "player_entity_id": "entity/sm1-graphical-a", "process_id": 1565723.0, "reconnect_count": 0.0, "recovery_complete_events": 2.0, "recovery_pending_events": 2.0, "rendering_method": "gl_compatibility", "respawn_count": 0.0, "revisions": [1.0, 2.0, 3.0, 4.0], "route_history": ["authority/a", "authority/b", "authority/a"], "schema": "planet_simulator.sm1_authority_recovery_client_report.v1", "shared_state": { "action_count": 2.0, "last_input_sequence": 4.0, "last_operation_id": "operation/sm1/graphical/5", "logical_player_id": "player/sm1-graphical-a", "operation_ids": ["operation/sm1/authority-recovery/1", "operation/sm1/authority-recovery/2", "operation/sm1/authority-recovery/3", "operation/sm1/graphical/5"], "player_entity_id": "entity/sm1-graphical-a", "position_x": 0.0, "product_session_id": "session/sm1/graphical-acceptance", "schema": "planet_simulator.sm1_graphical_shared_state.v1", "spawn_generation": 1.0, "world_revision": 4.0 }, "spawn_generation": 1.0, "standby_recovered": true, "state": "COMPLETE" }
+[sm1.7.10] PASS: 7.10 client B process PASS: { "active_recovered": true, "client_id": "b", "command_results": 0.0, "commands_sent": 0.0, "connect_count": 1.0, "display_server": "X11", "epochs": [1.0, 2.0, 3.0], "gateway_endpoint_id": "gateway/sm1/graphical-primary", "logical_player_id": "player/sm1-graphical-a", "passed": true, "player_entity_id": "entity/sm1-graphical-a", "process_id": 1565724.0, "reconnect_count": 0.0, "recovery_complete_events": 2.0, "recovery_pending_events": 2.0, "rendering_method": "gl_compatibility", "respawn_count": 0.0, "revisions": [1.0, 2.0, 3.0, 4.0], "route_history": ["authority/a", "authority/b", "authority/a"], "schema": "planet_simulator.sm1_authority_recovery_client_report.v1", "shared_state": { "action_count": 2.0, "last_input_sequence": 4.0, "last_operation_id": "operation/sm1/graphical/5", "logical_player_id": "player/sm1-graphical-a", "operation_ids": ["operation/sm1/authority-recovery/1", "operation/sm1/authority-recovery/2", "operation/sm1/authority-recovery/3", "operation/sm1/graphical/5"], "player_entity_id": "entity/sm1-graphical-a", "position_x": 0.0, "product_session_id": "session/sm1/graphical-acceptance", "schema": "planet_simulator.sm1_graphical_shared_state.v1", "spawn_generation": 1.0, "world_revision": 4.0 }, "spawn_generation": 1.0, "standby_recovered": true, "state": "COMPLETE" }
+[sm1.7.10] PASS: 7.10 Gateway process PASS: { "active_authority_id": "authority/a", "authority_epoch": 3.0, "authority_recovery_blocks_writes": false, "authority_recovery_complete": true, "authority_runtime_recovery_pending": false, "bootstrap_authority_epoch": 1.0, "bootstrap_authority_id": "authority/a", "canonical_gameplay_owner": false, "client_connection_count": 2.0, "client_endpoint_changed": false, "client_ids": ["b", "a"], "counters": { "active_authority_recoveries": 1.0, "authority_disconnects": 2.0, "authority_messages": 21.0, "authority_reconnects": 2.0, "authority_recoveries": 1.0, "authority_recovery_events": 2.0, "authority_recovery_state_queries": 2.0, "authority_recovery_status_queries": 2.0, "authority_status_queries": 2.0, "busy_rejections": 0.0, "client_disconnects": 0.0, "client_messages": 6.0, "client_reconnects": 0.0, "commands": 4.0, "handoffs": 2.0, "restart_resume_sessions": 0.0, "resume_queries": 0.0, "resume_successes": 0.0, "route_changes": 2.0, "session_ready_announcements": 0.0, "standby_syncs": 2.0, "state_broadcasts": 4.0 }, "gateway_endpoint_id": "gateway/sm1/graphical-primary", "handoff_count": 2.0, "last_state_checksum": "4c539c71cc56512e42f875c96b422540799f259db27709aeea68764ab3893e71", "last_world_revision": 4.0, "network_conditions": { "authorities": { "authority/a": { "profile": {  }, "snapshot": {  } }, "authority/b": { "profile": {  }, "snapshot": {  } } }, "client": { "profile": {  }, "snapshot": {  } } }, "passed": true, "process_id": 1565480.0, "schema": "planet_simulator.sm1_graphical_gateway_report.v1", "state": "COMPLETE", "transfer_payload_retained": false }
+[sm1.7.10] PASS: 7.10 replacement Authority A process PASS: { "active": true, "authority_epoch": 3.0, "authority_id": "authority/a", "counters": { "activations": 1.0, "execute_requests": 1.0, "executed": 1.0, "freezes": 0.0, "recovery_activations": 0.0, "recovery_state_queries": 1.0, "replays": 0.0, "retires": 0.0, "standby_syncs": 1.0, "state_queries": 0.0, "status_queries": 1.0, "warm_loads": 1.0, "write_rejections": 0.0 }, "passed": true, "private_persistence_owner": false, "process_id": 1566532.0, "schema": "planet_simulator.sm1_graphical_authority_report.v1", "shared_state": { "action_count": 2.0, "last_input_sequence": 4.0, "last_operation_id": "operation/sm1/graphical/5", "logical_player_id": "player/sm1-graphical-a", "operation_ids": ["operation/sm1/authority-recovery/1", "operation/sm1/authority-recovery/2", "operation/sm1/authority-recovery/3", "operation/sm1/graphical/5"], "player_entity_id": "entity/sm1-graphical-a", "position_x": 0.0, "product_session_id": "session/sm1/graphical-acceptance", "schema": "planet_simulator.sm1_graphical_shared_state.v1", "spawn_generation": 1.0, "world_revision": 4.0 }, "state": "COMPLETE", "state_checksum": "4c539c71cc56512e42f875c96b422540799f259db27709aeea68764ab3893e71", "warm": false }
+[sm1.7.10] PASS: 7.10 replacement Authority B process PASS: { "active": false, "authority_epoch": 2.0, "authority_id": "authority/b", "counters": { "activations": 0.0, "execute_requests": 2.0, "executed": 2.0, "freezes": 1.0, "recovery_activations": 1.0, "recovery_state_queries": 0.0, "replays": 0.0, "retires": 1.0, "standby_syncs": 1.0, "state_queries": 0.0, "status_queries": 1.0, "warm_loads": 0.0, "write_rejections": 0.0 }, "passed": true, "private_persistence_owner": false, "process_id": 1567279.0, "schema": "planet_simulator.sm1_graphical_authority_report.v1", "shared_state": { "action_count": 1.0, "last_input_sequence": 3.0, "last_operation_id": "operation/sm1/authority-recovery/3", "logical_player_id": "player/sm1-graphical-a", "operation_ids": ["operation/sm1/authority-recovery/1", "operation/sm1/authority-recovery/2", "operation/sm1/authority-recovery/3"], "player_entity_id": "entity/sm1-graphical-a", "position_x": 0.0, "product_session_id": "session/sm1/graphical-acceptance", "schema": "planet_simulator.sm1_graphical_shared_state.v1", "spawn_generation": 1.0, "world_revision": 3.0 }, "state": "COMPLETE", "state_checksum": "c6791f6bce8500877767b01309fdbfedd1e133fba4d58685d926bde7d8dd4b9e", "warm": false }
+[sm1.7.10] PASS: 7.10 authority crash/restart uses seven distinct product OS process identities
+[sm1.7.10] PASS: 7.10 client uses real graphical DisplayServer
+[sm1.7.10] PASS: 7.10 client uses GL compatibility renderer
+[sm1.7.10] PASS: 7.10 clients remain on one Gateway transport connection
+[sm1.7.10] PASS: 7.10 Authority recovery causes zero respawn
+[sm1.7.10] PASS: 7.10 client observes standby and active Authority recovery
+[sm1.7.10] PASS: 7.10 client observes exactly two recovery windows
+[sm1.7.10] PASS: 7.10 Gateway endpoint stays stable
+[sm1.7.10] PASS: 7.10 player identity stays stable
+[sm1.7.10] PASS: 7.10 spawn generation remains one
+[sm1.7.10] PASS: 7.10 client sees epochs 1->2->3 with no recovery epoch inflation
+[sm1.7.10] PASS: 7.10 client sees revisions 1..4 without recovery mutation
+[sm1.7.10] PASS: 7.10 route changes only on gameplay handoffs
+[sm1.7.10] PASS: 7.10 client uses real graphical DisplayServer
+[sm1.7.10] PASS: 7.10 client uses GL compatibility renderer
+[sm1.7.10] PASS: 7.10 clients remain on one Gateway transport connection
+[sm1.7.10] PASS: 7.10 Authority recovery causes zero respawn
+[sm1.7.10] PASS: 7.10 client observes standby and active Authority recovery
+[sm1.7.10] PASS: 7.10 client observes exactly two recovery windows
+[sm1.7.10] PASS: 7.10 Gateway endpoint stays stable
+[sm1.7.10] PASS: 7.10 player identity stays stable
+[sm1.7.10] PASS: 7.10 spawn generation remains one
+[sm1.7.10] PASS: 7.10 client sees epochs 1->2->3 with no recovery epoch inflation
+[sm1.7.10] PASS: 7.10 client sees revisions 1..4 without recovery mutation
+[sm1.7.10] PASS: 7.10 route changes only on gameplay handoffs
+[sm1.7.10] PASS: 7.10 writer completes four logical operations across two Authority restarts
+[sm1.7.10] PASS: 7.10 observer remains read-only
+[sm1.7.10] PASS: 7.10 final owner is A epoch3
+[sm1.7.10] PASS: 7.10 two gameplay handoffs and revision4 survive Authority restarts
+[sm1.7.10] PASS: 7.10 Gateway observes and reconnects exactly two Authority processes
+[sm1.7.10] PASS: 7.10 each replacement is validated and sourced read-only
+[sm1.7.10] PASS: 7.10 both replacements receive one zero-write standby sync
+[sm1.7.10] PASS: 7.10 only the crashed active B is recovery-activated
+[sm1.7.10] PASS: 7.10 exactly two Authority recoveries complete
+[sm1.7.10] PASS: 7.10 recovery itself adds no gameplay revision
+[sm1.7.10] PASS: 7.10 Gateway ends with no recovery pending or write block
+[sm1.7.10] PASS: 7.10 Gateway remains non-canonical and retains no transfer payload
+[sm1.7.10] PASS: 7.10 replacement A becomes final active authority only through normal B->A handoff
+[sm1.7.10] PASS: 7.10 recovered B retires normally after B->A
+[sm1.7.10] PASS: 7.10 final revision/input watermark is monotonic
+[sm1.7.10] PASS: 7.10 OperationId ledger contains each logical operation exactly once
+[sm1.7.10] PASS: 7.10 final world state is correct
+[sm1.7.10] PASS: 7.10 replacement A is synced zero-write and never recovery-self-activates
+[sm1.7.10] PASS: 7.10 replacement B activates only after recovery sync
+[sm1.7.10] PASS: 7.10 recovered standby A supplies one read-only historical state query for B recovery
+[sm1.7.10] PASS: 7.10 post-restart executions partition 1 on A + 2 on B
+[sm1.7.10] PASS: 7.10 recovery causes zero OperationId replay
+[sm1.7.10] PASS: 7.10 recovery causes zero stale-authority writes
+[sm1.7.10] PASS: 7.10 replacements create no private persistence owner
+[sm1.7.10] PASS: 7.10 child process 1565723 exited cleanly
+[sm1.7.10] PASS: 7.10 child process 1565724 exited cleanly
+[sm1.7.10] PASS: 7.10 child process 1565480 exited cleanly
+[sm1.7.10] PASS: 7.10 child process 1566532 exited cleanly
+[sm1.7.10] PASS: 7.10 child process 1567279 exited cleanly
+SM1.7.10 Authority recovery: 89 assertions, 0 failures
+SM1_7_10_AUTHORITY_RECOVERY_PASS
+SM1_7_10_ITERATION=3/10
+Godot Engine v4.8.beta1.double.custom_build.4d10419ca - https://godotengine.org
+
+[sm1.7.10] PASS: 7.10 three isolated ENET ports allocated
+[sm1.7.10] PASS: 7.10 Xvfb graphical display started
+[sm1.7.10] PASS: 7.10 original Authority A/B processes launched
+[sm1.7.10] PASS: 7.10 original Authority A listening
+[sm1.7.10] PASS: 7.10 original Authority B listening
+[sm1.7.10] PASS: 7.10 Gateway process launched
+[sm1.7.10] PASS: 7.10 Gateway listening
+[sm1.7.10] PASS: 7.10 two graphical clients launched
+WARNING: Could not set V-Sync mode, as changing V-Sync mode is not supported by the graphics driver.
+     at: set_use_vsync (platform/linuxbsd/x11/gl_manager_x11.cpp:372)
+WARNING: Could not set V-Sync mode, as changing V-Sync mode is not supported by the graphics driver.
+     at: set_use_vsync (platform/linuxbsd/x11/gl_manager_x11.cpp:372)
+[sm1.7.10] PASS: 7.10 writer reaches B/epoch2 before standby crash
+[sm1.7.10] PASS: 7.10 observer reaches B/epoch2 before standby crash
+[sm1.7.10] PASS: 7.10 checkpoint observes B epoch2
+[sm1.7.10] PASS: 7.10 checkpoint carries revision1 observed-state identity
+[sm1.7.10] PASS: 7.10 checkpoint observes B epoch2
+[sm1.7.10] PASS: 7.10 checkpoint carries revision1 observed-state identity
+[sm1.7.10] PASS: 7.10 retired Authority A receives real OS kill
+[sm1.7.10] PASS: 7.10 original retired Authority A is dead
+[sm1.7.10] PASS: 7.10 Authority A port released after crash
+[sm1.7.10] PASS: 7.10 replacement Authority A launches as new inactive process
+[sm1.7.10] PASS: 7.10 replacement A starts inactive and cannot self-promote
+[sm1.7.10] PASS: 7.10 writer observes zero-write standby A recovery
+[sm1.7.10] PASS: 7.10 observer observes zero-write standby A recovery
+[sm1.7.10] PASS: 7.10 standby recovery leaves B/epoch2 ownership unchanged
+[sm1.7.10] PASS: 7.10 standby recovery leaves world revision unchanged
+[sm1.7.10] PASS: 7.10 standby recovery leaves B/epoch2 ownership unchanged
+[sm1.7.10] PASS: 7.10 standby recovery leaves world revision unchanged
+[sm1.7.10] PASS: 7.10 active Authority B receives real OS kill
+[sm1.7.10] PASS: 7.10 original active Authority B is dead
+[sm1.7.10] PASS: 7.10 Authority B port released after crash
+[sm1.7.10] PASS: 7.10 replacement Authority B launches as new inactive process
+[sm1.7.10] PASS: 7.10 replacement B starts inactive and cannot self-promote
+[sm1.7.10] PASS: 7.10 client A process PASS: { "active_recovered": true, "client_id": "a", "command_results": 4.0, "commands_sent": 4.0, "connect_count": 1.0, "display_server": "X11", "epochs": [1.0, 2.0, 3.0], "gateway_endpoint_id": "gateway/sm1/graphical-primary", "logical_player_id": "player/sm1-graphical-a", "passed": true, "player_entity_id": "entity/sm1-graphical-a", "process_id": 1569304.0, "reconnect_count": 0.0, "recovery_complete_events": 2.0, "recovery_pending_events": 2.0, "rendering_method": "gl_compatibility", "respawn_count": 0.0, "revisions": [1.0, 2.0, 3.0, 4.0], "route_history": ["authority/a", "authority/b", "authority/a"], "schema": "planet_simulator.sm1_authority_recovery_client_report.v1", "shared_state": { "action_count": 2.0, "last_input_sequence": 4.0, "last_operation_id": "operation/sm1/graphical/5", "logical_player_id": "player/sm1-graphical-a", "operation_ids": ["operation/sm1/authority-recovery/1", "operation/sm1/authority-recovery/2", "operation/sm1/authority-recovery/3", "operation/sm1/graphical/5"], "player_entity_id": "entity/sm1-graphical-a", "position_x": 0.0, "product_session_id": "session/sm1/graphical-acceptance", "schema": "planet_simulator.sm1_graphical_shared_state.v1", "spawn_generation": 1.0, "world_revision": 4.0 }, "spawn_generation": 1.0, "standby_recovered": true, "state": "COMPLETE" }
+[sm1.7.10] PASS: 7.10 client B process PASS: { "active_recovered": true, "client_id": "b", "command_results": 0.0, "commands_sent": 0.0, "connect_count": 1.0, "display_server": "X11", "epochs": [1.0, 2.0, 3.0], "gateway_endpoint_id": "gateway/sm1/graphical-primary", "logical_player_id": "player/sm1-graphical-a", "passed": true, "player_entity_id": "entity/sm1-graphical-a", "process_id": 1569305.0, "reconnect_count": 0.0, "recovery_complete_events": 2.0, "recovery_pending_events": 2.0, "rendering_method": "gl_compatibility", "respawn_count": 0.0, "revisions": [1.0, 2.0, 3.0, 4.0], "route_history": ["authority/a", "authority/b", "authority/a"], "schema": "planet_simulator.sm1_authority_recovery_client_report.v1", "shared_state": { "action_count": 2.0, "last_input_sequence": 4.0, "last_operation_id": "operation/sm1/graphical/5", "logical_player_id": "player/sm1-graphical-a", "operation_ids": ["operation/sm1/authority-recovery/1", "operation/sm1/authority-recovery/2", "operation/sm1/authority-recovery/3", "operation/sm1/graphical/5"], "player_entity_id": "entity/sm1-graphical-a", "position_x": 0.0, "product_session_id": "session/sm1/graphical-acceptance", "schema": "planet_simulator.sm1_graphical_shared_state.v1", "spawn_generation": 1.0, "world_revision": 4.0 }, "spawn_generation": 1.0, "standby_recovered": true, "state": "COMPLETE" }
+[sm1.7.10] PASS: 7.10 Gateway process PASS: { "active_authority_id": "authority/a", "authority_epoch": 3.0, "authority_recovery_blocks_writes": false, "authority_recovery_complete": true, "authority_runtime_recovery_pending": false, "bootstrap_authority_epoch": 1.0, "bootstrap_authority_id": "authority/a", "canonical_gameplay_owner": false, "client_connection_count": 2.0, "client_endpoint_changed": false, "client_ids": ["b", "a"], "counters": { "active_authority_recoveries": 1.0, "authority_disconnects": 2.0, "authority_messages": 21.0, "authority_reconnects": 2.0, "authority_recoveries": 1.0, "authority_recovery_events": 2.0, "authority_recovery_state_queries": 2.0, "authority_recovery_status_queries": 2.0, "authority_status_queries": 2.0, "busy_rejections": 0.0, "client_disconnects": 0.0, "client_messages": 6.0, "client_reconnects": 0.0, "commands": 4.0, "handoffs": 2.0, "restart_resume_sessions": 0.0, "resume_queries": 0.0, "resume_successes": 0.0, "route_changes": 2.0, "session_ready_announcements": 0.0, "standby_syncs": 2.0, "state_broadcasts": 4.0 }, "gateway_endpoint_id": "gateway/sm1/graphical-primary", "handoff_count": 2.0, "last_state_checksum": "4c539c71cc56512e42f875c96b422540799f259db27709aeea68764ab3893e71", "last_world_revision": 4.0, "network_conditions": { "authorities": { "authority/a": { "profile": {  }, "snapshot": {  } }, "authority/b": { "profile": {  }, "snapshot": {  } } }, "client": { "profile": {  }, "snapshot": {  } } }, "passed": true, "process_id": 1569189.0, "schema": "planet_simulator.sm1_graphical_gateway_report.v1", "state": "COMPLETE", "transfer_payload_retained": false }
+[sm1.7.10] PASS: 7.10 replacement Authority A process PASS: { "active": true, "authority_epoch": 3.0, "authority_id": "authority/a", "counters": { "activations": 1.0, "execute_requests": 1.0, "executed": 1.0, "freezes": 0.0, "recovery_activations": 0.0, "recovery_state_queries": 1.0, "replays": 0.0, "retires": 0.0, "standby_syncs": 1.0, "state_queries": 0.0, "status_queries": 1.0, "warm_loads": 1.0, "write_rejections": 0.0 }, "passed": true, "private_persistence_owner": false, "process_id": 1570235.0, "schema": "planet_simulator.sm1_graphical_authority_report.v1", "shared_state": { "action_count": 2.0, "last_input_sequence": 4.0, "last_operation_id": "operation/sm1/graphical/5", "logical_player_id": "player/sm1-graphical-a", "operation_ids": ["operation/sm1/authority-recovery/1", "operation/sm1/authority-recovery/2", "operation/sm1/authority-recovery/3", "operation/sm1/graphical/5"], "player_entity_id": "entity/sm1-graphical-a", "position_x": 0.0, "product_session_id": "session/sm1/graphical-acceptance", "schema": "planet_simulator.sm1_graphical_shared_state.v1", "spawn_generation": 1.0, "world_revision": 4.0 }, "state": "COMPLETE", "state_checksum": "4c539c71cc56512e42f875c96b422540799f259db27709aeea68764ab3893e71", "warm": false }
+[sm1.7.10] PASS: 7.10 replacement Authority B process PASS: { "active": false, "authority_epoch": 2.0, "authority_id": "authority/b", "counters": { "activations": 0.0, "execute_requests": 2.0, "executed": 2.0, "freezes": 1.0, "recovery_activations": 1.0, "recovery_state_queries": 0.0, "replays": 0.0, "retires": 1.0, "standby_syncs": 1.0, "state_queries": 0.0, "status_queries": 1.0, "warm_loads": 0.0, "write_rejections": 0.0 }, "passed": true, "private_persistence_owner": false, "process_id": 1571007.0, "schema": "planet_simulator.sm1_graphical_authority_report.v1", "shared_state": { "action_count": 1.0, "last_input_sequence": 3.0, "last_operation_id": "operation/sm1/authority-recovery/3", "logical_player_id": "player/sm1-graphical-a", "operation_ids": ["operation/sm1/authority-recovery/1", "operation/sm1/authority-recovery/2", "operation/sm1/authority-recovery/3"], "player_entity_id": "entity/sm1-graphical-a", "position_x": 0.0, "product_session_id": "session/sm1/graphical-acceptance", "schema": "planet_simulator.sm1_graphical_shared_state.v1", "spawn_generation": 1.0, "world_revision": 3.0 }, "state": "COMPLETE", "state_checksum": "c6791f6bce8500877767b01309fdbfedd1e133fba4d58685d926bde7d8dd4b9e", "warm": false }
+[sm1.7.10] PASS: 7.10 authority crash/restart uses seven distinct product OS process identities
+[sm1.7.10] PASS: 7.10 client uses real graphical DisplayServer
+[sm1.7.10] PASS: 7.10 client uses GL compatibility renderer
+[sm1.7.10] PASS: 7.10 clients remain on one Gateway transport connection
+[sm1.7.10] PASS: 7.10 Authority recovery causes zero respawn
+[sm1.7.10] PASS: 7.10 client observes standby and active Authority recovery
+[sm1.7.10] PASS: 7.10 client observes exactly two recovery windows
+[sm1.7.10] PASS: 7.10 Gateway endpoint stays stable
+[sm1.7.10] PASS: 7.10 player identity stays stable
+[sm1.7.10] PASS: 7.10 spawn generation remains one
+[sm1.7.10] PASS: 7.10 client sees epochs 1->2->3 with no recovery epoch inflation
+[sm1.7.10] PASS: 7.10 client sees revisions 1..4 without recovery mutation
+[sm1.7.10] PASS: 7.10 route changes only on gameplay handoffs
+[sm1.7.10] PASS: 7.10 client uses real graphical DisplayServer
+[sm1.7.10] PASS: 7.10 client uses GL compatibility renderer
+[sm1.7.10] PASS: 7.10 clients remain on one Gateway transport connection
+[sm1.7.10] PASS: 7.10 Authority recovery causes zero respawn
+[sm1.7.10] PASS: 7.10 client observes standby and active Authority recovery
+[sm1.7.10] PASS: 7.10 client observes exactly two recovery windows
+[sm1.7.10] PASS: 7.10 Gateway endpoint stays stable
+[sm1.7.10] PASS: 7.10 player identity stays stable
+[sm1.7.10] PASS: 7.10 spawn generation remains one
+[sm1.7.10] PASS: 7.10 client sees epochs 1->2->3 with no recovery epoch inflation
+[sm1.7.10] PASS: 7.10 client sees revisions 1..4 without recovery mutation
+[sm1.7.10] PASS: 7.10 route changes only on gameplay handoffs
+[sm1.7.10] PASS: 7.10 writer completes four logical operations across two Authority restarts
+[sm1.7.10] PASS: 7.10 observer remains read-only
+[sm1.7.10] PASS: 7.10 final owner is A epoch3
+[sm1.7.10] PASS: 7.10 two gameplay handoffs and revision4 survive Authority restarts
+[sm1.7.10] PASS: 7.10 Gateway observes and reconnects exactly two Authority processes
+[sm1.7.10] PASS: 7.10 each replacement is validated and sourced read-only
+[sm1.7.10] PASS: 7.10 both replacements receive one zero-write standby sync
+[sm1.7.10] PASS: 7.10 only the crashed active B is recovery-activated
+[sm1.7.10] PASS: 7.10 exactly two Authority recoveries complete
+[sm1.7.10] PASS: 7.10 recovery itself adds no gameplay revision
+[sm1.7.10] PASS: 7.10 Gateway ends with no recovery pending or write block
+[sm1.7.10] PASS: 7.10 Gateway remains non-canonical and retains no transfer payload
+[sm1.7.10] PASS: 7.10 replacement A becomes final active authority only through normal B->A handoff
+[sm1.7.10] PASS: 7.10 recovered B retires normally after B->A
+[sm1.7.10] PASS: 7.10 final revision/input watermark is monotonic
+[sm1.7.10] PASS: 7.10 OperationId ledger contains each logical operation exactly once
+[sm1.7.10] PASS: 7.10 final world state is correct
+[sm1.7.10] PASS: 7.10 replacement A is synced zero-write and never recovery-self-activates
+[sm1.7.10] PASS: 7.10 replacement B activates only after recovery sync
+[sm1.7.10] PASS: 7.10 recovered standby A supplies one read-only historical state query for B recovery
+[sm1.7.10] PASS: 7.10 post-restart executions partition 1 on A + 2 on B
+[sm1.7.10] PASS: 7.10 recovery causes zero OperationId replay
+[sm1.7.10] PASS: 7.10 recovery causes zero stale-authority writes
+[sm1.7.10] PASS: 7.10 replacements create no private persistence owner
+[sm1.7.10] PASS: 7.10 child process 1569304 exited cleanly
+[sm1.7.10] PASS: 7.10 child process 1569305 exited cleanly
+[sm1.7.10] PASS: 7.10 child process 1569189 exited cleanly
+[sm1.7.10] PASS: 7.10 child process 1570235 exited cleanly
+[sm1.7.10] PASS: 7.10 child process 1571007 exited cleanly
+SM1.7.10 Authority recovery: 89 assertions, 0 failures
+SM1_7_10_AUTHORITY_RECOVERY_PASS
+SM1_7_10_ITERATION=4/10
+Godot Engine v4.8.beta1.double.custom_build.4d10419ca - https://godotengine.org
+
+[sm1.7.10] PASS: 7.10 three isolated ENET ports allocated
+[sm1.7.10] PASS: 7.10 Xvfb graphical display started
+[sm1.7.10] PASS: 7.10 original Authority A/B processes launched
+[sm1.7.10] PASS: 7.10 original Authority A listening
+[sm1.7.10] PASS: 7.10 original Authority B listening
+[sm1.7.10] PASS: 7.10 Gateway process launched
+[sm1.7.10] PASS: 7.10 Gateway listening
+[sm1.7.10] PASS: 7.10 two graphical clients launched
+WARNING: Could not set V-Sync mode, as changing V-Sync mode is not supported by the graphics driver.
+     at: set_use_vsync (platform/linuxbsd/x11/gl_manager_x11.cpp:372)
+WARNING: Could not set V-Sync mode, as changing V-Sync mode is not supported by the graphics driver.
+     at: set_use_vsync (platform/linuxbsd/x11/gl_manager_x11.cpp:372)
+[sm1.7.10] PASS: 7.10 writer reaches B/epoch2 before standby crash
+[sm1.7.10] PASS: 7.10 observer reaches B/epoch2 before standby crash
+[sm1.7.10] PASS: 7.10 checkpoint observes B epoch2
+[sm1.7.10] PASS: 7.10 checkpoint carries revision1 observed-state identity
+[sm1.7.10] PASS: 7.10 checkpoint observes B epoch2
+[sm1.7.10] PASS: 7.10 checkpoint carries revision1 observed-state identity
+[sm1.7.10] PASS: 7.10 retired Authority A receives real OS kill
+[sm1.7.10] PASS: 7.10 original retired Authority A is dead
+[sm1.7.10] PASS: 7.10 Authority A port released after crash
+[sm1.7.10] PASS: 7.10 replacement Authority A launches as new inactive process
+[sm1.7.10] PASS: 7.10 replacement A starts inactive and cannot self-promote
+[sm1.7.10] PASS: 7.10 writer observes zero-write standby A recovery
+[sm1.7.10] PASS: 7.10 observer observes zero-write standby A recovery
+[sm1.7.10] PASS: 7.10 standby recovery leaves B/epoch2 ownership unchanged
+[sm1.7.10] PASS: 7.10 standby recovery leaves world revision unchanged
+[sm1.7.10] PASS: 7.10 standby recovery leaves B/epoch2 ownership unchanged
+[sm1.7.10] PASS: 7.10 standby recovery leaves world revision unchanged
+[sm1.7.10] PASS: 7.10 active Authority B receives real OS kill
+[sm1.7.10] PASS: 7.10 original active Authority B is dead
+[sm1.7.10] PASS: 7.10 Authority B port released after crash
+[sm1.7.10] PASS: 7.10 replacement Authority B launches as new inactive process
+[sm1.7.10] PASS: 7.10 replacement B starts inactive and cannot self-promote
+[sm1.7.10] PASS: 7.10 client A process PASS: { "active_recovered": true, "client_id": "a", "command_results": 4.0, "commands_sent": 4.0, "connect_count": 1.0, "display_server": "X11", "epochs": [1.0, 2.0, 3.0], "gateway_endpoint_id": "gateway/sm1/graphical-primary", "logical_player_id": "player/sm1-graphical-a", "passed": true, "player_entity_id": "entity/sm1-graphical-a", "process_id": 1572626.0, "reconnect_count": 0.0, "recovery_complete_events": 2.0, "recovery_pending_events": 2.0, "rendering_method": "gl_compatibility", "respawn_count": 0.0, "revisions": [1.0, 2.0, 3.0, 4.0], "route_history": ["authority/a", "authority/b", "authority/a"], "schema": "planet_simulator.sm1_authority_recovery_client_report.v1", "shared_state": { "action_count": 2.0, "last_input_sequence": 4.0, "last_operation_id": "operation/sm1/graphical/5", "logical_player_id": "player/sm1-graphical-a", "operation_ids": ["operation/sm1/authority-recovery/1", "operation/sm1/authority-recovery/2", "operation/sm1/authority-recovery/3", "operation/sm1/graphical/5"], "player_entity_id": "entity/sm1-graphical-a", "position_x": 0.0, "product_session_id": "session/sm1/graphical-acceptance", "schema": "planet_simulator.sm1_graphical_shared_state.v1", "spawn_generation": 1.0, "world_revision": 4.0 }, "spawn_generation": 1.0, "standby_recovered": true, "state": "COMPLETE" }
+[sm1.7.10] PASS: 7.10 client B process PASS: { "active_recovered": true, "client_id": "b", "command_results": 0.0, "commands_sent": 0.0, "connect_count": 1.0, "display_server": "X11", "epochs": [1.0, 2.0, 3.0], "gateway_endpoint_id": "gateway/sm1/graphical-primary", "logical_player_id": "player/sm1-graphical-a", "passed": true, "player_entity_id": "entity/sm1-graphical-a", "process_id": 1572627.0, "reconnect_count": 0.0, "recovery_complete_events": 2.0, "recovery_pending_events": 2.0, "rendering_method": "gl_compatibility", "respawn_count": 0.0, "revisions": [1.0, 2.0, 3.0, 4.0], "route_history": ["authority/a", "authority/b", "authority/a"], "schema": "planet_simulator.sm1_authority_recovery_client_report.v1", "shared_state": { "action_count": 2.0, "last_input_sequence": 4.0, "last_operation_id": "operation/sm1/graphical/5", "logical_player_id": "player/sm1-graphical-a", "operation_ids": ["operation/sm1/authority-recovery/1", "operation/sm1/authority-recovery/2", "operation/sm1/authority-recovery/3", "operation/sm1/graphical/5"], "player_entity_id": "entity/sm1-graphical-a", "position_x": 0.0, "product_session_id": "session/sm1/graphical-acceptance", "schema": "planet_simulator.sm1_graphical_shared_state.v1", "spawn_generation": 1.0, "world_revision": 4.0 }, "spawn_generation": 1.0, "standby_recovered": true, "state": "COMPLETE" }
+[sm1.7.10] PASS: 7.10 Gateway process PASS: { "active_authority_id": "authority/a", "authority_epoch": 3.0, "authority_recovery_blocks_writes": false, "authority_recovery_complete": true, "authority_runtime_recovery_pending": false, "bootstrap_authority_epoch": 1.0, "bootstrap_authority_id": "authority/a", "canonical_gameplay_owner": false, "client_connection_count": 2.0, "client_endpoint_changed": false, "client_ids": ["b", "a"], "counters": { "active_authority_recoveries": 1.0, "authority_disconnects": 2.0, "authority_messages": 21.0, "authority_reconnects": 2.0, "authority_recoveries": 1.0, "authority_recovery_events": 2.0, "authority_recovery_state_queries": 2.0, "authority_recovery_status_queries": 2.0, "authority_status_queries": 2.0, "busy_rejections": 0.0, "client_disconnects": 0.0, "client_messages": 6.0, "client_reconnects": 0.0, "commands": 4.0, "handoffs": 2.0, "restart_resume_sessions": 0.0, "resume_queries": 0.0, "resume_successes": 0.0, "route_changes": 2.0, "session_ready_announcements": 0.0, "standby_syncs": 2.0, "state_broadcasts": 4.0 }, "gateway_endpoint_id": "gateway/sm1/graphical-primary", "handoff_count": 2.0, "last_state_checksum": "4c539c71cc56512e42f875c96b422540799f259db27709aeea68764ab3893e71", "last_world_revision": 4.0, "network_conditions": { "authorities": { "authority/a": { "profile": {  }, "snapshot": {  } }, "authority/b": { "profile": {  }, "snapshot": {  } } }, "client": { "profile": {  }, "snapshot": {  } } }, "passed": true, "process_id": 1572514.0, "schema": "planet_simulator.sm1_graphical_gateway_report.v1", "state": "COMPLETE", "transfer_payload_retained": false }
+[sm1.7.10] PASS: 7.10 replacement Authority A process PASS: { "active": true, "authority_epoch": 3.0, "authority_id": "authority/a", "counters": { "activations": 1.0, "execute_requests": 1.0, "executed": 1.0, "freezes": 0.0, "recovery_activations": 0.0, "recovery_state_queries": 1.0, "replays": 0.0, "retires": 0.0, "standby_syncs": 1.0, "state_queries": 0.0, "status_queries": 1.0, "warm_loads": 1.0, "write_rejections": 0.0 }, "passed": true, "private_persistence_owner": false, "process_id": 1573397.0, "schema": "planet_simulator.sm1_graphical_authority_report.v1", "shared_state": { "action_count": 2.0, "last_input_sequence": 4.0, "last_operation_id": "operation/sm1/graphical/5", "logical_player_id": "player/sm1-graphical-a", "operation_ids": ["operation/sm1/authority-recovery/1", "operation/sm1/authority-recovery/2", "operation/sm1/authority-recovery/3", "operation/sm1/graphical/5"], "player_entity_id": "entity/sm1-graphical-a", "position_x": 0.0, "product_session_id": "session/sm1/graphical-acceptance", "schema": "planet_simulator.sm1_graphical_shared_state.v1", "spawn_generation": 1.0, "world_revision": 4.0 }, "state": "COMPLETE", "state_checksum": "4c539c71cc56512e42f875c96b422540799f259db27709aeea68764ab3893e71", "warm": false }
+[sm1.7.10] PASS: 7.10 replacement Authority B process PASS: { "active": false, "authority_epoch": 2.0, "authority_id": "authority/b", "counters": { "activations": 0.0, "execute_requests": 2.0, "executed": 2.0, "freezes": 1.0, "recovery_activations": 1.0, "recovery_state_queries": 0.0, "replays": 0.0, "retires": 1.0, "standby_syncs": 1.0, "state_queries": 0.0, "status_queries": 1.0, "warm_loads": 0.0, "write_rejections": 0.0 }, "passed": true, "private_persistence_owner": false, "process_id": 1574881.0, "schema": "planet_simulator.sm1_graphical_authority_report.v1", "shared_state": { "action_count": 1.0, "last_input_sequence": 3.0, "last_operation_id": "operation/sm1/authority-recovery/3", "logical_player_id": "player/sm1-graphical-a", "operation_ids": ["operation/sm1/authority-recovery/1", "operation/sm1/authority-recovery/2", "operation/sm1/authority-recovery/3"], "player_entity_id": "entity/sm1-graphical-a", "position_x": 0.0, "product_session_id": "session/sm1/graphical-acceptance", "schema": "planet_simulator.sm1_graphical_shared_state.v1", "spawn_generation": 1.0, "world_revision": 3.0 }, "state": "COMPLETE", "state_checksum": "c6791f6bce8500877767b01309fdbfedd1e133fba4d58685d926bde7d8dd4b9e", "warm": false }
+[sm1.7.10] PASS: 7.10 authority crash/restart uses seven distinct product OS process identities
+[sm1.7.10] PASS: 7.10 client uses real graphical DisplayServer
+[sm1.7.10] PASS: 7.10 client uses GL compatibility renderer
+[sm1.7.10] PASS: 7.10 clients remain on one Gateway transport connection
+[sm1.7.10] PASS: 7.10 Authority recovery causes zero respawn
+[sm1.7.10] PASS: 7.10 client observes standby and active Authority recovery
+[sm1.7.10] PASS: 7.10 client observes exactly two recovery windows
+[sm1.7.10] PASS: 7.10 Gateway endpoint stays stable
+[sm1.7.10] PASS: 7.10 player identity stays stable
+[sm1.7.10] PASS: 7.10 spawn generation remains one
+[sm1.7.10] PASS: 7.10 client sees epochs 1->2->3 with no recovery epoch inflation
+[sm1.7.10] PASS: 7.10 client sees revisions 1..4 without recovery mutation
+[sm1.7.10] PASS: 7.10 route changes only on gameplay handoffs
+[sm1.7.10] PASS: 7.10 client uses real graphical DisplayServer
+[sm1.7.10] PASS: 7.10 client uses GL compatibility renderer
+[sm1.7.10] PASS: 7.10 clients remain on one Gateway transport connection
+[sm1.7.10] PASS: 7.10 Authority recovery causes zero respawn
+[sm1.7.10] PASS: 7.10 client observes standby and active Authority recovery
+[sm1.7.10] PASS: 7.10 client observes exactly two recovery windows
+[sm1.7.10] PASS: 7.10 Gateway endpoint stays stable
+[sm1.7.10] PASS: 7.10 player identity stays stable
+[sm1.7.10] PASS: 7.10 spawn generation remains one
+[sm1.7.10] PASS: 7.10 client sees epochs 1->2->3 with no recovery epoch inflation
+[sm1.7.10] PASS: 7.10 client sees revisions 1..4 without recovery mutation
+[sm1.7.10] PASS: 7.10 route changes only on gameplay handoffs
+[sm1.7.10] PASS: 7.10 writer completes four logical operations across two Authority restarts
+[sm1.7.10] PASS: 7.10 observer remains read-only
+[sm1.7.10] PASS: 7.10 final owner is A epoch3
+[sm1.7.10] PASS: 7.10 two gameplay handoffs and revision4 survive Authority restarts
+[sm1.7.10] PASS: 7.10 Gateway observes and reconnects exactly two Authority processes
+[sm1.7.10] PASS: 7.10 each replacement is validated and sourced read-only
+[sm1.7.10] PASS: 7.10 both replacements receive one zero-write standby sync
+[sm1.7.10] PASS: 7.10 only the crashed active B is recovery-activated
+[sm1.7.10] PASS: 7.10 exactly two Authority recoveries complete
+[sm1.7.10] PASS: 7.10 recovery itself adds no gameplay revision
+[sm1.7.10] PASS: 7.10 Gateway ends with no recovery pending or write block
+[sm1.7.10] PASS: 7.10 Gateway remains non-canonical and retains no transfer payload
+[sm1.7.10] PASS: 7.10 replacement A becomes final active authority only through normal B->A handoff
+[sm1.7.10] PASS: 7.10 recovered B retires normally after B->A
+[sm1.7.10] PASS: 7.10 final revision/input watermark is monotonic
+[sm1.7.10] PASS: 7.10 OperationId ledger contains each logical operation exactly once
+[sm1.7.10] PASS: 7.10 final world state is correct
+[sm1.7.10] PASS: 7.10 replacement A is synced zero-write and never recovery-self-activates
+[sm1.7.10] PASS: 7.10 replacement B activates only after recovery sync
+[sm1.7.10] PASS: 7.10 recovered standby A supplies one read-only historical state query for B recovery
+[sm1.7.10] PASS: 7.10 post-restart executions partition 1 on A + 2 on B
+[sm1.7.10] PASS: 7.10 recovery causes zero OperationId replay
+[sm1.7.10] PASS: 7.10 recovery causes zero stale-authority writes
+[sm1.7.10] PASS: 7.10 replacements create no private persistence owner
+[sm1.7.10] PASS: 7.10 child process 1572626 exited cleanly
+[sm1.7.10] PASS: 7.10 child process 1572627 exited cleanly
+[sm1.7.10] PASS: 7.10 child process 1572514 exited cleanly
+[sm1.7.10] PASS: 7.10 child process 1573397 exited cleanly
+[sm1.7.10] PASS: 7.10 child process 1574881 exited cleanly
+SM1.7.10 Authority recovery: 89 assertions, 0 failures
+SM1_7_10_AUTHORITY_RECOVERY_PASS
+SM1_7_10_ITERATION=5/10
+Godot Engine v4.8.beta1.double.custom_build.4d10419ca - https://godotengine.org
+
+[sm1.7.10] PASS: 7.10 three isolated ENET ports allocated
+[sm1.7.10] PASS: 7.10 Xvfb graphical display started
+[sm1.7.10] PASS: 7.10 original Authority A/B processes launched
+[sm1.7.10] PASS: 7.10 original Authority A listening
+[sm1.7.10] PASS: 7.10 original Authority B listening
+[sm1.7.10] PASS: 7.10 Gateway process launched
+[sm1.7.10] PASS: 7.10 Gateway listening
+[sm1.7.10] PASS: 7.10 two graphical clients launched
+WARNING: Could not set V-Sync mode, as changing V-Sync mode is not supported by the graphics driver.
+     at: set_use_vsync (platform/linuxbsd/x11/gl_manager_x11.cpp:372)
+WARNING: Could not set V-Sync mode, as changing V-Sync mode is not supported by the graphics driver.
+     at: set_use_vsync (platform/linuxbsd/x11/gl_manager_x11.cpp:372)
+[sm1.7.10] PASS: 7.10 writer reaches B/epoch2 before standby crash
+[sm1.7.10] PASS: 7.10 observer reaches B/epoch2 before standby crash
+[sm1.7.10] PASS: 7.10 checkpoint observes B epoch2
+[sm1.7.10] PASS: 7.10 checkpoint carries revision1 observed-state identity
+[sm1.7.10] PASS: 7.10 checkpoint observes B epoch2
+[sm1.7.10] PASS: 7.10 checkpoint carries revision1 observed-state identity
+[sm1.7.10] PASS: 7.10 retired Authority A receives real OS kill
+[sm1.7.10] PASS: 7.10 original retired Authority A is dead
+[sm1.7.10] PASS: 7.10 Authority A port released after crash
+[sm1.7.10] PASS: 7.10 replacement Authority A launches as new inactive process
+[sm1.7.10] PASS: 7.10 replacement A starts inactive and cannot self-promote
+[sm1.7.10] PASS: 7.10 writer observes zero-write standby A recovery
+[sm1.7.10] PASS: 7.10 observer observes zero-write standby A recovery
+[sm1.7.10] PASS: 7.10 standby recovery leaves B/epoch2 ownership unchanged
+[sm1.7.10] PASS: 7.10 standby recovery leaves world revision unchanged
+[sm1.7.10] PASS: 7.10 standby recovery leaves B/epoch2 ownership unchanged
+[sm1.7.10] PASS: 7.10 standby recovery leaves world revision unchanged
+[sm1.7.10] PASS: 7.10 active Authority B receives real OS kill
+[sm1.7.10] PASS: 7.10 original active Authority B is dead
+[sm1.7.10] PASS: 7.10 Authority B port released after crash
+[sm1.7.10] PASS: 7.10 replacement Authority B launches as new inactive process
+[sm1.7.10] PASS: 7.10 replacement B starts inactive and cannot self-promote
+[sm1.7.10] PASS: 7.10 client A process PASS: { "active_recovered": true, "client_id": "a", "command_results": 4.0, "commands_sent": 4.0, "connect_count": 1.0, "display_server": "X11", "epochs": [1.0, 2.0, 3.0], "gateway_endpoint_id": "gateway/sm1/graphical-primary", "logical_player_id": "player/sm1-graphical-a", "passed": true, "player_entity_id": "entity/sm1-graphical-a", "process_id": 1577675.0, "reconnect_count": 0.0, "recovery_complete_events": 2.0, "recovery_pending_events": 2.0, "rendering_method": "gl_compatibility", "respawn_count": 0.0, "revisions": [1.0, 2.0, 3.0, 4.0], "route_history": ["authority/a", "authority/b", "authority/a"], "schema": "planet_simulator.sm1_authority_recovery_client_report.v1", "shared_state": { "action_count": 2.0, "last_input_sequence": 4.0, "last_operation_id": "operation/sm1/graphical/5", "logical_player_id": "player/sm1-graphical-a", "operation_ids": ["operation/sm1/authority-recovery/1", "operation/sm1/authority-recovery/2", "operation/sm1/authority-recovery/3", "operation/sm1/graphical/5"], "player_entity_id": "entity/sm1-graphical-a", "position_x": 0.0, "product_session_id": "session/sm1/graphical-acceptance", "schema": "planet_simulator.sm1_graphical_shared_state.v1", "spawn_generation": 1.0, "world_revision": 4.0 }, "spawn_generation": 1.0, "standby_recovered": true, "state": "COMPLETE" }
+[sm1.7.10] PASS: 7.10 client B process PASS: { "active_recovered": true, "client_id": "b", "command_results": 0.0, "commands_sent": 0.0, "connect_count": 1.0, "display_server": "X11", "epochs": [1.0, 2.0, 3.0], "gateway_endpoint_id": "gateway/sm1/graphical-primary", "logical_player_id": "player/sm1-graphical-a", "passed": true, "player_entity_id": "entity/sm1-graphical-a", "process_id": 1577676.0, "reconnect_count": 0.0, "recovery_complete_events": 2.0, "recovery_pending_events": 2.0, "rendering_method": "gl_compatibility", "respawn_count": 0.0, "revisions": [1.0, 2.0, 3.0, 4.0], "route_history": ["authority/a", "authority/b", "authority/a"], "schema": "planet_simulator.sm1_authority_recovery_client_report.v1", "shared_state": { "action_count": 2.0, "last_input_sequence": 4.0, "last_operation_id": "operation/sm1/graphical/5", "logical_player_id": "player/sm1-graphical-a", "operation_ids": ["operation/sm1/authority-recovery/1", "operation/sm1/authority-recovery/2", "operation/sm1/authority-recovery/3", "operation/sm1/graphical/5"], "player_entity_id": "entity/sm1-graphical-a", "position_x": 0.0, "product_session_id": "session/sm1/graphical-acceptance", "schema": "planet_simulator.sm1_graphical_shared_state.v1", "spawn_generation": 1.0, "world_revision": 4.0 }, "spawn_generation": 1.0, "standby_recovered": true, "state": "COMPLETE" }
+[sm1.7.10] PASS: 7.10 Gateway process PASS: { "active_authority_id": "authority/a", "authority_epoch": 3.0, "authority_recovery_blocks_writes": false, "authority_recovery_complete": true, "authority_runtime_recovery_pending": false, "bootstrap_authority_epoch": 1.0, "bootstrap_authority_id": "authority/a", "canonical_gameplay_owner": false, "client_connection_count": 2.0, "client_endpoint_changed": false, "client_ids": ["b", "a"], "counters": { "active_authority_recoveries": 1.0, "authority_disconnects": 2.0, "authority_messages": 21.0, "authority_reconnects": 2.0, "authority_recoveries": 1.0, "authority_recovery_events": 2.0, "authority_recovery_state_queries": 2.0, "authority_recovery_status_queries": 2.0, "authority_status_queries": 2.0, "busy_rejections": 0.0, "client_disconnects": 0.0, "client_messages": 6.0, "client_reconnects": 0.0, "commands": 4.0, "handoffs": 2.0, "restart_resume_sessions": 0.0, "resume_queries": 0.0, "resume_successes": 0.0, "route_changes": 2.0, "session_ready_announcements": 0.0, "standby_syncs": 2.0, "state_broadcasts": 4.0 }, "gateway_endpoint_id": "gateway/sm1/graphical-primary", "handoff_count": 2.0, "last_state_checksum": "4c539c71cc56512e42f875c96b422540799f259db27709aeea68764ab3893e71", "last_world_revision": 4.0, "network_conditions": { "authorities": { "authority/a": { "profile": {  }, "snapshot": {  } }, "authority/b": { "profile": {  }, "snapshot": {  } } }, "client": { "profile": {  }, "snapshot": {  } } }, "passed": true, "process_id": 1577368.0, "schema": "planet_simulator.sm1_graphical_gateway_report.v1", "state": "COMPLETE", "transfer_payload_retained": false }
+[sm1.7.10] PASS: 7.10 replacement Authority A process PASS: { "active": true, "authority_epoch": 3.0, "authority_id": "authority/a", "counters": { "activations": 1.0, "execute_requests": 1.0, "executed": 1.0, "freezes": 0.0, "recovery_activations": 0.0, "recovery_state_queries": 1.0, "replays": 0.0, "retires": 0.0, "standby_syncs": 1.0, "state_queries": 0.0, "status_queries": 1.0, "warm_loads": 1.0, "write_rejections": 0.0 }, "passed": true, "private_persistence_owner": false, "process_id": 1578350.0, "schema": "planet_simulator.sm1_graphical_authority_report.v1", "shared_state": { "action_count": 2.0, "last_input_sequence": 4.0, "last_operation_id": "operation/sm1/graphical/5", "logical_player_id": "player/sm1-graphical-a", "operation_ids": ["operation/sm1/authority-recovery/1", "operation/sm1/authority-recovery/2", "operation/sm1/authority-recovery/3", "operation/sm1/graphical/5"], "player_entity_id": "entity/sm1-graphical-a", "position_x": 0.0, "product_session_id": "session/sm1/graphical-acceptance", "schema": "planet_simulator.sm1_graphical_shared_state.v1", "spawn_generation": 1.0, "world_revision": 4.0 }, "state": "COMPLETE", "state_checksum": "4c539c71cc56512e42f875c96b422540799f259db27709aeea68764ab3893e71", "warm": false }
+[sm1.7.10] PASS: 7.10 replacement Authority B process PASS: { "active": false, "authority_epoch": 2.0, "authority_id": "authority/b", "counters": { "activations": 0.0, "execute_requests": 2.0, "executed": 2.0, "freezes": 1.0, "recovery_activations": 1.0, "recovery_state_queries": 0.0, "replays": 0.0, "retires": 1.0, "standby_syncs": 1.0, "state_queries": 0.0, "status_queries": 1.0, "warm_loads": 0.0, "write_rejections": 0.0 }, "passed": true, "private_persistence_owner": false, "process_id": 1579992.0, "schema": "planet_simulator.sm1_graphical_authority_report.v1", "shared_state": { "action_count": 1.0, "last_input_sequence": 3.0, "last_operation_id": "operation/sm1/authority-recovery/3", "logical_player_id": "player/sm1-graphical-a", "operation_ids": ["operation/sm1/authority-recovery/1", "operation/sm1/authority-recovery/2", "operation/sm1/authority-recovery/3"], "player_entity_id": "entity/sm1-graphical-a", "position_x": 0.0, "product_session_id": "session/sm1/graphical-acceptance", "schema": "planet_simulator.sm1_graphical_shared_state.v1", "spawn_generation": 1.0, "world_revision": 3.0 }, "state": "COMPLETE", "state_checksum": "c6791f6bce8500877767b01309fdbfedd1e133fba4d58685d926bde7d8dd4b9e", "warm": false }
+[sm1.7.10] PASS: 7.10 authority crash/restart uses seven distinct product OS process identities
+[sm1.7.10] PASS: 7.10 client uses real graphical DisplayServer
+[sm1.7.10] PASS: 7.10 client uses GL compatibility renderer
+[sm1.7.10] PASS: 7.10 clients remain on one Gateway transport connection
+[sm1.7.10] PASS: 7.10 Authority recovery causes zero respawn
+[sm1.7.10] PASS: 7.10 client observes standby and active Authority recovery
+[sm1.7.10] PASS: 7.10 client observes exactly two recovery windows
+[sm1.7.10] PASS: 7.10 Gateway endpoint stays stable
+[sm1.7.10] PASS: 7.10 player identity stays stable
+[sm1.7.10] PASS: 7.10 spawn generation remains one
+[sm1.7.10] PASS: 7.10 client sees epochs 1->2->3 with no recovery epoch inflation
+[sm1.7.10] PASS: 7.10 client sees revisions 1..4 without recovery mutation
+[sm1.7.10] PASS: 7.10 route changes only on gameplay handoffs
+[sm1.7.10] PASS: 7.10 client uses real graphical DisplayServer
+[sm1.7.10] PASS: 7.10 client uses GL compatibility renderer
+[sm1.7.10] PASS: 7.10 clients remain on one Gateway transport connection
+[sm1.7.10] PASS: 7.10 Authority recovery causes zero respawn
+[sm1.7.10] PASS: 7.10 client observes standby and active Authority recovery
+[sm1.7.10] PASS: 7.10 client observes exactly two recovery windows
+[sm1.7.10] PASS: 7.10 Gateway endpoint stays stable
+[sm1.7.10] PASS: 7.10 player identity stays stable
+[sm1.7.10] PASS: 7.10 spawn generation remains one
+[sm1.7.10] PASS: 7.10 client sees epochs 1->2->3 with no recovery epoch inflation
+[sm1.7.10] PASS: 7.10 client sees revisions 1..4 without recovery mutation
+[sm1.7.10] PASS: 7.10 route changes only on gameplay handoffs
+[sm1.7.10] PASS: 7.10 writer completes four logical operations across two Authority restarts
+[sm1.7.10] PASS: 7.10 observer remains read-only
+[sm1.7.10] PASS: 7.10 final owner is A epoch3
+[sm1.7.10] PASS: 7.10 two gameplay handoffs and revision4 survive Authority restarts
+[sm1.7.10] PASS: 7.10 Gateway observes and reconnects exactly two Authority processes
+[sm1.7.10] PASS: 7.10 each replacement is validated and sourced read-only
+[sm1.7.10] PASS: 7.10 both replacements receive one zero-write standby sync
+[sm1.7.10] PASS: 7.10 only the crashed active B is recovery-activated
+[sm1.7.10] PASS: 7.10 exactly two Authority recoveries complete
+[sm1.7.10] PASS: 7.10 recovery itself adds no gameplay revision
+[sm1.7.10] PASS: 7.10 Gateway ends with no recovery pending or write block
+[sm1.7.10] PASS: 7.10 Gateway remains non-canonical and retains no transfer payload
+[sm1.7.10] PASS: 7.10 replacement A becomes final active authority only through normal B->A handoff
+[sm1.7.10] PASS: 7.10 recovered B retires normally after B->A
+[sm1.7.10] PASS: 7.10 final revision/input watermark is monotonic
+[sm1.7.10] PASS: 7.10 OperationId ledger contains each logical operation exactly once
+[sm1.7.10] PASS: 7.10 final world state is correct
+[sm1.7.10] PASS: 7.10 replacement A is synced zero-write and never recovery-self-activates
+[sm1.7.10] PASS: 7.10 replacement B activates only after recovery sync
+[sm1.7.10] PASS: 7.10 recovered standby A supplies one read-only historical state query for B recovery
+[sm1.7.10] PASS: 7.10 post-restart executions partition 1 on A + 2 on B
+[sm1.7.10] PASS: 7.10 recovery causes zero OperationId replay
+[sm1.7.10] PASS: 7.10 recovery causes zero stale-authority writes
+[sm1.7.10] PASS: 7.10 replacements create no private persistence owner
+[sm1.7.10] PASS: 7.10 child process 1577675 exited cleanly
+[sm1.7.10] PASS: 7.10 child process 1577676 exited cleanly
+[sm1.7.10] PASS: 7.10 child process 1577368 exited cleanly
+[sm1.7.10] PASS: 7.10 child process 1578350 exited cleanly
+[sm1.7.10] PASS: 7.10 child process 1579992 exited cleanly
+SM1.7.10 Authority recovery: 89 assertions, 0 failures
+SM1_7_10_AUTHORITY_RECOVERY_PASS
+SM1_7_10_ITERATION=6/10
+Godot Engine v4.8.beta1.double.custom_build.4d10419ca - https://godotengine.org
+
+[sm1.7.10] PASS: 7.10 three isolated ENET ports allocated
+[sm1.7.10] PASS: 7.10 Xvfb graphical display started
+[sm1.7.10] PASS: 7.10 original Authority A/B processes launched
+[sm1.7.10] PASS: 7.10 original Authority A listening
+[sm1.7.10] PASS: 7.10 original Authority B listening
+[sm1.7.10] PASS: 7.10 Gateway process launched
+[sm1.7.10] PASS: 7.10 Gateway listening
+[sm1.7.10] PASS: 7.10 two graphical clients launched
+WARNING: Could not set V-Sync mode, as changing V-Sync mode is not supported by the graphics driver.
+     at: set_use_vsync (platform/linuxbsd/x11/gl_manager_x11.cpp:372)
+WARNING: Could not set V-Sync mode, as changing V-Sync mode is not supported by the graphics driver.
+     at: set_use_vsync (platform/linuxbsd/x11/gl_manager_x11.cpp:372)
+[sm1.7.10] PASS: 7.10 writer reaches B/epoch2 before standby crash
+[sm1.7.10] PASS: 7.10 observer reaches B/epoch2 before standby crash
+[sm1.7.10] PASS: 7.10 checkpoint observes B epoch2
+[sm1.7.10] PASS: 7.10 checkpoint carries revision1 observed-state identity
+[sm1.7.10] PASS: 7.10 checkpoint observes B epoch2
+[sm1.7.10] PASS: 7.10 checkpoint carries revision1 observed-state identity
+[sm1.7.10] PASS: 7.10 retired Authority A receives real OS kill
+[sm1.7.10] PASS: 7.10 original retired Authority A is dead
+[sm1.7.10] PASS: 7.10 Authority A port released after crash
+[sm1.7.10] PASS: 7.10 replacement Authority A launches as new inactive process
+[sm1.7.10] PASS: 7.10 replacement A starts inactive and cannot self-promote
+[sm1.7.10] PASS: 7.10 writer observes zero-write standby A recovery
+[sm1.7.10] PASS: 7.10 observer observes zero-write standby A recovery
+[sm1.7.10] PASS: 7.10 standby recovery leaves B/epoch2 ownership unchanged
+[sm1.7.10] PASS: 7.10 standby recovery leaves world revision unchanged
+[sm1.7.10] PASS: 7.10 standby recovery leaves B/epoch2 ownership unchanged
+[sm1.7.10] PASS: 7.10 standby recovery leaves world revision unchanged
+[sm1.7.10] PASS: 7.10 active Authority B receives real OS kill
+[sm1.7.10] PASS: 7.10 original active Authority B is dead
+[sm1.7.10] PASS: 7.10 Authority B port released after crash
+[sm1.7.10] PASS: 7.10 replacement Authority B launches as new inactive process
+[sm1.7.10] PASS: 7.10 replacement B starts inactive and cannot self-promote
+[sm1.7.10] PASS: 7.10 client A process PASS: { "active_recovered": true, "client_id": "a", "command_results": 4.0, "commands_sent": 4.0, "connect_count": 1.0, "display_server": "X11", "epochs": [1.0, 2.0, 3.0], "gateway_endpoint_id": "gateway/sm1/graphical-primary", "logical_player_id": "player/sm1-graphical-a", "passed": true, "player_entity_id": "entity/sm1-graphical-a", "process_id": 1581512.0, "reconnect_count": 0.0, "recovery_complete_events": 2.0, "recovery_pending_events": 2.0, "rendering_method": "gl_compatibility", "respawn_count": 0.0, "revisions": [1.0, 2.0, 3.0, 4.0], "route_history": ["authority/a", "authority/b", "authority/a"], "schema": "planet_simulator.sm1_authority_recovery_client_report.v1", "shared_state": { "action_count": 2.0, "last_input_sequence": 4.0, "last_operation_id": "operation/sm1/graphical/5", "logical_player_id": "player/sm1-graphical-a", "operation_ids": ["operation/sm1/authority-recovery/1", "operation/sm1/authority-recovery/2", "operation/sm1/authority-recovery/3", "operation/sm1/graphical/5"], "player_entity_id": "entity/sm1-graphical-a", "position_x": 0.0, "product_session_id": "session/sm1/graphical-acceptance", "schema": "planet_simulator.sm1_graphical_shared_state.v1", "spawn_generation": 1.0, "world_revision": 4.0 }, "spawn_generation": 1.0, "standby_recovered": true, "state": "COMPLETE" }
+[sm1.7.10] PASS: 7.10 client B process PASS: { "active_recovered": true, "client_id": "b", "command_results": 0.0, "commands_sent": 0.0, "connect_count": 1.0, "display_server": "X11", "epochs": [1.0, 2.0, 3.0], "gateway_endpoint_id": "gateway/sm1/graphical-primary", "logical_player_id": "player/sm1-graphical-a", "passed": true, "player_entity_id": "entity/sm1-graphical-a", "process_id": 1581513.0, "reconnect_count": 0.0, "recovery_complete_events": 2.0, "recovery_pending_events": 2.0, "rendering_method": "gl_compatibility", "respawn_count": 0.0, "revisions": [1.0, 2.0, 3.0, 4.0], "route_history": ["authority/a", "authority/b", "authority/a"], "schema": "planet_simulator.sm1_authority_recovery_client_report.v1", "shared_state": { "action_count": 2.0, "last_input_sequence": 4.0, "last_operation_id": "operation/sm1/graphical/5", "logical_player_id": "player/sm1-graphical-a", "operation_ids": ["operation/sm1/authority-recovery/1", "operation/sm1/authority-recovery/2", "operation/sm1/authority-recovery/3", "operation/sm1/graphical/5"], "player_entity_id": "entity/sm1-graphical-a", "position_x": 0.0, "product_session_id": "session/sm1/graphical-acceptance", "schema": "planet_simulator.sm1_graphical_shared_state.v1", "spawn_generation": 1.0, "world_revision": 4.0 }, "spawn_generation": 1.0, "standby_recovered": true, "state": "COMPLETE" }
+[sm1.7.10] PASS: 7.10 Gateway process PASS: { "active_authority_id": "authority/a", "authority_epoch": 3.0, "authority_recovery_blocks_writes": false, "authority_recovery_complete": true, "authority_runtime_recovery_pending": false, "bootstrap_authority_epoch": 1.0, "bootstrap_authority_id": "authority/a", "canonical_gameplay_owner": false, "client_connection_count": 2.0, "client_endpoint_changed": false, "client_ids": ["a", "b"], "counters": { "active_authority_recoveries": 1.0, "authority_disconnects": 2.0, "authority_messages": 21.0, "authority_reconnects": 2.0, "authority_recoveries": 1.0, "authority_recovery_events": 2.0, "authority_recovery_state_queries": 2.0, "authority_recovery_status_queries": 2.0, "authority_status_queries": 2.0, "busy_rejections": 0.0, "client_disconnects": 0.0, "client_messages": 6.0, "client_reconnects": 0.0, "commands": 4.0, "handoffs": 2.0, "restart_resume_sessions": 0.0, "resume_queries": 0.0, "resume_successes": 0.0, "route_changes": 2.0, "session_ready_announcements": 0.0, "standby_syncs": 2.0, "state_broadcasts": 4.0 }, "gateway_endpoint_id": "gateway/sm1/graphical-primary", "handoff_count": 2.0, "last_state_checksum": "4c539c71cc56512e42f875c96b422540799f259db27709aeea68764ab3893e71", "last_world_revision": 4.0, "network_conditions": { "authorities": { "authority/a": { "profile": {  }, "snapshot": {  } }, "authority/b": { "profile": {  }, "snapshot": {  } } }, "client": { "profile": {  }, "snapshot": {  } } }, "passed": true, "process_id": 1581408.0, "schema": "planet_simulator.sm1_graphical_gateway_report.v1", "state": "COMPLETE", "transfer_payload_retained": false }
+[sm1.7.10] PASS: 7.10 replacement Authority A process PASS: { "active": true, "authority_epoch": 3.0, "authority_id": "authority/a", "counters": { "activations": 1.0, "execute_requests": 1.0, "executed": 1.0, "freezes": 0.0, "recovery_activations": 0.0, "recovery_state_queries": 1.0, "replays": 0.0, "retires": 0.0, "standby_syncs": 1.0, "state_queries": 0.0, "status_queries": 1.0, "warm_loads": 1.0, "write_rejections": 0.0 }, "passed": true, "private_persistence_owner": false, "process_id": 1582396.0, "schema": "planet_simulator.sm1_graphical_authority_report.v1", "shared_state": { "action_count": 2.0, "last_input_sequence": 4.0, "last_operation_id": "operation/sm1/graphical/5", "logical_player_id": "player/sm1-graphical-a", "operation_ids": ["operation/sm1/authority-recovery/1", "operation/sm1/authority-recovery/2", "operation/sm1/authority-recovery/3", "operation/sm1/graphical/5"], "player_entity_id": "entity/sm1-graphical-a", "position_x": 0.0, "product_session_id": "session/sm1/graphical-acceptance", "schema": "planet_simulator.sm1_graphical_shared_state.v1", "spawn_generation": 1.0, "world_revision": 4.0 }, "state": "COMPLETE", "state_checksum": "4c539c71cc56512e42f875c96b422540799f259db27709aeea68764ab3893e71", "warm": false }
+[sm1.7.10] PASS: 7.10 replacement Authority B process PASS: { "active": false, "authority_epoch": 2.0, "authority_id": "authority/b", "counters": { "activations": 0.0, "execute_requests": 2.0, "executed": 2.0, "freezes": 1.0, "recovery_activations": 1.0, "recovery_state_queries": 0.0, "replays": 0.0, "retires": 1.0, "standby_syncs": 1.0, "state_queries": 0.0, "status_queries": 1.0, "warm_loads": 0.0, "write_rejections": 0.0 }, "passed": true, "private_persistence_owner": false, "process_id": 1583933.0, "schema": "planet_simulator.sm1_graphical_authority_report.v1", "shared_state": { "action_count": 1.0, "last_input_sequence": 3.0, "last_operation_id": "operation/sm1/authority-recovery/3", "logical_player_id": "player/sm1-graphical-a", "operation_ids": ["operation/sm1/authority-recovery/1", "operation/sm1/authority-recovery/2", "operation/sm1/authority-recovery/3"], "player_entity_id": "entity/sm1-graphical-a", "position_x": 0.0, "product_session_id": "session/sm1/graphical-acceptance", "schema": "planet_simulator.sm1_graphical_shared_state.v1", "spawn_generation": 1.0, "world_revision": 3.0 }, "state": "COMPLETE", "state_checksum": "c6791f6bce8500877767b01309fdbfedd1e133fba4d58685d926bde7d8dd4b9e", "warm": false }
+[sm1.7.10] PASS: 7.10 authority crash/restart uses seven distinct product OS process identities
+[sm1.7.10] PASS: 7.10 client uses real graphical DisplayServer
+[sm1.7.10] PASS: 7.10 client uses GL compatibility renderer
+[sm1.7.10] PASS: 7.10 clients remain on one Gateway transport connection
+[sm1.7.10] PASS: 7.10 Authority recovery causes zero respawn
+[sm1.7.10] PASS: 7.10 client observes standby and active Authority recovery
+[sm1.7.10] PASS: 7.10 client observes exactly two recovery windows
+[sm1.7.10] PASS: 7.10 Gateway endpoint stays stable
+[sm1.7.10] PASS: 7.10 player identity stays stable
+[sm1.7.10] PASS: 7.10 spawn generation remains one
+[sm1.7.10] PASS: 7.10 client sees epochs 1->2->3 with no recovery epoch inflation
+[sm1.7.10] PASS: 7.10 client sees revisions 1..4 without recovery mutation
+[sm1.7.10] PASS: 7.10 route changes only on gameplay handoffs
+[sm1.7.10] PASS: 7.10 client uses real graphical DisplayServer
+[sm1.7.10] PASS: 7.10 client uses GL compatibility renderer
+[sm1.7.10] PASS: 7.10 clients remain on one Gateway transport connection
+[sm1.7.10] PASS: 7.10 Authority recovery causes zero respawn
+[sm1.7.10] PASS: 7.10 client observes standby and active Authority recovery
+[sm1.7.10] PASS: 7.10 client observes exactly two recovery windows
+[sm1.7.10] PASS: 7.10 Gateway endpoint stays stable
+[sm1.7.10] PASS: 7.10 player identity stays stable
+[sm1.7.10] PASS: 7.10 spawn generation remains one
+[sm1.7.10] PASS: 7.10 client sees epochs 1->2->3 with no recovery epoch inflation
+[sm1.7.10] PASS: 7.10 client sees revisions 1..4 without recovery mutation
+[sm1.7.10] PASS: 7.10 route changes only on gameplay handoffs
+[sm1.7.10] PASS: 7.10 writer completes four logical operations across two Authority restarts
+[sm1.7.10] PASS: 7.10 observer remains read-only
+[sm1.7.10] PASS: 7.10 final owner is A epoch3
+[sm1.7.10] PASS: 7.10 two gameplay handoffs and revision4 survive Authority restarts
+[sm1.7.10] PASS: 7.10 Gateway observes and reconnects exactly two Authority processes
+[sm1.7.10] PASS: 7.10 each replacement is validated and sourced read-only
+[sm1.7.10] PASS: 7.10 both replacements receive one zero-write standby sync
+[sm1.7.10] PASS: 7.10 only the crashed active B is recovery-activated
+[sm1.7.10] PASS: 7.10 exactly two Authority recoveries complete
+[sm1.7.10] PASS: 7.10 recovery itself adds no gameplay revision
+[sm1.7.10] PASS: 7.10 Gateway ends with no recovery pending or write block
+[sm1.7.10] PASS: 7.10 Gateway remains non-canonical and retains no transfer payload
+[sm1.7.10] PASS: 7.10 replacement A becomes final active authority only through normal B->A handoff
+[sm1.7.10] PASS: 7.10 recovered B retires normally after B->A
+[sm1.7.10] PASS: 7.10 final revision/input watermark is monotonic
+[sm1.7.10] PASS: 7.10 OperationId ledger contains each logical operation exactly once
+[sm1.7.10] PASS: 7.10 final world state is correct
+[sm1.7.10] PASS: 7.10 replacement A is synced zero-write and never recovery-self-activates
+[sm1.7.10] PASS: 7.10 replacement B activates only after recovery sync
+[sm1.7.10] PASS: 7.10 recovered standby A supplies one read-only historical state query for B recovery
+[sm1.7.10] PASS: 7.10 post-restart executions partition 1 on A + 2 on B
+[sm1.7.10] PASS: 7.10 recovery causes zero OperationId replay
+[sm1.7.10] PASS: 7.10 recovery causes zero stale-authority writes
+[sm1.7.10] PASS: 7.10 replacements create no private persistence owner
+[sm1.7.10] PASS: 7.10 child process 1581512 exited cleanly
+[sm1.7.10] PASS: 7.10 child process 1581513 exited cleanly
+[sm1.7.10] PASS: 7.10 child process 1581408 exited cleanly
+[sm1.7.10] PASS: 7.10 child process 1582396 exited cleanly
+[sm1.7.10] PASS: 7.10 child process 1583933 exited cleanly
+SM1.7.10 Authority recovery: 89 assertions, 0 failures
+SM1_7_10_AUTHORITY_RECOVERY_PASS
+SM1_7_10_ITERATION=7/10
+Godot Engine v4.8.beta1.double.custom_build.4d10419ca - https://godotengine.org
+
+[sm1.7.10] PASS: 7.10 three isolated ENET ports allocated
+[sm1.7.10] PASS: 7.10 Xvfb graphical display started
+[sm1.7.10] PASS: 7.10 original Authority A/B processes launched
+[sm1.7.10] PASS: 7.10 original Authority A listening
+[sm1.7.10] PASS: 7.10 original Authority B listening
+[sm1.7.10] PASS: 7.10 Gateway process launched
+[sm1.7.10] PASS: 7.10 Gateway listening
+[sm1.7.10] PASS: 7.10 two graphical clients launched
+WARNING: Could not set V-Sync mode, as changing V-Sync mode is not supported by the graphics driver.
+     at: set_use_vsync (platform/linuxbsd/x11/gl_manager_x11.cpp:372)
+WARNING: Could not set V-Sync mode, as changing V-Sync mode is not supported by the graphics driver.
+     at: set_use_vsync (platform/linuxbsd/x11/gl_manager_x11.cpp:372)
+[sm1.7.10] PASS: 7.10 writer reaches B/epoch2 before standby crash
+[sm1.7.10] PASS: 7.10 observer reaches B/epoch2 before standby crash
+[sm1.7.10] PASS: 7.10 checkpoint observes B epoch2
+[sm1.7.10] PASS: 7.10 checkpoint carries revision1 observed-state identity
+[sm1.7.10] PASS: 7.10 checkpoint observes B epoch2
+[sm1.7.10] PASS: 7.10 checkpoint carries revision1 observed-state identity
+[sm1.7.10] PASS: 7.10 retired Authority A receives real OS kill
+[sm1.7.10] PASS: 7.10 original retired Authority A is dead
+[sm1.7.10] PASS: 7.10 Authority A port released after crash
+[sm1.7.10] PASS: 7.10 replacement Authority A launches as new inactive process
+[sm1.7.10] PASS: 7.10 replacement A starts inactive and cannot self-promote
+[sm1.7.10] PASS: 7.10 writer observes zero-write standby A recovery
+[sm1.7.10] PASS: 7.10 observer observes zero-write standby A recovery
+[sm1.7.10] PASS: 7.10 standby recovery leaves B/epoch2 ownership unchanged
+[sm1.7.10] PASS: 7.10 standby recovery leaves world revision unchanged
+[sm1.7.10] PASS: 7.10 standby recovery leaves B/epoch2 ownership unchanged
+[sm1.7.10] PASS: 7.10 standby recovery leaves world revision unchanged
+[sm1.7.10] PASS: 7.10 active Authority B receives real OS kill
+[sm1.7.10] PASS: 7.10 original active Authority B is dead
+[sm1.7.10] PASS: 7.10 Authority B port released after crash
+[sm1.7.10] PASS: 7.10 replacement Authority B launches as new inactive process
+[sm1.7.10] PASS: 7.10 replacement B starts inactive and cannot self-promote
+[sm1.7.10] PASS: 7.10 client A process PASS: { "active_recovered": true, "client_id": "a", "command_results": 4.0, "commands_sent": 4.0, "connect_count": 1.0, "display_server": "X11", "epochs": [1.0, 2.0, 3.0], "gateway_endpoint_id": "gateway/sm1/graphical-primary", "logical_player_id": "player/sm1-graphical-a", "passed": true, "player_entity_id": "entity/sm1-graphical-a", "process_id": 1585726.0, "reconnect_count": 0.0, "recovery_complete_events": 2.0, "recovery_pending_events": 2.0, "rendering_method": "gl_compatibility", "respawn_count": 0.0, "revisions": [1.0, 2.0, 3.0, 4.0], "route_history": ["authority/a", "authority/b", "authority/a"], "schema": "planet_simulator.sm1_authority_recovery_client_report.v1", "shared_state": { "action_count": 2.0, "last_input_sequence": 4.0, "last_operation_id": "operation/sm1/graphical/5", "logical_player_id": "player/sm1-graphical-a", "operation_ids": ["operation/sm1/authority-recovery/1", "operation/sm1/authority-recovery/2", "operation/sm1/authority-recovery/3", "operation/sm1/graphical/5"], "player_entity_id": "entity/sm1-graphical-a", "position_x": 0.0, "product_session_id": "session/sm1/graphical-acceptance", "schema": "planet_simulator.sm1_graphical_shared_state.v1", "spawn_generation": 1.0, "world_revision": 4.0 }, "spawn_generation": 1.0, "standby_recovered": true, "state": "COMPLETE" }
+[sm1.7.10] PASS: 7.10 client B process PASS: { "active_recovered": true, "client_id": "b", "command_results": 0.0, "commands_sent": 0.0, "connect_count": 1.0, "display_server": "X11", "epochs": [1.0, 2.0, 3.0], "gateway_endpoint_id": "gateway/sm1/graphical-primary", "logical_player_id": "player/sm1-graphical-a", "passed": true, "player_entity_id": "entity/sm1-graphical-a", "process_id": 1585727.0, "reconnect_count": 0.0, "recovery_complete_events": 2.0, "recovery_pending_events": 2.0, "rendering_method": "gl_compatibility", "respawn_count": 0.0, "revisions": [1.0, 2.0, 3.0, 4.0], "route_history": ["authority/a", "authority/b", "authority/a"], "schema": "planet_simulator.sm1_authority_recovery_client_report.v1", "shared_state": { "action_count": 2.0, "last_input_sequence": 4.0, "last_operation_id": "operation/sm1/graphical/5", "logical_player_id": "player/sm1-graphical-a", "operation_ids": ["operation/sm1/authority-recovery/1", "operation/sm1/authority-recovery/2", "operation/sm1/authority-recovery/3", "operation/sm1/graphical/5"], "player_entity_id": "entity/sm1-graphical-a", "position_x": 0.0, "product_session_id": "session/sm1/graphical-acceptance", "schema": "planet_simulator.sm1_graphical_shared_state.v1", "spawn_generation": 1.0, "world_revision": 4.0 }, "spawn_generation": 1.0, "standby_recovered": true, "state": "COMPLETE" }
+[sm1.7.10] PASS: 7.10 Gateway process PASS: { "active_authority_id": "authority/a", "authority_epoch": 3.0, "authority_recovery_blocks_writes": false, "authority_recovery_complete": true, "authority_runtime_recovery_pending": false, "bootstrap_authority_epoch": 1.0, "bootstrap_authority_id": "authority/a", "canonical_gameplay_owner": false, "client_connection_count": 2.0, "client_endpoint_changed": false, "client_ids": ["b", "a"], "counters": { "active_authority_recoveries": 1.0, "authority_disconnects": 2.0, "authority_messages": 21.0, "authority_reconnects": 2.0, "authority_recoveries": 1.0, "authority_recovery_events": 2.0, "authority_recovery_state_queries": 2.0, "authority_recovery_status_queries": 2.0, "authority_status_queries": 2.0, "busy_rejections": 0.0, "client_disconnects": 0.0, "client_messages": 6.0, "client_reconnects": 0.0, "commands": 4.0, "handoffs": 2.0, "restart_resume_sessions": 0.0, "resume_queries": 0.0, "resume_successes": 0.0, "route_changes": 2.0, "session_ready_announcements": 0.0, "standby_syncs": 2.0, "state_broadcasts": 4.0 }, "gateway_endpoint_id": "gateway/sm1/graphical-primary", "handoff_count": 2.0, "last_state_checksum": "4c539c71cc56512e42f875c96b422540799f259db27709aeea68764ab3893e71", "last_world_revision": 4.0, "network_conditions": { "authorities": { "authority/a": { "profile": {  }, "snapshot": {  } }, "authority/b": { "profile": {  }, "snapshot": {  } } }, "client": { "profile": {  }, "snapshot": {  } } }, "passed": true, "process_id": 1585601.0, "schema": "planet_simulator.sm1_graphical_gateway_report.v1", "state": "COMPLETE", "transfer_payload_retained": false }
+[sm1.7.10] PASS: 7.10 replacement Authority A process PASS: { "active": true, "authority_epoch": 3.0, "authority_id": "authority/a", "counters": { "activations": 1.0, "execute_requests": 1.0, "executed": 1.0, "freezes": 0.0, "recovery_activations": 0.0, "recovery_state_queries": 1.0, "replays": 0.0, "retires": 0.0, "standby_syncs": 1.0, "state_queries": 0.0, "status_queries": 1.0, "warm_loads": 1.0, "write_rejections": 0.0 }, "passed": true, "private_persistence_owner": false, "process_id": 1586358.0, "schema": "planet_simulator.sm1_graphical_authority_report.v1", "shared_state": { "action_count": 2.0, "last_input_sequence": 4.0, "last_operation_id": "operation/sm1/graphical/5", "logical_player_id": "player/sm1-graphical-a", "operation_ids": ["operation/sm1/authority-recovery/1", "operation/sm1/authority-recovery/2", "operation/sm1/authority-recovery/3", "operation/sm1/graphical/5"], "player_entity_id": "entity/sm1-graphical-a", "position_x": 0.0, "product_session_id": "session/sm1/graphical-acceptance", "schema": "planet_simulator.sm1_graphical_shared_state.v1", "spawn_generation": 1.0, "world_revision": 4.0 }, "state": "COMPLETE", "state_checksum": "4c539c71cc56512e42f875c96b422540799f259db27709aeea68764ab3893e71", "warm": false }
+[sm1.7.10] PASS: 7.10 replacement Authority B process PASS: { "active": false, "authority_epoch": 2.0, "authority_id": "authority/b", "counters": { "activations": 0.0, "execute_requests": 2.0, "executed": 2.0, "freezes": 1.0, "recovery_activations": 1.0, "recovery_state_queries": 0.0, "replays": 0.0, "retires": 1.0, "standby_syncs": 1.0, "state_queries": 0.0, "status_queries": 1.0, "warm_loads": 0.0, "write_rejections": 0.0 }, "passed": true, "private_persistence_owner": false, "process_id": 1587575.0, "schema": "planet_simulator.sm1_graphical_authority_report.v1", "shared_state": { "action_count": 1.0, "last_input_sequence": 3.0, "last_operation_id": "operation/sm1/authority-recovery/3", "logical_player_id": "player/sm1-graphical-a", "operation_ids": ["operation/sm1/authority-recovery/1", "operation/sm1/authority-recovery/2", "operation/sm1/authority-recovery/3"], "player_entity_id": "entity/sm1-graphical-a", "position_x": 0.0, "product_session_id": "session/sm1/graphical-acceptance", "schema": "planet_simulator.sm1_graphical_shared_state.v1", "spawn_generation": 1.0, "world_revision": 3.0 }, "state": "COMPLETE", "state_checksum": "c6791f6bce8500877767b01309fdbfedd1e133fba4d58685d926bde7d8dd4b9e", "warm": false }
+[sm1.7.10] PASS: 7.10 authority crash/restart uses seven distinct product OS process identities
+[sm1.7.10] PASS: 7.10 client uses real graphical DisplayServer
+[sm1.7.10] PASS: 7.10 client uses GL compatibility renderer
+[sm1.7.10] PASS: 7.10 clients remain on one Gateway transport connection
+[sm1.7.10] PASS: 7.10 Authority recovery causes zero respawn
+[sm1.7.10] PASS: 7.10 client observes standby and active Authority recovery
+[sm1.7.10] PASS: 7.10 client observes exactly two recovery windows
+[sm1.7.10] PASS: 7.10 Gateway endpoint stays stable
+[sm1.7.10] PASS: 7.10 player identity stays stable
+[sm1.7.10] PASS: 7.10 spawn generation remains one
+[sm1.7.10] PASS: 7.10 client sees epochs 1->2->3 with no recovery epoch inflation
+[sm1.7.10] PASS: 7.10 client sees revisions 1..4 without recovery mutation
+[sm1.7.10] PASS: 7.10 route changes only on gameplay handoffs
+[sm1.7.10] PASS: 7.10 client uses real graphical DisplayServer
+[sm1.7.10] PASS: 7.10 client uses GL compatibility renderer
+[sm1.7.10] PASS: 7.10 clients remain on one Gateway transport connection
+[sm1.7.10] PASS: 7.10 Authority recovery causes zero respawn
+[sm1.7.10] PASS: 7.10 client observes standby and active Authority recovery
+[sm1.7.10] PASS: 7.10 client observes exactly two recovery windows
+[sm1.7.10] PASS: 7.10 Gateway endpoint stays stable
+[sm1.7.10] PASS: 7.10 player identity stays stable
+[sm1.7.10] PASS: 7.10 spawn generation remains one
+[sm1.7.10] PASS: 7.10 client sees epochs 1->2->3 with no recovery epoch inflation
+[sm1.7.10] PASS: 7.10 client sees revisions 1..4 without recovery mutation
+[sm1.7.10] PASS: 7.10 route changes only on gameplay handoffs
+[sm1.7.10] PASS: 7.10 writer completes four logical operations across two Authority restarts
+[sm1.7.10] PASS: 7.10 observer remains read-only
+[sm1.7.10] PASS: 7.10 final owner is A epoch3
+[sm1.7.10] PASS: 7.10 two gameplay handoffs and revision4 survive Authority restarts
+[sm1.7.10] PASS: 7.10 Gateway observes and reconnects exactly two Authority processes
+[sm1.7.10] PASS: 7.10 each replacement is validated and sourced read-only
+[sm1.7.10] PASS: 7.10 both replacements receive one zero-write standby sync
+[sm1.7.10] PASS: 7.10 only the crashed active B is recovery-activated
+[sm1.7.10] PASS: 7.10 exactly two Authority recoveries complete
+[sm1.7.10] PASS: 7.10 recovery itself adds no gameplay revision
+[sm1.7.10] PASS: 7.10 Gateway ends with no recovery pending or write block
+[sm1.7.10] PASS: 7.10 Gateway remains non-canonical and retains no transfer payload
+[sm1.7.10] PASS: 7.10 replacement A becomes final active authority only through normal B->A handoff
+[sm1.7.10] PASS: 7.10 recovered B retires normally after B->A
+[sm1.7.10] PASS: 7.10 final revision/input watermark is monotonic
+[sm1.7.10] PASS: 7.10 OperationId ledger contains each logical operation exactly once
+[sm1.7.10] PASS: 7.10 final world state is correct
+[sm1.7.10] PASS: 7.10 replacement A is synced zero-write and never recovery-self-activates
+[sm1.7.10] PASS: 7.10 replacement B activates only after recovery sync
+[sm1.7.10] PASS: 7.10 recovered standby A supplies one read-only historical state query for B recovery
+[sm1.7.10] PASS: 7.10 post-restart executions partition 1 on A + 2 on B
+[sm1.7.10] PASS: 7.10 recovery causes zero OperationId replay
+[sm1.7.10] PASS: 7.10 recovery causes zero stale-authority writes
+[sm1.7.10] PASS: 7.10 replacements create no private persistence owner
+[sm1.7.10] PASS: 7.10 child process 1585726 exited cleanly
+[sm1.7.10] PASS: 7.10 child process 1585727 exited cleanly
+[sm1.7.10] PASS: 7.10 child process 1585601 exited cleanly
+[sm1.7.10] PASS: 7.10 child process 1586358 exited cleanly
+[sm1.7.10] PASS: 7.10 child process 1587575 exited cleanly
+SM1.7.10 Authority recovery: 89 assertions, 0 failures
+SM1_7_10_AUTHORITY_RECOVERY_PASS
+SM1_7_10_ITERATION=8/10
+Godot Engine v4.8.beta1.double.custom_build.4d10419ca - https://godotengine.org
+
+[sm1.7.10] PASS: 7.10 three isolated ENET ports allocated
+[sm1.7.10] PASS: 7.10 Xvfb graphical display started
+[sm1.7.10] PASS: 7.10 original Authority A/B processes launched
+[sm1.7.10] PASS: 7.10 original Authority A listening
+[sm1.7.10] PASS: 7.10 original Authority B listening
+[sm1.7.10] PASS: 7.10 Gateway process launched
+[sm1.7.10] PASS: 7.10 Gateway listening
+[sm1.7.10] PASS: 7.10 two graphical clients launched
+WARNING: Could not set V-Sync mode, as changing V-Sync mode is not supported by the graphics driver.
+     at: set_use_vsync (platform/linuxbsd/x11/gl_manager_x11.cpp:372)
+WARNING: Could not set V-Sync mode, as changing V-Sync mode is not supported by the graphics driver.
+     at: set_use_vsync (platform/linuxbsd/x11/gl_manager_x11.cpp:372)
+[sm1.7.10] PASS: 7.10 writer reaches B/epoch2 before standby crash
+[sm1.7.10] PASS: 7.10 observer reaches B/epoch2 before standby crash
+[sm1.7.10] PASS: 7.10 checkpoint observes B epoch2
+[sm1.7.10] PASS: 7.10 checkpoint carries revision1 observed-state identity
+[sm1.7.10] PASS: 7.10 checkpoint observes B epoch2
+[sm1.7.10] PASS: 7.10 checkpoint carries revision1 observed-state identity
+[sm1.7.10] PASS: 7.10 retired Authority A receives real OS kill
+[sm1.7.10] PASS: 7.10 original retired Authority A is dead
+[sm1.7.10] PASS: 7.10 Authority A port released after crash
+[sm1.7.10] PASS: 7.10 replacement Authority A launches as new inactive process
+[sm1.7.10] PASS: 7.10 replacement A starts inactive and cannot self-promote
+[sm1.7.10] PASS: 7.10 writer observes zero-write standby A recovery
+[sm1.7.10] PASS: 7.10 observer observes zero-write standby A recovery
+[sm1.7.10] PASS: 7.10 standby recovery leaves B/epoch2 ownership unchanged
+[sm1.7.10] PASS: 7.10 standby recovery leaves world revision unchanged
+[sm1.7.10] PASS: 7.10 standby recovery leaves B/epoch2 ownership unchanged
+[sm1.7.10] PASS: 7.10 standby recovery leaves world revision unchanged
+[sm1.7.10] PASS: 7.10 active Authority B receives real OS kill
+[sm1.7.10] PASS: 7.10 original active Authority B is dead
+[sm1.7.10] PASS: 7.10 Authority B port released after crash
+[sm1.7.10] PASS: 7.10 replacement Authority B launches as new inactive process
+[sm1.7.10] PASS: 7.10 replacement B starts inactive and cannot self-promote
+[sm1.7.10] PASS: 7.10 client A process PASS: { "active_recovered": true, "client_id": "a", "command_results": 4.0, "commands_sent": 4.0, "connect_count": 1.0, "display_server": "X11", "epochs": [1.0, 2.0, 3.0], "gateway_endpoint_id": "gateway/sm1/graphical-primary", "logical_player_id": "player/sm1-graphical-a", "passed": true, "player_entity_id": "entity/sm1-graphical-a", "process_id": 1589765.0, "reconnect_count": 0.0, "recovery_complete_events": 2.0, "recovery_pending_events": 2.0, "rendering_method": "gl_compatibility", "respawn_count": 0.0, "revisions": [1.0, 2.0, 3.0, 4.0], "route_history": ["authority/a", "authority/b", "authority/a"], "schema": "planet_simulator.sm1_authority_recovery_client_report.v1", "shared_state": { "action_count": 2.0, "last_input_sequence": 4.0, "last_operation_id": "operation/sm1/graphical/5", "logical_player_id": "player/sm1-graphical-a", "operation_ids": ["operation/sm1/authority-recovery/1", "operation/sm1/authority-recovery/2", "operation/sm1/authority-recovery/3", "operation/sm1/graphical/5"], "player_entity_id": "entity/sm1-graphical-a", "position_x": 0.0, "product_session_id": "session/sm1/graphical-acceptance", "schema": "planet_simulator.sm1_graphical_shared_state.v1", "spawn_generation": 1.0, "world_revision": 4.0 }, "spawn_generation": 1.0, "standby_recovered": true, "state": "COMPLETE" }
+[sm1.7.10] PASS: 7.10 client B process PASS: { "active_recovered": true, "client_id": "b", "command_results": 0.0, "commands_sent": 0.0, "connect_count": 1.0, "display_server": "X11", "epochs": [1.0, 2.0, 3.0], "gateway_endpoint_id": "gateway/sm1/graphical-primary", "logical_player_id": "player/sm1-graphical-a", "passed": true, "player_entity_id": "entity/sm1-graphical-a", "process_id": 1589766.0, "reconnect_count": 0.0, "recovery_complete_events": 2.0, "recovery_pending_events": 2.0, "rendering_method": "gl_compatibility", "respawn_count": 0.0, "revisions": [1.0, 2.0, 3.0, 4.0], "route_history": ["authority/a", "authority/b", "authority/a"], "schema": "planet_simulator.sm1_authority_recovery_client_report.v1", "shared_state": { "action_count": 2.0, "last_input_sequence": 4.0, "last_operation_id": "operation/sm1/graphical/5", "logical_player_id": "player/sm1-graphical-a", "operation_ids": ["operation/sm1/authority-recovery/1", "operation/sm1/authority-recovery/2", "operation/sm1/authority-recovery/3", "operation/sm1/graphical/5"], "player_entity_id": "entity/sm1-graphical-a", "position_x": 0.0, "product_session_id": "session/sm1/graphical-acceptance", "schema": "planet_simulator.sm1_graphical_shared_state.v1", "spawn_generation": 1.0, "world_revision": 4.0 }, "spawn_generation": 1.0, "standby_recovered": true, "state": "COMPLETE" }
+[sm1.7.10] PASS: 7.10 Gateway process PASS: { "active_authority_id": "authority/a", "authority_epoch": 3.0, "authority_recovery_blocks_writes": false, "authority_recovery_complete": true, "authority_runtime_recovery_pending": false, "bootstrap_authority_epoch": 1.0, "bootstrap_authority_id": "authority/a", "canonical_gameplay_owner": false, "client_connection_count": 2.0, "client_endpoint_changed": false, "client_ids": ["b", "a"], "counters": { "active_authority_recoveries": 1.0, "authority_disconnects": 2.0, "authority_messages": 21.0, "authority_reconnects": 2.0, "authority_recoveries": 1.0, "authority_recovery_events": 2.0, "authority_recovery_state_queries": 2.0, "authority_recovery_status_queries": 2.0, "authority_status_queries": 2.0, "busy_rejections": 0.0, "client_disconnects": 0.0, "client_messages": 6.0, "client_reconnects": 0.0, "commands": 4.0, "handoffs": 2.0, "restart_resume_sessions": 0.0, "resume_queries": 0.0, "resume_successes": 0.0, "route_changes": 2.0, "session_ready_announcements": 0.0, "standby_syncs": 2.0, "state_broadcasts": 4.0 }, "gateway_endpoint_id": "gateway/sm1/graphical-primary", "handoff_count": 2.0, "last_state_checksum": "4c539c71cc56512e42f875c96b422540799f259db27709aeea68764ab3893e71", "last_world_revision": 4.0, "network_conditions": { "authorities": { "authority/a": { "profile": {  }, "snapshot": {  } }, "authority/b": { "profile": {  }, "snapshot": {  } } }, "client": { "profile": {  }, "snapshot": {  } } }, "passed": true, "process_id": 1589594.0, "schema": "planet_simulator.sm1_graphical_gateway_report.v1", "state": "COMPLETE", "transfer_payload_retained": false }
+[sm1.7.10] PASS: 7.10 replacement Authority A process PASS: { "active": true, "authority_epoch": 3.0, "authority_id": "authority/a", "counters": { "activations": 1.0, "execute_requests": 1.0, "executed": 1.0, "freezes": 0.0, "recovery_activations": 0.0, "recovery_state_queries": 1.0, "replays": 0.0, "retires": 0.0, "standby_syncs": 1.0, "state_queries": 0.0, "status_queries": 1.0, "warm_loads": 1.0, "write_rejections": 0.0 }, "passed": true, "private_persistence_owner": false, "process_id": 1590703.0, "schema": "planet_simulator.sm1_graphical_authority_report.v1", "shared_state": { "action_count": 2.0, "last_input_sequence": 4.0, "last_operation_id": "operation/sm1/graphical/5", "logical_player_id": "player/sm1-graphical-a", "operation_ids": ["operation/sm1/authority-recovery/1", "operation/sm1/authority-recovery/2", "operation/sm1/authority-recovery/3", "operation/sm1/graphical/5"], "player_entity_id": "entity/sm1-graphical-a", "position_x": 0.0, "product_session_id": "session/sm1/graphical-acceptance", "schema": "planet_simulator.sm1_graphical_shared_state.v1", "spawn_generation": 1.0, "world_revision": 4.0 }, "state": "COMPLETE", "state_checksum": "4c539c71cc56512e42f875c96b422540799f259db27709aeea68764ab3893e71", "warm": false }
+[sm1.7.10] PASS: 7.10 replacement Authority B process PASS: { "active": false, "authority_epoch": 2.0, "authority_id": "authority/b", "counters": { "activations": 0.0, "execute_requests": 2.0, "executed": 2.0, "freezes": 1.0, "recovery_activations": 1.0, "recovery_state_queries": 0.0, "replays": 0.0, "retires": 1.0, "standby_syncs": 1.0, "state_queries": 0.0, "status_queries": 1.0, "warm_loads": 0.0, "write_rejections": 0.0 }, "passed": true, "private_persistence_owner": false, "process_id": 1592209.0, "schema": "planet_simulator.sm1_graphical_authority_report.v1", "shared_state": { "action_count": 1.0, "last_input_sequence": 3.0, "last_operation_id": "operation/sm1/authority-recovery/3", "logical_player_id": "player/sm1-graphical-a", "operation_ids": ["operation/sm1/authority-recovery/1", "operation/sm1/authority-recovery/2", "operation/sm1/authority-recovery/3"], "player_entity_id": "entity/sm1-graphical-a", "position_x": 0.0, "product_session_id": "session/sm1/graphical-acceptance", "schema": "planet_simulator.sm1_graphical_shared_state.v1", "spawn_generation": 1.0, "world_revision": 3.0 }, "state": "COMPLETE", "state_checksum": "c6791f6bce8500877767b01309fdbfedd1e133fba4d58685d926bde7d8dd4b9e", "warm": false }
+[sm1.7.10] PASS: 7.10 authority crash/restart uses seven distinct product OS process identities
+[sm1.7.10] PASS: 7.10 client uses real graphical DisplayServer
+[sm1.7.10] PASS: 7.10 client uses GL compatibility renderer
+[sm1.7.10] PASS: 7.10 clients remain on one Gateway transport connection
+[sm1.7.10] PASS: 7.10 Authority recovery causes zero respawn
+[sm1.7.10] PASS: 7.10 client observes standby and active Authority recovery
+[sm1.7.10] PASS: 7.10 client observes exactly two recovery windows
+[sm1.7.10] PASS: 7.10 Gateway endpoint stays stable
+[sm1.7.10] PASS: 7.10 player identity stays stable
+[sm1.7.10] PASS: 7.10 spawn generation remains one
+[sm1.7.10] PASS: 7.10 client sees epochs 1->2->3 with no recovery epoch inflation
+[sm1.7.10] PASS: 7.10 client sees revisions 1..4 without recovery mutation
+[sm1.7.10] PASS: 7.10 route changes only on gameplay handoffs
+[sm1.7.10] PASS: 7.10 client uses real graphical DisplayServer
+[sm1.7.10] PASS: 7.10 client uses GL compatibility renderer
+[sm1.7.10] PASS: 7.10 clients remain on one Gateway transport connection
+[sm1.7.10] PASS: 7.10 Authority recovery causes zero respawn
+[sm1.7.10] PASS: 7.10 client observes standby and active Authority recovery
+[sm1.7.10] PASS: 7.10 client observes exactly two recovery windows
+[sm1.7.10] PASS: 7.10 Gateway endpoint stays stable
+[sm1.7.10] PASS: 7.10 player identity stays stable
+[sm1.7.10] PASS: 7.10 spawn generation remains one
+[sm1.7.10] PASS: 7.10 client sees epochs 1->2->3 with no recovery epoch inflation
+[sm1.7.10] PASS: 7.10 client sees revisions 1..4 without recovery mutation
+[sm1.7.10] PASS: 7.10 route changes only on gameplay handoffs
+[sm1.7.10] PASS: 7.10 writer completes four logical operations across two Authority restarts
+[sm1.7.10] PASS: 7.10 observer remains read-only
+[sm1.7.10] PASS: 7.10 final owner is A epoch3
+[sm1.7.10] PASS: 7.10 two gameplay handoffs and revision4 survive Authority restarts
+[sm1.7.10] PASS: 7.10 Gateway observes and reconnects exactly two Authority processes
+[sm1.7.10] PASS: 7.10 each replacement is validated and sourced read-only
+[sm1.7.10] PASS: 7.10 both replacements receive one zero-write standby sync
+[sm1.7.10] PASS: 7.10 only the crashed active B is recovery-activated
+[sm1.7.10] PASS: 7.10 exactly two Authority recoveries complete
+[sm1.7.10] PASS: 7.10 recovery itself adds no gameplay revision
+[sm1.7.10] PASS: 7.10 Gateway ends with no recovery pending or write block
+[sm1.7.10] PASS: 7.10 Gateway remains non-canonical and retains no transfer payload
+[sm1.7.10] PASS: 7.10 replacement A becomes final active authority only through normal B->A handoff
+[sm1.7.10] PASS: 7.10 recovered B retires normally after B->A
+[sm1.7.10] PASS: 7.10 final revision/input watermark is monotonic
+[sm1.7.10] PASS: 7.10 OperationId ledger contains each logical operation exactly once
+[sm1.7.10] PASS: 7.10 final world state is correct
+[sm1.7.10] PASS: 7.10 replacement A is synced zero-write and never recovery-self-activates
+[sm1.7.10] PASS: 7.10 replacement B activates only after recovery sync
+[sm1.7.10] PASS: 7.10 recovered standby A supplies one read-only historical state query for B recovery
+[sm1.7.10] PASS: 7.10 post-restart executions partition 1 on A + 2 on B
+[sm1.7.10] PASS: 7.10 recovery causes zero OperationId replay
+[sm1.7.10] PASS: 7.10 recovery causes zero stale-authority writes
+[sm1.7.10] PASS: 7.10 replacements create no private persistence owner
+[sm1.7.10] PASS: 7.10 child process 1589765 exited cleanly
+[sm1.7.10] PASS: 7.10 child process 1589766 exited cleanly
+[sm1.7.10] PASS: 7.10 child process 1589594 exited cleanly
+[sm1.7.10] PASS: 7.10 child process 1590703 exited cleanly
+[sm1.7.10] PASS: 7.10 child process 1592209 exited cleanly
+SM1.7.10 Authority recovery: 89 assertions, 0 failures
+SM1_7_10_AUTHORITY_RECOVERY_PASS
+SM1_7_10_ITERATION=9/10
+Godot Engine v4.8.beta1.double.custom_build.4d10419ca - https://godotengine.org
+
+[sm1.7.10] PASS: 7.10 three isolated ENET ports allocated
+[sm1.7.10] PASS: 7.10 Xvfb graphical display started
+[sm1.7.10] PASS: 7.10 original Authority A/B processes launched
+[sm1.7.10] PASS: 7.10 original Authority A listening
+[sm1.7.10] PASS: 7.10 original Authority B listening
+[sm1.7.10] PASS: 7.10 Gateway process launched
+[sm1.7.10] PASS: 7.10 Gateway listening
+[sm1.7.10] PASS: 7.10 two graphical clients launched
+WARNING: Could not set V-Sync mode, as changing V-Sync mode is not supported by the graphics driver.
+     at: set_use_vsync (platform/linuxbsd/x11/gl_manager_x11.cpp:372)
+WARNING: Could not set V-Sync mode, as changing V-Sync mode is not supported by the graphics driver.
+     at: set_use_vsync (platform/linuxbsd/x11/gl_manager_x11.cpp:372)
+[sm1.7.10] PASS: 7.10 writer reaches B/epoch2 before standby crash
+[sm1.7.10] PASS: 7.10 observer reaches B/epoch2 before standby crash
+[sm1.7.10] PASS: 7.10 checkpoint observes B epoch2
+[sm1.7.10] PASS: 7.10 checkpoint carries revision1 observed-state identity
+[sm1.7.10] PASS: 7.10 checkpoint observes B epoch2
+[sm1.7.10] PASS: 7.10 checkpoint carries revision1 observed-state identity
+[sm1.7.10] PASS: 7.10 retired Authority A receives real OS kill
+[sm1.7.10] PASS: 7.10 original retired Authority A is dead
+[sm1.7.10] PASS: 7.10 Authority A port released after crash
+[sm1.7.10] PASS: 7.10 replacement Authority A launches as new inactive process
+[sm1.7.10] PASS: 7.10 replacement A starts inactive and cannot self-promote
+[sm1.7.10] PASS: 7.10 writer observes zero-write standby A recovery
+[sm1.7.10] PASS: 7.10 observer observes zero-write standby A recovery
+[sm1.7.10] PASS: 7.10 standby recovery leaves B/epoch2 ownership unchanged
+[sm1.7.10] PASS: 7.10 standby recovery leaves world revision unchanged
+[sm1.7.10] PASS: 7.10 standby recovery leaves B/epoch2 ownership unchanged
+[sm1.7.10] PASS: 7.10 standby recovery leaves world revision unchanged
+[sm1.7.10] PASS: 7.10 active Authority B receives real OS kill
+[sm1.7.10] PASS: 7.10 original active Authority B is dead
+[sm1.7.10] PASS: 7.10 Authority B port released after crash
+[sm1.7.10] PASS: 7.10 replacement Authority B launches as new inactive process
+[sm1.7.10] PASS: 7.10 replacement B starts inactive and cannot self-promote
+[sm1.7.10] PASS: 7.10 client A process PASS: { "active_recovered": true, "client_id": "a", "command_results": 4.0, "commands_sent": 4.0, "connect_count": 1.0, "display_server": "X11", "epochs": [1.0, 2.0, 3.0], "gateway_endpoint_id": "gateway/sm1/graphical-primary", "logical_player_id": "player/sm1-graphical-a", "passed": true, "player_entity_id": "entity/sm1-graphical-a", "process_id": 1593882.0, "reconnect_count": 0.0, "recovery_complete_events": 2.0, "recovery_pending_events": 2.0, "rendering_method": "gl_compatibility", "respawn_count": 0.0, "revisions": [1.0, 2.0, 3.0, 4.0], "route_history": ["authority/a", "authority/b", "authority/a"], "schema": "planet_simulator.sm1_authority_recovery_client_report.v1", "shared_state": { "action_count": 2.0, "last_input_sequence": 4.0, "last_operation_id": "operation/sm1/graphical/5", "logical_player_id": "player/sm1-graphical-a", "operation_ids": ["operation/sm1/authority-recovery/1", "operation/sm1/authority-recovery/2", "operation/sm1/authority-recovery/3", "operation/sm1/graphical/5"], "player_entity_id": "entity/sm1-graphical-a", "position_x": 0.0, "product_session_id": "session/sm1/graphical-acceptance", "schema": "planet_simulator.sm1_graphical_shared_state.v1", "spawn_generation": 1.0, "world_revision": 4.0 }, "spawn_generation": 1.0, "standby_recovered": true, "state": "COMPLETE" }
+[sm1.7.10] PASS: 7.10 client B process PASS: { "active_recovered": true, "client_id": "b", "command_results": 0.0, "commands_sent": 0.0, "connect_count": 1.0, "display_server": "X11", "epochs": [1.0, 2.0, 3.0], "gateway_endpoint_id": "gateway/sm1/graphical-primary", "logical_player_id": "player/sm1-graphical-a", "passed": true, "player_entity_id": "entity/sm1-graphical-a", "process_id": 1593883.0, "reconnect_count": 0.0, "recovery_complete_events": 2.0, "recovery_pending_events": 2.0, "rendering_method": "gl_compatibility", "respawn_count": 0.0, "revisions": [1.0, 2.0, 3.0, 4.0], "route_history": ["authority/a", "authority/b", "authority/a"], "schema": "planet_simulator.sm1_authority_recovery_client_report.v1", "shared_state": { "action_count": 2.0, "last_input_sequence": 4.0, "last_operation_id": "operation/sm1/graphical/5", "logical_player_id": "player/sm1-graphical-a", "operation_ids": ["operation/sm1/authority-recovery/1", "operation/sm1/authority-recovery/2", "operation/sm1/authority-recovery/3", "operation/sm1/graphical/5"], "player_entity_id": "entity/sm1-graphical-a", "position_x": 0.0, "product_session_id": "session/sm1/graphical-acceptance", "schema": "planet_simulator.sm1_graphical_shared_state.v1", "spawn_generation": 1.0, "world_revision": 4.0 }, "spawn_generation": 1.0, "standby_recovered": true, "state": "COMPLETE" }
+[sm1.7.10] PASS: 7.10 Gateway process PASS: { "active_authority_id": "authority/a", "authority_epoch": 3.0, "authority_recovery_blocks_writes": false, "authority_recovery_complete": true, "authority_runtime_recovery_pending": false, "bootstrap_authority_epoch": 1.0, "bootstrap_authority_id": "authority/a", "canonical_gameplay_owner": false, "client_connection_count": 2.0, "client_endpoint_changed": false, "client_ids": ["a", "b"], "counters": { "active_authority_recoveries": 1.0, "authority_disconnects": 2.0, "authority_messages": 21.0, "authority_reconnects": 2.0, "authority_recoveries": 1.0, "authority_recovery_events": 2.0, "authority_recovery_state_queries": 2.0, "authority_recovery_status_queries": 2.0, "authority_status_queries": 2.0, "busy_rejections": 0.0, "client_disconnects": 0.0, "client_messages": 6.0, "client_reconnects": 0.0, "commands": 4.0, "handoffs": 2.0, "restart_resume_sessions": 0.0, "resume_queries": 0.0, "resume_successes": 0.0, "route_changes": 2.0, "session_ready_announcements": 0.0, "standby_syncs": 2.0, "state_broadcasts": 4.0 }, "gateway_endpoint_id": "gateway/sm1/graphical-primary", "handoff_count": 2.0, "last_state_checksum": "4c539c71cc56512e42f875c96b422540799f259db27709aeea68764ab3893e71", "last_world_revision": 4.0, "network_conditions": { "authorities": { "authority/a": { "profile": {  }, "snapshot": {  } }, "authority/b": { "profile": {  }, "snapshot": {  } } }, "client": { "profile": {  }, "snapshot": {  } } }, "passed": true, "process_id": 1593763.0, "schema": "planet_simulator.sm1_graphical_gateway_report.v1", "state": "COMPLETE", "transfer_payload_retained": false }
+[sm1.7.10] PASS: 7.10 replacement Authority A process PASS: { "active": true, "authority_epoch": 3.0, "authority_id": "authority/a", "counters": { "activations": 1.0, "execute_requests": 1.0, "executed": 1.0, "freezes": 0.0, "recovery_activations": 0.0, "recovery_state_queries": 1.0, "replays": 0.0, "retires": 0.0, "standby_syncs": 1.0, "state_queries": 0.0, "status_queries": 1.0, "warm_loads": 1.0, "write_rejections": 0.0 }, "passed": true, "private_persistence_owner": false, "process_id": 1594653.0, "schema": "planet_simulator.sm1_graphical_authority_report.v1", "shared_state": { "action_count": 2.0, "last_input_sequence": 4.0, "last_operation_id": "operation/sm1/graphical/5", "logical_player_id": "player/sm1-graphical-a", "operation_ids": ["operation/sm1/authority-recovery/1", "operation/sm1/authority-recovery/2", "operation/sm1/authority-recovery/3", "operation/sm1/graphical/5"], "player_entity_id": "entity/sm1-graphical-a", "position_x": 0.0, "product_session_id": "session/sm1/graphical-acceptance", "schema": "planet_simulator.sm1_graphical_shared_state.v1", "spawn_generation": 1.0, "world_revision": 4.0 }, "state": "COMPLETE", "state_checksum": "4c539c71cc56512e42f875c96b422540799f259db27709aeea68764ab3893e71", "warm": false }
+[sm1.7.10] PASS: 7.10 replacement Authority B process PASS: { "active": false, "authority_epoch": 2.0, "authority_id": "authority/b", "counters": { "activations": 0.0, "execute_requests": 2.0, "executed": 2.0, "freezes": 1.0, "recovery_activations": 1.0, "recovery_state_queries": 0.0, "replays": 0.0, "retires": 1.0, "standby_syncs": 1.0, "state_queries": 0.0, "status_queries": 1.0, "warm_loads": 0.0, "write_rejections": 0.0 }, "passed": true, "private_persistence_owner": false, "process_id": 1595399.0, "schema": "planet_simulator.sm1_graphical_authority_report.v1", "shared_state": { "action_count": 1.0, "last_input_sequence": 3.0, "last_operation_id": "operation/sm1/authority-recovery/3", "logical_player_id": "player/sm1-graphical-a", "operation_ids": ["operation/sm1/authority-recovery/1", "operation/sm1/authority-recovery/2", "operation/sm1/authority-recovery/3"], "player_entity_id": "entity/sm1-graphical-a", "position_x": 0.0, "product_session_id": "session/sm1/graphical-acceptance", "schema": "planet_simulator.sm1_graphical_shared_state.v1", "spawn_generation": 1.0, "world_revision": 3.0 }, "state": "COMPLETE", "state_checksum": "c6791f6bce8500877767b01309fdbfedd1e133fba4d58685d926bde7d8dd4b9e", "warm": false }
+[sm1.7.10] PASS: 7.10 authority crash/restart uses seven distinct product OS process identities
+[sm1.7.10] PASS: 7.10 client uses real graphical DisplayServer
+[sm1.7.10] PASS: 7.10 client uses GL compatibility renderer
+[sm1.7.10] PASS: 7.10 clients remain on one Gateway transport connection
+[sm1.7.10] PASS: 7.10 Authority recovery causes zero respawn
+[sm1.7.10] PASS: 7.10 client observes standby and active Authority recovery
+[sm1.7.10] PASS: 7.10 client observes exactly two recovery windows
+[sm1.7.10] PASS: 7.10 Gateway endpoint stays stable
+[sm1.7.10] PASS: 7.10 player identity stays stable
+[sm1.7.10] PASS: 7.10 spawn generation remains one
+[sm1.7.10] PASS: 7.10 client sees epochs 1->2->3 with no recovery epoch inflation
+[sm1.7.10] PASS: 7.10 client sees revisions 1..4 without recovery mutation
+[sm1.7.10] PASS: 7.10 route changes only on gameplay handoffs
+[sm1.7.10] PASS: 7.10 client uses real graphical DisplayServer
+[sm1.7.10] PASS: 7.10 client uses GL compatibility renderer
+[sm1.7.10] PASS: 7.10 clients remain on one Gateway transport connection
+[sm1.7.10] PASS: 7.10 Authority recovery causes zero respawn
+[sm1.7.10] PASS: 7.10 client observes standby and active Authority recovery
+[sm1.7.10] PASS: 7.10 client observes exactly two recovery windows
+[sm1.7.10] PASS: 7.10 Gateway endpoint stays stable
+[sm1.7.10] PASS: 7.10 player identity stays stable
+[sm1.7.10] PASS: 7.10 spawn generation remains one
+[sm1.7.10] PASS: 7.10 client sees epochs 1->2->3 with no recovery epoch inflation
+[sm1.7.10] PASS: 7.10 client sees revisions 1..4 without recovery mutation
+[sm1.7.10] PASS: 7.10 route changes only on gameplay handoffs
+[sm1.7.10] PASS: 7.10 writer completes four logical operations across two Authority restarts
+[sm1.7.10] PASS: 7.10 observer remains read-only
+[sm1.7.10] PASS: 7.10 final owner is A epoch3
+[sm1.7.10] PASS: 7.10 two gameplay handoffs and revision4 survive Authority restarts
+[sm1.7.10] PASS: 7.10 Gateway observes and reconnects exactly two Authority processes
+[sm1.7.10] PASS: 7.10 each replacement is validated and sourced read-only
+[sm1.7.10] PASS: 7.10 both replacements receive one zero-write standby sync
+[sm1.7.10] PASS: 7.10 only the crashed active B is recovery-activated
+[sm1.7.10] PASS: 7.10 exactly two Authority recoveries complete
+[sm1.7.10] PASS: 7.10 recovery itself adds no gameplay revision
+[sm1.7.10] PASS: 7.10 Gateway ends with no recovery pending or write block
+[sm1.7.10] PASS: 7.10 Gateway remains non-canonical and retains no transfer payload
+[sm1.7.10] PASS: 7.10 replacement A becomes final active authority only through normal B->A handoff
+[sm1.7.10] PASS: 7.10 recovered B retires normally after B->A
+[sm1.7.10] PASS: 7.10 final revision/input watermark is monotonic
+[sm1.7.10] PASS: 7.10 OperationId ledger contains each logical operation exactly once
+[sm1.7.10] PASS: 7.10 final world state is correct
+[sm1.7.10] PASS: 7.10 replacement A is synced zero-write and never recovery-self-activates
+[sm1.7.10] PASS: 7.10 replacement B activates only after recovery sync
+[sm1.7.10] PASS: 7.10 recovered standby A supplies one read-only historical state query for B recovery
+[sm1.7.10] PASS: 7.10 post-restart executions partition 1 on A + 2 on B
+[sm1.7.10] PASS: 7.10 recovery causes zero OperationId replay
+[sm1.7.10] PASS: 7.10 recovery causes zero stale-authority writes
+[sm1.7.10] PASS: 7.10 replacements create no private persistence owner
+[sm1.7.10] PASS: 7.10 child process 1593882 exited cleanly
+[sm1.7.10] PASS: 7.10 child process 1593883 exited cleanly
+[sm1.7.10] PASS: 7.10 child process 1593763 exited cleanly
+[sm1.7.10] PASS: 7.10 child process 1594653 exited cleanly
+[sm1.7.10] PASS: 7.10 child process 1595399 exited cleanly
+SM1.7.10 Authority recovery: 89 assertions, 0 failures
+SM1_7_10_AUTHORITY_RECOVERY_PASS
+SM1_7_10_ITERATION=10/10
+Godot Engine v4.8.beta1.double.custom_build.4d10419ca - https://godotengine.org
+
+[sm1.7.10] PASS: 7.10 three isolated ENET ports allocated
+[sm1.7.10] PASS: 7.10 Xvfb graphical display started
+[sm1.7.10] PASS: 7.10 original Authority A/B processes launched
+[sm1.7.10] PASS: 7.10 original Authority A listening
+[sm1.7.10] PASS: 7.10 original Authority B listening
+[sm1.7.10] PASS: 7.10 Gateway process launched
+[sm1.7.10] PASS: 7.10 Gateway listening
+[sm1.7.10] PASS: 7.10 two graphical clients launched
+WARNING: Could not set V-Sync mode, as changing V-Sync mode is not supported by the graphics driver.
+     at: set_use_vsync (platform/linuxbsd/x11/gl_manager_x11.cpp:372)
+WARNING: Could not set V-Sync mode, as changing V-Sync mode is not supported by the graphics driver.
+     at: set_use_vsync (platform/linuxbsd/x11/gl_manager_x11.cpp:372)
+[sm1.7.10] PASS: 7.10 writer reaches B/epoch2 before standby crash
+[sm1.7.10] PASS: 7.10 observer reaches B/epoch2 before standby crash
+[sm1.7.10] PASS: 7.10 checkpoint observes B epoch2
+[sm1.7.10] PASS: 7.10 checkpoint carries revision1 observed-state identity
+[sm1.7.10] PASS: 7.10 checkpoint observes B epoch2
+[sm1.7.10] PASS: 7.10 checkpoint carries revision1 observed-state identity
+[sm1.7.10] PASS: 7.10 retired Authority A receives real OS kill
+[sm1.7.10] PASS: 7.10 original retired Authority A is dead
+[sm1.7.10] PASS: 7.10 Authority A port released after crash
+[sm1.7.10] PASS: 7.10 replacement Authority A launches as new inactive process
+[sm1.7.10] PASS: 7.10 replacement A starts inactive and cannot self-promote
+[sm1.7.10] PASS: 7.10 writer observes zero-write standby A recovery
+[sm1.7.10] PASS: 7.10 observer observes zero-write standby A recovery
+[sm1.7.10] PASS: 7.10 standby recovery leaves B/epoch2 ownership unchanged
+[sm1.7.10] PASS: 7.10 standby recovery leaves world revision unchanged
+[sm1.7.10] PASS: 7.10 standby recovery leaves B/epoch2 ownership unchanged
+[sm1.7.10] PASS: 7.10 standby recovery leaves world revision unchanged
+[sm1.7.10] PASS: 7.10 active Authority B receives real OS kill
+[sm1.7.10] PASS: 7.10 original active Authority B is dead
+[sm1.7.10] PASS: 7.10 Authority B port released after crash
+[sm1.7.10] PASS: 7.10 replacement Authority B launches as new inactive process
+[sm1.7.10] PASS: 7.10 replacement B starts inactive and cannot self-promote
+[sm1.7.10] PASS: 7.10 client A process PASS: { "active_recovered": true, "client_id": "a", "command_results": 4.0, "commands_sent": 4.0, "connect_count": 1.0, "display_server": "X11", "epochs": [1.0, 2.0, 3.0], "gateway_endpoint_id": "gateway/sm1/graphical-primary", "logical_player_id": "player/sm1-graphical-a", "passed": true, "player_entity_id": "entity/sm1-graphical-a", "process_id": 1597248.0, "reconnect_count": 0.0, "recovery_complete_events": 2.0, "recovery_pending_events": 2.0, "rendering_method": "gl_compatibility", "respawn_count": 0.0, "revisions": [1.0, 2.0, 3.0, 4.0], "route_history": ["authority/a", "authority/b", "authority/a"], "schema": "planet_simulator.sm1_authority_recovery_client_report.v1", "shared_state": { "action_count": 2.0, "last_input_sequence": 4.0, "last_operation_id": "operation/sm1/graphical/5", "logical_player_id": "player/sm1-graphical-a", "operation_ids": ["operation/sm1/authority-recovery/1", "operation/sm1/authority-recovery/2", "operation/sm1/authority-recovery/3", "operation/sm1/graphical/5"], "player_entity_id": "entity/sm1-graphical-a", "position_x": 0.0, "product_session_id": "session/sm1/graphical-acceptance", "schema": "planet_simulator.sm1_graphical_shared_state.v1", "spawn_generation": 1.0, "world_revision": 4.0 }, "spawn_generation": 1.0, "standby_recovered": true, "state": "COMPLETE" }
+[sm1.7.10] PASS: 7.10 client B process PASS: { "active_recovered": true, "client_id": "b", "command_results": 0.0, "commands_sent": 0.0, "connect_count": 1.0, "display_server": "X11", "epochs": [1.0, 2.0, 3.0], "gateway_endpoint_id": "gateway/sm1/graphical-primary", "logical_player_id": "player/sm1-graphical-a", "passed": true, "player_entity_id": "entity/sm1-graphical-a", "process_id": 1597249.0, "reconnect_count": 0.0, "recovery_complete_events": 2.0, "recovery_pending_events": 2.0, "rendering_method": "gl_compatibility", "respawn_count": 0.0, "revisions": [1.0, 2.0, 3.0, 4.0], "route_history": ["authority/a", "authority/b", "authority/a"], "schema": "planet_simulator.sm1_authority_recovery_client_report.v1", "shared_state": { "action_count": 2.0, "last_input_sequence": 4.0, "last_operation_id": "operation/sm1/graphical/5", "logical_player_id": "player/sm1-graphical-a", "operation_ids": ["operation/sm1/authority-recovery/1", "operation/sm1/authority-recovery/2", "operation/sm1/authority-recovery/3", "operation/sm1/graphical/5"], "player_entity_id": "entity/sm1-graphical-a", "position_x": 0.0, "product_session_id": "session/sm1/graphical-acceptance", "schema": "planet_simulator.sm1_graphical_shared_state.v1", "spawn_generation": 1.0, "world_revision": 4.0 }, "spawn_generation": 1.0, "standby_recovered": true, "state": "COMPLETE" }
+[sm1.7.10] PASS: 7.10 Gateway process PASS: { "active_authority_id": "authority/a", "authority_epoch": 3.0, "authority_recovery_blocks_writes": false, "authority_recovery_complete": true, "authority_runtime_recovery_pending": false, "bootstrap_authority_epoch": 1.0, "bootstrap_authority_id": "authority/a", "canonical_gameplay_owner": false, "client_connection_count": 2.0, "client_endpoint_changed": false, "client_ids": ["a", "b"], "counters": { "active_authority_recoveries": 1.0, "authority_disconnects": 2.0, "authority_messages": 21.0, "authority_reconnects": 2.0, "authority_recoveries": 1.0, "authority_recovery_events": 2.0, "authority_recovery_state_queries": 2.0, "authority_recovery_status_queries": 2.0, "authority_status_queries": 2.0, "busy_rejections": 0.0, "client_disconnects": 0.0, "client_messages": 6.0, "client_reconnects": 0.0, "commands": 4.0, "handoffs": 2.0, "restart_resume_sessions": 0.0, "resume_queries": 0.0, "resume_successes": 0.0, "route_changes": 2.0, "session_ready_announcements": 0.0, "standby_syncs": 2.0, "state_broadcasts": 4.0 }, "gateway_endpoint_id": "gateway/sm1/graphical-primary", "handoff_count": 2.0, "last_state_checksum": "4c539c71cc56512e42f875c96b422540799f259db27709aeea68764ab3893e71", "last_world_revision": 4.0, "network_conditions": { "authorities": { "authority/a": { "profile": {  }, "snapshot": {  } }, "authority/b": { "profile": {  }, "snapshot": {  } } }, "client": { "profile": {  }, "snapshot": {  } } }, "passed": true, "process_id": 1596976.0, "schema": "planet_simulator.sm1_graphical_gateway_report.v1", "state": "COMPLETE", "transfer_payload_retained": false }
+[sm1.7.10] PASS: 7.10 replacement Authority A process PASS: { "active": true, "authority_epoch": 3.0, "authority_id": "authority/a", "counters": { "activations": 1.0, "execute_requests": 1.0, "executed": 1.0, "freezes": 0.0, "recovery_activations": 0.0, "recovery_state_queries": 1.0, "replays": 0.0, "retires": 0.0, "standby_syncs": 1.0, "state_queries": 0.0, "status_queries": 1.0, "warm_loads": 1.0, "write_rejections": 0.0 }, "passed": true, "private_persistence_owner": false, "process_id": 1597880.0, "schema": "planet_simulator.sm1_graphical_authority_report.v1", "shared_state": { "action_count": 2.0, "last_input_sequence": 4.0, "last_operation_id": "operation/sm1/graphical/5", "logical_player_id": "player/sm1-graphical-a", "operation_ids": ["operation/sm1/authority-recovery/1", "operation/sm1/authority-recovery/2", "operation/sm1/authority-recovery/3", "operation/sm1/graphical/5"], "player_entity_id": "entity/sm1-graphical-a", "position_x": 0.0, "product_session_id": "session/sm1/graphical-acceptance", "schema": "planet_simulator.sm1_graphical_shared_state.v1", "spawn_generation": 1.0, "world_revision": 4.0 }, "state": "COMPLETE", "state_checksum": "4c539c71cc56512e42f875c96b422540799f259db27709aeea68764ab3893e71", "warm": false }
+[sm1.7.10] PASS: 7.10 replacement Authority B process PASS: { "active": false, "authority_epoch": 2.0, "authority_id": "authority/b", "counters": { "activations": 0.0, "execute_requests": 2.0, "executed": 2.0, "freezes": 1.0, "recovery_activations": 1.0, "recovery_state_queries": 0.0, "replays": 0.0, "retires": 1.0, "standby_syncs": 1.0, "state_queries": 0.0, "status_queries": 1.0, "warm_loads": 0.0, "write_rejections": 0.0 }, "passed": true, "private_persistence_owner": false, "process_id": 1599624.0, "schema": "planet_simulator.sm1_graphical_authority_report.v1", "shared_state": { "action_count": 1.0, "last_input_sequence": 3.0, "last_operation_id": "operation/sm1/authority-recovery/3", "logical_player_id": "player/sm1-graphical-a", "operation_ids": ["operation/sm1/authority-recovery/1", "operation/sm1/authority-recovery/2", "operation/sm1/authority-recovery/3"], "player_entity_id": "entity/sm1-graphical-a", "position_x": 0.0, "product_session_id": "session/sm1/graphical-acceptance", "schema": "planet_simulator.sm1_graphical_shared_state.v1", "spawn_generation": 1.0, "world_revision": 3.0 }, "state": "COMPLETE", "state_checksum": "c6791f6bce8500877767b01309fdbfedd1e133fba4d58685d926bde7d8dd4b9e", "warm": false }
+[sm1.7.10] PASS: 7.10 authority crash/restart uses seven distinct product OS process identities
+[sm1.7.10] PASS: 7.10 client uses real graphical DisplayServer
+[sm1.7.10] PASS: 7.10 client uses GL compatibility renderer
+[sm1.7.10] PASS: 7.10 clients remain on one Gateway transport connection
+[sm1.7.10] PASS: 7.10 Authority recovery causes zero respawn
+[sm1.7.10] PASS: 7.10 client observes standby and active Authority recovery
+[sm1.7.10] PASS: 7.10 client observes exactly two recovery windows
+[sm1.7.10] PASS: 7.10 Gateway endpoint stays stable
+[sm1.7.10] PASS: 7.10 player identity stays stable
+[sm1.7.10] PASS: 7.10 spawn generation remains one
+[sm1.7.10] PASS: 7.10 client sees epochs 1->2->3 with no recovery epoch inflation
+[sm1.7.10] PASS: 7.10 client sees revisions 1..4 without recovery mutation
+[sm1.7.10] PASS: 7.10 route changes only on gameplay handoffs
+[sm1.7.10] PASS: 7.10 client uses real graphical DisplayServer
+[sm1.7.10] PASS: 7.10 client uses GL compatibility renderer
+[sm1.7.10] PASS: 7.10 clients remain on one Gateway transport connection
+[sm1.7.10] PASS: 7.10 Authority recovery causes zero respawn
+[sm1.7.10] PASS: 7.10 client observes standby and active Authority recovery
+[sm1.7.10] PASS: 7.10 client observes exactly two recovery windows
+[sm1.7.10] PASS: 7.10 Gateway endpoint stays stable
+[sm1.7.10] PASS: 7.10 player identity stays stable
+[sm1.7.10] PASS: 7.10 spawn generation remains one
+[sm1.7.10] PASS: 7.10 client sees epochs 1->2->3 with no recovery epoch inflation
+[sm1.7.10] PASS: 7.10 client sees revisions 1..4 without recovery mutation
+[sm1.7.10] PASS: 7.10 route changes only on gameplay handoffs
+[sm1.7.10] PASS: 7.10 writer completes four logical operations across two Authority restarts
+[sm1.7.10] PASS: 7.10 observer remains read-only
+[sm1.7.10] PASS: 7.10 final owner is A epoch3
+[sm1.7.10] PASS: 7.10 two gameplay handoffs and revision4 survive Authority restarts
+[sm1.7.10] PASS: 7.10 Gateway observes and reconnects exactly two Authority processes
+[sm1.7.10] PASS: 7.10 each replacement is validated and sourced read-only
+[sm1.7.10] PASS: 7.10 both replacements receive one zero-write standby sync
+[sm1.7.10] PASS: 7.10 only the crashed active B is recovery-activated
+[sm1.7.10] PASS: 7.10 exactly two Authority recoveries complete
+[sm1.7.10] PASS: 7.10 recovery itself adds no gameplay revision
+[sm1.7.10] PASS: 7.10 Gateway ends with no recovery pending or write block
+[sm1.7.10] PASS: 7.10 Gateway remains non-canonical and retains no transfer payload
+[sm1.7.10] PASS: 7.10 replacement A becomes final active authority only through normal B->A handoff
+[sm1.7.10] PASS: 7.10 recovered B retires normally after B->A
+[sm1.7.10] PASS: 7.10 final revision/input watermark is monotonic
+[sm1.7.10] PASS: 7.10 OperationId ledger contains each logical operation exactly once
+[sm1.7.10] PASS: 7.10 final world state is correct
+[sm1.7.10] PASS: 7.10 replacement A is synced zero-write and never recovery-self-activates
+[sm1.7.10] PASS: 7.10 replacement B activates only after recovery sync
+[sm1.7.10] PASS: 7.10 recovered standby A supplies one read-only historical state query for B recovery
+[sm1.7.10] PASS: 7.10 post-restart executions partition 1 on A + 2 on B
+[sm1.7.10] PASS: 7.10 recovery causes zero OperationId replay
+[sm1.7.10] PASS: 7.10 recovery causes zero stale-authority writes
+[sm1.7.10] PASS: 7.10 replacements create no private persistence owner
+[sm1.7.10] PASS: 7.10 child process 1597248 exited cleanly
+[sm1.7.10] PASS: 7.10 child process 1597249 exited cleanly
+[sm1.7.10] PASS: 7.10 child process 1596976 exited cleanly
+[sm1.7.10] PASS: 7.10 child process 1597880 exited cleanly
+[sm1.7.10] PASS: 7.10 child process 1599624 exited cleanly
+SM1.7.10 Authority recovery: 89 assertions, 0 failures
+SM1_7_10_AUTHORITY_RECOVERY_PASS
+SM1_7_10_AUTHORITY_RECOVERY_PASS
+iterations=10
+head=5f71900ff2668f32b42588581b80eaa89e1c876e
+godot=4.8.beta1.double.custom_build.4d10419ca
+SM1_AUTH_RECOVERY_EXIT=0

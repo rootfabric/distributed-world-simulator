@@ -1,0 +1,16 @@
+{
+  "capture": true,
+  "entries": [
+    {
+      "level": "info",
+      "message": "BreakpointRuntimeBridge listening on 127.0.0.1:9081",
+      "seq": 1
+    },
+    {
+      "level": "info",
+      "message": "log capture active (Godot 4.8-beta1 (custom_build))",
+      "seq": 2
+    }
+  ],
+  "latest_seq": 2
+}

@@ -1,0 +1,74 @@
+
+=== DWS TEST CLIENT: contracts ===
+Godot Engine v4.8.beta1.double.custom_build.4d10419ca - https://godotengine.org
+
+PASS: test seam client parses
+PASS: test Item Graph client parses
+PASS: accepted SM1 graphical client dependency parses
+PASS: accepted M3 graphical client dependency parses
+PASS: seam process gate exists
+PASS: items process gate exists
+PASS: test client did not create a P7 production runtime owner
+V0 test client contracts: 7 assertions, 0 failures
+
+=== DWS TEST CLIENT: seam ===
+Godot Engine v4.8.beta1.double.custom_build.4d10419ca - https://godotengine.org
+
+PASS: three ENET ports allocated
+PASS: graphical display available
+PASS: Authority A/B launched
+PASS: Authority A listening
+PASS: Authority B listening
+PASS: Gateway launched
+PASS: Gateway listening
+PASS: two observable graphical clients launched
+WARNING: Could not set V-Sync mode, as changing V-Sync mode is not supported by the graphics driver.
+     at: set_use_vsync (platform/linuxbsd/x11/gl_manager_x11.cpp:372)
+WARNING: Could not set V-Sync mode, as changing V-Sync mode is not supported by the graphics driver.
+     at: set_use_vsync (platform/linuxbsd/x11/gl_manager_x11.cpp:372)
+PASS: client A passed
+PASS: client B passed
+PASS: Gateway passed
+PASS: client uses graphical DisplayServer
+PASS: client uses one Gateway connection
+PASS: client performs zero reconnects
+PASS: client performs zero respawns
+PASS: client observes A->B->A route
+PASS: client uses graphical DisplayServer
+PASS: client uses one Gateway connection
+PASS: client performs zero reconnects
+PASS: client performs zero respawns
+PASS: client observes A->B->A route
+PASS: Gateway has two clients
+PASS: Gateway completes A->B->A handoff
+V0_TEST_CLIENT_SEAM_ARTIFACTS=/home/rdpuser/distributed-world-simulator/worktrees/engine48-linux-guards/artifacts/test-results/v0-test-client-seam-2155675
+V0 test client seam: 23 assertions, 0 failures
+
+=== DWS TEST CLIENT: items ===
+Godot Engine v4.8.beta1.double.custom_build.4d10419ca - https://godotengine.org
+
+PASS: dedicated-server ENET port allocated
+PASS: graphical display available
+PASS: dedicated server launched
+PASS: dedicated server READY
+PASS: observable Item client B launched
+WARNING: Could not set V-Sync mode, as changing V-Sync mode is not supported by the graphics driver.
+     at: set_use_vsync (platform/linuxbsd/x11/gl_manager_x11.cpp:372)
+PASS: Item client B ready as independent observer
+PASS: observable Item client A launched
+WARNING: Could not set V-Sync mode, as changing V-Sync mode is not supported by the graphics driver.
+     at: set_use_vsync (platform/linuxbsd/x11/gl_manager_x11.cpp:372)
+PASS: Item client A demo passed
+PASS: Item client B convergence passed
+PASS: Item client uses graphical DisplayServer
+PASS: Item Graph checksum is exact SHA-256
+PASS: Item client uses graphical DisplayServer
+PASS: Item Graph checksum is exact SHA-256
+PASS: A/B final Item Graph checksums converge
+PASS: beacon ends in shared crate
+PASS: Client A completed seven canonical demo commands
+V0_TEST_CLIENT_ITEMS_ARTIFACTS=/home/rdpuser/distributed-world-simulator/worktrees/engine48-linux-guards/artifacts/test-results/v0-test-client-items-2157741
+V0 test client items: 16 assertions, 0 failures
+
+V0 PLAYABLE SEAMLESS TEST CLIENTS: PASS
+SEAMLESS_EXIT=0

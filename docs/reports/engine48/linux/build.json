@@ -1,0 +1,9 @@
+{
+  "scons": "4.11.1 (venv ~/.local/src/godot-scons-venv) + zstandard",
+  "targets": ["editor", "template_debug", "template_release"],
+  "flags": "precision=double arch=x86_64 GODOT_VERSION_STATUS=beta1 -j12",
+  "install_prefix": "~/.local/opt/godot-double-4.8-beta1",
+  "baseline_prefix": "~/.local/opt/godot-double-4.7.1-a13da4f",
+  "binary_sha256_table": "build/binary-sha256.txt",
+  "build_logs": ["build/editor-build.log", "build/template-debug-build.log", "build/template-release-build.log", "build/baseline-471-editor-build.log"]
+}

@@ -1,0 +1,10 @@
+SM1_7_9_GODOT_VERSION=4.8.beta1.double.custom_build.4d10419ca
+SM1_7_9_TESTED_HEAD=c1d3070fec0cd2cb87d002bb8bd3205bd0d7a4ca
+SM1_7_9_ITERATIONS=10
+SM1_7_9_ITERATION=1/10
+Godot Engine v4.8.beta1.double.custom_build.4d10419ca - https://godotengine.org
+
+[sm1.7.9] PASS: 7.9 three isolated ENET ports allocated
+[sm1.7.9][FAIL] 7.9 Xvfb graphical display started
+SM1.7.9 Gateway failure/restart: 2 assertions, 2 failures
+SM1_GW_FAILURE_RESTART_EXIT=1

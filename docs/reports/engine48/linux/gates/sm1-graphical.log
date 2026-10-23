@@ -1,0 +1,107 @@
+SM1_6_GODOT_VERSION=4.8.beta1.double.custom_build.4d10419ca
+SM1_6_TESTED_HEAD=5f71900ff2668f32b42588581b80eaa89e1c876e
+SM1_L0_GODOT_VERSION=4.8.beta1.double.custom_build.4d10419ca
+SM1_L0_TESTED_HEAD=5f71900ff2668f32b42588581b80eaa89e1c876e
+Godot Engine v4.8.beta1.double.custom_build.4d10419ca - https://godotengine.org
+
+[sm1-l0] all 79 assertions passed
+[sm1-l0][stage] SM0_DONOR_TO_P6_OWNER_MAP_PASS
+[sm1-l0][stage] ONE_WRITER_TRANSFER_STATE_MACHINE_PASS
+[sm1-l0][stage] AMBIGUOUS_COMMIT_RETRY_EXACTLY_ONCE_PASS
+[sm1-l0][stage] STALE_SOURCE_FENCED_PASS
+Godot Engine v4.8.beta1.double.custom_build.4d10419ca - https://godotengine.org
+
+[sm1-carry-route] all 89 assertions passed
+[sm1-carry-route][stage] SOURCE_FREEZE_BEFORE_PLAYER_CAPTURE_PASS
+[sm1-carry-route][stage] COMPLETED_TRANSFER_REPLAY_PROOF_FENCE_PASS
+[sm1-carry-route][stage] PLAYER_CARRYING_DOMAIN_CONTINUITY_PASS
+[sm1-carry-route][stage] CLIENT_GATEWAY_ENDPOINT_UNCHANGED_PASS
+[sm1-carry-route][stage] OPERATION_ID_CONTINUITY_ACROSS_AUTHORITY_PASS
+[sm1-carry-route][stage] INPUT_SEQUENCE_CONTINUITY_PASS
+[sm1-carry-route][stage] INTERNAL_ROUTE_A_B_A_PASS
+Godot Engine v4.8.beta1.double.custom_build.4d10419ca - https://godotengine.org
+
+[sm1-world] all 77 assertions passed
+[sm1-world][stage] SOURCE_FREEZE_BEFORE_WORLD_CAPTURE_PASS
+[sm1-world][stage] ITEM_GRAPH_CANONICAL_CONTINUITY_PASS
+[sm1-world][stage] CONSTRUCTION_CANONICAL_CONTINUITY_PASS
+[sm1-world][stage] OUTPOST_PERSISTENCE_COMPOSITION_CONTINUITY_PASS
+[sm1-world][stage] SM1_5_CANONICAL_WORLD_STATE_CONTINUITY_PASS
+Godot Engine v4.8.beta1.double.custom_build.4d10419ca - https://godotengine.org
+
+[sm1-combined] all 66 assertions passed
+[sm1-combined][stage] PLAYER_WORLD_WARM_CHAIN_COMPOSITION_PASS
+[sm1-combined][stage] SM1_3_SM1_5_COMBINED_CONTINUITY_PASS
+Godot Engine v4.8.beta1.double.custom_build.4d10419ca - https://godotengine.org
+
+[sm1-historical-activation] all 28 assertions passed
+[sm1-historical-activation][stage] HISTORICAL_ACTIVATION_REPLAY_DOES_NOT_REASSERT_CURRENT_OWNER_PASS
+SM1_L0_EXACT_HEAD_EXECUTABLE_PASS head=5f71900ff2668f32b42588581b80eaa89e1c876e godot=4.8.beta1.double.custom_build.4d10419ca
+Godot Engine v4.8.beta1.double.custom_build.4d10419ca - https://godotengine.org
+
+[sm1-graphical] PASS: three isolated ENET ports allocated
+[sm1-graphical] PASS: Xvfb graphical display started
+[sm1-graphical] PASS: two authority processes launched
+[sm1-graphical] PASS: Authority A listening
+[sm1-graphical] PASS: Authority B listening
+[sm1-graphical] PASS: Gateway process launched
+[sm1-graphical] PASS: Gateway listening
+[sm1-graphical] PASS: two graphical client processes launched
+WARNING: Could not set V-Sync mode, as changing V-Sync mode is not supported by the graphics driver.
+     at: set_use_vsync (platform/linuxbsd/x11/gl_manager_x11.cpp:372)
+WARNING: Could not set V-Sync mode, as changing V-Sync mode is not supported by the graphics driver.
+     at: set_use_vsync (platform/linuxbsd/x11/gl_manager_x11.cpp:372)
+[sm1-graphical] PASS: client A process PASS: { "client_id": "a", "command_results": 5.0, "commands_sent": 5.0, "connect_count": 1.0, "display_server": "X11", "epochs": [1.0, 2.0, 3.0], "gateway_endpoint_id": "gateway/sm1/graphical-primary", "identity_failures": [], "logical_player_id": "player/sm1-graphical-a", "passed": true, "player_entity_id": "entity/sm1-graphical-a", "process_id": 1559600.0, "reconnect_count": 0.0, "rendering_method": "gl_compatibility", "respawn_count": 0.0, "revisions": [1.0, 2.0, 3.0, 4.0, 5.0], "route_history": ["authority/a", "authority/b", "authority/a"], "schema": "planet_simulator.sm1_graphical_client_report.v1", "spawn_generation": 1.0, "state": "COMPLETE" }
+[sm1-graphical] PASS: client B process PASS: { "client_id": "b", "command_results": 0.0, "commands_sent": 0.0, "connect_count": 1.0, "display_server": "X11", "epochs": [1.0, 2.0, 3.0], "gateway_endpoint_id": "gateway/sm1/graphical-primary", "identity_failures": [], "logical_player_id": "player/sm1-graphical-a", "passed": true, "player_entity_id": "entity/sm1-graphical-a", "process_id": 1559601.0, "reconnect_count": 0.0, "rendering_method": "gl_compatibility", "respawn_count": 0.0, "revisions": [1.0, 2.0, 3.0, 4.0, 5.0], "route_history": ["authority/a", "authority/b", "authority/a"], "schema": "planet_simulator.sm1_graphical_client_report.v1", "spawn_generation": 1.0, "state": "COMPLETE" }
+[sm1-graphical] PASS: Gateway process PASS: { "active_authority_id": "authority/a", "authority_epoch": 3.0, "authority_recovery_blocks_writes": false, "authority_recovery_complete": true, "authority_runtime_recovery_pending": false, "bootstrap_authority_epoch": 1.0, "bootstrap_authority_id": "authority/a", "canonical_gameplay_owner": false, "client_connection_count": 2.0, "client_endpoint_changed": false, "client_ids": ["a", "b"], "counters": { "active_authority_recoveries": 0.0, "authority_disconnects": 0.0, "authority_messages": 15.0, "authority_reconnects": 0.0, "authority_recoveries": 1.0, "authority_recovery_events": 0.0, "authority_recovery_state_queries": 0.0, "authority_recovery_status_queries": 0.0, "authority_status_queries": 2.0, "busy_rejections": 0.0, "client_disconnects": 0.0, "client_messages": 7.0, "client_reconnects": 0.0, "commands": 5.0, "handoffs": 2.0, "restart_resume_sessions": 0.0, "resume_queries": 0.0, "resume_successes": 0.0, "route_changes": 2.0, "session_ready_announcements": 0.0, "standby_syncs": 0.0, "state_broadcasts": 5.0 }, "gateway_endpoint_id": "gateway/sm1/graphical-primary", "handoff_count": 2.0, "last_state_checksum": "0bb8cfac9c669758bd51a5eb7330aeaaf6f5b787cc29230f21b684d3202d0ab8", "last_world_revision": 5.0, "network_conditions": { "authorities": { "authority/a": { "profile": {  }, "snapshot": {  } }, "authority/b": { "profile": {  }, "snapshot": {  } } }, "client": { "profile": {  }, "snapshot": {  } } }, "passed": true, "process_id": 1559507.0, "schema": "planet_simulator.sm1_graphical_gateway_report.v1", "state": "COMPLETE", "transfer_payload_retained": false }
+[sm1-graphical] PASS: Authority A process PASS: { "active": true, "authority_epoch": 3.0, "authority_id": "authority/a", "counters": { "activations": 1.0, "execute_requests": 3.0, "executed": 3.0, "freezes": 1.0, "recovery_activations": 0.0, "recovery_state_queries": 0.0, "replays": 0.0, "retires": 1.0, "standby_syncs": 0.0, "state_queries": 0.0, "status_queries": 1.0, "warm_loads": 1.0, "write_rejections": 0.0 }, "passed": true, "private_persistence_owner": false, "process_id": 1559029.0, "schema": "planet_simulator.sm1_graphical_authority_report.v1", "shared_state": { "action_count": 3.0, "last_input_sequence": 5.0, "last_operation_id": "operation/sm1/graphical/5", "logical_player_id": "player/sm1-graphical-a", "operation_ids": ["operation/sm1/graphical/1", "operation/sm1/graphical/2", "operation/sm1/graphical/3", "operation/sm1/graphical/4", "operation/sm1/graphical/5"], "player_entity_id": "entity/sm1-graphical-a", "position_x": 0.0, "product_session_id": "session/sm1/graphical-acceptance", "schema": "planet_simulator.sm1_graphical_shared_state.v1", "spawn_generation": 1.0, "world_revision": 5.0 }, "state": "COMPLETE", "state_checksum": "0bb8cfac9c669758bd51a5eb7330aeaaf6f5b787cc29230f21b684d3202d0ab8", "warm": false }
+[sm1-graphical] PASS: Authority B process PASS: { "active": false, "authority_epoch": 2.0, "authority_id": "authority/b", "counters": { "activations": 1.0, "execute_requests": 2.0, "executed": 2.0, "freezes": 1.0, "recovery_activations": 0.0, "recovery_state_queries": 0.0, "replays": 0.0, "retires": 1.0, "standby_syncs": 0.0, "state_queries": 0.0, "status_queries": 1.0, "warm_loads": 1.0, "write_rejections": 0.0 }, "passed": true, "private_persistence_owner": false, "process_id": 1559040.0, "schema": "planet_simulator.sm1_graphical_authority_report.v1", "shared_state": { "action_count": 2.0, "last_input_sequence": 4.0, "last_operation_id": "operation/sm1/graphical/4", "logical_player_id": "player/sm1-graphical-a", "operation_ids": ["operation/sm1/graphical/1", "operation/sm1/graphical/2", "operation/sm1/graphical/3", "operation/sm1/graphical/4"], "player_entity_id": "entity/sm1-graphical-a", "position_x": 0.0, "product_session_id": "session/sm1/graphical-acceptance", "schema": "planet_simulator.sm1_graphical_shared_state.v1", "spawn_generation": 1.0, "world_revision": 4.0 }, "state": "COMPLETE", "state_checksum": "ebc4dae7add677020b7a2f6c14ecb3fef85bc0aeb65005cee6d5d383d77cac59", "warm": false }
+[sm1-graphical] PASS: five distinct OS process identities
+[sm1-graphical] PASS: client uses real graphical DisplayServer
+[sm1-graphical] PASS: client uses GL compatibility renderer
+[sm1-graphical] PASS: client connects to Gateway exactly once
+[sm1-graphical] PASS: client performs zero reconnects
+[sm1-graphical] PASS: client performs zero respawns
+[sm1-graphical] PASS: client Gateway endpoint remains stable
+[sm1-graphical] PASS: logical player identity remains stable
+[sm1-graphical] PASS: player entity identity remains stable
+[sm1-graphical] PASS: spawn generation remains one
+[sm1-graphical] PASS: client observes authority epochs 1->2->3
+[sm1-graphical] PASS: client observes continuous revisions 1..5
+[sm1-graphical] PASS: client observes A->B->A route pivot
+[sm1-graphical] PASS: client uses real graphical DisplayServer
+[sm1-graphical] PASS: client uses GL compatibility renderer
+[sm1-graphical] PASS: client connects to Gateway exactly once
+[sm1-graphical] PASS: client performs zero reconnects
+[sm1-graphical] PASS: client performs zero respawns
+[sm1-graphical] PASS: client Gateway endpoint remains stable
+[sm1-graphical] PASS: logical player identity remains stable
+[sm1-graphical] PASS: player entity identity remains stable
+[sm1-graphical] PASS: spawn generation remains one
+[sm1-graphical] PASS: client observes authority epochs 1->2->3
+[sm1-graphical] PASS: client observes continuous revisions 1..5
+[sm1-graphical] PASS: client observes A->B->A route pivot
+[sm1-graphical] PASS: client A completes five commands through one Gateway connection
+[sm1-graphical] PASS: client B remains read-only observer
+[sm1-graphical] PASS: Gateway exposes the same logical endpoint
+[sm1-graphical] PASS: Gateway holds two simultaneous clients
+[sm1-graphical] PASS: Gateway completes exactly two handoffs
+[sm1-graphical] PASS: final owner returns to Authority A at epoch 3
+[sm1-graphical] PASS: Gateway observed final world revision 5
+[sm1-graphical] PASS: Gateway retains no transfer payload after handoff
+[sm1-graphical] PASS: Gateway never claims canonical gameplay ownership
+[sm1-graphical] PASS: client-facing Gateway endpoint never changes
+[sm1-graphical] PASS: Authority A is final active writer at epoch 3
+[sm1-graphical] PASS: Authority B is retired after return handoff
+[sm1-graphical] PASS: Authority A owns final revision 5
+[sm1-graphical] PASS: Authority B retains only retired revision 4
+[sm1-graphical] PASS: authorities do not create a private persistence owner
+[sm1-graphical] PASS: child process 1559600 exited cleanly
+[sm1-graphical] PASS: child process 1559601 exited cleanly
+[sm1-graphical] PASS: child process 1559507 exited cleanly
+[sm1-graphical] PASS: child process 1559029 exited cleanly
+[sm1-graphical] PASS: child process 1559040 exited cleanly
+SM1.6 graphical A-B-A process acceptance: 58 assertions, 0 failures
+SM1_6_GRAPHICAL_PROCESS_PASS
+SM1_6_GRAPHICAL_EXACT_HEAD_PASS head=5f71900ff2668f32b42588581b80eaa89e1c876e godot=4.8.beta1.double.custom_build.4d10419ca
+SM1_GRAPHICAL_EXIT=0

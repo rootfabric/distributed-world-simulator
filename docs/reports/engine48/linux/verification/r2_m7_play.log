@@ -1,0 +1,6 @@
+M7 network playground started: 127.0.0.1:24699
+Server PID: 1825562; client PIDs: 1826649 1826879
+Logs: /home/rdpuser/distributed-world-simulator/worktrees/engine48-linux-guards/artifacts/runtime/m7-network-playground/20261023-050047
+Network profiles: server=LOCAL client=LOCAL
+Controls: click viewport; WASD; Shift; Space; Tab; E; G; F; 1-0; Esc.
+Stop: ./STOP_M7_NETWORKED_PLAYGROUND.sh

@@ -1,0 +1,4 @@
+4d72a93edf3b4193bdbf22f72c0c9d15c14aa7130c07cf1638f88ca1f9744f6f  /home/rdpuser/.local/opt/godot-double-4.8-beta1/godot.linuxbsd.editor.double.x86_64
+af1e29d1c53688786e0551c54b1d1105300955302180b02a7fdf5711d46ff897  /home/rdpuser/.local/opt/godot-double-4.8-beta1/godot.linuxbsd.template_debug.double.x86_64
+fffb8f53f85bda1757572638d88386e80f90a7e0abf1be61638544197f4506e7  /home/rdpuser/.local/opt/godot-double-4.8-beta1/godot.linuxbsd.template_release.double.x86_64
+f8dbe9d873d368e1b7587ce3aae022b980e8176e9d1fd237894764d574fc272a  /home/rdpuser/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64

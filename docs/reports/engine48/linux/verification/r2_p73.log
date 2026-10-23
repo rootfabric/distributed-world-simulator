@@ -1,0 +1,188 @@
+Godot Engine v4.8.beta1.double.custom_build.4d10419ca - https://godotengine.org
+
+[   0% ] [90m[1mfirst_scan_filesystem[22m | Started Project initialization (5 steps)[39m[0m
+[   0% ] [90m[1mfirst_scan_filesystem[22m | Scanning file structure...[39m[0m
+[  16% ] [90m[1mfirst_scan_filesystem[22m | Loading global class names...[39m[0m
+[  33% ] [90m[1mfirst_scan_filesystem[22m | Verifying GDExtensions...[39m[0m
+[  50% ] [90m[1mfirst_scan_filesystem[22m | Creating autoload scripts...[39m[0m
+[  66% ] [90m[1mfirst_scan_filesystem[22m | Initializing plugins...[39m[0m
+[breakpoint_mcp] plugin enabled
+[breakpoint_mcp] listening on 127.0.0.1:9080
+[  83% ] [90m[1mfirst_scan_filesystem[22m | Starting file scan...[39m[0m
+[92m[ DONE ][39m [1mfirst_scan_filesystem[22m
+[0m
+[   0% ] [90m[1mloading_editor_layout[22m | Started Loading editor (5 steps)[39m[0m
+[   0% ] [90m[1mloading_editor_layout[22m | Loading editor layout...[39m[0m
+[  16% ] [90m[1mloading_editor_layout[22m | Loading docks...[39m[0m
+[92m[ DONE ][39m [1mloading_editor_layout[22m
+[0m
+[breakpoint_mcp] plugin disabled
+Godot Engine v4.8.beta1.double.custom_build.4d10419ca - https://godotengine.org
+
+V0-P7.3 material batch to Item Graph: PASS (116 assertions, 0 failures)
+[V0-P7.3] PASS p7-3-material-delivery
+Godot Engine v4.8.beta1.double.custom_build.4d10419ca - https://godotengine.org
+
+V0-P7.2 lunar Matter bubble: PASS (53 assertions, 0 failures)
+[V0-P7.3] PASS p7-2-bubble
+Godot Engine v4.8.beta1.double.custom_build.4d10419ca - https://godotengine.org
+
+V0-P7.2 lunar surface seam: PASS (50 assertions, 0 failures)
+[V0-P7.3] PASS p7-2-seam
+Godot Engine v4.8.beta1.double.custom_build.4d10419ca - https://godotengine.org
+
+V0-P7.1 authority gate: PASS (88 assertions, 0 failures)
+[V0-P7.3] PASS p7-1-authority
+Godot Engine v4.8.beta1.double.custom_build.4d10419ca - https://godotengine.org
+
+V0-P7.1 Tool->MW4 integration: PASS (30 assertions, 0 failures)
+[V0-P7.3] PASS p7-1-tool-to-mw4
+Godot Engine v4.8.beta1.double.custom_build.4d10419ca - https://godotengine.org
+
+V0-P5 mining tool gate: 36 assertions, 0 failures
+[V0-P7.3] PASS p5-mining-tool
+Godot Engine v4.8.beta1.double.custom_build.4d10419ca - https://godotengine.org
+
+PASS: canonical Item Graph configures for P3 domain test
+PASS: Earth resource spatial resolver configures
+PASS: ResourceMiningService configures against canonical Item Graph
+PASS: resource snapshot validates
+PASS: initial resource generation is one
+PASS: canonical ore node starts with eight units
+PASS: canonical ore node outputs item/ore
+PASS: Earth-fixed resource position resolves into MVP tangent plane
+PASS: first ore node is near but not inside spawn mining range
+PASS: canonical Item Graph configures for P3 domain test
+PASS: Earth resource spatial resolver configures
+PASS: ResourceMiningService configures against canonical Item Graph
+PASS: client execute cannot invoke trusted server output
+PASS: client trusted-output attempt is rejected by ordinary command dispatch
+PASS: client trusted-output attempt leaves canonical Item Graph checksum unchanged
+PASS: client trusted-output attempt leaves Item Graph revision unchanged
+PASS: client trusted-output attempt leaves Item Graph tick unchanged
+PASS: canonical Item Graph configures for P3 domain test
+PASS: Earth resource spatial resolver configures
+PASS: ResourceMiningService configures against canonical Item Graph
+PASS: resource target position resolves for test
+PASS: resource.mine payload survives canonical JSON round trip
+PASS: wire-round-tripped requested_units remains canonical JSON integer
+PASS: one-unit resource.mine succeeds in range
+PASS: successful mine decrements resource from eight to seven
+PASS: successful mine reports canonical ore output definition
+PASS: successful mine credits exactly one ore quantity
+PASS: successful mine returns deterministic output item identity
+PASS: successful mine advances resource generation exactly once
+PASS: successful mine advances Item Graph revision exactly once
+PASS: successful mine advances Item Graph tick exactly once
+PASS: mined output exists in canonical Item Graph
+PASS: mined output is one canonical item/ore
+PASS: mined output is credited to a real canonical player inventory slot
+PASS: exact resource.mine replay succeeds as replay
+PASS: exact replay returns identical output item identity
+PASS: exact replay does not deplete resource twice
+PASS: exact replay does not mint ore twice
+PASS: same operation id with different mining payload is rejected
+PASS: conflicting replay is mutation-free across resource and Item Graph
+PASS: zero quantity rejection is precise
+PASS: zero quantity rejection leaves resource canonical state unchanged
+PASS: zero quantity rejection leaves Item Graph canonical state unchanged
+PASS: oversize quantity rejection is precise
+PASS: oversize quantity rejection leaves resource canonical state unchanged
+PASS: oversize quantity rejection leaves Item Graph canonical state unchanged
+PASS: missing resource rejection is precise
+PASS: missing resource rejection leaves resource canonical state unchanged
+PASS: missing resource rejection leaves Item Graph canonical state unchanged
+PASS: out-of-range resource rejection is precise
+PASS: out-of-range resource rejection leaves resource canonical state unchanged
+PASS: out-of-range resource rejection leaves Item Graph canonical state unchanged
+PASS: client authority field rejection is precise
+PASS: client authority field rejection leaves resource canonical state unchanged
+PASS: client authority field rejection leaves Item Graph canonical state unchanged
+PASS: atomicity resolver configures
+PASS: resource service accepts bounded rejecting Item Graph port
+PASS: resource target position resolves for test
+PASS: Item Graph preflight failure rejects mining
+PASS: Item Graph preflight failure leaves resource state untouched
+PASS: failed output preflight never reaches Item Graph mutation call
+PASS: canonical Item Graph configures for P3 domain test
+PASS: Earth resource spatial resolver configures
+PASS: ResourceMiningService configures against canonical Item Graph
+PASS: resource target position resolves for test
+PASS: recovery source mine succeeds
+PASS: resource and Item Graph durable/replay states export
+PASS: fresh Item Graph restores mined durable state
+PASS: fresh Item Graph restores trusted-output replay ledger
+PASS: fresh recovery resolver configures
+PASS: fresh ResourceMiningService configures before restore
+PASS: fresh ResourceMiningService restores depleted state
+PASS: fresh ResourceMiningService restores mining replay ledger
+PASS: resource target position resolves for test
+PASS: fresh recovery exact replay is idempotent
+PASS: fresh recovery replay preserves output identity
+PASS: fresh recovery replay does not deplete resource again
+PASS: fresh recovery replay does not duplicate ore
+PASS: fresh recovery contains exactly one mined ore output in player inventory
+V0-P3 resource/mining domain: 79 assertions, 0 failures
+[V0-P7.3] PASS p3-resource-domain
+Godot Engine v4.8.beta1.double.custom_build.4d10419ca - https://godotengine.org
+
+MW4 matter mutations: START
+MW4 stage manifest: START
+MW4 stage manifest: DONE (0.000 s)
+MW4 stage swept-shape: START
+MW4 stage swept-shape: DONE (1.577 s)
+MW4 stage receiver-journal: START
+MW4 stage receiver-journal: DONE (0.061 s)
+MW4 stage atomic-store: START
+MW4 stage atomic-store: DONE (3.788 s)
+MW4 stage single-cell: START
+MW4 stage single-cell: DONE (2.040 s)
+MW4 stage cross-brick: START
+MW4 stage cross-brick: DONE (9.777 s)
+MW4 stage rejections: START
+MW4 stage rejections: DONE (4.336 s)
+MW4 stage rollback: START
+MW4 stage rollback: DONE (1.529 s)
+MW4 stage streamer: START
+MW4 stage streamer: DONE (2.090 s)
+MW4 matter mutations: PASS (187 assertions / 25.216 s)
+[V0-P7.3] PASS mw4
+Godot Engine v4.8.beta1.double.custom_build.4d10419ca - https://godotengine.org
+
+MW5 matter persistence: START
+MW5 stage manifest: START
+MW5 stage manifest: DONE (0.000 s)
+MW5 stage binary64-transport: START
+MW5 stage binary64-transport: DONE (0.003 s)
+MW5 stage checkpoint-roundtrip: START
+MW5 stage checkpoint-roundtrip: DONE (19.433 s)
+MW5 stage atomic-repository: START
+MW5 stage atomic-repository: DONE (32.787 s)
+MW5 stage identity-rejection: START
+MW5 stage identity-rejection: DONE (6.897 s)
+MW5 stage process-restart: START
+Godot Engine v4.8.beta1.double.custom_build.4d10419ca - https://godotengine.org
+
+Godot Engine v4.8.beta1.double.custom_build.4d10419ca - https://godotengine.org
+
+MW5 stage process-restart: DONE (11.380 s)
+MW5 matter persistence: PASS (142 assertions / 70.503 s)
+[V0-P7.3] PASS mw5
+Godot Engine v4.8.beta1.double.custom_build.4d10419ca - https://godotengine.org
+
+MW6 matter network authority: START
+MW6 stage manifest: START
+MW6 stage manifest: DONE (0.000 s)
+MW6 stage durable-bootstrap: START
+MW6 stage durable-bootstrap: DONE (6.896 s)
+MW6 stage authority-broadcast-replay: START
+MW6 stage authority-broadcast-replay: DONE (10.212 s)
+MW6 stage reconnect-delta-replay: START
+MW6 stage reconnect-delta-replay: DONE (8.285 s)
+MW6 stage snapshot-fallback-gap: START
+MW6 stage snapshot-fallback-gap: DONE (17.156 s)
+MW6 matter network authority: PASS (130 assertions / 42.553 s)
+[V0-P7.3] PASS mw6
+V0-P7.3 MATERIAL BATCH TO ITEM GRAPH GATE GREEN
+EXACT_HEAD=7aaa7fa9ebcabeeca33f15696002ff3907c22ffb
+GODOT=4.8.beta1.double.custom_build.4d10419ca

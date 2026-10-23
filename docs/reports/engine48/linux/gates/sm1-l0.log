@@ -1,0 +1,38 @@
+SM1_L0_GODOT_VERSION=4.8.beta1.double.custom_build.4d10419ca
+SM1_L0_TESTED_HEAD=24fc10ee1dedfe5b49d8b819fe7ef6591f5c0750
+Godot Engine v4.8.beta1.double.custom_build.4d10419ca - https://godotengine.org
+
+[sm1-l0] all 79 assertions passed
+[sm1-l0][stage] SM0_DONOR_TO_P6_OWNER_MAP_PASS
+[sm1-l0][stage] ONE_WRITER_TRANSFER_STATE_MACHINE_PASS
+[sm1-l0][stage] AMBIGUOUS_COMMIT_RETRY_EXACTLY_ONCE_PASS
+[sm1-l0][stage] STALE_SOURCE_FENCED_PASS
+Godot Engine v4.8.beta1.double.custom_build.4d10419ca - https://godotengine.org
+
+[sm1-carry-route] all 89 assertions passed
+[sm1-carry-route][stage] SOURCE_FREEZE_BEFORE_PLAYER_CAPTURE_PASS
+[sm1-carry-route][stage] COMPLETED_TRANSFER_REPLAY_PROOF_FENCE_PASS
+[sm1-carry-route][stage] PLAYER_CARRYING_DOMAIN_CONTINUITY_PASS
+[sm1-carry-route][stage] CLIENT_GATEWAY_ENDPOINT_UNCHANGED_PASS
+[sm1-carry-route][stage] OPERATION_ID_CONTINUITY_ACROSS_AUTHORITY_PASS
+[sm1-carry-route][stage] INPUT_SEQUENCE_CONTINUITY_PASS
+[sm1-carry-route][stage] INTERNAL_ROUTE_A_B_A_PASS
+Godot Engine v4.8.beta1.double.custom_build.4d10419ca - https://godotengine.org
+
+[sm1-world] all 77 assertions passed
+[sm1-world][stage] SOURCE_FREEZE_BEFORE_WORLD_CAPTURE_PASS
+[sm1-world][stage] ITEM_GRAPH_CANONICAL_CONTINUITY_PASS
+[sm1-world][stage] CONSTRUCTION_CANONICAL_CONTINUITY_PASS
+[sm1-world][stage] OUTPOST_PERSISTENCE_COMPOSITION_CONTINUITY_PASS
+[sm1-world][stage] SM1_5_CANONICAL_WORLD_STATE_CONTINUITY_PASS
+Godot Engine v4.8.beta1.double.custom_build.4d10419ca - https://godotengine.org
+
+[sm1-combined] all 66 assertions passed
+[sm1-combined][stage] PLAYER_WORLD_WARM_CHAIN_COMPOSITION_PASS
+[sm1-combined][stage] SM1_3_SM1_5_COMBINED_CONTINUITY_PASS
+Godot Engine v4.8.beta1.double.custom_build.4d10419ca - https://godotengine.org
+
+[sm1-historical-activation] all 28 assertions passed
+[sm1-historical-activation][stage] HISTORICAL_ACTIVATION_REPLAY_DOES_NOT_REASSERT_CURRENT_OWNER_PASS
+SM1_L0_EXACT_HEAD_EXECUTABLE_PASS head=24fc10ee1dedfe5b49d8b819fe7ef6591f5c0750 godot=4.8.beta1.double.custom_build.4d10419ca
+SM1_L0_EXIT=0

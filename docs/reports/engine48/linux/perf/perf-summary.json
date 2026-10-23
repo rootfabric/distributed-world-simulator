@@ -1,0 +1,230 @@
+{
+ "godot471-r1": {
+  "run": "godot471-r1",
+  "server": {
+   "health_windows": 104,
+   "window_max_elapsed_ms_p50": 799.0,
+   "window_max_elapsed_ms_p95": 799.0,
+   "window_max_elapsed_ms_p99": 799.0,
+   "hard_stalls": 0,
+   "soft_stalls": 0,
+   "rejections": 0,
+   "moves_total": 6221,
+   "connected_peers_last": 2
+  },
+  "client_a_fps": {
+   "samples": 0,
+   "p50": 0.0,
+   "p95": 0.0,
+   "p99": 0.0
+  },
+  "client_b_fps": {
+   "samples": 0,
+   "p50": 0.0,
+   "p95": 0.0,
+   "p99": 0.0
+  },
+  "cpu_seconds_total": 1430.86,
+  "wall_seconds": 179,
+  "server_rss_kb_last": 63413,
+  "clients_rss_kb_last": 178666,
+  "script_errors": 0,
+  "fps_both_clients": {
+   "samples": 394,
+   "p50": 16,
+   "p95": 18,
+   "mean": 15.93
+  },
+  "server_watchdog_note": "max_elapsed_ms is cumulative-since-start; final value = worst server stage elapsed of the run"
+ },
+ "godot471-r2": {
+  "run": "godot471-r2",
+  "server": {
+   "health_windows": 103,
+   "window_max_elapsed_ms_p50": 711.0,
+   "window_max_elapsed_ms_p95": 711.0,
+   "window_max_elapsed_ms_p99": 711.0,
+   "hard_stalls": 0,
+   "soft_stalls": 0,
+   "rejections": 0,
+   "moves_total": 6173,
+   "connected_peers_last": 2
+  },
+  "client_a_fps": {
+   "samples": 0,
+   "p50": 0.0,
+   "p95": 0.0,
+   "p99": 0.0
+  },
+  "client_b_fps": {
+   "samples": 0,
+   "p50": 0.0,
+   "p95": 0.0,
+   "p99": 0.0
+  },
+  "cpu_seconds_total": 1438.24,
+  "wall_seconds": 178,
+  "server_rss_kb_last": 63343,
+  "clients_rss_kb_last": 175747,
+  "script_errors": 0,
+  "fps_both_clients": {
+   "samples": 390,
+   "p50": 16,
+   "p95": 18,
+   "mean": 15.94
+  },
+  "server_watchdog_note": "max_elapsed_ms is cumulative-since-start; final value = worst server stage elapsed of the run"
+ },
+ "godot471-r3": {
+  "run": "godot471-r3",
+  "server": {
+   "health_windows": 103,
+   "window_max_elapsed_ms_p50": 719.0,
+   "window_max_elapsed_ms_p95": 719.0,
+   "window_max_elapsed_ms_p99": 719.0,
+   "hard_stalls": 0,
+   "soft_stalls": 0,
+   "rejections": 0,
+   "moves_total": 6302,
+   "connected_peers_last": 2
+  },
+  "client_a_fps": {
+   "samples": 0,
+   "p50": 0.0,
+   "p95": 0.0,
+   "p99": 0.0
+  },
+  "client_b_fps": {
+   "samples": 0,
+   "p50": 0.0,
+   "p95": 0.0,
+   "p99": 0.0
+  },
+  "cpu_seconds_total": 1486.51,
+  "wall_seconds": 178,
+  "server_rss_kb_last": 63330,
+  "clients_rss_kb_last": 177016,
+  "script_errors": 0,
+  "fps_both_clients": {
+   "samples": 392,
+   "p50": 16,
+   "p95": 19,
+   "mean": 16.16
+  },
+  "server_watchdog_note": "max_elapsed_ms is cumulative-since-start; final value = worst server stage elapsed of the run"
+ },
+ "godot48-r1": {
+  "run": "godot48-r1",
+  "server": {
+   "health_windows": 104,
+   "window_max_elapsed_ms_p50": 713.0,
+   "window_max_elapsed_ms_p95": 713.0,
+   "window_max_elapsed_ms_p99": 713.0,
+   "hard_stalls": 0,
+   "soft_stalls": 0,
+   "rejections": 0,
+   "moves_total": 6407,
+   "connected_peers_last": 2
+  },
+  "client_a_fps": {
+   "samples": 0,
+   "p50": 0.0,
+   "p95": 0.0,
+   "p99": 0.0
+  },
+  "client_b_fps": {
+   "samples": 0,
+   "p50": 0.0,
+   "p95": 0.0,
+   "p99": 0.0
+  },
+  "cpu_seconds_total": 1445.58,
+  "wall_seconds": 179,
+  "server_rss_kb_last": 65163,
+  "clients_rss_kb_last": 177984,
+  "script_errors": 0,
+  "fps_both_clients": {
+   "samples": 397,
+   "p50": 16,
+   "p95": 18,
+   "mean": 16.26
+  },
+  "server_watchdog_note": "max_elapsed_ms is cumulative-since-start; final value = worst server stage elapsed of the run"
+ },
+ "godot48-r2": {
+  "run": "godot48-r2",
+  "server": {
+   "health_windows": 104,
+   "window_max_elapsed_ms_p50": 678.0,
+   "window_max_elapsed_ms_p95": 678.0,
+   "window_max_elapsed_ms_p99": 678.0,
+   "hard_stalls": 0,
+   "soft_stalls": 0,
+   "rejections": 0,
+   "moves_total": 6197,
+   "connected_peers_last": 2
+  },
+  "client_a_fps": {
+   "samples": 0,
+   "p50": 0.0,
+   "p95": 0.0,
+   "p99": 0.0
+  },
+  "client_b_fps": {
+   "samples": 0,
+   "p50": 0.0,
+   "p95": 0.0,
+   "p99": 0.0
+  },
+  "cpu_seconds_total": 1425.5,
+  "wall_seconds": 179,
+  "server_rss_kb_last": 65239,
+  "clients_rss_kb_last": 182537,
+  "script_errors": 0,
+  "fps_both_clients": {
+   "samples": 395,
+   "p50": 16,
+   "p95": 18,
+   "mean": 15.74
+  },
+  "server_watchdog_note": "max_elapsed_ms is cumulative-since-start; final value = worst server stage elapsed of the run"
+ },
+ "godot48-r3": {
+  "run": "godot48-r3",
+  "server": {
+   "health_windows": 103,
+   "window_max_elapsed_ms_p50": 667.0,
+   "window_max_elapsed_ms_p95": 667.0,
+   "window_max_elapsed_ms_p99": 667.0,
+   "hard_stalls": 0,
+   "soft_stalls": 0,
+   "rejections": 0,
+   "moves_total": 6442,
+   "connected_peers_last": 2
+  },
+  "client_a_fps": {
+   "samples": 0,
+   "p50": 0.0,
+   "p95": 0.0,
+   "p99": 0.0
+  },
+  "client_b_fps": {
+   "samples": 0,
+   "p50": 0.0,
+   "p95": 0.0,
+   "p99": 0.0
+  },
+  "cpu_seconds_total": 1468.25,
+  "wall_seconds": 178,
+  "server_rss_kb_last": 65215,
+  "clients_rss_kb_last": 179919,
+  "script_errors": 0,
+  "fps_both_clients": {
+   "samples": 395,
+   "p50": 16,
+   "p95": 19,
+   "mean": 16.41
+  },
+  "server_watchdog_note": "max_elapsed_ms is cumulative-since-start; final value = worst server stage elapsed of the run"
+ }
+}

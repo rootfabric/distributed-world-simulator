@@ -1,0 +1,13 @@
+{
+  "product_head": "a936412cc3d597a88fa789fc73c6ac7dcfd7a4e9",
+  "branch": "feature/engine48-beta1-double-migration-r1",
+  "repair_branch": "repair/engine48-linux-runner-guards-r1",
+  "repair_tip": "7aaa7fa9ebcabeeca33f15696002ff3907c22ffb",
+  "godot_source_sha256": "6d49c02e438935e49a12231d857b2b56131948b004d5b668bf295c9bc3b2281c",
+  "godot_upstream_commit": "4d10419cacd6d3009976e8f9fd3abd970fd58018",
+  "godot_version_string": "4.8.beta1.double.custom_build.4d10419ca",
+  "baseline_version_string": "4.7.1.stable.double.custom_build.a13da4feb",
+  "editor_sha256_prefix": "4d72a93e",
+  "ubuntu": "22.04",
+  "renderer": "OpenGL 4.5 Mesa llvmpipe (software), Xvfb :99 rootless"
+}
