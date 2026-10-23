@@ -198,6 +198,8 @@ func send_to_peer(peer_id: String, frame: Dictionary) -> Dictionary:
 			extras["r31p23r21_size_reused"] = r21_reuse_encoded_size
 			extras["r31p23r2_simulator_stages"] = {
 				"passthrough": true,
+				"r31p23r21_size_reused": r21_reuse_encoded_size,
+				"r31p23r21_fast_encode": bool(extras.get("r31p23r21_fast_encode", false)),
 				"frame_validate_ms": float(p23_validated_us - p23_start_us) / 1000.0,
 				"canonical_json_ms": float(p23_canonical_us - p23_validated_us) / 1000.0,
 				"pre_delegate_ms": float(p23_before_delegate_us - p23_canonical_us) / 1000.0,
