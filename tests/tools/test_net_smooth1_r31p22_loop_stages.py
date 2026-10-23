@@ -131,12 +131,19 @@ class StageReducer(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             path=write(Path(temp),missing_loop=11)
             rows=read_trace(path,RUN_ID)
-            # One missing stage is tolerated but explicitly reported.
+            # Missing stage/handler rows for one entire non-snapshot frame
+            # may be tolerated ONLY with an explicit coverage-loss count.
+            rows["server_message"]=[
+                r for r in rows["server_message"]
+                if r["data"]["engine_frame"]!=11]
             v=analyze_events(rows)
             self.assertEqual(v["missing_attribution_frame_count"],1)
             # A larger gap is not silently hidden.
             rows["r31p22_loop_stages"]=[
                 a for a in rows["r31p22_loop_stages"]
+                if a["data"]["engine_frame"] not in {10,13,14}]
+            rows["server_message"]=[
+                a for a in rows["server_message"]
                 if a["data"]["engine_frame"] not in {10,13,14}]
             with self.assertRaisesRegex(ValueError,"FRAME_JOIN_INCOMPLETE"):
                 analyze_events(rows)
