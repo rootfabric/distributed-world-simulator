@@ -27,9 +27,9 @@ STAGES = (
 MESSAGE_STAGES = STAGES[:7]
 WIRE_STAGES = ("payload_clone_ms", "frame_create_ms",
                "boundary_send_ms", "outbound_flush_ms")
-KIND_KEYS = ("frame", "server_loop", "r31p22_loop_stages",
-             "movement_snapshot_stages", "r31p22_compact_wire_stages",
-             "r31p22_compact_wire_failed")
+KIND_KEYS = ("frame", "server_loop", "server_message",
+             "r31p22_loop_stages", "movement_snapshot_stages",
+             "r31p22_compact_wire_stages", "r31p22_compact_wire_failed")
 MIN_FRAMES = 100
 MIN_SNAPSHOTS = 10
 TOLERANCE_MS = 1.0
@@ -145,6 +145,10 @@ def analyze_events(trace: dict, *, minimum_frames: int = MIN_FRAMES,
     stages = indexed(trace["r31p22_loop_stages"], "LOOP_STAGES")
     snapshots = indexed(trace["movement_snapshot_stages"], "SNAPSHOT")
     compact_by_frame: dict[int, list[dict]] = {}
+    messages_by_frame: dict[int, list[dict]] = {}
+    for row in trace["server_message"]:
+        frame_id = positive_int(row["data"].get("engine_frame"), "HANDLER")
+        messages_by_frame.setdefault(frame_id, []).append(row)
     for row in trace["r31p22_compact_wire_stages"]:
         frame_id = positive_int(row["data"].get("engine_frame"), "COMPACT")
         compact_by_frame.setdefault(frame_id, []).append(row)
@@ -158,6 +162,8 @@ def analyze_events(trace: dict, *, minimum_frames: int = MIN_FRAMES,
         raise ValueError("UNMATCHED_SNAPSHOT_ENGINE_FRAME")
     if not set(compact_by_frame).issubset(set(snapshots)):
         raise ValueError("COMPACT_WITHOUT_SNAPSHOT_ENGINE_FRAME")
+    if not set(messages_by_frame).issubset(set(stages)):
+        raise ValueError("HANDLER_WITHOUT_LOOP_ENGINE_FRAME")
     if not set(stages).issubset(set(old_loops)):
         raise ValueError("LOOP_STAGE_WITHOUT_BASE_LOOP")
     missing = sorted(set(frames)-set(stages))
@@ -189,6 +195,11 @@ def analyze_events(trace: dict, *, minimum_frames: int = MIN_FRAMES,
         if measured_ms > process_ms+TOLERANCE_MS:
             raise ValueError("STAGE_TOTAL_EXCEEDS_ORIGINAL_PROCESS")
 
+        handler_rows=messages_by_frame.get(frame_id,[])
+        handlers_ms=sum(number(row["data"].get("duration_ms"),
+                               "HANDLER_DURATION") for row in handler_rows)
+        if handlers_ms>stage_vals["message_dispatch_ms"]+TOLERANCE_MS:
+            raise ValueError("HANDLERS_EXCEED_DISPATCH")
         snap=snapshots.get(frame_id)
         compact_rows=compact_by_frame.get(frame_id,[])
         if snap:
@@ -226,6 +237,10 @@ def analyze_events(trace: dict, *, minimum_frames: int = MIN_FRAMES,
             "deferred_admission_ms": stage_vals["deferred_admission_ms"],
             "boundary_poll_ms": stage_vals["boundary_poll_ms"],
             "message_dispatch_ms": stage_vals["message_dispatch_ms"],
+            "message_handler_sum_ms": handlers_ms,
+            "unattributed_dispatch_ms":
+                max(0.0, stage_vals["message_dispatch_ms"]-handlers_ms),
+            "message_handler_count": len(handler_rows),
             "snapshot_ms": stage_vals["snapshot_publication_ms"],
             "movement_persistence_ms": stage_vals["movement_persistence_ms"],
             "has_movement_snapshot": snap is not None,
@@ -248,6 +263,7 @@ def analyze_events(trace: dict, *, minimum_frames: int = MIN_FRAMES,
         "missing_attribution_frame_count": len(missing),
         "snapshot_frame_count": len(snapshots),
         "compact_wire_event_count": len(trace["r31p22_compact_wire_stages"]),
+        "message_handler_event_count":len(trace["server_message"]),
         "frame_interval_ms":dist([r["frame_interval_ms"] for r in rows]),
         "without_snapshot_frame_interval_ms":
             dist([r["frame_interval_ms"] for r in no_capture]),
