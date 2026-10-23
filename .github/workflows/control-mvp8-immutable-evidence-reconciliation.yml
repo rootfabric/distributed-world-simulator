@@ -153,3 +153,8 @@ jobs:
           } else {
               throw "CONTROL_STATUS_UNEXPECTED:EXIT_$rc CODE=$($last.error.code) DETAIL=$($last.error.detail)"
           }
+          # This CI step checks the *observed failure class*, not driver success.
+          # The nested pwsh returned 5 as proven above. Explicit success for
+          # the scoped diagnostic avoids the actions pwsh wrapper inheriting
+          # that native LASTEXITCODE and incorrectly failing this check.
+          exit 0
