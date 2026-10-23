@@ -87,11 +87,16 @@ func _run() -> void:
 	_check(ui.configure_staged_live(true, 1000000000, 1, 1, 64,
 		8388608, true, 4096, true, true), "REAL_R323_LAB_EXPLICIT_OPTIN")
 	var events: Array = []
+	# command_run_to_tick() synchronously refreshes presentation state at the
+	# CURRENT tick (0) before the run loop starts; that refresh is not a
+	# canonical tick publication. Connect AFTER the command so exactly one
+	# completed tick-1 visual publication (R3.2.3 single-emit) is observed.
+	var command_ok: bool = ui.command_run_to_tick(1)
 	ui.snapshot_updated.connect(func(snapshot: Dictionary) -> void:
 		events.append({"tick": int(snapshot.tick),
 			"hash": String(snapshot.canonical_state_hash)})
 	)
-	_check(ui.command_run_to_tick(1), "ACTUAL_GUI_WORKBENCH_COMMAND")
+	_check(command_ok, "ACTUAL_GUI_WORKBENCH_COMMAND")
 	var frames := 0
 	var draw_calls_peak := 0
 	var last_frame := Time.get_ticks_usec()
