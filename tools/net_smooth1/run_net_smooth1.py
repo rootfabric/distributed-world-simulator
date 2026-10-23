@@ -163,6 +163,7 @@ def play(args, manifest: dict) -> None:
                     r3c4r31b_durable_attribution=args.r3c4r31b_durable_attribution,
                     r31bp1_durable_chunks=args.r31bp1_durable_chunks,
                     r31bp20_validator_attribution=args.r31bp20_validator_attribution,
+                    r31p22_loop_attribution=args.r31p22_loop_attribution,
                     scenario=args.scenario)
     processes: dict[str,subprocess.Popen] = {}; streams=[]
     def spawn(role: str) -> None:
@@ -207,6 +208,9 @@ def play(args, manifest: dict) -> None:
         if role == 'server' and args.r31bp20_validator_attribution:
             # P2.0 source profiling only; never reaches client or M6 writer.
             env['DWS_NET_R31BP20_VALIDATOR_ATTRIBUTION']='1'
+        if role == 'server' and args.r31p22_loop_attribution:
+            # P2.2 server-only frame/process/compact-wire timing probe.
+            env['DWS_NET_R31P22_LOOP_ATTRIBUTION']='1'
         if role == 'server' and args.slow_item_writer_ms > 0:
             # Test-only worker injection, never delay the main-thread loop.
             env['DWS_NET_SMOOTH_TEST_HOOKS']='1'
@@ -750,6 +754,8 @@ def main() -> int:
                         help='R3.1b P1: server-only immutable M4/mining durable chunk cache, requires full P0 stack')
     parser.add_argument('--r31bp20-validator-attribution', action='store_true',
                         help='P2.0 server-only exact native validator stage attribution, requires P1 ON')
+    parser.add_argument('--r31p22-loop-attribution', action='store_true',
+                        help='P2.2: server-only exact loop/poll/compact-send stage timing, requires P1')
     parser.add_argument('--inject-stall-role',choices=('server','a','b'))
     parser.add_argument('--inject-stall-ms',type=int,default=250)
     args=parser.parse_args()
@@ -783,6 +789,8 @@ def main() -> int:
                      '--r3c4r2-worker-envelope --r3c4-periodic-frame-pacing --r3c-async-admission)')
     if args.r31bp20_validator_attribution and not args.r31bp1_durable_chunks:
         parser.error('P2.0 validator attribution requires --r31bp1-durable-chunks')
+    if args.r31p22_loop_attribution and not args.r31bp1_durable_chunks:
+        parser.error('P2.2 server-loop stage attribution requires --r31bp1-durable-chunks')
     run_id=uuid.uuid4().hex[:16]
     args.output=(args.output or ROOT/'artifacts/net-smooth1'/run_id).resolve()
     args.output.mkdir(parents=True,exist_ok=False)
