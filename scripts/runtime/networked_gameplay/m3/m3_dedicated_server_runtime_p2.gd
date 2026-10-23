@@ -722,9 +722,14 @@ func _handle_message(peer_id: String, session_id: String, payload: Dictionary) -
 			_: _send_result(peer_id, String(payload.get("operation_id", "")), "UNKNOWN", _failure("UNKNOWN_M3_MESSAGE_TYPE"))
 	_telemetry.observe("server_message_processing_ms", float(Time.get_ticks_usec() - handled_started_us) / 1000.0)
 	if SmoothTrace.enabled():
-		SmoothTrace.emit("server_message", {"type": message_type, "peer": peer_id,
+		var p22_message_record: Dictionary = {
+			"type": message_type, "peer": peer_id,
 			"operation_id": payload.get("operation_id", ""), "tick": _server_tick,
-			"duration_ms": float(Time.get_ticks_usec() - handled_started_us) / 1000.0})
+			"duration_ms": float(Time.get_ticks_usec() - handled_started_us) / 1000.0,
+		}
+		if _r31p22_loop_attribution_enabled:
+			p22_message_record["engine_frame"] = Engine.get_process_frames()
+		SmoothTrace.emit("server_message", p22_message_record)
 
 
 func _handle_compatibility_hello(peer_id: String, session_id: String, payload: Dictionary) -> void:
