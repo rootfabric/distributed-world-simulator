@@ -46,11 +46,12 @@ def fixture(root:Path, *,generations=None,logged=None,
         rows.append(record("r31p23r1_debug_overflow",20,details={
             "generation":90,"engine_frame":42,"pending":32,
         }))
-    rows.append(record("r31p23r1_debug_flushed",21,details={
-        "generation":generations[0],"engine_frame":50,
-        "original_engine_frame":10,"pending":len(generations)-1,
-        "print_ms":.2,
-    }))
+    if generations:
+        rows.append(record("r31p23r1_debug_flushed",21,details={
+            "generation":generations[0],"engine_frame":50,
+            "original_engine_frame":10,"pending":len(generations)-1,
+            "print_ms":.2,
+        }))
     rows.append(record("measure_end",100,measure=True))
     for i,row in enumerate(rows,1):
         row["n"]=i
