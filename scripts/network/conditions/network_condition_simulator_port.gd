@@ -176,13 +176,13 @@ func send_to_peer(peer_id: String, frame: Dictionary) -> Dictionary:
 	if bool(plan.get("drop", false)):
 		_increment("network_simulator_unreliable_packets_dropped")
 		_update_telemetry()
-		return TransportUtilsScript.success({
+		return _r31p23r2_wrap_simulated_result(TransportUtilsScript.success({
 			"enqueued": true,
 			"simulated": true,
 			"dropped": true,
 			"packet_bytes": packet_bytes,
 			"profile_id": String(_profile.get("profile_id", "")),
-		})
+		}),p23_probe,p23_start_us,p23_validated_us,p23_canonical_us)
 	if not _can_queue(OUTGOING, packet_bytes):
 		if _is_reliable(frame):
 			_increment("network_simulator_reliable_queue_backpressure")
@@ -193,13 +193,13 @@ func send_to_peer(peer_id: String, frame: Dictionary) -> Dictionary:
 			})
 		_increment("network_simulator_unreliable_queue_drops")
 		_update_telemetry()
-		return TransportUtilsScript.success({
+		return _r31p23r2_wrap_simulated_result(TransportUtilsScript.success({
 			"enqueued": true,
 			"simulated": true,
 			"dropped": true,
 			"queue_limit": true,
 			"packet_bytes": packet_bytes,
-		})
+		}),p23_probe,p23_start_us,p23_validated_us,p23_canonical_us)
 	_enqueue_outgoing(peer_id, frame, packet_bytes, plan, false)
 	if bool(plan.get("duplicate", false)):
 		if _can_queue(OUTGOING, packet_bytes):
@@ -210,14 +210,36 @@ func send_to_peer(peer_id: String, frame: Dictionary) -> Dictionary:
 		else:
 			_increment("network_simulator_duplicate_queue_suppressed")
 	_update_telemetry()
-	return TransportUtilsScript.success({
+	return _r31p23r2_wrap_simulated_result(TransportUtilsScript.success({
 		"enqueued": true,
 		"simulated": true,
 		"dropped": false,
 		"packet_bytes": packet_bytes,
 		"scheduled_at_ms": int(plan.get("due_ms", _now_ms())),
 		"profile_id": String(_profile.get("profile_id", "")),
-	})
+	}),p23_probe,p23_start_us,p23_validated_us,p23_canonical_us)
+
+
+# Delayed/drop profile remains a DISTINCT measured population: a scheduled
+# simulator send is NOT an actual same-frame ENet put_packet call.
+func _r31p23r2_wrap_simulated_result(
+	result: Dictionary, probe: bool, started_us: int,
+	validated_us: int, canonical_us: int
+) -> Dictionary:
+	if not probe or not bool(result.get("success", false)):
+		return result
+	var details: Dictionary = Dictionary(result.get("details", {}))
+	details["r31p23r2_simulator_stages"] = {
+		"passthrough": false,
+		"frame_validate_ms": float(validated_us - started_us) / 1000.0,
+		"canonical_json_ms": float(canonical_us - validated_us) / 1000.0,
+		"pre_delegate_ms": float(Time.get_ticks_usec() - canonical_us) / 1000.0,
+		"delegate_ms": 0.0,
+		"enet": {},
+	}
+	result["details"] = details
+	return result
+
 
 
 func poll_events(max_events: int) -> Array[Dictionary]:
