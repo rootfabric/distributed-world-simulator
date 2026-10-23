@@ -1,0 +1,30 @@
+{
+  "schema": "distributed_world_simulator.harness_evidence_ledger_reconciliation.v1",
+  "version": 1,
+  "reconciliation_id": "E2026-09-09-V0-MVP-R1-WO-001-EVIDENCE-RECONCILIATION-001",
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "authority": "DIRECTOR_REPAIR_EXACT_PINNED_LEGACY_EVIDENCE",
+  "mode": "QUARANTINE_EXACT_IMMUTABLE_MISTYPED_EVIDENCE_MAPS",
+  "reason": "MVP8 90bc1026 preliminary evidence document was committed once under canonical harness_evidence_map.v1 identity but has five historical stage-status enum values outside the frozen canonical schema. Preserve its bytes and provenance, exclude it from CURRENT canonical checkpoint authorization, leave newer stage-specific closure, acceptance and verifier receipts in their native schemas. No old PENDING value is promoted to PASS.",
+  "constraints": {
+    "quarantine_exact_paths_only": true,
+    "git_blob_pin_required": true,
+    "quarantined_file_must_remain_present": true,
+    "quarantined_file_must_have_single_add_commit": true,
+    "wildcard_paths_forbidden": true,
+    "canonical_evidence_map_schema_unchanged": true,
+    "future_unlisted_evidence_is_authoritative": true
+  },
+  "quarantined_evidence": [
+    {
+      "path": "config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence/MVP8-EVIDENCE-MAP-90BC1026-R1.v1.json",
+      "git_blob_sha": "9d6d6c676fdca3501ec35b8962c8dca36eaccfd7",
+      "reason": "PRELIMINARY_MVP8_EVIDENCE_MAP_WITH_NONCANONICAL_STAGE_STATUS_ENUMS"
+    }
+  ],
+  "canonical_evidence_maps_retained": [
+    "config/control/harness/executions/E2026-09-09-V0-MVP-R1/evidence/MVP7-EVIDENCE-MAP-AD48B24D-R1.v1.json"
+  ],
+  "status": "ACTIVE_RECONCILIATION"
+}
