@@ -1,0 +1,102 @@
+name: ECO ARCH2 A14.7 R2C Fresh Independent Exact
+
+on:
+  push:
+    branches:
+      - verify/eco-arch2-a147-r2c-dda5141e-fresh-r1
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  portable:
+    name: independent Stage C A13 exact + attack/cancel n32/96
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: 4.7.1 independent original A5 field/population/propagules and security
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fL --retry 3 -o /tmp/godot-r2c-fresh.zip https://github.com/godotengine/godot/releases/download/4.7.1-stable/Godot_v4.7.1-stable_linux.x86_64.zip
+          mkdir -p /tmp/godot-r2c-fresh
+          unzip -q /tmp/godot-r2c-fresh.zip -d /tmp/godot-r2c-fresh
+          godot=/tmp/godot-r2c-fresh/Godot_v4.7.1-stable_linux.x86_64
+          chmod +x "$godot"
+          "$godot" --headless --editor --path . --import > r2c-fresh-import.log 2>&1 || { cat r2c-fresh-import.log; exit 1; }
+          mkdir -p r2c-fresh-evidence
+          for n in 32 96; do
+            "$godot" --headless --path . --script res://validation/ecology/evo_arch2_a14_7/test_a147_r2c_fresh_independent.gd -- --population "$n" > "r2c-fresh-evidence/n$n.stdout.log" 2> "r2c-fresh-evidence/n$n.stderr.log" || { cat "r2c-fresh-evidence/n$n.stdout.log"; cat "r2c-fresh-evidence/n$n.stderr.log"; exit 1; }
+            grep -Fx 'A147_R2C_FRESH PASS' "r2c-fresh-evidence/n$n.stdout.log"
+            grep '^A147_R2C_FRESH_PROFILE_JSON ' "r2c-fresh-evidence/n$n.stdout.log" | sed 's/^A147_R2C_FRESH_PROFILE_JSON //' > "r2c-fresh-evidence/n$n.json"
+            if grep -Ei 'SCRIPT ERROR|Parse Error|Failed to load script|Error compiling' "r2c-fresh-evidence/n$n.stdout.log" "r2c-fresh-evidence/n$n.stderr.log"; then exit 1; fi
+          done
+          python3 - <<'PY'
+          import json,pathlib
+          for n in (32,96):
+              p=json.loads(pathlib.Path(f"r2c-fresh-evidence/n{n}.json").read_text())
+              assert p["schema"]=="dws.ecology.a147-r2c-independent-falsifier.v1"
+              assert p["population"]==n and p["peak_nested_workers"]>=2
+              assert p["threaded_worksets"]>=2 and p["a4_begins"]==1
+              assert p["exact_field"] and p["exact_population"] and p["exact_propagules"] and p["source_unchanged"]
+          print("A147_R2C_FRESH_INDEPENDENT_PORTABLE_EXACT_PASS")
+          PY
+          git diff --exit-code && git diff --cached --exit-code
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: eco-a147-r2c-independent-portable
+          path: |
+            r2c-fresh-import.log
+            r2c-fresh-evidence/
+          if-no-files-found: ignore
+
+  windows:
+    name: independent pinned Windows Double A13 A5 and tamper exact
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 80
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Native Windows full independent result exact
+        shell: pwsh
+        env:
+          CONFIGURED_GODOT: ${{ vars.DWS_GODOT_DOUBLE_BIN }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $godot = $env:CONFIGURED_GODOT
+          if ([string]::IsNullOrWhiteSpace($godot)) { $godot = 'C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe' }
+          if ((Get-FileHash $godot -Algorithm SHA256).Hash.ToLowerInvariant() -ne '3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5') { throw "GODOT_SHA256_MISMATCH" }
+          & $godot --headless --editor --path . --import *> r2c-fresh-win-import.log
+          if ($LASTEXITCODE -ne 0) { throw "R2C_FRESH_IMPORT_FAIL" }
+          New-Item -ItemType Directory -Force r2c-fresh-win-evidence | Out-Null
+          foreach ($n in @(32,96)) {
+            $out = Join-Path (Get-Location).Path "r2c-fresh-win-evidence\n$n.stdout.log"
+            $err = Join-Path (Get-Location).Path "r2c-fresh-win-evidence\n$n.stderr.log"
+            $argv = @('--headless','--path','.','--script','res://validation/ecology/evo_arch2_a14_7/test_a147_r2c_fresh_independent.gd','--','--population',"$n")
+            $proc = Start-Process -FilePath $godot -ArgumentList $argv -WorkingDirectory (Get-Location).Path -PassThru -RedirectStandardOutput $out -RedirectStandardError $err
+            $proc.WaitForExit()
+            $exit = [int64]$proc.ExitCode
+            if ($exit -ne 0) { Get-Content $out; Get-Content $err; throw "R2C_FRESH_NATIVE_FAIL_$n" }
+            if (-not (Select-String -Path $out -Pattern '^A147_R2C_FRESH PASS$' -Quiet)) { throw "R2C_FRESH_MARKER_MISSING_$n" }
+            $rows = @(Get-Content $out | Where-Object { $_ -match '^A147_R2C_FRESH_PROFILE_JSON ' })
+            if ($rows.Count -ne 1) { throw "R2C_FRESH_PROFILE_MISSING_$n" }
+            Set-Content -Path "r2c-fresh-win-evidence\n$n.json" -Value ($rows[0] -replace '^A147_R2C_FRESH_PROFILE_JSON ','') -Encoding utf8
+          }
+          git diff --exit-code
+          if ($LASTEXITCODE -ne 0) { throw "DIRTY_WORKTREE" }
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: eco-a147-r2c-independent-win
+          path: |
+            r2c-fresh-win-import.log
+            r2c-fresh-win-evidence/
+          if-no-files-found: ignore
