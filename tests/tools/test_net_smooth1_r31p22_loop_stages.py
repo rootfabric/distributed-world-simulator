@@ -127,25 +127,29 @@ class StageReducer(unittest.TestCase):
             self.assertEqual(result["worst_frame_samples"][0]["engine_frame"],80)
             self.assertEqual(result["frame_interval_ms"]["p99"],27.0)
 
-    def test_no_stage_for_more_than_one_percent_is_invalid(self):
+    def test_even_one_missing_non_snapshot_stage_is_inconclusive(self):
         with tempfile.TemporaryDirectory() as temp:
             path=write(Path(temp),missing_loop=11)
             rows=read_trace(path,RUN_ID)
-            # Missing stage/handler rows for one entire non-snapshot frame
-            # may be tolerated ONLY with an explicit coverage-loss count.
+            # Do not let the handler-specific orphan guard mask the exact
+            # frame coverage guard we are falsifying in this case.
             rows["server_message"]=[
                 r for r in rows["server_message"]
-                if r["data"]["engine_frame"]!=11]
-            v=analyze_events(rows)
-            self.assertEqual(v["missing_attribution_frame_count"],1)
-            # A larger gap is not silently hidden.
-            rows["r31p22_loop_stages"]=[
-                a for a in rows["r31p22_loop_stages"]
-                if a["data"]["engine_frame"] not in {10,13,14}]
-            rows["server_message"]=[
-                a for a in rows["server_message"]
-                if a["data"]["engine_frame"] not in {10,13,14}]
+                if r["data"]["engine_frame"] != 11]
             with self.assertRaisesRegex(ValueError,"FRAME_JOIN_INCOMPLETE"):
+                analyze_events(rows)
+
+    def test_extra_stage_not_joined_to_any_measured_frame_is_rejected(self):
+        with tempfile.TemporaryDirectory() as temp:
+            rows=read_trace(write(Path(temp)),RUN_ID)
+            import copy
+            extra=copy.deepcopy(rows["r31p22_loop_stages"][0])
+            extra["data"]["engine_frame"]=9999
+            rows["r31p22_loop_stages"].append(extra)
+            base=copy.deepcopy(rows["server_loop"][0])
+            base["data"]["engine_frame"]=9999
+            rows["server_loop"].append(base)
+            with self.assertRaisesRegex(ValueError,"STAGE_WITHOUT_MEASURED_FRAME"):
                 analyze_events(rows)
 
     def test_wire_exceeding_compact_send_invalid(self):
