@@ -2539,6 +2539,14 @@ func _send_on_channel(
 		return false
 	if not _ensure_peer_ready(peer_id):
 		return false
+	# P2.2 diagnostic: only COMPACT snapshot emission, not all messages.
+	# No native frame format or per-peer send/flush ordering is changed.
+	var p22_wire_probe := (
+		_r31p22_loop_attribution_enabled
+		and SmoothTrace.enabled()
+		and message_type == "COMPACT_GAMEPLAY_SNAPSHOT"
+	)
+	var p22_wire_started_us: int = Time.get_ticks_usec() if p22_wire_probe else 0
 	# The broadcaster owns a fresh compact snapshot and never mutates it.
 	# FrameScript.create() JSON-roundtrips into a detached per-peer payload;
 	# the envelope alone needs copying in this specific realtime path.
@@ -2548,21 +2556,44 @@ func _send_on_channel(
 	)
 	payload["type"] = message_type
 	payload["server_sent_at_ms"] = Time.get_ticks_msec()
+	var p22_clone_done_us: int = Time.get_ticks_usec() if p22_wire_probe else 0
 	var frame_result: Dictionary = _boundary.create_frame_for_peer(
 		peer_id, channel, Support.MESSAGE_SCHEMA, payload, delivery_mode
 	)
+	var p22_frame_done_us: int = Time.get_ticks_usec() if p22_wire_probe else 0
 	if not bool(frame_result.get("success", false)):
 		_last_error_code = String(frame_result.get("error_code", "FRAME_CREATE_FAILED"))
+		if p22_wire_probe:
+			SmoothTrace.emit("r31p22_compact_wire_failed", {
+				"engine_frame": Engine.get_process_frames(), "phase": "FRAME_CREATE"})
 		return false
 	var sent: Dictionary = _boundary.send_to_peer(peer_id, frame_result.get("details", {}).get("frame", {}))
+	var p22_send_done_us: int = Time.get_ticks_usec() if p22_wire_probe else 0
 	if not bool(sent.get("success", false)):
 		_last_error_code = String(sent.get("error_code", "SEND_FAILED"))
+		if p22_wire_probe:
+			SmoothTrace.emit("r31p22_compact_wire_failed", {
+				"engine_frame": Engine.get_process_frames(), "phase": "SEND"})
 		return false
 	var flushed: Dictionary = _boundary.flush_outbound(32, peer_id)
+	var p22_flush_done_us: int = Time.get_ticks_usec() if p22_wire_probe else 0
 	if not bool(flushed.get("success", false)):
 		_last_error_code = String(flushed.get("error_code", "FLUSH_FAILED"))
+		if p22_wire_probe:
+			SmoothTrace.emit("r31p22_compact_wire_failed", {
+				"engine_frame": Engine.get_process_frames(), "phase": "FLUSH"})
 		return false
 	_messages_sent += 1
+	if p22_wire_probe:
+		SmoothTrace.emit("r31p22_compact_wire_stages", {
+			"engine_frame": Engine.get_process_frames(),
+			"server_tick": _server_tick,
+			"payload_clone_ms": float(p22_clone_done_us - p22_wire_started_us) / 1000.0,
+			"frame_create_ms": float(p22_frame_done_us - p22_clone_done_us) / 1000.0,
+			"boundary_send_ms": float(p22_send_done_us - p22_frame_done_us) / 1000.0,
+			"outbound_flush_ms": float(p22_flush_done_us - p22_send_done_us) / 1000.0,
+			"total_ms": float(p22_flush_done_us - p22_wire_started_us) / 1000.0,
+		})
 	return true
 
 
