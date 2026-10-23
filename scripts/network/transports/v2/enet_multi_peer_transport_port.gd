@@ -149,7 +149,7 @@ func send_to_peer(peer_id: String, frame: Dictionary) -> Dictionary:
 	)
 	var encoded: Dictionary
 	if r21_fast:
-		# Above we executed the same ORIGINAL FrameScript.validate(frame)
+		# Above we executed the same ORIGINAL full protocol-frame validator
 		# (checksum, exact fields, channel, session and sequence). The only
 		# intervening operations are read-only peer/session lookups; the
 		# boundary already detached this frame before the port call.
@@ -196,7 +196,7 @@ func send_to_peer(peer_id: String, frame: Dictionary) -> Dictionary:
 
 
 
-# Internal ENet-only **postcondition of FrameScript.validate(frame)**.
+# Internal ENet-only **postcondition of full protocol-frame validation**.
 # Called from send_to_peer() on the SAME authoritative main-thread stack
 # after the original complete checksum/type/session/channel checks and the
 # read-only peer/session lookup. It is not exposed as a permissive protocol
