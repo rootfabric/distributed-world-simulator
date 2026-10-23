@@ -11,6 +11,12 @@ const Enet = preload(
     "res://scripts/network/transports/v2/enet_multi_peer_transport_port.gd")
 const Wire = preload(
     "res://scripts/network/contracts/network_contract_utils.gd")
+const ConditionSimulator = preload(
+    "res://scripts/network/conditions/network_condition_simulator_port.gd")
+const ConditionProfile = preload(
+    "res://scripts/network/conditions/network_condition_profile.gd")
+const Stub = preload(
+    "res://tests/runtime/r31p23r21_canonical_enet_stub.gd")
 
 var checks := 0
 var errors: Array[String] = []
@@ -176,6 +182,104 @@ func _packet_parity() -> void:
     port.free()
 
 
+# Real ConditionSimulatorPort LOCAL/passthrough path with an exact
+# FrameScript-validating ENet-contract delegate. Proves the optimized byte
+# count is the SAME as actual encoded canonical wire bytes; malformed frames
+# are still rejected before a delegate call.
+func _simulator_passthrough_parity() -> void:
+    var delegate = Stub.new()
+    var simulated = ConditionSimulator.new()
+    var profile: Dictionary = ConditionProfile.create("LOCAL", {})
+    check(bool(ConditionProfile.validate(profile).get("success", false)),
+          "valid canonical LOCAL zero-condition profile")
+    check(bool(simulated.setup(delegate, profile).get("success", false)),
+          "real simulator setup with test-only canonical ENet delegate")
+    check(bool(simulated.start_server({}).get("success", false)),
+          "real simulator starts same LOCAL passthrough path")
+
+    var frame: Dictionary = Frame.create(
+        "frame/test-r21/1", "transport-session/test-r21/a", 1,
+        "SNAPSHOT", "UNRELIABLE_SEQUENCED",
+        "planet_simulator.m3_network_message.v1",
+        {"type":"COMPACT_GAMEPLAY_SNAPSHOT",
+         "server_sent_at_ms":12,
+         "snapshot":{"schema":"planet_simulator.compact_gameplay_snapshot.v1",
+                     "revision":3,"server_tick":90}})
+    check(bool(Frame.validate(frame).get("success",false)),
+          "simulator test frame checksum valid")
+    var before: Dictionary = frame.duplicate(true)
+    var legacy: Dictionary = simulated.send_to_peer("peer/test-r21",frame)
+    check(bool(legacy.get("success", false)),
+          "legacy simulator passthrough sends exactly one frame")
+    var baseline_bytes: int = int(Dictionary(
+        legacy.get("details", {})).get("packet_bytes",-1))
+    check(delegate.accepted.size()==1, "legacy delegate invoked once")
+
+    check(bool(simulated.configure_r31p23r21_single_pass_compact(
+        true).get("success",false)), "opt-in propagated to canonical delegate")
+    check(bool(delegate.enabled), "R21 propagated to actual ENet contract")
+    var fast: Dictionary = simulated.send_to_peer("peer/test-r21",frame)
+    check(bool(fast.get("success",false)), "R21 LOCAL passthrough sends one frame")
+    check(delegate.accepted.size()==2, "R21 no extra packet/retry")
+    var new_bytes: int = int(Dictionary(
+        fast.get("details",{})).get("packet_bytes",-1))
+    check(new_bytes==baseline_bytes and new_bytes>0,
+          "exact canonical encoded packet size reused")
+    if delegate.accepted.size()==2:
+        var old_packet: PackedByteArray = Dictionary(delegate.accepted[0]).get(
+            "packet", PackedByteArray())
+        var new_packet: PackedByteArray = Dictionary(delegate.accepted[1]).get(
+            "packet", PackedByteArray())
+        check(old_packet==new_packet, "LOCAL real canonical wire bytes bit equal")
+        check(old_packet.size()==new_bytes,
+              "delegate's validated packet exact bytes = simulator count")
+    check(frame==before, "simulator cannot mutate caller-owned validated frame")
+
+    var corrupted: Dictionary = frame.duplicate(true)
+    corrupted["payload"]["snapshot"]["revision"]=999
+    var rejected: Dictionary = simulated.send_to_peer(
+        "peer/test-r21",corrupted)
+    check(not bool(rejected.get("success",true)) and
+          String(rejected.get("error_code",""))=="PAYLOAD_CHECKSUM_MISMATCH",
+          "R21 still catches tampered nested frame before ENet")
+    check(delegate.accepted.size()==2,
+          "tampered frame never sent to delegate")
+    delegate.omit_packet_size=true
+    var unproven: Dictionary = simulated.send_to_peer(
+        "peer/test-r21",frame)
+    check(not bool(unproven.get("success",true)) and
+          String(unproven.get("error_code",""))==
+          "R31P23R21_DELEGATE_PACKET_SIZE_MISSING",
+          "fail closed if canonical delegate has no proved encoded size")
+    simulated.stop()
+
+    # Under nonpassthrough network conditions R21 must retain the ORIGINAL
+    # size calculation and scheduling; no immediate delegated packet exists.
+    var delayed_port = Stub.new()
+    var delayed = ConditionSimulator.new()
+    var delayed_profile: Dictionary = ConditionProfile.create(
+        "LATENCY_TEST", {"outgoing_latency_min_ms": 5,
+                         "outgoing_latency_max_ms": 5})
+    check(bool(delayed.setup(delayed_port, delayed_profile).get(
+        "success", false)), "delayed profile actual ConditionSimulator setup")
+    check(bool(delayed.start_server({}).get("success", false)),
+          "delayed network condition profile server started")
+    check(bool(delayed.configure_r31p23r21_single_pass_compact(
+        true).get("success",false)), "R21 optin does not bypass simulated conditions")
+    var delay_result: Dictionary = delayed.send_to_peer("peer/test-r21",frame)
+    check(bool(delay_result.get("success",false)) and
+          bool(Dictionary(delay_result.get("details",{})).get("simulated",false)),
+          "simulated profile still queues instead of pretending ENet success")
+    check(delayed_port.accepted.is_empty(),
+          "simulated packet not falsely considered immediately sent")
+    check(int(Dictionary(delay_result.get("details",{})).get(
+        "packet_bytes",-1))==baseline_bytes,
+        "nonpassthrough packet sizing remains exact legacy JSON")
+    delayed.stop()
+    delayed_port.free()
+    delegate.free()
+
+
 func _run() -> void:
     OS.set_environment("DWS_NET_R31P23R21_SINGLE_PASS_COMPACT","invalid")
     var invalid = Runtime.new()
@@ -248,6 +352,7 @@ func _run() -> void:
               "unchanged native durable M6 shutdown")
     on.free()
     _packet_parity()
+    _simulator_passthrough_parity()
 
     for error in errors:
         push_error("NET_SMOOTH_R31P23R21_FAIL:" + error)
