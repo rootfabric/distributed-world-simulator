@@ -168,10 +168,13 @@ def analyze_events(trace: dict, *, minimum_frames: int = MIN_FRAMES,
         raise ValueError("LOOP_STAGE_WITHOUT_BASE_LOOP")
     missing = sorted(set(frames)-set(stages))
     missing_old = sorted(set(frames)-set(old_loops))
-    if len(missing) > max(1, int(len(frames)*.01)) or missing_old:
+    # An exact engine-frame diagnostic must NEVER silently drop even ONE
+    # very slow frame. Missing joined stages makes the entire source
+    # attribution INCONCLUSIVE, not a conditional p99 over a smaller sample.
+    if missing or missing_old:
         raise ValueError("FRAME_JOIN_INCOMPLETE")
-    if len(stages) > len(frames)+5:
-        raise ValueError("STAGE_WITHOUT_FRAME_COVERAGE")
+    if set(stages) - set(frames):
+        raise ValueError("STAGE_WITHOUT_MEASURED_FRAME")
 
     rows=[]
     by_stage={name:[] for name in STAGES}
