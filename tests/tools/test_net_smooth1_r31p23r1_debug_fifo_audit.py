@@ -22,7 +22,8 @@ def record(kind: str,t: int, *,details=None,measure=True):
 
 def fixture(root:Path, *,generations=None,logged=None,
             overflow=False,wrong_pid=False,drop=False,
-            enabled=True,reverse_stdout=False) -> Path:
+            enabled=True,reverse_stdout=False,
+            missing_m6=False,missing_profiled=False) -> Path:
     generations=generations if generations is not None else GENERATIONS
     logged=logged if logged is not None else generations
     (root/"server").mkdir(parents=True,exist_ok=True)
@@ -38,6 +39,14 @@ def fixture(root:Path, *,generations=None,logged=None,
         record("measure_start",10),
     ]
     for i,gen in enumerate(generations):
+        if not missing_m6:
+            rows.append(record("checkpoint_complete",11+i,details={
+                "generation":gen,
+            }))
+        if not missing_profiled:
+            rows.append(record("r31p23_movement_completion",11+i,details={
+                "generation":gen,
+            }))
         rows.append(record("r31p23r1_debug_queued",11+i,details={
             "generation":gen,"time_msec":100+gen,"engine_frame":i+10,
             "pending":i+1,
@@ -97,6 +106,14 @@ class FIFOAudit(unittest.TestCase):
         self.assertEqual(data["last_generation"],8)
         self.assertEqual(data["original_normative_verdict"],"FAIL")
         self.assertEqual(data["shutdown_flush_or_untraced"],1)
+
+    def test_m6_checkpoint_missing_in_trace_fails_closed(self):
+        run_test(expected="M6_COMPLETION_TO_DEBUG_QUEUE_MISMATCH",
+                 missing_m6=True)
+
+    def test_p23_completion_missing_in_trace_fails_closed(self):
+        run_test(expected="PROFILED_COMPLETION_TO_DEBUG_QUEUE_MISMATCH",
+                 missing_profiled=True)
 
     def test_one_queued_generation_not_printed_is_inconclusive(self):
         run_test(expected="DEBUG_LOG_COUNT_MISMATCH",logged=[7])
