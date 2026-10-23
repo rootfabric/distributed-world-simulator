@@ -123,7 +123,7 @@ class Source(unittest.TestCase):
         self.assertIn("DUPLICATE_ENGINE_FRAME",r)
         self.assertIn("FRAME_JOIN_INCOMPLETE",r)
         self.assertIn("COMPACT_WITHOUT_SNAPSHOT_ENGINE_FRAME",r)
-        self.assertIn("wire_total>compact_time+TOLERANCE_MS",r)
+        self.assertIn("wire_total>compact_time+.1",r)
         self.assertNotIn("taskkill",r)
 
 
