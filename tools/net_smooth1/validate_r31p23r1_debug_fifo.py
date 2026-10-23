@@ -48,6 +48,8 @@ def audit(root: Path) -> dict:
     log_path=root/"server"/"runtime.log"
     checked=read_trace(trace_path,run_id)  # sequence, END and zero dropped/IO
     queued=[]
+    completions=[]
+    profiled_completions=[]
     overflows=[]
     traced_flushed=[]
     pid=None
@@ -58,7 +60,13 @@ def audit(root: Path) -> dict:
             record=json.loads(raw)
             if record["kind"]=="header":
                 pid=positive_int(record["data"].get("pid"),"MAIN_PID")
-            if record.get("kind")=="r31p23r1_debug_queued":
+            if record.get("kind")=="checkpoint_complete":
+                completions.append(positive_int(record["data"].get("generation"),
+                                                "DURABLE_COMPLETED_GENERATION"))
+            elif record.get("kind")=="r31p23_movement_completion":
+                profiled_completions.append(positive_int(
+                    record["data"].get("generation"),"PROFILED_COMPLETED_GENERATION"))
+            elif record.get("kind")=="r31p23r1_debug_queued":
                 data=record["data"]
                 queued.append((
                     positive_int(data.get("generation"),"QUEUED_GENERATION"),
@@ -76,6 +84,10 @@ def audit(root: Path) -> dict:
         raise ValueError("P23R1_NO_COMPLETION_DEBUG_QUEUED")
     if len(queued)!=len(set(queued)):
         raise ValueError("P23R1_DUPLICATE_QUEUED_IDENTITY")
+    if Counter(gen for gen,_ in queued)!=Counter(completions):
+        raise ValueError("P23R1_M6_COMPLETION_TO_DEBUG_QUEUE_MISMATCH")
+    if Counter(gen for gen,_ in queued)!=Counter(profiled_completions):
+        raise ValueError("P23R1_PROFILED_COMPLETION_TO_DEBUG_QUEUE_MISMATCH")
 
     log_records=[]
     with log_path.open(encoding="utf-8",errors="replace") as stream:
@@ -121,6 +133,8 @@ def audit(root: Path) -> dict:
         "trace_sha256":checked["trace_sha256"],
         "runtime_log_sha256":sha256(log_path),
         "queued":len(queued),
+        "m6_checkpoint_completed":len(completions),
+        "profiled_completion_count":len(profiled_completions),
         "printed":len(log_records),
         "flushed_during_trace":len(traced_flushed),
         "shutdown_flush_or_untraced":len(queued)-len(traced_flushed),
