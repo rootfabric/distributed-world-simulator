@@ -321,7 +321,7 @@ def analyze_events(trace: dict, *, minimum_frames: int = MIN_FRAMES,
     }
 
 
-def analyze_run(root: Path) -> dict:
+def analyze_run(root: Path, *, require_completion: bool = False) -> dict:
     manifest=json.loads((root/"manifest.json").read_text(encoding="utf-8"))
     if (manifest.get("mode")!="gui" or manifest.get("profile")!="LOCAL"
         or manifest.get("scenario")!="r31-reconnect-roundtrip"
@@ -334,9 +334,13 @@ def analyze_run(root: Path) -> dict:
     if (type(manifest.get("run_id")) is not str
         or len(manifest["run_id"])!=16):
         raise ValueError("RUN_ID_MISSING")
+    if require_completion and manifest.get("r31p23_completion_attribution") is not True:
+        raise ValueError("P23_COMPLETION_CANARY_NOT_ENABLED")
     report=json.loads((root/"report.json").read_text(encoding="utf-8"))
     trace=read_trace(root/"server"/"trace.jsonl",manifest["run_id"])
     result=analyze_events(trace)
+    if require_completion and result["movement_completion_event_count"] < 1:
+        raise ValueError("P23_NO_REAL_MOVEMENT_COMPLETION_RECORDED")
     result["source"]={
         "run_id":manifest["run_id"],
         "head":manifest.get("identity",{}).get("head"),
@@ -352,9 +356,11 @@ def main()->int:
     ap=argparse.ArgumentParser(description=__doc__)
     ap.add_argument("root",type=Path)
     ap.add_argument("--output",required=True,type=Path)
+    ap.add_argument("--require-completion",action="store_true",
+                    help="P2.3 R0: require nonzero exact writer completion stage coverage")
     args=ap.parse_args()
     try:
-        result=analyze_run(args.root)
+        result=analyze_run(args.root,require_completion=args.require_completion)
     except (ValueError,TypeError,KeyError,OSError,json.JSONDecodeError) as exc:
         print("R31P22_INCONCLUSIVE: "+str(exc))
         return 2
