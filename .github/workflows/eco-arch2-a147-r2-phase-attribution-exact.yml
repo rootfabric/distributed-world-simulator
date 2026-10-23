@@ -1,0 +1,152 @@
+name: ECO ARCH2 A14.7 R2 Stage A CPU Throughput Attribution
+
+on:
+  push:
+    branches:
+      - feature/eco-arch2-a14-7-r2-sim-throughput-r1
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: eco-a147-r2-attribution-${{ github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  portable:
+    name: A14.7 R2 portable 4/32/96/256 exact worker phase profile
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Canonical Godot 4.7.1 phase profile, 4 isolated processes
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 validation/ecology/evo_arch2_a14_7/validate_r2_phase_profiles.py --self-test
+          curl -fL --retry 3 -o /tmp/godot-a147-r2.zip https://github.com/godotengine/godot/releases/download/4.7.1-stable/Godot_v4.7.1-stable_linux.x86_64.zip
+          mkdir -p /tmp/godot-a147-r2
+          unzip -q /tmp/godot-a147-r2.zip -d /tmp/godot-a147-r2
+          godot=/tmp/godot-a147-r2/Godot_v4.7.1-stable_linux.x86_64
+          chmod +x "$godot"
+          "$godot" --headless --editor --path . --import > a147-r2-import.log 2>&1 || { cat a147-r2-import.log; exit 1; }
+          mkdir -p a147-r2-evidence
+          for n in 4 32 96 256; do
+            echo "A147_R2_EXACT_BEGIN population=$n"
+            "$godot" --headless --path . --script res://validation/ecology/evo_arch2_a14_7/test_a147_r2_phase_profile.gd -- --r2-population "$n" > "a147-r2-evidence/phase-$n.stdout.log" 2> "a147-r2-evidence/phase-$n.stderr.log" || { cat "a147-r2-evidence/phase-$n.stdout.log"; cat "a147-r2-evidence/phase-$n.stderr.log"; exit 1; }
+            grep -Fx 'A147_R2_PHASE_PROFILE PASS' "a147-r2-evidence/phase-$n.stdout.log"
+            grep '^A147_R2_CPU_PHASE_PROFILE_JSON ' "a147-r2-evidence/phase-$n.stdout.log" | sed 's/^A147_R2_CPU_PHASE_PROFILE_JSON //' > "a147-r2-evidence/phase-$n.json"
+            test "$(wc -l < "a147-r2-evidence/phase-$n.json")" -eq 1
+            if grep -Ei 'SCRIPT ERROR|Parse Error|Failed to load script|Error compiling' "a147-r2-evidence/phase-$n.stdout.log" "a147-r2-evidence/phase-$n.stderr.log"; then exit 1; fi
+          done
+          python3 validation/ecology/evo_arch2_a14_7/validate_r2_phase_profiles.py a147-r2-evidence/phase-{4,32,96,256}.json
+          git diff --exit-code && git diff --cached --exit-code
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: a147-r2-portable-canonical-attribution
+          path: |
+            a147-r2-import.log
+            a147-r2-evidence/
+          if-no-files-found: ignore
+
+  linux:
+    name: A14.7 R2 Linux Double exact CPU phase profile
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 95
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Canonical pinned Linux 4.7.1 double
+        shell: bash
+        env:
+          CONFIGURED_GODOT: ${{ vars.DWS_GODOT_DOUBLE_LINUX_BIN }}
+        run: |
+          set -euo pipefail
+          godot="${CONFIGURED_GODOT:-$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64}"
+          test "$(sha256sum "$godot" | cut -d' ' -f1)" = "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7"
+          "$godot" --headless --editor --path . --import > a147-r2-linux-import.log 2>&1 || { cat a147-r2-linux-import.log; exit 1; }
+          mkdir -p a147-r2-linux-evidence
+          for n in 4 32 96 256; do
+            "$godot" --headless --path . --script res://validation/ecology/evo_arch2_a14_7/test_a147_r2_phase_profile.gd -- --r2-population "$n" > "a147-r2-linux-evidence/phase-$n.stdout.log" 2> "a147-r2-linux-evidence/phase-$n.stderr.log" || { cat "a147-r2-linux-evidence/phase-$n.stdout.log"; cat "a147-r2-linux-evidence/phase-$n.stderr.log"; exit 1; }
+            grep -Fx 'A147_R2_PHASE_PROFILE PASS' "a147-r2-linux-evidence/phase-$n.stdout.log"
+            grep '^A147_R2_CPU_PHASE_PROFILE_JSON ' "a147-r2-linux-evidence/phase-$n.stdout.log" | sed 's/^A147_R2_CPU_PHASE_PROFILE_JSON //' > "a147-r2-linux-evidence/phase-$n.json"
+          done
+          python3 validation/ecology/evo_arch2_a14_7/validate_r2_phase_profiles.py a147-r2-linux-evidence/phase-{4,32,96,256}.json
+          git diff --exit-code && git diff --cached --exit-code
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: a147-r2-linux-double-exact-attribution
+          path: |
+            a147-r2-linux-import.log
+            a147-r2-linux-evidence/
+          if-no-files-found: ignore
+
+  windows:
+    name: A14.7 R2 Windows pinned Double CPU attribution
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 100
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Pinned 4.7.1 Windows Double exact 4/32/96/256
+        shell: pwsh
+        env:
+          CONFIGURED_GODOT: ${{ vars.DWS_GODOT_DOUBLE_BIN }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $godot = $env:CONFIGURED_GODOT
+          if ([string]::IsNullOrWhiteSpace($godot)) { $godot = 'C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe' }
+          $sha = (Get-FileHash $godot -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($sha -ne '3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5') { throw 'A147_R2_GODOT_SHA256_MISMATCH' }
+          & $godot --headless --editor --path . --import *> a147-r2-windows-import.log
+          if ($LASTEXITCODE -ne 0) { throw "A147_R2_IMPORT_FAIL" }
+          New-Item -ItemType Directory -Force -Path a147-r2-windows-evidence | Out-Null
+          foreach ($n in @(4, 32, 96, 256)) {
+            $out = (Join-Path (Get-Location).Path "a147-r2-windows-evidence\phase-$n.stdout.log")
+            $err = (Join-Path (Get-Location).Path "a147-r2-windows-evidence\phase-$n.stderr.log")
+            $argv = @('--headless','--path','.','--script','res://validation/ecology/evo_arch2_a14_7/test_a147_r2_phase_profile.gd','--','--r2-population',"$n")
+            $started = Get-Date
+            $proc = Start-Process -FilePath $godot -ArgumentList $argv -WorkingDirectory (Get-Location).Path -PassThru -RedirectStandardOutput $out -RedirectStandardError $err
+            $peak = [int64]0
+            while (-not $proc.HasExited) {
+              $proc.Refresh()
+              if (-not $proc.HasExited) { $peak = [Math]::Max($peak,[int64]$proc.PeakWorkingSet64) }
+              Start-Sleep -Milliseconds 500
+            }
+            $proc.WaitForExit()
+            $signed = [int64]$proc.ExitCode
+            $hex = '0x{0:X8}' -f ([uint32]($signed -band [int64]0xffffffff))
+            Write-Host "A147_R2_NATIVE_EXIT n=$n signed=$signed hex=$hex sampled_peak_rss=$peak elapsed_s=$((Get-Date).Subtract($started).TotalSeconds)"
+            if ($signed -ne 0) { Get-Content $out; Get-Content $err; throw "A147_R2_NATIVE_CRASH_$n" }
+            if (-not (Select-String -Path $out -Pattern '^A147_R2_PHASE_PROFILE PASS$' -Quiet)) { throw "A147_R2_PROFILE_PASS_MISSING_$n" }
+            $rows = @(Get-Content $out | Where-Object { $_ -match '^A147_R2_CPU_PHASE_PROFILE_JSON ' })
+            if ($rows.Count -ne 1) { throw "A147_R2_PROFILE_COUNT_$n" }
+            $entry = ($rows[0] -replace '^A147_R2_CPU_PHASE_PROFILE_JSON ','') | ConvertFrom-Json
+            if ([int]$entry.population -ne $n -or -not [bool]$entry.checkpoint_equal) { throw "A147_R2_PROFILE_CANONICAL_FAIL_$n" }
+            Set-Content -Path "a147-r2-windows-evidence\phase-$n.json" -Value ($rows[0] -replace '^A147_R2_CPU_PHASE_PROFILE_JSON ','') -Encoding utf8
+            if (Select-String -Path $out,$err -Pattern 'SCRIPT ERROR|Parse Error|Failed to load script|Error compiling' -Quiet) { throw "A147_R2_GDSCRIPT_ERROR_$n" }
+          }
+          python validation/ecology/evo_arch2_a14_7/validate_r2_phase_profiles.py a147-r2-windows-evidence/phase-4.json a147-r2-windows-evidence/phase-32.json a147-r2-windows-evidence/phase-96.json a147-r2-windows-evidence/phase-256.json
+          if ($LASTEXITCODE -ne 0) { throw 'A147_R2_STRICT_PROFILE_VALIDATOR_FAILED' }
+          git diff --exit-code
+          if ($LASTEXITCODE -ne 0) { throw 'DIRTY_WORKTREE' }
+          git diff --cached --exit-code
+          if ($LASTEXITCODE -ne 0) { throw 'DIRTY_INDEX' }
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: a147-r2-windows-double-exact-attribution
+          path: |
+            a147-r2-windows-import.log
+            a147-r2-windows-evidence/
+          if-no-files-found: ignore

@@ -44,6 +44,10 @@ var _last_admission_mode := "FULL_SOURCE_VALIDATE"
 var _last_worker_source_validate_us := 0
 var _last_worker_candidate_validate_us := 0
 var _last_projection_wall_us := 0
+# A14.7 R2 Stage A: CPU-only wall-clock attribution. Never part of the
+# canonical Runtime/checkpoint or thread scheduling. Per-job totals are
+# published only after the existing full source/candidate validation.
+var _last_worker_phase_profile: Dictionary = {}
 var _job_started_us := 0
 var _jobs_started := 0
 var _jobs_committed := 0
@@ -119,6 +123,7 @@ func status() -> Dictionary:
 		"last_worker_source_validate_wall_us": _last_worker_source_validate_us,
 		"last_worker_candidate_validate_wall_us": _last_worker_candidate_validate_us,
 		"last_projection_wall_us": _last_projection_wall_us,
+		"last_worker_phase_profile": _last_worker_phase_profile.duplicate(true),
 		"last_worker_wall_us": _last_worker_wall_us,
 		"last_error": _last_error,
 	}
@@ -181,6 +186,7 @@ func advance(state: Dictionary, options: Dictionary,
 			return _failed("R3_ASYNC_WORKER_VALIDATION_RECEIPT", t0)
 		_last_worker_source_validate_us = int(payload.get("source_validate_us", 0))
 		_last_worker_candidate_validate_us = int(payload.get("candidate_validate_us", 0))
+		_last_worker_phase_profile = payload.get("phase_profile", {}).duplicate(true)
 		_last_projection_wall_us = int(payload.get("projection_wall_us", 0))
 		var source_validation_started_us: int = Time.get_ticks_usec()
 		var canonical_error := ""
@@ -225,6 +231,7 @@ func advance(state: Dictionary, options: Dictionary,
 			"worker_source_validate_wall_us": _last_worker_source_validate_us,
 			"worker_candidate_validate_wall_us": _last_worker_candidate_validate_us,
 			"worker_projection_wall_us": _last_projection_wall_us,
+			"worker_phase_profile": _last_worker_phase_profile.duplicate(true),
 			"presentation_snapshot": payload.get("presentation_snapshot", {}),
 			"complete_poll_wall_us": complete_poll_wall_us,
 		}
@@ -295,8 +302,20 @@ func _compute(frozen: Dictionary, options: Dictionary, members: int,
 		projection_manifest: Dictionary) -> void:
 	var started_us: int = Time.get_ticks_usec()
 	var payload: Dictionary = {}
+	# Exact single task wall decomposition. These counters are host-only;
+	# no per-organism ordering, quota, algorithm or state mutation changes.
+	var phases := {"begin_us": 0, "cursor_encode_us": 0,
+		"prepare_us": 0, "allocate_begin_us": 0, "allocate_resume_us": 0,
+		"advance_us": 0, "finalize_us": 0, "unknown_resume_us": 0,
+		"resume_total_us": 0,
+		"prepare_calls": 0, "allocate_begin_calls": 0,
+		"allocate_resume_calls": 0, "advance_calls": 0,
+		"finalize_calls": 0, "max_single_resume_us": 0,
+		"max_cursor_encode_us": 0, "max_cursor_bytes": 0}
+	var begin_started_us: int = Time.get_ticks_usec()
 	var started: Dictionary = Runtime.begin_staged_global_tick(
 		frozen, options, 4, members, true)
+	phases["begin_us"] = maxi(0, Time.get_ticks_usec() - begin_started_us)
 	if not bool(started.get("success", false)) or not started.has("cursor"):
 		payload = {"success": false,
 			"error": "BEGIN:" + String(started.get("error", "?"))}
@@ -306,12 +325,36 @@ func _compute(frozen: Dictionary, options: Dictionary, members: int,
 			if _is_cancel_requested():
 				payload = {"success": false, "error": "CANCELLED"}
 				break
+			var phase: String = String(cursor.get("lifecycle", {}).get("phase", "UNKNOWN"))
+			var bucket := "unknown"
+			if phase == "PREPARE":
+				bucket = "prepare"
+			elif phase == "ADVANCE":
+				bucket = "advance"
+			elif phase == "ALLOCATE":
+				bucket = "allocate_begin" if cursor.get("lifecycle", {}).get(
+					"allocator_cursor", {}).is_empty() else "allocate_resume"
+			var encode_started_us: int = Time.get_ticks_usec()
 			var encoded: String = C.encode(cursor)
-			if encoded.is_empty() or encoded.to_utf8_buffer().size() > cursor_cap:
+			var encoded_bytes: int = encoded.to_utf8_buffer().size()
+			var encode_us: int = maxi(0, Time.get_ticks_usec() - encode_started_us)
+			phases["cursor_encode_us"] += encode_us
+			phases["max_cursor_encode_us"] = maxi(int(phases.max_cursor_encode_us), encode_us)
+			phases["max_cursor_bytes"] = maxi(int(phases.max_cursor_bytes), encoded_bytes)
+			if encoded.is_empty() or encoded_bytes > cursor_cap:
 				payload = {"success": false, "error": "CURSOR_CAP"}
 				break
+			var resume_started_us: int = Time.get_ticks_usec()
 			var step: Dictionary = Runtime.resume_staged_global_tick(
 				frozen, options, cursor, 1, items, cursor_cap)
+			var resume_us: int = maxi(0, Time.get_ticks_usec() - resume_started_us)
+			phases["resume_total_us"] += resume_us
+			phases[bucket + "_us"] += resume_us
+			phases[bucket + "_calls"] = int(phases.get(bucket + "_calls", 0)) + 1
+			phases["max_single_resume_us"] = maxi(int(phases.max_single_resume_us), resume_us)
+			if bool(step.get("complete", false)):
+				phases["finalize_us"] += resume_us
+				phases["finalize_calls"] += 1
 			if not bool(step.get("success", false)):
 				payload = {"success": false,
 					"error": "RESUME:" + String(step.get("error", "?"))}
@@ -329,6 +372,9 @@ func _compute(frozen: Dictionary, options: Dictionary, members: int,
 			cursor = step.cursor
 		if payload.is_empty():
 			payload = {"success": false, "error": "WORKER_RESUME_LIMIT"}
+	# Worker telemetry is detached and NO phase data participates in
+	# canonical checksums, A4 demand reductions or adoption logic.
+	payload["phase_profile"] = phases.duplicate(true)
 	# The final full validation runs only on the CPU worker. Retain the
 	# direct-service full MAIN check until an exclusive owner lease exists.
 	if bool(payload.get("success", false)):
