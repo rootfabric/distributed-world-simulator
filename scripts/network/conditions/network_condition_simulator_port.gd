@@ -187,7 +187,7 @@ func send_to_peer(peer_id: String, frame: Dictionary) -> Dictionary:
 		var p23_delegate_us: int = Time.get_ticks_usec() if p23_probe else 0
 		if r21_reuse_encoded_size and bool(direct.get("success", false)):
 			var exact_bytes = Dictionary(direct.get("details", {})).get("packet_bytes")
-			if type(exact_bytes) != TYPE_INT or int(exact_bytes) < 1:
+			if typeof(exact_bytes) != TYPE_INT or int(exact_bytes) < 1:
 				return TransportUtilsScript.failure("R31P23R21_DELEGATE_PACKET_SIZE_MISSING")
 			packet_bytes = int(exact_bytes)
 		if bool(direct.get("success", false)):
