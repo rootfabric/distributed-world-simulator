@@ -45,6 +45,8 @@ jobs:
           python -m py_compile tools/net_smooth1/analyze_r31p22_loop_stages.py
           python -m unittest discover -s tests/tools -p 'test_net_smooth1_r31p22_loop_stages.py' -v
           python -m unittest discover -s tests/tools -p 'test_net_smooth1_r31p23_completion_source.py' -v
+          python -m py_compile tools/net_smooth1/validate_r31p23r1_debug_fifo.py
+          python -m unittest discover -s tests/tools -p 'test_net_smooth1_r31p23r1_debug_fifo_audit.py' -v
           python -m unittest discover -s tests/tools -p 'test_net_smooth1_r31p23r1_deferred_debug_source.py' -v
           python -m unittest discover -s tests/tools -p 'test_net_smooth1_r31p22_source_contracts.py' -v
           python -m py_compile tools/net_smooth1/analyze_r31bp20_validator_stages.py
