@@ -136,3 +136,49 @@ jobs:
           name: eco-a147-r1-linux-native-gui
           path: a147-evidence/
           if-no-files-found: ignore
+
+  virtual_gui_diagnostic:
+    name: Xvfb Mesa software GUI path diagnostic — NOT real GPU evidence
+    runs-on: ubuntu-latest
+    needs: portable_preflight
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Godot window + Input + rendering path in software only
+        shell: bash
+        run: |
+          set -euo pipefail
+          # This catches real GUI API and presentation errors on every PR
+          # but MUST NEVER be cited as hardware/GPU acceptance.
+          if ! command -v xvfb-run >/dev/null; then
+            sudo apt-get update -qq && sudo apt-get install -qy xvfb libgl1-mesa-dri
+          fi
+          curl -fL --retry 3 -o /tmp/godot-a147-gui.zip https://github.com/godotengine/godot/releases/download/4.7.1-stable/Godot_v4.7.1-stable_linux.x86_64.zip
+          mkdir -p /tmp/godot-a147-gui
+          unzip -q /tmp/godot-a147-gui.zip -d /tmp/godot-a147-gui
+          godot=/tmp/godot-a147-gui/Godot_v4.7.1-stable_linux.x86_64
+          chmod +x "$godot"
+          "$godot" --headless --editor --path . --import >/tmp/a147-gui-import.log 2>&1 || { cat /tmp/a147-gui-import.log; exit 1; }
+          mkdir -p a147-evidence
+          xvfb-run -a -s '-screen 0 1280x720x24' "$godot" --path . --script res://validation/ecology/evo_arch2_a14_7/a147_gui_soak.gd -- --a147-gui --a147-allow-software --a147-population 4 --a147-ticks 1 --a147-seconds 100 --a147-output res://a147-evidence/a147-4.json > a147-evidence/virtual4.stdout.log 2> a147-evidence/virtual4.stderr.log || { cat a147-evidence/virtual4.stdout.log; cat a147-evidence/virtual4.stderr.log; exit 1; }
+          grep -Fx 'A147_R1_NATIVE_GUI PASS' a147-evidence/virtual4.stdout.log
+          python3 - <<'PY'
+          import json,sys
+          sys.path.insert(0, 'validation/ecology/evo_arch2_a14_7')
+          from validate_gui_evidence import validate
+          p=json.load(open('a147-evidence/a147-4.json',encoding='utf-8'))
+          assert p['hardware_required'] is False
+          assert not validate(p, expected_population=4, require_hardware=False)
+          assert p['p3_p6_actual_lab_scene'] and p['renderer_draw_calls_peak'] > 0
+          print('A147_R1_VIRTUAL_GUI_DIAGNOSTIC_ONLY_PASS')
+          PY
+          git diff --exit-code && git diff --cached --exit-code
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: eco-a147-r1-virtual-software-diagnostic-only
+          path: a147-evidence/
+          if-no-files-found: ignore
