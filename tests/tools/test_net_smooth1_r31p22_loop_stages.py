@@ -66,6 +66,9 @@ def fixture(*,frames=150,fail_wire=False,missing_loop=None,
                 "compact_send_ms":.3 if fail_wire else 1.0,
                 "seam_check_send_ms":.2,
             }))
+        rows.append(make_event("server_message",i,t+3,{
+            "duration_ms":.15,"type":"PLAYER_INPUT_BATCH"
+        }))
         rows.append(make_event("server_loop",i,t+4,{
             "message_ms":MSG_SUM+.02,
             "process_ms":TOTAL+.9,
@@ -113,6 +116,11 @@ class StageReducer(unittest.TestCase):
             self.assertEqual(result["same_frame_count"],150)
             self.assertEqual(result["snapshot_frame_count"],50)
             self.assertEqual(result["compact_wire_event_count"],100)
+            self.assertEqual(result["message_handler_event_count"],150)
+            self.assertAlmostEqual(result["worst_frame_samples"][0][
+                "message_handler_sum_ms"],.15)
+            self.assertGreater(result["worst_frame_samples"][0][
+                "unattributed_dispatch_ms"],.30)
             self.assertAlmostEqual(result["components_ms"]["postcommit_ms"]["p99"],1.0)
             self.assertAlmostEqual(result["compact_wire_components_ms"]["frame_create_ms"]["p99"],.2)
             self.assertEqual(result["p99_tail_frame_count"],2)
@@ -138,6 +146,14 @@ class StageReducer(unittest.TestCase):
             path=write(Path(temp),fail_wire=True)
             with self.assertRaisesRegex(ValueError,"WIRE_COMPONENTS_EXCEED_COMPACT_SEND"):
                 analyze_events(read_trace(path,RUN_ID))
+
+    def test_handler_time_exceeding_dispatch_fails_closed(self):
+        with tempfile.TemporaryDirectory() as temp:
+            path=write(Path(temp))
+            rows=read_trace(path,RUN_ID)
+            rows["server_message"][0]["data"]["duration_ms"]=4.0
+            with self.assertRaisesRegex(ValueError,"HANDLERS_EXCEED_DISPATCH"):
+                analyze_events(rows)
 
     def test_compact_send_failure_cannot_be_reported_as_success(self):
         with tempfile.TemporaryDirectory() as temp:
