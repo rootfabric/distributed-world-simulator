@@ -21,7 +21,7 @@ RUNNER=ROOT/"tools/net_smooth1/run_net_smooth1.py"
 
 
 def function(src,name):
-    m=re.search(r"(?ms)^func "+re.escape(name)+r"\(.*?(?=^func |\Z)",src)
+    m=re.search(r"(?ms)^(?:static )?func "+re.escape(name)+r"\(.*?(?=^(?:static )?func |\Z)",src)
     if m is None:
         raise AssertionError("missing "+name)
     return m.group(0)
