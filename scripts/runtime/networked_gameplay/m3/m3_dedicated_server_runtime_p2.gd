@@ -3596,6 +3596,7 @@ func _r31p23r1_enqueue_completion_debug(generation: int) -> void:
 	_r31p23r1_debug_lines.append({
 		"line": detached_line,
 		"engine_frame": captured_frame,
+		"queued_us": Time.get_ticks_usec(),
 		"generation": generation,
 	})
 	_r31p23r1_debug_queued += 1
@@ -3643,6 +3644,7 @@ func _r31p23r1_flush_one_idle_debug(frame_started_us: int) -> void:
 			"original_engine_frame": int(item["engine_frame"]),
 			"generation": int(item["generation"]),
 			"print_ms": float(Time.get_ticks_usec() - started_us) / 1000.0,
+			"queue_delay_ms": float(started_us - int(item.get("queued_us", started_us))) / 1000.0,
 			"pending": _r31p23r1_debug_lines.size(),
 		})
 
