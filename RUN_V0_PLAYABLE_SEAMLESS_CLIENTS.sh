@@ -6,10 +6,10 @@ GODOT_BIN="${GODOT_BIN:-${GODOT:-}}"
 SCENARIO="${1:-all}"
 OBSERVE="${DWS_TEST_CLIENT_OBSERVE:-1}"
 STEP_MS="${DWS_TEST_CLIENT_STEP_MS:-800}"
-EXPECTED="4.7.1.stable.double.custom_build.a13da4feb"
+EXPECTED="4.8.beta1.double.custom_build.4d10419ca"
 
 if [[ -z "$GODOT_BIN" || ! -x "$GODOT_BIN" ]]; then
-  echo "Set GODOT_BIN to the Godot 4.7.1 double executable." >&2
+  echo "Set GODOT_BIN to the Godot 4.8 beta1 double executable." >&2
   exit 2
 fi
 

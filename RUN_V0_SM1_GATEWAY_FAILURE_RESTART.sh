@@ -3,7 +3,7 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 GODOT_BIN="${GODOT_BIN:-${GODOT:-}}"
-EXPECTED_GODOT_VERSION="4.7.1.stable.double.custom_build.a13da4feb"
+EXPECTED_GODOT_VERSION="4.8.beta1.double.custom_build.4d10419ca"
 ITERATIONS="${SM1_GATEWAY_RESTART_ITERATIONS:-10}"
 
 if [[ -z "$GODOT_BIN" ]]; then
@@ -15,7 +15,7 @@ if [[ -z "$GODOT_BIN" ]]; then
   done
 fi
 if [[ -z "$GODOT_BIN" || ! -x "$GODOT_BIN" ]]; then
-  echo "SM1_7_9_GODOT_NOT_FOUND: set GODOT_BIN to the Godot 4.7.1 double editor" >&2
+  echo "SM1_7_9_GODOT_NOT_FOUND: set GODOT_BIN to the Godot 4.8 beta1 double editor" >&2
   exit 2
 fi
 ACTUAL_GODOT_VERSION="$("$GODOT_BIN" --version | head -n 1 | tr -d '\r')"
@@ -37,7 +37,7 @@ if ! [[ "$ITERATIONS" =~ ^[0-9]+$ ]] || (( ITERATIONS < 1 )); then
   echo "SM1_7_9_ITERATIONS_INVALID: $ITERATIONS" >&2
   exit 6
 fi
-if [[ "$(uname -s)" == "Linux" && ! -x /usr/bin/Xvfb ]]; then
+if [[ "$(uname -s)" == "Linux" && ! -x "${XVFB_BIN:-/usr/bin/Xvfb}" ]]; then
   echo "SM1_7_9_XVFB_REQUIRED" >&2
   exit 7
 fi
