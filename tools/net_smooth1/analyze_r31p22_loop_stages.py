@@ -207,7 +207,7 @@ def analyze_events(trace: dict, *, minimum_frames: int = MIN_FRAMES,
                 wire_total+=total
                 for k,v in parts.items():
                     by_wire[k].append(v)
-            if wire_total>compact_time+TOLERANCE_MS:
+            if wire_total>compact_time+.1:
                 raise ValueError("WIRE_COMPONENTS_EXCEED_COMPACT_SEND")
 
         for name,value in stage_vals.items():
