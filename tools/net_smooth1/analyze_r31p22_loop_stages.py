@@ -244,6 +244,11 @@ def analyze_events(trace: dict, *, minimum_frames: int = MIN_FRAMES,
                 raise ValueError("SAME_FRAME_DEBUG_FLUSH_FORBIDDEN")
             drained_print_ms=number(d.get("print_ms"),"DEFERRED_DEBUG_PRINT")
             drained_delay_ms=number(d.get("queue_delay_ms"),"DEFERRED_DEBUG_DELAY")
+            # _process() emits P2.2 stage timestamps BEFORE the deliberately
+            # deferred print, but server_loop.process_ms includes it. Reject
+            # moved-to-another-frame work that is outside this total.
+            if drained_print_ms > max(0.0,process_ms-measured_ms)+TOLERANCE_MS:
+                raise ValueError("DEBUG_PRINT_EXCEEDS_PROCESS_REMAINDER")
             debug_print_ms.append(drained_print_ms)
             debug_delay_ms.append(drained_delay_ms)
         snap=snapshots.get(frame_id)
