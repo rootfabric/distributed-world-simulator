@@ -1,0 +1,249 @@
+name: NET-SMOOTH1 R31 P2.3 R2.1 Current COMPACT Single Encode Exact
+
+on:
+  push:
+    branches:
+      - feature/net-smooth1-r31p23-r21-compact-single-encode-r1
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: net-smooth-r31p23r21-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  source-contracts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Strict R3C4 and inherited persistence source proofs
+        run: |
+          set -euo pipefail
+          python -m py_compile tools/net_smooth1/analyze_r3c4_r30_capture_stages.py
+          python -m unittest discover -s tests/tools -p 'test_net_smooth1_r3c4_r30_capture_stages.py' -v
+          python -m py_compile tools/net_smooth1/analyze_r3c4_r31_cache.py
+          python -m unittest discover -s tests/tools -p 'test_net_smooth1_r3c4_r31_cache_analysis.py' -v
+          python -m py_compile tools/net_smooth1/diagnose_r31_long_gaps.py
+          python -m py_compile tools/net_smooth1/analyze_r31b_durable_stages.py
+          python -m unittest discover -s tests/tools -p 'test_net_smooth1_r31b_durable_stages.py' -v
+          python -m py_compile tools/net_smooth1/analyze_r31bp1_durable_chunks.py
+          python -m unittest discover -s tests/tools -p 'test_net_smooth1_r31bp1_durable_chunks.py' -v
+          python -m py_compile tools/net_smooth1/owned_process_cleanup.py
+          python -m py_compile tools/net_smooth1/run_net_smooth1.py
+          python -m py_compile tools/net_smooth1/analyze_r31bp1_durable_chunks.py
+          python -m unittest discover -s tests/tools -p 'test_net_smooth1_owned_process_cleanup.py' -v
+          python -m py_compile tools/net_smooth1/analyze_r31p22_loop_stages.py
+          python -m unittest discover -s tests/tools -p 'test_net_smooth1_r31p22_loop_stages.py' -v
+          python -m unittest discover -s tests/tools -p 'test_net_smooth1_r31p23_completion_source.py' -v
+          python -m py_compile tools/net_smooth1/analyze_r31p23r2_flush_layers.py
+          python -m unittest discover -s tests/tools -p 'test_net_smooth1_r31p23r2_source_contracts.py' -v
+          python -m unittest discover -s tests/tools -p 'test_net_smooth1_r31p23r21_source_contracts.py' -v
+          python -m unittest discover -s tests/tools -p 'test_net_smooth1_r31p23r2_flush_layers.py' -v
+          python -m unittest discover -s tests/tools -p 'test_net_smooth1_r31p22_source_contracts.py' -v
+          python -m py_compile tools/net_smooth1/analyze_r31bp20_validator_stages.py
+          python -m unittest discover -s tests/tools -p 'test_net_smooth1_r31bp20_validator_attribution.py' -v
+          python -m unittest discover -s tests/tools -p 'test_net_smooth1_r31bp1_b1b3_contracts.py' -v
+          python -m unittest discover -s tests/tools -p 'test_net_smooth1_r31bp1_802_safety_contracts.py' -v
+          python -m unittest discover -s tests/tools -p 'test_net_smooth1_r31b_durable_source.py' -v
+          python -m unittest discover -s tests/tools -p 'test_net_smooth1_r31b_long_gap_forensics.py' -v
+          python -m unittest discover -s tests/tools -p 'test_net_smooth1_r3c4_r31_versioned_replay_source.py' -v
+          python -m unittest discover -s tests/tools -p 'test_net_smooth1_r3c4_r30_source_attribution.py' -v
+          python -m unittest discover -s tests/tools -p 'test_net_smooth1_r3c4_r2_worker_envelope_source.py' -v
+          python -m unittest discover -s tests/tools -p 'test_net_smooth1_r3c4_periodic_frame_headroom_source.py' -v
+          python -m unittest discover -s tests/tools -p 'test_net_smooth1_r42_r3c21_persistence_projection_source_contract.py' -v
+          python -m unittest discover -s tests/tools -p 'test_net_smooth1_r42_r3c21_frame_pacing_source_contract.py' -v
+          python -m unittest discover -s tests/tools -p 'test_net_smooth1_r42_r3c2_source_contract.py' -v
+          python -m unittest discover -s tests/tools -p 'test_net_smooth1_r42_r3c2_fault_contract.py' -v
+          python -m unittest discover -s tests/tools -p 'test_net_smooth1_r31_measure_full_duration.py' -v
+
+  windows-exact:
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 100
+    env:
+      GODOT_SILENCE_ROOT_WARNING: '1'
+      BREAKPOINT_RUNTIME_DISABLED: '1'
+      PYTHONUTF8: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Exact R3C4 ancestry, identity and pinned Windows double
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          $Parent='b112c96bde4d4909b773abd4cbe2c3f198353c6a'
+          $B='C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe'
+          $E='artifacts\net-smooth1\r31p23r21-windows-exact'
+          New-Item -ItemType Directory -Force $E | Out-Null
+          if ((git rev-parse HEAD).Trim() -ne $env:GITHUB_SHA) { throw 'R3C4_HEAD_MISMATCH' }
+          git merge-base --is-ancestor $Parent HEAD
+          if ($LASTEXITCODE -ne 0) { throw 'R3C4_PARENT_MISMATCH' }
+          if (git status --porcelain --untracked-files=no) { throw 'R3C4_TRACKED_DIRTY' }
+          if (-not (Test-Path $B)) { throw 'R3C4_WINDOWS_DOUBLE_MISSING' }
+          $Version=(& $B --version | Out-String).Trim()
+          $Hash=(Get-FileHash $B -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($Version -ne '4.7.1.stable.double.custom_build.a13da4feb') { throw 'R3C4_VERSION_MISMATCH' }
+          if ($Hash -ne '3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5') { throw 'R3C4_HASH_MISMATCH' }
+          [ordered]@{head=(git rev-parse HEAD).Trim();tree=(git rev-parse 'HEAD^{tree}').Trim();parent=$Parent;godot=$Version;sha256=$Hash} | ConvertTo-Json | Set-Content "$E\identity.json" -Encoding UTF8
+      - name: Cold import (fail closed on any script parser error)
+        shell: pwsh
+        timeout-minutes: 15
+        run: |
+          $ErrorActionPreference='Stop'
+          $B='C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe'
+          $L='artifacts\net-smooth1\r31p23r21-windows-exact\cold-import.log'
+          & $B --headless --editor --path . --import --quit *> $L
+          if ($LASTEXITCODE -ne 0 -or (Select-String -Path $L -Pattern 'SCRIPT ERROR:|Parse Error:|Compile Error:' -Quiet)) { Get-Content $L -Tail 150; throw 'R3C4_IMPORT_FAILED' }
+      - name: R3C4 periodic, exact M6 and Earth regression
+        shell: pwsh
+        timeout-minutes: 74
+        run: |
+          $ErrorActionPreference='Stop'
+          $B='C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe'
+          $E='artifacts\net-smooth1\r31p23r21-windows-exact'
+          $Suites=@(
+            'tests/runtime/test_net_smooth1_r31p23r21_single_pass_compact.gd',
+            'tests/runtime/test_net_smooth1_r31p23r2_flush_attribution.gd',
+            'tests/runtime/test_net_smooth1_r31p23_completion_attribution.gd',
+            'tests/runtime/test_net_smooth1_r31p22_mode_guard.gd',
+            'tests/runtime/test_net_smooth1_r31bp20_validator_attribution.gd',
+            'tests/runtime/test_net_smooth1_r31bp1_durable_chunk_cache.gd',
+            'tests/runtime/test_net_smooth1_r31b_durable_gap_forensics.gd',
+            'tests/runtime/test_net_smooth1_r3c4_r31_versioned_replay_projection.gd',
+            'tests/runtime/test_net_smooth1_r3c4_r30_stage_attribution.gd',
+            'tests/runtime/test_net_smooth1_r3c4_r2_worker_envelope.gd',
+            'tests/runtime/test_net_smooth1_r3c4_periodic_frame_headroom.gd',
+            'tests/runtime/test_net_smooth1_async_checkpoint.gd',
+            'tests/runtime/test_net_smooth1_r42_p1b_periodic_completion_order.gd',
+            'tests/runtime/test_net_smooth1_r42_r3_slow_item_movement.gd',
+            'tests/runtime/test_net_smooth1_r42_r3c21_same_revision_tick_mirror.gd',
+            'tests/runtime/test_net_smooth1_r42_r3c21_frame_paced_visual.gd',
+            'tests/runtime/test_net_smooth1_r42_r3c3_r2_staged_vegetation.gd',
+            'tests/runtime/test_net_smooth1_r42_r3c_async_leave.gd',
+            'tests/runtime/test_net_smooth1_r42_r3c_queued_join.gd',
+            'tests/runtime/test_net_smooth1_r42_r3c2_phased_item_publication.gd',
+            'tests/runtime/test_m6_dedicated_recovery_contracts.gd',
+            'tests/characters/test_char2_network_avatar_client_presentation.gd'
+          )
+          foreach ($P in $Suites) {
+            $Stem=Join-Path $E (Split-Path $P -Leaf)
+            $Out="$Stem.stdout.log"; $Err="$Stem.stderr.log"
+            $Proc=Start-Process -FilePath $B -WorkingDirectory (Get-Location).Path -ArgumentList @('--headless','--path','.','--script',("res://"+$P)) -RedirectStandardOutput $Out -RedirectStandardError $Err -PassThru
+            try {
+              if (-not $Proc.WaitForExit(390000)) { $Proc.Kill($true); $Proc.WaitForExit(); throw "R3C4_TIMEOUT:$P" }
+              $Code=$Proc.ExitCode
+              $Errors=@(Select-String -Path $Out,$Err -Pattern 'SCRIPT ERROR:|Parse Error:|Compile Error:|ERROR:' -ErrorAction SilentlyContinue)
+              if ($Code -ne 0 -or $Errors.Count -gt 0) { Get-Content $Out -Tail 100; Get-Content $Err -Tail 100; throw "R3C4_RUNTIME_FAIL:$P EXIT=$Code ERRORS=$($Errors.Count)" }
+            } finally { $Proc.Dispose() }
+          }
+          if (git status --porcelain --untracked-files=no) { throw 'R3C4_POSTTEST_DIRTY' }
+      - name: Hash evidence
+        shell: pwsh
+        if: always()
+        run: |
+          $E='artifacts\net-smooth1\r31p23r21-windows-exact'
+          New-Item -ItemType Directory -Force $E | Out-Null
+          @(Get-ChildItem $E -File | Where-Object { $_.Name -ne 'sha256.json' } | ForEach-Object { [ordered]@{file=$_.Name;sha256=(Get-FileHash $_.FullName -Algorithm SHA256).Hash} }) | ConvertTo-Json -Depth 4 | Set-Content "$E\sha256.json" -Encoding UTF8
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: r3c4-windows-${{ github.sha }}-${{ github.run_id }}
+          path: artifacts/net-smooth1/r31p23r21-windows-exact/
+          if-no-files-found: error
+          retention-days: 21
+
+  linux-exact:
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 90
+    env:
+      GODOT_SILENCE_ROOT_WARNING: '1'
+      BREAKPOINT_RUNTIME_DISABLED: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Exact R3C4 ancestry and pinned Linux double
+        shell: bash
+        run: |
+          set -euo pipefail
+          E=artifacts/net-smooth1/r31p23r21-linux-exact
+          mkdir -p "$E"
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          git merge-base --is-ancestor b112c96bde4d4909b773abd4cbe2c3f198353c6a HEAD
+          test -z "$(git status --porcelain --untracked-files=no)"
+          B="${DWS_GODOT_DOUBLE_LINUX_BIN:-$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64}"
+          test -x "$B"
+          test "$("$B" --version | head -1)" = '4.7.1.stable.double.custom_build.a13da4feb'
+          test "$(sha256sum "$B" | cut -d' ' -f1)" = 'bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7'
+          echo "GODOT_BIN=$B" >> "$GITHUB_ENV"
+          { git rev-parse HEAD; git rev-parse 'HEAD^{tree}'; sha256sum "$B"; } > "$E/identity.txt"
+      - name: Cold import exact
+        shell: bash
+        timeout-minutes: 18
+        run: |
+          set -euo pipefail
+          L=artifacts/net-smooth1/r31p23r21-linux-exact/cold-import.log
+          "$GODOT_BIN" --headless --editor --path . --import --quit > "$L" 2>&1 || { tail -n 120 "$L"; exit 1; }
+          ! grep -E 'SCRIPT ERROR:|Parse Error:|Compile Error:' "$L"
+      - name: R3C4 periodic and M6 inherited regressions
+        shell: bash
+        timeout-minutes: 65
+        run: |
+          set -euo pipefail
+          E=artifacts/net-smooth1/r31p23r21-linux-exact
+          for P in \
+            tests/runtime/test_net_smooth1_r31p23r21_single_pass_compact.gd \
+            tests/runtime/test_net_smooth1_r31p23r2_flush_attribution.gd \
+            tests/runtime/test_net_smooth1_r31p23_completion_attribution.gd \
+            tests/runtime/test_net_smooth1_r31p22_mode_guard.gd \
+            tests/runtime/test_net_smooth1_r31bp20_validator_attribution.gd \
+            tests/runtime/test_net_smooth1_r31bp1_durable_chunk_cache.gd \
+            tests/runtime/test_net_smooth1_r31b_durable_gap_forensics.gd \
+            tests/runtime/test_net_smooth1_r3c4_r31_versioned_replay_projection.gd \
+            tests/runtime/test_net_smooth1_r3c4_r30_stage_attribution.gd \
+            tests/runtime/test_net_smooth1_r3c4_r2_worker_envelope.gd \
+            tests/runtime/test_net_smooth1_r3c4_periodic_frame_headroom.gd \
+            tests/runtime/test_net_smooth1_async_checkpoint.gd \
+            tests/runtime/test_net_smooth1_r42_p1b_periodic_completion_order.gd \
+            tests/runtime/test_net_smooth1_r42_r3_slow_item_movement.gd \
+            tests/runtime/test_net_smooth1_r42_r3c21_same_revision_tick_mirror.gd \
+            tests/runtime/test_net_smooth1_r42_r3c21_frame_paced_visual.gd \
+            tests/runtime/test_net_smooth1_r42_r3c3_r2_staged_vegetation.gd \
+            tests/runtime/test_net_smooth1_r42_r3c_async_leave.gd \
+            tests/runtime/test_net_smooth1_r42_r3c_queued_join.gd \
+            tests/runtime/test_net_smooth1_r42_r3c2_phased_item_publication.gd \
+            tests/runtime/test_m6_dedicated_recovery_contracts.gd
+          do
+            L="$E/$(basename "$P").log"
+            timeout --signal=TERM --kill-after=5s 390s "$GODOT_BIN" --headless --path . --script "res://$P" > "$L" 2>&1 || { code=$?; tail -n 130 "$L"; echo "R3C4_LINUX_FAIL:$P:$code"; exit 1; }
+            if grep -E 'SCRIPT ERROR:|Parse Error:|Compile Error:|ERROR:' "$L"; then tail -n 130 "$L"; exit 1; fi
+          done
+          test -z "$(git status --porcelain --untracked-files=no)"
+      - name: Hash evidence
+        if: always()
+        shell: bash
+        run: |
+          E=artifacts/net-smooth1/r31p23r21-linux-exact
+          mkdir -p "$E"
+          (cd "$E" && find . -type f ! -name SHA256SUMS.txt -print0 | sort -z | xargs -0 -r sha256sum > SHA256SUMS.txt)
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: r3c4-linux-${{ github.sha }}-${{ github.run_id }}
+          path: artifacts/net-smooth1/r31p23r21-linux-exact/
+          if-no-files-found: error
+          retention-days: 21
