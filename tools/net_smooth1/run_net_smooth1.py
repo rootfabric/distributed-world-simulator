@@ -165,6 +165,7 @@ def play(args, manifest: dict) -> None:
                     r31bp20_validator_attribution=args.r31bp20_validator_attribution,
                     r31p22_loop_attribution=args.r31p22_loop_attribution,
                     r31p23_completion_attribution=args.r31p23_completion_attribution,
+                    r31p23r2_flush_attribution=args.r31p23r2_flush_attribution,
                     scenario=args.scenario)
     processes: dict[str,subprocess.Popen] = {}; streams=[]
     def spawn(role: str) -> None:
@@ -215,6 +216,9 @@ def play(args, manifest: dict) -> None:
         if role == 'server' and args.r31p23_completion_attribution:
             # P2.3 R0 measures finished movement writer completion, not a join.
             env['DWS_NET_R31P23_COMPLETION_ATTRIBUTION']='1'
+        if role == 'server' and args.r31p23r2_flush_attribution:
+            # R2.0 isolates serializations, ENet put_packet and queue copying.
+            env['DWS_NET_R31P23R2_FLUSH_ATTRIBUTION']='1'
         if role == 'server' and args.slow_item_writer_ms > 0:
             # Test-only worker injection, never delay the main-thread loop.
             env['DWS_NET_SMOOTH_TEST_HOOKS']='1'
@@ -762,6 +766,8 @@ def main() -> int:
                         help='P2.2: server-only exact loop/poll/compact-send stage timing, requires P1')
     parser.add_argument('--r31p23-completion-attribution', action='store_true',
                         help='P2.3 R0: server-only async movement completion stages, requires P2.2')
+    parser.add_argument('--r31p23r2-flush-attribution', action='store_true',
+                        help='P2.3 R2.0: server-only COMPACT boundary/simulator/ENet flush profile, requires P2.2')
     parser.add_argument('--inject-stall-role',choices=('server','a','b'))
     parser.add_argument('--inject-stall-ms',type=int,default=250)
     args=parser.parse_args()
@@ -799,6 +805,8 @@ def main() -> int:
         parser.error('P2.2 server-loop stage attribution requires --r31bp1-durable-chunks')
     if args.r31p23_completion_attribution and not args.r31p22_loop_attribution:
         parser.error('P2.3 movement completion stage attribution requires --r31p22-loop-attribution')
+    if args.r31p23r2_flush_attribution and not args.r31p22_loop_attribution:
+        parser.error('P2.3 R2.0 flush attribution requires --r31p22-loop-attribution')
     run_id=uuid.uuid4().hex[:16]
     args.output=(args.output or ROOT/'artifacts/net-smooth1'/run_id).resolve()
     args.output.mkdir(parents=True,exist_ok=False)
