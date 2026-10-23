@@ -135,6 +135,17 @@ func _run() -> void:
               "queue drained after exact reads")
 
         server.call("_r31p23r1_enqueue_completion_debug", 102)
+        for generation in range(200, 231):
+            server.call("_r31p23r1_enqueue_completion_debug", generation)
+        var full: Dictionary = server.get_r31p23r1_debug_report()
+        check(int(full.get("pending", -1)) == 32,
+              "strict bounded private queue cannot grow beyond 32")
+        server.call("_r31p23r1_enqueue_completion_debug", 231)
+        var saturated: Dictionary = server.get_r31p23r1_debug_report()
+        check(int(saturated.get("overflow_sync", -1)) == 1,
+              "overfull event is printed synchronously and accounted")
+        check(int(saturated.get("pending", -1)) == 32,
+              "overflow does not replace an older committed generation")
         var before_generation: int = int(server.get("_checkpoint_generation"))
         check(bool(server.stop().get("success", false)),
               "graceful shutdown drains debug queue without changing M6 ACK")
@@ -143,8 +154,10 @@ func _run() -> void:
         var after: Dictionary = server.get_r31p23r1_debug_report()
         check(int(after.get("pending", -1)) == 0,
               "graceful stop never leaves a debug line behind")
-        check(int(after.get("flushed", -1)) >= 1,
-              "queued debug entry prints at shutdown")
+        check(int(after.get("flushed", -1)) == 32,
+              "all 32 queued entries print at shutdown in FIFO order")
+        check(int(after.get("overflow_sync", -1)) == 1,
+              "overflow is explicit and never silently discarded")
     server.free()
 
     for reason in failures:
