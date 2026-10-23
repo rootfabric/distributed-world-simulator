@@ -120,8 +120,18 @@ func _packet_parity() -> void:
             check(bool(decoded.get("success", false)),
                   "full RECEIVER checksum + canonical packet verification %d" % i)
             if bool(decoded.get("success", false)):
-                check(Dictionary(decoded.get("details", {})).get("frame") == frame,
-                      "decoded wire frame exactly equals original %d" % i)
+                var decoded_frame: Dictionary = Dictionary(
+                    decoded.get("details", {})).get("frame", {})
+                # Godot JSON can retype numeric Variant scalars on roundtrip;
+                # strict Dictionary == is NOT the wire-byte identity contract.
+                # Frame.decode already checks native payload hash and exact
+                # canonical packet text against these same bytes.
+                check(Wire.canonical_json(decoded_frame) ==
+                      Wire.canonical_json(frame),
+                      "decoded canonical JSON bytes exactly match original %d" % i)
+                check(String(decoded_frame.get("payload_checksum", "")) ==
+                      String(frame.get("payload_checksum", "")),
+                      "decoded native payload checksum identity %d" % i)
         check(_source_checksum(frame) == before_hash,
               "encode must not mutate caller-owned frame %d" % i)
 
