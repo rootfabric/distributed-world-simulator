@@ -2,7 +2,7 @@
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 GODOT_BIN="${GODOT_BIN:-${GODOT:-}}"
-EXPECTED_GODOT_VERSION="4.7.1.stable.double.custom_build.a13da4feb"
+EXPECTED_GODOT_VERSION="4.8.beta1.double.custom_build.4d10419ca"
 ITERATIONS="${SM1_IMPAIRED_CROSSING_ITERATIONS:-5}"
 if [[ -z "$GODOT_BIN" ]]; then
   for candidate in godot4 godot; do command -v "$candidate" >/dev/null 2>&1 && { GODOT_BIN="$(command -v "$candidate")"; break; }; done
