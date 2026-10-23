@@ -119,7 +119,7 @@ class R21Source(unittest.TestCase):
         self.assertIn("_has_active_manual_condition(OUTGOING)",sim)
         self.assertIn('"transport_kind", "")) == "ENET_MULTI_PEER"',sim)
         self.assertIn('== "COMPACT_GAMEPLAY_SNAPSHOT"',sim)
-        self.assertIn('type(exact_bytes)',sim) if False else self.assertIn('typeof(exact_bytes) != TYPE_INT',sim)
+        self.assertIn('typeof(exact_bytes) != TYPE_INT',sim)
         self.assertIn('"R31P23R21_DELEGATE_PACKET_SIZE_MISSING"',sim)
         self.assertIn('packet_bytes = int(exact_bytes)',sim)
         self.assertIn("_with_simulator_details(direct, packet_bytes, false, false, _now_ms())",sim)
