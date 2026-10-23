@@ -129,7 +129,7 @@ class StageReducer(unittest.TestCase):
             # A larger gap is not silently hidden.
             rows["r31p22_loop_stages"]=[
                 a for a in rows["r31p22_loop_stages"]
-                if a["data"]["engine_frame"] not in {12,13,14}]
+                if a["data"]["engine_frame"] not in {10,13,14}]
             with self.assertRaisesRegex(ValueError,"FRAME_JOIN_INCOMPLETE"):
                 analyze_events(rows)
 
@@ -160,7 +160,7 @@ class StageReducer(unittest.TestCase):
     def test_trace_loss_rejected(self):
         with tempfile.TemporaryDirectory() as temp:
             def poison(rows):
-                rows[-1]["n"]=rows[-2]["n"]  # duplicate sequence
+                rows[-2]["n"]=rows[-3]["n"]  # duplicate produced sequence, not footer
             path=write(Path(temp),mutator=poison)
             with self.assertRaisesRegex(ValueError,"TRACE_SEQUENCE_LOSS"):
                 read_trace(path,RUN_ID)
