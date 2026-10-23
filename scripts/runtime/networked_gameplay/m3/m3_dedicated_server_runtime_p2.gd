@@ -3577,6 +3577,12 @@ func _r31p23r1_enqueue_completion_debug(generation: int) -> void:
 		# No silent drop. The accepted debug path remains a fail-safe fallback
 		# even if this single frame becomes slow; count it explicitly.
 		_r31p23r1_debug_overflow_sync += 1
+		if SmoothTrace.enabled():
+			SmoothTrace.emit("r31p23r1_debug_overflow", {
+				"engine_frame": Engine.get_process_frames(),
+				"generation": generation,
+				"pending": _r31p23r1_debug_lines.size(),
+		})
 		_debug_event("MOVEMENT_CHECKPOINT_COMMITTED", {"generation": generation, "async": true})
 		return
 	var captured_time_ms: int = Time.get_ticks_msec()
@@ -3597,6 +3603,7 @@ func _r31p23r1_enqueue_completion_debug(generation: int) -> void:
 		SmoothTrace.emit("r31p23r1_debug_queued", {
 			"engine_frame": captured_frame,
 			"generation": generation,
+			"time_msec": captured_time_ms,
 			"pending": _r31p23r1_debug_lines.size(),
 		})
 
