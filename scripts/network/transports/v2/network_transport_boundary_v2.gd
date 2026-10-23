@@ -1,6 +1,7 @@
 extends RefCounted
 
 const NetworkUtilsScript = preload("res://scripts/network/contracts/network_contract_utils.gd")
+const R31SmoothTrace = preload("res://scripts/network/smoothness/net_smooth_trace.gd")
 const TransportUtilsScript = preload("res://scripts/network/transports/v2/transport_contract_utils.gd")
 const PortScript = preload("res://scripts/network/transports/v2/network_transport_port_v2.gd")
 const EventScript = preload("res://scripts/network/transports/v2/network_transport_event.gd")
@@ -27,6 +28,19 @@ var _max_pending_messages_per_peer: int = 128
 var _max_pending_bytes_per_peer: int = 2097152
 var _frame_sequence: int = 0
 var _telemetry
+# R31 P2.3 R2.0 opt-in transport boundary observability (default OFF).
+var _r31p23r2_attribution_enabled := false
+
+
+func configure_r31p23r2_flush_attribution(enabled: bool) -> Dictionary:
+	if _port == null or not _port.has_method("configure_r31p23r2_flush_attribution"):
+		return TransportUtilsScript.failure("R31P23R2_SIMULATOR_PORT_REQUIRED")
+	var port_result: Dictionary = _port.configure_r31p23r2_flush_attribution(enabled)
+	if not bool(port_result.get("success", false)):
+		return port_result
+	_r31p23r2_attribution_enabled = enabled
+	return TransportUtilsScript.success({"enabled": enabled})
+
 
 
 func configure(
@@ -313,13 +327,42 @@ func flush_outbound(max_frames: int = 64, peer_id: String = "") -> Dictionary:
 					peer_streams.erase(stream_key)
 					continue
 				var item: Dictionary = queue[0]
+				var p23_frame: Dictionary = Dictionary(item.get("frame", {}))
+				var p23_probe := (
+					_r31p23r2_attribution_enabled and R31SmoothTrace.enabled()
+					and String(Dictionary(p23_frame.get("payload", {})).get("type", "")) == "COMPACT_GAMEPLAY_SNAPSHOT"
+				)
+				var p23_started_us: int = Time.get_ticks_usec() if p23_probe else 0
 				item["attempts"] = int(item.get("attempts", 0)) + 1
 				queue[0] = item
 				peer_streams[stream_key] = queue
 				attempted += 1
+				var p23_before_copy_us: int = Time.get_ticks_usec() if p23_probe else 0
+				var dispatch_frame: Dictionary = item.get("frame", {}).duplicate(true)
+				var p23_after_copy_us: int = Time.get_ticks_usec() if p23_probe else 0
 				var result: Dictionary = _normalize_result(
-					_port.send_to_peer(queued_peer_id, item.get("frame", {}).duplicate(true))
+					_port.send_to_peer(queued_peer_id, dispatch_frame)
 				)
+				var p23_after_port_us: int = Time.get_ticks_usec() if p23_probe else 0
+				if p23_probe:
+					var simulator_stages: Dictionary = Dictionary(
+						Dictionary(result.get("details", {})).get("r31p23r2_simulator_stages", {})
+					)
+					R31SmoothTrace.emit("r31p23r2_flush_packet", {
+						"engine_frame": Engine.get_process_frames(),
+						"server_tick": 0, # transport boundary has no authoritative tick
+						"channel": String(p23_frame.get("channel", "")),
+						"delivery_mode": String(p23_frame.get("delivery_mode", "")),
+						"frame_id": String(p23_frame.get("frame_id", "")),
+						"session_sequence": int(p23_frame.get("sequence", 0)),
+						"attempt_number": int(item.get("attempts", 0)),
+						"queue_stage_ms": float(p23_before_copy_us - p23_started_us) / 1000.0,
+						"detached_frame_copy_ms": float(p23_after_copy_us - p23_before_copy_us) / 1000.0,
+						"port_call_ms": float(p23_after_port_us - p23_after_copy_us) / 1000.0,
+						"success": bool(result.get("success", false)),
+						"error_code": String(result.get("error_code", "")),
+						"simulator": simulator_stages.duplicate(true),
+					})
 				if not bool(result.get("success", false)):
 					_telemetry_increment("transport_send_failures")
 					blocked_streams[blocked_key] = true

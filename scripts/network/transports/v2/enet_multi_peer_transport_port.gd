@@ -27,6 +27,14 @@ var _client_route_id: String = ""
 var _client_route_generation: int = 0
 var _client_connected_emitted: bool = false
 var _last_status: int = MultiplayerPeer.CONNECTION_DISCONNECTED
+# R31 P2.3 R2.0 — PRIVATE observability for server-bound COMPACT only.
+# No ENet frame, delivery mode or session state is modified.
+var _r31p23r2_attribution_enabled := false
+
+
+func configure_r31p23r2_flush_attribution(enabled: bool) -> Dictionary:
+	_r31p23r2_attribution_enabled = enabled
+	return TransportUtilsScript.success({"enabled": enabled})
 
 
 func get_descriptor() -> Dictionary:
@@ -110,7 +118,13 @@ func disconnect_peer(peer_id: String, session_id: String) -> Dictionary:
 func send_to_peer(peer_id: String, frame: Dictionary) -> Dictionary:
 	if _peer == null:
 		return TransportUtilsScript.failure("ENET_NOT_STARTED")
+	var p23_probe: bool = (
+		_r31p23r2_attribution_enabled
+		and String(Dictionary(frame.get("payload", {})).get("type", "")) == "COMPACT_GAMEPLAY_SNAPSHOT"
+	)
+	var p23_started_us: int = Time.get_ticks_usec() if p23_probe else 0
 	var check: Dictionary = FrameScript.validate(frame)
+	var p23_validated_us: int = Time.get_ticks_usec() if p23_probe else 0
 	if not bool(check.get("success", false)):
 		return TransportUtilsScript.failure(String(check.get("error_code", "INVALID_FRAME")))
 	if not _logical_to_numeric.has(peer_id):
@@ -118,6 +132,7 @@ func send_to_peer(peer_id: String, frame: Dictionary) -> Dictionary:
 	if _session_by_peer.has(peer_id) and String(_session_by_peer[peer_id]) != String(frame.get("session_id", "")):
 		return TransportUtilsScript.failure("SESSION_MISMATCH")
 	var encoded: Dictionary = FrameScript.encode(frame, MAX_PACKET_BYTES)
+	var p23_encoded_us: int = Time.get_ticks_usec() if p23_probe else 0
 	if not bool(encoded.get("success", false)):
 		return encoded
 	var channel: int = _channel_index(String(frame["channel"]))
@@ -125,18 +140,32 @@ func send_to_peer(peer_id: String, frame: Dictionary) -> Dictionary:
 	_peer.set_target_peer(int(_logical_to_numeric[peer_id]))
 	var transfer_mode: int = _transfer_mode(String(frame["delivery_mode"]))
 	_peer.transfer_mode = transfer_mode
+	var p23_ready_us: int = Time.get_ticks_usec() if p23_probe else 0
 	var error: Error = _peer.put_packet(encoded.get("details", {}).get("packet", PackedByteArray()))
+	var p23_packet_us: int = Time.get_ticks_usec() if p23_probe else 0
 	if error != OK:
 		return TransportUtilsScript.failure("ENET_SEND_FAILED", {"godot_error": int(error)})
-	return TransportUtilsScript.success({
+	var peer_stats: Dictionary = _peer_statistics(peer_id)
+	var p23_stats_us: int = Time.get_ticks_usec() if p23_probe else 0
+	var details: Dictionary = {
 		"enqueued": true,
 		"packet_bytes": int(encoded.get("details", {}).get("packet_bytes", 0)),
 		"channel_index": channel,
 		"frame_channel": String(frame["channel"]),
 		"delivery_mode": String(frame["delivery_mode"]),
 		"transfer_mode": transfer_mode,
-		"peer_statistics": _peer_statistics(peer_id),
-	})
+		"peer_statistics": peer_stats,
+	}
+	if p23_probe:
+		details["r31p23r2_enet_stages"] = {
+			"validate_ms": float(p23_validated_us - p23_started_us) / 1000.0,
+			"frame_encode_ms": float(p23_encoded_us - p23_validated_us) / 1000.0,
+			"channel_setup_ms": float(p23_ready_us - p23_encoded_us) / 1000.0,
+			"put_packet_ms": float(p23_packet_us - p23_ready_us) / 1000.0,
+			"peer_stats_ms": float(p23_stats_us - p23_packet_us) / 1000.0,
+			"total_ms": float(p23_stats_us - p23_started_us) / 1000.0,
+		}
+	return TransportUtilsScript.success(details)
 
 
 func poll_events(max_events: int) -> Array[Dictionary]:
