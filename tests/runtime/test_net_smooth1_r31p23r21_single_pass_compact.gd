@@ -189,7 +189,7 @@ func _packet_parity() -> void:
               String(left.get("error_code","")) ==
               String(right.get("error_code","")),
               "invalid %s keeps exact original error" % key)
-    port.free()
+    port = null
 
 
 # Real ConditionSimulatorPort LOCAL/passthrough path with an exact
@@ -286,8 +286,8 @@ func _simulator_passthrough_parity() -> void:
         "packet_bytes",-1))==baseline_bytes,
         "nonpassthrough packet sizing remains exact legacy JSON")
     delayed.stop()
-    delayed_port.free()
-    delegate.free()
+    delayed_port = null
+    delegate = null
 
 
 func _run() -> void:
