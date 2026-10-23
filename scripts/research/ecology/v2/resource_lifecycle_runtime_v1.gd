@@ -766,9 +766,15 @@ static func staged_begin(field: Dictionary, population: Array,
 static func staged_resume(cursor: Dictionary, source_field: Dictionary,
 		source_population: Array, max_worksets_per_call: int = 1,
 		max_allocator_items_per_call: int = 16,
-		allocator_cap_bytes: int = StagedA4R2.DEFAULT_CURSOR_CAP_BYTES) -> Dictionary:
+		allocator_cap_bytes: int = StagedA4R2.DEFAULT_CURSOR_CAP_BYTES,
+		r2c_parallel_workers: int = 1) -> Dictionary:
 	if not C.integer(max_worksets_per_call, 1, 4096):
 		return _fail("A5_STAGED_QUOTA")
+	# R2C research-only: existing A13 threading is strictly bounded.
+	# The old accepted R3/R2/A14.5 paths still pass the default 1.
+	if not valid_parallel_prepare_workers(r2c_parallel_workers) \
+			or not valid_parallel_advance_workers(r2c_parallel_workers):
+		return _fail("A5_R2C_PARALLEL_WORKERS")
 	var r3_mode: bool = String(cursor.get("schema", "")) == STAGED_SCHEMA_R3
 	var expected_keys: Array = STAGED_R3_CURSOR_KEYS if r3_mode else STAGED_CURSOR_KEYS
 	if not C.keys(cursor, expected_keys) or (not r3_mode \
@@ -817,11 +823,24 @@ static func staged_resume(cursor: Dictionary, source_field: Dictionary,
 	var units: Array = next.units
 	var entries: Array = next.entries
 	var index: int = int(next.index)
+	var r2c_peak_workers := 0
+	var r2c_threaded_worksets := 0
 	if phase == "PREPARE":
 		var stop := mini(units.size(), index + max_worksets_per_call)
-		var fragment := _prepare_units_serial(next.field, entries, units.slice(index, stop))
+		# Reuse A13 verified detached per-workset threaded PREPARE.
+		# Unit results are consumed in stable index order before the
+		# SINGLE globally coupled A4 stage begins.
+		var fragment_units: Array = units.slice(index, stop)
+		var parallel: bool = r3_mode and r2c_parallel_workers > 1 \
+			and fragment_units.size() > 1
+		var fragment: Dictionary = _prepare_units_parallel(
+			next.field, entries, fragment_units, r2c_parallel_workers) if parallel \
+			else _prepare_units_serial(next.field, entries, fragment_units)
 		if not bool(fragment.get("success", false)):
 			return fragment
+		if parallel:
+			r2c_peak_workers = int(fragment.get("peak_workers", 0))
+			r2c_threaded_worksets = int(fragment.get("threaded_worksets", 0))
 		for id in fragment.samples:
 			next.samples[String(id)] = fragment.samples[id]
 		for demand in fragment.demands:
@@ -890,24 +909,36 @@ static func staged_resume(cursor: Dictionary, source_field: Dictionary,
 			next.phase = "ADVANCE"
 			next.index = 0
 	elif phase == "ADVANCE":
-		var by_id := _entries_by_id(entries)
 		var stop := mini(units.size(), index + max_worksets_per_call)
-		for unit_index in range(index, stop):
-			var unit: Dictionary = units[unit_index]
-			var task_entries: Array = []
-			for raw_id in unit.member_ids:
-				var id := String(raw_id)
-				if not by_id.has(id):
-					return _fail("A5_WORKSET_MEMBER")
-				task_entries.append(by_id[id])
-			var advanced := _advance_unit_worker(task_entries, next.samples,
-				next.intake_by_id, int(unit.index))
-			if not bool(advanced.get("success", false)):
-				return advanced
-			var consumed := _consume_advance_outcomes(
-				unit, advanced.outcomes, next.next_population, next.propagules)
-			if not bool(consumed.get("success", false)):
-				return consumed
+		var fragment_units: Array = units.slice(index, stop)
+		if r3_mode and r2c_parallel_workers > 1 and fragment_units.size() > 1:
+			# Outcomes are joined and CONSUMED in canonical unit/member
+			# order, preserving propagule-limit and failure precedence.
+			var parallel_result: Dictionary = _r2c_advance_staged_fragment_parallel(
+				entries, fragment_units, next.samples, next.intake_by_id,
+				next.next_population, next.propagules, r2c_parallel_workers)
+			if not bool(parallel_result.get("success", false)):
+				return parallel_result
+			r2c_peak_workers = int(parallel_result.get("peak_workers", 0))
+			r2c_threaded_worksets = int(parallel_result.get("threaded_worksets", 0))
+		else:
+			var by_id := _entries_by_id(entries)
+			for unit_index in range(index, stop):
+				var unit: Dictionary = units[unit_index]
+				var task_entries: Array = []
+				for raw_id in unit.member_ids:
+					var id := String(raw_id)
+					if not by_id.has(id):
+						return _fail("A5_WORKSET_MEMBER")
+					task_entries.append(by_id[id])
+				var advanced := _advance_unit_worker(task_entries, next.samples,
+					next.intake_by_id, int(unit.index))
+				if not bool(advanced.get("success", false)):
+					return advanced
+				var consumed := _consume_advance_outcomes(
+					unit, advanced.outcomes, next.next_population, next.propagules)
+				if not bool(consumed.get("success", false)):
+					return consumed
 		next.index = stop
 		if stop == units.size():
 			var finalized := _canonical_advance_result(
@@ -916,13 +947,87 @@ static func staged_resume(cursor: Dictionary, source_field: Dictionary,
 				next.allocated_field, finalized.population, finalized.propagules)
 			result["complete"] = true
 			result["phase"] = "COMPLETE"
+			# Host-only counters; absent from canonical state and cursor.
+			result["r2c_peak_workers"] = r2c_peak_workers
+			result["r2c_threaded_worksets"] = r2c_threaded_worksets
 			return result
 	next = _seal_staged_cursor(next)
 	if next.is_empty():
 		return _fail("A5_STAGED_CURSOR_SEAL")
 	return {"success": true, "complete": false, "phase": String(next.phase),
 		"cursor": next, "processed_worksets": max_worksets_per_call
-			if phase != "ALLOCATE" else 0}
+			if phase != "ALLOCATE" else 0,
+		"r2c_peak_workers": r2c_peak_workers,
+		"r2c_threaded_worksets": r2c_threaded_worksets}
+
+## Stage C: same detached workset thread pattern as the established A13
+## parallel-advance path. Work is speculative and each thread is joined
+## BEFORE touching the canonical-ordered output arrays. No shared mutable
+## alias is handed to nested workers. The single global A4 is upstream.
+static func _r2c_advance_staged_fragment_parallel(entries: Array,
+		units: Array, samples: Dictionary, intake_by_id: Dictionary,
+		next_population: Array, propagules: Array, max_workers: int) -> Dictionary:
+	if not valid_parallel_advance_workers(max_workers):
+		return _fail("A5_R2C_ADVANCE_WORKERS")
+	var by_id: Dictionary = _entries_by_id(entries)
+	var offset := 0
+	var peak_workers := 0
+	var threaded_worksets := 0
+	while offset < units.size():
+		var stop := mini(units.size(), offset + max_workers)
+		var active: Array = []
+		for i in range(offset, stop):
+			var unit: Dictionary = units[i]
+			var task_entries: Array = []
+			var task_samples: Dictionary = {}
+			var task_intake: Dictionary = {}
+			for raw_id in unit.member_ids:
+				var id: String = String(raw_id)
+				if not by_id.has(id):
+					for started in active:
+						started.thread.wait_to_finish()
+					return _fail("A5_WORKSET_MEMBER")
+				var entry: Dictionary = by_id[id]
+				task_entries.append(entry.duplicate(true))
+				if samples.has(id):
+					task_samples[id] = samples[id].duplicate(true)
+				if intake_by_id.has(id):
+					task_intake[id] = intake_by_id[id].duplicate(true)
+			var thread := Thread.new()
+			var err: Error = thread.start(_advance_unit_worker.bind(
+				task_entries, task_samples, task_intake, int(unit.index)))
+			if err != OK:
+				for started in active:
+					started.thread.wait_to_finish()
+				return _fail("A5_R2C_ADVANCE_THREAD_START")
+			active.append({"index": int(unit.index), "thread": thread})
+		peak_workers = maxi(peak_workers, active.size())
+		var results: Dictionary = {}
+		for started in active:
+			# Always join the ENTIRE wave, even if a later result fails.
+			results[int(started.index)] = started.thread.wait_to_finish()
+		for i in range(offset, stop):
+			var unit: Dictionary = units[i]
+			var raw: Variant = results.get(int(unit.index), null)
+			if not raw is Dictionary:
+				return _fail("A5_R2C_ADVANCE_RESULT")
+			var advanced: Dictionary = raw
+			if not bool(advanced.get("success", false)):
+				return advanced
+			if int(advanced.get("unit_index", -1)) != int(unit.index):
+				return _fail("A5_R2C_ADVANCE_INDEX")
+			if bool(advanced.get("worker_is_main_thread", true)):
+				return _fail("A5_R2C_ADVANCE_THREAD_CONTEXT")
+			threaded_worksets += 1
+			# Append to the EXISTING partial prefix (not a new isolated array)
+			# so global MAX_PROPAGULES_PER_STEP and exact error precedence hold.
+			var consumed: Dictionary = _consume_advance_outcomes(
+				unit, advanced.outcomes, next_population, propagules)
+			if not bool(consumed.get("success", false)):
+				return consumed
+		offset = stop
+	return {"success": true, "peak_workers": peak_workers,
+		"threaded_worksets": threaded_worksets}
 
 static func _seal_staged_cursor(cursor: Dictionary) -> Dictionary:
 	# Called ONLY for the owned cursor from staged_begin() or a detached
