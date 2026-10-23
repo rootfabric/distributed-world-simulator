@@ -78,8 +78,13 @@ jobs:
           PYTHONPATH: scripts
         run: |
           set -Eeuo pipefail
-          python -m harness.cli status --root "$PWD" >"$RUNNER_TEMP/mvp8-control-status.jsonl"
+          set +e
+          python -m harness.cli status --root "$PWD" >"$RUNNER_TEMP/mvp8-control-status.jsonl" 2>&1
+          status_exit=$?
+          set -e
           cat "$RUNNER_TEMP/mvp8-control-status.jsonl"
+          echo "CONTROL_MVP8_STATUS_EXIT=$status_exit"
+          if [ "$status_exit" -ne 0 ]; then exit "$status_exit"; fi
           python - "$RUNNER_TEMP/mvp8-control-status.jsonl" <<'PY'
           import json,sys
           lines=open(sys.argv[1],encoding="utf-8").read().splitlines()
