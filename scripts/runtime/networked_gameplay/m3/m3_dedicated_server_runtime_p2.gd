@@ -125,6 +125,8 @@ var _r31bp1_durable_chunks_enabled := false
 var _r31bp1_chunk_cache = null
 # R31b P2.0: profiler only. Does not skip any native validator.
 var _r31bp20_validator_attribution_enabled := false
+# R31P2.2: server-only diagnostic. Never changes work order, M6 or tick rate.
+var _r31p22_loop_attribution_enabled := false
 var _r3c4_deferral_started_ms := 0
 var _r3c4_deferred_frames := 0
 var _r3c4_capture_slots := 0
@@ -343,6 +345,22 @@ func setup(config: Dictionary) -> Dictionary:
 		or not bool(config.get("product_seam_enabled", false))
 	):
 		return _failure("R31BP20_REQUIRES_P1_P0_REPLAY_R2_PERSISTENCE_SEAM")
+	var p22_mode := OS.get_environment("DWS_NET_R31P22_LOOP_ATTRIBUTION")
+	if not p22_mode.is_empty() and p22_mode not in ["0", "1"]:
+		return _failure("R31P22_INVALID_MODE")
+	_r31p22_loop_attribution_enabled = (
+		bool(config.get("r31p22_loop_attribution_canary", false))
+		or p22_mode == "1"
+	)
+	if _r31p22_loop_attribution_enabled and (
+		not _r31bp1_durable_chunks_enabled
+		or not _r3c4r31b_durable_attribution_enabled
+		or not _r3c4r31_replay_projection_enabled
+		or not _r3c4r2_worker_envelope_enabled
+		or not _persistence_enabled
+		or not bool(config.get("product_seam_enabled", false))
+	):
+		return _failure("R31P22_REQUIRES_P1_P0_REPLAY_R2_PERSISTENCE_SEAM")
 	_p1b_item_async_enabled = (
 		bool(config.get("async_durable_item_canary", false))
 		or OS.get_environment("DWS_NET_P1B_ITEM_ASYNC") == "1"
@@ -500,26 +518,41 @@ func _process(delta: float) -> void:
 	if not _configured or _boundary == null or _fatal_persistence_failure:
 		return
 	var smooth_started := Time.get_ticks_usec()
+	# A single frame-local stamp sequence; when disabled, no timing calls
+	# or extra trace writes are added to the accepted product path.
+	var p22_marks: Array[int] = []
+	if _r31p22_loop_attribution_enabled:
+		p22_marks.append(smooth_started)
 	# Drain at most ONE post-durable stage from the PREVIOUS frame. A newly
 	# completed writer cannot trigger its full snapshot/delta/ACK/broadcast
 	# work in the same server frame (the R3C1 400-490ms completion burst).
 	_r3c2_drain_postcommit_stage()
+	if _r31p22_loop_attribution_enabled:
+		p22_marks.append(Time.get_ticks_usec())
 	if _fatal_persistence_failure:
 		return
 	_p1b_poll_item_async_commit()
+	if _r31p22_loop_attribution_enabled:
+		p22_marks.append(Time.get_ticks_usec())
 	if _fatal_persistence_failure:
 		return
 	_complete_async_movement_checkpoint(false)
+	if _r31p22_loop_attribution_enabled:
+		p22_marks.append(Time.get_ticks_usec())
 	if _fatal_persistence_failure:
 		return
 	# A transport leave must not mutate the authority during an in-flight
 	# durable generation. Drain one deferred leave when the gate is clear.
 	_drain_deferred_disconnects()
+	if _r31p22_loop_attribution_enabled:
+		p22_marks.append(Time.get_ticks_usec())
 	if _fatal_persistence_failure:
 		return
 	# R3C: one bounded pending JOIN/LEAVE admission per frame, never while an
 	# older generation is inflight. Old transport-session disconnects win.
 	_r3c_drain_deferred_admissions()
+	if _r31p22_loop_attribution_enabled:
+		p22_marks.append(Time.get_ticks_usec())
 	if _fatal_persistence_failure:
 		return
 	var process_started_us: int = Time.get_ticks_usec()
@@ -536,6 +569,8 @@ func _process(delta: float) -> void:
 	})
 	var polled: Dictionary = _boundary.poll_events(128)
 	_stall_exit(poll_probe)
+	if _r31p22_loop_attribution_enabled:
+		p22_marks.append(Time.get_ticks_usec())
 	if not bool(polled.get("success", false)):
 		_last_error_code = String(polled.get("error_code", "M3_SERVER_POLL_FAILED"))
 		_write_report("FAILED", false)
@@ -571,12 +606,16 @@ func _process(delta: float) -> void:
 			_handle_disconnect(peer_id, session_id)
 			_stall_exit(disconnect_probe)
 	var smooth_messages_done := Time.get_ticks_usec()
+	if _r31p22_loop_attribution_enabled:
+		p22_marks.append(Time.get_ticks_usec())
 	var fixed_probe := _stall_enter("FIXED_SIMULATION", {
 		"server_tick": _server_tick,
 		"pending_inputs": _total_pending_input_count(),
 	})
 	_advance_fixed_simulation(delta)
 	_stall_exit(fixed_probe)
+	if _r31p22_loop_attribution_enabled:
+		p22_marks.append(Time.get_ticks_usec())
 	var smooth_fixed_done := Time.get_ticks_usec()
 	var snapshot_probe := _stall_enter("MOVEMENT_SNAPSHOT_PUBLICATION", {
 		"server_tick": _server_tick,
@@ -584,6 +623,8 @@ func _process(delta: float) -> void:
 	})
 	_maybe_publish_movement_snapshot()
 	_stall_exit(snapshot_probe)
+	if _r31p22_loop_attribution_enabled:
+		p22_marks.append(Time.get_ticks_usec())
 	var smooth_snapshot_done := Time.get_ticks_usec()
 	# R3C.4: main-thread work already spent this frame BEFORE the periodic
 	# capture stage (messages + fixed simulation + snapshot serialization).
@@ -595,7 +636,11 @@ func _process(delta: float) -> void:
 	})
 	_maybe_persist_movement_checkpoint()
 	_stall_exit(persistence_probe)
+	if _r31p22_loop_attribution_enabled:
+		p22_marks.append(Time.get_ticks_usec())
 	_update_runtime_telemetry()
+	if _r31p22_loop_attribution_enabled:
+		p22_marks.append(Time.get_ticks_usec())
 	var process_duration_ms: float = float(Time.get_ticks_usec() - process_started_us) / 1000.0
 	_telemetry.observe("server_process_duration_ms", process_duration_ms)
 	_stall_exit(process_probe)
@@ -612,6 +657,29 @@ func _process(delta: float) -> void:
 			"capture_ms": _async_checkpoint_capture_ms,
 			"async_enabled": _movement_checkpoint_writer != null,
 			"async_busy": _movement_checkpoint_writer != null and _movement_checkpoint_writer.is_busy()})
+	if _r31p22_loop_attribution_enabled and SmoothTrace.enabled():
+		# One event per server frame; Engine.get_process_frames() matches
+		# the high-priority NetSmoothProbe on this SAME process/frame.
+		# No clock joins across server and client processes.
+		if p22_marks.size() == 12:
+			SmoothTrace.emit("r31p22_loop_stages", {
+				"engine_frame": Engine.get_process_frames(),
+				"server_tick": _server_tick,
+				"polled_events": Array(polled.get("details", {}).get("events", [])).size(),
+				"postcommit_ms": float(p22_marks[1] - p22_marks[0]) / 1000.0,
+				"item_completion_ms": float(p22_marks[2] - p22_marks[1]) / 1000.0,
+				"movement_completion_ms": float(p22_marks[3] - p22_marks[2]) / 1000.0,
+				"deferred_disconnect_ms": float(p22_marks[4] - p22_marks[3]) / 1000.0,
+				"deferred_admission_ms": float(p22_marks[5] - p22_marks[4]) / 1000.0,
+				"boundary_poll_ms": float(p22_marks[6] - p22_marks[5]) / 1000.0,
+				"message_dispatch_ms": float(p22_marks[7] - p22_marks[6]) / 1000.0,
+				"fixed_simulation_ms": float(p22_marks[8] - p22_marks[7]) / 1000.0,
+				"snapshot_publication_ms": float(p22_marks[9] - p22_marks[8]) / 1000.0,
+				"movement_persistence_ms": float(p22_marks[10] - p22_marks[9]) / 1000.0,
+				"telemetry_ms": float(p22_marks[11] - p22_marks[10]) / 1000.0,
+				"message_span_ms": float(p22_marks[7] - p22_marks[0]) / 1000.0,
+				"measured_total_ms": float(p22_marks[11] - p22_marks[0]) / 1000.0,
+			})
 	if _debug_logging and Time.get_ticks_msec() - _last_debug_report_ms >= 2000:
 		_last_debug_report_ms = Time.get_ticks_msec()
 		_debug_event("SERVER_HEALTH", {
