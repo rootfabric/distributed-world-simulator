@@ -44,7 +44,7 @@ def fixture(*,frames=150,fail_wire=False,missing_loop=None,
     add("header",0,{"schema":"dws.net_smooth.trace.v1",
                     "role":"server", "run_id":RUN_ID,
                     "clock":"PROCESS_LOCAL_MONOTONIC_US"})
-    add("measure_start",1000,{})
+    add("measure_start",1000,{},True)
     for i in range(1,frames+1):
         t=5000 + i*20000
         have_snap = i % 3 == 0
@@ -80,7 +80,7 @@ def fixture(*,frames=150,fail_wire=False,missing_loop=None,
                 **vals, "message_span_ms":MSG_SUM,
                 "measured_total_ms":TOTAL,
             }))
-        rows.append(make_event("frame",i,t+10,{"interval_ms":32.0 if i==80 else 20.0,
+        rows.append(make_event("frame",i,t+10,{"interval_ms":32.0 if i==80 else 27.0 if i==79 else 20.0,
                                               "engine_process_ms":5.0}))
     add("measure_end",5000+(frames+1)*20000,{},True)
     # Every produced row (including header/start/end-of-measure) has a gap-free
@@ -115,9 +115,9 @@ class StageReducer(unittest.TestCase):
             self.assertEqual(result["compact_wire_event_count"],100)
             self.assertAlmostEqual(result["components_ms"]["postcommit_ms"]["p99"],1.0)
             self.assertAlmostEqual(result["compact_wire_components_ms"]["frame_create_ms"]["p99"],.2)
-            self.assertEqual(result["p99_tail_frame_count"],1)
+            self.assertEqual(result["p99_tail_frame_count"],2)
             self.assertEqual(result["worst_frame_samples"][0]["engine_frame"],80)
-            self.assertEqual(result["frame_interval_ms"]["p99"],20.0)
+            self.assertEqual(result["frame_interval_ms"]["p99"],27.0)
 
     def test_no_stage_for_more_than_one_percent_is_invalid(self):
         with tempfile.TemporaryDirectory() as temp:
