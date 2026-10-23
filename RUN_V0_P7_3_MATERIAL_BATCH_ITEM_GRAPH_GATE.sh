@@ -3,7 +3,7 @@ set -euo pipefail
 
 GODOT_BIN="${1:-}"
 EXPECTED_HEAD="${2:-}"
-EXPECTED_GODOT="4.7.1.stable.double.custom_build.a13da4feb"
+EXPECTED_GODOT="4.8.beta1.double.custom_build.4d10419ca"
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ARTIFACT_ROOT="$ROOT/artifacts/runtime/v0-p7-3-material-batch-item-graph"
 mkdir -p "$ARTIFACT_ROOT"
@@ -67,7 +67,7 @@ run_contract "p7-2-seam" \
   "V0-P7.2 lunar surface seam: PASS (50 assertions, 0 failures)"
 run_contract "p7-1-authority" \
   "res://tests/runtime/test_v0_p7_1_matter_command_authority_gate.gd" \
-  "V0-P7.1 authority gate: PASS (83 assertions, 0 failures)"
+  "V0-P7.1 authority gate: PASS (88 assertions, 0 failures)"
 run_contract "p7-1-tool-to-mw4" \
   "res://tests/runtime/test_v0_p7_1_tool_to_mw4_adapter.gd" \
   "V0-P7.1 Tool->MW4 integration: PASS (30 assertions, 0 failures)"

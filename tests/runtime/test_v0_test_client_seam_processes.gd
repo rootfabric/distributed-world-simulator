@@ -162,10 +162,10 @@ func _ensure_display() -> String:
 	var current := OS.get_environment("DISPLAY")
 	if not current.is_empty():
 		return current
-	if not FileAccess.file_exists("/usr/bin/Xvfb"):
+	if not FileAccess.file_exists((OS.get_environment("XVFB_BIN") if OS.get_environment("XVFB_BIN") != "" else "/usr/bin/Xvfb")):
 		return ""
 	var display := ":%d" % (600 + OS.get_process_id() % 300)
-	_xvfb_pid = OS.create_process("/usr/bin/Xvfb", [display, "-screen", "0", "1440x900x24", "-nolisten", "tcp", "-noreset"], false)
+	_xvfb_pid = OS.create_process((OS.get_environment("XVFB_BIN") if OS.get_environment("XVFB_BIN") != "" else "/usr/bin/Xvfb"), [display, "-screen", "0", "1440x900x24", "-nolisten", "tcp", "-noreset"], false)
 	_pids.append(_xvfb_pid)
 	OS.delay_msec(500)
 	return display if OS.is_process_running(_xvfb_pid) else ""
