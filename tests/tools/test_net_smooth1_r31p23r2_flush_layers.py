@@ -14,7 +14,7 @@ from analyze_r31p23r2_flush_layers import analyze
 from test_net_smooth1_r31p22_loop_stages import fixture, RUN_ID
 
 
-def decorate(root:Path, mutator=None, *, no_passthrough=False):
+def decorate(root:Path, mutator=None, *, no_passthrough=False, r21=None):
     (root/"server").mkdir(parents=True,exist_ok=True)
     rows=fixture()
     sample_index=0
@@ -51,6 +51,9 @@ def decorate(root:Path, mutator=None, *, no_passthrough=False):
                     } if not no_passthrough else {},
                 },
             }
+            if r21 is not None and not no_passthrough:
+                details["simulator"]["r31p23r21_fast_encode"]=r21
+                details["simulator"]["r31p23r21_size_reused"]=r21
             augmented.append({**row, "kind":"r31p23r2_flush_packet", "data":details})
         augmented.append(row)
     if mutator:
@@ -63,22 +66,26 @@ def decorate(root:Path, mutator=None, *, no_passthrough=False):
     augmented.append(footer)
     trace=root/"server"/"trace.jsonl"
     trace.write_text("".join(json.dumps(x)+"\n" for x in augmented),encoding="utf-8")
-    (root/"manifest.json").write_text(json.dumps({
+    manifest={
         "run_id":RUN_ID,
         "r31p23r2_flush_attribution":True,
         "r31p22_loop_attribution":True,
         "r31bp1_durable_chunks":True,
         "r3c4r2_worker_envelope":True,
-    }),encoding="utf-8")
+    }
+    if r21 is not None:
+        manifest["r31p23r21_single_pass_compact"]=r21
+    (root/"manifest.json").write_text(json.dumps(manifest),encoding="utf-8")
     (root/"report.json").write_text(
         '{"verdict":"FAIL","reason":"server frame p99 >25"}',encoding="utf-8")
     return root
 
 
 class LayerFalsifier(unittest.TestCase):
-    def run_case(self,mutator=None,*,error=None,no_passthrough=False):
+    def run_case(self,mutator=None,*,error=None,no_passthrough=False,r21=None):
         with tempfile.TemporaryDirectory() as d:
-            root=decorate(Path(d),mutator,no_passthrough=no_passthrough)
+            root=decorate(Path(d),mutator,
+                          no_passthrough=no_passthrough,r21=r21)
             if error:
                 with self.assertRaisesRegex(ValueError,error):
                     analyze(root)
@@ -100,6 +107,36 @@ class LayerFalsifier(unittest.TestCase):
         self.assertAlmostEqual(out["enet_stage_ms"]["frame_encode_ms"]["p99"],.0005)
         self.assertEqual(out["simulator_stage_ms"]["canonical_json_ms"]["n"],100)
         self.assertEqual(out["worst_flush_frames"][0]["wire_count"],2)
+
+    def test_r21_on_and_off_every_real_compact_receipt_is_proved(self):
+        on=self.run_case(r21=True)
+        off=self.run_case(r21=False)
+        self.assertIs(on["r21_requested"],True)
+        self.assertEqual(on["r21_confirmed_passthrough_events"],100)
+        self.assertIs(off["r21_requested"],False)
+        self.assertEqual(off["r21_confirmed_passthrough_events"],100)
+        self.assertEqual(on["normative_original_verdict"],"FAIL")
+        self.assertEqual(off["normative_original_verdict"],"FAIL")
+
+    def test_r21_one_missing_optin_activation_fails_closed(self):
+        def wrong(rows):
+            first=next(r for r in rows
+                       if r["kind"]=="r31p23r2_flush_packet")
+            first["data"]["simulator"]["r31p23r21_fast_encode"]=False
+        self.run_case(wrong,r21=True,error="R21_FAST_ENCODE_OR_SIZE_RECEIPT_MISMATCH")
+
+    def test_r21_unexpected_fastpath_in_off_arm_fails_closed(self):
+        def wrong(rows):
+            first=next(r for r in rows
+                       if r["kind"]=="r31p23r2_flush_packet")
+            first["data"]["simulator"]["r31p23r21_size_reused"]=True
+        self.run_case(wrong,r21=False,error="R21_FAST_ENCODE_OR_SIZE_RECEIPT_MISMATCH")
+
+    def test_r21_simulated_delayed_profile_must_stay_separate(self):
+        sample=self.run_case(r21=True,no_passthrough=True)
+        self.assertEqual(sample["r21_confirmed_passthrough_events"],0)
+        self.assertEqual(sample["condition_queued_events"],100)
+        self.assertEqual(sample["enet_stage_ms"]["put_packet_ms"]["n"],0)
 
     def test_simulated_profile_is_not_mislabeled_as_real_enet(self):
         x=self.run_case(no_passthrough=True)
