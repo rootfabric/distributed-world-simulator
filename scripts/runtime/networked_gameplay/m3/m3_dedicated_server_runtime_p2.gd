@@ -1347,7 +1347,7 @@ func _maybe_publish_movement_snapshot() -> void:
 	if all_enqueued and target_count > 0:
 		_movement_snapshots_published += 1
 	if SmoothTrace.enabled():
-		SmoothTrace.emit("movement_snapshot_stages", {
+		var p22_snapshot_stage_record: Dictionary = {
 			"tick": _server_tick, "peers": target_count,
 			"committed_view": pending_view,
 			"pending_kind": String(_p1b_item_pending.get("kind", "ITEM")) if pending_view else "",
@@ -1360,8 +1360,10 @@ func _maybe_publish_movement_snapshot() -> void:
 			"seam_check_send_ms": float(seam_check_send_us) / 1000.0,
 			"seam_sent": _seam_messages_sent - seam_sent_before,
 			"seam_skipped_unchanged": _seam_unchanged_skipped - seam_skipped_before,
-		})
-
+		}
+		if _r31p22_loop_attribution_enabled:
+			p22_snapshot_stage_record["engine_frame"] = Engine.get_process_frames()
+		SmoothTrace.emit("movement_snapshot_stages", p22_snapshot_stage_record)
 
 # This reader only fetches *movement* records from the live service; every
 # durable field is sourced from the verified snapshot captured pre-ITEM.
