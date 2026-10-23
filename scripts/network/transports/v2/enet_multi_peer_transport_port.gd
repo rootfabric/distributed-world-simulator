@@ -155,13 +155,7 @@ func send_to_peer(peer_id: String, frame: Dictionary) -> Dictionary:
 		# boundary already detached this frame before the port call.
 		# Preserve FrameScript.encode's exact canonical bytes and error codes
 		# while avoiding its redundant second full validation/hash traversal.
-		var canonical_text: String = NetworkUtilsScript.canonical_json(frame)
-		if canonical_text.is_empty():
-			return TransportUtilsScript.failure("SERIALIZATION_FAILED")
-		var packet: PackedByteArray = canonical_text.to_utf8_buffer()
-		if MAX_PACKET_BYTES <= 0 or packet.size() > MAX_PACKET_BYTES:
-			return TransportUtilsScript.failure("PACKET_TOO_LARGE", {"packet_bytes": packet.size()})
-		encoded = TransportUtilsScript.success({"packet": packet, "packet_bytes": packet.size()})
+		encoded = _r31p23r21_encode_after_frame_validate(frame, MAX_PACKET_BYTES)
 	else:
 		encoded = FrameScript.encode(frame, MAX_PACKET_BYTES)
 	var p23_encoded_us: int = Time.get_ticks_usec() if p23_probe else 0
@@ -199,6 +193,27 @@ func send_to_peer(peer_id: String, frame: Dictionary) -> Dictionary:
 			"total_ms": float(p23_stats_us - p23_started_us) / 1000.0,
 		}
 	return TransportUtilsScript.success(details)
+
+
+
+# Internal ENet-only **postcondition of FrameScript.validate(frame)**.
+# Called from send_to_peer() on the SAME authoritative main-thread stack
+# after the original complete checksum/type/session/channel checks and the
+# read-only peer/session lookup. It is not exposed as a permissive protocol
+# decoder or an independent packet acceptance API.
+func _r31p23r21_encode_after_frame_validate(
+	frame: Dictionary, max_packet_bytes: int
+) -> Dictionary:
+	var canonical_text: String = NetworkUtilsScript.canonical_json(frame)
+	if canonical_text.is_empty():
+		return TransportUtilsScript.failure("SERIALIZATION_FAILED")
+	var packet: PackedByteArray = canonical_text.to_utf8_buffer()
+	if max_packet_bytes <= 0 or packet.size() > max_packet_bytes:
+		return TransportUtilsScript.failure("PACKET_TOO_LARGE",
+			{"packet_bytes": packet.size()})
+	return TransportUtilsScript.success({
+		"packet": packet, "packet_bytes": packet.size()
+	})
 
 
 func poll_events(max_events: int) -> Array[Dictionary]:
