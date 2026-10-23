@@ -53,6 +53,10 @@ var _last_worker_phase_profile: Dictionary = {}
 # concurrent mutation, reordering, allocator duplication or unchecked state.
 var _worker_worksets_per_resume := 1
 var _last_worker_worksets_per_resume := 1
+# R2C bounded nested A13 workset threads in worker-only CPU execution.
+# Frozen for the full candidate generation; DEFAULT ONE = old serial path.
+var _r2c_parallel_workset_workers := 1
+var _last_r2c_parallel_workset_workers := 1
 var _job_started_us := 0
 var _jobs_started := 0
 var _jobs_committed := 0
@@ -130,6 +134,7 @@ func status() -> Dictionary:
 		"last_projection_wall_us": _last_projection_wall_us,
 		"last_worker_phase_profile": _last_worker_phase_profile.duplicate(true),
 		"last_worker_worksets_per_resume": _last_worker_worksets_per_resume,
+		"last_r2c_parallel_workset_workers": _last_r2c_parallel_workset_workers,
 		"last_worker_wall_us": _last_worker_wall_us,
 		"last_error": _last_error,
 	}
@@ -140,19 +145,23 @@ func advance(state: Dictionary, options: Dictionary,
 		lease_owner: Object = null, lease_token: RefCounted = null,
 		lease_generation: int = -1,
 		projection_manifest: Dictionary = {},
-		worksets_per_resume: int = 1) -> Dictionary:
+		worksets_per_resume: int = 1,
+		r2c_parallel_workset_workers: int = 1) -> Dictionary:
 	var t0: int = Time.get_ticks_usec()
 	reap_discarded()
 	if not C.integer(max_members, 1, Spatial.MAX_MEMBERS) \
 			or not C.integer(allocator_items, 1, MAX_ALLOCATOR_ITEMS) \
 			or not C.integer(cursor_cap_bytes, 1024, MAX_CURSOR_BYTES) \
-			or not C.integer(worksets_per_resume, 1, 64):
+			or not C.integer(worksets_per_resume, 1, 64) \
+			or not C.integer(r2c_parallel_workset_workers, 1, 8):
 		return _failed("R3_ASYNC_PARAMETERS", t0)
 	if _task_id >= 0:
 		# A running generation has a frozen workset batching policy. Never
 		# silently change it mid-tick (including after worker completion).
 		if worksets_per_resume != _worker_worksets_per_resume:
 			return _failed("R2B_WORKSET_BATCH_CHANGED", t0)
+		if r2c_parallel_workset_workers != _r2c_parallel_workset_workers:
+			return _failed("R2C_WORKER_BOUND_CHANGED", t0)
 		if not WorkerThreadPool.is_task_completed(_task_id):
 			return _pending(t0, "DRAINING" if _abandoned else "BACKGROUND")
 		# Non-blocking by contract: the task is already completed. Always
@@ -200,6 +209,7 @@ func advance(state: Dictionary, options: Dictionary,
 		_last_worker_candidate_validate_us = int(payload.get("candidate_validate_us", 0))
 		_last_worker_phase_profile = payload.get("phase_profile", {}).duplicate(true)
 		_last_worker_worksets_per_resume = _worker_worksets_per_resume
+		_last_r2c_parallel_workset_workers = _r2c_parallel_workset_workers
 		_last_projection_wall_us = int(payload.get("projection_wall_us", 0))
 		var source_validation_started_us: int = Time.get_ticks_usec()
 		var canonical_error := ""
@@ -246,6 +256,7 @@ func advance(state: Dictionary, options: Dictionary,
 			"worker_projection_wall_us": _last_projection_wall_us,
 			"worker_phase_profile": _last_worker_phase_profile.duplicate(true),
 			"worker_worksets_per_resume": _last_worker_worksets_per_resume,
+			"r2c_parallel_workset_workers": _last_r2c_parallel_workset_workers,
 			"presentation_snapshot": payload.get("presentation_snapshot", {}),
 			"complete_poll_wall_us": complete_poll_wall_us,
 		}
@@ -291,6 +302,7 @@ func advance(state: Dictionary, options: Dictionary,
 	_source_tick = int(state.tick)
 	_job_started_us = Time.get_ticks_usec()
 	_worker_worksets_per_resume = worksets_per_resume
+	_r2c_parallel_workset_workers = r2c_parallel_workset_workers
 	# The worker is the only writer to this isolated outer dictionary; all
 	# nested authoritative state remains read-only until Runtime duplicates it.
 	var frozen_state: Dictionary = state.duplicate(false)
@@ -303,7 +315,8 @@ func advance(state: Dictionary, options: Dictionary,
 			frozen_state, frozen_options, max_members,
 			allocator_items, cursor_cap_bytes,
 			anchor, _source_tick, options_hash, _trusted_generation,
-			detached_manifest, worksets_per_resume),
+			detached_manifest, worksets_per_resume,
+			r2c_parallel_workset_workers),
 		false, "eco-a146-r3-2-global-a4")
 	if _task_id < 0:
 		_clear_trusted_lease()
@@ -315,7 +328,8 @@ func _compute(frozen: Dictionary, options: Dictionary, members: int,
 		items: int, cursor_cap: int, anchor: String, source_tick: int,
 		options_hash: String, generation: int,
 		projection_manifest: Dictionary,
-		worksets_per_resume: int) -> void:
+		worksets_per_resume: int,
+		r2c_parallel_workset_workers: int) -> void:
 	var started_us: int = Time.get_ticks_usec()
 	var payload: Dictionary = {}
 	# Exact single task wall decomposition. These counters are host-only;
@@ -327,7 +341,9 @@ func _compute(frozen: Dictionary, options: Dictionary, members: int,
 		"prepare_calls": 0, "allocate_begin_calls": 0,
 		"allocate_resume_calls": 0, "advance_calls": 0,
 		"finalize_calls": 0, "max_single_resume_us": 0,
-		"max_cursor_encode_us": 0, "max_cursor_bytes": 0}
+		"max_cursor_encode_us": 0, "max_cursor_bytes": 0,
+		"r2c_peak_workers": 0, "r2c_parallel_threaded_worksets": 0,
+		"r2c_parallel_resume_calls": 0}
 	var begin_started_us: int = Time.get_ticks_usec()
 	var started: Dictionary = Runtime.begin_staged_global_tick(
 		frozen, options, 4, members, true)
@@ -362,12 +378,20 @@ func _compute(frozen: Dictionary, options: Dictionary, members: int,
 				break
 			var resume_started_us: int = Time.get_ticks_usec()
 			var step: Dictionary = Runtime.resume_staged_global_tick(
-				frozen, options, cursor, worksets_per_resume, items, cursor_cap)
+				frozen, options, cursor, worksets_per_resume, items, cursor_cap,
+				r2c_parallel_workset_workers)
 			var resume_us: int = maxi(0, Time.get_ticks_usec() - resume_started_us)
 			phases["resume_total_us"] += resume_us
 			phases[bucket + "_us"] += resume_us
 			phases[bucket + "_calls"] = int(phases.get(bucket + "_calls", 0)) + 1
 			phases["max_single_resume_us"] = maxi(int(phases.max_single_resume_us), resume_us)
+			var peak_parallel: int = int(step.get("r2c_peak_workers", 0))
+			var completed_parallel: int = int(step.get("r2c_threaded_worksets", 0))
+			phases["r2c_peak_workers"] = maxi(
+				int(phases.r2c_peak_workers), peak_parallel)
+			phases["r2c_parallel_threaded_worksets"] += completed_parallel
+			if completed_parallel > 0:
+				phases["r2c_parallel_resume_calls"] += 1
 			if bool(step.get("complete", false)):
 				phases["finalize_us"] += resume_us
 				phases["finalize_calls"] += 1
