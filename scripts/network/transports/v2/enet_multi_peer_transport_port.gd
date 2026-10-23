@@ -1,6 +1,7 @@
 extends "res://scripts/network/transports/v2/network_transport_port_v2.gd"
 
 const EndpointScript = preload("res://scripts/network/contracts/network_endpoint.gd")
+const NetworkUtilsScript = preload("res://scripts/network/contracts/network_contract_utils.gd")
 const EventScript = preload("res://scripts/network/transports/v2/network_transport_event.gd")
 const FrameScript = preload("res://scripts/network/transports/v2/protocol_frame_v2.gd")
 const ChannelPolicyScript = preload("res://scripts/network/realtime/realtime_channel_policy.gd")
@@ -30,6 +31,14 @@ var _last_status: int = MultiplayerPeer.CONNECTION_DISCONNECTED
 # R31 P2.3 R2.0 — PRIVATE observability for server-bound COMPACT only.
 # No ENet frame, delivery mode or session state is modified.
 var _r31p23r2_attribution_enabled := false
+# R2.1 canary: only the already verified, main-thread COMPACT packet skips
+# a SECOND FrameScript.validate inside encode(). All invalid input is still
+# rejected by the original first validation; no worker or shared state.
+var _r31p23r21_single_pass_compact_enabled := false
+
+func configure_r31p23r21_single_pass_compact(enabled: bool) -> Dictionary:
+	_r31p23r21_single_pass_compact_enabled = enabled
+	return TransportUtilsScript.success({"enabled": enabled})
 
 
 func configure_r31p23r2_flush_attribution(enabled: bool) -> Dictionary:
@@ -131,7 +140,30 @@ func send_to_peer(peer_id: String, frame: Dictionary) -> Dictionary:
 		return TransportUtilsScript.failure("UNKNOWN_PEER")
 	if _session_by_peer.has(peer_id) and String(_session_by_peer[peer_id]) != String(frame.get("session_id", "")):
 		return TransportUtilsScript.failure("SESSION_MISMATCH")
-	var encoded: Dictionary = FrameScript.encode(frame, MAX_PACKET_BYTES)
+	var r21_fast: bool = (
+		_r31p23r21_single_pass_compact_enabled
+		and _mode == "SERVER"
+		and String(Dictionary(frame.get("payload", {})).get("type", "")) == "COMPACT_GAMEPLAY_SNAPSHOT"
+		and String(frame.get("channel", "")) == ChannelPolicyScript.SNAPSHOT
+		and String(frame.get("delivery_mode", "")) == "UNRELIABLE_SEQUENCED"
+	)
+	var encoded: Dictionary
+	if r21_fast:
+		# Above we executed the same ORIGINAL FrameScript.validate(frame)
+		# (checksum, exact fields, channel, session and sequence). The only
+		# intervening operations are read-only peer/session lookups; the
+		# boundary already detached this frame before the port call.
+		# Preserve FrameScript.encode's exact canonical bytes and error codes
+		# while avoiding its redundant second full validation/hash traversal.
+		var canonical_text: String = NetworkUtilsScript.canonical_json(frame)
+		if canonical_text.is_empty():
+			return TransportUtilsScript.failure("SERIALIZATION_FAILED")
+		var packet: PackedByteArray = canonical_text.to_utf8_buffer()
+		if MAX_PACKET_BYTES <= 0 or packet.size() > MAX_PACKET_BYTES:
+			return TransportUtilsScript.failure("PACKET_TOO_LARGE", {"packet_bytes": packet.size()})
+		encoded = TransportUtilsScript.success({"packet": packet, "packet_bytes": packet.size()})
+	else:
+		encoded = FrameScript.encode(frame, MAX_PACKET_BYTES)
 	var p23_encoded_us: int = Time.get_ticks_usec() if p23_probe else 0
 	if not bool(encoded.get("success", false)):
 		return encoded
@@ -157,6 +189,7 @@ func send_to_peer(peer_id: String, frame: Dictionary) -> Dictionary:
 		"peer_statistics": peer_stats,
 	}
 	if p23_probe:
+		details["r31p23r21_fast_encode"] = r21_fast
 		details["r31p23r2_enet_stages"] = {
 			"validate_ms": float(p23_validated_us - p23_started_us) / 1000.0,
 			"frame_encode_ms": float(p23_encoded_us - p23_validated_us) / 1000.0,
