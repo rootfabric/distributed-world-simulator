@@ -40,9 +40,10 @@ reinterpreted as a canonical PASS claim.
 - Show original historic record is **still invalid under canonical schema**.
 - Show selected canonical Evidence Map set can be validated after quarantining exactly that file.
 - Tampered SHA/path/missing quarantine must be rejected, not treated as an empty set.
-- `CONTROL_DEVELOPMENT.ps1 -Status` executed from this canonical-main-derived branch:
-  restore Harness tooling contract, but **do not** infer PC0 architectural
-  NON_RED or checkpoint acceptance merely from successful Status.
+- `CONTROL_DEVELOPMENT.ps1 -Status` is executed from this canonical-main-derived branch. The preliminary MVP8 evidence-map `SCHEMA_INVALID` must no longer be the first error. **A separate next gate is still RED**, so overall Status cannot be reported as PASS.
+  - Linux `python -m harness.cli status --root .` and Windows `CONTROL_DEVELOPMENT.ps1 -Status` each reproduced `EXIT 5 / EXECUTION_STATE_INVALID / EVENT_SUBJECT_NOT_ANCESTOR:E2026-09-09-V0-MVP-R1-V0-MVP-R1-WO-001-0050-MVP8-REPAIR-R2-INDEPENDENT-REVIEWER-PASS`.
+  - The event `0050` points to an independently created reviewer branch `review/v0-mvp8-dc6e7fff-r1`, which is not an ancestor of main. This provenance failure is enforced by `scripts/harness/state_builder.py` and **must not** be hidden by removing or rewriting the reviewer evidence.
+  - CI validates the exact follow-on error as a distinct fail-closed diagnostic: `CONTROL_MVP8_EVIDENCE_SCHEMA_RECOVERED=PASS` and `CONTROL_FULL_STATUS=BLOCKED_EVENT_SUBJECT_NOT_ANCESTOR`. These markers are NOT `PC0_NON_RED`.
 - Run all existing Harness regressions plus focused tests; compare Windows and
   Linux; pin `jsonschema==4.22.0`.
 - Prove `main` has not moved/been written, scope narrow, historical blob unchanged.
@@ -60,5 +61,6 @@ from canonical main or an explicitly main-derived control candidate.
 If status on this new main-derived branch fails for another exact reason,
 report it with logs and prepare a separate narrow repair rather than masking it.
 
-**Expected final verdict:** `CONTROL_TOOLING_RESTORED` when checks pass;
-not `PC0_NON_RED` unless PC0 itself has been run and reviewed.
+**Scoped evidence-repair verdict:** `SCHEMA_GATE_RECOVERED / FULL_HARNESS_STATUS_BLOCKED_ON_INDEPENDENT_EVENT_PROVENANCE` until separately repaired. This branch must never be called `CONTROL_TOOLING_RESTORED` or `PC0_NON_RED` based on schema tests alone.
+
+**Follow-on work:** require a *separately authorized and reviewed* narrow event-provenance repair. A historic reviewer-pass event is meaningful; a permissive exemption from ancestry checking or bulk deletion/relabeling of canonical event history would be outside this repair scope. First review the provenance rules and all later events, then decide a strictly proven, append-only reconciliation or proper canonicalized evidence rebind, without fabricated acceptance.
