@@ -129,6 +129,15 @@ var _r31bp20_validator_attribution_enabled := false
 var _r31p22_loop_attribution_enabled := false
 # R31 P2.3 R0: completion-only instrumentation, not a writer/ACK change.
 var _r31p23_completion_attribution_enabled := false
+# R31 P2.3 R1: opt-in DIAGNOSTIC console-log deferral ONLY. M6 generations,
+# postcommit, game state and outbound transport never use this queue.
+var _r31p23r1_deferred_checkpoint_debug_enabled := false
+const R31P23R1_MAX_DEBUG_QUEUE := 32
+const R31P23R1_IDLE_FRAME_BUDGET_US := 8000
+var _r31p23r1_debug_lines: Array[Dictionary] = []
+var _r31p23r1_debug_queued := 0
+var _r31p23r1_debug_flushed := 0
+var _r31p23r1_debug_overflow_sync := 0
 var _r3c4_deferral_started_ms := 0
 var _r3c4_deferred_frames := 0
 var _r3c4_capture_slots := 0
@@ -372,6 +381,19 @@ func setup(config: Dictionary) -> Dictionary:
 	)
 	if _r31p23_completion_attribution_enabled and not _r31p22_loop_attribution_enabled:
 		return _failure("R31P23_REQUIRES_R31P22_LOOP_ATTRIBUTION")
+	var r31p23r1_mode := OS.get_environment("DWS_NET_R31P23R1_DEFER_CHECKPOINT_DEBUG")
+	if not r31p23r1_mode.is_empty() and r31p23r1_mode not in ["0", "1"]:
+		return _failure("R31P23R1_INVALID_MODE")
+	_r31p23r1_deferred_checkpoint_debug_enabled = (
+		bool(config.get("r31p23r1_defer_checkpoint_debug_canary", false))
+		or r31p23r1_mode == "1"
+	)
+	if _r31p23r1_deferred_checkpoint_debug_enabled and not _r31p23_completion_attribution_enabled:
+		return _failure("R31P23R1_REQUIRES_P23_COMPLETION_ATTRIBUTION")
+	_r31p23r1_debug_lines.clear()
+	_r31p23r1_debug_queued = 0
+	_r31p23r1_debug_flushed = 0
+	_r31p23r1_debug_overflow_sync = 0
 	_p1b_item_async_enabled = (
 		bool(config.get("async_durable_item_canary", false))
 		or OS.get_environment("DWS_NET_P1B_ITEM_ASYNC") == "1"
@@ -655,6 +677,12 @@ func _process(delta: float) -> void:
 	var process_duration_ms: float = float(Time.get_ticks_usec() - process_started_us) / 1000.0
 	_telemetry.observe("server_process_duration_ms", process_duration_ms)
 	_stall_exit(process_probe)
+	# Only the lowest-work, non-snapshot, post-durable-idle server frames
+	# may print ONE previously detached debug line. Deferred stdout work is
+	# still visible in the original frame interval and server_loop.process_ms;
+	# never take it as OS/limiter sleep or remove it from normative analysis.
+	if _r31p23r1_deferred_checkpoint_debug_enabled:
+		_r31p23r1_flush_one_idle_debug(smooth_started)
 	if SmoothTrace.enabled():
 		var p22_server_loop_record: Dictionary = {"tick": _server_tick,
 			"peers": _peer_to_player.size(), "rejections": _rejections,
@@ -3228,7 +3256,10 @@ func _complete_async_movement_checkpoint(wait: bool) -> void:
 	var p23_after_telemetry_us: int = Time.get_ticks_usec() if _r31p23_completion_attribution_enabled else 0
 	# Do NOT clear dirty/counters here: movement after submission is newer than
 	# the detached checkpoint. The next request will capture that newer state.
-	_debug_event("MOVEMENT_CHECKPOINT_COMMITTED", {"generation": generation, "async": true})
+	if _r31p23r1_deferred_checkpoint_debug_enabled:
+		_r31p23r1_enqueue_completion_debug(generation)
+	else:
+		_debug_event("MOVEMENT_CHECKPOINT_COMMITTED", {"generation": generation, "async": true})
 	var p23_after_debug_us: int = Time.get_ticks_usec() if _r31p23_completion_attribution_enabled else 0
 	# get_report() recursively builds a full game/ItemGraph/M6 snapshot and
 	# writes JSON to the runtime result file. It is not the atomic checkpoint
@@ -3536,6 +3567,109 @@ func _stall_context(
 	}
 
 
+# P2.3 R1 derived debug text. Captures timestamp and generation at the
+# original committed generation. Does not own, postpone or alter any ACK,
+# durable checkpoint or authority state.
+func _r31p23r1_enqueue_completion_debug(generation: int) -> void:
+	if not _debug_logging:
+		return
+	if _r31p23r1_debug_lines.size() >= R31P23R1_MAX_DEBUG_QUEUE:
+		# No silent drop. The accepted debug path remains a fail-safe fallback
+		# even if this single frame becomes slow; count it explicitly.
+		_r31p23r1_debug_overflow_sync += 1
+		if SmoothTrace.enabled():
+			SmoothTrace.emit("r31p23r1_debug_overflow", {
+				"engine_frame": Engine.get_process_frames(),
+				"generation": generation,
+				"pending": _r31p23r1_debug_lines.size(),
+		})
+		_debug_event("MOVEMENT_CHECKPOINT_COMMITTED", {"generation": generation, "async": true})
+		return
+	var captured_time_ms: int = Time.get_ticks_msec()
+	var captured_frame: int = Engine.get_process_frames()
+	var detached_line: String = "[m7_server] %s" % JSON.stringify({
+		"event": "MOVEMENT_CHECKPOINT_COMMITTED",
+		"process_id": OS.get_process_id(),
+		"time_msec": captured_time_ms,
+		"details": {"generation": generation, "async": true},
+	}, "", true, true)
+	_r31p23r1_debug_lines.append({
+		"line": detached_line,
+		"engine_frame": captured_frame,
+		"queued_us": Time.get_ticks_usec(),
+		"generation": generation,
+	})
+	_r31p23r1_debug_queued += 1
+	if SmoothTrace.enabled():
+		SmoothTrace.emit("r31p23r1_debug_queued", {
+			"engine_frame": captured_frame,
+			"generation": generation,
+			"time_msec": captured_time_ms,
+			"pending": _r31p23r1_debug_lines.size(),
+		})
+
+
+# Isolate FIFO selection from print(), permitting native negative tests on
+# generation/time identity and strict no-same-frame behavior.
+func _r31p23r1_take_next_debug_line(engine_frame: int, allow_same_frame: bool = false) -> Dictionary:
+	if _r31p23r1_debug_lines.is_empty():
+		return {}
+	var head: Dictionary = _r31p23r1_debug_lines[0]
+	if not allow_same_frame and int(head.get("engine_frame", -1)) >= engine_frame:
+		return {}
+	return _r31p23r1_debug_lines.pop_front()
+
+
+func _r31p23r1_flush_one_idle_debug(frame_started_us: int) -> void:
+	if _r31p23r1_debug_lines.is_empty():
+		return
+	# Avoid newly committed ITEM, full/compact snapshot and persistence
+	# bursts. No FPS cap, tick pacing or gameplay stage is altered.
+	if (
+		_server_tick == _last_movement_snapshot_tick
+		or not _p1b_item_pending.is_empty()
+		or not _r3c2_postcommit_pending.is_empty()
+		or Time.get_ticks_usec() - frame_started_us > R31P23R1_IDLE_FRAME_BUDGET_US
+	):
+		return
+	var item: Dictionary = _r31p23r1_take_next_debug_line(Engine.get_process_frames())
+	if item.is_empty():
+		return
+	var started_us: int = Time.get_ticks_usec()
+	print(String(item["line"]))
+	_r31p23r1_debug_flushed += 1
+	if SmoothTrace.enabled():
+		SmoothTrace.emit("r31p23r1_debug_flushed", {
+			"engine_frame": Engine.get_process_frames(),
+			"original_engine_frame": int(item["engine_frame"]),
+			"generation": int(item["generation"]),
+			"print_ms": float(Time.get_ticks_usec() - started_us) / 1000.0,
+			"queue_delay_ms": float(started_us - int(item.get("queued_us", started_us))) / 1000.0,
+			"pending": _r31p23r1_debug_lines.size(),
+		})
+
+
+func _r31p23r1_flush_shutdown_debug() -> void:
+	# Shutdown is outside the measured gameplay window. Never discard
+	# queued log lines, even if the last frame had no safe idle slot.
+	while not _r31p23r1_debug_lines.is_empty():
+		var item: Dictionary = _r31p23r1_take_next_debug_line(Engine.get_process_frames(), true)
+		if item.is_empty():
+			break
+		print(String(item["line"]))
+		_r31p23r1_debug_flushed += 1
+
+
+func get_r31p23r1_debug_report() -> Dictionary:
+	return {
+		"enabled": _r31p23r1_deferred_checkpoint_debug_enabled,
+		"pending": _r31p23r1_debug_lines.size(),
+		"queued": _r31p23r1_debug_queued,
+		"flushed": _r31p23r1_debug_flushed,
+		"overflow_sync": _r31p23r1_debug_overflow_sync,
+	}
+
+
 func _debug_event(event_name: String, details: Dictionary = {}) -> void:
 	if not _debug_logging:
 		return
@@ -3738,6 +3872,8 @@ func get_report() -> Dictionary:
 func stop() -> Dictionary:
 	set_process(false)
 	_complete_async_movement_checkpoint(true)
+	if _r31p23r1_deferred_checkpoint_debug_enabled:
+		_r31p23r1_flush_shutdown_debug()
 	if _movement_checkpoint_writer != null:
 		_movement_checkpoint_writer.stop()
 		_movement_checkpoint_writer = null

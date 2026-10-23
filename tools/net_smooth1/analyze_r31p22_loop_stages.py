@@ -35,7 +35,7 @@ COMPLETION_STAGES = (
 KIND_KEYS = ("frame", "server_loop", "server_message",
              "r31p22_loop_stages", "movement_snapshot_stages",
              "r31p22_compact_wire_stages", "r31p22_compact_wire_failed",
-             "r31p23_movement_completion")
+             "r31p23_movement_completion", "r31p23r1_debug_flushed")
 MIN_FRAMES = 100
 MIN_SNAPSHOTS = 10
 TOLERANCE_MS = 1.0
@@ -151,6 +151,7 @@ def analyze_events(trace: dict, *, minimum_frames: int = MIN_FRAMES,
     stages = indexed(trace["r31p22_loop_stages"], "LOOP_STAGES")
     snapshots = indexed(trace["movement_snapshot_stages"], "SNAPSHOT")
     completion = indexed(trace["r31p23_movement_completion"], "COMPLETION")
+    flushed_debug = indexed(trace["r31p23r1_debug_flushed"], "DEFERRED_DEBUG")
     compact_by_frame: dict[int, list[dict]] = {}
     messages_by_frame: dict[int, list[dict]] = {}
     for row in trace["server_message"]:
@@ -173,6 +174,8 @@ def analyze_events(trace: dict, *, minimum_frames: int = MIN_FRAMES,
         raise ValueError("HANDLER_WITHOUT_LOOP_ENGINE_FRAME")
     if not set(completion).issubset(set(stages)):
         raise ValueError("COMPLETION_WITHOUT_LOOP_ENGINE_FRAME")
+    if not set(flushed_debug).issubset(set(stages)):
+        raise ValueError("DEBUG_FLUSH_WITHOUT_LOOP_ENGINE_FRAME")
     if not set(stages).issubset(set(old_loops)):
         raise ValueError("LOOP_STAGE_WITHOUT_BASE_LOOP")
     missing = sorted(set(frames)-set(stages))
@@ -189,6 +192,8 @@ def analyze_events(trace: dict, *, minimum_frames: int = MIN_FRAMES,
     by_stage={name:[] for name in STAGES}
     by_wire={name:[] for name in WIRE_STAGES}
     by_completion={name:[] for name in COMPLETION_STAGES}
+    debug_print_ms=[]
+    debug_delay_ms=[]
     for frame_id in sorted(set(frames)&set(stages)):
         f=frames[frame_id]["data"]
         old=old_loops[frame_id]["data"]
@@ -228,6 +233,24 @@ def analyze_events(trace: dict, *, minimum_frames: int = MIN_FRAMES,
                 raise ValueError("COMPLETION_EXCEEDS_P22_MOVEMENT_STAGE")
             for key,val in completion_values.items():
                 by_completion[key].append(val)
+        drained_debug=flushed_debug.get(frame_id)
+        drained_print_ms=0.0
+        drained_delay_ms=0.0
+        if drained_debug:
+            d=drained_debug["data"]
+            original=positive_int(d.get("original_engine_frame"),
+                                  "ORIGINAL_DEBUG_FRAME")
+            if original >= frame_id:
+                raise ValueError("SAME_FRAME_DEBUG_FLUSH_FORBIDDEN")
+            drained_print_ms=number(d.get("print_ms"),"DEFERRED_DEBUG_PRINT")
+            drained_delay_ms=number(d.get("queue_delay_ms"),"DEFERRED_DEBUG_DELAY")
+            # _process() emits P2.2 stage timestamps BEFORE the deliberately
+            # deferred print, but server_loop.process_ms includes it. Reject
+            # moved-to-another-frame work that is outside this total.
+            if drained_print_ms > max(0.0,process_ms-measured_ms)+TOLERANCE_MS:
+                raise ValueError("DEBUG_PRINT_EXCEEDS_PROCESS_REMAINDER")
+            debug_print_ms.append(drained_print_ms)
+            debug_delay_ms.append(drained_delay_ms)
         snap=snapshots.get(frame_id)
         compact_rows=compact_by_frame.get(frame_id,[])
         compact_sums={key:0.0 for key in WIRE_STAGES}
@@ -280,6 +303,8 @@ def analyze_events(trace: dict, *, minimum_frames: int = MIN_FRAMES,
             "compact_wire_sums_ms": compact_sums,
             "has_movement_completion": completed is not None,
             "movement_completion_stages_ms": completion_values,
+            "deferred_debug_print_ms": drained_print_ms,
+            "deferred_debug_queue_delay_ms": drained_delay_ms,
         })
     if not rows:
         raise ValueError("NO_SAME_FRAME_METRICS")
@@ -298,6 +323,7 @@ def analyze_events(trace: dict, *, minimum_frames: int = MIN_FRAMES,
         "compact_wire_event_count": len(trace["r31p22_compact_wire_stages"]),
         "message_handler_event_count":len(trace["server_message"]),
         "movement_completion_event_count":len(completion),
+        "deferred_debug_flush_frame_count":len(flushed_debug),
         "frame_interval_ms":dist([r["frame_interval_ms"] for r in rows]),
         "without_snapshot_frame_interval_ms":
             dist([r["frame_interval_ms"] for r in no_capture]),
@@ -308,6 +334,8 @@ def analyze_events(trace: dict, *, minimum_frames: int = MIN_FRAMES,
         "compact_wire_components_ms":{k:dist(values) for k,values in by_wire.items()},
         "movement_completion_components_ms":
             {k:dist(values) for k,values in by_completion.items()},
+        "deferred_debug_print_ms":dist(debug_print_ms),
+        "deferred_debug_queue_delay_ms":dist(debug_delay_ms),
         "worst_frame_samples":sorted(rows,key=lambda row:row["frame_interval_ms"],
                                      reverse=True)[:100],
         "important_limitations":[

@@ -38,7 +38,8 @@ def make_event(kind, frame, t, data, measure=True):
 
 def fixture(*,frames=150,fail_wire=False,missing_loop=None,
             corrupt_accounting=False,unknown_wire=False,missing_snapshot=False,
-            include_completion=False, invalid_completion=False):
+            include_completion=False, invalid_completion=False,
+            include_deferred_debug=False, invalid_deferred_debug=False):
     rows=[]
     def add(kind,t,data,measure=False):
         rows.append({"kind":kind,"t_us":t,"measure":measure,"data":data})
@@ -82,12 +83,21 @@ def fixture(*,frames=150,fail_wire=False,missing_loop=None,
                 "total_ms":.07,
                 "diagnostic_report_deferred":True,
             }))
+        has_flush=include_deferred_debug and i>1 and i%60==1
+        if has_flush:
+            rows.append(make_event("r31p23r1_debug_flushed",i,t+2,{
+                "generation":i//60,
+                "original_engine_frame":i-1,
+                "print_ms":5.0 if invalid_deferred_debug else 2.5,
+                "queue_delay_ms":25.0,
+                "pending":0,
+            }))
         rows.append(make_event("server_message",i,t+3,{
             "duration_ms":.15,"type":"PLAYER_INPUT_BATCH"
         }))
         rows.append(make_event("server_loop",i,t+4,{
             "message_ms":MSG_SUM+.02,
-            "process_ms":TOTAL+.9,
+            "process_ms":TOTAL+.9+(3.0 if has_flush else 0),
             "snapshot_ms":2.0,
         }))
         if i != missing_loop:
@@ -142,6 +152,23 @@ class StageReducer(unittest.TestCase):
             self.assertEqual(result["p99_tail_frame_count"],2)
             self.assertEqual(result["worst_frame_samples"][0]["engine_frame"],80)
             self.assertEqual(result["frame_interval_ms"]["p99"],27.0)
+
+    def test_deferred_stdout_is_visible_as_real_next_frame_cost(self):
+        with tempfile.TemporaryDirectory() as temp:
+            path=write(Path(temp),include_deferred_debug=True)
+            r=analyze_events(read_trace(path,RUN_ID))
+            self.assertEqual(r["deferred_debug_flush_frame_count"],2)
+            self.assertAlmostEqual(r["deferred_debug_print_ms"]["p99"],2.5)
+            self.assertAlmostEqual(r["deferred_debug_queue_delay_ms"]["p50"],25.0)
+            self.assertTrue(any(sample["deferred_debug_print_ms"]==2.5
+                                for sample in r["worst_frame_samples"]))
+
+    def test_deferred_stdout_cannot_exceed_same_frame_measured_budget(self):
+        with tempfile.TemporaryDirectory() as temp:
+            path=write(Path(temp),include_deferred_debug=True,
+                       invalid_deferred_debug=True)
+            with self.assertRaisesRegex(ValueError,"DEBUG_PRINT_EXCEEDS_PROCESS_REMAINDER"):
+                analyze_events(read_trace(path,RUN_ID))
 
     def test_completion_stages_exact_engine_frame_are_attributed(self):
         with tempfile.TemporaryDirectory() as temp:
