@@ -42,6 +42,18 @@ var _blackout_until_ms: Dictionary = {OUTGOING: 0, INCOMING: 0}
 var _packet_counts: Dictionary = {}
 var _stream_rngs: Dictionary = {}
 var _counters: Dictionary = {}
+# R31P23 R2.0 — OBSERVER ONLY, propagates exactly to delegate ENet.
+var _r31p23r2_attribution_enabled := false
+
+
+func configure_r31p23r2_flush_attribution(enabled: bool) -> Dictionary:
+	if _delegate == null or not _delegate.has_method("configure_r31p23r2_flush_attribution"):
+		return TransportUtilsScript.failure("R31P23R2_ENET_DELEGATE_REQUIRED")
+	var configured: Dictionary = _delegate.configure_r31p23r2_flush_attribution(enabled)
+	if not bool(configured.get("success", false)):
+		return configured
+	_r31p23r2_attribution_enabled = enabled
+	return TransportUtilsScript.success({"enabled": enabled})
 
 
 func setup(
@@ -130,15 +142,36 @@ func disconnect_peer(peer_id: String, session_id: String) -> Dictionary:
 func send_to_peer(peer_id: String, frame: Dictionary) -> Dictionary:
 	if not _configured or not _started:
 		return TransportUtilsScript.failure("SIMULATOR_NOT_STARTED")
+	var p23_probe: bool = (
+		_r31p23r2_attribution_enabled
+		and String(Dictionary(frame.get("payload", {})).get("type", "")) == "COMPACT_GAMEPLAY_SNAPSHOT"
+	)
+	var p23_start_us: int = Time.get_ticks_usec() if p23_probe else 0
 	var frame_check: Dictionary = FrameScript.validate(frame)
+	var p23_validated_us: int = Time.get_ticks_usec() if p23_probe else 0
 	if not bool(frame_check.get("success", false)):
 		return TransportUtilsScript.failure(String(frame_check.get("error_code", "INVALID_FRAME")))
 	var packet_bytes: int = NetworkUtilsScript.canonical_json(frame).to_utf8_buffer().size()
+	var p23_canonical_us: int = Time.get_ticks_usec() if p23_probe else 0
 	if _passthrough and not _has_active_manual_condition(OUTGOING):
+		var p23_before_delegate_us: int = Time.get_ticks_usec() if p23_probe else 0
 		var direct: Dictionary = _normalize_result(_delegate.send_to_peer(peer_id, frame))
+		var p23_delegate_us: int = Time.get_ticks_usec() if p23_probe else 0
 		if bool(direct.get("success", false)):
 			_increment("network_simulator_packets_passthrough")
-		return _with_simulator_details(direct, packet_bytes, false, false, _now_ms())
+		var result: Dictionary = _with_simulator_details(direct, packet_bytes, false, false, _now_ms())
+		if p23_probe and bool(result.get("success", false)):
+			var extras: Dictionary = Dictionary(result.get("details", {}))
+			extras["r31p23r2_simulator_stages"] = {
+				"passthrough": true,
+				"frame_validate_ms": float(p23_validated_us - p23_start_us) / 1000.0,
+				"canonical_json_ms": float(p23_canonical_us - p23_validated_us) / 1000.0,
+				"pre_delegate_ms": float(p23_before_delegate_us - p23_canonical_us) / 1000.0,
+				"delegate_ms": float(p23_delegate_us - p23_before_delegate_us) / 1000.0,
+				"enet": Dictionary(extras.get("r31p23r2_enet_stages", {})).duplicate(true),
+			}
+			result["details"] = extras
+		return result
 	var plan: Dictionary = _plan_packet(OUTGOING, peer_id, frame, packet_bytes)
 	if bool(plan.get("drop", false)):
 		_increment("network_simulator_unreliable_packets_dropped")
