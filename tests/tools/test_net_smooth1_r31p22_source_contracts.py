@@ -85,6 +85,15 @@ class Source(unittest.TestCase):
         self.assertIn("_messages_sent += 1",s)
         self.assertNotIn("await ",s)
 
+    def test_message_handler_events_have_same_process_engine_frame(self):
+        s=method(self.server,"_handle_message")
+        self.assertIn('p22_message_record["engine_frame"] = Engine.get_process_frames()',s)
+        self.assertIn('SmoothTrace.emit("server_message", p22_message_record)',s)
+        self.assertIn('"duration_ms"',s)
+        self.assertIn('"message_handler_sum_ms"',self.reducer)
+        self.assertIn('"unattributed_dispatch_ms"',self.reducer)
+        self.assertIn("HANDLERS_EXCEED_DISPATCH",self.reducer)
+
     def test_snapshot_and_probe_only_add_frame_identity_optin(self):
         s=method(self.server,"_maybe_publish_movement_snapshot")
         self.assertIn("p22_snapshot_stage_record",s)
