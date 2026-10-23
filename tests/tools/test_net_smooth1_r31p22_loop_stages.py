@@ -152,7 +152,9 @@ class StageReducer(unittest.TestCase):
                 "poll_completed_ms"]["p99"], .01)
             matched=[x for x in r["worst_frame_samples"]
                      if x["has_movement_completion"]]
-            self.assertEqual(matched, [])  # lower-tail completions aren't
+            self.assertGreaterEqual(len(matched), 1)
+            self.assertAlmostEqual(matched[0]["movement_completion_stages_ms"][
+                "poll_completed_ms"],.01)
             self.assertEqual(r["verdict"],"STAGE_ATTRIBUTION_VALID_ONLY_NOT_PERF_PASS")
 
     def test_invalid_completion_accounting_fails_closed(self):
