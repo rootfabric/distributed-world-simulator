@@ -20,8 +20,8 @@ RUNNER = ROOT / "tools/net_smooth1/run_net_smooth1.py"
 
 
 def function(source, name):
-    found = re.search(r"(?ms)^func " + re.escape(name) +
-                      r"\(.*?(?=^func |\Z)", source)
+    found = re.search(r"(?ms)^(?:static )?func " + re.escape(name) +
+                      r"\(.*?(?=^(?:static )?func |\Z)", source)
     assert found is not None, name
     return found.group(0)
 
