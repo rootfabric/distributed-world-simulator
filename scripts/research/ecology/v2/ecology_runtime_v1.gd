@@ -422,11 +422,14 @@ static func resume_staged_global_tick(state: Dictionary, options: Dictionary,
 		allocator_cap_bytes: int = 8388608,
 		r2c_parallel_workers: int = 1,
 		r2e_profile: bool = false,
-		r2e_owned_cpu: RefCounted = null) -> Dictionary:
+		r2e_owned_cpu: RefCounted = null,
+		r2e3_original_a4: bool = false) -> Dictionary:
 	# Strictly check the same authoritative frontier before ANY staged work,
 	# including a no-op and a final publish. Never accept a moved source.
 	var r2e_source_start_us: int = Time.get_ticks_usec() if r2e_profile else 0
 	var owned_fast: bool = r2e_owned_cpu != null
+	if r2e3_original_a4 and not owned_fast:
+		return _fail("RUNTIME_R2E3_REQUIRES_OWNED_WORKER")
 	if owned_fast:
 		# Strictly CPU-worker-owned, experimental-only. Main/public callers
 		# ALWAYS enter the original FULL Runtime.validate branch. This path
@@ -465,10 +468,16 @@ static func resume_staged_global_tick(state: Dictionary, options: Dictionary,
 		return _fail("RUNTIME_STAGED_OPTIONS_CHANGED")
 	var r2e_options_digest_us: int = Time.get_ticks_usec() - r2e_options_start_us if r2e_profile else 0
 	var r2e_lifecycle_start_us: int = Time.get_ticks_usec() if r2e_profile else 0
+	# On the E3 fast path, hand the already-validated worker-owned context
+	# to the authoritative original A4 ONLY at ALLOCATE. All public/default
+	# paths and every other A5 phase retain the existing behavior.
+	var a4_context: RefCounted = null
+	if r2e3_original_a4 and String(cursor.lifecycle.get("phase", "")) == "ALLOCATE":
+		a4_context = r2e_owned_cpu
 	var progressed := Lifecycle.staged_resume(
 		cursor.lifecycle, state.field, state.population, max_worksets_per_call,
 		max_allocator_items_per_call, allocator_cap_bytes,
-		r2c_parallel_workers, r2e_profile)
+		r2c_parallel_workers, r2e_profile, a4_context)
 	if not bool(progressed.get("success", false)):
 		return _fail("RUNTIME_STAGED_A5:" + String(progressed.get("error", "?")))
 	var r2e_lifecycle_us: int = Time.get_ticks_usec() - r2e_lifecycle_start_us if r2e_profile else 0
@@ -488,7 +497,9 @@ static func resume_staged_global_tick(state: Dictionary, options: Dictionary,
 				String(cursor.source_hash), String(cursor.options_hash),
 				progressed.cursor),
 			"r2c_peak_workers": int(progressed.get("r2c_peak_workers", 0)),
-			"r2c_threaded_worksets": int(progressed.get("r2c_threaded_worksets", 0))}
+			"r2c_threaded_worksets": int(progressed.get("r2c_threaded_worksets", 0)),
+			"r2e3_original_a4_admitted": bool(progressed.get(
+				"r2e3_original_a4_admitted", false))}
 		if r2e_profile:
 			partial["r2e_profile"] = r2e_detail
 		return partial

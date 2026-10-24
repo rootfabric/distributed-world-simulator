@@ -66,6 +66,11 @@ var _last_worker_r2e_profile := false
 # worker ONLY when real LAB Controller's exclusive R3.2.2 lease exists.
 var _worker_r2e2_owned_fast := false
 var _last_worker_r2e2_owned_fast := false
+# E3: default OFF research-only. Reduces TWO speculative global A4
+# computations to ONE original authoritative Field.allocate_demands call.
+# May only be enabled alongside the existing deep-owned Controller lease.
+var _worker_r2e3_original_a4 := false
+var _last_worker_r2e3_original_a4 := false
 var _job_started_us := 0
 var _jobs_started := 0
 var _jobs_committed := 0
@@ -146,6 +151,7 @@ func status() -> Dictionary:
 		"last_r2c_parallel_workset_workers": _last_r2c_parallel_workset_workers,
 		"last_worker_r2e_profile_enabled": _last_worker_r2e_profile,
 		"last_worker_r2e2_owned_fast": _last_worker_r2e2_owned_fast,
+		"last_worker_r2e3_original_a4": _last_worker_r2e3_original_a4,
 		"last_worker_wall_us": _last_worker_wall_us,
 		"last_error": _last_error,
 	}
@@ -159,7 +165,8 @@ func advance(state: Dictionary, options: Dictionary,
 		worksets_per_resume: int = 1,
 		r2c_parallel_workset_workers: int = 1,
 		r2e_profile: bool = false,
-		r2e2_owned_fast: bool = false) -> Dictionary:
+		r2e2_owned_fast: bool = false,
+		r2e3_original_a4: bool = false) -> Dictionary:
 	var t0: int = Time.get_ticks_usec()
 	reap_discarded()
 	if not C.integer(max_members, 1, Spatial.MAX_MEMBERS) \
@@ -179,6 +186,8 @@ func advance(state: Dictionary, options: Dictionary,
 			return _failed("R2E_PROFILER_POLICY_CHANGED", t0)
 		if r2e2_owned_fast != _worker_r2e2_owned_fast:
 			return _failed("R2E2_OWNED_POLICY_CHANGED", t0)
+		if r2e3_original_a4 != _worker_r2e3_original_a4:
+			return _failed("R2E3_ORIGINAL_A4_POLICY_CHANGED", t0)
 		if not WorkerThreadPool.is_task_completed(_task_id):
 			return _pending(t0, "DRAINING" if _abandoned else "BACKGROUND")
 		# Non-blocking by contract: the task is already completed. Always
@@ -229,6 +238,7 @@ func advance(state: Dictionary, options: Dictionary,
 		_last_r2c_parallel_workset_workers = _r2c_parallel_workset_workers
 		_last_worker_r2e_profile = _worker_r2e_profile
 		_last_worker_r2e2_owned_fast = _worker_r2e2_owned_fast
+		_last_worker_r2e3_original_a4 = _worker_r2e3_original_a4
 		_last_projection_wall_us = int(payload.get("projection_wall_us", 0))
 		var source_validation_started_us: int = Time.get_ticks_usec()
 		var canonical_error := ""
@@ -278,6 +288,7 @@ func advance(state: Dictionary, options: Dictionary,
 			"r2c_parallel_workset_workers": _last_r2c_parallel_workset_workers,
 			"worker_r2e_profile_enabled": _last_worker_r2e_profile,
 			"worker_r2e2_owned_fast": _last_worker_r2e2_owned_fast,
+			"worker_r2e3_original_a4": _last_worker_r2e3_original_a4,
 			"presentation_snapshot": payload.get("presentation_snapshot", {}),
 			"complete_poll_wall_us": complete_poll_wall_us,
 		}
@@ -297,6 +308,8 @@ func advance(state: Dictionary, options: Dictionary,
 		return _failed("R323_SNAPSHOT_REQUIRES_CONTROLLER_LEASE", t0)
 	if r2e2_owned_fast and not use_lease:
 		return _failed("R2E2_REQUIRES_CONTROLLER_LEASE", t0)
+	if r2e3_original_a4 and not r2e2_owned_fast:
+		return _failed("R2E3_REQUIRES_DEEP_OWNED_CONTROLLER", t0)
 	_clear_trusted_lease()
 	_source_hash = anchor
 	_options_hash = options_hash
@@ -328,6 +341,7 @@ func advance(state: Dictionary, options: Dictionary,
 	_r2c_parallel_workset_workers = r2c_parallel_workset_workers
 	_worker_r2e_profile = r2e_profile
 	_worker_r2e2_owned_fast = r2e2_owned_fast
+	_worker_r2e3_original_a4 = r2e3_original_a4
 	# The worker is the only writer to this isolated outer dictionary; all
 	# nested authoritative state remains read-only until Runtime duplicates it.
 	var frozen_state: Dictionary = state.duplicate(false)
@@ -342,7 +356,7 @@ func advance(state: Dictionary, options: Dictionary,
 			anchor, _source_tick, options_hash, _trusted_generation,
 			detached_manifest, worksets_per_resume,
 			r2c_parallel_workset_workers, r2e_profile,
-			r2e2_owned_fast),
+			r2e2_owned_fast, r2e3_original_a4),
 		false, "eco-a146-r3-2-global-a4")
 	if _task_id < 0:
 		_clear_trusted_lease()
@@ -356,7 +370,8 @@ func _compute(frozen: Dictionary, options: Dictionary, members: int,
 		projection_manifest: Dictionary,
 		worksets_per_resume: int,
 		r2c_parallel_workset_workers: int,
-		r2e_profile: bool, r2e2_owned_fast: bool) -> void:
+		r2e_profile: bool, r2e2_owned_fast: bool,
+		r2e3_original_a4: bool) -> void:
 	var started_us: int = Time.get_ticks_usec()
 	var payload: Dictionary = {}
 	# The borrowed top-level input has nested aliases into MAIN. For the
@@ -389,7 +404,8 @@ func _compute(frozen: Dictionary, options: Dictionary, members: int,
 		"finalize_calls": 0, "max_single_resume_us": 0,
 		"max_cursor_encode_us": 0, "max_cursor_bytes": 0,
 		"r2c_peak_workers": 0, "r2c_parallel_threaded_worksets": 0,
-		"r2c_parallel_resume_calls": 0}
+		"r2c_parallel_resume_calls": 0,
+		"r2e3_original_global_a4_barriers": 0}
 	if r2e2_owned_fast:
 		phases["r2e2_deep_detach_us"] = int(r2e2_admission.get("deep_clone_us", 0))
 		phases["r2e2_initial_full_source_validate_us"] = int(
@@ -438,7 +454,8 @@ func _compute(frozen: Dictionary, options: Dictionary, members: int,
 			var resume_started_us: int = Time.get_ticks_usec()
 			var step: Dictionary = Runtime.resume_staged_global_tick(
 				frozen, options, cursor, worksets_per_resume, items, cursor_cap,
-				r2c_parallel_workset_workers, r2e_profile, owned_context)
+				r2c_parallel_workset_workers, r2e_profile, owned_context,
+				r2e3_original_a4)
 			var resume_us: int = maxi(0, Time.get_ticks_usec() - resume_started_us)
 			if r2e_profile and bool(step.get("success", false)):
 				var detail: Dictionary = step.get("r2e_profile", {})
@@ -458,6 +475,8 @@ func _compute(frozen: Dictionary, options: Dictionary, members: int,
 					"cow_copy_us", 0))
 				phases["r2e_a5_seal_us"] += int(a5_detail.get(
 					"result_seal_us", 0))
+			if bool(step.get("r2e3_original_a4_admitted", false)):
+				phases["r2e3_original_global_a4_barriers"] += 1
 			phases["resume_total_us"] += resume_us
 			phases[bucket + "_us"] += resume_us
 			phases[bucket + "_calls"] = int(phases.get(bucket + "_calls", 0)) + 1
@@ -489,6 +508,14 @@ func _compute(frozen: Dictionary, options: Dictionary, members: int,
 			cursor = step.cursor
 		if payload.is_empty():
 			payload = {"success": false, "error": "WORKER_RESUME_LIMIT"}
+	# Fail closed if the E3 worker did not use EXACTLY ONE original global
+	# A4 barrier or somehow repeated it. The historical R2 path requires
+	# zero E3 barriers; neither path may partially publish resources.
+	if bool(payload.get("success", false)):
+		var admitted_e3: int = int(phases["r2e3_original_global_a4_barriers"])
+		if (r2e3_original_a4 and admitted_e3 != 1) \
+				or (not r2e3_original_a4 and admitted_e3 != 0):
+			payload = {"success": false, "error": "R2E3_GLOBAL_A4_BARRIER_COUNT"}
 	# Worker telemetry is detached and NO phase data participates in
 	# canonical checksums, A4 demand reductions or adoption logic.
 	payload["phase_profile"] = phases.duplicate(true)

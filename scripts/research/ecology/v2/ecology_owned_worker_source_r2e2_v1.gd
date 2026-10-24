@@ -20,6 +20,8 @@ var _tick := -1
 var _options_hash := ""
 var _a5_source_fingerprint := ""
 var _generation := -1
+# Stage E3 single-use ALLOCATE capability, per deep-owned generation.
+var _r2e3_original_a4_claimed := false
 
 func admit(input_source: Dictionary, input_options: Dictionary,
 		expected_anchor: String, expected_tick: int,
@@ -55,6 +57,7 @@ func admit(input_source: Dictionary, input_options: Dictionary,
 	_options_hash = options_hash_now
 	_a5_source_fingerprint = a5_fingerprint
 	_generation = generation
+	_r2e3_original_a4_claimed = false
 	_admitted = true
 	return {"success": true, "schema": SCHEMA,
 		"deep_clone_us": clone_us,
@@ -87,6 +90,35 @@ func _r2e2_owns(source: Dictionary, options: Dictionary,
 	var lifecycle: Variant = cursor.get("lifecycle", null)
 	return lifecycle is Dictionary and String(lifecycle.get(
 		"source_hash", "")) == _a5_source_fingerprint
+
+## E3: authorize the ORIGINAL single global A4 allocation exactly once
+## at an owned CPU worker's ALLOCATE frontier. A5 still validates the full
+## incoming sealed cursor and the detached field+population digest before
+## calling this method. No A4 result is returned without accepted Runtime
+## final state and worker full source/candidate validation.
+func _r2e3_allows_original_a4(source_field: Dictionary,
+		source_population: Array, a5_cursor: Dictionary) -> bool:
+	if not _admitted or Thread.is_main_thread() or _generation < 0 \
+			or _r2e3_original_a4_claimed \
+			or not is_same(source_field, _source.get("field", null)) \
+			or not is_same(source_population, _source.get("population", null)) \
+			or String(_source.get("integrity_hash", "")) != _anchor \
+			or String(a5_cursor.get("schema", "")) != \
+				"dws.ecology.a5-staged-lifecycle-r3.v1" \
+			or String(a5_cursor.get("source_hash", "")) != _a5_source_fingerprint \
+			or String(a5_cursor.get("phase", "")) != "ALLOCATE" \
+			or int(a5_cursor.get("index", -1)) != 0 \
+			or not a5_cursor.get("allocator_cursor", null) is Dictionary:
+		return false
+	# Claim exactly ONCE per owned generation, after all A5 public
+	# cursor/source checks and before running the original Field
+	# allocator. Any accidental second call, replayed phase or mutated
+	# staging generation is rejected even before OffMain's final global
+	# one-barrier count attestation.
+	if not a5_cursor.allocator_cursor.is_empty():
+		return false
+	_r2e3_original_a4_claimed = true
+	return true
 
 func source_anchor() -> String:
 	return _anchor
