@@ -30,6 +30,29 @@ def git(*args: str, cwd: Path = ROOT) -> str:
 
 
 class UntrackedWitnessMustFailClosed(unittest.TestCase):
+    def trace_unexpected_error(self, isolated: Path, envelope: dict):
+        if envelope.get("error", {}).get("detail") != "AttributeError":
+            return
+        diagnostic = (
+            "from pathlib import Path; "
+            "from harness.contracts import ContractBundle; "
+            "from harness.execution_selector import resolve_execution; "
+            "from harness.state_builder import build_state; "
+            "root=Path.cwd(); "
+            "bundle=ContractBundle.load(root); "
+            "execution,_=resolve_execution(root,bundle.contracts); "
+            "build_state(root,execution)"
+        )
+        env = dict(os.environ, PYTHONPATH=str(isolated / "scripts"))
+        result = subprocess.run(
+            [sys.executable, "-c", diagnostic],
+            cwd=isolated, env=env, capture_output=True, text=True,
+            timeout=60,
+        )
+        print("R2_WINDOWS_TEMP_WORKTREE_DEBUG_RC="+str(result.returncode),
+              flush=True)
+        print("R2_WINDOWS_TEMP_WORKTREE_DEBUG_TRACEBACK="+
+              result.stderr[-5000:],flush=True)
     def test_ignored_untracked_manifest_cannot_grant_event_ancestry_exception(self):
         # The test exact source itself is a detached child of the reviewed HEAD;
         # only the TEMP worktree receives a non-published commit.
@@ -96,6 +119,7 @@ class UntrackedWitnessMustFailClosed(unittest.TestCase):
                 print("REVIEW_STATUS_EXIT="+str(result.returncode), flush=True)
                 print("REVIEW_STATUS_OK="+str(envelope.get("ok")), flush=True)
                 print("REVIEW_STATUS_ERROR="+str(envelope.get("error")), flush=True)
+                self.trace_unexpected_error(isolated, envelope)
                 self.assertNotEqual(
                     result.returncode, 0,
                     "CRITICAL: ignored untracked witness authorized event #0050"
@@ -149,6 +173,7 @@ class UntrackedWitnessMustFailClosed(unittest.TestCase):
                     timeout=90,
                 )
                 report = json.loads(result.stdout.strip().splitlines()[-1])
+                self.trace_unexpected_error(isolated, report)
                 self.assertNotEqual(result.returncode, 0)
                 self.assertEqual(
                     report["error"]["detail"],
@@ -191,6 +216,7 @@ class UntrackedWitnessMustFailClosed(unittest.TestCase):
                     timeout=90,
                 )
                 report = json.loads(result.stdout.strip().splitlines()[-1])
+                self.trace_unexpected_error(isolated, report)
                 self.assertNotEqual(result.returncode, 0)
                 self.assertEqual(
                     report["error"]["detail"],
