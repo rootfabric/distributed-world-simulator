@@ -134,10 +134,18 @@ func _run() -> void:
 	_check(C.encode(source) == original,
 		"original external fixture never mutated by cancelled/restored workers")
 	var final_status: Dictionary = c.get_staged_telemetry().off_main
-	_check(int(final_status.jobs_committed) == 1 \
-		and int(final_status.tasks_joined) == 1 \
-		and int(final_status.jobs_failed) == 0,
-		"new generation exactly one worker joined and committed")
+	# OffMain is owned by the same StagedSession throughout restore.
+	# Controller.load_state resets STAGED telemetry, NOT OffMain's lifetime
+	# counters. One abandoned worker + one newly committed worker must
+	# yield TWO task joins and exactly ONE accepted canonical job.
+	_check(int(final_status.jobs_started) == 2 \
+		and int(final_status.jobs_abandoned) == 1 \
+		and int(final_status.tasks_joined) == 2 \
+		and int(final_status.jobs_committed) == 1 \
+		and int(final_status.jobs_failed) == 0 \
+		and not bool(final_status.pending) \
+		and not bool(final_status.abandoned_draining),
+		"cancel+restore: two jobs both joined, one abandoned, one committed")
 	_check(bool(final_status.last_worker_r2e2_owned_fast) \
 		and int(final_status.last_worker_source_validate_wall_us) > 0 \
 		and int(final_status.last_worker_candidate_validate_wall_us) > 0,
