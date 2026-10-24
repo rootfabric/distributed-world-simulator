@@ -100,7 +100,7 @@ func _r2e3_allows_original_a4(source_field: Dictionary,
 			or not is_same(source_population, _source.get("population", null)) \
 			or String(_source.get("integrity_hash", "")) != _anchor \
 			or String(a5_cursor.get("schema", "")) != \
-				"dws.ecology.a5-staged-r3-global-allocator.v1" \
+				"dws.ecology.a5-staged-lifecycle-r3.v1" \
 			or String(a5_cursor.get("source_hash", "")) != _a5_source_fingerprint \
 			or String(a5_cursor.get("phase", "")) != "ALLOCATE" \
 			or int(a5_cursor.get("index", -1)) != 0 \
