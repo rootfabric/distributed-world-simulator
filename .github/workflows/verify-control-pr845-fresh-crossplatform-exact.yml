@@ -162,11 +162,16 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference='Stop'
-          foreach ($mode in @('Status','CheckConsistency')) {
-            $extra = if ($mode -eq 'CheckConsistency') { @('-Candidate') } else { @() }
-            $raw=@(& pwsh -NoLogo -NoProfile -File (Join-Path $env:EXACT 'CONTROL_DEVELOPMENT.ps1') "-$mode" @extra)
-            $rc=$LASTEXITCODE
-            $o=($raw | Select-Object -Last 1) | ConvertFrom-Json
-            if ($rc -ne 0 -or $o.ok -ne $true) { throw "FAILED_$mode exit=$rc error=$($o.error)" }
-            Write-Host "PR845_FRESH_VERIFIER_WINDOWS_$mode=PASS"
+          $Driver=Join-Path $env:EXACT 'CONTROL_DEVELOPMENT.ps1'
+          $status=@(& pwsh -NoLogo -NoProfile -File $Driver -Status)
+          $statusRc=$LASTEXITCODE
+          $statusJson=($status | Select-Object -Last 1) | ConvertFrom-Json
+          if ($statusRc -ne 0 -or $statusJson.ok -ne $true) { throw "STATUS_FAILED exit=$statusRc" }
+          Write-Host 'PR845_FRESH_VERIFIER_WINDOWS_STATUS=PASS'
+          $consistency=@(& pwsh -NoLogo -NoProfile -File $Driver -CheckConsistency -Candidate)
+          $consistencyRc=$LASTEXITCODE
+          $consistencyJson=($consistency | Select-Object -Last 1) | ConvertFrom-Json
+          if ($consistencyRc -ne 0 -or $consistencyJson.ok -ne $true) {
+            throw "CONSISTENCY_FAILED exit=$consistencyRc error=$($consistencyJson.error)"
           }
+          Write-Host 'PR845_FRESH_VERIFIER_WINDOWS_CONSISTENCY=PASS'
