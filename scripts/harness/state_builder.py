@@ -128,11 +128,157 @@ def _git(root: Path, *args: str) -> tuple[int, str]:
     return output.returncode, output.stdout.strip()
 
 
+_EXTERNAL_REVIEW_WITNESS_SCHEMA = "distributed_world_simulator.harness_external_role_event_witness.v1"
+_EXTERNAL_REVIEW_WITNESS_AUTHORITY = "DIRECTOR_REPAIR_EXACT_PINNED_INDEPENDENT_REVIEWER"
+_EXTERNAL_REVIEW_WITNESS_MODE = "PROVE_ONE_DIRECT_CHILD_REVIEW_ONLY_COMMIT"
+
+
+def _external_reviewer_witnesses(
+    root: Path,
+    execution_dir: Path,
+    work_order: dict[str, Any],
+    event_paths: list[Path],
+    events: list[dict[str, Any]],
+    current_head: str,
+) -> dict[str, dict[str, Any]]:
+    """Prove a separately authored Reviewer receipt WITHOUT treating it as a main ancestor.
+
+    This is NOT a general exemption from Git subject ancestry: one exact immutable
+    event is allowed only when its external Git commit is a direct child of an
+    on-main product commit, adds exactly one verified review receipt and that
+    identical receipt has separately been committed on the current branch.
+    All unrelated events keep the original ancestor check.
+    """
+    manifest = execution_dir / "external-role-event-witness.v1.json"
+    if not manifest.exists():
+        return {}
+    relative_manifest = _repo_relative(root, manifest)
+    code, dirty = _git(root, "status", "--porcelain", "--", relative_manifest)
+    if code != 0 or dirty:
+        raise ContractValidationError("EXTERNAL_REVIEW_WITNESS_MANIFEST_DIRTY")
+    claim = read_json(manifest)
+    if set(claim) != {
+        "schema", "version", "project_epoch", "work_order_id",
+        "authority", "mode", "witnesses",
+    } or (
+        claim["schema"] != _EXTERNAL_REVIEW_WITNESS_SCHEMA
+        or type(claim["version"]) is not int or claim["version"] != 1
+        or claim["project_epoch"] != work_order["project_epoch"]
+        or claim["work_order_id"] != work_order["work_order_id"]
+        or claim["authority"] != _EXTERNAL_REVIEW_WITNESS_AUTHORITY
+        or claim["mode"] != _EXTERNAL_REVIEW_WITNESS_MODE
+    ):
+        raise ContractValidationError("EXTERNAL_REVIEW_WITNESS_MANIFEST_INVALID")
+    witnesses = claim["witnesses"]
+    # This version authorizes ONE specific historic reviewer, not arbitrary
+    # later role commits or an open-ended actor exemption.
+    if not isinstance(witnesses, list) or len(witnesses) != 1:
+        raise ContractValidationError("EXTERNAL_REVIEW_WITNESS_SCOPE_INVALID")
+    by_path = {
+        _repo_relative(root, path): event
+        for path, event in zip(event_paths, events)
+    }
+    proven: dict[str, dict[str, Any]] = {}
+    expected_keys = {
+        "event_path", "event_blob_sha", "event_id", "event_branch",
+        "event_predicate", "reviewer_commit", "reviewer_tree",
+        "reviewed_product_commit", "reviewed_product_tree",
+        "review_result_path", "review_result_blob_sha",
+    }
+    for witness in witnesses:
+        if not isinstance(witness, dict) or set(witness) != expected_keys:
+            raise ContractValidationError("EXTERNAL_REVIEW_WITNESS_FIELDS_INVALID")
+        for key in ("event_blob_sha", "reviewer_commit", "reviewer_tree",
+                    "reviewed_product_commit", "reviewed_product_tree",
+                    "review_result_blob_sha"):
+            if not isinstance(witness[key], str) or re.fullmatch(r"[0-9a-f]{40}", witness[key]) is None:
+                raise ContractValidationError("EXTERNAL_REVIEW_WITNESS_SHA_INVALID")
+        event_path = witness["event_path"]
+        result_path = witness["review_result_path"]
+        if (
+            not isinstance(event_path, str) or event_path not in by_path
+            or not isinstance(result_path, str)
+            or any(char in event_path + result_path for char in "*?[\\")
+            or ".." in event_path.split("/") or ".." in result_path.split("/")
+            or not event_path.startswith(_repo_relative(root, execution_dir / "events" / work_order["work_order_id"]) + "/")
+            or not result_path.startswith(_repo_relative(root, execution_dir / "verifications") + "/")
+            or (root / event_path).resolve().parent != (execution_dir / "events" / work_order["work_order_id"]).resolve()
+            or (root / result_path).resolve().parent != (execution_dir / "verifications").resolve()
+        ):
+            raise ContractValidationError("EXTERNAL_REVIEW_WITNESS_PATH_INVALID")
+        event = by_path[event_path]
+        original = event.get("product_subject")
+        if (
+            event.get("event_id") != witness["event_id"]
+            or event.get("head_sha") != witness["reviewer_commit"]
+            or event.get("tree_sha") != witness["reviewer_tree"]
+            or event.get("branch") != witness["event_branch"]
+            or event.get("predicate") != witness["event_predicate"]
+            or event.get("actor") != "REVIEWER"
+            or event.get("event_type") != "PREDICATE_VERIFIED"
+            or event.get("exit_code") != 0
+            or not isinstance(original, dict)
+            or original.get("head") != witness["reviewed_product_commit"]
+            or original.get("tree") != witness["reviewed_product_tree"]
+        ):
+            raise ContractValidationError("EXTERNAL_REVIEW_WITNESS_EVENT_IDENTITY_INVALID")
+        # Include git objects, history topology, and exact raw receipt in proof,
+        # never a trust in the event's own claimed sha alone.
+        for object_path, expected in (
+            (f"HEAD:{event_path}", witness["event_blob_sha"]),
+            (f"HEAD:{result_path}", witness["review_result_blob_sha"]),
+            (f"{witness['reviewer_commit']}:{result_path}", witness["review_result_blob_sha"]),
+            (f"{witness['reviewer_commit']}^{{tree}}", witness["reviewer_tree"]),
+            (f"{witness['reviewed_product_commit']}^{{tree}}", witness["reviewed_product_tree"]),
+        ):
+            code, actual = _git(root, "--no-replace-objects", "rev-parse", object_path)
+            if code != 0 or actual != expected:
+                raise ContractValidationError("EXTERNAL_REVIEW_WITNESS_GIT_BLOB_MISMATCH")
+        code, parents = _git(
+            root, "--no-replace-objects", "rev-list", "--parents", "-n", "1",
+            witness["reviewer_commit"],
+        )
+        if code != 0 or parents.split() != [
+            witness["reviewer_commit"], witness["reviewed_product_commit"],
+        ]:
+            raise ContractValidationError("EXTERNAL_REVIEW_WITNESS_NOT_DIRECT_CHILD")
+        code, actual_diff = _git(
+            root, "--no-replace-objects", "diff-tree", "--no-commit-id",
+            "--name-status", "-r", witness["reviewer_commit"],
+        )
+        if code != 0 or actual_diff != "A\\t" + result_path:
+            raise ContractValidationError("EXTERNAL_REVIEW_WITNESS_NOT_RECEIPT_ONLY")
+        code, _ = _git(root, "--no-replace-objects", "merge-base", "--is-ancestor",
+                       witness["reviewed_product_commit"], current_head)
+        if code != 0:
+            raise ContractValidationError("EXTERNAL_REVIEW_WITNESS_PRODUCT_NOT_ANCESTOR")
+
+        receipt = read_json(root / result_path)
+        if (
+            receipt.get("schema") != "distributed_world_simulator.mvp8_independent_review.v1"
+            or receipt.get("role") != "FRESH_INDEPENDENT_REVIEWER"
+            or receipt.get("verdict") != "PASS"
+            or receipt.get("project_epoch") != work_order["project_epoch"]
+            or receipt.get("work_order_id") != work_order["work_order_id"]
+            or receipt.get("reviewed_head") != witness["reviewed_product_commit"]
+            or receipt.get("reviewed_tree") != witness["reviewed_product_tree"]
+            or receipt.get("blocking_findings") != []
+            or receipt.get("required_fixes") != []
+            or receipt.get("evidence_gaps") != []
+            or receipt.get("merge_performed") is not False
+            or receipt.get("human_acceptance") is not False
+        ):
+            raise ContractValidationError("EXTERNAL_REVIEW_WITNESS_RECEIPT_INVALID")
+        proven[event_path] = witness
+    return proven
+
+
 def _validate_event_git_provenance(
     root: Path,
     event_paths: list[Path],
     events: list[dict[str, Any]],
     current_head: str,
+    external_witnesses: dict[str, dict[str, Any]] | None = None,
 ) -> str:
     if len(event_paths) != len(events):
         raise ContractValidationError("EVENT_PATH_COUNT_MISMATCH")
@@ -158,7 +304,7 @@ def _validate_event_git_provenance(
         if code != 0:
             raise ContractValidationError(f"EVENT_SUBJECT_HEAD_UNREACHABLE:{event['event_id']}")
         code, _ = _git(root, "merge-base", "--is-ancestor", event["head_sha"], current_head)
-        if code != 0:
+        if code != 0 and relative not in (external_witnesses or {}):
             raise ContractValidationError(f"EVENT_SUBJECT_NOT_ANCESTOR:{event['event_id']}")
         latest_add = add_commit
 
@@ -912,11 +1058,16 @@ def build_state(root: Path, execution_dir: Path) -> dict[str, Any]:
     canonical_branch = bundle.contracts["harness_policy"]["canonical_branch"]
     current_head = _git_head(root)
     implementation_head = _git_implementation_head(root, execution_dir, active["definition"])
+    external_witnesses = _external_reviewer_witnesses(
+        root, execution_dir, active["definition"], active["event_paths"],
+        active["events"], current_head,
+    )
     ledger_head = _validate_event_git_provenance(
         root,
         active["event_paths"],
         active["events"],
         current_head,
+        external_witnesses,
     )
     hard_block_proof = None
     hard_block_event_path = None
