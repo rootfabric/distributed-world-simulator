@@ -29,11 +29,11 @@ jobs:
               "tests/harness/test_mvp8_committed_witness_binding_r2.py":"A",
               "docs/control/CONTROL_MVP8_WITNESS_BINDING_R2_REPAIR_MAP_RU.md":"A",
           }
-          got=dict(row.split("\t") for row in subprocess.check_output(
+          got=dict((path,status) for status,path in (row.split("\t") for row in subprocess.check_output(
               ["git","diff","--name-status",
                "a2a8e93f065f9cee8fc8a39eb03df29be322c786","HEAD"],
-              text=True).splitlines())
-          assert got=={k:v for k,v in allowed.items()},(got,allowed)
+              text=True).splitlines()))
+          assert got==allowed,(got,allowed)
           print("PR839_R2_4_PATH_SCOPE=PASS")
           PY
           git diff --check "$base" HEAD
