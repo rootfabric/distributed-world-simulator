@@ -105,7 +105,15 @@ static func resume(source: Dictionary, demands: Array, owner_token: String,
 	var total: int = _phase_count(phase, cursor, demands)
 	if not C.integer(cursor.index, 0, total):
 		return _fail("A14_6_R2_CURSOR_INDEX")
-	var next: Dictionary = cursor.duplicate(true)
+	# R2D: transaction-local phase copy-on-write (COW), not unchecked
+	# mutation of the incoming immutable cursor. The legacy full deep-copy
+	# cloned every already sealed field, demand and outcome on each A4
+	# subphase, even when that subphase only touched one partition.
+	#
+	# The complete original checksum/source validation above is retained.
+	# Copy only nested structures THIS phase actually writes; all others
+	# remain read-only shared data. See R2D old-vs-new cursor-byte tests.
+	var next: Dictionary = _copy_for_phase(cursor, phase)
 	var index: int = int(next.index)
 	var stop: int = mini(total, index + max_items_per_call)
 	if phase == "NORMALIZE":
@@ -365,14 +373,52 @@ static func _finalize(next: Dictionary, source: Dictionary, demands: Array,
 		"state_hash": Field.state_hash(state),
 		"grants_hash": C.digest(result_grants)}
 
+## R2D: preserve public cursor immutability with precise phase COW.
+## NORMALIZE writes 'seen' and 'normalized'; BUILD_CLAIMS writes buckets
+## and grants; PRIMARY/RESIDUAL alter the corresponding sort buckets,
+## the working Field and the grant totals; FINALIZE changes only 'unmet'
+## in grants before duplicating working_field into the finalized state.
+## Every aliased input container is read-only in its selected phase.
+static func _copy_for_phase(cursor: Dictionary, phase: String) -> Dictionary:
+	var next: Dictionary = cursor.duplicate(false)
+	match phase:
+		"NORMALIZE":
+			next["normalized"] = cursor.normalized.duplicate(true)
+			next["seen"] = cursor.seen.duplicate(true)
+		"BUILD_CLAIMS":
+			next["primary_buckets"] = cursor.primary_buckets.duplicate(true)
+			next["residual_buckets"] = cursor.residual_buckets.duplicate(true)
+			next["grants"] = cursor.grants.duplicate(true)
+		"PRIMARY":
+			next["primary_buckets"] = cursor.primary_buckets.duplicate(true)
+			next["grants"] = cursor.grants.duplicate(true)
+			next["working_field"] = cursor.working_field.duplicate(true)
+		"RESIDUAL":
+			next["residual_buckets"] = cursor.residual_buckets.duplicate(true)
+			next["grants"] = cursor.grants.duplicate(true)
+			next["working_field"] = cursor.working_field.duplicate(true)
+		"FINALIZE":
+			next["grants"] = cursor.grants.duplicate(true)
+	return next
+
 static func _seal_cursor(cursor: Dictionary, cap_bytes: int) -> Dictionary:
 	cursor.checksum = ""
-	var digest: String = C.digest(cursor)
-	if digest.is_empty():
+	# The original C.digest(cursor) calls C.encode() once, then encodes
+	# the exact same large cursor AGAIN after populating the checksum
+	# solely to enforce the cap. Encode the canonical unsigned object
+	# once and compute the identical SHA256 directly.
+	var unsigned_text: String = C.encode(cursor)
+	if unsigned_text.is_empty():
+		return {}
+	var digest: String = unsigned_text.sha256_text()
+	# The canonical representation includes checksum as JSON string "".
+	# Replacing it with a SHA256 hex string adds EXACTLY 64 ASCII/UTF8
+	# bytes (no escaping changes). This preserves the original sealed
+	# cursor byte cap without a second O(cursor size) encode.
+	if digest.length() != 64:
 		return {}
 	cursor.checksum = digest
-	var encoded: String = C.encode(cursor)
-	if encoded.is_empty() or encoded.to_utf8_buffer().size() > cap_bytes:
+	if unsigned_text.to_utf8_buffer().size() + 64 > cap_bytes:
 		return {}
 	return cursor
 
