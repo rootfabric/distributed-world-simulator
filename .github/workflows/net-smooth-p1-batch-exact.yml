@@ -26,9 +26,10 @@ jobs:
         run: |
           set -euo pipefail
           git merge-base --is-ancestor fb513173df4c73c607fd8cb6680ad108c76f41ac HEAD
-          python -m py_compile tools/net_smooth1/run_net_smooth1.py tools/net_smooth1/analyze_r31p23r2_flush_layers.py
+          python -m py_compile tools/net_smooth1/run_net_smooth1.py tools/net_smooth1/analyze_r31p23r2_flush_layers.py tools/net_smooth1/p1_tail_aggregates.py tools/net_smooth1/p1_report_gen.py
           python -m unittest discover -s tests/tools -p 'test_net_smooth1_r31p23r2_flush_layers.py' -v
           python -m unittest discover -s tests/tools -p 'test_net_smooth1_p1_batch_flush_layers.py' -v
+          python -m unittest discover -s tests/tools -p 'test_net_smooth1_p1_tail_aggregates_strict.py' -v
           python -m unittest discover -s tests/tools -p 'test_net_smooth1_r31p23r2_source_contracts.py' -v
           python -m unittest discover -s tests/tools -p 'test_net_smooth1_r31p23r21_source_contracts.py' -v
           python -m unittest discover -s tests/tools -p 'test_net_smooth1_r31p23r22_source_contracts.py' -v
