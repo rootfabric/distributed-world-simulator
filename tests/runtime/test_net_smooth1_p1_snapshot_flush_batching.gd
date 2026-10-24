@@ -16,6 +16,9 @@ var failures: Array[String] = []
 
 var flush_calls := 0
 var flush_fail_next := false
+var partial_fail_next := false
+var pending_backpressure_next := false
+var sent_types: Array[String] = []
 
 var frame_creates := 0
 var sends := 0
@@ -35,12 +38,25 @@ class StubBoundary extends RefCounted:
 			"payload_checksum": "test"}}}
 	func send_to_peer(_peer_id: String, _frame: Dictionary) -> Dictionary:
 		test_ref.sends += 1
+		test_ref.sent_types.append(String(Dictionary(_frame.get("payload", {})).get("type", "")))
 		return {"success": true, "details": {"queued": true}}
 	func flush_outbound(_max_frames: int, _peer_id: String = "") -> Dictionary:
 		test_ref.flush_calls += 1
 		if test_ref.flush_fail_next:
 			return {"success": false, "error_code": "TEST_FLUSH_FAILED"}
-		return {"success": true, "details": {"dispatched": 1}}
+		if test_ref.partial_fail_next:
+			return {"success": true, "details": {
+				"attempted": 2, "dispatched": 1,
+				"failed": [{"peer_id": "peer/test/b", "error_code": "ENET_SEND_FAILED"}],
+				"blocked_stream_count": 1, "pending_messages": 1, "pending_bytes": 128}}
+		if test_ref.pending_backpressure_next:
+			return {"success": true, "details": {
+				"attempted": 1, "dispatched": 1, "failed": [],
+				"blocked_stream_count": 0, "pending_messages": 1, "pending_bytes": 128}}
+		return {"success": true, "details": {
+			"attempted": test_ref.sends, "dispatched": test_ref.sends,
+			"failed": [], "blocked_stream_count": 0,
+			"pending_messages": 0, "pending_bytes": 0}}
 	func drain() -> Dictionary:
 		return {"success": true, "details": {"replay": false}}
 	func stop() -> Dictionary:
@@ -54,7 +70,10 @@ func _init() -> void:
 func run() -> void:
 	test_one_flush_per_publication()
 	test_failed_batch_flush_stays_fail_closed()
-	check(assertions >= 6, "all expected assertions executed")
+	test_success_with_partial_dispatch_retains_dirty()
+	test_backpressure_pending_count_retains_dirty()
+	test_changed_and_unchanged_seam_use_one_batch()
+	check(assertions >= 20, "all expected assertions executed")
 	for f in failures:
 		push_error(f)
 	print("NET_SMOOTH1_P1_FLUSH_BATCHING: %s assertions=%d failures=%d" % [
@@ -69,6 +88,10 @@ func test_one_flush_per_publication() -> void:
 	flush_calls = 0
 	frame_creates = 0
 	sends = 0
+	flush_fail_next = false
+	partial_fail_next = false
+	pending_backpressure_next = false
+	sent_types.clear()
 	runtime.set("_boundary", StubBoundary.new())
 	(runtime.get("_boundary") as StubBoundary).test_ref = self
 	runtime.set("_peer_to_player", {"peer/test/a": "a", "peer/test/b": "b"})
@@ -91,6 +114,10 @@ func test_failed_batch_flush_stays_fail_closed() -> void:
 	flush_calls = 0
 	frame_creates = 0
 	sends = 0
+	flush_fail_next = false
+	partial_fail_next = false
+	pending_backpressure_next = false
+	sent_types.clear()
 	flush_fail_next = true
 	runtime.set("_boundary", StubBoundary.new())
 	(runtime.get("_boundary") as StubBoundary).test_ref = self
@@ -105,6 +132,101 @@ func test_failed_batch_flush_stays_fail_closed() -> void:
 		"failed flush is accounted as enqueue failure")
 	runtime.call("stop")
 	runtime.free()
+
+
+
+class SeamService extends RefCounted:
+	var previous
+	var state := {"region_id": "region/user1/b", "authority_epoch": 2,
+		"ownership_epoch": 3}
+	func create_snapshot() -> Dictionary:
+		return previous.create_snapshot()
+	func get_product_seam_state(_logical_player_id: String) -> Dictionary:
+		return state.duplicate(true)
+
+
+func test_success_with_partial_dispatch_retains_dirty() -> void:
+	var runtime := _setup()
+	if runtime == null:
+		return
+	_reset_stub()
+	partial_fail_next = true
+	_attach_boundary(runtime)
+	_arm_snapshot(runtime)
+	runtime.call("_maybe_publish_movement_snapshot")
+	check(flush_calls == 1, "partial transport success needs one batch")
+	check(bool(runtime.get("_movement_snapshot_dirty")), "success true with failed[] is dirty")
+	check(String(runtime.get("_last_error_code")) == "R31P1_BATCH_DISPATCH_INCOMPLETE",
+		"partial transport has explicit fail-closed code")
+	runtime.call("stop")
+	runtime.free()
+
+
+func test_backpressure_pending_count_retains_dirty() -> void:
+	var runtime := _setup()
+	if runtime == null:
+		return
+	_reset_stub()
+	pending_backpressure_next = true
+	_attach_boundary(runtime)
+	_arm_snapshot(runtime)
+	runtime.call("_maybe_publish_movement_snapshot")
+	check(flush_calls == 1, "bounded single backpressure batch")
+	check(bool(runtime.get("_movement_snapshot_dirty")), "pending retained frames are dirty")
+	runtime.call("stop")
+	runtime.free()
+
+
+func test_changed_and_unchanged_seam_use_one_batch() -> void:
+	var runtime := _setup()
+	if runtime == null:
+		return
+	_reset_stub()
+	var real_service = runtime.get("_service")
+	var seam := SeamService.new()
+	seam.previous = real_service
+	runtime.set("_service", seam)
+	_attach_boundary(runtime)
+	_arm_snapshot(runtime)
+	runtime.call("_maybe_publish_movement_snapshot")
+	check(flush_calls == 1, "changed seam authority one shared batch")
+	check(sends == 4, "two COMPACT and two reliable seam messages queued")
+	check(sent_types.count("COMPACT_GAMEPLAY_SNAPSHOT") == 2,
+		"two compact snapshots queued")
+	check(sent_types.count("PRODUCT_SEAM_STATE") == 2,
+		"two reliable seam changes queued before flush")
+	check(not bool(runtime.get("_movement_snapshot_dirty")),
+		"changed authority shared batch completes")
+	_arm_snapshot(runtime)
+	runtime.call("_maybe_publish_movement_snapshot")
+	check(flush_calls == 2, "unchanged seam one batch again")
+	check(sends == 6, "unchanged seam must not resend reliable state")
+	seam.state["authority_epoch"] = 3
+	_arm_snapshot(runtime)
+	runtime.call("_maybe_publish_movement_snapshot")
+	check(flush_calls == 3, "new authority epoch one batch")
+	check(sends == 10, "epoch change sends seam for both peers")
+	runtime.set("_service", real_service)
+	runtime.call("stop")
+	runtime.free()
+
+
+func _reset_stub() -> void:
+	flush_calls = 0
+	frame_creates = 0
+	sends = 0
+	flush_fail_next = false
+	partial_fail_next = false
+	pending_backpressure_next = false
+	sent_types.clear()
+
+
+func _attach_boundary(runtime: Object) -> void:
+	runtime.set("_boundary", StubBoundary.new())
+	(runtime.get("_boundary") as StubBoundary).test_ref = self
+	runtime.set("_peer_to_player", {"peer/test/a": "a", "peer/test/b": "b"})
+	runtime.set("_peer_to_session",
+		{"peer/test/a": "session/test", "peer/test/b": "session/test"})
 
 
 func _arm_snapshot(runtime: Object) -> void:
