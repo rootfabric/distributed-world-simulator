@@ -1,0 +1,72 @@
+name: REVIEW PR845 Sibling Git Integrity Adversarial
+on:
+  push:
+    branches: [review/control-mvp8-pr845-local-event-receipt-integrity-r1]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  review-exact-head:
+    runs-on: ubuntu-latest
+    timeout-minutes: 17
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Prove original exact subject and review-only scope
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          subject=3a8f858f85c5ff018676557650f34179d6d5f86b
+          test "$(git merge-base "$subject" HEAD)" = "$subject"
+          python3 - <<'PY'
+          import subprocess
+          parent="3a8f858f85c5ff018676557650f34179d6d5f86b"
+          got=subprocess.check_output(["git","diff","--name-only",parent,"HEAD"],text=True).splitlines()
+          required={".github/workflows/review-pr845-sibling-integrity.yml",
+                    "tests/harness/review_pr845_uncommitted_sibling_integrity_r1.py"}
+          assert set(got)==required,(got,required)
+          print("REVIEW_PR845_EXACT_PARENT_AND_TEST_ONLY_SCOPE=PASS")
+          PY
+          git diff --check "$subject" HEAD
+          python -m py_compile tests/harness/review_pr845_uncommitted_sibling_integrity_r1.py
+      - run: python -m pip install -r scripts/harness/requirements.txt
+      - name: Independent adversarial RED-or-GREEN on original subject
+        shell: bash
+        env:
+          PYTHONPATH: scripts
+        run: |
+          set -Eeuo pipefail
+          mkdir -p reviewer-evidence
+          set +e
+          python -m unittest discover -s tests/harness -p 'review_pr845_uncommitted_sibling_integrity_r1.py' -v >reviewer-evidence/falsifier-raw.log 2>&1
+          falsifier_exit=$?
+          set -e
+          cat reviewer-evidence/falsifier-raw.log
+          printf "FALSIFIER_EXIT=%s\n" "$falsifier_exit" | tee reviewer-evidence/result.txt
+          if [ "$falsifier_exit" -eq 0 ]; then
+            echo "REVIEW_PR845_SIBLING_GIT_INTEGRITY=GREEN" | tee -a reviewer-evidence/result.txt
+          elif [ "$falsifier_exit" -eq 1 ] && \
+             grep -q "REVIEW_PR845_CASE=summary" reviewer-evidence/falsifier-raw.log && \
+             grep -q "REVIEW_PR845_CASE=source_clean_after" reviewer-evidence/falsifier-raw.log && \
+             grep -q "Ran 2 tests" reviewer-evidence/falsifier-raw.log && \
+             grep -q "PROVENANCE_FAIL" reviewer-evidence/falsifier-raw.log; then
+            echo "REVIEW_PR845_SIBLING_GIT_INTEGRITY=RED_REPRODUCED" | tee -a reviewer-evidence/result.txt
+          else
+            echo "REVIEW_PR845_INSUFFICIENT_EVIDENCE_OR_UNEXPECTED_EXIT" | tee -a reviewer-evidence/result.txt
+            exit 1
+          fi
+          git rev-parse HEAD | tee reviewer-evidence/review-test-head.txt
+          git rev-parse 'HEAD^{tree}' | tee reviewer-evidence/review-test-tree.txt
+          (cd reviewer-evidence && sha256sum falsifier-raw.log result.txt > SHA256SUMS)
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: pr845-sibling-git-review
+          path: reviewer-evidence/**
+          if-no-files-found: warn
+          retention-days: 30
