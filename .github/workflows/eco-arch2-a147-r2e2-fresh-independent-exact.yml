@@ -1,0 +1,101 @@
+name: ECO ARCH2 A14.7 R2E2 Fresh Independent Security Exact
+
+on:
+  push:
+    branches:
+      - verify/eco-arch2-a147-r2e2-b718b615-fresh-r1
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  portable:
+    name: portable true LAB cancel/restore/forged owned context n32/96
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Real Godot 4.7.1 exact stale owner, direct denial and restore
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fL --retry 3 -o /tmp/godot-e2v.zip https://github.com/godotengine/godot/releases/download/4.7.1-stable/Godot_v4.7.1-stable_linux.x86_64.zip
+          mkdir -p /tmp/godot-e2v
+          unzip -q /tmp/godot-e2v.zip -d /tmp/godot-e2v
+          godot=/tmp/godot-e2v/Godot_v4.7.1-stable_linux.x86_64
+          chmod +x "$godot"
+          "$godot" --headless --editor --path . --import > r2e2-ver-import.log 2>&1 || { cat r2e2-ver-import.log; exit 1; }
+          mkdir -p r2e2-ver-evidence
+          for n in 32 96; do
+            "$godot" --headless --path . --script res://validation/ecology/evo_arch2_a14_7/test_a147_r2e2_fresh_independent.gd -- --population "$n" > "r2e2-ver-evidence/n$n.stdout.log" 2> "r2e2-ver-evidence/n$n.stderr.log" || { cat "r2e2-ver-evidence/n$n.stdout.log"; cat "r2e2-ver-evidence/n$n.stderr.log"; exit 1; }
+            grep -Fx 'A147_R2E2_FRESH PASS' "r2e2-ver-evidence/n$n.stdout.log"
+            grep '^A147_R2E2_FRESH_RECEIPT_JSON ' "r2e2-ver-evidence/n$n.stdout.log" | sed 's/^A147_R2E2_FRESH_RECEIPT_JSON //' > "r2e2-ver-evidence/n$n.json"
+          done
+          python3 - <<'PY'
+          import json,pathlib
+          for n in (32,96):
+              p=json.loads(pathlib.Path(f'r2e2-ver-evidence/n{n}.json').read_text())
+              assert p["schema"]=="dws.ecology.a147-r2e2-fresh-security.v1"
+              assert p["population"]==n and p["original_exact"]
+              assert p["late_cancel_reaped"] and p["external_source_unchanged"]
+              assert p["full_final_validation"] and p["direct_untrusted_rejected"]
+              assert p["restored_generation_committed_once"]
+          print('A147_R2E2_FRESH_SECURITY_EXACT_PASS')
+          PY
+          git diff --exit-code && git diff --cached --exit-code
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: a147-r2e2-independent-portable
+          path: |
+            r2e2-ver-import.log
+            r2e2-ver-evidence/
+          if-no-files-found: ignore
+
+  windows:
+    name: independent Windows Double real LAB cancellation/restore exact
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 100
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Pinned Windows Double independent single global A4 proof
+        shell: pwsh
+        env:
+          CONFIGURED_GODOT: ${{ vars.DWS_GODOT_DOUBLE_BIN }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $godot = $env:CONFIGURED_GODOT
+          if ([string]::IsNullOrWhiteSpace($godot)) { $godot = 'C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe' }
+          if ((Get-FileHash $godot -Algorithm SHA256).Hash.ToLowerInvariant() -ne '3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5') { throw 'R2E2_FRESH_GODOT_MISMATCH' }
+          & $godot --headless --editor --path . --import *> r2e2-ver-win-import.log
+          if ($LASTEXITCODE -ne 0) { throw 'R2E2_FRESH_IMPORT_FAIL' }
+          New-Item -ItemType Directory -Force r2e2-ver-win-evidence | Out-Null
+          foreach ($n in @(32,96)) {
+            $out = Join-Path (Get-Location).Path "r2e2-ver-win-evidence\n$n.stdout.log"
+            $err = Join-Path (Get-Location).Path "r2e2-ver-win-evidence\n$n.stderr.log"
+            $argv = @('--headless','--path','.','--script','res://validation/ecology/evo_arch2_a14_7/test_a147_r2e2_fresh_independent.gd','--','--population',"$n")
+            $p = Start-Process -FilePath $godot -ArgumentList $argv -WorkingDirectory (Get-Location).Path -PassThru -RedirectStandardOutput $out -RedirectStandardError $err
+            $p.WaitForExit()
+            $exit = [int64]$p.ExitCode
+            $hex = '0x{0:X8}' -f ([uint32]($exit -band [int64]0xffffffff))
+            Write-Host "R2E2_FRESH_NATIVE_EXIT n=$n code=$exit hex=$hex"
+            if ($exit -ne 0) { Get-Content $out; Get-Content $err; throw 'R2E2_FRESH_NATIVE_FAIL' }
+            if (-not (Select-String -Path $out -Pattern '^A147_R2E2_FRESH PASS$' -Quiet)) { throw 'R2E2_FRESH_PASS_MISSING' }
+          }
+          git diff --exit-code
+          if ($LASTEXITCODE -ne 0) { throw 'DIRTY_WORKTREE' }
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: a147-r2e2-independent-windows
+          path: |
+            r2e2-ver-win-import.log
+            r2e2-ver-win-evidence/
+          if-no-files-found: ignore
