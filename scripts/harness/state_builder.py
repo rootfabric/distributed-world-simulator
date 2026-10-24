@@ -246,7 +246,7 @@ def _external_reviewer_witnesses(
             root, "--no-replace-objects", "diff-tree", "--no-commit-id",
             "--name-status", "-r", witness["reviewer_commit"],
         )
-        if code != 0 or actual_diff != "A\\t" + result_path:
+        if code != 0 or actual_diff != "A\t" + result_path:
             raise ContractValidationError("EXTERNAL_REVIEW_WITNESS_NOT_RECEIPT_ONLY")
         code, _ = _git(root, "--no-replace-objects", "merge-base", "--is-ancestor",
                        witness["reviewed_product_commit"], current_head)
