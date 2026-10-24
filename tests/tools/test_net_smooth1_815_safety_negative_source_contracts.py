@@ -230,11 +230,12 @@ class Safety815Source(unittest.TestCase):
             for token in tokens:
                 self.assertIn(token, body, "%s: %s" % (name, token))
 
-    def test_deferred_godot_run_is_documented_in_header(self):
-        self.assertIn("DEFERRED", self.source)
+    def test_native_exact_required_instead_of_deferred(self):
+        self.assertIn("Native execution required", self.source)
         self.assertIn("tests/tools/"
                       "test_net_smooth1_815_safety_negative_source_contracts.py",
                       self.source)
+        self.assertNotIn("Godot execution is DEFERRED", self.source)
 
     def test_canonical_vector_is_byte_identical_across_two_encoders(self):
         for index, value in enumerate(fixed_vector()):
