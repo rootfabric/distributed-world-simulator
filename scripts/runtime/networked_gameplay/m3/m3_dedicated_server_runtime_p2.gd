@@ -134,6 +134,7 @@ var _r31p23r2_flush_attribution_enabled := false
 # R2.1: optional CURRENT COMPACT frame single validated ENet encode.
 # No worker, network/session mutation, durable ACK, queue scheduling change.
 var _r31p23r21_single_pass_compact_enabled := false
+var _r31p23r22_attested_compact_enabled := false
 var _r3c4_deferral_started_ms := 0
 var _r3c4_deferred_frames := 0
 var _r3c4_capture_slots := 0
@@ -395,6 +396,15 @@ func setup(config: Dictionary) -> Dictionary:
 	)
 	if _r31p23r21_single_pass_compact_enabled and not _r31p23r2_flush_attribution_enabled:
 		return _failure("R31P23R21_REQUIRES_R2P0_FLUSH_ATTRIBUTION")
+	var r22_mode := OS.get_environment("DWS_NET_R31P23R22_ATTESTED_COMPACT")
+	if not r22_mode.is_empty() and r22_mode not in ["0", "1"]:
+		return _failure("R31P23R22_INVALID_MODE")
+	_r31p23r22_attested_compact_enabled = (
+		bool(config.get("r31p23r22_attested_compact_canary", false))
+		or r22_mode == "1"
+	)
+	if _r31p23r22_attested_compact_enabled and not _r31p23r21_single_pass_compact_enabled:
+		return _failure("R31P23R22_REQUIRES_R21")
 	_p1b_item_async_enabled = (
 		bool(config.get("async_durable_item_canary", false))
 		or OS.get_environment("DWS_NET_P1B_ITEM_ASYNC") == "1"
@@ -540,6 +550,13 @@ func setup(config: Dictionary) -> Dictionary:
 			_cleanup_setup_failure()
 			return _failure("R31P23R21_TRANSPORT_SINGLE_PASS_SETUP_FAILED",
 				{"cause": r21_setup})
+	if _r31p23r22_attested_compact_enabled:
+		var r22_setup: Dictionary = _boundary.configure_r31p23r22_attested_compact(
+			true, _authority_owner_id, _authority_epoch
+		)
+		if not bool(r22_setup.get("success", false)):
+			_cleanup_setup_failure()
+			return _failure("R31P23R22_ATTESTED_SETUP_FAILED", {"cause": r22_setup})
 	var started: Dictionary = _boundary.start_server(Support.endpoint(_host, _port, true))
 	if not bool(started.get("success", false)):
 		_cleanup_setup_failure()
