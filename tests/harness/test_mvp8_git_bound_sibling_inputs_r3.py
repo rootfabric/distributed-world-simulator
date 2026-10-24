@@ -52,7 +52,7 @@ def disposable_named_worktree(case: str):
             )
 
 
-def proof(root: Path, forge_memory_dto: bool = False) -> subprocess.CompletedProcess:
+def proof(root: Path, mutation: str = "none") -> subprocess.CompletedProcess:
     cmd = """
 from pathlib import Path
 import subprocess, sys
@@ -63,8 +63,12 @@ epoch=root / 'config/control/harness/executions/E2026-09-09-V0-MVP-R1'
 work=read_json(epoch / 'work-orders/V0-MVP-R1-WO-001.v1.json')
 event_path=epoch / 'events/V0-MVP-R1-WO-001/0050-mvp8-repair-r2-independent-reviewer-pass.v1.json'
 event=read_json(event_path)
-if sys.argv[1]=='forge':
+if sys.argv[1]=='summary':
     event['summary']='IN_MEMORY_ONLY_FORGED_REVIEWER_SUMMARY'
+elif sys.argv[1]=='bool':
+    event['exit_code']=False
+elif sys.argv[1]=='float':
+    event['sequence']=float(event['sequence'])
 head=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
 try:
     proven=_external_reviewer_witnesses(root,epoch,work,[event_path],[event],head)
@@ -76,7 +80,7 @@ print('R3_GIT_BOUND_REVIEWER_ACCEPTED=true',flush=True)
 """
     env = dict(os.environ, PYTHONPATH=str(root / "scripts"))
     return subprocess.run(
-        [sys.executable, "-c", cmd, "forge" if forge_memory_dto else "normal"],
+        [sys.executable, "-c", cmd, mutation],
         cwd=root, env=env, capture_output=True, text=True, timeout=65,
     )
 
@@ -126,11 +130,23 @@ class R3SiblingAuthorityTest(unittest.TestCase):
     def test_forged_caller_supplied_event_dto_rejected(self):
         # Disk/HEAD/event remain identical. A caller cannot substitute a
         # partially modified in-memory event dictionary after those checks.
-        run = proof(ROOT, forge_memory_dto=True)
+        run = proof(ROOT, mutation="summary")
         self.assertEqual(run.returncode, 3, run.stdout + run.stderr)
         self.assertIn(
             "R3_PROVENANCE_DENIED=EXTERNAL_REVIEW_WITNESS_EVENT_DTO_MISMATCH", run.stdout
         )
+
+    def test_in_memory_json_bool_int_and_float_int_aliases_rejected(self):
+        # Equality of plain Python dicts mistakenly treats False==0 and
+        # float(50)==50. Git-backed DTO authority must be type-exact.
+        for kind in ("bool", "float"):
+            with self.subTest(kind=kind):
+                run = proof(ROOT, mutation=kind)
+                self.assertEqual(run.returncode, 3, run.stdout + run.stderr)
+                self.assertIn(
+                    "R3_PROVENANCE_DENIED=EXTERNAL_REVIEW_WITNESS_EVENT_DTO_MISMATCH",
+                    run.stdout,
+                )
 
 
 if __name__ == "__main__":
