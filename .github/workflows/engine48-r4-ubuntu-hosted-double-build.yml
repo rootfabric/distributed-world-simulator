@@ -1,0 +1,125 @@
+name: ENGINE48 R4 Ubuntu hosted double-source exact
+
+on:
+  pull_request:
+    branches:
+      - feature/engine48-r4-main-catchup
+    paths:
+      - '.github/workflows/engine48-r4-ubuntu-hosted-double-build.yml'
+      - 'tools/engine48/**'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: engine48-hosted-double-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  source-build-and-core-regression:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    env:
+      GODOT_SILENCE_ROOT_WARNING: "1"
+      BREAKPOINT_RUNTIME_DISABLED: "1"
+      ENGINE48_EXPECTED_SOURCE: "6d49c02e438935e49a12231d857b2b56131948b004d5b668bf295c9bc3b2281c"
+      ENGINE48_EXPECTED_VERSION: "4.8.beta1.double.custom_build.4d10419ca"
+      ENGINE48_SUBJECT: "${{ github.event.pull_request.head.sha }}"
+    steps:
+      - name: Exact product checkout
+        uses: actions/checkout@v4
+        with:
+          ref: "${{ github.event.pull_request.head.sha }}"
+          fetch-depth: 0
+
+      - name: Ubuntu native build dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends build-essential pkg-config python3 python3-pip scons \
+            libx11-dev libxcursor-dev libxinerama-dev libxi-dev libxrandr-dev libxext-dev \
+            libxfixes-dev libxrender-dev libgl1-mesa-dev libasound2-dev libpulse-dev \
+            libdbus-1-dev libudev-dev libwayland-dev libxkbcommon-dev libxkbcommon-x11-dev xvfb
+          scons --version
+
+      - name: Download and verify official Godot beta1 double SOURCE
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/engine48/linux/hosted-r4 "$RUNNER_TEMP/engine48-src"
+          test "$(git rev-parse HEAD)" = "$ENGINE48_SUBJECT"
+          git merge-base --is-ancestor e95c337a6677e6febf1067d0e39880ffea08dc11 HEAD
+          test -z "$(git status --porcelain --untracked-files=no)"
+          curl -fsSL --retry 3 \
+            https://github.com/godotengine/godot-builds/releases/download/4.8-beta1/godot-4.8-beta1.tar.xz \
+            -o "$RUNNER_TEMP/godot-4.8-beta1.tar.xz"
+          printf '%s  %s\n' "$ENGINE48_EXPECTED_SOURCE" "$RUNNER_TEMP/godot-4.8-beta1.tar.xz" | sha256sum -c -
+          tar -xJf "$RUNNER_TEMP/godot-4.8-beta1.tar.xz" -C "$RUNNER_TEMP/engine48-src" --strip-components=1
+          test -f "$RUNNER_TEMP/engine48-src/SConstruct"
+          {
+            echo "PRODUCT_HEAD=$(git rev-parse HEAD)"
+            echo "PRODUCT_TREE=$(git rev-parse 'HEAD^{tree}')"
+            echo "SOURCE_TARBALL_SHA256=$ENGINE48_EXPECTED_SOURCE"
+            echo "SOURCE_COMMIT=4d10419cacd6d3009976e8f9fd3abd970fd58018"
+            echo "BUILD_FLAGS=platform=linuxbsd target=editor arch=x86_64 precision=double"
+            echo "BUILD_ENV=GODOT_VERSION_STATUS=beta1"
+            uname -srmo
+          } > artifacts/engine48/linux/hosted-r4/identity.txt
+
+      - name: Compile x86_64 double editor from pinned official source
+        shell: bash
+        timeout-minutes: 140
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/engine48-src"
+          export GODOT_VERSION_STATUS=beta1
+          scons platform=linuxbsd target=editor arch=x86_64 precision=double -j2 \
+            > "$GITHUB_WORKSPACE/artifacts/engine48/linux/hosted-r4/build.log" 2>&1 ||
+            { tail -n 150 "$GITHUB_WORKSPACE/artifacts/engine48/linux/hosted-r4/build.log"; exit 1; }
+          godot="$RUNNER_TEMP/engine48-src/bin/godot.linuxbsd.editor.double.x86_64"
+          test -x "$godot"
+          version="$("$godot" --version)"
+          test "$version" = "$ENGINE48_EXPECTED_VERSION" ||
+            { echo "WRONG_COMPILED_VERSION:$version" >&2; exit 1; }
+          sha256sum "$godot" > "$GITHUB_WORKSPACE/artifacts/engine48/linux/hosted-r4/binary-sha256.txt"
+          echo "GODOT_BIN=$godot" >> "$GITHUB_ENV"
+          echo "COMPILED_ENGINE_VERSION=$version" >> "$GITHUB_WORKSPACE/artifacts/engine48/linux/hosted-r4/identity.txt"
+          # This build is independently reproduced, not byte-identical to outenemy.
+          echo 'ENGINE48_HOSTED_COMPILED_DOUBLE=PASS' >> "$GITHUB_WORKSPACE/artifacts/engine48/linux/hosted-r4/identity.txt"
+
+      - name: Strict cold import and exact P7/MW10/SM1/C22/M7
+        shell: bash
+        timeout-minutes: 40
+        run: |
+          set -euo pipefail
+          test "$("$GODOT_BIN" --version)" = "$ENGINE48_EXPECTED_VERSION"
+          rm -rf .godot
+          "$GODOT_BIN" --headless --editor --path . --import --quit > artifacts/engine48/linux/hosted-r4/cold-import.log 2>&1 ||
+            { tail -n 100 artifacts/engine48/linux/hosted-r4/cold-import.log; exit 1; }
+          test -s .godot/global_script_class_cache.cfg
+          git diff --exit-code
+          export GODOT_BIN
+          bash RUN_MW10_CROSS_REGION_MATTER_TRANSACTIONS_TESTS.sh 2>&1 | tee artifacts/engine48/linux/hosted-r4/mw10.log
+          bash RUN_V0_P7_3_MATERIAL_BATCH_ITEM_GRAPH_GATE.sh "$GODOT_BIN" "$ENGINE48_SUBJECT" 2>&1 | tee artifacts/engine48/linux/hosted-r4/p7-3.log
+          bash RUN_V0_SM1_L0.sh 2>&1 | tee artifacts/engine48/linux/hosted-r4/sm1-l0.log
+          bash RUN_C22_COMPILED_PROXY_TESTS.sh "$GODOT_BIN" 2>&1 | tee artifacts/engine48/linux/hosted-r4/c22.log
+          export XVFB_BIN="$(command -v Xvfb)"
+          bash RUN_M7_PLAYABLE_NETWORKED_PLAYGROUND_TESTS.sh "$GODOT_BIN" 2>&1 | tee artifacts/engine48/linux/hosted-r4/m7.log
+          grep -Fq 'M7 playable networked playground: PASS (13/13)' artifacts/engine48/linux/hosted-r4/m7.log
+          if grep -Eq 'M7 playable network processes: [0-9]+ assertions, [1-9][0-9]* failures' artifacts/engine48/linux/hosted-r4/m7.log; then
+            echo 'M7_FALSE_GREEN_REJECTED' >&2
+            exit 1
+          fi
+          test -z "$(git status --porcelain --untracked-files=no)"
+          echo "POSTFLIGHT_HEAD=$(git rev-parse HEAD)" > artifacts/engine48/linux/hosted-r4/postflight.txt
+          echo 'HOSTED_GPU_EVIDENCE=LLVMPipe_ONLY' >> artifacts/engine48/linux/hosted-r4/postflight.txt
+
+      - name: Upload exact build and runtime evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: engine48-ubuntu-hosted-double-r4-${{ github.run_id }}
+          path: artifacts/engine48/linux/hosted-r4/
+          if-no-files-found: warn
+          retention-days: 90
