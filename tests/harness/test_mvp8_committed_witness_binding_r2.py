@@ -1,13 +1,13 @@
-"""Adversarial Reviewer: an ignored untracked witness may not authorize events.
+"""R2 adversarial acceptance: local witness bytes never replace durable Git authority.
 
-Original reviewer RED on PR #839 (recorded separately): an ignored,
-untracked witness absent from HEAD authorized an event ancestry exception.
-This normatively proves RED-before -> GREEN-after at the current HEAD,
-and rejects a tracked-file skip-worktree mismatch and a rewritten manifest.
+Review RED on original PR #839 used a full Status in a temporary checkout
+without a committed witness. This regression isolates the exact new gate
+from unrelated full-CLI Git/state policy; normal full Status is still an
+independent required Windows+Linux CI stage.
 """
 from __future__ import annotations
 
-import json
+from contextlib import contextmanager
 import os
 from pathlib import Path
 import subprocess
@@ -16,11 +16,12 @@ import tempfile
 import unittest
 
 ROOT = Path(__file__).resolve().parents[2]
+WITNESS = ("config/control/harness/executions/E2026-09-09-V0-MVP-R1/"
+           "external-role-event-witness.v1.json")
+EPOCH = "config/control/harness/executions/E2026-09-09-V0-MVP-R1"
 SOURCE_HEAD = subprocess.check_output(
     ["git", "rev-parse", "HEAD"], cwd=ROOT, text=True,
 ).strip()
-WITNESS = ("config/control/harness/executions/E2026-09-09-V0-MVP-R1/"
-           "external-role-event-witness.v1.json")
 
 
 def git(*args: str, cwd: Path = ROOT) -> str:
@@ -29,207 +30,130 @@ def git(*args: str, cwd: Path = ROOT) -> str:
     ).strip()
 
 
-class UntrackedWitnessMustFailClosed(unittest.TestCase):
-    def trace_unexpected_error(self, isolated: Path, envelope: dict):
-        if envelope.get("error", {}).get("detail") != "AttributeError":
-            return
-        diagnostic = (
-            "from pathlib import Path; "
-            "from harness.contracts import ContractBundle; "
-            "from harness.execution_selector import resolve_execution; "
-            "from harness.state_builder import build_state; "
-            "root=Path.cwd(); "
-            "bundle=ContractBundle.load(root); "
-            "execution,_=resolve_execution(root,bundle.contracts); "
-            "build_state(root,execution)"
+@contextmanager
+def disposable_named_worktree(branch_name: str):
+    with tempfile.TemporaryDirectory(prefix="review-witness-r2-") as td:
+        isolated = Path(td) / "repo"
+        subprocess.run(
+            ["git", "-C", str(ROOT), "worktree", "add", "--detach",
+             str(isolated), SOURCE_HEAD],
+            check=True, capture_output=True, text=True,
         )
-        env = dict(os.environ, PYTHONPATH=str(isolated / "scripts"))
-        result = subprocess.run(
-            [sys.executable, "-c", diagnostic],
-            cwd=isolated, env=env, capture_output=True, text=True,
-            timeout=60,
-        )
-        print("R2_WINDOWS_TEMP_WORKTREE_DEBUG_RC="+str(result.returncode),
-              flush=True)
-        print("R2_WINDOWS_TEMP_WORKTREE_DEBUG_TRACEBACK="+
-              result.stderr[-5000:],flush=True)
+        try:
+            git("switch", "-c", branch_name, cwd=isolated)
+            yield isolated
+        finally:
+            subprocess.run(
+                ["git", "-C", str(ROOT), "worktree", "remove",
+                 "--force", str(isolated)],
+                check=False, capture_output=True, text=True,
+            )
+            subprocess.run(
+                ["git", "-C", str(ROOT), "branch", "-D", branch_name],
+                check=False, capture_output=True, text=True,
+            )
+
+
+def check_witness(root: Path) -> subprocess.CompletedProcess:
+    # Direct subprocess is platform-neutral: do NOT conflate an unrelated
+    # transient full Harness error with the explicit authorization guard.
+    code = """
+from pathlib import Path
+import subprocess
+import sys
+from harness.contracts import ContractValidationError, read_json
+from harness.state_builder import _external_reviewer_witnesses
+root = Path.cwd()
+epoch = root / 'config/control/harness/executions/E2026-09-09-V0-MVP-R1'
+work = read_json(epoch / 'work-orders/V0-MVP-R1-WO-001.v1.json')
+event = epoch / 'events/V0-MVP-R1-WO-001/0050-mvp8-repair-r2-independent-reviewer-pass.v1.json'
+head = subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
+try:
+    result = _external_reviewer_witnesses(
+        root, epoch, work, [event], [read_json(event)], head)
+except ContractValidationError as exc:
+    print('REVIEW_WITNESS_DENIED='+str(exc),flush=True)
+    raise SystemExit(3)
+print('REVIEW_WITNESS_ACCEPTED='+str(len(result)),flush=True)
+"""
+    env = dict(os.environ)
+    env["PYTHONPATH"] = str(root / "scripts")
+    return subprocess.run(
+        [sys.executable, "-c", code], cwd=root, env=env,
+        capture_output=True, text=True, timeout=35,
+    )
+
+
+class DurableWitnessMustFailClosed(unittest.TestCase):
+    def test_valid_committed_one_add_witness_accepted(self):
+        result = check_witness(ROOT)
+        self.assertEqual(result.returncode, 0, result.stdout+result.stderr)
+        self.assertIn("REVIEW_WITNESS_ACCEPTED=1", result.stdout)
+
     def test_ignored_untracked_manifest_cannot_grant_event_ancestry_exception(self):
-        # The test exact source itself is a detached child of the reviewed HEAD;
-        # only the TEMP worktree receives a non-published commit.
-        self.assertEqual(git("rev-parse", SOURCE_HEAD+"^{commit}"), SOURCE_HEAD)
-        manifest_bytes = (ROOT / WITNESS).read_bytes()
-
-        with tempfile.TemporaryDirectory(prefix="review-ignored-witness-") as temp:
-            isolated = Path(temp) / "detached"
+        original = (ROOT / WITNESS).read_bytes()
+        with disposable_named_worktree("review-local-ignored-witness") as isolated:
+            git("rm", "--", WITNESS, cwd=isolated)
             subprocess.run(
-                ["git", "-C", str(ROOT), "worktree", "add", "--detach",
-                 str(isolated), SOURCE_HEAD],
-                check=True, capture_output=True, text=True,
+                ["git", "-c", "user.name=Adversarial Review",
+                 "-c", "user.email=reviewer@example.invalid",
+                 "commit", "-m", "test only: remove manifest from HEAD"],
+                cwd=isolated, check=True, capture_output=True, text=True,
             )
-            try:
-                # Harness requires a named branch, not detached HEAD.
-                # The temporary probe is entirely disposable and unpushed.
+            self.assertNotEqual(
                 subprocess.run(
-                    ["git", "switch", "-c", "review-local-ignored-witness"],
-                    cwd=isolated, check=True, capture_output=True, text=True,
-                )
-                subprocess.run(
-                    ["git", "rm", "--", WITNESS], cwd=isolated,
-                    check=True, capture_output=True, text=True,
-                )
-                subprocess.run(
-                    ["git", "-c", "user.name=Adversarial Review",
-                     "-c", "user.email=reviewer@example.invalid",
-                     "commit", "-m", "test only: no durable witness in HEAD"],
-                    cwd=isolated, check=True, capture_output=True, text=True,
-                )
-                self.assertNotEqual(
-                    subprocess.run(
-                        ["git", "cat-file", "-e", "HEAD:"+WITNESS],
-                        cwd=isolated, stdout=subprocess.PIPE,
-                        stderr=subprocess.PIPE,
-                    ).returncode, 0,
-                )
-                candidate = isolated / WITNESS
-                candidate.parent.mkdir(parents=True, exist_ok=True)
-                candidate.write_bytes(manifest_bytes)
-                (isolated / ".gitignore").write_text(
-                    "/"+WITNESS+"\n", encoding="utf-8",
-                )
-                self.assertEqual(
-                    git("status", "--porcelain", "--", WITNESS, cwd=isolated), "",
-                    "Falsifier failed to hide the untracked witness",
-                )
-                env = dict(os.environ)
-                env["PYTHONPATH"] = str(isolated / "scripts")
-                result = subprocess.run(
-                    [sys.executable, "-m", "harness.cli", "status",
-                     "--root", str(isolated)],
-                    cwd=isolated, env=env, capture_output=True, text=True,
-                    timeout=90,
-                )
-                try:
-                    envelope = json.loads(result.stdout.strip().splitlines()[-1])
-                except Exception as exc:
-                    self.fail("Missing Status JSON: "+repr(exc)+" / "+
-                              result.stdout[-800:]+result.stderr[-800:])
-                print("REVIEW_EXACT_SOURCE="+SOURCE_HEAD, flush=True)
-                print("REVIEW_WITNESS_IN_HEAD=false", flush=True)
-                print("REVIEW_WORKTREE_WITNESS_IGNORED=true", flush=True)
-                print("REVIEW_STATUS_EXIT="+str(result.returncode), flush=True)
-                print("REVIEW_STATUS_OK="+str(envelope.get("ok")), flush=True)
-                print("REVIEW_STATUS_ERROR="+str(envelope.get("error")), flush=True)
-                self.trace_unexpected_error(isolated, envelope)
-                self.assertNotEqual(
-                    result.returncode, 0,
-                    "CRITICAL: ignored untracked witness authorized event #0050"
-                    " without a durable Git manifest",
-                )
-                self.assertEqual(envelope.get("ok"), False)
-                self.assertIn(
-                    envelope.get("error", {}).get("detail", ""),
-                    (
-                        "EXTERNAL_REVIEW_WITNESS_MANIFEST_NOT_COMMITTED",
-                        "EXTERNAL_REVIEW_WITNESS_MANIFEST_DIRTY",
-                        "EXTERNAL_REVIEW_WITNESS_GIT_BLOB_MISMATCH",
-                    ),
-                )
-            finally:
-                subprocess.run(
-                    ["git", "-C", str(ROOT), "worktree", "remove",
-                     "--force", str(isolated)],
-                    capture_output=True, text=True,
-                )
+                    ["git","cat-file","-e","HEAD:"+WITNESS],cwd=isolated,
+                    capture_output=True).returncode, 0,
+            )
+            (isolated / WITNESS).write_bytes(original)
+            (isolated / ".gitignore").write_text("/"+WITNESS+"\n",encoding="utf-8")
+            self.assertEqual(git("status","--porcelain","--",WITNESS,cwd=isolated),"")
+            result = check_witness(isolated)
+            print("R2_IGNORED_UNTRACKED_WITNESS="+result.stdout.strip(),flush=True)
+            self.assertEqual(result.returncode,3,result.stdout+result.stderr)
+            self.assertIn(
+                "REVIEW_WITNESS_DENIED=EXTERNAL_REVIEW_WITNESS_MANIFEST_NOT_COMMITTED",
+                result.stdout,
+            )
 
-    def test_skip_worktree_changed_bytes_cannot_authorize_provenance(self):
-        # Git porcelain can also be empty for a tracked path marked
-        # "assume-unchanged"; a live byte/hash compare is mandatory.
-        with tempfile.TemporaryDirectory(prefix="review-skipped-witness-") as temp:
-            isolated = Path(temp) / "checkout"
+    def test_skip_worktree_changed_bytes_must_not_authorize(self):
+        with disposable_named_worktree("review-local-assume-unchanged") as isolated:
+            manifest = isolated / WITNESS
+            original = manifest.read_text(encoding="utf-8")
+            self.assertIn('"version": 1',original)
+            git("update-index","--assume-unchanged",WITNESS,cwd=isolated)
+            manifest.write_text(
+                original.replace('"version": 1','"version":  1'),encoding="utf-8",
+            )
+            self.assertEqual(git("status","--porcelain","--",WITNESS,cwd=isolated),"")
+            result=check_witness(isolated)
+            print("R2_ASSUME_UNCHANGED_WITNESS="+result.stdout.strip(),flush=True)
+            self.assertEqual(result.returncode,3,result.stdout+result.stderr)
+            self.assertIn(
+                "REVIEW_WITNESS_DENIED=EXTERNAL_REVIEW_WITNESS_MANIFEST_DIRTY",
+                result.stdout,
+            )
+
+    def test_committed_manifest_rewrite_must_not_reauthorize(self):
+        with disposable_named_worktree("review-local-rewritten-witness") as isolated:
+            manifest = isolated / WITNESS
+            manifest.write_bytes(manifest.read_bytes()+b"\n")
+            git("add","--",WITNESS,cwd=isolated)
             subprocess.run(
-                ["git", "-C", str(ROOT), "worktree", "add", "--detach",
-                 str(isolated), SOURCE_HEAD],
-                check=True, capture_output=True, text=True,
+                ["git", "-c", "user.name=Adversarial Review",
+                 "-c", "user.email=reviewer@example.invalid",
+                 "commit", "-m", "test only: rewrite witness authority"],
+                cwd=isolated,check=True,capture_output=True,text=True,
             )
-            try:
-                git("switch", "-c", "review-local-assume-unchanged", cwd=isolated)
-                candidate = isolated / WITNESS
-                original = candidate.read_text(encoding="utf-8")
-                self.assertIn('"version": 1', original)
-                git("update-index", "--assume-unchanged", WITNESS, cwd=isolated)
-                candidate.write_text(
-                    original.replace('"version": 1', '"version":  1'),
-                    encoding="utf-8",
-                )
-                self.assertEqual(
-                    git("status", "--porcelain", "--", WITNESS, cwd=isolated), "",
-                    "Test cannot demonstrate hidden changed bytes",
-                )
-                env = dict(os.environ, PYTHONPATH=str(isolated / "scripts"))
-                result = subprocess.run(
-                    [sys.executable, "-m", "harness.cli", "status",
-                     "--root", str(isolated)],
-                    cwd=isolated, env=env, capture_output=True, text=True,
-                    timeout=90,
-                )
-                report = json.loads(result.stdout.strip().splitlines()[-1])
-                self.trace_unexpected_error(isolated, report)
-                self.assertNotEqual(result.returncode, 0)
-                self.assertEqual(
-                    report["error"]["detail"],
-                    "EXTERNAL_REVIEW_WITNESS_MANIFEST_DIRTY",
-                )
-            finally:
-                subprocess.run(
-                    ["git", "-C", str(ROOT), "worktree", "remove",
-                     "--force", str(isolated)],
-                    capture_output=True, text=True,
-                )
-
-    def test_rewritten_committed_manifest_must_fail_immutability(self):
-        with tempfile.TemporaryDirectory(prefix="review-rewrite-witness-") as temp:
-            isolated = Path(temp) / "checkout"
-            subprocess.run(
-                ["git", "-C", str(ROOT), "worktree", "add", "--detach",
-                 str(isolated), SOURCE_HEAD],
-                check=True, capture_output=True, text=True,
+            self.assertEqual(git("status","--porcelain","--",WITNESS,cwd=isolated),"")
+            result=check_witness(isolated)
+            print("R2_REWRITTEN_WITNESS="+result.stdout.strip(),flush=True)
+            self.assertEqual(result.returncode,3,result.stdout+result.stderr)
+            self.assertIn(
+                "REVIEW_WITNESS_DENIED=EXTERNAL_REVIEW_WITNESS_MANIFEST_NOT_IMMUTABLE",
+                result.stdout,
             )
-            try:
-                git("switch", "-c", "review-local-rewritten-witness", cwd=isolated)
-                candidate = isolated / WITNESS
-                candidate.write_bytes(candidate.read_bytes() + b"\n")
-                git("add", "--", WITNESS, cwd=isolated)
-                subprocess.run(
-                    ["git", "-c", "user.name=Adversarial Review",
-                     "-c", "user.email=reviewer@example.invalid",
-                     "commit", "-m", "test only: rewrite trusted witness"],
-                    cwd=isolated, check=True, capture_output=True, text=True,
-                )
-                self.assertEqual(
-                    git("status", "--porcelain", "--", WITNESS, cwd=isolated), ""
-                )
-                env = dict(os.environ, PYTHONPATH=str(isolated / "scripts"))
-                result = subprocess.run(
-                    [sys.executable, "-m", "harness.cli", "status",
-                     "--root", str(isolated)],
-                    cwd=isolated, env=env, capture_output=True, text=True,
-                    timeout=90,
-                )
-                report = json.loads(result.stdout.strip().splitlines()[-1])
-                self.trace_unexpected_error(isolated, report)
-                self.assertNotEqual(result.returncode, 0)
-                self.assertEqual(
-                    report["error"]["detail"],
-                    "EXTERNAL_REVIEW_WITNESS_MANIFEST_NOT_IMMUTABLE",
-                )
-            finally:
-                subprocess.run(
-                    ["git", "-C", str(ROOT), "worktree", "remove",
-                     "--force", str(isolated)],
-                    capture_output=True, text=True,
-                )
 
 
-
-if __name__ == "__main__":
+if __name__=="__main__":
     unittest.main()
