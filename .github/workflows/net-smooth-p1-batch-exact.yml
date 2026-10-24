@@ -1,0 +1,102 @@
+name: NET-SMOOTH1 P1 Batched COMPACT Exact
+on:
+  push:
+    branches:
+      - repair/net-smooth1-p1-tail-latency-r1
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: net-smooth-p1-batch-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  source-contracts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Strict real attested plus batched envelope/source tests
+        run: |
+          set -euo pipefail
+          git merge-base --is-ancestor fb513173df4c73c607fd8cb6680ad108c76f41ac HEAD
+          python -m py_compile tools/net_smooth1/run_net_smooth1.py tools/net_smooth1/analyze_r31p23r2_flush_layers.py
+          python -m unittest discover -s tests/tools -p 'test_net_smooth1_r31p23r2_flush_layers.py' -v
+          python -m unittest discover -s tests/tools -p 'test_net_smooth1_p1_batch_flush_layers.py' -v
+          python -m unittest discover -s tests/tools -p 'test_net_smooth1_r31p23r2_source_contracts.py' -v
+          python -m unittest discover -s tests/tools -p 'test_net_smooth1_r31p23r21_source_contracts.py' -v
+          python -m unittest discover -s tests/tools -p 'test_net_smooth1_r31p23r22_source_contracts.py' -v
+          test -z "$(git status --porcelain --untracked-files=no)"
+  linux-native-exact:
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 80
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Godot pinned Linux double cold import and native batch+M6
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          B="${DWS_GODOT_DOUBLE_LINUX_BIN:-$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64}"
+          test -x "$B"
+          test "$("$B" --version)" = '4.7.1.stable.double.custom_build.a13da4feb'
+          test "$(sha256sum "$B" | cut -d' ' -f1)" = 'bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7'
+          mkdir -p artifacts/p1-exact
+          "$B" --headless --editor --path . --import --quit > artifacts/p1-exact/import.log 2>&1
+          ! grep -E 'SCRIPT ERROR:|Parse Error:|Compile Error:' artifacts/p1-exact/import.log
+          for P in tests/runtime/test_net_smooth1_p1_snapshot_flush_batching.gd tests/runtime/test_net_smooth1_r31p23r22_attested_compact.gd tests/runtime/test_net_smooth1_r31p23r21_single_pass_compact.gd tests/runtime/test_m6_dedicated_recovery_contracts.gd tests/runtime/test_v0_user1_product_seam_bridge.gd; do
+            L="artifacts/p1-exact/$(basename "$P").log"
+            timeout 350 "$B" --headless --path . --script "res://$P" > "$L" 2>&1 || { tail -n 150 "$L"; exit 1; }
+            if grep -E 'SCRIPT ERROR:|Parse Error:|Compile Error:|ERROR:' "$L"; then tail -n 130 "$L"; exit 1; fi
+            grep -Eq 'PASS' "$L"
+          done
+          test -z "$(git status --porcelain --untracked-files=no)"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p1-linux-${{ github.sha }}
+          path: artifacts/p1-exact/
+          if-no-files-found: warn
+  windows-native-exact:
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 80
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Godot pinned Windows double cold import and native batch+M6
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          if ((git rev-parse HEAD).Trim() -ne $env:GITHUB_SHA) { throw 'HEAD_MISMATCH' }
+          $B='C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe'
+          if (-not (Test-Path $B)) { throw 'NO_PINNED_GODOT' }
+          if ((& $B --version | Out-String).Trim() -ne '4.7.1.stable.double.custom_build.a13da4feb') { throw 'VERSION_MISMATCH' }
+          if ((Get-FileHash $B -Algorithm SHA256).Hash.ToLowerInvariant() -ne '3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5') { throw 'HASH_MISMATCH' }
+          New-Item -ItemType Directory -Force artifacts/p1-exact | Out-Null
+          & $B --headless --editor --path . --import --quit *> artifacts/p1-exact/import.log
+          if ($LASTEXITCODE -ne 0 -or (Select-String artifacts/p1-exact/import.log -Pattern 'SCRIPT ERROR:|Parse Error:|Compile Error:' -Quiet)) { throw 'IMPORT_FAIL' }
+          foreach ($P in @('tests/runtime/test_net_smooth1_p1_snapshot_flush_batching.gd','tests/runtime/test_net_smooth1_r31p23r22_attested_compact.gd','tests/runtime/test_net_smooth1_r31p23r21_single_pass_compact.gd','tests/runtime/test_m6_dedicated_recovery_contracts.gd','tests/runtime/test_v0_user1_product_seam_bridge.gd')) {
+            $Out="artifacts/p1-exact/$(Split-Path $P -Leaf).log"
+            & $B --headless --path . --script "res://$P" *> $Out
+            if ($LASTEXITCODE -ne 0 -or (Select-String $Out -Pattern 'SCRIPT ERROR:|Parse Error:|Compile Error:|ERROR:' -Quiet) -or -not (Select-String $Out -Pattern 'PASS' -Quiet)) { Get-Content $Out -Tail 150; throw "NATIVE_FAIL:$P" }
+          }
+          if (git status --porcelain --untracked-files=no) { throw 'TRACKED_DIRTY' }
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p1-windows-${{ github.sha }}
+          path: artifacts/p1-exact/
+          if-no-files-found: warn
