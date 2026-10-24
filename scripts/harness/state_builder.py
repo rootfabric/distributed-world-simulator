@@ -128,6 +128,52 @@ def _git(root: Path, *args: str) -> tuple[int, str]:
     return output.returncode, output.stdout.strip()
 
 
+def _read_exact_git_blob_json(
+    root: Path,
+    path: Path,
+    expected_blob: str,
+    mismatch_code: str,
+) -> dict[str, Any]:
+    """Parse precisely the bytes whose Git blob identity was proven.
+
+    A prior HEAD:path check only establishes the committed source. Porcelain
+    status does not expose assume-unchanged/skip-worktree mutations, and
+    hashing a file separately from parsing it creates a read/use race.
+    Read bytes once; hash those *same bytes* with Git's raw blob machinery;
+    parse exactly that buffer with the same duplicate-key rule as read_json.
+    """
+    try:
+        raw = path.read_bytes()
+    except OSError as exc:
+        raise ContractValidationError(mismatch_code) from exc
+
+    proc = subprocess.run(
+        ["git", "--no-replace-objects", "hash-object", "--stdin"],
+        cwd=root,
+        input=raw,
+        capture_output=True,
+        check=False,
+    )
+    if proc.returncode != 0 or proc.stdout.decode("ascii", errors="replace").strip() != expected_blob:
+        raise ContractValidationError(mismatch_code)
+
+    def reject_duplicate_keys(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+        obj: dict[str, Any] = {}
+        for key, value in pairs:
+            if key in obj:
+                raise ContractValidationError(f"JSON_DUPLICATE_KEY:{path}:{key}")
+            obj[key] = value
+        return obj
+
+    try:
+        parsed = json.loads(raw.decode("utf-8"), object_pairs_hook=reject_duplicate_keys)
+    except (UnicodeError, json.JSONDecodeError) as exc:
+        raise ContractValidationError(f"EXTERNAL_REVIEW_WITNESS_SIBLING_JSON_INVALID:{path.name}") from exc
+    if not isinstance(parsed, dict):
+        raise ContractValidationError(f"EXTERNAL_REVIEW_WITNESS_SIBLING_JSON_NOT_OBJECT:{path.name}")
+    return parsed
+
+
 _EXTERNAL_REVIEW_WITNESS_SCHEMA = "distributed_world_simulator.harness_external_role_event_witness.v1"
 _EXTERNAL_REVIEW_WITNESS_AUTHORITY = "DIRECTOR_REPAIR_EXACT_PINNED_INDEPENDENT_REVIEWER"
 _EXTERNAL_REVIEW_WITNESS_MODE = "PROVE_ONE_DIRECT_CHILD_REVIEW_ONLY_COMMIT"
@@ -277,7 +323,20 @@ def _external_reviewer_witnesses(
         if code != 0:
             raise ContractValidationError("EXTERNAL_REVIEW_WITNESS_PRODUCT_NOT_ANCESTOR")
 
-        receipt = read_json(root / result_path)
+        # HEAD objects above have proven the canonical Git identities of both
+        # sibling inputs. Bind the *actual parsed bytes* to those exact blobs
+        # before allowing the exceptional non-ancestor Reviewer event. Neither
+        # git status nor caller-supplied event dictionaries are authority.
+        committed_event = _read_exact_git_blob_json(
+            root, root / event_path, witness["event_blob_sha"],
+            "EXTERNAL_REVIEW_WITNESS_EVENT_LOCAL_BLOB_MISMATCH",
+        )
+        if event != committed_event:
+            raise ContractValidationError("EXTERNAL_REVIEW_WITNESS_EVENT_DTO_MISMATCH")
+        receipt = _read_exact_git_blob_json(
+            root, root / result_path, witness["review_result_blob_sha"],
+            "EXTERNAL_REVIEW_WITNESS_RECEIPT_LOCAL_BLOB_MISMATCH",
+        )
         if (
             receipt.get("schema") != "distributed_world_simulator.mvp8_independent_review.v1"
             or receipt.get("role") != "FRESH_INDEPENDENT_REVIEWER"
