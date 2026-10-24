@@ -24,6 +24,7 @@ from analyze_net_smooth1 import write_report
 from owned_process_cleanup import finalize_owned_processes, preflight_no_smooth_godot
 
 TESTS = [
+ 'tests/runtime/test_net_smooth1_p1_real_boundary_partial_flush.gd',
  'tests/runtime/test_net_smooth1_815_safety_negative.gd',
  'tests/runtime/test_net_smooth1_p1_snapshot_flush_batching.gd',
  'tests/runtime/test_net_smooth1_r3c4_periodic_frame_headroom.gd',

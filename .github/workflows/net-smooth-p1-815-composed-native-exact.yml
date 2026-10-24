@@ -50,7 +50,7 @@ jobs:
           mkdir -p artifacts/issue815-native
           "$B" --headless --editor --path . --import --quit > artifacts/issue815-native/import.log 2>&1
           ! grep -E 'SCRIPT ERROR:|Parse Error:|Compile Error:' artifacts/issue815-native/import.log
-          for P in tests/runtime/test_net_smooth1_815_safety_negative.gd tests/runtime/test_net_smooth1_p1_snapshot_flush_batching.gd tests/runtime/test_net_smooth1_r31p23r22_attested_compact.gd; do
+          for P in tests/runtime/test_net_smooth1_p1_real_boundary_partial_flush.gd tests/runtime/test_net_smooth1_815_safety_negative.gd tests/runtime/test_net_smooth1_p1_snapshot_flush_batching.gd tests/runtime/test_net_smooth1_r31p23r22_attested_compact.gd; do
             L="artifacts/issue815-native/$(basename "$P").log"
             timeout 240 "$B" --headless --path . --script "res://$P" > "$L" 2>&1 || { tail -n 120 "$L"; exit 1; }
             if grep -E 'SCRIPT ERROR:|Parse Error:|Compile Error:|ERROR:' "$L"; then tail -n 100 "$L"; exit 1; fi
@@ -84,7 +84,7 @@ jobs:
           New-Item -ItemType Directory -Force artifacts/issue815-native | Out-Null
           & $B --headless --editor --path . --import --quit *> artifacts/issue815-native/import.log
           if ($LASTEXITCODE -ne 0 -or (Select-String artifacts/issue815-native/import.log -Pattern 'SCRIPT ERROR:|Parse Error:|Compile Error:' -Quiet)) { throw 'IMPORT_FAIL' }
-          foreach ($P in @('tests/runtime/test_net_smooth1_815_safety_negative.gd','tests/runtime/test_net_smooth1_p1_snapshot_flush_batching.gd','tests/runtime/test_net_smooth1_r31p23r22_attested_compact.gd')) {
+          foreach ($P in @('tests/runtime/test_net_smooth1_p1_real_boundary_partial_flush.gd','tests/runtime/test_net_smooth1_815_safety_negative.gd','tests/runtime/test_net_smooth1_p1_snapshot_flush_batching.gd','tests/runtime/test_net_smooth1_r31p23r22_attested_compact.gd')) {
             $Out="artifacts/issue815-native/$(Split-Path $P -Leaf).log"
             & $B --headless --path . --script "res://$P" *> $Out
             if ($LASTEXITCODE -ne 0 -or (Select-String $Out -Pattern 'SCRIPT ERROR:|Parse Error:|Compile Error:|ERROR:' -Quiet) -or -not (Select-String $Out -Pattern 'PASS' -Quiet)) { Get-Content $Out -Tail 120; throw "NATIVE_FAIL:$P" }
