@@ -1,0 +1,172 @@
+name: VERIFY PR845 Fresh Exact Independent
+on:
+  push:
+    branches: [verify/control-mvp8-pr845-fresh-crossplatform-exact-r1]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  scope:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Frozen product and verifier-only scope
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          head=3a8f858f85c5ff018676557650f34179d6d5f86b
+          tree=f03f89297f1cb97ed4df9b4b8ecedfc1fef2aec3
+          test "$(git merge-base "$head" HEAD)" = "$head"
+          test "$(git rev-parse "$head^{tree}")" = "$tree"
+          test "$(git diff --name-only "$head" HEAD)" = ".github/workflows/verify-control-pr845-fresh-crossplatform-exact.yml"
+          git diff --check "$head" HEAD
+          echo "PR845_FRESH_VERIFIER_SOURCE_PROVENANCE=PASS"
+  linux:
+    needs: scope
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Native Git checkout at exact tested product HEAD
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          exact="$RUNNER_TEMP/pr845-verifier-exact"
+          head=3a8f858f85c5ff018676557650f34179d6d5f86b
+          tree=f03f89297f1cb97ed4df9b4b8ecedfc1fef2aec3
+          git worktree add --detach "$exact" "$head"
+          git -C "$exact" switch -c "verify-pr845-linux-$GITHUB_RUN_ID"
+          test "$(git -C "$exact" rev-parse HEAD)" = "$head"
+          test "$(git -C "$exact" rev-parse 'HEAD^{tree}')" = "$tree"
+          echo "EXACT=$exact" >> "$GITHUB_ENV"
+          mkdir verification
+          printf 'HEAD=%s\nTREE=%s\n' "$head" "$tree" > verification/IDENTITY
+      - name: Pinned validator
+        run: python -m pip install -r "$EXACT/scripts/harness/requirements.txt"
+      - name: Focused adversarial R2, R1, schema tests
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          export PYTHONPATH="$EXACT/scripts"
+          cd "$EXACT"
+          for selector in test_mvp8_committed_witness_binding_r2.py test_mvp8_external_reviewer_event_witness_r1.py test_mvp8_immutable_evidence_reconciliation_r1.py; do
+            python -m unittest discover -s tests/harness -p "$selector" -v 2>&1 | tee "$GITHUB_WORKSPACE/verification/$selector.log"
+          done
+      - name: Fresh source Status and CheckConsistency
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          export PYTHONPATH="$EXACT/scripts"
+          cd "$EXACT"
+          python -m harness.cli status --root "$PWD" > "$GITHUB_WORKSPACE/verification/status.jsonl"
+          python -m harness.cli check-consistency --root "$PWD" --candidate > "$GITHUB_WORKSPACE/verification/consistency.jsonl"
+          python - "$GITHUB_WORKSPACE/verification" <<'PY'
+          import json,sys,pathlib
+          root=pathlib.Path(sys.argv[1])
+          for name in ('status','consistency'):
+              o=json.loads((root/(name+'.jsonl')).read_text().splitlines()[-1])
+              assert o.get('ok') is True and o.get('schema')=='distributed_world_simulator.control_development_output.v1',o
+          print('PR845_FRESH_VERIFIER_LINUX_STATUS_AND_CONSISTENCY=PASS')
+          PY
+      - name: Fresh independent 397-test regression suite
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          export PYTHONPATH="$EXACT/scripts"
+          cd "$EXACT"
+          python -m unittest discover -s tests/harness -v > "$GITHUB_WORKSPACE/verification/full-harness.log" 2>&1 || {
+            tail -90 "$GITHUB_WORKSPACE/verification/full-harness.log"
+            exit 1
+          }
+          tail -12 "$GITHUB_WORKSPACE/verification/full-harness.log"
+      - name: Independent PC0 standard and directional diagnosis
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          cd "$EXACT"
+          python scripts/control/project_control.py --no-fetch --no-fail-on-red >"$GITHUB_WORKSPACE/verification/pc0-standard.log"
+          python scripts/control/project_control_directional_watch.py --no-fail-on-red >"$GITHUB_WORKSPACE/verification/pc0-directional.log"
+          python - "$GITHUB_WORKSPACE/verification" <<'PY'
+          import json,pathlib,sys
+          out=pathlib.Path(sys.argv[1])
+          std=json.loads(pathlib.Path('artifacts/control/project-control-report.json').read_text())['overall_health']
+          dire=json.loads(pathlib.Path('artifacts/control/directional-watch-report.json').read_text())['overall_health']
+          print('PR845_FRESH_VERIFIER_PC0_STANDARD='+std)
+          print('PR845_FRESH_VERIFIER_PC0_DIRECTIONAL='+dire)
+          assert std in ('GREEN','YELLOW','RED') and dire in ('GREEN','YELLOW','RED')
+          (out/'pc0-health.json').write_text(json.dumps({'standard':std,'directional':dire})+'\n')
+          PY
+      - name: Exact evidence checksums
+        if: always()
+        shell: bash
+        run: |
+          (cd verification && sha256sum * > SHA256SUMS) || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: pr845-new-fresh-verifier-linux
+          path: verification/**
+          if-no-files-found: warn
+          retention-days: 30
+  windows:
+    needs: scope
+    runs-on: windows-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: New Windows exact named worktree
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          $Head='3a8f858f85c5ff018676557650f34179d6d5f86b'
+          $Tree='f03f89297f1cb97ed4df9b4b8ecedfc1fef2aec3'
+          $Exact=Join-Path $env:RUNNER_TEMP 'pr845-fresh-exact'
+          git worktree add --detach $Exact $Head
+          if ($LASTEXITCODE -ne 0) { throw 'WORKTREE_FAILED' }
+          git -C $Exact switch -c "verify-pr845-win-$env:GITHUB_RUN_ID"
+          if ($LASTEXITCODE -ne 0) { throw 'NAMED_BRANCH_FAILED' }
+          if ((git -C $Exact rev-parse HEAD).Trim() -cne $Head) { throw 'HEAD_MISMATCH' }
+          if ((git -C $Exact rev-parse 'HEAD^{tree}').Trim() -cne $Tree) { throw 'TREE_MISMATCH' }
+          "EXACT=$Exact" | Out-File $env:GITHUB_ENV -Append -Encoding utf8
+      - name: Pinned validator
+        shell: pwsh
+        run: python -m pip install -r "$env:EXACT/scripts/harness/requirements.txt"
+      - name: Focused R2 and R1 adversarial tests
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          $env:PYTHONPATH=Join-Path $env:EXACT 'scripts'
+          Push-Location $env:EXACT
+          try {
+            foreach ($selector in @('test_mvp8_committed_witness_binding_r2.py','test_mvp8_external_reviewer_event_witness_r1.py')) {
+              python -m unittest discover -s tests/harness -p $selector -v
+              if ($LASTEXITCODE -ne 0) { throw "FAILED_TEST_$selector" }
+            }
+          } finally { Pop-Location }
+      - name: Fresh native Windows Status and consistency
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          foreach ($mode in @('Status','CheckConsistency')) {
+            $extra = if ($mode -eq 'CheckConsistency') { @('-Candidate') } else { @() }
+            $raw=@(& pwsh -NoLogo -NoProfile -File (Join-Path $env:EXACT 'CONTROL_DEVELOPMENT.ps1') "-$mode" @extra)
+            $rc=$LASTEXITCODE
+            $o=($raw | Select-Object -Last 1) | ConvertFrom-Json
+            if ($rc -ne 0 -or $o.ok -ne $true) { throw "FAILED_$mode exit=$rc error=$($o.error)" }
+            Write-Host "PR845_FRESH_VERIFIER_WINDOWS_$mode=PASS"
+          }
