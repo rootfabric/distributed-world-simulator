@@ -32,17 +32,29 @@ jobs:
       - name: Checkout LIVE2
         uses: actions/checkout@v4
         with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
           fetch-depth: 0
           persist-credentials: false
+
+      - name: Select exact double Godot from project marker
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          & ./tools/engine48/select_exact_double_engine.ps1
+          if (-not $env:DWS_GODOT_DOUBLE_BIN) { throw 'DWS_PINNED_GODOT_MISSING' }
+          "GODOT_BIN=$env:DWS_GODOT_DOUBLE_BIN" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
 
       - name: Host and identity preflight
         shell: pwsh
         run: |
           $ErrorActionPreference='Stop'
-          $sha=(Get-FileHash $env:GODOT_BIN -Algorithm SHA256).Hash.ToLowerInvariant()
-          if ($sha -ne '3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5') { throw "GODOT_SHA_MISMATCH:$sha" }
-          $ver=& $env:GODOT_BIN --version
-          if ($ver -notmatch '4\.7\.1.*double.*a13da4feb') { throw "GODOT_VERSION_MISMATCH:$ver" }
+          $sha=(Get-FileHash -LiteralPath $env:GODOT_BIN -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($sha -ne $env:DWS_EFFECTIVE_GODOT_SHA256) { throw "GODOT_SHA_MISMATCH:$sha" }
+          $versionOutput=& $env:GODOT_BIN --version 2>&1
+          $versionExit=$LASTEXITCODE
+          $ver=([string]($versionOutput | Select-Object -First 1)).Trim()
+          $expected=if ($ver -like '4.8.beta1*') {'4.8.beta1.double.custom_build.4d10419ca'} else {'4.7.1.stable.double.custom_build.a13da4feb'}
+          if ($ver -ne $expected -or ($expected -like '4.8*' -and $versionExit -ne 0)) { throw "GODOT_VERSION_MISMATCH:$ver:$versionExit" }
           if ((git status --porcelain --untracked-files=no)) { throw 'TRACKED_DIRTY_BEFORE' }
           New-Item -ItemType Directory -Force artifacts\live2-targeted | Out-Null
           [ordered]@{
