@@ -767,7 +767,8 @@ static func staged_resume(cursor: Dictionary, source_field: Dictionary,
 		source_population: Array, max_worksets_per_call: int = 1,
 		max_allocator_items_per_call: int = 16,
 		allocator_cap_bytes: int = StagedA4R2.DEFAULT_CURSOR_CAP_BYTES,
-		r2c_parallel_workers: int = 1) -> Dictionary:
+		r2c_parallel_workers: int = 1,
+		r2e_profile: bool = false) -> Dictionary:
 	if not C.integer(max_worksets_per_call, 1, 4096):
 		return _fail("A5_STAGED_QUOTA")
 	# R2C research-only: existing A13 threading is strictly bounded.
@@ -801,12 +802,16 @@ static func staged_resume(cursor: Dictionary, source_field: Dictionary,
 	# step. Bind that checksum in the A5 envelope instead of digesting
 	# megabytes of already-sealed inner data for a second time. Accepted
 	# A14.5 v1 continues hashing its complete cursor exactly as before.
+	var r2e_cursor_check_start_us: int = Time.get_ticks_usec() if r2e_profile else 0
 	var digest: String = _staged_cursor_checksum(cursor)
 	if digest.is_empty() or digest != String(cursor.checksum):
 		return _fail("A5_STAGED_CURSOR_CHECKSUM")
+	var r2e_cursor_check_us: int = Time.get_ticks_usec() - r2e_cursor_check_start_us if r2e_profile else 0
+	var r2e_source_start_us: int = Time.get_ticks_usec() if r2e_profile else 0
 	var current_source := C.digest({"field": source_field, "population": source_population})
 	if current_source.is_empty() or current_source != String(cursor.source_hash):
 		return _fail("A5_STAGED_SOURCE_CHANGED")
+	var r2e_source_digest_us: int = Time.get_ticks_usec() - r2e_source_start_us if r2e_profile else 0
 	if not C.integer(cursor.index, 0, cursor.units.size()):
 		return _fail("A5_STAGED_CURSOR_INDEX")
 	var phase := String(cursor.phase)
@@ -814,12 +819,24 @@ static func staged_resume(cursor: Dictionary, source_field: Dictionary,
 		return _fail("A5_STAGED_PHASE")
 	if r3_mode and phase != "ALLOCATE" and not cursor.allocator_cursor.is_empty():
 		return _fail("A5_STAGED_R3_ALLOCATOR_PHASE")
-	# During R3 ALLOCATE only top-level phase/index/allocated results and
-	# nested R2 cursor ownership are replaced. Neither the source field,
-	# PREPARE samples, entries, demands nor old R2 cursor is modified.
-	# Avoid full deep-copying ALL biological state for each R2 item quota.
-	# PREPARE and ADVANCE still deep-copy their mutable outcome arrays.
-	var next: Dictionary = cursor.duplicate(false) if r3_mode and phase == "ALLOCATE" else cursor.duplicate(true)
+	# R2E evidence ruled out PREPARE/ADVANCE phase-local COW:
+	# fair paired Portable n256 (5.005s old vs 5.151s COW) regressed.
+	# Restore accepted frozen Stage D PREPARE/ADVANCE deep copy unchanged,
+	# retaining the accepted R3 ALLOCATE shallow envelope optimization.
+	# Full cursor SHA and source digest above still run on EVERY call.
+	# The only new functionality is optional, noncanonical timing evidence.
+	var r2e_copy_start_us: int = Time.get_ticks_usec() if r2e_profile else 0
+	var next: Dictionary = cursor.duplicate(false) \
+		if r3_mode and phase == "ALLOCATE" else cursor.duplicate(true)
+	var r2e_cow_copy_us: int = Time.get_ticks_usec() - r2e_copy_start_us if r2e_profile else 0
+	var r2e_profile_values: Dictionary = {}
+	if r2e_profile:
+		r2e_profile_values = {
+			"cursor_verify_us": r2e_cursor_check_us,
+			"source_digest_us": r2e_source_digest_us,
+			"cow_copy_us": r2e_cow_copy_us,
+			"result_seal_us": 0,
+		}
 	var units: Array = next.units
 	var entries: Array = next.entries
 	var index: int = int(next.index)
@@ -950,15 +967,24 @@ static func staged_resume(cursor: Dictionary, source_field: Dictionary,
 			# Host-only counters; absent from canonical state and cursor.
 			result["r2c_peak_workers"] = r2c_peak_workers
 			result["r2c_threaded_worksets"] = r2c_threaded_worksets
+			if r2e_profile:
+				result["r2e_profile"] = r2e_profile_values
 			return result
+	var r2e_seal_start_us: int = Time.get_ticks_usec() if r2e_profile else 0
 	next = _seal_staged_cursor(next)
 	if next.is_empty():
 		return _fail("A5_STAGED_CURSOR_SEAL")
-	return {"success": true, "complete": false, "phase": String(next.phase),
+	if r2e_profile:
+		r2e_profile_values["result_seal_us"] = Time.get_ticks_usec() - r2e_seal_start_us
+	var response: Dictionary = {"success": true, "complete": false,
+		"phase": String(next.phase),
 		"cursor": next, "processed_worksets": max_worksets_per_call
 			if phase != "ALLOCATE" else 0,
 		"r2c_peak_workers": r2c_peak_workers,
 		"r2c_threaded_worksets": r2c_threaded_worksets}
+	if r2e_profile:
+		response["r2e_profile"] = r2e_profile_values
+	return response
 
 ## Stage C: same detached workset thread pattern as the established A13
 ## parallel-advance path. Work is speculative and each thread is joined
