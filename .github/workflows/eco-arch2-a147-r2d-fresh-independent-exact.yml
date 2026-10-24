@@ -30,19 +30,31 @@ jobs:
           chmod +x "$godot"
           "$godot" --headless --editor --path . --import > r2d-ver-import.log 2>&1 || { cat r2d-ver-import.log; exit 1; }
           mkdir -p r2d-ver-evidence
-          for n in 32 96; do
+          for n in 32 96 256; do
             "$godot" --headless --path . --script res://validation/ecology/evo_arch2_a14_7/test_a147_r2d_fresh_independent.gd -- --population "$n" > "r2d-ver-evidence/n$n.stdout.log" 2> "r2d-ver-evidence/n$n.stderr.log" || { cat "r2d-ver-evidence/n$n.stdout.log"; cat "r2d-ver-evidence/n$n.stderr.log"; exit 1; }
             grep -Fx 'A147_R2D_INDEPENDENT PASS' "r2d-ver-evidence/n$n.stdout.log"
             grep '^A147_R2D_INDEPENDENT_JSON ' "r2d-ver-evidence/n$n.stdout.log" | sed 's/^A147_R2D_INDEPENDENT_JSON //' > "r2d-ver-evidence/n$n.json"
           done
           python3 - <<'PY'
           import json,pathlib
-          for n in (32,96):
+          for n in (32,96,256):
               p=json.loads(pathlib.Path(f'r2d-ver-evidence/n{n}.json').read_text())
               assert p['population']==n and p['exact_a4_state'] and p['exact_a4_grants']
               assert p['cursor_input_immutable'] and p['frozen_source_unchanged'] and p['single_original_global_reference']
               assert p['phase_order']==['NORMALIZE','BUILD_CLAIMS','PRIMARY','RESIDUAL','FINALIZE']
+          p256=json.loads(pathlib.Path('r2d-ver-evidence/n256.json').read_text())
+          assert p256['population']==256
           print('A147_R2D_FRESH_INDEPENDENT_EXACT_PASS')
+          PY
+          grep '^A147_R2D_ABBA_PROFILE_JSON ' r2d-ver-evidence/n256.stdout.log | sed 's/^A147_R2D_ABBA_PROFILE_JSON //' > r2d-ver-evidence/n256-abba.json
+          python3 - <<'PY'
+          import json
+          p=json.load(open('r2d-ver-evidence/n256-abba.json'))
+          assert p['population']==256 and p['order']==['FROZEN','R2D','R2D','FROZEN']
+          assert len(p['frozen_wall_us'])==len(p['r2d_wall_us'])==2
+          assert p['original_global_authority_exact'] and p['source_unchanged']
+          assert not p['full_tick_speedup_claim'] and not p['single_pair_claim']
+          print(f'R2D_ABBA_N256 frozen_mean_ms={p["frozen_mean_us"]/1000:.3f} r2d_mean_ms={p["r2d_mean_us"]/1000:.3f} ratio={p["observed_ratio"]:.3f}x')
           PY
           git diff --exit-code && git diff --cached --exit-code
       - uses: actions/upload-artifact@v4
@@ -75,7 +87,7 @@ jobs:
           & $godot --headless --editor --path . --import *> r2d-ver-win-import.log
           if ($LASTEXITCODE -ne 0) { throw 'A147_R2D_VERIFIER_IMPORT' }
           New-Item -ItemType Directory -Force r2d-ver-win-evidence | Out-Null
-          foreach ($n in @(32,96)) {
+          foreach ($n in @(32,96,256)) {
             $out = Join-Path (Get-Location).Path "r2d-ver-win-evidence\n$n.stdout.log"
             $err = Join-Path (Get-Location).Path "r2d-ver-win-evidence\n$n.stderr.log"
             $argv = @('--headless','--path','.','--script','res://validation/ecology/evo_arch2_a14_7/test_a147_r2d_fresh_independent.gd','--','--population',"$n")

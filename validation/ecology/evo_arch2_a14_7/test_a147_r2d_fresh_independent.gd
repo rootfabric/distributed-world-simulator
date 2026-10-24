@@ -6,6 +6,7 @@ const C = preload("res://scripts/research/ecology/v2/canonical_value_v1.gd")
 const Lifecycle = preload("res://scripts/research/ecology/v2/resource_lifecycle_runtime_v1.gd")
 const Field = preload("res://scripts/research/ecology/v2/local_environment_field_v1.gd")
 const A4 = preload("res://scripts/research/ecology/v2/a4_staged_global_allocator_probe_v1.gd")
+const Frozen = preload("res://validation/ecology/evo_arch2_a14_7/a147_r2d_frozen_a4_reference.gd")
 const Fixture = preload("res://validation/ecology/evo_arch2_a14_7/a147_scale_fixture.gd")
 
 const CAP := 8388608
@@ -24,7 +25,7 @@ func _check(ok: bool, label: String) -> void:
 func _run() -> void:
 	var args = OS.get_cmdline_user_args()
 	if args.size() != 2 or String(args[0]) != "--population" \
-			or not String(args[1]) in ["32", "96"]:
+			or not String(args[1]) in ["32", "96", "256"]:
 		_check(false, "invalid independent population")
 		_finish()
 		return
@@ -144,6 +145,8 @@ func _run() -> void:
 		"original A4 field/grant/revision/ledger exact bytes and SHA")
 	_check(C.encode(state) == snapshot_before and
 		C.encode(demands) == original_demands, "source and original demand untouched")
+	if n == 256:
+		_test_balanced_abba(source_field, demands, original)
 	print("A147_R2D_INDEPENDENT_JSON " + JSON.stringify({
 		"schema": "dws.ecology.a147-r2d-independent-a4.v1",
 		"population": n, "phase_order": phase_order, "steps": steps,
@@ -154,6 +157,76 @@ func _run() -> void:
 		"single_original_global_reference": true,
 	}))
 	_finish()
+
+
+## Independent 256 replay with alternating original/new executions.
+## This is still a small controlled microbenchmark, not native proof of
+## end-to-end tick improvement. Every sample executes all five A4 phases
+## and must reproduce original globally coupled Field.allocate_demands.
+func _test_balanced_abba(field: Dictionary, demands: Array,
+		expected: Dictionary) -> void:
+	var schedule: Array = ["FROZEN", "R2D", "R2D", "FROZEN"]
+	var frozen_times: Array = []
+	var r2d_times: Array = []
+	var immutable_source: String = C.encode(field)
+	var immutable_demands: String = C.encode(demands)
+	for which in schedule:
+		var engine: Script = Frozen if which == "FROZEN" else A4
+		var begun: Dictionary = engine.begin(
+			field, demands, String(field.owner_token),
+			int(field.owner_epoch), int(field.revision), 8388608)
+		_check(bool(begun.get("success", false)), which + " ABBA begins")
+		if not bool(begun.get("success", false)):
+			return
+		var start_us: int = Time.get_ticks_usec()
+		var cursor: Dictionary = begun.cursor
+		var finished: Dictionary = {}
+		for i in 128:
+			var snapshot: String = C.encode(cursor)
+			var progress: Dictionary = engine.resume(
+				field, demands, String(field.owner_token),
+				int(field.owner_epoch), int(field.revision),
+				cursor, 4096, 8388608)
+			_check(C.encode(cursor) == snapshot,
+				which + " ABBA never mutates prior deep input")
+			if not bool(progress.get("success", false)):
+				_check(false, which + " ABBA resume:" +
+					String(progress.get("error", "?")))
+				return
+			if bool(progress.get("complete", false)):
+				finished = progress
+				break
+			cursor = progress.cursor
+		var duration_us: int = Time.get_ticks_usec() - start_us
+		_check(not finished.is_empty(), which + " all global stages finished")
+		if finished.is_empty():
+			return
+		_check(bool(finished.get("reference_equal", false)) and
+			C.encode(finished.state) == C.encode(expected.state) and
+			C.encode(finished.grants) == C.encode(expected.grants) and
+			String(finished.state_hash) == String(expected.state_hash),
+			which + " byte-exact original global owner")
+		if which == "FROZEN":
+			frozen_times.append(duration_us)
+		else:
+			r2d_times.append(duration_us)
+	_check(C.encode(field) == immutable_source and
+		C.encode(demands) == immutable_demands,
+		"ABBA repeated original and optimized engines cannot mutate source")
+	if frozen_times.size() == 2 and r2d_times.size() == 2:
+		var old_us: float = (float(frozen_times[0]) + float(frozen_times[1])) / 2.0
+		var new_us: float = (float(r2d_times[0]) + float(r2d_times[1])) / 2.0
+		print("A147_R2D_ABBA_PROFILE_JSON " + JSON.stringify({
+			"schema": "dws.ecology.a147-r2d-independent-abba.v1",
+			"population": 256, "order": schedule,
+			"frozen_wall_us": frozen_times,
+			"r2d_wall_us": r2d_times,
+			"frozen_mean_us": old_us, "r2d_mean_us": new_us,
+			"observed_ratio": old_us / maxf(1.0, new_us),
+			"original_global_authority_exact": true,
+			"source_unchanged": C.encode(field) == immutable_source,
+			"full_tick_speedup_claim": false, "single_pair_claim": false,
+		}))
 
 func _finish() -> void:
 	print("A147_R2D_INDEPENDENT checks=%d failed=%d" % [checks, failures])
