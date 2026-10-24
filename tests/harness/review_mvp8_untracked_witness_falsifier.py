@@ -41,6 +41,12 @@ class UntrackedWitnessMustFailClosed(unittest.TestCase):
                 check=True, capture_output=True, text=True,
             )
             try:
+                # Harness requires a named branch, not detached HEAD.
+                # The temporary probe is entirely disposable and unpushed.
+                subprocess.run(
+                    ["git", "switch", "-c", "review-local-ignored-witness"],
+                    cwd=isolated, check=True, capture_output=True, text=True,
+                )
                 subprocess.run(
                     ["git", "rm", "--", WITNESS], cwd=isolated,
                     check=True, capture_output=True, text=True,
