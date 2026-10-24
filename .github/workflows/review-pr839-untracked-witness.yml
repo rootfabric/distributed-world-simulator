@@ -1,0 +1,69 @@
+name: REVIEW PR839 Adversarial Untracked Witness
+on:
+  push:
+    branches:
+      - review/control-mvp8-pr839-untracked-witness-falsifier-r1
+  workflow_dispatch:
+permissions:
+  contents: read
+
+jobs:
+  novel-falsifier:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python -m pip install -r scripts/harness/requirements.txt
+      - name: Prove reviewed source ancestry and reviewer-only change
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          exact=a2a8e93f065f9cee8fc8a39eb03df29be322c786
+          test "$(git merge-base "$exact" HEAD)" = "$exact"
+          git diff --check "$exact" HEAD
+          python3 - <<'PY'
+          import subprocess
+          exact="a2a8e93f065f9cee8fc8a39eb03df29be322c786"
+          diff=subprocess.check_output(["git","diff","--name-only",exact,"HEAD"],text=True).splitlines()
+          allowed={
+              ".github/workflows/review-pr839-untracked-witness.yml",
+              "tests/harness/review_mvp8_untracked_witness_falsifier.py",
+          }
+          assert set(diff)==allowed,diff
+          print("REVIEW_PR839_EXACT_PARENT_AND_TEST_ONLY_DIFF=PASS")
+          PY
+      - name: Exercise a new fail-closed negative against original PR839
+        shell: bash
+        env:
+          PYTHONPATH: scripts
+        run: |
+          set -Eeuo pipefail
+          mkdir -p reviewer-evidence
+          set +e
+          python -m unittest discover -s tests/harness -p 'review_mvp8_untracked_witness_falsifier.py' -v >reviewer-evidence/untracked-witness-RED.log 2>&1
+          exit_code=$?
+          set -e
+          cat reviewer-evidence/untracked-witness-RED.log
+          echo "FALSIFIER_EXIT=$exit_code" | tee reviewer-evidence/falsifier-receipt.txt
+          if [ "$exit_code" -ne 1 ]; then
+              echo "UNEXPECTED_FALSIFIER_EXIT"
+              exit 2
+          fi
+          grep -q "CRITICAL: ignored untracked witness authorized event #0050" reviewer-evidence/untracked-witness-RED.log
+          echo "REVIEW_PR839_UNTRACKED_WITNESS_RED_REPRODUCED=PASS" | tee -a reviewer-evidence/falsifier-receipt.txt
+          git rev-parse HEAD >reviewer-evidence/review-branch-head.txt
+          git rev-parse 'HEAD^{tree}' >reviewer-evidence/review-branch-tree.txt
+          (cd reviewer-evidence && sha256sum * >SHA256SUMS)
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: pr839-review-untracked-witness-${{ github.sha }}
+          path: reviewer-evidence/*
+          retention-days: 30
+          if-no-files-found: warn
