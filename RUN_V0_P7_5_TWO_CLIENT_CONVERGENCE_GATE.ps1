@@ -9,6 +9,17 @@ $Root = Split-Path -Parent $MyInvocation.MyCommand.Path
 $ArtifactRoot = Join-Path $Root "artifacts\runtime\v0-p7-5-two-client-convergence"
 $TestHome = Join-Path $ArtifactRoot "user-home"
 $ExpectedGodot = "4.7.1.stable.double.custom_build.a13da4feb"
+$ExpectedSha256 = ""
+# ENGINE48: strict fail-closed override for the Godot 4.8 beta1 double migration
+# gate, mirroring tests/integration/test_v0_mvp_4_graphical_shared_dig.py. When
+# DWS_ENGINE48_GODOT_SHA256 is set, it REPLACES the pinned identity for this run;
+# the executable must still match one exact SHA256 and version, never neither.
+$Engine48Sha = ([string]$env:DWS_ENGINE48_GODOT_SHA256).Trim().ToLowerInvariant()
+if ($Engine48Sha) {
+    if ($Engine48Sha -notmatch '^[0-9a-f]{64}$') { throw "DWS_ENGINE48_GODOT_SHA256_INVALID" }
+    $ExpectedSha256 = $Engine48Sha
+    $ExpectedGodot = "4.8.beta1.double.custom_build.4d10419ca"
+}
 New-Item -ItemType Directory -Force -Path $ArtifactRoot | Out-Null
 Remove-Item -Recurse -Force -ErrorAction SilentlyContinue $TestHome
 New-Item -ItemType Directory -Force -Path (Join-Path $TestHome "data") | Out-Null
@@ -16,8 +27,14 @@ New-Item -ItemType Directory -Force -Path (Join-Path $TestHome "config") | Out-N
 New-Item -ItemType Directory -Force -Path (Join-Path $TestHome "cache") | Out-Null
 
 if (-not (Test-Path -LiteralPath $GodotExe -PathType Leaf)) { throw "Exact Godot executable not found: $GodotExe" }
-$Version = (& $GodotExe --version 2>&1 | Select-Object -First 1).Trim()
-if ($Version -ne $ExpectedGodot) { throw "GODOT_IDENTITY_MISMATCH actual=$Version expected=$ExpectedGodot" }
+if ($ExpectedSha256) {
+    $ActualSha = (Get-FileHash -LiteralPath $GodotExe -Algorithm SHA256).Hash.ToLowerInvariant()
+    if ($ActualSha -ne $ExpectedSha256) { throw "GODOT_SHA256_MISMATCH actual=$ActualSha expected=$ExpectedSha256" }
+}
+$VersionOutput = & $GodotExe --version 2>&1
+$VersionExit = $LASTEXITCODE
+$Version = ([string]($VersionOutput | Select-Object -First 1)).Trim()
+if ($VersionExit -ne 0 -or $Version -ne $ExpectedGodot) { throw "GODOT_IDENTITY_MISMATCH actual=$Version expected=$ExpectedGodot" }
 $Head = (& git -C $Root rev-parse HEAD).Trim().ToLowerInvariant()
 if (-not [string]::IsNullOrWhiteSpace($ExpectedHead) -and $Head -ne $ExpectedHead.Trim().ToLowerInvariant()) {
     throw "P7_5_HEAD_MISMATCH actual=$Head expected=$ExpectedHead"
@@ -43,7 +60,17 @@ function Invoke-Contract {
         throw "P7.5 contract RED: $Name"
     }
     Assert-LogClean $Log
-    if (-not (Select-String -Path $Log -SimpleMatch $Summary -Quiet)) {
+    # Keep the strict legacy 4.7.1 contract (83/0) on its normal path.
+    # The 4.8 migration exercises the expanded P7.1 test (88/0):
+    # do not accept 83/0 as a false green on that new engine.
+    if ($Name -eq 'p7-1-authority' -and $Engine48Sha) {
+        if ($Summary -ne 'V0-P7.1 authority gate: PASS (83 assertions, 0 failures)') {
+            throw 'ENGINE48_P7_1_UNEXPECTED_EXPECTED_SUMMARY'
+        }
+        $Summary = 'V0-P7.1 authority gate: PASS (88 assertions, 0 failures)'
+    }
+    $SummaryPresent = Select-String -Path $Log -SimpleMatch $Summary -Quiet
+    if (-not $SummaryPresent) {
         Get-Content $Log -Tail 500 -ErrorAction SilentlyContinue
         throw "Missing PASS summary: $Summary"
     }

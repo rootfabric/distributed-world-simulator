@@ -3,7 +3,7 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 GODOT_BIN="${GODOT_BIN:-${GODOT:-}}"
-EXPECTED_GODOT_VERSION="4.7.1.stable.double.custom_build.a13da4feb"
+EXPECTED_GODOT_VERSION="4.8.beta1.double.custom_build.4d10419ca"
 
 if [[ -z "$GODOT_BIN" ]]; then
   for candidate in godot4 godot; do
@@ -15,7 +15,7 @@ if [[ -z "$GODOT_BIN" ]]; then
 fi
 
 if [[ -z "$GODOT_BIN" || ! -x "$GODOT_BIN" ]]; then
-  echo "SM1_6_GODOT_NOT_FOUND: set GODOT_BIN to the Godot 4.7.1 double editor" >&2
+  echo "SM1_6_GODOT_NOT_FOUND: set GODOT_BIN to the Godot 4.8 beta1 double editor" >&2
   exit 2
 fi
 ACTUAL_GODOT_VERSION="$("$GODOT_BIN" --version | head -n 1 | tr -d '\r')"
@@ -33,7 +33,7 @@ if [[ -n "$(git -C "$ROOT" status --porcelain --untracked-files=all)" ]]; then
   git -C "$ROOT" status --short >&2
   exit 5
 fi
-if [[ "$(uname -s)" == "Linux" && ! -x /usr/bin/Xvfb ]]; then
+if [[ "$(uname -s)" == "Linux" && ! -x "${XVFB_BIN:-/usr/bin/Xvfb}" ]]; then
   echo "SM1_6_XVFB_REQUIRED" >&2
   exit 6
 fi

@@ -161,10 +161,10 @@ func _spawn(exe: String, args: Array[String], user: String, display: String) -> 
 
 
 func _start_xvfb() -> String:
-	if not FileAccess.file_exists("/usr/bin/Xvfb"):
+	if not FileAccess.file_exists((OS.get_environment("XVFB_BIN") if OS.get_environment("XVFB_BIN") != "" else "/usr/bin/Xvfb")):
 		return ""
 	var display := ":%d" % (700 + OS.get_process_id() % 200)
-	xvfb_pid = OS.create_process("/usr/bin/Xvfb",[display,"-screen","0","1280x720x24","-nolisten","tcp","-noreset"],false)
+	xvfb_pid = OS.create_process((OS.get_environment("XVFB_BIN") if OS.get_environment("XVFB_BIN") != "" else "/usr/bin/Xvfb"),[display,"-screen","0","1280x720x24","-nolisten","tcp","-noreset"],false)
 	pids.append(xvfb_pid)
 	OS.delay_msec(500)
 	return display if OS.is_process_running(xvfb_pid) else ""

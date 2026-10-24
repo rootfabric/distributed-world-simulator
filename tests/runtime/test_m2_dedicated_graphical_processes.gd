@@ -274,7 +274,7 @@ func _spawn_process(executable: String, args: Array[String], user_root: String, 
 
 
 func _start_virtual_display(root: String) -> String:
-	var executable := "/usr/bin/Xvfb"
+	var executable := (OS.get_environment("XVFB_BIN") if OS.get_environment("XVFB_BIN") != "" else "/usr/bin/Xvfb")
 	if not FileAccess.file_exists(executable):
 		failures.append("Xvfb is required for the real graphical M2 process test")
 		return ""
