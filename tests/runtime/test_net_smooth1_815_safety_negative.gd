@@ -5,7 +5,7 @@ extends SceneTree
 # clock. Every negative path must fail CLOSED with the EXACT historical
 # error code documented in work/ns1-815-safety-r1/SAFETY_815_FINDINGS_RU.md.
 #
-# Godot execution is DEFERRED (host contended by a performance campaign);
+# Native execution required by the exact pinned Windows/Linux CI workflow;
 # tests/tools/test_net_smooth1_815_safety_negative_source_contracts.py
 # statically pins this file's fail-closed assertions until the deferred run.
 const Full = preload("res://scripts/runtime/networked_gameplay/contracts/player_state_snapshot.gd")
@@ -108,7 +108,13 @@ func _join_bit_corruption() -> void:
 		return
 	var packet: PackedByteArray = Dictionary(encoded["details"])["packet"]
 	var marker := String("815_SENTINEL").to_utf8_buffer()
-	var marker_at := packet.find(marker)
+	# PackedByteArray.find accepts ONE integer byte, not an array. Search
+	# the exact sentinel byte sequence without false single-byte matches.
+	var marker_at: int = -1
+	for offset in range(maxi(0, packet.size() - marker.size() + 1)):
+		if packet.slice(offset, offset + marker.size()) == marker:
+			marker_at = offset
+			break
 	check(marker_at > 0, "payload sentinel located inside packet bytes")
 	if marker_at <= 0:
 		return
@@ -265,36 +271,51 @@ func _authority_epoch_fences() -> void:
 		return
 	var ticket: int = int(Dictionary(prepared.get("details", {})).get("ticket", -1))
 
+	# A ticket is consumed BEFORE validating the fence, including failures.
+	# Every separate negative must mint a FRESH proof; otherwise a replay
+	# error would mask an incorrect epoch/route/session verifier.
 	enet.set("_r22_authority_epoch", 8)
 	var authority: Dictionary = enet.call("_r22_take_attestation",
 		source, PEER, ticket)
-	check(not _ok(authority) and
-		_code(authority) == "R31P23R22_AUTHORITY_CHANGED",
+	check(not _ok(authority) and _code(authority) == "R31P23R22_AUTHORITY_CHANGED",
 		"epoch change fails CLOSED as R31P23R22_AUTHORITY_CHANGED")
+	var epoch_replayed: Dictionary = enet.call("_r22_take_attestation", source, PEER, ticket)
+	check(not _ok(epoch_replayed) and _code(epoch_replayed) == "R31P23R22_PROOF_MISSING_OR_REPLAYED",
+		"failed epoch proof cannot be replayed")
 	enet.set("_r22_authority_epoch", 7)
 
-	enet.set("_route_generation_by_peer", {PEER: 4})
-	var route: Dictionary = enet.call("_r22_take_attestation",
-		source, PEER, ticket)
-	check(not _ok(route) and _code(route) == "R31P23R22_ROUTE_CHANGED",
-		"route change fails CLOSED as R31P23R22_ROUTE_CHANGED")
-	enet.set("_route_generation_by_peer", {PEER: 3})
+	var p_route: Dictionary = enet.r22_prepare_validated_compact(source, PEER, frame)
+	check(_ok(p_route), "fresh proof for route change")
+	if _ok(p_route):
+		enet.set("_route_generation_by_peer", {PEER: 4})
+		var route: Dictionary = enet.call("_r22_take_attestation",
+			source, PEER, int(Dictionary(p_route["details"]).get("ticket", 0)))
+		check(not _ok(route) and _code(route) == "R31P23R22_ROUTE_CHANGED",
+			"route change fails CLOSED as R31P23R22_ROUTE_CHANGED")
+		enet.set("_route_generation_by_peer", {PEER: 3})
 
-	enet.set("_session_by_peer", {PEER: SESSION_NEW})
-	var session: Dictionary = enet.call("_r22_take_attestation",
-		source, PEER, ticket)
-	check(not _ok(session) and _code(session) == "SESSION_MISMATCH",
-		"session change fails CLOSED as SESSION_MISMATCH")
-	enet.set("_session_by_peer", {PEER: SESSION_OLD})
+	var p_session: Dictionary = enet.r22_prepare_validated_compact(source, PEER, frame)
+	check(_ok(p_session), "fresh proof for session change")
+	if _ok(p_session):
+		enet.set("_session_by_peer", {PEER: SESSION_NEW})
+		var session: Dictionary = enet.call("_r22_take_attestation",
+			source, PEER, int(Dictionary(p_session["details"]).get("ticket", 0)))
+		check(not _ok(session) and _code(session) == "SESSION_MISMATCH",
+			"session change fails CLOSED as SESSION_MISMATCH")
+		enet.set("_session_by_peer", {PEER: SESSION_OLD})
 
-	var replay: Dictionary = enet.call("_r22_take_attestation",
-		source, PEER, ticket)
-	check(_ok(replay), "untouched fence state still consumes the one-use proof")
-	var replayed: Dictionary = enet.call("_r22_take_attestation",
-		source, PEER, ticket)
-	check(not _ok(replayed) and
-		_code(replayed) == "R31P23R22_PROOF_MISSING_OR_REPLAYED",
-		"proof replay fails CLOSED")
+	var p_replay: Dictionary = enet.r22_prepare_validated_compact(source, PEER, frame)
+	check(_ok(p_replay), "fresh proof for valid consumption and replay")
+	if _ok(p_replay):
+		var replay_ticket: int = int(Dictionary(p_replay["details"]).get("ticket", 0))
+		var claimed: Dictionary = enet.call("_r22_take_attestation",
+			source, PEER, replay_ticket)
+		check(_ok(claimed), "valid current authority proof succeeds exactly once")
+		var replayed: Dictionary = enet.call("_r22_take_attestation",
+			source, PEER, replay_ticket)
+		check(not _ok(replayed) and
+			_code(replayed) == "R31P23R22_PROOF_MISSING_OR_REPLAYED",
+			"proof replay fails CLOSED")
 
 	var damaged: Dictionary = _snapshot_frame(SESSION_OLD, 11)
 	var prepared2: Dictionary = enet.r22_prepare_validated_compact(
