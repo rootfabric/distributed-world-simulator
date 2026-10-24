@@ -359,7 +359,9 @@ func _compact_nested_checksum() -> void:
 		"compact scalar tamper keeping h fails CLOSED as COMPACT mismatch")
 
 	var h_tampered: Dictionary = body.duplicate(true)
-	h_tampered["h"] = String(h_tampered["h"]).substr(0, 63) + "0"
+	var original_h: String = String(h_tampered["h"])
+	# A fixed last nibble could already be 0. Always mutate this checksum.
+	h_tampered["h"] = original_h.substr(0, 63) + ("1" if original_h.ends_with("0") else "0")
 	check(not _ok(Compact.validate(h_tampered)) and
 		_code(Compact.validate(h_tampered)) ==
 			"COMPACT_GAMEPLAY_SNAPSHOT_CHECKSUM_MISMATCH",
