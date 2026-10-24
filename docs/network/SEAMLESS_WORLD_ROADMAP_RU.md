@@ -130,3 +130,13 @@ one observable user result
 - topology changes do not fork gameplay semantics.
 
 Полный ближайший план: [`../plans/PLAYABLE_NETWORK_MILESTONES_RU.md`](../plans/PLAYABLE_NETWORK_MILESTONES_RU.md).
+
+## SEAM-E2E R1 — обязательная полная приёмка распределённого мира (новый кандидат)
+
+Ранние milestones N3–N6 и два authority в SM1 остаются полезными. Но **полная продуктовая бесшовность** требует минимум три реальных authority-процесса A/B/C, Gateway, двух графических игроков и две независимые машины. Игроки под разными owners должны видеть и действительно взаимодействовать друг с другом через границу, совместно добывать ресурсы, менять одну постройку, обмениваться canonical предметами и сохранять физическую, визуальную, сетевую и durable непрерывность.
+
+- [Сквозная спецификация и критерии PASS/FAIL](../testing/SEAM_E2E_R1_MULTISERVER_WORLD_ACCEPTANCE_RU.md)
+- [Машинный контракт S01–S15](../../config/testing/seam-e2e-r1-acceptance.v1.json)
+- [Work Order для Windows/Linux агентов](../testing/SEAM_E2E_R1_EXECUTION_WORK_ORDER_RU.md)
+
+**Статус на фиксацию:** `SPEC_CANDIDATE / NOT_ACTIVATED / FULL_PRODUCT_NOT_YET_PROVEN`. R31 и SM1 не заменяют физический трёхсерверный E2E; этот документ не меняет control registry, runtime owners или прошлые результаты.

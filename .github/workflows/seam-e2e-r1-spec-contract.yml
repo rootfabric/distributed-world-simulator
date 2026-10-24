@@ -1,0 +1,54 @@
+name: SEAM-E2E R1 Spec Contract Only (Not Product Acceptance)
+
+on:
+  push:
+    branches:
+      - plan/seam-e2e-multiserver-crossplayer-acceptance-r1
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: seam-e2e-r1-spec-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  spec-contract-only:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Verify pinned HEAD and test-only scope
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test -z "$(git status --porcelain --untracked-files=no)"
+          git merge-base --is-ancestor ae9a669336d93b3497fa78e5bb6d8eb3a21a0211 HEAD
+          git rev-parse HEAD
+          git rev-parse 'HEAD^{tree}'
+      - name: Validate mandatory 3-authority two-host cross-player gates
+        run: |
+          set -euo pipefail
+          python -m py_compile tools/seam_e2e/check_contract.py tests/tools/test_seam_e2e_r1_contract.py
+          python tools/seam_e2e/check_contract.py
+          python -m unittest discover -s tests/tools -p 'test_seam_e2e_r1_contract.py' -v
+      - name: Explicitly prohibit runtime acceptance inference
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          m=json.loads(Path("config/testing/seam-e2e-r1-acceptance.v1.json").read_text(encoding="utf-8"))
+          assert m["status"]=="PROPOSED_CONTRACT_NOT_ACTIVATED"
+          assert m["product_release_must_not_be_claimed_from_this_spec_alone"] is True
+          assert m["release_decision"]["human_merge_and_release_gate"] is True
+          print("SEAM_E2E_R1_SPEC_PASS; PRODUCT_E2E_NOT_YET_PROVEN")
+          PY
