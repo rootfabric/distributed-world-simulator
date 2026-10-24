@@ -32,14 +32,21 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           fetch-depth: 0
 
+      - name: Resolve exact native Linux double engine
+        if: matrix.platform == 'Linux'
+        shell: bash
+        run: bash tools/engine48/select_exact_double_engine.sh
+      - name: Resolve exact native Windows double engine
+        if: matrix.platform == 'Windows'
+        shell: pwsh
+        run: '& ./tools/engine48/select_exact_double_engine.ps1'
       - name: A13 Spatial Linux exact
         if: matrix.platform == 'Linux'
         shell: bash
-        env:
-          CONFIGURED_GODOT: ${{ vars.DWS_GODOT_DOUBLE_LINUX_BIN }}
         run: |
           set -euo pipefail
-          godot="${CONFIGURED_GODOT:-${DWS_GODOT_DOUBLE_LINUX_BIN:-$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64}}"
+          godot="$DWS_GODOT_DOUBLE_LINUX_BIN"
+          test -x "$godot" || { echo ENGINE48_PINNED_EDITOR_MISSING >&2; exit 2; }
           python3 -m py_compile validation/ecology/evo_arch2_a13_spatial/run_exact.py
           python3 validation/ecology/evo_arch2_a13_spatial/run_exact.py --godot "$godot"
           python3 validation/ecology/evo_arch2_a13/run_exact.py --godot "$godot"
@@ -49,14 +56,10 @@ jobs:
       - name: A13 Spatial Windows exact
         if: matrix.platform == 'Windows'
         shell: pwsh
-        env:
-          CONFIGURED_GODOT: ${{ vars.DWS_GODOT_DOUBLE_BIN }}
         run: |
           $ErrorActionPreference = 'Stop'
-          $godot = $env:CONFIGURED_GODOT
-          if ([string]::IsNullOrWhiteSpace($godot)) {
-            $godot = 'C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe'
-          }
+          $godot = $env:DWS_GODOT_DOUBLE_BIN
+          if (-not $godot -or -not (Test-Path -LiteralPath $godot -PathType Leaf)) { throw 'ENGINE48_PINNED_EDITOR_MISSING' }
           python -m py_compile validation/ecology/evo_arch2_a13_spatial/run_exact.py
           if ($LASTEXITCODE -ne 0) { throw 'A13_SPATIAL_PYTHON_COMPILE' }
           python validation/ecology/evo_arch2_a13_spatial/run_exact.py --godot $godot
