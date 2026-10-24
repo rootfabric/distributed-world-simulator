@@ -67,7 +67,7 @@ func _run() -> void:
 		_finish()
 		return
 	var frozen: Dictionary = _run_lifecycle(Frozen, field, population, false)
-	var candidate: Dictionary = _run_lifecycle(A5, field, population, true)
+	var candidate: Dictionary = _run_lifecycle(A5, field, population, false)
 	if frozen.is_empty() or candidate.is_empty():
 		_finish()
 		return
@@ -89,11 +89,8 @@ func _run() -> void:
 		"both R2C/R2E previous cursors deeply immutable at EVERY resume")
 	_check(C.encode(state) == source_before,
 		"source field/population never modified by original or copy-on-write")
-	_check(int(candidate.profiled_calls) == int(candidate.calls) \
-		and int(candidate.substeps.cursor_verify_us) > 0 \
-		and int(candidate.substeps.source_digest_us) > 0 \
-		and int(candidate.substeps.cow_copy_us) > 0,
-		"new CPU profile records old full cursor and source checks for all calls")
+	_check(int(candidate.profiled_calls) == 0 and int(frozen.profiled_calls) == 0,
+		"both timed old/new A5 algorithms use profiler OFF")
 	# Also compare complete whole ecological Runtime and its A8 checkpoint.
 	var c = Controller.new()
 	var initialization: Dictionary = c.initialize(_manifest(), {})
@@ -148,7 +145,12 @@ func _run() -> void:
 		"deep_immutability": bool(frozen.immutable) and bool(candidate.immutable),
 		"source_unchanged": C.encode(state) == source_before,
 		"cpu_profile": steps,
-		"a5_cow_profile": candidate.substeps,
+		"a5_cow_profile": {
+			"source_digest_us": int(steps.r2e_a5_source_digest_us),
+			"cursor_verify_us": int(steps.r2e_a5_cursor_verify_us),
+			"cow_copy_us": int(steps.r2e_a5_cow_copy_us),
+			"result_seal_us": int(steps.r2e_a5_seal_us),
+		},
 		"worker_wall_us": int(result.worker_wall_us),
 		"worker_source_full_validate_us": int(result.worker_source_validate_wall_us),
 		"worker_candidate_full_validate_us": int(result.worker_candidate_validate_wall_us),
