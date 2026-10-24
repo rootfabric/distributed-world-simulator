@@ -12,7 +12,7 @@ m = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(m)
 
 ID = {"head": "a"*40, "tree": "b"*40, "godot_sha256": "c"*64,
-      "asset_manifest_sha256": "d"*64, "asset_count": 224}
+      "asset_manifest_sha256": "d"*64, "asset_count": 123}
 
 
 def fake(root, connected=True, roles=(), cleaned=True, invalid=False):
@@ -91,6 +91,63 @@ class Campaign(unittest.TestCase):
             docs = m.hash_tree(p, ("sha256-manifest.json",))
             self.assertEqual(len(docs), 1)
             self.assertEqual(docs[0]["sha256"], m.sha256_file(p/"raw.log"))
+
+
+    def test_asset_pack_uses_123_raw_sources_not_224_total_files(self):
+        # Synthetic canonical pack: exact 123 raw files plus 101 .import
+        # sidecars, same distinction as R2.2 runner identity, no data copied.
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            for index in range(123):
+                (root/("raw-%03d.asset" % index)).write_bytes(
+                    ("source-%03d" % index).encode())
+            for index in range(101):
+                (root/("raw-%03d.asset.import" % index)).write_text(
+                    "[remap]\nimporter=resource\n")
+            first = m.scan_asset_pack(root)
+            self.assertEqual(first["asset_count"], 123)
+            self.assertEqual(first["asset_import_sidecars"], 101)
+            self.assertEqual(first["asset_pack_file_count"], 224)
+            m.check_asset_pack(first, 123, first["asset_manifest_sha256"])
+            with self.assertRaisesRegex(ValueError, "QUATERNIUS_ASSET_COUNT_MISMATCH"):
+                m.check_asset_pack(first, 224)
+            with self.assertRaisesRegex(ValueError, "QUATERNIUS_ASSET_MANIFEST_SHA_MISMATCH"):
+                m.check_asset_pack(first, 123, "0"*64)
+
+            # Raw-byte corruption MUST be detected even though file count
+            # remains 123. Changing an import sidecar never changes raw hash.
+            (root/"raw-000.asset").write_bytes(b"CORRUPTED SOURCE")
+            corrupt = m.scan_asset_pack(root)
+            self.assertEqual(corrupt["asset_count"], 123)
+            self.assertNotEqual(corrupt["asset_manifest_sha256"],
+                                first["asset_manifest_sha256"])
+            with self.assertRaisesRegex(ValueError, "QUATERNIUS_ASSET_MANIFEST_SHA_MISMATCH"):
+                m.check_asset_pack(corrupt, 123, first["asset_manifest_sha256"])
+
+    def test_sidecar_changes_cannot_mutate_source_identity(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            (root/"raw.asset").write_bytes(b"same-source")
+            (root/"raw.asset.import").write_bytes(b"one-sidecar")
+            first = m.scan_asset_pack(root)
+            (root/"raw.asset.import").write_bytes(b"different-sidecar")
+            second = m.scan_asset_pack(root)
+            self.assertEqual(first["asset_manifest_sha256"],
+                             second["asset_manifest_sha256"])
+            self.assertEqual(first["asset_count"], second["asset_count"])
+            (root/"raw.asset.uid").write_bytes(b"uid")
+            third = m.scan_asset_pack(root)
+            self.assertEqual(third["asset_uid_sidecars"], 1)
+            self.assertEqual(third["asset_count"], 1)
+            self.assertEqual(third["asset_manifest_sha256"],
+                             first["asset_manifest_sha256"])
+
+    def test_parser_defaults_match_exact_product_source_filter(self):
+        content = FILE.read_text(encoding="utf-8")
+        self.assertIn('parser.add_argument("--expected-asset-count", type=int, default=123', content)
+        self.assertIn('--expected-asset-manifest-sha256', content)
+        self.assertIn("QUATERNIUS_ASSET_MANIFEST_SHA_MISMATCH", content)
+        self.assertNotIn('default=224', content)
 
 
 if __name__ == "__main__":

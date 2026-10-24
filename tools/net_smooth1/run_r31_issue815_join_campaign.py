@@ -134,6 +134,42 @@ def command_for_attempt(
     return cmd
 
 
+def scan_asset_pack(asset_root: Path) -> dict[str, Any]:
+    """Match product runner's raw-source hash EXACTLY, not sidecar count.
+
+    .import and .uid files are *not* members of asset_count nor the raw
+    source SHA256 manifest. The full pack count remains informational.
+    """
+    if not asset_root.is_dir():
+        raise ValueError("QUATERNIUS_ASSET_DIRECTORY_MISSING")
+    all_files = sorted(path for path in asset_root.rglob("*") if path.is_file())
+    source_files = [path for path in all_files
+                    if path.suffix not in (".import", ".uid")]
+    fingerprints = {
+        str(path.relative_to(asset_root)).replace("\\", "/"): sha256_file(path)
+        for path in source_files
+    }
+    return {
+        "asset_count": len(source_files),
+        "asset_manifest_sha256": hashlib.sha256(
+            json.dumps(fingerprints, sort_keys=True).encode()).hexdigest(),
+        "asset_import_sidecars": sum(path.suffix == ".import" for path in all_files),
+        "asset_uid_sidecars": sum(path.suffix == ".uid" for path in all_files),
+        "asset_pack_file_count": len(all_files),
+    }
+
+
+def check_asset_pack(
+    pack: dict[str, Any], expected_raw_count: int,
+    expected_manifest_sha256: str = ""
+) -> None:
+    if pack.get("asset_count") != expected_raw_count:
+        raise ValueError("QUATERNIUS_ASSET_COUNT_MISMATCH")
+    if (expected_manifest_sha256
+            and pack.get("asset_manifest_sha256") != expected_manifest_sha256):
+        raise ValueError("QUATERNIUS_ASSET_MANIFEST_SHA_MISMATCH")
+
+
 def validate_product(args: argparse.Namespace) -> dict[str, Any]:
     product, godot = args.product.resolve(), args.godot.resolve()
     if product == Path(__file__).resolve().parents[2]:
@@ -153,18 +189,16 @@ def validate_product(args: argparse.Namespace) -> dict[str, Any]:
     version = subprocess.check_output([str(godot), "--version"], text=True).strip()
     if version != EXPECTED_GODOT_VERSION:
         raise ValueError("GODOT_DOUBLE_VERSION_MISMATCH")
-    assets = product / "assets/external/quaternius"
-    files = sorted(x for x in assets.rglob("*")
-                   if x.is_file() and x.suffix not in (".import", ".uid"))
-    if len(files) != args.expected_asset_count:
-        raise ValueError("QUATERNIUS_ASSET_COUNT_MISMATCH")
-    asset_hashes = {p.relative_to(assets).as_posix(): sha256_file(p) for p in files}
-    asset_sha = hashlib.sha256(
-        json.dumps(asset_hashes, sort_keys=True).encode()).hexdigest()
+    # The canonical 224-file Quaternius package includes 101 .import
+    # sidecars. The PRODUCT runner identity intentionally counts/hashes
+    # ONLY 123 raw sources (ignoring .import and .uid). Do not confuse
+    # full pack count with asset_count or weaken the raw SHA manifest.
+    pack = scan_asset_pack(product / "assets/external/quaternius")
+    check_asset_pack(pack, args.expected_asset_count,
+                     args.expected_asset_manifest_sha256)
     return {
         "head": head, "tree": tree, "godot_sha256": binary_sha,
-        "godot_version": version, "asset_count": len(files),
-        "asset_manifest_sha256": asset_sha,
+        "godot_version": version, **pack,
         "tools_head": git(Path(__file__).resolve().parents[2], "rev-parse", "HEAD"),
         "platform": platform.platform(),
     }
@@ -194,7 +228,10 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--expected-head", required=True)
     parser.add_argument("--expected-tree", required=True)
     parser.add_argument("--expected-godot-sha256", required=True)
-    parser.add_argument("--expected-asset-count", type=int, default=224)
+    parser.add_argument("--expected-asset-count", type=int, default=123,
+                        help="raw Quaternius source count (123), ignoring .import/.uid sidecars")
+    parser.add_argument("--expected-asset-manifest-sha256", default="",
+                        help="optional full canonical SHA256 of raw-file content hash map")
     parser.add_argument("--attempts", type=int, default=10)
     parser.add_argument("--order", choices=("OFF_ON", "ON_OFF", "OFF_ONLY", "ON_ONLY"),
                         default="OFF_ON")
@@ -208,6 +245,11 @@ def main(argv: list[str] | None = None) -> int:
         if len(val) != (64 if key == "expected_godot_sha256" else 40) or any(
                 c not in "0123456789abcdef" for c in val):
             parser.error("bad lowercase hexadecimal expected hash")
+    if args.expected_asset_count < 1:
+        parser.error("raw asset count must be positive")
+    pin = args.expected_asset_manifest_sha256
+    if pin and (len(pin) != 64 or any(c not in "0123456789abcdef" for c in pin)):
+        parser.error("expected asset manifest SHA256 must be 64 lowercase hex digits")
     if os.name != "nt":
         parser.error("native Windows GUI desktop is required")
     try:
