@@ -24,6 +24,7 @@ from analyze_net_smooth1 import write_report
 from owned_process_cleanup import finalize_owned_processes, preflight_no_smooth_godot
 
 TESTS = [
+ 'tests/runtime/test_net_smooth1_p1_snapshot_flush_batching.gd',
  'tests/runtime/test_net_smooth1_r3c4_periodic_frame_headroom.gd',
  'tests/runtime/test_net_smooth1_r42_r3c2_phased_item_publication.gd',
  'tests/characters/test_net_smooth1_r42_r3c2_avatar_prewarm.gd',
@@ -827,6 +828,7 @@ def main() -> int:
     args.output=(args.output or ROOT/'artifacts/net-smooth1'/run_id).resolve()
     args.output.mkdir(parents=True,exist_ok=False)
     manifest={'schema':'dws.net_smooth.run.v1','run_id':run_id,'mode':args.mode,
+              'r31p1_snapshot_batching':args.mode=='gui' and args.scenario=='r31-reconnect-roundtrip',
               'duration_s':args.duration,'profile':args.profile,'identity':identity(args.godot),
               'started_utc':time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime())}
     dump(args.output/'manifest.json',manifest)
