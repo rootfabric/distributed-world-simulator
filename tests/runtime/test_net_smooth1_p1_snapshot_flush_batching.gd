@@ -73,7 +73,8 @@ func run() -> void:
 	test_success_with_partial_dispatch_retains_dirty()
 	test_backpressure_pending_count_retains_dirty()
 	test_changed_and_unchanged_seam_use_one_batch()
-	check(assertions >= 20, "all expected assertions executed")
+	test_changed_seam_partial_does_not_cache_undelivered()
+	check(assertions >= 26, "all expected assertions executed")
 	for f in failures:
 		push_error(f)
 	print("NET_SMOOTH1_P1_FLUSH_BATCHING: %s assertions=%d failures=%d" % [
@@ -197,6 +198,8 @@ func test_changed_and_unchanged_seam_use_one_batch() -> void:
 		"two reliable seam changes queued before flush")
 	check(not bool(runtime.get("_movement_snapshot_dirty")),
 		"changed authority shared batch completes")
+	check(Dictionary(runtime.get("_seam_sent_state_by_peer")).size() == 2,
+		"reliable seam cache commits only after complete dispatch")
 	_arm_snapshot(runtime)
 	runtime.call("_maybe_publish_movement_snapshot")
 	check(flush_calls == 2, "unchanged seam one batch again")
@@ -207,6 +210,38 @@ func test_changed_and_unchanged_seam_use_one_batch() -> void:
 	check(flush_calls == 3, "new authority epoch one batch")
 	check(sends == 10, "epoch change sends seam for both peers")
 	runtime.set("_service", real_service)
+	runtime.call("stop")
+	runtime.free()
+
+
+func test_changed_seam_partial_does_not_cache_undelivered() -> void:
+	var runtime := _setup()
+	if runtime == null:
+		return
+	_reset_stub()
+	var live_service = runtime.get("_service")
+	var seam := SeamService.new()
+	seam.previous = live_service
+	runtime.set("_service", seam)
+	_attach_boundary(runtime)
+	partial_fail_next = true
+	_arm_snapshot(runtime)
+	runtime.call("_maybe_publish_movement_snapshot")
+	check(flush_calls == 1, "changed seam partial failure uses single shared flush")
+	check(bool(runtime.get("_movement_snapshot_dirty")), "partial reliable seam keeps dirty")
+	check(Dictionary(runtime.get("_seam_sent_state_by_peer")).is_empty(),
+		"failed native dispatch must NOT poison reliable seam sent cache")
+	check(sent_types.count("PRODUCT_SEAM_STATE") == 2,
+		"both reliable seam frames were staged before partial failure")
+	partial_fail_next = false
+	_arm_snapshot(runtime)
+	runtime.call("_maybe_publish_movement_snapshot")
+	check(flush_calls == 2, "recovery retry still uses one shared flush")
+	check(Dictionary(runtime.get("_seam_sent_state_by_peer")).size() == 2,
+		"reliable seam cache advances only on subsequent COMPLETE batch")
+	check(not bool(runtime.get("_movement_snapshot_dirty")),
+		"successful retry publishes latest authoritative movement")
+	runtime.set("_service", live_service)
 	runtime.call("stop")
 	runtime.free()
 

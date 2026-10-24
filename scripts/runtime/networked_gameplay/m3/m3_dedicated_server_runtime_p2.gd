@@ -1379,6 +1379,7 @@ func _maybe_publish_movement_snapshot() -> void:
 	var all_enqueued := true
 	var compact_enqueued_any := false
 	var compact_enqueued_count: int = 0
+	var staged_seam_by_peer: Dictionary = {}
 	var committed_enqueues_before := _p1b_committed_enqueues
 	var target_count := 0
 	for peer_id_value in _peer_to_player.keys():
@@ -1416,7 +1417,8 @@ func _maybe_publish_movement_snapshot() -> void:
 					peer_id,
 					String(_peer_to_player.get(peer_id_value, "")),
 					"MOVEMENT_NETWORK_TICK",
-					false # defer changed reliable seam into shared batch
+					false, # defer changed reliable seam into shared batch
+					staged_seam_by_peer
 				)
 				seam_check_send_us += Time.get_ticks_usec() - seam_started_us
 		else:
@@ -1466,6 +1468,16 @@ func _maybe_publish_movement_snapshot() -> void:
 				"pending_bytes": pending_bytes,
 				"complete": batch_complete,
 			})
+		if batch_complete:
+			# A successful ENQUEUE alone is not proof that the reliable seam
+			# reached the native transport. Advance the per-peer resync cache
+			# only after the complete same-frame batch dispatch receipt.
+			for cached_peer_value in staged_seam_by_peer.keys():
+				var cached_peer: String = String(cached_peer_value)
+				_seam_sent_state_by_peer[cached_peer] = Dictionary(
+					staged_seam_by_peer[cached_peer]
+				).duplicate(true)
+				_seam_messages_sent += 1
 		if not batch_complete:
 			all_enqueued = false
 			_movement_snapshot_enqueue_failures += 1
@@ -1512,7 +1524,8 @@ func _send_product_seam_state(
 	peer_id: String,
 	logical_player_id: String,
 	reason: String,
-	flush_after_send: bool = true
+	flush_after_send: bool = true,
+	staged_seam_by_peer: Dictionary = {}
 ) -> bool:
 	if (
 		_service == null
@@ -1551,15 +1564,20 @@ func _send_product_seam_state(
 		flush_after_send
 	)
 	if sent:
-		# Only cache a successfully queued, reliable frame. Failed dispatches
-		# must be retried; never advance a cache on a rejected send.
-		_seam_sent_state_by_peer[peer_id] = {
+		var candidate_cache: Dictionary = {
 			"sent": true,
 			"session_id": session_id,
 			"logical_player_id": logical_player_id,
 			"state": state.duplicate(true),
 		}
-		_seam_messages_sent += 1
+		if flush_after_send:
+			# Original immediate path: _send_on_channel has itself flushed.
+			_seam_sent_state_by_peer[peer_id] = candidate_cache
+			_seam_messages_sent += 1
+		else:
+			# Batched path: ONLY after the shared flush confirms complete
+			# dispatch may an unchanged seam suppress later reliable resyncs.
+			staged_seam_by_peer[peer_id] = candidate_cache
 	return sent
 
 
