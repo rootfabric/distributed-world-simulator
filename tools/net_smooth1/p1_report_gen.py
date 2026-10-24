@@ -8,14 +8,12 @@ OUT = Path(__file__).resolve().parents[2] / "docs" / "evidence" / "2026-10-24_NE
 RUNS = ["r31p23r22-p0-pair1-off", "r31p23r22-p0-pair1-on",
         "r31p23r22-p0-pair2-off", "r31p23r22-p0-pair2-on",
         "r31p23r22-p0-pair3-off", "r31p23r22-p0-pair3-on"]
-AGG = {
-    "r31p23r22-p0-pair1-off": (7160, 673, 612, 46, 2, 1.49, 3.81, 20.3),
-    "r31p23r22-p0-pair1-on": (7188, 527, 456, 46, 11, 1.10, 2.39, 9.5),
-    "r31p23r22-p0-pair2-off": (7132, 874, 811, 46, 5, 1.48, 3.41, 8.3),
-    "r31p23r22-p0-pair2-on": (7196, 124, 79, 11, 30, 1.09, 2.31, 2.6),
-    "r31p23r22-p0-pair3-off": (6668, 1077, 988, 54, 8, 1.59, 9.85, 122.8),
-    "r31p23r22-p0-pair3-on": (7198, 473, 399, 50, 15, 1.01, 2.26, 4.5),
-}
+# Recompute ALL population counts from SHA-checked original measured traces.
+# The six original Windows roots must exist; no baked success numbers.
+import os
+from p1_tail_aggregates import summarize_run
+BASE = Path(os.environ.get("NET_SMOOTH1_P0_RUN_ROOT", str(Path(__file__).resolve().parents[2] / "work" / "ns1-p0-r22-20261024" / "artifacts" / "net-smooth1")))
+
 
 
 def f1(v):
@@ -48,7 +46,7 @@ def server_table(doc):
         if f["aux_in_window"].get("checkpoint_capture"):
             parts.append("checkpoint_capture в окне кадра")
         if covered < 20 and not snap_stage and float(st.get("movement_persistence_ms") or 0) <= 5:
-            parts.append("не покрыто инструментарием (host/OS)")
+            parts.append("не покрыто инструментарием (причина неизвестна)")
         if not parts:
             parts.append("смешанная: msg=%s fixed=%s" % (f2(st.get("message_dispatch_ms")), f2(st.get("fixed_simulation_ms"))))
         lines.append("| %d | %s | %s | %s | %s | %s | %s | %s | %s/%s/%s | %d | %s |" % (
@@ -93,7 +91,7 @@ def main():
 
 ## 1. Вердикт
 
-**Причина хвоста ДОКАЗАНА** (доминирующая, воспроизводится во всех шести прогонах): кадры выше нормы 25 мс —
+**Избыточный per-peer flush найден в коде; его единоличная причинность для всего хвоста НЕ доказана** (доминирующая, воспроизводится во всех шести прогонах): кадры выше нормы 25 мс —
 это кадры **публикации COMPACT movement-снапшота** (20 Гц): на главном потоке одним цепочкой в одном
 `engine_frame` выполняются capture + encode + **по-пирные** `create_frame_for_peer` → `send_to_peer` →
 `flush_outbound(32, peer_id)`. На 2 пиров — **два полных flush-прохода** на каждую публикацию.
@@ -112,11 +110,18 @@ def main():
 | прогон | кадров | >25 мс | из них snapshot-кадров | checkpoint-кадров | «голых» (без стадий) | flush p50/p99/max, мс |
 |---|---|---|---|---|---|---|""")
     for run in RUNS:
-        n, over, snap, ckpt, bare, fp50, fp99, fmax = AGG[run]
+        raw = summarize_run(BASE / run)
+        n = raw["count_frames"]
+        over = raw["count_over25"]
+        snap = raw["count_over25_with_snapshot"]
+        ckpt = raw["count_over25_with_checkpoint"]
+        bare = raw["count_over25_bare"]
+        fm = raw["flush_stage_ms"]
+        fp50, fp99, fmax = fm["p50"], fm["p99"], fm["max"]
         md.append("| %s | %d | %d (%.1f%%) | %d | %d | %d | %.2f / %.2f / %.1f |" % (
             run, n, over, 100.0 * over / n, snap, ckpt, bare, fp50, fp99, fmax))
     md.append("""
-Вывод из сводки: **86–97% кадров >25 мс в каждом прогоне — кадры, в engine_frame которых
+Вывод из сводки: **63–93% кадров >25 мс по исходной сводке (доля события, не причинность) — кадры, в engine_frame которых
 выполнялась публикация COMPACT-снапшота**. checkpoint-захват даёт ~46 кадров за прогон (каденция 2 с),
 «голые» паузы без каких-либо инструментированных стадий — 2–30 кадров (кроме pair2-on, где 30
 объясняются падением обоих пиров, см. раздел 5).

@@ -1,40 +1,113 @@
 #!/usr/bin/env python3
-"""Aggregate tail statistics per run for the P1 evidence report."""
+"""Fail-closed P1 full-population tail stats from ORIGINAL measured server trace.
+
+No pinned / local path and no hard-coded AGG. Reject missing/partial trace,
+incorrect identity, dropped events and invalid values. No raw file mutation.
+Usage: python tools/net_smooth1/p1_tail_aggregates.py RUN_ROOT --output stats.json
+"""
+from __future__ import annotations
+import argparse
+import hashlib
 import json
+import math
 from pathlib import Path
+from analyze_r31p22_loop_stages import read_trace, positive_int, number, dist
 
-BASE = Path(r"C:\distributed-world-simulator\work\ns1-p0-r22-20261024\artifacts\net-smooth1")
-RUNS = ["r31p23r22-p0-pair1-off", "r31p23r22-p0-pair1-on",
-        "r31p23r22-p0-pair2-off", "r31p23r22-p0-pair2-on",
-        "r31p23r22-p0-pair3-off", "r31p23r22-p0-pair3-on"]
 
-for run in RUNS:
-    trace = []
-    lo = hi = None
-    with (BASE / run / "server" / "trace.jsonl").open(encoding="utf-8") as f:
-        for line in f:
-            r = json.loads(line)
-            if r["kind"] == "measure_start":
-                lo = r["t_us"]
-            elif r["kind"] == "measure_end":
-                hi = r["t_us"]
-            elif r["kind"] in ("frame", "r31p22_loop_stages", "r31p22_compact_wire_stages",
-                               "movement_snapshot_stages"):
-                r["_k"] = r["kind"]
-                trace.append(r)
-    frames = [r for r in trace if r["_k"] == "frame" and lo <= r["t_us"] <= hi]
-    stages = {r["data"]["engine_frame"]: r["data"] for r in trace if r["_k"] == "r31p22_loop_stages"}
-    snaps = {r["data"]["engine_frame"]: r["data"] for r in trace if r["_k"] == "movement_snapshot_stages"}
-    over = [f for f in frames if f["data"]["interval_ms"] > 25]
-    with_snap = [f for f in over if f["data"]["engine_frame"] in snaps]
-    with_ckpt = [f for f in over if stages.get(f["data"]["engine_frame"], {}).get("movement_persistence_ms", 0) > 5]
-    bare = [f for f in over if f["data"]["engine_frame"] not in snaps
-            and stages.get(f["data"]["engine_frame"], {}).get("movement_persistence_ms", 0) <= 5
-            and sum(float(v) for k, v in stages.get(f["data"]["engine_frame"], {}).items() if k.endswith("_ms")) < 20]
-    wire = [r["data"] for r in trace if r["_k"] == "r31p22_compact_wire_stages" and lo <= r["t_us"] <= hi]
-    fl = sorted(w["outbound_flush_ms"] for w in wire)
-    print(run)
-    print("  frames=%d >25ms=%d (%.1f%%) of which snapshot=%d checkpoint=%d bare-uncovered=%d" % (
-        len(frames), len(over), 100 * len(over) / len(frames), len(with_snap), len(with_ckpt), len(bare)))
-    print("  flush_ms p50=%.2f p99=%.2f max=%.1f" % (
-        fl[len(fl) // 2], fl[max(0, int(len(fl) * .99) - 1)], fl[-1]))
+def file_sha(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def summarize_run(root: Path) -> dict:
+    manifest_path, report_path = root/"manifest.json", root/"report.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+    run_id = manifest.get("run_id")
+    if type(run_id) is not str or len(run_id) != 16:
+        raise ValueError("RUN_ID_INVALID")
+    identity = manifest.get("identity",{})
+    if (not isinstance(identity,dict) or not identity.get("head")
+        or not identity.get("tree") or not identity.get("godot_sha256")):
+        raise ValueError("SOURCE_IDENTITY_MISSING")
+    trace = read_trace(root/"server"/"trace.jsonl", run_id)
+    rows = trace["frame"]
+    frames = {}
+    for row in rows:
+        data=row["data"]
+        fid=positive_int(data.get("engine_frame"),"P1_ENGINE_FRAME")
+        if fid in frames:
+            raise ValueError("DUPLICATE_FRAME")
+        frames[fid]=number(data.get("interval_ms"),"P1_INTERVAL")
+    snapshot_ids = {
+        positive_int(r["data"].get("engine_frame"),"P1_SNAPSHOT_FRAME")
+        for r in trace["movement_snapshot_stages"]
+    }
+    loop_by_frame = {
+        positive_int(r["data"].get("engine_frame"),"P1_LOOP_FRAME"):r["data"]
+        for r in trace["r31p22_loop_stages"]
+    }
+    if len(loop_by_frame) != len(trace["r31p22_loop_stages"]):
+        raise ValueError("DUPLICATE_LOOP_STAGE")
+    if len(frames) < 100 or len(snapshot_ids) < 10:
+        raise ValueError("P1_INSUFFICIENT_FRAME_OR_SNAPSHOT_POPULATION")
+    over={fid for fid,value in frames.items() if value>25.0}
+    with_snapshot=over & snapshot_ids
+    with_checkpoint={
+        fid for fid in over
+        if number(loop_by_frame.get(fid,{}).get("movement_persistence_ms",0),
+                  "P1_PERSISTENCE")>5.0
+    }
+    bare={
+        fid for fid in over
+        if fid not in snapshot_ids and fid not in with_checkpoint
+        and sum(number(v,"P1_STAGE") for key,v in
+                loop_by_frame.get(fid,{}).items() if key.endswith("_ms"))<20.0
+    }
+    flush=[
+        number(r["data"].get("outbound_flush_ms"),"P1_FLUSH")
+        for r in trace["r31p22_compact_wire_stages"]
+    ]
+    if not flush:
+        raise ValueError("P1_MISSING_COMPACT_WIRE")
+    result={
+        "schema":"dws.net_smooth.p1_full_tail_aggregates.v2",
+        "source_run_id":run_id,
+        "source_head":identity["head"],"source_tree":identity["tree"],
+        "original_normative_verdict":report.get("verdict"),
+        "manifest_sha256":file_sha(manifest_path),
+        "report_sha256":file_sha(report_path),
+        "server_trace_sha256":trace["trace_sha256"],
+        "count_frames":len(frames),
+        "count_over25":len(over),
+        "count_over25_with_snapshot":len(with_snapshot),
+        "count_over25_with_checkpoint":len(with_checkpoint),
+        "count_over25_bare":len(bare),
+        "fraction_of_over25_with_snapshot":len(with_snapshot)/len(over) if over else 0.0,
+        "flush_stage_ms":dist(flush),
+        "interpretation":"SNAPSHOT_COINCIDENCE_NOT_PROOF_OF_FLUSH_CAUSALITY",
+    }
+    return result
+
+
+def main() -> int:
+    parser=argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("run_root",type=Path)
+    parser.add_argument("--output",type=Path,required=True)
+    args=parser.parse_args()
+    try:
+        result=summarize_run(args.run_root)
+    except (OSError,ValueError,TypeError,KeyError,json.JSONDecodeError) as exc:
+        print("P1_RAW_AGGREGATE_INCONCLUSIVE:"+str(exc))
+        return 2
+    args.output.parent.mkdir(parents=True,exist_ok=True)
+    args.output.write_text(json.dumps(result,ensure_ascii=False,indent=2),encoding="utf-8")
+    print(json.dumps({
+        "verdict":result["original_normative_verdict"],
+        "snapshot_fraction":result["fraction_of_over25_with_snapshot"],
+        "trace_sha256":result["server_trace_sha256"],
+    }))
+    return 0
+
+
+if __name__=="__main__":
+    raise SystemExit(main())
