@@ -55,6 +55,18 @@ def decorate(root:Path, mutator=None, *, no_passthrough=False, r21=None,
             if r21 is not None and not no_passthrough:
                 details["simulator"]["r31p23r21_fast_encode"]=r21
                 details["simulator"]["r31p23r21_size_reused"]=r21
+            if (manifest_overrides is not None and
+                    manifest_overrides.get("r31p23r22_attested_compact") is True
+                    and not no_passthrough):
+                # Genuine native R2.2 ON: the R2.1 fast encoder does NOT run.
+                details["simulator"]["r31p23r21_fast_encode"]=False
+                enet=details["simulator"]["enet"]
+                enet["validate_ms"]=0.0
+                enet["frame_encode_ms"]=0.0
+                enet["attestation_ms"]=.0007
+                enet["total_ms"]=sum(enet[k] for k in (
+                    "validate_ms","frame_encode_ms","attestation_ms",
+                    "channel_setup_ms","put_packet_ms","peer_stats_ms"))
             augmented.append({**row, "kind":"r31p23r2_flush_packet", "data":details})
         augmented.append(row)
     if mutator:
@@ -203,46 +215,80 @@ class LayerFalsifier(unittest.TestCase):
             first["data"]["simulator"]={}
         self.run_case(f,error="SIMULATOR_PROFILE_MISSING")
 
-    def test_r22_attested_arm_without_legacy_envelope_canaries_is_accepted(self):
-        # P0 ON arm: R2.1 flags + --r31p23r22-attested-compact ONLY. The legacy
-        # R3C4R2 worker-envelope / R31BP1 canaries are OFF and must not be
-        # mandatory for an R2.2-attested attribution run.
+
+    def test_true_r22_attested_on_wire_not_forged_r21_fast_encode(self):
         out=self.run_case(r21=True,manifest_overrides={
-            "r3c4r2_worker_envelope":None,"r31bp1_durable_chunks":None,
             "r31p23r22_attested_compact":True,
         })
         self.assertIs(out["r22_attested_requested"],True)
+        self.assertEqual(out["r22_confirmed_passthrough_events"],100)
         self.assertEqual(out["r21_confirmed_passthrough_events"],100)
-        self.assertEqual(out["passthrough_events"],100)
+        self.assertEqual(out["enet_stage_ms"]["attestation_ms"]["n"],100)
+        self.assertAlmostEqual(out["enet_stage_ms"]["attestation_ms"]["p99"],.0007)
+        self.assertEqual(out["normative_original_verdict"],"FAIL")
 
-    def test_r22_off_without_legacy_envelope_canaries_still_fails_closed(self):
-        self.run_case(manifest_overrides={
-            "r3c4r2_worker_envelope":None,"r31bp1_durable_chunks":None,
-            "r31p23r22_attested_compact":False,
-        },error="P23R2_INVALID_CANARY_OR_RUN_ID")
+    def test_r22_missing_actual_parent_canaries_is_rejected(self):
+        for key in ("r3c4r2_worker_envelope","r31bp1_durable_chunks"):
+            self.run_case(r21=True,manifest_overrides={
+                key:None,"r31p23r22_attested_compact":True,
+            },error="P23R2_INVALID_CANARY_OR_RUN_ID")
 
-    def test_r22_without_r21_canary_fails_closed(self):
+    def test_r22_without_r21_parent_rejected(self):
         self.run_case(manifest_overrides={
-            "r3c4r2_worker_envelope":None,"r31bp1_durable_chunks":None,
-            "r31p23r22_attested_compact":True,"r31p23r21_single_pass_compact":None,
+            "r31p23r22_attested_compact":True,
         },error="R22_REQUIRES_R21_CANARY")
 
-    def test_r22_invalid_canary_type_fails_closed(self):
+    def test_r22_nonboolean_marker_rejected(self):
         self.run_case(manifest_overrides={
             "r31p23r22_attested_compact":"yes",
         },error="R22_INVALID_MANIFEST_CANARY")
 
-    def test_r22_bad_canary_and_legacy_envelope_off_never_passes_as_on(self):
-        # An R2.2 claim with the strict R2.1 receipt contradicting the wire
-        # data must still fail closed inside the R2.2 arm.
-        def wrong(rows):
-            first=next(r for r in rows
-                       if r["kind"]=="r31p23r2_flush_packet")
-            first["data"]["simulator"]["r31p23r21_fast_encode"]=False
-        self.run_case(wrong,r21=True,manifest_overrides={
-            "r3c4r2_worker_envelope":None,"r31bp1_durable_chunks":None,
+    def test_r22_unexpected_legacy_fast_encoder_rejected(self):
+        def corrupt(rows):
+            item=next(r for r in rows if r["kind"]=="r31p23r2_flush_packet")
+            item["data"]["simulator"]["r31p23r21_fast_encode"]=True
+        self.run_case(corrupt,r21=True,manifest_overrides={
             "r31p23r22_attested_compact":True,
         },error="R21_FAST_ENCODE_OR_SIZE_RECEIPT_MISMATCH")
+
+    def test_r22_missing_attestation_stage_rejected(self):
+        def corrupt(rows):
+            item=next(r for r in rows if r["kind"]=="r31p23r2_flush_packet")
+            item["data"]["simulator"]["enet"].pop("attestation_ms")
+        self.run_case(corrupt,r21=True,manifest_overrides={
+            "r31p23r22_attested_compact":True,
+        },error="R22_ATTESTATION_STAGE_MISSING_OR_INVALID")
+
+    def test_r22_legacy_validation_rejected(self):
+        def corrupt(rows):
+            item=next(r for r in rows if r["kind"]=="r31p23r2_flush_packet")
+            item["data"]["simulator"]["enet"]["validate_ms"]=.2
+        self.run_case(corrupt,r21=True,manifest_overrides={
+            "r31p23r22_attested_compact":True,
+        },error="R22_ATTESTATION_STAGE_MISSING_OR_INVALID")
+
+    def test_r22_attestation_time_not_silently_excluded(self):
+        def corrupt(rows):
+            item=next(r for r in rows if r["kind"]=="r31p23r2_flush_packet")
+            item["data"]["simulator"]["enet"]["attestation_ms"]=2.0
+        self.run_case(corrupt,r21=True,manifest_overrides={
+            "r31p23r22_attested_compact":True,
+        },error="ENET_COMPONENTS_NOT_ADDITIVE")
+
+    def test_r21_legacy_off_and_on_forbid_forged_attestation(self):
+        def corrupt(rows):
+            item=next(r for r in rows if r["kind"]=="r31p23r2_flush_packet")
+            item["data"]["simulator"]["enet"]["attestation_ms"]=.2
+        self.run_case(corrupt,r21=True,error="R22_UNEXPECTED_ATTESTATION_OFF")
+        self.run_case(corrupt,r21=False,error="R22_UNEXPECTED_ATTESTATION_OFF")
+
+    def test_r22_missing_nested_wire_event_rejected(self):
+        def corrupt(rows):
+            index=next(i for i,r in enumerate(rows) if r["kind"]=="r31p23r2_flush_packet")
+            rows.pop(index)
+        self.run_case(corrupt,r21=True,manifest_overrides={
+            "r31p23r22_attested_compact":True,
+        },error="P23R2_INCOMPLETE_COMPACT_COVERAGE")
 
 
 if __name__=="__main__":
