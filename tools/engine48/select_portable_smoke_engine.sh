@@ -22,6 +22,6 @@ chmod +x "$binary"
 version="$("$binary" --version | tr -d '\r')"
 case "$version" in "$version_prefix"*) ;; *) echo "DWS_PORTABLE_SMOKE_VERSION_MISMATCH:$version" >&2; exit 5 ;; esac
 if [[ -n "$(printenv GITHUB_ENV || true)" ]]; then
-  printf 'DWS_PORTABLE_GODOT_BIN=%s\n' "$binary" >> "$GITHUB_ENV"
+  printf 'DWS_PORTABLE_GODOT_BIN=%s\nGODOT=%s\n' "$binary" "$binary" >> "$GITHUB_ENV"
 fi
 printf 'DWS_PORTABLE_GODOT_BIN=%s\nDWS_PORTABLE_SHA256=%s\nDWS_PORTABLE_VERSION=%s\nDWS_PORTABLE_PRECISION=standard_smoke_not_double_exact\n' "$binary" "$sha" "$version"
