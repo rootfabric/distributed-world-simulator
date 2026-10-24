@@ -1377,6 +1377,7 @@ func _maybe_publish_movement_snapshot() -> void:
 	var seam_sent_before := _seam_messages_sent
 	var seam_skipped_before := _seam_unchanged_skipped
 	var all_enqueued := true
+	var compact_enqueued_any := false
 	var committed_enqueues_before := _p1b_committed_enqueues
 	var target_count := 0
 	for peer_id_value in _peer_to_player.keys():
@@ -1394,10 +1395,12 @@ func _maybe_publish_movement_snapshot() -> void:
 			{"reason": "P1B_COMMITTED_VIEW_MOVEMENT" if pending_view else "MOVEMENT_NETWORK_TICK",
 			"snapshot": compact_snapshot},
 			RealtimeChannelPolicy.SNAPSHOT,
-			"UNRELIABLE_SEQUENCED"
+			"UNRELIABLE_SEQUENCED",
+			false
 		)
 		compact_send_us += Time.get_ticks_usec() - compact_started_us
 		if compact_queued:
+			compact_enqueued_any = true
 			_broadcasts += 1
 			_compact_movement_snapshots_published += 1
 			if pending_view:
@@ -1414,6 +1417,16 @@ func _maybe_publish_movement_snapshot() -> void:
 		else:
 			all_enqueued = false
 			_movement_snapshot_enqueue_failures += 1
+	# P1 tail repair: one batched transport flush per publication instead of
+	# one per peer. Per-peer queues keep per-peer ordering; every queued frame
+	# still leaves in this same engine frame. A failed batch flush is
+	# fail-closed: the snapshot stays dirty and is republished next tick.
+	if target_count > 0 and compact_enqueued_any:
+		var batch_flushed: Dictionary = _boundary.flush_outbound(32)
+		if not bool(batch_flushed.get("success", false)):
+			all_enqueued = false
+			_movement_snapshot_enqueue_failures += 1
+			_last_error_code = String(batch_flushed.get("error_code", "FLUSH_FAILED"))
 	_movement_snapshot_dirty = target_count > 0 and not all_enqueued
 	if all_enqueued and target_count > 0:
 		_movement_snapshots_published += 1
@@ -2606,7 +2619,8 @@ func _send_on_channel(
 	message_type: String,
 	data: Dictionary,
 	channel: String,
-	delivery_mode: String
+	delivery_mode: String,
+	flush_after_send: bool = true
 ) -> bool:
 	if _boundary == null or peer_id.is_empty():
 		return false
@@ -2648,7 +2662,7 @@ func _send_on_channel(
 			SmoothTrace.emit("r31p22_compact_wire_failed", {
 				"engine_frame": Engine.get_process_frames(), "phase": "SEND"})
 		return false
-	var flushed: Dictionary = _boundary.flush_outbound(32, peer_id)
+	var flushed: Dictionary = {"success": true} if not flush_after_send else _boundary.flush_outbound(32, peer_id)
 	var p22_flush_done_us: int = Time.get_ticks_usec() if p22_wire_probe else 0
 	if not bool(flushed.get("success", false)):
 		_last_error_code = String(flushed.get("error_code", "FLUSH_FAILED"))
