@@ -814,12 +814,30 @@ static func staged_resume(cursor: Dictionary, source_field: Dictionary,
 		return _fail("A5_STAGED_PHASE")
 	if r3_mode and phase != "ALLOCATE" and not cursor.allocator_cursor.is_empty():
 		return _fail("A5_STAGED_R3_ALLOCATOR_PHASE")
-	# During R3 ALLOCATE only top-level phase/index/allocated results and
-	# nested R2 cursor ownership are replaced. Neither the source field,
-	# PREPARE samples, entries, demands nor old R2 cursor is modified.
-	# Avoid full deep-copying ALL biological state for each R2 item quota.
-	# PREPARE and ADVANCE still deep-copy their mutable outcome arrays.
-	var next: Dictionary = cursor.duplicate(false) if r3_mode and phase == "ALLOCATE" else cursor.duplicate(true)
+	# R2E: versioned R3-stage cursor copy-on-write. The old R3 source
+	# validation + complete sealed checksum above STILL run on every call.
+	# A14.5 historical V1 keeps the byte-for-byte original full deep copy.
+	# Only clone the R3 collections that THIS stage can write; every other
+	# nested container remains a read-only alias. This is NOT a source
+	# validation/cache/ownership bypass. The immutable old cursor is still
+	# validated on EVERY call and no speculative results are published.
+	var next: Dictionary = cursor.duplicate(true)
+	if r3_mode:
+		next = cursor.duplicate(false)
+		if phase == "PREPARE":
+			# _prepare_units_{serial,parallel} build fresh detached results.
+			# PREPARE only extends the sample map and ordered demands array.
+			next["samples"] = cursor.samples.duplicate(true)
+			next["demands"] = cursor.demands.duplicate(true)
+		elif phase == "ADVANCE":
+			# _advance_unit_worker never mutates the input entry/samples;
+			# _consume_advance_outcomes only appends to these result arrays.
+			# Copy the *entire* previous prefix, preserving global
+			# MAX_PROPAGULES_PER_STEP and earliest failure precedence.
+			next["next_population"] = cursor.next_population.duplicate(true)
+			next["propagules"] = cursor.propagules.duplicate(true)
+		# ALLOCATE updates only detached top-level references to a sealed
+		# R2 A4 cursor and final allocation; nothing nested is mutated.
 	var units: Array = next.units
 	var entries: Array = next.entries
 	var index: int = int(next.index)
