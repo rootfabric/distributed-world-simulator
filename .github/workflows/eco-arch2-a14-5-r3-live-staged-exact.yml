@@ -40,18 +40,15 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
-      - name: Download official Godot 4.7.1 smoke engine
+      - name: Select SHA-pinned official portable smoke engine
         shell: bash
-        run: |
-          set -euo pipefail
-          curl -fL --retry 3 -o /tmp/godot.zip https://github.com/godotengine/godot/releases/download/4.7.1-stable/Godot_v4.7.1-stable_linux.x86_64.zip
-          unzip -q /tmp/godot.zip -d /tmp/godot
-          chmod +x /tmp/godot/Godot_v4.7.1-stable_linux.x86_64
+        run: bash tools/engine48/select_portable_smoke_engine.sh
+
       - name: Run A14.5 R3 live staged, scale and previous exact regressions
         shell: bash
         run: |
           set -euo pipefail
-          godot=/tmp/godot/Godot_v4.7.1-stable_linux.x86_64
+          godot=$DWS_PORTABLE_GODOT_BIN
           "$godot" --headless --editor --path . --import > /tmp/import.log 2>&1 || { cat /tmp/import.log; exit 1; }
           "$godot" --headless --path . --script res://validation/ecology/evo_arch2_a14_staged/test_staged_live_r3.gd > /tmp/a145-r3-live.log 2>&1 || { cat /tmp/a145-r3-live.log; exit 1; }
           cat /tmp/a145-r3-live.log
@@ -108,16 +105,22 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
+      - name: Select strict Linux editor from project marker
+        if: matrix.platform == 'Linux'
+        shell: bash
+        run: bash tools/engine48/select_exact_double_engine.sh
+      - name: Select strict Windows editor from project marker
+        if: matrix.platform == 'Windows'
+        shell: pwsh
+        run: '& ./tools/engine48/select_exact_double_engine.ps1'
       - name: Linux double exact
         if: matrix.platform == 'Linux'
         shell: bash
-        env:
-          CONFIGURED_GODOT: ${{ vars.DWS_GODOT_DOUBLE_LINUX_BIN }}
         run: |
           set -euo pipefail
-          godot="${CONFIGURED_GODOT:-${DWS_GODOT_DOUBLE_LINUX_BIN:-$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64}}"
+          godot="$DWS_GODOT_DOUBLE_LINUX_BIN"
           "$godot" --headless --editor --path . --import
-          test "$(sha256sum "$godot" | cut -d' ' -f1)" = "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7"
+          test "$(sha256sum "$godot" | cut -d' ' -f1)" = "$DWS_EFFECTIVE_GODOT_SHA256"
           "$godot" --headless --path . --script res://validation/ecology/evo_arch2_a14_staged/test_staged_live_r3.gd | tee /tmp/a145-r3-live.log
           grep -Fx 'ECO_ARCH2_A14_5_R3_LIVE PASS' /tmp/a145-r3-live.log
           "$godot" --headless --path . --script res://validation/ecology/evo_arch2_a14_staged/test_staged_live_r3_scale.gd | tee /tmp/a145-r3-scale.log
@@ -144,15 +147,13 @@ jobs:
       - name: Windows double exact
         if: matrix.platform == 'Windows'
         shell: pwsh
-        env:
-          CONFIGURED_GODOT: ${{ vars.DWS_GODOT_DOUBLE_BIN }}
         run: |
           $ErrorActionPreference = 'Stop'
-          $godot = $env:CONFIGURED_GODOT
-          if ([string]::IsNullOrWhiteSpace($godot)) { $godot = 'C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe' }
+          $godot = $env:DWS_GODOT_DOUBLE_BIN
+          if (-not $godot -or -not (Test-Path -LiteralPath $godot -PathType Leaf)) { throw 'DWS_PINNED_EDITOR_NOT_FOUND' }
           & $godot --headless --editor --path . --import
           if ($LASTEXITCODE -ne 0) { throw 'IMPORT_FAIL' }
-          if ((Get-FileHash $godot -Algorithm SHA256).Hash.ToLowerInvariant() -ne '3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5') { throw 'GODOT_SHA256_MISMATCH' }
+          if ((Get-FileHash $godot -Algorithm SHA256).Hash.ToLowerInvariant() -ne $env:DWS_EFFECTIVE_GODOT_SHA256) { throw 'GODOT_SHA256_MISMATCH' }
           & $godot --headless --path . --script res://validation/ecology/evo_arch2_a14_staged/test_staged_live_r3.gd | Tee-Object -FilePath a145-r3-live.log
           if ($LASTEXITCODE -ne 0) { throw 'A14_5_R3_LIVE_FAIL' }
           if (-not (Select-String -Path a145-r3-live.log -Pattern '^ECO_ARCH2_A14_5_R3_LIVE PASS$')) { throw 'R3_LIVE_MARKER_MISSING' }
