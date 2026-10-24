@@ -768,7 +768,8 @@ static func staged_resume(cursor: Dictionary, source_field: Dictionary,
 		max_allocator_items_per_call: int = 16,
 		allocator_cap_bytes: int = StagedA4R2.DEFAULT_CURSOR_CAP_BYTES,
 		r2c_parallel_workers: int = 1,
-		r2e_profile: bool = false) -> Dictionary:
+		r2e_profile: bool = false,
+		r2e3_owned_original_a4: RefCounted = null) -> Dictionary:
 	if not C.integer(max_worksets_per_call, 1, 4096):
 		return _fail("A5_STAGED_QUOTA")
 	# R2C research-only: existing A13 threading is strictly bounded.
@@ -819,6 +820,20 @@ static func staged_resume(cursor: Dictionary, source_field: Dictionary,
 		return _fail("A5_STAGED_PHASE")
 	if r3_mode and phase != "ALLOCATE" and not cursor.allocator_cursor.is_empty():
 		return _fail("A5_STAGED_R3_ALLOCATOR_PHASE")
+	if r2e3_owned_original_a4 != null:
+		# This research shortcut does NOT trust a caller-supplied Boolean.
+		# It is only legal on the unique fully joined R3 ALLOCATE frontier
+		# with an exclusive deep-owned CPU source, after FULL source digest
+		# and signed A5 cursor validation above. Direct A5 calls fail closed.
+		var owner_script: Script = r2e3_owned_original_a4.get_script() as Script
+		if not r3_mode or phase != "ALLOCATE" \
+				or owner_script == null or String(owner_script.resource_path) != \
+					"res://scripts/research/ecology/v2/ecology_owned_worker_source_r2e2_v1.gd" \
+				or not r2e3_owned_original_a4.has_method(
+					"_r2e3_allows_original_a4") \
+				or not bool(r2e3_owned_original_a4._r2e3_allows_original_a4(
+					source_field, source_population, cursor)):
+			return _fail("A5_R2E3_OWNED_GLOBAL_A4_DENIED")
 	# R2E evidence ruled out PREPARE/ADVANCE phase-local COW:
 	# fair paired Portable n256 (5.005s old vs 5.151s COW) regressed.
 	# Restore accepted frozen Stage D PREPARE/ADVANCE deep copy unchanged,
@@ -842,6 +857,7 @@ static func staged_resume(cursor: Dictionary, source_field: Dictionary,
 	var index: int = int(next.index)
 	var r2c_peak_workers := 0
 	var r2c_threaded_worksets := 0
+	var r2e3_original_a4_admitted := false
 	if phase == "PREPARE":
 		var stop := mini(units.size(), index + max_worksets_per_call)
 		# Reuse A13 verified detached per-workset threaded PREPARE.
@@ -871,7 +887,23 @@ static func staged_resume(cursor: Dictionary, source_field: Dictionary,
 		# No speculative resource/grant or organism state is published.
 		if index != 0:
 			return _fail("A5_STAGED_ALLOCATION_INDEX")
-		if r3_mode and not next.demands.is_empty():
+		if r2e3_owned_original_a4 != null:
+			# The original Field.allocate_demands is itself the
+			# authoritative, validating SINGLE global allocator used in
+			# A13. Running it ONCE removes the R2 speculative replay +
+			# full original reference reexecution. No new resource owner,
+			# no per-workset grants, and no partial state becomes visible.
+			var authoritative: Dictionary = _allocate_population_demands(
+				next.field, entries, String(next.owner_token),
+				int(next.owner_epoch), int(next.revision), next.demands)
+			if not bool(authoritative.get("success", false)):
+				return authoritative
+			next.allocated_field = authoritative.field
+			next.intake_by_id = authoritative.intake_by_id
+			next.phase = "ADVANCE"
+			next.index = 0
+			r2e3_original_a4_admitted = true
+		elif r3_mode and not next.demands.is_empty():
 			if next.allocator_cursor.is_empty():
 				# Begin R2 detached allocator; it can yield between the
 				# NORMALIZE, CLAIM, PRIMARY and RESIDUAL steps.
@@ -981,7 +1013,8 @@ static func staged_resume(cursor: Dictionary, source_field: Dictionary,
 		"cursor": next, "processed_worksets": max_worksets_per_call
 			if phase != "ALLOCATE" else 0,
 		"r2c_peak_workers": r2c_peak_workers,
-		"r2c_threaded_worksets": r2c_threaded_worksets}
+		"r2c_threaded_worksets": r2c_threaded_worksets,
+		"r2e3_original_a4_admitted": r2e3_original_a4_admitted}
 	if r2e_profile:
 		response["r2e_profile"] = r2e_profile_values
 	return response
