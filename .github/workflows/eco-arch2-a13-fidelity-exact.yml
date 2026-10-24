@@ -34,27 +34,18 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           fetch-depth: 0
 
-      - name: Install official Godot 4.7.1 parser/runtime smoke
+      - name: Verify and install official portable smoke engine
         shell: bash
-        run: |
-          set -euo pipefail
-          curl -fL --retry 3 -o /tmp/godot.zip https://github.com/godotengine/godot/releases/download/4.7.1-stable/Godot_v4.7.1-stable_linux.x86_64.zip
-          unzip -q /tmp/godot.zip -d /tmp/godot
-          chmod +x /tmp/godot/Godot_v4.7.1-stable_linux.x86_64
-          /tmp/godot/Godot_v4.7.1-stable_linux.x86_64 --version
+        run: bash tools/engine48/select_portable_smoke_engine.sh
 
       - name: Fresh import
         shell: bash
-        env:
-          GODOT: /tmp/godot/Godot_v4.7.1-stable_linux.x86_64
         run: |
           set -euo pipefail
           "$GODOT" --headless --editor --path . --import
 
       - name: Run focused fidelity smoke
         shell: bash
-        env:
-          GODOT: /tmp/godot/Godot_v4.7.1-stable_linux.x86_64
         run: |
           set -Eeuo pipefail
           log="$(mktemp)"
@@ -98,14 +89,20 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           fetch-depth: 0
 
+      - name: Select strict Linux editor from project marker
+        if: matrix.platform == 'Linux'
+        shell: bash
+        run: bash tools/engine48/select_exact_double_engine.sh
+      - name: Select strict Windows editor from project marker
+        if: matrix.platform == 'Windows'
+        shell: pwsh
+        run: '& ./tools/engine48/select_exact_double_engine.ps1'
       - name: A13 Fidelity Linux exact
         if: matrix.platform == 'Linux'
         shell: bash
-        env:
-          CONFIGURED_GODOT: ${{ vars.DWS_GODOT_DOUBLE_LINUX_BIN }}
         run: |
           set -euo pipefail
-          godot="${CONFIGURED_GODOT:-${DWS_GODOT_DOUBLE_LINUX_BIN:-$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64}}"
+          godot="$DWS_GODOT_DOUBLE_LINUX_BIN"
           python3 -m py_compile validation/ecology/evo_arch2_a13_fidelity/run_exact.py
           python3 validation/ecology/evo_arch2_a13_fidelity/run_exact.py --godot "$godot"
           python3 -S validation/ecology/evo_arch2_a13_fidelity/run_a9_contract.py
@@ -120,14 +117,10 @@ jobs:
       - name: A13 Fidelity Windows exact
         if: matrix.platform == 'Windows'
         shell: pwsh
-        env:
-          CONFIGURED_GODOT: ${{ vars.DWS_GODOT_DOUBLE_BIN }}
         run: |
           $ErrorActionPreference = 'Stop'
-          $godot = $env:CONFIGURED_GODOT
-          if ([string]::IsNullOrWhiteSpace($godot)) {
-            $godot = 'C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe'
-          }
+          $godot = $env:DWS_GODOT_DOUBLE_BIN
+          if (-not $godot -or -not (Test-Path -LiteralPath $godot -PathType Leaf)) { throw 'DWS_PINNED_EDITOR_NOT_FOUND' }
           python -m py_compile validation/ecology/evo_arch2_a13_fidelity/run_exact.py
           if ($LASTEXITCODE -ne 0) { throw 'A13_FIDELITY_PYTHON_COMPILE' }
           python validation/ecology/evo_arch2_a13_fidelity/run_exact.py --godot $godot
