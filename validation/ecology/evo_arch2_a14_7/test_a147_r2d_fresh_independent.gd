@@ -118,7 +118,7 @@ func _run() -> void:
 			source_field, demands, String(source_field.owner_token),
 			int(source_field.owner_epoch), int(source_field.revision), cursor,
 			4096, CAP)
-		original_cursor_bytes_unchanged = original_cursor_bytes_unchanged and
+		original_cursor_bytes_unchanged = original_cursor_bytes_unchanged and \
 			C.encode(cursor) == cursor_bytes
 		steps += 1
 		if not bool(advanced.get("success", false)):
