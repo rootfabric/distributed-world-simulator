@@ -113,7 +113,7 @@ func _run() -> void:
 	var strict_ck: Dictionary = Checkpoint.create(anchor, strict_state)
 	var fast_ck: Dictionary = Checkpoint.create(anchor, fast_state)
 	var ck_exact: bool = not ref_ck.is_empty() and not strict_ck.is_empty() \
-		and not fast_ck.is_empty() and
+		and not fast_ck.is_empty() and \
 		Checkpoint.serialize(ref_ck) == Checkpoint.serialize(strict_ck) \
 		and Checkpoint.serialize(strict_ck) == Checkpoint.serialize(fast_ck)
 	_check(ck_exact, "original A8 full serialized checkpoint byte exact")
