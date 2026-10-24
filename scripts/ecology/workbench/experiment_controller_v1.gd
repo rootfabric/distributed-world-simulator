@@ -254,7 +254,10 @@ func run_staged_frame(soft_budget_us: int = StagedSession.DEFAULT_SOFT_BUDGET_US
 		use_r3_allocator: bool = false,
 		allocator_items_per_call: int = 16,
 		use_off_main_r3: bool = false,
-		use_r323_presentation: bool = false) -> Dictionary:
+		use_r323_presentation: bool = false,
+		use_r2e2_owned_fast: bool = false) -> Dictionary:
+	if use_r2e2_owned_fast and not (use_off_main_r3 and use_r3_allocator):
+		return _command_fail("CONTROLLER_R2E2_REQUIRES_R3_OFFMAIN")
 	if use_r323_presentation and not use_off_main_r3:
 		return _command_fail("CONTROLLER_R323_REQUIRES_OFFMAIN")
 	if use_off_main_r3 and not use_r3_allocator:
@@ -295,7 +298,8 @@ func run_staged_frame(soft_budget_us: int = StagedSession.DEFAULT_SOFT_BUDGET_US
 		self if use_off_main_r3 else null,
 		_r322_lease_token if use_off_main_r3 else null,
 		_r322_generation if use_off_main_r3 else -1,
-		_manifest.duplicate(true) if use_r323_presentation else {})
+		_manifest.duplicate(true) if use_r323_presentation else {},
+		use_r2e2_owned_fast)
 	if not bool(result.get("success", false)):
 		_r322_revoke_lease()
 		# Transient plan/resource errors fail closed. If the underlying
