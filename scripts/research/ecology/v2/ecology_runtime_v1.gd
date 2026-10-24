@@ -421,13 +421,29 @@ static func resume_staged_global_tick(state: Dictionary, options: Dictionary,
 		max_allocator_items_per_call: int = 16,
 		allocator_cap_bytes: int = 8388608,
 		r2c_parallel_workers: int = 1,
-		r2e_profile: bool = false) -> Dictionary:
+		r2e_profile: bool = false,
+		r2e_owned_cpu: RefCounted = null) -> Dictionary:
 	# Strictly check the same authoritative frontier before ANY staged work,
 	# including a no-op and a final publish. Never accept a moved source.
 	var r2e_source_start_us: int = Time.get_ticks_usec() if r2e_profile else 0
-	var error := validate(state)
-	if not error.is_empty():
-		return _fail(error)
+	var owned_fast: bool = r2e_owned_cpu != null
+	if owned_fast:
+		# Strictly CPU-worker-owned, experimental-only. Main/public callers
+		# ALWAYS enter the original FULL Runtime.validate branch. This path
+		# requires a deep-detached source fully validated on worker admission
+		# and later FULLY re-validated before the completed worker receipt.
+		# Every signed outer cursor and original A5 source digest remains.
+		var owner_script: Script = r2e_owned_cpu.get_script() as Script
+		if Thread.is_main_thread() or owner_script == null \
+				or String(owner_script.resource_path) != \
+					"res://scripts/research/ecology/v2/ecology_owned_worker_source_r2e2_v1.gd" \
+				or not r2e_owned_cpu.has_method("_r2e2_owns") \
+				or not bool(r2e_owned_cpu._r2e2_owns(state, options, cursor)):
+			return _fail("RUNTIME_R2E2_OWNED_SOURCE_LEASE")
+	else:
+		var source_error: String = validate(state)
+		if not source_error.is_empty():
+			return _fail(source_error)
 	var r2e_source_validate_us: int = Time.get_ticks_usec() - r2e_source_start_us if r2e_profile else 0
 	if not C.keys(cursor, STAGED_TICK_KEYS) \
 			or String(cursor.schema) != STAGED_TICK_SCHEMA \
@@ -460,6 +476,7 @@ static func resume_staged_global_tick(state: Dictionary, options: Dictionary,
 	if r2e_profile:
 		r2e_detail = {
 			"full_source_validate_us": r2e_source_validate_us,
+			"owned_source_fast_path": owned_fast,
 			"options_digest_us": r2e_options_digest_us,
 			"a5_lifecycle_us": r2e_lifecycle_us,
 			"a5": progressed.get("r2e_profile", {}),
