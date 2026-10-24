@@ -819,31 +819,15 @@ static func staged_resume(cursor: Dictionary, source_field: Dictionary,
 		return _fail("A5_STAGED_PHASE")
 	if r3_mode and phase != "ALLOCATE" and not cursor.allocator_cursor.is_empty():
 		return _fail("A5_STAGED_R3_ALLOCATOR_PHASE")
-	# R2E: versioned R3-stage cursor copy-on-write. The old R3 source
-	# validation + complete sealed checksum above STILL run on every call.
-	# A14.5 historical V1 keeps the byte-for-byte original full deep copy.
-	# Only clone the R3 collections that THIS stage can write; every other
-	# nested container remains a read-only alias. This is NOT a source
-	# validation/cache/ownership bypass. The immutable old cursor is still
-	# validated on EVERY call and no speculative results are published.
+	# R2E evidence ruled out PREPARE/ADVANCE phase-local COW:
+	# fair paired Portable n256 (5.005s old vs 5.151s COW) regressed.
+	# Restore accepted frozen Stage D PREPARE/ADVANCE deep copy unchanged,
+	# retaining the accepted R3 ALLOCATE shallow envelope optimization.
+	# Full cursor SHA and source digest above still run on EVERY call.
+	# The only new functionality is optional, noncanonical timing evidence.
 	var r2e_copy_start_us: int = Time.get_ticks_usec() if r2e_profile else 0
-	var next: Dictionary = cursor.duplicate(true)
-	if r3_mode:
-		next = cursor.duplicate(false)
-		if phase == "PREPARE":
-			# _prepare_units_{serial,parallel} build fresh detached results.
-			# PREPARE only extends the sample map and ordered demands array.
-			next["samples"] = cursor.samples.duplicate(true)
-			next["demands"] = cursor.demands.duplicate(true)
-		elif phase == "ADVANCE":
-			# _advance_unit_worker never mutates the input entry/samples;
-			# _consume_advance_outcomes only appends to these result arrays.
-			# Copy the *entire* previous prefix, preserving global
-			# MAX_PROPAGULES_PER_STEP and earliest failure precedence.
-			next["next_population"] = cursor.next_population.duplicate(true)
-			next["propagules"] = cursor.propagules.duplicate(true)
-		# ALLOCATE updates only detached top-level references to a sealed
-		# R2 A4 cursor and final allocation; nothing nested is mutated.
+	var next: Dictionary = cursor.duplicate(false) \
+		if r3_mode and phase == "ALLOCATE" else cursor.duplicate(true)
 	var r2e_cow_copy_us: int = Time.get_ticks_usec() - r2e_copy_start_us if r2e_profile else 0
 	var r2e_profile_values: Dictionary = {}
 	if r2e_profile:
