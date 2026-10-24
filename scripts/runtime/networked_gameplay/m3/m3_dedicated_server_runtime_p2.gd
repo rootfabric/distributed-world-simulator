@@ -1378,6 +1378,7 @@ func _maybe_publish_movement_snapshot() -> void:
 	var seam_skipped_before := _seam_unchanged_skipped
 	var all_enqueued := true
 	var compact_enqueued_any := false
+	var compact_enqueued_count: int = 0
 	var committed_enqueues_before := _p1b_committed_enqueues
 	var target_count := 0
 	for peer_id_value in _peer_to_player.keys():
@@ -1387,6 +1388,8 @@ func _maybe_publish_movement_snapshot() -> void:
 			authoritative_snapshot, String(_peer_to_player.get(peer_id, "")),
 			String(_peer_to_session.get(peer_id, ""))
 		):
+			all_enqueued = false
+			_movement_snapshot_enqueue_failures += 1
 			continue  # changed transport session never inherits committed view
 		var compact_started_us := Time.get_ticks_usec()
 		var compact_queued := _send_on_channel(
@@ -1401,6 +1404,7 @@ func _maybe_publish_movement_snapshot() -> void:
 		compact_send_us += Time.get_ticks_usec() - compact_started_us
 		if compact_queued:
 			compact_enqueued_any = true
+			compact_enqueued_count += 1
 			_broadcasts += 1
 			_compact_movement_snapshots_published += 1
 			if pending_view:
@@ -1411,22 +1415,61 @@ func _maybe_publish_movement_snapshot() -> void:
 				_send_product_seam_state(
 					peer_id,
 					String(_peer_to_player.get(peer_id_value, "")),
-					"MOVEMENT_NETWORK_TICK"
+					"MOVEMENT_NETWORK_TICK",
+					false # defer changed reliable seam into shared batch
 				)
 				seam_check_send_us += Time.get_ticks_usec() - seam_started_us
 		else:
 			all_enqueued = false
 			_movement_snapshot_enqueue_failures += 1
-	# P1 tail repair: one batched transport flush per publication instead of
-	# one per peer. Per-peer queues keep per-peer ordering; every queued frame
-	# still leaves in this same engine frame. A failed batch flush is
-	# fail-closed: the snapshot stays dirty and is republished next tick.
+	# The actual boundary result may be SUCCESS with details.failed when
+	# only part of this two-peer batch was dispatched. Keep the snapshot
+	# dirty unless ALL compact frames and all queues drained successfully.
 	if target_count > 0 and compact_enqueued_any:
+		var batch_started_us: int = Time.get_ticks_usec()
 		var batch_flushed: Dictionary = _boundary.flush_outbound(32)
-		if not bool(batch_flushed.get("success", false)):
+		var batch_elapsed_ms: float = float(Time.get_ticks_usec() - batch_started_us) / 1000.0
+		var batch_details: Dictionary = Dictionary(batch_flushed.get("details", {}))
+		var failed_value = batch_details.get("failed")
+		var receipt_well_formed: bool = (
+			failed_value is Array
+			and typeof(batch_details.get("attempted")) == TYPE_INT
+			and typeof(batch_details.get("dispatched")) == TYPE_INT
+			and typeof(batch_details.get("blocked_stream_count")) == TYPE_INT
+			and typeof(batch_details.get("pending_messages")) == TYPE_INT
+			and typeof(batch_details.get("pending_bytes")) == TYPE_INT
+		)
+		var failed_count: int = Array(failed_value).size() if failed_value is Array else -1
+		var sent_count: int = int(batch_details.get("dispatched", -1))
+		var attempted_count: int = int(batch_details.get("attempted", -1))
+		var blocked_count: int = int(batch_details.get("blocked_stream_count", -1))
+		var pending_count: int = int(batch_details.get("pending_messages", -1))
+		var pending_bytes: int = int(batch_details.get("pending_bytes", -1))
+		var batch_complete: bool = (
+			bool(batch_flushed.get("success", false)) and receipt_well_formed
+			and failed_count == 0 and blocked_count == 0
+			and pending_count == 0 and pending_bytes == 0
+			and attempted_count >= sent_count
+			and sent_count >= compact_enqueued_count
+		)
+		if _r31p22_loop_attribution_enabled and SmoothTrace.enabled():
+			SmoothTrace.emit("r31p1_snapshot_batch_flush", {
+				"engine_frame": Engine.get_process_frames(),
+				"target_peers": target_count,
+				"queued_compact_frames": compact_enqueued_count,
+				"batch_flush_ms": batch_elapsed_ms,
+				"attempted": attempted_count,
+				"dispatched": sent_count,
+				"failed_count": failed_count,
+				"blocked_stream_count": blocked_count,
+				"pending_messages": pending_count,
+				"pending_bytes": pending_bytes,
+				"complete": batch_complete,
+			})
+		if not batch_complete:
 			all_enqueued = false
 			_movement_snapshot_enqueue_failures += 1
-			_last_error_code = String(batch_flushed.get("error_code", "FLUSH_FAILED"))
+			_last_error_code = "R31P1_BATCH_DISPATCH_INCOMPLETE"
 	_movement_snapshot_dirty = target_count > 0 and not all_enqueued
 	if all_enqueued and target_count > 0:
 		_movement_snapshots_published += 1
@@ -1468,7 +1511,8 @@ func _build_p1b_committed_movement_snapshot() -> Dictionary:
 func _send_product_seam_state(
 	peer_id: String,
 	logical_player_id: String,
-	reason: String
+	reason: String,
+	flush_after_send: bool = true
 ) -> bool:
 	if (
 		_service == null
@@ -1503,7 +1547,8 @@ func _send_product_seam_state(
 			"state": state,  # The service getter already returns a detached projection.
 		},
 		RealtimeChannelPolicy.RESYNC,
-		"RELIABLE_ORDERED"
+		"RELIABLE_ORDERED",
+		flush_after_send
 	)
 	if sent:
 		# Only cache a successfully queued, reliable frame. Failed dispatches
