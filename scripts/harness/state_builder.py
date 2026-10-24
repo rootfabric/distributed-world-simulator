@@ -331,7 +331,17 @@ def _external_reviewer_witnesses(
             root, root / event_path, witness["event_blob_sha"],
             "EXTERNAL_REVIEW_WITNESS_EVENT_LOCAL_BLOB_MISMATCH",
         )
-        if event != committed_event:
+        # Python structural equality is NOT type-exact for JSON scalars:
+        # False == 0 and 50.0 == 50. Canonical JSON encoding preserves these
+        # distinctions; a non-serializable or NaN DTO also fails closed.
+        try:
+            actual_event_dto = json.dumps(
+                event, sort_keys=True, separators=(",", ":"), ensure_ascii=False, allow_nan=False)
+            git_bound_event_dto = json.dumps(
+                committed_event, sort_keys=True, separators=(",", ":"), ensure_ascii=False, allow_nan=False)
+        except (TypeError, ValueError) as exc:
+            raise ContractValidationError("EXTERNAL_REVIEW_WITNESS_EVENT_DTO_MISMATCH") from exc
+        if actual_event_dto != git_bound_event_dto:
             raise ContractValidationError("EXTERNAL_REVIEW_WITNESS_EVENT_DTO_MISMATCH")
         receipt = _read_exact_git_blob_json(
             root, root / result_path, witness["review_result_blob_sha"],
