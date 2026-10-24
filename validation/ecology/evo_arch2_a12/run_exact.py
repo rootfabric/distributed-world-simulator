@@ -19,6 +19,22 @@ BINARY_SHA = {
     "Windows": "3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5",
     "Linux": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
 }
+# ENGINE48 strict opt-in: keep canonical 4.7.1 baseline when not selected.
+# Importer metadata in a 4.8 project must not be rewritten by a 4.7.1 engine.
+_engine48_sha = os.environ.get("DWS_ENGINE48_GODOT_SHA256", "").strip().lower()
+_project_48 = '"4.8"' in (ROOT / "project.godot").read_text(encoding="utf-8")
+if _engine48_sha:
+    _expected_48 = {
+        "Windows": "f53f90f686a4eb05df076692c1b67a9e3d12d7c6c981cf86f1015d1ec36a2636",
+        "Linux": "4d72a93edf3b4193bdbf22f72c0c9d15c14aa7130c07cf1638f88ca1f9744f6f",
+    }.get(platform.system())
+    if not _project_48 or not re.fullmatch(r"[0-9a-f]{64}", _engine48_sha) or _engine48_sha != _expected_48:
+        raise RuntimeError("ENGINE48_STRICT_EDITOR_IDENTITY_INVALID")
+    BINARY_SHA[platform.system()] = _engine48_sha
+    VERSION = "4.8.beta1.double.custom_build.4d10419ca"
+elif _project_48:
+    raise RuntimeError("ENGINE48_EDITOR_PIN_REQUIRED_FOR_48_PROJECT")
+
 TESTS = {"test_population_scale.gd": "SCALE"}
 FATAL = re.compile(r"SCRIPT ERROR|Parse Error|Failed to load script|Error compiling", re.I)
 
