@@ -54,7 +54,7 @@ jobs:
           $versionExit=$LASTEXITCODE
           $ver=([string]($versionOutput | Select-Object -First 1)).Trim()
           $expected=if ($ver -like '4.8.beta1*') {'4.8.beta1.double.custom_build.4d10419ca'} else {'4.7.1.stable.double.custom_build.a13da4feb'}
-          if ($ver -ne $expected -or ($expected -like '4.8*' -and $versionExit -ne 0)) { throw "GODOT_VERSION_MISMATCH:$ver:$versionExit" }
+          if ($ver -ne $expected -or ($expected -like '4.8*' -and $versionExit -ne 0)) { throw "GODOT_VERSION_MISMATCH:version=$($ver);exit=$($versionExit)" }
           if ((git status --porcelain --untracked-files=no)) { throw 'TRACKED_DIRTY_BEFORE' }
           New-Item -ItemType Directory -Force artifacts\live2-targeted | Out-Null
           [ordered]@{
