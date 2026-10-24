@@ -828,6 +828,7 @@ def main() -> int:
     args.output=(args.output or ROOT/'artifacts/net-smooth1'/run_id).resolve()
     args.output.mkdir(parents=True,exist_ok=False)
     manifest={'schema':'dws.net_smooth.run.v1','run_id':run_id,'mode':args.mode,
+              'r31p1_snapshot_batching':args.mode=='gui' and args.scenario=='r31-reconnect-roundtrip',
               'duration_s':args.duration,'profile':args.profile,'identity':identity(args.godot),
               'started_utc':time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime())}
     dump(args.output/'manifest.json',manifest)
