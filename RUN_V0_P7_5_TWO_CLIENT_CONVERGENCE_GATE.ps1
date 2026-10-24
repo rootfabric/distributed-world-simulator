@@ -61,11 +61,12 @@ function Invoke-Contract {
     }
     Assert-LogClean $Log
     $SummaryPresent = Select-String -Path $Log -SimpleMatch $Summary -Quiet
-    if (-not $SummaryPresent -and $Summary -match '^(.*\()\d+( assertions, 0 failures\))$') {
-        # ENGINE48: assertion totals legitimately vary between engine builds
-        # (e.g. 4.7.1 83 vs 4.8 88 on p7-1-authority). The fail-closed contract
-        # is the PASS line with ZERO failures; the count itself is informational.
-        $SummaryPresent = Select-String -Path $Log -Pattern ([regex]::Escape($Matches[1]) + '\d+' + [regex]::Escape($Matches[2])) -Quiet
+    if (-not $SummaryPresent -and $Name -eq 'p7-1-authority' -and
+        $Summary -eq 'V0-P7.1 authority gate: PASS (83 assertions, 0 failures)') {
+        # ENGINE48 current content contains 88 assertions (also proven on 4.7.1).
+        # Permit the two independently observed exact contracts ONLY for this gate.
+        # Never accept arbitrary counts: losing assertions must remain a hard failure.
+        $SummaryPresent = Select-String -Path $Log -SimpleMatch 'V0-P7.1 authority gate: PASS (88 assertions, 0 failures)' -Quiet
     }
     if (-not $SummaryPresent) {
         Get-Content $Log -Tail 500 -ErrorAction SilentlyContinue
