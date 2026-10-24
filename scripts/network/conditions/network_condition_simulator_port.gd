@@ -208,7 +208,7 @@ func send_to_peer(peer_id: String, frame: Dictionary) -> Dictionary:
 		var p23_before_delegate_us: int = Time.get_ticks_usec() if p23_probe else 0
 		var direct: Dictionary
 		if r22_attested_passthrough:
-			# FrameScript.validate(frame) above is the original full validator.
+			# The original full native validator has already passed above.
 			# The next method freezes exactly THESE checked source bytes; the
 			# subsequent ENet method receives only a one-use ticket, not frame.
 			var prepared: Dictionary = _delegate.r22_prepare_validated_compact(

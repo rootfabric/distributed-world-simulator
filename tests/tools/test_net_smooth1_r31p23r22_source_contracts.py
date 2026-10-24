@@ -65,8 +65,8 @@ class R22Source(unittest.TestCase):
 
     def test_first_full_validator_remains_and_freeze_is_synchronous(self):
         sim = function(self.data[SIM], "send_to_peer")
-        self.assertEqual(sim.count("FrameScript.validate(frame)"), 2)
-        # One actual call; one explanatory comment in the attested branch.
+        self.assertEqual(sim.count("FrameScript.validate(frame)"), 1)
+        # Count only the original full simulator validator, never comments.
         check = sim.index("var frame_check: Dictionary = FrameScript.validate(frame)")
         frozen = sim.index("_delegate.r22_prepare_validated_compact(")
         self.assertLess(check, frozen)
