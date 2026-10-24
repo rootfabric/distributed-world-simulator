@@ -30,7 +30,7 @@ done
 actual_version="$("$selected" --version | tr -d '\r')"
 [[ "$actual_version" == "$expected_version" ]] || { echo "DWS_EXACT_LINUX_VERSION_MISMATCH:$actual_version" >&2; exit 4; }
 if [[ -n "$(printenv GITHUB_ENV || true)" ]]; then
-  printf 'DWS_GODOT_DOUBLE_LINUX_BIN=%s\n' "$selected" >> "$GITHUB_ENV"
+  printf 'DWS_GODOT_DOUBLE_LINUX_BIN=%s\nDWS_EFFECTIVE_GODOT_SHA256=%s\n' "$selected" "$expected_sha" >> "$GITHUB_ENV"
   if (( is_48 )); then printf 'DWS_ENGINE48_GODOT_SHA256=%s\n' "$expected_sha" >> "$GITHUB_ENV"; fi
 fi
 printf 'DWS_EXACT_ENGINE_RESOLVED=%s\nDWS_EXACT_ENGINE_SHA256=%s\nDWS_EXACT_ENGINE_VERSION=%s\n' "$selected" "$expected_sha" "$actual_version"
