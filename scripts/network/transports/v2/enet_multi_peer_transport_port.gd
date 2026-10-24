@@ -35,10 +35,189 @@ var _r31p23r2_attribution_enabled := false
 # a SECOND FrameScript.validate inside encode(). All invalid input is still
 # rejected by the original first validation; no worker or shared state.
 var _r31p23r21_single_pass_compact_enabled := false
+# R2.2: single-use main-thread proof. No proof ever enters the wire, disk,
+# a client, a delayed simulator queue, or an asynchronous worker.
+var _r31p23r22_attested_compact_enabled := false
+var _r22_source_ref: WeakRef
+var _r22_authority_owner: String = ""
+var _r22_authority_epoch: int = 0
+var _r22_ticket_counter: int = 0
+var _r22_pending: Dictionary = {}
 
 func configure_r31p23r21_single_pass_compact(enabled: bool) -> Dictionary:
 	_r31p23r21_single_pass_compact_enabled = enabled
 	return TransportUtilsScript.success({"enabled": enabled})
+
+
+func configure_r31p23r22_attested_compact(
+	enabled: bool, source, authority_owner: String, authority_epoch: int
+) -> Dictionary:
+	if enabled and not _r31p23r21_single_pass_compact_enabled:
+		return TransportUtilsScript.failure("R31P23R22_REQUIRES_R21")
+	if enabled and (
+		not source is RefCounted or authority_owner.is_empty() or authority_epoch < 1
+	):
+		return TransportUtilsScript.failure("R31P23R22_INVALID_AUTHORITY")
+	_r22_pending.clear()
+	_r31p23r22_attested_compact_enabled = enabled
+	_r22_source_ref = weakref(source) if enabled else null
+	_r22_authority_owner = authority_owner if enabled else ""
+	_r22_authority_epoch = authority_epoch if enabled else 0
+	return TransportUtilsScript.success({"enabled": enabled})
+
+
+func r22_prepare_validated_compact(source, peer_id: String, frame: Dictionary) -> Dictionary:
+	# TRUST BOUNDARY: the registered simulator has executed the unmodified
+	# FrameScript.validate(frame) on this stack and has not changed the frame.
+	# Source-only and native negative tests fence the call chain. This API is
+	# never reachable from inbound ENet packets or arbitrary replay DTOs.
+	_r22_pending.clear()
+	if not _r31p23r22_attested_compact_enabled or _mode != "SERVER" or _peer == null:
+		return TransportUtilsScript.failure("R31P23R22_NOT_ENABLED")
+	if _r22_source_ref == null or source != _r22_source_ref.get_ref():
+		return TransportUtilsScript.failure("R31P23R22_SOURCE_MISMATCH")
+	if not _logical_to_numeric.has(peer_id):
+		return TransportUtilsScript.failure("UNKNOWN_PEER")
+	if String(_session_by_peer.get(peer_id, "")) != String(frame.get("session_id", "")):
+		return TransportUtilsScript.failure("SESSION_MISMATCH")
+	if (
+		String(Dictionary(frame.get("payload", {})).get("type", "")) != "COMPACT_GAMEPLAY_SNAPSHOT"
+		or String(frame.get("channel", "")) != ChannelPolicyScript.SNAPSHOT
+		or String(frame.get("delivery_mode", "")) != "UNRELIABLE_SEQUENCED"
+	):
+		return TransportUtilsScript.failure("R31P23R22_INELIGIBLE_FRAME")
+	var route_generation: int = int(_route_generation_by_peer.get(peer_id, 0))
+	if route_generation < 1:
+		return TransportUtilsScript.failure("R31P23R22_ROUTE_FENCE_MISSING")
+	# No signal, callback, await, deferred step, or mutation can interleave
+	# simulator validation and this canonical freeze on the main thread.
+	var canonical_text: String = NetworkUtilsScript.canonical_json(frame)
+	if canonical_text.is_empty():
+		return TransportUtilsScript.failure("SERIALIZATION_FAILED")
+	var packet: PackedByteArray = canonical_text.to_utf8_buffer()
+	if packet.size() > MAX_PACKET_BYTES:
+		return TransportUtilsScript.failure("PACKET_TOO_LARGE", {"packet_bytes": packet.size()})
+	_r22_ticket_counter += 1
+	_r22_pending = {
+		"ticket": _r22_ticket_counter,
+		"source_instance": source.get_instance_id(),
+		"delegate_instance": get_instance_id(),
+		"peer_id": peer_id,
+		"session_id": String(frame["session_id"]),
+		"sequence": int(frame["sequence"]),
+		"frame_id": String(frame["frame_id"]),
+		"channel": String(frame["channel"]),
+		"delivery_mode": String(frame["delivery_mode"]),
+		"payload_checksum": String(frame["payload_checksum"]),
+		"authority_owner": _r22_authority_owner,
+		"authority_epoch": _r22_authority_epoch,
+		"route_generation": route_generation,
+		"packet": packet,
+		"packet_bytes": packet.size(),
+		"packet_sha256": canonical_text.sha256_text(),
+	}
+	return TransportUtilsScript.success({"ticket": _r22_ticket_counter})
+
+
+func _r22_take_attestation(source, peer_id: String, ticket: int) -> Dictionary:
+	# Consume BEFORE testing so failed, stale, stolen and replayed capabilities
+	# cannot be tried repeatedly or forwarded to another session/authority.
+	var proof: Dictionary = _r22_pending
+	_r22_pending = {}
+	if not _r31p23r22_attested_compact_enabled or _mode != "SERVER":
+		return TransportUtilsScript.failure("R31P23R22_NOT_ENABLED")
+	if _r22_source_ref == null or source != _r22_source_ref.get_ref():
+		return TransportUtilsScript.failure("R31P23R22_SOURCE_MISMATCH")
+	if proof.is_empty() or ticket < 1 or int(proof.get("ticket", 0)) != ticket:
+		return TransportUtilsScript.failure("R31P23R22_PROOF_MISSING_OR_REPLAYED")
+	if (
+		int(proof.get("source_instance", 0)) != source.get_instance_id()
+		or int(proof.get("delegate_instance", 0)) != get_instance_id()
+		or String(proof.get("peer_id", "")) != peer_id
+	):
+		return TransportUtilsScript.failure("R31P23R22_PROOF_OWNER_MISMATCH")
+	if (
+		String(proof.get("authority_owner", "")) != _r22_authority_owner
+		or int(proof.get("authority_epoch", 0)) != _r22_authority_epoch
+	):
+		return TransportUtilsScript.failure("R31P23R22_AUTHORITY_CHANGED")
+	if not _logical_to_numeric.has(peer_id):
+		return TransportUtilsScript.failure("UNKNOWN_PEER")
+	if String(_session_by_peer.get(peer_id, "")) != String(proof.get("session_id", "")):
+		return TransportUtilsScript.failure("SESSION_MISMATCH")
+	if int(_route_generation_by_peer.get(peer_id, 0)) != int(proof.get("route_generation", -1)):
+		return TransportUtilsScript.failure("R31P23R22_ROUTE_CHANGED")
+	if (
+		int(proof.get("sequence", 0)) < 1 or String(proof.get("frame_id", "")).is_empty()
+		or String(proof.get("payload_checksum", "")).is_empty()
+		or String(proof.get("channel", "")) != ChannelPolicyScript.SNAPSHOT
+		or String(proof.get("delivery_mode", "")) != "UNRELIABLE_SEQUENCED"
+	):
+		return TransportUtilsScript.failure("R31P23R22_INVALID_PROOF")
+	var packet: PackedByteArray = proof.get("packet", PackedByteArray())
+	if (
+		packet.is_empty() or packet.size() != int(proof.get("packet_bytes", -1))
+		or packet.get_string_from_utf8().sha256_text() != String(proof.get("packet_sha256", ""))
+	):
+		return TransportUtilsScript.failure("PAYLOAD_CHECKSUM_MISMATCH")
+	return TransportUtilsScript.success({
+		"packet": packet, "packet_bytes": packet.size(),
+		"channel": String(proof["channel"]),
+		"delivery_mode": String(proof["delivery_mode"]),
+		"session_id": String(proof["session_id"]),
+		"sequence": int(proof["sequence"]),
+		"frame_id": String(proof["frame_id"]),
+		"payload_checksum": String(proof["payload_checksum"]),
+	})
+
+
+func r22_send_prepared(source, peer_id: String, ticket: int) -> Dictionary:
+	# Unlike send_to_peer(), no mutable frame is accepted at the send point.
+	# Only the single-use native snapshot retained by THIS ENet object is sent.
+	var p23_probe: bool = _r31p23r2_attribution_enabled
+	var started_us: int = Time.get_ticks_usec() if p23_probe else 0
+	var proof_result: Dictionary = _r22_take_attestation(source, peer_id, ticket)
+	var claimed_us: int = Time.get_ticks_usec() if p23_probe else 0
+	if not bool(proof_result.get("success", false)):
+		return proof_result
+	if _peer == null or _mode != "SERVER":
+		return TransportUtilsScript.failure("ENET_NOT_STARTED")
+	var details: Dictionary = Dictionary(proof_result.get("details", {}))
+	var packet: PackedByteArray = details.get("packet", PackedByteArray())
+	var channel: int = _channel_index(String(details["channel"]))
+	_peer.transfer_channel = channel
+	_peer.set_target_peer(int(_logical_to_numeric[peer_id]))
+	var transfer_mode: int = _transfer_mode(String(details["delivery_mode"]))
+	_peer.transfer_mode = transfer_mode
+	var ready_us: int = Time.get_ticks_usec() if p23_probe else 0
+	var error: Error = _peer.put_packet(packet)
+	var packet_us: int = Time.get_ticks_usec() if p23_probe else 0
+	if error != OK:
+		return TransportUtilsScript.failure("ENET_SEND_FAILED", {"godot_error": int(error)})
+	var stats: Dictionary = _peer_statistics(peer_id)
+	var stats_us: int = Time.get_ticks_usec() if p23_probe else 0
+	var result_details: Dictionary = {
+		"enqueued": true,
+		"packet_bytes": int(details["packet_bytes"]),
+		"channel_index": channel,
+		"frame_channel": String(details["channel"]),
+		"delivery_mode": String(details["delivery_mode"]),
+		"transfer_mode": transfer_mode,
+		"peer_statistics": stats,
+	}
+	if p23_probe:
+		result_details["r31p23r22_attestation_consumed"] = true
+		result_details["r31p23r21_fast_encode"] = false
+		result_details["r31p23r2_enet_stages"] = {
+			"validate_ms": 0.0,
+			"frame_encode_ms": 0.0,
+			"attestation_ms": float(claimed_us - started_us) / 1000.0,
+			"channel_setup_ms": float(ready_us - claimed_us) / 1000.0,
+			"put_packet_ms": float(packet_us - ready_us) / 1000.0,
+			"peer_stats_ms": float(stats_us - packet_us) / 1000.0,
+			"total_ms": float(stats_us - started_us) / 1000.0,
+		}
+	return TransportUtilsScript.success(result_details)
 
 
 func configure_r31p23r2_flush_attribution(enabled: bool) -> Dictionary:
@@ -110,6 +289,7 @@ func connect_client(endpoint: Dictionary, peer_id: String, session_id: String, r
 
 
 func disconnect_peer(peer_id: String, session_id: String) -> Dictionary:
+	_r22_pending.clear()
 	if _peer == null or not _session_by_peer.has(peer_id):
 		return TransportUtilsScript.success({"replay": true})
 	if String(_session_by_peer[peer_id]) != session_id:

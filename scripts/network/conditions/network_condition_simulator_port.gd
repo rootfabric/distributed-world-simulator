@@ -47,6 +47,7 @@ var _r31p23r2_attribution_enabled := false
 # R2.1: only LOCAL real ENet passthrough reuses actual encoded byte-count.
 # The original pre-delegate FrameScript.validate(frame) remains mandatory.
 var _r31p23r21_single_pass_compact_enabled := false
+var _r31p23r22_attested_compact_enabled := false
 
 func configure_r31p23r21_single_pass_compact(enabled: bool) -> Dictionary:
 	if _delegate == null or not _delegate.has_method("configure_r31p23r21_single_pass_compact"):
@@ -55,6 +56,22 @@ func configure_r31p23r21_single_pass_compact(enabled: bool) -> Dictionary:
 	if not bool(r.get("success", false)):
 		return r
 	_r31p23r21_single_pass_compact_enabled = enabled
+	return TransportUtilsScript.success({"enabled": enabled})
+
+
+func configure_r31p23r22_attested_compact(
+	enabled: bool, authority_owner: String, authority_epoch: int
+) -> Dictionary:
+	if enabled and not _r31p23r21_single_pass_compact_enabled:
+		return TransportUtilsScript.failure("R31P23R22_REQUIRES_R21")
+	if _delegate == null or not _delegate.has_method("configure_r31p23r22_attested_compact"):
+		return TransportUtilsScript.failure("R31P23R22_ENET_DELEGATE_REQUIRED")
+	var result: Dictionary = _delegate.configure_r31p23r22_attested_compact(
+		enabled, self, authority_owner, authority_epoch
+	)
+	if not bool(result.get("success", false)):
+		return result
+	_r31p23r22_attested_compact_enabled = enabled
 	return TransportUtilsScript.success({"enabled": enabled})
 
 
@@ -171,6 +188,12 @@ func send_to_peer(peer_id: String, frame: Dictionary) -> Dictionary:
 		and _delegate != null
 		and String(_delegate.get_descriptor().get("transport_kind", "")) == "ENET_MULTI_PEER"
 	)
+	var r22_attested_passthrough: bool = (
+		_r31p23r22_attested_compact_enabled
+		and r21_reuse_encoded_size and _mode == "SERVER"
+		and String(frame.get("channel", "")) == ChannelPolicyScript.SNAPSHOT
+		and String(frame.get("delivery_mode", "")) == "UNRELIABLE_SEQUENCED"
+	)
 	# Original frame checksum/JSON safety validation already succeeded above.
 	# In a real passthrough the ENet delegate MUST produce canonical packet
 	# bytes and return their exact count; reserializing just to count bytes
@@ -183,7 +206,21 @@ func send_to_peer(peer_id: String, frame: Dictionary) -> Dictionary:
 	var p23_canonical_us: int = Time.get_ticks_usec() if p23_probe else 0
 	if real_passthrough:
 		var p23_before_delegate_us: int = Time.get_ticks_usec() if p23_probe else 0
-		var direct: Dictionary = _normalize_result(_delegate.send_to_peer(peer_id, frame))
+		var direct: Dictionary
+		if r22_attested_passthrough:
+			# FrameScript.validate(frame) above is the original full validator.
+			# The next method freezes exactly THESE checked source bytes; the
+			# subsequent ENet method receives only a one-use ticket, not frame.
+			var prepared: Dictionary = _delegate.r22_prepare_validated_compact(
+				self, peer_id, frame
+			)
+			if not bool(prepared.get("success", false)):
+				return prepared
+			direct = _normalize_result(_delegate.r22_send_prepared(
+				self, peer_id, int(prepared.get("details", {}).get("ticket", 0))
+			))
+		else:
+			direct = _normalize_result(_delegate.send_to_peer(peer_id, frame))
 		var p23_delegate_us: int = Time.get_ticks_usec() if p23_probe else 0
 		if r21_reuse_encoded_size and bool(direct.get("success", false)):
 			var exact_bytes = Dictionary(direct.get("details", {})).get("packet_bytes")
@@ -196,6 +233,7 @@ func send_to_peer(peer_id: String, frame: Dictionary) -> Dictionary:
 		if p23_probe and bool(result.get("success", false)):
 			var extras: Dictionary = Dictionary(result.get("details", {}))
 			extras["r31p23r21_size_reused"] = r21_reuse_encoded_size
+			extras["r31p23r22_attestation_consumed"] = r22_attested_passthrough
 			extras["r31p23r2_simulator_stages"] = {
 				"passthrough": true,
 				"r31p23r21_size_reused": r21_reuse_encoded_size,
