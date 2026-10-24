@@ -1,7 +1,7 @@
 # CONTROL MVP8 R3 — Git-bound Reviewer event and receipt repair
 
-**Issue:** [#848](https://github.com/rootfabric/distributed-world-simulator/issues/848).  
-**Exact parent:** PR #845 @ `3a8f858f85c5ff018676557650f34179d6d5f86b` (TREE `f03f89297f1cb97ed4df9b4b8ecedfc1fef2aec3`).  
+**Issue:** [#848](https://github.com/rootfabric/distributed-world-simulator/issues/848).
+**Exact parent:** PR #845 @ `3a8f858f85c5ff018676557650f34179d6d5f86b` (TREE `f03f89297f1cb97ed4df9b4b8ecedfc1fef2aec3`).
 **Branch:** `repair/control-mvp8-pr845-git-bound-siblings-r3`. **Draft, no merge, no main changes.** Parent PR #845 has genuine `REVIEW_FAIL` and remains frozen.
 
 ## RED — source of the defect
