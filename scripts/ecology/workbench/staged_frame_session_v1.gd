@@ -94,7 +94,8 @@ func advance(state: Dictionary, options: Dictionary,
 		lease_owner: Object = null, lease_token: RefCounted = null,
 		lease_generation: int = -1,
 		projection_manifest: Dictionary = {},
-		r2e2_owned_fast: bool = false) -> Dictionary:
+		r2e2_owned_fast: bool = false,
+		r2e3_original_a4: bool = false) -> Dictionary:
 	if not C.integer(soft_budget_us, 1, 1000000000) \
 			or not C.integer(max_resumes, 1, MAX_RESUMES) \
 			or not C.integer(max_worksets, 1, MAX_WORKSETS) \
@@ -107,6 +108,8 @@ func advance(state: Dictionary, options: Dictionary,
 	if r2e2_owned_fast and (not use_off_main_r3 or lease_owner == null
 			or lease_token == null or lease_generation < 0):
 		return _error("R2E2_STAGED_REQUIRES_CONTROLLER_LEASE", false)
+	if r2e3_original_a4 and not r2e2_owned_fast:
+		return _error("R2E3_REQUIRES_DEEP_OWNED_LAB", false)
 	# R3.2 is a separate LAB-only execution option. Existing R3/A14.5
 	# behavior remains byte-for-byte unchanged unless this flag is set.
 	if use_off_main_r3:
@@ -118,7 +121,7 @@ func advance(state: Dictionary, options: Dictionary,
 		var async_step: Dictionary = _off_main.advance(
 			state, options, max_members, allocator_items_per_call, cursor_cap_bytes,
 			lease_owner, lease_token, lease_generation, projection_manifest,
-			1, 1, false, r2e2_owned_fast)
+			1, 1, false, r2e2_owned_fast, r2e3_original_a4)
 		if not bool(async_step.get("success", false)):
 			return _error("STAGED_SESSION_OFFMAIN:" +
 				String(async_step.get("error", "?")), true)
