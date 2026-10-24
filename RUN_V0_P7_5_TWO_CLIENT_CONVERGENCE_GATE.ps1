@@ -60,13 +60,16 @@ function Invoke-Contract {
         throw "P7.5 contract RED: $Name"
     }
     Assert-LogClean $Log
-    $SummaryPresent = Select-String -Path $Log -SimpleMatch $Summary -Quiet
-    if (-not $SummaryPresent -and $Summary -match '^(.*\()\d+( assertions, 0 failures\))$') {
-        # ENGINE48: assertion totals legitimately vary between engine builds
-        # (e.g. 4.7.1 83 vs 4.8 88 on p7-1-authority). The fail-closed contract
-        # is the PASS line with ZERO failures; the count itself is informational.
-        $SummaryPresent = Select-String -Path $Log -Pattern ([regex]::Escape($Matches[1]) + '\d+' + [regex]::Escape($Matches[2])) -Quiet
+    # Keep the strict legacy 4.7.1 contract (83/0) on its normal path.
+    # The 4.8 migration exercises the expanded P7.1 test (88/0):
+    # do not accept 83/0 as a false green on that new engine.
+    if ($Name -eq 'p7-1-authority' -and $Engine48Sha) {
+        if ($Summary -ne 'V0-P7.1 authority gate: PASS (83 assertions, 0 failures)') {
+            throw 'ENGINE48_P7_1_UNEXPECTED_EXPECTED_SUMMARY'
+        }
+        $Summary = 'V0-P7.1 authority gate: PASS (88 assertions, 0 failures)'
     }
+    $SummaryPresent = Select-String -Path $Log -SimpleMatch $Summary -Quiet
     if (-not $SummaryPresent) {
         Get-Content $Log -Tail 500 -ErrorAction SilentlyContinue
         throw "Missing PASS summary: $Summary"
