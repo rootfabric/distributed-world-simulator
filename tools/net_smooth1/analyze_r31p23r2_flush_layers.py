@@ -26,9 +26,21 @@ def analyze(root:Path,minimum_wire_events:int=10)->dict:
     run_id=manifest.get("run_id")
     if (type(run_id) is not str or len(run_id)!=16
         or manifest.get("r31p23r2_flush_attribution") is not True
-        or manifest.get("r31p22_loop_attribution") is not True
-        or manifest.get("r31bp1_durable_chunks") is not True
-        or manifest.get("r3c4r2_worker_envelope") is not True):
+        or manifest.get("r31p22_loop_attribution") is not True):
+        raise ValueError("P23R2_INVALID_CANARY_OR_RUN_ID")
+    # P2.3 R2.2 attested-compact attribution arm: the P0 ON flag set is the
+    # R2.1 flags plus ONLY --r31p23r22-attested-compact, so the legacy R3C4R2
+    # worker-envelope / R31BP1 durable-chunk canaries are legitimately OFF and
+    # must not be demanded from an R2.2-attested run. Every pre-existing strict
+    # R2.0/R2.1 receipt check below is unchanged for the legacy arm.
+    r22_expected=manifest.get("r31p23r22_attested_compact")
+    if r22_expected is not None and type(r22_expected) is not bool:
+        raise ValueError("R22_INVALID_MANIFEST_CANARY")
+    legacy_durable_canaries=(
+        manifest.get("r31bp1_durable_chunks") is True
+        and manifest.get("r3c4r2_worker_envelope") is True)
+    r22_attribution_arm=(r22_expected is True)
+    if not legacy_durable_canaries and not r22_attribution_arm:
         raise ValueError("P23R2_INVALID_CANARY_OR_RUN_ID")
     # Historical R2.0 traces have no R2.1 field; on a NEW R2.1
     # OFF/ON comparison the run's own manifest and every COMPACT's actual
@@ -37,6 +49,10 @@ def analyze(root:Path,minimum_wire_events:int=10)->dict:
     r21_expected=manifest.get("r31p23r21_single_pass_compact")
     if r21_expected is not None and type(r21_expected) is not bool:
         raise ValueError("R21_INVALID_MANIFEST_CANARY")
+    # R2.2 attested-compact is fail-closed ON TOP of R2.1 single-pass compact;
+    # an R2.2 claim without the R2.1 canary can never be analyzed as ON.
+    if r22_attribution_arm and r21_expected is not True:
+        raise ValueError("R22_REQUIRES_R21_CANARY")
     r21_confirmed=0
     trace_path=root/"server"/"trace.jsonl"
     trace=read_trace(trace_path,run_id)
@@ -160,6 +176,7 @@ def analyze(root:Path,minimum_wire_events:int=10)->dict:
         "condition_queued_events":nonpassthrough_count,
         "r21_requested":r21_expected,
         "r21_confirmed_passthrough_events":r21_confirmed,
+        "r22_attested_requested":bool(r22_expected),
         "boundary_stage_ms":{k:dist(v) for k,v in stage_series.items()},
         "simulator_stage_ms":{k:dist(v) for k,v in simulator_series.items()},
         "enet_stage_ms":{k:dist(v) for k,v in enet_series.items()},
