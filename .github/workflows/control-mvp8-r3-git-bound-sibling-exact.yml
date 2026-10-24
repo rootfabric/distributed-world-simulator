@@ -1,0 +1,186 @@
+name: CONTROL MVP8 R3 Git-Bound Sibling Exact
+on:
+  push:
+    branches: [repair/control-mvp8-pr845-git-bound-siblings-r3]
+  workflow_dispatch:
+permissions:
+  contents: read
+
+jobs:
+  frozen-scope:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Exact parent, four paths, preserved historic authorities
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          base=3a8f858f85c5ff018676557650f34179d6d5f86b
+          test "$(git merge-base "$base" HEAD)" = "$base"
+          python3 - <<'PY'
+          import subprocess
+          base="3a8f858f85c5ff018676557650f34179d6d5f86b"
+          expected={
+              "scripts/harness/state_builder.py":"M",
+              "tests/harness/test_mvp8_git_bound_sibling_inputs_r3.py":"A",
+              "docs/control/CONTROL_MVP8_R3_GIT_BOUND_SIBLING_REPAIR_MAP_RU.md":"A",
+              ".github/workflows/control-mvp8-r3-git-bound-sibling-exact.yml":"A",
+          }
+          rows=subprocess.check_output(["git","diff","--name-status",base,"HEAD"],text=True).splitlines()
+          seen=dict((path,status) for status,path in (row.split("\t") for row in rows))
+          assert seen==expected,(seen,expected)
+          pinned={
+            "config/control/harness/executions/E2026-09-09-V0-MVP-R1/external-role-event-witness.v1.json":"a2c07a8d7b24346abafa46513ed614b792126a97",
+            "config/control/harness/executions/E2026-09-09-V0-MVP-R1/events/V0-MVP-R1-WO-001/0050-mvp8-repair-r2-independent-reviewer-pass.v1.json":"b27cc80072fcb66cb217004ddad35aeb381d37a0",
+            "config/control/harness/executions/E2026-09-09-V0-MVP-R1/verifications/MVP8-INDEPENDENT-REVIEW-DC6E7FFF-R1.v1.json":"3759b7caf84ef1e49a894ae2d6b5934e676c15b5",
+          }
+          for path, sha in pinned.items():
+              observed=subprocess.check_output(["git","rev-parse","HEAD:"+path],text=True).strip()
+              assert observed==sha,(path,observed)
+              assert subprocess.check_output(["git","diff","--name-only",base,"HEAD","--",path],text=True).strip()==""
+          print("R3_EXACT_SCOPE_AND_HISTORIC_BLOB_PINS=PASS")
+          PY
+          git diff --check "$base" HEAD
+          python3 -m py_compile scripts/harness/state_builder.py tests/harness/test_mvp8_git_bound_sibling_inputs_r3.py
+  linux-exact:
+    needs: frozen-scope
+    runs-on: ubuntu-latest
+    timeout-minutes: 28
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install canonical pinned validator
+        run: python -m pip install -r scripts/harness/requirements.txt
+      - name: New R3 RED→GREEN, prior R2/R1, and evidence-map gates
+        shell: bash
+        env:
+          PYTHONPATH: scripts
+        run: |
+          set -Eeuo pipefail
+          mkdir -p verification
+          for selector in \
+            test_mvp8_git_bound_sibling_inputs_r3.py \
+            test_mvp8_committed_witness_binding_r2.py \
+            test_mvp8_external_reviewer_event_witness_r1.py \
+            test_mvp8_immutable_evidence_reconciliation_r1.py
+          do
+            python -m unittest discover -s tests/harness -p "$selector" -v 2>&1 | tee "verification/$selector.log"
+          done
+      - name: Exact Linux Status and CheckConsistency
+        shell: bash
+        env:
+          PYTHONPATH: scripts
+        run: |
+          set -Eeuo pipefail
+          python -m harness.cli status --root "$PWD" >verification/status.jsonl
+          python -m harness.cli check-consistency --root "$PWD" --candidate >verification/consistency.jsonl
+          python - <<'PY'
+          import json
+          for p in ["verification/status.jsonl","verification/consistency.jsonl"]:
+              obj=json.loads(open(p,encoding="utf-8").read().splitlines()[-1])
+              assert obj["schema"]=="distributed_world_simulator.control_development_output.v1" and obj.get("ok") is True,obj
+              print("R3_STATUS_OR_CONSISTENCY_PASS",p)
+          PY
+      - name: Entire canonical Harness regression
+        shell: bash
+        env:
+          PYTHONPATH: scripts
+        run: |
+          set -Eeuo pipefail
+          python -m unittest discover -s tests/harness -v >verification/full-harness.log 2>&1 || {
+            tail -120 verification/full-harness.log
+            exit 1
+          }
+          tail -14 verification/full-harness.log
+      - name: Standard and directional PC0 diagnostic (never suppress health)
+        shell: bash
+        env:
+          PYTHONPATH: scripts
+        run: |
+          set -Eeuo pipefail
+          set +e
+          python scripts/control/project_control.py --no-fetch --no-fail-on-red >verification/pc0-standard.log 2>&1
+          std_rc=$?
+          python scripts/control/project_control_directional_watch.py --no-fail-on-red >verification/pc0-directional.log 2>&1
+          dir_rc=$?
+          set -e
+          python - "$std_rc" "$dir_rc" <<'PY'
+          import json,sys,pathlib
+          a,b=map(int,sys.argv[1:])
+          standard=json.loads(pathlib.Path("artifacts/control/project-control-report.json").read_text())
+          directional=json.loads(pathlib.Path("artifacts/control/directional-watch-report.json").read_text())
+          result={"standard_health":standard["overall_health"],"directional_health":directional["overall_health"],
+                  "standard_exit":a,"directional_exit":b}
+          print("R3_PC0_DIAGNOSTICS",json.dumps(result))
+          pathlib.Path("verification/pc0-health.json").write_text(json.dumps(result,indent=2)+"\n")
+          assert a==0 and b==0,result
+          assert all(result[k] in ("GREEN","YELLOW","RED") for k in ("standard_health","directional_health"))
+          PY
+      - name: Evidence SHA manifest
+        if: always()
+        shell: bash
+        run: |
+          mkdir -p verification
+          printf 'HEAD=%s\nTREE=%s\n' "$(git rev-parse HEAD)" "$(git rev-parse 'HEAD^{tree}')" >verification/IDENTITY
+          (cd verification && sha256sum *.log *.json *.jsonl IDENTITY >SHA256SUMS) || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: control-mvp8-r3-linux-exact
+          path: verification/**
+          retention-days: 30
+          if-no-files-found: warn
+  windows-exact:
+    needs: frozen-scope
+    runs-on: windows-latest
+    timeout-minutes: 28
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python -m pip install -r scripts/harness/requirements.txt
+        shell: pwsh
+      - name: Exact Windows 4 R3, 4 R2, 6 R1 and 5 schema gates
+        shell: pwsh
+        env:
+          PYTHONPATH: scripts
+        run: |
+          $ErrorActionPreference='Stop'
+          New-Item -ItemType Directory -Path verification -Force | Out-Null
+          foreach ($selector in @(
+            'test_mvp8_git_bound_sibling_inputs_r3.py',
+            'test_mvp8_committed_witness_binding_r2.py',
+            'test_mvp8_external_reviewer_event_witness_r1.py',
+            'test_mvp8_immutable_evidence_reconciliation_r1.py'
+          )) {
+            python -m unittest discover -s tests/harness -p $selector -v 2>&1 | Tee-Object -FilePath "verification/$selector.log"
+            if ($LASTEXITCODE -ne 0) { throw "WINDOWS_FOCUSED_TEST_FAIL_$selector" }
+          }
+      - name: Exact native Windows public Status and CheckConsistency
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          $driver=Join-Path $PWD 'CONTROL_DEVELOPMENT.ps1'
+          $status=@(& pwsh -NoLogo -NoProfile -File $driver -Status)
+          $rc=$LASTEXITCODE
+          $obj=($status | Select-Object -Last 1) | ConvertFrom-Json
+          if ($rc -ne 0 -or $obj.ok -ne $true) { throw "WINDOWS_STATUS_FAIL_$rc" }
+          Write-Host 'R3_WINDOWS_STATUS=PASS'
+          $consistency=@(& pwsh -NoLogo -NoProfile -File $driver -CheckConsistency -Candidate)
+          $rc=$LASTEXITCODE
+          $obj=($consistency | Select-Object -Last 1) | ConvertFrom-Json
+          if ($rc -ne 0 -or $obj.ok -ne $true) { throw "WINDOWS_CONSISTENCY_FAIL_$rc" }
+          Write-Host 'R3_WINDOWS_CONSISTENCY=PASS'
