@@ -35,6 +35,7 @@ $env:DWS_GODOT_DOUBLE_BIN = $chosen
 if ($migrated) { $env:DWS_ENGINE48_GODOT_SHA256 = $expectedHash } else { Remove-Item Env:DWS_ENGINE48_GODOT_SHA256 -ErrorAction SilentlyContinue }
 if ($env:GITHUB_ENV) {
     "DWS_GODOT_DOUBLE_BIN=$chosen" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+    "DWS_EFFECTIVE_GODOT_SHA256=$expectedHash" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
     if ($migrated) { "DWS_ENGINE48_GODOT_SHA256=$expectedHash" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8 }
 }
 Write-Host "DWS_EXACT_ENGINE_RESOLVED=$chosen"
