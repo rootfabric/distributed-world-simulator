@@ -19,14 +19,14 @@ Extend `scripts/harness/state_builder.py::_external_reviewer_witnesses`. Once th
 
 - Altered local event fails closed `EXTERNAL_REVIEW_WITNESS_EVENT_LOCAL_BLOB_MISMATCH`.
 - Altered local Reviewer receipt fails closed `EXTERNAL_REVIEW_WITNESS_RECEIPT_LOCAL_BLOB_MISMATCH`.
-- A caller-supplied Python event dict that differs from the independently Git-bound event content fails `EXTERNAL_REVIEW_WITNESS_EVENT_DTO_MISMATCH`.
+- A caller-supplied Python event dict that differs from the independently Git-bound event content fails `EXTERNAL_REVIEW_WITNESS_EVENT_DTO_MISMATCH`. Equality is compared with deterministic, type-strict JSON encoding (not Python dict `==`, which treats `False == 0` and `50.0 == 50`); unencodable/NaN objects also fail closed.
 - A genuinely authentic event, receipt and original single-event witness continue to be accepted.
 
 **No changes** to original witness manifest, event ledger, independent Reviewer receipt, transition table, event schema, canonical ownership, Godot or FABRIC runtime. The original Git ancestry guard remains required for all other events. This does **not** convert a Reviewer PASS into a merge or human acceptance.
 
 ## Normative tests and possible blockers
 
-New `tests/harness/test_mvp8_git_bound_sibling_inputs_r3.py` tests authentic input, hidden uncommitted event #0050, hidden uncommitted review receipt, and forged in-memory DTO. Tests use clean named worktrees with unique names and remove their worktrees/branches on exit. RED original source, GREEN R3 candidate must be demonstrated.
+New `tests/harness/test_mvp8_git_bound_sibling_inputs_r3.py` tests authentic input, hidden uncommitted event #0050, hidden uncommitted review receipt, forged in-memory DTO, and numeric/boolean type-confusion DTO aliases. Tests use clean named worktrees with unique names and remove their worktrees/branches on exit. RED original source, GREEN R3 candidate must be demonstrated.
 
 Preserve previous R2 **4-case**, R1 **6-case**, and MVP8 evidence-map **5-case** tests; run full Harness suite, native Windows `CONTROL_DEVELOPMENT.ps1 -Status` / `-CheckConsistency -Candidate`, Linux exact `status` / `check-consistency --candidate`, standard and directional PC0, inspect raw logs and SHA256SUMS. Report actual non-RED/RED findings without treating `--no-fail-on-red` exit0 as architectural approval.
 
