@@ -70,10 +70,10 @@ class ExternalReviewerWitnessTest(unittest.TestCase):
                 value_map[field] = value
                 with self.assertRaisesRegex(ContractValidationError, error):
                     self.proof(manifest=value_map)
-        copy = copy.deepcopy(self.manifest)
-        copy["witnesses"].append(copy["witnesses"][0])
+        duplicate = copy.deepcopy(self.manifest)
+        duplicate["witnesses"].append(duplicate["witnesses"][0])
         with self.assertRaisesRegex(ContractValidationError, "EXTERNAL_REVIEW_WITNESS_SCOPE_INVALID"):
-            self.proof(manifest=copy)
+            self.proof(manifest=duplicate)
 
     def test_forged_event_blob_commit_parent_and_review_blob_rejected(self):
         for key, value, code in (
