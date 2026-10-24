@@ -88,6 +88,27 @@ func _r2e2_owns(source: Dictionary, options: Dictionary,
 	return lifecycle is Dictionary and String(lifecycle.get(
 		"source_hash", "")) == _a5_source_fingerprint
 
+## E3: authorize the ORIGINAL single global A4 allocation exactly once
+## at an owned CPU worker's ALLOCATE frontier. A5 still validates the full
+## incoming sealed cursor and the detached field+population digest before
+## calling this method. No A4 result is returned without accepted Runtime
+## final state and worker full source/candidate validation.
+func _r2e3_allows_original_a4(source_field: Dictionary,
+		source_population: Array, a5_cursor: Dictionary) -> bool:
+	if not _admitted or Thread.is_main_thread() or _generation < 0 \
+			or not is_same(source_field, _source.get("field", null)) \
+			or not is_same(source_population, _source.get("population", null)) \
+			or String(_source.get("integrity_hash", "")) != _anchor \
+			or String(a5_cursor.get("schema", "")) != \
+				"dws.ecology.a5-staged-r3-global-allocator.v1" \
+			or String(a5_cursor.get("source_hash", "")) != _a5_source_fingerprint \
+			or String(a5_cursor.get("phase", "")) != "ALLOCATE" \
+			or int(a5_cursor.get("index", -1)) != 0 \
+			or not a5_cursor.get("allocator_cursor", null) is Dictionary:
+		return false
+	# Only before the original speculative A4 cursor has been started.
+	return a5_cursor.allocator_cursor.is_empty()
+
 func source_anchor() -> String:
 	return _anchor
 
