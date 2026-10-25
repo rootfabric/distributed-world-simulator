@@ -193,7 +193,7 @@ func _permutation_unharmed() -> void:
 		var mutated_queue: Array = queue.duplicate()
 		mutated_queue[0] = item
 		sim.set("_outgoing_queue", mutated_queue)
-		var accepted_before := stub.accepted.size()
+		var accepted_before: int = stub.accepted.size()
 		sim.advance_time_ms(10000)
 		sim.drain()
 		check(stub.accepted.size() == accepted_before,
