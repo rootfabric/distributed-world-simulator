@@ -50,7 +50,7 @@ def fresh_named_worktree(label: str):
 
 def prove(root:Path):
     # This is the production trust-boundary function, not a simplified mock.
-    script=StringLiteral = """
+    script = """
 from pathlib import Path
 import subprocess,sys
 from harness.contracts import read_json,ContractValidationError
