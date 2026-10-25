@@ -29,6 +29,7 @@ def sha(path:Path)->str:
 
 def load_role(path:Path,run_id:str,role:str)->dict:
     by_sha=defaultdict(list)
+    outbound_guard_rejects=[]
     rows=0
     first=None
     last=None
@@ -74,6 +75,20 @@ def load_role(path:Path,run_id:str,role:str)->dict:
                     or d["raw_payload_redacted"] is not True):
                     raise ValueError("R31_815_MALFORMED_FINGERPRINT")
                 by_sha[d["packet_sha256"]].append(d)
+            elif obj.get("kind")=="r31_815_outbound_preflight_reject":
+                d=obj["data"]
+                if (role!="server"
+                    or type(d.get("frame_id")) is not str
+                    or not d["frame_id"].startswith("frame/")
+                    or type(d.get("packet_sha256")) is not str
+                    or len(d["packet_sha256"])!=64
+                    or type(d.get("decoder_error_code")) is not str
+                    or not d["decoder_error_code"]
+                    or d.get("packet_bytes_mutated") is not False
+                    or type(d.get("reject_index")) is not int
+                    or d["reject_index"]!=len(outbound_guard_rejects)+1):
+                    raise ValueError("R31_815_GUARD_RECEIPT_INVALID")
+                outbound_guard_rejects.append(d)
     if footer is None or last is None:
         raise ValueError("R31_815_TRACE_MISSING_FOOTER")
     # Header is also counted by trace writer: produced/written exclude END.
@@ -81,6 +96,7 @@ def load_role(path:Path,run_id:str,role:str)->dict:
         or footer.get("dropped")!=0 or footer.get("io_errors")!=0):
         raise ValueError("R31_815_TRACE_FOOTER_DROPPED_OR_MISMATCH")
     return {"role":role,"sha256":sha(path),"fingerprints":by_sha,
+            "guard_rejects":outbound_guard_rejects,
             "count":sum(map(len,by_sha.values())),"total_rows":rows}
 
 
@@ -117,6 +133,31 @@ def analyze(root:Path)->dict:
                     tx_by_sha[digest].append({"role":role,"receipt":d})
                 if d["phase"]=="rx_reject":
                     rejected.append({"role":role,"receipt":d})
+    guard_enabled=manifest.get("r31_815_outbound_guard",False)
+    if type(guard_enabled) is not bool:
+        raise ValueError("R31_815_GUARD_MANIFEST_UNTYPED")
+    guard_rejects=traces["server"]["guard_rejects"]
+    if guard_rejects and not guard_enabled:
+        raise ValueError("R31_815_GUARD_UNATTESTED_EVENTS")
+    blocked_packets=[]
+    for d in guard_rejects:
+        # An exact frame fingerprint rejected by preflight must NEVER
+        # subsequently appear in a native TX or RX on this run.
+        replayed=any(v["receipt"]["frame_id"]==d["frame_id"]
+                     for v in tx_by_sha.get(d["packet_sha256"],[]))
+        delivered=any(
+            v["frame_id"]==d["frame_id"]
+            for role in ("a","b")
+            for v in traces[role]["fingerprints"].get(d["packet_sha256"],[])
+        )
+        if replayed or delivered:
+            raise ValueError("R31_815_PREFLIGHT_GUARD_LEAKED_EXACT_PACKET")
+        blocked_packets.append({
+            "frame_id":d["frame_id"],
+            "packet_sha256":d["packet_sha256"],
+            "decoder_error_code":d["decoder_error_code"],
+            "packet_bytes_mutated":False,
+        })
     correlations=[]
     for rx in rejected:
         d=rx["receipt"]
@@ -222,6 +263,9 @@ def analyze(root:Path)->dict:
         "unattested_sender_postparse_mismatch_count":
             unattributed_parsed_mismatch_count,
         "actual_decode_reject_count":len(rejected),
+        "outbound_guard_enabled":guard_enabled,
+        "outbound_guard_reject_count":len(blocked_packets),
+        "outbound_guard_rejected_exact_packets":blocked_packets,
         "rejects":correlations,
         "limitations":[
             "Exact matching sender/receiver packet SHA and frame_id is required.",
@@ -230,6 +274,9 @@ def analyze(root:Path)->dict:
             "A matching SHA alone cannot distinguish numerical parsing, source-frame instability or trace stage error.",
             "No raw packets/payloads or personal identifiers are emitted.",
             "Trace time is process-local: never join by t_us across actors.",
+            "Outbound guard blocks exactly receiver-invalid packets before ENet but does not fix float serialization.",
+            "Unreliable COMPACT snapshots may be dropped by the existing simulator when guard rejects.",
+            "A zero inbound reject count with guard enabled cannot establish stable payload encoding.",
             "No successful rerun, source CI or zero checksum rejection closes #815.",
             "This forensic opt-in adds overhead and cannot be used for normative GUI p99.",
         ]
