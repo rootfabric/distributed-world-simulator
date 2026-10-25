@@ -182,16 +182,25 @@ func _permutation_unharmed() -> void:
 	var queue: Array = sim.get("_outgoing_queue")
 	check(not queue.is_empty(), "second frame still held by simulator queue")
 	if not queue.is_empty():
-		var item: Dictionary = Dictionary(queue[0]).duplicate(true)
-		var held: Dictionary = Dictionary(item.get("frame", {})).duplicate(true)
-		held["payload"]["server_sent_at_ms"] = 999999
-		item["frame"] = held
-		var refused_queued: Dictionary = stub.send_to_peer(PEER, held)
+		# duplicate_percent is 100% in this profile, so the frame sits in the
+		# queue as TWO copies. Every queued copy must be corrupted, otherwise
+		# the intact duplicate is legitimately delivered and the fail-closed
+		# assertion below would count it as a leak.
+		var mutated_queue: Array = queue.duplicate()
+		for queue_index in range(mutated_queue.size()):
+			var corrupted_item: Dictionary = (
+				Dictionary(mutated_queue[queue_index]).duplicate(true)
+			)
+			var corrupted_held: Dictionary = (
+				Dictionary(corrupted_item.get("frame", {})).duplicate(true)
+			)
+			corrupted_held["payload"]["server_sent_at_ms"] = 999999
+			corrupted_item["frame"] = corrupted_held
+			mutated_queue[queue_index] = corrupted_item
+		var refused_queued: Dictionary = stub.send_to_peer(PEER, mutated_queue[0]["frame"])
 		check(not _ok(refused_queued) and
 			_code(refused_queued) == "PAYLOAD_CHECKSUM_MISMATCH",
 			"delegate validator fails CLOSED on queued-corrupted frame")
-		var mutated_queue: Array = queue.duplicate()
-		mutated_queue[0] = item
 		sim.set("_outgoing_queue", mutated_queue)
 		var accepted_before: int = stub.accepted.size()
 		sim.advance_time_ms(10000)
