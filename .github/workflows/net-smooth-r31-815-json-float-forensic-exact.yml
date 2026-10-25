@@ -1,0 +1,98 @@
+name: NET-SMOOTH1 R31 #815 JSON float wire forensic exact
+on:
+  push:
+    branches:
+      - diagnostic/net-smooth1-r31-815-float-wire-fingerprint-r1
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  strict-source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Exact source and read-only packet SHA correlator
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          git merge-base --is-ancestor 38d62f5bc6143b6d5f4e0b95ff91adbb7e0a13a4 HEAD
+          python -m py_compile tools/net_smooth1/run_net_smooth1.py tools/net_smooth1/analyze_r31_815_wire_fingerprints.py
+          python -m unittest discover -s tests/tools -p 'test_net_smooth1_r31_815_wire_fingerprints.py' -v
+          python -m unittest discover -s tests/tools -p 'test_net_smooth1_r31p23r22_source_contracts.py' -v
+          python -m unittest discover -s tests/tools -p 'test_net_smooth1_p1_batch_flush_layers.py' -v
+          test -z "$(git status --porcelain --untracked-files=no)"
+  linux-native:
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Exact native Godot double JSON float red and original safety
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          B="${DWS_GODOT_DOUBLE_LINUX_BIN:-$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64}"
+          test -x "$B"
+          test "$("$B" --version | head -1)" = '4.7.1.stable.double.custom_build.a13da4feb'
+          test "$(sha256sum "$B" | cut -d' ' -f1)" = 'bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7'
+          mkdir -p artifacts/815-wire-fingerprint
+          "$B" --headless --editor --path . --import --quit > artifacts/815-wire-fingerprint/import.log 2>&1
+          ! grep -E 'SCRIPT ERROR:|Parse Error:|Compile Error:' artifacts/815-wire-fingerprint/import.log
+          for T in tests/runtime/test_net_smooth1_r31_815_float_wire_repro.gd tests/runtime/test_net_smooth1_815_safety_negative.gd tests/runtime/test_net_smooth1_r31p23r22_attested_compact.gd; do
+            L="artifacts/815-wire-fingerprint/$(basename "$T").log"
+            timeout 240 "$B" --headless --path . --script "res://$T" > "$L" 2>&1 || { tail -n 120 "$L"; exit 1; }
+            if grep -E 'SCRIPT ERROR:|Parse Error:|Compile Error:|ERROR:' "$L"; then tail -n 120 "$L"; exit 1; fi
+            grep -Eq 'PASS' "$L"
+          done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: r31-815-forensic-linux-${{ github.sha }}
+          path: artifacts/815-wire-fingerprint/
+          if-no-files-found: warn
+  windows-native:
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Exact pinned Win double numerical RED plus original checksum guards
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          if ((git rev-parse HEAD).Trim() -ne $env:GITHUB_SHA) { throw 'HEAD_MISMATCH' }
+          $B='C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe'
+          if (-not (Test-Path $B)) { throw 'BINARY_MISSING' }
+          if ((& $B --version | Out-String).Trim() -ne '4.7.1.stable.double.custom_build.a13da4feb') { throw 'VERSION_MISMATCH' }
+          if ((Get-FileHash $B -Algorithm SHA256).Hash.ToLowerInvariant() -ne '3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5') { throw 'BINARY_SHA_MISMATCH' }
+          New-Item -ItemType Directory -Force artifacts/815-wire-fingerprint | Out-Null
+          & $B --headless --editor --path . --import --quit *> artifacts/815-wire-fingerprint/import.log
+          if ($LASTEXITCODE -ne 0 -or (Select-String artifacts/815-wire-fingerprint/import.log -Pattern 'SCRIPT ERROR:|Parse Error:|Compile Error:' -Quiet)) { throw 'IMPORT_FAIL' }
+          foreach ($T in @('tests/runtime/test_net_smooth1_r31_815_float_wire_repro.gd','tests/runtime/test_net_smooth1_815_safety_negative.gd','tests/runtime/test_net_smooth1_r31p23r22_attested_compact.gd')) {
+            $L="artifacts/815-wire-fingerprint/$(Split-Path $T -Leaf).log"
+            & $B --headless --path . --script "res://$T" *> $L
+            if ($LASTEXITCODE -ne 0 -or (Select-String $L -Pattern 'SCRIPT ERROR:|Parse Error:|Compile Error:|ERROR:' -Quiet) -or -not (Select-String $L -Pattern 'PASS' -Quiet)) { Get-Content $L -Tail 130; throw "NATIVE_FAIL:$T" }
+          }
+          if (git status --porcelain --untracked-files=no) { throw 'TRACKED_DIRTY' }
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: r31-815-forensic-win-${{ github.sha }}
+          path: artifacts/815-wire-fingerprint/
+          if-no-files-found: warn
