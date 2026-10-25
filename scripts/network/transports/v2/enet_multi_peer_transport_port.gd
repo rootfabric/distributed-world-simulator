@@ -122,6 +122,14 @@ func r22_prepare_validated_compact(source, peer_id: String, frame: Dictionary) -
 		"packet_bytes": packet.size(),
 		"packet_sha256": canonical_text.sha256_text(),
 	}
+	if R31ChecksumForensics.enabled():
+		# Source frame validated by the existing simulator frame validator.
+		# Capture its original hash BEFORE ENet's immutable R2.2 proof is
+		# consumed. Without this, tx_enet only has packet bytes and the
+		# forensic sender_checksum_matches field is always null.
+		_r22_pending["r31_815_original_payload_sha256"] = (
+			NetworkUtilsScript.payload_hash(Dictionary(frame.get("payload", {})))
+		)
 	return TransportUtilsScript.success({"ticket": _r22_ticket_counter})
 
 
@@ -166,7 +174,7 @@ func _r22_take_attestation(source, peer_id: String, ticket: int) -> Dictionary:
 		or packet.get_string_from_utf8().sha256_text() != String(proof.get("packet_sha256", ""))
 	):
 		return TransportUtilsScript.failure("PAYLOAD_CHECKSUM_MISMATCH")
-	return TransportUtilsScript.success({
+	var accepted_details: Dictionary = {
 		"packet": packet, "packet_bytes": packet.size(),
 		"channel": String(proof["channel"]),
 		"delivery_mode": String(proof["delivery_mode"]),
@@ -174,7 +182,12 @@ func _r22_take_attestation(source, peer_id: String, ticket: int) -> Dictionary:
 		"sequence": int(proof["sequence"]),
 		"frame_id": String(proof["frame_id"]),
 		"payload_checksum": String(proof["payload_checksum"]),
-	})
+	}
+	if proof.has("r31_815_original_payload_sha256"):
+		# Diagnostic-only; not an authorization or a packet-field override.
+		accepted_details["r31_815_original_payload_sha256"] = String(
+			proof["r31_815_original_payload_sha256"])
+	return TransportUtilsScript.success(accepted_details)
 
 
 func r22_send_prepared(source, peer_id: String, ticket: int) -> Dictionary:
@@ -200,7 +213,9 @@ func r22_send_prepared(source, peer_id: String, ticket: int) -> Dictionary:
 	var packet_us: int = Time.get_ticks_usec() if p23_probe else 0
 	if error != OK:
 		return TransportUtilsScript.failure("ENET_SEND_FAILED", {"godot_error": int(error)})
-	_r31_815_emit_wire("tx_enet", peer_id, packet)
+	_r31_815_emit_wire(
+		"tx_enet", peer_id, packet, {}, "",
+		String(details.get("r31_815_original_payload_sha256", "")))
 	var stats: Dictionary = _peer_statistics(peer_id)
 	var stats_us: int = Time.get_ticks_usec() if p23_probe else 0
 	var result_details: Dictionary = {
@@ -658,7 +673,8 @@ func _r31_815_emit_wire(
 	peer_id: String,
 	packet: PackedByteArray,
 	sender_frame: Dictionary = {},
-	error_code: String = ""
+	error_code: String = "",
+	attested_source_payload_sha256: String = ""
 ) -> void:
 	# Inspection NEVER gates, mutates or substitutes a real ENet packet.
 	# The original checksum/frame validation and exact error paths above
@@ -669,7 +685,8 @@ func _r31_815_emit_wire(
 		return
 	_r31_815_wire_event_count += 1
 	var receipt: Dictionary = R31ChecksumForensics.inspect_packet(
-		phase, peer_id, packet, sender_frame, error_code)
+		phase, peer_id, packet, sender_frame, error_code,
+		attested_source_payload_sha256)
 	receipt["event_index"] = _r31_815_wire_event_count
 	R31SmoothTrace.emit("r31_815_wire_fingerprint", receipt)
 

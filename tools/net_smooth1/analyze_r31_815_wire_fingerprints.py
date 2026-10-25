@@ -124,18 +124,61 @@ def analyze(root:Path)->dict:
         # Do not match only by packet SHA when the claimed frame IDs differ.
         senders=[v for v in senders
                  if v["receipt"]["frame_id"]==d["frame_id"]]
-        exact_drift=[
+        verified_source_bad_parse=[
             v for v in senders
             if (v["receipt"].get("sender_checksum_matches") is True
                 and v["receipt"].get("postparse_checksum_matches") is False
                 and d.get("postparse_checksum_matches") is False
                 and d.get("error_code")=="PAYLOAD_CHECKSUM_MISMATCH")
         ]
-        classification=("SAME_EXACT_PACKET_SENDER_VALID_RECEIVER_FLOAT_DRIFT"
-                        if exact_drift else
-                        "SAME_EXACT_PACKET_REJECT_CAUSE_NOT_PROVEN"
-                        if senders else
-                        "UNMATCHED_RECEIVE_REJECT_SOURCE_BYTES_UNKNOWN")
+        sender_unattested=[
+            v for v in senders
+            if v["receipt"].get("sender_checksum_matches") is None
+        ]
+        tx_rx_parse_diverged=[
+            v for v in senders
+            if (v["receipt"].get("postparse_checksum_matches") is not None
+                and v["receipt"].get("postparse_checksum_matches") !=
+                    d.get("postparse_checksum_matches"))
+        ]
+        sender_source_invalid=[
+            v for v in senders
+            if v["receipt"].get("sender_checksum_matches") is False
+        ]
+        if verified_source_bad_parse:
+            # Validated ORIGINAL frame and same immutable byte stream, but
+            # post-JSON parse payload differs. Only a numeric-path witness can
+            # establish float64 as the unique specific cause.
+            classification="SAME_EXACT_PACKET_SOURCE_VALID_POSTPARSE_CHECKSUM_MISMATCH"
+        elif tx_rx_parse_diverged:
+            classification="SAME_EXACT_PACKET_TX_RX_POSTPARSE_DIVERGENCE"
+        elif sender_source_invalid:
+            classification="SAME_EXACT_PACKET_SOURCE_CHECKSUM_INVALID"
+        elif sender_unattested:
+            # Old R1 tool omitted R2.2's source-frame hash: never infer that
+            # sender_postparse_mismatch_count=0 proves absence of drift.
+            classification="SAME_EXACT_PACKET_R22_ORIGINAL_SOURCE_ATTESTATION_MISSING"
+        elif senders:
+            classification="SAME_EXACT_PACKET_REJECT_CAUSE_NOT_PROVEN"
+        else:
+            classification="UNMATCHED_RECEIVE_REJECT_SOURCE_BYTES_UNKNOWN"
+        sender_receipts=[{
+            "role":v["role"],
+            "sender_hash_provenance":v["receipt"].get(
+                "sender_hash_provenance","LEGACY_R1_NOT_CAPTURED"),
+            "sender_checksum_matches":v["receipt"].get("sender_checksum_matches"),
+            "sender_source_hash_captured":
+                v["receipt"].get("sender_source_hash_captured",
+                    v["receipt"].get("sender_checksum_matches") is not None),
+            "tx_postparse_checksum_matches":
+                v["receipt"].get("postparse_checksum_matches"),
+            "tx_postparse_payload_sha256":
+                v["receipt"].get("postparse_payload_sha256",""),
+            "tx_sender_dictionary_payload_sha256":
+                v["receipt"].get("sender_dictionary_payload_sha256",""),
+            "packet_canonical_after_parse":
+                v["receipt"].get("packet_canonical_after_parse"),
+        } for v in senders]
         correlations.append({
             "receiving_role":rx["role"],
             "frame_id":d["frame_id"],
@@ -143,11 +186,25 @@ def analyze(root:Path)->dict:
             "error_code":d.get("error_code",""),
             "message_type":d.get("message_type",""),
             "source_roles":sorted({v["role"] for v in senders}),
+            "sender_receipts":sender_receipts,
+            "rx_postparse_checksum_matches":d.get("postparse_checksum_matches"),
+            "rx_postparse_payload_sha256":d.get("postparse_payload_sha256",""),
+            "rx_advertised_payload_sha256":d.get("advertised_payload_sha256",""),
+            "numeric_root_cause_proven":False,
             "classification":classification,
         })
     mismatch_productions=sum(
         1 for senders in tx_by_sha.values() for item in senders
         if (item["receipt"].get("sender_checksum_matches") is True
+            and item["receipt"].get("postparse_checksum_matches") is False)
+    )
+    source_proof_missing_count=sum(
+        1 for senders in tx_by_sha.values() for item in senders
+        if item["receipt"].get("sender_checksum_matches") is None
+    )
+    unattributed_parsed_mismatch_count=sum(
+        1 for senders in tx_by_sha.values() for item in senders
+        if (item["receipt"].get("sender_checksum_matches") is None
             and item["receipt"].get("postparse_checksum_matches") is False)
     )
     return {
@@ -161,11 +218,16 @@ def analyze(root:Path)->dict:
         "trace_sha256":{k:v["sha256"] for k,v in traces.items()},
         "fingerprint_events":{k:v["count"] for k,v in traces.items()},
         "sender_postparse_mismatch_count":mismatch_productions,
+        "sender_original_proof_missing_count":source_proof_missing_count,
+        "unattested_sender_postparse_mismatch_count":
+            unattributed_parsed_mismatch_count,
         "actual_decode_reject_count":len(rejected),
         "rejects":correlations,
         "limitations":[
             "Exact matching sender/receiver packet SHA and frame_id is required.",
-            "Sender numeric drift is a reproducible candidate, not historical incident proof.",
+            "Old R1 attested R2.2 tx_enet omitted the original source-frame checksum: null is NOT false.",
+            "Source-validated same-byte postparse mismatch establishes checksum instability, not which numeric field caused it.",
+            "A matching SHA alone cannot distinguish numerical parsing, source-frame instability or trace stage error.",
             "No raw packets/payloads or personal identifiers are emitted.",
             "Trace time is process-local: never join by t_us across actors.",
             "No successful rerun, source CI or zero checksum rejection closes #815.",

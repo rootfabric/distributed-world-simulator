@@ -87,8 +87,11 @@ class Wire815(unittest.TestCase):
             self.assertEqual(got["original_normative_verdict"],"INCONCLUSIVE")
             self.assertEqual(got["actual_decode_reject_count"],1)
             self.assertEqual(got["rejects"][0]["classification"],
-                "SAME_EXACT_PACKET_SENDER_VALID_RECEIVER_FLOAT_DRIFT")
+                "SAME_EXACT_PACKET_SOURCE_VALID_POSTPARSE_CHECKSUM_MISMATCH")
             self.assertEqual(got["rejects"][0]["source_roles"],["server"])
+            self.assertTrue(got["rejects"][0]["sender_receipts"][0]["sender_checksum_matches"])
+            self.assertFalse(got["rejects"][0]["numeric_root_cause_proven"])
+            self.assertEqual(got["sender_original_proof_missing_count"],0)
             self.assertEqual(got["verdict"],
                 "INDEPENDENT_DIAGNOSTIC_ONLY_ISSUE_815_OPEN")
 
@@ -107,7 +110,35 @@ class Wire815(unittest.TestCase):
             setup(root,bad_sender_checksum=True)
             got=reducer.analyze(root)
             self.assertEqual(got["rejects"][0]["classification"],
-                             "SAME_EXACT_PACKET_REJECT_CAUSE_NOT_PROVEN")
+                             "SAME_EXACT_PACKET_R22_ORIGINAL_SOURCE_ATTESTATION_MISSING")
+            self.assertEqual(got["sender_original_proof_missing_count"],1)
+            self.assertEqual(got["unattested_sender_postparse_mismatch_count"],1)
+            self.assertIsNone(got["rejects"][0]["sender_receipts"][0]["sender_checksum_matches"])
+
+    def test_same_exact_packet_sender_and_receiver_parses_disagree(self):
+        with TemporaryDirectory() as d:
+            root=Path(d)
+            setup(root)
+            path=root/"server"/"trace.jsonl"
+            lines=[json.loads(row) for row in path.read_text().splitlines()]
+            lines[1]["data"]["postparse_checksum_matches"]=True
+            path.write_text("".join(json.dumps(row)+"\n" for row in lines))
+            got=reducer.analyze(root)
+            self.assertEqual(got["rejects"][0]["classification"],
+                "SAME_EXACT_PACKET_TX_RX_POSTPARSE_DIVERGENCE")
+            self.assertFalse(got["rejects"][0]["numeric_root_cause_proven"])
+
+    def test_present_but_invalid_sender_source_checksum_is_not_drift_proof(self):
+        with TemporaryDirectory() as d:
+            root=Path(d)
+            setup(root)
+            path=root/"server"/"trace.jsonl"
+            lines=[json.loads(row) for row in path.read_text().splitlines()]
+            lines[1]["data"]["sender_checksum_matches"]=False
+            path.write_text("".join(json.dumps(row)+"\n" for row in lines))
+            got=reducer.analyze(root)
+            self.assertEqual(got["rejects"][0]["classification"],
+                "SAME_EXACT_PACKET_SOURCE_CHECKSUM_INVALID")
 
     def test_trace_loss_rejected_not_silently_ignored(self):
         with TemporaryDirectory() as d:
@@ -144,6 +175,12 @@ class Wire815(unittest.TestCase):
         self.assertIn('env.pop(\'DWS_NET_R31_815_WIRE_FORENSICS\',None)',runner)
         self.assertIn("r31_815_wire_forensics=args.r31_815_wire_forensics",runner)
         self.assertIn('return UtilsScript.validation_failure("PAYLOAD_CHECKSUM_MISMATCH"',proto)
+        self.assertIn("r31_815_original_payload_sha256",enet)
+        self.assertIn('NetworkUtilsScript.payload_hash(Dictionary(frame.get("payload", {})))',enet)
+        self.assertIn('attested_source_payload_sha256',helper)
+        self.assertIn('R22_ORIGINAL_VALIDATED_FRAME',helper)
+        self.assertIn('sender_original_proof_missing_count',
+                      (ROOT/"tools/net_smooth1/analyze_r31_815_wire_fingerprints.py").read_text())
 
 
 if __name__=="__main__":
