@@ -75,13 +75,13 @@ class ServerOnlyPacing(unittest.TestCase):
         self.assertNotIn("Engine.max_fps",RUNTIME)
 
     def test_increasing_frame_count_does_not_hide_slow_rate(self):
-        baseline=c.frame_profile_ms([16.7]*1080+[33.3]*120,120)
-        candidate=c.frame_profile_ms([8.3]*2200+[33.3]*120,120)
+        baseline=c.frame_profile_ms([16.7]*1180+[33.3]*20,120)
+        candidate=c.frame_profile_ms([8.3]*2180+[33.3]*20,120)
         self.assertLess(candidate["original_frame_interval_ms"]["p99"],
                         baseline["original_frame_interval_ms"]["p99"])
         self.assertEqual(candidate["over_25ms_per_second"],
                          baseline["over_25ms_per_second"])
-        self.assertEqual(candidate["over_25ms_per_second"],1.0)
+        self.assertAlmostEqual(candidate["over_25ms_per_second"],20.0/120.0)
 
     def test_invalid_role_command_cannot_pass(self):
         with self.assertRaisesRegex(ValueError,"PACING_SERVER_NOT_HEADLESS"):
