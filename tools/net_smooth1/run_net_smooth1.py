@@ -268,6 +268,10 @@ def play(args, manifest: dict) -> None:
               f'--shutdown-after-ms={int((args.startup_timeout*3+args.warmup+args.duration+120)*1000)}']
         if role=='server':
             game += ['--product-seam',f'--persistence-root={root/"world"}']
+            if args.server_max_fps != 60:
+                # Explicit product verifier: native Godot launch cap AND
+                # application-level dedicated authority cap must agree.
+                game += [f'--server-frame-cap={args.server_max_fps}']
         else:
             game += [f'--player-identity={role}','--automation-control',
                      f'--automation-control-token={token}',f'--automation-control-port={ports[role]}',
