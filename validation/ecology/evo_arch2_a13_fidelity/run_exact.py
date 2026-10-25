@@ -94,6 +94,15 @@ def main() -> int:
             seconds=round(time.monotonic() - started, 3),
             sha256=digest(log),
         )
+        if code < 0 and os.name != "nt":
+            try:
+                native_signal = signal.Signals(-code).name
+            except ValueError:
+                native_signal = "UNKNOWN_SIGNAL_" + str(-code)
+            record["terminated_by_signal"] = native_signal
+            record["native_crash"] = True
+            print("ECO_A13_FIDELITY_NATIVE_SIGNAL %s exit=%d label=%s" % (
+                native_signal, code, label), flush=True)
         text = log.read_text(encoding="utf-8", errors="replace")
         print(f"{label}: exit={code} seconds={record['seconds']} log={log}", flush=True)
         if timed_out or (code != 0 and not allow_version_exit):
