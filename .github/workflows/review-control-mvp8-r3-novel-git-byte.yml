@@ -1,0 +1,90 @@
+name: REVIEW CONTROL MVP8 R3 Novel Git Byte Falsifiers
+on:
+  push:
+    branches: [review/control-mvp8-r3-novel-byte-integrity-r1]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  source-freeze:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Prove product R3 unchanged and test-only scope
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          source=7510aa4ff81e6d3a13bbfa0872b6f60bfb547621
+          tree=5003355e504c620c7f4bb0413bda6d4f36b9fd8d
+          test "$(git merge-base "$source" HEAD)" = "$source"
+          test "$(git rev-parse "$source^{tree}")" = "$tree"
+          python3 - <<'PY'
+          import subprocess
+          parent="7510aa4ff81e6d3a13bbfa0872b6f60bfb547621"
+          paths=set(subprocess.check_output(["git","diff","--name-only",parent,"HEAD"],text=True).splitlines())
+          assert paths=={
+              ".github/workflows/review-control-mvp8-r3-novel-git-byte.yml",
+              "tests/harness/review_control_mvp8_r3_skip_worktree_integrity_r1.py",
+          },paths
+          print("R3_NOVEL_REVIEW_PRODUCT_IMMUTABILITY=PASS")
+          PY
+          git diff --check "$source" HEAD
+          python3 -m py_compile tests/harness/review_control_mvp8_r3_skip_worktree_integrity_r1.py
+  review-linux:
+    needs: source-freeze
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python -m pip install -r scripts/harness/requirements.txt
+      - name: Novel independent test-only cases
+        shell: bash
+        env:
+          PYTHONPATH: scripts
+        run: |
+          set -Eeuo pipefail
+          mkdir -p novel-evidence
+          python -m unittest discover -s tests/harness -p 'review_control_mvp8_r3_skip_worktree_integrity_r1.py' -v 2>&1 | tee novel-evidence/review-linux.log
+          printf 'PRODUCT_HEAD=%s\nPRODUCT_TREE=%s\n' "7510aa4ff81e6d3a13bbfa0872b6f60bfb547621" "5003355e504c620c7f4bb0413bda6d4f36b9fd8d" > novel-evidence/IDENTITY
+          (cd novel-evidence && sha256sum review-linux.log IDENTITY >SHA256SUMS)
+          echo "R3_NOVEL_INDEPENDENT_REVIEW_LINUX=PASS"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: pr855-r3-novel-review-linux
+          path: novel-evidence/**
+          retention-days: 30
+          if-no-files-found: warn
+  review-windows:
+    needs: source-freeze
+    runs-on: windows-latest
+    timeout-minutes: 22
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python -m pip install -r scripts/harness/requirements.txt
+        shell: pwsh
+      - name: Novel independent test-only cases
+        shell: pwsh
+        env:
+          PYTHONPATH: scripts
+        run: |
+          $ErrorActionPreference='Stop'
+          python -m unittest discover -s tests/harness -p 'review_control_mvp8_r3_skip_worktree_integrity_r1.py' -v
+          if ($LASTEXITCODE -ne 0) { throw 'R3_NOVEL_GIT_BYTES_REVIEW_WINDOWS_FAIL' }
+          Write-Host 'R3_NOVEL_INDEPENDENT_REVIEW_WINDOWS=PASS'
