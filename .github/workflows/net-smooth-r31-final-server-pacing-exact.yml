@@ -99,6 +99,18 @@ jobs:
           ref: ${{ github.sha }}
           fetch-depth: 0
           persist-credentials: false
+      - name: Static PowerShell syntax gate for guarded six-arm Windows A/B
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          $Path=(Resolve-Path 'tools/net_smooth1/run_r31_final_pacing_windows.ps1').Path
+          $Tokens=$null
+          $ParseErrors=$null
+          [System.Management.Automation.Language.Parser]::ParseFile($Path,[ref]$Tokens,[ref]$ParseErrors) | Out-Null
+          if ($ParseErrors.Count -gt 0) {
+            $ParseErrors | Format-Table | Out-String | Write-Host
+            throw 'AB_POWERSHELL_AST_PARSE_FAIL'
+          }
       - name: Pinned Windows double, exact head, import and all native negatives
         shell: pwsh
         run: |
