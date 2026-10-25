@@ -1,0 +1,180 @@
+name: VERIFY CONTROL MVP8 R3 Current-Refs Exact
+on:
+  push:
+    branches: [verify/control-mvp8-r3-current-refs-20261025-r1]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  source-freeze:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Exact product commit and verifier-only file
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          head=7510aa4ff81e6d3a13bbfa0872b6f60bfb547621
+          tree=5003355e504c620c7f4bb0413bda6d4f36b9fd8d
+          test "$(git merge-base "$head" HEAD)" = "$head"
+          test "$(git rev-parse "$head^{tree}")" = "$tree"
+          test "$(git diff --name-only "$head" HEAD)" = ".github/workflows/verify-control-mvp8-r3-current-refs.yml"
+          git diff --check "$head" HEAD
+          echo 'VERIFY_R3_CURRENT_REFS_SOURCE_FREEZE=PASS'
+
+  linux-current:
+    needs: source-freeze
+    runs-on: ubuntu-latest
+    timeout-minutes: 26
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Clean named exact product checkout
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          exact="$RUNNER_TEMP/mvp8-r3-current-refs-exact"
+          git worktree add --detach "$exact" 7510aa4ff81e6d3a13bbfa0872b6f60bfb547621
+          git -C "$exact" switch -c "verify-mvp8-r3-current-$GITHUB_RUN_ID"
+          test "$(git -C "$exact" rev-parse HEAD)" = "7510aa4ff81e6d3a13bbfa0872b6f60bfb547621"
+          test "$(git -C "$exact" rev-parse 'HEAD^{tree}')" = "5003355e504c620c7f4bb0413bda6d4f36b9fd8d"
+          test -z "$(git -C "$exact" status --porcelain --untracked-files=no)"
+          echo "R3_EXACT=$exact" >> "$GITHUB_ENV"
+          mkdir -p verification
+          printf 'HEAD=%s\nTREE=%s\nMAIN_REF=%s\n' \
+             7510aa4ff81e6d3a13bbfa0872b6f60bfb547621 \
+             5003355e504c620c7f4bb0413bda6d4f36b9fd8d \
+             "$(git -C "$exact" rev-parse origin/main)" > verification/IDENTITY
+      - name: Pinned JSON Schema validator
+        run: python -m pip install -r "$R3_EXACT/scripts/harness/requirements.txt"
+      - name: Inherited R3/R2/R1/Evidence Map tests
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          export PYTHONPATH="$R3_EXACT/scripts"
+          cd "$R3_EXACT"
+          for selector in test_mvp8_git_bound_sibling_inputs_r3.py test_mvp8_committed_witness_binding_r2.py test_mvp8_external_reviewer_event_witness_r1.py test_mvp8_immutable_evidence_reconciliation_r1.py; do
+            python -m unittest discover -s tests/harness -p "$selector" -v 2>&1 | tee "$GITHUB_WORKSPACE/verification/$selector.log"
+          done
+          echo "R3_CURRENT_REFS_FOCUSED_20_OF_20_PASS=true"
+      - name: Current Status and CheckConsistency
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          export PYTHONPATH="$R3_EXACT/scripts"
+          cd "$R3_EXACT"
+          python -m harness.cli status --root "$PWD" >"$GITHUB_WORKSPACE/verification/status.jsonl"
+          python -m harness.cli check-consistency --root "$PWD" --candidate >"$GITHUB_WORKSPACE/verification/consistency.jsonl"
+          python - "$GITHUB_WORKSPACE/verification" <<'PY'
+          import json,pathlib,sys
+          root=pathlib.Path(sys.argv[1])
+          for key in ("status","consistency"):
+              x=json.loads((root/(key+".jsonl")).read_text().splitlines()[-1])
+              assert x.get("ok") is True and x.get("schema")=="distributed_world_simulator.control_development_output.v1",x
+              if key=="consistency":
+                  f=x.get("overview",{}).get("consistency_findings",[])
+                  print("R3_CURRENT_REFS_CONSISTENCY_FINDINGS=",json.dumps(f,ensure_ascii=False)[:3000])
+          print("R3_CURRENT_REFS_STATUS_AND_CONSISTENCY=PASS")
+          PY
+      - name: Current standard and directional PC0
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          cd "$R3_EXACT"
+          python scripts/control/project_control.py --no-fetch --no-fail-on-red >"$GITHUB_WORKSPACE/verification/pc0-standard.log"
+          python scripts/control/project_control_directional_watch.py --no-fail-on-red >"$GITHUB_WORKSPACE/verification/pc0-directional.log"
+          python - "$GITHUB_WORKSPACE/verification" <<'PY'
+          import json,pathlib,sys
+          obj={}
+          for key,file in (("standard","artifacts/control/project-control-report.json"),
+                           ("directional","artifacts/control/directional-watch-report.json")):
+              d=json.loads(pathlib.Path(file).read_text())
+              obj[key]=d.get("overall_health")
+          print("R3_CURRENT_REFS_PC0_HEALTH="+json.dumps(obj))
+          assert all(v in ("GREEN","YELLOW","RED") for v in obj.values()),obj
+          (pathlib.Path(sys.argv[1])/"pc0-health.json").write_text(json.dumps(obj,indent=2)+"\n")
+          PY
+      - name: Durable evidence SHA manifest
+        if: always()
+        shell: bash
+        run: |
+          (cd verification && sha256sum *.log *.json *.jsonl IDENTITY > SHA256SUMS) || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: control-r3-current-refs-linux
+          path: verification/**
+          retention-days: 30
+          if-no-files-found: warn
+
+  windows-current:
+    needs: source-freeze
+    runs-on: windows-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Clean named exact product worktree
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          $Head='7510aa4ff81e6d3a13bbfa0872b6f60bfb547621'
+          $Tree='5003355e504c620c7f4bb0413bda6d4f36b9fd8d'
+          $Exact=Join-Path $env:RUNNER_TEMP 'mvp8-r3-current-exact'
+          git worktree add --detach $Exact $Head
+          if ($LASTEXITCODE -ne 0) { throw 'EXACT_WORKTREE_FAIL' }
+          git -C $Exact switch -c "verify-mvp8-r3-win-$env:GITHUB_RUN_ID"
+          if ($LASTEXITCODE -ne 0) { throw 'EXACT_BRANCH_FAIL' }
+          if ((git -C $Exact rev-parse HEAD).Trim() -cne $Head) { throw 'HEAD_MISMATCH' }
+          if ((git -C $Exact rev-parse 'HEAD^{tree}').Trim() -cne $Tree) { throw 'TREE_MISMATCH' }
+          "R3_EXACT=$Exact" | Out-File $env:GITHUB_ENV -Append -Encoding utf8
+      - name: Pinned JSON Schema validator
+        shell: pwsh
+        run: python -m pip install -r "$env:R3_EXACT/scripts/harness/requirements.txt"
+      - name: Windows twenty focused inherited tests
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          $env:PYTHONPATH=Join-Path $env:R3_EXACT 'scripts'
+          Push-Location $env:R3_EXACT
+          try {
+            foreach ($selector in @(
+               'test_mvp8_git_bound_sibling_inputs_r3.py',
+               'test_mvp8_committed_witness_binding_r2.py',
+               'test_mvp8_external_reviewer_event_witness_r1.py',
+               'test_mvp8_immutable_evidence_reconciliation_r1.py'
+            )) {
+               python -m unittest discover -s tests/harness -p $selector -v
+               if ($LASTEXITCODE -ne 0) { throw "FOCUSED_TEST_FAIL_$selector" }
+            }
+          } finally { Pop-Location }
+          Write-Host "R3_CURRENT_REFS_WINDOWS_FOCUSED_20_OF_20=PASS"
+      - name: Windows fresh public Status and CheckConsistency
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          $Driver=Join-Path $env:R3_EXACT 'CONTROL_DEVELOPMENT.ps1'
+          $s=@(& pwsh -NoLogo -NoProfile -File $Driver -Status)
+          $rc=$LASTEXITCODE
+          $obj=($s | Select-Object -Last 1) | ConvertFrom-Json
+          if ($rc -ne 0 -or $obj.ok -ne $true) { throw "STATUS_FAIL_$rc" }
+          Write-Host 'R3_CURRENT_REFS_WINDOWS_STATUS=PASS'
+          $s=@(& pwsh -NoLogo -NoProfile -File $Driver -CheckConsistency -Candidate)
+          $rc=$LASTEXITCODE
+          $obj=($s | Select-Object -Last 1) | ConvertFrom-Json
+          if ($rc -ne 0 -or $obj.ok -ne $true) { throw "CONSISTENCY_FAIL_$rc" }
+          Write-Host 'R3_CURRENT_REFS_WINDOWS_CONSISTENCY=PASS'
