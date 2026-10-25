@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - diagnostic/net-smooth1-r31-815-float-wire-fingerprint-r1
+      - diagnostic/net-smooth1-r31-815-attested-tx-receipt-r2
   workflow_dispatch:
 permissions:
   contents: read
@@ -51,7 +52,7 @@ jobs:
           mkdir -p artifacts/815-wire-fingerprint
           "$B" --headless --editor --path . --import --quit > artifacts/815-wire-fingerprint/import.log 2>&1
           ! grep -E 'SCRIPT ERROR:|Parse Error:|Compile Error:' artifacts/815-wire-fingerprint/import.log
-          for T in tests/runtime/test_net_smooth1_r31_815_float_wire_repro.gd tests/runtime/test_net_smooth1_815_safety_negative.gd tests/runtime/test_net_smooth1_r31p23r22_attested_compact.gd; do
+          for T in tests/runtime/test_net_smooth1_r31_815_r22_original_sender_attestation.gd tests/runtime/test_net_smooth1_r31_815_float_wire_repro.gd tests/runtime/test_net_smooth1_815_safety_negative.gd tests/runtime/test_net_smooth1_r31p23r22_attested_compact.gd; do
             L="artifacts/815-wire-fingerprint/$(basename "$T").log"
             timeout 240 "$B" --headless --path . --script "res://$T" > "$L" 2>&1 || { tail -n 120 "$L"; exit 1; }
             if grep -E 'SCRIPT ERROR:|Parse Error:|Compile Error:|ERROR:' "$L"; then tail -n 120 "$L"; exit 1; fi
@@ -84,7 +85,7 @@ jobs:
           New-Item -ItemType Directory -Force artifacts/815-wire-fingerprint | Out-Null
           & $B --headless --editor --path . --import --quit *> artifacts/815-wire-fingerprint/import.log
           if ($LASTEXITCODE -ne 0 -or (Select-String artifacts/815-wire-fingerprint/import.log -Pattern 'SCRIPT ERROR:|Parse Error:|Compile Error:' -Quiet)) { throw 'IMPORT_FAIL' }
-          foreach ($T in @('tests/runtime/test_net_smooth1_r31_815_float_wire_repro.gd','tests/runtime/test_net_smooth1_815_safety_negative.gd','tests/runtime/test_net_smooth1_r31p23r22_attested_compact.gd')) {
+          foreach ($T in @('tests/runtime/test_net_smooth1_r31_815_r22_original_sender_attestation.gd','tests/runtime/test_net_smooth1_r31_815_float_wire_repro.gd','tests/runtime/test_net_smooth1_815_safety_negative.gd','tests/runtime/test_net_smooth1_r31p23r22_attested_compact.gd')) {
             $L="artifacts/815-wire-fingerprint/$(Split-Path $T -Leaf).log"
             & $B --headless --path . --script "res://$T" *> $L
             if ($LASTEXITCODE -ne 0 -or (Select-String $L -Pattern 'SCRIPT ERROR:|Parse Error:|Compile Error:|ERROR:' -Quiet) -or -not (Select-String $L -Pattern 'PASS' -Quiet)) { Get-Content $L -Tail 130; throw "NATIVE_FAIL:$T" }
