@@ -48,7 +48,7 @@ class OutboundGuardContracts(unittest.TestCase):
         r22send=body(ENET,"r22_send_prepared")
         self.assertIn("proof_result: Dictionary = _r22_take_attestation(",r22send)
         self.assertIn("_peer.put_packet(packet)",r22send)
-        self.assertIn("_r31_815_original_payload_sha256",ENET)
+        self.assertIn("r31_815_original_payload_sha256",ENET)
 
     def test_guard_only_server_environment_and_non_normative(self):
         self.assertIn("env.pop('DWS_NET_R31_815_OUTBOUND_DECODE_GUARD', None)",RUN)
@@ -77,7 +77,7 @@ class OutboundGuardContracts(unittest.TestCase):
             "default OFF does not change original",
             "R2.2 frozen one-use proof DENIED",
             "legacy send path refuses",
-            "receiver unmodified strict checksum",
+            "stable original receiver accepts exact canonical packet",
             "one-byte corruption",
         ):
             self.assertIn(code,NATIVE)
