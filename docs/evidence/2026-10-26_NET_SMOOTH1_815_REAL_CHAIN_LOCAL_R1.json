@@ -1,0 +1,131 @@
+{
+  "schema": "dws.net_smooth.815.local_contract_execution_receipt.v1",
+  "baseline_product_head": "d5d2f0042b1cb8e8e395301f21d9016218836d01",
+  "local_scope": "NATIVE_EXACT_CONTRACT_SLICE_NOT_FULL_GAME_CHECKOUT",
+  "godot_version": "4.7.1.stable.double.custom_build.a13da4feb",
+  "godot_sha256": "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7",
+  "source_blob_checks": [
+    {
+      "git_blob_sha1": "58b97f82ab09c699ae3c48060c6e0747579aa676",
+      "path": "scripts/network/contracts/network_contract_utils.gd",
+      "sha256": "a90e739876520baf1e4b532803e6cd2ebbb4da856c7f82dbcae001cadac7b803"
+    },
+    {
+      "git_blob_sha1": "ce6b25973a3fb55c64f4a451e11a786f63187be6",
+      "path": "scripts/network/transports/v2/transport_contract_utils.gd",
+      "sha256": "2cbff5397700a18a5c9dbe7ecc447481ce98191f36a160fd9d647cb5b8e5be38"
+    },
+    {
+      "git_blob_sha1": "2b14b325620695451bcedc242e2fb798bac15482",
+      "path": "scripts/network/realtime/realtime_channel_policy.gd",
+      "sha256": "8384fc00f39f5d42572d8428551db5915ad5282c018997bde6851cf495301606"
+    },
+    {
+      "git_blob_sha1": "ed3ebff3f30d55668248cc78b15c18f1fc5fb8cb",
+      "path": "scripts/network/transports/v2/protocol_frame_v2.gd",
+      "sha256": "7476d47446c74a7cb5297b397ff1b9841f82433edb55aba30c778e204a4d6b69"
+    },
+    {
+      "git_blob_sha1": "dae68d7ef6812e91381052baaaa3e32bf4404423",
+      "path": "scripts/runtime/networked_gameplay/contracts/wire_contract_utils.gd",
+      "sha256": "30de0886413f55bb606e3616ce532c2a5f479323c009d7b32fe684c1ccba624e"
+    },
+    {
+      "git_blob_sha1": "f09c5d156d8cd31704aa6790f0ee824c832df2ba",
+      "path": "scripts/runtime/networked_gameplay/contracts/player_state_snapshot.gd",
+      "sha256": "d17651a58bac9b383c9ea1e1820af7173110c991b666b72aeebbb02053fcf15b"
+    },
+    {
+      "git_blob_sha1": "d3e8bf3aa4ace9ce6b1a08224262ce4c14a8dcf8",
+      "path": "scripts/runtime/networked_gameplay/contracts/compact_gameplay_snapshot.gd",
+      "sha256": "47b2e0a15b9f5117e081039b2dc7313549869cffd1b20809410ab27cab3d44cd"
+    }
+  ],
+  "native_result": {
+    "verdict": "NATIVE_REAL_CONTRACT_RED_GREEN_ONLY",
+    "cases": 2048,
+    "legacy_red_cases": 14,
+    "v2_green_cases": 2048,
+    "first_stage": "FRAME_CREATE_JSON",
+    "first_checksums": [
+      "h",
+      "c"
+    ],
+    "numeric_field": "$.payload.snapshot.p[0].v[1]",
+    "bit_before": "381e0df76695bebc",
+    "bit_after": "391e0df76695bebc",
+    "v2_vs_v1_packet_bytes_percent": 7.897055404806141,
+    "historical_incident_proven": false,
+    "live_network_activation": false,
+    "ready_for_merge": false,
+    "report_sha256": "88aaf201d0b3b8e8dfb2d3508fb110e7ff53566a7a7f9abe596da23d2a66e62a"
+  },
+  "assertions": 22569,
+  "native_stdout": "Godot Engine v4.7.1.stable.double.custom_build.a13da4feb (2026-07-13 21:00:28 UTC) - https://godotengine.org\n\nNS1_815_REAL_CHAIN PASS assertions=22569 failures=0 legacy_red=14 v2_green=2048/2048",
+  "native_report_sha256": "88aaf201d0b3b8e8dfb2d3508fb110e7ff53566a7a7f9abe596da23d2a66e62a",
+  "native_log_sha256": "3a0f3daedd6c6824194441cf1d6f9b078dfd5112562413fcdcbe0af87e4bf6fa",
+  "service_integration_local_run": false,
+  "historical_incident_proven": false,
+  "live_network_activation": false,
+  "fixed_witness": {
+    "case": 84,
+    "compact_created": {
+      "c_computed": "8ebc8b907224bc558b879430a5e83e95f6034a1c792228d89ddee97819d3fc95",
+      "c_error": "",
+      "c_stored": "8ebc8b907224bc558b879430a5e83e95f6034a1c792228d89ddee97819d3fc95",
+      "c_valid": true,
+      "h_computed": "d8465dec70f12631b058b5ae7ccb515deb7d92a888cdaee97d07ab320fefca8c",
+      "h_error": "",
+      "h_stored": "d8465dec70f12631b058b5ae7ccb515deb7d92a888cdaee97d07ab320fefca8c",
+      "h_valid": true
+    },
+    "first_broken_checksums": [
+      "h",
+      "c"
+    ],
+    "first_broken_stage": "FRAME_CREATE_JSON",
+    "first_frame_create_numeric_change": {
+      "after_f64le": "391e0df76695bebc",
+      "after_json_number": "-4.2443274411560372e-16",
+      "before_f64le": "381e0df76695bebc",
+      "before_json_number": "-4.244327441156037e-16",
+      "path": "$.payload.snapshot.p[0].v[1]"
+    },
+    "first_receive_parse_numeric_change": {
+      "after_f64le": "381e0df76695bebc",
+      "after_json_number": "-4.244327441156037e-16",
+      "before_f64le": "391e0df76695bebc",
+      "before_json_number": "-4.2443274411560372e-16",
+      "path": "$.payload.snapshot.p[0].v[1]"
+    },
+    "frame_created": {
+      "c_computed": "c8fad64205c22e79527a409e2e024cf4a3a899bc805c4f17a1665713a2f67178",
+      "c_error": "MULTIPLAYER_SNAPSHOT_CHECKSUM_MISMATCH",
+      "c_stored": "8ebc8b907224bc558b879430a5e83e95f6034a1c792228d89ddee97819d3fc95",
+      "c_valid": false,
+      "h_computed": "9a35f31165de6d00db8bdd3a9d84299940e886947cca9ad518fde4edb7aceef7",
+      "h_error": "COMPACT_GAMEPLAY_SNAPSHOT_CHECKSUM_MISMATCH",
+      "h_stored": "d8465dec70f12631b058b5ae7ccb515deb7d92a888cdaee97d07ab320fefca8c",
+      "h_valid": false
+    },
+    "full_valid": true,
+    "historical_incident_proven": false,
+    "outer_after_frame_create": "053a4d8bf39ab3fa90de939b481079b96bc264aafcad5a25fd6ef730be045a02",
+    "outer_after_receive_parse": "e6eb536f022de15722c3d2a87b297046b6de36d4d203c9fc6791e770c3a8ad9d",
+    "outer_stored": "053a4d8bf39ab3fa90de939b481079b96bc264aafcad5a25fd6ef730be045a02",
+    "packet_bytes": 1239,
+    "packet_sha256": "4f076ebea93dfd546b13be30f722f4781f0bee535b07748eff56714240e8f837",
+    "receiver_error": "PAYLOAD_CHECKSUM_MISMATCH",
+    "receiver_parsed": {
+      "c_computed": "8ebc8b907224bc558b879430a5e83e95f6034a1c792228d89ddee97819d3fc95",
+      "c_error": "",
+      "c_stored": "8ebc8b907224bc558b879430a5e83e95f6034a1c792228d89ddee97819d3fc95",
+      "c_valid": true,
+      "h_computed": "d8465dec70f12631b058b5ae7ccb515deb7d92a888cdaee97d07ab320fefca8c",
+      "h_error": "",
+      "h_stored": "d8465dec70f12631b058b5ae7ccb515deb7d92a888cdaee97d07ab320fefca8c",
+      "h_valid": true
+    },
+    "receiver_pass": false
+  }
+}
