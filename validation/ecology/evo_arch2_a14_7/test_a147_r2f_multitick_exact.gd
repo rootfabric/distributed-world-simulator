@@ -137,11 +137,13 @@ func _run() -> void:
 		int(source.field.owner_epoch),int(source.field.revision),4,64,true)
 	_check(bool(staged.get("success", false)), "authentic R3 A5 PREPARE")
 	var seen_demands := -1
+	var allocation_demands: Array = []
 	if bool(staged.get("success", false)):
 		var cursor: Dictionary = staged.cursor
 		for j in 128:
 			if String(cursor.phase) == "ALLOCATE":
 				seen_demands = cursor.demands.size()
+				allocation_demands = cursor.demands.duplicate(true)
 				break
 			var p: Dictionary = Lifecycle.staged_resume(
 				cursor,source.field,source.population,16,4096,8388608,4)
@@ -154,7 +156,7 @@ func _run() -> void:
 		"correct original no-demand/nonempty-demand frontier")
 	if mode == "zero-stock" and seen_demands > 0:
 		var allocated: Dictionary = Field.allocate_demands(
-			source.field,cursor.demands,String(source.field.owner_token),
+			source.field,allocation_demands,String(source.field.owner_token),
 			int(source.field.owner_epoch),int(source.field.revision))
 		_check(bool(allocated.get("success",false)),
 			"canonical original allocation in saturated resource-starved field")
