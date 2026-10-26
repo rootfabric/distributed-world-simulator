@@ -1,0 +1,195 @@
+name: ECO A147 R2F Mutation Reproduction and Linux Fidelity Soak
+
+on:
+  push:
+    branches:
+      - feature/eco-a147-r2f-review-findings-closure-r1
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: eco-a147-r2f-multitick-${{ github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  portable:
+    name: Portable mutation, multitime A8, dead and zero-stock exact
+    runs-on: ubuntu-latest
+    timeout-minutes: 95
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0, persist-credentials: false}
+      - name: Original A13 vs composed Controller E3 every tick
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fL --retry 3 -o /tmp/r2f-godot.zip https://github.com/godotengine/godot/releases/download/4.7.1-stable/Godot_v4.7.1-stable_linux.x86_64.zip
+          mkdir -p /tmp/r2f-godot
+          unzip -q /tmp/r2f-godot.zip -d /tmp/r2f-godot
+          godot=/tmp/r2f-godot/Godot_v4.7.1-stable_linux.x86_64
+          chmod +x "$godot"
+          "$godot" --headless --editor --path . --import > r2f-multitick-import.log 2>&1 || { cat r2f-multitick-import.log; exit 1; }
+          mkdir -p r2f-multitick-evidence
+          for pair in 'scale 32' 'scale 96' 'scale 256' 'repro 4' 'no-demand 4' 'zero-stock 4'; do
+            set -- $pair
+            mode=$1; n=$2
+            echo "R2F_MULTI_BEGIN $mode n=$n"
+            "$godot" --headless --path . --script res://validation/ecology/evo_arch2_a14_7/test_a147_r2f_multitick_exact.gd -- --mode "$mode" --population "$n" > "r2f-multitick-evidence/$mode-$n.stdout.log" 2> "r2f-multitick-evidence/$mode-$n.stderr.log" || { cat "r2f-multitick-evidence/$mode-$n.stdout.log"; cat "r2f-multitick-evidence/$mode-$n.stderr.log"; exit 1; }
+            grep -Fx 'A147_R2F_MULTI PASS' "r2f-multitick-evidence/$mode-$n.stdout.log"
+            grep '^A147_R2F_MULTI_JSON ' "r2f-multitick-evidence/$mode-$n.stdout.log" | sed 's/^A147_R2F_MULTI_JSON //' > "r2f-multitick-evidence/$mode-$n.json"
+            test "$(wc -l < "r2f-multitick-evidence/$mode-$n.json")" -eq 1
+          done
+          python3 - <<'PY'
+          import json,pathlib
+          for mode,n in [('scale',32),('scale',96),('scale',256),('repro',4),('no-demand',4),('zero-stock',4)]:
+              p=json.loads(pathlib.Path(f'r2f-multitick-evidence/{mode}-{n}.json').read_text())
+              expected_ticks=8 if mode=='repro' else 2 if mode=='scale' else 1
+              assert p['schema']=='dws.ecology.a147-r2f-multitick-exact.v1'
+              assert p['mode']==mode and p['population']==n and p['ticks']==expected_ticks
+              assert len(p['hash_chain'])==expected_ticks and len(p['field_revision_chain'])==expected_ticks
+              assert p['checkpoint_every_tick'] and p['source_unchanged'] and p['owner_unchanged']
+              assert p['mutation_enabled'] and p['single_global_a4'] and p['no_partial_publication']
+              assert p['no_demand']==(mode=='no-demand')
+              if mode=='repro': assert p['reproduction_observed'] and p['population_chain'][-1]>4
+              print(f'R2F_MULTI_EXACT mode={mode} population={n} ticks={expected_ticks} final_population={p["population_chain"][-1]}')
+          print('A147_R2F_MULTI_ALL_ACCEPTED_EXACT_PASS')
+          PY
+          git diff --exit-code && git diff --cached --exit-code
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: a147-r2f-portable-multitick
+          path: |
+            r2f-multitick-import.log
+            r2f-multitick-evidence/
+          if-no-files-found: ignore
+
+  windows:
+    name: Pinned Windows Double A13-vs-E3 every mutation tick exact
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0, persist-credentials: false}
+      - name: Pinned Windows native multitick and zero-grant proof
+        shell: pwsh
+        env:
+          CONFIGURED_GODOT: ${{ vars.DWS_GODOT_DOUBLE_BIN }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $godot = $env:CONFIGURED_GODOT
+          if ([string]::IsNullOrWhiteSpace($godot)) { $godot = 'C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe' }
+          if ((Get-FileHash $godot -Algorithm SHA256).Hash.ToLowerInvariant() -ne '3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5') { throw 'R2F_PINNED_WINDOWS_SHA' }
+          & $godot --headless --editor --path . --import *> r2f-win-multitick-import.log
+          if ($LASTEXITCODE -ne 0) { throw 'R2F_WIN_IMPORT' }
+          New-Item -ItemType Directory -Force r2f-win-multitick | Out-Null
+          foreach ($item in @('scale:32','scale:96','scale:256','repro:4','no-demand:4','zero-stock:4')) {
+            $fields = $item.Split(':'); $mode = $fields[0]; $n = [int]$fields[1]
+            $out = Join-Path (Get-Location).Path "r2f-win-multitick\$mode-$n.stdout.log"
+            $err = Join-Path (Get-Location).Path "r2f-win-multitick\$mode-$n.stderr.log"
+            $argv = @('--headless','--path','.','--script','res://validation/ecology/evo_arch2_a14_7/test_a147_r2f_multitick_exact.gd','--','--mode',"$mode",'--population',"$n")
+            $proc = Start-Process -FilePath $godot -ArgumentList $argv -WorkingDirectory (Get-Location).Path -PassThru -RedirectStandardOutput $out -RedirectStandardError $err
+            $proc.WaitForExit()
+            Write-Host "R2F_NATIVE_MULTI_EXIT mode=$mode population=$n code=$($proc.ExitCode)"
+            if ($proc.ExitCode -ne 0) { Get-Content $out; Get-Content $err; throw 'R2F_WIN_MULTI_FAIL' }
+            if (-not (Select-String -Path $out -Pattern '^A147_R2F_MULTI PASS$' -Quiet)) { throw 'R2F_WIN_MULTI_MARKER' }
+            $rows = @(Get-Content $out | Where-Object { $_ -match '^A147_R2F_MULTI_JSON ' })
+            if ($rows.Count -ne 1) { throw 'R2F_WIN_MULTI_JSON' }
+            $data = (($rows[0] -replace '^A147_R2F_MULTI_JSON ','') | ConvertFrom-Json)
+            if (-not [bool]$data.checkpoint_every_tick -or -not [bool]$data.source_unchanged -or -not [bool]$data.owner_unchanged -or [int]$data.population -ne $n) { throw 'R2F_WIN_MULTI_A8' }
+            Set-Content -Path "r2f-win-multitick\$mode-$n.json" -Value (($rows[0] -replace '^A147_R2F_MULTI_JSON ','')) -Encoding utf8
+            if (Select-String -Path $out,$err -Pattern 'SCRIPT ERROR|Parse Error|Failed to load script|Error compiling' -Quiet) { throw 'R2F_WIN_MULTI_FATAL' }
+          }
+          git diff --exit-code
+          if ($LASTEXITCODE -ne 0) { throw 'R2F_WIN_TRACKED_CHANGED' }
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: a147-r2f-windows-multitick
+          path: |
+            r2f-win-multitick-import.log
+            r2f-win-multitick/
+          if-no-files-found: ignore
+
+  linux-double:
+    name: Pinned Linux Double multi-tick A13/E3 reproduction exact
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0, persist-credentials: false}
+      - name: Original A13 and worker-owned E3 multi-tick exact
+        shell: bash
+        env:
+          CONFIGURED_GODOT: ${{ vars.DWS_GODOT_DOUBLE_LINUX_BIN }}
+        run: |
+          set -euo pipefail
+          godot="${CONFIGURED_GODOT:-${DWS_GODOT_DOUBLE_LINUX_BIN:-$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64}}"
+          test "$(sha256sum "$godot" | cut -d' ' -f1)" = "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7"
+          "$godot" --headless --editor --path . --import > r2f-linux-multitick-import.log 2>&1 || { cat r2f-linux-multitick-import.log; exit 1; }
+          mkdir -p r2f-linux-multitick
+          for pair in 'scale 32' 'scale 96' 'scale 256' 'repro 4' 'no-demand 4' 'zero-stock 4'; do
+            set -- $pair
+            mode=$1; n=$2
+            "$godot" --headless --path . --script res://validation/ecology/evo_arch2_a14_7/test_a147_r2f_multitick_exact.gd -- --mode "$mode" --population "$n" > "r2f-linux-multitick/$mode-$n.stdout.log" 2> "r2f-linux-multitick/$mode-$n.stderr.log" || { cat "r2f-linux-multitick/$mode-$n.stdout.log"; cat "r2f-linux-multitick/$mode-$n.stderr.log"; exit 1; }
+            grep -Fx 'A147_R2F_MULTI PASS' "r2f-linux-multitick/$mode-$n.stdout.log"
+            grep '^A147_R2F_MULTI_JSON ' "r2f-linux-multitick/$mode-$n.stdout.log" | sed 's/^A147_R2F_MULTI_JSON //' > "r2f-linux-multitick/$mode-$n.json"
+          done
+          git diff --exit-code && git diff --cached --exit-code
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: a147-r2f-linux-double-multitick
+          path: |
+            r2f-linux-multitick-import.log
+            r2f-linux-multitick/
+          if-no-files-found: ignore
+
+  linux-fidelity-stability:
+    name: Pinned Linux Double A13 Fidelity 5 independent native repeats
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 105
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0, persist-credentials: false}
+      - name: Five-run original unmodified A13 Fidelity exact SIGSEGV watch
+        shell: bash
+        env:
+          CONFIGURED_GODOT: ${{ vars.DWS_GODOT_DOUBLE_LINUX_BIN }}
+        run: |
+          set -euo pipefail
+          godot="${CONFIGURED_GODOT:-${DWS_GODOT_DOUBLE_LINUX_BIN:-$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64}}"
+          test "$(sha256sum "$godot" | cut -d' ' -f1)" = "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7"
+          "$godot" --headless --editor --path . --import > r2f-fidelity-import.log 2>&1 || { cat r2f-fidelity-import.log; exit 1; }
+          mkdir -p r2f-fidelity-five
+          ulimit -c unlimited || :
+          for iteration in 1 2 3 4 5; do
+            echo "R2F_FIDELITY_NATIVE_START iteration=$iteration"
+            set +e
+            "$godot" --headless --path . --script res://validation/ecology/evo_arch2_a13_fidelity/test_fidelity_schedule.gd > "r2f-fidelity-five/n$iteration.log" 2>&1
+            code=$?
+            set -e
+            echo "iteration=$iteration exit=$code" | tee "r2f-fidelity-five/n$iteration.exit"
+            if [ "$code" -ne 0 ] || ! grep -Fxq 'EVO_ARCH2_A13_FIDELITY PASS' "r2f-fidelity-five/n$iteration.log" || ! grep -Fxq 'EVO_ARCH2_A13_FIDELITY checks=117 failed=0' "r2f-fidelity-five/n$iteration.log"; then
+              tail -120 "r2f-fidelity-five/n$iteration.log" || :
+              if command -v gdb >/dev/null 2>&1; then
+                timeout 180 gdb --quiet --batch -ex 'set pagination off' -ex run -ex 'thread apply all bt 18' --args "$godot" --headless --path . --script res://validation/ecology/evo_arch2_a13_fidelity/test_fidelity_schedule.gd > "r2f-fidelity-five/n$iteration.gdb.log" 2>&1 || :
+              fi
+              echo R2F_FIDELITY_NATIVE_FAIL
+              exit 1
+            fi
+            echo "R2F_FIDELITY_NATIVE_PASS iteration=$iteration"
+          done
+          sha256sum r2f-fidelity-five/n*.log > r2f-fidelity-five/digests.sha256
+          git diff --exit-code && git diff --cached --exit-code
+          echo "R2F_FIDELITY_5_OF_5_EXACT_PASS"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: a147-r2f-fidelity-five-linux
+          path: |
+            r2f-fidelity-import.log
+            r2f-fidelity-five/
+          if-no-files-found: ignore
