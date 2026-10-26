@@ -87,6 +87,14 @@ func _handle_compatibility_ack(payload: Dictionary) -> void:
 			"error_code", "COMPACT_CODEC_ACK_REJECTED")))
 		return
 	var selected: String = String(selected_check["details"]["selected"])
+	if _handshake_verified:
+		# Duplicate already-authenticated ACK is idempotent; it must never
+		# re-run READY transitions or change the active codec in this session.
+		if (_r31_815_bound_session != _transport_session_id
+			or _r31_815_bound_handshake != _handshake_id
+			or _r31_815_selected != selected):
+			_fail_connection("COMPACT_CODEC_RENEGOTIATION_FORBIDDEN")
+		return
 	super._handle_compatibility_ack(payload)
 	if not _handshake_verified:
 		return

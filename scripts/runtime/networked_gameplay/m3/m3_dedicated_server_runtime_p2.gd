@@ -213,6 +213,8 @@ var _handshake_rejections := 0
 var _r31_815_compact_mode: String = "off"
 var _r31_815_v1_sent: int = 0
 var _r31_815_v2_sent: int = 0
+var _r31_815_v1_encodes: int = 0
+var _r31_815_v2_encodes: int = 0
 var _r31_815_v2_encode_failures: int = 0
 var _handshake_replays := 0
 var _last_handshake_error_code := ""
@@ -282,6 +284,8 @@ func setup(config: Dictionary) -> Dictionary:
 	_r31_815_compact_mode = requested_codec_mode
 	_r31_815_v1_sent = 0
 	_r31_815_v2_sent = 0
+	_r31_815_v1_encodes = 0
+	_r31_815_v2_encodes = 0
 	_r31_815_v2_encode_failures = 0
 	_r3c_async_admission_enabled = (
 		bool(config.get("r3c_async_admission_canary", false))
@@ -853,6 +857,8 @@ func _handle_compatibility_hello(peer_id: String, session_id: String, payload: D
 		var existing: Dictionary = Dictionary(_peer_compatibility.get(peer_id, {}))
 		if String(existing.get("handshake_id", "")) != String(hello["handshake_id"]) or (
 			String(existing.get("compact_codec_format", R31CodecPolicy.LEGACY)) != selected_format
+		) or String(existing.get("compact_codec_offer_checksum", "")) != String(
+			offer.get("checksum", "")
 		):
 			_reject_handshake(peer_id, String(hello["handshake_id"]),
 				"COMPACT_CODEC_RENEGOTIATION_FORBIDDEN")
@@ -882,6 +888,7 @@ func _handle_compatibility_hello(peer_id: String, session_id: String, payload: D
 		"verified_at_ms": Time.get_ticks_msec(),
 		"client_fingerprint": Dictionary(hello.get("fingerprint", {})).duplicate(true),
 		"compact_codec_format": selected_format,
+		"compact_codec_offer_checksum": String(offer.get("checksum", "")),
 	}
 	if SmoothTrace.enabled():
 		SmoothTrace.emit("r31_815_compact_codec_selected", {
@@ -1430,31 +1437,41 @@ func _maybe_publish_movement_snapshot() -> void:
 	else:
 		authoritative_snapshot = _service.create_snapshot()
 	var snapshot_captured_us := Time.get_ticks_usec()
-	var compact_result: Dictionary = CompactGameplaySnapshot.encode(authoritative_snapshot)
-	var snapshot_encoded_us := Time.get_ticks_usec()
-	if not bool(compact_result.get("success", false)):
-		_compact_movement_snapshot_failures += 1
-		_last_error_code = String(compact_result.get("error_code", "COMPACT_GAMEPLAY_SNAPSHOT_BUILD_FAILED"))
-		return
-	# encode() returns a new value object. FrameScript.create() converts it to
-	# isolated canonical JSON per peer; no extra full snapshot copy here.
-	var compact_snapshot: Dictionary = Dictionary(compact_result.get("details", {}).get("snapshot", {}))
-	var compact_snapshot_v2: Dictionary = {}
-	if _r31_815_compact_mode != "off":
-		var v2_needed: bool = false
+	# Select before encoding: the v2-only path must NOT depend on v1 JSON
+	# precision or pay a duplicate encode. Mixed sessions encode each schema
+	# once and share immutable output with matching peers.
+	var need_v1: bool = _r31_815_compact_mode == "off"
+	var need_v2: bool = false
+	if not need_v1:
 		for value in _peer_to_player.keys():
-			if _r31_815_peer_codec(String(value)) == R31CodecPolicy.F64:
-				v2_needed = true
-				break
-		if v2_needed:
-			var v2_encoded: Dictionary = CompactV2.encode(authoritative_snapshot)
-			if not bool(v2_encoded.get("success", false)):
-				_r31_815_v2_encode_failures += 1
-				_compact_movement_snapshot_failures += 1
-				_last_error_code = String(v2_encoded.get(
-					"error_code", "R31_815_COMPACT_V2_ENCODE_FAILED"))
-				return  # NO implicit v1 downgrade for an already-negotiated v2 session
-			compact_snapshot_v2 = Dictionary(v2_encoded["details"]["snapshot"])
+			var codec: String = _r31_815_peer_codec(String(value))
+			if codec == R31CodecPolicy.F64:
+				need_v2 = true
+			elif codec == R31CodecPolicy.LEGACY:
+				need_v1 = true
+	var compact_snapshot: Dictionary = {}
+	if need_v1:
+		var compact_result: Dictionary = CompactGameplaySnapshot.encode(authoritative_snapshot)
+		_r31_815_v1_encodes += 1
+		if not bool(compact_result.get("success", false)):
+			_compact_movement_snapshot_failures += 1
+			_last_error_code = String(compact_result.get(
+				"error_code", "COMPACT_GAMEPLAY_SNAPSHOT_BUILD_FAILED"))
+			return
+		compact_snapshot = Dictionary(compact_result["details"]["snapshot"])
+	var compact_snapshot_v2: Dictionary = {}
+	if need_v2:
+		var v2_encoded: Dictionary = CompactV2.encode(authoritative_snapshot)
+		_r31_815_v2_encodes += 1
+		if not bool(v2_encoded.get("success", false)):
+			_r31_815_v2_encode_failures += 1
+			_compact_movement_snapshot_failures += 1
+			_last_error_code = String(v2_encoded.get(
+				"error_code", "R31_815_COMPACT_V2_ENCODE_FAILED"))
+			return  # NO implicit v1 downgrade for an already-negotiated v2 session
+		compact_snapshot_v2 = Dictionary(v2_encoded["details"]["snapshot"])
+	var snapshot_encoded_us := Time.get_ticks_usec()
+	# Each prevalidated compact body is now immutable for this publish tick.
 	var sent_started_us := Time.get_ticks_usec()
 	var compact_send_us := 0
 	var seam_check_send_us := 0
@@ -1479,6 +1496,8 @@ func _maybe_publish_movement_snapshot() -> void:
 		var selected_codec: String = _r31_815_peer_codec(peer_id)
 		if selected_codec.is_empty() or (
 			selected_codec == R31CodecPolicy.F64 and compact_snapshot_v2.is_empty()
+		) or (
+			selected_codec == R31CodecPolicy.LEGACY and compact_snapshot.is_empty()
 		):
 			all_enqueued = false
 			_movement_snapshot_enqueue_failures += 1
@@ -3880,6 +3899,8 @@ func get_report() -> Dictionary:
 		"r31_815_compact_codec_mode": _r31_815_compact_mode,
 		"r31_815_compact_v1_sent": _r31_815_v1_sent,
 		"r31_815_compact_v2_sent": _r31_815_v2_sent,
+		"r31_815_compact_v1_encodes": _r31_815_v1_encodes,
+		"r31_815_compact_v2_encodes": _r31_815_v2_encodes,
 		"r31_815_compact_v2_encode_failures": _r31_815_v2_encode_failures,
 		"peer_to_player": _peer_to_player.duplicate(true),
 		"joins": _joins,

@@ -31,6 +31,7 @@ jobs:
           python -m py_compile tools/net_smooth1/verify_815_real_chain_report.py tools/net_smooth1/run_net_smooth1.py tools/net_smooth1/verify_815_live_deploy.py
           python -m unittest discover -s tests/tools -p 'test_net_smooth1_815_real_chain_source.py' -v
           python -m unittest discover -s tests/tools -p 'test_net_smooth1_815_live_codec_source.py' -v
+          python -m unittest discover -s tests/tools -p 'test_net_smooth1_815_live_deploy_receipt.py' -v
           python -m unittest discover -s tests/tools -p 'test_net_smooth1_r31p23r22_source_contracts.py' -v
           python -m unittest discover -s tests/tools -p 'test_net_smooth1_p1_batch_flush_layers.py' -v
           test -z "$(git status --porcelain --untracked-files=no)"
@@ -167,6 +168,9 @@ jobs:
           export GODOT_SILENCE_ROOT_WARNING=1
           ROOT=artifacts/815-live-v2-deploy
           mkdir -p "$ROOT"
+          test -d assets/external/quaternius || { echo 'QUATERNIUS_123_RAW_ASSETS_MISSING_FROM_TEST_HOST'; exit 1; }
+          RAW_COUNT=$(find assets/external/quaternius -type f ! -name '*.import' ! -name '*.uid' | wc -l)
+          test "$RAW_COUNT" -eq 123 || { echo "QUATERNIUS_RAW_ASSET_COUNT_NOT_123:$RAW_COUNT"; exit 1; }
           { git rev-parse HEAD; git rev-parse 'HEAD^{tree}'; sha256sum "$B"; } > "$ROOT/identity.txt"
           set +e
           python3 tools/net_smooth1/run_net_smooth1.py \
@@ -199,4 +203,72 @@ jobs:
         with:
           name: ns1-815-live-v2-test-deploy-${{ github.sha }}
           path: artifacts/815-live-v2-deploy/
+          if-no-files-found: warn
+  windows-headless-test-deploy:
+    name: Windows native three-process v2/v1 test deployment (NON-NORMATIVE)
+    needs: [strict-source, windows-native]
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 32
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Exact native Earth server plus mixed versioned clients
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          $PSNativeCommandUseErrorActionPreference=$false
+          if ((git rev-parse HEAD).Trim() -ne $env:GITHUB_SHA) { throw 'EXACT_HEAD_MISMATCH' }
+          $B='C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe'
+          $Main=Join-Path (Split-Path $B -Parent) 'godot.windows.editor.double.x86_64.exe'
+          if ((& $B --version | Out-String).Trim() -ne '4.7.1.stable.double.custom_build.a13da4feb') { throw 'GODOT_VERSION_MISMATCH' }
+          if ((Get-FileHash $B -Algorithm SHA256).Hash.ToLowerInvariant() -ne '3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5') { throw 'GODOT_WRAPPER_HASH_MISMATCH' }
+          if ((Get-FileHash $Main -Algorithm SHA256).Hash.ToLowerInvariant() -ne '6464da3576b51f5e2f7db74a20eb1d62507a8a7c8a2fa55b1e08e1a1d0d801a4') { throw 'GODOT_MAIN_HASH_MISMATCH' }
+          $E='artifacts/815-live-v2-deploy-win'
+          New-Item -ItemType Directory -Force $E | Out-Null
+          [ordered]@{head=(git rev-parse HEAD).Trim();tree=(git rev-parse 'HEAD^{tree}').Trim();wrapper=(Get-FileHash $B -Algorithm SHA256).Hash;main=(Get-FileHash $Main -Algorithm SHA256).Hash} | ConvertTo-Json | Set-Content (Join-Path $E 'identity.json')
+          $Raw='assets/external/quaternius'
+          if (-not (Test-Path $Raw)) { throw 'QUATERNIUS_123_RAW_ASSETS_MISSING_FROM_TEST_HOST' }
+          $RawCount=@(Get-ChildItem $Raw -Recurse -File | Where-Object {$_.Extension -notin '.import','.uid'}).Count
+          if ($RawCount -ne 123) { throw "QUATERNIUS_123_RAW_ASSET_COUNT_MISMATCH:$RawCount" }
+          & $B --headless --editor --path . --import --quit *> (Join-Path $E 'cold-import.log')
+          if ($LASTEXITCODE -ne 0 -or (Select-String (Join-Path $E 'cold-import.log') -Pattern 'SCRIPT ERROR:|Parse Error:|Compile Error:' -Quiet)) { throw 'COLD_IMPORT_FAIL' }
+          $Common=@(
+            '--godot',$B,'--output',(Join-Path $E 'mixed'),
+            '--mode','headless','--scenario','r31-reconnect-roundtrip','--duration','35','--warmup','10',
+            '--startup-timeout','90','--profile','LOCAL',
+            '--r3c-async-admission','--r3c2-server-phased',
+            '--r3c4-periodic-frame-pacing','--r3c4r2-worker-envelope',
+            '--r3c4r31-replay-projection','--r3c4r31b-durable-attribution',
+            '--r31bp1-durable-chunks','--r31p22-loop-attribution',
+            '--r31p23r2-flush-attribution','--r31p23r21-single-pass-compact',
+            '--r31p23r22-attested-compact',
+            '--r31-815-compact-server-mode','prefer_v2',
+            '--r31-815-compact-client-a-mode','require_v2',
+            '--r31-815-compact-client-b-mode','off'
+          )
+          & python tools/net_smooth1/run_net_smooth1.py @Common *> (Join-Path $E 'runner.log')
+          $OriginalExit=$LASTEXITCODE
+          $OriginalExit | Set-Content (Join-Path $E 'original_runner_exit.txt')
+          # Original PERF FAIL stays FAIL. This stage ONLY proves mixed-version FUNCTIONAL play.
+          & python tools/net_smooth1/verify_815_live_deploy.py (Join-Path $E 'mixed') --output (Join-Path $E 'functional-test-deploy.json')
+          if ($LASTEXITCODE -ne 0) { Get-Content (Join-Path $E 'runner.log') -Tail 100; throw 'MIXED_VERSION_FUNCTIONAL_GATE_FAILED' }
+          if (git status --porcelain --untracked-files=no) { throw 'PRODUCT_TRACKED_DIRTY' }
+      - name: Hash all staging artifacts
+        if: always()
+        shell: pwsh
+        run: |
+          $E='artifacts/815-live-v2-deploy-win'
+          if (Test-Path $E) {
+            @(Get-ChildItem $E -Recurse -File | Where-Object {$_.Name -ne 'sha256.json'} | ForEach-Object {
+              [ordered]@{path=$_.FullName;sha256=(Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()}
+            }) | ConvertTo-Json -Depth 5 | Set-Content (Join-Path $E 'sha256.json')
+          }
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ns1-815-live-v2-win-headless-${{ github.sha }}
+          path: artifacts/815-live-v2-deploy-win/
           if-no-files-found: warn

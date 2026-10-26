@@ -92,6 +92,9 @@ def validate(root: Path) -> dict:
         for x in ("head","tree","godot_sha256","asset_manifest_sha256")
     ):
         raise ValueError("UNPINNED_SOURCE_OR_ASSETS")
+    if (ident.get("asset_count") != 123 or
+        ident["asset_manifest_sha256"] != "d0abf6650b2de9293e720c11981354ec403d7032adbc5f5b0c042655d2ce427d"):
+        raise ValueError("CANONICAL_QUATERNIUS_RAW_ASSETS_NOT_PRESENT")
     run_id=manifest.get("run_id")
     if type(run_id) is not str or len(run_id)!=16:
         raise ValueError("WRONG_RUN_ID")
@@ -117,6 +120,21 @@ def validate(root: Path) -> dict:
         raise ValueError("CLIENT_B_RECEIVED_UNOFFERED_V2")
     if results["b"]["kinds"].get("snapshot_received",0)<1:
         raise ValueError("CLIENT_B_NEVER_RECEIVED_LEGACY_SNAPSHOT")
+    for role in ("a","b"):
+        if results[role]["kinds"].get("compact_snapshot_stages",0)<1:
+            raise ValueError("CLIENT_"+role.upper()+"_NEVER_DECODED_ACCEPTED_COMPACT")
+    processes=report.get("processes")
+    if (not isinstance(processes,list) or len(processes)!=3 or
+        {x.get("role") for x in processes}!={"server","a","b"} or
+        any(x.get("verdict")=="INCONCLUSIVE" for x in processes)):
+        raise ValueError("INCOMPLETE_ORIGINAL_THREE_PROCESS_REPORT")
+    for p in processes:
+        if p.get("role")=="server":
+            if p.get("tick_hz") is None or float(p["tick_hz"])<59:
+                raise ValueError("SERVER_AUTHORITATIVE_FIXED_TICK_REGRESSED")
+            if (p.get("dropped_time_delta_s") is not None and
+                float(p["dropped_time_delta_s"])>0):
+                raise ValueError("SERVER_DROPPED_SIMULATION_TIME")
     for role in ("server","a","b"):
         logfile=root/role/"runtime.log"
         body=logfile.read_text(encoding="utf-8",errors="replace")
