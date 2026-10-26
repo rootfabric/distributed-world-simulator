@@ -119,6 +119,12 @@ func _decode_compact_snapshot(wire: Dictionary) -> Dictionary:
 		var result: Dictionary = CompactCodecV2.decode(wire)
 		if bool(result.get("success", false)):
 			_r31_815_v2_received += 1
+			if SmoothTrace.enabled() and _r31_815_v2_received <= 10:
+				SmoothTrace.emit("r31_815_compact_v2_received", {
+					"server_tick": int(wire.get("t", -1)),
+					"schema": CompactCodecV2.SCHEMA,
+					"session_sha256": _transport_session_id.sha256_text(),
+				})
 		return result
 	if selected == R31CodecPolicy.LEGACY:
 		if schema != CompactGameplaySnapshot.SCHEMA:

@@ -883,6 +883,12 @@ func _handle_compatibility_hello(peer_id: String, session_id: String, payload: D
 		"client_fingerprint": Dictionary(hello.get("fingerprint", {})).duplicate(true),
 		"compact_codec_format": selected_format,
 	}
+	if SmoothTrace.enabled():
+		SmoothTrace.emit("r31_815_compact_codec_selected", {
+			"selected": selected_format,
+			"peer_sha256": peer_id.sha256_text(),
+			"session_sha256": session_id.sha256_text(),
+		})
 	_handshake_accepts += 1
 	_telemetry.increment("handshake_accepts")
 	for method_name in ["mark_peer_synchronizing", "mark_peer_ready"]:
@@ -1495,6 +1501,13 @@ func _maybe_publish_movement_snapshot() -> void:
 		if compact_queued:
 			if selected_codec == R31CodecPolicy.F64:
 				_r31_815_v2_sent += 1
+				if SmoothTrace.enabled() and _r31_815_v2_sent <= 10:
+					SmoothTrace.emit("r31_815_compact_v2_sent", {
+						"server_tick": _server_tick,
+						"peer_sha256": peer_id.sha256_text(),
+						"schema": CompactV2.SCHEMA,
+						"session_sha256": String(_peer_to_session.get(peer_id, "")).sha256_text(),
+					})
 			else:
 				_r31_815_v1_sent += 1
 			compact_enqueued_any = true
