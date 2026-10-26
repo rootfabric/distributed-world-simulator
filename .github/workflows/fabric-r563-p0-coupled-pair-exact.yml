@@ -54,7 +54,7 @@ jobs:
         run: |
           set -Eeuo pipefail
           GODOT="$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64"
-          if test -n "$DWS_GODOT_DOUBLE_BIN"; then GODOT="$DWS_GODOT_DOUBLE_BIN"; fi
+          if declare -p DWS_GODOT_DOUBLE_BIN >/dev/null 2>&1 && test -n "$DWS_GODOT_DOUBLE_BIN"; then GODOT="$DWS_GODOT_DOUBLE_BIN"; fi
           test -x "$GODOT"
           test "$(sha256sum "$GODOT" | cut -d' ' -f1)" = bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7
           EVIDENCE="$RUNNER_TEMP/fabric-r563-p0-$GITHUB_RUN_ID"
