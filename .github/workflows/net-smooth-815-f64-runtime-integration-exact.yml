@@ -1,0 +1,32 @@
+name: NET-SMOOTH1 F64 Runtime Integration Exact
+on:
+  push:
+    branches:
+      - feature/net-smooth1-815-f64-v2-runtime-integration-r1
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  baseline-snapshot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Export exact original source, not credentials or worktree state
+        shell: bash
+        run: |
+          set -euo pipefail
+          git merge-base --is-ancestor cdc16f68f3d2871caa28dfd445472926ebdd1967 HEAD
+          mkdir -p artifacts/integration-source
+          git archive --format=tar.gz --output=artifacts/integration-source/codec-base.tar.gz cdc16f68f3d2871caa28dfd445472926ebdd1967
+          git rev-parse cdc16f68f3d2871caa28dfd445472926ebdd1967^{tree} > artifacts/integration-source/base-tree.txt
+          sha256sum artifacts/integration-source/codec-base.tar.gz > artifacts/integration-source/sha256.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: codec-integration-base-${{ github.sha }}
+          path: artifacts/integration-source/
+          if-no-files-found: error
