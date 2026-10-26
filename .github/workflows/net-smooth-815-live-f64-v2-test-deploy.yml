@@ -230,9 +230,35 @@ jobs:
           New-Item -ItemType Directory -Force $E | Out-Null
           [ordered]@{head=(git rev-parse HEAD).Trim();tree=(git rev-parse 'HEAD^{tree}').Trim();wrapper=(Get-FileHash $B -Algorithm SHA256).Hash;main=(Get-FileHash $Main -Algorithm SHA256).Hash} | ConvertTo-Json | Set-Content (Join-Path $E 'identity.json')
           $Raw='assets/external/quaternius'
-          if (-not (Test-Path $Raw)) { throw 'QUATERNIUS_123_RAW_ASSETS_MISSING_FROM_TEST_HOST' }
-          $RawCount=@(Get-ChildItem $Raw -Recurse -File | Where-Object {$_.Extension -notin '.import','.uid'}).Count
+          if (-not (Test-Path $Raw)) {
+            # Canonical RAW assets are out-of-tree; use ONLY previous audited
+            # detached worktrees on the SAME host. Copy, never move/delete.
+            $Candidates=@(
+              'C:\dws-815-guard-r1\assets\external\quaternius',
+              'C:\distributed-world-simulator\ns1-815-f64v2-win-r1\assets\external\quaternius'
+            )
+            if (Test-Path Env:DWS_QUATERNIUS_CANONICAL_SOURCE) {
+              $Candidates=@($env:DWS_QUATERNIUS_CANONICAL_SOURCE)+$Candidates
+            }
+            $Copied=$false
+            foreach ($Candidate in $Candidates) {
+              if (-not (Test-Path $Candidate)) { continue }
+              $Count=@(Get-ChildItem $Candidate -Recurse -File |
+                Where-Object { $_.Extension -notin '.import','.uid' }).Count
+              if ($Count -ne 123) { continue }
+              New-Item -ItemType Directory -Force $Raw | Out-Null
+              Copy-Item -Path (Join-Path $Candidate '*') -Destination $Raw -Recurse -Force
+              Write-Host ('STAGING_ASSET_SOURCE_RESTORED='+$Candidate)
+              $Copied=$true
+              break
+            }
+            if (-not $Copied) { throw 'QUATERNIUS_123_RAW_ASSETS_MISSING_FROM_TEST_HOST' }
+          }
+          $RawCount=@(Get-ChildItem $Raw -Recurse -File |
+            Where-Object { $_.Extension -notin '.import','.uid' }).Count
           if ($RawCount -ne 123) { throw "QUATERNIUS_123_RAW_ASSET_COUNT_MISMATCH:$RawCount" }
+          # Actual per-file asset SHA map and canonical aggregate are checked
+          # independently by run_net_smooth1 and verify_815_live_deploy.py.
           & $B --headless --editor --path . --import --quit *> (Join-Path $E 'cold-import.log')
           if ($LASTEXITCODE -ne 0 -or (Select-String (Join-Path $E 'cold-import.log') -Pattern 'SCRIPT ERROR:|Parse Error:|Compile Error:' -Quiet)) { throw 'COLD_IMPORT_FAIL' }
           $Common=@(
