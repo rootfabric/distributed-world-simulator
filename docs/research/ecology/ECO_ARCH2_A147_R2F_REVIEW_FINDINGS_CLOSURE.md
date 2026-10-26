@@ -15,7 +15,7 @@
 ## P2 multigeneration / error-frontier proof
 `test_a147_r2f_multitick_exact.gd` runs:
 - n32/96/256 original A13 vs E3 batch16/nested4, **2 committed ticks each**, mutation policy enabled; compare every complete field/grants/pop/feedback/outbox state and exact serialized A8 at EACH tick, plus owner/revision transitions and no partial publication.
-- Reproductive n4 fixture with A13 Fidelity life-history policy maturity tick 2, genuine genome `module_parameter` mutation enabled, **8 ticks**, assert actual population growth and parity at each tick. This detects mutation, propagule and child-admission regressions rather than only one tick with disabled mutations.
+- Reproductive n4 fixture with A13 Fidelity life-history policy maturity tick 2, genuine genome `module_parameter` mutation enabled, **4 ticks**, assert actual population growth and parity at each tick. This detects mutation, propagule and child-admission regressions rather than only one tick with disabled mutations.
 - Fully dead-inert n4 source (zero A5 demands) plus n4 zero-stock field (nonempty demands but every granted amount zero); both must match accepted single ORIGINAL global A4 behavior. No skipped A4 barrier or forged grants.
 - Main-thread/public Runtime malformed/stale source/checksum and first-error precedence further checked in dedicated fresh independent verifier before merge.
 - `.github/workflows/eco-a147-r2f-multitick-exact.yml` enforces this on official Portable and both pinned native Double operating systems, with 5 independent Linux native A13 Fidelity repetitions retaining gdb/exit evidence on any SIGSEGV. A single 5/5 pass reduces but does NOT mathematically rule out intermittent SIGSEGV.

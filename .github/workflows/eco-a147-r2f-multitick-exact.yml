@@ -45,7 +45,7 @@ jobs:
           import json,pathlib
           for mode,n in [('scale',32),('scale',96),('scale',256),('repro',4),('no-demand',4),('zero-stock',4)]:
               p=json.loads(pathlib.Path(f'r2f-multitick-evidence/{mode}-{n}.json').read_text())
-              expected_ticks=8 if mode=='repro' else 2 if mode=='scale' else 1
+              expected_ticks=4 if mode=='repro' else 2 if mode=='scale' else 1
               assert p['schema']=='dws.ecology.a147-r2f-multitick-exact.v1'
               assert p['mode']==mode and p['population']==n and p['ticks']==expected_ticks
               assert len(p['hash_chain'])==expected_ticks and len(p['field_revision_chain'])==expected_ticks

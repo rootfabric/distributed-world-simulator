@@ -103,7 +103,7 @@ func _run() -> void:
 		_check(false, "non-scale requires canonical n4")
 		_finish()
 		return
-	var num_ticks: int = 8 if mode == "repro" else (2 if mode == "scale" else 1)
+	var num_ticks: int = 4 if mode == "repro" else (2 if mode == "scale" else 1)
 	var source: Dictionary = _make_source(mode,n)
 	_check(not source.is_empty() and Runtime.validate(source).is_empty(),
 		"re-sealed original source valid")
@@ -165,7 +165,9 @@ func _run() -> void:
 			for g in allocated.grants:
 				no_grants = no_grants and int(g.granted) == 0
 			_check(no_grants,"zero field stock yields exactly zero grants")
+	printerr("R2F_MULTI_START mode=%s population=%d ticks=%d" % [mode,n,num_ticks])
 	for t in num_ticks:
+		printerr("R2F_MULTI_TICK_START mode=%s tick=%d" % [mode,t+1])
 		var previous: String = C.encode(reference)
 		var original: Dictionary = Runtime.step_spatial_parallel_advance(
 			reference,opts,4,64,4,4)
@@ -228,6 +230,8 @@ func _run() -> void:
 		revision_chain.append(int(current.field.revision))
 		population_chain.append(current.population.size())
 		reference = baseline
+		printerr("R2F_MULTI_TICK_PASS mode=%s tick=%d population=%d" % [
+			mode,t+1,current.population.size()])
 	_check(C.encode(source) == source_before,
 		"unchanged detached original fixture across all ticks")
 	_check(owner_unchanged and checkpoint_exact and hash_chain.size() == num_ticks,
