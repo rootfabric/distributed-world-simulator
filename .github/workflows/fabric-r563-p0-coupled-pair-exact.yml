@@ -1,0 +1,102 @@
+name: FABRIC R5.6.3 P0 Coupled Pair Research Exact
+on:
+  push:
+    branches: [research/fabric-r5-6-3-p0-coupled-pair-r1]
+  workflow_dispatch:
+permissions:
+  contents: read
+
+jobs:
+  frozen-scope:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Prove stacked base and exactly four research-only paths
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          BASE=d8e8361419b1fbcf0138c4deea18d19accc297f6
+          test "$(git merge-base "$BASE" HEAD)" = "$BASE"
+          test "$(git rev-parse "$BASE^{tree}")" = 7c5c0a4e6546b4f3f444c8a17582518c099b951e
+          test -z "$(git status --porcelain=v1 --untracked-files=no)"
+          git diff --check "$BASE" HEAD
+          python3 - <<'PY'
+          import subprocess
+          base="d8e8361419b1fbcf0138c4deea18d19accc297f6"
+          found=set(subprocess.check_output(["git","diff","--name-only",base,"HEAD"],text=True).splitlines())
+          expected={
+              "scripts/research/fabric_bake0/r5_6_3_p0_coupled_pair_predictor_v1.gd",
+              "tests/research/fabric_bake0/fabric_r5_6_3_p0_pair_acceptance.gd",
+              "docs/research/FABRIC_R563_P0_COUPLED_PAIR_WORK_ORDER_RU.md",
+              ".github/workflows/fabric-r563-p0-coupled-pair-exact.yml",
+          }
+          assert found==expected,(found,expected)
+          assert subprocess.check_output(["git","hash-object","scripts/research/fabric_bake0/r5_6_3_p0_coupled_pair_predictor_v1.gd"],text=True).strip()=="cd36048523a7f86928d8891e9f6a0fc8362b1f23"
+          assert subprocess.check_output(["git","hash-object","tests/research/fabric_bake0/fabric_r5_6_3_p0_pair_acceptance.gd"],text=True).strip()=="5f27f60092a05bccfb928adcabdff37648238c66"
+          print("FABRIC_R563_P0_FROZEN_SOURCE_PASS")
+          PY
+
+  linux-double:
+    needs: frozen-scope
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Strict isolated Godot 4.7.1 double P0 proof
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          GODOT="$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64"
+          if test -n "$DWS_GODOT_DOUBLE_BIN"; then GODOT="$DWS_GODOT_DOUBLE_BIN"; fi
+          test -x "$GODOT"
+          test "$(sha256sum "$GODOT" | cut -d' ' -f1)" = bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7
+          EVIDENCE="$RUNNER_TEMP/fabric-r563-p0-$GITHUB_RUN_ID"
+          mkdir -p "$EVIDENCE"/{xdg-data,xdg-config,xdg-cache}
+          export XDG_DATA_HOME="$EVIDENCE/xdg-data"
+          export XDG_CONFIG_HOME="$EVIDENCE/xdg-config"
+          export XDG_CACHE_HOME="$EVIDENCE/xdg-cache"
+          printf 'HEAD=%s\nTREE=%s\nGODOT_SHA=%s\n' "$(git rev-parse HEAD)" "$(git rev-parse 'HEAD^{tree}')" "$(sha256sum "$GODOT" | cut -d' ' -f1)" > "$EVIDENCE/identity.txt"
+          # Both cold imports must succeed without a hidden gameplay launch.
+          "$GODOT" --headless --path . --editor --recovery-mode --import >"$EVIDENCE/import-recovery.log" 2>&1
+          "$GODOT" --headless --path . --editor --import >"$EVIDENCE/import.log" 2>&1
+          for log in "$EVIDENCE/import-recovery.log" "$EVIDENCE/import.log"; do
+            if grep -Eiq 'SCRIPT ERROR|Parse Error|Failed to load script' "$log"; then cat "$log"; exit 1; fi
+          done
+          for i in 1 2; do
+            "$GODOT" --headless --path . --script tests/research/fabric_bake0/fabric_r5_6_3_p0_pair_acceptance.gd > "$EVIDENCE/pair-$i.log" 2>&1
+          done
+          python3 - "$EVIDENCE" <<'PY'
+          import json, pathlib, sys
+          folder=pathlib.Path(sys.argv[1])
+          lines=[]
+          for i in [1,2]:
+              data=(folder/f"pair-{i}.log").read_text()
+              assert "SCRIPT ERROR" not in data and "Parse Error" not in data,data
+              markers=[x.split("=",1)[1] for x in data.splitlines() if x.startswith("FABRIC_R563_P0_RESULT=")]
+              assert len(markers)==1,data
+              obj=json.loads(markers[0])
+              assert obj["checks"]==438 and obj["negatives"]==12 and obj["failures"]==[],obj
+              assert obj["max_energy_drift_ratio"]<0.01,obj
+              lines.append(markers[0])
+          assert lines[0]==lines[1],"deterministic double run mismatch"
+          (folder/"canonical-result.json").write_text(lines[0]+"\n")
+          print("FABRIC_R563_P0_LINUX_DOUBLE_EXACT_PASS")
+          PY
+          test -z "$(git status --porcelain=v1 --untracked-files=no)"
+          (cd "$EVIDENCE" && sha256sum identity.txt import-recovery.log import.log pair-1.log pair-2.log canonical-result.json > SHA256SUMS)
+          mkdir -p artifacts/fabric-r563-p0-ci
+          cp "$EVIDENCE"/{identity.txt,import-recovery.log,import.log,pair-1.log,pair-2.log,canonical-result.json,SHA256SUMS} artifacts/fabric-r563-p0-ci/
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: fabric-r563-p0-linux-exact
+          path: artifacts/fabric-r563-p0-ci/**
+          if-no-files-found: warn
+          retention-days: 30
