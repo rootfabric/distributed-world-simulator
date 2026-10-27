@@ -32,7 +32,7 @@ def event(kind:str, fmt:str, session:str, hs:str, role:str)->dict:
         data["peer_sha256"]=h("peer/"+role)
     if kind in (stage.SELECTED,stage.NEGOTIATED):
         data["selected"]=fmt
-    if kind in (*stage.TX.values(),*stage.RX.values()):
+    if kind in (*stage.TX.values(),*stage.RX.values(),*stage.APPLIED.values()):
         data["schema"]=("planet_simulator.compact_gameplay_snapshot.v2"
                          if fmt=="f64-v2" else
                          "planet_simulator.compact_gameplay_snapshot.v1")
