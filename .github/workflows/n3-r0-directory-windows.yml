@@ -53,7 +53,7 @@ jobs:
             & $env:GODOT_BIN --headless --path . --script "res://tests/network/$test" *> $log
             $code=$LASTEXITCODE
             Get-Content -LiteralPath $log
-            if ($code -ne 0) { throw "N3_NATIVE_FAIL:$test:$code" }
+            if ($code -ne 0) { throw "N3_NATIVE_FAIL:${test}:$code" }
             $raw=Get-Content -LiteralPath $log -Raw
             if ($raw -match 'SCRIPT ERROR:|Parse Error:|Compile Error:|\[n3-(r0|b0)\]\[FAIL\]|"verdict":"FAIL"') { throw "N3_NATIVE_PARSE_OR_FAIL:$test" }
             if ($raw -notmatch '"verdict":"PASS"') { throw "N3_NATIVE_NO_PASS_RECEIPT:$test" }
