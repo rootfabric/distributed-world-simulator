@@ -127,7 +127,7 @@ class LiveF64Source(unittest.TestCase):
             self.assertIn(phrase,RUNNER)
         ast.parse(RUNNER)
         reducer=(ROOT/"tools/net_smooth1/verify_815_live_deploy.py").read_text()
-        for marker in ("ORIGINAL_FUNCTIONAL_FAILURE", "MISSING_ACCEPTED_COMPACT_IN_NEGOTIATED_SESSION",
+        for marker in ("ORIGINAL_FUNCTIONAL_FAILURE", "MISSING_DECODED_COMPACT_IN_NEGOTIATED_SESSION",
                        "MISSING_SERVER_SEND_IN_NEGOTIATED_SESSION",
                        "NO_POST_RECONNECT_CLIENT_B_V1_HANDSHAKE", "handshake_sha256",
                        "PERFORMANCE_ONLY_FAILURES",
