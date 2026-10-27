@@ -87,6 +87,10 @@ class LiveF64Source(unittest.TestCase):
         self.assertIn('CompactCodecV2.decode(wire)',CLIENT)
         self.assertIn('r31_815_compact_v2_received',CLIENT)
         self.assertIn('r31_815_compact_v1_received',CLIENT)
+        self.assertIn('r31_815_compact_v1_applied',CLIENT)
+        self.assertIn('r31_815_compact_v2_applied',CLIENT)
+        self.assertIn('super._accept_compact_snapshot(wire)',CLIENT)
+        self.assertIn('if _compact_snapshot_updates <= before:',CLIENT)
         self.assertIn('_r31_815_last_rx_receipt_session',CLIENT)
         self.assertIn('handshake_sha256',CLIENT)
         self.assertIn('R31CodecPolicy.client_accept(',CLIENT)
@@ -126,7 +130,8 @@ class LiveF64Source(unittest.TestCase):
         for marker in ("ORIGINAL_FUNCTIONAL_FAILURE", "MISSING_ACCEPTED_COMPACT_IN_NEGOTIATED_SESSION",
                        "MISSING_SERVER_SEND_IN_NEGOTIATED_SESSION",
                        "NO_POST_RECONNECT_CLIENT_B_V1_HANDSHAKE", "handshake_sha256",
-                       "PERFORMANCE_ONLY_FAILURES"):
+                       "PERFORMANCE_ONLY_FAILURES",
+                       "matched_replica_apply_per_session", "MISSING_APPLIED_COMPACT_IN_NEGOTIATED_SESSION"):
             self.assertIn(marker,reducer)
 
     def test_binary64_is_lossless_and_no_checksum_waiver(self):

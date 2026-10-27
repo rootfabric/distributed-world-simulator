@@ -37,6 +37,8 @@ def event(kind:str, fmt:str, session:str, hs:str, role:str)->dict:
                          if fmt=="f64-v2" else
                          "planet_simulator.compact_gameplay_snapshot.v1")
         data["server_tick"]=66
+    if kind in stage.APPLIED.values():
+        data["replica_revision"]=21
     return {"kind":kind,"data":data}
 
 
@@ -78,12 +80,15 @@ def build_fixture(root:Path):
         "a":[
             event(stage.NEGOTIATED,"f64-v2","a1","ha1","a"),
             event(stage.RX["f64-v2"],"f64-v2","a1","ha1","a"),
+            event(stage.APPLIED["f64-v2"],"f64-v2","a1","ha1","a"),
         ],
         "b":[
             event(stage.NEGOTIATED,"legacy-v1","b1","hb1","b"),
             event(stage.RX["legacy-v1"],"legacy-v1","b1","hb1","b"),
+            event(stage.APPLIED["legacy-v1"],"legacy-v1","b1","hb1","b"),
             event(stage.NEGOTIATED,"legacy-v1","b2","hb2","b"),
             event(stage.RX["legacy-v1"],"legacy-v1","b2","hb2","b"),
+            event(stage.APPLIED["legacy-v1"],"legacy-v1","b2","hb2","b"),
         ]
     }
     write_actor_traces(root,events)
@@ -136,6 +141,7 @@ class StrictReceipt(unittest.TestCase):
         self.assertFalse(result["performance_accepted"])
         self.assertFalse(result["current_production_deployed"])
         self.assertFalse(result["ready_for_merge"])
+        self.assertTrue(result["verified_sessions"]["b"]["matched_replica_apply_per_session"])
 
     def test_functional_failure_cannot_be_laundered_as_perf_fail(self):
         for role,reason in [
@@ -160,7 +166,15 @@ class StrictReceipt(unittest.TestCase):
             e["b"]=[row for row in e["b"] if not (
                 row["kind"]==stage.RX["legacy-v1"] and
                 row["data"]["session_sha256"]==h("b2"))]
-        with self.assertRaisesRegex(ValueError,"MISSING_ACCEPTED_COMPACT_IN_NEGOTIATED_SESSION"):
+        with self.assertRaisesRegex(ValueError,"MISSING_DECODED_COMPACT_IN_NEGOTIATED_SESSION"):
+            self.run_case(change)
+
+    def test_post_reconnect_successful_decode_does_not_prove_replica_apply(self):
+        def change(root,m,r,e):
+            e["b"]=[row for row in e["b"] if not (
+                row["kind"]==stage.APPLIED["legacy-v1"] and
+                row["data"]["session_sha256"]==h("b2"))]
+        with self.assertRaisesRegex(ValueError,"MISSING_APPLIED_COMPACT_IN_NEGOTIATED_SESSION"):
             self.run_case(change)
 
     def test_server_old_session_receipt_cannot_prove_new_b_connection(self):
@@ -182,7 +196,7 @@ class StrictReceipt(unittest.TestCase):
     def test_cross_handshake_reuse_cannot_claim_proof(self):
         def change(root,m,r,e):
             next(row for row in e["b"] if row["kind"]==stage.RX["legacy-v1"] and row["data"]["session_sha256"]==h("b2"))["data"]["handshake_sha256"]=h("hb1")
-        with self.assertRaisesRegex(ValueError,"MISSING_ACCEPTED_COMPACT_IN_NEGOTIATED_SESSION"):
+        with self.assertRaisesRegex(ValueError,"MISSING_DECODED_COMPACT_IN_NEGOTIATED_SESSION"):
             self.run_case(change)
 
     def test_b_cannot_receive_v2(self):

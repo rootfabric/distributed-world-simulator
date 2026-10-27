@@ -32,7 +32,9 @@ TX={"f64-v2":"r31_815_compact_v2_sent",
     "legacy-v1":"r31_815_compact_v1_sent"}
 RX={"f64-v2":"r31_815_compact_v2_received",
     "legacy-v1":"r31_815_compact_v1_received"}
-KNOWN_KINDS={SELECTED,NEGOTIATED,*TX.values(),*RX.values()}
+APPLIED={"f64-v2":"r31_815_compact_v2_applied",
+         "legacy-v1":"r31_815_compact_v1_applied"}
+KNOWN_KINDS={SELECTED,NEGOTIATED,*TX.values(),*RX.values(),*APPLIED.values()}
 
 
 def sha(path: Path) -> str:
@@ -91,7 +93,7 @@ def read_trace(root: Path, role: str, run_id: str) -> dict:
                     raise ValueError("MISSING_SERVER_PEER_BINDING:"+role+":"+str(kind))
                 if kind in (SELECTED,NEGOTIATED) and d.get("selected") not in ("f64-v2","legacy-v1"):
                     raise ValueError("INVALID_CODEC_CHOICE")
-                if kind in (*TX.values(),*RX.values()):
+                if kind in (*TX.values(),*RX.values(),*APPLIED.values()):
                     expected_schema=("planet_simulator.compact_gameplay_snapshot.v2"
                                      if "v2_" in kind else
                                      "planet_simulator.compact_gameplay_snapshot.v1")
@@ -99,6 +101,10 @@ def read_trace(root: Path, role: str, run_id: str) -> dict:
                         raise ValueError("WIRE_RECEIPT_SCHEMA_MISMATCH:"+str(kind))
                     if type(d.get("server_tick")) is not int or d["server_tick"]<1:
                         raise ValueError("MISSING_NATIVE_COMPACT_TICK")
+                    if kind in APPLIED.values() and (
+                        type(d.get("replica_revision")) is not int
+                        or d["replica_revision"]<0):
+                        raise ValueError("MISSING_AUTHORITATIVE_REPLICA_APPLY")
                 matching.append((kind,d))
             n+=1
     if (header is None or header.get("role")!=role or
@@ -180,8 +186,12 @@ def _validate_session_evidence(events:dict)->dict:
     ):
         server_sent=_session_rows(srv,TX[selected])
         client_received=_session_rows(events[client]["messages"],RX[selected])
+        client_applied=_session_rows(events[client]["messages"],APPLIED[selected])
         unexpected=RX["legacy-v1"] if selected=="f64-v2" else RX["f64-v2"]
-        if any(k==unexpected for k,_ in events[client]["messages"]):
+        unexpected_applied=(APPLIED["legacy-v1"] if selected=="f64-v2"
+                            else APPLIED["f64-v2"])
+        if any(k in (unexpected,unexpected_applied)
+               for k,_ in events[client]["messages"]):
             raise ValueError("CLIENT_RECEIVED_UNNEGOTIATED_FORMAT:"+client)
         for session,proof in rows.items():
             server_choice=server_selections.get(session)
@@ -196,12 +206,17 @@ def _validate_session_evidence(events:dict)->dict:
             actual_rx=client_received.get(session)
             if (actual_rx is None or
                 actual_rx["handshake_sha256"]!=proof["handshake_sha256"]):
-                raise ValueError("MISSING_ACCEPTED_COMPACT_IN_NEGOTIATED_SESSION:"+client)
+                raise ValueError("MISSING_DECODED_COMPACT_IN_NEGOTIATED_SESSION:"+client)
+            actual_apply=client_applied.get(session)
+            if (actual_apply is None or
+                actual_apply["handshake_sha256"]!=proof["handshake_sha256"]):
+                raise ValueError("MISSING_APPLIED_COMPACT_IN_NEGOTIATED_SESSION:"+client)
         results[client]={
             "selected":selected,
             "verified_session_count":len(rows),
             "session_sha256s":sorted(rows),
             "matched_tx_rx_per_session":True,
+            "matched_replica_apply_per_session":True,
         }
     return results
 
