@@ -1,7 +1,7 @@
 name: FABRIC R5.6.3 P0 Coupled Pair Research Exact
 on:
   push:
-    branches: [research/fabric-r5-6-3-p0-coupled-pair-r1]
+    branches: [research/fabric-r5-6-3-p0-coupled-pair-r1, repair/fabric-r563-p0-ci-evidence-r1]
   workflow_dispatch:
 permissions:
   contents: read
@@ -15,7 +15,7 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
-      - name: Prove stacked base and exactly four research-only paths
+      - name: Prove frozen physics and bounded CI repair scope
         shell: bash
         run: |
           set -Eeuo pipefail
@@ -34,14 +34,25 @@ jobs:
               "docs/research/FABRIC_R563_P0_COUPLED_PAIR_WORK_ORDER_RU.md",
               ".github/workflows/fabric-r563-p0-coupled-pair-exact.yml",
           }
-          assert found==expected,(found,expected)
+          repair_base="5e9ed0d0146f9c82ec249e50f43bf30913808849"
+          subprocess.run(["git","merge-base","--is-ancestor",repair_base,"HEAD"],check=True)
+          repair_paths={
+              ".github/workflows/fabric-r563-p0-coupled-pair-exact.yml",
+              ".github/workflows/fabric-bake-b0-4-c-windows-double.yml",
+              ".github/workflows/fabric-r5-2-t14-observation-refinement.yml",
+              "tests/ci/test_fabric_r563_p0_ci_repair.py",
+              "docs/research/FABRIC_R563_P0_CI_REPAIR_R1_RU.md",
+          }
+          changed=set(subprocess.check_output(["git","diff","--name-only",repair_base,"HEAD"],text=True).splitlines())
+          assert changed==repair_paths,(changed,repair_paths)
+          assert found==expected|repair_paths,(found,expected|repair_paths)
           assert subprocess.check_output(["git","hash-object","scripts/research/fabric_bake0/r5_6_3_p0_coupled_pair_predictor_v1.gd"],text=True).strip()=="cd36048523a7f86928d8891e9f6a0fc8362b1f23"
           assert subprocess.check_output(["git","hash-object","tests/research/fabric_bake0/fabric_r5_6_3_p0_pair_acceptance.gd"],text=True).strip()=="5f27f60092a05bccfb928adcabdff37648238c66"
           print("FABRIC_R563_P0_FROZEN_SOURCE_PASS")
           PY
 
   linux-double:
-    needs: frozen-scope
+    needs: [frozen-scope, ci-regressions]
     runs-on: [self-hosted, Linux, X64]
     timeout-minutes: 60
     steps:
@@ -53,26 +64,41 @@ jobs:
         shell: bash
         run: |
           set -Eeuo pipefail
+          EVIDENCE="$PWD/artifacts/fabric-r563-p0-ci"
+          mkdir -p "$EVIDENCE"
+          trap 'rc=$?; printf "%s\n" "$rc" > "$EVIDENCE/run-exit-code.txt"; exit "$rc"' EXIT
+          printf 'HEAD=%s\nTREE=%s\n' "$(git rev-parse HEAD)" "$(git rev-parse 'HEAD^{tree}')" > "$EVIDENCE/identity.txt"
+          run_stage() {
+            local log="$1" rc=0
+            shift
+            "$@" > "$EVIDENCE/$log" 2>&1 || rc=$?
+            printf '%s\n' "$rc" > "$EVIDENCE/$log.exit-code"
+            if test "$rc" -ne 0; then
+              tail -n 200 "$EVIDENCE/$log"
+              return "$rc"
+            fi
+          }
           GODOT="$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64"
           if declare -p DWS_GODOT_DOUBLE_BIN >/dev/null 2>&1 && test -n "$DWS_GODOT_DOUBLE_BIN"; then GODOT="$DWS_GODOT_DOUBLE_BIN"; fi
           test -x "$GODOT"
-          test "$(sha256sum "$GODOT" | cut -d' ' -f1)" = bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7
-          EVIDENCE="$RUNNER_TEMP/fabric-r563-p0-$GITHUB_RUN_ID"
-          mkdir -p "$EVIDENCE"/{xdg-data,xdg-config,xdg-cache}
-          export XDG_DATA_HOME="$EVIDENCE/xdg-data"
-          export XDG_CONFIG_HOME="$EVIDENCE/xdg-config"
-          export XDG_CACHE_HOME="$EVIDENCE/xdg-cache"
-          printf 'HEAD=%s\nTREE=%s\nGODOT_SHA=%s\n' "$(git rev-parse HEAD)" "$(git rev-parse 'HEAD^{tree}')" "$(sha256sum "$GODOT" | cut -d' ' -f1)" > "$EVIDENCE/identity.txt"
-          # Both cold imports must succeed without a hidden gameplay launch.
-          "$GODOT" --headless --path . --editor --recovery-mode --import >"$EVIDENCE/import-recovery.log" 2>&1
-          "$GODOT" --headless --path . --editor --import >"$EVIDENCE/import.log" 2>&1
+          GODOT_SHA="$(sha256sum "$GODOT" | cut -d' ' -f1)"
+          printf 'GODOT_SHA=%s\n' "$GODOT_SHA" >> "$EVIDENCE/identity.txt"
+          test "$GODOT_SHA" = bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7
+          PROFILE="$RUNNER_TEMP/fabric-r563-p0-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          mkdir -p "$PROFILE"/{xdg-data,xdg-config,xdg-cache}
+          export XDG_DATA_HOME="$PROFILE/xdg-data"
+          export XDG_CONFIG_HOME="$PROFILE/xdg-config"
+          export XDG_CACHE_HOME="$PROFILE/xdg-cache"
+          export BREAKPOINT_RUNTIME_DISABLED=1
+          run_stage import-recovery.log "$GODOT" --headless --path . --editor --recovery-mode --import
+          run_stage import.log "$GODOT" --headless --path . --editor --import
           for log in "$EVIDENCE/import-recovery.log" "$EVIDENCE/import.log"; do
             if grep -Eiq 'SCRIPT ERROR|Parse Error|Failed to load script' "$log"; then cat "$log"; exit 1; fi
           done
           for i in 1 2; do
-            "$GODOT" --headless --path . --script tests/research/fabric_bake0/fabric_r5_6_3_p0_pair_acceptance.gd > "$EVIDENCE/pair-$i.log" 2>&1
+            run_stage "pair-$i.log" "$GODOT" --headless --path . --script tests/research/fabric_bake0/fabric_r5_6_3_p0_pair_acceptance.gd
           done
-          python3 - "$EVIDENCE" <<'PY'
+          run_stage validation.log python3 - "$EVIDENCE" <<'PY_RESULT'
           import json, pathlib, sys
           folder=pathlib.Path(sys.argv[1])
           lines=[]
@@ -88,15 +114,46 @@ jobs:
           assert lines[0]==lines[1],"deterministic double run mismatch"
           (folder/"canonical-result.json").write_text(lines[0]+"\n")
           print("FABRIC_R563_P0_LINUX_DOUBLE_EXACT_PASS")
-          PY
+          PY_RESULT
+          cat "$EVIDENCE/validation.log"
           test -z "$(git status --porcelain=v1 --untracked-files=no)"
-          (cd "$EVIDENCE" && sha256sum identity.txt import-recovery.log import.log pair-1.log pair-2.log canonical-result.json > SHA256SUMS)
-          mkdir -p artifacts/fabric-r563-p0-ci
-          cp "$EVIDENCE"/{identity.txt,import-recovery.log,import.log,pair-1.log,pair-2.log,canonical-result.json,SHA256SUMS} artifacts/fabric-r563-p0-ci/
+      - name: Seal available logs even on failure
+        if: always()
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          EVIDENCE="$PWD/artifacts/fabric-r563-p0-ci"
+          mkdir -p "$EVIDENCE"
+          if ! test -f "$EVIDENCE/identity.txt"; then
+            printf 'Runtime step was not reached; no physics verdict.\n' > "$EVIDENCE/NOT_RUN.txt"
+          fi
+          cd "$EVIDENCE"
+          find . -maxdepth 1 -type f ! -name SHA256SUMS -print0 | sort -z | xargs -0 -r sha256sum > SHA256SUMS
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: fabric-r563-p0-linux-exact
           path: artifacts/fabric-r563-p0-ci/**
-          if-no-files-found: warn
+          if-no-files-found: error
           retention-days: 30
+
+  ci-regressions:
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install pinned YAML parser
+        run: python -m pip install PyYAML==6.0.2
+      - name: Test actual workflow bodies with failure injection and PowerShell Core
+        env:
+          FABRIC_CI_REQUIRE_PWSH: '1'
+        run: python -m unittest discover -s tests/ci -p test_fabric_r563_p0_ci_repair.py -v
