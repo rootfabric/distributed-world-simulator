@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - feature/net-smooth1-815-live-f64-v2-negotiation-r1
+      - repair/net-smooth1-815-live-reconnect-receipts-r3
   workflow_dispatch:
 permissions:
   contents: read
@@ -32,6 +33,7 @@ jobs:
           python -m unittest discover -s tests/tools -p 'test_net_smooth1_815_real_chain_source.py' -v
           python -m unittest discover -s tests/tools -p 'test_net_smooth1_815_live_codec_source.py' -v
           python -m unittest discover -s tests/tools -p 'test_net_smooth1_815_live_deploy_receipt.py' -v
+          python -m unittest discover -s tests/tools -p 'test_net_smooth1_r31p23r22_source_contracts.py' -v
           python -m unittest discover -s tests/tools -p 'test_net_smooth1_r31p23r22_source_contracts.py' -v
           python -m unittest discover -s tests/tools -p 'test_net_smooth1_p1_batch_flush_layers.py' -v
           test -z "$(git status --porcelain --untracked-files=no)"
