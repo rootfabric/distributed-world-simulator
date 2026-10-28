@@ -1,0 +1,108 @@
+name: NET-SMOOTH1 R4.2 P1-B R2 ITEM Async Canary Exact
+
+on:
+  push:
+    branches:
+      - feature/net-smooth1-r42-p1b-r2-item-async-canary-r1
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: net-smooth-r42-p1b-r2-item-async-windows
+  cancel-in-progress: true
+
+jobs:
+  safety-windows:
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 35
+    env:
+      BREAKPOINT_RUNTIME_DISABLED: '1'
+      GODOT_SILENCE_ROOT_WARNING: '1'
+      PYTHONUTF8: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Exact Godot double identity and source cleanliness
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $Engine = 'C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe'
+          if (-not (Test-Path $Engine)) { throw 'P1B_GODOT_NOT_FOUND' }
+          $Version = (& $Engine --version | Out-String).Trim()
+          $SHA = (Get-FileHash $Engine -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($Version -ne '4.7.1.stable.double.custom_build.a13da4feb') { throw "P1B_GODOT_VERSION_MISMATCH:$Version" }
+          if ($SHA -ne '3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5') { throw "P1B_GODOT_SHA_MISMATCH:$SHA" }
+          if (git status --porcelain --untracked-files=no) { throw 'P1B_TRACKED_DIRTY' }
+          $Evidence = 'artifacts\net-smooth1\r42-p1b-r2-exact'
+          New-Item -ItemType Directory -Force $Evidence | Out-Null
+          [ordered]@{
+            head = (git rev-parse HEAD).Trim()
+            tree = (git rev-parse 'HEAD^{tree}').Trim()
+            godot_version = $Version
+            godot_sha256 = $SHA
+            acceptance_scope = 'R4.2-P1B-R2-ITEM_CANARY_UNVERIFIED'
+          } | ConvertTo-Json | Set-Content "$Evidence\identity.json" -Encoding UTF8
+      - name: Cold import and GDScript parsing
+        shell: pwsh
+        timeout-minutes: 12
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $Engine = 'C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe'
+          $Log = 'artifacts\net-smooth1\r42-p1b-r2-exact\import.log'
+          & $Engine --headless --editor --path . --import --quit *> $Log
+          if ($LASTEXITCODE -ne 0) { Get-Content $Log -Tail 150; throw 'P1B_IMPORT_FAILED' }
+          if (Select-String -Path $Log -Pattern 'SCRIPT ERROR:|Parse Error:|Compile Error:' -Quiet) { throw 'P1B_IMPORT_PARSE_ERROR' }
+      - name: Async proof, periodic ordering and adjacent durable invariants
+        shell: pwsh
+        timeout-minutes: 20
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $Engine = 'C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe'
+          $Evidence = 'artifacts\net-smooth1\r42-p1b-r2-exact'
+          $Suites = @(
+            'tests/runtime/test_net_smooth1_r42_p1b_item_async_canary.gd',
+            'tests/runtime/test_net_smooth1_r42_seam_full_snapshot_wire_checksum.gd',
+            'tests/runtime/test_net_smooth1_r42_p1b_periodic_completion_order.gd',
+            'tests/runtime/test_net_smooth1_r42_p1_async_durable_proof.gd',
+            'tests/runtime/test_net_smooth1_r41_pending_durable_gate.gd',
+            'tests/runtime/test_net_smooth1_r41_p1_fifo_disconnect_repair.gd',
+            'tests/runtime/test_net_smooth1_async_checkpoint.gd',
+            'tests/runtime/test_m6_dedicated_recovery_contracts.gd',
+            'tests/runtime/test_net_smooth1_r42_revision_fence_diagnostics.gd',
+            'tests/runtime/test_v0_user1_product_seam_bridge.gd'
+          )
+          foreach ($Suite in $Suites) {
+            $Log = Join-Path $Evidence ((Split-Path $Suite -Leaf)+'.log')
+            & $Engine --headless --path . --script ("res://"+$Suite) *> $Log
+            if ($LASTEXITCODE -ne 0) {
+              Get-Content $Log -Tail 150
+              throw "P1B_SUITE_FAILED:$Suite"
+            }
+            if (Select-String -Path $Log -Pattern 'SCRIPT ERROR:|Parse Error:|Compile Error:|ERROR:' -Quiet) { throw "P1B_SCRIPT_ERROR:$Suite" }
+          }
+          $AnalyzerLog = Join-Path $Evidence 'analyzer.log'
+          python -m unittest discover -s tests/tools -p test_net_smooth1_analyzer.py -v *> $AnalyzerLog
+          if ($LASTEXITCODE -ne 0) { Get-Content $AnalyzerLog -Tail 150; throw 'P1B_ANALYZER_FAILED' }
+          if (git status --porcelain --untracked-files=no) { throw 'P1B_POST_TEST_DIRTY' }
+      - name: SHA256 immutable job evidence
+        shell: pwsh
+        if: always()
+        run: |
+          $Evidence = 'artifacts\net-smooth1\r42-p1b-r2-exact'
+          New-Item -ItemType Directory -Force $Evidence | Out-Null
+          @(Get-ChildItem -Path $Evidence -File -ErrorAction SilentlyContinue |
+            Where-Object { $_.Name -ne 'hashes.json' } |
+            ForEach-Object { [ordered]@{name=$_.Name;sha256=(Get-FileHash $_.FullName -Algorithm SHA256).Hash} }) |
+            ConvertTo-Json -Depth 4 | Set-Content "$Evidence\hashes.json" -Encoding UTF8
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: net-smooth-r42-p1b-r2-exact-${{ github.sha }}-${{ github.run_id }}
+          path: artifacts/net-smooth1/r42-p1b-r2-exact/
+          retention-days: 21
+          if-no-files-found: error
