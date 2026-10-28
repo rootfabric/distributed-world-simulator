@@ -63,7 +63,13 @@ func _run() -> void:
 	check(proof.peek_publication(PEER_A, SESSION_A, "a", 1).is_empty(), "precommit ACK not eligible")
 	var observed_ticks := 0
 	var previous_frame_tick := -1
-	var last_position_x := -1.0
+	# PlayerMovementService uses forward = -Basis(...).z, so move_z=+1
+	# advances toward NEGATIVE world Z. Check strict progress for both players,
+	# not just ticking or a sign-inverted monotonicity assertion.
+	var previous_z_by_player: Dictionary = {
+		"a": float(Dictionary(_lookup(before, "a").get("position", {})).get("z", 0.0)),
+		"b": float(Dictionary(_lookup(before, "b").get("position", {})).get("z", 0.0)),
+	}
 	for frame in range(10):
 		var tick_start_ms := Time.get_ticks_msec()
 		for phase in range(3):
@@ -98,10 +104,32 @@ func _run() -> void:
 				var frozen_player: Dictionary = _lookup(before, id)
 				check(player.get("inventory") == frozen_player.get("inventory"), "no uncommitted inventory for "+id)
 				check(player.get("state_revision") == frozen_player.get("state_revision"), "no speculative player revision for "+id)
-			var a: Dictionary = _lookup(full, "a")
-			var z := float(Dictionary(a.get("position", {})).get("z", 0.0))
-			check(z >= last_position_x, "player a moves monotonically each frame")
-			last_position_x = z
+			# R3 repair falsifier: both players must make strict -Z progress.
+			# Also require the hybrid wire view to match the authoritative
+			# movement scalars at this exact fixed tick (no hold, no rollback).
+			for who in ["a", "b"]:
+				var projected_player: Dictionary = _lookup(full, who)
+				var live_player: Dictionary = service.get_player(who)
+				var projected_position: Dictionary = Dictionary(projected_player.get("position", {}))
+				var live_position: Dictionary = Dictionary(live_player.get("position", {}))
+				var projected_z := float(projected_position.get("z", 0.0))
+				check(
+					projected_z < float(previous_z_by_player[who]) - 0.01,
+					"player %s advances strictly along -Z each 50ms pending-ITEM frame" % who
+				)
+				check(
+					absf(projected_z - float(live_position.get("z", 0.0))) < 0.0001,
+					"player %s committed view tracks actual authoritative Z" % who
+				)
+				check(
+					absf(float(projected_position.get("x", 0.0)) - float(live_position.get("x", 0.0))) < 0.0001,
+					"player %s committed view tracks actual authoritative X" % who
+				)
+				check(
+					int(projected_player.get("last_input_sequence", -1)) == int(live_player.get("last_input_sequence", -2)),
+					"player %s committed view carries current input sequence" % who
+				)
+				previous_z_by_player[who] = projected_z
 			check(int(full.get("server_tick", -1)) - previous_frame_tick == 3 or previous_frame_tick < 0,
 				"exact 3 fixed ticks (50ms) per projected frame")
 			previous_frame_tick = int(full.get("server_tick", -1))
