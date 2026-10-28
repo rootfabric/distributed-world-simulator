@@ -21,6 +21,7 @@ const C = preload("res://scripts/research/ecology/v2/canonical_value_v1.gd")
 const Runtime = preload("res://scripts/research/ecology/v2/ecology_runtime_v1.gd")
 const Spatial = preload("res://scripts/research/ecology/v2/population_spatial_workset_plan_v1.gd")
 const SnapshotProjector = preload("res://scripts/ecology/workbench/ecology_r323_snapshot_projector_v1.gd")
+const OwnedSource = preload("res://scripts/research/ecology/v2/ecology_owned_worker_source_r2e2_v1.gd")
 
 const SCHEMA := "dws.ecology.a14-6-r3-2-off-main-session.v1"
 const MAX_WORKER_RESUMES := 4096
@@ -61,6 +62,10 @@ var _last_r2c_parallel_workset_workers := 1
 # Does not skip Runtime/A5/A4 validation or change canonical state.
 var _worker_r2e_profile := false
 var _last_worker_r2e_profile := false
+# R2E2 default OFF. The owner is deep-cloned/validated inside the CPU
+# worker ONLY when real LAB Controller's exclusive R3.2.2 lease exists.
+var _worker_r2e2_owned_fast := false
+var _last_worker_r2e2_owned_fast := false
 var _job_started_us := 0
 var _jobs_started := 0
 var _jobs_committed := 0
@@ -140,6 +145,7 @@ func status() -> Dictionary:
 		"last_worker_worksets_per_resume": _last_worker_worksets_per_resume,
 		"last_r2c_parallel_workset_workers": _last_r2c_parallel_workset_workers,
 		"last_worker_r2e_profile_enabled": _last_worker_r2e_profile,
+		"last_worker_r2e2_owned_fast": _last_worker_r2e2_owned_fast,
 		"last_worker_wall_us": _last_worker_wall_us,
 		"last_error": _last_error,
 	}
@@ -152,7 +158,8 @@ func advance(state: Dictionary, options: Dictionary,
 		projection_manifest: Dictionary = {},
 		worksets_per_resume: int = 1,
 		r2c_parallel_workset_workers: int = 1,
-		r2e_profile: bool = false) -> Dictionary:
+		r2e_profile: bool = false,
+		r2e2_owned_fast: bool = false) -> Dictionary:
 	var t0: int = Time.get_ticks_usec()
 	reap_discarded()
 	if not C.integer(max_members, 1, Spatial.MAX_MEMBERS) \
@@ -170,6 +177,8 @@ func advance(state: Dictionary, options: Dictionary,
 			return _failed("R2C_WORKER_BOUND_CHANGED", t0)
 		if r2e_profile != _worker_r2e_profile:
 			return _failed("R2E_PROFILER_POLICY_CHANGED", t0)
+		if r2e2_owned_fast != _worker_r2e2_owned_fast:
+			return _failed("R2E2_OWNED_POLICY_CHANGED", t0)
 		if not WorkerThreadPool.is_task_completed(_task_id):
 			return _pending(t0, "DRAINING" if _abandoned else "BACKGROUND")
 		# Non-blocking by contract: the task is already completed. Always
@@ -219,6 +228,7 @@ func advance(state: Dictionary, options: Dictionary,
 		_last_worker_worksets_per_resume = _worker_worksets_per_resume
 		_last_r2c_parallel_workset_workers = _r2c_parallel_workset_workers
 		_last_worker_r2e_profile = _worker_r2e_profile
+		_last_worker_r2e2_owned_fast = _worker_r2e2_owned_fast
 		_last_projection_wall_us = int(payload.get("projection_wall_us", 0))
 		var source_validation_started_us: int = Time.get_ticks_usec()
 		var canonical_error := ""
@@ -267,6 +277,7 @@ func advance(state: Dictionary, options: Dictionary,
 			"worker_worksets_per_resume": _last_worker_worksets_per_resume,
 			"r2c_parallel_workset_workers": _last_r2c_parallel_workset_workers,
 			"worker_r2e_profile_enabled": _last_worker_r2e_profile,
+			"worker_r2e2_owned_fast": _last_worker_r2e2_owned_fast,
 			"presentation_snapshot": payload.get("presentation_snapshot", {}),
 			"complete_poll_wall_us": complete_poll_wall_us,
 		}
@@ -284,6 +295,8 @@ func advance(state: Dictionary, options: Dictionary,
 		or lease_generation >= 0
 	if not projection_manifest.is_empty() and not use_lease:
 		return _failed("R323_SNAPSHOT_REQUIRES_CONTROLLER_LEASE", t0)
+	if r2e2_owned_fast and not use_lease:
+		return _failed("R2E2_REQUIRES_CONTROLLER_LEASE", t0)
 	_clear_trusted_lease()
 	_source_hash = anchor
 	_options_hash = options_hash
@@ -314,6 +327,7 @@ func advance(state: Dictionary, options: Dictionary,
 	_worker_worksets_per_resume = worksets_per_resume
 	_r2c_parallel_workset_workers = r2c_parallel_workset_workers
 	_worker_r2e_profile = r2e_profile
+	_worker_r2e2_owned_fast = r2e2_owned_fast
 	# The worker is the only writer to this isolated outer dictionary; all
 	# nested authoritative state remains read-only until Runtime duplicates it.
 	var frozen_state: Dictionary = state.duplicate(false)
@@ -327,7 +341,8 @@ func advance(state: Dictionary, options: Dictionary,
 			allocator_items, cursor_cap_bytes,
 			anchor, _source_tick, options_hash, _trusted_generation,
 			detached_manifest, worksets_per_resume,
-			r2c_parallel_workset_workers, r2e_profile),
+			r2c_parallel_workset_workers, r2e_profile,
+			r2e2_owned_fast),
 		false, "eco-a146-r3-2-global-a4")
 	if _task_id < 0:
 		_clear_trusted_lease()
@@ -341,9 +356,28 @@ func _compute(frozen: Dictionary, options: Dictionary, members: int,
 		projection_manifest: Dictionary,
 		worksets_per_resume: int,
 		r2c_parallel_workset_workers: int,
-		r2e_profile: bool) -> void:
+		r2e_profile: bool, r2e2_owned_fast: bool) -> void:
 	var started_us: int = Time.get_ticks_usec()
 	var payload: Dictionary = {}
+	# The borrowed top-level input has nested aliases into MAIN. For the
+	# experimental leased fast path, deep-clone it ONLY INSIDE this worker.
+	# Both source and options are then never returned to any host view.
+	var owned_context: RefCounted = null
+	var r2e2_admission: Dictionary = {}
+	if r2e2_owned_fast:
+		var owner: RefCounted = OwnedSource.new()
+		r2e2_admission = owner.admit(
+			frozen, options, anchor, source_tick, options_hash, generation)
+		if not bool(r2e2_admission.get("success", false)):
+			_mutex.lock()
+			_worker_result = {"success": false,
+				"error": "R2E2_OWNED_SOURCE:" + String(r2e2_admission.get("error", "?")),
+				"worker_wall_us": maxi(0, Time.get_ticks_usec() - started_us)}
+			_mutex.unlock()
+			return
+		owned_context = owner
+		frozen = owner.source_for_worker()
+		options = owner.options_for_worker()
 	# Exact single task wall decomposition. These counters are host-only;
 	# no per-organism ordering, quota, algorithm or state mutation changes.
 	var phases := {"begin_us": 0, "cursor_encode_us": 0,
@@ -356,6 +390,11 @@ func _compute(frozen: Dictionary, options: Dictionary, members: int,
 		"max_cursor_encode_us": 0, "max_cursor_bytes": 0,
 		"r2c_peak_workers": 0, "r2c_parallel_threaded_worksets": 0,
 		"r2c_parallel_resume_calls": 0}
+	if r2e2_owned_fast:
+		phases["r2e2_deep_detach_us"] = int(r2e2_admission.get("deep_clone_us", 0))
+		phases["r2e2_initial_full_source_validate_us"] = int(
+			r2e2_admission.get("first_full_source_validate_us", 0))
+		phases["r2e2_owned_lease_admitted"] = true
 	if r2e_profile:
 		# Overlapping totals: A5 cost is a SUBSET of Runtime resume wall;
 		# A5 checksum/source/copy/seal are SUBSETS of A5 lifecycle wall.
@@ -399,7 +438,7 @@ func _compute(frozen: Dictionary, options: Dictionary, members: int,
 			var resume_started_us: int = Time.get_ticks_usec()
 			var step: Dictionary = Runtime.resume_staged_global_tick(
 				frozen, options, cursor, worksets_per_resume, items, cursor_cap,
-				r2c_parallel_workset_workers, r2e_profile)
+				r2c_parallel_workset_workers, r2e_profile, owned_context)
 			var resume_us: int = maxi(0, Time.get_ticks_usec() - resume_started_us)
 			if r2e_profile and bool(step.get("success", false)):
 				var detail: Dictionary = step.get("r2e_profile", {})
@@ -453,6 +492,9 @@ func _compute(frozen: Dictionary, options: Dictionary, members: int,
 	# Worker telemetry is detached and NO phase data participates in
 	# canonical checksums, A4 demand reductions or adoption logic.
 	payload["phase_profile"] = phases.duplicate(true)
+	# E2 must NEVER bypass the original full final source/candidate
+	# validation, even when repeated in-loop structural validation is
+	# replaced by an exclusive owned-source lease.
 	# The final full validation runs only on the CPU worker. Retain the
 	# direct-service full MAIN check until an exclusive owner lease exists.
 	if bool(payload.get("success", false)):

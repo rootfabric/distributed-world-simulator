@@ -93,7 +93,8 @@ func advance(state: Dictionary, options: Dictionary,
 		use_off_main_r3: bool = false,
 		lease_owner: Object = null, lease_token: RefCounted = null,
 		lease_generation: int = -1,
-		projection_manifest: Dictionary = {}) -> Dictionary:
+		projection_manifest: Dictionary = {},
+		r2e2_owned_fast: bool = false) -> Dictionary:
 	if not C.integer(soft_budget_us, 1, 1000000000) \
 			or not C.integer(max_resumes, 1, MAX_RESUMES) \
 			or not C.integer(max_worksets, 1, MAX_WORKSETS) \
@@ -101,6 +102,11 @@ func advance(state: Dictionary, options: Dictionary,
 			or not C.integer(cursor_cap_bytes, 1024, MAX_CURSOR_BYTES) \
 			or not C.integer(allocator_items_per_call, 1, 4096):
 		return _error("STAGED_SESSION_PARAMETERS", false)
+	# R2E2 source ownership is only legal under real LAB Controller
+	# exclusive source lease. A direct StagedSession caller cannot opt-in.
+	if r2e2_owned_fast and (not use_off_main_r3 or lease_owner == null
+			or lease_token == null or lease_generation < 0):
+		return _error("R2E2_STAGED_REQUIRES_CONTROLLER_LEASE", false)
 	# R3.2 is a separate LAB-only execution option. Existing R3/A14.5
 	# behavior remains byte-for-byte unchanged unless this flag is set.
 	if use_off_main_r3:
@@ -111,7 +117,8 @@ func advance(state: Dictionary, options: Dictionary,
 		_calls += 1
 		var async_step: Dictionary = _off_main.advance(
 			state, options, max_members, allocator_items_per_call, cursor_cap_bytes,
-			lease_owner, lease_token, lease_generation, projection_manifest)
+			lease_owner, lease_token, lease_generation, projection_manifest,
+			1, 1, false, r2e2_owned_fast)
 		if not bool(async_step.get("success", false)):
 			return _error("STAGED_SESSION_OFFMAIN:" +
 				String(async_step.get("error", "?")), true)
