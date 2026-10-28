@@ -200,6 +200,7 @@ def play(args, manifest: dict) -> None:
                      r31p23r22_attested_compact=args.r31p23r22_attested_compact,
                     scenario=args.scenario,
                     r31_815_wire_forensics=args.r31_815_wire_forensics,
+                    r31_815_outbound_guard=args.r31_815_outbound_guard,
                     forensic_evidence_class='CHECKSUM_FINGERPRINT_DIAGNOSTIC_ONLY' if args.r31_815_wire_forensics else '')
     processes: dict[str,subprocess.Popen] = {}; streams=[]
     def spawn(role: str) -> None:
@@ -211,6 +212,9 @@ def play(args, manifest: dict) -> None:
         env.pop('DWS_NET_R31_815_WIRE_FORENSICS',None)
         if args.r31_815_wire_forensics:
             env['DWS_NET_R31_815_WIRE_FORENSICS']='1'
+        env.pop('DWS_NET_R31_815_OUTBOUND_DECODE_GUARD', None)
+        if role == 'server' and args.r31_815_outbound_guard:
+            env['DWS_NET_R31_815_OUTBOUND_DECODE_GUARD']='1'
         if role == args.inject_stall_role:
             env['DWS_NET_SMOOTH_INJECT_STALL_MS']=str(args.inject_stall_ms)
         if role == 'server' and args.checkpoint_mode=='sync':
@@ -821,6 +825,8 @@ def main() -> int:
                          help='P2.3 R2.2: single-use validated compact bytes; requires R2.1')
     parser.add_argument('--r31-815-wire-forensics', action='store_true',
                          help='NON-NORMATIVE SHA-only ENet send/recv fingerprinting for #815; no raw packet logged')
+    parser.add_argument('--r31-815-outbound-guard', action='store_true',
+                         help='NON-NORMATIVE SERVER ONLY: require original decoder to accept exact outgoing bytes; no checksum bypass')
     parser.add_argument('--inject-stall-role',choices=('server','a','b'))
     parser.add_argument('--inject-stall-ms',type=int,default=250)
     args=parser.parse_args()
@@ -876,6 +882,8 @@ def main() -> int:
         or not args.r31p22_loop_attribution
     ):
         parser.error('R31 #815 forensic capture requires real GUI LOCAL, roundtrip, R2.2 and P22')
+    if args.r31_815_outbound_guard and not args.r31_815_wire_forensics:
+        parser.error('R31 #815 outbound safety guard requires original wire forensics to record every rejected packet')
     run_id=uuid.uuid4().hex[:16]
     args.output=(args.output or ROOT/'artifacts/net-smooth1'/run_id).resolve()
     args.output.mkdir(parents=True,exist_ok=False)

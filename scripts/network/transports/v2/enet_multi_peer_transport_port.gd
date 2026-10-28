@@ -37,6 +37,11 @@ var _last_status: int = MultiplayerPeer.CONNECTION_DISCONNECTED
 var _r31p23r2_attribution_enabled := false
 # R31 #815 strict diagnostic ONLY. Bounded per-port capture, default OFF.
 var _r31_815_wire_event_count: int = 0
+# Opt-in R31 #815 SEND-SIDE CONTAINMENT only: strict receiver decoder
+# must accept EXACT bytes before an ENet packet can leave this server.
+# Default OFF; original actual ENet transfer/checksum/authority unchanged.
+const R31_815_OUTBOUND_GUARD_ENV: String = "DWS_NET_R31_815_OUTBOUND_DECODE_GUARD"
+var _r31_815_preflight_reject_count: int = 0
 # R2.1 canary: only the already verified, main-thread COMPACT packet skips
 # a SECOND FrameScript.validate inside encode(). All invalid input is still
 # rejected by the original first validation; no worker or shared state.
@@ -103,6 +108,12 @@ func r22_prepare_validated_compact(source, peer_id: String, frame: Dictionary) -
 	var packet: PackedByteArray = canonical_text.to_utf8_buffer()
 	if packet.size() > MAX_PACKET_BYTES:
 		return TransportUtilsScript.failure("PACKET_TOO_LARGE", {"packet_bytes": packet.size()})
+	# R2.2 sends frozen bytes and BYPASSES FrameScript.encode(). Validate
+	# EXACT frozen bytes with the original strict receiver before creating
+	# any single-use proof. Never send a receiver-invalid COMPACT frame.
+	var r31_815_checked: Dictionary = _r31_815_preflight(packet, frame)
+	if not bool(r31_815_checked.get("success", false)):
+		return r31_815_checked
 	_r22_ticket_counter += 1
 	_r22_pending = {
 		"ticket": _r22_ticket_counter,
@@ -363,6 +374,12 @@ func send_to_peer(peer_id: String, frame: Dictionary) -> Dictionary:
 	var p23_encoded_us: int = Time.get_ticks_usec() if p23_probe else 0
 	if not bool(encoded.get("success", false)):
 		return encoded
+	var r31_815_checked: Dictionary = _r31_815_preflight(
+		PackedByteArray(encoded.get("details", {}).get("packet", PackedByteArray())),
+		frame
+	)
+	if not bool(r31_815_checked.get("success", false)):
+		return r31_815_checked
 	var channel: int = _channel_index(String(frame["channel"]))
 	_peer.transfer_channel = channel
 	_peer.set_target_peer(int(_logical_to_numeric[peer_id]))
@@ -666,6 +683,40 @@ func _peer_statistics(peer_id: String) -> Dictionary:
 			* 100.0 / packet_loss_scale
 		),
 	}
+
+
+func _r31_815_preflight(packet: PackedByteArray, frame: Dictionary) -> Dictionary:
+	# Exact decoder is the ONLY acceptance oracle. No tolerated checksum,
+	# decoder fallback, lossy rounding, or packet rebuild. Original
+	# payload/frame content remains byte-identical when sending succeeds.
+	if _mode != "SERVER" or OS.get_environment(R31_815_OUTBOUND_GUARD_ENV) != "1":
+		return TransportUtilsScript.success()
+	var decoded: Dictionary = FrameScript.decode(packet, MAX_PACKET_BYTES)
+	if bool(decoded.get("success", false)):
+		return TransportUtilsScript.success()
+	var decoder_code: String = String(decoded.get("error_code", "INVALID_FRAME"))
+	_r31_815_preflight_reject_count += 1
+	if R31SmoothTrace.enabled():
+		R31SmoothTrace.emit("r31_815_outbound_preflight_reject", {
+			"frame_id": String(frame.get("frame_id", "")),
+			"channel": String(frame.get("channel", "")),
+			"payload_type": String(Dictionary(frame.get("payload", {})).get("type", "")),
+			"decoder_error_code": decoder_code,
+			"packet_sha256": packet.get_string_from_utf8().sha256_text(),
+			"reject_index": _r31_815_preflight_reject_count,
+			"packet_bytes": packet.size(),
+			"packet_bytes_mutated": false,
+		})
+	# Explicit recoverable SEND failure: simulator drops an unreliable
+	# snapshot, preserves RELIABLE FIFO/retry; boundary retains pending state.
+	# Crucially the client never receives these invalid bytes and cannot
+	# enter FAILED merely because Godot JSON floats are parse-unstable.
+	return TransportUtilsScript.failure(
+		"R31_815_OUTBOUND_RECEIVER_REJECTED",
+		{"decoder_error_code": decoder_code,
+		"packet_sha256": packet.get_string_from_utf8().sha256_text(),
+		"packet_bytes": packet.size()}
+	)
 
 
 func _r31_815_emit_wire(
