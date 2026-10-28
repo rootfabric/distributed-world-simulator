@@ -97,6 +97,31 @@ jobs:
           done
           git diff --exit-code
           git diff --cached --exit-code
+      - name: Export exact-source portable verification subset
+        shell: bash
+        run: |
+          set -euo pipefail
+          git archive --format=tar HEAD \
+            project.godot \
+            addons/breakpoint_mcp \
+            scripts/network/bus \
+            scripts/network/contracts \
+            scripts/network/gateway/runtime/n3_directory_route_service.gd \
+            scripts/network/gateway/runtime/n3_region_lease_directory.gd \
+            tests/network/test_n3_region_directory_contracts.gd \
+            tests/network/test_n3_directory_b0_routes.gd \
+            tests/network/test_n3_directory_runner.py \
+            tests/network/test_b0_message_bus_contracts.gd \
+            tests/network/test_b0_message_bus_integration.gd \
+            RUN_B0_MESSAGE_BUS_TESTS.ps1 \
+            RUN_NETWORK_CONTRACT_TESTS.ps1 \
+            RUN_WORLD_REGRESSION_TESTS.ps1 \
+            docs/architecture/B0_TRANSPORT_INDEPENDENT_MESSAGE_BUS_RU.md \
+            config/network/network-roadmap.v1.json \
+          | gzip -9 > artifacts/n3-r0-portable/source-subset.tar.gz
+          sha256sum artifacts/n3-r0-portable/source-subset.tar.gz \
+            > artifacts/n3-r0-portable/source-subset-sha256.txt
+
       - name: Upload scoped diagnostic receipts
         if: always()
         uses: actions/upload-artifact@v4
