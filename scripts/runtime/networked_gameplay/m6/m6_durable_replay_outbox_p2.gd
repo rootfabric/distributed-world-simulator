@@ -144,6 +144,38 @@ func to_dict() -> Dictionary:
 	return Utils.finalize_json_checksum(value)
 
 
+# R3C.4 R3.0 opt-in diagnostics only. Keep to_dict() untouched; this
+# reproduces its canonical JSON/checksum input exactly, and tests assert that
+# profiled and legacy bytes agree. No caching, mutable aliases or durable
+# generation changes are introduced by this probe.
+func to_dict_profiled() -> Dictionary:
+	if _service == null:
+		return {"value": {}, "metrics": {}}
+	var started_us: int = Time.get_ticks_usec()
+	var gameplay_replay: Dictionary = _service.export_replay_state()
+	var gameplay_done_us: int = Time.get_ticks_usec()
+	var value: Dictionary = {
+		"schema": SCHEMA,
+		"next_sequence": _next_sequence,
+		"gameplay_replay": gameplay_replay,
+		"committed_outbox": _records,
+		"checksum": "",
+	}
+	var normalized: Dictionary = Utils.finalize_json_checksum(value)
+	var finalized_us: int = Time.get_ticks_usec()
+	return {
+		"value": normalized,
+		"metrics": {
+			"gameplay_export_ms": float(gameplay_done_us - started_us) / 1000.0,
+			"checksum_detach_ms": float(finalized_us - gameplay_done_us) / 1000.0,
+			"committed_outbox_count": _records.size(),
+			"service_ledger_count": Dictionary(
+				gameplay_replay.get("service_operation_ledger", {})
+			).size(),
+		},
+	}
+
+
 func load_dict(value: Dictionary, _current_tick: int = -1) -> Dictionary:
 	if _service == null:
 		return _failure("M6_REPLAY_OUTBOX_NOT_CONFIGURED")

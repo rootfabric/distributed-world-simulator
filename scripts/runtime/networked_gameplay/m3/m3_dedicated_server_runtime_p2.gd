@@ -110,6 +110,9 @@ var _r3c4_periodic_frame_pacing_enabled := false
 # R3C.4 R2: a separate opt-in routes ONLY periodic envelope/checksum
 # construction to the existing worker, not the mutable gameplay export.
 var _r3c4r2_worker_envelope_enabled := false
+# R3C.4 R3.0: opt-in stage attribution only, never changes durable state or
+# ACK sequencing. A product optimization requires a different feature gate.
+var _r3c4r30_stage_attribution_enabled := false
 var _r3c4_deferral_started_ms := 0
 var _r3c4_deferred_frames := 0
 var _r3c4_capture_slots := 0
@@ -262,6 +265,15 @@ func setup(config: Dictionary) -> Dictionary:
 		or not _playable_sandbox
 	):
 		return _failure("R3C4_R2_REQUIRES_PERIODIC_PERSISTENT_MODE")
+	var r3c4r30_mode := OS.get_environment("DWS_NET_R3C4_R30_STAGE_ATTRIBUTION")
+	if not r3c4r30_mode.is_empty() and r3c4r30_mode not in ["0", "1"]:
+		return _failure("R3C4_R30_INVALID_MODE")
+	_r3c4r30_stage_attribution_enabled = (
+		bool(config.get("r3c4r30_stage_attribution_canary", false))
+		or r3c4r30_mode == "1"
+	)
+	if _r3c4r30_stage_attribution_enabled and not _r3c4r2_worker_envelope_enabled:
+		return _failure("R3C4_R30_REQUIRES_R2_WORKER_ENVELOPE")
 	_p1b_item_async_enabled = (
 		bool(config.get("async_durable_item_canary", false))
 		or OS.get_environment("DWS_NET_P1B_ITEM_ASYNC") == "1"
@@ -3034,7 +3046,14 @@ func _submit_async_movement_checkpoint() -> void:
 	else:
 		authority = _recovery_authority.export_recovery_state()
 	var after_authority := Time.get_ticks_usec()
-	var replay: Dictionary = _replay_outbox.to_dict()
+	var replay: Dictionary = {}
+	var replay_stage_metrics: Dictionary = {}
+	if _r3c4r30_stage_attribution_enabled:
+		var profiled_replay: Dictionary = _replay_outbox.to_dict_profiled()
+		replay = Dictionary(profiled_replay.get("value", {}))
+		replay_stage_metrics = Dictionary(profiled_replay.get("metrics", {}))
+	else:
+		replay = _replay_outbox.to_dict()
 	var after_replay := Time.get_ticks_usec()
 	if replay.is_empty() or (
 		frozen_gameplay.is_empty() if _r3c4r2_worker_envelope_enabled
@@ -3048,7 +3067,8 @@ func _submit_async_movement_checkpoint() -> void:
 		submitted = _movement_checkpoint_writer.submit_frozen_gameplay_source(
 			frozen_gameplay, replay,
 			"checkpoint/m6/dedicated/%d" % generation,
-			generation, _checkpoint_generation)
+			generation, _checkpoint_generation,
+			_r3c4r30_stage_attribution_enabled)
 	else:
 		submitted = _movement_checkpoint_writer.submit(
 			authority, replay, "checkpoint/m6/dedicated/%d" % generation,
@@ -3061,7 +3081,7 @@ func _submit_async_movement_checkpoint() -> void:
 	_async_checkpoint_capture_ms = float(Time.get_ticks_usec() - started) / 1000.0
 	if SmoothTrace.enabled():
 		var gameplay: Dictionary = replay.get("gameplay_replay", {})
-		SmoothTrace.emit("checkpoint_capture", {"generation": generation,
+		var capture_event: Dictionary = {"generation": generation,
 			"r3c4r2_worker_envelope": _r3c4r2_worker_envelope_enabled,
 			"capture_ms": _async_checkpoint_capture_ms,
 			"quiesce_ms": float(after_quiesce - started) / 1000.0,
@@ -3069,7 +3089,21 @@ func _submit_async_movement_checkpoint() -> void:
 			"replay_ms": float(after_replay - after_authority) / 1000.0,
 			"handoff_ms": float(Time.get_ticks_usec() - after_replay) / 1000.0,
 			"ledger_count": Dictionary(gameplay.get("service_operation_ledger", {})).size(),
-			"outbox_count": Array(replay.get("committed_outbox", [])).size()})
+			"outbox_count": Array(replay.get("committed_outbox", [])).size()}
+		if _r3c4r30_stage_attribution_enabled:
+			# replay_ms is to_dict(), *not* writer duplicate(true). The copy
+			# has its own measurement returned synchronously by submit().
+			capture_event["r30_replay_gameplay_ms"] = float(
+				replay_stage_metrics.get("gameplay_export_ms", -1.0))
+			capture_event["r30_replay_checksum_ms"] = float(
+				replay_stage_metrics.get("checksum_detach_ms", -1.0))
+			capture_event["r30_writer_deep_copy_ms"] = float(
+				Dictionary(submitted.get("details", {})).get("handoff_copy_ms", -1.0))
+			capture_event["r30_replay_ledger_count"] = int(
+				replay_stage_metrics.get("service_ledger_count", -1))
+			capture_event["r30_outbox_count"] = int(
+				replay_stage_metrics.get("committed_outbox_count", -1))
+		SmoothTrace.emit("checkpoint_capture", capture_event)
 	_movement_checkpoint_dirty = false
 	_movement_commands_since_checkpoint = 0
 	_last_movement_checkpoint_ms = Time.get_ticks_msec()
