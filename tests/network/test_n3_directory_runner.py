@@ -1,6 +1,7 @@
 """RED/GREEN guard for the documented N3 R0 shell execution entrypoint."""
 
 import os
+import shlex
 from pathlib import Path
 import subprocess
 import tempfile
@@ -29,6 +30,17 @@ esac
 
 
 class RunnerReceiptTests(unittest.TestCase):
+    @staticmethod
+    def bash_path(path: Path) -> str:
+        if os.name != "nt":
+            return str(path)
+        # Git Bash expects a POSIX path, even when Python starts on Windows.
+        result = subprocess.run(
+            ["bash", "-lc", "cygpath -u " + shlex.quote(str(path))],
+            text=True, capture_output=True, check=True,
+        )
+        return result.stdout.strip()
+
     def run_case(self, mode: str) -> subprocess.CompletedProcess[str]:
         with tempfile.TemporaryDirectory(prefix="n3-runner-") as temp:
             executable = Path(temp) / "fake-godot.sh"
@@ -36,7 +48,7 @@ class RunnerReceiptTests(unittest.TestCase):
             executable.chmod(0o755)
             env = dict(os.environ, N3_FAKE_CASE=mode, N3_R0_LOG_DIR=str(Path(temp) / "logs"))
             return subprocess.run(
-                ["bash", str(RUNNER), str(executable)],
+                ["bash", self.bash_path(RUNNER), self.bash_path(executable)],
                 cwd=ROOT, env=env, encoding="utf-8", text=True, capture_output=True,
                 timeout=30, check=False,
             )
