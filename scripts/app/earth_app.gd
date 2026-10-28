@@ -122,7 +122,11 @@ func _ready() -> void:
 		runtime_role == "game-client"
 		and OS.get_environment("DWS_NET_R3C3_STAGED_EARTH") == "1"
 	)
-	if not earth_world.setup(logger, staged_client_earth):
+	var frame_paced_visuals := (
+		staged_client_earth
+		and OS.get_environment("DWS_NET_R3C21_FRAME_PACED_PRESENTATION") == "1"
+	)
+	if not earth_world.setup(logger, staged_client_earth, frame_paced_visuals):
 		push_error("Earth runtime failed to initialize procedural terrain.")
 		return
 

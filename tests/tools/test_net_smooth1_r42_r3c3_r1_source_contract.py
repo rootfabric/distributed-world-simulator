@@ -52,7 +52,12 @@ class R3C3R1SourceContract(unittest.TestCase):
     def test_client_only_optin_does_not_change_other_roles(self):
         self.assertIn('runtime_role == "game-client"', APP)
         self.assertIn('DWS_NET_R3C3_STAGED_EARTH', APP)
-        self.assertIn("earth_world.setup(logger, staged_client_earth)", APP)
+        # The stacked R2.1 product passes an independent client-only boolean.
+        # Do NOT permit server/offline roles or a silently enabled R2.1.
+        self.assertIn('earth_world.setup(logger, staged_client_earth, frame_paced_visuals)', APP)
+        self.assertIn('DWS_NET_R3C21_FRAME_PACED_PRESENTATION', APP)
+        self.assertIn('staged_client_earth\n\t\tand OS.get_environment(', APP)
+        self.assertIn('r3c21_frame_paced_presentation: bool = false', WORLD)
         self.assertIn("var _r3c3_staged_geometry_enabled := false", WORLD)
         self.assertIn('if _r3c3_staged_geometry_enabled:', method(WORLD,"prepare_surface_region"))
         self.assertIn('--r3c3-staged-earth', HARNESS)
