@@ -200,6 +200,19 @@ func restore_durable_state(value: Dictionary) -> Dictionary:
 	# instead of failing forever with USER1_SECONDARY_FIXED_TICK_FAILED.
 	if _secondary == null:
 		return restored
+	# The base recovery swaps canonical registry and ownership objects with
+	# freshly validated durable instances. The trusted transfer port was
+	# bound during setup to the PRE-restore objects: without refreshing it,
+	# an A->B handoff after restart fails LIVE_PLAYER_SOURCE_NOT_FROZEN.
+	# Rebind the existing port in place so the secondary's trusted peer
+	# reference stays valid and no duplicate authority/port is created.
+	if _primary_port == null or _primary_port != get_live_player_transfer_port():
+		return _failure("USER1_PRIMARY_RECOVERY_PORT_NOT_READY")
+	var rebind: Dictionary = _primary_port.rebind_durable_recovery_views(
+		_players, _ownership
+	)
+	if not bool(rebind.get("success", false)):
+		return _failure("USER1_PRIMARY_RECOVERY_PORT_REBIND_FAILED", {"cause": rebind})
 	var resync: Dictionary = _secondary.resync_fixed_tick(
 		int(restored.get("details", {}).get("server_tick", _tick))
 	)
