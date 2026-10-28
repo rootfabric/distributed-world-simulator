@@ -107,6 +107,9 @@ var _r3c2_deferred_diagnostic_reports := 0
 # 20Hz movement snapshot burst. Frame pacing only; the single-writer M6
 # pipeline, generation semantics and durable-before-ACK barrier are unchanged.
 var _r3c4_periodic_frame_pacing_enabled := false
+# R3C.4 R2: a separate opt-in routes ONLY periodic envelope/checksum
+# construction to the existing worker, not the mutable gameplay export.
+var _r3c4r2_worker_envelope_enabled := false
 var _r3c4_deferral_started_ms := 0
 var _r3c4_deferred_frames := 0
 var _r3c4_capture_slots := 0
@@ -246,6 +249,19 @@ func setup(config: Dictionary) -> Dictionary:
 		bool(config.get("r3c4_periodic_frame_pacing_canary", false))
 		or r3c4_mode == "1"
 	)
+	var r3c4r2_mode := OS.get_environment("DWS_NET_R3C4_R2_WORKER_ENVELOPE")
+	if not r3c4r2_mode.is_empty() and r3c4r2_mode != "0" and r3c4r2_mode != "1":
+		return _failure("R3C4_R2_INVALID_MODE")
+	_r3c4r2_worker_envelope_enabled = (
+		bool(config.get("r3c4r2_worker_envelope_canary", false))
+		or r3c4r2_mode == "1"
+	)
+	if _r3c4r2_worker_envelope_enabled and (
+		not _r3c4_periodic_frame_pacing_enabled
+		or not _persistence_enabled
+		or not _playable_sandbox
+	):
+		return _failure("R3C4_R2_REQUIRES_PERIODIC_PERSISTENT_MODE")
 	_p1b_item_async_enabled = (
 		bool(config.get("async_durable_item_canary", false))
 		or OS.get_environment("DWS_NET_P1B_ITEM_ASYNC") == "1"
@@ -2790,6 +2806,7 @@ func _persistence_report() -> Dictionary:
 		"r3b_async_disconnect_commits": _r3b_async_disconnect_commits,
 		"r3c_async_admission_enabled": _r3c_async_admission_enabled,
 		"r3c4_periodic_frame_pacing_enabled": _r3c4_periodic_frame_pacing_enabled,
+		"r3c4r2_worker_envelope_enabled": _r3c4r2_worker_envelope_enabled,
 		"r3c4_deferred_frames": _r3c4_deferred_frames,
 		"r3c4_capture_slots": _r3c4_capture_slots,
 		"r3c4_forced_captures": _r3c4_forced_captures,
@@ -3008,17 +3025,34 @@ func _submit_async_movement_checkpoint() -> void:
 	# Both exports are captured on the authoritative thread at one quiescent
 	# boundary. Workers may only consume detached value data, never live owners.
 	var after_quiesce := Time.get_ticks_usec()
-	var authority: Dictionary = _recovery_authority.export_recovery_state()
+	var authority: Dictionary = {}
+	var frozen_gameplay: Dictionary = {}
+	if _r3c4r2_worker_envelope_enabled:
+		# Exactly one immutable value projection from the quiescent server
+		# state; the checksum-heavy EntitySnapshot envelope is made on worker.
+		frozen_gameplay = _recovery_authority.capture_frozen_gameplay_source_for_worker()
+	else:
+		authority = _recovery_authority.export_recovery_state()
 	var after_authority := Time.get_ticks_usec()
 	var replay: Dictionary = _replay_outbox.to_dict()
 	var after_replay := Time.get_ticks_usec()
-	if authority.is_empty() or replay.is_empty():
+	if replay.is_empty() or (
+		frozen_gameplay.is_empty() if _r3c4r2_worker_envelope_enabled
+		else authority.is_empty()
+	):
 		_enter_persistence_failure("M7_ASYNC_CHECKPOINT_CAPTURE_EMPTY")
 		return
 	var generation := _checkpoint_generation + 1
-	var submitted: Dictionary = _movement_checkpoint_writer.submit(
-		authority, replay, "checkpoint/m6/dedicated/%d" % generation,
-		generation, _checkpoint_generation)
+	var submitted: Dictionary = {}
+	if _r3c4r2_worker_envelope_enabled:
+		submitted = _movement_checkpoint_writer.submit_frozen_gameplay_source(
+			frozen_gameplay, replay,
+			"checkpoint/m6/dedicated/%d" % generation,
+			generation, _checkpoint_generation)
+	else:
+		submitted = _movement_checkpoint_writer.submit(
+			authority, replay, "checkpoint/m6/dedicated/%d" % generation,
+			generation, _checkpoint_generation)
 	if not bool(submitted.get("success", false)):
 		_last_persistence_error_details = submitted
 		_enter_persistence_failure(String(submitted.get("error_code", "M7_ASYNC_CHECKPOINT_SUBMIT_FAILED")))
@@ -3028,6 +3062,7 @@ func _submit_async_movement_checkpoint() -> void:
 	if SmoothTrace.enabled():
 		var gameplay: Dictionary = replay.get("gameplay_replay", {})
 		SmoothTrace.emit("checkpoint_capture", {"generation": generation,
+			"r3c4r2_worker_envelope": _r3c4r2_worker_envelope_enabled,
 			"capture_ms": _async_checkpoint_capture_ms,
 			"quiesce_ms": float(after_quiesce - started) / 1000.0,
 			"authority_ms": float(after_authority - after_quiesce) / 1000.0,
