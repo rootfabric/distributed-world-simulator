@@ -1,0 +1,99 @@
+name: engine48-windows-r1-verify
+
+# ENGINE48 R1 Windows gate: verifies the locally-built Godot 4.8 beta1 double
+# binary against the exact migration HEAD. This workflow is ENGINE48-specific
+# and does NOT modify the canonical 4.7.1 product workflows.
+
+on:
+  workflow_dispatch:
+    inputs:
+      godot48_console_sha256:
+        description: "SHA256 of godot.windows.editor.double.x86_64.console.exe (4.8 beta1 double build)"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  engine48-windows:
+    runs-on: [self-hosted, windows]
+    timeout-minutes: 90
+    env:
+      GODOT_SILENCE_ROOT_WARNING: "1"
+      DWS_ENGINE48_GODOT_SHA256: ${{ inputs.godot48_console_sha256 }}
+    steps:
+      - name: Checkout exact migration HEAD
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+
+      - name: Preflight identity
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          New-Item -ItemType Directory -Force artifacts\engine48 | Out-Null
+          $head=(git rev-parse HEAD).Trim()
+          if ($head -ne 'a936412cc3d597a88fa789fc73c6ac7dcfd7a4e9') { throw "ENGINE48_HEAD_MISMATCH:$head" }
+          if (git status --porcelain --untracked-files=no) { throw 'TRACKED_DIRTY' }
+          [ordered]@{
+            head=$head
+            tree=(git rev-parse 'HEAD^{tree}').Trim()
+            engine48_console_sha256="${{ inputs.godot48_console_sha256 }}"
+            expected_version='4.8.beta1.double.custom_build.4d10419ca'
+          } | ConvertTo-Json | Set-Content artifacts\engine48\preflight.json -Encoding UTF8
+
+      - name: Cold import with Godot 4.8
+        shell: pwsh
+        timeout-minutes: 15
+        run: |
+          $ErrorActionPreference='Stop'
+          $g=$env:ENGINE48_GODOT_CONSOLE
+          if (-not $g -or -not (Test-Path $g)) { throw 'ENGINE48_GODOT_CONSOLE env var with the 4.8 console exe path is required on the runner' }
+          $ver=& $g --version
+          if ($ver -ne '4.8.beta1.double.custom_build.4d10419ca') { throw "GODOT_VERSION_MISMATCH:$ver" }
+          "ENGINE48_GODOT_CONSOLE=$g" | Out-File $env:GITHUB_ENV -Append -Encoding utf8
+          if (Test-Path .godot) { Remove-Item .godot -Recurse -Force }
+          & $g --headless --path . --editor --import --quit *> artifacts\engine48\cold-import.log
+          if (-not (Test-Path .godot\global_script_class_cache.cfg)) { throw 'CLASS_CACHE_MISSING' }
+          if ((Get-Item .godot\global_script_class_cache.cfg).Length -le 0) { throw 'CLASS_CACHE_EMPTY' }
+
+      - name: Headless regression matrix (LIVE2/NX2/USER1/seam/M6)
+        shell: pwsh
+        timeout-minutes: 40
+        run: |
+          $ErrorActionPreference='Stop'
+          $g=$env:ENGINE48_GODOT_CONSOLE
+          $tests = @(
+            'tests/network/test_v0_live2_enet_rollover.gd',
+            'tests/runtime/test_v0_live2_human_gameplay_bridge.gd',
+            'tests/network/test_nx2_physical_channel_processes.gd',
+            'tests/runtime/test_v0_user1_first_usable_slice.gd',
+            'tests/runtime/test_v0_user1_product_seam_bridge.gd',
+            'tests/runtime/test_v0_p4_live_two_client_reconnect_convergence.gd',
+            'tests/runtime/test_m6_dedicated_recovery_processes.gd',
+            'tests/runtime/test_v0_ux0_product_shell.gd'
+          )
+          $results=@()
+          foreach ($t in $tests) {
+            & $g --headless --path . --script "res://$t" *> "artifacts\engine48\$(Split-Path -Leaf $t).log"
+            if ($LASTEXITCODE -ne 0) { throw "ENGINE48_TEST_FAILED:$t" }
+            $results += $t
+          }
+          $results | ConvertTo-Json | Set-Content artifacts\engine48\headless-matrix.json -Encoding UTF8
+
+      - name: MVP5 graphical material regression (ENGINE48 pin)
+        shell: pwsh
+        timeout-minutes: 25
+        run: |
+          $ErrorActionPreference='Stop'
+          python tests/integration/test_v0_mvp_5_graphical_material.py --engine $env:ENGINE48_GODOT_CONSOLE --output artifacts\engine48\mvp5 *> artifacts\engine48\mvp5.log
+          if ($LASTEXITCODE -ne 0) { Get-Content artifacts\engine48\mvp5.log -Tail 100; throw 'MVP5_FAILED' }
+
+      - name: M7 playable networked playground tests
+        shell: pwsh
+        timeout-minutes: 30
+        run: |
+          $ErrorActionPreference='Stop'
+          .\RUN_M7_PLAYABLE_NETWORKED_PLAYGROUND_TESTS.ps1 -GodotPath $env:ENGINE48_GODOT_CONSOLE *> artifacts\engine48\m7-tests.log
+          if ($LASTEXITCODE -ne 0) { Get-Content artifacts\engine48\m7-tests.log -Tail 100; throw 'M7_FAILED' }
