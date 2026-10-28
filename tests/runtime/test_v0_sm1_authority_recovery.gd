@@ -291,13 +291,13 @@ func _spawn(executable: String, args: Array, user_root: String, display: String,
 
 
 func _start_xvfb() -> String:
-	if not FileAccess.file_exists("/usr/bin/Xvfb"):
+	if not FileAccess.file_exists((OS.get_environment("XVFB_BIN") if OS.get_environment("XVFB_BIN") != "" else "/usr/bin/Xvfb")):
 		failures.append("Xvfb is required for SM1.7 Authority recovery graphical process acceptance")
 		return ""
 	var base := 1140 + (OS.get_process_id() % 80)
 	for offset in range(20):
 		var display := ":%d" % (base + offset)
-		xvfb_pid = OS.create_process("/usr/bin/Xvfb", [display, "-screen", "0", "1280x720x24", "-nolisten", "tcp", "-noreset"], false)
+		xvfb_pid = OS.create_process((OS.get_environment("XVFB_BIN") if OS.get_environment("XVFB_BIN") != "" else "/usr/bin/Xvfb"), [display, "-screen", "0", "1280x720x24", "-nolisten", "tcp", "-noreset"], false)
 		if xvfb_pid <= 0:
 			continue
 		OS.delay_msec(400)

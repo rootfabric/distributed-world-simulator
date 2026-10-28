@@ -106,11 +106,11 @@ func _spawn(executable: String, args: Array[String], user_root: String, display_
 	return pid
 
 func _start_virtual_display(root: String) -> String:
-	if not FileAccess.file_exists("/usr/bin/Xvfb"): failures.append("Xvfb required"); return ""
+	if not FileAccess.file_exists((OS.get_environment("XVFB_BIN") if OS.get_environment("XVFB_BIN") != "" else "/usr/bin/Xvfb")): failures.append("Xvfb required"); return ""
 	var base := 300 + (OS.get_process_id() % 400)
 	for offset in range(20):
 		var display_name := ":%d" % (base + offset)
-		xvfb_pid = OS.create_process("/usr/bin/Xvfb", [display_name, "-screen", "0", "1280x720x24", "-nolisten", "tcp", "-noreset"], false)
+		xvfb_pid = OS.create_process((OS.get_environment("XVFB_BIN") if OS.get_environment("XVFB_BIN") != "" else "/usr/bin/Xvfb"), [display_name, "-screen", "0", "1280x720x24", "-nolisten", "tcp", "-noreset"], false)
 		if xvfb_pid <= 0: continue
 		OS.delay_msec(500)
 		if OS.is_process_running(xvfb_pid): child_pids.append(xvfb_pid); return display_name
