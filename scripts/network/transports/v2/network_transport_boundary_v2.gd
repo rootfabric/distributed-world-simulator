@@ -33,6 +33,7 @@ var _r31p23r2_attribution_enabled := false
 # R31 P2.3 R2.1: propagates guarded current-frame COMPACT single-pass
 # to the condition simulator and underlying ENet delegate.
 var _r31p23r21_single_pass_compact_enabled := false
+var _r31p23r22_attested_compact_enabled := false
 
 func configure_r31p23r21_single_pass_compact(enabled: bool) -> Dictionary:
 	if _port == null or not _port.has_method("configure_r31p23r21_single_pass_compact"):
@@ -41,6 +42,22 @@ func configure_r31p23r21_single_pass_compact(enabled: bool) -> Dictionary:
 	if not bool(r.get("success", false)):
 		return r
 	_r31p23r21_single_pass_compact_enabled = enabled
+	return TransportUtilsScript.success({"enabled": enabled})
+
+
+func configure_r31p23r22_attested_compact(
+	enabled: bool, authority_owner: String, authority_epoch: int
+) -> Dictionary:
+	if enabled and not _r31p23r21_single_pass_compact_enabled:
+		return TransportUtilsScript.failure("R31P23R22_REQUIRES_R21")
+	if _port == null or not _port.has_method("configure_r31p23r22_attested_compact"):
+		return TransportUtilsScript.failure("R31P23R22_SIMULATOR_PORT_REQUIRED")
+	var result: Dictionary = _port.configure_r31p23r22_attested_compact(
+		enabled, authority_owner, authority_epoch
+	)
+	if not bool(result.get("success", false)):
+		return result
+	_r31p23r22_attested_compact_enabled = enabled
 	return TransportUtilsScript.success({"enabled": enabled})
 
 
