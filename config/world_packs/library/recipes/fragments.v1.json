@@ -1,0 +1,100 @@
+{
+  "schema": "dws.world_packs.recipe_fragments.v1",
+  "version": "1.0.0",
+  "status": "ACTIVE",
+  "presentation_only": true,
+  "description": "Composable recipe fragments referencing WP-SURFACE1 surface family shards. Fragments and recipes are presentation-only: they bind existing canonical Matter ids to surface descriptors for visualization and never mutate Matter, strata depth or physical materials.",
+  "fragments": [
+    {
+      "id": "fragment/regolith-mantle",
+      "version": "1.0.0",
+      "includes": [],
+      "bindings": [
+        {
+          "matter_id": "matter/regolith-loose",
+          "surface": "surface/regolith@1.0.0"
+        },
+        {
+          "matter_id": "matter/regolith-compacted",
+          "surface": "surface/regolith@1.0.0"
+        }
+      ],
+      "environments": []
+    },
+    {
+      "id": "fragment/basalt-bedrock",
+      "version": "1.0.0",
+      "includes": [],
+      "bindings": [
+        {
+          "matter_id": "matter/basalt",
+          "surface": "surface/basalt@1.0.0"
+        },
+        {
+          "matter_id": "matter/fractured-basalt",
+          "surface": "surface/basalt@1.0.0"
+        }
+      ],
+      "environments": []
+    },
+    {
+      "id": "fragment/ice-cement",
+      "version": "1.0.0",
+      "includes": [],
+      "bindings": [
+        {
+          "matter_id": "matter/water-ice",
+          "surface": "surface/ice@1.0.0"
+        }
+      ],
+      "environments": []
+    },
+    {
+      "id": "fragment/icy-mantle",
+      "version": "1.0.0",
+      "includes": [
+        "fragment/regolith-mantle@1.0.0",
+        "fragment/ice-cement@1.0.0"
+      ],
+      "bindings": [],
+      "environments": []
+    },
+    {
+      "id": "fragment/vacuum-exposure",
+      "version": "1.0.0",
+      "includes": [],
+      "bindings": [],
+      "environments": [
+        "environment/airless-shard@1.0.0"
+      ]
+    }
+  ],
+  "recipes": [
+    {
+      "id": "recipe/airless-rocky-body",
+      "version": "1.0.0",
+      "includes": [
+        "fragment/regolith-mantle@1.0.0",
+        "fragment/basalt-bedrock@1.0.0",
+        "fragment/vacuum-exposure@1.0.0"
+      ],
+      "tags": [
+        "composition-fixture",
+        "airless"
+      ]
+    },
+    {
+      "id": "recipe/icy-regolith-body",
+      "version": "1.0.0",
+      "includes": [
+        "fragment/icy-mantle@1.0.0",
+        "fragment/basalt-bedrock@1.0.0",
+        "fragment/vacuum-exposure@1.0.0"
+      ],
+      "tags": [
+        "composition-fixture",
+        "icy"
+      ]
+    }
+  ]
+}

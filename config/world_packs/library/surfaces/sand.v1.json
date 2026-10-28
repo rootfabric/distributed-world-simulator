@@ -1,0 +1,40 @@
+{
+  "schema": "dws.world_packs.surface_descriptor.v1",
+  "id": "surface/sand",
+  "version": "1.0.0",
+  "family": "surface-family/sand",
+  "presentation_only": true,
+  "binding_source": "config/world_packs/library/surfaces/matter_binding_rules.v1.json",
+  "binding_status": "PENDING_CANONICAL_MATTER",
+  "canonical_material_ids": [],
+  "pending_reason": "No canonical matter/sand id exists in matter_material_catalog; binding loose regolith or silicate waste as sand is an ambiguous physical binding and is forbidden by matter_binding_rules.",
+  "physical_anchor_summary": "Loose well-sorted sand-sized granular surfaces; presentation descriptor exists, physical binding awaits canonical Matter.",
+  "variants": [
+    {
+      "id": "diagnostic",
+      "tier": "casual",
+      "evidence_class": "diagnostic_fixture",
+      "assets": [
+        "asset/dws/diagnostic-swatch@1.0.0"
+      ],
+      "states": [
+        "default",
+        "fresh",
+        "wind_worked"
+      ],
+      "exposure": "exposed",
+      "fidelity": "casual",
+      "coordinate_space": "body_fixed",
+      "mapping": "triplanar",
+      "scale_bands": [
+        "local"
+      ],
+      "requires": []
+    }
+  ],
+  "tags": [
+    "family-shard",
+    "contract-fixture",
+    "pending-matter"
+  ]
+}

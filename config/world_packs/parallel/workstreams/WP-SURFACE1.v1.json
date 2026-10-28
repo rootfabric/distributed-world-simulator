@@ -1,0 +1,68 @@
+{
+  "schema": "dws.world_packs.parallel_workstream_state.v1",
+  "controller_id": "WORLD_PACKS_PARALLEL_R1",
+  "track_id": "WP-SURFACE1",
+  "branch": "work/world-packs-surface1-families-r1",
+  "controller_base_sha": "62602949e7912c9991a9220e0d560b511dc865ea",
+  "status": "READY_FOR_INTEGRATION",
+  "completed_milestones": [
+    "FAMILY_TAXONOMY",
+    "MATTER_BINDING_RULES",
+    "REGOLITH_BASALT_SAND_ICE_FAMILIES",
+    "FIDELITY_AND_EXPOSURE_STATES",
+    "RECIPE_FRAGMENT_COMPOSITION",
+    "CONFLICT_AND_ORDER_INDEPENDENCE_TESTS",
+    "EVIDENCE_READY"
+  ],
+  "blockers": [],
+  "next_action": "Independent reviewer re-review of PR #557 at the exact tested_head recorded in machine fields (see tested_head below); prose SHAs are never identity.",
+  "review_verdict": "PASS",
+  "reviewed_head": "b37ae1fbc6705a7a4461b0f925f2f1fa59859d16",
+  "reviewed_tested_head": "953e439c17d192b8e0800c1ab791cf31d9883008",
+  "reviewer_evidence": [
+    "Initial R2 review @ 2ab92799: FAIL (D1/D3/D4). Repair: 953e439c (D3) + b37ae1fb (D1/D4 state/evidence). Independent re-review @ b37ae1fb: VERDICT PASS — all PASS validation entries at exactly tested_head 953e439c; only state/evidence after tested_head; compose() fail-closed verified (43 passed); evidence doc consistent; reviewer independently confirmed Linux full regression 112/112 at 953e439c. Windows library_contract single symlink failure remains recorded as environmental (WinError 1314)."
+  ],
+  "last_checkpoint_head": "953e439c17d192b8e0800c1ab791cf31d9883008",
+  "tested_head": "953e439c17d192b8e0800c1ab791cf31d9883008",
+  "validation": [
+    {
+      "name": "surface_library_focused",
+      "command": "python -m pytest tests/world_packs/surface_library -q",
+      "result": "PASS",
+      "head": "953e439c17d192b8e0800c1ab791cf31d9883008"
+    },
+    {
+      "name": "wp1_0_library_contract_regression_windows",
+      "command": "python -m pytest tests/world_packs/test_library_contract.py",
+      "result": "FAIL",
+      "head": "953e439c17d192b8e0800c1ab791cf31d9883008"
+    },
+    {
+      "name": "wp1_0_library_contract_regression_linux_symlink_capable",
+      "command": "python3 -m pytest tests/world_packs/test_library_contract.py (Ubuntu WSL, ext4 clone)",
+      "result": "PASS",
+      "head": "953e439c17d192b8e0800c1ab791cf31d9883008"
+    },
+    {
+      "name": "parallel_controller_regression",
+      "command": "python -m pytest tests/world_packs/test_parallel_controller.py",
+      "result": "PASS",
+      "head": "953e439c17d192b8e0800c1ab791cf31d9883008"
+    },
+    {
+      "name": "full_world_packs_regression_linux",
+      "command": "python3 -m pytest tests/world_packs -q (Ubuntu WSL, ext4 clone)",
+      "result": "PASS",
+      "head": "953e439c17d192b8e0800c1ab791cf31d9883008"
+    }
+  ],
+  "updated_at_utc": "2026-09-06T12:00:00Z",
+  "notes": [
+    "All 7 declared milestones complete; evidence in docs/world_packs/evidence/WP-SURFACE1_EVIDENCE_READY_2026-09-05.md.",
+    "matter/sand does not exist in canonical matter catalog; surface/sand is PENDING_CANONICAL_MATTER with zero bindings; recipes reject pending surfaces by design.",
+    "R2 review repair of D1/D3/D4: (D1) all validation PASS entries now sit at exactly tested_head 953e439c — the earlier mismatch (tested_head 0adbf2aa vs validation heads d3fa268e) was the reviewed blind spot and is cleared by genuinely re-running the suites at the new implementation head; (D3) compose() now rejects unknown Matter ids fail-closed and the misnamed fail-open test was rewritten; (D4) evidence doc validation section regenerated to cite 953e439c. D2 (controller verify not enforcing exact-head PASS) is fixed by the controller repair branch repair/world-packs-parallel-controller-r2, not on this worker branch.",
+    "wp1_0_library_contract_regression_windows FAIL is the pre-existing Windows environment limitation: os.symlink requires SeCreateSymbolicLinkPrivilege (WinError 1314); 63/64 subtests pass. The same suite passes 64/64 on Ubuntu WSL (symlink-capable) at the same head, and the full world_packs suite passes 112/112 there.",
+    "Earlier revalidate commit 2ab92799 rewrote validation heads without recording real runs at that head; it is superseded by this state, which records runs executed at 953e439c on 2026-09-06."
+  ]
+}
+
