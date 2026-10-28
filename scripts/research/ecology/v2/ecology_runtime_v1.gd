@@ -419,7 +419,8 @@ static func begin_staged_global_tick(state: Dictionary, options: Dictionary,
 static func resume_staged_global_tick(state: Dictionary, options: Dictionary,
 		cursor: Dictionary, max_worksets_per_call: int = 1,
 		max_allocator_items_per_call: int = 16,
-		allocator_cap_bytes: int = 8388608) -> Dictionary:
+		allocator_cap_bytes: int = 8388608,
+		r2c_parallel_workers: int = 1) -> Dictionary:
 	# Strictly check the same authoritative frontier before ANY staged work,
 	# including a no-op and a final publish. Never accept a moved source.
 	var error := validate(state)
@@ -443,7 +444,8 @@ static func resume_staged_global_tick(state: Dictionary, options: Dictionary,
 		return _fail("RUNTIME_STAGED_OPTIONS_CHANGED")
 	var progressed := Lifecycle.staged_resume(
 		cursor.lifecycle, state.field, state.population, max_worksets_per_call,
-		max_allocator_items_per_call, allocator_cap_bytes)
+		max_allocator_items_per_call, allocator_cap_bytes,
+		r2c_parallel_workers)
 	if not bool(progressed.get("success", false)):
 		return _fail("RUNTIME_STAGED_A5:" + String(progressed.get("error", "?")))
 	if not bool(progressed.complete):
@@ -451,7 +453,9 @@ static func resume_staged_global_tick(state: Dictionary, options: Dictionary,
 			"phase": String(progressed.phase),
 			"cursor": _staged_tick_cursor(
 				String(cursor.source_hash), String(cursor.options_hash),
-				progressed.cursor)}
+				progressed.cursor),
+			"r2c_peak_workers": int(progressed.get("r2c_peak_workers", 0)),
+			"r2c_threaded_worksets": int(progressed.get("r2c_threaded_worksets", 0))}
 	# The ONLY publication point. Build exactly the intermediate state that
 	# step_lifecycle_spatial_scheduled() would have sealed.
 	var next := state.duplicate(true)
@@ -473,7 +477,9 @@ static func resume_staged_global_tick(state: Dictionary, options: Dictionary,
 	if not bool(finished.get("success", false)):
 		return _fail("RUNTIME_STAGED_FEEDBACK:" + String(finished.get("error", "?")))
 	return {"success": true, "complete": true, "phase": "COMPLETE",
-		"state": finished.state, "canonical_tick": int(finished.state.tick)}
+		"state": finished.state, "canonical_tick": int(finished.state.tick),
+		"r2c_peak_workers": int(progressed.get("r2c_peak_workers", 0)),
+		"r2c_threaded_worksets": int(progressed.get("r2c_threaded_worksets", 0))}
 
 static func Runtime_state_hash_for_staging(state: Dictionary) -> String:
 	return state_hash(state)
