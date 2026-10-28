@@ -16,8 +16,13 @@ $Godot = (Resolve-Path $GodotPath).Path
 $ExpectedSha256 = 'f53f90f686a4eb05df076692c1b67a9e3d12d7c6c981cf86f1015d1ec36a2636'
 $sha = (Get-FileHash -LiteralPath $Godot -Algorithm SHA256).Hash.ToLowerInvariant()
 if ($sha -ne $ExpectedSha256) { throw "ENGINE48_SHA_MISMATCH:$sha" }
-$ver = (& $Godot --version | Select-Object -First 1).Trim()
-if ($LASTEXITCODE -ne 0 -or $ver -ne $ExpectedVersion) { throw "ENGINE48_VERSION_MISMATCH:$ver" }
+# Native commands piped into Select-Object do not set $LASTEXITCODE (stays $null
+# in pwsh7 / -1 in PS5.1), which previously forced a false ENGINE48_VERSION_MISMATCH.
+# Invoke --version without a pipeline so its exit code is authoritative.
+$versionOutput = & $Godot --version 2>&1
+$versionExit = $LASTEXITCODE
+$ver = ([string]($versionOutput | Select-Object -First 1)).Trim()
+if ($versionExit -ne 0 -or $ver -ne $ExpectedVersion) { throw "ENGINE48_VERSION_MISMATCH:$ver(exit=$versionExit)" }
 if ((git -C $Root status --porcelain --untracked-files=no)) { throw 'TRACKED_DIRTY' }
 
 [ordered]@{

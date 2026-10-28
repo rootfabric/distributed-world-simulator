@@ -111,8 +111,14 @@ jobs:
           $g=($matches | Sort-Object | Select-Object -First 1)
           $actualHash=(Get-FileHash -LiteralPath $g -Algorithm SHA256).Hash.ToLowerInvariant()
           if ($actualHash -ne $env:DWS_ENGINE48_GODOT_SHA256) { throw "ENGINE48_BINARY_SHA_MISMATCH:$actualHash" }
-          $ver=(& $g --version | Select-Object -First 1).Trim()
-          if ($LASTEXITCODE -ne 0 -or $ver -ne $env:ENGINE48_EXPECTED_VERSION) { throw "ENGINE48_VERSION_MISMATCH:$ver" }
+          # A native command piped into Select-Object does not reliably set
+          # $LASTEXITCODE (observed unset on the self-hosted pwsh), which forced
+          # a false ENGINE48_VERSION_MISMATCH with a matching version string.
+          # Invoke --version without a pipeline so its exit code is authoritative.
+          $versionOutput = & $g --version 2>&1
+          $versionExit = $LASTEXITCODE
+          $ver = ([string]($versionOutput | Select-Object -First 1)).Trim()
+          if ($versionExit -ne 0 -or $ver -ne $env:ENGINE48_EXPECTED_VERSION) { throw "ENGINE48_VERSION_MISMATCH:$ver(exit=$versionExit)" }
           "ENGINE48_GODOT_CONSOLE=$g" | Out-File $env:GITHUB_ENV -Append -Encoding utf8
           Write-Host "ENGINE48_PINNED_EDITOR_FOUND=$g"
           [ordered]@{ engine=$g; sha256=$actualHash; version=$ver; candidate_count=$candidates.Count; match_count=$matches.Count } | ConvertTo-Json | Set-Content artifacts\engine48\verified-binary.json -Encoding UTF8
