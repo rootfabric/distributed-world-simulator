@@ -91,6 +91,9 @@ var _p1b_committed_rejections := 0
 const P1B_MAX_DEFERRED_ITEM_RESYNCS := 32
 var _p1b_item_resync_waiters: Dictionary = {}
 var _p1b_item_commits := 0
+# R3B: only the DISCONNECT legacy command uses this new asynchronous
+# single-writer path; other legacy command contracts are not broadened.
+var _r3b_async_disconnect_commits := 0
 # Count ONLY unsafe full/ITEM snapshots blocked during a pending mutation.
 # Movement committed-view frames are permitted and are never counted as holds.
 var _p1b_item_precommit_snapshot_holds := 0
@@ -212,6 +215,7 @@ func setup(config: Dictionary) -> Dictionary:
 	_p1b_committed_rejections = 0
 	_p1b_item_resync_waiters.clear()
 	_p1b_item_commits = 0
+	_r3b_async_disconnect_commits = 0
 	_p1b_item_precommit_snapshot_holds = 0
 	_p1b_item_graph_snapshot_holds = 0
 	_debug_logging = bool(config.get("debug_logging", false))
@@ -963,6 +967,7 @@ func _maybe_publish_movement_snapshot() -> void:
 		SmoothTrace.emit("movement_snapshot_stages", {
 			"tick": _server_tick, "peers": target_count,
 			"committed_view": pending_view,
+			"pending_kind": String(_p1b_item_pending.get("kind", "ITEM")) if pending_view else "",
 			"committed_enqueues": _p1b_committed_enqueues - committed_enqueues_before,
 			"all_enqueued": all_enqueued,
 			"capture_ms": float(snapshot_captured_us - snapshot_started_us) / 1000.0,
@@ -1278,7 +1283,8 @@ func _p1b_begin_item_async_commit(
 	operation_id: String, command_type: String, logical_id: String,
 	result: Dictionary, peer_id: String, session_id: String, ownership_epoch: int,
 	before_item_snapshot: Dictionary,
-	before_gameplay_snapshot: Dictionary
+	before_gameplay_snapshot: Dictionary,
+	commit_kind: String = "ITEM"
 ) -> bool:
 	if not _p1b_item_pending.is_empty() or _p1b_item_async_owner == null:
 		_enter_persistence_failure("P1B_ITEM_SINGLE_INFLIGHT_REQUIRED")
@@ -1288,6 +1294,9 @@ func _p1b_begin_item_async_commit(
 		return false
 	if before_gameplay_snapshot.is_empty():
 		_enter_persistence_failure("P1B_PREITEM_VIEW_REQUIRED")
+		return false
+	if commit_kind not in ["ITEM", "DISCONNECT"]:
+		_enter_persistence_failure("R3B_DURABLE_COMMIT_KIND_UNSUPPORTED")
 		return false
 	_p1b_committed_view = before_gameplay_snapshot  # already detached DTO
 	var capture_start_us := Time.get_ticks_usec()
@@ -1335,6 +1344,7 @@ func _p1b_begin_item_async_commit(
 	# thread can still accept movement inputs, but cannot publish the
 	# speculative ITEM/inventory state through any full/compact resync.
 	_p1b_item_pending = {
+		"kind": commit_kind,
 		"operation_id": operation_id,
 		"command_type": command_type,
 		"logical_id": logical_id,
@@ -1368,6 +1378,7 @@ func _p1b_begin_item_async_commit(
 		SmoothTrace.emit("p1b_item_capture_breakdown", _p1b_item_capture_stages)
 		SmoothTrace.emit("p1b_item_async_stages", {
 			"stage": "SUBMIT",
+			"kind": commit_kind,
 			"operation_hash": operation_id.sha256_text().left(16),
 			"generation": int(submitted.get("details", {}).get("generation", -1)),
 			"capture_ms": _p1b_item_last_capture_ms,
@@ -1430,7 +1441,10 @@ func _p1b_finish_item_committed(accepted: Dictionary, publish: bool) -> void:
 	_checkpoint_generation = generation
 	_last_checkpoint_operation_id = String(pending.get("operation_id", ""))
 	_durable_commits += 1
-	_p1b_item_commits += 1
+	if String(pending.get("kind", "ITEM")) == "DISCONNECT":
+		_r3b_async_disconnect_commits += 1
+	else:
+		_p1b_item_commits += 1
 	_p1b_item_last_worker_ms = float(accepted.get("details", {}).get("worker_ms", 0.0))
 	_p1b_item_last_build_ms = float(accepted.get("details", {}).get("build_ms", 0.0))
 	_p1b_item_last_write_ms = float(accepted.get("details", {}).get("write_ms", 0.0))
@@ -1448,6 +1462,7 @@ func _p1b_finish_item_committed(accepted: Dictionary, publish: bool) -> void:
 	if SmoothTrace.enabled():
 		SmoothTrace.emit("p1b_item_async_stages", {
 			"stage": "DURABLE_COMMIT",
+			"kind": String(pending.get("kind", "ITEM")),
 			"operation_hash": String(pending.get("operation_id", "")).sha256_text().left(16),
 			"generation": generation,
 			"ack_wait_ms": _p1b_item_last_ack_wait_ms,
@@ -1462,7 +1477,41 @@ func _p1b_finish_item_committed(accepted: Dictionary, publish: bool) -> void:
 		)
 		_p1b_item_resync_waiters.clear()
 		return
-	_p1b_publish_committed_item(pending)
+	if String(pending.get("kind", "ITEM")) == "DISCONNECT":
+		_r3b_publish_committed_disconnect(pending)
+	else:
+		_p1b_publish_committed_item(pending)
+
+
+# No old-session ACK is ever published. The generic M6 proof accepted the
+# exact writer completion/generation above; now finalize only this DISCONNECT
+# on the original transport-session fence. All other legacy handlers remain
+# synchronous until separately verified (do not overclaim their latency).
+func _r3b_publish_committed_disconnect(pending: Dictionary) -> void:
+	var operation_id := String(pending.get("operation_id", ""))
+	var peer_id := String(pending.get("peer_id", ""))
+	var session_id := String(pending.get("session_id", ""))
+	var result: Dictionary = Dictionary(pending.get("result", {}))
+	var stale: Dictionary = _p1b_item_async_owner.discard_stale_session(peer_id, session_id)
+	if not bool(stale.get("success", false)):
+		_enter_persistence_failure("R3B_DISCONNECT_ACK_QUARANTINE_FAILED")
+		return
+	if bool(result.get("success", false)) and not _is_replay_result(result):
+		_leaves += 1
+		_broadcast_delta(result.get("details", {}).get("delta", {}), peer_id)
+	else:
+		_rejections += 1
+	# A reconnected replacement session may share the peer id; never evict it.
+	if String(_peer_to_session.get(peer_id, "")) == session_id:
+		_peer_to_player.erase(peer_id)
+		_peer_to_session.erase(peer_id)
+		_seam_sent_state_by_peer.erase(peer_id)
+	_mark_operation_delivered(operation_id)
+	_broadcast_snapshot("PEER_DISCONNECTED")
+	_p1b_flush_item_resync_waiters()
+	if has_method("_p1b_flush_resource_resync_waiters"):
+		call("_p1b_flush_resource_resync_waiters")
+	_write_report("READY", false)
 
 
 func _p1b_publish_committed_item(pending: Dictionary) -> void:
@@ -1679,7 +1728,45 @@ func _commit_disconnect(peer_id: String, session_id: String) -> void:
 	var operation_id := "operation/m3/disconnect/%s" % session_id.sha256_text().left(16)
 	var logical_id := String(_peer_to_player.get(peer_id, ""))
 	var disconnect_epoch := _stored_ownership_epoch(logical_id, 0)
+	var r3b_reserved := false
+	var before_gameplay_snapshot: Dictionary = {}
+	if _p1b_item_async_enabled and not _service.has_durable_replay_operation(operation_id):
+		# The old sync path waited for the periodic writer, stalling the
+		# server for ~960ms. Defer before mutation; never wait in _process().
+		if _movement_checkpoint_writer == null or _movement_checkpoint_writer.is_busy():
+			_queue_deferred_disconnect(peer_id, session_id)
+			return
+		var reserved: Dictionary = _p1b_item_async_owner.reserve_mutation(
+			operation_id, peer_id, session_id, logical_id, disconnect_epoch, "DISCONNECT"
+		)
+		if not bool(reserved.get("success", false)):
+			if String(reserved.get("error_code", "")) in ["P1A_WAIT_PRIOR_PERIODIC", "P1A_GATE_BACKPRESSURE", "P1A_MUTATION_FENCED"]:
+				_queue_deferred_disconnect(peer_id, session_id)
+				return
+			_enter_persistence_failure("R3B_DISCONNECT_RESERVATION_FAILED")
+			return
+		r3b_reserved = true
+		before_gameplay_snapshot = _service.create_snapshot()
+		if not bool(FullSnapshot.validate(before_gameplay_snapshot).get("success", false)):
+			_enter_persistence_failure("R3B_DISCONNECT_PREVIEW_INVALID")
+			return
 	var result: Dictionary = _service.leave_transport_session(session_id, operation_id)
+	if r3b_reserved:
+		if bool(result.get("success", false)) and not _is_replay_result(result):
+			if not _p1b_begin_item_async_commit(
+				operation_id, "DISCONNECT", logical_id, result,
+				peer_id, session_id, disconnect_epoch, {},
+				before_gameplay_snapshot, "DISCONNECT"
+			):
+				# A successful mutation without its durable generation is FATAL.
+				return
+			return
+		var released: Dictionary = _p1b_item_async_owner.release_noncommitting_reservation(
+			operation_id, result
+		)
+		if not bool(released.get("success", false)):
+			_enter_persistence_failure("R3B_DISCONNECT_RESERVATION_RELEASE_FAILED")
+			return
 	if not _persist_command_result(operation_id, "DISCONNECT", logical_id, result, peer_id, session_id, disconnect_epoch):
 		return
 	# Disconnects never send an old-session ACK. Canonical M6 replay retains
@@ -2194,6 +2281,7 @@ func _persistence_report() -> Dictionary:
 		"item_async_canary_enabled": _p1b_item_async_enabled,
 		"item_async_pending": not _p1b_item_pending.is_empty(),
 		"item_async_commits": _p1b_item_commits,
+		"r3b_async_disconnect_commits": _r3b_async_disconnect_commits,
 		"item_async_snapshot_holds": _p1b_item_precommit_snapshot_holds,
 		"item_async_item_graph_snapshot_holds": _p1b_item_graph_snapshot_holds,
 		"item_committed_view_frames": _p1b_committed_frames,
