@@ -26,6 +26,9 @@ const PlayerStateSnapshot = preload(
 const ProductSeamState = preload(
 	"res://scripts/runtime/networked_gameplay/user1/user1_product_seam_state.gd"
 )
+const R31Bp1DurableChunkCache = preload(
+	"res://scripts/runtime/networked_gameplay/m6/r31bp1_durable_chunk_cache.gd"
+)
 
 const PRIMARY_REGION := "region/user1/a"
 const SECONDARY_REGION := "region/user1/b"
@@ -44,6 +47,58 @@ var _seam_state: Dictionary = {}
 var _transfer_serial := 0
 var _transfer_failures := 0
 var _transfer_log: Array[Dictionary] = []
+# R31b P1: opt-in server-only durable chunk cache. Default OFF; the runtime
+# attaches it only after the full fail-closed prerequisite fence passed.
+var _r31bp1_chunk_cache = null
+
+
+var _r31bp1_last_item_graph_hit := false
+var _r31bp1_last_resource_hit := false
+
+
+# R31b P1: attach the private immutable chunk cache. Passing null (or a
+# misconfigured cache) leaves the legacy uncached export path active.
+func configure_r31bp1_durable_chunk_cache(cache) -> Dictionary:
+	if cache == null:
+		_r31bp1_chunk_cache = null
+		return _success({"enabled": false})
+	if not cache.has_method("configure") or not cache.has_method("export_component"):
+		return _failure("R31BP1_CHUNK_CACHE_INVALID")
+	_r31bp1_chunk_cache = cache
+	return _success({
+		"enabled": bool(cache.is_enabled()) if cache.has_method("is_enabled") else false
+	})
+
+
+func is_r31bp1_durable_chunks_enabled() -> bool:
+	return _r31bp1_chunk_cache != null
+
+
+func get_r31bp1_durable_chunk_report() -> Dictionary:
+	if _r31bp1_chunk_cache == null:
+		return {}
+	return _r31bp1_chunk_cache.get_report()
+
+
+# Cache-mediated export of ONE component kind. On any cache failure the legacy
+# full component export is used unchanged (fail CLOSED, never fail the export).
+func _r31bp1_export_component(service, kind: String) -> Dictionary:
+	if _r31bp1_chunk_cache == null or service == null:
+		if kind == "item_graph":
+			_r31bp1_last_item_graph_hit = false
+		else:
+			_r31bp1_last_resource_hit = false
+		return service.export_durable_state() if service != null else {}
+	var exported: Dictionary = _r31bp1_chunk_cache.export_component(service, kind)
+	var hit := bool(exported.get("hit", false))
+	if kind == "item_graph":
+		_r31bp1_last_item_graph_hit = hit
+	else:
+		_r31bp1_last_resource_hit = hit
+	var value = exported.get("value", null)
+	if value is Dictionary and not Dictionary(value).is_empty():
+		return Dictionary(value)
+	return service.export_durable_state()
 
 
 func setup(
@@ -492,8 +547,8 @@ func export_durable_state() -> Dictionary:
 		"players": players_state,
 		"ownership": ownership_state,
 		"shared_item": _shared_items.export_durable_state(),
-		"canonical_item_graph": _canonical_multiplayer_items.export_durable_state(),
-		"resource_mining": _resource_mining.export_durable_state(),
+		"canonical_item_graph": _r31bp1_export_component(_canonical_multiplayer_items, "item_graph"),
+		"resource_mining": _r31bp1_export_component(_resource_mining, "resource_mining"),
 		"checksum": "",
 	}
 	state = SeamUtils.finalize_json_checksum(state)
@@ -536,9 +591,9 @@ func export_durable_state_r31b_profiled() -> Dictionary:
 		return {"value": {}, "stages": {"error": "REQUIRED_DOMAIN_MISSING"}}
 	var shared_state: Dictionary = _shared_items.export_durable_state()
 	var after_shared_us: int = Time.get_ticks_usec()
-	var item_state: Dictionary = _canonical_multiplayer_items.export_durable_state()
+	var item_state: Dictionary = _r31bp1_export_component(_canonical_multiplayer_items, "item_graph")
 	var after_item_us: int = Time.get_ticks_usec()
-	var resource_state: Dictionary = _resource_mining.export_durable_state()
+	var resource_state: Dictionary = _r31bp1_export_component(_resource_mining, "resource_mining")
 	var after_resource_us: int = Time.get_ticks_usec()
 	var durable: Dictionary = {
 		"schema": DURABLE_SCHEMA,
@@ -575,6 +630,9 @@ func export_durable_state_r31b_profiled() -> Dictionary:
 			"seam_coordinator_count": _seam_coordinators.size(),
 			"player_count": Array(snapshot.get("players", [])).size(),
 			"valid": bool(validated.get("success", false)),
+			"r31bp1_item_graph_cache_hit": _r31bp1_last_item_graph_hit,
+			"r31bp1_resource_cache_hit": _r31bp1_last_resource_hit,
+			"r31bp1_chunks_enabled": is_r31bp1_durable_chunks_enabled(),
 		},
 	}
 
