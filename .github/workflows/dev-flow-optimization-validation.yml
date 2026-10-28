@@ -1,0 +1,55 @@
+name: Development Flow Optimization Validation
+
+on:
+  push:
+    branches: [control/dev-flow-optimization-r1-20261028]
+    paths:
+      - '.github/workflows/dev-flow-optimization-validation.yml'
+      - 'scripts/devflow/**'
+      - 'tests/devflow/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dev-flow-validation-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Inspect actual Harness routing
+        shell: bash
+        run: |
+          set -euo pipefail
+          git rev-parse HEAD
+          git rev-parse 'HEAD^{tree}'
+          find scripts/harness -maxdepth 1 -name '*.py' -printf '%f\n' | sort
+          grep -nE 'required_roles|risk_policy|review_required|pre_build.*required|post_build.*required' scripts/harness/*.py
+          for path in PROJECT_CONTROL.md HARNESS_CONTROL.md docs/control/DEVELOPMENT_HARNESS_RU.md docs/control/HARNESS_REVIEW_AND_EVIDENCE_RU.md docs/control/HARNESS_AUTONOMOUS_EXECUTION_RU.md docs/control/HARNESS_CHANNEL_RECOVERY_RU.md; do
+            echo "=== $path ==="
+            head -55 "$path"
+          done
+      - name: Install pinned validation dependencies
+        run: python3 -m pip install --disable-pip-version-check -r scripts/harness/requirements.txt PyYAML==6.0.2
+      - name: Baseline Harness regression
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/dev-flow
+          python3 -m unittest discover -s tests/harness -p 'test_*.py' -v > artifacts/dev-flow/baseline-harness.log 2>&1 || { tail -100 artifacts/dev-flow/baseline-harness.log; exit 1; }
+          tail -12 artifacts/dev-flow/baseline-harness.log
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: dev-flow-validation-${{ github.run_id }}
+          path: artifacts/dev-flow/
+          if-no-files-found: warn
+          retention-days: 30
