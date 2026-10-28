@@ -71,6 +71,10 @@ class LiveF64Source(unittest.TestCase):
         self.assertIn('"compact_codec_offer_checksum": String(offer.get("checksum", ""))',SERVER)
         self.assertIn('existing.get("compact_codec_offer_checksum", "")',SERVER)
         self.assertIn('r31_815_compact_v2_sent',SERVER)
+        self.assertIn('r31_815_compact_v1_sent',SERVER)
+        self.assertIn('handshake_sha256',SERVER)
+        self.assertIn('_r31_815_first_codec_send_session_by_peer',SERVER)
+        self.assertIn('r31_815_compact_codec_selected',SERVER)
         self.assertIn('DWS_NET_815_COMPACT_SERVER_MODE',SERVER)
 
     def test_client_uses_one_virtual_decoder_for_normal_and_committed_view(self):
@@ -79,9 +83,16 @@ class LiveF64Source(unittest.TestCase):
         self.assertEqual(BASE.count('_decode_compact_snapshot(wire)'),1)
         self.assertIn('COMPACT_CODEC_VERSION_MISMATCH',CLIENT)
         self.assertIn('COMPACT_CODEC_SESSION_NOT_NEGOTIATED',CLIENT)
-        self.assertIn('return super._decode_compact_snapshot(wire)',CLIENT)
+        self.assertIn('super._decode_compact_snapshot(wire)',CLIENT)
         self.assertIn('CompactCodecV2.decode(wire)',CLIENT)
         self.assertIn('r31_815_compact_v2_received',CLIENT)
+        self.assertIn('r31_815_compact_v1_received',CLIENT)
+        self.assertIn('r31_815_compact_v1_applied',CLIENT)
+        self.assertIn('r31_815_compact_v2_applied',CLIENT)
+        self.assertIn('super._accept_compact_snapshot(wire)',CLIENT)
+        self.assertIn('if _compact_snapshot_updates <= before:',CLIENT)
+        self.assertIn('_r31_815_last_rx_receipt_session',CLIENT)
+        self.assertIn('handshake_sha256',CLIENT)
         self.assertIn('R31CodecPolicy.client_accept(',CLIENT)
         self.assertIn('COMPACT_CODEC_RENEGOTIATION_FORBIDDEN',CLIENT)
         self.assertIn('if _handshake_verified:',CLIENT)
@@ -93,7 +104,7 @@ class LiveF64Source(unittest.TestCase):
         self.assertIn('var _r31_815_compact_mode: String = "off"',SERVER)
         self.assertIn('var _r31_815_client_mode: String = "off"',CLIENT)
         self.assertIn('return super._send_control(message_type, data)',CLIENT)
-        self.assertIn('return super._decode_compact_snapshot(wire)',CLIENT)
+        self.assertIn('super._decode_compact_snapshot(wire)',CLIENT)
         self.assertIn('_broadcast_snapshot(',SERVER)
         self.assertIn('"GAMEPLAY_SNAPSHOT"',SERVER)
         self.assertIn('M6PendingDurableAckGate',SERVER)
@@ -115,6 +126,13 @@ class LiveF64Source(unittest.TestCase):
         ):
             self.assertIn(phrase,RUNNER)
         ast.parse(RUNNER)
+        reducer=(ROOT/"tools/net_smooth1/verify_815_live_deploy.py").read_text()
+        for marker in ("ORIGINAL_FUNCTIONAL_FAILURE", "MISSING_DECODED_COMPACT_IN_NEGOTIATED_SESSION",
+                       "MISSING_SERVER_SEND_IN_NEGOTIATED_SESSION",
+                       "NO_POST_RECONNECT_CLIENT_B_V1_HANDSHAKE", "handshake_sha256",
+                       "PERFORMANCE_ONLY_FAILURES",
+                       "matched_replica_apply_per_session", "MISSING_APPLIED_COMPACT_IN_NEGOTIATED_SESSION"):
+            self.assertIn(marker,reducer)
 
     def test_binary64_is_lossless_and_no_checksum_waiver(self):
         for phrase in ('IEEE754_BINARY64_LE_HEX_V1','FullSnapshot.validate(snapshot)',

@@ -21,6 +21,10 @@ var _r31_815_bound_session: String = ""
 var _r31_815_bound_handshake: String = ""
 var _r31_815_v1_received: int = 0
 var _r31_815_v2_received: int = 0
+# First successful COMPACT decode PER transport session, including reconnect.
+var _r31_815_last_rx_receipt_session: String = ""
+# One actual committed replica update receipt per negotiated session.
+var _r31_815_last_applied_receipt_session: String = ""
 var _r31_815_codec_rejections: int = 0
 
 
@@ -37,6 +41,8 @@ func setup(config: Dictionary) -> Dictionary:
 	_r31_815_client_mode = mode
 	_r31_815_v1_received = 0
 	_r31_815_v2_received = 0
+	_r31_815_last_rx_receipt_session = ""
+	_r31_815_last_applied_receipt_session = ""
 	_r31_815_codec_rejections = 0
 	return super.setup(config)
 
@@ -45,6 +51,8 @@ func _start_transport_attempt() -> Dictionary:
 	# The previous ACK is never reusable for a new reconnect or wrap-rotation.
 	_r31_815_bound_session = ""
 	_r31_815_bound_handshake = ""
+	_r31_815_last_rx_receipt_session = ""
+	_r31_815_last_applied_receipt_session = ""
 	_r31_815_selected = R31CodecPolicy.LEGACY
 	return super._start_transport_attempt()
 
@@ -109,10 +117,64 @@ func _handle_compatibility_ack(payload: Dictionary) -> void:
 		})
 
 
+func _r31_815_record_compact_receive(selected: String, wire: Dictionary) -> void:
+	if (not SmoothTrace.enabled() or not _handshake_verified
+		or _r31_815_bound_session != _transport_session_id
+		or _r31_815_bound_handshake != _handshake_id):
+		return
+	var receipt_key: String = _transport_session_id + "|" + selected
+	if _r31_815_last_rx_receipt_session == receipt_key:
+		return
+	SmoothTrace.emit(
+		"r31_815_compact_v2_received" if selected == R31CodecPolicy.F64
+		else "r31_815_compact_v1_received", {
+			"server_tick": int(wire.get("t", -1)),
+			"schema": CompactCodecV2.SCHEMA if selected == R31CodecPolicy.F64
+			else CompactGameplaySnapshot.SCHEMA,
+			"session_sha256": _transport_session_id.sha256_text(),
+			"handshake_sha256": _handshake_id.sha256_text(),
+		})
+	_r31_815_last_rx_receipt_session = receipt_key
+
+
+# This hook runs only after the inherited NX6 code accepted the FULL
+# canonical snapshot into the replica. A decoder-only receipt cannot
+# masquerade as an applied movement state after reconnect.
+func _accept_compact_snapshot(wire: Dictionary) -> void:
+	var before: int = _compact_snapshot_updates
+	super._accept_compact_snapshot(wire)
+	if _compact_snapshot_updates <= before:
+		return
+	if (not SmoothTrace.enabled() or not _handshake_verified
+		or _r31_815_bound_session != _transport_session_id
+		or _r31_815_bound_handshake != _handshake_id):
+		return
+	var format: String = _r31_815_selected
+	var session_key: String = _transport_session_id + "|" + format
+	if _r31_815_last_applied_receipt_session == session_key:
+		return
+	SmoothTrace.emit(
+		"r31_815_compact_v2_applied" if format == R31CodecPolicy.F64
+		else "r31_815_compact_v1_applied", {
+			"server_tick": int(wire.get("t", -1)),
+			"schema": CompactCodecV2.SCHEMA if format == R31CodecPolicy.F64
+			else CompactGameplaySnapshot.SCHEMA,
+			"session_sha256": _transport_session_id.sha256_text(),
+			"handshake_sha256": _handshake_id.sha256_text(),
+			"replica_revision": int(_replica.get_snapshot().get("revision", -1)),
+		})
+	_r31_815_last_applied_receipt_session = session_key
+
+
 func _decode_compact_snapshot(wire: Dictionary) -> Dictionary:
 	if _r31_815_client_mode == "off":
-		# Original unmodified v1 path for all default/off clients and tests.
-		return super._decode_compact_snapshot(wire)
+		# Default original v1 decode. Only read-only receipt metadata added
+		# after success, so mixed-mode evidence covers B AFTER reconnect.
+		var legacy: Dictionary = super._decode_compact_snapshot(wire)
+		if bool(legacy.get("success", false)):
+			_r31_815_v1_received += 1
+			_r31_815_record_compact_receive(R31CodecPolicy.LEGACY, wire)
+		return legacy
 	if not _handshake_verified or _r31_815_bound_session != _transport_session_id or (
 		_r31_815_bound_handshake != _handshake_id
 	):
@@ -124,27 +186,22 @@ func _decode_compact_snapshot(wire: Dictionary) -> Dictionary:
 		if schema != CompactCodecV2.SCHEMA:
 			_r31_815_codec_rejections += 1
 			return _failure("COMPACT_CODEC_VERSION_MISMATCH")
-		var result: Dictionary = CompactCodecV2.decode(wire)
-		if bool(result.get("success", false)):
+		var v2: Dictionary = CompactCodecV2.decode(wire)
+		if bool(v2.get("success", false)):
 			_r31_815_v2_received += 1
-			if SmoothTrace.enabled() and _r31_815_v2_received <= 10:
-				SmoothTrace.emit("r31_815_compact_v2_received", {
-					"server_tick": int(wire.get("t", -1)),
-					"schema": CompactCodecV2.SCHEMA,
-					"session_sha256": _transport_session_id.sha256_text(),
-				})
-		return result
+			_r31_815_record_compact_receive(R31CodecPolicy.F64, wire)
+		return v2
 	if selected == R31CodecPolicy.LEGACY:
 		if schema != CompactGameplaySnapshot.SCHEMA:
 			_r31_815_codec_rejections += 1
 			return _failure("COMPACT_CODEC_VERSION_MISMATCH")
-		var result: Dictionary = super._decode_compact_snapshot(wire)
-		if bool(result.get("success", false)):
+		var v1: Dictionary = super._decode_compact_snapshot(wire)
+		if bool(v1.get("success", false)):
 			_r31_815_v1_received += 1
-		return result
+			_r31_815_record_compact_receive(R31CodecPolicy.LEGACY, wire)
+		return v1
 	_r31_815_codec_rejections += 1
 	return _failure("COMPACT_CODEC_UNKNOWN_NEGOTIATION")
-
 
 
 func _process(delta: float) -> void:

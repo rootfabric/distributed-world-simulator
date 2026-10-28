@@ -213,6 +213,8 @@ var _handshake_rejections := 0
 var _r31_815_compact_mode: String = "off"
 var _r31_815_v1_sent: int = 0
 var _r31_815_v2_sent: int = 0
+# One actual send receipt per peer transport-session; reconnect needs its own.
+var _r31_815_first_codec_send_session_by_peer: Dictionary = {}
 var _r31_815_v1_encodes: int = 0
 var _r31_815_v2_encodes: int = 0
 var _r31_815_v2_encode_failures: int = 0
@@ -284,6 +286,7 @@ func setup(config: Dictionary) -> Dictionary:
 	_r31_815_compact_mode = requested_codec_mode
 	_r31_815_v1_sent = 0
 	_r31_815_v2_sent = 0
+	_r31_815_first_codec_send_session_by_peer.clear()
 	_r31_815_v1_encodes = 0
 	_r31_815_v2_encodes = 0
 	_r31_815_v2_encode_failures = 0
@@ -895,6 +898,7 @@ func _handle_compatibility_hello(peer_id: String, session_id: String, payload: D
 			"selected": selected_format,
 			"peer_sha256": peer_id.sha256_text(),
 			"session_sha256": session_id.sha256_text(),
+		"handshake_sha256": String(hello["handshake_id"]).sha256_text(),
 		})
 	_handshake_accepts += 1
 	_telemetry.increment("handshake_accepts")
@@ -1520,15 +1524,30 @@ func _maybe_publish_movement_snapshot() -> void:
 		if compact_queued:
 			if selected_codec == R31CodecPolicy.F64:
 				_r31_815_v2_sent += 1
-				if SmoothTrace.enabled() and _r31_815_v2_sent <= 10:
-					SmoothTrace.emit("r31_815_compact_v2_sent", {
-						"server_tick": _server_tick,
-						"peer_sha256": peer_id.sha256_text(),
-						"schema": CompactV2.SCHEMA,
-						"session_sha256": String(_peer_to_session.get(peer_id, "")).sha256_text(),
-					})
 			else:
 				_r31_815_v1_sent += 1
+			# The original 10-packet global cap suppressed every receipt
+			# after B reconnect. Emit the first true send in EACH session,
+			# using the original handshake and actual current route fence.
+			var current_session: String = String(_peer_to_session.get(peer_id, ""))
+			var receipt_key: String = current_session + "|" + selected_codec
+			if SmoothTrace.enabled() and not current_session.is_empty() and String(
+				_r31_815_first_codec_send_session_by_peer.get(peer_id, "")
+			) != receipt_key:
+				var peer_compatibility: Dictionary = Dictionary(
+					_peer_compatibility.get(peer_id, {}))
+				SmoothTrace.emit(
+					"r31_815_compact_v2_sent" if selected_codec == R31CodecPolicy.F64
+					else "r31_815_compact_v1_sent", {
+						"server_tick": _server_tick,
+						"peer_sha256": peer_id.sha256_text(),
+						"schema": CompactV2.SCHEMA if selected_codec == R31CodecPolicy.F64
+						else CompactGameplaySnapshot.SCHEMA,
+						"session_sha256": current_session.sha256_text(),
+						"handshake_sha256": String(
+							peer_compatibility.get("handshake_id", "")).sha256_text(),
+					})
+				_r31_815_first_codec_send_session_by_peer[peer_id] = receipt_key
 			compact_enqueued_any = true
 			compact_enqueued_count += 1
 			_broadcasts += 1
@@ -2651,6 +2670,7 @@ func _handle_disconnect(peer_id: String, session_id: String) -> void:
 		return
 	_peer_input_buffers.erase(peer_id)
 	_peer_compatibility.erase(peer_id)
+	_r31_815_first_codec_send_session_by_peer.erase(peer_id)
 	_debug_event("PEER_DISCONNECTED", {"peer_id": peer_id, "session_id": session_id})
 	if not _gate_can_accept():
 		_queue_deferred_disconnect(peer_id, session_id)
