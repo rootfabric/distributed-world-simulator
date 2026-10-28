@@ -57,6 +57,33 @@ var _budget_telemetry: Dictionary = {}
 # R3 speculative host-only cursor, never part of Runtime, checkpoint,
 # manifest, mutation seed, world authority or committed simulation state.
 var _staged_session: RefCounted = StagedSession.new()
+# A14.6 R3.2.2: only this trusted LAB Controller owns its canonical
+# Runtime and can issue a fast-admission lease. Public exported views
+# and debug_state are detached copies; no canonical mutable aliases.
+var _r322_lease_token: RefCounted = null
+var _r322_lease_options_hash := ""
+var _r322_generation := 0
+
+func _r322_revoke_lease() -> void:
+	_r322_lease_token = null
+	_r322_lease_options_hash = ""
+	_r322_generation += 1
+
+# Called only from OffMain's dispatch/adoption on main. This binds to
+# Dictionary IDENTITY and an opaque RefCounted token, not an untrusted hash.
+# All supported source mutation/cancel/restore paths revoke the lease.
+func _r322_source_lease_valid(state: Dictionary, anchor: String,
+		source_tick: int, options_hash: String, token: RefCounted,
+		generation: int) -> bool:
+	return _r322_lease_token != null and token != null \
+		and is_same(token, _r322_lease_token) \
+		and generation == _r322_generation \
+		and is_same(state, _runtime) \
+		and _status != "FAILED" and _status != "IDLE" \
+		and String(_manifest.get("mode", "")) == "LAB" \
+		and String(_runtime.get("integrity_hash", "")) == anchor \
+		and int(_runtime.get("tick", -1)) == source_tick \
+		and options_hash == _r322_lease_options_hash
 
 ## Attach the WORLD_COMPAT world authority adapter (P12). The adapter is the
 ## source of world/environment authority (region ACTIVE gate, matter-mapped
@@ -107,6 +134,8 @@ func initialize(manifest: Dictionary, founder_registry: Dictionary = {}) -> Dict
 	var created := Runtime.create(String(manifest.experiment_id), field, population, policy, bool(manifest.feedback.enabled))
 	if not created.success:
 		return _command_fail("CONTROLLER_RUNTIME_CREATE:" + String(created.error))
+	_r322_revoke_lease()
+	_staged_session.cancel()
 	_manifest = manifest.duplicate(true)
 	_founder_registry = founder_registry.duplicate(true)
 	_runtime = created.state
@@ -170,6 +199,7 @@ func run_budgeted_to_tick(target_tick: int,
 		_fail("CONTROLLER_BUDGET:" + String(measured.get("error", "?")))
 		return _failed_command()
 	# Single atomic canonical publication after an entire successful slice.
+	_r322_revoke_lease()
 	_runtime = measured.state
 	_status = "RUNNING"
 	var committed: int = int(measured.replayed_ticks)
@@ -235,11 +265,30 @@ func run_staged_frame(soft_budget_us: int = StagedSession.DEFAULT_SOFT_BUDGET_US
 		_staged_session.cancel()
 		_fail("CONTROLLER_STAGED_OPTIONS:" + String(opts.get("error", "?")))
 		return _failed_command()
+	# Only this actual Controller can issue exclusive ownership. Direct
+	# OffMain callers remain fully checked on the main thread.
+	if use_off_main_r3:
+		if _r322_lease_token == null:
+			_r322_generation += 1
+			_r322_lease_token = RefCounted.new()
+			_r322_lease_options_hash = C.digest(opts.options)
+		if not _r322_source_lease_valid(_runtime,
+				String(_runtime.get("integrity_hash", "")), tick(),
+				C.digest(opts.options), _r322_lease_token, _r322_generation):
+			_r322_revoke_lease()
+			_staged_session.cancel()
+			return _command_fail("CONTROLLER_STAGED_SOURCE_LEASE")
+	elif _r322_lease_token != null:
+		_r322_revoke_lease()
 	var result: Dictionary = _staged_session.advance(
 		_runtime, opts.options, soft_budget_us, max_resumes,
 		max_worksets, max_members, cursor_cap_bytes,
-		use_r3_allocator, allocator_items_per_call, use_off_main_r3)
+		use_r3_allocator, allocator_items_per_call, use_off_main_r3,
+		self if use_off_main_r3 else null,
+		_r322_lease_token if use_off_main_r3 else null,
+		_r322_generation if use_off_main_r3 else -1)
 	if not bool(result.get("success", false)):
+		_r322_revoke_lease()
 		# Transient plan/resource errors fail closed. If the underlying
 		# canonical worker fails, mark FAILED until reset, as run() does.
 		var reason := String(result.get("error", "?"))
@@ -252,6 +301,7 @@ func run_staged_frame(soft_budget_us: int = StagedSession.DEFAULT_SOFT_BUDGET_US
 		if not result.has("state") or not result.state is Dictionary:
 			_fail("CONTROLLER_STAGED_FINAL_STATE")
 			return _failed_command()
+		_r322_revoke_lease()
 		_runtime = result.state
 		_status = "RUNNING"
 	return {"success": true, "complete": bool(result.complete),
@@ -264,6 +314,7 @@ func run_staged_frame(soft_budget_us: int = StagedSession.DEFAULT_SOFT_BUDGET_US
 		"overrun_us": int(result.overrun_us)}
 
 func cancel_staged_tick() -> Dictionary:
+	_r322_revoke_lease()
 	var result: Dictionary = _staged_session.cancel()
 	return {"success": true, "cancelled": bool(result.cancelled), "tick": tick()}
 
@@ -299,6 +350,7 @@ func _reset_live_budget_metrics() -> void:
 ## Pause the loop (no tick is in flight; run/step resume from PAUSED).
 func pause() -> Dictionary:
 	# PAUSE abandons speculative work without moving the canonical frontier.
+	_r322_revoke_lease()
 	_staged_session.cancel()
 	if _status == "FAILED":
 		return _failed_command()
@@ -548,6 +600,8 @@ func load_state(state_text: String, expected_manifest_hash: String = "", expecte
 			return _command_fail("CONTROLLER_WORLD_STATE_IMPORT:" + String(imported.get("error", "?")))
 	elif not checkpoint.external_state.is_empty() or not String(checkpoint.external_state_hash).is_empty():
 		return _command_fail("CONTROLLER_LAB_EXTERNAL_STATE")
+	_r322_revoke_lease()
+	_staged_session.cancel()
 	_runtime = checkpoint.runtime_state.duplicate(true)
 	_status = "READY"
 	_error = ""
@@ -634,6 +688,7 @@ func apply_field_patch(patch: Dictionary) -> Dictionary:
 	var adopted := Runtime.adopt_field(_runtime, field)
 	if not bool(adopted.get("success", false)):
 		return _command_fail("CONTROLLER_FIELD_PATCH_ADOPT:" + String(adopted.get("error", "?")))
+	_r322_revoke_lease()
 	_runtime = adopted.state
 	_manifest = next_manifest
 	return {
@@ -696,6 +751,7 @@ func apply_world_stocks(resources: Dictionary, source_tag: String) -> Dictionary
 	var adopted := Runtime.adopt_field(_runtime, applied.state)
 	if not bool(adopted.get("success", false)):
 		return _command_fail("CONTROLLER_WORLD_STOCKS_ADOPT:" + String(adopted.get("error", "?")))
+	_r322_revoke_lease()
 	_runtime = adopted.state
 	return {"success": true, "tick": tick(), "field_hash": Field.state_hash(_runtime.field), "deposited": true}
 
@@ -783,6 +839,7 @@ func _tick_once() -> void:
 	if not bool(stepped.get("success", false)):
 		_fail("CONTROLLER_TICK:" + String(stepped.get("error", "?")))
 		return
+	_r322_revoke_lease()
 	_runtime = stepped.state
 
 ## Exactly the SAME manifest-origin, deterministic mutation options are
