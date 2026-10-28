@@ -44,7 +44,7 @@ class RunnerReceiptTests(unittest.TestCase):
     def run_case(self, mode: str) -> subprocess.CompletedProcess[str]:
         with tempfile.TemporaryDirectory(prefix="n3-runner-") as temp:
             executable = Path(temp) / "fake-godot.sh"
-            executable.write_text(FAKE_GODOT, encoding="utf-8")
+            executable.write_bytes(FAKE_GODOT.encode("utf-8"))
             executable.chmod(0o755)
             env = dict(os.environ, N3_FAKE_CASE=mode, N3_R0_LOG_DIR=str(Path(temp) / "logs"))
             return subprocess.run(
