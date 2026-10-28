@@ -1,237 +1,413 @@
 name: ECO ARCH2 A14.6 R1 Fine A5 Latency Exact
-
-on:
+'on':
   push:
     branches:
-      - feature/eco-arch2-a14-6-r1-a5-latency-decomposition
+    - feature/eco-arch2-a14-4-live-budget-profiling-r1
+    - feature/eco-arch2-a14-5-r3-live-staged-session-r1
+    - feature/eco-arch2-a14-6-r1-a5-latency-decomposition
   pull_request:
     paths:
-      - 'scripts/research/ecology/v2/a5_allocation_frontier_probe_v1.gd'
-      - 'scripts/research/ecology/v2/a5_fine_latency_profiler_v1.gd'
-      - 'validation/ecology/evo_arch2_a14_fine/**'
-      - '.github/workflows/eco-arch2-a14-6-r1-fine-latency-exact.yml'
-      - 'docs/research/ecology/EVO_ARCH2_ROADMAP_R6_RU.md'
-      - 'scripts/ecology/workbench/staged_frame_session_v1.gd'
-      - 'scripts/ecology/workbench/experiment_controller_v1.gd'
-      - 'scripts/ecology/workbench/ecology_workbench.gd'
-      - 'validation/ecology/evo_arch2_a14_staged/test_staged_live_r3.gd'
-      - 'validation/ecology/evo_arch2_a14_staged/test_staged_live_r3_scale.gd'
-      - '.github/workflows/eco-arch2-a14-5-r3-live-staged-exact.yml'
-      - 'validation/ecology/evo_arch2_a14_staged/test_staged_r2_latency.gd'
-      - '.github/workflows/eco-arch2-a14-5-r2-latency-exact.yml'
-      - 'scripts/research/ecology/v2/ecology_runtime_v1.gd'
-      - 'validation/ecology/evo_arch2_a14_staged/**'
-      - '.github/workflows/eco-arch2-a14-5-staged-exact.yml'
-      - 'scripts/ecology/workbench/experiment_controller_v1.gd'
-      - 'scripts/ecology/workbench/ecology_workbench.gd'
-      - 'scripts/research/ecology/v2/population_budget_live_driver_v1.gd'
-      - 'validation/ecology/evo_arch2_a14_live/**'
-      - '.github/workflows/eco-arch2-a14-4-live-exact.yml'
-  workflow_dispatch:
-
+    - .github/workflows/eco-arch2-a14-4-live-exact.yml
+    - .github/workflows/eco-arch2-a14-5-r2-latency-exact.yml
+    - .github/workflows/eco-arch2-a14-5-r3-live-staged-exact.yml
+    - .github/workflows/eco-arch2-a14-5-staged-exact.yml
+    - .github/workflows/eco-arch2-a14-6-r1-fine-latency-exact.yml
+    - docs/research/ecology/EVO_ARCH2_ROADMAP_R6_RU.md
+    - scripts/ecology/workbench/ecology_workbench.gd
+    - scripts/ecology/workbench/experiment_controller_v1.gd
+    - scripts/ecology/workbench/staged_frame_session_v1.gd
+    - scripts/research/ecology/v2/a5_allocation_frontier_probe_v1.gd
+    - scripts/research/ecology/v2/a5_fine_latency_profiler_v1.gd
+    - scripts/research/ecology/v2/ecology_runtime_v1.gd
+    - scripts/research/ecology/v2/population_budget_live_driver_v1.gd
+    - scripts/research/ecology/v2/resource_lifecycle_runtime_v1.gd
+    - validation/ecology/evo_arch2_a14_fine/**
+    - validation/ecology/evo_arch2_a14_live/**
+    - validation/ecology/evo_arch2_a14_staged/**
+    - validation/ecology/evo_arch2_a14_staged/test_staged_live_r3.gd
+    - validation/ecology/evo_arch2_a14_staged/test_staged_live_r3_scale.gd
+    - validation/ecology/evo_arch2_a14_staged/test_staged_r2_latency.gd
+  workflow_dispatch: null
 permissions:
   contents: read
-
 concurrency:
   group: eco-a14-6-r1-${{ github.head_ref || github.ref_name }}
   cancel-in-progress: true
-
 jobs:
   portable:
     runs-on: ubuntu-latest
     timeout-minutes: 105
     steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          persist-credentials: false
-      - name: Download official Godot 4.7.1 smoke engine
-        shell: bash
-        run: |
-          set -euo pipefail
-          curl -fL --retry 3 -o /tmp/godot.zip https://github.com/godotengine/godot/releases/download/4.7.1-stable/Godot_v4.7.1-stable_linux.x86_64.zip
-          unzip -q /tmp/godot.zip -d /tmp/godot
-          chmod +x /tmp/godot/Godot_v4.7.1-stable_linux.x86_64
-      - name: Fine A5 allocation profiles and previous exact regressions
-        shell: bash
-        run: |
-          set -euo pipefail
-          godot=/tmp/godot/Godot_v4.7.1-stable_linux.x86_64
-          "$godot" --headless --editor --path . --import > /tmp/import.log 2>&1 || { cat /tmp/import.log; exit 1; }
-          "$godot" --headless --path . --script res://validation/ecology/evo_arch2_a14_fine/test_allocation_frontier.gd > /tmp/a146-frontier.log 2>&1 || { cat /tmp/a146-frontier.log; exit 1; }
-          cat /tmp/a146-frontier.log
-          grep -Fx 'ECO_ARCH2_A14_6_FRONTIER PASS' /tmp/a146-frontier.log
-          "$godot" --headless --path . --script res://validation/ecology/evo_arch2_a14_fine/test_fine_latency_profile.gd > /tmp/a146-fine.log 2>&1 || { cat /tmp/a146-fine.log; exit 1; }
-          cat /tmp/a146-fine.log
-          grep -Fx 'ECO_ARCH2_A14_6_FINE PASS' /tmp/a146-fine.log
-          grep '^ECO_A14_6_FINE_PROFILE_JSON ' /tmp/a146-fine.log | sed 's/^ECO_A14_6_FINE_PROFILE_JSON //' > a146-fine-profiles.jsonl
-          test "$(wc -l < a146-fine-profiles.jsonl)" -eq 4
-          "$godot" --headless --path . --script res://validation/ecology/evo_arch2_a14_staged/test_staged_live_r3.gd > /tmp/a145-r3-live.log 2>&1 || { cat /tmp/a145-r3-live.log; exit 1; }
-          cat /tmp/a145-r3-live.log
-          grep -Fx 'ECO_ARCH2_A14_5_R3_LIVE PASS' /tmp/a145-r3-live.log
-          "$godot" --headless --path . --script res://validation/ecology/evo_arch2_a14_staged/test_staged_live_r3_scale.gd > /tmp/a145-r3-scale.log 2>&1 || { cat /tmp/a145-r3-scale.log; exit 1; }
-          cat /tmp/a145-r3-scale.log
-          grep -Fx 'ECO_ARCH2_A14_5_R3_SCALE PASS' /tmp/a145-r3-scale.log
-          grep '^ECO_A14_5_R3_PROFILE_JSON ' /tmp/a145-r3-scale.log | sed 's/^ECO_A14_5_R3_PROFILE_JSON //' > a145-r3-profiles.jsonl
-          test "$(wc -l < a145-r3-profiles.jsonl)" -eq 4
-          "$godot" --headless --path . --script res://validation/ecology/evo_arch2_a14_staged/test_staged_r2_latency.gd > /tmp/a145-r2-latency.log 2>&1 || { cat /tmp/a145-r2-latency.log; exit 1; }
-          cat /tmp/a145-r2-latency.log
-          grep -Fx 'ECO_ARCH2_A14_5_R2 PASS' /tmp/a145-r2-latency.log
-          grep '^ECO_A14_5_R2_PROFILE_JSON ' /tmp/a145-r2-latency.log | sed 's/^ECO_A14_5_R2_PROFILE_JSON //' > a145-r2-profiles.jsonl
-          test "$(wc -l < a145-r2-profiles.jsonl)" -eq 5
-          "$godot" --headless --path . --script res://validation/ecology/evo_arch2_a14_staged/test_staged_tick.gd > /tmp/a145-staged.log 2>&1 || { cat /tmp/a145-staged.log; exit 1; }
-          cat /tmp/a145-staged.log
-          grep -Fx 'ECO_ARCH2_A14_5_STAGED PASS' /tmp/a145-staged.log
-          "$godot" --headless --path . --script res://validation/ecology/evo_arch2_a14_live/test_live_integration.gd > /tmp/a144-live.log 2>&1 || { cat /tmp/a144-live.log; exit 1; }
-          cat /tmp/a144-live.log
-          grep -Fx 'ECO_ARCH2_A14_4_LIVE PASS' /tmp/a144-live.log
-          "$godot" --headless --path . --script res://validation/ecology/evo_arch2_a14_live/test_live_scale_profile.gd > /tmp/a144-profile.log 2>&1 || { cat /tmp/a144-profile.log; exit 1; }
-          cat /tmp/a144-profile.log
-          grep -Fx 'ECO_ARCH2_A14_4_PROFILE PASS' /tmp/a144-profile.log
-          grep '^ECO_A14_4_PROFILE_JSON ' /tmp/a144-profile.log | sed 's/^ECO_A14_4_PROFILE_JSON //' > a144-profiles.jsonl
-          test "$(wc -l < a144-profiles.jsonl)" -eq 5
-          "$godot" --headless --path . --script res://validation/ecology/evo_arch2_a14_budget/test_cpu_budget_wake.gd > /tmp/adaptive.log 2>&1 || { cat /tmp/adaptive.log; exit 1; }
-          cat /tmp/adaptive.log
-          grep -Fx 'ECO_ARCH2_A14_3_BUDGET PASS' /tmp/adaptive.log
-          "$godot" --headless --path . --script res://validation/ecology/evo_arch2_a14_adaptive/test_adaptive_fidelity.gd > /tmp/a14-2-regression.log 2>&1 || { cat /tmp/a14-2-regression.log; exit 1; }
-          grep -Fx 'ECO_ARCH2_A14_2_ADAPTIVE PASS' /tmp/a14-2-regression.log
-          if grep -Ei 'SCRIPT ERROR|Parse Error|Failed to load script|Error compiling' /tmp/adaptive.log /tmp/a144-live.log /tmp/a144-profile.log /tmp/a145-staged.log /tmp/a145-r2-latency.log /tmp/a145-r3-live.log /tmp/a145-r3-scale.log /tmp/a146-frontier.log /tmp/a146-fine.log; then exit 1; fi
-          git diff --exit-code && git diff --cached --exit-code
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        persist-credentials: false
+    - name: Download official Godot 4.7.1 smoke engine
+      shell: bash
+      run: 'set -euo pipefail
 
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: eco-a14-6-r1-portable-profiles
-          path: |
-            a144-profiles.jsonl
-            a145-r2-profiles.jsonl
-            a145-r3-profiles.jsonl
-            a146-fine-profiles.jsonl
-          if-no-files-found: ignore
+        curl -fL --retry 3 -o /tmp/godot.zip https://github.com/godotengine/godot/releases/download/4.7.1-stable/Godot_v4.7.1-stable_linux.x86_64.zip
 
+        unzip -q /tmp/godot.zip -d /tmp/godot
+
+        chmod +x /tmp/godot/Godot_v4.7.1-stable_linux.x86_64
+
+        '
+    - name: Fine A5 allocation profiles and previous exact regressions
+      shell: bash
+      run: 'set -euo pipefail
+
+        godot=/tmp/godot/Godot_v4.7.1-stable_linux.x86_64
+
+        "$godot" --headless --editor --path . --import > /tmp/import.log 2>&1 || { cat /tmp/import.log; exit 1; }
+
+        "$godot" --headless --path . --script res://validation/ecology/evo_arch2_a14_fine/test_allocation_frontier.gd > /tmp/a146-frontier.log
+        2>&1 || { cat /tmp/a146-frontier.log; exit 1; }
+
+        cat /tmp/a146-frontier.log
+
+        grep -Fx ''ECO_ARCH2_A14_6_FRONTIER PASS'' /tmp/a146-frontier.log
+
+        "$godot" --headless --path . --script res://validation/ecology/evo_arch2_a14_fine/test_fine_latency_profile.gd > /tmp/a146-fine.log
+        2>&1 || { cat /tmp/a146-fine.log; exit 1; }
+
+        cat /tmp/a146-fine.log
+
+        grep -Fx ''ECO_ARCH2_A14_6_FINE PASS'' /tmp/a146-fine.log
+
+        grep ''^ECO_A14_6_FINE_PROFILE_JSON '' /tmp/a146-fine.log | sed ''s/^ECO_A14_6_FINE_PROFILE_JSON //'' > a146-fine-profiles.jsonl
+
+        test "$(wc -l < a146-fine-profiles.jsonl)" -eq 4
+
+        "$godot" --headless --path . --script res://validation/ecology/evo_arch2_a14_staged/test_staged_live_r3.gd > /tmp/a145-r3-live.log
+        2>&1 || { cat /tmp/a145-r3-live.log; exit 1; }
+
+        cat /tmp/a145-r3-live.log
+
+        grep -Fx ''ECO_ARCH2_A14_5_R3_LIVE PASS'' /tmp/a145-r3-live.log
+
+        "$godot" --headless --path . --script res://validation/ecology/evo_arch2_a14_staged/test_staged_live_r3_scale.gd >
+        /tmp/a145-r3-scale.log 2>&1 || { cat /tmp/a145-r3-scale.log; exit 1; }
+
+        cat /tmp/a145-r3-scale.log
+
+        grep -Fx ''ECO_ARCH2_A14_5_R3_SCALE PASS'' /tmp/a145-r3-scale.log
+
+        grep ''^ECO_A14_5_R3_PROFILE_JSON '' /tmp/a145-r3-scale.log | sed ''s/^ECO_A14_5_R3_PROFILE_JSON //'' > a145-r3-profiles.jsonl
+
+        test "$(wc -l < a145-r3-profiles.jsonl)" -eq 4
+
+        "$godot" --headless --path . --script res://validation/ecology/evo_arch2_a14_staged/test_staged_r2_latency.gd > /tmp/a145-r2-latency.log
+        2>&1 || { cat /tmp/a145-r2-latency.log; exit 1; }
+
+        cat /tmp/a145-r2-latency.log
+
+        grep -Fx ''ECO_ARCH2_A14_5_R2 PASS'' /tmp/a145-r2-latency.log
+
+        grep ''^ECO_A14_5_R2_PROFILE_JSON '' /tmp/a145-r2-latency.log | sed ''s/^ECO_A14_5_R2_PROFILE_JSON //'' > a145-r2-profiles.jsonl
+
+        test "$(wc -l < a145-r2-profiles.jsonl)" -eq 5
+
+        "$godot" --headless --path . --script res://validation/ecology/evo_arch2_a14_staged/test_staged_tick.gd > /tmp/a145-staged.log
+        2>&1 || { cat /tmp/a145-staged.log; exit 1; }
+
+        cat /tmp/a145-staged.log
+
+        grep -Fx ''ECO_ARCH2_A14_5_STAGED PASS'' /tmp/a145-staged.log
+
+        "$godot" --headless --path . --script res://validation/ecology/evo_arch2_a14_live/test_live_integration.gd > /tmp/a144-live.log
+        2>&1 || { cat /tmp/a144-live.log; exit 1; }
+
+        cat /tmp/a144-live.log
+
+        grep -Fx ''ECO_ARCH2_A14_4_LIVE PASS'' /tmp/a144-live.log
+
+        "$godot" --headless --path . --script res://validation/ecology/evo_arch2_a14_live/test_live_scale_profile.gd > /tmp/a144-profile.log
+        2>&1 || { cat /tmp/a144-profile.log; exit 1; }
+
+        cat /tmp/a144-profile.log
+
+        grep -Fx ''ECO_ARCH2_A14_4_PROFILE PASS'' /tmp/a144-profile.log
+
+        grep ''^ECO_A14_4_PROFILE_JSON '' /tmp/a144-profile.log | sed ''s/^ECO_A14_4_PROFILE_JSON //'' > a144-profiles.jsonl
+
+        test "$(wc -l < a144-profiles.jsonl)" -eq 5
+
+        "$godot" --headless --path . --script res://validation/ecology/evo_arch2_a14_budget/test_cpu_budget_wake.gd > /tmp/adaptive.log
+        2>&1 || { cat /tmp/adaptive.log; exit 1; }
+
+        cat /tmp/adaptive.log
+
+        grep -Fx ''ECO_ARCH2_A14_3_BUDGET PASS'' /tmp/adaptive.log
+
+        "$godot" --headless --path . --script res://validation/ecology/evo_arch2_a14_adaptive/test_adaptive_fidelity.gd >
+        /tmp/a14-2-regression.log 2>&1 || { cat /tmp/a14-2-regression.log; exit 1; }
+
+        grep -Fx ''ECO_ARCH2_A14_2_ADAPTIVE PASS'' /tmp/a14-2-regression.log
+
+        if grep -Ei ''SCRIPT ERROR|Parse Error|Failed to load script|Error compiling'' /tmp/adaptive.log /tmp/a144-live.log
+        /tmp/a144-profile.log /tmp/a145-staged.log /tmp/a145-r2-latency.log /tmp/a145-r3-live.log /tmp/a145-r3-scale.log /tmp/a146-frontier.log
+        /tmp/a146-fine.log; then exit 1; fi
+
+        git diff --exit-code && git diff --cached --exit-code
+
+        '
+    - uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: eco-a14-6-r1-portable-profiles
+        path: 'a144-profiles.jsonl
+
+          a145-r2-profiles.jsonl
+
+          a145-r3-profiles.jsonl
+
+          a146-fine-profiles.jsonl
+
+          '
+        if-no-files-found: ignore
   exact:
     name: A14.6 R1 ${{ matrix.platform }} Exact
-    runs-on: [self-hosted, '${{ matrix.platform }}', X64]
+    runs-on:
+    - self-hosted
+    - ${{ matrix.platform }}
+    - X64
     strategy:
       fail-fast: false
       matrix:
-        platform: [Linux, Windows]
+        platform:
+        - Linux
+        - Windows
     timeout-minutes: 120
     steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          persist-credentials: false
-      - name: Linux double exact
-        if: matrix.platform == 'Linux'
-        shell: bash
-        env:
-          CONFIGURED_GODOT: ${{ vars.DWS_GODOT_DOUBLE_LINUX_BIN }}
-        run: |
-          set -euo pipefail
-          godot="${CONFIGURED_GODOT:-${DWS_GODOT_DOUBLE_LINUX_BIN:-$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64}}"
-          "$godot" --headless --editor --path . --import
-          test "$(sha256sum "$godot" | cut -d' ' -f1)" = "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7"
-          "$godot" --headless --path . --script res://validation/ecology/evo_arch2_a14_fine/test_allocation_frontier.gd | tee /tmp/a146-frontier.log
-          grep -Fx 'ECO_ARCH2_A14_6_FRONTIER PASS' /tmp/a146-frontier.log
-          "$godot" --headless --path . --script res://validation/ecology/evo_arch2_a14_fine/test_fine_latency_profile.gd | tee /tmp/a146-fine.log
-          grep -Fx 'ECO_ARCH2_A14_6_FINE PASS' /tmp/a146-fine.log
-          grep '^ECO_A14_6_FINE_PROFILE_JSON ' /tmp/a146-fine.log | sed 's/^ECO_A14_6_FINE_PROFILE_JSON //' > a146-fine-profiles.jsonl
-          test "$(wc -l < a146-fine-profiles.jsonl)" -eq 4
-          "$godot" --headless --path . --script res://validation/ecology/evo_arch2_a14_staged/test_staged_live_r3.gd | tee /tmp/a145-r3-live.log
-          grep -Fx 'ECO_ARCH2_A14_5_R3_LIVE PASS' /tmp/a145-r3-live.log
-          "$godot" --headless --path . --script res://validation/ecology/evo_arch2_a14_staged/test_staged_live_r3_scale.gd | tee /tmp/a145-r3-scale.log
-          grep -Fx 'ECO_ARCH2_A14_5_R3_SCALE PASS' /tmp/a145-r3-scale.log
-          grep '^ECO_A14_5_R3_PROFILE_JSON ' /tmp/a145-r3-scale.log | sed 's/^ECO_A14_5_R3_PROFILE_JSON //' > a145-r3-profiles.jsonl
-          test "$(wc -l < a145-r3-profiles.jsonl)" -eq 4
-          "$godot" --headless --path . --script res://validation/ecology/evo_arch2_a14_staged/test_staged_r2_latency.gd | tee /tmp/a145-r2-latency.log
-          grep -Fx 'ECO_ARCH2_A14_5_R2 PASS' /tmp/a145-r2-latency.log
-          grep '^ECO_A14_5_R2_PROFILE_JSON ' /tmp/a145-r2-latency.log | sed 's/^ECO_A14_5_R2_PROFILE_JSON //' > a145-r2-profiles.jsonl
-          test "$(wc -l < a145-r2-profiles.jsonl)" -eq 5
-          "$godot" --headless --path . --script res://validation/ecology/evo_arch2_a14_staged/test_staged_tick.gd | tee /tmp/a145-staged.log
-          grep -Fx 'ECO_ARCH2_A14_5_STAGED PASS' /tmp/a145-staged.log
-          "$godot" --headless --path . --script res://validation/ecology/evo_arch2_a14_live/test_live_integration.gd | tee /tmp/a144-live.log
-          grep -Fx 'ECO_ARCH2_A14_4_LIVE PASS' /tmp/a144-live.log
-          "$godot" --headless --path . --script res://validation/ecology/evo_arch2_a14_live/test_live_scale_profile.gd | tee /tmp/a144-profile.log
-          grep -Fx 'ECO_ARCH2_A14_4_PROFILE PASS' /tmp/a144-profile.log
-          grep '^ECO_A14_4_PROFILE_JSON ' /tmp/a144-profile.log | sed 's/^ECO_A14_4_PROFILE_JSON //' > a144-profiles.jsonl
-          test "$(wc -l < a144-profiles.jsonl)" -eq 5
-          "$godot" --headless --path . --script res://validation/ecology/evo_arch2_a14_budget/test_cpu_budget_wake.gd | tee /tmp/a14-2.log
-          grep -Fx 'ECO_ARCH2_A14_3_BUDGET PASS' /tmp/a14-2.log
-          "$godot" --headless --path . --script res://validation/ecology/evo_arch2_a14_adaptive/test_adaptive_fidelity.gd | tee /tmp/a14-2-regression.log
-          grep -Fx 'ECO_ARCH2_A14_2_ADAPTIVE PASS' /tmp/a14-2-regression.log
-          python3 validation/ecology/evo_arch2_a13_fidelity/run_exact.py --godot "$godot"
-      - name: Windows double exact
-        if: matrix.platform == 'Windows'
-        shell: pwsh
-        env:
-          CONFIGURED_GODOT: ${{ vars.DWS_GODOT_DOUBLE_BIN }}
-        run: |
-          $ErrorActionPreference = 'Stop'
-          $godot = $env:CONFIGURED_GODOT
-          if ([string]::IsNullOrWhiteSpace($godot)) { $godot = 'C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe' }
-          & $godot --headless --editor --path . --import
-          if ($LASTEXITCODE -ne 0) { throw 'IMPORT_FAIL' }
-          if ((Get-FileHash $godot -Algorithm SHA256).Hash.ToLowerInvariant() -ne '3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5') { throw 'GODOT_SHA256_MISMATCH' }
-          & $godot --headless --path . --script res://validation/ecology/evo_arch2_a14_fine/test_allocation_frontier.gd | Tee-Object -FilePath a146-frontier.log
-          if ($LASTEXITCODE -ne 0) { throw 'A14_6_FRONTIER_FAIL' }
-          if (-not (Select-String -Path a146-frontier.log -Pattern '^ECO_ARCH2_A14_6_FRONTIER PASS$')) { throw 'FRONTIER_MARKER_MISSING' }
-          & $godot --headless --path . --script res://validation/ecology/evo_arch2_a14_fine/test_fine_latency_profile.gd | Tee-Object -FilePath a146-fine.log
-          if ($LASTEXITCODE -ne 0) { throw 'A14_6_FINE_FAIL' }
-          if (-not (Select-String -Path a146-fine.log -Pattern '^ECO_ARCH2_A14_6_FINE PASS$')) { throw 'FINE_MARKER_MISSING' }
-          Get-Content a146-fine.log | Where-Object { $_ -match '^ECO_A14_6_FINE_PROFILE_JSON ' } | ForEach-Object { $_ -replace '^ECO_A14_6_FINE_PROFILE_JSON ','' } | Set-Content a146-fine-profiles.jsonl
-          if ((Get-Content a146-fine-profiles.jsonl).Count -ne 4) { throw 'FINE_PROFILE_COUNT' }
-          & $godot --headless --path . --script res://validation/ecology/evo_arch2_a14_staged/test_staged_live_r3.gd | Tee-Object -FilePath a145-r3-live.log
-          if ($LASTEXITCODE -ne 0) { throw 'A14_5_R3_LIVE_FAIL' }
-          if (-not (Select-String -Path a145-r3-live.log -Pattern '^ECO_ARCH2_A14_5_R3_LIVE PASS$')) { throw 'R3_LIVE_MARKER_MISSING' }
-          & $godot --headless --path . --script res://validation/ecology/evo_arch2_a14_staged/test_staged_live_r3_scale.gd | Tee-Object -FilePath a145-r3-scale.log
-          if ($LASTEXITCODE -ne 0) { throw 'A14_5_R3_SCALE_FAIL' }
-          if (-not (Select-String -Path a145-r3-scale.log -Pattern '^ECO_ARCH2_A14_5_R3_SCALE PASS$')) { throw 'R3_SCALE_MARKER_MISSING' }
-          Get-Content a145-r3-scale.log | Where-Object { $_ -match '^ECO_A14_5_R3_PROFILE_JSON ' } | ForEach-Object { $_ -replace '^ECO_A14_5_R3_PROFILE_JSON ','' } | Set-Content a145-r3-profiles.jsonl
-          if ((Get-Content a145-r3-profiles.jsonl).Count -ne 4) { throw 'R3_PROFILE_RECORD_COUNT' }
-          & $godot --headless --path . --script res://validation/ecology/evo_arch2_a14_staged/test_staged_r2_latency.gd | Tee-Object -FilePath a145-r2-latency.log
-          if ($LASTEXITCODE -ne 0) { throw 'A14_5_R2_LATENCY_FAIL' }
-          if (-not (Select-String -Path a145-r2-latency.log -Pattern '^ECO_ARCH2_A14_5_R2 PASS$')) { throw 'R2_MARKER_MISSING' }
-          Get-Content a145-r2-latency.log | Where-Object { $_ -match '^ECO_A14_5_R2_PROFILE_JSON ' } | ForEach-Object { $_ -replace '^ECO_A14_5_R2_PROFILE_JSON ','' } | Set-Content a145-r2-profiles.jsonl
-          if ((Get-Content a145-r2-profiles.jsonl).Count -ne 5) { throw 'R2_PROFILE_RECORD_COUNT' }
-          & $godot --headless --path . --script res://validation/ecology/evo_arch2_a14_staged/test_staged_tick.gd | Tee-Object -FilePath a145-staged.log
-          if ($LASTEXITCODE -ne 0) { throw 'A14_5_STAGED_EXACT_FAIL' }
-          if (-not (Select-String -Path a145-staged.log -Pattern '^ECO_ARCH2_A14_5_STAGED PASS$')) { throw 'STAGED_MARKER_MISSING' }
-          & $godot --headless --path . --script res://validation/ecology/evo_arch2_a14_live/test_live_integration.gd | Tee-Object -FilePath a144-live.log
-          if ($LASTEXITCODE -ne 0) { throw 'A14_4_LIVE_FAIL' }
-          if (-not (Select-String -Path a144-live.log -Pattern '^ECO_ARCH2_A14_4_LIVE PASS$')) { throw 'LIVE_MARKER_MISSING' }
-          & $godot --headless --path . --script res://validation/ecology/evo_arch2_a14_live/test_live_scale_profile.gd | Tee-Object -FilePath a144-profile.log
-          if ($LASTEXITCODE -ne 0) { throw 'A14_4_PROFILE_FAIL' }
-          if (-not (Select-String -Path a144-profile.log -Pattern '^ECO_ARCH2_A14_4_PROFILE PASS$')) { throw 'PROFILE_MARKER_MISSING' }
-          Get-Content a144-profile.log | Where-Object { $_ -match '^ECO_A14_4_PROFILE_JSON ' } | ForEach-Object { $_.Substring(23) } | Set-Content a144-profiles.jsonl
-          if ((Get-Content a144-profiles.jsonl).Count -ne 5) { throw 'PROFILE_RECORD_COUNT' }
-          & $godot --headless --path . --script res://validation/ecology/evo_arch2_a14_budget/test_cpu_budget_wake.gd
-          if ($LASTEXITCODE -ne 0) { throw 'A14_3_BUDGET_EXACT_FAIL' }
-          & $godot --headless --path . --script res://validation/ecology/evo_arch2_a14_adaptive/test_adaptive_fidelity.gd
-          if ($LASTEXITCODE -ne 0) { throw 'A14_2_REGRESSION_FAIL' }
-          python validation/ecology/evo_arch2_a13_fidelity/run_exact.py --godot $godot
-          if ($LASTEXITCODE -ne 0) { throw 'A13_REGRESSION_FAIL' }
-      - name: Clean tracked Linux
-        if: always() && matrix.platform == 'Linux'
-        shell: bash
-        run: |
-          git diff --exit-code && git diff --cached --exit-code
-      - name: Clean tracked Windows
-        if: always() && matrix.platform == 'Windows'
-        shell: pwsh
-        run: |
-          git diff --exit-code
-          if ($LASTEXITCODE -ne 0) { throw 'DIRTY_WORKTREE' }
-          git diff --cached --exit-code
-          if ($LASTEXITCODE -ne 0) { throw 'DIRTY_INDEX' }
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        persist-credentials: false
+    - name: Linux double exact
+      if: matrix.platform == 'Linux'
+      shell: bash
+      env:
+        CONFIGURED_GODOT: ${{ vars.DWS_GODOT_DOUBLE_LINUX_BIN }}
+      run: 'set -euo pipefail
 
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: eco-a14-6-r1-${{ matrix.platform }}-profiles
-          path: |
-            a144-profiles.jsonl
-            a145-r2-profiles.jsonl
-            a145-r3-profiles.jsonl
-            a146-fine-profiles.jsonl
-          if-no-files-found: ignore
+        godot="${CONFIGURED_GODOT:-${DWS_GODOT_DOUBLE_LINUX_BIN:-$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64}}"
+
+        "$godot" --headless --editor --path . --import
+
+        test "$(sha256sum "$godot" | cut -d'' '' -f1)" = "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7"
+
+        "$godot" --headless --path . --script res://validation/ecology/evo_arch2_a14_fine/test_allocation_frontier.gd | tee
+        /tmp/a146-frontier.log
+
+        grep -Fx ''ECO_ARCH2_A14_6_FRONTIER PASS'' /tmp/a146-frontier.log
+
+        "$godot" --headless --path . --script res://validation/ecology/evo_arch2_a14_fine/test_fine_latency_profile.gd | tee
+        /tmp/a146-fine.log
+
+        grep -Fx ''ECO_ARCH2_A14_6_FINE PASS'' /tmp/a146-fine.log
+
+        grep ''^ECO_A14_6_FINE_PROFILE_JSON '' /tmp/a146-fine.log | sed ''s/^ECO_A14_6_FINE_PROFILE_JSON //'' > a146-fine-profiles.jsonl
+
+        test "$(wc -l < a146-fine-profiles.jsonl)" -eq 4
+
+        "$godot" --headless --path . --script res://validation/ecology/evo_arch2_a14_staged/test_staged_live_r3.gd | tee /tmp/a145-r3-live.log
+
+        grep -Fx ''ECO_ARCH2_A14_5_R3_LIVE PASS'' /tmp/a145-r3-live.log
+
+        "$godot" --headless --path . --script res://validation/ecology/evo_arch2_a14_staged/test_staged_live_r3_scale.gd |
+        tee /tmp/a145-r3-scale.log
+
+        grep -Fx ''ECO_ARCH2_A14_5_R3_SCALE PASS'' /tmp/a145-r3-scale.log
+
+        grep ''^ECO_A14_5_R3_PROFILE_JSON '' /tmp/a145-r3-scale.log | sed ''s/^ECO_A14_5_R3_PROFILE_JSON //'' > a145-r3-profiles.jsonl
+
+        test "$(wc -l < a145-r3-profiles.jsonl)" -eq 4
+
+        "$godot" --headless --path . --script res://validation/ecology/evo_arch2_a14_staged/test_staged_r2_latency.gd | tee
+        /tmp/a145-r2-latency.log
+
+        grep -Fx ''ECO_ARCH2_A14_5_R2 PASS'' /tmp/a145-r2-latency.log
+
+        grep ''^ECO_A14_5_R2_PROFILE_JSON '' /tmp/a145-r2-latency.log | sed ''s/^ECO_A14_5_R2_PROFILE_JSON //'' > a145-r2-profiles.jsonl
+
+        test "$(wc -l < a145-r2-profiles.jsonl)" -eq 5
+
+        "$godot" --headless --path . --script res://validation/ecology/evo_arch2_a14_staged/test_staged_tick.gd | tee /tmp/a145-staged.log
+
+        grep -Fx ''ECO_ARCH2_A14_5_STAGED PASS'' /tmp/a145-staged.log
+
+        "$godot" --headless --path . --script res://validation/ecology/evo_arch2_a14_live/test_live_integration.gd | tee /tmp/a144-live.log
+
+        grep -Fx ''ECO_ARCH2_A14_4_LIVE PASS'' /tmp/a144-live.log
+
+        "$godot" --headless --path . --script res://validation/ecology/evo_arch2_a14_live/test_live_scale_profile.gd | tee
+        /tmp/a144-profile.log
+
+        grep -Fx ''ECO_ARCH2_A14_4_PROFILE PASS'' /tmp/a144-profile.log
+
+        grep ''^ECO_A14_4_PROFILE_JSON '' /tmp/a144-profile.log | sed ''s/^ECO_A14_4_PROFILE_JSON //'' > a144-profiles.jsonl
+
+        test "$(wc -l < a144-profiles.jsonl)" -eq 5
+
+        "$godot" --headless --path . --script res://validation/ecology/evo_arch2_a14_budget/test_cpu_budget_wake.gd | tee
+        /tmp/a14-2.log
+
+        grep -Fx ''ECO_ARCH2_A14_3_BUDGET PASS'' /tmp/a14-2.log
+
+        "$godot" --headless --path . --script res://validation/ecology/evo_arch2_a14_adaptive/test_adaptive_fidelity.gd |
+        tee /tmp/a14-2-regression.log
+
+        grep -Fx ''ECO_ARCH2_A14_2_ADAPTIVE PASS'' /tmp/a14-2-regression.log
+
+        python3 validation/ecology/evo_arch2_a13_fidelity/run_exact.py --godot "$godot"
+
+        '
+    - name: Windows double exact
+      if: matrix.platform == 'Windows'
+      shell: pwsh
+      env:
+        CONFIGURED_GODOT: ${{ vars.DWS_GODOT_DOUBLE_BIN }}
+      run: '$ErrorActionPreference = ''Stop''
+
+        $godot = $env:CONFIGURED_GODOT
+
+        if ([string]::IsNullOrWhiteSpace($godot)) { $godot = ''C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe''
+        }
+
+        & $godot --headless --editor --path . --import
+
+        if ($LASTEXITCODE -ne 0) { throw ''IMPORT_FAIL'' }
+
+        if ((Get-FileHash $godot -Algorithm SHA256).Hash.ToLowerInvariant() -ne ''3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5'')
+        { throw ''GODOT_SHA256_MISMATCH'' }
+
+        & $godot --headless --path . --script res://validation/ecology/evo_arch2_a14_fine/test_allocation_frontier.gd | Tee-Object
+        -FilePath a146-frontier.log
+
+        if ($LASTEXITCODE -ne 0) { throw ''A14_6_FRONTIER_FAIL'' }
+
+        if (-not (Select-String -Path a146-frontier.log -Pattern ''^ECO_ARCH2_A14_6_FRONTIER PASS$'')) { throw ''FRONTIER_MARKER_MISSING''
+        }
+
+        & $godot --headless --path . --script res://validation/ecology/evo_arch2_a14_fine/test_fine_latency_profile.gd | Tee-Object
+        -FilePath a146-fine.log
+
+        if ($LASTEXITCODE -ne 0) { throw ''A14_6_FINE_FAIL'' }
+
+        if (-not (Select-String -Path a146-fine.log -Pattern ''^ECO_ARCH2_A14_6_FINE PASS$'')) { throw ''FINE_MARKER_MISSING''
+        }
+
+        Get-Content a146-fine.log | Where-Object { $_ -match ''^ECO_A14_6_FINE_PROFILE_JSON '' } | ForEach-Object { $_ -replace
+        ''^ECO_A14_6_FINE_PROFILE_JSON '','''' } | Set-Content a146-fine-profiles.jsonl
+
+        if ((Get-Content a146-fine-profiles.jsonl).Count -ne 4) { throw ''FINE_PROFILE_COUNT'' }
+
+        & $godot --headless --path . --script res://validation/ecology/evo_arch2_a14_staged/test_staged_live_r3.gd | Tee-Object
+        -FilePath a145-r3-live.log
+
+        if ($LASTEXITCODE -ne 0) { throw ''A14_5_R3_LIVE_FAIL'' }
+
+        if (-not (Select-String -Path a145-r3-live.log -Pattern ''^ECO_ARCH2_A14_5_R3_LIVE PASS$'')) { throw ''R3_LIVE_MARKER_MISSING''
+        }
+
+        & $godot --headless --path . --script res://validation/ecology/evo_arch2_a14_staged/test_staged_live_r3_scale.gd |
+        Tee-Object -FilePath a145-r3-scale.log
+
+        if ($LASTEXITCODE -ne 0) { throw ''A14_5_R3_SCALE_FAIL'' }
+
+        if (-not (Select-String -Path a145-r3-scale.log -Pattern ''^ECO_ARCH2_A14_5_R3_SCALE PASS$'')) { throw ''R3_SCALE_MARKER_MISSING''
+        }
+
+        Get-Content a145-r3-scale.log | Where-Object { $_ -match ''^ECO_A14_5_R3_PROFILE_JSON '' } | ForEach-Object { $_ -replace
+        ''^ECO_A14_5_R3_PROFILE_JSON '','''' } | Set-Content a145-r3-profiles.jsonl
+
+        if ((Get-Content a145-r3-profiles.jsonl).Count -ne 4) { throw ''R3_PROFILE_RECORD_COUNT'' }
+
+        & $godot --headless --path . --script res://validation/ecology/evo_arch2_a14_staged/test_staged_r2_latency.gd | Tee-Object
+        -FilePath a145-r2-latency.log
+
+        if ($LASTEXITCODE -ne 0) { throw ''A14_5_R2_LATENCY_FAIL'' }
+
+        if (-not (Select-String -Path a145-r2-latency.log -Pattern ''^ECO_ARCH2_A14_5_R2 PASS$'')) { throw ''R2_MARKER_MISSING''
+        }
+
+        Get-Content a145-r2-latency.log | Where-Object { $_ -match ''^ECO_A14_5_R2_PROFILE_JSON '' } | ForEach-Object { $_
+        -replace ''^ECO_A14_5_R2_PROFILE_JSON '','''' } | Set-Content a145-r2-profiles.jsonl
+
+        if ((Get-Content a145-r2-profiles.jsonl).Count -ne 5) { throw ''R2_PROFILE_RECORD_COUNT'' }
+
+        & $godot --headless --path . --script res://validation/ecology/evo_arch2_a14_staged/test_staged_tick.gd | Tee-Object
+        -FilePath a145-staged.log
+
+        if ($LASTEXITCODE -ne 0) { throw ''A14_5_STAGED_EXACT_FAIL'' }
+
+        if (-not (Select-String -Path a145-staged.log -Pattern ''^ECO_ARCH2_A14_5_STAGED PASS$'')) { throw ''STAGED_MARKER_MISSING''
+        }
+
+        & $godot --headless --path . --script res://validation/ecology/evo_arch2_a14_live/test_live_integration.gd | Tee-Object
+        -FilePath a144-live.log
+
+        if ($LASTEXITCODE -ne 0) { throw ''A14_4_LIVE_FAIL'' }
+
+        if (-not (Select-String -Path a144-live.log -Pattern ''^ECO_ARCH2_A14_4_LIVE PASS$'')) { throw ''LIVE_MARKER_MISSING''
+        }
+
+        & $godot --headless --path . --script res://validation/ecology/evo_arch2_a14_live/test_live_scale_profile.gd | Tee-Object
+        -FilePath a144-profile.log
+
+        if ($LASTEXITCODE -ne 0) { throw ''A14_4_PROFILE_FAIL'' }
+
+        if (-not (Select-String -Path a144-profile.log -Pattern ''^ECO_ARCH2_A14_4_PROFILE PASS$'')) { throw ''PROFILE_MARKER_MISSING''
+        }
+
+        Get-Content a144-profile.log | Where-Object { $_ -match ''^ECO_A14_4_PROFILE_JSON '' } | ForEach-Object { $_.Substring(23)
+        } | Set-Content a144-profiles.jsonl
+
+        if ((Get-Content a144-profiles.jsonl).Count -ne 5) { throw ''PROFILE_RECORD_COUNT'' }
+
+        & $godot --headless --path . --script res://validation/ecology/evo_arch2_a14_budget/test_cpu_budget_wake.gd
+
+        if ($LASTEXITCODE -ne 0) { throw ''A14_3_BUDGET_EXACT_FAIL'' }
+
+        & $godot --headless --path . --script res://validation/ecology/evo_arch2_a14_adaptive/test_adaptive_fidelity.gd
+
+        if ($LASTEXITCODE -ne 0) { throw ''A14_2_REGRESSION_FAIL'' }
+
+        python validation/ecology/evo_arch2_a13_fidelity/run_exact.py --godot $godot
+
+        if ($LASTEXITCODE -ne 0) { throw ''A13_REGRESSION_FAIL'' }
+
+        '
+    - name: Clean tracked Linux
+      if: always() && matrix.platform == 'Linux'
+      shell: bash
+      run: 'git diff --exit-code && git diff --cached --exit-code
+
+        '
+    - name: Clean tracked Windows
+      if: always() && matrix.platform == 'Windows'
+      shell: pwsh
+      run: 'git diff --exit-code
+
+        if ($LASTEXITCODE -ne 0) { throw ''DIRTY_WORKTREE'' }
+
+        git diff --cached --exit-code
+
+        if ($LASTEXITCODE -ne 0) { throw ''DIRTY_INDEX'' }
+
+        '
+    - uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: eco-a14-6-r1-${{ matrix.platform }}-profiles
+        path: 'a144-profiles.jsonl
+
+          a145-r2-profiles.jsonl
+
+          a145-r3-profiles.jsonl
+
+          a146-fine-profiles.jsonl
+
+          '
+        if-no-files-found: ignore
