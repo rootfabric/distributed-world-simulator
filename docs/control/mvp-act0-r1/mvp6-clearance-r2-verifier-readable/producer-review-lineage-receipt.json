@@ -1,0 +1,28 @@
+{
+  "schema": "distributed_world_simulator.mvp6_clearance_r2_producer_review_lineage_receipt.v1",
+  "source_commit": "35a367e10ff723c46e7b2e6dd39b1f1e4d6f64de",
+  "source_path": "docs/control/mvp-act0-r1/journal-resolution-roles-r1/reviewer/feature-review.json",
+  "source_blob_sha": "0e70f365c0ca11c60ce8d191e10b25115481271f",
+  "review_id": "MVP6-JOURNAL-73B88181-REVIEW-R1",
+  "verdict": "PASS",
+  "scope": "APPROVED_JOURNAL_REPAIR_SOURCE_AND_FOCUSED_EVIDENCE_ONLY",
+  "reviewed_head": "73b8818184c93986e3313f35f9f4548c608e47e6",
+  "reviewed_tree": "a1bbe30fd68af5db3a9535bee942683ebe761bc1",
+  "machine_evidence_manifest_sha256": "e0cb0b4793b5b89846c0defca471dcd2feb023a8ba7a86af1768d98c8ce27ce8",
+  "runtime_blob": "abdf0c0a335f4e2c968933156fb17f94a7b45bd1",
+  "test_blob": "b86e375ac5cb79ff9463f246e843d09efb9b9e65",
+  "linux_run_id": 35097654348,
+  "linux_artifact_id": 10446937610,
+  "linux_zip_sha256": "afd5aeac91fd73e893fb569cc11a46a49c15673244c79c0a1dcd2e661160c1cd",
+  "current_feature_head": "f79085cfed69bdd826167d2390b286467cbf621c",
+  "ancestry_status": "reviewed_head_is_ancestor",
+  "current_feature_ahead_by": 26,
+  "critical_path": "scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service.gd",
+  "current_critical_blob": "44841fb3719b1cf36fd5afdfc0f8a0e4d0eacb30",
+  "source_verified_via_github_fetch": true,
+  "claims": {
+    "merge_authorized": false,
+    "clearance_accepted": false,
+    "mvp6_verified": false
+  }
+}

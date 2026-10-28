@@ -1,0 +1,25 @@
+{
+  "schema": "distributed_world_simulator.mvp6_clearance_r2_current_producer_fence.v1",
+  "producer_branch": "feature/v0-mvp-playable-seamless-planet-r1",
+  "producer_head": "f79085cfed69bdd826167d2390b286467cbf621c",
+  "producer_tree": "924ba3a801e36148778773fddc6dd87df15c9e35",
+  "producer_parent": "35a367e10ff723c46e7b2e6dd39b1f1e4d6f64de",
+  "reviewed_producer_head": "73b8818184c93986e3313f35f9f4548c608e47e6",
+  "reviewed_producer_is_ancestor": true,
+  "reviewed_to_current_ahead_by": 26,
+  "reviewed_to_current_behind_by": 0,
+  "m4_path": "scripts/runtime/networked_gameplay/m4/canonical_multiplayer_item_graph_service.gd",
+  "m4_blob": "44841fb3719b1cf36fd5afdfc0f8a0e4d0eacb30",
+  "journal_path": "scripts/network/prediction/predicted_item_interaction_journal.gd",
+  "journal_blob": "abdf0c0a335f4e2c968933156fb17f94a7b45bd1",
+  "historical_review_runtime_blob": "abdf0c0a335f4e2c968933156fb17f94a7b45bd1",
+  "journal_matches_historical_review_runtime_blob": true,
+  "journal_blob_source_verified_via_github_fetch": true,
+  "m4_blob_source_verified_via_github_fetch": true,
+  "exact_journal_mirror_path": "docs/control/mvp-act0-r1/mvp6-clearance-r2-verifier-readable/current-producer-f79085cf-journal.gd",
+  "claims": {
+    "clearance_accepted": false,
+    "main_merge_authorized": false,
+    "mvp6_verified": false
+  }
+}
