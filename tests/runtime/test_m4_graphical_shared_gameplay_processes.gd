@@ -51,8 +51,8 @@ func _spawn(exe:String,args:Array[String],user:String,display:String)->int:
 		else:OS.unset_environment(n)
 	return pid
 func _start_xvfb()->String:
-	if not FileAccess.file_exists("/usr/bin/Xvfb"):return ""
-	var d:=":%d"%(500+OS.get_process_id()%300);xvfb_pid=OS.create_process("/usr/bin/Xvfb",[d,"-screen","0","1280x720x24","-nolisten","tcp","-noreset"],false);pids.append(xvfb_pid);OS.delay_msec(500);return d if OS.is_process_running(xvfb_pid) else ""
+	if not FileAccess.file_exists((OS.get_environment("XVFB_BIN") if OS.get_environment("XVFB_BIN") != "" else "/usr/bin/Xvfb")):return ""
+	var d:=":%d"%(500+OS.get_process_id()%300);xvfb_pid=OS.create_process((OS.get_environment("XVFB_BIN") if OS.get_environment("XVFB_BIN") != "" else "/usr/bin/Xvfb"),[d,"-screen","0","1280x720x24","-nolisten","tcp","-noreset"],false);pids.append(xvfb_pid);OS.delay_msec(500);return d if OS.is_process_running(xvfb_pid) else ""
 func _wait_state(path:String,states:Array[String],timeout:int)->Dictionary:
 	var start:=Time.get_ticks_msec();var value:Dictionary={}
 	while Time.get_ticks_msec()-start<timeout:

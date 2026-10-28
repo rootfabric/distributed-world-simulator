@@ -1,0 +1,108 @@
+name: engine48-r3-ubuntu-exact
+
+# ENGINE48 candidate only; legacy 4.7.1 workflows remain unchanged.
+on:
+  pull_request:
+    branches: [repair/engine48-r3-p75-summary-count-r1]
+
+permissions:
+  contents: read
+
+jobs:
+  ubuntu-exact:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 150
+    env:
+      ENGINE48_SUBJECT: "${{ github.event.pull_request.head.sha }}"
+      ENGINE48_EDITOR_CONFIG: "${{ vars.DWS_ENGINE48_GODOT_LINUX_BIN }}"
+      ENGINE48_EDITOR_HASH: "4d72a93edf3b4193bdbf22f72c0c9d15c14aa7130c07cf1638f88ca1f9744f6f"
+      ENGINE48_GODOT_VERSION: "4.8.beta1.double.custom_build.4d10419ca"
+      GODOT_SILENCE_ROOT_WARNING: "1"
+      BREAKPOINT_RUNTIME_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: "${{ github.event.pull_request.head.sha }}"
+          fetch-depth: 0
+
+      - name: Exact identity and pinned Linux Godot 4.8 double
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/engine48/linux/r3
+          test "$(git rev-parse HEAD)" = "$ENGINE48_SUBJECT"
+          git merge-base --is-ancestor a497d5a6a9dd6e9e5b1c9b46df11dee2928f2824 HEAD
+          git merge-base --is-ancestor 7aaa7fa9ebcabeeca33f15696002ff3907c22ffb HEAD
+          test -z "$(git status --porcelain --untracked-files=no)"
+          selected=""
+          for candidate in "$ENGINE48_EDITOR_CONFIG" "$HOME/.local/opt/godot-double-4.8-beta1/godot.linuxbsd.editor.double.x86_64" "/home/rdpuser/.local/opt/godot-double-4.8-beta1/godot.linuxbsd.editor.double.x86_64"; do
+            [[ -n "$candidate" && -x "$candidate" ]] || continue
+            [[ "$(sha256sum "$candidate" | cut -d ' ' -f1)" == "$ENGINE48_EDITOR_HASH" ]] || continue
+            selected="$(realpath "$candidate")"
+            break
+          done
+          if [[ -z "$selected" ]]; then echo ENGINE48_EXACT_LINUX_EDITOR_NOT_FOUND >&2; exit 2; fi
+          [[ "$("$selected" --version)" == "$ENGINE48_GODOT_VERSION" ]] || { echo ENGINE48_WRONG_GODOT_VERSION >&2; exit 3; }
+          echo "GODOT_BIN=$selected" >> "$GITHUB_ENV"
+          printf 'HEAD=%s\nTREE=%s\nGODOT_SHA256=%s\n' "$(git rev-parse HEAD)" "$(git rev-parse 'HEAD^{tree}')" "$ENGINE48_EDITOR_HASH" > artifacts/engine48/linux/r3/preflight.txt
+
+      - name: Cold import and tracked clean
+        shell: bash
+        timeout-minutes: 15
+        run: |
+          set -euo pipefail
+          rm -rf .godot
+          "$GODOT_BIN" --headless --path . --editor --import --quit > artifacts/engine48/linux/r3/import.log 2>&1 || { tail -n 100 artifacts/engine48/linux/r3/import.log; exit 1; }
+          test -s .godot/global_script_class_cache.cfg
+          if grep -E 'SCRIPT ERROR:|Parse Error:|Compile Error:' artifacts/engine48/linux/r3/import.log; then exit 1; fi
+          git diff --exit-code
+          git diff --cached --exit-code
+
+      - name: MW10 exact, P7.2/P7.3, SM1 L0, C22
+        shell: bash
+        timeout-minutes: 60
+        run: |
+          set -euo pipefail
+          export GODOT_BIN
+          bash RUN_MW10_CROSS_REGION_MATTER_TRANSACTIONS_TESTS.sh 2>&1 | tee artifacts/engine48/linux/r3/mw10.log
+          bash RUN_V0_P7_2_LUNAR_MATTER_BUBBLE_GATE.sh "$GODOT_BIN" "$ENGINE48_SUBJECT" 2>&1 | tee artifacts/engine48/linux/r3/p7-2.log
+          bash RUN_V0_P7_3_MATERIAL_BATCH_ITEM_GRAPH_GATE.sh "$GODOT_BIN" "$ENGINE48_SUBJECT" 2>&1 | tee artifacts/engine48/linux/r3/p7-3.log
+          bash RUN_V0_SM1_L0.sh 2>&1 | tee artifacts/engine48/linux/r3/sm1-l0.log
+          bash RUN_C22_COMPILED_PROXY_TESTS.sh "$GODOT_BIN" 2>&1 | tee artifacts/engine48/linux/r3/c22.log
+          grep -Fq 'MW10 runner: PASS (2/2 suites)' artifacts/engine48/linux/r3/mw10.log
+          grep -Fq 'V0-P7.3 MATERIAL BATCH TO ITEM GRAPH GATE GREEN' artifacts/engine48/linux/r3/p7-3.log
+
+      - name: Graphical seam and M7 two-client process gate
+        shell: bash
+        timeout-minutes: 90
+        run: |
+          set -euo pipefail
+          command -v Xvfb >/dev/null || { echo ENGINE48_XVFB_REQUIRED >&2; exit 4; }
+          export XVFB_BIN="$(command -v Xvfb)" GODOT_BIN
+          bash RUN_V0_PLAYABLE_SEAMLESS_CLIENTS.sh all 2>&1 | tee artifacts/engine48/linux/r3/seam.log
+          bash RUN_M7_PLAYABLE_NETWORKED_PLAYGROUND_TESTS.sh "$GODOT_BIN" 2>&1 | tee artifacts/engine48/linux/r3/m7.log
+          grep -Fq 'V0 PLAYABLE SEAMLESS TEST CLIENTS: PASS' artifacts/engine48/linux/r3/seam.log
+          if grep -Eq 'M7 playable network processes: [0-9]+ assertions, [1-9][0-9]* failures' artifacts/engine48/linux/r3/m7.log; then
+            echo ENGINE48_FALSE_GREEN_M7_REJECTED >&2; exit 1
+          fi
+          grep -Eq 'M7 playable network processes: [0-9]+ assertions, 0 failures' artifacts/engine48/linux/r3/m7.log
+          grep -Fq 'M7 playable networked playground: PASS (13/13)' artifacts/engine48/linux/r3/m7.log
+
+      - name: Postflight tracked identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$ENGINE48_SUBJECT"
+          test -z "$(git status --porcelain --untracked-files=no)" || { git status --short; exit 1; }
+          git rev-parse HEAD > artifacts/engine48/linux/r3/postflight-head.txt
+          git rev-parse 'HEAD^{tree}' > artifacts/engine48/linux/r3/postflight-tree.txt
+
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: engine48-ubuntu-r3-${{ github.run_id }}-${{ github.run_attempt }}
+          path: artifacts/engine48/linux/r3/
+          if-no-files-found: warn
+          retention-days: 90

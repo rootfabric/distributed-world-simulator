@@ -814,13 +814,13 @@ func _wait_exit(pid: int, timeout_ms: int) -> void:
 
 
 func _start_virtual_display() -> String:
-	if not FileAccess.file_exists("/usr/bin/Xvfb"):
+	if not FileAccess.file_exists((OS.get_environment("XVFB_BIN") if OS.get_environment("XVFB_BIN") != "" else "/usr/bin/Xvfb")):
 		return ""
 	var base := 700 + (OS.get_process_id() % 200)
 	for offset in range(20):
 		var display_name := ":%d" % (base + offset)
 		xvfb_pid = OS.create_process(
-			"/usr/bin/Xvfb",
+			(OS.get_environment("XVFB_BIN") if OS.get_environment("XVFB_BIN") != "" else "/usr/bin/Xvfb"),
 			[display_name, "-screen", "0", "1280x720x24", "-nolisten", "tcp", "-noreset"],
 			false
 		)
