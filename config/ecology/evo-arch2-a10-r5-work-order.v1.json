@@ -1,0 +1,85 @@
+{
+  "schema": "dws.ecology.evo-arch2-a10-r5-work-order.v1",
+  "work_order_id": "EVO-ARCH2-A10-20260918-R5",
+  "state": "IN_PROGRESS",
+  "risk_class": "HIGH",
+  "branch": "feature/eco-evo-arch2-a10-final-composition-r5",
+  "parent_r4": "96d152176a813535db6950085cb10fff33c1464f",
+  "parent_r4_tree": "b554647557a6b78b79c24f4cd3a8ef63513a6468",
+  "goal": "Whole-A10 composition proof across A8 seam, production Region/Matter, explicit resource mapping, Construction damage and persistent body overlay.",
+  "additive_paths": [
+    "config/ecology/evo-arch2-a10-r5-work-order.v1.json",
+    "docs/research/ecology/EVO_ARCH2_A10_R5_FINAL_COMPOSITION_RU.md",
+    "validation/ecology/evo_arch2_a10_r5/test_final_composition.gd",
+    "validation/ecology/evo_arch2_a10_r5/verify.py",
+    ".github/workflows/eco-evo-arch2-a10-r5-exact.yml"
+  ],
+  "immutable_sources": [
+    "scripts/research/ecology/v2/world_binding_v1.gd",
+    "scripts/research/ecology/v2/matter_resource_mapping_v1.gd",
+    "scripts/research/ecology/v2/world_seam_binding_v1.gd",
+    "scripts/research/ecology/v2/body_construction_binding_v1.gd",
+    "scripts/research/ecology/v2/snapshot_seam_v1.gd"
+  ],
+  "required_gates": [
+    "R1_CURRENT_EXACT_PASS",
+    "R2_CURRENT_EXACT_PASS",
+    "R3_CURRENT_EXACT_PASS",
+    "R4_CURRENT_EXACT_PASS",
+    "R5_COMPOSITION_EXACT_PASS",
+    "PROJECT_CONTROL_NON_RED",
+    "FRESH_REVIEWER_PASS",
+    "FRESH_VERIFIER_PASS",
+    "MAIN_EPOCH_RECHECK",
+    "ACTIVE_ONLY_REGION_EXECUTION_REVIEW_REPAIR_PASS",
+    "WARM_ONLY_HANDOFF_PREPARATION_REVIEW_REPAIR_PASS",
+    "R4_EXTERNAL_DAMAGE_EVENT_ANCHOR_REVIEW_REPAIR_PASS",
+    "REHASHED_R1_R2_TRUST_ANCHOR_FALSIFIERS_PASS"
+  ],
+  "nonclaims": [
+    "A11",
+    "production ECO authority",
+    "automatic biological Matter extraction",
+    "main merge"
+  ],
+  "parent_refresh": {
+    "previous": "9ab7bdf396fc0ecffc847397c4f2e3685f5ef92b",
+    "current": "96d152176a813535db6950085cb10fff33c1464f",
+    "reason": "Verifier-only repair: R4 exact verifier newline syntax fixed; runtime adapters/tests unchanged."
+  },
+  "repair_r2": {
+    "platform": "Windows canonical double Godot 4.7.1 a13da4feb",
+    "findings": [
+      "R2 validate_exact_fields typed-array mismatch",
+      "R3 target_ack parser inference failure",
+      "R4 validate_exact_fields typed-array mismatch",
+      "R5 target_ack parser inference failure"
+    ],
+    "repair": "Typed contract arrays at source layers; explicit R3/R5 transition-loop annotations; preserve external Matter batch anchor.",
+    "prior_windows_subject": "57d274de196e2c4d54cf67f819fc925565db7a1a"
+  },
+  "repair_r3": {
+    "platform": "Windows canonical double Godot 4.7.1 a13da4feb",
+    "prior_subject": "2d32212914de961b9900b7e57694424c71d4ecd7",
+    "finding": "R4 forged-event tamper was byte-identical/no-op and falsely expected rejection.",
+    "repair": "R4 now changes part_id to part/support, re-seals binding_hash, and requires exact A10_R4_EVENT_MAPPING.",
+    "product_semantics_changed": false
+  },
+  "review_repair_r1": {
+    "finding": "Whole-stack review found R1 admitted WARM AuthorityRegionDescriptor as executable.",
+    "repair": "ACTIVE-only cursor/site admission propagated through R2-R5; R3 retains WARM only for handoff preparation.",
+    "expected_effect": "Prevent concurrent source ACTIVE and target WARM ecology execution before COMMITTED."
+  },
+  "review_repair_r2": {
+    "findings": [
+      "R1/R2 external-anchor tests did not falsify schema-valid rehashed objects against retained trusted checksums.",
+      "R3 accepted ACTIVE target as preparation descriptor before commit.",
+      "R4 apply_damage trusted self-sealed event bytes without caller-owned event authority anchor."
+    ],
+    "repair": "Add rehashed record/batch falsifiers; require WARM exactly for R3 preparation; require expected_event_binding_hash for R4 apply_damage and reject re-sealed semantic event against old trusted hash."
+  },
+  "verifier_repair_r1": {
+    "finding": "R4 verify.py accidentally contained a literal \\\\n in Python source and failed before runtime.",
+    "repair": "Replace literal backslash-n with a real newline; no R4 runtime code/test semantics changed."
+  }
+}
