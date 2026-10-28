@@ -1,0 +1,95 @@
+name: NET-SMOOTH1 #815 Native Negative Exact
+on:
+  push:
+    branches:
+      - tools/net-smooth1-815-safety-negative-r1
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  source-contracts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Complete R2.2 ancestry and six safety source contracts
+        run: |
+          set -euo pipefail
+          git merge-base --is-ancestor fb513173df4c73c607fd8cb6680ad108c76f41ac HEAD
+          python -m unittest discover -s tests/tools -p 'test_net_smooth1_815_safety_negative_source_contracts.py' -v
+          python -m unittest discover -s tests/tools -p 'test_net_smooth1_r31p23r22_source_contracts.py' -v
+  linux-native-exact:
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Pinned double binary, exact source, cold import and native negatives
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test -z "$(git status --porcelain --untracked-files=no)"
+          B="${DWS_GODOT_DOUBLE_LINUX_BIN:-$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64}"
+          test -x "$B"
+          test "$("$B" --version)" = '4.7.1.stable.double.custom_build.a13da4feb'
+          test "$(sha256sum "$B" | cut -d' ' -f1)" = 'bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7'
+          mkdir -p artifacts/issue815-native
+          "$B" --headless --editor --path . --import --quit > artifacts/issue815-native/import.log 2>&1
+          ! grep -E 'SCRIPT ERROR:|Parse Error:|Compile Error:' artifacts/issue815-native/import.log
+          for P in tests/runtime/test_net_smooth1_815_safety_negative.gd tests/runtime/test_net_smooth1_r31p23r22_attested_compact.gd; do
+            L="artifacts/issue815-native/$(basename "$P").log"
+            timeout 240 "$B" --headless --path . --script "res://$P" > "$L" 2>&1 || { tail -n 120 "$L"; exit 1; }
+            if grep -E 'SCRIPT ERROR:|Parse Error:|Compile Error:|ERROR:' "$L"; then tail -n 100 "$L"; exit 1; fi
+            grep -Eq 'PASS' "$L"
+          done
+          test -z "$(git status --porcelain --untracked-files=no)"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: safety815-linux-${{ github.sha }}
+          path: artifacts/issue815-native/
+          if-no-files-found: warn
+  windows-native-exact:
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Pinned double binary, exact source, cold import and native negatives
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          if ((git rev-parse HEAD).Trim() -ne $env:GITHUB_SHA) { throw 'HEAD_MISMATCH' }
+          $B='C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe'
+          if (-not (Test-Path $B)) { throw 'NO_PINNED_GODOT' }
+          if ((& $B --version | Out-String).Trim() -ne '4.7.1.stable.double.custom_build.a13da4feb') { throw 'VERSION_MISMATCH' }
+          if ((Get-FileHash $B -Algorithm SHA256).Hash.ToLowerInvariant() -ne '3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5') { throw 'HASH_MISMATCH' }
+          New-Item -ItemType Directory -Force artifacts/issue815-native | Out-Null
+          & $B --headless --editor --path . --import --quit *> artifacts/issue815-native/import.log
+          if ($LASTEXITCODE -ne 0 -or (Select-String artifacts/issue815-native/import.log -Pattern 'SCRIPT ERROR:|Parse Error:|Compile Error:' -Quiet)) { throw 'IMPORT_FAIL' }
+          foreach ($P in @('tests/runtime/test_net_smooth1_815_safety_negative.gd','tests/runtime/test_net_smooth1_r31p23r22_attested_compact.gd')) {
+            $Out="artifacts/issue815-native/$(Split-Path $P -Leaf).log"
+            & $B --headless --path . --script "res://$P" *> $Out
+            if ($LASTEXITCODE -ne 0 -or (Select-String $Out -Pattern 'SCRIPT ERROR:|Parse Error:|Compile Error:|ERROR:' -Quiet) -or -not (Select-String $Out -Pattern 'PASS' -Quiet)) { Get-Content $Out -Tail 120; throw "NATIVE_FAIL:$P" }
+          }
+          if (git status --porcelain --untracked-files=no) { throw 'TRACKED_DIRTY' }
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: safety815-windows-${{ github.sha }}
+          path: artifacts/issue815-native/
+          if-no-files-found: warn
