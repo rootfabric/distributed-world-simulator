@@ -179,6 +179,15 @@ static func _revision_semantic_projection(snapshot: Dictionary) -> Dictionary:
 		if gameplay_value is Dictionary:
 			var gameplay: Dictionary = Dictionary(gameplay_value).duplicate(true)
 			gameplay.erase("server_tick")
+			# R3C2-R2: ownership.server_tick mirrors the moving fixed tick at
+			# export time exactly like the top-level server_tick above. It is
+			# tick-derived metadata, not a canonical mutation; ownership
+			# revision and player rows stay protected by the same projection.
+			var ownership_value = gameplay.get("ownership", {})
+			if ownership_value is Dictionary:
+				var ownership: Dictionary = Dictionary(ownership_value).duplicate(true)
+				ownership.erase("server_tick")
+				gameplay["ownership"] = ownership
 			gameplay.erase("checksum")
 			components["networked_gameplay_state"] = gameplay
 		components.erase("durable_state_checksum")
