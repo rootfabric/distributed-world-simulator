@@ -190,6 +190,24 @@ func leave_transport_session(
 	return result
 
 
+func restore_durable_state(value: Dictionary) -> Dictionary:
+	var restored: Dictionary = super.restore_durable_state(value)
+	if not bool(restored.get("success", false)):
+		return restored
+	# The secondary movement authority is constructed once at setup with the
+	# launch server_tick. M6 recovery may restore the primary to a much later
+	# durable tick; resync the secondary so the next fixed tick stays monotonic
+	# instead of failing forever with USER1_SECONDARY_FIXED_TICK_FAILED.
+	if _secondary == null:
+		return restored
+	var resync: Dictionary = _secondary.resync_fixed_tick(
+		int(restored.get("details", {}).get("server_tick", _tick))
+	)
+	if not bool(resync.get("success", false)):
+		return resync
+	return restored
+
+
 func advance_fixed_server_tick(server_tick: int) -> Dictionary:
 	var primary: Dictionary = super.advance_fixed_server_tick(server_tick)
 	if not bool(primary.get("success", false)):

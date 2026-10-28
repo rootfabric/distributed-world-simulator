@@ -85,6 +85,19 @@ func setup(
 
 
 
+func resync_fixed_tick(server_tick: int) -> Dictionary:
+	# M6 recovery restores the primary product authority to a durable
+	# server_tick that is far ahead of this secondary's construction tick.
+	# Without a resync every later advance_fixed_server_tick fails
+	# NON_MONOTONIC_FIXED_SERVER_TICK and movement processing halts.
+	if not _configured:
+		return _movement_failure("NETWORKED_GAMEPLAY_SERVICE_NOT_READY")
+	if server_tick < 0:
+		return _movement_failure("INVALID_FIXED_TICK_RESYNC")
+	_tick = maxi(_tick, server_tick)
+	return _movement_success({"server_tick": _tick})
+
+
 func get_movement_ownership_record(logical_player_id: String) -> Dictionary:
 	if _ownership == null:
 		return {}

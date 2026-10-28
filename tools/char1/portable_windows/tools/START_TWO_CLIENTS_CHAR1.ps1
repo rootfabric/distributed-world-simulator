@@ -42,13 +42,17 @@ $server = Start-Process -FilePath $godot.Console -ArgumentList $serverArgs -Work
 $null = $server.Handle
 
 $bound = $false
+# The canonical Godot .console.exe wrapper spawns the real engine as a child
+# process, so the UDP listener can be owned by the child PID, not $server.Id.
+$serverPids = @($server.Id)
+$serverPids += @(Get-CimInstance Win32_Process -Filter "ParentProcessId=$($server.Id)" -ErrorAction SilentlyContinue | Select-Object -ExpandProperty ProcessId)
 for ($i = 0; $i -lt 90; $i++) {
     Start-Sleep -Seconds 1
     if ($server.HasExited) {
         throw ("CHAR2_SERVER_EXITED_BEFORE_READY:{0}; inspect evidence/char2-server*.log" -f $server.ExitCode)
     }
     $listeners = @(Get-NetUDPEndpoint -LocalPort $Port -ErrorAction SilentlyContinue)
-    if (@($listeners | Where-Object { $_.OwningProcess -eq $server.Id }).Count -gt 0) {
+    if (@($listeners | Where-Object { $serverPids -contains $_.OwningProcess }).Count -gt 0) {
         $bound = $true
         break
     }
