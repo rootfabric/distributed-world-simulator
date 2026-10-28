@@ -1,5 +1,6 @@
 extends Node3D
 
+const SmoothTrace = preload("res://scripts/network/smoothness/net_smooth_trace.gd")
 const EarthWorldScript = preload(
 	"res://scripts/world/earth/procedural_earth_world.gd"
 )
@@ -301,6 +302,7 @@ func create_runtime_snapshot() -> Dictionary:
 
 
 func attach_m3_multiplayer_client(runtime) -> Dictionary:
+	var attached_started_us := Time.get_ticks_usec()
 	if runtime_role != "game-client":
 		return {"success": false, "error_code": "M3_GAME_CLIENT_ROLE_REQUIRED"}
 	if (
@@ -342,10 +344,21 @@ func attach_m3_multiplayer_client(runtime) -> Dictionary:
 	_m3_attached = true
 	if earth_explorer != null:
 		earth_explorer.set_network_replica_mode(true)
+	var replica_started_us := Time.get_ticks_usec()
 	_on_m3_replica_updated(runtime.get_snapshot())
+	var replica_done_us := Time.get_ticks_usec()
 	_on_m4_item_graph_updated(runtime.get_item_graph_snapshot())
+	var item_done_us := Time.get_ticks_usec()
 	if runtime.has_method("get_construction_bundle"):
 		_on_m3_construction_updated(runtime.get_construction_bundle())
+	if SmoothTrace.enabled():
+		SmoothTrace.emit("r3c2_earth_attach", {
+			"total_ms": float(Time.get_ticks_usec() - attached_started_us) / 1000.0,
+			"replica_visual_ms": float(replica_done_us - replica_started_us) / 1000.0,
+			"item_ms": float(item_done_us - replica_done_us) / 1000.0,
+			"construction_ms": float(Time.get_ticks_usec() - item_done_us) / 1000.0,
+			"remote_count": _m3_remote_presenters.size(),
+		})
 	return {"success": true, "error_code": "", "details": {"local_player_id": runtime.get_local_player_id(), "mode": "EARTH_NETWORK_SPECTATOR", "m4_item_graph": not _m4_item_graph_snapshot.is_empty()}}
 
 
@@ -369,8 +382,13 @@ func _on_m3_replica_updated(snapshot: Dictionary) -> void:
 		seen[logical_id] = true
 		var presenter = _m3_remote_presenters.get(logical_id)
 		if presenter == null or not is_instance_valid(presenter):
-			presenter = _create_m3_remote_player_presenter()
-			add_child(presenter)
+			presenter = _create_m3_remote_player_presenter_for(logical_id)
+			# R3C.2: a Quaternius presenter prepared during Earth loading is
+			# already scene-owned. Reuse that exact visual rather than loading
+			# another GLTF synchronously from the first JOIN_ACK.
+			if presenter.get_parent() == null:
+				add_child(presenter)
+			presenter.visible = true
 			var setup_result: Dictionary = presenter.setup(
 				record, snapshot, Callable(self, "_map_m3_position_to_earth_world")
 			)
@@ -390,7 +408,7 @@ func _on_m3_replica_updated(snapshot: Dictionary) -> void:
 			continue
 		var stale_presenter = _m3_remote_presenters.get(logical_id)
 		if stale_presenter != null and is_instance_valid(stale_presenter):
-			stale_presenter.queue_free()
+			_retire_m3_remote_player_presenter(logical_id, stale_presenter)
 		_m3_remote_presenters.erase(logical_id)
 		_m3_remote_despawn_count += 1
 
@@ -400,6 +418,16 @@ func _on_m3_replica_updated(snapshot: Dictionary) -> void:
 # changing M3/SM1 network code or the historical default capsule presenter.
 func _create_m3_remote_player_presenter():
 	return RemotePlayerPresenterScript.new()
+
+
+# Presentation factory lifecycle hooks; network identity, authority and M6
+# replay do not depend on this cache. Default world keeps exact old behavior.
+func _create_m3_remote_player_presenter_for(_logical_id: String):
+	return _create_m3_remote_player_presenter()
+
+
+func _retire_m3_remote_player_presenter(_logical_id: String, presenter) -> void:
+	presenter.queue_free()
 
 
 func _apply_m3_local_spectator_record(record: Dictionary) -> void:

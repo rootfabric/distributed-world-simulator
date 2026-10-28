@@ -96,6 +96,13 @@ var _p1b_item_commits := 0
 var _r3b_async_disconnect_commits := 0
 # R3C is strictly opt-in pending independent Windows verification.
 var _r3c_async_admission_enabled := false
+# R3C.2: opt-in phased, ordered post-durable ITEM publication. The existing
+# M6 ACK escrow remains the only success publication authority.
+var _r3c2_phased_item_publication_enabled := false
+var _r3c2_postcommit_pending: Dictionary = {}
+var _r3c2_postcommit_phases_completed := 0
+var _r3c2_postcommit_last_stage_ms := 0.0
+var _r3c2_deferred_diagnostic_reports := 0
 var _r3c_async_leave_commits := 0
 const R3C_MAX_DEFERRED_ADMISSIONS := 32
 const R3C_ADMISSION_TIMEOUT_MS := 20000
@@ -216,10 +223,15 @@ func setup(config: Dictionary) -> Dictionary:
 		bool(config.get("r3c_async_admission_canary", false))
 		or OS.get_environment("DWS_NET_R3C_ASYNC_ADMISSION") == "1"
 	)
+	_r3c2_phased_item_publication_enabled = (
+		bool(config.get("r3c2_phased_publication_canary", false))
+		or OS.get_environment("DWS_NET_R3C2_PHASED_ITEM_PUBLICATION") == "1"
+	)
 	_p1b_item_async_enabled = (
 		bool(config.get("async_durable_item_canary", false))
 		or OS.get_environment("DWS_NET_P1B_ITEM_ASYNC") == "1"
 		or _r3c_async_admission_enabled
+		or _r3c2_phased_item_publication_enabled
 	)
 	if _p1b_item_async_enabled and (not _persistence_enabled or not _playable_sandbox):
 		return _failure("P1B_CANARY_REQUIRES_PERSISTENT_PLAYABLE_WORLD")
@@ -233,6 +245,10 @@ func setup(config: Dictionary) -> Dictionary:
 	_r3b_async_disconnect_commits = 0
 	_r3c_async_leave_commits = 0
 	_r3c_deferred_admissions.clear()
+	_r3c2_postcommit_pending.clear()
+	_r3c2_postcommit_phases_completed = 0
+	_r3c2_postcommit_last_stage_ms = 0.0
+	_r3c2_deferred_diagnostic_reports = 0
 	_r3c_queued_joins = 0
 	_r3c_queued_leaves = 0
 	_r3c_admissions_drained = 0
@@ -349,6 +365,12 @@ func _process(delta: float) -> void:
 	if not _configured or _boundary == null or _fatal_persistence_failure:
 		return
 	var smooth_started := Time.get_ticks_usec()
+	# Drain at most ONE post-durable stage from the PREVIOUS frame. A newly
+	# completed writer cannot trigger its full snapshot/delta/ACK/broadcast
+	# work in the same server frame (the R3C1 400-490ms completion burst).
+	_r3c2_drain_postcommit_stage()
+	if _fatal_persistence_failure:
+		return
 	_p1b_poll_item_async_commit()
 	if _fatal_persistence_failure:
 		return
@@ -1457,7 +1479,11 @@ func _p1b_begin_item_async_commit(
 	var capture_start_us := Time.get_ticks_usec()
 	var player_checksum := String(_service.create_snapshot().get("checksum", ""))
 	var player_done_us := Time.get_ticks_usec()
-	var item_checksum := String(_service.create_canonical_item_graph_snapshot().get("checksum", ""))
+	# This detached canonical ITEM snapshot is already built to bind the
+	# outbox checksum. Keep it for post-durable replication in R3C2 instead
+	# of recomputing the whole graph after the worker finishes.
+	var frozen_after_item: Dictionary = _service.create_canonical_item_graph_snapshot()
+	var item_checksum := String(frozen_after_item.get("checksum", ""))
 	var item_done_us := Time.get_ticks_usec()
 	var outbox_staged: Dictionary = _replay_outbox.stage_committed(
 		operation_id, command_type,
@@ -1507,6 +1533,8 @@ func _p1b_begin_item_async_commit(
 		"session_id": session_id,
 		"ownership_epoch": ownership_epoch,
 		"before_item": before_item_snapshot.duplicate(true),
+		"after_item_frozen": frozen_after_item if _r3c2_phased_item_publication_enabled else {},
+		"after_item_checksum": item_checksum if _r3c2_phased_item_publication_enabled else "",
 		"result": result.duplicate(true),
 		"started_us": capture_start_us,
 	}
@@ -1543,6 +1571,10 @@ func _p1b_begin_item_async_commit(
 
 
 func _p1b_poll_item_async_commit() -> void:
+	# The writer is already committed; M6 is waiting for staged publication.
+	# Polling PHASE_ACK_READY as if it were COMMIT_PENDING is a fatal bug.
+	if not _r3c2_postcommit_pending.is_empty():
+		return
 	if _p1b_item_pending.is_empty() or _p1b_item_async_owner == null:
 		return
 	var committed: Dictionary = _p1b_item_async_owner.poll_command_completion()
@@ -1561,6 +1593,22 @@ func _p1b_poll_item_async_commit() -> void:
 
 
 func _p1b_finish_item_shutdown_barrier() -> void:
+	# A completed generation awaiting staged publication is already durable.
+	# Shutdown has no live transport ACK: quarantine the held session and
+	# leave the result in canonical M6 replay for a fresh client after restart.
+	if not _r3c2_postcommit_pending.is_empty():
+		var pending: Dictionary = Dictionary(_r3c2_postcommit_pending.get("pending", {}))
+		var discarded: Dictionary = _p1b_item_async_owner.discard_stale_session(
+			String(pending.get("peer_id", "")), String(pending.get("session_id", ""))
+		)
+		if not bool(discarded.get("success", false)):
+			_enter_persistence_failure("R3C2_POSTCOMMIT_SHUTDOWN_QUARANTINE_FAILED")
+			return
+		_r3c2_postcommit_pending.clear()
+		_p1b_item_pending.clear()
+		_p1b_committed_view.clear()
+		_p1b_item_resync_waiters.clear()
+		return
 	# This is the ONLY intentional blocking wait: explicit stop/shutdown.
 	if _p1b_item_pending.is_empty():
 		return
@@ -1585,7 +1633,18 @@ func _p1b_finish_item_committed(accepted: Dictionary, publish: bool) -> void:
 	if _p1b_item_pending.is_empty() or not bool(accepted.get("details", {}).get("committed", false)):
 		_enter_persistence_failure("P1B_ITEM_COMMITTED_RESULT_REQUIRED")
 		return
-	var pending: Dictionary = _p1b_item_pending.duplicate(true)
+	# R3C2 frozen_before/after ITEM DTOs were detached at capture. Copy only
+	# the immutable envelope here: duplicate(true) of both full graphs on
+	# durable-completion reintroduced a 100ms+ main-thread stall. Leave the
+	# previous deep-copy behavior intact for every non-opt-in command.
+	var is_phased_item := (
+		_r3c2_phased_item_publication_enabled
+		and String(_p1b_item_pending.get("kind", "ITEM")) == "ITEM"
+	)
+	var pending: Dictionary = (
+		_p1b_item_pending.duplicate(false)
+		if is_phased_item else _p1b_item_pending.duplicate(true)
+	)
 	var generation := int(accepted.get("details", {}).get("generation", -1))
 	if (
 		generation != _checkpoint_generation + 1
@@ -1614,9 +1673,17 @@ func _p1b_finish_item_committed(accepted: Dictionary, publish: bool) -> void:
 		Time.get_ticks_usec() - int(pending.get("started_us", Time.get_ticks_usec()))
 	) / 1000.0
 	# Later movement mutations happened AFTER frozen capture; keep their
-	# dirty marker for a subsequent periodic checkpoint.
-	_p1b_item_pending.clear()
-	_p1b_committed_view.clear()
+	# dirty marker for a subsequent periodic checkpoint. R3C.2 ITEM keeps
+	# the old wire visibility fence and M6 ACK head until all presentation
+	# stages have completed on separate process turns.
+	var staged_item_publication := (
+		publish
+		and _r3c2_phased_item_publication_enabled
+		and String(pending.get("kind", "ITEM")) == "ITEM"
+	)
+	if not staged_item_publication:
+		_p1b_item_pending.clear()
+		_p1b_committed_view.clear()
 	if SmoothTrace.enabled():
 		SmoothTrace.emit("p1b_item_async_stages", {
 			"stage": "DURABLE_COMMIT",
@@ -1628,6 +1695,17 @@ func _p1b_finish_item_committed(accepted: Dictionary, publish: bool) -> void:
 			"worker_write_ms": _p1b_item_last_write_ms,
 			"held_snapshot_count": _p1b_item_precommit_snapshot_holds,
 		})
+	if staged_item_publication:
+		if not _r3c2_postcommit_pending.is_empty():
+			_enter_persistence_failure("R3C2_POSTCOMMIT_SINGLE_INFLIGHT_REQUIRED")
+			return
+		_r3c2_postcommit_pending = {
+			"stage": 0, "pending": pending, "after_item": {},
+			"delta": {}, "fallback": false,
+			"committed_at_ms": Time.get_ticks_msec(),
+			"test_hold_reported": false,
+		}
+		return
 	if not publish:
 		# Graceful shutdown never lies about delivery to the vanished peer.
 		_p1b_item_async_owner.discard_stale_session(
@@ -1721,6 +1799,155 @@ func _r3b_publish_committed_disconnect(pending: Dictionary) -> void:
 	if has_method("_p1b_flush_resource_resync_waiters"):
 		call("_p1b_flush_resource_resync_waiters")
 	_write_report("READY", false)
+
+
+# R3C.2: immutable postcommit work broken into ordered frame steps. While
+# the M6 ACK remains pending, no other canonical mutation is admitted. The
+# ordinary synchronous path remains untouched unless explicitly opted in.
+func _r3c2_drain_postcommit_stage() -> void:
+	if _r3c2_postcommit_pending.is_empty() or _fatal_persistence_failure:
+		return
+	var started := Time.get_ticks_usec()
+	var stage := int(_r3c2_postcommit_pending.get("stage", -1))
+	var pending: Dictionary = Dictionary(_r3c2_postcommit_pending.get("pending", {}))
+	var operation_id := String(pending.get("operation_id", ""))
+	var peer_id := String(pending.get("peer_id", ""))
+	var session_id := String(pending.get("session_id", ""))
+	var player_id := String(pending.get("logical_id", ""))
+	var ownership_epoch := int(pending.get("ownership_epoch", 0))
+	# R3C2 exact-process falsifier: a main-loop-NONBLOCKING window after
+	# verified atomic worker completion, strictly before any M6 ACK enqueue.
+	# Both environment gates are REQUIRED; ordinary gameplay is unchanged.
+	if (
+		stage == 2
+		and _r3c2_phased_item_publication_enabled
+		and OS.get_environment("DWS_NET_SMOOTH_TEST_HOOKS") == "1"
+	):
+		var forced_kill_window := (
+			OS.get_environment("DWS_NET_R3C2_TEST_FORCE_PRE_ACK_HOLD") == "1"
+		)
+		var requested_hold_ms := clampi(
+			int(OS.get_environment("DWS_NET_R3C2_TEST_PRE_ACK_HOLD_MS")), 0, 10000
+		)
+		var elapsed_ms := Time.get_ticks_msec() - int(
+			_r3c2_postcommit_pending.get("committed_at_ms", Time.get_ticks_msec())
+		)
+		# Exact process-crash proof uses a test-only hold that never expires
+		# by wall clock; otherwise a heavily loaded runner might send an ACK
+		# before the harness kills server1, falsely passing the kill window.
+		if forced_kill_window or (requested_hold_ms > 0 and elapsed_ms < requested_hold_ms):
+			if not bool(_r3c2_postcommit_pending.get("test_hold_reported", false)):
+				_r3c2_postcommit_pending["test_hold_reported"] = true
+				if SmoothTrace.enabled():
+					SmoothTrace.emit("r3c2_pre_ack_hold", {
+						"operation_hash": operation_id.sha256_text().left(16),
+						"generation": _checkpoint_generation,
+						"hold_budget_ms": requested_hold_ms,
+						"forced_until_kill": forced_kill_window,
+					})
+			return
+	match stage:
+		0:
+			# Immutable exact-checksum DTO captured before submission: ITEM
+			# cannot mutate while M6 owns this generation. No second graph
+			# export after the worker completes.
+			var after_item: Dictionary = Dictionary(
+				pending.get("after_item_frozen", {})
+			)
+			if (
+				after_item.is_empty()
+				or String(after_item.get("checksum", "")).is_empty()
+				or String(after_item.get("checksum", "")) !=
+					String(pending.get("after_item_checksum", ""))
+			):
+				_enter_persistence_failure("R3C2_FROZEN_ITEM_CHECKSUM_MISMATCH")
+				return
+			_r3c2_postcommit_pending["after_item"] = after_item
+			_r3c2_postcommit_pending["stage"] = 1
+		1:
+			var before_item: Dictionary = Dictionary(pending.get("before_item", {}))
+			var after_item: Dictionary = Dictionary(_r3c2_postcommit_pending.get("after_item", {}))
+			var delta_result: Dictionary = CanonicalItemGraphDelta.create(before_item, after_item)
+			if not bool(delta_result.get("success", false)):
+				_item_graph_delta_build_failures += 1
+				_last_error_code = "ITEM_GRAPH_DELTA_BUILD_FAILED"
+				_r3c2_postcommit_pending["fallback"] = true
+			else:
+				_r3c2_postcommit_pending["delta"] = Dictionary(
+					delta_result.get("details", {}).get("delta", {})
+				).duplicate(true)
+			_r3c2_postcommit_pending.erase("after_item")
+			_r3c2_postcommit_pending["stage"] = 2
+		2:
+			var result: Dictionary = Dictionary(pending.get("result", {}))
+			var delta: Dictionary = Dictionary(_r3c2_postcommit_pending.get("delta", {}))
+			var ready: Dictionary = _p1b_item_async_owner.peek_publication(
+				peer_id, session_id, player_id, ownership_epoch
+			)
+			var delivered := false
+			if bool(ready.get("success", false)):
+				if String(_peer_to_session.get(peer_id, "")) == session_id:
+					delivered = _send_result(
+						peer_id, operation_id, String(pending.get("command_type", "")),
+						result, delta
+					)
+				var enqueued: Dictionary = _p1b_item_async_owner.mark_enqueued(
+					operation_id, peer_id, session_id, player_id, ownership_epoch, delivered
+				)
+				if not bool(enqueued.get("success", false)):
+					_enter_persistence_failure("R3C2_POSTCOMMIT_ACK_FIFO_FAILED")
+					return
+				if delivered:
+					_mark_operation_delivered(operation_id)
+			else:
+				var stale: Dictionary = _p1b_item_async_owner.discard_stale_session(
+					peer_id, session_id
+				)
+				if not bool(stale.get("success", false)):
+					_enter_persistence_failure("R3C2_POSTCOMMIT_ACK_QUARANTINE_FAILED")
+					return
+			_r3c2_postcommit_pending["stage"] = 3
+		3:
+			# Item is durable and its original ACK has been resolved. Clear the
+			# visibility fence for replication; the independent R3C2 admission
+			# lock still prevents a new canonical command before phase 4.
+			_p1b_item_pending.clear()
+			_p1b_committed_view.clear()
+			if bool(_r3c2_postcommit_pending.get("fallback", false)):
+				_broadcast_item_snapshot("R3C2_ITEM_DELTA_FALLBACK")
+			else:
+				_broadcast_item_delta(
+					Dictionary(_r3c2_postcommit_pending.get("delta", {})),
+					peer_id, String(pending.get("command_type", ""))
+				)
+			_r3c2_postcommit_pending["stage"] = 4
+		4:
+			_broadcast_snapshot(
+				"ITEM_GRAPH_UPDATED", RealtimeChannelPolicy.RESYNC, "RELIABLE_ORDERED"
+			)
+			_capture_two_connected_checksum()
+			_p1b_flush_item_resync_waiters()
+			if has_method("_p1b_flush_resource_resync_waiters"):
+				call("_p1b_flush_resource_resync_waiters")
+			# _write_report() builds a FULL gameplay+M6 recovery export and
+			# writes it synchronously. It is diagnostic, not the durability
+			# checkpoint/ACK receipt. During opt-in real-time R3C2, defer
+			# this unbounded report until explicit stop or other quiet gate.
+			# The true durable result and every stage remain in bounded trace.
+			_r3c2_deferred_diagnostic_reports += 1
+			_r3c2_postcommit_pending.clear()
+		_:
+			_enter_persistence_failure("R3C2_POSTCOMMIT_INVALID_STAGE")
+			return
+	_r3c2_postcommit_last_stage_ms = float(Time.get_ticks_usec() - started) / 1000.0
+	_r3c2_postcommit_phases_completed += 1
+	if SmoothTrace.enabled():
+		SmoothTrace.emit("r3c2_postcommit_stage", {
+			"stage": stage, "generation": _checkpoint_generation,
+			"operation_hash": operation_id.sha256_text().left(16),
+			"duration_ms": _r3c2_postcommit_last_stage_ms,
+			"phases_completed": _r3c2_postcommit_phases_completed,
+		})
 
 
 func _p1b_publish_committed_item(pending: Dictionary) -> void:
@@ -2514,7 +2741,7 @@ func _enter_persistence_failure(error_code: String) -> void:
 
 
 func _persistence_report() -> Dictionary:
-	return {
+	var report: Dictionary = {
 		"enabled": _persistence_enabled,
 		"root_path": _persistence_root,
 		"checkpoint_generation": _checkpoint_generation,
@@ -2535,6 +2762,11 @@ func _persistence_report() -> Dictionary:
 		"item_async_commits": _p1b_item_commits,
 		"r3b_async_disconnect_commits": _r3b_async_disconnect_commits,
 		"r3c_async_admission_enabled": _r3c_async_admission_enabled,
+		"r3c2_phased_item_publication_enabled": _r3c2_phased_item_publication_enabled,
+		"r3c2_postcommit_stage": int(_r3c2_postcommit_pending.get("stage", -1)),
+		"r3c2_postcommit_phases_completed": _r3c2_postcommit_phases_completed,
+		"r3c2_postcommit_last_stage_ms": _r3c2_postcommit_last_stage_ms,
+		"r3c2_deferred_diagnostic_reports": _r3c2_deferred_diagnostic_reports,
 		"r3c_async_leave_commits": _r3c_async_leave_commits,
 		"r3c_deferred_admissions": _r3c_deferred_admissions.size(),
 		"r3c_queued_joins": _r3c_queued_joins,
@@ -2558,9 +2790,22 @@ func _persistence_report() -> Dictionary:
 		),
 		"service_recovery": _service.get_recovery_report() if _service != null else {},
 	}
+	# A READ-ONLY, opt-in recovery oracle for a real second server process.
+	# Expose just a boolean, not replay IDs or an authoritative dictionary.
+	# Never enabled by product configs, and never modifies M6 ACK/durability.
+	if OS.get_environment("DWS_NET_SMOOTH_TEST_HOOKS") == "1":
+		var operation_id := OS.get_environment("DWS_NET_R3C2_TEST_OPERATION_ID")
+		if not operation_id.is_empty():
+			report["r3c2_test_operation_recovered"] = (
+				_service != null
+				and _service.has_durable_replay_operation(operation_id)
+			)
+	return report
 
 
 func _gate_can_accept() -> bool:
+	if not _r3c2_postcommit_pending.is_empty():
+		return false
 	# Persistence-free runtimes (some M7 playable fixtures) have no durable
 	# contract to fence; the gate only guards persistence-enabled servers.
 	if not _persistence_enabled:
@@ -2697,7 +2942,20 @@ func _complete_async_movement_checkpoint(wait: bool) -> void:
 	# Do NOT clear dirty/counters here: movement after submission is newer than
 	# the detached checkpoint. The next request will capture that newer state.
 	_debug_event("MOVEMENT_CHECKPOINT_COMMITTED", {"generation": generation, "async": true})
-	_write_report("READY", false)
+	# get_report() recursively builds a full game/ItemGraph/M6 snapshot and
+	# writes JSON to the runtime result file. It is not the atomic checkpoint
+	# nor the M6 proof; during R3C2 this main-thread diagnostics-only report
+	# must not create a new >100ms stall right after worker completion.
+	if _r3c2_phased_item_publication_enabled:
+		_r3c2_deferred_diagnostic_reports += 1
+		if SmoothTrace.enabled():
+			SmoothTrace.emit("r3c2_periodic_report_deferred", {
+				"generation": generation,
+				"worker_ms": float(details.get("worker_ms", 0.0)),
+				"capture_ms": _async_checkpoint_capture_ms,
+			})
+	else:
+		_write_report("READY", false)
 
 
 func _submit_async_movement_checkpoint() -> void:
@@ -2752,6 +3010,11 @@ func _submit_async_movement_checkpoint() -> void:
 
 
 func _maybe_persist_movement_checkpoint() -> void:
+	# A durable command still owns the exact M6 publication order. Do not
+	# submit a periodic generation between its worker commit and final ACK /
+	# resync, even though the shared writer is technically no longer busy.
+	if not _r3c2_postcommit_pending.is_empty():
+		return
 	if (
 		_service != null
 		and _service.has_method("can_persist_product_state")
@@ -3082,6 +3345,7 @@ func stop() -> Dictionary:
 	_p1b_item_pending.clear()
 	_p1b_committed_view.clear()
 	_p1b_item_resync_waiters.clear()
+	_r3c2_postcommit_pending.clear()
 	_r3c_deferred_admissions.clear()
 	_fixed_tick_scheduler = null
 	_peer_input_buffers.clear()
