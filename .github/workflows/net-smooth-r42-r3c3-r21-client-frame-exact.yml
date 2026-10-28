@@ -4,13 +4,14 @@ on:
   push:
     branches:
       - repair/net-smooth1-r42-r3c3-r21-client-frame-pacing-r1
+      - repair/net-smooth1-r42-r3c21-r2-exact-parse-r1
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: net-smooth-r42-r3c3-r21-client-frame-exact
+  group: net-smooth-r42-r3c3-r21-client-frame-exact-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:

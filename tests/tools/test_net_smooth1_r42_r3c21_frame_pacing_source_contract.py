@@ -110,6 +110,9 @@ class R3C21Source(unittest.TestCase):
     def test_real_godot_r21_suite_has_stale_token_and_exact_parity(self):
         self.assertIn('EarthWorld.new()',TEST)
         self.assertIn('candidate.setup(null, true, true)',TEST)
+        # On exact 4.7.1 double Godot a dynamically typed candidate cannot
+        # provide := inference for surface_anchor_world. Pin the Vector3 type.
+        self.assertIn('var anchor_before: Vector3 = candidate.surface_anchor_world',TEST)
         self.assertIn('Preattach.R3C21_PHASE_PREATTACH',TEST)
         self.assertIn('not child.visible',TEST)
         self.assertIn('wrong_token',TEST)
