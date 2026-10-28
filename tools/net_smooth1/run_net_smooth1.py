@@ -115,8 +115,9 @@ def free_port(udp: bool = False) -> int:
         s.bind(('127.0.0.1',0));return s.getsockname()[1]
 
 
-def bridge(port: int, token: str, method: str, params: dict | None = None) -> dict:
-    reply=request(port,token,method,params or {},timeout=5.0)
+def bridge(port: int, token: str, method: str, params: dict | None = None,
+           timeout: float = 5.0) -> dict:
+    reply=request(port,token,method,params or {},timeout=timeout)
     if not reply.get('ok'): raise RuntimeError(f'{method}: {reply}')
     return reply['result']
 
@@ -128,6 +129,7 @@ def play(args, manifest: dict) -> None:
     token=secrets.token_urlsafe(24)
     manifest.update(udp_port=udp,automation_ports=ports,process_exit_codes={},errors=[],completed=False,
                     snapshot_stages_required=True,
+                    durable_stages_required=args.scenario=='durable-commands',
                     renderer='opengl3' if args.mode=='gui' else 'headless',resolution='900x600',max_fps=60,
                     vsync='disabled',phase_results=[],checkpoint_mode=args.checkpoint_mode,scenario=args.scenario)
     processes: dict[str,subprocess.Popen] = {}; streams=[]
@@ -190,8 +192,24 @@ def play(args, manifest: dict) -> None:
         # Both clients use the real Earth game and ordinary network movement path.
         time.sleep(args.warmup);alive()
         for role in ('a','b'):
-            status=command(role,'character.remote.status');dump(root/role/'avatar-status.json',status)
-            details=status.get('details',{})
+            # Avatar presentation can lag world generation under parallel load;
+            # poll within a bounded budget instead of a single post-warmup check.
+            deadline=time.monotonic()+30.0;status=None;details={}
+            while True:
+                alive()
+                try:
+                    status=command(role,'character.remote.status')
+                except (OSError, RuntimeError, ValueError, KeyError):
+                    status=None
+                if status is not None:
+                    details=status.get('details',{})
+                    dump(root/role/'avatar-status.json',status)
+                    if details.get('remote_count')==1:
+                        break
+                if time.monotonic()>deadline:
+                    break
+                time.sleep(.5)
+            dump(root/role/'avatar-status.json',status)
             if details.get('remote_count') != 1: raise RuntimeError(f'{role}: remote avatar missing')
             if args.mode=='gui':
                 remote=list(details.get('remote_players',{}).values())
@@ -208,6 +226,92 @@ def play(args, manifest: dict) -> None:
         def drive(role: str, x: float, z: float, yaw: float = 0.0, sprint: bool = False) -> None:
             bridge(ports[role], token, 'movement.set', {'move_x': x, 'move_z': z,
                 'look_yaw': yaw, 'sprint': sprint, 'ttl_ms': 900})
+        def durable_phase() -> dict:
+            # R4.0 durable-workload diagnostics: >=20 real authoritative durable
+            # commands of >=2 allowlisted types through the ordinary M4 client
+            # seam, plus one duplicate operation_id replay check. A successful
+            # blocking result is only returned after the server-side
+            # durable-before-ACK commit, and rejections never count as commits.
+            results=[];revisions=[]
+            def submit(role: str, command_type: str, payload: dict,
+                       operation_id: str) -> dict:
+                params={'command_type': command_type, 'payload': payload,
+                        'operation_id': operation_id}
+                reply=None
+                for attempt in range(3):
+                    try:
+                        reply=bridge(ports[role], token, 'item.command', params,
+                                     timeout=60.0)
+                        break
+                    except (OSError, RuntimeError, ValueError, KeyError) as exc:
+                        if attempt==2:
+                            raise RuntimeError(
+                                f'item.command transport failure {operation_id}: {exc}')
+                        time.sleep(1.0)
+                command_result=reply.get('item_command', {})
+                details=command_result.get('details', {})
+                entry={'role': role, 'command_type': command_type,
+                       'operation_id': operation_id,
+                       'ok': bool(command_result.get('success', False)),
+                       'error_code': command_result.get('error_code', '')}
+                entry.update(replay=bool(details.get('replay', False)),
+                             revision_before=details.get('item_graph_revision_before'),
+                             revision_after=details.get('item_graph_revision_after'))
+                return entry
+            logical={role: automation(role).get('logical_player_id') for role in ('a','b')}
+            index=0
+            # Unique operation_id per attempt; retries reuse the same
+            # operation_id and can only ever produce an idempotent replay.
+            # Keep issuing fresh commands until >=24 non-replay durable
+            # commits are recorded (bounded by 60 attempts overall).
+            while sum(1 for e in results if e['ok'] and not e['replay']) < 24 \
+                    and index < 60:
+                role=('a','b')[index%2]
+                if index%2==0:
+                    spec=('inventory.select_hotbar',
+                          {'selected_hotbar_index': (index//2)%8})
+                else:
+                    spec=('inventory.permission_probe',
+                          {'target_player_id': logical[role]})
+                entry=submit(role, spec[0], spec[1],
+                             f'operation/m6/r40/{manifest["run_id"]}/{role}/{index}')
+                entry['index']=index;results.append(entry);index+=1
+                if not entry['ok']:
+                    raise RuntimeError(f'durable command rejected (not committed): {entry}')
+                time.sleep(.3)
+            committed=[e for e in results if e['ok'] and not e['replay']]
+            if len(committed)<20:
+                raise RuntimeError(f'only {len(committed)} durable commits recorded; '
+                                   f'{len(results)} attempts')
+            for e in results:
+                if e['ok'] and not e['replay']:
+                    revisions.append((e['revision_before'], e['revision_after']))
+            if not all(b>a for a,b in revisions):
+                raise RuntimeError(f'item graph revision did not advance per commit: {revisions}')
+            # Duplicate operation_id with the identical payload must replay the
+            # recorded result without mutating the world a second time.
+            first=results[0]
+            dup_spec=('inventory.select_hotbar',
+                      {'selected_hotbar_index': (first['index']//2)%8}) \
+                if first['command_type']=='inventory.select_hotbar' else \
+                     ('inventory.permission_probe',
+                      {'target_player_id': logical[first['role']]})
+            dup=submit(first['role'], dup_spec[0], dup_spec[1], first['operation_id'])
+            dup['index']='duplicate';results.append(dup)
+            if not dup['ok'] or not dup['replay'] or \
+               dup['revision_after']!=dup['revision_before']:
+                raise RuntimeError(f'duplicate operation_id was not an idempotent replay: {dup}')
+            summary={'schema':'dws.net_smooth.durable_workload.v1',
+                     'commands':results,
+                     'committed_durable_count':len(committed),
+                     'command_types':sorted({e['command_type'] for e in committed}),
+                     'duplicate_replay_idempotent':True}
+            dump(root/'durable-commands.json',summary)
+            manifest['phase_results'].append({'phase':'durable_workload','result':{
+                'committed_durable_count':len(committed),
+                'command_types':summary['command_types'],
+                'duplicate_replay_idempotent':True}})
+            return summary
         if args.scenario == 'r31-reconnect-roundtrip':
             # R3.1: A crosses to secondary via real movement only, B reconnects
             # mid-remote, A must stay secondary (no foreign handback), then A
@@ -367,7 +471,20 @@ def play(args, manifest: dict) -> None:
             # Keep a full measurement window after the roundtrip stages so the
             # same GUI run also carries complete perf coverage.
             standard_phase_loop()
-        else:
+        elif args.scenario == 'durable-commands':
+            # Durable commands run inside the measured window; the standard
+            # movement loop afterwards keeps full movement/perf coverage.
+            durable_phase()
+            standard_phase_loop()
+            old=bridge(ports['b'],token,'state.get',{'kind':'automation'})['automation']
+            reconnect=command('b','network.reconnect')
+            time.sleep(1);wait_ready('b')
+            after=bridge(ports['b'],token,'state.get',{'kind':'automation'})['automation']
+            manifest['phase_results'].append({'phase':'reconnect_b','result':reconnect,
+                                             'before_epoch':old.get('ownership_epoch'),'after_epoch':after.get('ownership_epoch')})
+            if after.get('ownership_epoch',0)<=old.get('ownership_epoch',0):
+                raise RuntimeError('reconnect did not advance ownership epoch')
+        elif args.scenario in ('local', 'seam-stress'):
             standard_phase_loop()
             # Reconnect is outside the perf window; it still must execute and recover.
             old=bridge(ports['b'],token,'state.get',{'kind':'automation'})['automation']
@@ -426,7 +543,7 @@ def main() -> int:
     parser.add_argument('--include-process-tests',action='store_true')
     parser.add_argument('--skip-import',action='store_true')
     parser.add_argument('--profile',default='LOCAL')
-    parser.add_argument('--scenario',choices=('local','seam-stress','r31-reconnect-roundtrip'),default='local')
+    parser.add_argument('--scenario',choices=('local','seam-stress','r31-reconnect-roundtrip','durable-commands'),default='local')
     parser.add_argument('--checkpoint-mode',choices=('async','sync'),default='async')
     parser.add_argument('--inject-stall-role',choices=('server','a','b'))
     parser.add_argument('--inject-stall-ms',type=int,default=250)

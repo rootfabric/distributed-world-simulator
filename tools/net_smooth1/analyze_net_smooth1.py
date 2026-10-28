@@ -23,7 +23,8 @@ def stats(values: list[float]) -> dict[str, Any]:
 
 def analyze_trace(path: Path, role: str, run_id: str, min_seconds: float = 10.0,
                   local_profile: bool = True, checkpoint_mode: str | None = None,
-                  require_snapshot_stages: bool = False) -> dict[str, Any]:
+                  require_snapshot_stages: bool = False,
+                  require_durable_stages: bool = False) -> dict[str, Any]:
     problems: list[str] = []
     failures: list[str] = []
     samples: dict[str, list[float]] = {k: [] for k in (
@@ -32,7 +33,13 @@ def analyze_trace(path: Path, role: str, run_id: str, min_seconds: float = 10.0,
     stage_samples: dict[str, list[float]] = {k: [] for k in (
         "capture_ms", "encode_ms", "compact_send_ms", "seam_check_send_ms", "send_and_seam_ms",
         "decode_ms", "accept_ms", "reconcile_ms", "presentation_ms")}
+    durable_samples: dict[str, list[float]] = {k: [] for k in (
+        "command_player_checksum_ms", "command_item_graph_checksum_ms",
+        "command_outbox_stage_ms", "command_checkpoint_total_ms",
+        "checkpoint_wait_async_ms", "checkpoint_quiesce_ms",
+        "checkpoint_persist_atomic_ms")}
     seam_sent = 0; seam_skipped = 0
+    durable_failures = 0
     first: dict[str, Any] = {}; last: dict[str, Any] = {}
     header: dict[str, Any] = {}; footer: dict[str, Any] = {}
     previous: dict[str, dict[str, Any]] = {}
@@ -115,6 +122,29 @@ def analyze_trace(path: Path, role: str, run_id: str, min_seconds: float = 10.0,
                             if not math.isfinite(value) or value < 0:
                                 raise ValueError(f"invalid client snapshot stage {field}")
                             stage_samples[field].append(value)
+                elif kind in ("durable_command_stages", "durable_checkpoint_stages") and role == "server":
+                    if type(data.get("success")) is not bool:
+                        raise ValueError("invalid durable checkpoint success state")
+                    if kind == "durable_command_stages":
+                        if not isinstance(data.get("command_type"), str) or not data["command_type"]:
+                            raise ValueError("invalid durable command type")
+                        fields = (("player_checksum_ms","command_player_checksum_ms"),
+                                  ("item_graph_checksum_ms","command_item_graph_checksum_ms"),
+                                  ("outbox_stage_ms","command_outbox_stage_ms"),
+                                  ("checkpoint_total_ms","command_checkpoint_total_ms"))
+                    else:
+                        if data.get("origin") not in ("COMMAND", "PERIODIC"):
+                            raise ValueError("invalid durable checkpoint origin")
+                        fields = (("wait_async_ms","checkpoint_wait_async_ms"),
+                                  ("quiesce_ms","checkpoint_quiesce_ms"),
+                                  ("persist_atomic_ms","checkpoint_persist_atomic_ms"))
+                    for source, target in fields:
+                        value = float(data[source])
+                        if not math.isfinite(value) or value < 0:
+                            raise ValueError(f"invalid durable stage {source}")
+                        durable_samples[target].append(value)
+                    if not data["success"]:
+                        durable_failures += 1
                 elif kind == "client_loop":
                     client_state = data["state"]
                     if client_state != "CONNECTED": unexpected_states += 1
@@ -153,6 +183,13 @@ def analyze_trace(path: Path, role: str, run_id: str, min_seconds: float = 10.0,
         for key in required_fields:
             if len(stage_samples[key]) < 10:
                 problems.append(f"missing/incomplete snapshot stage {key}")
+    if require_durable_stages and role == "server":
+        for kind in ("durable_command_stages", "durable_checkpoint_stages"):
+            if counts.get(kind, 0) < 1:
+                problems.append(f"missing {kind} durable workload evidence")
+        for key, values in durable_samples.items():
+            if not values:
+                problems.append(f"missing durable stage {key}")
     if header.get("schema") != "dws.net_smooth.trace.v1": problems.append("missing/invalid header")
     if header.get("run_id") != run_id or header.get("role") != role: problems.append("identity mismatch")
     if not footer: problems.append("missing END / process did not drain")
@@ -191,11 +228,15 @@ def analyze_trace(path: Path, role: str, run_id: str, min_seconds: float = 10.0,
         if client_errors: failures.append("prediction reconcile failures")
         if counts.get("remote_visual",0)<10 or distance<.2: problems.append("no demonstrated remote movement")
         if backwards_holds: failures.append("backwards EXTRAPOLATE->HOLD jump")
+    if durable_failures:
+        failures.append(f"durable commit failures: {durable_failures}")
     verdict = "INCONCLUSIVE" if problems else "FAIL" if failures else "PASS"
     return {"role":role,"verdict":verdict,"duration_s":duration,"problems":problems,
             "failures":failures,"metrics":{k:stats(v) for k,v in samples.items()},
             "snapshot_stage_metrics":{k:stats(v) for k,v in stage_samples.items()},
             "seam_messages_sent":seam_sent,"seam_unchanged_skipped":seam_skipped,
+            "durable_stage_metrics":{k:stats(v) for k,v in durable_samples.items()},
+            "durable_stage_failures":durable_failures,
             "tick_hz":tick_hz,"dropped_time_delta_s":dropped_delta,
             "max_server_event_gap_ms":max_silence,"remote_distance_m":distance,
             "backwards_holds":backwards_holds,"counts":counts,"anomalies":anomalies}
@@ -206,7 +247,8 @@ def analyze_run(root: Path) -> dict[str, Any]:
     reports = [analyze_trace(root/role/"trace.jsonl",role,manifest["run_id"],
                             max(10,manifest["duration_s"]*.90), manifest["profile"]=="LOCAL",
                             manifest.get("checkpoint_mode"),
-                            manifest.get("snapshot_stages_required", False))
+                            manifest.get("snapshot_stages_required", False),
+                            manifest.get("durable_stages_required", False))
                for role in ("server","a","b")]
     infrastructure = manifest.get("errors", [])
     if manifest.get("completed") is not True: infrastructure = infrastructure+["orchestrator incomplete"]
