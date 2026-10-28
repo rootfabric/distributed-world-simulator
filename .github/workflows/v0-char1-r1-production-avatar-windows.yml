@@ -1,0 +1,175 @@
+name: V0 CHAR1 R1 Production Avatar Windows
+
+on:
+  push:
+    branches:
+      - feature/v0-char1-production-avatar-r1
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: v0-char1-r1-production-avatar-windows
+  cancel-in-progress: true
+
+env:
+  BASE_MAIN: 53567c0b98d032260dfe81df4bd43a131e32da54
+  GODOT_BIN: C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe
+  PYTHONUTF8: '1'
+  BREAKPOINT_RUNTIME_DISABLED: '1'
+  GODOT_SILENCE_ROOT_WARNING: '1'
+
+jobs:
+  source:
+    name: CHAR1 source contract
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Validate CHAR1 boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+          git merge-base --is-ancestor "$BASE_MAIN" HEAD
+          test "$(git merge-base "$BASE_MAIN" HEAD)" = "$BASE_MAIN"
+          changed="$(git diff --name-only "$BASE_MAIN" HEAD)"
+          ! grep -Eq '^(scripts/runtime/networked_gameplay|scripts/items|scripts/construction|scripts/persistence)/' <<<"$changed"
+          grep -q 'earth_char1_avatar_app.gd' config/worlds/catalog.json
+          grep -q 'provider_id' config/characters/production-avatar-catalog.v1.json
+          ! grep -q 'presentation_scene_path' config/characters/production-avatar-catalog.v1.json
+          ! grep -q 'quaternius_avatar_provider' scripts/app/earth_char1_avatar_app.gd
+          ! grep -q 'procedural_humanoid_avatar_provider' scripts/app/earth_char1_avatar_app.gd
+      - name: Pack exact CHAR1 source
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/char1-source"
+          git rev-parse HEAD > "$RUNNER_TEMP/char1-source/HEAD.txt"
+          git rev-parse 'HEAD^{tree}' > "$RUNNER_TEMP/char1-source/TREE.txt"
+          git archive --format=tar.gz --output="$RUNNER_TEMP/char1-source/source.tar.gz" HEAD
+
+      - name: Upload exact CHAR1 source
+        uses: actions/upload-artifact@v4
+        with:
+          name: v0-char1-r1-source-${{ github.sha }}-${{ github.run_id }}
+          path: ${{ runner.temp }}/char1-source/
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 0
+
+  windows:
+    name: CHAR1 exact Windows
+    needs: source
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Preflight
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          New-Item -ItemType Directory -Force artifacts\char1-windows | Out-Null
+          $foreign=@(Get-Process -ErrorAction SilentlyContinue | Where-Object {$_.ProcessName -like 'godot*'})
+          if($foreign.Count -gt 0){throw ('FOREIGN_GODOT_PROCESS:'+(($foreign|Select-Object -ExpandProperty Id)-join ','))}
+          $version=(& $env:GODOT_BIN --version | Out-String).Trim()
+          $sha=(Get-FileHash $env:GODOT_BIN -Algorithm SHA256).Hash.ToLowerInvariant()
+          if($version -ne '4.7.1.stable.double.custom_build.a13da4feb'){throw "GODOT_VERSION_MISMATCH:$version"}
+          if($sha -ne '3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5'){throw "GODOT_SHA_MISMATCH:$sha"}
+          $os=Get-CimInstance Win32_OperatingSystem
+          $free=[math]::Round(($os.FreePhysicalMemory*1KB)/1GB,2)
+          if($free -lt 10){throw "LOW_FREE_RAM:$free"}
+          [ordered]@{
+            head=(git rev-parse HEAD).Trim()
+            tree=(git rev-parse 'HEAD^{tree}').Trim()
+            base_main=$env:BASE_MAIN
+            godot_version=$version
+            godot_sha256=$sha
+            free_ram_gb=$free
+            host=$env:COMPUTERNAME
+          } | ConvertTo-Json -Depth 5 | Set-Content artifacts\char1-windows\preflight.json -Encoding UTF8
+      - name: Cold import
+        shell: pwsh
+        timeout-minutes: 12
+        run: |
+          $ErrorActionPreference='Stop'
+          if(Test-Path .godot){Remove-Item .godot -Recurse -Force}
+          & $env:GODOT_BIN --headless --path . --editor --import --quit *> artifacts\char1-windows\import.log
+          if($LASTEXITCODE -ne 0){Get-Content artifacts\char1-windows\import.log -Tail 300; throw "IMPORT_FAILED:$LASTEXITCODE"}
+          if(Select-String artifacts\char1-windows\import.log -Pattern 'SCRIPT ERROR:|Parse Error:|Compile Error:' -Quiet){Get-Content artifacts\char1-windows\import.log -Tail 300; throw 'IMPORT_SCRIPT_ERRORS'}
+      - name: CHAR1 interfaces and external-provider injection
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          foreach($test in @(
+            'tests/characters/test_char1_production_avatar.gd',
+            'tests/characters/test_char1_external_provider.gd'
+          )){
+            $log=Join-Path 'artifacts\char1-windows' ((Split-Path $test -Leaf)+'.log')
+            & $env:GODOT_BIN --headless --path . --script ('res://'+$test) *> $log
+            if($LASTEXITCODE -ne 0){Get-Content $log -Tail 300; throw ("CHAR1_TEST_FAILED:{0}:{1}" -f $test,$LASTEXITCODE)}
+            if(Select-String $log -Pattern 'SCRIPT ERROR:|Parse Error:|Compile Error:' -Quiet){Get-Content $log -Tail 300; throw ("CHAR1_TEST_SCRIPT_ERRORS:{0}" -f $test)}
+          }
+      - name: Product Shell UI smoke
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          $smoke=Join-Path (Resolve-Path 'artifacts\char1-windows').Path 'product-shell-smoke.json'
+          $log='artifacts\char1-windows\product-shell-smoke.log'
+          & $env:GODOT_BIN --headless --path . -- ('--product-shell-smoke='+$smoke.Replace('\','/')) *> $log
+          if($LASTEXITCODE -ne 0){Get-Content $log -Tail 200; throw ('CHAR1_PRODUCT_SHELL_EXIT:{0}' -f $LASTEXITCODE)}
+          if(-not(Test-Path $smoke)){throw 'CHAR1_PRODUCT_SHELL_REPORT_MISSING'}
+          $report=Get-Content $smoke -Raw | ConvertFrom-Json
+          if(-not [bool]$report.root_present){throw 'CHAR1_PRODUCT_SHELL_ROOT_MISSING'}
+          foreach($view in @('home','host','join','settings')){
+            if(@($report.view_ids) -notcontains $view){throw ('CHAR1_PRODUCT_SHELL_VIEW_MISSING:{0}' -f $view)}
+          }
+
+      - name: USER1 inherited regressions
+        shell: pwsh
+        timeout-minutes: 12
+        run: |
+          $ErrorActionPreference='Stop'
+          foreach($test in @(
+            'tests/runtime/test_v0_user1_product_seam_bridge.gd',
+            'tests/runtime/test_v0_user1_first_usable_slice.gd',
+            'tests/runtime/test_v0_ux0_product_shell.gd'
+          )){
+            $log=Join-Path 'artifacts\char1-windows' ((Split-Path $test -Leaf)+'.log')
+            & $env:GODOT_BIN --headless --path . --script ('res://'+$test) *> $log
+            if($LASTEXITCODE -ne 0){Get-Content $log -Tail 300; throw "CHAR1_INHERITED_REGRESSION:${test}:$LASTEXITCODE"}
+            if(Select-String $log -Pattern 'SCRIPT ERROR:|Parse Error:|Compile Error:' -Quiet){Get-Content $log -Tail 300; throw "CHAR1_INHERITED_SCRIPT_ERROR:$test"}
+          }
+
+      - name: Final clean source and host
+        if: always()
+        shell: pwsh
+        run: |
+          $head=(git rev-parse HEAD).Trim()
+          $tree=(git rev-parse 'HEAD^{tree}').Trim()
+          $tracked=(git status --porcelain --untracked-files=no | Out-String).Trim()
+          $godot=@(Get-Process -ErrorAction SilentlyContinue | Where-Object {$_.ProcessName -like 'godot*'})
+          [ordered]@{
+            head=$head
+            tree=$tree
+            tracked_clean=[string]::IsNullOrWhiteSpace($tracked)
+            remaining_godot_pids=@($godot|Select-Object -ExpandProperty Id)
+          } | ConvertTo-Json -Depth 5 | Set-Content artifacts\char1-windows\final.json -Encoding UTF8
+          if (-not [string]::IsNullOrWhiteSpace($tracked)){throw 'TRACKED_DIRTY_AFTER'}
+          if($godot.Count -gt 0){throw ('GODOT_PROCESS_LEAK:'+(($godot|Select-Object -ExpandProperty Id)-join ','))}
+
+      - name: Upload CHAR1 Windows evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v0-char1-r1-windows-${{ github.sha }}-${{ github.run_id }}
+          path: artifacts/char1-windows/
+          if-no-files-found: error
+          retention-days: 90
+          compression-level: 6
