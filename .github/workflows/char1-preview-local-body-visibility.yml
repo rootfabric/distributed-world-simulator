@@ -1,0 +1,40 @@
+name: CHAR1 Preview Local Body Visibility Source
+
+on:
+  push:
+    branches:
+      - feature/char1-realistic-avatar-preview-r1
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  source:
+    name: CHAR1 preview exact source
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Source-only contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -z "$(git status --porcelain --untracked-files=no)"
+          grep -q '_host.visible = not first_person' scripts/characters/lab/char1_realistic_avatar_viewer.gd
+          grep -q 'first-person avatar not rendered' tests/characters/test_char1_first_person_body_visibility.gd
+          mkdir -p "$RUNNER_TEMP/char1-preview-source"
+          git rev-parse HEAD > "$RUNNER_TEMP/char1-preview-source/HEAD.txt"
+          git rev-parse 'HEAD^{tree}' > "$RUNNER_TEMP/char1-preview-source/TREE.txt"
+          git archive --format=tar.gz --output="$RUNNER_TEMP/char1-preview-source/source.tar.gz" HEAD
+      - name: Archive exact source
+        uses: actions/upload-artifact@v4
+        with:
+          name: char1-first-person-source-${{ github.sha }}-${{ github.run_id }}
+          path: ${{ runner.temp }}/char1-preview-source/
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 0

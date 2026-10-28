@@ -1,0 +1,63 @@
+name: CHAR1 Portable Windows Release
+
+on:
+  push:
+    branches:
+      - feature/char1-realistic-avatar-preview-r1
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  windows-ps51:
+    name: Windows PowerShell 5.1 fast exit
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Test Process.Handle and ExitCode against quick subprocesses
+        shell: powershell
+        run: |
+          & .\tools\char1\portable_windows\tests\test_ps51_fast_exit.ps1
+          if ($LASTEXITCODE -and $LASTEXITCODE -ne 0) {
+            throw 'CHAR1_PS51_TEST_FAILED'
+          }
+
+  build:
+    name: Portable ZIP exact Git HEAD
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Build exact source package with fixed launcher
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/char1/build_windows_test.py --output "$RUNNER_TEMP/CHAR1_Realistic_Avatar_Windows_Test.zip" > "$RUNNER_TEMP/CHAR1_BUILD_REPORT.json"
+          python3 - "$RUNNER_TEMP/CHAR1_Realistic_Avatar_Windows_Test.zip" <<'PY'
+          import json, sys, zipfile
+          z = zipfile.ZipFile(sys.argv[1])
+          assert z.testzip() is None
+          p = "CHAR1_REALISTIC_WINDOWS_TEST/"
+          info = json.loads(z.read(p+"BUILD_INFO.json"))
+          assert info["portable_launcher_revision"] == "PS51_EXITCODE_HANDLE_R2"
+          common = z.read(p+"tools/CHAR1-Common.ps1").decode("utf-8")
+          assert common.index("$null = $process.Handle") < common.index("WaitForExit(")
+          assert info["external_quaternius_included"] is False
+          print("CHAR1_PORTABLE_SOURCE_PASS", info["product_head"], info["product_tree"])
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: char1-portable-windows-${{ github.sha }}-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/CHAR1_Realistic_Avatar_Windows_Test.zip
+            ${{ runner.temp }}/CHAR1_BUILD_REPORT.json
+          retention-days: 30
+          if-no-files-found: error
+          compression-level: 0
