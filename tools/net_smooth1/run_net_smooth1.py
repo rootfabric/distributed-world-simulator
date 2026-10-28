@@ -22,6 +22,7 @@ from live2_automation_client import request
 from analyze_net_smooth1 import write_report
 
 TESTS = [
+ 'tests/runtime/test_net_smooth1_r42_seam_full_snapshot_wire_checksum.gd',
  'tests/runtime/test_net_smooth1_r42_revision_fence_diagnostics.gd',
  'tests/network/test_net_smooth1_r31_compact_wire_checksum.gd',
  'tests/runtime/test_net_smooth1_r41_p1_fifo_disconnect_repair.gd',

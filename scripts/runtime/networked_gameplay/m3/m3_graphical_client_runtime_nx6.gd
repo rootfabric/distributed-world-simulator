@@ -1,6 +1,7 @@
 extends Node
 
 const SmoothTrace = preload("res://scripts/network/smoothness/net_smooth_trace.gd")
+const FullSnapshotWireProbe = preload("res://scripts/network/smoothness/net_full_snapshot_wire_probe.gd")
 
 signal session_ready(runtime)
 signal replica_updated(snapshot: Dictionary)
@@ -425,7 +426,10 @@ func _handle_join_ack(payload: Dictionary) -> void:
 	_adopt_authoritative_input_sequence(int(player.get("last_input_sequence", 0)))
 	if _player_entity_id != "player/%s" % _logical_player_id or _ownership_epoch < 1:
 		_fail_connection("INVALID_M3_JOIN_IDENTITY", {"player": player}); return
-	var accepted: Dictionary = _replica.accept_snapshot(payload.get("snapshot", {}))
+	var join_snapshot_value = payload.get("snapshot", {})
+	if join_snapshot_value is Dictionary:
+		FullSnapshotWireProbe.capture("CLIENT_JOIN_ACK_AFTER_FRAME", Dictionary(join_snapshot_value))
+	var accepted: Dictionary = _replica.accept_snapshot(join_snapshot_value)
 	if not bool(accepted.get("success", false)):
 		_fail_connection(String(accepted.get("error_code", "M3_JOIN_SNAPSHOT_REJECTED"))); return
 	_snapshot_updates += 1
