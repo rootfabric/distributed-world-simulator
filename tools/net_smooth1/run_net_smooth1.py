@@ -201,6 +201,9 @@ def play(args, manifest: dict) -> None:
                     scenario=args.scenario,
                     r31_815_wire_forensics=args.r31_815_wire_forensics,
                     r31_815_outbound_guard=args.r31_815_outbound_guard,
+                    r31_815_compact_server_mode=args.r31_815_compact_server_mode,
+                    r31_815_compact_client_a_mode=args.r31_815_compact_client_a_mode,
+                    r31_815_compact_client_b_mode=args.r31_815_compact_client_b_mode,
                     forensic_evidence_class='CHECKSUM_FINGERPRINT_DIAGNOSTIC_ONLY' if args.r31_815_wire_forensics else '')
     processes: dict[str,subprocess.Popen] = {}; streams=[]
     def spawn(role: str) -> None:
@@ -212,6 +215,16 @@ def play(args, manifest: dict) -> None:
         env.pop('DWS_NET_R31_815_WIRE_FORENSICS',None)
         if args.r31_815_wire_forensics:
             env['DWS_NET_R31_815_WIRE_FORENSICS']='1'
+        # Live v2 always requires explicit same-build handshake negotiation.
+        # No inherited shell value can silently change a player or authority.
+        env.pop('DWS_NET_815_COMPACT_SERVER_MODE', None)
+        env.pop('DWS_NET_815_COMPACT_CLIENT_MODE', None)
+        if role == 'server' and args.r31_815_compact_server_mode != 'off':
+            env['DWS_NET_815_COMPACT_SERVER_MODE'] = args.r31_815_compact_server_mode
+        if role == 'a' and args.r31_815_compact_client_a_mode != 'off':
+            env['DWS_NET_815_COMPACT_CLIENT_MODE'] = args.r31_815_compact_client_a_mode
+        if role == 'b' and args.r31_815_compact_client_b_mode != 'off':
+            env['DWS_NET_815_COMPACT_CLIENT_MODE'] = args.r31_815_compact_client_b_mode
         env.pop('DWS_NET_R31_815_OUTBOUND_DECODE_GUARD', None)
         if role == 'server' and args.r31_815_outbound_guard:
             env['DWS_NET_R31_815_OUTBOUND_DECODE_GUARD']='1'
@@ -827,6 +840,12 @@ def main() -> int:
                          help='NON-NORMATIVE SHA-only ENet send/recv fingerprinting for #815; no raw packet logged')
     parser.add_argument('--r31-815-outbound-guard', action='store_true',
                          help='NON-NORMATIVE SERVER ONLY: require original decoder to accept exact outgoing bytes; no checksum bypass')
+    parser.add_argument('--r31-815-compact-server-mode',choices=('off','prefer_v2','require_v2'),default='off',
+                        help='TEST DEPLOY only: opt-in product Earth server v2 capability; no auto-upgrade')
+    parser.add_argument('--r31-815-compact-client-a-mode',choices=('off','prefer_v2','require_v2'),default='off',
+                        help='TEST DEPLOY only: client A v2 offer; exact handshake-bound')
+    parser.add_argument('--r31-815-compact-client-b-mode',choices=('off','prefer_v2','require_v2'),default='off',
+                        help='TEST DEPLOY only: client B v2 offer; exact handshake-bound')
     parser.add_argument('--inject-stall-role',choices=('server','a','b'))
     parser.add_argument('--inject-stall-ms',type=int,default=250)
     args=parser.parse_args()
@@ -884,6 +903,16 @@ def main() -> int:
         parser.error('R31 #815 forensic capture requires real GUI LOCAL, roundtrip, R2.2 and P22')
     if args.r31_815_outbound_guard and not args.r31_815_wire_forensics:
         parser.error('R31 #815 outbound safety guard requires original wire forensics to record every rejected packet')
+    if any(mode != 'off' for mode in (
+        args.r31_815_compact_server_mode,
+        args.r31_815_compact_client_a_mode,
+        args.r31_815_compact_client_b_mode,
+    )):
+        if (args.mode not in ('gui', 'headless')
+            or args.scenario != 'r31-reconnect-roundtrip'
+            or args.profile != 'LOCAL'
+            or not args.r31p23r22_attested_compact):
+            parser.error('F64-v2 test deployment requires real LOCAL two-client reconnect scenario and R2.2 attestation')
     run_id=uuid.uuid4().hex[:16]
     args.output=(args.output or ROOT/'artifacts/net-smooth1'/run_id).resolve()
     args.output.mkdir(parents=True,exist_ok=False)

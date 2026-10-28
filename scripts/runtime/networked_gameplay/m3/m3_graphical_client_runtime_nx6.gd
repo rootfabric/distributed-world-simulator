@@ -490,9 +490,15 @@ func _accept_snapshot(snapshot: Dictionary) -> void:
 	_prune_acknowledged_inputs()
 	replica_updated.emit(_replica.get_snapshot())
 
+# Virtual decoder hook: the default remains EXACT v1; the product P2 adapter
+# may select a version only after the original NX0 handshake has succeeded.
+func _decode_compact_snapshot(snapshot: Dictionary) -> Dictionary:
+	return CompactGameplaySnapshot.decode(snapshot)
+
+
 func _accept_compact_snapshot(snapshot: Dictionary) -> void:
 	var smooth_decode_started_us := Time.get_ticks_usec()
-	var decoded: Dictionary = CompactGameplaySnapshot.decode(snapshot)
+	var decoded: Dictionary = _decode_compact_snapshot(snapshot)
 	var smooth_decoded_us := Time.get_ticks_usec()
 	if not bool(decoded.get("success", false)):
 		_compact_snapshot_rejections += 1
@@ -541,7 +547,7 @@ func _accept_compact_snapshot(snapshot: Dictionary) -> void:
 # peer movement presentation, and only after independently verifying the
 # nested full and compact checksums and local transport/USER1 ownership fence.
 func _accept_committed_view_movement_snapshot(wire: Dictionary) -> void:
-	var decoded: Dictionary = CompactGameplaySnapshot.decode(wire)
+	var decoded: Dictionary = _decode_compact_snapshot(wire)
 	if not bool(decoded.get("success", false)) or _replica == null or not _joined:
 		_committed_view_rejections += 1
 		return

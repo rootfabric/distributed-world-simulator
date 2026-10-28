@@ -14,11 +14,20 @@ class SourceIsolation(unittest.TestCase):
     def test_original_full_compact_frame_and_utils_byte_identical(self):
         audit.check_source(ROOT)
 
-    def test_new_wire_schema_explicit_and_not_in_live_runtime(self):
+    def test_new_wire_schema_only_used_by_explicit_session_bound_m3_routing(self):
         name = "compact_gameplay_snapshot_v2.gd"
+        allowed = {
+            "scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime_p2.gd",
+            "scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime_p2.gd",
+        }
         for path in (ROOT / "scripts").rglob("*.gd"):
-            if path.name != name:
-                self.assertNotIn(name, path.read_text(encoding="utf-8"), str(path))
+            rel = path.relative_to(ROOT).as_posix()
+            if path.name != name and name in path.read_text(encoding="utf-8"):
+                self.assertIn(rel, allowed, "unnegotiated codec import in " + rel)
+        for rel in allowed:
+            code = (ROOT / rel).read_text(encoding="utf-8")
+            self.assertIn('compact_gameplay_snapshot_v2.gd', code)
+            self.assertIn('R31CodecPolicy', code)
         codec = (ROOT / "scripts/runtime/networked_gameplay/contracts" / name).read_text()
         self.assertIn('planet_simulator.compact_gameplay_snapshot.v2', codec)
         self.assertIn('IEEE754_BINARY64_LE_HEX_V1', codec)

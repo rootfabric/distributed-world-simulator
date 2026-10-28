@@ -1,0 +1,300 @@
+name: NET-SMOOTH1 815 Live F64 V2 Test Deploy
+on:
+  push:
+    branches:
+      - feature/net-smooth1-815-live-f64-v2-negotiation-r1
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ns1-815-live-v2-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  strict-source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Exact original codec Git blobs, v2 isolation and source falsifiers
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          git merge-base --is-ancestor d5d2f0042b1cb8e8e395301f21d9016218836d01 HEAD
+          python -m py_compile tools/net_smooth1/verify_815_real_chain_report.py tools/net_smooth1/run_net_smooth1.py tools/net_smooth1/verify_815_live_deploy.py
+          python -m unittest discover -s tests/tools -p 'test_net_smooth1_815_real_chain_source.py' -v
+          python -m unittest discover -s tests/tools -p 'test_net_smooth1_815_live_codec_source.py' -v
+          python -m unittest discover -s tests/tools -p 'test_net_smooth1_815_live_deploy_receipt.py' -v
+          python -m unittest discover -s tests/tools -p 'test_net_smooth1_r31p23r22_source_contracts.py' -v
+          python -m unittest discover -s tests/tools -p 'test_net_smooth1_p1_batch_flush_layers.py' -v
+          test -z "$(git status --porcelain --untracked-files=no)"
+  linux-native:
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 70
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Pinned native corpus RED-GREEN, real USER1 seam and legacy safety
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          B="${DWS_GODOT_DOUBLE_LINUX_BIN:-$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64}"
+          test -x "$B"
+          test "$("$B" --version | head -1)" = '4.7.1.stable.double.custom_build.a13da4feb'
+          test "$(sha256sum "$B" | cut -d' ' -f1)" = 'bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7'
+          E=artifacts/815-real-chain
+          mkdir -p "$E"
+          { git rev-parse HEAD; git rev-parse 'HEAD^{tree}'; sha256sum "$B"; } > "$E/identity.txt"
+          export GODOT_SILENCE_ROOT_WARNING=1
+          export DWS_815_CHAIN_REPORT_PATH="$PWD/$E/real-chain.json"
+          "$B" --headless --editor --path . --import --quit > "$E/import.log" 2>&1 || { tail -n 120 "$E/import.log"; exit 1; }
+          ! grep -E 'SCRIPT ERROR:|Parse Error:|Compile Error:' "$E/import.log"
+          for T in \
+            tests/runtime/test_net_smooth1_815_live_codec_negotiation.gd \
+            tests/runtime/test_net_smooth1_815_real_snapshot_chain.gd \
+            tests/runtime/test_net_smooth1_815_user1_snapshot_v2.gd \
+            tests/runtime/test_net_smooth1_r31_815_outbound_decode_guard.gd \
+            tests/runtime/test_net_smooth1_815_safety_negative.gd \
+            tests/runtime/test_net_smooth1_r31p23r22_attested_compact.gd \
+            tests/runtime/test_m6_dedicated_recovery_contracts.gd \
+            tests/runtime/test_v0_user1_product_seam_bridge.gd
+          do
+            L="$E/$(basename "$T").log"
+            timeout --signal=TERM --kill-after=5s 480s "$B" --headless --path . --script "res://$T" > "$L" 2>&1 || { tail -n 140 "$L"; exit 1; }
+            if grep -E 'SCRIPT ERROR:|Parse Error:|Compile Error:|ERROR:' "$L"; then tail -n 120 "$L"; exit 1; fi
+            grep -Eq 'PASS' "$L"
+          done
+          python3 tools/net_smooth1/verify_815_real_chain_report.py "$E/real-chain.json" --source-root . > "$E/independent-report-check.json"
+          test -z "$(git status --porcelain --untracked-files=no)"
+          find "$E" -type f ! -name sha256.txt -print0 | sort -z | xargs -0 sha256sum > "$E/sha256.txt"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ns1-815-real-chain-linux-${{ github.sha }}
+          path: artifacts/815-real-chain/
+          if-no-files-found: warn
+  windows-native:
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 70
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Pinned Windows double real-contract chain and actual USER1 service
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          if ((git rev-parse HEAD).Trim() -ne $env:GITHUB_SHA) { throw 'HEAD_MISMATCH' }
+          $B='C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe'
+          if ((Get-FileHash $B -Algorithm SHA256).Hash.ToLowerInvariant() -ne '3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5') { throw 'GODOT_WRAPPER_HASH' }
+          $Main=Join-Path (Split-Path $B -Parent) 'godot.windows.editor.double.x86_64.exe'
+          if ((Get-FileHash $Main -Algorithm SHA256).Hash.ToLowerInvariant() -ne '6464da3576b51f5e2f7db74a20eb1d62507a8a7c8a2fa55b1e08e1a1d0d801a4') { throw 'GODOT_MAIN_HASH' }
+          if ((& $B --version | Out-String).Trim() -ne '4.7.1.stable.double.custom_build.a13da4feb') { throw 'GODOT_VERSION' }
+          $E='artifacts/815-real-chain'
+          New-Item -ItemType Directory -Force $E | Out-Null
+          [ordered]@{head=(git rev-parse HEAD).Trim();tree=(git rev-parse 'HEAD^{tree}').Trim();wrapper_sha=(Get-FileHash $B -Algorithm SHA256).Hash;main_sha=(Get-FileHash $Main -Algorithm SHA256).Hash} | ConvertTo-Json | Set-Content (Join-Path $E 'identity.json')
+          $env:DWS_815_CHAIN_REPORT_PATH=Join-Path (Resolve-Path $E).Path 'real-chain.json'
+          & $B --headless --editor --path . --import --quit *> (Join-Path $E 'import.log')
+          if ($LASTEXITCODE -ne 0 -or (Select-String (Join-Path $E 'import.log') -Pattern 'SCRIPT ERROR:|Parse Error:|Compile Error:' -Quiet)) { throw 'IMPORT_FAIL' }
+          $Tests=@(
+            'tests/runtime/test_net_smooth1_815_live_codec_negotiation.gd',
+            'tests/runtime/test_net_smooth1_815_real_snapshot_chain.gd',
+            'tests/runtime/test_net_smooth1_815_user1_snapshot_v2.gd',
+            'tests/runtime/test_net_smooth1_r31_815_outbound_decode_guard.gd',
+            'tests/runtime/test_net_smooth1_815_safety_negative.gd',
+            'tests/runtime/test_net_smooth1_r31p23r22_attested_compact.gd',
+            'tests/runtime/test_m6_dedicated_recovery_contracts.gd',
+            'tests/runtime/test_v0_user1_product_seam_bridge.gd'
+          )
+          foreach ($T in $Tests) {
+            $Out=Join-Path $E ((Split-Path $T -Leaf)+'.stdout.log')
+            $Err=Join-Path $E ((Split-Path $T -Leaf)+'.stderr.log')
+            $P=Start-Process -FilePath $B -WorkingDirectory (Get-Location).Path -ArgumentList @('--headless','--path','.','--script',('res://'+$T)) -PassThru -RedirectStandardOutput $Out -RedirectStandardError $Err
+            try {
+              if (-not $P.WaitForExit(480000)) { $P.Kill($true); $P.WaitForExit(); throw "NATIVE_TIMEOUT:$T" }
+              $Errors=@(Select-String -Path $Out,$Err -Pattern 'SCRIPT ERROR:|Parse Error:|Compile Error:|ERROR:')
+              if ($P.ExitCode -ne 0 -or $Errors.Count -gt 0 -or -not (Select-String $Out -Pattern 'PASS' -Quiet)) { Get-Content $Out -Tail 120; Get-Content $Err -Tail 120; throw "NATIVE_FAIL:$T" }
+            } finally { $P.Dispose() }
+          }
+          python tools/net_smooth1/verify_815_real_chain_report.py (Join-Path $E 'real-chain.json') --source-root . *> (Join-Path $E 'independent-report-check.json')
+          if ($LASTEXITCODE -ne 0) { throw 'EVIDENCE_CHECK_FAIL' }
+          if (git status --porcelain --untracked-files=no) { throw 'TRACKED_DIRTY' }
+      - name: Hash native evidence
+        if: always()
+        shell: pwsh
+        run: |
+          $E='artifacts/815-real-chain'
+          if (Test-Path $E) { @(Get-ChildItem $E -File | Where-Object {$_.Name -ne 'sha256.json'} | ForEach-Object {[ordered]@{file=$_.Name;sha=(Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()}}) | ConvertTo-Json -Depth 5 | Set-Content (Join-Path $E 'sha256.json') }
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ns1-815-real-chain-win-${{ github.sha }}
+          path: artifacts/815-real-chain/
+          if-no-files-found: warn
+
+  linux-headless-test-deploy:
+    name: Linux native three-process v2/v1 test deployment (NON-NORMATIVE)
+    needs: [strict-source, linux-native]
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 28
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Run real headless Earth server + client A v2 + client B v1
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          B="${DWS_GODOT_DOUBLE_LINUX_BIN:-$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64}"
+          test -x "$B"
+          test "$("$B" --version | head -1)" = '4.7.1.stable.double.custom_build.a13da4feb'
+          test "$(sha256sum "$B" | cut -d' ' -f1)" = 'bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7'
+          export GODOT_SILENCE_ROOT_WARNING=1
+          ROOT=artifacts/815-live-v2-deploy
+          mkdir -p "$ROOT"
+          test -d assets/external/quaternius || { echo 'QUATERNIUS_123_RAW_ASSETS_MISSING_FROM_TEST_HOST'; exit 1; }
+          RAW_COUNT=$(find assets/external/quaternius -type f ! -name '*.import' ! -name '*.uid' | wc -l)
+          test "$RAW_COUNT" -eq 123 || { echo "QUATERNIUS_RAW_ASSET_COUNT_NOT_123:$RAW_COUNT"; exit 1; }
+          { git rev-parse HEAD; git rev-parse 'HEAD^{tree}'; sha256sum "$B"; } > "$ROOT/identity.txt"
+          set +e
+          python3 tools/net_smooth1/run_net_smooth1.py \
+            --godot "$B" --output "$ROOT/mixed" \
+            --mode headless --scenario r31-reconnect-roundtrip \
+            --duration 35 --warmup 10 --startup-timeout 90 --profile LOCAL \
+            --r3c-async-admission --r3c2-server-phased \
+            --r3c4-periodic-frame-pacing --r3c4r2-worker-envelope \
+            --r3c4r31-replay-projection --r3c4r31b-durable-attribution \
+            --r31bp1-durable-chunks --r31p22-loop-attribution \
+            --r31p23r2-flush-attribution --r31p23r21-single-pass-compact \
+            --r31p23r22-attested-compact \
+            --r31-815-compact-server-mode prefer_v2 \
+            --r31-815-compact-client-a-mode require_v2 \
+            --r31-815-compact-client-b-mode off \
+            > "$ROOT/runner.log" 2>&1
+          STATUS=$?
+          set -e
+          printf '%s\n' "$STATUS" > "$ROOT/original_runner_exit.txt"
+          # Original runner PERF FAIL is preserved. Require independent functional proof.
+          python3 tools/net_smooth1/verify_815_live_deploy.py "$ROOT/mixed" \
+            --output "$ROOT/functional-test-deploy.json" || {
+              tail -n 120 "$ROOT/runner.log"
+              exit 1
+            }
+          test -z "$(git status --porcelain --untracked-files=no)"
+          find "$ROOT" -type f ! -name sha256.txt -print0 | sort -z | xargs -0 sha256sum > "$ROOT/sha256.txt"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ns1-815-live-v2-test-deploy-${{ github.sha }}
+          path: artifacts/815-live-v2-deploy/
+          if-no-files-found: warn
+  windows-headless-test-deploy:
+    name: Windows native three-process v2/v1 test deployment (NON-NORMATIVE)
+    needs: [strict-source, windows-native]
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 32
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Exact native Earth server plus mixed versioned clients
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          $PSNativeCommandUseErrorActionPreference=$false
+          if ((git rev-parse HEAD).Trim() -ne $env:GITHUB_SHA) { throw 'EXACT_HEAD_MISMATCH' }
+          $B='C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe'
+          $Main=Join-Path (Split-Path $B -Parent) 'godot.windows.editor.double.x86_64.exe'
+          if ((& $B --version | Out-String).Trim() -ne '4.7.1.stable.double.custom_build.a13da4feb') { throw 'GODOT_VERSION_MISMATCH' }
+          if ((Get-FileHash $B -Algorithm SHA256).Hash.ToLowerInvariant() -ne '3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5') { throw 'GODOT_WRAPPER_HASH_MISMATCH' }
+          if ((Get-FileHash $Main -Algorithm SHA256).Hash.ToLowerInvariant() -ne '6464da3576b51f5e2f7db74a20eb1d62507a8a7c8a2fa55b1e08e1a1d0d801a4') { throw 'GODOT_MAIN_HASH_MISMATCH' }
+          $E='artifacts/815-live-v2-deploy-win'
+          New-Item -ItemType Directory -Force $E | Out-Null
+          [ordered]@{head=(git rev-parse HEAD).Trim();tree=(git rev-parse 'HEAD^{tree}').Trim();wrapper=(Get-FileHash $B -Algorithm SHA256).Hash;main=(Get-FileHash $Main -Algorithm SHA256).Hash} | ConvertTo-Json | Set-Content (Join-Path $E 'identity.json')
+          $Raw='assets/external/quaternius'
+          if (-not (Test-Path $Raw)) {
+            # Canonical RAW assets are out-of-tree; use ONLY previous audited
+            # detached worktrees on the SAME host. Copy, never move/delete.
+            $Candidates=@(
+              'C:\dws-815-guard-r1\assets\external\quaternius',
+              'C:\distributed-world-simulator\ns1-815-f64v2-win-r1\assets\external\quaternius'
+            )
+            if (Test-Path Env:DWS_QUATERNIUS_CANONICAL_SOURCE) {
+              $Candidates=@($env:DWS_QUATERNIUS_CANONICAL_SOURCE)+$Candidates
+            }
+            $Copied=$false
+            foreach ($Candidate in $Candidates) {
+              if (-not (Test-Path $Candidate)) { continue }
+              $Count=@(Get-ChildItem $Candidate -Recurse -File |
+                Where-Object { $_.Extension -notin '.import','.uid' }).Count
+              if ($Count -ne 123) { continue }
+              New-Item -ItemType Directory -Force $Raw | Out-Null
+              Copy-Item -Path (Join-Path $Candidate '*') -Destination $Raw -Recurse -Force
+              Write-Host ('STAGING_ASSET_SOURCE_RESTORED='+$Candidate)
+              $Copied=$true
+              break
+            }
+            if (-not $Copied) { throw 'QUATERNIUS_123_RAW_ASSETS_MISSING_FROM_TEST_HOST' }
+          }
+          $RawCount=@(Get-ChildItem $Raw -Recurse -File |
+            Where-Object { $_.Extension -notin '.import','.uid' }).Count
+          if ($RawCount -ne 123) { throw "QUATERNIUS_123_RAW_ASSET_COUNT_MISMATCH:$RawCount" }
+          # Actual per-file asset SHA map and canonical aggregate are checked
+          # independently by run_net_smooth1 and verify_815_live_deploy.py.
+          & $B --headless --editor --path . --import --quit *> (Join-Path $E 'cold-import.log')
+          if ($LASTEXITCODE -ne 0 -or (Select-String (Join-Path $E 'cold-import.log') -Pattern 'SCRIPT ERROR:|Parse Error:|Compile Error:' -Quiet)) { throw 'COLD_IMPORT_FAIL' }
+          $Common=@(
+            '--godot',$B,'--output',(Join-Path $E 'mixed'),
+            '--mode','headless','--scenario','r31-reconnect-roundtrip','--duration','35','--warmup','10',
+            '--startup-timeout','90','--profile','LOCAL',
+            '--r3c-async-admission','--r3c2-server-phased',
+            '--r3c4-periodic-frame-pacing','--r3c4r2-worker-envelope',
+            '--r3c4r31-replay-projection','--r3c4r31b-durable-attribution',
+            '--r31bp1-durable-chunks','--r31p22-loop-attribution',
+            '--r31p23r2-flush-attribution','--r31p23r21-single-pass-compact',
+            '--r31p23r22-attested-compact',
+            '--r31-815-compact-server-mode','prefer_v2',
+            '--r31-815-compact-client-a-mode','require_v2',
+            '--r31-815-compact-client-b-mode','off'
+          )
+          & python tools/net_smooth1/run_net_smooth1.py @Common *> (Join-Path $E 'runner.log')
+          $OriginalExit=$LASTEXITCODE
+          $OriginalExit | Set-Content (Join-Path $E 'original_runner_exit.txt')
+          # Original PERF FAIL stays FAIL. This stage ONLY proves mixed-version FUNCTIONAL play.
+          & python tools/net_smooth1/verify_815_live_deploy.py (Join-Path $E 'mixed') --output (Join-Path $E 'functional-test-deploy.json')
+          if ($LASTEXITCODE -ne 0) { Get-Content (Join-Path $E 'runner.log') -Tail 100; throw 'MIXED_VERSION_FUNCTIONAL_GATE_FAILED' }
+          if (git status --porcelain --untracked-files=no) { throw 'PRODUCT_TRACKED_DIRTY' }
+      - name: Hash all staging artifacts
+        if: always()
+        shell: pwsh
+        run: |
+          $E='artifacts/815-live-v2-deploy-win'
+          if (Test-Path $E) {
+            @(Get-ChildItem $E -Recurse -File | Where-Object {$_.Name -ne 'sha256.json'} | ForEach-Object {
+              [ordered]@{path=$_.FullName;sha256=(Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()}
+            }) | ConvertTo-Json -Depth 5 | Set-Content (Join-Path $E 'sha256.json')
+          }
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ns1-815-live-v2-win-headless-${{ github.sha }}
+          path: artifacts/815-live-v2-deploy-win/
+          if-no-files-found: warn

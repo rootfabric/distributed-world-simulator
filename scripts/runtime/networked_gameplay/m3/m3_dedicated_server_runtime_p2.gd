@@ -30,6 +30,8 @@ const RealtimeChannelPolicy = preload("res://scripts/network/realtime/realtime_c
 const PlayerInputBatch = preload("res://scripts/runtime/networked_gameplay/contracts/player_input_batch.gd")
 const CanonicalItemGraphDelta = preload("res://scripts/runtime/networked_gameplay/contracts/canonical_item_graph_delta.gd")
 const CompactGameplaySnapshot = preload("res://scripts/runtime/networked_gameplay/contracts/compact_gameplay_snapshot.gd")
+const CompactV2 = preload("res://scripts/runtime/networked_gameplay/contracts/compact_gameplay_snapshot_v2.gd")
+const R31CodecPolicy = preload("res://scripts/network/contracts/r31_815_compact_codec_negotiation.gd")
 const FullSnapshot = preload("res://scripts/runtime/networked_gameplay/contracts/player_state_snapshot.gd")
 const CommittedView = preload("res://scripts/runtime/networked_gameplay/contracts/committed_movement_view.gd")
 const FixedTickScheduler = preload("res://scripts/network/simulation/fixed_tick_scheduler.gd")
@@ -207,6 +209,13 @@ var _peer_compatibility: Dictionary = {}
 var _handshake_attempts := 0
 var _handshake_accepts := 0
 var _handshake_rejections := 0
+# R31 #815: VERSIONED per-transport-session COMPACT codec; default OFF.
+var _r31_815_compact_mode: String = "off"
+var _r31_815_v1_sent: int = 0
+var _r31_815_v2_sent: int = 0
+var _r31_815_v1_encodes: int = 0
+var _r31_815_v2_encodes: int = 0
+var _r31_815_v2_encode_failures: int = 0
 var _handshake_replays := 0
 var _last_handshake_error_code := ""
 var _movement_snapshot_dirty := false
@@ -259,6 +268,25 @@ func setup(config: Dictionary) -> Dictionary:
 	_persistence_root = String(config.get("persistence_root", "")).strip_edges()
 	_persistence_enabled = not _persistence_root.is_empty()
 	_playable_sandbox = bool(config.get("playable_sandbox", false))
+	var requested_codec_mode: String = String(config.get(
+		"r31_815_compact_codec_mode",
+		OS.get_environment("DWS_NET_815_COMPACT_SERVER_MODE")
+	)).strip_edges().to_lower()
+	if requested_codec_mode.is_empty():
+		requested_codec_mode = "off"
+	var codec_setup: Dictionary = R31CodecPolicy.validate_mode(requested_codec_mode)
+	if not bool(codec_setup.get("success", false)):
+		return codec_setup
+	if requested_codec_mode != "off" and (
+		not _playable_sandbox or not bool(config.get("product_seam_enabled", false))
+	):
+		return _failure("R31_815_CODEC_REQUIRES_PLAYABLE_PRODUCT_SEAM")
+	_r31_815_compact_mode = requested_codec_mode
+	_r31_815_v1_sent = 0
+	_r31_815_v2_sent = 0
+	_r31_815_v1_encodes = 0
+	_r31_815_v2_encodes = 0
+	_r31_815_v2_encode_failures = 0
 	_r3c_async_admission_enabled = (
 		bool(config.get("r3c_async_admission_canary", false))
 		or OS.get_environment("DWS_NET_R3C_ASYNC_ADMISSION") == "1"
@@ -811,7 +839,30 @@ func _handle_compatibility_hello(peer_id: String, session_id: String, payload: D
 			String(evaluation.get("error_code", "FINGERPRINT_MISMATCH"))
 		)
 		return
+	var raw_offer = payload.get("compact_codec_offer", {})
+	if not raw_offer is Dictionary:
+		_reject_handshake(peer_id, String(hello.get("handshake_id", "")), "COMPACT_CODEC_INVALID_OFFER_TYPE")
+		return
+	var offer: Dictionary = raw_offer
+	var choice_result: Dictionary = R31CodecPolicy.choose(
+		_r31_815_compact_mode, offer, String(hello.get("handshake_id", ""))
+	)
+	if not bool(choice_result.get("success", false)):
+		_reject_handshake(peer_id, String(hello.get("handshake_id", "")),
+			String(choice_result.get("error_code", "COMPACT_CODEC_NEGOTIATION_FAILED")))
+		return
+	var selected_format: String = String(choice_result["details"]["selected"])
 	var already_compatible: bool = _is_peer_compatible(peer_id, session_id)
+	if already_compatible:
+		var existing: Dictionary = Dictionary(_peer_compatibility.get(peer_id, {}))
+		if String(existing.get("handshake_id", "")) != String(hello["handshake_id"]) or (
+			String(existing.get("compact_codec_format", R31CodecPolicy.LEGACY)) != selected_format
+		) or String(existing.get("compact_codec_offer_checksum", "")) != String(
+			offer.get("checksum", "")
+		):
+			_reject_handshake(peer_id, String(hello["handshake_id"]),
+				"COMPACT_CODEC_RENEGOTIATION_FORBIDDEN")
+			return
 	if not already_compatible:
 		var handshaking: Dictionary = _boundary.mark_peer_handshaking(peer_id)
 		if not bool(handshaking.get("success", false)) and String(
@@ -820,7 +871,11 @@ func _handle_compatibility_hello(peer_id: String, session_id: String, payload: D
 			_reject_handshake(peer_id, String(hello.get("handshake_id", "")), "PEER_HANDSHAKE_STATE_FAILED")
 			return
 	var ack: Dictionary = Dictionary(evaluation.get("details", {}).get("ack", {})).duplicate(true)
-	if not _send_control(peer_id, "COMPATIBILITY_ACK", {"ack": ack}):
+	var ack_payload: Dictionary = {"ack": ack}
+	if not offer.is_empty() or _r31_815_compact_mode != "off":
+		ack_payload["compact_codec_choice"] = R31CodecPolicy.create_choice(
+			selected_format, offer, String(hello["handshake_id"]))
+	if not _send_control(peer_id, "COMPATIBILITY_ACK", ack_payload):
 		_reject_handshake(peer_id, String(hello.get("handshake_id", "")), "FINGERPRINT_ACK_SEND_FAILED")
 		return
 	if already_compatible:
@@ -832,7 +887,15 @@ func _handle_compatibility_hello(peer_id: String, session_id: String, payload: D
 		"handshake_id": String(hello.get("handshake_id", "")),
 		"verified_at_ms": Time.get_ticks_msec(),
 		"client_fingerprint": Dictionary(hello.get("fingerprint", {})).duplicate(true),
+		"compact_codec_format": selected_format,
+		"compact_codec_offer_checksum": String(offer.get("checksum", "")),
 	}
+	if SmoothTrace.enabled():
+		SmoothTrace.emit("r31_815_compact_codec_selected", {
+			"selected": selected_format,
+			"peer_sha256": peer_id.sha256_text(),
+			"session_sha256": session_id.sha256_text(),
+		})
 	_handshake_accepts += 1
 	_telemetry.increment("handshake_accepts")
 	for method_name in ["mark_peer_synchronizing", "mark_peer_ready"]:
@@ -840,6 +903,18 @@ func _handle_compatibility_hello(peer_id: String, session_id: String, payload: D
 		if not bool(transition.get("success", false)):
 			_last_error_code = "NX0_PEER_READY_FAILED"
 			return
+
+
+func _r31_815_peer_codec(peer_id: String) -> String:
+	var row_value = _peer_compatibility.get(peer_id, {})
+	if not row_value is Dictionary:
+		return ""
+	var row: Dictionary = row_value
+	var current_session: String = String(_peer_to_session.get(peer_id, ""))
+	if current_session.is_empty() or String(row.get("session_id", "")) != current_session:
+		return ""
+	var selected: String = String(row.get("compact_codec_format", R31CodecPolicy.LEGACY))
+	return selected if selected in [R31CodecPolicy.LEGACY, R31CodecPolicy.F64] else ""
 
 
 func _reject_handshake(peer_id: String, handshake_id: String, error_code: String) -> void:
@@ -1362,15 +1437,41 @@ func _maybe_publish_movement_snapshot() -> void:
 	else:
 		authoritative_snapshot = _service.create_snapshot()
 	var snapshot_captured_us := Time.get_ticks_usec()
-	var compact_result: Dictionary = CompactGameplaySnapshot.encode(authoritative_snapshot)
+	# Select before encoding: the v2-only path must NOT depend on v1 JSON
+	# precision or pay a duplicate encode. Mixed sessions encode each schema
+	# once and share immutable output with matching peers.
+	var need_v1: bool = _r31_815_compact_mode == "off"
+	var need_v2: bool = false
+	if not need_v1:
+		for value in _peer_to_player.keys():
+			var codec: String = _r31_815_peer_codec(String(value))
+			if codec == R31CodecPolicy.F64:
+				need_v2 = true
+			elif codec == R31CodecPolicy.LEGACY:
+				need_v1 = true
+	var compact_snapshot: Dictionary = {}
+	if need_v1:
+		var compact_result: Dictionary = CompactGameplaySnapshot.encode(authoritative_snapshot)
+		_r31_815_v1_encodes += 1
+		if not bool(compact_result.get("success", false)):
+			_compact_movement_snapshot_failures += 1
+			_last_error_code = String(compact_result.get(
+				"error_code", "COMPACT_GAMEPLAY_SNAPSHOT_BUILD_FAILED"))
+			return
+		compact_snapshot = Dictionary(compact_result["details"]["snapshot"])
+	var compact_snapshot_v2: Dictionary = {}
+	if need_v2:
+		var v2_encoded: Dictionary = CompactV2.encode(authoritative_snapshot)
+		_r31_815_v2_encodes += 1
+		if not bool(v2_encoded.get("success", false)):
+			_r31_815_v2_encode_failures += 1
+			_compact_movement_snapshot_failures += 1
+			_last_error_code = String(v2_encoded.get(
+				"error_code", "R31_815_COMPACT_V2_ENCODE_FAILED"))
+			return  # NO implicit v1 downgrade for an already-negotiated v2 session
+		compact_snapshot_v2 = Dictionary(v2_encoded["details"]["snapshot"])
 	var snapshot_encoded_us := Time.get_ticks_usec()
-	if not bool(compact_result.get("success", false)):
-		_compact_movement_snapshot_failures += 1
-		_last_error_code = String(compact_result.get("error_code", "COMPACT_GAMEPLAY_SNAPSHOT_BUILD_FAILED"))
-		return
-	# encode() returns a new value object. FrameScript.create() converts it to
-	# isolated canonical JSON per peer; no extra full snapshot copy here.
-	var compact_snapshot: Dictionary = Dictionary(compact_result.get("details", {}).get("snapshot", {}))
+	# Each prevalidated compact body is now immutable for this publish tick.
 	var sent_started_us := Time.get_ticks_usec()
 	var compact_send_us := 0
 	var seam_check_send_us := 0
@@ -1392,18 +1493,42 @@ func _maybe_publish_movement_snapshot() -> void:
 			all_enqueued = false
 			_movement_snapshot_enqueue_failures += 1
 			continue  # changed transport session never inherits committed view
+		var selected_codec: String = _r31_815_peer_codec(peer_id)
+		if selected_codec.is_empty() or (
+			selected_codec == R31CodecPolicy.F64 and compact_snapshot_v2.is_empty()
+		) or (
+			selected_codec == R31CodecPolicy.LEGACY and compact_snapshot.is_empty()
+		):
+			all_enqueued = false
+			_movement_snapshot_enqueue_failures += 1
+			continue  # stale session, never an unnegotiated format fallback
+		var wire_snapshot: Dictionary = (
+			compact_snapshot_v2 if selected_codec == R31CodecPolicy.F64
+			else compact_snapshot
+		)
 		var compact_started_us := Time.get_ticks_usec()
 		var compact_queued := _send_on_channel(
 			peer_id,
 			"COMPACT_GAMEPLAY_SNAPSHOT",
 			{"reason": "P1B_COMMITTED_VIEW_MOVEMENT" if pending_view else "MOVEMENT_NETWORK_TICK",
-			"snapshot": compact_snapshot},
+			"snapshot": wire_snapshot},
 			RealtimeChannelPolicy.SNAPSHOT,
 			"UNRELIABLE_SEQUENCED",
 			false
 		)
 		compact_send_us += Time.get_ticks_usec() - compact_started_us
 		if compact_queued:
+			if selected_codec == R31CodecPolicy.F64:
+				_r31_815_v2_sent += 1
+				if SmoothTrace.enabled() and _r31_815_v2_sent <= 10:
+					SmoothTrace.emit("r31_815_compact_v2_sent", {
+						"server_tick": _server_tick,
+						"peer_sha256": peer_id.sha256_text(),
+						"schema": CompactV2.SCHEMA,
+						"session_sha256": String(_peer_to_session.get(peer_id, "")).sha256_text(),
+					})
+			else:
+				_r31_815_v1_sent += 1
 			compact_enqueued_any = true
 			compact_enqueued_count += 1
 			_broadcasts += 1
@@ -3771,6 +3896,12 @@ func get_report() -> Dictionary:
 		"host": _host,
 		"port": _port,
 		"connected_peer_count": _peer_to_player.size(),
+		"r31_815_compact_codec_mode": _r31_815_compact_mode,
+		"r31_815_compact_v1_sent": _r31_815_v1_sent,
+		"r31_815_compact_v2_sent": _r31_815_v2_sent,
+		"r31_815_compact_v1_encodes": _r31_815_v1_encodes,
+		"r31_815_compact_v2_encodes": _r31_815_v2_encodes,
+		"r31_815_compact_v2_encode_failures": _r31_815_v2_encode_failures,
 		"peer_to_player": _peer_to_player.duplicate(true),
 		"joins": _joins,
 		"fast_join_acks": _fast_join_acks,
