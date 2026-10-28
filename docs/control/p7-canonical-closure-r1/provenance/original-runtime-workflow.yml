@@ -1,0 +1,82 @@
+name: V0 P7 Canonical Acceptance Runtime
+
+on:
+  push:
+    branches:
+      - control/v0-p7-canonical-acceptance-runtime-r1
+
+permissions:
+  contents: read
+
+jobs:
+  canonical-p7:
+    if: github.actor == 'rootfabric' && github.triggering_actor == 'rootfabric' && github.event_name == 'push'
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 180
+    env:
+      CANONICAL_MAIN_SHA: c14c37cce4930a8b5132d5d5fdfab3a5dfa82f5f
+      CANONICAL_MAIN_TREE: 04679a6e67fc86ec156d4341140fd5b0225d6085
+      EXPECTED_GODOT_VERSION: 4.7.1.stable.double.custom_build.a13da4feb
+      EXPECTED_GODOT_SHA256: bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7
+
+    steps:
+      - name: Checkout exact canonical main
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          clean: true
+          ref: c14c37cce4930a8b5132d5d5fdfab3a5dfa82f5f
+
+      - name: Verify exact canonical identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$CANONICAL_MAIN_SHA"
+          test "$(git rev-parse 'HEAD^{tree}')" = "$CANONICAL_MAIN_TREE"
+          test -z "$(git status --porcelain --untracked-files=no)"
+          echo "TRACKED_CLEAN_BEFORE=true"
+
+      - name: Resolve exact Linux double Godot
+        shell: bash
+        env:
+          CONFIGURED_GODOT_BIN: ${{ vars.DWS_GODOT_DOUBLE_BIN }}
+        run: |
+          set -euo pipefail
+          godot="$CONFIGURED_GODOT_BIN"
+          if [ -z "$godot" ] || [ ! -x "$godot" ]; then
+            godot="$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64"
+          fi
+          test -x "$godot"
+          version="$("$godot" --version 2>&1 | head -n1 | tr -d '\r')"
+          test "$version" = "$EXPECTED_GODOT_VERSION"
+          sha="$(sha256sum "$godot" | awk '{print $1}')"
+          test "$sha" = "$EXPECTED_GODOT_SHA256"
+          echo "GODOT_BIN=$godot" >> "$GITHUB_ENV"
+          echo "GODOT_VERSION=$version"
+          echo "GODOT_SHA256=$sha"
+
+      - name: Run repository-owned canonical P7 full gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/runtime/v0-p7-canonical-acceptance
+          bash ./RUN_V0_P7_7_GRAPHICAL_DIGGING_GATE.sh "$GODOT_BIN" "$CANONICAL_MAIN_SHA" 2>&1 | tee artifacts/runtime/v0-p7-canonical-acceptance/full-gate-console.log
+          grep -F "V0-P7.7 GRAPHICAL DIGGING GATE GREEN" artifacts/runtime/v0-p7-canonical-acceptance/full-gate-console.log
+          grep -F "EXACT_HEAD=$CANONICAL_MAIN_SHA" artifacts/runtime/v0-p7-canonical-acceptance/full-gate-console.log
+          grep -F "EXACT_TREE=$CANONICAL_MAIN_TREE" artifacts/runtime/v0-p7-canonical-acceptance/full-gate-console.log
+
+      - name: Verify tracked checkout clean after gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -z "$(git status --porcelain --untracked-files=no)"
+          echo "TRACKED_CLEAN_AFTER=true"
+          find artifacts/runtime -type f -print0 | sort -z | xargs -0 sha256sum > artifacts/runtime/v0-p7-canonical-acceptance/SHA256SUMS
+
+      - name: Upload canonical runtime evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v0-p7-canonical-acceptance-runtime-c14c37cc-linux
+          path: artifacts/runtime/
+          if-no-files-found: error
