@@ -1,0 +1,70 @@
+name: Export Tested Development Flow Objects
+on:
+  push:
+    branches: [control/dev-flow-export-r1-20261028]
+    paths: ['.github/workflows/dev-flow-object-export.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: dev-flow-tested-object-export
+  cancel-in-progress: false
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 94770abffcd6344a477d0712c5447b8acb04bcf3
+          fetch-depth: 1
+          persist-credentials: false
+          show-progress: false
+      - run: python3 -m pip install --disable-pip-version-check PyYAML==6.0.2
+      - name: Reconstruct exact tested tree and export content-addressed blobs only
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/dev-flow/rendered
+          python3 scripts/devflow/apply_optimization.py checkout > artifacts/dev-flow/transform.json
+          python3 - <<'PY'
+          import json,os,subprocess,urllib.request,urllib.error
+          from pathlib import Path
+          def git(*args):return subprocess.check_output(['git',*args],text=True).strip()
+          parent=git('rev-parse','HEAD')
+          paths=json.loads(Path('artifacts/dev-flow/transform.json').read_text())['changed_paths']
+          subprocess.run(['git','add','--',*paths],check=True)
+          tree=git('write-tree')
+          assert tree=='6ba05ecef1dc4f36367ef059a98681c19b136779','TESTED_TREE_MISMATCH'
+          entries=[]; errors=[]
+          for path in paths:
+              raw=Path(path).read_bytes(); text=raw.decode('utf-8')
+              copy=Path('artifacts/dev-flow/rendered')/path
+              copy.parent.mkdir(parents=True,exist_ok=True);copy.write_bytes(raw)
+              sha=git('rev-parse',':'+path)
+              req=urllib.request.Request('https://api.github.com/repos/'+os.environ['GITHUB_REPOSITORY']+'/git/blobs',
+                  data=json.dumps({'content':text,'encoding':'utf-8'}).encode(),method='POST',
+                  headers={'Authorization':'Bearer '+os.environ['GH_TOKEN'],'Accept':'application/vnd.github+json','Content-Type':'application/json'})
+              try:
+                  with urllib.request.urlopen(req,timeout=60) as response: result=json.load(response)
+                  assert result['sha']==sha,'REMOTE_BLOB_MISMATCH'
+              except urllib.error.HTTPError as exc:
+                  errors.append({'path':path,'status':exc.code,'message':exc.read().decode()[:1200]})
+              entries.append({'path':path,'mode':'100644','type':'blob','sha':sha})
+          spec={'source_head':parent,'base_tree':git('rev-parse','HEAD^{tree}'),'tested_tree':tree,
+                'tested_commit':'ba8bb2c34569c2a91f3c5dd6611a1ebe64139bba','validation_run':40626211905,
+                'tree_elements':entries,'blob_publication_errors':errors,'refs_changed':False}
+          Path('artifacts/dev-flow/connector-tree-spec.json').write_text(json.dumps(spec,ensure_ascii=False,indent=2)+'\n')
+          print('CONNECTOR_TREE_SPEC='+json.dumps(spec,ensure_ascii=False))
+          assert not errors,'BLOB_EXPORT_INCOMPLETE_RENDERED_BYTES_RETAINED'
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: dev-flow-tested-object-export-${{ github.run_id }}
+          path: artifacts/dev-flow/
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 90
