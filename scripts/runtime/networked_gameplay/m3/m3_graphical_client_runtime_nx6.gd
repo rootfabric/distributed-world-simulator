@@ -15,6 +15,8 @@ const Support = preload("res://scripts/runtime/networked_gameplay/m3/m3_process_
 const RuntimeIdentity = preload("res://scripts/network/observability/network_runtime_identity.gd")
 const ProtocolManifest = preload("res://scripts/network/observability/network_protocol_manifest.gd")
 const CompatibilityHandshake = preload("res://scripts/network/observability/network_compatibility_handshake.gd")
+const WorldDefinitionScript = preload("res://scripts/world/earth/world_definition.gd")
+const ControlPointProbeScript = preload("res://scripts/world/earth/control_point_probe.gd")
 const TelemetryCollector = preload("res://scripts/network/observability/network_telemetry_collector.gd")
 const ConditionSimulatorPort = preload("res://scripts/network/conditions/network_condition_simulator_port.gd")
 const ConditionProfileStore = preload("res://scripts/network/conditions/network_condition_profile_store.gd")
@@ -80,6 +82,9 @@ var _handshake_sent := false
 var _handshake_verified := false
 var _handshake_rejections := 0
 var _handshake_rtt_ms := 0.0
+var _world_definition_verified := false
+var _world_definition: Dictionary = {}
+var _local_world_announcement: Dictionary = {}
 var _operation_started_ms: Dictionary = {}
 var _operation_types: Dictionary = {}
 var _input_history: Array[Dictionary] = []
@@ -132,6 +137,9 @@ func setup(config: Dictionary) -> Dictionary:
 	_handshake_verified = false
 	_handshake_rejections = 0
 	_handshake_rtt_ms = 0.0
+	_world_definition_verified = false
+	_world_definition.clear()
+	_local_world_announcement.clear()
 	_operation_started_ms.clear()
 	_operation_types.clear()
 	_input_history.clear()
@@ -228,7 +236,7 @@ func _process(_delta: float) -> void:
 			return
 		_handshake_sent = true
 		_telemetry.increment("handshake_hello_sent")
-	if _handshake_verified and not _join_sent and String(
+	if _handshake_verified and _world_definition_verified and not _join_sent and String(
 		_boundary.get_peer_snapshot(SERVER_PEER_ID).get("state", "")
 	) == "READY":
 		_join_operation_id = Support.transport_bound_operation_id(_logical_player_id, "join", _transport_session_id)
@@ -284,6 +292,7 @@ func _handle_message(payload: Dictionary) -> void:
 	match message_type:
 		"COMPATIBILITY_ACK": _handle_compatibility_ack(payload)
 		"COMPATIBILITY_REJECTED": _handle_compatibility_rejection(payload)
+		"WORLD_DEFINITION": _handle_world_definition(payload)
 		"JOIN_ACK":
 			_observe_operation_latency(String(payload.get("operation_id", "")))
 			_handle_join_ack(payload)
@@ -343,6 +352,57 @@ func _handle_compatibility_ack(payload: Dictionary) -> void:
 	_telemetry.observe("handshake_rtt_ms", _handshake_rtt_ms)
 	if not _mark_peer_ready():
 		_fail_connection("NX0_PEER_READY_FAILED")
+
+
+func _handle_world_definition(payload: Dictionary) -> void:
+	var announced_value = payload.get("definition", {})
+	if not announced_value is Dictionary:
+		_fail_connection("INVALID_WORLD_DEFINITION_ANNOUNCEMENT")
+		return
+	var announced: Dictionary = announced_value
+	var local_announcement: Dictionary = _resolve_local_world_announcement(
+		String(announced.get("world_id", WorldDefinitionScript.DEFAULT_WORLD_ID))
+	)
+	# Fail closed: any divergence between the locally computed PlanetDefinition
+	# hash and the server announcement breaks the connection before JOIN.
+	var evaluation: Dictionary = WorldDefinitionScript.evaluate_announcement(
+		local_announcement, announced
+	)
+	if not bool(evaluation.get("success", false)):
+		_fail_connection(String(evaluation.get("error_code", "WORLD_DEFINITION_MISMATCH")), evaluation)
+		return
+	var probe: Dictionary = ControlPointProbeScript.compute_for_world(
+		String(local_announcement["world_id"])
+	)
+	# Fail closed on digest presence first: a missing or empty announced
+	# control-point digest must never degenerate into a self-comparison.
+	var digest_evaluation: Dictionary = WorldDefinitionScript.evaluate_control_point_digest(
+		String(probe.get("digest", "")), announced
+	)
+	if not bool(digest_evaluation.get("success", false)):
+		_fail_connection(
+			String(digest_evaluation.get("error_code", "WORLD_DEFINITION_DIGEST_MISSING")),
+			digest_evaluation
+		)
+		return
+	_world_definition = announced.duplicate(true)
+	_world_definition_verified = true
+	var control_point_digest := String(probe.get("digest", ""))
+	_telemetry.increment("world_definition_verified")
+	_debug_event("WORLD_DEFINITION_VERIFIED", {
+		"world_id": String(_world_definition.get("world_id", "")),
+		"generator_hash": String(_world_definition.get("generator_hash", "")),
+		"control_point_digest": control_point_digest,
+		"control_point_count": int(probe.get("point_count", 0)),
+	})
+
+
+func _resolve_local_world_announcement(world_id: String) -> Dictionary:
+	if _local_world_announcement.is_empty() or String(
+		_local_world_announcement.get("world_id", "")
+	) != world_id:
+		_local_world_announcement = WorldDefinitionScript.create_announcement(world_id)
+	return _local_world_announcement.duplicate(true)
 
 
 func _handle_compatibility_rejection(payload: Dictionary) -> void:
@@ -1260,6 +1320,13 @@ func get_report() -> Dictionary:
 			"verified": _handshake_verified,
 			"rejections": _handshake_rejections,
 			"rtt_ms": _handshake_rtt_ms,
+		},
+		"world_definition": {
+			"verified": _world_definition_verified,
+			"announced": _world_definition.duplicate(true),
+			"local_generator_hash": String(
+				_local_world_announcement.get("generator_hash", "")
+			),
 		},
 		"network_conditions": (
 			_network_condition_simulator.get_runtime_snapshot()

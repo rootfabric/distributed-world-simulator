@@ -1,6 +1,5 @@
 {
   "schema": "planet_simulator.rule_pipeline.v1",
-  "seed": 20260726,
   "rules": [
     {
       "id": "continental_relief",

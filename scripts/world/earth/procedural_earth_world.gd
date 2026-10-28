@@ -4,6 +4,10 @@ signal earth_rebuilt(summary: Dictionary)
 
 const BODY_CONFIG_PATH: String = "res://config/planets/earth.json"
 const LOD_CONFIG_PATH: String = "res://config/generation/earth_lod.json"
+const WORLD_ID: String = "earth"
+const WorldDefinitionScript = preload(
+	"res://scripts/world/earth/world_definition.gd"
+)
 const EarthRulePipelineScript = preload(
 	"res://scripts/world/planetary/earth_rule_pipeline.gd"
 )
@@ -19,6 +23,7 @@ const GravityMathScript = preload(
 
 var body_config: Dictionary = {}
 var lod_config: Dictionary = {}
+var world_definition: Dictionary = {}
 var pipeline
 var assets
 var placement_system
@@ -68,9 +73,22 @@ func setup(logger_reference = null) -> bool:
 			"lod_config": not lod_config.is_empty(),
 		})
 		return false
+	world_definition = WorldDefinitionScript.load_definition(WORLD_ID)
+	if world_definition.is_empty():
+		_log_error("planet_definition_missing", {
+			"world_id": WORLD_ID,
+			"catalog_path": WorldDefinitionScript.CATALOG_PATH,
+		})
+		return false
+	world_definition["generator_hash"] = WorldDefinitionScript.compute_definition_hash(
+		world_definition
+	)
 	_apply_config()
 	pipeline = EarthRulePipelineScript.new()
-	if not pipeline.setup():
+	if not pipeline.setup(
+		EarthRulePipelineScript.CONFIG_PATH,
+		int(world_definition["seed"])
+	):
 		_log_error("earth_rule_pipeline_invalid", {
 			"errors": pipeline.get_validation_errors(),
 		})
@@ -331,6 +349,18 @@ func get_biome_name_at(direction: Vector3) -> String:
 	return pipeline.biome_name(int(state.get("biome_code", -1)))
 
 
+func get_world_seed() -> int:
+	return int(world_definition.get("seed", 0))
+
+
+func get_world_generator_hash() -> String:
+	return String(world_definition.get("generator_hash", ""))
+
+
+func get_world_definition_snapshot() -> Dictionary:
+	return world_definition.duplicate(true)
+
+
 func get_surface_state(direction: Vector3, lod_level: int = 0) -> Dictionary:
 	return pipeline.sample(direction.normalized(), lod_level) if pipeline != null else {}
 
@@ -340,7 +370,7 @@ func find_biome_direction(biome_name: String) -> Vector3:
 		return cached_biome_directions[biome_name]
 	var target_code: int = _biome_code_from_name(biome_name)
 	var rng := RandomNumberGenerator.new()
-	rng.seed = int(body_config.get("seed", 20260726)) + target_code * 10_007
+	rng.seed = get_world_seed() + target_code * 10_007
 	var best_direction: Vector3 = surface_center_direction
 	var best_score: float = -INF
 	for _attempt in range(5200):
@@ -392,7 +422,10 @@ func get_debug_view_name() -> String:
 
 func reload_rules() -> bool:
 	var new_pipeline = EarthRulePipelineScript.new()
-	if not new_pipeline.setup():
+	if not new_pipeline.setup(
+		EarthRulePipelineScript.CONFIG_PATH,
+		get_world_seed()
+	):
 		_log_error("earth_rule_reload_failed", {
 			"errors": new_pipeline.get_validation_errors(),
 		})

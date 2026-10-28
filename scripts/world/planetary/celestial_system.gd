@@ -25,6 +25,9 @@ const GravityFieldScript = preload(
 const GravityMathScript = preload(
 	"res://scripts/simulation/gravity/gravity_math.gd"
 )
+const WorldDefinitionScript = preload(
+	"res://scripts/world/earth/world_definition.gd"
+)
 
 var config: Dictionary = {}
 var all_bodies: Dictionary = {}
@@ -582,7 +585,7 @@ func _create_proxy_texture() -> ImageTexture:
 	var height: int = 256
 	var image := Image.create(width, height, false, Image.FORMAT_RGB8)
 	var noise := FastNoiseLite.new()
-	noise.seed = 20260726
+	noise.seed = WorldDefinitionScript.get_world_seed("earth")
 	noise.frequency = 1.0
 	noise.noise_type = FastNoiseLite.TYPE_SIMPLEX_SMOOTH
 	noise.fractal_type = FastNoiseLite.FRACTAL_FBM

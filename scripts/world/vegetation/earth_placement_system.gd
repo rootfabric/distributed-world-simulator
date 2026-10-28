@@ -1,11 +1,15 @@
 extends Node3D
 
 const CONFIG_PATH: String = "res://config/generation/earth_vegetation.json"
+const WorldDefinitionScript = preload(
+	"res://scripts/world/earth/world_definition.gd"
+)
 
 var earth_world
 var pipeline
 var assets
 var config: Dictionary = {}
+var _world_seed: int = -1
 var tree_types: Array = []
 var grass_types: Array = []
 var near_tree_instances: Array[MultiMeshInstance3D] = []
@@ -22,6 +26,11 @@ func setup(world_reference, pipeline_reference, asset_library) -> bool:
 	config = _load_json(CONFIG_PATH)
 	if config.is_empty():
 		return false
+	# F4: resolve the world seed once per setup (setup runs again on rule
+	# reload) instead of parsing the catalog on every regenerate() call.
+	_world_seed = WorldDefinitionScript.get_world_seed()
+	if earth_world != null and earth_world.has_method("get_world_seed"):
+		_world_seed = int(earth_world.get_world_seed())
 	tree_types = config.get("tree_types", [])
 	grass_types = config.get("grass_types", [])
 	return true
@@ -429,7 +438,14 @@ func _anchor_seed(direction: Vector3) -> int:
 		roundi(direction.y * 10000.0),
 		roundi(direction.z * 10000.0)
 	)
-	var value: int = int(config.get("seed", 20260726))
+	# Vegetation placement inherits the world seed from the PlanetDefinition
+	# (catalog) through the owning procedural world; the placement config no
+	# longer carries its own seed copy. The seed is cached in setup() (F4).
+	var value: int = _world_seed
+	if value < 0:
+		value = WorldDefinitionScript.get_world_seed()
+		if earth_world != null and earth_world.has_method("get_world_seed"):
+			value = int(earth_world.get_world_seed())
 	value ^= quantized.x * 73856093
 	value ^= quantized.y * 19349663
 	value ^= quantized.z * 83492791

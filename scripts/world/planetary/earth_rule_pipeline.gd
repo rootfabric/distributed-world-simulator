@@ -1,6 +1,9 @@
 extends RefCounted
 
 const CONFIG_PATH: String = "res://config/generation/earth_rules.json"
+const WorldDefinitionScript = preload(
+	"res://scripts/world/earth/world_definition.gd"
+)
 const INITIAL_FIELDS := [
 	"direction",
 	"latitude_rad",
@@ -19,14 +22,16 @@ var batch_started_usec: int = 0
 var batch_started_sample_count: int = 0
 
 
-func setup(config_path: String = CONFIG_PATH) -> bool:
+func setup(config_path: String = CONFIG_PATH, seed_override: int = -1) -> bool:
 	rules.clear()
 	validation_errors.clear()
 	var config: Dictionary = _load_json(config_path)
 	if config.is_empty():
 		validation_errors.append("Cannot load rule pipeline config: %s" % config_path)
 		return false
-	seed = int(config.get("seed", 20260726))
+	if not _resolve_seed(seed_override):
+		validation_errors.append("Cannot resolve world planet definition seed")
+		return false
 	var descriptors = config.get("rules", [])
 	if not descriptors is Array:
 		validation_errors.append("The rules field must be an array")
@@ -120,6 +125,20 @@ func biome_name(code: int) -> String:
 			return "rock"
 		_:
 			return "unknown"
+
+
+func _resolve_seed(seed_override: int) -> bool:
+	# Single authoritative seed source: the catalog PlanetDefinition. Explicit
+	# overrides (procedural world setup, probes, tests) win; rules files never
+	# carry their own seed anymore.
+	if seed_override >= 0:
+		seed = int(seed_override)
+		return seed > 0
+	var definition := WorldDefinitionScript.load_definition()
+	if definition.is_empty():
+		return false
+	seed = int(definition["seed"])
+	return seed > 0
 
 
 func _validate_contracts() -> void:
