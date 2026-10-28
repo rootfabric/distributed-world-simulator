@@ -27,6 +27,17 @@ func _process(_delta: float) -> void:
 		Trace.emit("measure_end")
 		Trace.measuring = false
 		_measurement_ended = true
+		# Explicit local measurement-close ACK before planned reconnect,
+		# final screenshots and teardown. The harness must wait for EVERY
+		# process ACK; this does not retroactively filter any captured stalls.
+		var ack: FileAccess = FileAccess.open(
+			directory.path_join("measure.end.ack"), FileAccess.WRITE)
+		if ack == null:
+			push_error("NET_SMOOTH_MEASURE_END_ACK_WRITE_FAILED")
+		else:
+			ack.store_string(str(Time.get_ticks_usec()) + "\n")
+			ack.flush()
+			ack.close()
 	elif not _measurement_ended and not Trace.measuring and FileAccess.file_exists(directory.path_join("measure.start")):
 		Trace.measuring = true
 		Trace.emit("measure_start")

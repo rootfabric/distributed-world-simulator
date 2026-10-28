@@ -53,7 +53,16 @@ class TestR31MeasureWindow(unittest.TestCase):
         for scenario in ("r3-slow-item", "durable-commands", "local", "seam-stress"):
             self.assertIn(scenario, RUNNER)
         self.assertIn("close_measure_window()", RUNNER)
-        self.assertIn("time.sleep(1.2)", RUNNER)
+        # The fixed 1.2s sleep was replaced by a stronger handshake:
+        # ALL three probes must explicitly acknowledge measure.end before
+        # reconnect, screenshots, or process teardown can begin. This test
+        # deliberately rejects any regression to blind time-based sleeps.
+        self.assertIn("'measure.end.ack'", RUNNER)
+        self.assertIn("measurement_close_ack_complete", RUNNER)
+        self.assertIn("NET_SMOOTH_MEASURE_END_ACK_TIMEOUT", RUNNER)
+        self.assertIn("if not measure_closed:", RUNNER)
+        self.assertIn("close_measure_window()", RUNNER)
+        self.assertNotIn("time.sleep(1.2)", RUNNER)
 
 if __name__ == "__main__":
     unittest.main()
