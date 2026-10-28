@@ -1,3 +1,16 @@
+<!-- DEV-FLOW-2026-10-28-R1 -->
+## Действующее обновление процесса — 28 октября 2026
+
+Применяйте `docs/plans/DEVELOPMENT_FLOW_OPTIMIZATION_RU.md` и
+`config/control/harness/development-flow-policy.v1.json`: один независимый
+содержательный разбор LOW/MEDIUM с повторным использованием достоверного CI;
+усиленные HIGH/CRITICAL и явные execution-требования сохраняются. Ремонт
+проверяется по изменённой области, новые улучшения не расширяют приёмку молча.
+NET: малые p99 отклонения неблокирующие; приоритет N3. ECO: R2F и backlog;
+FABRIC: интеграция проверенных ремонтов; ENGINE48: пригодный Linux executor.
+Прежние FAIL, Work Orders, source SHA и запреты на продуктовый merge не отменены.
+<!-- /DEV-FLOW-2026-10-28-R1 -->
+
 # PlanetSimulator agent development rules
 
 ## Language and delivery
