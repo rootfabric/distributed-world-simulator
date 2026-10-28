@@ -1,0 +1,54 @@
+name: Apply Approved Development Flow To Branches
+on:
+  push:
+    branches: [control/dev-flow-rollout-r1-20261028]
+    paths:
+      - '.github/workflows/dev-flow-apply-all-branches.yml'
+      - 'scripts/devflow/rollout_guard.py'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: dev-flow-branch-rollout
+  cancel-in-progress: false
+jobs:
+  rollout:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          show-progress: false
+      - run: python3 -m pip install --disable-pip-version-check PyYAML==6.0.2
+      - name: Read exact branch inventory
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --quiet --unshallow --no-tags origin '+refs/heads/*:refs/remotes/origin/*'
+          mkdir -p artifacts/dev-flow
+          git rev-parse HEAD > artifacts/dev-flow/executor-head.txt
+          git rev-parse origin/main > artifacts/dev-flow/canonical-head.txt
+          git ls-remote --heads origin > artifacts/dev-flow/remote-before.txt
+          python3 -m unittest discover -s tests/devflow -p 'test_*.py' -v > artifacts/dev-flow/rollout-tests.log 2>&1 || { cat artifacts/dev-flow/rollout-tests.log; exit 1; }
+          tail -5 artifacts/dev-flow/rollout-tests.log
+      - name: Prepare scoped commits without remote mutation
+        run: python3 scripts/devflow/rollout_guard.py plan
+      - name: Publish approved-compatible commits without force
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 scripts/devflow/rollout_guard.py publish
+      - name: Preserve inventory and evidence hashes
+        if: always()
+        shell: bash
+        run: |
+          mkdir -p artifacts/dev-flow
+          git ls-remote --heads origin > artifacts/dev-flow/remote-after.txt
+          find artifacts/dev-flow -type f ! -name SHA256SUMS -print0 | sort -z | xargs -0 sha256sum > artifacts/dev-flow/SHA256SUMS
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: dev-flow-branch-rollout-${{ github.run_id }}-${{ github.run_attempt }}
+          path: artifacts/dev-flow/
+          if-no-files-found: error
+          retention-days: 90
