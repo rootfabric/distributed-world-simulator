@@ -1,5 +1,7 @@
 extends Node3D
 
+const SmoothTrace = preload("res://scripts/network/smoothness/net_smooth_trace.gd")
+
 const RemoteSnapshotInterpolator = preload(
 	"res://scripts/network/interpolation/remote_snapshot_interpolator.gd"
 )
@@ -170,6 +172,11 @@ func _apply_interpolated_state(state: Dictionary) -> void:
 	)
 	_last_mode = String(state.get("mode", "UNKNOWN"))
 	_last_render_tick = float(state.get("render_tick", _last_render_tick))
+	if SmoothTrace.enabled():
+		SmoothTrace.emit("remote_visual", {"id": str(get_instance_id()),
+			"position": [_presented_position.x, _presented_position.y, _presented_position.z],
+			"velocity": [target_velocity.x, target_velocity.y, target_velocity.z],
+			"yaw": target_orientation_yaw, "mode": _last_mode, "render_tick": _last_render_tick})
 	_apply_orientation()
 	_apply_flashlight()
 

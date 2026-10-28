@@ -119,7 +119,9 @@ func poll_events(max_events: int = 64) -> Dictionary:
 		if not bool(applied.get("success", false)):
 			return applied
 		if bool(applied.get("details", {}).get("deliver_event", true)):
-			accepted.append(raw_event.duplicate(true))
+			# success() detaches the entire returned event batch below; avoid
+			# another full copy for each already-validated inbound snapshot.
+			accepted.append(raw_event)
 			_record_received_event(raw_event)
 	_update_queue_telemetry()
 	_telemetry_observe("transport_poll_duration_ms", float(Time.get_ticks_usec() - poll_started_us) / 1000.0)
@@ -439,6 +441,8 @@ func get_snapshot() -> Dictionary:
 			if _port != null and _port.has_method("get_runtime_snapshot") else {}
 		),
 		"telemetry_attached": _telemetry != null,
+		"sequence_gap_semantics": "GLOBAL_ID_SKIPS_WITHIN_STREAM_NOT_PACKET_LOSS",
+		"sequence_gap_is_packet_loss": false,
 	}
 
 
@@ -479,7 +483,16 @@ func _apply_event(event: Dictionary) -> Dictionary:
 				return TransportUtilsScript.success({"deliver_event": false})
 			var gap: int = int(incoming.get("details", {}).get("gap", 0))
 			if gap > 0:
-				_telemetry_increment("transport_unreliable_sequence_gaps", gap)
+				# A peer allocates IDs globally; receivers track each delivery/channel
+				# stream. Other streams and sender coalescing also create ID skips.
+				# These counters are NOT measurements of packets lost on the wire.
+				_telemetry_increment("transport_sequence_id_skips", gap)
+				if unreliable_sequenced:
+					_telemetry_increment("transport_unreliable_sequence_id_skips", gap)
+					# Compatibility alias; explicitly labelled by get_snapshot().
+					_telemetry_increment("transport_unreliable_sequence_gaps", gap)
+				else:
+					_telemetry_increment("transport_reliable_sequence_id_skips", gap)
 		"PEER_DISCONNECTED":
 			_telemetry_increment("transport_peer_disconnected_events")
 			var peer_error_code: String = String(event.get("error_code", ""))

@@ -1,5 +1,7 @@
 extends Node
 
+const SmoothTrace = preload("res://scripts/network/smoothness/net_smooth_trace.gd")
+
 signal session_ready(runtime)
 signal replica_updated(snapshot: Dictionary)
 signal item_graph_updated(snapshot: Dictionary)
@@ -298,6 +300,10 @@ func _process(_delta: float) -> void:
 	var process_duration_ms: float = float(Time.get_ticks_usec() - process_started_us) / 1000.0
 	_telemetry.observe("client_process_duration_ms", process_duration_ms)
 	_telemetry.observe("client_tick_duration_ms", process_duration_ms)
+	if SmoothTrace.enabled():
+		SmoothTrace.emit("client_loop", {"process_ms": process_duration_ms,
+			"state": _connection_state, "player": _logical_player_id,
+			"session": _transport_session_id, "reconcile_failures": _prediction_reconcile_failures})
 	if _debug_logging and Time.get_ticks_msec() - _last_debug_report_ms >= 2000:
 		_last_debug_report_ms = Time.get_ticks_msec()
 		_debug_event("CLIENT_HEALTH", {
@@ -311,6 +317,10 @@ func _process(_delta: float) -> void:
 func _handle_message(payload: Dictionary) -> void:
 	var server_sent_at_ms: int = int(payload.get("server_sent_at_ms", 0))
 	var message_type: String = String(payload.get("type", ""))
+	if SmoothTrace.enabled() and message_type in ["GAMEPLAY_SNAPSHOT", "COMPACT_GAMEPLAY_SNAPSHOT"]:
+		SmoothTrace.emit("snapshot_received", {"type": message_type,
+			"tick": int(payload.get("snapshot", {}).get("server_tick", -1)),
+			"session": _transport_session_id})
 	if server_sent_at_ms > 0:
 		var message_age_ms: float = float(maxi(Time.get_ticks_msec() - server_sent_at_ms, 0))
 		_telemetry.observe("server_message_age_ms", message_age_ms)
@@ -446,13 +456,16 @@ func _accept_snapshot(snapshot: Dictionary) -> void:
 	replica_updated.emit(_replica.get_snapshot())
 
 func _accept_compact_snapshot(snapshot: Dictionary) -> void:
+	var smooth_decode_started_us := Time.get_ticks_usec()
 	var decoded: Dictionary = CompactGameplaySnapshot.decode(snapshot)
+	var smooth_decoded_us := Time.get_ticks_usec()
 	if not bool(decoded.get("success", false)):
 		_compact_snapshot_rejections += 1
 		_last_error_code = String(decoded.get("error_code", "COMPACT_GAMEPLAY_SNAPSHOT_REJECTED"))
 		return
 	var decoded_snapshot: Dictionary = Dictionary(decoded.get("details", {}).get("snapshot", {}))
 	var accepted: Dictionary = _replica.accept_snapshot(decoded_snapshot)
+	var smooth_accepted_us := Time.get_ticks_usec()
 	if not bool(accepted.get("success", false)):
 		var error_code: String = String(accepted.get("error_code", "M3_COMPACT_SNAPSHOT_REJECTED"))
 		if (
@@ -470,9 +483,22 @@ func _accept_compact_snapshot(snapshot: Dictionary) -> void:
 	if not bool(accepted.get("details", {}).get("replay", false)):
 		_snapshot_updates += 1
 		_compact_snapshot_updates += 1
-	_reconcile_prediction_from_snapshot(_replica.get_snapshot())
+	# get_snapshot() already returns a detached deep copy. Reuse that exact
+	# immutable-for-this-callback value for reconcile and public presentation;
+	# avoid copying the full player state twice for every 20Hz update.
+	var current_snapshot: Dictionary = _replica.get_snapshot()
+	_reconcile_prediction_from_snapshot(current_snapshot)
 	_prune_acknowledged_inputs()
-	replica_updated.emit(_replica.get_snapshot())
+	var smooth_reconciled_us := Time.get_ticks_usec()
+	replica_updated.emit(current_snapshot)
+	if SmoothTrace.enabled():
+		SmoothTrace.emit("compact_snapshot_stages", {
+			"tick": int(current_snapshot.get("server_tick", -1)),
+			"decode_ms": float(smooth_decoded_us - smooth_decode_started_us) / 1000.0,
+			"accept_ms": float(smooth_accepted_us - smooth_decoded_us) / 1000.0,
+			"reconcile_ms": float(smooth_reconciled_us - smooth_accepted_us) / 1000.0,
+			"presentation_ms": float(Time.get_ticks_usec() - smooth_reconciled_us) / 1000.0,
+		})
 
 
 func _same_snapshot_state_except_clock(current: Dictionary, incoming: Dictionary) -> bool:
@@ -805,6 +831,7 @@ func _reconcile_prediction_from_snapshot(snapshot: Dictionary) -> void:
 	var local_player: Dictionary = _player_from_snapshot(snapshot, _logical_player_id)
 	if local_player.is_empty():
 		return
+	var smooth_started := Time.get_ticks_usec()
 	var reconciled: Dictionary = _prediction_reconciler.reconcile(
 		local_player,
 		int(snapshot.get("server_tick", 0))
@@ -813,6 +840,12 @@ func _reconcile_prediction_from_snapshot(snapshot: Dictionary) -> void:
 		_prediction_reconcile_failures += 1
 		return
 	var details: Dictionary = Dictionary(reconciled.get("details", {}))
+	if SmoothTrace.enabled():
+		SmoothTrace.emit("reconcile", {"duration_ms": float(Time.get_ticks_usec() - smooth_started) / 1000.0,
+			"error_m": details.get("prediction_error_m", 0.0),
+			"replayed_ticks": details.get("replayed_ticks", 0),
+			"hard_correction": details.get("hard_correction", false),
+			"server_tick": snapshot.get("server_tick", -1)})
 	_telemetry.observe("prediction_error_m", float(details.get("prediction_error_m", 0.0)))
 	_telemetry.observe("prediction_replayed_ticks", float(details.get("replayed_ticks", 0)))
 	if String(details.get("correction_mode", "NONE")) != "NONE":

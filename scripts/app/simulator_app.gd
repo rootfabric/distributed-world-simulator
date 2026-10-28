@@ -108,6 +108,10 @@ var _m7_mode: bool = false
 
 
 func _ready() -> void:
+	var smooth_trace = preload("res://scripts/network/smoothness/net_smooth_trace.gd")
+	smooth_trace.start()
+	if smooth_trace.enabled():
+		add_child(preload("res://scripts/network/smoothness/net_smooth_probe.gd").new())
 	name = "SimulatorApp"
 	get_tree().auto_accept_quit = false
 	launch_options = _parse_launch_options()
@@ -2197,6 +2201,7 @@ func _failure(code: String, message: String) -> Dictionary:
 
 func _exit_tree() -> void:
 	_stop_networked_gameplay_runtimes()
+	preload("res://scripts/network/smoothness/net_smooth_trace.gd").finish()
 	if _runtime_release_blocked:
 		return
 	if current_runtime != null and is_instance_valid(current_runtime):
