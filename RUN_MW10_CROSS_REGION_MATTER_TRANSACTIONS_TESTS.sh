@@ -76,8 +76,8 @@ run_suite() {
 
 
 failures=0
-run_suite   "contracts/runtime"   "res://tests/matter/transactions/test_mw10_cross_region_transactions.gd"   "MW10 cross-region Matter transactions: PASS (184 assertions)" || failures=$((failures + 1))
-run_suite   "multi-process"   "res://tests/matter/transactions/test_mw10_cross_region_processes.gd"   "MW10 cross-region Matter processes: PASS (51 assertions)" || failures=$((failures + 1))
+run_suite   "contracts/runtime"   "res://tests/matter/transactions/test_mw10_cross_region_transactions.gd"   "MW10 cross-region Matter transactions: PASS (201 assertions)" || failures=$((failures + 1))
+run_suite   "multi-process"   "res://tests/matter/transactions/test_mw10_cross_region_processes.gd"   "MW10 cross-region Matter processes: PASS (53 assertions)" || failures=$((failures + 1))
 
 if [[ $failures -ne 0 ]]; then
   echo "MW10 runner: FAIL ($failures/2 suites failed)." >&2
