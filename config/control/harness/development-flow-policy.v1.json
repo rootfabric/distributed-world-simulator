@@ -1,0 +1,35 @@
+{
+  "schema": "distributed_world_simulator.development_flow_policy.v1",
+  "revision": "DEV-FLOW-2026-10-28-R1",
+  "authority": "OWNER_REQUEST_2026_10_27_RESUMED_2026_10_28",
+  "routine_risks": [
+    "LOW",
+    "MEDIUM"
+  ],
+  "one_independent_actor_may_cover_review_and_verification": true,
+  "existing_required_roles_and_predicates_preserved": true,
+  "historical_work_orders_and_verdicts_are_immutable": true,
+  "trusted_exact_machine_evidence_reused_by_default": true,
+  "new_execution_requires_concrete_reason": true,
+  "high_critical_keep_separate_responsibilities": true,
+  "unknown_risk_uses_conservative_route": true,
+  "implementer_cannot_self_accept": true,
+  "runtime_test_launcher_assets_engine_change_invalidates_relevant_evidence": true,
+  "docs_reuse_requires_explicit_content_equivalence_receipt": true,
+  "performance_goals_do_not_waive_functional_failures": true,
+  "small_net_p99_miss_is_advisory": true,
+  "no_automatic_product_merge_or_default_enablement": true,
+  "wip": {
+    "primary_product": 1,
+    "integration": 1,
+    "urgent_repair_or_infrastructure": 1
+  },
+  "pilot_metrics": [
+    "review_to_integration",
+    "job_queue_seconds",
+    "job_runtime_seconds",
+    "duplicate_suite_invocations",
+    "new_material_findings",
+    "escaped_regressions"
+  ]
+}
