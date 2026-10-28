@@ -5,6 +5,7 @@ on:
     paths:
       - 'scripts/network/gateway/runtime/n3_*.gd'
       - 'tests/network/test_n3_*.gd'
+      - 'tests/network/test_n3_*.py'
       - 'RUN_N3_R0_DIRECTORY_CONTRACTS.sh'
       - '.github/workflows/n3-r0-directory-windows.yml'
   workflow_dispatch:
@@ -44,6 +45,17 @@ jobs:
           [ordered]@{ head=(git rev-parse HEAD).Trim(); tree=(git rev-parse 'HEAD^{tree}').Trim();
             godot_version=$version; godot_sha256=$actual } |
             ConvertTo-Json | Set-Content artifacts/n3-r0/identity.json -Encoding UTF8
+      - name: N3 runner RED/GREEN fail-closed regression
+        shell: pwsh
+        timeout-minutes: 3
+        run: |
+          $ErrorActionPreference='Stop'
+          python -m unittest tests/network/test_n3_directory_runner.py -v *> artifacts/n3-r0/runner-regression.log
+          $exit=$LASTEXITCODE
+          Get-Content -LiteralPath artifacts/n3-r0/runner-regression.log
+          if ($exit -ne 0) { throw "N3_RUNNER_REGRESSION_FAILED:$exit" }
+          if (-not ((Get-Content -LiteralPath artifacts/n3-r0/runner-regression.log -Raw) -match 'Ran 6 tests')) { throw 'N3_RUNNER_SIX_CASES_NOT_SEEN' }
+
       - name: N3 region-lease and B0 route negative native tests
         shell: pwsh
         timeout-minutes: 10
@@ -63,6 +75,23 @@ jobs:
           [ordered]@{ head=(git rev-parse HEAD).Trim(); tree=(git rev-parse 'HEAD^{tree}').Trim();
             lease_native_pass=$true; b0_native_pass=$true; tracked_clean=$true } |
             ConvertTo-Json | Set-Content artifacts/n3-r0/summary.json -Encoding UTF8
+      - name: Existing B0 contracts and integration focused regression
+        shell: pwsh
+        timeout-minutes: 7
+        run: |
+          $ErrorActionPreference='Stop'
+          foreach ($name in @('contracts','integration')) {
+            $test="test_b0_message_bus_$name.gd"
+            $log="artifacts/n3-r0/$test.log"
+            & $env:GODOT_BIN --headless --path . --script "res://tests/network/$test" *> $log
+            $exit=$LASTEXITCODE
+            Get-Content -LiteralPath $log
+            if ($exit -ne 0) { throw "B0_NATIVE_NONZERO:${test}:$exit" }
+            $raw=Get-Content -LiteralPath $log -Raw
+            if ($raw -match 'SCRIPT ERROR:|Parse Error:|Compile Error:|Failed to load script|Error compiling') { throw "B0_NATIVE_SCRIPT_ERROR:$test" }
+            if ($raw -notmatch "B0 message bus ${name}: PASS") { throw "B0_NATIVE_PASS_MISSING:$test" }
+          }
+
       - name: Upload exact receipts
         if: always()
         uses: actions/upload-artifact@v4

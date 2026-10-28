@@ -1,0 +1,134 @@
+name: Development Flow Optimization Validation
+
+on:
+  push:
+    branches: [control/dev-flow-optimization-r1-20261028]
+    paths:
+      - '.github/workflows/dev-flow-optimization-validation.yml'
+      - 'scripts/devflow/**'
+      - 'tests/devflow/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: dev-flow-validation-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          show-progress: false
+      - name: Install pinned validation dependencies
+        run: python3 -m pip install --disable-pip-version-check -r scripts/harness/requirements.txt PyYAML==6.0.2
+      - name: Focused negative controls and migration
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/dev-flow
+          git rev-parse HEAD > artifacts/dev-flow/source-head.txt
+          python3 -m unittest discover -s tests/devflow -p 'test_*.py' -v > artifacts/dev-flow/focused.log 2>&1 || { cat artifacts/dev-flow/focused.log; exit 1; }
+          tail -5 artifacts/dev-flow/focused.log
+          python3 scripts/devflow/apply_optimization.py checkout | tee artifacts/dev-flow/transform.json
+          git diff --stat
+          git diff > artifacts/dev-flow/optimization.patch
+          python3 - <<'PY'
+          import ast, json
+          from pathlib import Path
+          import importlib.util
+          spec=importlib.util.spec_from_file_location('migration','scripts/devflow/apply_optimization.py')
+          module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
+          receipt=json.loads(Path('artifacts/dev-flow/transform.json').read_text())
+          for path in receipt['changed_paths']:
+              text=Path(path).read_text()
+              if path.endswith('.yml'):
+                  cfg=module.load_yaml(text)
+                  assert 'on' in cfg and 'jobs' in cfg, path
+              if path.endswith('.py'): ast.parse(text, filename=path)
+          files={p:Path(p).read_text() for p in module.PATHS if Path(p).is_file()}
+          changes,_=module.transform(files)
+          assert not changes, 'NON_IDEMPOTENT_TRANSFORM'
+          print('CHANGED_WORKFLOWS_PARSE_AND_MIGRATION_IDEMPOTENCE=PASS')
+          PY
+          git config user.name 'Development Flow Migration'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          python3 - <<'PY'
+          import json,subprocess
+          from pathlib import Path
+          paths=json.loads(Path('artifacts/dev-flow/transform.json').read_text())['changed_paths']
+          if paths: subprocess.run(['git','add','--',*paths],check=True)
+          PY
+          if ! git diff --cached --quiet; then git commit -m 'ci(control): activate DEV-FLOW-2026-10-28-R1 without product changes'; fi
+          git rev-parse HEAD | tee artifacts/dev-flow/tested-head.txt
+          git rev-parse 'HEAD^{tree}' | tee artifacts/dev-flow/tested-tree.txt
+      - name: Complete existing Harness regression on transformed source
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s tests/harness -p 'test_*.py' -v > artifacts/dev-flow/transformed-harness.log 2>&1 || { tail -140 artifacts/dev-flow/transformed-harness.log; exit 1; }
+          tail -7 artifacts/dev-flow/transformed-harness.log
+          git diff --exit-code
+          git diff --cached --exit-code
+      - name: Preserve tested candidate through Git data API
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json,os,subprocess,urllib.request
+          from pathlib import Path
+          def git(*args): return subprocess.check_output(['git',*args],text=True).strip()
+          def api(path,data):
+              req=urllib.request.Request('https://api.github.com/repos/'+os.environ['GITHUB_REPOSITORY']+'/'+path,
+                  data=json.dumps(data).encode(),method='POST',headers={'Authorization':'Bearer '+os.environ['GH_TOKEN'],'Accept':'application/vnd.github+json','Content-Type':'application/json','X-GitHub-Api-Version':'2022-11-28'})
+              with urllib.request.urlopen(req,timeout=90) as response:return json.load(response)
+          parent=Path('artifacts/dev-flow/source-head.txt').read_text().strip()
+          tested=git('rev-parse','HEAD'); tree=git('rev-parse','HEAD^{tree}')
+          paths=git('diff','--name-only',parent,tested).splitlines()
+          entries=[{'path':p,'mode':'100644','type':'blob','content':Path(p).read_text()} for p in paths]
+          if entries:
+              remote_tree=api('git/trees',{'base_tree':git('rev-parse',parent+'^{tree}'),'tree':entries})
+              assert remote_tree['sha']==tree,'REMOTE_TREE_MISMATCH'
+              author={'name':git('show','-s','--format=%an',tested),'email':git('show','-s','--format=%ae',tested),'date':git('show','-s','--format=%aI',tested)}
+              committer={'name':git('show','-s','--format=%cn',tested),'email':git('show','-s','--format=%ce',tested),'date':git('show','-s','--format=%cI',tested)}
+              message=subprocess.check_output(['git','show','-s','--format=%B',tested],text=True).rstrip('\n')+'\n'
+              remote_commit=api('git/commits',{'tree':tree,'parents':[parent],'message':message,'author':author,'committer':committer})
+              assert remote_commit['sha']==tested,'REMOTE_COMMIT_MISMATCH'
+          result={'source_head':parent,'tested_head':tested,'tested_tree':tree,'focused_tests':'PASS','full_harness':'PASS','publication':'IMMUTABLE_OBJECTS_CREATED_REF_NOT_MOVED','changed_paths':paths,'run_id':os.environ['GITHUB_RUN_ID']}
+          Path('artifacts/dev-flow/summary.json').write_text(json.dumps(result,indent=2)+'\n')
+          print(json.dumps(result))
+          PY
+      - name: Plan every branch without remote writes
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --quiet origin '+refs/heads/*:refs/remotes/origin/*'
+          python3 scripts/devflow/apply_optimization.py plan --manifest artifacts/dev-flow/rollout-plan.json
+          python3 - <<'PY'
+          import json,collections
+          from pathlib import Path
+          report=json.loads(Path('artifacts/dev-flow/rollout-plan.json').read_text())
+          counts=collections.Counter(r['status'] for r in report['rows'])
+          print('ALL_BRANCH_PLAN_STATUS='+json.dumps(dict(counts)))
+          notes=collections.Counter(str(n.get('eco_deduplication',n.get('harness_runtime_advice',''))) for r in report['rows'] for n in r['notes'])
+          print('EXCEPTIONS='+json.dumps(dict(notes)))
+          PY
+      - name: Evidence hashes
+        if: always()
+        shell: bash
+        run: |
+          if [ -d artifacts/dev-flow ]; then find artifacts/dev-flow -type f ! -name SHA256SUMS -print0 | sort -z | xargs -0 sha256sum > artifacts/dev-flow/SHA256SUMS; fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: dev-flow-validation-${{ github.run_id }}
+          path: artifacts/dev-flow/
+          if-no-files-found: error
+          retention-days: 90
