@@ -51,6 +51,9 @@ func setup(
 		_host = null
 		return host_setup
 	_host.set_first_person_mode(_first_person_mode)
+	# Local first-person world-model preview policy: hide the whole avatar.
+	# Other clients render their independent remote presenters unaffected.
+	_host.visible = not _first_person_mode
 	_refresh_definition_projection_options()
 	refresh_projection()
 	return Contract.success({
@@ -170,6 +173,7 @@ func set_first_person_mode(enabled: bool) -> void:
 	_first_person_mode = enabled
 	if _host != null:
 		_host.set_first_person_mode(enabled)
+		_host.visible = not enabled
 	_refresh_definition_projection_options()
 	refresh_projection()
 
@@ -200,6 +204,7 @@ func create_report() -> Dictionary:
 		"schema": "planet_simulator.earth_local_avatar_presenter.v1",
 		"active_character_id": get_active_character_id(),
 		"first_person_mode": _first_person_mode,
+		"local_body_visible": _host.visible if _host != null else false,
 		"eye_height_m": _eye_height_m,
 		"visual_vertical_offset_m": _visual_vertical_offset_m,
 		"projection_updates": _projection_updates,
