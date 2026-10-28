@@ -62,8 +62,9 @@ func _run() -> void:
 	check(staged.global_earth.mesh == null, "global ArrayMesh is not uploaded in synchronous setup")
 	check(staged.local_surface.mesh == null, "local ArrayMesh is not uploaded in synchronous setup")
 	check(int(early.get("target_token", -1)) == 1, "one initial local request queued")
-	check(not bool(early.get("vegetation_staged", true)), "R1 does not mislabel R2 vegetation as async")
-	check(not bool(early.get("gpu_upload_staged", true)), "R1 does not claim bounded R2 GPU upload")
+	# R2 now stages vegetation and GPU upload behind the same explicit flag.
+	check(bool(early.get("vegetation_staged", false)), "R2 stages vegetation preparation")
+	check(bool(early.get("gpu_upload_staged", false)), "R2 stages GPU transform upload")
 	print("R3C3_R1_INIT_SETUP_MS=%0.3f" % setup_ms)
 
 	# _ready spawn teleport requests exactly the same direction again. In

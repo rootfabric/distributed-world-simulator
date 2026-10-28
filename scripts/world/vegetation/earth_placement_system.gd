@@ -13,6 +13,10 @@ var billboard_tree_instances: Array[MultiMeshInstance3D] = []
 var grass_instances: Array[MultiMeshInstance3D] = []
 var rock_instances: Array[MultiMeshInstance3D] = []
 var generation_summary: Dictionary = {}
+# Exact CPU-side source transforms per committed MultiMesh name. Reading back
+# a MultiMesh depends on the rendering backend (the headless dummy server
+# returns identity), so tests and verification use these authoritative arrays.
+var committed_transform_sources: Dictionary = {}
 
 
 func setup(world_reference, pipeline_reference, asset_library) -> bool:
@@ -92,6 +96,7 @@ func regenerate(
 		false
 	)
 	rock_instances = _create_rock_instances(rock_transforms)
+	_record_transform_sources(near_tree_transforms, billboard_transforms, grass_transforms, rock_transforms)
 
 	var pipeline_samples_after: int = int(
 		pipeline.get_performance_snapshot().get("total_sample_count", 0)
@@ -405,6 +410,28 @@ func _clear_instances() -> void:
 	billboard_tree_instances.clear()
 	grass_instances.clear()
 	rock_instances.clear()
+	committed_transform_sources.clear()
+
+
+func _record_transform_sources(
+	near_buckets: Dictionary,
+	billboard_buckets: Dictionary,
+	grass_buckets: Dictionary,
+	rock_buckets: Array
+) -> void:
+	committed_transform_sources.clear()
+	for type_id in near_buckets.keys():
+		if near_buckets[type_id] is Array and not (near_buckets[type_id] as Array).is_empty():
+			committed_transform_sources["NearTrees_%s" % type_id] = near_buckets[type_id]
+	for type_id in billboard_buckets.keys():
+		if billboard_buckets[type_id] is Array and not (billboard_buckets[type_id] as Array).is_empty():
+			committed_transform_sources["BillboardTrees_%s" % type_id] = billboard_buckets[type_id]
+	for type_id in grass_buckets.keys():
+		if grass_buckets[type_id] is Array and not (grass_buckets[type_id] as Array).is_empty():
+			committed_transform_sources["Grass_%s" % type_id] = grass_buckets[type_id]
+	for variant in range(rock_buckets.size()):
+		if rock_buckets[variant] is Array and not (rock_buckets[variant] as Array).is_empty():
+			committed_transform_sources["Rocks_%d" % variant] = rock_buckets[variant]
 
 
 func _count_bucket_transforms(buckets: Dictionary) -> int:
@@ -444,3 +471,324 @@ func _load_json(path: String) -> Dictionary:
 		return {}
 	var parsed = JSON.parse_string(file.get_as_text())
 	return parsed if parsed is Dictionary else {}
+
+
+# ---------------------------------------------------------------------------
+# R3C3 R2 STAGE B/C: staged GPU preparation and atomic visual swap.
+# The legacy synchronous regenerate() above stays byte-identical for the
+# default-off path. These methods are main-thread only and never touch the
+# live visible instances until commit_staged_generation().
+# ---------------------------------------------------------------------------
+
+const R3C3R2_PHASE_IDLE := "IDLE"
+const R3C3R2_PHASE_ALLOCATED := "GPU_ALLOCATE_DONE"
+const R3C3R2_PHASE_UPLOADING := "GPU_UPLOAD_CHUNKS"
+const R3C3R2_PHASE_READY := "UPLOAD_READY"
+const R3C3R2_PHASE_COMMITTED := "COMMITTED"
+const R3C3R2_PHASE_FAILED := "FAILED"
+
+var _r3c3r2_candidate_nodes: Array[MultiMeshInstance3D] = []
+var _r3c3r2_upload_queue: Array = []
+var _r3c3r2_token := 0
+var _r3c3r2_phase := R3C3R2_PHASE_IDLE
+var _r3c3r2_failure := ""
+var _r3c3r2_allocate_ms := 0.0
+var _r3c3r2_upload_ms_total := 0.0
+var _r3c3r2_upload_ms_max := 0.0
+var _r3c3r2_commit_ms := 0.0
+var _r3c3r2_instance_count_total := 0
+var _r3c3r2_instances_uploaded := 0
+var _r3c3r2_source_transforms: Dictionary = {}
+
+
+func begin_staged_generation(
+	token: int,
+	near_buckets: Dictionary,
+	billboard_buckets: Dictionary,
+	grass_buckets: Dictionary,
+	rock_buckets: Array
+) -> Dictionary:
+	cancel_staged_generation()
+	if token < 1:
+		return _r3c3r2_fail("R3C3R2_GENERATION_TOKEN_INVALID")
+	if _r3c3r2_phase == R3C3R2_PHASE_COMMITTED and _r3c3r2_token == token:
+		return _r3c3r2_fail("R3C3R2_DOUBLE_COMMIT_SAME_REGION")
+	# Defensive structure validation before any GPU allocation: a corrupted
+	# bucket must never reach a MultiMesh.
+	for type_id in near_buckets.keys():
+		if not near_buckets[type_id] is Array:
+			return _r3c3r2_fail("R3C3R2_CORRUPT_NEAR_BUCKET")
+	for type_id in billboard_buckets.keys():
+		if not billboard_buckets[type_id] is Array:
+			return _r3c3r2_fail("R3C3R2_CORRUPT_BILLBOARD_BUCKET")
+	for type_id in grass_buckets.keys():
+		if not grass_buckets[type_id] is Array:
+			return _r3c3r2_fail("R3C3R2_CORRUPT_GRASS_BUCKET")
+	if rock_buckets.size() != 3:
+		return _r3c3r2_fail("R3C3R2_CORRUPT_ROCK_BUCKETS")
+	for values in rock_buckets:
+		if not values is Array:
+			return _r3c3r2_fail("R3C3R2_CORRUPT_ROCK_BUCKET")
+	_r3c3r2_token = token
+	_r3c3r2_failure = ""
+	_r3c3r2_allocate_ms = 0.0
+	_r3c3r2_upload_ms_total = 0.0
+	_r3c3r2_upload_ms_max = 0.0
+	_r3c3r2_commit_ms = 0.0
+	_r3c3r2_instance_count_total = 0
+	_r3c3r2_instances_uploaded = 0
+	_r3c3r2_source_transforms = {}
+	# Candidates are created detached from the scene tree: the old complete
+	# region remains visible and untouched during the entire upload.
+	var started: int = Time.get_ticks_usec()
+	_r3c3r2_upload_queue.clear()
+	_r3c3r2_candidate_nodes.clear()
+	if _r3c3r2_collect_candidates(
+		near_buckets, "NearTrees", true, false
+	) and _r3c3r2_collect_candidates(
+		billboard_buckets, "BillboardTrees", true, true
+	) and _r3c3r2_collect_candidates(
+		grass_buckets, "Grass", false, false
+	):
+		for variant in range(rock_buckets.size()):
+			var transforms: Array = rock_buckets[variant]
+			if transforms.is_empty():
+				continue
+			if not _r3c3r2_allocate_candidate(
+				transforms, "Rocks_%d" % variant,
+				assets.get_rock_mesh(variant),
+				assets.get_rock_material(variant),
+				GeometryInstance3D.SHADOW_CASTING_SETTING_ON,
+				false
+			):
+				return _r3c3r2_fail("R3C3R2_ROCK_MESH_REQUIRED")
+	else:
+		return _r3c3r2_fail("R3C3R2_ASSET_MESH_REQUIRED")
+	_r3c3r2_allocate_ms = float(Time.get_ticks_usec() - started) / 1000.0
+	_r3c3r2_phase = R3C3R2_PHASE_ALLOCATED
+	return {"success": true, "error_code": "", "details": {
+		"token": token,
+		"candidates": _r3c3r2_candidate_nodes.size(),
+		"instance_count_total": _r3c3r2_instance_count_total,
+		"allocate_ms": _r3c3r2_allocate_ms,
+	}}
+
+
+func _r3c3r2_collect_candidates(
+	buckets: Dictionary,
+	group_name: String,
+	is_tree: bool,
+	billboard: bool
+) -> bool:
+	for type_id_value in buckets.keys():
+		var type_id: String = String(type_id_value)
+		var transforms: Array = buckets[type_id]
+		if transforms.is_empty():
+			continue
+		var mesh: Mesh
+		var material: Material
+		if billboard:
+			mesh = assets.get_billboard_mesh(type_id)
+			material = assets.get_billboard_material(type_id)
+		elif is_tree:
+			# Tree meshes keep separate trunk and crown surface materials.
+			mesh = assets.get_tree_mesh(type_id)
+			material = null
+		else:
+			mesh = assets.get_grass_mesh(type_id)
+			material = assets.get_grass_material(type_id)
+		var cast_shadow := (
+			GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			if billboard or not is_tree
+			else GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+		)
+		if not _r3c3r2_allocate_candidate(
+			transforms, "%s_%s" % [group_name, type_id],
+			mesh, material, cast_shadow, billboard
+		):
+			return false
+	return true
+
+
+func _r3c3r2_allocate_candidate(
+	transforms: Array,
+	node_name: String,
+	mesh: Mesh,
+	material: Material,
+	cast_shadow: int,
+	_billboard: bool
+) -> bool:
+	if mesh == null:
+		return false
+	var instance := MultiMeshInstance3D.new()
+	instance.name = node_name
+	var multi_mesh := MultiMesh.new()
+	multi_mesh.transform_format = MultiMesh.TRANSFORM_3D
+	multi_mesh.mesh = mesh
+	# Single bounded allocation point; its duration is measured and reported.
+	multi_mesh.instance_count = transforms.size()
+	instance.multimesh = multi_mesh
+	if material != null:
+		instance.material_override = material
+	instance.cast_shadow = cast_shadow
+	instance.visible = false
+	_r3c3r2_candidate_nodes.append(instance)
+	_r3c3r2_upload_queue.append({
+		"instance": instance,
+		"multimesh": multi_mesh,
+		"transforms": transforms,
+		"cursor": 0,
+	})
+	_r3c3r2_source_transforms[node_name] = transforms
+	_r3c3r2_instance_count_total += transforms.size()
+	return true
+
+
+func advance_staged_upload(max_instances: int = 2048) -> Dictionary:
+	if _r3c3r2_phase == R3C3R2_PHASE_FAILED:
+		return {"success": false, "error_code": _r3c3r2_failure}
+	if max_instances < 1:
+		return _r3c3r2_reject("R3C3R2_INVALID_UPLOAD_BUDGET")
+	if _r3c3r2_phase == R3C3R2_PHASE_IDLE:
+		return _r3c3r2_reject("R3C3R2_UPLOAD_BEFORE_ALLOCATE")
+	if _r3c3r2_phase == R3C3R2_PHASE_COMMITTED:
+		return _r3c3r2_reject("R3C3R2_UPLOAD_AFTER_COMMIT")
+	if _r3c3r2_phase == R3C3R2_PHASE_READY:
+		return {"success": true, "error_code": "", "details": {
+			"ready": true, "uploaded": 0, "elapsed_us": 0,
+		}}
+	var started: int = Time.get_ticks_usec()
+	var uploaded := 0
+	while uploaded < max_instances and not _r3c3r2_upload_queue.is_empty():
+		var entry: Dictionary = _r3c3r2_upload_queue[0]
+		var transforms: Array = entry["transforms"]
+		var cursor: int = int(entry["cursor"])
+		var multi_mesh: MultiMesh = entry["multimesh"]
+		while cursor < transforms.size() and uploaded < max_instances:
+			multi_mesh.set_instance_transform(cursor, transforms[cursor])
+			cursor += 1
+			uploaded += 1
+			_r3c3r2_instances_uploaded += 1
+		entry["cursor"] = cursor
+		if cursor >= transforms.size():
+			_r3c3r2_upload_queue.pop_front()
+	var elapsed_us: int = Time.get_ticks_usec() - started
+	var elapsed_ms: float = float(elapsed_us) / 1000.0
+	_r3c3r2_upload_ms_total += elapsed_ms
+	_r3c3r2_upload_ms_max = maxf(_r3c3r2_upload_ms_max, elapsed_ms)
+	if _r3c3r2_upload_queue.is_empty():
+		_r3c3r2_phase = R3C3R2_PHASE_READY
+	return {"success": true, "error_code": "", "details": {
+		"ready": _r3c3r2_phase == R3C3R2_PHASE_READY,
+		"uploaded": uploaded,
+		"elapsed_us": elapsed_us,
+		"token": _r3c3r2_token,
+	}}
+
+
+func is_staged_upload_ready(token: int) -> bool:
+	return (
+		_r3c3r2_phase == R3C3R2_PHASE_READY
+		and _r3c3r2_token == token
+		and _r3c3r2_instances_uploaded == _r3c3r2_instance_count_total
+	)
+
+
+# STAGE C: atomic visual commit. The old complete region is only replaced here,
+# after every transform of the new candidate is uploaded and verified.
+func commit_staged_generation(token: int) -> Dictionary:
+	if _r3c3r2_phase == R3C3R2_PHASE_FAILED:
+		return {"success": false, "error_code": _r3c3r2_failure}
+	if _r3c3r2_phase == R3C3R2_PHASE_COMMITTED and _r3c3r2_token == token:
+		return _r3c3r2_reject("R3C3R2_DOUBLE_COMMIT_SAME_REGION")
+	if _r3c3r2_token != token:
+		return _r3c3r2_reject("R3C3R2_STALE_GENERATION_TOKEN")
+	if _r3c3r2_phase != R3C3R2_PHASE_READY:
+		return _r3c3r2_reject("R3C3R2_COMMIT_BEFORE_UPLOAD_READY")
+	if _r3c3r2_instances_uploaded != _r3c3r2_instance_count_total:
+		return _r3c3r2_reject("R3C3R2_INCOMPLETE_GPU_UPLOAD")
+	var started: int = Time.get_ticks_usec()
+	# Atomic point: clear old, attach complete new candidates.
+	_clear_instances()
+	for instance in _r3c3r2_candidate_nodes:
+		instance.visible = true
+		add_child(instance)
+	var committed: Array[MultiMeshInstance3D] = []
+	committed.assign(_r3c3r2_candidate_nodes)
+	_r3c3r2_candidate_nodes = []
+	_r3c3r2_upload_queue.clear()
+	committed_transform_sources = _r3c3r2_source_transforms
+	_r3c3r2_source_transforms = {}
+	_rebuild_live_lists_from_children()
+	_r3c3r2_commit_ms = float(Time.get_ticks_usec() - started) / 1000.0
+	_r3c3r2_phase = R3C3R2_PHASE_COMMITTED
+	return {"success": true, "error_code": "", "details": {
+		"token": token,
+		"instances": committed.size(),
+		"instance_count_total": _r3c3r2_instance_count_total,
+		"commit_ms": _r3c3r2_commit_ms,
+	}}
+
+
+func cancel_staged_generation() -> void:
+	# Free detached scratch GPU candidates; nothing invisible accumulates.
+	for instance in _r3c3r2_candidate_nodes:
+		if instance != null and is_instance_valid(instance):
+			instance.queue_free()
+	_r3c3r2_candidate_nodes = []
+	_r3c3r2_upload_queue = []
+	_r3c3r2_source_transforms = {}
+	_r3c3r2_phase = R3C3R2_PHASE_IDLE
+	_r3c3r2_failure = ""
+	_r3c3r2_instances_uploaded = 0
+	_r3c3r2_instance_count_total = 0
+
+
+func _rebuild_live_lists_from_children() -> void:
+	near_tree_instances.clear()
+	billboard_tree_instances.clear()
+	grass_instances.clear()
+	rock_instances.clear()
+	for child in get_children():
+		if child is MultiMeshInstance3D:
+			var node_name: String = String(child.name)
+			if node_name.begins_with("NearTrees_"):
+				near_tree_instances.append(child)
+			elif node_name.begins_with("BillboardTrees_"):
+				billboard_tree_instances.append(child)
+			elif node_name.begins_with("Grass_"):
+				grass_instances.append(child)
+			elif node_name.begins_with("Rocks_"):
+				rock_instances.append(child)
+
+
+func apply_staged_generation_summary(summary: Dictionary) -> void:
+	generation_summary = summary.duplicate(true)
+
+
+func get_staged_upload_report() -> Dictionary:
+	return {
+		"phase": _r3c3r2_phase,
+		"token": _r3c3r2_token,
+		"error": _r3c3r2_failure,
+		"candidates": _r3c3r2_candidate_nodes.size(),
+		"instance_count_total": _r3c3r2_instance_count_total,
+		"instances_uploaded": _r3c3r2_instances_uploaded,
+		"allocate_ms": _r3c3r2_allocate_ms,
+		"upload_ms_total": _r3c3r2_upload_ms_total,
+		"upload_ms_max": _r3c3r2_upload_ms_max,
+		"commit_ms": _r3c3r2_commit_ms,
+	}
+
+
+func _r3c3r2_fail(error_code: String) -> Dictionary:
+	_r3c3r2_failure = error_code
+	_r3c3r2_phase = R3C3R2_PHASE_FAILED
+	return {"success": false, "error_code": error_code}
+
+
+# Validation rejects keep the state machine usable: only structural corruption
+# permanently fails the generation pipeline.
+func _r3c3r2_reject(error_code: String) -> Dictionary:
+	_r3c3r2_failure = error_code
+	return {"success": false, "error_code": error_code}
