@@ -13,8 +13,16 @@ func _ready() -> void:
 func _process(_delta: float) -> void:
 	var now := Time.get_ticks_usec()
 	if _last_us > 0:
-		Trace.emit("frame", {"interval_ms": float(now - _last_us) / 1000.0,
-			"engine_process_ms": Performance.get_monitor(Performance.TIME_PROCESS) * 1000.0})
+		var frame_data: Dictionary = {
+			"interval_ms": float(now - _last_us) / 1000.0,
+			"engine_process_ms": Performance.get_monitor(Performance.TIME_PROCESS) * 1000.0,
+		}
+		# Opt-in server-only frame identity. This global engine frame counter
+		# cannot be joined across processes, but exactly joins this server's
+		# probe, loop and compact snapshot without timestamp approximation.
+		if OS.get_environment("DWS_NET_R31P22_LOOP_ATTRIBUTION") == "1":
+			frame_data["engine_frame"] = Engine.get_process_frames()
+		Trace.emit("frame", frame_data)
 	_last_us = now
 	var now_ms := Time.get_ticks_msec()
 	if now_ms - _last_control_ms < 200:
