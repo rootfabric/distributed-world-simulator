@@ -111,8 +111,12 @@ static func can_execute_region(session: Dictionary, registry: Dictionary, region
 	var region := Registry.region_by_id(registry, region_id)
 	if region.is_empty():
 		return Utils.failure("BRIDGE2_REGION_NOT_FOUND")
+	return _can_execute_region_validated(session, region)
+
+static func _can_execute_region_validated(session: Dictionary, region: Dictionary) -> Dictionary:
+	var region_id := String(region["region_id"])
 	var adapter: Dictionary = region["adapter"]
-	checked = Slice.validate_against_master(
+	var checked := Slice.validate_against_master(
 		adapter["source_slice"],
 		session["live_master_frontier"],
 		session["live_master_authority"]
@@ -167,7 +171,7 @@ static func step(
 	var gate_results := {}
 	for region in registry["regions"]:
 		var region_id := String(region["region_id"])
-		var gate := can_execute_region(session, registry, region_id)
+		var gate := _can_execute_region_validated(session, region)
 		if not bool(gate.get("success", false)):
 			return Utils.failure("BRIDGE2_MIXED_STEP_BLOCKED", {
 				"region_id": region_id,

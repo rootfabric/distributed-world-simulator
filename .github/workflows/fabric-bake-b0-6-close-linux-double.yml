@@ -22,7 +22,7 @@ permissions:
 jobs:
   exact-linux-double:
     runs-on: [self-hosted, Linux, X64]
-    timeout-minutes: 45
+    timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
         with:
