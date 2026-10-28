@@ -1,149 +1,93 @@
 name: Project Control
-
-on:
-  workflow_dispatch:
-  pull_request:
+'on':
+  workflow_dispatch: null
+  pull_request: null
   push:
-    branches: [main]
+    branches:
+    - main
   schedule:
-    - cron: "17 3 * * *"
-
+  - cron: 17 3 * * *
 jobs:
   control:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout exact event subject
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+    - name: Checkout exact event subject
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+    - name: Verify exact checkout
+      env:
+        EXPECTED_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+      run: 'ACTUAL_SHA="$(git rev-parse HEAD)"
 
-      - name: Verify exact checkout
-        env:
-          EXPECTED_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
-        run: |
-          ACTUAL_SHA="$(git rev-parse HEAD)"
-          echo "PROJECT_CONTROL_EXPECTED_HEAD=$EXPECTED_SHA"
-          echo "PROJECT_CONTROL_ACTUAL_HEAD=$ACTUAL_SHA"
-          test "$ACTUAL_SHA" = "$EXPECTED_SHA"
+        echo "PROJECT_CONTROL_EXPECTED_HEAD=$EXPECTED_SHA"
 
-      - name: Fetch all branch refs
-        run: git fetch origin '+refs/heads/*:refs/remotes/origin/*' --prune
+        echo "PROJECT_CONTROL_ACTUAL_HEAD=$ACTUAL_SHA"
 
-      - name: Install pinned Harness dependencies
-        run: |
-          python3 -m pip install --disable-pip-version-check -r scripts/harness/requirements.txt
-          python3 - <<'PY'
-          import importlib.metadata
-          from pathlib import Path
+        test "$ACTUAL_SHA" = "$EXPECTED_SHA"
 
-          required = Path("scripts/harness/requirements.txt").read_text(encoding="utf-8").strip()
-          expected = required.split("==", 1)[1]
-          actual = importlib.metadata.version("jsonschema")
-          if actual != expected:
-              raise SystemExit(f"PINNED_DEPENDENCY_VERSION_MISMATCH:jsonschema={actual}:expected={expected}")
-          print(f"PINNED DEPENDENCY OK: jsonschema=={actual}")
-          PY
+        '
+    - name: Fetch all branch refs
+      run: git fetch origin '+refs/heads/*:refs/remotes/origin/*' --prune
+    - name: Install pinned Harness dependencies
+      run: "python3 -m pip install --disable-pip-version-check -r scripts/harness/requirements.txt\npython3 - <<'PY'\nimport\
+        \ importlib.metadata\nfrom pathlib import Path\n\nrequired = Path(\"scripts/harness/requirements.txt\").read_text(encoding=\"\
+        utf-8\").strip()\nexpected = required.split(\"==\", 1)[1]\nactual = importlib.metadata.version(\"jsonschema\")\nif\
+        \ actual != expected:\n    raise SystemExit(f\"PINNED_DEPENDENCY_VERSION_MISMATCH:jsonschema={actual}:expected={expected}\"\
+        )\nprint(f\"PINNED DEPENDENCY OK: jsonschema=={actual}\")\nPY\n"
+    - name: Validate control candidate syntax and generation
+      run: "python3 -m py_compile \\\n  scripts/control/project_control.py \\\n  scripts/control/project_control_architecture_compat.py\
+        \ \\\n  scripts/control/project_control_core.py \\\n  scripts/control/directional_watch_clearance.py \\\n  scripts/control/project_control_directional_watch.py\
+        \ \\\n  scripts/harness/checkpoint_planner.py \\\n  scripts/harness/event_reducer.py \\\n  scripts/harness/execution_selector.py\
+        \ \\\n  scripts/harness/mission.py \\\n  scripts/harness/continuation.py \\\n  scripts/harness/agent_execution_policy.py\
+        \ \\\n  scripts/harness/git_authority.py \\\n  scripts/harness/contracts.py \\\n  scripts/harness/cli.py\npython3\
+        \ - <<'PY'\nimport json\nfrom pathlib import Path\n\nrequired_json = [\n    Path(\"config/control/project-control-policy.v1.json\"\
+        ),\n    Path(\"config/control/project-program-registry.v1.json\"),\n    Path(\"config/control/architecture-ownership.v1.json\"\
+        ),\n    Path(\"config/control/directional-watch-clearances.v1.json\"),\n    Path(\"config/architecture/global-program-roadmap.v1.json\"\
+        ),\n    Path(\"config/control/harness/project-goals.v1.json\"),\n    Path(\"config/control/harness/checkpoint-catalog.v1.json\"\
+        ),\n    Path(\"config/control/harness/harness-policy.v1.json\"),\n    Path(\"config/control/harness/scheduler-policy.v1.json\"\
+        ),\n    Path(\"config/control/harness/v0-product-train-policy.v1.json\"),\n    Path(\"config/control/harness/continuation-policy.v1.json\"\
+        ),\n    Path(\"config/control/harness/agent-execution-profiles.v1.json\"),\n    Path(\"config/control/harness/work-order.schema.v1.json\"\
+        ),\n    Path(\"config/control/harness/event.schema.v1.json\"),\n    Path(\"config/control/harness/project-epoch.schema.v1.json\"\
+        ),\n    Path(\"config/control/harness/risk-policy.v1.json\"),\n    Path(\"config/control/harness/review-policy.v1.json\"\
+        ),\n    Path(\"config/control/harness/repair-doctrine.v1.json\"),\n    Path(\"config/control/harness/evidence-map.schema.v1.json\"\
+        ),\n    Path(\"config/control/harness/human-attention.schema.v1.json\"),\n    Path(\"validation/harness/control-development-output.schema.v1.json\"\
+        ),\n]\nfor path in required_json:\n    with path.open(\"r\", encoding=\"utf-8\") as handle:\n        value = json.load(handle)\n\
+        \    if not isinstance(value, dict):\n        raise SystemExit(f\"Expected JSON object: {path}\")\n    print(f\"JSON\
+        \ OK: {path}\")\n\nregistry = json.loads(Path(\"config/control/project-program-registry.v1.json\").read_text(encoding=\"\
+        utf-8\"))\nif registry.get(\"registry_generation\") != 80:\n    raise SystemExit(f\"GENERATION80_CANDIDATE_REQUIRED:{registry.get('registry_generation')}\"\
+        )\nprint(\"CANDIDATE REGISTRY GENERATION OK: 80\")\nPY\n"
+    - name: Run Harness checkpoint-session and agent-execution regression
+      run: "python3 -m unittest \\\n  tests.harness.test_harness_checkpoint_session \\\n  tests.harness.test_agent_execution_policy\n"
+    - name: Run architecture and ownership passport compatibility regression
+      run: "python3 -m unittest \\\n  tests.harness.test_project_control_architecture_compatibility \\\n  tests.harness.test_project_control_historical_ownership_compatibility\
+        \ \\\n  tests.harness.test_project_control_proposed_r3_ownership_projection\n"
+    - name: Run H0.2 machine checkpoint regression
+      run: python3 -m unittest tests.harness.test_h0_2_machine_checkpoint_contract
+    - name: Run V0 product checkpoint regression
+      run: "python3 -m unittest \\\n  tests.harness.test_v0_s1_networked_checkpoint_contract \\\n  tests.harness.test_v0_product_train_policy\n"
+    - name: Run generation-80 authorization safety regression
+      run: "python3 -m unittest \\\n  tests.harness.test_v0_generation80_safety_guards \\\n  tests.harness.test_project_control_directional_clearance\n"
+    - name: Run canonical-main PC0 auditor
+      run: python3 scripts/control/project_control.py --no-fetch --no-fail-on-red
+    - name: Run canonical-main PC0 directional watch auditor
+      run: python3 scripts/control/project_control_directional_watch.py --no-fail-on-red
+    - name: Upload control reports
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: project-control-report
+        path: 'artifacts/control/PROJECT_STATUS_RU.md
 
-      - name: Validate control candidate syntax and generation
-        run: |
-          python3 -m py_compile \
-            scripts/control/project_control.py \
-            scripts/control/project_control_architecture_compat.py \
-            scripts/control/project_control_core.py \
-            scripts/control/directional_watch_clearance.py \
-            scripts/control/project_control_directional_watch.py \
-            scripts/harness/checkpoint_planner.py \
-            scripts/harness/event_reducer.py \
-            scripts/harness/execution_selector.py \
-            scripts/harness/mission.py \
-            scripts/harness/continuation.py \
-            scripts/harness/agent_execution_policy.py \
-            scripts/harness/git_authority.py \
-            scripts/harness/contracts.py \
-            scripts/harness/cli.py
-          python3 - <<'PY'
-          import json
-          from pathlib import Path
+          artifacts/control/project-control-report.json
 
-          required_json = [
-              Path("config/control/project-control-policy.v1.json"),
-              Path("config/control/project-program-registry.v1.json"),
-              Path("config/control/architecture-ownership.v1.json"),
-              Path("config/control/directional-watch-clearances.v1.json"),
-              Path("config/architecture/global-program-roadmap.v1.json"),
-              Path("config/control/harness/project-goals.v1.json"),
-              Path("config/control/harness/checkpoint-catalog.v1.json"),
-              Path("config/control/harness/harness-policy.v1.json"),
-              Path("config/control/harness/scheduler-policy.v1.json"),
-              Path("config/control/harness/v0-product-train-policy.v1.json"),
-              Path("config/control/harness/continuation-policy.v1.json"),
-              Path("config/control/harness/agent-execution-profiles.v1.json"),
-              Path("config/control/harness/work-order.schema.v1.json"),
-              Path("config/control/harness/event.schema.v1.json"),
-              Path("config/control/harness/project-epoch.schema.v1.json"),
-              Path("config/control/harness/risk-policy.v1.json"),
-              Path("config/control/harness/review-policy.v1.json"),
-              Path("config/control/harness/repair-doctrine.v1.json"),
-              Path("config/control/harness/evidence-map.schema.v1.json"),
-              Path("config/control/harness/human-attention.schema.v1.json"),
-              Path("validation/harness/control-development-output.schema.v1.json"),
-          ]
-          for path in required_json:
-              with path.open("r", encoding="utf-8") as handle:
-                  value = json.load(handle)
-              if not isinstance(value, dict):
-                  raise SystemExit(f"Expected JSON object: {path}")
-              print(f"JSON OK: {path}")
+          artifacts/control/DIRECTIONAL_WATCH_STATUS_RU.md
 
-          registry = json.loads(Path("config/control/project-program-registry.v1.json").read_text(encoding="utf-8"))
-          if registry.get("registry_generation") != 80:
-              raise SystemExit(f"GENERATION80_CANDIDATE_REQUIRED:{registry.get('registry_generation')}")
-          print("CANDIDATE REGISTRY GENERATION OK: 80")
-          PY
+          artifacts/control/directional-watch-report.json
 
-      - name: Run Harness checkpoint-session and agent-execution regression
-        run: |
-          python3 -m unittest \
-            tests.harness.test_harness_checkpoint_session \
-            tests.harness.test_agent_execution_policy
-
-      - name: Run architecture and ownership passport compatibility regression
-        run: |
-          python3 -m unittest \
-            tests.harness.test_project_control_architecture_compatibility \
-            tests.harness.test_project_control_historical_ownership_compatibility \
-            tests.harness.test_project_control_proposed_r3_ownership_projection
-
-      - name: Run H0.2 machine checkpoint regression
-        run: python3 -m unittest tests.harness.test_h0_2_machine_checkpoint_contract
-
-      - name: Run V0 product checkpoint regression
-        run: |
-          python3 -m unittest \
-            tests.harness.test_v0_s1_networked_checkpoint_contract \
-            tests.harness.test_v0_product_train_policy
-
-      - name: Run generation-80 authorization safety regression
-        run: |
-          python3 -m unittest \
-            tests.harness.test_v0_generation80_safety_guards \
-            tests.harness.test_project_control_directional_clearance
-
-      - name: Run canonical-main PC0 auditor
-        run: python3 scripts/control/project_control.py --no-fetch --no-fail-on-red
-
-      - name: Run canonical-main PC0 directional watch auditor
-        run: python3 scripts/control/project_control_directional_watch.py --no-fail-on-red
-
-      - name: Upload control reports
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: project-control-report
-          path: |
-            artifacts/control/PROJECT_STATUS_RU.md
-            artifacts/control/project-control-report.json
-            artifacts/control/DIRECTIONAL_WATCH_STATUS_RU.md
-            artifacts/control/directional-watch-report.json
-          if-no-files-found: warn
+          '
+        if-no-files-found: warn
+concurrency:
+  group: project-control-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
