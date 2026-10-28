@@ -1,0 +1,19 @@
+# ECO ARCH2 A14.7 R2 Stage D — A4 phase-local copy-on-write and exact single-encode seal
+
+**STATUS: DRAFT, no merge.** Direct frozen parent R2C PR #835: `dda5141ef7ed8d0c28f98d22d0015f3bd87dc428`, TREE `7b54af07c1b4764570d7743de58c9fac3ae6d787`. Parent R2C Windows and independent Windows pinned Double have PASS. Main `aac301b9a9a89e027f6d99864437eb750a4202ca` unchanged.
+
+Original Windows R1 real LAB native RTX4060 GUI p99 6.3–7.3ms; 256 canonical tick ~17.6s; simulation debt growing. CPU Stage A Portable 256: PREPARE 15.37%, original global A4 24.98%, ADVANCE 32.78%, redundant worker cursor encode 7.38%; full validations/projection additional. Stage B 1-vs-16 workset batching Portable paired 256 33.14s→23.84s; Stage C threaded 16x4 versus 16x1 24.04s→22.90s, extra ~5%. Both are experimental, never production default.
+
+## Stage D minimal, exact modifications
+
+Only `scripts/research/ecology/v2/a4_staged_global_allocator_probe_v1.gd` changes. No canonical biology/field algorithm, Runtime/A5/A6 ownership, checkpoint, Godot UI or WORLD_COMPAT changes; all default R3.2.3 and Stage C options remain unchanged.
+
+**Phase-local immutable input copy-on-write:** frozen Stage C `StagedA4R2.resume` performs `cursor.duplicate(true)` for ALL nested data for EVERY R2 A4 item resume. After SAME full field/owner/revision/demand digest and complete cursor checksum validation, clone only nested structures written in the current phase: NORMALIZE (seen, normalized); BUILD_CLAIMS (grants, both buckets); PRIMARY (grants, primary_buckets, working_field); RESIDUAL (grants, residual_buckets, working_field); FINALIZE (grants). Everything else is read-only shared immutable data. Every next cursor is newly sealed; source and incoming cursors must not change even through nested aliases. No unchecked trusted source shortcut.
+
+**Exactly same SHA256 and byte-cap seal:** original `_seal_cursor` computes `C.digest(cursor)` (internally `C.encode`) while checksum="", then re-encodes entire cursor with 64-char checksum just to measure byte cap. Encode unsigned cursor once, use `unsigned_text.sha256_text()` (identical to original digest) and byte cap equal to unsigned UTF8 byte count + precisely 64 ASCII SHA256 bytes (JSON string quotes unchanged). Test Unicode and exact cap-off-by-one boundaries against frozen original code.
+
+**Tests:** test-only frozen pre-optimization Stage C A4 script copied byte-exact into `validation/ecology/evo_arch2_a14_7/a147_r2d_frozen_a4_reference.gd`. Test uses original R3.2.3 source fixture and A5 PREPARE demands, runs original and optimized A4 on SAME field/demand array, compares entire field/grants/ledger/revision against independent AUTHORITATIVE `Field.allocate_demands` and old script, input-cursor deep immutability EACH resume, five-phase order, exact number of steps, reject mutated cursor and frozen source. Validate exact SHA/cap boundaries including Unicode.
+
+Then re-run inherited `test_a147_r2c_parallel_worksets.gd` n4/32/96/256 with exact original A13 Runtime hash and full serialized A8 checkpoint; one global allocator, source intact, no partial commits. Native pinned Windows Double and Portable separate processes required. Direct untrusted calls preserve all original checks; reject corrupted source, bad grant and cancel as in inherited verifier. Fresh independent verifier and Windows GPU backlog/p99 review gate publication into product.
+
+**Not claimed:** GUI p99 improvement, 256<1s/tick, cancellation/time SLA, automatic main promotion. A4 final independent `Field.allocate_demands` runs exactly once and its FULL byte comparison remains obligatory. Future Stage E must profile expensive repeated Runtime validate/A5 source digest and original A4 reference separately with trusted owner fencing, without skipping any adversarial validation.
