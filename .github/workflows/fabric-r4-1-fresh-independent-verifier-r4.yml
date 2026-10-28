@@ -111,7 +111,7 @@ jobs:
           echo 'FABRIC_R4_1_FRESH_INDEPENDENT_VERIFIER_R4=PASS'
       - uses: actions/upload-artifact@v4
         with:
-          name: fabric-r4-1-verifier-r3-${{ github.sha }}
+          name: fabric-r4-1-verifier-r4-${{ github.sha }}
           path: |
             r41-verifier-r4-identity.txt
             r41-verifier-r4-godot.txt
