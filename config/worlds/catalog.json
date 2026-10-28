@@ -23,7 +23,7 @@
       "id": "earth",
       "display_name": "Земля",
       "description": "Процедурная Земля с атмосферой без отображения Луны.",
-      "runtime_script": "res://scripts/app/earth_p3_resource_mining_app.gd",
+      "runtime_script": "res://scripts/app/earth_char1_avatar_app.gd",
       "tags": [
         "planet",
         "procedural",
@@ -33,7 +33,8 @@
         "startup_mode": "earth",
         "visible_bodies": [
           "earth"
-        ]
+        ],
+        "avatar_character_id": "character/quaternius/regular"
       },
       "universe_id": "main",
       "instance_id": "persistent",
@@ -90,9 +91,9 @@
       ],
       "options": {
         "spawn": [
-          0.0,
+          0,
           1.2,
-          6.0
+          6
         ]
       },
       "universe_id": "main",
