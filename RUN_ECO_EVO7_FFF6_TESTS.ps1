@@ -12,6 +12,11 @@ if (-not $SkipBaseline) {
     & (Join-Path $RootDir "RUN_ECO_EVO7_FFF5_TESTS.ps1") -GodotPath $GodotPath
     if ($LASTEXITCODE -ne 0) { throw "FFF5 dependency chain failed with exit code $LASTEXITCODE" }
 }
+
+Write-Host "=== ECO.EVO7 FFF6 visual first-frame regression ==="
+& $GodotPath --headless --path $RootDir --script res://tests/ecology/eco_evo7_fff6_visual_first_frame_acceptance.gd
+if ($LASTEXITCODE -ne 0) { throw "FFF6 visual first-frame regression failed with exit code $LASTEXITCODE" }
+
 Write-Host "=== ECO.EVO7 FFF6 100-cycle succession acceptance ==="
 & $GodotPath --headless --path $RootDir --script res://tests/research/ecology/eco_evo7_fff6_succession_acceptance.gd
 if ($LASTEXITCODE -ne 0) { throw "FFF6 succession acceptance failed with exit code $LASTEXITCODE" }

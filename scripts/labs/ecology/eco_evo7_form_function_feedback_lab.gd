@@ -21,9 +21,19 @@ var cached_hash := ""
 func _ready() -> void:
 	name = "EcoEvo7FormFunctionFeedbackLab"
 	_build_world_shell()
+	## The FFF6 bridge performs six deterministic 100-cycle communities. Running
+	## it synchronously from _ready() prevents the first frame from ever being
+	## presented and makes the GUI look like a permanently black window. Present
+	## an explicit loading frame first, then start the unchanged accepted model.
+	hud.text = "ECO.EVO7 FFF6 — Form / Function / Feedback\nPreparing deterministic 100-cycle community...\nThe visual shell is ready; ecology computation starts after the first presented frame."
+	status.text = "Initializing FFF6 visual observatory..."
+	call_deferred("_bootstrap_after_first_frame")
+
+func _bootstrap_after_first_frame() -> void:
+	await get_tree().process_frame
 	_run_and_materialize()
 	if OS.get_environment("EVO7_FFF6_LAB_AUTOCAP") == "1":
-		call_deferred("_autocap")
+		_autocap()
 
 func _autocap() -> void:
 	await get_tree().process_frame
@@ -44,6 +54,9 @@ func _build_world_shell() -> void:
 	camera.position = Vector3(0.0, 22.0, 28.0)
 	camera.rotation_degrees = Vector3(-32.0, 0.0, 0.0)
 	add_child(camera)
+	## Be explicit. The previous lab relied on implicit viewport camera selection,
+	## which is fragile when opened as a standalone scene or embedded in a lab.
+	camera.make_current()
 	var layer := CanvasLayer.new()
 	add_child(layer)
 	hud.position = Vector2(18, 18)
@@ -133,9 +146,16 @@ func _material(color: Color) -> StandardMaterial3D:
 	material.albedo_color = color
 	return material
 
-func _unhandled_key_input(event: InputEventKey) -> void:
-	if not event.pressed or event.echo: return
-	match event.keycode:
+func _unhandled_key_input(event: InputEvent) -> void:
+	## Godot 4.7's Node virtual signature is InputEvent. Narrowing the override
+	## to InputEventKey is a parse error, so keep the exact parent signature and
+	## fail closed for non-key events before accessing key-specific fields.
+	if not event is InputEventKey:
+		return
+	var key_event := event as InputEventKey
+	if not key_event.pressed or key_event.echo:
+		return
+	match key_event.keycode:
 		KEY_SPACE:
 			show_final = not show_final
 			_rebuild_plots(); _refresh_hud()
