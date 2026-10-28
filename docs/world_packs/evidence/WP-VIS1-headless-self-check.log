@@ -1,0 +1,20 @@
+WP-VIS1 headless self-check log
+command: godot --headless --path . --script res://scripts/world_packs/labs/surface_material_lab_self_check.gd
+exit code: 0
+
+Godot Engine v4.7.1.stable.double.custom_build.a13da4feb (2026-07-13 21:00:28 UTC) - https://godotengine.org
+
+SURFACE_MATERIAL_LAB_FIXTURE=horizontal_plane world_normal=(0.000, 1.000, 0.000)
+SURFACE_MATERIAL_LAB_FIXTURE=slope_45 world_normal=(-0.707, 0.707, 0.000)
+SURFACE_MATERIAL_LAB_FIXTURE=vertical_wall world_normal=(0.000, 0.000, -1.000)
+SURFACE_MATERIAL_LAB_FIXTURE=overhang world_normal=(0.000, -0.707, -0.707)
+SURFACE_MATERIAL_LAB_FIXTURE=inverted_ceiling world_normal=(0.000, -1.000, 0.000)
+SURFACE_MATERIAL_LAB_FIXTURE=sphere_fixture world_normal=(1.000, 0.000, 0.000)
+SURFACE_MATERIAL_LAB_FIXTURE=irregular_rock world_normal=(0.564, 0.826, -0.012)
+SURFACE_MATERIAL_LAB_SCAFFOLD_READY
+SURFACE_MATERIAL_LAB_FIXTURES=7
+SURFACE_MATERIAL_LAB_FIDELITY=full
+SURFACE_MATERIAL_LAB_FIDELITY=preview
+SURFACE_MATERIAL_LAB_FIDELITY=full
+SURFACE_MATERIAL_LAB_SELF_CHECK=PASS surfaces=7 markers=0
+
