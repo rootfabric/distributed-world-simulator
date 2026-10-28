@@ -1,0 +1,9 @@
+# WP-ASSET1 asset fetch tooling requirements.
+#
+# The asset_fetch package is intentionally Python-stdlib-only
+# (urllib, hashlib, zipfile, tarfile, socket, ipaddress).
+# Runtime dependencies: none.
+# Test dependencies: pytest.
+#
+# Do not add network-heavy or trust-store dependencies here without a
+# controller-approved scope change (WP-ASSET1 allowed paths only).
