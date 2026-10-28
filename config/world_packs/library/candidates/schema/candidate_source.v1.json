@@ -1,0 +1,110 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:dws:world_packs:candidate_source:1",
+  "title": "DWS WORLD PACKS external source candidate descriptor; discovery/provenance record only, not a runtime asset contract",
+  "$ref": "#/$defs/candidate",
+  "$defs": {
+    "text": {"type": "string", "minLength": 1, "maxLength": 2048},
+    "httpsUrl": {"type": "string", "pattern": "^https://[^\\s]+$", "maxLength": 2048},
+    "slug": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$"},
+    "sha256OrNull": {"oneOf": [{"type": "null"}, {"type": "string", "pattern": "^[0-9a-f]{64}$"}]},
+    "dateUtc": {"type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}(T[0-9]{2}:[0-9]{2}:[0-9]{2}Z)?$"},
+    "candidate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "candidate_id",
+        "family",
+        "review_status",
+        "upstream",
+        "license",
+        "observed",
+        "provenance",
+        "intended_use",
+        "recorded_at_utc",
+        "recorded_by"
+      ],
+      "properties": {
+        "schema": {"const": "dws.world_packs.candidate_source.v1"},
+        "candidate_id": {"type": "string", "pattern": "^candidate/[a-z0-9][a-z0-9-]*/[a-z0-9][a-z0-9-]*$"},
+        "family": {"enum": ["rock_cliff", "sand_gravel", "soil_ground", "ice", "snow"]},
+        "review_status": {"enum": ["discovery", "license_verified", "bytes_verified", "rejected"]},
+        "rejection_reason": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/text"}]},
+        "upstream": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["site", "page_url", "asset_identity"],
+          "properties": {
+            "site": {"$ref": "#/$defs/slug"},
+            "page_url": {"$ref": "#/$defs/httpsUrl"},
+            "asset_identity": {"$ref": "#/$defs/text"},
+            "author": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/text"}]},
+            "author_observed_on": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/httpsUrl"}]}
+          }
+        },
+        "license": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["expression", "license_url", "applies_to", "verified"],
+          "properties": {
+            "expression": {"enum": ["CC0-1.0", "PDDL-1.0", "CC-BY-4.0", "MIT", "Apache-2.0", "unknown", "rejected"]},
+            "license_url": {"$ref": "#/$defs/httpsUrl"},
+            "applies_to": {"enum": ["downloadable_assets", "assets_and_previews", "site_only", "unclear"]},
+            "verified": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["method", "verified_url", "verified_at_utc"],
+              "properties": {
+                "method": {"enum": ["page_license_statement", "license_text", "not_verified"]},
+                "verified_url": {"$ref": "#/$defs/httpsUrl"},
+                "verified_at_utc": {"$ref": "#/$defs/dateUtc"}
+              }
+            },
+            "notes": {"$ref": "#/$defs/text"}
+          }
+        },
+        "observed": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["sha256", "expected_bytes", "resolution_variant", "pbr_maps_observed", "observation"],
+          "properties": {
+            "sha256": {"$ref": "#/$defs/sha256OrNull"},
+            "expected_bytes": {"oneOf": [{"type": "null"}, {"type": "integer", "minimum": 1}]},
+            "resolution_variant": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/text"}],
+              "description": "Only the concrete variant whose page/entry was observed; null until a concrete file is selected."},
+            "pbr_maps_observed": {
+              "type": "array", "uniqueItems": true,
+              "items": {"enum": ["diffuse_albedo", "normal_gl", "normal_dx", "roughness", "ao", "displacement", "arm", "metalness", "opacity"]}
+            },
+            "observation": {"$ref": "#/$defs/text"}
+          }
+        },
+        "provenance": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["class", "measured_reference", "claims"],
+          "properties": {
+            "class": {"enum": ["artistic", "photogrammetry", "procedural", "measured_reference"]},
+            "measured_reference": {"type": "boolean"},
+            "measured_evidence_url": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/httpsUrl"}]},
+            "claims": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/text"},
+              "description": "Only claims actually observable on the upstream page or license text."}
+          }
+        },
+        "intended_use": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["surface_families", "fidelity_tier", "notes"],
+          "properties": {
+            "surface_families": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/slug"}},
+            "fidelity_tier": {"enum": ["casual", "standard", "high_fidelity", "reference_only"]},
+            "notes": {"$ref": "#/$defs/text"}
+          }
+        },
+        "recorded_at_utc": {"$ref": "#/$defs/dateUtc"},
+        "recorded_by": {"$ref": "#/$defs/text"}
+      }
+    }
+  }
+}

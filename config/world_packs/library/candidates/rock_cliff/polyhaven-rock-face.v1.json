@@ -1,0 +1,50 @@
+{
+  "schema": "dws.world_packs.candidate_source.v1",
+  "candidate_id": "candidate/polyhaven/rock-face",
+  "family": "rock_cliff",
+  "review_status": "discovery",
+  "rejection_reason": null,
+  "upstream": {
+    "site": "polyhaven",
+    "page_url": "https://polyhaven.com/a/rock_face",
+    "asset_identity": "rock_face",
+    "author": "Dario Barresi / Greg Zaal",
+    "author_observed_on": "https://polyhaven.com/a/rock_face"
+  },
+  "license": {
+    "expression": "CC0-1.0",
+    "license_url": "https://polyhaven.com/license",
+    "applies_to": "downloadable_assets",
+    "verified": {
+      "method": "page_license_statement",
+      "verified_url": "https://polyhaven.com/license",
+      "verified_at_utc": "2026-09-05"
+    },
+    "notes": "CC0 covers downloadable assets; site previews/logos are separate website content and are not treated as CC0 assets by this record."
+  },
+  "observed": {
+    "sha256": null,
+    "expected_bytes": null,
+    "resolution_variant": null,
+    "pbr_maps_observed": [],
+    "observation": "Asset page observed 2026-09-05 (see docs/world_packs/RESEARCH_AND_SOURCES_RU.md): 1K-16K downloads, enumerated full PBR set, stated width 2.4 m, reddish weathered rock face. Exact channel list per archive to be recorded only when a concrete variant is selected."
+  },
+  "provenance": {
+    "class": "photogrammetry",
+    "measured_reference": false,
+    "measured_evidence_url": null,
+    "claims": [
+      "1K-16K resolution downloads listed on asset page",
+      "enumerated full PBR map set on asset page",
+      "stated real-world width 2.4 m",
+      "reddish weathered rock surface appearance"
+    ]
+  },
+  "intended_use": {
+    "surface_families": ["fractured-rock"],
+    "fidelity_tier": "standard",
+    "notes": "Artistic photogrammetry rock/cliff look; NOT measured basalt and NOT evidence of mineral composition."
+  },
+  "recorded_at_utc": "2026-09-05",
+  "recorded_by": "WP-CONTENT1"
+}

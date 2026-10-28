@@ -1,0 +1,48 @@
+{
+  "schema": "dws.world_packs.candidate_source.v1",
+  "candidate_id": "candidate/ambientcg/snow001",
+  "family": "snow",
+  "review_status": "discovery",
+  "rejection_reason": null,
+  "upstream": {
+    "site": "ambientcg",
+    "page_url": "https://ambientcg.com/view?id=Snow001",
+    "asset_identity": "Snow001",
+    "author": null,
+    "author_observed_on": null
+  },
+  "license": {
+    "expression": "CC0-1.0",
+    "license_url": "https://docs.ambientcg.com/license/",
+    "applies_to": "assets_and_previews",
+    "verified": {
+      "method": "page_license_statement",
+      "verified_url": "https://docs.ambientcg.com/license/",
+      "verified_at_utc": "2026-09-05"
+    },
+    "notes": "ambientCG license page states CC0 for downloadable assets and preview renders. Author not observed on asset page, stays null."
+  },
+  "observed": {
+    "sha256": null,
+    "expected_bytes": null,
+    "resolution_variant": null,
+    "pbr_maps_observed": [],
+    "observation": "Asset page observed 2026-09-05 (see docs/world_packs/RESEARCH_AND_SOURCES_RU.md): procedural PBR archives 1K-8K, JPG/PNG. Exact channels and hashes only after a concrete small variant is selected and prepared."
+  },
+  "provenance": {
+    "class": "procedural",
+    "measured_reference": false,
+    "measured_evidence_url": null,
+    "claims": [
+      "procedural PBR archives 1K-8K listed on asset page",
+      "JPG/PNG download formats listed on asset page"
+    ]
+  },
+  "intended_use": {
+    "surface_families": ["snow"],
+    "fidelity_tier": "casual",
+    "notes": "Snow surface look only; not a physical snow depth/pack model and not pack-owned snowfall truth."
+  },
+  "recorded_at_utc": "2026-09-05",
+  "recorded_by": "WP-CONTENT1"
+}
