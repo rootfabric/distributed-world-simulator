@@ -1,0 +1,25 @@
+name: NET-SMOOTH1 P21 offline tail tools
+on:
+  push:
+    branches: [work/net-smooth1-r31bp21-tail-review-r1]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  synthetic-tools:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Synthetic tools only (NOT native/GUI acceptance)
+        run: |
+          python -m py_compile tools/net_smooth1/analyze_r31_server_tail.py tools/net_smooth1/capture_r31_process_inventory.py
+          python -m unittest discover -s tests/tools -p "test_r31_*.py" -v
