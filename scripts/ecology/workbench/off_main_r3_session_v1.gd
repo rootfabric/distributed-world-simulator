@@ -20,6 +20,7 @@ extends RefCounted
 const C = preload("res://scripts/research/ecology/v2/canonical_value_v1.gd")
 const Runtime = preload("res://scripts/research/ecology/v2/ecology_runtime_v1.gd")
 const Spatial = preload("res://scripts/research/ecology/v2/population_spatial_workset_plan_v1.gd")
+const SnapshotProjector = preload("res://scripts/ecology/workbench/ecology_r323_snapshot_projector_v1.gd")
 
 const SCHEMA := "dws.ecology.a14-6-r3-2-off-main-session.v1"
 const MAX_WORKER_RESUMES := 4096
@@ -42,6 +43,7 @@ var _trusted_generation := -1
 var _last_admission_mode := "FULL_SOURCE_VALIDATE"
 var _last_worker_source_validate_us := 0
 var _last_worker_candidate_validate_us := 0
+var _last_projection_wall_us := 0
 var _job_started_us := 0
 var _jobs_started := 0
 var _jobs_committed := 0
@@ -116,6 +118,7 @@ func status() -> Dictionary:
 		"last_admission_mode": _last_admission_mode,
 		"last_worker_source_validate_wall_us": _last_worker_source_validate_us,
 		"last_worker_candidate_validate_wall_us": _last_worker_candidate_validate_us,
+		"last_projection_wall_us": _last_projection_wall_us,
 		"last_worker_wall_us": _last_worker_wall_us,
 		"last_error": _last_error,
 	}
@@ -124,7 +127,8 @@ func advance(state: Dictionary, options: Dictionary,
 		max_members: int = 8, allocator_items: int = 64,
 		cursor_cap_bytes: int = 8388608,
 		lease_owner: Object = null, lease_token: RefCounted = null,
-		lease_generation: int = -1) -> Dictionary:
+		lease_generation: int = -1,
+		projection_manifest: Dictionary = {}) -> Dictionary:
 	var t0: int = Time.get_ticks_usec()
 	reap_discarded()
 	if not C.integer(max_members, 1, Spatial.MAX_MEMBERS) \
@@ -177,6 +181,7 @@ func advance(state: Dictionary, options: Dictionary,
 			return _failed("R3_ASYNC_WORKER_VALIDATION_RECEIPT", t0)
 		_last_worker_source_validate_us = int(payload.get("source_validate_us", 0))
 		_last_worker_candidate_validate_us = int(payload.get("candidate_validate_us", 0))
+		_last_projection_wall_us = int(payload.get("projection_wall_us", 0))
 		var source_validation_started_us: int = Time.get_ticks_usec()
 		var canonical_error := ""
 		var admission_mode := "FULL_SOURCE_VALIDATE"
@@ -219,6 +224,8 @@ func advance(state: Dictionary, options: Dictionary,
 			"source_admission_mode": admission_mode,
 			"worker_source_validate_wall_us": _last_worker_source_validate_us,
 			"worker_candidate_validate_wall_us": _last_worker_candidate_validate_us,
+			"worker_projection_wall_us": _last_projection_wall_us,
+			"presentation_snapshot": payload.get("presentation_snapshot", {}),
 			"complete_poll_wall_us": complete_poll_wall_us,
 		}
 	# Exactly one job can run per host session. Starting with
@@ -233,6 +240,8 @@ func advance(state: Dictionary, options: Dictionary,
 	var anchor: String = String(state.integrity_hash)
 	var use_lease: bool = lease_owner != null or lease_token != null \
 		or lease_generation >= 0
+	if not projection_manifest.is_empty() and not use_lease:
+		return _failed("R323_SNAPSHOT_REQUIRES_CONTROLLER_LEASE", t0)
 	_clear_trusted_lease()
 	_source_hash = anchor
 	_options_hash = options_hash
@@ -264,11 +273,15 @@ func advance(state: Dictionary, options: Dictionary,
 	# nested authoritative state remains read-only until Runtime duplicates it.
 	var frozen_state: Dictionary = state.duplicate(false)
 	var frozen_options: Dictionary = options.duplicate(true)
+	# The LAB Controller passes its privately-owned detached manifest. No
+	# scene references, mutable canonical aliases or UI Objects enter task.
+	var detached_manifest: Dictionary = projection_manifest.duplicate(true)
 	_task_id = WorkerThreadPool.add_task(
 		Callable(self, "_compute").bind(
 			frozen_state, frozen_options, max_members,
 			allocator_items, cursor_cap_bytes,
-			anchor, _source_tick, options_hash, _trusted_generation),
+			anchor, _source_tick, options_hash, _trusted_generation,
+			detached_manifest),
 		false, "eco-a146-r3-2-global-a4")
 	if _task_id < 0:
 		_clear_trusted_lease()
@@ -278,7 +291,8 @@ func advance(state: Dictionary, options: Dictionary,
 
 func _compute(frozen: Dictionary, options: Dictionary, members: int,
 		items: int, cursor_cap: int, anchor: String, source_tick: int,
-		options_hash: String, generation: int) -> void:
+		options_hash: String, generation: int,
+		projection_manifest: Dictionary) -> void:
 	var started_us: int = Time.get_ticks_usec()
 	var payload: Dictionary = {}
 	var started: Dictionary = Runtime.begin_staged_global_tick(
@@ -343,6 +357,21 @@ func _compute(frozen: Dictionary, options: Dictionary, members: int,
 			payload["validated_generation"] = generation
 			payload["source_validate_us"] = source_validate_us
 			payload["candidate_validate_us"] = candidate_validate_us
+			# R3.2.3: perform the historical get_snapshot() read-only hash
+			# and presentation computation on the CPU worker, never Node/GPU.
+			if not projection_manifest.is_empty():
+				var projection_started_us: int = Time.get_ticks_usec()
+				var snapshot: Dictionary = SnapshotProjector.project_validated(
+					payload.state, projection_manifest)
+				if snapshot.is_empty() or not bool(snapshot.get("success", false)) \
+						or int(snapshot.get("tick", -1)) != source_tick + 1 \
+						or String(snapshot.get("canonical_state_hash", "")) != \
+							String(payload.state.integrity_hash):
+					payload = {"success": false, "error": "R323_SNAPSHOT_PROJECTION"}
+				else:
+					payload["presentation_snapshot"] = snapshot
+					payload["projection_wall_us"] = maxi(
+						0, Time.get_ticks_usec() - projection_started_us)
 	payload["worker_wall_us"] = maxi(0, Time.get_ticks_usec() - started_us)
 	_mutex.lock()
 	_worker_result = payload
