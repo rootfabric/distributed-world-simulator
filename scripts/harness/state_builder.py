@@ -153,9 +153,33 @@ def _external_reviewer_witnesses(
     if not manifest.exists():
         return {}
     relative_manifest = _repo_relative(root, manifest)
+    # A clean porcelain status does NOT prove that a path is committed:
+    # git-ignored UNTRACKED files are invisible to status. The witness
+    # authorizes one exception to canonical event ancestry, so bind its
+    # exact on-disk bytes to the immutable blob actually stored in HEAD.
+    code, committed_blob = _git(
+        root, "--no-replace-objects", "rev-parse", f"HEAD:{relative_manifest}")
+    if code != 0 or re.fullmatch(r"[0-9a-f]{40}", committed_blob) is None:
+        raise ContractValidationError("EXTERNAL_REVIEW_WITNESS_MANIFEST_NOT_COMMITTED")
+    code, working_blob = _git(
+        root, "--no-replace-objects", "hash-object", "--no-filters", "--", relative_manifest)
+    if code != 0 or working_blob != committed_blob:
+        raise ContractValidationError("EXTERNAL_REVIEW_WITNESS_MANIFEST_DIRTY")
     code, dirty = _git(root, "status", "--porcelain", "--", relative_manifest)
     if code != 0 or dirty:
         raise ContractValidationError("EXTERNAL_REVIEW_WITNESS_MANIFEST_DIRTY")
+    # This version is a one-time exact historical reconciliation, not a
+    # mutable authority file that can be silently repointed on a later HEAD.
+    code, history = _git(
+        root, "--no-replace-objects", "log", "--format=%H", "--", relative_manifest)
+    commits = history.splitlines()
+    if code != 0 or len(commits) != 1:
+        raise ContractValidationError("EXTERNAL_REVIEW_WITNESS_MANIFEST_NOT_IMMUTABLE")
+    code, original_add = _git(
+        root, "--no-replace-objects", "log", "--diff-filter=A",
+        "-1", "--format=%H", "--", relative_manifest)
+    if code != 0 or original_add != commits[0]:
+        raise ContractValidationError("EXTERNAL_REVIEW_WITNESS_MANIFEST_ADD_NOT_PROVEN")
     claim = read_json(manifest)
     if set(claim) != {
         "schema", "version", "project_epoch", "work_order_id",

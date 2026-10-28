@@ -1,0 +1,175 @@
+name: CONTROL MVP8 Witness Binding R2 Exact
+on:
+  push:
+    branches: [repair/control-mvp8-pr839-committed-witness-binding-r2]
+  workflow_dispatch:
+permissions:
+  contents: read
+
+jobs:
+  scope:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Freeze original PR839 lineage and four scoped paths
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          base=a2a8e93f065f9cee8fc8a39eb03df29be322c786
+          test "$(git merge-base "$base" HEAD)" = "$base"
+          python3 - <<'PY'
+          import subprocess
+          allowed={
+              ".github/workflows/control-mvp8-pr839-witness-binding-r2.yml":"A",
+              "scripts/harness/state_builder.py":"M",
+              "tests/harness/test_mvp8_committed_witness_binding_r2.py":"A",
+              "docs/control/CONTROL_MVP8_WITNESS_BINDING_R2_REPAIR_MAP_RU.md":"A",
+          }
+          got=dict((path,status) for status,path in (row.split("\t") for row in subprocess.check_output(
+              ["git","diff","--name-status",
+               "a2a8e93f065f9cee8fc8a39eb03df29be322c786","HEAD"],
+              text=True).splitlines()))
+          assert got==allowed,(got,allowed)
+          print("PR839_R2_4_PATH_SCOPE=PASS")
+          PY
+          git diff --check "$base" HEAD
+          python3 -m py_compile scripts/harness/state_builder.py tests/harness/test_mvp8_committed_witness_binding_r2.py
+          for item in "config/control/harness/executions/E2026-09-09-V0-MVP-R1/external-role-event-witness.v1.json" "config/control/harness/executions/E2026-09-09-V0-MVP-R1/events/V0-MVP-R1-WO-001/0050-mvp8-repair-r2-independent-reviewer-pass.v1.json" "config/control/harness/executions/E2026-09-09-V0-MVP-R1/verifications/MVP8-INDEPENDENT-REVIEW-DC6E7FFF-R1.v1.json"; do
+            test -z "$(git diff --name-only "$base" HEAD -- "$item")"
+          done
+  linux:
+    needs: scope
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python -m pip install -r scripts/harness/requirements.txt
+      - name: Fresh original RED→GREEN and two additional bypass tests
+        shell: bash
+        env:
+          PYTHONPATH: scripts
+        run: |
+          set -Eeuo pipefail
+          python -m unittest discover -s tests/harness -p 'test_mvp8_committed_witness_binding_r2.py' -v
+      - name: Previous witness and evidence-map guard regression
+        shell: bash
+        env:
+          PYTHONPATH: scripts
+        run: |
+          set -Eeuo pipefail
+          python -m unittest discover -s tests/harness -p 'test_mvp8_external_reviewer_event_witness_r1.py' -v
+          python -m unittest discover -s tests/harness -p 'test_mvp8_immutable_evidence_reconciliation_r1.py' -v
+      - name: Actual canonical-main-derived Status must return exit zero
+        shell: bash
+        env:
+          PYTHONPATH: scripts
+        run: |
+          set -Eeuo pipefail
+          python -m harness.cli status --root "$PWD" >"$RUNNER_TEMP/pr839-r2-status.jsonl"
+          python - "$RUNNER_TEMP/pr839-r2-status.jsonl" <<'PY'
+          import sys,json
+          msg=json.loads(open(sys.argv[1],encoding="utf-8").read().splitlines()[-1])
+          assert msg.get("ok") is True and msg["schema"]=="distributed_world_simulator.control_development_output.v1",msg
+          print("CONTROL_MVP8_R2_LINUX_STATUS=PASS")
+          PY
+      - name: Full pinned Harness suite
+        shell: bash
+        env:
+          PYTHONPATH: scripts
+        run: python -m unittest discover -s tests/harness -v
+      - name: Classify CheckConsistency and PC0 without masking global findings
+        shell: bash
+        env:
+          PYTHONPATH: scripts
+        run: |
+          set -Eeuo pipefail
+          mkdir -p reviewer-evidence
+          set +e
+          python -m harness.cli check-consistency --root "$PWD" --candidate > reviewer-evidence/check-consistency.jsonl 2>&1
+          consistency=$?
+          python scripts/control/project_control.py --no-fetch --no-fail-on-red >reviewer-evidence/pc0-standard.log 2>&1
+          pc0=$?
+          python scripts/control/project_control_directional_watch.py --no-fail-on-red >reviewer-evidence/pc0-directional.log 2>&1
+          directional=$?
+          set -e
+          python - "$consistency" "$pc0" "$directional" <<'PY'
+          import json,sys
+          from pathlib import Path
+          a,b,c=map(int,sys.argv[1:])
+          print("CHECK_CONSISTENCY_EXIT",a)
+          f=Path("reviewer-evidence/check-consistency.jsonl")
+          try:
+              e=json.loads(f.read_text(encoding="utf-8").splitlines()[-1])
+              print("CHECK_CONSISTENCY_OK",e.get("ok"))
+              if a==0: assert e.get("ok") is True
+              else: print("CHECK_CONSISTENCY_FINDING",e.get("error"))
+          except Exception as err:
+              print("CHECK_CONSISTENCY_PARSE_DIAG",str(err))
+          print("PC0_STANDARD_EXIT",b)
+          print("PC0_DIRECTIONAL_EXIT",c)
+          for f in ("artifacts/control/project-control-report.json","artifacts/control/directional-watch-report.json"):
+              p=Path(f)
+              if p.is_file():
+                  data=json.loads(p.read_text(encoding="utf-8"))
+                  print("PC0_REPORT",f,"HEALTH",data.get("overall_health"))
+          if a not in (0,3) or b not in (0,2) or c not in (0,2): raise SystemExit("Unexpected auxiliary audit executor error")
+          PY
+          (cd reviewer-evidence && sha256sum * >SHA256SUMS)
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: pr839-r2-control-linux-${{ github.sha }}
+          path: |
+            reviewer-evidence/**
+            artifacts/control/project-control-report.json
+            artifacts/control/directional-watch-report.json
+          if-no-files-found: warn
+          retention-days: 30
+  windows:
+    needs: scope
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python -m pip install -r scripts/harness/requirements.txt
+        shell: pwsh
+      - name: Witness durability, skipped tracked bytes and committed rewrite
+        shell: pwsh
+        env:
+          PYTHONPATH: scripts
+        run: |
+          python -m unittest discover -s tests/harness -p 'test_mvp8_committed_witness_binding_r2.py' -v
+          if ($LASTEXITCODE -ne 0) { throw 'R2_WINDOWS_FALSIFIER_FAIL' }
+          python -m unittest discover -s tests/harness -p 'test_mvp8_external_reviewer_event_witness_r1.py' -v
+          if ($LASTEXITCODE -ne 0) { throw 'R1_WINDOWS_WITNESS_REGRESSION' }
+      - name: Windows native public Status and CheckConsistency diagnostics
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          $raw=@(& pwsh -NoLogo -NoProfile -File (Join-Path $PWD 'CONTROL_DEVELOPMENT.ps1') -Status)
+          $rc=$LASTEXITCODE
+          $obj=($raw | Select-Object -Last 1) | ConvertFrom-Json
+          if ($rc -ne 0 -or $obj.ok -ne $true) { throw "WINDOWS_STATUS_FAILED_$rc" }
+          Write-Host 'CONTROL_MVP8_R2_WINDOWS_STATUS=PASS'
+          $raw=@(& pwsh -NoLogo -NoProfile -File (Join-Path $PWD 'CONTROL_DEVELOPMENT.ps1') -CheckConsistency -Candidate)
+          $rc=$LASTEXITCODE
+          $obj=($raw | Select-Object -Last 1) | ConvertFrom-Json
+          Write-Host "CONTROL_MVP8_R2_WINDOWS_CHECKCONSISTENCY_EXIT=$rc"
+          Write-Host "CONTROL_MVP8_R2_WINDOWS_CHECKCONSISTENCY_OK=$($obj.ok)"
+          if ($rc -notin @(0,3)) { throw "WINDOWS_CHECKCONSISTENCY_UNEXPECTED_$rc" }
