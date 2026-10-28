@@ -1,0 +1,105 @@
+name: N3 R0a Directory Windows Exact
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/network/gateway/runtime/n3_*.gd'
+      - 'tests/network/test_n3_*.gd'
+      - 'tests/network/test_n3_*.py'
+      - 'RUN_N3_R0_DIRECTORY_CONTRACTS.sh'
+      - '.github/workflows/n3-r0-directory-windows.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: n3-r0-directory-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  native-windows:
+    name: N3 R0a B0 and lease native exact
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 20
+    env:
+      GODOT_BIN: 'C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Exact identity and clean preflight
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          $expected='3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5'
+          if (-not (Test-Path -LiteralPath $env:GODOT_BIN -PathType Leaf)) { throw 'CANONICAL_GODOT_MISSING' }
+          $actual=(Get-FileHash -LiteralPath $env:GODOT_BIN -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($actual -ne $expected) { throw "GODOT_SHA_MISMATCH:$actual" }
+          $version=(& $env:GODOT_BIN --version | Select-Object -First 1).Trim()
+          if ($version -notmatch '4\.7\.1.*double.*a13da4feb') { throw "GODOT_VERSION_MISMATCH:$version" }
+          if (git status --porcelain --untracked-files=no) { throw 'TRACKED_WORKTREE_DIRTY' }
+          New-Item -ItemType Directory -Force artifacts/n3-r0 | Out-Null
+          [ordered]@{ head=(git rev-parse HEAD).Trim(); tree=(git rev-parse 'HEAD^{tree}').Trim();
+            godot_version=$version; godot_sha256=$actual } |
+            ConvertTo-Json | Set-Content artifacts/n3-r0/identity.json -Encoding UTF8
+      - name: N3 runner RED/GREEN fail-closed regression
+        shell: pwsh
+        timeout-minutes: 3
+        run: |
+          $ErrorActionPreference='Stop'
+          # Direct script invocation: on Windows a regular "tests" package in
+          # site-packages shadows the repo namespace package, which breaks
+          # "python -m unittest tests/network/....py" module resolution.
+          python tests/network/test_n3_directory_runner.py -v *> artifacts/n3-r0/runner-regression.log
+          $exit=$LASTEXITCODE
+          Get-Content -LiteralPath artifacts/n3-r0/runner-regression.log
+          if ($exit -ne 0) { throw "N3_RUNNER_REGRESSION_FAILED:$exit" }
+          if (-not ((Get-Content -LiteralPath artifacts/n3-r0/runner-regression.log -Raw) -match 'Ran 6 tests')) { throw 'N3_RUNNER_SIX_CASES_NOT_SEEN' }
+
+      - name: N3 region-lease and B0 route negative native tests
+        shell: pwsh
+        timeout-minutes: 10
+        run: |
+          $ErrorActionPreference='Stop'
+          foreach ($test in @('test_n3_region_directory_contracts.gd','test_n3_directory_b0_routes.gd')) {
+            $log="artifacts/n3-r0/$test.log"
+            & $env:GODOT_BIN --headless --path . --script "res://tests/network/$test" *> $log
+            $code=$LASTEXITCODE
+            Get-Content -LiteralPath $log
+            if ($code -ne 0) { throw "N3_NATIVE_FAIL:${test}:$code" }
+            $raw=Get-Content -LiteralPath $log -Raw
+            if ($raw -match 'SCRIPT ERROR:|Parse Error:|Compile Error:|\[n3-(r0|b0)\]\[FAIL\]|"verdict":"FAIL"') { throw "N3_NATIVE_PARSE_OR_FAIL:$test" }
+            if ($raw -notmatch '"verdict":"PASS"') { throw "N3_NATIVE_NO_PASS_RECEIPT:$test" }
+          }
+          if (git status --porcelain --untracked-files=no) { throw 'TRACKED_DIRTY_AFTER' }
+          [ordered]@{ head=(git rev-parse HEAD).Trim(); tree=(git rev-parse 'HEAD^{tree}').Trim();
+            lease_native_pass=$true; b0_native_pass=$true; tracked_clean=$true } |
+            ConvertTo-Json | Set-Content artifacts/n3-r0/summary.json -Encoding UTF8
+      - name: Existing B0 contracts and integration focused regression
+        shell: pwsh
+        timeout-minutes: 7
+        run: |
+          $ErrorActionPreference='Stop'
+          foreach ($name in @('contracts','integration')) {
+            $test="test_b0_message_bus_$name.gd"
+            $log="artifacts/n3-r0/$test.log"
+            & $env:GODOT_BIN --headless --path . --script "res://tests/network/$test" *> $log
+            $exit=$LASTEXITCODE
+            Get-Content -LiteralPath $log
+            if ($exit -ne 0) { throw "B0_NATIVE_NONZERO:${test}:$exit" }
+            $raw=Get-Content -LiteralPath $log -Raw
+            if ($raw -match 'SCRIPT ERROR:|Parse Error:|Compile Error:|Failed to load script|Error compiling') { throw "B0_NATIVE_SCRIPT_ERROR:$test" }
+            if ($raw -notmatch "B0 message bus ${name}: PASS") { throw "B0_NATIVE_PASS_MISSING:$test" }
+          }
+
+      - name: Upload exact receipts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: n3-r0-native-${{ github.run_id }}-${{ github.run_attempt }}
+          path: artifacts/n3-r0/
+          if-no-files-found: warn
+          retention-days: 30

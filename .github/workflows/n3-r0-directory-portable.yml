@@ -1,0 +1,132 @@
+name: N3 R0a Portable Native Diagnostic
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/network/gateway/runtime/n3_*.gd'
+      - 'tests/network/test_n3_*.gd'
+      - 'tests/network/test_n3_*.py'
+      - 'RUN_N3_R0_DIRECTORY_CONTRACTS.sh'
+      - '.github/workflows/n3-r0-directory-portable.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  portable-diagnostic:
+    name: N3 portable B0 diagnostic (not double exact acceptance)
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Download official portable Godot 4.7.1 and record provenance
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/n3-r0-portable /tmp/n3-r0-godot
+          curl -fL --retry 3 --connect-timeout 20 --max-time 180 -o /tmp/n3-r0-godot/engine.zip \
+            https://github.com/godotengine/godot/releases/download/4.7.1-stable/Godot_v4.7.1-stable_linux.x86_64.zip
+          unzip -q /tmp/n3-r0-godot/engine.zip -d /tmp/n3-r0-godot
+          chmod +x /tmp/n3-r0-godot/Godot_v4.7.1-stable_linux.x86_64
+          /tmp/n3-r0-godot/Godot_v4.7.1-stable_linux.x86_64 --version | tee artifacts/n3-r0-portable/engine-version.txt
+          sha256sum /tmp/n3-r0-godot/Godot_v4.7.1-stable_linux.x86_64 | tee artifacts/n3-r0-portable/engine-sha256.txt
+          git rev-parse HEAD | tee artifacts/n3-r0-portable/head.txt
+          git rev-parse 'HEAD^{tree}' | tee artifacts/n3-r0-portable/tree.txt
+          echo 'NON_ACCEPTANCE_SINGLE_PRECISION_DIAGNOSTIC' | tee artifacts/n3-r0-portable/precision-scope.txt
+      - name: Source runner false-green regression
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest tests/network/test_n3_directory_runner.py -v \
+            >artifacts/n3-r0-portable/runner-regression.log 2>&1 || {
+              cat artifacts/n3-r0-portable/runner-regression.log; exit 1;
+            }
+          cat artifacts/n3-r0-portable/runner-regression.log
+          grep -q '^Ran 6 tests ' artifacts/n3-r0-portable/runner-regression.log
+          grep -qx 'OK' artifacts/n3-r0-portable/runner-regression.log
+      - name: Real portable native N3 + B0 regression
+        shell: bash
+        run: |
+          set -euo pipefail
+          godot=/tmp/n3-r0-godot/Godot_v4.7.1-stable_linux.x86_64
+          tests=(
+            tests/network/test_n3_region_directory_contracts.gd
+            tests/network/test_n3_directory_b0_routes.gd
+            tests/network/test_b0_message_bus_contracts.gd
+            tests/network/test_b0_message_bus_integration.gd
+          )
+          for test in "${tests[@]}"; do
+            name="$(basename "$test" .gd)"
+            log="artifacts/n3-r0-portable/$name.log"
+            timeout 90s "$godot" --headless --path . --script "res://$test" >"$log" 2>&1 || {
+              cat "$log"; echo "NATIVE_EXECUTION_FAILED:$name"; exit 1;
+            }
+            cat "$log"
+            if grep -Eq 'SCRIPT ERROR:|Parse Error:|Compile Error:|Failed to load script|Error compiling' "$log"; then
+              echo "NATIVE_SCRIPT_ERROR:$name"; exit 1
+            fi
+            if [[ "$name" == test_n3_* ]]; then
+              python3 - "$log" "${name#test_}" <<'PY'
+          import json
+          import pathlib
+          import sys
+          lines = pathlib.Path(sys.argv[1]).read_text(errors="replace").splitlines()
+          receipts = []
+          for line in lines:
+              try:
+                  value = json.loads(line.strip())
+              except json.JSONDecodeError:
+                  continue
+              if isinstance(value, dict) and ("test" in value or "verdict" in value):
+                  receipts.append(value)
+          if len(receipts) != 1 or receipts[0].get("test") != sys.argv[2] or receipts[0].get("verdict") != "PASS" or receipts[0].get("failures") != []:
+              raise SystemExit("N3_NATIVE_PASS_RECEIPT_INVALID: " + sys.argv[2])
+          print("N3_PORTABLE_RECEIPT_OK:" + sys.argv[2])
+          PY
+            else
+              marker="${name#test_b0_message_bus_}"
+              grep -Eq "^B0 message bus ${marker}: PASS \([0-9]+ assertions\)$" "$log" || {
+                echo "B0_NATIVE_PASS_MISSING:$name"; exit 1;
+              }
+            fi
+          done
+          git diff --exit-code
+          git diff --cached --exit-code
+      - name: Export exact-source portable verification subset
+        shell: bash
+        run: |
+          set -euo pipefail
+          git archive --format=tar HEAD \
+            project.godot \
+            addons/breakpoint_mcp \
+            scripts/network/bus \
+            scripts/network/contracts \
+            scripts/network/gateway/runtime/n3_directory_route_service.gd \
+            scripts/network/gateway/runtime/n3_region_lease_directory.gd \
+            tests/network/test_n3_region_directory_contracts.gd \
+            tests/network/test_n3_directory_b0_routes.gd \
+            tests/network/test_n3_directory_runner.py \
+            tests/network/test_b0_message_bus_contracts.gd \
+            tests/network/test_b0_message_bus_integration.gd \
+            RUN_B0_MESSAGE_BUS_TESTS.ps1 \
+            RUN_NETWORK_CONTRACT_TESTS.ps1 \
+            RUN_WORLD_REGRESSION_TESTS.ps1 \
+            docs/architecture/B0_TRANSPORT_INDEPENDENT_MESSAGE_BUS_RU.md \
+            config/network/network-roadmap.v1.json \
+          | gzip -9 > artifacts/n3-r0-portable/source-subset.tar.gz
+          sha256sum artifacts/n3-r0-portable/source-subset.tar.gz \
+            > artifacts/n3-r0-portable/source-subset-sha256.txt
+
+      - name: Upload scoped diagnostic receipts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: n3-r0-portable-${{ github.run_id }}
+          path: artifacts/n3-r0-portable/
+          retention-days: 30
+          if-no-files-found: warn
