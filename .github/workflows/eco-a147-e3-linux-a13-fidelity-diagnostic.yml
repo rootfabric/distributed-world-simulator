@@ -1,0 +1,117 @@
+name: ECO A147 E3 Linux A13 Fidelity Crash Diagnostics
+
+on:
+  push:
+    branches:
+      - repair/eco-a147-e3-linux-fidelity-native-segv-r1
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  source-snapshot:
+    name: Frozen source bundle for local Double reproduction
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Package exact HEAD without git secrets
+        shell: bash
+        run: |
+          set -euo pipefail
+          git rev-parse HEAD
+          test -f project.godot
+          tar -czf a13-fidelity-repro.tar.gz --exclude='*.uid' \
+            project.godot scripts validation tests config addons assets scenes
+          sha256sum a13-fidelity-repro.tar.gz > a13-fidelity-repro.sha256
+          ls -lh a13-fidelity-repro.tar.gz
+          git diff --exit-code
+          git diff --cached --exit-code
+      - uses: actions/upload-artifact@v4
+        with:
+          name: a147-e3-linux-crash-local-source
+          path: |
+            a13-fidelity-repro.tar.gz
+            a13-fidelity-repro.sha256
+          if-no-files-found: error
+
+  linux-double-native:
+    name: Exact pinned Linux 4.7.1 Fidelity native crash and gdb trace
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Replay original exact Fidelity and preserve crash evidence
+        shell: bash
+        env:
+          CONFIGURED_GODOT: ${{ vars.DWS_GODOT_DOUBLE_LINUX_BIN }}
+        run: |
+          set -uo pipefail
+          out="artifacts/runtime/a147-e3-linux-fidelity"
+          mkdir -p "$out"
+          godot="${CONFIGURED_GODOT:-${DWS_GODOT_DOUBLE_LINUX_BIN:-$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64}}"
+          sha256sum "$godot" | tee "$out/godot.sha256"
+          if [ "$(sha256sum "$godot" | cut -d' ' -f1)" != "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7" ]; then exit 1; fi
+          "$godot" --version | tee "$out/godot.version"
+          { uname -a; free -h; nproc; ulimit -a; command -v gdb || :; } > "$out/host.txt" 2>&1
+          python3 -m py_compile validation/ecology/evo_arch2_a13_fidelity/run_exact.py || exit 1
+          git rev-parse HEAD > "$out/product-head.txt"
+          git rev-parse HEAD^{tree} > "$out/product-tree.txt"
+          git status --porcelain --untracked-files=no > "$out/tracked-before.txt"
+          "$godot" --headless --editor --path . --import > "$out/cold-import.log" 2>&1
+          import_status=$?
+          echo "$import_status" > "$out/import-exit.txt"
+          if [ "$import_status" -ne 0 ]; then tail -100 "$out/cold-import.log"; exit 1; fi
+          ulimit -c unlimited || :
+          "$godot" --headless --path . --script res://validation/ecology/evo_arch2_a13_fidelity/test_fidelity_schedule.gd > "$out/trace.log" 2>&1
+          status=$?
+          echo "$status" > "$out/exact-exit.txt"
+          tail -120 "$out/trace.log" || :
+          if [ "$status" -ne 0 ]; then
+            # The original exact test remains RED; scoped probes only
+            # identify the native failure frontier, never rescue the gate.
+            probe=res://validation/ecology/evo_arch2_a147_linux_fidelity_diag/fidelity_stage_probe.gd
+            for scope in plan-only one-tick four-ticks eight-ticks; do
+              timeout 120 "$godot" --headless --path . --script "$probe" -- "--$scope" \
+                > "$out/probe-$scope.log" 2>&1
+              probe_code=$?
+              echo "$probe_code" > "$out/probe-$scope.exit.txt"
+              echo "A13_DIAG_SCOPE=$scope exit=$probe_code"
+              tail -12 "$out/probe-$scope.log" || :
+              if [ "$probe_code" -ne 0 ]; then break; fi
+            done
+            timeout 160 "$godot" --headless --path . --script "$probe" \
+              > "$out/probe-full-trace.log" 2>&1
+            trace_code=$?
+            echo "$trace_code" > "$out/probe-full-trace-exit.txt"
+            tail -35 "$out/probe-full-trace.log" || :
+          fi
+          if [ "$status" -ne 0 ] && command -v gdb >/dev/null 2>&1; then
+            timeout 180 gdb --quiet --batch -ex 'set pagination off' -ex 'run' \
+              -ex 'info threads' -ex 'thread apply all bt 24' --args \
+              "$godot" --headless --path . --script \
+              res://validation/ecology/evo_arch2_a13_fidelity/test_fidelity_schedule.gd \
+              > "$out/gdb-backtrace.log" 2>&1 || :
+            tail -110 "$out/gdb-backtrace.log" || :
+          fi
+          git status --porcelain --untracked-files=no > "$out/tracked-after.txt"
+          if ! diff "$out/tracked-before.txt" "$out/tracked-after.txt"; then echo SUBJECT_DRIFT; exit 1; fi
+          if [ "$status" -eq 0 ] && grep -Fxq 'EVO_ARCH2_A13_FIDELITY PASS' "$out/trace.log"; then
+            echo "NATIVE_LINUX_FIDELITY_PASS"
+            exit 0
+          fi
+          echo "NATIVE_LINUX_FIDELITY_FAIL_EXIT_$status"
+          exit 1
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: a147-e3-linux-fidelity-diagnostic
+          path: artifacts/runtime/a147-e3-linux-fidelity/
+          if-no-files-found: warn
