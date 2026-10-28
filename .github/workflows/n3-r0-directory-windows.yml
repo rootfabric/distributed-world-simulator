@@ -50,7 +50,10 @@ jobs:
         timeout-minutes: 3
         run: |
           $ErrorActionPreference='Stop'
-          python -m unittest tests/network/test_n3_directory_runner.py -v *> artifacts/n3-r0/runner-regression.log
+          # Direct script invocation: on Windows a regular "tests" package in
+          # site-packages shadows the repo namespace package, which breaks
+          # "python -m unittest tests/network/....py" module resolution.
+          python tests/network/test_n3_directory_runner.py -v *> artifacts/n3-r0/runner-regression.log
           $exit=$LASTEXITCODE
           Get-Content -LiteralPath artifacts/n3-r0/runner-regression.log
           if ($exit -ne 0) { throw "N3_RUNNER_REGRESSION_FAILED:$exit" }
