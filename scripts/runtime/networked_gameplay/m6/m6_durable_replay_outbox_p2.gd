@@ -4,10 +4,19 @@ const Utils = preload("res://scripts/network/contracts/network_contract_utils.gd
 
 const SCHEMA := "planet_simulator.m6_durable_replay_outbox.v1"
 const MAX_OUTBOX_RECORDS := 2048
+const R31_CACHE_MAX_BYTES := 4 * 1024 * 1024
+const R31_CACHE_MAX_OUTBOX_RECORDS := 256
 
 var _service
 var _next_sequence := 1
 var _records: Array = []
+var _r31_cache_value: Dictionary = {}
+var _r31_cache_fence: Dictionary = {}
+var _r31_cache_outbox_version := -1
+var _r31_outbox_version := 0
+var _r31_cache_generation := 0
+var _r31_hits := 0
+var _r31_misses := 0
 
 
 func setup(service_reference) -> Dictionary:
@@ -22,6 +31,7 @@ func setup(service_reference) -> Dictionary:
 	_service = service_reference
 	_next_sequence = 1
 	_records.clear()
+	_r31_invalidate_projection()
 	return _success()
 
 
@@ -71,6 +81,7 @@ func stage_committed(operation_id: String, command_type: String, payload: Dictio
 	_next_sequence += 1
 	_records.append(record)
 	_prune()
+	_r31_invalidate_projection()
 	return _success({"record": record.duplicate(true)})
 
 
@@ -85,6 +96,7 @@ func mark_delivered(sequence: int) -> Dictionary:
 		record["delivered"] = true
 		record["state"] = "DELIVERED"
 		_records[index] = record
+		_r31_invalidate_projection()
 		return _success({"record": record.duplicate(true)})
 	return _failure("M6_OUTBOX_RECORD_NOT_FOUND", {"sequence": sequence})
 
@@ -96,6 +108,7 @@ func mark_delivery_attempt(sequence: int) -> Dictionary:
 			continue
 		record["delivery_attempts"] = int(record.get("delivery_attempts", 0)) + 1
 		_records[index] = record
+		_r31_invalidate_projection()
 		return _success({"record": record.duplicate(true)})
 	return _failure("M6_OUTBOX_RECORD_NOT_FOUND", {"sequence": sequence})
 
@@ -176,6 +189,71 @@ func to_dict_profiled() -> Dictionary:
 	}
 
 
+
+# Replay data is a DERIVED immutable projection, never the source of truth.
+# All caller results are detached; writer retains its existing deep-copy fence.
+func to_dict_r31_versioned() -> Dictionary:
+	if _service == null or not _service.has_method("get_r31_replay_source_fence"):
+		return {"value": to_dict(), "cache_hit": false, "bypassed": "SOURCE_FENCE_UNAVAILABLE"}
+	var source_fence: Dictionary = _service.get_r31_replay_source_fence()
+	if (
+		source_fence.is_empty()
+		or String(source_fence.get("schema", "")) != "dws.r3c4.r31.replay_source_fence.v1"
+	):
+		return {"value": to_dict(), "cache_hit": false, "bypassed": "SOURCE_FENCE_INVALID"}
+	if (
+		not _r31_cache_value.is_empty()
+		and _r31_cache_outbox_version == _r31_outbox_version
+		and _r31_cache_fence == source_fence
+	):
+		_r31_hits += 1
+		return {
+			"value": _r31_cache_value.duplicate(true),
+			"cache_hit": true,
+			"projection_generation": _r31_cache_generation,
+			"source_fence": source_fence,
+		}
+	_r31_misses += 1
+	var normalized: Dictionary = to_dict()
+	if _service.get_r31_replay_source_fence() != source_fence:
+		return {"value": to_dict(), "cache_hit": false, "bypassed": "SOURCE_FENCE_CHANGED"}
+	if _records.size() > R31_CACHE_MAX_OUTBOX_RECORDS:
+		_r31_cache_value.clear()
+		return {"value": normalized, "cache_hit": false, "bypassed": "REPLAY_OUTBOX_BUDGET"}
+	var json_size: int = JSON.stringify(normalized).to_utf8_buffer().size()
+	if json_size > R31_CACHE_MAX_BYTES:
+		_r31_cache_value.clear()
+		return {"value": normalized, "cache_hit": false, "bypassed": "REPLAY_BYTES_BUDGET"}
+	_r31_cache_value = normalized
+	_r31_cache_fence = source_fence.duplicate(true)
+	_r31_cache_outbox_version = _r31_outbox_version
+	_r31_cache_generation += 1
+	return {
+		"value": normalized.duplicate(true),
+		"cache_hit": false,
+		"projection_generation": _r31_cache_generation,
+		"source_fence": source_fence,
+	}
+
+
+func get_r31_projection_report() -> Dictionary:
+	return {
+		"cache_hits": _r31_hits,
+		"cache_misses": _r31_misses,
+		"projection_generation": _r31_cache_generation,
+		"outbox_generation": _r31_outbox_version,
+		"cache_present": not _r31_cache_value.is_empty(),
+	}
+
+
+func _r31_invalidate_projection() -> void:
+	_r31_outbox_version += 1
+	_r31_cache_value.clear()
+	_r31_cache_fence.clear()
+	_r31_cache_outbox_version = -1
+
+
+
 func load_dict(value: Dictionary, _current_tick: int = -1) -> Dictionary:
 	if _service == null:
 		return _failure("M6_REPLAY_OUTBOX_NOT_CONFIGURED")
@@ -187,6 +265,7 @@ func load_dict(value: Dictionary, _current_tick: int = -1) -> Dictionary:
 		return _failure("M6_GAMEPLAY_REPLAY_RESTORE_FAILED", {"cause": restored})
 	_next_sequence = int(value.get("next_sequence", 1))
 	_records = Array(value.get("committed_outbox", [])).duplicate(true)
+	_r31_invalidate_projection()
 	return _success({
 		"next_sequence": _next_sequence,
 		"outbox_count": _records.size(),

@@ -18,6 +18,8 @@ var _tick := 0
 var _players: Dictionary = {}
 var _session_to_player: Dictionary = {}
 var _operation_ledger: Dictionary = {}
+# R3.1: monotonic replay mutation stamp. Durable player movement never bumps it.
+var _replay_projection_generation := 0
 var _live_gates: Dictionary = {}
 var _live_stages: Dictionary = {}
 
@@ -34,6 +36,7 @@ func setup(authority_owner_id: String, authority_epoch: int, server_tick: int = 
 	_players.clear()
 	_session_to_player.clear()
 	_operation_ledger.clear()
+	_replay_projection_generation += 1
 	return _success({"snapshot": create_snapshot()})
 
 
@@ -182,6 +185,7 @@ func restore_durable_state(value: Dictionary) -> Dictionary:
 	_players = staged_players
 	_session_to_player.clear()
 	_operation_ledger.clear()
+	_replay_projection_generation += 1
 	return _success({"player_count": _players.size(), "revision": _revision, "server_tick": _tick})
 
 
@@ -226,6 +230,12 @@ func validate_durable_state(value: Dictionary) -> Dictionary:
 	return _success({"player_count": seen.size()})
 
 
+# Constant-size, owner-native replay fence. Exporter cache may only be used
+# while this generation and ALL other domain replay generations are unchanged.
+func get_replay_projection_generation() -> int:
+	return _replay_projection_generation
+
+
 func export_replay_state() -> Dictionary:
 	var records: Dictionary = {}
 	var operation_ids := _operation_ledger.keys()
@@ -243,6 +253,7 @@ func restore_replay_state(value: Dictionary) -> Dictionary:
 	if not bool(validation.get("success", false)):
 		return validation
 	_operation_ledger = Dictionary(value.get("records", {})).duplicate(true)
+	_replay_projection_generation += 1
 	return _success({"operation_count": _operation_ledger.size()})
 
 
@@ -395,6 +406,7 @@ func _replay(operation_id: String, fingerprint: String) -> Dictionary:
 
 func _record(operation_id: String, fingerprint: String, result: Dictionary) -> void:
 	_operation_ledger[operation_id] = {"fingerprint": fingerprint, "result": result.duplicate(true)}
+	_replay_projection_generation += 1
 
 
 func _record_failure(operation_id: String, fingerprint: String, code: String) -> Dictionary:

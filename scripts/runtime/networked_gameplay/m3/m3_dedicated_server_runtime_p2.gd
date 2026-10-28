@@ -113,6 +113,9 @@ var _r3c4r2_worker_envelope_enabled := false
 # R3C.4 R3.0: opt-in stage attribution only, never changes durable state or
 # ACK sequencing. A product optimization requires a different feature gate.
 var _r3c4r30_stage_attribution_enabled := false
+# Replay-only immutable derived cache, NOT an authority gameplay snapshot.
+# R3.1a opt-in does not change command paths, ACK gate or disk format.
+var _r3c4r31_replay_projection_enabled := false
 var _r3c4_deferral_started_ms := 0
 var _r3c4_deferred_frames := 0
 var _r3c4_capture_slots := 0
@@ -274,6 +277,19 @@ func setup(config: Dictionary) -> Dictionary:
 	)
 	if _r3c4r30_stage_attribution_enabled and not _r3c4r2_worker_envelope_enabled:
 		return _failure("R3C4_R30_REQUIRES_R2_WORKER_ENVELOPE")
+	var r3c4r31_mode := OS.get_environment("DWS_NET_R3C4_R31_REPLAY_PROJECTION")
+	if not r3c4r31_mode.is_empty() and r3c4r31_mode not in ["0", "1"]:
+		return _failure("R3C4_R31_INVALID_MODE")
+	_r3c4r31_replay_projection_enabled = (
+		bool(config.get("r3c4r31_replay_projection_canary", false))
+		or r3c4r31_mode == "1"
+	)
+	if _r3c4r31_replay_projection_enabled and not _r3c4r2_worker_envelope_enabled:
+		return _failure("R3C4_R31_REQUIRES_R2_WORKER_ENVELOPE")
+	# R3.0 timings apply to uncached replay path only. Keep independent
+	# opt-in modes mutually exclusive to prevent false source attribution.
+	if _r3c4r31_replay_projection_enabled and _r3c4r30_stage_attribution_enabled:
+		return _failure("R3C4_R31_R30_ATTRIBUTION_MODE_CONFLICT")
 	_p1b_item_async_enabled = (
 		bool(config.get("async_durable_item_canary", false))
 		or OS.get_environment("DWS_NET_P1B_ITEM_ASYNC") == "1"
@@ -2819,6 +2835,7 @@ func _persistence_report() -> Dictionary:
 		"r3c_async_admission_enabled": _r3c_async_admission_enabled,
 		"r3c4_periodic_frame_pacing_enabled": _r3c4_periodic_frame_pacing_enabled,
 		"r3c4r2_worker_envelope_enabled": _r3c4r2_worker_envelope_enabled,
+		"r3c4r31_replay_projection_enabled": _r3c4r31_replay_projection_enabled,
 		"r3c4_deferred_frames": _r3c4_deferred_frames,
 		"r3c4_capture_slots": _r3c4_capture_slots,
 		"r3c4_forced_captures": _r3c4_forced_captures,
@@ -3048,7 +3065,11 @@ func _submit_async_movement_checkpoint() -> void:
 	var after_authority := Time.get_ticks_usec()
 	var replay: Dictionary = {}
 	var replay_stage_metrics: Dictionary = {}
-	if _r3c4r30_stage_attribution_enabled:
+	var replay_projection_result: Dictionary = {}
+	if _r3c4r31_replay_projection_enabled:
+		replay_projection_result = _replay_outbox.to_dict_r31_versioned()
+		replay = Dictionary(replay_projection_result.get("value", {}))
+	elif _r3c4r30_stage_attribution_enabled:
 		var profiled_replay: Dictionary = _replay_outbox.to_dict_profiled()
 		replay = Dictionary(profiled_replay.get("value", {}))
 		replay_stage_metrics = Dictionary(profiled_replay.get("metrics", {}))
@@ -3090,6 +3111,13 @@ func _submit_async_movement_checkpoint() -> void:
 			"handoff_ms": float(Time.get_ticks_usec() - after_replay) / 1000.0,
 			"ledger_count": Dictionary(gameplay.get("service_operation_ledger", {})).size(),
 			"outbox_count": Array(replay.get("committed_outbox", [])).size()}
+		if _r3c4r31_replay_projection_enabled:
+			capture_event["r31_cache_hit"] = bool(
+				replay_projection_result.get("cache_hit", false))
+			capture_event["r31_cache_bypassed"] = String(
+				replay_projection_result.get("bypassed", ""))
+			capture_event["r31_projection_generation"] = int(
+				replay_projection_result.get("projection_generation", -1))
 		if _r3c4r30_stage_attribution_enabled:
 			# replay_ms is to_dict(), *not* writer duplicate(true). The copy
 			# has its own measurement returned synchronously by submit().
