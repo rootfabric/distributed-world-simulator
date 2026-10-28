@@ -1,0 +1,117 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:dws:world-library:contract:1",
+  "title": "DWS WP1.0 draft metadata contract; not a WORLDGEN runtime schema",
+  "$ref": "#/$defs/catalog",
+  "$defs": {
+    "text": {"type": "string", "minLength": 1, "maxLength": 2048},
+    "version": {"type": "string", "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$"},
+    "hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "material": {"type": "string", "pattern": "^matter/[a-z0-9]+(?:-[a-z0-9]+)*$"},
+    "assetRef": {"type": "string", "pattern": "^asset/[a-z0-9][a-z0-9/-]*@(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$"},
+    "surfaceRef": {"type": "string", "pattern": "^surface/[a-z0-9][a-z0-9/-]*@(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$"},
+    "environmentRef": {"type": "string", "pattern": "^environment/[a-z0-9][a-z0-9/-]*@(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$"},
+    "recipeRef": {"type": "string", "pattern": "^recipe/[a-z0-9][a-z0-9/-]*@(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$"},
+    "tags": {"type": "array", "uniqueItems": true, "items": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._/-]*$"}},
+    "asset": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "version", "sha256", "expected_bytes", "media_type", "archive_type", "import_recipe", "license", "tags"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^asset/[a-z0-9][a-z0-9/-]*$"},
+        "version": {"$ref": "#/$defs/version"}, "sha256": {"$ref": "#/$defs/hash"},
+        "expected_bytes": {"type": "integer", "minimum": 1, "maximum": 9007199254740991},
+        "media_type": {"$ref": "#/$defs/text"},
+        "archive_type": {"enum": ["none", "zip", "tar"]},
+        "import_recipe": {
+          "type": "object", "additionalProperties": false, "required": ["id", "version"],
+          "properties": {"id": {"type": "string", "pattern": "^import/[a-z0-9-]+$"}, "version": {"$ref": "#/$defs/version"}}
+        },
+        "license": {
+          "type": "object", "additionalProperties": false,
+          "required": ["expression", "license_url", "author", "attribution_required", "attribution", "redistribution", "commercial_use", "provenance"],
+          "properties": {
+            "expression": {"enum": ["CC0-1.0", "CC-BY-4.0", "MIT", "BSD-2-Clause", "BSD-3-Clause"]},
+            "license_url": {"$ref": "#/$defs/text"}, "author": {"$ref": "#/$defs/text"},
+            "attribution_required": {"type": "boolean"}, "attribution": {"type": "string"},
+            "redistribution": {"enum": ["allowed", "user_download_only", "forbidden", "unknown"]},
+            "commercial_use": {"enum": ["allowed", "forbidden", "unknown"]},
+            "provenance": {"$ref": "#/$defs/text"}
+          }
+        }, "tags": {"$ref": "#/$defs/tags"}
+      }
+    },
+    "surface": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "version", "canonical_material_ids", "variants", "tags"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^surface/[a-z0-9][a-z0-9/-]*$"}, "version": {"$ref": "#/$defs/version"},
+        "canonical_material_ids": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/material"}},
+        "variants": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/variant"}}, "tags": {"$ref": "#/$defs/tags"}
+      }
+    },
+    "variant": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "tier", "evidence_class", "assets", "states", "coordinate_space", "mapping", "scale_bands", "requires"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$"},
+        "tier": {"enum": ["casual", "standard", "high_fidelity"]},
+        "evidence_class": {"enum": ["diagnostic_fixture", "artistic", "reference_based"]},
+        "assets": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/assetRef"}},
+        "states": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"enum": ["default", "fresh", "weathered", "fracture"]}},
+        "coordinate_space": {"enum": ["body_fixed", "local_surface"]},
+        "mapping": {"enum": ["triplanar", "tangent_uv", "procedural_3d"]},
+        "scale_bands": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"enum": ["orbital", "regional", "terrain", "local", "micro"]}},
+        "requires": {"$ref": "#/$defs/tags"}
+      }
+    },
+    "environment": {
+      "type": "object", "additionalProperties": false, "required": ["id", "version", "presentation_only", "tags"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^environment/[a-z0-9][a-z0-9/-]*$"}, "version": {"$ref": "#/$defs/version"},
+        "presentation_only": {"const": true}, "tags": {"$ref": "#/$defs/tags"}
+      }
+    },
+    "recipe": {
+      "type": "object", "additionalProperties": false, "required": ["id", "version", "includes", "bindings", "environments", "tags"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^recipe/[a-z0-9][a-z0-9/-]*$"}, "version": {"$ref": "#/$defs/version"},
+        "includes": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/recipeRef"}},
+        "bindings": {"type": "array", "uniqueItems": true, "items": {
+          "type": "object", "additionalProperties": false, "required": ["material_id", "surface"],
+          "properties": {"material_id": {"$ref": "#/$defs/material"}, "surface": {"$ref": "#/$defs/surfaceRef"}}
+        }},
+        "environments": {"type": "array", "maxItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/environmentRef"}},
+        "tags": {"$ref": "#/$defs/tags"}
+      }
+    },
+    "catalog": {
+      "type": "object", "additionalProperties": false, "required": ["schema", "status", "assets", "surfaces", "environments", "recipes"],
+      "properties": {
+        "schema": {"const": "dws.world_library.v1"}, "status": {"const": "DRAFT_CONTRACT_FIXTURE"},
+        "assets": {"type": "array", "items": {"$ref": "#/$defs/asset"}},
+        "surfaces": {"type": "array", "items": {"$ref": "#/$defs/surface"}},
+        "environments": {"type": "array", "items": {"$ref": "#/$defs/environment"}},
+        "recipes": {"type": "array", "minItems": 1, "maxItems": 128, "items": {"$ref": "#/$defs/recipe"}}
+      }
+    },
+    "locations": {
+      "type": "object", "additionalProperties": false, "required": ["schema", "entries"],
+      "properties": {
+        "schema": {"const": "dws.world_asset_sources.v1"},
+        "entries": {"type": "array", "items": {
+          "type": "object", "additionalProperties": false, "required": ["asset", "sha256", "sources"],
+          "properties": {
+            "asset": {"$ref": "#/$defs/assetRef"}, "sha256": {"$ref": "#/$defs/hash"},
+            "sources": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {
+              "type": "object", "additionalProperties": false, "required": ["type", "locator", "source_version", "role"],
+              "properties": {
+                "type": {"enum": ["https", "repo_fixture"]}, "locator": {"$ref": "#/$defs/text"},
+                "source_version": {"$ref": "#/$defs/text"}, "role": {"enum": ["upstream", "mirror"]}
+              }
+            }}
+          }
+        }}
+      }
+    }
+  }
+}

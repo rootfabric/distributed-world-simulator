@@ -1,0 +1,17 @@
+{
+  "schema": "dws.world_asset_sources.v1",
+  "entries": [
+    {
+      "asset": "asset/dws/diagnostic-swatch@1.0.0",
+      "sha256": "529c893ea8cd6bac13de54f3e1dcc1ba487f98b12c0ee90321f417d8c5e0fb9c",
+      "sources": [
+        {
+          "type": "repo_fixture",
+          "locator": "tests/world_packs/library_fixtures/swatch.txt",
+          "source_version": "1.0.0",
+          "role": "upstream"
+        }
+      ]
+    }
+  ]
+}
