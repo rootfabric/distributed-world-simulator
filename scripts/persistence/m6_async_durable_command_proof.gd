@@ -171,8 +171,14 @@ func accept_command_completion(completion: Dictionary) -> Dictionary:
 # completion must be observed from the owner runtime and handed off only AFTER
 # its repository commit; never poll the same completion in two owners.
 func observe_periodic_completion(completion: Dictionary) -> Dictionary:
+	# P1-B: a periodic completion arriving while this owner has a reserved or
+	# pending durable command is a strict single-writer ordering violation.
+	# The caller must never silently discard that completed generation: a lost
+	# previous_generation would make the next ACK falsely appear durable.
+	if _phase == PHASE_FATAL:
+		return _failure(_fatal_code)
 	if _phase != PHASE_IDLE:
-		return _failure("P1A_PERIODIC_WHILE_COMMAND")
+		return fail_closed("P1B_PERIODIC_COMPLETION_OUT_OF_PHASE")
 	var details: Dictionary = Dictionary(completion.get("details", {}))
 	if not bool(completion.get("success", false)):
 		return fail_closed("P1A_PERIODIC_COMMIT_FAILED")
