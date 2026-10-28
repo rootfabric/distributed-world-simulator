@@ -37,7 +37,8 @@ def make_event(kind, frame, t, data, measure=True):
 
 
 def fixture(*,frames=150,fail_wire=False,missing_loop=None,
-            corrupt_accounting=False,unknown_wire=False,missing_snapshot=False):
+            corrupt_accounting=False,unknown_wire=False,missing_snapshot=False,
+            include_completion=False, invalid_completion=False):
     rows=[]
     def add(kind,t,data,measure=False):
         rows.append({"kind":kind,"t_us":t,"measure":measure,"data":data})
@@ -65,6 +66,21 @@ def fixture(*,frames=150,fail_wire=False,missing_loop=None,
                 "peers":2,"capture_ms":.1,"encode_ms":.2,
                 "compact_send_ms":.3 if fail_wire else 1.0,
                 "seam_check_send_ms":.2,
+            }))
+        if include_completion and i % 60 == 0:
+            stages={
+                "poll_completed_ms":.01, "generation_ack_gate_ms":.01,
+                "metadata_copy_ms":.01, "completion_trace_ms":.01,
+                "telemetry_ms":.01, "debug_event_ms":.01,
+                "diagnostic_report_ms":.01,
+            }
+            if invalid_completion and i==60:
+                stages["generation_ack_gate_ms"]=1.0
+            rows.append(make_event("r31p23_movement_completion",i,t+2,{
+                "generation":i//60,
+                **stages,
+                "total_ms":.07,
+                "diagnostic_report_deferred":True,
             }))
         rows.append(make_event("server_message",i,t+3,{
             "duration_ms":.15,"type":"PLAYER_INPUT_BATCH"
@@ -126,6 +142,26 @@ class StageReducer(unittest.TestCase):
             self.assertEqual(result["p99_tail_frame_count"],2)
             self.assertEqual(result["worst_frame_samples"][0]["engine_frame"],80)
             self.assertEqual(result["frame_interval_ms"]["p99"],27.0)
+
+    def test_completion_stages_exact_engine_frame_are_attributed(self):
+        with tempfile.TemporaryDirectory() as temp:
+            path=write(Path(temp),include_completion=True)
+            r=analyze_events(read_trace(path,RUN_ID))
+            self.assertEqual(r["movement_completion_event_count"],2)
+            self.assertAlmostEqual(r["movement_completion_components_ms"][
+                "poll_completed_ms"]["p99"], .01)
+            matched=[x for x in r["worst_frame_samples"]
+                     if x["has_movement_completion"]]
+            self.assertGreaterEqual(len(matched), 1)
+            self.assertAlmostEqual(matched[0]["movement_completion_stages_ms"][
+                "poll_completed_ms"],.01)
+            self.assertEqual(r["verdict"],"STAGE_ATTRIBUTION_VALID_ONLY_NOT_PERF_PASS")
+
+    def test_invalid_completion_accounting_fails_closed(self):
+        with tempfile.TemporaryDirectory() as temp:
+            path=write(Path(temp),include_completion=True,invalid_completion=True)
+            with self.assertRaisesRegex(ValueError,"COMPLETION_STAGE_ACCOUNTING_MISMATCH"):
+                analyze_events(read_trace(path,RUN_ID))
 
     def test_even_one_missing_non_snapshot_stage_is_inconclusive(self):
         with tempfile.TemporaryDirectory() as temp:

@@ -127,6 +127,8 @@ var _r31bp1_chunk_cache = null
 var _r31bp20_validator_attribution_enabled := false
 # R31P2.2: server-only diagnostic. Never changes work order, M6 or tick rate.
 var _r31p22_loop_attribution_enabled := false
+# R31 P2.3 R0: completion-only instrumentation, not a writer/ACK change.
+var _r31p23_completion_attribution_enabled := false
 var _r3c4_deferral_started_ms := 0
 var _r3c4_deferred_frames := 0
 var _r3c4_capture_slots := 0
@@ -361,6 +363,15 @@ func setup(config: Dictionary) -> Dictionary:
 		or not bool(config.get("product_seam_enabled", false))
 	):
 		return _failure("R31P22_REQUIRES_P1_P0_REPLAY_R2_PERSISTENCE_SEAM")
+	var p23_mode := OS.get_environment("DWS_NET_R31P23_COMPLETION_ATTRIBUTION")
+	if not p23_mode.is_empty() and p23_mode not in ["0", "1"]:
+		return _failure("R31P23_INVALID_MODE")
+	_r31p23_completion_attribution_enabled = (
+		bool(config.get("r31p23_completion_attribution_canary", false))
+		or p23_mode == "1"
+	)
+	if _r31p23_completion_attribution_enabled and not _r31p22_loop_attribution_enabled:
+		return _failure("R31P23_REQUIRES_R31P22_LOOP_ATTRIBUTION")
 	_p1b_item_async_enabled = (
 		bool(config.get("async_durable_item_canary", false))
 		or OS.get_environment("DWS_NET_P1B_ITEM_ASYNC") == "1"
@@ -3170,12 +3181,14 @@ func _complete_async_movement_checkpoint(wait: bool) -> void:
 		return
 	if _movement_checkpoint_writer == null:
 		return
+	var p23_started_us: int = Time.get_ticks_usec() if _r31p23_completion_attribution_enabled else 0
 	var completed: Dictionary = (
 		_movement_checkpoint_writer.wait_completed() if wait
 		else _movement_checkpoint_writer.poll_completed()
 	)
 	if completed.is_empty():
 		return
+	var p23_after_poll_us: int = Time.get_ticks_usec() if _r31p23_completion_attribution_enabled else 0
 	if not bool(completed.get("success", false)):
 		_last_persistence_error_details = completed
 		_enter_persistence_failure(String(completed.get("error_code", "M7_ASYNC_CHECKPOINT_FAILED")))
@@ -3199,19 +3212,24 @@ func _complete_async_movement_checkpoint(wait: bool) -> void:
 			if not bool(observed.get("success", false)):
 				_enter_persistence_failure(String(observed.get("error_code", "M6_DURABLE_ACK_GATE_OBSERVE_FAILED")))
 				return
+	var p23_after_gate_us: int = Time.get_ticks_usec() if _r31p23_completion_attribution_enabled else 0
 	_movement_checkpoints += 1
 	_async_checkpoint_last = details.duplicate(true)
 	_async_checkpoint_last["capture_ms"] = _async_checkpoint_capture_ms
 	_async_checkpoint_last["elapsed_ms"] = float(Time.get_ticks_usec() - _async_checkpoint_started_us) / 1000.0
+	var p23_after_metadata_us: int = Time.get_ticks_usec() if _r31p23_completion_attribution_enabled else 0
 	if SmoothTrace.enabled():
 		SmoothTrace.emit("checkpoint_complete", _async_checkpoint_last)
+	var p23_after_trace_us: int = Time.get_ticks_usec() if _r31p23_completion_attribution_enabled else 0
 	if _telemetry != null:
 		_telemetry.observe("persistence_duration_ms", float(details.get("worker_ms", 0.0)))
 		_telemetry.observe("persistence_capture_ms", _async_checkpoint_capture_ms)
 		_telemetry.increment("persistence_commits")
+	var p23_after_telemetry_us: int = Time.get_ticks_usec() if _r31p23_completion_attribution_enabled else 0
 	# Do NOT clear dirty/counters here: movement after submission is newer than
 	# the detached checkpoint. The next request will capture that newer state.
 	_debug_event("MOVEMENT_CHECKPOINT_COMMITTED", {"generation": generation, "async": true})
+	var p23_after_debug_us: int = Time.get_ticks_usec() if _r31p23_completion_attribution_enabled else 0
 	# get_report() recursively builds a full game/ItemGraph/M6 snapshot and
 	# writes JSON to the runtime result file. It is not the atomic checkpoint
 	# nor the M6 proof; during R3C2 this main-thread diagnostics-only report
@@ -3226,6 +3244,21 @@ func _complete_async_movement_checkpoint(wait: bool) -> void:
 			})
 	else:
 		_write_report("READY", false)
+	if _r31p23_completion_attribution_enabled and SmoothTrace.enabled():
+		var p23_done_us: int = Time.get_ticks_usec()
+		SmoothTrace.emit("r31p23_movement_completion", {
+			"engine_frame": Engine.get_process_frames(),
+			"generation": generation,
+			"poll_completed_ms": float(p23_after_poll_us - p23_started_us) / 1000.0,
+			"generation_ack_gate_ms": float(p23_after_gate_us - p23_after_poll_us) / 1000.0,
+			"metadata_copy_ms": float(p23_after_metadata_us - p23_after_gate_us) / 1000.0,
+			"completion_trace_ms": float(p23_after_trace_us - p23_after_metadata_us) / 1000.0,
+			"telemetry_ms": float(p23_after_telemetry_us - p23_after_trace_us) / 1000.0,
+			"debug_event_ms": float(p23_after_debug_us - p23_after_telemetry_us) / 1000.0,
+			"diagnostic_report_ms": float(p23_done_us - p23_after_debug_us) / 1000.0,
+			"total_ms": float(p23_done_us - p23_started_us) / 1000.0,
+			"diagnostic_report_deferred": _r3c2_phased_item_publication_enabled,
+		})
 
 
 func _submit_async_movement_checkpoint() -> void:
