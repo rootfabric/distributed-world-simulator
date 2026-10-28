@@ -1,0 +1,20 @@
+{
+  "schema": "dws.ecology.research-work-order.v1",
+  "id": "EVO-ARCH2-A7-20260912-R1",
+  "mode": "ISOLATED_RESEARCH_CANDIDATE",
+  "branch": "feature/eco-evo-arch2-a7-observatory-r1",
+  "source_head": "993271eb46880b77f0e7584f931131d4bd0a5125",
+  "source_tree": "adce0899b348d6e8b359d732972af0ca5579c742",
+  "source_acceptance_ref": "acceptance/eco-evo-arch2-a6-r1",
+  "main_observed": "7dfc68ab5a1e90254a1b7039807f275b5da04eef",
+  "registry_generation": 82,
+  "risk": "HIGH",
+  "authorization": "Explicit user request to implement A7 Observatory after A6 research acceptance. No main-owned production activation or self-acceptance.",
+  "allowed_paths": ["config/ecology/evo-arch2-a7*", "docs/research/ecology/EVO_ARCH2_A7*", "scripts/research/ecology/v2/observatory_*", "scripts/labs/ecology/arch2_a7_*", "scenes/labs/ecology/arch2_a7_*", "tests/research/ecology/v2/arch2_a7_*", "validation/ecology/evo_arch2_a7/**"],
+  "forbidden_paths": ["all existing A0-A6 runtime and tests", "scripts/ecology/production/**", "scripts/simulation/**", "scripts/network/**", "config/control/**", "config/architecture/**", "project.godot", ".github/workflows/** on implementation branch"],
+  "validation_branch": "validation/eco-arch2-a7-exact-r1",
+  "required_predicates": ["A0_A6_UNCHANGED", "THREE_REAL_A6_SESSIONS_WET_DRY_DARK", "PREDECLARED_SEEDS_NO_OUTCOME_SELECTION", "A3_FOUNDER_MUTATION_AND_NONE_CONTROL", "COMMON_GARDEN_CLONAL_CONTROL", "EFFECTS_OFF_CAUSAL_CONTROL", "ATOMIC_THREE_SITE_STEP", "ONE_SIMULATION_STATE_FOR_UI_AND_METRICS", "READ_ONLY_FULL_BODY_PHENOTYPE_PROJECTION", "PAUSE_STEP_SPEED_RESET_SELECT", "ANCHORED_SAVE_LOAD_RESTART", "BOUNDED_SOURCE_BOUND_EXPORT", "UNKNOWN_OR_TAMPERED_PROTOCOL_REJECTED", "EXPLICIT_BUDGET_NOT_BIOLOGICAL_SELECTION", "A7_EXACT_X2", "GRAPHICAL_SCENE_CAPTURE_AND_UI_TEST", "A6_A5_A0_A4_VIS5_REGRESSIONS", "FRESH_INDEPENDENT_REVIEW"],
+  "acceptance_policy": {"self_accept": false, "merge_requires_human": true, "production_promotion": false, "independent_review_required": true, "independent_verification_required": true, "global_pc0_green_inferred": false},
+  "state": "DISPATCHED",
+  "resume_anchor": {"exact_subject": "acceptance/eco-evo-arch2-a6-r1@993271eb46880b77f0e7584f931131d4bd0a5125", "last_completed_predicate": "A6_RESEARCH_ACCEPTANCE_CONFIRMED", "known_failed_route": "Historical container GitHub DNS; use connector for Git writes and existing exact local objects for execution", "next_action": "Implement bounded Observatory and executable counterfactual/UI/restart tests, then publish exact evidence and independent review", "allowed_recovery_route": "GitHub connector durable refs, existing local checkout, trusted repository-owned validation CI"}
+}
