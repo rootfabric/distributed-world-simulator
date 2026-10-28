@@ -1,0 +1,57 @@
+{
+  "schema": "distributed_world_simulator.harness_execution_evidence_policy.v1",
+  "execution_evidence_revision": "H0-EVIDENCE-2026-08-18-R1",
+  "purpose": "Prevent evidence-strength inflation by separating executable carrier identity, behavioral execution, process freshness, runner equivalence and independent role authority.",
+  "evidence_dimensions": {
+    "execution_level": ["STATIC_INSPECTION", "PARSER_PRELOAD", "BEHAVIORAL_EXECUTION"],
+    "process_freshness": ["NOT_APPLICABLE", "REUSED_PROCESS", "FRESH_PROCESS"],
+    "carrier_integrity": ["UNVERIFIED", "TOP_LEVEL_EXACT_ONLY", "EXACT_TRANSITIVE_EXECUTABLE_CLOSURE"],
+    "transport": ["DIRECT_TOOL", "CANONICAL_RUNNER", "DECLARED_EQUIVALENT_EXECUTION"],
+    "role_authority": ["IMPLEMENTER_SELF_CHECK", "INDEPENDENT_REVIEWER", "INDEPENDENT_VERIFIER", "INTEGRATOR", "PC0"]
+  },
+  "non_upgrade_rules": [
+    "PARSER_PRELOAD_NEVER_IMPLIES_BEHAVIORAL_EXECUTION",
+    "FRESH_PROCESS_NEVER_IMPLIES_INDEPENDENT_ROLE_AUTHORITY",
+    "TOP_LEVEL_EXACT_ONLY_NEVER_IMPLIES_CANONICAL_CARRIER",
+    "DECLARED_EQUIVALENT_EXECUTION_NEVER_IMPLIES_CANONICAL_RUNNER_EXECUTED",
+    "IMPLEMENTER_SELF_CHECK_NEVER_IMPLIES_INDEPENDENT_REVIEW_OR_VERIFICATION",
+    "GREEN_EXECUTION_NEVER_OVERRIDES_AN_EXPLICIT_ROLE_BOUNDARY"
+  ],
+  "canonical_behavioral_gate": {
+    "required_execution_level": "BEHAVIORAL_EXECUTION",
+    "required_carrier_integrity": "EXACT_TRANSITIVE_EXECUTABLE_CLOSURE",
+    "closure_manifest_required": true,
+    "closure_discovery_must_precede_execution": true,
+    "stubs_or_substitutes_forbidden": true,
+    "required_manifest_fields": ["target_head", "root_executables", "transitive_files", "path", "git_blob_sha", "identity_verified"],
+    "all_transitive_files_must_match_exact_blob": true
+  },
+  "runner_equivalence": {
+    "missing_canonical_runtime_is_not_success": true,
+    "equivalent_execution_requires_explicit_checkpoint_permission": true,
+    "equivalent_execution_requires_predicate_manifest": true,
+    "predicate_manifest_must_cover_canonical_runner_gates": true,
+    "deviations_must_be_recorded": true,
+    "canonical_runner_executed_and_equivalent_execution_executed_are_distinct_fields": true
+  },
+  "post_freeze_integrity": {
+    "code_under_test_head_must_be_frozen": true,
+    "carrier_may_advance_for_non_executable_evidence_only": true,
+    "code_under_test_to_carrier_diff_must_be_enumerated": true,
+    "executable_or_semantic_drift_requires_new_code_under_test_head": true,
+    "silent_reuse_of_stale_review_or_test_evidence_for_changed_executable_head_forbidden": true
+  },
+  "acceptance": {
+    "evidence_may_not_self_upgrade": true,
+    "checkpoint_policy_must_explicitly_allow_the_present_evidence_vector": true,
+    "otherwise_green_execution_remains_candidate": true,
+    "role_independence_requires_distinct_actor_or_session_as_defined_by_review_policy": true
+  },
+  "continuation": {
+    "green_execution_with_independent_role_gate_pending": "ROLE_BOUNDARY",
+    "behavioral_failure": "RETURN_TO_IMPLEMENTER_REPAIR_AND_REFREEZE",
+    "incomplete_exact_closure": "EVIDENCE_CARRIER_REPAIR_REQUIRED",
+    "post_freeze_executable_drift": "REBIND_TARGET_AND_REVERIFY",
+    "accepted_checkpoint": "FOLLOW_EXPLICIT_NEXT_AUTHORIZATION_ONLY"
+  }
+}

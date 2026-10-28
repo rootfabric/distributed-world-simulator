@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "distributed_world_simulator.harness_execution_evidence.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema","target_head","execution_level","process_freshness","carrier_integrity","transport","role_authority",
+    "canonical_runner_executed","equivalent_execution_executed","equivalent_execution_allowed","equivalent_predicates_complete",
+    "role_independent","post_freeze_executable_drift","claims"
+  ],
+  "properties": {
+    "schema": {"const": "distributed_world_simulator.harness_execution_evidence.v1"},
+    "target_head": {"type":"string","pattern":"^[0-9a-f]{40}$"},
+    "execution_level": {"enum":["STATIC_INSPECTION","PARSER_PRELOAD","BEHAVIORAL_EXECUTION"]},
+    "process_freshness": {"enum":["NOT_APPLICABLE","REUSED_PROCESS","FRESH_PROCESS"]},
+    "carrier_integrity": {"enum":["UNVERIFIED","TOP_LEVEL_EXACT_ONLY","EXACT_TRANSITIVE_EXECUTABLE_CLOSURE"]},
+    "transport": {"enum":["DIRECT_TOOL","CANONICAL_RUNNER","DECLARED_EQUIVALENT_EXECUTION"]},
+    "role_authority": {"enum":["IMPLEMENTER_SELF_CHECK","INDEPENDENT_REVIEWER","INDEPENDENT_VERIFIER","INTEGRATOR","PC0"]},
+    "canonical_runner_executed": {"type":"boolean"},
+    "equivalent_execution_executed": {"type":"boolean"},
+    "equivalent_execution_allowed": {"type":"boolean"},
+    "equivalent_predicates_complete": {"type":"boolean"},
+    "role_independent": {"type":"boolean"},
+    "post_freeze_executable_drift": {"type":"boolean"},
+    "closure_manifest": {
+      "type":"object",
+      "additionalProperties": false,
+      "required":["target_head","root_executables","transitive_files"],
+      "properties": {
+        "target_head":{"type":"string","pattern":"^[0-9a-f]{40}$"},
+        "root_executables":{"type":"array","minItems":1,"items":{"type":"string","minLength":1}},
+        "transitive_files":{"type":"array","minItems":1,"items":{"type":"object","additionalProperties":false,"required":["path","git_blob_sha","identity_verified"],"properties":{"path":{"type":"string","minLength":1},"git_blob_sha":{"type":"string","pattern":"^[0-9a-f]{40}$"},"identity_verified":{"const":true}}}}
+      }
+    },
+    "equivalent_predicates": {"type":"array","items":{"type":"string","minLength":1}},
+    "deviations": {"type":"array","items":{"type":"string","minLength":1}},
+    "claims": {
+      "type":"object",
+      "additionalProperties": false,
+      "required":["parser_pass","behavioral_pass","fresh_process_pass","canonical_carrier_pass","independent_reviewer_pass","independent_verifier_pass"],
+      "properties": {
+        "parser_pass":{"type":"boolean"},
+        "behavioral_pass":{"type":"boolean"},
+        "fresh_process_pass":{"type":"boolean"},
+        "canonical_carrier_pass":{"type":"boolean"},
+        "independent_reviewer_pass":{"type":"boolean"},
+        "independent_verifier_pass":{"type":"boolean"}
+      }
+    }
+  }
+}
