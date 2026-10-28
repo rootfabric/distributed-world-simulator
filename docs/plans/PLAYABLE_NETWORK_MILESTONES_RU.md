@@ -1,3 +1,16 @@
+<!-- DEV-FLOW-2026-10-28-R1 -->
+## Действующее обновление процесса — 28 октября 2026
+
+Применяйте `docs/plans/DEVELOPMENT_FLOW_OPTIMIZATION_RU.md` и
+`config/control/harness/development-flow-policy.v1.json`: один независимый
+содержательный разбор LOW/MEDIUM с повторным использованием достоверного CI;
+усиленные HIGH/CRITICAL и явные execution-требования сохраняются. Ремонт
+проверяется по изменённой области, новые улучшения не расширяют приёмку молча.
+NET: малые p99 отклонения неблокирующие; приоритет N3. ECO: R2F и backlog;
+FABRIC: интеграция проверенных ремонтов; ENGINE48: пригодный Linux executor.
+Прежние FAIL, Work Orders, source SHA и запреты на продуктовый merge не отменены.
+<!-- /DEV-FLOW-2026-10-28-R1 -->
+
 > **Post-A2 correction (2026-07-30):** этот документ сохраняет исторический контекст H1–A2. Текущий официальный порядок заменён на `A2 → M1 → M2 → M3 → M4 → M5 → M6 → A3 → B1 → B2 → N3–N6`. См. [`SINGLE_SERVER_MULTIPLAYER_ROADMAP_RU.md`](SINGLE_SERVER_MULTIPLAYER_ROADMAP_RU.md).
 
 # PlanetSimulator — игровые сетевые вехи после S1
