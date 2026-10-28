@@ -2,6 +2,8 @@
 
 import os
 import shlex
+import shutil
+import sys
 from pathlib import Path
 import subprocess
 import tempfile
@@ -29,6 +31,30 @@ esac
 '''
 
 
+def resolve_bash() -> str:
+    """Resolve a real Git Bash executable.
+
+    On Windows, spawning the bare name ``bash`` via CreateProcess resolves
+    ``C:\\Windows\\System32\\bash.exe`` (WSL) before ``PATH`` is consulted, and
+    WSL bash has no ``cygpath``, which breaks Git Bash path conversion. Prefer
+    an explicit Git Bash resolution instead.
+    """
+    if os.name != "nt":
+        return "bash"
+    candidates = []
+    found = shutil.which("bash")
+    if found and "system32" not in Path(found).parts.__str__().lower():
+        candidates.append(found)
+    git_exe = shutil.which("git")
+    if git_exe:
+        candidates.append(str(Path(git_exe).resolve().parents[1] / "bin" / "bash.exe"))
+    candidates.append(r"C:\Program Files\Git\bin\bash.exe")
+    for candidate in candidates:
+        if candidate and Path(candidate).is_file():
+            return candidate
+    return "bash"
+
+
 class RunnerReceiptTests(unittest.TestCase):
     @staticmethod
     def bash_path(path: Path) -> str:
@@ -36,7 +62,7 @@ class RunnerReceiptTests(unittest.TestCase):
             return str(path)
         # Git Bash expects a POSIX path, even when Python starts on Windows.
         result = subprocess.run(
-            ["bash", "-lc", "cygpath -u " + shlex.quote(str(path))],
+            [resolve_bash(), "-lc", "cygpath -u " + shlex.quote(str(path))],
             text=True, capture_output=True, check=True,
         )
         return result.stdout.strip()
@@ -46,9 +72,16 @@ class RunnerReceiptTests(unittest.TestCase):
             executable = Path(temp) / "fake-godot.sh"
             executable.write_bytes(FAKE_GODOT.encode("utf-8"))
             executable.chmod(0o755)
-            env = dict(os.environ, N3_FAKE_CASE=mode, N3_R0_LOG_DIR=str(Path(temp) / "logs"))
+            env = dict(
+                os.environ,
+                N3_FAKE_CASE=mode,
+                N3_R0_LOG_DIR=str(Path(temp) / "logs"),
+                # Pin the receipt validator to this interpreter: on Windows,
+                # the script's default "python3" probe can hit the Store stub.
+                N3_R0_PYTHON=sys.executable,
+            )
             return subprocess.run(
-                ["bash", self.bash_path(RUNNER), self.bash_path(executable)],
+                [resolve_bash(), self.bash_path(RUNNER), self.bash_path(executable)],
                 cwd=ROOT, env=env, encoding="utf-8", text=True, capture_output=True,
                 timeout=30, check=False,
             )

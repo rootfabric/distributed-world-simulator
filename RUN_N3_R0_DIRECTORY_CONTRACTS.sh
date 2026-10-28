@@ -9,7 +9,11 @@ mkdir -p "$LOG_DIR"
 PYTHON_BIN="${N3_R0_PYTHON:-}"
 if [[ -z "$PYTHON_BIN" ]]; then
     for executable in python3 python; do
-        if command -v "$executable" >/dev/null 2>&1; then
+        # Verify the candidate actually runs: on Windows Git Bash,
+        # "python3" can resolve to the Microsoft Store stub, which exits
+        # non-zero without executing anything.
+        if command -v "$executable" >/dev/null 2>&1 \
+                && "$executable" -c "pass" >/dev/null 2>&1; then
             PYTHON_BIN="$executable"
             break
         fi
