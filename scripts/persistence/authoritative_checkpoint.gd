@@ -187,6 +187,12 @@ static func _revision_semantic_projection(snapshot: Dictionary) -> Dictionary:
 			if ownership_value is Dictionary:
 				var ownership: Dictionary = Dictionary(ownership_value).duplicate(true)
 				ownership.erase("server_tick")
+				# R3C21-R2: ownership.checksum is derived over the mirrored
+				# server_tick above, so it changes with pure time progression
+				# at a constant state_revision. Erase it like every other
+				# derived checksum; ownership.revision and player rows remain
+				# protected by this projection.
+				ownership.erase("checksum")
 				gameplay["ownership"] = ownership
 			gameplay.erase("checksum")
 			components["networked_gameplay_state"] = gameplay
@@ -198,6 +204,58 @@ static func _revision_semantic_projection(snapshot: Dictionary) -> Dictionary:
 # Debugging-only path oracle for a rejected checkpoint. Deterministic order,
 # bounded traversal, and NO values. Unknown map keys (e.g. player/session IDs)
 # are redacted from logs. This is never consulted by progression acceptance.
+static func debug_all_revision_difference_paths(left: Variant, right: Variant) -> Array:
+	var paths: Array = []
+	_collect_revision_differences(left, right, "$", 0, paths)
+	if paths.is_empty():
+		paths.append("$")
+	return paths
+
+
+static func _collect_revision_differences(
+	left: Variant, right: Variant, path: String, depth: int, paths: Array
+) -> void:
+	if left == right or paths.size() >= 64:
+		return
+	if typeof(left) != typeof(right) or depth >= 16:
+		paths.append(path)
+		return
+	if left is Dictionary:
+		var left_map: Dictionary = left
+		var right_map: Dictionary = right
+		var keys: Array = left_map.keys()
+		keys.sort()
+		# Keep the same checksum-deferred ordering as the first-diff oracle.
+		if keys.has("checksum"):
+			keys.erase("checksum")
+			keys.append("checksum")
+		for index in range(mini(keys.size(), 256)):
+			var key: Variant = keys[index]
+			var next_path: String = "%s.%s" % [path, _revision_diagnostic_key(String(key))]
+			if not right_map.has(key):
+				paths.append(next_path)
+				continue
+			_collect_revision_differences(left_map[key], right_map[key], next_path, depth + 1, paths)
+		var right_keys: Array = right_map.keys()
+		right_keys.sort()
+		for index in range(mini(right_keys.size(), 256)):
+			var key: Variant = right_keys[index]
+			if not left_map.has(key):
+				paths.append("%s.%s" % [path, _revision_diagnostic_key(String(key))])
+	elif left is Array:
+		var left_array: Array = left
+		var right_array: Array = right
+		for index in range(mini(mini(left_array.size(), right_array.size()), 256)):
+			_collect_revision_differences(
+				left_array[index], right_array[index], "%s[%d]" % [path, index], depth + 1, paths
+			)
+		if left_array.size() != right_array.size():
+			paths.append("%s[length]" % path)
+		return
+	else:
+		paths.append(path)
+
+
 static func _first_revision_difference(left: Variant, right: Variant, path: String, depth: int) -> String:
 	if left == right:
 		return ""
