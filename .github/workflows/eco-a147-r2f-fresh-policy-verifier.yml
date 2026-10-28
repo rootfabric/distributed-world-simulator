@@ -1,0 +1,126 @@
+name: ECO A147 R2F Fresh Policy Security Verifier
+
+on:
+  push:
+    branches:
+      - verify/eco-a147-r2f-9a1a986-policy-r1
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  portable:
+    name: Portable independent policy freeze and A8 recovery n32
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0, persist-credentials: false}
+      - name: Run real original A13 vs restored 16/4 Controller
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fL --retry 3 -o /tmp/r2f-verifier-godot.zip https://github.com/godotengine/godot/releases/download/4.7.1-stable/Godot_v4.7.1-stable_linux.x86_64.zip
+          mkdir -p /tmp/r2f-verifier-godot
+          unzip -q /tmp/r2f-verifier-godot.zip -d /tmp/r2f-verifier-godot
+          godot=/tmp/r2f-verifier-godot/Godot_v4.7.1-stable_linux.x86_64
+          chmod +x "$godot"
+          "$godot" --headless --editor --path . --import > r2f-fresh-import.log 2>&1 || { cat r2f-fresh-import.log; exit 1; }
+          "$godot" --headless --path . --script res://validation/ecology/evo_arch2_a14_7/test_a147_r2f_fresh_policy_verifier.gd > r2f-fresh.stdout.log 2> r2f-fresh.stderr.log || { cat r2f-fresh.stdout.log; cat r2f-fresh.stderr.log; exit 1; }
+          grep -Fx 'A147_R2F_FRESH_POLICY PASS' r2f-fresh.stdout.log
+          python3 - <<'PY'
+          import json,pathlib
+          lines=[line.split('A147_R2F_FRESH_POLICY_JSON ',1)[1] for line in pathlib.Path('r2f-fresh.stdout.log').read_text().splitlines() if line.startswith('A147_R2F_FRESH_POLICY_JSON ')]
+          assert len(lines)==1,lines
+          d=json.loads(lines[0])
+          assert d['schema']=='dws.ecology.a147-r2f-fresh-policy.v1' and d['population']==32
+          assert d['canonical_equal'] and d['checkpoint_equal'] and d['one_original_a4']
+          assert d['jobs_started']==3 and d['jobs_abandoned']==2
+          assert d['jobs_committed']==1 and d['tasks_joined']==3
+          assert d['full_source_validation'] and d['full_candidate_validation']
+          print('R2F_FRESH_ADVERSARIAL_EXACT_PASS')
+          PY
+          git diff --exit-code && git diff --cached --exit-code
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: a147-r2f-fresh-portable
+          path: |
+            r2f-fresh-import.log
+            r2f-fresh.stdout.log
+            r2f-fresh.stderr.log
+          if-no-files-found: ignore
+
+  windows:
+    name: Pinned Windows Double independent policy and cancel exact
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0, persist-credentials: false}
+      - name: Native Windows 4.7.1 Double lease and worker lifetime
+        shell: pwsh
+        env:
+          CONFIGURED_GODOT: ${{ vars.DWS_GODOT_DOUBLE_BIN }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $godot = $env:CONFIGURED_GODOT
+          if ([string]::IsNullOrWhiteSpace($godot)) { $godot = 'C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe' }
+          if ((Get-FileHash $godot -Algorithm SHA256).Hash.ToLowerInvariant() -ne '3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5') { throw 'PINNED_GODOT_SHA_MISMATCH' }
+          & $godot --headless --editor --path . --import *> r2f-fresh-win-import.log
+          if ($LASTEXITCODE -ne 0) { throw 'R2F_FRESH_WIN_IMPORT_FAIL' }
+          $out = Join-Path (Get-Location).Path 'r2f-fresh-win.stdout.log'
+          $err = Join-Path (Get-Location).Path 'r2f-fresh-win.stderr.log'
+          $p = Start-Process -FilePath $godot -ArgumentList @('--headless','--path','.','--script','res://validation/ecology/evo_arch2_a14_7/test_a147_r2f_fresh_policy_verifier.gd') -WorkingDirectory (Get-Location).Path -PassThru -RedirectStandardOutput $out -RedirectStandardError $err
+          $p.WaitForExit()
+          Write-Host "R2F_FRESH_WIN_NATIVE_EXIT=$($p.ExitCode)"
+          if ($p.ExitCode -ne 0) { Get-Content $out; Get-Content $err; throw 'R2F_FRESH_WIN_FAIL' }
+          if (-not (Select-String -Path $out -Pattern '^A147_R2F_FRESH_POLICY PASS$' -Quiet)) { throw 'R2F_FRESH_WIN_PASS_MISSING' }
+          $rows = @(Get-Content $out | Where-Object { $_ -match '^A147_R2F_FRESH_POLICY_JSON ' })
+          if ($rows.Count -ne 1) { throw 'R2F_FRESH_WIN_JSON' }
+          $receipt = ($rows[0] -replace '^A147_R2F_FRESH_POLICY_JSON ','') | ConvertFrom-Json
+          if (-not $receipt.canonical_equal -or -not $receipt.checkpoint_equal -or [int]$receipt.jobs_abandoned -ne 2 -or [int]$receipt.jobs_committed -ne 1) { throw 'R2F_FRESH_WIN_RECEIPT' }
+          git diff --exit-code
+          if ($LASTEXITCODE -ne 0) { throw 'TRACKED_CHANGE' }
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: a147-r2f-fresh-windows-double
+          path: |
+            r2f-fresh-win-import.log
+            r2f-fresh-win.stdout.log
+            r2f-fresh-win.stderr.log
+          if-no-files-found: ignore
+
+  linux-double:
+    name: Pinned Linux Double independent policy and cancel exact
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0, persist-credentials: false}
+      - name: Native Linux 4.7.1 Double generation rejection
+        shell: bash
+        env:
+          CONFIGURED_GODOT: ${{ vars.DWS_GODOT_DOUBLE_LINUX_BIN }}
+        run: |
+          set -euo pipefail
+          godot="$CONFIGURED_GODOT"
+          if [ -z "$godot" ]; then godot="$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64"; fi
+          test "$(sha256sum "$godot" | cut -d' ' -f1)" = "bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7"
+          "$godot" --headless --editor --path . --import > r2f-fresh-linux-import.log 2>&1 || { cat r2f-fresh-linux-import.log; exit 1; }
+          "$godot" --headless --path . --script res://validation/ecology/evo_arch2_a14_7/test_a147_r2f_fresh_policy_verifier.gd > r2f-fresh-linux.stdout.log 2> r2f-fresh-linux.stderr.log || { cat r2f-fresh-linux.stdout.log; cat r2f-fresh-linux.stderr.log; exit 1; }
+          grep -Fx 'A147_R2F_FRESH_POLICY PASS' r2f-fresh-linux.stdout.log
+          grep -F '"jobs_abandoned":2' r2f-fresh-linux.stdout.log
+          grep -F '"jobs_committed":1' r2f-fresh-linux.stdout.log
+          git diff --exit-code && git diff --cached --exit-code
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: a147-r2f-fresh-linux-double
+          path: |
+            r2f-fresh-linux-import.log
+            r2f-fresh-linux.stdout.log
+            r2f-fresh-linux.stderr.log
+          if-no-files-found: ignore
