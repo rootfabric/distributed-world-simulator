@@ -17,6 +17,10 @@ var _live_exports6: Dictionary = {}
 var _live_stages6: Dictionary = {}
 var _live_retired6: Dictionary = {}
 var _live_installed6: Dictionary = {}
+# R31b P1: monotone durable source epoch for changes outside M4's ordinary
+# _revision/_tick (player inventory seeding, live policy boot, restore).
+# A derived snapshot cache NEVER owns or mutates these canonical tables.
+var _r31bp1_durable_source_serial := 0
 
 func configure_live_items(fixture_owner: bool, spatial_validation: bool = true) -> Dictionary:
 	if not _configured or _live_enabled6 or _sandbox_mode or not _inventories.is_empty() or not _ledger.is_empty() or _revision != 0:
@@ -33,6 +37,7 @@ func configure_live_items(fixture_owner: bool, spatial_validation: bool = true) 
 		# sandbox inventory/tool seeding is enabled merely to get spatial checks.
 		for spec in [["item/shared/beacon/1", Vector3(1.2, 0.4, -3.4)], ["item/shared/ore/1", Vector3(-1.5, 0.35, -2.8)], ["item/shared/crate/1", Vector3(3.0, 0.8, -2.0)]]:
 			_items[spec[0]]["transform"] = PlayableStateCodec.create_transform_dto(Transform3D(Basis.IDENTITY, spec[1]))
+	_r31bp1_durable_source_serial += 1
 	return _success()
 
 func bind_live_item_actor(actor: String, gate, trusted_port) -> Dictionary:
@@ -68,7 +73,37 @@ func _live_epoch_admission6(actor: String, epoch: int, kind: String) -> Dictiona
 func ensure_player(actor: String) -> void:
 	if _live_enabled6 and _live_gates6.has(actor) and not _live_gates6[actor].is_locally_ready():
 		return
+	# P5 can seed an inventory/mining tool WITHOUT advancing M4 _revision.
+	# Detect that owner-native change before allowing any cached durable DTO.
+	var before_inventories: int = _inventories.size()
+	var before_items: int = _items.size()
 	super.ensure_player(actor)
+	if _inventories.size() != before_inventories or _items.size() != before_items:
+		_r31bp1_durable_source_serial += 1
+
+# Constant-time, owner-native durable fence, never inferred from replay alone.
+# _revision/_tick advance on canonical ITEM/output/carry commits, and the
+# serial protects changes with no revision (new player inventory/live boot,
+# restore). Replay generation adds a conservative extra invalidation guard.
+func get_r31bp1_durable_source_fence() -> Dictionary:
+	if not _configured:
+		return {}
+	return {
+		"schema": "dws.r31bp1.m4.durable_fence.v1",
+		"owner": _authority_owner_id,
+		"authority_epoch": _authority_epoch,
+		"revision": _revision,
+		"tick": _tick,
+		"source_serial": _r31bp1_durable_source_serial,
+		"replay_generation": get_replay_projection_generation(),
+		"sandbox": _sandbox_mode,
+		"live_items": _live_enabled6,
+		"live_spatial": _live_spatial6,
+		"live_fixture_owner": _live_fixture_owner6,
+		"instance_id": get_instance_id(),
+	}
+
+
 
 func lookup_replay(actor: String, epoch: int, operation: String, kind: String, payload: Dictionary) -> Dictionary:
 	var admitted := _live_epoch_admission6(actor, epoch, kind)
@@ -410,7 +445,11 @@ func restore_durable_state(value: Dictionary) -> Dictionary:
 	_live_enabled6 = not policy.is_empty()
 	_live_spatial6 = bool(policy.get("spatial_validation", false))
 	_live_fixture_owner6 = bool(policy.get("fixture_owner", true))
-	return super.restore_durable_state(value)
+	var restored: Dictionary = super.restore_durable_state(value)
+	if bool(restored.get("success", false)):
+		# A restart can restore the SAME revision/tick with DIFFERENT bytes.
+		_r31bp1_durable_source_serial += 1
+	return restored
 
 func restore_replay_state(value: Dictionary) -> Dictionary:
 	if not _live_gates6.is_empty(): return _failure("LIVE_HANDOFF_RESTART_RECONCILIATION_REQUIRED")

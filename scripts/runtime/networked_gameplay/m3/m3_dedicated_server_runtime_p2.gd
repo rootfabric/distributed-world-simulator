@@ -118,6 +118,8 @@ var _r3c4r30_stage_attribution_enabled := false
 var _r3c4r31_replay_projection_enabled := false
 # R3C.4 R3.1b P0: per-domain durable export attribution only (opt-in).
 var _r3c4r31b_durable_attribution_enabled := false
+# R31b P1 bounded immutable M4/mining durable chunks (default OFF).
+var _r3c4r31bp1_durable_chunks_enabled := false
 var _r3c4_deferral_started_ms := 0
 var _r3c4_deferred_frames := 0
 var _r3c4_capture_slots := 0
@@ -303,6 +305,15 @@ func setup(config: Dictionary) -> Dictionary:
 		return _failure("R3C4_R31B_REQUIRES_R31_REPLAY_PROJECTION")
 	if _r3c4r31b_durable_attribution_enabled and not bool(config.get("product_seam_enabled", false)):
 		return _failure("R3C4_R31B_REQUIRES_PRODUCT_SEAM")
+	var p1_mode := OS.get_environment("DWS_NET_R31BP1_DURABLE_CHUNKS")
+	if not p1_mode.is_empty() and p1_mode not in ["0", "1"]:
+		return _failure("R31BP1_INVALID_MODE")
+	_r3c4r31bp1_durable_chunks_enabled = (
+		bool(config.get("r31bp1_durable_chunks_canary", false))
+		or p1_mode == "1"
+	)
+	if _r3c4r31bp1_durable_chunks_enabled and not _r3c4r31b_durable_attribution_enabled:
+		return _failure("R31BP1_REQUIRES_R31B_DURABLE_ATTRIBUTION")
 	_p1b_item_async_enabled = (
 		bool(config.get("async_durable_item_canary", false))
 		or OS.get_environment("DWS_NET_P1B_ITEM_ASYNC") == "1"
@@ -2850,6 +2861,7 @@ func _persistence_report() -> Dictionary:
 		"r3c4r2_worker_envelope_enabled": _r3c4r2_worker_envelope_enabled,
 		"r3c4r31_replay_projection_enabled": _r3c4r31_replay_projection_enabled,
 		"r3c4r31b_durable_attribution_enabled": _r3c4r31b_durable_attribution_enabled,
+		"r31bp1_durable_chunks_enabled": _r3c4r31bp1_durable_chunks_enabled,
 		"r3c4_deferred_frames": _r3c4_deferred_frames,
 		"r3c4_capture_slots": _r3c4_capture_slots,
 		"r3c4_forced_captures": _r3c4_forced_captures,
@@ -3075,9 +3087,15 @@ func _submit_async_movement_checkpoint() -> void:
 		# Exactly one immutable value projection from the quiescent server
 		# state; the checksum-heavy EntitySnapshot envelope is made on worker.
 		if _r3c4r31b_durable_attribution_enabled:
-			var profiled_source: Dictionary = (
-				_recovery_authority.capture_frozen_gameplay_source_r31b_profiled()
-			)
+			var profiled_source: Dictionary = {}
+			if _r3c4r31bp1_durable_chunks_enabled:
+				profiled_source = (
+					_recovery_authority.capture_frozen_gameplay_source_r31bp1_chunks()
+				)
+			else:
+				profiled_source = (
+					_recovery_authority.capture_frozen_gameplay_source_r31b_profiled()
+				)
 			frozen_gameplay = Dictionary(profiled_source.get("frozen_gameplay", {}))
 			r31b_durable_stages = Dictionary(profiled_source.get("stages", {}))
 		else:
@@ -3135,6 +3153,7 @@ func _submit_async_movement_checkpoint() -> void:
 			"outbox_count": Array(replay.get("committed_outbox", [])).size()}
 		if _r3c4r31b_durable_attribution_enabled:
 			capture_event["r31b_durable_stages"] = r31b_durable_stages.duplicate(true)
+			capture_event["r31bp1_durable_chunks"] = _r3c4r31bp1_durable_chunks_enabled
 		if _r3c4r31_replay_projection_enabled:
 			capture_event["r31_cache_hit"] = bool(
 				replay_projection_result.get("cache_hit", false))

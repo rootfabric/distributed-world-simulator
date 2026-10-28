@@ -17,6 +17,8 @@ var _generation := 0
 var _nodes: Dictionary = {}
 var _ledger: Dictionary = {}
 var _replay_projection_generation := 0
+# R31b P1: restore can reuse an old _generation with different node bytes.
+var _r31bp1_durable_source_serial := 0
 var _item_graph
 var _spatial_resolver
 
@@ -49,6 +51,7 @@ func setup(
 	_authority_epoch = authority_epoch
 	_generation = 1
 	_nodes = Dictionary(catalog_result.get("details", {}).get("nodes", {})).duplicate(true)
+	_r31bp1_durable_source_serial += 1
 	_ledger.clear()
 	_replay_projection_generation += 1
 	_item_graph = item_graph
@@ -163,6 +166,21 @@ func get_node(resource_node_id: String) -> Dictionary:
 	var node_id := resource_node_id.strip_edges().to_lower()
 	return Dictionary(_nodes[node_id]).duplicate(true) if _nodes.has(node_id) else {}
 
+# A stable owner+epoch+generation+reset fence. Mining increments _generation;
+# setup/restore also bump an independent serial to prevent ABA reuse.
+func get_r31bp1_durable_source_fence() -> Dictionary:
+	if not _configured:
+		return {}
+	return {
+		"schema": "dws.r31bp1.resource.durable_fence.v1",
+		"owner": _authority_owner_id,
+		"authority_epoch": _authority_epoch,
+		"generation": _generation,
+		"source_serial": _r31bp1_durable_source_serial,
+		"instance_id": get_instance_id(),
+	}
+
+
 
 func export_durable_state() -> Dictionary:
 	if not _configured:
@@ -205,6 +223,7 @@ func restore_durable_state(value: Dictionary) -> Dictionary:
 	_authority_epoch = int(snapshot.get("authority_epoch", 0))
 	_generation = int(snapshot.get("generation", 0))
 	_nodes = staged_nodes
+	_r31bp1_durable_source_serial += 1
 	_configured = true
 	return _success({
 		"generation": _generation,
