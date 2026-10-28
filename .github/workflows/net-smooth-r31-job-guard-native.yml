@@ -1,0 +1,44 @@
+name: NET-SMOOTH1 B3 Windows Job containment tools
+on:
+  push:
+    branches: [work/net-smooth1-r31-b3-job-guard-r1]
+  pull_request:
+    paths:
+      - tools/net_smooth1/win_job_guard.py
+      - tools/net_smooth1/run_r31_job_guard.py
+      - tests/tools/test_r31_job_guard_portable.py
+      - tests/tools/test_r31_job_guard_native.py
+      - .github/workflows/net-smooth-r31-job-guard-native.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  portable-logic:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m unittest discover -s tests/tools -p 'test_r31_job_guard_portable.py' -v
+  windows-native-job-not-godot:
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Portable logic
+        run: python -m unittest discover -s tests/tools -p 'test_r31_job_guard_portable.py' -v
+      - name: Native Windows process tree and controller-crash falsifiers
+        env:
+          R31_JOB_NATIVE_EVIDENCE: artifacts/r31-job-native
+        run: python -m unittest discover -s tests/tools -p 'test_r31_job_guard_native.py' -v
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: r31-job-native-not-godot
+          path: artifacts/r31-job-native/
+          if-no-files-found: warn
