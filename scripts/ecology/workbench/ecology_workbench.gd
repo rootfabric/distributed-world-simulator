@@ -61,6 +61,9 @@ var staged_cursor_cap_bytes := 8388608
 ## A14.6 R3 explicitly opt-in; accepted A14.5 staged LAB remains default.
 var staged_r3_allocator_enabled := false
 var staged_r3_allocator_items := 16
+# Extra R3.2 opt-in: CPU-only global A4 works away from the UI thread.
+# Disabled by default, including when R3 allocator is enabled.
+var staged_r3_off_main_enabled := false
 var running := false
 # Pending run target (P5): {"kind": "tick"|"generation"|"condition", ...} or {}.
 var pending_target: Dictionary = {}
@@ -383,6 +386,11 @@ func _set_branch_status(text: String) -> void:
 # --- Tick-driven update with wall-clock budget ------------------------------
 
 func _process(delta: float) -> void:
+	# Even after PAUSE or opt-out, continue nonblocking cleanup of an
+	# abandoned CPU worker so its pool task is eventually joined exactly
+	# once. This operation NEVER starts or commits ecology.
+	if controller != null and controller.has_method("reap_cancelled_staged_worker"):
+		controller.reap_cancelled_staged_worker()
 	if not running or controller == null:
 		return
 	_wall_elapsed += delta
@@ -435,7 +443,7 @@ func _process_staged_live(interval: float) -> void:
 		staged_wall_budget_us, staged_resumes_per_frame,
 		staged_worksets_per_resume, staged_max_members,
 		staged_cursor_cap_bytes, staged_r3_allocator_enabled,
-		staged_r3_allocator_items)
+		staged_r3_allocator_items, staged_r3_off_main_enabled)
 	if not bool(result.get("success", false)):
 		running = false
 		_refresh_from_controller(false)
@@ -449,15 +457,24 @@ func _process_staged_live(interval: float) -> void:
 			running = false
 		_refresh_from_controller(false)
 	elif _status_bar != null:
-		# No speculative organism presentation is ever published.
-		_update_status_bar(controller.get_snapshot())
+		# Pending asynchronous frames avoid the expensive canonical
+		# get_snapshot() presentation rebuild on the MAIN thread.
+		if staged_r3_off_main_enabled:
+			_status_bar.text = "LAB R3.2 CPU worker · canonical tick %d · %s" % [
+				int(controller.tick()), String(result.get("phase", "BACKGROUND"))]
+		else:
+			# Historical accepted A14.5/R3 UI behavior stays unchanged.
+			_update_status_bar(controller.get_snapshot())
 
 ## Opt-in control. Disabling/reconfiguring while a tick is half-prepared
 ## cancels its host-only cursor and leaves the committed tick unchanged.
 func configure_staged_live(enabled: bool, soft_budget_us: int = 30000,
 		resumes_per_frame: int = 1, worksets_per_resume: int = 1,
 		max_members: int = 8, cursor_cap_bytes: int = 8388608,
-		use_r3_allocator: bool = false, allocator_items_per_call: int = 16) -> bool:
+		use_r3_allocator: bool = false, allocator_items_per_call: int = 16,
+		use_off_main_r3: bool = false) -> bool:
+	if use_off_main_r3 and not use_r3_allocator:
+		return false
 	if soft_budget_us < 1 or soft_budget_us > 1000000000 \
 			or resumes_per_frame < 1 or resumes_per_frame > 16 \
 			or worksets_per_resume < 1 or worksets_per_resume > 64 \
@@ -474,6 +491,7 @@ func configure_staged_live(enabled: bool, soft_budget_us: int = 30000,
 	staged_cursor_cap_bytes = cursor_cap_bytes
 	staged_r3_allocator_enabled = enabled and use_r3_allocator
 	staged_r3_allocator_items = allocator_items_per_call
+	staged_r3_off_main_enabled = enabled and use_r3_allocator and use_off_main_r3
 	return true
 
 func _cancel_staged_pending() -> void:

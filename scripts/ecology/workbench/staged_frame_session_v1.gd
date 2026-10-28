@@ -10,6 +10,7 @@ extends RefCounted
 const C = preload("res://scripts/research/ecology/v2/canonical_value_v1.gd")
 const Runtime = preload("res://scripts/research/ecology/v2/ecology_runtime_v1.gd")
 const Spatial = preload("res://scripts/research/ecology/v2/population_spatial_workset_plan_v1.gd")
+const OffMain = preload("res://scripts/ecology/workbench/off_main_r3_session_v1.gd")
 
 const DEFAULT_SOFT_BUDGET_US := 30000
 const DEFAULT_MAX_RESUMES := 1
@@ -24,6 +25,7 @@ const PHASES := ["BEGIN", "PREPARE", "ALLOCATE", "ADVANCE"]
 const SCHEMA := "dws.ecology.a14-5-r3-host-staged-session.v1"
 
 var _cursor: Dictionary = {}
+var _off_main: RefCounted = OffMain.new()
 var _members := 0
 var _r3_allocator := false
 var _allocator_items := 0
@@ -46,10 +48,11 @@ var _samples: Dictionary = {
 }
 
 func has_pending() -> bool:
-	return not _cursor.is_empty()
+	return not _cursor.is_empty() or _off_main.has_pending()
 
 func cancel() -> Dictionary:
 	var was_pending := has_pending()
+	_off_main.cancel()
 	_cursor = {}
 	_members = 0
 	_r3_allocator = false
@@ -58,6 +61,9 @@ func cancel() -> Dictionary:
 	if was_pending:
 		_cancelled += 1
 	return {"success": true, "cancelled": was_pending}
+
+func reap_cancelled_off_main() -> bool:
+	return _off_main.reap_discarded()
 
 func reset_telemetry() -> void:
 	cancel()
@@ -83,7 +89,8 @@ func advance(state: Dictionary, options: Dictionary,
 		max_members: int = DEFAULT_MEMBERS,
 		cursor_cap_bytes: int = DEFAULT_CURSOR_BYTES,
 		use_r3_allocator: bool = false,
-		allocator_items_per_call: int = 16) -> Dictionary:
+		allocator_items_per_call: int = 16,
+		use_off_main_r3: bool = false) -> Dictionary:
 	if not C.integer(soft_budget_us, 1, 1000000000) \
 			or not C.integer(max_resumes, 1, MAX_RESUMES) \
 			or not C.integer(max_worksets, 1, MAX_WORKSETS) \
@@ -91,6 +98,27 @@ func advance(state: Dictionary, options: Dictionary,
 			or not C.integer(cursor_cap_bytes, 1024, MAX_CURSOR_BYTES) \
 			or not C.integer(allocator_items_per_call, 1, 4096):
 		return _error("STAGED_SESSION_PARAMETERS", false)
+	# R3.2 is a separate LAB-only execution option. Existing R3/A14.5
+	# behavior remains byte-for-byte unchanged unless this flag is set.
+	if use_off_main_r3:
+		if not use_r3_allocator:
+			return _error("STAGED_SESSION_OFFMAIN_REQUIRES_R3", false)
+		if not _cursor.is_empty():
+			return _error("STAGED_SESSION_LEGACY_PENDING", false)
+		_calls += 1
+		var async_step: Dictionary = _off_main.advance(
+			state, options, max_members, allocator_items_per_call, cursor_cap_bytes)
+		if not bool(async_step.get("success", false)):
+			return _error("STAGED_SESSION_OFFMAIN:" +
+				String(async_step.get("error", "?")), true)
+		if bool(async_step.get("complete", false)):
+			_completed_ticks += 1
+		_last_call_us = int(async_step.get("wall_us", 0))
+		_peak_call_us = maxi(_peak_call_us, _last_call_us)
+		return async_step
+	if _off_main.has_pending():
+		return _error("STAGED_SESSION_OFFMAIN_PENDING", false)
+	_off_main.reap_discarded()
 	if has_pending() and max_members != _members:
 		return _error("STAGED_SESSION_MEMBERS_CHANGED", true)
 	if has_pending() and (use_r3_allocator != _r3_allocator \
@@ -173,9 +201,12 @@ func advance(state: Dictionary, options: Dictionary,
 	return _pending_result(started_us, soft_budget_us, resumed)
 
 func status() -> Dictionary:
+	_off_main.reap_discarded()
 	var phase := "NONE"
-	if has_pending():
+	if not _cursor.is_empty():
 		phase = String(_cursor.lifecycle.get("phase", "?"))
+	elif _off_main.has_pending():
+		phase = "BACKGROUND"
 	var by_phase := {}
 	for phase_name in PHASES:
 		var values: Array = _samples[phase_name]
@@ -204,6 +235,7 @@ func status() -> Dictionary:
 			peak = int(ordered.back())
 		r3_by_phase[subphase] = {"samples": ordered.size(), "p95_us": p95, "peak_us": peak}
 	return {"schema": SCHEMA, "pending": has_pending(), "phase": phase,
+		"off_main": _off_main.status(),
 		"r3_allocator_enabled": _r3_allocator,
 		"r3_allocator_subphase": allocator_subphase,
 		"r3_allocator_calls": _r3_allocator_calls,
