@@ -95,7 +95,9 @@ func advance(state: Dictionary, options: Dictionary,
 		lease_generation: int = -1,
 		projection_manifest: Dictionary = {},
 		r2e2_owned_fast: bool = false,
-		r2e3_original_a4: bool = false) -> Dictionary:
+		r2e3_original_a4: bool = false,
+		r2f_worksets_per_resume: int = 1,
+		r2f_parallel_workers: int = 1) -> Dictionary:
 	if not C.integer(soft_budget_us, 1, 1000000000) \
 			or not C.integer(max_resumes, 1, MAX_RESUMES) \
 			or not C.integer(max_worksets, 1, MAX_WORKSETS) \
@@ -110,6 +112,14 @@ func advance(state: Dictionary, options: Dictionary,
 		return _error("R2E2_STAGED_REQUIRES_CONTROLLER_LEASE", false)
 	if r2e3_original_a4 and not r2e2_owned_fast:
 		return _error("R2E3_REQUIRES_DEEP_OWNED_LAB", false)
+	if not C.integer(r2f_worksets_per_resume, 1, 64) \
+			or not C.integer(r2f_parallel_workers, 1, 8):
+		return _error("R2F_STAGED_WORKSET_POLICY", false)
+	if (r2f_worksets_per_resume != 1 or r2f_parallel_workers != 1) \
+			and not (use_off_main_r3 and r2e2_owned_fast and r2e3_original_a4 \
+			and lease_owner != null and lease_token != null \
+			and lease_generation >= 0):
+		return _error("R2F_STAGED_REQUIRES_OWNED_E3", false)
 	# R3.2 is a separate LAB-only execution option. Existing R3/A14.5
 	# behavior remains byte-for-byte unchanged unless this flag is set.
 	if use_off_main_r3:
@@ -121,7 +131,8 @@ func advance(state: Dictionary, options: Dictionary,
 		var async_step: Dictionary = _off_main.advance(
 			state, options, max_members, allocator_items_per_call, cursor_cap_bytes,
 			lease_owner, lease_token, lease_generation, projection_manifest,
-			1, 1, false, r2e2_owned_fast, r2e3_original_a4)
+			r2f_worksets_per_resume, r2f_parallel_workers, false,
+			r2e2_owned_fast, r2e3_original_a4)
 		if not bool(async_step.get("success", false)):
 			return _error("STAGED_SESSION_OFFMAIN:" +
 				String(async_step.get("error", "?")), true)

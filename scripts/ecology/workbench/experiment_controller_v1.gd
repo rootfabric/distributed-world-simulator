@@ -256,7 +256,20 @@ func run_staged_frame(soft_budget_us: int = StagedSession.DEFAULT_SOFT_BUDGET_US
 		use_off_main_r3: bool = false,
 		use_r323_presentation: bool = false,
 		use_r2e2_owned_fast: bool = false,
-		use_r2e3_original_a4: bool = false) -> Dictionary:
+		use_r2e3_original_a4: bool = false,
+		r2f_worksets_per_resume: int = 1,
+		r2f_parallel_workers: int = 1) -> Dictionary:
+	# A14.7 R2F: allow the FULL A13 Stage B/C execution envelope inside
+	# the same real LAB Controller + E2/E3 owned worker. Defaults 1/1
+	# preserve all accepted original GUI and untrusted public behavior.
+	# Reject invalid settings BEFORE issuing or renewing any source lease.
+	if not C.integer(r2f_worksets_per_resume, 1, 64) \
+			or not C.integer(r2f_parallel_workers, 1, 8):
+		return _command_fail("CONTROLLER_R2F_WORKSET_POLICY")
+	if (r2f_worksets_per_resume != 1 or r2f_parallel_workers != 1) \
+			and not (use_r2e3_original_a4 and use_r2e2_owned_fast \
+			and use_off_main_r3 and use_r3_allocator):
+		return _command_fail("CONTROLLER_R2F_REQUIRES_OWNED_E3")
 	if use_r2e3_original_a4 and not use_r2e2_owned_fast:
 		return _command_fail("CONTROLLER_R2E3_REQUIRES_OWNED_E2")
 	if use_r2e2_owned_fast and not (use_off_main_r3 and use_r3_allocator):
@@ -302,7 +315,8 @@ func run_staged_frame(soft_budget_us: int = StagedSession.DEFAULT_SOFT_BUDGET_US
 		_r322_lease_token if use_off_main_r3 else null,
 		_r322_generation if use_off_main_r3 else -1,
 		_manifest.duplicate(true) if use_r323_presentation else {},
-		use_r2e2_owned_fast, use_r2e3_original_a4)
+		use_r2e2_owned_fast, use_r2e3_original_a4,
+		r2f_worksets_per_resume, r2f_parallel_workers)
 	if not bool(result.get("success", false)):
 		_r322_revoke_lease()
 		# Transient plan/resource errors fail closed. If the underlying

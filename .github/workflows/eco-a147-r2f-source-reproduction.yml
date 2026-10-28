@@ -1,0 +1,36 @@
+name: ECO A147 R2F Source Reproduction Bundle
+
+on:
+  push:
+    branches:
+      - feature/eco-a147-r2f-review-findings-closure-r1
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  source:
+    name: Frozen source bundle for local independent pinned Linux Double
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Archive R2F source without git secrets
+        shell: bash
+        run: |
+          set -euo pipefail
+          git rev-parse HEAD
+          test -f project.godot
+          tar -czf r2f-exact-source.tar.gz --exclude='*.uid' project.godot scripts validation tests config addons assets scenes
+          sha256sum r2f-exact-source.tar.gz > r2f-exact-source.sha256
+          ls -lh r2f-exact-source.tar.gz
+          git diff --exit-code && git diff --cached --exit-code
+      - uses: actions/upload-artifact@v4
+        with:
+          name: a147-r2f-exact-source
+          path: |
+            r2f-exact-source.tar.gz
+            r2f-exact-source.sha256
+          if-no-files-found: error
