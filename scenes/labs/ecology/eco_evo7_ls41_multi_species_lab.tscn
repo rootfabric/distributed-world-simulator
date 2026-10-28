@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/labs/ecology/eco_evo7_ls41_multi_species_lab.gd" id="1_ls41"]
+
+[node name="EcoEvo7LS41MultiSpeciesLab" type="Node2D"]
+script = ExtResource("1_ls41")
