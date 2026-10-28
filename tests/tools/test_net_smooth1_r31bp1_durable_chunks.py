@@ -1,5 +1,6 @@
-"""R31b P1 durable chunk cache analyzer: exact and fail-closed negatives."""
+"""R31b P1 measured-window hit-rate, startup contamination and bypass falsifiers."""
 from __future__ import annotations
+
 import json
 from pathlib import Path
 import sys
@@ -11,83 +12,140 @@ sys.path.insert(0, str(ROOT / "tools/net_smooth1"))
 from analyze_r31bp1_durable_chunks import analyze
 
 
-def report(*, hits=99, misses=1, bypasses=0, bytes_=2048, cached=True, enabled=True,
-           fence=True):
-    def component(cached_value):
+def report(i: int, *, hits: int | None = None, misses: int = 1,
+           bypasses: int = 0, reason: str = "", bytes_: int = 2048,
+           cached: bool = True, fence: bool = True) -> dict:
+    def component(kind: str) -> dict:
         return {
-            "enabled": True, "max_chunk_bytes": 4 * 1024 * 1024,
-            "hits": hits, "misses": misses, "bypasses": bypasses,
-            "bytes": bytes_ if cached_value else 0,
-            "cached": cached_value,
-            "fence": {"kind": "x", "instance_id": 1, "authority_owner_id": "a",
-                      "authority_epoch": 1, "state_serial": 7}
-                      if cached_value and fence else {},
+            "hits": 100 + i if hits is None else hits,
+            "misses": misses,
+            "bypasses": bypasses,
+            "bypass_reasons": {reason: bypasses} if reason and bypasses else {},
+            "bytes": bytes_ if cached else 0,
+            "cached": cached,
+            "fence": {
+                "kind": kind, "instance_id": 7,
+                "authority_owner_id": "authority/m3",
+                "authority_epoch": 1, "state_serial": 3,
+                **({"revision": 10, "tick": 10}
+                   if kind == "item_graph" else {"generation": 5}),
+            } if fence else {},
         }
-    return {"enabled": enabled,
-            "item_graph": component(cached),
-            "resource_mining": component(cached)}
+    return {"enabled": True, "max_chunk_bytes": 4 * 1024 * 1024,
+            "item_graph": component("item_graph"),
+            "resource_mining": component("resource_mining")}
 
 
-def capture(t: int, rep=None, seam=1, valid=True) -> dict:
-    stages = {"total_ms": 8.0, "item_graph_ms": 1.0, "resource_ms": 1.0,
-              "valid": valid, "seam_coordinator_count": seam}
-    data = {"r3c4r2_worker_envelope": True, "r31_cache_hit": True,
-            "authority_ms": 12.0, "r31b_durable_stages": stages}
-    if rep is not False:
-        data["r31bp1_durable_chunks"] = rep if rep is not None else report()
-    return {"t_us": t, "kind": "checkpoint_capture", "measure": True, "data": data}
+def event(i: int, *, rep=None, fallback=False, valid=True) -> dict:
+    stage = ({"fallback_ms": 9.0, "seam_coordinator_count": 0}
+             if fallback else {
+                 "total_ms": 11.0, "item_graph_ms": .2,
+                 "resource_ms": .1, "validation_ms": 7.0,
+                 "final_checksum_ms": 3.2,
+                 "valid": valid, "seam_coordinator_count": 1,
+             })
+    return {
+        "kind": "checkpoint_capture", "measure": True, "t_us": i * 1200000,
+        "data": {
+            "r3c4r2_worker_envelope": True, "r31_cache_hit": True,
+            "r31b_durable_stages": stage,
+            "r31bp1_durable_chunks": report(i) if rep is None else rep,
+        },
+    }
 
 
 def run(events: list[dict]) -> dict:
     with tempfile.TemporaryDirectory() as d:
-        p = Path(d) / "server.jsonl"
-        p.write_text("".join(json.dumps(ev) + "\n" for ev in events), encoding="utf-8")
-        return analyze(p)
+        path = Path(d) / "server.jsonl"
+        path.write_text("".join(json.dumps(ev) + "\n" for ev in events), encoding="utf-8")
+        return analyze(path)
 
 
-class ChunkCacheAnalyzer(unittest.TestCase):
-    def test_valid_warm_run_passes(self):
-        r = run([capture(i) for i in range(20)])
+class MeasuredWindowFalsifiers(unittest.TestCase):
+    def test_active_measured_counter_deltas_not_startup(self):
+        r = run([event(i) for i in range(20)])
         self.assertEqual(r["verdict"], "R31BP1_CHUNK_CACHE_ATTRIBUTION_VALID_ONLY")
         self.assertEqual(r["checkpoint_count"], 20)
+        self.assertEqual(r["active_measured"], 20)
         for kind in ("item_graph", "resource_mining"):
-            self.assertGreaterEqual(r["components"][kind]["hit_rate"], 0.9)
+            c = r["components"][kind]
+            self.assertEqual(c["hits"], 19)
+            self.assertEqual(c["misses"], 0)
+            self.assertEqual(c["startup_baseline"]["hits"], 100)
+            self.assertEqual(c["measurement_basis"],
+                             "difference_from_first_active_measured_capture")
+
+    def test_legitimate_unbound_population_not_counted_as_active(self):
+        rows = [event(i, fallback=True) for i in range(18)]
+        rows.extend(event(i) for i in range(18, 79))
+        r = run(rows)
+        self.assertEqual(r["active_measured"], 61)
+        self.assertEqual(r["seam_unbound_fallback_measured"], 18)
+        self.assertEqual(r["components"]["item_graph"]["hits"], 60)
+
+    def test_huge_warmup_counts_cannot_fake_good_measured_hit_rate(self):
+        rows = [event(i, rep=report(i, hits=999999, misses=i+1))
+                for i in range(20)]
+        with self.assertRaisesRegex(ValueError, "HIT_RATE_BELOW_90PCT"):
+            run(rows)
 
     def test_missing_report_fails(self):
-        with self.assertRaisesRegex(ValueError, "R31BP1_CACHE_REPORT_MISSING"):
-            run([capture(i, rep=False) for i in range(20)])
+        rows = [event(i) for i in range(20)]
+        rows[1]["data"].pop("r31bp1_durable_chunks")
+        with self.assertRaisesRegex(ValueError, "CACHE_REPORT_MISSING"):
+            run(rows)
 
-    def test_hit_rate_below_90_fails(self):
-        with self.assertRaisesRegex(ValueError, "HIT_RATE_BELOW_90PCT"):
-            run([capture(i, rep=report(hits=5, misses=5)) for i in range(20)])
+    def test_source_fence_change_reason_fails(self):
+        rows = [
+            event(i, rep=report(i, misses=1 + (i >= 8),
+                                bypasses=int(i >= 8), reason="SOURCE_FENCE_CHANGED"))
+            for i in range(20)
+        ]
+        with self.assertRaisesRegex(ValueError, "UNEXPECTED_BYPASS"):
+            run(rows)
+
+    def test_explicit_oversize_bypass_is_accounted(self):
+        rows = [
+            event(i, rep=report(i, misses=1+int(i>=7), bypasses=int(i>=7),
+                                reason="CHUNK_OVERSIZE"))
+            for i in range(20)
+        ]
+        r = run(rows)
+        self.assertEqual(r["components"]["item_graph"]["bypasses"], 1)
+        self.assertEqual(r["components"]["item_graph"]["bypass_reasons"]["CHUNK_OVERSIZE"], 1)
+
+    def test_inconsistent_bypass_counter_fails(self):
+        rows = [event(i) for i in range(20)]
+        rows[10]["data"]["r31bp1_durable_chunks"]["item_graph"]["bypasses"] = 9
+        with self.assertRaisesRegex(ValueError, "BYPASS_ACCOUNTING"):
+            run(rows)
+
+    def test_counter_reset_fails(self):
+        rows = [event(i) for i in range(20)]
+        rows[14]["data"]["r31bp1_durable_chunks"]["resource_mining"]["hits"] = 3
+        with self.assertRaisesRegex(ValueError, "COUNTER_RESET"):
+            run(rows)
 
     def test_disabled_cache_fails(self):
-        with self.assertRaisesRegex(ValueError, "R31BP1_CACHE_NOT_ENABLED"):
-            run([capture(i, rep=report(enabled=False)) for i in range(20)])
+        rows = [event(i) for i in range(20)]
+        rows[2]["data"]["r31bp1_durable_chunks"]["enabled"] = False
+        with self.assertRaisesRegex(ValueError, "CACHE_REPORT_MISSING_OR_DISABLED"):
+            run(rows)
 
-    def test_oversize_bypass_is_measured_allowed(self):
-        r = run([capture(i, rep=report(bypasses=1, cached=False)) for i in range(20)])
-        self.assertEqual(r["components"]["item_graph"]["bypasses"], 1)
-
-    def test_invalid_chunk_size_fails(self):
-        with self.assertRaisesRegex(ValueError, "ITEM_GRAPH_SIZE_INVALID"):
-            run([capture(i, rep=report(bytes_=9 * 1024 * 1024)) for i in range(20)])
+    def test_oversized_cached_chunk_fails(self):
+        rows = [event(i, rep=report(i, bytes_=9*1024*1024))
+                for i in range(20)]
+        with self.assertRaisesRegex(ValueError, "SIZE_INVALID"):
+            run(rows)
 
     def test_invalid_fence_fails(self):
-        with self.assertRaisesRegex(ValueError, "ITEM_GRAPH_FENCE_INVALID"):
-            run([capture(i, rep=report(fence=False)) for i in range(20)])
+        rows = [event(i, rep=report(i, fence=False)) for i in range(20)]
+        with self.assertRaisesRegex(ValueError, "FENCE_INVALID"):
+            run(rows)
 
-    def test_insufficient_samples_fails(self):
-        with self.assertRaisesRegex(ValueError, "R31BP1_INSUFFICIENT_SAMPLES"):
-            run([capture(0)])
-
-    def test_no_activity_fails(self):
-        empty = {"enabled": True, "item_graph": {"hits": 0, "misses": 0,
-                 "bypasses": 0, "bytes": 0, "cached": False, "fence": {}},
-                 "resource_mining": {"hits": 0, "misses": 0, "bypasses": 0,
-                 "bytes": 0, "cached": False, "fence": {}}}
-        with self.assertRaisesRegex(ValueError, "NO_MEASURED_ACTIVITY"):
-            run([capture(i, rep=empty) for i in range(20)])
+    def test_insufficient_active_fails_closed(self):
+        with self.assertRaisesRegex(ValueError, "INSUFFICIENT_ACTIVE"):
+            run([event(i, fallback=True) for i in range(20)])
 
 
 if __name__ == "__main__":

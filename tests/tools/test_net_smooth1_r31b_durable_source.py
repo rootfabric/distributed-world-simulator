@@ -31,10 +31,11 @@ class Source(unittest.TestCase):
         self.assertIn("_build_remote_player_durable_state", normal)
         self.assertIn("_build_remote_ownership_durable_state", normal)
         self.assertIn("_shared_items.export_durable_state()", normal)
-        # R31b P1: the two immutable chunk components flow through the
-        # fail-closed cache helper; every other component export is unchanged.
-        self.assertIn('_r31bp1_export_component(_canonical_multiplayer_items, "item_graph")', normal)
-        self.assertIn('_r31bp1_export_component(_resource_mining, "resource_mining")', normal)
+        # R31b P1 repair: DIRECT command/ACK path stays exactly legacy.
+        # The cache helper exists only in export_durable_state_r31b_profiled.
+        self.assertIn("_canonical_multiplayer_items.export_durable_state()", normal)
+        self.assertIn("_resource_mining.export_durable_state()", normal)
+        self.assertNotIn("_r31bp1_export_component", normal)
         self.assertIn("SeamUtils.finalize_json_checksum(state)", normal)
         self.assertIn("validate_durable_state(state)", normal)
         self.assertNotIn("await ", normal)
