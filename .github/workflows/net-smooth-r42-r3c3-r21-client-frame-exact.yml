@@ -6,6 +6,7 @@ on:
       - repair/net-smooth1-r42-r3c3-r21-client-frame-pacing-r1
       - repair/net-smooth1-r42-r3c21-r2-exact-parse-r1
       - review/net-smooth1-r42-r3c21-persistence-exact-r1
+      - repair/net-smooth1-r31-measure-full-duration-r1
   workflow_dispatch:
 
 permissions:
@@ -33,6 +34,7 @@ jobs:
           set -euo pipefail
           python -m unittest discover -s tests/tools -p 'test_net_smooth1_r42_r3c21_frame_pacing_source_contract.py' -v
           python -m unittest discover -s tests/tools -p 'test_net_smooth1_r42_r3c21_persistence_projection_source_contract.py' -v
+          python -m unittest discover -s tests/tools -p 'test_net_smooth1_r31_measure_full_duration.py' -v
           python -m unittest discover -s tests/tools -p 'test_net_smooth1_r42_r3c21_visual_analyzer.py' -v
           python -m unittest discover -s tests/tools -p 'test_net_smooth1_r42_r3c3_r1_source_contract.py' -v
           python -m unittest discover -s tests/tools -p 'test_net_smooth1_r42_r3c2_source_contract.py' -v
@@ -57,12 +59,15 @@ jobs:
           $ErrorActionPreference='Stop'
           $Base='1645bba8af775fb989717b8a556f7431ca347dc4'
           $RepairBase='1205996dbf3e17295b88e7c4142bb209d1ca7320'
+          $HarnessBase='3079dc6fb1785156718f48385276445e47ea19f3'
           $B='C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe'
           if ((git rev-parse HEAD).Trim() -ne $env:GITHUB_SHA) { throw 'R3C21_HEAD_MISMATCH' }
           git merge-base --is-ancestor $Base HEAD
           if ($LASTEXITCODE -ne 0) { throw 'R3C21_PARENT_NOT_ANCESTOR' }
           git merge-base --is-ancestor $RepairBase HEAD
           if ($LASTEXITCODE -ne 0) { throw 'R3C21_REPAIR_PARENT_NOT_ANCESTOR' }
+          git merge-base --is-ancestor $HarnessBase HEAD
+          if ($LASTEXITCODE -ne 0) { throw 'R3C21_R31_HARNESS_PARENT_NOT_ANCESTOR' }
           if (git status --porcelain --untracked-files=no) { throw 'R3C21_TRACKED_DIRTY' }
           if (-not (Test-Path $B)) { throw 'R3C21_GODOT_MISSING' }
           $Version=(& $B --version | Out-String).Trim()
@@ -158,9 +163,11 @@ jobs:
           mkdir -p "$E"
           BASE='1645bba8af775fb989717b8a556f7431ca347dc4'
           REPAIR_BASE='1205996dbf3e17295b88e7c4142bb209d1ca7320'
+          HARNESS_BASE='3079dc6fb1785156718f48385276445e47ea19f3'
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
           git merge-base --is-ancestor "$BASE" HEAD
           git merge-base --is-ancestor "$REPAIR_BASE" HEAD
+          git merge-base --is-ancestor "$HARNESS_BASE" HEAD
           test -z "$(git status --porcelain --untracked-files=no)"
           B="${DWS_GODOT_DOUBLE_LINUX_BIN:-$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64}"
           test -x "$B"
