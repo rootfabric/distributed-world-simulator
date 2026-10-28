@@ -143,6 +143,30 @@ def bridge(port: int, token: str, method: str, params: dict | None = None,
     return reply['result']
 
 
+
+def build_engine_launch(godot: Path, role: str, mode: str,
+                        server_max_fps: int) -> list[str]:
+    """Diagnostic only: change ONLY dedicated server engine frame pacing.
+
+    Real simulation remains FixedTickScheduler(60Hz); both graphical
+    clients retain the original 60fps cap and VSync setting. Legacy
+    behavior remains the default when server_max_fps == 60.
+    """
+    if server_max_fps not in (60, 90, 120):
+        raise ValueError('INVALID_SERVER_FRAME_PACING_MODE')
+    if role not in ('server', 'a', 'b') or mode not in ('gui', 'headless'):
+        raise ValueError('INVALID_PACING_ROLE_OR_MODE')
+    effective_fps = server_max_fps if role == 'server' else 60
+    engine = [str(godot), '--path', str(ROOT), '--max-fps',
+              str(effective_fps), '--disable-vsync']
+    if role == 'server' or mode == 'headless':
+        engine += ['--headless']
+    else:
+        engine += ['--rendering-driver', 'opengl3', '--windowed',
+                   '--resolution', '900x600',
+                   '--position', '20,60' if role == 'a' else '940,60']
+    return engine
+
 def play(args, manifest: dict) -> None:
     root=args.output
     udp=free_port(True); ports={name:free_port() for name in ('a','b')}
@@ -152,6 +176,8 @@ def play(args, manifest: dict) -> None:
                     snapshot_stages_required=True,
                     durable_stages_required=args.scenario in ('durable-commands', 'r3-slow-item'),
                     renderer='opengl3' if args.mode=='gui' else 'headless',resolution='900x600',max_fps=60,
+                    server_max_fps=args.server_max_fps,
+                    server_pacing_diagnostic=args.server_max_fps!=60,
                     vsync='disabled',phase_results=[],checkpoint_mode=args.checkpoint_mode,
                     r3c_async_admission=args.r3c_async_admission,
                     slow_item_writer_ms=args.slow_item_writer_ms,
@@ -234,10 +260,7 @@ def play(args, manifest: dict) -> None:
             # Test-only worker injection, never delay the main-thread loop.
             env['DWS_NET_SMOOTH_TEST_HOOKS']='1'
             env['DWS_NET_SMOOTH_TEST_ITEM_DELAY_MS']=str(args.slow_item_writer_ms)
-        engine=[str(args.godot),'--path',str(ROOT),'--max-fps','60','--disable-vsync']
-        if role=='server' or args.mode=='headless': engine += ['--headless']
-        else: engine += ['--rendering-driver','opengl3','--windowed','--resolution','900x600',
-                         '--position','20,60' if role=='a' else '940,60']
+        engine=build_engine_launch(args.godot, role, args.mode, args.server_max_fps)
         game=['--',f'--role={"dedicated-server" if role=="server" else "game-client"}',
               '--network-mvp','--world=earth','--server-address=127.0.0.1',f'--server-port={udp}',
               '--network-debug','--network-debug-stay-open',f'--network-profile={args.profile}',
@@ -738,6 +761,8 @@ def main() -> int:
     parser.add_argument('--mode',choices=('focused','headless','gui'),default='focused')
     parser.add_argument('--output',type=Path)
     parser.add_argument('--duration',type=float,default=120)
+    parser.add_argument('--server-max-fps',type=int,choices=(60,90,120),default=60,
+                        help='DIAGNOSTIC ONLY: dedicated headless engine 60/90/120 cap; clients stay 60; never modifies fixed 60Hz tick')
     parser.add_argument('--warmup',type=float,default=20)
     parser.add_argument('--startup-timeout',type=float,default=240)
     parser.add_argument('--test-timeout',type=float,default=240)
@@ -789,6 +814,12 @@ def main() -> int:
     args.godot=args.godot.resolve()
     if not args.godot.is_file(): parser.error('Godot executable not found')
     if args.duration<12 or args.warmup<0 or args.startup_timeout<=0: parser.error('invalid duration/budgets')
+    if args.server_max_fps != 60 and (
+        args.mode != 'gui' or args.scenario != 'r31-reconnect-roundtrip'
+        or args.profile != 'LOCAL' or not args.r31p22_loop_attribution
+        or not args.r31p23r2_flush_attribution or not args.r31bp1_durable_chunks
+    ):
+        parser.error('pacing diagnostic requires real GUI LOCAL R31 reconnect, full server loop/COMPACT and durable evidence')
     if args.slow_item_writer_ms < 0 or args.slow_item_writer_ms > 2000:
         parser.error('slow ITEM writer delay must be 0..2000ms')
     if args.slow_item_writer_ms and args.scenario != 'r3-slow-item':
