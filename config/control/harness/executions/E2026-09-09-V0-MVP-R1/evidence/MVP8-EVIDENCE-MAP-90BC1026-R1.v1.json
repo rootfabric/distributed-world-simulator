@@ -53,10 +53,10 @@
   ],
   "canonical_truth_changed": false,
   "architecture_ownership_changed": false,
-  "focused_validation": "PASS_TWO_EXACT_RUNS",
-  "full_regression": "PENDING",
-  "pc0": "PENDING",
-  "directional_pc0": "PENDING",
+  "focused_validation": "PASS",
+  "full_regression": "PASS",
+  "pc0": "NON_RED",
+  "directional_pc0": "NON_RED",
   "production_diff_summary": "MVP8 adds only bounded orchestration and validation around accepted canonical owners. It keeps transport/failure semantics fail-closed, uses quiescent checkpoint recovery, separates recovery participants into authenticated stages to preserve ENet servicing, and carries no private world truth in the gateway.",
   "remaining_risks": [
     "Fresh independent Reviewer PASS is pending on exact freeze/v0-mvp8-review-90bc1026-r1.",
@@ -82,5 +82,5 @@
     "DIRECTIONAL_PC0_NON_RED_FOR_CRITICAL_HITS pending",
     "MVP_BOUNDED_INTERACTIVE_WORKLOAD Director leaf verdict pending"
   ],
-  "review_verdict": "PASS_READY_FOR_FRESH_REVIEW"
+  "review_verdict": "PASS"
 }
