@@ -1,0 +1,21 @@
+{
+  "schema": "fabric.holdout_r4.freeze.v1",
+  "generation": "G1",
+  "subject_head": "fd6e83b35301d7a15e92c55939654f1f95729730",
+  "subject_tree": "314330d717db059cd9b9db32c5d6150097e1f2c3",
+  "preregistration": "c73262adf568e2309fe5dd49a034812492566691",
+  "whole_predecessor_tree_immutable": true,
+  "physical_tolerance_abs_rel": 1e-05,
+  "parity_tolerance_abs_rel": 1e-08,
+  "first_failure_tolerance_s": 0.0001,
+  "data_schema": "fabric.holdout_r4.cases.v1",
+  "protocol_calibration_is_not_independent_holdout": true,
+  "source_sha256": {
+    "tests/research/fabric1/fabric_holdout_r4_probe.gd": "b9f381235551d93820428f87ee2ee55f34f3ffc0c0033a846855f7265e67d3c7",
+    "scripts/research/fabric_holdout_r4/holdout.py": "1cdf95267dac0ba22429291a418d007f825a8baa59c3248696ad2ba272dc2139",
+    "tests/research/fabric1/fabric_holdout_r4_protocol_test.py": "8b01e6e9241aa53022779a43843fc8f6a09c827512e77d3c91c879e0902dd8ac",
+    "RUN_FABRIC_HOLDOUT_R4_TESTS.sh": "ecc71e77c7c73865e89fd1f964c402eae4509bc7568826b00ba1493df4757fd5",
+    ".github/workflows/fabric-holdout-r4-linux-double.yml": "ad8a4515fe2e48ed96413657cfb3bc17cf8abbbc4dffc57e83e0f810d7f8c736",
+    "tests/research/fabric1/fabric_holdout_r4_serialization_probe.gd": "4f76760adb4c99469f504f54e311ee7910ce48b94019dceeafe49d354508bbb5"
+  }
+}

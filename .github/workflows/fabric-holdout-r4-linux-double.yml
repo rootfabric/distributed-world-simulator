@@ -1,0 +1,42 @@
+name: FABRIC HOLDOUT-R4 Frozen G1
+on:
+  push:
+    branches: [research/fabric-holdout-r4-frozen-generalization-r1]
+    paths:
+      - scripts/research/fabric_holdout_r4/**
+      - tests/research/fabric1/fabric_holdout_r4_*
+      - config/research/fabric-holdout-r4-*
+      - RUN_FABRIC_HOLDOUT_R4_TESTS.sh
+      - .github/workflows/fabric-holdout-r4-linux-double.yml
+permissions:
+  contents: read
+concurrency:
+  group: fabric-holdout-r4-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  holdout:
+    if: github.repository == 'rootfabric/distributed-world-simulator' && github.actor == github.repository_owner && github.triggering_actor == github.repository_owner
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Execute exact frozen holdout and unchanged regressions
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(git rev-parse origin/research/fabric-composition-r3-coupled-mechanism-r1)" = fd6e83b35301d7a15e92c55939654f1f95729730
+          mkdir -p artifacts
+          export GODOT_BIN="${DWS_GODOT_DOUBLE_BIN:-$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64}"
+          bash RUN_FABRIC_HOLDOUT_R4_TESTS.sh
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: fabric-holdout-r4-${{ github.sha }}-${{ github.run_attempt }}
+          path: artifacts/fabric-holdout-r4-exact-*/
+          if-no-files-found: error
+          retention-days: 30
