@@ -21,7 +21,8 @@ static func inspect_packet(
 	peer_id: String,
 	packet: PackedByteArray,
 	sender_frame: Dictionary = {},
-	error_code: String = ""
+	error_code: String = "",
+	attested_source_payload_sha256: String = ""
 ) -> Dictionary:
 	# Pure instrumentation: only parse a private copy of existing wire bytes.
 	var packet_text: String = packet.get_string_from_utf8()
@@ -39,9 +40,16 @@ static func inspect_packet(
 		NetworkUtilsScript.payload_hash(body) if body_value is Dictionary else ""
 	)
 	var sender_hash: String = ""
+	var sender_hash_source: String = "NOT_CAPTURED"
 	if sender_frame.has("payload") and sender_frame["payload"] is Dictionary:
 		sender_hash = NetworkUtilsScript.payload_hash(
 			Dictionary(sender_frame["payload"]))
+		sender_hash_source = "SOURCE_FRAME_DICTIONARY"
+	elif not attested_source_payload_sha256.is_empty():
+		# R2.2 sends ONLY immutable attested bytes, not a live Dictionary.
+		# Its proof carries the checksum of the ORIGINAL verified frame.
+		sender_hash = attested_source_payload_sha256
+		sender_hash_source = "R22_ORIGINAL_VALIDATED_FRAME"
 	var parsed_canonical: String = NetworkUtilsScript.canonical_json(frame)
 	return {
 		"schema": SCHEMA,
@@ -62,6 +70,8 @@ static func inspect_packet(
 		"postparse_checksum_matches": (
 			advertised_checksum != "" and parsed_checksum == advertised_checksum),
 		"sender_dictionary_payload_sha256": sender_hash,
+		"sender_hash_provenance": sender_hash_source,
+		"sender_source_hash_captured": not sender_hash.is_empty(),
 		"sender_checksum_matches": (
 			sender_hash == advertised_checksum if not sender_hash.is_empty() else null),
 		"packet_canonical_after_parse": (
