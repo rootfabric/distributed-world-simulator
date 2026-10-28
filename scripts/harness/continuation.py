@@ -6,6 +6,7 @@ from typing import Any
 
 from .contracts import ContractValidationError
 from .mission import mission_from_state
+from .development_flow import execution_plan
 from .evidence_provenance import hard_block_matches_state
 
 _AUTO_ROLE_BY_WORK_TYPE = {
@@ -115,6 +116,7 @@ def build_continuation(
     work_order = state["active_work_order"]
     reduced = state["reduced_work_order"]
     mission = mission_from_state(state)
+    mission["review_execution_plan"] = execution_plan(work_order)
     state_name = str(reduced.get("state", ""))
     blockers = set(state.get("checkpoint_blockers", []))
     findings = set(state.get("findings", []))
