@@ -9,7 +9,7 @@ param(
     [string] $AssetSource = '',
     [ValidateSet('async','sync')][string] $CheckpointMode = 'async',
     [string] $NetworkProfile = 'LOCAL',
-    [ValidateSet('local','seam-stress')][string] $Scenario = 'local',
+    [ValidateSet('local','seam-stress','r31-reconnect-roundtrip')][string] $Scenario = 'local',
     [ValidateSet('','server','a','b')][string] $InjectStallRole = '',
     [int] $InjectStallMs = 250,
     [switch] $IncludeProcessTests,
