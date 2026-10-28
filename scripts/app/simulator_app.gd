@@ -10,6 +10,7 @@ const SimulationClockScript = preload(
 	"res://scripts/simulation/time/simulation_clock.gd"
 )
 const LaunchOptionsScript = preload("res://scripts/runtime/launch_options.gd")
+const ServerFramePacingPolicy = preload("res://scripts/network/smoothness/server_frame_pacing_policy.gd")
 const RuntimeDescriptorScript = preload("res://scripts/runtime/runtime_descriptor.gd")
 const RuntimeRoleScript = preload("res://scripts/runtime/runtime_role.gd")
 const NetworkRuntimeIdentityScript = preload("res://scripts/network/observability/network_runtime_identity.gd")
@@ -124,6 +125,15 @@ func _ready() -> void:
 	var runtime_role: String = String(
 		launch_options.get("role", RuntimeRoleScript.OFFLINE)
 	)
+	var server_cap: Dictionary = ServerFramePacingPolicy.apply(launch_options)
+	if not bool(server_cap.get("success", false)):
+		push_error("NET_SMOOTH_SERVER_CAP_REJECTED:%s" % String(
+			server_cap.get("error_code", "R31_SERVER_FRAME_CAP_ENGINE_REJECTED")))
+		get_tree().quit(2)
+		return
+	if bool(server_cap.get("details", {}).get("enabled", false)):
+		print("NET_SMOOTH_SERVER_FRAME_CAP_APPLIED cap=%d fixed_tick_hz=60 compact_hz=20" %
+			int(server_cap["details"]["effective"]))
 	presentation_enabled = RuntimeRoleScript.presentation_enabled(runtime_role)
 	local_input_enabled = RuntimeRoleScript.accepts_local_input(runtime_role)
 	set_process_unhandled_input(local_input_enabled)

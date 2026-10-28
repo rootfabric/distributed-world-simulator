@@ -24,6 +24,7 @@ from analyze_net_smooth1 import write_report
 from owned_process_cleanup import finalize_owned_processes, preflight_no_smooth_godot
 
 TESTS = [
+ 'tests/runtime/test_net_smooth1_product_server_pacing.gd',
  'tests/runtime/test_net_smooth1_p1_real_boundary_partial_flush.gd',
  'tests/runtime/test_net_smooth1_815_safety_negative.gd',
  'tests/runtime/test_net_smooth1_p1_snapshot_flush_batching.gd',
@@ -268,6 +269,10 @@ def play(args, manifest: dict) -> None:
               f'--shutdown-after-ms={int((args.startup_timeout*3+args.warmup+args.duration+120)*1000)}']
         if role=='server':
             game += ['--product-seam',f'--persistence-root={root/"world"}']
+            if args.server_max_fps != 60:
+                # Explicit product verifier: native Godot launch cap AND
+                # application-level dedicated authority cap must agree.
+                game += [f'--server-frame-cap={args.server_max_fps}']
         else:
             game += [f'--player-identity={role}','--automation-control',
                      f'--automation-control-token={token}',f'--automation-control-port={ports[role]}',

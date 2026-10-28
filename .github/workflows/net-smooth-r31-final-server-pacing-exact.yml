@@ -1,0 +1,169 @@
+name: NET-SMOOTH1 R31 P1 Product Server Pacing Exact
+on:
+  push:
+    branches:
+      - feature/net-smooth1-r31-pacing-product-optin-r1
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: net-smooth-r31-final-pacing-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  source-contracts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Exact source identity, server-only pacing and R2.2 safety guards
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          git merge-base --is-ancestor 4a223cf3362fc9a6585420c23dba68a8e7bdca0b HEAD
+          test -z "$(git status --porcelain --untracked-files=no)"
+          python -m py_compile tools/net_smooth1/run_net_smooth1.py tools/net_smooth1/compare_r31_server_pacing.py
+          for T in \
+            test_net_smooth1_product_server_pacing_source.py \
+            test_net_smooth1_server_pacing_diagnostic.py \
+            test_net_smooth1_r31_measure_full_duration.py \
+            test_net_smooth1_p1_batch_flush_layers.py \
+            test_net_smooth1_r31p23r2_flush_layers.py \
+            test_net_smooth1_r31p23r22_source_contracts.py \
+            test_net_smooth1_815_safety_negative_source_contracts.py
+          do
+            python -m unittest discover -s tests/tools -p "$T" -v
+          done
+          test -z "$(git status --porcelain --untracked-files=no)"
+  linux-native-exact:
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 85
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Pinned double exact native Godot and full product safety
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          git merge-base --is-ancestor 4a223cf3362fc9a6585420c23dba68a8e7bdca0b HEAD
+          test -z "$(git status --porcelain --untracked-files=no)"
+          B="${DWS_GODOT_DOUBLE_LINUX_BIN:-$HOME/.local/opt/godot-double-4.7.1-a13da4f/godot.linuxbsd.editor.double.x86_64}"
+          test -x "$B"
+          test "$("$B" --version | head -1)" = '4.7.1.stable.double.custom_build.a13da4feb'
+          test "$(sha256sum "$B" | cut -d' ' -f1)" = 'bfa7ce632d8d4b1dcc96f64f5405ee52b57c4e25d15c3e0478acc26e08d517d7'
+          export GODOT_SILENCE_ROOT_WARNING=1
+          mkdir -p artifacts/r31-final-pacing
+          { git rev-parse HEAD; git rev-parse 'HEAD^{tree}'; sha256sum "$B"; } > artifacts/r31-final-pacing/identity.txt
+          "$B" --headless --editor --path . --import --quit > artifacts/r31-final-pacing/import.log 2>&1 || { tail -n 130 artifacts/r31-final-pacing/import.log; exit 1; }
+          ! grep -E 'SCRIPT ERROR:|Parse Error:|Compile Error:' artifacts/r31-final-pacing/import.log
+          for P in \
+            tests/runtime/test_net_smooth1_product_server_pacing.gd \
+            tests/runtime/test_launch_options.gd \
+            tests/runtime/test_net_smooth1_p1_real_boundary_partial_flush.gd \
+            tests/runtime/test_net_smooth1_p1_snapshot_flush_batching.gd \
+            tests/runtime/test_net_smooth1_815_safety_negative.gd \
+            tests/runtime/test_net_smooth1_r31p23r22_attested_compact.gd \
+            tests/runtime/test_net_smooth1_r31p23r21_single_pass_compact.gd \
+            tests/runtime/test_m6_dedicated_recovery_contracts.gd \
+            tests/runtime/test_v0_user1_product_seam_bridge.gd
+          do
+            L="artifacts/r31-final-pacing/$(basename "$P").log"
+            timeout --signal=TERM --kill-after=5s 390s "$B" --headless --path . --script "res://$P" > "$L" 2>&1 || { tail -n 140 "$L"; exit 1; }
+            if grep -E 'SCRIPT ERROR:|Parse Error:|Compile Error:|ERROR:' "$L"; then tail -n 100 "$L"; exit 1; fi
+            grep -Eq 'PASS' "$L"
+          done
+          test -z "$(git status --porcelain --untracked-files=no)"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: r31-final-pacing-linux-${{ github.sha }}
+          path: artifacts/r31-final-pacing/
+          if-no-files-found: warn
+  windows-native-exact:
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 85
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Static PowerShell syntax gate for guarded six-arm Windows A/B
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          $Path=(Resolve-Path 'tools/net_smooth1/run_r31_final_pacing_windows.ps1').Path
+          $Tokens=$null
+          $ParseErrors=$null
+          [System.Management.Automation.Language.Parser]::ParseFile($Path,[ref]$Tokens,[ref]$ParseErrors) | Out-Null
+          if ($ParseErrors.Count -gt 0) {
+            $ParseErrors | Format-Table | Out-String | Write-Host
+            throw 'AB_POWERSHELL_AST_PARSE_FAIL'
+          }
+      - name: Pinned Windows double, exact head, import and all native negatives
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          if ((git rev-parse HEAD).Trim() -ne $env:GITHUB_SHA) { throw 'HEAD_MISMATCH' }
+          git merge-base --is-ancestor 4a223cf3362fc9a6585420c23dba68a8e7bdca0b HEAD
+          if ($LASTEXITCODE -ne 0) { throw 'PARENT_MISMATCH' }
+          if (git status --porcelain --untracked-files=no) { throw 'TRACKED_DIRTY' }
+          $B='C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe'
+          if (-not (Test-Path $B)) { throw 'PINNED_BIN_MISSING' }
+          if ((& $B --version | Out-String).Trim() -ne '4.7.1.stable.double.custom_build.a13da4feb') { throw 'ENGINE_VERSION' }
+          if ((Get-FileHash $B -Algorithm SHA256).Hash.ToLowerInvariant() -ne '3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5') { throw 'ENGINE_HASH' }
+          $E='artifacts/r31-final-pacing'
+          New-Item -ItemType Directory -Force $E | Out-Null
+          [ordered]@{head=(git rev-parse HEAD).Trim();tree=(git rev-parse 'HEAD^{tree}').Trim();godot=(Get-FileHash $B -Algorithm SHA256).Hash.ToLowerInvariant()} | ConvertTo-Json | Set-Content (Join-Path $E 'identity.json')
+          & $B --headless --editor --path . --import --quit *> (Join-Path $E 'import.log')
+          if ($LASTEXITCODE -ne 0 -or (Select-String (Join-Path $E 'import.log') -Pattern 'SCRIPT ERROR:|Parse Error:|Compile Error:' -Quiet)) { throw 'COLD_IMPORT_FAIL' }
+          $Tests=@(
+            'tests/runtime/test_net_smooth1_product_server_pacing.gd',
+            'tests/runtime/test_launch_options.gd',
+            'tests/runtime/test_net_smooth1_p1_real_boundary_partial_flush.gd',
+            'tests/runtime/test_net_smooth1_p1_snapshot_flush_batching.gd',
+            'tests/runtime/test_net_smooth1_815_safety_negative.gd',
+            'tests/runtime/test_net_smooth1_r31p23r22_attested_compact.gd',
+            'tests/runtime/test_net_smooth1_r31p23r21_single_pass_compact.gd',
+            'tests/runtime/test_m6_dedicated_recovery_contracts.gd',
+            'tests/runtime/test_v0_user1_product_seam_bridge.gd'
+          )
+          foreach ($P in $Tests) {
+            $Stem=Split-Path $P -Leaf
+            $Out=Join-Path $E ($Stem+'.stdout.log')
+            $Err=Join-Path $E ($Stem+'.stderr.log')
+            $Proc=Start-Process -FilePath $B -WorkingDirectory (Get-Location).Path -ArgumentList @('--headless','--path','.','--script',('res://'+$P)) -PassThru -RedirectStandardOutput $Out -RedirectStandardError $Err
+            try {
+              if (-not $Proc.WaitForExit(390000)) { $Proc.Kill($true); $Proc.WaitForExit(); throw "NATIVE_TIMEOUT:$P" }
+              $Errors=@(Select-String -Path $Out,$Err -Pattern 'SCRIPT ERROR:|Parse Error:|Compile Error:|ERROR:' -ErrorAction SilentlyContinue)
+              if ($Proc.ExitCode -ne 0 -or $Errors.Count -gt 0 -or -not (Select-String -Path $Out -Pattern 'PASS' -Quiet)) {
+                Get-Content $Out -Tail 100; Get-Content $Err -Tail 100
+                throw "NATIVE_FAIL:$P EXIT=$($Proc.ExitCode) ERRORS=$($Errors.Count)"
+              }
+            } finally { $Proc.Dispose() }
+          }
+          if (git status --porcelain --untracked-files=no) { throw 'TRACKED_DIRTY_POST' }
+      - name: Hash all native test evidence
+        if: always()
+        shell: pwsh
+        run: |
+          $E='artifacts/r31-final-pacing'
+          New-Item -ItemType Directory -Force $E | Out-Null
+          @(Get-ChildItem $E -File | Where-Object { $_.Name -ne 'sha256.json' } | ForEach-Object { [ordered]@{file=$_.Name;sha256=(Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()} }) | ConvertTo-Json -Depth 4 | Set-Content (Join-Path $E 'sha256.json')
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: r31-final-pacing-win-${{ github.sha }}
+          path: artifacts/r31-final-pacing/
+          if-no-files-found: warn

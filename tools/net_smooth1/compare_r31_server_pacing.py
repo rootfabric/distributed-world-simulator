@@ -100,12 +100,34 @@ def inspect_run(root: Path) -> dict[str, Any]:
     if not isinstance(cmds,dict):
         raise ValueError("PACING_MISSING_ACTUAL_SPAWN_COMMANDS")
     for role in ("server","a","b"):
-        observed=max_fps_from_command(cmds.get(role),role)
+        command=cmds.get(role)
+        observed=max_fps_from_command(command,role)
         expected=cap if role=="server" else 60
         if observed!=expected:
             raise ValueError("PACING_EXECUTED_ROLE_CAP_MISMATCH_"+role)
+        # The actual product role cannot be forged by harness-only manifest.
+        # Only a dedicated Earth server may request explicit Engine.max_fps.
+        declarations=[x for x in command if x.startswith("--server-frame-cap=")]
+        if role=="server":
+            expected_declarations=[] if cap==60 else [f"--server-frame-cap={cap}"]
+            if declarations!=expected_declarations:
+                raise ValueError("PACING_PRODUCT_ROLE_CAP_MISMATCH")
+            if not ("--role=dedicated-server" in command
+                    and "--network-mvp" in command
+                    and "--product-seam" in command
+                    and "--world=earth" in command):
+                raise ValueError("PACING_SERVER_PRODUCT_ROLE_NOT_ATTESTED")
+        elif declarations or "--role=game-client" not in command:
+            raise ValueError("PACING_CLIENT_CLAIMED_SERVER_CAP")
         if not (root/role/"measure.end.ack").is_file():
             raise ValueError("PACING_MISSING_MEASUREMENT_ACK_"+role)
+    log=(root/"server"/"runtime.log").read_text(encoding="utf-8",errors="replace")
+    actual=f"NET_SMOOTH_SERVER_FRAME_CAP_APPLIED cap={cap} fixed_tick_hz=60 compact_hz=20"
+    if cap==60:
+        if "NET_SMOOTH_SERVER_FRAME_CAP_APPLIED" in log:
+            raise ValueError("PACING_UNEXPECTED_PRODUCT_CAP_IN_BASELINE")
+    elif log.count(actual)!=1:
+        raise ValueError("PACING_MISSING_NATIVE_ENGINE_EFFECTIVE_CAP_RECEIPT")
     if (report.get("evidence_class")!="GUI_LOCAL_CANDIDATE"
         or report.get("verdict") not in ("PASS","FAIL")
         or report.get("infrastructure")):
@@ -152,6 +174,7 @@ def inspect_run(root: Path) -> dict[str, Any]:
         "report_sha256":sha(report_path),
         "server_trace_sha256":trace["trace_sha256"],
         "server_max_fps":cap,
+        "product_applied_cap":cap if cap!=60 else None,
         "client_max_fps":60,
         "run_id":manifest["run_id"],
         "original_normative_verdict":report["verdict"],
