@@ -420,12 +420,15 @@ static func resume_staged_global_tick(state: Dictionary, options: Dictionary,
 		cursor: Dictionary, max_worksets_per_call: int = 1,
 		max_allocator_items_per_call: int = 16,
 		allocator_cap_bytes: int = 8388608,
-		r2c_parallel_workers: int = 1) -> Dictionary:
+		r2c_parallel_workers: int = 1,
+		r2e_profile: bool = false) -> Dictionary:
 	# Strictly check the same authoritative frontier before ANY staged work,
 	# including a no-op and a final publish. Never accept a moved source.
+	var r2e_source_start_us: int = Time.get_ticks_usec() if r2e_profile else 0
 	var error := validate(state)
 	if not error.is_empty():
 		return _fail(error)
+	var r2e_source_validate_us: int = Time.get_ticks_usec() - r2e_source_start_us if r2e_profile else 0
 	if not C.keys(cursor, STAGED_TICK_KEYS) \
 			or String(cursor.schema) != STAGED_TICK_SCHEMA \
 			or not cursor.lifecycle is Dictionary:
@@ -440,22 +443,38 @@ static func resume_staged_global_tick(state: Dictionary, options: Dictionary,
 		return _fail("RUNTIME_STAGED_CURSOR_CHECKSUM")
 	if String(cursor.source_hash) != String(state.integrity_hash):
 		return _fail("RUNTIME_STAGED_SOURCE_CHANGED")
-	if String(cursor.options_hash) != C.digest(options):
+	var r2e_options_start_us: int = Time.get_ticks_usec() if r2e_profile else 0
+	var options_digest_now: String = C.digest(options)
+	if String(cursor.options_hash) != options_digest_now:
 		return _fail("RUNTIME_STAGED_OPTIONS_CHANGED")
+	var r2e_options_digest_us: int = Time.get_ticks_usec() - r2e_options_start_us if r2e_profile else 0
+	var r2e_lifecycle_start_us: int = Time.get_ticks_usec() if r2e_profile else 0
 	var progressed := Lifecycle.staged_resume(
 		cursor.lifecycle, state.field, state.population, max_worksets_per_call,
 		max_allocator_items_per_call, allocator_cap_bytes,
-		r2c_parallel_workers)
+		r2c_parallel_workers, r2e_profile)
 	if not bool(progressed.get("success", false)):
 		return _fail("RUNTIME_STAGED_A5:" + String(progressed.get("error", "?")))
+	var r2e_lifecycle_us: int = Time.get_ticks_usec() - r2e_lifecycle_start_us if r2e_profile else 0
+	var r2e_detail: Dictionary = {}
+	if r2e_profile:
+		r2e_detail = {
+			"full_source_validate_us": r2e_source_validate_us,
+			"options_digest_us": r2e_options_digest_us,
+			"a5_lifecycle_us": r2e_lifecycle_us,
+			"a5": progressed.get("r2e_profile", {}),
+		}
 	if not bool(progressed.complete):
-		return {"success": true, "complete": false,
+		var partial: Dictionary = {"success": true, "complete": false,
 			"phase": String(progressed.phase),
 			"cursor": _staged_tick_cursor(
 				String(cursor.source_hash), String(cursor.options_hash),
 				progressed.cursor),
 			"r2c_peak_workers": int(progressed.get("r2c_peak_workers", 0)),
 			"r2c_threaded_worksets": int(progressed.get("r2c_threaded_worksets", 0))}
+		if r2e_profile:
+			partial["r2e_profile"] = r2e_detail
+		return partial
 	# The ONLY publication point. Build exactly the intermediate state that
 	# step_lifecycle_spatial_scheduled() would have sealed.
 	var next := state.duplicate(true)
@@ -476,10 +495,13 @@ static func resume_staged_global_tick(state: Dictionary, options: Dictionary,
 	var finished := step_feedback(admitted.state)
 	if not bool(finished.get("success", false)):
 		return _fail("RUNTIME_STAGED_FEEDBACK:" + String(finished.get("error", "?")))
-	return {"success": true, "complete": true, "phase": "COMPLETE",
+	var complete: Dictionary = {"success": true, "complete": true, "phase": "COMPLETE",
 		"state": finished.state, "canonical_tick": int(finished.state.tick),
 		"r2c_peak_workers": int(progressed.get("r2c_peak_workers", 0)),
 		"r2c_threaded_worksets": int(progressed.get("r2c_threaded_worksets", 0))}
+	if r2e_profile:
+		complete["r2e_profile"] = r2e_detail
+	return complete
 
 static func Runtime_state_hash_for_staging(state: Dictionary) -> String:
 	return state_hash(state)

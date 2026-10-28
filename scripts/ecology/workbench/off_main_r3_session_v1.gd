@@ -57,6 +57,10 @@ var _last_worker_worksets_per_resume := 1
 # Frozen for the full candidate generation; DEFAULT ONE = old serial path.
 var _r2c_parallel_workset_workers := 1
 var _last_r2c_parallel_workset_workers := 1
+# R2E opt-in HOST-ONLY instrumentation, frozen per job generation.
+# Does not skip Runtime/A5/A4 validation or change canonical state.
+var _worker_r2e_profile := false
+var _last_worker_r2e_profile := false
 var _job_started_us := 0
 var _jobs_started := 0
 var _jobs_committed := 0
@@ -135,6 +139,7 @@ func status() -> Dictionary:
 		"last_worker_phase_profile": _last_worker_phase_profile.duplicate(true),
 		"last_worker_worksets_per_resume": _last_worker_worksets_per_resume,
 		"last_r2c_parallel_workset_workers": _last_r2c_parallel_workset_workers,
+		"last_worker_r2e_profile_enabled": _last_worker_r2e_profile,
 		"last_worker_wall_us": _last_worker_wall_us,
 		"last_error": _last_error,
 	}
@@ -146,7 +151,8 @@ func advance(state: Dictionary, options: Dictionary,
 		lease_generation: int = -1,
 		projection_manifest: Dictionary = {},
 		worksets_per_resume: int = 1,
-		r2c_parallel_workset_workers: int = 1) -> Dictionary:
+		r2c_parallel_workset_workers: int = 1,
+		r2e_profile: bool = false) -> Dictionary:
 	var t0: int = Time.get_ticks_usec()
 	reap_discarded()
 	if not C.integer(max_members, 1, Spatial.MAX_MEMBERS) \
@@ -162,6 +168,8 @@ func advance(state: Dictionary, options: Dictionary,
 			return _failed("R2B_WORKSET_BATCH_CHANGED", t0)
 		if r2c_parallel_workset_workers != _r2c_parallel_workset_workers:
 			return _failed("R2C_WORKER_BOUND_CHANGED", t0)
+		if r2e_profile != _worker_r2e_profile:
+			return _failed("R2E_PROFILER_POLICY_CHANGED", t0)
 		if not WorkerThreadPool.is_task_completed(_task_id):
 			return _pending(t0, "DRAINING" if _abandoned else "BACKGROUND")
 		# Non-blocking by contract: the task is already completed. Always
@@ -210,6 +218,7 @@ func advance(state: Dictionary, options: Dictionary,
 		_last_worker_phase_profile = payload.get("phase_profile", {}).duplicate(true)
 		_last_worker_worksets_per_resume = _worker_worksets_per_resume
 		_last_r2c_parallel_workset_workers = _r2c_parallel_workset_workers
+		_last_worker_r2e_profile = _worker_r2e_profile
 		_last_projection_wall_us = int(payload.get("projection_wall_us", 0))
 		var source_validation_started_us: int = Time.get_ticks_usec()
 		var canonical_error := ""
@@ -257,6 +266,7 @@ func advance(state: Dictionary, options: Dictionary,
 			"worker_phase_profile": _last_worker_phase_profile.duplicate(true),
 			"worker_worksets_per_resume": _last_worker_worksets_per_resume,
 			"r2c_parallel_workset_workers": _last_r2c_parallel_workset_workers,
+			"worker_r2e_profile_enabled": _last_worker_r2e_profile,
 			"presentation_snapshot": payload.get("presentation_snapshot", {}),
 			"complete_poll_wall_us": complete_poll_wall_us,
 		}
@@ -303,6 +313,7 @@ func advance(state: Dictionary, options: Dictionary,
 	_job_started_us = Time.get_ticks_usec()
 	_worker_worksets_per_resume = worksets_per_resume
 	_r2c_parallel_workset_workers = r2c_parallel_workset_workers
+	_worker_r2e_profile = r2e_profile
 	# The worker is the only writer to this isolated outer dictionary; all
 	# nested authoritative state remains read-only until Runtime duplicates it.
 	var frozen_state: Dictionary = state.duplicate(false)
@@ -316,7 +327,7 @@ func advance(state: Dictionary, options: Dictionary,
 			allocator_items, cursor_cap_bytes,
 			anchor, _source_tick, options_hash, _trusted_generation,
 			detached_manifest, worksets_per_resume,
-			r2c_parallel_workset_workers),
+			r2c_parallel_workset_workers, r2e_profile),
 		false, "eco-a146-r3-2-global-a4")
 	if _task_id < 0:
 		_clear_trusted_lease()
@@ -329,7 +340,8 @@ func _compute(frozen: Dictionary, options: Dictionary, members: int,
 		options_hash: String, generation: int,
 		projection_manifest: Dictionary,
 		worksets_per_resume: int,
-		r2c_parallel_workset_workers: int) -> void:
+		r2c_parallel_workset_workers: int,
+		r2e_profile: bool) -> void:
 	var started_us: int = Time.get_ticks_usec()
 	var payload: Dictionary = {}
 	# Exact single task wall decomposition. These counters are host-only;
@@ -344,6 +356,14 @@ func _compute(frozen: Dictionary, options: Dictionary, members: int,
 		"max_cursor_encode_us": 0, "max_cursor_bytes": 0,
 		"r2c_peak_workers": 0, "r2c_parallel_threaded_worksets": 0,
 		"r2c_parallel_resume_calls": 0}
+	if r2e_profile:
+		# Overlapping totals: A5 cost is a SUBSET of Runtime resume wall;
+		# A5 checksum/source/copy/seal are SUBSETS of A5 lifecycle wall.
+		for key in ["r2e_profiled_calls", "r2e_runtime_source_validate_us",
+				"r2e_runtime_options_digest_us", "r2e_a5_lifecycle_us",
+				"r2e_a5_cursor_verify_us", "r2e_a5_source_digest_us",
+				"r2e_a5_cow_copy_us", "r2e_a5_seal_us"]:
+			phases[key] = 0
 	var begin_started_us: int = Time.get_ticks_usec()
 	var started: Dictionary = Runtime.begin_staged_global_tick(
 		frozen, options, 4, members, true)
@@ -379,8 +399,26 @@ func _compute(frozen: Dictionary, options: Dictionary, members: int,
 			var resume_started_us: int = Time.get_ticks_usec()
 			var step: Dictionary = Runtime.resume_staged_global_tick(
 				frozen, options, cursor, worksets_per_resume, items, cursor_cap,
-				r2c_parallel_workset_workers)
+				r2c_parallel_workset_workers, r2e_profile)
 			var resume_us: int = maxi(0, Time.get_ticks_usec() - resume_started_us)
+			if r2e_profile and bool(step.get("success", false)):
+				var detail: Dictionary = step.get("r2e_profile", {})
+				var a5_detail: Dictionary = detail.get("a5", {})
+				phases["r2e_profiled_calls"] += 1
+				phases["r2e_runtime_source_validate_us"] += int(detail.get(
+					"full_source_validate_us", 0))
+				phases["r2e_runtime_options_digest_us"] += int(detail.get(
+					"options_digest_us", 0))
+				phases["r2e_a5_lifecycle_us"] += int(detail.get(
+					"a5_lifecycle_us", 0))
+				phases["r2e_a5_cursor_verify_us"] += int(a5_detail.get(
+					"cursor_verify_us", 0))
+				phases["r2e_a5_source_digest_us"] += int(a5_detail.get(
+					"source_digest_us", 0))
+				phases["r2e_a5_cow_copy_us"] += int(a5_detail.get(
+					"cow_copy_us", 0))
+				phases["r2e_a5_seal_us"] += int(a5_detail.get(
+					"result_seal_us", 0))
 			phases["resume_total_us"] += resume_us
 			phases[bucket + "_us"] += resume_us
 			phases[bucket + "_calls"] = int(phases.get(bucket + "_calls", 0)) + 1
