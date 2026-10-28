@@ -26,9 +26,18 @@ def analyze(root:Path,minimum_wire_events:int=10)->dict:
     run_id=manifest.get("run_id")
     if (type(run_id) is not str or len(run_id)!=16
         or manifest.get("r31p23r2_flush_attribution") is not True
-        or manifest.get("r31p22_loop_attribution") is not True
-        or manifest.get("r31bp1_durable_chunks") is not True
-        or manifest.get("r3c4r2_worker_envelope") is not True):
+        or manifest.get("r31p22_loop_attribution") is not True):
+        raise ValueError("P23R2_INVALID_CANARY_OR_RUN_ID")
+    # Exact R2.2 requires ALL R2.1 / durable / worker prerequisite canaries.
+    # Never allow a claimed attestation to waive their actual source lineage.
+    r22_expected=manifest.get("r31p23r22_attested_compact")
+    if r22_expected is not None and type(r22_expected) is not bool:
+        raise ValueError("R22_INVALID_MANIFEST_CANARY")
+    legacy_durable_canaries=(
+        manifest.get("r31bp1_durable_chunks") is True
+        and manifest.get("r3c4r2_worker_envelope") is True)
+    r22_attribution_arm=(r22_expected is True)
+    if not legacy_durable_canaries:
         raise ValueError("P23R2_INVALID_CANARY_OR_RUN_ID")
     # Historical R2.0 traces have no R2.1 field; on a NEW R2.1
     # OFF/ON comparison the run's own manifest and every COMPACT's actual
@@ -37,7 +46,12 @@ def analyze(root:Path,minimum_wire_events:int=10)->dict:
     r21_expected=manifest.get("r31p23r21_single_pass_compact")
     if r21_expected is not None and type(r21_expected) is not bool:
         raise ValueError("R21_INVALID_MANIFEST_CANARY")
+    # R2.2 attested-compact is fail-closed ON TOP of R2.1 single-pass compact;
+    # an R2.2 claim without the R2.1 canary can never be analyzed as ON.
+    if r22_attribution_arm and r21_expected is not True:
+        raise ValueError("R22_REQUIRES_R21_CANARY")
     r21_confirmed=0
+    r22_confirmed=0
     trace_path=root/"server"/"trace.jsonl"
     trace=read_trace(trace_path,run_id)
     old=analyze_events(trace, minimum_frames=100, minimum_snapshots=10)
@@ -49,7 +63,7 @@ def analyze(root:Path,minimum_wire_events:int=10)->dict:
     observed=defaultdict(list)
     stage_series={key:[] for key in BOUNDARY_STAGES}
     simulator_series={key:[] for key in SIM_STAGES}
-    enet_series={key:[] for key in ENET_STAGES}
+    enet_series={key:[] for key in ENET_STAGES+("attestation_ms",)}
     ids=set()
     passthrough_count=0
     nonpassthrough_count=0
@@ -81,8 +95,11 @@ def analyze(root:Path,minimum_wire_events:int=10)->dict:
             if not isinstance(sim,dict) or type(sim.get("passthrough")) is not bool:
                 raise ValueError("P23R2_SIMULATOR_PROFILE_MISSING")
             if r21_expected is not None and sim["passthrough"]:
+                # R2.2 keeps the canonical packet-size receipt, but does
+                # NOT use R2.1 fast encode: it consumes native attestation.
+                expected_fast=r21_expected and not r22_attribution_arm
                 if (sim.get("r31p23r21_size_reused") is not r21_expected
-                    or sim.get("r31p23r21_fast_encode") is not r21_expected):
+                    or sim.get("r31p23r21_fast_encode") is not expected_fast):
                     raise ValueError("R21_FAST_ENCODE_OR_SIZE_RECEIPT_MISMATCH")
                 r21_confirmed+=1
             sim_parts={key:number(sim.get(key),key) for key in SIM_STAGES}
@@ -96,7 +113,18 @@ def analyze(root:Path,minimum_wire_events:int=10)->dict:
                 enet=sim.get("enet")
                 if not isinstance(enet,dict):
                     raise ValueError("P23R2_ENET_DETAILS_MISSING")
-                enet_parts={key:number(enet.get(key),key) for key in ENET_STAGES}
+                if r22_attribution_arm:
+                    if ("attestation_ms" not in enet
+                        or enet.get("validate_ms") != 0.0
+                        or enet.get("frame_encode_ms") != 0.0):
+                        raise ValueError("R22_ATTESTATION_STAGE_MISSING_OR_INVALID")
+                    stage_keys=ENET_STAGES+("attestation_ms",)
+                    r22_confirmed+=1
+                else:
+                    if "attestation_ms" in enet:
+                        raise ValueError("R22_UNEXPECTED_ATTESTATION_OFF")
+                    stage_keys=ENET_STAGES
+                enet_parts={key:number(enet.get(key),key) for key in stage_keys}
                 enet_total=number(enet.get("total_ms"),"ENET_TOTAL")
                 if abs(sum(enet_parts.values())-enet_total)>TOLERANCE_MS:
                     raise ValueError("P23R2_ENET_COMPONENTS_NOT_ADDITIVE")
@@ -114,6 +142,8 @@ def analyze(root:Path,minimum_wire_events:int=10)->dict:
                 "enet":enet_parts,"passthrough":sim["passthrough"],
             })
 
+    if r22_attribution_arm and r22_confirmed < minimum_wire_events:
+        raise ValueError("R22_NO_CONFIRMED_PASSTHROUGH_ATTESTATIONS")
     expected_total=sum(map(len,originals.values()))
     observed_total=sum(map(len,observed.values()))
     if expected_total<minimum_wire_events or observed_total!=expected_total:
@@ -160,6 +190,8 @@ def analyze(root:Path,minimum_wire_events:int=10)->dict:
         "condition_queued_events":nonpassthrough_count,
         "r21_requested":r21_expected,
         "r21_confirmed_passthrough_events":r21_confirmed,
+        "r22_attested_requested":bool(r22_expected),
+        "r22_confirmed_passthrough_events":r22_confirmed,
         "boundary_stage_ms":{k:dist(v) for k,v in stage_series.items()},
         "simulator_stage_ms":{k:dist(v) for k,v in simulator_series.items()},
         "enet_stage_ms":{k:dist(v) for k,v in enet_series.items()},
