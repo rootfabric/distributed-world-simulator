@@ -1,0 +1,137 @@
+name: USER1 M6 Postrestore Seam Transfer Port Exact
+
+on:
+  push:
+    branches:
+      - repair/char2-m6-postrestore-transfer-port-r1
+  pull_request:
+    paths:
+      - 'scripts/runtime/networked_gameplay/user1/user1_product_player_transfer_port.gd'
+      - 'scripts/runtime/networked_gameplay/user1/user1_product_seam_gameplay_service.gd'
+      - 'tests/runtime/test_user1_seam_recovery_port_rebind.gd'
+      - '.github/workflows/user1-m6-postrestore-seam-exact.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: user1-m6-restored-port-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  source:
+    name: Exact source and allowed HIGH-risk repair
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Enforce exact original parent and narrow repair hashes
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/user1-m6-port-exact
+          git merge-base --is-ancestor d4ab242415c8b5cb3a48baf5f569b0b5c5e060b1 HEAD
+          test -z "$(git status --porcelain --untracked-files=no)"
+          python3 - <<'PY'
+          import subprocess
+          from pathlib import Path
+          base='d4ab242415c8b5cb3a48baf5f569b0b5c5e060b1'
+          actual=set(subprocess.check_output(['git','diff','--name-only',base,'HEAD'], text=True).splitlines())
+          permitted={
+            'scripts/runtime/networked_gameplay/user1/user1_product_player_transfer_port.gd',
+            'scripts/runtime/networked_gameplay/user1/user1_product_seam_gameplay_service.gd',
+            'tests/runtime/test_user1_seam_recovery_port_rebind.gd',
+            '.github/workflows/user1-m6-postrestore-seam-exact.yml'
+          }
+          assert actual==permitted, ('HIGH_RISK_REPAIR_SCOPE_DRIFT',actual^permitted)
+          trusted={
+            'scripts/runtime/networked_gameplay/user1/user1_product_player_transfer_port.gd':'6d0aedb3b10d21f0f1e5306f66bbef87b1999d53',
+            'scripts/runtime/networked_gameplay/user1/user1_product_seam_gameplay_service.gd':'0878498c3a743b644036ede27e8b41336db19857',
+            'tests/runtime/test_user1_seam_recovery_port_rebind.gd':'22e2e1a23f9abc4749200cdeebaf1977f4c34da2',
+          }
+          for path,expected in trusted.items():
+            assert Path(path).is_file(), path
+            actual_sha=subprocess.check_output(['git','hash-object',path], text=True).strip()
+            assert actual_sha==expected, (path,actual_sha,expected)
+          print('USER1_M6_POSTRESTORE_TRUSTED_BLOBS_PASS')
+          PY
+          git rev-parse HEAD | tee artifacts/user1-m6-port-exact/head.txt
+          git rev-parse 'HEAD^{tree}' | tee artifacts/user1-m6-port-exact/tree.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: user1-m6-exact-source-${{ github.run_id }}
+          path: artifacts/user1-m6-port-exact/
+          retention-days: 30
+          if-no-files-found: warn
+
+  windows:
+    name: Windows Godot Double postrestore seam exact
+    needs: source
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 25
+    env:
+      BREAKPOINT_RUNTIME_DISABLED: '1'
+      GODOT_SILENCE_ROOT_WARNING: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Engine SHA, cold import and precise identity
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          New-Item -ItemType Directory -Force artifacts/user1-m6-port-exact | Out-Null
+          $godot='C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe'
+          if(-not(Test-Path $godot)){throw 'CANONICAL_DOUBLE_MISSING'}
+          $version=(& $godot --version | Select-Object -First 1).Trim()
+          $hash=(Get-FileHash $godot -Algorithm SHA256).Hash.ToLowerInvariant()
+          if($version -ne '4.7.1.stable.double.custom_build.a13da4feb'){throw "ENGINE_VERSION_MISMATCH:$version"}
+          if($hash -ne '3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5'){throw "ENGINE_SHA_MISMATCH:$hash"}
+          $head=(git rev-parse HEAD).Trim()
+          $expected=if($env:GITHUB_EVENT_NAME -eq 'pull_request'){$env:GITHUB_HEAD_REF}else{$env:GITHUB_SHA}
+          if($env:GITHUB_EVENT_NAME -ne 'pull_request' -and $head -ne $expected){throw 'HEAD_DRIFT'}
+          [ordered]@{HEAD=$head;TREE=(git rev-parse 'HEAD^{tree}').Trim();ENGINE_SHA=$hash;ENGINE_VERSION=$version} | ConvertTo-Json | Set-Content artifacts/user1-m6-port-exact/identity.json -Encoding UTF8
+          & $godot --headless --editor --path . --import *> artifacts/user1-m6-port-exact/import.log
+          if($LASTEXITCODE -ne 0 -or (Select-String artifacts/user1-m6-port-exact/import.log -Pattern 'SCRIPT ERROR:|Parse Error:|Compile Error:' -Quiet)){
+            Get-Content artifacts/user1-m6-port-exact/import.log -Tail 100
+            throw 'COLD_IMPORT_FAIL'
+          }
+      - name: Recovery/rebind and inherited seam focused negatives
+        shell: pwsh
+        timeout-minutes: 15
+        run: |
+          $ErrorActionPreference='Stop'
+          $godot='C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe'
+          $tests=@(
+            @{path='tests/runtime/test_user1_seam_recovery_tick_resync.gd'; marker='USER1 SEAM RECOVERY TICK RESYNC: PASS (15 assertions, 0 failures)'},
+            @{path='tests/runtime/test_user1_seam_recovery_port_rebind.gd'; marker='USER1 POST-RESTORE SEAM PORT REBIND: PASS (440 assertions, 0 failures)'},
+            @{path='tests/runtime/test_v0_user1_product_seam_bridge.gd'; marker='USER1 PRODUCT SEAM BRIDGE: PASS (57 assertions, 0 failures)'},
+            @{path='tests/runtime/test_v0_user1_first_usable_slice.gd'; marker='USER1 FIRST USABLE SLICE: 31 assertions, 0 failures'}
+          )
+          foreach($t in $tests){
+            $script=$t.path
+            $log=Join-Path 'artifacts/user1-m6-port-exact' ((Split-Path $script -Leaf)+'.log')
+            & $godot --headless --path . --script "res://$script" *> $log
+            $exit=$LASTEXITCODE
+            $raw=Get-Content $log -Raw
+            Get-Content $log -Tail 6
+            if($exit -ne 0 -or $raw.Contains('SCRIPT ERROR:') -or $raw.Contains('Parse Error:') -or $raw.Contains('Compile Error:') -or $raw.Contains(': FAIL') -or (-not $raw.Contains($t.marker))){
+              throw "USER1_NATIVE_FAILED:$script exit:$exit"
+            }
+          }
+          if(git status --porcelain --untracked-files=no){throw 'TRACKED_WORKTREE_DIRTY'}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: user1-m6-exact-windows-${{ github.run_id }}
+          path: artifacts/user1-m6-port-exact/
+          retention-days: 30
+          if-no-files-found: warn
