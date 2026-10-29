@@ -4,10 +4,19 @@ const Utils = preload("res://scripts/network/contracts/network_contract_utils.gd
 
 const SCHEMA := "planet_simulator.m6_durable_replay_outbox.v1"
 const MAX_OUTBOX_RECORDS := 2048
+const R31_CACHE_MAX_BYTES := 4 * 1024 * 1024
+const R31_CACHE_MAX_OUTBOX_RECORDS := 256
 
 var _service
 var _next_sequence := 1
 var _records: Array = []
+var _r31_cache_value: Dictionary = {}
+var _r31_cache_fence: Dictionary = {}
+var _r31_cache_outbox_version := -1
+var _r31_outbox_version := 0
+var _r31_cache_generation := 0
+var _r31_hits := 0
+var _r31_misses := 0
 
 
 func setup(service_reference) -> Dictionary:
@@ -22,6 +31,7 @@ func setup(service_reference) -> Dictionary:
 	_service = service_reference
 	_next_sequence = 1
 	_records.clear()
+	_r31_invalidate_projection()
 	return _success()
 
 
@@ -34,20 +44,28 @@ func stage_committed(operation_id: String, command_type: String, payload: Dictio
 		return _failure("INVALID_M6_OUTBOX_OPERATION")
 	if not bool(_service.has_durable_replay_operation(normalized_operation)):
 		return _failure("M6_OUTBOX_OPERATION_NOT_REPLAY_DURABLE", {"operation_id": normalized_operation})
-	var safe := Utils.canonicalize(payload, "$.m6_outbox_payload")
-	if not bool(safe.get("success", false)):
-		return _failure("M6_OUTBOX_PAYLOAD_NOT_JSON_SAFE", {"message": String(safe.get("error", ""))})
+	# One JSON-safe canonical round trip is enough to validate and detach.
+	# The old canonicalize() + json_round_trip() + duplicate(true) path
+	# traversed the entire (potentially large) command result three times.
 	var payload_round_trip: Dictionary = Utils.json_round_trip(payload)
 	if not bool(payload_round_trip.get("success", false)) or not payload_round_trip.get("value") is Dictionary:
 		return _failure("M6_OUTBOX_PAYLOAD_NOT_JSON_SAFE", {"message": String(payload_round_trip.get("error", ""))})
-	var stable_payload: Dictionary = Dictionary(payload_round_trip.get("value", {})).duplicate(true)
+	var stable_payload: Dictionary = Dictionary(payload_round_trip.get("value", {}))
 	for record_value in _records:
 		if String(Dictionary(record_value).get("operation_id", "")) == normalized_operation:
 			return _failure("M6_OUTBOX_OPERATION_ALREADY_STAGED", {"operation_id": normalized_operation})
 	_prune_for_new_record()
 	if _records.size() >= MAX_OUTBOX_RECORDS:
 		return _failure("M6_OUTBOX_CAPACITY_EXCEEDED")
-	var report: Dictionary = _service.get_report()
+	# get_report() recursively exports ALL durable and replay state just
+	# to read a tick and revision. That O(history) work is not part of M6
+	# durability and caused escalating main-thread ITEM capture latency.
+	# Support older fake services while production exposes a cheap clock.
+	var report: Dictionary = (
+		_service.get_outbox_clock()
+		if _service.has_method("get_outbox_clock")
+		else _service.get_report()
+	)
 	var record: Dictionary = {
 		"sequence": _next_sequence,
 		"operation_id": normalized_operation,
@@ -63,6 +81,7 @@ func stage_committed(operation_id: String, command_type: String, payload: Dictio
 	_next_sequence += 1
 	_records.append(record)
 	_prune()
+	_r31_invalidate_projection()
 	return _success({"record": record.duplicate(true)})
 
 
@@ -77,6 +96,7 @@ func mark_delivered(sequence: int) -> Dictionary:
 		record["delivered"] = true
 		record["state"] = "DELIVERED"
 		_records[index] = record
+		_r31_invalidate_projection()
 		return _success({"record": record.duplicate(true)})
 	return _failure("M6_OUTBOX_RECORD_NOT_FOUND", {"sequence": sequence})
 
@@ -88,6 +108,7 @@ func mark_delivery_attempt(sequence: int) -> Dictionary:
 			continue
 		record["delivery_attempts"] = int(record.get("delivery_attempts", 0)) + 1
 		_records[index] = record
+		_r31_invalidate_projection()
 		return _success({"record": record.duplicate(true)})
 	return _failure("M6_OUTBOX_RECORD_NOT_FOUND", {"sequence": sequence})
 
@@ -128,10 +149,109 @@ func to_dict() -> Dictionary:
 		"schema": SCHEMA,
 		"next_sequence": _next_sequence,
 		"gameplay_replay": _service.export_replay_state(),
-		"committed_outbox": get_records(),
+		# finalize_json_checksum() creates a detached deep copy/roundtrip;
+		# get_records() performs another redundant copy on this hot path.
+		"committed_outbox": _records,
 		"checksum": "",
 	}
 	return Utils.finalize_json_checksum(value)
+
+
+# R3C.4 R3.0 opt-in diagnostics only. Keep to_dict() untouched; this
+# reproduces its canonical JSON/checksum input exactly, and tests assert that
+# profiled and legacy bytes agree. No caching, mutable aliases or durable
+# generation changes are introduced by this probe.
+func to_dict_profiled() -> Dictionary:
+	if _service == null:
+		return {"value": {}, "metrics": {}}
+	var started_us: int = Time.get_ticks_usec()
+	var gameplay_replay: Dictionary = _service.export_replay_state()
+	var gameplay_done_us: int = Time.get_ticks_usec()
+	var value: Dictionary = {
+		"schema": SCHEMA,
+		"next_sequence": _next_sequence,
+		"gameplay_replay": gameplay_replay,
+		"committed_outbox": _records,
+		"checksum": "",
+	}
+	var normalized: Dictionary = Utils.finalize_json_checksum(value)
+	var finalized_us: int = Time.get_ticks_usec()
+	return {
+		"value": normalized,
+		"metrics": {
+			"gameplay_export_ms": float(gameplay_done_us - started_us) / 1000.0,
+			"checksum_detach_ms": float(finalized_us - gameplay_done_us) / 1000.0,
+			"committed_outbox_count": _records.size(),
+			"service_ledger_count": Dictionary(
+				gameplay_replay.get("service_operation_ledger", {})
+			).size(),
+		},
+	}
+
+
+
+# Replay data is a DERIVED immutable projection, never the source of truth.
+# All caller results are detached; writer retains its existing deep-copy fence.
+func to_dict_r31_versioned() -> Dictionary:
+	if _service == null or not _service.has_method("get_r31_replay_source_fence"):
+		return {"value": to_dict(), "cache_hit": false, "bypassed": "SOURCE_FENCE_UNAVAILABLE"}
+	var source_fence: Dictionary = _service.get_r31_replay_source_fence()
+	if (
+		source_fence.is_empty()
+		or String(source_fence.get("schema", "")) != "dws.r3c4.r31.replay_source_fence.v1"
+	):
+		return {"value": to_dict(), "cache_hit": false, "bypassed": "SOURCE_FENCE_INVALID"}
+	if (
+		not _r31_cache_value.is_empty()
+		and _r31_cache_outbox_version == _r31_outbox_version
+		and _r31_cache_fence == source_fence
+	):
+		_r31_hits += 1
+		return {
+			"value": _r31_cache_value.duplicate(true),
+			"cache_hit": true,
+			"projection_generation": _r31_cache_generation,
+			"source_fence": source_fence,
+		}
+	_r31_misses += 1
+	var normalized: Dictionary = to_dict()
+	if _service.get_r31_replay_source_fence() != source_fence:
+		return {"value": to_dict(), "cache_hit": false, "bypassed": "SOURCE_FENCE_CHANGED"}
+	if _records.size() > R31_CACHE_MAX_OUTBOX_RECORDS:
+		_r31_cache_value.clear()
+		return {"value": normalized, "cache_hit": false, "bypassed": "REPLAY_OUTBOX_BUDGET"}
+	var json_size: int = JSON.stringify(normalized).to_utf8_buffer().size()
+	if json_size > R31_CACHE_MAX_BYTES:
+		_r31_cache_value.clear()
+		return {"value": normalized, "cache_hit": false, "bypassed": "REPLAY_BYTES_BUDGET"}
+	_r31_cache_value = normalized
+	_r31_cache_fence = source_fence.duplicate(true)
+	_r31_cache_outbox_version = _r31_outbox_version
+	_r31_cache_generation += 1
+	return {
+		"value": normalized.duplicate(true),
+		"cache_hit": false,
+		"projection_generation": _r31_cache_generation,
+		"source_fence": source_fence,
+	}
+
+
+func get_r31_projection_report() -> Dictionary:
+	return {
+		"cache_hits": _r31_hits,
+		"cache_misses": _r31_misses,
+		"projection_generation": _r31_cache_generation,
+		"outbox_generation": _r31_outbox_version,
+		"cache_present": not _r31_cache_value.is_empty(),
+	}
+
+
+func _r31_invalidate_projection() -> void:
+	_r31_outbox_version += 1
+	_r31_cache_value.clear()
+	_r31_cache_fence.clear()
+	_r31_cache_outbox_version = -1
+
 
 
 func load_dict(value: Dictionary, _current_tick: int = -1) -> Dictionary:
@@ -145,6 +265,7 @@ func load_dict(value: Dictionary, _current_tick: int = -1) -> Dictionary:
 		return _failure("M6_GAMEPLAY_REPLAY_RESTORE_FAILED", {"cause": restored})
 	_next_sequence = int(value.get("next_sequence", 1))
 	_records = Array(value.get("committed_outbox", [])).duplicate(true)
+	_r31_invalidate_projection()
 	return _success({
 		"next_sequence": _next_sequence,
 		"outbox_count": _records.size(),
