@@ -24,6 +24,9 @@ func configure_live_items(fixture_owner: bool, spatial_validation: bool = true) 
 	_live_enabled6 = true
 	_live_spatial6 = spatial_validation
 	_live_fixture_owner6 = fixture_owner
+	# R31b P1: zero-revision native live item policy bootstrap mutates fixture
+	# items; a cached durable chunk must never alias this pre-bootstrap source.
+	_note_r31bp1_state_change()
 	if not fixture_owner:
 		_items.clear()
 		_containers.clear()
@@ -117,6 +120,7 @@ func _tag_live_replay6(actor: String, operation: String, existed: bool) -> void:
 	# exact replay must never rewrite another actor's pre-existing ledger row.
 	if _live_enabled6 and not existed and _ledger.has(operation):
 		_ledger[operation]["live_player_id"] = actor
+		_note_replay_projection_mutation()
 
 func _live_phase6(actor: String, gate, transfer: String, purpose: String, token: String = "") -> Dictionary:
 	if not _live_enabled6 or gate == null or _live_gates6.get(actor) != gate:
@@ -274,6 +278,7 @@ func retire_live_item_carry(actor: String, gate, transfer: String, token: String
 	for row in slice["containers"]: _containers.erase(row["container_id"])
 	for row in slice["mounts"]: _mounts.erase(row["mount_id"])
 	for operation in slice["replay"]: _ledger.erase(operation)
+	_note_replay_projection_mutation()
 	_inventories.erase(actor)
 	_open_containers.erase(actor)
 	_live_installed6.erase(actor)
@@ -309,6 +314,7 @@ func install_live_item_carry(actor: String, gate, transfer: String, token: Strin
 	for row in slice["containers"]: _containers[row["container_id"]] = Dictionary(row).duplicate(true)
 	for row in slice["mounts"]: _mounts[row["mount_id"]] = Dictionary(row).duplicate(true)
 	for operation in slice["replay"]: _ledger[operation] = Dictionary(slice["replay"][operation]).duplicate(true)
+	_note_replay_projection_mutation()
 	_open_containers.erase(actor)
 	_live_stages6.erase(actor)
 	_live_installed6[actor] = transfer

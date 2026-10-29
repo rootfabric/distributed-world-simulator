@@ -51,6 +51,29 @@ func configure(
 	})
 
 
+func rebind_durable_recovery_views(registry, ownership) -> Dictionary:
+	# Recovery replaces the primary PlayerRegistry and OwnershipService after
+	# the port was constructed. Its trusted peer must retain the SAME port
+	# identity, but all future transfer gates must see the restored rows.
+	# Never rebind an active or partially staged handoff.
+	if _owner_ref == null or _owner_ref.get_ref() == null:
+		return _product_failure("LIVE_TRANSFER_OWNER_REQUIRED")
+	if registry == null or ownership == null:
+		return _product_failure("LIVE_TRANSFER_RECOVERY_VIEWS_REQUIRED")
+	if has_bindings():
+		return _product_failure("LIVE_TRANSFER_RECOVERY_HAS_BINDINGS")
+	_registry = registry
+	_ownership = ownership
+	# These are process-local protocol receipts; none may be trusted across
+	# a durable server restart. The trust peer mapping remains intact.
+	_prepared.clear()
+	_staged.clear()
+	_retired.clear()
+	_installing.clear()
+	_source_record_checksums.clear()
+	return _product_success({"rebound": true, "trusted_peer_count": _peers.size()})
+
+
 func bind_player(
 	logical_id: String,
 	session: String,

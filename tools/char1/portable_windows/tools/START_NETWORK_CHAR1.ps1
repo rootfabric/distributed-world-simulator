@@ -1,44 +1,19 @@
 [CmdletBinding()]
-param(
-    [string] $GodotConsole = '',
-    [string] $AssetSource = '',
-    [switch] $SkipImport
-)
-
-$ErrorActionPreference = 'Stop'
-. (Join-Path $PSScriptRoot 'CHAR1-Common.ps1')
-$package = Get-CHAR1Root
-$project = Join-Path $package 'project'
-$info = Assert-CHAR1Snapshot $package
-$godot = Resolve-CHAR1Godot $GodotConsole
-[void](Ensure-CHAR1RealAssets $package $AssetSource)
-if (-not $SkipImport) {
-    [void](Invoke-CHAR1Command $godot.Console $project @('--headless','--editor','--import','--quit') 'char2-product-shell-import')
-}
-# Real USER1 product shell: Host World starts a dedicated server and client A;
-# Join World starts another *real* ENet GUI client B. This is not the avatar lab.
-$argsList = @(
-    '--rendering-driver', 'opengl3',
-    '--path', ('"{0}"' -f $project),
-    '--', '--product-shell'
-)
-$process = Start-Process -FilePath $godot.GUI -WorkingDirectory $project -ArgumentList $argsList -PassThru
-$evidence = Join-Path $package 'evidence'
-New-Item -ItemType Directory -Force -Path $evidence | Out-Null
-[ordered]@{
-    product_head = $info.product_head
-    product_tree = $info.product_tree
-    mode = 'REAL_ENET_HOST_JOIN'
-    ui_pid = $process.Id
-    initial_view = 'FIRST_PERSON'
-    local_first_person_body = 'HIDDEN'
-    local_third_person_body = 'VISIBLE'
-    remote_avatar_provider = 'avatar/quaternius'
-    command = 'Host World -> player a, then Join World -> player b'
-    launched_at = (Get-Date).ToString('o')
-} | ConvertTo-Json -Depth 5 | Set-Content (Join-Path $evidence 'char2-product-shell-launch.json') -Encoding UTF8
-Write-Host ('CHAR2 REAL NETWORK PRODUCT SHELL STARTED: PID {0}' -f $process.Id) -ForegroundColor Green
-Write-Host 'Click Host World (player a, 24580), then Join World (127.0.0.1, player b, 24580).'
-Write-Host 'In each client: V/F7 toggles first/third-person. The OTHER player always keeps the full Quaternius avatar.'
-Write-Host 'F1 console: character.camera.status, character.avatar.status; no network protocol changes.'
-Write-Host 'Windows remain open for user testing until the user closes them.'
+param([string]$GodotConsole='', [string]$AssetSource='', [switch]$SkipImport)
+$ErrorActionPreference='Stop'
+. (Join-Path $PSScriptRoot 'Playtest-Common.ps1')
+$package=Get-CHAR1Root
+$project=Join-Path $package 'project'
+$info=Assert-CHAR1Snapshot $package
+$godot=Resolve-CHAR1Godot $GodotConsole
+Assert-PlaytestAssets -Package $package -GodotConsole $godot.Console -AssetSource $AssetSource -SkipImport:$SkipImport
+$quoted='"{0}"' -f $project
+$launchArguments=@('--max-fps','60','--disable-vsync','--rendering-driver','opengl3','--path',$quoted,'--','--product-shell')
+$evidence=Join-Path $package 'evidence'
+New-Item -ItemType Directory -Force $evidence | Out-Null
+$process=Start-PlaytestProcess -Executable $godot.GUI -Package $package -Role launcher -Identity 'launcher' -LaunchArguments $launchArguments -LogPrefix (Join-Path $evidence ('shell-'+(Get-Date -Format 'yyyyMMdd-HHmmss')))
+[ordered]@{product_head=$info.product_head;product_tree=$info.product_tree;profile='PLAYTEST_R1_SAFE60';entrypoint='EARTH_PRODUCT_SHELL';ui_pid=$process.Id;gui_acceptance='PENDING';started=(Get-Date).ToString('o')}|ConvertTo-Json|Set-Content (Join-Path $evidence 'playtest-launch.json') -Encoding UTF8
+Write-Host 'DWS Playtest R1: Host World / Join World. No M7 playground.' -ForegroundColor Green
+Write-Host 'For Host: use a new slot for a new world; Continue retains that world.'
+Write-Host 'For Join: enter host IP, same port, and a DIFFERENT player name.'
+Write-Host 'V/F7 toggles camera; the yellow hint gives direction/distance to your peer.'

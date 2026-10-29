@@ -42,6 +42,47 @@ var _blackout_until_ms: Dictionary = {OUTGOING: 0, INCOMING: 0}
 var _packet_counts: Dictionary = {}
 var _stream_rngs: Dictionary = {}
 var _counters: Dictionary = {}
+# R31P23 R2.0 — OBSERVER ONLY, propagates exactly to delegate ENet.
+var _r31p23r2_attribution_enabled := false
+# R2.1: only LOCAL real ENet passthrough reuses actual encoded byte-count.
+# The original pre-delegate FrameScript.validate(frame) remains mandatory.
+var _r31p23r21_single_pass_compact_enabled := false
+var _r31p23r22_attested_compact_enabled := false
+
+func configure_r31p23r21_single_pass_compact(enabled: bool) -> Dictionary:
+	if _delegate == null or not _delegate.has_method("configure_r31p23r21_single_pass_compact"):
+		return TransportUtilsScript.failure("R31P23R21_ENET_DELEGATE_REQUIRED")
+	var r: Dictionary = _delegate.configure_r31p23r21_single_pass_compact(enabled)
+	if not bool(r.get("success", false)):
+		return r
+	_r31p23r21_single_pass_compact_enabled = enabled
+	return TransportUtilsScript.success({"enabled": enabled})
+
+
+func configure_r31p23r22_attested_compact(
+	enabled: bool, authority_owner: String, authority_epoch: int
+) -> Dictionary:
+	if enabled and not _r31p23r21_single_pass_compact_enabled:
+		return TransportUtilsScript.failure("R31P23R22_REQUIRES_R21")
+	if _delegate == null or not _delegate.has_method("configure_r31p23r22_attested_compact"):
+		return TransportUtilsScript.failure("R31P23R22_ENET_DELEGATE_REQUIRED")
+	var result: Dictionary = _delegate.configure_r31p23r22_attested_compact(
+		enabled, self, authority_owner, authority_epoch
+	)
+	if not bool(result.get("success", false)):
+		return result
+	_r31p23r22_attested_compact_enabled = enabled
+	return TransportUtilsScript.success({"enabled": enabled})
+
+
+func configure_r31p23r2_flush_attribution(enabled: bool) -> Dictionary:
+	if _delegate == null or not _delegate.has_method("configure_r31p23r2_flush_attribution"):
+		return TransportUtilsScript.failure("R31P23R2_ENET_DELEGATE_REQUIRED")
+	var configured: Dictionary = _delegate.configure_r31p23r2_flush_attribution(enabled)
+	if not bool(configured.get("success", false)):
+		return configured
+	_r31p23r2_attribution_enabled = enabled
+	return TransportUtilsScript.success({"enabled": enabled})
 
 
 func setup(
@@ -130,26 +171,92 @@ func disconnect_peer(peer_id: String, session_id: String) -> Dictionary:
 func send_to_peer(peer_id: String, frame: Dictionary) -> Dictionary:
 	if not _configured or not _started:
 		return TransportUtilsScript.failure("SIMULATOR_NOT_STARTED")
+	var p23_probe: bool = (
+		_r31p23r2_attribution_enabled
+		and String(Dictionary(frame.get("payload", {})).get("type", "")) == "COMPACT_GAMEPLAY_SNAPSHOT"
+	)
+	var p23_start_us: int = Time.get_ticks_usec() if p23_probe else 0
 	var frame_check: Dictionary = FrameScript.validate(frame)
+	var p23_validated_us: int = Time.get_ticks_usec() if p23_probe else 0
 	if not bool(frame_check.get("success", false)):
 		return TransportUtilsScript.failure(String(frame_check.get("error_code", "INVALID_FRAME")))
-	var packet_bytes: int = NetworkUtilsScript.canonical_json(frame).to_utf8_buffer().size()
-	if _passthrough and not _has_active_manual_condition(OUTGOING):
-		var direct: Dictionary = _normalize_result(_delegate.send_to_peer(peer_id, frame))
+	var real_passthrough: bool = _passthrough and not _has_active_manual_condition(OUTGOING)
+	var r21_reuse_encoded_size: bool = (
+		_r31p23r21_single_pass_compact_enabled
+		and real_passthrough
+		and String(Dictionary(frame.get("payload", {})).get("type", "")) == "COMPACT_GAMEPLAY_SNAPSHOT"
+		and _delegate != null
+		and String(_delegate.get_descriptor().get("transport_kind", "")) == "ENET_MULTI_PEER"
+	)
+	var r22_attested_passthrough: bool = (
+		_r31p23r22_attested_compact_enabled
+		and r21_reuse_encoded_size and _mode == "SERVER"
+		and String(frame.get("channel", "")) == ChannelPolicyScript.SNAPSHOT
+		and String(frame.get("delivery_mode", "")) == "UNRELIABLE_SEQUENCED"
+	)
+	# Original frame checksum/JSON safety validation already succeeded above.
+	# In a real passthrough the ENet delegate MUST produce canonical packet
+	# bytes and return their exact count; reserializing just to count bytes
+	# here was an extra full JSON traversal. Simulated/dropped profiles keep
+	# the original size calculation, queue policy and failure codes.
+	var packet_bytes: int = (
+		-1 if r21_reuse_encoded_size
+		else NetworkUtilsScript.canonical_json(frame).to_utf8_buffer().size()
+	)
+	var p23_canonical_us: int = Time.get_ticks_usec() if p23_probe else 0
+	if real_passthrough:
+		var p23_before_delegate_us: int = Time.get_ticks_usec() if p23_probe else 0
+		var direct: Dictionary
+		if r22_attested_passthrough:
+			# The original full native validator has already passed above.
+			# The next method freezes exactly THESE checked source bytes; the
+			# subsequent ENet method receives only a one-use ticket, not frame.
+			var prepared: Dictionary = _delegate.r22_prepare_validated_compact(
+				self, peer_id, frame
+			)
+			if not bool(prepared.get("success", false)):
+				return prepared
+			direct = _normalize_result(_delegate.r22_send_prepared(
+				self, peer_id, int(prepared.get("details", {}).get("ticket", 0))
+			))
+		else:
+			direct = _normalize_result(_delegate.send_to_peer(peer_id, frame))
+		var p23_delegate_us: int = Time.get_ticks_usec() if p23_probe else 0
+		if r21_reuse_encoded_size and bool(direct.get("success", false)):
+			var exact_bytes = Dictionary(direct.get("details", {})).get("packet_bytes")
+			if typeof(exact_bytes) != TYPE_INT or int(exact_bytes) < 1:
+				return TransportUtilsScript.failure("R31P23R21_DELEGATE_PACKET_SIZE_MISSING")
+			packet_bytes = int(exact_bytes)
 		if bool(direct.get("success", false)):
 			_increment("network_simulator_packets_passthrough")
-		return _with_simulator_details(direct, packet_bytes, false, false, _now_ms())
+		var result: Dictionary = _with_simulator_details(direct, packet_bytes, false, false, _now_ms())
+		if p23_probe and bool(result.get("success", false)):
+			var extras: Dictionary = Dictionary(result.get("details", {}))
+			extras["r31p23r21_size_reused"] = r21_reuse_encoded_size
+			extras["r31p23r22_attestation_consumed"] = r22_attested_passthrough
+			extras["r31p23r2_simulator_stages"] = {
+				"passthrough": true,
+				"r31p23r21_size_reused": r21_reuse_encoded_size,
+				"r31p23r21_fast_encode": bool(extras.get("r31p23r21_fast_encode", false)),
+				"frame_validate_ms": float(p23_validated_us - p23_start_us) / 1000.0,
+				"canonical_json_ms": float(p23_canonical_us - p23_validated_us) / 1000.0,
+				"pre_delegate_ms": float(p23_before_delegate_us - p23_canonical_us) / 1000.0,
+				"delegate_ms": float(p23_delegate_us - p23_before_delegate_us) / 1000.0,
+				"enet": Dictionary(extras.get("r31p23r2_enet_stages", {})).duplicate(true),
+			}
+			result["details"] = extras
+		return result
 	var plan: Dictionary = _plan_packet(OUTGOING, peer_id, frame, packet_bytes)
 	if bool(plan.get("drop", false)):
 		_increment("network_simulator_unreliable_packets_dropped")
 		_update_telemetry()
-		return TransportUtilsScript.success({
+		return _r31p23r2_wrap_simulated_result(TransportUtilsScript.success({
 			"enqueued": true,
 			"simulated": true,
 			"dropped": true,
 			"packet_bytes": packet_bytes,
 			"profile_id": String(_profile.get("profile_id", "")),
-		})
+		}),p23_probe,p23_start_us,p23_validated_us,p23_canonical_us)
 	if not _can_queue(OUTGOING, packet_bytes):
 		if _is_reliable(frame):
 			_increment("network_simulator_reliable_queue_backpressure")
@@ -160,13 +267,13 @@ func send_to_peer(peer_id: String, frame: Dictionary) -> Dictionary:
 			})
 		_increment("network_simulator_unreliable_queue_drops")
 		_update_telemetry()
-		return TransportUtilsScript.success({
+		return _r31p23r2_wrap_simulated_result(TransportUtilsScript.success({
 			"enqueued": true,
 			"simulated": true,
 			"dropped": true,
 			"queue_limit": true,
 			"packet_bytes": packet_bytes,
-		})
+		}),p23_probe,p23_start_us,p23_validated_us,p23_canonical_us)
 	_enqueue_outgoing(peer_id, frame, packet_bytes, plan, false)
 	if bool(plan.get("duplicate", false)):
 		if _can_queue(OUTGOING, packet_bytes):
@@ -177,14 +284,36 @@ func send_to_peer(peer_id: String, frame: Dictionary) -> Dictionary:
 		else:
 			_increment("network_simulator_duplicate_queue_suppressed")
 	_update_telemetry()
-	return TransportUtilsScript.success({
+	return _r31p23r2_wrap_simulated_result(TransportUtilsScript.success({
 		"enqueued": true,
 		"simulated": true,
 		"dropped": false,
 		"packet_bytes": packet_bytes,
 		"scheduled_at_ms": int(plan.get("due_ms", _now_ms())),
 		"profile_id": String(_profile.get("profile_id", "")),
-	})
+	}),p23_probe,p23_start_us,p23_validated_us,p23_canonical_us)
+
+
+# Delayed/drop profile remains a DISTINCT measured population: a scheduled
+# simulator send is NOT an actual same-frame ENet put_packet call.
+func _r31p23r2_wrap_simulated_result(
+	result: Dictionary, probe: bool, started_us: int,
+	validated_us: int, canonical_us: int
+) -> Dictionary:
+	if not probe or not bool(result.get("success", false)):
+		return result
+	var details: Dictionary = Dictionary(result.get("details", {}))
+	details["r31p23r2_simulator_stages"] = {
+		"passthrough": false,
+		"frame_validate_ms": float(validated_us - started_us) / 1000.0,
+		"canonical_json_ms": float(canonical_us - validated_us) / 1000.0,
+		"pre_delegate_ms": float(Time.get_ticks_usec() - canonical_us) / 1000.0,
+		"delegate_ms": 0.0,
+		"enet": {},
+	}
+	result["details"] = details
+	return result
+
 
 
 func poll_events(max_events: int) -> Array[Dictionary]:

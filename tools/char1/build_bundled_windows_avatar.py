@@ -22,7 +22,7 @@ from datetime import datetime, timezone
 
 from build_windows_test import build as build_exact_source
 
-ROOT_NAME = "CHAR1_REALISTIC_WITH_AVATAR"
+ROOT_NAME = "DWS_PLAYTEST_R1"
 ENGINE_CONSOLE = "godot.windows.editor.double.x86_64.console.exe"
 ENGINE_GUI = "godot.windows.editor.double.x86_64.exe"
 ENGINE_VERSION = "4.7.1.stable.double.custom_build.a13da4feb"
@@ -164,7 +164,7 @@ def extract_source(source_zip: pathlib.Path, dest: pathlib.Path) -> None:
 
 
 def make_launchers(folder: pathlib.Path) -> None:
-    for filename in ["START_CHAR1.cmd", "VERIFY_CHAR1.cmd", "START_NETWORK_CHAR1.cmd", "START_TWO_CLIENTS_CHAR1.cmd"]:
+    for filename in ["START_CHAR1.cmd", "VERIFY_CHAR1.cmd", "START_NETWORK_CHAR1.cmd", "START_TWO_CLIENTS_CHAR1.cmd", "START.cmd", "START_TWO_CLIENTS.cmd"]:
         dest = folder / filename
         if not dest.is_file():
             raise RuntimeError("Missing tracked Windows launcher: " + filename)
@@ -173,7 +173,7 @@ def make_launchers(folder: pathlib.Path) -> None:
             'setlocal\r\n'
             'cd /d "%~dp0"\r\n'
             'powershell.exe -NoProfile -ExecutionPolicy Bypass -File '
-            '"%~dp0tools\\' + filename.replace(".cmd", ".ps1") + '" '
+            '"%~dp0tools\\' + ({"START.cmd":"START_NETWORK_CHAR1.ps1", "START_CHAR1.cmd":"START_NETWORK_CHAR1.ps1", "START_TWO_CLIENTS.cmd":"START_TWO_CLIENTS_CHAR1.ps1"}.get(filename, filename.replace(".cmd", ".ps1"))) + '" '
             '-GodotConsole "%~dp0runtime\\' + ENGINE_CONSOLE + '" %*\r\n'
             'if errorlevel 1 (\r\n'
             '  echo CHAR1 launch / verification FAILED. See error above and evidence logs.\r\n'
@@ -266,6 +266,10 @@ def build(args: argparse.Namespace) -> dict:
             ("char2-product-camera",
                 "tests/characters/test_char2_product_camera_toggle.gd",
                 "CHAR2 PRODUCT CAMERA: PASS"),
+            ("release-profile", "tests/runtime/test_playtest_launch_profile.gd", "PLAYTEST LAUNCH PROFILE: PASS"),
+            ("recovery-tick", "tests/runtime/test_user1_seam_recovery_tick_resync.gd", "USER1 SEAM RECOVERY TICK RESYNC: PASS"),
+            ("recovery-seam", "tests/runtime/test_user1_seam_recovery_port_rebind.gd", "USER1 POST-RESTORE SEAM PORT REBIND: PASS"),
+            ("remote-reconnect", "tests/runtime/test_net_smooth1_remote_owner_reconnect.gd", "PASS"),
         ]
         for name, scene, marker in checks:
             log = run_checked([
@@ -282,7 +286,9 @@ def build(args: argparse.Namespace) -> dict:
         # Preserve reproducible original tracked source identity, but record that
         # the assembled payload also contains CC0 resources and engine binaries.
         embedded = {
-            "package": "CHAR1 Realistic Avatar Bundled Windows Preview",
+            "package": "DWS Playtest R1 — Earth Host/Join NET-SMOOTH1 + CHAR2",
+            "launch_profile": "PLAYTEST_R1_SAFE60",
+            "gui_human_acceptance": "PENDING",
             "kind": "PORTABLE_GODOT_EDITOR_RUNTIME_AND_CC0_ASSETS",
             "product_head": head,
             "product_tree": tree,
@@ -304,25 +310,7 @@ def build(args: argparse.Namespace) -> dict:
             json.dumps(embedded, indent=2, ensure_ascii=False) + "\n",
             encoding="utf-8"
         )
-        (package / "README_WITH_AVATAR_RU.txt").write_text(
-            "CHAR1: ready-to-run Windows preview with real Quaternius avatar.\n"
-            "Unpack to a writable directory and run START_CHAR1.cmd.\n"
-            "For actual dedicated server + two ENet clients use START_NETWORK_CHAR1.cmd.\n"
-            "For automatic three-process test use START_TWO_CLIENTS_CHAR1.cmd.\n"
-            "Host World as a, then Join World as b on port 24580.\n"
-            "In actual game clients V/F7 toggles camera; remote avatars always visible.\n"
-            "No Godot installation and no separate Quaternius downloads required.\n"
-            "First launch may re-import assets. C/V switches first/third person;\n"
-            "first person hides the local body. 1 selects real Quaternius,\n"
-            "2/3 switch to procedural comparisons; I/W/R choose idle/walk/run.\n"
-            "The package is a portable Godot editor-runtime preview, NOT\n"
-            "an exported standalone production game binary.\n"
-            "Quaternius Universal Base Characters and Universal Animation\n"
-            "Library are CC0 1.0 Universal: https://creativecommons.org/publicdomain/zero/1.0/\n"
-            "Licenses: LICENSES/GODOT_MIT_LICENSE.txt and\n"
-            "LICENSES/QUATERNIUS_CC0_PROVENANCE.txt.\n",
-            encoding="utf-8"
-        )
+        shutil.copy2(project / "docs/release/PLAYTEST_R1_RU.txt", package / "README_RU.txt")
         with zipfile.ZipFile(output, "w", compression=zipfile.ZIP_DEFLATED,
                              compresslevel=6, allowZip64=True) as archive:
             for file in sorted(package.rglob("*")):

@@ -40,7 +40,27 @@ func save_atomic(checkpoint: Dictionary) -> Dictionary:
 			return _failure("CURRENT_AUTHORITATIVE_CHECKPOINT_CORRUPTED", {"cause": current_result})
 		var progression: Dictionary = CheckpointScript.validate_progression(checkpoint, current_result["details"]["checkpoint"])
 		if not bool(progression.get("success", false)):
-			return _failure(String(progression.get("error_code", "AUTHORITATIVE_CHECKPOINT_ROLLBACK")), {"message": String(progression.get("message", ""))})
+			var failure_details: Dictionary = {"message": String(progression.get("message", ""))}
+			if OS.get_environment("DWS_NET_SMOOTH_TEST_HOOKS") == "1" and String(progression.get("error_code", "")) == "SAME_REVISION_AUTHORITATIVE_MUTATION":
+				# Test-only diagnostics: redacted leaf paths only, never values.
+				var candidate_projection: Dictionary = CheckpointScript._revision_semantic_projection(checkpoint["authority_state"].get("current_snapshot", {}))
+				var current_projection: Dictionary = CheckpointScript._revision_semantic_projection(current_result["details"]["checkpoint"]["authority_state"].get("current_snapshot", {}))
+				failure_details["debug_diff_paths"] = CheckpointScript.debug_all_revision_difference_paths(
+					candidate_projection, current_projection
+				)
+				var gameplay_raw: Dictionary = Dictionary(checkpoint["authority_state"].get("current_snapshot", {}).get("domain_components", {}).get("networked_gameplay_state", {}))
+				var current_raw: Dictionary = Dictionary(current_result["details"]["checkpoint"]["authority_state"].get("current_snapshot", {}).get("domain_components", {}).get("networked_gameplay_state", {}))
+				var candidate_ownership_tick := int(Dictionary(gameplay_raw.get("ownership", {})).get("server_tick", -1))
+				var current_ownership_tick := int(Dictionary(current_raw.get("ownership", {})).get("server_tick", -1))
+				var candidate_gameplay_tick := int(gameplay_raw.get("server_tick", -1))
+				var current_gameplay_tick := int(current_raw.get("server_tick", -1))
+				failure_details["debug_erased_field_delta"] = {
+					"ownership_server_tick_delta": candidate_ownership_tick - current_ownership_tick,
+					"gameplay_server_tick_delta": candidate_gameplay_tick - current_gameplay_tick,
+					"ownership_revision_candidate": int(Dictionary(gameplay_raw.get("ownership", {})).get("revision", -1)),
+					"ownership_revision_current": int(Dictionary(current_raw.get("ownership", {})).get("revision", -1)),
+				}
+			return _failure(String(progression.get("error_code", "AUTHORITATIVE_CHECKPOINT_ROLLBACK")), failure_details)
 	var prepared: Dictionary = prepare(checkpoint)
 	if not bool(prepared.get("success", false)):
 		return prepared

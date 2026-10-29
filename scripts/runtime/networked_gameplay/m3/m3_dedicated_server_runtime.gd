@@ -1,5 +1,9 @@
 extends "res://scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime_p2.gd"
 
+# P1-B R2: V0 resource resync readers also respect ITEM commit visibility.
+const P1B_MAX_RESOURCE_RESYNC_WAITERS := 32
+var _p1b_resource_resync_waiters: Dictionary = {}
+
 const ResourceMiningDelta = preload(
 	"res://scripts/runtime/networked_gameplay/p3/resource_mining_delta.gd"
 )
@@ -212,6 +216,16 @@ func _handle_construction_command(peer_id: String, session_id: String, payload: 
 	if not command_value is Dictionary:
 		_send_result(peer_id, operation_id, "CONSTRUCTION_COMMAND", _failure("CONSTRUCTION_COMMAND_REQUIRED"))
 		return
+	# The V0/P4 override must obey the SAME M6 durability gate as the P2
+	# base handler. Construction's separate gateway has no proven M6 owner.
+	if not _gate_can_accept():
+		_reject_uncommitted_command(peer_id, operation_id, "CONSTRUCTION_COMMAND",
+			_gate_reject_code())
+		return
+	if not _construction_durability_allowed():
+		_reject_uncommitted_command(peer_id, operation_id, "CONSTRUCTION_COMMAND",
+			"M3_CONSTRUCTION_DURABILITY_CONTRACT_REQUIRED")
+		return
 	var logical_id := String(_peer_to_player.get(peer_id, ""))
 	if (
 		_service != null
@@ -374,6 +388,13 @@ func _handle_resource_command(peer_id: String, session_id: String, payload: Dict
 		_send_result(peer_id, operation_id, "resource.mine", _failure("RESOURCE_MINING_NOT_READY"))
 		_resource_rejections += 1
 		return
+	# V0-P3 mining is also a canonical mutation. Never let it race an
+	# unresolved ITEM generation or steal that worker's completion.
+	if not _gate_can_accept():
+		_reject_uncommitted_command(peer_id, operation_id, "resource.mine",
+			_gate_reject_code())
+		_resource_rejections += 1
+		return
 
 	var logical_id := String(_peer_to_player.get(peer_id, ""))
 	var stage_context := _stall_context(peer_id, operation_id, "resource.mine")
@@ -465,10 +486,21 @@ func _handle_resource_resync_request(
 	if not _peer_to_player.has(peer_id) or String(_peer_to_session.get(peer_id, "")) != session_id:
 		return
 	_resource_resync_requests += 1
+	if not _p1b_item_pending.is_empty():
+		if (
+			_p1b_resource_resync_waiters.has(peer_id)
+			or _p1b_resource_resync_waiters.size() < P1B_MAX_RESOURCE_RESYNC_WAITERS
+		):
+			_p1b_resource_resync_waiters[peer_id] = session_id
+		else:
+			_last_error_code = "P1B_RESOURCE_RESYNC_QUEUE_FULL"
+		return
 	_send_resource_snapshot(peer_id, "EXPLICIT_RESYNC")
 
 
 func _send_resource_snapshot(peer_id: String, reason: String) -> bool:
+	if not _p1b_item_pending.is_empty():
+		return false
 	if _service == null or not _service.has_method("create_resource_mining_snapshot"):
 		return false
 	var snapshot: Dictionary = _service.create_resource_mining_snapshot()
@@ -484,6 +516,25 @@ func _send_resource_snapshot(peer_id: String, reason: String) -> bool:
 	if sent:
 		_resource_snapshots_published += 1
 	return sent
+
+
+# Drop session-scoped read-only resync waiters on an explicit shutdown.
+# Canonical replay/outbox is separate and remains durable.
+func stop() -> Dictionary:
+	_p1b_resource_resync_waiters.clear()
+	return super.stop()
+
+
+func _p1b_flush_resource_resync_waiters() -> void:
+	if not _p1b_item_pending.is_empty() or _p1b_resource_resync_waiters.is_empty():
+		return
+	var queued: Dictionary = _p1b_resource_resync_waiters.duplicate(true)
+	_p1b_resource_resync_waiters.clear()
+	for peer_value in queued.keys():
+		var peer_id := String(peer_value)
+		if String(_peer_to_session.get(peer_id, "")) != String(queued[peer_id]):
+			continue
+		_send_resource_snapshot(peer_id, "P1B_AFTER_ITEM_COMMIT")
 
 
 func _broadcast_resource_snapshot(reason: String) -> void:

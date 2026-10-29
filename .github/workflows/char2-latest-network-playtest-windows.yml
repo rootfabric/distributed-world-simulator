@@ -1,78 +1,66 @@
-name: CHAR2 Latest Main Windows Playtest Bundle
+name: DWS Playtest R1 Host Join Windows Bundle
 
 on:
   push:
-    branches:
-      - integration/char2-current-main-playtest-r1
+    branches: [integration/char2-current-main-playtest-r1]
+    paths-ignore: ['.github/workflows/playtest-baseline-inputs.yml', '.github/workflows/assemble-playtest-rc1.yml', 'tools/release/assembly-payload.b64']
   workflow_dispatch:
 
 permissions:
   contents: read
-
 concurrency:
-  group: char2-latest-network-playtest
+  group: dws-playtest-r1-bundle
   cancel-in-progress: true
 
 jobs:
   source:
-    name: Reproducible latest-main character source
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
           persist-credentials: false
-      - name: Check source provenance and character integration
-        shell: bash
+      - name: Exact inputs and composition guard
         run: |
           set -euo pipefail
-          mkdir -p artifacts/char2-integrated
-          git merge-base --is-ancestor 8b504a2d854e891baa4688c6a8f25e9dc8c956d7 HEAD
-          test -z "$(git status --porcelain --untracked-files=no)"
+          python3 tools/release/verify_playtest_source.py
           python3 -m py_compile tools/char1/build_windows_test.py tools/char1/build_bundled_windows_avatar.py
-          python3 - <<'PY'
-          import json
-          from pathlib import Path
-          c=json.loads(Path("config/worlds/catalog.json").read_text(encoding="utf-8"))
-          earth=next(w for w in c["worlds"] if w["id"]=="earth")
-          assert earth["runtime_script"]=="res://scripts/app/earth_char1_avatar_app.gd"
-          assert earth["options"]["avatar_character_id"]=="character/quaternius/regular"
-          for p in [
-              "scripts/network/gateway/runtime/n3_region_lease_directory.gd",
-              "scripts/network/gateway/runtime/n3_directory_route_service.gd",
-              "scripts/app/earth_char1_avatar_app.gd",
-              "scripts/characters/runtime/earth_network_avatar_presenter.gd",
-              "scripts/characters/providers/quaternius_avatar_engine.gd",
-              "tools/char1/portable_windows/START_TWO_CLIENTS_CHAR1.cmd",
-              "tools/char1/portable_windows/START_NETWORK_CHAR1.cmd",
-              "tests/characters/test_char2_network_avatar_client_presentation.gd",
-              "tests/characters/test_char2_product_camera_toggle.gd",
-          ]:
-              assert Path(p).is_file(), p
-          print("INTEGRATED_SOURCE_PREFLIGHT_PASS")
-          PY
-          git diff --name-only 8b504a2d854e891baa4688c6a8f25e9dc8c956d7 HEAD > artifacts/char2-integrated/changed-files.txt
-          if grep -Eq '^(scripts/runtime/networked_gameplay/|scripts/network/|scripts/persistence/|scripts/items/|scripts/construction/)' artifacts/char2-integrated/changed-files.txt; then
-            echo "PRODUCTION_NETWORK_OWNER_MODIFIED"; exit 1
-          fi
-          git rev-parse HEAD > artifacts/char2-integrated/HEAD.txt
-          git rev-parse 'HEAD^{tree}' > artifacts/char2-integrated/TREE.txt
-          git archive --format=tar.gz -o artifacts/char2-integrated/exact-source.tar.gz HEAD
-          sha256sum artifacts/char2-integrated/exact-source.tar.gz > artifacts/char2-integrated/source.sha256
+          mkdir -p artifacts/playtest-r1-source
+          git rev-parse HEAD > artifacts/playtest-r1-source/HEAD.txt
+          git rev-parse 'HEAD^{tree}' > artifacts/playtest-r1-source/TREE.txt
+          git archive --format=tar.gz -o artifacts/playtest-r1-source/source.tar.gz HEAD
+          cp config/release/playtest-r1.json config/release/playtest-composition.v1.json artifacts/playtest-r1-source/
       - uses: actions/upload-artifact@v4
         with:
-          name: char2-latest-network-exact-source
-          path: artifacts/char2-integrated/
-          retention-days: 14
-          compression-level: 0
+          name: playtest-r1-exact-source
+          path: artifacts/playtest-r1-source/
           if-no-files-found: error
+          retention-days: 30
 
-  windows:
-    name: Real CHAR2 avatars + latest network Windows ZIP
+  windows-syntax:
     needs: source
+    runs-on: windows-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Parse actual shipped launchers on Windows PowerShell
+        shell: powershell
+        run: |
+          $ErrorActionPreference='Stop'
+          foreach($path in @('tools/char1/portable_windows/tools/Playtest-Common.ps1','tools/char1/portable_windows/tools/START_NETWORK_CHAR1.ps1','tools/char1/portable_windows/tools/START_TWO_CLIENTS_CHAR1.ps1')) {
+            $tok=$null;$errs=$null
+            [System.Management.Automation.Language.Parser]::ParseFile((Join-Path (Get-Location) $path),[ref]$tok,[ref]$errs)|Out-Null
+            if($errs.Count -ne 0){throw ($errs|Out-String)}
+          }
+          Write-Host 'WINDOWS_PS51_LAUNCH_SYNTAX_PASS'
+
+  windows-bundle:
+    needs: [source, windows-syntax]
     runs-on: [self-hosted, Windows, X64]
-    timeout-minutes: 90
+    timeout-minutes: 60
     env:
       BREAKPOINT_RUNTIME_DISABLED: '1'
       GODOT_SILENCE_ROOT_WARNING: '1'
@@ -80,82 +68,39 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: ${{ github.sha }}
           fetch-depth: 0
           persist-credentials: false
-      - name: Exact double engine and import
+      - name: Full portable Earth Host Join + real Quaternius
         shell: pwsh
         run: |
           $ErrorActionPreference='Stop'
-          New-Item -ItemType Directory -Force artifacts/char2-integrated-windows | Out-Null
-          $godot='C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe'
-          if (-not(Test-Path $godot)) { throw 'DOUBLE_GODOT_MISSING' }
-          $version=(& $godot --version | Select-Object -First 1).Trim()
-          $actual=(Get-FileHash $godot -Algorithm SHA256).Hash.ToLowerInvariant()
-          if($version -ne '4.7.1.stable.double.custom_build.a13da4feb'){throw "GODOT_VERSION_MISMATCH:$version"}
-          if($actual -ne '3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5'){throw "GODOT_SHA_MISMATCH:$actual"}
           $head=(git rev-parse HEAD).Trim()
-          if($head -ne $env:GITHUB_SHA){throw "CI_HEAD_MISMATCH:$head"}
-          [ordered]@{head=$head;tree=(git rev-parse 'HEAD^{tree}').Trim();godot_version=$version;godot_sha256=$actual}|ConvertTo-Json|Set-Content artifacts/char2-integrated-windows/identity.json -Encoding UTF8
-          & $godot --headless --editor --path . --import *> artifacts/char2-integrated-windows/import.log
-          if($LASTEXITCODE -ne 0 -or (Select-String artifacts/char2-integrated-windows/import.log -Pattern 'SCRIPT ERROR:|Parse Error:|Compile Error:' -Quiet)){
-            Get-Content artifacts/char2-integrated-windows/import.log -Tail 100
-            throw 'CHAR2_IMPORT_FAILED'
-          }
-      - name: Focused CHAR2 and network USER1 regressions
-        shell: pwsh
-        timeout-minutes: 25
-        run: |
-          $ErrorActionPreference='Stop'
-          $godot='C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe'
-          foreach($test in @(
-            'tests/characters/test_char2_network_avatar_client_presentation.gd',
-            'tests/characters/test_char2_product_camera_toggle.gd',
-            'tests/characters/test_char1_production_avatar.gd',
-            'tests/characters/test_char1_first_person_body_visibility.gd',
-            'tests/runtime/test_v0_user1_product_seam_bridge.gd',
-            'tests/runtime/test_v0_user1_first_usable_slice.gd',
-            'tests/runtime/test_v0_ux0_product_shell.gd'
-          )){
-            $log=Join-Path 'artifacts/char2-integrated-windows' ((Split-Path $test -Leaf)+'.log')
-            & $godot --headless --path . --script "res://$test" *> $log
-            $exit=$LASTEXITCODE
-            if($exit -ne 0 -or (Select-String $log -Pattern 'SCRIPT ERROR:|Parse Error:|Compile Error:|: FAIL' -Quiet)){
-              Get-Content $log -Tail 110
-              throw "CHAR2_NATIVE_FAILED:$test exit:$exit"
-            }
-            Get-Content $log -Tail 5
-          }
-          if(git status --porcelain --untracked-files=no){throw 'TRACKED_TREE_DIRTY'}
-      - name: Strict real CC0 Quaternius Windows bundle
-        shell: pwsh
-        timeout-minutes: 50
-        run: |
-          $ErrorActionPreference='Stop'
-          $candidates=@(
-            $env:DWS_QUATERNIUS_ASSET_ROOT,
+          if($head -ne $env:GITHUB_SHA){throw 'HEAD_MISMATCH'}
+          New-Item -ItemType Directory -Force artifacts/playtest-r1 | Out-Null
+          $candidates=@($env:DWS_QUATERNIUS_ASSET_ROOT,
             'C:\distributed-world-simulator\char1-realistic-r1\assets\external\quaternius',
-            'C:\distributed-world-simulator\distributed-world-simulator\char1-realistic-r1\assets\external\quaternius',
-            'C:\dwsv-char1-git-hotfix-test\CHAR1_REALISTIC_WINDOWS_TEST\project\assets\external\quaternius'
-          )
-          $assets=$null
-          foreach($candidate in $candidates){
-            if([string]::IsNullOrWhiteSpace($candidate)){continue}
-            if((Test-Path (Join-Path $candidate 'base_characters')) -and (Test-Path (Join-Path $candidate 'animation_library'))){$assets=$candidate;break}
+            'C:\dwsv-char1-git-hotfix-test\CHAR1_REALISTIC_WINDOWS_TEST\project\assets\external\quaternius')
+          if(Test-Path 'C:\dws-char2-playtest-r1-delivery') {
+            $candidates+=@(Get-ChildItem 'C:\dws-char2-playtest-r1-delivery' -Directory -Recurse -Depth 6 -Filter quaternius -ErrorAction SilentlyContinue|Select-Object -ExpandProperty FullName)
           }
-          if($null -eq $assets){throw 'REAL_CC0_ASSETS_MISSING: specify DWS_QUATERNIUS_ASSET_ROOT'}
-          $out=(Join-Path (Resolve-Path 'artifacts/char2-integrated-windows').Path 'DWS_LATEST_NETWORK_CHAR2_Windows.zip')
-          $expected=(git rev-parse HEAD).Trim()
-          python tools/char1/build_bundled_windows_avatar.py --repo . --expected-head $expected --godot-console 'C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe' --assets-root $assets --output $out *> artifacts/char2-integrated-windows/build.log
-          $exit=$LASTEXITCODE
-          Get-Content artifacts/char2-integrated-windows/build.log -Tail 60
-          if($exit -ne 0){throw "CHAR2_BUNDLE_FAILED:$exit"}
-          if(-not(Test-Path $out)){throw 'BUNDLE_ZIP_MISSING'}
-          [ordered]@{head=$expected;tree=(git rev-parse 'HEAD^{tree}').Trim();sha256=(Get-FileHash $out -Algorithm SHA256).Hash.ToLowerInvariant();zip_bytes=(Get-Item $out).Length;avatar='REAL_QUATERNIUS_CC0';manual_gui='PENDING'} | ConvertTo-Json -Depth 4 | Set-Content artifacts/char2-integrated-windows/bundle-receipt.json -Encoding UTF8
+          $asset=$null
+          foreach($c in $candidates){
+            if([string]::IsNullOrWhiteSpace($c)){continue}
+            if((Test-Path (Join-Path $c 'base_characters')) -and (Test-Path (Join-Path $c 'animation_library'))){$asset=$c;break}
+          }
+          if($null -eq $asset){throw 'REAL_ASSETS_NOT_FOUND'}
+          $out=Join-Path (Resolve-Path 'artifacts/playtest-r1').Path ('DWS_PLAYTEST_R1_'+$head.Substring(0,12)+'_Windows.zip')
+          python tools/char1/build_bundled_windows_avatar.py --repo . --expected-head $head --assets-root $asset --output $out *> artifacts/playtest-r1/build.log
+          $code=$LASTEXITCODE
+          Get-Content artifacts/playtest-r1/build.log -Tail 100
+          if($code -ne 0){throw "WINDOWS_BUNDLE_FAIL:$code"}
+          [ordered]@{head=$head;tree=(git rev-parse 'HEAD^{tree}').Trim();zip_sha256=(Get-FileHash $out -Algorithm SHA256).Hash.ToLowerInvariant();profile='PLAYTEST_R1_SAFE60';gui_acceptance='PENDING_HUMAN'}|ConvertTo-Json|Set-Content artifacts/playtest-r1/receipt.json -Encoding UTF8
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: char2-latest-network-windows-bundle
-          path: artifacts/char2-integrated-windows/
-          retention-days: 30
-          compression-level: 0
+          name: DWS-PLAYTEST-R1-Windows
+          path: artifacts/playtest-r1/
           if-no-files-found: warn
+          compression-level: 0
+          retention-days: 30

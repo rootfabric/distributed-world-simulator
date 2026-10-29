@@ -21,6 +21,14 @@ SOURCE_DIR = pathlib.PurePosixPath("tools/char1/portable_windows")
 PACKAGE_ROOT = "CHAR1_REALISTIC_WINDOWS_TEST"
 REVISION = "PS51_EXITCODE_HANDLE_R2"
 CRITICAL = (
+    "config/release/playtest-r1.json",
+    "scripts/runtime/playtest_launch_profile.gd",
+    "scripts/ui/product_shell.gd",
+    "scripts/runtime/networked_gameplay/m3/m3_dedicated_server_runtime_p2.gd",
+    "scripts/runtime/networked_gameplay/m3/m3_graphical_client_runtime_nx6.gd",
+    "scripts/runtime/networked_gameplay/user1/user1_product_seam_gameplay_service.gd",
+    "scripts/runtime/networked_gameplay/user1/user1_product_player_transfer_port.gd",
+    "scripts/app/earth_char1_avatar_app.gd",
     "scripts/characters/lab/char1_realistic_avatar_viewer.gd",
     "tests/characters/test_char1_first_person_body_visibility.gd",
     "tests/characters/test_char1_realistic_viewmode.gd",
