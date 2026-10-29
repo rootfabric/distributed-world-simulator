@@ -1,0 +1,62 @@
+name: Playtest Baseline Exact Inputs
+
+on:
+  push:
+    branches: [integration/char2-current-main-playtest-r1]
+    paths: ['.github/workflows/playtest-baseline-inputs.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  inputs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Export immutable source inputs and exact tree provenance
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/playtest-inputs
+          python3 - <<'PY'
+          import hashlib,json,pathlib,subprocess
+          out=pathlib.Path('artifacts/playtest-inputs')
+          refs={
+            'main':'8b504a2d854e891baa4688c6a8f25e9dc8c956d7',
+            'net_windows':'38d62f5bc6143b6d5f4e0b95ff91adbb7e0a13a4',
+            'char2':'d4ab242415c8b5cb3a48baf5f569b0b5c5e060b1',
+            'recovery':'a5be22a6d909f8ef6bc0db2cb9e94bf1c312234d',
+          }
+          def git(*args): return subprocess.check_output(['git',*args])
+          manifest={}
+          for name,ref in refs.items():
+              resolved=git('rev-parse',ref+'^{commit}').decode().strip()
+              assert resolved==ref,(name,resolved)
+              tree=git('rev-parse',ref+'^{tree}').decode().strip()
+              archive=out/(name+'.tar.gz')
+              subprocess.run(['git','archive','--format=tar.gz','--output='+str(archive),ref],check=True)
+              (out/(name+'-tree.txt')).write_bytes(git('ls-tree','-r',ref))
+              manifest[name]={'head':ref,'tree':tree,'archive_sha256':hashlib.sha256(archive.read_bytes()).hexdigest()}
+          mb=git('merge-base',refs['main'],refs['net_windows']).decode().strip()
+          subprocess.run(['git','archive','--format=tar.gz','--output='+str(out/'common.tar.gz'),mb],check=True)
+          manifest['common']={'head':mb,'tree':git('rev-parse',mb+'^{tree}').decode().strip(),'archive_sha256':hashlib.sha256((out/'common.tar.gz').read_bytes()).hexdigest()}
+          (out/'net-vs-common.patch').write_bytes(git('diff','--binary',mb,refs['net_windows']))
+          (out/'net-vs-common-names.txt').write_bytes(git('diff','--name-status',mb,refs['net_windows']))
+          (out/'main-vs-common-names.txt').write_bytes(git('diff','--name-status',mb,refs['main']))
+          (out/'char2-vs-main.patch').write_bytes(git('diff','--binary',refs['main'],refs['char2']))
+          (out/'recovery-vs-char2.patch').write_bytes(git('diff','--binary',refs['char2'],refs['recovery']))
+          (out/'manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
+          print(json.dumps(manifest,indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: playtest-baseline-exact-inputs
+          path: artifacts/playtest-inputs/
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 14
