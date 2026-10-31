@@ -41,7 +41,11 @@ def verify_world(states, units, a_ore, b_ore, stages):
         require(remaining(state) == units, role + ': resource count')
         require(ore(state, 'a') == a_ore and ore(state, 'b') == b_ore, role + ': inventory count')
         total_ore = sum(i['quantity'] for i in state['items']['items'] if i['definition_id'] == 'item/ore')
-        require(total_ore + units + (0, 2, 6, 8)[stages] == 8, role + ': material conservation')
+        # The accepted sandbox also seeds eight loose ore units; this scenario
+        # must use the mined output, leaving that independent stack untouched.
+        seeded = next(i for i in state['items']['items'] if i['item_id'] == 'item/shared/ore/1')
+        require(seeded['quantity'] == 8 and seeded['location']['kind'] == 'WORLD', role + ': seeded ore changed')
+        require(total_ore + units + (0, 2, 6, 8)[stages] == 16, role + ': material conservation')
         require(state['outpost']['completed_stage_count'] == stages, role + ': construction stage')
         for key in ('items', 'resource', 'construction'):
             require(len(state[key].get('checksum', '')) == 64, role + ': missing ' + key)
