@@ -50,13 +50,21 @@ func _process(delta: float) -> bool:
 		var p: Dictionary = client.get_local_player_record().get("position", {})
 		var direction: Vector3 = (destination - Vector3(float(p.get("x", 0)), 0, float(p.get("z", 0)))).slide(Vector3.UP)
 		var arrived := direction.length() <= 0.45
-		var intent := {"move_x": 0.0, "move_z": 0.0 if arrived else 1.0,
+		var intent := {"move_x": 0.0, "move_z": 0.0 if arrived else minf(1.0, direction.length() / 2.0),
 			"look_yaw": atan2(-direction.x, -direction.z), "look_pitch": 0.0,
 			"jump_pressed": false, "sprint": false, "delta_seconds": 0.1}
-		var moved: Dictionary = client.submit_movement_intent_nonblocking(intent)
+		var moved: Dictionary = client.submit_movement_intent_blocking(intent) if arrived else client.submit_movement_intent_nonblocking(intent)
 		if not bool(moved.get("success", false)):
 			movement_error = moved
 		if arrived:
+			# Confirm the stop, then aim from the acknowledged position. Marking
+			# arrival before this ACK can leave the actor looking past the crate.
+			var stopped: Dictionary = client.get_local_player_record().get("position", {})
+			var facing: Vector3 = destination - Vector3(float(stopped.get("x", 0)), 0, float(stopped.get("z", 0)))
+			intent["look_yaw"] = atan2(-facing.x, -facing.z)
+			var aimed: Dictionary = client.submit_movement_intent_blocking(intent)
+			if not bool(aimed.get("success", false)):
+				movement_error = aimed
 			destination = null
 	var request_path := folder.path_join("request.json")
 	if FileAccess.file_exists(request_path):

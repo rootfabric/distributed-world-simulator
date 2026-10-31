@@ -91,11 +91,11 @@ class SharedGameplayCheck:
         tmp.write_text(json.dumps(value, ensure_ascii=False, indent=2), encoding='utf-8')
         os.replace(tmp, path)
 
-    def wait(self, name, predicate, timeout=35):
+    def wait(self, name, predicate, timeout=35, check_clients=True):
         start, last = time.monotonic(), ''
         while time.monotonic() - start < timeout:
             for role in ('a', 'b'):
-                if role in self.processes and self.processes[role].poll() is not None:
+                if check_clients and role in self.processes and self.processes[role].poll() is not None:
                     raise RuntimeError(role + ' process exited: ' + str(self.processes[role].returncode))
             try:
                 result = predicate()
@@ -141,7 +141,7 @@ class SharedGameplayCheck:
         def received():
             reply = json.loads((self.root / role / 'reply.json').read_text(encoding='utf-8'))
             return reply if reply['id'] == request_id else False
-        reply = self.wait(role + ':' + method, received)
+        reply = self.wait(role + ':' + method, received, check_clients=method != 'quit')
         self.commands[-1]['reply'] = reply
         self.save('commands.json', self.commands)
         return reply['result']
@@ -212,7 +212,13 @@ class SharedGameplayCheck:
         def arrived():
             state = self.state(role)
             p = state['player']['position']
-            return not state['moving'] and math.hypot(p['x'] - x, p['z'] - z) < .7
+            yaw = state['player']['orientation_yaw']
+            dx, dz = x - p['x'], z - p['z']
+            distance = math.hypot(dx, dz)
+            facing = distance < .05 or (-math.sin(yaw) * dx - math.cos(yaw) * dz) / distance > .95
+            velocity = state['player']['velocity']
+            stopped = math.hypot(velocity['x'], velocity['z']) < .01
+            return not state['moving'] and distance < .7 and stopped and facing
         self.wait(role + ':arrived', arrived)
 
     def approach_resource(self, role):
