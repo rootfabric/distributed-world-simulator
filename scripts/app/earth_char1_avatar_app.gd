@@ -223,6 +223,12 @@ func register_runtime_commands(registry, owner_id: String) -> void:
 		"category": "character",
 	}, Callable(self, "_command_char2_remote_avatar_status"))
 	_register_command(registry, owner_id, {
+		"id": "character.remote.visual",
+		"description": "Read-only viewport anchors and target skeleton animation samples.",
+		"usage": "character.remote.visual",
+		"category": "character",
+	}, Callable(self, "_command_char2_remote_visual"))
+	_register_command(registry, owner_id, {
 		"id": "character.avatar.list",
 		"description": "Показать доступные сменные CHAR1 avatar definitions.",
 		"usage": "character.avatar.list",
@@ -293,6 +299,16 @@ func _command_char2_remote_avatar_status(_arguments: Array[String]) -> Dictionar
 		"protocol_changed": false,
 	}
 	return {"success": true, "output": JSON.stringify(result, "  "), "details": result}
+
+
+func _command_char2_remote_visual(_arguments: Array[String]) -> Dictionary:
+	var players: Dictionary = {}
+	var camera: Camera3D = get_viewport().get_camera_3d()
+	for player_id in _m3_remote_presenters:
+		var presenter = _m3_remote_presenters[player_id]
+		if presenter != null and is_instance_valid(presenter) and presenter.has_method("create_visual_observation"):
+			players[player_id] = presenter.create_visual_observation(camera)
+	return {"success": true, "details": {"players": players}, "output": JSON.stringify(players)}
 
 
 func _on_m3_replica_updated(snapshot: Dictionary) -> void:

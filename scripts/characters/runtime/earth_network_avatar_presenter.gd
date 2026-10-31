@@ -129,6 +129,32 @@ func get_report() -> Dictionary:
 	return report
 
 
+func create_visual_observation(camera: Camera3D) -> Dictionary:
+	if camera == null or _avatar_host == null or not is_inside_tree():
+		return {"available": false}
+	var viewport_rect := camera.get_viewport().get_visible_rect()
+	var points: Dictionary = {}
+	var all_in_frame := true
+	# Anatomical anchors in the actual displayed host transform, not server XY.
+	for anchor in {"feet": 0.0, "torso": 0.9, "head": 1.7}:
+		var height := float({"feet": 0.0, "torso": 0.9, "head": 1.7}[anchor])
+		var world_point: Vector3 = _avatar_host.to_global(Vector3(0.0, height, 0.0))
+		var pixel := camera.unproject_position(world_point)
+		var in_frame := not camera.is_position_behind(world_point) and viewport_rect.has_point(pixel)
+		all_in_frame = all_in_frame and in_frame
+		points[anchor] = {"pixel": [pixel.x, pixel.y], "in_frame": in_frame}
+	return {
+		"available": true,
+		"visible_in_tree": _avatar_host.is_visible_in_tree(),
+		"anchors_in_frame": all_in_frame,
+		"anchors": points,
+		"viewport_size": [viewport_rect.size.x, viewport_rect.size.y],
+		"animation": _avatar_host.create_visual_observation(),
+		"planar_presented": [_presented_planar_position.x, _presented_planar_position.y],
+		"occlusion_tested": false,
+	}
+
+
 func _exit_tree() -> void:
 	if _avatar_host != null and is_instance_valid(_avatar_host):
 		_avatar_host.shutdown()

@@ -113,6 +113,12 @@ func shutdown() -> void:
 	if _active_presenter != null and is_instance_valid(_active_presenter):
 		_active_presenter.shutdown()
 
+func create_visual_observation() -> Dictionary:
+	if _active_presenter == null or not _active_presenter.has_method("create_visual_observation"):
+		return {}
+	return _active_presenter.create_visual_observation()
+
+
 func create_report() -> Dictionary:
 	return {
 		"schema": "planet_simulator.player_avatar_host.v1",

@@ -85,6 +85,10 @@ func _set_visual_visibility(
 	for child in node.get_children():
 		_set_visual_visibility(child, head_branch)
 
+func create_visual_observation() -> Dictionary:
+	return _engine.create_visual_observation() if _engine != null else {}
+
+
 func create_report() -> Dictionary:
 	var report := super.create_report()
 	report["schema"] = "planet_simulator.quaternius_avatar_adapter.v1"
