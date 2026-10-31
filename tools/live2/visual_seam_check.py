@@ -229,10 +229,12 @@ document.getElementById('play').onclick=()=>{clearTimeout(timer);playing=!playin
             for role in ('a', 'b'):
                 self.wait(role + '-connected', lambda r=role: self.state(r)['connection_state'] == 'CONNECTED')
             self.wait('avatar-ready', self.avatar_ready)
-            # Observer moves normally to an off-track vantage point (+Z).
+            # Midpoint vantage keeps the whole actor legible on both sides.
             def position_observer():
-                self.move('a', z=-1)
-                return self.state('a')['local_player']['position']['z'] >= 9
+                position = self.state('a')['local_player']['position']
+                self.move('a', x=.5 if position['x'] < 5.5 else 0,
+                          z=-.5 if position['z'] < 5 else 0)
+                return position['x'] >= 5.5 and position['z'] >= 5
             self.wait('observer-positioned', position_observer, 15)
             self.stop()
             time.sleep(1)
