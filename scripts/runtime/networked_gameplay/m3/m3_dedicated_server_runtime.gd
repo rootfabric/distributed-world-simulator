@@ -193,15 +193,12 @@ func _handle_v0_message(peer_id: String, session_id: String, payload: Dictionary
 		return
 
 	super._handle_message(peer_id, session_id, payload)
-	# JOIN_ACK already carries gameplay and Item Graph state. Publish the P3
-	# resource snapshot on the same reliable RESYNC stream immediately after a
-	# successful join so old P2 message ordering remains untouched.
-	if (
-		message_type == "JOIN"
-		and _peer_to_player.has(peer_id)
-		and String(_peer_to_session.get(peer_id, "")) == session_id
-	):
-		_send_resource_snapshot(peer_id, "PLAYER_JOINED")
+
+
+func _publish_join_replica_extensions(peer_id: String) -> void:
+	# Admission may complete from the deferred queue, outside this dispatcher.
+	# Keep resources on the same reliable RESYNC stream after a successful ACK.
+	_send_resource_snapshot(peer_id, "PLAYER_JOINED")
 
 
 func _handle_construction_command(peer_id: String, session_id: String, payload: Dictionary) -> void:

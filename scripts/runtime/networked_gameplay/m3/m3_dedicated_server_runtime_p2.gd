@@ -1085,7 +1085,14 @@ func _handle_join(peer_id: String, session_id: String, payload: Dictionary) -> v
 	if join_sent:
 		_mark_operation_delivered(operation_id)
 		_send_product_seam_state(peer_id, logical_id, "PLAYER_JOINED")
+		_publish_join_replica_extensions(peer_id)
 	_write_report("READY", false)
+
+func _publish_join_replica_extensions(_peer_id: String) -> void:
+	# Derived replicas publish here for both immediate and deferred admission,
+	# only after JOIN_ACK enqueue succeeds and the persistence fence is clear.
+	pass
+
 
 func _handle_move(peer_id: String, session_id: String, payload: Dictionary) -> void:
 	if not _peer_to_player.has(peer_id) or String(_peer_to_session.get(peer_id, "")) != session_id:
