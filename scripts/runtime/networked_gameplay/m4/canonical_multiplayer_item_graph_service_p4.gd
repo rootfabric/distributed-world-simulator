@@ -197,6 +197,7 @@ func apply_server_construction_consume(
 		"fingerprint": fingerprint,
 		"result": result.duplicate(true),
 	}
+	_note_replay_projection_mutation()
 	return result
 
 

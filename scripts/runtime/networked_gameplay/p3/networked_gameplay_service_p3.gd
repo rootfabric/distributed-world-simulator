@@ -89,7 +89,9 @@ func export_durable_state() -> Dictionary:
 
 
 func validate_durable_state(value: Dictionary) -> Dictionary:
+	var r31bp20_started_us: int = _r31bp20_stage_start_us()
 	var base_validation := super.validate_durable_state(value)
+	_r31bp20_stage_end("base_layer_total_ms", r31bp20_started_us)
 	if not bool(base_validation.get("success", false)):
 		return base_validation
 	if not value.has(RESOURCE_DURABLE_FIELD):
@@ -98,17 +100,21 @@ func validate_durable_state(value: Dictionary) -> Dictionary:
 		return _success({"resource_state": "LEGACY_P2_DEFAULT"})
 	if typeof(value.get(RESOURCE_DURABLE_FIELD)) != TYPE_DICTIONARY:
 		return _failure("INVALID_RESOURCE_DURABLE_SECTION")
+	r31bp20_started_us = _r31bp20_stage_start_us()
 	var validator = ResourceMiningService.new()
 	var resource_state: Dictionary = value.get(RESOURCE_DURABLE_FIELD, {})
 	var resource_validation := validator.validate_durable_state(resource_state)
+	_r31bp20_stage_end("resource_validator_ms", r31bp20_started_us)
 	if not bool(resource_validation.get("success", false)):
 		return _failure("INVALID_GAMEPLAY_RESOURCE_STATE", {"cause": resource_validation})
+	r31bp20_started_us = _r31bp20_stage_start_us()
 	var resource_snapshot: Dictionary = resource_state.get("snapshot", {})
 	if (
 		String(resource_snapshot.get("authority_owner_id", "")) != String(value.get("authority_owner_id", ""))
 		or int(resource_snapshot.get("authority_epoch", 0)) != int(value.get("authority_epoch", 0))
 	):
 		return _failure("GAMEPLAY_RESOURCE_AUTHORITY_MISMATCH")
+	_r31bp20_stage_end("resource_authority_ms", r31bp20_started_us)
 	return _success()
 
 

@@ -1,5 +1,7 @@
 extends "res://scripts/app/earth_p1_modern_inventory_app.gd"
 
+# SmoothTrace is inherited from EarthApp; never shadow its constant here.
+
 const ResourceMiningSnapshot = preload(
 	"res://scripts/runtime/networked_gameplay/p3/resource_mining_snapshot.gd"
 )
@@ -31,7 +33,9 @@ var _user1_journey_overlay
 
 
 func attach_m3_multiplayer_client(runtime) -> Dictionary:
+	var started_us := Time.get_ticks_usec()
 	var result: Dictionary = super.attach_m3_multiplayer_client(runtime)
+	var earth_done_us := Time.get_ticks_usec()
 	if not bool(result.get("success", false)):
 		return result
 	if (
@@ -69,6 +73,13 @@ func attach_m3_multiplayer_client(runtime) -> Dictionary:
 	details["resource_generation"] = int(_p3_resource_snapshot.get("generation", 0))
 	details["user1_journey"] = true
 	result["details"] = details
+	if SmoothTrace.enabled():
+		SmoothTrace.emit("r3c2_resource_attach", {
+			"total_ms": float(Time.get_ticks_usec() - started_us) / 1000.0,
+			"earth_ms": float(earth_done_us - started_us) / 1000.0,
+			"resource_projection_ms": float(Time.get_ticks_usec() - earth_done_us) / 1000.0,
+			"target_count": _p3_resource_targets.size(),
+		})
 	return result
 
 

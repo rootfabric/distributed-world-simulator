@@ -1,5 +1,6 @@
 extends Node3D
 
+const SmoothTrace = preload("res://scripts/network/smoothness/net_smooth_trace.gd")
 const CommandRegistryScript = preload("res://scripts/core/command_registry.gd")
 const RuntimeTestRegistryScript = preload("res://scripts/core/runtime_test_registry.gd")
 const WorldCatalogScript = preload("res://scripts/core/world_catalog.gd")
@@ -9,6 +10,7 @@ const SimulationClockScript = preload(
 	"res://scripts/simulation/time/simulation_clock.gd"
 )
 const LaunchOptionsScript = preload("res://scripts/runtime/launch_options.gd")
+const ServerFramePacingPolicy = preload("res://scripts/network/smoothness/server_frame_pacing_policy.gd")
 const RuntimeDescriptorScript = preload("res://scripts/runtime/runtime_descriptor.gd")
 const RuntimeRoleScript = preload("res://scripts/runtime/runtime_role.gd")
 const NetworkRuntimeIdentityScript = preload("res://scripts/network/observability/network_runtime_identity.gd")
@@ -108,6 +110,10 @@ var _m7_mode: bool = false
 
 
 func _ready() -> void:
+	var smooth_trace = preload("res://scripts/network/smoothness/net_smooth_trace.gd")
+	smooth_trace.start()
+	if smooth_trace.enabled():
+		add_child(preload("res://scripts/network/smoothness/net_smooth_probe.gd").new())
 	name = "SimulatorApp"
 	get_tree().auto_accept_quit = false
 	launch_options = _parse_launch_options()
@@ -119,6 +125,15 @@ func _ready() -> void:
 	var runtime_role: String = String(
 		launch_options.get("role", RuntimeRoleScript.OFFLINE)
 	)
+	var server_cap: Dictionary = ServerFramePacingPolicy.apply(launch_options)
+	if not bool(server_cap.get("success", false)):
+		push_error("NET_SMOOTH_SERVER_CAP_REJECTED:%s" % String(
+			server_cap.get("error_code", "R31_SERVER_FRAME_CAP_ENGINE_REJECTED")))
+		get_tree().quit(2)
+		return
+	if bool(server_cap.get("details", {}).get("enabled", false)):
+		print("NET_SMOOTH_SERVER_FRAME_CAP_APPLIED cap=%d fixed_tick_hz=60 compact_hz=20" %
+			int(server_cap["details"]["effective"]))
 	presentation_enabled = RuntimeRoleScript.presentation_enabled(runtime_role)
 	local_input_enabled = RuntimeRoleScript.accepts_local_input(runtime_role)
 	set_process_unhandled_input(local_input_enabled)
@@ -1953,11 +1968,13 @@ func _setup_m5_graphical_acceptance_driver() -> void:
 func _on_graphical_game_client_session_ready(session) -> void:
 	if current_runtime == null or not is_instance_valid(current_runtime):
 		return
+	var started_us := Time.get_ticks_usec()
 	var attached: Dictionary = (
 		_attach_m3_graphical_game_client(current_runtime, session)
 		if _m3_mode
 		else _attach_graphical_game_client(current_runtime, session)
 	)
+	var attached_us := Time.get_ticks_usec()
 	if not bool(attached.get("success", false)):
 		push_error("Graphical game client attach failed: %s" % attached)
 		if _network_debug_stay_open:
@@ -1966,6 +1983,14 @@ func _on_graphical_game_client_session_ready(session) -> void:
 			return
 		request_graceful_shutdown("graphical_game_client_attach_failed", 7)
 	_refresh_runtime_descriptor()
+	if SmoothTrace.enabled():
+		SmoothTrace.emit("r3c2_client_connect_attach", {
+			"attach_ms": float(attached_us - started_us) / 1000.0,
+			"descriptor_ms": float(Time.get_ticks_usec() - attached_us) / 1000.0,
+			"total_ms": float(Time.get_ticks_usec() - started_us) / 1000.0,
+			"world": current_world_id, "m3": _m3_mode,
+			"success": bool(attached.get("success", false)),
+		})
 
 
 func _on_graphical_game_client_connection_state_changed(
@@ -2197,6 +2222,7 @@ func _failure(code: String, message: String) -> Dictionary:
 
 func _exit_tree() -> void:
 	_stop_networked_gameplay_runtimes()
+	preload("res://scripts/network/smoothness/net_smooth_trace.gd").finish()
 	if _runtime_release_blocked:
 		return
 	if current_runtime != null and is_instance_valid(current_runtime):

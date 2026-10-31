@@ -234,6 +234,8 @@ func handle_request_for_testing(request: Dictionary) -> Dictionary:
 			return _command_execute(request_id, params)
 		"movement.set":
 			return _movement_set(request_id, params)
+		"item.command":
+			return _item_command(request_id, params)
 		"movement.stop":
 			return _movement_stop(request_id)
 		"view.set":
@@ -274,6 +276,19 @@ func _movement_set(request_id: String, params: Dictionary) -> Dictionary:
 		request_id,
 		bool(result.get("success", false)),
 		{"movement": result},
+		String(result.get("error_code", "")) if not bool(result.get("success", false)) else ""
+	)
+
+
+func _item_command(request_id: String, params: Dictionary) -> Dictionary:
+	var runtime = _app.get_current_runtime()
+	if runtime == null or not runtime.has_method("automation_submit_item_command"):
+		return _response(request_id, false, {}, "AUTOMATION_ITEM_COMMAND_NOT_SUPPORTED")
+	var result: Dictionary = runtime.call("automation_submit_item_command", params)
+	return _response(
+		request_id,
+		bool(result.get("success", false)),
+		{"item_command": result},
 		String(result.get("error_code", "")) if not bool(result.get("success", false)) else ""
 	)
 

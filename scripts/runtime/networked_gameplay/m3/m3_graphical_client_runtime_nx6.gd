@@ -1,5 +1,7 @@
 extends Node
 
+const SmoothTrace = preload("res://scripts/network/smoothness/net_smooth_trace.gd")
+
 signal session_ready(runtime)
 signal replica_updated(snapshot: Dictionary)
 signal item_graph_updated(snapshot: Dictionary)
@@ -24,6 +26,7 @@ const RealtimeChannelPolicy = preload("res://scripts/network/realtime/realtime_c
 const PlayerInputBatch = preload("res://scripts/runtime/networked_gameplay/contracts/player_input_batch.gd")
 const CanonicalItemGraphDelta = preload("res://scripts/runtime/networked_gameplay/contracts/canonical_item_graph_delta.gd")
 const CompactGameplaySnapshot = preload("res://scripts/runtime/networked_gameplay/contracts/compact_gameplay_snapshot.gd")
+const CommittedView = preload("res://scripts/runtime/networked_gameplay/contracts/committed_movement_view.gd")
 const InputSequence = preload("res://scripts/network/simulation/input_sequence.gd")
 const ClientPredictionReconciler = preload("res://scripts/network/prediction/client_prediction_reconciler.gd")
 const ConstructionReplica = preload("res://scripts/construction/multiplayer/construction_multiplayer_replica.gd")
@@ -107,6 +110,13 @@ var _item_resync_pending := false
 var _compact_snapshot_updates := 0
 var _compact_snapshot_rejections := 0
 var _compact_snapshot_clock_updates := 0
+# R3 committed-view frames are *presentation only*, never advanced into the
+# durable multiplayer replica. A new M6 generation still requires normal ACK
+# and reliable GAMEPLAY_SNAPSHOT.
+var _committed_view_presentation: Dictionary = {}
+var _committed_view_last_tick := -1
+var _committed_view_updates := 0
+var _committed_view_rejections := 0
 var _prediction_reconciler
 var _prediction_input_accumulator: float = 0.0
 var _prediction_last_network_intent: Dictionary = {}
@@ -181,6 +191,10 @@ func setup(config: Dictionary) -> Dictionary:
 	_compact_snapshot_updates = 0
 	_compact_snapshot_rejections = 0
 	_compact_snapshot_clock_updates = 0
+	_committed_view_presentation.clear()
+	_committed_view_last_tick = -1
+	_committed_view_updates = 0
+	_committed_view_rejections = 0
 	_prediction_reconciler = ClientPredictionReconciler.new()
 	_construction_replica = ConstructionReplica.new()
 	_construction_session.clear()
@@ -298,6 +312,10 @@ func _process(_delta: float) -> void:
 	var process_duration_ms: float = float(Time.get_ticks_usec() - process_started_us) / 1000.0
 	_telemetry.observe("client_process_duration_ms", process_duration_ms)
 	_telemetry.observe("client_tick_duration_ms", process_duration_ms)
+	if SmoothTrace.enabled():
+		SmoothTrace.emit("client_loop", {"process_ms": process_duration_ms,
+			"state": _connection_state, "player": _logical_player_id,
+			"session": _transport_session_id, "reconcile_failures": _prediction_reconcile_failures})
 	if _debug_logging and Time.get_ticks_msec() - _last_debug_report_ms >= 2000:
 		_last_debug_report_ms = Time.get_ticks_msec()
 		_debug_event("CLIENT_HEALTH", {
@@ -311,6 +329,10 @@ func _process(_delta: float) -> void:
 func _handle_message(payload: Dictionary) -> void:
 	var server_sent_at_ms: int = int(payload.get("server_sent_at_ms", 0))
 	var message_type: String = String(payload.get("type", ""))
+	if SmoothTrace.enabled() and message_type in ["GAMEPLAY_SNAPSHOT", "COMPACT_GAMEPLAY_SNAPSHOT"]:
+		SmoothTrace.emit("snapshot_received", {"type": message_type,
+			"tick": int(payload.get("snapshot", {}).get("server_tick", -1)),
+			"session": _transport_session_id})
 	if server_sent_at_ms > 0:
 		var message_age_ms: float = float(maxi(Time.get_ticks_msec() - server_sent_at_ms, 0))
 		_telemetry.observe("server_message_age_ms", message_age_ms)
@@ -331,7 +353,11 @@ func _handle_message(payload: Dictionary) -> void:
 			_fail_connection(String(payload.get("error_code", "JOIN_REJECTED")), payload)
 		"GAMEPLAY_DELTA": _accept_delta(payload.get("delta", {}))
 		"GAMEPLAY_SNAPSHOT": _accept_snapshot(payload.get("snapshot", {}))
-		"COMPACT_GAMEPLAY_SNAPSHOT": _accept_compact_snapshot(payload.get("snapshot", {}))
+		"COMPACT_GAMEPLAY_SNAPSHOT":
+			if String(payload.get("reason", "")) == "P1B_COMMITTED_VIEW_MOVEMENT":
+				_accept_committed_view_movement_snapshot(Dictionary(payload.get("snapshot", {})))
+			else:
+				_accept_compact_snapshot(payload.get("snapshot", {}))
 		"ITEM_GRAPH_SNAPSHOT": _accept_item_snapshot(payload.get("snapshot", {}))
 		"ITEM_GRAPH_DELTA": _accept_item_delta(payload.get("delta", {}))
 		"CONSTRUCTION_SNAPSHOT": _accept_construction_snapshot(payload)
@@ -406,6 +432,7 @@ func _handle_compatibility_rejection(payload: Dictionary) -> void:
 
 
 func _handle_join_ack(payload: Dictionary) -> void:
+	var started_us := Time.get_ticks_usec()
 	var player_value = payload.get("player", {})
 	if not player_value is Dictionary:
 		_fail_connection("INVALID_M3_JOIN_ACK"); return
@@ -415,12 +442,16 @@ func _handle_join_ack(payload: Dictionary) -> void:
 	_adopt_authoritative_input_sequence(int(player.get("last_input_sequence", 0)))
 	if _player_entity_id != "player/%s" % _logical_player_id or _ownership_epoch < 1:
 		_fail_connection("INVALID_M3_JOIN_IDENTITY", {"player": player}); return
+	var identity_done_us := Time.get_ticks_usec()
 	var accepted: Dictionary = _replica.accept_snapshot(payload.get("snapshot", {}))
 	if not bool(accepted.get("success", false)):
 		_fail_connection(String(accepted.get("error_code", "M3_JOIN_SNAPSHOT_REJECTED"))); return
+	var snapshot_done_us := Time.get_ticks_usec()
 	_snapshot_updates += 1
 	_accept_item_snapshot(payload.get("item_graph_snapshot", {}))
+	var item_done_us := Time.get_ticks_usec()
 	_initialize_prediction_from_snapshot(_replica.get_snapshot())
+	var prediction_done_us := Time.get_ticks_usec()
 	_joined = true
 	_last_error_code = ""
 	_reconnect_pending = false
@@ -433,8 +464,22 @@ func _handle_join_ack(payload: Dictionary) -> void:
 	})
 	_write_report("READY", false)
 	_debug_event("CLIENT_READY", {"player_entity_id":_player_entity_id,"ownership_epoch":_ownership_epoch})
+	var ready_done_us := Time.get_ticks_usec()
 	replica_updated.emit(_replica.get_snapshot())
+	var replica_done_us := Time.get_ticks_usec()
 	session_ready.emit(self)
+	if SmoothTrace.enabled():
+		SmoothTrace.emit("r3c2_join_ack_breakdown", {
+			"identity_ms": float(identity_done_us - started_us) / 1000.0,
+			"snapshot_accept_ms": float(snapshot_done_us - identity_done_us) / 1000.0,
+			"item_accept_ms": float(item_done_us - snapshot_done_us) / 1000.0,
+			"prediction_init_ms": float(prediction_done_us - item_done_us) / 1000.0,
+			"ready_report_ms": float(ready_done_us - prediction_done_us) / 1000.0,
+			"replica_signal_ms": float(replica_done_us - ready_done_us) / 1000.0,
+			"session_ready_signal_ms": float(Time.get_ticks_usec() - replica_done_us) / 1000.0,
+			"total_ms": float(Time.get_ticks_usec() - started_us) / 1000.0,
+			"ownership_epoch": _ownership_epoch,
+		})
 
 func _accept_snapshot(snapshot: Dictionary) -> void:
 	var accepted: Dictionary = _replica.accept_snapshot(snapshot)
@@ -446,13 +491,16 @@ func _accept_snapshot(snapshot: Dictionary) -> void:
 	replica_updated.emit(_replica.get_snapshot())
 
 func _accept_compact_snapshot(snapshot: Dictionary) -> void:
+	var smooth_decode_started_us := Time.get_ticks_usec()
 	var decoded: Dictionary = CompactGameplaySnapshot.decode(snapshot)
+	var smooth_decoded_us := Time.get_ticks_usec()
 	if not bool(decoded.get("success", false)):
 		_compact_snapshot_rejections += 1
 		_last_error_code = String(decoded.get("error_code", "COMPACT_GAMEPLAY_SNAPSHOT_REJECTED"))
 		return
 	var decoded_snapshot: Dictionary = Dictionary(decoded.get("details", {}).get("snapshot", {}))
 	var accepted: Dictionary = _replica.accept_snapshot(decoded_snapshot)
+	var smooth_accepted_us := Time.get_ticks_usec()
 	if not bool(accepted.get("success", false)):
 		var error_code: String = String(accepted.get("error_code", "M3_COMPACT_SNAPSHOT_REJECTED"))
 		if (
@@ -470,9 +518,92 @@ func _accept_compact_snapshot(snapshot: Dictionary) -> void:
 	if not bool(accepted.get("details", {}).get("replay", false)):
 		_snapshot_updates += 1
 		_compact_snapshot_updates += 1
-	_reconcile_prediction_from_snapshot(_replica.get_snapshot())
+	# get_snapshot() already returns a detached deep copy. Reuse that exact
+	# immutable-for-this-callback value for reconcile and public presentation;
+	# avoid copying the full player state twice for every 20Hz update.
+	var current_snapshot: Dictionary = _replica.get_snapshot()
+	_reconcile_prediction_from_snapshot(current_snapshot)
 	_prune_acknowledged_inputs()
-	replica_updated.emit(_replica.get_snapshot())
+	var smooth_reconciled_us := Time.get_ticks_usec()
+	replica_updated.emit(current_snapshot)
+	if SmoothTrace.enabled():
+		SmoothTrace.emit("compact_snapshot_stages", {
+			"tick": int(current_snapshot.get("server_tick", -1)),
+			"decode_ms": float(smooth_decoded_us - smooth_decode_started_us) / 1000.0,
+			"accept_ms": float(smooth_accepted_us - smooth_decoded_us) / 1000.0,
+			"reconcile_ms": float(smooth_reconciled_us - smooth_accepted_us) / 1000.0,
+			"presentation_ms": float(Time.get_ticks_usec() - smooth_reconciled_us) / 1000.0,
+		})
+
+
+
+# No revision-fence bypass in the canonical replica store: this overlays only
+# peer movement presentation, and only after independently verifying the
+# nested full and compact checksums and local transport/USER1 ownership fence.
+func _accept_committed_view_movement_snapshot(wire: Dictionary) -> void:
+	var decoded: Dictionary = CompactGameplaySnapshot.decode(wire)
+	if not bool(decoded.get("success", false)) or _replica == null or not _joined:
+		_committed_view_rejections += 1
+		return
+	var incoming: Dictionary = Dictionary(decoded.get("details", {}).get("snapshot", {}))
+	if not CommittedView.peer_is_fenced(incoming, _logical_player_id, _transport_session_id):
+		_committed_view_rejections += 1
+		return
+	var canonical: Dictionary = _replica.get_snapshot()
+	# The last reliable client snapshot can trail the pre-ITEM server view by
+	# a few 20Hz frames. Never roll back; compare pinned durable domains
+	# separately, and do not import incoming revisions into _replica.
+	if canonical.is_empty() or int(incoming.get("revision", -1)) < int(canonical.get("revision", -2)):
+		_committed_view_rejections += 1
+		return
+	for field in ["authority_owner_id", "authority_epoch", "region_id", "shared_item"]:
+		if incoming.get(field) != canonical.get(field):
+			_committed_view_rejections += 1
+			return
+	var tick := int(incoming.get("server_tick", -1))
+	if tick <= maxi(_committed_view_last_tick, int(canonical.get("server_tick", -1))):
+		return  # normal out-of-order movement packet, not a checksum violation
+	# Verify durable/player metadata; a frame containing a speculative inventory,
+	# presentation or revision is not allowed to become a view at all.
+	var canonical_rows: Dictionary = {}
+	for value in canonical.get("players", []):
+		if value is Dictionary:
+			canonical_rows[String(value.get("logical_player_id", ""))] = value
+	for value in incoming.get("players", []):
+		if not value is Dictionary:
+			_committed_view_rejections += 1
+			return
+		var moving: Dictionary = value
+		var id := String(moving.get("logical_player_id", ""))
+		if not canonical_rows.has(id):
+			_committed_view_rejections += 1
+			return
+		var frozen: Dictionary = canonical_rows[id]
+		for field in ["player_entity_id", "transport_session_id", "ownership_epoch",
+			"connected", "inventory", "flashlight_enabled"]:
+			if moving.get(field) != frozen.get(field):
+				_committed_view_rejections += 1
+				return
+	var projected: Dictionary = CommittedView.project(
+		canonical, Array(incoming.get("players", [])), tick
+	)
+	if not bool(projected.get("success", false)):
+		_committed_view_rejections += 1
+		return
+	var presentation: Dictionary = Dictionary(projected.get("details", {}).get("snapshot", {}))
+	_committed_view_presentation = presentation
+	_committed_view_last_tick = tick
+	_committed_view_updates += 1
+	if SmoothTrace.enabled():
+		SmoothTrace.emit("r3_committed_view_received", {
+			"tick": tick,
+			"committed_revision": int(canonical.get("revision", -1)),
+			"session": _transport_session_id,
+		})
+	# Every active consumer sees motion; only _replica owns durable progress.
+	_reconcile_prediction_from_snapshot(presentation)
+	_prune_acknowledged_inputs()
+	replica_updated.emit(presentation.duplicate(true))
 
 
 func _same_snapshot_state_except_clock(current: Dictionary, incoming: Dictionary) -> bool:
@@ -805,6 +936,7 @@ func _reconcile_prediction_from_snapshot(snapshot: Dictionary) -> void:
 	var local_player: Dictionary = _player_from_snapshot(snapshot, _logical_player_id)
 	if local_player.is_empty():
 		return
+	var smooth_started := Time.get_ticks_usec()
 	var reconciled: Dictionary = _prediction_reconciler.reconcile(
 		local_player,
 		int(snapshot.get("server_tick", 0))
@@ -813,6 +945,12 @@ func _reconcile_prediction_from_snapshot(snapshot: Dictionary) -> void:
 		_prediction_reconcile_failures += 1
 		return
 	var details: Dictionary = Dictionary(reconciled.get("details", {}))
+	if SmoothTrace.enabled():
+		SmoothTrace.emit("reconcile", {"duration_ms": float(Time.get_ticks_usec() - smooth_started) / 1000.0,
+			"error_m": details.get("prediction_error_m", 0.0),
+			"replayed_ticks": details.get("replayed_ticks", 0),
+			"hard_correction": details.get("hard_correction", false),
+			"server_tick": snapshot.get("server_tick", -1)})
 	_telemetry.observe("prediction_error_m", float(details.get("prediction_error_m", 0.0)))
 	_telemetry.observe("prediction_replayed_ticks", float(details.get("replayed_ticks", 0)))
 	if String(details.get("correction_mode", "NONE")) != "NONE":
@@ -1269,8 +1407,23 @@ func _telemetry_sample() -> Dictionary:
 	return Dictionary(result.get("details", {}).get("sample", {})).duplicate(true) if bool(result.get("success", false)) else {}
 
 func get_player(logical_player_id: String) -> Dictionary:
-	return _replica.get_player(logical_player_id) if _replica != null else {}
-func get_snapshot() -> Dictionary: return _replica.get_snapshot() if _replica != null else {}
+	for player_value in get_snapshot().get("players", []):
+		if player_value is Dictionary and String(player_value.get("logical_player_id", "")) == logical_player_id:
+			return Dictionary(player_value).duplicate(true)
+	return {}
+func get_snapshot() -> Dictionary:
+	if _replica == null:
+		return {}
+	var canonical: Dictionary = _replica.get_snapshot()
+	if _committed_view_presentation.is_empty():
+		return canonical
+	# A reliable committed generation supersedes every speculative-movement
+	# overlay. This never changes the revision stored in the canonical replica.
+	if int(canonical.get("revision", -1)) > int(_committed_view_presentation.get("revision", -1)):
+		_committed_view_presentation.clear()
+		_committed_view_last_tick = -1
+		return canonical
+	return _committed_view_presentation.duplicate(true)
 func get_local_player_id() -> String: return _logical_player_id
 func get_local_player_record() -> Dictionary: return get_player(_logical_player_id)
 func get_remote_player_ids() -> Array[String]:
@@ -1428,6 +1581,8 @@ func _reset_transport_protocol_state() -> void:
 	# across a restarted server would incorrectly reject a valid new baseline as
 	# a rollback before recovery/resync can run.
 	_replica = Replica.new()
+	_committed_view_presentation.clear()
+	_committed_view_last_tick = -1
 	_item_graph_snapshot.clear()
 	_item_snapshot_updates = 0
 	_construction_replica = ConstructionReplica.new()
@@ -1632,6 +1787,9 @@ func get_report() -> Dictionary:
 			"compact_snapshot_updates": _compact_snapshot_updates,
 			"compact_snapshot_rejections": _compact_snapshot_rejections,
 			"compact_snapshot_clock_updates": _compact_snapshot_clock_updates,
+			"committed_view_updates": _committed_view_updates,
+			"committed_view_rejections": _committed_view_rejections,
+			"committed_view_last_tick": _committed_view_last_tick,
 		},
 		"client_prediction": {
 			"enabled": _prediction_reconciler != null and _prediction_reconciler.is_configured(),

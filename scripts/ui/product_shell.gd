@@ -1,5 +1,7 @@
 extends CanvasLayer
 
+const PlaytestProfile = preload("res://scripts/runtime/playtest_launch_profile.gd")
+
 const PREFS_PATH := "user://v0-live/product-shell.json"
 const PREFS_SCHEMA := "dws.ux0.product_shell_prefs.v1"
 const DEFAULT_PORT := 24580
@@ -174,6 +176,8 @@ static func build_child_process_args(
 
 
 func setup() -> void:
+	if PlaytestProfile.enabled():
+		DisplayServer.window_set_title("DWS Playtest R1 — Host / Join — " + OS.get_environment("DWS_PLAYTEST_SOURCE_HEAD").left(8))
 	name = "UX0ProductShell"
 	layer = 10
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -538,7 +542,7 @@ func _refresh_from_preferences() -> void:
 	if _join_address != null:
 		_join_address.text = address
 		_join_port.value = port
-		_join_player.text = player
+		_join_player.text = (player + "-2") if PlaytestProfile.enabled() and _host_client_pid > 0 and OS.is_process_running(_host_client_pid) else player
 	if _settings_player != null:
 		_settings_player.text = player
 		_settings_port.value = port
@@ -612,7 +616,22 @@ func _launch_host(
 			return
 		_host_server_pid = int(server_result.get("pid", -1))
 		_set_status("Dedicated server PID %d запускается…" % _host_server_pid, true)
-		await get_tree().create_timer(0.65).timeout
+		if PlaytestProfile.enabled():
+			var server_log := String(server_result.get("log_path", ""))
+			var deadline := Time.get_ticks_msec() + 240000
+			var ready := false
+			while Time.get_ticks_msec() < deadline and OS.is_process_running(_host_server_pid):
+				if FileAccess.file_exists(server_log):
+					var output := FileAccess.get_file_as_string(server_log)
+					ready = output.contains('"event":"node_ready"') or output.contains('"event": "node_ready"')
+					if ready: break
+				await get_tree().create_timer(0.25).timeout
+			if not ready:
+				_set_status("Server не подтвердил готовность мира. Лог: " + server_log, false)
+				_set_busy(false)
+				return
+		else:
+			await get_tree().create_timer(0.65).timeout
 		if _host_server_pid <= 0 or not OS.is_process_running(_host_server_pid):
 			_host_server_pid = -1
 			_set_status(
@@ -701,7 +720,23 @@ func _spawn_runtime(user_args: PackedStringArray, headless: bool) -> Dictionary:
 	var editor_runtime := OS.has_feature("editor")
 	var project_path := ProjectSettings.globalize_path("res://")
 	var arguments := build_child_process_args(user_args, editor_runtime, project_path, headless)
+	var saved := {}
+	var log_path := ""
+	if PlaytestProfile.enabled():
+		var prepared := PlaytestProfile.prepare(user_args, OS.get_environment("DWS_PLAYTEST_DATA_ROOT"), OS.get_environment("DWS_PLAYTEST_SOURCE_HEAD"))
+		if not bool(prepared.get("success", false)): return prepared
+		var root := String(prepared["profile_root"])
+		for folder in [root, root.path_join("data"), root.path_join("config"), root.path_join("cache")]:
+			if DirAccess.make_dir_recursive_absolute(folder) != OK:
+				return {"success":false,"error_code":"PLAYTEST_PROFILE_DIRECTORY_FAILED"}
+		log_path = root.path_join("runtime-%d.log" % Time.get_unix_time_from_system())
+		arguments = PackedStringArray(prepared["engine_args"])
+		arguments.append_array(PackedStringArray(["--log-file", log_path]))
+		arguments.append_array(build_child_process_args(prepared["user_args"], editor_runtime, project_path, headless))
+		saved = PlaytestProfile.apply_environment(prepared["environment"])
+		print("PLAYTEST_LAUNCH_PROFILE ", JSON.stringify({"profile":prepared["profile"], "role":prepared["role"], "source_head":OS.get_environment("DWS_PLAYTEST_SOURCE_HEAD"), "flags":prepared["environment"]}))
 	var pid := OS.create_process(executable, arguments, false)
+	PlaytestProfile.restore_environment(saved)
 	if pid <= 0:
 		return {
 			"success": false,
@@ -712,6 +747,7 @@ func _spawn_runtime(user_args: PackedStringArray, headless: bool) -> Dictionary:
 		"success": true,
 		"error_code": "",
 		"pid": pid,
+		"log_path": log_path,
 		"details": {"executable": executable, "arguments": Array(arguments)},
 	}
 

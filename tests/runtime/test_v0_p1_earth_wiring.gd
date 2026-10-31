@@ -1,7 +1,11 @@
 extends SceneTree
 
 const P1_RUNTIME_PATH := "res://scripts/app/earth_p1_modern_inventory_app.gd"
-const CURRENT_EARTH_RUNTIME_PATH := "res://scripts/app/earth_p3_resource_mining_app.gd"
+# This STACKED product HEAD routes Earth through CHAR1, which MUST inherit
+# P3 and P1. The accepted main baseline still routes directly through P3;
+# do not weaken or rewrite that independent main-lineage check.
+const CURRENT_EARTH_RUNTIME_PATH := "res://scripts/app/earth_char1_avatar_app.gd"
+const P3_RUNTIME_PATH := "res://scripts/app/earth_p3_resource_mining_app.gd"
 const WORLD_CATALOG_PATH := "res://config/worlds/catalog.json"
 const EarthItemSpatialProjector = preload(
 	"res://scripts/runtime/networked_gameplay/i2s/earth_item_spatial_projector.gd"
@@ -59,8 +63,33 @@ func _test_runtime_compiles_and_is_routed() -> void:
 				break
 	_assert(
 		earth_runtime == CURRENT_EARTH_RUNTIME_PATH,
-		"Earth product routing may advance to P3 while the inherited P1 runtime contract remains directly testable"
+		"Earth stacked product route is exact CHAR1 avatar on the named subject HEAD"
 	)
+	# The route upgrade is not allowed to bypass P3 ResourceMining or the
+	# inherited P1 inventory+item interaction seam. Verify the actual GDScript
+	# parent chain, not only a string label in catalog.json.
+	var product_script = load(CURRENT_EARTH_RUNTIME_PATH)
+	_assert(product_script != null and product_script.can_instantiate(),
+		"CHAR1 product Earth route loads and instantiates")
+	var char1_source := FileAccess.get_file_as_string(CURRENT_EARTH_RUNTIME_PATH)
+	var p3_source := FileAccess.get_file_as_string(P3_RUNTIME_PATH)
+	_assert(
+		char1_source.begins_with('extends "' + P3_RUNTIME_PATH + '"'),
+		"CHAR1 exact product route inherits P3 ResourceMining")
+	_assert(
+		p3_source.begins_with('extends "' + P1_RUNTIME_PATH + '"'),
+		"P3 ResourceMining exact parent is P1 modern inventory")
+	if product_script != null and product_script.can_instantiate():
+		var product_runtime = product_script.new()
+		_assert(product_runtime.has_method("_ensure_mvp_inventory_shell"),
+			"CHAR1 product does not bypass inherited P1 inventory owner")
+		_assert(product_runtime.has_method("_command_i2s_player_interact"),
+			"CHAR1 product retains inherited canonical P1 item interaction")
+		_assert(product_runtime.has_method("attach_m3_multiplayer_client"),
+			"CHAR1 product retains M3 gameplay attach")
+		_assert(product_runtime.has_method("create_m3_graphical_client_report"),
+			"CHAR1 product preserves network presentation reporting")
+		product_runtime.free()
 
 
 func _test_projector_matches_mvp_axes_and_reference_frame() -> void:

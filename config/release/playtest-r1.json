@@ -1,0 +1,73 @@
+{
+  "schema": "dws.playtest.launch_profile.v1",
+  "id": "PLAYTEST_R1_SAFE60",
+  "world": "earth",
+  "engine_version": "4.7.1.stable.double.custom_build.a13da4feb",
+  "engine_console_sha256": "3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5",
+  "source_inputs": {
+    "main": {
+      "head": "8b504a2d854e891baa4688c6a8f25e9dc8c956d7",
+      "tree": "4014abc640fc3b7f6fddfc62249c14d666107e63",
+      "archive_sha256": "dd975659a2275f7b714cbdfaaa0d8f8507be74f1217f6328159db08f2379b42d"
+    },
+    "net_windows": {
+      "head": "38d62f5bc6143b6d5f4e0b95ff91adbb7e0a13a4",
+      "tree": "6edde63203bb5fdea52e227010f548ff4f850542",
+      "archive_sha256": "b583853fa9bf630a3d2600bc7e5a69939d83c247cc8c387f31e181a2b1fafea1"
+    },
+    "char2": {
+      "head": "d4ab242415c8b5cb3a48baf5f569b0b5c5e060b1",
+      "tree": "7e56f67161e4ef5bd5fa298ebf6b573fad5d5b0f",
+      "archive_sha256": "9b9dc230c739a6ed0ab44a3bd8221faa5582bbe001f6cfada5eac8a699d11448"
+    },
+    "recovery": {
+      "head": "a5be22a6d909f8ef6bc0db2cb9e94bf1c312234d",
+      "tree": "93c893df3099c17d31fde540f1ad6ca60daf6e4e",
+      "archive_sha256": "4a4424183a6a721aa4828fdfdd3302ce7a462613a8b85205b94f4e0abeb114cc"
+    },
+    "common": {
+      "head": "53567c0b98d032260dfe81df4bd43a131e32da54",
+      "tree": "5e267ee297adb4f1db5c797c21c2e4a15997ce4c",
+      "archive_sha256": "bbc434dfd91be47c4c874bcd019be2885b2b31e9a44f0553870fbc1dcd2c2538"
+    }
+  },
+  "network_build_id": "dws-playtest-r1-safe60",
+  "common_engine_args": [
+    "--max-fps",
+    "60",
+    "--disable-vsync"
+  ],
+  "server_environment": {
+    "DWS_NET_R3C_ASYNC_ADMISSION": "1",
+    "DWS_NET_R3C2_PHASED_ITEM_PUBLICATION": "1",
+    "DWS_NET_R3C4_PERIODIC_FRAME_PACING": "1",
+    "DWS_NET_R3C4_R2_WORKER_ENVELOPE": "1",
+    "DWS_NET_R3C4_R31_REPLAY_PROJECTION": "1",
+    "DWS_NET_R3C4_R31B_DURABLE_ATTRIBUTION": "1",
+    "DWS_NET_R31BP1_DURABLE_CHUNKS": "1",
+    "DWS_NET_R31P22_LOOP_ATTRIBUTION": "1",
+    "DWS_NET_R31P23R2_FLUSH_ATTRIBUTION": "1",
+    "DWS_NET_R31P23R21_SINGLE_PASS_COMPACT": "1",
+    "DWS_NET_R31P23R22_ATTESTED_COMPACT": "1"
+  },
+  "client_environment": {
+    "DWS_NET_R3C2_AVATAR_PREWARM": "1",
+    "DWS_NET_R3C3_STAGED_EARTH": "1",
+    "DWS_NET_R3C21_FRAME_PACED_PRESENTATION": "1"
+  },
+  "disabled_environment": [
+    "DWS_NET_SMOOTH_SYNC_CHECKPOINTS",
+    "DWS_NET_P1B_ITEM_ASYNC",
+    "DWS_NET_R31_815_OUTBOUND_DECODE_GUARD",
+    "DWS_NET_R31_815_WIRE_FORENSICS",
+    "DWS_NET_R31_815_F64_V2",
+    "DWS_NET_R31_815_COMPACT_F64_V2"
+  ],
+  "performance_policy": "small p99 misses advisory; corruption/disconnect/recovery/visibility remain functional failures",
+  "excluded": [
+    "M7 playground as product entrypoint",
+    "120fps server experiment",
+    "mixed F64-v2 experiment",
+    "Godot 4.8 migration"
+  ]
+}

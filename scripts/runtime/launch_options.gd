@@ -2,6 +2,7 @@ extends RefCounted
 
 const RuntimeRoleScript = preload("res://scripts/runtime/runtime_role.gd")
 const NetworkRuntimeIdentityScript = preload("res://scripts/network/observability/network_runtime_identity.gd")
+const ServerFramePacingPolicy = preload("res://scripts/network/smoothness/server_frame_pacing_policy.gd")
 const NetworkProtocolManifestScript = preload("res://scripts/network/observability/network_protocol_manifest.gd")
 const NetworkConditionProfileScript = preload("res://scripts/network/conditions/network_condition_profile.gd")
 const NetworkConditionProfileStoreScript = preload("res://scripts/network/conditions/network_condition_profile_store.gd")
@@ -22,6 +23,7 @@ static func defaults() -> Dictionary:
 		"authority_region": "",
 		"server_address": "127.0.0.1",
 		"server_port": 24580,
+		"server_frame_cap": 0, # 0 leaves native engine launch configuration unchanged
 		"player_identity": "local-astronaut",
 		"connect_timeout_ms": 15000,
 		"command_timeout_ms": 5000,
@@ -118,6 +120,8 @@ static func parse(arguments) -> Dictionary:
 				options["server_address"] = value
 			"server-port":
 				options["server_port"] = _parse_port(value, key, errors)
+			"server-frame-cap":
+				options["server_frame_cap"] = _parse_non_negative_int(value, key, errors)
 			"player-identity":
 				options["player_identity"] = value.to_lower()
 			"connect-timeout-ms":
@@ -356,6 +360,10 @@ static func _validate(options: Dictionary, errors: Array[String]) -> void:
 	if String(options.get("network_condition_presets_file", "")).strip_edges().is_empty():
 		errors.append("Launch option network_condition_presets_file cannot be empty")
 
+	# Role- and product-fenced opt-in, before mutating Engine.max_fps.
+	var pacing_check: Dictionary = ServerFramePacingPolicy.validate(options)
+	if not bool(pacing_check.get("success", false)):
+		errors.append(String(pacing_check.get("error_code", "R31_SERVER_FRAME_CAP_INVALID")))
 	var identity_check: Dictionary = NetworkRuntimeIdentityScript.validate_config({
 		"world_id": String(options.get("world", "")),
 		"playable_sandbox": bool(options.get("network_playground", false)),

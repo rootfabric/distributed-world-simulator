@@ -211,7 +211,7 @@ func _test_bounded_extrapolation_and_hold() -> void:
 	_assert((edge.get("details", {}).get("position", Vector3.ZERO) as Vector3).is_equal_approx(Vector3(0.45, 0.0, 0.0)), "horizon edge position")
 	var held: Dictionary = interpolator.sample_at_render_tick(60.0)
 	_assert(String(held.get("details", {}).get("mode", "")) == "HOLD_EXTRAPOLATION_LIMIT", "past horizon holds")
-	_assert((held.get("details", {}).get("position", Vector3.ZERO) as Vector3).is_equal_approx(Vector3(0.15, 0.0, 0.0)), "hold never drifts beyond authoritative endpoint")
+	_assert((held.get("details", {}).get("position", Vector3.ZERO) as Vector3).is_equal_approx(Vector3(0.45, 0.0, 0.0)), "hold stays at bounded extrapolation endpoint without snapping back")
 	var report: Dictionary = interpolator.get_report()
 	_assert(int(report.get("extrapolation_samples", 0)) == 2, "extrapolation telemetry")
 	_assert(int(report.get("hold_samples", 0)) == 1, "hold telemetry")

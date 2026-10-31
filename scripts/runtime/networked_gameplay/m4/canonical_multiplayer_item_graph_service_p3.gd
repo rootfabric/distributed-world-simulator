@@ -124,6 +124,7 @@ func apply_server_output(
 		"fingerprint": fingerprint,
 		"result": result.duplicate(true),
 	}
+	_note_replay_projection_mutation()
 	return result
 
 

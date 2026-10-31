@@ -28,7 +28,7 @@ static func encode(snapshot: Dictionary) -> Dictionary:
 			"n": Array(player.get("inventory", [])).duplicate(true),
 			"q": int(player.get("last_input_sequence", 0)),
 			"r": int(player.get("state_revision", 0)),
-			"y": float(player.get("orientation_yaw", 0.0)),
+			"y": FullSnapshot._wire_number(float(player.get("orientation_yaw", 0.0))),
 			"f": bool(player.get("flashlight_enabled", false)),
 		})
 	var item: Dictionary = Dictionary(normalized.get("shared_item", {}))
@@ -48,6 +48,32 @@ static func encode(snapshot: Dictionary) -> Dictionary:
 		},
 		"c": String(normalized.get("checksum", "")),
 	}
+	# Preserve the original nested full checksum on the common fast path. If
+	# the compact scalar representation actually needs stabilization, the full
+	# checksum must describe those same wire-visible player numbers.
+	var original_players: Array = normalized.get("players", [])
+	var scalar_changed := false
+	for index in range(players.size()):
+		var short: Dictionary = players[index]
+		var original: Dictionary = original_players[index]
+		if (
+			original.get("position") != _array_to_vector(Array(short["p"]))
+			or original.get("velocity") != _array_to_vector(Array(short["v"]))
+			or float(original.get("orientation_yaw", 0)) != float(short["y"])
+		):
+			scalar_changed = true
+			break
+	if scalar_changed:
+		var projected: Dictionary = normalized.duplicate(true)
+		var projected_players: Array = projected["players"]
+		for index in range(players.size()):
+			var short: Dictionary = players[index]
+			var full: Dictionary = projected_players[index]
+			full["position"] = _array_to_vector(Array(short["p"]))
+			full["velocity"] = _array_to_vector(Array(short["v"]))
+			full["orientation_yaw"] = float(short["y"])
+		projected.erase("checksum")
+		body["c"] = Utils.payload_hash(projected)
 	body["h"] = Utils.payload_hash(body)
 	return _success({"snapshot": body})
 
@@ -145,7 +171,7 @@ static func validate(value: Dictionary) -> Dictionary:
 
 
 static func _vector_to_array(value: Dictionary) -> Array:
-	return [float(value.get("x", 0.0)), float(value.get("y", 0.0)), float(value.get("z", 0.0))]
+	return [FullSnapshot._wire_number(float(value.get("x", 0.0))), FullSnapshot._wire_number(float(value.get("y", 0.0))), FullSnapshot._wire_number(float(value.get("z", 0.0)))]
 
 
 static func _array_to_vector(value: Array) -> Dictionary:

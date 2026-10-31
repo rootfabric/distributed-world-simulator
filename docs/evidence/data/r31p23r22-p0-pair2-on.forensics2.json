@@ -1,0 +1,1769 @@
+{
+ "run": "r31p23r22-p0-pair2-on",
+ "server": {
+  "top_frames": [
+   {
+    "engine_frame": 3806,
+    "interval_ms": 183.622,
+    "t_rel_start_ms": 31012.8,
+    "t_rel_end_ms": 31196.4,
+    "engine_process_ms": 67.283,
+    "loop_stages": {
+     "postcommit_ms": 0.003,
+     "item_completion_ms": 107.749,
+     "movement_completion_ms": 0.023,
+     "deferred_disconnect_ms": 58.836,
+     "deferred_admission_ms": 0.008,
+     "boundary_poll_ms": 0.748,
+     "message_dispatch_ms": 0.005,
+     "fixed_simulation_ms": 0.249,
+     "snapshot_publication_ms": 0.026,
+     "movement_persistence_ms": 0.037,
+     "telemetry_ms": 0.256
+    },
+    "covered_sum_ms": 167.94,
+    "measured_stage_gap_ms": 15.68,
+    "compact_wire": {},
+    "flush_packets": [],
+    "snapshot_stage": {},
+    "messages": [],
+    "aux_in_window": {
+     "p1b_item_async_stages": {
+      "count": 2,
+      "detail": [
+       {
+        "generation": 37,
+        "stage": "DURABLE_COMMIT",
+        "kind": "DISCONNECT"
+       },
+       {
+        "generation": 38,
+        "capture_ms": 53.805,
+        "stage": "SUBMIT",
+        "kind": "DISCONNECT"
+       }
+      ]
+     }
+    }
+   },
+   {
+    "engine_frame": 3819,
+    "interval_ms": 139.649,
+    "t_rel_start_ms": 31366.9,
+    "t_rel_end_ms": 31506.5,
+    "engine_process_ms": 67.283,
+    "loop_stages": {
+     "postcommit_ms": 0.004,
+     "item_completion_ms": 124.641,
+     "movement_completion_ms": 0.015,
+     "deferred_disconnect_ms": 0.002,
+     "deferred_admission_ms": 0.003,
+     "boundary_poll_ms": 0.35,
+     "message_dispatch_ms": 0.003,
+     "fixed_simulation_ms": 0.066,
+     "snapshot_publication_ms": 0.011,
+     "movement_persistence_ms": 0.016,
+     "telemetry_ms": 0.126
+    },
+    "covered_sum_ms": 125.24,
+    "measured_stage_gap_ms": 14.41,
+    "compact_wire": {},
+    "flush_packets": [],
+    "snapshot_stage": {},
+    "messages": [],
+    "aux_in_window": {
+     "p1b_item_async_stages": {
+      "count": 1,
+      "detail": [
+       {
+        "generation": 38,
+        "stage": "DURABLE_COMMIT",
+        "kind": "DISCONNECT"
+       }
+      ]
+     }
+    }
+   },
+   {
+    "engine_frame": 3793,
+    "interval_ms": 81.053,
+    "t_rel_start_ms": 30762.6,
+    "t_rel_end_ms": 30843.7,
+    "engine_process_ms": 11.903,
+    "loop_stages": {
+     "postcommit_ms": 0.003,
+     "item_completion_ms": 0.002,
+     "movement_completion_ms": 0.008,
+     "deferred_disconnect_ms": 0.002,
+     "deferred_admission_ms": 0.002,
+     "boundary_poll_ms": 0.476,
+     "message_dispatch_ms": 63.176,
+     "fixed_simulation_ms": 1.684,
+     "snapshot_publication_ms": 0.03,
+     "movement_persistence_ms": 0.031,
+     "telemetry_ms": 0.274
+    },
+    "covered_sum_ms": 65.69,
+    "measured_stage_gap_ms": 15.36,
+    "compact_wire": {},
+    "flush_packets": [],
+    "snapshot_stage": {},
+    "messages": [],
+    "aux_in_window": {
+     "p1b_item_async_stages": {
+      "count": 1,
+      "detail": [
+       {
+        "generation": 37,
+        "capture_ms": 54.6,
+        "stage": "SUBMIT",
+        "kind": "DISCONNECT"
+       }
+      ]
+     }
+    }
+   },
+   {
+    "engine_frame": 1994,
+    "interval_ms": 66.408,
+    "t_rel_start_ms": 754.4,
+    "t_rel_end_ms": 820.8,
+    "engine_process_ms": 111.353,
+    "loop_stages": {
+     "postcommit_ms": 0.006,
+     "item_completion_ms": 0.003,
+     "movement_completion_ms": 0.012,
+     "deferred_disconnect_ms": 0.003,
+     "deferred_admission_ms": 0.002,
+     "boundary_poll_ms": 2.288,
+     "message_dispatch_ms": 0.773,
+     "fixed_simulation_ms": 0.728,
+     "snapshot_publication_ms": 0.026,
+     "movement_persistence_ms": 50.667,
+     "telemetry_ms": 0.377
+    },
+    "covered_sum_ms": 54.89,
+    "measured_stage_gap_ms": 11.52,
+    "compact_wire": {},
+    "flush_packets": [],
+    "snapshot_stage": {},
+    "messages": [
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 0.657
+     }
+    ],
+    "aux_in_window": {
+     "r3c4_periodic_capture_slot": {
+      "count": 1,
+      "detail": [
+       {
+        "deferred_frames": 9,
+        "forced": false,
+        "precapture_work_ms": 3.841
+       }
+      ]
+     },
+     "periodic_checkpoint_dispatch": {
+      "count": 1,
+      "detail": [
+       {
+        "generation": 19,
+        "origin": "MOVEMENT_PERIODIC",
+        "route": "ASYNC_WRITER"
+       }
+      ]
+     },
+     "checkpoint_capture": {
+      "count": 1,
+      "detail": [
+       {
+        "generation": 20,
+        "capture_ms": 50.248
+       }
+      ]
+     }
+    }
+   },
+   {
+    "engine_frame": 3001,
+    "interval_ms": 36.862,
+    "t_rel_start_ms": 17562.3,
+    "t_rel_end_ms": 17599.2,
+    "engine_process_ms": 23.708,
+    "loop_stages": {
+     "postcommit_ms": 0.005,
+     "item_completion_ms": 0.002,
+     "movement_completion_ms": 0.01,
+     "deferred_disconnect_ms": 0.003,
+     "deferred_admission_ms": 0.002,
+     "boundary_poll_ms": 3.506,
+     "message_dispatch_ms": 1.257,
+     "fixed_simulation_ms": 0.64,
+     "snapshot_publication_ms": 0.023,
+     "movement_persistence_ms": 15.473,
+     "telemetry_ms": 0.223
+    },
+    "covered_sum_ms": 21.14,
+    "measured_stage_gap_ms": 15.72,
+    "compact_wire": {},
+    "flush_packets": [],
+    "snapshot_stage": {},
+    "messages": [
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 0.523
+     },
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 0.526
+     }
+    ],
+    "aux_in_window": {
+     "r3c4_periodic_capture_slot": {
+      "count": 1,
+      "detail": [
+       {
+        "deferred_frames": 14,
+        "forced": false,
+        "precapture_work_ms": 5.449
+       }
+      ]
+     },
+     "periodic_checkpoint_dispatch": {
+      "count": 1,
+      "detail": [
+       {
+        "generation": 30,
+        "origin": "MOVEMENT_PERIODIC",
+        "route": "ASYNC_WRITER"
+       }
+      ]
+     },
+     "checkpoint_capture": {
+      "count": 1,
+      "detail": [
+       {
+        "generation": 31,
+        "capture_ms": 15.24
+       }
+      ]
+     }
+    }
+   },
+   {
+    "engine_frame": 2818,
+    "interval_ms": 36.828,
+    "t_rel_start_ms": 14513.9,
+    "t_rel_end_ms": 14550.7,
+    "engine_process_ms": 16.338,
+    "loop_stages": {
+     "postcommit_ms": 0.007,
+     "item_completion_ms": 0.003,
+     "movement_completion_ms": 0.009,
+     "deferred_disconnect_ms": 0.004,
+     "deferred_admission_ms": 0.004,
+     "boundary_poll_ms": 3.758,
+     "message_dispatch_ms": 1.414,
+     "fixed_simulation_ms": 0.82,
+     "snapshot_publication_ms": 0.029,
+     "movement_persistence_ms": 15.773,
+     "telemetry_ms": 0.347
+    },
+    "covered_sum_ms": 22.17,
+    "measured_stage_gap_ms": 14.66,
+    "compact_wire": {},
+    "flush_packets": [],
+    "snapshot_stage": {},
+    "messages": [
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 0.657
+     },
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 0.541
+     }
+    ],
+    "aux_in_window": {
+     "r3c4_periodic_capture_slot": {
+      "count": 1,
+      "detail": [
+       {
+        "deferred_frames": 13,
+        "forced": false,
+        "precapture_work_ms": 6.048
+       }
+      ]
+     },
+     "periodic_checkpoint_dispatch": {
+      "count": 1,
+      "detail": [
+       {
+        "generation": 28,
+        "origin": "MOVEMENT_PERIODIC",
+        "route": "ASYNC_WRITER"
+       }
+      ]
+     },
+     "checkpoint_capture": {
+      "count": 1,
+      "detail": [
+       {
+        "generation": 29,
+        "capture_ms": 15.435
+       }
+      ]
+     }
+    }
+   },
+   {
+    "engine_frame": 2269,
+    "interval_ms": 35.55,
+    "t_rel_start_ms": 5362.7,
+    "t_rel_end_ms": 5398.3,
+    "engine_process_ms": 19.155,
+    "loop_stages": {
+     "postcommit_ms": 0.006,
+     "item_completion_ms": 0.003,
+     "movement_completion_ms": 0.011,
+     "deferred_disconnect_ms": 0.005,
+     "deferred_admission_ms": 0.002,
+     "boundary_poll_ms": 3.724,
+     "message_dispatch_ms": 1.486,
+     "fixed_simulation_ms": 0.617,
+     "snapshot_publication_ms": 0.021,
+     "movement_persistence_ms": 13.301,
+     "telemetry_ms": 0.245
+    },
+    "covered_sum_ms": 19.42,
+    "measured_stage_gap_ms": 16.13,
+    "compact_wire": {},
+    "flush_packets": [],
+    "snapshot_stage": {},
+    "messages": [
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 0.673
+     },
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 0.613
+     }
+    ],
+    "aux_in_window": {
+     "r3c4_periodic_capture_slot": {
+      "count": 1,
+      "detail": [
+       {
+        "deferred_frames": 10,
+        "forced": false,
+        "precapture_work_ms": 5.875
+       }
+      ]
+     },
+     "periodic_checkpoint_dispatch": {
+      "count": 1,
+      "detail": [
+       {
+        "generation": 22,
+        "origin": "MOVEMENT_PERIODIC",
+        "route": "ASYNC_WRITER"
+       }
+      ]
+     },
+     "checkpoint_capture": {
+      "count": 1,
+      "detail": [
+       {
+        "generation": 23,
+        "capture_ms": 13.049
+       }
+      ]
+     }
+    }
+   },
+   {
+    "engine_frame": 2603,
+    "interval_ms": 35.363,
+    "t_rel_start_ms": 10929.2,
+    "t_rel_end_ms": 10964.5,
+    "engine_process_ms": 19.463,
+    "loop_stages": {
+     "postcommit_ms": 0.007,
+     "item_completion_ms": 0.002,
+     "movement_completion_ms": 0.011,
+     "deferred_disconnect_ms": 0.004,
+     "deferred_admission_ms": 0.003,
+     "boundary_poll_ms": 3.785,
+     "message_dispatch_ms": 1.364,
+     "fixed_simulation_ms": 0.673,
+     "snapshot_publication_ms": 13.247,
+     "movement_persistence_ms": 0.042,
+     "telemetry_ms": 0.25
+    },
+    "covered_sum_ms": 19.39,
+    "measured_stage_gap_ms": 15.97,
+    "compact_wire": {
+     "payload_clone_ms": 0.002,
+     "frame_create_ms": 1.631,
+     "boundary_send_ms": 1.519,
+     "outbound_flush_ms": 1.951,
+     "total_ms": 5.103
+    },
+    "flush_packets": [
+     {
+      "channel": "SNAPSHOT",
+      "port_call_ms": 1.715,
+      "queue_stage_ms": 0.002,
+      "detached_frame_copy_ms": 0.018,
+      "delivery_mode": "UNRELIABLE_SEQUENCED",
+      "attempt_number": 1
+     },
+     {
+      "channel": "SNAPSHOT",
+      "port_call_ms": 1.664,
+      "queue_stage_ms": 0.002,
+      "detached_frame_copy_ms": 0.017,
+      "delivery_mode": "UNRELIABLE_SEQUENCED",
+      "attempt_number": 1
+     }
+    ],
+    "snapshot_stage": {
+     "capture_ms": 0.997,
+     "encode_ms": 1.502,
+     "compact_send_ms": 10.515,
+     "send_and_seam_ms": 10.654,
+     "peers": 2,
+     "tick": 2653
+    },
+    "messages": [
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 0.63
+     },
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 0.519
+     }
+    ],
+    "aux_in_window": {}
+   },
+   {
+    "engine_frame": 1980,
+    "interval_ms": 33.435,
+    "t_rel_start_ms": 516.6,
+    "t_rel_end_ms": 550.0,
+    "engine_process_ms": 111.353,
+    "loop_stages": {
+     "postcommit_ms": 0.008,
+     "item_completion_ms": 0.005,
+     "movement_completion_ms": 0.013,
+     "deferred_disconnect_ms": 0.004,
+     "deferred_admission_ms": 0.003,
+     "boundary_poll_ms": 3.857,
+     "message_dispatch_ms": 1.4,
+     "fixed_simulation_ms": 0.908,
+     "snapshot_publication_ms": 11.294,
+     "movement_persistence_ms": 0.038,
+     "telemetry_ms": 0.301
+    },
+    "covered_sum_ms": 17.83,
+    "measured_stage_gap_ms": 15.6,
+    "compact_wire": {
+     "payload_clone_ms": 0.002,
+     "frame_create_ms": 1.459,
+     "boundary_send_ms": 1.299,
+     "outbound_flush_ms": 1.778,
+     "total_ms": 4.538
+    },
+    "flush_packets": [
+     {
+      "channel": "SNAPSHOT",
+      "port_call_ms": 1.137,
+      "queue_stage_ms": 0.002,
+      "detached_frame_copy_ms": 0.015,
+      "delivery_mode": "UNRELIABLE_SEQUENCED",
+      "attempt_number": 1
+     },
+     {
+      "channel": "SNAPSHOT",
+      "port_call_ms": 1.5,
+      "queue_stage_ms": 0.001,
+      "detached_frame_copy_ms": 0.018,
+      "delivery_mode": "UNRELIABLE_SEQUENCED",
+      "attempt_number": 1
+     }
+    ],
+    "snapshot_stage": {
+     "capture_ms": 1.518,
+     "encode_ms": 1.538,
+     "compact_send_ms": 7.987,
+     "send_and_seam_ms": 8.156,
+     "peers": 2,
+     "tick": 2028
+    },
+    "messages": [
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 0.633
+     },
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 0.558
+     }
+    ],
+    "aux_in_window": {}
+   },
+   {
+    "engine_frame": 2045,
+    "interval_ms": 33.114,
+    "t_rel_start_ms": 1630.8,
+    "t_rel_end_ms": 1663.9,
+    "engine_process_ms": 57.068,
+    "loop_stages": {
+     "postcommit_ms": 0.006,
+     "item_completion_ms": 0.003,
+     "movement_completion_ms": 0.01,
+     "deferred_disconnect_ms": 0.004,
+     "deferred_admission_ms": 0.002,
+     "boundary_poll_ms": 2.254,
+     "message_dispatch_ms": 0.793,
+     "fixed_simulation_ms": 0.633,
+     "snapshot_publication_ms": 13.684,
+     "movement_persistence_ms": 0.047,
+     "telemetry_ms": 0.279
+    },
+    "covered_sum_ms": 17.71,
+    "measured_stage_gap_ms": 15.4,
+    "compact_wire": {
+     "payload_clone_ms": 0.002,
+     "frame_create_ms": 1.673,
+     "boundary_send_ms": 1.542,
+     "outbound_flush_ms": 2.007,
+     "total_ms": 5.224
+    },
+    "flush_packets": [
+     {
+      "channel": "SNAPSHOT",
+      "port_call_ms": 1.766,
+      "queue_stage_ms": 0.002,
+      "detached_frame_copy_ms": 0.021,
+      "delivery_mode": "UNRELIABLE_SEQUENCED",
+      "attempt_number": 1
+     },
+     {
+      "channel": "SNAPSHOT",
+      "port_call_ms": 1.695,
+      "queue_stage_ms": 0.002,
+      "detached_frame_copy_ms": 0.018,
+      "delivery_mode": "UNRELIABLE_SEQUENCED",
+      "attempt_number": 1
+     }
+    ],
+    "snapshot_stage": {
+     "capture_ms": 1.071,
+     "encode_ms": 1.562,
+     "compact_send_ms": 10.792,
+     "send_and_seam_ms": 10.949,
+     "peers": 2,
+     "tick": 2095
+    },
+    "messages": [
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 0.677
+     }
+    ],
+    "aux_in_window": {}
+   },
+   {
+    "engine_frame": 2075,
+    "interval_ms": 33.082,
+    "t_rel_start_ms": 2131.0,
+    "t_rel_end_ms": 2164.1,
+    "engine_process_ms": 19.62,
+    "loop_stages": {
+     "postcommit_ms": 0.007,
+     "item_completion_ms": 0.004,
+     "movement_completion_ms": 0.011,
+     "deferred_disconnect_ms": 0.005,
+     "deferred_admission_ms": 0.003,
+     "boundary_poll_ms": 2.481,
+     "message_dispatch_ms": 0.782,
+     "fixed_simulation_ms": 0.709,
+     "snapshot_publication_ms": 13.518,
+     "movement_persistence_ms": 0.045,
+     "telemetry_ms": 0.27
+    },
+    "covered_sum_ms": 17.84,
+    "measured_stage_gap_ms": 15.25,
+    "compact_wire": {
+     "payload_clone_ms": 0.002,
+     "frame_create_ms": 1.713,
+     "boundary_send_ms": 1.504,
+     "outbound_flush_ms": 2.017,
+     "total_ms": 5.236
+    },
+    "flush_packets": [
+     {
+      "channel": "SNAPSHOT",
+      "port_call_ms": 1.755,
+      "queue_stage_ms": 0.002,
+      "detached_frame_copy_ms": 0.02,
+      "delivery_mode": "UNRELIABLE_SEQUENCED",
+      "attempt_number": 1
+     },
+     {
+      "channel": "SNAPSHOT",
+      "port_call_ms": 1.712,
+      "queue_stage_ms": 0.003,
+      "detached_frame_copy_ms": 0.022,
+      "delivery_mode": "UNRELIABLE_SEQUENCED",
+      "attempt_number": 1
+     }
+    ],
+    "snapshot_stage": {
+     "capture_ms": 1.066,
+     "encode_ms": 1.574,
+     "compact_send_ms": 10.603,
+     "send_and_seam_ms": 10.772,
+     "peers": 2,
+     "tick": 2125
+    },
+    "messages": [
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 0.641
+     }
+    ],
+    "aux_in_window": {}
+   },
+   {
+    "engine_frame": 4320,
+    "interval_ms": 32.388,
+    "t_rel_start_ms": 39809.6,
+    "t_rel_end_ms": 39842.0,
+    "engine_process_ms": 5.228,
+    "loop_stages": {
+     "postcommit_ms": 0.006,
+     "item_completion_ms": 0.002,
+     "movement_completion_ms": 0.01,
+     "deferred_disconnect_ms": 0.004,
+     "deferred_admission_ms": 0.003,
+     "boundary_poll_ms": 16.986,
+     "message_dispatch_ms": 0.006,
+     "fixed_simulation_ms": 0.197,
+     "snapshot_publication_ms": 0.033,
+     "movement_persistence_ms": 0.033,
+     "telemetry_ms": 0.211
+    },
+    "covered_sum_ms": 17.49,
+    "measured_stage_gap_ms": 14.9,
+    "compact_wire": {},
+    "flush_packets": [],
+    "snapshot_stage": {},
+    "messages": [],
+    "aux_in_window": {}
+   },
+   {
+    "engine_frame": 2452,
+    "interval_ms": 31.654,
+    "t_rel_start_ms": 8412.5,
+    "t_rel_end_ms": 8444.2,
+    "engine_process_ms": 13.37,
+    "loop_stages": {
+     "postcommit_ms": 0.004,
+     "item_completion_ms": 0.002,
+     "movement_completion_ms": 0.009,
+     "deferred_disconnect_ms": 0.003,
+     "deferred_admission_ms": 0.001,
+     "boundary_poll_ms": 2.381,
+     "message_dispatch_ms": 1.116,
+     "fixed_simulation_ms": 0.586,
+     "snapshot_publication_ms": 0.02,
+     "movement_persistence_ms": 11.051,
+     "telemetry_ms": 0.216
+    },
+    "covered_sum_ms": 15.39,
+    "measured_stage_gap_ms": 16.27,
+    "compact_wire": {},
+    "flush_packets": [],
+    "snapshot_stage": {},
+    "messages": [
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 0.495
+     },
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 0.443
+     }
+    ],
+    "aux_in_window": {
+     "r3c4_periodic_capture_slot": {
+      "count": 1,
+      "detail": [
+       {
+        "deferred_frames": 11,
+        "forced": false,
+        "precapture_work_ms": 4.122
+       }
+      ]
+     },
+     "periodic_checkpoint_dispatch": {
+      "count": 1,
+      "detail": [
+       {
+        "generation": 24,
+        "origin": "MOVEMENT_PERIODIC",
+        "route": "ASYNC_WRITER"
+       }
+      ]
+     },
+     "checkpoint_capture": {
+      "count": 1,
+      "detail": [
+       {
+        "generation": 25,
+        "capture_ms": 10.838
+       }
+      ]
+     }
+    }
+   },
+   {
+    "engine_frame": 1950,
+    "interval_ms": 31.648,
+    "t_rel_start_ms": 18.9,
+    "t_rel_end_ms": 50.6,
+    "engine_process_ms": 111.353,
+    "loop_stages": {
+     "postcommit_ms": 0.006,
+     "item_completion_ms": 0.003,
+     "movement_completion_ms": 0.011,
+     "deferred_disconnect_ms": 0.004,
+     "deferred_admission_ms": 0.004,
+     "boundary_poll_ms": 2.32,
+     "message_dispatch_ms": 0.763,
+     "fixed_simulation_ms": 0.798,
+     "snapshot_publication_ms": 13.874,
+     "movement_persistence_ms": 0.045,
+     "telemetry_ms": 0.286
+    },
+    "covered_sum_ms": 18.11,
+    "measured_stage_gap_ms": 13.53,
+    "compact_wire": {
+     "payload_clone_ms": 0.001,
+     "frame_create_ms": 1.721,
+     "boundary_send_ms": 1.462,
+     "outbound_flush_ms": 2.111,
+     "total_ms": 5.295
+    },
+    "flush_packets": [
+     {
+      "channel": "SNAPSHOT",
+      "port_call_ms": 1.652,
+      "queue_stage_ms": 0.002,
+      "detached_frame_copy_ms": 0.017,
+      "delivery_mode": "UNRELIABLE_SEQUENCED",
+      "attempt_number": 1
+     },
+     {
+      "channel": "SNAPSHOT",
+      "port_call_ms": 1.787,
+      "queue_stage_ms": 0.002,
+      "detached_frame_copy_ms": 0.018,
+      "delivery_mode": "UNRELIABLE_SEQUENCED",
+      "attempt_number": 1
+     }
+    ],
+    "snapshot_stage": {
+     "capture_ms": 1.106,
+     "encode_ms": 1.638,
+     "compact_send_ms": 10.856,
+     "send_and_seam_ms": 11.012,
+     "peers": 2,
+     "tick": 1998
+    },
+    "messages": [
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 0.633
+     }
+    ],
+    "aux_in_window": {}
+   },
+   {
+    "engine_frame": 2910,
+    "interval_ms": 31.636,
+    "t_rel_start_ms": 16052.5,
+    "t_rel_end_ms": 16084.1,
+    "engine_process_ms": 16.017,
+    "loop_stages": {
+     "postcommit_ms": 0.006,
+     "item_completion_ms": 0.003,
+     "movement_completion_ms": 0.011,
+     "deferred_disconnect_ms": 0.004,
+     "deferred_admission_ms": 0.003,
+     "boundary_poll_ms": 0.649,
+     "message_dispatch_ms": 0.004,
+     "fixed_simulation_ms": 0.768,
+     "snapshot_publication_ms": 0.028,
+     "movement_persistence_ms": 20.461,
+     "telemetry_ms": 0.388
+    },
+    "covered_sum_ms": 22.32,
+    "measured_stage_gap_ms": 9.31,
+    "compact_wire": {},
+    "flush_packets": [],
+    "snapshot_stage": {},
+    "messages": [],
+    "aux_in_window": {
+     "r3c4_periodic_capture_slot": {
+      "count": 1,
+      "detail": [
+       {
+        "deferred_frames": 14,
+        "forced": false,
+        "precapture_work_ms": 1.476
+       }
+      ]
+     },
+     "periodic_checkpoint_dispatch": {
+      "count": 1,
+      "detail": [
+       {
+        "generation": 29,
+        "origin": "MOVEMENT_PERIODIC",
+        "route": "ASYNC_WRITER"
+       }
+      ]
+     },
+     "checkpoint_capture": {
+      "count": 1,
+      "detail": [
+       {
+        "generation": 30,
+        "capture_ms": 20.002
+       }
+      ]
+     }
+    }
+   },
+   {
+    "engine_frame": 1977,
+    "interval_ms": 30.638,
+    "t_rel_start_ms": 470.4,
+    "t_rel_end_ms": 501.0,
+    "engine_process_ms": 111.353,
+    "loop_stages": {
+     "postcommit_ms": 0.008,
+     "item_completion_ms": 0.003,
+     "movement_completion_ms": 0.011,
+     "deferred_disconnect_ms": 0.005,
+     "deferred_admission_ms": 0.002,
+     "boundary_poll_ms": 2.346,
+     "message_dispatch_ms": 0.779,
+     "fixed_simulation_ms": 0.704,
+     "snapshot_publication_ms": 14.296,
+     "movement_persistence_ms": 0.049,
+     "telemetry_ms": 0.287
+    },
+    "covered_sum_ms": 18.49,
+    "measured_stage_gap_ms": 12.15,
+    "compact_wire": {
+     "payload_clone_ms": 0.003,
+     "frame_create_ms": 1.78,
+     "boundary_send_ms": 1.56,
+     "outbound_flush_ms": 2.008,
+     "total_ms": 5.351
+    },
+    "flush_packets": [
+     {
+      "channel": "SNAPSHOT",
+      "port_call_ms": 1.799,
+      "queue_stage_ms": 0.002,
+      "detached_frame_copy_ms": 0.02,
+      "delivery_mode": "UNRELIABLE_SEQUENCED",
+      "attempt_number": 1
+     },
+     {
+      "channel": "SNAPSHOT",
+      "port_call_ms": 1.674,
+      "queue_stage_ms": 0.002,
+      "detached_frame_copy_ms": 0.016,
+      "delivery_mode": "UNRELIABLE_SEQUENCED",
+      "attempt_number": 1
+     }
+    ],
+    "snapshot_stage": {
+     "capture_ms": 1.003,
+     "encode_ms": 1.529,
+     "compact_send_ms": 11.501,
+     "send_and_seam_ms": 11.655,
+     "peers": 2,
+     "tick": 2025
+    },
+    "messages": [
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 0.645
+     }
+    ],
+    "aux_in_window": {}
+   },
+   {
+    "engine_frame": 2321,
+    "interval_ms": 30.623,
+    "t_rel_start_ms": 6230.8,
+    "t_rel_end_ms": 6261.4,
+    "engine_process_ms": 20.828,
+    "loop_stages": {
+     "postcommit_ms": 0.009,
+     "item_completion_ms": 0.003,
+     "movement_completion_ms": 0.012,
+     "deferred_disconnect_ms": 0.004,
+     "deferred_admission_ms": 0.003,
+     "boundary_poll_ms": 2.362,
+     "message_dispatch_ms": 0.763,
+     "fixed_simulation_ms": 0.805,
+     "snapshot_publication_ms": 12.11,
+     "movement_persistence_ms": 0.022,
+     "telemetry_ms": 0.148
+    },
+    "covered_sum_ms": 16.24,
+    "measured_stage_gap_ms": 14.38,
+    "compact_wire": {
+     "payload_clone_ms": 0.002,
+     "frame_create_ms": 1.759,
+     "boundary_send_ms": 0.821,
+     "outbound_flush_ms": 1.309,
+     "total_ms": 3.891
+    },
+    "flush_packets": [
+     {
+      "channel": "SNAPSHOT",
+      "port_call_ms": 1.765,
+      "queue_stage_ms": 0.003,
+      "detached_frame_copy_ms": 0.017,
+      "delivery_mode": "UNRELIABLE_SEQUENCED",
+      "attempt_number": 1
+     },
+     {
+      "channel": "SNAPSHOT",
+      "port_call_ms": 1.134,
+      "queue_stage_ms": 0.003,
+      "detached_frame_copy_ms": 0.015,
+      "delivery_mode": "UNRELIABLE_SEQUENCED",
+      "attempt_number": 1
+     }
+    ],
+    "snapshot_stage": {
+     "capture_ms": 0.998,
+     "encode_ms": 1.46,
+     "compact_send_ms": 9.472,
+     "send_and_seam_ms": 9.592,
+     "peers": 2,
+     "tick": 2371
+    },
+    "messages": [
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 0.629
+     }
+    ],
+    "aux_in_window": {}
+   },
+   {
+    "engine_frame": 3404,
+    "interval_ms": 30.437,
+    "t_rel_start_ms": 24280.3,
+    "t_rel_end_ms": 24310.7,
+    "engine_process_ms": 15.484,
+    "loop_stages": {
+     "postcommit_ms": 0.007,
+     "item_completion_ms": 0.004,
+     "movement_completion_ms": 0.014,
+     "deferred_disconnect_ms": 0.004,
+     "deferred_admission_ms": 0.004,
+     "boundary_poll_ms": 0.695,
+     "message_dispatch_ms": 0.004,
+     "fixed_simulation_ms": 0.875,
+     "snapshot_publication_ms": 13.373,
+     "movement_persistence_ms": 0.044,
+     "telemetry_ms": 0.315
+    },
+    "covered_sum_ms": 15.34,
+    "measured_stage_gap_ms": 15.1,
+    "compact_wire": {
+     "payload_clone_ms": 0.002,
+     "frame_create_ms": 1.728,
+     "boundary_send_ms": 1.552,
+     "outbound_flush_ms": 2.046,
+     "total_ms": 5.328
+    },
+    "flush_packets": [
+     {
+      "channel": "SNAPSHOT",
+      "port_call_ms": 1.961,
+      "queue_stage_ms": 0.002,
+      "detached_frame_copy_ms": 0.016,
+      "delivery_mode": "UNRELIABLE_SEQUENCED",
+      "attempt_number": 1
+     },
+     {
+      "channel": "SNAPSHOT",
+      "port_call_ms": 1.75,
+      "queue_stage_ms": 0.002,
+      "detached_frame_copy_ms": 0.016,
+      "delivery_mode": "UNRELIABLE_SEQUENCED",
+      "attempt_number": 1
+     }
+    ],
+    "snapshot_stage": {
+     "capture_ms": 0.967,
+     "encode_ms": 1.391,
+     "compact_send_ms": 10.767,
+     "send_and_seam_ms": 10.914,
+     "peers": 2,
+     "tick": 3454
+    },
+    "messages": [],
+    "aux_in_window": {}
+   },
+   {
+    "engine_frame": 2822,
+    "interval_ms": 30.36,
+    "t_rel_start_ms": 14582.4,
+    "t_rel_end_ms": 14612.7,
+    "engine_process_ms": 16.338,
+    "loop_stages": {
+     "postcommit_ms": 0.006,
+     "item_completion_ms": 0.002,
+     "movement_completion_ms": 0.013,
+     "deferred_disconnect_ms": 0.004,
+     "deferred_admission_ms": 0.003,
+     "boundary_poll_ms": 2.51,
+     "message_dispatch_ms": 0.84,
+     "fixed_simulation_ms": 0.716,
+     "snapshot_publication_ms": 12.962,
+     "movement_persistence_ms": 0.035,
+     "telemetry_ms": 0.244
+    },
+    "covered_sum_ms": 17.33,
+    "measured_stage_gap_ms": 13.03,
+    "compact_wire": {
+     "payload_clone_ms": 0.002,
+     "frame_create_ms": 1.833,
+     "boundary_send_ms": 1.46,
+     "outbound_flush_ms": 1.862,
+     "total_ms": 5.157
+    },
+    "flush_packets": [
+     {
+      "channel": "SNAPSHOT",
+      "port_call_ms": 1.701,
+      "queue_stage_ms": 0.003,
+      "detached_frame_copy_ms": 0.017,
+      "delivery_mode": "UNRELIABLE_SEQUENCED",
+      "attempt_number": 1
+     },
+     {
+      "channel": "SNAPSHOT",
+      "port_call_ms": 1.593,
+      "queue_stage_ms": 0.002,
+      "detached_frame_copy_ms": 0.017,
+      "delivery_mode": "UNRELIABLE_SEQUENCED",
+      "attempt_number": 1
+     }
+    ],
+    "snapshot_stage": {
+     "capture_ms": 1.177,
+     "encode_ms": 1.759,
+     "compact_send_ms": 9.803,
+     "send_and_seam_ms": 9.934,
+     "peers": 2,
+     "tick": 2872
+    },
+    "messages": [
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 0.715
+     }
+    ],
+    "aux_in_window": {}
+   },
+   {
+    "engine_frame": 3367,
+    "interval_ms": 30.333,
+    "t_rel_start_ms": 23662.0,
+    "t_rel_end_ms": 23692.3,
+    "engine_process_ms": 17.048,
+    "loop_stages": {
+     "postcommit_ms": 0.005,
+     "item_completion_ms": 0.002,
+     "movement_completion_ms": 0.01,
+     "deferred_disconnect_ms": 0.004,
+     "deferred_admission_ms": 0.003,
+     "boundary_poll_ms": 2.934,
+     "message_dispatch_ms": 0.692,
+     "fixed_simulation_ms": 0.396,
+     "snapshot_publication_ms": 0.014,
+     "movement_persistence_ms": 10.328,
+     "telemetry_ms": 0.194
+    },
+    "covered_sum_ms": 14.58,
+    "measured_stage_gap_ms": 15.75,
+    "compact_wire": {},
+    "flush_packets": [],
+    "snapshot_stage": {},
+    "messages": [
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 0.309
+     },
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 0.258
+     }
+    ],
+    "aux_in_window": {
+     "r3c4_periodic_capture_slot": {
+      "count": 1,
+      "detail": [
+       {
+        "deferred_frames": 16,
+        "forced": false,
+        "precapture_work_ms": 4.06
+       }
+      ]
+     },
+     "periodic_checkpoint_dispatch": {
+      "count": 1,
+      "detail": [
+       {
+        "generation": 34,
+        "origin": "MOVEMENT_PERIODIC",
+        "route": "ASYNC_WRITER"
+       }
+      ]
+     },
+     "checkpoint_capture": {
+      "count": 1,
+      "detail": [
+       {
+        "generation": 35,
+        "capture_ms": 10.124
+       }
+      ]
+     }
+    }
+   }
+  ],
+  "biggest_messages": [
+   {
+    "duration_ms": 1.55,
+    "engine_frame": 2911,
+    "operation_id": "",
+    "peer": "peer/enet/255118887/m3-b-11056-29857",
+    "tick": 2960,
+    "type": "PLAYER_INPUT_BATCH"
+   },
+   {
+    "duration_ms": 1.054,
+    "engine_frame": 2911,
+    "operation_id": "",
+    "peer": "peer/enet/1362346483/m3-a-10836-5442",
+    "tick": 2960,
+    "type": "PLAYER_INPUT_BATCH"
+   },
+   {
+    "duration_ms": 0.862,
+    "engine_frame": 3007,
+    "operation_id": "",
+    "peer": "peer/enet/255118887/m3-b-11056-29857",
+    "tick": 3056,
+    "type": "PLAYER_INPUT_BATCH"
+   },
+   {
+    "duration_ms": 0.82,
+    "engine_frame": 1996,
+    "operation_id": "",
+    "peer": "peer/enet/1362346483/m3-a-10836-5442",
+    "tick": 2044,
+    "type": "PLAYER_INPUT_BATCH"
+   },
+   {
+    "duration_ms": 0.816,
+    "engine_frame": 2509,
+    "operation_id": "",
+    "peer": "peer/enet/255118887/m3-b-11056-29857",
+    "tick": 2558,
+    "type": "PLAYER_INPUT_BATCH"
+   },
+   {
+    "duration_ms": 0.81,
+    "engine_frame": 3277,
+    "operation_id": "",
+    "peer": "peer/enet/255118887/m3-b-11056-29857",
+    "tick": 3326,
+    "type": "PLAYER_INPUT_BATCH"
+   },
+   {
+    "duration_ms": 0.804,
+    "engine_frame": 3235,
+    "operation_id": "",
+    "peer": "peer/enet/255118887/m3-b-11056-29857",
+    "tick": 3284,
+    "type": "PLAYER_INPUT_BATCH"
+   },
+   {
+    "duration_ms": 0.78,
+    "engine_frame": 2419,
+    "operation_id": "",
+    "peer": "peer/enet/255118887/m3-b-11056-29857",
+    "tick": 2468,
+    "type": "PLAYER_INPUT_BATCH"
+   }
+  ],
+  "biggest_compact_sends": [
+   {
+    "engine_frame": 2180,
+    "compact_send_ms": 12.259,
+    "send_and_seam_ms": 12.415,
+    "tick": 2230
+   },
+   {
+    "engine_frame": 2036,
+    "compact_send_ms": 11.518,
+    "send_and_seam_ms": 11.72,
+    "tick": 2086
+   },
+   {
+    "engine_frame": 1977,
+    "compact_send_ms": 11.501,
+    "send_and_seam_ms": 11.655,
+    "tick": 2025
+   },
+   {
+    "engine_frame": 1992,
+    "compact_send_ms": 11.437,
+    "send_and_seam_ms": 11.575,
+    "tick": 2040
+   },
+   {
+    "engine_frame": 2459,
+    "compact_send_ms": 11.204,
+    "send_and_seam_ms": 11.355,
+    "tick": 2509
+   },
+   {
+    "engine_frame": 2828,
+    "compact_send_ms": 10.989,
+    "send_and_seam_ms": 11.151,
+    "tick": 2878
+   },
+   {
+    "engine_frame": 1965,
+    "compact_send_ms": 10.903,
+    "send_and_seam_ms": 11.079,
+    "tick": 2013
+   },
+   {
+    "engine_frame": 1950,
+    "compact_send_ms": 10.856,
+    "send_and_seam_ms": 11.012,
+    "tick": 1998
+   }
+  ],
+  "stage_max_ms": {
+   "postcommit_ms": 0.102,
+   "item_completion_ms": 124.641,
+   "movement_completion_ms": 11.819,
+   "deferred_disconnect_ms": 58.836,
+   "deferred_admission_ms": 0.086,
+   "boundary_poll_ms": 16.986,
+   "message_dispatch_ms": 63.176,
+   "fixed_simulation_ms": 2.046,
+   "snapshot_publication_ms": 15.375,
+   "movement_persistence_ms": 50.667,
+   "telemetry_ms": 0.606
+  },
+  "stage_p99_ms": {
+   "postcommit_ms": 0.01,
+   "item_completion_ms": 0.005,
+   "movement_completion_ms": 0.02,
+   "deferred_disconnect_ms": 0.006,
+   "deferred_admission_ms": 0.005,
+   "boundary_poll_ms": 3.675,
+   "message_dispatch_ms": 1.353,
+   "fixed_simulation_ms": 0.828,
+   "snapshot_publication_ms": 10.896,
+   "movement_persistence_ms": 0.063,
+   "telemetry_ms": 0.34
+  }
+ },
+ "a": {
+  "top_frames": [
+   {
+    "engine_frame": null,
+    "interval_ms": 113.421,
+    "process_ms": 25.936,
+    "snap_ticks": [
+     -1,
+     -1
+    ],
+    "compact_stages": [
+     {
+      "tick": 2362,
+      "decode_ms": 0.736,
+      "accept_ms": 0.495,
+      "reconcile_ms": 0.963,
+      "presentation_ms": 0.34
+     },
+     {
+      "tick": 2365,
+      "decode_ms": 0.883,
+      "accept_ms": 0.537,
+      "reconcile_ms": 1.082,
+      "presentation_ms": 0.35
+     }
+    ]
+   },
+   {
+    "engine_frame": null,
+    "interval_ms": 109.407,
+    "process_ms": 20.266,
+    "snap_ticks": [
+     -1,
+     -1
+    ],
+    "compact_stages": [
+     {
+      "tick": 2647,
+      "decode_ms": 0.692,
+      "accept_ms": 0.47,
+      "reconcile_ms": 0.963,
+      "presentation_ms": 0.259
+     },
+     {
+      "tick": 2650,
+      "decode_ms": 0.712,
+      "accept_ms": 0.487,
+      "reconcile_ms": 1.062,
+      "presentation_ms": 0.44
+     }
+    ]
+   },
+   {
+    "engine_frame": null,
+    "interval_ms": 81.477,
+    "process_ms": 14.746,
+    "snap_ticks": [],
+    "compact_stages": []
+   },
+   {
+    "engine_frame": null,
+    "interval_ms": 70.86,
+    "process_ms": 59.372,
+    "snap_ticks": [],
+    "compact_stages": []
+   },
+   {
+    "engine_frame": null,
+    "interval_ms": 69.838,
+    "process_ms": 47.649,
+    "snap_ticks": [],
+    "compact_stages": []
+   },
+   {
+    "engine_frame": null,
+    "interval_ms": 58.769,
+    "process_ms": 36.051,
+    "snap_ticks": [],
+    "compact_stages": []
+   },
+   {
+    "engine_frame": null,
+    "interval_ms": 55.677,
+    "process_ms": 13.103,
+    "snap_ticks": [],
+    "compact_stages": []
+   },
+   {
+    "engine_frame": null,
+    "interval_ms": 55.376,
+    "process_ms": 13.962,
+    "snap_ticks": [],
+    "compact_stages": []
+   },
+   {
+    "engine_frame": null,
+    "interval_ms": 53.545,
+    "process_ms": 20.889,
+    "snap_ticks": [],
+    "compact_stages": []
+   },
+   {
+    "engine_frame": null,
+    "interval_ms": 50.35,
+    "process_ms": 18.418,
+    "snap_ticks": [],
+    "compact_stages": []
+   },
+   {
+    "engine_frame": null,
+    "interval_ms": 48.747,
+    "process_ms": 30.883,
+    "snap_ticks": [],
+    "compact_stages": []
+   },
+   {
+    "engine_frame": null,
+    "interval_ms": 45.81,
+    "process_ms": 15.921,
+    "snap_ticks": [],
+    "compact_stages": []
+   },
+   {
+    "engine_frame": null,
+    "interval_ms": 45.365,
+    "process_ms": 16.853,
+    "snap_ticks": [],
+    "compact_stages": []
+   },
+   {
+    "engine_frame": null,
+    "interval_ms": 44.842,
+    "process_ms": 15.406,
+    "snap_ticks": [],
+    "compact_stages": []
+   },
+   {
+    "engine_frame": null,
+    "interval_ms": 44.828,
+    "process_ms": 13.992,
+    "snap_ticks": [],
+    "compact_stages": []
+   },
+   {
+    "engine_frame": null,
+    "interval_ms": 43.578,
+    "process_ms": 18.031,
+    "snap_ticks": [],
+    "compact_stages": []
+   },
+   {
+    "engine_frame": null,
+    "interval_ms": 42.287,
+    "process_ms": 63.066,
+    "snap_ticks": [],
+    "compact_stages": []
+   },
+   {
+    "engine_frame": null,
+    "interval_ms": 41.671,
+    "process_ms": 32.781,
+    "snap_ticks": [],
+    "compact_stages": []
+   },
+   {
+    "engine_frame": null,
+    "interval_ms": 39.437,
+    "process_ms": 34.013,
+    "snap_ticks": [],
+    "compact_stages": []
+   },
+   {
+    "engine_frame": null,
+    "interval_ms": 38.333,
+    "process_ms": 91.421,
+    "snap_ticks": [
+     -1
+    ],
+    "compact_stages": [
+     {
+      "tick": 2040,
+      "decode_ms": 1.289,
+      "accept_ms": 0.853,
+      "reconcile_ms": 1.475,
+      "presentation_ms": 0.499
+     }
+    ]
+   }
+  ],
+  "client_states": [
+   "CONNECTED"
+  ],
+  "sessions": [
+   "transport-session/m3/a/10836/5442"
+  ],
+  "top_snapshot_gaps_ms_tick": [
+   [
+    112.9,
+    -1
+   ],
+   [
+    109.3,
+    -1
+   ],
+   [
+    108.7,
+    -1
+   ],
+   [
+    67.7,
+    -1
+   ],
+   [
+    66.4,
+    -1
+   ],
+   [
+    64.6,
+    -1
+   ],
+   [
+    62.8,
+    -1
+   ],
+   [
+    61.9,
+    -1
+   ]
+  ]
+ },
+ "b": {
+  "top_frames": [
+   {
+    "engine_frame": null,
+    "interval_ms": 115.748,
+    "process_ms": 24.677,
+    "snap_ticks": [
+     -1,
+     -1
+    ],
+    "compact_stages": [
+     {
+      "tick": 2368,
+      "decode_ms": 0.745,
+      "accept_ms": 0.494,
+      "reconcile_ms": 0.86,
+      "presentation_ms": 0.279
+     },
+     {
+      "tick": 2371,
+      "decode_ms": 0.709,
+      "accept_ms": 0.476,
+      "reconcile_ms": 0.678,
+      "presentation_ms": 0.241
+     }
+    ]
+   },
+   {
+    "engine_frame": null,
+    "interval_ms": 75.016,
+    "process_ms": 35.034,
+    "snap_ticks": [],
+    "compact_stages": []
+   },
+   {
+    "engine_frame": null,
+    "interval_ms": 58.606,
+    "process_ms": 16.764,
+    "snap_ticks": [],
+    "compact_stages": []
+   },
+   {
+    "engine_frame": null,
+    "interval_ms": 58.426,
+    "process_ms": 18.642,
+    "snap_ticks": [
+     -1
+    ],
+    "compact_stages": [
+     {
+      "tick": 2647,
+      "decode_ms": 0.833,
+      "accept_ms": 0.479,
+      "reconcile_ms": 0.912,
+      "presentation_ms": 0.275
+     }
+    ]
+   },
+   {
+    "engine_frame": null,
+    "interval_ms": 52.606,
+    "process_ms": 52.873,
+    "snap_ticks": [],
+    "compact_stages": []
+   },
+   {
+    "engine_frame": null,
+    "interval_ms": 52.388,
+    "process_ms": 20.82,
+    "snap_ticks": [],
+    "compact_stages": []
+   },
+   {
+    "engine_frame": null,
+    "interval_ms": 52.235,
+    "process_ms": 18.322,
+    "snap_ticks": [],
+    "compact_stages": []
+   },
+   {
+    "engine_frame": null,
+    "interval_ms": 51.671,
+    "process_ms": 37.968,
+    "snap_ticks": [],
+    "compact_stages": []
+   },
+   {
+    "engine_frame": null,
+    "interval_ms": 50.083,
+    "process_ms": 18.322,
+    "snap_ticks": [],
+    "compact_stages": []
+   },
+   {
+    "engine_frame": null,
+    "interval_ms": 49.953,
+    "process_ms": 20.312,
+    "snap_ticks": [],
+    "compact_stages": []
+   },
+   {
+    "engine_frame": null,
+    "interval_ms": 46.955,
+    "process_ms": 12.678,
+    "snap_ticks": [],
+    "compact_stages": []
+   },
+   {
+    "engine_frame": null,
+    "interval_ms": 46.298,
+    "process_ms": 52.873,
+    "snap_ticks": [],
+    "compact_stages": []
+   },
+   {
+    "engine_frame": null,
+    "interval_ms": 45.244,
+    "process_ms": 20.82,
+    "snap_ticks": [],
+    "compact_stages": []
+   },
+   {
+    "engine_frame": null,
+    "interval_ms": 43.034,
+    "process_ms": 20.82,
+    "snap_ticks": [],
+    "compact_stages": []
+   },
+   {
+    "engine_frame": null,
+    "interval_ms": 42.938,
+    "process_ms": 18.642,
+    "snap_ticks": [
+     -1
+    ],
+    "compact_stages": [
+     {
+      "tick": 2650,
+      "decode_ms": 0.686,
+      "accept_ms": 0.465,
+      "reconcile_ms": 0.952,
+      "presentation_ms": 0.374
+     }
+    ]
+   },
+   {
+    "engine_frame": null,
+    "interval_ms": 41.98,
+    "process_ms": 12.678,
+    "snap_ticks": [],
+    "compact_stages": []
+   },
+   {
+    "engine_frame": null,
+    "interval_ms": 41.504,
+    "process_ms": 16.979,
+    "snap_ticks": [],
+    "compact_stages": []
+   },
+   {
+    "engine_frame": null,
+    "interval_ms": 40.693,
+    "process_ms": 33.702,
+    "snap_ticks": [],
+    "compact_stages": []
+   },
+   {
+    "engine_frame": null,
+    "interval_ms": 40.032,
+    "process_ms": 95.276,
+    "snap_ticks": [
+     -1
+    ],
+    "compact_stages": [
+     {
+      "tick": 2025,
+      "decode_ms": 1.577,
+      "accept_ms": 1.071,
+      "reconcile_ms": 2.103,
+      "presentation_ms": 0.541
+     }
+    ]
+   },
+   {
+    "engine_frame": null,
+    "interval_ms": 39.858,
+    "process_ms": 14.611,
+    "snap_ticks": [],
+    "compact_stages": []
+   }
+  ],
+  "client_states": [
+   "CONNECTED"
+  ],
+  "sessions": [
+   "transport-session/m3/b/11056/29857"
+  ],
+  "top_snapshot_gaps_ms_tick": [
+   [
+    133.1,
+    -1
+   ],
+   [
+    82.2,
+    -1
+   ],
+   [
+    69.3,
+    -1
+   ],
+   [
+    69.1,
+    -1
+   ],
+   [
+    68.1,
+    -1
+   ],
+   [
+    68.0,
+    -1
+   ],
+   [
+    66.6,
+    -1
+   ],
+   [
+    66.5,
+    -1
+   ]
+  ]
+ }
+}

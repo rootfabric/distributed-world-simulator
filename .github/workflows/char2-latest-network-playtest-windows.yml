@@ -1,0 +1,106 @@
+name: DWS Playtest R1 Host Join Windows Bundle
+
+on:
+  push:
+    branches: [integration/char2-current-main-playtest-r1]
+    paths-ignore: ['.github/workflows/playtest-baseline-inputs.yml', '.github/workflows/assemble-playtest-rc1.yml', 'tools/release/assembly-payload.b64']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+concurrency:
+  group: dws-playtest-r1-bundle
+  cancel-in-progress: true
+
+jobs:
+  source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Exact inputs and composition guard
+        run: |
+          set -euo pipefail
+          python3 tools/release/verify_playtest_source.py
+          python3 -m py_compile tools/char1/build_windows_test.py tools/char1/build_bundled_windows_avatar.py
+          mkdir -p artifacts/playtest-r1-source
+          git rev-parse HEAD > artifacts/playtest-r1-source/HEAD.txt
+          git rev-parse 'HEAD^{tree}' > artifacts/playtest-r1-source/TREE.txt
+          git archive --format=tar.gz -o artifacts/playtest-r1-source/source.tar.gz HEAD
+          cp config/release/playtest-r1.json config/release/playtest-composition.v1.json artifacts/playtest-r1-source/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: playtest-r1-exact-source
+          path: artifacts/playtest-r1-source/
+          if-no-files-found: error
+          retention-days: 30
+
+  windows-syntax:
+    needs: source
+    runs-on: windows-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Parse actual shipped launchers on Windows PowerShell
+        shell: powershell
+        run: |
+          $ErrorActionPreference='Stop'
+          foreach($path in @('tools/char1/portable_windows/tools/Playtest-Common.ps1','tools/char1/portable_windows/tools/START_NETWORK_CHAR1.ps1','tools/char1/portable_windows/tools/START_TWO_CLIENTS_CHAR1.ps1')) {
+            $tok=$null;$errs=$null
+            [System.Management.Automation.Language.Parser]::ParseFile((Join-Path (Get-Location) $path),[ref]$tok,[ref]$errs)|Out-Null
+            if($errs.Count -ne 0){throw ($errs|Out-String)}
+          }
+          Write-Host 'WINDOWS_PS51_LAUNCH_SYNTAX_PASS'
+
+  windows-bundle:
+    needs: [source, windows-syntax]
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 60
+    env:
+      BREAKPOINT_RUNTIME_DISABLED: '1'
+      GODOT_SILENCE_ROOT_WARNING: '1'
+      PYTHONUTF8: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Full portable Earth Host Join + real Quaternius
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          $head=(git rev-parse HEAD).Trim()
+          if($head -ne $env:GITHUB_SHA){throw 'HEAD_MISMATCH'}
+          New-Item -ItemType Directory -Force artifacts/playtest-r1 | Out-Null
+          $candidates=@($env:DWS_QUATERNIUS_ASSET_ROOT,
+            'C:\distributed-world-simulator\char1-realistic-r1\assets\external\quaternius',
+            'C:\dwsv-char1-git-hotfix-test\CHAR1_REALISTIC_WINDOWS_TEST\project\assets\external\quaternius')
+          if(Test-Path 'C:\dws-char2-playtest-r1-delivery') {
+            $candidates+=@(Get-ChildItem 'C:\dws-char2-playtest-r1-delivery' -Directory -Recurse -Depth 6 -Filter quaternius -ErrorAction SilentlyContinue|Select-Object -ExpandProperty FullName)
+          }
+          $asset=$null
+          foreach($c in $candidates){
+            if([string]::IsNullOrWhiteSpace($c)){continue}
+            if((Test-Path (Join-Path $c 'base_characters')) -and (Test-Path (Join-Path $c 'animation_library'))){$asset=$c;break}
+          }
+          if($null -eq $asset){throw 'REAL_ASSETS_NOT_FOUND'}
+          $out=Join-Path (Resolve-Path 'artifacts/playtest-r1').Path ('DWS_PLAYTEST_R1_'+$head.Substring(0,12)+'_Windows.zip')
+          python tools/char1/build_bundled_windows_avatar.py --repo . --expected-head $head --assets-root $asset --output $out *> artifacts/playtest-r1/build.log
+          $code=$LASTEXITCODE
+          Get-Content artifacts/playtest-r1/build.log -Tail 100
+          if($code -ne 0){throw "WINDOWS_BUNDLE_FAIL:$code"}
+          [ordered]@{head=$head;tree=(git rev-parse 'HEAD^{tree}').Trim();zip_sha256=(Get-FileHash $out -Algorithm SHA256).Hash.ToLowerInvariant();profile='PLAYTEST_R1_SAFE60';gui_acceptance='PENDING_HUMAN'}|ConvertTo-Json|Set-Content artifacts/playtest-r1/receipt.json -Encoding UTF8
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: DWS-PLAYTEST-R1-Windows
+          path: artifacts/playtest-r1/
+          if-no-files-found: warn
+          compression-level: 0
+          retention-days: 30

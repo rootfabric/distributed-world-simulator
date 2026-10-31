@@ -1,0 +1,2467 @@
+{
+ "run": "r31p23r22-p0-pair3-off",
+ "server": {
+  "top_frames": [
+   {
+    "engine_frame": 5310,
+    "interval_ms": 320.503,
+    "t_rel_start_ms": 62698.9,
+    "t_rel_end_ms": 63019.4,
+    "engine_process_ms": 28.927,
+    "loop_stages": {
+     "postcommit_ms": 0.004,
+     "item_completion_ms": 0.002,
+     "movement_completion_ms": 0.01,
+     "deferred_disconnect_ms": 0.003,
+     "deferred_admission_ms": 0.002,
+     "boundary_poll_ms": 40.226,
+     "message_dispatch_ms": 4.433,
+     "fixed_simulation_ms": 15.015,
+     "snapshot_publication_ms": 246.558,
+     "movement_persistence_ms": 0.049,
+     "telemetry_ms": 2.723
+    },
+    "covered_sum_ms": 309.02,
+    "measured_stage_gap_ms": 11.48,
+    "compact_wire": {
+     "payload_clone_ms": 0.003,
+     "frame_create_ms": 9.814,
+     "boundary_send_ms": 61.836,
+     "outbound_flush_ms": 122.771,
+     "total_ms": 194.424
+    },
+    "flush_packets": [
+     {
+      "channel": "SNAPSHOT",
+      "port_call_ms": 10.689,
+      "queue_stage_ms": 0.002,
+      "detached_frame_copy_ms": 0.018,
+      "delivery_mode": "UNRELIABLE_SEQUENCED",
+      "attempt_number": 1
+     },
+     {
+      "channel": "SNAPSHOT",
+      "port_call_ms": 122.153,
+      "queue_stage_ms": 0.003,
+      "detached_frame_copy_ms": 0.032,
+      "delivery_mode": "UNRELIABLE_SEQUENCED",
+      "attempt_number": 1
+     }
+    ],
+    "snapshot_stage": {
+     "capture_ms": 1.289,
+     "encode_ms": 20.325,
+     "compact_send_ms": 224.722,
+     "send_and_seam_ms": 224.863,
+     "peers": 2,
+     "tick": 5809
+    },
+    "messages": [
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 1.627
+     },
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 0.636
+     },
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 0.582
+     },
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 0.563
+     },
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 0.566
+     }
+    ],
+    "aux_in_window": {}
+   },
+   {
+    "engine_frame": 6449,
+    "interval_ms": 184.907,
+    "t_rel_start_ms": 84358.3,
+    "t_rel_end_ms": 84543.2,
+    "engine_process_ms": 29.475,
+    "loop_stages": {
+     "postcommit_ms": 0.007,
+     "item_completion_ms": 0.003,
+     "movement_completion_ms": 0.032,
+     "deferred_disconnect_ms": 0.007,
+     "deferred_admission_ms": 0.003,
+     "boundary_poll_ms": 2.492,
+     "message_dispatch_ms": 0.789,
+     "fixed_simulation_ms": 0.813,
+     "snapshot_publication_ms": 0.025,
+     "movement_persistence_ms": 0.041,
+     "telemetry_ms": 0.275
+    },
+    "covered_sum_ms": 4.49,
+    "measured_stage_gap_ms": 180.42,
+    "compact_wire": {},
+    "flush_packets": [],
+    "snapshot_stage": {},
+    "messages": [
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 0.652
+     }
+    ],
+    "aux_in_window": {}
+   },
+   {
+    "engine_frame": 5303,
+    "interval_ms": 140.147,
+    "t_rel_start_ms": 62140.7,
+    "t_rel_end_ms": 62280.9,
+    "engine_process_ms": 28.927,
+    "loop_stages": {
+     "postcommit_ms": 0.011,
+     "item_completion_ms": 0.004,
+     "movement_completion_ms": 0.013,
+     "deferred_disconnect_ms": 0.005,
+     "deferred_admission_ms": 0.002,
+     "boundary_poll_ms": 38.573,
+     "message_dispatch_ms": 3.039,
+     "fixed_simulation_ms": 3.387,
+     "snapshot_publication_ms": 85.252,
+     "movement_persistence_ms": 0.107,
+     "telemetry_ms": 0.292
+    },
+    "covered_sum_ms": 130.69,
+    "measured_stage_gap_ms": 9.46,
+    "compact_wire": {
+     "payload_clone_ms": 0.003,
+     "frame_create_ms": 10.747,
+     "boundary_send_ms": 18.549,
+     "outbound_flush_ms": 4.664,
+     "total_ms": 33.963
+    },
+    "flush_packets": [
+     {
+      "channel": "SNAPSHOT",
+      "port_call_ms": 2.472,
+      "queue_stage_ms": 0.003,
+      "detached_frame_copy_ms": 0.019,
+      "delivery_mode": "UNRELIABLE_SEQUENCED",
+      "attempt_number": 1
+     },
+     {
+      "channel": "SNAPSHOT",
+      "port_call_ms": 4.17,
+      "queue_stage_ms": 0.003,
+      "detached_frame_copy_ms": 0.018,
+      "delivery_mode": "UNRELIABLE_SEQUENCED",
+      "attempt_number": 1
+     }
+    ],
+    "snapshot_stage": {
+     "capture_ms": 1.833,
+     "encode_ms": 7.99,
+     "compact_send_ms": 75.09,
+     "send_and_seam_ms": 75.274,
+     "peers": 2,
+     "tick": 5775
+    },
+    "messages": [
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 0.742
+     },
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 0.866
+     },
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 0.517
+     },
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 0.551
+     }
+    ],
+    "aux_in_window": {
+     "r3c4_periodic_frame_deferred": {
+      "count": 1,
+      "detail": [
+       {
+        "deferral_ms": 0.0,
+        "precapture_work_ms": 130.287
+       }
+      ]
+     }
+    }
+   },
+   {
+    "engine_frame": 5005,
+    "interval_ms": 121.493,
+    "t_rel_start_ms": 56919.6,
+    "t_rel_end_ms": 57041.0,
+    "engine_process_ms": 15.615,
+    "loop_stages": {
+     "postcommit_ms": 0.009,
+     "item_completion_ms": 0.004,
+     "movement_completion_ms": 0.014,
+     "deferred_disconnect_ms": 0.005,
+     "deferred_admission_ms": 0.003,
+     "boundary_poll_ms": 13.111,
+     "message_dispatch_ms": 6.035,
+     "fixed_simulation_ms": 7.596,
+     "snapshot_publication_ms": 90.171,
+     "movement_persistence_ms": 0.151,
+     "telemetry_ms": 0.363
+    },
+    "covered_sum_ms": 117.46,
+    "measured_stage_gap_ms": 4.03,
+    "compact_wire": {
+     "payload_clone_ms": 0.003,
+     "frame_create_ms": 7.007,
+     "boundary_send_ms": 3.416,
+     "outbound_flush_ms": 20.84,
+     "total_ms": 31.266
+    },
+    "flush_packets": [
+     {
+      "channel": "SNAPSHOT",
+      "port_call_ms": 29.968,
+      "queue_stage_ms": 0.002,
+      "detached_frame_copy_ms": 0.02,
+      "delivery_mode": "UNRELIABLE_SEQUENCED",
+      "attempt_number": 1
+     },
+     {
+      "channel": "SNAPSHOT",
+      "port_call_ms": 20.018,
+      "queue_stage_ms": 0.002,
+      "detached_frame_copy_ms": 0.016,
+      "delivery_mode": "UNRELIABLE_SEQUENCED",
+      "attempt_number": 1
+     }
+    ],
+    "snapshot_stage": {
+     "capture_ms": 5.294,
+     "encode_ms": 1.985,
+     "compact_send_ms": 82.028,
+     "send_and_seam_ms": 82.396,
+     "peers": 2,
+     "tick": 5462
+    },
+    "messages": [
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 0.757
+     },
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 0.585
+     },
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 2.748
+     },
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 1.242
+     }
+    ],
+    "aux_in_window": {}
+   },
+   {
+    "engine_frame": 2266,
+    "interval_ms": 115.188,
+    "t_rel_start_ms": 5939.3,
+    "t_rel_end_ms": 6054.5,
+    "engine_process_ms": 42.216,
+    "loop_stages": {
+     "postcommit_ms": 0.007,
+     "item_completion_ms": 0.002,
+     "movement_completion_ms": 0.012,
+     "deferred_disconnect_ms": 0.003,
+     "deferred_admission_ms": 0.004,
+     "boundary_poll_ms": 56.896,
+     "message_dispatch_ms": 3.873,
+     "fixed_simulation_ms": 9.492,
+     "snapshot_publication_ms": 41.388,
+     "movement_persistence_ms": 0.074,
+     "telemetry_ms": 0.38
+    },
+    "covered_sum_ms": 112.13,
+    "measured_stage_gap_ms": 3.06,
+    "compact_wire": {
+     "payload_clone_ms": 0.022,
+     "frame_create_ms": 4.57,
+     "boundary_send_ms": 5.473,
+     "outbound_flush_ms": 5.487,
+     "total_ms": 15.552
+    },
+    "flush_packets": [
+     {
+      "channel": "SNAPSHOT",
+      "port_call_ms": 9.127,
+      "queue_stage_ms": 0.003,
+      "detached_frame_copy_ms": 0.02,
+      "delivery_mode": "UNRELIABLE_SEQUENCED",
+      "attempt_number": 1
+     },
+     {
+      "channel": "SNAPSHOT",
+      "port_call_ms": 4.193,
+      "queue_stage_ms": 0.003,
+      "detached_frame_copy_ms": 0.018,
+      "delivery_mode": "UNRELIABLE_SEQUENCED",
+      "attempt_number": 1
+     }
+    ],
+    "snapshot_stage": {
+     "capture_ms": 1.277,
+     "encode_ms": 4.768,
+     "compact_send_ms": 35.06,
+     "send_and_seam_ms": 35.246,
+     "peers": 2,
+     "tick": 2404
+    },
+    "messages": [
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 1.883
+     },
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 1.202
+     }
+    ],
+    "aux_in_window": {}
+   },
+   {
+    "engine_frame": 5304,
+    "interval_ms": 111.408,
+    "t_rel_start_ms": 62280.9,
+    "t_rel_end_ms": 62392.3,
+    "engine_process_ms": 28.927,
+    "loop_stages": {
+     "postcommit_ms": 0.005,
+     "item_completion_ms": 0.002,
+     "movement_completion_ms": 0.008,
+     "deferred_disconnect_ms": 0.002,
+     "deferred_admission_ms": 0.002,
+     "boundary_poll_ms": 19.103,
+     "message_dispatch_ms": 5.608,
+     "fixed_simulation_ms": 14.802,
+     "snapshot_publication_ms": 33.15,
+     "movement_persistence_ms": 33.211,
+     "telemetry_ms": 0.383
+    },
+    "covered_sum_ms": 106.28,
+    "measured_stage_gap_ms": 5.13,
+    "compact_wire": {
+     "payload_clone_ms": 0.006,
+     "frame_create_ms": 6.939,
+     "boundary_send_ms": 2.782,
+     "outbound_flush_ms": 5.597,
+     "total_ms": 15.324
+    },
+    "flush_packets": [
+     {
+      "channel": "SNAPSHOT",
+      "port_call_ms": 5.36,
+      "queue_stage_ms": 0.003,
+      "detached_frame_copy_ms": 0.022,
+      "delivery_mode": "UNRELIABLE_SEQUENCED",
+      "attempt_number": 1
+     },
+     {
+      "channel": "SNAPSHOT",
+      "port_call_ms": 5.037,
+      "queue_stage_ms": 0.003,
+      "detached_frame_copy_ms": 0.019,
+      "delivery_mode": "UNRELIABLE_SEQUENCED",
+      "attempt_number": 1
+     }
+    ],
+    "snapshot_stage": {
+     "capture_ms": 2.379,
+     "encode_ms": 1.664,
+     "compact_send_ms": 28.707,
+     "send_and_seam_ms": 28.896,
+     "peers": 2,
+     "tick": 5783
+    },
+    "messages": [
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 0.632
+     },
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 0.62
+     },
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 0.703
+     },
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 0.793
+     },
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 1.484
+     },
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 0.609
+     }
+    ],
+    "aux_in_window": {
+     "r3c4_periodic_frame_deferred": {
+      "count": 1,
+      "detail": [
+       {
+        "deferral_ms": 83.0,
+        "precapture_work_ms": 72.683
+       }
+      ]
+     },
+     "r3c4_periodic_capture_slot": {
+      "count": 1,
+      "detail": [
+       {
+        "deferred_frames": 33,
+        "forced": true,
+        "precapture_work_ms": 72.683
+       }
+      ]
+     },
+     "periodic_checkpoint_dispatch": {
+      "count": 1,
+      "detail": [
+       {
+        "generation": 59,
+        "origin": "MOVEMENT_PERIODIC",
+        "route": "ASYNC_WRITER"
+       }
+      ]
+     },
+     "checkpoint_capture": {
+      "count": 1,
+      "detail": [
+       {
+        "generation": 60,
+        "capture_ms": 32.493
+       }
+      ]
+     }
+    }
+   },
+   {
+    "engine_frame": 4426,
+    "interval_ms": 109.399,
+    "t_rel_start_ms": 45849.8,
+    "t_rel_end_ms": 45959.2,
+    "engine_process_ms": 19.741,
+    "loop_stages": {
+     "postcommit_ms": 0.005,
+     "item_completion_ms": 0.003,
+     "movement_completion_ms": 0.009,
+     "deferred_disconnect_ms": 0.003,
+     "deferred_admission_ms": 0.002,
+     "boundary_poll_ms": 3.539,
+     "message_dispatch_ms": 0.826,
+     "fixed_simulation_ms": 0.849,
+     "snapshot_publication_ms": 93.367,
+     "movement_persistence_ms": 0.278,
+     "telemetry_ms": 0.326
+    },
+    "covered_sum_ms": 99.21,
+    "measured_stage_gap_ms": 10.19,
+    "compact_wire": {
+     "payload_clone_ms": 0.002,
+     "frame_create_ms": 4.758,
+     "boundary_send_ms": 3.036,
+     "outbound_flush_ms": 4.969,
+     "total_ms": 12.765
+    },
+    "flush_packets": [
+     {
+      "channel": "SNAPSHOT",
+      "port_call_ms": 53.217,
+      "queue_stage_ms": 0.002,
+      "detached_frame_copy_ms": 0.016,
+      "delivery_mode": "UNRELIABLE_SEQUENCED",
+      "attempt_number": 1
+     },
+     {
+      "channel": "SNAPSHOT",
+      "port_call_ms": 4.435,
+      "queue_stage_ms": 0.003,
+      "detached_frame_copy_ms": 0.023,
+      "delivery_mode": "UNRELIABLE_SEQUENCED",
+      "attempt_number": 1
+     }
+    ],
+    "snapshot_stage": {
+     "capture_ms": 1.346,
+     "encode_ms": 13.749,
+     "compact_send_ms": 77.943,
+     "send_and_seam_ms": 78.116,
+     "peers": 2,
+     "tick": 4799
+    },
+    "messages": [
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 0.706
+     }
+    ],
+    "aux_in_window": {}
+   },
+   {
+    "engine_frame": 4210,
+    "interval_ms": 108.749,
+    "t_rel_start_ms": 41969.5,
+    "t_rel_end_ms": 42078.2,
+    "engine_process_ms": 55.264,
+    "loop_stages": {
+     "postcommit_ms": 0.006,
+     "item_completion_ms": 0.003,
+     "movement_completion_ms": 0.012,
+     "deferred_disconnect_ms": 0.004,
+     "deferred_admission_ms": 0.005,
+     "boundary_poll_ms": 26.934,
+     "message_dispatch_ms": 2.857,
+     "fixed_simulation_ms": 0.878,
+     "snapshot_publication_ms": 59.658,
+     "movement_persistence_ms": 0.078,
+     "telemetry_ms": 0.317
+    },
+    "covered_sum_ms": 90.75,
+    "measured_stage_gap_ms": 18.0,
+    "compact_wire": {
+     "payload_clone_ms": 0.005,
+     "frame_create_ms": 4.297,
+     "boundary_send_ms": 3.402,
+     "outbound_flush_ms": 14.021,
+     "total_ms": 21.725
+    },
+    "flush_packets": [
+     {
+      "channel": "SNAPSHOT",
+      "port_call_ms": 14.072,
+      "queue_stage_ms": 0.002,
+      "detached_frame_copy_ms": 0.016,
+      "delivery_mode": "UNRELIABLE_SEQUENCED",
+      "attempt_number": 1
+     },
+     {
+      "channel": "SNAPSHOT",
+      "port_call_ms": 13.54,
+      "queue_stage_ms": 0.002,
+      "detached_frame_copy_ms": 0.015,
+      "delivery_mode": "UNRELIABLE_SEQUENCED",
+      "attempt_number": 1
+     }
+    ],
+    "snapshot_stage": {
+     "capture_ms": 2.321,
+     "encode_ms": 3.507,
+     "compact_send_ms": 43.547,
+     "send_and_seam_ms": 53.661,
+     "peers": 2,
+     "tick": 4566
+    },
+    "messages": [
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 1.171
+     },
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 1.036
+     }
+    ],
+    "aux_in_window": {}
+   },
+   {
+    "engine_frame": 2579,
+    "interval_ms": 104.978,
+    "t_rel_start_ms": 12005.3,
+    "t_rel_end_ms": 12110.3,
+    "engine_process_ms": 91.299,
+    "loop_stages": {
+     "postcommit_ms": 0.004,
+     "item_completion_ms": 0.002,
+     "movement_completion_ms": 0.007,
+     "deferred_disconnect_ms": 0.003,
+     "deferred_admission_ms": 0.002,
+     "boundary_poll_ms": 18.137,
+     "message_dispatch_ms": 3.48,
+     "fixed_simulation_ms": 8.146,
+     "snapshot_publication_ms": 71.361,
+     "movement_persistence_ms": 0.036,
+     "telemetry_ms": 1.29
+    },
+    "covered_sum_ms": 102.47,
+    "measured_stage_gap_ms": 2.51,
+    "compact_wire": {
+     "payload_clone_ms": 0.003,
+     "frame_create_ms": 2.689,
+     "boundary_send_ms": 1.64,
+     "outbound_flush_ms": 9.277,
+     "total_ms": 13.609
+    },
+    "flush_packets": [
+     {
+      "channel": "SNAPSHOT",
+      "port_call_ms": 3.462,
+      "queue_stage_ms": 0.003,
+      "detached_frame_copy_ms": 0.057,
+      "delivery_mode": "UNRELIABLE_SEQUENCED",
+      "attempt_number": 1
+     },
+     {
+      "channel": "SNAPSHOT",
+      "port_call_ms": 8.978,
+      "queue_stage_ms": 0.002,
+      "detached_frame_copy_ms": 0.016,
+      "delivery_mode": "UNRELIABLE_SEQUENCED",
+      "attempt_number": 1
+     }
+    ],
+    "snapshot_stage": {
+     "capture_ms": 15.652,
+     "encode_ms": 25.929,
+     "compact_send_ms": 29.388,
+     "send_and_seam_ms": 29.568,
+     "peers": 2,
+     "tick": 2767
+    },
+    "messages": [
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 1.389
+     },
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 0.888
+     },
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 0.613
+     }
+    ],
+    "aux_in_window": {}
+   },
+   {
+    "engine_frame": 5006,
+    "interval_ms": 100.556,
+    "t_rel_start_ms": 57041.0,
+    "t_rel_end_ms": 57141.6,
+    "engine_process_ms": 119.987,
+    "loop_stages": {
+     "postcommit_ms": 0.005,
+     "item_completion_ms": 0.002,
+     "movement_completion_ms": 0.009,
+     "deferred_disconnect_ms": 0.002,
+     "deferred_admission_ms": 0.003,
+     "boundary_poll_ms": 22.362,
+     "message_dispatch_ms": 6.995,
+     "fixed_simulation_ms": 11.298,
+     "snapshot_publication_ms": 53.688,
+     "movement_persistence_ms": 0.062,
+     "telemetry_ms": 0.325
+    },
+    "covered_sum_ms": 94.75,
+    "measured_stage_gap_ms": 5.8,
+    "compact_wire": {
+     "payload_clone_ms": 0.003,
+     "frame_create_ms": 19.481,
+     "boundary_send_ms": 4.406,
+     "outbound_flush_ms": 7.387,
+     "total_ms": 31.277
+    },
+    "flush_packets": [
+     {
+      "channel": "SNAPSHOT",
+      "port_call_ms": 9.123,
+      "queue_stage_ms": 0.002,
+      "detached_frame_copy_ms": 0.022,
+      "delivery_mode": "UNRELIABLE_SEQUENCED",
+      "attempt_number": 1
+     },
+     {
+      "channel": "SNAPSHOT",
+      "port_call_ms": 6.14,
+      "queue_stage_ms": 0.003,
+      "detached_frame_copy_ms": 0.019,
+      "delivery_mode": "UNRELIABLE_SEQUENCED",
+      "attempt_number": 1
+     }
+    ],
+    "snapshot_stage": {
+     "capture_ms": 2.853,
+     "encode_ms": 3.709,
+     "compact_send_ms": 46.832,
+     "send_and_seam_ms": 47.029,
+     "peers": 2,
+     "tick": 5469
+    },
+    "messages": [
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 0.947
+     },
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 1.384
+     },
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 0.766
+     },
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 2.01
+     },
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 1.15
+     }
+    ],
+    "aux_in_window": {}
+   },
+   {
+    "engine_frame": 5309,
+    "interval_ms": 98.876,
+    "t_rel_start_ms": 62600.0,
+    "t_rel_end_ms": 62698.9,
+    "engine_process_ms": 28.927,
+    "loop_stages": {
+     "postcommit_ms": 0.006,
+     "item_completion_ms": 0.002,
+     "movement_completion_ms": 0.007,
+     "deferred_disconnect_ms": 0.003,
+     "deferred_admission_ms": 0.003,
+     "boundary_poll_ms": 7.688,
+     "message_dispatch_ms": 2.292,
+     "fixed_simulation_ms": 21.393,
+     "snapshot_publication_ms": 61.744,
+     "movement_persistence_ms": 0.051,
+     "telemetry_ms": 0.269
+    },
+    "covered_sum_ms": 93.46,
+    "measured_stage_gap_ms": 5.42,
+    "compact_wire": {
+     "payload_clone_ms": 0.003,
+     "frame_create_ms": 19.792,
+     "boundary_send_ms": 23.571,
+     "outbound_flush_ms": 4.138,
+     "total_ms": 47.504
+    },
+    "flush_packets": [
+     {
+      "channel": "SNAPSHOT",
+      "port_call_ms": 5.553,
+      "queue_stage_ms": 0.003,
+      "detached_frame_copy_ms": 0.015,
+      "delivery_mode": "UNRELIABLE_SEQUENCED",
+      "attempt_number": 1
+     },
+     {
+      "channel": "SNAPSHOT",
+      "port_call_ms": 3.831,
+      "queue_stage_ms": 0.002,
+      "detached_frame_copy_ms": 0.023,
+      "delivery_mode": "UNRELIABLE_SEQUENCED",
+      "attempt_number": 1
+     }
+    ],
+    "snapshot_stage": {
+     "capture_ms": 1.42,
+     "encode_ms": 1.839,
+     "compact_send_ms": 58.257,
+     "send_and_seam_ms": 58.399,
+     "peers": 2,
+     "tick": 5803
+    },
+    "messages": [
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 0.775
+     },
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 0.579
+     },
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 0.577
+     }
+    ],
+    "aux_in_window": {}
+   },
+   {
+    "engine_frame": 4445,
+    "interval_ms": 95.368,
+    "t_rel_start_ms": 46372.6,
+    "t_rel_end_ms": 46467.9,
+    "engine_process_ms": 103.123,
+    "loop_stages": {
+     "postcommit_ms": 0.007,
+     "item_completion_ms": 0.003,
+     "movement_completion_ms": 0.011,
+     "deferred_disconnect_ms": 0.005,
+     "deferred_admission_ms": 0.003,
+     "boundary_poll_ms": 11.707,
+     "message_dispatch_ms": 8.632,
+     "fixed_simulation_ms": 3.094,
+     "snapshot_publication_ms": 49.953,
+     "movement_persistence_ms": 0.049,
+     "telemetry_ms": 0.264
+    },
+    "covered_sum_ms": 73.73,
+    "measured_stage_gap_ms": 21.64,
+    "compact_wire": {
+     "payload_clone_ms": 0.003,
+     "frame_create_ms": 2.761,
+     "boundary_send_ms": 2.873,
+     "outbound_flush_ms": 30.128,
+     "total_ms": 35.765
+    },
+    "flush_packets": [
+     {
+      "channel": "SNAPSHOT",
+      "port_call_ms": 4.294,
+      "queue_stage_ms": 0.003,
+      "detached_frame_copy_ms": 0.017,
+      "delivery_mode": "UNRELIABLE_SEQUENCED",
+      "attempt_number": 1
+     },
+     {
+      "channel": "SNAPSHOT",
+      "port_call_ms": 29.724,
+      "queue_stage_ms": 0.002,
+      "detached_frame_copy_ms": 0.018,
+      "delivery_mode": "UNRELIABLE_SEQUENCED",
+      "attempt_number": 1
+     }
+    ],
+    "snapshot_stage": {
+     "capture_ms": 1.425,
+     "encode_ms": 1.776,
+     "compact_send_ms": 46.485,
+     "send_and_seam_ms": 46.656,
+     "peers": 2,
+     "tick": 4829
+    },
+    "messages": [
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 0.928
+     },
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 6.45
+     },
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 0.786
+     }
+    ],
+    "aux_in_window": {}
+   },
+   {
+    "engine_frame": 2688,
+    "interval_ms": 94.513,
+    "t_rel_start_ms": 14092.7,
+    "t_rel_end_ms": 14187.2,
+    "engine_process_ms": 35.617,
+    "loop_stages": {
+     "postcommit_ms": 0.004,
+     "item_completion_ms": 0.003,
+     "movement_completion_ms": 0.01,
+     "deferred_disconnect_ms": 0.003,
+     "deferred_admission_ms": 0.002,
+     "boundary_poll_ms": 13.882,
+     "message_dispatch_ms": 8.191,
+     "fixed_simulation_ms": 2.467,
+     "snapshot_publication_ms": 66.999,
+     "movement_persistence_ms": 0.038,
+     "telemetry_ms": 0.271
+    },
+    "covered_sum_ms": 91.87,
+    "measured_stage_gap_ms": 2.64,
+    "compact_wire": {
+     "payload_clone_ms": 0.003,
+     "frame_create_ms": 13.964,
+     "boundary_send_ms": 7.069,
+     "outbound_flush_ms": 27.73,
+     "total_ms": 48.766
+    },
+    "flush_packets": [
+     {
+      "channel": "SNAPSHOT",
+      "port_call_ms": 6.075,
+      "queue_stage_ms": 0.002,
+      "detached_frame_copy_ms": 0.144,
+      "delivery_mode": "UNRELIABLE_SEQUENCED",
+      "attempt_number": 1
+     },
+     {
+      "channel": "SNAPSHOT",
+      "port_call_ms": 27.228,
+      "queue_stage_ms": 0.002,
+      "detached_frame_copy_ms": 0.019,
+      "delivery_mode": "UNRELIABLE_SEQUENCED",
+      "attempt_number": 1
+     }
+    ],
+    "snapshot_stage": {
+     "capture_ms": 1.151,
+     "encode_ms": 1.659,
+     "compact_send_ms": 63.79,
+     "send_and_seam_ms": 64.098,
+     "peers": 2,
+     "tick": 2893
+    },
+    "messages": [
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 1.354
+     },
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 5.097
+     },
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 0.645
+     },
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 0.648
+     }
+    ],
+    "aux_in_window": {}
+   },
+   {
+    "engine_frame": 5311,
+    "interval_ms": 94.194,
+    "t_rel_start_ms": 63019.4,
+    "t_rel_end_ms": 63113.6,
+    "engine_process_ms": 28.927,
+    "loop_stages": {
+     "postcommit_ms": 0.004,
+     "item_completion_ms": 0.002,
+     "movement_completion_ms": 5.069,
+     "deferred_disconnect_ms": 0.006,
+     "deferred_admission_ms": 0.003,
+     "boundary_poll_ms": 34.009,
+     "message_dispatch_ms": 11.768,
+     "fixed_simulation_ms": 5.511,
+     "snapshot_publication_ms": 26.651,
+     "movement_persistence_ms": 0.074,
+     "telemetry_ms": 0.333
+    },
+    "covered_sum_ms": 83.43,
+    "measured_stage_gap_ms": 10.76,
+    "compact_wire": {
+     "payload_clone_ms": 0.003,
+     "frame_create_ms": 2.677,
+     "boundary_send_ms": 2.379,
+     "outbound_flush_ms": 4.53,
+     "total_ms": 9.589
+    },
+    "flush_packets": [
+     {
+      "channel": "SNAPSHOT",
+      "port_call_ms": 3.141,
+      "queue_stage_ms": 0.003,
+      "detached_frame_copy_ms": 0.019,
+      "delivery_mode": "UNRELIABLE_SEQUENCED",
+      "attempt_number": 1
+     },
+     {
+      "channel": "SNAPSHOT",
+      "port_call_ms": 4.031,
+      "queue_stage_ms": 0.003,
+      "detached_frame_copy_ms": 0.02,
+      "delivery_mode": "UNRELIABLE_SEQUENCED",
+      "attempt_number": 1
+     }
+    ],
+    "snapshot_stage": {
+     "capture_ms": 3.765,
+     "encode_ms": 4.229,
+     "compact_send_ms": 18.244,
+     "send_and_seam_ms": 18.502,
+     "peers": 2,
+     "tick": 5817
+    },
+    "messages": [
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 0.645
+     },
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 0.598
+     },
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 0.608
+     },
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 0.569
+     },
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 0.545
+     },
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 0.495
+     },
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 0.531
+     },
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 0.501
+     },
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 1.595
+     },
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 0.473
+     },
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 0.66
+     },
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 0.641
+     },
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 0.633
+     },
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 0.598
+     },
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 0.646
+     },
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 0.866
+     }
+    ],
+    "aux_in_window": {
+     "checkpoint_complete": {
+      "count": 1,
+      "detail": [
+       {
+        "generation": 60,
+        "capture_ms": 32.493,
+        "worker_ms": 534.189,
+        "write_ms": 487.374,
+        "elapsed_ms": 669.475,
+        "build_ms": 46.815
+       }
+      ]
+     }
+    }
+   },
+   {
+    "engine_frame": 2714,
+    "interval_ms": 93.009,
+    "t_rel_start_ms": 15027.5,
+    "t_rel_end_ms": 15120.6,
+    "engine_process_ms": 93.801,
+    "loop_stages": {
+     "postcommit_ms": 0.004,
+     "item_completion_ms": 0.002,
+     "movement_completion_ms": 0.008,
+     "deferred_disconnect_ms": 0.002,
+     "deferred_admission_ms": 0.003,
+     "boundary_poll_ms": 26.004,
+     "message_dispatch_ms": 4.435,
+     "fixed_simulation_ms": 7.77,
+     "snapshot_publication_ms": 52.245,
+     "movement_persistence_ms": 0.041,
+     "telemetry_ms": 0.298
+    },
+    "covered_sum_ms": 90.81,
+    "measured_stage_gap_ms": 2.2,
+    "compact_wire": {
+     "payload_clone_ms": 0.003,
+     "frame_create_ms": 5.887,
+     "boundary_send_ms": 1.705,
+     "outbound_flush_ms": 5.887,
+     "total_ms": 13.482
+    },
+    "flush_packets": [
+     {
+      "channel": "SNAPSHOT",
+      "port_call_ms": 10.525,
+      "queue_stage_ms": 0.002,
+      "detached_frame_copy_ms": 0.015,
+      "delivery_mode": "UNRELIABLE_SEQUENCED",
+      "attempt_number": 1
+     },
+     {
+      "channel": "SNAPSHOT",
+      "port_call_ms": 5.532,
+      "queue_stage_ms": 0.002,
+      "detached_frame_copy_ms": 0.018,
+      "delivery_mode": "UNRELIABLE_SEQUENCED",
+      "attempt_number": 1
+     }
+    ],
+    "snapshot_stage": {
+     "capture_ms": 1.591,
+     "encode_ms": 2.931,
+     "compact_send_ms": 47.374,
+     "send_and_seam_ms": 47.552,
+     "peers": 2,
+     "tick": 2949
+    },
+    "messages": [
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 0.514
+     },
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 2.384
+     },
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 0.62
+     },
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 0.49
+     }
+    ],
+    "aux_in_window": {}
+   },
+   {
+    "engine_frame": 3316,
+    "interval_ms": 92.514,
+    "t_rel_start_ms": 26847.8,
+    "t_rel_end_ms": 26940.3,
+    "engine_process_ms": 42.454,
+    "loop_stages": {
+     "postcommit_ms": 0.006,
+     "item_completion_ms": 0.003,
+     "movement_completion_ms": 0.011,
+     "deferred_disconnect_ms": 0.004,
+     "deferred_admission_ms": 0.003,
+     "boundary_poll_ms": 3.974,
+     "message_dispatch_ms": 1.207,
+     "fixed_simulation_ms": 0.491,
+     "snapshot_publication_ms": 0.016,
+     "movement_persistence_ms": 71.983,
+     "telemetry_ms": 0.242
+    },
+    "covered_sum_ms": 77.94,
+    "measured_stage_gap_ms": 14.57,
+    "compact_wire": {},
+    "flush_packets": [],
+    "snapshot_stage": {},
+    "messages": [
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 0.724
+     },
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 0.306
+     }
+    ],
+    "aux_in_window": {
+     "r3c4_periodic_capture_slot": {
+      "count": 1,
+      "detail": [
+       {
+        "deferred_frames": 18,
+        "forced": false,
+        "precapture_work_ms": 5.715
+       }
+      ]
+     },
+     "periodic_checkpoint_dispatch": {
+      "count": 1,
+      "detail": [
+       {
+        "generation": 36,
+        "origin": "MOVEMENT_PERIODIC",
+        "route": "ASYNC_WRITER"
+       }
+      ]
+     },
+     "checkpoint_capture": {
+      "count": 1,
+      "detail": [
+       {
+        "generation": 37,
+        "capture_ms": 71.689
+       }
+      ]
+     }
+    }
+   },
+   {
+    "engine_frame": 2568,
+    "interval_ms": 91.733,
+    "t_rel_start_ms": 11471.7,
+    "t_rel_end_ms": 11563.4,
+    "engine_process_ms": 32.129,
+    "loop_stages": {
+     "postcommit_ms": 0.004,
+     "item_completion_ms": 0.002,
+     "movement_completion_ms": 0.006,
+     "deferred_disconnect_ms": 0.002,
+     "deferred_admission_ms": 0.002,
+     "boundary_poll_ms": 1.978,
+     "message_dispatch_ms": 0.985,
+     "fixed_simulation_ms": 1.741,
+     "snapshot_publication_ms": 31.923,
+     "movement_persistence_ms": 52.559,
+     "telemetry_ms": 0.322
+    },
+    "covered_sum_ms": 89.52,
+    "measured_stage_gap_ms": 2.21,
+    "compact_wire": {
+     "payload_clone_ms": 0.002,
+     "frame_create_ms": 7.321,
+     "boundary_send_ms": 9.905,
+     "outbound_flush_ms": 2.793,
+     "total_ms": 20.021
+    },
+    "flush_packets": [
+     {
+      "channel": "SNAPSHOT",
+      "port_call_ms": 2.667,
+      "queue_stage_ms": 0.003,
+      "detached_frame_copy_ms": 0.027,
+      "delivery_mode": "UNRELIABLE_SEQUENCED",
+      "attempt_number": 1
+     },
+     {
+      "channel": "SNAPSHOT",
+      "port_call_ms": 2.411,
+      "queue_stage_ms": 0.003,
+      "detached_frame_copy_ms": 0.026,
+      "delivery_mode": "UNRELIABLE_SEQUENCED",
+      "attempt_number": 1
+     }
+    ],
+    "snapshot_stage": {
+     "capture_ms": 1.005,
+     "encode_ms": 1.716,
+     "compact_send_ms": 28.852,
+     "send_and_seam_ms": 28.995,
+     "peers": 2,
+     "tick": 2735
+    },
+    "messages": [
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 0.861
+     }
+    ],
+    "aux_in_window": {
+     "r3c4_periodic_frame_deferred": {
+      "count": 1,
+      "detail": [
+       {
+        "deferral_ms": 85.0,
+        "precapture_work_ms": 36.644
+       }
+      ]
+     },
+     "r3c4_periodic_capture_slot": {
+      "count": 1,
+      "detail": [
+       {
+        "deferred_frames": 14,
+        "forced": true,
+        "precapture_work_ms": 36.644
+       }
+      ]
+     },
+     "periodic_checkpoint_dispatch": {
+      "count": 1,
+      "detail": [
+       {
+        "generation": 26,
+        "origin": "MOVEMENT_PERIODIC",
+        "route": "ASYNC_WRITER"
+       }
+      ]
+     },
+     "checkpoint_capture": {
+      "count": 1,
+      "detail": [
+       {
+        "generation": 27,
+        "capture_ms": 51.943
+       }
+      ]
+     }
+    }
+   },
+   {
+    "engine_frame": 2267,
+    "interval_ms": 91.662,
+    "t_rel_start_ms": 6054.5,
+    "t_rel_end_ms": 6146.1,
+    "engine_process_ms": 42.216,
+    "loop_stages": {
+     "postcommit_ms": 0.006,
+     "item_completion_ms": 0.004,
+     "movement_completion_ms": 0.011,
+     "deferred_disconnect_ms": 0.004,
+     "deferred_admission_ms": 0.003,
+     "boundary_poll_ms": 25.357,
+     "message_dispatch_ms": 13.505,
+     "fixed_simulation_ms": 18.449,
+     "snapshot_publication_ms": 30.023,
+     "movement_persistence_ms": 0.054,
+     "telemetry_ms": 0.342
+    },
+    "covered_sum_ms": 87.76,
+    "measured_stage_gap_ms": 3.9,
+    "compact_wire": {
+     "payload_clone_ms": 0.045,
+     "frame_create_ms": 2.332,
+     "boundary_send_ms": 3.254,
+     "outbound_flush_ms": 4.894,
+     "total_ms": 10.525
+    },
+    "flush_packets": [
+     {
+      "channel": "SNAPSHOT",
+      "port_call_ms": 4.578,
+      "queue_stage_ms": 0.002,
+      "detached_frame_copy_ms": 0.025,
+      "delivery_mode": "UNRELIABLE_SEQUENCED",
+      "attempt_number": 1
+     },
+     {
+      "channel": "SNAPSHOT",
+      "port_call_ms": 4.527,
+      "queue_stage_ms": 0.002,
+      "detached_frame_copy_ms": 0.017,
+      "delivery_mode": "UNRELIABLE_SEQUENCED",
+      "attempt_number": 1
+     }
+    ],
+    "snapshot_stage": {
+     "capture_ms": 3.669,
+     "encode_ms": 2.447,
+     "compact_send_ms": 23.601,
+     "send_and_seam_ms": 23.765,
+     "peers": 2,
+     "tick": 2411
+    },
+    "messages": [
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 2.389
+     },
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 2.067
+     },
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 1.268
+     },
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 1.768
+     },
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 1.427
+     }
+    ],
+    "aux_in_window": {}
+   },
+   {
+    "engine_frame": 4450,
+    "interval_ms": 91.234,
+    "t_rel_start_ms": 46693.7,
+    "t_rel_end_ms": 46785.0,
+    "engine_process_ms": 103.123,
+    "loop_stages": {
+     "postcommit_ms": 0.004,
+     "item_completion_ms": 0.002,
+     "movement_completion_ms": 0.007,
+     "deferred_disconnect_ms": 0.004,
+     "deferred_admission_ms": 0.002,
+     "boundary_poll_ms": 33.406,
+     "message_dispatch_ms": 1.44,
+     "fixed_simulation_ms": 5.762,
+     "snapshot_publication_ms": 47.473,
+     "movement_persistence_ms": 0.061,
+     "telemetry_ms": 0.303
+    },
+    "covered_sum_ms": 88.46,
+    "measured_stage_gap_ms": 2.77,
+    "compact_wire": {
+     "payload_clone_ms": 0.002,
+     "frame_create_ms": 1.879,
+     "boundary_send_ms": 2.445,
+     "outbound_flush_ms": 5.148,
+     "total_ms": 9.474
+    },
+    "flush_packets": [
+     {
+      "channel": "SNAPSHOT",
+      "port_call_ms": 7.674,
+      "queue_stage_ms": 0.002,
+      "detached_frame_copy_ms": 0.048,
+      "delivery_mode": "UNRELIABLE_SEQUENCED",
+      "attempt_number": 1
+     },
+     {
+      "channel": "SNAPSHOT",
+      "port_call_ms": 3.809,
+      "queue_stage_ms": 0.003,
+      "detached_frame_copy_ms": 0.02,
+      "delivery_mode": "UNRELIABLE_SEQUENCED",
+      "attempt_number": 1
+     }
+    ],
+    "snapshot_stage": {
+     "capture_ms": 1.603,
+     "encode_ms": 11.685,
+     "compact_send_ms": 29.994,
+     "send_and_seam_ms": 34.004,
+     "peers": 2,
+     "tick": 4849
+    },
+    "messages": [
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 0.697
+     },
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 0.529
+     }
+    ],
+    "aux_in_window": {}
+   },
+   {
+    "engine_frame": 5663,
+    "interval_ms": 89.266,
+    "t_rel_start_ms": 71015.4,
+    "t_rel_end_ms": 71104.7,
+    "engine_process_ms": 53.252,
+    "loop_stages": {
+     "postcommit_ms": 0.007,
+     "item_completion_ms": 0.004,
+     "movement_completion_ms": 0.015,
+     "deferred_disconnect_ms": 0.007,
+     "deferred_admission_ms": 0.003,
+     "boundary_poll_ms": 4.539,
+     "message_dispatch_ms": 0.92,
+     "fixed_simulation_ms": 1.783,
+     "snapshot_publication_ms": 50.217,
+     "movement_persistence_ms": 0.049,
+     "telemetry_ms": 0.24
+    },
+    "covered_sum_ms": 57.78,
+    "measured_stage_gap_ms": 31.48,
+    "compact_wire": {
+     "payload_clone_ms": 0.002,
+     "frame_create_ms": 0.874,
+     "boundary_send_ms": 40.554,
+     "outbound_flush_ms": 2.624,
+     "total_ms": 44.054
+    },
+    "flush_packets": [
+     {
+      "channel": "SNAPSHOT",
+      "port_call_ms": 1.732,
+      "queue_stage_ms": 0.001,
+      "detached_frame_copy_ms": 0.01,
+      "delivery_mode": "UNRELIABLE_SEQUENCED",
+      "attempt_number": 1
+     },
+     {
+      "channel": "SNAPSHOT",
+      "port_call_ms": 2.33,
+      "queue_stage_ms": 0.004,
+      "detached_frame_copy_ms": 0.02,
+      "delivery_mode": "UNRELIABLE_SEQUENCED",
+      "attempt_number": 1
+     }
+    ],
+    "snapshot_stage": {
+     "capture_ms": 0.72,
+     "encode_ms": 0.788,
+     "compact_send_ms": 48.5,
+     "send_and_seam_ms": 48.618,
+     "peers": 2,
+     "tick": 6299
+    },
+    "messages": [
+     {
+      "type": "PLAYER_INPUT_BATCH",
+      "duration_ms": 0.759
+     }
+    ],
+    "aux_in_window": {}
+   }
+  ],
+  "biggest_messages": [
+   {
+    "duration_ms": 14.162,
+    "engine_frame": 2766,
+    "operation_id": "",
+    "peer": "peer/enet/1349316/m3-b-24864-30877",
+    "tick": 3017,
+    "type": "PLAYER_INPUT_BATCH"
+   },
+   {
+    "duration_ms": 12.302,
+    "engine_frame": 4446,
+    "operation_id": "",
+    "peer": "peer/enet/1349316/m3-b-24864-30877",
+    "tick": 4829,
+    "type": "PLAYER_INPUT_BATCH"
+   },
+   {
+    "duration_ms": 11.715,
+    "engine_frame": 2780,
+    "operation_id": "",
+    "peer": "peer/enet/2012357735/m3-a-21620-6351",
+    "tick": 3046,
+    "type": "PLAYER_INPUT_BATCH"
+   },
+   {
+    "duration_ms": 11.518,
+    "engine_frame": 5467,
+    "operation_id": "",
+    "peer": "peer/enet/1349316/m3-b-24864-30877",
+    "tick": 6049,
+    "type": "PLAYER_INPUT_BATCH"
+   },
+   {
+    "duration_ms": 10.702,
+    "engine_frame": 6590,
+    "operation_id": "",
+    "peer": "peer/enet/2012357735/m3-a-21620-6351",
+    "tick": 7247,
+    "type": "PLAYER_INPUT_BATCH"
+   },
+   {
+    "duration_ms": 10.566,
+    "engine_frame": 5464,
+    "operation_id": "",
+    "peer": "peer/enet/2012357735/m3-a-21620-6351",
+    "tick": 6040,
+    "type": "PLAYER_INPUT_BATCH"
+   },
+   {
+    "duration_ms": 10.263,
+    "engine_frame": 4451,
+    "operation_id": "",
+    "peer": "peer/enet/1349316/m3-b-24864-30877",
+    "tick": 4849,
+    "type": "PLAYER_INPUT_BATCH"
+   },
+   {
+    "duration_ms": 9.321,
+    "engine_frame": 2569,
+    "operation_id": "",
+    "peer": "peer/enet/2012357735/m3-a-21620-6351",
+    "tick": 2735,
+    "type": "PLAYER_INPUT_BATCH"
+   }
+  ],
+  "biggest_compact_sends": [
+   {
+    "engine_frame": 5310,
+    "compact_send_ms": 224.722,
+    "send_and_seam_ms": 224.863,
+    "tick": 5809
+   },
+   {
+    "engine_frame": 5005,
+    "compact_send_ms": 82.028,
+    "send_and_seam_ms": 82.396,
+    "tick": 5462
+   },
+   {
+    "engine_frame": 4426,
+    "compact_send_ms": 77.943,
+    "send_and_seam_ms": 78.116,
+    "tick": 4799
+   },
+   {
+    "engine_frame": 5303,
+    "compact_send_ms": 75.09,
+    "send_and_seam_ms": 75.274,
+    "tick": 5775
+   },
+   {
+    "engine_frame": 2688,
+    "compact_send_ms": 63.79,
+    "send_and_seam_ms": 64.098,
+    "tick": 2893
+   },
+   {
+    "engine_frame": 2869,
+    "compact_send_ms": 61.153,
+    "send_and_seam_ms": 61.304,
+    "tick": 3165
+   },
+   {
+    "engine_frame": 5406,
+    "compact_send_ms": 58.627,
+    "send_and_seam_ms": 58.774,
+    "tick": 5938
+   },
+   {
+    "engine_frame": 5309,
+    "compact_send_ms": 58.257,
+    "send_and_seam_ms": 58.399,
+    "tick": 5803
+   }
+  ],
+  "stage_max_ms": {
+   "postcommit_ms": 0.373,
+   "item_completion_ms": 2.088,
+   "movement_completion_ms": 35.857,
+   "deferred_disconnect_ms": 0.266,
+   "deferred_admission_ms": 0.198,
+   "boundary_poll_ms": 56.896,
+   "message_dispatch_ms": 19.995,
+   "fixed_simulation_ms": 45.457,
+   "snapshot_publication_ms": 246.558,
+   "movement_persistence_ms": 71.983,
+   "telemetry_ms": 10.546
+  },
+  "stage_p99_ms": {
+   "postcommit_ms": 0.012,
+   "item_completion_ms": 0.005,
+   "movement_completion_ms": 2.074,
+   "deferred_disconnect_ms": 0.008,
+   "deferred_admission_ms": 0.005,
+   "boundary_poll_ms": 10.575,
+   "message_dispatch_ms": 4.291,
+   "fixed_simulation_ms": 4.921,
+   "snapshot_publication_ms": 33.672,
+   "movement_persistence_ms": 11.893,
+   "telemetry_ms": 0.717
+  }
+ },
+ "a": {
+  "top_frames": [
+   {
+    "engine_frame": null,
+    "interval_ms": 143.673,
+    "process_ms": 22.719,
+    "snap_ticks": [
+     -1
+    ],
+    "compact_stages": [
+     {
+      "tick": 7231,
+      "decode_ms": 0.7,
+      "accept_ms": 0.877,
+      "reconcile_ms": 1.628,
+      "presentation_ms": 0.465
+     }
+    ]
+   },
+   {
+    "engine_frame": null,
+    "interval_ms": 116.17,
+    "process_ms": 36.331,
+    "snap_ticks": [
+     -1,
+     -1
+    ],
+    "compact_stages": [
+     {
+      "tick": 2516,
+      "decode_ms": 0.839,
+      "accept_ms": 0.603,
+      "reconcile_ms": 0.945,
+      "presentation_ms": 0.273
+     },
+     {
+      "tick": 2519,
+      "decode_ms": 0.723,
+      "accept_ms": 0.469,
+      "reconcile_ms": 0.788,
+      "presentation_ms": 0.364
+     }
+    ]
+   },
+   {
+    "engine_frame": null,
+    "interval_ms": 92.147,
+    "process_ms": 31.48,
+    "snap_ticks": [
+     -1,
+     -1
+    ],
+    "compact_stages": [
+     {
+      "tick": 6052,
+      "decode_ms": 1.265,
+      "accept_ms": 0.949,
+      "reconcile_ms": 1.5,
+      "presentation_ms": 0.468
+     },
+     {
+      "tick": 6055,
+      "decode_ms": 3.468,
+      "accept_ms": 0.994,
+      "reconcile_ms": 1.44,
+      "presentation_ms": 0.5
+     }
+    ]
+   },
+   {
+    "engine_frame": null,
+    "interval_ms": 66.471,
+    "process_ms": 41.471,
+    "snap_ticks": [
+     -1
+    ],
+    "compact_stages": [
+     {
+      "tick": 6350,
+      "decode_ms": 0.896,
+      "accept_ms": 0.949,
+      "reconcile_ms": 1.405,
+      "presentation_ms": 0.464
+     }
+    ]
+   },
+   {
+    "engine_frame": null,
+    "interval_ms": 64.628,
+    "process_ms": 26.13,
+    "snap_ticks": [
+     -1,
+     -1
+    ],
+    "compact_stages": [
+     {
+      "tick": 2621,
+      "decode_ms": 0.799,
+      "accept_ms": 0.573,
+      "reconcile_ms": 1.349,
+      "presentation_ms": 0.298
+     },
+     {
+      "tick": 2624,
+      "decode_ms": 0.766,
+      "accept_ms": 0.494,
+      "reconcile_ms": 1.308,
+      "presentation_ms": 0.49
+     }
+    ]
+   },
+   {
+    "engine_frame": null,
+    "interval_ms": 57.777,
+    "process_ms": 30.212,
+    "snap_ticks": [
+     -1
+    ],
+    "compact_stages": [
+     {
+      "tick": 5697,
+      "decode_ms": 1.061,
+      "accept_ms": 0.732,
+      "reconcile_ms": 1.14,
+      "presentation_ms": 0.365
+     }
+    ]
+   },
+   {
+    "engine_frame": null,
+    "interval_ms": 49.332,
+    "process_ms": 21.613,
+    "snap_ticks": [
+     -1
+    ],
+    "compact_stages": [
+     {
+      "tick": 8678,
+      "decode_ms": 0.756,
+      "accept_ms": 0.57,
+      "reconcile_ms": 0.939,
+      "presentation_ms": 0.439
+     }
+    ]
+   },
+   {
+    "engine_frame": null,
+    "interval_ms": 47.968,
+    "process_ms": 28.829,
+    "snap_ticks": [
+     -1
+    ],
+    "compact_stages": [
+     {
+      "tick": 7916,
+      "decode_ms": 0.729,
+      "accept_ms": 0.559,
+      "reconcile_ms": 0.93,
+      "presentation_ms": 0.307
+     }
+    ]
+   },
+   {
+    "engine_frame": null,
+    "interval_ms": 45.21,
+    "process_ms": 30.226,
+    "snap_ticks": [
+     -1
+    ],
+    "compact_stages": [
+     {
+      "tick": 8108,
+      "decode_ms": 0.732,
+      "accept_ms": 0.489,
+      "reconcile_ms": 0.968,
+      "presentation_ms": 0.286
+     }
+    ]
+   },
+   {
+    "engine_frame": null,
+    "interval_ms": 44.993,
+    "process_ms": 34.495,
+    "snap_ticks": [
+     -1
+    ],
+    "compact_stages": [
+     {
+      "tick": 6302,
+      "decode_ms": 2.34,
+      "accept_ms": 1.263,
+      "reconcile_ms": 5.538,
+      "presentation_ms": 2.318
+     }
+    ]
+   },
+   {
+    "engine_frame": null,
+    "interval_ms": 44.238,
+    "process_ms": 38.422,
+    "snap_ticks": [
+     -1
+    ],
+    "compact_stages": [
+     {
+      "tick": 3385,
+      "decode_ms": 0.763,
+      "accept_ms": 0.507,
+      "reconcile_ms": 0.903,
+      "presentation_ms": 0.324
+     }
+    ]
+   },
+   {
+    "engine_frame": null,
+    "interval_ms": 41.997,
+    "process_ms": 28.829,
+    "snap_ticks": [
+     -1
+    ],
+    "compact_stages": [
+     {
+      "tick": 7961,
+      "decode_ms": 0.722,
+      "accept_ms": 0.476,
+      "reconcile_ms": 1.002,
+      "presentation_ms": 0.28
+     }
+    ]
+   },
+   {
+    "engine_frame": null,
+    "interval_ms": 40.187,
+    "process_ms": 30.288,
+    "snap_ticks": [
+     -1
+    ],
+    "compact_stages": [
+     {
+      "tick": 8051,
+      "decode_ms": 1.327,
+      "accept_ms": 0.929,
+      "reconcile_ms": 1.672,
+      "presentation_ms": 0.495
+     }
+    ]
+   },
+   {
+    "engine_frame": null,
+    "interval_ms": 38.715,
+    "process_ms": 27.762,
+    "snap_ticks": [
+     -1
+    ],
+    "compact_stages": [
+     {
+      "tick": 4472,
+      "decode_ms": 0.876,
+      "accept_ms": 0.901,
+      "reconcile_ms": 1.928,
+      "presentation_ms": 0.396
+     }
+    ]
+   },
+   {
+    "engine_frame": null,
+    "interval_ms": 38.453,
+    "process_ms": 30.288,
+    "snap_ticks": [
+     -1
+    ],
+    "compact_stages": [
+     {
+      "tick": 8048,
+      "decode_ms": 0.714,
+      "accept_ms": 0.484,
+      "reconcile_ms": 1.021,
+      "presentation_ms": 0.286
+     }
+    ]
+   },
+   {
+    "engine_frame": null,
+    "interval_ms": 37.778,
+    "process_ms": 30.285,
+    "snap_ticks": [
+     -1
+    ],
+    "compact_stages": [
+     {
+      "tick": 6170,
+      "decode_ms": 1.213,
+      "accept_ms": 0.856,
+      "reconcile_ms": 2.307,
+      "presentation_ms": 0.513
+     }
+    ]
+   },
+   {
+    "engine_frame": null,
+    "interval_ms": 37.485,
+    "process_ms": 28.829,
+    "snap_ticks": [
+     -1
+    ],
+    "compact_stages": [
+     {
+      "tick": 7919,
+      "decode_ms": 0.709,
+      "accept_ms": 0.487,
+      "reconcile_ms": 0.974,
+      "presentation_ms": 0.328
+     }
+    ]
+   },
+   {
+    "engine_frame": null,
+    "interval_ms": 36.66,
+    "process_ms": 24.038,
+    "snap_ticks": [
+     -1
+    ],
+    "compact_stages": [
+     {
+      "tick": 4782,
+      "decode_ms": 1.475,
+      "accept_ms": 0.979,
+      "reconcile_ms": 1.441,
+      "presentation_ms": 0.526
+     }
+    ]
+   },
+   {
+    "engine_frame": null,
+    "interval_ms": 36.104,
+    "process_ms": 25.824,
+    "snap_ticks": [
+     -1
+    ],
+    "compact_stages": [
+     {
+      "tick": 2404,
+      "decode_ms": 1.435,
+      "accept_ms": 0.972,
+      "reconcile_ms": 4.448,
+      "presentation_ms": 0.628
+     }
+    ]
+   },
+   {
+    "engine_frame": null,
+    "interval_ms": 36.099,
+    "process_ms": 25.824,
+    "snap_ticks": [
+     -1
+    ],
+    "compact_stages": [
+     {
+      "tick": 2411,
+      "decode_ms": 1.805,
+      "accept_ms": 1.113,
+      "reconcile_ms": 4.931,
+      "presentation_ms": 0.54
+     }
+    ]
+   }
+  ],
+  "client_states": [
+   "CONNECTED"
+  ],
+  "sessions": [
+   "transport-session/m3/a/21620/6351"
+  ],
+  "top_snapshot_gaps_ms_tick": [
+   [
+    268.1,
+    -1
+   ],
+   [
+    234.8,
+    -1
+   ],
+   [
+    178.9,
+    -1
+   ],
+   [
+    165.8,
+    -1
+   ],
+   [
+    154.8,
+    -1
+   ],
+   [
+    143.4,
+    -1
+   ],
+   [
+    139.7,
+    -1
+   ],
+   [
+    139.1,
+    -1
+   ]
+  ]
+ },
+ "b": {
+  "top_frames": [
+   {
+    "engine_frame": null,
+    "interval_ms": 148.905,
+    "process_ms": 24.321,
+    "snap_ticks": [],
+    "compact_stages": []
+   },
+   {
+    "engine_frame": null,
+    "interval_ms": 129.083,
+    "process_ms": 35.471,
+    "snap_ticks": [
+     -1,
+     -1
+    ],
+    "compact_stages": [
+     {
+      "tick": 2507,
+      "decode_ms": 1.152,
+      "accept_ms": 0.842,
+      "reconcile_ms": 2.17,
+      "presentation_ms": 0.564
+     },
+     {
+      "tick": 2510,
+      "decode_ms": 1.652,
+      "accept_ms": 0.885,
+      "reconcile_ms": 1.729,
+      "presentation_ms": 0.601
+     }
+    ]
+   },
+   {
+    "engine_frame": null,
+    "interval_ms": 82.198,
+    "process_ms": 39.033,
+    "snap_ticks": [
+     -1
+    ],
+    "compact_stages": [
+     {
+      "tick": 6350,
+      "decode_ms": 1.373,
+      "accept_ms": 0.937,
+      "reconcile_ms": 1.38,
+      "presentation_ms": 0.498
+     }
+    ]
+   },
+   {
+    "engine_frame": null,
+    "interval_ms": 61.418,
+    "process_ms": 19.833,
+    "snap_ticks": [
+     -1
+    ],
+    "compact_stages": [
+     {
+      "tick": 2621,
+      "decode_ms": 1.457,
+      "accept_ms": 1.052,
+      "reconcile_ms": 1.716,
+      "presentation_ms": 0.293
+     }
+    ]
+   },
+   {
+    "engine_frame": null,
+    "interval_ms": 58.694,
+    "process_ms": 24.914,
+    "snap_ticks": [
+     -1
+    ],
+    "compact_stages": [
+     {
+      "tick": 7502,
+      "decode_ms": 0.782,
+      "accept_ms": 0.53,
+      "reconcile_ms": 1.062,
+      "presentation_ms": 0.479
+     }
+    ]
+   },
+   {
+    "engine_frame": null,
+    "interval_ms": 56.263,
+    "process_ms": 53.939,
+    "snap_ticks": [
+     -1
+    ],
+    "compact_stages": [
+     {
+      "tick": 8024,
+      "decode_ms": 1.149,
+      "accept_ms": 0.856,
+      "reconcile_ms": 1.571,
+      "presentation_ms": 0.459
+     }
+    ]
+   },
+   {
+    "engine_frame": null,
+    "interval_ms": 55.173,
+    "process_ms": 19.833,
+    "snap_ticks": [
+     -1
+    ],
+    "compact_stages": [
+     {
+      "tick": 2624,
+      "decode_ms": 0.713,
+      "accept_ms": 0.486,
+      "reconcile_ms": 1.016,
+      "presentation_ms": 0.279
+     }
+    ]
+   },
+   {
+    "engine_frame": null,
+    "interval_ms": 53.088,
+    "process_ms": 30.607,
+    "snap_ticks": [
+     -1
+    ],
+    "compact_stages": [
+     {
+      "tick": 7949,
+      "decode_ms": 0.743,
+      "accept_ms": 0.481,
+      "reconcile_ms": 0.823,
+      "presentation_ms": 0.26
+     }
+    ]
+   },
+   {
+    "engine_frame": null,
+    "interval_ms": 48.713,
+    "process_ms": 30.607,
+    "snap_ticks": [
+     -1
+    ],
+    "compact_stages": [
+     {
+      "tick": 7916,
+      "decode_ms": 0.85,
+      "accept_ms": 0.488,
+      "reconcile_ms": 0.969,
+      "presentation_ms": 0.408
+     }
+    ]
+   },
+   {
+    "engine_frame": null,
+    "interval_ms": 45.87,
+    "process_ms": 33.338,
+    "snap_ticks": [
+     -1
+    ],
+    "compact_stages": [
+     {
+      "tick": 6170,
+      "decode_ms": 1.398,
+      "accept_ms": 1.015,
+      "reconcile_ms": 1.418,
+      "presentation_ms": 0.474
+     }
+    ]
+   },
+   {
+    "engine_frame": null,
+    "interval_ms": 45.696,
+    "process_ms": 25.419,
+    "snap_ticks": [
+     -1
+    ],
+    "compact_stages": [
+     {
+      "tick": 3190,
+      "decode_ms": 1.601,
+      "accept_ms": 1.048,
+      "reconcile_ms": 2.047,
+      "presentation_ms": 0.798
+     }
+    ]
+   },
+   {
+    "engine_frame": null,
+    "interval_ms": 45.348,
+    "process_ms": 53.939,
+    "snap_ticks": [
+     -1
+    ],
+    "compact_stages": [
+     {
+      "tick": 8021,
+      "decode_ms": 1.323,
+      "accept_ms": 0.912,
+      "reconcile_ms": 1.671,
+      "presentation_ms": 0.311
+     }
+    ]
+   },
+   {
+    "engine_frame": null,
+    "interval_ms": 44.372,
+    "process_ms": 30.651,
+    "snap_ticks": [
+     -1
+    ],
+    "compact_stages": [
+     {
+      "tick": 8678,
+      "decode_ms": 0.711,
+      "accept_ms": 0.496,
+      "reconcile_ms": 0.868,
+      "presentation_ms": 0.256
+     }
+    ]
+   },
+   {
+    "engine_frame": null,
+    "interval_ms": 43.369,
+    "process_ms": 21.943,
+    "snap_ticks": [
+     -1
+    ],
+    "compact_stages": [
+     {
+      "tick": 3559,
+      "decode_ms": 0.801,
+      "accept_ms": 0.494,
+      "reconcile_ms": 0.958,
+      "presentation_ms": 0.273
+     }
+    ]
+   },
+   {
+    "engine_frame": null,
+    "interval_ms": 43.244,
+    "process_ms": 35.362,
+    "snap_ticks": [
+     -1
+    ],
+    "compact_stages": [
+     {
+      "tick": 6158,
+      "decode_ms": 1.447,
+      "accept_ms": 1.03,
+      "reconcile_ms": 1.55,
+      "presentation_ms": 0.518
+     }
+    ]
+   },
+   {
+    "engine_frame": null,
+    "interval_ms": 42.601,
+    "process_ms": 17.145,
+    "snap_ticks": [
+     -1
+    ],
+    "compact_stages": [
+     {
+      "tick": 7691,
+      "decode_ms": 0.736,
+      "accept_ms": 0.479,
+      "reconcile_ms": 0.995,
+      "presentation_ms": 0.317
+     }
+    ]
+   },
+   {
+    "engine_frame": null,
+    "interval_ms": 41.321,
+    "process_ms": 20.481,
+    "snap_ticks": [
+     -1
+    ],
+    "compact_stages": [
+     {
+      "tick": 7091,
+      "decode_ms": 1.28,
+      "accept_ms": 0.945,
+      "reconcile_ms": 1.455,
+      "presentation_ms": 0.483
+     }
+    ]
+   },
+   {
+    "engine_frame": null,
+    "interval_ms": 40.888,
+    "process_ms": 20.23,
+    "snap_ticks": [
+     -1
+    ],
+    "compact_stages": [
+     {
+      "tick": 2416,
+      "decode_ms": 1.414,
+      "accept_ms": 0.938,
+      "reconcile_ms": 4.187,
+      "presentation_ms": 0.645
+     }
+    ]
+   },
+   {
+    "engine_frame": null,
+    "interval_ms": 40.86,
+    "process_ms": 29.139,
+    "snap_ticks": [
+     -1
+    ],
+    "compact_stages": [
+     {
+      "tick": 6052,
+      "decode_ms": 1.341,
+      "accept_ms": 0.927,
+      "reconcile_ms": 1.422,
+      "presentation_ms": 0.467
+     }
+    ]
+   },
+   {
+    "engine_frame": null,
+    "interval_ms": 40.034,
+    "process_ms": 23.055,
+    "snap_ticks": [
+     -1
+    ],
+    "compact_stages": [
+     {
+      "tick": 7907,
+      "decode_ms": 1.543,
+      "accept_ms": 1.081,
+      "reconcile_ms": 1.916,
+      "presentation_ms": 0.567
+     }
+    ]
+   }
+  ],
+  "client_states": [
+   "CONNECTED"
+  ],
+  "sessions": [
+   "transport-session/m3/b/24864/30877"
+  ],
+  "top_snapshot_gaps_ms_tick": [
+   [
+    319.2,
+    -1
+   ],
+   [
+    217.7,
+    -1
+   ],
+   [
+    199.5,
+    -1
+   ],
+   [
+    152.0,
+    -1
+   ],
+   [
+    142.4,
+    -1
+   ],
+   [
+    134.6,
+    -1
+   ],
+   [
+    132.8,
+    -1
+   ],
+   [
+    128.6,
+    -1
+   ]
+  ]
+ }
+}

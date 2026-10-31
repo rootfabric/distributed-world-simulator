@@ -25,6 +25,11 @@ var _containers: Dictionary = {}
 var _mounts: Dictionary = {}
 var _open_containers: Dictionary = {}
 var _ledger: Dictionary = {}
+var _replay_projection_generation := 0
+# R31b P1: monotone durable-source serial. Unlike _revision, this ALSO moves on
+# zero-revision live changes (inventory/tool seeding, fixture bootstrap) and on
+# setup/restore, so a cached durable chunk can never alias a mutated source.
+var _r31bp1_state_serial := 0
 var _sandbox_mode := false
 
 func setup(authority_owner_id: String, authority_epoch: int, options: Dictionary = {}) -> Dictionary:
@@ -33,6 +38,8 @@ func setup(authority_owner_id: String, authority_epoch: int, options: Dictionary
 	_authority_owner_id = authority_owner_id.strip_edges(); _authority_epoch = authority_epoch
 	_sandbox_mode = bool(options.get("playable_sandbox", false))
 	_revision = 0; _tick = 0; _inventories.clear(); _open_containers.clear(); _ledger.clear()
+	_replay_projection_generation += 1
+	_note_r31bp1_state_change()
 	if _sandbox_mode:
 		_items = {
 			"item/shared/beacon/1": _world_item("item/shared/beacon/1", "item/beacon", 1, Vector3(1.2, 0.4, -3.4)),
@@ -58,6 +65,9 @@ func ensure_player(logical_player_id: String) -> void:
 	if id.is_empty(): return
 	if _inventories.has(id): return
 	_inventories[id] = {"inventory":[],"hotbar":[],"selected_hotbar_index":0}
+	# Zero-revision live change: a cached durable chunk must be invalidated even
+	# though no item command bumped _revision.
+	_note_r31bp1_state_change()
 	if _sandbox_mode:
 		_seed_sandbox_player(id)
 
@@ -95,6 +105,8 @@ func execute(logical_player_id: String, ownership_epoch: int, operation_id: Stri
 		result["revision"] = _revision
 		result["replay"] = false
 	_ledger[operation_id] = {"fingerprint":fingerprint,"result":result.duplicate(true)}
+	_replay_projection_generation += 1
+	_note_r31bp1_state_change()
 	return result
 
 func _execute(player_id: String, command_type: String, payload: Dictionary, authority_context: Dictionary) -> Dictionary:
@@ -681,6 +693,8 @@ func restore_durable_state(value: Dictionary) -> Dictionary:
 	_mounts = staged_mounts
 	_open_containers.clear()
 	_ledger.clear()
+	_replay_projection_generation += 1
+	_note_r31bp1_state_change()
 	_configured = true
 	return _success({"revision": _revision, "tick": _tick, "item_count": _items.size()})
 
@@ -841,6 +855,38 @@ func validate_durable_state(value: Dictionary) -> Dictionary:
 		return _failure("ITEM_GRAPH_DURABLE_STATE_NOT_JSON_SAFE")
 	return _success({"item_count": item_records.size(), "inventory_count": inventory_ids.size()})
 
+func get_replay_projection_generation() -> int:
+	return _replay_projection_generation
+
+
+# R31b P1: monotone durable-source serial + explicit change note. Ordinary item
+# commands already bump _revision; this serial additionally covers zero-revision
+# mutations and reset/restore so cache fences can never produce an ABA alias.
+func get_r31bp1_state_serial() -> int:
+	return _r31bp1_state_serial
+
+
+func _note_r31bp1_state_change() -> void:
+	_r31bp1_state_serial += 1
+
+
+func get_r31bp1_chunk_fence() -> Dictionary:
+	return {
+		"kind": "item_graph",
+		"instance_id": get_instance_id(),
+		"authority_owner_id": _authority_owner_id,
+		"authority_epoch": _authority_epoch,
+		"revision": _revision,
+		"tick": _tick,
+		"state_serial": _r31bp1_state_serial,
+	}
+
+
+func _note_replay_projection_mutation() -> void:
+	_replay_projection_generation += 1
+	_note_r31bp1_state_change()
+
+
 func export_replay_state() -> Dictionary:
 	var records: Dictionary = {}
 	var operation_ids := _ledger.keys()
@@ -855,6 +901,7 @@ func restore_replay_state(value: Dictionary) -> Dictionary:
 	if not bool(validation.get("success", false)):
 		return validation
 	_ledger = Dictionary(value.get("records", {})).duplicate(true)
+	_note_replay_projection_mutation()
 	return _success({"operation_count": _ledger.size()})
 
 func validate_replay_state(value: Dictionary) -> Dictionary:

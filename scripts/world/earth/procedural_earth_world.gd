@@ -2,6 +2,34 @@ extends Node3D
 
 signal earth_rebuilt(summary: Dictionary)
 
+const StagedSurfaceJobScript = preload(
+	"res://scripts/world/earth/earth_surface_build_job.gd"
+)
+const StagedVegetationJobScript = preload(
+	"res://scripts/world/earth/earth_vegetation_build_job.gd"
+)
+const SmoothTrace = preload(
+	"res://scripts/network/smoothness/net_smooth_trace.gd"
+)
+const R3C3_DEFAULT_MAX_STEPS_PER_FRAME := 128
+const R3C3_DEFAULT_BUDGET_US := 2000
+const R3C3R2_MAX_ATTEMPTS_PER_SLICE := 2048
+const R3C3R2_CPU_BUDGET_US := 2000
+# First-region exception: until ANY local surface is published the client has
+# no visible terrain at all. A bounded 8ms slice keeps the first visible world
+# at ~7s instead of ~29s, still far below the legacy single 3s+ freeze, and
+# its slice durations are traced separately for acceptance review.
+const R3C3R2_CPU_BUDGET_FIRST_REGION_US := 8000
+const R3C3R2_MAX_UPLOAD_INSTANCES_PER_SLICE := 4096
+const R3C3R2_PHASE_IDLE := "IDLE"
+const R3C3R2_PHASE_VEGETATION_CPU := "VEGETATION_CPU"
+const R3C3R2_PHASE_GPU_ALLOCATE := "GPU_ALLOCATE"
+const R3C3R2_PHASE_GPU_UPLOAD := "GPU_UPLOAD_CHUNKS"
+const R3C3R2_PHASE_VERIFY := "VERIFY_CANDIDATE"
+const R3C3R2_PHASE_COMMIT := "ATOMIC_VISUAL_COMMIT"
+const R3C3R2_PHASE_DONE := "READY"
+const R3C21_PHASE_PREATTACH := "GPU_PREATTACH"
+
 const BODY_CONFIG_PATH: String = "res://config/planets/earth.json"
 const LOD_CONFIG_PATH: String = "res://config/generation/earth_lod.json"
 const EarthRulePipelineScript = preload(
@@ -55,11 +83,69 @@ var cached_biome_directions: Dictionary = {}
 var last_local_mesh_statistics: Dictionary = {}
 var last_global_mesh_statistics: Dictionary = {}
 
+# Opt-in ONLY: presentation jobs and trace state. No new authority or
+# topology. Old committed region remains untouched during a recenter request.
+var _r3c3_staged_geometry_enabled := false
+var _r3c3_global_job
+var _r3c3_local_job
+var _r3c3_global_ready := false
+var _r3c3_local_ready := false
+var _r3c3_requested_direction := Vector3.UP
+var _r3c3_requested_east := Vector3.RIGHT
+var _r3c3_requested_north := Vector3.FORWARD
+var _r3c3_requested_anchor := Vector3.ZERO
+var _r3c3_token := 0
+var _r3c3_global_token := 0
+var _r3c3_generation_committed := 0
+var _r3c3_last_slice_us := 0
+var _r3c3_last_commit_us := 0
+var _r3c3_stale_cancellations := 0
+var _r3c3_last_error := ""
+var _r3c3_local_batch_started := false
+var _r3c3_global_batch_started := false
+var _r3c3_target_initialized := false
+# R3C3 R2: staged vegetation + bounded GPU publication. Still opt-in only and
+# presentation-only; no authority/topology change.
+var _r3c3r2_enabled := false
+var _r3c3r2_vegetation_job
+var _r3c3r2_phase := R3C3R2_PHASE_IDLE
+var _r3c3r2_pending_mesh: Mesh = null
+var _r3c3r2_pending_terrain: Dictionary = {}
+var _r3c3r2_pending_stats: Dictionary = {}
+var _r3c3r2_mesh_upload_ms := 0.0
+var _r3c3r2_cpu_slice_ms_max := 0.0
+var _r3c3r2_cpu_ms_total := 0.0
+var _r3c3r2_pipeline_samples_before := 0
+var _r3c3r2_verify_ms := 0.0
+var _r3c3r2_visual_commit_ms := 0.0
+var _r3c3r2_stale_cancellations := 0
 
-func setup(logger_reference = null) -> bool:
+# R2.1 opt-in: register detached, fully uploaded but invisible renderer nodes
+# at one candidate per frame, then atomic swap of visibility at final commit.
+var _r3c21_frame_paced_enabled := false
+var _r3c21_preattach_slice_ms_max := 0.0
+var _r3c21_preattached_nodes := 0
+var _r3c21_first_visible_frames_left := 0
+var _r3c21_last_committed_token := 0
+var _r3c21_last_recenter_dedup := 0
+var _r3c21_first_visible_max_gap_ms := 0.0
+var _r3c21_last_phase_budget_us := 0
+
+
+func setup(
+	logger_reference = null, r3c3_staged_geometry: bool = false,
+	r3c21_frame_paced_presentation: bool = false
+) -> bool:
 	if initialized:
 		return true
 	logger = logger_reference
+	_r3c3_staged_geometry_enabled = r3c3_staged_geometry
+	# R2 staged vegetation rides the same explicit opt-in as R1 staging: one
+	# env/flag surface, default-off keeps the legacy synchronous path intact.
+	_r3c3r2_enabled = r3c3_staged_geometry
+	_r3c21_frame_paced_enabled = (
+		r3c3_staged_geometry and r3c21_frame_paced_presentation
+	)
 	body_config = _load_json(BODY_CONFIG_PATH)
 	lod_config = _load_json(LOD_CONFIG_PATH)
 	if body_config.is_empty() or lod_config.is_empty():
@@ -79,17 +165,30 @@ func setup(logger_reference = null) -> bool:
 	assets.setup()
 	assets.set_surface_debug_mode(false)
 	_create_nodes()
-	pipeline.begin_batch("global_earth")
-	global_earth.mesh = _build_global_mesh()
-	var global_profile: Dictionary = pipeline.end_batch()
+	placement_system.configure_frame_paced_preattach(_r3c21_frame_paced_enabled)
+	var global_profile: Dictionary = {}
 	var default_direction: Vector3 = get_canonical_spawn_direction()
-	prepare_surface_region(default_direction, false)
+	if _r3c3_staged_geometry_enabled:
+		# Scene shells exist immediately. Global and local CPU mesh generation
+		# will be advanced in _process, not during client CONNECTED attach.
+		# The canonical position/height pipeline is already initialized.
+		_r3c3_begin_global_job()
+		prepare_surface_region(default_direction, false)
+		set_process(true)
+	else:
+		pipeline.begin_batch("global_earth")
+		global_earth.mesh = _build_global_mesh()
+		global_profile = pipeline.end_batch()
+		prepare_surface_region(default_direction, false)
+		set_process(false)
 	initialized = true
 	_log_info("earth_world_initialized", {
 		"radius_m": planet_radius_m,
 		"active_rules": pipeline.get_active_rule_ids(),
 		"global_generation": global_profile,
 		"local_generation": last_rebuild_summary,
+		"r3c3_staged_geometry": _r3c3_staged_geometry_enabled,
+		"r3c21_frame_paced_presentation": _r3c21_frame_paced_enabled,
 	})
 	return true
 
@@ -153,6 +252,9 @@ func _create_nodes() -> void:
 func prepare_surface_region(center_direction: Vector3, _include_collision: bool = false) -> void:
 	if pipeline == null:
 		return
+	if _r3c3_staged_geometry_enabled:
+		_r3c3_request_surface_region(center_direction)
+		return
 	var started_usec: int = Time.get_ticks_usec()
 	surface_center_direction = center_direction.normalized()
 	surface_east = _make_east(surface_center_direction)
@@ -207,8 +309,617 @@ func update_for_view(
 	var target_surface: Vector3 = get_surface_point(target_direction)
 	var distance_from_anchor: float = (target_surface - surface_anchor_world).length()
 	if distance_from_anchor > local_recenter_distance_m and rebuild_cooldown_sec <= 0.0:
+		# During a CPU/GPU generation the committed anchor may be 6,500km
+		# behind the requested target. Never reset the 76k-attempt job every
+		# 750ms merely because the player moved a few real metres. Retarget
+		# only once the player crosses the pending region's coverage too.
+		if _r3c21_frame_paced_enabled and (
+			_r3c3_local_job != null or _r3c3r2_phase not in [
+				R3C3R2_PHASE_IDLE, R3C3R2_PHASE_DONE
+			]
+		):
+			var pending_surface: Vector3 = get_surface_point(_r3c3_requested_direction)
+			if (target_surface - pending_surface).length() <= local_recenter_distance_m:
+				_r3c21_last_recenter_dedup += 1
+				return
 		prepare_surface_region(target_direction, false)
 		rebuild_cooldown_sec = 0.75
+
+
+
+# R3C3 R1 geometry-only time slicing. Global geometry first, then the newest
+# local target. The legacy synchronous mesh, vegetation and LOD contracts stay
+# unchanged when disabled. Vegetation/regenerate + ArrayMesh upload remain
+# blocking at commit in R1 and are strictly R2 work, NOT performance PASS.
+func _r3c3_begin_global_job() -> void:
+	_r3c3_global_token += 1
+	_r3c3_global_ready = false
+	_r3c3_global_job = StagedSurfaceJobScript.new()
+	var configured: Dictionary = _r3c3_global_job.configure_global(
+		pipeline, planet_radius_m, global_rings, global_segments,
+		global_surface_offset_m, debug_view
+	)
+	if not bool(configured.get("success", false)):
+		_r3c3_fail(String(configured.get("error_code", "R3C3_GLOBAL_CONFIG_FAILED")))
+		return
+	# Defer begin_batch until the first actual job slice. The Earth initial
+	# anchor query occurs during setup; counting it in the global mesh batch
+	# would incorrectly inflate baseline geometry sample telemetry.
+	_r3c3_global_batch_started = false
+	if SmoothTrace.enabled():
+		SmoothTrace.emit("r3c3_earth_geometry_requested", {
+			"mode": "global", "global_token": _r3c3_global_token,
+			"sample_count": (global_rings + 1) * (global_segments + 1),
+		})
+
+
+func _r3c3_request_surface_region(center_direction: Vector3, force: bool = false) -> void:
+	if not _r3c3_staged_geometry_enabled or pipeline == null:
+		return
+	if center_direction.length_squared() < 0.000001:
+		_r3c3_fail("R3C3_LOCAL_DIRECTION_INVALID")
+		return
+	var direction: Vector3 = center_direction.normalized()
+	# Deduplicate EarthWorld.setup + EarthExplorer.activate at identical spawn;
+	# they previously built the full 13825-point region twice synchronously.
+	if not force:
+		if _r3c3_local_job != null and direction.is_equal_approx(_r3c3_requested_direction):
+			return
+		if _r3c3_local_job == null and _r3c3_local_ready and direction.is_equal_approx(surface_center_direction):
+			return
+	if _r3c3_local_job != null:
+		_r3c3_stale_cancellations += 1
+		_r3c3_local_job = null
+	# R2: a superseded vegetation generation is cancelled and its scratch
+	# GPU candidates freed; the old visible region stays untouched.
+	if _r3c3r2_phase != R3C3R2_PHASE_IDLE and _r3c3r2_phase != R3C3R2_PHASE_DONE:
+		_r3c3r2_stale_cancellations += 1
+		_r3c3r2_cancel_pending()
+	_r3c3_token += 1
+	_r3c3_requested_direction = direction
+	_r3c3_requested_east = _make_east(direction)
+	_r3c3_requested_north = _r3c3_requested_east.cross(direction).normalized()
+	_r3c3_requested_anchor = get_surface_point(direction)
+	_r3c3_target_initialized = true
+	_r3c3_local_batch_started = false
+	_r3c3_local_job = StagedSurfaceJobScript.new()
+	var configured: Dictionary = _r3c3_local_job.configure_local(
+		pipeline, planet_radius_m, local_radius_m, local_rings, local_segments,
+		direction, _r3c3_requested_east, _r3c3_requested_north,
+		_r3c3_requested_anchor, debug_view
+	)
+	if not bool(configured.get("success", false)):
+		_r3c3_fail(String(configured.get("error_code", "R3C3_LOCAL_CONFIG_FAILED")))
+		return
+	if SmoothTrace.enabled():
+		SmoothTrace.emit("r3c3_earth_geometry_requested", {
+			"mode": "local", "token": _r3c3_token,
+			"sample_count": 1 + local_rings * local_segments,
+			"cancelled": _r3c3_stale_cancellations,
+		})
+	# R2: the vegetation CPU job for this exact token starts at request time
+	# and progresses concurrently with the geometry job (one bounded slice of
+	# each per frame). It publishes nothing until the atomic visual commit.
+	_begin_r3c3r2_vegetation_cpu(_r3c3_token)
+
+
+func _process(delta: float) -> void:
+	if not initialized or not _r3c3_staged_geometry_enabled:
+		return
+	if not _r3c3_last_error.is_empty():
+		return
+	if _r3c21_frame_paced_enabled:
+		# A finished region can release detached old GPU groups on separate
+		# renderer frames, rather than paying all deallocation at swap.
+		if placement_system != null:
+			placement_system.drain_retired_visuals(1)
+		if _r3c21_first_visible_frames_left > 0:
+			var actual_gap_ms: float = delta * 1000.0
+			_r3c21_first_visible_max_gap_ms = maxf(
+				_r3c21_first_visible_max_gap_ms, actual_gap_ms
+			)
+			if SmoothTrace.enabled():
+				SmoothTrace.emit("r3c21_first_visible_frame", {
+					"token": _r3c21_last_committed_token,
+					"frame_gap_ms": actual_gap_ms,
+					"frames_after_commit": 9 - _r3c21_first_visible_frames_left,
+					"retired_remaining": int(
+						placement_system.get_staged_upload_report().get(
+							"r21_retired_remaining", 0
+						)
+					),
+				})
+			_r3c21_first_visible_frames_left -= 1
+	# Exactly ONE CPU job slice per process tick. No SceneTree/GPU manipulation
+	# during these slices: only immutable scratch packed arrays are mutated.
+	if _r3c3_global_job != null:
+		if not _r3c3_global_batch_started:
+			pipeline.begin_batch("global_earth_r3c3")
+			_r3c3_global_batch_started = true
+		_r3c3_advance_job("global", _r3c3_global_job, _r3c3_global_token)
+		return
+	# R3C3 R2: one bounded geometry slice AND one bounded vegetation slice per
+	# process tick. Both are pure-CPU main-thread scratch work; vegetation for
+	# the requested token runs CONCURRENTLY with its geometry build so a full
+	# region becomes committable as soon as the slower job finishes.
+	if _r3c3_local_job != null:
+		if not _r3c3_local_batch_started:
+			pipeline.begin_batch("local_earth_surface_r3c3")
+			_r3c3_local_batch_started = true
+		_r3c3_advance_job("local", _r3c3_local_job, _r3c3_token)
+	if _r3c3r2_phase != R3C3R2_PHASE_IDLE and _r3c3r2_phase != R3C3R2_PHASE_DONE:
+		var cpu_budget: int = (
+			R3C3R2_CPU_BUDGET_FIRST_REGION_US if not _r3c3_local_ready
+			else R3C3R2_CPU_BUDGET_US
+		)
+		if _r3c21_frame_paced_enabled:
+			# Smoothness-first cooperative CPU pacing. A heavy previous
+			# frame must not receive another 8ms vegetation slice. Restore
+			# headroom when the frame is healthy, without changing RNG order.
+			if delta >= 0.025:
+				cpu_budget = 600
+			elif delta >= 0.020:
+				cpu_budget = 1200
+			else:
+				cpu_budget = 3500 if not _r3c3_local_ready else 1800
+		_r3c21_last_phase_budget_us = cpu_budget
+		_r3c3r2_process_vegetation(cpu_budget)
+
+
+func _r3c3_advance_job(mode: String, job, token: int) -> void:
+	var started: int = Time.get_ticks_usec()
+	var result: Dictionary = job.advance(
+		R3C3_DEFAULT_MAX_STEPS_PER_FRAME, R3C3_DEFAULT_BUDGET_US
+	)
+	_r3c3_last_slice_us = Time.get_ticks_usec() - started
+	if not bool(result.get("success", false)):
+		_r3c3_fail(String(result.get("error_code", "R3C3_GEOMETRY_SLICE_FAILED")))
+		return
+	if SmoothTrace.enabled():
+		var progress: Dictionary = result.get("details", {})
+		SmoothTrace.emit("r3c3_earth_geometry_slice", {
+			"mode": mode, "token": token,
+			"phase": String(progress.get("phase", "")),
+			"processed_units": int(progress.get("processed_units", 0)),
+			"elapsed_us": _r3c3_last_slice_us,
+			"sampled": int(progress.get("sampled", 0)),
+			"sample_total": int(progress.get("sample_total", 0)),
+		})
+	if not job.is_ready():
+		return
+	# Output is generated only by the matching requested job generation.
+	# There is no worker thread, no future callback to a freed Node and no
+	# stale terrain allowed to replace a later teleport/recenter target.
+	if mode == "global":
+		if token != _r3c3_global_token or job != _r3c3_global_job:
+			_r3c3_stale_cancellations += 1
+			return
+		_r3c3_commit_global_geometry(job, token)
+	else:
+		if token != _r3c3_token or job != _r3c3_local_job:
+			_r3c3_stale_cancellations += 1
+			return
+		_r3c3_commit_local_geometry(job, token)
+
+
+func _r3c3_commit_global_geometry(job, token: int) -> void:
+	var started: int = Time.get_ticks_usec()
+	var arrays: Array = job.get_arrays()
+	if arrays.is_empty():
+		_r3c3_fail("R3C3_GLOBAL_ARRAYS_EMPTY")
+		return
+	var committed_mesh := ArrayMesh.new()
+	committed_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+	if committed_mesh.get_surface_count() != 1:
+		_r3c3_fail("R3C3_GLOBAL_MESH_UPLOAD_FAILED")
+		return
+	global_earth.mesh = committed_mesh
+	last_global_mesh_statistics = job.get_statistics()
+	var profile: Dictionary = pipeline.end_batch()
+	_r3c3_global_ready = true
+	_r3c3_global_job = null
+	_r3c3_global_batch_started = false
+	_r3c3_last_commit_us = Time.get_ticks_usec() - started
+	if SmoothTrace.enabled():
+		SmoothTrace.emit("r3c3_earth_geometry_committed", {
+			"mode": "global", "global_token": token,
+			"upload_ms": float(_r3c3_last_commit_us) / 1000.0,
+			"vertices": int(last_global_mesh_statistics.get("sample_count", 0)),
+			"profile_samples": int(profile.get("last_batch_sample_count", 0)),
+		})
+
+
+func _r3c3_commit_local_geometry(job, token: int) -> void:
+	# R3C3 R2: the CPU mesh scratch is complete, but NOTHING synchronous is
+	# published yet. Stage the candidate ArrayMesh. The vegetation CPU job for
+	# this token already runs concurrently; the visual commit waits for BOTH.
+	var started: int = Time.get_ticks_usec()
+	var arrays: Array = job.get_arrays()
+	if arrays.is_empty():
+		_r3c3_fail("R3C3_LOCAL_ARRAYS_EMPTY")
+		return
+	var committed_mesh := ArrayMesh.new()
+	committed_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+	if committed_mesh.get_surface_count() != 1:
+		_r3c3_fail("R3C3_LOCAL_MESH_UPLOAD_FAILED")
+		return
+	_r3c3r2_mesh_upload_ms = float(Time.get_ticks_usec() - started) / 1000.0
+	var terrain_profile: Dictionary = pipeline.end_batch()
+	_r3c3r2_pending_mesh = committed_mesh
+	_r3c3r2_pending_terrain = terrain_profile
+	_r3c3r2_pending_stats = job.get_statistics()
+	_r3c3_local_job = null
+	_r3c3_local_batch_started = false
+	if SmoothTrace.enabled():
+		SmoothTrace.emit("r3c3_earth_geometry_committed", {
+			"mode": "local", "token": token,
+			"mesh_upload_ms": _r3c3r2_mesh_upload_ms,
+			"vertices": int(_r3c3r2_pending_stats.get("sample_count", 0)),
+			"phase": "GEOMETRY_READY_STAGED_PENDING",
+		})
+
+
+func _begin_r3c3r2_vegetation_cpu(token: int) -> void:
+	if not _r3c3r2_enabled:
+		return
+	var job = StagedVegetationJobScript.new()
+	var configured: Dictionary = job.configure(
+		self,
+		placement_system.config,
+		placement_system.tree_types,
+		placement_system.grass_types,
+		_r3c3_requested_direction,
+		_r3c3_requested_east,
+		_r3c3_requested_north,
+		_r3c3_requested_anchor,
+		token
+	)
+	if not bool(configured.get("success", false)):
+		_r3c3_fail(String(configured.get("error_code", "R3C3R2_VEGETATION_CONFIG_FAILED")))
+		return
+	_r3c3r2_vegetation_job = job
+	_r3c3r2_phase = R3C3R2_PHASE_VEGETATION_CPU
+	_r3c3r2_cpu_slice_ms_max = 0.0
+	_r3c3r2_cpu_ms_total = 0.0
+	_r3c3r2_verify_ms = 0.0
+	_r3c3r2_visual_commit_ms = 0.0
+	# Same accounting basis as the legacy regenerate(): snapshot diff of the
+	# pipeline sample counter across the whole vegetation generation.
+	_r3c3r2_pipeline_samples_before = int(
+		pipeline.get_performance_snapshot().get("total_sample_count", 0)
+	)
+	if SmoothTrace.enabled():
+		SmoothTrace.emit("r3c3r2_vegetation_cpu_requested", {
+			"token": token,
+			"seed": int(configured.get("details", {}).get("seed", 0)),
+		})
+
+
+
+func _r3c3r2_process_vegetation(cpu_budget_us: int = R3C3R2_CPU_BUDGET_US) -> void:
+	if _r3c3r2_phase == R3C3R2_PHASE_VEGETATION_CPU:
+		var job = _r3c3r2_vegetation_job
+		if job == null:
+			_r3c3_fail("R3C3R2_VEGETATION_JOB_LOST")
+			return
+		var started: int = Time.get_ticks_usec()
+		var result: Dictionary = job.advance(
+			R3C3R2_MAX_ATTEMPTS_PER_SLICE, cpu_budget_us
+		)
+		var elapsed_ms: float = float(Time.get_ticks_usec() - started) / 1000.0
+		_r3c3r2_cpu_slice_ms_max = maxf(_r3c3r2_cpu_slice_ms_max, elapsed_ms)
+		_r3c3r2_cpu_ms_total += elapsed_ms
+		if not bool(result.get("success", false)):
+			_r3c3_fail(String(result.get("error_code", "R3C3R2_VEGETATION_SLICE_FAILED")))
+			return
+		if SmoothTrace.enabled():
+			var progress: Dictionary = result.get("details", {})
+			SmoothTrace.emit("r3c3r2_vegetation_cpu_slice", {
+				"token": job.get_generation_token(),
+				"stage": String(progress.get("stage", "")),
+				"processed_attempts": int(progress.get("processed_attempts", 0)),
+				"elapsed_us": int(progress.get("elapsed_us", 0)),
+				"budget_us": cpu_budget_us,
+				"first_region": not _r3c3_local_ready,
+			})
+		if job.is_ready() and job.get_generation_token() == _r3c3_token \
+				and _r3c3r2_pending_mesh != null:
+			_r3c3r2_phase = R3C3R2_PHASE_GPU_ALLOCATE
+		elif job.get_stage() == "FAILED":
+			_r3c3_fail(job.get_error_code())
+		return
+	if _r3c3r2_phase == R3C3R2_PHASE_GPU_ALLOCATE:
+		var token: int = _r3c3r2_vegetation_job.get_generation_token()
+		var started: int = Time.get_ticks_usec()
+		var allocated: Dictionary = placement_system.begin_staged_generation(
+			token,
+			_r3c3r2_vegetation_job.get_near_buckets(),
+			_r3c3r2_vegetation_job.get_billboard_buckets(),
+			_r3c3r2_vegetation_job.get_grass_buckets(),
+			_r3c3r2_vegetation_job.get_rock_buckets()
+		)
+		var elapsed_ms: float = float(Time.get_ticks_usec() - started) / 1000.0
+		_r3c3r2_visual_commit_ms = 0.0
+		if not bool(allocated.get("success", false)):
+			_r3c3_fail(String(allocated.get("error_code", "R3C3R2_GPU_ALLOCATE_FAILED")))
+			return
+		if SmoothTrace.enabled():
+			SmoothTrace.emit("r3c3r2_gpu_allocate", {
+				"token": token,
+				"candidates": int(allocated.get("details", {}).get("candidates", 0)),
+				"instance_count_total": int(
+					allocated.get("details", {}).get("instance_count_total", 0)
+				),
+				"allocate_ms": float(
+					allocated.get("details", {}).get("allocate_ms", 0.0)
+				) + elapsed_ms,
+			})
+		_r3c3r2_phase = R3C3R2_PHASE_GPU_UPLOAD
+		return
+	if _r3c3r2_phase == R3C3R2_PHASE_GPU_UPLOAD:
+		var result: Dictionary = placement_system.advance_staged_upload(
+			R3C3R2_MAX_UPLOAD_INSTANCES_PER_SLICE
+		)
+		if not bool(result.get("success", false)):
+			_r3c3_fail(String(result.get("error_code", "R3C3R2_GPU_UPLOAD_FAILED")))
+			return
+		var details: Dictionary = result.get("details", {})
+		if SmoothTrace.enabled():
+			SmoothTrace.emit("r3c3r2_gpu_upload_slice", {
+				"token": int(details.get("token", 0)),
+				"uploaded": int(details.get("uploaded", 0)),
+				"elapsed_us": int(details.get("elapsed_us", 0)),
+			})
+		if bool(details.get("ready", false)):
+			_r3c3r2_phase = (
+				R3C21_PHASE_PREATTACH if _r3c21_frame_paced_enabled
+				else R3C3R2_PHASE_VERIFY
+			)
+		return
+	if _r3c3r2_phase == R3C21_PHASE_PREATTACH:
+		# Hidden candidates are added one per frame on the owning Godot main
+		# thread. They cannot appear in the old visible region before commit.
+		var token: int = _r3c3r2_vegetation_job.get_generation_token()
+		if token != _r3c3_token:
+			_r3c3r2_stale_cancellations += 1
+			_r3c3r2_cancel_pending()
+			return
+		var attached: Dictionary = placement_system.advance_staged_preattach(token, 1)
+		if not bool(attached.get("success", false)):
+			_r3c3_fail(String(attached.get("error_code", "R3C21_PREATTACH_FAILED")))
+			return
+		var progress: Dictionary = attached.get("details", {})
+		_r3c21_preattached_nodes += int(progress.get("attached", 0))
+		_r3c21_preattach_slice_ms_max = maxf(
+			_r3c21_preattach_slice_ms_max,
+			float(progress.get("elapsed_us", 0)) / 1000.0
+		)
+		if SmoothTrace.enabled():
+			SmoothTrace.emit("r3c21_preattach_slice", {
+				"token": token, "attached": int(progress.get("attached", 0)),
+				"attached_total": int(progress.get("attached_total", 0)),
+				"elapsed_us": int(progress.get("elapsed_us", 0)),
+				"ready": bool(progress.get("ready", false)),
+			})
+		if bool(progress.get("ready", false)):
+			_r3c3r2_phase = R3C3R2_PHASE_VERIFY
+		return
+	if _r3c3r2_phase == R3C3R2_PHASE_VERIFY:
+		var started: int = Time.get_ticks_usec()
+		var token: int = _r3c3r2_vegetation_job.get_generation_token()
+		if token != _r3c3_token:
+			_r3c3_stale_cancellations += 1
+			_r3c3r2_cancel_pending()
+			return
+		if not placement_system.is_staged_upload_ready(token):
+			_r3c3_fail("R3C3R2_VERIFY_INCOMPLETE_UPLOAD")
+			return
+		if _r3c3r2_pending_mesh == null or _r3c3r2_pending_mesh.get_surface_count() != 1:
+			_r3c3_fail("R3C3R2_VERIFY_MESH_INVALID")
+			return
+		# Exact transform spot verification against the CPU scratch buckets:
+		# the uploaded MultiMesh must hold the identical candidate transforms.
+		if not _r3c3r2_verify_uploaded_transforms(token):
+			return
+		_r3c3r2_verify_ms = float(Time.get_ticks_usec() - started) / 1000.0
+		_r3c3r2_phase = R3C3R2_PHASE_COMMIT
+		return
+	if _r3c3r2_phase == R3C3R2_PHASE_COMMIT:
+		_r3c3r2_commit_visual()
+
+
+func _r3c3r2_verify_uploaded_transforms(token: int) -> bool:
+	# Verify a bounded prefix of each candidate MultiMesh against the exact
+	# scratch arrays. Full array parity is proven by the dedicated test suite;
+	# this runtime guard catches torn/duplicate uploads before publication.
+	var job = _r3c3r2_vegetation_job
+	var expected_by_name: Dictionary = {}
+	for type_id in job.get_near_buckets().keys():
+		expected_by_name["NearTrees_%s" % type_id] = job.get_near_buckets()[type_id]
+	for type_id in job.get_billboard_buckets().keys():
+		expected_by_name["BillboardTrees_%s" % type_id] = job.get_billboard_buckets()[type_id]
+	for type_id in job.get_grass_buckets().keys():
+		expected_by_name["Grass_%s" % type_id] = job.get_grass_buckets()[type_id]
+	for variant in range(job.get_rock_buckets().size()):
+		expected_by_name["Rocks_%d" % variant] = job.get_rock_buckets()[variant]
+	var verified_total := 0
+	for candidate in placement_system._r3c3r2_candidate_nodes:
+		var node_name: String = (
+			String(candidate.get_meta("r3c21_canonical_name", ""))
+			if _r3c21_frame_paced_enabled else String(candidate.name)
+		)
+		if not expected_by_name.has(node_name):
+			_r3c3_fail("R3C3R2_VERIFY_UNKNOWN_CANDIDATE:" + node_name)
+			return false
+		var expected: Array = expected_by_name[node_name]
+		var multi_mesh: MultiMesh = candidate.multimesh
+		if multi_mesh == null or multi_mesh.instance_count != expected.size():
+			_r3c3_fail("R3C3R2_VERIFY_COUNT_MISMATCH:" + node_name)
+			return false
+		# The upload queue consumed exactly this candidate's source array in
+		# order (instances_uploaded accounting is verified in
+		# is_staged_upload_ready). Transform readback from a MultiMesh depends
+		# on the rendering backend and is exercised in GUI runtime evidence;
+		# exact CPU parity is proven by the dedicated test suite.
+		if not placement_system._r3c3r2_source_transforms.has(node_name):
+			_r3c3_fail("R3C3R2_VERIFY_SOURCE_MISSING:" + node_name)
+			return false
+		if placement_system._r3c3r2_source_transforms[node_name] != expected:
+			_r3c3_fail("R3C3R2_VERIFY_SOURCE_MISMATCH:" + node_name)
+			return false
+		verified_total += expected.size()
+	if verified_total <= 0 and placement_system._r3c3r2_instance_count_total > 0:
+		_r3c3_fail("R3C3R2_VERIFY_EMPTY_CANDIDATES")
+		return false
+	if SmoothTrace.enabled():
+		SmoothTrace.emit("r3c3r2_verify_candidate", {
+			"token": token, "probed_transforms": verified_total,
+		})
+	return true
+
+
+func _r3c3r2_commit_visual() -> void:
+	var started: int = Time.get_ticks_usec()
+	var token: int = _r3c3r2_vegetation_job.get_generation_token()
+	var committed: Dictionary = placement_system.commit_staged_generation(token)
+	if not bool(committed.get("success", false)):
+		_r3c3_fail(String(committed.get("error_code", "R3C3R2_VISUAL_COMMIT_FAILED")))
+		return
+	# Atomic point: terrain mesh, anchor basis and vegetation change together.
+	surface_center_direction = _r3c3_requested_direction
+	surface_east = _r3c3_requested_east
+	surface_north = _r3c3_requested_north
+	surface_anchor_world = _r3c3_requested_anchor
+	local_surface.mesh = _r3c3r2_pending_mesh
+	_r3c3r2_pending_mesh = null
+	last_local_mesh_statistics = _r3c3r2_pending_stats
+	_update_root_positions()
+	_apply_lod_visibility()
+	var cpu_summary: Dictionary = _r3c3r2_vegetation_job.get_summary()
+	var placement_summary: Dictionary = {
+		"seed": int(cpu_summary.get("seed", 0)),
+		"elapsed_ms": _r3c3r2_cpu_ms_total,
+		"pipeline_samples": _r3c3r2_vegetation_job.get_total_attempts(),
+		"near_trees": int(cpu_summary.get("near_trees", 0)),
+		"billboard_trees": int(cpu_summary.get("billboard_trees", 0)),
+		"grass": int(cpu_summary.get("grass", 0)),
+		"rocks": int(cpu_summary.get("rocks", 0)),
+	}
+	placement_system.apply_staged_generation_summary(placement_summary)
+	_r3c3r2_visual_commit_ms = float(Time.get_ticks_usec() - started) / 1000.0
+	if _r3c21_frame_paced_enabled:
+		_r3c21_last_committed_token = token
+		_r3c21_first_visible_frames_left = 8
+		_r3c21_first_visible_max_gap_ms = 0.0
+	_r3c3_local_ready = true
+	_r3c3_generation_committed = token
+	_r3c3r2_vegetation_job = null
+	_r3c3r2_phase = R3C3R2_PHASE_DONE
+	_r3c3_last_commit_us = Time.get_ticks_usec() - started
+	last_rebuild_summary = {
+		"elapsed_ms": float(_r3c3_last_commit_us) / 1000.0,
+		"terrain": _r3c3r2_pending_terrain,
+		"mesh": last_local_mesh_statistics.duplicate(true),
+		"placement": placement_summary,
+		"center_direction": [
+			surface_center_direction.x,
+			surface_center_direction.y,
+			surface_center_direction.z,
+		],
+		"biome": get_biome_name_at(surface_center_direction),
+	}
+	earth_rebuilt.emit(last_rebuild_summary.duplicate(true))
+	_log_info("earth_surface_rebuilt", last_rebuild_summary)
+	if logger != null:
+		logger.performance("earth_surface_rebuild", last_rebuild_summary)
+	if SmoothTrace.enabled():
+		SmoothTrace.emit("r3c3r2_visual_commit", {
+			"token": token,
+			"commit_ms": _r3c3r2_visual_commit_ms,
+			"mesh_upload_ms": _r3c3r2_mesh_upload_ms,
+			"cpu_slice_max_ms": _r3c3r2_cpu_slice_ms_max,
+			"verify_ms": _r3c3r2_verify_ms,
+			"r21_frame_paced": _r3c21_frame_paced_enabled,
+			"r21_preattach_ms_max": _r3c21_preattach_slice_ms_max,
+		})
+
+
+func _r3c3r2_cancel_pending() -> void:
+	# A newer region superseded this generation: free scratch CPU/GPU state.
+	# The old complete visible region is never touched here.
+	_r3c3r2_vegetation_job = null
+	_r3c3r2_pending_mesh = null
+	_r3c3r2_pending_terrain = {}
+	_r3c3r2_pending_stats = {}
+	_r3c3r2_phase = R3C3R2_PHASE_IDLE
+	placement_system.cancel_staged_generation()
+
+
+func _r3c3_fail(code: String) -> void:
+	_r3c3_last_error = code
+	_r3c3_global_job = null
+	_r3c3_local_job = null
+	_r3c3r2_vegetation_job = null
+	_r3c3r2_phase = R3C3R2_PHASE_IDLE
+	_r3c3r2_pending_mesh = null
+	if placement_system != null:
+		placement_system.cancel_staged_generation()
+	set_process(false)
+	_log_error("r3c3_earth_geometry_failure", {"error_code": code})
+
+
+func get_r3c3_staged_geometry_report() -> Dictionary:
+	var vegetation_pending := (
+		_r3c3r2_phase != R3C3R2_PHASE_IDLE and _r3c3r2_phase != R3C3R2_PHASE_DONE
+	)
+	return {
+		"enabled": _r3c3_staged_geometry_enabled,
+		"global_ready": _r3c3_global_ready,
+		"local_ready": _r3c3_local_ready,
+		"visual_region_ready": (
+			_r3c3_global_ready and _r3c3_local_ready
+			and _r3c3_global_job == null and _r3c3_local_job == null
+			and not vegetation_pending
+		),
+		"old_complete_region_remains_visible_during_recenter": (
+			_r3c3_local_ready and (_r3c3_local_job != null or vegetation_pending)
+		),
+		"target_token": _r3c3_token,
+		"committed_token": _r3c3_generation_committed,
+		"global": _r3c3_global_job.get_report() if _r3c3_global_job != null else {},
+		"local": _r3c3_local_job.get_report() if _r3c3_local_job != null else {},
+		"last_slice_us": _r3c3_last_slice_us,
+		"last_commit_us": _r3c3_last_commit_us,
+		"stale_cancellations": _r3c3_stale_cancellations,
+		"last_error": _r3c3_last_error,
+		# R2: staged vegetation and bounded GPU upload are implemented behind
+		# the same explicit opt-in. Default-off keeps the synchronous path.
+		"vegetation_staged": _r3c3r2_enabled,
+		"gpu_upload_staged": _r3c3r2_enabled,
+		"vegetation_phase": _r3c3r2_phase,
+		"vegetation_pending": vegetation_pending,
+		"vegetation": (
+			_r3c3r2_vegetation_job.get_report() if _r3c3r2_vegetation_job != null else {}
+		),
+		"staged_upload": (
+			placement_system.get_staged_upload_report() if placement_system != null else {}
+		),
+		"r3c3r2_timings": {
+			"mesh_upload_ms": _r3c3r2_mesh_upload_ms,
+			"cpu_slice_max_ms": _r3c3r2_cpu_slice_ms_max,
+			"verify_ms": _r3c3r2_verify_ms,
+			"visual_commit_ms": _r3c3r2_visual_commit_ms,
+			"stale_cancellations": _r3c3r2_stale_cancellations,
+		},
+		"r3c21": {
+			"enabled": _r3c21_frame_paced_enabled,
+			"preattached_nodes": _r3c21_preattached_nodes,
+			"preattach_slice_ms_max": _r3c21_preattach_slice_ms_max,
+			"pending_recenter_dedup": _r3c21_last_recenter_dedup,
+			"first_visible_max_gap_ms": _r3c21_first_visible_max_gap_ms,
+			"cpu_budget_us": _r3c21_last_phase_budget_us,
+		},
+	}
 
 
 func set_render_origin(new_origin_world: Vector3) -> void:
@@ -374,7 +1085,10 @@ func cycle_debug_view() -> String:
 	debug_view = (debug_view + 1) % 4
 	if assets != null:
 		assets.set_surface_debug_mode(debug_view != 0)
-	prepare_surface_region(surface_center_direction, false)
+	if _r3c3_staged_geometry_enabled:
+		_r3c3_request_surface_region(surface_center_direction, true)
+	else:
+		prepare_surface_region(surface_center_direction, false)
 	return get_debug_view_name()
 
 
@@ -400,10 +1114,14 @@ func reload_rules() -> bool:
 	pipeline = new_pipeline
 	placement_system.setup(self, pipeline, assets)
 	assets.set_surface_debug_mode(debug_view != 0)
-	pipeline.begin_batch("global_earth_reload")
-	global_earth.mesh = _build_global_mesh()
-	pipeline.end_batch()
-	prepare_surface_region(surface_center_direction, false)
+	if _r3c3_staged_geometry_enabled:
+		_r3c3_begin_global_job()
+		_r3c3_request_surface_region(surface_center_direction, true)
+	else:
+		pipeline.begin_batch("global_earth_reload")
+		global_earth.mesh = _build_global_mesh()
+		pipeline.end_batch()
+		prepare_surface_region(surface_center_direction, false)
 	cached_biome_directions.clear()
 	return true
 

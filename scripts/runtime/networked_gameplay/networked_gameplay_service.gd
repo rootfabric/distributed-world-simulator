@@ -8,6 +8,30 @@ extends "res://scripts/runtime/networked_gameplay/p5/networked_gameplay_service_
 func get_canonical_item_graph_port():
 	return _canonical_multiplayer_items if _configured else null
 
+
+# R3C.4 R3.1a: constant-time fence over the REAL owner-native replay ledgers.
+# This is provenance for a *derived* cache, never a second authoritative state.
+# All counters are bumped on source mutation/restore; fixed movement ticks
+# deliberately do not modify replay generations.
+func get_r31_replay_source_fence() -> Dictionary:
+	if (
+		not _configured
+		or _ownership == null
+		or _canonical_multiplayer_items == null
+		or _resource_mining == null
+	):
+		return {}
+	return {
+		"schema": "dws.r3c4.r31.replay_source_fence.v1",
+		"authority_owner_id": _authority_owner_id,
+		"authority_epoch": _authority_epoch,
+		"service_generation": get_service_replay_projection_generation(),
+		"ownership_generation": _ownership.get_replay_projection_generation(),
+		"item_graph_generation": _canonical_multiplayer_items.get_replay_projection_generation(),
+		"resource_generation": _resource_mining.get_replay_projection_generation(),
+	}
+
+
 func get_resource_mining_port():
 	return _resource_mining if _configured else null
 

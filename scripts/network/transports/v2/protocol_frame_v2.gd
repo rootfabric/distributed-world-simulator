@@ -23,10 +23,15 @@ static func create(
 	payload_schema: String,
 	payload: Dictionary
 ) -> Dictionary:
-	var canonical_payload := payload.duplicate(true)
-	var round_trip := UtilsScript.json_round_trip(canonical_payload)
-	if bool(round_trip.get("success", false)) and round_trip.get("value") is Dictionary:
-		canonical_payload = Dictionary(round_trip.get("value", {}))
+	# The JSON round-trip produces an independent canonical Dictionary. Only
+	# the invalid/non-JSON fallback needs an explicit detached copy before
+	# validation rejects it. Avoid deep-copying the common valid payload twice.
+	var round_trip := UtilsScript.json_round_trip(payload)
+	var canonical_payload: Dictionary = (
+		Dictionary(round_trip.get("value", {}))
+		if bool(round_trip.get("success", false)) and round_trip.get("value") is Dictionary
+		else payload.duplicate(true)
+	)
 	return {
 		"schema": SCHEMA,
 		"protocol_version": PROTOCOL_VERSION,
@@ -114,4 +119,5 @@ static func decode(packet: PackedByteArray, max_packet_bytes: int = 1048576) -> 
 		return TransportUtilsScript.failure(String(check.get("error_code", "INVALID_FRAME")))
 	if UtilsScript.canonical_json(parsed) != text:
 		return TransportUtilsScript.failure("NON_CANONICAL_FRAME")
-	return TransportUtilsScript.success({"frame": parsed.duplicate(true)})
+	# success() makes the public deep copy. `parsed` is a fresh JSON value.
+	return TransportUtilsScript.success({"frame": parsed})

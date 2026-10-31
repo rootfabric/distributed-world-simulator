@@ -20,8 +20,14 @@ const Carry = preload(
 	"res://scripts/runtime/networked_gameplay/sm1/sm1_player_carrying_domain.gd"
 )
 const SeamUtils = preload("res://scripts/network/contracts/network_contract_utils.gd")
+const PlayerStateSnapshot = preload(
+	"res://scripts/runtime/networked_gameplay/contracts/player_state_snapshot.gd"
+)
 const ProductSeamState = preload(
 	"res://scripts/runtime/networked_gameplay/user1/user1_product_seam_state.gd"
+)
+const R31Bp1DurableChunkCache = preload(
+	"res://scripts/runtime/networked_gameplay/m6/r31bp1_durable_chunk_cache.gd"
 )
 
 const PRIMARY_REGION := "region/user1/a"
@@ -41,6 +47,70 @@ var _seam_state: Dictionary = {}
 var _transfer_serial := 0
 var _transfer_failures := 0
 var _transfer_log: Array[Dictionary] = []
+# R31b P1: opt-in server-only durable chunk cache. Default OFF; the runtime
+# attaches it only after the full fail-closed prerequisite fence passed.
+var _r31bp1_chunk_cache = null
+
+
+var _r31bp1_last_item_graph_hit := false
+var _r31bp1_last_resource_hit := false
+# R31b P2.0 attribution-only, default OFF, no validator bypass.
+var _r31bp20_validation_attribution_enabled := false
+
+func configure_r31bp20_validation_attribution(enabled: bool) -> Dictionary:
+	_r31bp20_validation_attribution_enabled = enabled
+	return _success({"enabled": _r31bp20_validation_attribution_enabled})
+
+
+# R31b P1: attach the private immutable chunk cache. Passing null (or a
+# misconfigured cache) leaves the legacy uncached export path active.
+func configure_r31bp1_durable_chunk_cache(cache) -> Dictionary:
+	if cache == null:
+		_r31bp1_chunk_cache = null
+		return _success({"enabled": false})
+	if not cache.has_method("configure") or not cache.has_method("export_component"):
+		return _failure("R31BP1_CHUNK_CACHE_INVALID")
+	_r31bp1_chunk_cache = cache
+	return _success({
+		"enabled": bool(cache.is_enabled()) if cache.has_method("is_enabled") else false
+	})
+
+
+func is_r31bp1_durable_chunks_enabled() -> bool:
+	return _r31bp1_chunk_cache != null
+
+
+func get_r31bp1_durable_chunk_report() -> Dictionary:
+	if _r31bp1_chunk_cache == null:
+		return {}
+	return _r31bp1_chunk_cache.get_report()
+
+
+# Cache-mediated export of ONE component kind. On any cache failure the legacy
+# full component export is used unchanged (fail CLOSED, never fail the export).
+func _r31bp1_export_component(service, kind: String) -> Dictionary:
+	if _r31bp1_chunk_cache == null or service == null:
+		if kind == "item_graph":
+			_r31bp1_last_item_graph_hit = false
+		else:
+			_r31bp1_last_resource_hit = false
+		return service.export_durable_state() if service != null else {}
+	var exported: Dictionary = _r31bp1_chunk_cache.export_component(service, kind)
+	var hit := bool(exported.get("hit", false))
+	if kind == "item_graph":
+		_r31bp1_last_item_graph_hit = hit
+	else:
+		_r31bp1_last_resource_hit = hit
+	# A source which changed while exporting must NEVER produce a second
+	# mixed-revision snapshot. Abort this periodic generation fail-closed.
+	if String(exported.get("bypass", "")) == "SOURCE_FENCE_CHANGED":
+		return {}
+	var value = exported.get("value", null)
+	if value is Dictionary and not Dictionary(value).is_empty():
+		return Dictionary(value)
+	# Other explicit non-cache cases use the canonical legacy source; P1
+	# periodic export rejects an empty result before M6 worker submission.
+	return service.export_durable_state()
 
 
 func setup(
@@ -127,7 +197,12 @@ func join(
 	transport_session_id: String,
 	operation_id: String
 ) -> Dictionary:
-	if not _seam_coordinators.is_empty():
+	# Other players can hold ACTIVE movement bindings on the secondary
+	# authority without freezing a new local player JOIN. Do not admit a
+	# reconnect of the SAME remote player or JOIN during an in-flight SM1
+	# handoff: those rows still require an explicit transfer fence.
+	var player_id := logical_player_id.strip_edges().to_lower()
+	if _seam_coordinators.has(player_id) or not _seam_transfers_quiescent():
 		return _failure("USER1_SEAM_JOIN_FROZEN_WHILE_PLAYER_REMOTE")
 	var result: Dictionary = super.join(
 		logical_player_id,
@@ -135,7 +210,6 @@ func join(
 		operation_id
 	)
 	if bool(result.get("success", false)):
-		var player_id := logical_player_id.strip_edges().to_lower()
 		_seam_sessions[player_id] = transport_session_id
 		_seam_last_operation[player_id] = operation_id
 		if not _seam_state.has(player_id):
@@ -154,9 +228,13 @@ func leave(
 	transport_session_id: String,
 	operation_id: String
 ) -> Dictionary:
-	var returned := _force_all_primary()
-	if not bool(returned.get("success", false)):
-		return returned
+	# A leave is scoped to its own transport identity. Handing back every
+	# remote movement player would silently change unrelated ownership.
+	var player_id := logical_player_id.strip_edges().to_lower()
+	if String(_seam_sessions.get(player_id, "")) == transport_session_id:
+		var returned := _force_player_primary(player_id)
+		if not bool(returned.get("success", false)):
+			return returned
 	var result: Dictionary = super.leave(
 		logical_player_id,
 		transport_session_id,
@@ -172,14 +250,16 @@ func leave_transport_session(
 	transport_session_id: String,
 	operation_id: String
 ) -> Dictionary:
-	var returned := _force_all_primary()
-	if not bool(returned.get("success", false)):
-		return returned
 	var logical_id := ""
 	for player_id_value in _seam_sessions:
 		if String(_seam_sessions[player_id_value]) == transport_session_id:
 			logical_id = String(player_id_value)
 			break
+	# Unknown/stale sessions cannot force a handback of other players.
+	if not logical_id.is_empty():
+		var returned := _force_player_primary(logical_id)
+		if not bool(returned.get("success", false)):
+			return returned
 	var result: Dictionary = super.leave_transport_session(
 		transport_session_id,
 		operation_id
@@ -188,6 +268,37 @@ func leave_transport_session(
 		_seam_sessions.erase(logical_id)
 		_seam_last_operation[logical_id] = operation_id
 	return result
+
+
+func restore_durable_state(value: Dictionary) -> Dictionary:
+	var restored: Dictionary = super.restore_durable_state(value)
+	if not bool(restored.get("success", false)):
+		return restored
+	# The secondary movement authority is constructed once at setup with the
+	# launch server_tick. M6 recovery may restore the primary to a much later
+	# durable tick; resync the secondary so the next fixed tick stays monotonic
+	# instead of failing forever with USER1_SECONDARY_FIXED_TICK_FAILED.
+	if _secondary == null:
+		return restored
+	# The base recovery swaps canonical registry and ownership objects with
+	# freshly validated durable instances. The trusted transfer port was
+	# bound during setup to the PRE-restore objects: without refreshing it,
+	# an A->B handoff after restart fails LIVE_PLAYER_SOURCE_NOT_FROZEN.
+	# Rebind the existing port in place so the secondary's trusted peer
+	# reference stays valid and no duplicate authority/port is created.
+	if _primary_port == null or _primary_port != get_live_player_transfer_port():
+		return _failure("USER1_PRIMARY_RECOVERY_PORT_NOT_READY")
+	var rebind: Dictionary = _primary_port.rebind_durable_recovery_views(
+		_players, _ownership
+	)
+	if not bool(rebind.get("success", false)):
+		return _failure("USER1_PRIMARY_RECOVERY_PORT_REBIND_FAILED", {"cause": rebind})
+	var resync: Dictionary = _secondary.resync_fixed_tick(
+		int(restored.get("details", {}).get("server_tick", _tick))
+	)
+	if not bool(resync.get("success", false)):
+		return resync
+	return restored
 
 
 func advance_fixed_server_tick(server_tick: int) -> Dictionary:
@@ -289,7 +400,11 @@ func create_snapshot() -> Dictionary:
 	var players: Array = []
 	for player_id_value in ids:
 		players.append(Dictionary(by_id[player_id_value]).duplicate(true))
-	snapshot["players"] = players
+	# R4.2-P0 repair: secondary-owned live rows were previously hashed raw,
+	# bypassing the r31 wire-number fixed point used by ordinary snapshots.
+	# Keep only the existing DTO projection, never normalize live authority.
+	# Avoid a second full JSON round trip on the hot 20 Hz seam path.
+	snapshot["players"] = PlayerStateSnapshot.normalize_wire_players(players)
 	snapshot.erase("checksum")
 	snapshot["checksum"] = SeamUtils.payload_hash(snapshot)
 	return snapshot
@@ -386,9 +501,10 @@ func _product_actor_context(player: Dictionary) -> Dictionary:
 	}
 
 
-func _build_remote_player_durable_state() -> Dictionary:
+func _build_remote_player_durable_state(snapshot: Dictionary = {}) -> Dictionary:
 	var rows: Array = []
-	for player_value in create_snapshot().get("players", []):
+	var view: Dictionary = snapshot if not snapshot.is_empty() else create_snapshot()
+	for player_value in view.get("players", []):
 		if not player_value is Dictionary:
 			continue
 		var row: Dictionary = Dictionary(player_value).duplicate(true)
@@ -404,9 +520,10 @@ func _build_remote_player_durable_state() -> Dictionary:
 	return state if bool(checked.get("success", false)) else {}
 
 
-func _build_remote_ownership_durable_state() -> Dictionary:
+func _build_remote_ownership_durable_state(snapshot: Dictionary = {}) -> Dictionary:
 	var rows: Array = []
-	for player_value in create_snapshot().get("players", []):
+	var view: Dictionary = snapshot if not snapshot.is_empty() else create_snapshot()
+	for player_value in view.get("players", []):
 		if not player_value is Dictionary:
 			continue
 		var player_id := String(player_value.get("logical_player_id", ""))
@@ -433,13 +550,26 @@ func _build_remote_ownership_durable_state() -> Dictionary:
 	return state if bool(checked.get("success", false)) else {}
 
 
+# Additional seam fence: source lineage may change without creating a local
+# gameplay command. B->A or A->B transfers invalidate a cached replay result.
+func get_r31_replay_source_fence() -> Dictionary:
+	var fence: Dictionary = super.get_r31_replay_source_fence()
+	if fence.is_empty() or not _seam_transfers_quiescent():
+		return {}
+	fence["seam_transfer_serial"] = _transfer_serial
+	fence["seam_coordinator_count"] = _seam_coordinators.size()
+	return fence
+
+
 func export_durable_state() -> Dictionary:
 	if _seam_coordinators.is_empty():
 		return super.export_durable_state()
 	if not _seam_transfers_quiescent():
 		return {}
-	var players_state := _build_remote_player_durable_state()
-	var ownership_state := _build_remote_ownership_durable_state()
+	# R3.2: reuse one snapshot for both durable player/ownership rows.
+	var durable_players_view: Dictionary = create_snapshot()
+	var players_state := _build_remote_player_durable_state(durable_players_view)
+	var ownership_state := _build_remote_ownership_durable_state(durable_players_view)
 	if (
 		players_state.is_empty()
 		or ownership_state.is_empty()
@@ -467,6 +597,122 @@ func export_durable_state() -> Dictionary:
 	state = SeamUtils.finalize_json_checksum(state)
 	var validated := validate_durable_state(state)
 	return state if bool(validated.get("success", false)) else {}
+
+
+
+# R3C.4 R3.1b P0 — independent *measurement* of the existing PRODUCT durable
+# export, not a multi-frame exporter, cache, or second owner. This reproduces
+# the same export_DTO fields and validation within one authoritative frame.
+# Default export_durable_state() is left untouched.
+func export_durable_state_r31b_profiled() -> Dictionary:
+	var began_us: int = Time.get_ticks_usec()
+	if _seam_coordinators.is_empty():
+		var fallback: Dictionary = super.export_durable_state()
+		return {
+			"value": fallback,
+			"stages": {
+				"fallback_ms": float(Time.get_ticks_usec() - began_us) / 1000.0,
+				"total_ms": float(Time.get_ticks_usec() - began_us) / 1000.0,
+				"seam_coordinator_count": 0,
+			},
+		}
+	if not _seam_transfers_quiescent():
+		return {"value": {}, "stages": {"error": "SEAM_NOT_QUIESCENT"}}
+	# One authoritative fixed tick for the entire periodic export. Cached
+	# domains do NOT permit mutable player/ownership rows to span ticks.
+	var frozen_tick: int = _tick
+	var frozen_revision: int = _revision
+	var frozen_transfer_serial: int = _transfer_serial
+	var frozen_owner: String = _authority_owner_id
+	var frozen_epoch: int = _authority_epoch
+	var snapshot: Dictionary = create_snapshot()
+	var after_snapshot_us: int = Time.get_ticks_usec()
+	var players_state: Dictionary = _build_remote_player_durable_state(snapshot)
+	var after_players_us: int = Time.get_ticks_usec()
+	var ownership_state: Dictionary = _build_remote_ownership_durable_state(snapshot)
+	var after_ownership_us: int = Time.get_ticks_usec()
+	if (
+		players_state.is_empty()
+		or ownership_state.is_empty()
+		or _shared_items == null
+		or _canonical_multiplayer_items == null
+		or _resource_mining == null
+	):
+		return {"value": {}, "stages": {"error": "REQUIRED_DOMAIN_MISSING"}}
+	var item_fence: Dictionary = {}
+	var resource_fence: Dictionary = {}
+	if _r31bp1_chunk_cache != null:
+		item_fence = _canonical_multiplayer_items.get_r31bp1_chunk_fence()
+		resource_fence = _resource_mining.get_r31bp1_chunk_fence()
+		if item_fence.is_empty() or resource_fence.is_empty():
+			return {"value": {}, "stages": {"error": "R31BP1_SOURCE_FENCE_MISSING"}}
+	var shared_state: Dictionary = _shared_items.export_durable_state()
+	var after_shared_us: int = Time.get_ticks_usec()
+	var item_state: Dictionary = _r31bp1_export_component(_canonical_multiplayer_items, "item_graph")
+	var after_item_us: int = Time.get_ticks_usec()
+	var resource_state: Dictionary = _r31bp1_export_component(_resource_mining, "resource_mining")
+	var after_resource_us: int = Time.get_ticks_usec()
+	if item_state.is_empty() or resource_state.is_empty():
+		return {"value": {}, "stages": {"error": "R31BP1_COMPONENT_EXPORT_FAILED"}}
+	var durable: Dictionary = {
+		"schema": DURABLE_SCHEMA,
+		"authority_owner_id": _authority_owner_id,
+		"authority_epoch": _authority_epoch,
+		"revision": _revision,
+		"server_tick": _tick,
+		"region_id": _region_id,
+		"topology_adapter": _topology_adapter,
+		"profile": _profile,
+		"players": players_state,
+		"ownership": ownership_state,
+		"shared_item": shared_state,
+		"canonical_item_graph": item_state,
+		"resource_mining": resource_state,
+		"checksum": "",
+	}
+	durable = SeamUtils.finalize_json_checksum(durable)
+	var after_final_checksum_us: int = Time.get_ticks_usec()
+	var validated: Dictionary = {}
+	var p20_validation_stages: Dictionary = {}
+	if _r31bp20_validation_attribution_enabled:
+		var observed: Dictionary = validate_durable_state_p20_profiled(durable)
+		validated = Dictionary(observed.get("validation", {}))
+		p20_validation_stages = Dictionary(observed.get("stages", {}))
+	else:
+		validated = validate_durable_state(durable)
+	var done_us: int = Time.get_ticks_usec()
+	if _r31bp1_chunk_cache != null and (
+		_tick != frozen_tick or _revision != frozen_revision
+		or _transfer_serial != frozen_transfer_serial
+		or _authority_owner_id != frozen_owner or _authority_epoch != frozen_epoch
+		or not _seam_transfers_quiescent()
+		or _canonical_multiplayer_items.get_r31bp1_chunk_fence() != item_fence
+		or _resource_mining.get_r31bp1_chunk_fence() != resource_fence
+	):
+		return {"value": {}, "stages": {"error": "R31BP1_GLOBAL_SOURCE_FENCE_CHANGED"}}
+	return {
+		"value": durable if bool(validated.get("success", false)) else {},
+		"stages": {
+			"snapshot_ms": float(after_snapshot_us - began_us) / 1000.0,
+			"players_ms": float(after_players_us - after_snapshot_us) / 1000.0,
+			"ownership_ms": float(after_ownership_us - after_players_us) / 1000.0,
+			"shared_item_ms": float(after_shared_us - after_ownership_us) / 1000.0,
+			"item_graph_ms": float(after_item_us - after_shared_us) / 1000.0,
+			"resource_ms": float(after_resource_us - after_item_us) / 1000.0,
+			"final_checksum_ms": float(after_final_checksum_us - after_resource_us) / 1000.0,
+			"validation_ms": float(done_us - after_final_checksum_us) / 1000.0,
+			"r31bp20_validation_stages": p20_validation_stages.duplicate(true),
+			"total_ms": float(done_us - began_us) / 1000.0,
+			"seam_coordinator_count": _seam_coordinators.size(),
+			"player_count": Array(snapshot.get("players", [])).size(),
+			"valid": bool(validated.get("success", false)),
+			"r31bp1_item_graph_cache_hit": _r31bp1_last_item_graph_hit,
+			"r31bp1_resource_cache_hit": _r31bp1_last_resource_hit,
+			"r31bp1_chunks_enabled": is_r31bp1_durable_chunks_enabled(),
+		},
+	}
+
+
 
 
 func set_player_presentation(
@@ -682,6 +928,14 @@ func product_mutation_allowed(logical_player_id: String = "") -> bool:
 
 func can_persist_product_state() -> bool:
 	return _seam_transfers_quiescent()
+
+
+# R3.2: quiescence-only probe. The one immediately following M6 export
+# creates and validates the durable checkpoint itself; do not export twice.
+func prepare_product_persistence_quiescence_only() -> Dictionary:
+	if not _seam_transfers_quiescent():
+		return _failure("USER1_SEAM_PERSISTENCE_TRANSFER_IN_FLIGHT")
+	return _success({"quiescent": true, "remote_binding_count": _seam_coordinators.size()})
 
 
 func prepare_product_persistence() -> Dictionary:
@@ -1089,22 +1343,22 @@ func _abort_transfer_before_commit(
 	})
 
 
+func _force_player_primary(player_id: String) -> Dictionary:
+	if not _seam_coordinators.has(player_id):
+		return _success({"replay": true})
+	if _active_authority(player_id) == _secondary_authority_id:
+		return _perform_transfer(player_id, _primary_authority_id, true)
+	return _release_roundtrip_binding(player_id)
+
+
 func _force_all_primary() -> Dictionary:
+	# This is intentionally global only for shutdown/full recovery. Ordinary
+	# transport LEAVE must call _force_player_primary for its own identity.
 	var players := _seam_coordinators.keys().duplicate()
 	for player_id_value in players:
-		var player_id := String(player_id_value)
-		if _active_authority(player_id) == _secondary_authority_id:
-			var returned := _perform_transfer(
-				player_id,
-				_primary_authority_id,
-				true
-			)
-			if not bool(returned.get("success", false)):
-				return returned
-		elif _seam_coordinators.has(player_id):
-			var released := _release_roundtrip_binding(player_id)
-			if not bool(released.get("success", false)):
-				return released
+		var returned := _force_player_primary(String(player_id_value))
+		if not bool(returned.get("success", false)):
+			return returned
 	return _success({"quiescent": true})
 
 

@@ -1,0 +1,13 @@
+{
+  "schema": "planet_simulator.avatar_provider_manifest.v1",
+  "providers": [
+    {
+      "provider_id": "avatar/quaternius",
+      "factory_script": "res://scripts/characters/providers/quaternius_avatar_provider.gd"
+    },
+    {
+      "provider_id": "avatar/procedural_humanoid",
+      "factory_script": "res://scripts/characters/providers/procedural_humanoid_avatar_provider.gd"
+    }
+  ]
+}

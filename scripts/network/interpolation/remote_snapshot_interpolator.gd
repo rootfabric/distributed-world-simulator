@@ -293,13 +293,14 @@ func sample_at_render_tick(render_tick: float) -> Dictionary:
 		_extrapolation_samples += 1
 		return _extrapolated_result(latest, extrapolation_ticks, render_tick)
 	_hold_samples += 1
-	return _state_result(
-		latest,
-		"HOLD_EXTRAPOLATION_LIMIT",
-		render_tick,
-		1.0,
-		_max_extrapolation_ticks
-	)
+	# NET-SMOOTH1: stopping extrapolation must not undo the distance already
+	# presented. Clamp at the horizon, not at the old authoritative endpoint.
+	# This remains visual-only; the timeline and canonical records are untouched.
+	var held: Dictionary = _extrapolated_result(latest, _max_extrapolation_ticks, render_tick)
+	held["details"]["mode"] = "HOLD_EXTRAPOLATION_LIMIT"
+	# NET-SMOOTH1: presentation semantics must keep following the latest
+	# authoritative velocity; only the position horizon is clamped.
+	return held
 
 
 func get_config() -> Dictionary:
