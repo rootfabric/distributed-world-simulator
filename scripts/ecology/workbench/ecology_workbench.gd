@@ -58,6 +58,9 @@ var staged_resumes_per_frame := 1
 var staged_worksets_per_resume := 1
 var staged_max_members := 8
 var staged_cursor_cap_bytes := 8388608
+## A14.6 R3 explicitly opt-in; accepted A14.5 staged LAB remains default.
+var staged_r3_allocator_enabled := false
+var staged_r3_allocator_items := 16
 var running := false
 # Pending run target (P5): {"kind": "tick"|"generation"|"condition", ...} or {}.
 var pending_target: Dictionary = {}
@@ -431,7 +434,8 @@ func _process_staged_live(interval: float) -> void:
 	var result: Dictionary = controller.run_staged_frame(
 		staged_wall_budget_us, staged_resumes_per_frame,
 		staged_worksets_per_resume, staged_max_members,
-		staged_cursor_cap_bytes)
+		staged_cursor_cap_bytes, staged_r3_allocator_enabled,
+		staged_r3_allocator_items)
 	if not bool(result.get("success", false)):
 		running = false
 		_refresh_from_controller(false)
@@ -452,12 +456,14 @@ func _process_staged_live(interval: float) -> void:
 ## cancels its host-only cursor and leaves the committed tick unchanged.
 func configure_staged_live(enabled: bool, soft_budget_us: int = 30000,
 		resumes_per_frame: int = 1, worksets_per_resume: int = 1,
-		max_members: int = 8, cursor_cap_bytes: int = 8388608) -> bool:
+		max_members: int = 8, cursor_cap_bytes: int = 8388608,
+		use_r3_allocator: bool = false, allocator_items_per_call: int = 16) -> bool:
 	if soft_budget_us < 1 or soft_budget_us > 1000000000 \
 			or resumes_per_frame < 1 or resumes_per_frame > 16 \
 			or worksets_per_resume < 1 or worksets_per_resume > 64 \
 			or max_members < 1 or max_members > 256 \
-			or cursor_cap_bytes < 1024 or cursor_cap_bytes > 16777216:
+			or cursor_cap_bytes < 1024 or cursor_cap_bytes > 16777216 \
+			or allocator_items_per_call < 1 or allocator_items_per_call > 4096:
 		return false
 	_cancel_staged_pending()
 	staged_live_enabled = enabled
@@ -466,6 +472,8 @@ func configure_staged_live(enabled: bool, soft_budget_us: int = 30000,
 	staged_worksets_per_resume = worksets_per_resume
 	staged_max_members = max_members
 	staged_cursor_cap_bytes = cursor_cap_bytes
+	staged_r3_allocator_enabled = enabled and use_r3_allocator
+	staged_r3_allocator_items = allocator_items_per_call
 	return true
 
 func _cancel_staged_pending() -> void:
@@ -644,6 +652,11 @@ func _update_status_bar(snapshot: Dictionary) -> void:
 			int(staged.get("phase_stats", {}).get("ALLOCATE", {}).get("p95_us", 0)) / 1000,
 			int(staged.get("cancellations", 0)),
 		]
+		if staged_r3_allocator_enabled:
+			_status_bar.text += " | R3 A4 %s %d calls" % [
+				String(staged.get("r3_allocator_subphase", "NONE")),
+				int(staged.get("r3_allocator_calls", 0)),
+			]
 
 # --- P3 organism markers + P6 generic morphology meshes -----------------------
 
