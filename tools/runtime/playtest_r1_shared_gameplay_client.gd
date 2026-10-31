@@ -121,5 +121,10 @@ func _write(name: String, value: Dictionary) -> void:
 		return
 	file.store_string(JSON.stringify(value))
 	file.close()
-	if DirAccess.rename_absolute(path + ".tmp", path) != OK:
-		quit(3)
+	# Windows readers may briefly hold a file without delete-sharing.
+	for attempt in range(25):
+		if DirAccess.rename_absolute(path + ".tmp", path) == OK:
+			return
+		OS.delay_msec(2)
+	push_error("MAILBOX_RENAME_FAILED: " + name)
+	quit(3)

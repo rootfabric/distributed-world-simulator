@@ -43,7 +43,7 @@ def verify_world(states, units, a_ore, b_ore, stages):
         require(state['outpost']['completed_stage_count'] == stages, role + ': construction stage')
         for key in ('items', 'resource', 'construction'):
             require(len(state[key].get('checksum', '')) == 64, role + ': missing ' + key)
-        require(len(state['outpost']['construct_checksum']) == 64, role + ': empty construct')
+        require(len(state['outpost']['construct_checksum']) == (64 if stages else 0), role + ': construct existence')
     require(durable(states['a']) == durable(states['b']), 'replicas disagree')
 
 
@@ -174,7 +174,8 @@ class SharedGameplayCheck:
                 verify_world(states, units, a_ore, b_ore, stages)
                 if expected is not None:
                     require(durable(states['a']) == expected, label + ': persisted state changed')
-            except AssertionError:
+            except AssertionError as error:
+                self.report['last_world_mismatch'] = str(error)
                 return False
             return states
         states = self.wait(label, converged)
