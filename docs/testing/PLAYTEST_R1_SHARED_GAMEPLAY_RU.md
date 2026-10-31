@@ -39,6 +39,9 @@ M6 ACK gate, получен PERSISTENCE_FATAL DURABLE_GATE_IDENTITY_REQUIRED. Р
 ремонт ограничен передачей уже проверенной identity в _persist_command_result;
 контракт durable-before-ACK не ослабляется. Риск повышен до HIGH: отдельные
 независимые Reviewer и Verifier, live повтор и негативные проверки runner.
+Повтор 95d1874c6 обнаружил второй пропуск того же пути: успешный mining ACK не
+освобождал escrow, следующая команда получала DURABLE_GATE_BACKPRESSURE. Добавлены
+те же preflight/enqueue-completion hooks, которые уже применяет ITEM handler.
 
 Обнаружен также явный защитный запрет строительства с persistence:
 M3_CONSTRUCTION_DURABILITY_CONTRACT_REQUIRED. Обход этого запрета и создание нового

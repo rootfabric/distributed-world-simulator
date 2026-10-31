@@ -409,9 +409,10 @@ func _handle_resource_command(peer_id: String, session_id: String, payload: Dict
 	)
 	_stall_exit(execute_probe)
 	var persist_probe := _stall_enter("RESOURCE:PERSIST_RESULT", stage_context)
+	var resource_epoch := int(payload.get("ownership_epoch", 0))
 	var persisted_result := _persist_command_result(
 		operation_id, "resource.mine", logical_id, result,
-		peer_id, session_id, int(payload.get("ownership_epoch", 0))
+		peer_id, session_id, resource_epoch
 	)
 	_stall_exit(persist_probe)
 	if not persisted_result:
@@ -453,9 +454,14 @@ func _handle_resource_command(peer_id: String, session_id: String, payload: Dict
 				resource_delta_result.get("details", {}).get("delta", {})
 			).duplicate(true)
 
+	if not _gate_preflight_success_result(operation_id, peer_id, session_id, logical_id, resource_epoch, result):
+		return
 	var send_probe := _stall_enter("RESOURCE:RESULT_SEND", stage_context)
 	var result_sent := _send_result(peer_id, operation_id, "resource.mine", result, item_delta)
+	_gate_after_result_enqueue(operation_id, peer_id, session_id, logical_id, resource_epoch, result, result_sent)
 	_stall_exit(send_probe)
+	if _fatal_persistence_failure:
+		return
 	if bool(result.get("success", false)):
 		if not _is_replay_result(result):
 			var replication_probe := _stall_enter("RESOURCE:REPLICATION", stage_context)
