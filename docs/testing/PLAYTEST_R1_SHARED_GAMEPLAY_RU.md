@@ -31,3 +31,18 @@ Mailbox управляет тестовыми клиентами, не пише�
 Сырые результаты только C:/distributed-world-simulator/artifacts/shared-gameplay-20261031.
 Localhost seam не доказывает multi-host N3–N5, штатный restart не доказывает crash
 durability. Историческая SCHEMA_INVALID MVP8 не переименовывается в acceptance.
+
+## Ремонт по первому исполнению
+
+Прогон f462b5663: resource.mine не передавал peer/session/ownership в существующий
+M6 ACK gate, получен PERSISTENCE_FATAL DURABLE_GATE_IDENTITY_REQUIRED. Разрешённый
+ремонт ограничен передачей уже проверенной identity в _persist_command_result;
+контракт durable-before-ACK не ослабляется. Риск повышен до HIGH: отдельные
+независимые Reviewer и Verifier, live повтор и негативные проверки runner.
+
+Обнаружен также явный защитный запрет строительства с persistence:
+M3_CONSTRUCTION_DURABILITY_CONTRACT_REQUIRED. Обход этого запрета и создание нового
+cross-domain persistence owner не входят в ремонт. Сценарий обязан сохранить FAIL
+полного цикла, но после такого конкретного отказа продолжить независимые проверки
+передачи/границы/reconnect/restart с добытой рудой. В таком прогоне строительство
+и продолжение строительства обозначаются BLOCKED, никогда PASS.

@@ -409,7 +409,10 @@ func _handle_resource_command(peer_id: String, session_id: String, payload: Dict
 	)
 	_stall_exit(execute_probe)
 	var persist_probe := _stall_enter("RESOURCE:PERSIST_RESULT", stage_context)
-	var persisted_result := _persist_command_result(operation_id, "resource.mine", logical_id, result)
+	var persisted_result := _persist_command_result(
+		operation_id, "resource.mine", logical_id, result,
+		peer_id, session_id, int(payload.get("ownership_epoch", 0))
+	)
 	_stall_exit(persist_probe)
 	if not persisted_result:
 		_send_result(peer_id, operation_id, "resource.mine", _failure("M6_DURABLE_COMMIT_FAILED"))
