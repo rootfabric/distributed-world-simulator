@@ -17,6 +17,12 @@ import time
 from live2_automation_client import request
 
 
+def require(condition, code):
+    """Acceptance checks must also execute under python -O/PYTHONOPTIMIZE."""
+    if not condition:
+        raise AssertionError(code)
+
+
 class VisualCheck:
     def __init__(self, args):
         self.args = args
@@ -134,6 +140,7 @@ class VisualCheck:
                 and not avatar.get('legacy_capsule_visible', True))
 
     def sample(self, phase):
+        sample_started = time.monotonic()
         actor, observer = self.state('b'), self.state('a')
         p, q = actor['local_player']['position'], observer['local_player']['position']
         dx, dz = p['x'] - q['x'], p['z'] - q['z']
@@ -142,16 +149,17 @@ class VisualCheck:
         time.sleep(.06)  # Allow a render update before observing/capturing.
         visual = self.command('a', 'character.remote.visual')['players'].get('b', {})
         frame = self.rpc('a', 'screenshot.capture', {'filename': f'{len(self.samples):04d}-{phase}.png'})
-        row = {'index': len(self.samples), 'phase': phase, 'captured_at_monotonic': time.monotonic(),
+        row = {'index': len(self.samples), 'phase': phase, 'sample_started_monotonic': sample_started,
+               'captured_at_monotonic': time.monotonic(),
                'actor': actor, 'observer': observer, 'visual': visual,
                'frame': str(Path(frame['path']).relative_to(self.root)),
                'frame_sha256': self.digest(frame['path'])}
         self.samples.append(row)
         self.save('samples.json', self.samples)
-        assert actor['connection_state'] == observer['connection_state'] == 'CONNECTED', 'CONNECTION_LOST'
-        assert actor['player_entity_id'] == self.identity and actor['ownership_epoch'] == self.epoch, 'ACTOR_IDENTITY_CHANGED'
-        assert visual.get('available') and visual.get('visible_in_tree'), 'AVATAR_UNAVAILABLE'
-        assert visual.get('anchors_in_frame'), 'AVATAR_OUT_OF_FRAME'
+        require(actor['connection_state'] == observer['connection_state'] == 'CONNECTED', 'CONNECTION_LOST')
+        require(actor['player_entity_id'] == self.identity and actor['ownership_epoch'] == self.epoch, 'ACTOR_IDENTITY_CHANGED')
+        require(visual.get('available') and visual.get('visible_in_tree'), 'AVATAR_UNAVAILABLE')
+        require(visual.get('anchors_in_frame'), 'AVATAR_OUT_OF_FRAME')
         return actor
 
     def idle(self, phase):
@@ -178,11 +186,34 @@ class VisualCheck:
         for phase, semantic in [('idle', 'idle'), ('walk', 'walk'), ('run', 'run'), ('stopped', 'idle')]:
             rows = [r for r in self.samples if r['phase'] == phase]
             matching = [r['visual']['animation'] for r in rows if r['visual']['animation'].get('semantic') == semantic]
-            assert len(matching) >= 3, 'ANIMATION_SEMANTIC_MISSING ' + phase
-            assert all(a.get('animation_playing') and a.get('target_bone_count', 0) > 0 for a in matching), 'ANIMATION_NOT_PLAYING'
-            assert len({a['target_pose_sha256'] for a in matching if a.get('target_pose_sha256')}) >= 3, 'FROZEN_TARGET_POSE ' + phase
-            assert len({a['animation_position_seconds'] for a in matching}) >= 3, 'FROZEN_ANIMATION_CLOCK ' + phase
-        assert self.state('b')['seam_roundtrips'] > self.initial_roundtrips, 'ROUNDTRIP_MISSING'
+            require(len(matching) >= 3, 'ANIMATION_SEMANTIC_MISSING ' + phase)
+            require(all(a.get('animation_playing') and a.get('target_bone_count', 0) > 0 for a in matching), 'ANIMATION_NOT_PLAYING')
+            require(len({a['target_pose_sha256'] for a in matching if a.get('target_pose_sha256')}) >= 3, 'FROZEN_TARGET_POSE ' + phase)
+            require(len({a['animation_position_seconds'] for a in matching}) >= 3, 'FROZEN_ANIMATION_CLOCK ' + phase)
+        require(self.state('b')['seam_roundtrips'] > self.initial_roundtrips, 'ROUNDTRIP_MISSING')
+
+    def write_gallery(self):
+        # Original PNGs, no interpolation. Playback uses sampled capture times.
+        frames = [{'src': row['frame'].replace('\\', '/'), 'phase': row['phase'],
+                   'region': row['actor']['region_id'], 'animation': row['visual'].get('animation', {}),
+                   't': row['captured_at_monotonic']} for row in self.samples]
+        payload = json.dumps(frames).replace('<', '\\u003c')
+        html = '''<!doctype html><meta charset="utf-8"><title>Visual seam evidence</title>
+<style>body{background:#111827;color:#e5e7eb;font:16px sans-serif;margin:24px}img{max-width:100%;max-height:72vh}input{width:70%}button{padding:8px}pre{white-space:pre-wrap}</style>
+<h1>Playtest R1 — визуальная проверка</h1>
+<p>Исходные PNG с реальным интервалом захвата. Это выборка кадров, не видео 60 FPS.</p>
+<button id="play">▶ / пауза</button> <input id="seek" type="range" min="0" value="0"><span id="count"></span>
+<p><img id="frame" alt="Captured game viewport"></p><pre id="info"></pre>
+<script>const frames=PAYLOAD;let index=0,playing=false,timer;
+const seek=document.getElementById('seek');seek.max=Math.max(0,frames.length-1);
+function show(){if(!frames.length)return;const f=frames[index];document.getElementById('frame').src=f.src;
+seek.value=index;document.getElementById('count').textContent=` ${index+1}/${frames.length}`;
+document.getElementById('info').textContent=JSON.stringify({phase:f.phase,region:f.region,animation:f.animation},null,2);}
+function next(){if(!playing||index>=frames.length-1){playing=false;return;}const delay=Math.max(1,(frames[index+1].t-frames[index].t)*1000);
+timer=setTimeout(()=>{index++;show();next()},delay);}
+seek.oninput=()=>{clearTimeout(timer);playing=false;index=Number(seek.value);show()};
+document.getElementById('play').onclick=()=>{clearTimeout(timer);playing=!playing;if(index>=frames.length-1)index=0;show();next()};show();</script>'''
+        (self.root / 'index.html').write_text(html.replace('PAYLOAD', payload), encoding='utf-8')
 
     def run(self):
         try:
@@ -245,6 +276,7 @@ class VisualCheck:
             if errors:
                 self.report.update(result='FAIL', log_errors=errors)
             self.report.update(frame_count=len(self.samples), process_exit_codes={k: v.returncode for k, v in self.processes.items()})
+            self.write_gallery()
             self.save('report.json', self.report)
             print(self.report['result'], self.report.get('failure', ''), self.root, flush=True)
         return 0 if self.report['result'] == 'PASS' else 1
