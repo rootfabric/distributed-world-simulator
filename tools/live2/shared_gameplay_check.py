@@ -114,6 +114,20 @@ class SharedGameplayCheck:
         return state
 
     def rpc(self, role, method, params=None, operation_id='', allowed_error=None):
+        operation_id = operation_id or 'operation/shared-gameplay/' + role + '/' + str(len(self.commands) + 1)
+        # This explicit pre-admission response proves no mutation was submitted.
+        # Retry the same operation, retaining every attempt in commands.json.
+        for attempt in range(20):
+            result = self._rpc_once(role, method, params, operation_id)
+            if result.get('error_code') == 'P1A_WAIT_PRIOR_PERIODIC':
+                time.sleep(.1)
+                continue
+            require(result.get('success') or (allowed_error is not None and
+                    result.get('error_code') == allowed_error), str(result))
+            return result
+        raise RuntimeError('PRE_ADMISSION_RETRY_EXHAUSTED ' + operation_id)
+
+    def _rpc_once(self, role, method, params, operation_id):
         request_id = str(len(self.commands) + 1)
         request = {'id': request_id, 'method': method, 'params': params or {},
                    'operation_id': operation_id or 'operation/shared-gameplay/' + role + '/' + request_id}
@@ -126,8 +140,6 @@ class SharedGameplayCheck:
         reply = self.wait(role + ':' + method, received)
         self.commands[-1]['reply'] = reply
         self.save('commands.json', self.commands)
-        require(reply['result'].get('success') or (allowed_error is not None and
-                reply['result'].get('error_code') == allowed_error), str(reply))
         return reply['result']
 
     def item(self, role, command, **payload):
