@@ -1,3 +1,14 @@
+## Принятая центральная игровая база — 31 октября 2026
+
+По явному решению владельца после ручного испытания центральная база дальнейшей
+разработки и проверки бесшовности — **Playtest R1**, ветка
+`integration/char2-current-main-playtest-r1`, точный commit
+`3b634cea35d5ed2ddf3a80952e9bcd0b1916d901`.
+Решение и границы: [принятая база](docs/control/PLAYTEST_R1_BASELINE_ACCEPTED_20261031_RU.md).
+Это main-owned выбор runtime-базы: новые игровые продолжения должны сохранять
+её CHAR2, NET-SMOOTH1 и recovery-композицию, а не начинаться с прежнего runtime main.
+Бесшовность — следующая проверяемая цель; её полная приёмка ещё не заявлена.
+
 # Distributed World Simulator — Project Control Center
 
 **Control plane:** `PC0-2026-08-10-R1`  
