@@ -37,10 +37,37 @@ p99 или плавности всех кадров. Сетевой multi-host �
 
 Runner/диагностика/тесты/документ — tracked paths текущей ветки; полные прогоны —
 C:/distributed-world-simulator/artifacts/visual-seam-20261031. В Git сохраняются
-компактный результат, provenance и выбранные кадры; большие сырые прогоны остаются
-в workspace artifacts. Cleanup останавливает только собственные процессы и
+этапы, итоговый документ и provenance/hashes; кадры, видео и машинные отчёты —
+в workspace artifacts согласно правилу размещения владельца. Cleanup останавливает только собственные процессы и
 отпускает movement intents. Новые runtime owners не вводятся.
 
 Независимые review/verification по AGENTS обязательны перед заявлением результата.
 Историческая SCHEMA_INVALID MVP8 остаётся отдельным control finding; acceptance
 main и merge не подменяются локальным визуальным PASS.
+
+## Реализованный запуск
+
+Из корня checkout на Windows:
+
+```powershell
+python tools/live2/visual_seam_check.py
+```
+
+Для закреплённого source добавьте `--expected-head <полный SHA>`.
+Runner требует чистый tracked checkout и установленный double Godot; путь движка
+меняется через `--godot`. `--output` задаёт каталог внутри workspace artifacts.
+Каждый запуск создаёт отдельный timestamp-каталог и завершает свои процессы.
+
+Результаты: `report.json`, `samples.json`, `initial.json`, `final.json`, runtime.log,
+PNG и `index.html` с покадровым просмотром/проигрыванием по времени захвата.
+`character.remote.visual` — read-only runtime command: screen anchors и реальная
+поза целевого skeleton, animation semantic/clip/time. Camera aiming и движение
+проходят через существующий `movement.set`, без изменения сетевого протокола.
+
+Вердикт проверяется также при Python optimization. Негативные проверки:
+
+```powershell
+python -O -m unittest discover -s tools/live2 -p test_visual_seam_check.py -v
+```
+
+Фактический результат этапа: [визуальный прогон 31 октября](PLAYTEST_R1_VISUAL_RESULT_20261031_RU.md).
