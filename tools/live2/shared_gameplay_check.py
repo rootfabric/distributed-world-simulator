@@ -40,6 +40,8 @@ def verify_world(states, units, a_ore, b_ore, stages):
         require(state['report']['connection_state'] == 'CONNECTED', role + ': disconnected')
         require(remaining(state) == units, role + ': resource count')
         require(ore(state, 'a') == a_ore and ore(state, 'b') == b_ore, role + ': inventory count')
+        total_ore = sum(i['quantity'] for i in state['items']['items'] if i['definition_id'] == 'item/ore')
+        require(total_ore + units + (0, 2, 6, 8)[stages] == 8, role + ': material conservation')
         require(state['outpost']['completed_stage_count'] == stages, role + ': construction stage')
         for key in ('items', 'resource', 'construction'):
             require(len(state[key].get('checksum', '')) == 64, role + ': missing ' + key)
@@ -107,7 +109,7 @@ class SharedGameplayCheck:
         require(not state['movement_error'], role + ': movement rejected ' + str(state['movement_error']))
         return state
 
-    def rpc(self, role, method, params=None, operation_id=''):
+    def rpc(self, role, method, params=None, operation_id='', allowed_error=None):
         request_id = str(len(self.commands) + 1)
         request = {'id': request_id, 'method': method, 'params': params or {},
                    'operation_id': operation_id or 'operation/shared-gameplay/' + role + '/' + request_id}
@@ -120,7 +122,8 @@ class SharedGameplayCheck:
         reply = self.wait(role + ':' + method, received)
         self.commands[-1]['reply'] = reply
         self.save('commands.json', self.commands)
-        require(reply['result'].get('success'), str(reply))
+        require(reply['result'].get('success') or (allowed_error is not None and
+                reply['result'].get('error_code') == allowed_error), str(reply))
         return reply['result']
 
     def item(self, role, command, **payload):
@@ -247,18 +250,24 @@ class SharedGameplayCheck:
             self.checkpoint('received', 5, 0, 3, 0)
             for role in ('a', 'b'):
                 self.item(role, 'container.close', container_id='container/shared/crate/1')
-            self.rpc('b', 'build')
-            built = self.checkpoint('foundation', 5, 0, 1, 1)
+            pre_build = self.checkpoint('before-foundation', 5, 0, 3, 0)
+            build = self.rpc('b', 'build', allowed_error='M3_CONSTRUCTION_DURABILITY_CONTRACT_REQUIRED')
+            blocked = not build.get('success')
+            self.report['blocked_checks'] = ['construction', 'construction-recovery', 'continued-construction'] if blocked else []
+            self.report['construction_error'] = build.get('error_code', '')
+            stage, b_quantity = (0, 3) if blocked else (1, 1)
+            built = self.checkpoint('foundation-rejected' if blocked else 'foundation', 5, 0, b_quantity, stage,
+                                    durable(pre_build['a']) if blocked else None)
             preserved = durable(built['a'])
             for role in ('a', 'b'):
                 self.roundtrip(role)
-                self.checkpoint('after-seam-' + role, 5, 0, 1, 1, preserved)
+                self.checkpoint('after-seam-' + role, 5, 0, b_quantity, stage, preserved)
             before = self.state('b')['report']
             self.rpc('b', 'reconnect')
             self.wait('b:rejoined', lambda: self.ready('b') and
                       self.state('b')['report']['ownership_epoch'] > before['ownership_epoch'] and
                       self.state('b')['report']['transport_session_id'] != before['transport_session_id'])
-            self.checkpoint('reconnected', 5, 0, 1, 1, preserved)
+            pre_restart = self.checkpoint('reconnected', 5, 0, b_quantity, stage, preserved)
             require(self.processes['server'].poll() is None, 'SERVER_STOPPED_BEFORE_RESTART_STAGE')
             print('Waiting for scheduled graceful server shutdown', flush=True)
             self.wait('server-stopped', lambda: self.processes['server'].poll() is not None,
@@ -266,19 +275,26 @@ class SharedGameplayCheck:
             require(self.processes['server'].returncode == 0, 'UNCLEAN_SERVER_EXIT')
             self.spawn('server-recovered')
             require(self.processes['server'].pid != self.processes['server-recovered'].pid, 'SERVER_PID_REUSED')
+            self.wait('recovered-server-ready', lambda: '"event":"node_ready"' in
+                      (self.root / 'server-recovered/runtime.log').read_text(errors='replace'))
             for role in ('a', 'b'):
                 self.wait(role + ':recovered', lambda r=role: self.ready(r) and
-                          self.state(r)['report']['server_disconnects'] >= 1, timeout=60)
-            self.checkpoint('recovered', 5, 0, 1, 1, preserved)
+                          self.state(r)['report']['server_disconnects'] > pre_restart[r]['report']['server_disconnects'] and
+                          self.state(r)['report']['ownership_epoch'] > pre_restart[r]['report']['ownership_epoch'], timeout=60)
+            self.checkpoint('recovered', 5, 0, b_quantity, stage, preserved)
             self.approach_resource('a')
             self.rpc('a', 'mine', {'quantity': 4})
-            self.checkpoint('recovery-mine', 1, 4, 1, 1)
-            self.rpc('a', 'build')
-            self.checkpoint('walls', 1, 0, 1, 2)
+            self.checkpoint('recovery-mine', 1, 4, b_quantity, stage)
+            if not blocked:
+                self.rpc('a', 'build')
+                self.checkpoint('walls', 1, 0, 1, 2)
             self.approach_resource('b')
             self.item('b', 'item.equip', item_id='item/player/b/p5-mining-tool', slot_id='tool/main')
             self.rpc('b', 'mine', {'quantity': 1})
-            self.checkpoint('last-ore', 0, 0, 2, 2)
+            self.checkpoint('last-ore', 0, 4 if blocked else 0, b_quantity + 1, 0 if blocked else 2)
+            if blocked:
+                self.report['executed_gameplay_checks'] = 'PASS'
+                raise AssertionError('FULL_SCENARIO_BLOCKED: M3_CONSTRUCTION_DURABILITY_CONTRACT_REQUIRED')
             self.rpc('b', 'build')
             final = self.checkpoint('complete', 0, 0, 0, 3)
             require(all(s['outpost']['complete'] for s in final.values()), 'OUTPOST_NOT_COMPLETE')
