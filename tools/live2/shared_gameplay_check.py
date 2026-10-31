@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 import socket
 import subprocess
+import sys
 import time
 import traceback
 
@@ -70,12 +71,15 @@ class SharedGameplayCheck:
         self.report = {'schema': 'dws.shared_gameplay_check.v1', 'result': 'RUNNING',
                        'head': self.head, 'tree': self.git('rev-parse', 'HEAD^{tree}').strip(),
                        'profile': self.profile['id'], 'phases': [], 'inputs': {},
+                       'invocation': sys.argv,
                        'limitations': ['localhost product seam; not multi-host',
                                        'graceful restart; not crash recovery',
                                        'headless runtime clients; no GUI acceptance']}
         for path in (args.godot, Path(__file__), self.project / 'tools/runtime/playtest_r1_shared_gameplay_client.gd',
                      self.project / 'config/release/playtest-r1.json'):
             self.report['inputs'][str(path)] = hashlib.sha256(path.read_bytes()).hexdigest()
+        (self.root / 'runner.py').write_bytes(Path(__file__).read_bytes())
+        (self.root / 'client.gd').write_bytes((self.project / 'tools/runtime/playtest_r1_shared_gameplay_client.gd').read_bytes())
         self.save('report.json', self.report)
 
     def git(self, *args):
@@ -335,6 +339,13 @@ class SharedGameplayCheck:
                         process.wait(timeout=8)
             for log in self.logs:
                 log.close()
+            unchanged = self.git('rev-parse', 'HEAD').strip() == self.head and not self.git(
+                'status', '--porcelain', '--untracked-files=no').strip()
+            unchanged = unchanged and all(hashlib.sha256(Path(p).read_bytes()).hexdigest() == digest
+                                          for p, digest in self.report['inputs'].items())
+            self.report['source_unchanged'] = unchanged
+            if not unchanged:
+                self.report.update(result='FAIL', integrity_error='SOURCE_CHANGED_DURING_RUN')
             self.report['processes'] = {k: {'pid': p.pid, 'exit_code': p.returncode} for k, p in self.processes.items()}
             self.report['seconds'] = time.monotonic() - started
             self.save('report.json', self.report)
