@@ -172,13 +172,23 @@ func capture_live_player(logical_player_id: String, gate, transfer_id: String) -
 
 
 func validate_live_player_record(record: Dictionary) -> Dictionary:
+	return _validate_player_transfer_record(record, true)
+
+
+func validate_player_replay_record(record: Dictionary) -> Dictionary:
+	# Historical LEAVE outcomes remain disconnected after a new session joins.
+	# Validate their exact shape without treating them as the current live row.
+	return _validate_player_transfer_record(record, false)
+
+
+func _validate_player_transfer_record(record: Dictionary, require_connected: bool) -> Dictionary:
 	var fields: Array[String] = ["logical_player_id", "player_entity_id", "transport_session_id", "ownership_epoch", "connected", "position", "velocity", "inventory", "last_input_sequence", "state_revision", "orientation_yaw", "flashlight_enabled"]
 	if record.size() != fields.size():
 		return _failure("LIVE_PLAYER_RECORD_FIELDS_INVALID")
 	for field in fields:
 		if not record.has(field):
 			return _failure("LIVE_PLAYER_RECORD_FIELDS_INVALID")
-	if record.get("connected") != true or typeof(record.get("transport_session_id")) != TYPE_STRING or not String(record["transport_session_id"]).begins_with("transport-session/"):
+	if typeof(record.get("connected")) != TYPE_BOOL or (require_connected and record["connected"] != true) or typeof(record.get("transport_session_id")) != TYPE_STRING or not String(record["transport_session_id"]).begins_with("transport-session/"):
 		return _failure("LIVE_PLAYER_SESSION_REQUIRED")
 	for field in ["ownership_epoch", "state_revision", "last_input_sequence"]:
 		var value = record.get(field)

@@ -1164,7 +1164,7 @@ func validate_live_player_replay(logical_id: String, entries: Dictionary) -> Dic
 		if details.has("player"):
 			if not details["player"] is Dictionary or details["player"].get("logical_player_id") != logical_id:
 				return _failure("LIVE_PLAYER_REPLAY_ACTOR_MISMATCH")
-			var valid: Dictionary = _players.validate_live_player_record(details["player"])
+			var valid: Dictionary = _players.validate_player_replay_record(details["player"])
 			if not bool(valid.get("success", false)):
 				return valid
 		if _operation_ledger.has(operation_id):
