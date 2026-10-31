@@ -473,6 +473,24 @@ func _animate_fallback() -> void:
 		torso.rotation.z = sin(_motion_time * 2.0) * 0.015 if current_semantic == "idle" else 0.0
 
 
+func create_visual_observation() -> Dictionary:
+	# Explicit diagnostic sampling only; never executed from the animation loop.
+	var pose: Array = []
+	if _target_skeleton != null:
+		for index in range(_target_skeleton.get_bone_count()):
+			var rotation := _target_skeleton.get_bone_pose_rotation(index)
+			pose.append([snappedf(rotation.x, 0.0001), snappedf(rotation.y, 0.0001),
+				snappedf(rotation.z, 0.0001), snappedf(rotation.w, 0.0001)])
+	return {
+		"semantic": current_semantic,
+		"animation": current_animation,
+		"animation_playing": _animation_player != null and _animation_player.is_playing(),
+		"animation_position_seconds": _animation_player.current_animation_position if _animation_player != null else -1.0,
+		"target_pose_sha256": JSON.stringify(pose).sha256_text() if not pose.is_empty() else "",
+		"target_bone_count": pose.size(),
+	}
+
+
 func create_report() -> Dictionary:
 	return {
 		"schema": "planet_simulator.quaternius_avatar_presenter.v1",
