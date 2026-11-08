@@ -4,6 +4,10 @@ const EndpointScript = preload("res://scripts/network/contracts/network_endpoint
 const NetworkUtilsScript = preload("res://scripts/network/contracts/network_contract_utils.gd")
 const EventScript = preload("res://scripts/network/transports/v2/network_transport_event.gd")
 const FrameScript = preload("res://scripts/network/transports/v2/protocol_frame_v2.gd")
+const R31ChecksumForensics = preload(
+	"res://scripts/network/smoothness/r31_815_wire_checksum_forensics.gd"
+)
+const R31SmoothTrace = preload("res://scripts/network/smoothness/net_smooth_trace.gd")
 const ChannelPolicyScript = preload("res://scripts/network/realtime/realtime_channel_policy.gd")
 
 const MAX_CLIENTS: int = 32
@@ -31,6 +35,8 @@ var _last_status: int = MultiplayerPeer.CONNECTION_DISCONNECTED
 # R31 P2.3 R2.0 — PRIVATE observability for server-bound COMPACT only.
 # No ENet frame, delivery mode or session state is modified.
 var _r31p23r2_attribution_enabled := false
+# R31 #815 strict diagnostic ONLY. Bounded per-port capture, default OFF.
+var _r31_815_wire_event_count: int = 0
 # R2.1 canary: only the already verified, main-thread COMPACT packet skips
 # a SECOND FrameScript.validate inside encode(). All invalid input is still
 # rejected by the original first validation; no worker or shared state.
@@ -194,6 +200,7 @@ func r22_send_prepared(source, peer_id: String, ticket: int) -> Dictionary:
 	var packet_us: int = Time.get_ticks_usec() if p23_probe else 0
 	if error != OK:
 		return TransportUtilsScript.failure("ENET_SEND_FAILED", {"godot_error": int(error)})
+	_r31_815_emit_wire("tx_enet", peer_id, packet)
 	var stats: Dictionary = _peer_statistics(peer_id)
 	var stats_us: int = Time.get_ticks_usec() if p23_probe else 0
 	var result_details: Dictionary = {
@@ -351,6 +358,8 @@ func send_to_peer(peer_id: String, frame: Dictionary) -> Dictionary:
 	var p23_packet_us: int = Time.get_ticks_usec() if p23_probe else 0
 	if error != OK:
 		return TransportUtilsScript.failure("ENET_SEND_FAILED", {"godot_error": int(error)})
+	_r31_815_emit_wire("tx_enet", peer_id, PackedByteArray(
+		encoded.get("details", {}).get("packet", PackedByteArray())), frame)
 	var peer_stats: Dictionary = _peer_statistics(peer_id)
 	var p23_stats_us: int = Time.get_ticks_usec() if p23_probe else 0
 	var details: Dictionary = {
@@ -472,8 +481,12 @@ func _poll_peer() -> void:
 		var packet: PackedByteArray = _peer.get_packet()
 		var decoded: Dictionary = FrameScript.decode(packet, MAX_PACKET_BYTES)
 		if not bool(decoded.get("success", false)):
+			_r31_815_emit_wire(
+				"rx_reject", "", packet, {},
+				String(decoded.get("error_code", "INVALID_FRAME")))
 			_append_event("TRANSPORT_ERROR", "", "", 0, {}, String(decoded.get("error_code", "INVALID_FRAME")), {"packet_bytes": packet.size()})
 			continue
+		_r31_815_emit_wire("rx_enet", "", packet)
 		var frame: Dictionary = decoded.get("details", {}).get("frame", {})
 		var expected_channel: int = _channel_index(String(frame.get("channel", "")))
 		var expected_mode: int = _transfer_mode(String(frame.get("delivery_mode", "")))
@@ -638,6 +651,27 @@ func _peer_statistics(peer_id: String) -> Dictionary:
 			* 100.0 / packet_loss_scale
 		),
 	}
+
+
+func _r31_815_emit_wire(
+	phase: String,
+	peer_id: String,
+	packet: PackedByteArray,
+	sender_frame: Dictionary = {},
+	error_code: String = ""
+) -> void:
+	# Inspection NEVER gates, mutates or substitutes a real ENet packet.
+	# The original checksum/frame validation and exact error paths above
+	# execute unconditionally. The trace is non-normative by construction.
+	if not R31ChecksumForensics.enabled() or not R31SmoothTrace.enabled():
+		return
+	if _r31_815_wire_event_count >= R31ChecksumForensics.MAX_EVENTS_PER_PROCESS:
+		return
+	_r31_815_wire_event_count += 1
+	var receipt: Dictionary = R31ChecksumForensics.inspect_packet(
+		phase, peer_id, packet, sender_frame, error_code)
+	receipt["event_index"] = _r31_815_wire_event_count
+	R31SmoothTrace.emit("r31_815_wire_fingerprint", receipt)
 
 
 func _append_event(event_type: String, peer_id: String = "", session_id: String = "", sequence: int = 0, frame: Dictionary = {}, error_code: String = "", details: Dictionary = {}) -> void:

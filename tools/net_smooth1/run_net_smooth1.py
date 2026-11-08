@@ -198,13 +198,19 @@ def play(args, manifest: dict) -> None:
                     r31p23r2_flush_attribution=args.r31p23r2_flush_attribution,
                     r31p23r21_single_pass_compact=args.r31p23r21_single_pass_compact,
                      r31p23r22_attested_compact=args.r31p23r22_attested_compact,
-                    scenario=args.scenario)
+                    scenario=args.scenario,
+                    r31_815_wire_forensics=args.r31_815_wire_forensics,
+                    forensic_evidence_class='CHECKSUM_FINGERPRINT_DIAGNOSTIC_ONLY' if args.r31_815_wire_forensics else '')
     processes: dict[str,subprocess.Popen] = {}; streams=[]
     def spawn(role: str) -> None:
         target=root/role;target.mkdir(parents=True)
         env=environment(target)
         env.update(DWS_NET_SMOOTH_TRACE_DIR=str(target),DWS_NET_SMOOTH_RUN_ID=manifest['run_id'],
                    DWS_NET_SMOOTH_ROLE=role)
+        # Only an explicit CLI flag activates wire fingerprints for all roles.
+        env.pop('DWS_NET_R31_815_WIRE_FORENSICS',None)
+        if args.r31_815_wire_forensics:
+            env['DWS_NET_R31_815_WIRE_FORENSICS']='1'
         if role == args.inject_stall_role:
             env['DWS_NET_SMOOTH_INJECT_STALL_MS']=str(args.inject_stall_ms)
         if role == 'server' and args.checkpoint_mode=='sync':
@@ -813,6 +819,8 @@ def main() -> int:
                         help='P2.3 R2.1: skip only redundant ENet validation and LOCAL COMPACT size-reserialize; requires R2.0')
     parser.add_argument('--r31p23r22-attested-compact', action='store_true',
                          help='P2.3 R2.2: single-use validated compact bytes; requires R2.1')
+    parser.add_argument('--r31-815-wire-forensics', action='store_true',
+                         help='NON-NORMATIVE SHA-only ENet send/recv fingerprinting for #815; no raw packet logged')
     parser.add_argument('--inject-stall-role',choices=('server','a','b'))
     parser.add_argument('--inject-stall-ms',type=int,default=250)
     args=parser.parse_args()
@@ -862,6 +870,12 @@ def main() -> int:
         parser.error('P2.3 R2.1 single-pass COMPACT requires --r31p23r2-flush-attribution')
     if args.r31p23r22_attested_compact and not args.r31p23r21_single_pass_compact:
         parser.error('P2.3 R2.2 attested COMPACT requires --r31p23r21-single-pass-compact')
+    if args.r31_815_wire_forensics and (
+        args.mode != 'gui' or args.scenario != 'r31-reconnect-roundtrip'
+        or args.profile != 'LOCAL' or not args.r31p23r22_attested_compact
+        or not args.r31p22_loop_attribution
+    ):
+        parser.error('R31 #815 forensic capture requires real GUI LOCAL, roundtrip, R2.2 and P22')
     run_id=uuid.uuid4().hex[:16]
     args.output=(args.output or ROOT/'artifacts/net-smooth1'/run_id).resolve()
     args.output.mkdir(parents=True,exist_ok=False)
