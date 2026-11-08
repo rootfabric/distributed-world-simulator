@@ -6,7 +6,7 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: fabric-t14-${{{ github.ref }}-${{{ github.event_name }}
+  group: fabric-t14-${{ github.ref }}-${{ github.event_name }}
   cancel-in-progress: true
 
 jobs:
@@ -35,6 +35,6 @@ jobs:
           sha256sum source/t14-source.tar.gz > source/source.sha256
       - uses: actions/upload-artifact@v4
         with:
-          name: t14-source-${{{ github.sha }}
+          name: t14-source-${{ github.sha }}
           path: source/**
           retention-days: 30
