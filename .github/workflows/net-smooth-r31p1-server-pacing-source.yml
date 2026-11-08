@@ -1,0 +1,31 @@
+name: NET-SMOOTH1 R31 P1 Server-only Engine Pacing Diagnostic
+on:
+  push:
+    branches:
+      - diagnostic/net-smooth1-r31p1-server-pacing-r1
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  strict-source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Confirm immutable verified repair parent, source and strict controls
+        run: |
+          set -euo pipefail
+          git merge-base --is-ancestor 6b7b2a25cb5f1525a41e64c31b1c9600c399d44d HEAD
+          python -m py_compile tools/net_smooth1/run_net_smooth1.py tools/net_smooth1/compare_r31_server_pacing.py
+          python -m unittest discover -s tests/tools -p 'test_net_smooth1_server_pacing_diagnostic.py' -v
+          python -m unittest discover -s tests/tools -p 'test_net_smooth1_r31_measure_full_duration.py' -v
+          python -m unittest discover -s tests/tools -p 'test_net_smooth1_p1_batch_flush_layers.py' -v
+          python -m unittest discover -s tests/tools -p 'test_net_smooth1_r31p23r22_source_contracts.py' -v
+          test -z "$(git status --porcelain --untracked-files=no)"
