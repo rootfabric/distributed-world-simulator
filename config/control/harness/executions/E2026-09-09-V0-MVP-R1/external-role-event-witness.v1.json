@@ -1,0 +1,23 @@
+{
+  "schema": "distributed_world_simulator.harness_external_role_event_witness.v1",
+  "version": 1,
+  "project_epoch": "E2026-09-09-V0-MVP-R1",
+  "work_order_id": "V0-MVP-R1-WO-001",
+  "authority": "DIRECTOR_REPAIR_EXACT_PINNED_INDEPENDENT_REVIEWER",
+  "mode": "PROVE_ONE_DIRECT_CHILD_REVIEW_ONLY_COMMIT",
+  "witnesses": [
+    {
+      "event_path": "config/control/harness/executions/E2026-09-09-V0-MVP-R1/events/V0-MVP-R1-WO-001/0050-mvp8-repair-r2-independent-reviewer-pass.v1.json",
+      "event_blob_sha": "b27cc80072fcb66cb217004ddad35aeb381d37a0",
+      "event_id": "E2026-09-09-V0-MVP-R1-V0-MVP-R1-WO-001-0050-MVP8-REPAIR-R2-INDEPENDENT-REVIEWER-PASS",
+      "event_branch": "review/v0-mvp8-dc6e7fff-r1",
+      "event_predicate": "MVP8_INDEPENDENT_REVIEWER_PASS",
+      "reviewer_commit": "6d1f3fbcbebee31d9be9745f82becc3439de57cc",
+      "reviewer_tree": "5946f247f66f5dfb083a35b8606f8ac8c6c57700",
+      "reviewed_product_commit": "dc6e7fffa27d764ea09ded949d50b99a32fa4d9b",
+      "reviewed_product_tree": "8fc0044ff42ad502e6457593a185465af7d2a825",
+      "review_result_path": "config/control/harness/executions/E2026-09-09-V0-MVP-R1/verifications/MVP8-INDEPENDENT-REVIEW-DC6E7FFF-R1.v1.json",
+      "review_result_blob_sha": "3759b7caf84ef1e49a894ae2d6b5934e676c15b5"
+    }
+  ]
+}
