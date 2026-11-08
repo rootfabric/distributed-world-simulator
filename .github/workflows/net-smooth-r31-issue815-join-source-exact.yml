@@ -1,0 +1,32 @@
+name: NET-SMOOTH1 Issue 815 Fresh JOIN Source Contract
+on:
+  push:
+    branches:
+      - diagnostic/net-smooth1-r31-815-fresh-join-campaign-r1
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  source-only:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Parent, offline tests and source integrity
+        run: |
+          set -euo pipefail
+          git merge-base --is-ancestor fb513173df4c73c607fd8cb6680ad108c76f41ac HEAD
+          test -z "$(git status --porcelain --untracked-files=no)"
+          python -m py_compile tools/net_smooth1/run_r31_issue815_join_campaign.py
+          python -m unittest discover -s tests/tools -p 'test_net_smooth1_r31_issue815_join_campaign.py' -v
+          python -m unittest discover -s tests/tools -p 'test_net_smooth1_r31p23r22_source_contracts.py' -v
+          test -z "$(git status --porcelain --untracked-files=no)"
