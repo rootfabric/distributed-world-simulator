@@ -17,6 +17,16 @@ FABRIC: интеграция проверенных ремонтов; ENGINE48: 
 
 ## Текущий статус
 
+<!-- SEAMLESS-TESTING-R1 2026-11-13 -->
+Тестовая система бесшовных переносов (r1): ветка feature/seamless-transfer-testing-r1,
+runner RUN_SEAMLESS_TRANSFER_SUITE.ps1 (4/4 PASS на 42c7a4a8c). Два authority-процесса
++ gateway: 20 handoff без разрыва сессии, 0 потерь команд, пауза клиента p95 ≈ 49 мс,
+полный переход begin→activate p95 ≈ 185 мс (L0). Гэпы: переноса ДАННЫХ предметов/гридов
+между процессами нет (SM1.5 hash-only, SM1.6 player-dict), проекций на шве нет,
+M0 JSON float round-trip ломает aggregate-checksum'ы на 15+ частях. Подробности:
+docs/network/SEAMLESS_TRANSFER_TESTING_PLAN_RU.md, docs/network/SEAMLESS_TRANSFER_TESTING_REPORT_RU.md.
+<!-- /SEAMLESS-TESTING-R1 -->
+
 ```text
 runtime accepted: v16.9.3-runtime-h3-dedicated-multiplayer
 architecture accepted: v16.9.4-architecture-a2-networked-gameplay
