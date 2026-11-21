@@ -62,6 +62,9 @@ static func settle_after_first_impact(machine: Dictionary) -> Dictionary:
 	var assembly := Coupled.compile_from_machine(machine)
 	if not bool(assembly.get("success", false)):
 		return _failure("COMPLEX2E_COUPLED_COMPILE_FAILED", assembly)
+	var step_context := _prepare_step_context(assembly)
+	if not bool(step_context.get("success", false)):
+		return _failure("COMPLEX2E_STEP_CONTEXT_FAILED", step_context)
 	var live := Coupled.zero_state(assembly)
 	var reference := Coupled.zero_state(assembly)
 	if not bool(live.get("success", false)) or not bool(reference.get("success", false)):
@@ -78,8 +81,8 @@ static func settle_after_first_impact(machine: Dictionary) -> Dictionary:
 	var samples: Array = []
 	for step_index in range(MAX_SETTLE_STEPS):
 		var force: Array = FIRST_IMPACT_FORCE.duplicate() if step_index < FIRST_IMPACT_STEPS else [0.0, 0.0, 0.0, 0.0]
-		var active_step := Coupled.compiled_step(assembly, live, force, DT)
-		var full_step := Coupled.full_reference_step(assembly, reference, force, DT)
+		var active_step := _prepared_step(assembly, live, force, step_context["compiled"], "COMPILED_DYNAMIC_ROM")
+		var full_step := _prepared_step(assembly, reference, force, step_context["reference"], "FULL_CANONICAL_SUM")
 		if not bool(active_step.get("success", false)):
 			return _failure("COMPLEX2E_FIRST_ACTIVE_STEP_FAILED", {"step": step_index, "result": active_step})
 		if not bool(full_step.get("success", false)):
@@ -133,6 +136,9 @@ static func settle_after_first_impact(machine: Dictionary) -> Dictionary:
 	}
 
 static func reimpact_from_settled(assembly: Dictionary, settled_state: Dictionary, settled_reference: Dictionary) -> Dictionary:
+	var step_context := _prepare_step_context(assembly)
+	if not bool(step_context.get("success", false)):
+		return _failure("COMPLEX2E_STEP_CONTEXT_FAILED", step_context)
 	var live := settled_state.duplicate(true)
 	var reference := settled_reference.duplicate(true)
 	var max_delta := 0.0
@@ -145,8 +151,8 @@ static func reimpact_from_settled(assembly: Dictionary, settled_state: Dictionar
 	var peak_native_abs: Array = [0.0, 0.0, 0.0, 0.0]
 	for step_index in range(REIMPACT_STEPS + REIMPACT_RINGDOWN_STEPS):
 		var force: Array = REIMPACT_FORCE.duplicate() if step_index < REIMPACT_STEPS else [0.0, 0.0, 0.0, 0.0]
-		var active_step := Coupled.compiled_step(assembly, live, force, DT)
-		var full_step := Coupled.full_reference_step(assembly, reference, force, DT)
+		var active_step := _prepared_step(assembly, live, force, step_context["compiled"], "COMPILED_DYNAMIC_ROM")
+		var full_step := _prepared_step(assembly, reference, force, step_context["reference"], "FULL_CANONICAL_SUM")
 		if not bool(active_step.get("success", false)):
 			return _failure("COMPLEX2E_REIMPACT_ACTIVE_STEP_FAILED", {"step": step_index, "result": active_step})
 		if not bool(full_step.get("success", false)):
@@ -189,6 +195,45 @@ static func reimpact_from_settled(assembly: Dictionary, settled_state: Dictionar
 			"final_energy_j": final_energy,
 		}),
 	}
+
+static func _prepare_step_context(assembly: Dictionary) -> Dictionary:
+	var checked := Coupled.validate(assembly)
+	if not bool(checked.get("success", false)):
+		return checked
+	var reference := Coupled._compile_matrices(Array(assembly["couplings"]).duplicate(true))
+	if not bool(reference.get("success", false)):
+		return reference
+	return {
+		"success": true,
+		"compiled": {
+			"mass_matrix": assembly["mass_matrix"],
+			"stiffness_matrix": assembly["stiffness_matrix"],
+			"damping_matrix": assembly["damping_matrix"],
+		},
+		"reference": {
+			"mass_matrix": reference["mass_matrix"],
+			"stiffness_matrix": reference["stiffness_matrix"],
+			"damping_matrix": reference["damping_matrix"],
+		},
+	}
+
+static func _prepared_step(
+	assembly: Dictionary,
+	state: Dictionary,
+	force: Array,
+	matrices: Dictionary,
+	evaluator: String
+) -> Dictionary:
+	return Coupled._midpoint_step(
+		assembly,
+		state,
+		force,
+		DT,
+		matrices["mass_matrix"],
+		matrices["stiffness_matrix"],
+		matrices["damping_matrix"],
+		evaluator
+	)
 
 static func _sample(phase: String, state: Dictionary, energy_j: float) -> Dictionary:
 	var native_q: Array = []

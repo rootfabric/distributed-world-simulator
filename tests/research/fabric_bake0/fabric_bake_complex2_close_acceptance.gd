@@ -51,7 +51,12 @@ func _initialize() -> void:
 	_check(String(e.get("parent_b_hybrid_backend_hash", "")) == String(e.get("final_hybrid_backend_hash", "")), "D/E must preserve B HYBRID backend", [e.get("parent_b_hybrid_backend_hash"), e.get("final_hybrid_backend_hash")])
 
 	var perf := Perf.run_matrix()
-	_check(bool(perf.get("success", false)), "PERF matrix must succeed", perf)
+	var perf_success := bool(perf.get("success", false))
+	var perf_hash := String(perf.get("matrix_hash", ""))
+	_check(perf_success, "PERF matrix must succeed", perf)
+	if not perf_success:
+		print("COMPLEX2_PERF_PRIMARY_FAILURE_CODE=%s" % String(perf.get("error_code", "UNKNOWN")))
+		print("COMPLEX2_PERF_PRIMARY_FAILURE_DETAILS=%s" % JSON.stringify(perf.get("details", {})))
 	var perf_cases: Array = Array(perf.get("cases", []))
 	var perf_counts: Array = []
 	for raw_case in perf_cases:
@@ -72,7 +77,7 @@ func _initialize() -> void:
 		"c": String(c["experiment_hash"]),
 		"d": String(e["parent_d_experiment_hash"]),
 		"e": String(e["experiment_hash"]),
-		"perf": String(perf["matrix_hash"]),
+		"perf": perf_hash,
 		"representation_kinds": EXPECTED_KINDS,
 		"fabric019_authorized": false,
 	})
@@ -84,7 +89,7 @@ func _initialize() -> void:
 		quit(1)
 		return
 	print("COMPLEX2_CLOSE_HASH=%s" % closure_hash)
-	print("COMPLEX2_PERF_HASH=%s" % String(perf["matrix_hash"]))
+	print("COMPLEX2_PERF_HASH=%s" % perf_hash)
 	print("FABRIC COMPLEX2-CLOSE Acceptance: PASS (%d assertions) A+B+C+D+E+PERF" % assertions)
 	quit(0)
 

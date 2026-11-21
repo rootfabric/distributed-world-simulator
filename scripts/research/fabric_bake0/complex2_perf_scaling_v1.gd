@@ -22,7 +22,7 @@ static func run_matrix() -> Dictionary:
 	for part_count in PART_COUNTS:
 		var case_result := run_case(part_count)
 		if not bool(case_result.get("success", false)):
-			return _failure("COMPLEX2PERF_CASE_FAILED", {"part_count": part_count, "case": case_result})
+			return _matrix_case_failure_for_diagnostics(part_count, case_result)
 		cases.append(case_result)
 	var deterministic_cases: Array = []
 	for case_result in cases:
@@ -44,6 +44,13 @@ static func run_matrix() -> Dictionary:
 		"cases": cases,
 		"matrix_hash": Utils.canonical_hash({"schema": SCHEMA, "cases": deterministic_cases}),
 	}
+
+static func _matrix_case_failure_for_diagnostics(part_count: int, case_result: Dictionary) -> Dictionary:
+	var failure := _failure("COMPLEX2PERF_CASE_FAILED", {"part_count": part_count, "case": case_result})
+	# A matrix-level failure has no valid matrix hash. Keep the field present so
+	# downstream diagnostics preserve the primary error instead of masking it.
+	failure["matrix_hash"] = ""
+	return failure
 
 static func run_case(part_count: int) -> Dictionary:
 	if not PART_COUNTS.has(part_count) or part_count % MODULE_COUNT != 0:
