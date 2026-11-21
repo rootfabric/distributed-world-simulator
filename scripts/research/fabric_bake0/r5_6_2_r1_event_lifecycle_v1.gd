@@ -41,6 +41,9 @@ func bootstrap(store, construct_id: String, matter: Dictionary, authority: Dicti
 		return U.failure("R562_ALREADY_STARTED")
 	if not _valid_store(store):
 		return U.failure("R562_CANONICAL_STORE_REQUIRED")
+	# Admission must not return a READY journal that cold recovery rejects.
+	if initial_events.size() > MAX_EVENTS:
+		return U.failure("R562_EVENT_BUDGET_EXCEEDED")
 	var snapshot: Dictionary = store.get_snapshot(construct_id)
 	if snapshot.get("construct_id", "") != construct_id:
 		return U.failure("R562_OWNER_SOURCE_MISSING")
