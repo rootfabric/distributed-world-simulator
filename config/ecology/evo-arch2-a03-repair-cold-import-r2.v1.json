@@ -1,0 +1,30 @@
+{
+  "schema": "dws.ecology.research-repair-work-order.v1",
+  "id": "EVO-ARCH2-A03-REPAIR-COLD-IMPORT-R2",
+  "parent_work_order": "EVO-ARCH2-A03-20260906-R1",
+  "risk": "MEDIUM",
+  "reason": "Cold empty-.godot import exposed pre-existing leading UTF-8 BOM bytes that Godot 4.7.1 double parses as Expected '[' in three legacy scene files.",
+  "authorization": "Bounded repair continuation within the user-requested A0-A3 exact acceptance mission; no architecture ownership or product scope expansion.",
+  "allowed_paths": [
+    "scenes/labs/ecology/eco_evo5_probe2_tree_lab.tscn",
+    "scenes/labs/ecology/eco_evo5_t51_creature_lab.tscn",
+    "scenes/labs/ecology/eco_evo5_terrain_fly_lab.tscn"
+  ],
+  "allowed_change": "REMOVE_EXACTLY_ONE_LEADING_UTF8_BOM_EF_BB_BF_IF_PRESENT",
+  "forbidden_changes": [
+    "SEMANTIC_SCENE_EDIT",
+    "NODE_OR_RESOURCE_EDIT",
+    "SCRIPT_EDIT",
+    "OTHER_LEGACY_SCENE_EDIT",
+    "PRODUCTION_OWNERSHIP_CHANGE"
+  ],
+  "required_predicates": [
+    "BASE_BYTES_EQUAL_BOM_PLUS_REPAIRED_BYTES",
+    "REPAIRED_FILE_STARTS_WITH_GD_SCENE_TOKEN",
+    "COLD_EMPTY_GODOT_IMPORT_PASS",
+    "NO_SCRIPT_OR_PARSE_ERROR",
+    "VIS5_REGRESSION_UNCHANGED"
+  ],
+  "state": "AUTHORIZED_REPAIR",
+  "merge_authorized": false
+}
