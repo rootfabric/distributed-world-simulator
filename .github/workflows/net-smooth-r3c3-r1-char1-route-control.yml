@@ -1,0 +1,107 @@
+name: NET-SMOOTH R3C3 R1 CHAR1 Route Control Exact
+
+on:
+  push:
+    branches:
+      - control/net-smooth-r3c3-r1-earth-char1-route-exact
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Exact routed CHAR1 P3 P1 ancestry, no route looseness
+        run: |
+          python -m unittest discover -s tests/tools -p test_control_v0_earth_char1_route.py -v
+          python -m unittest discover -s tests/tools -p test_net_smooth1_r42_r3c3_r1_source_contract.py -v
+  windows-exact:
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Exact subject and pinned Godot
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          $Base='bb39396fe838a297a60555cdbcafb3aa3af42578'
+          $B='C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe'
+          if ((git rev-parse HEAD).Trim() -ne $env:GITHUB_SHA) { throw 'ROUTE_HEAD_MISMATCH' }
+          git merge-base --is-ancestor $Base HEAD
+          if ($LASTEXITCODE -ne 0) { throw 'ROUTE_PARENT_MISMATCH' }
+          if (git status --porcelain --untracked-files=no) { throw 'ROUTE_DIRTY' }
+          if (-not (Test-Path $B)) { throw 'ROUTE_GODOT_MISSING' }
+          if ((& $B --version | Out-String).Trim() -ne '4.7.1.stable.double.custom_build.a13da4feb') { throw 'ROUTE_GODOT_VERSION' }
+          if ((Get-FileHash $B -Algorithm SHA256).Hash.ToLowerInvariant() -ne '3633c3e609c8ce2f9bae334a9c7e75c7f974de3af0415ab4a8050a625a15a7a5') { throw 'ROUTE_GODOT_SHA' }
+          $E='artifacts\net-smooth1\r3c3-r1-char1-route'
+          New-Item -ItemType Directory -Force $E | Out-Null
+          [ordered]@{head=(git rev-parse HEAD).Trim();tree=(git rev-parse 'HEAD^{tree}').Trim();base=$Base} | ConvertTo-Json | Set-Content "$E\identity.json" -Encoding UTF8
+      - name: Cold import
+        shell: pwsh
+        run: |
+          $B='C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe'
+          $L='artifacts\net-smooth1\r3c3-r1-char1-route\import.log'
+          & $B --headless --editor --path . --import --quit *> $L
+          if ($LASTEXITCODE -ne 0 -or (Select-String $L -Pattern 'SCRIPT ERROR:|Parse Error:|Compile Error:' -Quiet)) {
+            Get-Content $L -Tail 100
+            throw 'ROUTE_IMPORT_FAIL'
+          }
+      - name: Independent exact route and geometry regression
+        shell: pwsh
+        timeout-minutes: 30
+        run: |
+          $B='C:\Godot\godot\bin\godot.windows.editor.double.x86_64.console.exe'
+          $E='artifacts\net-smooth1\r3c3-r1-char1-route'
+          foreach ($P in @(
+            'tests/runtime/test_v0_p1_earth_wiring.gd',
+            'tests/runtime/test_net_smooth1_r42_r3c3_staged_earth_geometry.gd',
+            'tests/runtime/test_mvp_earth_m3_spectator.gd',
+            'tests/runtime/test_v0_p1_earth_surface_presentation.gd',
+            'tests/runtime/test_net_smooth1_r42_r3c2_phased_item_publication.gd',
+            'tests/runtime/test_net_smooth1_r42_r3c_async_leave.gd',
+            'tests/runtime/test_net_smooth1_r42_r3c_queued_join.gd'
+          )) {
+            $Stem=Join-Path $E (Split-Path $P -Leaf)
+            $Out="$Stem.stdout.log"; $Err="$Stem.stderr.log"
+            $Proc=Start-Process -FilePath $B -WorkingDirectory (Get-Location).Path -ArgumentList @('--headless','--path','.','--script',("res://"+$P)) -RedirectStandardOutput $Out -RedirectStandardError $Err -PassThru
+            try {
+              if (-not $Proc.WaitForExit(180000)) { $Proc.Kill($true); $Proc.WaitForExit(); throw "ROUTE_TIMEOUT:$P" }
+              $Code=$Proc.ExitCode
+              $Errors=@(Select-String -Path $Out,$Err -Pattern 'SCRIPT ERROR:|Parse Error:|Compile Error:|ERROR:' -ErrorAction SilentlyContinue)
+              if ($Code -ne 0 -or $Errors.Count -gt 0) {
+                Get-Content $Out -Tail 100; Get-Content $Err -Tail 100
+                throw "ROUTE_TEST_FAILED:$P EXIT=$Code"
+              }
+            } finally { $Proc.Dispose() }
+          }
+          if (git status --porcelain --untracked-files=no) { throw 'ROUTE_TRACKED_DIRTY' }
+      - name: Exact SHA256 evidence
+        if: always()
+        shell: pwsh
+        run: |
+          $E='artifacts\net-smooth1\r3c3-r1-char1-route'
+          New-Item -ItemType Directory -Force $E | Out-Null
+          @(Get-ChildItem $E -File | Where-Object { $_.Name -ne 'sha256.json' } |
+            ForEach-Object { [ordered]@{file=$_.Name;sha256=(Get-FileHash $_.FullName -Algorithm SHA256).Hash} }) | ConvertTo-Json -Depth 4 | Set-Content "$E\sha256.json" -Encoding UTF8
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: r3c3-r1-char1-route-exact-${{ github.sha }}-${{ github.run_id }}
+          path: artifacts/net-smooth1/r3c3-r1-char1-route/
+          retention-days: 21
+          if-no-files-found: error
